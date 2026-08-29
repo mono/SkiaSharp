@@ -9,7 +9,7 @@ _DOCS_DIR = Path(__file__).resolve().parents[2]
 if str(_DOCS_DIR) not in sys.path:
     sys.path.insert(0, str(_DOCS_DIR))
 
-from release_notes import common
+from release_notes import common, github
 
 
 def _load_release_notes_data_module():
@@ -113,22 +113,16 @@ class CoreTupleTests(unittest.TestCase):
         self.assertEqual(common.core_tuple("3.119.0.1"), (3, 119, 0, 1))
 
 
-class ImportReleaseGithubTests(unittest.TestCase):
-    def test_resolves_the_same_managed_markers(self):
-        gh = common.import_release_github()
-        self.assertEqual(gh.SUMMARY_START_MARKER, "<!-- SKIASHARP:RELEASE-SUMMARY:START -->")
-        self.assertEqual(gh.SUMMARY_END_MARKER, "<!-- SKIASHARP:RELEASE-SUMMARY:END -->")
+class ReleaseGithubTests(unittest.TestCase):
+    def test_owns_the_managed_markers(self):
+        self.assertEqual(github.SUMMARY_START_MARKER, "<!-- SKIASHARP:RELEASE-SUMMARY:START -->")
+        self.assertEqual(github.SUMMARY_END_MARKER, "<!-- SKIASHARP:RELEASE-SUMMARY:END -->")
         self.assertEqual(
-            gh.GENERATED_START_MARKER, "<!-- SKIASHARP:GITHUB-GENERATED-NOTES:START -->"
+            github.GENERATED_START_MARKER, "<!-- SKIASHARP:GITHUB-GENERATED-NOTES:START -->"
         )
         self.assertEqual(
-            gh.GENERATED_END_MARKER, "<!-- SKIASHARP:GITHUB-GENERATED-NOTES:END -->"
+            github.GENERATED_END_MARKER, "<!-- SKIASHARP:GITHUB-GENERATED-NOTES:END -->"
         )
-
-    def test_is_idempotent_and_cached_by_sys_modules(self):
-        first = common.import_release_github()
-        second = common.import_release_github()
-        self.assertIs(first, second)
 
 
 class DataFormatSyncTests(unittest.TestCase):

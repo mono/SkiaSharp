@@ -15,10 +15,8 @@ Design rules that every module here follows:
   optional body per shipment); everything else is deterministic.
 * Historical releases without the managed markers, and pages whose data.json
   predates this format, are safely skipped rather than rewritten.
-* The updater never redefines the managed markers itself — it imports them
-  from ``scripts/infra/release/release_github.py``, the single source of
-  truth Finish uses to compose the initial release body, so the two paths
-  can never diverge on marker bytes.
+* The exact-summary package owns the managed release-body markers and helpers;
+  the C# Finish tool uses the same literal marker contract.
 """
 
 from __future__ import annotations

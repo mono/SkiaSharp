@@ -177,17 +177,32 @@ class ReleaseTestPlanTests(unittest.TestCase):
     @mock.patch.object(planner.common, "run_checked")
     def test_receipt_report_uses_finish_plan(self, run_checked):
         def write_plan(args, *, cwd, timeout):
-            output = Path(args[args.index("--output") + 1])
-            output.write_text(json.dumps(FINISH_PLAN), encoding="utf-8")
+            if "--output" in args:
+                output = Path(args[args.index("--output") + 1])
+                output.write_text(json.dumps(FINISH_PLAN), encoding="utf-8")
             return SimpleNamespace(stdout="")
 
         run_checked.side_effect = write_plan
         result = planner.receipt_report(Path("/repo"), SKIA_VERSION)
 
         self.assertEqual(result, FINISH_PLAN)
-        args = run_checked.call_args.args[0]
-        self.assertEqual(args[1], str(planner.RELEASE_CLI))
-        self.assertEqual(args[2:4], ["finish", "plan"])
+        self.assertEqual(run_checked.call_count, 3)
+        restore, build, invocation = [
+            call.args[0] for call in run_checked.call_args_list
+        ]
+        self.assertEqual(
+            restore,
+            ["dotnet", "restore", str(planner.RELEASE_PROJECT), "--locked-mode"],
+        )
+        self.assertEqual(build[0:3], ["dotnet", "build", str(planner.RELEASE_PROJECT)])
+        self.assertIn("--no-restore", build)
+        self.assertEqual(invocation[0:2], ["dotnet", "run"])
+        self.assertIn("--no-build", invocation)
+        self.assertIn("--no-restore", invocation)
+        self.assertIn(str(planner.RELEASE_PROJECT), invocation)
+        self.assertIn("finish", invocation)
+        self.assertIn("plan", invocation)
+        args = invocation
         self.assertIn(SKIA_VERSION, args)
         self.assertEqual(run_checked.call_args.kwargs["timeout"], 600)
 

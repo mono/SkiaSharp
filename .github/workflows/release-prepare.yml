@@ -27,6 +27,7 @@ jobs:
     timeout-minutes: 20
     outputs:
       tooling_sha: ${{ steps.outputs.outputs.tooling_sha }}
+      plan_id: ${{ steps.outputs.outputs.plan_id }}
       release_identity: ${{ steps.outputs.outputs.release_identity }}
       next_action: ${{ steps.outputs.outputs.next_action }}
     steps:
@@ -49,6 +50,11 @@ jobs:
           persist-credentials: false
           submodules: false
 
+      - name: Set up exact release tooling
+        uses: ./.github/actions/setup-release-tool
+        with:
+          tooling-sha: ${{ github.sha }}
+
       - name: Build immutable release plan
         env:
           GH_TOKEN: ${{ github.token }}
@@ -57,6 +63,10 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/release-prepare"
+          release_tool=(
+            dotnet run --no-build --no-restore --configuration Release
+            --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --
+          )
           args=(
             prepare plan
             --integration-target "$RELEASE_TARGET"
@@ -66,8 +76,8 @@ jobs:
           if [ -n "$RELEASE_VERSION" ]; then
             args+=(--version "$RELEASE_VERSION")
           fi
-          python3 scripts/infra/release/release.py "${args[@]}"
-          python3 scripts/infra/release/release.py render-plan \
+          "${release_tool[@]}" "${args[@]}"
+          "${release_tool[@]}" render-plan \
             --plan "$RUNNER_TEMP/release-prepare/plan.json" \
             --format markdown \
             --output "$RUNNER_TEMP/release-prepare/summary.md"
@@ -79,6 +89,7 @@ jobs:
           set -euo pipefail
           plan="$RUNNER_TEMP/release-prepare/plan.json"
           echo "tooling_sha=$(jq -r '.toolingSha' "$plan")" >> "$GITHUB_OUTPUT"
+          echo "plan_id=$(jq -r '.planId' "$plan")" >> "$GITHUB_OUTPUT"
           echo "release_identity=$(jq -r '.release.identity' "$plan")" >> "$GITHUB_OUTPUT"
           echo "next_action=$(jq -r '.nextAction' "$plan")" >> "$GITHUB_OUTPUT"
 
@@ -118,6 +129,11 @@ jobs:
           persist-credentials: false
           submodules: false
 
+      - name: Set up exact release tooling
+        uses: ./.github/actions/setup-release-tool
+        with:
+          tooling-sha: ${{ needs.plan.outputs.tooling_sha }}
+
       - name: Require approved tooling to remain on main
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
@@ -136,7 +152,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          python3 scripts/infra/release/release.py check-environment \
+          dotnet run --no-build --no-restore --configuration Release \
+            --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj -- \
+            check-environment \
             --name release-branching \
             --default-branch "$DEFAULT_BRANCH" \
             --output "$RUNNER_TEMP/release-branching-environment.json"
@@ -147,25 +165,49 @@ jobs:
           name: release-prepare-plan
           path: ${{ runner.temp }}/release-prepare
 
-      - name: Configure approved GitHub identity
-        env:
-          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+      - name: Configure release commit identity
         run: |
           set -euo pipefail
-          test -n "$GH_TOKEN"
-          gh auth setup-git
           git config user.name "SkiaSharp Release Automation"
           git config user.email "devnull@localhost"
 
       - name: Apply approved release plan
         env:
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          RELEASE_GIT_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          EXPECTED_PLAN_ID: ${{ needs.plan.outputs.plan_id }}
         run: |
           set -euo pipefail
-          python3 scripts/infra/release/release.py prepare apply \
+          test -n "$GH_TOKEN"
+          test -n "$EXPECTED_PLAN_ID"
+          auth_dir="$RUNNER_TEMP/release-git-auth"
+          askpass="$auth_dir/askpass.sh"
+          mkdir -p "$auth_dir"
+          cat > "$askpass" <<'EOF'
+          #!/bin/sh
+          case "$1" in
+            *Username*) printf '%s\n' 'x-access-token' ;;
+            *Password*) printf '%s\n' "$RELEASE_GIT_TOKEN" ;;
+            *) exit 1 ;;
+          esac
+          EOF
+          chmod 700 "$askpass"
+          cleanup() {
+            rm -f "$askpass"
+            rmdir "$auth_dir" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          export GIT_ASKPASS="$askpass"
+          export GIT_TERMINAL_PROMPT=0
+          release_tool=(
+            dotnet run --no-build --no-restore --configuration Release
+            --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --
+          )
+          "${release_tool[@]}" prepare apply \
             --plan "$RUNNER_TEMP/release-prepare/plan.json" \
+            --expected-plan-id "$EXPECTED_PLAN_ID" \
             --output "$RUNNER_TEMP/release-prepare/result.json"
-          python3 scripts/infra/release/release.py render-plan \
+          "${release_tool[@]}" render-plan \
             --plan "$RUNNER_TEMP/release-prepare/result.json" \
             --format markdown \
             --output "$RUNNER_TEMP/release-prepare/result.md"

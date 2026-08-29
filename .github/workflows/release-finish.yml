@@ -28,6 +28,7 @@ jobs:
       pull-requests: read
     outputs:
       tooling_sha: ${{ steps.outputs.outputs.tooling_sha }}
+      plan_id: ${{ steps.outputs.outputs.plan_id }}
       release_identity: ${{ steps.outputs.outputs.release_identity }}
       next_action: ${{ steps.outputs.outputs.next_action }}
     steps:
@@ -50,13 +51,10 @@ jobs:
           persist-credentials: false
           submodules: false
 
-      - name: Set up .NET for package signature verification
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - name: Set up exact release tooling
+        uses: ./.github/actions/setup-release-tool
         with:
-          global-json-file: global.json
-
-      - name: Pre-warm the pinned .NET SDK
-        run: ./eng/common/dotnet.sh --version
+          tooling-sha: ${{ github.sha }}
 
       - name: Build immutable finalization plan
         id: plan_command
@@ -66,30 +64,20 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/release-finish"
+          release_tool=(
+            dotnet run --no-build --no-restore --configuration Release
+            --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --
+          )
           status=0
-          python3 scripts/infra/release/release.py finish plan \
+          "${release_tool[@]}" finish plan \
             --version "$RELEASE_VERSION" \
             --tooling-sha "$GITHUB_SHA" \
-            --download-dir "$RUNNER_TEMP/release-finish/packages" \
             --output "$RUNNER_TEMP/release-finish/plan.json" || status=$?
           echo "status=$status" >> "$GITHUB_OUTPUT"
-          if [ "$status" -eq 2 ]; then
-            {
-              echo "# Release $RELEASE_VERSION is pending on NuGet.org"
-              echo
-              jq -r '.message' "$RUNNER_TEMP/release-finish/plan.json"
-              echo
-              echo "| Package | Version |"
-              echo "| --- | --- |"
-              jq -r '.missingPackages[] | "| `\(.id)` | `\(.version)` |"' \
-                "$RUNNER_TEMP/release-finish/plan.json"
-            } > "$RUNNER_TEMP/release-finish/summary.md"
-            cat "$RUNNER_TEMP/release-finish/summary.md" >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          elif [ "$status" -ne 0 ]; then
+          if [ "$status" -ne 0 ] && [ "$status" -ne 2 ]; then
             exit "$status"
           fi
-          python3 scripts/infra/release/release.py render-plan \
+          "${release_tool[@]}" render-plan \
             --plan "$RUNNER_TEMP/release-finish/plan.json" \
             --format markdown \
             --output "$RUNNER_TEMP/release-finish/summary.md"
@@ -102,6 +90,7 @@ jobs:
           set -euo pipefail
           plan="$RUNNER_TEMP/release-finish/plan.json"
           echo "tooling_sha=$(jq -r '.toolingSha' "$plan")" >> "$GITHUB_OUTPUT"
+          echo "plan_id=$(jq -r '.planId' "$plan")" >> "$GITHUB_OUTPUT"
           echo "release_identity=$(jq -r '.release.identity' "$plan")" >> "$GITHUB_OUTPUT"
           echo "next_action=$(jq -r '.nextAction' "$plan")" >> "$GITHUB_OUTPUT"
 
@@ -142,6 +131,11 @@ jobs:
           persist-credentials: false
           submodules: false
 
+      - name: Set up exact release tooling
+        uses: ./.github/actions/setup-release-tool
+        with:
+          tooling-sha: ${{ needs.plan.outputs.tooling_sha }}
+
       - name: Require approved tooling to remain on main
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
@@ -160,7 +154,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          python3 scripts/infra/release/release.py check-environment \
+          dotnet run --no-build --no-restore --configuration Release \
+            --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj -- \
+            check-environment \
             --name release-tag \
             --default-branch "$DEFAULT_BRANCH" \
             --output "$RUNNER_TEMP/release-tag-environment.json"
@@ -174,14 +170,40 @@ jobs:
       - name: Create or reconcile tag and draft
         env:
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          RELEASE_GIT_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          EXPECTED_PLAN_ID: ${{ needs.plan.outputs.plan_id }}
         run: |
           set -euo pipefail
           test -n "$GH_TOKEN"
-          gh auth setup-git
-          python3 scripts/infra/release/release.py finish create-draft \
+          test -n "$EXPECTED_PLAN_ID"
+          auth_dir="$RUNNER_TEMP/release-git-auth"
+          askpass="$auth_dir/askpass.sh"
+          mkdir -p "$auth_dir"
+          cat > "$askpass" <<'EOF'
+          #!/bin/sh
+          case "$1" in
+            *Username*) printf '%s\n' 'x-access-token' ;;
+            *Password*) printf '%s\n' "$RELEASE_GIT_TOKEN" ;;
+            *) exit 1 ;;
+          esac
+          EOF
+          chmod 700 "$askpass"
+          cleanup() {
+            rm -f "$askpass"
+            rmdir "$auth_dir" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          export GIT_ASKPASS="$askpass"
+          export GIT_TERMINAL_PROMPT=0
+          release_tool=(
+            dotnet run --no-build --no-restore --configuration Release
+            --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --
+          )
+          "${release_tool[@]}" finish create-draft \
             --plan "$RUNNER_TEMP/release-finish/plan.json" \
+            --expected-plan-id "$EXPECTED_PLAN_ID" \
             --output "$RUNNER_TEMP/release-finish/draft-result.json"
-          python3 scripts/infra/release/release.py render-plan \
+          "${release_tool[@]}" render-plan \
             --plan "$RUNNER_TEMP/release-finish/draft-result.json" \
             --format markdown \
             --output "$RUNNER_TEMP/release-finish/draft-result.md"
@@ -220,8 +242,10 @@ jobs:
       pull-requests: read
     outputs:
       tooling_sha: ${{ needs.plan.outputs.tooling_sha }}
+      plan_id: ${{ needs.plan.outputs.plan_id }}
       release_identity: ${{ needs.plan.outputs.release_identity }}
       next_action: ${{ steps.outputs.outputs.next_action }}
+      publication_plan_id: ${{ steps.outputs.outputs.publication_plan_id }}
     steps:
       - name: Checkout approved tooling revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -231,6 +255,11 @@ jobs:
           fetch-tags: true
           persist-credentials: false
           submodules: false
+
+      - name: Set up exact release tooling
+        uses: ./.github/actions/setup-release-tool
+        with:
+          tooling-sha: ${{ needs.plan.outputs.tooling_sha }}
 
       - name: Require approved tooling to remain on main
         env:
@@ -253,12 +282,19 @@ jobs:
       - name: Audit publication
         env:
           GH_TOKEN: ${{ github.token }}
+          EXPECTED_PLAN_ID: ${{ needs.plan.outputs.plan_id }}
         run: |
           set -euo pipefail
-          python3 scripts/infra/release/release.py finish plan-publication \
+          test -n "$EXPECTED_PLAN_ID"
+          release_tool=(
+            dotnet run --no-build --no-restore --configuration Release
+            --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --
+          )
+          "${release_tool[@]}" finish plan-publication \
             --plan "$RUNNER_TEMP/release-finish/plan.json" \
+            --expected-plan-id "$EXPECTED_PLAN_ID" \
             --output "$RUNNER_TEMP/release-finish/publication-plan.json"
-          python3 scripts/infra/release/release.py render-plan \
+          "${release_tool[@]}" render-plan \
             --plan "$RUNNER_TEMP/release-finish/publication-plan.json" \
             --format markdown \
             --output "$RUNNER_TEMP/release-finish/publication-plan.md"
@@ -269,7 +305,9 @@ jobs:
         run: |
           set -euo pipefail
           next_action=$(jq -r '.nextAction' "$RUNNER_TEMP/release-finish/publication-plan.json")
+          publication_plan_id=$(jq -r '.publicationPlanId' "$RUNNER_TEMP/release-finish/publication-plan.json")
           echo "next_action=$next_action" >> "$GITHUB_OUTPUT"
+          echo "publication_plan_id=$publication_plan_id" >> "$GITHUB_OUTPUT"
           case "$next_action" in
             publish|closeout) ;;
             *)
@@ -311,6 +349,11 @@ jobs:
           persist-credentials: false
           submodules: false
 
+      - name: Set up exact release tooling
+        uses: ./.github/actions/setup-release-tool
+        with:
+          tooling-sha: ${{ needs.plan-publication.outputs.tooling_sha }}
+
       - name: Require approved tooling to remain on main
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
@@ -341,7 +384,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          python3 scripts/infra/release/release.py check-environment \
+          dotnet run --no-build --no-restore --configuration Release \
+            --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj -- \
+            check-environment \
             --name release-publish \
             --default-branch "$DEFAULT_BRANCH" \
             --output "$RUNNER_TEMP/release-publish-environment.json"
@@ -349,14 +394,25 @@ jobs:
       - name: Publish or reconcile GitHub Release
         env:
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          EXPECTED_PLAN_ID: ${{ needs.plan.outputs.plan_id }}
+          EXPECTED_PUBLICATION_PLAN_ID: ${{ needs.plan-publication.outputs.publication_plan_id }}
         run: |
           set -euo pipefail
+          test -n "$GH_TOKEN"
+          test -n "$EXPECTED_PLAN_ID"
+          test -n "$EXPECTED_PUBLICATION_PLAN_ID"
           mkdir -p "$RUNNER_TEMP/release-finish/result"
-          python3 scripts/infra/release/release.py finish publish \
+          release_tool=(
+            dotnet run --no-build --no-restore --configuration Release
+            --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --
+          )
+          "${release_tool[@]}" finish publish \
             --plan "$RUNNER_TEMP/release-finish/original/plan.json" \
+            --expected-plan-id "$EXPECTED_PLAN_ID" \
             --publication "$RUNNER_TEMP/release-finish/publication/publication-plan.json" \
+            --expected-publication-plan-id "$EXPECTED_PUBLICATION_PLAN_ID" \
             --output "$RUNNER_TEMP/release-finish/result/publish-result.json"
-          python3 scripts/infra/release/release.py render-plan \
+          "${release_tool[@]}" render-plan \
             --plan "$RUNNER_TEMP/release-finish/result/publish-result.json" \
             --format markdown \
             --output "$RUNNER_TEMP/release-finish/result/publish-result.md"
@@ -406,6 +462,11 @@ jobs:
           persist-credentials: false
           submodules: false
 
+      - name: Set up exact release tooling
+        uses: ./.github/actions/setup-release-tool
+        with:
+          tooling-sha: ${{ needs.plan.outputs.tooling_sha }}
+
       - name: Require approved tooling to remain on main
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
@@ -427,12 +488,20 @@ jobs:
       - name: Reconcile milestones and dispatch release notes
         env:
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          EXPECTED_PLAN_ID: ${{ needs.plan.outputs.plan_id }}
         run: |
           set -euo pipefail
-          python3 scripts/infra/release/release.py finish closeout \
+          test -n "$GH_TOKEN"
+          test -n "$EXPECTED_PLAN_ID"
+          release_tool=(
+            dotnet run --no-build --no-restore --configuration Release
+            --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --
+          )
+          "${release_tool[@]}" finish closeout \
             --plan "$RUNNER_TEMP/release-finish/plan.json" \
+            --expected-plan-id "$EXPECTED_PLAN_ID" \
             --output "$RUNNER_TEMP/release-finish/closeout-result.json"
-          python3 scripts/infra/release/release.py render-plan \
+          "${release_tool[@]}" render-plan \
             --plan "$RUNNER_TEMP/release-finish/closeout-result.json" \
             --format markdown \
             --output "$RUNNER_TEMP/release-finish/closeout-result.md"

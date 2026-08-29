@@ -1,8 +1,7 @@
 """Safety guards for reviewed release-summary prose.
 
 Ported from the retired ``release-publish`` skill's GitHub Release "teaser"
-guards (``assemble_release_body`` in
-``.agents/skills/release-publish/scripts/release_github.py`` on ``main``):
+guards:
 no code fence, no CVE/security/vulnerability claims, no unwritten
 placeholder, and a real plain-language opening sentence. Two rules are new
 here, specific to the managed-marker design the teaser never had: prose must
@@ -18,15 +17,13 @@ from __future__ import annotations
 
 import re
 
-from . import common
-
-_gh = common.import_release_github()
+from . import github
 
 MANAGED_MARKERS = (
-    _gh.SUMMARY_START_MARKER,
-    _gh.SUMMARY_END_MARKER,
-    _gh.GENERATED_START_MARKER,
-    _gh.GENERATED_END_MARKER,
+    github.SUMMARY_START_MARKER,
+    github.SUMMARY_END_MARKER,
+    github.GENERATED_START_MARKER,
+    github.GENERATED_END_MARKER,
 )
 RELEASE_LINKS_MARKER = "<!-- RELEASE_LINKS -->"
 

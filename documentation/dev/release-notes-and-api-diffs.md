@@ -1342,9 +1342,8 @@ broader format churn. `scripts/infra/docs/release_notes/` is the whole feature's
   injected) that builds the `shipments` array, and `validate_shipment(s)`, the
   structural guard applied both when writing and when the updater reads it back.
 - **`safety.py`** — the prose-safety gate, ported in spirit from the retired
-  `release-publish` skill's GitHub Release "teaser" guard (`assemble_release_body` in
-  `.agents/skills/release-publish/scripts/release_github.py` on the pre-consolidation
-  `main`): no code fence, no CVE/security/vulnerability wording, no unwritten
+  `release-publish` skill's pre-consolidation GitHub Release "teaser" guard:
+  no code fence, no CVE/security/vulnerability wording, no unwritten
   placeholder, and a real opening sentence — plus a design-specific rule the teaser
   never needed: prose must never contain the literal text of a managed marker (an
   untrusted PR title an agent paraphrased, or a compromised prose.json entry, could
@@ -1360,7 +1359,7 @@ broader format churn. `scripts/infra/docs/release_notes/` is the whole feature's
   preflights (skip — never an error — a release that does not exist, is still an
   **unpublished draft** (see below), has no managed markers at all, i.e. a historical
   release published before this feature, or is already current), re-reads every
-  planned release immediately before the first write as a race barrier (`gh`/the REST
+  planned release immediately before the first write as a race barrier (the REST
   API has no conditional PATCH), writes, then re-reads and requires the stored body to
   equal the intended body exactly. Any preflight or race failure aborts the **whole
   batch** before a single write.
@@ -1375,15 +1374,15 @@ with an explicit `skipped` result/detail; it converges once GitHub's `release`
 (published) event fires — the workflow's own `release: types: [published]` trigger —
 or on this workflow's next scheduled/dispatched run after that, whichever comes first.
 
-**Markers.** The updater imports — never redefines — the managed markers and body
-helpers from `scripts/infra/release/release_github.py` (`SUMMARY_START_MARKER`,
-`SUMMARY_END_MARKER`, `GENERATED_START_MARKER`, `GENERATED_END_MARKER`,
-`has_managed_markers`, `replace_managed_summary`, `GhCliGitHubClient`) — the same module
-Finish uses to compose a new release's initial body (empty summary region + GitHub's
-generated notes). The two paths can therefore never diverge on marker bytes. Finish
-always publishes immediately with generated notes only; the reviewed summary converges
-later, whenever its release-notes PR merges — there is no release-critical deadline for
-it, and a release may indefinitely carry generated notes only.
+**Markers.** The exact-summary package owns the four managed marker constants and
+body helpers in `scripts/infra/docs/release_notes/github.py`. Its minimal REST client
+updates only published release bodies without a `gh` CLI dependency. The C# Finish
+tool carries the same literal marker contract when it composes a new release's initial
+body (empty summary region + GitHub's generated notes); C# contract tests protect those
+bytes. Finish always publishes immediately with generated notes only; the reviewed
+summary converges later, whenever its release-notes PR merges — there is no
+release-critical deadline for it, and a release may indefinitely carry generated notes
+only.
 
 **Compatibility.** Bumping `_DATA_JSON_FORMAT_VERSION` (3 → 4) to add `shipments` is
 deliberately the *smallest* compatible upgrade, and change detection is a THREE-way

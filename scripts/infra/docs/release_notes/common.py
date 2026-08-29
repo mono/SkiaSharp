@@ -1,24 +1,18 @@
-"""Shared grammar, tag parsing, and release_github import glue.
+"""Shared exact-release tag grammar and parsing.
 
-This module has no side effects other than the deliberate ``sys.path``
-insertion needed to reach ``scripts/infra/release/release_github.py`` (see
-:func:`import_release_github`). It never shells out to ``git`` itself — every
-function here is a pure computation over already-fetched strings, so the
-whole package stays independently unit testable without a real repository.
+Every function here is a pure computation over already-fetched strings, so
+the package stays independently unit testable without a real repository.
 """
 
 from __future__ import annotations
 
 import re
-import sys
 from dataclasses import dataclass
-from pathlib import Path
 
 # The public GitHub repository these exact shipments and their GitHub Release
-# summaries belong to. Matches ``scripts/infra/release/release_github.py``'s
-# ``GITHUB_REPOSITORY`` and ``scripts/infra/docs/release-notes-data.py``'s
-# ``REPO`` -- kept as a separate literal here (rather than importing either)
-# so this package has no required import-time dependency on either sibling.
+# summaries belong to. Matches ``scripts/infra/docs/release-notes-data.py``'s
+# ``REPO`` -- kept as a separate literal here so this package has no required
+# import-time dependency on that sibling.
 REPO = "mono/SkiaSharp"
 
 # Bump together with ``scripts/infra/docs/release-notes-data.py``'s
@@ -123,29 +117,3 @@ def parse_tag(tag: str) -> ParsedTag | None:
         hotfix=hotfix_i,
         sort_key=sort_key,
     )
-
-
-_RELEASE_DIR = Path(__file__).resolve().parents[2] / "release"
-
-
-def import_release_github():
-    """Import ``scripts/infra/release/release_github.py`` by path.
-
-    The exact-summary updater must use exactly the managed markers and body
-    helpers ``release_github.py`` defines (``SUMMARY_START_MARKER`` etc.,
-    ``has_managed_markers``, ``replace_managed_summary``,
-    ``GhCliGitHubClient``) -- the same module Finish uses to compose a new
-    release's initial body -- so the two paths can never diverge on marker
-    bytes. This mirrors the sys.path convention ``scripts/infra/release``'s
-    own tests use for importing sibling modules, and the ``importlib``
-    convention ``release-notes-render.py`` uses for importing
-    ``release-notes-data.py``: insert the directory once, then import
-    normally so ``release_github``'s own bare ``import release_common`` and
-    ``from release_model import RELEASE_TAG_RE`` resolve.
-    """
-
-    if str(_RELEASE_DIR) not in sys.path:
-        sys.path.insert(0, str(_RELEASE_DIR))
-    import release_github  # noqa: PLC0415 -- see docstring for why this is late.
-
-    return release_github

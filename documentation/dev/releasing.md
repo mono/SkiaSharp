@@ -24,6 +24,12 @@ Every GitHub write follows a read-only plan and a protected environment
 approval. Rerunning a workflow reconciles matching partial state instead of
 duplicating it.
 
+The workflows build `utils/SkiaSharp.ReleaseTool` from the exact audited
+checkout using `global.json` and locked NuGet dependencies. The standalone C#
+CLI uses source-generated `System.Text.Json`, NuGet SDK APIs for public package
+receipts and signatures, and Octokit for GitHub reads and writes. It does not
+bootstrap or download native Skia artifacts and does not invoke the `gh` CLI.
+
 ## Required repository configuration
 
 Configure these protected GitHub environments:
@@ -54,6 +60,12 @@ maintainer rather than `github-actions[bot]`; that path first requires the exact
 tag and published release and can only change milestones or dispatch convergent
 workflows. Replacing the broad token with a narrowly scoped GitHub App remains
 the required long-term hardening and must not change release logic.
+
+Release checkouts never persist credentials. Approved branch/tag jobs expose
+the PAT to a temporary noninteractive `GIT_ASKPASS` helper only while the C#
+command runs, then remove the helper. Octokit uses the same approved PAT for the
+cross-repository `mono/skia` Prepare ref and other GitHub writes; environment
+checks use only job-scoped `github.token`.
 
 GitHub returns draft releases only to callers with push access. The two
 read-only Finish planning jobs therefore receive job-scoped `contents: write`
@@ -99,7 +111,10 @@ The read-only plan determines:
 
 The plan records the exact tooling, base, and Skia commits. The
 `release-branching` job waits for approval, checks out that exact tooling
-revision, revalidates the refs, and then applies the plan.
+revision, revalidates the refs, and then applies the plan. Every plan carries a
+new `planId` GUID. The workflow exports it separately and supplies
+`--expected-plan-id` to every write or derived-plan command, so an artifact from
+another run cannot be substituted.
 
 ### Branch types
 
@@ -140,12 +155,12 @@ auto-merges it.
 
 The final summary contains:
 
+- the plan GUID and next recovery action;
 - release and maintenance branches;
-- exact SkiaSharp and Skia commits;
-- base SkiaSharp/HarfBuzzSharp versions;
-- prerelease label;
-- bump PR URL;
-- links to Build 1642 and Tests 1630.
+- exact SkiaSharp base and Skia commits;
+- every planned or reconciled operation;
+- stable bump PR state and URL when applicable;
+- warnings.
 
 For previews and RCs, the final public package version is not known until the
 build revision is assigned. Prepare reports the base plus label, not a guessed
@@ -227,8 +242,7 @@ The first Finish plan shows:
 - every required public package and version;
 - the package source commit and release branch;
 - the exact tag and previous release tag;
-- tag/draft operations and conflicts;
-- a preliminary milestone closeout.
+- tag/draft operations and conflicts.
 
 The `release-tag` environment then gates:
 
@@ -248,7 +262,8 @@ effects.
 The `release-publish` environment gates publication of that exact draft.
 The approved publication artifact contains the remote draft body hash; the write
 job fails if the draft body or managed-marker state changed while approval was
-pending.
+pending. It also carries a distinct `publicationPlanId` GUID; publication
+requires both `--expected-plan-id` and `--expected-publication-plan-id`.
 
 ### Automatic closeout
 
@@ -304,9 +319,26 @@ Both workflows are reconciliation based:
   are reported as done;
 - conflicting immutable state is blocked.
 
-The release CLI under `scripts/infra/release/` exposes the same plan/apply
-operations for diagnostics. Never edit a plan JSON or execute a command copied
-from it; regenerate the plan from current state.
+The C# CLI exposes the same plan/apply operations for diagnostics. Build the
+exact checkout first:
+
+```text
+dotnet restore utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --locked-mode
+dotnet build utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --configuration Release --no-restore
+dotnet run --no-build --no-restore --configuration Release \
+  --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj -- \
+  finish plan --version 4.152.0 --output finish-plan.json
+```
+
+Use `render-plan --plan <artifact> --format json|markdown --output <path>` to
+strictly validate and render any release artifact. Never edit artifact JSON;
+regenerate it from current state. Recovery commands that consume a plan must
+receive its exact `planId`; publication additionally requires the exact
+`publicationPlanId`.
+
+The two JSON files retained under `scripts/infra/release/` are runtime policy
+inputs for the C# receipt verifier: the public package anchors and trusted
+signing certificates. They are not Python release tooling.
 
 ## Related documentation
 

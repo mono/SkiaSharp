@@ -46,10 +46,13 @@ python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
 
 The planner:
 
-1. invokes the repository release CLI's public NuGet receipt verification;
-2. derives the exact HarfBuzzSharp version;
-3. pins both package versions in every runner command;
-4. reports available and host-inapplicable coverage.
+1. locked-restores and builds the standalone C# release tool at the current
+   checkout without downloading native Skia artifacts;
+2. invokes its read-only public NuGet receipt verification using NuGet SDK APIs
+   and `GH_TOKEN`/`GITHUB_TOKEN` for GitHub state;
+3. derives the exact HarfBuzzSharp version;
+4. pins both package versions in every runner command;
+5. reports available and host-inapplicable coverage.
 
 Render:
 
