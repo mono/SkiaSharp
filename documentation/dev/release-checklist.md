@@ -786,7 +786,9 @@ using ReleaseChecklist;
 using ReleaseChecklist.Git;
 using ReleaseChecklist.GitHub;
 using ReleaseChecklist.NuGet;
+
 enum StepStatus { Done, NotDone, Blocked, Skipped }
+
 [Flags]
 enum ReleaseCapability
 {
@@ -797,6 +799,7 @@ enum ReleaseCapability
     Publish = 8,
     Closeout = 16,
 }
+
 var options = ReleaseOptions.Parse(args);
 var builder = ReleaseChecklist.CreateBuilder(options);
 var local = builder.AddGitRepository(builder.RepositoryRoot, "origin");
@@ -804,102 +807,114 @@ var github = builder.AddGitHubRepository("mono", "SkiaSharp");
 var skia = builder.AddGitHubRepository("mono", "skia");
 var nuget = builder.AddNuGetSource("https://api.nuget.org/v3/index.json");
 var found = await ReleaseDiscovery.DiscoverAsync(options, local, github, nuget, builder.CancellationToken);
-builder.Root("release", root =>
+
+var root = builder.Root("release");
+var prepare = root.Step("prepare-repository", Check: CheckResult.Done);
+var validatedBase = prepare.Step(
+    "validate-base",
+    Check: ctx => SkiaSharpPolicy.CheckBaseAsync(local, found, ctx));
+var maintenance = validatedBase.GitBranch(
+    "maintenance-branch", local, found.MaintenanceBranch, found.MaintenanceBaseRef,
+    expectedTarget: found.MaintenanceBaseSha,
+    configure: ctx => SkiaSharpVersionFiles.ConfigureMaintenance(ctx, found),
+    requiredWhen: found.Identity.RequiresMaintenanceBranch,
+    capability: ReleaseCapability.Branching);
+var skiaBranch = maintenance.GitHubBranch(
+    "mono-skia-release-branch", skia, found.ReleaseBranch, found.SkiaGitlink,
+    acceptExisting: actual => SkiaSharpPolicy.ValidSkiaReleaseBranch(found, actual),
+    capability: ReleaseCapability.Branching);
+var releaseBranch = skiaBranch.GitBranch(
+    "skiasharp-release-branch", local, found.ReleaseBranch, found.BaseSha,
+    configure: ctx => SkiaSharpVersionFiles.ConfigureRelease(ctx, found),
+    acceptExisting: actual => SkiaSharpPolicy.ValidReleaseBranch(found, actual),
+    capability: ReleaseCapability.Branching);
+
+if (found.Identity.IsStable)
 {
-    root.Step("prepare-repository", Check: CheckResult.Done).Children(prepare =>
-    prepare.Step("validate-base", Check: ctx => SkiaSharpPolicy.CheckBaseAsync(local, found, ctx)).Children(valid =>
-    valid.GitBranch(
-        "maintenance-branch", local, found.MaintenanceBranch, found.MaintenanceBaseRef,
-        expectedTarget: found.MaintenanceBaseSha,
-        configure: ctx => SkiaSharpVersionFiles.ConfigureMaintenance(ctx, found),
-        requiredWhen: found.Identity.RequiresMaintenanceBranch, capability: ReleaseCapability.Branching)
-    .Children(maintenance => maintenance.GitHubBranch(
-        "mono-skia-release-branch", skia, found.ReleaseBranch, found.SkiaGitlink,
-        acceptExisting: actual => SkiaSharpPolicy.ValidSkiaReleaseBranch(found, actual),
-        capability: ReleaseCapability.Branching)
-    .Children(skiaBranch => skiaBranch.GitBranch(
-        "skiasharp-release-branch", local, found.ReleaseBranch, found.BaseSha,
-        configure: ctx => SkiaSharpVersionFiles.ConfigureRelease(ctx, found),
-        acceptExisting: actual => SkiaSharpPolicy.ValidReleaseBranch(found, actual),
-        capability: ReleaseCapability.Branching)
-    .Children(releaseBranch =>
-    {
-        if (found.Identity.IsStable)
-        {
-            releaseBranch.Step("stable-bump-follow-up", Check: CheckResult.Done).Children(stable =>
-            stable.GitBranch(
-                "stable-bump-branch", local, SkiaSharpVersions.NextPreviewBranch(found.Identity),
-                found.MaintenanceBranch, configure: SkiaSharpVersionFiles.ConfigureNextPreview,
-                acceptExisting: SkiaSharpPolicy.ValidStableBumpBranch,
-                capability: ReleaseCapability.Branching)
-            .Children(bump => bump.GitHubPullRequest(
-                "stable-bump-pull-request", github, bump.Name, found.MaintenanceBranch,
-                capability: ReleaseCapability.Branching)
-            .Children(pr => pr.Step("stable-bump-pull-request-merged",
-                Check: ctx => github.CheckPullRequestMergedAsync(pr.Number, ctx)))));
-        }
-        releaseBranch.NuGetPackage("exact-public-nuget-package", nuget, "SkiaSharp", found.PublicVersion)
-        .Children(package => package.NuGetReceipt(
-            "complete-public-receipt", package,
-            configure: receipt => SkiaSharpPackages.RequireCompleteHistoricalReceipt(
-                receipt, found.ReleaseBranch, local, versionsFile: "scripts/VERSIONS.txt",
-                certificates: "scripts/infra/release/trusted-signing-certificates.json"))
-        .Children(receipt =>
-        {
-            var tags = receipt.Step<TagSelection>("effective-and-previous-tags",
-                Check: ctx => SkiaSharpTags.SelectEffectiveAndPreviousAsync(
-                    local, found.Identity, receipt.SourceCommit,
-                    normalizeHistoricalAndNewNames: true, blockOnMultipleCurrentNames: true, ctx));
-            tags.Children(selected => selected.GitTag(
-                "release-tag", local, selected.Value.EffectiveName, receipt.SourceCommit,
-                createPreferredNameWhenAbsent: $"v{found.Identity}", capability: ReleaseCapability.Tag)
-            .Children(tag => tag.GitHubRelease(
-                "release-draft", github, selected.Value.EffectiveName, receipt.SourceCommit,
-                SkiaSharpVersions.ReleaseTitle(found.Identity), found.Identity.IsPrerelease,
-                body: ctx => SkiaSharpReleaseBody.CreateOrMigrateAsync(selected.Value.Previous, receipt, ctx),
-                draft: true, capability: ReleaseCapability.Draft)
-            .Children(draft =>
-            {
-                var observation = draft.Step<PublicationObservation>("publication-observation",
-                    Check: ctx => PublicationObservation.CaptureAsync(
-                        tag: selected.Value.EffectiveName, releaseId: draft.Id,
-                        targetCommit: receipt.SourceCommit, title: SkiaSharpVersions.ReleaseTitle(found.Identity),
-                        prerelease: found.Identity.IsPrerelease, bodySha256: draft.BodySha256,
-                        observedAt: ctx.Clock.UtcNow,
-                        onlyMutation: ReleaseMutation.PublishGitHubRelease, ctx));
-                observation.Children(observed => observed.GitHubRelease(
-                    "publish-release", github, draft.Id, publishUsing: observed.Value,
-                    capability: ReleaseCapability.Publish)
-                .Children(published => published.Step("closeout", Check: CheckResult.Done).Children(closeout =>
-                {
-                    closeout.Milestone(
-                        "public-schedule", github, ChromiumSchedule.Public,
-                        SkiaSharpMilestones.CurrentAndNextTwo, staleCreateCutoff: TimeSpan.FromDays(30),
-                        capability: ReleaseCapability.Closeout)
-                    .Children(schedule => schedule.Step("reconcile-and-rollover",
-                        Check: ctx => SkiaSharpReconciliation.CheckAsync(
-                            github, found, receipt, selected.Value.Previous, ctx),
-                        Action: ctx => SkiaSharpReconciliation.ApplyAsync(github, found, ctx),
-                        capability: ReleaseCapability.Closeout));
-                    closeout.WorkflowDispatch(
-                        "release-notes", github, "update-release-notes.lock.yml", "main",
-                        inputs: SkiaSharpReleaseNotes.DispatchInputs(found.Identity),
-                        satisfiedWhen: SkiaSharpReleaseNotes.ExactShipmentQueuedOrRendered,
-                        capability: ReleaseCapability.Closeout)
-                    .Children(notes => notes.GitHubRelease(
-                        "reviewed-summary", github, published.Id,
-                        body: SkiaSharpReleaseNotes.ReviewedSummary,
-                        capability: ReleaseCapability.Closeout));
-                    closeout.WorkflowDispatch(
-                        "issue-template", github, "auto-update-issue-template-versions.yml", "main",
-                        when: found.Identity.IsStable,
-                        satisfiedWhen: SkiaSharpIssueTemplates.ContainsRelease,
-                        capability: ReleaseCapability.Closeout);
-                })));
-            })));
-        }));
-    }))));
-});
+    var stableBump = releaseBranch.Group("stable-bump-follow-up", Check: CheckResult.Done);
+    var bumpBranch = stableBump.GitBranch(
+        "stable-bump-branch", local, SkiaSharpVersions.NextPreviewBranch(found.Identity),
+        found.MaintenanceBranch, configure: SkiaSharpVersionFiles.ConfigureNextPreview,
+        acceptExisting: SkiaSharpPolicy.ValidStableBumpBranch,
+        capability: ReleaseCapability.Branching);
+    var bumpPullRequest = bumpBranch.GitHubPullRequest(
+        "stable-bump-pull-request", github, bumpBranch.Name, found.MaintenanceBranch,
+        capability: ReleaseCapability.Branching);
+    var bumpMerged = bumpPullRequest.Step(
+        "stable-bump-pull-request-merged",
+        Check: ctx => github.CheckPullRequestMergedAsync(bumpPullRequest.Number, ctx));
+}
+
+// These are siblings because both are created from releaseBranch.
+var publicPackage = releaseBranch.NuGetPackage(
+    "exact-public-nuget-package", nuget, "SkiaSharp", found.PublicVersion);
+var receipt = publicPackage.NuGetReceipt(
+    "complete-public-receipt", publicPackage,
+    configure: value => SkiaSharpPackages.RequireCompleteHistoricalReceipt(
+        value, found.ReleaseBranch, local, versionsFile: "scripts/VERSIONS.txt",
+        certificates: "scripts/infra/release/trusted-signing-certificates.json"));
+var tags = receipt.Step<TagSelection>(
+    "effective-and-previous-tags",
+    Check: ctx => SkiaSharpTags.SelectEffectiveAndPreviousAsync(
+        local, found.Identity, receipt.SourceCommit,
+        normalizeHistoricalAndNewNames: true,
+        blockOnMultipleCurrentNames: true,
+        ctx));
+var tag = tags.GitTag(
+    "release-tag", local, tags.Value.EffectiveName, receipt.SourceCommit,
+    createPreferredNameWhenAbsent: $"v{found.Identity}",
+    capability: ReleaseCapability.Tag);
+var draft = tag.GitHubRelease(
+    "release-draft", github, tags.Value.EffectiveName, receipt.SourceCommit,
+    SkiaSharpVersions.ReleaseTitle(found.Identity), found.Identity.IsPrerelease,
+    body: ctx => SkiaSharpReleaseBody.CreateOrMigrateAsync(tags.Value.Previous, receipt, ctx),
+    draft: true,
+    capability: ReleaseCapability.Draft);
+var observation = draft.Step<PublicationObservation>(
+    "publication-observation",
+    Check: ctx => PublicationObservation.CaptureAsync(
+        tag: tags.Value.EffectiveName,
+        releaseId: draft.Id,
+        targetCommit: receipt.SourceCommit,
+        title: SkiaSharpVersions.ReleaseTitle(found.Identity),
+        prerelease: found.Identity.IsPrerelease,
+        bodySha256: draft.BodySha256,
+        observedAt: ctx.Clock.UtcNow,
+        onlyMutation: ReleaseMutation.PublishGitHubRelease,
+        ctx));
+var published = observation.GitHubRelease(
+    "publish-release", github, draft.Id, publishUsing: observation.Value,
+    capability: ReleaseCapability.Publish);
+var closeout = published.Step("closeout", Check: CheckResult.Done);
+
+var schedule = closeout.Milestone(
+    "public-schedule", github, ChromiumSchedule.Public,
+    SkiaSharpMilestones.CurrentAndNextTwo,
+    staleCreateCutoff: TimeSpan.FromDays(30),
+    capability: ReleaseCapability.Closeout);
+var reconciliation = schedule.Step(
+    "reconcile-and-rollover",
+    Check: ctx => SkiaSharpReconciliation.CheckAsync(
+        github, found, receipt, tags.Value.Previous, ctx),
+    Action: ctx => SkiaSharpReconciliation.ApplyAsync(github, found, ctx),
+    capability: ReleaseCapability.Closeout);
+
+var notes = closeout.WorkflowDispatch(
+    "release-notes", github, "update-release-notes.lock.yml", "main",
+    inputs: SkiaSharpReleaseNotes.DispatchInputs(found.Identity),
+    satisfiedWhen: SkiaSharpReleaseNotes.ExactShipmentQueuedOrRendered,
+    capability: ReleaseCapability.Closeout);
+var reviewedSummary = notes.GitHubRelease(
+    "reviewed-summary", github, published.Id,
+    body: SkiaSharpReleaseNotes.ReviewedSummary,
+    capability: ReleaseCapability.Closeout);
+
+var issueTemplate = closeout.WorkflowDispatch(
+    "issue-template", github, "auto-update-issue-template-versions.yml", "main",
+    when: found.Identity.IsStable,
+    satisfiedWhen: SkiaSharpIssueTemplates.ContainsRelease,
+    capability: ReleaseCapability.Closeout);
+
 return await builder.RunAsync();
 ```
 
