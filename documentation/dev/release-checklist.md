@@ -773,3 +773,467 @@ This section explains provenance only. It does not add release gates, restore ol
 - The #4895 summary updater supplies the normative published-only, preflight-all, batch-drift-barrier, managed-region-only, and post-write-verification behavior captured in step 12.
 - `documentation/dev/releasing.md`, `documentation/dev/versioning.md`, release tooling and tests, historical branches/tags, and PR #4895 are implementation/history references rather than alternative checklists.
 - `update-skia`, native-dependency update, and security-audit processes prepare product source before a release identity is frozen; they are upstream change-management work, not steps in this checklist.
+
+## Illustrative C# checklist definition
+
+This sketch is non-normative and does not prescribe the final SDK API. It illustrates how one host-independent C# definition could compose reusable Git, GitHub, and NuGet primitives with a small amount of SkiaSharp-specific policy code. Handles represent lazily evaluated, compiler-typed values or step outputs; dependencies determine evaluation order without requiring every top-level item to be created at once.
+
+```csharp
+using NuGet.Versioning;
+using ReleaseChecklist;
+using ReleaseChecklist.Git;
+using ReleaseChecklist.GitHub;
+using ReleaseChecklist.NuGet;
+
+var builder = ReleaseChecklistApplication.CreateBuilder(args);
+
+// Inputs are host-independent. Inspecting requires no write capability.
+var releaseIdentity = builder.AddRequiredInput(
+    "release",
+    SkiaSharpVersions.ParseReleaseIdentity);
+
+var releaseBase = builder.AddRequiredInput(
+    "base",
+    GitReference.Parse);
+
+var approvedBaseSha = builder.AddRequiredInput(
+    "base-sha",
+    GitCommit.Parse);
+
+var maintenanceBase = builder.AddOptionalInput(
+    "maintenance-base",
+    GitReference.Parse);
+
+var maintenanceBaseSha = builder.AddOptionalInput(
+    "maintenance-base-sha",
+    GitCommit.Parse);
+
+// A prerelease public version is intentionally unavailable during the first run.
+// Stable can derive its public version from the release identity.
+var suppliedPublicVersion = builder.AddOptionalInput(
+    "public-version",
+    NuGetVersion.Parse);
+
+var publicVersion = builder.AddDerivedValue(
+    "exact-public-version",
+    context => SkiaSharpVersions.ResolvePublicVersion(
+        releaseIdentity.Get(context),
+        suppliedPublicVersion.GetOptional(context)));
+
+var skiasharpGit = builder.AddGitRepository(
+    "skiasharp-git",
+    workingDirectory: builder.RepositoryRoot,
+    remote: "origin");
+
+var skiasharpGitHub = builder.AddGitHubRepository(
+    "skiasharp-github",
+    owner: "mono",
+    name: "SkiaSharp");
+
+var skiaGitHub = builder.AddGitHubRepository(
+    "skia-github",
+    owner: "mono",
+    name: "skia");
+
+var nugetOrg = builder.AddNuGetSource(
+    "nuget-org",
+    "https://api.nuget.org/v3/index.json");
+
+var releaseBranchName = releaseIdentity.Select(
+    value => GitBranchName.Parse($"release/{value}"));
+
+var maintenanceBranchName = releaseIdentity.Select(
+    value => GitBranchName.Parse($"release/{value.Major}.{value.Minor}.x"));
+
+var releaseTagName = releaseIdentity.Select(
+    value => GitTagName.Parse($"v{value}"));
+
+// Top-level 1: establish public repository source state.
+var prepare = builder.AddGroup("prepare-repository");
+
+var inputs = prepare.AddCheck(
+    "validate-release-inputs",
+    async context =>
+    {
+        var identity = releaseIdentity.Get(context);
+        var baseRef = releaseBase.Get(context);
+        var baseSha = approvedBaseSha.Get(context);
+
+        await skiasharpGit.RequireRefAtAsync(baseRef, baseSha, context.CancellationToken);
+        await SkiaSharpPolicy.RequireValidReleaseBaseAsync(
+            skiasharpGit,
+            identity,
+            baseRef,
+            baseSha,
+            maintenanceBase.GetOptional(context),
+            context.CancellationToken);
+        await SkiaSharpPolicy.RequireMaintenanceBaseAsync(
+            skiasharpGit,
+            identity,
+            maintenanceBase.GetOptional(context),
+            maintenanceBaseSha.GetOptional(context),
+            context.CancellationToken);
+
+        return CheckResult.Done(
+            $"Release {identity} will use {baseRef} at {baseSha}.");
+    });
+
+var maintenanceBranch = prepare.AddGitBranch(
+        "maintenance-branch",
+        repository: skiasharpGit,
+        name: maintenanceBranchName,
+        target: context => SkiaSharpPolicy.ResolveMaintenanceCreationCommit(
+            context,
+            releaseIdentity,
+            releaseBase,
+            approvedBaseSha,
+            maintenanceBase,
+            maintenanceBaseSha))
+    .AcceptExistingWhen((context, actual) =>
+        SkiaSharpPolicy.IsValidMaintenanceBranchAsync(
+            context,
+            actual,
+            releaseIdentity,
+            approvedBaseSha))
+    .When(context => SkiaSharpPolicy.RequiresMaintenanceBranch(
+        releaseIdentity.Get(context)))
+    .DependsOn(inputs)
+    .RequiresCapability(ReleaseCapability.Branching);
+
+var skiaCommit = prepare.AddDerivedValue(
+    "skia-gitlink",
+    async context => await skiasharpGit.ReadGitlinkAsync(
+        approvedBaseSha.Get(context),
+        "externals/skia",
+        context.CancellationToken))
+    .DependsOn(inputs);
+
+var skiaReleaseBranch = prepare.AddGitHubBranch(
+        "skia-release-branch",
+        repository: skiaGitHub,
+        name: releaseBranchName,
+        target: skiaCommit)
+    .DependsOn(inputs)
+    .RequiresCapability(ReleaseCapability.Branching);
+
+var skiasharpReleaseBranch = prepare.AddGitBranch(
+        "skiasharp-release-branch",
+        repository: skiasharpGit,
+        name: releaseBranchName,
+        target: approvedBaseSha,
+        configureCommit: async context =>
+        {
+            await SkiaSharpVersionFiles.SetReleaseIdentityAsync(
+                context.Worktree,
+                releaseIdentity.Get(context),
+                context.CancellationToken);
+
+            return GitCommitDescription.Create(
+                $"Bump the version to {releaseIdentity.Get(context)}",
+                trailers:
+                [
+                    $"Release-Base: {approvedBaseSha.Get(context)}",
+                    $"Release-Skia: {skiaCommit.Get(context)}",
+                ]);
+        })
+    .AcceptExistingWhen((context, actual) =>
+        SkiaSharpPolicy.IsValidExistingReleaseBranchAsync(
+            context,
+            actual,
+            releaseIdentity,
+            approvedBaseSha,
+            skiaCommit))
+    .DependsOn(skiaReleaseBranch)
+    .RequiresCapability(ReleaseCapability.Branching);
+
+// The bump PR is a sibling follow-up. Its human merge is observable but is not
+// automatically made a prerequisite of the public NuGet boundary.
+var stableBump = prepare.AddGroup("stable-bump")
+    .When(context => SkiaSharpPolicy.RequiresStableBump(
+        releaseIdentity.Get(context)));
+
+var nextVersion = stableBump.AddDerivedValue(
+    "next-version",
+    context => SkiaSharpVersions.NextDevelopmentVersion(
+        releaseIdentity.Get(context),
+        skiasharpGit.ReadVersions(maintenanceBranchName.Get(context))))
+    .DependsOn(maintenanceBranch, skiasharpReleaseBranch);
+
+var bumpBranch = stableBump.AddGitBranch(
+        "stable-bump-branch",
+        repository: skiasharpGit,
+        name: nextVersion.Select(value => GitBranchName.Parse($"bump-version-{value.SkiaSharp}")),
+        target: maintenanceBranchName,
+        configureCommit: context => SkiaSharpVersionFiles.SetNextPreviewAsync(
+            context.Worktree,
+            nextVersion.Get(context),
+            context.CancellationToken))
+    .AcceptExistingWhen((context, actual) =>
+        SkiaSharpPolicy.IsValidStableBumpBranchAsync(
+            context,
+            actual,
+            nextVersion,
+            maintenanceBranchName))
+    .DependsOn(maintenanceBranch, skiasharpReleaseBranch)
+    .RequiresCapability(ReleaseCapability.Branching);
+
+var bumpPullRequest = stableBump.AddGitHubPullRequest(
+        "stable-bump-pull-request",
+        repository: skiasharpGitHub,
+        head: bumpBranch,
+        @base: maintenanceBranchName,
+        title: nextVersion.Select(value => $"Bump to {value.SkiaSharp} after release"))
+    .DependsOn(bumpBranch)
+    .RequiresCapability(ReleaseCapability.Branching);
+
+stableBump.AddWait(
+        "stable-bump-human-merge",
+        until: context => SkiaSharpPolicy.StableBumpHasMergedAsync(
+            context,
+            nextVersion,
+            maintenanceBranchName))
+    .DependsOn(bumpPullRequest);
+
+// Top-level 2: the only opaque external boundary.
+var publicBoundary = builder.AddGroup("public-nuget-boundary")
+    .DependsOn(skiasharpReleaseBranch);
+
+var publicVersionKnown = publicBoundary.AddWait(
+    "exact-public-version-known",
+    until: context => publicVersion.TryGet(context) is not null,
+    waitingMessage: "Supply --public-version after the external release process publishes the exact package.");
+
+var skiasharpPackage = publicBoundary.AddNuGetPackage(
+        "skiasharp-package",
+        source: nugetOrg,
+        packageId: "SkiaSharp",
+        version: publicVersion)
+    .WaitUntilListed()
+    .DependsOn(publicVersionKnown);
+
+var publicReceipt = publicBoundary.AddNuGetReceipt(
+        "complete-public-receipt",
+        primaryPackage: skiasharpPackage,
+        configure: receipt =>
+        {
+            receipt.RequireCatalogHash("SHA512");
+            receipt.RequireRepositoryType("git");
+            receipt.RequireSourceBranch(releaseBranchName);
+            receipt.RequireSourceCommitContainedBy(skiasharpGit, releaseBranchName);
+            receipt.AddFamilyFromFile(
+                skiasharpGit,
+                sourceCommit: receipt.SourceCommit,
+                path: "scripts/VERSIONS.txt",
+                configure: SkiaSharpPackages.ConfigureHistoricalFamily);
+            receipt.AddSignatureAnchor("SkiaSharp");
+            receipt.AddSignatureAnchor("SkiaSharp.HarfBuzz");
+            receipt.AddSignatureAnchor("HarfBuzzSharp");
+            receipt.UseTrustedCertificates("scripts/infra/release/trusted-signing-certificates.json");
+        })
+    .DependsOn(skiasharpPackage);
+
+// Top-level 3: publish the public GitHub repository release.
+var publish = builder.AddGroup("publish-github-release")
+    .DependsOn(publicReceipt);
+
+var currentTag = publish.AddGitTagForIdentity(
+        "current-release-tag",
+        repository: skiasharpGit,
+        identity: releaseIdentity,
+        preferredName: releaseTagName,
+        normalize: SkiaSharpTags.NormalizeHistoricalOrCurrent,
+        target: publicReceipt.SourceCommit)
+    .AcceptHistoricalNameWhenTargetMatches()
+    .BlockOnMultipleNamesForSameIdentity()
+    .DependsOn(publicReceipt);
+
+var previousTag = publish.AddGitTagSelection(
+        "previous-release-tag",
+        repository: skiasharpGit,
+        currentIdentity: releaseIdentity,
+        normalize: SkiaSharpTags.NormalizeHistoricalOrCurrent,
+        excludeCurrentIdentity: true);
+
+var releaseTag = publish.AddGitTag(
+        "release-tag",
+        repository: skiasharpGit,
+        name: currentTag.EffectiveName,
+        target: publicReceipt.SourceCommit)
+    .CreatePreferredNameOnlyWhenIdentityHasNoExistingTag(releaseTagName)
+    .DependsOn(currentTag)
+    .RequiresCapability(ReleaseCapability.Tag);
+
+var releaseDraft = publish.AddGitHubRelease(
+        "release-draft",
+        repository: skiasharpGitHub,
+        tag: currentTag.EffectiveName,
+        target: publicReceipt.SourceCommit,
+        title: releaseIdentity.Select(SkiaSharpVersions.ReleaseTitle),
+        prerelease: releaseIdentity.Select(value => value.IsPrerelease),
+        body: context => SkiaSharpReleaseBody.CreateOrMigrateAsync(
+            context,
+            previousTag,
+            publicReceipt))
+    .AsDraft()
+    .DependsOn(releaseTag, previousTag)
+    .RequiresCapability(ReleaseCapability.Draft);
+
+var publicationObservation = publish.AddObservation(
+        "publication-observation",
+        tag: currentTag.EffectiveName,
+        releaseId: releaseDraft.Id,
+        targetCommit: publicReceipt.SourceCommit,
+        title: releaseIdentity.Select(SkiaSharpVersions.ReleaseTitle),
+        prerelease: releaseIdentity.Select(value => value.IsPrerelease),
+        bodySha256: releaseDraft.BodySha256,
+        observedAt: builder.Clock.UtcNow,
+        mutation: ReleaseMutation.PublishGitHubRelease)
+    .DependsOn(releaseDraft);
+
+var publishedRelease = publish.AddGitHubReleasePublication(
+        "publish-release",
+        release: releaseDraft,
+        expected: publicationObservation)
+    .DependsOn(publicationObservation)
+    .RequiresCapability(ReleaseCapability.Publish);
+
+// Top-level 4: converge public repository state after publication.
+var closeout = builder.AddGroup("closeout")
+    .DependsOn(publishedRelease);
+
+var schedules = closeout.AddPublicSchedule(
+        "scheduled-milestones",
+        source: ChromiumSchedule.Public,
+        milestones: context => SkiaSharpMilestones.CurrentAndNextTwo(context))
+    .Expand(SkiaSharpMilestones.CreatePreviewRcStableDefinitions)
+    .CreateOrUpdateGitHubMilestones(skiasharpGitHub, staleCreateCutoff: TimeSpan.FromDays(30))
+    .RequiresCapability(ReleaseCapability.Closeout);
+
+var shippedChanges = closeout.AddCheck(
+        "shipped-change-range",
+        context => SkiaSharpReconciliation.ResolveCompleteRangeAsync(
+            context,
+            skiasharpGit,
+            releaseIdentity,
+            publicReceipt.SourceCommit,
+            previousTag))
+    .DependsOn(publishedRelease);
+
+var assignments = closeout.AddGitHubMilestoneAssignments(
+        "reconcile-pull-requests-and-issues",
+        repository: skiasharpGitHub,
+        milestone: releaseIdentity.Select(value => value.ToString()),
+        items: shippedChanges.Select(SkiaSharpReconciliation.FindPullRequestsAndClosingIssues))
+    .WhenMilestoneExists(otherwise: StepStatus.Skipped)
+    .DependsOn(shippedChanges, schedules)
+    .RequiresCapability(ReleaseCapability.Closeout);
+
+var closedMilestones = closeout.AddGitHubMilestoneRollover(
+        "rollover-and-close-shipped-milestones",
+        repository: skiasharpGitHub,
+        tagNormalizer: SkiaSharpTags.NormalizeHistoricalOrCurrent)
+    .DependsOn(assignments, schedules)
+    .RequiresCapability(ReleaseCapability.Closeout);
+
+var releaseNotes = closeout.AddGitHubWorkflowDispatch(
+        "release-notes",
+        repository: skiasharpGitHub,
+        workflow: "update-release-notes.lock.yml",
+        @ref: "main",
+        inputs: context => SkiaSharpReleaseNotes.DispatchInputs(
+            releaseIdentity.Get(context)))
+    .SatisfiedWhen(context => SkiaSharpReleaseNotes.ExactShipmentIsQueuedOrRenderedAsync(
+        context,
+        releaseIdentity))
+    .RecordReceipt(context => SkiaSharpReleaseNotes.FindDispatchReceiptAsync(
+        context,
+        releaseIdentity))
+    .DependsOn(publishedRelease)
+    .RequiresCapability(ReleaseCapability.Closeout);
+
+var issueTemplate = closeout.AddGitHubWorkflowDispatch(
+        "issue-template",
+        repository: skiasharpGitHub,
+        workflow: "auto-update-issue-template-versions.yml",
+        @ref: "main")
+    .When(context => !releaseIdentity.Get(context).IsPrerelease)
+    .SatisfiedWhen(context => SkiaSharpIssueTemplates.ContainsReleaseAsync(
+        context,
+        releaseIdentity))
+    .RecordReceipt(context => SkiaSharpIssueTemplates.FindDispatchReceiptAsync(
+        context,
+        releaseIdentity))
+    .DependsOn(publishedRelease)
+    .RequiresCapability(ReleaseCapability.Closeout);
+
+var reviewedSummary = closeout.AddStep(
+        "reviewed-release-summary",
+        step => step
+            .Check(context => SkiaSharpReleaseNotes.CheckReviewedSummaryAsync(
+                context,
+                currentTag,
+                releaseIdentity))
+            .Apply(context => SkiaSharpReleaseNotes.ApplyReviewedSummaryAsync(
+                context,
+                currentTag,
+                releaseIdentity))
+            .RequiresCapability(ReleaseCapability.Closeout))
+    .DependsOn(releaseNotes);
+
+closeout.AddCompletion(
+    "repository-release-complete",
+    dependencies:
+    [
+        closedMilestones,
+        releaseNotes,
+        issueTemplate,
+        reviewedSummary,
+    ]);
+
+return await builder.RunAsync();
+```
+
+The SDK implied by this sketch has a deliberately small execution model:
+
+- `AddGroup` and `DependsOn` define hierarchy and ordering.
+- Waiting or Blocked state prevents only dependent descendants from running; independent sibling branches continue. The public NuGet boundary depends on `skiasharp-release-branch`, not `stable-bump-human-merge`.
+- `AddWait` represents an external or human-owned prerequisite without inventing persisted state.
+- Git, GitHub, and NuGet methods are reusable primitives that own existence checks, safe create-if-absent actions, conflicts, retries, and post-action rereads.
+- `Check` and callback parameters are escape hatches for SkiaSharp policy that cannot be generalized honestly.
+- `AcceptExistingWhen` lets a reusable create-if-absent primitive accept a safely advanced existing branch without weakening its default exact-target conflict rule.
+- `RequiresCapability` prevents mutation unless the execution host supplies the explicitly approved capability.
+- Capabilities are operation-scoped: branch creation, tag creation, draft mutation, publication, and closeout are distinct grants. A host may approve multiple exact staged operations together, but `--apply tag` cannot mutate a draft.
+- The publication observation binds tag, release ID, target commit, title, prerelease state, exact body SHA256, observation time, and the single publish mutation; the capability grant separately records actor/approver separation.
+- A run without capabilities is inspection-only.
+- A run with a capability recomputes all dependencies from authoritative state, verifies the approved observation, performs only Ready actions covered by that capability, and checks convergence afterward.
+- `StepStatus.Done`, `Ready`, `Waiting`, `Blocked`, and `Skipped` are sufficient; the repository/GitHub/NuGet state remains the durable state machine.
+- The external organizational build, manual testing, and package publication process is represented only by `exact-public-version-known` and `skiasharp-package`; no internal client or identifier appears in the definition.
+- Building the definition fails immediately for duplicate IDs, unresolved handles, dependency cycles, a child depending on a later impossible parent, a mutating step without a capability, or an action without a check/post-check contract.
+
+For example, an inspection-only local run resuming the existing RC1 branch could remain minimal:
+
+```bash
+dotnet run --project utils/SkiaSharp.ReleaseChecklist -- \
+  --release 4.152.0-rc.1 \
+  --base refs/remotes/origin/release/4.152.0-rc.1 \
+  --base-sha 2357692e1e0fb1d3dc742e74fad4682adf5d4dec
+```
+
+After the opaque external process publishes packages, the same definition resumes by adding the exact public version:
+
+```bash
+dotnet run --project utils/SkiaSharp.ReleaseChecklist -- \
+  --release 4.152.0-rc.1 \
+  --base refs/remotes/origin/release/4.152.0-rc.1 \
+  --base-sha 2357692e1e0fb1d3dc742e74fad4682adf5d4dec \
+  --public-version 4.152.0-rc.1.26426.14
+```
+
+A mutating host supplies one reviewed capability and the immutable observation it approved:
+
+```bash
+dotnet run --project utils/SkiaSharp.ReleaseChecklist -- \
+  ...same exact inputs... \
+  --apply tag \
+  --expect-observation-sha256 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+```
