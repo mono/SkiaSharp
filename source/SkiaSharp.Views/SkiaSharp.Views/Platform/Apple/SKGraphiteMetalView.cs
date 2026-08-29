@@ -129,8 +129,13 @@ namespace SkiaSharp.Views.tvOS
 				using (var restore = new SKAutoCanvasRestore (surface.Canvas, true)) {
 					var info = new SKImageInfo (
 						width, height, SKColorType.Bgra8888, SKAlphaType.Premul);
-					OnPaintSurface (new SKPaintGraphiteSurfaceEventArgs (
-						surface, backendTexture, context, info, info, InsertRecording));
+					var eventArgs = new SKPaintGraphiteSurfaceEventArgs (
+						surface, backendTexture, context, info);
+					try {
+						OnPaintSurface (eventArgs);
+					} finally {
+						contextUnrecoverable |= eventArgs.ContextUnrecoverable;
+					}
 				}
 
 				using var recording = recorder.Snap ()
