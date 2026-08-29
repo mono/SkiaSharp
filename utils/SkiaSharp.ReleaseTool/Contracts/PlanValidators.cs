@@ -456,7 +456,8 @@ namespace SkiaSharp.ReleaseTool.Contracts
 			{
 				{ IsPublished: true } => FinishNextAction.Closeout,
 				{ Exists: true, MarkerState: ManagedMarkerState.Complete }
-					when plan.Tag.Status == FinishState.Done =>
+					when plan.Tag.Status == FinishState.Done &&
+						Finishing.ManagedReleaseMarkers.HasGeneratedNotes(draft.Body!) =>
 					FinishNextAction.PlanPublication,
 				_ => FinishNextAction.CreateDraft,
 			};
@@ -488,7 +489,10 @@ namespace SkiaSharp.ReleaseTool.Contracts
 				PlanValidation.Require(byId.ContainsKey(id), $"operations is missing '{id}'");
 
 			var published = plan.Draft.IsPublished;
-			var ready = plan.Draft.Exists && plan.Draft.MarkerState == ManagedMarkerState.Complete;
+			var ready =
+				plan.Draft.Exists &&
+				plan.Draft.MarkerState == ManagedMarkerState.Complete &&
+				Finishing.ManagedReleaseMarkers.HasGeneratedNotes(plan.Draft.Body!);
 			var expected = new Dictionary<FinishOperationId, PlanOperationStatus>
 			{
 				[FinishOperationId.CreateTag] =
@@ -531,6 +535,194 @@ namespace SkiaSharp.ReleaseTool.Contracts
 			PlanValidation.Require(double.IsFinite(report.DeadlineSeconds) && report.DeadlineSeconds >= 0, "deadlineSeconds must be nonnegative");
 			PlanValidation.Require(report.ElapsedSeconds >= report.DeadlineSeconds, "elapsedSeconds must reach deadlineSeconds");
 			PlanValidation.Require(!string.IsNullOrWhiteSpace(report.Message), "message must not be empty");
+		}
+	}
+
+	public static class FinishCreateDraftResultValidator
+	{
+		public static void Validate(FinishCreateDraftResult result)
+		{
+			FinishArtifactValidation.ValidateHeader(
+				result.SchemaVersion,
+				result.Operation,
+				FinishArtifactOperation.CreateDraft,
+				result.PlanId,
+				result.GeneratedAt,
+				result.ToolingSha);
+			FinishArtifactValidation.ValidateRelease(
+				result.Release,
+				result.SourceCommit,
+				result.ReleaseId,
+				result.ReleaseUrl);
+			FinishArtifactValidation.ValidateBodyHash(
+				result.BodyHashAlgorithm,
+				result.BodyHash);
+			PlanValidation.Require(
+				result.NextAction is FinishNextAction.PlanPublication or FinishNextAction.Closeout,
+				"nextAction must be plan-publication or closeout");
+
+			var operations = FinishArtifactValidation.IndexOperations(result.Operations);
+			PlanValidation.Require(operations.Count == 2, "operations must contain exactly the tag and draft results");
+			PlanValidation.Require(
+				operations.TryGetValue(FinishOperationId.CreateTag, out var tag),
+				"operations is missing create-tag");
+			PlanValidation.Require(
+				tag!.Status is FinishWriteStatus.Created or FinishWriteStatus.Existing,
+				"create-tag status must be created or existing");
+			PlanValidation.Require(
+				operations.TryGetValue(FinishOperationId.CreateDraft, out var draft),
+				"operations is missing create-draft");
+			var expectedAction = draft!.Status == FinishWriteStatus.AlreadyPublished
+				? FinishNextAction.Closeout
+				: FinishNextAction.PlanPublication;
+			PlanValidation.Require(
+				draft.Status is FinishWriteStatus.Created or
+					FinishWriteStatus.Existing or
+					FinishWriteStatus.Migrated or
+					FinishWriteStatus.AlreadyPublished,
+				"create-draft status is invalid");
+			PlanValidation.Require(result.NextAction == expectedAction, "nextAction does not match create-draft status");
+		}
+	}
+
+	public static class FinishPublicationPlanValidator
+	{
+		public static void Validate(FinishPublicationPlan plan)
+		{
+			FinishArtifactValidation.ValidateHeader(
+				plan.SchemaVersion,
+				plan.Operation,
+				FinishArtifactOperation.PlanPublication,
+				plan.PlanId,
+				plan.GeneratedAt,
+				plan.ToolingSha);
+			PlanValidation.Require(plan.PublicationPlanId != Guid.Empty, "publicationPlanId must not be empty");
+			PlanValidation.Require(plan.PublicationPlanId != plan.PlanId, "publicationPlanId must be distinct from planId");
+			FinishArtifactValidation.ValidateRelease(
+				plan.Release,
+				plan.SourceCommit,
+				plan.ReleaseId,
+				plan.ReleaseUrl);
+			FinishArtifactValidation.ValidateBodyHash(
+				plan.BodyHashAlgorithm,
+				plan.BodyHash);
+			PlanValidation.Require(plan.IsDraft != plan.IsPublished, "exactly one of isDraft and isPublished must be true");
+			if (plan.MarkerState == ManagedMarkerState.None)
+				PlanValidation.Require(!plan.HasGeneratedNotes, "markerless releases cannot report generated notes");
+			var expectedReady =
+				plan.IsDraft &&
+				plan.MarkerState == ManagedMarkerState.Complete &&
+				plan.HasGeneratedNotes;
+			PlanValidation.Require(plan.ReadyToPublish == expectedReady, "readyToPublish is inconsistent");
+			var expectedAction = plan.IsPublished
+				? FinishNextAction.Closeout
+				: FinishNextAction.Publish;
+			PlanValidation.Require(plan.NextAction == expectedAction, "nextAction does not match release state");
+			PlanValidation.Require(
+				plan.IsPublished || plan.ReadyToPublish,
+				"an unpublished publication plan must be ready to publish");
+		}
+	}
+
+	public static class FinishPublishResultValidator
+	{
+		public static void Validate(FinishPublishResult result)
+		{
+			FinishArtifactValidation.ValidateHeader(
+				result.SchemaVersion,
+				result.Operation,
+				FinishArtifactOperation.Publish,
+				result.PlanId,
+				result.GeneratedAt,
+				result.ToolingSha);
+			PlanValidation.Require(result.PublicationPlanId != Guid.Empty, "publicationPlanId must not be empty");
+			PlanValidation.Require(result.PublicationPlanId != result.PlanId, "publicationPlanId must be distinct from planId");
+			PlanValidation.Require(result.NextAction == FinishNextAction.Closeout, "nextAction must be closeout");
+			FinishArtifactValidation.ValidateRelease(
+				result.Release,
+				result.SourceCommit,
+				result.ReleaseId,
+				result.ReleaseUrl);
+			FinishArtifactValidation.ValidateBodyHash(
+				result.BodyHashAlgorithm,
+				result.BodyHash);
+
+			var operations = FinishArtifactValidation.IndexOperations(result.Operations);
+			PlanValidation.Require(operations.Count == 1, "operations must contain exactly the publish result");
+			PlanValidation.Require(
+				operations.TryGetValue(FinishOperationId.PublishRelease, out var publish),
+				"operations is missing publish-release");
+			PlanValidation.Require(
+				publish!.Status is FinishWriteStatus.Published or FinishWriteStatus.AlreadyPublished,
+				"publish-release status must be published or already-published");
+		}
+	}
+
+	internal static class FinishArtifactValidation
+	{
+		public static void ValidateHeader(
+			int schemaVersion,
+			FinishArtifactOperation operation,
+			FinishArtifactOperation expectedOperation,
+			Guid planId,
+			DateTimeOffset generatedAt,
+			string toolingSha)
+		{
+			PlanValidation.Require(schemaVersion == 1, "schemaVersion must be 1");
+			PlanValidation.Require(operation == expectedOperation, $"operation must be '{expectedOperation}'");
+			PlanValidation.Require(planId != Guid.Empty, "planId must not be empty");
+			PlanValidation.Require(
+				generatedAt != default && generatedAt.Offset == TimeSpan.Zero,
+				"generatedAt must be a UTC timestamp");
+			PlanValidation.ValidateSha(toolingSha, "toolingSha");
+		}
+
+		public static void ValidateRelease(
+			FinishReleaseInfo release,
+			string sourceCommit,
+			long releaseId,
+			Uri releaseUrl)
+		{
+			var requested = PublicReleaseVersion.Parse(release.Version);
+			var identity = requested.Identity;
+			PlanValidation.Require(release.Identity == identity.Raw, "release.identity is inconsistent");
+			PlanValidation.Require(release.Branch == identity.ReleaseBranch, "release.branch is inconsistent");
+			PlanValidation.Require(release.Raw == identity.Raw, "release.raw is inconsistent");
+			PlanValidation.Require(release.Numeric == identity.Numeric, "release.numeric is inconsistent");
+			PlanValidation.Require(release.Label == identity.Label, "release.label is inconsistent");
+			PlanValidation.Require(release.ReleaseType == identity.ReleaseType, "release.releaseType is inconsistent");
+			PlanValidation.Require(release.Stable == identity.Stable, "release.stable is inconsistent");
+			PlanValidation.Require(release.Title == identity.Title, "release.title is inconsistent");
+			PlanValidation.Require(release.Tag == identity.Tag, "release.tag is inconsistent");
+			PlanValidation.ValidateSha(sourceCommit, "sourceCommit");
+			PlanValidation.Require(releaseId > 0, "releaseId must be positive");
+			PlanValidation.Require(releaseUrl is { IsAbsoluteUri: true }, "releaseUrl must be absolute");
+		}
+
+		public static void ValidateBodyHash(
+			BodyHashAlgorithm algorithm,
+			string hash)
+		{
+			PlanValidation.Require(algorithm == BodyHashAlgorithm.Sha256, "bodyHashAlgorithm must be SHA256");
+			PlanValidation.Require(
+				hash is not null &&
+				hash.Length == 64 &&
+				hash.All(static character => character is >= '0' and <= '9' or >= 'a' and <= 'f'),
+				"bodyHash must be a lowercase 64-hex SHA256");
+		}
+
+		public static Dictionary<FinishOperationId, FinishWriteOperationResult> IndexOperations(
+			IReadOnlyList<FinishWriteOperationResult> operations)
+		{
+			var values = operations ?? throw new ValidationException("operations must not be null");
+			var byId = new Dictionary<FinishOperationId, FinishWriteOperationResult>();
+			foreach (var operation in values)
+			{
+				if (operation is null)
+					throw new ValidationException("operations must not contain null values");
+				PlanValidation.Require(byId.TryAdd(operation.Id, operation), $"operations contains duplicate id '{operation.Id}'");
+			}
+			return byId;
 		}
 	}
 

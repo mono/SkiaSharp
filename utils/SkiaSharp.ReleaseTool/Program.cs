@@ -202,6 +202,8 @@ namespace SkiaSharp.ReleaseTool
 		IPrepareGitHubClient CreateGitHubClient();
 		IFinishGitHubClient CreateFinishGitHubClient() =>
 			throw new NotSupportedException();
+		IFinishGitHubWriteClient CreateFinishGitHubWriteClient() =>
+			throw new NotSupportedException();
 		IPublicReceiptVerifier CreatePublicReceiptVerifier() =>
 			throw new NotSupportedException();
 	}
@@ -223,6 +225,9 @@ namespace SkiaSharp.ReleaseTool
 		public IPrepareGitHubClient CreateGitHubClient() => new OctokitPrepareGitHubClient();
 
 		public IFinishGitHubClient CreateFinishGitHubClient() =>
+			new OctokitFinishGitHubClient();
+
+		public IFinishGitHubWriteClient CreateFinishGitHubWriteClient() =>
 			new OctokitFinishGitHubClient();
 
 		public IPublicReceiptVerifier CreatePublicReceiptVerifier() =>

@@ -28,8 +28,50 @@ namespace SkiaSharp.ReleaseTool.Json
 				ReleaseJsonContext.Strict.FinishPendingReport,
 				FinishPendingReportValidator.Validate);
 
+		public static void Write(string path, FinishCreateDraftResult result) =>
+			Write(
+				path,
+				result,
+				ReleaseJsonContext.Strict.FinishCreateDraftResult,
+				FinishCreateDraftResultValidator.Validate);
+
+		public static void Write(string path, FinishPublicationPlan plan) =>
+			Write(
+				path,
+				plan,
+				ReleaseJsonContext.Strict.FinishPublicationPlan,
+				FinishPublicationPlanValidator.Validate);
+
+		public static void Write(string path, FinishPublishResult result) =>
+			Write(
+				path,
+				result,
+				ReleaseJsonContext.Strict.FinishPublishResult,
+				FinishPublishResultValidator.Validate);
+
 		public static PreparePlan ReadPrepare(string path, Guid expectedPlanId) =>
 			Read(path, ReleaseJsonContext.Strict.PreparePlan, PreparePlanValidator.Validate, expectedPlanId);
+
+		public static FinishPlan ReadFinish(string path, Guid expectedPlanId) =>
+			Read(path, ReleaseJsonContext.Strict.FinishPlan, FinishPlanValidator.Validate, expectedPlanId);
+
+		public static FinishPublicationPlan ReadPublication(
+			string path,
+			Guid expectedPlanId,
+			Guid expectedPublicationPlanId)
+		{
+			var plan = Read(
+				path,
+				ReleaseJsonContext.Strict.FinishPublicationPlan,
+				FinishPublicationPlanValidator.Validate,
+				expectedPlanId);
+			if (plan.PublicationPlanId != expectedPublicationPlanId)
+			{
+				throw new ValidationException(
+					$"publicationPlanId '{plan.PublicationPlanId}' does not match expected correlation id '{expectedPublicationPlanId}'");
+			}
+			return plan;
+		}
 
 		private static void Write<T>(
 			string path,
@@ -80,6 +122,8 @@ namespace SkiaSharp.ReleaseTool.Json
 			var actualPlanId = plan switch
 			{
 				PreparePlan prepare => prepare.PlanId,
+				FinishPlan finish => finish.PlanId,
+				FinishPublicationPlan publication => publication.PlanId,
 				_ => throw new InvalidOperationException($"Unsupported plan type {typeof(T).Name}."),
 			};
 			if (actualPlanId != expectedPlanId)

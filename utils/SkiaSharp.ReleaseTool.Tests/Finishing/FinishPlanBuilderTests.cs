@@ -62,6 +62,30 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 		}
 
 		[Fact]
+		public async Task Marked_draft_with_empty_generated_notes_routes_to_repair()
+		{
+			var body =
+				$"{ManagedReleaseMarkers.SummaryStart}\nreviewed\n{ManagedReleaseMarkers.SummaryEnd}\n" +
+				$"{ManagedReleaseMarkers.GeneratedNotesStart}\n \n{ManagedReleaseMarkers.GeneratedNotesEnd}";
+
+			var plan = await BuildAsync(
+				new FinishRepository(),
+				Release(isDraft: true, body));
+
+			Assert.Equal(FinishNextAction.CreateDraft, plan.NextAction);
+			Assert.Equal(
+				PlanOperationStatus.Pending,
+				Assert.Single(
+					plan.Operations,
+					operation => operation.Id == FinishOperationId.CreateDraft).Status);
+			Assert.Equal(
+				PlanOperationStatus.Skipped,
+				Assert.Single(
+					plan.Operations,
+					operation => operation.Id == FinishOperationId.PublishRelease).Status);
+		}
+
+		[Fact]
 		public async Task Published_release_routes_to_closeout_and_accepts_exact_legacy_source_branch()
 		{
 			var release = Release(
@@ -199,6 +223,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 			string body,
 			string target = Commit) =>
 			new(
+				123,
 				"v4.152.0",
 				"Version 4.152.0",
 				isDraft,

@@ -7,6 +7,7 @@ using SkiaSharp.ReleaseTool.Model;
 using SkiaSharp.ReleaseTool.NuGet;
 using SkiaSharp.ReleaseTool.Planning;
 using SkiaSharp.ReleaseTool.Tests.Planning;
+using SkiaSharp.ReleaseTool.Tests.Finishing;
 using Xunit;
 
 namespace SkiaSharp.ReleaseTool.Tests.Cli
@@ -40,6 +41,151 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 			Assert.Equal(PendingNextAction.Pending, report.NextAction);
 			Assert.Equal("SkiaSharp", Assert.Single(report.MissingPackages).Id);
 			Assert.Empty(environment.Error.ToString());
+		}
+
+		[Fact]
+		public async Task Finish_write_commands_require_explicit_correlations_and_publication()
+		{
+			using var root = new TestDirectory("finish-cli-required");
+			var environment = new FinishEnvironment(new FakePrepareRepository(root.Path));
+
+			Assert.NotEqual(
+				ExitCodes.Success,
+				await Program.InvokeAsync(
+					["finish", "create-draft", "--plan", "finish.json"],
+					environment));
+			Assert.NotEqual(
+				ExitCodes.Success,
+				await Program.InvokeAsync(
+					["finish", "plan-publication", "--plan", "finish.json"],
+					environment));
+			Assert.NotEqual(
+				ExitCodes.Success,
+				await Program.InvokeAsync(
+					[
+						"finish",
+						"publish",
+						"--plan",
+						"finish.json",
+						"--expected-plan-id",
+						Guid.NewGuid().ToString(),
+					],
+					environment));
+		}
+
+		[Fact]
+		public async Task Finish_write_commands_persist_typed_default_outputs_end_to_end()
+		{
+			using var fixture = await FinishTestFixture.CreateAsync("finish-cli-write");
+			var planPath = Path.Combine(fixture.Repository.Root, "approved-finish.json");
+			PlanStore.Write(planPath, fixture.Plan);
+			var environment = new FinishWriteEnvironment(
+				fixture.Repository,
+				fixture.GitHub);
+
+			var createExit = await Program.InvokeAsync(
+				[
+					"finish",
+					"create-draft",
+					"--repo",
+					fixture.Repository.Root,
+					"--plan",
+					"approved-finish.json",
+					"--expected-plan-id",
+					fixture.Plan.PlanId.ToString(),
+				],
+				environment);
+
+			Assert.Equal(ExitCodes.Success, createExit);
+			var createPath = Path.Combine(
+				fixture.Repository.Root,
+				"finish-create-draft-result.json");
+			var createResult = JsonSerializer.Deserialize(
+				File.ReadAllText(createPath),
+				ReleaseJsonContext.Strict.FinishCreateDraftResult);
+			Assert.NotNull(createResult);
+			Assert.Equal(FinishNextAction.PlanPublication, createResult.NextAction);
+
+			var publicationExit = await Program.InvokeAsync(
+				[
+					"finish",
+					"plan-publication",
+					"--repo",
+					fixture.Repository.Root,
+					"--plan",
+					"approved-finish.json",
+					"--expected-plan-id",
+					fixture.Plan.PlanId.ToString(),
+				],
+				environment);
+
+			Assert.Equal(ExitCodes.Success, publicationExit);
+			var publicationPath = Path.Combine(
+				fixture.Repository.Root,
+				"finish-publication-plan.json");
+			var publication = PlanStore.ReadPublication(
+				publicationPath,
+				fixture.Plan.PlanId,
+				FinishTestFixture.PublicationPlanId);
+			Assert.Equal(FinishNextAction.Publish, publication.NextAction);
+
+			var publishExit = await Program.InvokeAsync(
+				[
+					"finish",
+					"publish",
+					"--repo",
+					fixture.Repository.Root,
+					"--plan",
+					"approved-finish.json",
+					"--expected-plan-id",
+					fixture.Plan.PlanId.ToString(),
+					"--publication",
+					"finish-publication-plan.json",
+					"--expected-publication-plan-id",
+					publication.PublicationPlanId.ToString(),
+				],
+				environment);
+
+			Assert.Equal(ExitCodes.Success, publishExit);
+			var publishPath = Path.Combine(
+				fixture.Repository.Root,
+				"finish-publish-result.json");
+			var publishResult = JsonSerializer.Deserialize(
+				File.ReadAllText(publishPath),
+				ReleaseJsonContext.Strict.FinishPublishResult);
+			Assert.NotNull(publishResult);
+			Assert.Equal(FinishNextAction.Closeout, publishResult.NextAction);
+			Assert.Equal(publication.PublicationPlanId, publishResult.PublicationPlanId);
+			Assert.True(File.Exists(createPath));
+		}
+
+		[Fact]
+		public async Task CLI_PlanId_mismatch_is_rejected_before_write_client_creation()
+		{
+			using var fixture = await FinishTestFixture.CreateAsync("finish-cli-correlation");
+			PlanStore.Write(
+				Path.Combine(fixture.Repository.Root, "approved-finish.json"),
+				fixture.Plan);
+			var environment = new FinishWriteEnvironment(
+				fixture.Repository,
+				fixture.GitHub);
+
+			var exit = await Program.InvokeAsync(
+				[
+					"finish",
+					"create-draft",
+					"--repo",
+					fixture.Repository.Root,
+					"--plan",
+					"approved-finish.json",
+					"--expected-plan-id",
+					Guid.NewGuid().ToString(),
+				],
+				environment);
+
+			Assert.Equal(ExitCodes.GenericError, exit);
+			Assert.Equal(0, environment.WriteClientCreations);
+			Assert.Equal(0, fixture.GitHub.GetCount);
 		}
 
 		private static void WritePolicies(string root)
@@ -105,6 +251,40 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 						[new PendingPackage("SkiaSharp", requestedVersion.Text)],
 						TimeSpan.FromSeconds(60),
 						TimeSpan.FromSeconds(60)));
+		}
+
+		private sealed class FinishWriteEnvironment(
+			IReleaseRepository repository,
+			IFinishGitHubWriteClient github) : IReleaseCommandEnvironment
+		{
+			public StringWriter Output { get; } = new();
+			public StringWriter Error { get; } = new();
+			public int WriteClientCreations { get; private set; }
+			public TextWriter StandardOutput => Output;
+			public TextWriter StandardError => Error;
+			public TimeProvider TimeProvider { get; } =
+				new FixedTimeProvider();
+			public Func<Guid> NewPlanId => () =>
+				FinishTestFixture.PublicationPlanId;
+
+			public Task<IReleaseRepository> OpenRepositoryAsync(
+				string? path,
+				CancellationToken cancellationToken) =>
+				Task.FromResult(repository);
+
+			public IPrepareGitHubClient CreateGitHubClient() =>
+				throw new NotSupportedException();
+
+			public IFinishGitHubClient CreateFinishGitHubClient() => github;
+
+			public IFinishGitHubWriteClient CreateFinishGitHubWriteClient()
+			{
+				WriteClientCreations++;
+				return github;
+			}
+
+			public IPublicReceiptVerifier CreatePublicReceiptVerifier() =>
+				throw new NotSupportedException();
 		}
 
 		private sealed class FixedTimeProvider : TimeProvider

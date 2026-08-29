@@ -25,8 +25,47 @@ namespace SkiaSharp.ReleaseTool.Contracts
 		[JsonStringEnumMemberName("plan-publication")]
 		PlanPublication,
 
+		[JsonStringEnumMemberName("publish")]
+		Publish,
+
 		[JsonStringEnumMemberName("closeout")]
 		Closeout,
+	}
+
+	public enum FinishArtifactOperation
+	{
+		[JsonStringEnumMemberName("finish-create-draft")]
+		CreateDraft,
+
+		[JsonStringEnumMemberName("finish-plan-publication")]
+		PlanPublication,
+
+		[JsonStringEnumMemberName("finish-publish")]
+		Publish,
+	}
+
+	public enum FinishWriteStatus
+	{
+		[JsonStringEnumMemberName("created")]
+		Created,
+
+		[JsonStringEnumMemberName("existing")]
+		Existing,
+
+		[JsonStringEnumMemberName("migrated")]
+		Migrated,
+
+		[JsonStringEnumMemberName("published")]
+		Published,
+
+		[JsonStringEnumMemberName("already-published")]
+		AlreadyPublished,
+	}
+
+	public enum BodyHashAlgorithm
+	{
+		[JsonStringEnumMemberName("SHA256")]
+		Sha256,
 	}
 
 	public enum PendingNextAction

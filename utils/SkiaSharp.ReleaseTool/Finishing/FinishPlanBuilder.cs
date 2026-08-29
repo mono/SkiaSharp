@@ -58,11 +58,14 @@ namespace SkiaSharp.ReleaseTool.Finishing
 			var markers = existingRelease is null
 				? ManagedMarkerState.None
 				: ManagedReleaseMarkers.Inspect(existingRelease.Body);
+			var hasGeneratedNotes = existingRelease is not null &&
+				markers == ManagedMarkerState.Complete &&
+				ManagedReleaseMarkers.HasGeneratedNotes(existingRelease.Body);
 			var nextAction = (tagState, existingRelease) switch
 			{
 				(_, { IsDraft: false }) => FinishNextAction.Closeout,
 				(FinishState.Done, { IsDraft: true })
-					when markers == ManagedMarkerState.Complete =>
+					when hasGeneratedNotes =>
 					FinishNextAction.PlanPublication,
 				_ => FinishNextAction.CreateDraft,
 			};
@@ -117,7 +120,10 @@ namespace SkiaSharp.ReleaseTool.Finishing
 					existingRelease?.TargetCommitish,
 					existingRelease?.Url,
 					existingRelease?.Body),
-				Operations: BuildOperations(tagState, existingRelease, markers),
+				Operations: BuildOperations(
+					tagState,
+					existingRelease,
+					hasGeneratedNotes),
 				Warnings: warnings);
 			FinishPlanValidator.Validate(plan);
 			return plan;
@@ -163,10 +169,10 @@ namespace SkiaSharp.ReleaseTool.Finishing
 		private static IReadOnlyList<FinishOperation> BuildOperations(
 			FinishState tagState,
 			FinishGitHubRelease? release,
-			ManagedMarkerState markers)
+			bool hasGeneratedNotes)
 		{
 			var published = release is { IsDraft: false };
-			var draftReady = release is not null && markers == ManagedMarkerState.Complete;
+			var draftReady = release is not null && hasGeneratedNotes;
 			return
 			[
 				new(

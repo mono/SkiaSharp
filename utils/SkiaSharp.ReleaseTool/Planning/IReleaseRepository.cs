@@ -26,6 +26,11 @@ namespace SkiaSharp.ReleaseTool.Planning
 			string remote = "origin",
 			bool setUpstream = true,
 			CancellationToken cancellationToken = default);
+		Task PushTagAsync(
+			string tag,
+			string sha,
+			string remote = "origin",
+			CancellationToken cancellationToken = default);
 		Task<string> ReadWorktreeFileAsync(
 			string path,
 			CancellationToken cancellationToken = default);
