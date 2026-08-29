@@ -38,5 +38,9 @@ namespace SkiaSharp.ReleaseTool.Planning
 			string path,
 			string content,
 			CancellationToken cancellationToken = default);
+		Task<IReadOnlyList<string>> CommitSubjectsFirstParentAsync(
+			string? exclusiveLowerBound,
+			string sourceCommit,
+			CancellationToken cancellationToken = default);
 	}
 }

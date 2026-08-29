@@ -49,11 +49,34 @@ namespace SkiaSharp.ReleaseTool.Json
 				ReleaseJsonContext.Strict.FinishPublishResult,
 				FinishPublishResultValidator.Validate);
 
+		public static void Write(string path, FinishCloseoutPlan plan) =>
+			Write(
+				path,
+				plan,
+				ReleaseJsonContext.Strict.FinishCloseoutPlan,
+				FinishCloseoutPlanValidator.Validate);
+
+		public static void Write(string path, FinishCloseoutResult result) =>
+			Write(
+				path,
+				result,
+				ReleaseJsonContext.Strict.FinishCloseoutResult,
+				FinishCloseoutResultValidator.Validate);
+
 		public static PreparePlan ReadPrepare(string path, Guid expectedPlanId) =>
 			Read(path, ReleaseJsonContext.Strict.PreparePlan, PreparePlanValidator.Validate, expectedPlanId);
 
 		public static FinishPlan ReadFinish(string path, Guid expectedPlanId) =>
 			Read(path, ReleaseJsonContext.Strict.FinishPlan, FinishPlanValidator.Validate, expectedPlanId);
+
+		public static FinishCloseoutPlan ReadCloseout(
+			string path,
+			Guid expectedPlanId) =>
+			Read(
+				path,
+				ReleaseJsonContext.Strict.FinishCloseoutPlan,
+				FinishCloseoutPlanValidator.Validate,
+				expectedPlanId);
 
 		public static FinishPublicationPlan ReadPublication(
 			string path,
@@ -124,6 +147,7 @@ namespace SkiaSharp.ReleaseTool.Json
 				PreparePlan prepare => prepare.PlanId,
 				FinishPlan finish => finish.PlanId,
 				FinishPublicationPlan publication => publication.PlanId,
+				FinishCloseoutPlan closeout => closeout.PlanId,
 				_ => throw new InvalidOperationException($"Unsupported plan type {typeof(T).Name}."),
 			};
 			if (actualPlanId != expectedPlanId)

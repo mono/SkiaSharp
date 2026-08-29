@@ -44,6 +44,72 @@ namespace SkiaSharp.ReleaseTool.Contracts
 		Publish,
 	}
 
+	public enum FinishCloseoutOperation
+	{
+		[JsonStringEnumMemberName("finish-plan-closeout")]
+		Plan,
+
+		[JsonStringEnumMemberName("finish-closeout")]
+		Apply,
+	}
+
+	public enum FinishCloseoutNextAction
+	{
+		[JsonStringEnumMemberName("closeout")]
+		Closeout,
+
+		[JsonStringEnumMemberName("blocked")]
+		Blocked,
+
+		[JsonStringEnumMemberName("done")]
+		Done,
+	}
+
+	public enum FinishCloseoutStatus
+	{
+		[JsonStringEnumMemberName("pending")]
+		Pending,
+
+		[JsonStringEnumMemberName("done")]
+		Done,
+
+		[JsonStringEnumMemberName("skipped")]
+		Skipped,
+
+		[JsonStringEnumMemberName("blocked")]
+		Blocked,
+	}
+
+	public enum FinishScheduleAction
+	{
+		[JsonStringEnumMemberName("create")]
+		Create,
+
+		[JsonStringEnumMemberName("update")]
+		Update,
+
+		[JsonStringEnumMemberName("none")]
+		None,
+	}
+
+	public enum FinishReconcileKind
+	{
+		[JsonStringEnumMemberName("pull-request")]
+		PullRequest,
+
+		[JsonStringEnumMemberName("issue")]
+		Issue,
+	}
+
+	public enum FinishDispatchStatus
+	{
+		[JsonStringEnumMemberName("pending")]
+		Pending,
+
+		[JsonStringEnumMemberName("dispatched")]
+		Dispatched,
+	}
+
 	public enum FinishWriteStatus
 	{
 		[JsonStringEnumMemberName("created")]

@@ -200,6 +200,30 @@ namespace SkiaSharp.ReleaseTool.Git
 			return ExpectedBooleanExit(result, "merge-base --is-ancestor");
 		}
 
+		public async Task<IReadOnlyList<string>> CommitSubjectsFirstParentAsync(
+			string? exclusiveLowerBound,
+			string sourceCommit,
+			CancellationToken cancellationToken = default)
+		{
+			_ = ParseSha(sourceCommit, "source commit");
+			if (exclusiveLowerBound is not null)
+				_ = ParseSha(exclusiveLowerBound, "exclusive lower bound");
+			var range = exclusiveLowerBound is null
+				? sourceCommit
+				: $"{exclusiveLowerBound}..{sourceCommit}";
+			var result = await GitAsync(
+				["log", "--first-parent", "--format=%s", range],
+				cancellationToken: cancellationToken).ConfigureAwait(false);
+			var subjects = new List<string>();
+			using var reader = new StringReader(result.StandardOutput);
+			while (reader.ReadLine() is { } subject)
+			{
+				if (subject.Length > 0)
+					subjects.Add(subject);
+			}
+			return subjects;
+		}
+
 		public async Task RequireCleanAsync(
 			IReadOnlyList<string>? allowedUntrackedPaths = null,
 			CancellationToken cancellationToken = default)

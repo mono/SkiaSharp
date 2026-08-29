@@ -726,6 +726,254 @@ namespace SkiaSharp.ReleaseTool.Contracts
 		}
 	}
 
+	public static class FinishCloseoutPlanValidator
+	{
+		public static void Validate(FinishCloseoutPlan plan)
+		{
+			FinishCloseoutValidation.ValidateHeader(
+				plan.SchemaVersion,
+				plan.Operation,
+				FinishCloseoutOperation.Plan,
+				plan.PlanId,
+				plan.GeneratedAt,
+				plan.ToolingSha,
+				plan.Release,
+				plan.SourceCommit,
+				plan.SourceBranch,
+				plan.Tag,
+				plan.Warnings);
+			FinishCloseoutValidation.ValidateSchedule(plan.ScheduleOperations);
+			FinishCloseoutValidation.ValidateReconciliation(plan.ReconcileOperations);
+			FinishCloseoutValidation.ValidateClosure(plan.ClosureOperations);
+			FinishCloseoutValidation.ValidateDispatches(
+				plan.Dispatches,
+				FinishDispatchStatus.Pending,
+				plan.Release);
+			var blocked = plan.ClosureOperations.Any(operation => operation.Status == FinishCloseoutStatus.Blocked);
+			var pending = plan.ScheduleOperations.Any(operation => operation.Status == FinishCloseoutStatus.Pending) ||
+				plan.ReconcileOperations.Any(operation => operation.Status == FinishCloseoutStatus.Pending) ||
+				plan.ClosureOperations.Any(operation => operation.Status == FinishCloseoutStatus.Pending);
+			var expected = blocked
+				? FinishCloseoutNextAction.Blocked
+				: pending
+					? FinishCloseoutNextAction.Closeout
+					: FinishCloseoutNextAction.Done;
+			PlanValidation.Require(plan.NextAction == expected, "nextAction is inconsistent with closeout operations");
+		}
+	}
+
+	public static class FinishCloseoutResultValidator
+	{
+		public static void Validate(FinishCloseoutResult result)
+		{
+			FinishCloseoutValidation.ValidateHeader(
+				result.SchemaVersion,
+				result.Operation,
+				FinishCloseoutOperation.Apply,
+				result.PlanId,
+				result.GeneratedAt,
+				result.ToolingSha,
+				result.Release,
+				result.SourceCommit,
+				result.SourceBranch,
+				result.Tag,
+				result.Warnings);
+			var scheduleResults = result.ScheduleResults
+				?? throw new ValidationException("scheduleResults must not be null");
+			var reconcileResults = result.ReconcileResults
+				?? throw new ValidationException("reconcileResults must not be null");
+			var closureResults = result.ClosureResults
+				?? throw new ValidationException("closureResults must not be null");
+			PlanValidation.Require(
+				scheduleResults.All(value => value is not null && value.Status is FinishCloseoutStatus.Done or FinishCloseoutStatus.Skipped),
+				"scheduleResults contains an invalid status");
+			PlanValidation.Require(
+				reconcileResults.All(value => value is not null && value.Status == FinishCloseoutStatus.Done),
+				"reconcileResults contains an invalid status");
+			PlanValidation.Require(
+				closureResults.All(value => value is not null && value.Status is FinishCloseoutStatus.Done or FinishCloseoutStatus.Blocked),
+				"closureResults contains an invalid status");
+			FinishCloseoutValidation.ValidateDispatches(
+				result.Dispatches,
+				FinishDispatchStatus.Dispatched,
+				result.Release);
+			var expected = closureResults.Any(operation => operation.Status == FinishCloseoutStatus.Blocked)
+				? FinishCloseoutNextAction.Blocked
+				: FinishCloseoutNextAction.Done;
+			PlanValidation.Require(result.NextAction == expected, "nextAction is inconsistent with closeout results");
+		}
+	}
+
+	internal static class FinishCloseoutValidation
+	{
+		public static void ValidateHeader(
+			int schemaVersion,
+			FinishCloseoutOperation operation,
+			FinishCloseoutOperation expectedOperation,
+			Guid planId,
+			DateTimeOffset generatedAt,
+			string toolingSha,
+			FinishReleaseInfo release,
+			string sourceCommit,
+			string sourceBranch,
+			string tag,
+			IReadOnlyList<string> warnings)
+		{
+			PlanValidation.Require(schemaVersion == 1, "schemaVersion must be 1");
+			PlanValidation.Require(operation == expectedOperation, $"operation must be '{expectedOperation}'");
+			PlanValidation.Require(planId != Guid.Empty, "planId must not be empty");
+			PlanValidation.Require(
+				generatedAt != default && generatedAt.Offset == TimeSpan.Zero,
+				"generatedAt must be a UTC timestamp");
+			PlanValidation.ValidateSha(toolingSha, "toolingSha");
+			PlanValidation.ValidateSha(sourceCommit, "sourceCommit");
+			var requested = PublicReleaseVersion.Parse(release.Version);
+			var identity = requested.Identity;
+			PlanValidation.Require(release.Identity == identity.Raw, "release.identity is inconsistent");
+			PlanValidation.Require(release.Branch == identity.ReleaseBranch, "release.branch is inconsistent");
+			PlanValidation.Require(release.Raw == identity.Raw, "release.raw is inconsistent");
+			PlanValidation.Require(release.Numeric == identity.Numeric, "release.numeric is inconsistent");
+			PlanValidation.Require(release.Label == identity.Label, "release.label is inconsistent");
+			PlanValidation.Require(release.ReleaseType == identity.ReleaseType, "release.releaseType is inconsistent");
+			PlanValidation.Require(release.Stable == identity.Stable, "release.stable is inconsistent");
+			PlanValidation.Require(release.Title == identity.Title, "release.title is inconsistent");
+			PlanValidation.Require(release.Tag == identity.Tag, "release.tag is inconsistent");
+			PlanValidation.Require(sourceBranch == release.Branch, "sourceBranch is inconsistent");
+			PlanValidation.Require(tag == release.Tag, "tag is inconsistent");
+			PlanValidation.ValidateStrings(warnings, "warnings");
+		}
+
+		public static void ValidateSchedule(IReadOnlyList<FinishScheduleOperation> operations)
+		{
+			var values = operations ?? throw new ValidationException("scheduleOperations must not be null");
+			foreach (var operation in values)
+			{
+				if (operation is null)
+					throw new ValidationException("scheduleOperations must not contain null values");
+				PlanValidation.Require(!string.IsNullOrWhiteSpace(operation.Title), "schedule title must not be empty");
+				PlanValidation.Require(operation.DueOn.Offset == TimeSpan.Zero, "schedule dueOn must be UTC");
+				PlanValidation.Require(!string.IsNullOrWhiteSpace(operation.Description), "schedule description must not be empty");
+				var changes = operation.Changes
+					?? throw new ValidationException("schedule changes must not be null");
+				if (changes.Any(change => change is null))
+					throw new ValidationException("schedule changes must not contain null values");
+				PlanValidation.Require(
+					changes.Select(change => change.Field).Distinct(StringComparer.Ordinal).Count() == changes.Count,
+					"schedule changes contains duplicate fields");
+				PlanValidation.Require(
+					changes.All(change => change is not null && change.Field is "dueOn" or "description"),
+					"schedule changes contains an unsupported field");
+				PlanValidation.Require(
+					operation.Action switch
+					{
+						FinishScheduleAction.Create =>
+							operation.Status == FinishCloseoutStatus.Pending &&
+							operation.Number is null &&
+							changes.Count == 0,
+						FinishScheduleAction.Update =>
+							operation.Status == FinishCloseoutStatus.Pending &&
+							operation.Number > 0 &&
+							changes.Count > 0,
+						FinishScheduleAction.None =>
+							operation.Status is FinishCloseoutStatus.Done or FinishCloseoutStatus.Skipped &&
+							changes.Count == 0,
+						_ => false,
+					},
+					"schedule action/status is inconsistent");
+			}
+		}
+
+		public static void ValidateReconciliation(IReadOnlyList<FinishReconcileOperation> operations)
+		{
+			var values = operations ?? throw new ValidationException("reconcileOperations must not be null");
+			var seen = new HashSet<(FinishReconcileKind, int)>();
+			foreach (var operation in values)
+			{
+				if (operation is null)
+					throw new ValidationException("reconcileOperations must not contain null values");
+				PlanValidation.Require(operation.Number > 0, "reconcile item number must be positive");
+				PlanValidation.Require(seen.Add((operation.Kind, operation.Number)), "reconcileOperations contains a duplicate item");
+				PlanValidation.Require(
+					operation.Kind == FinishReconcileKind.PullRequest
+						? operation.ViaPullRequest is null
+						: operation.ViaPullRequest > 0,
+					"reconcile viaPullRequest is inconsistent with item kind");
+				PlanValidation.Require(!string.IsNullOrWhiteSpace(operation.ToMilestone), "reconcile target milestone must not be empty");
+				PlanValidation.Require(operation.ToMilestoneNumber > 0, "reconcile target milestone number must be positive");
+				PlanValidation.Require(operation.Status == FinishCloseoutStatus.Pending, "reconcile status must be pending");
+			}
+		}
+
+		public static void ValidateClosure(IReadOnlyList<FinishClosureOperation> operations)
+		{
+			var values = operations ?? throw new ValidationException("closureOperations must not be null");
+			foreach (var operation in values)
+			{
+				if (operation is null)
+					throw new ValidationException("closureOperations must not contain null values");
+				PlanValidation.Require(operation.MilestoneNumber > 0, "closure milestone number must be positive");
+				PlanValidation.Require(operation.Tag == $"v{operation.Milestone}", "closure tag is inconsistent");
+				PlanValidation.Require(operation.Status is FinishCloseoutStatus.Pending or FinishCloseoutStatus.Blocked, "closure status must be pending or blocked");
+				PlanValidation.Require(operation.OpenItemCount >= 0, "closure openItemCount must not be negative");
+				PlanValidation.Require(
+					operation.Status != FinishCloseoutStatus.Blocked ||
+					(operation.OpenItemCount > 0 &&
+					 operation.MoveTo is null &&
+					 operation.MoveToNumber is null &&
+					 !string.IsNullOrWhiteSpace(operation.Detail)),
+					"blocked closure operation is inconsistent");
+				PlanValidation.Require(
+					operation.Status != FinishCloseoutStatus.Pending ||
+					operation.OpenItemCount == 0 ||
+					!string.IsNullOrWhiteSpace(operation.MoveTo),
+					"pending closure with open items must have a target");
+			}
+		}
+
+		public static void ValidateDispatches(
+			IReadOnlyList<FinishWorkflowDispatch> dispatches,
+			FinishDispatchStatus expectedStatus,
+			FinishReleaseInfo release)
+		{
+			var values = dispatches ?? throw new ValidationException("dispatches must not be null");
+			var expectedCount = release.Stable ? 2 : 1;
+			PlanValidation.Require(values.Count == expectedCount, "dispatch count is inconsistent with release type");
+			foreach (var dispatch in values)
+			{
+				if (dispatch is null)
+					throw new ValidationException("dispatches must not contain null values");
+				PlanValidation.Require(dispatch.Ref == "main", "dispatch ref must be main");
+				PlanValidation.Require(dispatch.Status == expectedStatus, "dispatch status is inconsistent");
+				PlanValidation.Require(dispatch.Inputs is not null, "dispatch inputs must not be null");
+			}
+			var notes = values[0];
+			PlanValidation.Require(
+				notes.Workflow == "update-release-notes.lock.yml",
+				"first dispatch must target update-release-notes.lock.yml");
+			PlanValidation.Require(notes.Inputs.Count == 4, "release-notes dispatch inputs are incomplete");
+			RequireInput(notes.Inputs, "source_branch", "main");
+			RequireInput(notes.Inputs, "min_version", release.Numeric);
+			RequireInput(notes.Inputs, "max_version", release.Numeric);
+			RequireInput(notes.Inputs, "force", "false");
+			if (release.Stable)
+			{
+				var refresh = values[1];
+				PlanValidation.Require(
+					refresh.Workflow == "auto-update-issue-template-versions.yml",
+					"second dispatch must target auto-update-issue-template-versions.yml");
+				PlanValidation.Require(refresh.Inputs.Count == 0, "issue-template refresh dispatch inputs must be empty");
+			}
+		}
+
+		private static void RequireInput(
+			IReadOnlyDictionary<string, string> inputs,
+			string name,
+			string expected) =>
+			PlanValidation.Require(
+				inputs.TryGetValue(name, out var value) && value == expected,
+				$"dispatch input '{name}' is inconsistent");
+	}
+
 	internal static class PlanValidation
 	{
 		public static void ValidateHeader(

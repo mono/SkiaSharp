@@ -3,10 +3,12 @@ using System.Text.Json;
 using SkiaSharp.ReleaseTool.Cli;
 using SkiaSharp.ReleaseTool.Contracts;
 using SkiaSharp.ReleaseTool.Errors;
+using SkiaSharp.ReleaseTool.Environments;
 using SkiaSharp.ReleaseTool.Finishing;
 using SkiaSharp.ReleaseTool.Git;
 using SkiaSharp.ReleaseTool.Json;
 using SkiaSharp.ReleaseTool.Model;
+using SkiaSharp.ReleaseTool.Milestones;
 using SkiaSharp.ReleaseTool.NuGet;
 using SkiaSharp.ReleaseTool.Planning;
 
@@ -186,6 +188,7 @@ namespace SkiaSharp.ReleaseTool
 			root.Options.Add(repoOption);
 			root.Subcommands.Add(prepareCommand);
 			root.Subcommands.Add(FinishPlanCommand.Create(repoOption, environment));
+			root.Subcommands.Add(CheckEnvironmentCommand.Create(environment));
 			return await root.Parse(args).InvokeAsync().ConfigureAwait(false);
 		}
 	}
@@ -205,6 +208,12 @@ namespace SkiaSharp.ReleaseTool
 		IFinishGitHubWriteClient CreateFinishGitHubWriteClient() =>
 			throw new NotSupportedException();
 		IPublicReceiptVerifier CreatePublicReceiptVerifier() =>
+			throw new NotSupportedException();
+		IGitHubEnvironmentClient CreateEnvironmentGitHubClient() =>
+			throw new NotSupportedException();
+		ICloseoutGitHubClient CreateCloseoutGitHubClient() =>
+			throw new NotSupportedException();
+		IChromiumScheduleClient CreateChromiumScheduleClient() =>
 			throw new NotSupportedException();
 	}
 
@@ -234,5 +243,14 @@ namespace SkiaSharp.ReleaseTool
 			new PublicReceiptVerifier(
 				new NuGetOrgPackageSource(),
 				new NuGetPackageSignatureVerifier());
+
+		public IGitHubEnvironmentClient CreateEnvironmentGitHubClient() =>
+			new HttpGitHubEnvironmentClient();
+
+		public ICloseoutGitHubClient CreateCloseoutGitHubClient() =>
+			new OctokitCloseoutGitHubClient();
+
+		public IChromiumScheduleClient CreateChromiumScheduleClient() =>
+			new HttpChromiumScheduleClient();
 	}
 }
