@@ -15,6 +15,6 @@
 # The base image already provides everything the native library links against (libstdc++, libgcc,
 # musl libc, ICU), so there is deliberately nothing to install here.
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0.203-alpine3.23
+FROM mcr.microsoft.com/dotnet/sdk:10.0.400-alpine3.23
 
 WORKDIR /work

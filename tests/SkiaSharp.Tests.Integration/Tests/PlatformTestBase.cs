@@ -30,7 +30,7 @@ public abstract class PlatformTestBase : IDisposable
     /// <see cref="BaseFramework"/>.
     /// </summary>
     protected static readonly string SdkVersion =
-        AppContext.GetData("SdkVersion") as string is { Length: > 0 } sv ? sv : "10.0.100";
+        AppContext.GetData("SdkVersion") as string is { Length: > 0 } sv ? sv : "10.0.400";
 
     /// <summary>
     /// Whether the generated temp projects may resolve a prerelease SDK. Defaults to <c>false</c>;
