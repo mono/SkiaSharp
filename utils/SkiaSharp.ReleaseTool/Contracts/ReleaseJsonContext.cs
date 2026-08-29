@@ -18,6 +18,8 @@ namespace SkiaSharp.ReleaseTool.Contracts
 	[JsonSerializable(typeof(FinishCreateDraftResult))]
 	[JsonSerializable(typeof(FinishPublicationPlan))]
 	[JsonSerializable(typeof(FinishPublishResult))]
+	[JsonSerializable(typeof(FinishCloseoutPlan))]
+	[JsonSerializable(typeof(FinishCloseoutResult))]
 	public partial class ReleaseJsonContext : JsonSerializerContext
 	{
 		public static ReleaseJsonContext Strict { get; } = new(CreateOptions());
@@ -52,6 +54,12 @@ namespace SkiaSharp.ReleaseTool.Contracts
 			options.Converters.Add(new JsonStringEnumConverter<FinishWriteStatus>(allowIntegerValues: false));
 			options.Converters.Add(new JsonStringEnumConverter<BodyHashAlgorithm>(allowIntegerValues: false));
 			options.Converters.Add(new JsonStringEnumConverter<ReleaseKind>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<FinishCloseoutOperation>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<FinishCloseoutNextAction>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<FinishCloseoutStatus>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<FinishScheduleAction>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<FinishReconcileKind>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<FinishDispatchStatus>(allowIntegerValues: false));
 			return options;
 		}
 	}

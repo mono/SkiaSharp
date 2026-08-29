@@ -4,6 +4,7 @@ using SkiaSharp.ReleaseTool.Contracts;
 using SkiaSharp.ReleaseTool.Errors;
 using SkiaSharp.ReleaseTool.Finishing;
 using SkiaSharp.ReleaseTool.Json;
+using SkiaSharp.ReleaseTool.Milestones;
 using SkiaSharp.ReleaseTool.Model;
 using SkiaSharp.ReleaseTool.NuGet;
 
@@ -107,7 +108,87 @@ namespace SkiaSharp.ReleaseTool.Cli
 			finish.Subcommands.Add(CreateDraftCommand(repositoryOption, environment));
 			finish.Subcommands.Add(PlanPublicationCommand(repositoryOption, environment));
 			finish.Subcommands.Add(PublishCommand(repositoryOption, environment));
+			finish.Subcommands.Add(CloseoutCommand(repositoryOption, environment));
 			return finish;
+		}
+
+		private static Command CloseoutCommand(
+			Option<string?> repositoryOption,
+			IReleaseCommandEnvironment environment)
+		{
+			var planOption = PlanOption();
+			var expectedPlanIdOption = ExpectedPlanIdOption();
+			var dryRunOption = new Option<bool>("--dry-run")
+			{
+				Description = "Write a live read-only closeout plan instead of applying it.",
+			};
+			var outputOption = OutputOption(
+				"Finish closeout plan or result output path.",
+				"finish-closeout.json");
+			var command = new Command(
+				"closeout",
+				"Plan or apply schedule, milestone reconciliation, closure, and workflow dispatch.");
+			command.Options.Add(planOption);
+			command.Options.Add(expectedPlanIdOption);
+			command.Options.Add(dryRunOption);
+			command.Options.Add(outputOption);
+			command.SetAction(async (parseResult, cancellationToken) =>
+			{
+				try
+				{
+					var repository = await environment.OpenRepositoryAsync(
+						parseResult.GetValue(repositoryOption),
+						cancellationToken).ConfigureAwait(false);
+					var expectedPlanId = parseResult.GetRequiredValue(expectedPlanIdOption);
+					var planPath = Path.Combine(
+						repository.Root,
+						parseResult.GetRequiredValue(planOption));
+					var approvedPlan = ReadFinish(planPath, expectedPlanId);
+					var output = parseResult.GetRequiredValue(outputOption);
+					var outputPath = Path.Combine(repository.Root, output);
+					var service = new FinishCloseoutService(
+						repository,
+						environment.CreateCloseoutGitHubClient(),
+						environment.CreateChromiumScheduleClient(),
+						environment.TimeProvider);
+					if (parseResult.GetValue(dryRunOption))
+					{
+						var result = await service.PlanAsync(
+							approvedPlan,
+							expectedPlanId,
+							cancellationToken).ConfigureAwait(false);
+						Write(outputPath, output, result);
+						await environment.StandardOutput.WriteLineAsync(
+							JsonSerializer.Serialize(
+								result,
+								ReleaseJsonContext.Strict.FinishCloseoutPlan)).ConfigureAwait(false);
+					}
+					else
+					{
+						var result = await service.ApplyAsync(
+							approvedPlan,
+							expectedPlanId,
+							cancellationToken).ConfigureAwait(false);
+						Write(outputPath, output, result);
+						await environment.StandardOutput.WriteLineAsync(
+							JsonSerializer.Serialize(
+								result,
+								ReleaseJsonContext.Strict.FinishCloseoutResult)).ConfigureAwait(false);
+					}
+					return ExitCodes.Success;
+				}
+				catch (OperationCanceledException)
+				{
+					await environment.StandardError.WriteLineAsync("error: operation canceled").ConfigureAwait(false);
+					return ExitCodes.Canceled;
+				}
+				catch (ReleaseToolException ex)
+				{
+					await environment.StandardError.WriteLineAsync($"error: {ex.Message}").ConfigureAwait(false);
+					return ExitCodes.GenericError;
+				}
+			});
+			return command;
 		}
 
 		private static Command CreateDraftCommand(
@@ -449,6 +530,36 @@ namespace SkiaSharp.ReleaseTool.Cli
 			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 			{
 				throw new ReleaseToolException($"could not write finish publish result '{displayPath}'", ex);
+			}
+		}
+
+		private static void Write(
+			string path,
+			string displayPath,
+			FinishCloseoutPlan plan)
+		{
+			try
+			{
+				PlanStore.Write(path, plan);
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				throw new ReleaseToolException($"could not write finish closeout plan '{displayPath}'", ex);
+			}
+		}
+
+		private static void Write(
+			string path,
+			string displayPath,
+			FinishCloseoutResult result)
+		{
+			try
+			{
+				PlanStore.Write(path, result);
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				throw new ReleaseToolException($"could not write finish closeout result '{displayPath}'", ex);
 			}
 		}
 	}

@@ -220,6 +220,12 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 			CancellationToken cancellationToken = default) =>
 			throw new NotSupportedException("The planning fake has no worktree files.");
 
+		public Task<IReadOnlyList<string>> CommitSubjectsFirstParentAsync(
+			string? exclusiveLowerBound,
+			string sourceCommit,
+			CancellationToken cancellationToken = default) =>
+			throw new NotSupportedException("The planning fake has no commit history.");
+
 		private static string VersionsText(TestVersionState state)
 		{
 			var skiaFile = state.Skia.Split('.').Length == 3 ? $"{state.Skia}.0" : state.Skia;
