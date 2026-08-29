@@ -18,24 +18,24 @@ parameters:
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-22.04
+        name: $(DncEngPublicBuildPool)
+        demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         os: windows
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: windows-2022
+        name: $(DncEngPublicBuildPool)
+        demands: ImageOverride -equals 1es-windows-2022-open
         os: windows
   - name: buildAgentWindowsNative
     displayName: 'The Windows build agent configuration for building the native assets:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: windows-2022
+        name: $(DncEngPublicBuildPool)
+        demands: ImageOverride -equals 1es-windows-2022-open
         os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
@@ -58,16 +58,16 @@ parameters:
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-22.04
+        name: $(DncEngPublicBuildPool)
+        demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         os: linux
   - name: buildAgentLinuxNative
     displayName: 'The Linux build agent configuration for building the native assets:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-22.04
+        name: $(DncEngPublicBuildPool)
+        demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         os: linux
   - name: buildAgentAndroidTests
     displayName: 'The build agent configuration for building the Android tests:'
@@ -79,6 +79,7 @@ parameters:
         os: linux
 
 variables:
+  - template: /eng/common/templates/variables/pool-providers.yml@self
   - template: /scripts/azure-templates-variables.yml@self
 
 extends:

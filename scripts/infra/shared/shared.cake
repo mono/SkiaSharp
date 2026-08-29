@@ -21,21 +21,29 @@ DirectoryPath PROFILE_PATH = EnvironmentVariable("USERPROFILE") ?? EnvironmentVa
 // BUILD IDENTITY
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview");
-var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
+var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview").ToLowerInvariant ();
 var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER") ?? "0");
 var BUILD_COUNTER = Argument ("buildCounter", EnvironmentVariable ("BUILD_COUNTER") ?? BUILD_NUMBER);
+var DOTNET_FINAL_VERSION_KIND = Argument (
+    "dotNetFinalVersionKind",
+    EnvironmentVariable ("DOTNET_FINAL_VERSION_KIND") ?? "").ToLowerInvariant ();
 var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
 var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? ""). Replace ("refs/heads/", "");
 var GIT_URL = Argument ("gitUrl", EnvironmentVariable ("GIT_URL") ?? "");
 
+if (!string.IsNullOrEmpty (DOTNET_FINAL_VERSION_KIND) && DOTNET_FINAL_VERSION_KIND != "release") {
+    throw new Exception (
+        $"Unsupported DotNetFinalVersionKind '{DOTNET_FINAL_VERSION_KIND}'. " +
+        "Expected an empty value or 'release'.");
+}
+
 var PREVIEW_NUGET_SUFFIX = "";
-if (!string.IsNullOrEmpty (FEATURE_NAME)) {
-    PREVIEW_NUGET_SUFFIX = $"featurepreview-{FEATURE_NAME}";
+if (DOTNET_FINAL_VERSION_KIND == "release") {
+    PREVIEW_NUGET_SUFFIX = "";
 } else {
     PREVIEW_NUGET_SUFFIX = $"{PREVIEW_LABEL}";
 }
-if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
+if (DOTNET_FINAL_VERSION_KIND != "release" && !string.IsNullOrEmpty (BUILD_NUMBER)) {
     PREVIEW_NUGET_SUFFIX += $".{BUILD_NUMBER}";
 }
 
@@ -56,8 +64,8 @@ var MSBUILD_VERSION_PROPERTIES = new Dictionary<string, string> {
     { "GIT_URL", GIT_URL },
     { "BUILD_COUNTER", BUILD_COUNTER },
     { "BUILD_NUMBER", BUILD_NUMBER },
-    { "FEATURE_NAME", FEATURE_NAME },
     { "PREVIEW_LABEL", PREVIEW_LABEL },
+    { "DotNetFinalVersionKind", DOTNET_FINAL_VERSION_KIND },
 };
 
 var DATE_TIME_NOW = DateTime.Now;
@@ -69,9 +77,11 @@ var DATE_TIME_STR = DATE_TIME_NOW.ToString ("yyyyMMdd_HHmmss");
 
 FilePath NUGET_CONFIG_PATH = MakeAbsolute(ROOT_PATH.CombineWithFilePath("nuget.config"));
 DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
-DirectoryPath OUTPUT_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets"));
-DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets-special"));
-DirectoryPath OUTPUT_SYMBOLS_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets-symbols"));
+DirectoryPath ROOT_OUTPUT_PATH = MakeAbsolute(Directory(Argument("outputPath", ROOT_PATH.Combine("output").FullPath)));
+DirectoryPath OUTPUT_NUGETS_PATH = ROOT_OUTPUT_PATH.Combine("nugets");
+DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = ROOT_OUTPUT_PATH.Combine("nugets-special");
+DirectoryPath OUTPUT_ARCADE_ASSETS_PATH = ROOT_OUTPUT_PATH.Combine("arcade-assets");
+DirectoryPath OUTPUT_PDB_ARTIFACTS_PATH = ROOT_OUTPUT_PATH.Combine("pdbs");
 DirectoryPath DOCS_ROOT_PATH = ROOT_PATH.Combine("docs");
 DirectoryPath DOCS_PATH = DOCS_ROOT_PATH.Combine("SkiaSharpAPI");
 
@@ -87,9 +97,7 @@ var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 var COVERAGE = Argument ("coverage", false);
 var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
 
-var CI_ARTIFACTS_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json");
-
-var PREVIEW_ONLY_NUGETS = new List<string> {};
+var CI_ARTIFACTS_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-transport/nuget/v3/index.json");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET PACKAGES
@@ -174,7 +182,6 @@ foreach (var arg in Arguments()) {
 
 Information("Source Control:");
 Information($"    {"PREVIEW_LABEL".PadRight(30)} {{0}}", PREVIEW_LABEL);
-Information($"    {"FEATURE_NAME".PadRight(30)} {{0}}", FEATURE_NAME);
 Information($"    {"BUILD_NUMBER".PadRight(30)} {{0}}", BUILD_NUMBER);
 Information($"    {"GIT_SHA".PadRight(30)} {{0}}", GIT_SHA);
 Information($"    {"GIT_BRANCH_NAME".PadRight(30)} {{0}}", GIT_BRANCH_NAME);
