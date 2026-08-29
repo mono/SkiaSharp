@@ -1,7 +1,6 @@
 parameters:
-  - name: isSplitPipeline
-    type: boolean
-    default: false
+  - name: buildPipelineType
+    type: string
   - name: buildAgentHost
     type: object
   - name: buildAgentWindows
@@ -20,7 +19,7 @@ stages:
 
     - stage: api_diff
       displayName: API Diff
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: package
@@ -48,7 +47,7 @@ stages:
 
     - stage: managed
       displayName: Build Managed
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: native
@@ -107,7 +106,7 @@ stages:
 
     - stage: tests
       displayName: Tests
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: native
@@ -310,6 +309,9 @@ stages:
               - name: native
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
+            preBuildSteps:
+              - bash: bash ./scripts/infra/managed/install-chrome.sh
+                displayName: Install Chrome for WASM tests
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the WASM test results
@@ -359,7 +361,7 @@ stages:
 
     - stage: samples
       displayName: Samples
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: package

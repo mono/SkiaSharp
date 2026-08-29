@@ -27,13 +27,16 @@ parameters:
   - name: use1ESPipelineTemplates
     type: boolean
     default: false
-  - name: enableSigning
+  - name: enableCaching
     type: boolean
     default: false
   - name: forceRealSigning
     type: boolean
     default: false
-  - name: enableCaching
+  - name: registerInBar
+    type: boolean
+    default: false
+  - name: runApiScan
     type: boolean
     default: false
 
@@ -43,7 +46,7 @@ stages:
     parameters:
       buildAgentHost: ${{ parameters.buildAgentHost }}
 
-  - ${{ if in(parameters.buildPipelineType, 'native', 'complete') }}:
+  - ${{ if in(parameters.buildPipelineType, 'native', 'build', 'complete') }}:
     - template: /scripts/azure-templates-stages-native.yml@self
       parameters:
         buildAgentHost: ${{ parameters.buildAgentHost }}
@@ -53,21 +56,36 @@ stages:
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableCaching: ${{ parameters.enableCaching }}
 
-  - ${{ if in(parameters.buildPipelineType, 'package', 'complete') }}:
+  - ${{ if in(parameters.buildPipelineType, 'build', 'complete') }}:
     - template: /scripts/azure-templates-stages-package.yml@self
       parameters:
-        isSplitPipeline: ${{ eq(parameters.buildPipelineType, 'package') }}
-        buildAgentHost: ${{ parameters.buildAgentHost }}
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
-        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
-        enableSigning: ${{ parameters.enableSigning }}
-        forceRealSigning: ${{ parameters.forceRealSigning }}
-        enableCaching: ${{ parameters.enableCaching }}
+
+  # Exclude public builds and both policy-triggered and manually queued PR refs
+  # before expanding any internal signing, compliance, or publishing stages.
+  - ${{ if and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/'))) }}:
+    - ${{ if eq(parameters.buildPipelineType, 'build') }}:
+      - template: /scripts/azure-templates-stages-signing.yml@self
+        parameters:
+          buildAgent: ${{ parameters.buildAgentWindows }}
+          ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+            useRealSigning: true
+          ${{ else }}:
+            useRealSigning: false
+          ${{ if or(and(eq(parameters.forceRealSigning, 'true'), eq(parameters.registerInBar, 'true')), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+            publishAssets: true
+          ${{ else }}:
+            publishAssets: false
+
+      - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Schedule'))) }}:
+        - template: /scripts/azure-templates-stages-apiscan.yml@self
+          parameters:
+            buildAgentWindows: ${{ parameters.buildAgentWindows }}
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-test.yml@self
       parameters:
-        isSplitPipeline: ${{ eq(parameters.buildPipelineType, 'test') }}
+        buildPipelineType: ${{ parameters.buildPipelineType }}
         buildAgentHost: ${{ parameters.buildAgentHost }}
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
         buildAgentMac: ${{ parameters.buildAgentMac }}
