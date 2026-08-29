@@ -7,16 +7,8 @@ namespace SkiaSharpSample;
 [Register("GraphiteViewController")]
 public class GraphiteViewController : UIViewController
 {
-	static readonly SKColor[] colors =
-	{
-		new(0x35, 0x8C, 0xFF),
-		new(0x7C, 0x4D, 0xFF),
-		new(0x00, 0xC9, 0xA7),
-		new(0xFF, 0xB0, 0x2E),
-		new(0xF4, 0x5B, 0x8A),
-	};
-
 	FpsCounter fpsCounter = new();
+	GraphiteSceneRenderer? renderer;
 	SKPoint touchPoint = new(0.5f, 0.5f);
 	bool touchActive;
 	bool renderFailed;
@@ -87,6 +79,8 @@ public class GraphiteViewController : UIViewController
 		if (disposing && skiaView != null)
 		{
 			skiaView.Paused = true;
+			renderer?.Dispose();
+			renderer = null;
 			skiaView.PaintSurface -= OnPaintSurface;
 			skiaView.RenderFailed -= OnRenderFailed;
 		}
@@ -107,9 +101,10 @@ public class GraphiteViewController : UIViewController
 
 	void OnPaintSurface(object? sender, SKPaintGraphiteSurfaceEventArgs e)
 	{
-		DrawScene(e.Surface.Canvas, e.Info, fpsCounter.ElapsedSeconds, touchPoint, touchActive);
+		renderer ??= new GraphiteSceneRenderer(e);
+		renderer.Draw(e, fpsCounter.ElapsedSeconds, touchActive ? touchPoint : null);
 		if (fpsCounter.Tick() is double fps)
-			BeginInvokeOnMainThread(() => fpsLabel.Text = $"  GRAPHITE / METAL  |  FPS: {fps:F0}  ");
+			BeginInvokeOnMainThread(() => fpsLabel.Text = $"  FPS: {fps:F0}  ");
 	}
 
 	void OnRenderFailed(object? sender, SKGraphiteRenderFailedEventArgs e)
@@ -117,45 +112,11 @@ public class GraphiteViewController : UIViewController
 		renderFailed = true;
 		BeginInvokeOnMainThread(() =>
 		{
-			fpsLabel.Text = "  GRAPHITE / METAL  |  RENDER FAILED  ";
+			fpsLabel.Text = "  RENDER FAILED  ";
 			var alert = UIAlertController.Create("Graphite rendering failed", e.Exception.Message, UIAlertControllerStyle.Alert);
 			alert.AddAction(UIAlertAction.Create("OK", UIAlertActionStyle.Default, null));
 			PresentViewController(alert, true, null);
 		});
 	}
 
-	static void DrawScene(SKCanvas canvas, SKImageInfo info, float elapsed, SKPoint touch, bool active)
-	{
-		var width = info.Width;
-		var height = info.Height;
-		var scale = Math.Min(width, height);
-		canvas.Clear(new SKColor(0x08, 0x0B, 0x1A));
-
-		using var paint = new SKPaint { IsAntialias = true };
-		for (var i = 0; i < colors.Length; i++)
-		{
-			var angle = elapsed * (0.35f + i * 0.07f) + i * 1.25f;
-			var x = width * 0.5f + MathF.Cos(angle) * width * (0.18f + i * 0.015f);
-			var y = height * 0.5f + MathF.Sin(angle * 1.3f) * height * (0.16f + i * 0.012f);
-			paint.Color = colors[i];
-			paint.Style = SKPaintStyle.Fill;
-			canvas.DrawCircle(x, y, scale * (0.055f + i * 0.008f), paint);
-		}
-
-		if (active)
-		{
-			paint.Color = SKColors.White;
-			paint.Style = SKPaintStyle.Stroke;
-			paint.StrokeWidth = Math.Max(3f, scale * 0.008f);
-			canvas.DrawCircle(touch.X * width, touch.Y * height, scale * 0.09f, paint);
-		}
-
-		using var titleFont = new SKFont { Size = scale * 0.11f };
-		using var subtitleFont = new SKFont { Size = scale * 0.038f };
-		paint.Color = SKColors.White;
-		paint.Style = SKPaintStyle.Fill;
-		canvas.DrawText("GRAPHITE", width * 0.5f, height * 0.48f, SKTextAlign.Center, titleFont, paint);
-		paint.Color = new SKColor(0x8E, 0xC5, 0xFF);
-		canvas.DrawText("METAL", width * 0.5f, height * 0.55f, SKTextAlign.Center, subtitleFont, paint);
-	}
 }

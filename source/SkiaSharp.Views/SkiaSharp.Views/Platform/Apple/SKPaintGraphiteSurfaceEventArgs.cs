@@ -13,6 +13,8 @@ namespace SkiaSharp.Views.tvOS
 {
 	public class SKPaintGraphiteSurfaceEventArgs : EventArgs
 	{
+		private readonly Func<SKGraphiteRecording, SKGraphiteInsertStatus>? insertRecording;
+
 		public SKPaintGraphiteSurfaceEventArgs (
 			SKSurface surface,
 			SKGraphiteBackendTexture backendTexture,
@@ -28,12 +30,24 @@ namespace SkiaSharp.Views.tvOS
 			SKGraphiteContext context,
 			SKImageInfo info,
 			SKImageInfo rawInfo)
+			: this (surface, backendTexture, context, info, rawInfo, null)
+		{
+		}
+
+		internal SKPaintGraphiteSurfaceEventArgs (
+			SKSurface surface,
+			SKGraphiteBackendTexture backendTexture,
+			SKGraphiteContext context,
+			SKImageInfo info,
+			SKImageInfo rawInfo,
+			Func<SKGraphiteRecording, SKGraphiteInsertStatus>? insertRecording)
 		{
 			Surface = surface ?? throw new ArgumentNullException (nameof (surface));
 			BackendTexture = backendTexture ?? throw new ArgumentNullException (nameof (backendTexture));
 			Context = context ?? throw new ArgumentNullException (nameof (context));
 			Info = info;
 			RawInfo = rawInfo;
+			this.insertRecording = insertRecording;
 		}
 
 		public SKSurface Surface { get; }
@@ -47,6 +61,30 @@ namespace SkiaSharp.Views.tvOS
 		public SKImageInfo Info { get; }
 
 		public SKImageInfo RawInfo { get; }
+
+		public SKGraphiteRecorder? CreateRecorder () =>
+			CreateRecorder (-1);
+
+		public SKGraphiteRecorder? CreateRecorder (long recorderBudgetBytes)
+		{
+			var imageCache = new SKGraphiteImageCache ();
+			var recorder = Context.CreateRecorder (
+				recorderBudgetBytes,
+				imageCache.FindOrCreate,
+				imageCache.Dispose);
+			if (recorder is null)
+				imageCache.Dispose ();
+			return recorder;
+		}
+
+		public SKGraphiteInsertStatus InsertRecording (SKGraphiteRecording recording)
+		{
+			if (recording is null)
+				throw new ArgumentNullException (nameof (recording));
+
+			return insertRecording?.Invoke (recording) ??
+				Context.InsertRecording (recording);
+		}
 	}
 }
 #endif

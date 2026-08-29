@@ -130,20 +130,14 @@ namespace SkiaSharp.Views.tvOS
 					var info = new SKImageInfo (
 						width, height, SKColorType.Bgra8888, SKAlphaType.Premul);
 					OnPaintSurface (new SKPaintGraphiteSurfaceEventArgs (
-						surface, backendTexture, context, info));
+						surface, backendTexture, context, info, info, InsertRecording));
 				}
 
 				using var recording = recorder.Snap ()
 					?? throw new InvalidOperationException ("Unable to snap the Graphite recording.");
-				var status = context.InsertRecording (recording);
-				if (status != SKGraphiteInsertStatus.Success) {
-					if (status == SKGraphiteInsertStatus.AddCommandsFailed ||
-						status == SKGraphiteInsertStatus.AsyncShaderCompilesFailed ||
-						status == SKGraphiteInsertStatus.OutOfOrderRecording) {
-						contextUnrecoverable = true;
-					}
+				var status = InsertRecording (recording);
+				if (status != SKGraphiteInsertStatus.Success)
 					throw new InvalidOperationException ($"Unable to insert the Graphite recording: {status}.");
-				}
 				if (!context.Submit (new SKGraphiteSubmitInfo {
 					Sync = false,
 					MarkBoundary = true,
@@ -188,6 +182,20 @@ namespace SkiaSharp.Views.tvOS
 			}
 
 			base.Dispose (disposing);
+		}
+
+		private SKGraphiteInsertStatus InsertRecording (SKGraphiteRecording recording)
+		{
+			if (context is null)
+				throw new InvalidOperationException ("The Graphite context is unavailable.");
+
+			var status = context.InsertRecording (recording);
+			if (status == SKGraphiteInsertStatus.AddCommandsFailed ||
+				status == SKGraphiteInsertStatus.AsyncShaderCompilesFailed ||
+				status == SKGraphiteInsertStatus.OutOfOrderRecording) {
+				contextUnrecoverable = true;
+			}
+			return status;
 		}
 
 		private void Initialize ()
