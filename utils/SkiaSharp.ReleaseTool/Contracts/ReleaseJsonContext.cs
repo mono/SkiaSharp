@@ -18,7 +18,6 @@ namespace SkiaSharp.ReleaseTool.Contracts
 	[JsonSerializable(typeof(FinishCreateDraftResult))]
 	[JsonSerializable(typeof(FinishPublicationPlan))]
 	[JsonSerializable(typeof(FinishPublishResult))]
-	[JsonSerializable(typeof(FinishCloseoutPlan))]
 	[JsonSerializable(typeof(FinishCloseoutResult))]
 	public partial class ReleaseJsonContext : JsonSerializerContext
 	{

@@ -8,11 +8,6 @@ namespace SkiaSharp.ReleaseTool.NuGet
 		IReadOnlySet<string> AnchorPackages,
 		IReadOnlyList<SigningCertificatePolicyEntry> Certificates)
 	{
-		private static readonly HashSet<string> ExpectedAnchors =
-			new(
-				["SkiaSharp", "SkiaSharp.HarfBuzz", "HarfBuzzSharp"],
-				StringComparer.Ordinal);
-
 		public static ReleasePolicies Load(string repositoryRoot)
 		{
 			var directory = Path.Combine(repositoryRoot, "scripts", "infra", "release");
@@ -25,14 +20,18 @@ namespace SkiaSharp.ReleaseTool.NuGet
 
 			var anchors = packages.AnchorPackages
 				?? throw new NuGetReceiptException("public-packages.json anchorPackages must not be null");
-			if (anchors.Count != ExpectedAnchors.Count ||
-				!anchors.ToHashSet(StringComparer.Ordinal).SetEquals(ExpectedAnchors))
+			if (anchors.Count == 0)
+				throw new NuGetReceiptException("public-packages.json has no anchor packages");
+			if (anchors.Any(anchor =>
+				string.IsNullOrWhiteSpace(anchor) ||
+				anchor.Any(static character =>
+					!char.IsAsciiLetterOrDigit(character) &&
+					character is not ('.' or '-' or '_'))))
 			{
-				throw new NuGetReceiptException(
-					"public-packages.json anchorPackages must contain exactly SkiaSharp, SkiaSharp.HarfBuzz, and HarfBuzzSharp");
+				throw new NuGetReceiptException("public-packages.json contains an invalid anchor package ID");
 			}
-			if (anchors.Any(string.IsNullOrWhiteSpace))
-				throw new NuGetReceiptException("public-packages.json contains an empty anchor package");
+			if (anchors.Distinct(StringComparer.Ordinal).Count() != anchors.Count)
+				throw new NuGetReceiptException("public-packages.json contains a duplicate anchor package");
 
 			if (signing.HashAlgorithm != "SHA256")
 				throw new NuGetReceiptException("trusted-signing-certificates.json hashAlgorithm must be SHA256");

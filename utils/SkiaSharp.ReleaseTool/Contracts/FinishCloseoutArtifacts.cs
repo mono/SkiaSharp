@@ -1,22 +1,5 @@
 namespace SkiaSharp.ReleaseTool.Contracts
 {
-	public sealed record FinishCloseoutPlan(
-		int SchemaVersion,
-		FinishCloseoutOperation Operation,
-		Guid PlanId,
-		DateTimeOffset GeneratedAt,
-		string ToolingSha,
-		FinishCloseoutNextAction NextAction,
-		FinishReleaseInfo Release,
-		string SourceCommit,
-		string SourceBranch,
-		string Tag,
-		IReadOnlyList<FinishScheduleOperation> ScheduleOperations,
-		IReadOnlyList<FinishReconcileOperation> ReconcileOperations,
-		IReadOnlyList<FinishClosureOperation> ClosureOperations,
-		IReadOnlyList<FinishWorkflowDispatch> Dispatches,
-		IReadOnlyList<string> Warnings);
-
 	public sealed record FinishCloseoutResult(
 		int SchemaVersion,
 		FinishCloseoutOperation Operation,

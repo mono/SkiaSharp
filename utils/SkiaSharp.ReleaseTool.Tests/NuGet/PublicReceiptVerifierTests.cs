@@ -38,6 +38,33 @@ namespace SkiaSharp.ReleaseTool.Tests.NuGet
 			Assert.Contains("advanced", receipt.Warnings[0]);
 		}
 
+		[Theory]
+		[InlineData("SkiaSharp")]
+		[InlineData("SkiaSharp.HarfBuzz")]
+		[InlineData("HarfBuzzSharp")]
+		public async Task Current_semantic_anchors_must_be_configured(string missing)
+		{
+			var policies = PackageTestData.Policies();
+			policies = policies with
+			{
+				AnchorPackages = policies.AnchorPackages
+					.Where(value => value != missing)
+					.ToHashSet(StringComparer.Ordinal),
+			};
+			var verifier = new PublicReceiptVerifier(
+				ReceiptPackageSource.CreateStable(),
+				new RecordingSignatureVerifier());
+
+			var error = await Assert.ThrowsAsync<NuGetReceiptException>(() =>
+				verifier.VerifyAsync(
+					new ReceiptRepository(Commit, Commit),
+					PublicReleaseVersion.Parse("4.152.0"),
+					policies,
+					CancellationToken.None));
+
+			Assert.Contains(missing, error.Message);
+		}
+
 		[Fact]
 		public async Task Uses_one_monotonic_deadline_and_reports_all_pending_packages()
 		{

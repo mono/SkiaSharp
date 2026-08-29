@@ -327,14 +327,17 @@ dotnet restore utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --locked
 dotnet build utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --configuration Release --no-restore
 dotnet run --no-build --no-restore --configuration Release \
   --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj -- \
-  finish plan --version 4.152.0 --output finish-plan.json
+  finish plan --version 4.152.0 --output finish-plan.json \
+  --summary finish-plan.md
 ```
 
-Use `render-plan --plan <artifact> --format json|markdown --output <path>` to
-strictly validate and render any release artifact. Never edit artifact JSON;
-regenerate it from current state. Recovery commands that consume a plan must
-receive its exact `planId`; publication additionally requires the exact
-`publicationPlanId`.
+Producing commands accept `--summary <path>` and write their typed Markdown
+summary directly. Never edit artifact JSON; regenerate it from current state.
+Recovery commands that consume a plan require both its exact `planId` and the
+lowercase SHA256 of its raw JSON bytes via `--expected-plan-sha256`.
+Publication additionally requires the exact `publicationPlanId` and
+`--expected-publication-sha256`. The workflows calculate these digests before
+upload and propagate them independently of the artifacts.
 
 The two JSON files retained under `scripts/infra/release/` are runtime policy
 inputs for the C# receipt verifier: the public package anchors and trusted

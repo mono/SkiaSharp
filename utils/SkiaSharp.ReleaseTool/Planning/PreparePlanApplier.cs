@@ -24,7 +24,6 @@ namespace SkiaSharp.ReleaseTool.Planning
 			CancellationToken cancellationToken = default,
 			IReadOnlyList<string>? allowedUntrackedPaths = null)
 		{
-			PreparePlanValidator.Validate(plan);
 			if (plan.PlanId != expectedPlanId)
 				throw new ValidationException($"planId '{plan.PlanId}' does not match expected correlation id '{expectedPlanId}'");
 
@@ -61,7 +60,6 @@ namespace SkiaSharp.ReleaseTool.Planning
 				Operations: operations,
 				StableBumpPullRequestUrl: pullRequestUrl,
 				Warnings: plan.Warnings);
-			PrepareApplyResultValidator.Validate(result);
 			return result;
 		}
 

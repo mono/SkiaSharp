@@ -125,7 +125,6 @@ namespace SkiaSharp.ReleaseTool.Finishing
 					existingRelease,
 					hasGeneratedNotes),
 				Warnings: warnings);
-			FinishPlanValidator.Validate(plan);
 			return plan;
 		}
 

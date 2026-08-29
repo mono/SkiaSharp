@@ -57,7 +57,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 			}
 
 			await Assert.ThrowsAsync<ConflictException>(() =>
-				setup.Service.PlanAsync(
+				setup.Service.ApplyAsync(
 					setup.Plan,
 					setup.Plan.PlanId,
 					TestContext.Current.CancellationToken));
@@ -107,7 +107,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 			}
 
 			var error = await Assert.ThrowsAsync<ConflictException>(() =>
-				setup.Service.PlanAsync(
+				setup.Service.ApplyAsync(
 					setup.Plan,
 					setup.Plan.PlanId,
 					TestContext.Current.CancellationToken));
@@ -297,7 +297,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 			var setup = Setup();
 
 			await Assert.ThrowsAsync<ValidationException>(() =>
-				setup.Service.PlanAsync(
+				setup.Service.ApplyAsync(
 					setup.Plan,
 					Guid.NewGuid(),
 					TestContext.Current.CancellationToken));

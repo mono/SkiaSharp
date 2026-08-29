@@ -27,6 +27,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 					"prepare", "plan",
 					"--integration-target", "main",
 					"--repo", root.Path,
+					"--summary", "prepare-summary.md",
 				],
 				environment);
 
@@ -42,8 +43,14 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 			Assert.Equal("3.119.0-preview.1", printed.Release.Version);
 			Assert.Equivalent(
 				printed,
-				PlanStore.ReadPrepare(outputPath, printed.PlanId),
+				PlanStore.ReadPrepare(
+					outputPath,
+					printed.PlanId,
+					ArtifactHash.ComputeFile(outputPath)),
 				strict: true);
+			Assert.Contains(
+				printed.PlanId.ToString(),
+				File.ReadAllText(Path.Combine(root.Path, "prepare-summary.md")));
 			Assert.Empty(environment.Error.ToString());
 		}
 
@@ -93,6 +100,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 			var plan = await fixture.PlanAsync();
 			var planPath = Path.Combine(fixture.Repository.Root, "approved-plan.json");
 			PlanStore.Write(planPath, plan);
+			var planHash = ArtifactHash.ComputeFile(planPath);
 			var environment = new FakeEnvironment(
 				fixture.Repository,
 				fixture.GitHub);
@@ -106,10 +114,12 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 				[
 					"prepare", "apply",
 					"--plan", "approved-plan.json",
-					"--expected-plan-id", Guid.NewGuid().ToString(),
+					"--expected-plan-id", plan.PlanId.ToString(),
+					"--expected-plan-sha256", new string('0', 64),
 				],
 				environment);
 			Assert.Equal(ExitCodes.GenericError, mismatch);
+			Assert.Equal(0, environment.GitHubClientCreations);
 
 			environment.Error.GetStringBuilder().Clear();
 			var exitCode = await Program.InvokeAsync(
@@ -117,7 +127,9 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 					"prepare", "apply",
 					"--plan", "approved-plan.json",
 					"--expected-plan-id", plan.PlanId.ToString(),
+					"--expected-plan-sha256", planHash,
 					"--output", "apply-result.json",
+					"--summary", "apply-result.md",
 				],
 				environment);
 
@@ -130,7 +142,9 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 				ReleaseJsonContext.Strict.PrepareApplyResult);
 			Assert.NotNull(result);
 			Assert.Equal(plan.PlanId, result.PlanId);
-			PrepareApplyResultValidator.Validate(result);
+			Assert.Contains(
+				plan.PlanId.ToString(),
+				File.ReadAllText(Path.Combine(fixture.Repository.Root, "apply-result.md")));
 		}
 
 		private sealed class FakeEnvironment(
@@ -140,6 +154,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 			public StringWriter Output { get; } = new();
 			public StringWriter Error { get; } = new();
 			public string? OpenedPath { get; private set; }
+			public int GitHubClientCreations { get; private set; }
 			public TextWriter StandardOutput => Output;
 			public TextWriter StandardError => Error;
 			public TimeProvider TimeProvider { get; } =
@@ -155,7 +170,11 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 				return Task.FromResult(repository);
 			}
 
-			public IPrepareGitHubClient CreateGitHubClient() => github;
+			public IPrepareGitHubClient CreateGitHubClient()
+			{
+				GitHubClientCreations++;
+				return github;
+			}
 		}
 
 		private sealed class CancelingEnvironment : IReleaseCommandEnvironment

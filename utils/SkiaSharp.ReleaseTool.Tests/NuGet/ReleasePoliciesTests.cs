@@ -14,9 +14,10 @@ namespace SkiaSharp.ReleaseTool.Tests.NuGet
 
 			var policies = ReleasePolicies.Load(root);
 
-			Assert.Equal(
-				["HarfBuzzSharp", "SkiaSharp", "SkiaSharp.HarfBuzz"],
-				policies.AnchorPackages.Order(StringComparer.Ordinal).ToArray());
+			Assert.NotEmpty(policies.AnchorPackages);
+			Assert.All(
+				policies.AnchorPackages,
+				static id => Assert.DoesNotContain(id, char.IsWhiteSpace));
 			Assert.Contains(policies.Certificates, certificate => certificate.Role == SigningCertificateRole.Author);
 			Assert.Contains(policies.Certificates, certificate => certificate.Role == SigningCertificateRole.Repository);
 		}

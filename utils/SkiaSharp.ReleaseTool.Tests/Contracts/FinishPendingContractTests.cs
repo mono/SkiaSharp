@@ -29,7 +29,6 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 				json,
 				ReleaseJsonContext.Strict.FinishPendingReport);
 			Assert.NotNull(copy);
-			FinishPendingReportValidator.Validate(copy);
 
 			Assert.Throws<JsonException>(() => JsonSerializer.Deserialize(
 				json.Insert(json.IndexOf('{') + 1, "\"unknown\":true,"),

@@ -27,7 +27,11 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 			var environment = new FinishEnvironment(repository);
 
 			var exitCode = await Program.InvokeAsync(
-				["finish", "plan", "--version", "4.152.0"],
+				[
+					"finish", "plan",
+					"--version", "4.152.0",
+					"--summary", "finish-pending.md",
+				],
 				environment);
 
 			Assert.Equal(ExitCodes.Pending, exitCode);
@@ -40,6 +44,9 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 			Assert.NotNull(report);
 			Assert.Equal(PendingNextAction.Pending, report.NextAction);
 			Assert.Equal("SkiaSharp", Assert.Single(report.MissingPackages).Id);
+			Assert.Contains(
+				"Missing packages",
+				File.ReadAllText(Path.Combine(root.Path, "finish-pending.md")));
 			Assert.Empty(environment.Error.ToString());
 		}
 
@@ -79,6 +86,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 			using var fixture = await FinishTestFixture.CreateAsync("finish-cli-write");
 			var planPath = Path.Combine(fixture.Repository.Root, "approved-finish.json");
 			PlanStore.Write(planPath, fixture.Plan);
+			var planHash = ArtifactHash.ComputeFile(planPath);
 			var environment = new FinishWriteEnvironment(
 				fixture.Repository,
 				fixture.GitHub);
@@ -93,6 +101,8 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 					"approved-finish.json",
 					"--expected-plan-id",
 					fixture.Plan.PlanId.ToString(),
+					"--expected-plan-sha256",
+					planHash,
 				],
 				environment);
 
@@ -116,6 +126,8 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 					"approved-finish.json",
 					"--expected-plan-id",
 					fixture.Plan.PlanId.ToString(),
+					"--expected-plan-sha256",
+					planHash,
 				],
 				environment);
 
@@ -126,7 +138,8 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 			var publication = PlanStore.ReadPublication(
 				publicationPath,
 				fixture.Plan.PlanId,
-				FinishTestFixture.PublicationPlanId);
+				FinishTestFixture.PublicationPlanId,
+				ArtifactHash.ComputeFile(publicationPath));
 			Assert.Equal(FinishNextAction.Publish, publication.NextAction);
 
 			var publishExit = await Program.InvokeAsync(
@@ -139,10 +152,16 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 					"approved-finish.json",
 					"--expected-plan-id",
 					fixture.Plan.PlanId.ToString(),
+					"--expected-plan-sha256",
+					planHash,
 					"--publication",
 					"finish-publication-plan.json",
 					"--expected-publication-plan-id",
 					publication.PublicationPlanId.ToString(),
+					"--expected-publication-sha256",
+					ArtifactHash.ComputeFile(publicationPath),
+					"--summary",
+					"finish-publish-result.md",
 				],
 				environment);
 
@@ -157,10 +176,15 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 			Assert.Equal(FinishNextAction.Closeout, publishResult.NextAction);
 			Assert.Equal(publication.PublicationPlanId, publishResult.PublicationPlanId);
 			Assert.True(File.Exists(createPath));
+			Assert.Contains(
+				publication.PublicationPlanId.ToString(),
+				File.ReadAllText(Path.Combine(
+					fixture.Repository.Root,
+					"finish-publish-result.md")));
 		}
 
 		[Fact]
-		public async Task CLI_PlanId_mismatch_is_rejected_before_write_client_creation()
+		public async Task CLI_plan_digest_mismatch_is_rejected_before_write_client_creation()
 		{
 			using var fixture = await FinishTestFixture.CreateAsync("finish-cli-correlation");
 			PlanStore.Write(
@@ -179,13 +203,60 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 					"--plan",
 					"approved-finish.json",
 					"--expected-plan-id",
-					Guid.NewGuid().ToString(),
+					fixture.Plan.PlanId.ToString(),
+					"--expected-plan-sha256",
+					new string('0', 64),
 				],
 				environment);
 
 			Assert.Equal(ExitCodes.GenericError, exit);
 			Assert.Equal(0, environment.WriteClientCreations);
 			Assert.Equal(0, fixture.GitHub.GetCount);
+			Assert.False(File.Exists(Path.Combine(
+				fixture.Repository.Root,
+				"finish-create-draft-result.json")));
+		}
+
+		[Fact]
+		public async Task CLI_publication_digest_mismatch_is_rejected_before_write_client_creation()
+		{
+			using var fixture = await FinishTestFixture.CreateAsync("finish-cli-publication-digest");
+			await fixture.EnsureTagAsync();
+			fixture.SetRelease(ManagedReleaseMarkers.BuildInitialBody("notes"));
+			var publication = await fixture.Service.PlanPublicationAsync(
+				fixture.Plan,
+				fixture.Plan.PlanId,
+				TestContext.Current.CancellationToken);
+			var planPath = Path.Combine(fixture.Repository.Root, "approved-finish.json");
+			var publicationPath = Path.Combine(fixture.Repository.Root, "publication.json");
+			PlanStore.Write(planPath, fixture.Plan);
+			PlanStore.Write(publicationPath, publication);
+			var environment = new FinishWriteEnvironment(fixture.Repository, fixture.GitHub);
+
+			var exit = await Program.InvokeAsync(
+				[
+					"finish",
+					"publish",
+					"--repo",
+					fixture.Repository.Root,
+					"--plan",
+					"approved-finish.json",
+					"--expected-plan-id",
+					fixture.Plan.PlanId.ToString(),
+					"--expected-plan-sha256",
+					ArtifactHash.ComputeFile(planPath),
+					"--publication",
+					"publication.json",
+					"--expected-publication-plan-id",
+					publication.PublicationPlanId.ToString(),
+					"--expected-publication-sha256",
+					new string('0', 64),
+				],
+				environment);
+
+			Assert.Equal(ExitCodes.GenericError, exit);
+			Assert.Equal(0, environment.WriteClientCreations);
+			Assert.Equal(0, fixture.GitHub.PublishCount);
 		}
 
 		private static void WritePolicies(string root)

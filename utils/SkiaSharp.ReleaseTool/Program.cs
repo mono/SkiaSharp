@@ -50,6 +50,10 @@ namespace SkiaSharp.ReleaseTool
 				Description = "Prepare plan output path.",
 				DefaultValueFactory = _ => "prepare-plan.json",
 			};
+			var summaryOption = new Option<string?>("--summary")
+			{
+				Description = "Optional prepare plan Markdown summary path.",
+			};
 			var planFileOption = new Option<string>("--plan")
 			{
 				Description = "Approved prepare plan file.",
@@ -60,10 +64,19 @@ namespace SkiaSharp.ReleaseTool
 				Description = "Plan correlation identifier emitted by prepare plan.",
 				Required = true,
 			};
+			var expectedPlanSha256Option = new Option<string>("--expected-plan-sha256")
+			{
+				Description = "Exact lowercase SHA256 digest of the approved prepare plan bytes.",
+				Required = true,
+			};
 			var applyOutputOption = new Option<string>("--output")
 			{
 				Description = "Prepare apply result output path.",
 				DefaultValueFactory = _ => "prepare-apply-result.json",
+			};
+			var applySummaryOption = new Option<string?>("--summary")
+			{
+				Description = "Optional prepare result Markdown summary path.",
 			};
 
 			var planCommand = new Command("plan", "Discover release state and write a read-only prepare plan.");
@@ -72,6 +85,7 @@ namespace SkiaSharp.ReleaseTool
 			planCommand.Options.Add(approvedBaseOption);
 			planCommand.Options.Add(toolingShaOption);
 			planCommand.Options.Add(outputOption);
+			planCommand.Options.Add(summaryOption);
 			planCommand.SetAction(async (parseResult, cancellationToken) =>
 			{
 				try
@@ -100,6 +114,9 @@ namespace SkiaSharp.ReleaseTool
 					try
 					{
 						PlanStore.Write(Path.Combine(repository.Root, output), plan);
+						ReleaseSummary.Write(
+							SummaryPath(repository.Root, parseResult.GetValue(summaryOption)),
+							plan);
 					}
 					catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 					{
@@ -124,7 +141,9 @@ namespace SkiaSharp.ReleaseTool
 			var applyCommand = new Command("apply", "Apply an approved prepare plan.");
 			applyCommand.Options.Add(planFileOption);
 			applyCommand.Options.Add(expectedPlanIdOption);
+			applyCommand.Options.Add(expectedPlanSha256Option);
 			applyCommand.Options.Add(applyOutputOption);
+			applyCommand.Options.Add(applySummaryOption);
 			applyCommand.SetAction(async (parseResult, cancellationToken) =>
 			{
 				try
@@ -133,13 +152,17 @@ namespace SkiaSharp.ReleaseTool
 						parseResult.GetValue(repoOption),
 						cancellationToken).ConfigureAwait(false);
 					var expectedPlanId = parseResult.GetRequiredValue(expectedPlanIdOption);
+					var expectedPlanSha256 = parseResult.GetRequiredValue(expectedPlanSha256Option);
 					var planPath = Path.Combine(
 						repository.Root,
 						parseResult.GetRequiredValue(planFileOption));
 					PreparePlan plan;
 					try
 					{
-						plan = PlanStore.ReadPrepare(planPath, expectedPlanId);
+						plan = PlanStore.ReadPrepare(
+							planPath,
+							expectedPlanId,
+							expectedPlanSha256);
 					}
 					catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 					{
@@ -158,6 +181,9 @@ namespace SkiaSharp.ReleaseTool
 					try
 					{
 						PlanStore.Write(outputPath, result);
+						ReleaseSummary.Write(
+							SummaryPath(repository.Root, parseResult.GetValue(applySummaryOption)),
+							result);
 					}
 					catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 					{
@@ -189,9 +215,11 @@ namespace SkiaSharp.ReleaseTool
 			root.Subcommands.Add(prepareCommand);
 			root.Subcommands.Add(FinishPlanCommand.Create(repoOption, environment));
 			root.Subcommands.Add(CheckEnvironmentCommand.Create(environment));
-			root.Subcommands.Add(RenderPlanCommand.Create(environment));
 			return await root.Parse(args).InvokeAsync().ConfigureAwait(false);
 		}
+
+		private static string? SummaryPath(string repositoryRoot, string? path) =>
+			string.IsNullOrWhiteSpace(path) ? null : Path.Combine(repositoryRoot, path);
 	}
 
 	internal interface IReleaseCommandEnvironment

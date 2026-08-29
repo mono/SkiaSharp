@@ -17,67 +17,6 @@ namespace SkiaSharp.ReleaseTool.Finishing
 		private const string ReleaseNotesWorkflow = "update-release-notes.lock.yml";
 		private const string IssueTemplateWorkflow = "auto-update-issue-template-versions.yml";
 
-		public async Task<FinishCloseoutPlan> PlanAsync(
-			FinishPlan parent,
-			Guid expectedPlanId,
-			CancellationToken cancellationToken = default)
-		{
-			RequireParent(parent, expectedPlanId);
-			await repository.FetchAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-			var tags = await RequireShippedAsync(parent, cancellationToken).ConfigureAwait(false);
-			var warnings = new List<string>();
-			var milestones = await github.GetMilestonesAsync(cancellationToken).ConfigureAwait(false);
-			var milestoneMap = MilestonePlanner.Index(milestones);
-			var schedule = await PlanScheduleAsync(
-				milestoneMap,
-				warnings,
-				cancellationToken).ConfigureAwait(false);
-			var reconciliation = await PlanReconciliationAsync(
-				parent,
-				milestones,
-				tags,
-				warnings,
-				cancellationToken).ConfigureAwait(false);
-			var creatable = schedule
-				.Where(operation =>
-					operation.Action == FinishScheduleAction.Create &&
-					operation.Status == FinishCloseoutStatus.Pending)
-				.Select(operation => operation.Title)
-				.ToHashSet(StringComparer.Ordinal);
-			var closure = await MilestonePlanner.PlanClosureAsync(
-				milestones,
-				tags,
-				github,
-				creatable,
-				warnings,
-				cancellationToken).ConfigureAwait(false);
-			var nextAction = closure.Any(operation => operation.Status == FinishCloseoutStatus.Blocked)
-				? FinishCloseoutNextAction.Blocked
-				: schedule.Any(operation => operation.Status == FinishCloseoutStatus.Pending) ||
-					reconciliation.Count > 0 ||
-					closure.Any(operation => operation.Status == FinishCloseoutStatus.Pending)
-					? FinishCloseoutNextAction.Closeout
-					: FinishCloseoutNextAction.Done;
-			var result = new FinishCloseoutPlan(
-				SchemaVersion: 1,
-				Operation: FinishCloseoutOperation.Plan,
-				PlanId: parent.PlanId,
-				GeneratedAt: timeProvider.GetUtcNow(),
-				ToolingSha: parent.ToolingSha,
-				NextAction: nextAction,
-				Release: parent.Release,
-				SourceCommit: parent.Receipt.SourceCommit,
-				SourceBranch: parent.Receipt.SourceBranch,
-				Tag: parent.Tag.Name,
-				ScheduleOperations: schedule,
-				ReconcileOperations: reconciliation,
-				ClosureOperations: closure,
-				Dispatches: BuildDispatches(parent, FinishDispatchStatus.Pending),
-				Warnings: warnings);
-			FinishCloseoutPlanValidator.Validate(result);
-			return result;
-		}
-
 		public async Task<FinishCloseoutResult> ApplyAsync(
 			FinishPlan parent,
 			Guid expectedPlanId,
@@ -156,7 +95,6 @@ namespace SkiaSharp.ReleaseTool.Finishing
 				ClosureResults: closureResults,
 				Dispatches: dispatched,
 				Warnings: warnings);
-			FinishCloseoutResultValidator.Validate(result);
 			return result;
 		}
 
@@ -397,7 +335,6 @@ namespace SkiaSharp.ReleaseTool.Finishing
 
 		private static void RequireParent(FinishPlan parent, Guid expectedPlanId)
 		{
-			FinishPlanValidator.Validate(parent);
 			if (parent.PlanId != expectedPlanId)
 			{
 				throw new ValidationException(

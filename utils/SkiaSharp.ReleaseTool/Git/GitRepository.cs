@@ -4,7 +4,7 @@ using SkiaSharp.ReleaseTool.Processes;
 
 namespace SkiaSharp.ReleaseTool.Git
 {
-	public sealed class GitRepository : IGitRepository, IReleaseRepository
+	public sealed class GitRepository : IReleaseRepository
 	{
 		private const string TagRefPrefix = "refs/tags/";
 		private const string PeeledTagSuffix = "^{}";
@@ -179,15 +179,6 @@ namespace SkiaSharp.ReleaseTool.Git
 			return lines;
 		}
 
-		public async Task<string> MergeBaseAsync(
-			string a,
-			string b,
-			CancellationToken cancellationToken = default)
-		{
-			var result = await GitAsync(["merge-base", a, b], cancellationToken: cancellationToken).ConfigureAwait(false);
-			return ParseSha(ParseSingleLine(result.StandardOutput, "merge base"), "merge base");
-		}
-
 		public async Task<bool> IsAncestorAsync(
 			string ancestor,
 			string descendant,
@@ -263,12 +254,6 @@ namespace SkiaSharp.ReleaseTool.Git
 			return ParseSingleLine(result.StandardOutput, "current branch");
 		}
 
-		public async Task CreateBranchAsync(
-			string branch,
-			string startPoint,
-			CancellationToken cancellationToken = default) =>
-			_ = await GitAsync(["branch", branch, startPoint], cancellationToken: cancellationToken).ConfigureAwait(false);
-
 		public async Task UpdateLocalBranchAsync(
 			string branch,
 			string sha,
@@ -319,12 +304,6 @@ namespace SkiaSharp.ReleaseTool.Git
 			_ = await GitAsync(
 				["push", remote, $"{sha}:refs/tags/{tag}"],
 				cancellationToken: cancellationToken).ConfigureAwait(false);
-
-		public Task<bool> ContainsCommitAsync(
-			string branchRef,
-			string commit,
-			CancellationToken cancellationToken = default) =>
-			IsAncestorAsync(commit, branchRef, cancellationToken);
 
 		public Task<string> ReadWorktreeFileAsync(
 			string path,

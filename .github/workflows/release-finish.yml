@@ -29,6 +29,7 @@ jobs:
     outputs:
       tooling_sha: ${{ steps.outputs.outputs.tooling_sha }}
       plan_id: ${{ steps.outputs.outputs.plan_id }}
+      plan_sha256: ${{ steps.outputs.outputs.plan_sha256 }}
       release_identity: ${{ steps.outputs.outputs.release_identity }}
       next_action: ${{ steps.outputs.outputs.next_action }}
     steps:
@@ -72,15 +73,12 @@ jobs:
           "${release_tool[@]}" finish plan \
             --version "$RELEASE_VERSION" \
             --tooling-sha "$GITHUB_SHA" \
-            --output "$RUNNER_TEMP/release-finish/plan.json" || status=$?
+            --output "$RUNNER_TEMP/release-finish/plan.json" \
+            --summary "$RUNNER_TEMP/release-finish/summary.md" || status=$?
           echo "status=$status" >> "$GITHUB_OUTPUT"
           if [ "$status" -ne 0 ] && [ "$status" -ne 2 ]; then
             exit "$status"
           fi
-          "${release_tool[@]}" render-plan \
-            --plan "$RUNNER_TEMP/release-finish/plan.json" \
-            --format markdown \
-            --output "$RUNNER_TEMP/release-finish/summary.md"
           cat "$RUNNER_TEMP/release-finish/summary.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Export immutable plan identity
@@ -91,6 +89,7 @@ jobs:
           plan="$RUNNER_TEMP/release-finish/plan.json"
           echo "tooling_sha=$(jq -r '.toolingSha' "$plan")" >> "$GITHUB_OUTPUT"
           echo "plan_id=$(jq -r '.planId' "$plan")" >> "$GITHUB_OUTPUT"
+          echo "plan_sha256=$(sha256sum "$plan" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
           echo "release_identity=$(jq -r '.release.identity' "$plan")" >> "$GITHUB_OUTPUT"
           echo "next_action=$(jq -r '.nextAction' "$plan")" >> "$GITHUB_OUTPUT"
 
@@ -172,10 +171,12 @@ jobs:
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
           RELEASE_GIT_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
           EXPECTED_PLAN_ID: ${{ needs.plan.outputs.plan_id }}
+          EXPECTED_PLAN_SHA256: ${{ needs.plan.outputs.plan_sha256 }}
         run: |
           set -euo pipefail
           test -n "$GH_TOKEN"
           test -n "$EXPECTED_PLAN_ID"
+          test -n "$EXPECTED_PLAN_SHA256"
           auth_dir="$RUNNER_TEMP/release-git-auth"
           askpass="$auth_dir/askpass.sh"
           mkdir -p "$auth_dir"
@@ -202,11 +203,9 @@ jobs:
           "${release_tool[@]}" finish create-draft \
             --plan "$RUNNER_TEMP/release-finish/plan.json" \
             --expected-plan-id "$EXPECTED_PLAN_ID" \
-            --output "$RUNNER_TEMP/release-finish/draft-result.json"
-          "${release_tool[@]}" render-plan \
-            --plan "$RUNNER_TEMP/release-finish/draft-result.json" \
-            --format markdown \
-            --output "$RUNNER_TEMP/release-finish/draft-result.md"
+            --expected-plan-sha256 "$EXPECTED_PLAN_SHA256" \
+            --output "$RUNNER_TEMP/release-finish/draft-result.json" \
+            --summary "$RUNNER_TEMP/release-finish/draft-result.md"
           cat "$RUNNER_TEMP/release-finish/draft-result.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload draft result
@@ -246,6 +245,7 @@ jobs:
       release_identity: ${{ needs.plan.outputs.release_identity }}
       next_action: ${{ steps.outputs.outputs.next_action }}
       publication_plan_id: ${{ steps.outputs.outputs.publication_plan_id }}
+      publication_sha256: ${{ steps.outputs.outputs.publication_sha256 }}
     steps:
       - name: Checkout approved tooling revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -283,9 +283,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           EXPECTED_PLAN_ID: ${{ needs.plan.outputs.plan_id }}
+          EXPECTED_PLAN_SHA256: ${{ needs.plan.outputs.plan_sha256 }}
         run: |
           set -euo pipefail
           test -n "$EXPECTED_PLAN_ID"
+          test -n "$EXPECTED_PLAN_SHA256"
           release_tool=(
             dotnet run --no-build --no-restore --configuration Release
             --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --
@@ -293,11 +295,9 @@ jobs:
           "${release_tool[@]}" finish plan-publication \
             --plan "$RUNNER_TEMP/release-finish/plan.json" \
             --expected-plan-id "$EXPECTED_PLAN_ID" \
-            --output "$RUNNER_TEMP/release-finish/publication-plan.json"
-          "${release_tool[@]}" render-plan \
-            --plan "$RUNNER_TEMP/release-finish/publication-plan.json" \
-            --format markdown \
-            --output "$RUNNER_TEMP/release-finish/publication-plan.md"
+            --expected-plan-sha256 "$EXPECTED_PLAN_SHA256" \
+            --output "$RUNNER_TEMP/release-finish/publication-plan.json" \
+            --summary "$RUNNER_TEMP/release-finish/publication-plan.md"
           cat "$RUNNER_TEMP/release-finish/publication-plan.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Export publication state
@@ -306,8 +306,10 @@ jobs:
           set -euo pipefail
           next_action=$(jq -r '.nextAction' "$RUNNER_TEMP/release-finish/publication-plan.json")
           publication_plan_id=$(jq -r '.publicationPlanId' "$RUNNER_TEMP/release-finish/publication-plan.json")
+          publication_sha256=$(sha256sum "$RUNNER_TEMP/release-finish/publication-plan.json" | cut -d ' ' -f 1)
           echo "next_action=$next_action" >> "$GITHUB_OUTPUT"
           echo "publication_plan_id=$publication_plan_id" >> "$GITHUB_OUTPUT"
+          echo "publication_sha256=$publication_sha256" >> "$GITHUB_OUTPUT"
           case "$next_action" in
             publish|closeout) ;;
             *)
@@ -395,12 +397,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
           EXPECTED_PLAN_ID: ${{ needs.plan.outputs.plan_id }}
+          EXPECTED_PLAN_SHA256: ${{ needs.plan.outputs.plan_sha256 }}
           EXPECTED_PUBLICATION_PLAN_ID: ${{ needs.plan-publication.outputs.publication_plan_id }}
+          EXPECTED_PUBLICATION_SHA256: ${{ needs.plan-publication.outputs.publication_sha256 }}
         run: |
           set -euo pipefail
           test -n "$GH_TOKEN"
           test -n "$EXPECTED_PLAN_ID"
+          test -n "$EXPECTED_PLAN_SHA256"
           test -n "$EXPECTED_PUBLICATION_PLAN_ID"
+          test -n "$EXPECTED_PUBLICATION_SHA256"
           mkdir -p "$RUNNER_TEMP/release-finish/result"
           release_tool=(
             dotnet run --no-build --no-restore --configuration Release
@@ -409,13 +415,12 @@ jobs:
           "${release_tool[@]}" finish publish \
             --plan "$RUNNER_TEMP/release-finish/original/plan.json" \
             --expected-plan-id "$EXPECTED_PLAN_ID" \
+            --expected-plan-sha256 "$EXPECTED_PLAN_SHA256" \
             --publication "$RUNNER_TEMP/release-finish/publication/publication-plan.json" \
             --expected-publication-plan-id "$EXPECTED_PUBLICATION_PLAN_ID" \
-            --output "$RUNNER_TEMP/release-finish/result/publish-result.json"
-          "${release_tool[@]}" render-plan \
-            --plan "$RUNNER_TEMP/release-finish/result/publish-result.json" \
-            --format markdown \
-            --output "$RUNNER_TEMP/release-finish/result/publish-result.md"
+            --expected-publication-sha256 "$EXPECTED_PUBLICATION_SHA256" \
+            --output "$RUNNER_TEMP/release-finish/result/publish-result.json" \
+            --summary "$RUNNER_TEMP/release-finish/result/publish-result.md"
           cat "$RUNNER_TEMP/release-finish/result/publish-result.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload publication result
@@ -489,10 +494,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
           EXPECTED_PLAN_ID: ${{ needs.plan.outputs.plan_id }}
+          EXPECTED_PLAN_SHA256: ${{ needs.plan.outputs.plan_sha256 }}
         run: |
           set -euo pipefail
           test -n "$GH_TOKEN"
           test -n "$EXPECTED_PLAN_ID"
+          test -n "$EXPECTED_PLAN_SHA256"
           release_tool=(
             dotnet run --no-build --no-restore --configuration Release
             --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --
@@ -500,11 +507,9 @@ jobs:
           "${release_tool[@]}" finish closeout \
             --plan "$RUNNER_TEMP/release-finish/plan.json" \
             --expected-plan-id "$EXPECTED_PLAN_ID" \
-            --output "$RUNNER_TEMP/release-finish/closeout-result.json"
-          "${release_tool[@]}" render-plan \
-            --plan "$RUNNER_TEMP/release-finish/closeout-result.json" \
-            --format markdown \
-            --output "$RUNNER_TEMP/release-finish/closeout-result.md"
+            --expected-plan-sha256 "$EXPECTED_PLAN_SHA256" \
+            --output "$RUNNER_TEMP/release-finish/closeout-result.json" \
+            --summary "$RUNNER_TEMP/release-finish/closeout-result.md"
           cat "$RUNNER_TEMP/release-finish/closeout-result.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload closeout result
