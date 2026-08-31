@@ -38,11 +38,12 @@ param(
     [switch] $Push
 )
 
-Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
-
+# 0. Initialize shared helpers, execution mode, and repository paths.
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
+Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
 $writeLocal = $Apply -or $Push
+$mode = if ($Push) { 'push' } elseif ($Apply) { 'local apply' } else { 'dry run' }
 $skiaRemote = $ReleaseSkiaRemote
 $skiaPath = $ReleaseSkiaPath
 $variablesPath = $ReleaseVariablesPath
@@ -422,7 +423,6 @@ $isStable = [bool] $Matches.stable
 $label = if ($isStable) { 'stable' } else { "$($Matches.channel).$($Matches.iteration)" }
 $identity = if ($isStable) { $version } else { $Release }
 $releaseBranch = "release/$identity"
-$mode = if ($Push) { 'push' } elseif ($Apply) { 'local apply' } else { 'dry run' }
 Write-Host "Preparing $identity ($mode)"
 
 # 2. Prepare the exact release branches.

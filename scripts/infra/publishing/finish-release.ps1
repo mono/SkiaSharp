@@ -25,18 +25,17 @@ param(
     [switch] $Push
 )
 
-# 0. Initialize repository paths, marker contracts, and execution mode.
-Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
-
+# 0. Initialize shared helpers, execution mode, and repository paths.
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
+Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
+$writeRemote = $Push
+$mode = if ($writeRemote) { 'push' } else { 'dry run' }
 $repository = $ReleaseRepository
 $summaryStart = $ReleaseSummaryStartMarker
 $summaryEnd = $ReleaseSummaryEndMarker
 $generatedStart = $ReleaseGeneratedStartMarker
 $generatedEnd = $ReleaseGeneratedEndMarker
-$writeRemote = [bool] $Push
-$mode = if ($writeRemote) { 'push' } else { 'dry run' }
 
 # Requires the public-version and managed-region markers to be complete and ordered.
 function Assert-ManagedBody([string] $Body) {
