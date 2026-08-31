@@ -183,6 +183,25 @@ function Get-ReleaseIdentity([string] $PublicVersion) {
     throw "Version must be stable X.Y.Z[.F] or an exact public X.Y.Z[.F]-(preview|rc).N.BUILD version."
 }
 
+# Resolves a prerelease identity to its one exact public NuGet package version.
+function Resolve-NuGetPackageVersion([string] $PackageId, [string] $Version) {
+    if ($Version -notmatch '^\d+\.\d+\.\d+(?:\.\d+)?-(?:preview|rc)\.[1-9]\d*$') {
+        return $Version
+    }
+
+    $lowerId = $PackageId.ToLowerInvariant()
+    $uri = "https://api.nuget.org/v3-flatcontainer/$lowerId/index.json"
+    $matches = @(
+        (Invoke-RestMethod -Uri $uri).versions |
+            Where-Object { $_ -match "^$([regex]::Escape($Version))\.\d+(?:\.\d+)?$" }
+    )
+    if ($matches.Count -ne 1) {
+        $found = if ($matches) { $matches -join ', ' } else { 'none' }
+        throw "$PackageId $Version must match exactly one public NuGet version; found $found."
+    }
+    return $matches[0]
+}
+
 # Reads the repository branch and commit from one public NuGet nuspec.
 function Get-NuGetPackageSource([string] $PackageId, [string] $PackageVersion) {
     $lowerId = $PackageId.ToLowerInvariant()
@@ -325,6 +344,7 @@ Export-ModuleMember -Function @(
     'Get-GitTreeEntrySha',
     'Push-ReleaseBranch',
     'Get-ReleaseIdentity',
+    'Resolve-NuGetPackageVersion',
     'Get-NuGetPackageSource',
     'Invoke-GitHubJson',
     'Invoke-GitHubJsonWithRetry',

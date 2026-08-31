@@ -16,16 +16,17 @@ After the exact packages appear on NuGet.org, use **Release - Finish** or run:
 ```powershell
 # Read-only
 ./scripts/infra/publishing/finish-release.ps1 `
-  -Version 4.153.0-preview.1.26431.1
+  -Version 4.153.0-preview.1
 
 # Push the next pending remote action
 ./scripts/infra/publishing/finish-release.ps1 `
-  -Version 4.153.0-preview.1.26431.1 `
+  -Version 4.153.0-preview.1 `
   -Push
 ```
 
-The first `-Push` run reads the source commit from the exact public SkiaSharp
-package, creates the immutable exact NuGet version tag at that commit, creates a
+An abbreviated prerelease identity must resolve to exactly one public SkiaSharp
+package version. The first `-Push` run reads that package's source commit,
+creates the immutable exact NuGet version tag at that commit, creates a
 marked GitHub Release draft, and stops. Review that draft. A later dry-run
 reports publication, and the second `-Push` run publishes the draft and
 dispatches release-note/summary follow-up. Run **Release - Milestones**

@@ -13,8 +13,8 @@
     draft on GitHub and run the script again to publish it.
 
 .PARAMETER Version
-    The exact public SkiaSharp package version, including the build revision
-    for previews and release candidates.
+    A stable version or prerelease identity. A prerelease build revision may be
+    omitted when exactly one matching SkiaSharp version exists on NuGet.org.
 
 .PARAMETER Push
     Pushes the next pending remote action. Without this switch, the script is
@@ -157,9 +157,16 @@ function Invoke-ReleaseFollowUpWorkflows([pscustomobject] $Release, [switch] $Dr
 }
 
 # 1. Resolve the exact public release.
-# 1.1 Parse the public version into its branch and tag identity.
+# 1.1 Resolve an abbreviated prerelease identity to one public NuGet version.
+$requestedVersion = $Version
+$Version = Resolve-NuGetPackageVersion -PackageId 'SkiaSharp' -Version $Version
+if ($Version -ne $requestedVersion) {
+    Write-ReleaseStatus ready "Resolved $requestedVersion to public package version $Version."
+}
+
+# 1.2 Parse the public version into its branch and tag identity.
 $release = Get-ReleaseIdentity -PublicVersion $Version
-# 1.2 Read the source commit directly from the public SkiaSharp nuspec.
+# 1.3 Read the source commit directly from the public SkiaSharp nuspec.
 Write-Host "Finishing $Version ($(if ($Push) { 'push' } else { 'dry run' }))"
 $packageSource = Get-NuGetPackageSource -PackageId 'SkiaSharp' -PackageVersion $Version
 Write-ReleaseStatus ready "SkiaSharp $Version was built from $($packageSource.Commit) on $($packageSource.Branch)."
