@@ -194,9 +194,11 @@ function Ensure-VersionBranch(
             -PreviewLabel $PreviewLabel `
             -HarfBuzzSharpVersion $HarfBuzzSharpVersion `
             -ExpectedSkiaSha $ExpectedSkiaSha
+        Write-ReleaseStatus ready "SkiaSharp $Branch exists at $remoteSha."
+        return [pscustomobject] @{ Branch = $Branch; LocalSha = $null; RemoteSha = $remoteSha }
     }
 
-    # Validate any local branch against both desired metadata and remote identity.
+    # No remote branch exists, so validate any local work that may need to be pushed.
     $localSha = Get-LocalBranchSha -Repository . -Branch $Branch
     if ($localSha) {
         Assert-VersionMetadata `
@@ -206,15 +208,6 @@ function Ensure-VersionBranch(
             -PreviewLabel $PreviewLabel `
             -HarfBuzzSharpVersion $HarfBuzzSharpVersion `
             -ExpectedSkiaSha $ExpectedSkiaSha
-        if ($remoteSha -and $localSha -ne $remoteSha) {
-            throw "Local $Branch differs from origin/$Branch."
-        }
-    }
-
-    # A validated remote branch is complete; local Apply must not recreate or check it out.
-    if ($remoteSha) {
-        Write-ReleaseStatus ready "SkiaSharp $Branch exists at $remoteSha."
-        return [pscustomobject] @{ Branch = $Branch; LocalSha = $localSha; RemoteSha = $remoteSha }
     }
 
     # Report the desired local action without inventing a commit SHA in dry-run mode.
@@ -266,24 +259,23 @@ function Ensure-VersionBranch(
 
 # Converges the local mono/skia branch to the parent repository's gitlink.
 function Ensure-SkiaBranch([string] $Branch, [string] $ExpectedSha) {
-    # Validate remote and local branch identities before changing the submodule checkout.
+    # A matching remote branch is complete, regardless of stale local checkout state.
     $remoteSha = Get-RemoteBranchSha $skiaRemote $Branch
     if ($remoteSha -and $remoteSha -ne $ExpectedSha) {
         throw "mono/skia $Branch exists at $remoteSha, expected $ExpectedSha."
     }
+    if ($remoteSha) {
+        Write-ReleaseStatus ready "mono/skia $Branch exists at $remoteSha."
+        return [pscustomobject] @{ Branch = $Branch; LocalSha = $null; RemoteSha = $remoteSha }
+    }
 
+    # No remote branch exists, so validate any local work that may need to be pushed.
     $localSha = $null
     if (Test-Path "$skiaPath/.git") {
         $localSha = Get-LocalBranchSha -Repository $skiaPath -Branch $Branch
         if ($localSha -and $localSha -ne $ExpectedSha) {
             throw "Local mono/skia $Branch is at $localSha, expected $ExpectedSha."
         }
-    }
-
-    # A matching remote Skia branch is complete and does not require local submodule state.
-    if ($remoteSha) {
-        Write-ReleaseStatus ready "mono/skia $Branch exists at $remoteSha."
-        return [pscustomobject] @{ Branch = $Branch; LocalSha = $localSha; RemoteSha = $remoteSha }
     }
 
     # Report the local branch action without initializing the submodule in dry-run mode.
