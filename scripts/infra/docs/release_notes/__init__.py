@@ -16,7 +16,7 @@ Design rules that every module here follows:
 * Historical releases without the managed markers, and pages whose data.json
   predates this format, are safely skipped rather than rewritten.
 * The exact-summary package owns the managed release-body markers and helpers;
-  the C# Finish tool uses the same literal marker contract.
+  the PowerShell Finish script uses the same literal marker contract.
 """
 
 from __future__ import annotations

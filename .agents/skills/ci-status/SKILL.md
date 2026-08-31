@@ -30,9 +30,8 @@ description: >
 Provide a dashboard view of SkiaSharp CI health across main and recent release branches,
 with AI-powered analysis to identify patterns, regressions, and actionable fixes.
 
-This skill gives a **broad overview** of CI health across multiple branches.
-For one exact release, use the `Release - Prepare` / `Release - Finish` workflow
-summaries or the C# release tool's read-only plan commands with `--summary`.
+This skill gives a **broad overview** of CI health across multiple branches,
+including the current dnceng Build and Tests pipelines.
 
 ## Pipelines Tracked
 
@@ -382,9 +381,9 @@ If asked to dig deeper:
 | Question | Use |
 |----------|-----|
 | "Is main green?" | **ci-status** |
-| "How's the release/3.119.4 build doing?" | **ci-status** or the release workflow summary |
+| "How's the release/3.119.4 build doing?" | **ci-status** |
 | "Daily CI check" | **ci-status** |
-| "Is public release X ready to finalize?" | **Release - Finish** plan |
+| "Are public packages ready to finalize?" | **release-publish** dry-run |
 | "Any CI failures across the board?" | **ci-status** |
 | "What automation is failing?" | **ci-status** |
 | "Trace the pipeline chain for branch X" | **ci-status** |

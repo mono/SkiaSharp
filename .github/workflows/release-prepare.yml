@@ -3,222 +3,66 @@ name: Release - Prepare
 on:
   workflow_dispatch:
     inputs:
-      target:
-        description: Integration branch (main or release/X.Y.x)
+      base:
+        description: Branch or commit SHA from which to create the release
         required: true
         default: main
         type: string
-      release_version:
-        description: Exact release version; leave empty to detect the next preview
-        required: false
-        default: ""
+      release:
+        description: Exact identity (X.Y.Z-preview.N, X.Y.Z-rc.N, or X.Y.Z-stable)
+        required: true
         type: string
 
 permissions:
-  actions: read
   contents: read
-  deployments: read
   pull-requests: read
 
 jobs:
-  plan:
-    name: Plan release branches
+  dry-run:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
     outputs:
-      tooling_sha: ${{ steps.outputs.outputs.tooling_sha }}
-      plan_id: ${{ steps.outputs.outputs.plan_id }}
-      plan_sha256: ${{ steps.outputs.outputs.plan_sha256 }}
-      release_identity: ${{ steps.outputs.outputs.release_identity }}
-      next_action: ${{ steps.outputs.outputs.next_action }}
+      base_sha: ${{ steps.prepare.outputs.base_sha }}
     steps:
-      - name: Require the default branch workflow
-        env:
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-        run: |
-          set -euo pipefail
-          expected="refs/heads/$DEFAULT_BRANCH"
-          if [ "$GITHUB_REF" != "$expected" ]; then
-            echo "::error::Release workflows must be dispatched from $expected, not $GITHUB_REF."
-            exit 1
-          fi
-
-      - name: Checkout trusted release tooling
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Require main
+        run: test "$GITHUB_REF" = "refs/heads/${{ github.event.repository.default_branch }}"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          fetch-tags: true
           persist-credentials: false
-          submodules: false
-
-      - name: Set up exact release tooling
-        uses: ./.github/actions/setup-release-tool
-        with:
-          tooling-sha: ${{ github.sha }}
-
-      - name: Build immutable release plan
+      - name: Preview
+        id: prepare
+        shell: pwsh
         env:
+          BASE: ${{ inputs.base }}
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TARGET: ${{ inputs.target }}
-          RELEASE_VERSION: ${{ inputs.release_version }}
+          RELEASE: ${{ inputs.release }}
         run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/release-prepare"
-          release_tool=(
-            dotnet run --no-build --no-restore --configuration Release
-            --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --
-          )
-          args=(
-            prepare plan
-            --integration-target "$RELEASE_TARGET"
-            --tooling-sha "$GITHUB_SHA"
-            --output "$RUNNER_TEMP/release-prepare/plan.json"
-            --summary "$RUNNER_TEMP/release-prepare/summary.md"
-          )
-          if [ -n "$RELEASE_VERSION" ]; then
-            args+=(--version "$RELEASE_VERSION")
-          fi
-          "${release_tool[@]}" "${args[@]}"
-          cat "$RUNNER_TEMP/release-prepare/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          ./scripts/infra/publishing/prepare-release.ps1 `
+            -Base $env:BASE `
+            -Release $env:RELEASE *>&1 |
+            Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
 
-      - name: Export immutable plan identity
-        id: outputs
-        run: |
-          set -euo pipefail
-          plan="$RUNNER_TEMP/release-prepare/plan.json"
-          echo "tooling_sha=$(jq -r '.toolingSha' "$plan")" >> "$GITHUB_OUTPUT"
-          echo "plan_id=$(jq -r '.planId' "$plan")" >> "$GITHUB_OUTPUT"
-          echo "plan_sha256=$(sha256sum "$plan" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
-          echo "release_identity=$(jq -r '.release.identity' "$plan")" >> "$GITHUB_OUTPUT"
-          echo "next_action=$(jq -r '.nextAction' "$plan")" >> "$GITHUB_OUTPUT"
-
-      - name: Upload release plan
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: release-prepare-plan
-          path: |
-            ${{ runner.temp }}/release-prepare/plan.json
-            ${{ runner.temp }}/release-prepare/summary.md
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Fail blocked release plan
-        if: steps.outputs.outputs.next_action == 'blocked'
-        run: |
-          echo "::error::The release plan is blocked. Review the plan summary and rerun after resolving it."
-          exit 1
-
-  apply:
-    name: Create release branches
-    needs: plan
-    if: needs.plan.outputs.next_action == 'apply'
+  push:
+    needs: dry-run
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     environment: release-branching
     concurrency:
-      group: release-${{ needs.plan.outputs.release_identity }}
+      group: release-${{ inputs.release }}
       cancel-in-progress: false
     steps:
-      - name: Checkout approved tooling revision
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.plan.outputs.tooling_sha }}
           fetch-depth: 0
-          fetch-tags: true
           persist-credentials: false
-          submodules: false
-
-      - name: Set up exact release tooling
-        uses: ./.github/actions/setup-release-tool
-        with:
-          tooling-sha: ${{ needs.plan.outputs.tooling_sha }}
-
-      - name: Require approved tooling to remain on main
+      - name: Push
+        shell: pwsh
         env:
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-          TOOLING_SHA: ${{ needs.plan.outputs.tooling_sha }}
-        run: |
-          set -euo pipefail
-          git fetch origin "$DEFAULT_BRANCH" --quiet
-          git merge-base --is-ancestor "$TOOLING_SHA" "origin/$DEFAULT_BRANCH" || {
-            echo "::error::Approved tooling $TOOLING_SHA is no longer an ancestor of origin/$DEFAULT_BRANCH."
-            exit 1
-          }
-
-      - name: Require protected release environment
-        env:
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          dotnet run --no-build --no-restore --configuration Release \
-            --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj -- \
-            check-environment \
-            --name release-branching \
-            --default-branch "$DEFAULT_BRANCH" \
-            --output "$RUNNER_TEMP/release-branching-environment.json"
-
-      - name: Download approved release plan
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: release-prepare-plan
-          path: ${{ runner.temp }}/release-prepare
-
-      - name: Configure release commit identity
-        run: |
-          set -euo pipefail
-          git config user.name "SkiaSharp Release Automation"
-          git config user.email "devnull@localhost"
-
-      - name: Apply approved release plan
-        env:
+          BASE_SHA: ${{ needs.dry-run.outputs.base_sha }}
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-          RELEASE_GIT_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-          EXPECTED_PLAN_ID: ${{ needs.plan.outputs.plan_id }}
-          EXPECTED_PLAN_SHA256: ${{ needs.plan.outputs.plan_sha256 }}
+          RELEASE: ${{ inputs.release }}
         run: |
-          set -euo pipefail
-          test -n "$GH_TOKEN"
-          test -n "$EXPECTED_PLAN_ID"
-          test -n "$EXPECTED_PLAN_SHA256"
-          auth_dir="$RUNNER_TEMP/release-git-auth"
-          askpass="$auth_dir/askpass.sh"
-          mkdir -p "$auth_dir"
-          cat > "$askpass" <<'EOF'
-          #!/bin/sh
-          case "$1" in
-            *Username*) printf '%s\n' 'x-access-token' ;;
-            *Password*) printf '%s\n' "$RELEASE_GIT_TOKEN" ;;
-            *) exit 1 ;;
-          esac
-          EOF
-          chmod 700 "$askpass"
-          cleanup() {
-            rm -f "$askpass"
-            rmdir "$auth_dir" 2>/dev/null || true
-          }
-          trap cleanup EXIT
-          export GIT_ASKPASS="$askpass"
-          export GIT_TERMINAL_PROMPT=0
-          release_tool=(
-            dotnet run --no-build --no-restore --configuration Release
-            --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj --
-          )
-          "${release_tool[@]}" prepare apply \
-            --plan "$RUNNER_TEMP/release-prepare/plan.json" \
-            --expected-plan-id "$EXPECTED_PLAN_ID" \
-            --expected-plan-sha256 "$EXPECTED_PLAN_SHA256" \
-            --output "$RUNNER_TEMP/release-prepare/result.json" \
-            --summary "$RUNNER_TEMP/release-prepare/result.md"
-          cat "$RUNNER_TEMP/release-prepare/result.md" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload release result
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: release-prepare-result
-          path: |
-            ${{ runner.temp }}/release-prepare/plan.json
-            ${{ runner.temp }}/release-prepare/result.json
-            ${{ runner.temp }}/release-prepare/result.md
-          if-no-files-found: error
-          retention-days: 90
+          ./scripts/infra/publishing/prepare-release.ps1 `
+            -Base $env:BASE_SHA `
+            -Release $env:RELEASE `
+            -Push *>&1 |
+            Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append

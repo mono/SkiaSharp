@@ -50,9 +50,15 @@ class ParseTagTests(unittest.TestCase):
         self.assertEqual(parsed.core, "4.150.0")
         self.assertEqual(parsed.channel, "preview")
         self.assertEqual(parsed.milestone, 1)
-        self.assertEqual(parsed.build, 1)
+        self.assertEqual(parsed.build, (1,))
         self.assertEqual(parsed.label, "Preview 1 (Build 1)")
         self.assertEqual(parsed.public_version, "4.150.0-preview.1.1")
+
+    def test_parses_two_part_arcade_build_revision(self):
+        parsed = common.parse_tag("v4.152.0-rc.1.26426.14")
+
+        self.assertEqual(parsed.build, (26426, 14))
+        self.assertEqual(parsed.public_version, "4.152.0-rc.1.26426.14")
 
     def test_preview_tag_without_build_revision(self):
         # The release-automation-v2 tag shape: "-preview.<milestone>" only.

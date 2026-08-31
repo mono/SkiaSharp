@@ -1364,10 +1364,10 @@ broader format churn. `scripts/infra/docs/release_notes/` is the whole feature's
   equal the intended body exactly. Any preflight or race failure aborts the **whole
   batch** before a single write.
 
-**Drafts.** Finish creates the release as a **draft** and persists a hash of its exact
-initial body, holding it there until its own environment approval publishes it. If the
-summary updater patched that draft's body in the meantime, the persisted hash would go
-stale out from under Finish — a genuine cross-workflow race that would force an
+**Drafts.** The publication script creates the release as a **draft** and records a hash
+of its exact body while it waits for publication approval. If the summary updater
+patched that draft's body in the meantime, the expected hash would go stale out from
+under publication — a genuine cross-workflow race that would force an
 unrelated reapproval with no actual content problem. So `update_releases()` checks
 `existing.is_draft` in preflight and skips (never errors on, never patches) any draft,
 with an explicit `skipped` result/detail; it converges once GitHub's `release`
@@ -1376,13 +1376,11 @@ or on this workflow's next scheduled/dispatched run after that, whichever comes 
 
 **Markers.** The exact-summary package owns the four managed marker constants and
 body helpers in `scripts/infra/docs/release_notes/github.py`. Its minimal REST client
-updates only published release bodies without a `gh` CLI dependency. The C# Finish
-tool carries the same literal marker contract when it composes a new release's initial
-body (empty summary region + GitHub's generated notes); C# contract tests protect those
-bytes. Finish always publishes immediately with generated notes only; the reviewed
-summary converges later, whenever its release-notes PR merges — there is no
-release-critical deadline for it, and a release may indefinitely carry generated notes
-only.
+updates only published release bodies without a `gh` CLI dependency. The Python
+PowerShell Finish script carries the same literal marker contract when composing the
+initial draft and reviewed publication body. The reviewed release-notes summary
+converges later whenever its release-notes PR merges; there is no release-critical
+deadline for it.
 
 **Compatibility.** Bumping `_DATA_JSON_FORMAT_VERSION` (3 → 4) to add `shipments` is
 deliberately the *smallest* compatible upgrade, and change detection is a THREE-way

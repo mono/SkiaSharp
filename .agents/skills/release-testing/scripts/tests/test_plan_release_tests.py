@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import importlib.util
-import json
+import io
 from pathlib import Path
 import shlex
 import sys
-from types import SimpleNamespace
 import unittest
 from unittest import mock
+import zipfile
 
 
 SCRIPTS = Path(__file__).resolve().parent.parent
@@ -56,6 +56,36 @@ FINISH_PLAN = {
 
 
 class ReleaseTestPlanTests(unittest.TestCase):
+    @mock.patch.object(planner.urllib.request, "urlopen")
+    def test_read_package_uses_nuspec_source_and_dependencies(self, urlopen):
+        nuspec = f"""<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>SkiaSharp.HarfBuzz</id>
+    <version>{SKIA_VERSION}</version>
+    <repository branch="release/4.152.0-preview.1" commit="{'a' * 40}" />
+    <dependencies>
+      <group>
+        <dependency id="HarfBuzzSharp" version="{HARFBUZZ_VERSION}" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>"""
+        content = io.BytesIO()
+        with zipfile.ZipFile(content, "w") as package:
+            package.writestr("SkiaSharp.HarfBuzz.nuspec", nuspec)
+        response = mock.MagicMock()
+        response.__enter__.return_value.read.return_value = content.getvalue()
+        urlopen.return_value = response
+
+        result = planner.read_package("SkiaSharp.HarfBuzz", SKIA_VERSION)
+
+        self.assertEqual(result["commit"], "a" * 40)
+        self.assertEqual(
+            result["harfBuzzVersions"],
+            [HARFBUZZ_VERSION],
+        )
+
     def test_full_macos_matrix(self):
         matrix, missing = planner.build_matrix(
             SKIA_VERSION,
@@ -174,37 +204,42 @@ class ReleaseTestPlanTests(unittest.TestCase):
             self.assertEqual(parsed.skia, "4.152.0-preview.1.1")
             self.assertEqual(parsed.harfbuzz, "14.2.1-preview.1.1")
 
-    @mock.patch.object(planner.common, "run_checked")
-    def test_receipt_report_uses_finish_plan(self, run_checked):
-        def write_plan(args, *, cwd, timeout):
-            if "--output" in args:
-                output = Path(args[args.index("--output") + 1])
-                output.write_text(json.dumps(FINISH_PLAN), encoding="utf-8")
-            return SimpleNamespace(stdout="")
+    @mock.patch.object(planner, "read_package")
+    def test_receipt_report_uses_public_anchor_packages(self, read_package):
+        def package(package_id, version):
+            dependencies = (
+                [HARFBUZZ_VERSION]
+                if package_id == "SkiaSharp.HarfBuzz"
+                else []
+            )
+            return {
+                "id": package_id,
+                "version": version,
+                "branch": "release/4.152.0-preview.1",
+                "commit": "a" * 40,
+                "harfBuzzVersions": dependencies,
+            }
 
-        run_checked.side_effect = write_plan
+        read_package.side_effect = package
         result = planner.receipt_report(Path("/repo"), SKIA_VERSION)
 
-        self.assertEqual(result, FINISH_PLAN)
-        self.assertEqual(run_checked.call_count, 3)
-        restore, build, invocation = [
-            call.args[0] for call in run_checked.call_args_list
-        ]
+        self.assertEqual(result["receipt"]["sourceCommit"], "a" * 40)
         self.assertEqual(
-            restore,
-            ["dotnet", "restore", str(planner.RELEASE_PROJECT), "--locked-mode"],
+            result["receipt"]["harfBuzzSharpVersion"],
+            HARFBUZZ_VERSION,
         )
-        self.assertEqual(build[0:3], ["dotnet", "build", str(planner.RELEASE_PROJECT)])
-        self.assertIn("--no-restore", build)
-        self.assertEqual(invocation[0:2], ["dotnet", "run"])
-        self.assertIn("--no-build", invocation)
-        self.assertIn("--no-restore", invocation)
-        self.assertIn(str(planner.RELEASE_PROJECT), invocation)
-        self.assertIn("finish", invocation)
-        self.assertIn("plan", invocation)
-        args = invocation
-        self.assertIn(SKIA_VERSION, args)
-        self.assertEqual(run_checked.call_args.kwargs["timeout"], 600)
+        self.assertEqual(
+            [item["id"] for item in result["receipt"]["packages"]],
+            ["SkiaSharp", "SkiaSharp.HarfBuzz", "HarfBuzzSharp"],
+        )
+        self.assertEqual(
+            read_package.call_args_list,
+            [
+                mock.call("SkiaSharp", SKIA_VERSION),
+                mock.call("SkiaSharp.HarfBuzz", SKIA_VERSION),
+                mock.call("HarfBuzzSharp", HARFBUZZ_VERSION),
+            ],
+        )
 
     def test_release_summary_is_flat(self):
         summary = planner.release_summary(FINISH_PLAN)

@@ -56,7 +56,7 @@ class FakeGitHubClient:
         return _release_info(tag, body, is_draft=tag in self.draft_tags)
 
     def publish(self, tag):
-        """Simulate Finish publishing the draft: the SAME body the draft
+        """Simulate publication of the draft: the SAME body the draft
         held becomes the published release's body -- exactly what happens
         when the release-published event later fires."""
         self.draft_tags.discard(tag)
@@ -285,11 +285,11 @@ class UpdateReleasesTests(unittest.TestCase):
         self.assertEqual(client.writes, [])
 
     def test_skips_an_unpublished_draft_without_any_patch(self):
-        # A cross-workflow race: Finish holds this exact release as an
+        # A cross-workflow race: publication holds this exact release as an
         # unpublished draft while its own environment approval is pending,
         # and persists the draft body's hash to verify against before
         # publishing. Patching it here would invalidate that hash out from
-        # under Finish and force an unrelated reapproval.
+        # under publication and force an unrelated reapproval.
         candidate = self._candidate()
         client = FakeGitHubClient(
             {candidate.tag: self.initial_body}, draft_tags={candidate.tag}
@@ -312,7 +312,7 @@ class UpdateReleasesTests(unittest.TestCase):
 
     def test_converges_once_the_same_release_is_later_published(self):
         # The exact scenario the fix targets: a draft is skipped on one run,
-        # then Finish publishes it (the release-published event fires, or
+        # then publication completes (the release-published event fires, or
         # this workflow's next run observes the now-published release), and
         # the SAME candidate/client converges successfully with no
         # intervening state change other than is_draft flipping to False.

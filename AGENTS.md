@@ -386,9 +386,9 @@ See [documentation/dev/debugging-methodology.md](documentation/dev/debugging-met
 
 Custom slash commands are available for specialized workflows. Use these for complex tasks that benefit from structured processes.
 
-Repository releases are not started or published through slash commands. Use
-the **Release - Prepare** GitHub workflow, the team-owned Azure DevOps
-publication pipeline, and then **Release - Finish**. See
+Repository release branches are normally created with the **Release - Prepare**
+GitHub workflow, which runs `scripts/infra/publishing/prepare-release.ps1`. The release skills remain available for publication, milestone maintenance, and
+optional public-package smoke testing. See
 [`documentation/dev/releasing.md`](documentation/dev/releasing.md).
 
 ### When to Use Commands
@@ -405,7 +405,9 @@ publication pipeline, and then **Release - Finish**. See
 | Update dependency | `/native-dependency-update` | "bump libpng", "fix CVE in zlib" |
 | Write XML docs | `/api-docs` | "document", "fill in missing docs" |
 | Security check | `/security-audit` | "audit CVEs", "security overview" (read-only) |
-| Smoke-test an exact release | `/release-testing` | "smoke test 4.x", "verify public packages" |
+| Prepare release branches | `/release-branch` | "release now", "start release X" |
+| Publish release | `/release-publish` | "push to nuget", "tag release" |
+| Smoke-test a public release | `/release-testing` | "smoke test release", "verify public packages" |
 | Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |
 | Skia analyst | `/skia-analyst` | "what changed", "what are we missing", "feature gap", "api diff", "scout features", "diff tags" |
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |

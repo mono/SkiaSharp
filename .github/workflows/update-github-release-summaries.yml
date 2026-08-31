@@ -44,7 +44,7 @@ jobs:
         with:
           # A "release" or "workflow_dispatch" run always converges from
           # trusted main -- the tag being released is not itself trusted
-          # (Finish already tagged it before this ever runs), and reviewed
+          # (the publication script already tagged it before this runs), and reviewed
           # prose lives only on main.
           ref: ${{ github.event_name == 'push' && github.sha || 'main' }}
           fetch-depth: 0

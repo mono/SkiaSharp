@@ -3,8 +3,7 @@ name: release-testing
 description: >
   Smoke-test an exact public SkiaSharp release package set on the current host.
   Use when a maintainer asks to smoke test a NuGet.org version. This is optional
-  human validation, not a required step in the automated Prepare/Finish release
-  workflows.
+  human validation after public publication, not a release prerequisite.
 ---
 
 # Release Smoke Testing
@@ -15,14 +14,14 @@ Mac Catalyst, and Windows rendering.
 
 The supported release path is documented in
 [releasing.md](../../../documentation/dev/releasing.md). Branch creation,
-package publication, tags, GitHub Releases, and milestones are owned by
-workflows and deterministic scripts, not this skill.
+package publication, tags, GitHub Releases, and milestones are outside this
+skill.
 
 ## Contract
 
 - Start from one exact public SkiaSharp version.
-- The public-version planner verifies the complete NuGet.org receipt before
-  producing test commands.
+- The public-version planner verifies the three public anchor packages and
+  their matching source metadata before producing test commands.
 - Never substitute a newer version, branch, feed, runtime, image, simulator, or
   device.
 - Present the host-appropriate matrix and obtain approval before preparation or
@@ -32,8 +31,7 @@ workflows and deterministic scripts, not this skill.
 - Do not add skips, change expected output, or override package pins.
 - Each runner owns its setup and cleanup. Never delete user-owned devices.
 - Report screenshots and all initial/retry outcomes.
-- A passing report informs the maintainer's team-pipeline decision; it does not
-  mutate or unlock either GitHub release workflow.
+- A passing report is advisory and never mutates release state.
 
 ## Plan
 
@@ -46,11 +44,10 @@ python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
 
 The planner:
 
-1. locked-restores and builds the standalone C# release tool at the current
-   checkout without downloading native Skia artifacts;
-2. invokes its read-only public NuGet receipt verification using NuGet SDK APIs
-   and `GH_TOKEN`/`GITHUB_TOKEN` for GitHub state;
-3. derives the exact HarfBuzzSharp version;
+1. downloads the exact `SkiaSharp` and `SkiaSharp.HarfBuzz` packages from
+   NuGet.org;
+2. derives and downloads the exact `HarfBuzzSharp` dependency;
+3. requires all three packages to identify the same source branch and commit;
 4. pins both package versions in every runner command;
 5. reports available and host-inapplicable coverage.
 

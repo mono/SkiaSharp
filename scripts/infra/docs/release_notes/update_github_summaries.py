@@ -5,12 +5,12 @@ The release-notes workflow and skill own summary prose (headline/body) and
 this package owns Markdown structure; this script only selects exact tags,
 expands deterministic links, and replaces the managed summary region of an
 already-marked GitHub Release body byte-for-byte. It never touches the
-``SKIASHARP:GITHUB-GENERATED-NOTES`` region GitHub itself generated, it skips
+``SKIASHARP:GITHUB-GENERATED-NOTES`` region the publication script preserves, it skips
 (never rewrites) a release whose body has no managed markers at all -- a
 historical release published before this feature existed -- and it skips
-(never rewrites) an unpublished draft: Finish persists a body-hash for the
-exact draft it created while its own environment approval is pending, and
-patching the draft here would invalidate that hash out from under Finish, a
+(never rewrites) an unpublished draft: the publication script persists a
+body-hash for the exact draft awaiting approval, and patching the draft here
+would invalidate that hash out from under publication, a
 genuine cross-workflow race. A draft converges once GitHub's "release"
 (published) event fires, or on this workflow's next scheduled/dispatched run.
 
@@ -276,10 +276,10 @@ def update_releases(
     convention:
 
     1. **Preflight** -- fetch each release, skip it (never an error) when it
-       does not exist, is still an unpublished draft (Finish holds a
+       does not exist, is still an unpublished draft (publication holds a
        persisted body-hash for the exact draft it created and is waiting on
        environment approval to publish; patching the draft here would
-       invalidate that hash out from under Finish -- a genuine
+       invalidate that hash out from under publication -- a genuine
        cross-workflow race -- and force an unrelated reapproval), or has no
        managed markers (a historical, unmarked release), skip when the
        computed body is already current (idempotent), else render + validate
@@ -305,11 +305,11 @@ def update_releases(
                 result.add(candidate.tag, "skipped", "GitHub Release does not exist")
                 continue
             if existing.is_draft:
-                # Finish holds an unpublished draft while its own environment
+                # Publication holds an unpublished draft while approval
                 # approval is pending, and separately persists the exact
                 # draft body's hash to verify against before publishing. If
                 # we patched the draft here, that persisted hash would go
-                # stale out from under Finish -- a genuine cross-workflow
+                # stale out from under publication -- a genuine cross-workflow
                 # race -- and force an unrelated reapproval. Never write to a
                 # draft; converge once GitHub's "release" (published) event
                 # fires, or on this workflow's next scheduled/dispatched run

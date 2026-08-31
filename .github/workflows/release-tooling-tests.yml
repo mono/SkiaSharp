@@ -3,37 +3,31 @@ name: Release - Tooling Tests
 on:
   pull_request:
     paths:
-      - ".agents/skills/release-testing/**"
-      - ".github/actions/setup-release-tool/**"
+      - ".agents/skills/release-*/**"
       - ".github/workflows/release-*.yml"
       - ".github/workflows/update-github-release-summaries.yml"
       - ".github/workflows/update-release-notes.md"
       - ".github/workflows/update-release-notes.lock.yml"
+      - "scripts/infra/publishing/**"
       - "scripts/infra/caching/repo-deps.json"
       - "scripts/infra/docs/release-notes-data.py"
       - "scripts/infra/docs/release-notes-schema/**"
       - "scripts/infra/docs/release_notes/**"
-      - "scripts/infra/release/**"
-      - "utils/SkiaSharp.ReleaseTool/**"
-      - "utils/SkiaSharp.ReleaseTool.Tests/**"
-      - "utils/Utils.slnx"
+      - "scripts/infra/milestones/**"
   push:
     branches: [main]
     paths:
-      - ".agents/skills/release-testing/**"
-      - ".github/actions/setup-release-tool/**"
+      - ".agents/skills/release-*/**"
       - ".github/workflows/release-*.yml"
       - ".github/workflows/update-github-release-summaries.yml"
       - ".github/workflows/update-release-notes.md"
       - ".github/workflows/update-release-notes.lock.yml"
+      - "scripts/infra/publishing/**"
       - "scripts/infra/caching/repo-deps.json"
       - "scripts/infra/docs/release-notes-data.py"
       - "scripts/infra/docs/release-notes-schema/**"
       - "scripts/infra/docs/release_notes/**"
-      - "scripts/infra/release/**"
-      - "utils/SkiaSharp.ReleaseTool/**"
-      - "utils/SkiaSharp.ReleaseTool.Tests/**"
-      - "utils/Utils.slnx"
+      - "scripts/infra/milestones/**"
   workflow_dispatch:
 
 permissions:
@@ -51,25 +45,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up exact release tooling
-        uses: ./.github/actions/setup-release-tool
-        with:
-          tooling-sha: ${{ github.sha }}
+      - name: Validate PowerShell release scripts
+        shell: pwsh
+        run: |
+          $errors = @(
+            $paths = @(Get-ChildItem scripts/infra/publishing -Filter *.ps* -Recurse)
+            foreach ($path in $paths) {
+              $parseErrors = $null
+              [System.Management.Automation.Language.Parser]::ParseFile(
+                $path.FullName,
+                [ref] $null,
+                [ref] $parseErrors) > $null
+              $parseErrors
+            }
+          )
+          if ($errors.Count) {
+            $errors | Format-List
+            exit 1
+          }
+          Get-Help ./scripts/infra/publishing/prepare-release.ps1 -Full > $null
+          Get-Help ./scripts/infra/publishing/finish-release.ps1 -Full > $null
+          Get-Help ./scripts/infra/publishing/update-release-milestones.ps1 -Full > $null
 
-      - name: Restore C# release tooling tests
-        run: dotnet restore utils/SkiaSharp.ReleaseTool.Tests/SkiaSharp.ReleaseTool.Tests.csproj --locked-mode
-
-      - name: Build C# release tooling tests
-        run: dotnet build utils/SkiaSharp.ReleaseTool.Tests/SkiaSharp.ReleaseTool.Tests.csproj --configuration Release --no-restore
-
-      - name: Test C# release tooling
-        run: dotnet test utils/SkiaSharp.ReleaseTool.Tests/SkiaSharp.ReleaseTool.Tests.csproj --configuration Release --no-build --no-restore
-
-      - name: Run exact release summary tests
-        run: python3 -m unittest discover -s scripts/infra/docs/release_notes/tests -p 'test_*.py'
+      - name: Run release milestone tests
+        shell: pwsh
+        run: ./scripts/infra/publishing/tests/Test-ReleaseMilestones.ps1
 
       - name: Run release smoke-testing tests
         run: python3 -m unittest discover -s .agents/skills/release-testing/scripts/tests -p 'test_*.py'
+
+      - name: Run exact release summary tests
+        run: python3 -m unittest discover -s scripts/infra/docs/release_notes/tests -p 'test_*.py'
 
       - name: Validate cache dependency coverage
         run: python3 scripts/infra/caching/repo-deps.py validate

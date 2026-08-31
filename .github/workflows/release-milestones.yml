@@ -1,56 +1,50 @@
-name: Release - Finish
+name: Release - Milestones
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: Exact public SkiaSharp version on NuGet.org
+        description: Released numeric SkiaSharp version
         required: true
         type: string
 
 permissions:
-  actions: write
-  contents: write
+  contents: read
+  issues: write
+  pull-requests: write
 
 jobs:
   dry-run:
     runs-on: ubuntu-latest
     steps:
-      - name: Require main
-        run: test "$GITHUB_REF" = "refs/heads/${{ github.event.repository.default_branch }}"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          persist-credentials: false
       - name: Preview
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
         run: |
-          ./scripts/infra/publishing/finish-release.ps1 `
+          ./scripts/infra/publishing/update-release-milestones.ps1 `
             -Version $env:VERSION *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
 
   push:
     needs: dry-run
     runs-on: ubuntu-latest
-    environment: release-publish
-    concurrency:
-      group: release-${{ inputs.version }}
-      cancel-in-progress: false
+    environment: release-milestones
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          persist-credentials: false
       - name: Push
         shell: pwsh
         env:
-          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
         run: |
-          ./scripts/infra/publishing/finish-release.ps1 `
+          ./scripts/infra/publishing/update-release-milestones.ps1 `
             -Version $env:VERSION `
             -Push *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
