@@ -162,6 +162,9 @@ This is advisory validation. It does not unlock or mutate publication state.
 | Hotfix preview | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` |
 | Hotfix stable | `X.Y.Z.F-stable` | `release/X.Y.Z.F` |
 
+Hotfixes advance exactly one four-part revision from their base:
+`X.Y.Z → X.Y.Z.1 → X.Y.Z.2`. Each hotfix also increments HarfBuzzSharp.
+
 Prerelease public packages append the Arcade build revision. Stable packages use
 the bare numeric version.
 

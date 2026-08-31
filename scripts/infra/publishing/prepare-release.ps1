@@ -95,23 +95,35 @@ function Get-NextHarfBuzzVersion([string] $Version) {
     return "$($Matches.native).$revision"
 }
 
-# Keeps HarfBuzz for label-only cuts and increments it for a four-part hotfix.
+# Keeps HarfBuzz for label-only cuts and increments it for the next four-part hotfix.
 function Get-ReleaseHarfBuzzVersion([pscustomobject] $BaseVersions, [string] $ReleaseVersion) {
     if ($BaseVersions.SkiaSharp -eq $ReleaseVersion) {
         return $BaseVersions.HarfBuzzSharp
     }
 
     $releaseParts = $ReleaseVersion -split '\.'
-    $stableBase = $releaseParts[0..2] -join '.'
-    if ($releaseParts.Count -eq 4 -and $BaseVersions.SkiaSharp -eq $stableBase) {
-        return Get-NextHarfBuzzVersion -Version $BaseVersions.HarfBuzzSharp
+    if ($releaseParts.Count -eq 4) {
+        $stableBase = $releaseParts[0..2] -join '.'
+        $baseParts = $BaseVersions.SkiaSharp -split '\.'
+        $nextRevision = if ($BaseVersions.SkiaSharp -eq $stableBase) {
+            1
+        } elseif ($baseParts.Count -eq 4 -and ($baseParts[0..2] -join '.') -eq $stableBase) {
+            [int] $baseParts[3] + 1
+        }
+        $expectedVersion = if ($null -ne $nextRevision) { "$stableBase.$nextRevision" } else { $null }
+        if ($ReleaseVersion -eq $expectedVersion) {
+            return Get-NextHarfBuzzVersion -Version $BaseVersions.HarfBuzzSharp
+        }
+        if ($expectedVersion) {
+            throw "The next hotfix after $($BaseVersions.SkiaSharp) must be $expectedVersion, not $ReleaseVersion."
+        }
     }
 
     throw (
         "Base contains SkiaSharp $($BaseVersions.SkiaSharp), but the release " +
         "requests $ReleaseVersion. Normal preview, RC, and stable cuts must use " +
-        "a base already at the requested numeric version; only a four-part " +
-        "hotfix may advance it here.")
+        "a base already at the requested numeric version; a hotfix may only " +
+        "advance to the next four-part revision.")
 }
 
 # Rejects any branch transformation that changes only one package family.
