@@ -1357,28 +1357,22 @@ broader format churn. `scripts/infra/docs/release_notes/` is the whole feature's
 - **`update_github_summaries.py`** — the workflow's entry point. It selects every exact
   tag with both `shipments` facts and a `release_summaries` entry, and for each one:
   preflights (skip — never an error — a release that does not exist, is still an
-  **unpublished draft** (see below), has no managed markers at all, i.e. a historical
+  unpublished draft, has no managed markers at all, i.e. a historical
   release published before this feature, or is already current), re-reads every
   planned release immediately before the first write as a race barrier (the REST
   API has no conditional PATCH), writes, then re-reads and requires the stored body to
   equal the intended body exactly. Any preflight or race failure aborts the **whole
   batch** before a single write.
 
-**Drafts.** The publication script creates the release as a **draft** and records a hash
-of its exact body while it waits for publication approval. If the summary updater
-patched that draft's body in the meantime, the expected hash would go stale out from
-under publication — a genuine cross-workflow race that would force an
-unrelated reapproval with no actual content problem. So `update_releases()` checks
-`existing.is_draft` in preflight and skips (never errors on, never patches) any draft,
-with an explicit `skipped` result/detail; it converges once GitHub's `release`
-(published) event fires — the workflow's own `release: types: [published]` trigger —
-or on this workflow's next scheduled/dispatched run after that, whichever comes first.
+**Drafts.** `update_releases()` skips any unpublished draft and converges after
+publication. The normal Finish flow publishes directly, but retaining this guard keeps
+the updater safe around manually created or legacy drafts.
 
 **Markers.** The exact-summary package owns the four managed marker constants and
 body helpers in `scripts/infra/docs/release_notes/github.py`. Its minimal REST client
-updates only published release bodies without a `gh` CLI dependency. The Python
-PowerShell Finish script carries the same literal marker contract when composing the
-initial draft and reviewed publication body. The reviewed release-notes summary
+updates only published release bodies without a `gh` CLI dependency. The PowerShell
+Finish script carries the same literal marker contract when composing the
+initial published body. The reviewed release-notes summary
 converges later whenever its release-notes PR merges; there is no release-critical
 deadline for it.
 

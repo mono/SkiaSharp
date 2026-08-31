@@ -285,11 +285,7 @@ class UpdateReleasesTests(unittest.TestCase):
         self.assertEqual(client.writes, [])
 
     def test_skips_an_unpublished_draft_without_any_patch(self):
-        # A cross-workflow race: publication holds this exact release as an
-        # unpublished draft while its own environment approval is pending,
-        # and persists the draft body's hash to verify against before
-        # publishing. Patching it here would invalidate that hash out from
-        # under publication and force an unrelated reapproval.
+        # Summary convergence must never edit an unpublished draft.
         candidate = self._candidate()
         client = FakeGitHubClient(
             {candidate.tag: self.initial_body}, draft_tags={candidate.tag}

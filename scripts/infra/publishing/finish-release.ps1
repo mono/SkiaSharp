@@ -6,19 +6,16 @@
 
 .DESCRIPTION
     Reads the source commit from the exact public SkiaSharp package, creates the
-    immutable exact-version tag and a marked GitHub Release draft, then publishes
-    a previously reviewed draft and dispatches follow-up workflows.
-
-    The first pushed run creates the tag and draft, then stops. Review the
-    draft on GitHub and run the script again to publish it.
+    immutable exact-version tag, publishes a marked GitHub Release, and dispatches
+    follow-up workflows in one pushed run.
 
 .PARAMETER Version
     A stable version or prerelease identity. A prerelease build revision may be
     omitted when exactly one matching SkiaSharp version exists on NuGet.org.
 
 .PARAMETER Push
-    Pushes the next pending remote action. Without this switch, the script is
-    read-only.
+    Publishes the tag and release, then dispatches follow-up workflows. Without
+    this switch, the script is read-only.
 #>
 
 param(
@@ -69,70 +66,79 @@ function Assert-GitHubRelease([pscustomobject] $Release, [pscustomobject] $GitHu
     }
 }
 
-# Creates a marked generated-notes draft and verifies it from GitHub.
-function New-ReleaseDraft([pscustomobject] $Release, [string] $SourceCommit) {
-    # Generate GitHub's notes for the immutable tag/source pair.
-    $generated = Invoke-GitHubJson -Arguments @(
-        'api',
-        '--method',
-        'POST',
-        "repos/$repository/releases/generate-notes",
-        '--field',
-        "tag_name=$($Release.Tag)",
-        '--field',
-        "target_commitish=$SourceCommit"
-    )
+# Creates or resumes one marked, published GitHub Release.
+function Publish-GitHubRelease(
+    [pscustomobject] $Release,
+    [string] $SourceCommit,
+    [pscustomobject] $Existing,
+    [switch] $DryRun
+) {
+    if ($Existing -and !$Existing.isDraft) {
+        Write-ReleaseStatus ready "GitHub Release $($Release.Tag) is published."
+        return
+    }
+    if ($DryRun) {
+        $action = if ($Existing) { 'Publish existing draft' } else { 'Create and publish' }
+        Write-ReleaseStatus plan "$action GitHub Release $($Release.Tag)."
+        return
+    }
 
-    # Wrap generated notes in regions owned by Finish and the summary updater.
-    $bodyPath = [System.IO.Path]::GetTempFileName()
-    $body = (
-        "$summaryStart`n`n$summaryEnd`n`n" +
-        "$generatedStart`n$($generated.body.Trim())`n$generatedEnd`n")
-    try {
-        Set-Content $bodyPath $body -NoNewline
-
-        # Create the draft, then reread and verify GitHub's stored metadata/body.
-        $arguments = @(
-            'release', 'create', $Release.Tag,
-            '--repo', $repository,
-            '--title', $Release.Title,
-            '--notes-file', $bodyPath,
-            '--target', $SourceCommit,
-            '--verify-tag',
-            '--draft'
+    if ($Existing) {
+        Assert-GitHubRelease $Release $Existing
+        gh release edit $Release.Tag --repo $repository --verify-tag --draft=false | Out-Host
+    } else {
+        # Generate GitHub's notes and wrap them in regions owned by Finish and the summary updater.
+        $generated = Invoke-GitHubJson -Arguments @(
+            'api',
+            '--method',
+            'POST',
+            "repos/$repository/releases/generate-notes",
+            '--field',
+            "tag_name=$($Release.Tag)",
+            '--field',
+            "target_commitish=$SourceCommit"
         )
-        if ($Release.IsPrerelease) {
-            $arguments += @('--prerelease', '--latest=false')
+        $bodyPath = [System.IO.Path]::GetTempFileName()
+        $body = (
+            "$summaryStart`n`n$summaryEnd`n`n" +
+            "$generatedStart`n$($generated.body.Trim())`n$generatedEnd`n")
+        try {
+            Set-Content $bodyPath $body -NoNewline
+            $arguments = @(
+                'release', 'create', $Release.Tag,
+                '--repo', $repository,
+                '--title', $Release.Title,
+                '--notes-file', $bodyPath,
+                '--target', $SourceCommit,
+                '--verify-tag'
+            )
+            if ($Release.IsPrerelease) {
+                $arguments += @('--prerelease', '--latest=false')
+            }
+            gh @arguments | Out-Host
+        } finally {
+            Remove-Item $bodyPath -Force -ErrorAction SilentlyContinue
         }
-        gh @arguments | Out-Host
-    } finally {
-        Remove-Item $bodyPath -Force -ErrorAction SilentlyContinue
     }
 
-    $created = Get-GitHubRelease -Repository $repository -Tag $Release.Tag
-    if (!$created -or !$created.isDraft) {
-        throw "GitHub Release draft $($Release.Tag) was not created."
-    }
-    Assert-GitHubRelease $Release $created
-    Write-ReleaseStatus applied "Created draft $($Release.Tag). Review it on GitHub, then rerun Finish."
-}
-
-# Publishes a previously reviewed draft without replacing its body.
-function Publish-ReleaseDraft([pscustomobject] $Release, [pscustomobject] $GitHubRelease) {
-    Assert-GitHubRelease $Release $GitHubRelease
-    gh release edit $Release.Tag --repo $repository --verify-tag --draft=false | Out-Host
     $published = Get-GitHubRelease -Repository $repository -Tag $Release.Tag
     if (!$published -or $published.isDraft) {
         throw "GitHub Release $($Release.Tag) was not published."
     }
     Assert-GitHubRelease $Release $published
+    if ($published.name -ne $Release.Title) {
+        throw "Published GitHub Release $($Release.Tag) has conflicting metadata."
+    }
+    Assert-ManagedBody $published.body
     Write-ReleaseStatus applied "Published GitHub Release $($Release.Tag)."
 }
 
 # Dispatches convergent release-note and issue-template follow-up workflows.
 function Invoke-ReleaseFollowUpWorkflows([pscustomobject] $Release, [switch] $DryRun) {
     if ($DryRun) {
-        Write-ReleaseStatus plan "Dispatch release notes and summary for $($Release.Tag)."
+        Write-ReleaseStatus plan "Dispatch release-note generation for $($Release.Tag)."
+        Write-ReleaseStatus ready (
+            'The GitHub Release summary converges automatically after publication or reviewed notes merge.')
         if (!$Release.IsPrerelease) {
             Write-ReleaseStatus plan 'Dispatch the issue-template version update.'
         }
@@ -144,16 +150,12 @@ function Invoke-ReleaseFollowUpWorkflows([pscustomobject] $Release, [switch] $Dr
         -f source_branch=main `
         -f min_version=$($Release.Numeric) `
         -f max_version=$($Release.Numeric)
-    gh workflow run update-github-release-summaries.yml `
-        --repo $repository `
-        --ref main `
-        -f tag=$($Release.Tag)
     if (!$Release.IsPrerelease) {
         gh workflow run auto-update-issue-template-versions.yml `
             --repo $repository `
             --ref main
     }
-    Write-ReleaseStatus applied 'Release follow-up workflows were dispatched.'
+    Write-ReleaseStatus applied 'Release-note follow-up workflows were dispatched.'
 }
 
 # 1. Resolve the exact public release.
@@ -187,28 +189,12 @@ if ($Push) {
 # 2.2 Ensure the tag points to the package source commit.
 Push-ReleaseTag -Remote origin -Tag $release.Tag -SourceCommit $packageSource.Commit -Push:$Push
 
-# 3. Converge the GitHub Release in two reviewed passes.
-# 3.1 Create a missing draft and stop for human review.
-if (!$initialRelease) {
-    if ($Push) {
-        New-ReleaseDraft -Release $release -SourceCommit $packageSource.Commit
-    } else {
-        Write-ReleaseStatus skipped "Skipping: gh release create $($release.Tag) --draft (requires -Push)."
-    }
-    return
-}
-
-# 3.2 Publish a draft that existed before this run.
-if ($initialRelease.isDraft) {
-    if ($Push) {
-        Publish-ReleaseDraft -Release $release -GitHubRelease $initialRelease
-    } else {
-        Write-ReleaseStatus skipped "Skipping: gh release edit $($release.Tag) --draft=false (requires -Push)."
-        return
-    }
-} else {
-    Write-ReleaseStatus ready "GitHub Release $($release.Tag) is published."
-}
+# 3. Create or resume the published GitHub Release.
+Publish-GitHubRelease `
+    -Release $release `
+    -SourceCommit $packageSource.Commit `
+    -Existing $initialRelease `
+    -DryRun:(-not $Push)
 
 # 4. Dispatch follow-up workflows only after publication.
 Invoke-ReleaseFollowUpWorkflows -Release $release -DryRun:(-not $Push)

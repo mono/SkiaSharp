@@ -18,19 +18,19 @@ After the exact packages appear on NuGet.org, use **Release - Finish** or run:
 ./scripts/infra/publishing/finish-release.ps1 `
   -Version 4.153.0-preview.1
 
-# Push the next pending remote action
+# Publish the tag and GitHub Release
 ./scripts/infra/publishing/finish-release.ps1 `
   -Version 4.153.0-preview.1 `
   -Push
 ```
 
 An abbreviated prerelease identity must resolve to exactly one public SkiaSharp
-package version. The first `-Push` run reads that package's source commit,
-creates the immutable exact NuGet version tag at that commit, creates a
-marked GitHub Release draft, and stops. Review that draft. A later dry-run
-reports publication, and the second `-Push` run publishes the draft and
-dispatches release-note/summary follow-up. Run **Release - Milestones**
-separately when milestone reconciliation is needed.
+package version. The `-Push` run reads that package's source commit, creates the
+immutable exact NuGet version tag at that commit, publishes a marked GitHub
+Release, and dispatches release-note generation. The GitHub Release summary
+workflow runs automatically on publication and again when reviewed release-note
+data lands on `main`. Run **Release - Milestones** separately when milestone
+reconciliation is needed.
 
 Always present the dry-run and obtain confirmation before `-Push`. Never move
 or delete a tag, replace a published release, or substitute a newer package.

@@ -106,17 +106,18 @@ after the exact packages appear on NuGet.org. Use **Release - Finish** or run:
 ./scripts/infra/publishing/finish-release.ps1 `
   -Version 4.153.0-preview.1
 
-# Push the next remote action
+# Publish the tag and GitHub Release
 ./scripts/infra/publishing/finish-release.ps1 `
   -Version 4.153.0-preview.1 `
   -Push
 ```
 
 An abbreviated prerelease identity must resolve to exactly one public SkiaSharp
-package version. The first `-Push` run reads that package's source commit,
-creates the exact-version tag at that commit, creates a marked GitHub Release
-draft, and stops. Review the draft on GitHub. A second workflow dispatch or
-local `-Push` run publishes that draft and dispatches release follow-up.
+package version. The `-Push` run reads that package's source commit, creates the
+exact-version tag at that commit, publishes a marked GitHub Release, and
+dispatches release-note generation. The GitHub Release summary workflow runs
+automatically on publication and when reviewed release-note data later lands on
+`main`.
 
 Package, tag, and release writes always have a separate dry-run and explicit
 confirmation. The repository automation never approves the team pipeline's
