@@ -25,6 +25,7 @@ param(
     [switch] $Push
 )
 
+# 0. Initialize repository paths, marker contracts, and execution mode.
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
 
 $ErrorActionPreference = 'Stop'
@@ -34,6 +35,8 @@ $summaryStart = $ReleaseSummaryStartMarker
 $summaryEnd = $ReleaseSummaryEndMarker
 $generatedStart = $ReleaseGeneratedStartMarker
 $generatedEnd = $ReleaseGeneratedEndMarker
+$writeRemote = [bool] $Push
+$mode = if ($writeRemote) { 'push' } else { 'dry run' }
 
 # Requires the public-version and managed-region markers to be complete and ordered.
 function Assert-ManagedBody([string] $Body) {
@@ -70,14 +73,13 @@ function Assert-GitHubRelease([pscustomobject] $Release, [pscustomobject] $GitHu
 function Publish-GitHubRelease(
     [pscustomobject] $Release,
     [string] $SourceCommit,
-    [pscustomobject] $Existing,
-    [switch] $DryRun
+    [pscustomobject] $Existing
 ) {
     if ($Existing -and !$Existing.isDraft) {
         Write-ReleaseStatus ready "GitHub Release $($Release.Tag) is published."
         return
     }
-    if ($DryRun) {
+    if (!$writeRemote) {
         $action = if ($Existing) { 'Publish existing draft' } else { 'Create and publish' }
         Write-ReleaseStatus plan "$action GitHub Release $($Release.Tag)."
         return
@@ -134,8 +136,8 @@ function Publish-GitHubRelease(
 }
 
 # Dispatches convergent release-note and issue-template follow-up workflows.
-function Invoke-ReleaseFollowUpWorkflows([pscustomobject] $Release, [switch] $DryRun) {
-    if ($DryRun) {
+function Invoke-ReleaseFollowUpWorkflows([pscustomobject] $Release) {
+    if (!$writeRemote) {
         Write-ReleaseStatus plan "Dispatch release-note generation for $($Release.Tag)."
         Write-ReleaseStatus ready (
             'The GitHub Release summary converges automatically after publication or reviewed notes merge.')
@@ -161,7 +163,7 @@ function Invoke-ReleaseFollowUpWorkflows([pscustomobject] $Release, [switch] $Dr
 # 1. Resolve the exact public release.
 # 1.1 Resolve an abbreviated prerelease identity to one public NuGet version.
 $requestedVersion = $Version
-Write-Host "Finishing $requestedVersion ($(if ($Push) { 'push' } else { 'dry run' }))"
+Write-Host "Finishing $requestedVersion ($mode)"
 $Version = Resolve-NuGetPackageVersion -PackageId 'SkiaSharp' -Version $Version
 if ($Version -ne $requestedVersion) {
     Write-ReleaseStatus ready "Resolved $requestedVersion to public package version $Version."
@@ -182,7 +184,7 @@ $initialRelease = Get-GitHubRelease -Repository $repository -Tag $release.Tag
 if ($initialRelease) {
     Assert-GitHubRelease -Release $release -GitHubRelease $initialRelease
 }
-if ($Push) {
+if ($writeRemote) {
     Enable-GitHubGitAuthentication
 }
 
@@ -193,8 +195,7 @@ Push-ReleaseTag -Remote origin -Tag $release.Tag -SourceCommit $packageSource.Co
 Publish-GitHubRelease `
     -Release $release `
     -SourceCommit $packageSource.Commit `
-    -Existing $initialRelease `
-    -DryRun:(-not $Push)
+    -Existing $initialRelease
 
 # 4. Dispatch follow-up workflows only after publication.
-Invoke-ReleaseFollowUpWorkflows -Release $release -DryRun:(-not $Push)
+Invoke-ReleaseFollowUpWorkflows -Release $release
