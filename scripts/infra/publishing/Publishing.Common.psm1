@@ -151,14 +151,19 @@ function Get-ReleaseIdentity([string] $PublicVersion) {
         $PublicVersion,
         '^(?<numeric>\d+\.\d+\.\d+(?:\.\d+)?)-(?<channel>preview|rc)\.(?<iteration>[1-9]\d*)\.(?<build>\d+(?:\.\d+)?)$')
     if ($prerelease.Success) {
+        $numeric = $prerelease.Groups['numeric'].Value
+        $channel = $prerelease.Groups['channel'].Value
+        $iteration = $prerelease.Groups['iteration'].Value
         $identity = (
-            "$($prerelease.Groups['numeric'].Value)-$($prerelease.Groups['channel'].Value)." +
-            $prerelease.Groups['iteration'].Value)
+            "$numeric-$channel." +
+            $iteration)
+        $channelTitle = if ($channel -eq 'rc') { 'RC' } else { 'Preview' }
         return [pscustomobject] @{
             Identity = $identity
-            Numeric = $prerelease.Groups['numeric'].Value
+            Numeric = $numeric
             Branch = "release/$identity"
             Tag = "v$PublicVersion"
+            Title = "Version $numeric ($channelTitle $iteration)"
             IsPrerelease = $true
         }
     }
@@ -170,6 +175,7 @@ function Get-ReleaseIdentity([string] $PublicVersion) {
             Numeric = $PublicVersion
             Branch = "release/$PublicVersion"
             Tag = "v$PublicVersion"
+            Title = "Version $PublicVersion"
             IsPrerelease = $false
         }
     }

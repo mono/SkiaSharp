@@ -55,14 +55,18 @@ function Assert-ManagedBody([string] $Body) {
     }
 }
 
-# Requires an existing GitHub Release to match the intended immutable metadata.
+# Validates release identity and, for drafts, the managed publication contract.
 function Assert-GitHubRelease([pscustomobject] $Release, [pscustomobject] $GitHubRelease) {
     if ($GitHubRelease.tagName -ne $Release.Tag -or
-        $GitHubRelease.name -ne "Version $($Release.Identity)" -or
         [bool] $GitHubRelease.isPrerelease -ne $Release.IsPrerelease) {
         throw "GitHub Release $($Release.Tag) has conflicting metadata."
     }
-    Assert-ManagedBody $GitHubRelease.body
+    if ($GitHubRelease.isDraft) {
+        if ($GitHubRelease.name -ne $Release.Title) {
+            throw "GitHub Release draft $($Release.Tag) has conflicting metadata."
+        }
+        Assert-ManagedBody $GitHubRelease.body
+    }
 }
 
 # Creates a marked generated-notes draft and verifies it from GitHub.
@@ -91,7 +95,7 @@ function New-ReleaseDraft([pscustomobject] $Release, [string] $SourceCommit) {
         $arguments = @(
             'release', 'create', $Release.Tag,
             '--repo', $repository,
-            '--title', "Version $($Release.Identity)",
+            '--title', $Release.Title,
             '--notes-file', $bodyPath,
             '--target', $SourceCommit,
             '--verify-tag',
