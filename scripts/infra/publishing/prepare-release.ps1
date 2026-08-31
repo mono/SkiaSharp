@@ -211,11 +211,15 @@ function Ensure-VersionBranch(
         }
     }
 
+    # A validated remote branch is complete; local Apply must not recreate or check it out.
+    if ($remoteSha) {
+        Write-ReleaseStatus ready "SkiaSharp $Branch exists at $remoteSha."
+        return [pscustomobject] @{ Branch = $Branch; LocalSha = $localSha; RemoteSha = $remoteSha }
+    }
+
     # Report the desired local action without inventing a commit SHA in dry-run mode.
     if (!$writeLocal) {
-        if ($remoteSha) {
-            Write-ReleaseStatus ready "SkiaSharp $Branch exists at $remoteSha."
-        } elseif ($localSha) {
+        if ($localSha) {
             Write-ReleaseStatus ready "SkiaSharp $Branch is local at $localSha and would be pushed."
         } else {
             Write-ReleaseStatus plan (
@@ -230,24 +234,21 @@ function Ensure-VersionBranch(
     if ($localSha) {
         git switch $Branch | Out-Host
     } else {
-        $startSha = if ($remoteSha) { $remoteSha } else { $BaseSha }
-        git switch -c $Branch $startSha | Out-Host
-        if (!$remoteSha) {
-            $updatedVariables = Set-VersionVariables `
-                -Text (Get-Content $variablesPath -Raw) `
-                -SkiaSharpVersion $SkiaSharpVersion `
-                -PreviewLabel $PreviewLabel
-            $updatedVersions = Set-PackageVersions `
-                -Text (Get-Content $versionsPath -Raw) `
-                -SkiaSharpVersion $SkiaSharpVersion `
-                -HarfBuzzSharpVersion $HarfBuzzSharpVersion
-            Set-Content $variablesPath $updatedVariables -NoNewline
-            Set-Content $versionsPath $updatedVersions -NoNewline
-            if (git status --porcelain -- $variablesPath $versionsPath) {
-                git add -- $variablesPath $versionsPath
-                git -c user.name='SkiaSharp Release Bot' -c user.email='noreply@github.com' `
-                    commit -m $CommitMessage | Out-Host
-            }
+        git switch -c $Branch $BaseSha | Out-Host
+        $updatedVariables = Set-VersionVariables `
+            -Text (Get-Content $variablesPath -Raw) `
+            -SkiaSharpVersion $SkiaSharpVersion `
+            -PreviewLabel $PreviewLabel
+        $updatedVersions = Set-PackageVersions `
+            -Text (Get-Content $versionsPath -Raw) `
+            -SkiaSharpVersion $SkiaSharpVersion `
+            -HarfBuzzSharpVersion $HarfBuzzSharpVersion
+        Set-Content $variablesPath $updatedVariables -NoNewline
+        Set-Content $versionsPath $updatedVersions -NoNewline
+        if (git status --porcelain -- $variablesPath $versionsPath) {
+            git add -- $variablesPath $versionsPath
+            git -c user.name='SkiaSharp Release Bot' -c user.email='noreply@github.com' `
+                commit -m $CommitMessage | Out-Host
         }
         $localSha = (git rev-parse HEAD).Trim()
         Assert-VersionMetadata `
@@ -279,11 +280,15 @@ function Ensure-SkiaBranch([string] $Branch, [string] $ExpectedSha) {
         }
     }
 
+    # A matching remote Skia branch is complete and does not require local submodule state.
+    if ($remoteSha) {
+        Write-ReleaseStatus ready "mono/skia $Branch exists at $remoteSha."
+        return [pscustomobject] @{ Branch = $Branch; LocalSha = $localSha; RemoteSha = $remoteSha }
+    }
+
     # Report the local branch action without initializing the submodule in dry-run mode.
     if (!$writeLocal) {
-        if ($remoteSha) {
-            Write-ReleaseStatus ready "mono/skia $Branch exists at $remoteSha."
-        } elseif ($localSha) {
+        if ($localSha) {
             Write-ReleaseStatus ready "mono/skia $Branch is local at $localSha and would be pushed."
         } else {
             Write-ReleaseStatus plan "Create mono/skia $Branch at $ExpectedSha."
