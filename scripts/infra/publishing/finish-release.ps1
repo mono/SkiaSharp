@@ -159,6 +159,7 @@ function Invoke-ReleaseFollowUpWorkflows([pscustomobject] $Release, [switch] $Dr
 # 1. Resolve the exact public release.
 # 1.1 Resolve an abbreviated prerelease identity to one public NuGet version.
 $requestedVersion = $Version
+Write-Host "Finishing $requestedVersion ($(if ($Push) { 'push' } else { 'dry run' }))"
 $Version = Resolve-NuGetPackageVersion -PackageId 'SkiaSharp' -Version $Version
 if ($Version -ne $requestedVersion) {
     Write-ReleaseStatus ready "Resolved $requestedVersion to public package version $Version."
@@ -167,7 +168,6 @@ if ($Version -ne $requestedVersion) {
 # 1.2 Parse the public version into its branch and tag identity.
 $release = Get-ReleaseIdentity -PublicVersion $Version
 # 1.3 Read the source commit directly from the public SkiaSharp nuspec.
-Write-Host "Finishing $Version ($(if ($Push) { 'push' } else { 'dry run' }))"
 $packageSource = Get-NuGetPackageSource -PackageId 'SkiaSharp' -PackageVersion $Version
 Write-ReleaseStatus ready "SkiaSharp $Version was built from $($packageSource.Commit) on $($packageSource.Branch)."
 if ($packageSource.Branch -ne $release.Branch) {
