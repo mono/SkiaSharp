@@ -191,6 +191,19 @@ namespace SkiaSharp.ReleaseTool.Git
 			return ExpectedBooleanExit(result, "merge-base --is-ancestor");
 		}
 
+		public async Task<string> MergeBaseAsync(
+			string left,
+			string right,
+			CancellationToken cancellationToken = default)
+		{
+			var result = await GitAsync(
+				["merge-base", left, right],
+				cancellationToken: cancellationToken).ConfigureAwait(false);
+			return ParseSha(
+				ParseSingleLine(result.StandardOutput, "merge base"),
+				"merge base");
+		}
+
 		public async Task<IReadOnlyList<string>> CommitSubjectsFirstParentAsync(
 			string? exclusiveLowerBound,
 			string sourceCommit,

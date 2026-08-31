@@ -70,6 +70,22 @@ namespace SkiaSharp.ReleaseTool.Tests.Git
 		}
 
 		[Fact]
+		public void Closing_issue_parser_supports_all_GitHub_keywords_and_qualified_references()
+		{
+			var body =
+				"close #1\ncloses: #2\nclosed mono/SkiaSharp#3\n" +
+				"fix #4\nfixes: #5\nfixed #6\n" +
+				"resolve #7\nresolves: #8\nresolved #9\nFixes #5\n" +
+				"<!-- Fixes #123 -->\nFixes mono/skia#124\n" +
+				"`Fixes #125`\n```\nFixes #126\n```\n" +
+				"Fixes #2147483648";
+
+			Assert.Equal(
+				[1, 2, 3, 4, 5, 6, 7, 8, 9],
+				MilestonePlanner.ExtractClosingIssues(body));
+		}
+
+		[Fact]
 		public async Task Empty_commit_subjects_are_ignored()
 		{
 			using var directory = new TestDirectory("closeout-empty-subject");

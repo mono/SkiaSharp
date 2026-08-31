@@ -132,6 +132,17 @@ namespace SkiaSharp.ReleaseTool.Milestones
 			return pullRequest.Milestone?.Title;
 		}
 
+		public async Task<string?> GetPullRequestBodyAsync(
+			int pullRequestNumber,
+			CancellationToken cancellationToken = default)
+		{
+			var pullRequest = await ExecuteAsync(
+				() => client.PullRequest.Get(Owner, Repository, pullRequestNumber),
+				$"read pull request {pullRequestNumber}",
+				cancellationToken).ConfigureAwait(false);
+			return pullRequest.Body;
+		}
+
 		public async Task<string?> GetIssueMilestoneAsync(
 			int issueNumber,
 			CancellationToken cancellationToken = default)
@@ -233,6 +244,7 @@ namespace SkiaSharp.ReleaseTool.Milestones
 						HttpCompletionOption.ResponseHeadersRead,
 						cancellationToken).ConfigureAwait(false);
 				}
+
 				catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
 				{
 					throw new GitHubException($"closing-issue lookup timed out for pull request {pullRequestNumber}", ex);

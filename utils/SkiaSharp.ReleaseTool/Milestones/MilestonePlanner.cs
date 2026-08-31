@@ -1,4 +1,5 @@
 using NuGet.Versioning;
+using System.Text.RegularExpressions;
 using SkiaSharp.ReleaseTool.Contracts;
 using SkiaSharp.ReleaseTool.Errors;
 using SkiaSharp.ReleaseTool.Model;
@@ -7,6 +8,19 @@ namespace SkiaSharp.ReleaseTool.Milestones
 {
 	internal static class MilestonePlanner
 	{
+		private static readonly Regex ClosingIssuePattern = new(
+			@"\b(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s*:?\s+(?:(?<repository>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+))?#(?<number>[1-9][0-9]*)",
+			RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+		private static readonly Regex HtmlCommentPattern = new(
+			@"<!--.*?-->",
+			RegexOptions.Singleline | RegexOptions.CultureInvariant);
+		private static readonly Regex FencedCodePattern = new(
+			@"(?:```|~~~).*?(?:```|~~~)",
+			RegexOptions.Singleline | RegexOptions.CultureInvariant);
+		private static readonly Regex InlineCodePattern = new(
+			@"`[^`\r\n]*`",
+			RegexOptions.CultureInvariant);
+
 		public static IReadOnlyDictionary<string, GitHubMilestone> Index(
 			IReadOnlyList<GitHubMilestone> milestones)
 		{
@@ -118,6 +132,36 @@ namespace SkiaSharp.ReleaseTool.Milestones
 			return result;
 		}
 
+		public static IReadOnlyList<int> ExtractClosingIssues(string? body)
+		{
+			if (string.IsNullOrWhiteSpace(body))
+				return [];
+			var visible = HtmlCommentPattern.Replace(body, "");
+			visible = FencedCodePattern.Replace(visible, "");
+			visible = InlineCodePattern.Replace(visible, "");
+			var issues = new List<int>();
+			foreach (Match match in ClosingIssuePattern.Matches(visible))
+			{
+				if (match.Groups["repository"].Success &&
+					!string.Equals(
+						match.Groups["repository"].Value,
+						"mono/SkiaSharp",
+						StringComparison.OrdinalIgnoreCase))
+				{
+					continue;
+				}
+				if (int.TryParse(
+					match.Groups["number"].Value,
+					System.Globalization.NumberStyles.None,
+					System.Globalization.CultureInfo.InvariantCulture,
+					out var issue))
+				{
+					issues.Add(issue);
+				}
+			}
+			return issues.Distinct().ToArray();
+		}
+
 		public static async Task<IReadOnlyList<FinishReconcileOperation>> PlanReconciliationAsync(
 			IReadOnlyList<int> pullRequestNumbers,
 			GitHubMilestone target,
@@ -142,9 +186,14 @@ namespace SkiaSharp.ReleaseTool.Milestones
 						target.Number,
 						FinishCloseoutStatus.Pending));
 				}
-				foreach (var issueNumber in await github.GetClosingIssuesAsync(
-					pullRequestNumber,
-					cancellationToken).ConfigureAwait(false))
+				var relatedIssues = (await github.GetClosingIssuesAsync(
+						pullRequestNumber,
+						cancellationToken).ConfigureAwait(false))
+					.Concat(ExtractClosingIssues(await github.GetPullRequestBodyAsync(
+						pullRequestNumber,
+						cancellationToken).ConfigureAwait(false)))
+					.Distinct();
+				foreach (var issueNumber in relatedIssues)
 				{
 					if (!seen.Add((FinishReconcileKind.Issue, issueNumber)))
 						continue;

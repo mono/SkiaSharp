@@ -127,6 +127,42 @@ namespace SkiaSharp.ReleaseTool.Tests.Model
 				TagOrdering.SelectPreviousTag("v3.119.0", tags));
 		}
 
+		[Fact]
+		public void Tag_ordering_normalizes_historical_build_revision_tags()
+		{
+			string[] tags =
+			[
+				"v4.151.1",
+				"v4.152.0-preview.1.1",
+				"v4.152.0-preview.2.26426.14",
+				"v4.152.0-rc.1.26426.14",
+			];
+
+			Assert.Equal(
+				"v4.152.0-preview.2.26426.14",
+				TagOrdering.SelectPreviousTag("v4.152.0-rc.1", tags));
+			Assert.Equal(
+				"v4.152.0-rc.1.26426.14",
+				TagOrdering.SelectPreviousTag("v4.152.0", tags));
+			Assert.Equal(
+				"v4.151.1",
+				TagOrdering.SelectPreviousTag("v4.152.0-preview.1", tags));
+		}
+
+		[Fact]
+		public void Tag_ordering_rejects_duplicate_normalized_identities()
+		{
+			var error = Assert.Throws<PlanException>(() =>
+				TagOrdering.SelectPreviousTag(
+					"v4.152.0",
+					[
+						"v4.152.0-preview.1.1",
+						"v4.152.0-preview.1.26426.14",
+					]));
+
+			Assert.Contains("normalize to the same identity", error.Message);
+		}
+
 		[Theory]
 		[InlineData("42")]
 		[InlineData("12345.7")]

@@ -42,5 +42,9 @@ namespace SkiaSharp.ReleaseTool.Planning
 			string? exclusiveLowerBound,
 			string sourceCommit,
 			CancellationToken cancellationToken = default);
+		Task<string> MergeBaseAsync(
+			string left,
+			string right,
+			CancellationToken cancellationToken = default);
 	}
 }

@@ -27,6 +27,10 @@ namespace SkiaSharp.ReleaseTool.Milestones
 			int pullRequestNumber,
 			CancellationToken cancellationToken = default);
 
+		Task<string?> GetPullRequestBodyAsync(
+			int pullRequestNumber,
+			CancellationToken cancellationToken = default);
+
 		Task<IReadOnlyList<int>> GetClosingIssuesAsync(
 			int pullRequestNumber,
 			CancellationToken cancellationToken = default);
@@ -49,5 +53,6 @@ namespace SkiaSharp.ReleaseTool.Milestones
 			string reference,
 			IReadOnlyDictionary<string, string> inputs,
 			CancellationToken cancellationToken = default);
+
 	}
 }

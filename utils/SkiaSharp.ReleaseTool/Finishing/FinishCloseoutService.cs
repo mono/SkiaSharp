@@ -192,32 +192,112 @@ namespace SkiaSharp.ReleaseTool.Finishing
 				return [];
 			}
 
-			string? lowerBound = null;
+			string? previousEndpoint = null;
 			if (parent.PreviousTag is not null)
 			{
 				var remoteTags = await repository.RemoteTagsAsync(
 					pattern: $"refs/tags/{parent.PreviousTag}",
 					cancellationToken: cancellationToken).ConfigureAwait(false);
-				if (!remoteTags.TryGetValue(parent.PreviousTag, out lowerBound))
+				if (!remoteTags.TryGetValue(parent.PreviousTag, out previousEndpoint))
 				{
 					throw new ConflictException(
 						$"cannot resolve previous tag '{parent.PreviousTag}' to a commit; the release boundary for PR/issue reconciliation is ambiguous");
 				}
-				if (!await repository.CommitExistsAsync(lowerBound, cancellationToken).ConfigureAwait(false) ||
-					!await repository.IsAncestorAsync(
-						lowerBound,
-						parent.Receipt.SourceCommit,
-						cancellationToken).ConfigureAwait(false))
+				if (!await repository.CommitExistsAsync(
+					previousEndpoint,
+					cancellationToken).ConfigureAwait(false))
 				{
 					throw new ConflictException(
-						$"previous tag '{parent.PreviousTag}' ({lowerBound}) is not an ancestor of shipped commit {parent.Receipt.SourceCommit}; the release boundary for PR/issue reconciliation is ambiguous");
+						$"previous tag '{parent.PreviousTag}' ({previousEndpoint}) does not resolve to a commit");
 				}
 			}
-			var subjects = await repository.CommitSubjectsFirstParentAsync(
-				lowerBound,
+			var identity = SkiaSharpReleaseIdentity.Parse(parent.Release.Identity);
+			var maintenanceRef = $"refs/remotes/origin/{identity.IntegrationBranch}";
+			var integrationRef = await repository.RefExistsAsync(
+				maintenanceRef,
+				cancellationToken).ConfigureAwait(false)
+				? maintenanceRef
+				: "refs/remotes/origin/main";
+			var currentProjection = await repository.MergeBaseAsync(
+				parent.Receipt.SourceCommit,
+				integrationRef,
+				cancellationToken).ConfigureAwait(false);
+			string? previousProjection = null;
+			if (previousEndpoint is not null)
+			{
+				previousProjection = await repository.MergeBaseAsync(
+					previousEndpoint,
+					integrationRef,
+					cancellationToken).ConfigureAwait(false);
+			}
+			var integrationSubjects = await repository.CommitSubjectsFirstParentAsync(
+				previousProjection,
+				currentProjection,
+				cancellationToken).ConfigureAwait(false);
+			var releaseLowerBound = previousEndpoint is not null &&
+				await repository.IsAncestorAsync(
+					previousEndpoint,
+					parent.Receipt.SourceCommit,
+					cancellationToken).ConfigureAwait(false)
+					? previousEndpoint
+					: currentProjection;
+			var releaseSubjects = await repository.CommitSubjectsFirstParentAsync(
+				releaseLowerBound,
 				parent.Receipt.SourceCommit,
 				cancellationToken).ConfigureAwait(false);
-			var pullRequests = MilestonePlanner.ExtractMergedPullRequests(subjects);
+			var branchSubjects = new List<string>();
+			SkiaSharpReleaseIdentity? previousIdentity = null;
+			if (parent.PreviousTag is not null &&
+				!TagOrdering.TryNormalizeTag(parent.PreviousTag, out previousIdentity))
+			{
+				throw new ConflictException(
+					$"previous tag '{parent.PreviousTag}' cannot be normalized for release branch reconciliation");
+			}
+			var shippedIdentities = new HashSet<string>(StringComparer.Ordinal);
+			foreach (var tag in tags)
+			{
+				if (TagOrdering.TryNormalizeTag(tag, out var shipped))
+					shippedIdentities.Add(shipped.Raw);
+			}
+			foreach (var branch in await repository.ReleaseBranchesAsync(
+				cancellationToken: cancellationToken).ConfigureAwait(false))
+			{
+				SkiaSharpReleaseIdentity candidate;
+				try
+				{
+					candidate = SkiaSharpReleaseIdentity.ParseBranch(branch);
+				}
+				catch (ReleaseToolException)
+				{
+					continue;
+				}
+				if (candidate.Line != identity.Line ||
+					candidate.Equals(identity) ||
+					candidate.CompareTo(identity) > 0 ||
+					previousIdentity is not null && candidate.CompareTo(previousIdentity) <= 0 ||
+					shippedIdentities.Contains(candidate.Raw))
+				{
+					continue;
+				}
+				var endpoint = await repository.RemoteShaAsync(
+					branch,
+					cancellationToken: cancellationToken).ConfigureAwait(false)
+					?? throw new ConflictException(
+						$"release branch '{branch}' disappeared during shipped-range reconciliation");
+				var projection = await repository.MergeBaseAsync(
+					endpoint,
+					integrationRef,
+					cancellationToken).ConfigureAwait(false);
+				branchSubjects.AddRange(await repository.CommitSubjectsFirstParentAsync(
+					projection,
+					endpoint,
+					cancellationToken).ConfigureAwait(false));
+			}
+			var pullRequests = MilestonePlanner.ExtractMergedPullRequests(
+				integrationSubjects
+					.Concat(releaseSubjects)
+					.Concat(branchSubjects)
+					.ToArray()).Distinct().ToArray();
 			return await MilestonePlanner.PlanReconciliationAsync(
 				pullRequests,
 				target,

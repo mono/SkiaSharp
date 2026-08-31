@@ -77,42 +77,64 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 			setup.GitHub.PullRequestMilestones[43] = null;
 			setup.GitHub.ClosingIssues[42] = [7];
 			setup.GitHub.ClosingIssues[43] = [7];
+			setup.GitHub.PullRequestBodies[43] = "Resolves: mono/SkiaSharp#8";
 			setup.GitHub.IssueMilestones[7] = null;
+			setup.GitHub.IssueMilestones[8] = null;
 
 			var result = await setup.Service.ApplyAsync(
 				setup.Plan,
 				setup.Plan.PlanId,
 				TestContext.Current.CancellationToken);
 
-			Assert.Equal(3, result.ReconcileResults.Count);
+			Assert.Equal(4, result.ReconcileResults.Count);
 			Assert.Equal(1, setup.GitHub.PullRequestMilestoneNumbers[42]);
 			Assert.Equal(1, setup.GitHub.PullRequestMilestoneNumbers[43]);
 			Assert.Equal(1, setup.GitHub.IssueMilestoneNumbers[7]);
-			Assert.Single(result.ReconcileResults, value => value.Kind == FinishReconcileKind.Issue);
-			Assert.Equal(3, setup.GitHub.AssignmentWrites);
+			Assert.Equal(1, setup.GitHub.IssueMilestoneNumbers[8]);
+			Assert.Equal(2, result.ReconcileResults.Count(value => value.Kind == FinishReconcileKind.Issue));
+			Assert.Equal(4, setup.GitHub.AssignmentWrites);
 		}
 
-		[Theory]
-		[InlineData(false)]
-		[InlineData(true)]
-		public async Task Ambiguous_previous_boundary_fails_explicitly(bool diverged)
+		[Fact]
+		public async Task Sibling_previous_boundary_is_projected_onto_integration_history()
 		{
 			var setup = Setup(previousTag: "v4.151.0");
 			setup.GitHub.Milestones.Add(new(1, setup.Plan.Release.Identity, true, null, null));
-			if (diverged)
-			{
-				setup.Repository.Tags["v4.151.0"] = PlanSamples.Sha('e');
-				setup.Repository.Commits.Add(PlanSamples.Sha('e'));
-				setup.Repository.RejectedAncestry.Add((PlanSamples.Sha('e'), setup.Plan.Receipt.SourceCommit));
-			}
+			setup.Repository.Tags["v4.151.0"] = PlanSamples.Sha('e');
+			setup.Repository.Commits.Add(PlanSamples.Sha('e'));
+			setup.Repository.Subjects.Add("Release branch only (#42)");
+			setup.GitHub.PullRequestMilestones[42] = null;
 
-			var error = await Assert.ThrowsAsync<ConflictException>(() =>
-				setup.Service.ApplyAsync(
-					setup.Plan,
-					setup.Plan.PlanId,
-					TestContext.Current.CancellationToken));
+			var result = await setup.Service.ApplyAsync(
+				setup.Plan,
+				setup.Plan.PlanId,
+				TestContext.Current.CancellationToken);
 
-			Assert.Contains("ambiguous", error.Message);
+			Assert.Contains(result.ReconcileResults, item => item.Number == 42);
+			Assert.Equal(1, setup.GitHub.PullRequestMilestoneNumbers[42]);
+		}
+
+		[Fact]
+		public async Task Unshipped_exact_branch_segment_rolls_into_current_release()
+		{
+			var setup = Setup(previousTag: "v4.151.1");
+			setup.GitHub.Milestones.Add(new(1, setup.Plan.Release.Identity, true, null, null));
+			setup.Repository.Tags["v4.151.1"] = PlanSamples.Sha('e');
+			setup.Repository.Commits.Add(PlanSamples.Sha('e'));
+			const string branch = "release/4.152.0-preview.1";
+			var endpoint = PlanSamples.Sha('c');
+			setup.Repository.ReleaseBranchNames.Add(branch);
+			setup.Repository.RemoteBranches[branch] = endpoint;
+			setup.Repository.SubjectsBySource[endpoint] = ["Unshipped branch change (#77)"];
+			setup.GitHub.PullRequestMilestones[77] = null;
+
+			var result = await setup.Service.ApplyAsync(
+				setup.Plan,
+				setup.Plan.PlanId,
+				TestContext.Current.CancellationToken);
+
+			Assert.Contains(result.ReconcileResults, item => item.Number == 77);
+			Assert.Equal(1, setup.GitHub.PullRequestMilestoneNumbers[77]);
 		}
 
 		[Fact]
@@ -253,7 +275,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 		{
 			var setup = Setup();
 			setup.GitHub.Milestones.Add(new(1, setup.Plan.Release.Identity, true, null, null));
-			setup.GitHub.FailDispatchAttempt = 1;
+			setup.GitHub.FailDispatchAttempt = 2;
 
 			await Assert.ThrowsAsync<GitHubException>(() =>
 				setup.Service.ApplyAsync(
@@ -261,6 +283,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 					setup.Plan.PlanId,
 					TestContext.Current.CancellationToken));
 			Assert.Equal(1, setup.GitHub.CloseWrites);
+			Assert.Single(setup.GitHub.Dispatches);
 
 			setup.GitHub.FailDispatchAttempt = null;
 			var result = await setup.Service.ApplyAsync(
@@ -270,6 +293,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 
 			Assert.Equal(1, setup.GitHub.CloseWrites);
 			Assert.Equal(2, result.Dispatches.Count);
+			Assert.Equal(3, setup.GitHub.Dispatches.Count);
 		}
 
 		[Fact]
@@ -415,6 +439,8 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 		public Dictionary<string, string> RemoteBranches { get; } = new(StringComparer.Ordinal);
 		public Dictionary<string, string> Tags { get; } = new(StringComparer.Ordinal);
 		public List<string> Subjects { get; } = [];
+		public List<string> ReleaseBranchNames { get; } = [];
+		public Dictionary<string, IReadOnlyList<string>> SubjectsBySource { get; } = [];
 		public bool Ancestor { get; set; } = true;
 		public HashSet<(string Ancestor, string Descendant)> RejectedAncestry { get; } = [];
 		public string VersionsText { get; set; } =
@@ -451,10 +477,17 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 				: new Dictionary<string, string>();
 			return Task.FromResult<IReadOnlyDictionary<string, string>>(values);
 		}
-		public Task<IReadOnlyList<string>> ReleaseBranchesAsync(string remote = "origin", CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<string>>([]);
+		public Task<IReadOnlyList<string>> ReleaseBranchesAsync(string remote = "origin", CancellationToken cancellationToken = default) =>
+			Task.FromResult<IReadOnlyList<string>>([.. ReleaseBranchNames]);
 		public Task<bool> IsAncestorAsync(string ancestor, string descendant, CancellationToken cancellationToken = default) =>
 			Task.FromResult(Ancestor && !RejectedAncestry.Contains((ancestor, descendant)));
-		public Task<IReadOnlyList<string>> CommitSubjectsFirstParentAsync(string? exclusiveLowerBound, string sourceCommit, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<string>>([.. Subjects]);
+		public Task<string> MergeBaseAsync(string left, string right, CancellationToken cancellationToken = default) =>
+			Task.FromResult(left);
+		public Task<IReadOnlyList<string>> CommitSubjectsFirstParentAsync(string? exclusiveLowerBound, string sourceCommit, CancellationToken cancellationToken = default) =>
+			Task.FromResult(
+				SubjectsBySource.TryGetValue(sourceCommit, out var values)
+					? values
+					: (IReadOnlyList<string>)[.. Subjects]);
 		public Task RequireCleanAsync(IReadOnlyList<string>? allowedUntrackedPaths = null, CancellationToken cancellationToken = default) => Task.CompletedTask;
 		public Task<string> CurrentBranchAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
 		public Task UpdateLocalBranchAsync(string branch, string sha, CancellationToken cancellationToken = default) => throw new NotSupportedException();
@@ -485,6 +518,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 		public List<GitHubMilestone> Milestones { get; } = [];
 		public Dictionary<int, List<GitHubMilestoneItem>> OpenItems { get; } = [];
 		public Dictionary<int, string?> PullRequestMilestones { get; } = [];
+		public Dictionary<int, string?> PullRequestBodies { get; } = [];
 		public Dictionary<int, int> PullRequestMilestoneNumbers { get; } = [];
 		public Dictionary<int, IReadOnlyList<int>> ClosingIssues { get; } = [];
 		public Dictionary<int, string?> IssueMilestones { get; } = [];
@@ -542,6 +576,14 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 			return Task.FromResult(PullRequestMilestones.GetValueOrDefault(pullRequestNumber));
 		}
 
+		public Task<string?> GetPullRequestBodyAsync(
+			int pullRequestNumber,
+			CancellationToken cancellationToken = default)
+		{
+			MilestoneAccessCount++;
+			return Task.FromResult(PullRequestBodies.GetValueOrDefault(pullRequestNumber));
+		}
+
 		public Task<IReadOnlyList<int>> GetClosingIssuesAsync(int pullRequestNumber, CancellationToken cancellationToken = default)
 		{
 			MilestoneAccessCount++;
@@ -591,5 +633,6 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 			Dispatches.Add(new(workflow, reference, inputs, FinishDispatchStatus.Dispatched));
 			return Task.CompletedTask;
 		}
+
 	}
 }

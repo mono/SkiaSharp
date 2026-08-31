@@ -226,6 +226,12 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 			CancellationToken cancellationToken = default) =>
 			throw new NotSupportedException("The planning fake has no commit history.");
 
+		public Task<string> MergeBaseAsync(
+			string left,
+			string right,
+			CancellationToken cancellationToken = default) =>
+			throw new NotSupportedException("The planning fake has no commit history.");
+
 		private static string VersionsText(TestVersionState state)
 		{
 			var skiaFile = state.Skia.Split('.').Length == 3 ? $"{state.Skia}.0" : state.Skia;
