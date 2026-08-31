@@ -78,9 +78,11 @@ Stable input uses the explicit `-stable` suffix but creates
 - increments HarfBuzzSharp within its current milestone bucket;
 - creates `bump-version-X.Y.Z`;
 - returns both families to `preview.0`; and
-- opens a PR against `release/X.Y.x`.
+- opens a PR against a manually created `release/X.Y.x` servicing line when one
+  exists, otherwise against `main`.
 
-The bump PR remains human-owned and is never merged by the script.
+Release preparation never creates the optional `.x` line. The bump PR remains
+human-owned and is never merged by the script.
 
 ## 2. Build, test, and publish packages
 

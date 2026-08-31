@@ -412,7 +412,9 @@ The release preparation script verified the version transformation.
 
 # 1. Parse the requested release.
 # 1.1 Validate the numeric version, channel, and iteration.
-$releasePattern = '^(?<version>\d+\.\d+\.\d+(?:\.\d+)?)-(?:(?<channel>preview|rc)\.(?<iteration>[1-9]\d*)|(?<stable>stable))$'
+$releasePattern = (
+    '^(?<version>\d+\.\d+\.\d+(?:\.\d+)?)-' +
+    '(?:(?<channel>preview|rc)\.(?<iteration>[1-9]\d*)|(?<stable>stable))$')
 if ($Release -notmatch $releasePattern) {
     throw "Invalid release identity '$Release'."
 }
@@ -473,14 +475,17 @@ $skiaState = Ensure-SkiaBranch -Branch $releaseBranch -ExpectedSha $releaseSkiaS
 $bumpState = $null
 $bumpPullRequest = $null
 if ($isStable -and ($version -split '\.').Count -eq 3) {
-    # 3.1 Resolve the maintenance branch that receives the next version.
+    # 3.1 Prefer a manually split servicing line; otherwise advance main.
     $parts = $version -split '\.'
-    $maintenanceBranch = "release/$($parts[0]).$($parts[1]).x"
-    $maintenanceSha = Get-RemoteBranchSha origin $maintenanceBranch
+    $servicingBranch = "release/$($parts[0]).$($parts[1]).x"
+    $servicingSha = Get-RemoteBranchSha origin $servicingBranch
+    $maintenanceBranch = if ($servicingSha) { $servicingBranch } else { 'main' }
+    $maintenanceSha = if ($servicingSha) { $servicingSha } else { Get-RemoteBranchSha origin main }
     if (!$maintenanceSha) {
         throw "origin/$maintenanceBranch does not exist."
     }
     git fetch --quiet origin "refs/heads/$maintenanceBranch"
+    Write-ReleaseStatus ready "Post-stable bump targets $maintenanceBranch at $maintenanceSha."
 
     # 3.2 Bump SkiaSharp and HarfBuzzSharp together for the next build.
     $next = Get-NextVersions -Version $version -CurrentHarfBuzzVersion $releaseHarfBuzzVersion

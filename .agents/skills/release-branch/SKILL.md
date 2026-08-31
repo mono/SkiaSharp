@@ -36,5 +36,6 @@ state is reused; conflicting state blocks the run.
 
 Stable input uses the explicit `-stable` suffix but creates
 `release/X.Y.Z`. A three-part stable release also prepares the next SkiaSharp
-patch and HarfBuzzSharp revision on `bump-version-X.Y.Z` and opens a PR against
-`release/X.Y.x`.
+patch and HarfBuzzSharp revision on `bump-version-X.Y.Z`. Its PR targets a
+manually created `release/X.Y.x` servicing line when one exists, otherwise
+`main`; release preparation never creates the `.x` line.
