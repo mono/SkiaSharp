@@ -129,8 +129,7 @@ Single source of truth for all commands:
 > after native changes will cause `EntryPointNotFoundException` at runtime because the downloaded
 > binaries don't contain your new functions.
 
-> **Note:** For pre-publication CI package approval testing, see
-> `/release-testing`.
+> **Note:** For optional public-package smoke testing, see `/release-testing`.
 
 **Recovery Commands:**
 
@@ -390,7 +389,7 @@ Custom slash commands are available for specialized workflows. Use these for com
 Repository release branches are normally created with the **Release - Prepare**
 GitHub workflow, which runs `scripts/infra/publishing/prepare-release.ps1`. The
 release skills remain available for publication, milestone maintenance, and
-pre-publication CI package approval testing. See
+optional public-package smoke testing. See
 [`documentation/dev/releasing.md`](documentation/dev/releasing.md).
 
 ### When to Use Commands
@@ -410,7 +409,7 @@ pre-publication CI package approval testing. See
 | Prepare release branches | `/release-branch` | "release now", "start release X" |
 | Finalize release | `/release-publish` | "finish release", "tag release" |
 | Maintain release milestones | `/release-milestones` | "reconcile milestones", "advance milestone schedule" |
-| Approve release CI packages | `/release-testing` | "approve release packages", "validate CI packages" |
+| Smoke-test a public release | `/release-testing` | "smoke test release", "verify public packages" |
 | Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |
 | Skia analyst | `/skia-analyst` | "what changed", "what are we missing", "feature gap", "api diff", "scout features", "diff tags" |
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |
