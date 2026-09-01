@@ -2,22 +2,23 @@
 
 <#
 .SYNOPSIS
-    Updates release milestone dates, rolls open work forward, and closes shipped milestones.
+    Reconciles merged pull requests and linked issues to shipped release milestones.
 
-.PARAMETER Count
-    The number of Chromium milestones whose release milestones are maintained.
+.PARAMETER Version
+    The released numeric SkiaSharp version, such as 4.153.0 or 4.153.0.1.
 
 .PARAMETER Repository
-    The GitHub repository whose milestones are maintained.
+    The GitHub repository whose release assignments are maintained.
 
 .PARAMETER Push
-    Performs GitHub milestone mutations. Without this switch, the script is
+    Performs GitHub milestone assignments. Without this switch, the script is
     read-only and reports exact skipped mutations.
 #>
 
 param(
-    [ValidateRange(1, 20)]
-    [int] $Count = 3,
+    [Parameter(Mandatory)]
+    [ValidatePattern('^\d+\.\d+\.\d+(?:\.\d+)?$')]
+    [string] $Version,
 
     [ValidatePattern('^[^/]+/[^/]+$')]
     [string] $Repository = 'mono/SkiaSharp',
@@ -35,11 +36,11 @@ $writeRemote = $Push
 $mode = if ($writeRemote) { 'push' } else { 'dry run' }
 $root = Get-GitRepositoryRoot
 
-# 1. Maintain Chromium-derived dates, roll open work, and close shipped milestones.
-Write-ReleaseStatus start "Release milestone update ($mode)."
-Invoke-ReleaseMilestoneAdvancement `
+# 1. Reconcile shipped commits, pull requests, and linked issues.
+Write-ReleaseStatus start "Release assignment reconciliation for $Version ($mode)."
+Invoke-ReleaseAssignmentReconciliation `
     -Root $root `
-    -Count $Count `
+    -Version $Version `
     -Repository $Repository `
     -Push:$Push
-Write-ReleaseStatus complete "Release milestone update completed ($mode)."
+Write-ReleaseStatus complete "Release assignment reconciliation completed ($mode)."

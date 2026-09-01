@@ -41,13 +41,19 @@ param(
 # 0. Initialize shared helpers, execution mode, and repository paths.
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
+Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
 $writeLocal = $Apply -or $Push
 $mode = if ($Push) { 'push' } elseif ($Apply) { 'local apply' } else { 'dry run' }
+$root = Get-GitRepositoryRoot
 $skiaRemote = $ReleaseSkiaRemote
 $skiaPath = $ReleaseSkiaPath
+$skiaRepository = Join-Path $root $skiaPath
 $variablesPath = $ReleaseVariablesPath
 $versionsPath = $ReleaseVersionsPath
+$variablesFile = Join-Path $root $variablesPath
+$versionsFile = Join-Path $root $versionsPath
 
 # Rewrites the SkiaSharp version and release label in the pipeline variables.
 function Set-VersionVariables([string] $Text, [string] $SkiaSharpVersion, [string] $PreviewLabel) {
@@ -67,8 +73,8 @@ function Set-PackageVersions([string] $Text, [string] $SkiaSharpVersion, [string
 
 # Reads the coupled package versions and release label from one commit.
 function Get-VersionState([string] $Commit) {
-    $variables = Get-GitFileText -Commit $Commit -Path $variablesPath
-    $versions = Get-GitFileText -Commit $Commit -Path $versionsPath
+    $variables = Get-GitFileText -Root $root -Commit $Commit -Path $variablesPath
+    $versions = Get-GitFileText -Root $root -Commit $Commit -Path $versionsPath
     $skiaVariable = [regex]::Match($variables, '(?m)^[ \t]*SKIASHARP_VERSION:[ \t]*(?<version>\S+)[ \t]*$')
     $previewLabel = [regex]::Match($variables, "(?m)^[ \t]*PREVIEW_LABEL:[ \t]*['`"]?(?<label>[^'`"`r`n]+)")
     $skiaPackage = [regex]::Match($versions, '(?m)^SkiaSharp[ \t]+nuget[ \t]+(?<version>\S+)[ \t]*$')
@@ -146,8 +152,8 @@ function Test-VersionMetadata(
     [string] $PreviewLabel,
     [string] $HarfBuzzSharpVersion
 ) {
-    $variables = Get-GitFileText -Commit $Commit -Path $variablesPath
-    $versions = Get-GitFileText -Commit $Commit -Path $versionsPath
+    $variables = Get-GitFileText -Root $root -Commit $Commit -Path $variablesPath
+    $versions = Get-GitFileText -Root $root -Commit $Commit -Path $versionsPath
     $expectedVariables = Set-VersionVariables `
         -Text $variables `
         -SkiaSharpVersion $SkiaSharpVersion `
@@ -175,7 +181,7 @@ function Assert-VersionMetadata(
         -HarfBuzzSharpVersion $HarfBuzzSharpVersion)) {
         throw "$Branch at $Commit has different version metadata."
     }
-    $actualSkiaSha = Get-GitTreeEntrySha -Commit $Commit -Path $skiaPath
+    $actualSkiaSha = Get-GitTreeEntrySha -Root $root -Commit $Commit -Path $skiaPath
     if ($actualSkiaSha -ne $ExpectedSkiaSha) {
         throw "$Branch at $Commit references mono/skia $actualSkiaSha, expected $ExpectedSkiaSha."
     }
@@ -197,9 +203,9 @@ function Ensure-VersionBranch(
         -HarfBuzzSharpVersion $HarfBuzzSharpVersion
 
     # Validate an existing remote branch before trusting or fetching it.
-    $remoteSha = Get-RemoteBranchSha -Remote origin -Branch $Branch
+    $remoteSha = Get-RemoteBranchSha -Root $root -Remote origin -Branch $Branch
     if ($remoteSha) {
-        git fetch --quiet origin "refs/heads/$Branch"
+        $null = Invoke-Git -Root $root -Arguments @('fetch', '--quiet', 'origin', "refs/heads/$Branch")
         Assert-VersionMetadata `
             -Commit $remoteSha `
             -Branch "origin/$Branch" `
@@ -212,7 +218,7 @@ function Ensure-VersionBranch(
     }
 
     # No remote branch exists, so validate any local work that may need to be pushed.
-    $localSha = Get-LocalBranchSha -Repository . -Branch $Branch
+    $localSha = Get-LocalBranchSha -Root $root -Branch $Branch
     if ($localSha) {
         Assert-VersionMetadata `
             -Commit $localSha `
@@ -238,25 +244,32 @@ function Ensure-VersionBranch(
 
     # Reuse a valid local branch or create its single deterministic version commit.
     if ($localSha) {
-        git switch $Branch | Out-Host
+        $null = Invoke-Git -Root $root -Arguments @('switch', $Branch) -WriteOutput
     } else {
-        git switch -c $Branch $BaseSha | Out-Host
+        $null = Invoke-Git -Root $root -Arguments @('switch', '-c', $Branch, $BaseSha) -WriteOutput
         $updatedVariables = Set-VersionVariables `
-            -Text (Get-Content $variablesPath -Raw) `
+            -Text (Get-Content $variablesFile -Raw) `
             -SkiaSharpVersion $SkiaSharpVersion `
             -PreviewLabel $PreviewLabel
         $updatedVersions = Set-PackageVersions `
-            -Text (Get-Content $versionsPath -Raw) `
+            -Text (Get-Content $versionsFile -Raw) `
             -SkiaSharpVersion $SkiaSharpVersion `
             -HarfBuzzSharpVersion $HarfBuzzSharpVersion
-        Set-Content $variablesPath $updatedVariables -NoNewline
-        Set-Content $versionsPath $updatedVersions -NoNewline
-        if (git status --porcelain -- $variablesPath $versionsPath) {
-            git add -- $variablesPath $versionsPath
-            git -c user.name='SkiaSharp Release Bot' -c user.email='noreply@github.com' `
-                commit -m $CommitMessage | Out-Host
+        Set-Content $variablesFile $updatedVariables -NoNewline
+        Set-Content $versionsFile $updatedVersions -NoNewline
+        $status = Invoke-Git -Root $root -Arguments @('status', '--porcelain', '--', $variablesPath, $versionsPath)
+        if ($status.Output) {
+            $null = Invoke-Git -Root $root -Arguments @('add', '--', $variablesPath, $versionsPath)
+            $null = Invoke-Git `
+                -Root $root `
+                -Arguments @(
+                    '-c', 'user.name=SkiaSharp Release Bot',
+                    '-c', 'user.email=noreply@github.com',
+                    'commit', '-m', $CommitMessage
+                ) `
+                -WriteOutput
         }
-        $localSha = (git rev-parse HEAD).Trim()
+        $localSha = (Invoke-Git -Root $root -Arguments @('rev-parse', 'HEAD')).Output
         Assert-VersionMetadata `
             -Commit $localSha `
             -Branch $Branch `
@@ -273,7 +286,7 @@ function Ensure-VersionBranch(
 # Converges the local mono/skia branch to the parent repository's gitlink.
 function Ensure-SkiaBranch([string] $Branch, [string] $ExpectedSha) {
     # A matching remote branch is complete, regardless of stale local checkout state.
-    $remoteSha = Get-RemoteBranchSha $skiaRemote $Branch
+    $remoteSha = Get-RemoteBranchSha -Root $root -Remote $skiaRemote -Branch $Branch
     if ($remoteSha -and $remoteSha -ne $ExpectedSha) {
         throw "mono/skia $Branch exists at $remoteSha, expected $ExpectedSha."
     }
@@ -284,8 +297,8 @@ function Ensure-SkiaBranch([string] $Branch, [string] $ExpectedSha) {
 
     # No remote branch exists, so validate any local work that may need to be pushed.
     $localSha = $null
-    if (Test-Path "$skiaPath/.git") {
-        $localSha = Get-LocalBranchSha -Repository $skiaPath -Branch $Branch
+    if (Test-Path "$skiaRepository/.git") {
+        $localSha = Get-LocalBranchSha -Root $skiaRepository -Branch $Branch
         if ($localSha -and $localSha -ne $ExpectedSha) {
             throw "Local mono/skia $Branch is at $localSha, expected $ExpectedSha."
         }
@@ -302,16 +315,16 @@ function Ensure-SkiaBranch([string] $Branch, [string] $ExpectedSha) {
     }
 
     # Initialize the pinned submodule commit and create or select its matching branch.
-    git submodule update --init --checkout -- $skiaPath | Out-Host
-    git -C $skiaPath fetch --quiet origin $ExpectedSha
-    $localSha = Get-LocalBranchSha -Repository $skiaPath -Branch $Branch
+    $null = Invoke-Git -Root $root -Arguments @('submodule', 'update', '--init', '--checkout', '--', $skiaPath) -WriteOutput
+    $null = Invoke-Git -Root $skiaRepository -Arguments @('fetch', '--quiet', 'origin', $ExpectedSha)
+    $localSha = Get-LocalBranchSha -Root $skiaRepository -Branch $Branch
     if ($localSha) {
         if ($localSha -ne $ExpectedSha) {
             throw "Local mono/skia $Branch is at $localSha, expected $ExpectedSha."
         }
-        git -C $skiaPath switch $Branch | Out-Host
+        $null = Invoke-Git -Root $skiaRepository -Arguments @('switch', $Branch) -WriteOutput
     } else {
-        git -C $skiaPath switch -c $Branch $ExpectedSha | Out-Host
+        $null = Invoke-Git -Root $skiaRepository -Arguments @('switch', '-c', $Branch, $ExpectedSha) -WriteOutput
         $localSha = $ExpectedSha
     }
 
@@ -321,7 +334,7 @@ function Ensure-SkiaBranch([string] $Branch, [string] $ExpectedSha) {
 
 # Detects whether maintenance already moved to the next preview version.
 function Test-MaintenanceAdvanced([string] $Commit, [string] $NextVersion) {
-    $variables = Get-GitFileText -Commit $Commit -Path $variablesPath
+    $variables = Get-GitFileText -Root $root -Commit $Commit -Path $variablesPath
     if ($variables -notmatch '(?m)^[ \t]*SKIASHARP_VERSION:[ \t]*(?<version>\d+\.\d+\.\d+)[ \t]*$') {
         return $false
     }
@@ -342,12 +355,16 @@ function Get-NextVersions([string] $Version, [string] $CurrentHarfBuzzVersion) {
 
 # Finds the unique current bump PR and rejects a closed, unmerged attempt.
 function Get-BumpPullRequest([string] $Branch, [string] $BaseBranch) {
-    $pullRequests = @(gh pr list `
-        --repo mono/SkiaSharp `
-        --head $Branch `
-        --base $BaseBranch `
-        --state all `
-        --json number,state,mergedAt,url | ConvertFrom-Json)
+    $pullRequests = @(
+        Invoke-GitHubJsonWithRetry -Arguments @(
+            'pr', 'list',
+            '--repo', $ReleaseRepository,
+            '--head', $Branch,
+            '--base', $BaseBranch,
+            '--state', 'all',
+            '--json', 'number,state,mergedAt,url'
+        )
+    )
     if ($pullRequests.Count -gt 1) {
         throw "Multiple pull requests exist for $Branch."
     }
@@ -413,12 +430,16 @@ The release preparation script verified the version transformation.
 - [x] Native change? N/A
 "@
     # Open the human-owned PR without enabling merge or auto-merge.
-    gh pr create `
-        --repo mono/SkiaSharp `
-        --head $Branch `
-        --base $BaseBranch `
-        --title "Bump to the next version ($NextVersion) after release" `
-        --body $body | Out-Host
+    $null = Invoke-GitHub `
+        -Arguments @(
+            'pr', 'create',
+            '--repo', $ReleaseRepository,
+            '--head', $Branch,
+            '--base', $BaseBranch,
+            '--title', "Bump to the next version ($NextVersion) after release",
+            '--body', $body
+        ) `
+        -WriteOutput
     Write-ReleaseStatus pushed "Created the bump PR from $Branch to $BaseBranch."
 }
 
@@ -441,7 +462,7 @@ Write-Host "Preparing $identity ($mode)"
 
 # 2. Prepare the exact release branches.
 # 2.1 Resolve the source commit and read both package versions.
-$baseSha = Get-ResolvedGitCommit -Reference $Base
+$baseSha = Get-ResolvedGitCommit -Root $root -Reference $Base
 if ($env:GITHUB_OUTPUT) {
     Add-Content $env:GITHUB_OUTPUT "base_sha=$baseSha"
 }
@@ -454,7 +475,7 @@ if (!(Test-VersionMetadata `
     -HarfBuzzSharpVersion $baseVersions.HarfBuzzSharp)) {
     throw "$Base at $baseSha has inconsistent package-family version metadata."
 }
-$baseSkiaSha = Get-GitTreeEntrySha -Commit $baseSha -Path $skiaPath
+$baseSkiaSha = Get-GitTreeEntrySha -Root $root -Commit $baseSha -Path $skiaPath
 
 # 2.2 Keep the pair for label-only cuts; increment both for a new hotfix.
 $releaseHarfBuzzVersion = Get-ReleaseHarfBuzzVersion -BaseVersions $baseVersions -ReleaseVersion $version
@@ -480,7 +501,7 @@ $releaseCommit = if ($releaseState.LocalSha) {
 } else {
     $baseSha
 }
-$releaseSkiaSha = Get-GitTreeEntrySha -Commit $releaseCommit -Path $skiaPath
+$releaseSkiaSha = Get-GitTreeEntrySha -Root $root -Commit $releaseCommit -Path $skiaPath
 $skiaState = Ensure-SkiaBranch -Branch $releaseBranch -ExpectedSha $releaseSkiaSha
 
 # 3. Prepare the post-stable bump.
@@ -490,13 +511,17 @@ if ($isStable -and ($version -split '\.').Count -eq 3) {
     # 3.1 Prefer a manually split servicing line; otherwise advance main.
     $parts = $version -split '\.'
     $servicingBranch = "release/$($parts[0]).$($parts[1]).x"
-    $servicingSha = Get-RemoteBranchSha origin $servicingBranch
+    $servicingSha = Get-RemoteBranchSha -Root $root -Remote origin -Branch $servicingBranch
     $maintenanceBranch = if ($servicingSha) { $servicingBranch } else { 'main' }
-    $maintenanceSha = if ($servicingSha) { $servicingSha } else { Get-RemoteBranchSha origin main }
+    $maintenanceSha = if ($servicingSha) {
+        $servicingSha
+    } else {
+        Get-RemoteBranchSha -Root $root -Remote origin -Branch main
+    }
     if (!$maintenanceSha) {
         throw "origin/$maintenanceBranch does not exist."
     }
-    git fetch --quiet origin "refs/heads/$maintenanceBranch"
+    $null = Invoke-Git -Root $root -Arguments @('fetch', '--quiet', 'origin', "refs/heads/$maintenanceBranch")
     Write-ReleaseStatus ready "Post-stable bump targets $maintenanceBranch at $maintenanceSha."
 
     # 3.2 Bump SkiaSharp and HarfBuzzSharp together for the next build.
@@ -517,7 +542,7 @@ if ($isStable -and ($version -split '\.').Count -eq 3) {
                 -NextHarfBuzzVersion $next.HarfBuzzSharp `
                 -Existing $bumpPullRequest
         } else {
-            $maintenanceSkiaSha = Get-GitTreeEntrySha -Commit $maintenanceSha -Path $skiaPath
+            $maintenanceSkiaSha = Get-GitTreeEntrySha -Root $root -Commit $maintenanceSha -Path $skiaPath
             $bumpState = Ensure-VersionBranch `
                 -Branch $bumpBranch `
                 -BaseSha $maintenanceSha `
@@ -537,7 +562,7 @@ if ($Push) {
 
 # 4.1 Push mono/skia before the SkiaSharp branch that references it.
 Push-ReleaseBranch `
-    -Repository $skiaPath `
+    -Root $skiaRepository `
     -Remote $skiaRemote `
     -Branch $skiaState.Branch `
     -LocalSha $skiaState.LocalSha `
@@ -547,7 +572,7 @@ Push-ReleaseBranch `
 
 # 4.2 Push the exact SkiaSharp release branch.
 Push-ReleaseBranch `
-    -Repository . `
+    -Root $root `
     -Remote origin `
     -Branch $releaseState.Branch `
     -LocalSha $releaseState.LocalSha `
@@ -558,7 +583,7 @@ Push-ReleaseBranch `
 # 4.3 Push the stable bump and create its maintenance PR.
 if ($bumpState) {
     Push-ReleaseBranch `
-        -Repository . `
+        -Root $root `
         -Remote origin `
         -Branch $bumpState.Branch `
         -LocalSha $bumpState.LocalSha `

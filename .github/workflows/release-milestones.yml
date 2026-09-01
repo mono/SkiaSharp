@@ -4,9 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Released numeric SkiaSharp version
-        required: true
+        description: Released numeric version (required for reconciliation)
+        required: false
+        default: ""
         type: string
+      reconcile:
+        description: Reconcile shipped pull requests and linked issues
+        required: true
+        default: true
+        type: boolean
+      update:
+        description: Update dates, roll open work, and close shipped milestones
+        required: true
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -21,20 +32,38 @@ jobs:
       issues: read
       pull-requests: read
     steps:
-      - name: Require main
-        run: test "$GITHUB_REF" = "refs/heads/${{ github.event.repository.default_branch }}"
+      - name: Validate request
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          RECONCILE: ${{ inputs.reconcile }}
+          UPDATE: ${{ inputs.update }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          test "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH"
+          test "$RECONCILE" = "true" || test "$UPDATE" = "true"
+          test "$RECONCILE" != "true" || test -n "$VERSION"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Preview
+      - name: Preview release assignments
+        if: inputs.reconcile
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
         run: |
-          ./scripts/infra/publishing/update-release-milestones.ps1 `
+          ./scripts/infra/publishing/reconcile-release-assignments.ps1 `
             -Version $env:VERSION *>&1 |
+            Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
+
+      - name: Preview release milestones
+        if: inputs.update
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ./scripts/infra/publishing/update-release-milestones.ps1 *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
 
   push:
@@ -46,13 +75,24 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Push
+      - name: Reconcile release assignments
+        if: inputs.reconcile
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
         run: |
-          ./scripts/infra/publishing/update-release-milestones.ps1 `
+          ./scripts/infra/publishing/reconcile-release-assignments.ps1 `
             -Version $env:VERSION `
+            -Push *>&1 |
+            Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
+
+      - name: Update release milestones
+        if: inputs.update
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ./scripts/infra/publishing/update-release-milestones.ps1 `
             -Push *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append

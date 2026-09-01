@@ -3,8 +3,12 @@
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
-$scriptPath = Join-Path $PSScriptRoot '../update-release-milestones.ps1'
-. $scriptPath -Version '4.152.0'
+$publishingRoot = Split-Path $PSScriptRoot
+Import-Module (Join-Path $publishingRoot 'Git.Common.psm1') -Force
+Import-Module (Join-Path $publishingRoot 'GitHub.Common.psm1') -Force
+Import-Module (Join-Path $publishingRoot 'Publishing.Common.psm1') -Force
+Import-Module (Join-Path $publishingRoot 'ReleaseMilestones.Common.psm1') -Force
+$milestoneModule = Get-Module ReleaseMilestones.Common
 
 $script:TestsRun = 0
 
@@ -246,11 +250,11 @@ $pushMilestones = @{
     '4.152.0-preview.1' = [pscustomobject] @{ number = 1; state = 'open' }
     '4.152.0-preview.2' = [pscustomobject] @{ number = 2; state = 'open' }
 }
-$writeRemote = $true
+& $milestoneModule { $script:WriteRemote = $true }
 try {
     Complete-GitHubMilestone -Repository 'mono/SkiaSharp' -Operation $pushOperation -Milestones $pushMilestones
 } finally {
-    $writeRemote = $false
+    & $milestoneModule { $script:WriteRemote = $false }
 }
 Assert-Equal '4.152.0-preview.2' $script:FakeItemMilestone 'The fake-gh apply path did not move open work.'
 Assert-Equal 'closed' $script:FakeMilestoneState 'The fake-gh apply path did not close the emptied milestone.'

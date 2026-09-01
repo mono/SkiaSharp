@@ -127,23 +127,31 @@ protected publication stage.
 
 ## 4. Maintain milestones
 
-Run the **Release - Milestones** workflow after publication, or use:
+Run **Release - Milestones** after publication. Both workflow operations are
+selected by default and can be run independently:
 
 ```powershell
-# Read-only
-./scripts/infra/publishing/update-release-milestones.ps1 `
+# Reconcile shipped pull requests and linked issues
+./scripts/infra/publishing/reconcile-release-assignments.ps1 `
   -Version 4.153.0
 
-# Apply GitHub milestone changes
-./scripts/infra/publishing/update-release-milestones.ps1 `
-  -Version 4.153.0 `
-  -Push
+# Update milestone dates, rollover, and closure
+./scripts/infra/publishing/update-release-milestones.ps1
 ```
 
-The milestone script reconciles shipped pull requests and linked issues, moves
-remaining open work forward, updates upcoming Chromium-derived dates, and
-closes shipped milestones. It never changes release branches, tags, packages,
-or GitHub Releases.
+Both scripts are read-only by default. Add `-Push` to the selected script after
+reviewing its output:
+
+```powershell
+./scripts/infra/publishing/reconcile-release-assignments.ps1 `
+  -Version 4.153.0 `
+  -Push
+
+./scripts/infra/publishing/update-release-milestones.ps1 -Push
+```
+
+These scripts never change release branches, tags, packages, or GitHub
+Releases.
 
 ## Maintain issue-template versions
 
@@ -219,5 +227,6 @@ base milestone.
 - [Versioning](versioning.md)
 - [Packages](packages.md)
 - [Release notes and API diffs](release-notes-and-api-diffs.md)
+- [Release assignment script](../../scripts/infra/publishing/reconcile-release-assignments.ps1)
 - [Release milestone script](../../scripts/infra/publishing/update-release-milestones.ps1)
 - [Issue-template version script](../../scripts/infra/publishing/update-bug-template.ps1)

@@ -28,9 +28,12 @@ param(
 # 0. Initialize shared helpers, execution mode, and repository paths.
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
+Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
 $writeRemote = $Push
 $mode = if ($writeRemote) { 'push' } else { 'dry run' }
+$root = Get-GitRepositoryRoot
 $repository = $ReleaseRepository
 $summaryStart = $ReleaseSummaryStartMarker
 $summaryEnd = $ReleaseSummaryEndMarker
@@ -86,7 +89,9 @@ function Publish-GitHubRelease(
 
     if ($Existing) {
         Assert-GitHubRelease $Release $Existing
-        gh release edit $Release.Tag --repo $repository --verify-tag --draft=false | Out-Host
+        $null = Invoke-GitHub `
+            -Arguments @('release', 'edit', $Release.Tag, '--repo', $repository, '--verify-tag', '--draft=false') `
+            -WriteOutput
     } else {
         # Generate GitHub's notes and wrap them in regions owned by Finish and the summary updater.
         $generated = Invoke-GitHubJson -Arguments @(
@@ -116,7 +121,7 @@ function Publish-GitHubRelease(
             if ($Release.IsPrerelease) {
                 $arguments += @('--prerelease', '--latest=false')
             }
-            gh @arguments | Out-Host
+            $null = Invoke-GitHub -Arguments $arguments -WriteOutput
         } finally {
             Remove-Item $bodyPath -Force -ErrorAction SilentlyContinue
         }
@@ -145,16 +150,24 @@ function Invoke-ReleaseFollowUpWorkflows([pscustomobject] $Release) {
         }
         return
     }
-    gh workflow run update-release-notes.lock.yml `
-        --repo $repository `
-        --ref main `
-        -f source_branch=main `
-        -f min_version=$($Release.Numeric) `
-        -f max_version=$($Release.Numeric)
+    $null = Invoke-GitHub `
+        -Arguments @(
+            'workflow', 'run', 'update-release-notes.lock.yml',
+            '--repo', $repository,
+            '--ref', 'main',
+            '-f', 'source_branch=main',
+            '-f', "min_version=$($Release.Numeric)",
+            '-f', "max_version=$($Release.Numeric)"
+        ) `
+        -WriteOutput
     if (!$Release.IsPrerelease) {
-        gh workflow run auto-update-issue-template-versions.yml `
-            --repo $repository `
-            --ref main
+        $null = Invoke-GitHub `
+            -Arguments @(
+                'workflow', 'run', 'auto-update-issue-template-versions.yml',
+                '--repo', $repository,
+                '--ref', 'main'
+            ) `
+            -WriteOutput
     }
     Write-ReleaseStatus applied 'Release-note follow-up workflows were dispatched.'
 }
@@ -188,7 +201,12 @@ if ($writeRemote) {
 }
 
 # 2.2 Ensure the tag points to the package source commit.
-Push-ReleaseTag -Remote origin -Tag $release.Tag -SourceCommit $packageSource.Commit -Push:$Push
+Push-ReleaseTag `
+    -Root $root `
+    -Remote origin `
+    -Tag $release.Tag `
+    -SourceCommit $packageSource.Commit `
+    -Push:$Push
 
 # 3. Create or resume the published GitHub Release.
 Publish-GitHubRelease `

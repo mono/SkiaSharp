@@ -10,24 +10,33 @@ description: >
 
 # Release Milestones
 
-Use **Release - Milestones** or run the repository-owned script:
+Use **Release - Milestones** with both operations selected, or run the two
+repository-owned scripts separately:
 
 ```powershell
-# Read-only
-./scripts/infra/publishing/update-release-milestones.ps1 `
+# Reconcile shipped assignments (read-only)
+./scripts/infra/publishing/reconcile-release-assignments.ps1 `
   -Version 4.153.0
 
-# Apply GitHub milestone changes
-./scripts/infra/publishing/update-release-milestones.ps1 `
+# Reconcile shipped assignments
+./scripts/infra/publishing/reconcile-release-assignments.ps1 `
   -Version 4.153.0 `
+  -Push
+
+# Update dates, roll work forward, and close shipped milestones (read-only)
+./scripts/infra/publishing/update-release-milestones.ps1
+
+# Apply milestone updates
+./scripts/infra/publishing/update-release-milestones.ps1 `
   -Push
 ```
 
-The script first reconciles merged pull requests and linked issues to the
-release where they shipped. It then maintains upcoming Chromium-derived dates,
-moves remaining open work to the next unshipped milestone, and closes shipped
-milestones.
+Assignment reconciliation maps merged pull requests and linked issues to the
+release where they shipped. Milestone updates maintain upcoming
+Chromium-derived dates, move remaining open work to the next unshipped
+milestone, and close shipped milestones.
 
-Always run and present the read-only result before requesting confirmation for
-`-Push`. Warnings block remote reconciliation or closure. This workflow never
-creates release branches, tags, packages, or GitHub Releases.
+Always run and present the selected read-only operation(s) before requesting
+confirmation for `-Push`. Warnings block remote reconciliation or closure.
+These scripts never create release branches, tags, packages, or GitHub
+Releases.

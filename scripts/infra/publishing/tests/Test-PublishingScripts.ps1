@@ -4,13 +4,20 @@ $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
 $publishingRoot = Split-Path $PSScriptRoot
+$gitCommonPath = Join-Path $publishingRoot 'Git.Common.psm1'
+$gitHubCommonPath = Join-Path $publishingRoot 'GitHub.Common.psm1'
 $commonPath = Join-Path $publishingRoot 'Publishing.Common.psm1'
+$issueTemplateCommonPath = Join-Path $publishingRoot 'IssueTemplate.Common.psm1'
 $preparePath = Join-Path $publishingRoot 'prepare-release.ps1'
 $finishPath = Join-Path $publishingRoot 'finish-release.ps1'
 $bugTemplatePath = Join-Path $publishingRoot 'update-bug-template.ps1'
+$reconcilePath = Join-Path $publishingRoot 'reconcile-release-assignments.ps1'
 $milestonesPath = Join-Path $publishingRoot 'update-release-milestones.ps1'
 
+Import-Module $gitCommonPath -Force
+Import-Module $gitHubCommonPath -Force
 Import-Module $commonPath -Force
+Import-Module $issueTemplateCommonPath -Force
 $script:TestsRun = 0
 
 # Requires two values to be equal.
@@ -68,6 +75,7 @@ function Get-ScriptFunctionText([string] $Path) {
 $prepareParameters = (Get-Command $preparePath).Parameters.Keys
 $finishParameters = (Get-Command $finishPath).Parameters.Keys
 $bugTemplateParameters = (Get-Command $bugTemplatePath).Parameters.Keys
+$reconcileParameters = (Get-Command $reconcilePath).Parameters.Keys
 $milestoneParameters = (Get-Command $milestonesPath).Parameters.Keys
 Assert-True ($prepareParameters -contains 'Apply' -and $prepareParameters -contains 'Push') `
     'Prepare must expose Apply and Push.'
@@ -75,8 +83,11 @@ Assert-True ($finishParameters -contains 'Push' -and $finishParameters -notconta
     'Finish must expose Push but not Apply.'
 Assert-True ($bugTemplateParameters -contains 'Apply' -and $bugTemplateParameters -contains 'Push') `
     'The bug-template updater must expose Apply and Push.'
-Assert-True ($milestoneParameters -contains 'Push' -and $milestoneParameters -notcontains 'Apply') `
-    'The milestone updater must expose Push but not Apply.'
+Assert-True ($reconcileParameters -contains 'Version' -and $reconcileParameters -contains 'Push' -and
+    $reconcileParameters -notcontains 'Apply') 'Assignment reconciliation must expose Version and Push but not Apply.'
+Assert-True ($milestoneParameters -contains 'Count' -and $milestoneParameters -contains 'Push' -and
+    $milestoneParameters -notcontains 'Apply' -and $milestoneParameters -notcontains 'Version') `
+    'The milestone updater must expose Count and Push but not Apply or Version.'
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
 Assert-True ($bugTemplateScript -match '--force-with-lease') `
     'The issue-template automation branch must use force-with-lease.'
@@ -84,6 +95,18 @@ Assert-True ($bugTemplateScript -notmatch '(?m)git push[^\r\n]*--force(?:\s|$)')
     'The issue-template automation branch contains an unguarded force push.'
 Assert-True ($bugTemplateScript -notmatch '(?m)^\s*git (?:switch|add|push|rev-parse)') `
     'A bug-template Git command is not rooted with git -C.'
+$productionFiles = Get-ChildItem $publishingRoot -File |
+    Where-Object { $_.Extension -in @('.ps1', '.psm1') -and $_.Name -notin @(
+        'Git.Common.psm1',
+        'GitHub.Common.psm1'
+    ) }
+foreach ($productionFile in $productionFiles) {
+    $content = Get-Content $productionFile.FullName -Raw
+    Assert-True ($content -notmatch '(?m)^\s*(?:&\s*)?(?:git|gh)\s') `
+        "$($productionFile.Name) bypasses the shared Git or GitHub invoker."
+    Assert-True ($content -notmatch 'Invoke-GitCommand|MyInvocation\.InvocationName') `
+        "$($productionFile.Name) contains a retired command or dot-source guard."
+}
 
 # Exercises shared release identities, pagination, mutation safety, and repository versions.
 $preview = Get-ReleaseIdentity '4.152.0-preview.1.26426.14'
@@ -137,25 +160,28 @@ try {
     & git -C $gitRoot branch release/test
     & git init --quiet --bare $bareRoot
     $localSha = (git -C $gitRoot rev-parse release/test).Trim()
-    Assert-Equal $localSha (Get-LocalBranchSha $gitRoot release/test) 'A local branch SHA was not resolved.'
+    Assert-Equal $localSha (Get-LocalBranchSha -Root $gitRoot -Branch release/test) `
+        'A local branch SHA was not resolved.'
     Push-ReleaseBranch `
-        -Repository $gitRoot `
+        -Root $gitRoot `
         -Remote $bareRoot `
         -Branch release/test `
         -LocalSha $localSha `
         -RemoteSha $null `
         -Description 'test' `
         -Push
-    Assert-Equal $localSha (Get-RemoteBranchSha $bareRoot release/test) 'A local test branch was not pushed.'
+    Assert-Equal $localSha (Get-RemoteBranchSha -Root $gitRoot -Remote $bareRoot -Branch release/test) `
+        'A local test branch was not pushed.'
     $dryBranch = @(Push-ReleaseBranch `
-        -Repository $gitRoot `
+        -Root $gitRoot `
         -Remote $bareRoot `
         -Branch release/dry `
         -LocalSha $localSha `
         -RemoteSha $null `
         -Description 'test' 6>&1) -join "`n"
     Assert-True ($dryBranch -match 'requires -Push') 'A dry branch push did not explain its guard.'
-    Assert-Equal $null (Get-RemoteBranchSha $bareRoot release/dry) 'A dry branch push changed its remote.'
+    Assert-Equal $null (Get-RemoteBranchSha -Root $gitRoot -Remote $bareRoot -Branch release/dry) `
+        'A dry branch push changed its remote.'
 } finally {
     Remove-Item $gitRoot, $bareRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
@@ -229,8 +255,7 @@ Assert-True ($publishPlan -match 'Create and publish') 'Finish did not plan rele
 Assert-True ($followUpPlan -match 'release-note generation') 'Finish did not plan release-note follow-up.'
 Remove-Item Function:\gh
 
-# Loads and exercises issue-template release parsing, selection, and text surgery.
-Invoke-Expression (Get-ScriptFunctionText $bugTemplatePath)
+# Exercises issue-template release parsing, selection, and text surgery.
 $nightlyOption = 'Nightly / CI build'
 $otherOption = 'Other (Please indicate in the description)'
 $hotfix = ConvertTo-IssueTemplateVersion 'v4.151.1.1'
