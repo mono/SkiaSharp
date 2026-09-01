@@ -339,7 +339,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
 
         with self.assertRaisesRegex(
             planner.PlanError,
-            "does not have one exact HarfBuzzSharp dependency",
+            "does not pin one concrete HarfBuzzSharp dependency",
         ):
             planner.receipt_report(SKIA_VERSION)
 

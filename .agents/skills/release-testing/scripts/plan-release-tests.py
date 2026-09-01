@@ -134,7 +134,7 @@ def receipt_report(version: str) -> dict:
         or not is_exact_version(bridge["harfBuzzVersions"][0])
     ):
         raise PlanError(
-            f"SkiaSharp.HarfBuzz {version} does not have one exact "
+            f"SkiaSharp.HarfBuzz {version} does not pin one concrete "
             "HarfBuzzSharp dependency"
         )
     harfbuzz_version = bridge["harfBuzzVersions"][0]

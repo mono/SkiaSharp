@@ -39,7 +39,7 @@ the same version.
 **`CI package source metadata does not match`** — the selected BAR package
 family is not coherent under the current policy. Do not approve it.
 
-**`does not have one exact HarfBuzzSharp dependency`** — the bridge package
+**`does not pin one concrete HarfBuzzSharp dependency`** — the bridge package
 does not pin one concrete dependency version. Do not infer one from another
 feed.
 
@@ -59,7 +59,8 @@ feed.
 | `the wasm-tools workload is not installed` | Missing workload | Record Blazor as failed, continue unrelated coverage, then ask whether to install `wasm-tools` or explicitly amend the matrix |
 | `SkiaSharpVersion must be the exact package version` | Missing version param | Add both exact SkiaSharp and HarfBuzzSharp versions emitted by the planner |
 | `HarfBuzzSharpVersion must be the exact package version` | Missing version param | Use the distinct HarfBuzzSharp version emitted by the planner |
-| Exact package cannot be restored by a runner | Version is absent from dotnet-libraries or a dependency is unavailable from dotnet-public | Confirm the planner's exact versions exist on the configured feeds, then retry them unchanged |
+| Stable `X.Y.Z` package cannot be restored | Future bare public version was used before publication | Use the exact `X.Y.Z-stable.{build}` package selected from the BAR |
+| Generated platform package cannot be restored | A satellite package such as `SkiaSharp.Views.Blazor`, `SkiaSharp.Views.Maui.Controls`, or `SkiaSharp.NativeAssets.Linux.NoDependencies` is unavailable at the exact version | Confirm the satellite package exists on dotnet-libraries and retry the same version; dependencies continue to resolve from dotnet-public |
 
 ## Appium Errors
 

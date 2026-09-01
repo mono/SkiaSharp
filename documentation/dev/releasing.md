@@ -97,10 +97,21 @@ Pushing a `release/*` branch triggers the current dnceng release chain:
 | `skiasharp-package` | 1642 | Build, signing, API Scan, BAR registration, packages |
 | `skiasharp-tests` | 1630 | Tests consuming the exact Build pipeline resource |
 
-The team-owned release process reviews the connected Build and Tests runs,
-selects their exact BAR/packages, and publishes them to NuGet.org through its
-protected publication pipeline. Repository automation does not query, queue, or
-approve this internal boundary.
+The team-owned release process reviews the connected Build and Tests runs and
+selects their exact BAR/packages. Before publication, use
+[release-testing](../../.agents/skills/release-testing/SKILL.md) with the exact
+SkiaSharp CI package version:
+
+```bash
+python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
+  4.153.0-preview.1.26431.1
+```
+
+The release-testing skill verifies the package family on dotnet-libraries,
+runs the approved host/device matrix, and records the human release-approval
+gate. Failed required coverage blocks approval, but the skill does not publish
+packages or change BAR state. After approval, the team publishes the selected
+BAR to NuGet.org through its protected publication pipeline.
 
 ## 3. Create the public GitHub Release
 
@@ -176,19 +187,6 @@ also expose `apply` and `push`. The same script can be run locally:
 
 It derives both bug-report version dropdowns from published GitHub Releases and
 preserves every unrelated line in the issue form.
-
-## Optional public-package smoke testing
-
-After an exact package version is public, use
-[release-testing](../../.agents/skills/release-testing/SKILL.md) for
-host/device smoke testing:
-
-```bash
-python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
-  4.153.0-preview.1.26431.1
-```
-
-This is advisory validation. It does not unlock or mutate publication state.
 
 ## Version reference
 
