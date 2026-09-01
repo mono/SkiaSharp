@@ -15,7 +15,8 @@ push using the exact resolved base commit.
 The script requires:
 
 - `-Base`: a SkiaSharp branch or commit SHA;
-- `-Release`: `X.Y.Z-preview.N`, `X.Y.Z-rc.N`, or `X.Y.Z-stable`.
+- `-Release`: `X.Y.Z[-preview.N|-rc.N|-stable]`, or the corresponding
+  four-part hotfix form `X.Y.Z.F[-preview.N|-rc.N|-stable]`.
 
 Local modes:
 

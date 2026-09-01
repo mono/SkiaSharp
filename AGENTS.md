@@ -387,7 +387,8 @@ See [documentation/dev/debugging-methodology.md](documentation/dev/debugging-met
 Custom slash commands are available for specialized workflows. Use these for complex tasks that benefit from structured processes.
 
 Repository release branches are normally created with the **Release - Prepare**
-GitHub workflow, which runs `scripts/infra/publishing/prepare-release.ps1`. The release skills remain available for publication, milestone maintenance, and
+GitHub workflow, which runs `scripts/infra/publishing/prepare-release.ps1`. The
+release skills remain available for publication, milestone maintenance, and
 optional public-package smoke testing. See
 [`documentation/dev/releasing.md`](documentation/dev/releasing.md).
 
@@ -406,7 +407,8 @@ optional public-package smoke testing. See
 | Write XML docs | `/api-docs` | "document", "fill in missing docs" |
 | Security check | `/security-audit` | "audit CVEs", "security overview" (read-only) |
 | Prepare release branches | `/release-branch` | "release now", "start release X" |
-| Publish release | `/release-publish` | "push to nuget", "tag release" |
+| Finalize release | `/release-publish` | "finish release", "tag release" |
+| Maintain release milestones | `/release-milestones` | "reconcile milestones", "advance milestone schedule" |
 | Smoke-test a public release | `/release-testing` | "smoke test release", "verify public packages" |
 | Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |
 | Skia analyst | `/skia-analyst` | "what changed", "what are we missing", "feature gap", "api diff", "scout features", "diff tags" |

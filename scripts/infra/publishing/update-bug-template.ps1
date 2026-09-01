@@ -367,9 +367,7 @@ if ($writeRemote) {
     if ($displayPath -eq '..' -or $displayPath.StartsWith("../") -or $displayPath.StartsWith("..\")) {
         throw 'Push mode requires an issue-form path inside the repository.'
     }
-    if ((Invoke-Git -Root $root -Arguments @('status', '--porcelain')).Output) {
-        throw 'Push mode requires a clean worktree.'
-    }
+    Assert-GitWorktreeClean -Root $root
     $mainSha = Get-ResolvedGitCommit -Root $root -Reference main
     $headSha = (Invoke-Git -Root $root -Arguments @('rev-parse', 'HEAD')).Output
     if ($headSha -ne $mainSha) {

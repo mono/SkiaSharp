@@ -104,6 +104,16 @@ $greatestTag = Get-ShippedTag '4.152.0-preview.1' @(
 Assert-Equal 'v4.152.0-preview.1.26426.14' $greatestTag 'The greatest dnceng build tuple was not selected.'
 Assert-Equal 'v4.152.0' (Get-ShippedTag '4.152.0' @('v4.152.0')) 'A stable exact tag was not detected.'
 
+$previousBranches = @(
+    ConvertTo-ReleaseMilestone 'release/4.150.2'
+    ConvertTo-ReleaseMilestone 'release/4.150.3'
+)
+$previousShipped = Get-PreviousStableBranch `
+    -Branches $previousBranches `
+    -Version '4.151.0' `
+    -Tags @('v4.150.2')
+Assert-Equal '4.150.2' $previousShipped.Title 'An unshipped stable branch became the previous release boundary.'
+
 $schedule = [pscustomobject] @{
     branch_point = '2026-07-27T00:00:00Z'
     earliest_beta = '2026-08-04T00:00:00Z'
@@ -176,9 +186,10 @@ try {
     $start = (& git -C $gitRoot rev-parse HEAD).Trim()
     & git -C $gitRoot commit --quiet --allow-empty -m 'Merge feature (#42)'
     & git -C $gitRoot commit --quiet --allow-empty -m 'Commit without pull request'
+    & git -C $gitRoot commit --quiet --allow-empty -m 'Revert "Feature (#4087)" (#4091)'
     $end = (& git -C $gitRoot rev-parse HEAD).Trim()
-    Assert-Equal @(42) @(Get-ReleasePullRequests -Root $gitRoot -Start $start -End $end) `
-        'First-parent Git history did not yield its merged pull request.'
+    Assert-Equal @(42, 4091) @(Get-ReleasePullRequests -Root $gitRoot -Start $start -End $end) `
+        'First-parent Git history did not yield trailing merged pull request numbers.'
 } finally {
     if (Test-Path -LiteralPath $gitRoot) {
         Remove-Item -LiteralPath $gitRoot -Recurse -Force

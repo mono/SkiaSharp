@@ -10,11 +10,9 @@ page.** A script (`release-notes-render.py`) owns every heading, table, banner, 
 ❤️, and PR link. Your entire job is to fill a small set of prose *slots*, and the
 renderer assembles the page from those plus the facts in `data.json`.
 
-This split exists on purpose: the parts that used to break — dropped headings,
-bare handles, missing contributors, malformed links — are now impossible because
-you never type them. Spend your effort on the one thing only a human-quality
-writer can do: turn a raw activity log into a changelog a **NuGet consumer** wants
-to read.
+The renderer owns headings, handles, contributor lists, and links so those
+structural elements remain consistent. Focus on turning the activity facts into
+a changelog a **NuGet consumer** wants to read.
 
 ## The one test for everything you write
 
@@ -231,11 +229,14 @@ release-critical deadline for it.
 
 `data.shipments` (format 4+, present only on a **released** page) lists every
 exact tag this page rolls up — a preview, an rc, and/or the stable release
-itself — each with its own `tag` (e.g. `"v4.151.0-preview.1"`), `label`
+itself — each with its own `tag` (e.g. `"v4.151.0-preview.1.1"`), `label`
 (e.g. `"Preview 1"`), and delta `prs` since the previous tag (globally, not
 just this page's). Write one `release_summaries` entry per tag you have
 enough to say something crisp about; **omit** a tag entirely rather than pad
 it — an omitted tag is simply not converged yet, never an error.
+
+Copy each key verbatim from `data.shipments`; prerelease keys include their
+exact Arcade build revision.
 
 Each entry is `{"headline": string, "body": string|null}`:
 
@@ -246,8 +247,8 @@ Each entry is `{"headline": string, "body": string|null}`:
 - `body` — optional, 1-3 sentences of extra detail; `null` when the headline
   says enough.
 
-Both strings go through the same safety gate the retired release-publish
-teaser used (`scripts/infra/docs/release_notes/safety.py`): no code fence, no
+Both strings go through the release-summary safety gate
+(`scripts/infra/docs/release_notes/safety.py`): no code fence, no
 CVE/security/vulnerability wording (bundled-dependency bumps stay neutral —
 `"Updated libpng to 1.6.44."`, never "security fix"), no unwritten placeholder,
 no heading/list/table as the opening line, and never the literal text of a

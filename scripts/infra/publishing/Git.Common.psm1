@@ -47,6 +47,22 @@ function Get-GitRepositoryRoot([string] $Path = $PWD.Path) {
     return (Invoke-Git -Root $Path -Arguments @('rev-parse', '--show-toplevel')).Output
 }
 
+# Requires a clean tracked and untracked worktree.
+function Assert-GitWorktreeClean([string] $Root, [switch] $IgnoreSubmodules) {
+    $arguments = @(
+        'status',
+        '--porcelain',
+        '--untracked-files=all'
+    )
+    if ($IgnoreSubmodules) {
+        $arguments += '--ignore-submodules=all'
+    }
+    $status = Invoke-Git -Root $Root -Arguments $arguments
+    if ($status.Output) {
+        throw 'The worktree must be clean before local automation writes.'
+    }
+}
+
 # Resolves a branch or tag from a remote, peeling annotated tags when present.
 function Get-RemoteRefSha([string] $Root, [string] $Remote, [string] $Ref) {
     $output = (Invoke-Git -Root $Root -Arguments @('ls-remote', $Remote, $Ref, "$Ref^{}")).Output
@@ -105,6 +121,7 @@ Export-ModuleMember -Function @(
     'Format-Command',
     'Invoke-Git',
     'Get-GitRepositoryRoot',
+    'Assert-GitWorktreeClean',
     'Get-RemoteRefSha',
     'Get-RemoteBranchSha',
     'Get-RemoteTagSha',

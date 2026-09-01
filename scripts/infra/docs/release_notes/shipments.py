@@ -29,9 +29,6 @@ _REQUIRED_FIELDS = (
     "changelog_url",
     "prs",
 )
-_CHANNELS = {"preview", "rc", "stable"}
-
-
 def collect_shipments(
     page_version: str,
     all_tags: Iterable[str],
@@ -108,19 +105,22 @@ def validate_shipment(shipment: object) -> list[str]:
     if errors:
         return errors
     tag = shipment["tag"]
-    if not isinstance(tag, str) or not common.EXACT_RELEASE_TAG_RE.fullmatch(tag):
+    parsed = common.parse_tag(tag) if isinstance(tag, str) else None
+    if parsed is None:
         errors.append("shipment tag {!r} is not an exact release tag".format(tag))
         return errors
-    if shipment.get("public_version") != tag[1:]:
+    expected = {
+        "core_version": parsed.core,
+        "public_version": parsed.public_version,
+        "channel": parsed.channel_name,
+        "label": parsed.label,
+    }
+    for field, value in expected.items():
+        if shipment.get(field) == value:
+            continue
         errors.append(
-            "shipment {} public_version {!r} does not match its own tag".format(
-                tag, shipment.get("public_version")
-            )
-        )
-    if shipment.get("channel") not in _CHANNELS:
-        errors.append(
-            "shipment {} channel {!r} is not one of {}".format(
-                tag, shipment.get("channel"), sorted(_CHANNELS)
+            "shipment {} {} {!r} does not match {!r} derived from its tag".format(
+                tag, field, shipment.get(field), value
             )
         )
     target_sha = shipment.get("target_sha")
@@ -130,18 +130,22 @@ def validate_shipment(shipment: object) -> list[str]:
     if not isinstance(prs, list) or not all(isinstance(n, int) for n in prs):
         errors.append("shipment {} prs must be an array of integers".format(tag))
     previous_tag = shipment.get("previous_tag")
-    if previous_tag is not None and not isinstance(previous_tag, str):
-        errors.append("shipment {} previous_tag must be a string or null".format(tag))
+    previous = common.parse_tag(previous_tag) if isinstance(previous_tag, str) else None
+    if previous_tag is not None and previous is None:
+        errors.append("shipment {} previous_tag must be an exact release tag or null".format(tag))
+    elif previous is not None and previous.sort_key >= parsed.sort_key:
+        errors.append("shipment {} previous_tag must precede its tag".format(tag))
     changelog_url = shipment.get("changelog_url")
-    expected_prefix = "https://github.com/{}/compare/".format(common.REPO)
-    if changelog_url is not None and (
-        not isinstance(changelog_url, str) or not changelog_url.startswith(expected_prefix)
-    ):
-        errors.append("shipment {} has an invalid changelog_url".format(tag))
-    if (changelog_url is None) != (previous_tag is None):
+    expected_changelog = (
+        "https://github.com/{}/compare/{}...{}".format(common.REPO, previous_tag, tag)
+        if previous is not None
+        else None
+    )
+    if changelog_url != expected_changelog:
         errors.append(
-            "shipment {} changelog_url and previous_tag must both be set or both "
-            "be null".format(tag)
+            "shipment {} changelog_url for previous_tag {!r} is {!r}; expected {!r}".format(
+                tag, previous_tag, changelog_url, expected_changelog
+            )
         )
     return errors
 

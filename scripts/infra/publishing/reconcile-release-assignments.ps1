@@ -93,13 +93,18 @@ function Get-ReleaseBranches([string] $Root, [string] $Version) {
     return [pscustomobject] @{ Selected = $selected; All = $all }
 }
 
-# Finds the latest stable release branch before the requested numeric line.
-function Get-PreviousStableBranch([object[]] $Branches, [string] $Version) {
+# Finds the latest shipped stable branch before the requested numeric line.
+function Get-PreviousStableBranch([object[]] $Branches, [string] $Version, [string[]] $Tags) {
     $target = ConvertTo-ReleaseMilestone $Version
-    return $Branches |
+    $candidates = $Branches |
         Where-Object { !$_.Channel -and $_.NumericKey -lt $target.NumericKey } |
-        Sort-Object NumericKey -Descending |
-        Select-Object -First 1
+        Sort-Object NumericKey -Descending
+    foreach ($candidate in $candidates) {
+        if (Get-ShippedTag -Title $candidate.Title -Tags $Tags) {
+            return $candidate
+        }
+    }
+    return $null
 }
 
 # Rolls each unshipped branch forward to the next branch that was shipped.
@@ -127,7 +132,7 @@ function Get-ReleasePullRequests([string] $Root, [string] $Start, [string] $End)
         "$Start..$End"
     )).Output
     $numbers = foreach ($subject in @($output -split "`r?`n")) {
-        $match = [regex]::Match($subject, '\(#(?<number>\d+)\)')
+        $match = [regex]::Match($subject, '\(#(?<number>\d+)\)$')
         if ($match.Success) {
             [int] $match.Groups['number'].Value
         }
@@ -152,72 +157,58 @@ function Get-LinkedIssues([string] $Repository, [int] $PullRequest) {
 # 1. Reconcile shipped commits, pull requests, and linked issues.
 Write-ReleaseStatus start "Release assignment reconciliation for $Version ($mode)."
 
-# 1.1 Refresh release refs and calculate the exact shipped branch/tag boundaries.
-$null = Invoke-Git -Root $root -Arguments @('fetch', 'origin', '--prune')
-$tags = Get-RemoteReleaseTags -Root $root -NumericVersion $Version
+# 1.1 Refresh release refs and identify shipped milestones in release order.
+$null = Invoke-Git -Root $root -Arguments @('fetch', 'origin', '--prune', '--tags')
+$tags = Get-RemoteReleaseTags -Root $root
 $branchSet = Get-ReleaseBranches -Root $root -Version $Version
 $branches = @($branchSet.Selected)
-$previous = Get-PreviousStableBranch -Branches $branchSet.All -Version $Version
+$previous = Get-PreviousStableBranch -Branches $branchSet.All -Version $Version -Tags $tags
 $warnings = [System.Collections.Generic.List[string]]::new()
+$previousTag = if ($previous) { Get-ShippedTag -Title $previous.Title -Tags $tags } else { $null }
 if (!$previous) {
     $warnings.Add("No previous stable release boundary exists for $Version.")
+} elseif (!$previousTag) {
+    $warnings.Add("Previous stable release $($previous.Title) has no exact shipped tag.")
 }
 
-$mergeBases = @{}
-foreach ($branch in $branches) {
-    $mergeBases[$branch.Name] = (Invoke-Git -Root $root -Arguments @(
-        'merge-base',
-        'origin/main',
-        "origin/$($branch.Name)"
-    )).Output
-    if (!$mergeBases[$branch.Name]) {
-        $warnings.Add("No merge-base exists for $($branch.Name).")
-    }
-}
-$previousBase = if ($previous) {
-    (Invoke-Git -Root $root -Arguments @('merge-base', 'origin/main', "origin/$($previous.Name)")).Output
-} else {
-    $null
-}
-if ($previous -and !$previousBase) {
-    $warnings.Add("No merge-base exists for previous boundary $($previous.Name).")
-}
-
-# 1.2 Roll unshipped branch milestones forward and collect required assignments.
+# 1.2 Roll unshipped milestones forward and inspect each shipped tag range once.
 $effective = @(Get-EffectiveMilestoneTitles -Branches $branches -Tags $tags)
-for ($index = 1; $index -lt $branches.Count; $index++) {
-    $previousEffective = $effective[$index - 1]
-    $currentEffective = $effective[$index]
-    if ($previousEffective -and $currentEffective -and $previousEffective -ne $currentEffective -and
-        $mergeBases[$branches[$index - 1].Name] -eq $mergeBases[$branches[$index].Name]) {
-        $warnings.Add(
-            "Release boundaries for $previousEffective and $currentEffective resolve to the same commit.")
-    }
-}
+$targetTitles = @($effective | Where-Object { $_ } | Select-Object -Unique)
 $milestones = Get-GitHubMilestoneMap -Repository $Repository
 $operations = [System.Collections.Generic.List[object]]::new()
+$seenPullRequests = [System.Collections.Generic.HashSet[int]]::new()
 $correct = 0
-for ($index = 0; $index -lt $branches.Count; $index++) {
-    $targetTitle = $effective[$index]
-    if (!$targetTitle) {
+foreach ($targetTitle in $targetTitles) {
+    $currentTag = Get-ShippedTag -Title $targetTitle -Tags $tags
+    if (!$currentTag) {
+        $warnings.Add("Release milestone $targetTitle has no exact shipped tag.")
         continue
     }
     if (!$milestones.ContainsKey($targetTitle)) {
         $warnings.Add("Milestone $targetTitle does not exist.")
+        $previousTag = $currentTag
         continue
     }
-    $start = if ($index -eq 0) { $previousBase } else { $mergeBases[$branches[$index - 1].Name] }
-    $end = $mergeBases[$branches[$index].Name]
+    if (!$previousTag) {
+        $warnings.Add("Release boundary before $targetTitle is missing.")
+        $previousTag = $currentTag
+        continue
+    }
+    $start = (Invoke-Git -Root $root -Arguments @(
+        'merge-base',
+        "refs/tags/$previousTag",
+        "refs/tags/$currentTag"
+    )).Output
+    $end = (Invoke-Git -Root $root -Arguments @('rev-parse', "refs/tags/$currentTag`^{commit}")).Output
     if (!$start -or !$end) {
-        $warnings.Add("Release boundaries are missing for $targetTitle.")
-        continue
-    }
-    $ancestor = Invoke-Git -Root $root -Arguments @('merge-base', '--is-ancestor', $start, $end) -AllowFailure
-    if ($ancestor.ExitCode -ne 0) {
-        $warnings.Add("Release boundaries for $targetTitle are ambiguous: $start is not an ancestor of $end.")
+        $warnings.Add("Release boundaries from $previousTag to $currentTag are missing.")
+        $previousTag = $currentTag
         continue
     }
     foreach ($pullRequest in Get-ReleasePullRequests -Root $root -Start $start -End $end) {
+        if (!$seenPullRequests.Add($pullRequest)) {
+            continue
+        }
         $pull = Get-GitHubIssue -Repository $Repository -Number $pullRequest
         $current = [string] $pull.milestone.title
         if ($current -eq $targetTitle) {
@@ -249,6 +240,7 @@ for ($index = 0; $index -lt $branches.Count; $index++) {
             }
         }
     }
+    $previousTag = $currentTag
 }
 
 foreach ($warning in $warnings) {

@@ -462,7 +462,15 @@ $releaseBranch = "release/$identity"
 Write-Host "Preparing $identity ($mode)"
 
 # 2. Prepare the exact release branches.
-# 2.1 Resolve the source commit and read both package versions.
+# 2.1 Protect existing parent and submodule work before local operations.
+if ($writeLocal) {
+    Assert-GitWorktreeClean -Root $root -IgnoreSubmodules
+    if (Test-Path "$skiaRepository/.git") {
+        Assert-GitWorktreeClean -Root $skiaRepository
+    }
+}
+
+# 2.2 Resolve the source commit and read both package versions.
 $baseSha = Get-ResolvedGitCommit -Root $root -Reference $Base
 if ($env:GITHUB_OUTPUT) {
     Add-Content $env:GITHUB_OUTPUT "base_sha=$baseSha"
@@ -478,13 +486,13 @@ if (!(Test-VersionMetadata `
 }
 $baseSkiaSha = Get-GitTreeEntrySha -Root $root -Commit $baseSha -Path $skiaPath
 
-# 2.2 Keep the pair for label-only cuts; increment both for a new hotfix.
+# 2.3 Keep the pair for label-only cuts; increment both for a new hotfix.
 $releaseHarfBuzzVersion = Get-ReleaseHarfBuzzVersion -BaseVersions $baseVersions -ReleaseVersion $version
 Write-ReleaseStatus ready (
     "Release versions: SkiaSharp $($baseVersions.SkiaSharp) -> $version; " +
     "HarfBuzzSharp $($baseVersions.HarfBuzzSharp) -> $releaseHarfBuzzVersion.")
 
-# 2.3 Ensure the SkiaSharp branch contains the coupled package versions.
+# 2.4 Ensure the SkiaSharp branch contains the coupled package versions.
 $releaseState = Ensure-VersionBranch `
     -Branch $releaseBranch `
     -BaseSha $baseSha `
@@ -494,7 +502,7 @@ $releaseState = Ensure-VersionBranch `
     -ExpectedSkiaSha $baseSkiaSha `
     -CommitMessage "Create release branch for $identity"
 
-# 2.4 Ensure mono/skia has the matching branch at the exact gitlink.
+# 2.5 Ensure mono/skia has the matching branch at the exact gitlink.
 $releaseCommit = if ($releaseState.LocalSha) {
     $releaseState.LocalSha
 } elseif ($releaseState.RemoteSha) {

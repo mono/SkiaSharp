@@ -22,6 +22,12 @@ as immutable.
 The preparation script is convergent: matching state is reused and conflicting
 state stops the run.
 
+Before using the release workflows, configure required-reviewer protection on
+the `release-branching`, `release-publish`, and `release-milestones`
+environments. Store `SKIASHARP_AUTOBUMP_TOKEN` as an environment secret in the
+first two. The read-only jobs fail closed when required-reviewer protection is
+missing.
+
 ## 1. Prepare release branches
 
 Use the **Release - Prepare** workflow from `main`. It requires:

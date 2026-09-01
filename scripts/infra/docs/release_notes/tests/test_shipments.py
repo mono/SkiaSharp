@@ -217,6 +217,18 @@ class ValidateShipmentTests(unittest.TestCase):
         errors = shipments.validate_shipment(_valid_shipment(public_version="9.9.9"))
         self.assertTrue(any("public_version" in error for error in errors))
 
+    def test_rejects_core_channel_and_label_mismatched_with_the_tag(self):
+        errors = shipments.validate_shipment(
+            _valid_shipment(
+                core_version="9.9.9",
+                channel="stable",
+                label="Wrong",
+            )
+        )
+        self.assertTrue(any("core_version" in error for error in errors))
+        self.assertTrue(any("channel" in error for error in errors))
+        self.assertTrue(any("label" in error for error in errors))
+
     def test_rejects_an_unknown_channel(self):
         errors = shipments.validate_shipment(_valid_shipment(channel="beta"))
         self.assertTrue(any("channel" in error for error in errors))
@@ -232,6 +244,17 @@ class ValidateShipmentTests(unittest.TestCase):
     def test_rejects_a_changelog_url_outside_the_repository(self):
         errors = shipments.validate_shipment(
             _valid_shipment(changelog_url="https://evil.example/compare/a...b")
+        )
+        self.assertTrue(any("changelog_url" in error for error in errors))
+
+    def test_rejects_a_changelog_url_for_different_endpoints(self):
+        errors = shipments.validate_shipment(
+            _valid_shipment(
+                changelog_url=(
+                    "https://github.com/mono/SkiaSharp/compare/"
+                    "v4.150.2...v4.151.0-preview.2"
+                )
+            )
         )
         self.assertTrue(any("changelog_url" in error for error in errors))
 
@@ -257,7 +280,16 @@ class ValidateShipmentsTests(unittest.TestCase):
     def test_accepts_distinct_shipments(self):
         errors = shipments.validate_shipments([
             _valid_shipment(),
-            _valid_shipment(tag="v4.151.0", public_version="4.151.0", channel="stable", label="Stable"),
+            _valid_shipment(
+                tag="v4.151.0",
+                public_version="4.151.0",
+                channel="stable",
+                label="Stable",
+                changelog_url=(
+                    "https://github.com/mono/SkiaSharp/compare/"
+                    "v4.150.2...v4.151.0"
+                ),
+            ),
         ])
         self.assertEqual(errors, [])
 

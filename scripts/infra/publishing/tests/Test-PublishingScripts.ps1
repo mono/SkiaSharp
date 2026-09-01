@@ -172,6 +172,10 @@ try {
     & git -C $gitRoot config user.name 'Publishing Tests'
     & git -C $gitRoot config user.email 'publishing@example.invalid'
     & git -C $gitRoot commit --quiet --allow-empty -m 'Initial'
+    Assert-Equal $null (Assert-GitWorktreeClean $gitRoot) 'A clean worktree was rejected.'
+    'dirty' | Set-Content (Join-Path $gitRoot 'dirty.txt')
+    Assert-Throws { Assert-GitWorktreeClean $gitRoot } 'must be clean' 'A dirty worktree was accepted.'
+    Remove-Item (Join-Path $gitRoot 'dirty.txt')
     & git -C $gitRoot branch release/test
     & git init --quiet --bare $bareRoot
     $localSha = (git -C $gitRoot rev-parse release/test).Trim()

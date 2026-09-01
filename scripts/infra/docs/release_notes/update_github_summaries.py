@@ -158,7 +158,7 @@ def select_candidates(
                 )
             continue
 
-        shipment_list = data.get("shipments") or []
+        shipment_list = data.get("shipments")
         shipment_errors = shipments_module.validate_shipments(shipment_list)
         if shipment_errors:
             raise UpdateError("{}: {}".format(data_path, "; ".join(shipment_errors)))
