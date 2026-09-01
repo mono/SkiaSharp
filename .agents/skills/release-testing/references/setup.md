@@ -163,10 +163,12 @@ browser. The test builds a real native WASM app with
 
 ## Package sources
 
-Public smoke runs restore the exact SkiaSharp and HarfBuzzSharp versions from
-NuGet.org:
+Generated applications use:
 
-`https://api.nuget.org/v3/index.json`
+- SkiaSharp preview feed:
+  `https://aka.ms/skiasharp-eap/index.json`
+- NuGet.org:
+  `https://api.nuget.org/v3/index.json`
 
-The planner verifies the public receipt and derives both exact versions before
-emitting runner commands. Never infer or substitute a feed or version.
+Always use exact test versions from release-status. Stable prepublication tests
+use `*-stable.{build}`, not bare public versions.

@@ -1,97 +1,156 @@
 ---
 name: release-testing
 description: >
-  Smoke-test an exact public SkiaSharp release package set on the current host.
-  Use when a maintainer asks to smoke test a NuGet.org version. This is optional
-  human validation after public publication, not a release prerequisite.
+  Run integration tests against the exact SkiaSharp release packages before
+  publishing. Use when the user asks to test or verify a release, run the
+  release matrix, test packages on Android/iOS/Mac/Windows/Blazor/Linux, or
+  continue after release-status. This is the third release step: plan the
+  host-appropriate matrix, obtain approval, execute every item, repair
+  environment failures, and report the final release gate.
 ---
 
-# Release Smoke Testing
+# Release Testing
 
-Use this skill for host/device validation that benefits from human inspection:
-native loading, console use, Linux containers, Blazor rendering, Android, iOS,
-Mac Catalyst, and Windows rendering.
+This skill is **Step 3 of 5**:
 
-The supported release path is documented in
-[releasing.md](../../../documentation/dev/releasing.md). Branch creation,
-package publication, tags, GitHub Releases, and milestones are outside this
-skill.
+[release-branch](../release-branch/SKILL.md) →
+[release-status](../release-status/SKILL.md) → **release-testing** →
+[release-publish](../release-publish/SKILL.md) →
+[release-milestones](../release-milestones/SKILL.md)
 
 ## Contract
 
-- Start from one exact public SkiaSharp version.
-- The public-version planner verifies the three public anchor packages and
-  their matching source metadata before producing test commands.
-- Never substitute a newer version, branch, feed, runtime, image, simulator, or
-  device.
-- Present the host-appropriate matrix and obtain approval before preparation or
-  execution.
-- Execute every approved item even when an earlier item fails.
-- Product assertions and rendering differences remain failures.
-- Do not add skips, change expected output, or override package pins.
-- Each runner owns its setup and cleanup. Never delete user-owned devices.
-- Report screenshots and all initial/retry outcomes.
-- A passing report is advisory and never mutates release state.
+- Run the read-only planner first and preserve its exact source commit, managed
+  run, tests run, and paired package versions throughout testing.
+- Obtain user approval for the matrix before preparation or execution.
+- Test stable releases with exact `*-stable.{build}` packages, never the future
+  bare public version.
+- Execute every approved item once even when earlier items fail. A failed item
+  blocks publication but does not stop collection of unrelated results.
+- Never turn a failure into a skip or silently substitute a runtime, image,
+  device, package version, or expected artifact.
+- Each platform runner checks its own prerequisites and owns setup/cleanup.
+  Do not manually duplicate its SDK, Appium, device, Docker, or test commands.
+- Run mobile items sequentially. Runners must not delete user-owned devices.
+- Invoke release-publish after every approved item and artifact check passes,
+  unless the user explicitly overrides this gate. Record the override and
+  proceed without investigating or challenging it.
+- This skill never publishes packages, creates tags/releases, or merges code.
 
-## Plan
+## Fixed matrix
 
-For a public package version:
+| ID | Coverage | Host |
+|----|----------|------|
+| `smoke` | Native loading | All |
+| `console` | Console and HarfBuzzSharp | All |
+| `linux` | Linux packages in Docker | All |
+| `blazor` | Native WASM in Chromium | All |
+| `android-26` | Minimum Android test target | All |
+| `android-37.1` | Maximum Android test target | All |
+| `maccatalyst` | Mac Catalyst rendering | macOS |
+| `ios-18.6` | Minimum iOS test target | macOS |
+| `ios-26.5` | Maximum iOS test target | macOS |
+| `windows` | MAUI Windows rendering | Windows |
+
+iOS 18.6 and Android 26 are minimum **release-test targets**, not product
+support minimums. Exact mobile targets must already be installed. Missing or
+host-inapplicable coverage must be explicit in the approved plan.
+
+## Script contract
+
+| Script | Responsibility |
+|--------|----------------|
+| `scripts/plan-release-tests.py` | Read-only release-status handoff and exact host matrix. |
+| `scripts/prepare-test-run.py` | Restore pinned local tools and clear prior integration output once. |
+| `scripts/run-host-tests.py` | Smoke, console, Docker/Linux, Blazor, Mac Catalyst, and Windows host items. |
+| `scripts/run-android-tests.py` | Android environment, Appium, temporary/reused emulator, test, and cleanup. |
+| `scripts/run-ios-tests.py` | Fresh iOS simulator, Appium test, and cleanup. |
+| `scripts/release_test_common.py` | Shared versions, heartbeat execution, validation, package arguments, and test invocation. |
+
+Planner actions:
+
+| `nextAction` | Response |
+|--------------|----------|
+| `approve-test-matrix` | Present and obtain approval. |
+| `wait-for-tests-trigger` / `wait-for-tests` | Return to release-status, unless the user explicitly overrides only this wait with `--allow-incomplete-ci`. |
+| `retry-tests` | Investigate/retry failed CI tests; never override them here. |
+| Anything else | Return to release-status. |
+
+Use [setup.md](references/setup.md) for prerequisites,
+[monitoring.md](references/monitoring.md) for live progress, and
+[troubleshooting.md](references/troubleshooting.md) only after failures.
+
+## Workflow
+
+### 1. Plan and approve
 
 ```bash
 python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
-  {exact-public-skiasharp-version}
+  {release-branch-or-commit}
 ```
 
-The planner:
-
-1. downloads the exact `SkiaSharp` and `SkiaSharp.HarfBuzz` packages from
-   NuGet.org;
-2. derives and downloads the exact `HarfBuzzSharp` dependency;
-3. requires all three packages to identify the same source branch and commit;
-4. pins both package versions in every runner command;
-5. reports available and host-inapplicable coverage.
-
-Render:
+If `readyToPlan` is false, report `nextAction` and stop. Otherwise render:
 
 ```markdown
-## Release smoke-test plan
+## Release test plan
 
-**Version:** `{release.publicPackages.SkiaSharp}`
+**Release:** `{release.branch}`
 **Commit:** `{release.commit}`
-**Packages:** SkiaSharp `{version}`, HarfBuzzSharp `{version}`
-**Source:** NuGet.org
+**Managed/tests runs:** `{release.managedRunId}` / `{release.testsRunId}`
+**Packages:** SkiaSharp `{test version}`, HarfBuzzSharp `{test version}`
+**Host:** `{host.os}` / `{host.architecture}`
 
 | ID | Test | Target | Estimate |
 |----|------|--------|----------|
 | `{id}` | `{label}` | `{target}` | `{estimatedMinutes}` min |
 ```
 
-Use `ask_user` to approve the full available matrix, customize it, or cancel.
+Include every `missingCoverage[]` and release warning. Use `ask_user`:
 
-## Execute
+1. `Run the full available matrix (Recommended)`
+2. `Customize the matrix`
+3. `Cancel release testing`
 
-Run preparation once:
+Confirm the exact final IDs after customization.
+
+### 2. Prepare once
 
 ```bash
 python3 .agents/skills/release-testing/scripts/prepare-test-run.py
 ```
 
-Then run each approved matrix item's emitted command sequentially. Record:
+### 3. Collect every result
 
-- item ID and exact command;
-- initial result and duration;
-- failure phase and diagnostics;
-- environment repairs;
-- retry result;
-- expected screenshot paths and review status.
+For each approved item, run its emitted `command` sequentially:
 
-Use [setup.md](references/setup.md) for prerequisites,
-[monitoring.md](references/monitoring.md) for progress, and
-[troubleshooting.md](references/troubleshooting.md) only after a failure.
+1. Show the exact command and the full pending/running/passed/failed table.
+2. Run it in a visible terminal canvas; use an attached async shell only when
+   the canvas is unavailable.
+3. Relay new `[release-test]` output and refresh done/failed/remaining state
+   every five seconds. Never launch a duplicate command after a delayed read.
+4. Record duration, failure phase, diagnostics, artifacts, and result.
+5. Continue after failure once runner-owned cleanup finishes.
 
-## Report
+### 4. Repair and retry
 
-The final report must include the immutable public version/source commit, every
-approved item, omitted host coverage, initial and retry outcomes, and screenshot
-review. State plainly that smoke testing is advisory unless a separate protected
-team-pipeline gate requires the result.
+After all initial attempts, present the complete failure inventory and group
+shared root causes. Apply only concrete, safe environment repairs, then retry
+affected failed items. Ask before installing/upgrading software, changing
+permissions, or touching user-owned devices. Preserve initial failures and all
+retry outcomes.
+
+Product assertions and rendering differences remain failures; do not alter
+expectations, skips, or package pins to make them pass.
+
+### 5. Report the gate
+
+Review expected screenshots under `output/logs/testlogs/integration/`. The final
+report must include:
+
+- Immutable release/run/package identity.
+- Every approved ID with initial, repair, retry, and final result.
+- Missing or intentionally omitted coverage.
+- Screenshot paths and review status.
+
+Proceed to [release-publish](../release-publish/SKILL.md) when all final results
+and artifact checks pass, or when the user explicitly overrides the gate.
