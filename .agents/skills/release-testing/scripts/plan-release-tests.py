@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan the default SkiaSharp public-package smoke-test matrix."""
+"""Plan the SkiaSharp CI-package release-approval test matrix."""
 
 from __future__ import annotations
 
@@ -19,7 +19,11 @@ import zipfile
 import release_test_common as common
 
 PlanError = common.ReleaseTestError
-PUBLIC_VERIFICATION_SOURCE = "NuGet.org"
+CI_PACKAGE_SOURCE = "dotnet-libraries"
+DOTNET_LIBRARIES_FLAT_CONTAINER = (
+    "https://pkgs.dev.azure.com/dnceng/public/"
+    "_packaging/dotnet-libraries/nuget/v3/flat2"
+)
 RUNNER_RESTORE_SOURCES = ("dotnet-libraries", "dotnet-public")
 
 
@@ -43,16 +47,20 @@ def format_command(
 
 def package_sources() -> dict:
     return {
-        "publicVerification": PUBLIC_VERIFICATION_SOURCE,
+        "ciVerification": CI_PACKAGE_SOURCE,
         "runnerRestore": list(RUNNER_RESTORE_SOURCES),
     }
+
+
+def is_exact_version(value: str | None) -> bool:
+    return bool(value) and not re.search(r"[\s\[\](),*]", value)
 
 
 def read_package(package_id: str, version: str) -> dict:
     lower_id = package_id.lower()
     lower_version = version.lower()
     url = (
-        "https://api.nuget.org/v3-flatcontainer/"
+        f"{DOTNET_LIBRARIES_FLAT_CONTAINER}/"
         f"{urllib.parse.quote(lower_id)}/{urllib.parse.quote(lower_version)}/"
         f"{urllib.parse.quote(lower_id)}.{urllib.parse.quote(lower_version)}.nupkg"
     )
@@ -65,7 +73,8 @@ def read_package(package_id: str, version: str) -> dict:
             content = response.read()
     except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as error:
         raise PlanError(
-            f"NuGet.org package {package_id} {version} is unavailable: {error}"
+            f"dotnet-libraries package {package_id} {version} is "
+            f"unavailable: {error}"
         ) from error
 
     try:
@@ -83,7 +92,8 @@ def read_package(package_id: str, version: str) -> dict:
             )
     except (ET.ParseError, zipfile.BadZipFile) as error:
         raise PlanError(
-            f"NuGet.org package {package_id} {version} is malformed: {error}"
+            f"dotnet-libraries package {package_id} {version} is "
+            f"malformed: {error}"
         ) from error
 
     if metadata is None:
@@ -105,6 +115,7 @@ def read_package(package_id: str, version: str) -> dict:
         dependency.get("version")
         for dependency in metadata.findall(".//{*}dependency")
         if dependency.get("id") == "HarfBuzzSharp"
+        and dependency.get("version")
     }
     return {
         "id": actual_id,
@@ -115,10 +126,13 @@ def read_package(package_id: str, version: str) -> dict:
     }
 
 
-def receipt_report(_root, version: str) -> dict:
+def receipt_report(version: str) -> dict:
     skia = read_package("SkiaSharp", version)
     bridge = read_package("SkiaSharp.HarfBuzz", version)
-    if len(bridge["harfBuzzVersions"]) != 1:
+    if (
+        len(bridge["harfBuzzVersions"]) != 1
+        or not is_exact_version(bridge["harfBuzzVersions"][0])
+    ):
         raise PlanError(
             f"SkiaSharp.HarfBuzz {version} does not have one exact "
             "HarfBuzzSharp dependency"
@@ -129,7 +143,7 @@ def receipt_report(_root, version: str) -> dict:
     if len({item["branch"] for item in packages}) != 1 or len(
         {item["commit"] for item in packages}
     ) != 1:
-        raise PlanError("Public package source metadata does not match")
+        raise PlanError("CI package source metadata does not match")
     return {
         "receipt": {
             "skiaSharpVersion": version,
@@ -141,7 +155,6 @@ def receipt_report(_root, version: str) -> dict:
             ],
         },
         "release": {"branch": skia["branch"]},
-        "warnings": [],
     }
 
 
@@ -332,9 +345,8 @@ def release_summary(plan: dict) -> dict:
     return {
         "branch": release["branch"],
         "commit": receipt["sourceCommit"],
-        "state": "public",
-        "warnings": plan.get("warnings") or [],
-        "publicPackages": {
+        "state": "ci-packages",
+        "ciPackages": {
             "SkiaSharp": receipt["skiaSharpVersion"],
             "HarfBuzzSharp": receipt["harfBuzzSharpVersion"],
         },
@@ -344,12 +356,11 @@ def release_summary(plan: dict) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("release_version")
+    parser.add_argument("package_version")
     args = parser.parse_args()
 
     try:
-        root = common.repository_root()
-        plan = receipt_report(root, args.release_version)
+        plan = receipt_report(args.package_version)
 
         host_os = (
             "macOS"

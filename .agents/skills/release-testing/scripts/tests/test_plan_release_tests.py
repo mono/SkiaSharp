@@ -45,9 +45,12 @@ RUNNERS = {
 }
 
 
-SKIA_VERSION = "4.152.0-preview.1.1"
-HARFBUZZ_VERSION = "14.2.1-preview.1.1"
-PUBLIC_PLAN = {
+SKIA_VERSION = "4.152.0-rc.1.26426.14"
+HARFBUZZ_VERSION = "14.2.1.200-rc.1.26426.14"
+RELEASE_BRANCH = "release/4.152.0-rc.1"
+HISTORICAL_SKIA_VERSION = "4.151.1"
+HISTORICAL_HARFBUZZ_VERSION = "14.2.1.1"
+CI_PLAN = {
     "receipt": {
         "skiaSharpVersion": SKIA_VERSION,
         "harfBuzzSharpVersion": HARFBUZZ_VERSION,
@@ -58,8 +61,7 @@ PUBLIC_PLAN = {
             {"id": "HarfBuzzSharp"},
         ],
     },
-    "release": {"branch": "release/4.152.0-preview.1"},
-    "warnings": ["example"],
+    "release": {"branch": RELEASE_BRANCH},
 }
 
 
@@ -71,7 +73,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
   <metadata>
     <id>SkiaSharp.HarfBuzz</id>
     <version>{SKIA_VERSION}</version>
-    <repository branch="release/4.152.0-preview.1" commit="{'a' * 40}" />
+    <repository branch="{RELEASE_BRANCH}" commit="{'a' * 40}" />
     <dependencies>
       <group>
         <dependency id="HarfBuzzSharp" version="{HARFBUZZ_VERSION}" />
@@ -96,9 +98,10 @@ class ReleaseTestPlanTests(unittest.TestCase):
         request = urlopen.call_args.args[0]
         self.assertEqual(
             request.full_url,
-            "https://api.nuget.org/v3-flatcontainer/"
-            "skiasharp.harfbuzz/4.152.0-preview.1.1/"
-            "skiasharp.harfbuzz.4.152.0-preview.1.1.nupkg",
+            "https://pkgs.dev.azure.com/dnceng/public/"
+            "_packaging/dotnet-libraries/nuget/v3/flat2/"
+            "skiasharp.harfbuzz/4.152.0-rc.1.26426.14/"
+            "skiasharp.harfbuzz.4.152.0-rc.1.26426.14.nupkg",
         )
 
     def test_full_macos_matrix(self):
@@ -165,11 +168,11 @@ class ReleaseTestPlanTests(unittest.TestCase):
                 r"run-(?:host|android|ios)-tests\.py",
             )
             self.assertIn(
-                "--skiasharp 4.152.0-preview.1.1",
+                f"--skiasharp {SKIA_VERSION}",
                 command,
             )
             self.assertIn(
-                "--harfbuzzsharp 14.2.1-preview.1.1",
+                f"--harfbuzzsharp {HARFBUZZ_VERSION}",
                 command,
             )
         android = next(
@@ -185,18 +188,22 @@ class ReleaseTestPlanTests(unittest.TestCase):
         ios = next(item for item in matrix if item["id"] == "ios-26.5")
         self.assertIn("run-ios-tests.py 26.5", ios["command"])
 
-    def test_plan_contract_distinguishes_verification_and_restore_sources(self):
+    def test_plan_contract_has_no_global_setup_commands(self):
         self.assertNotIn(
             "globalSetupCommands",
             SCRIPT_PATH.read_text(encoding="ascii"),
         )
+
+    def test_plan_reports_ci_verification_and_restore_sources(self):
         self.assertEqual(
             planner.package_sources(),
             {
-                "publicVerification": "NuGet.org",
+                "ciVerification": "dotnet-libraries",
                 "runnerRestore": ["dotnet-libraries", "dotnet-public"],
             },
         )
+
+    def test_integration_config_uses_ci_package_sources(self):
         config = ET.parse(NUGET_CONFIG).getroot()
         self.assertEqual(
             [
@@ -226,7 +233,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
             "### 2. Prepare once",
             "### 3. Collect every result",
             "### 4. Repair and retry",
-            "### 5. Report the advisory result",
+            "### 5. Report the release-approval gate",
         ):
             self.assertIn(heading, skill)
         for item_id in (
@@ -268,11 +275,11 @@ class ReleaseTestPlanTests(unittest.TestCase):
                 else parsed.command
             )
             self.assertEqual(parsed_id, item["id"])
-            self.assertEqual(parsed.skia, "4.152.0-preview.1.1")
-            self.assertEqual(parsed.harfbuzz, "14.2.1-preview.1.1")
+            self.assertEqual(parsed.skia, SKIA_VERSION)
+            self.assertEqual(parsed.harfbuzz, HARFBUZZ_VERSION)
 
     @mock.patch.object(planner, "read_package")
-    def test_receipt_report_uses_public_anchor_packages(self, read_package):
+    def test_receipt_report_uses_ci_anchor_packages(self, read_package):
         def package(package_id, version):
             dependencies = (
                 [HARFBUZZ_VERSION]
@@ -282,13 +289,13 @@ class ReleaseTestPlanTests(unittest.TestCase):
             return {
                 "id": package_id,
                 "version": version,
-                "branch": "release/4.152.0-preview.1",
+                "branch": RELEASE_BRANCH,
                 "commit": "a" * 40,
                 "harfBuzzVersions": dependencies,
             }
 
         read_package.side_effect = package
-        result = planner.receipt_report(Path("/repo"), SKIA_VERSION)
+        result = planner.receipt_report(SKIA_VERSION)
 
         self.assertEqual(result["receipt"]["sourceCommit"], "a" * 40)
         self.assertEqual(
@@ -309,6 +316,34 @@ class ReleaseTestPlanTests(unittest.TestCase):
         )
 
     @mock.patch.object(planner, "read_package")
+    def test_receipt_report_requires_exact_harfbuzz_dependency(
+        self,
+        read_package,
+    ):
+        read_package.side_effect = [
+            {
+                "id": "SkiaSharp",
+                "version": SKIA_VERSION,
+                "branch": RELEASE_BRANCH,
+                "commit": "a" * 40,
+                "harfBuzzVersions": [],
+            },
+            {
+                "id": "SkiaSharp.HarfBuzz",
+                "version": SKIA_VERSION,
+                "branch": RELEASE_BRANCH,
+                "commit": "a" * 40,
+                "harfBuzzVersions": [f"[{HARFBUZZ_VERSION}]"],
+            },
+        ]
+
+        with self.assertRaisesRegex(
+            planner.PlanError,
+            "does not have one exact HarfBuzzSharp dependency",
+        ):
+            planner.receipt_report(SKIA_VERSION)
+
+    @mock.patch.object(planner, "read_package")
     def test_receipt_report_rejects_mismatched_anchor_branch(
         self,
         read_package,
@@ -320,7 +355,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
                 "branch": (
                     "release/4.151.0"
                     if package_id == "HarfBuzzSharp"
-                    else "release/4.152.0-preview.1"
+                    else RELEASE_BRANCH
                 ),
                 "commit": "a" * 40,
                 "harfBuzzVersions": (
@@ -336,7 +371,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
             planner.PlanError,
             "source metadata does not match",
         ):
-            planner.receipt_report(Path("/repo"), SKIA_VERSION)
+            planner.receipt_report(SKIA_VERSION)
 
     @mock.patch.object(planner, "read_package")
     def test_receipt_report_rejects_reused_anchor_from_another_commit(
@@ -344,17 +379,21 @@ class ReleaseTestPlanTests(unittest.TestCase):
         read_package,
     ):
         def package(package_id, version):
+            if package_id == "HarfBuzzSharp":
+                return {
+                    "id": package_id,
+                    "version": version,
+                    "branch": "release/4.150.1",
+                    "commit": "c3e4f4c20e1f23ab74d31a8838a5bd6dc55365f2",
+                    "harfBuzzVersions": [],
+                }
             return {
                 "id": package_id,
                 "version": version,
-                "branch": "release/4.152.0-preview.1",
-                "commit": (
-                    "b" * 40
-                    if package_id == "HarfBuzzSharp"
-                    else "a" * 40
-                ),
+                "branch": "release/4.151.1",
+                "commit": "279f93f4ffa7f9fe4e9c0bc298bedc3c9e439764",
                 "harfBuzzVersions": (
-                    [HARFBUZZ_VERSION]
+                    [HISTORICAL_HARFBUZZ_VERSION]
                     if package_id == "SkiaSharp.HarfBuzz"
                     else []
                 ),
@@ -366,17 +405,16 @@ class ReleaseTestPlanTests(unittest.TestCase):
             planner.PlanError,
             "source metadata does not match",
         ):
-            planner.receipt_report(Path("/repo"), SKIA_VERSION)
+            planner.receipt_report(HISTORICAL_SKIA_VERSION)
 
-    def test_release_summary_reports_public_package_identity(self):
+    def test_release_summary_reports_ci_package_identity(self):
         self.assertEqual(
-            planner.release_summary(PUBLIC_PLAN),
+            planner.release_summary(CI_PLAN),
             {
-                "branch": "release/4.152.0-preview.1",
+                "branch": RELEASE_BRANCH,
                 "commit": "a" * 40,
-                "state": "public",
-                "warnings": ["example"],
-                "publicPackages": {
+                "state": "ci-packages",
+                "ciPackages": {
                     "SkiaSharp": SKIA_VERSION,
                     "HarfBuzzSharp": HARFBUZZ_VERSION,
                 },

@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Run one approved non-mobile SkiaSharp release-test matrix item."""
 
-from __future__ import annotations
-
 import argparse
 import os
 from pathlib import Path

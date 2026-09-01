@@ -22,26 +22,30 @@ package version, or skip policy.
 
 ## Package Resolution Errors
 
-### Packages appear missing after publication
+### Packages appear missing after the release build
 
-**Symptom:** The team pipeline shows success, but the requested public version
-is not yet available to the smoke planner.
+**Symptom:** The selected release build/BAR is complete, but the exact CI
+package version is not yet available to the planner.
 
-**Cause:** NuGet.org indexing is incomplete, the entered public version is
-wrong, or the published package family is incomplete.
+**Cause:** dotnet-libraries indexing is incomplete, the entered CI package
+version is wrong, or the BAR package family is incomplete.
 
 **Fix:** Rerun the planner with the same exact version after indexing completes.
-It verifies all three public anchor packages and never chooses a replacement
-version.
+It verifies all three anchor packages and never chooses a replacement version.
 
-**`not yet visible on NuGet.org`** — wait and retry the same version.
+**`dotnet-libraries package ... is unavailable`** — wait for indexing and retry
+the same version.
 
-**`package source commits disagree`** — the public package family is not a
-coherent SkiaSharp release. Do not test or tag it as one.
+**`CI package source metadata does not match`** — the selected BAR package
+family is not coherent under the current policy. Do not approve it.
+
+**`does not have one exact HarfBuzzSharp dependency`** — the bridge package
+does not pin one concrete dependency version. Do not infer one from another
+feed.
 
 | Wrong | Correct |
 |-------|---------|
-| Newest matching package | Exact requested public version |
+| Newest matching package | Exact package version selected from the BAR |
 | Partial prefix search | Exact package ID and version |
 
 ---
@@ -55,7 +59,7 @@ coherent SkiaSharp release. Do not test or tag it as one.
 | `the wasm-tools workload is not installed` | Missing workload | Record Blazor as failed, continue unrelated coverage, then ask whether to install `wasm-tools` or explicitly amend the matrix |
 | `SkiaSharpVersion must be the exact package version` | Missing version param | Add both exact SkiaSharp and HarfBuzzSharp versions emitted by the planner |
 | `HarfBuzzSharpVersion must be the exact package version` | Missing version param | Use the distinct HarfBuzzSharp version emitted by the planner |
-| Exact package cannot be restored by a runner | Version is absent from dotnet-libraries or a dependency is unavailable from dotnet-public | Confirm the planner's exact versions exist on the configured feeds, then retry them unchanged; NuGet.org public verification is a separate planner step |
+| Exact package cannot be restored by a runner | Version is absent from dotnet-libraries or a dependency is unavailable from dotnet-public | Confirm the planner's exact versions exist on the configured feeds, then retry them unchanged |
 
 ## Appium Errors
 

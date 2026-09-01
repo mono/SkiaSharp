@@ -163,8 +163,9 @@ browser. The test builds a real native WASM app with
 
 ## Package sources
 
-The planner downloads all three public anchor packages directly from NuGet.org.
-That verifies public availability and matching nuspec source metadata before any
+The planner downloads all three anchor packages directly from
+dotnet-libraries. That verifies the exact CI package family selected from the
+completed release build/BAR and its matching nuspec source metadata before any
 runner command is emitted.
 
 The integration project then restores the planner's exact SkiaSharp and
@@ -176,7 +177,6 @@ HarfBuzzSharp versions through:
   `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json`
 
 dotnet-libraries is the current-release runner source; dotnet-public supplies
-dependencies. Neither runner source replaces the planner's NuGet.org public
-verification or proves cross-feed payload identity. Historical stable packages
-may not be retained on dotnet-libraries and are outside this workflow. Never
-infer or substitute a feed or version.
+dependencies. Stable approval runs use the exact `*-stable.{build}` package
+version produced by the build, not the future bare public version. Never infer
+or substitute a feed or version.
