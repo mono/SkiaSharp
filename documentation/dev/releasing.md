@@ -5,7 +5,8 @@ branches, the dnceng pipelines to build and test them, and the team-owned
 publication pipeline to publish packages.
 
 ```text
-Release - Prepare -> dnceng Build/Tests -> team publication -> GitHub release/milestones
+Release - Prepare -> dnceng Build/Tests + BAR -> release-testing approval
+    -> team publication -> GitHub release/milestones
 ```
 
 ## Safety
@@ -97,10 +98,42 @@ Pushing a `release/*` branch triggers the current dnceng release chain:
 | `skiasharp-package` | 1642 | Build, signing, API Scan, BAR registration, packages |
 | `skiasharp-tests` | 1630 | Tests consuming the exact Build pipeline resource |
 
-The team-owned release process reviews the connected Build and Tests runs,
-selects their exact BAR/packages, and publishes them to NuGet.org through its
-protected publication pipeline. Repository automation does not query, queue, or
-approve this internal boundary.
+Arcade routes `IsShipping=true` packages to `dotnet-libraries` and
+`IsShipping=false` build inputs to `dotnet-libraries-transport`.
+
+Release-testing smoke-tests the exact selected CI artifacts on the approved
+host/device targets before team publication. NuGet.org is not a planner or
+runner source for this gate.
+
+The team-owned release process selects the exact connected Build and Tests runs
+and their BAR. Before publication, use
+[release-testing](../../.agents/skills/release-testing/SKILL.md) with the exact
+SkiaSharp CI package version:
+
+```bash
+python3 .agents/skills/release-testing/scripts/plan-release-tests.py 4.150.3
+```
+
+The planner asks Maestro which BAR produced that version. If more than one
+build produced it, pass the release-approved BAR explicitly:
+
+```bash
+python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
+  4.150.3 --bar-id 329644
+```
+
+The planner resolves the BAR asset's GUID-backed per-build V3 and flat-container
+feed through Darc. It downloads exact `SkiaSharp` and `SkiaSharp.HarfBuzz`
+packages from that feed, derives the exact `HarfBuzzSharp` dependency, and
+requires all three packages to report the selected build's source branch and
+commit. Every runner receives the same package versions and GUID feed;
+`dotnet-public` supplies dependencies.
+
+The skill runs the approved host/device matrix and records the human
+release-approval gate. Failed required coverage blocks approval, but the skill
+does not publish packages or change BAR state. After approval, the team
+publishes the selected BAR to NuGet.org through its protected publication
+pipeline.
 
 ## 3. Create the public GitHub Release
 
@@ -176,19 +209,6 @@ also expose `apply` and `push`. The same script can be run locally:
 
 It derives both bug-report version dropdowns from published GitHub Releases and
 preserves every unrelated line in the issue form.
-
-## Optional public-package smoke testing
-
-After an exact package version is public, use
-[release-testing](../../.agents/skills/release-testing/SKILL.md) for
-host/device smoke testing:
-
-```bash
-python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
-  4.153.0-preview.1.26431.1
-```
-
-This is advisory validation. It does not unlock or mutate publication state.
 
 ## Version reference
 
