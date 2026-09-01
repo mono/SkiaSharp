@@ -18,21 +18,23 @@ on:
         required: true
         default: true
         type: boolean
+      push:
+        description: Apply GitHub milestone changes
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
-  deployments: read
   issues: write
   pull-requests: write
 
 jobs:
-  dry-run:
+  maintain:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      deployments: read
-      issues: read
-      pull-requests: read
+    concurrency:
+      group: release-milestones
+      cancel-in-progress: false
     steps:
       - name: Validate request
         env:
@@ -44,47 +46,6 @@ jobs:
           test "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH"
           test "$RECONCILE" = "true" || test "$UPDATE" = "true"
           test "$RECONCILE" != "true" || test -n "$VERSION"
-      - name: Require protected release environment
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_ENVIRONMENT: release-milestones
-        run: |
-          reviewers=$(gh api \
-            "repos/$GITHUB_REPOSITORY/environments/$RELEASE_ENVIRONMENT" \
-            --jq '[.protection_rules[] | select(.type == "required_reviewers")] | length')
-          test "$reviewers" -gt 0 || {
-            echo "::error::$RELEASE_ENVIRONMENT must require reviewers."
-            exit 1
-          }
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Preview release assignments
-        if: inputs.reconcile
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
-        run: |
-          ./scripts/infra/publishing/reconcile-release-assignments.ps1 `
-            -Version $env:VERSION *>&1 |
-            Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
-
-      - name: Preview release milestones
-        if: inputs.update
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          ./scripts/infra/publishing/update-release-milestones.ps1 *>&1 |
-            Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
-
-  push:
-    needs: dry-run
-    runs-on: ubuntu-latest
-    environment: release-milestones
-    steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -94,11 +55,14 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+          PUSH: ${{ inputs.push }}
           VERSION: ${{ inputs.version }}
         run: |
-          ./scripts/infra/publishing/reconcile-release-assignments.ps1 `
-            -Version $env:VERSION `
-            -Push *>&1 |
+          $arguments = @{ Version = $env:VERSION }
+          if ($env:PUSH -eq 'true') {
+            $arguments.Push = $true
+          }
+          ./scripts/infra/publishing/reconcile-release-assignments.ps1 @arguments *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
 
       - name: Update release milestones
@@ -106,7 +70,11 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+          PUSH: ${{ inputs.push }}
         run: |
-          ./scripts/infra/publishing/update-release-milestones.ps1 `
-            -Push *>&1 |
+          $arguments = @{}
+          if ($env:PUSH -eq 'true') {
+            $arguments.Push = $true
+          }
+          ./scripts/infra/publishing/update-release-milestones.ps1 @arguments *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append

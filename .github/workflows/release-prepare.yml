@@ -12,70 +12,57 @@ on:
         description: Exact identity (X.Y.Z-preview.N, X.Y.Z-rc.N, or X.Y.Z-stable)
         required: true
         type: string
+      apply:
+        description: Create local release state without pushing
+        required: true
+        default: false
+        type: boolean
+      push:
+        description: Create and push release state
+        required: true
+        default: false
+        type: boolean
 
 permissions:
-  contents: read
-  deployments: read
-  pull-requests: read
+  contents: write
+  pull-requests: write
 
 jobs:
-  dry-run:
+  prepare:
     runs-on: ubuntu-latest
-    outputs:
-      base_sha: ${{ steps.prepare.outputs.base_sha }}
-    steps:
-      - name: Require main
-        run: test "$GITHUB_REF" = "refs/heads/${{ github.event.repository.default_branch }}"
-      - name: Require protected release environment
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_ENVIRONMENT: release-branching
-        run: |
-          reviewers=$(gh api \
-            "repos/$GITHUB_REPOSITORY/environments/$RELEASE_ENVIRONMENT" \
-            --jq '[.protection_rules[] | select(.type == "required_reviewers")] | length')
-          test "$reviewers" -gt 0 || {
-            echo "::error::$RELEASE_ENVIRONMENT must require reviewers."
-            exit 1
-          }
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Preview
-        id: prepare
-        shell: pwsh
-        env:
-          BASE: ${{ inputs.base }}
-          GH_TOKEN: ${{ github.token }}
-          RELEASE: ${{ inputs.release }}
-        run: |
-          ./scripts/infra/publishing/prepare-release.ps1 `
-            -Base $env:BASE `
-            -Release $env:RELEASE *>&1 |
-            Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
-
-  push:
-    needs: dry-run
-    runs-on: ubuntu-latest
-    environment: release-branching
     concurrency:
       group: release-${{ inputs.release }}
       cancel-in-progress: false
     steps:
+      - name: Validate request
+        env:
+          APPLY: ${{ inputs.apply }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          PUSH: ${{ inputs.push }}
+        run: |
+          test "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH"
+          test "$APPLY" != "true" || test "$PUSH" != "true"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Push
+      - name: Prepare
         shell: pwsh
         env:
-          BASE_SHA: ${{ needs.dry-run.outputs.base_sha }}
-          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          BASE: ${{ inputs.base }}
+          APPLY: ${{ inputs.apply }}
+          GH_TOKEN: ${{ inputs.push && secrets.SKIASHARP_AUTOBUMP_TOKEN || github.token }}
+          PUSH: ${{ inputs.push }}
           RELEASE: ${{ inputs.release }}
         run: |
-          ./scripts/infra/publishing/prepare-release.ps1 `
-            -Base $env:BASE_SHA `
-            -Release $env:RELEASE `
-            -Push *>&1 |
+          $arguments = @{
+            Base = $env:BASE
+            Release = $env:RELEASE
+          }
+          if ($env:PUSH -eq 'true') {
+            $arguments.Push = $true
+          } elseif ($env:APPLY -eq 'true') {
+            $arguments.Apply = $true
+          }
+          ./scripts/infra/publishing/prepare-release.ps1 @arguments *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append

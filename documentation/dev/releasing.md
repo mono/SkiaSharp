@@ -22,27 +22,25 @@ as immutable.
 The preparation script is convergent: matching state is reused and conflicting
 state stops the run.
 
-Before using the release workflows, configure required-reviewer protection on
-the `release-branching`, `release-publish`, and `release-milestones`
-environments. Store `SKIASHARP_AUTOBUMP_TOKEN` as an environment secret in the
-first two. The read-only jobs fail closed when required-reviewer protection is
-missing.
 
 ## 1. Prepare release branches
 
 Use the **Release - Prepare** workflow from `main`. It requires:
 
 | Input | Example |
-|-------|---------|
+| --- | --- |
 | `base` | `main`, `release/4.152.x`, or an exact commit SHA |
 | `release` | `4.153.0-preview.1`, `4.153.0-rc.1`, or `4.153.0-stable` |
 
 The workflow:
 
-1. resolves `base` to an exact commit;
-2. runs `scripts/infra/publishing/prepare-release.ps1` read-only and shows every action;
-3. waits at the protected `release-branching` environment;
-4. reruns with the same base commit and `-Push`.
+1. resolves `base` and runs `scripts/infra/publishing/prepare-release.ps1`;
+2. defaults to a read-only run when `apply` and `push` are disabled;
+3. passes `-Apply` when `apply` is selected; or
+4. passes `-Push` when `push` is selected.
+
+Use separate workflow dispatches for preview and mutation. Review the dry-run
+output before selecting `apply` or `push`.
 
 The script creates matching branches in `mono/SkiaSharp` and `mono/skia`. The
 Skia branch points to the exact `externals/skia` gitlink used by the SkiaSharp
@@ -72,7 +70,7 @@ branch.
 `-Push` implies the local Apply work. This makes the three modes:
 
 | Mode | Local writes | Remote writes |
-|------|--------------|---------------|
+| --- | --- | --- |
 | no switch | No | No |
 | `-Apply` | Yes | No |
 | `-Push` | Yes | Yes |
@@ -95,7 +93,7 @@ human-owned and is never merged by the script.
 Pushing a `release/*` branch triggers the current dnceng release chain:
 
 | Pipeline | ID | Responsibility |
-|----------|----|----------------|
+| --- | --- | --- |
 | `skiasharp-package` | 1642 | Build, signing, API Scan, BAR registration, packages |
 | `skiasharp-tests` | 1630 | Tests consuming the exact Build pipeline resource |
 
@@ -133,8 +131,10 @@ protected publication stage.
 
 ## 4. Maintain milestones
 
-Run **Release - Milestones** after publication. Both workflow operations are
-selected by default and can be run independently:
+Run **Release - Milestones** after publication. Reconciliation and milestone
+updates are selected by default; `push` is disabled by default. Review one
+read-only dispatch, then enable `push` in a separate dispatch if the plan is
+correct.
 
 ```powershell
 # Reconcile shipped pull requests and linked issues
@@ -161,8 +161,9 @@ Releases.
 
 ## Maintain issue-template versions
 
-**Sync - Issue Template Versions** runs daily and opens or refreshes its owned
-pull request. The same script can be run locally:
+**Sync - Issue Template Versions** runs daily in push mode and opens or
+refreshes its owned pull request. Manual dispatches default to read-only and
+also expose `apply` and `push`. The same script can be run locally:
 
 ```powershell
 # Read-only
@@ -194,7 +195,7 @@ This is advisory validation. It does not unlock or mutate publication state.
 ## Version reference
 
 | Release type | Prepare input | Branch |
-|--------------|---------------|--------|
+| --- | --- | --- |
 | Preview | `X.Y.Z-preview.N` | `release/X.Y.Z-preview.N` |
 | RC | `X.Y.Z-rc.N` | `release/X.Y.Z-rc.N` |
 | Stable | `X.Y.Z-stable` | `release/X.Y.Z` |
@@ -218,7 +219,7 @@ unique HarfBuzzSharp version; BAR registrations cannot reuse an older package
 version from another build.
 
 | Milestone relative to adoption | Revision range |
-|--------------------------------|----------------|
+| --- | --- |
 | Base milestone | 0-99 |
 | Base + 1 | 100-199 |
 | Base + 2 | 200-299 |

@@ -10,8 +10,9 @@ description: >
 
 # Release Milestones
 
-Use **Release - Milestones** with both operations selected, or run the two
-repository-owned scripts separately:
+Use **Release - Milestones** with both operations selected and `push` disabled
+for a read-only run. After reviewing that output, dispatch again with `push`
+enabled, or run the two repository-owned scripts separately:
 
 ```powershell
 # Reconcile shipped assignments (read-only)

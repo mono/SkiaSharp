@@ -8,9 +8,10 @@ description: >
 
 # Release Branch
 
-Use the **Release - Prepare** GitHub workflow for normal releases. It runs the
-same script twice: a read-only preview, followed by an environment-approved
-push using the exact resolved base commit.
+Use the **Release - Prepare** GitHub workflow for normal releases. `apply` and
+`push` are off by default, so a dispatch is read-only. After reviewing that
+output, dispatch again with `apply` for local-only state or `push` for remote
+release branches.
 
 The script requires:
 

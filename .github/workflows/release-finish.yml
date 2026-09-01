@@ -7,67 +7,39 @@ on:
         description: Stable version or prerelease identity/exact NuGet version
         required: true
         type: string
+      push:
+        description: Create the tag and publish the GitHub Release
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   actions: write
   contents: write
-  deployments: read
 
 jobs:
-  dry-run:
+  finish:
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      deployments: read
-    steps:
-      - name: Require main
-        run: test "$GITHUB_REF" = "refs/heads/${{ github.event.repository.default_branch }}"
-      - name: Require protected release environment
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_ENVIRONMENT: release-publish
-        run: |
-          reviewers=$(gh api \
-            "repos/$GITHUB_REPOSITORY/environments/$RELEASE_ENVIRONMENT" \
-            --jq '[.protection_rules[] | select(.type == "required_reviewers")] | length')
-          test "$reviewers" -gt 0 || {
-            echo "::error::$RELEASE_ENVIRONMENT must require reviewers."
-            exit 1
-          }
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Preview
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
-        run: |
-          ./scripts/infra/publishing/finish-release.ps1 `
-            -Version $env:VERSION *>&1 |
-            Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
-
-  push:
-    needs: dry-run
-    runs-on: ubuntu-latest
-    environment: release-publish
     concurrency:
       group: release-${{ inputs.version }}
       cancel-in-progress: false
     steps:
+      - name: Require main
+        run: test "$GITHUB_REF" = "refs/heads/${{ github.event.repository.default_branch }}"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Push
+      - name: Finish
         shell: pwsh
         env:
-          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          GH_TOKEN: ${{ inputs.push && secrets.SKIASHARP_AUTOBUMP_TOKEN || github.token }}
+          PUSH: ${{ inputs.push }}
           VERSION: ${{ inputs.version }}
         run: |
-          ./scripts/infra/publishing/finish-release.ps1 `
-            -Version $env:VERSION `
-            -Push *>&1 |
+          $arguments = @{ Version = $env:VERSION }
+          if ($env:PUSH -eq 'true') {
+            $arguments.Push = $true
+          }
+          ./scripts/infra/publishing/finish-release.ps1 @arguments *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
