@@ -7,7 +7,6 @@ $publishingRoot = Split-Path $PSScriptRoot
 $gitCommonPath = Join-Path $publishingRoot 'Git.Common.psm1'
 $gitHubCommonPath = Join-Path $publishingRoot 'GitHub.Common.psm1'
 $commonPath = Join-Path $publishingRoot 'Publishing.Common.psm1'
-$issueTemplateCommonPath = Join-Path $publishingRoot 'IssueTemplate.Common.psm1'
 $preparePath = Join-Path $publishingRoot 'prepare-release.ps1'
 $finishPath = Join-Path $publishingRoot 'finish-release.ps1'
 $bugTemplatePath = Join-Path $publishingRoot 'update-bug-template.ps1'
@@ -17,7 +16,6 @@ $milestonesPath = Join-Path $publishingRoot 'update-release-milestones.ps1'
 Import-Module $gitCommonPath -Force
 Import-Module $gitHubCommonPath -Force
 Import-Module $commonPath -Force
-Import-Module $issueTemplateCommonPath -Force
 $script:TestsRun = 0
 
 # Requires two values to be equal.
@@ -50,6 +48,20 @@ function Assert-Throws([scriptblock] $Action, [string] $Pattern, [string] $Messa
         return
     }
     throw "$Message`nNo error was thrown."
+}
+
+# Requires a script to reject an unsupported Apply switch before execution.
+function Assert-RejectsApply([string] $Path, [string[]] $ScriptArguments) {
+    $nativePreference = $PSNativeCommandUseErrorActionPreference
+    $PSNativeCommandUseErrorActionPreference = $false
+    try {
+        $output = @(& pwsh -NoLogo -NoProfile -File $Path @ScriptArguments -Apply 2>&1)
+        $exitCode = $LASTEXITCODE
+    } finally {
+        $PSNativeCommandUseErrorActionPreference = $nativePreference
+    }
+    Assert-True ($exitCode -ne 0 -and ($output -join "`n") -match 'parameter name .Apply') `
+        "$([IO.Path]::GetFileName($Path)) did not reject Apply before execution."
 }
 
 # Loads top-level function definitions without executing a script's main flow.
@@ -88,6 +100,9 @@ Assert-True ($reconcileParameters -contains 'Version' -and $reconcileParameters 
 Assert-True ($milestoneParameters -contains 'Count' -and $milestoneParameters -contains 'Push' -and
     $milestoneParameters -notcontains 'Apply' -and $milestoneParameters -notcontains 'Version') `
     'The milestone updater must expose Count and Push but not Apply or Version.'
+Assert-RejectsApply $finishPath @('-Version', '4.152.0-preview.1')
+Assert-RejectsApply $reconcilePath @('-Version', '4.152.0')
+Assert-RejectsApply $milestonesPath @()
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
 Assert-True ($bugTemplateScript -match '--force-with-lease') `
     'The issue-template automation branch must use force-with-lease.'
@@ -256,6 +271,7 @@ Assert-True ($followUpPlan -match 'release-note generation') 'Finish did not pla
 Remove-Item Function:\gh
 
 # Exercises issue-template release parsing, selection, and text surgery.
+Invoke-Expression (Get-ScriptFunctionText $bugTemplatePath)
 $nightlyOption = 'Nightly / CI build'
 $otherOption = 'Other (Please indicate in the description)'
 $hotfix = ConvertTo-IssueTemplateVersion 'v4.151.1.1'

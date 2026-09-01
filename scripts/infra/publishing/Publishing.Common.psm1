@@ -79,6 +79,99 @@ function Push-ReleaseBranch(
     Write-ReleaseStatus pushed "$Description $Branch is at $actual."
 }
 
+# Parses a release branch or milestone title into its shipping-order identity.
+function ConvertTo-ReleaseMilestone([string] $Value) {
+    $match = [regex]::Match(
+        $Value,
+        '^(?:release/)?(?<numeric>\d+\.\d+\.\d+(?:\.\d+)?)(?:-(?<channel>preview|rc)\.(?<iteration>\d+))?$')
+    if (!$match.Success) {
+        return $null
+    }
+    $numericText = $match.Groups['numeric'].Value
+    $parts = @($numericText.Split('.') | ForEach-Object { [int] $_ })
+    $hotfix = if ($parts.Count -eq 4) { $parts[3] } else { 0 }
+    $channel = if ($match.Groups['channel'].Success) { $match.Groups['channel'].Value } else { $null }
+    $iteration = if ($match.Groups['iteration'].Success) { [int] $match.Groups['iteration'].Value } else { 0 }
+    $channelRank = switch ($channel) {
+        'preview' { 0 }
+        'rc' { 1 }
+        default { 2 }
+    }
+    $title = $numericText
+    if ($channel) {
+        $title += "-$channel.$iteration"
+    }
+    return [pscustomobject] @{
+        Name = if ($Value.StartsWith('release/')) { $Value } else { "release/$title" }
+        Title = $title
+        Numeric = $parts
+        NumericKey = '{0:D10}.{1:D10}.{2:D10}.{3:D10}' -f $parts[0], $parts[1], $parts[2], $hotfix
+        Channel = $channel
+        Iteration = $iteration
+        SortKey = '{0:D10}.{1:D10}.{2:D10}.{3:D10}.{4:D2}.{5:D10}' -f
+            $parts[0], $parts[1], $parts[2], $hotfix, $channelRank, $iteration
+    }
+}
+
+# Selects the greatest exact NuGet tag that shipped a milestone.
+function Get-ShippedTag([string] $Title, [string[]] $Tags) {
+    if ($Title -match '-(?:preview|rc)\.') {
+        $pattern = '^v' + [regex]::Escape($Title) + '\.(?<first>\d+)(?:\.(?<second>\d+))?$'
+        $tagMatches = foreach ($tag in $Tags) {
+            $match = [regex]::Match($tag, $pattern)
+            if ($match.Success) {
+                [pscustomobject] @{
+                    Tag = $tag
+                    First = [long] $match.Groups['first'].Value
+                    Second = if ($match.Groups['second'].Success) {
+                        [long] $match.Groups['second'].Value
+                    } else {
+                        [long] -1
+                    }
+                }
+            }
+        }
+        return ($tagMatches | Sort-Object First, Second -Descending | Select-Object -First 1).Tag
+    }
+    $exact = "v$Title"
+    if ($Tags -contains $exact) {
+        return $exact
+    }
+    return $null
+}
+
+# Reads non-peeled remote release tags, optionally narrowed to one numeric line.
+function Get-RemoteReleaseTags([string] $Root, [string] $NumericVersion = '') {
+    $pattern = if ($NumericVersion) { "refs/tags/v$NumericVersion*" } else { 'refs/tags/v*' }
+    $output = (Invoke-Git -Root $Root -Arguments @('ls-remote', '--tags', 'origin', $pattern)).Output
+    $tags = foreach ($line in @($output -split "`r?`n")) {
+        if ($line -and $line -match '^[^\s]+\s+refs/tags/(?<tag>.+)$' -and !$Matches.tag.EndsWith('^{}')) {
+            $Matches.tag
+        }
+    }
+    return @($tags | Sort-Object -Unique)
+}
+
+# Assigns one issue or pull request to a milestone and verifies remote writes.
+function Set-GitHubItemMilestone(
+    [string] $Repository,
+    [int] $Number,
+    [int] $MilestoneNumber,
+    [string] $MilestoneTitle,
+    [string] $Description,
+    [switch] $Push
+) {
+    $arguments = @('api', "repos/$Repository/issues/$Number", '-X', 'PATCH', '-F', "milestone=$MilestoneNumber")
+    $null = Invoke-GitHubMutation -Arguments $arguments -Description $Description -Push:$Push
+    if ($Push) {
+        $actual = Get-GitHubIssue -Repository $Repository -Number $Number
+        if ([string] $actual.milestone.title -ne $MilestoneTitle) {
+            throw "GitHub item #$Number milestone update could not be verified."
+        }
+        Write-ReleaseStatus applied "$Description verified."
+    }
+}
+
 # Parses an exact public package version into branch, tag, and title identities.
 function Get-ReleaseIdentity([string] $PublicVersion) {
     $prerelease = [regex]::Match(
@@ -197,6 +290,10 @@ Export-ModuleMember -Function @(
     'Write-ReleaseStatus',
     'Get-RepositoryReleaseVersion',
     'Push-ReleaseBranch',
+    'ConvertTo-ReleaseMilestone',
+    'Get-ShippedTag',
+    'Get-RemoteReleaseTags',
+    'Set-GitHubItemMilestone',
     'Get-ReleaseIdentity',
     'Resolve-NuGetPackageVersion',
     'Get-NuGetPackageSource',

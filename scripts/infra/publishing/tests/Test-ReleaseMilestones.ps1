@@ -7,8 +7,32 @@ $publishingRoot = Split-Path $PSScriptRoot
 Import-Module (Join-Path $publishingRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $publishingRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $publishingRoot 'Publishing.Common.psm1') -Force
-Import-Module (Join-Path $publishingRoot 'ReleaseMilestones.Common.psm1') -Force
-$milestoneModule = Get-Module ReleaseMilestones.Common
+
+# Loads top-level function definitions without executing a script's main flow.
+function Get-ScriptFunctionText([string] $Path) {
+    $tokens = $null
+    $errors = $null
+    $ast = [Management.Automation.Language.Parser]::ParseFile(
+        (Resolve-Path $Path),
+        [ref] $tokens,
+        [ref] $errors)
+    if ($errors.Count) {
+        throw "Could not parse $Path."
+    }
+    return (
+        $ast.FindAll(
+            { param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] },
+            $false) |
+            ForEach-Object { $_.Extent.Text }
+    ) -join "`n`n"
+}
+
+Invoke-Expression (Get-ScriptFunctionText (Join-Path $publishingRoot 'reconcile-release-assignments.ps1'))
+Invoke-Expression (Get-ScriptFunctionText (Join-Path $publishingRoot 'update-release-milestones.ps1'))
+$Push = $false
+$writeRemote = $false
+$moveSettleAttempts = 5
+$moveSettleDelaySeconds = 0
 
 $script:TestsRun = 0
 
@@ -250,11 +274,13 @@ $pushMilestones = @{
     '4.152.0-preview.1' = [pscustomobject] @{ number = 1; state = 'open' }
     '4.152.0-preview.2' = [pscustomobject] @{ number = 2; state = 'open' }
 }
-& $milestoneModule { $script:WriteRemote = $true }
+$Push = $true
+$writeRemote = $true
 try {
     Complete-GitHubMilestone -Repository 'mono/SkiaSharp' -Operation $pushOperation -Milestones $pushMilestones
 } finally {
-    & $milestoneModule { $script:WriteRemote = $false }
+    $Push = $false
+    $writeRemote = $false
 }
 Assert-Equal '4.152.0-preview.2' $script:FakeItemMilestone 'The fake-gh apply path did not move open work.'
 Assert-Equal 'closed' $script:FakeMilestoneState 'The fake-gh apply path did not close the emptied milestone.'

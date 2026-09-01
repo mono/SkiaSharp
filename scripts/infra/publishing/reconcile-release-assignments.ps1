@@ -15,6 +15,7 @@
     read-only and reports exact skipped mutations.
 #>
 
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidatePattern('^\d+\.\d+\.\d+(?:\.\d+)?$')]
@@ -30,11 +31,123 @@ param(
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
-Import-Module (Join-Path $PSScriptRoot 'ReleaseMilestones.Common.psm1') -ArgumentList ([bool] $Push) -Force
 $writeRemote = $Push
 $mode = if ($writeRemote) { 'push' } else { 'dry run' }
 $root = Get-GitRepositoryRoot
+
+# Reads one pull request.
+function Get-GitHubPullRequest([string] $Repository, [int] $Number) {
+    return Invoke-GitHubJsonWithRetry -Arguments @('api', "repos/$Repository/pulls/$Number")
+}
+
+# Reads issues that GitHub records as closed by one pull request.
+function Get-GitHubClosingIssues([string] $Repository, [int] $PullRequest) {
+    $owner, $name = $Repository.Split('/', 2)
+    $query = @'
+query($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      closingIssuesReferences(first: 50) {
+        nodes { number }
+      }
+    }
+  }
+}
+'@
+    $data = Invoke-GitHubJsonWithRetry -Arguments @(
+        'api', 'graphql',
+        '-f', "query=$query",
+        '-F', "owner=$owner",
+        '-F', "name=$name",
+        '-F', "number=$PullRequest"
+    )
+    $nodes = @($data.data.repository.pullRequest.closingIssuesReferences.nodes)
+    return @($nodes | ForEach-Object { [int] $_.number })
+}
+
+# Enumerates release branches and selects those in one numeric release line.
+function Get-ReleaseBranches([string] $Root, [string] $Version) {
+    $output = (Invoke-Git -Root $Root -Arguments @(
+        'for-each-ref',
+        '--format=%(refname:strip=3)',
+        'refs/remotes/origin/release/'
+    )).Output
+    $all = @(
+        foreach ($line in @($output -split "`r?`n")) {
+            if ($line) {
+                $parsed = ConvertTo-ReleaseMilestone $line
+                if ($parsed) {
+                    $parsed
+                }
+            }
+        }
+    )
+    $selected = @($all | Where-Object {
+        $_.Title -eq $Version -or $_.Title.StartsWith("$Version-") -or $_.Title.StartsWith("$Version.")
+    } | Sort-Object SortKey)
+    if ($selected.Count -eq 0) {
+        throw "No release branches match $Version."
+    }
+    return [pscustomobject] @{ Selected = $selected; All = $all }
+}
+
+# Finds the latest stable release branch before the requested numeric line.
+function Get-PreviousStableBranch([object[]] $Branches, [string] $Version) {
+    $target = ConvertTo-ReleaseMilestone $Version
+    return $Branches |
+        Where-Object { !$_.Channel -and $_.NumericKey -lt $target.NumericKey } |
+        Sort-Object NumericKey -Descending |
+        Select-Object -First 1
+}
+
+# Rolls each unshipped branch forward to the next branch that was shipped.
+function Get-EffectiveMilestoneTitles([object[]] $Branches, [string[]] $Tags) {
+    $result = [System.Collections.Generic.List[object]]::new()
+    for ($index = 0; $index -lt $Branches.Count; $index++) {
+        $effective = $null
+        for ($candidate = $index; $candidate -lt $Branches.Count; $candidate++) {
+            if (Get-ShippedTag -Title $Branches[$candidate].Title -Tags $Tags) {
+                $effective = $Branches[$candidate].Title
+                break
+            }
+        }
+        $result.Add($effective)
+    }
+    return $result.ToArray()
+}
+
+# Extracts merged pull request numbers from one first-parent release range.
+function Get-ReleasePullRequests([string] $Root, [string] $Start, [string] $End) {
+    $output = (Invoke-Git -Root $Root -Arguments @(
+        'log',
+        '--format=%s',
+        '--first-parent',
+        "$Start..$End"
+    )).Output
+    $numbers = foreach ($subject in @($output -split "`r?`n")) {
+        $match = [regex]::Match($subject, '\(#(?<number>\d+)\)')
+        if ($match.Success) {
+            [int] $match.Groups['number'].Value
+        }
+    }
+    return @($numbers | Sort-Object -Unique)
+}
+
+# Combines GitHub closing references with closing keywords in the pull request body.
+function Get-LinkedIssues([string] $Repository, [int] $PullRequest) {
+    $numbers = [System.Collections.Generic.HashSet[int]]::new()
+    foreach ($number in Get-GitHubClosingIssues -Repository $Repository -PullRequest $PullRequest) {
+        $null = $numbers.Add($number)
+    }
+    $pull = Get-GitHubPullRequest -Repository $Repository -Number $PullRequest
+    $pattern = '(?i)(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s*:?\s+#(?<number>\d+)'
+    foreach ($match in [regex]::Matches([string] $pull.body, $pattern)) {
+        $null = $numbers.Add([int] $match.Groups['number'].Value)
+    }
+    return @($numbers | Sort-Object)
+}
 
 # 1. Reconcile shipped commits, pull requests, and linked issues.
 Write-ReleaseStatus start "Release assignment reconciliation for $Version ($mode)."
@@ -155,7 +268,8 @@ if ($warnings.Count -gt 0) {
             -Number $item.Number `
             -MilestoneNumber $item.ToMilestoneNumber `
             -MilestoneTitle $item.ToMilestone `
-            -Description $description
+            -Description $description `
+            -Push:$Push
     }
 } else {
     foreach ($item in $operations) {
@@ -165,7 +279,8 @@ if ($warnings.Count -gt 0) {
             -Number $item.Number `
             -MilestoneNumber $item.ToMilestoneNumber `
             -MilestoneTitle $item.ToMilestone `
-            -Description $description
+            -Description $description `
+            -Push:$Push
     }
     Write-ReleaseStatus checked (
         "Reconciliation: $($operations.Count) assignment(s), $correct already correct; " +

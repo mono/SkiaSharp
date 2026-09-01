@@ -26,6 +26,7 @@
     Without Apply or Push, the script is a dry run.
 #>
 
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [string] $Release,

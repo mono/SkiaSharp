@@ -18,6 +18,7 @@
     this switch, the script is read-only.
 #>
 
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [string] $Version,
