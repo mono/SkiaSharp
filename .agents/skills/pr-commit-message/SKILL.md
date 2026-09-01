@@ -283,7 +283,10 @@ Check the final draft by claim type:
   "excluded by request", or "out of scope for review size" is development chronology and
   stops being true the moment the follow-up lands.
 - **Mixed-truth sentences:** split a verified fact from an unsupported qualifier instead of
-  accepting the whole sentence because half is true.
+  accepting the whole sentence because half is true. Watch for two distinct things the
+  evidence calls by the same role word — a control, a baseline, a fixture, a config — and
+  confirm which one each clause is about before joining them, because merging them yields a
+  sentence whose halves are both true and whose join is not.
 
 ### 5. Build source-backed attribution
 
