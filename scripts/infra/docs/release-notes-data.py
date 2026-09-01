@@ -89,7 +89,7 @@ Reads scripts/infra/docs/versions.json (if present) for comparison overrides and
 supersession markers. versions.json is the single source of truth: only the
 versions listed there get a non-default baseline or a superseded marker.
 
-Requirements: git, Python 3.7+
+Requirements: git, Python 3.10+
 """
 
 from __future__ import annotations

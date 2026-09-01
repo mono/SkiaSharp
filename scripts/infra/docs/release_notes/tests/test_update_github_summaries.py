@@ -56,7 +56,7 @@ class FakeGitHubClient:
         return _release_info(tag, body, is_draft=tag in self.draft_tags)
 
     def publish(self, tag):
-        """Simulate Finish publishing the draft: the SAME body the draft
+        """Simulate publication of the draft: the SAME body the draft
         held becomes the published release's body -- exactly what happens
         when the release-published event later fires."""
         self.draft_tags.discard(tag)
@@ -173,6 +173,10 @@ class SelectCandidatesTests(unittest.TestCase):
                     public_version="4.151.0",
                     channel="stable",
                     label="Stable",
+                    changelog_url=(
+                        "https://github.com/mono/SkiaSharp/compare/"
+                        "v4.150.2...v4.151.0"
+                    ),
                 ),
             ]),
             prose=_prose(summaries={
@@ -189,7 +193,7 @@ class SelectCandidatesTests(unittest.TestCase):
             data=_data(shipments=[_shipment(core_version="9.9.9")]),
             prose=_prose(),
         )
-        with self.assertRaisesRegex(updater.UpdateError, "does not match its own page version"):
+        with self.assertRaisesRegex(updater.UpdateError, "core_version.*derived from its tag"):
             updater.select_candidates(self.repository)
 
     def test_rejects_duplicate_shipment_tags_within_one_data_file(self):
@@ -201,18 +205,32 @@ class SelectCandidatesTests(unittest.TestCase):
         with self.assertRaisesRegex(updater.UpdateError, "duplicate shipment tag"):
             updater.select_candidates(self.repository)
 
-    def test_rejects_the_same_exact_tag_appearing_in_two_data_files(self):
+    def test_rejects_a_falsey_non_array_shipment_value(self):
+        self.fixture.write_page(
+            "4.151.0",
+            data={
+                "format": 4,
+                "version": "4.151.0",
+                "shipments": {},
+                "contributors": [],
+            },
+            prose=_prose(),
+        )
+        with self.assertRaisesRegex(updater.UpdateError, "shipments must be an array"):
+            updater.select_candidates(self.repository, tag="v4.151.0")
+
+    def test_rejects_a_shipment_stored_under_a_different_page_version(self):
         self.fixture.write_page("4.151.0", data=_data(), prose=_prose())
         self.fixture.write_page(
             "4.151.0b",
             data={
                 "format": 4,
                 "version": "4.151.0b",
-                "shipments": [_shipment(core_version="4.151.0b")],
+                "shipments": [_shipment()],
             },
             prose=_prose(),
         )
-        with self.assertRaisesRegex(updater.UpdateError, "appears in multiple data files"):
+        with self.assertRaisesRegex(updater.UpdateError, "does not match its own page version"):
             updater.select_candidates(self.repository)
 
     def test_rejects_malformed_json(self):
@@ -227,7 +245,7 @@ class SelectCandidatesTests(unittest.TestCase):
 
 class UpdateReleasesTests(unittest.TestCase):
     def setUp(self):
-        self.initial_body = GH.build_initial_body("## What's Changed\n* A PR by @a\n")
+        self.initial_body = GH.build_managed_body("", "## What's Changed\n* A PR by @a\n")
 
     def _candidate(self, **shipment_overrides):
         shipment = _shipment(**shipment_overrides)
@@ -276,20 +294,20 @@ class UpdateReleasesTests(unittest.TestCase):
         self.assertEqual(result.entries[0].status, "skipped")
         self.assertEqual(client.writes, [])
 
-    def test_skips_an_unmarked_historical_release_without_writing(self):
+    def test_adopts_an_unmarked_release_and_preserves_its_body(self):
         candidate = self._candidate()
-        client = FakeGitHubClient({candidate.tag: "Just a plain historical release body."})
+        original = "Just a plain GitHub-generated release body."
+        client = FakeGitHubClient({candidate.tag: original})
         result = updater.update_releases([candidate], client)
-        self.assertEqual(result.entries[0].status, "skipped")
-        self.assertIn("no managed markers", result.entries[0].detail)
-        self.assertEqual(client.writes, [])
+        self.assertEqual(result.entries[0].status, "updated")
+        self.assertEqual(len(client.writes), 1)
+        (_, written_body) = client.writes[0]
+        self.assertIn(original, written_body)
+        self.assertIn(GH.SUMMARY_START_MARKER, written_body)
+        self.assertIn(GH.GENERATED_START_MARKER, written_body)
 
     def test_skips_an_unpublished_draft_without_any_patch(self):
-        # A cross-workflow race: Finish holds this exact release as an
-        # unpublished draft while its own environment approval is pending,
-        # and persists the draft body's hash to verify against before
-        # publishing. Patching it here would invalidate that hash out from
-        # under Finish and force an unrelated reapproval.
+        # Summary convergence must never edit an unpublished draft.
         candidate = self._candidate()
         client = FakeGitHubClient(
             {candidate.tag: self.initial_body}, draft_tags={candidate.tag}
@@ -312,7 +330,7 @@ class UpdateReleasesTests(unittest.TestCase):
 
     def test_converges_once_the_same_release_is_later_published(self):
         # The exact scenario the fix targets: a draft is skipped on one run,
-        # then Finish publishes it (the release-published event fires, or
+        # then publication completes (the release-published event fires, or
         # this workflow's next run observes the now-published release), and
         # the SAME candidate/client converges successfully with no
         # intervening state change other than is_draft flipping to False.
@@ -459,7 +477,7 @@ class MainEndToEndTests(unittest.TestCase):
 
     def test_converges_a_push_event_and_reports_success(self):
         self.fixture.write_page("4.151.0", data=_data(), prose=_prose())
-        initial_body = GH.build_initial_body("## What's Changed\n")
+        initial_body = GH.build_managed_body("", "## What's Changed\n")
         fake_client = FakeGitHubClient({"v4.151.0-preview.1": initial_body})
         with mock.patch.object(GH, "RestGitHubClient", return_value=fake_client):
             exit_code = updater.main([

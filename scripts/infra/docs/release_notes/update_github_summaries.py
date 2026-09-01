@@ -2,17 +2,11 @@
 """Apply reviewed release summaries to managed GitHub Release bodies.
 
 The release-notes workflow and skill own summary prose (headline/body) and
-this package owns Markdown structure; this script only selects exact tags,
-expands deterministic links, and replaces the managed summary region of an
-already-marked GitHub Release body byte-for-byte. It never touches the
-``SKIASHARP:GITHUB-GENERATED-NOTES`` region GitHub itself generated, it skips
-(never rewrites) a release whose body has no managed markers at all -- a
-historical release published before this feature existed -- and it skips
-(never rewrites) an unpublished draft: Finish persists a body-hash for the
-exact draft it created while its own environment approval is pending, and
-patching the draft here would invalidate that hash out from under Finish, a
-genuine cross-workflow race. A draft converges once GitHub's "release"
-(published) event fires, or on this workflow's next scheduled/dispatched run.
+this package owns Markdown structure; this script selects exact tags, expands
+deterministic links, and replaces the managed summary region of a GitHub
+Release body. On the first update it adds the managed regions around the
+existing release body; later updates preserve that body region byte-for-byte.
+It skips unpublished drafts, which converge after publication.
 
     update_github_summaries.py --event push --repository mono/SkiaSharp
     update_github_summaries.py --event release --repository mono/SkiaSharp --tag v4.151.0
@@ -161,7 +155,7 @@ def select_candidates(
                 )
             continue
 
-        shipment_list = data.get("shipments") or []
+        shipment_list = data.get("shipments")
         shipment_errors = shipments_module.validate_shipments(shipment_list)
         if shipment_errors:
             raise UpdateError("{}: {}".format(data_path, "; ".join(shipment_errors)))
@@ -276,15 +270,10 @@ def update_releases(
     convention:
 
     1. **Preflight** -- fetch each release, skip it (never an error) when it
-       does not exist, is still an unpublished draft (Finish holds a
-       persisted body-hash for the exact draft it created and is waiting on
-       environment approval to publish; patching the draft here would
-       invalidate that hash out from under Finish -- a genuine
-       cross-workflow race -- and force an unrelated reapproval), or has no
-       managed markers (a historical, unmarked release), skip when the
-       computed body is already current (idempotent), else render + validate
-       and stage a plan. Any hard error here aborts the WHOLE batch before a
-       single write is sent.
+       does not exist or is still an unpublished draft, adopt an unmarked body
+       on its first reviewed update, skip when the computed body is already
+       current (idempotent), else render + validate and stage a plan. Any hard
+       error here aborts the WHOLE batch before a single write is sent.
     2. **Race barrier** -- immediately before the first write, re-fetch every
        staged release and require its body to be byte-identical to what
        preflight read. The REST API has no conditional PATCH, so this
@@ -305,15 +294,7 @@ def update_releases(
                 result.add(candidate.tag, "skipped", "GitHub Release does not exist")
                 continue
             if existing.is_draft:
-                # Finish holds an unpublished draft while its own environment
-                # approval is pending, and separately persists the exact
-                # draft body's hash to verify against before publishing. If
-                # we patched the draft here, that persisted hash would go
-                # stale out from under Finish -- a genuine cross-workflow
-                # race -- and force an unrelated reapproval. Never write to a
-                # draft; converge once GitHub's "release" (published) event
-                # fires, or on this workflow's next scheduled/dispatched run
-                # after that.
+                # Never patch an unpublished draft; converge after publication.
                 result.add(
                     candidate.tag,
                     "skipped",
@@ -321,20 +302,8 @@ def update_releases(
                     "or the next run",
                 )
                 continue
-            if not github.has_managed_markers(existing.body):
-                result.add(
-                    candidate.tag,
-                    "skipped",
-                    "release body has no managed markers (unmarked historical release)",
-                )
-                continue
             summary_text = render_managed_summary(candidate, renderer)
             new_body = github.replace_managed_summary(existing.body, summary_text)
-            if new_body is None:
-                result.add(
-                    candidate.tag, "skipped", "release body markers disappeared before write"
-                )
-                continue
             if new_body == existing.body:
                 result.add(
                     candidate.tag, "unchanged", "managed summary already matches reviewed prose"

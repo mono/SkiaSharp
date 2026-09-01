@@ -80,11 +80,15 @@ class RestGitHubClientTests(unittest.TestCase):
             github.RestGitHubClient("../SkiaSharp", token="secret")
 
     def test_marker_helpers_reject_partial_or_duplicate_contracts(self):
-        body = github.build_initial_body("notes")
+        body = github.build_managed_body("", "notes")
         self.assertTrue(github.has_managed_markers(body))
         replaced = github.replace_managed_summary(body, "summary")
         self.assertIn("summary", replaced)
         self.assertIn("notes", replaced)
+        adopted = github.replace_managed_summary("plain release notes", "summary")
+        self.assertIn("summary", adopted)
+        self.assertIn("plain release notes", adopted)
+        self.assertTrue(github.has_managed_markers(adopted))
         with self.assertRaises(github.GitHubError):
             github.has_managed_markers(body + github.SUMMARY_START_MARKER)
 

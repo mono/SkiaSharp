@@ -1,16 +1,9 @@
 """Safety guards for reviewed release-summary prose.
 
-Ported from the retired ``release-publish`` skill's GitHub Release "teaser"
-guards:
-no code fence, no CVE/security/vulnerability claims, no unwritten
-placeholder, and a real plain-language opening sentence. Two rules are new
-here, specific to the managed-marker design the teaser never had: prose must
-not itself contain any managed marker or ``<!-- RELEASE_LINKS -->`` sentinel
-(an untrusted PR title or a compromised prose.json entry could otherwise
-smuggle a marker byte sequence into the body and corrupt the region
-boundaries the updater trusts), and it must not contain a raw HTML comment at
-all (the only place a body legitimately carries one is a marker, which is
-already covered).
+Prose must use plain language without code fences, security claims, unwritten
+placeholders, managed markers, link sentinels, or raw HTML comments. These
+checks prevent reviewed or untrusted text from changing the release body's
+owned structure.
 """
 
 from __future__ import annotations
@@ -27,10 +20,8 @@ MANAGED_MARKERS = (
 )
 RELEASE_LINKS_MARKER = "<!-- RELEASE_LINKS -->"
 
-# Ported verbatim in spirit from the retired teaser's
-# ``assemble_release_body`` check: never let reviewed prose name a CVE or
-# call anything a security fix -- we deliberately never signal which bundled
-# component was vulnerable.
+# Never let reviewed prose name a CVE or identify a bundled component as
+# vulnerable.
 SECURITY_CLAIM_RE = re.compile(
     r"\b(?:CVE-\d|security (?:fix|release|patch|advisory)|vulnerabilit)",
     re.IGNORECASE,

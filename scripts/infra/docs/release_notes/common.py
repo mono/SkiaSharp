@@ -33,7 +33,8 @@ DATA_FORMAT = 4
 # it is neither generated nor consumed by this package.
 EXACT_RELEASE_TAG_RE = re.compile(
     r"^v(?P<numeric>\d+\.\d+\.\d+)(?:\.(?P<hotfix>\d+))?"
-    r"(?:-(?P<channel>preview|rc)\.(?P<milestone>\d+)(?:\.(?P<build>\d+))?)?$"
+    r"(?:-(?P<channel>preview|rc)\.(?P<milestone>\d+)"
+    r"(?:\.(?P<build>\d+(?:\.\d+)?))?)?$"
 )
 
 FRIENDLY_CHANNEL = {"preview": "Preview", "rc": "Release Candidate"}
@@ -56,7 +57,7 @@ class ParsedTag:
     core_tuple: tuple[int, int, int, int]
     channel: str | None
     milestone: int | None
-    build: int | None
+    build: tuple[int, ...] | None
     hotfix: int | None
     sort_key: tuple
 
@@ -76,7 +77,9 @@ class ParsedTag:
             return "Hotfix" if self.hotfix else "Stable"
         label = "{} {}".format(FRIENDLY_CHANNEL[self.channel], self.milestone)
         if self.build:
-            label += " (Build {})".format(self.build)
+            label += " (Build {})".format(
+                ".".join(str(part) for part in self.build)
+            )
         return label
 
 
@@ -99,13 +102,17 @@ def parse_tag(tag: str) -> ParsedTag | None:
     build = match.group("build")
     core = numeric + (".{}".format(hotfix) if hotfix else "")
     milestone_i = int(milestone) if milestone is not None else None
-    build_i = int(build) if build is not None else None
+    build_i = (
+        tuple(int(part) for part in build.split("."))
+        if build is not None
+        else None
+    )
     hotfix_i = int(hotfix) if hotfix is not None else None
     sort_key = (
         core_tuple(core),
         _CHANNEL_RANK[channel],
         milestone_i or 0,
-        build_i or 0,
+        build_i or (0,),
     )
     return ParsedTag(
         tag=tag,
