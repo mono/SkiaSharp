@@ -83,7 +83,21 @@ function ConvertTo-IsoDate([object] $Value) {
     if ($null -eq $Value -or [string]::IsNullOrWhiteSpace([string] $Value)) {
         return ''
     }
-    return ([datetime] $Value).ToString('yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    $utc = if ($Value -is [datetime]) {
+        if ($Value.Kind -eq [DateTimeKind]::Unspecified) {
+            [DateTime]::SpecifyKind($Value, [DateTimeKind]::Utc)
+        } else {
+            $Value.ToUniversalTime()
+        }
+    } elseif ($Value -is [DateTimeOffset]) {
+        $Value.UtcDateTime
+    } else {
+        [DateTimeOffset]::Parse(
+            [string] $Value,
+            [Globalization.CultureInfo]::InvariantCulture,
+            [Globalization.DateTimeStyles]::AssumeUniversal).UtcDateTime
+    }
+    return $utc.ToString('yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
 }
 
 # Fetches and validates one Chromium milestone schedule.

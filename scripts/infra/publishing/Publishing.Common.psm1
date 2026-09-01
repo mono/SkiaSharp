@@ -94,12 +94,9 @@ function ConvertTo-ReleaseMilestone([string] $Value) {
         $title += "-$channel.$iteration"
     }
     return [pscustomobject] @{
-        Name = if ($Value.StartsWith('release/')) { $Value } else { "release/$title" }
         Title = $title
-        Numeric = $parts
         NumericKey = '{0:D10}.{1:D10}.{2:D10}.{3:D10}' -f $parts[0], $parts[1], $parts[2], $hotfix
         Channel = $channel
-        Iteration = $iteration
         SortKey = '{0:D10}.{1:D10}.{2:D10}.{3:D10}.{4:D2}.{5:D10}' -f
             $parts[0], $parts[1], $parts[2], $hotfix, $channelRank, $iteration
     }
@@ -132,10 +129,9 @@ function Get-ShippedTag([string] $Title, [string[]] $Tags) {
     return $null
 }
 
-# Reads non-peeled remote release tags, optionally narrowed to one numeric line.
-function Get-RemoteReleaseTags([string] $Root, [string] $NumericVersion = '') {
-    $pattern = if ($NumericVersion) { "refs/tags/v$NumericVersion*" } else { 'refs/tags/v*' }
-    $output = (Invoke-Git -Root $Root -Arguments @('ls-remote', '--tags', 'origin', $pattern)).Output
+# Reads all non-peeled remote release tags.
+function Get-RemoteReleaseTags([string] $Root) {
+    $output = (Invoke-Git -Root $Root -Arguments @('ls-remote', '--tags', 'origin', 'refs/tags/v*')).Output
     $tags = foreach ($line in @($output -split "`r?`n")) {
         if ($line -and $line -match '^[^\s]+\s+refs/tags/(?<tag>.+)$' -and !$Matches.tag.EndsWith('^{}')) {
             $Matches.tag
@@ -177,7 +173,6 @@ function Get-ReleaseIdentity([string] $PublicVersion) {
         $identity = "$numeric-$channel.$iteration"
         $channelTitle = if ($channel -eq 'rc') { 'RC' } else { 'Preview' }
         return [pscustomobject] @{
-            Identity = $identity
             Numeric = $numeric
             Branch = "release/$identity"
             Tag = "v$PublicVersion"
@@ -188,7 +183,6 @@ function Get-ReleaseIdentity([string] $PublicVersion) {
 
     if ($PublicVersion -match '^\d+\.\d+\.\d+(?:\.\d+)?$') {
         return [pscustomobject] @{
-            Identity = $PublicVersion
             Numeric = $PublicVersion
             Branch = "release/$PublicVersion"
             Tag = "v$PublicVersion"

@@ -177,6 +177,7 @@ $targetTitles = @($effective | Where-Object { $_ } | Select-Object -Unique)
 $milestones = Get-GitHubMilestoneMap -Repository $Repository
 $operations = [System.Collections.Generic.List[object]]::new()
 $seenPullRequests = [System.Collections.Generic.HashSet[int]]::new()
+$seenIssues = [System.Collections.Generic.HashSet[int]]::new()
 $correct = 0
 foreach ($targetTitle in $targetTitles) {
     $currentTag = Get-ShippedTag -Title $targetTitle -Tags $tags
@@ -224,6 +225,9 @@ foreach ($targetTitle in $targetTitles) {
             })
         }
         foreach ($linked in Get-LinkedIssues -Repository $Repository -PullRequest $pullRequest) {
+            if (!$seenIssues.Add($linked)) {
+                continue
+            }
             $issue = Get-GitHubIssue -Repository $Repository -Number $linked
             $linkedCurrent = [string] $issue.milestone.title
             if ($linkedCurrent -eq $targetTitle) {
@@ -253,27 +257,18 @@ if ($warnings.Count -gt 0) {
         throw "Reconciliation is blocked by $($warnings.Count) release-boundary or milestone warning(s)."
     }
     Write-ReleaseStatus blocked "Reconciliation has $($warnings.Count) warning(s); no mutation can be applied safely."
-    foreach ($item in $operations) {
-        $description = "Assign $($item.Kind) #$($item.Number) to $($item.ToMilestone)"
-        Set-GitHubItemMilestone `
-            -Repository $Repository `
-            -Number $item.Number `
-            -MilestoneNumber $item.ToMilestoneNumber `
-            -MilestoneTitle $item.ToMilestone `
-            -Description $description `
-            -Push:$Push
-    }
-} else {
-    foreach ($item in $operations) {
-        $description = "Assign $($item.Kind) #$($item.Number) to $($item.ToMilestone)"
-        Set-GitHubItemMilestone `
-            -Repository $Repository `
-            -Number $item.Number `
-            -MilestoneNumber $item.ToMilestoneNumber `
-            -MilestoneTitle $item.ToMilestone `
-            -Description $description `
-            -Push:$Push
-    }
+}
+foreach ($item in $operations) {
+    $description = "Assign $($item.Kind) #$($item.Number) to $($item.ToMilestone)"
+    Set-GitHubItemMilestone `
+        -Repository $Repository `
+        -Number $item.Number `
+        -MilestoneNumber $item.ToMilestoneNumber `
+        -MilestoneTitle $item.ToMilestone `
+        -Description $description `
+        -Push:$Push
+}
+if ($warnings.Count -eq 0) {
     Write-ReleaseStatus checked (
         "Reconciliation: $($operations.Count) assignment(s), $correct already correct; " +
         'commits after the final shipped branch were not inspected.')
