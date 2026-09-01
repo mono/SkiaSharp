@@ -129,10 +129,33 @@ protected publication stage.
 
 ## 4. Maintain milestones
 
-Use the [release-milestones](../../.agents/skills/release-milestones/SKILL.md)
-skill after publication to reconcile shipped assignments and maintain
-milestone dates, rollover, and closure. Milestone maintenance remains separate
-from release branches, tags, packages, and GitHub Releases.
+Run **Release - Milestones** after publication. Reconciliation and milestone
+updates are selected by default; `push` is disabled by default. Review one
+read-only dispatch, then enable `push` in a separate dispatch if the plan is
+correct.
+
+```powershell
+# Reconcile shipped pull requests and linked issues
+./scripts/infra/publishing/reconcile-release-assignments.ps1 `
+  -Version 4.153.0
+
+# Update milestone dates, rollover, and closure
+./scripts/infra/publishing/update-release-milestones.ps1
+```
+
+Both scripts are read-only by default. Add `-Push` to the selected script after
+reviewing its output:
+
+```powershell
+./scripts/infra/publishing/reconcile-release-assignments.ps1 `
+  -Version 4.153.0 `
+  -Push
+
+./scripts/infra/publishing/update-release-milestones.ps1 -Push
+```
+
+These scripts never change release branches, tags, packages, or GitHub
+Releases.
 
 ## Maintain issue-template versions
 
@@ -209,5 +232,6 @@ base milestone.
 - [Versioning](versioning.md)
 - [Packages](packages.md)
 - [Release notes and API diffs](release-notes-and-api-diffs.md)
-- [Release milestone skill](../../.agents/skills/release-milestones/SKILL.md)
+- [Release assignment script](../../scripts/infra/publishing/reconcile-release-assignments.ps1)
+- [Release milestone script](../../scripts/infra/publishing/update-release-milestones.ps1)
 - [Issue-template version script](../../scripts/infra/publishing/update-bug-template.ps1)
