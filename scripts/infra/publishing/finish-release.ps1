@@ -6,8 +6,8 @@
 
 .DESCRIPTION
     Reads the source commit from the exact public SkiaSharp package, creates the
-    immutable exact-version tag, publishes a marked GitHub Release, and dispatches
-    follow-up workflows in one pushed run.
+    immutable exact-version tag, publishes a GitHub-generated Release, and
+    dispatches follow-up workflows in one pushed run.
 
 .PARAMETER Version
     A stable version or prerelease identity. A prerelease build revision may be
@@ -36,29 +36,8 @@ $writeRemote = $Push
 $mode = if ($writeRemote) { 'push' } else { 'dry run' }
 $root = Get-GitRepositoryRoot
 $repository = $ReleaseRepository
-$summaryStart = $ReleaseSummaryStartMarker
-$summaryEnd = $ReleaseSummaryEndMarker
-$generatedStart = $ReleaseGeneratedStartMarker
-$generatedEnd = $ReleaseGeneratedEndMarker
 
-# Requires the public-version and managed-region markers to be complete and ordered.
-function Assert-ManagedBody([string] $Body) {
-    $markers = @($summaryStart, $summaryEnd, $generatedStart, $generatedEnd)
-    $positions = @()
-    foreach ($marker in $markers) {
-        if ([regex]::Matches($Body, [regex]::Escape($marker)).Count -ne 1) {
-            throw "GitHub Release body must contain exactly one $marker."
-        }
-        $positions += $Body.IndexOf($marker, [StringComparison]::Ordinal)
-    }
-    for ($index = 1; $index -lt $positions.Count; $index++) {
-        if ($positions[$index - 1] -ge $positions[$index]) {
-            throw 'GitHub Release body markers are out of order.'
-        }
-    }
-}
-
-# Validates release identity and, for drafts, the managed publication contract.
+# Validates release identity and the title of an existing draft.
 function Assert-GitHubRelease([pscustomobject] $Release, [pscustomobject] $GitHubRelease) {
     if ($GitHubRelease.tagName -ne $Release.Tag -or
         [bool] $GitHubRelease.isPrerelease -ne $Release.IsPrerelease) {
@@ -68,11 +47,10 @@ function Assert-GitHubRelease([pscustomobject] $Release, [pscustomobject] $GitHu
         if ($GitHubRelease.name -ne $Release.Title) {
             throw "GitHub Release draft $($Release.Tag) has conflicting metadata."
         }
-        Assert-ManagedBody $GitHubRelease.body
     }
 }
 
-# Creates or resumes one marked, published GitHub Release.
+# Creates or resumes one published GitHub Release.
 function Publish-GitHubRelease(
     [pscustomobject] $Release,
     [string] $SourceCommit,
@@ -94,38 +72,18 @@ function Publish-GitHubRelease(
             -Arguments @('release', 'edit', $Release.Tag, '--repo', $repository, '--verify-tag', '--draft=false') `
             -WriteOutput
     } else {
-        # Generate GitHub's notes and wrap them in regions owned by Finish and the summary updater.
-        $generated = Invoke-GitHubJson -Arguments @(
-            'api',
-            '--method',
-            'POST',
-            "repos/$repository/releases/generate-notes",
-            '--field',
-            "tag_name=$($Release.Tag)",
-            '--field',
-            "target_commitish=$SourceCommit"
+        $arguments = @(
+            'release', 'create', $Release.Tag,
+            '--repo', $repository,
+            '--title', $Release.Title,
+            '--generate-notes',
+            '--target', $SourceCommit,
+            '--verify-tag'
         )
-        $bodyPath = [System.IO.Path]::GetTempFileName()
-        $body = (
-            "$summaryStart`n`n$summaryEnd`n`n" +
-            "$generatedStart`n$($generated.body.Trim())`n$generatedEnd`n")
-        try {
-            Set-Content $bodyPath $body -NoNewline
-            $arguments = @(
-                'release', 'create', $Release.Tag,
-                '--repo', $repository,
-                '--title', $Release.Title,
-                '--notes-file', $bodyPath,
-                '--target', $SourceCommit,
-                '--verify-tag'
-            )
-            if ($Release.IsPrerelease) {
-                $arguments += @('--prerelease', '--latest=false')
-            }
-            $null = Invoke-GitHub -Arguments $arguments -WriteOutput
-        } finally {
-            Remove-Item $bodyPath -Force -ErrorAction SilentlyContinue
+        if ($Release.IsPrerelease) {
+            $arguments += @('--prerelease', '--latest=false')
         }
+        $null = Invoke-GitHub -Arguments $arguments -WriteOutput
     }
 
     $published = Get-GitHubRelease -Repository $repository -Tag $Release.Tag
@@ -136,7 +94,6 @@ function Publish-GitHubRelease(
     if ($published.name -ne $Release.Title) {
         throw "Published GitHub Release $($Release.Tag) has conflicting metadata."
     }
-    Assert-ManagedBody $published.body
     Write-ReleaseStatus applied "Published GitHub Release $($Release.Tag)."
 }
 

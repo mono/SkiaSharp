@@ -231,16 +231,8 @@ Assert-True ($updatedVersions -match 'SkiaSharp nuget 4\.151\.1\.1') `
 Assert-True ($updatedVersions -match 'HarfBuzzSharp nuget 14\.2\.1\.2') `
     'Prepare did not update HarfBuzzSharp packages.'
 
-# Loads and exercises Finish's managed-body and dry-run behavior.
+# Loads and exercises Finish's release metadata and dry-run behavior.
 Invoke-Expression (Get-ScriptFunctionText $finishPath)
-$summaryStart = $ReleaseSummaryStartMarker
-$summaryEnd = $ReleaseSummaryEndMarker
-$generatedStart = $ReleaseGeneratedStartMarker
-$generatedEnd = $ReleaseGeneratedEndMarker
-$managedBody = "$summaryStart`nsummary`n$summaryEnd`n$generatedStart`nnotes`n$generatedEnd"
-Assert-Equal $null (Assert-ManagedBody $managedBody) 'A valid managed release body was rejected.'
-Assert-Throws { Assert-ManagedBody "$summaryStart`n$summaryEnd" } 'must contain exactly one' `
-    'An incomplete managed release body was accepted.'
 $publishedHistorical = [pscustomobject] @{
     tagName = $preview.Tag
     name = 'Historical title'
@@ -255,12 +247,15 @@ $draft = [pscustomobject] @{
     name = $preview.Title
     isDraft = $true
     isPrerelease = $true
-    body = $managedBody
+    body = 'Draft notes'
 }
-Assert-Equal $null (Assert-GitHubRelease $preview $draft) 'A valid managed draft was rejected.'
-$draft.body = 'unmanaged'
-Assert-Throws { Assert-GitHubRelease $preview $draft } 'must contain exactly one' `
-    'An unmanaged draft was accepted.'
+Assert-Equal $null (Assert-GitHubRelease $preview $draft) 'A valid draft was rejected.'
+$draft.name = 'Wrong title'
+Assert-Throws { Assert-GitHubRelease $preview $draft } 'conflicting metadata' `
+    'A draft with the wrong title was accepted.'
+$powerShellReleaseText = (Get-Content $finishPath -Raw) + (Get-Content $commonPath -Raw)
+Assert-True ($powerShellReleaseText -notmatch 'SKIASHARP:(?:RELEASE-SUMMARY|GITHUB-GENERATED-NOTES)') `
+    'PowerShell unexpectedly owns release-summary body markers.'
 $writeRemote = $false
 $script:FakeGhCalls = 0
 function global:gh {

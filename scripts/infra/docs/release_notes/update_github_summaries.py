@@ -2,14 +2,11 @@
 """Apply reviewed release summaries to managed GitHub Release bodies.
 
 The release-notes workflow and skill own summary prose (headline/body) and
-this package owns Markdown structure; this script only selects exact tags,
-expands deterministic links, and replaces the managed summary region of an
-already-marked GitHub Release body byte-for-byte. It never touches the
-``SKIASHARP:GITHUB-GENERATED-NOTES`` region the publication script preserves,
-it skips (never rewrites) a release whose body has no managed markers at all --
-a historical release published before this feature existed -- and it skips
-(never rewrites) an unpublished draft. A draft converges once GitHub's
-"release" (published) event fires, or on this workflow's next run.
+this package owns Markdown structure; this script selects exact tags, expands
+deterministic links, and replaces the managed summary region of a GitHub
+Release body. On the first update it adds the managed regions around the
+existing release body; later updates preserve that body region byte-for-byte.
+It skips unpublished drafts, which converge after publication.
 
     update_github_summaries.py --event push --repository mono/SkiaSharp
     update_github_summaries.py --event release --repository mono/SkiaSharp --tag v4.151.0
@@ -273,8 +270,8 @@ def update_releases(
     convention:
 
     1. **Preflight** -- fetch each release, skip it (never an error) when it
-       does not exist, is still an unpublished draft, or has no managed markers
-       (a historical, unmarked release), skip when the computed body is already
+       does not exist or is still an unpublished draft, adopt an unmarked body
+       on its first reviewed update, skip when the computed body is already
        current (idempotent), else render + validate and stage a plan. Any hard
        error here aborts the WHOLE batch before a single write is sent.
     2. **Race barrier** -- immediately before the first write, re-fetch every
@@ -305,20 +302,8 @@ def update_releases(
                     "or the next run",
                 )
                 continue
-            if not github.has_managed_markers(existing.body):
-                result.add(
-                    candidate.tag,
-                    "skipped",
-                    "release body has no managed markers (unmarked historical release)",
-                )
-                continue
             summary_text = render_managed_summary(candidate, renderer)
             new_body = github.replace_managed_summary(existing.body, summary_text)
-            if new_body is None:
-                result.add(
-                    candidate.tag, "skipped", "release body markers disappeared before write"
-                )
-                continue
             if new_body == existing.body:
                 result.add(
                     candidate.tag, "unchanged", "managed summary already matches reviewed prose"

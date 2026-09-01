@@ -1352,11 +1352,12 @@ The implementation lives under `scripts/infra/docs/release_notes/`:
 - **`update_github_summaries.py`** — the workflow's entry point. It selects every exact
   tag with both `shipments` facts and a `release_summaries` entry, and for each one:
   preflights (skip — never an error — a release that does not exist, is still an
-  unpublished draft, has no managed markers, or is already current), re-reads every
-  planned release immediately before the first write as a race barrier (the REST
-  API has no conditional PATCH), writes, then re-reads and requires the stored body to
-  equal the intended body exactly. Any preflight or race failure aborts the **whole
-  batch** before a single write.
+  unpublished draft, or is already current), adds managed regions around an
+  unmarked body, re-reads every planned release immediately before the first
+  write as a race barrier (the REST API has no conditional PATCH), writes,
+  then re-reads and requires the stored body to equal the intended body
+  exactly. Any preflight or race failure aborts the **whole batch** before a
+  single write.
 
 **Drafts.** `update_releases()` skips any unpublished draft and converges after
 publication. The normal Finish flow publishes directly, but retaining this guard keeps
@@ -1364,11 +1365,11 @@ the updater safe around manually created or legacy drafts.
 
 **Markers.** The exact-summary package owns the four managed marker constants and
 body helpers in `scripts/infra/docs/release_notes/github.py`. Its minimal REST client
-updates only published release bodies without a `gh` CLI dependency. The PowerShell
-Finish script carries the same literal marker contract when composing the
-initial published body. The reviewed release-notes summary
-converges later whenever its release-notes PR merges; there is no release-critical
-deadline for it.
+updates only published release bodies without a `gh` CLI dependency. On the
+first reviewed update it wraps the existing GitHub-generated body in the
+generated-notes region and adds the managed summary region. Later updates
+replace only the summary region. The summary converges whenever its
+release-notes PR merges; there is no release-critical deadline for it.
 
 **Change detection.** Format 4 includes `shipments` and uses three distinct
 comparisons:

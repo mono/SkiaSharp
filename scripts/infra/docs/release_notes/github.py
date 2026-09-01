@@ -53,22 +53,24 @@ def has_managed_markers(body: str) -> bool:
     return _marker_positions(body) is not None
 
 
-def build_initial_body(generated_notes_body: str) -> str:
-    return (
-        "{}\n\n{}\n\n{}\n{}\n{}\n".format(
-            SUMMARY_START_MARKER,
-            SUMMARY_END_MARKER,
-            GENERATED_START_MARKER,
-            generated_notes_body.strip(),
-            GENERATED_END_MARKER,
-        )
+def build_managed_body(summary: str, existing_body: str) -> str:
+    preserved = existing_body
+    separator = "" if not preserved or preserved.endswith("\n") else "\n"
+    return "{}\n{}\n{}\n\n{}\n{}{}{}\n".format(
+        SUMMARY_START_MARKER,
+        summary.strip(),
+        SUMMARY_END_MARKER,
+        GENERATED_START_MARKER,
+        preserved,
+        separator,
+        GENERATED_END_MARKER,
     )
 
 
-def replace_managed_summary(body: str, summary: str) -> str | None:
+def replace_managed_summary(body: str, summary: str) -> str:
     positions = _marker_positions(body)
     if positions is None:
-        return None
+        return build_managed_body(summary, body)
     summary_start, summary_end, _, _ = positions
     owned_start = summary_start + len(SUMMARY_START_MARKER)
     return body[:owned_start] + "\n" + summary.strip() + "\n" + body[summary_end:]

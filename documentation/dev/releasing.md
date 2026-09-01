@@ -120,7 +120,7 @@ after the exact packages appear on NuGet.org. Use **Release - Finish** or run:
 
 An abbreviated prerelease identity must resolve to exactly one public SkiaSharp
 package version. The `-Push` run reads that package's source commit, creates the
-exact-version tag at that commit, publishes a marked GitHub Release, and
+exact-version tag at that commit, publishes a GitHub-generated Release, and
 dispatches release-note generation. The GitHub Release summary workflow runs
 automatically on publication and when reviewed release-note data later lands on
 `main`.

@@ -10,14 +10,6 @@ New-Variable -Scope Script -Option ReadOnly -Name ReleaseSkiaRemote -Value 'http
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseSkiaPath -Value 'externals/skia'
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseVariablesPath -Value 'scripts/azure-templates-variables.yml'
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseVersionsPath -Value 'scripts/VERSIONS.txt'
-New-Variable -Scope Script -Option ReadOnly -Name ReleaseSummaryStartMarker `
-    -Value '<!-- SKIASHARP:RELEASE-SUMMARY:START -->'
-New-Variable -Scope Script -Option ReadOnly -Name ReleaseSummaryEndMarker `
-    -Value '<!-- SKIASHARP:RELEASE-SUMMARY:END -->'
-New-Variable -Scope Script -Option ReadOnly -Name ReleaseGeneratedStartMarker `
-    -Value '<!-- SKIASHARP:GITHUB-GENERATED-NOTES:START -->'
-New-Variable -Scope Script -Option ReadOnly -Name ReleaseGeneratedEndMarker `
-    -Value '<!-- SKIASHARP:GITHUB-GENERATED-NOTES:END -->'
 
 # Writes one concise publishing state transition.
 function Write-ReleaseStatus([string] $State, [string] $Message) {
@@ -304,9 +296,5 @@ Export-ModuleMember -Function @(
     'ReleaseSkiaRemote',
     'ReleaseSkiaPath',
     'ReleaseVariablesPath',
-    'ReleaseVersionsPath',
-    'ReleaseSummaryStartMarker',
-    'ReleaseSummaryEndMarker',
-    'ReleaseGeneratedStartMarker',
-    'ReleaseGeneratedEndMarker'
+    'ReleaseVersionsPath'
 )

@@ -245,7 +245,7 @@ class SelectCandidatesTests(unittest.TestCase):
 
 class UpdateReleasesTests(unittest.TestCase):
     def setUp(self):
-        self.initial_body = GH.build_initial_body("## What's Changed\n* A PR by @a\n")
+        self.initial_body = GH.build_managed_body("", "## What's Changed\n* A PR by @a\n")
 
     def _candidate(self, **shipment_overrides):
         shipment = _shipment(**shipment_overrides)
@@ -294,13 +294,17 @@ class UpdateReleasesTests(unittest.TestCase):
         self.assertEqual(result.entries[0].status, "skipped")
         self.assertEqual(client.writes, [])
 
-    def test_skips_an_unmarked_historical_release_without_writing(self):
+    def test_adopts_an_unmarked_release_and_preserves_its_body(self):
         candidate = self._candidate()
-        client = FakeGitHubClient({candidate.tag: "Just a plain historical release body."})
+        original = "Just a plain GitHub-generated release body."
+        client = FakeGitHubClient({candidate.tag: original})
         result = updater.update_releases([candidate], client)
-        self.assertEqual(result.entries[0].status, "skipped")
-        self.assertIn("no managed markers", result.entries[0].detail)
-        self.assertEqual(client.writes, [])
+        self.assertEqual(result.entries[0].status, "updated")
+        self.assertEqual(len(client.writes), 1)
+        (_, written_body) = client.writes[0]
+        self.assertIn(original, written_body)
+        self.assertIn(GH.SUMMARY_START_MARKER, written_body)
+        self.assertIn(GH.GENERATED_START_MARKER, written_body)
 
     def test_skips_an_unpublished_draft_without_any_patch(self):
         # Summary convergence must never edit an unpublished draft.
@@ -473,7 +477,7 @@ class MainEndToEndTests(unittest.TestCase):
 
     def test_converges_a_push_event_and_reports_success(self):
         self.fixture.write_page("4.151.0", data=_data(), prose=_prose())
-        initial_body = GH.build_initial_body("## What's Changed\n")
+        initial_body = GH.build_managed_body("", "## What's Changed\n")
         fake_client = FakeGitHubClient({"v4.151.0-preview.1": initial_body})
         with mock.patch.object(GH, "RestGitHubClient", return_value=fake_client):
             exit_code = updater.main([
