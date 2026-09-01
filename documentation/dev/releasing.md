@@ -104,14 +104,17 @@ SkiaSharp CI package version:
 
 ```bash
 python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
-  4.153.0-preview.1.26431.1
+  4.150.3
 ```
 
-The release-testing skill verifies the package family on dotnet-libraries,
-runs the approved host/device matrix, and records the human release-approval
-gate. Failed required coverage blocks approval, but the skill does not publish
-packages or change BAR state. After approval, the team publishes the selected
-BAR to NuGet.org through its protected publication pipeline.
+The planner asks Maestro which BAR produced that version and resolves the
+BAR-specific Darc NuGet feed. If multiple builds produced the version, pass
+`--bar-id` with the release-approved BAR. The skill verifies that feed's
+package family, runs the approved host/device matrix, and records the human
+release-approval gate. Failed required coverage blocks approval, but the skill
+does not publish packages or change BAR state. After approval, the team
+publishes the selected BAR to NuGet.org through its protected publication
+pipeline.
 
 ## 3. Create the public GitHub Release
 

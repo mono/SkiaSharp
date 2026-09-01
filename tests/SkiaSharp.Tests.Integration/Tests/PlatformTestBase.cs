@@ -43,11 +43,18 @@ public abstract class PlatformTestBase : IDisposable
     protected readonly string TestDir;
     protected readonly string SkiaVersion;
     protected readonly string HarfBuzzVersion;
+    protected readonly string PackageSource;
     protected readonly string ScreenshotDir;
 
     protected PlatformTestBase(ITestOutputHelper output)
     {
         Output = output;
+        SkiaVersion = AppContext.GetData("SkiaSharpVersion") as string
+            ?? throw new InvalidOperationException("SkiaSharpVersion not set");
+        HarfBuzzVersion = AppContext.GetData("HarfBuzzSharpVersion") as string
+            ?? throw new InvalidOperationException("HarfBuzzSharpVersion not set");
+        PackageSource = AppContext.GetData("PackageSource") as string
+            ?? throw new InvalidOperationException("PackageSource not set");
 
         // Resolve symlinks to avoid macOS /var -> /private/var issue that breaks Razor compilation
         // When using full paths with /var/..., Razor compiler fails to find sibling folders
@@ -63,17 +70,7 @@ public abstract class PlatformTestBase : IDisposable
         ScreenshotDir = Path.Combine(repoRoot, "output", "logs", "testlogs", "integration");
         Directory.CreateDirectory(ScreenshotDir);
         
-        // Write nuget.config to TestDir for package resolution
-        File.WriteAllText(Path.Combine(TestDir, "nuget.config"), """
-            <?xml version="1.0" encoding="utf-8"?>
-            <configuration>
-              <packageSources>
-                <clear />
-                <add key="SkiaSharp Preview" value="https://aka.ms/skiasharp-eap/index.json" />
-                <add key="NuGet.org" value="https://api.nuget.org/v3/index.json" />
-              </packageSources>
-            </configuration>
-            """);
+        WriteNuGetConfig(TestDir);
         
         // Write global.json to pin the temp projects to a known SDK band. The MAUI/console/Blazor
         // temp projects are generated outside the repo (in TempPath), so without this they would
@@ -91,11 +88,21 @@ public abstract class PlatformTestBase : IDisposable
             }
             """);
         
-        SkiaVersion = AppContext.GetData("SkiaSharpVersion") as string 
-            ?? throw new InvalidOperationException("SkiaSharpVersion not set");
+    }
 
-        HarfBuzzVersion = AppContext.GetData("HarfBuzzSharpVersion") as string 
-            ?? throw new InvalidOperationException("HarfBuzzSharpVersion not set");
+    protected void WriteNuGetConfig(string directory)
+    {
+        var packageSource = System.Security.SecurityElement.Escape(PackageSource);
+        File.WriteAllText(Path.Combine(directory, "nuget.config"), $$"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <configuration>
+              <packageSources>
+                <clear />
+                <add key="SkiaSharp BAR" value="{{packageSource}}" />
+                <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />
+              </packageSources>
+            </configuration>
+            """);
     }
 
 	public void Dispose()

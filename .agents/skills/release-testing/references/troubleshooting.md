@@ -24,20 +24,31 @@ package version, or skip policy.
 
 ### Packages appear missing after the release build
 
-**Symptom:** The selected release build/BAR is complete, but the exact CI
-package version is not yet available to the planner.
+**Symptom:** The selected release build/BAR is complete, but the planner cannot
+resolve or read its exact package feed.
 
-**Cause:** dotnet-libraries indexing is incomplete, the entered CI package
-version is wrong, or the BAR package family is incomplete.
+**Cause:** Darc authentication failed, the version is outside `--max-age`, more
+than one BAR produced it, the build has no NuGet feed location, or its package
+family is incomplete.
 
-**Fix:** Rerun the planner with the same exact version after indexing completes.
-It verifies all three anchor packages and never chooses a replacement version.
+**Fix:** Keep the exact version. Authenticate with `darc login`, increase
+`--max-age` only when needed, or use the exact `--bar-id` reported by the
+planner.
 
-**`dotnet-libraries package ... is unavailable`** — wait for indexing and retry
-the same version.
+**`multiple BAR builds contain ...`** — select the BAR approved for release and
+rerun with `--bar-id`.
+
+**`BAR build ... has no NuGet feed locations`** — the build has not published a
+testable Darc feed. Inspect the BAR/build rather than choosing another feed.
+
+**`BAR feed package ... is unavailable`** — the per-build feed is incomplete.
+Wait for indexing or repair that build; do not substitute another BAR.
 
 **`CI package source metadata does not match`** — the selected BAR package
 family is not coherent under the current policy. Do not approve it.
+
+**`BAR build and package source metadata do not match`** — the feed does not
+belong to the Darc-selected build. Do not execute the matrix.
 
 **`does not pin one concrete HarfBuzzSharp dependency`** — the bridge package
 does not pin one concrete dependency version. Do not infer one from another
@@ -45,7 +56,8 @@ feed.
 
 | Wrong | Correct |
 |-------|---------|
-| Newest matching package | Exact package version selected from the BAR |
+| Newest matching BAR | Exact release-approved BAR ID |
+| Global feed alias | Per-build feed returned by Darc |
 | Partial prefix search | Exact package ID and version |
 
 ---
@@ -54,13 +66,12 @@ feed.
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| Local `android` / `apple` tool is unavailable | Pinned manifest has not been restored | Run `python3 .agents/skills/release-testing/scripts/prepare-test-run.py`; it performs `dotnet tool restore` |
+| Local `android` / `apple` tool is unavailable | Pinned manifest has not been restored | Run `pwsh -NoLogo -NoProfile -File .agents/skills/release-testing/scripts/prepare-test-run.ps1`; it performs `dotnet tool restore` |
 | `the maui workload is not installed` | Missing workload | Record affected MAUI items, continue unrelated coverage, then ask whether to install `maui` or explicitly amend the matrix |
 | `the wasm-tools workload is not installed` | Missing workload | Record Blazor as failed, continue unrelated coverage, then ask whether to install `wasm-tools` or explicitly amend the matrix |
 | `SkiaSharpVersion must be the exact package version` | Missing version param | Add both exact SkiaSharp and HarfBuzzSharp versions emitted by the planner |
 | `HarfBuzzSharpVersion must be the exact package version` | Missing version param | Use the distinct HarfBuzzSharp version emitted by the planner |
-| Stable `X.Y.Z` package cannot be restored | Future bare public version was used before publication | Use the exact `X.Y.Z-stable.{build}` package selected from the BAR |
-| Generated platform package cannot be restored | A satellite package such as `SkiaSharp.Views.Blazor`, `SkiaSharp.Views.Maui.Controls`, or `SkiaSharp.NativeAssets.Linux.NoDependencies` is unavailable at the exact version | Confirm the satellite package exists on dotnet-libraries and retry the same version; dependencies continue to resolve from dotnet-public |
+| Generated platform package cannot be restored | A satellite package such as `SkiaSharp.Views.Blazor`, `SkiaSharp.Views.Maui.Controls`, or `SkiaSharp.NativeAssets.Linux.NoDependencies` is unavailable at the exact version | Confirm the satellite package exists on the selected BAR feed and retry the same build; dependencies continue to resolve from dotnet-public |
 
 ## Appium Errors
 
@@ -177,17 +188,6 @@ Scale factor calculated automatically from screenshot size vs window size:
 ### Mac Catalyst
 
 Mac Catalyst uses hardcoded 2x scale factor. Screenshot is full monitor size, element coordinates are app-relative.
-
-**No Allow UI Automation prompt / WDA app missing:**
-
-Xcode 27 rejects Mac2's current WebDriverAgentMac deployment target before
-XCTest can request authenticated Automation Mode. The host runner works around
-this by selecting the newest installed Xcode 26.x process-locally. Confirm its
-output contains `Using Xcode 26... for Mac2`.
-
-If no Xcode 26.x is installed, the runner uses the default Xcode and prints that
-fallback explicitly. Track removal of this workaround in
-[appium/appium-mac2-driver#410](https://github.com/appium/appium-mac2-driver/issues/410).
 
 **"Timed out while enabling automation mode" error:**
 

@@ -1,37 +1,21 @@
 #!/usr/bin/env python3
-"""Plan the SkiaSharp CI-package release-approval test matrix."""
+"""Plan the SkiaSharp BAR-package release-approval test matrix."""
 
 from __future__ import annotations
-
 import argparse
-import io
 import json
 import platform
 import re
 import shlex
 import sys
-import urllib.error
-import urllib.parse
-import urllib.request
-import xml.etree.ElementTree as ET
-import zipfile
-
 import release_test_common as common
+import release_test_darc as darc
+import release_test_nuget as nuget
 
 PlanError = common.ReleaseTestError
-CI_PACKAGE_SOURCE = "dotnet-libraries"
-DOTNET_LIBRARIES_FLAT_CONTAINER = (
-    "https://pkgs.dev.azure.com/dnceng/public/"
-    "_packaging/dotnet-libraries/nuget/v3/flat2"
-)
-RUNNER_RESTORE_SOURCES = ("dotnet-libraries", "dotnet-public")
 
 
-def format_command(
-    argv: list[str],
-    *,
-    platform_name: str | None = None,
-) -> str:
+def format_command(argv: list[str], *, platform_name: str | None = None) -> str:
     platform_name = platform_name or sys.platform
     if platform_name != "win32":
         return shlex.join(argv)
@@ -45,126 +29,51 @@ def format_command(
     return f"& {formatted}" if formatted.startswith("'") else formatted
 
 
-def package_sources() -> dict:
+def package_sources(receipt: dict) -> dict:
     return {
-        "ciVerification": CI_PACKAGE_SOURCE,
-        "runnerRestore": list(RUNNER_RESTORE_SOURCES),
+        "barLocation": receipt["packageFeed"],
+        "ciVerification": receipt["resolvedPackageSource"],
+        "resolvedFlatContainer": receipt["flatContainer"],
+        "runnerRestore": [receipt["resolvedPackageSource"], common.DOTNET_PUBLIC_SOURCE],
     }
 
 
-def is_exact_version(value: str | None) -> bool:
-    return bool(value) and not re.search(r"[\s\[\](),*]", value)
-
-
-def read_package(package_id: str, version: str) -> dict:
-    lower_id = package_id.lower()
-    lower_version = version.lower()
-    url = (
-        f"{DOTNET_LIBRARIES_FLAT_CONTAINER}/"
-        f"{urllib.parse.quote(lower_id)}/{urllib.parse.quote(lower_version)}/"
-        f"{urllib.parse.quote(lower_id)}.{urllib.parse.quote(lower_version)}.nupkg"
-    )
-    request = urllib.request.Request(
-        url,
-        headers={"User-Agent": "SkiaSharp-release-testing"},
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=60) as response:
-            content = response.read()
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as error:
-        raise PlanError(
-            f"dotnet-libraries package {package_id} {version} is "
-            f"unavailable: {error}"
-        ) from error
-
-    try:
-        with zipfile.ZipFile(io.BytesIO(content)) as package:
-            nuspecs = [
-                name for name in package.namelist()
-                if name.lower().endswith(".nuspec")
-            ]
-            if len(nuspecs) != 1:
-                raise PlanError(
-                    f"{package_id} {version} contains {len(nuspecs)} nuspecs"
-                )
-            metadata = ET.fromstring(package.read(nuspecs[0])).find(
-                "{*}metadata"
-            )
-    except (ET.ParseError, zipfile.BadZipFile) as error:
-        raise PlanError(
-            f"dotnet-libraries package {package_id} {version} is "
-            f"malformed: {error}"
-        ) from error
-
-    if metadata is None:
-        raise PlanError(f"{package_id} {version} has no nuspec metadata")
-    actual_id = metadata.findtext("{*}id")
-    actual_version = metadata.findtext("{*}version")
-    repository = metadata.find("{*}repository")
-    if (
-        actual_id != package_id
-        or actual_version != version
-        or repository is None
-        or not repository.get("branch")
-        or not re.fullmatch(r"[0-9a-f]{40}", repository.get("commit") or "")
-    ):
-        raise PlanError(
-            f"{package_id} {version} has inconsistent source metadata"
-        )
-    dependencies = {
-        dependency.get("version")
-        for dependency in metadata.findall(".//{*}dependency")
-        if dependency.get("id") == "HarfBuzzSharp"
-        and dependency.get("version")
-    }
-    return {
-        "id": actual_id,
-        "version": actual_version,
-        "branch": repository.get("branch"),
-        "commit": repository.get("commit"),
-        "harfBuzzVersions": sorted(dependencies),
-    }
-
-
-def receipt_report(version: str) -> dict:
-    skia = read_package("SkiaSharp", version)
-    bridge = read_package("SkiaSharp.HarfBuzz", version)
-    if (
-        len(bridge["harfBuzzVersions"]) != 1
-        or not is_exact_version(bridge["harfBuzzVersions"][0])
-    ):
-        raise PlanError(
-            f"SkiaSharp.HarfBuzz {version} does not pin one concrete "
-            "HarfBuzzSharp dependency"
-        )
-    harfbuzz_version = bridge["harfBuzzVersions"][0]
-    harfbuzz = read_package("HarfBuzzSharp", harfbuzz_version)
+def receipt_report(version: str, *, bar_id: int | None = None, max_age: int = 30) -> dict:
+    source = darc.resolve_build(version, bar_id=bar_id, max_age=max_age)
+    flat_container = nuget.resolve_flat_container(source.package_feed)
+    resolved_package_source = nuget.service_index_from_flat_container(flat_container)
+    skia = nuget.read_package("SkiaSharp", version, flat_container)
+    bridge = nuget.read_package("SkiaSharp.HarfBuzz", version, flat_container)
+    if len(bridge.harfbuzz_versions) != 1 or not nuget.is_concrete_version(bridge.harfbuzz_versions[0]):
+        raise PlanError(f"SkiaSharp.HarfBuzz {version} does not pin one concrete HarfBuzzSharp dependency")
+    harfbuzz_version = bridge.harfbuzz_versions[0]
+    harfbuzz = nuget.read_package("HarfBuzzSharp", harfbuzz_version, flat_container)
     packages = [skia, bridge, harfbuzz]
-    if len({item["branch"] for item in packages}) != 1 or len(
-        {item["commit"] for item in packages}
-    ) != 1:
+    if len({item.branch for item in packages}) != 1 or len({item.commit for item in packages}) != 1:
         raise PlanError("CI package source metadata does not match")
+    if skia.branch.removeprefix("refs/heads/") != source.branch or skia.commit != source.commit:
+        raise PlanError("BAR build and package source metadata do not match")
     return {
         "receipt": {
+            "barBuildId": source.id,
+            "buildNumber": source.build_number,
+            "azdoBuildId": source.azdo_build_id,
+            "buildLink": source.build_link,
+            "branch": source.branch,
+            "commit": source.commit,
+            "packageFeed": source.package_feed,
+            "flatContainer": flat_container,
+            "resolvedPackageSource": resolved_package_source,
             "skiaSharpVersion": version,
             "harfBuzzSharpVersion": harfbuzz_version,
-            "sourceCommit": skia["commit"],
-            "packages": [
-                {"id": item["id"], "version": item["version"]}
-                for item in packages
-            ],
+            "sourceCommit": skia.commit,
+            "packages": [{"id": item.id, "version": item.version} for item in packages],
         },
-        "release": {"branch": skia["branch"]},
+        "release": {"branch": source.branch},
     }
 
 
-def runner_command(
-    runner_script: str,
-    runner_args: list[str],
-    *,
-    skia_version: str,
-    harfbuzz_version: str,
-) -> str:
+def runner_command(runner_script: str, runner_args: list[str], *, skia_version: str, harfbuzz_version: str, package_source: str) -> str:
     return format_command(
         [
             sys.executable,
@@ -174,6 +83,8 @@ def runner_command(
             skia_version,
             "--harfbuzzsharp",
             harfbuzz_version,
+            "--package-source",
+            package_source,
         ]
     )
 
@@ -187,6 +98,7 @@ def matrix_item(
     runner_args: list[str],
     skia_version: str,
     harfbuzz_version: str,
+    package_source: str,
     estimated_minutes: int,
     visual: bool = False,
 ) -> dict:
@@ -195,37 +107,18 @@ def matrix_item(
         "label": label,
         "target": target,
         "estimatedMinutes": estimated_minutes,
-        "command": runner_command(
-            runner_script,
-            runner_args,
-            skia_version=skia_version,
-            harfbuzz_version=harfbuzz_version,
-        ),
+        "command": runner_command(runner_script, runner_args, skia_version=skia_version, harfbuzz_version=harfbuzz_version, package_source=package_source),
     }
     if visual:
-        item["expectedArtifacts"] = [
-            "output/logs/testlogs/integration/*.png"
-        ]
+        item["expectedArtifacts"] = ["output/logs/testlogs/integration/*.png"]
     return item
 
 
-def build_matrix(
-    skia_version: str,
-    harfbuzz_version: str,
-    host_os: str,
-) -> tuple[list[dict], list[str]]:
+def build_matrix(skia_version: str, harfbuzz_version: str, package_source: str, host_os: str) -> tuple[list[dict], list[str]]:
     matrix: list[dict] = []
     missing: list[str] = []
 
-    def add(
-        item_id: str,
-        label: str,
-        target: str,
-        runner_script: str,
-        runner_args: list[str],
-        minutes: int,
-        visual: bool = False,
-    ) -> None:
+    def add(item_id: str, label: str, target: str, runner_script: str, runner_args: list[str], minutes: int, visual: bool = False) -> None:
         matrix.append(
             matrix_item(
                 item_id=item_id,
@@ -235,44 +128,16 @@ def build_matrix(
                 runner_args=runner_args,
                 skia_version=skia_version,
                 harfbuzz_version=harfbuzz_version,
+                package_source=package_source,
                 estimated_minutes=minutes,
                 visual=visual,
             )
         )
 
-    add(
-        "smoke",
-        "Native loading smoke tests",
-        ".NET",
-        "run-host-tests.py",
-        ["smoke"],
-        1,
-    )
-    add(
-        "console",
-        "Console application tests",
-        ".NET",
-        "run-host-tests.py",
-        ["console"],
-        1,
-    )
-    add(
-        "linux",
-        "Linux container tests",
-        "Docker Linux",
-        "run-host-tests.py",
-        ["linux"],
-        2,
-    )
-    add(
-        "blazor",
-        "Blazor WebAssembly rendering tests",
-        "Chromium",
-        "run-host-tests.py",
-        ["blazor"],
-        3,
-        True,
-    )
+    add("smoke", "Native loading smoke tests", ".NET", "run-host-tests.py", ["smoke"], 1)
+    add("console", "Console application tests", ".NET", "run-host-tests.py", ["console"], 1)
+    add("linux", "Linux container tests", "Docker Linux", "run-host-tests.py", ["linux"], 2)
+    add("blazor", "Blazor WebAssembly rendering tests", "Chromium", "run-host-tests.py", ["blazor"], 3, True)
     add(
         f"android-{common.ANDROID_MIN_VERSION}",
         "MAUI Android minimum",
@@ -293,15 +158,7 @@ def build_matrix(
     )
 
     if host_os == "macOS":
-        add(
-            "maccatalyst",
-            "MAUI Mac Catalyst rendering tests",
-            "Current macOS",
-            "run-host-tests.py",
-            ["maccatalyst"],
-            3,
-            True,
-        )
+        add("maccatalyst", "MAUI Mac Catalyst rendering tests", "Current macOS", "run-host-tests.py", ["maccatalyst"], 3, True)
         add(
             f"ios-{common.IOS_MIN_VERSION}",
             "MAUI iOS minimum test target",
@@ -324,15 +181,7 @@ def build_matrix(
         missing.append("iOS and Mac Catalyst require a macOS host")
 
     if host_os == "Windows":
-        add(
-            "windows",
-            "MAUI Windows rendering tests",
-            "Windows",
-            "run-host-tests.py",
-            ["windows"],
-            4,
-            True,
-        )
+        add("windows", "MAUI Windows rendering tests", "Windows", "run-host-tests.py", ["windows"], 4, True)
     else:
         missing.append("MAUI Windows requires a Windows host")
 
@@ -345,11 +194,11 @@ def release_summary(plan: dict) -> dict:
     return {
         "branch": release["branch"],
         "commit": receipt["sourceCommit"],
-        "state": "ci-packages",
-        "ciPackages": {
-            "SkiaSharp": receipt["skiaSharpVersion"],
-            "HarfBuzzSharp": receipt["harfBuzzSharpVersion"],
-        },
+        "barBuildId": receipt["barBuildId"],
+        "buildNumber": receipt["buildNumber"],
+        "azdoBuildId": receipt["azdoBuildId"],
+        "buildLink": receipt["buildLink"],
+        "ciPackages": {"SkiaSharp": receipt["skiaSharpVersion"], "HarfBuzzSharp": receipt["harfBuzzSharpVersion"]},
         "verifiedPackageCount": len(receipt["packages"]),
     }
 
@@ -357,41 +206,25 @@ def release_summary(plan: dict) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("package_version")
+    parser.add_argument("--bar-id", type=int)
+    parser.add_argument("--max-age", type=int, default=30)
     args = parser.parse_args()
 
     try:
-        plan = receipt_report(args.package_version)
+        plan = receipt_report(args.package_version, bar_id=args.bar_id, max_age=args.max_age)
 
-        host_os = (
-            "macOS"
-            if sys.platform == "darwin"
-            else "Windows"
-            if sys.platform == "win32"
-            else "Linux"
-        )
+        host_os = "macOS" if sys.platform == "darwin" else "Windows" if sys.platform == "win32" else "Linux"
         receipt = plan["receipt"]
-        matrix, missing = build_matrix(
-            receipt["skiaSharpVersion"],
-            receipt["harfBuzzSharpVersion"],
-            host_os,
-        )
+        matrix, missing = build_matrix(receipt["skiaSharpVersion"], receipt["harfBuzzSharpVersion"], receipt["resolvedPackageSource"], host_os)
         print(
             json.dumps(
                 {
-                    "schemaVersion": 6,
+                    "schemaVersion": 7,
                     "release": release_summary(plan),
-                    "readyToPlan": True,
-                    "nextAction": "approve-test-matrix",
-                    "host": {
-                        "os": host_os,
-                        "architecture": platform.machine().lower(),
-                    },
+                    "host": {"os": host_os, "architecture": platform.machine().lower()},
                     "matrix": matrix,
-                    "defaultSelection": [
-                        item["id"] for item in matrix
-                    ],
                     "missingCoverage": missing,
-                    "packageSources": package_sources(),
+                    "packageSources": package_sources(receipt),
                 },
                 indent=2,
             )

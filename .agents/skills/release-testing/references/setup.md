@@ -5,11 +5,16 @@ what the runner requires and checks.
 
 ## Pinned local tools
 
-The approved preparation step restores the repository tool manifest once:
+After matrix approval, run the small preparation script once:
 
-```bash
-dotnet tool restore
+```powershell
+pwsh -NoLogo -NoProfile -File `
+  .agents/skills/release-testing/scripts/prepare-test-run.ps1
 ```
+
+It runs `dotnet tool restore` and clears only the prior integration screenshot
+directory. Keeping this after planning prevents read-only BAR discovery from
+changing local tools or deleting evidence before the matrix is approved.
 
 The repository pins:
 
@@ -24,6 +29,23 @@ Tool restore is deterministic because versions are pinned in
 treating a missing local tool as a user blocker.
 Each platform runner then checks only the tool it owns, so an unavailable mobile
 tool does not block unrelated host coverage.
+
+## Darc and Maestro
+
+The planner requires `darc` and queries `https://maestro.dot.net` read-only:
+
+```bash
+darc get-asset --name SkiaSharp --version {version} \
+  --bar-uri https://maestro.dot.net --output-format json
+```
+
+Use `darc login` when local Azure CLI credentials are insufficient. Darc returns
+the producing BAR, build metadata, and its per-build NuGet V3 feed. More than
+one matching BAR requires the planner's `--bar-id` option; never select the
+newest match implicitly.
+
+The repository's `eng/common/darc-init.sh` and `darc-init.ps1` can install Darc,
+but they modify the local tool installation. Ask before running either script.
 
 ## Workloads
 
@@ -48,19 +70,17 @@ Required drivers:
 | Appium | `3.6.0` |
 | Android `uiautomator2` | `8.2.2` |
 | iOS `xcuitest` | `12.1.2` |
-| Mac Catalyst `mac2` | `4.0.5` |
+| Mac Catalyst `mac2` | `4.2.0` |
 
 It does not install or update Appium or drivers or query npm. A
 missing/mismatched version or an existing server on port 4723 fails the item for
 user action. Required doctor findings that remain after deterministic path
 resolution also fail clearly.
 
-For Mac Catalyst, the host runner temporarily selects the newest installed
-Xcode 26.x using `dotnet apple xcode list`. Mac2's bundled WebDriverAgentMac
-currently targets macOS 10.15 and cannot build with Xcode 27
+Mac2 4.1.1 fixed WebDriverAgentMac builds with Xcode 27
 ([appium/appium-mac2-driver#410](https://github.com/appium/appium-mac2-driver/issues/410)).
-The override is process-local; if Xcode 26.x is unavailable, the runner leaves
-the default Xcode unchanged.
+The pinned 4.2.0 release includes that fix, so the host runner uses the selected
+Xcode normally.
 
 ## Android
 
@@ -163,20 +183,17 @@ browser. The test builds a real native WASM app with
 
 ## Package sources
 
-The planner downloads all three anchor packages directly from
-dotnet-libraries. That verifies the exact CI package family selected from the
-completed release build/BAR and its matching nuspec source metadata before any
-runner command is emitted.
+The BAR asset location is a per-build feed such as:
 
-The integration project then restores the planner's exact SkiaSharp and
-HarfBuzzSharp versions through:
+`https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-SkiaSharp-{commit}/nuget/v3/index.json`
 
-- dotnet-libraries:
-  `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json`
-- dotnet-public:
-  `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json`
+The planner reads that service index to resolve its GUID-backed
+`PackageBaseAddress`, then downloads and verifies the package family there. It
+derives the GUID-based V3 index and passes that source to every runner command.
+The integration harness uses that exact feed for SkiaSharp packages and
+dotnet-public for dependencies, including generated console, Docker, Blazor,
+and MAUI projects.
 
-dotnet-libraries is the current-release runner source; dotnet-public supplies
-dependencies. Stable approval runs use the exact `*-stable.{build}` package
-version produced by the build, not the future bare public version. Never infer
-or substitute a feed or version.
+The same package version can exist in more than one per-build feed. BAR identity
+and feed URL are therefore part of the immutable test identity; never replace
+them with a global feed or a different build.

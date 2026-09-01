@@ -23,12 +23,7 @@ class ReleaseTestCommonTests(unittest.TestCase):
         self.assertEqual(common.IOS_MAX_VERSION, "26.5")
 
     def test_json_parser_ignores_command_noise(self):
-        self.assertEqual(
-            common.parse_json_output(
-                "WARN [tool] not JSON\nstatus\n{\"ready\": true}\n"
-            ),
-            {"ready": True},
-        )
+        self.assertEqual(common.parse_json_output('WARN [tool] not JSON\nstatus\n{"ready": true}\n'), {"ready": True})
 
     def test_scripts_are_ascii_only(self):
         SCRIPT_PATH.read_text(encoding="ascii")

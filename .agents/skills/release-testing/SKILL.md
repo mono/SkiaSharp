@@ -1,49 +1,41 @@
 ---
 name: release-testing
 description: >
-  Validate an exact SkiaSharp CI release package set on the current host. Use
-  after the release build and tests finish, before approving its BAR packages
-  for publication.
+  Validate an exact SkiaSharp BAR package set on the current host. Use after the
+  release Build and Tests pipelines finish, before approving their packages for
+  team publication.
 ---
 
-# Release Package Testing
+# Release Package Approval Testing
 
-Use this skill for host/device validation that benefits from human inspection:
-native loading, console use, Linux containers, Blazor rendering, Android, iOS,
-Mac Catalyst, and Windows rendering.
+```text
+dnceng Build/Tests + BAR -> release-testing -> team publication
+```
 
-This is the human release-approval gate between the completed dnceng
-Build/Tests chain and the team-owned publication pipeline. The supported
-release path is documented in
-[releasing.md](../../../documentation/dev/releasing.md). This skill never
-publishes packages or changes BAR state.
+This skill is the human approval gate for one completed BAR build. It resolves
+that build's per-build Darc feed, verifies the package family, runs the approved
+host/device matrix, and records the release decision. It never publishes
+packages, changes BAR state, creates tags/releases, or merges code.
 
-## Contract
+## Boundaries
 
-- Start from one exact SkiaSharp CI package version selected from the completed
-  release build/BAR.
-- The planner verifies the three anchor packages and their matching source
-  metadata on dotnet-libraries before producing test commands.
-- Runner commands pin those exact versions; the integration project restores
-  them through dotnet-libraries with dependencies from dotnet-public.
-- Test stable releases with exact `*-stable.{build}` packages, never the future
-  bare public version.
-- Obtain user approval for the matrix before preparation or execution.
-- Execute every approved item once even when earlier items fail. A failed item
-  blocks release approval but does not stop collection of unrelated results.
-- Never turn a failure into a skip or silently substitute a runtime, image,
-  device, package version, feed, branch, or expected artifact.
-- Each platform runner checks its own prerequisites and owns setup/cleanup.
-  Do not manually duplicate its SDK, Appium, device, Docker, or test commands.
-- Run mobile items sequentially. Runners must not delete user-owned devices.
+- Start from the exact SkiaSharp package version selected for release. When
+  Maestro finds more than one producing BAR, require its exact `--bar-id`.
+- Verify `SkiaSharp`, `SkiaSharp.HarfBuzz`, and the bridge's concrete
+  `HarfBuzzSharp` dependency from the resolved BAR feed.
+- Require all three packages to identify the BAR's source branch and commit.
+- Pin the package versions and resolved feed in every runner command. Never
+  substitute another build, feed, runtime, image, device, or expected artifact.
+- Obtain approval for the exact host matrix before setup or execution.
+- Run every approved item once. A failure blocks release approval but does not
+  stop collection of unrelated results.
+- Platform runners own prerequisites and cleanup. Run mobile items sequentially
+  and never delete user-owned devices.
 - Product assertions and rendering differences remain failures. Do not change
-  expectations, skips, or package pins to make them pass.
-- Preserve every initial failure, environment repair, retry, and artifact
-  review in the final report.
-- This skill never publishes packages, changes BAR state, creates tags/releases,
-  or merges code.
+  expectations, skips, targets, or package pins to manufacture a pass.
+- Preserve every initial failure, repair, retry, and artifact review.
 
-## Fixed matrix
+## Test matrix
 
 | ID | Coverage | Host |
 |----|----------|------|
@@ -59,56 +51,64 @@ publishes packages or changes BAR state.
 | `windows` | MAUI Windows rendering | Windows |
 
 iOS 18.6 and Android 26 are minimum **release-test targets**, not product
-support minimums. Exact mobile targets must already be installed. Missing or
-host-inapplicable coverage must be explicit in the approved plan.
+support minimums. Exact mobile targets must already be installed. The approved
+plan must state every host-inapplicable or intentionally omitted item.
 
-## Script contract
+## Runner ownership
 
 | Script | Responsibility |
 |--------|----------------|
-| `scripts/plan-release-tests.py` | Read-only CI package verification and exact host matrix. |
-| `scripts/prepare-test-run.py` | Restore pinned local tools and clear prior integration output once. |
-| `scripts/run-host-tests.py` | Smoke, console, Docker/Linux, Blazor, Mac Catalyst, and Windows host items. |
-| `scripts/run-android-tests.py` | Android environment, Appium, temporary/reused emulator, test, and cleanup. |
-| `scripts/run-ios-tests.py` | Fresh iOS simulator, Appium test, and cleanup. |
-| `scripts/release_test_common.py` | Shared versions, heartbeat execution, validation, package arguments, and test invocation. |
+| `scripts/plan-release-tests.py` | Resolve the BAR/feed, verify packages, and emit the host matrix. |
+| `scripts/prepare-test-run.ps1` | Restore pinned local tools and clear prior integration output once. |
+| `scripts/run-host-tests.py` | Run smoke, console, Docker/Linux, Blazor, Mac Catalyst, and Windows items. |
+| `scripts/run-android-tests.py` | Own Android/Appium setup, temporary or reused emulator, test, and cleanup. |
+| `scripts/run-ios-tests.py` | Own iOS/Appium setup, fresh simulator, test, and cleanup. |
+| `scripts/release_test_common.py` | Share package arguments, restore sources, heartbeats, validation, and test invocation. |
 
-Use [setup.md](references/setup.md) for prerequisites,
+Do not manually duplicate runner-owned SDK, Appium, device, Docker, or test
+commands. Use [setup.md](references/setup.md) for prerequisites,
 [monitoring.md](references/monitoring.md) for live progress, and
-[troubleshooting.md](references/troubleshooting.md) only after failures.
+[troubleshooting.md](references/troubleshooting.md) after failures.
 
-## Workflow
+## Runbook
 
-### 1. Plan and approve
+### 1. Resolve and verify the BAR package family
+
+```bash
+python3 .agents/skills/release-testing/scripts/plan-release-tests.py 4.150.3
+```
+
+The planner uses `darc get-asset` to find the producing BAR. If the version is
+ambiguous, rerun with the exact ID reported by the planner:
 
 ```bash
 python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
-  {exact-ci-skiasharp-version}
+  4.150.3 --bar-id 329644
 ```
 
 The planner:
 
-1. downloads the exact `SkiaSharp` and `SkiaSharp.HarfBuzz` packages from
-   dotnet-libraries;
-2. derives and downloads the exact `HarfBuzzSharp` dependency;
-3. requires all three packages to identify the same source branch and commit;
-4. pins both package versions in every runner command; and
-5. reports available and host-inapplicable coverage.
+1. reads the BAR build, source branch/commit, build link, and Darc feed location;
+2. resolves that feed's GUID-backed NuGet flat-container endpoint;
+3. downloads the three anchor packages from that feed;
+4. verifies package IDs, versions, source metadata, and bridge dependency;
+5. requires package metadata to match the selected BAR; and
+6. emits host-specific commands with the exact versions and feed pinned.
 
-dotnet-libraries is the authority for the CI package family under test.
-dotnet-public supplies dependencies during runner restore. Never substitute
-NuGet.org or a different package version to make a test pass.
-
-Render:
+Render the plan:
 
 ```markdown
 ## Release package test plan
 
-**CI version:** `{release.ciPackages.SkiaSharp}`
-**Commit:** `{release.commit}`
-**Packages:** SkiaSharp `{version}`, HarfBuzzSharp `{version}`
-**CI verification:** `{packageSources.ciVerification}`
-**Runner restore:** `{packageSources.runnerRestore}`
+**BAR:** `{release.barBuildId}` / `{release.buildNumber}`
+**Build:** `{release.buildLink}`
+**Source:** `{release.branch}` @ `{release.commit}`
+**Packages:** SkiaSharp `{release.ciPackages.SkiaSharp}`,
+HarfBuzzSharp `{release.ciPackages.HarfBuzzSharp}`
+**Verified anchors:** `{release.verifiedPackageCount}`
+**Darc location:** `{packageSources.barLocation}`
+**GUID feed:** `{packageSources.ciVerification}`
+**Flat container:** `{packageSources.resolvedFlatContainer}`
 **Host:** `{host.os}` / `{host.architecture}`
 
 | ID | Test | Target | Estimate |
@@ -116,56 +116,59 @@ Render:
 | `{id}` | `{label}` | `{target}` | `{estimatedMinutes}` min |
 ```
 
-Include every `missingCoverage[]`. Use `ask_user`:
+Include every `missingCoverage[]`.
+
+### 2. Approve the exact matrix
+
+Use `ask_user`:
 
 1. `Run the full available matrix (Recommended)`
 2. `Customize the matrix`
 3. `Cancel release testing`
 
-Confirm the exact final IDs after customization.
+After customization, confirm the exact final item IDs.
 
-### 2. Prepare once
+### 3. Prepare once
 
-```bash
-python3 .agents/skills/release-testing/scripts/prepare-test-run.py
+```powershell
+pwsh -NoLogo -NoProfile -File `
+  .agents/skills/release-testing/scripts/prepare-test-run.ps1
 ```
 
-### 3. Collect every result
+Keep preparation after approval: it changes local tool state and clears prior
+integration artifacts, while planning remains read-only.
 
-For each approved item, run its emitted `command` sequentially:
+### 4. Run every approved item
 
-1. Show the exact command and the full pending/running/passed/failed table.
-2. Run it in a visible terminal canvas; use an attached async shell only when
-   the canvas is unavailable.
-3. Relay new `[release-test]` output and refresh done/failed/remaining state
-   every five seconds. Never launch a duplicate command after a delayed read.
-4. Record duration, failure phase, diagnostics, artifacts, and result.
+Run emitted commands sequentially:
+
+1. Show the exact command and full pending/running/passed/failed table.
+2. Use a visible terminal canvas; use attached async Bash only when unavailable.
+3. Relay new `[release-test]` output and refresh the complete table every five
+   seconds. Never duplicate a command after a delayed read.
+4. Record duration, failing phase, diagnostics, `expectedArtifacts[]`, and result.
 5. Continue after failure once runner-owned cleanup finishes.
 
-### 4. Repair and retry
+### 5. Repair and retry
 
-After all initial attempts, present the complete failure inventory and group
+After every initial attempt, present the complete failure inventory and group
 shared root causes. Apply only concrete, safe environment repairs, then retry
-affected failed items. Ask before installing/upgrading software, changing
-permissions, or touching user-owned devices. Preserve initial failures and all
-retry outcomes.
+affected items. Ask before installing/upgrading software, changing permissions,
+or touching user-owned devices.
 
-Product assertions and rendering differences remain failures; do not alter
-expectations, skips, package pins, runtimes, or targets to make them pass.
+Preserve initial and retry outcomes. Do not alter assertions, expected images,
+skips, package pins, runtimes, or targets to produce a pass.
 
-### 5. Report the release-approval gate
+### 6. Report and decide
 
-Review expected screenshots under `output/logs/testlogs/integration/`. The final
-report must include:
+Review screenshots under `output/logs/testlogs/integration/`. Report:
 
-- immutable CI package version, source branch and commit, and paired package
-  versions;
-- CI verification and runner restore sources;
+- immutable BAR/build ID, build link, source branch/commit, and package feed;
+- exact SkiaSharp and HarfBuzzSharp versions;
 - every approved ID with initial, repair, retry, and final result;
 - missing or intentionally omitted host coverage; and
 - screenshot paths and review status.
 
-Approve the exact package family for the team publication pipeline only when
-all required results and artifact checks pass. Otherwise report that release
-approval is blocked. This skill records the decision but never publishes or
-changes BAR state.
+Approve the exact BAR package family for team publication only when all required
+results and artifact checks pass. Otherwise state that release approval is
+blocked. This skill records the decision but never performs the publication.
