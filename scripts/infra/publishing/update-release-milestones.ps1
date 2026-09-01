@@ -31,37 +31,18 @@ param(
     [switch] $Push
 )
 
+# 0. Initialize shared helpers, execution mode, and milestone settings.
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
-
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
+$writeRemote = $Push
+$mode = if ($writeRemote) { 'push' } else { 'dry run' }
 
 $script:ScheduleUrl = 'https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone={0}'
 $script:RequiredScheduleFields = @('branch_point', 'earliest_beta', 'early_stable_cut', 'early_stable', 'stable_cut',
     'stable_date')
 $script:MoveSettleAttempts = 5
 $script:MoveSettleDelaySeconds = 2
-
-# Reads the managed major version and current Skia milestone.
-function Get-CurrentReleaseVersion([string] $Root) {
-    $path = Join-Path $Root 'scripts/VERSIONS.txt'
-    if (!(Test-Path -LiteralPath $path -PathType Leaf)) {
-        throw 'scripts/VERSIONS.txt does not exist.'
-    }
-    $major = $null
-    $milestone = $null
-    foreach ($line in Get-Content -LiteralPath $path) {
-        if ($line -match '^\s*SkiaSharp\s+nuget\s+(?<major>\d+)\.') {
-            $major = [int] $Matches.major
-        } elseif ($line -match '^\s*libSkiaSharp\s+milestone\s+(?<milestone>\d+)\s*$') {
-            $milestone = [int] $Matches.milestone
-        }
-    }
-    if ($null -eq $major -or $null -eq $milestone) {
-        throw "Could not read SkiaSharp/libSkiaSharp versions from $path."
-    }
-    return [pscustomobject] @{ Major = $major; Milestone = $milestone }
-}
 
 # Reads all repository milestones and rejects duplicate titles.
 function Get-GitHubMilestoneMap([string] $Repository) {
@@ -270,10 +251,10 @@ function Get-LinkedIssues([string] $Repository, [int] $PullRequest) {
 
 # Assigns one issue or pull request and verifies the resulting milestone.
 function Set-GitHubItemMilestone([string] $Repository, [int] $Number, [int] $MilestoneNumber,
-    [string] $MilestoneTitle, [string] $Description, [switch] $Push) {
+    [string] $MilestoneTitle, [string] $Description) {
     $arguments = @('api', "repos/$Repository/issues/$Number", '-X', 'PATCH', '-F', "milestone=$MilestoneNumber")
-    $null = Invoke-GitHubMutation -Arguments $arguments -Description $Description -Push:$Push
-    if ($Push) {
+    $null = Invoke-GitHubMutation -Arguments $arguments -Description $Description -Push:$writeRemote
+    if ($writeRemote) {
         $actual = Get-GitHubIssue -Repository $Repository -Number $Number
         if ([string] $actual.milestone.title -ne $MilestoneTitle) {
             throw "GitHub item #$Number milestone update could not be verified."
@@ -283,8 +264,10 @@ function Set-GitHubItemMilestone([string] $Repository, [int] $Number, [int] $Mil
 }
 
 # Builds and applies reconciliation assignments for a shipped numeric release line.
-function Invoke-ReleaseAssignmentReconciliation([string] $Root, [string] $Version, [string] $Repository, [switch] $Push) {
+function Invoke-ReleaseAssignmentReconciliation([string] $Root, [string] $Version, [string] $Repository) {
     Write-ReleaseStatus checking "Reconciling assignments for $Version."
+
+    # Refresh release refs and calculate the exact shipped branch/tag boundaries.
     $null = Invoke-GitCommand -Root $Root -Arguments @('fetch', 'origin', '--prune')
     $tags = Get-RemoteReleaseTags -Root $Root -NumericVersion $Version
     $branchSet = Get-ReleaseBranches -Root $Root -Version $Version
@@ -312,6 +295,7 @@ function Invoke-ReleaseAssignmentReconciliation([string] $Root, [string] $Versio
         $warnings.Add("No merge-base exists for previous boundary $($previous.Name).")
     }
 
+    # Roll unshipped branch milestones forward and collect required assignments.
     $effective = @(Get-EffectiveMilestoneTitles -Branches $branches -Tags $tags)
     for ($index = 1; $index -lt $branches.Count; $index++) {
         $previousEffective = $effective[$index - 1]
@@ -383,8 +367,10 @@ function Invoke-ReleaseAssignmentReconciliation([string] $Root, [string] $Versio
     foreach ($warning in $warnings) {
         Write-Warning $warning
     }
+
+    # Block unsafe remote writes but still show every planned dry-run mutation.
     if ($warnings.Count -gt 0) {
-        if ($Push) {
+        if ($writeRemote) {
             throw "Reconciliation is blocked by $($warnings.Count) release-boundary or milestone warning(s)."
         }
         Write-ReleaseStatus blocked "Reconciliation has $($warnings.Count) warning(s); no mutation can be applied safely."
@@ -395,10 +381,12 @@ function Invoke-ReleaseAssignmentReconciliation([string] $Root, [string] $Versio
         }
         return
     }
+
+    # Apply and verify each unambiguous pull-request or issue assignment.
     foreach ($item in $operations) {
         $description = "Assign $($item.Kind) #$($item.Number) to $($item.ToMilestone)"
         Set-GitHubItemMilestone -Repository $Repository -Number $item.Number -MilestoneNumber $item.ToMilestoneNumber `
-            -MilestoneTitle $item.ToMilestone -Description $description -Push:$Push
+            -MilestoneTitle $item.ToMilestone -Description $description
     }
     Write-ReleaseStatus checked (
         "Reconciliation: $($operations.Count) assignment(s), $correct already correct; " +
@@ -577,7 +565,7 @@ function Get-MilestoneClosureOperations([hashtable] $Existing, [object[]] $Miles
 }
 
 # Creates or updates one milestone and verifies all managed fields.
-function Sync-GitHubMilestone([string] $Repository, [object] $Operation, [switch] $Push) {
+function Sync-GitHubMilestone([string] $Repository, [object] $Operation) {
     if ($Operation.Action -eq 'create') {
         $arguments = @('api', "repos/$Repository/milestones", '-X', 'POST', '-f', "title=$($Operation.Title)", '-f',
             "due_on=$($Operation.DueOn)", '-f', "description=$($Operation.Description)")
@@ -589,8 +577,8 @@ function Sync-GitHubMilestone([string] $Repository, [object] $Operation, [switch
     } else {
         return
     }
-    $null = Invoke-GitHubMutation -Arguments $arguments -Description $description -Push:$Push
-    if ($Push) {
+    $null = Invoke-GitHubMutation -Arguments $arguments -Description $description -Push:$writeRemote
+    if ($writeRemote) {
         $milestones = Get-GitHubMilestoneMap -Repository $Repository
         $actual = $milestones[$Operation.Title]
         if (!$actual -or (ConvertTo-IsoDate -Value $actual.due_on) -ne $Operation.DueOn.Substring(0, 10) -or
@@ -623,7 +611,7 @@ function Wait-MilestoneMoves([string] $Repository, [int] $MilestoneNumber, [int[
 }
 
 # Moves open work and closes one shipped milestone after consistency checks.
-function Complete-GitHubMilestone([string] $Repository, [object] $Operation, [hashtable] $Milestones, [switch] $Push) {
+function Complete-GitHubMilestone([string] $Repository, [object] $Operation, [hashtable] $Milestones) {
     $movedNumbers = @($Operation.OpenItems | ForEach-Object { [int] $_.Number })
     if ($Operation.OpenItems.Count -gt 0) {
         if (!$Milestones.ContainsKey($Operation.MoveTo)) {
@@ -633,10 +621,10 @@ function Complete-GitHubMilestone([string] $Repository, [object] $Operation, [ha
         foreach ($item in $Operation.OpenItems) {
             $description = "Move $($item.Kind) #$($item.Number) to $($Operation.MoveTo)"
             Set-GitHubItemMilestone -Repository $Repository -Number $item.Number -MilestoneNumber ([int] $target.number) `
-                -MilestoneTitle $Operation.MoveTo -Description $description -Push:$Push
+                -MilestoneTitle $Operation.MoveTo -Description $description
         }
     }
-    if ($Push) {
+    if ($writeRemote) {
         Wait-MilestoneMoves -Repository $Repository -MilestoneNumber $Operation.Number -MovedNumbers $movedNumbers
     } else {
         $remaining = @(Get-OpenMilestoneItems -Repository $Repository -MilestoneNumber $Operation.Number)
@@ -648,8 +636,8 @@ function Complete-GitHubMilestone([string] $Repository, [object] $Operation, [ha
     }
     $arguments = @('api', "repos/$Repository/milestones/$($Operation.Number)", '-X', 'PATCH', '-f', 'state=closed')
     $description = "Close shipped milestone $($Operation.Title)"
-    $null = Invoke-GitHubMutation -Arguments $arguments -Description $description -Push:$Push
-    if ($Push) {
+    $null = Invoke-GitHubMutation -Arguments $arguments -Description $description -Push:$writeRemote
+    if ($writeRemote) {
         $actual = (Get-GitHubMilestoneMap -Repository $Repository)[$Operation.Title]
         if ([string] $actual.state -ne 'closed') {
             throw "Milestone $($Operation.Title) closure could not be verified."
@@ -659,9 +647,11 @@ function Complete-GitHubMilestone([string] $Repository, [object] $Operation, [ha
 }
 
 # Maintains upcoming dates and safely rolls over and closes shipped milestones.
-function Invoke-ReleaseMilestoneAdvancement([string] $Root, [int] $Count, [string] $Repository, [switch] $Push) {
+function Invoke-ReleaseMilestoneAdvancement([string] $Root, [int] $Count, [string] $Repository) {
     Write-ReleaseStatus checking "Advancing release milestone schedule for $Count Chromium milestone(s)."
-    $currentVersion = Get-CurrentReleaseVersion -Root $Root
+
+    # Build the desired milestone schedule from current repository and Chromium state.
+    $currentVersion = Get-RepositoryReleaseVersion -Root $Root
     $existing = Get-GitHubMilestoneMap -Repository $Repository
     $desired = [System.Collections.Generic.List[object]]::new()
     for ($milestone = $currentVersion.Milestone; $milestone -lt $currentVersion.Milestone + $Count; $milestone++) {
@@ -680,6 +670,8 @@ function Invoke-ReleaseMilestoneAdvancement([string] $Root, [int] $Count, [strin
             $known[$title] = $parsed
         }
     }
+
+    # Plan rollover and closure only where every future destination is known.
     $creatable = @($scheduleOperations | Where-Object Action -eq 'create' | ForEach-Object Title)
     $closurePlan = Get-MilestoneClosureOperations -Existing $existing -Milestones @($known.Values) -Tags $tags `
         -CreatableTitles $creatable -OpenItemsFor {
@@ -690,23 +682,24 @@ function Invoke-ReleaseMilestoneAdvancement([string] $Root, [int] $Count, [strin
         Write-Warning $warning
     }
     if ($closurePlan.Warnings.Count -gt 0) {
-        if ($Push) {
+        if ($writeRemote) {
             throw "Milestone advancement is blocked by $($closurePlan.Warnings.Count) rollover warning(s)."
         }
         Write-ReleaseStatus blocked "Advancement has $($closurePlan.Warnings.Count) warning(s); mutations are unsafe."
     }
 
+    # Synchronize milestone metadata before moving work and closing shipped milestones.
     foreach ($operation in $scheduleOperations) {
-        Sync-GitHubMilestone -Repository $Repository -Operation $operation -Push:$Push
+        Sync-GitHubMilestone -Repository $Repository -Operation $operation
     }
-    $milestonesAfterSync = if ($Push) { Get-GitHubMilestoneMap -Repository $Repository } else { $existing.Clone() }
-    if (!$Push) {
+    $milestonesAfterSync = if ($writeRemote) { Get-GitHubMilestoneMap -Repository $Repository } else { $existing.Clone() }
+    if (!$writeRemote) {
         foreach ($operation in $scheduleOperations | Where-Object Action -eq 'create') {
             $milestonesAfterSync[$operation.Title] = [pscustomobject] @{ number = -1; state = 'open' }
         }
     }
     foreach ($operation in $closurePlan.Operations | Where-Object Status -eq 'pending') {
-        Complete-GitHubMilestone -Repository $Repository -Operation $operation -Milestones $milestonesAfterSync -Push:$Push
+        Complete-GitHubMilestone -Repository $Repository -Operation $operation -Milestones $milestonesAfterSync
     }
     $creates = @($scheduleOperations | Where-Object Action -eq 'create').Count
     $updates = @($scheduleOperations | Where-Object Action -eq 'update').Count
@@ -716,15 +709,14 @@ function Invoke-ReleaseMilestoneAdvancement([string] $Root, [int] $Count, [strin
 
 if ($MyInvocation.InvocationName -ne '.') {
     $root = Get-GitRepositoryRoot
-    $mode = if ($Push) { 'push' } else { 'dry run' }
 
     # 1. Reconcile merged pull requests and linked issues to the release where they shipped.
     Write-ReleaseStatus start "Release milestone reconciliation ($mode)."
-    Invoke-ReleaseAssignmentReconciliation -Root $root -Version $Version -Repository $Repository -Push:$Push
+    Invoke-ReleaseAssignmentReconciliation -Root $root -Version $Version -Repository $Repository
 
     # 2. Maintain upcoming dates, roll over open work, and close shipped milestones.
     Write-ReleaseStatus start "Release milestone advancement ($mode)."
-    Invoke-ReleaseMilestoneAdvancement -Root $root -Count $Count -Repository $Repository -Push:$Push
+    Invoke-ReleaseMilestoneAdvancement -Root $root -Count $Count -Repository $Repository
 
     Write-ReleaseStatus complete "Release milestone maintenance completed ($mode)."
 }

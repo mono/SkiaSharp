@@ -246,7 +246,12 @@ $pushMilestones = @{
     '4.152.0-preview.1' = [pscustomobject] @{ number = 1; state = 'open' }
     '4.152.0-preview.2' = [pscustomobject] @{ number = 2; state = 'open' }
 }
-Complete-GitHubMilestone -Repository 'mono/SkiaSharp' -Operation $pushOperation -Milestones $pushMilestones -Push
+$writeRemote = $true
+try {
+    Complete-GitHubMilestone -Repository 'mono/SkiaSharp' -Operation $pushOperation -Milestones $pushMilestones
+} finally {
+    $writeRemote = $false
+}
 Assert-Equal '4.152.0-preview.2' $script:FakeItemMilestone 'The fake-gh apply path did not move open work.'
 Assert-Equal 'closed' $script:FakeMilestoneState 'The fake-gh apply path did not close the emptied milestone.'
 

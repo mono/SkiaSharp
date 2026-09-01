@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
-# Shared repository paths and release-body marker contracts.
+# Shared repository paths and release contracts.
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseRepository -Value 'mono/SkiaSharp'
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseSkiaRemote -Value 'https://github.com/mono/skia.git'
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseSkiaPath -Value 'externals/skia'
@@ -55,6 +55,27 @@ function Invoke-GitCommand([string] $Root, [string[]] $Arguments, [switch] $Allo
 # Resolves the root of the current Git repository.
 function Get-GitRepositoryRoot {
     return (Invoke-GitCommand -Root $PWD.Path -Arguments @('rev-parse', '--show-toplevel')).Output
+}
+
+# Reads the managed SkiaSharp major version and current Skia milestone.
+function Get-RepositoryReleaseVersion([string] $Root) {
+    $path = Join-Path $Root $ReleaseVersionsPath
+    if (!(Test-Path -LiteralPath $path -PathType Leaf)) {
+        throw "$ReleaseVersionsPath does not exist."
+    }
+    $major = $null
+    $milestone = $null
+    foreach ($line in Get-Content -LiteralPath $path) {
+        if ($line -match '^\s*SkiaSharp\s+nuget\s+(?<major>\d+)\.') {
+            $major = [int] $Matches.major
+        } elseif ($line -match '^\s*libSkiaSharp\s+milestone\s+(?<milestone>\d+)\s*$') {
+            $milestone = [int] $Matches.milestone
+        }
+    }
+    if ($null -eq $major -or $null -eq $milestone) {
+        throw "Could not read SkiaSharp/libSkiaSharp versions from $path."
+    }
+    return [pscustomobject] @{ Major = $major; Milestone = $milestone }
 }
 
 # Resolves a branch or tag from a remote, peeling annotated tags when present.
@@ -191,15 +212,15 @@ function Resolve-NuGetPackageVersion([string] $PackageId, [string] $Version) {
 
     $lowerId = $PackageId.ToLowerInvariant()
     $uri = "https://api.nuget.org/v3-flatcontainer/$lowerId/index.json"
-    $matches = @(
+    $versionsFound = @(
         (Invoke-RestMethod -Uri $uri).versions |
             Where-Object { $_ -match "^$([regex]::Escape($Version))\.\d+(?:\.\d+)?$" }
     )
-    if ($matches.Count -ne 1) {
-        $found = if ($matches) { $matches -join ', ' } else { 'none' }
+    if ($versionsFound.Count -ne 1) {
+        $found = if ($versionsFound) { $versionsFound -join ', ' } else { 'none' }
         throw "$PackageId $Version must match exactly one public NuGet version; found $found."
     }
-    return $matches[0]
+    return $versionsFound[0]
 }
 
 # Reads the repository branch and commit from one public NuGet nuspec.
@@ -337,6 +358,7 @@ Export-ModuleMember -Function @(
     'Write-ReleaseStatus',
     'Invoke-GitCommand',
     'Get-GitRepositoryRoot',
+    'Get-RepositoryReleaseVersion',
     'Get-RemoteBranchSha',
     'Get-LocalBranchSha',
     'Get-ResolvedGitCommit',

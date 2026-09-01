@@ -13,7 +13,6 @@ on:
       - "scripts/infra/docs/release-notes-data.py"
       - "scripts/infra/docs/release-notes-schema/**"
       - "scripts/infra/docs/release_notes/**"
-      - "scripts/infra/milestones/**"
   push:
     branches: [main]
     paths:
@@ -27,7 +26,6 @@ on:
       - "scripts/infra/docs/release-notes-data.py"
       - "scripts/infra/docs/release-notes-schema/**"
       - "scripts/infra/docs/release_notes/**"
-      - "scripts/infra/milestones/**"
   workflow_dispatch:
 
 permissions:
@@ -65,11 +63,14 @@ jobs:
           }
           Get-Help ./scripts/infra/publishing/prepare-release.ps1 -Full > $null
           Get-Help ./scripts/infra/publishing/finish-release.ps1 -Full > $null
+          Get-Help ./scripts/infra/publishing/update-bug-template.ps1 -Full > $null
           Get-Help ./scripts/infra/publishing/update-release-milestones.ps1 -Full > $null
 
-      - name: Run release milestone tests
+      - name: Run publishing PowerShell tests
         shell: pwsh
-        run: ./scripts/infra/publishing/tests/Test-ReleaseMilestones.ps1
+        run: |
+          ./scripts/infra/publishing/tests/Test-PublishingScripts.ps1
+          ./scripts/infra/publishing/tests/Test-ReleaseMilestones.ps1
 
       - name: Run release smoke-testing tests
         run: python3 -m unittest discover -s .agents/skills/release-testing/scripts/tests -p 'test_*.py'

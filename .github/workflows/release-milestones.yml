@@ -16,10 +16,17 @@ permissions:
 jobs:
   dry-run:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
     steps:
+      - name: Require main
+        run: test "$GITHUB_REF" = "refs/heads/${{ github.event.repository.default_branch }}"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Preview
         shell: pwsh
         env:
@@ -38,6 +45,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Push
         shell: pwsh
         env:

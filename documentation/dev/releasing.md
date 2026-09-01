@@ -130,14 +130,39 @@ protected publication stage.
 Run the **Release - Milestones** workflow after publication, or use:
 
 ```powershell
+# Read-only
 ./scripts/infra/publishing/update-release-milestones.ps1 `
   -Version 4.153.0
+
+# Apply GitHub milestone changes
+./scripts/infra/publishing/update-release-milestones.ps1 `
+  -Version 4.153.0 `
+  -Push
 ```
 
-The milestone scripts reconcile shipped pull requests and linked issues, move
-remaining open work forward, update upcoming Chromium-derived dates, and close
-shipped milestones. They never change release branches, tags, packages, or
-GitHub Releases.
+The milestone script reconciles shipped pull requests and linked issues, moves
+remaining open work forward, updates upcoming Chromium-derived dates, and
+closes shipped milestones. It never changes release branches, tags, packages,
+or GitHub Releases.
+
+## Maintain issue-template versions
+
+**Sync - Issue Template Versions** runs daily and opens or refreshes its owned
+pull request. The same script can be run locally:
+
+```powershell
+# Read-only
+./scripts/infra/publishing/update-bug-template.ps1
+
+# Update only the local issue form
+./scripts/infra/publishing/update-bug-template.ps1 -Apply
+
+# Refresh the owned automation branch and pull request
+./scripts/infra/publishing/update-bug-template.ps1 -Push
+```
+
+It derives both bug-report version dropdowns from published GitHub Releases and
+preserves every unrelated line in the issue form.
 
 ## Optional public-package smoke testing
 
@@ -174,6 +199,10 @@ HarfBuzzSharp uses `X.Y.Z.N`. The Skia milestone that first adopts native
 HarfBuzz `X.Y.Z` owns revisions 0-99. Each later Skia milestone using that same
 native version adds 100:
 
+Every promoted build that changes the SkiaSharp numeric version also needs a
+unique HarfBuzzSharp version; BAR registrations cannot reuse an older package
+version from another build.
+
 | Milestone relative to adoption | Revision range |
 |--------------------------------|----------------|
 | Base milestone | 0-99 |
@@ -190,4 +219,5 @@ base milestone.
 - [Versioning](versioning.md)
 - [Packages](packages.md)
 - [Release notes and API diffs](release-notes-and-api-diffs.md)
-- [Milestone scripts](../../scripts/infra/milestones/README.md)
+- [Release milestone script](../../scripts/infra/publishing/update-release-milestones.ps1)
+- [Issue-template version script](../../scripts/infra/publishing/update-bug-template.ps1)
