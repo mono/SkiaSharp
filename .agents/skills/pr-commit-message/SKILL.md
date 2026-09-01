@@ -34,7 +34,10 @@ high-cost failures before drafting:
 - For each candidate universal, bound, count, or inequality, privately record the complete
   search universe and check it for counterexamples. Proof over a subset cannot support a
   claim about the whole API, repository, platform set, or generated surface. One outlier
-  means the quantified wording must be narrowed or removed.
+  means the quantified wording must be narrowed or removed. When that universe is a family
+  of similar artifacts such as workflows, projects, targets, or packages, list its members
+  and the dimension being generalized, then read that dimension on each member. Families
+  that look uniform usually are not, and reading two of five is how a false universal ships.
 - Inspect human discussion on the current PR and every related or superseded PR whose work or
   feedback is carried forward. Adopted feedback needs source-backed attribution or a required
   `Missing context:` line when the contributor's email cannot be verified.
@@ -130,6 +133,15 @@ Apply these boundary rules:
   each independently justifies safe adoption.
 - Review-found correctness or safety changes remain explicit decisions, or become topics
   when they have independent search intent.
+- A shared mechanism, guard, or contract that several topics route through is itself a topic
+  when it carries a guarantee, invariant, or safety rule that none of its consumers own. It
+  is easy to mistake for plumbing precisely because it appears everywhere; distributing it
+  as a sentence inside each consumer leaves that guarantee without a home and hides why the
+  consumers became uniform.
+- A removal, replacement, or move belongs to the topic that performs it, but the departing
+  component still needs its name, the behavior that left with it, and where that
+  responsibility now lives. This message is the only thing a future search for the deleted
+  name will find.
 
 Use a counterfactual independence test before collapsing any candidate: if its correction
 were reverted while the proposed parent remained, would a distinct failure, constraint, or
@@ -172,7 +184,10 @@ Start the body with verified references. Use labels only for the relationship th
 - `Fixes:` for an issue the PR closes
 - `Context:` for related issues, PRs, runs, announcements, documentation, URLs, or exact
   commit SHAs
-- `Requires:` for a companion PR or dependency that must land
+- `Requires:` for the immediate companion PR or dependency this change is built on and
+  cannot merge without. In a stack, that is the parent you actually build on; an earlier
+  ancestor in the same stack explains context but is not what this change requires, so it
+  belongs under `Context:`
 - `Changes:` for dependency compare views or upstream ranges
 - another label only when recent repository history establishes both its spelling and use
 
@@ -188,6 +203,11 @@ Preserve the content expected for the kind of change:
   project response, and authoritative links
 - **Public API:** programming model, ownership or lifetime rules, native dependency, and
   platform limitations
+- **Configuration or policy split:** each context, the value it receives, and the reason the
+  difference is deliberate. An undocumented split reads as an inconsistency, and the next
+  reader unifies it and reintroduces the failure it was preventing
+- **Removal or migration:** the removed component by name, the behavior that left with it,
+  and where that responsibility now lives
 
 For multiple topics, use this shape:
 
@@ -211,7 +231,11 @@ For multiple topics, use this shape:
 <trailers>
 ```
 
-Name sections after the actual problem or decision, not `Changes` or `Implementation`.
+Name sections after the actual problem or decision, not `Changes` or `Implementation`. A
+component, file, or artifact category is not the decision either; prefer the boundary,
+failure, or rule the section resolves. Lead the overview with the governing design rather
+than with provenance or scope bookkeeping — where the work was extracted from is one fact
+the message can state, not the reason the change exists.
 Use bullets for explicit decisions inside a topic, not as a substitute for topic sections.
 Keep exception snippets, logs, reference lists, and bullets in-family for the target
 repository.
@@ -241,11 +265,23 @@ Check the final draft by claim type:
   outlier. Narrow or remove the qualifier when any counterexample exists.
 - **Precision:** verify exception names, predicates, revisions, versions, test counts,
   benchmark values, platform claims, and validation results against their exact sources.
-  Prefer durable validation evidence; omit transient pending, queued, or action-required
-  status unless it explains a shipped design decision.
+  Re-read measurements and counts at the current head; a number captured before a later
+  push was true when observed and is wrong now. Prefer durable validation evidence; omit
+  transient pending, queued, or action-required status unless it explains a shipped design
+  decision.
+- **Coverage and capability claims:** describe what tests, validation, or a guard actually
+  assert, in the terms the assertions use, rather than the capability they gesture at.
+  "Covers remote branch authority" and "covers guarded pushes and direct-invocation guards"
+  read as equivalent until someone relies on the first one and finds nothing behind it.
+- **Safety and non-behavior claims:** replace an adjective such as read-only, safe,
+  isolated, advisory, or deterministic with the specific thing that cannot happen and to
+  which neighboring system. The adjective is what a later change quietly violates, because
+  nothing in it says which guarantee was load-bearing.
 - **Causal rationale:** verify reasons copied from PR descriptions, commits, or comments.
   Preserve meaningful non-goals and limitations, but label inference as inference or omit
-  uncertain precision.
+  uncertain precision. A non-goal is durable when it states a lasting reason; "deferred",
+  "excluded by request", or "out of scope for review size" is development chronology and
+  stops being true the moment the follow-up lands.
 - **Mixed-truth sentences:** split a verified fact from an unsupported qualifier instead of
   accepting the whole sentence because half is true.
 
@@ -267,8 +303,10 @@ retain both.
 Accept a `(name, email)` pair only when that exact email appears in a relevant commit author
 entry, a co-author trailer, or the non-null `email` field returned by
 `gh api users/<login>`. Never infer an address from a name or organization, construct a
-GitHub noreply address, or mine unrelated commits. If a contributing human reviewer has no
-verified email, omit the trailer and report:
+GitHub noreply address, or mine unrelated commits. A trailer your own environment or house
+style would normally append is not evidence either; it belongs here only when this PR's own
+commits record it. If a contributing human reviewer has no verified email, omit the trailer
+and report:
 
 ```text
 Missing context: verified email for @login
@@ -281,8 +319,9 @@ updaters and automated review accounts; they are not missing human contributors.
 coding agents when they authored code or appear in a co-author trailer.
 
 Every eligible candidate in the resulting attribution map must appear exactly once in the
-trailers, or in `Missing context:` when a contributing human lacks a verified email. Place
-trailers at the end of the message after a blank line, one per line.
+trailers, or in `Missing context:` when a contributing human lacks a verified email. Trailers
+are part of the commit message, so place them inside the fenced block at the end after a
+blank line, one per line; only `Missing context:` lines belong outside the fence.
 
 ### 6. Format and check the final output
 
@@ -291,7 +330,9 @@ After drafting and attribution, confirm:
 1. Every substantive changed path maps to a topic, explicit decision, or derivative, and
    `section count == material-topic count` whenever that count is two or more.
 2. Every topic explains need or symptom, cause or constraint, chosen change, and evidence;
-   every explicit decision and decisive anchor has one visible home.
+   every explicit decision and decisive anchor has one visible home. Sibling sections carry
+   comparable evidence; an asymmetry there is usually a dropped anchor rather than a
+   genuinely unverified topic.
 3. Every precise, relational, causal, quantified, and validation claim has its completed
    proof entry; no proof over a subset is worded as a whole-surface claim.
 4. Every eligible attribution candidate, including relevant PR and commit authors, appears
