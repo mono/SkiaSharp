@@ -14,6 +14,7 @@ import zipfile
 SCRIPTS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
 SCRIPT_PATH = SCRIPTS / "plan-release-tests.py"
+SKILL_PATH = SCRIPTS.parent / "SKILL.md"
 ROOT = SCRIPTS.parents[3]
 NUGET_CONFIG = ROOT / "tests/SkiaSharp.Tests.Integration/nuget.config"
 SPEC = importlib.util.spec_from_file_location("plan_release_tests", SCRIPT_PATH)
@@ -215,6 +216,32 @@ class ReleaseTestPlanTests(unittest.TestCase):
                 ),
             ],
         )
+
+    def test_skill_preserves_the_operational_workflow(self):
+        skill = SKILL_PATH.read_text(encoding="ascii")
+        for heading in (
+            "## Fixed matrix",
+            "## Script contract",
+            "### 1. Plan and approve",
+            "### 2. Prepare once",
+            "### 3. Collect every result",
+            "### 4. Repair and retry",
+            "### 5. Report the advisory result",
+        ):
+            self.assertIn(heading, skill)
+        for item_id in (
+            "smoke",
+            "console",
+            "linux",
+            "blazor",
+            f"android-{planner.common.ANDROID_MIN_VERSION}",
+            f"android-{planner.common.ANDROID_MAX_VERSION}",
+            "maccatalyst",
+            f"ios-{planner.common.IOS_MIN_VERSION}",
+            f"ios-{planner.common.IOS_MAX_VERSION}",
+            "windows",
+        ):
+            self.assertIn(f"`{item_id}`", skill)
 
     def test_every_planned_command_round_trips_through_runner_parser(self):
         matrix, _ = planner.build_matrix(
