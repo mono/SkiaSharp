@@ -23,9 +23,9 @@ public class AppiumFixture : IAsyncLifetime
 
         Console.WriteLine($"[AppiumFixture] Starting Appium on port {Port}...");
         
-        // Appium is installed as a shell script (appium.cmd on Windows), which Process.Start
-        // cannot execute directly with UseShellExecute=false. Run it through the platform shell.
-        var (shell, shellArgs) = GetShellCommand($"appium --port {Port} --relaxed-security --log-timestamp");
+        // npm exec honors Appium's project-local or global extension context. --no prevents
+        // npm from downloading Appium when the approved installation is unavailable.
+        var (shell, shellArgs) = GetShellCommand($"npm exec --no -- appium --port {Port} --relaxed-security --log-timestamp");
 
         var psi = new ProcessStartInfo
         {
@@ -34,7 +34,8 @@ public class AppiumFixture : IAsyncLifetime
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            WorkingDirectory = FindRepositoryRoot()
         };
 
         _appiumProcess = Process.Start(psi);
@@ -107,6 +108,18 @@ public class AppiumFixture : IAsyncLifetime
         OperatingSystem.IsWindows()
             ? ("cmd.exe", $"/C {command}")
             : ("/bin/bash", $"-c \"{command}\"");
+
+    private static string FindRepositoryRoot()
+    {
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory != null; directory = directory.Parent)
+        {
+            var git = Path.Combine(directory.FullName, ".git");
+            if (Directory.Exists(git) || File.Exists(git))
+                return directory.FullName;
+        }
+
+        return Directory.GetCurrentDirectory();
+    }
 }
 
 /// <summary>

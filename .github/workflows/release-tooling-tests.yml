@@ -6,6 +6,8 @@ on:
       - ".agents/skills/release-branch/**"
       - ".agents/skills/release-milestones/**"
       - ".agents/skills/release-publish/**"
+      - ".agents/skills/release-testing/**"
+      - "tests/SkiaSharp.Tests.Integration/**"
       - ".github/workflows/release-*.yml"
       - "scripts/infra/publishing/**"
       - "scripts/infra/caching/repo-deps.json"
@@ -15,6 +17,8 @@ on:
       - ".agents/skills/release-branch/**"
       - ".agents/skills/release-milestones/**"
       - ".agents/skills/release-publish/**"
+      - ".agents/skills/release-testing/**"
+      - "tests/SkiaSharp.Tests.Integration/**"
       - ".github/workflows/release-*.yml"
       - "scripts/infra/publishing/**"
       - "scripts/infra/caching/repo-deps.json"
@@ -39,7 +43,10 @@ jobs:
         shell: pwsh
         run: |
           $errors = @(
-            $paths = @(Get-ChildItem scripts/infra/publishing -Filter *.ps* -Recurse)
+            $paths = @(
+              Get-ChildItem scripts/infra/publishing -Filter *.ps* -Recurse
+              Get-ChildItem .agents/skills/release-testing/scripts -Filter *.ps1 -Recurse
+            )
             foreach ($path in $paths) {
               $parseErrors = $null
               [System.Management.Automation.Language.Parser]::ParseFile(
@@ -64,6 +71,13 @@ jobs:
         run: |
           ./scripts/infra/publishing/tests/Test-PublishingScripts.ps1
           ./scripts/infra/publishing/tests/Test-ReleaseMilestones.ps1
+
+      - name: Run release-testing Python tests
+        run: python3 -m unittest discover -s .agents/skills/release-testing/scripts/tests -p "test_*.py"
+
+      - name: Run release-testing PowerShell tests
+        shell: pwsh
+        run: ./.agents/skills/release-testing/scripts/tests/Test-PrepareTestRun.ps1
 
       - name: Validate cache dependency coverage
         run: python3 scripts/infra/caching/repo-deps.py validate

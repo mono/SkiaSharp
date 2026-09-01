@@ -29,7 +29,7 @@ silent. Use an attached asynchronous Bash job only as a fallback.
 
 ## Test Phases and Timing
 
-### Quick Tests (SmokeTests, ConsoleTests, BlazorTests)
+### Quick Tests (SmokeTests, ConsoleTests)
 
 | Phase | Duration | Output Indicator |
 |-------|----------|------------------|
@@ -37,7 +37,17 @@ silent. Use an attached asynchronous Bash job only as a fallback.
 | Run tests | 10-60s | "Starting test execution, please wait..." |
 | Complete | - | "Passed! - Failed: 0, Passed: N" |
 
-**Feedback:** These are fast enough that a single TODO update per test is sufficient.
+### BlazorTests
+
+| Phase | Duration | Output Indicator |
+|-------|----------|------------------|
+| Build native WASM app | Up to 5 min | `WasmBuildNative=true` build output |
+| Launch local server | Up to 30s | Server readiness |
+| Chromium render/check | Up to 90s | Rendered status and screenshot |
+| Complete | - | `Passed! - Failed: 0, Passed: 2` |
+
+Blazor is not a quick test. Continue five-second status updates during native
+WASM compilation and browser startup.
 
 ### LinuxConsoleTests (Docker)
 
@@ -144,24 +154,6 @@ timed out, and never use a background agent to own the command.
 | Run test | "Running Appium test..." |
 | Verify | "Verifying screenshot..." |
 | Done | "✅ Passed" |
-
-### Example: Full Test Feedback Flow
-
-```
-🔄 Running MauiiOSTests (iOS 18.6)
-  ✅ Test project compiled
-  ✅ Created MauiiOSSKCanvasView project
-  ⏳ Building iOS app (~60-90s expected)...
-     ⏳ Still building (~5s elapsed)
-     ⏳ Still building (~10s elapsed)
-  ✅ Build complete (~75s)
-  ⏳ Deploying to iPhone 14 Pro simulator...
-  ✅ App deployed, running test...
-  ✅ Screenshot captured and verified
-  ✅ MauiiOSTests (iOS 18.6) passed!
-```
-
----
 
 ## Detecting Problems
 

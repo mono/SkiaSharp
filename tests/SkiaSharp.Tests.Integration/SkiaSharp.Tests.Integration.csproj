@@ -20,6 +20,7 @@
          ValidateVersions target below. -->
     <SkiaSharpVersion Condition="'$(SkiaSharpVersion)' == ''"></SkiaSharpVersion>
     <HarfBuzzSharpVersion Condition="'$(HarfBuzzSharpVersion)' == ''"></HarfBuzzSharpVersion>
+    <RestoreSources Condition="'$(PackageSource)' != ''">$(PackageSource);https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json</RestoreSources>
 
     <!-- Framework band for the generated temp projects. Defaults to net10.0. To smoke-test the
          packages on a newer band (e.g. a .NET 11 preview), override all three, e.g.:
@@ -69,6 +70,7 @@
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="SkiaSharpVersion" Value="$(SkiaSharpVersion)" />
     <RuntimeHostConfigurationOption Include="HarfBuzzSharpVersion" Value="$(HarfBuzzSharpVersion)" />
+    <RuntimeHostConfigurationOption Include="PackageSource" Value="$(PackageSource)" />
     <RuntimeHostConfigurationOption Include="BaseFramework" Value="$(BaseFramework)" />
     <RuntimeHostConfigurationOption Include="SdkVersion" Value="$(SdkVersion)" />
     <RuntimeHostConfigurationOption Include="SdkAllowPrerelease" Value="$(SdkAllowPrerelease)" />
@@ -86,6 +88,8 @@
          Text="SkiaSharpVersion must be the exact package version from the selected CI build. Use: dotnet test -p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}" />
     <Error Condition="'$(HarfBuzzSharpVersion)' == ''" 
          Text="HarfBuzzSharpVersion must be the exact package version from the selected CI build. Use: dotnet test -p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}" />
+    <Error Condition="'$(PackageSource)' == ''"
+         Text="PackageSource must be the BAR build's NuGet V3 feed." />
     <Message Importance="High" Text="Testing SkiaSharp $(SkiaSharpVersion) with HarfBuzzSharp $(HarfBuzzSharpVersion)" />
   </Target>
 

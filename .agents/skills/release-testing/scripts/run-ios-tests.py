@@ -6,26 +6,11 @@ from pathlib import Path
 import re
 import sys
 import uuid
-
 import release_test_common as common
 
 
 def apple_simulators(root: Path) -> list[dict]:
-    return common.run_json(
-        [
-            "dotnet",
-            "tool",
-            "run",
-            "apple",
-            "--",
-            "simulator",
-            "list",
-            "--available",
-            "--format",
-            "json",
-        ],
-        cwd=root,
-    )
+    return common.run_json(["dotnet", "tool", "run", "apple", "--", "simulator", "list", "--available", "--format", "json"], cwd=root)
 
 
 def ios_simulator_version(simulator: dict) -> str:
@@ -42,9 +27,7 @@ def ios_versions(simulators: list[dict]) -> set[str]:
         version
         for simulator in simulators
         if (version := ios_simulator_version(simulator))
-        and str((simulator.get("runtime") or {}).get("name") or "").startswith(
-            "iOS "
-        )
+        and str((simulator.get("runtime") or {}).get("name") or "").startswith("iOS ")
         and simulator.get("isAvailable", True)
         and (simulator.get("runtime") or {}).get("isAvailable", True)
     }
@@ -62,24 +45,15 @@ def ios_device_types(simulators: list[dict], version: str) -> set[str]:
     return devices
 
 
-def resolve_ios_device_type(
-    simulators: list[dict],
-    version: str,
-    requested: str | None,
-) -> str:
+def resolve_ios_device_type(simulators: list[dict], version: str, requested: str | None) -> str:
     devices = ios_device_types(simulators, version)
     if requested:
         if requested not in devices:
             available = ", ".join(sorted(devices)) or "none"
-            raise common.ReleaseTestError(
-                f"iOS {version} does not support device type {requested}; "
-                f"available iPhones: {available}"
-            )
+            raise common.ReleaseTestError(f"iOS {version} does not support device type {requested}; available iPhones: {available}")
         return requested
     if not devices:
-        raise common.ReleaseTestError(
-            f"iOS {version} has no available iPhone simulator device type"
-        )
+        raise common.ReleaseTestError(f"iOS {version} has no available iPhone simulator device type")
 
     def score(name: str) -> tuple:
         standard = re.fullmatch(r"iPhone\s+(\d+)", name)
@@ -103,14 +77,8 @@ def run_ios(root: Path, args, version: str) -> None:
     if version not in ios_versions(simulators):
         raise common.ReleaseTestError(f"iOS {version} is not installed")
     runtime = f"iOS {version}"
-    device_type = resolve_ios_device_type(
-        simulators,
-        version,
-        args.device,
-    )
-    simulator_name = (
-        f"SkiaSharp Release iOS {version} {uuid.uuid4().hex[:8]}"
-    )
+    device_type = resolve_ios_device_type(simulators, version, args.device)
+    simulator_name = f"SkiaSharp Release iOS {version} {uuid.uuid4().hex[:8]}"
     simulator_id = simulator_name
     try:
         simulator = common.run_json(
@@ -132,57 +100,15 @@ def run_ios(root: Path, args, version: str) -> None:
             ],
             cwd=root,
         )
-        simulator_id = str(simulator.get("udid") or "")
-        if not simulator_id:
-            raise common.ReleaseTestError(
-                "the temporary iOS simulator has no UDID"
-            )
-        print(
-            f"Selected {simulator_name} ({runtime}) "
-            f"[{simulator_id}]",
-            flush=True,
-        )
-        common.run_streaming(
-            [
-                "dotnet",
-                "tool",
-                "run",
-                "apple",
-                "--",
-                "simulator",
-                "boot",
-                simulator_id,
-                "--wait",
-                "--timeout",
-                "180",
-            ],
-            cwd=root,
-        )
-        common.run_test(
-            root,
-            "MauiiOSTests",
-            args,
-            properties={
-                "iOSDevice": simulator_name,
-                "iOSVersion": version,
-            },
-        )
+        udid = str(simulator.get("udid") or "")
+        if not udid:
+            raise common.ReleaseTestError("the temporary iOS simulator has no UDID")
+        simulator_id = udid
+        print(f"Selected {simulator_name} ({runtime}) [{simulator_id}]", flush=True)
+        common.run_streaming(["dotnet", "tool", "run", "apple", "--", "simulator", "boot", simulator_id, "--wait", "--timeout", "180"], cwd=root)
+        common.run_test(root, "MauiiOSTests", args, properties={"iOSDevice": simulator_name, "iOSVersion": version})
     finally:
-        common.run_streaming(
-            [
-                "dotnet",
-                "tool",
-                "run",
-                "apple",
-                "--",
-                "simulator",
-                "delete",
-                simulator_id,
-                "--force",
-            ],
-            cwd=root,
-            check=False,
-        )
+        common.run_streaming(["dotnet", "tool", "run", "apple", "--", "simulator", "delete", simulator_id, "--force"], cwd=root, check=False)
 
 
 def execute(root: Path, args) -> None:

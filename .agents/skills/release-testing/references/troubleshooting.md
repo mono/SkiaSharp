@@ -22,43 +22,60 @@ package version, or skip policy.
 
 ## Package Resolution Errors
 
-### Packages appear missing but CI succeeded
+### Packages appear missing after the release build
 
-**Symptom:** CI shows success, but package search seems to find wrong version or nothing matching your release.
+**Symptom:** The selected release build/BAR is complete, but the planner cannot
+resolve or read its exact package feed.
 
-**Cause:** Using `.latestVersion` from the JSON instead of `.version`, or choosing the newest
-matching feed package instead of the exact package from the selected CI build. The feed contains
-multiple version streams (for example, 3.119.2 and 3.119.3) and CI builds, so either approach can
-return the wrong one.
+**Cause:** Darc authentication failed, the version is outside `--max-age`, more
+than one BAR produced it, the build has no NuGet feed location, or its package
+family is incomplete.
 
-**Fix:** Rerun `release-status`. It verifies both exact package versions against
-the preview feed and reports `wait-for-packages` until both are indexed. Do not
-select a replacement version from the feed.
+**Fix:** Keep the exact version. Authenticate with `darc login`, increase
+`--max-age` only when needed, or use the exact `--bar-id` reported by the
+planner.
 
-**`ERROR: Could not resolve build metadata for run ...`** — confirm the selected `SkiaSharp`
-pipeline run ID and Azure CLI authentication.
+**`multiple BAR builds contain ...`** — select the BAR approved for release and
+rerun with `--bar-id`.
 
-**`ERROR: Selected run came from ...`** — the selected run is not from the requested release
-branch. Return to release-status and select the correct run.
+**`SkiaSharp ... was not found in Maestro`** — confirm the exact version. If
+the build is older than 30 days, increase `--max-age`; do not change versions.
 
-**`ERROR: Selected source commit ... is not available locally`** — fetch the named release branch
-again. Do not checkout the branch; the remote-tracking fetch should make the commit available.
+**`BAR build ... is already released`** — this is not a pre-publication
+approval candidate. Do not route around the rejection.
 
-**`ERROR: Selected source commit ... does not belong to ...`** — the run and release branch do not
-match. Re-check the selected run rather than reading version files from the branch's current tip.
+**`BAR build ... has no NuGet feed locations`** — the build has not published a
+testable Darc feed. Inspect the BAR/build rather than choosing another feed.
 
-**`ERROR: Could not read release versions from ...`** — confirm the selected source commit contains
-both version files. Keep `HEAD` unchanged and inspect them with `git show {source-sha}:{path}`.
+**`BAR build ... has multiple NuGet feed locations`** — the BAR location is
+ambiguous. Inspect the build rather than choosing the first feed.
 
-**`ERROR: Selected buildNumber ... does not match ...`** — the selected run is not from that
-release branch, or its source commit contains different version values. Re-check the run selected
-by release-status and its `sourceVersion`.
+**`BAR package feed has ... flat-container resources`** or
+**`unexpected BAR flat-container URL`** — the feed does not have the one
+supported NuGet V3 shape. Do not construct a replacement URL manually.
 
-| ❌ Wrong | ✅ Correct |
-|----------|-----------|
-| `.latestVersion` | `.version` |
-| Newest matching build | Exact selected CI build |
-| Prefix filtering to select a version | Exact version match |
+**`BAR feed package ... is unavailable`** — the per-build feed is incomplete.
+Wait for indexing or repair that build; do not substitute another BAR.
+
+**`contains ... nuspecs`**, **`has no nuspec metadata`**, or
+**`has inconsistent source metadata`** — the package cannot establish one exact
+identity. Do not approve the BAR.
+
+**`CI package source metadata does not match`** — the selected BAR package
+family is not coherent under the current policy. Do not approve it.
+
+**`BAR build and package source metadata do not match`** — the feed does not
+belong to the Darc-selected build. Do not execute the matrix.
+
+**`does not pin one concrete HarfBuzzSharp dependency`** — the bridge package
+does not pin one concrete dependency version. Do not infer one from another
+feed.
+
+| Wrong | Correct |
+|-------|---------|
+| Newest matching BAR | Exact release-approved BAR ID |
+| Global feed alias | Per-build feed returned by Darc |
+| Partial prefix search | Exact package ID and version |
 
 ---
 
@@ -66,23 +83,25 @@ by release-status and its `sourceVersion`.
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| Local `android` / `apple` tool is unavailable | Pinned manifest has not been restored | Run `python3 .agents/skills/release-testing/scripts/prepare-test-run.py`; it performs `dotnet tool restore` |
+| Local `android` / `apple` tool is unavailable | Pinned manifest has not been restored | Run `pwsh -NoLogo -NoProfile -File .agents/skills/release-testing/scripts/prepare-test-run.ps1`; it performs `dotnet tool restore` |
 | `the maui workload is not installed` | Missing workload | Record affected MAUI items, continue unrelated coverage, then ask whether to install `maui` or explicitly amend the matrix |
 | `the wasm-tools workload is not installed` | Missing workload | Record Blazor as failed, continue unrelated coverage, then ask whether to install `wasm-tools` or explicitly amend the matrix |
-| `SkiaSharpVersion must be the exact package version from the selected CI build` | Missing version param | Add `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}` to `dotnet test` |
-| `HarfBuzzSharpVersion must be the exact package version from the selected CI build` | Missing version param | Add `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}` to `dotnet test` |
-| Stable `X.Y.Z` package cannot be restored | Eventual public version was passed before publication | Use the exact `X.Y.Z-stable.{build}` and matching HarfBuzzSharp test packages |
+| `SkiaSharpVersion must be the exact package version` | Missing version param | Add both exact SkiaSharp and HarfBuzzSharp versions emitted by the planner |
+| `HarfBuzzSharpVersion must be the exact package version` | Missing version param | Use the distinct HarfBuzzSharp version emitted by the planner |
+| Generated platform package cannot be restored | A satellite package such as `SkiaSharp.Views.Blazor`, `SkiaSharp.Views.Maui.Controls`, or `SkiaSharp.NativeAssets.Linux.NoDependencies` is unavailable at the exact version | Confirm the satellite package exists on the selected BAR feed and retry the same build; dependencies continue to resolve from dotnet-public |
 
 ## Appium Errors
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `Appium is not installed or is not on PATH` | Appium is absent or npm global binaries are unavailable | Record affected MAUI items, continue unrelated coverage, then ask whether to install/configure Appium before retrying |
+| `npm is not installed or is not on PATH` | The Node/npm runtime required by Appium is unavailable | Record affected MAUI items, continue unrelated coverage, then ask whether to install/configure Node and npm before retrying |
+| `Appium is not installed in the current npm context or globally` | Neither the containing npm project nor the global PATH provides Appium | Use one supported Appium model: npm project dependencies, or a global Appium installation with Extension CLI-managed drivers |
 | `the Appium ... driver is not installed` | Required platform driver is absent | Record affected items, continue unrelated coverage, then ask whether to install that driver before retrying |
-| `Appium ... is required; found ...` | Server or driver differs from the pinned release-test version | Record affected items, continue unrelated coverage, then ask whether to switch versions before retrying |
+| `Appium ... or newer is required; found ...` | Server or driver is older than the tested minimum | Record affected items, continue unrelated coverage, then ask whether to update before retrying |
+| Driver cannot import `appium/driver.js` or `appium/support.js` | Appium and its drivers were installed using incompatible npm contexts | Run the same `npm exec --no -- appium ...` checks used by the runner; keep Appium and drivers together in one npm project, or manage drivers through the global Appium Extension CLI and `APPIUM_HOME` |
 | Doctor reports `ANDROID_HOME` / `JAVA_HOME` missing | Pinned path discovery failed | Run `dotnet tool run android -- sdk find` and `jdk find` to diagnose the selected installations |
 | Driver doctor fails after path resolution | Required platform environment is incomplete | Fix every remaining required doctor finding; optional recording/streaming tools are not needed |
-| `Connection refused` | Port conflict | Appium auto-starts on 4723; check for conflicts |
+| `Connection refused` | Appium failed to start or exited before the session connected | Inspect Appium output and retry after correcting the startup failure |
 | `Session creation timeout` | First run building WDA | Wait - WebDriverAgent builds on first iOS/Mac run |
 | `Invalid bundle identifier` | Wrong bundleId | Tests extract from csproj automatically |
 
@@ -93,7 +112,8 @@ by release-status and its `sourceVersion`.
 | `Android ... is not installed` | No installed image matches the exact version and host architecture | Record that item, continue, then inspect `dotnet tool run android -- sdk list --installed --format json` and ask whether to install it or explicitly amend the matrix |
 | `Android SDK package ... is not installed` | Emulator or platform tools are absent | Record affected Android items, continue, then ask whether to install the missing package |
 | `hvf is not enabled` / `mprotect failed: Permission denied` | Android emulator installation/acceleration is unhealthy despite host support | Check `emulator -accel-check`, reinstall/update the Android emulator package through `dotnet android`, then retry |
-| Multiple Android emulators are running | Automatic target selection is ambiguous | Rerun with `--device-id <serial>` |
+| `no Android emulator port is available` | Every supported emulator port is occupied | Stop an approved existing emulator or explicitly reuse a compatible device with `--device-id <serial>` |
+| Explicit Android device has the wrong API | The selected `--device-id` does not match the approved target | Choose a compatible device; without `--device-id`, the runner creates its exact release-owned AVD on a free port |
 | `iOS ... is not installed` | The exact runtime has no available installed simulator | Record that item, continue, then ask whether to install it or explicitly amend the matrix |
 | Temporary simulator creation fails | No compatible iPhone type is available for the exact runtime | Inspect `dotnet apple simulator list --runtime "iOS {version}"`; install a compatible device profile or explicitly choose one with `--device` |
 | `System UI isn't responding` (Android) | Emulator unstable | Tests auto-retry with dialog dismissal |
@@ -157,7 +177,7 @@ Or use Console.app → select simulator device.
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `Executable doesn't exist` | Browsers not installed | `pwsh playwright.ps1 install chromium` |
+| `Executable doesn't exist` | The pinned Playwright browser is not installed | After the integration project builds and with approval to install software, run `pwsh tests/SkiaSharp.Tests.Integration/bin/Debug/net10.0/playwright.ps1 install chromium` |
 | `Target page, context or browser has been closed` | Server crashed | Check app build output |
 | `Timeout waiting for selector` | App didn't render | Check Blazor app console for errors |
 | `Blazor server failed to start` | Env vars from parent | Fixed in test code (ClearDotNetEnvironmentVariables) |
@@ -171,34 +191,11 @@ Or use Console.app → select simulator device.
 | `Fontconfig error: Cannot load default config file` | No fontconfig in container | Expected with `NoDependencies` — not an error |
 | `Cannot connect to the Docker daemon` | Docker Desktop crashed or is not running | Continue unrelated items; restart Docker Desktop in the repair pass and retry only `linux` |
 | Docker image build slow | No layer cache | Normal on first run (~90s), cached after |
-
-## Platform-Specific Notes
-
-### macOS /var symlink issue
-
-If Blazor tests fail with path-related errors, the test infrastructure automatically resolves `/var` → `/private/var` in `PlatformTestBase.cs`.
-
-### iOS Simulator Scale Factors
-
-Scale factor calculated automatically from screenshot size vs window size:
-- iPhone Pro/Max: 3x
-- iPhone standard: 3x
-- iPad: 2x
+| Failed Docker test leaves `skiasharp-test-*` images | Docker image cleanup is not runner-owned | Record the image tags and remove them explicitly after diagnostics are preserved |
 
 ### Mac Catalyst
 
 Mac Catalyst uses hardcoded 2x scale factor. Screenshot is full monitor size, element coordinates are app-relative.
-
-**No Allow UI Automation prompt / WDA app missing:**
-
-Xcode 27 rejects Mac2's current WebDriverAgentMac deployment target before
-XCTest can request authenticated Automation Mode. The host runner works around
-this by selecting the newest installed Xcode 26.x process-locally. Confirm its
-output contains `Using Xcode 26... for Mac2`.
-
-If no Xcode 26.x is installed, the runner uses the default Xcode and prints that
-fallback explicitly. Track removal of this workaround in
-[appium/appium-mac2-driver#410](https://github.com/appium/appium-mac2-driver/issues/410).
 
 **"Timed out while enabling automation mode" error:**
 
@@ -213,8 +210,8 @@ logged-in Aqua session.
 4. Restart the Terminal/IDE and rerun the item in isolation.
 
 Do not run `enable-automationmode-without-authentication` for interactive release
-tests. Recovery kills only stale WebDriverAgentRunner processes and does not
-reset TCC.
+tests. Recovery terminates processes named `WebDriverAgentRunner`; confirm no
+unrelated Appium session owns one before retrying. Recovery does not reset TCC.
 
 ## Retry Logic
 
@@ -222,7 +219,6 @@ Tests include automatic retry for transient failures:
 - **Android**: 3 retries, 10s delay, recovery includes dialog dismissal
 - **iOS**: 3 retries, 10s delay
 - **Mac Catalyst**: 3 retries, 30s delay, recovery kills stale WDA test processes
-- **Blazor**: 3 retries for server startup
 
 Retryable errors include:
 - Device not found
