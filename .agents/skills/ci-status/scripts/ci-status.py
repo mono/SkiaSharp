@@ -13,7 +13,7 @@ Options:
 
 Queries Azure DevOps for:
   Public CI:  mono-SkiaSharp — dnceng-public/public, def 345
-  Internal:   skiasharp-package (1642) -> skiasharp-tests (1630)
+  Internal:   SkiaSharp-Native (26493) → SkiaSharp (10789) → SkiaSharp-Tests (15756)
 """
 
 import argparse
@@ -25,8 +25,8 @@ import urllib.request
 from datetime import datetime, timezone
 from collections import defaultdict
 
-ORG_DNCENG = "https://dev.azure.com/dnceng"
-PROJECT_DNCENG = "internal"
+ORG_DEVDIV = "https://devdiv.visualstudio.com"
+PROJECT_DEVDIV = "DevDiv"
 
 ORG_DNCENG_PUBLIC = "https://dev.azure.com/dnceng-public"
 PROJECT_DNCENG_PUBLIC = "public"
@@ -37,12 +37,12 @@ PUBLIC_PIPELINES = [
     {"name": "mono-SkiaSharp", "id": 345, "org": ORG_DNCENG_PUBLIC, "project": PROJECT_DNCENG_PUBLIC},
 ]
 
-# Internal release pipeline chain - runs on release/* branches.
-# The combined Build registers signed assets in BAR; Tests consumes that exact
-# pipeline resource.
+# Internal release pipeline chain — runs on release/* branches
+# Lives in devdiv/DevDiv org
 INTERNAL_PIPELINES = [
-    {"name": "skiasharp-package", "id": 1642, "org": ORG_DNCENG, "project": PROJECT_DNCENG},
-    {"name": "skiasharp-tests", "id": 1630, "org": ORG_DNCENG, "project": PROJECT_DNCENG},
+    {"name": "SkiaSharp-Native", "id": 26493, "org": ORG_DEVDIV, "project": PROJECT_DEVDIV},
+    {"name": "SkiaSharp", "id": 10789, "org": ORG_DEVDIV, "project": PROJECT_DEVDIV},
+    {"name": "SkiaSharp-Tests", "id": 15756, "org": ORG_DEVDIV, "project": PROJECT_DEVDIV},
 ]
 
 ICONS = {

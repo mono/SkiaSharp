@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-Query Component Governance (CG) alerts for the SkiaSharp Build pipeline.
+Query all Component Governance (CG) alerts for SkiaSharp pipelines.
 
-The combined skiasharp-package pipeline builds native and managed assets,
-signs, and registers the shipped packages in BAR. The script queries its latest
-completed builds from main and active release branches, then deduplicates alerts
-across all builds.
+Queries BOTH the SkiaSharp-Native (native libraries) and SkiaSharp (managed C#)
+pipelines since together they make up the shipped build. Automatically queries
+the latest builds from main AND active release branches, then deduplicates
+alerts across all builds to give a complete picture.
 
 Prerequisites:
   - az CLI installed and authenticated
   - az devops extension installed
-  - Default org/project configured: az devops configure --defaults organization=https://dev.azure.com/dnceng project=internal
+  - Default org/project configured: az devops configure --defaults organization=https://devdiv.visualstudio.com project=DevDiv
 
 Usage:
-  python3 query-cg-alerts.py --output FILE [--branch BRANCH] [--text] [--verbose] [--build-id BUILD_ID]
+  python3 query-cg-alerts.py --output FILE [--branch BRANCH] [--text] [--verbose] [--pipeline PIPELINE] [--build-id BUILD_ID]
 
   # Standard usage — query all branches, write JSON to file (progress on stdout)
   python3 query-cg-alerts.py --output output/ai/cg-alerts-cache.json
@@ -26,6 +26,9 @@ Usage:
 
   # Query only a specific branch
   python3 query-cg-alerts.py --branch main --output output/ai/cg-alerts-cache.json
+
+  # Query only the native pipeline
+  python3 query-cg-alerts.py --pipeline native --output output/ai/cg-alerts-cache.json
 
   # Query a specific build
   python3 query-cg-alerts.py --build-id 14176611 --output output/ai/cg-alerts-cache.json
@@ -45,12 +48,13 @@ import urllib.request
 from collections import defaultdict
 from datetime import datetime, timezone
 
-ORG = "https://dev.azure.com/dnceng"
-PROJECT = "internal"
+ORG = "https://devdiv.visualstudio.com"
+PROJECT = "DevDiv"
 
-# The combined pipeline owns native and managed shipped assets.
+# Both pipelines together make up the shipped build
 PIPELINES = {
-    "build": {"id": 1642, "name": "skiasharp-package"},
+    "native": {"id": 26493, "name": "SkiaSharp-Native"},
+    "managed": {"id": 10789, "name": "SkiaSharp"},
 }
 
 # Branches to query by default (main + any active release branches)
@@ -227,6 +231,8 @@ def main():
     parser = argparse.ArgumentParser(description="Query CG alerts for SkiaSharp pipelines")
     parser.add_argument("--build-id", type=int, help="Specific build ID (skips branch discovery)")
     parser.add_argument("--branch", type=str, help="Query only this branch (e.g., 'main' or 'release/3.119.x')")
+    parser.add_argument("--pipeline", type=str, choices=["native", "managed", "both"], default="both",
+                        help="Which pipeline to query (default: both)")
     parser.add_argument("--text", action="store_true", help="Also print human-readable text summary to stdout")
     parser.add_argument("--output", "-o", type=str, required=True, help="Write JSON output to this file (required). Progress prints to stdout.")
     parser.add_argument("--verbose", "-v", action="store_true", help="Show per-job progress (each CG log parsed)")
@@ -234,7 +240,11 @@ def main():
 
     token = get_token()
 
-    pipelines_to_query = [("build", PIPELINES["build"])]
+    # Determine which pipelines to query
+    if args.pipeline == "both":
+        pipelines_to_query = list(PIPELINES.items())
+    else:
+        pipelines_to_query = [(args.pipeline, PIPELINES[args.pipeline])]
 
     # Determine which builds to query
     builds_to_query = []  # list of (build_id, branch, build_number, pipeline_type)
@@ -245,15 +255,9 @@ def main():
         build = api_get(token, url)
         if build:
             branch = build.get("sourceBranch", "").replace("refs/heads/", "")
+            # Determine pipeline type from definition
             def_id = build.get("definition", {}).get("id")
-            if def_id != PIPELINES["build"]["id"]:
-                print(
-                    f"ERROR: Build {args.build_id} belongs to definition "
-                    f"{def_id}, expected {PIPELINES['build']['id']}",
-                    file=sys.stderr,
-                )
-                sys.exit(1)
-            ptype = "build"
+            ptype = "native" if def_id == PIPELINES["native"]["id"] else "managed"
             builds_to_query.append((args.build_id, branch, build.get("buildNumber", "unknown"), ptype))
         else:
             print(f"ERROR: Build {args.build_id} not found", file=sys.stderr)

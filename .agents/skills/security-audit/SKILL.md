@@ -2,8 +2,7 @@
 name: security-audit
 description: >
   Audit SkiaSharp's native dependencies for security vulnerabilities and CVEs,
-  including Component Governance (CG) alerts from the combined
-  skiasharp-package Azure DevOps pipeline.
+  including Component Governance (CG) alerts from the SkiaSharp-Native and SkiaSharp Azure DevOps pipelines.
   Read-only investigation that produces a status report with recommendations.
 
   Use when user asks to:
@@ -13,7 +12,7 @@ description: >
   - Get an overview of open vulnerabilities
   - See what security work is pending
   - Check Component Governance alerts
-  - Review CG alerts from the official combined Build pipeline
+  - Review CG alerts from the native build pipeline
 
   Triggers: "security audit", "audit CVEs", "CVE status", "what security issues are open",
   "check vulnerability status", "security overview", "what CVEs need fixing",
@@ -303,9 +302,8 @@ submodules, etc.
 
 ### Step 7: Query Component Governance Alerts
 
-CG scans Docker container images and build-time dependencies from the combined
-`skiasharp-package` ADO pipeline. CG alerts are invisible to GitHub Issues and
-NVD searches alone.
+CG scans Docker container images and build-time deps from both ADO pipelines. CG alerts are
+invisible to GitHub Issues and NVD searches alone.
 
 > 🛑 **THIS STEP TAKES 5–7 MINUTES.** The CG script queries 60+ jobs across 8+ builds. This
 > is NORMAL and NON-NEGOTIABLE. Use `initial_wait: 600` (or higher). Do NOT skip, fabricate
@@ -319,7 +317,7 @@ NVD searches alone.
 - Alert categories (Alpine, Debian, npm, Rust, NuGet)
 - Key Dockerfiles for fixes
 - How to embed the raw `alerts` array in the report (do NOT summarize)
-- CG portal and exact Build links
+- Portal links
 
 ---
 

@@ -87,9 +87,8 @@
   <!-- Component Governance Alerts -->
   <div class="card mb-4" id="cg-section" style="display:none;">
     <div class="card-header bg-white d-flex align-items-center">
-      <i class="bi bi-shield-exclamation me-2"></i><strong>Component Governance</strong>
-      <a href="https://dev.azure.com/dnceng/internal/_componentGovernance/dotnet-SkiaSharp" target="_blank" class="ms-2 small">Open alerts</a>
-      <a href="https://dev.azure.com/dnceng/internal/_build?definitionId=1642" target="_blank" class="ms-2 small">Open scan pipeline</a>
+      <i class="bi bi-shield-exclamation me-2"></i><strong>Component Governance (Build Pipeline)</strong>
+      <a href="https://devdiv.visualstudio.com/DevDiv/_componentGovernance/113321?_a=alerts&typeId=29227950&alerts-view-option=active" target="_blank" class="ms-2 small">Open in AzDO</a>
       <span class="ms-auto" id="cg-badge"></span>
     </div>
     <div class="card-body">
@@ -627,7 +626,7 @@ function renderCgAlerts(cg) {
   const pipes = cg.pipelines || [];
   if (pipes.length > 0) {
     document.getElementById('cg-pipelines').innerHTML = `<i class="bi bi-gear me-1"></i>Scanned: ${pipes.map(p =>
-      `<a href="https://dev.azure.com/dnceng/internal/_build?definitionId=${p.id}" target="_blank">${esc(p.name)}</a>`
+      `<a href="https://dev.azure.com/devdiv/DevDiv/_build?definitionId=${p.id}" target="_blank">${esc(p.name)}</a>`
     ).join(', ')}`;
   }
 }

@@ -4,7 +4,6 @@ on:
   pull_request:
     paths:
       - ".agents/skills/release-branch/**"
-      - ".agents/skills/release-milestones/**"
       - ".agents/skills/release-publish/**"
       - ".github/workflows/release-*.yml"
       - "scripts/infra/publishing/**"
@@ -13,7 +12,6 @@ on:
     branches: [main]
     paths:
       - ".agents/skills/release-branch/**"
-      - ".agents/skills/release-milestones/**"
       - ".agents/skills/release-publish/**"
       - ".github/workflows/release-*.yml"
       - "scripts/infra/publishing/**"
@@ -56,14 +54,10 @@ jobs:
           Get-Help ./scripts/infra/publishing/prepare-release.ps1 -Full > $null
           Get-Help ./scripts/infra/publishing/finish-release.ps1 -Full > $null
           Get-Help ./scripts/infra/publishing/update-bug-template.ps1 -Full > $null
-          Get-Help ./scripts/infra/publishing/reconcile-release-assignments.ps1 -Full > $null
-          Get-Help ./scripts/infra/publishing/update-release-milestones.ps1 -Full > $null
 
       - name: Run publishing PowerShell tests
         shell: pwsh
-        run: |
-          ./scripts/infra/publishing/tests/Test-PublishingScripts.ps1
-          ./scripts/infra/publishing/tests/Test-ReleaseMilestones.ps1
+        run: ./scripts/infra/publishing/tests/Test-PublishingScripts.ps1
 
       - name: Validate cache dependency coverage
         run: python3 scripts/infra/caching/repo-deps.py validate

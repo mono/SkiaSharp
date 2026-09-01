@@ -74,30 +74,6 @@ function Expand-GitHubPages([object] $Pages) {
     return $items.ToArray()
 }
 
-# Reads all repository milestones and rejects duplicate titles.
-function Get-GitHubMilestoneMap([string] $Repository) {
-    $pages = Invoke-GitHubJsonWithRetry -Arguments @(
-        'api',
-        '--paginate',
-        '--slurp',
-        "repos/$Repository/milestones?state=all&per_page=100"
-    )
-    $result = @{}
-    foreach ($milestone in Expand-GitHubPages $pages) {
-        $title = [string] $milestone.title
-        if ($result.ContainsKey($title)) {
-            throw "Multiple milestones are named $title."
-        }
-        $result[$title] = $milestone
-    }
-    return $result
-}
-
-# Reads one issue or pull request through the issues endpoint.
-function Get-GitHubIssue([string] $Repository, [int] $Number) {
-    return Invoke-GitHubJsonWithRetry -Arguments @('api', "repos/$Repository/issues/$Number")
-}
-
 # Reads a GitHub Release while treating a missing tag as normal state.
 function Get-GitHubRelease([string] $Repository, [string] $Tag) {
     $result = Invoke-GitHub -Arguments @(
@@ -125,8 +101,6 @@ Export-ModuleMember -Function @(
     'Invoke-GitHubJson',
     'Invoke-GitHubJsonWithRetry',
     'Expand-GitHubPages',
-    'Get-GitHubMilestoneMap',
-    'Get-GitHubIssue',
     'Get-GitHubRelease',
     'Enable-GitHubGitAuthentication'
 )

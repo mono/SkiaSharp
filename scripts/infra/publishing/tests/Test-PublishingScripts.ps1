@@ -10,8 +10,6 @@ $commonPath = Join-Path $publishingRoot 'Publishing.Common.psm1'
 $preparePath = Join-Path $publishingRoot 'prepare-release.ps1'
 $finishPath = Join-Path $publishingRoot 'finish-release.ps1'
 $bugTemplatePath = Join-Path $publishingRoot 'update-bug-template.ps1'
-$reconcilePath = Join-Path $publishingRoot 'reconcile-release-assignments.ps1'
-$milestonesPath = Join-Path $publishingRoot 'update-release-milestones.ps1'
 
 Import-Module $gitCommonPath -Force
 Import-Module $gitHubCommonPath -Force
@@ -87,22 +85,13 @@ function Get-ScriptFunctionText([string] $Path) {
 $prepareParameters = (Get-Command $preparePath).Parameters.Keys
 $finishParameters = (Get-Command $finishPath).Parameters.Keys
 $bugTemplateParameters = (Get-Command $bugTemplatePath).Parameters.Keys
-$reconcileParameters = (Get-Command $reconcilePath).Parameters.Keys
-$milestoneParameters = (Get-Command $milestonesPath).Parameters.Keys
 Assert-True ($prepareParameters -contains 'Apply' -and $prepareParameters -contains 'Push') `
     'Prepare must expose Apply and Push.'
 Assert-True ($finishParameters -contains 'Push' -and $finishParameters -notcontains 'Apply') `
     'Finish must expose Push but not Apply.'
 Assert-True ($bugTemplateParameters -contains 'Apply' -and $bugTemplateParameters -contains 'Push') `
     'The bug-template updater must expose Apply and Push.'
-Assert-True ($reconcileParameters -contains 'Version' -and $reconcileParameters -contains 'Push' -and
-    $reconcileParameters -notcontains 'Apply') 'Assignment reconciliation must expose Version and Push but not Apply.'
-Assert-True ($milestoneParameters -contains 'Count' -and $milestoneParameters -contains 'Push' -and
-    $milestoneParameters -notcontains 'Apply' -and $milestoneParameters -notcontains 'Version') `
-    'The milestone updater must expose Count and Push but not Apply or Version.'
 Assert-RejectsApply $finishPath @('-Version', '4.152.0-preview.1')
-Assert-RejectsApply $reconcilePath @('-Version', '4.152.0')
-Assert-RejectsApply $milestonesPath @()
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
 Assert-True ($bugTemplateScript -match '--force-with-lease') `
     'The issue-template automation branch must use force-with-lease.'

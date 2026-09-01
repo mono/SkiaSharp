@@ -3,7 +3,7 @@ name: ci-status
 description: >
   Check the CI build health and automation status of SkiaSharp across main and
   recent release branches. Collects the last N builds from the AzDO pipeline chain
-  (Public plus the combined Build and connected Tests) and all GitHub Actions workflows from
+  (Public + Native → Managed → Tests) and all GitHub Actions workflows from
   mono/SkiaSharp and mono/SkiaSharp-API-docs, providing a daily dashboard view
   with AI-powered analysis of failures, regressions, and flakes.
 
@@ -30,15 +30,15 @@ description: >
 Provide a dashboard view of SkiaSharp CI health across main and recent release branches,
 with AI-powered analysis to identify patterns, regressions, and actionable fixes.
 
-This skill gives a **broad overview** of CI health across multiple branches,
-including the current dnceng Build and Tests pipelines.
+Unlike the `release-status` skill (which tracks a single release through the pipeline chain),
+this skill gives a **broad overview** of CI health across multiple branches simultaneously.
 
 ## Pipelines Tracked
 
 ### Prerequisites
 
 The collector script requires:
-- **`az` CLI** — authenticated with access to `dnceng-public/public` and `dnceng/internal`
+- **`az` CLI** — authenticated with access to `dnceng-public/public` and `devdiv/DevDiv` orgs
 - **`gh` CLI** — authenticated with read access to `mono/SkiaSharp` and `mono/SkiaSharp-API-docs`
 - **Git remotes** — fetched recently so `git branch -r` returns up-to-date release branches
 
@@ -48,17 +48,13 @@ The collector script requires:
 |---------------|-------------|---------------|-----|
 | `mono-SkiaSharp` | dnceng-public/public | 345 | [link](https://dev.azure.com/dnceng-public/public/_build?definitionId=345&_a=summary) |
 
-### Internal Release Chain (dnceng/internal — triggers on release/* branches)
+### Internal Release Chain (devdiv/DevDiv org — triggers on release/* branches)
 
 | Order | Pipeline Name | Definition ID | URL |
 |-------|---------------|---------------|-----|
-| 1 | `skiasharp-package` | 1642 | [link](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) |
-| 2 | `skiasharp-tests` | 1630 | [link](https://dev.azure.com/dnceng/internal/_build?definitionId=1630) |
-
-Tests consumes the folder-qualified pipeline resource
-`\dotnet\skiasharp\skiasharp-package`. The Build pipeline owns native and
-managed compilation, real signing, BAR registration/validation, and Arcade's
-standard Darc/Maestro stages.
+| 1 | `SkiaSharp-Native` | 26493 | [link](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=26493) |
+| 2 | `SkiaSharp` | 10789 | [link](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=10789) |
+| 3 | `SkiaSharp-Tests` | 15756 | [link](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=15756) |
 
 ### GitHub Actions (mono/SkiaSharp and mono/SkiaSharp-API-docs)
 
@@ -172,20 +168,16 @@ Group all errors/warnings across all branches and pipelines by **normalized sign
 
 ### 2.3 Pipeline Chain Analysis (MANDATORY — always perform, even when failures look independent)
 
-The Internal chain is sequential: **Build -> Tests**. A red Tests run is not
-automatically an independent failure; it may be a downstream casualty of the
-exact Build resource it consumed.
+The Internal chain is sequential: **Native → Managed → Tests**. A red pipeline is NOT automatically an independent failure — it is often a downstream casualty of an upstream break.
 
 For **every** branch that has ≥1 red internal pipeline, you MUST:
-1. Identify whether the connected Build failed before Tests.
-2. Decide whether a red Tests run is an **independent failure** (its own distinct
-   error) or a **cascade** from the exact Build resource.
-3. **Collapse cascades** into the Build root cause so a single break is not
-   counted twice.
+1. Find the earliest-in-chain failing pipeline (Native before Managed before Tests).
+2. Decide whether each later red pipeline is an **independent failure** (its own distinct error) or a **cascade** (failed because the upstream artifact never built / a shared error).
+3. **Collapse cascades** into the upstream root cause so a single break is not counted as 2–3 problems.
 
 Emit one explicit sentence per affected branch, even if the answer is "no cascade":
-- Cascade: `"release/X: Build and Tests are red; Tests consumed that exact Build and is a downstream cascade, not an independent break."`
-- Independent: `"release/X: Build and Tests are both red but have unrelated errors ({errA} vs {errB}) — two independent failures."`
+- Cascade: `"release/X: 3 red internal pipelines — root-caused to {Native}; Managed+Tests were blocked downstream, not independently broken."`
+- Independent: `"release/X: Native and Tests both red but with unrelated errors ({errA} vs {errB}) — two independent failures, not a cascade."`
 
 ⚠️ Do not skip this step or list internal pipelines as separate equal-weight failures without first stating the chain verdict. This is the most common analysis miss.
 
@@ -339,12 +331,12 @@ After rendering, present a brief summary in chat and point to the files:
 🟡 CI is degraded — release/3.119.x is blocked by a Guardian TSA upload failure; main is green.
 
 📊 AzDO Health:
-  main                         ✅ Public | ✅ Build | ✅ Tests
-  release/4.147.0-preview.3    ❌ Public | ⚠️ Build | ✅ Tests
-  release/3.119.x              ❌ Public | ⚠️ Build | ❌ Tests
+  main                         ✅ Public | ✅ Native | ✅ Managed | ✅ Tests
+  release/4.147.0-preview.3    ❌ Public | ⚠️ Native | ✅ Managed | ✅ Tests
+  release/3.119.x              ❌ Public | ⚠️ Native | ⚠️ Managed | ❌ Tests
 
 🔗 Chain verdict:
-  release/3.119.x: Tests red independently (Guardian TSA); Build warning only — no cascade.
+  release/3.119.x: Tests red independently (Guardian TSA); Native/Managed warnings only — no cascade.
   release/4.147.0-preview.3: Public CI red (CS0016 errors); internal chain unaffected.
 
 🐙 GitHub Actions:
@@ -381,12 +373,12 @@ If asked to dig deeper:
 | Question | Use |
 |----------|-----|
 | "Is main green?" | **ci-status** |
-| "How's the release/3.119.4 build doing?" | **ci-status** |
+| "How's the release/3.119.4 build doing?" | **release-status** |
 | "Daily CI check" | **ci-status** |
-| "Are public packages ready to finalize?" | **release-publish** dry-run |
+| "Are packages ready for release X?" | **release-status** |
 | "Any CI failures across the board?" | **ci-status** |
 | "What automation is failing?" | **ci-status** |
-| "Trace the pipeline chain for branch X" | **ci-status** |
+| "Trace the pipeline chain for branch X" | **release-status** |
 | "Why is CI red?" | **ci-status** (with analysis) |
 | "Is release/X shippable?" | **ci-status** (risk assessment) |
 | "GitHub Actions status?" | **ci-status** |
