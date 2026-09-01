@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
 import importlib.util
+import io
 from pathlib import Path
 import shlex
 import sys
 import unittest
+from unittest import mock
+import zipfile
 
 
 SCRIPTS = Path(__file__).resolve().parent.parent
@@ -38,19 +41,61 @@ RUNNERS = {
 }
 
 
-STATUS = {
-    "packageVersions": {
-        "test": {
-            "SkiaSharp": "4.152.0-preview.1.1",
-            "HarfBuzzSharp": "14.2.1-preview.1.1",
-        }
-    }
+SKIA_VERSION = "4.152.0-preview.1.1"
+HARFBUZZ_VERSION = "14.2.1-preview.1.1"
+PUBLIC_PLAN = {
+    "receipt": {
+        "skiaSharpVersion": SKIA_VERSION,
+        "harfBuzzSharpVersion": HARFBUZZ_VERSION,
+        "sourceCommit": "a" * 40,
+        "packages": [
+            {"id": "SkiaSharp"},
+            {"id": "SkiaSharp.HarfBuzz"},
+            {"id": "HarfBuzzSharp"},
+        ],
+    },
+    "release": {"branch": "release/4.152.0-preview.1"},
+    "warnings": ["example"],
 }
 
 
 class ReleaseTestPlanTests(unittest.TestCase):
+    @mock.patch.object(planner.urllib.request, "urlopen")
+    def test_read_package_uses_nuspec_source_and_dependencies(self, urlopen):
+        nuspec = f"""<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>SkiaSharp.HarfBuzz</id>
+    <version>{SKIA_VERSION}</version>
+    <repository branch="release/4.152.0-preview.1" commit="{'a' * 40}" />
+    <dependencies>
+      <group>
+        <dependency id="HarfBuzzSharp" version="{HARFBUZZ_VERSION}" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>"""
+        content = io.BytesIO()
+        with zipfile.ZipFile(content, "w") as package:
+            package.writestr("SkiaSharp.HarfBuzz.nuspec", nuspec)
+        response = mock.MagicMock()
+        response.__enter__.return_value.read.return_value = content.getvalue()
+        urlopen.return_value = response
+
+        result = planner.read_package("SkiaSharp.HarfBuzz", SKIA_VERSION)
+
+        self.assertEqual(result["commit"], "a" * 40)
+        self.assertEqual(
+            result["harfBuzzVersions"],
+            [HARFBUZZ_VERSION],
+        )
+
     def test_full_macos_matrix(self):
-        matrix, missing = planner.build_matrix(STATUS, "macOS")
+        matrix, missing = planner.build_matrix(
+            SKIA_VERSION,
+            HARFBUZZ_VERSION,
+            "macOS",
+        )
         self.assertEqual(
             [item["id"] for item in matrix],
             [
@@ -71,7 +116,11 @@ class ReleaseTestPlanTests(unittest.TestCase):
         )
 
     def test_linux_matrix_reports_apple_and_windows_gaps(self):
-        matrix, missing = planner.build_matrix(STATUS, "Linux")
+        matrix, missing = planner.build_matrix(
+            SKIA_VERSION,
+            HARFBUZZ_VERSION,
+            "Linux",
+        )
         self.assertEqual(
             [item["id"] for item in matrix],
             [
@@ -92,7 +141,11 @@ class ReleaseTestPlanTests(unittest.TestCase):
         )
 
     def test_matrix_commands_use_platform_runners(self):
-        matrix, _ = planner.build_matrix(STATUS, "macOS")
+        matrix, _ = planner.build_matrix(
+            SKIA_VERSION,
+            HARFBUZZ_VERSION,
+            "macOS",
+        )
         for item in matrix:
             self.assertNotIn("selectedByDefault", item)
             command = item["command"]
@@ -128,7 +181,11 @@ class ReleaseTestPlanTests(unittest.TestCase):
         )
 
     def test_every_planned_command_round_trips_through_runner_parser(self):
-        matrix, _ = planner.build_matrix(STATUS, "macOS")
+        matrix, _ = planner.build_matrix(
+            SKIA_VERSION,
+            HARFBUZZ_VERSION,
+            "macOS",
+        )
         for item in matrix:
             argv = shlex.split(item["command"])
             script_index = next(
@@ -151,65 +208,118 @@ class ReleaseTestPlanTests(unittest.TestCase):
             self.assertEqual(parsed.skia, "4.152.0-preview.1.1")
             self.assertEqual(parsed.harfbuzz, "14.2.1-preview.1.1")
 
-    def test_status_override_is_limited_to_tests_wait(self):
-        base = {
-            "managedRun": {"state": "succeeded"},
-            "packageFeed": {"state": "ready"},
-        }
-        self.assertEqual(
-            planner.plan_eligibility(
-                {**base, "nextAction": "wait-for-tests"},
-                allow_incomplete_ci=True,
-            ),
-            (True, True),
-        )
-        with self.assertRaisesRegex(
-            planner.PlanError,
-            "only the tests wait",
-        ):
-            planner.plan_eligibility(
-                {**base, "nextAction": "wait-for-managed"},
-                allow_incomplete_ci=True,
+    @mock.patch.object(planner, "read_package")
+    def test_receipt_report_uses_public_anchor_packages(self, read_package):
+        def package(package_id, version):
+            dependencies = (
+                [HARFBUZZ_VERSION]
+                if package_id == "SkiaSharp.HarfBuzz"
+                else []
             )
-        with self.assertRaisesRegex(
-            planner.PlanError,
-            "only the tests wait",
-        ):
-            planner.plan_eligibility(
-                {**base, "nextAction": "retry-tests"},
-                allow_incomplete_ci=True,
-            )
+            return {
+                "id": package_id,
+                "version": version,
+                "branch": "release/4.152.0-preview.1",
+                "commit": "a" * 40,
+                "harfBuzzVersions": dependencies,
+            }
 
-    def test_release_summary_is_flat(self):
-        status = {
-            "branch": "release/4.152.0-preview.1",
-            "commit": "a" * 40,
-            "state": "ready",
-            "nextAction": "start-release-testing",
-            "warnings": ["example"],
-            "managedRun": {
-                "state": "succeeded",
-                "runId": 20,
-                "buildNumber": "build",
-                "sourceBranch": "refs/heads/release/x",
-                "sourceVersion": "a" * 40,
-                "url": "managed",
-            },
-            "testsRun": {"runId": 30, "url": "tests"},
-            "packageVersions": {
-                "test": {"SkiaSharp": "s", "HarfBuzzSharp": "h"},
-                "public": {"SkiaSharp": "s", "HarfBuzzSharp": "h"},
-            },
-        }
-        summary = planner.release_summary(
-            status,
-            status_override=False,
+        read_package.side_effect = package
+        result = planner.receipt_report(Path("/repo"), SKIA_VERSION)
+
+        self.assertEqual(result["receipt"]["sourceCommit"], "a" * 40)
+        self.assertEqual(
+            result["receipt"]["harfBuzzSharpVersion"],
+            HARFBUZZ_VERSION,
         )
-        self.assertEqual(summary["managedRunId"], 20)
-        self.assertEqual(summary["testsRunId"], 30)
-        self.assertEqual(summary["warnings"], ["example"])
-        self.assertNotIn("managedRun", summary)
-        self.assertNotIn("testsRun", summary)
+        self.assertEqual(
+            [item["id"] for item in result["receipt"]["packages"]],
+            ["SkiaSharp", "SkiaSharp.HarfBuzz", "HarfBuzzSharp"],
+        )
+        self.assertEqual(
+            read_package.call_args_list,
+            [
+                mock.call("SkiaSharp", SKIA_VERSION),
+                mock.call("SkiaSharp.HarfBuzz", SKIA_VERSION),
+                mock.call("HarfBuzzSharp", HARFBUZZ_VERSION),
+            ],
+        )
+
+    @mock.patch.object(planner, "read_package")
+    def test_receipt_report_rejects_mismatched_anchor_branch(
+        self,
+        read_package,
+    ):
+        def package(package_id, version):
+            return {
+                "id": package_id,
+                "version": version,
+                "branch": (
+                    "release/4.151.0"
+                    if package_id == "HarfBuzzSharp"
+                    else "release/4.152.0-preview.1"
+                ),
+                "commit": "a" * 40,
+                "harfBuzzVersions": (
+                    [HARFBUZZ_VERSION]
+                    if package_id == "SkiaSharp.HarfBuzz"
+                    else []
+                ),
+            }
+
+        read_package.side_effect = package
+
+        with self.assertRaisesRegex(
+            planner.PlanError,
+            "source metadata does not match",
+        ):
+            planner.receipt_report(Path("/repo"), SKIA_VERSION)
+
+    @mock.patch.object(planner, "read_package")
+    def test_receipt_report_rejects_reused_anchor_from_another_commit(
+        self,
+        read_package,
+    ):
+        def package(package_id, version):
+            return {
+                "id": package_id,
+                "version": version,
+                "branch": "release/4.152.0-preview.1",
+                "commit": (
+                    "b" * 40
+                    if package_id == "HarfBuzzSharp"
+                    else "a" * 40
+                ),
+                "harfBuzzVersions": (
+                    [HARFBUZZ_VERSION]
+                    if package_id == "SkiaSharp.HarfBuzz"
+                    else []
+                ),
+            }
+
+        read_package.side_effect = package
+
+        with self.assertRaisesRegex(
+            planner.PlanError,
+            "source metadata does not match",
+        ):
+            planner.receipt_report(Path("/repo"), SKIA_VERSION)
+
+    def test_release_summary_reports_public_package_identity(self):
+        self.assertEqual(
+            planner.release_summary(PUBLIC_PLAN),
+            {
+                "branch": "release/4.152.0-preview.1",
+                "commit": "a" * 40,
+                "state": "public",
+                "warnings": ["example"],
+                "publicPackages": {
+                    "SkiaSharp": SKIA_VERSION,
+                    "HarfBuzzSharp": HARFBUZZ_VERSION,
+                },
+                "verifiedPackageCount": 3,
+            },
+        )
 
     def test_windows_command_quotes_powershell_metacharacters(self):
         result = planner.format_command(

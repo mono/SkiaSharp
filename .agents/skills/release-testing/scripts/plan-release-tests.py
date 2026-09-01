@@ -1,31 +1,24 @@
 #!/usr/bin/env python3
-"""Plan the default SkiaSharp release integration-test matrix."""
+"""Plan the default SkiaSharp public-package smoke-test matrix."""
 
 from __future__ import annotations
 
 import argparse
+import io
 import json
-from pathlib import Path
 import platform
 import re
 import shlex
 import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
+import zipfile
 
 import release_test_common as common
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-STATUS_SCRIPT = (
-    SCRIPT_DIR.parent.parent
-    / "release-status"
-    / "scripts"
-    / "pipeline-status.py"
-)
-
-
 PlanError = common.ReleaseTestError
-
-
-parse_json_output = common.parse_json_output
 
 
 def format_command(
@@ -46,14 +39,101 @@ def format_command(
     return f"& {formatted}" if formatted.startswith("'") else formatted
 
 
-def status_report(root: Path, target: str) -> dict:
-    return parse_json_output(
-        common.run_checked(
-            [sys.executable, str(STATUS_SCRIPT), target],
-            cwd=root,
-            timeout=180,
-        ).stdout
+def read_package(package_id: str, version: str) -> dict:
+    lower_id = package_id.lower()
+    lower_version = version.lower()
+    url = (
+        "https://api.nuget.org/v3-flatcontainer/"
+        f"{urllib.parse.quote(lower_id)}/{urllib.parse.quote(lower_version)}/"
+        f"{urllib.parse.quote(lower_id)}.{urllib.parse.quote(lower_version)}.nupkg"
     )
+    request = urllib.request.Request(
+        url,
+        headers={"User-Agent": "SkiaSharp-release-testing"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            content = response.read()
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as error:
+        raise PlanError(
+            f"NuGet.org package {package_id} {version} is unavailable: {error}"
+        ) from error
+
+    try:
+        with zipfile.ZipFile(io.BytesIO(content)) as package:
+            nuspecs = [
+                name for name in package.namelist()
+                if name.lower().endswith(".nuspec")
+            ]
+            if len(nuspecs) != 1:
+                raise PlanError(
+                    f"{package_id} {version} contains {len(nuspecs)} nuspecs"
+                )
+            metadata = ET.fromstring(package.read(nuspecs[0])).find(
+                "{*}metadata"
+            )
+    except (ET.ParseError, zipfile.BadZipFile) as error:
+        raise PlanError(
+            f"NuGet.org package {package_id} {version} is malformed: {error}"
+        ) from error
+
+    if metadata is None:
+        raise PlanError(f"{package_id} {version} has no nuspec metadata")
+    actual_id = metadata.findtext("{*}id")
+    actual_version = metadata.findtext("{*}version")
+    repository = metadata.find("{*}repository")
+    if (
+        actual_id != package_id
+        or actual_version != version
+        or repository is None
+        or not repository.get("branch")
+        or not re.fullmatch(r"[0-9a-f]{40}", repository.get("commit") or "")
+    ):
+        raise PlanError(
+            f"{package_id} {version} has inconsistent source metadata"
+        )
+    dependencies = {
+        dependency.get("version")
+        for dependency in metadata.findall(".//{*}dependency")
+        if dependency.get("id") == "HarfBuzzSharp"
+    }
+    return {
+        "id": actual_id,
+        "version": actual_version,
+        "branch": repository.get("branch"),
+        "commit": repository.get("commit"),
+        "harfBuzzVersions": sorted(dependencies),
+    }
+
+
+def receipt_report(_root, version: str) -> dict:
+    skia = read_package("SkiaSharp", version)
+    bridge = read_package("SkiaSharp.HarfBuzz", version)
+    if len(bridge["harfBuzzVersions"]) != 1:
+        raise PlanError(
+            f"SkiaSharp.HarfBuzz {version} does not have one exact "
+            "HarfBuzzSharp dependency"
+        )
+    harfbuzz_version = bridge["harfBuzzVersions"][0]
+    harfbuzz = read_package("HarfBuzzSharp", harfbuzz_version)
+    packages = [skia, bridge, harfbuzz]
+    if len({item["branch"] for item in packages}) != 1 or len(
+        {item["commit"] for item in packages}
+    ) != 1:
+        raise PlanError("Public package source metadata does not match")
+    return {
+        "receipt": {
+            "skiaSharpVersion": version,
+            "harfBuzzSharpVersion": harfbuzz_version,
+            "sourceCommit": skia["commit"],
+            "packages": [
+                {"id": item["id"], "version": item["version"]}
+                for item in packages
+            ],
+        },
+        "release": {"branch": skia["branch"]},
+        "warnings": [],
+    }
 
 
 def runner_command(
@@ -108,12 +188,10 @@ def matrix_item(
 
 
 def build_matrix(
-    status: dict,
+    skia_version: str,
+    harfbuzz_version: str,
     host_os: str,
 ) -> tuple[list[dict], list[str]]:
-    versions = status["packageVersions"]["test"]
-    skia = versions["SkiaSharp"]
-    harfbuzz = versions["HarfBuzzSharp"]
     matrix: list[dict] = []
     missing: list[str] = []
 
@@ -133,8 +211,8 @@ def build_matrix(
                 target=target,
                 runner_script=runner_script,
                 runner_args=runner_args,
-                skia_version=skia,
-                harfbuzz_version=harfbuzz,
+                skia_version=skia_version,
+                harfbuzz_version=harfbuzz_version,
                 estimated_minutes=minutes,
                 visual=visual,
             )
@@ -239,87 +317,30 @@ def build_matrix(
     return matrix, missing
 
 
-def release_summary(status: dict, *, status_override: bool) -> dict:
-    managed = status.get("managedRun") or {}
-    tests = status.get("testsRun") or {}
-    versions = status.get("packageVersions") or {}
+def release_summary(plan: dict) -> dict:
+    receipt = plan["receipt"]
+    release = plan["release"]
     return {
-        "branch": status.get("branch"),
-        "commit": status.get("commit"),
-        "state": status.get("state"),
-        "nextAction": status.get("nextAction"),
-        "statusOverride": status_override,
-        "warnings": status.get("warnings") or [],
-        "managedRunId": managed.get("runId"),
-        "testsRunId": tests.get("runId"),
-        "buildNumber": managed.get("buildNumber"),
-        "sourceBranch": managed.get("sourceBranch"),
-        "sourceVersion": managed.get("sourceVersion"),
-        "managedRunUrl": managed.get("url"),
-        "testsRunUrl": tests.get("url"),
-        "testPackages": versions.get("test"),
-        "publicPackages": versions.get("public"),
+        "branch": release["branch"],
+        "commit": receipt["sourceCommit"],
+        "state": "public",
+        "warnings": plan.get("warnings") or [],
+        "publicPackages": {
+            "SkiaSharp": receipt["skiaSharpVersion"],
+            "HarfBuzzSharp": receipt["harfBuzzSharpVersion"],
+        },
+        "verifiedPackageCount": len(receipt["packages"]),
     }
-
-
-def plan_eligibility(
-    status: dict,
-    *,
-    allow_incomplete_ci: bool,
-) -> tuple[bool, bool]:
-    next_action = status.get("nextAction")
-    ready = next_action == "start-release-testing"
-    if not ready and not allow_incomplete_ci:
-        return False, False
-    if not ready and next_action not in {
-        "wait-for-tests-trigger",
-        "wait-for-tests",
-    }:
-        raise PlanError(
-            "--allow-incomplete-ci may override only the tests wait"
-        )
-    managed_state = (status.get("managedRun") or {}).get("state")
-    feed_state = (status.get("packageFeed") or {}).get("state")
-    if managed_state not in ("succeeded", "warning"):
-        raise PlanError(
-            "Cannot override an incomplete/failed managed package build"
-        )
-    if feed_state != "ready":
-        raise PlanError("Cannot plan tests until both packages are available")
-    return True, not ready
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("release_branch_or_commit")
-    parser.add_argument("--allow-incomplete-ci", action="store_true")
+    parser.add_argument("release_version")
     args = parser.parse_args()
 
     try:
         root = common.repository_root()
-        status = status_report(root, args.release_branch_or_commit)
-        eligible, status_override = plan_eligibility(
-            status,
-            allow_incomplete_ci=args.allow_incomplete_ci,
-        )
-        if not eligible:
-            print(
-                json.dumps(
-                    {
-                        "schemaVersion": 5,
-                        "release": release_summary(
-                            status,
-                            status_override=False,
-                        ),
-                        "readyToPlan": False,
-                        "nextAction": status.get("nextAction"),
-                        "matrix": [],
-                        "overrideFlag": "--allow-incomplete-ci",
-                    },
-                    indent=2,
-                )
-            )
-            return 0
+        plan = receipt_report(root, args.release_version)
 
         host_os = (
             "macOS"
@@ -328,15 +349,17 @@ def main() -> int:
             if sys.platform == "win32"
             else "Linux"
         )
-        matrix, missing = build_matrix(status, host_os)
+        receipt = plan["receipt"]
+        matrix, missing = build_matrix(
+            receipt["skiaSharpVersion"],
+            receipt["harfBuzzSharpVersion"],
+            host_os,
+        )
         print(
             json.dumps(
                 {
-                    "schemaVersion": 5,
-                    "release": release_summary(
-                        status,
-                        status_override=status_override,
-                    ),
+                    "schemaVersion": 6,
+                    "release": release_summary(plan),
                     "readyToPlan": True,
                     "nextAction": "approve-test-matrix",
                     "host": {
@@ -348,6 +371,7 @@ def main() -> int:
                         item["id"] for item in matrix
                     ],
                     "missingCoverage": missing,
+                    "source": "NuGet.org",
                 },
                 indent=2,
             )
