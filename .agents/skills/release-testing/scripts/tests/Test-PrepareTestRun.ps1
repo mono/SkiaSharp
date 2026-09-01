@@ -21,8 +21,7 @@ try {
 
     $result = (& $prepare -RepositoryRoot $root | Out-String) | ConvertFrom-Json
     Assert-True $global:ReleaseTestDotnetCalled 'dotnet tool restore was not invoked.'
-    Assert-True $result.toolsRestored 'toolsRestored was not true.'
-    Assert-True $result.outputReset 'outputReset was not true.'
+    Assert-True ($result.outputDirectory -eq $integration) 'The output directory was not reported.'
     Assert-True (-not (Test-Path (Join-Path $integration 'old.txt'))) 'Old integration output was not removed.'
     Assert-True (Test-Path $sibling) 'The sibling output file was removed.'
 }

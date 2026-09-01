@@ -100,9 +100,10 @@ def run_ios(root: Path, args, version: str) -> None:
             ],
             cwd=root,
         )
-        simulator_id = str(simulator.get("udid") or "")
-        if not simulator_id:
+        udid = str(simulator.get("udid") or "")
+        if not udid:
             raise common.ReleaseTestError("the temporary iOS simulator has no UDID")
+        simulator_id = udid
         print(f"Selected {simulator_name} ({runtime}) [{simulator_id}]", flush=True)
         common.run_streaming(["dotnet", "tool", "run", "apple", "--", "simulator", "boot", simulator_id, "--wait", "--timeout", "180"], cwd=root)
         common.run_test(root, "MauiiOSTests", args, properties={"iOSDevice": simulator_name, "iOSVersion": version})

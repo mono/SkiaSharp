@@ -19,7 +19,7 @@ try {
 
     New-Item -ItemType Directory -Force $output > $null
     Get-ChildItem -Force $output | Remove-Item -Recurse -Force
-    [pscustomobject]@{ toolsRestored = $true; outputDirectory = $output; outputReset = $true } | ConvertTo-Json
+    [pscustomobject]@{ outputDirectory = $output } | ConvertTo-Json
 }
 finally {
     Pop-Location

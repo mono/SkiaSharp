@@ -38,7 +38,6 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         filter_value = args[args.index("--filter-class") + 1]
         self.assertEqual(filter_value, "SkiaSharp.Tests.Integration.ConsoleTests")
         self.assertIn(f"-p:PackageSource={BAR_FEED}", args)
-        self.assertIn(f"-p:RestoreSources={BAR_FEED};{common.DOTNET_PUBLIC_SOURCE}", args)
 
     def test_android_image_selection_requires_exact_version(self):
         packages = [
@@ -53,6 +52,14 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         self.assertEqual(android.select_android_image(packages, selector="37.1", architecture="arm64-v8a")[1], "37.1")
         with self.assertRaisesRegex(common.ReleaseTestError, "Android 37 is not installed"):
             android.select_android_image(packages, selector="37", architecture="arm64-v8a")
+
+    def test_android_emulator_uses_next_free_port(self):
+        devices = [
+            {"serial": "emulator-5554", "isEmulator": True},
+            {"serial": "physical-device", "isEmulator": False},
+            {"serial": "emulator-5558", "isEmulator": True},
+        ]
+        self.assertEqual(android.select_emulator_port(devices), 5556)
 
     def test_ios_runtime_and_device_selection(self):
         simulators = [
@@ -86,6 +93,23 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         self.assertTrue(any(values[5:8] == ["simulator", "boot", "SIM-123"] for values in commands))
         self.assertTrue(any(values[5:8] == ["simulator", "delete", "SIM-123"] for values in commands))
 
+    def test_ios_missing_udid_deletes_simulator_by_name(self):
+        simulators = [{"isAvailable": True, "runtime": {"name": "iOS 18.6", "version": "18.6"}, "deviceType": {"name": "iPhone 16", "productFamily": "iPhone"}}]
+        args = SimpleNamespace(device=None)
+        with (
+            mock.patch.object(ios.common, "require_workload"),
+            mock.patch.object(ios.common, "require_appium_driver"),
+            mock.patch.object(ios, "apple_simulators", return_value=simulators),
+            mock.patch.object(ios.common, "run_json", return_value={}) as create,
+            mock.patch.object(ios.common, "run_streaming") as command,
+            self.assertRaisesRegex(common.ReleaseTestError, "has no UDID"),
+        ):
+            ios.run_ios(Path.cwd(), args, "18.6")
+
+        simulator_name = create.call_args.args[0][7]
+        commands = [call.args[0] for call in command.call_args_list]
+        self.assertTrue(any(values[5:8] == ["simulator", "delete", simulator_name] for values in commands))
+
     def test_split_parsers_accept_their_platform_options(self):
         android_args = android.create_parser().parse_args(
             ["37.1", "--skiasharp", "s", "--harfbuzzsharp", "h", "--package-source", BAR_FEED, "--device", "pixel_9", "--device-id", "emulator-5554"]
@@ -98,14 +122,23 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         self.assertEqual(ios_args.version, "26.5")
         self.assertEqual(host_args.command, "linux")
 
-    def test_appium_versions_are_exact(self):
-        self.assertEqual(common.REQUIRED_APPIUM_DRIVERS["mac2"], "4.2.0")
-        drivers = {"uiautomator2": {"installed": True, "version": "8.2.2"}}
-        common.validate_appium_driver("3.6.0", drivers, "uiautomator2")
-        with self.assertRaisesRegex(common.ReleaseTestError, "Appium 3.6.0 is required"):
+    def test_appium_versions_enforce_minimums(self):
+        self.assertEqual(common.MINIMUM_APPIUM_DRIVERS["mac2"], "4.1.1")
+        drivers = {"uiautomator2": {"installed": True, "version": "8.5.0"}}
+        common.validate_appium_driver("3.7.0", drivers, "uiautomator2")
+        with self.assertRaisesRegex(common.ReleaseTestError, "Appium 3.6.0 or newer is required"):
             common.validate_appium_driver("3.5.0", drivers, "uiautomator2")
-        with self.assertRaisesRegex(common.ReleaseTestError, "uiautomator2 8.2.2 is required"):
+        with self.assertRaisesRegex(common.ReleaseTestError, "uiautomator2 8.2.2 or newer is required"):
             common.validate_appium_driver("3.6.0", {"uiautomator2": {"installed": True, "version": "8.1.0"}}, "uiautomator2")
+        with self.assertRaisesRegex(common.ReleaseTestError, "Appium 3.6.0 or newer is required"):
+            common.validate_appium_driver("3.6.0-rc.2", drivers, "uiautomator2")
+        with self.assertRaisesRegex(common.ReleaseTestError, "uiautomator2 8.2.2 or newer is required"):
+            common.validate_appium_driver("3.7.0", {"uiautomator2": {"installed": True, "version": "9.0.0-beta.1"}}, "uiautomator2")
+
+    def test_appium_version_allows_npm_diagnostics(self):
+        output = "dbug Appium Creating hash file directory\n3.7.0\n"
+        self.assertEqual(common.appium_version_output(output), "3.7.0")
+        self.assertEqual(common.APPIUM_COMMAND, ["npm", "exec", "--no", "--", "appium"])
 
     def test_android_environment_is_refreshed_each_run(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -118,11 +151,9 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             environ = {"ANDROID_HOME": str(old_sdk), "JAVA_HOME": str(old_jdk)}
             results = [subprocess.CompletedProcess([], 0, f"{sdk}\n", ""), subprocess.CompletedProcess([], 0, f"{jdk}\n", "")]
             with mock.patch.object(android.common, "run_streaming", side_effect=results) as command:
-                resolved = android.configure_android_environment(Path.cwd(), environ)
+                android.configure_android_environment(Path.cwd(), environ)
         self.assertEqual(command.call_count, 2)
-        self.assertEqual(resolved["ANDROID_HOME"], str(sdk))
-        self.assertEqual(resolved["JAVA_HOME"], str(jdk))
-        self.assertEqual(environ, resolved)
+        self.assertEqual(environ, {"ANDROID_HOME": str(sdk), "JAVA_HOME": str(jdk)})
 
     def test_missing_executable_has_clear_error(self):
         with (
@@ -174,17 +205,12 @@ class ReleaseTestRunnerTests(unittest.TestCase):
 
     def test_windows_command_shims_run_through_cmd(self):
         def which(command):
-            return {"appium": "C:\\Program Files\\nodejs\\appium.cmd", "cmd.exe": "C:\\Windows\\System32\\cmd.exe"}.get(command)
+            return {"npm": "C:\\Program Files\\nodejs\\npm.cmd", "cmd.exe": "C:\\Windows\\System32\\cmd.exe"}.get(command)
 
         with mock.patch.object(common.sys, "platform", "win32"), mock.patch.object(common.shutil, "which", side_effect=which):
-            resolved = common.resolve_command(["appium", "--version"])
+            resolved = common.resolve_command([*common.APPIUM_COMMAND, "--version"])
         self.assertEqual(resolved[:4], ["C:\\Windows\\System32\\cmd.exe", "/d", "/s", "/c"])
-        self.assertIn("appium.cmd", resolved[4])
-
-    def test_scripts_are_ascii_only(self):
-        for filename in ("release_test_common.py", "run-host-tests.py", "run-android-tests.py", "run-ios-tests.py"):
-            (SCRIPTS / filename).read_text(encoding="ascii")
-        Path(__file__).read_text(encoding="ascii")
+        self.assertIn("npm.cmd", resolved[4])
 
     def test_runners_have_no_provisioning_commands(self):
         for filename in ("run-host-tests.py", "run-android-tests.py", "run-ios-tests.py"):

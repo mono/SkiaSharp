@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import re
 import shlex
 import shutil
 import socket
@@ -17,9 +18,10 @@ ANDROID_MAX_VERSION = "37.1"
 IOS_MIN_VERSION = "18.6"
 IOS_MAX_VERSION = "26.5"
 TEST_PROJECT = "tests/SkiaSharp.Tests.Integration/SkiaSharp.Tests.Integration.csproj"
-DOTNET_PUBLIC_SOURCE = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"
-REQUIRED_APPIUM_VERSION = "3.6.0"
-REQUIRED_APPIUM_DRIVERS = {"mac2": "4.2.0", "uiautomator2": "8.2.2", "xcuitest": "12.1.2"}
+APPIUM_COMMAND = ["npm", "exec", "--no", "--", "appium"]
+MINIMUM_APPIUM_VERSION = "3.6.0"
+MINIMUM_APPIUM_DRIVERS = {"mac2": "4.1.1", "uiautomator2": "8.2.2", "xcuitest": "12.1.2"}
+SEMVER_PATTERN = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$")
 HEARTBEAT_SECONDS = 5
 
 
@@ -137,26 +139,47 @@ def require_appium_port_available() -> None:
     raise ReleaseTestError("Appium is already running on port 4723")
 
 
+def appium_version_output(text: str) -> str:
+    versions = {line.strip().removeprefix("v") for line in text.splitlines() if SEMVER_PATTERN.fullmatch(line.strip())}
+    if len(versions) != 1:
+        raise ReleaseTestError("Appium returned no unambiguous semantic version")
+    return versions.pop()
+
+
+def is_at_least_version(installed: str, minimum: str) -> bool:
+    installed_match = SEMVER_PATTERN.fullmatch(installed)
+    minimum_match = SEMVER_PATTERN.fullmatch(minimum)
+    if not installed_match or not minimum_match or minimum_match.group(4):
+        return False
+    installed_core = tuple(int(value) for value in installed_match.groups()[:3])
+    minimum_core = tuple(int(value) for value in minimum_match.groups()[:3])
+    return installed_match.group(4) is None and installed_core >= minimum_core
+
+
 def validate_appium_driver(server_version: str, drivers: dict, driver: str) -> None:
-    if server_version != REQUIRED_APPIUM_VERSION:
-        raise ReleaseTestError(f"Appium {REQUIRED_APPIUM_VERSION} is required; found {server_version or 'unknown'}")
+    if not is_at_least_version(server_version, MINIMUM_APPIUM_VERSION):
+        raise ReleaseTestError(f"Appium {MINIMUM_APPIUM_VERSION} or newer is required; found {server_version or 'unknown'}")
     installed = drivers.get(driver) or {}
     if not installed.get("installed"):
         raise ReleaseTestError(f"the Appium {driver} driver is not installed")
-    required_version = REQUIRED_APPIUM_DRIVERS[driver]
+    minimum_version = MINIMUM_APPIUM_DRIVERS[driver]
     installed_version = str(installed.get("version") or "")
-    if installed_version != required_version:
-        raise ReleaseTestError(f"Appium {driver} {required_version} is required; found {installed_version or 'unknown'}")
+    if not is_at_least_version(installed_version, minimum_version):
+        raise ReleaseTestError(f"Appium {driver} {minimum_version} or newer is required; found {installed_version or 'unknown'}")
 
 
 def require_appium_driver(root: Path, driver: str) -> None:
     require_appium_port_available()
-    if not shutil.which("appium"):
-        raise ReleaseTestError("Appium is not installed or is not on PATH")
-    server_version = run_streaming(["appium", "--version"], cwd=root, capture=True).stdout.strip()
-    drivers = run_json(["appium", "driver", "list", "--installed", "--json"], cwd=root)
+    if not shutil.which("npm"):
+        raise ReleaseTestError("npm is not installed or is not on PATH")
+    try:
+        server_output = run_streaming([*APPIUM_COMMAND, "--version"], cwd=root, capture=True).stdout
+    except ReleaseTestError as error:
+        raise ReleaseTestError(f"Appium is not installed in the current npm context or globally\n{error}") from error
+    server_version = appium_version_output(server_output)
+    drivers = run_json([*APPIUM_COMMAND, "driver", "list", "--installed", "--json"], cwd=root)
     validate_appium_driver(server_version, drivers, driver)
-    run_streaming(["appium", "driver", "doctor", driver], cwd=root)
+    run_streaming([*APPIUM_COMMAND, "driver", "doctor", driver], cwd=root)
 
 
 def add_package_arguments(parser: argparse.ArgumentParser) -> None:
@@ -173,7 +196,6 @@ def test_args(test_class: str, *, skia: str, harfbuzz: str, package_source: str,
         f"-p:SkiaSharpVersion={skia}",
         f"-p:HarfBuzzSharpVersion={harfbuzz}",
         f"-p:PackageSource={package_source}",
-        f"-p:RestoreSources={package_source};{DOTNET_PUBLIC_SOURCE}",
         "-p:BaseFramework=net10.0",
         "-p:SdkVersion=10.0.400",
         "-p:SdkAllowPrerelease=false",

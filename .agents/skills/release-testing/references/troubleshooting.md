@@ -38,11 +38,28 @@ planner.
 **`multiple BAR builds contain ...`** — select the BAR approved for release and
 rerun with `--bar-id`.
 
+**`SkiaSharp ... was not found in Maestro`** — confirm the exact version. If
+the build is older than 30 days, increase `--max-age`; do not change versions.
+
+**`BAR build ... is already released`** — this is not a pre-publication
+approval candidate. Do not route around the rejection.
+
 **`BAR build ... has no NuGet feed locations`** — the build has not published a
 testable Darc feed. Inspect the BAR/build rather than choosing another feed.
 
+**`BAR build ... has multiple NuGet feed locations`** — the BAR location is
+ambiguous. Inspect the build rather than choosing the first feed.
+
+**`BAR package feed has ... flat-container resources`** or
+**`unexpected BAR flat-container URL`** — the feed does not have the one
+supported NuGet V3 shape. Do not construct a replacement URL manually.
+
 **`BAR feed package ... is unavailable`** — the per-build feed is incomplete.
 Wait for indexing or repair that build; do not substitute another BAR.
+
+**`contains ... nuspecs`**, **`has no nuspec metadata`**, or
+**`has inconsistent source metadata`** — the package cannot establish one exact
+identity. Do not approve the BAR.
 
 **`CI package source metadata does not match`** — the selected BAR package
 family is not coherent under the current policy. Do not approve it.
@@ -77,12 +94,14 @@ feed.
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `Appium is not installed or is not on PATH` | Appium is absent or npm global binaries are unavailable | Record affected MAUI items, continue unrelated coverage, then ask whether to install/configure Appium before retrying |
+| `npm is not installed or is not on PATH` | The Node/npm runtime required by Appium is unavailable | Record affected MAUI items, continue unrelated coverage, then ask whether to install/configure Node and npm before retrying |
+| `Appium is not installed in the current npm context or globally` | Neither the containing npm project nor the global PATH provides Appium | Use one supported Appium model: npm project dependencies, or a global Appium installation with Extension CLI-managed drivers |
 | `the Appium ... driver is not installed` | Required platform driver is absent | Record affected items, continue unrelated coverage, then ask whether to install that driver before retrying |
-| `Appium ... is required; found ...` | Server or driver differs from the pinned release-test version | Record affected items, continue unrelated coverage, then ask whether to switch versions before retrying |
+| `Appium ... or newer is required; found ...` | Server or driver is older than the tested minimum | Record affected items, continue unrelated coverage, then ask whether to update before retrying |
+| Driver cannot import `appium/driver.js` or `appium/support.js` | Appium and its drivers were installed using incompatible npm contexts | Run the same `npm exec --no -- appium ...` checks used by the runner; keep Appium and drivers together in one npm project, or manage drivers through the global Appium Extension CLI and `APPIUM_HOME` |
 | Doctor reports `ANDROID_HOME` / `JAVA_HOME` missing | Pinned path discovery failed | Run `dotnet tool run android -- sdk find` and `jdk find` to diagnose the selected installations |
 | Driver doctor fails after path resolution | Required platform environment is incomplete | Fix every remaining required doctor finding; optional recording/streaming tools are not needed |
-| `Connection refused` | Port conflict | Appium auto-starts on 4723; check for conflicts |
+| `Connection refused` | Appium failed to start or exited before the session connected | Inspect Appium output and retry after correcting the startup failure |
 | `Session creation timeout` | First run building WDA | Wait - WebDriverAgent builds on first iOS/Mac run |
 | `Invalid bundle identifier` | Wrong bundleId | Tests extract from csproj automatically |
 
@@ -93,7 +112,8 @@ feed.
 | `Android ... is not installed` | No installed image matches the exact version and host architecture | Record that item, continue, then inspect `dotnet tool run android -- sdk list --installed --format json` and ask whether to install it or explicitly amend the matrix |
 | `Android SDK package ... is not installed` | Emulator or platform tools are absent | Record affected Android items, continue, then ask whether to install the missing package |
 | `hvf is not enabled` / `mprotect failed: Permission denied` | Android emulator installation/acceleration is unhealthy despite host support | Check `emulator -accel-check`, reinstall/update the Android emulator package through `dotnet android`, then retry |
-| Multiple Android emulators are running | Automatic target selection is ambiguous | Rerun with `--device-id <serial>` |
+| `no Android emulator port is available` | Every supported emulator port is occupied | Stop an approved existing emulator or explicitly reuse a compatible device with `--device-id <serial>` |
+| Explicit Android device has the wrong API | The selected `--device-id` does not match the approved target | Choose a compatible device; without `--device-id`, the runner creates its exact release-owned AVD on a free port |
 | `iOS ... is not installed` | The exact runtime has no available installed simulator | Record that item, continue, then ask whether to install it or explicitly amend the matrix |
 | Temporary simulator creation fails | No compatible iPhone type is available for the exact runtime | Inspect `dotnet apple simulator list --runtime "iOS {version}"`; install a compatible device profile or explicitly choose one with `--device` |
 | `System UI isn't responding` (Android) | Emulator unstable | Tests auto-retry with dialog dismissal |
@@ -157,7 +177,7 @@ Or use Console.app → select simulator device.
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `Executable doesn't exist` | Browsers not installed | `pwsh playwright.ps1 install chromium` |
+| `Executable doesn't exist` | The pinned Playwright browser is not installed | After the integration project builds and with approval to install software, run `pwsh tests/SkiaSharp.Tests.Integration/bin/Debug/net10.0/playwright.ps1 install chromium` |
 | `Target page, context or browser has been closed` | Server crashed | Check app build output |
 | `Timeout waiting for selector` | App didn't render | Check Blazor app console for errors |
 | `Blazor server failed to start` | Env vars from parent | Fixed in test code (ClearDotNetEnvironmentVariables) |
@@ -171,19 +191,7 @@ Or use Console.app → select simulator device.
 | `Fontconfig error: Cannot load default config file` | No fontconfig in container | Expected with `NoDependencies` — not an error |
 | `Cannot connect to the Docker daemon` | Docker Desktop crashed or is not running | Continue unrelated items; restart Docker Desktop in the repair pass and retry only `linux` |
 | Docker image build slow | No layer cache | Normal on first run (~90s), cached after |
-
-## Platform-Specific Notes
-
-### macOS /var symlink issue
-
-If Blazor tests fail with path-related errors, the test infrastructure automatically resolves `/var` → `/private/var` in `PlatformTestBase.cs`.
-
-### iOS Simulator Scale Factors
-
-Scale factor calculated automatically from screenshot size vs window size:
-- iPhone Pro/Max: 3x
-- iPhone standard: 3x
-- iPad: 2x
+| Failed Docker test leaves `skiasharp-test-*` images | Docker image cleanup is not runner-owned | Record the image tags and remove them explicitly after diagnostics are preserved |
 
 ### Mac Catalyst
 
@@ -202,8 +210,8 @@ logged-in Aqua session.
 4. Restart the Terminal/IDE and rerun the item in isolation.
 
 Do not run `enable-automationmode-without-authentication` for interactive release
-tests. Recovery kills only stale WebDriverAgentRunner processes and does not
-reset TCC.
+tests. Recovery terminates processes named `WebDriverAgentRunner`; confirm no
+unrelated Appium session owns one before retrying. Recovery does not reset TCC.
 
 ## Retry Logic
 
@@ -211,7 +219,6 @@ Tests include automatic retry for transient failures:
 - **Android**: 3 retries, 10s delay, recovery includes dialog dismissal
 - **iOS**: 3 retries, 10s delay
 - **Mac Catalyst**: 3 retries, 30s delay, recovery kills stale WDA test processes
-- **Blazor**: 3 retries for server startup
 
 Retryable errors include:
 - Device not found

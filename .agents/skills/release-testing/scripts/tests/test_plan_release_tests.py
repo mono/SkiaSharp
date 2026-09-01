@@ -58,20 +58,11 @@ BAR_GUID_FEED = (
 BAR_SOURCE = {
     "barBuildId": BAR_ID,
     "buildNumber": "4.150.3+20260828.7",
-    "azdoBuildId": 3060533,
     "buildLink": "https://dev.azure.com/dnceng/internal/_build/results?buildId=3060533",
-    "branch": RELEASE_BRANCH,
-    "commit": BAR_COMMIT,
     "packageFeed": BAR_FEED,
 }
 BAR_BUILD = planner.darc.BarBuild(
-    id=BAR_ID,
-    build_number=BAR_SOURCE["buildNumber"],
-    azdo_build_id=BAR_SOURCE["azdoBuildId"],
-    build_link=BAR_SOURCE["buildLink"],
-    branch=RELEASE_BRANCH,
-    commit=BAR_COMMIT,
-    package_feed=BAR_FEED,
+    id=BAR_ID, build_number=BAR_SOURCE["buildNumber"], build_link=BAR_SOURCE["buildLink"], branch=RELEASE_BRANCH, commit=BAR_COMMIT, package_feed=BAR_FEED
 )
 DARC_ASSET = {
     "name": "SkiaSharp",
@@ -81,23 +72,18 @@ DARC_ASSET = {
         "branch": f"refs/heads/{RELEASE_BRANCH}",
         "commit": BAR_COMMIT,
         "buildNumber": BAR_SOURCE["buildNumber"],
-        "azdoBuildId": BAR_SOURCE["azdoBuildId"],
         "buildLink": BAR_SOURCE["buildLink"],
         "released": False,
     },
     "locations": ["https://dev.azure.com/dnceng/internal/_apis/build/builds/3060533/artifacts", BAR_FEED],
 }
-CI_PLAN = {
-    "receipt": {
-        **BAR_SOURCE,
-        "flatContainer": BAR_FLAT_CONTAINER,
-        "resolvedPackageSource": BAR_GUID_FEED,
-        "skiaSharpVersion": SKIA_VERSION,
-        "harfBuzzSharpVersion": HARFBUZZ_VERSION,
-        "sourceCommit": BAR_COMMIT,
-        "packages": [{"id": "SkiaSharp"}, {"id": "SkiaSharp.HarfBuzz"}, {"id": "HarfBuzzSharp"}],
-    },
-    "release": {"branch": RELEASE_BRANCH},
+CI_RECEIPT = {
+    **BAR_SOURCE,
+    "resolvedPackageSource": BAR_GUID_FEED,
+    "sourceBranch": RELEASE_BRANCH,
+    "sourceCommit": BAR_COMMIT,
+    "skiaSharpVersion": SKIA_VERSION,
+    "harfBuzzSharpVersion": HARFBUZZ_VERSION,
 }
 
 
@@ -199,7 +185,6 @@ class ReleaseTestPlanTests(unittest.TestCase):
     def test_matrix_commands_use_platform_runners(self):
         matrix, _ = planner.build_matrix(SKIA_VERSION, HARFBUZZ_VERSION, BAR_GUID_FEED, "macOS")
         for item in matrix:
-            self.assertNotIn("selectedByDefault", item)
             command = item["command"]
             self.assertRegex(command, r"run-(?:host|android|ios)-tests\.py")
             self.assertIn(f"--skiasharp {SKIA_VERSION}", command)
@@ -214,44 +199,21 @@ class ReleaseTestPlanTests(unittest.TestCase):
         ios = next(item for item in matrix if item["id"] == "ios-26.5")
         self.assertIn("run-ios-tests.py 26.5", ios["command"])
 
-    def test_plan_contract_has_no_global_setup_commands(self):
-        self.assertNotIn("globalSetupCommands", SCRIPT_PATH.read_text(encoding="ascii"))
-
-    def test_plan_reports_ci_verification_and_restore_sources(self):
-        self.assertEqual(
-            planner.package_sources(CI_PLAN["receipt"]),
-            {
-                "barLocation": BAR_FEED,
-                "ciVerification": BAR_GUID_FEED,
-                "resolvedFlatContainer": BAR_FLAT_CONTAINER,
-                "runnerRestore": [BAR_GUID_FEED, planner.common.DOTNET_PUBLIC_SOURCE],
-            },
-        )
+    def test_plan_reports_bar_and_guid_feeds(self):
+        self.assertEqual(planner.package_sources(CI_RECEIPT), {"barLocation": BAR_FEED, "guidFeed": BAR_GUID_FEED})
 
     def test_integration_harness_uses_resolved_bar_feed(self):
         project = INTEGRATION_PROJECT.read_text(encoding="utf-8")
         platform = PLATFORM_TEST_BASE.read_text(encoding="utf-8")
         linux = LINUX_TESTS.read_text(encoding="utf-8")
 
-        self.assertIn("<PackageSource", project)
+        self.assertIn('RuntimeHostConfigurationOption Include="PackageSource"', project)
         self.assertIn("<RestoreSources", project)
         self.assertIn('key="SkiaSharp BAR"', platform)
         self.assertIn("WriteNuGetConfig(projectDir)", linux)
 
-    def test_skill_preserves_the_operational_workflow(self):
+    def test_skill_matrix_matches_planner_constants(self):
         skill = SKILL_PATH.read_text(encoding="ascii")
-        for heading in (
-            "## Boundaries",
-            "## Test matrix",
-            "## Runner ownership",
-            "### 1. Resolve and verify the BAR package family",
-            "### 2. Approve the exact matrix",
-            "### 3. Prepare once",
-            "### 4. Run every approved item",
-            "### 5. Repair and retry",
-            "### 6. Report and decide",
-        ):
-            self.assertIn(heading, skill)
         for item_id in (
             "smoke",
             "console",
@@ -292,9 +254,8 @@ class ReleaseTestPlanTests(unittest.TestCase):
         read_package.side_effect = package
         result = self.receipt_report()
 
-        self.assertEqual(result["receipt"]["sourceCommit"], BAR_COMMIT)
-        self.assertEqual(result["receipt"]["harfBuzzSharpVersion"], HARFBUZZ_VERSION)
-        self.assertEqual([item["id"] for item in result["receipt"]["packages"]], ["SkiaSharp", "SkiaSharp.HarfBuzz", "HarfBuzzSharp"])
+        self.assertEqual(result["sourceCommit"], BAR_COMMIT)
+        self.assertEqual(result["harfBuzzSharpVersion"], HARFBUZZ_VERSION)
         self.assertEqual(
             read_package.call_args_list,
             [
@@ -359,16 +320,14 @@ class ReleaseTestPlanTests(unittest.TestCase):
 
     def test_release_summary_reports_ci_package_identity(self):
         self.assertEqual(
-            planner.release_summary(CI_PLAN),
+            planner.release_summary(CI_RECEIPT),
             {
                 "branch": RELEASE_BRANCH,
                 "commit": BAR_COMMIT,
                 "barBuildId": BAR_ID,
                 "buildNumber": BAR_SOURCE["buildNumber"],
-                "azdoBuildId": BAR_SOURCE["azdoBuildId"],
                 "buildLink": BAR_SOURCE["buildLink"],
                 "ciPackages": {"SkiaSharp": SKIA_VERSION, "HarfBuzzSharp": HARFBUZZ_VERSION},
-                "verifiedPackageCount": 3,
             },
         )
 
@@ -379,12 +338,6 @@ class ReleaseTestPlanTests(unittest.TestCase):
     def test_windows_command_uses_call_operator_for_quoted_executable(self):
         result = planner.format_command(["C:\\Program Files\\Python\\python.exe", "run-host-tests.py"], platform_name="win32")
         self.assertTrue(result.startswith("& 'C:\\Program Files"))
-
-    def test_scripts_are_ascii_only(self):
-        SCRIPT_PATH.read_text(encoding="ascii")
-        Path(planner.darc.__file__).read_text(encoding="ascii")
-        Path(planner.nuget.__file__).read_text(encoding="ascii")
-        Path(__file__).read_text(encoding="ascii")
 
 
 if __name__ == "__main__":

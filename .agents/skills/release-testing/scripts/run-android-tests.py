@@ -13,7 +13,7 @@ import release_test_common as common
 ANDROID_IMAGE_FLAVORS = {"google_apis": 4, "google_apis_ps16k": 3, "google_apis_playstore": 2, "google_apis_playstore_ps16k": 1}
 
 
-def configure_android_environment(root: Path, environ: dict[str, str] | None = None) -> dict[str, str]:
+def configure_android_environment(root: Path, environ: dict[str, str] | None = None) -> None:
     environ = environ if environ is not None else os.environ
     android_home = common.run_streaming(["dotnet", "tool", "run", "android", "--", "sdk", "find"], cwd=root, capture=True).stdout.strip()
     if not android_home or not Path(android_home).is_dir():
@@ -27,7 +27,6 @@ def configure_android_environment(root: Path, environ: dict[str, str] | None = N
     environ["JAVA_HOME"] = java_home
     print(f"Using ANDROID_HOME={android_home}", flush=True)
     print(f"Using JAVA_HOME={java_home}", flush=True)
-    return {"ANDROID_HOME": android_home, "JAVA_HOME": java_home}
 
 
 def numeric_version(value: str) -> tuple[int, ...]:
@@ -85,6 +84,18 @@ def android_device_api(root: Path, device_id: str) -> str:
     return str((devices[0].get("properties") or {}).get("ro.build.version.sdk", ""))
 
 
+def select_emulator_port(devices: list[dict]) -> int:
+    used_ports = {
+        int(match.group(1))
+        for device in devices
+        if (match := re.fullmatch(r"emulator-(\d+)", str(device.get("serial") or "")))
+    }
+    for port in range(5554, 5683, 2):
+        if port not in used_ports:
+            return port
+    raise common.ReleaseTestError("no Android emulator port is available from 5554 through 5682")
+
+
 def run_android_test(root: Path, args, *, device_id: str, device_name: str, expected_api: str) -> None:
     actual_api = android_device_api(root, device_id)
     if actual_api != expected_api:
@@ -110,13 +121,6 @@ def execute(root: Path, args) -> None:
         selected = next((device for device in connected if device.get("serial") == args.device_id), None)
         if selected is None:
             raise common.ReleaseTestError(f"Android device {args.device_id} is not connected")
-    else:
-        emulators = [device for device in connected if device.get("isEmulator")]
-        if len(emulators) == 1:
-            selected = emulators[0]
-        elif len(emulators) > 1:
-            serials = ", ".join(str(device.get("serial")) for device in emulators)
-            raise common.ReleaseTestError(f"multiple Android emulators are running ({serials}); " "select one with --device-id")
     common.require_appium_driver(root, "uiautomator2")
     if selected:
         device_id = str(selected.get("serial"))
@@ -130,7 +134,9 @@ def execute(root: Path, args) -> None:
     image, version = select_android_image(packages, selector=selector, architecture=architecture)
     device = args.device or "pixel"
     avd_name = f"SkiaSharp_Release_Android_{version.replace('.', '_')}_{uuid.uuid4().hex[:8]}"
-    print(f"Selected Android {version} using {image} and device {device}", flush=True)
+    emulator_port = select_emulator_port(connected)
+    device_id = f"emulator-{emulator_port}"
+    print(f"Selected Android {version} using {image} and device {device} on {device_id}", flush=True)
     try:
         common.run_streaming(
             ["dotnet", "tool", "run", "android", "--", "avd", "create", "--name", avd_name, "--sdk", image, "--device", device, "--force"], cwd=root
@@ -147,7 +153,7 @@ def execute(root: Path, args) -> None:
                 "--name",
                 avd_name,
                 "--port",
-                "5554",
+                str(emulator_port),
                 "--wipe",
                 "--no-window",
                 "--no-snapshot",
@@ -163,7 +169,7 @@ def execute(root: Path, args) -> None:
             ],
             cwd=root,
         )
-        run_android_test(root, args, device_id="emulator-5554", device_name=avd_name, expected_api=expected_api)
+        run_android_test(root, args, device_id=device_id, device_name=avd_name, expected_api=expected_api)
     finally:
         common.run_streaming(["dotnet", "tool", "run", "android", "--", "avd", "delete", "--name", avd_name, "--force"], cwd=root, check=False)
 

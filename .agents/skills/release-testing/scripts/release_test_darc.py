@@ -13,7 +13,6 @@ MAESTRO_URI = "https://maestro.dot.net"
 class BarBuild:
     id: int
     build_number: str | None
-    azdo_build_id: int | None
     build_link: str | None
     branch: str
     commit: str
@@ -64,7 +63,6 @@ def resolve_build(version: str, *, bar_id: int | None = None, max_age: int = 30)
     return BarBuild(
         id=build["id"],
         build_number=build.get("buildNumber"),
-        azdo_build_id=build.get("azdoBuildId"),
         build_link=build.get("buildLink"),
         branch=branch.removeprefix("refs/heads/"),
         commit=commit,

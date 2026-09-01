@@ -52,35 +52,54 @@ but they modify the local tool installation. Ask before running either script.
 The runner requires the `maui` workload for mobile/desktop MAUI tests and
 `wasm-tools` for Blazor. It reports a missing workload without installing it.
 
-## Appium
+Every test command pins `BaseFramework=net10.0`, `SdkVersion=10.0.400`, and
+`SdkAllowPrerelease=false`. Override all three together only when the approved
+release test intentionally targets another SDK band.
 
-MAUI integration tests start and stop the Appium server automatically. The
-runner verifies the existing installation:
+## Appium and Windows automation
+
+Android, iOS, and Mac Catalyst runners verify the existing Appium installation
+and driver before testing:
 
 ```bash
-appium --version
-appium driver list --installed --json
-appium driver doctor {driver}
+npm exec --no -- appium --version
+npm exec --no -- appium driver list --installed --json
+npm exec --no -- appium driver doctor {driver}
 ```
 
-Required drivers:
+Minimum tested versions:
 
-| Component | Required version |
-|-----------|------------------|
+| Component | Minimum version |
+|-----------|-----------------|
 | Appium | `3.6.0` |
 | Android `uiautomator2` | `8.2.2` |
 | iOS `xcuitest` | `12.1.2` |
-| Mac Catalyst `mac2` | `4.2.0` |
+| Mac Catalyst `mac2` | `4.1.1` |
 
-It does not install or update Appium or drivers or query npm. A
-missing/mismatched version or an existing server on port 4723 fails the item for
-user action. Required doctor findings that remain after deterministic path
-resolution also fail clearly.
+Newer versions are accepted; driver doctor and the platform tests remain the
+compatibility gate. The runners and test fixture use Appium's npm-aware launcher
+so a project-local Appium installation and its declared drivers take precedence,
+with a global Appium installation and its Extension CLI-managed drivers as the
+fallback. The `--no` option prevents npm from downloading anything. No driver
+filesystem path is inferred or pinned.
+
+Use one of Appium's supported installation models: manage Appium and drivers as
+dependencies in an npm project, or install Appium globally and manage drivers
+with `appium driver`. In the latter model, Appium owns the extension location
+through `APPIUM_HOME` (default `~/.appium`). The runners do not install, update,
+or query npm. A missing/too-old version, an existing server on port 4723, or a
+required doctor finding fails the item for user action.
+
+The Windows runner instead requires `WinAppDriver.exe` on `PATH`; it does not
+perform the same Appium version/driver validation. The shared test fixture
+starts Appium when the port is free or reuses an already running server.
 
 Mac2 4.1.1 fixed WebDriverAgentMac builds with Xcode 27
 ([appium/appium-mac2-driver#410](https://github.com/appium/appium-mac2-driver/issues/410)).
-The pinned 4.2.0 release includes that fix, so the host runner uses the selected
-Xcode normally.
+The minimum therefore includes that fix, so the host runner uses the selected
+Xcode normally. Generated MAUI builds still pass `ValidateXcodeVersion=false`
+because release testing validates SkiaSharp rendering rather than the workload's
+recommended Xcode version.
 
 ## Android
 
@@ -115,19 +134,22 @@ For the exact version, the runner prefers the highest installed image revision,
 then the image flavor in the table. The `emulator`, `platform-tools`, and one
 matching image must already be installed.
 
-The runner creates a uniquely named release-owned AVD, starts it on port 5554
-headlessly with `--wipe`, `--no-snapshot`, `--wait`, and a 300-second timeout,
-validates the booted API, and force-deletes the AVD afterward.
+Without `--device-id`, the runner creates a uniquely named release-owned AVD on
+the next free even emulator port from 5554 through 5682. Existing emulators and
+physical devices are left untouched. The runner starts its AVD with
+wipe/no-snapshot, no window/audio/boot animation, disabled animations,
+host-appropriate GPU acceleration, boot waiting, and a 300-second timeout.
+macOS requires acceleration. The runner validates the booted API and
+force-deletes the release-owned AVD afterward.
 
 Use `--device {profile}` to replace the default `pixel` hardware profile.
 Use `--device-id {serial}` for an already connected emulator or physical
-device.
+device. This explicit option is the only path that reuses an existing device;
+the runner validates its API and never deletes it.
 
-One running emulator is reused after API validation. Multiple running emulators
-require `--device-id`. An externally owned/reused device is not deleted.
-
-The runner does not invoke `sdkmanager`, `avdmanager`, `emulator`, or `adb`
-directly. Device discovery and property validation also use `dotnet android`.
+The Python runner does not invoke `sdkmanager`, `avdmanager`, `emulator`, or
+`adb` directly. Device discovery and property validation use `dotnet android`;
+Appium and the integration harness may invoke SDK tools such as `adb`.
 UiAutomator2's official requirements mandate `ANDROID_HOME` and `JAVA_HOME`;
 the runner resolves both on every Android invocation with:
 
@@ -166,7 +188,7 @@ unavailable for the exact runtime.
 
 ## Docker
 
-Linux package tests are selected when:
+Linux package tests require:
 
 ```bash
 docker info --format '{{.OSType}}'
@@ -197,3 +219,10 @@ and MAUI projects.
 The same package version can exist in more than one per-build feed. BAR identity
 and feed URL are therefore part of the immutable test identity; never replace
 them with a global feed or a different build.
+
+## CI coverage
+
+**Release - Tooling Tests** runs the Python unit suite, PowerShell preparation
+test, and syntax checks when release-testing or integration files change. It
+does not query live Maestro or execute platform tests; release approval always
+requires the runbook against the selected BAR.
