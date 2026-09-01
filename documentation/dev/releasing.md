@@ -101,6 +101,10 @@ Pushing a `release/*` branch triggers the current dnceng release chain:
 Arcade routes `IsShipping=true` packages to `dotnet-libraries` and
 `IsShipping=false` build inputs to `dotnet-libraries-transport`.
 
+Release-testing smoke-tests the exact selected CI artifacts on the approved
+host/device targets before team publication. NuGet.org is not a planner or
+runner source for this gate.
+
 The team-owned release process selects the exact connected Build and Tests runs
 and their BAR. Before publication, use
 [release-testing](../../.agents/skills/release-testing/SKILL.md) with the exact
