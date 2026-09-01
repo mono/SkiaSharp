@@ -269,6 +269,23 @@ Assert-True ($publishPlan -match 'Create and publish') 'Finish did not plan rele
 Assert-True ($followUpPlan -match 'release-note generation') 'Finish did not plan release-note follow-up.'
 Remove-Item Function:\gh
 
+$script:FakeGhCommands = [System.Collections.Generic.List[string]]::new()
+function global:gh {
+    $script:FakeGhCommands.Add(($args -join ' '))
+    $global:LASTEXITCODE = 0
+}
+$writeRemote = $true
+try {
+    $null = Invoke-ReleaseFollowUpWorkflows $stable
+} finally {
+    $writeRemote = $false
+    Remove-Item Function:\gh
+}
+Assert-True ([bool] (
+    $script:FakeGhCommands |
+        Where-Object { $_ -match 'auto-update-issue-template-versions\.yml.*-f push=true' }
+)) 'Stable Finish did not dispatch the issue-template workflow in push mode.'
+
 # Exercises issue-template release parsing, selection, and text surgery.
 Invoke-Expression (Get-ScriptFunctionText $bugTemplatePath)
 $nightlyOption = 'Nightly / CI build'

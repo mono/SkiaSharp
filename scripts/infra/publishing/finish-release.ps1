@@ -123,7 +123,8 @@ function Invoke-ReleaseFollowUpWorkflows([pscustomobject] $Release) {
             -Arguments @(
                 'workflow', 'run', 'auto-update-issue-template-versions.yml',
                 '--repo', $repository,
-                '--ref', 'main'
+                '--ref', 'main',
+                '-f', 'push=true'
             ) `
             -WriteOutput
     }
