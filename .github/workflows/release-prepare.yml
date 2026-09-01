@@ -1,0 +1,68 @@
+name: Release - Prepare
+
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Branch or commit SHA from which to create the release
+        required: true
+        default: main
+        type: string
+      release:
+        description: Exact identity (X.Y.Z-preview.N, X.Y.Z-rc.N, or X.Y.Z-stable)
+        required: true
+        type: string
+      apply:
+        description: Create local release state without pushing
+        required: true
+        default: false
+        type: boolean
+      push:
+        description: Create and push release state
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release-${{ inputs.release }}
+      cancel-in-progress: false
+    steps:
+      - name: Validate request
+        env:
+          APPLY: ${{ inputs.apply }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          PUSH: ${{ inputs.push }}
+        run: |
+          test "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH"
+          test "$APPLY" != "true" || test "$PUSH" != "true"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prepare
+        shell: pwsh
+        env:
+          BASE: ${{ inputs.base }}
+          APPLY: ${{ inputs.apply }}
+          GH_TOKEN: ${{ inputs.push && secrets.SKIASHARP_AUTOBUMP_TOKEN || github.token }}
+          PUSH: ${{ inputs.push }}
+          RELEASE: ${{ inputs.release }}
+        run: |
+          $arguments = @{
+            Base = $env:BASE
+            Release = $env:RELEASE
+          }
+          if ($env:PUSH -eq 'true') {
+            $arguments.Push = $true
+          } elseif ($env:APPLY -eq 'true') {
+            $arguments.Apply = $true
+          }
+          ./scripts/infra/publishing/prepare-release.ps1 @arguments *>&1 |
+            Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append

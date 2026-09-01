@@ -1,0 +1,63 @@
+name: Release - Tooling Tests
+
+on:
+  pull_request:
+    paths:
+      - ".agents/skills/release-branch/**"
+      - ".agents/skills/release-publish/**"
+      - ".github/workflows/release-*.yml"
+      - "scripts/infra/publishing/**"
+      - "scripts/infra/caching/repo-deps.json"
+  push:
+    branches: [main]
+    paths:
+      - ".agents/skills/release-branch/**"
+      - ".agents/skills/release-publish/**"
+      - ".github/workflows/release-*.yml"
+      - "scripts/infra/publishing/**"
+      - "scripts/infra/caching/repo-deps.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-tooling-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate PowerShell release scripts
+        shell: pwsh
+        run: |
+          $errors = @(
+            $paths = @(Get-ChildItem scripts/infra/publishing -Filter *.ps* -Recurse)
+            foreach ($path in $paths) {
+              $parseErrors = $null
+              [System.Management.Automation.Language.Parser]::ParseFile(
+                $path.FullName,
+                [ref] $null,
+                [ref] $parseErrors) > $null
+              $parseErrors
+            }
+          )
+          if ($errors.Count) {
+            $errors | Format-List
+            exit 1
+          }
+          Get-Help ./scripts/infra/publishing/prepare-release.ps1 -Full > $null
+          Get-Help ./scripts/infra/publishing/finish-release.ps1 -Full > $null
+          Get-Help ./scripts/infra/publishing/update-bug-template.ps1 -Full > $null
+
+      - name: Run publishing PowerShell tests
+        shell: pwsh
+        run: ./scripts/infra/publishing/tests/Test-PublishingScripts.ps1
+
+      - name: Validate cache dependency coverage
+        run: python3 scripts/infra/caching/repo-deps.py validate
