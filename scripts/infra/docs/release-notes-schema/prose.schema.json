@@ -127,6 +127,32 @@
       ],
       "description": "1-2 sentences summarising the HarfBuzz-specific changes in this release (the PRs in data.harfbuzz.prs). Required ONLY when data.harfbuzz.prs is non-empty; null/omit when it is empty (the template renders a fixed 'no changes' line) or when data.harfbuzz is absent. The template adds the '## HarfBuzzSharp X.Y.Z' heading, the \u2764\ufe0f credit and PR links.",
       "maxLength": 500
+    },
+    "release_summaries": {
+      "type": "object",
+      "description": "Optional. One entry per exact shipment tag in data.shipments (format 4+; e.g. 'v4.151.0-preview.1') whose reviewed GitHub Release summary is ready to converge. scripts/infra/docs/release_notes/update_github_summaries.py folds each entry into the managed '<!-- SKIASHARP:RELEASE-SUMMARY -->' region of that exact tag's GitHub Release, alongside GitHub's own generated notes -- never touching them. Omit a tag entirely until it is ready; the updater safely skips any shipment with no entry here. See scripts/infra/docs/release_notes/safety.py for the full prose-safety contract (no heading/list/table/code-fence opener, no CVE or security/vulnerability claim, no managed-marker text).",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "headline"
+        ],
+        "properties": {
+          "headline": {
+            "type": "string",
+            "description": "One plain-language sentence naming what this exact shipment is about, e.g. 'SkiaSharp 4.151.0 previews the Skia m151 engine update.' The renderer prefixes it with the shipment's script-owned label (e.g. '**Preview 1**') and appends deterministic NuGet/release-notes/changelog links -- never write those yourself.",
+            "maxLength": 400
+          },
+          "body": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional. 1-3 sentences of additional detail. Null when the headline says enough.",
+            "maxLength": 1200
+          }
+        }
+      }
     }
   }
 }
