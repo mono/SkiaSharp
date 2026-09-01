@@ -101,8 +101,6 @@ function Publish-GitHubRelease(
 function Invoke-ReleaseFollowUpWorkflows([pscustomobject] $Release) {
     if (!$writeRemote) {
         Write-ReleaseStatus plan "Dispatch release-note generation for $($Release.Tag)."
-        Write-ReleaseStatus ready (
-            'The GitHub Release summary converges automatically after publication or reviewed notes merge.')
         if (!$Release.IsPrerelease) {
             Write-ReleaseStatus plan 'Dispatch the issue-template version update.'
         }

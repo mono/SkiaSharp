@@ -27,10 +27,8 @@ After the exact packages appear on NuGet.org, use **Release - Finish** or run:
 An abbreviated prerelease identity must resolve to exactly one public SkiaSharp
 package version. The `-Push` run reads that package's source commit, creates the
 immutable exact NuGet version tag at that commit, publishes a GitHub-generated
-Release, and dispatches release-note generation. The GitHub Release summary
-workflow runs automatically on publication and again when reviewed release-note
-data lands on `main`. Run **Release - Milestones** separately when milestone
-reconciliation is needed.
+Release, and dispatches release-note generation. Run **Release - Milestones**
+separately when milestone reconciliation is needed.
 
 Always present the dry-run and obtain confirmation before `-Push`. Never move
 or delete a tag, replace a published release, or substitute a newer package.

@@ -292,8 +292,6 @@ Follow the **release-notes skill**
 ([`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md))
 for **how** to write each page's prose and render it — the prose slots, the six
 categories, the breaking-change sources (`*.breaking.md` + `_sources/<version>.notes.md`),
-the optional per-shipment `release_summaries` slot that converges reviewed GitHub Release
-summaries (a separate, non-blocking surface from the website page — see the skill),
 the per-page `release-notes-render.py` validation, and the "never hand-edit the page" rules all
 live there. The renderer owns every heading, table, banner, `@handle`, ❤️, and PR link,
 so you only ever write prose.
@@ -314,12 +312,6 @@ This run's **CI-specific deltas** on top of the skill:
    committed JSON). If `--all` exits non-zero, fix the reported prose and re-run.
 4. Commit and open the PR (below). If, after `--all`, `git status` shows the working
    tree is genuinely unchanged, make no commit and exit; otherwise commit everything.
-
-`release_summaries` entries you write are **not** validated by
-`release-notes-render.py` (they render nowhere on the website page) — a separate,
-classic workflow (`update-github-release-summaries.yml`) validates and converges
-them into the matching GitHub Release afterwards, on its own schedule. Getting one
-wrong never blocks this PR or this run; fix it in a follow-up.
 
 ## How the PR is made
 

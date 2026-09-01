@@ -5,27 +5,15 @@ on:
     paths:
       - ".agents/skills/release-*/**"
       - ".github/workflows/release-*.yml"
-      - ".github/workflows/update-github-release-summaries.yml"
-      - ".github/workflows/update-release-notes.md"
-      - ".github/workflows/update-release-notes.lock.yml"
       - "scripts/infra/publishing/**"
       - "scripts/infra/caching/repo-deps.json"
-      - "scripts/infra/docs/release-notes-data.py"
-      - "scripts/infra/docs/release-notes-schema/**"
-      - "scripts/infra/docs/release_notes/**"
   push:
     branches: [main]
     paths:
       - ".agents/skills/release-*/**"
       - ".github/workflows/release-*.yml"
-      - ".github/workflows/update-github-release-summaries.yml"
-      - ".github/workflows/update-release-notes.md"
-      - ".github/workflows/update-release-notes.lock.yml"
       - "scripts/infra/publishing/**"
       - "scripts/infra/caching/repo-deps.json"
-      - "scripts/infra/docs/release-notes-data.py"
-      - "scripts/infra/docs/release-notes-schema/**"
-      - "scripts/infra/docs/release_notes/**"
   workflow_dispatch:
 
 permissions:
@@ -75,9 +63,6 @@ jobs:
 
       - name: Run release smoke-testing tests
         run: python3 -m unittest discover -s .agents/skills/release-testing/scripts/tests -p 'test_*.py'
-
-      - name: Run exact release summary tests
-        run: python3 -m unittest discover -s scripts/infra/docs/release_notes/tests -p 'test_*.py'
 
       - name: Validate cache dependency coverage
         run: python3 scripts/infra/caching/repo-deps.py validate
