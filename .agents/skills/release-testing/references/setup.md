@@ -163,10 +163,20 @@ browser. The test builds a real native WASM app with
 
 ## Package sources
 
-Public smoke runs restore the exact SkiaSharp and HarfBuzzSharp versions from
-NuGet.org:
+The planner downloads all three public anchor packages directly from NuGet.org.
+That verifies public availability and matching nuspec source metadata before any
+runner command is emitted.
 
-`https://api.nuget.org/v3/index.json`
+The integration project then restores the planner's exact SkiaSharp and
+HarfBuzzSharp versions through:
 
-The planner verifies the public receipt and derives both exact versions before
-emitting runner commands. Never infer or substitute a feed or version.
+- dotnet-libraries:
+  `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json`
+- dotnet-public:
+  `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json`
+
+dotnet-libraries is the current-release runner source; dotnet-public supplies
+dependencies. Neither runner source replaces the planner's NuGet.org public
+verification or proves cross-feed payload identity. Historical stable packages
+may not be retained on dotnet-libraries and are outside this workflow. Never
+infer or substitute a feed or version.

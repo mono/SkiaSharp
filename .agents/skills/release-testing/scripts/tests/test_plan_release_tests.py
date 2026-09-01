@@ -7,12 +7,15 @@ import shlex
 import sys
 import unittest
 from unittest import mock
+import xml.etree.ElementTree as ET
 import zipfile
 
 
 SCRIPTS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
 SCRIPT_PATH = SCRIPTS / "plan-release-tests.py"
+ROOT = SCRIPTS.parents[3]
+NUGET_CONFIG = ROOT / "tests/SkiaSharp.Tests.Integration/nuget.config"
 SPEC = importlib.util.spec_from_file_location("plan_release_tests", SCRIPT_PATH)
 planner = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = planner
@@ -88,6 +91,13 @@ class ReleaseTestPlanTests(unittest.TestCase):
         self.assertEqual(
             result["harfBuzzVersions"],
             [HARFBUZZ_VERSION],
+        )
+        request = urlopen.call_args.args[0]
+        self.assertEqual(
+            request.full_url,
+            "https://api.nuget.org/v3-flatcontainer/"
+            "skiasharp.harfbuzz/4.152.0-preview.1.1/"
+            "skiasharp.harfbuzz.4.152.0-preview.1.1.nupkg",
         )
 
     def test_full_macos_matrix(self):
@@ -174,10 +184,36 @@ class ReleaseTestPlanTests(unittest.TestCase):
         ios = next(item for item in matrix if item["id"] == "ios-26.5")
         self.assertIn("run-ios-tests.py 26.5", ios["command"])
 
-    def test_plan_contract_has_no_global_setup_commands(self):
+    def test_plan_contract_distinguishes_verification_and_restore_sources(self):
         self.assertNotIn(
             "globalSetupCommands",
             SCRIPT_PATH.read_text(encoding="ascii"),
+        )
+        self.assertEqual(
+            planner.package_sources(),
+            {
+                "publicVerification": "NuGet.org",
+                "runnerRestore": ["dotnet-libraries", "dotnet-public"],
+            },
+        )
+        config = ET.parse(NUGET_CONFIG).getroot()
+        self.assertEqual(
+            [
+                (source.get("key"), source.get("value"))
+                for source in config.findall("./packageSources/add")
+            ],
+            [
+                (
+                    "dotnet-libraries",
+                    "https://pkgs.dev.azure.com/dnceng/public/"
+                    "_packaging/dotnet-libraries/nuget/v3/index.json",
+                ),
+                (
+                    "dotnet-public",
+                    "https://pkgs.dev.azure.com/dnceng/public/"
+                    "_packaging/dotnet-public/nuget/v3/index.json",
+                ),
+            ],
         )
 
     def test_every_planned_command_round_trips_through_runner_parser(self):

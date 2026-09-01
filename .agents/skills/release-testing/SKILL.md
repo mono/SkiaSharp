@@ -21,7 +21,9 @@ skill.
 
 - Start from one exact public SkiaSharp version.
 - The public-version planner verifies the three public anchor packages and
-  their matching source metadata before producing test commands.
+  their matching source metadata on NuGet.org before producing test commands.
+- Runner commands pin those exact versions; the integration project restores
+  them through dotnet-libraries with dependencies from dotnet-public.
 - Never substitute a newer version, branch, feed, runtime, image, simulator, or
   device.
 - Present the host-appropriate matrix and obtain approval before preparation or
@@ -51,6 +53,10 @@ The planner:
 4. pins both package versions in every runner command;
 5. reports available and host-inapplicable coverage.
 
+NuGet.org is the authority for public availability and package source metadata.
+The runner feeds execute the verified plan; they do not independently prove
+publication or payload identity.
+
 Render:
 
 ```markdown
@@ -59,7 +65,8 @@ Render:
 **Version:** `{release.publicPackages.SkiaSharp}`
 **Commit:** `{release.commit}`
 **Packages:** SkiaSharp `{version}`, HarfBuzzSharp `{version}`
-**Source:** NuGet.org
+**Public verification:** `{packageSources.publicVerification}`
+**Runner restore:** `{packageSources.runnerRestore}`
 
 | ID | Test | Target | Estimate |
 |----|------|--------|----------|

@@ -19,6 +19,8 @@ import zipfile
 import release_test_common as common
 
 PlanError = common.ReleaseTestError
+PUBLIC_VERIFICATION_SOURCE = "NuGet.org"
+RUNNER_RESTORE_SOURCES = ("dotnet-libraries", "dotnet-public")
 
 
 def format_command(
@@ -37,6 +39,13 @@ def format_command(
 
     formatted = " ".join(quote(argument) for argument in argv)
     return f"& {formatted}" if formatted.startswith("'") else formatted
+
+
+def package_sources() -> dict:
+    return {
+        "publicVerification": PUBLIC_VERIFICATION_SOURCE,
+        "runnerRestore": list(RUNNER_RESTORE_SOURCES),
+    }
 
 
 def read_package(package_id: str, version: str) -> dict:
@@ -371,7 +380,7 @@ def main() -> int:
                         item["id"] for item in matrix
                     ],
                     "missingCoverage": missing,
-                    "source": "NuGet.org",
+                    "packageSources": package_sources(),
                 },
                 indent=2,
             )

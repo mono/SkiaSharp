@@ -55,7 +55,7 @@ coherent SkiaSharp release. Do not test or tag it as one.
 | `the wasm-tools workload is not installed` | Missing workload | Record Blazor as failed, continue unrelated coverage, then ask whether to install `wasm-tools` or explicitly amend the matrix |
 | `SkiaSharpVersion must be the exact package version` | Missing version param | Add both exact SkiaSharp and HarfBuzzSharp versions emitted by the planner |
 | `HarfBuzzSharpVersion must be the exact package version` | Missing version param | Use the distinct HarfBuzzSharp version emitted by the planner |
-| Stable `X.Y.Z` package cannot be restored | NuGet.org indexing is incomplete or publication failed | Retry the same exact version; do not substitute a prerelease/feed package |
+| Exact package cannot be restored by a runner | Version is absent from dotnet-libraries or a dependency is unavailable from dotnet-public | Confirm the planner's exact versions exist on the configured feeds, then retry them unchanged; NuGet.org public verification is a separate planner step |
 
 ## Appium Errors
 
