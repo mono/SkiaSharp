@@ -6,10 +6,10 @@ This guide explains how to build SkiaSharp samples using CI-produced NuGet packa
 
 Official builds register wrapper packages as non-shipping assets in the same BAR
 as the product packages. The Maestro `SkiaSharp` channel routes them to the
-separate **SkiaSharp Transport** Azure DevOps feed:
+shared **dotnet-libraries-transport** Azure DevOps feed:
 
 ```
-https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-transport/nuget/v3/index.json
+https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json
 ```
 
 These wrapper packages bundle the real NuGet packages inside their `tools/` directory:
@@ -91,7 +91,7 @@ These arguments control **which CI build** to fetch from the feed:
 | Argument | Environment variable | Default | Purpose |
 |----------|---------------------|---------|---------|
 | `--gitBranch` | `GIT_BRANCH_NAME` | `""` | Fetch by branch name |
-| `--previewFeed` | — | SkiaSharp Transport URL | Override the NuGet feed |
+| `--previewFeed` | — | dotnet-libraries-transport URL | Override the NuGet feed |
 
 ### For building samples (`samples`)
 
@@ -168,4 +168,4 @@ Some platforms are disabled by default:
 May need a newer `Microsoft.WindowsAppSDK` version.
 
 ### NuGet feed authentication
-The SkiaSharp Transport feed is public — no authentication required.
+The dotnet-libraries-transport feed is public — no authentication required.

@@ -104,7 +104,7 @@ cd ..
 dotnet cake --target=docs-download-output
 ```
 
-This downloads NuGet packages from the SkiaSharp Transport feed. By default it fetches from the `main` branch. To use a different branch:
+This downloads NuGet packages from the dotnet-libraries-transport feed. By default it fetches from the `main` branch. To use a different branch:
 
 ```bash
 dotnet cake --target=docs-download-output --gitBranch=my-feature-branch
@@ -144,7 +144,7 @@ For detailed XML documentation patterns and review criteria, see:
 
 | Target | Description |
 |--------|-------------|
-| `docs-download-output` | Downloads the `_nugets` package from the SkiaSharp Transport Azure Artifacts feed |
+| `docs-download-output` | Downloads the `_nugets` package from the dotnet-libraries-transport Azure Artifacts feed |
 | `docs-api-diff` | Generates the committed release-site API diffs under `documentation/docfx/releases/` from published NuGet.org packages; incremental and scoped with `--force`, `--minVersion`, `--maxVersion` |
 | `docs-update-frameworks` | Extracts assemblies, builds `frameworks.xml` with monikers, runs `mdoc update` to generate XML API docs |
 | `docs-format-docs` | Cleans XML output, removes duplicates, syncs extension method docs, reports coverage |

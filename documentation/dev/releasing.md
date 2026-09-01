@@ -97,6 +97,9 @@ Pushing a `release/*` branch triggers the current dnceng release chain:
 | `skiasharp-package` | 1642 | Build, signing, API Scan, BAR registration, packages |
 | `skiasharp-tests` | 1630 | Tests consuming the exact Build pipeline resource |
 
+Arcade routes `IsShipping=true` packages to `dotnet-libraries` and
+`IsShipping=false` build inputs to `dotnet-libraries-transport`.
+
 The team-owned release process reviews the connected Build and Tests runs,
 selects their exact BAR/packages, and publishes them to NuGet.org through its
 protected publication pipeline. Repository automation does not query, queue, or
