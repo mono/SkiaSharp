@@ -145,6 +145,11 @@ after the exact packages appear on NuGet.org. Use **Release - Finish** or run:
 ./scripts/infra/publishing/finish-release.ps1 `
   -Version 4.153.0-preview.1
 
+# Apply the support-tier file update locally without publishing
+./scripts/infra/publishing/finish-release.ps1 `
+  -Version 4.153.0-preview.1 `
+  -Apply
+
 # Publish the tag and GitHub Release
 ./scripts/infra/publishing/finish-release.ps1 `
   -Version 4.153.0-preview.1 `

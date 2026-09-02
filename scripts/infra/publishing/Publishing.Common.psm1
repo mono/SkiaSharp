@@ -352,8 +352,12 @@ function Publish-AutomationFilePullRequest(
     [string] $Title,
     [string] $Body,
     [string] $Description,
+    [switch] $Apply,
     [switch] $Push
 ) {
+    if ($Apply -and $Push) {
+        throw 'Apply and Push are mutually exclusive.'
+    }
     $resolvedFiles = [ordered] @{}
     foreach ($path in $Files.Keys) {
         $fullPath = [IO.Path]::GetFullPath((Join-Path $Root ([string] $path)))
@@ -374,11 +378,22 @@ function Publish-AutomationFilePullRequest(
         Write-ReleaseStatus ready "$Description files are current."
         return
     }
-    if (!$Push) {
+    if (!$Apply -and !$Push) {
         Write-ReleaseStatus plan "Create or update the $Description PR from $Branch to $BaseBranch."
         return
     }
     Assert-GitWorktreeClean -Root $Root -IgnoreSubmodules
+    if ($Apply) {
+        foreach ($path in $resolvedFiles.Keys) {
+            [IO.File]::WriteAllText(
+                $resolvedFiles[$path],
+                [string] $Files[$path],
+                [Text.UTF8Encoding]::new($false))
+        }
+        Write-ReleaseStatus applied "Updated $Description files locally."
+        return
+    }
+
     $baseSha = Get-ResolvedGitCommit -Root $Root -Reference $BaseBranch
     $headSha = (Invoke-Git -Root $Root -Arguments @('rev-parse', 'HEAD')).Output
     if ($headSha -ne $baseSha) {

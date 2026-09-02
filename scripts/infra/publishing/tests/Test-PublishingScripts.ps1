@@ -91,8 +91,8 @@ $reconcileParameters = (Get-Command $reconcilePath).Parameters.Keys
 $milestoneParameters = (Get-Command $milestonesPath).Parameters.Keys
 Assert-True ($prepareParameters -contains 'Apply' -and $prepareParameters -contains 'Push') `
     'Prepare must expose Apply and Push.'
-Assert-True ($finishParameters -contains 'Push' -and $finishParameters -notcontains 'Apply') `
-    'Finish must expose Push but not Apply.'
+Assert-True ($finishParameters -contains 'Apply' -and $finishParameters -contains 'Push') `
+    'Finish must expose Apply and Push.'
 Assert-True ($bugTemplateParameters -contains 'Apply' -and $bugTemplateParameters -contains 'Push') `
     'The bug-template updater must expose Apply and Push.'
 Assert-True ($reconcileParameters -contains 'Version' -and $reconcileParameters -contains 'Push' -and
@@ -100,7 +100,6 @@ Assert-True ($reconcileParameters -contains 'Version' -and $reconcileParameters 
 Assert-True ($milestoneParameters -contains 'Count' -and $milestoneParameters -contains 'Push' -and
     $milestoneParameters -notcontains 'Apply' -and $milestoneParameters -notcontains 'Version') `
     'The milestone updater must expose Count and Push but not Apply or Version.'
-Assert-RejectsApply $finishPath @('-Version', '4.152.0-preview.1')
 Assert-RejectsApply $reconcilePath @('-Version', '4.152.0')
 Assert-RejectsApply $milestonesPath @()
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
@@ -478,6 +477,21 @@ try {
     & git -C $automationRoot remote add origin $automationBare
     & git -C $automationRoot push --quiet origin main
     $mainSha = (git -C $automationRoot rev-parse HEAD).Trim()
+
+    Publish-AutomationFilePullRequest `
+        -Root $automationRoot `
+        -Repository 'mono/SkiaSharp' `
+        -Branch automation/apply `
+        -BaseBranch main `
+        -Files ([ordered] @{ 'template.yml' = "applied`n" }) `
+        -CommitMessage 'Apply test' `
+        -Title 'Apply test' `
+        -Body 'Apply test' `
+        -Description test `
+        -Apply
+    Assert-Equal "applied`n" ([IO.File]::ReadAllText((Join-Path $automationRoot 'template.yml'))) `
+        'Automation Apply did not write the desired local content.'
+    & git -C $automationRoot restore template.yml
 
     & git -C $automationRoot switch --quiet -c automation/update
     [IO.File]::WriteAllText(

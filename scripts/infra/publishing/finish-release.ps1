@@ -15,13 +15,19 @@
 
 .PARAMETER Push
     Publishes the tag and release, then dispatches follow-up workflows. Without
-    this switch, the script is read-only.
+    Apply or Push, the script is read-only.
+
+.PARAMETER Apply
+    Writes the proposed release-support update locally without committing,
+    pushing, publishing, or dispatching workflows.
 #>
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [string] $Version,
+
+    [switch] $Apply,
 
     [switch] $Push
 )
@@ -32,8 +38,11 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
+if ($Apply -and $Push) {
+    throw 'Apply and Push are mutually exclusive.'
+}
 $writeRemote = $Push
-$mode = if ($writeRemote) { 'push' } else { 'dry run' }
+$mode = if ($Push) { 'push' } elseif ($Apply) { 'local apply' } else { 'dry run' }
 $root = Get-GitRepositoryRoot
 $repository = $ReleaseRepository
 
@@ -236,6 +245,7 @@ The publishing tests cover preview, RC, stable promotion, idempotency, multiple 
         -Title "Update $line release support tier" `
         -Body $body `
         -Description 'release-support' `
+        -Apply:$Apply `
         -Push:$Push
 }
 

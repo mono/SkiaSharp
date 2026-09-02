@@ -7,6 +7,11 @@ on:
         description: Stable version or prerelease identity/exact NuGet version
         required: true
         type: string
+      apply:
+        description: Apply the support update locally without publishing
+        required: true
+        default: false
+        type: boolean
       push:
         description: Create the tag and publish the GitHub Release
         required: true
@@ -26,7 +31,12 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Require main
-        run: test "$GITHUB_REF" = "refs/heads/${{ github.event.repository.default_branch }}"
+        env:
+          APPLY: ${{ inputs.apply }}
+          PUSH: ${{ inputs.push }}
+        run: |
+          test "$GITHUB_REF" = "refs/heads/${{ github.event.repository.default_branch }}"
+          test "$APPLY" != "true" || test "$PUSH" != "true"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -35,12 +45,15 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ inputs.push && secrets.SKIASHARP_AUTOBUMP_TOKEN || github.token }}
+          APPLY: ${{ inputs.apply }}
           PUSH: ${{ inputs.push }}
           VERSION: ${{ inputs.version }}
         run: |
           $arguments = @{ Version = $env:VERSION }
           if ($env:PUSH -eq 'true') {
             $arguments.Push = $true
+          } elseif ($env:APPLY -eq 'true') {
+            $arguments.Apply = $true
           }
           ./scripts/infra/publishing/finish-release.ps1 @arguments *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append

@@ -38,6 +38,9 @@ param(
 # 0. Initialize shared helpers, execution mode, and repository state.
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
+if ($Apply -and $Push) {
+    throw 'Apply and Push are mutually exclusive.'
+}
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
@@ -286,12 +289,6 @@ if (!$writeLocal) {
     Write-ReleaseStatus plan "Update $displayPath."
     return
 }
-if (!$writeRemote) {
-    [IO.File]::WriteAllText($path, $updated, [Text.UTF8Encoding]::new($false))
-    Write-ReleaseStatus applied "Updated $displayPath."
-    return
-}
-
 # 3. Publish the update through the shared automation-PR path.
 $body = @"
 ## Description
@@ -335,4 +332,5 @@ Publish-AutomationFilePullRequest `
     -Title 'Update issue template version dropdowns' `
     -Body $body `
     -Description 'issue-template' `
-    -Push
+    -Apply:$Apply `
+    -Push:$Push
