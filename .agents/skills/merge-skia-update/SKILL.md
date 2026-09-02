@@ -70,10 +70,11 @@ another PR as competing only when evidence shows at least one of:
   one PR if the other landed.
 
 Record an explicit merge, close, or supersede disposition for every competing
-PR. Do not land while a competing pointer PR remains open. Merely touching
-`DEPS`, the gitlink, or another commonly changed file is not enough: report
-unrelated parallel work as non-blocking with the evidence that distinguishes
-it.
+PR, then require that disposition to be completed before landing: the PR must
+already be merged, closed, or explicitly superseded. Do not leave any
+demonstrated competing PR open. Merely touching `DEPS`, the gitlink, or another
+commonly changed file is not enough: report unrelated parallel work as
+non-blocking with the evidence that distinguishes it.
 
 Verify repository metadata on both PRs:
 
@@ -184,16 +185,19 @@ merges. A same-milestone servicing sync does not create another release line.
 1. Derive `release/A.B.x` from the previous SkiaSharp product line; for example,
    an M153 bump preserves `release/4.152.x`.
 2. Re-fetch and record the current mono/skia base and mono/SkiaSharp base tips.
-3. Preflight both destination refs before creating either branch. Each must be
+3. Before any write, verify both source tips identify the previous milestone
+   and the parent base's `externals/skia` gitlink equals the recorded native
+   base tip.
+4. Preflight both destination refs before creating either branch. Each must be
    absent or already resolve to its intended source SHA; stop before any write
    if either conflicts.
-4. Present both planned refs and exact source SHAs and obtain explicit
+5. Present both planned refs and exact source SHAs and obtain explicit
    maintainer confirmation.
-5. Create any missing mono/skia release branch first from the recorded native
+6. Create any missing mono/skia release branch first from the recorded native
    base tip, then create the missing identically named mono/SkiaSharp release
    branch from the recorded parent base tip. Use guarded non-force ref creation.
-6. Never force or move an existing release branch.
-7. Verify the parent release branch's `externals/skia` gitlink equals the native
+7. Never force or move an existing release branch.
+8. Verify the parent release branch's `externals/skia` gitlink equals the native
    release branch tip and both branches still identify the previous milestone.
 
 Record both branch SHAs. This split keeps the previous milestone serviceable
@@ -295,7 +299,8 @@ Stop without merging when any of these is true:
 - the native PR is behind its base or its prospective merge tree differs from
   the reviewed PR-head tree;
 - persisted review evidence is missing, schema-invalid, or stale;
-- a competing sync or pointer PR lacks an explicit disposition;
+- any demonstrated competing PR remains open or lacks a completed merge, close,
+  or supersede disposition;
 - required PR labels or the parent release milestone are wrong;
 - a fork patch, dependency, API, ownership, or release-note finding is open;
 - temporary compatibility work lacks restored support or an accepted limitation

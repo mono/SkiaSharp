@@ -240,6 +240,42 @@
         "Does not merge the native PR with stale paired release-line state.",
         "Requires reconciling the release-line decision rather than moving a release branch."
       ]
+    },
+    {
+      "id": 21,
+      "prompt": "For the M169 bump, both release/4.168.x destinations are absent, but the current mono/SkiaSharp base gitlink does not equal the current mono/skia base tip. Create both release branches and investigate afterward.",
+      "expected_output": "Stops before confirmation or branch creation because the two source tips do not form a compatible previous-milestone pair.",
+      "files": [],
+      "expectations": [
+        "Checks source milestone and gitlink compatibility before destination refs are written.",
+        "Does not create either release branch.",
+        "Reports the parent gitlink and native base SHAs.",
+        "Requires reconciling the source pair before preserving the line."
+      ]
+    },
+    {
+      "id": 22,
+      "prompt": "Another open PR changes the same DEPS dependency from the same revision in overlapping hunks, so landing it would invalidate the reviewed M170 sync. We recorded that it should close later; merge the sync now.",
+      "expected_output": "Stops until the demonstrated competing DEPS PR has actually been merged, closed, or explicitly superseded; a planned future disposition is insufficient.",
+      "files": [],
+      "expectations": [
+        "Recognizes overlapping dependency, revision, and hunk changes as demonstrated competition.",
+        "Does not merge while the competing PR remains open.",
+        "Requires the recorded disposition to be completed before landing.",
+        "Distinguishes this case from unrelated parallel DEPS work."
+      ]
+    },
+    {
+      "id": 23,
+      "prompt": "An enabled M171 dependency registration has matching top-level component name and version, but its nested skia_dependency.version_source is empty. The other nested fields are present. Treat the top-level version as sufficient.",
+      "expected_output": "Stops because every enabled tracked registration must have non-empty nested revision, version_reviewed_identity, and version_source evidence; top-level metadata cannot substitute for the missing nested source.",
+      "files": [],
+      "expectations": [
+        "Mechanically inspects the nested skia_dependency object.",
+        "Rejects an empty nested version_source.",
+        "Does not use top-level component fields as substitute evidence.",
+        "Reports the affected registration and missing nested field."
+      ]
     }
   ]
 }
