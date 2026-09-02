@@ -414,6 +414,7 @@ pre-publication BAR/CI package approval testing. See
 | Skia analyst | `/skia-analyst` | "what changed", "what are we missing", "feature gap", "api diff", "scout features", "diff tags" |
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |
 | Review Skia update | `/review-skia-update` | "review the Skia merge PR" |
+| Merge Skia update | `/merge-skia-update` | "merge the Skia bump", "land the Skia sync PRs" |
 | PR commit message | `/pr-commit-message` | "write commit message for PR" |
 | Validate samples | `/validate-samples` | "build samples", "test sample projects" |
 | Scout GM samples | `/sample-scout` | "find demos to port", "what samples are we missing", "gallery ideas" |

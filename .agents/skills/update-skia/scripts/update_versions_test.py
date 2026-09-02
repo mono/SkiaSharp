@@ -31,7 +31,10 @@ class UpdateVersionsTests(unittest.TestCase):
             "libSkiaSharp soname 151.0.0\n"
             "SkiaSharp assembly 4.151.3.0\n"
             "SkiaSharp file 4.151.3.0\n"
-            "SkiaSharp nuget 4.151.3\n",
+            "SkiaSharp nuget 4.151.3\n"
+            "HarfBuzzSharp file 14.2.1.100\n"
+            "HarfBuzzSharp nuget 14.2.1.100\n"
+            "HarfBuzzSharp.NativeAssets.Linux nuget 14.2.1.100\n",
             encoding="utf-8",
         )
         (self.root / "scripts" / "azure-templates-variables.yml").write_text(
@@ -137,7 +140,11 @@ class UpdateVersionsTests(unittest.TestCase):
             cwd=self.root,
             check=True,
         )
-        subprocess.run(["git", "add", "cgmanifest.json"], cwd=self.root, check=True)
+        subprocess.run(
+            ["git", "add", "cgmanifest.json", "scripts/VERSIONS.txt"],
+            cwd=self.root,
+            check=True,
+        )
         subprocess.run(
             ["git", "commit", "--quiet", "-m", "parent fixture"],
             cwd=self.root,
@@ -169,6 +176,8 @@ class UpdateVersionsTests(unittest.TestCase):
         self.assertIn("milestone 152", versions)
         self.assertIn("increment 0", versions)
         self.assertIn("4.152.0", versions)
+        self.assertEqual(3, versions.count("14.2.1.200"))
+        self.assertNotIn("14.2.1.100", versions)
         self.assertIn(
             "SKIASHARP_VERSION: 4.152.0",
             (self.root / "scripts" / "azure-templates-variables.yml").read_text(
@@ -192,6 +201,53 @@ class UpdateVersionsTests(unittest.TestCase):
         self.assertEqual(152, skia["chrome_milestone"])
         self.assertEqual("chrome/m152", skia["component"]["other"]["version"])
         self.assertEqual("chrome/m152", skia["upstream_ref"])
+
+    def test_advances_harfbuzz_to_start_of_target_milestone_bucket(self) -> None:
+        versions_path = self.root / "scripts" / "VERSIONS.txt"
+        versions_path.write_text(
+            versions_path.read_text(encoding="utf-8").replace(
+                "14.2.1.100", "14.2.1.142"
+            ),
+            encoding="utf-8",
+        )
+
+        update_versions(self.root, 151, 152, "chrome/m152")
+
+        versions = versions_path.read_text(encoding="utf-8")
+        self.assertEqual(3, versions.count("14.2.1.200"))
+        self.assertNotIn("14.2.1.142", versions)
+
+    def test_milestone_update_is_idempotent_for_harfbuzz_bucket(self) -> None:
+        update_versions(self.root, 151, 152, "chrome/m152")
+        versions_path = self.root / "scripts" / "VERSIONS.txt"
+        first = versions_path.read_bytes()
+
+        update_versions(self.root, 151, 152, "chrome/m152")
+
+        self.assertEqual(first, versions_path.read_bytes())
+
+    def test_repairs_harfbuzz_bucket_after_partial_milestone_update(self) -> None:
+        versions_path = self.root / "scripts" / "VERSIONS.txt"
+        versions = versions_path.read_text(encoding="utf-8")
+        versions = versions.replace("release m151", "release m152")
+        versions = versions.replace("milestone 151", "milestone 152")
+        versions = versions.replace("151.0.0", "152.0.0")
+        versions = versions.replace("4.151.3.0", "4.152.0.0")
+        versions = versions.replace("4.151.3", "4.152.0")
+        versions_path.write_text(versions, encoding="utf-8")
+
+        update_versions(
+            self.root,
+            151,
+            152,
+            "chrome/m152",
+            parent_base_sha=self.parent_base_sha,
+            skia_base_sha=self.skia_base_sha,
+        )
+
+        updated = versions_path.read_text(encoding="utf-8")
+        self.assertEqual(3, updated.count("14.2.1.200"))
+        self.assertNotIn("14.2.1.100", updated)
 
     def test_same_milestone_updates_only_manifest_hashes(self) -> None:
         versions_path = self.root / "scripts" / "VERSIONS.txt"

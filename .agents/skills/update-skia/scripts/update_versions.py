@@ -328,6 +328,64 @@ def replace_transition(
     return content
 
 
+def advance_harfbuzz_package_bucket(
+    versions: str,
+    current_milestone: int,
+    target_milestone: int,
+    base_versions: str | None = None,
+) -> str:
+    """Move HarfBuzzSharp packages to the target Skia milestone's bucket."""
+    source_versions = base_versions or versions
+    source_matches = re.findall(
+        r"^\s*HarfBuzzSharp\S*\s+(?:file|nuget)\s+(\d+\.\d+\.\d+(?:\.\d+)?)\s*$",
+        source_versions,
+        flags=re.MULTILINE,
+    )
+    if not source_matches:
+        raise RuntimeError("Could not find HarfBuzzSharp package versions.")
+    if len(set(source_matches)) != 1:
+        raise RuntimeError("HarfBuzzSharp package versions are inconsistent.")
+
+    package_version = source_matches[0]
+    version_match = re.fullmatch(
+        r"(?P<native>\d+\.\d+\.\d+)(?:\.(?P<revision>\d+))?",
+        package_version,
+    )
+    if not version_match:
+        raise RuntimeError(f"Invalid HarfBuzzSharp package version: {package_version}.")
+
+    revision = int(version_match.group("revision") or 0)
+    milestone_delta = target_milestone - current_milestone
+    if milestone_delta <= 0:
+        raise RuntimeError("HarfBuzzSharp buckets can only advance with the Skia milestone.")
+
+    target_revision = ((revision // 100) + milestone_delta) * 100
+    target_version = f"{version_match.group('native')}.{target_revision}"
+    current_matches = re.findall(
+        r"^\s*HarfBuzzSharp\S*\s+(?:file|nuget)\s+(\d+\.\d+\.\d+(?:\.\d+)?)\s*$",
+        versions,
+        flags=re.MULTILINE,
+    )
+    if len(current_matches) != len(source_matches) or len(set(current_matches)) != 1:
+        raise RuntimeError("HarfBuzzSharp package versions are inconsistent.")
+    if current_matches[0] == target_version:
+        return versions
+    if current_matches[0] != package_version:
+        raise RuntimeError(
+            "HarfBuzzSharp package versions do not match the parent base or target bucket."
+        )
+
+    updated, count = re.subn(
+        r"^(\s*HarfBuzzSharp\S*\s+(?:file|nuget)\s+)\S+(\s*)$",
+        rf"\g<1>{target_version}\g<2>",
+        versions,
+        flags=re.MULTILINE,
+    )
+    if count != len(source_matches):
+        raise RuntimeError("Could not update every HarfBuzzSharp package version.")
+    return updated
+
+
 def update_versions(
     repo_root: Path,
     current: int,
@@ -359,6 +417,11 @@ def update_versions(
     pipeline = pipeline_path.read_text(encoding="utf-8-sig")
     sk_types = sk_types_path.read_text(encoding="utf-8-sig")
     cgmanifest = json.loads(cgmanifest_path.read_text(encoding="utf-8-sig"))
+    base_versions = (
+        git_show(repo_root, parent_base_sha, "scripts/VERSIONS.txt")
+        if parent_base_sha
+        else None
+    )
     dependency_changes = []
     dependency_errors = []
 
@@ -368,6 +431,9 @@ def update_versions(
             f"Could not find current or target NuGet version in {versions_path}."
         )
     major = match.group(1)
+    has_current_milestone = bool(
+        re.search(rf"libSkiaSharp\s+milestone\s+{current}\b", versions)
+    )
 
     if current != target:
         versions = replace_transition(
@@ -401,6 +467,13 @@ def update_versions(
             f"{major}.{target}.0",
             versions,
         )
+        if has_current_milestone or base_versions:
+            versions = advance_harfbuzz_package_bucket(
+                versions,
+                current,
+                target,
+                base_versions,
+            )
         pipeline = re.sub(
             rf"(SKIASHARP_VERSION:\s*){major}\.{current}\.\d+\b",
             rf"\g<1>{major}.{target}.0",
