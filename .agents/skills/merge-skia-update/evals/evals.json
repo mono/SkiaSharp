@@ -61,6 +61,66 @@
         "Routes the existing PR pair through update-skia instead of opening unrelated replacement PRs.",
         "Requires review and CI/package gates again after the refresh."
       ]
+    },
+    {
+      "id": 6,
+      "prompt": "Merge the M157 PR pair. Both PR descriptions say the author reviewed the changes and CI is green, but there is no persisted review-skia-update report or independent reviewer evidence.",
+      "expected_output": "Stops before merging because PR-body self-attestation is insufficient, and requires a current schema-valid persisted review-skia-update report or explicit independent human review evidence for the exact live heads.",
+      "files": [],
+      "assertions": [
+        "Does not accept the PR description as review evidence.",
+        "Does not merge either PR.",
+        "Requires a current schema-valid persisted report or independent human review evidence.",
+        "Requires rerunning review-skia-update after a push or rebase makes the evidence stale."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Land the M158 pair. There is also an open SkiaSharp PR that only updates externals/skia and cgmanifest.json to another M158 commit, but we can leave that pointer PR open and sort it out later.",
+      "expected_output": "Stops until both repositories have been searched for competing sync work and the pointer-only PR receives an explicit close, supersede, or merge disposition.",
+      "files": [],
+      "assertions": [
+        "Searches both repositories for duplicate, superseded, and pointer-only PRs.",
+        "Does not leave a competing pointer PR open.",
+        "Requires an explicit disposition before landing.",
+        "Does not merge either main PR while the competing work is unresolved."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Merge this same-milestone M158 servicing sync. Both PRs have type/milestone-bump, neither has partner/agentic-workflows, and the SkiaSharp PR has no release milestone.",
+      "expected_output": "Corrects the metadata before landing: both PRs need type/milestone-sync and partner/agentic-workflows, servicing syncs must not carry the bump label, and only true bumps require type/milestone-bump plus the parent release milestone.",
+      "files": [],
+      "assertions": [
+        "Does not treat a servicing sync as a milestone bump.",
+        "Requires type/milestone-sync and partner/agentic-workflows on both PRs.",
+        "Removes or rejects the incorrect type/milestone-bump label.",
+        "Explains that the parent release milestone is required for true bumps, not servicing syncs."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "The M159 pair merged and all pre-merge checks passed, but CI on the actual mono/SkiaSharp main merge commit is red. Report the landing complete based on the PR checks.",
+      "expected_output": "Refuses to report completion, investigates the required post-merge CI failure on the actual base-branch commit, and requires a repair to be opened and landed before completion.",
+      "files": [],
+      "assertions": [
+        "Does not substitute pre-merge PR checks for post-merge CI.",
+        "Does not report the landing complete.",
+        "Uses the actual base-branch merge or squash commit as the CI subject.",
+        "Requires a repair when the post-merge failure is real."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Merge M160 now. Android only passed after disabling a backend with a temporary GN flag. We did not restore it, document an accepted limitation, or file a tracking issue, but the rest of the matrix is green.",
+      "expected_output": "Stops the landing, requires restoring the prior Android/backend support when possible, and otherwise requires an explicitly accepted limitation with a linked tracking issue before merge.",
+      "files": [],
+      "assertions": [
+        "Does not merge either PR while the temporary disable is unresolved.",
+        "Audits temporary source exclusions, GN flags, backend disables, platform workarounds, and fork backports.",
+        "Requires restoring prior support when possible.",
+        "Requires both an accepted limitation and tracking issue if restoration is deferred."
+      ]
     }
   ]
 }
