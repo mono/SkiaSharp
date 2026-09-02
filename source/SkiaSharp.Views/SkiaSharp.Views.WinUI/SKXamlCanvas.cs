@@ -43,7 +43,7 @@ namespace SkiaSharp.Views.UWP
 		private bool isVisible = true;
 
 		// workaround for https://github.com/mono/SkiaSharp/issues/1118
-		private int loadUnloadCounter = 0;
+		private bool isLoaded;
 
 		public SKXamlCanvas()
 		{
@@ -124,9 +124,10 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
-			loadUnloadCounter++;
-			if (loadUnloadCounter != 1)
+			if (isLoaded)
 				return;
+
+			isLoaded = true;
 
 #if WINDOWS
 			XamlRoot.Changed += OnXamlRootChanged;
@@ -141,9 +142,10 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnUnloaded(object sender, RoutedEventArgs e)
 		{
-			loadUnloadCounter--;
-			if (loadUnloadCounter != 0)
+			if (!isLoaded)
 				return;
+
+			isLoaded = false;
 
 #if WINDOWS
 			if (XamlRoot != null)
