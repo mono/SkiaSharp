@@ -9,7 +9,6 @@ $gitHubCommonPath = Join-Path $publishingRoot 'GitHub.Common.psm1'
 $commonPath = Join-Path $publishingRoot 'Publishing.Common.psm1'
 $preparePath = Join-Path $publishingRoot 'prepare-release.ps1'
 $finishPath = Join-Path $publishingRoot 'finish-release.ps1'
-$releaseSupportPath = Join-Path $publishingRoot 'update-release-support.ps1'
 $bugTemplatePath = Join-Path $publishingRoot 'update-bug-template.ps1'
 $reconcilePath = Join-Path $publishingRoot 'reconcile-release-assignments.ps1'
 $milestonesPath = Join-Path $publishingRoot 'update-release-milestones.ps1'
@@ -87,7 +86,6 @@ function Get-ScriptFunctionText([string] $Path) {
 # Verifies each script exposes only its intended mutation switches.
 $prepareParameters = (Get-Command $preparePath).Parameters.Keys
 $finishParameters = (Get-Command $finishPath).Parameters.Keys
-$releaseSupportParameters = (Get-Command $releaseSupportPath).Parameters.Keys
 $bugTemplateParameters = (Get-Command $bugTemplatePath).Parameters.Keys
 $reconcileParameters = (Get-Command $reconcilePath).Parameters.Keys
 $milestoneParameters = (Get-Command $milestonesPath).Parameters.Keys
@@ -95,8 +93,6 @@ Assert-True ($prepareParameters -contains 'Apply' -and $prepareParameters -conta
     'Prepare must expose Apply and Push.'
 Assert-True ($finishParameters -contains 'Push' -and $finishParameters -notcontains 'Apply') `
     'Finish must expose Push but not Apply.'
-Assert-True ($releaseSupportParameters -contains 'Version' -and $releaseSupportParameters -contains 'Push' -and
-    $releaseSupportParameters -notcontains 'Apply') 'Release support must expose Version and Push but not Apply.'
 Assert-True ($bugTemplateParameters -contains 'Apply' -and $bugTemplateParameters -contains 'Push') `
     'The bug-template updater must expose Apply and Push.'
 Assert-True ($reconcileParameters -contains 'Version' -and $reconcileParameters -contains 'Push' -and
@@ -105,23 +101,16 @@ Assert-True ($milestoneParameters -contains 'Count' -and $milestoneParameters -c
     $milestoneParameters -notcontains 'Apply' -and $milestoneParameters -notcontains 'Version') `
     'The milestone updater must expose Count and Push but not Apply or Version.'
 Assert-RejectsApply $finishPath @('-Version', '4.152.0-preview.1')
-Assert-RejectsApply $releaseSupportPath @('-Version', '4.152.0-preview.1.26426.14')
 Assert-RejectsApply $reconcilePath @('-Version', '4.152.0')
 Assert-RejectsApply $milestonesPath @()
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
-$releaseSupportScript = Get-Content $releaseSupportPath -Raw
-Assert-True ($bugTemplateScript -match '--force-with-lease') `
-    'The issue-template automation branch must use force-with-lease.'
-Assert-True ($bugTemplateScript -notmatch '(?m)git push[^\r\n]*--force(?:\s|$)') `
-    'The issue-template automation branch contains an unguarded force push.'
+$commonScript = Get-Content $commonPath -Raw
+Assert-True ($commonScript -match '--force-with-lease') `
+    'The shared automation branch helper must use force-with-lease.'
+Assert-True ($commonScript -notmatch '(?m)git push[^\r\n]*--force(?:\s|$)') `
+    'The shared automation branch helper contains an unguarded force push.'
 Assert-True ($bugTemplateScript -notmatch '(?m)^\s*git (?:switch|add|push|rev-parse)') `
     'A bug-template Git command is not rooted with git -C.'
-Assert-True ($releaseSupportScript -match '--force-with-lease') `
-    'The release-support automation branch must use force-with-lease.'
-Assert-True ($releaseSupportScript -notmatch '(?m)git push[^\r\n]*--force(?:\s|$)') `
-    'The release-support automation branch contains an unguarded force push.'
-Assert-True ($releaseSupportScript -notmatch '(?m)^\s*git (?:switch|add|push|rev-parse)') `
-    'A release-support Git command is not rooted with git -C.'
 $productionFiles = Get-ChildItem $publishingRoot -File |
     Where-Object { $_.Extension -in @('.ps1', '.psm1') -and $_.Name -notin @(
         'Git.Common.psm1',
@@ -268,7 +257,7 @@ Assert-Throws { Assert-GitHubRelease $preview $draft } 'conflicting metadata' `
 $powerShellReleaseText = (Get-Content $finishPath -Raw) + (Get-Content $commonPath -Raw)
 Assert-True ($powerShellReleaseText -notmatch 'SKIASHARP:(?:RELEASE-SUMMARY|GITHUB-GENERATED-NOTES)') `
     'PowerShell unexpectedly owns release-summary body markers.'
-Assert-True ((Get-Content $finishPath -Raw) -match 'update-release-support\.ps1') `
+Assert-True ((Get-Content $finishPath -Raw) -match 'Update-ReleaseSupport') `
     'Finish does not invoke release-support maintenance.'
 $writeRemote = $false
 $script:FakeGhCalls = 0
@@ -301,7 +290,6 @@ Assert-True ([bool] (
 )) 'Stable Finish did not dispatch the issue-template workflow in push mode.'
 
 # Exercises exact-release support-tier additions and promotions.
-Invoke-Expression (Get-ScriptFunctionText $releaseSupportPath)
 $supportConfig = @'
 {
   "$comment": "keep this text",
@@ -356,21 +344,21 @@ Assert-Equal @('4.151', '4.153') @($promotedDocument.support.preview) `
     'A stable release removed a preview line other than its own.'
 Assert-Equal $promotedSupport (Get-UpdatedReleaseSupport -Text $promotedSupport -Release $promotedRelease) `
     'A repeated stable promotion was not idempotent.'
-Assert-True ($promotedSupport -match [regex]::Escape('"$comment": "keep this text"')) `
+Assert-Equal 'keep this text' $promotedDocument.'$comment' `
     'Release support changed an unrelated top-level comment.'
-Assert-True ($promotedSupport -match '(?s)"unrelated_before":\s*\{\s*"support":\s*\{\s*' +
-    [regex]::Escape('"stable": ["do-not-change"],') + '\s*' +
-    [regex]::Escape('"preview": ["also-do-not-change"]')) `
+Assert-Equal @('do-not-change') @($promotedDocument.unrelated_before.support.stable) `
     'Release support changed a nested support object.'
-Assert-True ($promotedSupport -match [regex]::Escape('"$comment": "keep this support text"')) `
+Assert-Equal @('also-do-not-change') @($promotedDocument.unrelated_before.support.preview) `
+    'Release support changed a nested preview tier.'
+Assert-Equal 'keep this support text' $promotedDocument.support.'$comment' `
     'Release support changed the support comment.'
-Assert-True ($promotedSupport -match '(?s)"metadata":\s*\{\s*' +
-    [regex]::Escape('"stable": ["nested-stable"],') + '\s*' +
-    [regex]::Escape('"preview": ["nested-preview"]')) `
+Assert-Equal @('nested-stable') @($promotedDocument.support.metadata.stable) `
     'Release support changed a nested property within the top-level support object.'
-Assert-True ($promotedSupport -match '"history_floor": \{\s*"skiasharp": "3\.0\.0"\s*\}') `
+Assert-Equal @('nested-preview') @($promotedDocument.support.metadata.preview) `
+    'Release support changed nested preview metadata.'
+Assert-Equal '3.0.0' $promotedDocument.history_floor.skiasharp `
     'Release support changed history-floor configuration.'
-Assert-True ($promotedSupport -match '"unrelated": \{\s*"enabled": true\s*\}') `
+Assert-Equal $true $promotedDocument.unrelated.enabled `
     'Release support changed unrelated configuration.'
 
 $inlineConfig = @'
@@ -382,8 +370,9 @@ $inlineConfig = @'
 }
 '@
 $inlinePreview = Get-UpdatedReleaseSupport -Text $inlineConfig -Release $previewRelease
-Assert-True ($inlinePreview -match [regex]::Escape('"stable": [ "4.150" ]')) `
-    'A preview release reformatted the unchanged stable tier.'
+$inlinePreviewDocument = $inlinePreview | ConvertFrom-Json
+Assert-Equal @('4.150') @($inlinePreviewDocument.support.stable) `
+    'A preview release changed the unchanged stable tier.'
 $emptyPromotionConfig = @'
 {
   "support": {
@@ -501,18 +490,18 @@ try {
     $remoteSha = (git -C $automationRoot rev-parse HEAD).Trim()
     & git -C $automationRoot switch --quiet main
 
-    Assert-True (Test-IssueTemplateAutomationBranch `
+    Assert-True (Test-AutomationFileBranch `
         -Root $automationRoot `
         -RemoteSha $remoteSha `
-        -MainSha $mainSha `
-        -Path 'template.yml' `
-        -Content "new`n") 'An identical automation branch was not reusable.'
-    Assert-True (!(Test-IssueTemplateAutomationBranch `
+        -BaseSha $mainSha `
+        -Files ([ordered] @{ 'template.yml' = "new`n" })) `
+        'An identical automation branch was not reusable.'
+    Assert-True (!(Test-AutomationFileBranch `
         -Root $automationRoot `
         -RemoteSha $remoteSha `
-        -MainSha $mainSha `
-        -Path 'template.yml' `
-        -Content "different`n")) 'A different automation branch was incorrectly reusable.'
+        -BaseSha $mainSha `
+        -Files ([ordered] @{ 'template.yml' = "different`n" }))) `
+        'A different automation branch was incorrectly reusable.'
 } finally {
     Remove-Item $automationRoot, $automationBare -Recurse -Force -ErrorAction SilentlyContinue
 }
