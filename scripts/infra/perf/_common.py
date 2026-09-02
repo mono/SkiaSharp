@@ -53,11 +53,19 @@ def http_get(url: str, *, retries: int = 4, timeout: int = 120,
             req = urllib.request.Request(url, headers=request_headers)
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 return resp.read()
+        except urllib.error.HTTPError as err:
+            # A 4xx other than 429 will never succeed on retry; sleeping through four
+            # attempts per request just burns the caller's time budget.
+            if 400 <= err.code < 500 and err.code != 429:
+                raise
+            last = err
         except (urllib.error.URLError, TimeoutError, ConnectionError) as err:
             last = err
-            wait = min(30, 2 ** attempt)
-            log(f"  ! request failed ({err}); retry {attempt}/{retries} in {wait}s")
-            time.sleep(wait)
+        if attempt == retries:
+            break
+        wait = min(30, 2 ** attempt)
+        log(f"  ! request failed ({last}); retry {attempt}/{retries} in {wait}s")
+        time.sleep(wait)
     raise RuntimeError(f"GET failed after {retries} attempts: {url}\n  {last}")
 
 

@@ -88,18 +88,22 @@ def github_paginate(path: str, *, per_page: int = 100, max_pages: int = 50, **kw
 def measured_build(repo: str, pr_number: int, **kwargs) -> str | None:
     """Return the build id already reported on a PR, or None if there is no report.
 
+    FIRST marker comment wins, matching every writer in the workflow (all of which use
+    `page.data.find(...)`). If reader and writers ever disagreed about which comment is
+    authoritative — two markers can exist after a concurrent manual dispatch, or because
+    a human quoted the marker — the writers would keep stamping one comment while this
+    read returned the other, and the PR would be re-selected and re-downloaded forever.
+
     Raises GitHubReadError when the comments cannot be read.
     """
     try:
-        stamp = None
         for comment in github_paginate(f"/repos/{repo}/issues/{pr_number}/comments",
                                        **kwargs):
             body = comment.get("body") or ""
             if COMMENT_MARKER in body:
                 match = _BUILD_STAMP_RE.search(body)
-                if match:
-                    stamp = match.group(1)
-        return stamp
+                return match.group(1) if match else None
+        return None
     except GitHubReadError:
         raise
     except Exception as err:  # noqa: BLE001
@@ -107,9 +111,14 @@ def measured_build(repo: str, pr_number: int, **kwargs) -> str | None:
 
 
 def open_pull_requests(repo: str, **kwargs) -> list[int]:
-    """Return the open PR numbers for a repository."""
+    """Return the open PR numbers for a repository.
+
+    Ascending `created` order makes paging append-only, so a PR opened mid-sweep cannot
+    shift the window and hide an entry.
+    """
     return [pr["number"]
-            for pr in github_paginate(f"/repos/{repo}/pulls?state=open", **kwargs)]
+            for pr in github_paginate(
+                f"/repos/{repo}/pulls?state=open&sort=created&direction=asc", **kwargs)]
 
 
 def latest_successful_build(
@@ -206,7 +215,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--repo", default=None,
                    help="owner/name; discover open PRs and read their reported build ids.")
     p.add_argument("--measured", action="append", default=[],
-                   help="Already-measured <pr>=<build> pair (repeatable); such PRs are skipped.")
+                   help="Already-measured <pr>=<build> pair (repeatable). Ignored when "
+                        "--repo is given, because the stamp is then read live.")
     p.add_argument("--org", default=DEFAULT_ORG, help=f"AzDO org (default: {DEFAULT_ORG}).")
     p.add_argument("--project", default=DEFAULT_PROJECT,
                    help=f"AzDO project (default: {DEFAULT_PROJECT}).")

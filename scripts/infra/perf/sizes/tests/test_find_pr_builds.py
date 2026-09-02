@@ -171,9 +171,20 @@ class MeasuredBuildTests(unittest.TestCase):
         self.assertEqual("222", find_pr_builds.measured_build("o/r", 1, fetch=fetch))
         self.assertTrue(any("page=2" in u for u in fetch.seen))
 
-    def test_uses_the_newest_stamp_when_several_exist(self):
+    def test_first_marker_comment_wins_like_the_writers(self):
+        """Reader and writers must agree on WHICH comment is authoritative.
+
+        Every writer in the workflow uses `find(...)` (first match). If this read took the
+        last match instead, a PR carrying two marker comments would have its stamp written
+        to one and read from the other, and would be re-measured (~1 GB) on every sweep.
+        """
         fetch = paged_fetch([[report(1)] + [comment("x")] * 99, [report(2)]])
-        self.assertEqual("2", find_pr_builds.measured_build("o/r", 1, fetch=fetch))
+        self.assertEqual("1", find_pr_builds.measured_build("o/r", 1, fetch=fetch))
+
+    def test_a_later_quoted_marker_cannot_poison_the_stamp(self):
+        quoted = comment("> <!-- skiasharp-pr-artifact-sizes -->\n> <!-- build=999 -->")
+        fetch = paged_fetch([[report(42), quoted]])
+        self.assertEqual("42", find_pr_builds.measured_build("o/r", 1, fetch=fetch))
 
     def test_no_report_is_none(self):
         fetch = paged_fetch([[comment("nothing here")]])

@@ -247,9 +247,10 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           BUILD_ID: ${{ matrix.build }}
+          PR_NUMBER: ${{ matrix.pr }}
         with:
           script: |
-            const prNumber = Number('${{ matrix.pr }}') || null;
+            const prNumber = Number(process.env.PR_NUMBER) || null;
             if (!prNumber) {
               core.info('No PR number yet; the build is claimed after it is resolved.');
               return;
@@ -315,12 +316,14 @@ jobs:
 
       - name: Post or update the PR comment
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          PR_NUMBER: ${{ matrix.pr }}
         with:
           script: |
             const fs = require('fs');
             const measurement = JSON.parse(fs.readFileSync('pr-sizes.json', 'utf8'));
             const prNumber = measurement.prNumber
-              || Number('${{ matrix.pr }}') || null;
+              || Number(process.env.PR_NUMBER) || null;
             if (!prNumber) {
               core.warning('No PR number could be resolved; skipping comment.');
               return;
@@ -352,9 +355,10 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           BUILD_ID: ${{ matrix.build }}
+          PR_NUMBER: ${{ matrix.pr }}
         with:
           script: |
-            const prNumber = Number('${{ matrix.pr }}') || null;
+            const prNumber = Number(process.env.PR_NUMBER) || null;
             if (!prNumber) {
               core.warning('No PR number could be resolved; not recording the failure.');
               return;

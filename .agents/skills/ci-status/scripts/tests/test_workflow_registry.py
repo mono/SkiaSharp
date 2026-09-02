@@ -149,13 +149,19 @@ class SkillDocTests(unittest.TestCase):
         Either omit the precision or keep it correct — this test refuses the third option.
         """
         with open(os.path.join(SKILL_DIR, "SKILL.md"), encoding="utf-8") as fh:
-            rows = [ln for ln in fh if ln.startswith("| ") and "mono/SkiaSharp" in ln]
+            rows = [ln for ln in fh if ln.startswith("| ")]
         by_name = {w["name"]: w["workflow"] for w in local_workflows()}
         stale = []
+        unresolved = []
         for row in rows:
             cells = [c.strip() for c in row.strip().strip("|").split("|")]
+            if len(cells) < 3 or cells[1] != "mono/SkiaSharp":
+                continue  # header, separator, or a row owned by another repository
             name = cells[0]
             if name not in by_name:
+                # A renamed workflow must fail loudly rather than silently disabling the
+                # schedule check for its row.
+                unresolved.append(name)
                 continue
             path = os.path.join(WORKFLOW_DIR, by_name[name])
             if not os.path.isfile(path):
@@ -170,12 +176,13 @@ class SkillDocTests(unittest.TestCase):
                 if literal not in crons:
                     stale.append(f"{name}: documents cron {literal!r}, file has {crons}")
 
-            for hh, mm in re.findall(r"\b(\d{2}):(\d{2}) UTC", trigger_cell):
-                wanted = {(c.split()[1], c.split()[0]) for c in crons if len(c.split()) >= 2}
-                if (str(int(hh)), str(int(mm))) not in {
-                        (h.lstrip("0") or "0", m.lstrip("0") or "0") for h, m in wanted}:
+            for hh, mm in re.findall(r"\b(\d{1,2}):(\d{2}) UTC", trigger_cell):
+                actual = {(c.split()[1], c.split()[0]) for c in crons if len(c.split()) >= 2}
+                if (str(int(hh)), str(int(mm))) not in actual:
                     stale.append(
                         f"{name}: documents {hh}:{mm} UTC, file has {crons}")
+        self.assertEqual([], unresolved,
+                         f"SKILL.md rows name untracked workflows: {unresolved}")
         self.assertEqual([], stale, "; ".join(stale))
 
 

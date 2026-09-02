@@ -45,9 +45,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Run artifact-size intake tests
-        run: python3 -m unittest discover -s scripts/infra/perf/sizes/tests -p "test_*.py"
-
       - name: Run ci-status workflow registry tests
         # Guards the dashboard against tracking workflows that no longer exist.
         run: |
@@ -55,6 +52,11 @@ jobs:
           python3 -c "import yaml" 2>/dev/null \
             || python3 -m pip install --quiet --break-system-packages pyyaml
           python3 -m unittest discover -s .agents/skills/ci-status/scripts/tests -p "test_*.py"
+
+      - name: Run artifact-size intake tests
+        # Runs after the PyYAML guard above: these tests parse the workflow YAML to prove
+        # the size sweep stamps a build before it downloads it.
+        run: python3 -m unittest discover -s scripts/infra/perf/sizes/tests -p "test_*.py"
 
       - name: Run update-skia tooling tests
         # These import their module under test by name, so they must run from their own
