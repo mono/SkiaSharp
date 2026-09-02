@@ -64,7 +64,7 @@ checks. The reciprocal PR links must identify this exact pair.
 Search both repositories for competing open work before proceeding. Treat
 another PR as competing only when evidence shows at least one of:
 
-- the same sync line, head, or base;
+- another Skia sync shares the same sync line, head, or intended sync base;
 - a duplicate `externals/skia` or `cgmanifest.json` repin;
 - overlapping DEPS dependency names, revisions, or hunks that would invalidate
   one PR if the other landed.
@@ -183,15 +183,17 @@ merges. A same-milestone servicing sync does not create another release line.
 
 1. Derive `release/A.B.x` from the previous SkiaSharp product line; for example,
    an M153 bump preserves `release/4.152.x`.
-2. Re-fetch the current mono/skia base and mono/SkiaSharp base tips. Present
-   both planned refs and exact source SHAs and obtain explicit maintainer
-   confirmation before creating remote branches.
-3. Create the mono/skia release branch first from the pre-bump native base tip,
-   then create the identically named mono/SkiaSharp release branch from the
-   pre-bump parent base tip.
-4. Never force or move an existing release branch. Reuse it only when it already
-   resolves to the intended source SHA; stop on conflicting state.
-5. Verify the parent release branch's `externals/skia` gitlink equals the native
+2. Re-fetch and record the current mono/skia base and mono/SkiaSharp base tips.
+3. Preflight both destination refs before creating either branch. Each must be
+   absent or already resolve to its intended source SHA; stop before any write
+   if either conflicts.
+4. Present both planned refs and exact source SHAs and obtain explicit
+   maintainer confirmation.
+5. Create any missing mono/skia release branch first from the recorded native
+   base tip, then create the missing identically named mono/SkiaSharp release
+   branch from the recorded parent base tip. Use guarded non-force ref creation.
+6. Never force or move an existing release branch.
+7. Verify the parent release branch's `externals/skia` gitlink equals the native
    release branch tip and both branches still identify the previous milestone.
 
 Record both branch SHAs. This split keeps the previous milestone serviceable
@@ -200,16 +202,19 @@ after the default branches advance.
 ## 6. Merge mono/skia first
 
 1. Re-fetch both PRs and upstream immediately before merging.
-2. Verify the native PR head is based on the current base tip: its merge base
+2. For a true bump, verify both current base tips still equal the recorded
+   `release/A.B.x` branch SHAs. If either base advanced after the split, stop
+   and reconcile the release-line decision rather than merging stale state.
+3. Verify the native PR head is based on the current base tip: its merge base
    must equal that tip and it must not be behind. Compute the prospective merge
    tree and require it to equal the reviewed PR-head tree before performing the
    irreversible merge.
-3. Invoke `pr-commit-message` for the mono/skia PR using the final head,
+4. Invoke `pr-commit-message` for the mono/skia PR using the final head,
    companion PR, compare range, review findings, and validation evidence.
-4. Mark the PR ready if needed.
-5. Merge with GitHub's **merge commit** strategy. Never squash or rebase it.
-6. Fetch the resulting base-branch tip and record its exact SHA and tree.
-7. Verify that resulting base-branch commit has exactly the reviewed PR-head
+5. Mark the PR ready if needed.
+6. Merge with GitHub's **merge commit** strategy. Never squash or rebase it.
+7. Fetch the resulting base-branch tip and record its exact SHA and tree.
+8. Verify that resulting base-branch commit has exactly the reviewed PR-head
    tree and that its history contains the authoritative two-parent upstream
    merge. Stop on any tree difference or missing ancestry.
 

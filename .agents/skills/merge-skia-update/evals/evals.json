@@ -193,6 +193,29 @@
         "Confirms semantic versions against the nested source evidence.",
         "Does not infer missing evidence from top-level component fields."
       ]
+    },
+    {
+      "id": 17,
+      "prompt": "Land this reviewed same-milestone M165 servicing sync. Matching release/4.165.x branches already exist from the original bump; should we create another servicing branch before merging?",
+      "expected_output": "Does not create another release branch because prior-line preservation applies only when a true milestone bump replaces the current default-branch milestone.",
+      "files": [],
+      "expectations": [
+        "Does not create release branches for a same-milestone servicing sync.",
+        "Reuses the existing servicing line rather than splitting it again.",
+        "Still applies the normal review, CI, package, merge-order, and final-repin gates."
+      ]
+    },
+    {
+      "id": 18,
+      "prompt": "Both M166 PRs remain draft while all readiness evidence is being collected. Every substantive gate passes; draft state is the only remaining status. Is the pair unready solely because it is draft?",
+      "expected_output": "Does not treat draft state alone as a readiness blocker and keeps the PRs draft until immediately before an explicitly approved merge.",
+      "files": [],
+      "expectations": [
+        "Reports substantive readiness independently of draft state.",
+        "Does not mark either PR ready during a read-only assessment.",
+        "Marks ready only immediately before an approved merge.",
+        "Still treats missing labels, milestone, mergeability, reviews, CI, or packages as blockers."
+      ]
     }
   ]
 }
