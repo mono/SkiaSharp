@@ -22,6 +22,10 @@ import urllib.request
 
 USER_AGENT = "skiasharp-perf-tracker/1.0 (+https://github.com/mono/SkiaSharp)"
 
+# 4xx statuses worth retrying: 403 is GitHub's secondary rate limit, 408 a request
+# timeout, 429 ordinary throttling. Every other 4xx is a permanent answer.
+RETRYABLE_HTTP_CODES = frozenset({403, 408, 429})
+
 # SkiaSharp package feeds.
 EAP_INDEX_URL = (
     "https://pkgs.dev.azure.com/dnceng/public/"
@@ -45,10 +49,10 @@ def http_get(url: str, *, retries: int = 4, timeout: int = 120,
              headers: dict | None = None) -> bytes:
     """GET a URL returning the raw bytes, retrying transient failures.
 
-    Every failure — including a non-retryable 4xx — is raised as ``RuntimeError``. Callers
-    such as ``feed_versions`` treat that as "absent" and return an empty result, so leaking
-    the raw ``urllib.error.HTTPError`` here would turn a package that is simply not on a
-    feed yet into a crash in the nightly trackers.
+    Every HTTP or connection failure — including a non-retryable 4xx — is raised as
+    ``RuntimeError``. Callers such as ``feed_versions`` treat that as "absent" and return an
+    empty result, so leaking the raw ``urllib.error.HTTPError`` here would turn a package
+    that is simply not on a feed yet into a crash in the nightly trackers.
     """
     last: Exception | None = None
     request_headers = {"User-Agent": USER_AGENT}
@@ -60,9 +64,11 @@ def http_get(url: str, *, retries: int = 4, timeout: int = 120,
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 return resp.read()
         except urllib.error.HTTPError as err:
-            # A 4xx other than 429 will never succeed on retry; sleeping through four
-            # attempts per request just burns the caller's time budget.
-            if 400 <= err.code < 500 and err.code != 429:
+            # Most 4xx will never succeed on retry, and sleeping through four doomed
+            # attempts just burns the caller's time budget. The exceptions are genuinely
+            # transient: 403 is what GitHub returns for a secondary rate limit, 408 is a
+            # request timeout, and 429 is ordinary throttling.
+            if 400 <= err.code < 500 and err.code not in RETRYABLE_HTTP_CODES:
                 raise RuntimeError(f"GET failed with HTTP {err.code}: {url}") from err
             last = err
         except (urllib.error.URLError, TimeoutError, ConnectionError) as err:

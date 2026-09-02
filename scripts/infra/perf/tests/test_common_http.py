@@ -84,7 +84,7 @@ class HttpGetContractTests(unittest.TestCase):
         self.assertIsInstance(ctx.exception.__cause__, urllib.error.HTTPError)
 
     def test_non_retryable_4xx_fails_fast(self):
-        for code in (400, 401, 403, 404):
+        for code in (400, 404, 410, 422):
             with self.subTest(code=code):
                 self.slept.clear()
                 fake = self.install(http_error(code))
@@ -92,6 +92,30 @@ class HttpGetContractTests(unittest.TestCase):
                     _common.http_get("https://example.invalid/x")
                 self.assertEqual(1, fake.calls, "a non-retryable 4xx must not be retried")
                 self.assertEqual([], self.slept, "a non-retryable 4xx must not sleep")
+
+    def test_transient_4xx_is_still_retried(self):
+        """403 is GitHub's secondary rate limit and 408 a timeout — both recover.
+
+        The size sweep issues dozens of sequential authenticated GETs every 30 minutes,
+        which is exactly the shape that trips a secondary rate limit; fast-failing those
+        would make the sweep strictly less resilient than before the fast-fail existed.
+        """
+        for code in (403, 408, 429):
+            with self.subTest(code=code):
+                fake = self.install(http_error(code))
+                with self.assertRaises(RuntimeError):
+                    _common.http_get("https://example.invalid/x", retries=3)
+                self.assertEqual(3, fake.calls, f"HTTP {code} must be retried")
+
+    def test_no_credentials_leak_into_the_error(self):
+        self.install(http_error(404))
+        with self.assertRaises(RuntimeError) as ctx:
+            _common.http_get("https://example.invalid/x",
+                             headers={"Authorization": "Bearer s3cr3t-token-value"})
+        message = str(ctx.exception)
+        self.assertNotIn("s3cr3t-token-value", message)
+        self.assertNotIn("Bearer", message)
+        self.assertNotIn("Authorization", message)
 
     def test_429_is_still_retried(self):
         fake = self.install(http_error(429))
