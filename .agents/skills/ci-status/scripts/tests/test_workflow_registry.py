@@ -16,6 +16,7 @@ compiler to run and are not brittle to lock regeneration.
 from __future__ import annotations
 
 import importlib.util
+import re
 import os
 import unittest
 
@@ -139,6 +140,43 @@ class SkillDocTests(unittest.TestCase):
             self.assertNotIn(
                 f"| {removed} |", text,
                 f"SKILL.md still advertises {removed!r}, which no tracked workflow provides.")
+
+    def test_documented_schedules_match_the_workflow(self):
+        """Any schedule the table states must be true of the workflow it names.
+
+        gh-aw re-jitters the cron of every generated lock on upgrade, so a documented
+        `HH:MM UTC` or literal cron silently goes stale the next time the compiler runs.
+        Either omit the precision or keep it correct — this test refuses the third option.
+        """
+        with open(os.path.join(SKILL_DIR, "SKILL.md"), encoding="utf-8") as fh:
+            rows = [ln for ln in fh if ln.startswith("| ") and "mono/SkiaSharp" in ln]
+        by_name = {w["name"]: w["workflow"] for w in local_workflows()}
+        stale = []
+        for row in rows:
+            cells = [c.strip() for c in row.strip().strip("|").split("|")]
+            name = cells[0]
+            if name not in by_name:
+                continue
+            path = os.path.join(WORKFLOW_DIR, by_name[name])
+            if not os.path.isfile(path):
+                continue
+            block = load_workflow(by_name[name])
+            block = block.get("on", block.get(True)) or {}
+            crons = [s.get("cron") for s in (block.get("schedule") or [])
+                     if isinstance(s, dict) and s.get("cron")]
+            trigger_cell = cells[2] if len(cells) > 2 else ""
+
+            for literal in re.findall(r"`([^`]*\*[^`]*)`", trigger_cell):
+                if literal not in crons:
+                    stale.append(f"{name}: documents cron {literal!r}, file has {crons}")
+
+            for hh, mm in re.findall(r"\b(\d{2}):(\d{2}) UTC", trigger_cell):
+                wanted = {(c.split()[1], c.split()[0]) for c in crons if len(c.split()) >= 2}
+                if (str(int(hh)), str(int(mm))) not in {
+                        (h.lstrip("0") or "0", m.lstrip("0") or "0") for h, m in wanted}:
+                    stale.append(
+                        f"{name}: documents {hh}:{mm} UTC, file has {crons}")
+        self.assertEqual([], stale, "; ".join(stale))
 
 
 if __name__ == "__main__":

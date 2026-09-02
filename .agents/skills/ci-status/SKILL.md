@@ -71,15 +71,15 @@ standard Darc/Maestro stages.
 | Sync - Samples | mono/SkiaSharp | Push/PR to `samples/` | Sample projects broken if failing |
 | Tests - Binding Generation Determinism | mono/SkiaSharp | Push/PR | Generated bindings drift undetected |
 | Sync - Docs Submodule | mono/SkiaSharp | Daily (10:00 UTC) | API docs get out of sync |
-| Sync - Release Notes & API Diffs | mono/SkiaSharp | Push to main/release/tags + daily (00:00 UTC) | Release notes stop auto-updating |
-| Sync - Skia Upstream | mono/SkiaSharp | Every 6h (`43 */6 * * *`) | Upstream tracking breaks |
-| Fixer - Memory Leak | mono/SkiaSharp | Every 12h (`15 */12 * * *`) | Leak-hunting automation stops |
-| Fixer - Performance | mono/SkiaSharp | Every 12h (`30 */12 * * *`) | Perf-hunting automation stops |
-| Sync - Issue Triage | mono/SkiaSharp | Daily (05:25 UTC) + issue events | Triage automation stops |
+| Sync - Release Notes & API Diffs | mono/SkiaSharp | Push to main/release/tags + daily | Release notes stop auto-updating |
+| Sync - Skia Upstream | mono/SkiaSharp | Every 6h | Upstream tracking breaks |
+| Fixer - Memory Leak | mono/SkiaSharp | Every 12h | Leak-hunting automation stops |
+| Fixer - Performance | mono/SkiaSharp | Every 12h | Perf-hunting automation stops |
+| Sync - Issue Triage | mono/SkiaSharp | Daily + issue events | Triage automation stops |
 | Sync - Issue Template Versions | mono/SkiaSharp | Scheduled | Bug template advertises stale versions |
 | Sync - Agentic Data | mono/SkiaSharp | Workflow run events | AI workflow data lost |
 | Track - Artifact Sizes | mono/SkiaSharp | Nightly (07:00 UTC) + PR sweep | Package size tracking/PR reports stop |
-| Track - Benchmarks | mono/SkiaSharp | Nightly (08:00 UTC) | Benchmark trend tracking stops |
+| Track - Benchmarks | mono/SkiaSharp | Every 6h | Benchmark trend tracking stops |
 | Release - Prepare | mono/SkiaSharp | Workflow dispatch | Release branches cannot be cut |
 | Release - Finish | mono/SkiaSharp | Workflow dispatch | Releases cannot be finalized |
 | Release - Milestones | mono/SkiaSharp | Workflow dispatch | Milestone reconciliation stops |

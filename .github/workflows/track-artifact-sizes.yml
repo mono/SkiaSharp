@@ -65,6 +65,9 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+      # The sweep lists open PRs and reads their size-report comment. PR comments live on
+      # the issues endpoint, so both scopes are needed to read the dedupe stamp.
+      issues: read
       pull-requests: read
     outputs:
       mode: ${{ steps.mode.outputs.mode }}
@@ -107,7 +110,9 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$MODE" = "pr" ]; then
-            # Manual fallback: measure exactly the build the operator named.
+            # Manual fallback: measure exactly the build the operator named. This path
+            # never consults the dedupe stamp, so it is also the deliberate retry route
+            # for a build the sweep has already stamped.
             python3 - <<'PY' > matrix.json
           import json, os
           print(json.dumps([{
@@ -116,28 +121,12 @@ jobs:
           }]))
           PY
           else
-            # Targeted poll: one AzDO query per open PR, skipping builds already reported.
-            # Assigned first so `set -e` sees a failing `gh pr list`; inside a `for` word
-            # list a failed substitution would silently yield an empty, always-green sweep.
-            prs=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open \
-                    --limit 100 --json number --jq '.[].number')
-            args=()
-            for pr in $prs; do
-              args+=(--pr "$pr")
-              # The report comment is upserted, so the newest page always holds it; no
-              # --paginate (a repo-wide token budget must survive 48 sweeps a day) and no
-              # stderr suppression (a throttled read must be visible, not read as "unmeasured"
-              # which would re-download ~1 GB).
-              measured=$(gh api \
-                "repos/$GITHUB_REPOSITORY/issues/$pr/comments?per_page=100&sort=created&direction=desc" \
-                --jq '.[] | select(.body | contains("<!-- skiasharp-pr-artifact-sizes")) | .body' \
-                | grep -o 'build=[0-9][0-9]*' | tail -1 | cut -d= -f2 || true)
-              if [ -n "${measured:-}" ]; then
-                args+=(--measured "$pr=$measured")
-              fi
-            done
+            # Targeted poll. PR discovery and the per-PR stamp read both happen inside the
+            # script so they can paginate and fail closed; the per-issue comments endpoint
+            # ignores sort/direction and always returns oldest-first, so the size report
+            # lives on the LAST page once a PR passes 100 comments.
             python3 scripts/infra/perf/sizes/find_pr_builds.py \
-              ${args[@]+"${args[@]}"} --limit 10 --output matrix.json
+              --repo "$GITHUB_REPOSITORY" --limit 10 --output matrix.json
           fi
           echo "matrix=$(cat matrix.json)" >> "$GITHUB_OUTPUT"
           cat matrix.json
@@ -239,6 +228,7 @@ jobs:
         include: ${{ fromJSON(needs.resolve.outputs.matrix || '[]') }}
     permissions:
       contents: read
+      issues: write
       pull-requests: write
     env:
       BUILD_URL: https://dev.azure.com/dnceng-public/public/_build/results?buildId=${{ matrix.build }}
@@ -247,6 +237,50 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Claim the build
+        # Writes the dedupe stamp BEFORE the ~1 GB download. `if: failure()` cannot carry
+        # this: a job hard-timeout (or a cancellation) kills the job outright, so no later
+        # step runs and an unstampable build would be re-selected by every sweep forever.
+        # Stamping the attempt up front makes the dedupe durable regardless of how the job
+        # ends; the `workflow_dispatch` path ignores stamps and remains the retry route.
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          BUILD_ID: ${{ matrix.build }}
+        with:
+          script: |
+            const prNumber = Number('${{ matrix.pr }}') || null;
+            if (!prNumber) {
+              core.info('No PR number yet; the build is claimed after it is resolved.');
+              return;
+            }
+            const marker = '<!-- skiasharp-pr-artifact-sizes -->';
+            const buildId = process.env.BUILD_ID;
+            const body = [
+              marker,
+              `<!-- build=${buildId} -->`,
+              '## 📦 Artifact size report',
+              '',
+              `Measuring the packages from build [\`${buildId}\`](${process.env.BUILD_URL})…`,
+              '',
+              `[Run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+            ].join('\n');
+            const repo = { owner: context.repo.owner, repo: context.repo.repo };
+
+            let existing = null;
+            for await (const page of github.paginate.iterator(
+              github.rest.issues.listComments,
+              { ...repo, issue_number: prNumber, per_page: 100 }
+            )) {
+              existing = page.data.find(c => c.body.includes(marker));
+              if (existing) break;
+            }
+            if (existing) {
+              await github.rest.issues.updateComment({ ...repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...repo, issue_number: prNumber, body });
+            }
+            core.info(`claimed build ${buildId} on PR #${prNumber}`);
 
       - name: Download + measure the PR's packages
         run: |
@@ -312,10 +346,8 @@ jobs:
             }
 
       - name: Record a failed measurement
-        # The sweep dedupes on the `build=` stamp in the comment. Without this, a build that
-        # can never be measured (expired artifact, unparseable package) would be re-selected
-        # every 30 minutes and re-downloaded at ~1 GB forever — the same runaway class this
-        # workflow was changed to eliminate. Record the attempt, not just the success.
+        # The claim step already made the dedupe durable; this only replaces the
+        # "measuring…" text so the PR shows why no numbers arrived.
         if: failure()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:

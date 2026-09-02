@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # perf/
@@ -40,6 +41,75 @@ DEFAULT_PROJECT = "public"
 # The public SkiaSharp pipeline; its `Package NuGets` job publishes the `nuget` artifact
 # that measure_pr.py consumes.
 DEFAULT_DEFINITION = 345
+
+GITHUB_API = "https://api.github.com"
+# The stable marker on the size-report comment; the build stamp follows it.
+COMMENT_MARKER = "<!-- skiasharp-pr-artifact-sizes"
+_BUILD_STAMP_RE = re.compile(r"<!--\s*build=(\d+)\s*-->")
+
+
+class GitHubReadError(RuntimeError):
+    """A PR's existing size comment could not be read.
+
+    The caller must treat this as *unknown*, never as *unmeasured*: measuring downloads
+    roughly a gigabyte, so guessing "not yet measured" on a throttled or failing read is
+    how a transient API problem turns into a repeated multi-gigabyte download.
+    """
+
+
+def github_get(path: str, *, token: str | None = None, fetch=None):
+    """GET one GitHub API path, authenticated when a token is available."""
+    fetch = fetch or http_get_json
+    headers = {"Accept": "application/vnd.github+json"}
+    token = token if token is not None else os.environ.get("GH_TOKEN", "")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return fetch(f"{GITHUB_API}{path}", headers=headers)
+
+
+def github_paginate(path: str, *, per_page: int = 100, max_pages: int = 50, **kwargs):
+    """Yield every item across pages.
+
+    The per-issue comments endpoint ignores `sort` and `direction` — it always returns
+    oldest-first — so the newest comment is on the LAST page. Reading only the first page
+    would miss the size report on any PR with more than `per_page` comments.
+    """
+    sep = "&" if "?" in path else "?"
+    for page in range(1, max_pages + 1):
+        batch = github_get(f"{path}{sep}per_page={per_page}&page={page}", **kwargs)
+        if not isinstance(batch, list):
+            raise GitHubReadError(f"unexpected response shape for {path} page {page}")
+        yield from batch
+        if len(batch) < per_page:
+            return
+    raise GitHubReadError(f"{path} exceeded {max_pages} pages")
+
+
+def measured_build(repo: str, pr_number: int, **kwargs) -> str | None:
+    """Return the build id already reported on a PR, or None if there is no report.
+
+    Raises GitHubReadError when the comments cannot be read.
+    """
+    try:
+        stamp = None
+        for comment in github_paginate(f"/repos/{repo}/issues/{pr_number}/comments",
+                                       **kwargs):
+            body = comment.get("body") or ""
+            if COMMENT_MARKER in body:
+                match = _BUILD_STAMP_RE.search(body)
+                if match:
+                    stamp = match.group(1)
+        return stamp
+    except GitHubReadError:
+        raise
+    except Exception as err:  # noqa: BLE001
+        raise GitHubReadError(f"PR #{pr_number}: {err}") from err
+
+
+def open_pull_requests(repo: str, **kwargs) -> list[int]:
+    """Return the open PR numbers for a repository."""
+    return [pr["number"]
+            for pr in github_paginate(f"/repos/{repo}/pulls?state=open", **kwargs)]
 
 
 def latest_successful_build(
@@ -76,9 +146,16 @@ def latest_successful_build(
 def build_matrix(
     pr_numbers: list[int],
     measured: dict[int, str] | None = None,
+    *,
+    read_measured=None,
     **kwargs,
 ) -> list[dict]:
-    """Return the matrix entries for PRs with a new, not-yet-measured build."""
+    """Return the matrix entries for PRs with a new, not-yet-measured build.
+
+    `read_measured(pr)` looks the stamp up live; a GitHubReadError from it SKIPS that PR
+    for this sweep rather than measuring it, because an unreadable stamp is unknown, not
+    absent. The next sweep retries.
+    """
     measured = measured or {}
     entries: list[dict] = []
     errors: list[int] = []
@@ -88,7 +165,16 @@ def build_matrix(
             if pr_number not in errors:
                 log(f"  - PR #{pr_number}: no successful package build")
             continue
-        if measured.get(pr_number) == build_id:
+        if read_measured is not None:
+            try:
+                already = read_measured(pr_number)
+            except GitHubReadError as err:
+                log(f"  ! PR #{pr_number}: skipping, could not read its report: {err}")
+                errors.append(pr_number)
+                continue
+        else:
+            already = measured.get(pr_number)
+        if already == build_id:
             log(f"  - PR #{pr_number}: build {build_id} already measured")
             continue
         log(f"  + PR #{pr_number}: build {build_id}")
@@ -96,8 +182,8 @@ def build_matrix(
     # A widespread query failure (throttling, an AzDO outage) otherwise looks exactly like
     # "nobody has a build" and would silently stop PR size reports with no signal anywhere.
     if errors and len(errors) >= max(3, len(pr_numbers) // 2):
-        log(f"::warning::{len(errors)} of {len(pr_numbers)} PR build queries failed; "
-            "Azure DevOps may be throttling or unavailable")
+        log(f"::warning::{len(errors)} of {len(pr_numbers)} PR lookups failed; "
+            "Azure DevOps or GitHub may be throttling or unavailable")
     return entries
 
 
@@ -116,7 +202,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--pr", type=int, action="append", default=[],
-                   help="Open PR number to check (repeatable).")
+                   help="Open PR number to check (repeatable). Omit with --repo to sweep.")
+    p.add_argument("--repo", default=None,
+                   help="owner/name; discover open PRs and read their reported build ids.")
     p.add_argument("--measured", action="append", default=[],
                    help="Already-measured <pr>=<build> pair (repeatable); such PRs are skipped.")
     p.add_argument("--org", default=DEFAULT_ORG, help=f"AzDO org (default: {DEFAULT_ORG}).")
@@ -133,9 +221,19 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
+    pr_numbers = list(args.pr)
+    read_measured = None
+    if args.repo:
+        # Discovery and stamp reads both fail closed: an unreadable PR list aborts the
+        # sweep rather than silently reporting "nothing to do".
+        if not pr_numbers:
+            pr_numbers = open_pull_requests(args.repo)
+            log(f"{len(pr_numbers)} open pull request(s)")
+        read_measured = lambda pr: measured_build(args.repo, pr)  # noqa: E731
     entries = build_matrix(
-        args.pr,
+        pr_numbers,
         parse_measured(args.measured),
+        read_measured=read_measured,
         org=args.org,
         project=args.project,
         definition=args.definition,

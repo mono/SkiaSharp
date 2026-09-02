@@ -41,12 +41,16 @@ def log(msg: str) -> None:
 # HTTP (stdlib only, exponential backoff)
 # --------------------------------------------------------------------------- #
 
-def http_get(url: str, *, retries: int = 4, timeout: int = 120) -> bytes:
+def http_get(url: str, *, retries: int = 4, timeout: int = 120,
+             headers: dict | None = None) -> bytes:
     """GET a URL returning the raw bytes, retrying transient failures."""
     last: Exception | None = None
+    request_headers = {"User-Agent": USER_AGENT}
+    if headers:
+        request_headers.update(headers)
     for attempt in range(1, retries + 1):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+            req = urllib.request.Request(url, headers=request_headers)
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 return resp.read()
         except (urllib.error.URLError, TimeoutError, ConnectionError) as err:

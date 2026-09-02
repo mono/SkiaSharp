@@ -9,6 +9,7 @@ a build that is already reported, and must survive a single failing Azure DevOps
 from __future__ import annotations
 
 import contextlib
+import re
 import io
 import json
 import os
@@ -129,6 +130,135 @@ class MeasuredParsingTests(unittest.TestCase):
     def test_rejects_malformed_pair(self):
         with self.assertRaises(ValueError):
             find_pr_builds.parse_measured(["4912"])
+
+
+def paged_fetch(pages, *, fail_on_page=None):
+    """Serve /comments pages in the API's real oldest-first order."""
+    seen = []
+
+    def _fetch(url, headers=None):
+        seen.append(url)
+        page = int(re.search(r"[?&]page=(\d+)", url).group(1))
+        if fail_on_page is not None and page == fail_on_page:
+            raise RuntimeError("403 rate limited")
+        return pages[page - 1] if page - 1 < len(pages) else []
+
+    _fetch.seen = seen
+    return _fetch
+
+
+def comment(body):
+    return {"body": body}
+
+
+def report(build_id):
+    return comment(f"<!-- skiasharp-pr-artifact-sizes -->\n<!-- build={build_id} -->\nreport")
+
+
+class MeasuredBuildTests(unittest.TestCase):
+    """The per-issue comments endpoint ignores sort/direction and returns oldest-first."""
+
+    def test_finds_stamp_on_the_first_page(self):
+        fetch = paged_fetch([[comment("hi"), report(111)]])
+        self.assertEqual("111", find_pr_builds.measured_build("o/r", 1, fetch=fetch))
+
+    def test_finds_stamp_beyond_the_first_page(self):
+        # 100 unrelated comments, then the report — exactly the case a single
+        # non-paginated read misses, causing a repeated ~1 GB measurement.
+        page1 = [comment(f"noise {i}") for i in range(100)]
+        page2 = [comment("noise 100"), report(222)]
+        fetch = paged_fetch([page1, page2])
+        self.assertEqual("222", find_pr_builds.measured_build("o/r", 1, fetch=fetch))
+        self.assertTrue(any("page=2" in u for u in fetch.seen))
+
+    def test_uses_the_newest_stamp_when_several_exist(self):
+        fetch = paged_fetch([[report(1)] + [comment("x")] * 99, [report(2)]])
+        self.assertEqual("2", find_pr_builds.measured_build("o/r", 1, fetch=fetch))
+
+    def test_no_report_is_none(self):
+        fetch = paged_fetch([[comment("nothing here")]])
+        self.assertIsNone(find_pr_builds.measured_build("o/r", 1, fetch=fetch))
+
+    def test_api_failure_raises_rather_than_reporting_unmeasured(self):
+        fetch = paged_fetch([[comment("x")] * 100, []], fail_on_page=2)
+        with self.assertRaises(find_pr_builds.GitHubReadError):
+            find_pr_builds.measured_build("o/r", 1, fetch=fetch)
+
+    def test_unexpected_shape_raises(self):
+        def _fetch(url, headers=None):
+            return {"message": "Not Found"}
+        with self.assertRaises(find_pr_builds.GitHubReadError):
+            find_pr_builds.measured_build("o/r", 1, fetch=_fetch)
+
+
+class FailClosedSweepTests(unittest.TestCase):
+    def test_unreadable_comments_skip_the_pr_instead_of_measuring_it(self):
+        azdo = fake_fetch({"refs/pull/10/merge": builds(100)})
+
+        def read_measured(pr):
+            raise find_pr_builds.GitHubReadError("429")
+
+        self.assertEqual(
+            [],
+            find_pr_builds.build_matrix([10], read_measured=read_measured, fetch=azdo))
+
+    def test_live_stamp_dedupes(self):
+        azdo = fake_fetch({"refs/pull/10/merge": builds(100)})
+        self.assertEqual(
+            [],
+            find_pr_builds.build_matrix([10], read_measured=lambda pr: "100", fetch=azdo))
+
+    def test_live_stamp_allows_a_newer_build(self):
+        azdo = fake_fetch({"refs/pull/10/merge": builds(200)})
+        self.assertEqual(
+            [{"pr": 10, "build": "200"}],
+            find_pr_builds.build_matrix([10], read_measured=lambda pr: "100", fetch=azdo))
+
+
+class ClaimOrderingTests(unittest.TestCase):
+    """Every selected build must be stamped before any expensive work begins.
+
+    `if: failure()` cannot cover a job hard-timeout, so the stamp has to be written by an
+    unconditional step that runs before the download.
+    """
+
+    WORKFLOW = os.path.abspath(os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),  # .../scripts/infra/perf/sizes/tests
+        "..", "..", "..", "..", "..",                # -> repository root
+        ".github", "workflows", "track-artifact-sizes.yml"))
+
+    def setUp(self):
+        import yaml
+        with open(self.WORKFLOW, encoding="utf-8") as fh:
+            self.steps = yaml.safe_load(fh)["jobs"]["pr"]["steps"]
+
+    def names(self):
+        return [s.get("name") or s.get("uses") for s in self.steps]
+
+    def index_of(self, needle):
+        for i, name in enumerate(self.names()):
+            if needle in (name or ""):
+                return i
+        raise AssertionError(f"no step named {needle!r} in {self.names()}")
+
+    def test_claim_runs_before_the_download(self):
+        self.assertLess(self.index_of("Claim the build"),
+                        self.index_of("Download + measure"))
+
+    def test_claim_is_unconditional(self):
+        self.assertIsNone(self.steps[self.index_of("Claim the build")].get("if"),
+                          "the claim step must not be conditional")
+
+    def test_claim_writes_the_dedupe_stamp(self):
+        script = self.steps[self.index_of("Claim the build")]["with"]["script"]
+        self.assertIn("build=${buildId}", script)
+        self.assertIn("skiasharp-pr-artifact-sizes", script)
+
+    def test_no_step_before_the_claim_downloads_anything(self):
+        before = self.steps[: self.index_of("Claim the build")]
+        for step in before:
+            rendered = json.dumps(step)
+            self.assertNotIn("measure_pr.py", rendered)
 
 
 class CliTests(unittest.TestCase):
