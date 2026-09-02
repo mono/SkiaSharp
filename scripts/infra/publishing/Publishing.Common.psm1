@@ -272,6 +272,199 @@ function Push-ReleaseTag(
     Write-ReleaseStatus applied "Created $Tag at $SourceCommit."
 }
 
+# Tests whether one commit contains the desired file contents.
+function Test-GitFileContents(
+    [string] $Root,
+    [string] $Commit,
+    [System.Collections.IDictionary] $Files
+) {
+    foreach ($path in $Files.Keys) {
+        $temporary = [IO.Path]::GetTempFileName()
+        try {
+            [IO.File]::WriteAllText($temporary, [string] $Files[$path], [Text.UTF8Encoding]::new($false))
+            $desiredBlob = (Invoke-Git -Root $Root -Arguments @('hash-object', $temporary)).Output
+        } finally {
+            Remove-Item $temporary -Force -ErrorAction SilentlyContinue
+        }
+        $actualBlob = Invoke-Git -Root $Root -Arguments @('rev-parse', "$Commit`:$path") -AllowFailure
+        if ($actualBlob.ExitCode -ne 0 -or $actualBlob.Output -ne $desiredBlob) {
+            return $false
+        }
+    }
+    return $true
+}
+
+# Tests whether an automation branch is one desired file-only commit on its base.
+function Test-AutomationFileBranch(
+    [string] $Root,
+    [string] $RemoteSha,
+    [string] $BaseSha,
+    [System.Collections.IDictionary] $Files
+) {
+    if (!$RemoteSha) {
+        return $false
+    }
+    $null = Invoke-Git -Root $Root -Arguments @('fetch', '--quiet', 'origin', $RemoteSha)
+    $parent = Invoke-Git -Root $Root -Arguments @('rev-parse', "$RemoteSha^") -AllowFailure
+    if ($parent.ExitCode -ne 0 -or $parent.Output -ne $BaseSha) {
+        return $false
+    }
+    $changed = @(
+        (Invoke-Git -Root $Root -Arguments @('diff', '--name-only', "$BaseSha..$RemoteSha")).Output `
+            -split "`r?`n" |
+            Where-Object { $_ } |
+            Sort-Object
+    )
+    $expected = @($Files.Keys | ForEach-Object { [string] $_ } | Sort-Object)
+    if (($changed -join "`n") -ne ($expected -join "`n")) {
+        return $false
+    }
+
+    return Test-GitFileContents -Root $Root -Commit $RemoteSha -Files $Files
+}
+
+# Creates or reuses a guarded automation branch and pull request for desired file contents.
+function Publish-AutomationFilePullRequest(
+    [string] $Root,
+    [string] $Repository,
+    [string] $Branch,
+    [string] $BaseBranch,
+    [System.Collections.IDictionary] $Files,
+    [string] $CommitMessage,
+    [string] $Title,
+    [string] $Body,
+    [string] $Description,
+    [ValidateSet('DryRun', 'Apply', 'Push')]
+    [string] $Mode = 'DryRun'
+) {
+    $resolvedFiles = [ordered] @{}
+    foreach ($path in $Files.Keys) {
+        $fullPath = [IO.Path]::GetFullPath((Join-Path $Root ([string] $path)))
+        $relative = [IO.Path]::GetRelativePath($Root, $fullPath)
+        if ($relative -eq '..' -or $relative.StartsWith("../") -or $relative.StartsWith("..\")) {
+            throw "Automation file '$path' is outside the repository."
+        }
+        $resolvedFiles[$path] = $fullPath
+    }
+    $baseSha = Get-ResolvedGitCommit -Root $Root -Reference $BaseBranch
+    $baseIsCurrent = Test-GitFileContents -Root $Root -Commit $baseSha -Files $Files
+    $pullRequests = @(
+        Invoke-GitHubJsonWithRetry -Arguments @(
+            'pr', 'list',
+            '--repo', $Repository,
+            '--head', $Branch,
+            '--base', $BaseBranch,
+            '--state', 'open',
+            '--json', 'number,url'
+        )
+    )
+    if ($pullRequests.Count -gt 1) {
+        throw "Multiple open pull requests use $Branch."
+    }
+    $remoteSha = Get-RemoteBranchSha -Root $Root -Remote origin -Branch $Branch
+    $branchIsCurrent = Test-AutomationFileBranch `
+        -Root $Root `
+        -RemoteSha $remoteSha `
+        -BaseSha $baseSha `
+        -Files $Files
+    if ($Mode -ne 'DryRun') {
+        Assert-GitWorktreeClean -Root $Root -IgnoreSubmodules
+        $headSha = (Invoke-Git -Root $Root -Arguments @('rev-parse', 'HEAD')).Output
+        if ($headSha -ne $baseSha) {
+            throw "Automation $Mode must run at current origin/$BaseBranch $baseSha, not $headSha."
+        }
+    }
+    if ($baseIsCurrent) {
+        if ($pullRequests) {
+            Write-ReleaseStatus warning (
+                "$Description files are current, but PR #$($pullRequests[0].number) is still open: " +
+                $pullRequests[0].url)
+        } else {
+            Write-ReleaseStatus ready "$Description files are current."
+        }
+        return
+    }
+    if ($Mode -eq 'DryRun') {
+        if ($branchIsCurrent -and $pullRequests) {
+            Write-ReleaseStatus ready "$Description PR #$($pullRequests[0].number) is open: $($pullRequests[0].url)"
+        } elseif ($branchIsCurrent) {
+            Write-ReleaseStatus plan "Create the $Description PR from the current $Branch branch."
+        } else {
+            Write-ReleaseStatus plan "Create or update the $Description PR from $Branch to $BaseBranch."
+        }
+        return
+    }
+    if ($branchIsCurrent) {
+        if ($Mode -eq 'Apply') {
+            $null = Invoke-Git -Root $Root -Arguments @('switch', '-C', $Branch, $remoteSha) -WriteOutput
+            Write-ReleaseStatus applied "$description branch $Branch is local at $remoteSha."
+        } elseif ($pullRequests) {
+            Write-ReleaseStatus ready "$Description PR #$($pullRequests[0].number) is open: $($pullRequests[0].url)"
+        } else {
+            New-GitHubPullRequest `
+                -Repository $Repository `
+                -Branch $Branch `
+                -BaseBranch $BaseBranch `
+                -Title $Title `
+                -Body $Body
+            Write-ReleaseStatus pushed "Created the $Description PR from $Branch to $BaseBranch."
+        }
+        return
+    }
+
+    $null = Invoke-Git -Root $Root -Arguments @('switch', '-C', $Branch, $baseSha) -WriteOutput
+    foreach ($path in $resolvedFiles.Keys) {
+        [IO.File]::WriteAllText($resolvedFiles[$path], [string] $Files[$path], [Text.UTF8Encoding]::new($false))
+    }
+    $null = Invoke-Git -Root $Root -Arguments (@('add', '--') + @($Files.Keys))
+    $null = Invoke-Git `
+        -Root $Root `
+        -Arguments @(
+            '-c', 'user.name=github-actions[bot]',
+            '-c', 'user.email=41898282+github-actions[bot]@users.noreply.github.com',
+            'commit', '-m', $CommitMessage
+        ) `
+        -WriteOutput
+    $localSha = (Invoke-Git -Root $Root -Arguments @('rev-parse', 'HEAD')).Output
+    if ($Mode -eq 'Apply') {
+        Write-ReleaseStatus applied "$Description branch $Branch is local at $localSha."
+        return
+    }
+
+    Enable-GitHubGitAuthentication
+    if ($remoteSha) {
+        $null = Invoke-Git `
+            -Root $Root `
+            -Arguments @(
+                'push', 'origin',
+                "HEAD:refs/heads/$Branch",
+                "--force-with-lease=refs/heads/$Branch`:$remoteSha"
+            ) `
+            -WriteOutput
+    } else {
+        $null = Invoke-Git `
+            -Root $Root `
+            -Arguments @('push', 'origin', "HEAD:refs/heads/$Branch") `
+            -WriteOutput
+    }
+    if ((Get-RemoteBranchSha -Root $Root -Remote origin -Branch $Branch) -ne $localSha) {
+        throw "$Description automation branch push could not be verified."
+    }
+    Write-ReleaseStatus pushed "$Branch is at $localSha."
+
+    if ($pullRequests) {
+        Write-ReleaseStatus ready "$Description PR #$($pullRequests[0].number) is open: $($pullRequests[0].url)"
+    } else {
+        New-GitHubPullRequest `
+            -Repository $Repository `
+            -Branch $Branch `
+            -BaseBranch $BaseBranch `
+            -Title $Title `
+            -Body $Body
+        Write-ReleaseStatus pushed "Created the $Description PR from $Branch to $BaseBranch."
+    }
+}
+
 Export-ModuleMember -Function @(
     'Write-ReleaseStatus',
     'Get-RepositoryReleaseVersion',
@@ -284,7 +477,10 @@ Export-ModuleMember -Function @(
     'Resolve-NuGetPackageVersion',
     'Get-NuGetPackageSource',
     'Invoke-GitHubMutation',
-    'Push-ReleaseTag'
+    'Push-ReleaseTag',
+    'Test-GitFileContents',
+    'Test-AutomationFileBranch',
+    'Publish-AutomationFilePullRequest'
 ) -Variable @(
     'ReleaseRepository',
     'ReleaseSkiaRemote',

@@ -8,10 +8,9 @@ description: >
 
 # Release Branch
 
-Use the **Release - Prepare** GitHub workflow for normal releases. `apply` and
-`push` are off by default, so a dispatch is read-only. After reviewing that
-output, dispatch again with `apply` for local-only state or `push` for remote
-release branches.
+Use the **Release - Prepare** GitHub workflow for normal releases. `DryRun` is
+the default mode. After reviewing that output, dispatch again with `Apply` for
+local-only state or `Push` for remote release branches.
 
 The script requires:
 
@@ -23,16 +22,16 @@ Local modes:
 
 ```powershell
 # Read-only
-./scripts/infra/publishing/prepare-release.ps1 -Base main -Release 4.153.0-preview.1
+./scripts/infra/publishing/prepare-release.ps1 -Base main -Release 4.153.0-preview.1 -Mode DryRun
 
 # Create and validate local branches and commits
-./scripts/infra/publishing/prepare-release.ps1 -Base main -Release 4.153.0-preview.1 -Apply
+./scripts/infra/publishing/prepare-release.ps1 -Base main -Release 4.153.0-preview.1 -Mode Apply
 
 # Create locally, push mono/skia then mono/SkiaSharp, and create a stable bump PR
-./scripts/infra/publishing/prepare-release.ps1 -Base main -Release 4.153.0-preview.1 -Push
+./scripts/infra/publishing/prepare-release.ps1 -Base main -Release 4.153.0-preview.1 -Mode Push
 ```
 
-Before `-Push`, show the resolved base SHA and every planned ref to the user and
+Before `-Mode Push`, show the resolved base SHA and every planned ref to the user and
 obtain confirmation. Never force-update a release branch. Existing matching
 state is reused; conflicting state blocks the run.
 

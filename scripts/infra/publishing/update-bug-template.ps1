@@ -15,12 +15,9 @@
 .PARAMETER File
     The issue-form path, relative to the repository root unless absolute.
 
-.PARAMETER Apply
-    Writes the updated issue form locally without committing or pushing.
-
-.PARAMETER Push
-    Updates the owned automation branch and pull request. Without Apply or Push,
-    the script is read-only.
+.PARAMETER Mode
+    DryRun is read-only, Apply writes the updated issue form locally, and Push
+    updates the owned automation branch and pull request.
 #>
 
 [CmdletBinding()]
@@ -30,9 +27,8 @@ param(
 
     [string] $File = '.github/ISSUE_TEMPLATE/bug-report.yml',
 
-    [switch] $Apply,
-
-    [switch] $Push
+    [ValidateSet('DryRun', 'Apply', 'Push')]
+    [string] $Mode = 'DryRun'
 )
 
 # 0. Initialize shared helpers, execution mode, and repository state.
@@ -41,9 +37,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
-$writeLocal = $Apply -or $Push
-$writeRemote = $Push
-$mode = if ($Push) { 'push' } elseif ($Apply) { 'local apply' } else { 'dry run' }
+$modeDescription = $Mode.ToLowerInvariant()
 $automationBranch = 'automation/update-issue-template-versions'
 $otherOption = 'Other (Please indicate in the description)'
 $nightlyOption = 'Nightly / CI build'
@@ -253,62 +247,33 @@ function Get-UpdatedIssueTemplate([string] $Text, [pscustomobject] $Options) {
     return $updated
 }
 
-# Tests whether the remote automation branch already contains the desired one-file update.
-function Test-IssueTemplateAutomationBranch(
-    [string] $Root,
-    [string] $RemoteSha,
-    [string] $MainSha,
-    [string] $Path,
-    [string] $Content
-) {
-    if (!$RemoteSha) {
-        return $false
-    }
-    $null = Invoke-Git -Root $Root -Arguments @('fetch', '--quiet', 'origin', $RemoteSha)
-    $parent = Invoke-Git -Root $Root -Arguments @('rev-parse', "$RemoteSha^") -AllowFailure
-    if ($parent.ExitCode -ne 0 -or $parent.Output -ne $MainSha) {
-        return $false
-    }
-    $changed = @(
-        (Invoke-Git -Root $Root -Arguments @('diff', '--name-only', "$MainSha..$RemoteSha")).Output `
-            -split "`r?`n" |
-            Where-Object { $_ }
-    )
-    if ($changed.Count -ne 1 -or $changed[0] -ne $Path) {
-        return $false
-    }
-
-    $temporary = [IO.Path]::GetTempFileName()
-    try {
-        [IO.File]::WriteAllText($temporary, $Content, [Text.UTF8Encoding]::new($false))
-        $desiredBlob = (Invoke-Git -Root $Root -Arguments @('hash-object', $temporary)).Output
-    } finally {
-        Remove-Item $temporary -Force -ErrorAction SilentlyContinue
-    }
-    $remoteBlob = Invoke-Git -Root $Root -Arguments @('rev-parse', "$RemoteSha`:$Path") -AllowFailure
-    return $remoteBlob.ExitCode -eq 0 -and $remoteBlob.Output -eq $desiredBlob
+$root = Get-GitRepositoryRoot
+$path = if ([IO.Path]::IsPathRooted($File)) {
+    [IO.Path]::GetFullPath($File)
+} else {
+    [IO.Path]::GetFullPath((Join-Path $root $File))
 }
+$displayPath = [IO.Path]::GetRelativePath($root, $path)
+Write-Host "Updating issue-template versions ($modeDescription)"
 
-# Creates the automation pull request or reports the existing one.
-function Confirm-IssueTemplatePullRequest([string] $Repository, [string] $Branch) {
-    $pullRequests = @(
-        Invoke-GitHubJsonWithRetry -Arguments @(
-            'pr', 'list',
-            '--repo', $Repository,
-            '--head', $Branch,
-            '--base', 'main',
-            '--state', 'open',
-            '--json', 'number,url'
-        )
-    )
-    if ($pullRequests.Count -gt 1) {
-        throw "Multiple open pull requests use $Branch."
-    }
-    if ($pullRequests) {
-        Write-ReleaseStatus ready "Issue-template PR #$($pullRequests[0].number) is open: $($pullRequests[0].url)"
-        return
-    }
-    $body = @"
+# 1. Build deterministic option lists from published releases.
+$releaseVersion = Get-RepositoryReleaseVersion -Root $root
+$versions = @(Get-PublishedReleaseVersions -Repository $Repository)
+if ($versions.Count -eq 0) {
+    throw 'No published releases were found.'
+}
+$options = New-IssueTemplateOptions -Versions $versions -Major $releaseVersion.Major
+Write-ReleaseStatus ready "Supported major: $($releaseVersion.Major).x"
+Write-Host "Version options:`n  - $($options.Version -join "`n  - ")"
+Write-Host "Version default: $($options.VersionDefault)"
+Write-Host "Last-known-good options:`n  - $($options.GoodVersion -join "`n  - ")"
+Write-Host "Last-known-good default: $($options.GoodVersionDefault)"
+
+# 2. Render and optionally write the local issue form.
+$original = [IO.File]::ReadAllText($path)
+$updated = Get-UpdatedIssueTemplate -Text $original -Options $options
+# 3. Converge the update through the shared dry-run/apply/push path.
+$body = @"
 ## Description
 
 Refresh the bug-report version dropdowns from published GitHub Releases.
@@ -340,115 +305,14 @@ The publishing tests verify version selection and byte-preserving issue-form upd
 - [x] New/changed public API? N/A
 - [x] Native change? N/A
 "@
-    $null = Invoke-GitHub `
-        -Arguments @(
-            'pr', 'create',
-            '--repo', $Repository,
-            '--base', 'main',
-            '--head', $Branch,
-            '--title', 'Update issue template version dropdowns',
-            '--body', $body
-        ) `
-        -WriteOutput
-    Write-ReleaseStatus pushed "Created the issue-template PR from $Branch to main."
-}
-
-$root = Get-GitRepositoryRoot
-$path = if ([IO.Path]::IsPathRooted($File)) {
-    [IO.Path]::GetFullPath($File)
-} else {
-    [IO.Path]::GetFullPath((Join-Path $root $File))
-}
-$displayPath = [IO.Path]::GetRelativePath($root, $path)
-Write-Host "Updating issue-template versions ($mode)"
-
-# 1. Push mode starts from the current remote main and a clean worktree.
-if ($writeRemote) {
-    if ($displayPath -eq '..' -or $displayPath.StartsWith("../") -or $displayPath.StartsWith("..\")) {
-        throw 'Push mode requires an issue-form path inside the repository.'
-    }
-    Assert-GitWorktreeClean -Root $root
-    $mainSha = Get-ResolvedGitCommit -Root $root -Reference main
-    $headSha = (Invoke-Git -Root $root -Arguments @('rev-parse', 'HEAD')).Output
-    if ($headSha -ne $mainSha) {
-        throw "Push mode must run at current origin/main $mainSha, not $headSha."
-    }
-}
-
-# 2. Build deterministic option lists from published releases.
-$releaseVersion = Get-RepositoryReleaseVersion -Root $root
-$versions = @(Get-PublishedReleaseVersions -Repository $Repository)
-if ($versions.Count -eq 0) {
-    throw 'No published releases were found.'
-}
-$options = New-IssueTemplateOptions -Versions $versions -Major $releaseVersion.Major
-Write-ReleaseStatus ready "Supported major: $($releaseVersion.Major).x"
-Write-Host "Version options:`n  - $($options.Version -join "`n  - ")"
-Write-Host "Version default: $($options.VersionDefault)"
-Write-Host "Last-known-good options:`n  - $($options.GoodVersion -join "`n  - ")"
-Write-Host "Last-known-good default: $($options.GoodVersionDefault)"
-
-# 3. Render and optionally write the local issue form.
-$original = [IO.File]::ReadAllText($path)
-$updated = Get-UpdatedIssueTemplate -Text $original -Options $options
-if ($updated -eq $original) {
-    Write-ReleaseStatus ready "$displayPath is current."
-    return
-}
-if (!$writeLocal) {
-    Write-ReleaseStatus plan "Update $displayPath."
-    return
-}
-if (!$writeRemote) {
-    [IO.File]::WriteAllText($path, $updated, [Text.UTF8Encoding]::new($false))
-    Write-ReleaseStatus applied "Updated $displayPath."
-    return
-}
-
-# 4. Reuse an identical automation branch or publish one exact replacement.
-$remoteSha = Get-RemoteBranchSha -Root $root -Remote origin -Branch $automationBranch
-if (Test-IssueTemplateAutomationBranch `
+Publish-AutomationFilePullRequest `
     -Root $root `
-    -RemoteSha $remoteSha `
-    -MainSha $mainSha `
-    -Path $displayPath `
-    -Content $updated) {
-    Write-ReleaseStatus ready "$automationBranch already contains the desired update at $remoteSha."
-    Confirm-IssueTemplatePullRequest -Repository $Repository -Branch $automationBranch
-    return
-}
-
-[IO.File]::WriteAllText($path, $updated, [Text.UTF8Encoding]::new($false))
-Write-ReleaseStatus applied "Updated $displayPath."
-$null = Invoke-Git -Root $root -Arguments @('switch', '-C', $automationBranch, $mainSha) -WriteOutput
-$null = Invoke-Git -Root $root -Arguments @('add', '--', $displayPath)
-$null = Invoke-Git `
-    -Root $root `
-    -Arguments @(
-        '-c', 'user.name=github-actions[bot]',
-        '-c', 'user.email=41898282+github-actions[bot]@users.noreply.github.com',
-        'commit', '-m', 'Update issue template version dropdowns'
-    ) `
-    -WriteOutput
-$localSha = (Invoke-Git -Root $root -Arguments @('rev-parse', 'HEAD')).Output
-Enable-GitHubGitAuthentication
-if ($remoteSha) {
-    $null = Invoke-Git `
-        -Root $root `
-        -Arguments @(
-            'push', 'origin',
-            "HEAD:refs/heads/$automationBranch",
-            "--force-with-lease=refs/heads/$automationBranch`:$remoteSha"
-        ) `
-        -WriteOutput
-} else {
-    $null = Invoke-Git `
-        -Root $root `
-        -Arguments @('push', 'origin', "HEAD:refs/heads/$automationBranch") `
-        -WriteOutput
-}
-if ((Get-RemoteBranchSha -Root $root -Remote origin -Branch $automationBranch) -ne $localSha) {
-    throw 'Issue-template automation branch push could not be verified.'
-}
-Write-ReleaseStatus pushed "$automationBranch is at $localSha."
-Confirm-IssueTemplatePullRequest -Repository $Repository -Branch $automationBranch
+    -Repository $Repository `
+    -Branch $automationBranch `
+    -BaseBranch main `
+    -Files ([ordered] @{ $displayPath = $updated }) `
+    -CommitMessage 'Update issue template version dropdowns' `
+    -Title 'Update issue template version dropdowns' `
+    -Body $body `
+    -Description 'issue-template' `
+    -Mode $Mode

@@ -16,19 +16,26 @@ After the exact packages appear on NuGet.org, use **Release - Finish** or run:
 ```powershell
 # Read-only
 ./scripts/infra/publishing/finish-release.ps1 `
-  -Version 4.153.0-preview.1
+  -Version 4.153.0-preview.1 `
+  -Mode DryRun
+
+# Apply the support-tier file update locally without publishing
+./scripts/infra/publishing/finish-release.ps1 `
+  -Version 4.153.0-preview.1 `
+  -Mode Apply
 
 # Publish the tag and GitHub Release
 ./scripts/infra/publishing/finish-release.ps1 `
   -Version 4.153.0-preview.1 `
-  -Push
+  -Mode Push
 ```
 
 An abbreviated prerelease identity must resolve to exactly one public SkiaSharp
-package version. The `-Push` run reads that package's source commit, creates the
+package version. The `Push` run reads that package's source commit, creates the
 immutable exact NuGet version tag at that commit, publishes a GitHub-generated
-Release, and dispatches release-note generation. Run **Release - Milestones**
-separately when milestone reconciliation is needed.
+Release, opens or updates the released line's support-tier PR, and dispatches
+release-note generation. Run **Release - Milestones** separately when milestone
+reconciliation is needed.
 
-Always present the dry-run and obtain confirmation before `-Push`. Never move
+Always present the dry-run and obtain confirmation before `-Mode Push`. Never move
 or delete a tag, replace a published release, or substitute a newer package.

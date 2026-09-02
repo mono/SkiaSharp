@@ -5,16 +5,15 @@ on:
     - cron: "0 9 * * *"  # Daily at 09:00 UTC
   workflow_dispatch:
     inputs:
-      apply:
-        description: Update the checked-out issue template without pushing
+      mode:
+        description: Execution mode
         required: true
-        default: false
-        type: boolean
-      push:
-        description: Refresh the automation branch and pull request
-        required: true
-        default: false
-        type: boolean
+        default: DryRun
+        type: choice
+        options:
+          - DryRun
+          - Apply
+          - Push
 
 permissions:
   contents: write
@@ -31,12 +30,9 @@ jobs:
     steps:
       - name: Validate request
         env:
-          APPLY: ${{ inputs.apply || false }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-          PUSH: ${{ github.event_name == 'schedule' || inputs.push }}
         run: |
           test "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH"
-          test "$APPLY" != "true" || test "$PUSH" != "true"
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -48,15 +44,9 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          APPLY: ${{ inputs.apply || false }}
-          PUSH: ${{ github.event_name == 'schedule' || inputs.push }}
+          MODE: ${{ github.event_name == 'schedule' && 'Push' || inputs.mode }}
           REPOSITORY: ${{ github.repository }}
         run: |
-          $arguments = @{ Repository = $env:REPOSITORY }
-          if ($env:PUSH -eq 'true') {
-            $arguments.Push = $true
-          } elseif ($env:APPLY -eq 'true') {
-            $arguments.Apply = $true
-          }
+          $arguments = @{ Mode = $env:MODE; Repository = $env:REPOSITORY }
           ./scripts/infra/publishing/update-bug-template.ps1 @arguments *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append

@@ -7,15 +7,20 @@ on:
         description: Stable version or prerelease identity/exact NuGet version
         required: true
         type: string
-      push:
-        description: Create the tag and publish the GitHub Release
+      mode:
+        description: Execution mode
         required: true
-        default: false
-        type: boolean
+        default: DryRun
+        type: choice
+        options:
+          - DryRun
+          - Apply
+          - Push
 
 permissions:
   actions: write
   contents: write
+  pull-requests: write
 
 jobs:
   finish:
@@ -33,13 +38,10 @@ jobs:
       - name: Finish
         shell: pwsh
         env:
-          GH_TOKEN: ${{ inputs.push && secrets.SKIASHARP_AUTOBUMP_TOKEN || github.token }}
-          PUSH: ${{ inputs.push }}
+          GH_TOKEN: ${{ inputs.mode == 'Push' && secrets.SKIASHARP_AUTOBUMP_TOKEN || github.token }}
+          MODE: ${{ inputs.mode }}
           VERSION: ${{ inputs.version }}
         run: |
-          $arguments = @{ Version = $env:VERSION }
-          if ($env:PUSH -eq 'true') {
-            $arguments.Push = $true
-          }
+          $arguments = @{ Mode = $env:MODE; Version = $env:VERSION }
           ./scripts/infra/publishing/finish-release.ps1 @arguments *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
