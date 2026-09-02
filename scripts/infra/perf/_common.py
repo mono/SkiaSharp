@@ -43,7 +43,13 @@ def log(msg: str) -> None:
 
 def http_get(url: str, *, retries: int = 4, timeout: int = 120,
              headers: dict | None = None) -> bytes:
-    """GET a URL returning the raw bytes, retrying transient failures."""
+    """GET a URL returning the raw bytes, retrying transient failures.
+
+    Every failure — including a non-retryable 4xx — is raised as ``RuntimeError``. Callers
+    such as ``feed_versions`` treat that as "absent" and return an empty result, so leaking
+    the raw ``urllib.error.HTTPError`` here would turn a package that is simply not on a
+    feed yet into a crash in the nightly trackers.
+    """
     last: Exception | None = None
     request_headers = {"User-Agent": USER_AGENT}
     if headers:
@@ -57,7 +63,7 @@ def http_get(url: str, *, retries: int = 4, timeout: int = 120,
             # A 4xx other than 429 will never succeed on retry; sleeping through four
             # attempts per request just burns the caller's time budget.
             if 400 <= err.code < 500 and err.code != 429:
-                raise
+                raise RuntimeError(f"GET failed with HTTP {err.code}: {url}") from err
             last = err
         except (urllib.error.URLError, TimeoutError, ConnectionError) as err:
             last = err

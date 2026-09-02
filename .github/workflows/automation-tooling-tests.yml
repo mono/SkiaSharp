@@ -58,6 +58,11 @@ jobs:
         # the size sweep stamps a build before it downloads it.
         run: python3 -m unittest discover -s scripts/infra/perf/sizes/tests -p "test_*.py"
 
+      - name: Run perf HTTP contract tests
+        # Pins the RuntimeError contract that feed_versions, track.enumerate_feed_packages
+        # and measure_pr.resolve_pr_number rely on to mean "absent".
+        run: python3 -m unittest discover -s scripts/infra/perf/tests -p "test_*.py"
+
       - name: Run update-skia tooling tests
         # These import their module under test by name, so they must run from their own
         # directory rather than through a repository-root discovery run.
