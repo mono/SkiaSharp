@@ -88,7 +88,7 @@
   <div class="card mb-4" id="tsa-section">
     <div class="card-header bg-white d-flex align-items-center">
       <i class="bi bi-kanban me-2"></i><strong>TSA Azure Boards Work Items</strong>
-      <a id="tsa-search-link" href="#" target="_blank" class="ms-2 small">Search in DevDiv</a>
+      <a id="tsa-search-link" href="#" target="_blank" class="ms-2 small">Search in dnceng</a>
       <span class="ms-auto" id="tsa-badge"></span>
     </div>
     <div class="card-body">
@@ -541,7 +541,7 @@ function renderTsaTable(items) {
       <td>${esc(severity)}</td>
       <td>${esc(item.tsaCategory)}</td>
       <td>${esc(toolRule)}</td>
-      <td>${esc(item.title)}</td>
+      <td>${esc(item.title)}${item.impactedFile ? `<div class="text-muted small">${esc(item.impactedFile)}</div>` : ''}</td>
       <td>${esc(item.assignedTo || 'Unassigned')}</td>
       <td>${esc(item.changedDate || '')}</td>
       <td><span class="badge ${corrBadge}">${esc(correlationLabel)}</span></td>
@@ -568,6 +568,11 @@ function renderTsaWorkItems(tsa) {
   if (!tsa || status !== 'success') {
     document.getElementById('tsa-error').innerHTML =
       `<div class="alert alert-danger">TSA query ${esc(status)}: ${esc((tsa && tsa.error) || 'No successful query evidence was loaded.')}</div>`;
+  } else if (tsa.emptyResult) {
+    document.getElementById('tsa-error').innerHTML =
+      '<div class="alert alert-info">The authoritative dnceng query completed successfully and returned no TSA work items.</div>';
+  } else {
+    document.getElementById('tsa-error').innerHTML = '';
   }
 
   const cards = [

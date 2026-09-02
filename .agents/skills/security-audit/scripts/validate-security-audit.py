@@ -145,6 +145,10 @@ else:
             + (f": {tsa.get('error')}" if tsa.get("error") else "")
         )
 
+    if tsa.get("organization") != "https://dev.azure.com/dnceng":
+        errors.append("tsaWorkItems.organization must be https://dev.azure.com/dnceng")
+    if tsa.get("project") != "internal":
+        errors.append("tsaWorkItems.project must be the dnceng internal project")
     if tsa.get("codebaseTag") != "TSA-skiasharp.skiasharp_main":
         errors.append(
             "tsaWorkItems.codebaseTag must be the narrow "
@@ -155,10 +159,10 @@ else:
 
     tsa_items = tsa.get("items", [])
     tsa_summary = tsa.get("summary", {})
-    if query_status == "success" and not tsa_items:
+    if tsa.get("emptyResult") != (query_status == "success" and not tsa_items):
         errors.append(
-            "tsaWorkItems reports success with zero items — the established TSA codebase has "
-            "active and historical evidence, so an empty success is incomplete"
+            "tsaWorkItems.emptyResult must be true exactly when a successful dnceng query "
+            "returns zero records"
         )
     total = len(tsa_items)
     active = sum(item.get("activity") == "active" for item in tsa_items)
@@ -195,10 +199,17 @@ else:
         location = f"tsaWorkItems.items[{i}]"
         if "TSA-skiasharp.skiasharp_main" not in item.get("tags", []):
             errors.append(f"{location} missing exact codebase tag")
+        if item.get("areaPath") != r"internal\Dotnet-Core-Engineering":
+            errors.append(
+                f"{location}.areaPath must be internal\\Dotnet-Core-Engineering"
+            )
+        if item.get("iterationPath") != "internal":
+            errors.append(f"{location}.iterationPath must be internal")
         if not item.get("rawFields"):
             errors.append(f"{location}.rawFields is empty — preserve raw Azure Boards evidence")
-        if not item.get("url", "").endswith(f"/{item.get('id')}"):
-            errors.append(f"{location}.url does not point to its DevDiv work item")
+        expected_url = f"https://dev.azure.com/dnceng/internal/_workitems/edit/{item.get('id')}"
+        if item.get("url") != expected_url:
+            errors.append(f"{location}.url does not point to its dnceng/internal work item")
         correlation = item.get("correlation")
         if not correlation:
             errors.append(f"{location}.correlation missing — unmatched items must be explicit")

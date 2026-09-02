@@ -191,17 +191,19 @@ Examples: `"NVD (Chrome CPE)"`, `"NVD web search"`, `"Android Security Bulletin"
 
 Required on every audit. TSA is existing legacy infrastructure retained for now; this workflow
 does not migrate it to WiM. Query only the exact
-`[System.Tags] CONTAINS 'TSA-skiasharp.skiasharp_main'` codebase tag.
+`[System.Tags] CONTAINS 'TSA-skiasharp.skiasharp_main'` codebase tag in the authoritative
+`internal\Dotnet-Core-Engineering` area and `internal` iteration.
 
 ```json
 {
   "queryStatus": "success",
   "queriedAt": "2026-08-13T05:31:22.410622+00:00",
-  "organization": "https://dev.azure.com/devdiv",
-  "project": "DevDiv",
+  "organization": "https://dev.azure.com/dnceng",
+  "project": "internal",
   "codebaseTag": "TSA-skiasharp.skiasharp_main",
-  "portalSearchUrl": "https://almsearch.dev.azure.com/devdiv/DevDiv/_search?type=workitem&text=TSA-skiasharp.skiasharp_main",
+  "portalSearchUrl": "https://almsearch.dev.azure.com/dnceng/internal/_search?type=workitem&text=TSA-skiasharp.skiasharp_main",
   "cacheFile": "output/ai/tsa-work-items-cache.json",
+  "emptyResult": false,
   "summary": {
     "total": 12,
     "active": 2,
@@ -214,9 +216,10 @@ does not migrate it to WiM. Query only the exact
   },
   "groups": [
     {
-      "key": "Roslyn:CA2265",
+      "key": "Roslyn:CA2265:binding/SkiaSharp/SKPathBuilder.cs",
       "tool": "Roslyn",
       "ruleIds": ["CA2265"],
+      "occurrence": "binding/SkiaSharp/SKPathBuilder.cs",
       "activeIds": [1234567],
       "historicalIds": [],
       "hasActiveHistory": false
@@ -232,17 +235,25 @@ does not migrate it to WiM. Query only the exact
       "severity": "2 - High",
       "priority": null,
       "tags": ["TSA", "TSA-Compliance", "TSA-Roslyn-CA2265", "TSA-skiasharp.skiasharp_main"],
-      "areaPath": "DevDiv\\.NET MAUI\\SkiaSharp",
-      "iterationPath": "DevDiv",
+      "areaPath": "internal\\Dotnet-Core-Engineering",
+      "iterationPath": "internal",
       "assignedTo": null,
       "createdDate": "2026-04-28T06:45:56.813Z",
       "changedDate": "2026-04-28T06:45:56.813Z",
-      "url": "https://dev.azure.com/devdiv/DevDiv/_workitems/edit/1234567",
+      "url": "https://dev.azure.com/dnceng/internal/_workitems/edit/1234567",
       "tool": "Roslyn",
       "ruleIds": ["CA2265"],
       "tsaCategory": "Compliance",
-      "dedupKey": "Roslyn:CA2265",
-      "rawFields": {"System.Id": 1234567},
+      "impactedFile": "binding/SkiaSharp/SKPathBuilder.cs",
+      "evidence": {
+        "impactedFile": "binding/SkiaSharp/SKPathBuilder.cs",
+        "reproSteps": "Roslyn detected CA2265..."
+      },
+      "dedupKey": "Roslyn:CA2265:binding/SkiaSharp/SKPathBuilder.cs",
+      "rawFields": {
+        "System.Id": 1234567,
+        "Microsoft.VSTS.TCM.ReproSteps": "Roslyn detected CA2265..."
+      },
       "correlation": {
         "status": "unmatched",
         "findingDependencies": [],
@@ -256,11 +267,14 @@ does not migrate it to WiM. Query only the exact
 
 `queryStatus` may be `success`, `error`, or `unknown`, but semantic validation rejects anything
 other than `success`. A failed query must remain visibly failed; never turn it into an empty
-successful result.
+successful result. A genuine zero-record response from dnceng is successful evidence and sets
+`emptyResult: true`; this is distinct from an authentication, WIQL, or hydration error.
 
 `activity` separates actionable work from historical suppression/deduplication evidence. Preserve
-all records and all raw selected fields. Every item requires a `correlation` object. If it cannot
-be matched to `findings` or `cgAlerts`, retain it with `status: "unmatched"`.
+all records and all complete raw fields. Deduplication keys include the impacted file or title so
+separate occurrences of the same rule are not collapsed. Every item requires a `correlation`
+object. If it cannot be matched to `findings` or `cgAlerts`, retain it with
+`status: "unmatched"`.
 
 ## `nextSteps` — Prioritized Actions
 

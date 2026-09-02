@@ -16,6 +16,17 @@ def normalized(value):
     return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
 
 
+def string_values(value):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for child in value.values():
+            yield from string_values(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from string_values(child)
+
+
 def correlate(report, tsa):
     findings = report.get("findings", [])
     cg_alerts = report.get("cgAlerts", {}).get("alerts", [])
@@ -40,6 +51,8 @@ def correlate(report, tsa):
             " ".join(item.get("tags", [])),
             item.get("tool", ""),
             " ".join(item.get("ruleIds", [])),
+            " ".join(string_values(item.get("evidence", {}))),
+            " ".join(string_values(item.get("rawFields", {}))),
         ])
         identifiers = {identifier.upper() for identifier in IDENTIFIER_PATTERN.findall(haystack)}
         finding_dependencies = {
@@ -109,18 +122,23 @@ def main():
     with open(args.tsa_cache, encoding="utf-8") as handle:
         tsa = json.load(handle)
 
-    if tsa.get("queryStatus") != "success":
+    query_succeeded = tsa.get("queryStatus") == "success"
+    if not query_succeeded:
         print(
             f"ERROR: TSA query status is {tsa.get('queryStatus', 'unknown')}: "
             f"{tsa.get('error', 'no error detail')}",
             file=sys.stderr,
         )
-        return 1
-
-    correlate(report, tsa)
+        report["tsaWorkItems"] = tsa
+    else:
+        correlate(report, tsa)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as handle:
         json.dump(report, handle, indent=2, ensure_ascii=False)
+
+    if not query_succeeded:
+        print(f"[TSA] Failed query evidence written to: {output_path}")
+        return 1
 
     summary = report["tsaWorkItems"]["summary"]
     print(

@@ -235,6 +235,10 @@ def render_md(data):
         lines.append(f"**Portal:** [Search TSA work items]({tsa['portalSearchUrl']})")
     if tsa.get("error"):
         lines.append(f"**Query error:** {sanitize_cell(tsa['error'])}")
+    elif tsa.get("emptyResult"):
+        lines.append(
+            "**Result:** The authoritative dnceng query completed successfully and returned no TSA work items."
+        )
     lines.append("")
     lines.append(
         "> TSA is existing legacy infrastructure retained for now. "

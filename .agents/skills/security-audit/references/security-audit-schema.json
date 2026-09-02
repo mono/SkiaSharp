@@ -473,6 +473,7 @@
         "codebaseTag",
         "portalSearchUrl",
         "cacheFile",
+        "emptyResult",
         "summary",
         "groups",
         "items"
@@ -486,10 +487,10 @@
           "type": "string"
         },
         "organization": {
-          "const": "https://dev.azure.com/devdiv"
+          "const": "https://dev.azure.com/dnceng"
         },
         "project": {
-          "const": "DevDiv"
+          "const": "internal"
         },
         "codebaseTag": {
           "const": "TSA-skiasharp.skiasharp_main"
@@ -502,6 +503,9 @@
         },
         "cacheFile": {
           "type": "string"
+        },
+        "emptyResult": {
+          "type": "boolean"
         },
         "error": {
           "type": "string"
@@ -583,7 +587,7 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["key", "tool", "ruleIds", "activeIds", "historicalIds"],
+            "required": ["key", "tool", "ruleIds", "occurrence", "activeIds", "historicalIds"],
             "properties": {
               "key": {
                 "type": "string"
@@ -596,6 +600,9 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "occurrence": {
+                "type": "string"
               },
               "activeIds": {
                 "type": "array",
@@ -631,6 +638,8 @@
               "tool",
               "ruleIds",
               "tsaCategory",
+              "impactedFile",
+              "evidence",
               "dedupKey",
               "rawFields",
               "correlation"
@@ -665,10 +674,10 @@
                 }
               },
               "areaPath": {
-                "type": ["string", "null"]
+                "const": "internal\\Dotnet-Core-Engineering"
               },
               "iterationPath": {
-                "type": ["string", "null"]
+                "const": "internal"
               },
               "assignedTo": {
                 "type": ["string", "null"]
@@ -694,6 +703,14 @@
               "tsaCategory": {
                 "type": "string",
                 "enum": ["Security", "Compliance", "Tooling"]
+              },
+              "impactedFile": {
+                "type": ["string", "null"]
+              },
+              "evidence": {
+                "type": "object",
+                "description": "Normalized TSA triage evidence such as impacted file, repro steps, risk, exception, and mitigation fields.",
+                "additionalProperties": true
               },
               "dedupKey": {
                 "type": "string"

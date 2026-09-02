@@ -31,12 +31,12 @@ Include TSA status immediately after the security summary:
 
 | Activity | ID | State | Category | Tool / Rule | Title | Correlation |
 |----------|----|-------|----------|-------------|-------|-------------|
-| Active | [1234567](https://dev.azure.com/devdiv/DevDiv/_workitems/edit/1234567) | Active | Compliance | Roslyn / CA2265 | ... | Unmatched |
+| Active | [1234567](https://dev.azure.com/dnceng/internal/_workitems/edit/1234567) | Active | Compliance | Roslyn / CA2265 | ... | Unmatched |
 ```
 
 Render active/actionable items first and historical records in a separate table. Do not omit
 resolved records: they are evidence for deduplication and suppression history. Include the
-codebase-tag search link and individual DevDiv work-item links.
+codebase-tag search link and individual dnceng/internal work-item links.
 
 ## Detailed Findings
 

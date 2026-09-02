@@ -41,7 +41,7 @@ work items are audited alongside it and combined into a single unified report.
 - **[references/skia-cve-resolution.md](references/skia-cve-resolution.md)** — Skia core CVE pipeline (NVD → Bug ID → Commit → Branch → Cherry-pick → Reachability). **The Skia process is fine-grained — read this before auditing Skia.**
 - **[references/third-party-deps.md](references/third-party-deps.md)** — Third-party CVE process (libpng, freetype, harfbuzz, etc.): version verification, fix-commit ancestry, known false positives
 - **[references/cg-alerts.md](references/cg-alerts.md)** — Component Governance alerts: ADO pipeline queries, Docker container CVEs, fix locations
-- **[references/tsa-work-items.md](references/tsa-work-items.md)** — Legacy TSA Azure Boards query, active/history classification, correlation, and portal links
+- **[references/tsa-work-items.md](references/tsa-work-items.md)** — TSA Azure Boards query in dnceng, active/history classification, correlation, and portal links
 - **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Dependency list, cgmanifest format, Skia-specific tracking notes
 - **[references/report-template.md](references/report-template.md)** — Markdown format guide (used by `render-security-audit-md.py`)
 - **[references/report-schema.md](references/report-schema.md)** — JSON schema for structured output
@@ -339,13 +339,17 @@ python3 .agents/skills/security-audit/scripts/query-tsa-work-items.py \
   --output output/ai/tsa-work-items-cache.json
 ```
 
-The script uses current `az` authentication against `https://dev.azure.com/devdiv`, project
-`DevDiv`, and the narrow `[System.Tags] CONTAINS 'TSA-skiasharp.skiasharp_main'` WIQL predicate.
-Do not query the broad SkiaSharp area; it has more than 1,000 items and times out.
+The script uses current `az` authentication against `https://dev.azure.com/dnceng`, project
+`internal`, and the narrow `[System.Tags] CONTAINS 'TSA-skiasharp.skiasharp_main'` WIQL
+predicate. It also enforces the authoritative area `internal\Dotnet-Core-Engineering` and
+iteration `internal`. Do not query the broad SkiaSharp area; it has more than 1,000 obsolete
+DevDiv items and times out.
 
-The cache contains every active and historical item with raw selected fields, normalized triage
-fields, tool/rule/category derivation, portal URLs, and deduplication groups. A failed query writes
-`queryStatus: "error"` and exits nonzero. Never fabricate an empty success.
+The cache contains every active and historical dnceng item with complete raw fields, normalized
+triage evidence, tool/rule/category derivation, portal URLs, and occurrence-level deduplication
+groups. A real zero-record response is recorded as `emptyResult: true`. An authentication, WIQL,
+or record-hydration failure writes `queryStatus: "error"` and exits nonzero; never disguise failure
+as empty success.
 
 See **[references/tsa-work-items.md](references/tsa-work-items.md)** for the evidence model,
 correlation command, and portal links.
@@ -453,7 +457,7 @@ The HTML renders:
 - Collapsible findings with CVE tables, severity badges, NVD links
 - Chrome Releases blog section with above-milestone CVEs by component
 - TSA section with query status, active/actionable and historical records, tool/rule/category,
-  DevDiv links, and correlation status
+  dnceng/internal links, and correlation status
 - Version verification table with match/mismatch indicators
 - Skia upstream verification details with commit links
 - Prioritized next steps with severity-coded borders

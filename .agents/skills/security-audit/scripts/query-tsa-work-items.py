@@ -1,21 +1,33 @@
 #!/usr/bin/env python3
-"""Query the legacy TSA Azure Boards work items for the SkiaSharp codebase."""
+"""Query TSA Azure Boards work items for the SkiaSharp codebase."""
 
 import argparse
 import json
 import re
 import subprocess
 import sys
-from collections import Counter, defaultdict
+import tempfile
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote
 
 
-ORG = "https://dev.azure.com/devdiv"
-PROJECT = "DevDiv"
+ORG = "https://dev.azure.com/dnceng"
+PROJECT = "internal"
 CODEBASE_TAG = "TSA-skiasharp.skiasharp_main"
-ACTIVE_STATES = {"active", "approved", "committed", "doing", "in progress", "new", "proposed"}
+AREA_PATH = r"internal\Dotnet-Core-Engineering"
+ITERATION_PATH = "internal"
+HISTORICAL_STATES = {
+    "closed",
+    "completed",
+    "done",
+    "inactive",
+    "rejected",
+    "removed",
+    "resolved",
+    "won't fix",
+}
 FIELDS = [
     "System.Id",
     "System.Title",
@@ -30,6 +42,34 @@ FIELDS = [
     "System.CreatedDate",
     "System.ChangedDate",
 ]
+EVIDENCE_FIELDS = {
+    "description": ("System.Description",),
+    "reproSteps": ("Microsoft.VSTS.TCM.ReproSteps",),
+    "resolvedReason": ("Microsoft.VSTS.Common.ResolvedReason",),
+    "impactedFile": (
+        "Microsoft.DevDiv.FileImpacted",
+        "Custom.FileImpacted",
+    ),
+    "triageNotes": (
+        "Microsoft.DevDiv.TriageNotes",
+        "Custom.TriageNotes",
+    ),
+    "mitigation": (
+        "DevDiv.LSI.MitigationDetails",
+        "Custom.MitigationDetails",
+        "Custom.Mitigation",
+    ),
+    "risk": (
+        "Microsoft.DevDiv.AdjustedRiskRating",
+        "Microsoft.DevDiv.OriginalRiskRating",
+        "Custom.RiskRating",
+    ),
+    "exception": (
+        "Custom.IsException",
+        "Microsoft.DevDiv.ExceptionJustification",
+        "Custom.ExceptionJustification",
+    ),
+}
 
 
 def iso_now():
@@ -79,25 +119,64 @@ def derive_category(tags):
     return "Tooling"
 
 
-def transform_rows(rows, queried_at, cache_file):
-    if not rows:
-        raise ValueError(
-            f"Azure Boards returned no items for {CODEBASE_TAG}; "
-            "treating this as incomplete evidence rather than an empty success"
-        )
+def build_wiql():
+    return (
+        f"SELECT {', '.join(f'[{field}]' for field in FIELDS)} FROM WorkItems "
+        f"WHERE [System.TeamProject] = '{PROJECT}' "
+        f"AND [System.Tags] CONTAINS '{CODEBASE_TAG}' "
+        f"AND [System.AreaPath] = '{AREA_PATH}' "
+        f"AND [System.IterationPath] = '{ITERATION_PATH}' "
+        "ORDER BY [System.ChangedDate] DESC"
+    )
 
+
+def portal_search_url():
+    return (
+        f"https://almsearch.dev.azure.com/dnceng/{PROJECT}/_search"
+        f"?type=workitem&text={quote(CODEBASE_TAG)}"
+    )
+
+
+def first_field(fields, names):
+    for name in names:
+        value = fields.get(name)
+        if value is not None and value != "":
+            return value
+    return None
+
+
+def derive_impacted_file(fields, title):
+    impacted_file = first_field(fields, EVIDENCE_FIELDS["impactedFile"])
+    if impacted_file:
+        return impacted_file
+    match = re.search(r"\(in (.+)\)\s*$", title or "")
+    return match.group(1) if match else None
+
+
+def collect_evidence(fields):
+    evidence = {}
+    for key, names in EVIDENCE_FIELDS.items():
+        value = first_field(fields, names)
+        if value is not None:
+            evidence[key] = value
+    return evidence
+
+
+def transform_rows(rows, queried_at, cache_file):
     items = []
-    groups = defaultdict(lambda: {"activeIds": [], "historicalIds": []})
+    groups = {}
 
     for row in rows:
         fields = row.get("fields", {})
         item_id = fields.get("System.Id", row.get("id"))
         title = fields.get("System.Title", "")
         state = fields.get("System.State", "Unknown")
-        activity = "active" if state.lower() in ACTIVE_STATES else "historical"
+        activity = "historical" if state.lower() in HISTORICAL_STATES else "active"
         tags = split_tags(fields.get("System.Tags"))
         tool, rule_ids = derive_tool_and_rules(tags, title)
-        dedup_key = f"{tool}:{','.join(rule_ids) if rule_ids else title}"
+        impacted_file = derive_impacted_file(fields, title)
+        occurrence = impacted_file or title
+        dedup_key = f"{tool}:{','.join(rule_ids) if rule_ids else title}:{occurrence}"
         url = f"{ORG}/{PROJECT}/_workitems/edit/{item_id}"
 
         item = {
@@ -118,11 +197,21 @@ def transform_rows(rows, queried_at, cache_file):
             "tool": tool,
             "ruleIds": rule_ids,
             "tsaCategory": derive_category(tags),
+            "impactedFile": impacted_file,
+            "evidence": collect_evidence(fields),
             "dedupKey": dedup_key,
             "rawFields": fields,
         }
         items.append(item)
-        groups[dedup_key][f"{activity}Ids"].append(item_id)
+        group = groups.setdefault(dedup_key, {
+            "key": dedup_key,
+            "tool": tool,
+            "ruleIds": rule_ids,
+            "occurrence": occurrence,
+            "activeIds": [],
+            "historicalIds": [],
+        })
+        group[f"{activity}Ids"].append(item_id)
 
     items.sort(key=lambda item: (item.get("changedDate") or "", item["id"]), reverse=True)
     items.sort(key=lambda item: item["activity"] != "active")
@@ -130,23 +219,11 @@ def transform_rows(rows, queried_at, cache_file):
     by_category = Counter(item["tsaCategory"] for item in items)
     by_tool = Counter(item["tool"] for item in items)
 
-    group_records = []
-    for key, ids in sorted(groups.items()):
-        tool, _, rules = key.partition(":")
-        group_records.append({
-            "key": key,
-            "tool": tool,
-            "ruleIds": [rule for rule in rules.split(",") if rule],
-            "activeIds": sorted(ids["activeIds"]),
-            "historicalIds": sorted(ids["historicalIds"]),
-        })
+    group_records = sorted(groups.values(), key=lambda group: group["key"])
+    for group in group_records:
+        group["activeIds"].sort()
+        group["historicalIds"].sort()
 
-    wiql = (
-        f"SELECT {', '.join(f'[{field}]' for field in FIELDS)} FROM WorkItems "
-        f"WHERE [System.TeamProject] = '{PROJECT}' "
-        f"AND [System.Tags] CONTAINS '{CODEBASE_TAG}' "
-        "ORDER BY [System.ChangedDate] DESC"
-    )
     active_count = sum(item["activity"] == "active" for item in items)
     return {
         "queryStatus": "success",
@@ -154,12 +231,10 @@ def transform_rows(rows, queried_at, cache_file):
         "organization": ORG,
         "project": PROJECT,
         "codebaseTag": CODEBASE_TAG,
-        "wiql": wiql,
-        "portalSearchUrl": (
-            f"https://almsearch.dev.azure.com/devdiv/{PROJECT}/_search"
-            f"?type=workitem&text={quote(CODEBASE_TAG)}"
-        ),
+        "wiql": build_wiql(),
+        "portalSearchUrl": portal_search_url(),
         "cacheFile": cache_file,
+        "emptyResult": not items,
         "summary": {
             "total": len(items),
             "active": active_count,
@@ -182,12 +257,10 @@ def error_result(message, queried_at, cache_file):
         "organization": ORG,
         "project": PROJECT,
         "codebaseTag": CODEBASE_TAG,
-        "wiql": None,
-        "portalSearchUrl": (
-            f"https://almsearch.dev.azure.com/devdiv/{PROJECT}/_search"
-            f"?type=workitem&text={quote(CODEBASE_TAG)}"
-        ),
+        "wiql": build_wiql(),
+        "portalSearchUrl": portal_search_url(),
         "cacheFile": cache_file,
+        "emptyResult": False,
         "error": message,
         "summary": {
             "total": 0,
@@ -204,31 +277,69 @@ def error_result(message, queried_at, cache_file):
     }
 
 
+def hydrate_rows(rows):
+    ids = [row.get("fields", {}).get("System.Id", row.get("id")) for row in rows]
+    ids = [item_id for item_id in ids if item_id is not None]
+    if not ids:
+        return []
+
+    hydrated = []
+    for offset in range(0, len(ids), 200):
+        payload = {
+            "ids": ids[offset:offset + 200],
+            "$expand": "All",
+            "errorPolicy": "Fail",
+        }
+        with tempfile.NamedTemporaryFile("w", suffix=".json", encoding="utf-8") as handle:
+            json.dump(payload, handle)
+            handle.flush()
+            command = [
+                "az", "devops", "invoke",
+                "--org", ORG,
+                "--area", "wit",
+                "--resource", "workitemsbatch",
+                "--route-parameters", f"project={PROJECT}",
+                "--api-version", "7.1",
+                "--http-method", "POST",
+                "--in-file", handle.name,
+                "--output", "json",
+            ]
+            result = subprocess.run(command, capture_output=True, text=True, timeout=180)
+        if result.returncode != 0:
+            raise RuntimeError(result.stderr.strip() or "Azure Boards work-item hydration failed")
+        data = json.loads(result.stdout)
+        batch = data.get("value", data) if isinstance(data, dict) else data
+        if not isinstance(batch, list):
+            raise RuntimeError("Azure Boards work-item hydration returned a non-array response")
+        hydrated.extend(batch)
+
+    if len(hydrated) != len(ids):
+        raise RuntimeError(
+            f"Azure Boards returned {len(hydrated)} complete records for {len(ids)} queried IDs"
+        )
+    return hydrated
+
+
 def query_rows():
-    wiql = (
-        f"SELECT {', '.join(f'[{field}]' for field in FIELDS)} FROM WorkItems "
-        f"WHERE [System.TeamProject] = '{PROJECT}' "
-        f"AND [System.Tags] CONTAINS '{CODEBASE_TAG}' "
-        "ORDER BY [System.ChangedDate] DESC"
-    )
     command = [
         "az", "boards", "query",
         "--org", ORG,
         "--project", PROJECT,
-        "--wiql", wiql,
+        "--wiql", build_wiql(),
         "--output", "json",
     ]
     result = subprocess.run(command, capture_output=True, text=True, timeout=180)
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or "az boards query failed")
-    data = json.loads(result.stdout)
+    # Azure DevOps CLI 1.0.2 emits no JSON at all for a successful zero-row WIQL result.
+    data = json.loads(result.stdout) if result.stdout.strip() else []
     if not isinstance(data, list):
         raise RuntimeError("Azure Boards query returned a non-array response")
-    return data
+    return hydrate_rows(data)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Query SkiaSharp TSA work items from DevDiv Azure Boards")
+    parser = argparse.ArgumentParser(description="Query SkiaSharp TSA work items from dnceng Azure Boards")
     parser.add_argument("--output", "-o", required=True, help="Cache output path")
     parser.add_argument("--input-json", help="Replay raw az boards query JSON instead of calling Azure Boards")
     args = parser.parse_args()
