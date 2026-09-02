@@ -11,6 +11,8 @@ namespace SkiaSharpSample;
 
 public partial class DrawingPage : ContentPage
 {
+	const float WheelDeltaPerNotch = 120f;
+
 	static readonly (SKColor Light, SKColor Dark)[] colorPalette =
 	{
 		(SKColors.Black, SKColors.White),
@@ -153,7 +155,7 @@ public partial class DrawingPage : ContentPage
 				break;
 
 			case SKTouchAction.WheelChanged:
-				SetBrushSize(brushSize + e.WheelDelta / 120f);
+				SetBrushSize(brushSize + e.WheelDelta / WheelDeltaPerNotch);
 				break;
 		}
 		e.Handled = true;
