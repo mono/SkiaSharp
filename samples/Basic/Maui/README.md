@@ -37,9 +37,11 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 
 - **`SKCanvasView`** — Software-rendered canvas invalidated on demand after each stroke or clear.
 - **`SKPath`** — Freehand strokes captured as paths with `MoveTo` and `LineTo` from touch events.
-- **`SKTouchEventArgs`** — Cross-platform touch tracking for press, move, and release.
+- **`SKTouchEventArgs`** — Cross-platform contact tracking for drawing, two-contact pinch resizing, passive pointer hover, and wheel/trackpad scroll resizing.
 - **Color palette** — Six selectable colors with dark/light mode variants.
-- **Brush size** — Adjustable stroke width via a MAUI `Slider` control.
+- **Brush size** — Adjustable via a MAUI `Slider`, mouse wheel/trackpad scroll, or a two-contact pinch.
+
+On iPadOS and Mac Catalyst, moving a mouse or trackpad pointer over the canvas displays the current brush outline. Trackpad magnification is not represented by `SKTouchEventArgs`; the pinch interaction in this sample uses two real touch contacts.
 
 ## Requirements
 
