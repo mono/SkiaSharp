@@ -49,6 +49,7 @@ def latest_successful_build(
     project: str = DEFAULT_PROJECT,
     definition: int = DEFAULT_DEFINITION,
     fetch=None,
+    errors: list | None = None,
 ) -> str | None:
     """Return the newest completed+succeeded build id for a PR, or None."""
     fetch = fetch or http_get_json
@@ -63,6 +64,8 @@ def latest_successful_build(
         data = fetch(url)
     except Exception as err:  # noqa: BLE001 - a single unreachable PR must not fail the sweep
         log(f"  ! PR #{pr_number}: could not query builds: {err}")
+        if errors is not None:
+            errors.append(pr_number)
         return None
     builds = data.get("value") or []
     if not builds:
@@ -78,16 +81,23 @@ def build_matrix(
     """Return the matrix entries for PRs with a new, not-yet-measured build."""
     measured = measured or {}
     entries: list[dict] = []
+    errors: list[int] = []
     for pr_number in pr_numbers:
-        build_id = latest_successful_build(pr_number, **kwargs)
+        build_id = latest_successful_build(pr_number, errors=errors, **kwargs)
         if not build_id:
-            log(f"  - PR #{pr_number}: no successful package build")
+            if pr_number not in errors:
+                log(f"  - PR #{pr_number}: no successful package build")
             continue
         if measured.get(pr_number) == build_id:
             log(f"  - PR #{pr_number}: build {build_id} already measured")
             continue
         log(f"  + PR #{pr_number}: build {build_id}")
         entries.append({"pr": pr_number, "build": build_id})
+    # A widespread query failure (throttling, an AzDO outage) otherwise looks exactly like
+    # "nobody has a build" and would silently stop PR size reports with no signal anywhere.
+    if errors and len(errors) >= max(3, len(pr_numbers) // 2):
+        log(f"::warning::{len(errors)} of {len(pr_numbers)} PR build queries failed; "
+            "Azure DevOps may be throttling or unavailable")
     return entries
 
 

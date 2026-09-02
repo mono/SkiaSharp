@@ -52,7 +52,8 @@ jobs:
         # Guards the dashboard against tracking workflows that no longer exist.
         run: |
           set -euo pipefail
-          python3 -c "import yaml" 2>/dev/null || pip install --quiet pyyaml
+          python3 -c "import yaml" 2>/dev/null \
+            || python3 -m pip install --quiet --break-system-packages pyyaml
           python3 -m unittest discover -s .agents/skills/ci-status/scripts/tests -p "test_*.py"
 
       - name: Run update-skia tooling tests

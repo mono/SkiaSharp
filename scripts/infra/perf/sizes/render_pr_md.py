@@ -113,8 +113,11 @@ def render(pr: dict, baseline: dict | None, *, build_url: str | None) -> str:
 
     build_id = pr.get("buildId")
     # Machine-readable build stamp: the scheduled PR intake reads this back so a build that
-    # is already reported is never downloaded and measured again.
-    lines.append(f"<!-- build={build_id} -->")
+    # is already reported is never downloaded and measured again. Guard the append — a
+    # `build=None` stamp would not match the intake's numeric pattern and would silently
+    # disable dedupe for this PR.
+    if build_id:
+        lines.append(f"<!-- build={build_id} -->")
     lines += ["## 📦 Artifact size report", ""]
 
     build_ref = f"[`{build_id}`]({build_url})" if build_url else f"`{build_id}`"

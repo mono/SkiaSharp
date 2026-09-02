@@ -8,6 +8,8 @@ a build that is already reported, and must survive a single failing Azure DevOps
 
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import os
 import sys
@@ -95,6 +97,28 @@ class BuildMatrixTests(unittest.TestCase):
 
     def test_no_open_prs_is_empty(self):
         self.assertEqual([], find_pr_builds.build_matrix([], fetch=fake_fetch({})))
+
+    def test_widespread_failure_is_warned_about(self):
+        """Mass throttling must not be indistinguishable from 'nobody has a build'."""
+        fetch = fake_fetch({f"refs/pull/{n}/merge": RuntimeError("429") for n in range(1, 5)})
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            entries = find_pr_builds.build_matrix([1, 2, 3, 4], fetch=fetch)
+        self.assertEqual([], entries)
+        self.assertIn("::warning::", buf.getvalue())
+        self.assertIn("4 of 4", buf.getvalue())
+
+    def test_a_single_failure_is_not_warned_about(self):
+        fetch = fake_fetch({
+            "refs/pull/1/merge": RuntimeError("blip"),
+            "refs/pull/2/merge": builds(22),
+            "refs/pull/3/merge": builds(33),
+            "refs/pull/4/merge": builds(44),
+        })
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            find_pr_builds.build_matrix([1, 2, 3, 4], fetch=fetch)
+        self.assertNotIn("::warning::", buf.getvalue())
 
 
 class MeasuredParsingTests(unittest.TestCase):

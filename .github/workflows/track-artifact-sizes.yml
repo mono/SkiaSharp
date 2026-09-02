@@ -68,7 +68,11 @@ jobs:
       pull-requests: read
     outputs:
       mode: ${{ steps.mode.outputs.mode }}
-      matrix: ${{ steps.builds.outputs.matrix }}
+      # Always a JSON array. On the nightly path the `builds` step is skipped, and an unset
+      # output would be '' — `strategy.matrix` is expanded BEFORE the consuming job's `if:`,
+      # so fromJSON('') would fail the whole run (and with it the nightly persist) before the
+      # guard could skip the job.
+      matrix: ${{ steps.builds.outputs.matrix || '[]' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -113,19 +117,27 @@ jobs:
           PY
           else
             # Targeted poll: one AzDO query per open PR, skipping builds already reported.
+            # Assigned first so `set -e` sees a failing `gh pr list`; inside a `for` word
+            # list a failed substitution would silently yield an empty, always-green sweep.
+            prs=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open \
+                    --limit 100 --json number --jq '.[].number')
             args=()
-            for pr in $(gh pr list --repo "$GITHUB_REPOSITORY" --state open \
-                          --limit 100 --json number --jq '.[].number'); do
+            for pr in $prs; do
               args+=(--pr "$pr")
-              measured=$(gh api "repos/$GITHUB_REPOSITORY/issues/$pr/comments" --paginate \
+              # The report comment is upserted, so the newest page always holds it; no
+              # --paginate (a repo-wide token budget must survive 48 sweeps a day) and no
+              # stderr suppression (a throttled read must be visible, not read as "unmeasured"
+              # which would re-download ~1 GB).
+              measured=$(gh api \
+                "repos/$GITHUB_REPOSITORY/issues/$pr/comments?per_page=100&sort=created&direction=desc" \
                 --jq '.[] | select(.body | contains("<!-- skiasharp-pr-artifact-sizes")) | .body' \
-                2>/dev/null | grep -o 'build=[0-9][0-9]*' | tail -1 | cut -d= -f2 || true)
+                | grep -o 'build=[0-9][0-9]*' | tail -1 | cut -d= -f2 || true)
               if [ -n "${measured:-}" ]; then
                 args+=(--measured "$pr=$measured")
               fi
             done
             python3 scripts/infra/perf/sizes/find_pr_builds.py \
-              ${args[@]+"${args[@]}"} --output matrix.json
+              ${args[@]+"${args[@]}"} --limit 10 --output matrix.json
           fi
           echo "matrix=$(cat matrix.json)" >> "$GITHUB_OUTPUT"
           cat matrix.json
@@ -217,14 +229,14 @@ jobs:
   # --------------------------------------------------------------------------- #
   pr:
     needs: resolve
-    if: needs.resolve.outputs.matrix != '' && needs.resolve.outputs.matrix != '[]'
+    if: needs.resolve.outputs.matrix != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
       max-parallel: 2
       matrix:
-        include: ${{ fromJSON(needs.resolve.outputs.matrix) }}
+        include: ${{ fromJSON(needs.resolve.outputs.matrix || '[]') }}
     permissions:
       contents: read
       pull-requests: write
@@ -298,3 +310,47 @@ jobs:
               await github.rest.issues.createComment({ ...repo, issue_number: prNumber, body });
               core.info(`created comment on PR #${prNumber}`);
             }
+
+      - name: Record a failed measurement
+        # The sweep dedupes on the `build=` stamp in the comment. Without this, a build that
+        # can never be measured (expired artifact, unparseable package) would be re-selected
+        # every 30 minutes and re-downloaded at ~1 GB forever — the same runaway class this
+        # workflow was changed to eliminate. Record the attempt, not just the success.
+        if: failure()
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          BUILD_ID: ${{ matrix.build }}
+        with:
+          script: |
+            const prNumber = Number('${{ matrix.pr }}') || null;
+            if (!prNumber) {
+              core.warning('No PR number could be resolved; not recording the failure.');
+              return;
+            }
+            const marker = '<!-- skiasharp-pr-artifact-sizes -->';
+            const buildId = process.env.BUILD_ID;
+            const body = [
+              marker,
+              `<!-- build=${buildId} -->`,
+              '## 📦 Artifact size report',
+              '',
+              `Could not measure the packages from build [\`${buildId}\`](${process.env.BUILD_URL}).`,
+              '',
+              `See [the failed run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}).`,
+            ].join('\n');
+            const repo = { owner: context.repo.owner, repo: context.repo.repo };
+
+            let existing = null;
+            for await (const page of github.paginate.iterator(
+              github.rest.issues.listComments,
+              { ...repo, issue_number: prNumber, per_page: 100 }
+            )) {
+              existing = page.data.find(c => c.body.includes(marker));
+              if (existing) break;
+            }
+            if (existing) {
+              await github.rest.issues.updateComment({ ...repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...repo, issue_number: prNumber, body });
+            }
+            core.info(`recorded failed measurement of build ${buildId} on PR #${prNumber}`);
