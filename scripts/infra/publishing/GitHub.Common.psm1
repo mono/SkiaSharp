@@ -115,6 +115,26 @@ function Get-GitHubRelease([string] $Repository, [string] $Tag) {
     throw "Unable to read GitHub Release $Tag`: $detail"
 }
 
+# Creates one pull request.
+function New-GitHubPullRequest(
+    [string] $Repository,
+    [string] $Branch,
+    [string] $BaseBranch,
+    [string] $Title,
+    [string] $Body
+) {
+    $null = Invoke-GitHub `
+        -Arguments @(
+            'pr', 'create',
+            '--repo', $Repository,
+            '--base', $BaseBranch,
+            '--head', $Branch,
+            '--title', $Title,
+            '--body', $Body
+        ) `
+        -WriteOutput
+}
+
 # Configures Git to use the active gh authentication for github.com.
 function Enable-GitHubGitAuthentication {
     $null = Invoke-GitHub -Arguments @('auth', 'setup-git', '--hostname', 'github.com') -WriteOutput
@@ -128,5 +148,6 @@ Export-ModuleMember -Function @(
     'Get-GitHubMilestoneMap',
     'Get-GitHubIssue',
     'Get-GitHubRelease',
+    'New-GitHubPullRequest',
     'Enable-GitHubGitAuthentication'
 )

@@ -323,28 +323,6 @@ function Test-AutomationFileBranch(
     return Test-GitFileContents -Root $Root -Commit $RemoteSha -Files $Files
 }
 
-# Creates one automation pull request.
-function New-AutomationPullRequest(
-    [string] $Repository,
-    [string] $Branch,
-    [string] $BaseBranch,
-    [string] $Title,
-    [string] $Body,
-    [string] $Description
-) {
-    $null = Invoke-GitHub `
-        -Arguments @(
-            'pr', 'create',
-            '--repo', $Repository,
-            '--base', $BaseBranch,
-            '--head', $Branch,
-            '--title', $Title,
-            '--body', $Body
-        ) `
-        -WriteOutput
-    Write-ReleaseStatus pushed "Created the $Description PR from $Branch to $BaseBranch."
-}
-
 # Creates or reuses a guarded automation branch and pull request for desired file contents.
 function Publish-AutomationFilePullRequest(
     [string] $Root,
@@ -423,13 +401,13 @@ function Publish-AutomationFilePullRequest(
         } elseif ($pullRequests) {
             Write-ReleaseStatus ready "$Description PR #$($pullRequests[0].number) is open: $($pullRequests[0].url)"
         } else {
-            New-AutomationPullRequest `
+            New-GitHubPullRequest `
                 -Repository $Repository `
                 -Branch $Branch `
                 -BaseBranch $BaseBranch `
                 -Title $Title `
-                -Body $Body `
-                -Description $Description
+                -Body $Body
+            Write-ReleaseStatus pushed "Created the $Description PR from $Branch to $BaseBranch."
         }
         return
     }
@@ -477,13 +455,13 @@ function Publish-AutomationFilePullRequest(
     if ($pullRequests) {
         Write-ReleaseStatus ready "$Description PR #$($pullRequests[0].number) is open: $($pullRequests[0].url)"
     } else {
-        New-AutomationPullRequest `
+        New-GitHubPullRequest `
             -Repository $Repository `
             -Branch $Branch `
             -BaseBranch $BaseBranch `
             -Title $Title `
-            -Body $Body `
-            -Description $Description
+            -Body $Body
+        Write-ReleaseStatus pushed "Created the $Description PR from $Branch to $BaseBranch."
     }
 }
 
