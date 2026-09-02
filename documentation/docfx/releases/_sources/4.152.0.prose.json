@@ -1,0 +1,82 @@
+{
+  "theme": "Graphite GPU backend and Vulkan Silk.NET",
+  "highlights_headline": "SkiaSharp 4.152.0 previews Graphite GPU backend bindings and the Vulkan Silk.NET package.",
+  "highlights_body": "This preview adds Graphite bindings for Vulkan, Metal and Dawn, restores the SkiaSharp.Vulkan.Silk.NET package with Android and Linux Vulkan test coverage, backend-neutral async pixel readback, and fixes several native use-after-free and memory-leak bugs.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to Chrome milestone m152",
+          "detail": "The bundled Skia engine is upgraded to chrome/m152, with follow-up servicing syncs and stability fixes merged in during the preview.",
+          "prs": [4538, 4568, 4651, 4808, 4537]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings for Vulkan, Metal and Dawn",
+          "detail": "Adds SkiaSharp bindings for Skia's Graphite GPU backend, covering Vulkan, Metal and Dawn, alongside a restored SkiaSharp.Vulkan.Silk.NET package with Android and Linux Vulkan test coverage.",
+          "prs": [3968, 4527, 4841]
+        },
+        {
+          "lead": "Backend-neutral async pixel readback",
+          "detail": "SKImage and SKSurface gain a RequestReadPixels API that works asynchronously across GPU backends.",
+          "prs": [4545]
+        },
+        {
+          "lead": "Improved NuGet package READMEs",
+          "detail": "The published NuGet package READMEs are refreshed with clearer content.",
+          "prs": [4714]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Several native use-after-free and memory-leak fixes",
+          "detail": "Fixes use-after-free crashes in SKRegion.SpanIterator and SKPixmap.ExtractSubset/With*, an undisposed SKStreamAsset leak in HarfBuzz blob conversion, a CoTaskMem pixel-buffer leak on SKImage.Create failure, and a missed Dispose of the previous uniform buffer in SKRuntimeEffectUniforms.Reset().",
+          "prs": [4355, 4455, 4558, 4710, 4783]
+        },
+        {
+          "lead": "FreeType used for Nano Server font support",
+          "detail": "Nano Server containers now resolve fonts through FreeType instead of failing due to missing platform font APIs.",
+          "prs": [4280]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Further managed performance ports and allocation reductions",
+          "detail": "SKData.SaveTo, SKFourByteTag/Tag ToString, GetEncodedText, and SKRuntimeEffectUniforms lookups all avoid extra copies, boxing, or allocations, and HandleDictionary's skip-registration check is cached — no observable behaviour change.",
+          "prs": [4498, 4512, 4550, 4630, 4690, 4752]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Apple native symbol packages and deterministic Android builds",
+          "detail": "Apple native symbol packages are generated during pack, Android builds run on Linux with a deterministic build identity requirement, and all solutions are converted to the newer .slnx format.",
+          "prs": [4528, 4612, 4815, 4843, 4846]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Switching Nano Server font support to FreeType",
+    "mmitche": "Initializing the MSVC environment once per native Windows build",
+    "ramezgerges": "The Graphite GPU backend bindings for Vulkan, Metal and Dawn"
+  },
+  "preview_summaries": {
+    "v4.152.0-preview.1.1": "Preview 1 opened the line with the Skia m152 update, Graphite GPU backend bindings, the restored Vulkan Silk.NET package, backend-neutral async pixel readback, and several native use-after-free and memory-leak fixes."
+  },
+  "harfbuzz_summary": "Avoids a defensive Feature[] copy in Font.Shape and improves NuGet package documentation, alongside the bundled HarfBuzz update to 14.2.1.200."
+}
