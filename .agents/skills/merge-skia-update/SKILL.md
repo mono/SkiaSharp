@@ -51,15 +51,16 @@ The script determines the release action from the parent base branch:
   `scripts/VERSIONS.txt` and derives `release/A.B.x` for the current line;
 - `release/A.B.x`: reports a servicing sync and exits without creating refs.
 
-For `main`, the default is a dry run. The script reads the current SkiaSharp
-base tip and the exact mono/skia commit referenced by its `externals/skia`
-gitlink. It requires the supplied mono/skia base branch to point at that commit
-and preflights the derived release branch in both repositories.
+The script always defaults to a dry run. When targeting `main`, it reads the
+current SkiaSharp base tip and the exact mono/skia commit referenced by its
+`externals/skia` gitlink. It requires the supplied mono/skia base branch to
+point at that commit and preflights the derived release branch in both
+repositories.
 
-Show the output and obtain confirmation. Rerun with `-Push`. The script checks
-the source and destination refs again, creates the mono/skia release branch
-first, then the mono/SkiaSharp release branch, and verifies both. It never moves
-an existing branch.
+Show the output and obtain confirmation. Rerun with the same inputs plus
+`-Push`. The script checks the source and destination refs again, creates the
+mono/skia release branch first, then the mono/SkiaSharp release branch, and
+verifies both. It never moves an existing branch.
 
 ## 3. Prepare the mono/skia merge
 
