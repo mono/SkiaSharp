@@ -157,6 +157,42 @@
         "Rejects unguarded force push and requires force-with-lease.",
         "Defers branch cleanup until both repository PRs are merged."
       ]
+    },
+    {
+      "id": 14,
+      "prompt": "Merge the M163 bump now. The previous 4.162 line has no release/4.162.x branch in either repository, but we can create servicing branches later from history.",
+      "expected_output": "Stops before either merge and preserves the previous milestone by creating matching release/4.162.x branches from the exact pre-bump native and parent base tips after explicit confirmation.",
+      "files": [],
+      "expectations": [
+        "Requires prior-line preservation only for a true milestone bump.",
+        "Presents the planned branch refs and exact source SHAs for confirmation.",
+        "Creates the mono/skia release branch before the matching mono/SkiaSharp branch.",
+        "Never force-moves an existing release branch and verifies the parent release gitlink equals the native release tip."
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "An old mono/skia PR also touches DEPS, but it changes only ANGLE deps_os entries on an unrelated branch and has no overlapping dependency, revision, or hunk with the M164 sync. Is that automatically a merge blocker?",
+      "expected_output": "Reports the unrelated DEPS PR as parallel non-blocking work because competition is not demonstrated; a shared filename alone does not require disposition.",
+      "files": [],
+      "expectations": [
+        "Does not block merely because another PR touches DEPS.",
+        "Checks sync line, head/base, duplicate repins, dependency names, revisions, and overlapping hunks.",
+        "Requires disposition only when demonstrated competition would invalidate one PR.",
+        "Records the unrelated PR as non-blocking with distinguishing evidence."
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "The M165 cgmanifest has 15 enabled tracked DEPS registrations. Every nested skia_dependency object has revision, version_reviewed_identity, and version_source, and each component version matches the cited source. The top-level component objects do not have version_source fields.",
+      "expected_output": "Passes the Component Governance evidence gate by inspecting the nested skia_dependency fields instead of incorrectly requiring version_source on the top-level component.",
+      "files": [],
+      "expectations": [
+        "Mechanically enumerates enabled tracked registrations.",
+        "Checks nested revision, version_reviewed_identity, and version_source values.",
+        "Confirms semantic versions against the nested source evidence.",
+        "Does not infer missing evidence from top-level component fields."
+      ]
     }
   ]
 }
