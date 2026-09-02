@@ -193,11 +193,14 @@ merges. A same-milestone servicing sync does not create another release line.
    if either conflicts.
 5. Present both planned refs and exact source SHAs and obtain explicit
    maintainer confirmation.
-6. Create any missing mono/skia release branch first from the recorded native
+6. Immediately after confirmation and before either write, re-fetch both base
+   tips and require them to equal the recorded source SHAs. If either advanced,
+   stop and restart the source-pair preflight and confirmation.
+7. Create any missing mono/skia release branch first from the recorded native
    base tip, then create the missing identically named mono/SkiaSharp release
    branch from the recorded parent base tip. Use guarded non-force ref creation.
-7. Never force or move an existing release branch.
-8. Verify the parent release branch's `externals/skia` gitlink equals the native
+8. Never force or move an existing release branch.
+9. Verify the parent release branch's `externals/skia` gitlink equals the native
    release branch tip and both branches still identify the previous milestone.
 
 Record both branch SHAs. This split keeps the previous milestone serviceable

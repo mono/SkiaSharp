@@ -276,6 +276,18 @@
         "Does not use top-level component fields as substitute evidence.",
         "Reports the affected registration and missing nested field."
       ]
+    },
+    {
+      "id": 24,
+      "prompt": "The M172 release-branch plan was confirmed, but mono/skia skiasharp advanced while we waited for approval. Create release/4.171.x from the previously displayed SHA anyway.",
+      "expected_output": "Stops before creating either release ref, reruns the source-pair and destination preflight with the new base tips, and obtains fresh confirmation.",
+      "files": [],
+      "expectations": [
+        "Re-fetches both base tips immediately after confirmation and before any write.",
+        "Detects that the native base no longer matches the confirmed SHA.",
+        "Does not create either release branch from stale state.",
+        "Requires a fresh compatible plan and maintainer confirmation."
+      ]
     }
   ]
 }
