@@ -749,16 +749,16 @@ Either field may be a single string or a list. An absent or empty block makes ev
 line render as top-level/supported (the legacy flat layout), so the feature is purely
 additive.
 
-**Maintained by hand, on purpose (do not auto-sync).** The values *correspond to* Chrome's
-channels, but the block is a **human-curated grouping for the docs site**, not a mirror of
-the live channels — so it is edited by hand and must not be auto-derived from Chromium Dash.
-The reason is that SkiaSharp does not ship every Chrome milestone: if we **skip a bump**,
-blindly copying the live Chrome milestones in would point a tier at a milestone that has
-**no SkiaSharp release line**, and the page would then show the actually-released lines as
-out of support (worst case: "everything is unsupported"). A maintainer therefore sets each
-list to milestones we actually released. Automating this is only safe once the Skia-update
-pipeline is **fully automated and auto-merging every milestone** (so "skipped bump" can't
-happen); until then, treat these two lists as a manual editorial decision.
+**Release-driven membership; policy-driven removal.** Release Finish proposes a focused
+PR from the exact public SkiaSharp package version: previews and RCs add their line to
+`preview`, while stable releases add their line to `stable` and remove only that same
+line from `preview`. It never removes another supported line. Maintainers explicitly
+remove lines when support ends. The values *correspond to* Chrome's channels, but the block
+is a **release-backed, human-curated grouping for the docs site**, not a mirror of the live
+channels. SkiaSharp does not ship every Chrome milestone, so membership is derived only from
+versions that actually reached NuGet.org and never from Chromium Dash. Release Finish makes
+the safe monotonic additions and same-line promotion; support retirement remains an explicit
+editorial decision.
 
 **Drift is detected, not auto-fixed.** The security audit's milestone heads-up
 (`.agents/skills/security-audit/scripts/query-milestone-schedule.py`, Step 3) already
@@ -778,8 +778,8 @@ Extended/Stable/Beta and `stable*`/`preview*` = our newest stable/preview milest
 | `preview* ≤ S` | 🔴 drift — not a real preview |
 | `preview` empty | 🟡 warn — no preview documented |
 
-A `drift` verdict is an audit **finding**; the fix is always a manual edit of this block
-(never auto-written — see the manual-by-design note above).
+A `drift` verdict is an audit **finding**. A later actual release may resolve it through
+Release Finish; otherwise a maintainer reviews and edits the block explicitly.
 
 
 ### 3.6 The co-release map sidecar (Cake → release-notes-data.py)

@@ -6,8 +6,8 @@
 
 .DESCRIPTION
     Reads the source commit from the exact public SkiaSharp package, creates the
-    immutable exact-version tag, publishes a GitHub-generated Release, and
-    dispatches follow-up workflows in one pushed run.
+    immutable exact-version tag, publishes a GitHub-generated Release, opens or
+    updates the release-support PR, and dispatches follow-up workflows.
 
 .PARAMETER Version
     A stable version or prerelease identity. A prerelease build revision may be
@@ -171,5 +171,10 @@ Publish-GitHubRelease `
     -SourceCommit $packageSource.Commit `
     -Existing $initialRelease
 
-# 4. Dispatch follow-up workflows only after publication.
+# 4. Propose the released line's deterministic support-tier update.
+& (Join-Path $PSScriptRoot 'update-release-support.ps1') `
+    -Version $Version `
+    -Push:$Push
+
+# 5. Dispatch follow-up workflows only after publication.
 Invoke-ReleaseFollowUpWorkflows -Release $release

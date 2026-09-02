@@ -153,8 +153,12 @@ after the exact packages appear on NuGet.org. Use **Release - Finish** or run:
 
 An abbreviated prerelease identity must resolve to exactly one public SkiaSharp
 package version. The `-Push` run reads that package's source commit, creates the
-exact-version tag at that commit, publishes a GitHub-generated Release, and
-dispatches release-note generation.
+exact-version tag at that commit, publishes a GitHub-generated Release, opens or
+updates a focused support-tier PR, and dispatches release-note generation. A
+preview or RC adds its `major.minor` line to `support.preview`; a stable release
+adds it to `support.stable` and removes only that same line from
+`support.preview`. Ending support for any other line remains a maintainer policy
+decision.
 
 Package, tag, and release writes always have a separate dry-run and explicit
 confirmation. The repository automation never approves the team pipeline's

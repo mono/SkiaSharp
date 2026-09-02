@@ -9,6 +9,7 @@ $gitHubCommonPath = Join-Path $publishingRoot 'GitHub.Common.psm1'
 $commonPath = Join-Path $publishingRoot 'Publishing.Common.psm1'
 $preparePath = Join-Path $publishingRoot 'prepare-release.ps1'
 $finishPath = Join-Path $publishingRoot 'finish-release.ps1'
+$releaseSupportPath = Join-Path $publishingRoot 'update-release-support.ps1'
 $bugTemplatePath = Join-Path $publishingRoot 'update-bug-template.ps1'
 $reconcilePath = Join-Path $publishingRoot 'reconcile-release-assignments.ps1'
 $milestonesPath = Join-Path $publishingRoot 'update-release-milestones.ps1'
@@ -86,6 +87,7 @@ function Get-ScriptFunctionText([string] $Path) {
 # Verifies each script exposes only its intended mutation switches.
 $prepareParameters = (Get-Command $preparePath).Parameters.Keys
 $finishParameters = (Get-Command $finishPath).Parameters.Keys
+$releaseSupportParameters = (Get-Command $releaseSupportPath).Parameters.Keys
 $bugTemplateParameters = (Get-Command $bugTemplatePath).Parameters.Keys
 $reconcileParameters = (Get-Command $reconcilePath).Parameters.Keys
 $milestoneParameters = (Get-Command $milestonesPath).Parameters.Keys
@@ -93,6 +95,8 @@ Assert-True ($prepareParameters -contains 'Apply' -and $prepareParameters -conta
     'Prepare must expose Apply and Push.'
 Assert-True ($finishParameters -contains 'Push' -and $finishParameters -notcontains 'Apply') `
     'Finish must expose Push but not Apply.'
+Assert-True ($releaseSupportParameters -contains 'Version' -and $releaseSupportParameters -contains 'Push' -and
+    $releaseSupportParameters -notcontains 'Apply') 'Release support must expose Version and Push but not Apply.'
 Assert-True ($bugTemplateParameters -contains 'Apply' -and $bugTemplateParameters -contains 'Push') `
     'The bug-template updater must expose Apply and Push.'
 Assert-True ($reconcileParameters -contains 'Version' -and $reconcileParameters -contains 'Push' -and
@@ -101,15 +105,23 @@ Assert-True ($milestoneParameters -contains 'Count' -and $milestoneParameters -c
     $milestoneParameters -notcontains 'Apply' -and $milestoneParameters -notcontains 'Version') `
     'The milestone updater must expose Count and Push but not Apply or Version.'
 Assert-RejectsApply $finishPath @('-Version', '4.152.0-preview.1')
+Assert-RejectsApply $releaseSupportPath @('-Version', '4.152.0-preview.1.26426.14')
 Assert-RejectsApply $reconcilePath @('-Version', '4.152.0')
 Assert-RejectsApply $milestonesPath @()
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
+$releaseSupportScript = Get-Content $releaseSupportPath -Raw
 Assert-True ($bugTemplateScript -match '--force-with-lease') `
     'The issue-template automation branch must use force-with-lease.'
 Assert-True ($bugTemplateScript -notmatch '(?m)git push[^\r\n]*--force(?:\s|$)') `
     'The issue-template automation branch contains an unguarded force push.'
 Assert-True ($bugTemplateScript -notmatch '(?m)^\s*git (?:switch|add|push|rev-parse)') `
     'A bug-template Git command is not rooted with git -C.'
+Assert-True ($releaseSupportScript -match '--force-with-lease') `
+    'The release-support automation branch must use force-with-lease.'
+Assert-True ($releaseSupportScript -notmatch '(?m)git push[^\r\n]*--force(?:\s|$)') `
+    'The release-support automation branch contains an unguarded force push.'
+Assert-True ($releaseSupportScript -notmatch '(?m)^\s*git (?:switch|add|push|rev-parse)') `
+    'A release-support Git command is not rooted with git -C.'
 $productionFiles = Get-ChildItem $publishingRoot -File |
     Where-Object { $_.Extension -in @('.ps1', '.psm1') -and $_.Name -notin @(
         'Git.Common.psm1',
@@ -256,6 +268,8 @@ Assert-Throws { Assert-GitHubRelease $preview $draft } 'conflicting metadata' `
 $powerShellReleaseText = (Get-Content $finishPath -Raw) + (Get-Content $commonPath -Raw)
 Assert-True ($powerShellReleaseText -notmatch 'SKIASHARP:(?:RELEASE-SUMMARY|GITHUB-GENERATED-NOTES)') `
     'PowerShell unexpectedly owns release-summary body markers.'
+Assert-True ((Get-Content $finishPath -Raw) -match 'update-release-support\.ps1') `
+    'Finish does not invoke release-support maintenance.'
 $writeRemote = $false
 $script:FakeGhCalls = 0
 function global:gh {
@@ -285,6 +299,107 @@ Assert-True ([bool] (
     $script:FakeGhCommands |
         Where-Object { $_ -match 'auto-update-issue-template-versions\.yml.*-f push=true' }
 )) 'Stable Finish did not dispatch the issue-template workflow in push mode.'
+
+# Exercises exact-release support-tier additions and promotions.
+Invoke-Expression (Get-ScriptFunctionText $releaseSupportPath)
+$supportConfig = @'
+{
+  "$comment": "keep this text",
+  "unrelated_before": {
+    "support": {
+      "stable": ["do-not-change"],
+      "preview": ["also-do-not-change"]
+    }
+  },
+  "support": {
+    "$comment": "keep this support text",
+    "metadata": {
+      "stable": ["nested-stable"],
+      "preview": ["nested-preview"]
+    },
+    "stable": [
+      "4.148",
+      "4.150"
+    ],
+    "preview": [
+      "4.151"
+    ]
+  },
+  "history_floor": {
+    "skiasharp": "3.0.0"
+  },
+  "unrelated": {
+    "enabled": true
+  }
+}
+'@
+$previewRelease = Get-ReleaseIdentity '4.152.0-preview.1.26426.14'
+$previewSupport = Get-UpdatedReleaseSupport -Text $supportConfig -Release $previewRelease
+$previewDocument = $previewSupport | ConvertFrom-Json
+Assert-Equal @('4.151', '4.152') @($previewDocument.support.preview) `
+    'A preview release did not append its line.'
+Assert-Equal @('4.148', '4.150') @($previewDocument.support.stable) `
+    'A preview release changed existing stable lines.'
+
+$rcRelease = Get-ReleaseIdentity '4.153.0-rc.1.26430.2'
+$rcSupport = Get-UpdatedReleaseSupport -Text $previewSupport -Release $rcRelease
+$rcDocument = $rcSupport | ConvertFrom-Json
+Assert-Equal @('4.151', '4.152', '4.153') @($rcDocument.support.preview) `
+    'An RC release did not append its line.'
+
+$promotedRelease = Get-ReleaseIdentity '4.152.0'
+$promotedSupport = Get-UpdatedReleaseSupport -Text $rcSupport -Release $promotedRelease
+$promotedDocument = $promotedSupport | ConvertFrom-Json
+Assert-Equal @('4.148', '4.150', '4.152') @($promotedDocument.support.stable) `
+    'A stable release did not retain existing stable lines and append its line.'
+Assert-Equal @('4.151', '4.153') @($promotedDocument.support.preview) `
+    'A stable release removed a preview line other than its own.'
+Assert-Equal $promotedSupport (Get-UpdatedReleaseSupport -Text $promotedSupport -Release $promotedRelease) `
+    'A repeated stable promotion was not idempotent.'
+Assert-True ($promotedSupport -match [regex]::Escape('"$comment": "keep this text"')) `
+    'Release support changed an unrelated top-level comment.'
+Assert-True ($promotedSupport -match '(?s)"unrelated_before":\s*\{\s*"support":\s*\{\s*' +
+    [regex]::Escape('"stable": ["do-not-change"],') + '\s*' +
+    [regex]::Escape('"preview": ["also-do-not-change"]')) `
+    'Release support changed a nested support object.'
+Assert-True ($promotedSupport -match [regex]::Escape('"$comment": "keep this support text"')) `
+    'Release support changed the support comment.'
+Assert-True ($promotedSupport -match '(?s)"metadata":\s*\{\s*' +
+    [regex]::Escape('"stable": ["nested-stable"],') + '\s*' +
+    [regex]::Escape('"preview": ["nested-preview"]')) `
+    'Release support changed a nested property within the top-level support object.'
+Assert-True ($promotedSupport -match '"history_floor": \{\s*"skiasharp": "3\.0\.0"\s*\}') `
+    'Release support changed history-floor configuration.'
+Assert-True ($promotedSupport -match '"unrelated": \{\s*"enabled": true\s*\}') `
+    'Release support changed unrelated configuration.'
+
+$inlineConfig = @'
+{
+  "support": {
+    "stable": [ "4.150" ],
+    "preview": []
+  }
+}
+'@
+$inlinePreview = Get-UpdatedReleaseSupport -Text $inlineConfig -Release $previewRelease
+Assert-True ($inlinePreview -match [regex]::Escape('"stable": [ "4.150" ]')) `
+    'A preview release reformatted the unchanged stable tier.'
+$emptyPromotionConfig = @'
+{
+  "support": {
+    "stable": [],
+    "preview": ["4.152"]
+  }
+}
+'@
+$emptyPromotion = Get-UpdatedReleaseSupport -Text $emptyPromotionConfig -Release $promotedRelease
+$emptyPromotionDocument = $emptyPromotion | ConvertFrom-Json
+Assert-Equal @('4.152') @($emptyPromotionDocument.support.stable) `
+    'Promotion from an empty stable tier failed.'
+Assert-Equal @() @($emptyPromotionDocument.support.preview) `
+    'Promotion did not empty the sole preview tier.'
+Assert-Equal $emptyPromotion (Get-UpdatedReleaseSupport -Text $emptyPromotion -Release $promotedRelease) `
+    'Rerunning after promotion from the sole preview tier failed.'
 
 # Exercises issue-template release parsing, selection, and text surgery.
 Invoke-Expression (Get-ScriptFunctionText $bugTemplatePath)
