@@ -33,15 +33,12 @@ Use the **Release - Prepare** workflow from `main`. It requires:
 | `base` | `main`, `release/4.152.x`, or an exact commit SHA |
 | `release` | `4.153.0-preview.1`, `4.153.0-rc.1`, or `4.153.0-stable` |
 
-The workflow:
+The workflow resolves `base` and runs
+`scripts/infra/publishing/prepare-release.ps1` with the selected `mode`.
+`DryRun` is the default.
 
-1. resolves `base` and runs `scripts/infra/publishing/prepare-release.ps1`;
-2. defaults to a read-only run when `apply` and `push` are disabled;
-3. passes `-Apply` when `apply` is selected; or
-4. passes `-Push` when `push` is selected.
-
-Use separate workflow dispatches for preview and mutation. Review the dry-run
-output before selecting `apply` or `push`.
+Use separate workflow dispatches for preview and mutation. Review the `DryRun`
+output before selecting `Apply` or `Push`.
 
 The script creates matching branches in `mono/SkiaSharp` and `mono/skia`. The
 Skia branch points to the exact `externals/skia` gitlink used by the SkiaSharp
@@ -53,28 +50,27 @@ branch.
 # Read-only
 ./scripts/infra/publishing/prepare-release.ps1 `
   -Base main `
-  -Release 4.153.0-preview.1
+  -Release 4.153.0-preview.1 `
+  -Mode DryRun
 
 # Create and validate local branches and commits
 ./scripts/infra/publishing/prepare-release.ps1 `
   -Base main `
   -Release 4.153.0-preview.1 `
-  -Apply
+  -Mode Apply
 
 # Create locally, push both repositories, and create a stable bump PR
 ./scripts/infra/publishing/prepare-release.ps1 `
   -Base main `
   -Release 4.153.0-preview.1 `
-  -Push
+  -Mode Push
 ```
-
-`-Push` implies the local Apply work. This makes the three modes:
 
 | Mode | Local writes | Remote writes |
 | --- | --- | --- |
-| no switch | No | No |
-| `-Apply` | Yes | No |
-| `-Push` | Yes | Yes |
+| `DryRun` (default) | No | No |
+| `Apply` | Yes | No |
+| `Push` | Yes | Yes |
 
 Stable input uses the explicit `-stable` suffix but creates
 `release/X.Y.Z`. For a three-part stable release, Prepare also:
@@ -143,21 +139,22 @@ after the exact packages appear on NuGet.org. Use **Release - Finish** or run:
 ```powershell
 # Read-only
 ./scripts/infra/publishing/finish-release.ps1 `
-  -Version 4.153.0-preview.1
+  -Version 4.153.0-preview.1 `
+  -Mode DryRun
 
 # Apply the support-tier file update locally without publishing
 ./scripts/infra/publishing/finish-release.ps1 `
   -Version 4.153.0-preview.1 `
-  -Apply
+  -Mode Apply
 
 # Publish the tag and GitHub Release
 ./scripts/infra/publishing/finish-release.ps1 `
   -Version 4.153.0-preview.1 `
-  -Push
+  -Mode Push
 ```
 
 An abbreviated prerelease identity must resolve to exactly one public SkiaSharp
-package version. The `-Push` run reads that package's source commit, creates the
+package version. The `Push` run reads that package's source commit, creates the
 exact-version tag at that commit, publishes a GitHub-generated Release, opens or
 updates a focused support-tier PR, and dispatches release-note generation. A
 preview or RC adds its `major.minor` line to `support.preview`; a stable release
@@ -202,18 +199,18 @@ Releases.
 ## Maintain issue-template versions
 
 **Sync - Issue Template Versions** runs daily in push mode and opens or
-refreshes its owned pull request. Manual dispatches default to read-only and
-also expose `apply` and `push`. The same script can be run locally:
+refreshes its owned pull request. Manual dispatches default to `DryRun` and expose the same three-state mode. The
+same script can be run locally:
 
 ```powershell
 # Read-only
-./scripts/infra/publishing/update-bug-template.ps1
+./scripts/infra/publishing/update-bug-template.ps1 -Mode DryRun
 
 # Update only the local issue form
-./scripts/infra/publishing/update-bug-template.ps1 -Apply
+./scripts/infra/publishing/update-bug-template.ps1 -Mode Apply
 
 # Refresh the owned automation branch and pull request
-./scripts/infra/publishing/update-bug-template.ps1 -Push
+./scripts/infra/publishing/update-bug-template.ps1 -Mode Push
 ```
 
 It derives both bug-report version dropdowns from published GitHub Releases and

@@ -18,12 +18,9 @@
 .PARAMETER Base
     The SkiaSharp branch or commit SHA from which to create the release.
 
-.PARAMETER Apply
-    Creates and validates missing local branches and commits without pushing.
-
-.PARAMETER Push
-    Creates local state as needed, then pushes branches and creates the stable bump PR.
-    Without Apply or Push, the script is a dry run.
+.PARAMETER Mode
+    DryRun reports actions, Apply creates and validates local branches and
+    commits, and Push also publishes branches and creates the stable bump PR.
 #>
 
 [CmdletBinding()]
@@ -34,9 +31,8 @@ param(
     [Parameter(Mandatory)]
     [string] $Base,
 
-    [switch] $Apply,
-
-    [switch] $Push
+    [ValidateSet('DryRun', 'Apply', 'Push')]
+    [string] $Mode = 'DryRun'
 )
 
 # 0. Initialize shared helpers, execution mode, and repository paths.
@@ -45,8 +41,9 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
-$writeLocal = $Apply -or $Push
-$mode = if ($Push) { 'push' } elseif ($Apply) { 'local apply' } else { 'dry run' }
+$writeLocal = $Mode -ne 'DryRun'
+$writeRemote = $Mode -eq 'Push'
+$modeDescription = $Mode.ToLowerInvariant()
 $root = Get-GitRepositoryRoot
 $skiaRemote = $ReleaseSkiaRemote
 $skiaPath = $ReleaseSkiaPath
@@ -390,7 +387,7 @@ function Ensure-BumpPullRequest(
         Write-ReleaseStatus ready "Bump PR #$($Existing.number) is ${state}: $($Existing.url)"
         return
     }
-    if (!$Push) {
+    if (!$writeRemote) {
         Write-ReleaseStatus plan "Create a bump PR from $Branch to $BaseBranch."
         return
     }
@@ -459,7 +456,7 @@ $isStable = [bool] $Matches.stable
 $label = if ($isStable) { 'stable' } else { "$($Matches.channel).$($Matches.iteration)" }
 $identity = if ($isStable) { $version } else { $Release }
 $releaseBranch = "release/$identity"
-Write-Host "Preparing $identity ($mode)"
+Write-Host "Preparing $identity ($modeDescription)"
 
 # 2. Prepare the exact release branches.
 # 2.1 Protect existing parent and submodule work before local operations.
@@ -565,7 +562,7 @@ if ($isStable -and ($version -split '\.').Count -eq 3) {
 }
 
 # 4. Publish or report every prepared remote action.
-if ($Push) {
+if ($writeRemote) {
     Enable-GitHubGitAuthentication
 }
 
@@ -577,7 +574,7 @@ Push-ReleaseBranch `
     -LocalSha $skiaState.LocalSha `
     -RemoteSha $skiaState.RemoteSha `
     -Description 'mono/skia' `
-    -Push:$Push
+    -Push:$writeRemote
 
 # 4.2 Push the exact SkiaSharp release branch.
 Push-ReleaseBranch `
@@ -587,7 +584,7 @@ Push-ReleaseBranch `
     -LocalSha $releaseState.LocalSha `
     -RemoteSha $releaseState.RemoteSha `
     -Description 'SkiaSharp' `
-    -Push:$Push
+    -Push:$writeRemote
 
 # 4.3 Push the stable bump and create its maintenance PR.
 if ($bumpState) {
@@ -598,7 +595,7 @@ if ($bumpState) {
         -LocalSha $bumpState.LocalSha `
         -RemoteSha $bumpState.RemoteSha `
         -Description 'SkiaSharp' `
-        -Push:$Push
+        -Push:$writeRemote
     Ensure-BumpPullRequest `
         -Branch $bumpState.Branch `
         -BaseBranch $maintenanceBranch `
@@ -608,4 +605,4 @@ if ($bumpState) {
         -Existing $bumpPullRequest
 }
 
-Write-Host "Release preparation complete ($mode)."
+Write-Host "Release preparation complete ($modeDescription)."

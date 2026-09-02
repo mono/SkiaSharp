@@ -89,12 +89,15 @@ $finishParameters = (Get-Command $finishPath).Parameters.Keys
 $bugTemplateParameters = (Get-Command $bugTemplatePath).Parameters.Keys
 $reconcileParameters = (Get-Command $reconcilePath).Parameters.Keys
 $milestoneParameters = (Get-Command $milestonesPath).Parameters.Keys
-Assert-True ($prepareParameters -contains 'Apply' -and $prepareParameters -contains 'Push') `
-    'Prepare must expose Apply and Push.'
-Assert-True ($finishParameters -contains 'Apply' -and $finishParameters -contains 'Push') `
-    'Finish must expose Apply and Push.'
-Assert-True ($bugTemplateParameters -contains 'Apply' -and $bugTemplateParameters -contains 'Push') `
-    'The bug-template updater must expose Apply and Push.'
+Assert-True ($prepareParameters -contains 'Mode' -and
+    $prepareParameters -notcontains 'Apply' -and $prepareParameters -notcontains 'Push') `
+    'Prepare must expose only the three-state Mode parameter.'
+Assert-True ($finishParameters -contains 'Mode' -and
+    $finishParameters -notcontains 'Apply' -and $finishParameters -notcontains 'Push') `
+    'Finish must expose only the three-state Mode parameter.'
+Assert-True ($bugTemplateParameters -contains 'Mode' -and
+    $bugTemplateParameters -notcontains 'Apply' -and $bugTemplateParameters -notcontains 'Push') `
+    'The bug-template updater must expose only the three-state Mode parameter.'
 Assert-True ($reconcileParameters -contains 'Version' -and $reconcileParameters -contains 'Push' -and
     $reconcileParameters -notcontains 'Apply') 'Assignment reconciliation must expose Version and Push but not Apply.'
 Assert-True ($milestoneParameters -contains 'Count' -and $milestoneParameters -contains 'Push' -and
@@ -285,8 +288,8 @@ try {
 }
 Assert-True ([bool] (
     $script:FakeGhCommands |
-        Where-Object { $_ -match 'auto-update-issue-template-versions\.yml.*-f push=true' }
-)) 'Stable Finish did not dispatch the issue-template workflow in push mode.'
+        Where-Object { $_ -match 'auto-update-issue-template-versions\.yml.*-f mode=Push' }
+)) 'Stable Finish did not dispatch the issue-template workflow in Push mode.'
 
 # Exercises exact-release support-tier additions and promotions.
 $supportConfig = @'
@@ -478,20 +481,32 @@ try {
     & git -C $automationRoot push --quiet origin main
     $mainSha = (git -C $automationRoot rev-parse HEAD).Trim()
 
-    Publish-AutomationFilePullRequest `
-        -Root $automationRoot `
-        -Repository 'mono/SkiaSharp' `
-        -Branch automation/apply `
-        -BaseBranch main `
-        -Files ([ordered] @{ 'template.yml' = "applied`n" }) `
-        -CommitMessage 'Apply test' `
-        -Title 'Apply test' `
-        -Body 'Apply test' `
-        -Description test `
-        -Apply
+    function global:gh {
+        $global:LASTEXITCODE = 0
+        '[]'
+    }
+    try {
+        Publish-AutomationFilePullRequest `
+            -Root $automationRoot `
+            -Repository 'mono/SkiaSharp' `
+            -Branch automation/apply `
+            -BaseBranch main `
+            -Files ([ordered] @{ 'template.yml' = "applied`n" }) `
+            -CommitMessage 'Apply test' `
+            -Title 'Apply test' `
+            -Body 'Apply test' `
+            -Description test `
+            -Mode Apply
+    } finally {
+        Remove-Item Function:\gh
+    }
     Assert-Equal "applied`n" ([IO.File]::ReadAllText((Join-Path $automationRoot 'template.yml'))) `
         'Automation Apply did not write the desired local content.'
-    & git -C $automationRoot restore template.yml
+    Assert-Equal 'automation/apply' ((git -C $automationRoot branch --show-current).Trim()) `
+        'Automation Apply did not create the local automation branch.'
+    Assert-Equal '' ((git -C $automationRoot status --porcelain) -join '') `
+        'Automation Apply did not commit the local update.'
+    & git -C $automationRoot switch --quiet main
 
     & git -C $automationRoot switch --quiet -c automation/update
     [IO.File]::WriteAllText(

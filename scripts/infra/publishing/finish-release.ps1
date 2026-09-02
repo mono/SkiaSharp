@@ -13,13 +13,9 @@
     A stable version or prerelease identity. A prerelease build revision may be
     omitted when exactly one matching SkiaSharp version exists on NuGet.org.
 
-.PARAMETER Push
-    Publishes the tag and release, then dispatches follow-up workflows. Without
-    Apply or Push, the script is read-only.
-
-.PARAMETER Apply
-    Writes the proposed release-support update locally without committing,
-    pushing, publishing, or dispatching workflows.
+.PARAMETER Mode
+    DryRun is read-only, Apply writes the proposed support update locally, and
+    Push publishes the tag, release, support PR, and follow-up workflows.
 #>
 
 [CmdletBinding()]
@@ -27,9 +23,8 @@ param(
     [Parameter(Mandatory)]
     [string] $Version,
 
-    [switch] $Apply,
-
-    [switch] $Push
+    [ValidateSet('DryRun', 'Apply', 'Push')]
+    [string] $Mode = 'DryRun'
 )
 
 # 0. Initialize shared helpers, execution mode, and repository paths.
@@ -38,11 +33,8 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
-if ($Apply -and $Push) {
-    throw 'Apply and Push are mutually exclusive.'
-}
-$writeRemote = $Push
-$mode = if ($Push) { 'push' } elseif ($Apply) { 'local apply' } else { 'dry run' }
+$writeRemote = $Mode -eq 'Push'
+$modeDescription = $Mode.ToLowerInvariant()
 $root = Get-GitRepositoryRoot -Path $PSScriptRoot
 $repository = $ReleaseRepository
 
@@ -131,7 +123,7 @@ function Invoke-ReleaseFollowUpWorkflows([pscustomobject] $Release) {
                 'workflow', 'run', 'auto-update-issue-template-versions.yml',
                 '--repo', $repository,
                 '--ref', 'main',
-                '-f', 'push=true'
+                '-f', 'mode=Push'
             ) `
             -WriteOutput
     }
@@ -245,14 +237,13 @@ The publishing tests cover preview, RC, stable promotion, idempotency, multiple 
         -Title "Update $line release support tier" `
         -Body $body `
         -Description 'release-support' `
-        -Apply:$Apply `
-        -Push:$Push
+        -Mode $Mode
 }
 
 # 1. Resolve the exact public release.
 # 1.1 Resolve an abbreviated prerelease identity to one public NuGet version.
 $requestedVersion = $Version
-Write-Host "Finishing $requestedVersion ($mode)"
+Write-Host "Finishing $requestedVersion ($modeDescription)"
 $Version = Resolve-NuGetPackageVersion -PackageId 'SkiaSharp' -Version $Version
 if ($Version -ne $requestedVersion) {
     Write-ReleaseStatus ready "Resolved $requestedVersion to public package version $Version."
@@ -283,7 +274,7 @@ Push-ReleaseTag `
     -Remote origin `
     -Tag $release.Tag `
     -SourceCommit $packageSource.Commit `
-    -Push:$Push
+    -Push:$writeRemote
 
 # 3. Create or resume the published GitHub Release.
 Publish-GitHubRelease `

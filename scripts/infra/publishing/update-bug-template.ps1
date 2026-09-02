@@ -15,12 +15,9 @@
 .PARAMETER File
     The issue-form path, relative to the repository root unless absolute.
 
-.PARAMETER Apply
-    Writes the updated issue form locally without committing or pushing.
-
-.PARAMETER Push
-    Updates the owned automation branch and pull request. Without Apply or Push,
-    the script is read-only.
+.PARAMETER Mode
+    DryRun is read-only, Apply writes the updated issue form locally, and Push
+    updates the owned automation branch and pull request.
 #>
 
 [CmdletBinding()]
@@ -30,23 +27,17 @@ param(
 
     [string] $File = '.github/ISSUE_TEMPLATE/bug-report.yml',
 
-    [switch] $Apply,
-
-    [switch] $Push
+    [ValidateSet('DryRun', 'Apply', 'Push')]
+    [string] $Mode = 'DryRun'
 )
 
 # 0. Initialize shared helpers, execution mode, and repository state.
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
-if ($Apply -and $Push) {
-    throw 'Apply and Push are mutually exclusive.'
-}
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
-$writeLocal = $Apply -or $Push
-$writeRemote = $Push
-$mode = if ($Push) { 'push' } elseif ($Apply) { 'local apply' } else { 'dry run' }
+$modeDescription = $Mode.ToLowerInvariant()
 $automationBranch = 'automation/update-issue-template-versions'
 $otherOption = 'Other (Please indicate in the description)'
 $nightlyOption = 'Nightly / CI build'
@@ -263,7 +254,7 @@ $path = if ([IO.Path]::IsPathRooted($File)) {
     [IO.Path]::GetFullPath((Join-Path $root $File))
 }
 $displayPath = [IO.Path]::GetRelativePath($root, $path)
-Write-Host "Updating issue-template versions ($mode)"
+Write-Host "Updating issue-template versions ($modeDescription)"
 
 # 1. Build deterministic option lists from published releases.
 $releaseVersion = Get-RepositoryReleaseVersion -Root $root
@@ -281,15 +272,7 @@ Write-Host "Last-known-good default: $($options.GoodVersionDefault)"
 # 2. Render and optionally write the local issue form.
 $original = [IO.File]::ReadAllText($path)
 $updated = Get-UpdatedIssueTemplate -Text $original -Options $options
-if ($updated -eq $original) {
-    Write-ReleaseStatus ready "$displayPath is current."
-    return
-}
-if (!$writeLocal) {
-    Write-ReleaseStatus plan "Update $displayPath."
-    return
-}
-# 3. Publish the update through the shared automation-PR path.
+# 3. Converge the update through the shared dry-run/apply/push path.
 $body = @"
 ## Description
 
@@ -332,5 +315,4 @@ Publish-AutomationFilePullRequest `
     -Title 'Update issue template version dropdowns' `
     -Body $body `
     -Description 'issue-template' `
-    -Apply:$Apply `
-    -Push:$Push
+    -Mode $Mode
