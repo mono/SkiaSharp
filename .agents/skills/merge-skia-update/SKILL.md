@@ -7,7 +7,7 @@ description: >
   release line, prepares the mono/skia merge message, pauses for the manual
   native merge, repins the existing parent PR to the actual merged commit, then
   prepares the SkiaSharp merge message. This skill never merges either PR.
-compatibility: Requires git, gh, and PowerShell 7 with access to mono/skia and mono/SkiaSharp.
+compatibility: Requires git, gh, and PowerShell 7.4+ with access to mono/skia and mono/SkiaSharp.
 ---
 
 # Merge Skia Update

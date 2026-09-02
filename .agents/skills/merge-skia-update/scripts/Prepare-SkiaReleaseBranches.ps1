@@ -1,4 +1,5 @@
 #!/usr/bin/env pwsh
+#Requires -Version 7.4
 
 [CmdletBinding()]
 param(
@@ -12,29 +13,12 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-
-function Invoke-Native {
-    param(
-        [Parameter(Mandatory)]
-        [string] $Command,
-
-        [Parameter(Mandatory)]
-        [string[]] $Arguments
-    )
-
-    $output = @(& $Command @Arguments 2>&1)
-    $exitCode = $LASTEXITCODE
-
-    if ($exitCode -ne 0) {
-        throw "$Command $($Arguments -join ' ') failed:`n$($output -join "`n")"
-    }
-    return ($output -join "`n").Trim()
-}
+$PSNativeCommandUseErrorActionPreference = $true
 
 function Get-RemoteBranchSha {
     param([string] $RepositoryUrl, [string] $Branch)
 
-    $result = Invoke-Native git @('ls-remote', '--heads', $RepositoryUrl, "refs/heads/$Branch")
+    $result = git ls-remote --heads $RepositoryUrl "refs/heads/$Branch"
     if (-not $result) {
         return $null
     }
@@ -69,28 +53,18 @@ function Assert-Destination {
 function New-RemoteBranch {
     param([string] $Repository, [string] $Branch, [string] $Sha)
 
-    $null = Invoke-Native gh @(
-        'api', '--method', 'POST',
-        "repos/$Repository/git/refs",
-        '-f', "ref=refs/heads/$Branch",
-        '-f', "sha=$Sha"
-    )
+    gh api --method POST "repos/$Repository/git/refs" -f "ref=refs/heads/$Branch" -f "sha=$Sha" | Out-Null
 }
 
-$repoRoot = Invoke-Native git @('rev-parse', '--show-toplevel')
+$repoRoot = git rev-parse --show-toplevel
 Set-Location $repoRoot
-$null = Invoke-Native git @('check-ref-format', '--branch', $SkiaSharpBaseBranch)
-$null = Invoke-Native git @('check-ref-format', '--branch', $SkiaBaseBranch)
+git check-ref-format --branch $SkiaSharpBaseBranch | Out-Null
+git check-ref-format --branch $SkiaBaseBranch | Out-Null
 
-$parentUrl = Invoke-Native git @('remote', 'get-url', 'origin')
+$parentUrl = git remote get-url origin
 
-$null = Invoke-Native git @(
-    'fetch', '--no-tags', 'origin',
-    "+refs/heads/${SkiaSharpBaseBranch}:refs/remotes/origin/${SkiaSharpBaseBranch}"
-)
-$parentBaseSha = Invoke-Native git @(
-    'rev-parse', "refs/remotes/origin/${SkiaSharpBaseBranch}^{commit}"
-)
+git fetch --no-tags origin "+refs/heads/${SkiaSharpBaseBranch}:refs/remotes/origin/${SkiaSharpBaseBranch}" | Out-Null
+$parentBaseSha = git rev-parse "refs/remotes/origin/${SkiaSharpBaseBranch}^{commit}"
 
 if ($SkiaSharpBaseBranch -match '^release/(?<version>\d+\.\d+)\.x$') {
     Write-Host "Servicing branch: $SkiaSharpBaseBranch"
@@ -101,25 +75,19 @@ if ($SkiaSharpBaseBranch -ne 'main') {
     throw "SkiaSharp base branch must be main or release/A.B.x; got $SkiaSharpBaseBranch."
 }
 
-$versions = Invoke-Native git @('show', "${parentBaseSha}:scripts/VERSIONS.txt")
-$versionMatch = [regex]::Match(
-    $versions,
-    '(?m)^SkiaSharp\s+nuget\s+(?<major>\d+)\.(?<minor>\d+)\.\d+(?:[-+]\S+)?\s*$'
-)
+$versions = (git show "${parentBaseSha}:scripts/VERSIONS.txt" | Out-String).Trim()
+$versionMatch = [regex]::Match($versions, '(?m)^SkiaSharp\s+nuget\s+(?<major>\d+)\.(?<minor>\d+)\.\d+(?:[-+]\S+)?\s*$')
 if (-not $versionMatch.Success) {
     throw "Cannot derive the current SkiaSharp product line from scripts/VERSIONS.txt at $parentBaseSha."
 }
 $ReleaseBranch = "release/$($versionMatch.Groups['major'].Value).$($versionMatch.Groups['minor'].Value).x"
-$null = Invoke-Native git @('check-ref-format', '--branch', $ReleaseBranch)
+git check-ref-format --branch $ReleaseBranch | Out-Null
 
-$nativeUrl = Invoke-Native git @(
-    'config', '--blob', "${parentBaseSha}:.gitmodules",
-    '--get', 'submodule.externals/skia.url'
-)
+$nativeUrl = git config --blob "${parentBaseSha}:.gitmodules" --get submodule.externals/skia.url
 $parentRepository = Get-GitHubRepository $parentUrl
 $nativeRepository = Get-GitHubRepository $nativeUrl
 
-$treeEntry = Invoke-Native git @('ls-tree', $parentBaseSha, '--', 'externals/skia')
+$treeEntry = git ls-tree $parentBaseSha -- externals/skia
 $treeParts = $treeEntry -split '\s+'
 if ($treeParts.Count -lt 3 -or $treeParts[1] -ne 'commit') {
     throw "$parentBaseSha does not contain the externals/skia gitlink."

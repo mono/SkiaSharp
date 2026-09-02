@@ -1,4 +1,5 @@
 #!/usr/bin/env pwsh
+#Requires -Version 7.4
 
 [CmdletBinding()]
 param(
@@ -12,57 +13,40 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-
-function Invoke-Native {
-    param(
-        [Parameter(Mandatory)]
-        [string] $Command,
-
-        [Parameter(Mandatory)]
-        [string[]] $Arguments
-    )
-
-    $output = @(& $Command @Arguments 2>&1)
-    $exitCode = $LASTEXITCODE
-
-    if ($exitCode -ne 0) {
-        throw "$Command $($Arguments -join ' ') failed:`n$($output -join "`n")"
-    }
-    return ($output -join "`n").Trim()
-}
+$PSNativeCommandUseErrorActionPreference = $true
 
 function Get-RemoteBranchSha {
     param([string] $RepositoryUrl, [string] $Branch)
 
-    $result = Invoke-Native git @('ls-remote', '--heads', $RepositoryUrl, "refs/heads/$Branch")
+    $result = git ls-remote --heads $RepositoryUrl "refs/heads/$Branch"
     if (-not $result) {
         return $null
     }
     return ($result -split '\s+')[0]
 }
 
-$repoRoot = Invoke-Native git @('rev-parse', '--show-toplevel')
+$repoRoot = git rev-parse --show-toplevel
 Set-Location $repoRoot
-$null = Invoke-Native git @('check-ref-format', '--branch', $SkiaSharpBranch)
-$null = Invoke-Native git @('check-ref-format', '--branch', $SkiaBranch)
+git check-ref-format --branch $SkiaSharpBranch | Out-Null
+git check-ref-format --branch $SkiaBranch | Out-Null
 
-$currentBranch = Invoke-Native git @('branch', '--show-current')
-$currentHead = Invoke-Native git @('rev-parse', 'HEAD^{commit}')
-$status = Invoke-Native git @('status', '--porcelain=v1', '--untracked-files=all')
+$currentBranch = git branch --show-current
+$currentHead = git rev-parse 'HEAD^{commit}'
+$status = @(git status --porcelain=v1 --untracked-files=all)
 if ($currentBranch -ne $SkiaSharpBranch) {
     throw "Current branch is $currentBranch; expected $SkiaSharpBranch."
 }
 if ($status) {
-    throw "The SkiaSharp worktree is not clean:`n$status"
+    throw "The SkiaSharp worktree is not clean:`n$($status -join "`n")"
 }
 
-$parentUrl = Invoke-Native git @('remote', 'get-url', 'origin')
+$parentUrl = git remote get-url origin
 $parentRemoteHead = Get-RemoteBranchSha $parentUrl $SkiaSharpBranch
 if ($parentRemoteHead -ne $currentHead) {
     throw "Current checkout is $currentHead, but origin/$SkiaSharpBranch is $parentRemoteHead."
 }
 
-$oldGitlinkEntry = Invoke-Native git @('ls-tree', 'HEAD', '--', 'externals/skia')
+$oldGitlinkEntry = git ls-tree HEAD -- externals/skia
 $oldGitlinkParts = $oldGitlinkEntry -split '\s+'
 if ($oldGitlinkParts.Count -lt 3 -or $oldGitlinkParts[1] -ne 'commit') {
     throw 'The current SkiaSharp commit does not contain the externals/skia gitlink.'
@@ -80,19 +64,14 @@ if ($oldManifestSha.Count -ne 1 -or $oldManifestSha[0] -ne $oldGitlink) {
     throw "cgmanifest mono/skia SHA does not match the current gitlink $oldGitlink."
 }
 
-$null = Invoke-Native git @('submodule', 'update', '--init', '--', 'externals/skia')
+git submodule update --init -- externals/skia | Out-Null
 $skiaRoot = Join-Path $repoRoot 'externals/skia'
 Set-Location $skiaRoot
-$nativeUrl = Invoke-Native git @('remote', 'get-url', 'origin')
-$null = Invoke-Native git @(
-    'fetch', '--no-tags', 'origin',
-    "+refs/heads/${SkiaBranch}:refs/remotes/origin/${SkiaBranch}"
-)
-$mergedSha = Invoke-Native git @(
-    'rev-parse', "refs/remotes/origin/${SkiaBranch}^{commit}"
-)
+$nativeUrl = git remote get-url origin
+git fetch --no-tags origin "+refs/heads/${SkiaBranch}:refs/remotes/origin/${SkiaBranch}" | Out-Null
+$mergedSha = git rev-parse "refs/remotes/origin/${SkiaBranch}^{commit}"
 
-$parents = (Invoke-Native git @('rev-list', '--parents', '-n', '1', $mergedSha)) -split '\s+'
+$parents = (git rev-list --parents -n 1 $mergedSha) -split '\s+'
 if ($parents.Count -ne 3) {
     throw "mono/skia $SkiaBranch tip $mergedSha is not a two-parent merge commit."
 }
@@ -100,8 +79,8 @@ if ($oldGitlink -notin $parents[1..2]) {
     throw "mono/skia $SkiaBranch tip $mergedSha does not merge the parent PR gitlink $oldGitlink."
 }
 
-$oldTree = Invoke-Native git @('rev-parse', "${oldGitlink}^{tree}")
-$mergedTree = Invoke-Native git @('rev-parse', "${mergedSha}^{tree}")
+$oldTree = git rev-parse "${oldGitlink}^{tree}"
+$mergedTree = git rev-parse "${mergedSha}^{tree}"
 if ($mergedTree -ne $oldTree) {
     throw "Merged mono/skia tree $mergedTree differs from the parent PR's reviewed tree $oldTree."
 }
@@ -124,7 +103,7 @@ if ($parentRemoteNow -ne $currentHead -or $nativeRemoteNow -ne $mergedSha) {
     throw 'A source branch changed after preflight. Run the script without -Push again.'
 }
 
-$null = Invoke-Native git @('checkout', '--detach', $mergedSha)
+git checkout --detach $mergedSha | Out-Null
 Set-Location $repoRoot
 
 $manifest = Get-Content $manifestPath -Raw
@@ -140,8 +119,7 @@ $updatedManifest = $regex.Replace(
 )
 [System.IO.File]::WriteAllText($manifestPath, $updatedManifest, [System.Text.UTF8Encoding]::new($false))
 
-$changedOutput = Invoke-Native git @('diff', '--name-only')
-$changed = @($changedOutput -split "`n" | Where-Object { $_ })
+$changed = @(git diff --name-only | Where-Object { $_ })
 $unexpected = @($changed | Where-Object { $_ -notin @('cgmanifest.json', 'externals/skia') })
 if ($unexpected -or $changed.Count -eq 0) {
     throw "Expected only cgmanifest.json and externals/skia to change; found: $($changed -join ', ')"
@@ -154,26 +132,21 @@ $manifestSha = @(
         ForEach-Object { $_.component.git.commitHash }
 )
 Set-Location $skiaRoot
-$gitlinkNow = Invoke-Native git @('rev-parse', 'HEAD^{commit}')
+$gitlinkNow = git rev-parse 'HEAD^{commit}'
 Set-Location $repoRoot
 if ($manifestSha.Count -ne 1 -or $manifestSha[0] -ne $mergedSha -or $gitlinkNow -ne $mergedSha) {
     throw 'The updated gitlink and cgmanifest do not both match the merged mono/skia SHA.'
 }
 
-$null = Invoke-Native git @('add', '--', 'externals/skia', 'cgmanifest.json')
-$stagedOutput = Invoke-Native git @('diff', '--cached', '--name-only')
-$staged = @($stagedOutput -split "`n" | Where-Object { $_ })
+git add -- externals/skia cgmanifest.json | Out-Null
+$staged = @(git diff --cached --name-only | Where-Object { $_ })
 if ($staged.Count -eq 0 -or @($staged | Where-Object { $_ -notin @('cgmanifest.json', 'externals/skia') })) {
     throw "Unexpected staged paths: $($staged -join ', ')"
 }
 
-$null = Invoke-Native git @(
-    'commit',
-    '-m', 'Update Skia reference to merged commit',
-    '-m', "mono/skia $SkiaBranch advanced from $oldGitlink to $mergedSha."
-)
-$newParentHead = Invoke-Native git @('rev-parse', 'HEAD^{commit}')
-$null = Invoke-Native git @('push', 'origin', "HEAD:refs/heads/$SkiaSharpBranch")
+git commit -m 'Update Skia reference to merged commit' -m "mono/skia $SkiaBranch advanced from $oldGitlink to $mergedSha." | Out-Null
+$newParentHead = git rev-parse 'HEAD^{commit}'
+git push origin "HEAD:refs/heads/$SkiaSharpBranch" | Out-Null
 
 $remoteResult = Get-RemoteBranchSha $parentUrl $SkiaSharpBranch
 if ($remoteResult -ne $newParentHead) {
