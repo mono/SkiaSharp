@@ -18,13 +18,20 @@ name: Track - Artifact Sizes
 # Both modes share the measurement primitives in scripts/infra/perf/sizes/ (track.py's
 # measure_nupkg) and the render helpers in render_md.py.
 #
-# NOTE: `check_run` only triggers workflows on the default branch, so the pr mode is inert
-# until this file is merged to `main`. Validate it beforehand with `workflow_dispatch` and a
-# known PR `build_id`.
+# NOTE: PR mode is driven by a scheduled *poll* of Azure DevOps, not by a `check_run`
+# subscription. GitHub cannot filter `check_run` by app, name, or path, so subscribing to it
+# started a runner for EVERY completed check run on the default branch — including the ones
+# our own Actions workflows publish. Since `persist-aw-data` runs on `workflow_run` of THIS
+# workflow and then publishes its own check run, the two formed a self-sustaining 1:1 loop
+# (40,000 runs; 1,229 of the 1,288 check runs on one commit were Actions-created, and 608
+# Actions check completions landed in an hour that saw exactly 1 Azure check). A job-level
+# `if:` cannot fix that — a skipped job still publishes a check run and still feeds the loop.
+# Polling instead is bounded and targeted: see scripts/infra/perf/sizes/find_pr_builds.py.
 
 on:
   schedule:
-    - cron: "0 7 * * *"  # Daily at 07:00 UTC (offset from the 08:00 benchmark tracker)
+    - cron: "0 7 * * *"     # Nightly at 07:00 UTC (offset from the 08:00 benchmark tracker)
+    - cron: "*/30 * * * *"  # PR intake sweep: poll AzDO for new successful package builds
   workflow_dispatch:
     inputs:
       build_id:
@@ -35,15 +42,14 @@ on:
         description: "PR mode: PR number to comment on (optional; resolved from the build)."
         required: false
         type: string
-  check_run:
-    types: [completed]
 
 permissions:
   contents: read
 
 concurrency:
-  # nightly runs are a singleton (never cancel a persist); pr runs are keyed per build.
-  group: track-artifact-sizes-${{ github.event.check_run.id || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_id) || 'nightly' }}
+  # Nightly runs are a singleton (never cancel a persist); the sweep is a singleton too so
+  # overlapping polls cannot double-measure the same build.
+  group: track-artifact-sizes-${{ (github.event_name == 'schedule' && github.event.schedule == '0 7 * * *') && 'nightly' || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_id) || (github.event_name == 'workflow_dispatch' && 'nightly') || 'sweep' }}
   cancel-in-progress: false
 
 env:
@@ -51,88 +57,78 @@ env:
 
 jobs:
   # --------------------------------------------------------------------------- #
-  # Shared entrypoint: pick the mode and, for pr mode, resolve the build/PR.
+  # Shared entrypoint: pick the mode and, for PR work, resolve the builds to measure.
   # --------------------------------------------------------------------------- #
   resolve:
     if: github.repository_owner == 'mono'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
-      mode: ${{ steps.resolve.outputs.mode }}
-      build_id: ${{ steps.resolve.outputs.build_id }}
-      pr_number: ${{ steps.resolve.outputs.pr_number }}
-      build_url: ${{ steps.resolve.outputs.build_url }}
+      mode: ${{ steps.mode.outputs.mode }}
+      matrix: ${{ steps.builds.outputs.matrix }}
     steps:
-      - name: Resolve mode + build
-        id: resolve
+      - uses: actions/checkout@v4
+
+      - name: Pick the mode
+        id: mode
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          CRON: ${{ github.event.schedule }}
+          INPUT_BUILD_ID: ${{ github.event.inputs.build_id }}
         run: |
-          python3 - <<'PY'
-          import json, os, re, urllib.request
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "schedule" ] && [ "$CRON" = "0 7 * * *" ]; then
+            mode=nightly                       # the 07:00 feed measurement
+          elif [ "$EVENT_NAME" = "schedule" ]; then
+            mode=sweep                         # the PR intake poll
+          elif [ -n "${INPUT_BUILD_ID:-}" ]; then
+            mode=pr                            # manual fallback for one build
+          else
+            mode=nightly                       # manual nightly
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "mode=$mode"
 
-          PACKAGE_CHECK = "mono-SkiaSharp (Package NuGets Package NuGets)"
-          event = os.environ["GITHUB_EVENT_NAME"]
-          payload = json.load(open(os.environ["GITHUB_EVENT_PATH"]))
-
-          mode, build_id, pr_number, build_url = "none", "", "", ""
-
-          if event == "schedule":
-              mode = "nightly"
-          elif event == "workflow_dispatch":
-              inp = payload.get("inputs") or {}
-              build_id = (inp.get("build_id") or "").strip()
-              if build_id:
-                  mode, pr_number = "pr", (inp.get("pr_number") or "").strip()
-              else:
-                  mode = "nightly"
-          elif event == "check_run":
-              cr = payload.get("check_run") or {}
-              app = (cr.get("app") or {}).get("slug")
-              if (app == "azure-pipelines"
-                      and cr.get("name") == PACKAGE_CHECK
-                      and cr.get("conclusion") == "success"):
-                  m = re.search(r"[?&]buildId=(\d+)", cr.get("details_url") or "")
-                  if m:
-                      build_id = m.group(1)
-                  else:
-                      parts = (cr.get("external_id") or "").split("|")
-                      if len(parts) > 1 and parts[1].isdigit():
-                          build_id = parts[1]
-                  prs = cr.get("pull_requests") or []
-                  if prs:
-                      pr_number = str(prs[0]["number"])
-                  if build_id:
-                      mode = "pr"
-
-          # For a check-run build with no PR hint (fork PR, or a push to a branch/main),
-          # verify via the build's source branch so main/push builds don't trigger a
-          # pointless ~1 GB download. Only refs/pull/<n>/merge builds proceed.
-          if mode == "pr" and build_id and not pr_number and event == "check_run":
-              try:
-                  url = ("https://dev.azure.com/dnceng-public/public/_apis/build/builds/"
-                         f"{build_id}?api-version=7.1")
-                  req = urllib.request.Request(url, headers={"User-Agent": "skiasharp-size-pr/1.0"})
-                  data = json.load(urllib.request.urlopen(req, timeout=60))
-                  mm = re.search(r"refs/pull/(\d+)/merge", data.get("sourceBranch", "") or "", re.I)
-                  if mm:
-                      pr_number = mm.group(1)
-                  else:
-                      print(f"::notice::build {build_id} is not a PR build "
-                            f"({data.get('sourceBranch')!r}); skipping")
-                      mode = "none"
-              except Exception as err:  # noqa: BLE001
-                  print(f"::warning::could not verify build {build_id}: {err}")
-                  mode = "none"
-
-          if mode == "pr" and build_id:
-              build_url = ("https://dev.azure.com/dnceng-public/public/_build/results"
-                           f"?buildId={build_id}")
-
-          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
-              fh.write(f"mode={mode}\n")
-              fh.write(f"build_id={build_id}\n")
-              fh.write(f"pr_number={pr_number}\n")
-              fh.write(f"build_url={build_url}\n")
-          print(f"mode={mode} build_id={build_id or '-'} pr_number={pr_number or '-'}")
+      - name: Resolve the PR builds to measure
+        id: builds
+        if: steps.mode.outputs.mode != 'nightly'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MODE: ${{ steps.mode.outputs.mode }}
+          INPUT_BUILD_ID: ${{ github.event.inputs.build_id }}
+          INPUT_PR_NUMBER: ${{ github.event.inputs.pr_number }}
+        run: |
+          set -euo pipefail
+          if [ "$MODE" = "pr" ]; then
+            # Manual fallback: measure exactly the build the operator named.
+            python3 - <<'PY' > matrix.json
+          import json, os
+          print(json.dumps([{
+              "pr": (os.environ.get("INPUT_PR_NUMBER") or "").strip(),
+              "build": os.environ["INPUT_BUILD_ID"].strip(),
+          }]))
           PY
+          else
+            # Targeted poll: one AzDO query per open PR, skipping builds already reported.
+            args=()
+            for pr in $(gh pr list --repo "$GITHUB_REPOSITORY" --state open \
+                          --limit 100 --json number --jq '.[].number'); do
+              args+=(--pr "$pr")
+              measured=$(gh api "repos/$GITHUB_REPOSITORY/issues/$pr/comments" --paginate \
+                --jq '.[] | select(.body | contains("<!-- skiasharp-pr-artifact-sizes")) | .body' \
+                2>/dev/null | grep -o 'build=[0-9][0-9]*' | tail -1 | cut -d= -f2 || true)
+              if [ -n "${measured:-}" ]; then
+                args+=(--measured "$pr=$measured")
+              fi
+            done
+            python3 scripts/infra/perf/sizes/find_pr_builds.py \
+              ${args[@]+"${args[@]}"} --output matrix.json
+          fi
+          echo "matrix=$(cat matrix.json)" >> "$GITHUB_OUTPUT"
+          cat matrix.json
 
   # --------------------------------------------------------------------------- #
   # Nightly: measure feed packages, persist history, render the dashboard.
@@ -221,12 +217,19 @@ jobs:
   # --------------------------------------------------------------------------- #
   pr:
     needs: resolve
-    if: needs.resolve.outputs.mode == 'pr'
+    if: needs.resolve.outputs.matrix != '' && needs.resolve.outputs.matrix != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include: ${{ fromJSON(needs.resolve.outputs.matrix) }}
     permissions:
       contents: read
       pull-requests: write
+    env:
+      BUILD_URL: https://dev.azure.com/dnceng-public/public/_build/results?buildId=${{ matrix.build }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -236,8 +239,8 @@ jobs:
       - name: Download + measure the PR's packages
         run: |
           python3 scripts/infra/perf/sizes/measure_pr.py \
-            --build-id "${{ needs.resolve.outputs.build_id }}" \
-            ${{ needs.resolve.outputs.pr_number && format('--pr-number {0}', needs.resolve.outputs.pr_number) || '' }} \
+            --build-id "${{ matrix.build }}" \
+            ${{ matrix.pr && format('--pr-number {0}', matrix.pr) || '' }} \
             --output pr-sizes.json
 
       - name: Fetch the nightly baseline from the data branch
@@ -261,7 +264,7 @@ jobs:
           python3 scripts/infra/perf/sizes/render_pr_md.py \
             --pr-sizes pr-sizes.json \
             --baseline baseline.json \
-            --build-url "${{ needs.resolve.outputs.build_url }}" \
+            --build-url "$BUILD_URL" \
             --output comment.md
 
       - name: Post or update the PR comment
@@ -271,7 +274,7 @@ jobs:
             const fs = require('fs');
             const measurement = JSON.parse(fs.readFileSync('pr-sizes.json', 'utf8'));
             const prNumber = measurement.prNumber
-              || Number('${{ needs.resolve.outputs.pr_number }}') || null;
+              || Number('${{ matrix.pr }}') || null;
             if (!prNumber) {
               core.warning('No PR number could be resolved; skipping comment.');
               return;

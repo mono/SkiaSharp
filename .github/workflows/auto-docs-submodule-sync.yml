@@ -56,6 +56,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          # Record what the remote holds BEFORE we rewrite the branch locally. `checkout -B`
+          # from origin/main leaves the local branch with no reflog relationship to the remote,
+          # so a bare `--force-with-lease` has no expectation to check and would degrade to a
+          # plain force. The explicit `<ref>:<sha>` form below is the only safe variant here.
+          # An empty value is a valid lease meaning "the branch must not exist yet".
+          REMOTE_SHA=$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)
+          echo "remote $BRANCH is at: ${REMOTE_SHA:-<absent>}"
+
           # Always start fresh from main — avoids stale commit accumulation
           git checkout -B "$BRANCH" origin/main
 
@@ -69,7 +77,9 @@ jobs:
 
           Latest: $LATEST_MSG"
 
-          git push origin "$BRANCH" --force
+          # Guarded force: rejected with "stale info" if anything else moved the branch
+          # after we read REMOTE_SHA. Never an unguarded --force (see AGENTS.md).
+          git push origin "$BRANCH" --force-with-lease="refs/heads/$BRANCH:$REMOTE_SHA"
 
           # Create PR if one doesn't already exist
           existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')

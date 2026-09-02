@@ -5,10 +5,13 @@ on:
     paths:
       - ".agents/skills/release-branch/**"
       - ".agents/skills/release-milestones/**"
+      - ".agents/skills/release-notes/**"
       - ".agents/skills/release-publish/**"
       - ".agents/skills/release-testing/**"
       - "tests/SkiaSharp.Tests.Integration/**"
       - ".github/workflows/release-*.yml"
+      - ".github/workflows/update-github-release-summaries.yml"
+      - "scripts/infra/docs/**"
       - "scripts/infra/publishing/**"
       - "scripts/infra/caching/repo-deps.json"
   push:
@@ -16,10 +19,13 @@ on:
     paths:
       - ".agents/skills/release-branch/**"
       - ".agents/skills/release-milestones/**"
+      - ".agents/skills/release-notes/**"
       - ".agents/skills/release-publish/**"
       - ".agents/skills/release-testing/**"
       - "tests/SkiaSharp.Tests.Integration/**"
       - ".github/workflows/release-*.yml"
+      - ".github/workflows/update-github-release-summaries.yml"
+      - "scripts/infra/docs/**"
       - "scripts/infra/publishing/**"
       - "scripts/infra/caching/repo-deps.json"
   workflow_dispatch:
@@ -74,6 +80,11 @@ jobs:
 
       - name: Run release-testing Python tests
         run: python3 -m unittest discover -s .agents/skills/release-testing/scripts/tests -p "test_*.py"
+
+      - name: Run release-notes and GitHub-summary Python tests
+        # These cover the release-note renderer and the GitHub Release summary mutation that
+        # Finish dispatches (scripts/infra/docs/release_notes/tests/test_update_github_summaries.py).
+        run: python3 -m unittest discover -s scripts/infra/docs/release_notes/tests -p "test_*.py"
 
       - name: Run release-testing PowerShell tests
         shell: pwsh

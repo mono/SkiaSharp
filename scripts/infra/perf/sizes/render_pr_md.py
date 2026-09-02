@@ -109,9 +109,14 @@ def render(pr: dict, baseline: dict | None, *, build_url: str | None) -> str:
     pr_pkgs: dict[str, dict] = pr.get("packages", {})
     base_pkgs: dict[str, dict] = (baseline or {}).get("packages", {})
 
-    lines: list[str] = [MARKER, "## 📦 Artifact size report", ""]
+    lines: list[str] = [MARKER]
 
     build_id = pr.get("buildId")
+    # Machine-readable build stamp: the scheduled PR intake reads this back so a build that
+    # is already reported is never downloaded and measured again.
+    lines.append(f"<!-- build={build_id} -->")
+    lines += ["## 📦 Artifact size report", ""]
+
     build_ref = f"[`{build_id}`]({build_url})" if build_url else f"`{build_id}`"
     if baseline:
         lines.append(
