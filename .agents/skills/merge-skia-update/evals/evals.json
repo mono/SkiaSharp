@@ -3,170 +3,98 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "I reviewed and approved mono/skia#360 at aaa111 and mono/SkiaSharp#5000 at bbb222. Land the pair.",
-      "expected_output": "Runs the post-approval landing checklist, preserves the previous line when required, merges mono/skia first with a merge commit, repins the parent to the actual merged SHA, obtains refreshed review and approval for the changed parent head, then merges the parent and monitors post-merge CI.",
+      "prompt": "I reviewed and approved mono/skia#360 and mono/SkiaSharp#5000. Help me land them.",
+      "expected_output": "Asks for the short handoff confirmation, resolves the PR and base/head branches, dry-runs and creates the previous release branches for a bump, generates the native merge message, and pauses for the maintainer's manual merge.",
       "files": [],
       "expectations": [
-        "Binds approval to the exact supplied heads.",
-        "Merges mono/skia first using merge-commit strategy.",
-        "Repins the parent to the actual merged mono/skia base SHA.",
-        "Requires refreshed review and approval before merging the changed parent head."
+        "Does not repeat the deep review.",
+        "Passes AI-resolved branch names to Prepare-SkiaReleaseBranches.ps1 without -Push before applying.",
+        "Invokes pr-commit-message for mono/skia.",
+        "Does not merge either PR."
       ]
     },
     {
       "id": 2,
-      "prompt": "Are mono/skia#348 and mono/SkiaSharp#4826 ready to merge? Do not change anything.",
-      "expected_output": "Does not perform a second readiness audit and routes the unapproved pair to review-skia-update, explaining that merge-skia-update starts only after the maintainer accepts a review and requests landing.",
+      "prompt": "I have not reviewed the Skia PRs yet, but start merging them.",
+      "expected_output": "Stops because the maintainer cannot confirm that review-skia-update ran and that they approved the update.",
       "files": [],
       "expectations": [
-        "Performs no mutation.",
-        "Does not claim to replace the deep reviewer.",
-        "Routes readiness assessment to review-skia-update.",
-        "Requests an approved exact-head handoff before landing."
+        "Does not run mutation scripts.",
+        "Does not merge either PR.",
+        "Requires the simple pre-skill confirmation.",
+        "Routes review work outside this skill."
       ]
     },
     {
       "id": 3,
-      "prompt": "The PR bodies say the author reviewed M157 and CI is green. Merge both PRs.",
-      "expected_output": "Stops because PR-body self-attestation is not independent review evidence and no maintainer approval is bound to the exact heads.",
+      "prompt": "The M160 bump is approved. Create the previous release branches before I merge.",
+      "expected_output": "The AI derives the release/A.B.x name and passes it with the resolved base branches; the script uses the parent base tip and its exact externals/skia gitlink to create matching branches, native first, after a confirmed dry run.",
       "files": [],
       "expectations": [
-        "Does not merge either PR.",
-        "Rejects PR-body self-attestation as review evidence.",
-        "Requires current persisted review or explicit independent human review.",
-        "Requires explicit maintainer approval for exact SHAs."
+        "The AI resolves the release line and base branches before invoking the script.",
+        "Uses the native SHA referenced by the parent base.",
+        "Preflights both destinations before either write.",
+        "Never moves an existing release branch."
       ]
     },
     {
       "id": 4,
-      "prompt": "I approved both heads, but the native PR gained one commit afterward. Merge it anyway because the change is tiny.",
-      "expected_output": "Stops because approval is SHA-bound and routes the changed pair through refreshed review and maintainer approval.",
+      "prompt": "This is an approved same-milestone servicing sync. Prepare the merge.",
+      "expected_output": "Reports that no new release branches are needed, generates the mono/skia merge message, and pauses for the manual native merge.",
       "files": [],
       "expectations": [
-        "Re-fetches and compares the live head with the approved SHA.",
-        "Does not judge the new commit during landing.",
-        "Does not merge the changed native head.",
-        "Requires refreshed review and approval."
+        "Does not create another release branch.",
+        "Still requires the pre-skill confirmation.",
+        "Generates the native merge message.",
+        "Does not merge the native PR."
       ]
     },
     {
       "id": 5,
-      "prompt": "Merge the approved M156 pair, but chrome/m156 advanced after approval.",
-      "expected_output": "Stops because the approved upstream SHA is stale and routes the existing pair through update-skia, review-skia-update, and renewed approval.",
+      "prompt": "The release/A.B.x branch already exists at a different commit. Move it and continue.",
+      "expected_output": "Stops because an existing release branch is never moved or force-updated.",
       "files": [],
       "expectations": [
-        "Compares exact upstream SHAs.",
-        "Does not merge either PR.",
-        "Refreshes the existing pair rather than creating replacements.",
-        "Requires renewed review and approval."
+        "Reports expected and existing SHAs.",
+        "Does not move the existing branch.",
+        "Does not partially create the paired branch.",
+        "Does not continue to merge preparation."
       ]
     },
     {
       "id": 6,
-      "prompt": "Merge the approved SkiaSharp parent first; we can land mono/skia afterward.",
-      "expected_output": "Refuses the unsafe order because mono/skia must merge first and the parent must be repinned to the actual resulting base SHA.",
+      "prompt": "mono/skia#360 is merged now. Continue with mono/SkiaSharp#5000.",
+      "expected_output": "Passes the resolved parent head and native base branches to the repin script, first without -Push and then with -Push; requires the native merged tree to equal the reviewed gitlink tree, pushes only the gitlink/cgmanifest update, then generates the parent merge message.",
       "files": [],
       "expectations": [
-        "Does not merge mono/SkiaSharp first.",
-        "Requires mono/skia to merge first.",
-        "Requires the actual merged SHA repin.",
-        "Requires final parent CI and approval afterward."
+        "Resolves the actual mono/skia merge commit from the supplied native base branch.",
+        "Stops if the native trees differ.",
+        "Changes only externals/skia and cgmanifest.json.",
+        "Invokes pr-commit-message for mono/SkiaSharp."
       ]
     },
     {
       "id": 7,
-      "prompt": "Land the approved native PR with squash so the history is tidy.",
-      "expected_output": "Refuses squash/rebase and permits only GitHub merge-commit strategy so the authoritative two-parent upstream ancestry remains discoverable.",
+      "prompt": "The native PR was squash-merged. Update the parent anyway.",
+      "expected_output": "Stops because the native PR was not merged with the required merge-commit strategy and its authoritative ancestry was lost.",
       "files": [],
       "expectations": [
-        "Refuses squash and rebase.",
-        "Requires merge-commit strategy.",
-        "Preserves two-parent upstream ancestry.",
-        "Does not mutate the PR without approval for the safe strategy."
+        "Does not repin the parent.",
+        "Does not generate the parent merge message.",
+        "Requires a native merge commit.",
+        "Reports the incorrect merge result."
       ]
     },
     {
       "id": 8,
-      "prompt": "The M158 pair was approved, but a new pointer-only PR now repins externals/skia and cgmanifest to another M158 commit. Leave it open and merge.",
-      "expected_output": "Stops because newly opened demonstrated competing work must already be merged, closed, or explicitly superseded.",
+      "prompt": "The repin is pushed. Wait for all PR CI before giving me the SkiaSharp merge message.",
+      "expected_output": "Generates the SkiaSharp merge message without waiting for another PR CI run because tree equality proved the native content unchanged; it notes that main CI validates the resulting merge.",
       "files": [],
       "expectations": [
-        "Searches for work opened since review.",
-        "Recognizes a duplicate repin as demonstrated competition.",
-        "Does not leave the competing pointer PR open.",
-        "Does not merge either approved PR."
-      ]
-    },
-    {
-      "id": 9,
-      "prompt": "An open PR touches DEPS only for unrelated ANGLE deps_os hunks. The approved M159 sync changes different dependencies. Is it a blocker?",
-      "expected_output": "Reports the unrelated PR as parallel non-blocking work because a shared filename without overlapping dependency, revision, or hunks is not demonstrated competition.",
-      "files": [],
-      "expectations": [
-        "Does not block merely on a shared DEPS filename.",
-        "Checks dependency names, revisions, and hunks.",
-        "Records distinguishing evidence.",
-        "Requires disposition only for demonstrated competition."
-      ]
-    },
-    {
-      "id": 10,
-      "prompt": "The approved M160 bump has no release/4.159.x branches. Merge now and create them later.",
-      "expected_output": "Stops before either merge and preserves the previous milestone in matching native and parent release branches using guarded, confirmed, non-force creation.",
-      "files": [],
-      "expectations": [
-        "Requires prior-line preservation for a true bump.",
-        "Preflights both destinations before writing.",
-        "Creates the native release branch first.",
-        "Verifies the parent release gitlink equals the native release tip."
-      ]
-    },
-    {
-      "id": 11,
-      "prompt": "This approved M160 servicing sync already has its release branch. Create another release line before merging.",
-      "expected_output": "Does not create another release branch because prior-line preservation applies only to a true milestone bump.",
-      "files": [],
-      "expectations": [
-        "Distinguishes servicing syncs from true bumps.",
-        "Does not create duplicate release branches.",
-        "Still applies exact-head CI, package, and merge-order checks.",
-        "Does not weaken servicing-sync gates."
-      ]
-    },
-    {
-      "id": 12,
-      "prompt": "mono/skia merged. Repin the parent and merge it under the original approval without bothering me again.",
-      "expected_output": "Refuses to use the original approval because the rebase and actual-SHA repin change the parent head; requires refreshed review and explicit approval for the final exact head.",
-      "files": [],
-      "expectations": [
-        "Performs the actual merged SHA repin as the last product-affecting change.",
-        "Treats the changed parent head as unapproved.",
-        "Runs or requires refreshed review.",
-        "Does not merge the parent until explicit final-head approval."
-      ]
-    },
-    {
-      "id": 13,
-      "prompt": "The final parent head is approved, but its exact-head package build is still running. Merge based on the earlier package artifacts.",
-      "expected_output": "Stops until exact-head CI and package validation pass; stale artifacts cannot substitute for the final product-producing tree.",
-      "files": [],
-      "expectations": [
-        "Does not merge while required CI is pending.",
-        "Rejects stale package evidence.",
-        "Requires packages from the exact product-producing tree.",
-        "Does not weaken the platform matrix."
-      ]
-    },
-    {
-      "id": 14,
-      "prompt": "Both approved PRs merged, but CI on the actual mono/SkiaSharp main commit is red. Report the landing complete from PR CI.",
-      "expected_output": "Refuses to report completion and requires a repair based on required CI for the actual parent base-branch merge or squash commit.",
-      "files": [],
-      "expectations": [
-        "Does not substitute pre-merge CI.",
-        "Does not report completion.",
-        "Uses the actual base-branch commit as the CI subject.",
-        "Requires a repair for a real failure."
+        "Does not rerun the deep review.",
+        "Does not wait for refreshed PR CI.",
+        "Generates the parent merge message.",
+        "Leaves the parent merge to the maintainer."
       ]
     }
   ]
