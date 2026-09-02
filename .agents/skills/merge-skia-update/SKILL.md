@@ -168,12 +168,16 @@ a flake.
 ## 5. Merge mono/skia first
 
 1. Re-fetch both PRs and upstream immediately before merging.
-2. Invoke `pr-commit-message` for the mono/skia PR using the final head,
+2. Verify the native PR head is based on the current base tip: its merge base
+   must equal that tip and it must not be behind. Compute the prospective merge
+   tree and require it to equal the reviewed PR-head tree before performing the
+   irreversible merge.
+3. Invoke `pr-commit-message` for the mono/skia PR using the final head,
    companion PR, compare range, review findings, and validation evidence.
-3. Mark the PR ready if needed.
-4. Merge with GitHub's **merge commit** strategy. Never squash or rebase it.
-5. Fetch the resulting base-branch tip and record its exact SHA and tree.
-6. Verify that resulting base-branch commit has exactly the reviewed PR-head
+4. Mark the PR ready if needed.
+5. Merge with GitHub's **merge commit** strategy. Never squash or rebase it.
+6. Fetch the resulting base-branch tip and record its exact SHA and tree.
+7. Verify that resulting base-branch commit has exactly the reviewed PR-head
    tree and that its history contains the authoritative two-parent upstream
    merge. Stop on any tree difference or missing ancestry.
 
@@ -250,6 +254,8 @@ Stop without merging when any of these is true:
 
 - upstream has advanced beyond the reviewed SHA;
 - the mono/skia merge is not a verified two-parent merge;
+- the native PR is behind its base or its prospective merge tree differs from
+  the reviewed PR-head tree;
 - persisted review evidence is missing, schema-invalid, or stale;
 - a competing sync or pointer PR lacks an explicit disposition;
 - required PR labels or the parent release milestone are wrong;

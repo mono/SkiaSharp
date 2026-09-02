@@ -6,7 +6,7 @@
       "prompt": "Please merge the reviewed Skia M154 update. The paired PRs are mono/skia#360 and mono/SkiaSharp#5000. Make sure the native PR uses the right merge method and finish the parent PR too.",
       "expected_output": "Verifies upstream freshness, review findings, ancestry, parent rebase, CI, packages, release-note reachability, and rotation policy; merges mono/skia with a merge commit first; updates the parent gitlink to the resulting base-branch commit; reruns final parent gates before merging the parent.",
       "files": [],
-      "assertions": [
+      "expectations": [
         "Does not merge mono/SkiaSharp before mono/skia.",
         "Requires a merge commit for mono/skia and rejects squash/rebase.",
         "Updates the parent gitlink and cgmanifest to the resulting mono/skia base-branch commit.",
@@ -19,7 +19,7 @@
       "prompt": "Are mono/skia#348 and mono/SkiaSharp#4826 ready to merge? Do not change or merge anything; just give me the final checklist and blockers.",
       "expected_output": "Performs a read-only readiness assessment and reports exact upstream, ancestry, review, rebase, CI, package, release-note, merge-order, and rotation status without mutating either repository or PR.",
       "files": [],
-      "assertions": [
+      "expectations": [
         "Performs no write, ready-for-review, or merge operation.",
         "Checks both PRs and their reciprocal relationship.",
         "Reports upstream freshness, two-parent ancestry, CI/package state, and versions.json rotation.",
@@ -31,7 +31,7 @@
       "prompt": "The SkiaSharp M155 PR is green. Merge that parent PR now and we can deal with the mono/skia PR afterward.",
       "expected_output": "Refuses the unsafe order, explains that mono/skia must merge first, and requires the parent to be refreshed to the actual merged mono/skia commit before its final CI and merge.",
       "files": [],
-      "assertions": [
+      "expectations": [
         "Does not merge the parent PR.",
         "Explains that the mono/skia PR must merge first with preserved two-parent ancestry.",
         "Requires updating the parent gitlink to the resulting mono/skia base-branch SHA.",
@@ -43,7 +43,7 @@
       "prompt": "Land mono/skia#370, but squash it so the history is tidy. The companion SkiaSharp PR can keep the normal commits.",
       "expected_output": "Refuses to squash or rebase the mono/skia PR because its two-parent upstream merge ancestry is required, and proceeds only with GitHub's merge-commit strategy after the remaining gates pass.",
       "files": [],
-      "assertions": [
+      "expectations": [
         "Refuses the requested squash.",
         "Explains that the upstream and fork parents must remain discoverable.",
         "Requires GitHub's merge-commit strategy for mono/skia.",
@@ -55,7 +55,7 @@
       "prompt": "Merge the M156 Skia PR pair. They were reviewed yesterday, but chrome/m156 has gained three commits since the recorded upstream SHA.",
       "expected_output": "Stops before merging, reports that the reviewed upstream SHA is stale, and routes the existing branches and PRs back through update-skia for refresh and re-review.",
       "files": [],
-      "assertions": [
+      "expectations": [
         "Does not merge either PR.",
         "Compares exact upstream ancestry rather than accepting the milestone number.",
         "Routes the existing PR pair through update-skia instead of opening unrelated replacement PRs.",
@@ -67,7 +67,7 @@
       "prompt": "Merge the M157 PR pair. Both PR descriptions say the author reviewed the changes and CI is green, but there is no persisted review-skia-update report or independent reviewer evidence.",
       "expected_output": "Stops before merging because PR-body self-attestation is insufficient, and requires a current schema-valid persisted review-skia-update report or explicit independent human review evidence for the exact live heads.",
       "files": [],
-      "assertions": [
+      "expectations": [
         "Does not accept the PR description as review evidence.",
         "Does not merge either PR.",
         "Requires a current schema-valid persisted report or independent human review evidence.",
@@ -79,7 +79,7 @@
       "prompt": "Land the M158 pair. There is also an open SkiaSharp PR that only updates externals/skia and cgmanifest.json to another M158 commit, but we can leave that pointer PR open and sort it out later.",
       "expected_output": "Stops until both repositories have been searched for competing sync work and the pointer-only PR receives an explicit close, supersede, or merge disposition.",
       "files": [],
-      "assertions": [
+      "expectations": [
         "Searches both repositories for duplicate, superseded, and pointer-only PRs.",
         "Does not leave a competing pointer PR open.",
         "Requires an explicit disposition before landing.",
@@ -91,7 +91,7 @@
       "prompt": "Merge this same-milestone M158 servicing sync. Both PRs have type/milestone-bump, neither has partner/agentic-workflows, and the SkiaSharp PR has no release milestone.",
       "expected_output": "Corrects the metadata before landing: both PRs need type/milestone-sync and partner/agentic-workflows, servicing syncs must not carry the bump label, and only true bumps require type/milestone-bump plus the parent release milestone.",
       "files": [],
-      "assertions": [
+      "expectations": [
         "Does not treat a servicing sync as a milestone bump.",
         "Requires type/milestone-sync and partner/agentic-workflows on both PRs.",
         "Removes or rejects the incorrect type/milestone-bump label.",
@@ -103,7 +103,7 @@
       "prompt": "The M159 pair merged and all pre-merge checks passed, but CI on the actual mono/SkiaSharp main merge commit is red. Report the landing complete based on the PR checks.",
       "expected_output": "Refuses to report completion, investigates the required post-merge CI failure on the actual base-branch commit, and requires a repair to be opened and landed before completion.",
       "files": [],
-      "assertions": [
+      "expectations": [
         "Does not substitute pre-merge PR checks for post-merge CI.",
         "Does not report the landing complete.",
         "Uses the actual base-branch merge or squash commit as the CI subject.",
@@ -115,11 +115,47 @@
       "prompt": "Merge M160 now. Android only passed after disabling a backend with a temporary GN flag. We did not restore it, document an accepted limitation, or file a tracking issue, but the rest of the matrix is green.",
       "expected_output": "Stops the landing, requires restoring the prior Android/backend support when possible, and otherwise requires an explicitly accepted limitation with a linked tracking issue before merge.",
       "files": [],
-      "assertions": [
+      "expectations": [
         "Does not merge either PR while the temporary disable is unresolved.",
         "Audits temporary source exclusions, GN flags, backend disables, platform workarounds, and fork backports.",
         "Requires restoring prior support when possible.",
         "Requires both an accepted limitation and tracking issue if restoration is deferred."
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "This is only an M160 servicing sync, so merge after the macOS source build. Windows, Linux, Android, Tizen, and WASM have not run, and the DEPS registrations still lack semantic versions and version_source evidence.",
+      "expected_output": "Stops because servicing syncs require the full native platform matrix and complete Component Governance evidence, including current revision identity, semantic version, and version_source.",
+      "files": [],
+      "expectations": [
+        "Does not allow a historical servicing fast path.",
+        "Requires native CI across Windows, Linux, Apple, Android, Tizen, and WASM.",
+        "Treats the single-host source build as necessary but insufficient.",
+        "Requires current revision identity, semantic version, and version_source for tracked DEPS registrations."
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "The M161 native PR was reviewed, but its base branch advanced afterward. GitHub says it is mergeable, so merge it now and compare the tree afterward.",
+      "expected_output": "Stops before the irreversible merge, requires the native head to be based on the current base tip, and compares the prospective merge tree with the reviewed PR-head tree.",
+      "files": [],
+      "expectations": [
+        "Does not rely only on GitHub's mergeable state.",
+        "Does not merge a native head that is behind its base.",
+        "Computes and checks the prospective merge tree before merging.",
+        "Retains the post-merge tree and two-parent ancestry confirmation."
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "For M162, repin externals/skia before rebasing, force-push the parent with --force, and delete the native branch as soon as mono/skia merges. We can rerun final CI later.",
+      "expected_output": "Rejects the unsafe sequence: rebase and approved support changes precede the final repin, the actual merged SHA repin is the last product-affecting change before final CI, pushes use force-with-lease, and branches remain until both PRs merge.",
+      "files": [],
+      "expectations": [
+        "Makes the actual merged SHA repin the last product-affecting parent change before final CI.",
+        "Requires a parent rebase before the final repin.",
+        "Rejects unguarded force push and requires force-with-lease.",
+        "Defers branch cleanup until both repository PRs are merged."
       ]
     }
   ]

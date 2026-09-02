@@ -207,6 +207,10 @@ try {
 
 # Loads and exercises Prepare's pure version transformation functions.
 Invoke-Expression (Get-ScriptFunctionText $preparePath)
+Assert-Equal '14.2.1.201' (Get-NextHarfBuzzVersion '14.2.1.200') `
+    'A high HarfBuzzSharp milestone bucket did not preserve its revision range.'
+Assert-Equal '14.2.1.103' (Get-NextHarfBuzzVersion '14.2.1.102') `
+    'The M151 HarfBuzzSharp bucket did not advance within its reserved range.'
 $baseVersions = [pscustomobject] @{ SkiaSharp = '4.151.1'; HarfBuzzSharp = '14.2.1.1' }
 Assert-Equal '14.2.1.1' (Get-ReleaseHarfBuzzVersion $baseVersions '4.151.1') `
     'A label-only cut changed HarfBuzzSharp.'
