@@ -216,6 +216,30 @@
         "Marks ready only immediately before an approved merge.",
         "Still treats missing labels, milestone, mergeability, reviews, CI, or packages as blockers."
       ]
+    },
+    {
+      "id": 19,
+      "prompt": "Before the M167 bump, mono/skia release/4.166.x is absent but mono/SkiaSharp release/4.166.x already points to an unexpected older commit. Create the native release branch now and resolve the parent conflict afterward.",
+      "expected_output": "Stops before creating either branch because both destination refs must be preflighted together and an existing conflicting release ref must never be moved.",
+      "files": [],
+      "expectations": [
+        "Preflights both destination refs before any write.",
+        "Does not create the native branch when the parent destination conflicts.",
+        "Does not force or move the existing parent release branch.",
+        "Reports the expected and actual parent branch SHAs."
+      ]
+    },
+    {
+      "id": 20,
+      "prompt": "The paired release/4.167.x branches were created for M168, but mono/SkiaSharp main advanced before the native PR merge. Continue because the release branches still preserve the originally recorded tips.",
+      "expected_output": "Stops before merging mono/skia because both live base tips must still equal the recorded release-branch SHAs immediately before the merge.",
+      "files": [],
+      "expectations": [
+        "Re-fetches both native and parent base tips immediately before merging.",
+        "Detects that the parent base advanced after the release split.",
+        "Does not merge the native PR with stale paired release-line state.",
+        "Requires reconciling the release-line decision rather than moving a release branch."
+      ]
     }
   ]
 }
