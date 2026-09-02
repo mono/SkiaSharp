@@ -1,322 +1,242 @@
 ---
 name: merge-skia-update
 description: >
-  Safely land a reviewed Skia milestone bump or servicing sync across the
-  paired mono/skia and mono/SkiaSharp pull requests. Use whenever a maintainer
-  asks to merge, land, finalize, or complete a Skia bump/sync, or asks what is
-  still required before those PRs can merge. Verifies upstream freshness,
-  two-parent ancestry, fork and dependency decisions, parent rebase state,
-  release-note reachability, prior-line preservation, CI, packages, merge
-  order, and the supported-line rotation. Use update-skia to create or refresh
-  the update and review-skia-update for the deep review; this skill owns the
-  final landing.
-  Do not use it to merge Google Skia into the fork or for bleeding-edge
-  upstream-main syncs.
+  Run the post-approval merge checklist for a reviewed Skia milestone bump or
+  servicing sync across mono/skia and mono/SkiaSharp. Use only after a
+  maintainer has accepted a current review for the exact PR heads and explicitly
+  asks to merge, land, finalize, or complete the pair. Preserves the previous
+  release line, merges mono/skia first with a merge commit, repins the parent to
+  the actual merged SHA, requires refreshed approval after head-changing work,
+  validates exact-head CI and packages, and monitors post-merge CI. Use
+  review-skia-update for review or readiness assessment and update-skia to
+  create or refresh the update.
 compatibility: Requires git, gh, Python 3, and access to mono/skia and mono/SkiaSharp.
 ---
 
 # Merge Skia Update
 
-Land the two-repository update without losing upstream ancestry or leaving
-SkiaSharp pointed at an orphaned mono/skia PR commit.
-
-This skill covers `chrome/mN` milestone bumps and same-milestone servicing
-syncs. Use `update-skia` for a bleeding-edge Google Skia `main` sync because a
-continuously moving upstream tip needs a different landing policy.
+Execute the landing checklist for an already reviewed and approved Skia update.
+This skill is the merger, not the reviewer.
 
 ```
-reviewed PRs
+approved exact heads
   -> preserve the previous milestone as release/A.B.x
   -> merge mono/skia with a merge commit
-  -> point SkiaSharp at the resulting skiasharp commit
-  -> rebase and validate the parent
+  -> repin SkiaSharp to the actual merged SHA
+  -> refresh review and approval for the final parent head
   -> merge mono/SkiaSharp
+  -> verify post-merge CI
 ```
+
+This skill covers `chrome/mN` milestone bumps and same-milestone servicing
+syncs. Use `update-skia` for a bleeding-edge Google Skia `main` sync.
+
+## Scope boundary
+
+- Start only when the maintainer says the reviewed pair is approved and asks to
+  land it.
+- For "is this ready?", "review this", or an unapproved pair, stop and invoke
+  `review-skia-update`. Return here after the maintainer accepts that review.
+- Do not repeat the deep audit of fork patches, DEPS, Component Governance,
+  generated bindings, managed APIs, release notes, compatibility workarounds,
+  or version semantics. Those belong to the review.
+- Do verify that the accepted review covers those areas, has no unresolved
+  blockers, and identifies the exact live PR heads.
+- Approval is SHA-bound. Any push, rebase, repin, metadata/product edit, or
+  upstream movement that changes reviewed evidence invalidates approval.
+  Re-run the reviewer and obtain explicit maintainer approval before continuing.
 
 ## Safety contract
 
-- Treat "is this ready?" as read-only. Merge only when the user explicitly asks
-  to merge or land the PRs.
-- Never merge around a failed gate. Report the blocker and stop.
-- Never squash or rebase the mono/skia PR. Its upstream merge ancestry is part
-  of the sync record.
-- Never merge the SkiaSharp PR first.
-- Use `--force-with-lease` when a reviewed feature branch must be rebased;
-  never use an unguarded force push.
-- Do not replace a native source build with `externals-download`.
-- Do not weaken review or cross-platform CI gates for a same-milestone servicing
-  sync. Historical fast merges are not a supported landing path.
-- A draft PR is expected while gates remain open and is not by itself a
-  readiness blocker. Mark it ready only immediately before an approved merge.
+- Never merge without explicit maintainer approval for the exact heads.
+- Never merge around a failed checklist item. Report the blocker and stop.
+- Never merge mono/SkiaSharp before mono/skia.
+- Never squash or rebase the mono/skia PR; use GitHub's merge-commit strategy.
+- Use `--force-with-lease` for a reviewed feature-branch rebase; never use an
+  unguarded force push.
+- Never replace a native source build with `externals-download`.
+- Do not weaken full cross-platform CI for a servicing sync.
+- A draft is not a blocker. Mark a PR ready only immediately before its approved
+  merge.
+- Delete branches only after both PRs merge.
 
-## 1. Resolve the pair
+## 1. Accept the approved handoff
 
-Identify and cross-check:
+Record:
 
-- the mono/skia PR, its `skiasharp` or release-line base, and head SHA;
-- the mono/SkiaSharp companion PR, its parent base, and head SHA;
-- the milestone, upstream `chrome/mN` ref and exact SHA;
-- the shared `skia-sync/...` feature branch.
+- the mono/skia PR, base, approved head SHA, and target upstream ref/SHA;
+- the mono/SkiaSharp PR, base, and approved head SHA;
+- the reciprocal PR links and shared `skia-sync/...` branch;
+- the persisted, schema-valid `review-skia-update` report or explicit
+  independent human review evidence accepted by the maintainer;
+- the maintainer's explicit approval for those exact heads;
+- the accepted disposition of review findings, compatibility limitations and
+  tracking issues, support rotation, and any competing work.
 
-Read both PR bodies, commits, changed paths, reviews, inline comments, and
-checks. The reciprocal PR links must identify this exact pair.
+PR-body self-attestation is not independent review evidence. If the handoff is
+missing, stale, schema-invalid, or has unresolved findings, stop and return to
+`review-skia-update`.
 
-Search both repositories for competing open work before proceeding. Treat
-another PR as competing only when evidence shows at least one of:
+The accepted review must account for:
 
-- another Skia sync shares the same sync line, head, or intended sync base;
-- a duplicate `externals/skia` or `cgmanifest.json` repin;
-- overlapping DEPS dependency names, revisions, or hunks that would invalidate
-  one PR if the other landed.
+- upstream integrity and genuine two-parent ancestry;
+- fork patches, DEPS, generated interop, managed API/ownership, and tests;
+- version surfaces, skipped milestones, and HarfBuzz bucket progression;
+- enabled tracked Component Governance registrations and their nested
+  `skia_dependency.revision`, `version_reviewed_identity`, and
+  `version_source`;
+- temporary feature/backend disables, source exclusions, GN flags, platform
+  workarounds, and backports;
+- reachable release notes;
+- the explicit `scripts/infra/docs/versions.json` support-rotation decision.
 
-Record an explicit merge, close, or supersede disposition for every competing
-PR, then require that disposition to be completed before landing: the PR must
-already be merged, closed, or explicitly superseded. Do not leave any
-demonstrated competing PR open. Merely touching `DEPS`, the gitlink, or another
-commonly changed file is not enough: report unrelated parallel work as
-non-blocking with the evidence that distinguishes it.
+Do not recreate these audits in this skill; require their accepted result.
 
-Verify repository metadata on both PRs:
+## 2. Revalidate volatile merge facts
 
-- every bump and servicing sync has `type/milestone-sync` and
-  `partner/agentic-workflows`;
-- a true milestone bump additionally has `type/milestone-bump`, and the parent
-  PR is assigned the release milestone (historically
-  `4.N.0-preview.1`);
-- a same-milestone servicing sync is not labeled as a milestone bump.
+Immediately before any write:
 
-## 2. Recheck the review gates
+1. Re-fetch both PRs, both base branches, and the target upstream ref.
+2. Require both live heads to equal the approved SHAs.
+3. Require the upstream ref to equal the approved upstream SHA.
+4. Verify both PRs still have the accepted labels and milestone:
+   - both: `type/milestone-sync` and `partner/agentic-workflows`;
+   - true bump: also `type/milestone-bump`, with the parent assigned the release
+     milestone;
+   - servicing sync: no `type/milestone-bump`.
+5. Search for work opened since the review. Block only demonstrated competition:
+   - the same sync line, head, or intended base;
+   - a duplicate gitlink or cgmanifest repin;
+   - overlapping DEPS dependency/revision/hunks that invalidate one PR.
+   A shared filename alone is non-blocking. Every demonstrated competitor must
+   already be merged, closed, or explicitly superseded.
+6. Require both heads to be mergeable and current with their bases.
+7. Require exact-head required CI to be green. Native CI must cover Windows,
+   Linux, Apple, Android, Tizen, and WASM.
+8. Require package validation from the exact successful parent build: expected
+   IDs and versions, dependency ranges, archive integrity, representative
+   native assets/symbols, restore, and runtime loading.
 
-Do not rely on a review captured before the latest push.
+If any live fact differs from the approved handoff, stop. Run the appropriate
+refresh/review workflow and obtain new approval rather than interpreting the
+change during landing.
 
-1. Compare the live Google Skia ref with the recorded
-   `cgmanifest.json` `upstream_merge_commit`.
-   - If upstream moved, stop and run `update-skia` to refresh the existing PR.
-   - A milestone number match is not enough; compare exact ancestry.
-2. Confirm mono/skia contains a genuine two-parent merge whose upstream parent
-   is the target SHA and whose fork parent is the recorded base.
-3. Require either a current, persisted, schema-valid `review-skia-update`
-   report for the exact live heads or explicit evidence of an independent
-   human review. A PR-body self-attestation is not review evidence. If the
-   evidence is missing, invalid, or stale after any push or rebase, stop and
-   run or rerun `review-skia-update`.
-4. Resolve every finding from that review:
-   - added, removed, or changed fork patches;
-   - DEPS URLs, SHAs, and enabled/commented states;
-   - C API and generated binding changes;
-   - restored legacy code or dangling references;
-   - wrapper ownership, ABI, and test coverage.
-5. Confirm release-note sidecars mention only behavior reachable through the
-   current C and managed bindings.
-6. Confirm the parent PR is based directly on the current target branch:
-   - `behind_by == 0`;
-   - its merge base is the current base tip;
-   - GitHub lists only update commits and intended files, not commits already
-     on the base branch.
-7. Verify every version surface, including:
-   - Skia milestone and upstream SHA;
-   - native soname and `SK_C_INCREMENT`;
-   - SkiaSharp assembly/file/package versions;
-   - every crossed milestone when the update skips milestones;
-   - the HarfBuzzSharp milestone bucket, advanced by 100 for every crossed
-     milestone when native HarfBuzz did not change.
-8. Audit temporary compatibility work introduced to make CI green: disabled
-   features or backends, temporary source exclusions, GN flags, platform
-   workarounds, and fork backports. Restore prior support before merge whenever
-   possible. Otherwise require an explicitly accepted limitation and a linked
-   tracking issue.
-9. Mechanically inspect every enabled tracked DEPS Component Governance
-   registration's nested `skia_dependency` object. Require non-empty
-   `revision`, `version_reviewed_identity`, and `version_source` values, and
-   confirm the registered semantic version matches that evidence. Do not infer
-   missing evidence from top-level `component` fields. Treat legacy compliance
-   backfills as a separate gate even when the dependency version itself did
-   not change.
+## 3. Preserve the previous milestone
 
-## 3. Make the supported-line decision
+For a true milestone bump, preserve the replaced line before either merge. A
+same-milestone servicing sync does not create another release line.
 
-Read `scripts/infra/docs/versions.json`. Its `support` block is hand-maintained
-release policy and also drives the scheduled Skia-sync rotation.
+1. Derive `release/A.B.x` from the previous SkiaSharp product line.
+2. Record the current mono/skia and mono/SkiaSharp base tips.
+3. Require both tips to identify the previous milestone and the parent base
+   gitlink to equal the native base tip.
+4. Preflight both destination refs before any write. Each must be absent or
+   already equal its intended source SHA; never move an existing branch.
+5. Present both refs and exact source SHAs and obtain confirmation.
+6. Re-fetch both source tips after confirmation. If either changed, restart the
+   preflight and confirmation.
+7. Create the mono/skia branch first, then the matching mono/SkiaSharp branch,
+   with guarded non-force ref creation.
+8. Verify both branch SHAs and that the parent release gitlink equals the native
+   release tip.
 
-Before landing a new milestone, report:
+## 4. Merge mono/skia
 
-- the current stable and preview lines;
-- the rotation produced by `stable + preview + highest-supported-plus-one`;
-- whether the newly merged main milestone and intended next milestone will be
-  monitored.
+1. Re-fetch both PRs, bases, and upstream.
+2. For a true bump, require both base tips still to equal the recorded release
+   branch SHAs.
+3. Require the native head and upstream SHA still to equal the approved values.
+4. Require the native merge base to equal the current base tip and `behind_by`
+   to be zero.
+5. Confirm the approved head contains the genuine two-parent upstream merge.
+6. Compute the prospective GitHub merge tree and require it to equal the
+   approved PR-head tree.
+7. Invoke `pr-commit-message`, mark the PR ready if necessary, and merge with
+   GitHub's **merge commit** strategy.
+8. Fetch the resulting base commit. Require its tree to equal the approved head
+   tree and its history to contain the authoritative two-parent upstream merge.
 
-Do not infer support from Chrome channels or edit the file automatically.
-After reporting the computed rotation, ask for and consume an explicit
-maintainer decision. If approved, update support in the parent PR and
-revalidate the documentation/index behavior that consumes it. If declined,
-record that decision. If no decision exists, or the rotation would omit a line
-the maintainer intends to service, stop. History is not policy: M151 updated
-this file during landing while M152 omitted it and left the rotation stale.
+Record the GitHub-created base SHA. It is authoritative even when it differs
+from the PR head.
 
-## 4. Validate the pre-merge heads
+## 5. Refresh and reapprove the parent
 
-Both current heads must be mergeable and free of pending or failing required
-checks. CI must cover the repository's native, managed, test, visual, package,
-and sample stages.
+1. Rebase the parent feature branch onto the latest parent base.
+2. Apply only the support-rotation decision already accepted during review.
+3. As the last product-affecting parent operation before final CI, check out
+   `externals/skia` at the actual merged mono/skia base SHA, then run
+   `update-skia/scripts/update_versions.py` with the approved milestone and
+   upstream inputs plus the recorded pre-update parent and native base SHAs.
+   The helper reads the checked-out submodule HEAD when writing the cgmanifest
+   git registration, so never run it against the old PR-head checkout and repin
+   later.
+4. Verify the resulting diff and rerun the metadata checks. Require both the
+   gitlink and cgmanifest registration to equal the actual merged SHA while the
+   reviewed upstream ref and merge SHA remain unchanged.
+5. Commit and push with a guarded lease. A tiny dependent PR targeting the sync
+   branch is allowed only when branch policy requires it, and must merge before
+   final CI.
+6. Verify GitHub lists only the intended commits and files.
+7. Run `review-skia-update` against the refreshed exact pair, including the
+   final parent head. Obtain explicit maintainer approval for that final head.
 
-A source build on the available host is necessary but insufficient. Full native
-CI across Windows, Linux, Apple platforms, Android, Tizen, and WASM is the
-primary detector for compiler, SDK, linker, GN, and packaging fallout. Require
-that matrix for both true bumps and same-milestone servicing syncs.
+Do not merge the parent using the original approval: the required rebase and
+actual-SHA repin changed its head.
 
-Validate packages from the exact successful parent build:
+## 6. Merge mono/SkiaSharp
 
-- package IDs and expected SkiaSharp/HarfBuzzSharp versions;
-- dependency ranges;
-- archive integrity;
-- representative native assets and symbols;
-- restore plus runtime loading on the available host.
+After refreshed approval:
 
-PR artifacts are normally unsigned; signing is a publication-pipeline concern.
-Retry a failed CI job only when its logs prove an infrastructure failure such
-as a network timeout. Do not classify a compile, test, or rendering failure as
-a flake.
+1. Re-fetch the parent PR and base; require the live head to equal the newly
+   approved SHA, `behind_by == 0`, and the merge base to equal the base tip.
+2. Require the gitlink and cgmanifest registration to equal the actual merged
+   mono/skia base SHA.
+3. Require exact-head CI to be green. If the package-producing tree changed,
+   validate packages again from this build.
+4. Invoke `pr-commit-message`, mark the PR ready if needed, and merge using the
+   repository's normal strategy only after explicit approval.
 
-## 5. Preserve the previous milestone
-
-For a true milestone bump, preserve the line being replaced before either PR
-merges. A same-milestone servicing sync does not create another release line.
-
-1. Derive `release/A.B.x` from the previous SkiaSharp product line; for example,
-   an M153 bump preserves `release/4.152.x`.
-2. Re-fetch and record the current mono/skia base and mono/SkiaSharp base tips.
-3. Before any write, verify both source tips identify the previous milestone
-   and the parent base's `externals/skia` gitlink equals the recorded native
-   base tip.
-4. Preflight both destination refs before creating either branch. Each must be
-   absent or already resolve to its intended source SHA; stop before any write
-   if either conflicts.
-5. Present both planned refs and exact source SHAs and obtain explicit
-   maintainer confirmation.
-6. Immediately after confirmation and before either write, re-fetch both base
-   tips and require them to equal the recorded source SHAs. If either advanced,
-   stop and restart the source-pair preflight and confirmation.
-7. Create any missing mono/skia release branch first from the recorded native
-   base tip, then create the missing identically named mono/SkiaSharp release
-   branch from the recorded parent base tip. Use guarded non-force ref creation.
-8. Never force or move an existing release branch.
-9. Verify the parent release branch's `externals/skia` gitlink equals the native
-   release branch tip and both branches still identify the previous milestone.
-
-Record both branch SHAs. This split keeps the previous milestone serviceable
-after the default branches advance.
-
-## 6. Merge mono/skia first
-
-1. Re-fetch both PRs and upstream immediately before merging.
-2. For a true bump, verify both current base tips still equal the recorded
-   `release/A.B.x` branch SHAs. If either base advanced after the split, stop
-   and reconcile the release-line decision rather than merging stale state.
-3. Verify the native PR head is based on the current base tip: its merge base
-   must equal that tip and it must not be behind. Compute the prospective merge
-   tree and require it to equal the reviewed PR-head tree before performing the
-   irreversible merge.
-4. Invoke `pr-commit-message` for the mono/skia PR using the final head,
-   companion PR, compare range, review findings, and validation evidence.
-5. Mark the PR ready if needed.
-6. Merge with GitHub's **merge commit** strategy. Never squash or rebase it.
-7. Fetch the resulting base-branch tip and record its exact SHA and tree.
-8. Verify that resulting base-branch commit has exactly the reviewed PR-head
-   tree and that its history contains the authoritative two-parent upstream
-   merge. Stop on any tree difference or missing ancestry.
-
-The resulting `skiasharp` commit may differ from the PR head because GitHub can
-create a merge commit. That resulting base-branch SHA is authoritative.
-
-## 7. Refresh the SkiaSharp parent
-
-1. Check out the companion feature branch.
-2. Run `update-skia/scripts/update_versions.py` with the original current and
-   target milestones, exact upstream SHA, parent-base SHA, and Skia-base SHA.
-   The helper rewrites and validates final metadata, so inspect its diff; do
-   not treat it as read-only and do not hand-edit generated bindings.
-3. Apply an approved `versions.json` support decision and revalidate its
-   documentation/index consumers.
-4. Rebase the parent feature branch onto the latest target-branch tip.
-5. As the last product-affecting parent change before final CI, update
-   `externals/skia` and its `cgmanifest.json` registration to the exact merged
-   mono/skia base-branch SHA. Preserve the reviewed upstream ref and upstream
-   merge SHA, and rerun the metadata checks. Do not repin earlier: M150 and
-   M151 repeatedly demonstrated that an early repin goes stale.
-6. Commit the final repin directly in the companion branch under the normal
-   workflow. When branch ownership or review policy requires isolation, a tiny
-   dependent PR targeting the sync branch is allowed, but it must merge before
-   the parent PR and before final CI.
-7. Push with a guarded lease and verify GitHub now shows only intended commits
-   and files.
-
-Never leave the parent pointing at the old PR-head commit.
-
-## 8. Run the final parent gate
-
-Wait for CI on the refreshed parent head. Re-download and validate packages if
-the package-producing tree changed. Update both PR descriptions with durable
-SHAs, merge decisions, build/test evidence, package results, and remaining
-platform limitations.
-
-Invoke `pr-commit-message` for the parent PR, mark it ready, and merge it using
-the repository's normal strategy only after explicit approval.
-
-## 9. Verify and report
+## 7. Verify completion
 
 Confirm:
 
-- mono/skia's base contains the reviewed upstream merge;
-- mono/SkiaSharp's base contains the final parent commit;
-- the parent gitlink equals the merged mono/skia commit;
-- both PRs are merged and no stale open sync PR remains;
-- required CI on the actual mono/SkiaSharp base-branch merge or squash commit is
-  green;
-- optional branch deletion happens only after both merges.
+- mono/skia's base contains the approved upstream merge and reviewed tree;
+- mono/SkiaSharp's base contains the final approved parent commit;
+- the merged parent gitlink equals the merged mono/skia SHA;
+- both PRs are merged and no demonstrated competing sync PR remains open;
+- required CI on the actual parent base-branch merge/squash commit is green;
+- branch cleanup occurs only now, after both merges.
 
-Monitor post-merge CI against the actual parent base-branch commit, not the
-pre-merge head. Do not report the landing complete until required post-merge
-CI is green. If it fails, open and land a repair; do not substitute pre-merge
-checks as evidence. M152 demonstrates why this gate is required.
+Do not report completion from pre-merge CI. If post-merge CI fails, open and
+land a repair.
 
 Report:
 
 ```text
+Approved review: <report/evidence and exact approved SHAs>
 Upstream: <ref> @ <sha>
 Previous line: <release/A.B.x native sha and parent sha>
 mono/skia: <PR> -> <merged sha>
+Final parent approval: <evidence and exact head SHA>
 mono/SkiaSharp: <PR> -> <merged sha>
-Review: <report and unresolved findings>
-CI: <exact successful build>
+CI: <exact successful head builds>
 Post-merge CI: <base commit and successful build>
 Packages: <versions and validation>
-Rotation: <stable, preview, next targets and decision>
+Rotation: <accepted decision>
 ```
 
 ## Stop conditions
 
-Stop without merging when any of these is true:
+Stop without the next merge when:
 
-- upstream has advanced beyond the reviewed SHA;
-- the mono/skia merge is not a verified two-parent merge;
-- the native PR is behind its base or its prospective merge tree differs from
-  the reviewed PR-head tree;
-- persisted review evidence is missing, schema-invalid, or stale;
-- any demonstrated competing PR remains open or lacks a completed merge, close,
-  or supersede disposition;
-- required PR labels or the parent release milestone are wrong;
-- a fork patch, dependency, API, ownership, or release-note finding is open;
-- temporary compatibility work lacks restored support or an accepted limitation
-  with a tracking issue;
-- a crossed milestone, HarfBuzz bucket, or Component Governance registration is
-  unaccounted for;
-- a true bump has not preserved the previous milestone in matching
-  `release/A.B.x` branches, the branch tips conflict, or the parent release
-  gitlink does not equal the native release tip;
-- the parent is behind its base or includes unrelated base commits;
-- required CI is pending or failing;
-- packages are missing, inconsistent, or cannot load;
-- the supported-line rotation needs a maintainer decision;
-- mono/skia merged but the parent has not been updated to its resulting commit;
-- the merged mono/skia base tree differs from the reviewed PR-head tree;
+- the maintainer has not explicitly approved the exact live head;
+- review evidence is missing, invalid, stale, or has unresolved findings;
+- upstream, a PR head, or reviewed evidence changed;
+- a demonstrated competitor remains open;
+- labels, milestone, mergeability, base currency, CI, or packages fail;
+- a true bump has not preserved the previous line in matching branches;
+- the native prospective or resulting merge tree differs from the approved
+  tree, or two-parent ancestry is missing;
+- the parent does not point to the actual merged mono/skia SHA;
+- refreshed review and approval for the final parent head are missing;
 - required post-parent-merge CI is pending or failing.
