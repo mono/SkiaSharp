@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "I reviewed and approved mono/skia#360 and mono/SkiaSharp#5000. Help me land them.",
-      "expected_output": "Asks for the short handoff confirmation, resolves the PR and base/head branches, dry-runs and creates the previous release branches for a bump, generates the native merge message, and pauses for the maintainer's manual merge.",
+      "expected_output": "Asks for the short handoff confirmation, resolves the PR and base/head branches, lets the preparation script derive and create the previous release branches when the parent targets main, generates the native merge message, and pauses for the maintainer's manual merge.",
       "files": [],
       "expectations": [
         "Does not repeat the deep review.",
@@ -28,10 +28,11 @@
     {
       "id": 3,
       "prompt": "The M160 bump is approved. Create the previous release branches before I merge.",
-      "expected_output": "The AI derives the release/A.B.x name and passes it with the resolved base branches; the script uses the parent base tip and its exact externals/skia gitlink to create matching branches, native first, after a confirmed dry run.",
+      "expected_output": "The AI passes the resolved main and native base branches; the script derives release/A.B.x from the current SkiaSharp package version committed on main, then uses the parent base tip and its exact externals/skia gitlink to create matching branches, native first, after a confirmed dry run.",
       "files": [],
       "expectations": [
-        "The AI resolves the release line and base branches before invoking the script.",
+        "The AI resolves the base branches but does not calculate or pass the release line.",
+        "The script derives release/A.B.x from scripts/VERSIONS.txt on the exact parent base commit.",
         "Uses the native SHA referenced by the parent base.",
         "Preflights both destinations before either write.",
         "Never moves an existing release branch."
@@ -40,7 +41,7 @@
     {
       "id": 4,
       "prompt": "This is an approved same-milestone servicing sync. Prepare the merge.",
-      "expected_output": "Reports that no new release branches are needed, generates the mono/skia merge message, and pauses for the manual native merge.",
+      "expected_output": "Passes the existing release/A.B.x parent target to the preparation script, which reports that this is a servicing sync and creates no refs; then generates the mono/skia merge message and pauses for the manual native merge.",
       "files": [],
       "expectations": [
         "Does not create another release branch.",

@@ -8,9 +8,6 @@ param(
     [Parameter(Mandatory)]
     [string] $SkiaBaseBranch,
 
-    [Parameter(Mandatory)]
-    [string] $ReleaseBranch,
-
     [switch] $Push
 )
 
@@ -97,7 +94,6 @@ function New-RemoteBranch {
 $repoRoot = Invoke-Native git @('rev-parse', '--show-toplevel')
 $null = Invoke-Native git @('check-ref-format', '--branch', $SkiaSharpBaseBranch) $repoRoot
 $null = Invoke-Native git @('check-ref-format', '--branch', $SkiaBaseBranch) $repoRoot
-$null = Invoke-Native git @('check-ref-format', '--branch', $ReleaseBranch) $repoRoot
 
 $parentUrl = Invoke-Native git @('remote', 'get-url', 'origin') $repoRoot
 
@@ -108,6 +104,27 @@ $null = Invoke-Native git @(
 $parentBaseSha = Invoke-Native git @(
     'rev-parse', "refs/remotes/origin/${SkiaSharpBaseBranch}^{commit}"
 ) $repoRoot
+
+if ($SkiaSharpBaseBranch -match '^release/(?<version>\d+\.\d+)\.x$') {
+    Write-Host "Servicing branch: $SkiaSharpBaseBranch"
+    Write-Host 'No release branches are needed for a servicing sync.'
+    exit 0
+}
+if ($SkiaSharpBaseBranch -ne 'main') {
+    throw "SkiaSharp base branch must be main or release/A.B.x; got $SkiaSharpBaseBranch."
+}
+
+$versions = Invoke-Native git @('show', "${parentBaseSha}:scripts/VERSIONS.txt") $repoRoot
+$versionMatch = [regex]::Match(
+    $versions,
+    '(?m)^SkiaSharp\s+nuget\s+(?<major>\d+)\.(?<minor>\d+)\.\d+(?:[-+]\S+)?\s*$'
+)
+if (-not $versionMatch.Success) {
+    throw "Cannot derive the current SkiaSharp product line from scripts/VERSIONS.txt at $parentBaseSha."
+}
+$ReleaseBranch = "release/$($versionMatch.Groups['major'].Value).$($versionMatch.Groups['minor'].Value).x"
+$null = Invoke-Native git @('check-ref-format', '--branch', $ReleaseBranch) $repoRoot
+
 $nativeUrl = Invoke-Native git @(
     'config', '--blob', "${parentBaseSha}:.gitmodules",
     '--get', 'submodule.externals/skia.url'

@@ -31,28 +31,30 @@ Use GitHub and the PR bodies to resolve:
 
 - the mono/skia PR number, head branch, and base branch;
 - the mono/SkiaSharp PR number, head branch, and base branch;
-- whether this is a milestone bump or same-milestone servicing sync;
-- for a bump, the previous `release/A.B.x` branch name.
+- whether the parent targets `main` or an existing `release/A.B.x` branch.
 
 Present these values before continuing.
 
-## 2. Preserve the previous release line for a bump
-
-Skip this section for a same-milestone servicing sync.
+## 2. Preserve the previous release line when targeting main
 
 Run the script with the branch names already resolved by the AI:
 
 ```powershell
 pwsh .agents/skills/merge-skia-update/scripts/Prepare-SkiaReleaseBranches.ps1 `
   -SkiaSharpBaseBranch <parent-base> `
-  -SkiaBaseBranch <native-base> `
-  -ReleaseBranch <release/A.B.x>
+  -SkiaBaseBranch <native-base>
 ```
 
-The default is a dry run. The script reads the current SkiaSharp base tip and
-the exact mono/skia commit referenced by its `externals/skia` gitlink. It
-requires the supplied mono/skia base branch to point at that commit and
-preflights the release branch in both repositories.
+The script determines the release action from the parent base branch:
+
+- `main`: reads the committed SkiaSharp package version from
+  `scripts/VERSIONS.txt` and derives `release/A.B.x` for the current line;
+- `release/A.B.x`: reports a servicing sync and exits without creating refs.
+
+For `main`, the default is a dry run. The script reads the current SkiaSharp
+base tip and the exact mono/skia commit referenced by its `externals/skia`
+gitlink. It requires the supplied mono/skia base branch to point at that commit
+and preflights the derived release branch in both repositories.
 
 Show the output and obtain confirmation. Rerun with `-Push`. The script checks
 the source and destination refs again, creates the mono/skia release branch
@@ -121,6 +123,8 @@ Stop when:
 
 - the maintainer does not confirm the initial checklist;
 - the PR pair or branch names cannot be resolved;
+- the parent base is neither `main` nor `release/A.B.x`;
+- the current product line cannot be derived from `scripts/VERSIONS.txt`;
 - a supplied native base branch does not match the parent base gitlink;
 - an existing release branch points at a different SHA;
 - a release source changes between dry run and `-Push`;
