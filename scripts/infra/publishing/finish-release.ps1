@@ -43,7 +43,7 @@ if ($Apply -and $Push) {
 }
 $writeRemote = $Push
 $mode = if ($Push) { 'push' } elseif ($Apply) { 'local apply' } else { 'dry run' }
-$root = Get-GitRepositoryRoot
+$root = Get-GitRepositoryRoot -Path $PSScriptRoot
 $repository = $ReleaseRepository
 
 # Validates release identity and the title of an existing draft.
