@@ -1,0 +1,66 @@
+{
+  "skill_name": "merge-skia-update",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Please merge the reviewed Skia M154 update. The paired PRs are mono/skia#360 and mono/SkiaSharp#5000. Make sure the native PR uses the right merge method and finish the parent PR too.",
+      "expected_output": "Verifies upstream freshness, review findings, ancestry, parent rebase, CI, packages, release-note reachability, and rotation policy; merges mono/skia with a merge commit first; updates the parent gitlink to the resulting base-branch commit; reruns final parent gates before merging the parent.",
+      "files": [],
+      "assertions": [
+        "Does not merge mono/SkiaSharp before mono/skia.",
+        "Requires a merge commit for mono/skia and rejects squash/rebase.",
+        "Updates the parent gitlink and cgmanifest to the resulting mono/skia base-branch commit.",
+        "Checks current CI, packages, upstream SHA, and parent rebase state before each merge.",
+        "Reports the versions.json support rotation and stops if it needs a maintainer decision."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Are mono/skia#348 and mono/SkiaSharp#4826 ready to merge? Do not change or merge anything; just give me the final checklist and blockers.",
+      "expected_output": "Performs a read-only readiness assessment and reports exact upstream, ancestry, review, rebase, CI, package, release-note, merge-order, and rotation status without mutating either repository or PR.",
+      "files": [],
+      "assertions": [
+        "Performs no write, ready-for-review, or merge operation.",
+        "Checks both PRs and their reciprocal relationship.",
+        "Reports upstream freshness, two-parent ancestry, CI/package state, and versions.json rotation.",
+        "Names mono/skia-first and parent-gitlink-refresh as the required merge sequence."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The SkiaSharp M155 PR is green. Merge that parent PR now and we can deal with the mono/skia PR afterward.",
+      "expected_output": "Refuses the unsafe order, explains that mono/skia must merge first, and requires the parent to be refreshed to the actual merged mono/skia commit before its final CI and merge.",
+      "files": [],
+      "assertions": [
+        "Does not merge the parent PR.",
+        "Explains that the mono/skia PR must merge first with preserved two-parent ancestry.",
+        "Requires updating the parent gitlink to the resulting mono/skia base-branch SHA.",
+        "Requires final parent CI after the gitlink update."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Land mono/skia#370, but squash it so the history is tidy. The companion SkiaSharp PR can keep the normal commits.",
+      "expected_output": "Refuses to squash or rebase the mono/skia PR because its two-parent upstream merge ancestry is required, and proceeds only with GitHub's merge-commit strategy after the remaining gates pass.",
+      "files": [],
+      "assertions": [
+        "Refuses the requested squash.",
+        "Explains that the upstream and fork parents must remain discoverable.",
+        "Requires GitHub's merge-commit strategy for mono/skia.",
+        "Does not mutate either PR if the user does not approve the required strategy."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Merge the M156 Skia PR pair. They were reviewed yesterday, but chrome/m156 has gained three commits since the recorded upstream SHA.",
+      "expected_output": "Stops before merging, reports that the reviewed upstream SHA is stale, and routes the existing branches and PRs back through update-skia for refresh and re-review.",
+      "files": [],
+      "assertions": [
+        "Does not merge either PR.",
+        "Compares exact upstream ancestry rather than accepting the milestone number.",
+        "Routes the existing PR pair through update-skia instead of opening unrelated replacement PRs.",
+        "Requires review and CI/package gates again after the refresh."
+      ]
+    }
+  ]
+}
