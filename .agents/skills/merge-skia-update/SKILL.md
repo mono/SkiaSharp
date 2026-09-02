@@ -15,9 +15,28 @@ compatibility: Requires git, gh, and PowerShell 7.4+ with access to mono/skia an
 Help with the mechanical work around two manual merges. Do not repeat the
 review and do not merge either PR.
 
-## 1. Confirm and resolve
+## 1. Resolve and confirm
 
-Ask the maintainer to confirm:
+Resolve the PR pair before asking for any landing confirmation.
+
+If the maintainer supplied either PR, use its reciprocal link to find the
+companion PR. If they supplied both PRs, require each reciprocal link to point
+to the other; stop on any mismatch. Otherwise, search the open Skia update PRs
+and pair them using their reciprocal links and shared sync branches.
+
+- If exactly one pair is found, present it.
+- If multiple pairs are found, present the candidates and ask the maintainer
+  which pair to land.
+- If no pair can be resolved, ask for either PR number and stop until it is
+  provided.
+
+For the selected pair, resolve and present:
+
+- the mono/skia PR number, head branch, and base branch;
+- the mono/SkiaSharp PR number, head branch, and base branch;
+- whether the parent targets `main` or an existing `release/A.B.x` branch.
+
+Only after the maintainer sees the exact selected pair, ask them to confirm:
 
 - `review-skia-update` has run;
 - they are happy with the review and approve the update;
@@ -26,14 +45,6 @@ Ask the maintainer to confirm:
 
 If they do not confirm, stop. Do not independently re-audit reviews, labels,
 milestones, CI, packages, DEPS, bindings, or release notes.
-
-Use GitHub and the PR bodies to resolve:
-
-- the mono/skia PR number, head branch, and base branch;
-- the mono/SkiaSharp PR number, head branch, and base branch;
-- whether the parent targets `main` or an existing `release/A.B.x` branch.
-
-Present these values before continuing.
 
 ## 2. Preserve the previous release line when targeting main
 
@@ -147,7 +158,9 @@ wait for main CI to finish.
 Stop when:
 
 - the maintainer does not confirm the initial checklist;
-- the PR pair or branch names cannot be resolved;
+- the PR pair or branch names cannot be resolved or the maintainer has not
+  selected one of multiple candidate pairs;
+- supplied PR numbers do not reciprocally link to each other;
 - the parent base is neither `main` nor `release/A.B.x`;
 - the current product line cannot be derived from `scripts/VERSIONS.txt`;
 - a supplied native base branch does not match the parent base gitlink;

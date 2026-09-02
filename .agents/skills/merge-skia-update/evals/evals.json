@@ -4,13 +4,26 @@
     {
       "id": 1,
       "prompt": "I reviewed and approved mono/skia#360 and mono/SkiaSharp#5000. Help me land them.",
-      "expected_output": "Asks for the short handoff confirmation, resolves the PR and base/head branches, lets the preparation script derive and create the previous release branches when the parent targets main, generates the native merge message, and pauses for the maintainer's manual merge.",
+      "expected_output": "Resolves and presents the exact PR pair and base/head branches before asking for the short handoff confirmation, lets the preparation script derive and create the previous release branches when the parent targets main, generates the native merge message, and pauses for the maintainer's manual merge.",
       "files": [],
       "expectations": [
         "Does not repeat the deep review.",
+        "Verifies that the two supplied PRs reciprocally link to each other.",
         "Passes AI-resolved branch names to Prepare-SkiaReleaseBranches.ps1 without -Push before applying.",
         "Invokes pr-commit-message for mono/skia.",
         "Does not merge either PR."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Run merge-skia-update. There are two open Skia update pairs.",
+      "expected_output": "Discovers and presents both reciprocal mono/skia and mono/SkiaSharp PR pairs, asks the maintainer to select one, and does not ask for prerequisite approval or run scripts until a pair is selected.",
+      "files": [],
+      "expectations": [
+        "Does not guess which update pair to land.",
+        "Groups candidates as native and parent PR pairs using reciprocal links and sync branches.",
+        "Asks for one pair selection before the prerequisite checklist.",
+        "Does not run either helper script."
       ]
     },
     {
