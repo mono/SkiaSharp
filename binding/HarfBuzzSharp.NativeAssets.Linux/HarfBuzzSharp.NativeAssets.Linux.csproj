@@ -1,27 +1,28 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Linux</Title>
+    <PackageDescription>Meta-package that pulls in every Linux runtime identifier HarfBuzzSharp ships (glibc, musl, bionic; x64, x86, arm, arm64, riscv64, loongarch64). Backward-compatible with the previous single-nupkg layout — anyone referencing this keeps getting the same union of Linux natives. Callers that only need one RID can reference the specific HarfBuzzSharp.NativeAssets.linux-* leaf directly and skip the rest (see mono/SkiaSharp#3210 for the motivation).</PackageDescription>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
     <!-- glibc -->
-    <PackageFile Include="..\..\output\native\linux\x64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linux\x86\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-x86\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linux\arm64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-arm64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linux\arm\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-arm\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linux\riscv64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-riscv64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linux\loongarch64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-loongarch64\native\%(Filename)%(Extension)" />
-    <!-- Musl -->
-    <PackageFile Include="..\..\output\native\alpine\x64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-musl-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpine\x86\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-musl-x86\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpine\arm64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-musl-arm64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpine\arm\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-musl-arm\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpine\riscv64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-musl-riscv64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpine\loongarch64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-musl-loongarch64\native\%(Filename)%(Extension)" />
-    <!-- Bionic -->
-    <PackageFile Include="..\..\output\native\bionic\x64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-bionic-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\bionic\arm64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-bionic-arm64\native\%(Filename)%(Extension)" />
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-x64\HarfBuzzSharp.NativeAssets.linux-x64.csproj" />
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-x86\HarfBuzzSharp.NativeAssets.linux-x86.csproj" />
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-arm64\HarfBuzzSharp.NativeAssets.linux-arm64.csproj" />
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-arm\HarfBuzzSharp.NativeAssets.linux-arm.csproj" />
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-riscv64\HarfBuzzSharp.NativeAssets.linux-riscv64.csproj" />
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-loongarch64\HarfBuzzSharp.NativeAssets.linux-loongarch64.csproj" />
+    <!-- musl -->
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-musl-x64\HarfBuzzSharp.NativeAssets.linux-musl-x64.csproj" />
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-musl-x86\HarfBuzzSharp.NativeAssets.linux-musl-x86.csproj" />
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-musl-arm64\HarfBuzzSharp.NativeAssets.linux-musl-arm64.csproj" />
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-musl-arm\HarfBuzzSharp.NativeAssets.linux-musl-arm.csproj" />
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-musl-riscv64\HarfBuzzSharp.NativeAssets.linux-musl-riscv64.csproj" />
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-musl-loongarch64\HarfBuzzSharp.NativeAssets.linux-musl-loongarch64.csproj" />
+    <!-- bionic -->
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-bionic-x64\HarfBuzzSharp.NativeAssets.linux-bionic-x64.csproj" />
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.linux-bionic-arm64\HarfBuzzSharp.NativeAssets.linux-bionic-arm64.csproj" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
