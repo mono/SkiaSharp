@@ -10,6 +10,8 @@ namespace SkiaSharp.Views.Maui.Platform
 {
 	internal class SKTouchHandler : UIGestureRecognizer
 	{
+		// UIKit exposes points but no authoritative points-per-notch value,
+		// so this v120 calibration is empirical.
 		private const double ScrollPointsPerNotch = 40.0;
 
 		private Action<SKTouchEventArgs>? onTouchAction;
