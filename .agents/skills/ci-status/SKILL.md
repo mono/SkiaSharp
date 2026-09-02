@@ -71,7 +71,7 @@ standard Darc/Maestro stages.
 | Sync - Samples | mono/SkiaSharp | Push/PR to `samples/` | Sample projects broken if failing |
 | Tests - Binding Generation Determinism | mono/SkiaSharp | Push/PR | Generated bindings drift undetected |
 | Sync - Docs Submodule | mono/SkiaSharp | Daily (10:00 UTC) | API docs get out of sync |
-| Sync - Release Notes & API Diffs | mono/SkiaSharp | Push to main/release/tags + daily | Release notes stop auto-updating |
+| Sync - Release Notes & API Diffs | mono/SkiaSharp | Push to main + daily | Release notes stop auto-updating |
 | Sync - Skia Upstream | mono/SkiaSharp | Every 6h | Upstream tracking breaks |
 | Fixer - Memory Leak | mono/SkiaSharp | Every 12h | Leak-hunting automation stops |
 | Fixer - Performance | mono/SkiaSharp | Every 12h | Perf-hunting automation stops |
