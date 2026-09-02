@@ -19,22 +19,11 @@ function Invoke-Native {
         [string] $Command,
 
         [Parameter(Mandatory)]
-        [string[]] $Arguments,
-
-        [string] $WorkingDirectory
+        [string[]] $Arguments
     )
 
-    if ($WorkingDirectory) {
-        Push-Location $WorkingDirectory
-    }
-    try {
-        $output = @(& $Command @Arguments 2>&1)
-        $exitCode = $LASTEXITCODE
-    } finally {
-        if ($WorkingDirectory) {
-            Pop-Location
-        }
-    }
+    $output = @(& $Command @Arguments 2>&1)
+    $exitCode = $LASTEXITCODE
 
     if ($exitCode -ne 0) {
         throw "$Command $($Arguments -join ' ') failed:`n$($output -join "`n")"
@@ -55,10 +44,7 @@ function Get-RemoteBranchSha {
 function Get-GitHubRepository {
     param([string] $RepositoryUrl)
 
-    $match = [regex]::Match(
-        $RepositoryUrl,
-        '(?i)github\.com[/:](?<repository>[^/:\s]+/[^/\s]+?)(?:\.git)?$'
-    )
+    $match = [regex]::Match($RepositoryUrl, '(?i)github\.com[/:](?<repository>[^/:\s]+/[^/\s]+?)(?:\.git)?$')
     if (-not $match.Success) {
         throw "Cannot derive a GitHub owner/repository from $RepositoryUrl."
     }
@@ -92,18 +78,19 @@ function New-RemoteBranch {
 }
 
 $repoRoot = Invoke-Native git @('rev-parse', '--show-toplevel')
-$null = Invoke-Native git @('check-ref-format', '--branch', $SkiaSharpBaseBranch) $repoRoot
-$null = Invoke-Native git @('check-ref-format', '--branch', $SkiaBaseBranch) $repoRoot
+Set-Location $repoRoot
+$null = Invoke-Native git @('check-ref-format', '--branch', $SkiaSharpBaseBranch)
+$null = Invoke-Native git @('check-ref-format', '--branch', $SkiaBaseBranch)
 
-$parentUrl = Invoke-Native git @('remote', 'get-url', 'origin') $repoRoot
+$parentUrl = Invoke-Native git @('remote', 'get-url', 'origin')
 
 $null = Invoke-Native git @(
     'fetch', '--no-tags', 'origin',
     "+refs/heads/${SkiaSharpBaseBranch}:refs/remotes/origin/${SkiaSharpBaseBranch}"
-) $repoRoot
+)
 $parentBaseSha = Invoke-Native git @(
     'rev-parse', "refs/remotes/origin/${SkiaSharpBaseBranch}^{commit}"
-) $repoRoot
+)
 
 if ($SkiaSharpBaseBranch -match '^release/(?<version>\d+\.\d+)\.x$') {
     Write-Host "Servicing branch: $SkiaSharpBaseBranch"
@@ -114,7 +101,7 @@ if ($SkiaSharpBaseBranch -ne 'main') {
     throw "SkiaSharp base branch must be main or release/A.B.x; got $SkiaSharpBaseBranch."
 }
 
-$versions = Invoke-Native git @('show', "${parentBaseSha}:scripts/VERSIONS.txt") $repoRoot
+$versions = Invoke-Native git @('show', "${parentBaseSha}:scripts/VERSIONS.txt")
 $versionMatch = [regex]::Match(
     $versions,
     '(?m)^SkiaSharp\s+nuget\s+(?<major>\d+)\.(?<minor>\d+)\.\d+(?:[-+]\S+)?\s*$'
@@ -123,16 +110,16 @@ if (-not $versionMatch.Success) {
     throw "Cannot derive the current SkiaSharp product line from scripts/VERSIONS.txt at $parentBaseSha."
 }
 $ReleaseBranch = "release/$($versionMatch.Groups['major'].Value).$($versionMatch.Groups['minor'].Value).x"
-$null = Invoke-Native git @('check-ref-format', '--branch', $ReleaseBranch) $repoRoot
+$null = Invoke-Native git @('check-ref-format', '--branch', $ReleaseBranch)
 
 $nativeUrl = Invoke-Native git @(
     'config', '--blob', "${parentBaseSha}:.gitmodules",
     '--get', 'submodule.externals/skia.url'
-) $repoRoot
+)
 $parentRepository = Get-GitHubRepository $parentUrl
 $nativeRepository = Get-GitHubRepository $nativeUrl
 
-$treeEntry = Invoke-Native git @('ls-tree', $parentBaseSha, '--', 'externals/skia') $repoRoot
+$treeEntry = Invoke-Native git @('ls-tree', $parentBaseSha, '--', 'externals/skia')
 $treeParts = $treeEntry -split '\s+'
 if ($treeParts.Count -lt 3 -or $treeParts[1] -ne 'commit') {
     throw "$parentBaseSha does not contain the externals/skia gitlink."
