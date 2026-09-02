@@ -75,7 +75,10 @@ Stop. Continue only after the maintainer says mono/skia is merged.
 
 ## 4. Repin the existing SkiaSharp PR
 
-Use a clean worktree checked out to the resolved SkiaSharp PR head branch:
+Check whether the current checkout is clean, on the resolved SkiaSharp PR head
+branch, and matches its remote tip. Never discard or overwrite local changes.
+
+If the current checkout is suitable, use it directly:
 
 ```powershell
 pwsh .agents/skills/merge-skia-update/scripts/Update-SkiaSharpSkiaCommit.ps1 `
@@ -93,6 +96,27 @@ The default is a dry run. The script:
 Show the output. If it is correct, rerun with `-Push`. The script updates only
 `externals/skia` and the mono/skia `commitHash` in `cgmanifest.json`, commits the
 change, and pushes the existing SkiaSharp PR branch without force.
+
+If the current checkout is unsuitable, ask whether the maintainer wants to
+check out the parent PR branch or avoid a local checkout. For the no-checkout
+option, first verify the same two-parent ancestry and tree-equality conditions,
+record the exact verified mono/skia merge SHA, then trigger the existing
+workflow:
+
+```shell
+gh workflow run auto-skia-submodule-sync.yml --repo mono/SkiaSharp \
+  -f target_branch=<parent-head> \
+  -f skia_branch=<native-base>
+```
+
+The workflow opens or updates a small dependent PR targeting the existing
+SkiaSharp PR branch. Before showing that PR to the maintainer, confirm it
+changes only `externals/skia` and `cgmanifest.json` and that both files point to
+the exact verified merge SHA. Recheck that SHA's ancestry and tree equality
+against the reviewed native commit. Stop if the workflow captured any SHA
+other than the recorded verified one. Wait for the maintainer to merge the
+dependent PR manually, then verify the parent PR still points to that exact
+SHA. Do not generate the parent merge message until the dependent PR is merged.
 
 ## 5. Prepare the mono/SkiaSharp merge
 
@@ -132,6 +156,9 @@ Stop when:
 - mono/skia was not merged with a two-parent merge commit;
 - that merge does not contain the parent PR's reviewed native commit;
 - the merged and reviewed native trees differ;
-- the current worktree is not the clean, current SkiaSharp PR branch;
+- local repin was selected but the current checkout is not clean, on the parent
+  PR branch, and at its remote tip;
+- the workflow repin changes unexpected files, captures a different native SHA,
+  or its dependent PR is not merged;
 - the repin would change anything except `externals/skia` and
   `cgmanifest.json`.

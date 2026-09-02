@@ -65,13 +65,26 @@
     {
       "id": 6,
       "prompt": "mono/skia#360 is merged now. Continue with mono/SkiaSharp#5000.",
-      "expected_output": "Passes the resolved parent head and native base branches to the repin script, first without -Push and then with -Push; requires the native merged tree to equal the reviewed gitlink tree, pushes only the gitlink/cgmanifest update, then generates the parent merge message.",
+      "expected_output": "Checks whether the current checkout is clean, on the parent head, and at its remote tip. If suitable, it passes the resolved parent head and native base branches to the repin script, first without -Push and then with -Push; requires the native merged tree to equal the reviewed gitlink tree, pushes only the gitlink/cgmanifest update, then generates the parent merge message.",
       "files": [],
       "expectations": [
         "Resolves the actual mono/skia merge commit from the supplied native base branch.",
         "Stops if the native trees differ.",
         "Changes only externals/skia and cgmanifest.json.",
         "Invokes pr-commit-message for mono/SkiaSharp."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "mono/skia#360 is merged, but I do not want to check out the SkiaSharp PR branch locally.",
+      "expected_output": "Records the exact verified native merge SHA after checking its ancestry and tree equality, offers the existing auto-skia-submodule-sync workflow with the parent PR head as target_branch, verifies the dependent PR pins that exact SHA in only the two intended files, waits for it to be manually merged, then generates the parent merge message.",
+      "files": [],
+      "expectations": [
+        "Does not require or modify a local parent PR checkout.",
+        "Passes the parent PR head to target_branch and the native base to skia_branch.",
+        "Explains that the workflow opens a dependent PR rather than updating the parent branch directly.",
+        "Stops if the workflow captures a branch tip other than the exact merge SHA verified before dispatch.",
+        "Does not merge the dependent PR or either update PR."
       ]
     },
     {
