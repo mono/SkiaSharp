@@ -65,9 +65,10 @@ TRIGGER_KEYS = {
 }
 
 
-def local_workflows():
+def local_workflows(registry=GITHUB_WORKFLOWS, repository=None):
     """Entries owned by this repository (the rest live in the docs repository)."""
-    return [w for w in GITHUB_WORKFLOWS if w["repo"] == COLLECTOR.CURRENT_REPOSITORY]
+    current = repository or COLLECTOR.CURRENT_REPOSITORY
+    return [w for w in registry if w["repo"] == current]
 
 
 def load_workflow(name):
@@ -134,6 +135,23 @@ class RegistryTests(unittest.TestCase):
         seen = [(w["repo"], w["workflow"]) for w in GITHUB_WORKFLOWS]
         self.assertEqual(len(seen), len(set(seen)), "Duplicate workflow entries are tracked.")
 
+    def test_registry_resolves_both_migration_owners(self):
+        expected_count = len(GITHUB_WORKFLOWS)
+        for owner in ("mono", "dotnet"):
+            with self.subTest(owner=owner):
+                current = f"{owner}/SkiaSharp"
+                docs = f"{owner}/SkiaSharp-API-docs"
+                registry = COLLECTOR.workflow_registry(current, docs)
+                self.assertEqual(expected_count, len(registry))
+                self.assertEqual(
+                    len(local_workflows()),
+                    len(local_workflows(registry, current)),
+                )
+                self.assertEqual(
+                    3,
+                    sum(entry["repo"] == docs for entry in registry),
+                )
+
     def test_scheduled_workflows_really_have_a_cron(self):
         """A workflow tracked as scheduled but with no cron would always look idle."""
         missing = []
@@ -153,6 +171,30 @@ class SkillDocTests(unittest.TestCase):
     def _skill_text(self):
         with open(os.path.join(SKILL_DIR, "SKILL.md"), encoding="utf-8") as fh:
             return fh.read()
+
+    def _workflow_rows(self):
+        rows = []
+        for line in self._skill_text().splitlines():
+            if not line.startswith("| "):
+                continue
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            if len(cells) >= 4 and cells[1] in ("`{current}`", "`{docs}`"):
+                rows.append(cells)
+        return rows
+
+    def test_every_documented_workflow_matches_the_registry(self):
+        rows = self._workflow_rows()
+        documented = {(cells[0], cells[1]) for cells in rows}
+        expected = {
+            (
+                entry["name"],
+                "`{current}`"
+                if entry["repo"] == COLLECTOR.CURRENT_REPOSITORY
+                else "`{docs}`",
+            )
+            for entry in GITHUB_WORKFLOWS
+        }
+        self.assertEqual(expected, documented)
 
     def test_skill_table_only_names_tracked_workflows(self):
         rows = [ln for ln in self._skill_text().splitlines() if ln.startswith("| ")]
@@ -178,7 +220,7 @@ class SkillDocTests(unittest.TestCase):
         unresolved = []
         for row in rows:
             cells = [c.strip() for c in row.strip().strip("|").split("|")]
-            if len(cells) < 3 or cells[1] != COLLECTOR.CURRENT_REPOSITORY:
+            if len(cells) < 3 or cells[1] != "`{current}`":
                 continue  # header, separator, or a row owned by another repository
             name = cells[0]
             if name not in by_name:
@@ -203,6 +245,46 @@ class SkillDocTests(unittest.TestCase):
         self.assertEqual([], stale, "; ".join(stale))
         self.assertEqual([], unresolved,
                          f"SKILL.md rows name untracked workflows: {unresolved}")
+
+
+class BackportWorkflowTests(unittest.TestCase):
+    def setUp(self):
+        self.path = os.path.join(WORKFLOW_DIR, "backport.yml")
+        self.data = load_workflow("backport.yml")
+        with open(self.path, encoding="utf-8") as stream:
+            self.text = stream.read()
+
+    def test_uses_pinned_arcade_contract(self):
+        self.assertEqual("PR - Backport", self.data["name"])
+        self.assertEqual(
+            {
+                "actions": "write",
+                "contents": "write",
+                "issues": "write",
+                "pull-requests": "write",
+            },
+            self.data["permissions"],
+        )
+        job = self.data["jobs"]["backport"]
+        self.assertEqual(
+            "dotnet/arcade/.github/workflows/backport-base.yml@"
+            "306225d7029934938d109e18df390f04e366a68d",
+            job["uses"],
+        )
+        self.assertEqual(
+            {
+                "repository_owners": "mono,dotnet",
+                "pr_title_template": "[%target_branch%] %source_pr_title%",
+                "pr_description_template":
+                    "Backport of #%source_pr_number% to %target_branch%",
+                "pr_labels": "backport",
+            },
+            job["with"],
+        )
+
+    def test_uses_comment_and_cleanup_triggers_without_tibdex(self):
+        self.assertEqual({"issue_comment", "schedule"}, on_keys(self.data))
+        self.assertNotIn("tibdex/backport", self.text)
 
 
 if __name__ == "__main__":

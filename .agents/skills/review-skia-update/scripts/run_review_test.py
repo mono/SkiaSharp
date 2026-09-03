@@ -1,5 +1,7 @@
 import unittest
 from unittest.mock import patch
+import importlib.util
+from pathlib import Path
 
 from run_review import (
     extract_skia_milestone_from_cgmanifest,
@@ -7,6 +9,14 @@ from run_review import (
     extract_skia_upstream_ref_from_cgmanifest,
     recorded_commit_belongs_to_upstream,
 )
+
+_PERSIST_PATH = Path(__file__).with_name("persist-skia-review.py")
+_PERSIST_SPEC = importlib.util.spec_from_file_location(
+    "persist_skia_review", _PERSIST_PATH
+)
+PERSIST = importlib.util.module_from_spec(_PERSIST_SPEC)
+assert _PERSIST_SPEC.loader is not None
+_PERSIST_SPEC.loader.exec_module(PERSIST)
 
 
 class RunReviewTests(unittest.TestCase):
@@ -87,6 +97,14 @@ class RunReviewTests(unittest.TestCase):
                 "fork-head",
                 "upstream/chrome/m152",
             )
+        )
+
+    def test_review_output_uses_stable_skia_key(self) -> None:
+        self.assertEqual(
+            Path("output/ai/repos/github-52292286/ai-review"),
+            PERSIST.output_directory(
+                {"skiaRepositoryKey": "github-52292286"}
+            ),
         )
 
 

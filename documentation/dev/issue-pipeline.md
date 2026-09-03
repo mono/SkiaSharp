@@ -23,14 +23,22 @@ All three skills should prefer the local cache worktree when available:
 ```bash
 [ -d ".data-cache" ] || git worktree add .data-cache docs-data-cache
 git -C .data-cache pull --rebase origin docs-data-cache
-CACHE=".data-cache/repos/mono-SkiaSharp"
+REPO_KEY=$(python3 scripts/infra/repository_identity.py get repositoryKey)
+LEGACY_KEY=$(python3 scripts/infra/repository_identity.py get legacyRepositoryKeys | jq -r '.[0]')
+find_cache_file() {
+  for cache in ".data-cache/repos/$REPO_KEY" ".data-cache/repos/$LEGACY_KEY"; do
+    [ -f "$cache/$1" ] && { printf '%s\n' "$cache/$1"; return 0; }
+  done
+  return 1
+}
 ```
 
-Expected artifact locations:
+New artifacts are written under `.data-cache/repos/$REPO_KEY`; reads probe that
+stable key first and then `$LEGACY_KEY` so existing handoff history remains visible.
 
-- `"$CACHE/ai-triage/{n}.json"`
-- `"$CACHE/ai-repro/{n}.json"`
-- `"$CACHE/ai-fix/{n}.json"`
+- `find_cache_file "ai-triage/{n}.json"`
+- `find_cache_file "ai-repro/{n}.json"`
+- `find_cache_file "ai-fix/{n}.json"`
 
 ---
 
@@ -167,9 +175,11 @@ Pipeline progress per issue can be determined by checking which artifacts exist:
 
 To check pipeline status for an issue:
 ```bash
-CACHE=".data-cache/repos/mono-SkiaSharp"
 N=1234
-[ -f "$CACHE/ai-triage/$N.json" ] && echo "✅ Triaged"
-[ -f "$CACHE/ai-repro/$N.json" ] && echo "✅ Reproduced" && python3 -c "import json; print('  conclusion:', json.load(open('$CACHE/ai-repro/$N.json'))['conclusion'])"
-[ -f "$CACHE/ai-fix/$N.json" ] && echo "✅ Fix" && python3 -c "import json; print('  status:', json.load(open('$CACHE/ai-fix/$N.json'))['status']['value'])"
+TRIAGE=$(find_cache_file "ai-triage/$N.json" || true)
+REPRO=$(find_cache_file "ai-repro/$N.json" || true)
+FIX=$(find_cache_file "ai-fix/$N.json" || true)
+[ -n "$TRIAGE" ] && echo "✅ Triaged"
+[ -n "$REPRO" ] && echo "✅ Reproduced" && python3 -c "import json; print('  conclusion:', json.load(open('$REPRO'))['conclusion'])"
+[ -n "$FIX" ] && echo "✅ Fix" && python3 -c "import json; print('  status:', json.load(open('$FIX'))['status']['value'])"
 ```

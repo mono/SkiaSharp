@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 
@@ -83,6 +84,8 @@ class RepositoryIdentityTests(unittest.TestCase):
                             "publicSiteBaseUrl": "https://pages.example/SkiaSharp",
                             "repositoryKey": "github-52293126",
                             "legacyRepositoryKeys": ["legacy-SkiaSharp"],
+                            "skiaRepositoryKey": "github-52292286",
+                            "legacySkiaRepositoryKeys": ["legacy-skia"],
                         }
                     ),
                     encoding="utf-8",
@@ -106,6 +109,7 @@ class RepositoryIdentityTests(unittest.TestCase):
                 )
                 self.assertEqual("google/skia", resolved["upstreamSkiaRepository"])
                 self.assertEqual("github-52293126", resolved["repositoryKey"])
+                self.assertEqual("github-52292286", resolved["skiaRepositoryKey"])
 
     def test_manifest_requires_exactly_one_matching_skia_registration(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -187,6 +191,59 @@ class RepositoryIdentityTests(unittest.TestCase):
                 performance.read_text(encoding="utf-8"),
             )
 
+    def test_real_site_rewrite_only_changes_repository_identities(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            site = Path(directory)
+            source_files = {
+                ROOT / "documentation/site/index.html": site / "index.html",
+                ROOT / "documentation/site/404.html": site / "404.html",
+                ROOT / "documentation/site/ai/index.html": site / "ai/index.html",
+                ROOT / "documentation/site/ai/dashboard-data.json":
+                    site / "ai/dashboard-data.json",
+                ROOT / "scripts/infra/perf/templates/dashboard.html":
+                    site / "perf/index.html",
+            }
+            for source, destination in source_files.items():
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, destination)
+
+            before = {
+                path: path.read_text(encoding="utf-8")
+                for path in source_files.values()
+            }
+            IDENTITY.render_site_identity(
+                site,
+                {
+                    "repository": "dotnet/SkiaSharp",
+                    "repositoryUrl": "https://github.com/dotnet/SkiaSharp",
+                    "docsRepository": "dotnet/SkiaSharp-API-docs",
+                    "docsUrl": "https://github.com/dotnet/SkiaSharp-API-docs",
+                },
+            )
+            after = {
+                path: path.read_text(encoding="utf-8")
+                for path in source_files.values()
+            }
+
+            for path in source_files.values():
+                self.assertEqual(
+                    before[path].count("https://www.nuget.org/packages/SkiaSharp"),
+                    after[path].count("https://www.nuget.org/packages/SkiaSharp"),
+                )
+                self.assertEqual(
+                    before[path].count("https://learn.microsoft.com/"),
+                    after[path].count("https://learn.microsoft.com/"),
+                )
+            self.assertEqual(before[site / "404.html"], after[site / "404.html"])
+            self.assertIn(
+                "https://raw.githubusercontent.com/dotnet/SkiaSharp/aw-data/",
+                after[site / "perf/index.html"],
+            )
+            self.assertNotIn(
+                "https://www.nuget.org/dotnet/SkiaSharp",
+                "\n".join(after.values()),
+            )
+
     def test_identity_scan_rejects_new_executable_old_owner_literal(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -218,6 +275,27 @@ class RepositoryIdentityTests(unittest.TestCase):
                 ],
                 IDENTITY.scan_identity_drift(root),
             )
+
+    def test_identity_scan_catches_all_legacy_identity_shapes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess = __import__("subprocess")
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            script = root / "scripts" / "new-tool.py"
+            script.parent.mkdir()
+            script.write_text(
+                "\n".join(
+                    (
+                        'url = "https://github.com/orgs/mono/projects/1"',
+                        'cache = "repos/mono-SkiaSharp"',
+                        'skia_cache = "repos/mono-skia"',
+                        'owners = "repository_owners: mono,dotnet"',
+                    )
+                ),
+                encoding="utf-8",
+            )
+            violations = IDENTITY.scan_identity_drift(root)
+            self.assertEqual(4, len(violations))
 
 
 if __name__ == "__main__":

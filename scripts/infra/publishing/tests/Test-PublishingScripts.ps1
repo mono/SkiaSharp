@@ -140,7 +140,22 @@ foreach ($productionFile in $productionFiles) {
 }
 
 # Exercises shared release identities, pagination, mutation safety, and repository versions.
-Assert-Equal 'https://github.com/mono/skia.git' $ReleaseSkiaRemote `
+$identityConfig = Get-Content (Join-Path $repositoryRoot 'scripts/infra/repository-identity.json') -Raw |
+    ConvertFrom-Json
+$configuredSkiaUrl = (& git -C $repositoryRoot config -f .gitmodules --get submodule.externals/skia.url).Trim()
+$configuredSkiaRepository = [regex]::Match(
+    $configuredSkiaUrl,
+    '(?i)github\.com[/:](?<repository>[^/:\s]+/[^/\s]+?)(?:\.git)?$'
+).Groups['repository'].Value
+$expectedSkiaRemote = "https://github.com/$configuredSkiaRepository.git"
+$expectedCurrentRepository = if ($env:GITHUB_REPOSITORY) {
+    $env:GITHUB_REPOSITORY
+} else {
+    $identityConfig.offlineRepository
+}
+Assert-Equal $expectedCurrentRepository $ReleaseRepository `
+    'The current repository did not follow runtime context or the configured fallback.'
+Assert-Equal $expectedSkiaRemote $ReleaseSkiaRemote `
     'The paired Skia remote was not loaded from .gitmodules.'
 $previousRepository = $env:GITHUB_REPOSITORY
 try {
@@ -159,9 +174,9 @@ try {
 } finally {
     $env:GITHUB_REPOSITORY = $previousRepository
 }
-Assert-Equal 'mono/SkiaSharp|https://github.com/mono/skia.git' $offlineIdentity.Trim() `
+Assert-Equal "$($identityConfig.offlineRepository)|$expectedSkiaRemote" $offlineIdentity.Trim() `
     'The offline repository fallback was not loaded.'
-Assert-Equal 'dotnet/SkiaSharp|https://github.com/mono/skia.git' $runtimeIdentity.Trim() `
+Assert-Equal "dotnet/SkiaSharp|$expectedSkiaRemote" $runtimeIdentity.Trim() `
     'The runtime repository did not override only the current repository identity.'
 $preview = Get-ReleaseIdentity '4.152.0-preview.1.26426.14'
 Assert-Equal 'release/4.152.0-preview.1' $preview.Branch 'Preview branch identity was incorrect.'

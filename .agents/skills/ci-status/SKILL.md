@@ -60,40 +60,44 @@ Tests consumes the folder-qualified pipeline resource
 managed compilation, real signing, BAR registration/validation, and Arcade's
 standard Darc/Maestro stages.
 
-### GitHub Actions (mono/SkiaSharp and mono/SkiaSharp-API-docs)
+### GitHub Actions
+
+`{current}` means the repository resolved from the explicit CLI option, GitHub
+context, or shared offline fallback. `{docs}` means the API-docs repository
+resolved from `.gitmodules`.
 
 | Workflow | Repository | Trigger | Why Track |
 |----------|------------|---------|-----------|
-| Pages - Deploy | mono/SkiaSharp | Push/PR to main | Docs site broken if failing |
-| Pages - Go Live! | mono/SkiaSharp | Workflow dispatch | Docs don't publish if failing |
-| Pages - PR Staging - Cleanup | mono/SkiaSharp | PR close events | Stale staging deploys accumulate |
-| Pages - PR Staging - Sweep Stale | mono/SkiaSharp | Daily (06:00 UTC) | Stale staging deploys accumulate |
-| Sync - Samples | mono/SkiaSharp | Push/PR to `samples/` | Sample projects broken if failing |
-| Tests - Binding Generation Determinism | mono/SkiaSharp | Push/PR | Generated bindings drift undetected |
-| Sync - Docs Submodule | mono/SkiaSharp | Daily (10:00 UTC) | API docs get out of sync |
-| Sync - Skia Submodule | mono/SkiaSharp | Daily (10:30 UTC) | Skia submodule pin goes stale |
-| Sync - Release Notes & API Diffs | mono/SkiaSharp | Push to main + daily | Release notes stop auto-updating |
-| Sync - Skia Upstream | mono/SkiaSharp | Every 6h | Upstream tracking breaks |
-| Fixer - Memory Leak | mono/SkiaSharp | Every 12h | Leak-hunting automation stops |
-| Fixer - Performance | mono/SkiaSharp | Every 12h | Perf-hunting automation stops |
-| Sync - Issue Triage | mono/SkiaSharp | Daily | Triage automation stops |
-| Sync - Issue Template Versions | mono/SkiaSharp | Daily (09:00 UTC) | Bug template advertises stale versions |
-| Sync - Agentic Data | mono/SkiaSharp | Workflow run events | AI workflow data lost |
-| Track - Artifact Sizes | mono/SkiaSharp | Nightly + PR sweep | Package size tracking/PR reports stop |
-| Track - Benchmarks | mono/SkiaSharp | Every 6h | Benchmark trend tracking stops |
-| Release - Prepare | mono/SkiaSharp | Workflow dispatch | Release branches cannot be cut |
-| Release - Finish | mono/SkiaSharp | Workflow dispatch | Releases cannot be finalized |
-| Release - Milestones | mono/SkiaSharp | Workflow dispatch | Milestone reconciliation stops |
-| Update GitHub Release summaries | mono/SkiaSharp | Workflow dispatch | Release bodies go stale |
-| Release - Tooling Tests | mono/SkiaSharp | Push/PR to release tooling | Release scripts regress unnoticed |
-| Automation - Tooling Tests | mono/SkiaSharp | Push/PR to automation tooling | Automation scripts regress unnoticed |
-| PR - Backport | mono/SkiaSharp | `/backport to <branch>` PR comment | Cherry-picks to release branches fail |
-| PR - Rebase | mono/SkiaSharp | PR comment | PR rebase automation broken |
-| PR - Artifacts Comment | mono/SkiaSharp | Workflow run events | Build links not posted to PRs |
-| Merge Message | mono/SkiaSharp | PR comment events | Merge commit messages not drafted |
-| Auto API Docs Writer | mono/SkiaSharp-API-docs | Scheduled/dispatch | XML docs stop being written |
-| Automerge Docs | mono/SkiaSharp-API-docs | PR events | Doc PRs won't auto-merge |
-| Go Live | mono/SkiaSharp-API-docs | Workflow dispatch | Docs don't publish to live |
+| Pages - Deploy | `{current}` | Push/PR to main | Docs site broken if failing |
+| Pages - Go Live! | `{current}` | Workflow dispatch | Docs don't publish if failing |
+| Pages - PR Staging - Cleanup | `{current}` | PR close events | Stale staging deploys accumulate |
+| Pages - PR Staging - Sweep Stale | `{current}` | Daily (06:00 UTC) | Stale staging deploys accumulate |
+| Sync - Samples | `{current}` | Push/PR to `samples/` | Sample projects broken if failing |
+| Tests - Binding Generation Determinism | `{current}` | Push/PR | Generated bindings drift undetected |
+| Sync - Docs Submodule | `{current}` | Daily (10:00 UTC) | API docs get out of sync |
+| Sync - Skia Submodule | `{current}` | Daily (10:30 UTC) | Skia submodule pin goes stale |
+| Sync - Release Notes & API Diffs | `{current}` | Push to main + daily | Release notes stop auto-updating |
+| Sync - Skia Upstream | `{current}` | Every 6h | Upstream tracking breaks |
+| Fixer - Memory Leak | `{current}` | Every 12h | Leak-hunting automation stops |
+| Fixer - Performance | `{current}` | Every 12h | Perf-hunting automation stops |
+| Sync - Issue Triage | `{current}` | Daily | Triage automation stops |
+| Sync - Issue Template Versions | `{current}` | Daily (09:00 UTC) | Bug template advertises stale versions |
+| Sync - Agentic Data | `{current}` | Workflow run events | AI workflow data lost |
+| Track - Artifact Sizes | `{current}` | Nightly + PR sweep | Package size tracking/PR reports stop |
+| Track - Benchmarks | `{current}` | Every 6h | Benchmark trend tracking stops |
+| Release - Prepare | `{current}` | Workflow dispatch | Release branches cannot be cut |
+| Release - Finish | `{current}` | Workflow dispatch | Releases cannot be finalized |
+| Release - Milestones | `{current}` | Workflow dispatch | Milestone reconciliation stops |
+| Update GitHub Release summaries | `{current}` | Workflow dispatch | Release bodies go stale |
+| Release - Tooling Tests | `{current}` | Push/PR to release tooling | Release scripts regress unnoticed |
+| Automation - Tooling Tests | `{current}` | Push/PR to automation tooling | Automation scripts regress unnoticed |
+| PR - Backport | `{current}` | `/backport to <branch>` PR comment | Cherry-picks to release branches fail |
+| PR - Rebase | `{current}` | PR comment | PR rebase automation broken |
+| PR - Artifacts Comment | `{current}` | Workflow run events | Build links not posted to PRs |
+| Merge Message | `{current}` | PR comment events | Merge commit messages not drafted |
+| Auto API Docs Writer | `{docs}` | Scheduled/dispatch | XML docs stop being written |
+| Automerge Docs | `{docs}` | PR events | Doc PRs won't auto-merge |
+| Go Live | `{docs}` | Workflow dispatch | Docs don't publish to live |
 
 > Schedules above are deliberately imprecise for gh-aw generated `*.lock.yml` workflows
 > ("Every 6h", "Daily"). The compiler re-jitters their cron on every upgrade, so a literal

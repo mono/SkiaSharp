@@ -10,6 +10,24 @@ import sys
 from pathlib import Path
 
 
+def repository_identity():
+    repo_root = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    infra_dir = Path(repo_root) / "scripts" / "infra"
+    sys.path.insert(0, str(infra_dir))
+    from repository_identity import resolve_identity
+
+    return resolve_identity(Path(repo_root))
+
+
+def output_directory(identity):
+    return Path("output/ai/repos") / identity["skiaRepositoryKey"] / "ai-review"
+
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: python3 persist-skia-review.py <path-to-json>")
@@ -25,7 +43,8 @@ def main():
         print(f"❌ Cannot extract PR number from filename: {path.name}")
         sys.exit(2)
 
-    dest_dir = Path("output/ai/repos/mono-skia/ai-review")
+    identity = repository_identity()
+    dest_dir = output_directory(identity)
     dest_dir.mkdir(parents=True, exist_ok=True)
 
     # Validate before persisting

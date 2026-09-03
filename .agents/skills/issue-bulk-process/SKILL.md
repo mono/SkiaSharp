@@ -31,10 +31,13 @@ Parse the user's message to determine the issue list:
 ### 1. Detect current repository
 
 ```bash
-gh repo view --json owner,name -q '"\(.owner.login)/\(.name)"'
+REPOSITORY=$(python3 scripts/infra/repository_identity.py get repository)
+REPO_KEY=$(python3 scripts/infra/repository_identity.py get repositoryKey)
+LEGACY_KEY=$(python3 scripts/infra/repository_identity.py get legacyRepositoryKeys | jq -r '.[0]')
 ```
 
-Store the `{owner}` and `{repo}` for use in all subsequent phases.
+Use `$REPOSITORY` for GitHub calls. The stable and legacy keys are both probed
+for existing cache artifacts so migration does not split prior results.
 
 ### 2. Resolve issue list
 
@@ -71,11 +74,15 @@ Extract issue numbers from the output. Present the list to the user and confirm 
 Before launching triage/repro agents, check for existing result files:
 
 ```bash
-# Check for existing triage results
-ls .data-cache/repos/{owner}-{repo}/ai-triage/{number}.json 2>/dev/null
+find_cache_file() {
+  for cache in ".data-cache/repos/$REPO_KEY" ".data-cache/repos/$LEGACY_KEY"; do
+    [ -f "$cache/$1" ] && { printf '%s\n' "$cache/$1"; return 0; }
+  done
+  return 1
+}
 
-# Check for existing repro results
-ls .data-cache/repos/{owner}-{repo}/ai-repro/{number}.json 2>/dev/null
+find_cache_file "ai-triage/{number}.json"
+find_cache_file "ai-repro/{number}.json"
 ```
 
 - **Default behavior:** Skip issues that already have a triage JSON file. Skip reproduction for

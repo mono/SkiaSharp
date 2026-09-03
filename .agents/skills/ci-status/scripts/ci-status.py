@@ -71,7 +71,7 @@ ICONS = {
 # trigger: "push" = push/PR, "schedule" = cron, "dispatch" = manual, "event" = PR/issue events
 # branches: (optional) override which branches to query for branch-scoped workflows.
 #           If omitted, uses the full set (main + release/*).
-GITHUB_WORKFLOWS = [
+_GITHUB_WORKFLOWS = [
     # Current repository — Build & Docs (push-triggered, main + release/*)
     {"repo": CURRENT_REPOSITORY, "workflow": "build-site.yml", "name": "Pages - Deploy", "scope": "branch", "trigger": "push"},
     {"repo": CURRENT_REPOSITORY, "workflow": "samples.yml", "name": "Sync - Samples", "scope": "branch", "trigger": "push"},
@@ -113,13 +113,13 @@ GITHUB_WORKFLOWS = [
 ]
 
 
-def configure_workflow_repositories(repository: str, docs_repository: str) -> None:
-    """Apply explicit CLI repository overrides without changing registry structure."""
-
-    global GITHUB_WORKFLOWS
+def workflow_registry(
+    repository: str = CURRENT_REPOSITORY,
+    docs_repository: str = DOCS_REPOSITORY,
+) -> list[dict]:
     current = normalize_github_repository(repository)
     docs = normalize_github_repository(docs_repository)
-    GITHUB_WORKFLOWS = [
+    return [
         {
             **entry,
             "repo": (
@@ -128,8 +128,18 @@ def configure_workflow_repositories(repository: str, docs_repository: str) -> No
                 else docs if entry["repo"] == DOCS_REPOSITORY else entry["repo"]
             ),
         }
-        for entry in GITHUB_WORKFLOWS
+        for entry in _GITHUB_WORKFLOWS
     ]
+
+
+GITHUB_WORKFLOWS = workflow_registry()
+
+
+def configure_workflow_repositories(repository: str, docs_repository: str) -> None:
+    """Apply explicit CLI repository overrides without changing registry structure."""
+
+    global GITHUB_WORKFLOWS
+    GITHUB_WORKFLOWS = workflow_registry(repository, docs_repository)
 
 
 def az(args: list[str]) -> str:

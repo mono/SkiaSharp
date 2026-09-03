@@ -16,6 +16,9 @@ on:
     paths:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
+      - ".agents/skills/review-skia-update/**"
+      - ".agents/skills/issue-bulk-process/**"
+      - "documentation/dev/issue-pipeline.md"
       - ".github/scripts/**"
       - "scripts/infra/repository-identity.json"
       - "scripts/infra/repository_identity.py"
@@ -25,6 +28,7 @@ on:
       - "binding/**/PACKAGE-README.md"
       - "documentation/site/**"
       - "scripts/infra/docs/generate-ai-dashboard.py"
+      - "scripts/infra/caching/repo-deps.json"
       # Any workflow edit, so the registry test re-checks its tracked list. '*.yml' already
       # covers the generated '*.lock.yml' files.
       - ".github/workflows/*.yml"
@@ -33,6 +37,9 @@ on:
     paths:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
+      - ".agents/skills/review-skia-update/**"
+      - ".agents/skills/issue-bulk-process/**"
+      - "documentation/dev/issue-pipeline.md"
       - ".github/scripts/**"
       - "scripts/infra/repository-identity.json"
       - "scripts/infra/repository_identity.py"
@@ -42,6 +49,7 @@ on:
       - "binding/**/PACKAGE-README.md"
       - "documentation/site/**"
       - "scripts/infra/docs/generate-ai-dashboard.py"
+      - "scripts/infra/caching/repo-deps.json"
       - ".github/workflows/*.yml"
   workflow_dispatch:
 
@@ -92,6 +100,10 @@ jobs:
             echo "::endgroup::"
           done
 
+      - name: Run review-skia tooling tests
+        working-directory: .agents/skills/review-skia-update/scripts
+        run: python3 -m unittest discover -p "*_test.py" -v
+
       - name: Run skia-sync work detector tests
         run: bash .github/scripts/tests/skia-sync-detect.test.sh
 
@@ -100,15 +112,16 @@ jobs:
           python3 -m unittest scripts/infra/tests/test_repository_identity.py -v
           python3 scripts/infra/repository_identity.py validate
           python3 scripts/infra/repository_identity.py scan
+          python3 -m py_compile \
+            .agents/skills/review-skia-update/scripts/persist-skia-review.py
 
       - name: Validate portable package README generation
-        env:
-          GITHUB_REPOSITORY: dotnet/SkiaSharp
         run: |
           dotnet msbuild binding/SkiaSharp/SkiaSharp.csproj \
             -t:_GeneratePackageReadmeFile \
             -p:TargetFramework=net10.0 \
             -p:PackageDescription=Validation \
+            -p:SkiaSharpRepositoryUrl=https://github.com/dotnet/SkiaSharp \
             -v:minimal
           readme=binding/SkiaSharp/obj/Debug/net10.0/README.md
           grep -Fq "https://github.com/dotnet/SkiaSharp/issues" "$readme"
@@ -136,3 +149,6 @@ jobs:
             $errors | Format-List
             exit 1
           }
+
+      - name: Validate cache dependency coverage
+        run: python3 scripts/infra/caching/repo-deps.py validate

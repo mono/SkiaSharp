@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import configparser
+import fnmatch
 import json
 import os
 import re
@@ -26,6 +27,9 @@ _URL_PATTERNS = (
 )
 _LEGACY_IDENTITY_RE = re.compile(
     r"mono/(?:SkiaSharp(?:-API-docs)?|skia)|"
+    r"\bmono-(?:SkiaSharp|skia)\b|"
+    r"github\.com/orgs/mono/|"
+    r"repository_owners\s*:\s*mono(?:,|\b)|"
     r"github\.repository_owner\s*==\s*['\"]mono['\"]|"
     r"github\.repository\s*==\s*['\"]mono/SkiaSharp['\"]"
 )
@@ -48,6 +52,68 @@ _TRANSITION_WORKFLOWS = {
     ".github/workflows/merge-message.md",
     ".github/workflows/performance-fixer.md",
 }
+_LEGACY_LITERAL_ALLOWLIST = (
+    (
+        "scripts/infra/repository-identity.json",
+        re.compile(r"mono/(?:SkiaSharp|skia)|mono-(?:SkiaSharp|skia)"),
+        "central offline fallback and retained legacy cache aliases",
+    ),
+    (
+        ".github/workflows/auto-triage.md",
+        re.compile(r"github\.com/orgs/mono/projects/1"),
+        "current backlog project remains live until transfer infrastructure is ready",
+    ),
+    (
+        ".github/workflows/auto-triage.lock.yml",
+        re.compile(r"github\.com/orgs/mono/projects/1"),
+        "generated form of the current backlog project transition value",
+    ),
+    (
+        ".github/workflows/backport.yml",
+        re.compile(r"repository_owners\s*:\s*mono,dotnet"),
+        "temporary trusted-owner transition allowlist",
+    ),
+    (
+        ".agents/skills/ci-status/scripts/ci-status.py",
+        re.compile(r"mono-SkiaSharp"),
+        "Azure pipeline 345 name is intentionally unchanged",
+    ),
+    (
+        ".agents/skills/ci-status/SKILL.md",
+        re.compile(r"mono-SkiaSharp"),
+        "documents the intentionally unchanged Azure pipeline 345 name",
+    ),
+    (
+        ".github/workflows/track-artifact-sizes.yml",
+        re.compile(r"mono-SkiaSharp"),
+        "Azure Pipelines check name is intentionally unchanged",
+    ),
+    (
+        "scripts/get-skiasharp-pr.*",
+        re.compile(r"mono-SkiaSharp"),
+        "Azure pipeline 345 name is intentionally unchanged",
+    ),
+    (
+        ".github/workflows/*.lock.yml",
+        re.compile(r"mono/(?:SkiaSharp|skia)|mono-(?:SkiaSharp|skia)"),
+        "generated workflow; its source transition value is reviewed separately",
+    ),
+    (
+        ".github/scripts/tests/**",
+        re.compile(r"mono/(?:SkiaSharp|skia)|mono-(?:SkiaSharp|skia)"),
+        "migration fixture exercises the legacy identity",
+    ),
+    (
+        "scripts/infra/**/tests/**",
+        re.compile(r"mono/(?:SkiaSharp|skia)|mono-(?:SkiaSharp|skia)"),
+        "migration or historical fixture",
+    ),
+    (
+        ".agents/skills/release-notes/samples/**",
+        re.compile(r"mono/(?:SkiaSharp|skia)"),
+        "immutable historical release sample",
+    ),
+)
 
 
 class IdentityError(RuntimeError):
@@ -68,6 +134,8 @@ def load_config(path: Path = CONFIG_PATH) -> dict:
         "publicSiteBaseUrl": str,
         "repositoryKey": str,
         "legacyRepositoryKeys": list,
+        "skiaRepositoryKey": str,
+        "legacySkiaRepositoryKeys": list,
     }
     for key, expected_type in required.items():
         if not isinstance(value.get(key), expected_type):
@@ -145,6 +213,8 @@ def resolve_identity(
         "repositoryGitUrl": github_url(current, git=True),
         "repositoryKey": config["repositoryKey"],
         "legacyRepositoryKeys": list(config["legacyRepositoryKeys"]),
+        "skiaRepositoryKey": config["skiaRepositoryKey"],
+        "legacySkiaRepositoryKeys": list(config["legacySkiaRepositoryKeys"]),
         "skiaRepository": skia,
         "skiaUrl": github_url(skia),
         "skiaGitUrl": github_url(skia, git=True),
@@ -197,11 +267,17 @@ def render_site_identity(directory: Path, identity: dict) -> int:
             f"https://raw.githubusercontent.com/{identity['repository']}/aw-data/",
         ),
         (
-            re.compile(r"\b[^/\s\"'<>]+/SkiaSharp-API-docs\b"),
+            re.compile(
+                r"(?<![/A-Za-z0-9_.-])"
+                r"[A-Za-z0-9_.-]+/SkiaSharp-API-docs\b"
+            ),
             identity["docsRepository"],
         ),
         (
-            re.compile(r"\b[^/\s\"'<>]+/SkiaSharp(?!-API-docs)\b"),
+            re.compile(
+                r"(?<![/A-Za-z0-9_.-])"
+                r"[A-Za-z0-9_.-]+/SkiaSharp(?!-API-docs)\b"
+            ),
             identity["repository"],
         ),
     )
@@ -237,7 +313,12 @@ def _is_scanned_path(relative: str) -> bool:
     )
 
 
-def _is_allowed_legacy_literal(relative: str, line: str, content: str) -> bool:
+def _legacy_allowlist_reason(
+    relative: str, line: str, content: str
+) -> str | None:
+    for path_pattern, line_pattern, reason in _LEGACY_LITERAL_ALLOWLIST:
+        if fnmatch.fnmatch(relative, path_pattern) and line_pattern.search(line):
+            return reason
     if (
         relative.endswith(".md")
         and not relative.startswith(".github/workflows/")
@@ -247,7 +328,7 @@ def _is_allowed_legacy_literal(relative: str, line: str, content: str) -> bool:
             line,
         )
     ):
-        return True
+        return "non-executable narrative terminology"
     if relative in {
         "scripts/infra/repository-identity.json",
         "scripts/infra/repository_identity.py",
@@ -255,22 +336,22 @@ def _is_allowed_legacy_literal(relative: str, line: str, content: str) -> bool:
         "scripts/get-skiasharp-pr.sh",
         "scripts/get-skiasharp-pr.ps1",
     }:
-        return True
+        return "central identity implementation or current bootstrap URL"
     if relative.startswith((
         ".github/ISSUE_TEMPLATE/",
         ".agents/skills/release-notes/samples/",
     )):
-        return True
+        return "current public redirect or historical sample"
     if relative == ".github/pull_request_template.md":
-        return True
+        return "contributor template retains live redirect URLs until cutover"
     if "/tests/" in relative or relative.endswith(("_test.py", ".test.sh")):
-        return True
+        return "test fixture"
     if "/references/" in relative and any(
         marker in relative for marker in ("examples", "schema")
     ):
-        return True
+        return "historical example or schema identifier"
     if relative.endswith(".lock.yml"):
-        return True
+        return "generated workflow"
     if relative in _TRANSITION_WORKFLOWS:
         pairs = (
             ("mono/skiasharp", "dotnet/skiasharp"),
@@ -278,14 +359,14 @@ def _is_allowed_legacy_literal(relative: str, line: str, content: str) -> bool:
         )
         lowered = content.lower()
         if any(old in line.lower() and new in lowered for old, new in pairs):
-            return True
+            return "temporary dual-owner gh-aw transition allowlist"
     if relative == ".agents/skills/ci-status/scripts/ci-status.py" and "mono-SkiaSharp" in line:
-        return True
+        return "Azure pipeline 345 name is intentionally unchanged"
     if relative == ".github/workflows/track-artifact-sizes.yml" and "mono-SkiaSharp" in line:
-        return True
+        return "Azure Pipelines check name is intentionally unchanged"
     if line.lstrip().startswith("#") and "https://github.com/" not in line:
-        return True
-    return False
+        return "non-executable comment"
+    return None
 
 
 def scan_identity_drift(root: Path) -> list[str]:
@@ -320,7 +401,7 @@ def scan_identity_drift(root: Path) -> list[str]:
         for number, line in enumerate(content.splitlines(), 1):
             if not _LEGACY_IDENTITY_RE.search(line):
                 continue
-            if _is_allowed_legacy_literal(relative, line, content):
+            if _legacy_allowlist_reason(relative, line, content):
                 continue
             violations.append(f"{relative}:{number}: {line.strip()}")
     return violations

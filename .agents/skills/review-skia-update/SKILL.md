@@ -122,7 +122,7 @@ Copy the validated JSON to `output/ai/` for collection.
 python3 .agents/skills/review-skia-update/scripts/persist-skia-review.py {output_dir}/{pr_number}.json
 ```
 
-This copies the JSON to `output/ai/repos/mono-skia/ai-review/` and generates an HTML report
+This copies the JSON to `output/ai/repos/<stable-skia-key>/ai-review/` and generates an HTML report
 alongside it. The HTML is a self-contained file (Bootstrap 5 + diff2html) suitable for attaching
 to a PR/issue or uploading as a gist.
 
@@ -145,7 +145,8 @@ After presenting the summary, ask the user if they'd like to open the HTML repor
 to review the full contents (diffs, recommendations, dependency table, etc.). If yes:
 
 ```bash
-open output/ai/repos/mono-skia/ai-review/{pr_number}.html  # macOS
+SKIA_KEY=$(python3 scripts/infra/repository_identity.py get skiaRepositoryKey)
+open "output/ai/repos/$SKIA_KEY/ai-review/{pr_number}.html"  # macOS
 # or: xdg-open ... (Linux) / start ... (Windows)
 ```
 
