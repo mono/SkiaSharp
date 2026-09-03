@@ -78,6 +78,11 @@ function Format-ScheduleDate([datetime] $Date) {
     return $Date.ToString('ddd, MMM dd, yyyy', [Globalization.CultureInfo]::InvariantCulture)
 }
 
+# Uses end-of-day UTC so GitHub preserves the intended calendar date when normalizing milestone deadlines.
+function Format-GitHubDueOn([datetime] $Date) {
+    return $Date.ToString('yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture) + 'T23:59:59Z'
+}
+
 # Normalizes GitHub string or DateTime values to an ISO calendar date.
 function ConvertTo-IsoDate([object] $Value) {
     if ($null -eq $Value -or [string]::IsNullOrWhiteSpace([string] $Value)) {
@@ -134,7 +139,7 @@ function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int
         [pscustomobject] @{
             Title = "$base-preview.1"
             Due = $beta
-            DueOn = $beta.ToString('yyyy-MM-dd') + 'T00:00:00Z'
+            DueOn = Format-GitHubDueOn $beta
             Description = (
                 "Skia m$Milestone preview.1 $separator Start $(Format-ScheduleDate $branch) $separator " +
                 'Merge Skia sync PR and ship preview.')
@@ -142,7 +147,7 @@ function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int
         [pscustomobject] @{
             Title = "$base-preview.2"
             Due = $earlyStable
-            DueOn = $earlyStable.ToString('yyyy-MM-dd') + 'T00:00:00Z'
+            DueOn = Format-GitHubDueOn $earlyStable
             Description = (
                 "Skia m$Milestone preview.2 $separator Start $(Format-ScheduleDate $earlyCut) $separator " +
                 'Bug fixes and API additions from preview.1 feedback.')
@@ -150,7 +155,7 @@ function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int
         [pscustomobject] @{
             Title = "$base-rc.1"
             Due = $stableCut
-            DueOn = $stableCut.ToString('yyyy-MM-dd') + 'T00:00:00Z'
+            DueOn = Format-GitHubDueOn $stableCut
             Description = (
                 "Skia m$Milestone RC $separator Start $(Format-ScheduleDate $earlyStable) $separator " +
                 'Critical bug fixes only, no new features.')
@@ -158,7 +163,7 @@ function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int
         [pscustomobject] @{
             Title = $base
             Due = $stable
-            DueOn = $stable.ToString('yyyy-MM-dd') + 'T00:00:00Z'
+            DueOn = Format-GitHubDueOn $stable
             Description = (
                 "Skia m$Milestone stable $separator Start $(Format-ScheduleDate $stableCut) $separator " +
                 'Ship to NuGet.org, tag and create GitHub Release.')

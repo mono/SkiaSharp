@@ -177,8 +177,9 @@ symbol blobs. `eng/SignCheckExclusionsFile.txt` marks transport packages
 
 Official BARs publish one branch-versioned transport package per ID.
 
-See [Releasing](releasing.md) for release branches, BAR selection, testing, and
-NuGet.org publication.
+See the [Release Guide](releasing.md) for the maintainer workflow and
+[Release process internals](release-process-internals.md) for branch, BAR,
+signing, testing, and publication mechanics.
 
 ---
 

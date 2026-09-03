@@ -130,11 +130,11 @@ Assert-Equal @(
     '4.152.0'
 ) @($desired.Title) 'Chromium stages were not mapped to release milestones.'
 Assert-Equal @(
-    '2026-08-04T00:00:00Z',
-    '2026-08-12T00:00:00Z',
-    '2026-08-18T00:00:00Z',
-    '2026-08-25T00:00:00Z'
-) @($desired.DueOn) 'Chromium schedule dates were not mapped to the expected stages.'
+    '2026-08-04T23:59:59Z',
+    '2026-08-12T23:59:59Z',
+    '2026-08-18T23:59:59Z',
+    '2026-08-25T23:59:59Z'
+) @($desired.DueOn) 'Chromium schedule dates were not mapped to end-of-day GitHub deadlines.'
 Assert-True ($desired[0].Description.Contains([char] 0x00b7)) 'Milestone descriptions lost their separators.'
 
 $matchingSchedule = @{

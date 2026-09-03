@@ -64,7 +64,8 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 ### Releasing
 | Document | Description |
 |----------|-------------|
-| [releasing.md](releasing.md) | Complete release guide: branching, workflow, checklist |
+| [releasing.md](releasing.md) | Maintainer runbook: workflows, inputs, approvals, and release checklist |
+| [release-process-internals.md](release-process-internals.md) | Release automation architecture, state, invariants, and implementation map |
 | [versioning.md](versioning.md) | Version numbering scheme |
 
 ### Reference
