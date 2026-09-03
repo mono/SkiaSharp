@@ -176,6 +176,7 @@ class SkillDocTests(unittest.TestCase):
         by_name = {w["name"]: w["workflow"] for w in local_workflows()}
         stale = []
         unresolved = []
+        compared = 0
         for row in rows:
             cells = [c.strip() for c in row.strip().strip("|").split("|")]
             if len(cells) < 3 or cells[1] != "mono/SkiaSharp":
@@ -192,10 +193,12 @@ class SkillDocTests(unittest.TestCase):
             trigger_cell = cells[2]
 
             for literal in re.findall(r"`([^`]*\*[^`]*)`", trigger_cell):
+                compared += 1
                 if literal not in crons:
                     stale.append(f"{name}: documents cron {literal!r}, file has {crons}")
 
             for hh, mm in re.findall(r"\b(\d{1,2}):(\d{2}) UTC", trigger_cell):
+                compared += 1
                 actual = {(c.split()[1], c.split()[0]) for c in crons if len(c.split()) >= 2}
                 if (str(int(hh)), str(int(mm))) not in actual:
                     stale.append(f"{name}: documents {hh}:{mm} UTC, file has {crons}")
@@ -203,6 +206,16 @@ class SkillDocTests(unittest.TestCase):
         self.assertEqual([], stale, "; ".join(stale))
         self.assertEqual([], unresolved,
                          f"SKILL.md rows name untracked workflows: {unresolved}")
+        # A pass here means nothing unless at least one schedule was actually compared.
+        # Strip every documented time from the table and the loops above simply never run,
+        # leaving a green test that checks nothing — the same silent-pass shape this suite
+        # exists to catch. Hand-written workflows must keep their exact time documented;
+        # only gh-aw locks are allowed to be imprecise.
+        self.assertGreater(
+            compared, 0,
+            "No documented schedule was compared, so this test asserted nothing. "
+            "At least one SKILL.md row must state an exact 'HH:MM UTC' or literal cron "
+            "for a hand-written (non-lock) workflow.")
 
 
 if __name__ == "__main__":
