@@ -140,7 +140,7 @@ select **Run workflow**, and choose `main` as the workflow branch.
 
 | Input | Value |
 | --- | --- |
-| `version` | Stable: `X.Y.Z[.F]`. Prerelease: either `X.Y.Z[.F]-preview.N` / `-rc.N`, or the exact public version with its appended `.BUILD` |
+| `version` | Stable: `X.Y.Z[.F]`.<br>Prerelease: either `X.Y.Z[.F]-preview.N` / `-rc.N`, or the exact public version with its appended `.BUILD` |
 | `push` | Leave unchecked for the read-only plan; check only after reviewing it |
 
 A short prerelease identity and an exact public prerelease version are equally
