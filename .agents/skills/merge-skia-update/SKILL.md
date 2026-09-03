@@ -143,8 +143,8 @@ and body to the maintainer.
 
 Tell the maintainer to merge it manually using the repository's normal merge
 method. Do not wait for another PR CI run: the repin script proved that the
-merged mono/skia tree is identical to the reviewed PR tree. Main CI validates
-the resulting merge.
+merged mono/skia tree is identical to the reviewed PR tree. CI on the resolved
+parent base branch validates the resulting merge.
 
 Stop. Continue only after the maintainer says mono/SkiaSharp is merged.
 
@@ -153,12 +153,12 @@ Stop. Continue only after the maintainer says mono/SkiaSharp is merged.
 Confirm:
 
 - both PRs are merged;
-- mono/SkiaSharp main points its gitlink and cgmanifest at the actual mono/skia
-  merge commit;
-- main CI has started for the resulting SkiaSharp commit.
+- the resolved mono/SkiaSharp parent base branch points its gitlink and
+  cgmanifest at the actual mono/skia merge commit;
+- CI has started on that parent base branch for the resulting SkiaSharp commit.
 
 Report both merged SHAs and the preserved release branch, if created. Do not
-wait for main CI to finish.
+wait for the parent base branch CI to finish.
 
 ## Stop conditions
 

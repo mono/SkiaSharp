@@ -128,12 +128,12 @@
     {
       "id": 8,
       "prompt": "The repin is pushed. Wait for all PR CI before giving me the SkiaSharp merge message.",
-      "expected_output": "Generates the SkiaSharp merge message without waiting for another PR CI run because tree equality proved the native content unchanged; it notes that main CI validates the resulting merge.",
+      "expected_output": "Generates the SkiaSharp merge message without waiting for another PR CI run because tree equality proved the native content unchanged; it notes that CI on the resolved parent base branch validates the resulting merge.",
       "files": [],
       "expectations": [
         "Does not rerun the deep review.",
         "Does not wait for refreshed PR CI.",
-        "Generates the parent merge message.",
+        "Generates the parent merge message and refers to CI on the resolved parent base branch rather than assuming main.",
         "Leaves the parent merge to the maintainer."
       ]
     }
