@@ -29,6 +29,7 @@ class CadenceTests(unittest.TestCase):
         payload = {
             "mstones": [{
                 "branch_point": "2026-08-17T00:00:00",
+                "earliest_beta": "2026-08-19T00:00:00",
                 "early_stable_cut": "2026-08-25T00:00:00",
                 "stable_cut": "2026-09-01T00:00:00",
                 "stable_date": "2026-09-08T00:00:00",
@@ -43,25 +44,25 @@ class CadenceTests(unittest.TestCase):
             schedule = self.index.fetch_chrome_schedule(153)
 
         self.assertEqual({
-            "branch_point": "2026-08-17",
-            "early_stable_cut": "2026-08-25",
-            "stable_cut": "2026-09-01",
-            "stable_date": "2026-09-08",
+            "earliest_beta": "2026-08-19T00:00:00",
+            "early_stable_cut": "2026-08-25T00:00:00",
+            "stable_cut": "2026-09-01T00:00:00",
+            "stable_date": "2026-09-08T00:00:00",
         }, schedule)
 
     def test_timeline_renders_four_release_stages(self):
         schedule = {
             "153": {
-                "branch_point": "2026-08-17",
-                "early_stable_cut": "2026-08-25",
-                "stable_cut": "2026-09-01",
-                "stable_date": "2026-09-08",
+                "earliest_beta": "2026-08-19T00:00:00",
+                "early_stable_cut": "2026-08-25T00:00:00",
+                "stable_cut": "2026-09-01T00:00:00",
+                "stable_date": "2026-09-08T00:00:00",
             },
             "154": {
-                "branch_point": "2026-08-31",
-                "early_stable_cut": "2026-09-08",
-                "stable_cut": "2026-09-15",
-                "stable_date": "2026-09-22",
+                "earliest_beta": "2026-09-02T00:00:00",
+                "early_stable_cut": "2026-09-08T00:00:00",
+                "stable_cut": "2026-09-15T00:00:00",
+                "stable_date": "2026-09-22T00:00:00",
             },
         }
         rendered = self.renderer.render_cadence_timeline(
@@ -69,10 +70,10 @@ class CadenceTests(unittest.TestCase):
 
         rows = [line for line in rendered if line.startswith("| ")][1:]
         self.assertEqual([
-            "| m153 Branch Point | Aug 17 | Preview 1 | Aug 18 | `4.153.0-preview.1` |",
+            "| m153 Earliest Beta | Aug 19 | Preview 1 | Aug 19 | `4.153.0-preview.1` |",
             "| m153 Early Stable Cut | Aug 25 | Preview 2 | Aug 25 | `4.153.0-preview.2` |",
-            "| m154 Branch Point | Aug 31 | Preview 1 | Sep 1 | `4.154.0-preview.1` |",
             "| m153 Stable Cut | Sep 1 | RC 1 | Sep 1 | `4.153.0-rc.1` |",
+            "| m154 Earliest Beta | Sep 2 | Preview 1 | Sep 2 | `4.154.0-preview.1` |",
             "| m153 Stable Date | Sep 8 | Stable | Sep 8 | `4.153.0` |",
             "| m154 Early Stable Cut | Sep 8 | Preview 2 | Sep 8 | `4.154.0-preview.2` |",
             "| m154 Stable Cut | Sep 15 | RC 1 | Sep 15 | `4.154.0-rc.1` |",
@@ -86,6 +87,6 @@ class CadenceTests(unittest.TestCase):
         }
         with self.assertRaisesRegex(
                 RuntimeError,
-                "missing Chromium marker 'branch_point' for m153.*release-notes-index.py"):
+                "missing Chromium marker 'earliest_beta' for m153.*release-notes-index.py"):
             self.renderer.render_cadence_timeline(
                 153, 154, "4.153", "4.154", stale)

@@ -116,9 +116,10 @@ Assert-Equal '4.150.2' $previousShipped.Title 'An unshipped stable branch became
 
 $schedule = [pscustomobject] @{
     branch_point = '2026-07-27T00:00:00Z'
+    earliest_beta = '2026-07-29T00:00:00Z'
     early_stable_cut = '2026-08-04T00:00:00Z'
-    stable_cut = '2026-08-18T00:00:00Z'
-    stable_date = '2026-08-25T00:00:00Z'
+    stable_cut = '2026-08-11T00:00:00Z'
+    stable_date = '2026-08-18T00:00:00Z'
 }
 $desired = New-DesiredReleaseMilestones -Schedule $schedule -Milestone 152 -Major 4
 Assert-Equal @(
@@ -128,16 +129,16 @@ Assert-Equal @(
     '4.152.0'
 ) @($desired.Title) 'Chromium stages were not mapped to release milestones.'
 Assert-Equal @(
-    '2026-07-28T23:59:59Z',
+    '2026-07-29T23:59:59Z',
     '2026-08-04T23:59:59Z',
-    '2026-08-18T23:59:59Z',
-    '2026-08-25T23:59:59Z'
+    '2026-08-11T23:59:59Z',
+    '2026-08-18T23:59:59Z'
 ) @($desired.DueOn) 'Chromium schedule dates were not mapped to end-of-day GitHub deadlines.'
 Assert-Equal @(
     'Skia m152 preview.1 · Start Mon, Jul 27, 2026 · Merge Skia sync PR and ship preview.',
-    'Skia m152 preview.2 · Start Tue, Jul 28, 2026 · Bug fixes and API additions from preview.1 feedback.',
+    'Skia m152 preview.2 · Start Wed, Jul 29, 2026 · Bug fixes and API additions from preview.1 feedback.',
     'Skia m152 RC 1 · Start Tue, Aug 04, 2026 · Critical bug fixes only, no new features.',
-    'Skia m152 stable · Start Tue, Aug 18, 2026 · Ship to NuGet.org, tag and create GitHub Release.'
+    'Skia m152 stable · Start Tue, Aug 11, 2026 · Ship to NuGet.org, tag and create GitHub Release.'
 ) @($desired.Description) 'Milestone descriptions did not preserve the SkiaSharp release windows.'
 Assert-True ($desired[0].Description.Contains([char] 0x00b7)) 'Milestone descriptions lost their separators.'
 
@@ -145,7 +146,7 @@ $matchingSchedule = @{
     '4.152.0-preview.1' = [pscustomobject] @{
         number = 1
         state = 'open'
-        due_on = [datetime] '2026-07-28T00:00:00Z'
+        due_on = [datetime] '2026-07-29T00:00:00Z'
         description = $desired[0].Description
     }
 }

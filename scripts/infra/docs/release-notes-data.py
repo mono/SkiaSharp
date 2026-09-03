@@ -416,7 +416,7 @@ def version_key(version):
 # Chrome's public release schedule (Chromium Dash). Used to drive the release
 # cadence section with the real phase dates for the milestones currently in
 # flight. Chromium marker names remain separate from the SkiaSharp release
-# names and timing that the index renderer derives from them.
+# names that the index renderer maps onto them.
 CHROME_SCHEDULE_URL = (
     "https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone={}")
 

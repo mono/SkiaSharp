@@ -28,7 +28,6 @@ import json
 import re
 import sys
 from collections import defaultdict
-from datetime import date, timedelta
 from pathlib import Path
 
 # ── reuse release-notes-data.py's shared low-level helpers (one source of truth) ─────
@@ -469,12 +468,6 @@ def format_schedule_date(iso):
     return "{} {}".format(_MONTH_ABBR[int(month) - 1], int(day))
 
 
-def shift_schedule_date(iso, days):
-    # type: (str, int) -> str
-    """Shift an ISO schedule date while preserving a date-only representation."""
-    return (date.fromisoformat(iso[:10]) + timedelta(days=days)).isoformat()
-
-
 def _toc_folded_section(title, groups, stable_groups, unreleased_groups):
     # type: (str, list[str], dict, dict) -> list[str]
     """Render a collapsed parent TOC node nesting its minor groups (spec §3.5).
@@ -692,7 +685,7 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
             "",
             "| Chromium marker | SkiaSharp timing | SkiaSharp release | Purpose |",
             "|---|---|---|---|",
-            "| Branch Point | Next day | Preview 1 | Merge upstream Skia, ship initial preview |",
+            "| Earliest Beta | Same day | Preview 1 | Merge upstream Skia, ship initial preview |",
             "| Early Stable Cut | Same day | Preview 2 | Bug fixes and API additions from preview feedback |",
             "| Stable Cut | Same day | RC 1 | Critical bug fixes only, no new features |",
             "| Stable Date | Same day | Stable | Ship to NuGet.org, tag and create GitHub Release |",
@@ -799,10 +792,10 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
     """
     # Keep this mapping in sync with update-release-milestones.ps1 New-DesiredReleaseMilestones.
     phases = [
-        ("Branch Point", "branch_point", 1, "Preview 1", ".0-preview.1"),
-        ("Early Stable Cut", "early_stable_cut", 0, "Preview 2", ".0-preview.2"),
-        ("Stable Cut", "stable_cut", 0, "RC 1", ".0-rc.1"),
-        ("Stable Date", "stable_date", 0, "Stable", ".0"),
+        ("Earliest Beta", "earliest_beta", "Preview 1", ".0-preview.1"),
+        ("Early Stable Cut", "early_stable_cut", "Preview 2", ".0-preview.2"),
+        ("Stable Cut", "stable_cut", "RC 1", ".0-rc.1"),
+        ("Stable Date", "stable_date", "Stable", ".0"),
     ]
     schedule_by_ms = schedule_by_ms or {}
     cur_sched = schedule_by_ms.get(str(cur_ms))
@@ -812,23 +805,21 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
             "index.json is missing the Chrome schedule for m{} or m{} - re-run "
             "release-notes-index.py (the network Prepare step) to refresh "
             "_sources/index.json.".format(cur_ms, next_ms))
-    events = []  # type: list[tuple[str, str, str, str, str]]
+    events = []  # type: list[tuple[str, str, str, str]]
     for ms_num, base, sched in (
             (cur_ms, cur_base, cur_sched), (next_ms, next_base, next_sched)):
-        for marker, key, offset, release, suffix in phases:
+        for marker, key, release, suffix in phases:
             if key not in sched:
                 raise RuntimeError(
                     "index.json is missing Chromium marker '{}' for m{} - re-run "
                     "release-notes-index.py to refresh _sources/index.json."
                     .format(key, ms_num))
-            release_date = shift_schedule_date(sched[key], offset)
             events.append((
-                release_date,
                 sched[key],
                 "m{} {}".format(ms_num, marker),
                 release,
                 "`{}{}`".format(base, suffix)))
-    events.sort(key=lambda e: (e[0], e[1], e[2]))
+    events.sort(key=lambda e: (e[0], e[1]))
     header = (
         "**Schedule for the two milestones currently in flight "
         "(m{} and m{}), from the "
@@ -843,9 +834,9 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
             marker,
             format_schedule_date(marker_date),
             release,
-            format_schedule_date(release_date),
+            format_schedule_date(marker_date),
             package)
-        for release_date, marker_date, marker, release, package in events
+        for marker_date, marker, release, package in events
     ]
     return [header, ""] + rows
 

@@ -32,7 +32,6 @@ import json
 import re
 import sys
 import urllib.request
-from datetime import date
 from pathlib import Path
 
 # ── reuse release-notes-data.py's shared low-level helpers (one source of truth) ─────
@@ -114,15 +113,15 @@ def fetch_chrome_schedule(milestone, timeout=8):
         raise RuntimeError(
             "Chrome schedule for m{} returned no milestone data".format(milestone))
     ms = mstones[0]
-    fields = ("branch_point", "early_stable_cut", "stable_cut", "stable_date")
-    dates = {}
+    fields = ("earliest_beta", "early_stable_cut", "stable_cut", "stable_date")
+    schedule = {}
     for key in fields:
         value = ms.get(key)
         if not value:
             raise RuntimeError(
                 "Chrome schedule for m{} is missing '{}'".format(milestone, key))
-        dates[key] = date.fromisoformat(value[:10])
-    return {key: value.isoformat() for key, value in dates.items()}
+        schedule[key] = value
+    return schedule
 
 
 def _index_json_path():

@@ -38,6 +38,7 @@ $root = Get-GitRepositoryRoot
 $scheduleUrl = 'https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone={0}'
 $requiredScheduleFields = @(
     'branch_point',
+    'earliest_beta',
     'early_stable_cut',
     'stable_cut',
     'stable_date'
@@ -126,7 +127,7 @@ function Get-ChromiumSchedule([int] $Milestone) {
 # Keep this mapping in sync with release-notes-render.py render_cadence_timeline().
 function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int] $Major) {
     $branch = ConvertTo-ScheduleDate $Schedule.branch_point
-    $preview = $branch.AddDays(1)
+    $beta = ConvertTo-ScheduleDate $Schedule.earliest_beta
     $earlyCut = ConvertTo-ScheduleDate $Schedule.early_stable_cut
     $stableCut = ConvertTo-ScheduleDate $Schedule.stable_cut
     $stable = ConvertTo-ScheduleDate $Schedule.stable_date
@@ -135,8 +136,8 @@ function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int
     return @(
         [pscustomobject] @{
             Title = "$base-preview.1"
-            Due = $preview
-            DueOn = Format-GitHubDueOn $preview
+            Due = $beta
+            DueOn = Format-GitHubDueOn $beta
             Description = (
                 "Skia m$Milestone preview.1 $separator Start $(Format-ScheduleDate $branch) $separator " +
                 'Merge Skia sync PR and ship preview.')
@@ -146,7 +147,7 @@ function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int
             Due = $earlyCut
             DueOn = Format-GitHubDueOn $earlyCut
             Description = (
-                "Skia m$Milestone preview.2 $separator Start $(Format-ScheduleDate $preview) $separator " +
+                "Skia m$Milestone preview.2 $separator Start $(Format-ScheduleDate $beta) $separator " +
                 'Bug fixes and API additions from preview.1 feedback.')
         }
         [pscustomobject] @{

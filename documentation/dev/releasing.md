@@ -174,7 +174,7 @@ The maintained cadence follows Chromium's overlapping two-week trains:
 
 | Chromium marker | SkiaSharp timing | SkiaSharp release |
 | --- | --- | --- |
-| Branch Point | Next day | Preview 1 |
+| Earliest Beta | Same day | Preview 1 |
 | Early Stable Cut | Same day | Preview 2 |
 | Stable Cut | Same day | RC 1 |
 | Stable Date | Same day | Stable |
