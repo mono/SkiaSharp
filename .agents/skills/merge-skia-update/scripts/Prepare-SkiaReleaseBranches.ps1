@@ -61,17 +61,6 @@ function Get-SkiaMilestone {
     return $milestone
 }
 
-function Get-SkiaSharpProductLine {
-    param([string] $Commit)
-
-    $versions = (git show "${Commit}:scripts/VERSIONS.txt" | Out-String).Trim()
-    $versionMatch = [regex]::Match($versions, '(?m)^SkiaSharp\s+nuget\s+(?<major>\d+)\.(?<minor>\d+)\.\d+(?:[-+]\S+)?\s*$')
-    if (-not $versionMatch.Success) {
-        throw "Cannot derive the SkiaSharp product line from scripts/VERSIONS.txt at $Commit."
-    }
-    return "$($versionMatch.Groups['major'].Value).$($versionMatch.Groups['minor'].Value)"
-}
-
 function Assert-Destination {
     param(
         [string] $Repository,
@@ -127,12 +116,12 @@ if ($headMilestone -eq $baseMilestone) {
     exit 0
 }
 
-$baseProductLine = Get-SkiaSharpProductLine $parentBaseSha
-$headProductLine = Get-SkiaSharpProductLine $parentHeadSha
-if ($headProductLine -eq $baseProductLine) {
-    throw "Skia milestone changes from m$baseMilestone to m$headMilestone, but the SkiaSharp product line remains $baseProductLine."
+$versions = (git show "${parentBaseSha}:scripts/VERSIONS.txt" | Out-String).Trim()
+$versionMatch = [regex]::Match($versions, '(?m)^SkiaSharp\s+nuget\s+(?<major>\d+)\.(?<minor>\d+)\.\d+(?:[-+]\S+)?\s*$')
+if (-not $versionMatch.Success) {
+    throw "Cannot derive the current SkiaSharp product line from scripts/VERSIONS.txt at $parentBaseSha."
 }
-$ReleaseBranch = "release/$baseProductLine.x"
+$ReleaseBranch = "release/$($versionMatch.Groups['major'].Value).$($versionMatch.Groups['minor'].Value).x"
 git check-ref-format --branch $ReleaseBranch | Out-Null
 
 $nativeUrl = git config --blob "${parentBaseSha}:.gitmodules" --get submodule.externals/skia.url
@@ -156,7 +145,7 @@ if ($nativeBranchSha -ne $nativeBaseSha) {
 $nativeExisting = Assert-Destination $nativeRepository $nativeUrl $ReleaseBranch $nativeBaseSha
 $parentExisting = Assert-Destination $parentRepository $parentUrl $ReleaseBranch $parentBaseSha
 
-Write-Host "Milestone bump:     m$baseMilestone -> m$headMilestone ($baseProductLine -> $headProductLine)"
+Write-Host "Milestone bump:     m$baseMilestone -> m$headMilestone"
 Write-Host "Release branch:     $ReleaseBranch"
 Write-Host "$nativeRepository source: $SkiaBaseBranch @ $nativeBaseSha$(if ($nativeExisting) { ' (release branch already exists)' })"
 Write-Host "$parentRepository source: $SkiaSharpBaseBranch @ $parentBaseSha$(if ($parentExisting) { ' (release branch already exists)' })"

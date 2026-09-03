@@ -173,8 +173,7 @@ Stop when:
 - a supplied native base branch does not match the parent base gitlink;
 - an existing release branch points at a different SHA;
 - a release source changes between dry run and `-Push`;
-- the parent head milestone regresses or changes without a corresponding
-  SkiaSharp product-line change;
+- the parent head milestone regresses;
 - mono/skia was not merged with a two-parent merge commit;
 - that merge does not contain the parent PR's reviewed native commit;
 - the merged and reviewed native trees differ;
