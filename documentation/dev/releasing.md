@@ -175,8 +175,9 @@ The maintained cadence follows Chromium's overlapping two-week trains:
 | Stage | Target date |
 | --- | --- |
 | Preview 1 | One day after Chromium branch point |
+| Preview 2 | Chromium early-stable cut |
 | RC 1 | Chromium stable cut |
-| Stable | One day after Chromium Stable |
+| Stable | Chromium Stable |
 
 ## 7. Complete the follow-up pull requests
 

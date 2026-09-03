@@ -71,12 +71,12 @@ function Assert-Throws([scriptblock] $Action, [string] $Pattern, [string] $Messa
 $branches = @(
     ConvertTo-ReleaseMilestone 'release/4.152.0'
     ConvertTo-ReleaseMilestone 'release/4.152.0-rc.1'
-    ConvertTo-ReleaseMilestone 'release/4.152.0-preview.1'
+    ConvertTo-ReleaseMilestone 'release/4.152.0-preview.2'
     ConvertTo-ReleaseMilestone 'release/4.152.0.1-preview.1'
     ConvertTo-ReleaseMilestone 'release/4.152.0.1'
 ) | Sort-Object SortKey
 Assert-Equal @(
-    '4.152.0-preview.1',
+    '4.152.0-preview.2',
     '4.152.0-rc.1',
     '4.152.0',
     '4.152.0.1-preview.1',
@@ -85,11 +85,16 @@ Assert-Equal @(
 
 $rollForwardBranches = @(
     ConvertTo-ReleaseMilestone 'release/4.152.0-preview.1'
+    ConvertTo-ReleaseMilestone 'release/4.152.0-preview.2'
     ConvertTo-ReleaseMilestone 'release/4.152.0-rc.1'
 )
-$effective = Get-EffectiveMilestoneTitles -Branches $rollForwardBranches -Tags @('v4.152.0-rc.1.1')
+$effective = Get-EffectiveMilestoneTitles -Branches $rollForwardBranches -Tags @(
+    'v4.152.0-preview.2.1',
+    'v4.152.0-rc.1.1'
+)
 Assert-Equal @(
-    '4.152.0-rc.1',
+    '4.152.0-preview.2',
+    '4.152.0-preview.2',
     '4.152.0-rc.1'
 ) @($effective) 'An unshipped preview did not roll forward.'
 
@@ -114,19 +119,22 @@ Assert-Equal '4.150.2' $previousShipped.Title 'An unshipped stable branch became
 
 $schedule = [pscustomobject] @{
     branch_point = '2026-07-27T00:00:00Z'
+    early_stable_cut = '2026-08-04T00:00:00Z'
     stable_cut = '2026-08-18T00:00:00Z'
     stable_date = '2026-08-25T00:00:00Z'
 }
 $desired = New-DesiredReleaseMilestones -Schedule $schedule -Milestone 152 -Major 4
 Assert-Equal @(
     '4.152.0-preview.1',
+    '4.152.0-preview.2',
     '4.152.0-rc.1',
     '4.152.0'
 ) @($desired.Title) 'Chromium stages were not mapped to release milestones.'
 Assert-Equal @(
     '2026-07-28T23:59:59Z',
+    '2026-08-04T23:59:59Z',
     '2026-08-18T23:59:59Z',
-    '2026-08-26T23:59:59Z'
+    '2026-08-25T23:59:59Z'
 ) @($desired.DueOn) 'Chromium schedule dates were not mapped to end-of-day GitHub deadlines.'
 Assert-True ($desired[0].Description.Contains([char] 0x00b7)) 'Milestone descriptions lost their separators.'
 
@@ -143,10 +151,11 @@ Assert-Equal 'none' $matchingOperation[0].Action 'An already-current DateTime du
 
 $existing = @{
     '4.152.0-preview.1' = [pscustomobject] @{ number = 1; state = 'open' }
-    '4.152.0-rc.1' = [pscustomobject] @{ number = 2; state = 'open' }
+    '4.152.0-preview.2' = [pscustomobject] @{ number = 2; state = 'open' }
 }
 $releaseMilestones = @(
     ConvertTo-ReleaseMilestone '4.152.0-preview.1'
+    ConvertTo-ReleaseMilestone '4.152.0-preview.2'
     ConvertTo-ReleaseMilestone '4.152.0-rc.1'
     ConvertTo-ReleaseMilestone '4.152.0'
 )
@@ -154,7 +163,8 @@ $closure = Get-MilestoneClosureOperations -Existing $existing -Milestones $relea
     -Tags @('v4.152.0-preview.1.2') -CreatableTitles @() -OpenItemsFor {
         @([pscustomobject] @{ Number = 99; Kind = 'issue' })
     }
-Assert-Equal '4.152.0-rc.1' $closure.Operations[0].MoveTo 'Open work did not move to the release candidate.'
+Assert-Equal '4.152.0-preview.2' $closure.Operations[0].MoveTo `
+    'Open work did not move to the next preview.'
 Assert-Equal 0 $closure.Warnings.Count 'A valid rollover unexpectedly produced a warning.'
 
 $blocked = Get-MilestoneClosureOperations -Existing @{ '4.152.0' = [pscustomobject] @{ number = 4; state = 'open' } } `
@@ -197,10 +207,10 @@ function global:gh {
     $script:FakeGhCalls.Add($command)
     if ($script:FakeGhScenario -eq 'apply') {
         if ($command -match 'issues/99 .*PATCH') {
-            $script:FakeItemMilestone = '4.152.0-rc.1'
+            $script:FakeItemMilestone = '4.152.0-preview.2'
             return '{"number":99}'
         } elseif ($command -match 'issues/99$') {
-            return '{"number":99,"milestone":{"title":"4.152.0-rc.1"}}'
+            return '{"number":99,"milestone":{"title":"4.152.0-preview.2"}}'
         } elseif ($command -match 'issues\?milestone=1') {
             return '[[]]'
         } elseif ($command -match 'milestones/1 .*PATCH') {
@@ -211,7 +221,7 @@ function global:gh {
 [
   [
     {"number":1,"title":"4.152.0-preview.1","state":"$script:FakeMilestoneState"},
-    {"number":2,"title":"4.152.0-rc.1","state":"open"}
+    {"number":2,"title":"4.152.0-preview.2","state":"open"}
   ]
 ]
 "@
@@ -271,11 +281,11 @@ $pushOperation = [pscustomobject] @{
     Title = '4.152.0-preview.1'
     Number = 1
     OpenItems = @([pscustomobject] @{ Number = 99; Kind = 'issue' })
-    MoveTo = '4.152.0-rc.1'
+    MoveTo = '4.152.0-preview.2'
 }
 $pushMilestones = @{
     '4.152.0-preview.1' = [pscustomobject] @{ number = 1; state = 'open' }
-    '4.152.0-rc.1' = [pscustomobject] @{ number = 2; state = 'open' }
+    '4.152.0-preview.2' = [pscustomobject] @{ number = 2; state = 'open' }
 }
 $Push = $true
 $writeRemote = $true
@@ -285,7 +295,7 @@ try {
     $Push = $false
     $writeRemote = $false
 }
-Assert-Equal '4.152.0-rc.1' $script:FakeItemMilestone 'The fake-gh apply path did not move open work.'
+Assert-Equal '4.152.0-preview.2' $script:FakeItemMilestone 'The fake-gh apply path did not move open work.'
 Assert-Equal 'closed' $script:FakeMilestoneState 'The fake-gh apply path did not close the emptied milestone.'
 
 $script:FakeGhScenario = 'new-item'

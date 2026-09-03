@@ -415,8 +415,8 @@ def version_key(version):
 
 # Chrome's public release schedule (Chromium Dash). Used to drive the release
 # cadence section with the real phase dates for the milestones currently in
-# flight. Preview, RC, and stable dates derive from branch_point, stable_cut,
-# and stable_date respectively.
+# flight. Preview 1 is one day after branch_point; Preview 2, RC, and stable
+# map to early_stable_cut, stable_cut, and stable_date respectively.
 CHROME_SCHEDULE_URL = (
     "https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone={}")
 

@@ -4,24 +4,27 @@ Release notes for SkiaSharp. SkiaSharp ships as NuGet packages whose minor versi
 
 ## Release cadence
 
-SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor version corresponds to a Chrome/Skia milestone and progresses through three phases:
+SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor version corresponds to a Chrome/Skia milestone and progresses through four weekly phases:
 
 | Timing | SkiaSharp Release | Purpose |
 |---|---|---|
 | One day after branch point | Preview 1 | Merge upstream Skia and ship the initial preview |
-| Stable cut | RC 1 | Incorporate preview feedback and stabilize |
-| One day after Chrome Stable | Stable | Ship to NuGet.org, tag and create the GitHub Release |
+| Early-stable cut | Preview 2 | Incorporate initial preview feedback |
+| Stable cut | RC 1 | Stabilize with critical fixes only |
+| Chrome Stable | Stable | Ship to NuGet.org, tag and create the GitHub Release |
 
 **Schedule for the two milestones currently in flight (m153 and m154), from the [Chromium release schedule](https://chromiumdash.appspot.com/schedule):**
 
 | Date | Event | Package |
 |------|-------|---------|
 | Aug 18 | m153 Preview 1 | `4.153.0-preview.1` |
+| Aug 25 | m153 Preview 2 | `4.153.0-preview.2` |
 | Sep 1 | m153 RC 1 | `4.153.0-rc.1` |
 | Sep 1 | m154 Preview 1 | `4.154.0-preview.1` |
-| Sep 9 | m153 Stable | `4.153.0` |
+| Sep 8 | m153 Stable | `4.153.0` |
+| Sep 8 | m154 Preview 2 | `4.154.0-preview.2` |
 | Sep 15 | m154 RC 1 | `4.154.0-rc.1` |
-| Sep 23 | m154 Stable | `4.154.0` |
+| Sep 22 | m154 Stable | `4.154.0` |
 
 Two milestones are always in flight — as one enters its RC/stable phase, the next begins its preview phase.
 
@@ -32,7 +35,7 @@ Two milestones are always in flight — as one enters its RC/stable phase, the n
 
 Packages follow the scheme `4.{chrome_milestone}.{patch}` — the middle number **is** the Chrome milestone number. For example, `4.154.0` ships alongside Chrome 154's stable release.
 
-- Preview: `4.154.0-preview.1`
+- Preview: `4.154.0-preview.1`, `4.154.0-preview.2`
 - Release candidate: `4.154.0-rc.1`
 - Stable: `4.154.0`
 

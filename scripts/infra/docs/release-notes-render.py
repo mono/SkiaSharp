@@ -681,13 +681,14 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
             "",
             "SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor "
             "version corresponds to a Chrome/Skia milestone and progresses through "
-            "three phases:",
+            "four weekly phases:",
             "",
             "| Timing | SkiaSharp Release | Purpose |",
             "|---|---|---|",
             "| One day after branch point | Preview 1 | Merge upstream Skia and ship the initial preview |",
-            "| Stable cut | RC 1 | Incorporate preview feedback and stabilize |",
-            "| One day after Chrome Stable | Stable | Ship to NuGet.org, tag and create the GitHub Release |",
+            "| Early-stable cut | Preview 2 | Incorporate initial preview feedback |",
+            "| Stable cut | RC 1 | Stabilize with critical fixes only |",
+            "| Chrome Stable | Stable | Ship to NuGet.org, tag and create the GitHub Release |",
             "",
         ])
         lines.extend(render_cadence_timeline(
@@ -710,7 +711,7 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
             "`" + next_ver + "` ships alongside Chrome " + str(next_ms) + "'s "
             "stable release.",
             "",
-            "- Preview: `" + next_ver + "-preview.1`",
+            "- Preview: `" + next_ver + "-preview.1`, `" + next_ver + "-preview.2`",
             "- Release candidate: `" + next_ver + "-rc.1`",
             "- Stable: `" + next_ver + "`",
             "",
@@ -790,7 +791,8 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
     schedule is a hard error — re-run release-notes-index.py to refresh index.json.
     """
     phases = [
-        ("Preview 1", "preview", ".0-preview.1"),
+        ("Preview 1", "preview_1", ".0-preview.1"),
+        ("Preview 2", "preview_2", ".0-preview.2"),
         ("RC 1", "rc", ".0-rc.1"),
         ("Stable", "stable", ".0"),
     ]
