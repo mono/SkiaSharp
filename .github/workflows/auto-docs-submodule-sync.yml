@@ -56,6 +56,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          # Record what the remote holds BEFORE we rewrite the branch locally, so the push
+          # below can state its own expectation instead of relying on whatever
+          # refs/remotes/origin/$BRANCH happens to hold. An empty value is a valid lease
+          # meaning "the branch must not exist yet", which is what the very first run sees.
+          REMOTE_SHA=$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)
+          echo "remote $BRANCH is at: ${REMOTE_SHA:-<absent>}"
+
           # Always start fresh from main — avoids stale commit accumulation
           git checkout -B "$BRANCH" origin/main
 
@@ -69,7 +76,13 @@ jobs:
 
           Latest: $LATEST_MSG"
 
-          git push origin "$BRANCH" --force
+          # Guarded force: rejected with "stale info" if anything moved the branch after we
+          # read REMOTE_SHA above. Never an unguarded --force (see AGENTS.md). The explicit
+          # <ref>:<sha> form is used rather than a bare --force-with-lease because a bare
+          # lease reads refs/remotes/origin/$BRANCH, which only exists here because the
+          # checkout step sets fetch-depth: 0; with the action's default depth that ref is
+          # absent and every push after the first would be rejected, silently stalling the sync.
+          git push origin "$BRANCH" --force-with-lease="refs/heads/$BRANCH:$REMOTE_SHA"
 
           # Create PR if one doesn't already exist
           existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
