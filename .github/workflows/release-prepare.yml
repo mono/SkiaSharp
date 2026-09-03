@@ -12,15 +12,11 @@ on:
         description: Exact identity (X.Y.Z-preview.N, X.Y.Z-rc.N, or X.Y.Z-stable)
         required: true
         type: string
-      mode:
-        description: Execution mode
+      push:
+        description: Push release branches and create any stable bump PR
         required: true
-        default: DryRun
-        type: choice
-        options:
-          - DryRun
-          - Apply
-          - Push
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -43,8 +39,8 @@ jobs:
         shell: pwsh
         env:
           BASE: ${{ inputs.base }}
-          GH_TOKEN: ${{ inputs.mode == 'Push' && secrets.SKIASHARP_AUTOBUMP_TOKEN || github.token }}
-          MODE: ${{ inputs.mode }}
+          GH_TOKEN: ${{ inputs.push && secrets.SKIASHARP_AUTOBUMP_TOKEN || github.token }}
+          MODE: ${{ inputs.push && 'Push' || 'DryRun' }}
           RELEASE: ${{ inputs.release }}
         run: |
           $arguments = @{
