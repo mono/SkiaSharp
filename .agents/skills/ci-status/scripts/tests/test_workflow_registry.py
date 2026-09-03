@@ -137,14 +137,24 @@ class RegistryTests(unittest.TestCase):
     def test_scheduled_workflows_really_have_a_cron(self):
         """A workflow tracked as scheduled but with no cron would always look idle."""
         missing = []
+        checked = 0
         for entry in local_workflows():
             if entry["trigger"] != "schedule":
                 continue
             if not os.path.isfile(os.path.join(WORKFLOW_DIR, entry["workflow"])):
                 continue
+            checked += 1
             if not crons_for(entry["workflow"]):
                 missing.append(entry["workflow"])
         self.assertEqual([], missing, f"Tracked as scheduled but define no cron: {missing}")
+        # `missing` is also empty when nothing was examined at all. Re-typing the tracked
+        # schedule entries to another trigger empties this loop while leaving the registry
+        # full, and it does not trip the trigger test either, because a scheduled workflow
+        # almost always declares workflow_dispatch as well. Assert the loop did work.
+        self.assertGreater(
+            checked, 0,
+            "No scheduled workflow was examined, so this test asserted nothing — "
+            "the registry has no entry with trigger='schedule'.")
 
 
 class SkillDocTests(unittest.TestCase):
