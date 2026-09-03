@@ -9,7 +9,7 @@ implementation of the automation, see
 Release - Prepare
     -> skiasharp-package
     -> skiasharp-tests
-    -> release-testing approval
+    -> optional release-testing approval
     -> internal publication
     -> Release - Finish
     -> Release - Milestones
@@ -72,6 +72,12 @@ mainly useful when running the script in a persistent local checkout.
 | `X.Y.Z.F-rc.N` | `release/X.Y.Z.F-rc.N` |
 | `X.Y.Z.F-stable` | `release/X.Y.Z.F` |
 
+The `-stable` suffix is deliberately required only for the Prepare input. It is
+an explicit confirmation that prevents an accidental stable cut. The workflow
+removes it from the branch identity and uses the internal
+`PREVIEW_LABEL=stable` switch; stable packages, tags, and GitHub Releases keep
+the bare numeric version.
+
 The workflow pushes `mono/skia` first, then `mono/SkiaSharp`. A three-part
 stable release also opens a human-owned PR that advances SkiaSharp and
 HarfBuzzSharp to the next preview versions. Review and merge that PR normally;
@@ -94,27 +100,18 @@ build, so it is not an expected release-branch stage.
 Do not continue if the Build and Tests runs disagree on branch, commit, build
 number, or upstream pipeline resource.
 
-## 3. Approve the exact BAR package set
+## 3. Optional: approve the exact BAR package set
 
-Use the repository's `release-testing` skill on every required host before
-publication. Start with the exact CI package version recorded from the Build:
+This extra package validation is optional. To run it, use the repository's
+`release-testing` skill on each desired host with this copy-pasteable prompt:
 
-```bash
-python3 .agents/skills/release-testing/scripts/plan-release-tests.py 4.153.0
+```text
+Use the release-testing skill to validate SkiaSharp {exact CI package version} from BAR {BAR ID}. Run the full available matrix on this host and produce the release approval report.
 ```
 
-If Maestro reports more than one producing BAR, select the release-approved BAR
-explicitly:
-
-```bash
-python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
-  4.153.0 --bar-id 329644
-```
-
-Approve the full required host/device matrix. Keep the combined report with the
-BAR ID, Build link, source branch and commit, exact package versions, feed, and
-every test result. A required failure or unapproved omission blocks
-publication.
+If you run this gate, keep its report with the BAR ID, Build link, source branch
+and commit, exact package versions, feed, and test results. Record the decision
+if this optional step is skipped.
 
 ## 4. Publish the BAR to NuGet.org
 
@@ -123,8 +120,9 @@ publication.
 > NuGet.org.
 
 Until that UI is documented, use the current team-owned protected publication
-procedure. Before confirming it, match the selected BAR ID, Build run, source
-branch and commit, and package versions to the approved release-testing report.
+procedure. Confirm the selected BAR ID, Build run, source branch and commit,
+and package versions. If optional release-testing was run, require them to
+match its approval report exactly.
 
 After publication completes, verify that the exact SkiaSharp package version
 and its expected shipping package family are visible on NuGet.org. Do not run
@@ -138,11 +136,13 @@ select **Run workflow**, and choose `main` as the workflow branch.
 
 | Input | Value |
 | --- | --- |
-| `version` | Prefer the exact public NuGet version: `X.Y.Z[.F]` for stable or `X.Y.Z[.F]-preview.N.BUILD` / `-rc.N.BUILD` for prerelease |
+| `version` | Stable: `X.Y.Z[.F]`. Prerelease: either `X.Y.Z[.F]-preview.N` / `-rc.N`, or the exact public version with its appended `.BUILD` |
 | `mode` | `DryRun` first, then `Push` with the same version |
 
-An abbreviated prerelease identity such as `4.153.0-preview.1` is accepted only
-when it matches exactly one public SkiaSharp package version.
+A short prerelease identity and an exact public prerelease version are equally
+valid. Most releases have only one matching public build, so
+`4.153.0-preview.1` is usually sufficient. When there are zero or multiple
+matches, provide the exact version such as `4.153.0-preview.1.26453.1`.
 
 Review the `DryRun` source branch, source commit, tag, release title, support
 update, and follow-up workflows. Then run `Push` and verify:
@@ -197,7 +197,7 @@ Keep these values together for the whole release:
 | `skiasharp-tests` run | Build ID and URL |
 | BAR | BAR ID |
 | Packages | Exact SkiaSharp and HarfBuzzSharp versions |
-| Test approval | Combined report and approved omissions, if any |
+| Optional test approval | Combined report or recorded skip decision |
 | Public release | NuGet version, tag, and GitHub Release URL |
 
 ## Related documentation

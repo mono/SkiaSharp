@@ -22,7 +22,7 @@ GitHub Actions: Release - Prepare
        +-> dnceng skiasharp-tests
              -> consumes the exact skiasharp-package pipeline resource
 
-BAR feed -> release-testing -> protected internal publication -> NuGet.org
+BAR feed -> optional release-testing -> protected internal publication -> NuGet.org
 
 NuGet.org -> GitHub Actions: Release - Finish
   -> exact tag and GitHub Release
@@ -70,8 +70,11 @@ Prepare accepts an explicit channel identity:
 | Hotfix RC | `X.Y.Z.F-rc.N` | `release/X.Y.Z.F-rc.N` |
 | Hotfix stable | `X.Y.Z.F-stable` | `release/X.Y.Z.F` |
 
-The `-stable` suffix is a preparation sentinel. Stable package versions,
-branches, and tags do not include it.
+The `-stable` suffix is a deliberate Prepare-only confirmation sentinel. The
+script strips it before creating the release branch and sets
+`PREVIEW_LABEL=stable`, which in turn sets
+`DOTNET_FINAL_VERSION_KIND=release`. Stable package versions, branches, tags,
+and GitHub Releases all use the bare numeric version.
 
 Official prerelease packages append the build revision derived from Arcade's
 `yyyyMMdd.revision` `OfficialBuildId`. Stable packages use the bare numeric
@@ -224,8 +227,8 @@ transport rules.
 
 ## Release package approval
 
-The `release-testing` skill is a pre-publication approval gate for one BAR. Its
-planner:
+The `release-testing` skill is an optional pre-publication approval gate for
+one BAR. Its planner:
 
 1. uses Darc to find the BAR that produced the requested SkiaSharp version;
 2. requires an explicit BAR ID when the version is ambiguous;
@@ -249,8 +252,8 @@ here because platform targets change more often than the release architecture.
 
 Default-channel promotion and final public publication are separate actions.
 The package pipeline registers and promotes the BAR through Arcade/Maestro.
-After release-testing approves that exact BAR, a protected internal operation
-publishes its shipping assets to NuGet.org.
+After any optional release-testing is complete, a protected internal operation
+publishes the selected BAR's shipping assets to NuGet.org.
 
 The repository currently does not define the Maestro UI location, button,
 fields, permissions, or approval sequence for that final action. The operator

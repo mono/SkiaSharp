@@ -35,8 +35,9 @@ Before `-Mode Push`, show the resolved base SHA and every planned ref to the use
 obtain confirmation. Never force-update a release branch. Existing matching
 state is reused; conflicting state blocks the run.
 
-Stable input uses the explicit `-stable` suffix but creates
-`release/X.Y.Z`. A three-part stable release also prepares the next SkiaSharp
-patch and HarfBuzzSharp revision on `bump-version-X.Y.Z`. Its PR targets a
-manually created `release/X.Y.x` servicing line when one exists, otherwise
-`main`; release preparation never creates the `.x` line.
+Stable input deliberately uses the explicit `-stable` sentinel to prevent an
+accidental stable cut, but creates the bare `release/X.Y.Z` branch. A three-part
+stable release also prepares the next SkiaSharp patch and HarfBuzzSharp
+revision on `bump-version-X.Y.Z`. Its PR targets a manually created
+`release/X.Y.x` servicing line when one exists, otherwise `main`; release
+preparation never creates the `.x` line.
