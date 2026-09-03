@@ -12,6 +12,9 @@ $finishPath = Join-Path $publishingRoot 'finish-release.ps1'
 $bugTemplatePath = Join-Path $publishingRoot 'update-bug-template.ps1'
 $reconcilePath = Join-Path $publishingRoot 'reconcile-release-assignments.ps1'
 $milestonesPath = Join-Path $publishingRoot 'update-release-milestones.ps1'
+$repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '../../../..')
+$prepareWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-prepare.yml'
+$finishWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-finish.yml'
 
 Import-Module $gitCommonPath -Force
 Import-Module $gitHubCommonPath -Force
@@ -105,6 +108,16 @@ Assert-True ($milestoneParameters -contains 'Count' -and $milestoneParameters -c
     'The milestone updater must expose Count and Push but not Apply or Version.'
 Assert-RejectsApply $reconcilePath @('-Version', '4.152.0')
 Assert-RejectsApply $milestonesPath @()
+foreach ($workflowPath in @($prepareWorkflowPath, $finishWorkflowPath)) {
+    $workflow = Get-Content $workflowPath -Raw
+    $workflowName = [IO.Path]::GetFileName($workflowPath)
+    Assert-True ($workflow -notmatch '(?m)^      mode:\s*$') `
+        "$workflowName still exposes the disposable three-state mode input."
+    Assert-True ($workflow -match '(?ms)^      push:\r?\n(?:        .*\r?\n)+?        default: false\r?\n        type: boolean\s*$') `
+        "$workflowName does not expose an unchecked boolean push input."
+    Assert-True ($workflow.Contains("MODE: `${{ inputs.push && 'Push' || 'DryRun' }}")) `
+        "$workflowName does not map its push checkbox to DryRun or Push."
+}
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
 $commonScript = Get-Content $commonPath -Raw
 Assert-True ($commonScript -match '--force-with-lease') `

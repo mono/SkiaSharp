@@ -51,18 +51,17 @@ select **Run workflow**, and choose `main` as the workflow branch.
 | --- | --- |
 | `base` | `main`, a servicing branch such as `release/4.152.x`, or an exact commit SHA |
 | `release` | `X.Y.Z-preview.N`, `X.Y.Z-rc.N`, `X.Y.Z-stable`, or the equivalent four-part hotfix identity |
-| `mode` | `DryRun` first; `Push` only after reviewing the plan |
+| `push` | Leave unchecked for the read-only plan; check only after reviewing it |
 
 Run the workflow twice with identical `base` and `release` values:
 
-1. Run `DryRun`. Verify the resolved base SHA, package versions, branch names,
-   and every planned remote write.
-2. Run `Push`. Verify that both release branches were created and point to the
-   expected commits.
+1. Leave `push` unchecked. Verify the resolved base SHA, package versions,
+   branch names, and every planned remote write.
+2. Check `push` and run again. Verify that both release branches were created
+   and point to the expected commits.
 
-`Apply` performs and validates local changes on the temporary GitHub runner but
-does not push or retain them. It is optional between `DryRun` and `Push`; it is
-mainly useful when running the script in a persistent local checkout.
+The workflow intentionally omits the script's local-only `Apply` mode because
+changes on its disposable runner would not be retained.
 
 | Release input | Branch created in both repositories |
 | --- | --- |
@@ -138,15 +137,16 @@ select **Run workflow**, and choose `main` as the workflow branch.
 | Input | Value |
 | --- | --- |
 | `version` | Stable: `X.Y.Z[.F]`. Prerelease: either `X.Y.Z[.F]-preview.N` / `-rc.N`, or the exact public version with its appended `.BUILD` |
-| `mode` | `DryRun` first, then `Push` with the same version |
+| `push` | Leave unchecked for the read-only plan; check only after reviewing it |
 
 A short prerelease identity and an exact public prerelease version are equally
 valid. Most releases have only one matching public build, so
 `4.153.0-preview.1` is usually sufficient. When there are zero or multiple
 matches, provide the exact version such as `4.153.0-preview.1.26453.1`.
 
-Review the `DryRun` source branch, source commit, tag, release title, support
-update, and follow-up workflows. Then run `Push` and verify:
+First run with `push` unchecked and review the source branch, source commit,
+tag, release title, support update, and follow-up workflows. Then run again
+with `push` checked and verify:
 
 - the immutable exact-version tag points to the package's source commit;
 - the GitHub Release is published with the correct prerelease state;

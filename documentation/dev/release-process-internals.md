@@ -89,7 +89,9 @@ source branch and commit, computes the package build number, and sets
 ### Workflow boundary
 
 `.github/workflows/release-prepare.yml` can be dispatched only from the default
-branch. It passes `base`, `release`, and `mode` directly to
+branch. Its `push` input is an unchecked-by-default boolean. The workflow maps
+unchecked to script mode `DryRun` and checked to `Push`, then passes `base`,
+`release`, and the mapped mode to
 `scripts/infra/publishing/prepare-release.ps1`.
 
 | Mode | Local writes | Remote writes |
@@ -98,9 +100,10 @@ branch. It passes `base`, `release`, and `mode` directly to
 | `Apply` | Yes | No |
 | `Push` | Yes | Yes |
 
-In GitHub Actions, `Apply` changes only the temporary runner checkout. Locally,
-it leaves branches and commits available for inspection. `Push` uses the
-repository automation token and performs all remote operations.
+`Apply` is intentionally available only through direct local script use, where
+it leaves branches and commits available for inspection. GitHub Actions omits
+that disposable middle state. Checked `push` uses the repository automation
+token and performs all remote operations.
 
 ### Preparation algorithm
 
@@ -266,7 +269,9 @@ authority and cannot run early.
 ### Public-package verification
 
 `.github/workflows/release-finish.yml` runs
-`scripts/infra/publishing/finish-release.ps1` from `main`.
+`scripts/infra/publishing/finish-release.ps1` from `main`. Its
+unchecked-by-default `push` input maps to `DryRun` when unchecked and `Push`
+when checked; local callers can still select `Apply` directly.
 
 An exact stable version is used as-is. An abbreviated preview or RC identity is
 resolved through the NuGet.org flat-container index and must match exactly one

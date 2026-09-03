@@ -8,9 +8,9 @@ description: >
 
 # Release Branch
 
-Use the **Release - Prepare** GitHub workflow for normal releases. `DryRun` is
-the default mode. After reviewing that output, dispatch again with `Apply` for
-local-only state or `Push` for remote release branches.
+Use the **Release - Prepare** GitHub workflow for normal releases. Leave `push`
+unchecked for the read-only plan. After reviewing that output, dispatch again
+with `push` checked to create the remote release branches.
 
 The script requires:
 

@@ -11,7 +11,9 @@ description: >
 The internal Build, Tests, signing, BAR, promotion, and NuGet.org publication
 process is owned by the team pipeline and is outside this skill.
 
-After the exact packages appear on NuGet.org, use **Release - Finish** or run:
+After the exact packages appear on NuGet.org, use **Release - Finish**. Leave
+`push` unchecked for the read-only plan, then dispatch again with `push`
+checked after approval. The equivalent local commands are:
 
 ```powershell
 # Read-only
