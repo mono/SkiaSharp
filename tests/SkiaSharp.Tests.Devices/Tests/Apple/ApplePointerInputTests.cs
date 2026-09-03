@@ -19,11 +19,94 @@ public class AppleWheelDeltaTests
 	[InlineData(40, -120)]
 	[InlineData(-2, 6)]
 	[InlineData(2, -6)]
-	[InlineData(-0.1, 1)]
-	[InlineData(0.1, -1)]
 	[InlineData(0, 0)]
-	public void WheelTranslationUsesIncrementalV120Units(double translationY, int expected) =>
-		Assert.Equal(expected, SKTouchHandler.NormalizeWheelDelta(translationY));
+	public void WheelTranslationUsesIncrementalV120Units(double translationY, int expected)
+	{
+		var projector = new SKTouchHandler.LegacyWheelDeltaProjector();
+
+		Assert.Equal(expected, projector.Project(translationY, UIGestureRecognizerState.Began));
+	}
+
+	[Fact]
+	public void FractionalWheelTranslationIsPreservedAcrossCallbacks()
+	{
+		var projector = new SKTouchHandler.LegacyWheelDeltaProjector();
+
+		Assert.Equal(0, projector.Project(-0.1, UIGestureRecognizerState.Began));
+		Assert.Equal(0, projector.Project(-0.1, UIGestureRecognizerState.Changed));
+		Assert.Equal(0, projector.Project(-0.1, UIGestureRecognizerState.Changed));
+		Assert.Equal(1, projector.Project(-0.1, UIGestureRecognizerState.Changed));
+	}
+
+	[Theory]
+	[InlineData(-1, -0.1, 3)]
+	[InlineData(1, 0.1, -3)]
+	public void WheelProjectionIsInvariantToCallbackPartitioning(
+		double singleTranslation,
+		double partitionedTranslation,
+		int expected)
+	{
+		var singleCallback = new SKTouchHandler.LegacyWheelDeltaProjector();
+		var partitionedCallbacks = new SKTouchHandler.LegacyWheelDeltaProjector();
+
+		var singleTotal = singleCallback.Project(singleTranslation, UIGestureRecognizerState.Began);
+		var partitionedTotal = partitionedCallbacks.Project(partitionedTranslation, UIGestureRecognizerState.Began);
+		for (var i = 1; i < 10; i++)
+			partitionedTotal += partitionedCallbacks.Project(partitionedTranslation, UIGestureRecognizerState.Changed);
+
+		Assert.Equal(expected, singleTotal);
+		Assert.Equal(singleTotal, partitionedTotal);
+	}
+
+	[Fact]
+	public void EndedTranslationIsProjectedBeforeRemainderIsDropped()
+	{
+		var projector = new SKTouchHandler.LegacyWheelDeltaProjector();
+
+		Assert.Equal(0, projector.Project(-0.25, UIGestureRecognizerState.Began));
+		Assert.Equal(2, projector.Project(-0.5, UIGestureRecognizerState.Changed));
+		Assert.Equal(1, projector.Project(-0.25, UIGestureRecognizerState.Ended));
+		Assert.Equal(0, projector.Project(0, UIGestureRecognizerState.Began));
+	}
+
+	[Fact]
+	public void EndedOnlyTranslationIsProjected()
+	{
+		var projector = new SKTouchHandler.LegacyWheelDeltaProjector();
+
+		Assert.Equal(3, projector.Project(-1, UIGestureRecognizerState.Ended));
+	}
+
+	[Fact]
+	public void SubUnitTranslationDoesNotForceWheelDelta()
+	{
+		var projector = new SKTouchHandler.LegacyWheelDeltaProjector();
+
+		Assert.Equal(0, projector.Project(-0.1, UIGestureRecognizerState.Began));
+		Assert.Equal(0, projector.Project(0, UIGestureRecognizerState.Ended));
+	}
+
+	[Fact]
+	public void ProjectorsDoNotShareRemainders()
+	{
+		var first = new SKTouchHandler.LegacyWheelDeltaProjector();
+		var second = new SKTouchHandler.LegacyWheelDeltaProjector();
+
+		Assert.Equal(0, first.Project(-0.3, UIGestureRecognizerState.Began));
+		Assert.Equal(0, second.Project(-0.1, UIGestureRecognizerState.Began));
+		Assert.Equal(1, first.Project(-0.1, UIGestureRecognizerState.Changed));
+		Assert.Equal(0, second.Project(-0.1, UIGestureRecognizerState.Changed));
+	}
+
+	[Fact]
+	public void ResetDropsCancelledGestureRemainder()
+	{
+		var projector = new SKTouchHandler.LegacyWheelDeltaProjector();
+
+		Assert.Equal(0, projector.Project(-0.3, UIGestureRecognizerState.Began));
+		projector.Reset();
+		Assert.Equal(0, projector.Project(-0.1, UIGestureRecognizerState.Changed));
+	}
 }
 
 [Collection("SKUITests")]
@@ -60,6 +143,7 @@ public class ApplePointerInputTests : SKUITests
 			.Where(recognizer =>
 				recognizer.AllowedScrollTypesMask == UIScrollTypeMask.All &&
 				recognizer.MaximumNumberOfTouches == 0));
+		Assert.Empty(scroll.AllowedTouchTypes);
 		Assert.False(scroll.CancelsTouchesInView);
 		Assert.NotNull(scroll.Delegate);
 
