@@ -179,6 +179,9 @@ The maintained cadence follows Chromium's overlapping two-week trains:
 | Stable Cut | Same day | RC 1 |
 | Stable Date | Same day | Stable |
 
+Stable for one milestone and Preview 2 for the next intentionally share the
+same release date.
+
 ## 7. Complete the follow-up pull requests
 
 Review and merge the automation PRs through the normal repository process:

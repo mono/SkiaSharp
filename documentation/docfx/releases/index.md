@@ -26,7 +26,7 @@ SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor version corre
 | m154 Stable Cut | Sep 15 | RC 1 | Sep 15 | `4.154.0-rc.1` |
 | m154 Stable Date | Sep 22 | Stable | Sep 22 | `4.154.0` |
 
-Two milestones are always in flight — as one enters its RC/stable phase, the next begins its preview phase.
+Two milestones are always in flight. Stable for one milestone and Preview 2 for the next intentionally share the same release date.
 
 > [!NOTE]
 > [Starting with Chrome 153](https://developer.chrome.com/blog/chrome-two-week-release) (September 2026), Chrome ships milestones every two weeks. Each milestone still takes about three weeks from branch point to Stable, so adjacent release trains overlap.

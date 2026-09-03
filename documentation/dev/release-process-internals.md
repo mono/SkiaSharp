@@ -341,7 +341,7 @@ to mutate when those warnings make the result unsafe.
 
 - reads the repository's current Skia major/milestone identity;
 - fetches Chromium milestone schedule dates;
-- creates or updates preview.1, preview.2, RC, and stable milestones;
+- creates or updates preview.1, preview.2, RC 1, and stable milestones;
 - moves remaining open work from a shipped milestone to the next unshipped
   milestone; and
 - closes shipped milestones.

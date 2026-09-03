@@ -695,8 +695,8 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
             cur_ms, next_ms, cur_base, next_base, schedule_by_ms))
         lines.extend([
             "",
-            "Two milestones are always in flight — as one enters its RC/stable "
-            "phase, the next begins its preview phase.",
+            "Two milestones are always in flight. Stable for one milestone and "
+            "Preview 2 for the next intentionally share the same release date.",
             "",
             "> [!NOTE]",
             "> [Starting with Chrome 153](https://developer.chrome.com/blog/chrome-two-week-release) "
