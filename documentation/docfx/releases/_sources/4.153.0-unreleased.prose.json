@@ -1,15 +1,21 @@
 {
-  "theme": "Skia m153 engine sync",
-  "highlights_headline": "In progress, this release syncs the bundled engine to Skia milestone 153.",
+  "theme": "Skia m153 engine update",
+  "highlights_headline": "SkiaSharp 4.153.0 bumps to the Skia m153 engine, including upstream bug fixes.",
   "highlights_body": null,
-  "breaking": [],
+  "breaking": [
+    {
+      "title": "Linux font fallback may select a different face",
+      "body": "Skia now tries FcFontMatch before falling back to FcFontSort on Linux. Apps relying on the exact fallback face may see different glyphs or metrics after upgrading; specify an explicit family/style or bundle a typeface when deterministic selection matters.",
+      "prs": [4826]
+    }
+  ],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
           "lead": "Skia updated to milestone 153",
-          "detail": "Brings the bundled Skia engine up to the m153 upstream release line, including a follow-up merge of upstream chrome/m153 bug fixes.",
+          "detail": "Bumps the bundled Skia engine to milestone 153 and merges upstream chrome/m153 bug fixes.",
           "prs": [4826, 4927]
         }
       ]
@@ -26,5 +32,7 @@
     }
   ],
   "contributor_summaries": {},
-  "preview_summaries": {}
+  "preview_summaries": {},
+  "harfbuzz_summary": null,
+  "release_summaries": {}
 }
