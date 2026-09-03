@@ -1,0 +1,93 @@
+{
+  "theme": "Skia m152, Graphite bindings",
+  "highlights_headline": "SkiaSharp 4.152.0 previews Skia m152 with new Graphite GPU backend bindings and several native leak fixes.",
+  "highlights_body": "It adds a Vulkan.Silk.NET package, backend-neutral async pixel reads, and fixes several use-after-free and undisposed-resource leaks discovered during a memory audit.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to milestone m152",
+          "detail": "Brings the bundled Skia engine up to the m152 upstream release line, plus ongoing chrome/m151 and m152 servicing bug-fix merges.",
+          "prs": [4651, 4538, 4568, 4808, 4537]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings added",
+          "detail": "Adds bindings for Skia's Graphite GPU backend across Vulkan, Metal, and Dawn.",
+          "prs": [3968]
+        },
+        {
+          "lead": "Backend-neutral async pixel reads",
+          "detail": "Adds an async RequestReadPixels API to SKImage and SKSurface that works across GPU backends.",
+          "prs": [4545]
+        },
+        {
+          "lead": "Vulkan via Silk.NET",
+          "detail": "Adds the SkiaSharp.Vulkan.Silk.NET package, with Vulkan tests now running on Android and Linux.",
+          "prs": [4527, 4841]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Native use-after-free and leaks fixed",
+          "detail": "Fixes native use-after-free crashes in SKRegion.SpanIterator and SKPixmap.ExtractSubset/With* (both now root their pixel source), an undisposed SKStreamAsset leak in the HarfBuzz blob conversion path, a CoTaskMem pixel-buffer leak on SKImage.Create's raster failure path, and a leaked uniform buffer in SKRuntimeEffectUniforms.Reset().",
+          "prs": [4355, 4558, 4710, 4455, 4783]
+        },
+        {
+          "lead": "Nano Server font support restored",
+          "detail": "Uses FreeType for font support on Nano Server.",
+          "prs": [4280]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Managed hot paths optimized",
+          "detail": "Removes a defensive Feature[] copy in HarfBuzz Font.Shape, avoids char boxing in SKFourByteTag/Tag.ToString, caches a reflection-based skip-registration check, avoids a double buffer copy in SKData.SaveTo, pre-sizes the SKRuntimeEffectUniforms lookup map, and avoids an intermediate string allocation in GetEncodedText's null-terminated path.",
+          "prs": [4690, 4752, 4630, 4550, 4512, 4498]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "New containerized test coverage",
+          "detail": "Adds containerized test legs for Azure Linux, Alpine/musl, and Nano Server.",
+          "prs": [4515]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Restored Nano Server font support by switching it to FreeType.",
+    "mmitche": "Fixed the Windows native build to initialize the MSVC environment only once per build.",
+    "ramezgerges": "Added the Graphite GPU backend bindings for Vulkan, Metal, and Dawn."
+  },
+  "preview_summaries": {
+    "v4.152.0-preview.1.1": "Preview 1 added the Graphite GPU backend bindings, the Vulkan.Silk.NET package, backend-neutral async pixel reads, and fixed several native memory leaks found during an audit.",
+    "v4.152.0-rc.1.26426.14": "Release Candidate 1 bumped to Skia m152, restored Nano Server font support, and converted the solution files to .slnx format."
+  },
+  "harfbuzz_summary": "Avoids a defensive Feature array copy in Font.Shape for lower per-call overhead.",
+  "release_summaries": {
+    "v4.152.0-preview.1.1": {
+      "headline": "SkiaSharp 4.152.0 Preview 1 adds Graphite GPU backend bindings and a Vulkan.Silk.NET package.",
+      "body": "It also fixes several native use-after-free and resource-leak bugs found during a memory audit."
+    },
+    "v4.152.0-rc.1.26426.14": {
+      "headline": "SkiaSharp 4.152.0 Release Candidate 1 updates to Skia m152.",
+      "body": "It also restores Nano Server font support and moves the solution files to .slnx format."
+    }
+  }
+}
