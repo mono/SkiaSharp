@@ -71,6 +71,17 @@ class CadenceTests(unittest.TestCase):
         self.assertEqual(8, len(rows))
         text = "\n".join(rows)
         self.assertIn("m153 Branch Point | Aug 17 | Preview 1 | Aug 18", text)
-        self.assertIn("m153 Early Stable Cut", text)
-        self.assertIn("m153 Stable Cut", text)
-        self.assertIn("m153 Stable Date", text)
+        self.assertIn("m153 Early Stable Cut | Aug 25 | Preview 2 | Aug 25", text)
+        self.assertIn("m153 Stable Cut | Sep 1 | RC 1 | Sep 1", text)
+        self.assertIn("m153 Stable Date | Sep 8 | Stable | Sep 8", text)
+
+    def test_timeline_rejects_stale_schedule_keys(self):
+        stale = {
+            "153": {"beta": "2026-08-19"},
+            "154": {"beta": "2026-09-02"},
+        }
+        with self.assertRaisesRegex(
+                RuntimeError,
+                "missing Chromium marker 'branch_point' for m153.*release-notes-index.py"):
+            self.renderer.render_cadence_timeline(
+                153, 154, "4.153", "4.154", stale)

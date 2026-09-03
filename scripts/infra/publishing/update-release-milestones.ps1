@@ -123,7 +123,7 @@ function Get-ChromiumSchedule([int] $Milestone) {
     return $schedule
 }
 
-# Maps a Chromium schedule to weekly preview, release candidate, and stable milestones.
+# Keep this mapping in sync with release-notes-render.py render_cadence_timeline().
 function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int] $Major) {
     $branch = ConvertTo-ScheduleDate $Schedule.branch_point
     $preview = $branch.AddDays(1)

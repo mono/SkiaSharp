@@ -10,7 +10,7 @@ SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor version corre
 |---|---|---|---|
 | Branch Point | Next day | Preview 1 | Merge upstream Skia, ship initial preview |
 | Early Stable Cut | Same day | Preview 2 | Bug fixes and API additions from preview feedback |
-| Stable Cut | Same day | RC | Critical bug fixes only, no new features |
+| Stable Cut | Same day | RC 1 | Critical bug fixes only, no new features |
 | Stable Date | Same day | Stable | Ship to NuGet.org, tag and create GitHub Release |
 
 **Schedule for the two milestones currently in flight (m153 and m154), from the [Chromium release schedule](https://chromiumdash.appspot.com/schedule):**
@@ -19,11 +19,11 @@ SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor version corre
 |---|---|---|---|---|
 | m153 Branch Point | Aug 17 | Preview 1 | Aug 18 | `4.153.0-preview.1` |
 | m153 Early Stable Cut | Aug 25 | Preview 2 | Aug 25 | `4.153.0-preview.2` |
-| m153 Stable Cut | Sep 1 | RC | Sep 1 | `4.153.0-rc.1` |
 | m154 Branch Point | Aug 31 | Preview 1 | Sep 1 | `4.154.0-preview.1` |
+| m153 Stable Cut | Sep 1 | RC 1 | Sep 1 | `4.153.0-rc.1` |
 | m153 Stable Date | Sep 8 | Stable | Sep 8 | `4.153.0` |
 | m154 Early Stable Cut | Sep 8 | Preview 2 | Sep 8 | `4.154.0-preview.2` |
-| m154 Stable Cut | Sep 15 | RC | Sep 15 | `4.154.0-rc.1` |
+| m154 Stable Cut | Sep 15 | RC 1 | Sep 15 | `4.154.0-rc.1` |
 | m154 Stable Date | Sep 22 | Stable | Sep 22 | `4.154.0` |
 
 Two milestones are always in flight — as one enters its RC/stable phase, the next begins its preview phase.

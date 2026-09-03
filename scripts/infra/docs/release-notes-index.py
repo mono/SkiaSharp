@@ -114,20 +114,15 @@ def fetch_chrome_schedule(milestone, timeout=8):
         raise RuntimeError(
             "Chrome schedule for m{} returned no milestone data".format(milestone))
     ms = mstones[0]
-    fields = {
-        "branch_point": "branch_point",
-        "early_stable_cut": "early_stable_cut",
-        "stable_cut": "stable_cut",
-        "stable_date": "stable_date",
-    }
+    fields = ("branch_point", "early_stable_cut", "stable_cut", "stable_date")
     dates = {}
-    for phase, key in fields.items():
+    for key in fields:
         value = ms.get(key)
         if not value:
             raise RuntimeError(
                 "Chrome schedule for m{} is missing '{}'".format(milestone, key))
-        dates[phase] = date.fromisoformat(value[:10])
-    return {phase: value.isoformat() for phase, value in dates.items()}
+        dates[key] = date.fromisoformat(value[:10])
+    return {key: value.isoformat() for key, value in dates.items()}
 
 
 def _index_json_path():

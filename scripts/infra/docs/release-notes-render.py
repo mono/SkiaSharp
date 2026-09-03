@@ -694,7 +694,7 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
             "|---|---|---|---|",
             "| Branch Point | Next day | Preview 1 | Merge upstream Skia, ship initial preview |",
             "| Early Stable Cut | Same day | Preview 2 | Bug fixes and API additions from preview feedback |",
-            "| Stable Cut | Same day | RC | Critical bug fixes only, no new features |",
+            "| Stable Cut | Same day | RC 1 | Critical bug fixes only, no new features |",
             "| Stable Date | Same day | Stable | Ship to NuGet.org, tag and create GitHub Release |",
             "",
         ])
@@ -797,10 +797,11 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
     and committed in _sources/index.json, so this runs with no network. A missing
     schedule is a hard error — re-run release-notes-index.py to refresh index.json.
     """
+    # Keep this mapping in sync with update-release-milestones.ps1 New-DesiredReleaseMilestones.
     phases = [
         ("Branch Point", "branch_point", 1, "Preview 1", ".0-preview.1"),
         ("Early Stable Cut", "early_stable_cut", 0, "Preview 2", ".0-preview.2"),
-        ("Stable Cut", "stable_cut", 0, "RC", ".0-rc.1"),
+        ("Stable Cut", "stable_cut", 0, "RC 1", ".0-rc.1"),
         ("Stable Date", "stable_date", 0, "Stable", ".0"),
     ]
     schedule_by_ms = schedule_by_ms or {}
@@ -815,6 +816,11 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
     for ms_num, base, sched in (
             (cur_ms, cur_base, cur_sched), (next_ms, next_base, next_sched)):
         for marker, key, offset, release, suffix in phases:
+            if key not in sched:
+                raise RuntimeError(
+                    "index.json is missing Chromium marker '{}' for m{} - re-run "
+                    "release-notes-index.py to refresh _sources/index.json."
+                    .format(key, ms_num))
             release_date = shift_schedule_date(sched[key], offset)
             events.append((
                 release_date,
@@ -822,7 +828,7 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
                 "m{} {}".format(ms_num, marker),
                 release,
                 "`{}{}`".format(base, suffix)))
-    events.sort(key=lambda e: e[0])
+    events.sort(key=lambda e: (e[0], e[1], e[2]))
     header = (
         "**Schedule for the two milestones currently in flight "
         "(m{} and m{}), from the "
