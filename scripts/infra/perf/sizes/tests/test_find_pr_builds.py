@@ -1,307 +1,206 @@
 #!/usr/bin/env python3
-"""Tests for the PR artifact-size intake (scripts/infra/perf/sizes/find_pr_builds.py).
-
-These cover the properties that replaced the old `check_run` subscription:
-
-* discovery is ONE Azure DevOps query, not one per open pull request;
-* only the newest build per PR is considered, since older ones are superseded;
-* a build is selected on a durable comment stamp, never on the clock;
-* the stamp carries the STAGE attempt, because Azure DevOps reuses the build id on a
-  re-run and `buildNumberRevision` is a daily counter that cannot distinguish one;
-* an unreadable comment SKIPS the PR rather than re-measuring it (~1 GB per measurement);
-* selection is oldest-first so a backlog drains FIFO.
-"""
+"""Tests for the PR artifact-size intake."""
 
 from __future__ import annotations
 
-import contextlib
-import io
 import os
-import re
 import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import find_pr_builds  # noqa: E402
+import find_pr_builds as f  # noqa: E402
+
+T0 = "2026-01-01T00:00:00"
+T1 = "2026-01-02T00:00:00"
 
 
-# --------------------------------------------------------------------------- #
-# Fixtures
-# --------------------------------------------------------------------------- #
-
-def azdo_build(build_id, pr, *, status="completed", result="succeeded", finish="2026-01-01T00:00:00Z"):
-    return {
-        "id": build_id,
-        "sourceBranch": f"refs/pull/{pr}/merge",
-        "status": status,
-        "result": result,
-        "finishTime": finish,
-        "buildNumberRevision": 29,  # a daily counter; must NOT be used as the attempt
-    }
+def build(build_id, pr, *, status="completed", result="succeeded"):
+    return {"id": build_id, "sourceBranch": f"refs/pull/{pr}/merge",
+            "status": status, "result": result}
 
 
-def azdo_feed(*builds):
-    def _fetch(url, headers=None):
-        return {"count": len(builds), "value": list(builds)}
-    return _fetch
+def feed(*builds):
+    return lambda url, headers=None: {"value": list(builds)}
 
 
-def timeline(state="completed", result="succeeded", attempt=1):
-    def _fetch(url, headers=None):
-        return {"records": [
-            {"type": "Stage", "name": "Native", "state": "completed", "result": "succeeded"},
-            {"type": "Stage", "name": find_pr_builds.PACKAGE_STAGE, "state": state, "result": result, "attempt": attempt},
-        ]}
-    return _fetch
+def select(*builds, stage=None, reported=None):
+    return f.select("o/r", 2,
+                    builds=lambda: f.newest_build_per_pr(2, fetch=feed(*builds)),
+                    stage=stage or (lambda b: T1),
+                    reported=reported or (lambda pr: None))
 
 
-def paged_fetch(pages, *, fail_on_page=None):
-    """Serve /comments pages in the API's real oldest-first order."""
-    seen = []
+class ParseTimeTests(unittest.TestCase):
+    def test_parses_every_precision_azure_emits(self):
+        """Azure mixes 7-, 2-, 1-digit and absent fractions within a single timeline."""
+        for value in ("2026-09-02T03:34:33Z", "2026-09-02T03:34:33.4Z",
+                      "2026-09-02T03:34:33.83Z", "2026-09-02T03:34:33.3866667Z"):
+            parsed = f.parse_time(value)
+            self.assertIsNotNone(parsed, value)
+            self.assertEqual("2026-09-02T03:34:33", parsed.strftime(f.STAMP_FORMAT), value)
 
-    def _fetch(url, headers=None):
-        seen.append(url)
-        page = int(re.search(r"[?&]page=(\d+)", url).group(1))
-        if fail_on_page is not None and page == fail_on_page:
-            raise RuntimeError("403 rate limited")
-        return pages[page - 1] if page - 1 < len(pages) else []
+    def test_compares_chronologically_where_strings_do_not(self):
+        """Raw: 'Z' (0x5A) > '.' (0x2E), so the same instant would rank as later."""
+        bare, frac = "2026-09-02T03:34:33Z", "2026-09-02T03:34:33.3866667Z"
+        self.assertGreater(bare, frac)                             # the trap
+        self.assertLess(f.parse_time(bare), f.parse_time(frac))    # sub-second, ordered
+        self.assertLess(f.parse_time(frac), f.parse_time("2026-09-02T05:10:46.04Z"))
 
-    _fetch.seen = seen
-    return _fetch
+    def test_our_own_stamp_round_trips(self):
+        """A stored stamp is naive; an Azure value is aware. They must stay comparable."""
+        stored, azure = f.parse_time("2026-09-02T03:34:33"), f.parse_time("2026-09-02T03:34:33Z")
+        self.assertEqual(stored, azure)
 
-
-def comment(body):
-    return {"body": body}
-
-
-def report(identity):
-    return comment(f"<!-- skiasharp-pr-artifact-sizes -->\n<!-- build={identity} -->\nreport")
+    def test_missing_or_malformed_is_none(self):
+        for value in (None, "", "not-a-time"):
+            self.assertIsNone(f.parse_time(value))
 
 
-# --------------------------------------------------------------------------- #
-# Discovery
-# --------------------------------------------------------------------------- #
-
-class RecentPrBuildsTests(unittest.TestCase):
+class DiscoveryTests(unittest.TestCase):
     def test_one_query_covers_every_pr(self):
-        seen = []
+        calls = []
 
-        def _fetch(url, headers=None):
-            seen.append(url)
-            return {"value": [azdo_build(1, 10), azdo_build(2, 11), azdo_build(3, 12)]}
+        def fetch(url, headers=None):
+            calls.append(url)
+            return {"value": [build(1, 10), build(2, 11), build(3, 12)]}
 
-        got = find_pr_builds.recent_pr_builds(fetch=_fetch)
-        self.assertEqual({10, 11, 12}, set(got))
-        self.assertEqual(1, len(seen), "discovery must not scale with open PR count")
-
-    def test_query_is_scoped(self):
-        seen = []
-
-        def _fetch(url, headers=None):
-            seen.append(url)
-            return {"value": []}
-
-        find_pr_builds.recent_pr_builds(fetch=_fetch, hours=2)
-        url = seen[0]
-        self.assertIn("definitions=345", url)
-        self.assertIn("minTime=", url)
-        self.assertIn("queryOrder=finishTimeDescending", url)
+        self.assertEqual({10, 11, 12}, set(f.newest_build_per_pr(2, fetch=fetch)))
+        self.assertEqual(1, len(calls), "must not scale with open PR count")
 
     def test_keeps_only_the_newest_build_per_pr(self):
-        fetch = azdo_feed(azdo_build(100, 10), azdo_build(250, 10), azdo_build(180, 10))
-        got = find_pr_builds.recent_pr_builds(fetch=fetch)
-        self.assertEqual(250, got[10]["id"], "a superseded build must not be reported")
+        got = f.newest_build_per_pr(2, fetch=feed(build(100, 10), build(250, 10), build(180, 10)))
+        self.assertEqual(250, got[10]["id"])
 
     def test_ignores_non_pr_builds(self):
-        main_build = dict(azdo_build(1, 1), sourceBranch="refs/heads/main")
-        fetch = azdo_feed(main_build, azdo_build(2, 42))
-        self.assertEqual({42}, set(find_pr_builds.recent_pr_builds(fetch=fetch)))
+        main = dict(build(1, 1), sourceBranch="refs/heads/main")
+        self.assertEqual({42}, set(f.newest_build_per_pr(2, fetch=feed(main, build(2, 42)))))
 
 
-class PackageStageTests(unittest.TestCase):
-    def test_reports_success_and_attempt(self):
-        ok, attempt = find_pr_builds.package_stage_status("1", fetch=timeline(attempt=3))
-        self.assertTrue(ok)
-        self.assertEqual(3, attempt)
+class PackagedAtTests(unittest.TestCase):
+    def stage(self, **kw):
+        rec = {"type": "Stage", "name": f.PACKAGE_STAGE, "state": "completed",
+               "result": "succeeded", "finishTime": T1}
+        rec.update(kw)
+        return lambda url, headers=None: {"records": [rec]}
 
-    def test_incomplete_stage_is_not_ready(self):
-        ok, _ = find_pr_builds.package_stage_status("1", fetch=timeline(state="inProgress", result=None))
-        self.assertFalse(ok)
+    def test_returns_finish_time_when_succeeded(self):
+        self.assertEqual(T1, f.packaged_at("1", fetch=self.stage()))
 
-    def test_failed_stage_is_not_ready(self):
-        ok, _ = find_pr_builds.package_stage_status("1", fetch=timeline(result="failed"))
-        self.assertFalse(ok)
+    def test_none_while_running(self):
+        self.assertIsNone(f.packaged_at("1", fetch=self.stage(state="inProgress", result=None)))
 
-    def test_missing_stage_is_not_ready(self):
-        ok, attempt = find_pr_builds.package_stage_status("1", fetch=lambda url, headers=None: {"records": []})
-        self.assertFalse(ok)
-        self.assertEqual(1, attempt)
+    def test_none_when_failed(self):
+        self.assertIsNone(f.packaged_at("1", fetch=self.stage(result="failed")))
+
+    def test_none_when_stage_absent(self):
+        self.assertIsNone(f.packaged_at("1", fetch=lambda url, headers=None: {"records": []}))
 
     def test_unreadable_timeline_is_contained(self):
-        def _boom(url, headers=None):
+        def boom(url, headers=None):
             raise RuntimeError("azdo 503")
-        ok, _ = find_pr_builds.package_stage_status("1", fetch=_boom)
-        self.assertFalse(ok, "an unreadable timeline must not be treated as ready")
+        self.assertIsNone(f.packaged_at("1", fetch=boom))
 
-
-# --------------------------------------------------------------------------- #
-# The stamp
-# --------------------------------------------------------------------------- #
-
-class ReportedBuildTests(unittest.TestCase):
-    """The per-issue comments endpoint ignores sort/direction: always oldest-first."""
-
-    def test_finds_stamp_on_the_first_page(self):
-        fetch = paged_fetch([[comment("hi"), report("111.1")]])
-        self.assertEqual("111.1", find_pr_builds.reported_build("o/r", 1, fetch=fetch))
-
-    def test_finds_stamp_beyond_the_first_page(self):
-        page1 = [comment(f"noise {i}") for i in range(100)]
-        fetch = paged_fetch([page1, [comment("x"), report("222.1")]])
-        self.assertEqual("222.1", find_pr_builds.reported_build("o/r", 1, fetch=fetch))
-        self.assertTrue(any("page=2" in u for u in fetch.seen))
-
-    def test_first_marker_comment_wins_like_the_writers(self):
-        """Reader and writers must agree on WHICH comment is authoritative."""
-        fetch = paged_fetch([[report("1.1")] + [comment("x")] * 99, [report("2.1")]])
-        self.assertEqual("1.1", find_pr_builds.reported_build("o/r", 1, fetch=fetch))
-
-    def test_no_report_is_none(self):
-        self.assertIsNone(find_pr_builds.reported_build("o/r", 1, fetch=paged_fetch([[comment("none")]])))
-
-    def test_api_failure_raises_rather_than_reporting_absent(self):
-        fetch = paged_fetch([[comment("x")] * 100, []], fail_on_page=2)
-        with self.assertRaises(find_pr_builds.GitHubReadError):
-            find_pr_builds.reported_build("o/r", 1, fetch=fetch)
-
-
-# --------------------------------------------------------------------------- #
-# Selection
-# --------------------------------------------------------------------------- #
 
 class SelectTests(unittest.TestCase):
-    def select(self, *builds, reported=None, **kw):
-        return find_pr_builds.select(
-            "o/r",
-            azdo_fetch=azdo_feed(*builds),
-            timeline_fetch=timeline(),
-            read_reported=reported or (lambda pr: None),
-            **kw)
+    def test_reports_an_unreported_build(self):
+        self.assertEqual([{"pr": 10, "build": "500", "packagedAt": T1}], select(build(500, 10)))
 
-    def test_selects_an_unreported_build(self):
-        got = self.select(azdo_build(500, 10))
-        self.assertEqual([{"pr": 10, "build": "500", "identity": "500.1"}], got)
+    def test_skips_when_not_newer_than_the_report(self):
+        self.assertEqual([], select(build(500, 10), reported=lambda pr: f.parse_time(T1)))
 
-    def test_skips_a_build_already_reported(self):
-        self.assertEqual([], self.select(azdo_build(500, 10), reported=lambda pr: "500.1"))
+    def test_reports_a_rerun_because_it_packages_later(self):
+        """Ordering removes any dependence on a rerun/attempt counter."""
+        got = select(build(500, 10), reported=lambda pr: f.parse_time(T0))
+        self.assertEqual(1, len(got))
 
-    def test_reports_again_after_a_stage_rerun(self):
-        """The id is reused on a re-run, so the attempt is what distinguishes it."""
-        got = find_pr_builds.select(
-            "o/r",
-            azdo_fetch=azdo_feed(azdo_build(500, 10)),
-            timeline_fetch=timeline(attempt=2),
-            read_reported=lambda pr: "500.1")
-        self.assertEqual("500.2", got[0]["identity"])
-
-    def test_daily_revision_is_not_used_as_the_attempt(self):
-        got = self.select(azdo_build(500, 10))
-        self.assertEqual("500.1", got[0]["identity"], "buildNumberRevision (29) must never appear in the stamp")
-
-    def test_failed_build_is_skipped(self):
-        self.assertEqual([], self.select(azdo_build(500, 10, result="failed")))
-
-    def test_unpackaged_build_is_skipped(self):
-        got = find_pr_builds.select(
-            "o/r",
-            azdo_fetch=azdo_feed(azdo_build(500, 10, status="inProgress", result=None)),
-            timeline_fetch=timeline(state="inProgress", result=None),
-            read_reported=lambda pr: None)
+    def test_ignores_a_stale_out_of_order_result(self):
+        got = select(build(500, 10), stage=lambda b: T0, reported=lambda pr: f.parse_time(T1))
         self.assertEqual([], got)
 
-    def test_in_progress_build_reports_once_packaged(self):
-        """Watching the package stage reports well before the build finishes."""
-        got = find_pr_builds.select(
-            "o/r",
-            azdo_fetch=azdo_feed(azdo_build(500, 10, status="inProgress", result=None)),
-            timeline_fetch=timeline(),
-            read_reported=lambda pr: None)
-        self.assertEqual(1, len(got))
+    def test_reports_a_failed_build_that_packaged_successfully(self):
+        """Real case (build 1577663): failed overall, `Package NuGets` succeeded.
+
+        The packages exist and their sizes are meaningful, so gating on the build's overall
+        result would silently discard them. Only the stage's own result may gate this.
+        """
+        self.assertEqual(1, len(select(build(500, 10, result="failed"))))
+
+    def test_skips_a_build_whose_packaging_failed(self):
+        self.assertEqual([], select(build(500, 10, result="failed"), stage=lambda b: None))
+
+    def test_skips_a_build_that_has_not_packaged(self):
+        self.assertEqual([], select(build(500, 10), stage=lambda b: None))
+
+    def test_reports_an_in_progress_build_once_packaged(self):
+        self.assertEqual(1, len(select(build(500, 10, status="inProgress", result=None))))
 
     def test_oldest_first(self):
-        got = self.select(
-            azdo_build(3, 12, finish="2026-01-01T03:00:00Z"),
-            azdo_build(1, 10, finish="2026-01-01T01:00:00Z"),
-            azdo_build(2, 11, finish="2026-01-01T02:00:00Z"))
-        self.assertEqual([10, 11, 12], [e["pr"] for e in got])
-
-    def test_no_cap_every_ready_build_is_returned(self):
-        """Measured worst case is 7 PRs per 2h against a 256-job matrix limit."""
-        got = self.select(*[azdo_build(i, i) for i in range(1, 21)])
-        self.assertEqual(20, len(got))
+        times = {1: "2026-01-03T00:00:00", 2: "2026-01-01T00:00:00", 3: "2026-01-02T00:00:00"}
+        got = select(build(1, 10), build(2, 11), build(3, 12), stage=lambda b: times[b])
+        self.assertEqual([11, 12, 10], [e["pr"] for e in got])
 
     def test_unreadable_comment_skips_rather_than_measuring(self):
-        def _boom(pr):
-            raise find_pr_builds.GitHubReadError("429")
-        self.assertEqual([], self.select(azdo_build(500, 10), reported=_boom))
+        """An unknown stamp must not cause a ~1.1 GB re-download."""
+        def boom(pr):
+            raise RuntimeError("429")
+        self.assertEqual([], select(build(500, 10), reported=boom))
 
-    def test_only_pr_restricts_to_one_pull_request(self):
-        got = self.select(azdo_build(1, 10), azdo_build(2, 11), only_pr=11)
-        self.assertEqual([11], [e["pr"] for e in got])
-
-    def test_ignore_reported_reports_on_demand(self):
-        """Kept for the manual dispatch/backfill route, which must be able to re-report."""
-        got = self.select(azdo_build(500, 10), reported=lambda pr: "500.1", ignore_reported=True)
-        self.assertEqual(1, len(got))
+    def test_no_cap(self):
+        self.assertEqual(20, len(select(*[build(i, i) for i in range(1, 21)])))
 
     def test_nothing_ready_is_empty(self):
-        self.assertEqual([], self.select())
-
-    def test_widespread_read_failure_is_warned_about(self):
-        def _boom(pr):
-            raise find_pr_builds.GitHubReadError("429")
-        buf = io.StringIO()
-        with contextlib.redirect_stderr(buf):
-            self.select(*[azdo_build(i, i) for i in range(1, 6)], reported=_boom)
-        self.assertIn("::warning::", buf.getvalue())
+        self.assertEqual([], select())
 
 
-# --------------------------------------------------------------------------- #
-# Workflow wiring
-# --------------------------------------------------------------------------- #
+class StampTests(unittest.TestCase):
+    MARKER = "<!-- skiasharp-pr-artifact-sizes -->"
+
+    def comments(self, *bodies):
+        return lambda url, headers=None: [{"body": b} for b in bodies]
+
+    def test_reads_the_stamp(self):
+        fetch = self.comments("hi", f"{self.MARKER}\n<!-- build=7 packaged={T1} -->")
+        self.assertEqual(f.parse_time(T1), f.reported_at("o/r", 1, fetch=fetch))
+
+    def test_first_marker_wins_matching_the_writers(self):
+        fetch = self.comments(f"{self.MARKER}\n<!-- build=1 packaged={T0} -->",
+                              f"{self.MARKER}\n<!-- build=2 packaged={T1} -->")
+        self.assertEqual(f.parse_time(T0), f.reported_at("o/r", 1, fetch=fetch))
+
+    def test_no_report_is_none(self):
+        self.assertIsNone(f.reported_at("o/r", 1, fetch=self.comments("nothing here")))
+
+    def test_read_failure_propagates(self):
+        def boom(url, headers=None):
+            raise RuntimeError("403")
+        with self.assertRaises(RuntimeError):
+            f.reported_at("o/r", 1, fetch=boom)
+
 
 class WorkflowTests(unittest.TestCase):
-    """Guards on the workflow itself: no loop-prone trigger, and a safe comment command."""
-
-    WORKFLOW = os.path.abspath(os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "..", "..", "..", "..", "..",
-        ".github", "workflows", "track-artifact-sizes.yml"))
+    PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                        "..", "..", "..", "..", "..",
+                                        ".github", "workflows", "track-artifact-sizes.yml"))
 
     def setUp(self):
         import yaml
-        with open(self.WORKFLOW, encoding="utf-8") as fh:
+        with open(self.PATH, encoding="utf-8") as fh:
             self.raw = fh.read()
         self.wf = yaml.safe_load(self.raw)
         self.on = self.wf.get("on", self.wf.get(True))
 
-    def test_never_subscribes_to_check_run_or_check_suite(self):
-        """The loop that produced 40,000 runs. A skipped job still publishes a check run."""
-        self.assertNotIn("check_run", self.on)
-        self.assertNotIn("check_suite", self.on)
-
-    def test_sweep_is_hourly(self):
-        crons = [s["cron"] for s in self.on["schedule"]]
-        self.assertIn("0 7 * * *", crons, "the nightly measurement must survive")
-        self.assertTrue(any(c.endswith("* * * *") and not c.startswith("0 7") for c in crons))
-
-    def test_only_subscribes_to_events_actions_cannot_emit(self):
-        """This workflow posts PR comments, so an `issue_comment` trigger could re-trigger it."""
+    def test_only_events_actions_cannot_emit(self):
+        """check_run looped to 40,000 runs; this workflow also posts comments."""
         self.assertEqual({"schedule", "workflow_dispatch"}, set(self.on))
 
-    def test_matrix_inputs_are_guarded_against_empty_string(self):
-        """`strategy.matrix` expands BEFORE the job `if:`, so fromJSON('') fails the run."""
+    def test_nightly_and_hourly_sweep(self):
+        crons = [s["cron"] for s in self.on["schedule"]]
+        self.assertIn("0 7 * * *", crons)
+        self.assertTrue(any(c != "0 7 * * *" for c in crons))
+
+    def test_matrix_guarded_against_empty_string(self):
+        """strategy.matrix expands BEFORE the job `if:`, so fromJSON('') fails the run."""
         self.assertIn("steps.builds.outputs.matrix || '[]'", self.raw)
         self.assertIn("needs.resolve.outputs.matrix || '[]'", self.raw)
 

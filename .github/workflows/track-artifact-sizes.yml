@@ -29,9 +29,11 @@ name: Track - Artifact Sizes
 #
 # The replacement is one anonymous Azure DevOps query per sweep that returns every recent
 # PR build, so discovery is O(1) in the number of open pull requests rather than O(open
-# PRs). Whether a build is reported is decided by a durable `<!-- build=id.attempt -->`
-# stamp in the PR comment, not by the clock, so a duplicate sweep is a no-op and a missed
-# one catches up. See scripts/infra/perf/sizes/find_pr_builds.py.
+# PRs). Whether a build is reported is decided by a durable
+# `<!-- build=<id> packaged=<time> -->` stamp in the PR comment rather than by the sweep's
+# own clock: a build is measured only when its packages are NEWER than the ones already
+# reported, so a duplicate sweep is a no-op, a missed one catches up, a stage re-run reports
+# itself by finishing later, and a stale out-of-order result is ignored. See scripts/infra/perf/sizes/find_pr_builds.py.
 
 on:
   schedule:
@@ -125,11 +127,13 @@ jobs:
             # never consults the dedupe stamp, so it is also the deliberate retry route
             # for a build the sweep has already stamped.
             python3 - <<'PY' > matrix.json
-          import json, os
+          import datetime, json, os
           print(json.dumps([{
               "pr": (os.environ.get("INPUT_PR_NUMBER") or "").strip(),
               "build": os.environ["INPUT_BUILD_ID"].strip(),
-              "identity": os.environ["INPUT_BUILD_ID"].strip() + ".1",
+              # A manual dispatch does not consult the stamp, so "now" is a truthful record
+              # of when this report was produced and keeps the stamp strictly increasing.
+              "packagedAt": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
           }]))
           PY
           else
@@ -261,7 +265,7 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           BUILD_ID: ${{ matrix.build }}
-          BUILD_IDENTITY: ${{ matrix.identity }}
+          PACKAGED_AT: ${{ matrix.packagedAt }}
           PR_NUMBER: ${{ matrix.pr }}
         with:
           script: |
@@ -274,7 +278,7 @@ jobs:
             const buildId = process.env.BUILD_ID;
             const body = [
               marker,
-              `<!-- build=${process.env.BUILD_IDENTITY || buildId} -->`,
+              `<!-- build=${buildId} packaged=${process.env.PACKAGED_AT || new Date().toISOString().slice(0, 19)} -->`,
               '## 📦 Artifact size report',
               '',
               `Measuring the packages from build [\`${buildId}\`](${process.env.BUILD_URL})…`,
@@ -370,7 +374,7 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           BUILD_ID: ${{ matrix.build }}
-          BUILD_IDENTITY: ${{ matrix.identity }}
+          PACKAGED_AT: ${{ matrix.packagedAt }}
           PR_NUMBER: ${{ matrix.pr }}
         with:
           script: |
@@ -383,7 +387,7 @@ jobs:
             const buildId = process.env.BUILD_ID;
             const body = [
               marker,
-              `<!-- build=${process.env.BUILD_IDENTITY || buildId} -->`,
+              `<!-- build=${buildId} packaged=${process.env.PACKAGED_AT || new Date().toISOString().slice(0, 19)} -->`,
               '## 📦 Artifact size report',
               '',
               `Could not measure the packages from build [\`${buildId}\`](${process.env.BUILD_URL}).`,
