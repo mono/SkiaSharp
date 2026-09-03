@@ -13,6 +13,7 @@ name: Automation - Tooling Tests
 on:
   pull_request:
     paths:
+      - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
       - "scripts/infra/perf/**"
@@ -21,6 +22,7 @@ on:
   push:
     branches: [main]
     paths:
+      - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
       - "scripts/infra/perf/**"
@@ -50,6 +52,21 @@ jobs:
           python3 -c "import yaml" 2>/dev/null \
             || python3 -m pip install --quiet --break-system-packages pyyaml
           python3 -m unittest discover -s scripts/infra/perf/sizes/tests -p "test_*.py"
+
+      - name: Run ci-status workflow registry tests
+        # Guards the CI dashboard against tracking workflows that no longer exist — a stale
+        # entry does not error, it renders a green row for a workflow that is not there.
+        # The suite arrives with #4932; the guard keeps this workflow green whichever of the
+        # two merges first, rather than coupling two otherwise independent PRs.
+        run: |
+          set -euo pipefail
+          dir=.agents/skills/ci-status/scripts/tests
+          if [ ! -d "$dir" ]; then
+            echo "::notice::$dir not present yet (arrives with #4932); skipping."
+            exit 0
+          fi
+          python3 -c "import yaml" 2>/dev/null || python3 -m pip install --quiet --break-system-packages pyyaml
+          python3 -m unittest discover -s "$dir" -p "test_*.py"
 
       - name: Run perf HTTP contract tests
         # Pins the RuntimeError contract that feed_versions, track.enumerate_feed_packages
