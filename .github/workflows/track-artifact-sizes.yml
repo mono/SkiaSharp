@@ -326,11 +326,14 @@ jobs:
           fi
 
       - name: Render the size-diff comment
+        env:
+          PACKAGED_AT: ${{ matrix.packagedAt }}
         run: |
           python3 scripts/infra/perf/sizes/render_pr_md.py \
             --pr-sizes pr-sizes.json \
             --baseline baseline.json \
             --build-url "$BUILD_URL" \
+            --packaged-at "$PACKAGED_AT" \
             --output comment.md
 
       - name: Post or update the PR comment

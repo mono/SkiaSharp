@@ -105,19 +105,20 @@ def baseline_nupkg(baseline_pkg: dict) -> int | None:
 # Rendering
 # --------------------------------------------------------------------------- #
 
-def render(pr: dict, baseline: dict | None, *, build_url: str | None) -> str:
+def render(pr: dict, baseline: dict | None, *, build_url: str | None,
+           packaged_at: str | None = None) -> str:
     pr_pkgs: dict[str, dict] = pr.get("packages", {})
     base_pkgs: dict[str, dict] = (baseline or {}).get("packages", {})
 
     lines: list[str] = [MARKER]
 
     build_id = pr.get("buildId")
-    # Machine-readable build stamp: the scheduled PR intake reads this back so a build that
-    # is already reported is never downloaded and measured again. Guard the append — a
-    # `build=None` stamp would not match the intake's numeric pattern and would silently
-    # disable dedupe for this PR.
-    if build_id:
-        lines.append(f"<!-- build={build_id} -->")
+    # Machine-readable stamp. This body REPLACES the one the claim step wrote, so it must
+    # carry the same `build=<id> packaged=<time>` form find_pr_builds.py reads back —
+    # emitting only `build=<id>` would leave the intake unable to match, and every sweep
+    # would re-download and re-measure this build.
+    if build_id and packaged_at:
+        lines.append(f"<!-- build={build_id} packaged={packaged_at} -->")
     lines += ["## 📦 Artifact size report", ""]
 
     build_ref = f"[`{build_id}`]({build_url})" if build_url else f"`{build_id}`"
@@ -273,6 +274,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                    help="Baseline nightly raw snapshot JSON (sizes/raw/<date>.json). "
                         "Omit / point at a missing file to render absolute sizes only.")
     p.add_argument("--build-url", default=None, help="AzDO build results URL for the header link.")
+    p.add_argument("--packaged-at", default=None,
+                   help="When the packages were produced; recorded in the dedupe stamp.")
     p.add_argument("--output", default=None,
                    help="Write the Markdown here (default: stdout). Also appended to "
                         "$GITHUB_STEP_SUMMARY when set.")
@@ -292,7 +295,7 @@ def main(argv: list[str]) -> int:
         except (json.JSONDecodeError, OSError) as err:
             print(f"warning: could not read baseline ({err}); absolute-only", file=sys.stderr)
 
-    markdown = render(pr, baseline, build_url=args.build_url)
+    markdown = render(pr, baseline, build_url=args.build_url, packaged_at=args.packaged_at)
 
     if args.output:
         with open(args.output, "w", encoding="utf-8") as fh:

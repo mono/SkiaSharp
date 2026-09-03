@@ -178,6 +178,37 @@ class StampTests(unittest.TestCase):
             f.reported_at("o/r", 1, fetch=boom)
 
 
+class StampRoundTripTests(unittest.TestCase):
+    """The rendered comment REPLACES the claim step's body, so it must carry the same stamp.
+
+    If the renderer emitted only `build=<id>`, the intake could never match it and would
+    re-download and re-measure the same ~1.1 GB artifact on every sweep.
+    """
+
+    def test_renderer_output_is_readable_by_the_intake(self):
+        import json as _json
+        import subprocess
+        import tempfile
+        render = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                              "render_pr_md.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            sizes = os.path.join(tmp, "pr.json")
+            out = os.path.join(tmp, "comment.md")
+            with open(sizes, "w", encoding="utf-8") as fh:
+                _json.dump({"buildId": "1577884", "prNumber": 10,
+                            "packages": {"SkiaSharp": {"version": "3.1.0", "nupkg": 1000,
+                                                       "files": {}, "natives": {}}}}, fh)
+            subprocess.run([sys.executable, render, "--pr-sizes", sizes,
+                            "--packaged-at", "2026-09-02T03:34:33", "--output", out],
+                           check=True, capture_output=True)
+            with open(out, encoding="utf-8") as fh:
+                body = fh.read()
+        match = f.STAMP_RE.search(body)
+        self.assertIsNotNone(match, f"intake cannot read the rendered stamp:\n{body[:200]}")
+        self.assertEqual("1577884", match.group(1))
+        self.assertEqual(f.parse_time("2026-09-02T03:34:33"), f.parse_time(match.group(2)))
+
+
 class WorkflowTests(unittest.TestCase):
     PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                         "..", "..", "..", "..", "..",
@@ -198,6 +229,10 @@ class WorkflowTests(unittest.TestCase):
         crons = [s["cron"] for s in self.on["schedule"]]
         self.assertIn("0 7 * * *", crons)
         self.assertTrue(any(c != "0 7 * * *" for c in crons))
+
+    def test_renderer_receives_the_packaging_time(self):
+        """Without it the renderer omits the stamp and dedupe silently stops working."""
+        self.assertIn("--packaged-at", self.raw)
 
     def test_matrix_guarded_against_empty_string(self):
         """strategy.matrix expands BEFORE the job `if:`, so fromJSON('') fails the run."""
