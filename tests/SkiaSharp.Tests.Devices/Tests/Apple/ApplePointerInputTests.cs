@@ -135,6 +135,8 @@ public class ApplePointerInputTests : SKUITests
 		var platformView = Assert.IsAssignableFrom<UIView>(view.Handler!.PlatformView);
 		var recognizers = platformView.GestureRecognizers ?? Array.Empty<UIGestureRecognizer>();
 
+		var touch = Assert.Single(recognizers.Where(recognizer =>
+			recognizer.GetType().DeclaringType == typeof(SKTouchHandler)));
 		var hover = Assert.Single(recognizers.OfType<UIHoverGestureRecognizer>());
 		Assert.False(hover.CancelsTouchesInView);
 
@@ -154,6 +156,7 @@ public class ApplePointerInputTests : SKUITests
 
 		SetTouchEvents(view, false);
 
+		Assert.DoesNotContain(touch, platformView.GestureRecognizers ?? Array.Empty<UIGestureRecognizer>());
 		Assert.DoesNotContain(hover, platformView.GestureRecognizers ?? Array.Empty<UIGestureRecognizer>());
 		Assert.DoesNotContain(scroll, platformView.GestureRecognizers ?? Array.Empty<UIGestureRecognizer>());
 
