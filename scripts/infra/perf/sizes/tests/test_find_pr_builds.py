@@ -282,6 +282,44 @@ class CommentContractTests(unittest.TestCase):
         self.assertTrue(url.endswith("/issues/7/comments"))
 
 
+class EntryPointTests(unittest.TestCase):
+    """The workflow runs these as CLI scripts, so main() is the production path.
+
+    Everything else here calls compose/upsert/select directly. That left main() free to drop
+    the stamp — the bug this branch already shipped once — or to post nothing at all, with the
+    whole suite still green.
+    """
+
+    def test_posting_goes_through_compose_so_the_body_is_stamped(self):
+        posted = []
+        original = pc.upsert
+        pc.upsert = lambda repo, pr, body, **kw: posted.append(body)
+        try:
+            pc.main(["--repo", "o/r", "--pr", "7", "--build", "1577884",
+                     "--packaged-at", T1, "--status", "claiming"])
+        finally:
+            pc.upsert = original
+        self.assertEqual(1, len(posted), "main() posted nothing")
+        match = pc.STAMP_RE.search(posted[0])
+        self.assertIsNotNone(match, f"main() posted an unstamped body:\n{posted[0]}")
+        self.assertEqual("1577884", match.group(1))
+        self.assertEqual(parse_iso_utc(T1), parse_iso_utc(match.group(2)))
+
+    def test_the_matrix_written_out_is_what_select_chose(self):
+        import tempfile
+        original = f.select
+        f.select = lambda *a, **kw: [{"pr": 10, "build": "500", "packagedAt": T1}]
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out = os.path.join(tmp, "matrix.json")
+                f.main(["--repo", "o/r", "--output", out])
+                with open(out, encoding="utf-8") as fh:
+                    written = json.load(fh)
+        finally:
+            f.select = original
+        self.assertEqual([{"pr": 10, "build": "500", "packagedAt": T1}], written)
+
+
 class WorkflowTests(unittest.TestCase):
     PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                         "..", "..", "..", "..", "..",
