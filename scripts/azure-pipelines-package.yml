@@ -107,9 +107,9 @@ extends:
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     settings:
-      # Temporary during migration: collect required egress without blocking
-      # official builds. Switch to Enforce after mirrors/allowlisting are ready.
-      networkIsolationMode: Audit
+      # Network isolation remains enforced, but this shared .NET policy permits
+      # required build egress and cleans the CFS rules after each job.
+      networkIsolationPolicy: Permissive,CFSClean
     customBuildTags:
       - ES365AIMigrationTooling
     sdl:
