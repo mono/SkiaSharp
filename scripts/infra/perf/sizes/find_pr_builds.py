@@ -1,33 +1,36 @@
 #!/usr/bin/env python3
-"""Find the newest successful package build for each open PR.
+"""Find PR package builds that still need an artifact-size report.
 
-This is the *targeted intake* for the PR mode of ``track-artifact-sizes``.
+This is the intake for the PR mode of ``track-artifact-sizes``.
 
-Historically the workflow subscribed to ``check_run: [completed]`` so it could react the
-moment the Azure DevOps ``Package NuGets`` job finished. GitHub offers no server-side
-filter for ``check_run`` (no app, name, or path filters), so that subscription started a
-runner for **every** completed check run on the default branch — including the check runs
-our own Actions workflows publish. Because ``persist-aw-data`` runs on
-``workflow_run: [completed]`` of ``track-artifact-sizes`` and then publishes its own check
-run, the two workflows formed a self-sustaining 1:1 loop that produced tens of thousands of
-runs. See the PR that introduced this file for the measurements.
+Why it is shaped like this
+--------------------------
+The workflow used to subscribe to ``check_run: [completed]``. GitHub offers no server-side filter for that event (no app, name, or
+path filter), so every completed check run on the default branch started a runner and filtering happened only after the job began.
+Because ``persist-aw-data`` runs on ``workflow_run`` of this workflow and then publishes its own check run, the pair formed a
+self-sustaining loop — both workflows reached 40,000 runs, and a sample of 25 consecutive runs showed 24 doing no work at all. A
+job-level ``if:`` cannot fix that: a *skipped* job still publishes a check run.
 
-Polling Azure DevOps directly is bounded (one cheap REST call per open PR, on a cron) and
-targeted (it asks for exactly the pipeline and result we care about), so it replaces the
-event subscription without giving up the behaviour.
+So discovery is a poll instead. The important part is what it polls. Azure DevOps already maintains the queue we need, so one
+anonymous request returns every recent PR build — O(1) in the number of open pull requests, not O(open PRs):
 
-Output is a GitHub Actions matrix payload::
+    builds?definitions=345&minTime=<now-2h>&queryOrder=finishTimeDescending
 
-    [{"pr": 4912, "build": "1576555"}]
+The sweep runs hourly and looks back 2 hours, so an entire sweep can be missed without losing a report. Whether a build is actually
+reported is decided by a durable stamp in the PR comment rather than by the clock, so a duplicate sweep is a no-op and a delayed one
+still catches up.
 
-Only builds that are ``completed`` + ``succeeded`` on ``refs/pull/<n>/merge`` are returned,
-and any PR whose size comment already records that exact build id is dropped so a rerun
-never re-downloads ~1 GB of packages for a result that is already published.
+There is no per-sweep cap. Over 250 hours of real traffic the worst 2-hour window held 7 distinct pull requests, against a GitHub
+matrix limit of 256, so capping would only add a silent-deferral path that never earns its keep.
+
+Only the newest build per PR is considered: older builds are superseded, and Azure DevOps deletes them, so they neither need nor
+deserve a report.
 """
 
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import os
 import re
@@ -38,27 +41,92 @@ from _common import http_get_json, log  # noqa: E402
 
 DEFAULT_ORG = "dnceng-public"
 DEFAULT_PROJECT = "public"
-# The public SkiaSharp pipeline; its `Package NuGets` job publishes the `nuget` artifact
-# that measure_pr.py consumes.
+# The public SkiaSharp pipeline; its `Package NuGets` stage publishes the `nuget` artifact.
 DEFAULT_DEFINITION = 345
+# The stage that produces the packages. It finishes well before the build does (measured
+# ~1h30m earlier on a real build), so watching it reports sooner than waiting for the build.
+PACKAGE_STAGE = "Package NuGets"
 
 GITHUB_API = "https://api.github.com"
-# The stable marker on the size-report comment; the build stamp follows it.
 COMMENT_MARKER = "<!-- skiasharp-pr-artifact-sizes"
-_BUILD_STAMP_RE = re.compile(r"<!--\s*build=(\d+)\s*-->")
+_BUILD_STAMP_RE = re.compile(r"<!--\s*build=([0-9]+(?:\.[0-9]+)?)\s*-->")
+_PR_BRANCH_RE = re.compile(r"refs/pull/(\d+)/merge", re.IGNORECASE)
 
 
 class GitHubReadError(RuntimeError):
     """A PR's existing size comment could not be read.
 
-    The caller must treat this as *unknown*, never as *unmeasured*: measuring downloads
-    roughly a gigabyte, so guessing "not yet measured" on a throttled or failing read is
-    how a transient API problem turns into a repeated multi-gigabyte download.
+    Callers must treat this as *unknown*, never as *unreported*: measuring downloads roughly a gigabyte, so guessing
+    "not yet measured" on a throttled read turns a transient API failure into a repeated multi-gigabyte download.
     """
 
 
+# --------------------------------------------------------------------------- #
+# Azure DevOps — the queue
+# --------------------------------------------------------------------------- #
+
+def _api(org: str, project: str) -> str:
+    return f"https://dev.azure.com/{org}/{project}/_apis"
+
+
+def recent_pr_builds(
+    *,
+    org: str = DEFAULT_ORG,
+    project: str = DEFAULT_PROJECT,
+    definition: int = DEFAULT_DEFINITION,
+    hours: int = 24,
+    top: int = 100,
+    fetch=None,
+) -> dict[int, dict]:
+    """Return the NEWEST build per PR from one query.
+
+    One request covers every open PR, so this does not grow with the number of open pull requests. Superseded builds are
+    ignored because only the newest can still be relevant.
+    """
+    fetch = fetch or http_get_json
+    since = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    url = f"{_api(org, project)}/build/builds?definitions={definition}&minTime={since}&$top={top}&queryOrder=finishTimeDescending&api-version=7.1"
+    data = fetch(url)
+
+    newest: dict[int, dict] = {}
+    for build in data.get("value") or []:
+        match = _PR_BRANCH_RE.search(build.get("sourceBranch") or "")
+        if not match:
+            continue  # a branch or main build, not a PR
+        pr = int(match.group(1))
+        current = newest.get(pr)
+        if current is None or int(build["id"]) > int(current["id"]):
+            newest[pr] = build
+    return newest
+
+
+def package_stage_status(build_id: str, *, org: str = DEFAULT_ORG, project: str = DEFAULT_PROJECT, fetch=None) -> tuple[bool, int]:
+    """Return ``(package stage succeeded, attempt number)`` for a build.
+
+    The attempt matters: Azure DevOps REUSES the build id when a failed stage is re-run, and ``buildNumberRevision`` is a daily
+    revision counter, not a rerun counter — so neither can distinguish a re-run. The timeline's per-stage ``attempt`` is the only
+    field that does, and without it a corrected measurement after a re-run would be silently suppressed by the stamp.
+    """
+    fetch = fetch or http_get_json
+    try:
+        data = fetch(f"{_api(org, project)}/build/builds/{build_id}/timeline?api-version=7.1")
+    except Exception as err:  # noqa: BLE001 - one unreadable timeline must not stop the sweep
+        log(f"  ! build {build_id}: could not read timeline: {err}")
+        return False, 1
+    for record in data.get("records") or []:
+        if record.get("type") == "Stage" and record.get("name") == PACKAGE_STAGE:
+            attempt = record.get("attempt")
+            attempt = attempt if isinstance(attempt, int) and attempt > 0 else 1
+            ok = record.get("state") == "completed" and record.get("result") == "succeeded"
+            return ok, attempt
+    return False, 1
+
+
+# --------------------------------------------------------------------------- #
+# GitHub — the stamp
+# --------------------------------------------------------------------------- #
+
 def github_get(path: str, *, token: str | None = None, fetch=None):
-    """GET one GitHub API path, authenticated when a token is available."""
     fetch = fetch or http_get_json
     headers = {"Accept": "application/vnd.github+json"}
     token = token if token is not None else os.environ.get("GH_TOKEN", "")
@@ -70,9 +138,8 @@ def github_get(path: str, *, token: str | None = None, fetch=None):
 def github_paginate(path: str, *, per_page: int = 100, max_pages: int = 50, **kwargs):
     """Yield every item across pages.
 
-    The per-issue comments endpoint ignores `sort` and `direction` — it always returns
-    oldest-first — so the newest comment is on the LAST page. Reading only the first page
-    would miss the size report on any PR with more than `per_page` comments.
+    The per-issue comments endpoint ignores ``sort`` and ``direction`` — it always returns oldest-first — so the report can sit on
+    the LAST page once a PR passes ``per_page`` comments. Reading only the first page would miss it and re-measure forever.
     """
     sep = "&" if "?" in path else "?"
     for page in range(1, max_pages + 1):
@@ -85,20 +152,15 @@ def github_paginate(path: str, *, per_page: int = 100, max_pages: int = 50, **kw
     raise GitHubReadError(f"{path} exceeded {max_pages} pages")
 
 
-def measured_build(repo: str, pr_number: int, **kwargs) -> str | None:
-    """Return the build id already reported on a PR, or None if there is no report.
+def reported_build(repo: str, pr_number: int, **kwargs) -> str | None:
+    """Return the build identity already reported on a PR, or None.
 
-    FIRST marker comment wins, matching every writer in the workflow (all of which use
-    `page.data.find(...)`). If reader and writers ever disagreed about which comment is
-    authoritative — two markers can exist after a concurrent manual dispatch, or because
-    a human quoted the marker — the writers would keep stamping one comment while this
-    read returned the other, and the PR would be re-selected and re-downloaded forever.
-
-    Raises GitHubReadError when the comments cannot be read.
+    FIRST marker comment wins, matching every writer in the workflow (all of which use ``find()``). If reader and writers disagreed
+    about which comment is authoritative — two markers are reachable when a manual dispatch races the sweep — the writers would keep
+    stamping one comment while this read returned the other, and the PR would be re-measured on every sweep forever.
     """
     try:
-        for comment in github_paginate(f"/repos/{repo}/issues/{pr_number}/comments",
-                                       **kwargs):
+        for comment in github_paginate(f"/repos/{repo}/issues/{pr_number}/comments", **kwargs):
             body = comment.get("body") or ""
             if COMMENT_MARKER in body:
                 match = _BUILD_STAMP_RE.search(body)
@@ -110,153 +172,107 @@ def measured_build(repo: str, pr_number: int, **kwargs) -> str | None:
         raise GitHubReadError(f"PR #{pr_number}: {err}") from err
 
 
-def open_pull_requests(repo: str, **kwargs) -> list[int]:
-    """Return the open PR numbers for a repository.
+# --------------------------------------------------------------------------- #
+# Selection
+# --------------------------------------------------------------------------- #
 
-    Ascending `created` order makes paging append-only, so a PR opened mid-sweep cannot
-    shift the window and hide an entry.
-    """
-    return [pr["number"]
-            for pr in github_paginate(
-                f"/repos/{repo}/pulls?state=open&sort=created&direction=asc", **kwargs)]
-
-
-def latest_successful_build(
-    pr_number: int,
+def select(
+    repo: str,
     *,
-    org: str = DEFAULT_ORG,
-    project: str = DEFAULT_PROJECT,
-    definition: int = DEFAULT_DEFINITION,
-    fetch=None,
-    errors: list | None = None,
-) -> str | None:
-    """Return the newest completed+succeeded build id for a PR, or None."""
-    fetch = fetch or http_get_json
-    url = (
-        f"https://dev.azure.com/{org}/{project}/_apis/build/builds"
-        f"?definitions={definition}"
-        f"&branchName=refs/pull/{pr_number}/merge"
-        "&statusFilter=completed&resultFilter=succeeded"
-        "&queryOrder=finishTimeDescending&$top=1&api-version=7.1"
-    )
-    try:
-        data = fetch(url)
-    except Exception as err:  # noqa: BLE001 - a single unreachable PR must not fail the sweep
-        log(f"  ! PR #{pr_number}: could not query builds: {err}")
-        if errors is not None:
-            errors.append(pr_number)
-        return None
-    builds = data.get("value") or []
-    if not builds:
-        return None
-    return str(builds[0]["id"])
-
-
-def build_matrix(
-    pr_numbers: list[int],
-    measured: dict[int, str] | None = None,
-    *,
-    read_measured=None,
+    hours: int = 2,
+    only_pr: int | None = None,
+    ignore_reported: bool = False,
+    read_reported=None,
+    azdo_fetch=None,
+    timeline_fetch=None,
     **kwargs,
 ) -> list[dict]:
-    """Return the matrix entries for PRs with a new, not-yet-measured build.
+    """Return every build needing a report, oldest first.
 
-    `read_measured(pr)` looks the stamp up live; a GitHubReadError from it SKIPS that PR
-    for this sweep rather than measuring it, because an unreadable stamp is unknown, not
-    absent. The next sweep retries.
+    There is deliberately no cap. Measured over 250 hours of real traffic, the worst 2-hour window contained 7 distinct pull
+    requests — 37x under GitHub's 256-job matrix limit — so a cap would only add a way to silently defer work without ever being
+    needed. Oldest-first keeps a backlog draining FIFO.
     """
-    measured = measured or {}
-    entries: list[dict] = []
-    errors: list[int] = []
-    for pr_number in pr_numbers:
-        build_id = latest_successful_build(pr_number, errors=errors, **kwargs)
-        if not build_id:
-            if pr_number not in errors:
-                log(f"  - PR #{pr_number}: no successful package build")
-            continue
-        if read_measured is not None:
-            try:
-                already = read_measured(pr_number)
-            except GitHubReadError as err:
-                log(f"  ! PR #{pr_number}: skipping, could not read its report: {err}")
-                errors.append(pr_number)
-                continue
-        else:
-            already = measured.get(pr_number)
-        if already == build_id:
-            log(f"  - PR #{pr_number}: build {build_id} already measured")
-            continue
-        log(f"  + PR #{pr_number}: build {build_id}")
-        entries.append({"pr": pr_number, "build": build_id})
-    # A widespread query failure (throttling, an AzDO outage) otherwise looks exactly like
-    # "nobody has a build" and would silently stop PR size reports with no signal anywhere.
-    if errors and len(errors) >= max(3, len(pr_numbers) // 2):
-        log(f"::warning::{len(errors)} of {len(pr_numbers)} PR lookups failed; "
-            "Azure DevOps or GitHub may be throttling or unavailable")
-    return entries
+    read_reported = read_reported or (lambda pr: reported_build(repo, pr))
+    builds = recent_pr_builds(hours=hours, fetch=azdo_fetch, **kwargs)
+    if only_pr is not None:
+        builds = {pr: b for pr, b in builds.items() if pr == only_pr}
+    log(f"{len(builds)} pull request(s) with a build in the last {hours}h")
 
+    ready: list[tuple[str, int, dict, int]] = []
+    for pr, build in builds.items():
+        if build.get("status") == "completed" and build.get("result") != "succeeded":
+            log(f"  - PR #{pr}: build {build['id']} did not succeed")
+            continue
+        # The timeline is the only source of the rerun attempt, and it also lets an in-progress build report as soon as packaging
+        # is done rather than waiting for the whole build (measured ~1h30m earlier on a real build).
+        packaged, attempt = package_stage_status(build["id"], fetch=timeline_fetch)
+        if not packaged:
+            log(f"  - PR #{pr}: build {build['id']} has not packaged yet")
+            continue
+        ready.append((build.get("finishTime") or build.get("queueTime") or "", pr, build, attempt))
 
-def parse_measured(pairs: list[str]) -> dict[int, str]:
-    """Parse ``--measured 4912=1576555`` pairs into a mapping."""
-    measured: dict[int, str] = {}
-    for pair in pairs:
-        pr_text, _, build_id = pair.partition("=")
-        if not build_id:
-            raise ValueError(f"--measured expects <pr>=<build>, got {pair!r}")
-        measured[int(pr_text)] = build_id
-    return measured
+    ready.sort(key=lambda item: item[0])
+
+    selected: list[dict] = []
+    errors = 0
+    for _, pr, build, attempt in ready:
+        identity = f"{build['id']}.{attempt}"
+        try:
+            # An explicit request re-reports on demand, so the stamp is not consulted.
+            already = None if ignore_reported else read_reported(pr)
+        except GitHubReadError as err:
+            log(f"  ! PR #{pr}: skipping, could not read its report: {err}")
+            errors += 1
+            continue
+        if already == identity:
+            log(f"  - PR #{pr}: build {identity} already reported")
+            continue
+        log(f"  + PR #{pr}: build {identity}")
+        selected.append({"pr": pr, "build": str(build["id"]), "identity": identity})
+
+    if errors and errors >= max(3, len(ready) // 2):
+        log(f"::warning::{errors} of {len(ready)} PR lookups failed; GitHub may be throttling or unavailable")
+    return selected
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--pr", type=int, action="append", default=[],
-                   help="Open PR number to check (repeatable). Omit with --repo to sweep.")
-    p.add_argument("--repo", default=None,
-                   help="owner/name; discover open PRs and read their reported build ids.")
-    p.add_argument("--measured", action="append", default=[],
-                   help="Already-measured <pr>=<build> pair (repeatable). Ignored when "
-                        "--repo is given, because the stamp is then read live.")
+    p.add_argument("--repo", required=True, help="owner/name of the GitHub repository.")
+    p.add_argument("--hours", type=int, default=2,
+                   help="How far back to look for builds (default: 2).")
     p.add_argument("--org", default=DEFAULT_ORG, help=f"AzDO org (default: {DEFAULT_ORG}).")
     p.add_argument("--project", default=DEFAULT_PROJECT,
                    help=f"AzDO project (default: {DEFAULT_PROJECT}).")
     p.add_argument("--definition", type=int, default=DEFAULT_DEFINITION,
                    help=f"AzDO pipeline definition id (default: {DEFAULT_DEFINITION}).")
-    p.add_argument("--limit", type=int, default=10,
-                   help="Maximum matrix entries to emit (default: 10).")
-    p.add_argument("--output", default=None,
-                   help="Write the matrix JSON here (default: stdout).")
+    p.add_argument("--only-pr", type=int, default=None,
+                   help="Restrict to a single PR number (used by `/track sizes`).")
+    p.add_argument("--ignore-reported", action="store_true",
+                   help="Report even if the stamp already matches (explicit re-request).")
+    p.add_argument("--output", default=None, help="Write the matrix JSON here.")
     return p.parse_args(argv)
 
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
-    pr_numbers = list(args.pr)
-    read_measured = None
-    if args.repo:
-        # Discovery and stamp reads both fail closed: an unreadable PR list aborts the
-        # sweep rather than silently reporting "nothing to do".
-        if not pr_numbers:
-            pr_numbers = open_pull_requests(args.repo)
-            log(f"{len(pr_numbers)} open pull request(s)")
-        read_measured = lambda pr: measured_build(args.repo, pr)  # noqa: E731
-    entries = build_matrix(
-        pr_numbers,
-        parse_measured(args.measured),
-        read_measured=read_measured,
+    entries = select(
+        args.repo,
+        hours=args.hours,
+        only_pr=args.only_pr,
+        ignore_reported=args.ignore_reported,
         org=args.org,
         project=args.project,
         definition=args.definition,
     )
-    if args.limit >= 0:
-        entries = entries[: args.limit]
     payload = json.dumps(entries)
     if args.output:
         with open(args.output, "w", encoding="utf-8") as fh:
             fh.write(payload)
     else:
         print(payload)
-    log(f"{len(entries)} PR build(s) to measure")
+    log(f"{len(entries)} build(s) to measure")
     return 0
 
 

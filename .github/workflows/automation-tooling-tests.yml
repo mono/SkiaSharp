@@ -13,7 +13,6 @@ name: Automation - Tooling Tests
 on:
   pull_request:
     paths:
-      - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
       - "scripts/infra/perf/**"
@@ -22,7 +21,6 @@ on:
   push:
     branches: [main]
     paths:
-      - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
       - "scripts/infra/perf/**"
@@ -45,18 +43,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Run ci-status workflow registry tests
-        # Guards the dashboard against tracking workflows that no longer exist.
+      - name: Run artifact-size intake tests
+        # These parse the workflow YAML, so PyYAML must be present.
         run: |
           set -euo pipefail
           python3 -c "import yaml" 2>/dev/null \
             || python3 -m pip install --quiet --break-system-packages pyyaml
-          python3 -m unittest discover -s .agents/skills/ci-status/scripts/tests -p "test_*.py"
-
-      - name: Run artifact-size intake tests
-        # Runs after the PyYAML guard above: these tests parse the workflow YAML to prove
-        # the size sweep stamps a build before it downloads it.
-        run: python3 -m unittest discover -s scripts/infra/perf/sizes/tests -p "test_*.py"
+          python3 -m unittest discover -s scripts/infra/perf/sizes/tests -p "test_*.py"
 
       - name: Run perf HTTP contract tests
         # Pins the RuntimeError contract that feed_versions, track.enumerate_feed_packages

@@ -18,20 +18,27 @@ name: Track - Artifact Sizes
 # Both modes share the measurement primitives in scripts/infra/perf/sizes/ (track.py's
 # measure_nupkg) and the render helpers in render_md.py.
 #
-# NOTE: PR mode is driven by a scheduled *poll* of Azure DevOps, not by a `check_run`
-# subscription. GitHub cannot filter `check_run` by app, name, or path, so subscribing to it
-# started a runner for EVERY completed check run on the default branch — including the ones
-# our own Actions workflows publish. Since `persist-aw-data` runs on `workflow_run` of THIS
-# workflow and then publishes its own check run, the two formed a self-sustaining 1:1 loop
-# (40,000 runs; 1,229 of the 1,288 check runs on one commit were Actions-created, and 608
-# Actions check completions landed in an hour that saw exactly 1 Azure check). A job-level
-# `if:` cannot fix that — a skipped job still publishes a check run and still feeds the loop.
-# Polling instead is bounded and targeted: see scripts/infra/perf/sizes/find_pr_builds.py.
+# NOTE: PR mode is driven by an hourly *poll* of Azure DevOps, plus an on-demand
+# `/track sizes` comment. It must NEVER subscribe to `check_run` again. GitHub cannot
+# filter that event by app, name, or path, so subscribing started a runner for EVERY
+# completed check run on the default branch — including the ones our own Actions workflows
+# publish. Since `persist-aw-data` runs on `workflow_run` of THIS workflow and then
+# publishes its own check run, the two formed a self-sustaining loop: both reached 40,000
+# runs, and in a sample of 25 consecutive runs 24 did no work at all. A job-level `if:`
+# cannot fix it — a *skipped* job still publishes a check run and still feeds the loop.
+#
+# The replacement is one anonymous Azure DevOps query per sweep that returns every recent
+# PR build, so discovery is O(1) in the number of open pull requests rather than O(open
+# PRs). Whether a build is reported is decided by a durable `<!-- build=id.attempt -->`
+# stamp in the PR comment, not by the clock, so a duplicate sweep is a no-op and a missed
+# one catches up. See scripts/infra/perf/sizes/find_pr_builds.py.
 
 on:
   schedule:
-    - cron: "0 7 * * *"     # Nightly at 07:00 UTC (offset from the 08:00 benchmark tracker)
-    - cron: "*/30 * * * *"  # PR intake sweep: poll AzDO for new successful package builds
+    - cron: "0 7 * * *"  # Nightly at 07:00 UTC (offset from the 08:00 benchmark tracker)
+    - cron: "40 * * * *"  # Hourly PR sweep (looks back 2h, so a missed sweep self-heals)
+  issue_comment:
+    types: [created]
   workflow_dispatch:
     inputs:
       build_id:
@@ -47,9 +54,16 @@ permissions:
   contents: read
 
 concurrency:
-  # Nightly runs are a singleton (never cancel a persist); the sweep is a singleton too so
-  # overlapping polls cannot double-measure the same build.
-  group: track-artifact-sizes-${{ (github.event_name == 'schedule' && github.event.schedule == '0 7 * * *') && 'nightly' || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_id) || (github.event_name == 'workflow_dispatch' && 'nightly') || 'sweep' }}
+  # The nightly run is a singleton (never cancel a persist). Sweeps are a singleton too, so
+  # two cannot double-measure a build. A `/track sizes` comment is keyed per PR so one PR's
+  # manual request never blocks another's.
+  group: >-
+    track-artifact-sizes-${{
+      (github.event_name == 'schedule' && github.event.schedule == '0 7 * * *') && 'nightly'
+      || github.event_name == 'schedule' && 'sweep'
+      || github.event_name == 'issue_comment' && format('pr-{0}', github.event.issue.number)
+      || github.event.inputs.build_id && format('build-{0}', github.event.inputs.build_id)
+      || 'nightly' }}
   cancel-in-progress: false
 
 env:
@@ -60,7 +74,17 @@ jobs:
   # Shared entrypoint: pick the mode and, for PR work, resolve the builds to measure.
   # --------------------------------------------------------------------------- #
   resolve:
-    if: github.repository_owner == 'mono'
+    # `/track sizes` is honoured only from a PR comment by someone with write access, so an
+    # arbitrary fork user cannot make the repository download a gigabyte on demand. The bot
+    # check matters because THIS workflow posts comments: without it the report comment
+    # could re-trigger the workflow, which is the same class of loop `check_run` created.
+    if: >-
+      github.repository_owner == 'mono' &&
+      (github.event_name != 'issue_comment' ||
+       (github.event.issue.pull_request != null &&
+        github.event.comment.user.type != 'Bot' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+        startsWith(github.event.comment.body, '/track sizes')))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -90,7 +114,9 @@ jobs:
           if [ "$EVENT_NAME" = "schedule" ] && [ "$CRON" = "0 7 * * *" ]; then
             mode=nightly                       # the 07:00 feed measurement
           elif [ "$EVENT_NAME" = "schedule" ]; then
-            mode=sweep                         # the PR intake poll
+            mode=sweep                         # the hourly PR sweep
+          elif [ "$EVENT_NAME" = "issue_comment" ]; then
+            mode=comment                       # `/track sizes` on one PR
           elif [ -n "${INPUT_BUILD_ID:-}" ]; then
             mode=pr                            # manual fallback for one build
           else
@@ -107,9 +133,16 @@ jobs:
           MODE: ${{ steps.mode.outputs.mode }}
           INPUT_BUILD_ID: ${{ github.event.inputs.build_id }}
           INPUT_PR_NUMBER: ${{ github.event.inputs.pr_number }}
+          COMMENT_PR: ${{ github.event.issue.number }}
         run: |
           set -euo pipefail
-          if [ "$MODE" = "pr" ]; then
+          if [ "$MODE" = "comment" ]; then
+            # `/track sizes`: measure this PR's newest packaged build, ignoring the stamp so
+            # the command always re-reports on request.
+            python3 scripts/infra/perf/sizes/find_pr_builds.py \
+              --repo "$GITHUB_REPOSITORY" --hours 720 --only-pr "$COMMENT_PR" \
+              --ignore-reported --output matrix.json
+          elif [ "$MODE" = "pr" ]; then
             # Manual fallback: measure exactly the build the operator named. This path
             # never consults the dedupe stamp, so it is also the deliberate retry route
             # for a build the sweep has already stamped.
@@ -118,6 +151,7 @@ jobs:
           print(json.dumps([{
               "pr": (os.environ.get("INPUT_PR_NUMBER") or "").strip(),
               "build": os.environ["INPUT_BUILD_ID"].strip(),
+              "identity": os.environ["INPUT_BUILD_ID"].strip() + ".1",
           }]))
           PY
           else
@@ -126,7 +160,7 @@ jobs:
             # ignores sort/direction and always returns oldest-first, so the size report
             # lives on the LAST page once a PR passes 100 comments.
             python3 scripts/infra/perf/sizes/find_pr_builds.py \
-              --repo "$GITHUB_REPOSITORY" --limit 10 --output matrix.json
+              --repo "$GITHUB_REPOSITORY" --hours 2 --output matrix.json
           fi
           echo "matrix=$(cat matrix.json)" >> "$GITHUB_OUTPUT"
           cat matrix.json
@@ -223,7 +257,9 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      max-parallel: 2
+      # Measured worst case is 7 PRs in a 2h window; each job gets its own runner, so the
+      # ~1.1 GB download is not shared and disk is never contended.
+      max-parallel: 5
       matrix:
         include: ${{ fromJSON(needs.resolve.outputs.matrix || '[]') }}
     permissions:
@@ -247,6 +283,7 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           BUILD_ID: ${{ matrix.build }}
+          BUILD_IDENTITY: ${{ matrix.identity }}
           PR_NUMBER: ${{ matrix.pr }}
         with:
           script: |
@@ -259,7 +296,7 @@ jobs:
             const buildId = process.env.BUILD_ID;
             const body = [
               marker,
-              `<!-- build=${buildId} -->`,
+              `<!-- build=${process.env.BUILD_IDENTITY || buildId} -->`,
               '## 📦 Artifact size report',
               '',
               `Measuring the packages from build [\`${buildId}\`](${process.env.BUILD_URL})…`,
@@ -355,6 +392,7 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           BUILD_ID: ${{ matrix.build }}
+          BUILD_IDENTITY: ${{ matrix.identity }}
           PR_NUMBER: ${{ matrix.pr }}
         with:
           script: |
@@ -367,7 +405,7 @@ jobs:
             const buildId = process.env.BUILD_ID;
             const body = [
               marker,
-              `<!-- build=${buildId} -->`,
+              `<!-- build=${process.env.BUILD_IDENTITY || buildId} -->`,
               '## 📦 Artifact size report',
               '',
               `Could not measure the packages from build [\`${buildId}\`](${process.env.BUILD_URL}).`,

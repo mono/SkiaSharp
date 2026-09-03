@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """Tests for the HTTP contract in scripts/infra/perf/_common.py.
 
-`http_get` raises `RuntimeError` for every failure, and several callers depend on exactly
-that: `feed_versions`, `track.enumerate_feed_packages`, and `measure_pr.resolve_pr_number`
-catch `RuntimeError` to mean "absent / unavailable" and return an empty result.
+`http_get` raises `RuntimeError` for every failure, and several callers depend on exactly that: `feed_versions`,
+`track.enumerate_feed_packages`, and `measure_pr.resolve_pr_number` catch `RuntimeError` to mean "absent / unavailable" and return
+an empty result.
 
-Fast-failing a non-retryable 4xx must therefore not leak the raw
-`urllib.error.HTTPError` — it is an `OSError`, not a `RuntimeError`, so it would escape
-those handlers and turn a package that is merely not published yet into a crash in the
-nightly size tracker. These tests pin both halves of that contract: the speed and the type.
+Fast-failing a non-retryable 4xx must therefore not leak the raw `urllib.error.HTTPError` — it is an `OSError`, not a
+`RuntimeError`, so it would escape those handlers and turn a package that is merely not published yet into a crash in the nightly
+size tracker. These tests pin both halves of that contract: the speed and the type.
 
 Everything here is offline; `urllib.request.urlopen` and `time.sleep` are replaced.
 """
@@ -96,9 +95,8 @@ class HttpGetContractTests(unittest.TestCase):
     def test_transient_4xx_is_still_retried(self):
         """403 is GitHub's secondary rate limit and 408 a timeout — both recover.
 
-        The size sweep issues dozens of sequential authenticated GETs every 30 minutes,
-        which is exactly the shape that trips a secondary rate limit; fast-failing those
-        would make the sweep strictly less resilient than before the fast-fail existed.
+        The size sweep issues sequential authenticated GETs on a schedule, which is exactly the shape that trips a secondary rate
+        limit; fast-failing those would make the sweep strictly less resilient than before the fast-fail existed.
         """
         for code in (403, 408, 429):
             with self.subTest(code=code):
@@ -152,19 +150,15 @@ class AbsentPackageContractTests(unittest.TestCase):
 
     def test_feed_versions_returns_empty_for_a_missing_package(self):
         _common.urllib.request.urlopen = FakeUrlopen(http_error(404))
-        self.assertEqual(
-            [], _common.feed_versions("https://example.invalid/flat/", "Nope.Missing"))
+        self.assertEqual([], _common.feed_versions("https://example.invalid/flat/", "Nope.Missing"))
 
     def test_feed_versions_returns_empty_when_the_feed_is_unavailable(self):
         _common.urllib.request.urlopen = FakeUrlopen(http_error(503))
-        self.assertEqual(
-            [], _common.feed_versions("https://example.invalid/flat/", "Nope.Missing"))
+        self.assertEqual([], _common.feed_versions("https://example.invalid/flat/", "Nope.Missing"))
 
     def test_feed_versions_passes_versions_through(self):
         _common.urllib.request.urlopen = FakeUrlopen(b'{"versions":["1.0.0","2.0.0"]}')
-        self.assertEqual(
-            ["1.0.0", "2.0.0"],
-            _common.feed_versions("https://example.invalid/flat/", "Real.Package"))
+        self.assertEqual(["1.0.0", "2.0.0"], _common.feed_versions("https://example.invalid/flat/", "Real.Package"))
 
 
 if __name__ == "__main__":

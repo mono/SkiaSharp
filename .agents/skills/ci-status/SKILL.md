@@ -69,27 +69,16 @@ standard Darc/Maestro stages.
 | Pages - PR Staging - Cleanup | mono/SkiaSharp | PR close events | Stale staging deploys accumulate |
 | Pages - PR Staging - Sweep Stale | mono/SkiaSharp | Daily (06:00 UTC) | Stale staging deploys accumulate |
 | Sync - Samples | mono/SkiaSharp | Push/PR to `samples/` | Sample projects broken if failing |
-| Tests - Binding Generation Determinism | mono/SkiaSharp | Push/PR | Generated bindings drift undetected |
+| API Diff | mono/SkiaSharp | Weekly (Sun 00:00 UTC) | API regression detection |
 | Sync - Docs Submodule | mono/SkiaSharp | Daily (10:00 UTC) | API docs get out of sync |
-| Sync - Release Notes & API Diffs | mono/SkiaSharp | Push to main + daily | Release notes stop auto-updating |
-| Sync - Skia Upstream | mono/SkiaSharp | Every 6h | Upstream tracking breaks |
-| Fixer - Memory Leak | mono/SkiaSharp | Every 12h | Leak-hunting automation stops |
-| Fixer - Performance | mono/SkiaSharp | Every 12h | Perf-hunting automation stops |
-| Sync - Issue Triage | mono/SkiaSharp | Daily + issue events | Triage automation stops |
-| Sync - Issue Template Versions | mono/SkiaSharp | Scheduled | Bug template advertises stale versions |
-| Sync - Agentic Data | mono/SkiaSharp | Workflow run events | AI workflow data lost |
-| Track - Artifact Sizes | mono/SkiaSharp | Nightly (07:00 UTC) + PR sweep | Package size tracking/PR reports stop |
-| Track - Benchmarks | mono/SkiaSharp | Every 6h | Benchmark trend tracking stops |
-| Release - Prepare | mono/SkiaSharp | Workflow dispatch | Release branches cannot be cut |
-| Release - Finish | mono/SkiaSharp | Workflow dispatch | Releases cannot be finalized |
-| Release - Milestones | mono/SkiaSharp | Workflow dispatch | Milestone reconciliation stops |
-| Update GitHub Release summaries | mono/SkiaSharp | Workflow dispatch | Release bodies go stale |
-| Release - Tooling Tests | mono/SkiaSharp | Push/PR to release tooling | Release scripts regress unnoticed |
-| Automation - Tooling Tests | mono/SkiaSharp | Push/PR to automation tooling | Automation scripts regress unnoticed |
+| Sync - Release Notes & API Diffs | mono/SkiaSharp | Push to main/release/tags | Release notes stop auto-updating |
+| Sync - Skia Upstream | mono/SkiaSharp | Daily (07:00 UTC) | Upstream tracking breaks |
+| Nightly Fix Finder | mono/SkiaSharp | Nightly | Nightly automation health |
+| Sync - Issue Triage | mono/SkiaSharp | Daily (04:05 UTC) + issue events | Triage automation stops |
+| Sync - Agentic Data | mono/SkiaSharp | Push to main | AI workflow data lost |
 | PR - Backport | mono/SkiaSharp | PR label/comment | Cherry-picks to release branches fail |
 | PR - Rebase | mono/SkiaSharp | PR comment | PR rebase automation broken |
 | PR - Artifacts Comment | mono/SkiaSharp | Workflow run events | Build links not posted to PRs |
-| Merge Message | mono/SkiaSharp | PR events | Merge commit messages not drafted |
 | Auto API Docs Writer | mono/SkiaSharp-API-docs | Scheduled/dispatch | XML docs stop being written |
 | Automerge Docs | mono/SkiaSharp-API-docs | PR events | Doc PRs won't auto-merge |
 | Go Live | mono/SkiaSharp-API-docs | Workflow dispatch | Docs don't publish to live |
@@ -238,14 +227,10 @@ For each tracked GitHub Actions workflow:
 - Whether failures are related to AzDO failures (same commit?) or independent
 - Categorize by severity:
   - **High**: Pages - Deploy, Sync - Samples, Sync - Release Notes & API Diffs, Sync - Skia Upstream,
-    Release - Prepare, Release - Finish, Release - Tooling Tests, Auto API Docs Writer
-    (broken = user-facing impact or release process blocked)
-  - **Medium**: Sync - Docs Submodule, Fixer - Memory Leak, Fixer - Performance, Sync - Issue Triage,
-    Sync - Issue Template Versions, Automation - Tooling Tests, Tests - Binding Generation Determinism,
-    Release - Milestones, Update GitHub Release summaries,
+    Auto API Docs Writer (broken = user-facing impact or release process blocked)
+  - **Medium**: Sync - Docs Submodule, Nightly Fix Finder, Sync - Issue Triage,
     PR - Backport, Pages - Go Live! (broken = automation degraded, manual workaround exists)
   - **Low**: Pages - PR Staging - Cleanup, Pages - PR Staging - Sweep Stale, PR - Rebase, PR - Artifacts Comment,
-    Merge Message, Track - Artifact Sizes, Track - Benchmarks,
     Sync - Agentic Data (broken = cosmetic/housekeeping)
 
 GitHub Actions failures don't block releases directly (AzDO owns that), but they
