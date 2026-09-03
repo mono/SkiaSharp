@@ -228,5 +228,48 @@ class SkillDocTests(unittest.TestCase):
             "for a hand-written (non-lock) workflow.")
 
 
+class CollectorWiringTests(unittest.TestCase):
+    """The registry is only worth validating if the collector actually reads it.
+
+    Every other test here checks the *contents* of GITHUB_WORKFLOWS. None of them
+    execute ``collect_github_data``, so the line joining the registry to the collector
+    is untested: point that loop at an empty list, or at a hardcoded entry, and the
+    whole suite still passes while the dashboard reports nothing — or reports a
+    workflow that was never tracked, which is the exact failure this suite exists to
+    catch. This test covers the wiring rather than the parts.
+    """
+
+    def _collect_with_stubs(self):
+        """Run the collector with every network call replaced by a recorder."""
+        requested = []
+
+        def fake_runs(repo, workflow, branch, top=5):
+            requested.append((repo, workflow))
+            return []
+
+        original_runs = COLLECTOR.get_github_workflow_runs
+        original_enrich = COLLECTOR._enrich_failed_runs
+        COLLECTOR.get_github_workflow_runs = fake_runs
+        COLLECTOR._enrich_failed_runs = lambda wf_data: None
+        try:
+            collected = COLLECTOR.collect_github_data(["main"], 1)
+        finally:
+            COLLECTOR.get_github_workflow_runs = original_runs
+            COLLECTOR._enrich_failed_runs = original_enrich
+        return requested, collected
+
+    def test_collector_queries_exactly_the_tracked_workflows(self):
+        requested, collected = self._collect_with_stubs()
+        self.assertTrue(requested, "collect_github_data queried nothing at all.")
+        self.assertEqual(
+            {(w["repo"], w["workflow"]) for w in GITHUB_WORKFLOWS},
+            set(requested),
+            "collect_github_data did not query exactly the tracked workflows — the "
+            "registry and the collector have come apart.")
+        self.assertEqual(
+            len(GITHUB_WORKFLOWS), len(collected),
+            "collect_github_data returned a different number of entries than it tracks.")
+
+
 if __name__ == "__main__":
     unittest.main()
