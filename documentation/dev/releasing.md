@@ -15,6 +15,7 @@ implementation of the automation, see
 | 4 | Use the protected internal publication process | Publishes the selected BAR's shipping packages to NuGet.org |
 | 5 | Run **Release - Finish** | Creates the tag and GitHub Release, then starts follow-up automation |
 | 6 | Run **Release - Milestones** | Reconciles shipped work and advances release milestones |
+| 7 | Merge the follow-up PRs | Lands any version bump, support update, and release notes |
 
 ## Safety
 
@@ -45,6 +46,10 @@ maintenance base before the stable Prepare `Push` run. Prepare does not create
 that branch. When it exists, the post-stable version-bump PR targets it;
 otherwise the PR targets `main`.
 
+Prepare, Finish, and Milestones use the same two-dispatch pattern: first run
+with `push` unchecked to review a read-only plan, then run again with identical
+inputs and `push` checked.
+
 ## 1. Prepare the release branches
 
 Open
@@ -55,35 +60,25 @@ select **Run workflow**, and choose `main` as the workflow branch.
 | --- | --- |
 | `base` | `main`, a servicing branch such as `release/4.152.x`, or an exact commit SHA |
 | `release` | `X.Y.Z-preview.N`, `X.Y.Z-rc.N`, `X.Y.Z-stable`, or the equivalent four-part hotfix identity |
-| `push` | Leave unchecked for the read-only plan; check only after reviewing it |
+| `push` | Use the two-dispatch pattern above |
 
 > [!NOTE]
 > For a stable release, enter the explicit `X.Y.Z-stable` sentinel. The
 > resulting branch, package version, tag, and GitHub Release use bare `X.Y.Z`.
 
-Run the workflow twice with identical `base` and `release` values:
+Review the plan's base SHA, package versions, branch names, and remote writes.
+After the push run, verify that both release branches exist at the expected
+commits.
 
-1. Leave `push` unchecked. Verify the resolved base SHA, package versions,
-   branch names, and every planned remote write.
-2. Check `push` and run again. Verify that both release branches were created
-   and point to the expected commits.
-
-The workflow intentionally omits the script's local-only `Apply` mode because
-changes on its disposable runner would not be retained.
-
-| Release input | Branch created in both repositories |
-| --- | --- |
-| `X.Y.Z-preview.N` | `release/X.Y.Z-preview.N` |
-| `X.Y.Z-rc.N` | `release/X.Y.Z-rc.N` |
-| `X.Y.Z-stable` | `release/X.Y.Z` |
-| `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` |
-| `X.Y.Z.F-rc.N` | `release/X.Y.Z.F-rc.N` |
-| `X.Y.Z.F-stable` | `release/X.Y.Z.F` |
+Both repositories use `release/<identity>`, with `-stable` removed. For example,
+`4.153.0-preview.1` creates `release/4.153.0-preview.1`, while
+`4.153.0-stable` creates `release/4.153.0`. Four-part hotfixes follow the same
+rule.
 
 The workflow pushes `mono/skia` first, then `mono/SkiaSharp`. A three-part
-stable release also opens a human-owned PR that advances SkiaSharp and
-HarfBuzzSharp to the next preview versions. Review and merge that PR normally;
-the workflow does not merge it.
+stable release also ensures that maintenance advances to the next SkiaSharp and
+HarfBuzzSharp preview versions. It creates or reuses a human-owned bump PR
+unless the target branch is already advanced; the workflow never merges it.
 
 ## 2. Wait for the release pipelines
 
@@ -96,8 +91,7 @@ automatically. Do not manually queue a different build.
 | [`skiasharp-tests` (1630)](https://dev.azure.com/dnceng/internal/_build?definitionId=1630) | Succeeded and was pipeline-triggered from that exact `skiasharp-package` run |
 
 The public CI pipeline may also run for the branch. Its unsigned artifacts are
-not the release BAR. API Scan is not automatically enabled for a `release/*`
-build, so it is not an expected release-branch stage.
+not the release BAR.
 
 Do not continue if the Build and Tests runs disagree on branch, commit, build
 number, or upstream pipeline resource.
@@ -113,9 +107,8 @@ from BAR {BAR ID}. Run the full available matrix on this host and produce the
 release approval report.
 ```
 
-If you run this gate, keep its report with the BAR ID, Build link, source branch
-and commit, exact package versions, feed, and test results. Record the decision
-if this optional step is skipped.
+Add the resulting approval report, or the decision to skip this step, to the
+release record below.
 
 ## 4. Publish the BAR to NuGet.org
 
@@ -124,9 +117,9 @@ if this optional step is skipped.
 > NuGet.org.
 
 Until that UI is documented, use the current team-owned protected publication
-procedure. Confirm the selected BAR ID, Build run, source branch and commit,
-and package versions. If optional release-testing was run, require them to
-match its approval report exactly.
+procedure. Confirm the BAR, Build run, source branch and commit, and package
+versions against the release record. If optional release-testing was run, they
+must match its approval report exactly.
 
 After publication completes, verify that the exact SkiaSharp package version
 and its expected shipping package family are visible on NuGet.org. Do not run
@@ -140,19 +133,19 @@ select **Run workflow**, and choose `main` as the workflow branch.
 
 | Input | Value |
 | --- | --- |
-| `version` | Stable: `X.Y.Z[.F]`.<br>Prerelease: either `X.Y.Z[.F]-preview.N` / `-rc.N`, or the exact public version with its appended `.BUILD` |
-| `push` | Leave unchecked for the read-only plan; check only after reviewing it |
+| `version` | Stable: `X.Y.Z[.F]`.<br>Prerelease: `X.Y.Z[.F]-preview.N` / `-rc.N`, optionally with the exact `.BUILD` suffix |
+| `push` | Use the two-dispatch pattern above |
 
-A short prerelease identity and an exact public prerelease version are equally
-valid. Most releases have only one matching public build, so
-`4.153.0-preview.1` is usually sufficient. When there are zero or multiple
-matches, provide the exact version such as `4.153.0-preview.1.26453.1`.
+Both prerelease forms are valid. A short identity such as
+`4.153.0-preview.1` is usually sufficient. If no public build matches, stop. If
+multiple builds match, use the exact version, such as
+`4.153.0-preview.1.26453.1`.
 
-First run with `push` unchecked and review the source branch, source commit,
-tag, release title, support update, and follow-up workflows. Then run again
-with `push` checked and verify:
+Review the plan's source branch, source commit, tag, release title, support
+update, and follow-up workflows. After the push run, verify:
 
-- the immutable exact-version tag points to the package's source commit;
+- the immutable exact-version tag was created or verified at the package's
+  source commit;
 - the GitHub Release is published with the correct prerelease state;
 - the support state was already correct or the release-support PR was opened
   or updated; and
@@ -162,21 +155,20 @@ Stable releases also dispatch the issue-template version update.
 
 ## 6. Reconcile and advance milestones
 
-After Release - Finish has created the shipped tag, open
+After Release - Finish has created or verified the shipped tag, open
 [Release - Milestones](https://github.com/mono/SkiaSharp/actions/workflows/release-milestones.yml),
 select **Run workflow**, and choose `main` as the workflow branch.
 
-| Input | First run | Apply run |
-| --- | --- | --- |
-| `version` | Numeric release core, such as `4.153.0` or `4.153.0.1` | Same value |
-| `reconcile` | `true` | `true` |
-| `update` | `true` | `true` |
-| `push` | `false` | `true` |
+| Input | Value |
+| --- | --- |
+| `version` | Numeric release core, such as `4.153.0` or `4.153.0.1` |
+| `reconcile` | Checked |
+| `update` | Checked |
+| `push` | Use the two-dispatch pattern above |
 
-Run this after previews and RCs as well as stable releases. Review the read-only
-plan before the `push: true` run. Warnings about missing tags, milestones, or
-release boundaries block safe mutation and must be resolved rather than
-ignored.
+Run this after previews and RCs as well as stable releases. Warnings about
+missing tags, milestones, or release boundaries block safe mutation and must
+be resolved rather than ignored.
 
 ## 7. Complete the follow-up pull requests
 
@@ -186,16 +178,13 @@ Review and merge the automation PRs through the normal repository process:
 - the release-support PR, when one was needed; and
 - the generated release-notes/API-diff PR, when one was opened or updated.
 
-The issue-template version workflow also runs daily, so a stable release's
-manual dispatch is convergent with the scheduled update.
-
 ## Release record
 
 Keep these values together for the whole release:
 
 | Identity | Record |
 | --- | --- |
-| Requested release identity | `X.Y.Z[.F][-channel.N]` |
+| Requested Prepare identity | `X.Y.Z[.F]-preview.N`, `-rc.N`, or `-stable` |
 | SkiaSharp release branch and commit | `release/...` at SHA |
 | mono/skia release branch and commit | `release/...` at SHA |
 | `skiasharp-package` run | Build ID and URL |
