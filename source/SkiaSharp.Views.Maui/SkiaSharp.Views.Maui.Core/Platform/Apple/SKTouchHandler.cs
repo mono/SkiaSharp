@@ -10,15 +10,12 @@ namespace SkiaSharp.Views.Maui.Platform
 {
 	internal class SKTouchHandler : UIGestureRecognizer
 	{
-		// UIKit exposes points but no authoritative points-per-notch value,
-		// so this v120 calibration is empirical.
-		private const double ScrollPointsPerNotch = 40.0;
-
 		private Action<SKTouchEventArgs>? onTouchAction;
 		private Func<double, double, SKPoint>? scalePixels;
 		private UIHoverGestureRecognizer? hoverGestureRecognizer;
 		private UIPanGestureRecognizer? scrollGestureRecognizer;
 		private ScrollGestureRecognizerDelegate? scrollGestureRecognizerDelegate;
+		private readonly LegacyWheelDeltaProjector wheelDeltaProjector = new();
 		private CGPoint? lastPointerLocation;
 
 		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<double, double, SKPoint> scalePixels)
@@ -130,6 +127,7 @@ namespace SkiaSharp.Views.Maui.Platform
 				scrollGestureRecognizer ??= new UIPanGestureRecognizer(OnScroll)
 				{
 					AllowedScrollTypesMask = UIScrollTypeMask.All,
+					AllowedTouchTypes = Array.Empty<NSNumber>(),
 					MaximumNumberOfTouches = 0,
 					CancelsTouchesInView = false,
 					Delegate = scrollGestureRecognizerDelegate,
@@ -146,6 +144,7 @@ namespace SkiaSharp.Views.Maui.Platform
 			if (scrollGestureRecognizer != null && view.GestureRecognizers?.Contains(scrollGestureRecognizer) == true)
 				view.RemoveGestureRecognizer(scrollGestureRecognizer);
 
+			wheelDeltaProjector.Reset();
 			lastPointerLocation = null;
 		}
 
@@ -171,15 +170,25 @@ namespace SkiaSharp.Views.Maui.Platform
 
 		private void OnScroll(UIPanGestureRecognizer recognizer)
 		{
-			if ((recognizer.State != UIGestureRecognizerState.Began &&
-				recognizer.State != UIGestureRecognizerState.Changed) ||
-				recognizer.View is not { } view)
+			if (recognizer.View is not { } view)
+				return;
+
+			var state = recognizer.State;
+			if (state is UIGestureRecognizerState.Cancelled or UIGestureRecognizerState.Failed)
+			{
+				recognizer.SetTranslation(CGPoint.Empty, view);
+				wheelDeltaProjector.Reset();
+				return;
+			}
+			if (state is not UIGestureRecognizerState.Began and
+				not UIGestureRecognizerState.Changed and
+				not UIGestureRecognizerState.Ended)
 				return;
 
 			var translation = recognizer.TranslationInView(view);
 			recognizer.SetTranslation(CGPoint.Empty, view);
 
-			var wheelDelta = NormalizeWheelDelta(translation.Y);
+			var wheelDelta = wheelDeltaProjector.Project(translation.Y, state);
 			if (wheelDelta == 0)
 				return;
 
@@ -207,15 +216,37 @@ namespace SkiaSharp.Views.Maui.Platform
 			return args.Handled;
 		}
 
-		internal static int NormalizeWheelDelta(double translationY)
+		internal sealed class LegacyWheelDeltaProjector
 		{
-			if (translationY == 0)
-				return 0;
+			// Browsers use 40 logical pixels per Cocoa tick as a content-scroll
+			// compatibility policy. UIKit only provides point translation, so
+			// this is sensitivity for legacy v120 events, not hardware calibration.
+			private const double LegacyWheelDeltaDistance = 40.0;
+			private const double WheelDeltaPerNominalNotch = 120.0;
+			private const double WholeDeltaTolerance = 1e-10;
 
-			var delta = (int)Math.Round(
-				-translationY * 120.0 / ScrollPointsPerNotch,
-				MidpointRounding.AwayFromZero);
-			return delta == 0 ? -Math.Sign(translationY) : delta;
+			private double remainder;
+
+			public int Project(double translationY, UIGestureRecognizerState state)
+			{
+				if (state == UIGestureRecognizerState.Began)
+					remainder = 0;
+
+				remainder -= translationY * WheelDeltaPerNominalNotch / LegacyWheelDeltaDistance;
+				var nearestWholeDelta = Math.Round(remainder);
+				if (Math.Abs(remainder - nearestWholeDelta) < WholeDeltaTolerance)
+					remainder = nearestWholeDelta;
+				var delta = (int)Math.Truncate(remainder);
+				remainder -= delta;
+
+				if (state == UIGestureRecognizerState.Ended)
+					remainder = 0;
+
+				return delta;
+			}
+
+			public void Reset() =>
+				remainder = 0;
 		}
 
 		private sealed class ScrollGestureRecognizerDelegate : UIGestureRecognizerDelegate
