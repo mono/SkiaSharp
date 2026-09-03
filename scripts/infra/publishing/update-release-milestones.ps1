@@ -40,7 +40,6 @@ $requiredScheduleFields = @(
     'branch_point',
     'earliest_beta',
     'early_stable_cut',
-    'early_stable',
     'stable_cut',
     'stable_date'
 )
@@ -125,12 +124,11 @@ function Get-ChromiumSchedule([int] $Milestone) {
     return $schedule
 }
 
-# Maps a Chromium schedule to the four SkiaSharp release milestones.
+# Keep this mapping in sync with release-notes-render.py render_cadence_timeline().
 function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int] $Major) {
     $branch = ConvertTo-ScheduleDate $Schedule.branch_point
     $beta = ConvertTo-ScheduleDate $Schedule.earliest_beta
     $earlyCut = ConvertTo-ScheduleDate $Schedule.early_stable_cut
-    $earlyStable = ConvertTo-ScheduleDate $Schedule.early_stable
     $stableCut = ConvertTo-ScheduleDate $Schedule.stable_cut
     $stable = ConvertTo-ScheduleDate $Schedule.stable_date
     $base = "$Major.$Milestone.0"
@@ -146,10 +144,10 @@ function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int
         }
         [pscustomobject] @{
             Title = "$base-preview.2"
-            Due = $earlyStable
-            DueOn = Format-GitHubDueOn $earlyStable
+            Due = $earlyCut
+            DueOn = Format-GitHubDueOn $earlyCut
             Description = (
-                "Skia m$Milestone preview.2 $separator Start $(Format-ScheduleDate $earlyCut) $separator " +
+                "Skia m$Milestone preview.2 $separator Start $(Format-ScheduleDate $beta) $separator " +
                 'Bug fixes and API additions from preview.1 feedback.')
         }
         [pscustomobject] @{
@@ -157,7 +155,7 @@ function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int
             Due = $stableCut
             DueOn = Format-GitHubDueOn $stableCut
             Description = (
-                "Skia m$Milestone RC $separator Start $(Format-ScheduleDate $earlyStable) $separator " +
+                "Skia m$Milestone RC 1 $separator Start $(Format-ScheduleDate $earlyCut) $separator " +
                 'Critical bug fixes only, no new features.')
         }
         [pscustomobject] @{
