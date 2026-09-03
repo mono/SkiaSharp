@@ -136,7 +136,7 @@ Assert-Equal @(
 Assert-Equal @(
     'Skia m152 preview.1 · Start Mon, Jul 27, 2026 · Merge Skia sync PR and ship preview.',
     'Skia m152 preview.2 · Start Tue, Jul 28, 2026 · Bug fixes and API additions from preview.1 feedback.',
-    'Skia m152 RC · Start Tue, Aug 04, 2026 · Critical bug fixes only, no new features.',
+    'Skia m152 RC 1 · Start Tue, Aug 04, 2026 · Critical bug fixes only, no new features.',
     'Skia m152 stable · Start Tue, Aug 18, 2026 · Ship to NuGet.org, tag and create GitHub Release.'
 ) @($desired.Description) 'Milestone descriptions did not preserve the SkiaSharp release windows.'
 Assert-True ($desired[0].Description.Contains([char] 0x00b7)) 'Milestone descriptions lost their separators.'

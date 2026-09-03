@@ -154,7 +154,7 @@ function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int
             Due = $stableCut
             DueOn = Format-GitHubDueOn $stableCut
             Description = (
-                "Skia m$Milestone RC $separator Start $(Format-ScheduleDate $earlyCut) $separator " +
+                "Skia m$Milestone RC 1 $separator Start $(Format-ScheduleDate $earlyCut) $separator " +
                 'Critical bug fixes only, no new features.')
         }
         [pscustomobject] @{

@@ -68,12 +68,16 @@ class CadenceTests(unittest.TestCase):
             153, 154, "4.153", "4.154", schedule)
 
         rows = [line for line in rendered if line.startswith("| ")][1:]
-        self.assertEqual(8, len(rows))
-        text = "\n".join(rows)
-        self.assertIn("m153 Branch Point | Aug 17 | Preview 1 | Aug 18", text)
-        self.assertIn("m153 Early Stable Cut | Aug 25 | Preview 2 | Aug 25", text)
-        self.assertIn("m153 Stable Cut | Sep 1 | RC 1 | Sep 1", text)
-        self.assertIn("m153 Stable Date | Sep 8 | Stable | Sep 8", text)
+        self.assertEqual([
+            "| m153 Branch Point | Aug 17 | Preview 1 | Aug 18 | `4.153.0-preview.1` |",
+            "| m153 Early Stable Cut | Aug 25 | Preview 2 | Aug 25 | `4.153.0-preview.2` |",
+            "| m154 Branch Point | Aug 31 | Preview 1 | Sep 1 | `4.154.0-preview.1` |",
+            "| m153 Stable Cut | Sep 1 | RC 1 | Sep 1 | `4.153.0-rc.1` |",
+            "| m153 Stable Date | Sep 8 | Stable | Sep 8 | `4.153.0` |",
+            "| m154 Early Stable Cut | Sep 8 | Preview 2 | Sep 8 | `4.154.0-preview.2` |",
+            "| m154 Stable Cut | Sep 15 | RC 1 | Sep 15 | `4.154.0-rc.1` |",
+            "| m154 Stable Date | Sep 22 | Stable | Sep 22 | `4.154.0` |",
+        ], rows)
 
     def test_timeline_rejects_stale_schedule_keys(self):
         stale = {
