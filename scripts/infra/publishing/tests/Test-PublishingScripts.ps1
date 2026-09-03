@@ -12,6 +12,9 @@ $finishPath = Join-Path $publishingRoot 'finish-release.ps1'
 $bugTemplatePath = Join-Path $publishingRoot 'update-bug-template.ps1'
 $reconcilePath = Join-Path $publishingRoot 'reconcile-release-assignments.ps1'
 $milestonesPath = Join-Path $publishingRoot 'update-release-milestones.ps1'
+$repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '../../../..')
+$prepareWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-prepare.yml'
+$finishWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-finish.yml'
 
 Import-Module $gitCommonPath -Force
 Import-Module $gitHubCommonPath -Force
@@ -105,6 +108,16 @@ Assert-True ($milestoneParameters -contains 'Count' -and $milestoneParameters -c
     'The milestone updater must expose Count and Push but not Apply or Version.'
 Assert-RejectsApply $reconcilePath @('-Version', '4.152.0')
 Assert-RejectsApply $milestonesPath @()
+foreach ($workflowPath in @($prepareWorkflowPath, $finishWorkflowPath)) {
+    $workflow = Get-Content $workflowPath -Raw
+    $workflowName = [IO.Path]::GetFileName($workflowPath)
+    Assert-True ($workflow -notmatch '(?m)^      mode:\s*$') `
+        "$workflowName still exposes the disposable three-state mode input."
+    Assert-True ($workflow -match '(?ms)^      push:\r?\n(?:        .*\r?\n)+?        default: false\r?\n        type: boolean\s*$') `
+        "$workflowName does not expose an unchecked boolean push input."
+    Assert-True ($workflow.Contains("MODE: `${{ inputs.push && 'Push' || 'DryRun' }}")) `
+        "$workflowName does not map its push checkbox to DryRun or Push."
+}
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
 $commonScript = Get-Content $commonPath -Raw
 Assert-True ($commonScript -match '--force-with-lease') `
@@ -135,6 +148,20 @@ $stable = Get-ReleaseIdentity '4.151.1'
 Assert-Equal 'Version 4.151.1' $stable.Title 'Stable release title was incorrect.'
 Assert-Throws { Get-ReleaseIdentity '4.152.0-preview.1' } 'exact public' `
     'An abbreviated version unexpectedly passed exact identity parsing.'
+
+# Resolve-NuGetPackageVersion decides whether Finish must disambiguate an abbreviated
+# preview/rc against nuget.org. Only versions matching the abbreviated shape may reach the
+# network; everything else must be returned untouched. These assertions cover exactly the
+# no-network branches, so they stay deterministic and offline. Deliberately absent:
+# '4.152.0-preview.1', the one shape that *would* call Invoke-RestMethod.
+foreach ($exact in @('4.151.1', '4.151.1.1', '4.152.0-preview.1.26426.14', '4.152.0-rc.2.1.2')) {
+    Assert-Equal $exact (Resolve-NuGetPackageVersion 'SkiaSharp' $exact) `
+        "An exact version ($exact) was not passed through unchanged."
+}
+foreach ($invalid in @('4.152.0-preview.0', '4.152.0-rc.0', '4.152.0-beta.1', '4.152.0-preview')) {
+    Assert-Equal $invalid (Resolve-NuGetPackageVersion 'SkiaSharp' $invalid) `
+        "A non-resolvable version ($invalid) was not passed through unchanged."
+}
 $pages = @(
     @([pscustomobject] @{ number = 1 }, [pscustomobject] @{ number = 2 }),
     @([pscustomobject] @{ number = 3 })
@@ -204,6 +231,58 @@ try {
     Assert-True ($dryBranch -match 'requires -Push') 'A dry branch push did not explain its guard.'
     Assert-Equal $null (Get-RemoteBranchSha -Root $gitRoot -Remote $bareRoot -Branch release/dry) `
         'A dry branch push changed its remote.'
+
+    # --- Push-ReleaseTag: the irreversible path Finish uses to publish a release tag. ---
+    # A tag is immutable once consumed by a release, so the guarded behaviours below
+    # (dry-run refusal, create-and-verify, idempotent re-run, conflict rejection) are the
+    # ones worth pinning. Everything here runs against a local bare remote: no network.
+    $tagSha = (git -C $gitRoot rev-parse release/test).Trim()
+
+    $dryTag = @(Push-ReleaseTag `
+        -Root $gitRoot `
+        -Remote $bareRoot `
+        -Tag v9.9.9 `
+        -SourceCommit $tagSha 6>&1) -join "`n"
+    Assert-True ($dryTag -match 'requires -Push') 'A dry tag push did not explain its guard.'
+    Assert-Equal $null (Get-RemoteTagSha -Root $gitRoot -Remote $bareRoot -Tag v9.9.9) `
+        'A dry tag push created a remote tag.'
+
+    Push-ReleaseTag `
+        -Root $gitRoot `
+        -Remote $bareRoot `
+        -Tag v9.9.9 `
+        -SourceCommit $tagSha `
+        -Push
+    Assert-Equal $tagSha (Get-RemoteTagSha -Root $gitRoot -Remote $bareRoot -Tag v9.9.9) `
+        'A release tag was not created at its source commit.'
+
+    # Re-running Finish must be safe: the tag already points at the same commit.
+    $repeatTag = @(Push-ReleaseTag `
+        -Root $gitRoot `
+        -Remote $bareRoot `
+        -Tag v9.9.9 `
+        -SourceCommit $tagSha `
+        -Push 6>&1) -join "`n"
+    Assert-True ($repeatTag -match "points to $tagSha") `
+        'Re-pushing an identical tag was not reported as already ready.'
+
+    # A tag that already points somewhere else must NEVER be moved.
+    & git -C $gitRoot commit --quiet --allow-empty -m 'Second'
+    $otherSha = (git -C $gitRoot rev-parse HEAD).Trim()
+    Assert-Throws { Push-ReleaseTag `
+        -Root $gitRoot `
+        -Remote $bareRoot `
+        -Tag v9.9.9 `
+        -SourceCommit $otherSha `
+        -Push } 'expected' 'A conflicting release tag was silently accepted.'
+    Assert-Equal $tagSha (Get-RemoteTagSha -Root $gitRoot -Remote $bareRoot -Tag v9.9.9) `
+        'A conflicting tag push moved the remote tag.'
+    # The conflict must be detected before -Push is even considered.
+    Assert-Throws { Push-ReleaseTag `
+        -Root $gitRoot `
+        -Remote $bareRoot `
+        -Tag v9.9.9 `
+        -SourceCommit $otherSha } 'expected' 'A dry run ignored a conflicting release tag.'
 } finally {
     Remove-Item $gitRoot, $bareRoot -Recurse -Force -ErrorAction SilentlyContinue
 }

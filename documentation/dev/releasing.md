@@ -1,263 +1,202 @@
 # Release Guide
 
-SkiaSharp releases use a repository-owned PowerShell script to prepare release
-branches, the dnceng pipelines to build and test them, and the team-owned
-publication pipeline to publish packages.
+This is the maintainer runbook for shipping SkiaSharp. It lists the workflows
+to run, the values to enter, and the state to verify. For the design and
+implementation of the automation, see
+[Release process internals](release-process-internals.md).
 
-```text
-Release - Prepare -> dnceng Build/Tests + BAR -> release-testing approval
-    -> team publication -> GitHub release/milestones
-```
+## Process at a glance
+
+| Step | Action | Result |
+| --- | --- | --- |
+| 1 | Run **Release - Prepare** | Creates the paired `mono/skia` and `mono/SkiaSharp` release branches |
+| 2 | Wait for `skiasharp-package`, then `skiasharp-tests` | Produces the signed BAR and validates the exact Build pipeline resource |
+| 3 | Optionally run `release-testing` | Adds host/device validation for the selected BAR |
+| 4 | Use the protected internal publication process | Publishes the selected BAR's shipping packages to NuGet.org |
+| 5 | Run **Release - Finish** | Creates the tag and GitHub Release, then starts follow-up automation |
+| 6 | Run **Release - Milestones** | Reconciles shipped work and advances release milestones |
+| 7 | Merge the follow-up PRs | Lands any version bump, support update, and release notes |
 
 ## Safety
 
-Release refs, package versions, tags, and published GitHub Releases are treated
-as immutable.
+Release refs, package versions, tags, and published GitHub Releases are
+immutable.
 
 - Never force-update an existing release branch.
 - Never move or delete a release tag.
 - Never replace a published NuGet.org package version.
-- Never replace conflicting remote state merely because a rerun expected
-  something else.
+- Never substitute a different build, BAR, feed, or package after testing.
+- Stop when existing remote state conflicts with the requested release.
 
-The preparation script is convergent: matching state is reused and conflicting
-state stops the run.
+## Before starting
 
+Decide:
 
-## 1. Prepare release branches
+- the release identity, such as `4.153.0-preview.1`, `4.153.0-rc.1`, or
+  `4.153.0-stable`;
+- the exact source branch or commit to release; and
+- whether a stable line needs a long-lived `release/X.Y.x` servicing branch.
 
-Use the **Release - Prepare** workflow from `main`. It requires:
+> [!NOTE]
+> The `-stable` label is a Prepare-only safety sentinel. It will not appear in
+> package versions, branch names, tags, or GitHub Releases.
 
-| Input | Example |
+If a servicing branch is required, create `release/X.Y.x` from the intended
+maintenance base before the stable Prepare `Push` run. Prepare does not create
+that branch. When it exists, the post-stable version-bump PR targets it;
+otherwise the PR targets `main`.
+
+Prepare, Finish, and Milestones use the same two-dispatch pattern: first run
+with `push` unchecked to review a read-only plan, then run again with identical
+inputs and `push` checked.
+
+## 1. Prepare the release branches
+
+Open
+[Release - Prepare](https://github.com/mono/SkiaSharp/actions/workflows/release-prepare.yml),
+select **Run workflow**, and choose `main` as the workflow branch.
+
+| Input | Value |
 | --- | --- |
-| `base` | `main`, `release/4.152.x`, or an exact commit SHA |
-| `release` | `4.153.0-preview.1`, `4.153.0-rc.1`, or `4.153.0-stable` |
+| `base` | `main`, a servicing branch such as `release/4.152.x`, or an exact commit SHA |
+| `release` | `X.Y.Z-preview.N`, `X.Y.Z-rc.N`, `X.Y.Z-stable`, or the equivalent four-part hotfix identity |
+| `push` | Use the two-dispatch pattern above |
 
-The workflow resolves `base` and runs
-`scripts/infra/publishing/prepare-release.ps1` with the selected `mode`.
-`DryRun` is the default.
+> [!NOTE]
+> For a stable release, enter the explicit `X.Y.Z-stable` sentinel. The
+> resulting branch, package version, tag, and GitHub Release use bare `X.Y.Z`.
 
-Use separate workflow dispatches for preview and mutation. Review the `DryRun`
-output before selecting `Apply` or `Push`.
+Review the plan's base SHA, package versions, branch names, and remote writes.
+After the push run, verify that both release branches exist at the expected
+commits.
 
-The script creates matching branches in `mono/SkiaSharp` and `mono/skia`. The
-Skia branch points to the exact `externals/skia` gitlink used by the SkiaSharp
-branch.
+Both repositories use `release/<identity>`, with `-stable` removed. For example,
+`4.153.0-preview.1` creates `release/4.153.0-preview.1`, while
+`4.153.0-stable` creates `release/4.153.0`. Four-part hotfixes follow the same
+rule.
 
-### Local modes
+The workflow pushes `mono/skia` first, then `mono/SkiaSharp`. A three-part
+stable release also ensures that maintenance advances to the next SkiaSharp and
+HarfBuzzSharp preview versions. It creates or reuses a human-owned bump PR
+unless the target branch is already advanced; the workflow never merges it.
 
-```powershell
-# Read-only
-./scripts/infra/publishing/prepare-release.ps1 `
-  -Base main `
-  -Release 4.153.0-preview.1 `
-  -Mode DryRun
+## 2. Wait for the release pipelines
 
-# Create and validate local branches and commits
-./scripts/infra/publishing/prepare-release.ps1 `
-  -Base main `
-  -Release 4.153.0-preview.1 `
-  -Mode Apply
+Pushing the SkiaSharp `release/*` branch starts the internal pipeline chain
+automatically. Do not manually queue a different build.
 
-# Create locally, push both repositories, and create a stable bump PR
-./scripts/infra/publishing/prepare-release.ps1 `
-  -Base main `
-  -Release 4.153.0-preview.1 `
-  -Mode Push
-```
-
-| Mode | Local writes | Remote writes |
-| --- | --- | --- |
-| `DryRun` (default) | No | No |
-| `Apply` | Yes | No |
-| `Push` | Yes | Yes |
-
-Stable input uses the explicit `-stable` suffix but creates
-`release/X.Y.Z`. For a three-part stable release, Prepare also:
-
-- calculates the next SkiaSharp patch;
-- increments HarfBuzzSharp within its current milestone bucket;
-- creates `bump-version-X.Y.Z`;
-- returns both families to `preview.0`; and
-- opens a PR against a manually created `release/X.Y.x` servicing line when one
-  exists, otherwise against `main`.
-
-Release preparation never creates the optional `.x` line. The bump PR remains
-human-owned and is never merged by the script.
-
-## 2. Build, test, and publish packages
-
-Pushing a `release/*` branch triggers the current dnceng release chain:
-
-| Pipeline | ID | Responsibility |
-| --- | --- | --- |
-| `skiasharp-package` | 1642 | Build, signing, API Scan, BAR registration, packages |
-| `skiasharp-tests` | 1630 | Tests consuming the exact Build pipeline resource |
-
-Arcade routes `IsShipping=true` packages to `dotnet-libraries` and
-`IsShipping=false` build inputs to `dotnet-libraries-transport`.
-
-Release-testing smoke-tests the exact selected CI artifacts on the approved
-host/device targets before team publication. NuGet.org is not a planner or
-runner source for this gate.
-
-The team-owned release process selects the exact connected Build and Tests runs
-and their BAR. Before publication, use
-[release-testing](../../.agents/skills/release-testing/SKILL.md) with the exact
-SkiaSharp CI package version:
-
-```bash
-python3 .agents/skills/release-testing/scripts/plan-release-tests.py 4.150.3
-```
-
-The planner asks Maestro which BAR produced that version. If more than one
-build produced it, pass the release-approved BAR explicitly:
-
-```bash
-python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
-  4.150.3 --bar-id 329644
-```
-
-The planner resolves the BAR asset's GUID-backed per-build V3 and flat-container
-feed through Darc. It downloads exact `SkiaSharp` and `SkiaSharp.HarfBuzz`
-packages from that feed, derives the exact `HarfBuzzSharp` dependency, and
-requires all three packages to report the selected build's source branch and
-commit. Every runner receives the same package versions and GUID feed;
-`dotnet-public` supplies dependencies.
-
-The skill runs the approved host/device matrix and records the human
-release-approval gate. Failed required coverage blocks approval, but the skill
-does not publish packages or change BAR state. After approval, the team
-publishes the selected BAR to NuGet.org through its protected publication
-pipeline.
-
-## 3. Create the public GitHub Release
-
-Use the [release-publish](../../.agents/skills/release-publish/SKILL.md) skill
-after the exact packages appear on NuGet.org. Use **Release - Finish** or run:
-
-```powershell
-# Read-only
-./scripts/infra/publishing/finish-release.ps1 `
-  -Version 4.153.0-preview.1 `
-  -Mode DryRun
-
-# Apply the support-tier file update locally without publishing
-./scripts/infra/publishing/finish-release.ps1 `
-  -Version 4.153.0-preview.1 `
-  -Mode Apply
-
-# Publish the tag and GitHub Release
-./scripts/infra/publishing/finish-release.ps1 `
-  -Version 4.153.0-preview.1 `
-  -Mode Push
-```
-
-An abbreviated prerelease identity must resolve to exactly one public SkiaSharp
-package version. The `Push` run reads that package's source commit, creates the
-exact-version tag at that commit, publishes a GitHub-generated Release, opens or
-updates a focused support-tier PR, and dispatches release-note generation. A
-preview or RC adds its `major.minor` line to `support.preview`; a stable release
-adds it to `support.stable` and removes only that same line from
-`support.preview`. Ending support for any other line remains a maintainer policy
-decision.
-
-Package, tag, and release writes always have a separate dry-run and explicit
-confirmation. The repository automation never approves the team pipeline's
-protected publication stage.
-
-## 4. Maintain milestones
-
-Run **Release - Milestones** after publication. Reconciliation and milestone
-updates are selected by default; `push` is disabled by default. Review one
-read-only dispatch, then enable `push` in a separate dispatch if the plan is
-correct.
-
-```powershell
-# Reconcile shipped pull requests and linked issues
-./scripts/infra/publishing/reconcile-release-assignments.ps1 `
-  -Version 4.153.0
-
-# Update milestone dates, rollover, and closure
-./scripts/infra/publishing/update-release-milestones.ps1
-```
-
-Both scripts are read-only by default. Add `-Push` to the selected script after
-reviewing its output:
-
-```powershell
-./scripts/infra/publishing/reconcile-release-assignments.ps1 `
-  -Version 4.153.0 `
-  -Push
-
-./scripts/infra/publishing/update-release-milestones.ps1 -Push
-```
-
-These scripts never change release branches, tags, packages, or GitHub
-Releases.
-
-## Maintain issue-template versions
-
-**Sync - Issue Template Versions** runs daily in push mode and opens or
-refreshes its owned pull request. Manual dispatches default to `DryRun` and expose the same three-state mode. The
-same script can be run locally:
-
-```powershell
-# Read-only
-./scripts/infra/publishing/update-bug-template.ps1 -Mode DryRun
-
-# Update only the local issue form
-./scripts/infra/publishing/update-bug-template.ps1 -Mode Apply
-
-# Refresh the owned automation branch and pull request
-./scripts/infra/publishing/update-bug-template.ps1 -Mode Push
-```
-
-It derives both bug-report version dropdowns from published GitHub Releases and
-preserves every unrelated line in the issue form.
-
-## Version reference
-
-| Release type | Prepare input | Branch |
-| --- | --- | --- |
-| Preview | `X.Y.Z-preview.N` | `release/X.Y.Z-preview.N` |
-| RC | `X.Y.Z-rc.N` | `release/X.Y.Z-rc.N` |
-| Stable | `X.Y.Z-stable` | `release/X.Y.Z` |
-| Hotfix preview | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` |
-| Hotfix stable | `X.Y.Z.F-stable` | `release/X.Y.Z.F` |
-
-Hotfixes advance exactly one four-part revision from their base:
-`X.Y.Z → X.Y.Z.1 → X.Y.Z.2`. Each hotfix also increments HarfBuzzSharp.
-
-Prerelease public packages append the Arcade build revision. Stable packages use
-the bare numeric version.
-
-### HarfBuzzSharp milestone buckets
-
-HarfBuzzSharp uses `X.Y.Z.N`. The Skia milestone that first adopts native
-HarfBuzz `X.Y.Z` owns revisions 0-99. Each later Skia milestone using that same
-native version adds 100:
-
-Every promoted build that changes the SkiaSharp numeric version also needs a
-unique HarfBuzzSharp version; BAR registrations cannot reuse an older package
-version from another build.
-
-| Milestone relative to adoption | Revision range |
+| Pipeline | What to verify |
 | --- | --- |
-| Base milestone | 0-99 |
-| Base + 1 | 100-199 |
-| Base + 2 | 200-299 |
+| [`skiasharp-package` (1642)](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) | Succeeded for the exact release branch and commit; record the Build run, exact package version, and BAR ID |
+| [`skiasharp-tests` (1630)](https://dev.azure.com/dnceng/internal/_build?definitionId=1630) | Succeeded and was pipeline-triggered from that exact `skiasharp-package` run |
 
-For example, M150 adopted HarfBuzz 14.2.1, so M151 uses `14.2.1.100-199`
-and M152 uses `14.2.1.200-299`. Releases within one milestone increment by one.
-A native HarfBuzz upgrade resets the revision to zero and establishes a new
-base milestone.
+The public CI pipeline may also run for the branch. Its unsigned artifacts are
+not the release BAR.
+
+Do not continue if the Build and Tests runs disagree on branch, commit, build
+number, or upstream pipeline resource.
+
+## 3. Optional: approve the exact BAR package set
+
+This extra package validation is optional. To run it, use the repository's
+`release-testing` skill on each desired host with this copy-pasteable prompt:
+
+```text
+Use the release-testing skill to validate SkiaSharp {exact CI package version}
+from BAR {BAR ID}. Run the full available matrix on this host and produce the
+release approval report.
+```
+
+Add the resulting approval report, or the decision to skip this step, to the
+release record below.
+
+## 4. Publish the BAR to NuGet.org
+
+> **TODO:** Document the exact internal Maestro page, button, fields, required
+> permissions, and approval sequence used to publish the selected BAR to
+> NuGet.org.
+
+Until that UI is documented, use the current team-owned protected publication
+procedure. Confirm the BAR, Build run, source branch and commit, and package
+versions against the release record. If optional release-testing was run, they
+must match its approval report exactly.
+
+After publication completes, verify that the exact SkiaSharp package version
+and its expected shipping package family are visible on NuGet.org. Do not run
+Release - Finish before that verification.
+
+## 5. Finish the public release
+
+Open
+[Release - Finish](https://github.com/mono/SkiaSharp/actions/workflows/release-finish.yml),
+select **Run workflow**, and choose `main` as the workflow branch.
+
+| Input | Value |
+| --- | --- |
+| `version` | Stable: `X.Y.Z[.F]`.<br>Prerelease: `X.Y.Z[.F]-preview.N` / `-rc.N`, optionally with the exact `.BUILD` suffix |
+| `push` | Use the two-dispatch pattern above |
+
+Both prerelease forms are valid. A short identity such as
+`4.153.0-preview.1` is usually sufficient. If no public build matches, stop. If
+multiple builds match, use the exact version, such as
+`4.153.0-preview.1.26453.1`.
+
+Review the plan's source branch, source commit, tag, release title, support
+update, and follow-up workflows. After the push run, verify:
+
+- the immutable exact-version tag was created or verified at the package's
+  source commit;
+- the GitHub Release is published with the correct prerelease state;
+- the support state was already correct or the release-support PR was opened
+  or updated; and
+- release-note generation was dispatched.
+
+Stable releases also dispatch the issue-template version update.
+
+## 6. Reconcile and advance milestones
+
+After Release - Finish has created or verified the shipped tag, open
+[Release - Milestones](https://github.com/mono/SkiaSharp/actions/workflows/release-milestones.yml),
+select **Run workflow**, and choose `main` as the workflow branch.
+
+| Input | Value |
+| --- | --- |
+| `version` | Numeric release core, such as `4.153.0` or `4.153.0.1` |
+| `reconcile` | Checked |
+| `update` | Checked |
+| `push` | Use the two-dispatch pattern above |
+
+Run this after previews and RCs as well as stable releases. Warnings about
+missing tags, milestones, or release boundaries block safe mutation and must
+be resolved rather than ignored.
+
+## 7. Complete the follow-up pull requests
+
+Review and merge the automation PRs through the normal repository process:
+
+- the post-stable version-bump PR, when one was created;
+- the release-support PR, when one was needed; and
+- the generated release-notes/API-diff PR, when one was opened or updated.
+
+## Release record
+
+Keep these values together for the whole release:
+
+| Identity | Record |
+| --- | --- |
+| Requested Prepare identity | `X.Y.Z[.F]-preview.N`, `-rc.N`, or `-stable` |
+| SkiaSharp release branch and commit | `release/...` at SHA |
+| mono/skia release branch and commit | `release/...` at SHA |
+| `skiasharp-package` run | Build ID and URL |
+| `skiasharp-tests` run | Build ID and URL |
+| BAR | BAR ID |
+| Packages | Exact SkiaSharp and HarfBuzzSharp versions |
+| Optional test approval | Combined report or recorded skip decision |
+| Public release | NuGet version, tag, and GitHub Release URL |
 
 ## Related documentation
 
+- [Release process internals](release-process-internals.md)
 - [Versioning](versioning.md)
 - [Packages](packages.md)
 - [Release notes and API diffs](release-notes-and-api-diffs.md)
-- [Release assignment script](../../scripts/infra/publishing/reconcile-release-assignments.ps1)
-- [Release milestone script](../../scripts/infra/publishing/update-release-milestones.ps1)
-- [Issue-template version script](../../scripts/infra/publishing/update-bug-template.ps1)

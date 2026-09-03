@@ -64,6 +64,7 @@ GITHUB_WORKFLOWS = [
     # mono/SkiaSharp — Build & Docs (push-triggered, main + release/*)
     {"repo": "mono/SkiaSharp", "workflow": "build-site.yml", "name": "Pages - Deploy", "scope": "branch", "trigger": "push"},
     {"repo": "mono/SkiaSharp", "workflow": "samples.yml", "name": "Sync - Samples", "scope": "branch", "trigger": "push"},
+    {"repo": "mono/SkiaSharp", "workflow": "binding-generation-determinism.yml", "name": "Tests - Binding Generation Determinism", "scope": "branch", "trigger": "push"},
     # mono/SkiaSharp — Release-path push workflow (main + release/*)
     {"repo": "mono/SkiaSharp", "workflow": "update-release-notes.lock.yml", "name": "Sync - Release Notes & API Diffs", "scope": "branch", "trigger": "push"},
     # mono/SkiaSharp — Automation & Sync (global: scheduled/dispatch, not branch-specific)
@@ -73,13 +74,27 @@ GITHUB_WORKFLOWS = [
     {"repo": "mono/SkiaSharp", "workflow": "auto-docs-submodule-sync.yml", "name": "Sync - Docs Submodule", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-skia-submodule-sync.yml", "name": "Sync - Skia Submodule", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-skia-sync.lock.yml", "name": "Sync - Skia Upstream", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp", "workflow": "nightly-fix-finder.lock.yml", "name": "Nightly Fix Finder", "scope": "global", "trigger": "schedule"},
+    {"repo": "mono/SkiaSharp", "workflow": "memory-leak-fixer.lock.yml", "name": "Fixer - Memory Leak", "scope": "global", "trigger": "schedule"},
+    {"repo": "mono/SkiaSharp", "workflow": "performance-fixer.lock.yml", "name": "Fixer - Performance", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-triage.lock.yml", "name": "Sync - Issue Triage", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp", "workflow": "persist-aw-data.yml", "name": "Sync - Agentic Data", "scope": "global", "trigger": "push"},
+    {"repo": "mono/SkiaSharp", "workflow": "auto-update-issue-template-versions.yml", "name": "Sync - Issue Template Versions", "scope": "global", "trigger": "schedule"},
+    # persist-aw-data runs off workflow_run, not push — see tests/test_workflow_registry.py
+    {"repo": "mono/SkiaSharp", "workflow": "persist-aw-data.yml", "name": "Sync - Agentic Data", "scope": "global", "trigger": "event"},
+    # mono/SkiaSharp — Tracking dashboards (global: scheduled)
+    {"repo": "mono/SkiaSharp", "workflow": "track-artifact-sizes.yml", "name": "Track - Artifact Sizes", "scope": "global", "trigger": "schedule"},
+    {"repo": "mono/SkiaSharp", "workflow": "track-benchmarks.yml", "name": "Track - Benchmarks", "scope": "global", "trigger": "schedule"},
+    # mono/SkiaSharp — Release path (dispatch-driven, plus the tooling test gate)
+    {"repo": "mono/SkiaSharp", "workflow": "release-prepare.yml", "name": "Release - Prepare", "scope": "global", "trigger": "dispatch"},
+    {"repo": "mono/SkiaSharp", "workflow": "release-finish.yml", "name": "Release - Finish", "scope": "global", "trigger": "dispatch"},
+    {"repo": "mono/SkiaSharp", "workflow": "release-milestones.yml", "name": "Release - Milestones", "scope": "global", "trigger": "dispatch"},
+    {"repo": "mono/SkiaSharp", "workflow": "update-github-release-summaries.yml", "name": "Update GitHub Release summaries", "scope": "global", "trigger": "dispatch"},
+    {"repo": "mono/SkiaSharp", "workflow": "release-tooling-tests.yml", "name": "Release - Tooling Tests", "scope": "branch", "trigger": "push"},
+    {"repo": "mono/SkiaSharp", "workflow": "automation-tooling-tests.yml", "name": "Automation - Tooling Tests", "scope": "branch", "trigger": "push"},
     # mono/SkiaSharp — PR Utilities (global: triggered by PR events, not branch-specific)
     {"repo": "mono/SkiaSharp", "workflow": "backport.yml", "name": "PR - Backport", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "rebase.yml", "name": "PR - Rebase", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "pr-artifacts-comment.yml", "name": "PR - Artifacts Comment", "scope": "global", "trigger": "event"},
+    {"repo": "mono/SkiaSharp", "workflow": "merge-message.lock.yml", "name": "Merge Message", "scope": "global", "trigger": "event"},
     # mono/SkiaSharp-API-docs (global: scheduled/dispatch/PR events)
     {"repo": "mono/SkiaSharp-API-docs", "workflow": "auto-api-docs-writer.lock.yml", "name": "Auto API Docs Writer", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp-API-docs", "workflow": "automerge-docs.yml", "name": "Automerge Docs", "scope": "global", "trigger": "event"},

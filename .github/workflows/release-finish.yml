@@ -7,15 +7,11 @@ on:
         description: Stable version or prerelease identity/exact NuGet version
         required: true
         type: string
-      mode:
-        description: Execution mode
+      push:
+        description: Publish the tag, GitHub Release, support PR, and follow-up workflows
         required: true
-        default: DryRun
-        type: choice
-        options:
-          - DryRun
-          - Apply
-          - Push
+        default: false
+        type: boolean
 
 permissions:
   actions: write
@@ -38,8 +34,8 @@ jobs:
       - name: Finish
         shell: pwsh
         env:
-          GH_TOKEN: ${{ inputs.mode == 'Push' && secrets.SKIASHARP_AUTOBUMP_TOKEN || github.token }}
-          MODE: ${{ inputs.mode }}
+          GH_TOKEN: ${{ inputs.push && secrets.SKIASHARP_AUTOBUMP_TOKEN || github.token }}
+          MODE: ${{ inputs.push && 'Push' || 'DryRun' }}
           VERSION: ${{ inputs.version }}
         run: |
           $arguments = @{ Mode = $env:MODE; Version = $env:VERSION }
