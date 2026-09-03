@@ -5,15 +5,16 @@ to run, the values to enter, and the state to verify. For the design and
 implementation of the automation, see
 [Release process internals](release-process-internals.md).
 
-```text
-Release - Prepare
-    -> skiasharp-package
-    -> skiasharp-tests
-    -> optional release-testing approval
-    -> internal publication
-    -> Release - Finish
-    -> Release - Milestones
-```
+## Process at a glance
+
+| Step | Action | Result |
+| --- | --- | --- |
+| 1 | Run **Release - Prepare** | Creates the paired `mono/skia` and `mono/SkiaSharp` release branches |
+| 2 | Wait for `skiasharp-package`, then `skiasharp-tests` | Produces the signed BAR and validates the exact Build pipeline resource |
+| 3 | Optionally run `release-testing` | Adds host/device validation for the selected BAR |
+| 4 | Use the protected internal publication process | Publishes the selected BAR's shipping packages to NuGet.org |
+| 5 | Run **Release - Finish** | Creates the tag and GitHub Release, then starts follow-up automation |
+| 6 | Run **Release - Milestones** | Reconciles shipped work and advances release milestones |
 
 ## Safety
 
