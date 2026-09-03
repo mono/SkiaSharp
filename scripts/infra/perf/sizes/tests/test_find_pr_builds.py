@@ -251,8 +251,9 @@ class SelectTests(unittest.TestCase):
         self.assertEqual([11], [e["pr"] for e in got])
 
     def test_ignore_reported_reports_on_demand(self):
+        """Kept for the manual dispatch/backfill route, which must be able to re-report."""
         got = self.select(azdo_build(500, 10), reported=lambda pr: "500.1", ignore_reported=True)
-        self.assertEqual(1, len(got), "`/track sizes` must re-report on request")
+        self.assertEqual(1, len(got))
 
     def test_nothing_ready_is_empty(self):
         self.assertEqual([], self.select())
@@ -295,12 +296,9 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("0 7 * * *", crons, "the nightly measurement must survive")
         self.assertTrue(any(c.endswith("* * * *") and not c.startswith("0 7") for c in crons))
 
-    def test_comment_command_is_guarded(self):
-        guard = self.wf["jobs"]["resolve"]["if"]
-        self.assertIn("/track sizes", guard)
-        self.assertIn("pull_request", guard, "must ignore plain issues")
-        self.assertIn("Bot", guard, "its own comment must not re-trigger the workflow")
-        self.assertIn("author_association", guard, "must require write access")
+    def test_only_subscribes_to_events_actions_cannot_emit(self):
+        """This workflow posts PR comments, so an `issue_comment` trigger could re-trigger it."""
+        self.assertEqual({"schedule", "workflow_dispatch"}, set(self.on))
 
     def test_matrix_inputs_are_guarded_against_empty_string(self):
         """`strategy.matrix` expands BEFORE the job `if:`, so fromJSON('') fails the run."""

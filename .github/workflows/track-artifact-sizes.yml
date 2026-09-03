@@ -37,8 +37,6 @@ on:
   schedule:
     - cron: "0 7 * * *"  # Nightly at 07:00 UTC (offset from the 08:00 benchmark tracker)
     - cron: "40 * * * *"  # Hourly PR sweep (looks back 2h, so a missed sweep self-heals)
-  issue_comment:
-    types: [created]
   workflow_dispatch:
     inputs:
       build_id:
@@ -61,7 +59,6 @@ concurrency:
     track-artifact-sizes-${{
       (github.event_name == 'schedule' && github.event.schedule == '0 7 * * *') && 'nightly'
       || github.event_name == 'schedule' && 'sweep'
-      || github.event_name == 'issue_comment' && format('pr-{0}', github.event.issue.number)
       || github.event.inputs.build_id && format('build-{0}', github.event.inputs.build_id)
       || 'nightly' }}
   cancel-in-progress: false
@@ -74,17 +71,7 @@ jobs:
   # Shared entrypoint: pick the mode and, for PR work, resolve the builds to measure.
   # --------------------------------------------------------------------------- #
   resolve:
-    # `/track sizes` is honoured only from a PR comment by someone with write access, so an
-    # arbitrary fork user cannot make the repository download a gigabyte on demand. The bot
-    # check matters because THIS workflow posts comments: without it the report comment
-    # could re-trigger the workflow, which is the same class of loop `check_run` created.
-    if: >-
-      github.repository_owner == 'mono' &&
-      (github.event_name != 'issue_comment' ||
-       (github.event.issue.pull_request != null &&
-        github.event.comment.user.type != 'Bot' &&
-        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
-        startsWith(github.event.comment.body, '/track sizes')))
+    if: github.repository_owner == 'mono'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -115,8 +102,6 @@ jobs:
             mode=nightly                       # the 07:00 feed measurement
           elif [ "$EVENT_NAME" = "schedule" ]; then
             mode=sweep                         # the hourly PR sweep
-          elif [ "$EVENT_NAME" = "issue_comment" ]; then
-            mode=comment                       # `/track sizes` on one PR
           elif [ -n "${INPUT_BUILD_ID:-}" ]; then
             mode=pr                            # manual fallback for one build
           else
@@ -133,16 +118,9 @@ jobs:
           MODE: ${{ steps.mode.outputs.mode }}
           INPUT_BUILD_ID: ${{ github.event.inputs.build_id }}
           INPUT_PR_NUMBER: ${{ github.event.inputs.pr_number }}
-          COMMENT_PR: ${{ github.event.issue.number }}
         run: |
           set -euo pipefail
-          if [ "$MODE" = "comment" ]; then
-            # `/track sizes`: measure this PR's newest packaged build, ignoring the stamp so
-            # the command always re-reports on request.
-            python3 scripts/infra/perf/sizes/find_pr_builds.py \
-              --repo "$GITHUB_REPOSITORY" --hours 720 --only-pr "$COMMENT_PR" \
-              --ignore-reported --output matrix.json
-          elif [ "$MODE" = "pr" ]; then
+          if [ "$MODE" = "pr" ]; then
             # Manual fallback: measure exactly the build the operator named. This path
             # never consults the dedupe stamp, so it is also the deliberate retry route
             # for a build the sweep has already stamped.
