@@ -9,8 +9,8 @@ name: Track - Artifact Sizes
 #       the time-series to the `aw-data` branch (sizes/index.json, via persist-aw-data.yml),
 #       and emits the shared interactive perf dashboard.
 #
-#   * pr       (the AzDO nuget-publishing check run, or a manual dispatch with a build id)
-#       Reacts to the Azure DevOps job that already packed the NuGets — no rebuild here.
+#   * pr       (the hourly sweep, or a manual dispatch naming a build id)
+#       Measures the Azure DevOps job that already packed the NuGets — no rebuild here.
 #       Downloads that build's `nuget` artifact, measures every .nupkg + every file inside,
 #       diffs against the latest nightly baseline on `aw-data`, and posts/updates a size-diff
 #       PR comment. Informational only: never blocks, never writes to `aw-data`.
@@ -18,14 +18,14 @@ name: Track - Artifact Sizes
 # Both modes share the measurement primitives in scripts/infra/perf/sizes/ (track.py's
 # measure_nupkg) and the render helpers in render_md.py.
 #
-# NOTE: PR mode is driven by an hourly *poll* of Azure DevOps, plus an on-demand
-# `/track sizes` comment. It must NEVER subscribe to `check_run` again. GitHub cannot
-# filter that event by app, name, or path, so subscribing started a runner for EVERY
-# completed check run on the default branch — including the ones our own Actions workflows
-# publish. Since `persist-aw-data` runs on `workflow_run` of THIS workflow and then
-# publishes its own check run, the two formed a self-sustaining loop: both reached 40,000
-# runs, and in a sample of 25 consecutive runs 24 did no work at all. A job-level `if:`
-# cannot fix it — a *skipped* job still publishes a check run and still feeds the loop.
+# NOTE: PR mode is driven by an hourly *poll* of Azure DevOps. It must NEVER subscribe to
+# `check_run` again. GitHub cannot filter that event by app, name, or path, so subscribing
+# started a runner for EVERY completed check run on the default branch — including the ones
+# our own Actions workflows publish. Since `persist-aw-data` runs on `workflow_run` of THIS
+# workflow and then publishes its own check run, the two formed a self-sustaining loop: both
+# reached 40,000 runs, and in a sample of 25 consecutive runs 24 did no work at all. A
+# job-level `if:` cannot fix it — a *skipped* job still publishes a check run and still feeds
+# the loop.
 #
 # The replacement is one anonymous Azure DevOps query per sweep that returns every recent
 # PR build, so discovery is O(1) in the number of open pull requests rather than O(open
@@ -33,7 +33,8 @@ name: Track - Artifact Sizes
 # `<!-- build=<id> packaged=<time> -->` stamp in the PR comment rather than by the sweep's
 # own clock: a build is measured only when its packages are NEWER than the ones already
 # reported, so a duplicate sweep is a no-op, a missed one catches up, a stage re-run reports
-# itself by finishing later, and a stale out-of-order result is ignored. See scripts/infra/perf/sizes/find_pr_builds.py.
+# itself by finishing later, and a stale out-of-order result is ignored.
+# See find_pr_builds.py for selection and pr_comment.py for the comment format itself.
 
 on:
   schedule:
@@ -55,8 +56,8 @@ permissions:
 
 concurrency:
   # The nightly run is a singleton (never cancel a persist). Sweeps are a singleton too, so
-  # two cannot double-measure a build. A `/track sizes` comment is keyed per PR so one PR's
-  # manual request never blocks another's.
+  # two cannot double-measure a build. A manual dispatch is keyed by its build id, so one
+  # operator-requested measurement never blocks another.
   group: >-
     track-artifact-sizes-${{
       (github.event_name == 'schedule' && github.event.schedule == '0 7 * * *') && 'nightly'
@@ -250,6 +251,8 @@ jobs:
       pull-requests: write
     env:
       BUILD_URL: https://dev.azure.com/dnceng-public/public/_build/results?buildId=${{ matrix.build }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -262,45 +265,11 @@ jobs:
         # step runs and an unstampable build would be re-selected by every sweep forever.
         # Stamping the attempt up front makes the dedupe durable regardless of how the job
         # ends; the `workflow_dispatch` path ignores stamps and remains the retry route.
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        env:
-          BUILD_ID: ${{ matrix.build }}
-          PACKAGED_AT: ${{ matrix.packagedAt }}
-          PR_NUMBER: ${{ matrix.pr }}
-        with:
-          script: |
-            const prNumber = Number(process.env.PR_NUMBER) || null;
-            if (!prNumber) {
-              core.info('No PR number yet; the build is claimed after it is resolved.');
-              return;
-            }
-            const marker = '<!-- skiasharp-pr-artifact-sizes -->';
-            const buildId = process.env.BUILD_ID;
-            const body = [
-              marker,
-              `<!-- build=${buildId} packaged=${process.env.PACKAGED_AT || new Date().toISOString().slice(0, 19)} -->`,
-              '## 📦 Artifact size report',
-              '',
-              `Measuring the packages from build [\`${buildId}\`](${process.env.BUILD_URL})…`,
-              '',
-              `[Run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
-            ].join('\n');
-            const repo = { owner: context.repo.owner, repo: context.repo.repo };
-
-            let existing = null;
-            for await (const page of github.paginate.iterator(
-              github.rest.issues.listComments,
-              { ...repo, issue_number: prNumber, per_page: 100 }
-            )) {
-              existing = page.data.find(c => c.body.includes(marker));
-              if (existing) break;
-            }
-            if (existing) {
-              await github.rest.issues.updateComment({ ...repo, comment_id: existing.id, body });
-            } else {
-              await github.rest.issues.createComment({ ...repo, issue_number: prNumber, body });
-            }
-            core.info(`claimed build ${buildId} on PR #${prNumber}`);
+        run: |
+          python3 scripts/infra/perf/sizes/pr_comment.py \
+            --repo "$GITHUB_REPOSITORY" --pr "${{ matrix.pr }}" \
+            --build "${{ matrix.build }}" --packaged-at "${{ matrix.packagedAt }}" \
+            --status claiming --build-url "$BUILD_URL" --run-url "$RUN_URL"
 
       - name: Download + measure the PR's packages
         run: |
@@ -326,90 +295,29 @@ jobs:
           fi
 
       - name: Render the size-diff comment
-        env:
-          PACKAGED_AT: ${{ matrix.packagedAt }}
+        # Body only: the marker and the dedupe stamp are added by pr_comment.py when it posts.
         run: |
           python3 scripts/infra/perf/sizes/render_pr_md.py \
             --pr-sizes pr-sizes.json \
             --baseline baseline.json \
             --build-url "$BUILD_URL" \
-            --packaged-at "$PACKAGED_AT" \
             --output comment.md
 
       - name: Post or update the PR comment
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        env:
-          PR_NUMBER: ${{ matrix.pr }}
-        with:
-          script: |
-            const fs = require('fs');
-            const measurement = JSON.parse(fs.readFileSync('pr-sizes.json', 'utf8'));
-            const prNumber = measurement.prNumber
-              || Number(process.env.PR_NUMBER) || null;
-            if (!prNumber) {
-              core.warning('No PR number could be resolved; skipping comment.');
-              return;
-            }
-            const body = fs.readFileSync('comment.md', 'utf8');
-            const marker = '<!-- skiasharp-pr-artifact-sizes -->';
-            const repo = { owner: context.repo.owner, repo: context.repo.repo };
-
-            let existing = null;
-            for await (const page of github.paginate.iterator(
-              github.rest.issues.listComments,
-              { ...repo, issue_number: prNumber, per_page: 100 }
-            )) {
-              existing = page.data.find(c => c.body.includes(marker));
-              if (existing) break;
-            }
-            if (existing) {
-              await github.rest.issues.updateComment({ ...repo, comment_id: existing.id, body });
-              core.info(`updated comment on PR #${prNumber}`);
-            } else {
-              await github.rest.issues.createComment({ ...repo, issue_number: prNumber, body });
-              core.info(`created comment on PR #${prNumber}`);
-            }
+        # The measurement carries the PR number for the dispatch path, where the operator
+        # may have supplied only a build id.
+        run: |
+          python3 scripts/infra/perf/sizes/pr_comment.py \
+            --repo "$GITHUB_REPOSITORY" --pr "${{ matrix.pr }}" --pr-from pr-sizes.json \
+            --build "${{ matrix.build }}" --packaged-at "${{ matrix.packagedAt }}" \
+            --body-file comment.md
 
       - name: Record a failed measurement
         # The claim step already made the dedupe durable; this only replaces the
         # "measuring…" text so the PR shows why no numbers arrived.
         if: failure()
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        env:
-          BUILD_ID: ${{ matrix.build }}
-          PACKAGED_AT: ${{ matrix.packagedAt }}
-          PR_NUMBER: ${{ matrix.pr }}
-        with:
-          script: |
-            const prNumber = Number(process.env.PR_NUMBER) || null;
-            if (!prNumber) {
-              core.warning('No PR number could be resolved; not recording the failure.');
-              return;
-            }
-            const marker = '<!-- skiasharp-pr-artifact-sizes -->';
-            const buildId = process.env.BUILD_ID;
-            const body = [
-              marker,
-              `<!-- build=${buildId} packaged=${process.env.PACKAGED_AT || new Date().toISOString().slice(0, 19)} -->`,
-              '## 📦 Artifact size report',
-              '',
-              `Could not measure the packages from build [\`${buildId}\`](${process.env.BUILD_URL}).`,
-              '',
-              `See [the failed run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}).`,
-            ].join('\n');
-            const repo = { owner: context.repo.owner, repo: context.repo.repo };
-
-            let existing = null;
-            for await (const page of github.paginate.iterator(
-              github.rest.issues.listComments,
-              { ...repo, issue_number: prNumber, per_page: 100 }
-            )) {
-              existing = page.data.find(c => c.body.includes(marker));
-              if (existing) break;
-            }
-            if (existing) {
-              await github.rest.issues.updateComment({ ...repo, comment_id: existing.id, body });
-            } else {
-              await github.rest.issues.createComment({ ...repo, issue_number: prNumber, body });
-            }
-            core.info(`recorded failed measurement of build ${buildId} on PR #${prNumber}`);
+        run: |
+          python3 scripts/infra/perf/sizes/pr_comment.py \
+            --repo "$GITHUB_REPOSITORY" --pr "${{ matrix.pr }}" \
+            --build "${{ matrix.build }}" --packaged-at "${{ matrix.packagedAt }}" \
+            --status failed --build-url "$BUILD_URL" --run-url "$RUN_URL"

@@ -3,12 +3,9 @@
 
 Emits a GitHub Actions matrix: [{"pr": 4913, "build": "1577884", "packagedAt": "..."}]
 
-This replaced an `on: check_run` subscription. That event has no server-side filter, so every
-completed check run on the default branch started a runner; combined with persist-aw-data
-publishing its own check run it formed a loop that reached 40,000 runs. Never reintroduce it —
-a *skipped* job still publishes a check run, so a job-level `if:` is not a fix.
+This replaced an `on: check_run` subscription that ran away to 40,000 runs; see the header of
+.github/workflows/track-artifact-sizes.yml for why it must never come back.
 """
-
 from __future__ import annotations
 
 import argparse
@@ -19,35 +16,13 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # perf/
-from _common import http_get_json, log  # noqa: E402
+from _common import http_get_json, log, parse_iso_utc  # noqa: E402
+from pr_comment import STAMP_FORMAT, read_stamp  # noqa: E402
 
 ORG, PROJECT, DEFINITION = "dnceng-public", "public", 345
 PACKAGE_STAGE = "Package NuGets"  # finishes ~1h30m before the build, so reports land sooner
 AZDO = f"https://dev.azure.com/{ORG}/{PROJECT}/_apis"
 
-STAMP_RE = re.compile(r"<!--\s*build=(\d+)\s+packaged=(\S+?)\s*-->")
-# Whole seconds, UTC implied. Azure timestamps are always UTC and their sub-second precision
-# is both inconsistent and useless for ordering builds minutes apart.
-STAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
-
-
-def parse_time(value: str | None) -> datetime.datetime | None:
-    """Parse an Azure DevOps timestamp, or a stamp we wrote, into a naive UTC datetime.
-
-    Azure mixes fractional precision within a single timeline (7-digit, 2-digit, 1-digit and
-    absent), so these must be compared as datetimes rather than strings — raw, `"...:33Z"`
-    sorts above `"...:33.386Z"` because 'Z' exceeds '.'. `fromisoformat` accepts every form
-    Azure emits; our own stamps parse as naive, so any offset is normalised away.
-    """
-    if not value:
-        return None
-    try:
-        parsed = datetime.datetime.fromisoformat(value)
-    except ValueError:
-        return None
-    if parsed.tzinfo:
-        parsed = parsed.astimezone(datetime.timezone.utc).replace(tzinfo=None)
-    return parsed
 
 
 def newest_build_per_pr(hours: int, fetch=http_get_json) -> dict[int, dict]:
@@ -83,28 +58,6 @@ def packaged_at(build_id, fetch=http_get_json) -> str | None:
     return None
 
 
-def reported_at(repo: str, pr: int, fetch=http_get_json) -> datetime.datetime | None:
-    """When the packages last reported on this PR were produced.
-
-    Raises on a failed read: the caller must treat that as *unknown*, never as *unreported*,
-    because measuring downloads ~1.1 GB and a throttled read would repeat it every sweep.
-
-    One page only. The bot keeps a single upserted comment and real PRs sit in the low tens,
-    so a PR would need 100+ comments before this could miss it — and the next push re-reports.
-    """
-    token = os.environ.get("GH_TOKEN", "")
-    headers = {"Accept": "application/vnd.github+json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    comments = fetch(f"https://api.github.com/repos/{repo}/issues/{pr}/comments?per_page=100",
-                     headers=headers)
-    for body in (c.get("body") or "" for c in comments):
-        match = STAMP_RE.search(body)
-        if match:
-            return parse_time(match.group(2))
-    return None
-
-
 def select(repo: str, hours: int, *, builds=None, stage=None, reported=None) -> list[dict]:
     """Builds worth reporting, oldest first so a backlog drains in order.
 
@@ -114,14 +67,14 @@ def select(repo: str, hours: int, *, builds=None, stage=None, reported=None) -> 
     """
     builds = builds or (lambda: newest_build_per_pr(hours))
     stage = stage or packaged_at
-    reported = reported or (lambda pr: reported_at(repo, pr))
+    reported = reported or (lambda pr: read_stamp(repo, pr))
 
     ready = []
     for pr, build in builds().items():
         # Deliberately not gated on the build's overall result: a build can fail in a later
         # stage having already packaged successfully, and those packages are still worth
         # measuring. `stage()` returns a time only when packaging itself succeeded.
-        when = parse_time(stage(build["id"]))
+        when = parse_iso_utc(stage(build["id"]))
         if when:
             ready.append((when, pr, build))
     ready.sort(key=lambda item: item[0])

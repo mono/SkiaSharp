@@ -13,6 +13,7 @@ by path from CI, not as a package). Only the standard library is used.
 
 from __future__ import annotations
 
+import datetime
 import json
 import re
 import sys
@@ -45,9 +46,9 @@ def log(msg: str) -> None:
 # HTTP (stdlib only, exponential backoff)
 # --------------------------------------------------------------------------- #
 
-def http_get(url: str, *, retries: int = 4, timeout: int = 120,
-             headers: dict | None = None) -> bytes:
-    """GET a URL returning the raw bytes, retrying transient failures.
+def http_request(url: str, *, method: str = "GET", data: bytes | None = None, retries: int = 4,
+                 timeout: int = 120, headers: dict | None = None) -> bytes:
+    """Issue an HTTP request returning the raw bytes, retrying transient failures.
 
     Every HTTP or connection failure — including a non-retryable 4xx — is raised as
     ``RuntimeError``. Callers such as ``feed_versions`` treat that as "absent" and return an
@@ -56,11 +57,13 @@ def http_get(url: str, *, retries: int = 4, timeout: int = 120,
     """
     last: Exception | None = None
     request_headers = {"User-Agent": USER_AGENT}
+    if data is not None:
+        request_headers["Content-Type"] = "application/json"
     if headers:
         request_headers.update(headers)
     for attempt in range(1, retries + 1):
         try:
-            req = urllib.request.Request(url, headers=request_headers)
+            req = urllib.request.Request(url, data=data, headers=request_headers, method=method)
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 return resp.read()
         except urllib.error.HTTPError as err:
@@ -69,7 +72,7 @@ def http_get(url: str, *, retries: int = 4, timeout: int = 120,
             # transient: 403 is what GitHub returns for a secondary rate limit, 408 is a
             # request timeout, and 429 is ordinary throttling.
             if 400 <= err.code < 500 and err.code not in RETRYABLE_HTTP_CODES:
-                raise RuntimeError(f"GET failed with HTTP {err.code}: {url}") from err
+                raise RuntimeError(f"{method} failed with HTTP {err.code}: {url}") from err
             last = err
         except (urllib.error.URLError, TimeoutError, ConnectionError) as err:
             last = err
@@ -78,11 +81,43 @@ def http_get(url: str, *, retries: int = 4, timeout: int = 120,
         wait = min(30, 2 ** attempt)
         log(f"  ! request failed ({last}); retry {attempt}/{retries} in {wait}s")
         time.sleep(wait)
-    raise RuntimeError(f"GET failed after {retries} attempts: {url}\n  {last}")
+    raise RuntimeError(f"{method} failed after {retries} attempts: {url}\n  {last}")
+
+
+def http_get(url: str, **kwargs) -> bytes:
+    return http_request(url, **kwargs)
 
 
 def http_get_json(url: str, **kwargs) -> dict:
-    return json.loads(http_get(url, **kwargs).decode("utf-8"))
+    """GET and decode JSON. An empty body decodes to ``{}``.
+
+    Azure DevOps answers ``204 No Content`` for a build with no timeline (superseded or
+    cancelled before any stage ran). That is a successful, meaningful answer, so decoding
+    it as JSON and reporting the resulting `Expecting value: line 1 column 1` as a fetch
+    failure made an ordinary state look like an outage in the sweep log.
+    """
+    raw = http_get(url, **kwargs)
+    return json.loads(raw.decode("utf-8")) if raw.strip() else {}
+
+
+def parse_iso_utc(value: str | None) -> "datetime.datetime | None":
+    """Parse an ISO-8601 timestamp into a naive UTC datetime, or None if unparseable.
+
+    Azure DevOps mixes fractional precision within a single timeline (7-digit, 2-digit,
+    1-digit and absent), so these must be compared as datetimes rather than strings — raw,
+    ``"...:33Z"`` sorts above ``"...:33.386Z"`` because 'Z' exceeds '.'. ``fromisoformat``
+    accepts every form Azure emits; naive input is taken as UTC, which is what both Azure
+    and our own stamps mean.
+    """
+    if not value:
+        return None
+    try:
+        parsed = datetime.datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if parsed.tzinfo:
+        parsed = parsed.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+    return parsed
 
 
 # --------------------------------------------------------------------------- #

@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 """Tests for the HTTP contract in scripts/infra/perf/_common.py.
 
-`http_get` raises `RuntimeError` for every failure, and several callers depend on exactly that: `feed_versions`,
-`track.enumerate_feed_packages`, and `measure_pr.resolve_pr_number` catch `RuntimeError` to mean "absent / unavailable" and return
-an empty result.
-
-Fast-failing a non-retryable 4xx must therefore not leak the raw `urllib.error.HTTPError` — it is an `OSError`, not a
-`RuntimeError`, so it would escape those handlers and turn a package that is merely not published yet into a crash in the nightly
-size tracker. These tests pin both halves of that contract: the speed and the type.
+`http_get` raises `RuntimeError` for every failure, and `feed_versions`,
+`track.enumerate_feed_packages` and `measure_pr.resolve_pr_number` all catch exactly that to
+mean "absent". A fast-fail for non-retryable 4xx once raised `HTTPError` instead, which is an
+`OSError` and escaped all three, turning an unpublished package into a crash. These pin both
+halves of the contract: the type, and which codes are permanent.
 
 Everything here is offline; `urllib.request.urlopen` and `time.sleep` are replaced.
 """
-
 from __future__ import annotations
 
 import io
@@ -95,15 +92,19 @@ class HttpGetContractTests(unittest.TestCase):
     def test_transient_4xx_is_still_retried(self):
         """403 is GitHub's secondary rate limit and 408 a timeout — both recover.
 
-        The size sweep issues sequential authenticated GETs on a schedule, which is exactly the shape that trips a secondary rate
-        limit; fast-failing those would make the sweep strictly less resilient than before the fast-fail existed.
+        The sweep issues sequential authenticated GETs on a schedule, exactly the shape that
+        trips a secondary rate limit, so fast-failing these would make it strictly less
+        resilient than before the fast-fail existed.
         """
         for code in (403, 408, 429):
             with self.subTest(code=code):
+                self.slept.clear()
                 fake = self.install(http_error(code))
                 with self.assertRaises(RuntimeError):
                     _common.http_get("https://example.invalid/x", retries=3)
                 self.assertEqual(3, fake.calls, f"HTTP {code} must be retried")
+                # Backoff happens between attempts only, never after the last one.
+                self.assertEqual(2, len(self.slept))
 
     def test_no_credentials_leak_into_the_error(self):
         self.install(http_error(404))
@@ -114,14 +115,6 @@ class HttpGetContractTests(unittest.TestCase):
         self.assertNotIn("s3cr3t-token-value", message)
         self.assertNotIn("Bearer", message)
         self.assertNotIn("Authorization", message)
-
-    def test_429_is_still_retried(self):
-        fake = self.install(http_error(429))
-        with self.assertRaises(RuntimeError):
-            _common.http_get("https://example.invalid/x", retries=3)
-        self.assertEqual(3, fake.calls)
-        # Backoff happens between attempts only, never after the last one.
-        self.assertEqual(2, len(self.slept))
 
     def test_5xx_is_still_retried(self):
         fake = self.install(http_error(503))
@@ -150,15 +143,39 @@ class AbsentPackageContractTests(unittest.TestCase):
 
     def test_feed_versions_returns_empty_for_a_missing_package(self):
         _common.urllib.request.urlopen = FakeUrlopen(http_error(404))
-        self.assertEqual([], _common.feed_versions("https://example.invalid/flat/", "Nope.Missing"))
+        self.assertEqual([], _common.feed_versions("https://x.invalid/flat/", "Nope"))
 
     def test_feed_versions_returns_empty_when_the_feed_is_unavailable(self):
         _common.urllib.request.urlopen = FakeUrlopen(http_error(503))
-        self.assertEqual([], _common.feed_versions("https://example.invalid/flat/", "Nope.Missing"))
+        self.assertEqual([], _common.feed_versions("https://x.invalid/flat/", "Nope"))
 
     def test_feed_versions_passes_versions_through(self):
         _common.urllib.request.urlopen = FakeUrlopen(b'{"versions":["1.0.0","2.0.0"]}')
-        self.assertEqual(["1.0.0", "2.0.0"], _common.feed_versions("https://example.invalid/flat/", "Real.Package"))
+        self.assertEqual(["1.0.0", "2.0.0"],
+                         _common.feed_versions("https://x.invalid/flat/", "Real"))
+
+
+class EmptyBodyTests(unittest.TestCase):
+    """Azure DevOps answers 204 No Content for a build with no timeline."""
+
+    def decode(self, raw):
+        original = _common.http_get
+        _common.http_get = lambda url, **kw: raw
+        try:
+            return _common.http_get_json("https://example.invalid")
+        finally:
+            _common.http_get = original
+
+    def test_no_content_is_an_empty_object(self):
+        self.assertEqual({}, self.decode(b""))
+        self.assertEqual({}, self.decode(b"   \n"))
+
+    def test_real_json_still_decodes(self):
+        self.assertEqual({"records": []}, self.decode(b'{"records": []}'))
+
+    def test_malformed_json_still_raises(self):
+        with self.assertRaises(ValueError):
+            self.decode(b"<html>not json</html>")
 
 
 if __name__ == "__main__":

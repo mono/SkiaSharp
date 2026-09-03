@@ -27,8 +27,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # sizes/
 from render_md import friendly_native_label, human  # noqa: E402
 from track import _is_native_entry  # noqa: E402
 
-MARKER = "<!-- skiasharp-pr-artifact-sizes -->"
-
 # Below this, a size change is treated as noise (matches the nightly tracker) and the
 # package is considered unchanged.
 NOISE_BYTES = 50 * 1024
@@ -105,21 +103,15 @@ def baseline_nupkg(baseline_pkg: dict) -> int | None:
 # Rendering
 # --------------------------------------------------------------------------- #
 
-def render(pr: dict, baseline: dict | None, *, build_url: str | None,
-           packaged_at: str | None = None) -> str:
+def render(pr: dict, baseline: dict | None, *, build_url: str | None) -> str:
+    """The report body only. pr_comment.py prepends the marker and the dedupe stamp, so
+    this must not emit either: two markers would let the comment lookup match the wrong
+    half, and a second stamp would shadow the real one for the intake's regex."""
     pr_pkgs: dict[str, dict] = pr.get("packages", {})
     base_pkgs: dict[str, dict] = (baseline or {}).get("packages", {})
 
-    lines: list[str] = [MARKER]
-
     build_id = pr.get("buildId")
-    # Machine-readable stamp. This body REPLACES the one the claim step wrote, so it must
-    # carry the same `build=<id> packaged=<time>` form find_pr_builds.py reads back —
-    # emitting only `build=<id>` would leave the intake unable to match, and every sweep
-    # would re-download and re-measure this build.
-    if build_id and packaged_at:
-        lines.append(f"<!-- build={build_id} packaged={packaged_at} -->")
-    lines += ["## 📦 Artifact size report", ""]
+    lines: list[str] = ["## 📦 Artifact size report", ""]
 
     build_ref = f"[`{build_id}`]({build_url})" if build_url else f"`{build_id}`"
     if baseline:
@@ -274,8 +266,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                    help="Baseline nightly raw snapshot JSON (sizes/raw/<date>.json). "
                         "Omit / point at a missing file to render absolute sizes only.")
     p.add_argument("--build-url", default=None, help="AzDO build results URL for the header link.")
-    p.add_argument("--packaged-at", default=None,
-                   help="When the packages were produced; recorded in the dedupe stamp.")
     p.add_argument("--output", default=None,
                    help="Write the Markdown here (default: stdout). Also appended to "
                         "$GITHUB_STEP_SUMMARY when set.")
@@ -295,7 +285,7 @@ def main(argv: list[str]) -> int:
         except (json.JSONDecodeError, OSError) as err:
             print(f"warning: could not read baseline ({err}); absolute-only", file=sys.stderr)
 
-    markdown = render(pr, baseline, build_url=args.build_url, packaged_at=args.packaged_at)
+    markdown = render(pr, baseline, build_url=args.build_url)
 
     if args.output:
         with open(args.output, "w", encoding="utf-8") as fh:
