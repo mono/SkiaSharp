@@ -41,7 +41,7 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **Color palette** — Six selectable colors with dark/light mode variants.
 - **Brush size** — Adjustable via a MAUI `Slider`, mouse wheel/trackpad scroll, or a two-contact pinch.
 
-On iPadOS and Mac Catalyst, moving a mouse or trackpad pointer over the canvas displays the current brush outline. The sample interprets `WheelDelta` using the proposed [v120 convention](https://github.com/mono/SkiaSharp/issues/3533): 120 units represent one discrete wheel notch, while smaller magnitudes preserve precision scrolling. Trackpad magnification is not represented by `SKTouchEventArgs`; the pinch interaction in this sample uses two real touch contacts.
+On iPadOS and Mac Catalyst, moving a mouse or trackpad pointer over the canvas displays the current brush outline. The sample treats 120 `WheelDelta` units as one nominal compatibility notch while preserving smaller integer deltas from precision scrolling. Apple maps UIKit point translation to this legacy scale using a browser-style content-scroll sensitivity, not a hardware detent calibration. [#3533](https://github.com/mono/SkiaSharp/issues/3533) tracks a future fractional two-axis scroll API. Trackpad magnification is not represented by `SKTouchEventArgs`; the pinch interaction in this sample uses two real touch contacts.
 
 ## Requirements
 
