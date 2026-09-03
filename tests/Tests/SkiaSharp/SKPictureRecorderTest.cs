@@ -81,5 +81,55 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(SKRect.Create(x, y, w, h), picture.CullRect);
 		}
+
+		[Fact]
+		public void DrawableFromRecorderReproducesGeometryOnPlayback()
+		{
+			// Guards against regressions from the M154 SkBigPicture -> SkPicture refactor
+			// (upstream b392fb672d). Ensures that a picture recorded through
+			// EndRecordingAsDrawable reproduces its recorded geometry and colors when
+			// played back through both SKDrawable.Draw and SKDrawable.Snapshot -> Playback.
+			// Uses only stable, cross-platform, CPU-deterministic APIs.
+
+			var cullRect = SKRect.Create(0, 0, 40, 40);
+
+			using var recorder = new SKPictureRecorder();
+			var recCanvas = recorder.BeginRecording(cullRect);
+			DrawTestBitmap(recCanvas, 40, 40);
+
+			using var drawable = recorder.EndRecordingAsDrawable();
+			Assert.NotNull(drawable);
+			Assert.Equal(cullRect, drawable.Bounds);
+
+			// Path 1: Draw the drawable directly onto a fresh canvas and confirm the
+			// four quadrant colors of the recorded geometry survive the drawable playback.
+			using (var bmp = new SKBitmap(40, 40))
+			using (var cnv = new SKCanvas(bmp))
+			{
+				drawable.Draw(cnv, 0, 0);
+				ValidateTestBitmap(bmp);
+			}
+
+			// Path 2: Snapshot the drawable into an SKPicture and validate that both
+			// Playback and DrawPicture reproduce the same recorded geometry.
+			using var snapshot = drawable.Snapshot();
+			Assert.NotNull(snapshot);
+			Assert.Equal(cullRect, snapshot.CullRect);
+			Assert.True(snapshot.ApproximateBytesUsed > 0);
+
+			using (var bmp = new SKBitmap(40, 40))
+			using (var cnv = new SKCanvas(bmp))
+			{
+				snapshot.Playback(cnv);
+				ValidateTestBitmap(bmp);
+			}
+
+			using (var bmp = new SKBitmap(40, 40))
+			using (var cnv = new SKCanvas(bmp))
+			{
+				cnv.DrawPicture(snapshot);
+				ValidateTestBitmap(bmp);
+			}
+		}
 	}
 }
