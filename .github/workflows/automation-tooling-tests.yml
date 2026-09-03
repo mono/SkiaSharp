@@ -5,6 +5,7 @@ name: Automation - Tooling Tests
 # silently:
 #
 #   * .agents/skills/ci-status/scripts/tests/       — the CI dashboard's workflow registry
+#   * .agents/skills/merge-skia-update/scripts/tests/ — safe Skia landing preparation
 #   * .agents/skills/update-skia/scripts/*_test.py  — Skia milestone update tooling
 #   * .github/scripts/tests/skia-sync-detect.test.sh — the auto-skia-sync work detector
 #
@@ -15,6 +16,7 @@ on:
   pull_request:
     paths:
       - ".agents/skills/ci-status/**"
+      - ".agents/skills/merge-skia-update/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
       # Any workflow edit, so the registry test re-checks its tracked list. '*.yml' already
@@ -24,6 +26,7 @@ on:
     branches: [main]
     paths:
       - ".agents/skills/ci-status/**"
+      - ".agents/skills/merge-skia-update/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
       - ".github/workflows/*.yml"
@@ -75,6 +78,11 @@ jobs:
             python3 -m unittest "${test%.py}"
             echo "::endgroup::"
           done
+
+      - name: Run merge-skia-update tooling tests
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s .agents/skills/merge-skia-update/scripts/tests -p "test_*.py" -v
 
       - name: Run skia-sync work detector tests
         run: bash .github/scripts/tests/skia-sync-detect.test.sh

@@ -9,7 +9,7 @@
       "expectations": [
         "Does not repeat the deep review.",
         "Verifies that the two supplied PRs reciprocally link to each other.",
-        "Passes AI-resolved branch names to Prepare-SkiaReleaseBranches.ps1 without -Push before applying.",
+        "Passes AI-resolved parent base/head and native base branch names to Prepare-SkiaReleaseBranches.ps1 without -Push before applying.",
         "Invokes pr-commit-message for mono/skia.",
         "Does not merge either PR."
       ]
@@ -41,14 +41,27 @@
     {
       "id": 3,
       "prompt": "The M160 bump is approved. Create the previous release branches before I merge.",
-      "expected_output": "The AI passes the resolved main and native base branches; the script derives release/A.B.x from the current SkiaSharp package version committed on main, then uses the parent base tip and its exact externals/skia gitlink to create matching branches, native first, after a confirmed dry run.",
+      "expected_output": "The AI passes the resolved parent base/head and native base branches; the script verifies that the parent milestone increases, derives release/A.B.x from the current SkiaSharp package version committed on main, then uses the parent base tip and its exact externals/skia gitlink to create matching branches, native first, after a confirmed dry run.",
       "files": [],
       "expectations": [
-        "The AI resolves the base branches but does not calculate or pass the release line.",
+        "The AI resolves the parent base/head and native base branches but does not calculate or pass the release line.",
+        "The script confirms that chrome_milestone increases from the parent base to the parent head.",
         "The script derives release/A.B.x from scripts/VERSIONS.txt on the exact parent base commit.",
         "Uses the native SHA referenced by the parent base.",
         "Preflights both destinations before either write.",
         "Never moves an existing release branch."
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "This approved Skia update targets main but stays on the current milestone. Prepare the merge.",
+      "expected_output": "Passes the resolved parent base/head and native base branches to the preparation script, which compares their committed chrome_milestone values, reports a same-milestone sync, creates no release refs, and continues to the native merge-message handoff.",
+      "files": [],
+      "expectations": [
+        "Does not create a release branch for a same-milestone main update.",
+        "Does not ask for a release-branch push confirmation.",
+        "Generates the native merge message.",
+        "Does not merge the native PR."
       ]
     },
     {

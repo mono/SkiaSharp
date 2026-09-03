@@ -46,32 +46,39 @@ Only after the maintainer sees the exact selected pair, ask them to confirm:
 If they do not confirm, stop. Do not independently re-audit reviews, labels,
 milestones, CI, packages, DEPS, bindings, or release notes.
 
-## 2. Preserve the previous release line when targeting main
+## 2. Preserve the previous release line for milestone bumps
 
 Run the script with the branch names already resolved by the AI:
 
 ```powershell
 pwsh .agents/skills/merge-skia-update/scripts/Prepare-SkiaReleaseBranches.ps1 `
   -SkiaSharpBaseBranch <parent-base> `
+  -SkiaSharpHeadBranch <parent-head> `
   -SkiaBaseBranch <native-base>
 ```
 
 The script determines the release action from the parent base branch:
 
-- `main`: reads the committed SkiaSharp package version from
-  `scripts/VERSIONS.txt` and derives `release/A.B.x` for the current line;
+- `main`: compares the committed `chrome_milestone` on the parent base and head;
+  when the milestone increases, it reads the base's committed SkiaSharp package
+  version from `scripts/VERSIONS.txt` and derives `release/A.B.x` for the
+  previous line;
+- `main` with no milestone change: reports a same-milestone sync and exits
+  without creating refs;
 - `release/A.B.x`: reports a servicing sync and exits without creating refs.
 
-The script always defaults to a dry run. When targeting `main`, it reads the
-current SkiaSharp base tip and the exact mono/skia commit referenced by its
-`externals/skia` gitlink. It requires the supplied mono/skia base branch to
-point at that commit and preflights the derived release branch in both
+The script always defaults to a dry run. For a milestone bump targeting `main`,
+it reads the current SkiaSharp base tip and the exact mono/skia commit referenced
+by its `externals/skia` gitlink. It requires the supplied mono/skia base branch
+to point at that commit and preflights the derived release branch in both
 repositories.
 
-Show the output and obtain confirmation. Rerun with the same inputs plus
-`-Push`. The script checks the source and destination refs again, creates the
-mono/skia release branch first, then the mono/SkiaSharp release branch, and
-verifies both. It never moves an existing branch.
+When the script reports a milestone bump, show the output and obtain
+confirmation. Rerun with the same inputs plus `-Push`. The script checks the
+source and destination refs again, creates the mono/skia release branch first,
+then the mono/SkiaSharp release branch, and verifies both. It never moves an
+existing branch. When it reports a same-milestone or servicing sync, continue
+without a push confirmation.
 
 ## 3. Prepare the mono/skia merge
 
@@ -166,6 +173,8 @@ Stop when:
 - a supplied native base branch does not match the parent base gitlink;
 - an existing release branch points at a different SHA;
 - a release source changes between dry run and `-Push`;
+- the parent head milestone regresses or changes without a corresponding
+  SkiaSharp product-line change;
 - mono/skia was not merged with a two-parent merge commit;
 - that merge does not contain the parent PR's reviewed native commit;
 - the merged and reviewed native trees differ;
