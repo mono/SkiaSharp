@@ -57,6 +57,10 @@ select **Run workflow**, and choose `main` as the workflow branch.
 | `release` | `X.Y.Z-preview.N`, `X.Y.Z-rc.N`, `X.Y.Z-stable`, or the equivalent four-part hotfix identity |
 | `push` | Leave unchecked for the read-only plan; check only after reviewing it |
 
+> [!NOTE]
+> For a stable release, enter the explicit `X.Y.Z-stable` sentinel. The
+> resulting branch, package version, tag, and GitHub Release use bare `X.Y.Z`.
+
 Run the workflow twice with identical `base` and `release` values:
 
 1. Leave `push` unchecked. Verify the resolved base SHA, package versions,
