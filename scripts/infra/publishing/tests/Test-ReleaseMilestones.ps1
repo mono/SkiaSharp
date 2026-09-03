@@ -88,10 +88,7 @@ $rollForwardBranches = @(
     ConvertTo-ReleaseMilestone 'release/4.152.0-preview.2'
     ConvertTo-ReleaseMilestone 'release/4.152.0-rc.1'
 )
-$effective = Get-EffectiveMilestoneTitles -Branches $rollForwardBranches -Tags @(
-    'v4.152.0-preview.2.1',
-    'v4.152.0-rc.1.1'
-)
+$effective = Get-EffectiveMilestoneTitles -Branches $rollForwardBranches -Tags @('v4.152.0-preview.2.1', 'v4.152.0-rc.1.1')
 Assert-Equal @(
     '4.152.0-preview.2',
     '4.152.0-preview.2',
@@ -163,8 +160,7 @@ $closure = Get-MilestoneClosureOperations -Existing $existing -Milestones $relea
     -Tags @('v4.152.0-preview.1.2') -CreatableTitles @() -OpenItemsFor {
         @([pscustomobject] @{ Number = 99; Kind = 'issue' })
     }
-Assert-Equal '4.152.0-preview.2' $closure.Operations[0].MoveTo `
-    'Open work did not move to the next preview.'
+Assert-Equal '4.152.0-preview.2' $closure.Operations[0].MoveTo 'Open work did not move to the next unshipped milestone.'
 Assert-Equal 0 $closure.Warnings.Count 'A valid rollover unexpectedly produced a warning.'
 
 $blocked = Get-MilestoneClosureOperations -Existing @{ '4.152.0' = [pscustomobject] @{ number = 4; state = 'open' } } `

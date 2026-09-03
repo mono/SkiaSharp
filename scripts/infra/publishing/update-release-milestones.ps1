@@ -127,7 +127,7 @@ function Get-ChromiumSchedule([int] $Milestone) {
 function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int] $Major) {
     $branch = ConvertTo-ScheduleDate $Schedule.branch_point
     $preview = $branch.AddDays(1)
-    $earlyStableCut = ConvertTo-ScheduleDate $Schedule.early_stable_cut
+    $earlyCut = ConvertTo-ScheduleDate $Schedule.early_stable_cut
     $stableCut = ConvertTo-ScheduleDate $Schedule.stable_cut
     $stable = ConvertTo-ScheduleDate $Schedule.stable_date
     $base = "$Major.$Milestone.0"
@@ -138,24 +138,24 @@ function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int
             Due = $preview
             DueOn = Format-GitHubDueOn $preview
             Description = (
-                "Skia m$Milestone preview.1 $separator Branch point $(Format-ScheduleDate $branch) $separator " +
-                'Merge the Skia sync PR and ship the initial preview the next day.')
+                "Skia m$Milestone preview.1 $separator Start $(Format-ScheduleDate $branch) $separator " +
+                'Merge Skia sync PR and ship preview.')
         }
         [pscustomobject] @{
             Title = "$base-preview.2"
-            Due = $earlyStableCut
-            DueOn = Format-GitHubDueOn $earlyStableCut
+            Due = $earlyCut
+            DueOn = Format-GitHubDueOn $earlyCut
             Description = (
                 "Skia m$Milestone preview.2 $separator Start $(Format-ScheduleDate $preview) $separator " +
-                'Incorporate initial preview feedback and ship the second preview.')
+                'Bug fixes and API additions from preview.1 feedback.')
         }
         [pscustomobject] @{
             Title = "$base-rc.1"
             Due = $stableCut
             DueOn = Format-GitHubDueOn $stableCut
             Description = (
-                "Skia m$Milestone RC $separator Start $(Format-ScheduleDate $earlyStableCut) $separator " +
-                'Stabilize the release candidate; critical fixes only.')
+                "Skia m$Milestone RC $separator Start $(Format-ScheduleDate $earlyCut) $separator " +
+                'Critical bug fixes only, no new features.')
         }
         [pscustomobject] @{
             Title = $base
@@ -163,7 +163,7 @@ function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int
             DueOn = Format-GitHubDueOn $stable
             Description = (
                 "Skia m$Milestone stable $separator Start $(Format-ScheduleDate $stableCut) $separator " +
-                'Ship to NuGet.org, tag, and create the GitHub Release.')
+                'Ship to NuGet.org, tag and create GitHub Release.')
         }
     )
 }

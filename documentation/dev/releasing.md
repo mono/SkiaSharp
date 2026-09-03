@@ -172,12 +172,12 @@ be resolved rather than ignored.
 
 The maintained cadence follows Chromium's overlapping two-week trains:
 
-| Stage | Target date |
-| --- | --- |
-| Preview 1 | One day after Chromium branch point |
-| Preview 2 | Chromium early-stable cut |
-| RC 1 | Chromium stable cut |
-| Stable | Chromium Stable |
+| Chromium marker | SkiaSharp timing | SkiaSharp release |
+| --- | --- | --- |
+| Branch Point | Next day | Preview 1 |
+| Early Stable Cut | Same day | Preview 2 |
+| Stable Cut | Same day | RC 1 |
+| Stable Date | Same day | Stable |
 
 ## 7. Complete the follow-up pull requests
 

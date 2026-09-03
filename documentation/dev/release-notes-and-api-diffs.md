@@ -906,7 +906,7 @@ The release-notes pipeline has three script-owned producers, split by artifact:
 - **`release-notes-index.py` (Prepare, network-capable) — aggregate index data.** Inputs are
   the remote branch list and the live Chromium Dash schedule. It emits only
   `releases/_sources/index.json`:
-  `{"chrome_schedule": {"<milestone>": {preview_1, preview_2, rc, stable}},
+  `{"chrome_schedule": {"<milestone>": {branch_point, early_stable_cut, stable_cut, stable_date}},
   "live_unreleased": ["<version>", …]}` — the schedule for the two milestones in
   flight, and the version cores whose `-unreleased` page is still a live head (the
   set `release-notes-render.py --all` prunes against, §4.2). It writes no Markdown, deletes

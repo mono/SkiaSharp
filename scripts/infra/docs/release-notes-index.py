@@ -32,7 +32,7 @@ import json
 import re
 import sys
 import urllib.request
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 # ── reuse release-notes-data.py's shared low-level helpers (one source of truth) ─────
@@ -90,12 +90,12 @@ def live_unreleased_versions():
 
 def fetch_chrome_schedule(milestone, timeout=8):
     # type: (int, int) -> dict
-    """Return SkiaSharp release dates derived from one Chromium milestone.
+    """Return the Chromium release markers for one milestone.
 
-    Preview 1 is one day after branch point, Preview 2 is early-stable cut, RC
-    is stable cut, and stable is Chrome Stable. The schedule is required, so any
-    problem (offline, timeout, HTTP/JSON error, missing milestone or missing
-    phase date) raises ``RuntimeError`` and fails generation loudly.
+    Returns the Chromium markers that drive the SkiaSharp release cadence. The
+    schedule is required, so any problem (offline, timeout, HTTP/JSON error,
+    missing milestone or missing marker) raises ``RuntimeError`` and fails
+    generation loudly.
     """
     url = CHROME_SCHEDULE_URL.format(milestone)
     try:
@@ -115,10 +115,10 @@ def fetch_chrome_schedule(milestone, timeout=8):
             "Chrome schedule for m{} returned no milestone data".format(milestone))
     ms = mstones[0]
     fields = {
-        "preview_1": "branch_point",
-        "preview_2": "early_stable_cut",
-        "rc": "stable_cut",
-        "stable": "stable_date",
+        "branch_point": "branch_point",
+        "early_stable_cut": "early_stable_cut",
+        "stable_cut": "stable_cut",
+        "stable_date": "stable_date",
     }
     dates = {}
     for phase, key in fields.items():
@@ -127,7 +127,6 @@ def fetch_chrome_schedule(milestone, timeout=8):
             raise RuntimeError(
                 "Chrome schedule for m{} is missing '{}'".format(milestone, key))
         dates[phase] = date.fromisoformat(value[:10])
-    dates["preview_1"] += timedelta(days=1)
     return {phase: value.isoformat() for phase, value in dates.items()}
 
 

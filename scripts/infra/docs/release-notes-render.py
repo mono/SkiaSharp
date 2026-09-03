@@ -28,6 +28,7 @@ import json
 import re
 import sys
 from collections import defaultdict
+from datetime import date, timedelta
 from pathlib import Path
 
 # ── reuse release-notes-data.py's shared low-level helpers (one source of truth) ─────
@@ -468,6 +469,12 @@ def format_schedule_date(iso):
     return "{} {}".format(_MONTH_ABBR[int(month) - 1], int(day))
 
 
+def shift_schedule_date(iso, days):
+    # type: (str, int) -> str
+    """Shift an ISO schedule date while preserving a date-only representation."""
+    return (date.fromisoformat(iso[:10]) + timedelta(days=days)).isoformat()
+
+
 def _toc_folded_section(title, groups, stable_groups, unreleased_groups):
     # type: (str, list[str], dict, dict) -> list[str]
     """Render a collapsed parent TOC node nesting its minor groups (spec §3.5).
@@ -681,14 +688,14 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
             "",
             "SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor "
             "version corresponds to a Chrome/Skia milestone and progresses through "
-            "four weekly phases:",
+            "four phases:",
             "",
-            "| Timing | SkiaSharp Release | Purpose |",
-            "|---|---|---|",
-            "| One day after branch point | Preview 1 | Merge upstream Skia and ship the initial preview |",
-            "| Early-stable cut | Preview 2 | Incorporate initial preview feedback |",
-            "| Stable cut | RC 1 | Stabilize with critical fixes only |",
-            "| Chrome Stable | Stable | Ship to NuGet.org, tag and create the GitHub Release |",
+            "| Chromium marker | SkiaSharp timing | SkiaSharp release | Purpose |",
+            "|---|---|---|---|",
+            "| Branch Point | Next day | Preview 1 | Merge upstream Skia, ship initial preview |",
+            "| Early Stable Cut | Same day | Preview 2 | Bug fixes and API additions from preview feedback |",
+            "| Stable Cut | Same day | RC | Critical bug fixes only, no new features |",
+            "| Stable Date | Same day | Stable | Ship to NuGet.org, tag and create GitHub Release |",
             "",
         ])
         lines.extend(render_cadence_timeline(
@@ -791,10 +798,10 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
     schedule is a hard error — re-run release-notes-index.py to refresh index.json.
     """
     phases = [
-        ("Preview 1", "preview_1", ".0-preview.1"),
-        ("Preview 2", "preview_2", ".0-preview.2"),
-        ("RC 1", "rc", ".0-rc.1"),
-        ("Stable", "stable", ".0"),
+        ("Branch Point", "branch_point", 1, "Preview 1", ".0-preview.1"),
+        ("Early Stable Cut", "early_stable_cut", 0, "Preview 2", ".0-preview.2"),
+        ("Stable Cut", "stable_cut", 0, "RC", ".0-rc.1"),
+        ("Stable Date", "stable_date", 0, "Stable", ".0"),
     ]
     schedule_by_ms = schedule_by_ms or {}
     cur_sched = schedule_by_ms.get(str(cur_ms))
@@ -804,23 +811,36 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
             "index.json is missing the Chrome schedule for m{} or m{} - re-run "
             "release-notes-index.py (the network Prepare step) to refresh "
             "_sources/index.json.".format(cur_ms, next_ms))
-    events = []  # type: list[tuple[str, str, str]]
+    events = []  # type: list[tuple[str, str, str, str, str]]
     for ms_num, base, sched in (
             (cur_ms, cur_base, cur_sched), (next_ms, next_base, next_sched)):
-        for label, key, suffix in phases:
-            iso = sched[key]
-            events.append((iso,
-                           "m{} {}".format(ms_num, label),
-                           "`{}{}`".format(base, suffix)))
+        for marker, key, offset, release, suffix in phases:
+            release_date = shift_schedule_date(sched[key], offset)
+            events.append((
+                release_date,
+                sched[key],
+                "m{} {}".format(ms_num, marker),
+                release,
+                "`{}{}`".format(base, suffix)))
     events.sort(key=lambda e: e[0])
     header = (
         "**Schedule for the two milestones currently in flight "
         "(m{} and m{}), from the "
         "[Chromium release schedule](https://chromiumdash.appspot.com/schedule):**"
         .format(cur_ms, next_ms))
-    rows = ["| Date | Event | Package |", "|------|-------|---------|"]
-    rows += ["| {} | {} | {} |".format(format_schedule_date(iso), ev, pkg)
-             for iso, ev, pkg in events]
+    rows = [
+        "| Chromium marker | Chromium date | SkiaSharp release | SkiaSharp date | Package |",
+        "|---|---|---|---|---|",
+    ]
+    rows += [
+        "| {} | {} | {} | {} | {} |".format(
+            marker,
+            format_schedule_date(marker_date),
+            release,
+            format_schedule_date(release_date),
+            package)
+        for release_date, marker_date, marker, release, package in events
+    ]
     return [header, ""] + rows
 
 

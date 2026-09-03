@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 import unittest
 from pathlib import Path
@@ -18,22 +19,6 @@ def _load_script(filename, module_name):
     return module
 
 
-class _Response:
-    status = 200
-
-    def __init__(self, payload):
-        self.payload = payload
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        return False
-
-    def read(self):
-        return json.dumps(self.payload).encode("utf-8")
-
-
 class CadenceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -49,32 +34,34 @@ class CadenceTests(unittest.TestCase):
                 "stable_date": "2026-09-08T00:00:00",
             }]
         }
+        response = io.BytesIO(json.dumps(payload).encode("utf-8"))
+        response.status = 200
         with mock.patch.object(
                 self.index.urllib.request,
                 "urlopen",
-                return_value=_Response(payload)):
+                return_value=response):
             schedule = self.index.fetch_chrome_schedule(153)
 
         self.assertEqual({
-            "preview_1": "2026-08-18",
-            "preview_2": "2026-08-25",
-            "rc": "2026-09-01",
-            "stable": "2026-09-08",
+            "branch_point": "2026-08-17",
+            "early_stable_cut": "2026-08-25",
+            "stable_cut": "2026-09-01",
+            "stable_date": "2026-09-08",
         }, schedule)
 
     def test_timeline_renders_four_release_stages(self):
         schedule = {
             "153": {
-                "preview_1": "2026-08-18",
-                "preview_2": "2026-08-25",
-                "rc": "2026-09-01",
-                "stable": "2026-09-08",
+                "branch_point": "2026-08-17",
+                "early_stable_cut": "2026-08-25",
+                "stable_cut": "2026-09-01",
+                "stable_date": "2026-09-08",
             },
             "154": {
-                "preview_1": "2026-09-01",
-                "preview_2": "2026-09-08",
-                "rc": "2026-09-15",
-                "stable": "2026-09-22",
+                "branch_point": "2026-08-31",
+                "early_stable_cut": "2026-09-08",
+                "stable_cut": "2026-09-15",
+                "stable_date": "2026-09-22",
             },
         }
         rendered = self.renderer.render_cadence_timeline(
@@ -82,11 +69,8 @@ class CadenceTests(unittest.TestCase):
 
         rows = [line for line in rendered if line.startswith("| ")][1:]
         self.assertEqual(8, len(rows))
-        self.assertIn("m153 Preview 1", "\n".join(rows))
-        self.assertIn("m153 Preview 2", "\n".join(rows))
-        self.assertIn("m153 RC 1", "\n".join(rows))
-        self.assertIn("m153 Stable", "\n".join(rows))
-
-
-if __name__ == "__main__":
-    unittest.main()
+        text = "\n".join(rows)
+        self.assertIn("m153 Branch Point | Aug 17 | Preview 1 | Aug 18", text)
+        self.assertIn("m153 Early Stable Cut", text)
+        self.assertIn("m153 Stable Cut", text)
+        self.assertIn("m153 Stable Date", text)
