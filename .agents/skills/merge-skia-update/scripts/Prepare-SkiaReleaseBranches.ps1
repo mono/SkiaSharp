@@ -7,6 +7,9 @@ param(
     [string] $SkiaSharpBaseBranch,
 
     [Parameter(Mandatory)]
+    [string] $SkiaSharpHeadBranch,
+
+    [Parameter(Mandatory)]
     [string] $SkiaBaseBranch,
 
     [switch] $Push
@@ -35,6 +38,29 @@ function Get-GitHubRepository {
     return $match.Groups['repository'].Value
 }
 
+function Get-SkiaMilestone {
+    param([string] $Commit)
+
+    $manifestText = git show "${Commit}:cgmanifest.json" | Out-String
+    $manifest = $manifestText | ConvertFrom-Json
+    $registrations = @(
+        $manifest.registrations | Where-Object {
+            $_.component.type -eq 'other' -and
+            $_.component.other.name -eq 'skia' -and
+            $null -ne $_.chrome_milestone
+        }
+    )
+    if ($registrations.Count -ne 1) {
+        throw "Cannot derive the Skia milestone from cgmanifest.json at $Commit."
+    }
+
+    $milestone = [int] $registrations[0].chrome_milestone
+    if ($milestone -le 0) {
+        throw "Invalid Skia milestone '$($registrations[0].chrome_milestone)' in cgmanifest.json at $Commit."
+    }
+    return $milestone
+}
+
 function Assert-Destination {
     param(
         [string] $Repository,
@@ -59,6 +85,7 @@ function New-RemoteBranch {
 $repoRoot = git rev-parse --show-toplevel
 Set-Location $repoRoot
 git check-ref-format --branch $SkiaSharpBaseBranch | Out-Null
+git check-ref-format --branch $SkiaSharpHeadBranch | Out-Null
 git check-ref-format --branch $SkiaBaseBranch | Out-Null
 
 $parentUrl = git remote get-url origin
@@ -73,6 +100,20 @@ if ($SkiaSharpBaseBranch -match '^release/(?<version>\d+\.\d+)\.x$') {
 }
 if ($SkiaSharpBaseBranch -ne 'main') {
     throw "SkiaSharp base branch must be main or release/A.B.x; got $SkiaSharpBaseBranch."
+}
+
+git fetch --no-tags origin "+refs/heads/${SkiaSharpHeadBranch}:refs/remotes/origin/${SkiaSharpHeadBranch}" | Out-Null
+$parentHeadSha = git rev-parse "refs/remotes/origin/${SkiaSharpHeadBranch}^{commit}"
+
+$baseMilestone = Get-SkiaMilestone $parentBaseSha
+$headMilestone = Get-SkiaMilestone $parentHeadSha
+if ($headMilestone -lt $baseMilestone) {
+    throw "Skia milestone regresses from m$baseMilestone on $SkiaSharpBaseBranch to m$headMilestone on $SkiaSharpHeadBranch."
+}
+if ($headMilestone -eq $baseMilestone) {
+    Write-Host "Same-milestone sync: m$baseMilestone -> m$headMilestone."
+    Write-Host 'No release branches are needed.'
+    exit 0
 }
 
 $versions = (git show "${parentBaseSha}:scripts/VERSIONS.txt" | Out-String).Trim()
@@ -104,6 +145,7 @@ if ($nativeBranchSha -ne $nativeBaseSha) {
 $nativeExisting = Assert-Destination $nativeRepository $nativeUrl $ReleaseBranch $nativeBaseSha
 $parentExisting = Assert-Destination $parentRepository $parentUrl $ReleaseBranch $parentBaseSha
 
+Write-Host "Milestone bump:     m$baseMilestone -> m$headMilestone"
 Write-Host "Release branch:     $ReleaseBranch"
 Write-Host "$nativeRepository source: $SkiaBaseBranch @ $nativeBaseSha$(if ($nativeExisting) { ' (release branch already exists)' })"
 Write-Host "$parentRepository source: $SkiaSharpBaseBranch @ $parentBaseSha$(if ($parentExisting) { ' (release branch already exists)' })"
@@ -115,8 +157,9 @@ if (-not $Push) {
 
 # Re-read every source and destination immediately before the first write.
 $parentBaseNow = Get-RemoteBranchSha $parentUrl $SkiaSharpBaseBranch
+$parentHeadNow = Get-RemoteBranchSha $parentUrl $SkiaSharpHeadBranch
 $nativeBaseNow = Get-RemoteBranchSha $nativeUrl $SkiaBaseBranch
-if ($parentBaseNow -ne $parentBaseSha -or $nativeBaseNow -ne $nativeBaseSha) {
+if ($parentBaseNow -ne $parentBaseSha -or $parentHeadNow -ne $parentHeadSha -or $nativeBaseNow -ne $nativeBaseSha) {
     throw 'A source branch changed after preflight. Run the script without -Push again.'
 }
 $nativeExisting = Assert-Destination $nativeRepository $nativeUrl $ReleaseBranch $nativeBaseSha
