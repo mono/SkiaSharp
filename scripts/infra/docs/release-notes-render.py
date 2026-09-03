@@ -683,12 +683,12 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
             "version corresponds to a Chrome/Skia milestone and progresses through "
             "four phases:",
             "",
-            "| Chromium marker | SkiaSharp timing | SkiaSharp release | Purpose |",
-            "|---|---|---|---|",
-            "| Earliest Beta | Same day | Preview 1 | Merge upstream Skia, ship initial preview |",
-            "| Early Stable Cut | Same day | Preview 2 | Bug fixes and API additions from preview feedback |",
-            "| Stable Cut | Same day | RC 1 | Critical bug fixes only, no new features |",
-            "| Stable Date | Same day | Stable | Ship to NuGet.org, tag and create GitHub Release |",
+            "| Chromium marker | SkiaSharp release | Purpose |",
+            "|---|---|---|",
+            "| Earliest Beta | Preview 1 | Merge upstream Skia, ship initial preview |",
+            "| Early Stable Cut | Preview 2 | Bug fixes and API additions from preview feedback |",
+            "| Stable Cut | RC 1 | Critical bug fixes only, no new features |",
+            "| Stable Date | Stable | Ship to NuGet.org, tag and create GitHub Release |",
             "",
         ])
         lines.extend(render_cadence_timeline(
@@ -826,16 +826,12 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
         "[Chromium release schedule](https://chromiumdash.appspot.com/schedule):**"
         .format(cur_ms, next_ms))
     rows = [
-        "| Chromium marker | Chromium date | SkiaSharp release | SkiaSharp date | Package |",
-        "|---|---|---|---|---|",
+        "| Date | Chromium marker | SkiaSharp release | Package |",
+        "|---|---|---|---|",
     ]
     rows += [
-        "| {} | {} | {} | {} | {} |".format(
-            marker,
-            format_schedule_date(marker_date),
-            release,
-            format_schedule_date(marker_date),
-            package)
+        "| {} | {} | {} | {} |".format(
+            format_schedule_date(marker_date), marker, release, package)
         for marker_date, marker, release, package in events
     ]
     return [header, ""] + rows

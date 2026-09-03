@@ -6,25 +6,25 @@ Release notes for SkiaSharp. SkiaSharp ships as NuGet packages whose minor versi
 
 SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor version corresponds to a Chrome/Skia milestone and progresses through four phases:
 
-| Chromium marker | SkiaSharp timing | SkiaSharp release | Purpose |
-|---|---|---|---|
-| Earliest Beta | Same day | Preview 1 | Merge upstream Skia, ship initial preview |
-| Early Stable Cut | Same day | Preview 2 | Bug fixes and API additions from preview feedback |
-| Stable Cut | Same day | RC 1 | Critical bug fixes only, no new features |
-| Stable Date | Same day | Stable | Ship to NuGet.org, tag and create GitHub Release |
+| Chromium marker | SkiaSharp release | Purpose |
+|---|---|---|
+| Earliest Beta | Preview 1 | Merge upstream Skia, ship initial preview |
+| Early Stable Cut | Preview 2 | Bug fixes and API additions from preview feedback |
+| Stable Cut | RC 1 | Critical bug fixes only, no new features |
+| Stable Date | Stable | Ship to NuGet.org, tag and create GitHub Release |
 
 **Schedule for the two milestones currently in flight (m153 and m154), from the [Chromium release schedule](https://chromiumdash.appspot.com/schedule):**
 
-| Chromium marker | Chromium date | SkiaSharp release | SkiaSharp date | Package |
-|---|---|---|---|---|
-| m153 Earliest Beta | Aug 19 | Preview 1 | Aug 19 | `4.153.0-preview.1` |
-| m153 Early Stable Cut | Aug 25 | Preview 2 | Aug 25 | `4.153.0-preview.2` |
-| m153 Stable Cut | Sep 1 | RC 1 | Sep 1 | `4.153.0-rc.1` |
-| m154 Earliest Beta | Sep 2 | Preview 1 | Sep 2 | `4.154.0-preview.1` |
-| m153 Stable Date | Sep 8 | Stable | Sep 8 | `4.153.0` |
-| m154 Early Stable Cut | Sep 8 | Preview 2 | Sep 8 | `4.154.0-preview.2` |
-| m154 Stable Cut | Sep 15 | RC 1 | Sep 15 | `4.154.0-rc.1` |
-| m154 Stable Date | Sep 22 | Stable | Sep 22 | `4.154.0` |
+| Date | Chromium marker | SkiaSharp release | Package |
+|---|---|---|---|
+| Aug 19 | m153 Earliest Beta | Preview 1 | `4.153.0-preview.1` |
+| Aug 25 | m153 Early Stable Cut | Preview 2 | `4.153.0-preview.2` |
+| Sep 1 | m153 Stable Cut | RC 1 | `4.153.0-rc.1` |
+| Sep 2 | m154 Earliest Beta | Preview 1 | `4.154.0-preview.1` |
+| Sep 8 | m153 Stable Date | Stable | `4.153.0` |
+| Sep 8 | m154 Early Stable Cut | Preview 2 | `4.154.0-preview.2` |
+| Sep 15 | m154 Stable Cut | RC 1 | `4.154.0-rc.1` |
+| Sep 22 | m154 Stable Date | Stable | `4.154.0` |
 
 Two milestones are always in flight. Stable for one milestone and Preview 2 for the next intentionally share the same release date.
 

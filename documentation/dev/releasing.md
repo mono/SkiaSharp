@@ -170,17 +170,21 @@ Run this after previews and RCs as well as stable releases. Warnings about
 missing tags, milestones, or release boundaries block safe mutation and must
 be resolved rather than ignored.
 
-The maintained cadence follows Chromium's overlapping two-week trains:
+The maintained cadence follows Chromium's overlapping two-week trains. This
+M153/M154 example shows each offset from its Chromium branch point; the
+Chromium marker appears before the corresponding SkiaSharp release:
 
-| Chromium marker | SkiaSharp timing | SkiaSharp release |
-| --- | --- | --- |
-| Earliest Beta | Same day | Preview 1 |
-| Early Stable Cut | Same day | Preview 2 |
-| Stable Cut | Same day | RC 1 |
-| Stable Date | Same day | Stable |
-
-Stable for one milestone and Preview 2 for the next intentionally share the
-same release date.
+| Date | M153 day | M153 | M154 day | M154 |
+| --- | ---: | --- | ---: | --- |
+| Aug 17 | 0 | Branch Point | | |
+| Aug 19 | 2 | Earliest Beta → Preview 1 | | |
+| Aug 25 | 8 | Early Stable Cut → Preview 2 | | |
+| Aug 31 | | | 0 | Branch Point |
+| Sep 1 | 15 | Stable Cut → RC 1 | | |
+| Sep 2 | | | 2 | Earliest Beta → Preview 1 |
+| Sep 8 | 22 | Stable Date → Stable | 8 | Early Stable Cut → Preview 2 |
+| Sep 15 | | | 15 | Stable Cut → RC 1 |
+| Sep 22 | | | 22 | Stable Date → Stable |
 
 ## 7. Complete the follow-up pull requests
 
