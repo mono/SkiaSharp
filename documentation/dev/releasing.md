@@ -36,6 +36,10 @@ Decide:
 - the exact source branch or commit to release; and
 - whether a stable line needs a long-lived `release/X.Y.x` servicing branch.
 
+> [!NOTE]
+> The `-stable` label is a Prepare-only safety sentinel. It will not appear in
+> package versions, branch names, tags, or GitHub Releases.
+
 If a servicing branch is required, create `release/X.Y.x` from the intended
 maintenance base before the stable Prepare `Push` run. Prepare does not create
 that branch. When it exists, the post-stable version-bump PR targets it;
@@ -71,12 +75,6 @@ changes on its disposable runner would not be retained.
 | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` |
 | `X.Y.Z.F-rc.N` | `release/X.Y.Z.F-rc.N` |
 | `X.Y.Z.F-stable` | `release/X.Y.Z.F` |
-
-The `-stable` suffix is deliberately required only for the Prepare input. It is
-an explicit confirmation that prevents an accidental stable cut. The workflow
-removes it from the branch identity and uses the internal
-`PREVIEW_LABEL=stable` switch; stable packages, tags, and GitHub Releases keep
-the bare numeric version.
 
 The workflow pushes `mono/skia` first, then `mono/SkiaSharp`. A three-part
 stable release also opens a human-owned PR that advances SkiaSharp and
