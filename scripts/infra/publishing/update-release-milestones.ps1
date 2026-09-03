@@ -21,7 +21,7 @@ param(
     [int] $Count = 3,
 
     [ValidatePattern('^[^/]+/[^/]+$')]
-    [string] $Repository = 'mono/SkiaSharp',
+    [string] $Repository,
 
     [switch] $Push
 )
@@ -32,6 +32,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
+$Repository = if ($Repository) { $Repository } else { $ReleaseRepository }
 $writeRemote = $Push
 $mode = if ($writeRemote) { 'push' } else { 'dry run' }
 $root = Get-GitRepositoryRoot

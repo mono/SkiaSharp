@@ -60,9 +60,13 @@ jobs:
           PYTHONDONTWRITEBYTECODE: "1"
         run: |
           set -euo pipefail
+          documentation_base_url=$(
+            python3 scripts/infra/repository_identity.py get publicSiteBaseUrl
+          )
           args=(
             --event "$EVENT_NAME"
             --repository "$REPOSITORY"
+            --documentation-base-url "$documentation_base_url"
           )
           if [ "$EVENT_NAME" = "release" ]; then
             args+=(--tag "$RELEASE_TAG")

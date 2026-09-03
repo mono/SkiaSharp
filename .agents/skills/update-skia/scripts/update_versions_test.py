@@ -113,6 +113,15 @@ class UpdateVersionsTests(unittest.TestCase):
             ),
             encoding="utf-8",
         )
+        (self.root / ".gitmodules").write_text(
+            '[submodule "externals/skia"]\n'
+            "\tpath = externals/skia\n"
+            "\turl = https://github.com/mono/skia.git\n"
+            '[submodule "docs"]\n'
+            "\tpath = docs\n"
+            "\turl = https://github.com/mono/SkiaSharp-API-docs\n",
+            encoding="utf-8",
+        )
 
         skia = self.root / "externals" / "skia"
         subprocess.run(["git", "init", "--quiet"], cwd=skia, check=True)
@@ -740,6 +749,37 @@ class UpdateVersionsTests(unittest.TestCase):
         registration = manifest["registrations"][1]
         self.assertEqual("chrome/m152", registration["upstream_ref"])
         self.assertEqual(exact_sha, registration["upstream_merge_commit"])
+
+    def test_staged_script_imports_immutable_identity_helper(self) -> None:
+        repository_root = Path(__file__).resolve().parents[4]
+        staged_script = self.root / "runtime" / "update-skia" / "update_versions.py"
+        identity_dir = self.root / "runtime" / "repository-identity"
+        staged_script.parent.mkdir(parents=True)
+        identity_dir.mkdir(parents=True)
+        staged_script.write_text(
+            (repository_root / ".agents/skills/update-skia/scripts/update_versions.py")
+            .read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        for name in ("repository_identity.py", "repository-identity.json"):
+            (identity_dir / name).write_text(
+                (repository_root / "scripts/infra" / name).read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+
+        result = subprocess.run(
+            [sys.executable, str(staged_script), "--help"],
+            env={
+                **os.environ,
+                "SKIASHARP_IDENTITY_INFRA_DIR": str(identity_dir),
+            },
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn("--repo-root", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

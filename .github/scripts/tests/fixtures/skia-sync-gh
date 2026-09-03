@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+[ "${1:-}" = api ] || { echo "unexpected gh command: $*" >&2; exit 1; }
+endpoint="${2:?missing API endpoint}"
+
+case "$endpoint" in
+  repos/"$TEST_REPOSITORY"/contents/scripts/VERSIONS.txt\?ref=*)
+    printf 'libSkiaSharp test milestone %s\n' "$TEST_MAIN_MS" | base64
+    ;;
+  repos/"$TEST_SKIA_REPOSITORY"/compare/*)
+    printf '%s\n' "$endpoint" >>"$TEST_COMPARE_LOG"
+    if [ "${TEST_COMPARE_FAIL:-false}" = true ]; then
+      echo "gh: HTTP 503 Service Unavailable" >&2
+      exit 1
+    fi
+    if [ -n "${TEST_SYNC_BRANCH:-}" ] &&
+        [ "$endpoint" = "repos/${TEST_SKIA_REPOSITORY}/compare/${TEST_UPSTREAM_SHA}...${TEST_SYNC_BRANCH}" ]; then
+      printf '%s\n' "$TEST_SYNC_BEHIND"
+    elif [ "$endpoint" = "repos/${TEST_SKIA_REPOSITORY}/compare/${TEST_UPSTREAM_SHA}...${TEST_SKIA_BASE_BRANCH}" ]; then
+      printf '%s\n' "$TEST_BASE_BEHIND"
+    else
+      echo "unexpected compare endpoint: $endpoint" >&2
+      exit 1
+    fi
+    ;;
+  *)
+    echo "unexpected gh API endpoint: $endpoint" >&2
+    exit 1
+    ;;
+esac

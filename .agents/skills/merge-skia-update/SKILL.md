@@ -122,7 +122,8 @@ record the exact verified mono/skia merge SHA, then trigger the existing
 workflow:
 
 ```shell
-gh workflow run auto-skia-submodule-sync.yml --repo mono/SkiaSharp \
+REPOSITORY=$(python3 scripts/infra/repository_identity.py get repository)
+gh workflow run auto-skia-submodule-sync.yml --repo "$REPOSITORY" \
   -f target_branch=<parent-head> \
   -f skia_branch=<native-base>
 ```

@@ -75,27 +75,31 @@ for f in glob.glob('output/ai-triage/*/triage.json'):
 GitHub issue comments are available directly from `gh issue view --json comments` or GitHub MCP issue/PR tools.
 
 ```bash
-gh search issues "repo:mono/SkiaSharp state:closed KEYWORD1 KEYWORD2" --limit 20 \
+REPOSITORY=$(python3 scripts/infra/repository_identity.py get repository)
+gh search issues "repo:$REPOSITORY state:closed KEYWORD1 KEYWORD2" --limit 20 \
   --json number,title,url
 ```
 
 ```python
-import json, subprocess
+import json, os, subprocess
 
+REPOSITORY = subprocess.check_output([
+    'python3', 'scripts/infra/repository_identity.py', 'get', 'repository'
+], text=True).strip()
 KEYWORDS = ['KEYWORD1', 'KEYWORD2']
 SIGNALS = ['workaround', 'solved', 'fixed it', 'i resolved', 'as a workaround',
            'the fix is', 'what worked', 'try using', 'instead of', 'turned out']
 
 search = subprocess.check_output([
     'gh', 'search', 'issues',
-    f"repo:mono/SkiaSharp state:closed {' '.join(KEYWORDS)}",
+    f"repo:{REPOSITORY} state:closed {' '.join(KEYWORDS)}",
     '--limit', '20', '--json', 'number,title'
 ], text=True)
 
 for d in json.loads(search):
     detail = subprocess.check_output([
         'gh', 'issue', 'view', str(d['number']),
-        '--repo', 'mono/SkiaSharp',
+        '--repo', REPOSITORY,
         '--json', 'comments'
     ], text=True)
     comments = json.loads(detail).get('comments', [])
@@ -112,8 +116,9 @@ for d in json.loads(search):
 **Direct GitHub search**:
 
 ```bash
-gh search issues "SKImage FromEncoded crash" --repo mono/SkiaSharp --state closed --limit 10
-gh issue view {N} --repo mono/SkiaSharp --json comments \
+REPOSITORY=$(python3 scripts/infra/repository_identity.py get repository)
+gh search issues "SKImage FromEncoded crash" --repo "$REPOSITORY" --state closed --limit 10
+gh issue view {N} --repo "$REPOSITORY" --json comments \
   --jq '.comments[] | select(.body | test("workaround|solved|fixed"; "i")) | {author: .author.login, body: .body[:300]}'
 ```
 

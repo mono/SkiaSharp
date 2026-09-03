@@ -230,6 +230,95 @@ class DataJsonUnchangedIsStrictTests(unittest.TestCase):
             path = self._write(tmp_dir, old)
             self.assertFalse(self.module._data_json_unchanged(path, new))
 
+
+class PreserveHistoricalGitHubUrlsTests(unittest.TestCase):
+    def setUp(self):
+        self.module = _load_release_notes_data_module()
+
+    def _write(self, tmp_dir, data):
+        import json as _json
+
+        path = Path(tmp_dir) / "4.150.0.data.json"
+        path.write_text(_json.dumps(data))
+        return path
+
+    def test_preserves_only_owner_changes_for_existing_release_facts(self):
+        existing = {
+            "banner": {
+                "github_release_url": (
+                    "https://github.com/mono/SkiaSharp/releases/tag/v4.151.0"
+                )
+            },
+            "shipments": [
+                {
+                    "tag": "v4.151.0",
+                    "changelog_url": (
+                        "https://github.com/mono/SkiaSharp/compare/"
+                        "v4.151.0-rc.1.1...v4.151.0"
+                    ),
+                }
+            ],
+        }
+        generated = {
+            "banner": {
+                "github_release_url": (
+                    "https://github.com/dotnet/SkiaSharp/releases/tag/v4.151.0"
+                )
+            },
+            "shipments": [
+                {
+                    "tag": "v4.151.0",
+                    "changelog_url": (
+                        "https://github.com/dotnet/SkiaSharp/compare/"
+                        "v4.151.0-rc.1.1...v4.151.0"
+                    ),
+                },
+                {
+                    "tag": "v4.151.1",
+                    "changelog_url": (
+                        "https://github.com/dotnet/SkiaSharp/compare/"
+                        "v4.151.0...v4.151.1"
+                    ),
+                },
+            ],
+            "previews": [
+                {
+                    "key": "rc.1",
+                    "release_url": (
+                        "https://github.com/dotnet/SkiaSharp/releases/tag/v4.151.0-rc.1"
+                    ),
+                },
+                {
+                    "key": "preview.1",
+                    "release_url": (
+                        "https://github.com/dotnet/SkiaSharp/releases/tag/"
+                        "v4.151.0-preview.1"
+                    ),
+                },
+            ],
+        }
+        existing["previews"] = [
+            {
+                "key": "preview.1",
+                "release_url": (
+                    "https://github.com/mono/SkiaSharp/releases/tag/"
+                    "v4.151.0-preview.1"
+                ),
+            }
+        ]
+
+        actual = self.module.preserve_historical_github_urls(existing, generated)
+
+        self.assertIn("mono/SkiaSharp", actual["banner"]["github_release_url"])
+        self.assertIn(
+            "mono/SkiaSharp", actual["shipments"][0]["changelog_url"]
+        )
+        self.assertIn(
+            "dotnet/SkiaSharp", actual["shipments"][1]["changelog_url"]
+        )
+        self.assertIn("dotnet/SkiaSharp", actual["previews"][0]["release_url"])
+        self.assertIn("mono/SkiaSharp", actual["previews"][1]["release_url"])
+
     def test_a_new_shipment_tag_is_NOT_unchanged(self):
         import tempfile
 

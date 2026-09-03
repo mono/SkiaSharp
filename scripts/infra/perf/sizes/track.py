@@ -52,6 +52,7 @@ from _common import (  # noqa: E402
     latest_nightly,
     pick_resource,
     released_roles,
+    USER_AGENT as COMMON_USER_AGENT,
 )
 
 # --------------------------------------------------------------------------- #
@@ -62,7 +63,7 @@ SCHEMA_VERSION = 1
 
 ROLES = ("prev-major", "prev-stable", "curr-stable", "latest")
 
-USER_AGENT = "skiasharp-artifact-size-tracker/1.0 (+https://github.com/mono/SkiaSharp)"
+USER_AGENT = COMMON_USER_AGENT.replace("skiasharp-perf-tracker", "skiasharp-artifact-size-tracker")
 
 # Native binary file extensions (managed .dll are filtered out separately).
 _NATIVE_EXTS = (".so", ".dylib", ".dll", ".a")

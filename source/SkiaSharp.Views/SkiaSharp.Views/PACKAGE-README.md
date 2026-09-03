@@ -2,7 +2,7 @@
 
 [![NuGet](https://img.shields.io/nuget/v/SkiaSharp.Views?style=flat-square&label=NuGet)](https://www.nuget.org/packages/SkiaSharp.Views)
 [![NuGet downloads](https://img.shields.io/nuget/dt/SkiaSharp.Views?style=flat-square&label=Downloads)](https://www.nuget.org/packages/SkiaSharp.Views)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/mono/SkiaSharp/blob/main/LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)]({{RepositoryUrl}}/blob/main/LICENSE.md)
 
 **SkiaSharp.Views** provides native SkiaSharp drawing views for Android, iOS, Mac Catalyst, macOS, tvOS, and Tizen applications. Each view owns the platform rendering surface and raises a familiar `PaintSurface` event so application code can draw with `SKCanvas`.
 
@@ -67,12 +67,12 @@ Choose the package that matches the application framework:
 
 - [SkiaSharp documentation](https://mono.github.io/SkiaSharp/docs/)
 - Platform API reference on Microsoft Learn: [Android](https://learn.microsoft.com/dotnet/api/skiasharp.views.android), [iOS and Mac Catalyst](https://learn.microsoft.com/dotnet/api/skiasharp.views.ios), [macOS](https://learn.microsoft.com/dotnet/api/skiasharp.views.mac), and [Tizen](https://learn.microsoft.com/dotnet/api/skiasharp.views.tizen)
-- [Platform samples](https://github.com/mono/SkiaSharp/tree/main/samples/Basic)
+- [Platform samples]({{RepositoryUrl}}/tree/main/samples/Basic)
 - [Live SkiaSharp Gallery](https://mono.github.io/SkiaSharp/gallery/)
-- [Package selection and deployment guide](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md)
+- [Package selection and deployment guide]({{RepositoryUrl}}/blob/main/documentation/dev/packages.md)
 
 ## Feedback and contributing
 
-SkiaSharp is an open-source Microsoft project built with the .NET community. Use [GitHub Discussions](https://github.com/mono/SkiaSharp/discussions) for questions, file bugs and feature requests in the [issue tracker](https://github.com/mono/SkiaSharp/issues), and read the [contributing guide](https://github.com/mono/SkiaSharp/blob/main/CONTRIBUTING.md) to get involved.
+SkiaSharp is an open-source Microsoft project built with the .NET community. Use [GitHub Discussions]({{RepositoryUrl}}/discussions) for questions, file bugs and feature requests in the [issue tracker]({{RepositoryUrl}}/issues), and read the [contributing guide]({{RepositoryUrl}}/blob/main/CONTRIBUTING.md) to get involved.
 
-This package is released under the [MIT license](https://github.com/mono/SkiaSharp/blob/main/LICENSE.md).
+This package is released under the [MIT license]({{RepositoryUrl}}/blob/main/LICENSE.md).

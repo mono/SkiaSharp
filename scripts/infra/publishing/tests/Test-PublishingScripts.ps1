@@ -140,6 +140,29 @@ foreach ($productionFile in $productionFiles) {
 }
 
 # Exercises shared release identities, pagination, mutation safety, and repository versions.
+Assert-Equal 'https://github.com/mono/skia.git' $ReleaseSkiaRemote `
+    'The paired Skia remote was not loaded from .gitmodules.'
+$previousRepository = $env:GITHUB_REPOSITORY
+try {
+    Remove-Item Env:\GITHUB_REPOSITORY -ErrorAction SilentlyContinue
+    $offlineIdentity = @(
+        pwsh -NoLogo -NoProfile -Command (
+            "Import-Module '$commonPath' -Force; " +
+            'Write-Output "$ReleaseRepository|$ReleaseSkiaRemote"')
+    ) -join "`n"
+    $env:GITHUB_REPOSITORY = 'dotnet/SkiaSharp'
+    $runtimeIdentity = @(
+        pwsh -NoLogo -NoProfile -Command (
+            "Import-Module '$commonPath' -Force; " +
+            'Write-Output "$ReleaseRepository|$ReleaseSkiaRemote"')
+    ) -join "`n"
+} finally {
+    $env:GITHUB_REPOSITORY = $previousRepository
+}
+Assert-Equal 'mono/SkiaSharp|https://github.com/mono/skia.git' $offlineIdentity.Trim() `
+    'The offline repository fallback was not loaded.'
+Assert-Equal 'dotnet/SkiaSharp|https://github.com/mono/skia.git' $runtimeIdentity.Trim() `
+    'The runtime repository did not override only the current repository identity.'
 $preview = Get-ReleaseIdentity '4.152.0-preview.1.26426.14'
 Assert-Equal 'release/4.152.0-preview.1' $preview.Branch 'Preview branch identity was incorrect.'
 Assert-Equal 'v4.152.0-preview.1.26426.14' $preview.Tag 'Preview tag identity was incorrect.'

@@ -1,6 +1,13 @@
 <Project>
 
   <PropertyGroup>
+    <_RepositoryIdentityConfig>$(MSBuildThisFileDirectory)..\scripts\infra\repository-identity.json</_RepositoryIdentityConfig>
+    <_RepositoryIdentityJson>$([System.IO.File]::ReadAllText('$(_RepositoryIdentityConfig)'))</_RepositoryIdentityJson>
+    <_RepositoryIdentitySlug>$([System.Text.RegularExpressions.Regex]::Match('$(_RepositoryIdentityJson)', '&quot;offlineRepository&quot;\s*:\s*&quot;(?&lt;value&gt;[^&quot;]+)&quot;').Groups['value'].Value)</_RepositoryIdentitySlug>
+    <_RepositoryIdentitySlug Condition="'$(GITHUB_REPOSITORY)' != ''">$(GITHUB_REPOSITORY)</_RepositoryIdentitySlug>
+    <_RepositoryIdentitySite>$([System.Text.RegularExpressions.Regex]::Match('$(_RepositoryIdentityJson)', '&quot;publicSiteBaseUrl&quot;\s*:\s*&quot;(?&lt;value&gt;[^&quot;]+)&quot;').Groups['value'].Value)</_RepositoryIdentitySite>
+    <SkiaSharpRepositoryUrl Condition="'$(SkiaSharpRepositoryUrl)' == ''">https://github.com/$(_RepositoryIdentitySlug)</SkiaSharpRepositoryUrl>
+    <SkiaSharpDocumentationUrl Condition="'$(SkiaSharpDocumentationUrl)' == ''">$(_RepositoryIdentitySite)</SkiaSharpDocumentationUrl>
     
     <!-- package -->
     <PackageProjectUrl>https://go.microsoft.com/fwlink/?linkid=868515</PackageProjectUrl>

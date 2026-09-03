@@ -63,7 +63,7 @@ echo "    Submodule commit: $SUBMODULE_COMMIT"
 # Fetch and verify the requested skia target branch
 if ! git fetch origin "$SKIA_TARGET" 2>/dev/null; then
     echo ""
-    echo "=== ERROR: Branch 'origin/$SKIA_TARGET' does not exist in mono/skia ==="
+    echo "=== ERROR: Branch 'origin/$SKIA_TARGET' does not exist in the paired Skia repository ==="
     echo "Ask the user which skia branch to target for this update."
     popd > /dev/null
     exit 1

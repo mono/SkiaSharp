@@ -68,10 +68,17 @@ pwsh --version    # Requires 7.5+
 # Cache worktree
 [ -d ".data-cache" ] || git worktree add .data-cache docs-data-cache
 git -C .data-cache pull --rebase origin docs-data-cache
-CACHE=".data-cache/repos/mono-SkiaSharp"
+REPO_KEY=$(python3 scripts/infra/repository_identity.py get repositoryKey)
+LEGACY_KEY=$(python3 scripts/infra/repository_identity.py get legacyRepositoryKeys | jq -r '.[0]')
+find_cache_file() {
+  for cache in ".data-cache/repos/$REPO_KEY" ".data-cache/repos/$LEGACY_KEY"; do
+    [ -f "$cache/$1" ] && { printf '%s\n' "$cache/$1"; return 0; }
+  done
+  return 1
+}
 
-TRIAGE="$CACHE/ai-triage/NNNN.json"
-REPRO="$CACHE/ai-repro/NNNN.json"
+TRIAGE=$(find_cache_file "ai-triage/NNNN.json" || true)
+REPRO=$(find_cache_file "ai-repro/NNNN.json" || true)
 ```
 
 - If `TRIAGE` exists: treat it as the **authoritative classification + codeInvestigation**. Extract key details and uncertainties.

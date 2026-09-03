@@ -42,11 +42,13 @@ jobs:
           GH_TOKEN: ${{ inputs.push && secrets.SKIASHARP_AUTOBUMP_TOKEN || github.token }}
           MODE: ${{ inputs.push && 'Push' || 'DryRun' }}
           RELEASE: ${{ inputs.release }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           $arguments = @{
             Base = $env:BASE
             Mode = $env:MODE
             Release = $env:RELEASE
+            Repository = $env:GITHUB_REPOSITORY
           }
           ./scripts/infra/publishing/prepare-release.ps1 @arguments *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append

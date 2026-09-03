@@ -11,7 +11,7 @@ For a developer-run update:
 1. Confirm the parent and `externals/skia` worktrees are clean.
 2. Initialize submodules and verify `git`, `gh`, Python 3, and the .NET SDK are available.
 3. Fetch the parent base candidates and mono/skia base candidates.
-4. Ensure mono/skia has an `upstream` remote for `https://github.com/google/skia.git`.
+4. Ensure the paired Skia repository has an `upstream` remote for `https://github.com/google/skia.git`.
 5. Check both repositories for an existing PR or branch for the requested target. Continue an
    existing update only when its bases and upstream ref match; never overwrite unrelated work.
 

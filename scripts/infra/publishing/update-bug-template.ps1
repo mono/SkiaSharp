@@ -23,7 +23,7 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^[^/]+/[^/]+$')]
-    [string] $Repository = 'mono/SkiaSharp',
+    [string] $Repository,
 
     [string] $File = '.github/ISSUE_TEMPLATE/bug-report.yml',
 
@@ -37,6 +37,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
+$Repository = if ($Repository) { $Repository } else { $ReleaseRepository }
 $modeDescription = $Mode.ToLowerInvariant()
 $automationBranch = 'automation/update-issue-template-versions'
 $otherOption = 'Other (Please indicate in the description)'

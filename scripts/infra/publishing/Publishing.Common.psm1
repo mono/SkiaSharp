@@ -4,9 +4,38 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1')
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1')
 
+function ConvertTo-GitHubRepository([string] $Value) {
+    $candidate = $Value.Trim()
+    if ($candidate -match '^(?<slug>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?)(?:\.git)?$') {
+        return $Matches.slug
+    }
+    if ($candidate -match '^(?:https://|git://)github\.com/(?<slug>[^/]+/[^/]+?)(?:\.git)?/?$' -or
+        $candidate -match '^git@github\.com:(?<slug>[^/]+/[^/]+?)(?:\.git)?$' -or
+        $candidate -match '^ssh://git@github\.com/(?<slug>[^/]+/[^/]+?)(?:\.git)?/?$') {
+        return $Matches.slug
+    }
+    throw "Unsupported GitHub repository identity: '$Value'."
+}
+
+$identityConfigPath = Join-Path (Split-Path $PSScriptRoot) 'repository-identity.json'
+if (!(Test-Path -LiteralPath $identityConfigPath -PathType Leaf)) {
+    throw "Repository identity config does not exist: $identityConfigPath"
+}
+$identityConfig = Get-Content -LiteralPath $identityConfigPath -Raw | ConvertFrom-Json
+$repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '../../..')
+$currentRepository = if ($env:GITHUB_REPOSITORY) {
+    ConvertTo-GitHubRepository $env:GITHUB_REPOSITORY
+} else {
+    ConvertTo-GitHubRepository $identityConfig.offlineRepository
+}
+$skiaUrlResult = Invoke-Git `
+    -Root $repositoryRoot `
+    -Arguments @('config', '-f', '.gitmodules', '--get', 'submodule.externals/skia.url')
+$skiaRepository = ConvertTo-GitHubRepository $skiaUrlResult.Output.Trim()
+
 # Shared repository paths and release contracts.
-New-Variable -Scope Script -Option ReadOnly -Name ReleaseRepository -Value 'mono/SkiaSharp'
-New-Variable -Scope Script -Option ReadOnly -Name ReleaseSkiaRemote -Value 'https://github.com/mono/skia.git'
+New-Variable -Scope Script -Option ReadOnly -Name ReleaseRepository -Value $currentRepository
+New-Variable -Scope Script -Option ReadOnly -Name ReleaseSkiaRemote -Value "https://github.com/$skiaRepository.git"
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseSkiaPath -Value 'externals/skia'
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseVariablesPath -Value 'scripts/azure-templates-variables.yml'
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseVersionsPath -Value 'scripts/VERSIONS.txt'

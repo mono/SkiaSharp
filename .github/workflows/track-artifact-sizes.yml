@@ -54,7 +54,7 @@ jobs:
   # Shared entrypoint: pick the mode and, for pr mode, resolve the build/PR.
   # --------------------------------------------------------------------------- #
   resolve:
-    if: github.repository_owner == 'mono'
+    if: github.repository_id == 52293126
     runs-on: ubuntu-latest
     outputs:
       mode: ${{ steps.resolve.outputs.mode }}

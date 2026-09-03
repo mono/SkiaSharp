@@ -56,7 +56,7 @@ on:
 
 # Only ever run on the canonical repo — never on forks.
 if: |
-  github.repository == 'mono/SkiaSharp'
+  github.repository_id == 52293126
 
 # Give the skill's Phase 5 report a writable step-summary sink (mirrors the
 # convention used by memory-leak-fixer / auto-triage).
@@ -96,7 +96,7 @@ permissions:
 tools:
   github:
     toolsets: [issues, pull_requests, search]
-    allowed-repos: ["mono/skiasharp"]
+    allowed-repos: ["mono/skiasharp", "dotnet/skiasharp"]
     min-integrity: none
   edit:
   bash: ["dotnet", "pwsh", "git", "gh", "find", "ls", "cat", "grep", "head", "tail", "wc", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "bash", "sh", "chmod", "cp", "mv", "rm"]

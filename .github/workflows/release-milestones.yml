@@ -57,8 +57,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PUSH: ${{ inputs.push }}
           VERSION: ${{ inputs.version }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          $arguments = @{ Version = $env:VERSION }
+          $arguments = @{ Repository = $env:REPOSITORY; Version = $env:VERSION }
           if ($env:PUSH -eq 'true') {
             $arguments.Push = $true
           }
@@ -71,8 +72,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PUSH: ${{ inputs.push }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          $arguments = @{}
+          $arguments = @{ Repository = $env:REPOSITORY }
           if ($env:PUSH -eq 'true') {
             $arguments.Push = $true
           }

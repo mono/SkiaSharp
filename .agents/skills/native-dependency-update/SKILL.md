@@ -259,6 +259,13 @@ Both repos use branch name `dev/update-{dep}`. The skia branch was already creat
 
 The branch `dev/update-{dep}` already exists in `externals/skia` (created by setup script).
 
+Resolve the paired repositories once before the commands below:
+
+```bash
+REPOSITORY=$(python3 scripts/infra/repository_identity.py get repository)
+SKIA_REPOSITORY=$(python3 scripts/infra/repository_identity.py get skiaRepository)
+```
+
 1. **Stage ALL changes before committing** (DEPS, BUILD.gn if changed)
 2. **Commit ONCE** with this exact format:
    ```
@@ -268,7 +275,7 @@ The branch `dev/update-{dep}` already exists in `externals/skia` (created by set
    ```
 3. **Push ONCE** and create a PR targeting `{skia_target_branch}`:
    ```bash
-   unset GH_TOKEN && gh pr create --repo mono/skia --base {skia_target_branch} --title "Update {dep} to {version}" --body "..."
+   unset GH_TOKEN && gh pr create --repo "$SKIA_REPOSITORY" --base {skia_target_branch} --title "Update {dep} to {version}" --body "..."
    ```
 
 Do NOT commit-then-amend. Every amend requires a force-push which re-triggers CI (wasting 2+ hours of compute).
@@ -284,15 +291,15 @@ Do NOT commit-then-amend. Every amend requires a force-push which re-triggers CI
    - If targeting `main`: use the `create_pull_request` tool
    - If targeting a release branch: use the `create_pull_request` tool, then immediately fix the base:
      ```bash
-     unset GH_TOKEN && gh pr edit {number} --repo mono/SkiaSharp --base {skiasharp_target_branch}
+     unset GH_TOKEN && gh pr edit {number} --repo "$REPOSITORY" --base {skiasharp_target_branch}
      ```
 
 #### Step 3: Cross-link the PRs
 
 Edit **both** PRs to reference each other:
 ```bash
-unset GH_TOKEN && gh pr edit {skia_pr_number} --repo mono/skia --body "...Required SkiaSharp PR: https://github.com/mono/SkiaSharp/pull/{number}..."
-unset GH_TOKEN && gh pr edit {skiasharp_pr_number} --repo mono/SkiaSharp --body "...Required skia PR: https://github.com/mono/skia/pull/{number}..."
+unset GH_TOKEN && gh pr edit {skia_pr_number} --repo "$SKIA_REPOSITORY" --body "...Required SkiaSharp PR: https://github.com/$REPOSITORY/pull/{number}..."
+unset GH_TOKEN && gh pr edit {skiasharp_pr_number} --repo "$REPOSITORY" --body "...Required skia PR: https://github.com/$SKIA_REPOSITORY/pull/{number}..."
 ```
 
 #### Phase 5 Completion Checklist
@@ -302,7 +309,7 @@ Before proceeding, verify ALL of these:
 - [ ] Branch names follow `dev/update-{dep}` convention
 - [ ] mono/skia PR targets `{skia_target_branch}` branch
 - [ ] mono/SkiaSharp PR targets `{skiasharp_target_branch}` branch
-- [ ] **SkiaSharp's `externals/skia` submodule points to the mono/skia PR branch** (check with `git submodule status`)
+- [ ] **SkiaSharp's `externals/skia` submodule points to the paired Skia PR branch** (check with `git submodule status`)
 - [ ] `cgmanifest.json` updated with new version
 - [ ] `scripts/VERSIONS.txt` updated for independently-versioned deps (harfbuzz: `release`, `soname`, `file`, all `nuget` lines) — N/A for statically-linked deps
 - [ ] Both PRs cross-reference each other

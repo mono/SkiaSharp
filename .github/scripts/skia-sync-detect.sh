@@ -66,9 +66,24 @@ done
 [ -n "$OUT" ] || { echo "::error::skia-sync-detect.sh: --output is required"; exit 2; }
 emit() { printf '%s=%s\n' "$1" "$2" >>"$OUT"; }
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
+IDENTITY_ROOT="${SKIASHARP_IDENTITY_ROOT:-$REPO_ROOT}"
+IDENTITY_ARGS=(--root "$IDENTITY_ROOT")
+if [ -n "${GITHUB_REPOSITORY:-}" ]; then
+  IDENTITY_ARGS+=(--repository "$GITHUB_REPOSITORY")
+fi
+IDENTITY_JSON=$(python3 "$REPO_ROOT/scripts/infra/repository_identity.py" \
+  "${IDENTITY_ARGS[@]}" json)
+REPOSITORY=$(jq -er '.repository' <<<"$IDENTITY_JSON")
+REPOSITORY_GIT_URL=$(jq -er '.repositoryGitUrl' <<<"$IDENTITY_JSON")
+SKIA_REPOSITORY=$(jq -er '.skiaRepository' <<<"$IDENTITY_JSON")
+SKIA_GIT_URL=$(jq -er '.skiaGitUrl' <<<"$IDENTITY_JSON")
+UPSTREAM_SKIA_GIT_URL=$(jq -er '.upstreamSkiaGitUrl' <<<"$IDENTITY_JSON")
+
 # Milestone number from scripts/VERSIONS.txt at the given ref (remote read, no checkout).
 milestone_of() {
-  gh api "repos/${GITHUB_REPOSITORY}/contents/scripts/VERSIONS.txt?ref=$1" \
+  gh api "repos/${REPOSITORY}/contents/scripts/VERSIONS.txt?ref=$1" \
     --jq '.content' | base64 -d | grep '^libSkiaSharp.*milestone' | awk '{print $NF}'
 }
 
@@ -93,14 +108,14 @@ NEXT=$((MAIN_MS + 1))
 # versions.json `support` block, read remotely at the immutable triggering commit
 # (pre_activation only sparse-checks out .github/scripts, so the file is not on disk).
 support_json() {
-  gh api "repos/${GITHUB_REPOSITORY}/contents/scripts/infra/docs/versions.json?ref=${REF_IMMUTABLE}" \
+  gh api "repos/${REPOSITORY}/contents/scripts/infra/docs/versions.json?ref=${REF_IMMUTABLE}" \
     --jq '.content' | base64 -d
 }
 # Has upstream cut the chrome/m<N> milestone branch yet? Fail hard on a lookup error so a
 # transient git failure can't be mistaken for "branch absent" and silently fall back to main.
 chrome_branch_exists() {
   local out
-  if ! out=$(git ls-remote --heads https://github.com/google/skia.git "refs/heads/chrome/m$1"); then
+  if ! out=$(git ls-remote --heads "$UPSTREAM_SKIA_GIT_URL" "refs/heads/chrome/m$1"); then
     echo "::error::git ls-remote failed while checking upstream chrome/m$1"
     exit 1
   fi
@@ -197,9 +212,9 @@ if [ -n "$BASE_BRANCH_OVERRIDE" ]; then
     echo "::error::Invalid base branch override: '$BASE_BRANCH_OVERRIDE'"
     exit 1
   fi
-  if ! git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" \
+  if ! git ls-remote --exit-code --heads "$REPOSITORY_GIT_URL" \
       "refs/heads/${BASE_BRANCH_OVERRIDE}" >/dev/null; then
-    echo "::error::Base branch override '${BASE_BRANCH_OVERRIDE}' does not exist in ${GITHUB_REPOSITORY}."
+    echo "::error::Base branch override '${BASE_BRANCH_OVERRIDE}' does not exist in ${REPOSITORY}."
     exit 1
   fi
   BASE_BRANCH="$BASE_BRANCH_OVERRIDE"
@@ -208,7 +223,7 @@ if [ -n "$BASE_BRANCH_OVERRIDE" ]; then
 # `2>/dev/null` swallows the "integer expression expected" noise for a non-numeric
 # TARGET, which then falls through to the main line.
 elif [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then
-  RELEASE_BRANCH=$(git ls-remote --heads "https://github.com/${GITHUB_REPOSITORY}.git" \
+  RELEASE_BRANCH=$(git ls-remote --heads "$REPOSITORY_GIT_URL" \
       "refs/heads/release/*.${TARGET}.x" \
     | sed -n 's|.*refs/heads/\(release/[0-9][0-9.]*\.x\)$|\1|p' | sort -u)
   # The glob can match more than one major (e.g. release/4.148.x and a stray
@@ -226,9 +241,9 @@ elif [ -n "$RELEASE_BRANCH" ]; then
   BASE_BRANCH="$RELEASE_BRANCH"
   SKIA_BASE_BRANCH="$RELEASE_BRANCH"
   HEAD_BRANCH="skia-sync/${RELEASE_BRANCH//\//-}"
-  # The matching mono/skia release branch MUST already exist.
-  if [ -z "$(git ls-remote --heads https://github.com/mono/skia.git "refs/heads/${SKIA_BASE_BRANCH}" | awk '{print $1}')" ]; then
-    echo "::error::mono/skia branch '${SKIA_BASE_BRANCH}' does not exist. Release branches are owned by the Release - Prepare workflow — create it before running a release sync for m${TARGET}."
+  # The matching paired Skia release branch MUST already exist.
+  if [ -z "$(git ls-remote --heads "$SKIA_GIT_URL" "refs/heads/${SKIA_BASE_BRANCH}" | awk '{print $1}')" ]; then
+    echo "::error::${SKIA_REPOSITORY} branch '${SKIA_BASE_BRANCH}' does not exist. Release branches are owned by the Release - Prepare workflow — create it before running a release sync for m${TARGET}."
     exit 1
   fi
 elif [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then
@@ -256,6 +271,10 @@ emit base_branch "$BASE_BRANCH"
 emit skia_base_branch "$SKIA_BASE_BRANCH"
 emit head_branch "$HEAD_BRANCH"
 emit current "$CURRENT"
+emit repository "$REPOSITORY"
+emit repository_git_url "$REPOSITORY_GIT_URL"
+emit skia_repository "$SKIA_REPOSITORY"
+emit skia_git_url "$SKIA_GIT_URL"
 
 echo "Resolved: m${TARGET} → ${BASE_BRANCH} (mode=${MODE}, upstream=${UPSTREAM_REF}, base milestone=m${CURRENT}, head=${HEAD_BRANCH}, release=${IS_RELEASE}, invalid=${INVALID})"
 
@@ -271,7 +290,7 @@ if [ "$INVALID" = true ]; then
 fi
 
 # -- Work check: only spin up the expensive agent when there is new upstream work ----
-UPSTREAM_SHA=$(git ls-remote https://github.com/google/skia.git "refs/heads/${UPSTREAM_REF}" | awk '{print $1}')
+UPSTREAM_SHA=$(git ls-remote "$UPSTREAM_SKIA_GIT_URL" "refs/heads/${UPSTREAM_REF}" | awk '{print $1}')
 if [ -z "$UPSTREAM_SHA" ]; then
   echo "::notice::upstream/${UPSTREAM_REF} does not exist yet"
   [ "$MODE" = explicit ] && exit 1
@@ -282,13 +301,13 @@ fi
 # Compare upstream HEAD against the existing sync branch if present; otherwise against
 # the resolved mono/skia base. This applies to both main and release destinations: a new
 # milestone naturally has work when its upstream HEAD is not contained in the base.
-SYNC_SHA=$(git ls-remote https://github.com/mono/skia.git "refs/heads/${HEAD_BRANCH}" | awk '{print $1}')
+SYNC_SHA=$(git ls-remote "$SKIA_GIT_URL" "refs/heads/${HEAD_BRANCH}" | awk '{print $1}')
 COMPARE_REF="$SKIA_BASE_BRANCH"
 if [ -n "$SYNC_SHA" ]; then
   COMPARE_REF="$HEAD_BRANCH"
 fi
-if ! BEHIND=$(gh api "repos/mono/skia/compare/${UPSTREAM_SHA}...${COMPARE_REF}" --jq '.behind_by'); then
-  echo "::error::Unable to compare upstream ${UPSTREAM_REF} (${UPSTREAM_SHA}) against mono/skia ${COMPARE_REF}; ancestry is unknown, refusing to start sync."
+if ! BEHIND=$(gh api "repos/${SKIA_REPOSITORY}/compare/${UPSTREAM_SHA}...${COMPARE_REF}" --jq '.behind_by'); then
+  echo "::error::Unable to compare upstream ${UPSTREAM_REF} (${UPSTREAM_SHA}) against ${SKIA_REPOSITORY} ${COMPARE_REF}; ancestry is unknown, refusing to start sync."
   exit 1
 fi
 if [ "$BEHIND" = 0 ]; then

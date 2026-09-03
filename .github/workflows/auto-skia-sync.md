@@ -39,7 +39,11 @@ on:
     - name: Check out detection scripts
       uses: actions/checkout@v7.0.1
       with:
-        sparse-checkout: .github/scripts
+        sparse-checkout: |
+          .gitmodules
+          .github/scripts
+          scripts/infra/repository-identity.json
+          scripts/infra/repository_identity.py
     - name: Detect milestone
       id: detect
       # Scheduled runs pass an empty target — the detector then ROTATES: it reads
@@ -69,6 +73,10 @@ jobs:
       base_branch: ${{ steps.detect.outputs.base_branch }}
       skia_base_branch: ${{ steps.detect.outputs.skia_base_branch }}
       head_branch: ${{ steps.detect.outputs.head_branch }}
+      repository: ${{ steps.detect.outputs.repository }}
+      repository_git_url: ${{ steps.detect.outputs.repository_git_url }}
+      skia_repository: ${{ steps.detect.outputs.skia_repository }}
+      skia_git_url: ${{ steps.detect.outputs.skia_git_url }}
 
 # -- Agent job gate --------------------------------------------------
 # Only run the agent if pre-activation succeeded and explicitly found work to do.
@@ -88,7 +96,7 @@ concurrency:
 tools:
   github:
     toolsets: [repos, pull_requests]
-    allowed-repos: ["mono/skia", "mono/skiasharp"]
+    allowed-repos: ["mono/skia", "dotnet/skia", "mono/skiasharp", "dotnet/skiasharp", "google/skia"]
     min-integrity: none
   bash: ["*"]
   edit:
@@ -186,6 +194,10 @@ steps:
         printf 'SKIA_SYNC_BASE_BRANCH=%s\n' "$base_branch"
         printf 'SKIA_SYNC_SKIA_BASE_BRANCH=%s\n' "$skia_base_branch"
         printf 'SKIA_SYNC_HEAD_BRANCH=%s\n' "$head_branch"
+        printf 'SKIA_SYNC_REPOSITORY=%s\n' "$repository"
+        printf 'SKIA_SYNC_REPOSITORY_GIT_URL=%s\n' "$repository_git_url"
+        printf 'SKIA_SYNC_SKIA_REPOSITORY=%s\n' "$skia_repository"
+        printf 'SKIA_SYNC_SKIA_GIT_URL=%s\n' "$skia_git_url"
         printf 'SKIA_SYNC_PLATFORM=linux\n'
         printf 'SKIA_SYNC_ARCH=x64\n'
         printf 'SKIA_SYNC_SKIA_BASE_SHA=%s\n' "$(git -C externals/skia rev-parse HEAD)"
@@ -196,9 +208,13 @@ steps:
       mkdir -p "$RUNTIME_DIR"
       cp -a .agents/skills/update-skia "$RUNTIME_DIR/update-skia"
       cp -a .github/scripts/skia-sync-push-prs.sh "$RUNTIME_DIR/skia-sync-push-prs.sh"
+      mkdir -p "$RUNTIME_DIR/repository-identity"
+      cp scripts/infra/repository_identity.py "$RUNTIME_DIR/repository-identity/"
+      cp scripts/infra/repository-identity.json "$RUNTIME_DIR/repository-identity/"
       {
         printf 'SKIA_SYNC_RUNTIME_DIR=%s\n' "$RUNTIME_DIR"
         printf 'SKIA_SYNC_SKILL_DIR=%s\n' "$RUNTIME_DIR/update-skia"
+        printf 'SKIASHARP_IDENTITY_INFRA_DIR=%s\n' "$RUNTIME_DIR/repository-identity"
       } >> "$GITHUB_ENV"
       chmod -R a-w "$RUNTIME_DIR"
 
@@ -335,7 +351,7 @@ engineering process. Load one numbered phase reference at a time from the same d
 | Target milestone | `${{ needs.pre_activation.outputs.target }}` |
 | Upstream ref | `${{ needs.pre_activation.outputs.upstream_ref }}` |
 | Parent base | `${{ needs.pre_activation.outputs.base_branch }}` |
-| mono/skia base | `${{ needs.pre_activation.outputs.skia_base_branch }}` |
+| `${{ needs.pre_activation.outputs.skia_repository }}` base | `${{ needs.pre_activation.outputs.skia_base_branch }}` |
 | Shared head branch | `${{ needs.pre_activation.outputs.head_branch }}` |
 | Release-line mode | `${{ needs.pre_activation.outputs.is_release }}` |
 | Build target | `linux / x64` |

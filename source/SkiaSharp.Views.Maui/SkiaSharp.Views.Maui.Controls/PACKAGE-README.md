@@ -2,7 +2,7 @@
 
 [![NuGet](https://img.shields.io/nuget/v/SkiaSharp.Views.Maui.Controls?style=flat-square&label=NuGet)](https://www.nuget.org/packages/SkiaSharp.Views.Maui.Controls)
 [![NuGet downloads](https://img.shields.io/nuget/dt/SkiaSharp.Views.Maui.Controls?style=flat-square&label=Downloads)](https://www.nuget.org/packages/SkiaSharp.Views.Maui.Controls)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/mono/SkiaSharp/blob/main/LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)]({{RepositoryUrl}}/blob/main/LICENSE.md)
 
 **SkiaSharp.Views.Maui.Controls** adds SkiaSharp rendering controls and image sources to .NET MAUI applications. Put a CPU- or GPU-backed canvas alongside standard MAUI controls, draw with the full SkiaSharp API, and share the same rendering code across Android, iOS, Mac Catalyst, and Windows.
 
@@ -75,12 +75,12 @@ Call `InvalidateSurface()` whenever state changes and the view should redraw. Us
 
 - [SkiaSharp .NET MAUI guides](https://mono.github.io/SkiaSharp/docs/guides/)
 - [API reference on Microsoft Learn](https://learn.microsoft.com/dotnet/api/skiasharp.views.maui.controls)
-- [Buildable .NET MAUI sample](https://github.com/mono/SkiaSharp/tree/main/samples/Basic/Maui)
+- [Buildable .NET MAUI sample]({{RepositoryUrl}}/tree/main/samples/Basic/Maui)
 - [Live SkiaSharp Gallery](https://mono.github.io/SkiaSharp/gallery/) - explore the rendering API in your browser
-- [SkiaSharp package and deployment guide](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md)
+- [SkiaSharp package and deployment guide]({{RepositoryUrl}}/blob/main/documentation/dev/packages.md)
 
 ## Feedback and contributing
 
-SkiaSharp is an open-source Microsoft project built with the .NET community. Use [GitHub Discussions](https://github.com/mono/SkiaSharp/discussions) for questions, file bugs and feature requests in the [issue tracker](https://github.com/mono/SkiaSharp/issues), and read the [contributing guide](https://github.com/mono/SkiaSharp/blob/main/CONTRIBUTING.md) to get involved.
+SkiaSharp is an open-source Microsoft project built with the .NET community. Use [GitHub Discussions]({{RepositoryUrl}}/discussions) for questions, file bugs and feature requests in the [issue tracker]({{RepositoryUrl}}/issues), and read the [contributing guide]({{RepositoryUrl}}/blob/main/CONTRIBUTING.md) to get involved.
 
-This package is released under the [MIT license](https://github.com/mono/SkiaSharp/blob/main/LICENSE.md).
+This package is released under the [MIT license]({{RepositoryUrl}}/blob/main/LICENSE.md).

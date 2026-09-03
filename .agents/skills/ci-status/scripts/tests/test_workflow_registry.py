@@ -17,7 +17,7 @@ Two real examples this suite would have caught:
   removed 2026-06-18 when it was folded into "Sync - Release Notes & API Diffs"), so the
   row was a stale leftover quietly duplicating a workflow already listed below it.
 
-These tests assert that every ``mono/SkiaSharp`` entry names a file that exists on this
+These tests assert that every current-repository entry names a file that exists on this
 branch, that the declared ``trigger`` still matches that file's ``on:`` block, and that the
 display name matches. They parse the committed workflow YAML — including generated
 ``.lock.yml`` files, which carry their own ``on:`` block — so they never need the gh-aw
@@ -66,8 +66,8 @@ TRIGGER_KEYS = {
 
 
 def local_workflows():
-    """Entries owned by this repository (the rest live in mono/SkiaSharp-API-docs)."""
-    return [w for w in GITHUB_WORKFLOWS if w["repo"] == "mono/SkiaSharp"]
+    """Entries owned by this repository (the rest live in the docs repository)."""
+    return [w for w in GITHUB_WORKFLOWS if w["repo"] == COLLECTOR.CURRENT_REPOSITORY]
 
 
 def load_workflow(name):
@@ -99,7 +99,7 @@ def crons_for(workflow_file):
 
 class RegistryTests(unittest.TestCase):
     def test_registry_is_not_empty(self):
-        self.assertTrue(local_workflows(), "No mono/SkiaSharp workflows are tracked.")
+        self.assertTrue(local_workflows(), "No current-repository workflows are tracked.")
 
     def test_every_tracked_workflow_file_exists(self):
         missing = [w["workflow"] for w in local_workflows()
@@ -178,7 +178,7 @@ class SkillDocTests(unittest.TestCase):
         unresolved = []
         for row in rows:
             cells = [c.strip() for c in row.strip().strip("|").split("|")]
-            if len(cells) < 3 or cells[1] != "mono/SkiaSharp":
+            if len(cells) < 3 or cells[1] != COLLECTOR.CURRENT_REPOSITORY:
                 continue  # header, separator, or a row owned by another repository
             name = cells[0]
             if name not in by_name:

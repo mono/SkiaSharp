@@ -12,6 +12,7 @@ import re
 import subprocess
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 # Import sibling check modules
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -19,6 +20,11 @@ import check_generated_files  # noqa: E402
 import check_source  # noqa: E402
 import check_deps  # noqa: E402
 import check_companion  # noqa: E402
+
+INFRA_DIR = Path(__file__).resolve().parents[4] / "scripts" / "infra"
+if str(INFRA_DIR) not in sys.path:
+    sys.path.insert(0, str(INFRA_DIR))
+from repository_identity import resolve_identity  # noqa: E402
 
 
 def eprint(*args, **kwargs):
@@ -137,7 +143,7 @@ def main():
     )
     parser.add_argument(
         "--skia-pr", type=int, required=True,
-        help="The mono/skia PR number to review.",
+        help="The paired Skia repository PR number to review.",
     )
     parser.add_argument(
         "--skiasharp-pr", type=int, required=True,
@@ -170,6 +176,9 @@ def main():
         )
     repo_root = result.stdout.strip()
     skia_root = os.path.join(repo_root, "externals", "skia")
+    identity = resolve_identity(Path(repo_root))
+    repository = identity["repository"]
+    skia_repository = identity["skiaRepository"]
 
     # =========================================================================
     # Pre-flight
@@ -184,10 +193,10 @@ def main():
         eprint("▸ Initialising skia submodule (not yet present)...")
         run_git(["submodule", "update", "--init", "externals/skia"], cwd=repo_root)
 
-    # Verify submodule origin points at mono/skia (worktrees sometimes inherit
+    # Verify the submodule origin against .gitmodules (worktrees sometimes inherit
     # the parent repo's remote instead).
     eprint("▸ Verifying submodule remote...")
-    ensure_remote(skia_root, "origin", "https://github.com/mono/skia.git")
+    ensure_remote(skia_root, "origin", identity["skiaGitUrl"])
 
     # Pre-fetch the skia PR ref so that later fetches in the parent repo
     # can resolve the submodule pointer (which references a SHA from the
@@ -218,11 +227,11 @@ def main():
     eprint("═══ Step 1 — Parse & Setup ═══")
 
     # 1a. Fetch skia PR metadata
-    eprint(f"▸ Fetching mono/skia PR #{skia_pr_number}...")
+    eprint(f"▸ Fetching {skia_repository} PR #{skia_pr_number}...")
     pr_result = subprocess.run(
         [
             "gh", "pr", "view", str(skia_pr_number),
-            "--repo", "mono/skia",
+            "--repo", skia_repository,
             "--json", "title,headRefName,headRefOid,baseRefName,baseRefOid,state,author",
         ],
         capture_output=True, text=True,
@@ -240,7 +249,7 @@ def main():
     companion_pr_result = subprocess.run(
         [
             "gh", "pr", "view", str(skiasharp_pr_number),
-            "--repo", "mono/SkiaSharp",
+            "--repo", repository,
             "--json", "title,headRefName,headRefOid,baseRefName,baseRefOid,state,author",
         ],
         capture_output=True, text=True,
@@ -559,6 +568,8 @@ def main():
 
     raw_results = {
         "meta": {
+            "repo": skia_repository,
+            "skiasharpRepository": repository,
             "skiaPrNumber": skia_pr_number,
             "skiasharpPrNumber": skiasharp_pr_number,
             "prTitle": pr["title"],

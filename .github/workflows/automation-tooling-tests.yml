@@ -17,6 +17,14 @@ on:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
+      - "scripts/infra/repository-identity.json"
+      - "scripts/infra/repository_identity.py"
+      - "scripts/infra/tests/test_repository_identity.py"
+      - "source/SkiaSharp.NuGet.targets"
+      - "source/SkiaSharp.NuGet.props"
+      - "binding/**/PACKAGE-README.md"
+      - "documentation/site/**"
+      - "scripts/infra/docs/generate-ai-dashboard.py"
       # Any workflow edit, so the registry test re-checks its tracked list. '*.yml' already
       # covers the generated '*.lock.yml' files.
       - ".github/workflows/*.yml"
@@ -26,6 +34,14 @@ on:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
+      - "scripts/infra/repository-identity.json"
+      - "scripts/infra/repository_identity.py"
+      - "scripts/infra/tests/test_repository_identity.py"
+      - "source/SkiaSharp.NuGet.targets"
+      - "source/SkiaSharp.NuGet.props"
+      - "binding/**/PACKAGE-README.md"
+      - "documentation/site/**"
+      - "scripts/infra/docs/generate-ai-dashboard.py"
       - ".github/workflows/*.yml"
   workflow_dispatch:
 
@@ -78,3 +94,45 @@ jobs:
 
       - name: Run skia-sync work detector tests
         run: bash .github/scripts/tests/skia-sync-detect.test.sh
+
+      - name: Run repository identity tests and drift scan
+        run: |
+          python3 -m unittest scripts/infra/tests/test_repository_identity.py -v
+          python3 scripts/infra/repository_identity.py validate
+          python3 scripts/infra/repository_identity.py scan
+
+      - name: Validate portable package README generation
+        env:
+          GITHUB_REPOSITORY: dotnet/SkiaSharp
+        run: |
+          dotnet msbuild binding/SkiaSharp/SkiaSharp.csproj \
+            -t:_GeneratePackageReadmeFile \
+            -p:TargetFramework=net10.0 \
+            -p:PackageDescription=Validation \
+            -v:minimal
+          readme=binding/SkiaSharp/obj/Debug/net10.0/README.md
+          grep -Fq "https://github.com/dotnet/SkiaSharp/issues" "$readme"
+          ! grep -Fq '{{RepositoryUrl}}' "$readme"
+
+      - name: Validate portable PowerShell agent scripts
+        shell: pwsh
+        run: |
+          $errors = @(
+            foreach ($path in @(
+              '.agents/skills/issue-fix/scripts/persist-fix.ps1',
+              '.agents/skills/issue-repro/scripts/persist-repro.ps1',
+              '.agents/skills/merge-skia-update/scripts/Prepare-SkiaReleaseBranches.ps1',
+              '.agents/skills/merge-skia-update/scripts/Update-SkiaSharpSkiaCommit.ps1'
+            )) {
+              $parseErrors = $null
+              [System.Management.Automation.Language.Parser]::ParseFile(
+                (Resolve-Path $path),
+                [ref] $null,
+                [ref] $parseErrors) > $null
+              $parseErrors
+            }
+          )
+          if ($errors.Count) {
+            $errors | Format-List
+            exit 1
+          }

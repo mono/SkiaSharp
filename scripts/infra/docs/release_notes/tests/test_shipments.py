@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import sys
 import unittest
+from unittest import mock
 from pathlib import Path
 
 _DOCS_DIR = Path(__file__).resolve().parents[2]
 if str(_DOCS_DIR) not in sys.path:
     sys.path.insert(0, str(_DOCS_DIR))
 
-from release_notes import shipments
+from release_notes import common, shipments
 
 
 # A realistic slice of this repository's actual tag history spanning a
@@ -139,7 +140,8 @@ class CollectShipmentsTests(unittest.TestCase):
         rc = next(item for item in result if item["tag"] == "v4.150.0-rc.1.1")
         self.assertEqual(
             rc["changelog_url"],
-            "https://github.com/mono/SkiaSharp/compare/v4.150.0-preview.2.1...v4.150.0-rc.1.1",
+            "https://github.com/{}/compare/"
+            "v4.150.0-preview.2.1...v4.150.0-rc.1.1".format(common.REPO),
         )
 
     def test_prs_are_the_exact_delta_since_the_previous_tag(self):
@@ -246,6 +248,16 @@ class ValidateShipmentTests(unittest.TestCase):
             _valid_shipment(changelog_url="https://evil.example/compare/a...b")
         )
         self.assertTrue(any("changelog_url" in error for error in errors))
+
+    def test_accepts_preserved_historical_owner_after_transfer(self):
+        shipment = _valid_shipment(
+            changelog_url=(
+                "https://github.com/mono/SkiaSharp/compare/"
+                "v4.150.2...v4.151.0-preview.1"
+            )
+        )
+        with mock.patch.object(common, "REPO", "dotnet/SkiaSharp"):
+            self.assertEqual([], shipments.validate_shipment(shipment))
 
     def test_rejects_a_changelog_url_for_different_endpoints(self):
         errors = shipments.validate_shipment(

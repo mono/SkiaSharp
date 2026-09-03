@@ -62,7 +62,8 @@ If `gh` is unavailable or unauthenticated, use the GitHub MCP issue/PR retrieval
 ### 1. Read the issue
 
 ```bash
-gh issue view {number} --repo mono/SkiaSharp \
+REPOSITORY=$(python3 scripts/infra/repository_identity.py get repository)
+gh issue view {number} --repo "$REPOSITORY" \
   --json number,title,body,labels,comments,state,createdAt,updatedAt,closedAt,author,milestone \
   > /tmp/{number}.issue.json
 ```
@@ -87,10 +88,10 @@ GitHub MCP issue/PR retrieval tools are equally valid if the environment exposes
 7. **Search for related issues AND PRs** — use `gh` CLI or GitHub MCP directly:
    ```bash
    # Search issues (finds duplicates, prior reports, related discussions)
-   gh search issues "{keywords from issue}" --repo mono/SkiaSharp --limit 10 \
+   gh search issues "{keywords from issue}" --repo "$REPOSITORY" --limit 10 \
      --json number,title,state,url
    # Search PRs (finds fixes, prior attempts, reverted changes)
-   gh pr list --search '{keywords from issue}' --state all --repo mono/SkiaSharp --limit 10 --json number,title,state,mergedAt
+   gh pr list --search '{keywords from issue}' --state all --repo "$REPOSITORY" --limit 10 --json number,title,state,mergedAt
    ```
    Include ALL related issues and PRs in `evidence.reproEvidence.repoLinks` — both duplicate/related issues AND closed/unmerged PRs, as they reveal prior reports and maintainer decisions. Duplicate issues are especially important for `close-as-duplicate` classification.
 

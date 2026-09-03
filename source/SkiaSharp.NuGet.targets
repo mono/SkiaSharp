@@ -46,11 +46,11 @@ $(PackageNotes)</PackageDescription>
       <_PackageReadmeApiUrl>$(PackageReadmeApiUrl)</_PackageReadmeApiUrl>
       <_PackageReadmeApiUrl Condition="'$(_PackageReadmeApiUrl)' == ''">https://learn.microsoft.com/dotnet/api/skiasharp</_PackageReadmeApiUrl>
       <_PackageReadmeResourceLinks>$(PackageReadmeResourceLinks)</_PackageReadmeResourceLinks>
-      <_PackageReadmeResourceLinks Condition="'$(_PackageReadmeResourceLinks)' == ''">- [SkiaSharp documentation](https://mono.github.io/SkiaSharp/docs/)
+      <_PackageReadmeResourceLinks Condition="'$(_PackageReadmeResourceLinks)' == ''">- [SkiaSharp documentation]($(SkiaSharpDocumentationUrl)/docs/)
 - [API reference on Microsoft Learn]($(_PackageReadmeApiUrl))
-- [Package selection and deployment guide](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md)
-- [Live SkiaSharp Gallery](https://mono.github.io/SkiaSharp/gallery/)
-- [SkiaFiddle](https://mono.github.io/SkiaSharp/fiddle/) - experiment with SkiaSharp in your browser</_PackageReadmeResourceLinks>
+- [Package selection and deployment guide]($(SkiaSharpRepositoryUrl)/blob/main/documentation/dev/packages.md)
+- [Live SkiaSharp Gallery]($(SkiaSharpDocumentationUrl)/gallery/)
+- [SkiaFiddle]($(SkiaSharpDocumentationUrl)/fiddle/) - experiment with SkiaSharp in your browser</_PackageReadmeResourceLinks>
 
       <_PackageReadmeSummary>$(PackageReadmeSummary)</_PackageReadmeSummary>
       <_PackageReadmeSummary Condition="'$(_PackageReadmeSummary)' == ''">$(PackageDescription)</_PackageReadmeSummary>
@@ -67,7 +67,7 @@ $(PackageNotes)</PackageDescription>
 
 [![NuGet](https://img.shields.io/nuget/v/$(PackageId)?style=flat-square&amp;label=NuGet)](https://www.nuget.org/packages/$(PackageId))
 [![NuGet downloads](https://img.shields.io/nuget/dt/$(PackageId)?style=flat-square&amp;label=Downloads)](https://www.nuget.org/packages/$(PackageId))
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/mono/SkiaSharp/blob/main/LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)]($(SkiaSharpRepositoryUrl)/blob/main/LICENSE.md)
 
 $(_PackageReadmeSummary)
 
@@ -83,17 +83,14 @@ $(_PackageReadmeResourceLinks)
 
 ## Feedback and contributing
 
-SkiaSharp is an open-source project from Microsoft, released under the [MIT license](https://github.com/mono/SkiaSharp/blob/main/LICENSE.md). Use [GitHub Discussions](https://github.com/mono/SkiaSharp/discussions) for questions, file bugs and feature requests in the [issue tracker](https://github.com/mono/SkiaSharp/issues), and see the [contributing guide](https://github.com/mono/SkiaSharp/blob/main/CONTRIBUTING.md) to get involved.</_PackageReadmeContents>
+SkiaSharp is an open-source project from Microsoft, released under the [MIT license]($(SkiaSharpRepositoryUrl)/blob/main/LICENSE.md). Use [GitHub Discussions]($(SkiaSharpRepositoryUrl)/discussions) for questions, file bugs and feature requests in the [issue tracker]($(SkiaSharpRepositoryUrl)/issues), and see the [contributing guide]($(SkiaSharpRepositoryUrl)/blob/main/CONTRIBUTING.md) to get involved.</_PackageReadmeContents>
+      <_PackageReadmeContents Condition="'$(_PackageReadmeSource)' != ''">$([System.IO.File]::ReadAllText('$(_PackageReadmeSource)').Replace('{{RepositoryUrl}}', '$(SkiaSharpRepositoryUrl)').Replace('{{DocumentationUrl}}', '$(SkiaSharpDocumentationUrl)'))</_PackageReadmeContents>
     </PropertyGroup>
 
-    <Copy SourceFiles="$(_PackageReadmeSource)"
-          DestinationFiles="$(_PackageReadmeOutput)"
-          Condition="'$(_PackageReadmeSource)' != ''" />
     <WriteLinesToFile File="$(_PackageReadmeOutput)"
-                     Lines="$(_PackageReadmeContents)"
+                     Lines="$([MSBuild]::Escape('$(_PackageReadmeContents)'))"
                      Encoding="UTF-8"
-                     Overwrite="True"
-                     Condition="'$(_PackageReadmeSource)' == ''" />
+                     Overwrite="True" />
     <ItemGroup>
       <FileWrites Include="$(_PackageReadmeOutput)" />
       <None Include="$(_PackageReadmeOutput)" PackagePath="$(PackageReadmeFile)" Pack="True" />

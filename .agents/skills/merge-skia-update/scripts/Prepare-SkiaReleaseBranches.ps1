@@ -136,10 +136,10 @@ if ($treeParts.Count -lt 3 -or $treeParts[1] -ne 'commit') {
 $nativeBaseSha = $treeParts[2]
 $nativeBranchSha = Get-RemoteBranchSha $nativeUrl $SkiaBaseBranch
 if (-not $nativeBranchSha) {
-    throw "mono/skia branch $SkiaBaseBranch does not exist."
+    throw "$nativeRepository branch $SkiaBaseBranch does not exist."
 }
 if ($nativeBranchSha -ne $nativeBaseSha) {
-    throw "SkiaSharp $SkiaSharpBaseBranch points to mono/skia $nativeBaseSha, but $SkiaBaseBranch points to $nativeBranchSha."
+    throw "SkiaSharp $SkiaSharpBaseBranch points to $nativeRepository $nativeBaseSha, but $SkiaBaseBranch points to $nativeBranchSha."
 }
 
 $nativeExisting = Assert-Destination $nativeRepository $nativeUrl $ReleaseBranch $nativeBaseSha

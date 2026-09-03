@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS Persist a validated repro JSON to output/ai/.
-.DESCRIPTION Copies the repro JSON to output/ai/repos/mono-SkiaSharp/ai-repro/{number}.json.
+.DESCRIPTION Copies the repro JSON to the portable repository output path.
 .EXAMPLE  pwsh persist-repro.ps1 /tmp/skiasharp/repro/20250101-120000/3400.json
 #>
 param(
@@ -17,7 +17,11 @@ if ($number -notmatch '^\d+$') {
     exit 2
 }
 
-$dest = "output/ai/repos/mono-SkiaSharp/ai-repro/$number.json"
+$repoRoot = (git rev-parse --show-toplevel).Trim()
+if ($LASTEXITCODE -ne 0 -or !$repoRoot) { throw 'Unable to resolve the repository root.' }
+$identity = Get-Content (Join-Path $repoRoot 'scripts/infra/repository-identity.json') -Raw |
+    ConvertFrom-Json
+$dest = "output/ai/repos/$($identity.repositoryKey)/ai-repro/$number.json"
 New-Item -ItemType Directory -Force (Split-Path $dest) | Out-Null
 Copy-Item $Path $dest -Force
 Write-Host "✅ Persisted to $dest"

@@ -7,7 +7,7 @@ on:
     name: merge-message
     events: [pull_request_comment]
 
-if: github.repository == 'mono/SkiaSharp'
+if: github.repository_id == 52293126
 
 environment: gh-aw-agents
 
@@ -27,7 +27,9 @@ tools:
   github:
     allowed-repos:
       - mono/skiasharp
+      - dotnet/skiasharp
       - mono/skia
+      - dotnet/skia
       - google/skia
     min-integrity: none
     toolsets:

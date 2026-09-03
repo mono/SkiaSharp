@@ -45,6 +45,13 @@ import sys
 import urllib.request
 from pathlib import Path
 
+_INFRA_DIR = Path(__file__).resolve().parent.parent
+if str(_INFRA_DIR) not in sys.path:
+    sys.path.insert(0, str(_INFRA_DIR))
+from repository_identity import resolve_identity  # noqa: E402
+
+_IDENTITY = resolve_identity()
+
 # ── Paths & constants ────────────────────────────────────────────────────────
 
 DEFAULT_OUTPUT = Path("documentation/site/ai/dashboard-data.json")
@@ -397,9 +404,8 @@ def build_cadence(existing):
         "asOf": today_iso(),
         "scheduleUrl": prev_cadence.get(
             "scheduleUrl", "https://chromiumdash.appspot.com/schedule"),
-        "prsUrl": prev_cadence.get(
-            "prsUrl",
-            "https://github.com/mono/SkiaSharp/pulls?q=is%3Apr+milestone+in%3Atitle"),
+        "prsUrl": "{}/pulls?q=is%3Apr+milestone+in%3Atitle".format(
+            _IDENTITY["repositoryUrl"]),
         "caption": prev_cadence.get(
             "caption",
             "AI opens, tests, and lands the sync PR; humans review the API."),
@@ -459,9 +465,8 @@ def main(argv=None):
         "adoption": build_adoption(existing),
         "cadence": build_cadence(existing),
         "cost": build_cost(existing),
-        "footerUrl": existing.get(
-            "footerUrl",
-            "https://github.com/mono/SkiaSharp/tree/main/.github/workflows"),
+        "footerUrl": "{}/tree/main/.github/workflows".format(
+            _IDENTITY["repositoryUrl"]),
     }
 
     text = json.dumps(result, indent=2, ensure_ascii=False) + "\n"

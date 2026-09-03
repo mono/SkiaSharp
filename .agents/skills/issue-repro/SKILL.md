@@ -42,13 +42,22 @@ Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON +
 
 1. **Read the issue** (preferred):
    ```bash
-   CACHE=".data-cache/repos/mono-SkiaSharp"
+   REPOSITORY=$(python3 scripts/infra/repository_identity.py get repository)
+   REPO_KEY=$(python3 scripts/infra/repository_identity.py get repositoryKey)
+   LEGACY_KEY=$(python3 scripts/infra/repository_identity.py get legacyRepositoryKeys | jq -r '.[0]')
    [ -d ".data-cache" ] || git worktree add .data-cache docs-data-cache
    git -C .data-cache pull --rebase origin docs-data-cache
-   cat $CACHE/github/items/{number}.json
+   find_cache_file() {
+     for cache in ".data-cache/repos/$REPO_KEY" ".data-cache/repos/$LEGACY_KEY"; do
+       [ -f "$cache/$1" ] && { printf '%s\n' "$cache/$1"; return 0; }
+     done
+     return 1
+   }
+   ISSUE_FILE=$(find_cache_file "github/items/{number}.json")
+   cat "$ISSUE_FILE"
    ```
-   **Fallback:** `gh issue view {number} --repo mono/SkiaSharp --json title,body,labels,comments,state,createdAt,closedAt,author`
-2. **Triage boost** — if `$CACHE/ai-triage/{number}.json` exists, extract `classification.platforms[]`, `evidence.bugSignals`, `analysis.nextQuestions[]`, and `output.actionability.suggestedReproPlatform` as **hints** (verify independently). The `suggestedReproPlatform` (`linux`|`macos`|`windows`) indicates which CI runner was selected for reproduction.
+   **Fallback:** `gh issue view {number} --repo "$REPOSITORY" --json title,body,labels,comments,state,createdAt,closedAt,author`
+2. **Triage boost** — if `TRIAGE=$(find_cache_file "ai-triage/{number}.json")` succeeds, extract `classification.platforms[]`, `evidence.bugSignals`, `analysis.nextQuestions[]`, and `output.actionability.suggestedReproPlatform` as **hints** (verify independently). The `suggestedReproPlatform` (`linux`|`macos`|`windows`) indicates which CI runner was selected for reproduction.
 
 ---
 

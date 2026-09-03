@@ -23,13 +23,14 @@ set -euo pipefail
 
 BASE_BRANCH="${base_branch:?base_branch not set — source skia-sync-detect.sh first}"
 SKIA_BASE_BRANCH="${skia_base_branch:?skia_base_branch not set — source skia-sync-detect.sh first}"
+SKIA_REPOSITORY="${skia_repository:?skia_repository not set — source skia-sync-detect.sh first}"
 CURRENT="${current:?current not set — source skia-sync-detect.sh first}"
 UPSTREAM_REF="${upstream_ref:?upstream_ref not set — source skia-sync-detect.sh first}"
 WORKSPACE="${GITHUB_WORKSPACE:?GITHUB_WORKSPACE not set}"
 ENV_FILE="${GITHUB_ENV:?GITHUB_ENV not set}"
 SKIA_DIR="${WORKSPACE}/externals/skia"
 
-echo "Aligning submodule to origin/${BASE_BRANCH} (mono/skia ${SKIA_BASE_BRANCH})"
+echo "Aligning submodule to origin/${BASE_BRANCH} (${SKIA_REPOSITORY} ${SKIA_BASE_BRANCH})"
 git -C "$WORKSPACE" fetch origin "$BASE_BRANCH" 2>&1
 PARENT_BASE_SHA=$(git -C "$WORKSPACE" rev-parse "origin/${BASE_BRANCH}^{commit}")
 BASE_SUB_SHA=$(git -C "$WORKSPACE" ls-tree "origin/${BASE_BRANCH}" -- externals/skia | awk '{print $3}')

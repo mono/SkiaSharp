@@ -7,13 +7,18 @@ the package stays independently unit testable without a real repository.
 from __future__ import annotations
 
 import re
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 
-# The public GitHub repository these exact shipments and their GitHub Release
-# summaries belong to. Matches ``scripts/infra/docs/release-notes-data.py``'s
-# ``REPO`` -- kept as a separate literal here so this package has no required
-# import-time dependency on that sibling.
-REPO = "mono/SkiaSharp"
+_INFRA_DIR = Path(__file__).resolve().parents[2]
+if str(_INFRA_DIR) not in sys.path:
+    sys.path.insert(0, str(_INFRA_DIR))
+from repository_identity import resolve_identity  # noqa: E402
+
+IDENTITY = resolve_identity()
+REPO = IDENTITY["repository"]
+PUBLIC_SITE_BASE_URL = IDENTITY["publicSiteBaseUrl"]
 
 # Bump together with ``scripts/infra/docs/release-notes-data.py``'s
 # ``_DATA_JSON_FORMAT_VERSION`` -- a test in this package's ``tests/`` folder

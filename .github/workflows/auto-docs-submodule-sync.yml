@@ -26,6 +26,8 @@ jobs:
 
       - name: Initialize and update docs submodule
         run: |
+          IDENTITY=$(python3 scripts/infra/repository_identity.py json)
+          echo "DOCS_REPOSITORY=$(jq -r '.docsRepository' <<<"$IDENTITY")" >> "$GITHUB_ENV"
           git submodule update --init -- docs
           cd docs
           git fetch origin main
@@ -91,7 +93,7 @@ jobs:
           else
             gh pr create --base main --head "$BRANCH" \
               --title "Update docs submodule to latest main" \
-              --body "Automated update of the \`docs/\` submodule to track \`mono/SkiaSharp-API-docs\` main.
+              --body "Automated update of the \`docs/\` submodule to track \`$DOCS_REPOSITORY\` main.
 
           Created by [auto-docs-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-docs-submodule-sync.yml)."
           fi

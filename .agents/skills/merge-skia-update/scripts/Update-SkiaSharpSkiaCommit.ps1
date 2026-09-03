@@ -27,6 +27,10 @@ function Get-RemoteBranchSha {
 
 $repoRoot = git rev-parse --show-toplevel
 Set-Location $repoRoot
+$skiaGitUrl = (git config -f .gitmodules --get submodule.externals/skia.url).Trim()
+if (-not $skiaGitUrl) {
+    throw 'Unable to resolve externals/skia from .gitmodules.'
+}
 git check-ref-format --branch $SkiaSharpBranch | Out-Null
 git check-ref-format --branch $SkiaBranch | Out-Null
 
@@ -57,11 +61,11 @@ $manifestPath = Join-Path $repoRoot 'cgmanifest.json'
 $manifestBefore = Get-Content $manifestPath -Raw | ConvertFrom-Json
 $oldManifestSha = @(
     $manifestBefore.registrations |
-        Where-Object { $_.component.git.repositoryUrl -eq 'https://github.com/mono/skia.git' } |
+        Where-Object { $_.component.git.repositoryUrl -eq $skiaGitUrl } |
         ForEach-Object { $_.component.git.commitHash }
 )
 if ($oldManifestSha.Count -ne 1 -or $oldManifestSha[0] -ne $oldGitlink) {
-    throw "cgmanifest mono/skia SHA does not match the current gitlink $oldGitlink."
+    throw "cgmanifest Skia SHA does not match the current gitlink $oldGitlink."
 }
 
 git submodule update --init -- externals/skia | Out-Null
@@ -73,20 +77,20 @@ $mergedSha = git rev-parse "refs/remotes/origin/${SkiaBranch}^{commit}"
 
 $parents = (git rev-list --parents -n 1 $mergedSha) -split '\s+'
 if ($parents.Count -ne 3) {
-    throw "mono/skia $SkiaBranch tip $mergedSha is not a two-parent merge commit."
+    throw "Skia $SkiaBranch tip $mergedSha is not a two-parent merge commit."
 }
 if ($oldGitlink -notin $parents[1..2]) {
-    throw "mono/skia $SkiaBranch tip $mergedSha does not merge the parent PR gitlink $oldGitlink."
+    throw "Skia $SkiaBranch tip $mergedSha does not merge the parent PR gitlink $oldGitlink."
 }
 
 $oldTree = git rev-parse "${oldGitlink}^{tree}"
 $mergedTree = git rev-parse "${mergedSha}^{tree}"
 if ($mergedTree -ne $oldTree) {
-    throw "Merged mono/skia tree $mergedTree differs from the parent PR's reviewed tree $oldTree."
+    throw "Merged Skia tree $mergedTree differs from the parent PR's reviewed tree $oldTree."
 }
 
 Write-Host "SkiaSharp branch:  $SkiaSharpBranch @ $currentHead"
-Write-Host "mono/skia branch:  $SkiaBranch"
+Write-Host "Skia branch:       $SkiaBranch"
 Write-Host "Reviewed commit:   $oldGitlink"
 Write-Host "Merged commit:     $mergedSha"
 Write-Host "Identical tree:    $mergedTree"
@@ -107,11 +111,12 @@ git checkout --detach $mergedSha | Out-Null
 Set-Location $repoRoot
 
 $manifest = Get-Content $manifestPath -Raw
-$pattern = '(?s)("repositoryUrl"\s*:\s*"https://github\.com/mono/skia\.git"\s*,\s*"commitHash"\s*:\s*")[0-9a-fA-F]{40}(")'
+$escapedSkiaGitUrl = [regex]::Escape($skiaGitUrl)
+$pattern = '(?s)("repositoryUrl"\s*:\s*"' + $escapedSkiaGitUrl + '"\s*,\s*"commitHash"\s*:\s*")[0-9a-fA-F]{40}(")'
 $regex = [regex]::new($pattern)
 $matches = $regex.Matches($manifest)
 if ($matches.Count -ne 1) {
-    throw "Expected exactly one mono/skia git registration in cgmanifest.json; found $($matches.Count)."
+    throw "Expected exactly one paired Skia git registration in cgmanifest.json; found $($matches.Count)."
 }
 $updatedManifest = $regex.Replace(
     $manifest,
@@ -128,14 +133,14 @@ if ($unexpected -or $changed.Count -eq 0) {
 $manifestNow = Get-Content $manifestPath -Raw | ConvertFrom-Json
 $manifestSha = @(
     $manifestNow.registrations |
-        Where-Object { $_.component.git.repositoryUrl -eq 'https://github.com/mono/skia.git' } |
+        Where-Object { $_.component.git.repositoryUrl -eq $skiaGitUrl } |
         ForEach-Object { $_.component.git.commitHash }
 )
 Set-Location $skiaRoot
 $gitlinkNow = git rev-parse 'HEAD^{commit}'
 Set-Location $repoRoot
 if ($manifestSha.Count -ne 1 -or $manifestSha[0] -ne $mergedSha -or $gitlinkNow -ne $mergedSha) {
-    throw 'The updated gitlink and cgmanifest do not both match the merged mono/skia SHA.'
+    throw 'The updated gitlink and cgmanifest do not both match the merged Skia SHA.'
 }
 
 git add -- externals/skia cgmanifest.json | Out-Null
@@ -144,7 +149,7 @@ if ($staged.Count -eq 0 -or @($staged | Where-Object { $_ -notin @('cgmanifest.j
     throw "Unexpected staged paths: $($staged -join ', ')"
 }
 
-git commit -m 'Update Skia reference to merged commit' -m "mono/skia $SkiaBranch advanced from $oldGitlink to $mergedSha." | Out-Null
+git commit -m 'Update Skia reference to merged commit' -m "Skia $SkiaBranch advanced from $oldGitlink to $mergedSha." | Out-Null
 $newParentHead = git rev-parse 'HEAD^{commit}'
 git push origin "HEAD:refs/heads/$SkiaSharpBranch" | Out-Null
 

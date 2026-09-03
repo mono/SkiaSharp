@@ -23,6 +23,9 @@ param(
     [Parameter(Mandatory)]
     [string] $Version,
 
+    [ValidatePattern('^[^/]+/[^/]+$')]
+    [string] $Repository,
+
     [ValidateSet('DryRun', 'Apply', 'Push')]
     [string] $Mode = 'DryRun'
 )
@@ -36,7 +39,7 @@ Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
 $writeRemote = $Mode -eq 'Push'
 $modeDescription = $Mode.ToLowerInvariant()
 $root = Get-GitRepositoryRoot -Path $PSScriptRoot
-$repository = $ReleaseRepository
+$repository = if ($Repository) { $Repository } else { $ReleaseRepository }
 
 # Validates release identity and the title of an existing draft.
 function Assert-GitHubRelease([pscustomobject] $Release, [pscustomobject] $GitHubRelease) {

@@ -98,25 +98,27 @@ jobs:
           fi
 
           if [ -n "$PR_NUMBER" ]; then
+            REPOSITORY_NAME="${GITHUB_REPOSITORY#*/}"
             # Validate PR_NUMBER is a positive integer
             if ! [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
               echo "Invalid PR number: $PR_NUMBER"
               exit 1
             fi
             echo "artifact_name=staging-site-${PR_NUMBER}" >> $GITHUB_OUTPUT
-            echo "gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery/" >> $GITHUB_OUTPUT
-            echo "uno_gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery-uno/" >> $GITHUB_OUTPUT
-            echo "fiddle_base_href=/SkiaSharp/staging/${PR_NUMBER}/fiddle/" >> $GITHUB_OUTPUT
+            echo "gallery_base_href=/${REPOSITORY_NAME}/staging/${PR_NUMBER}/gallery/" >> $GITHUB_OUTPUT
+            echo "uno_gallery_base_href=/${REPOSITORY_NAME}/staging/${PR_NUMBER}/gallery-uno/" >> $GITHUB_OUTPUT
+            echo "fiddle_base_href=/${REPOSITORY_NAME}/staging/${PR_NUMBER}/fiddle/" >> $GITHUB_OUTPUT
             echo "is_staging=true" >> $GITHUB_OUTPUT
             echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
             echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
             echo "source_label=PR #${PR_NUMBER}" >> $GITHUB_OUTPUT
             echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
           else
+            REPOSITORY_NAME="${GITHUB_REPOSITORY#*/}"
             echo "artifact_name=main-site" >> $GITHUB_OUTPUT
-            echo "gallery_base_href=/SkiaSharp/gallery/" >> $GITHUB_OUTPUT
-            echo "uno_gallery_base_href=/SkiaSharp/gallery-uno/" >> $GITHUB_OUTPUT
-            echo "fiddle_base_href=/SkiaSharp/fiddle/" >> $GITHUB_OUTPUT
+            echo "gallery_base_href=/${REPOSITORY_NAME}/gallery/" >> $GITHUB_OUTPUT
+            echo "uno_gallery_base_href=/${REPOSITORY_NAME}/gallery-uno/" >> $GITHUB_OUTPUT
+            echo "fiddle_base_href=/${REPOSITORY_NAME}/fiddle/" >> $GITHUB_OUTPUT
             echo "is_staging=false" >> $GITHUB_OUTPUT
             echo "pr_number=" >> $GITHUB_OUTPUT
             echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
@@ -273,7 +275,6 @@ jobs:
             --output site/ai/dashboard-data.json \
             --base documentation/site/ai/dashboard-data.json \
             || echo "::warning::AI dashboard refresh failed; shipping committed snapshot"
-
           touch site/.nojekyll
 
           # Inject build info into landing page footer
@@ -360,6 +361,11 @@ jobs:
           # SkiaFiddle (Uno Platform) → /fiddle/
           cp -r output/skia-fiddle-publish/wwwroot site/fiddle
           uno_rewrite_dir site/fiddle "${FIDDLE_BASE_HREF%/}"
+
+          # Resolve current and paired repository links after every site source
+          # has been assembled. Generated release pages under /docs stay untouched.
+          python3 scripts/infra/repository_identity.py \
+            --repository "$GITHUB_REPOSITORY" render-site site
 
           echo "=== Site layout ==="
           find site -maxdepth 2 -type f | head -30
@@ -540,11 +546,12 @@ jobs:
         with:
           script: |
             const prNumber = ${{ needs.build.outputs.pr_number }};
-            const stagingUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/`;
-            const docsUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/docs/`;
-            const galleryUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/gallery/`;
-            const unoGalleryUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/gallery-uno/`;
-            const fiddleUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/fiddle/`;
+            const pagesBase = `https://${context.repo.owner}.github.io/${context.repo.repo}`;
+            const stagingUrl = `${pagesBase}/staging/${prNumber}/`;
+            const docsUrl = `${pagesBase}/staging/${prNumber}/docs/`;
+            const galleryUrl = `${pagesBase}/staging/${prNumber}/gallery/`;
+            const unoGalleryUrl = `${pagesBase}/staging/${prNumber}/gallery-uno/`;
+            const fiddleUrl = `${pagesBase}/staging/${prNumber}/fiddle/`;
 
             // Hidden marker to uniquely identify this workflow's comment
             const marker = '<!-- skiasharp-docs-staging-preview -->';

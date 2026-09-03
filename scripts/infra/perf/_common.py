@@ -19,8 +19,16 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from pathlib import Path
 
-USER_AGENT = "skiasharp-perf-tracker/1.0 (+https://github.com/mono/SkiaSharp)"
+INFRA_DIR = Path(__file__).resolve().parent.parent
+if str(INFRA_DIR) not in sys.path:
+    sys.path.insert(0, str(INFRA_DIR))
+from repository_identity import resolve_identity  # noqa: E402
+
+USER_AGENT = "skiasharp-perf-tracker/1.0 (+{})".format(
+    resolve_identity()["repositoryUrl"]
+)
 
 # SkiaSharp package feeds.
 EAP_INDEX_URL = (
