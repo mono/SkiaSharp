@@ -107,9 +107,9 @@ extends:
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     settings:
-      # Network isolation remains enforced, but this shared .NET policy permits
-      # required build egress and cleans the CFS rules after each job.
-      networkIsolationPolicy: Permissive,CFSClean
+      # Network isolation remains enforced, but these shared policies permit
+      # required build egress, including Google-hosted tooling, and clean CFS rules.
+      networkIsolationPolicy: Permissive,CFSClean,GoogleTools
     customBuildTags:
       - ES365AIMigrationTooling
     sdl:
