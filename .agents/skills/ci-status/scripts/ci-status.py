@@ -89,6 +89,7 @@ GITHUB_WORKFLOWS = [
     {"repo": "mono/SkiaSharp", "workflow": "release-milestones.yml", "name": "Release - Milestones", "scope": "global", "trigger": "dispatch"},
     {"repo": "mono/SkiaSharp", "workflow": "update-github-release-summaries.yml", "name": "Update GitHub Release summaries", "scope": "global", "trigger": "dispatch"},
     {"repo": "mono/SkiaSharp", "workflow": "release-tooling-tests.yml", "name": "Release - Tooling Tests", "scope": "branch", "trigger": "push"},
+    {"repo": "mono/SkiaSharp", "workflow": "automation-tooling-tests.yml", "name": "Automation - Tooling Tests", "scope": "branch", "trigger": "push"},
     # mono/SkiaSharp — PR Utilities (global: triggered by PR events, not branch-specific)
     {"repo": "mono/SkiaSharp", "workflow": "backport.yml", "name": "PR - Backport", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "rebase.yml", "name": "PR - Rebase", "scope": "global", "trigger": "event"},
