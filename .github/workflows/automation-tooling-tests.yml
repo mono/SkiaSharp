@@ -1,11 +1,13 @@
 name: Automation - Tooling Tests
 
 # Runs the repository's non-release automation test suites. These all existed and passed
-# locally but were wired to no workflow, so a regression in them reached `main` silently:
+# locally but were wired to no workflow, so a regression in them could reach `main`
+# silently:
 #
+#   * .agents/skills/ci-status/scripts/tests/       — the CI dashboard's workflow registry
 #   * .agents/skills/update-skia/scripts/*_test.py  — Skia milestone update tooling
 #   * .github/scripts/tests/skia-sync-detect.test.sh — the auto-skia-sync work detector
-#   * scripts/infra/perf/sizes/tests/                — the artifact-size PR intake
+#   * scripts/infra/perf/**/tests/                   — the artifact-size PR intake
 #
 # Release publishing tooling is covered separately by release-tooling-tests.yml. Paths are
 # kept tight on purpose: this must not become a catch-all that runs on every change.
@@ -17,8 +19,9 @@ on:
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
       - "scripts/infra/perf/**"
+      # Any workflow edit, so the registry test re-checks its tracked list. '*.yml' already
+      # covers the generated '*.lock.yml' files.
       - ".github/workflows/*.yml"
-      - ".github/workflows/*.lock.yml"
   push:
     branches: [main]
     paths:
@@ -27,7 +30,6 @@ on:
       - ".github/scripts/**"
       - "scripts/infra/perf/**"
       - ".github/workflows/*.yml"
-      - ".github/workflows/*.lock.yml"
   workflow_dispatch:
 
 permissions:
@@ -45,51 +47,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Run artifact-size intake tests
-        # These parse the workflow YAML, so PyYAML must be present.
-        run: |
-          set -euo pipefail
-          python3 -c "import yaml" 2>/dev/null \
-            || python3 -m pip install --quiet --break-system-packages pyyaml
-          python3 -m unittest discover -s scripts/infra/perf/sizes/tests -p "test_*.py"
-
       - name: Run ci-status workflow registry tests
         # Guards the CI dashboard against tracking workflows that no longer exist — a stale
         # entry does not error, it renders a GREEN row for a workflow that is not there.
         #
-        # The suite is on main as of #4932, so its absence is now a hard failure rather than
-        # something to tolerate: a step that passes while testing nothing is the very defect
-        # this suite exists to catch. Two paths could still pass silently, so both are closed.
-        #   * A renamed or moved directory. `unittest discover` does fail on one (exit 1), but
-        #     with a raw traceback, so the explicit check is kept purely to name the cause.
-        #   * An empty or non-matching directory. This exits 5 only from Python 3.12 onward
-        #     (cpython#106584) and 0 before it; ubuntu-latest ships 3.12.3, so the grep is
-        #     redundant today and load-bearing the moment an older interpreter is pinned.
-        #     `NO TESTS RAN` is written from the reporting path (`run == 0 and not skipped`
-        #     in unittest/runner.py), so it appears on every version regardless of exit code.
+        # Called directly rather than behind an existence check: on the runner's Python
+        # (3.12+) `unittest discover` fails loudly in both degenerate cases — exit 1
+        # (ImportError) if the directory is gone, exit 5 ("NO TESTS RAN") if it is empty.
+        # A guard here would only be able to turn those into a silent pass.
         run: |
           set -euo pipefail
-          dir=.agents/skills/ci-status/scripts/tests
-          if [ ! -d "$dir" ]; then
-            echo "::error::$dir is missing — the ci-status skill moved or was renamed."
-            exit 1
-          fi
-          python3 -c "import yaml" 2>/dev/null || python3 -m pip install --quiet --break-system-packages pyyaml
-          set +e
-          output=$(python3 -m unittest discover -s "$dir" -p "test_*.py" -v 2>&1)
-          status=$?
-          set -e
-          echo "$output"
-          if echo "$output" | grep -q "NO TESTS RAN"; then
-            echo "::error::$dir exists but contains no tests — the registry guard is not running."
-            exit 1
-          fi
-          exit $status
+          python3 -c "import yaml" 2>/dev/null \
+            || python3 -m pip install --quiet --break-system-packages pyyaml
+          python3 -m unittest discover -s .agents/skills/ci-status/scripts/tests -p "test_*.py" -v
+
+      - name: Run artifact-size intake tests
+        # Covers the hourly PR sweep: which builds are selected, and the comment stamp that
+        # keeps a measured build from being re-downloaded. Parses the workflow YAML, so
+        # PyYAML must be present.
+        run: |
+          set -euo pipefail
+          python3 -c "import yaml" 2>/dev/null \
+            || python3 -m pip install --quiet --break-system-packages pyyaml
+          python3 -m unittest discover -s scripts/infra/perf/sizes/tests -p "test_*.py" -v
 
       - name: Run perf HTTP contract tests
         # Pins the RuntimeError contract that feed_versions, track.enumerate_feed_packages
-        # and measure_pr.resolve_pr_number rely on to mean "absent".
-        run: python3 -m unittest discover -s scripts/infra/perf/tests -p "test_*.py"
+        # and measure_pr.resolve_pr_number all rely on to mean "absent".
+        run: python3 -m unittest discover -s scripts/infra/perf/tests -p "test_*.py" -v
 
       - name: Run update-skia tooling tests
         # These import their module under test by name, so they must run from their own
@@ -97,7 +82,13 @@ jobs:
         working-directory: .agents/skills/update-skia/scripts
         run: |
           set -euo pipefail
-          for test in *_test.py; do
+          shopt -s nullglob
+          tests=(*_test.py)
+          if [ ${#tests[@]} -eq 0 ]; then
+            echo "::error::No *_test.py found — the update-skia tests moved or were renamed."
+            exit 1
+          fi
+          for test in "${tests[@]}"; do
             echo "::group::$test"
             python3 -m unittest "${test%.py}"
             echo "::endgroup::"
