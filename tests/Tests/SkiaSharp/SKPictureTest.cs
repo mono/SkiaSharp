@@ -112,6 +112,59 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void CanRoundtripNestedPictureThroughSerialization()
+		{
+			// Guards against regressions from the M154 SkBigPicture -> SkPicture refactor
+			// (upstream b392fb672d). Records an outer picture that draws a nested SKPicture,
+			// serializes / deserializes it through the stable C API, and asserts observable
+			// contract parity + raster playback fidelity. Uses only stable public APIs and
+			// avoids byte-exact serialization or exact byte-count assertions.
+
+			var cullRect = SKRect.Create(0, 0, 40, 40);
+
+			using var nested = CreateTestPicture();
+
+			using var recorder = new SKPictureRecorder();
+			var recCanvas = recorder.BeginRecording(cullRect);
+			recCanvas.DrawPicture(nested);
+			using var original = recorder.EndRecording();
+
+			var originalOpCount = original.ApproximateOperationCount;
+			var originalOpCountWithNested = original.GetApproximateOperationCount(true);
+
+			using var data = original.Serialize();
+			Assert.NotNull(data);
+
+			using var deserialized = SKPicture.Deserialize(data);
+			Assert.NotNull(deserialized);
+
+			// CullRect parity (exact — CullRect is round-tripped through the format).
+			Assert.Equal(original.CullRect, deserialized.CullRect);
+			Assert.Equal(cullRect, deserialized.CullRect);
+
+			// Approximate operation-count parity for both the shallow and nested variants.
+			// Cross-milestone-safe: assert equality between original and deserialized,
+			// not a specific magic number that could shift with internal storage changes.
+			Assert.Equal(originalOpCount, deserialized.ApproximateOperationCount);
+			Assert.Equal(originalOpCountWithNested, deserialized.GetApproximateOperationCount(true));
+
+			// The nested variant must not be smaller than the shallow variant.
+			Assert.True(deserialized.GetApproximateOperationCount(true) >= deserialized.ApproximateOperationCount);
+
+			// ApproximateBytesUsed is internal storage — only assert positivity, never an
+			// exact value: the M154 refactor may shift internal byte accounting.
+			Assert.True(deserialized.ApproximateBytesUsed > 0);
+
+			// Raster playback parity: the deserialized picture must reproduce the same
+			// pixels as the nested test bitmap.
+			using var bmp = new SKBitmap(40, 40);
+			using var cnv = new SKCanvas(bmp);
+			deserialized.Playback(cnv);
+
+			ValidateTestBitmap(bmp);
+		}
+
+		[Fact]
 		public void EncodesImageIntoPicture()
 		{
 			// create an image

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 using Xunit;
 
@@ -467,6 +468,75 @@ namespace SkiaSharp.Tests
 				Assert.Equal("80", rect.Attribute("width")?.Value);
 				Assert.Equal("80", rect.Attribute("height")?.Value);
 			}
+		}
+
+		[Fact]
+		public void SvgCanvasEmitsFilterDefinitionForSrcInColorFilter()
+		{
+			// Guards against structural regressions in the SVG filter DAG emitted by
+			// SKSvgCanvas when a SrcIn blend-mode SKColorFilter is applied to a paint.
+			// This is the M153/M154 shared invariant for the SVG filter-emission code path
+			// touched by upstream 7788196ddd and 15db98a90b: assert only that the
+			// filter definition + reference wiring are structurally correct on BOTH
+			// milestones. Do NOT assert in2="SourceGraphic" (M154 fix), the specific
+			// set of feBlend elements (M154-only expansion), or exact XML text/order.
+
+			var stream = new MemoryStream();
+
+			using (var svg = SKSvgCanvas.Create(SKRect.Create(100, 100), stream))
+			using (var colorFilter = SKColorFilter.CreateBlendMode(SKColors.Red, SKBlendMode.SrcIn))
+			using (var paint = new SKPaint
+			{
+				Color = SKColors.Blue,
+				Style = SKPaintStyle.Fill,
+				ColorFilter = colorFilter,
+			})
+			{
+				svg.DrawRect(SKRect.Create(10, 10, 80, 80), paint);
+			}
+
+			stream.Position = 0;
+
+			using var reader = new StreamReader(stream);
+			var xml = reader.ReadToEnd();
+			var xdoc = XDocument.Parse(xml);
+
+			var svgRoot = xdoc.Root;
+			var ns = svgRoot.Name.Namespace;
+
+			// (1) Exactly one <filter> element with a non-empty id.
+			var filters = xdoc.Descendants(ns + "filter").ToList();
+			Assert.Single(filters);
+
+			var filter = filters[0];
+			var filterId = filter.Attribute("id")?.Value;
+			Assert.False(string.IsNullOrEmpty(filterId));
+
+			// (2) Inside the filter, an <feFlood> primitive with flood-color and
+			// flood-opacity attributes.
+			var feFloods = filter.Descendants(ns + "feFlood").ToList();
+			Assert.NotEmpty(feFloods);
+
+			var feFlood = feFloods[0];
+			Assert.False(string.IsNullOrEmpty(feFlood.Attribute("flood-color")?.Value));
+			Assert.False(string.IsNullOrEmpty(feFlood.Attribute("flood-opacity")?.Value));
+
+			// (3) An <feComposite> primitive with operator="in" and in="flood".
+			// This is the shape of the SrcIn masking primitive on both M153 and M154.
+			// (M154 additionally sets in2="SourceGraphic"; we do not assert that.)
+			var feComposites = filter.Descendants(ns + "feComposite").ToList();
+			var srcInComposite = feComposites.FirstOrDefault(e =>
+				e.Attribute("operator")?.Value == "in" &&
+				e.Attribute("in")?.Value == "flood");
+			Assert.NotNull(srcInComposite);
+
+			// (4) The painted <rect> references the filter via filter="url(#{filterId})".
+			var rect = xdoc.Descendants(ns + "rect")
+				.FirstOrDefault(e => e.Attribute("filter") != null);
+			Assert.NotNull(rect);
+
+			var filterAttr = rect.Attribute("filter").Value;
+			Assert.Equal($"url(#{filterId})", filterAttr);
 		}
 
 		[Theory]
