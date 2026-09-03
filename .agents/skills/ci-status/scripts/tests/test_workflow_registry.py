@@ -305,5 +305,56 @@ class CollectorWiringTests(unittest.TestCase):
             "The report's github_workflows payload is not the tracked registry.")
 
 
+class WorkflowInvokesWhatItGuardsTests(unittest.TestCase):
+    """The workflow that runs these suites must also trigger on what they cover.
+
+    Everything above tests the suite. Nothing tested the layer that *invokes* it, and
+    that layer has a silent failure of its own: delete an entry from the workflow's
+    `paths:` filter and the suite simply stops running for changes in that area. No
+    test fails, no run goes red — the guard is gone and CI stays green, which is the
+    same "healthy-looking but absent" shape this whole suite exists to catch.
+    """
+
+    WORKFLOW = "automation-tooling-tests.yml"
+
+    def _workflow(self):
+        path = os.path.join(WORKFLOW_DIR, self.WORKFLOW)
+        if not os.path.isfile(path):
+            self.skipTest(f"{self.WORKFLOW} is not present on this branch")
+        return load_workflow(self.WORKFLOW)
+
+    @staticmethod
+    def _suite_roots(workflow):
+        """Directories the workflow's steps actually execute tests from."""
+        roots = set()
+        for step in workflow["jobs"]["test"]["steps"]:
+            run = step.get("run", "")
+            if step.get("working-directory"):
+                roots.add(step["working-directory"].strip("/"))
+            # Anchored on `unittest discover` rather than a bare `-s`, which would also
+            # match unrelated shell options such as `shopt -s nullglob`.
+            for m in re.finditer(r"unittest\s+discover\s+-s\s+(\S+)", run):
+                roots.add(m.group(1).strip("/"))
+            for m in re.finditer(r"bash\s+(\S+\.sh)", run):
+                roots.add(os.path.dirname(m.group(1).strip("/")))
+        return {r for r in roots if r}
+
+    def test_every_suite_it_runs_is_in_its_own_paths_filter(self):
+        workflow = self._workflow()
+        block = on_block(workflow)
+        roots = self._suite_roots(workflow)
+        self.assertTrue(roots, "Found no test directories in the workflow's steps.")
+
+        for event in ("pull_request", "push"):
+            patterns = [p.rstrip("*").rstrip("/") for p in (block[event]["paths"] or [])]
+            uncovered = [r for r in roots
+                         if not any(r == p or r.startswith(p + "/") for p in patterns)]
+            self.assertEqual(
+                [], uncovered,
+                f"{self.WORKFLOW} runs suites under {uncovered} but its {event} "
+                f"paths filter does not cover them — a change there would not run "
+                f"them, and nothing would report that.")
+
+
 if __name__ == "__main__":
     unittest.main()
