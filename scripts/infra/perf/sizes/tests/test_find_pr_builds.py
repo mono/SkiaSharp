@@ -346,6 +346,24 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(3, self.raw.count("python3 scripts/infra/perf/sizes/pr_comment.py"))
         self.assertNotIn("skiasharp-pr-artifact-sizes", self.raw)
 
+    def test_every_writer_is_given_the_build_and_its_packaging_time(self):
+        """Omitting --packaged-at is silent and permanent.
+
+        compose() then stamps with the sweep's own clock, which is later than the packaging
+        time it stands for, so a genuine re-run packaged before that moment compares as
+        already-reported and is never measured. Nothing fails; the report simply stops
+        updating. The flags are asserted per invocation rather than by total count, so moving
+        one to a step that does not need it cannot pass.
+        """
+        invocations = self.raw.split("python3 scripts/infra/perf/sizes/pr_comment.py")[1:]
+        self.assertEqual(3, len(invocations))
+        for i, call in enumerate(invocations):
+            args = call.split("- name:")[0]
+            self.assertIn("--packaged-at", args, f"pr_comment.py call {i} omits --packaged-at")
+            self.assertIn("--build", args, f"pr_comment.py call {i} omits --build")
+            self.assertIn("matrix.packagedAt", args, f"call {i} passes a literal, not the matrix")
+            self.assertIn("matrix.build", args, f"call {i} passes a literal, not the matrix")
+
     def test_matrix_guarded_against_empty_string(self):
         """strategy.matrix expands BEFORE the job `if:`, so fromJSON('') fails the run."""
         self.assertIn("steps.builds.outputs.matrix || '[]'", self.raw)
