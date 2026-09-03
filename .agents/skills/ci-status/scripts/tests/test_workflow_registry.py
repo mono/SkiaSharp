@@ -270,6 +270,40 @@ class CollectorWiringTests(unittest.TestCase):
             len(GITHUB_WORKFLOWS), len(collected),
             "collect_github_data returned a different number of entries than it tracks.")
 
+    def test_report_carries_the_collected_workflows_through_unchanged(self):
+        """The assembly layer must not drop or filter what the collector returned.
+
+        Covering collect_github_data is not enough: the payload is assembled a layer up,
+        and that join can silently narrow the result. Replacing the assignment with a
+        filtered comprehension — the same 'drop the branch-scoped entries' mistake this
+        suite catches one level down — leaves a report that still looks complete.
+        `branches=[]` skips the Azure DevOps loop entirely, so this needs no `az`.
+        """
+        # Shaped like a real entry so a filtering mutation fails on the assertion below
+        # rather than incidentally raising KeyError on a missing field.
+        sentinel = [
+            {"repo": "mono/SkiaSharp", "workflow": "sentinel-a.yml", "name": "Sentinel A",
+             "scope": "branch", "trigger": "push", "branches": [], "runs": [],
+             "stats": None, "error": None},
+            {"repo": "mono/SkiaSharp", "workflow": "sentinel-b.yml", "name": "Sentinel B",
+             "scope": "global", "trigger": "schedule", "branches": [], "runs": [],
+             "stats": None, "error": None},
+        ]
+        original = COLLECTOR.collect_github_data
+        COLLECTOR.collect_github_data = lambda branches, top_builds: list(sentinel)
+        try:
+            data = COLLECTOR.collect_data([], 1, False)
+        finally:
+            COLLECTOR.collect_github_data = original
+
+        self.assertEqual(
+            sentinel, data["github_actions"],
+            "The report did not carry through what collect_github_data returned — the "
+            "assembly layer dropped, filtered or replaced it.")
+        self.assertEqual(
+            GITHUB_WORKFLOWS, data["github_workflows"],
+            "The report's github_workflows payload is not the tracked registry.")
+
 
 if __name__ == "__main__":
     unittest.main()
