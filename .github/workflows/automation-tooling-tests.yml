@@ -55,18 +55,40 @@ jobs:
 
       - name: Run ci-status workflow registry tests
         # Guards the CI dashboard against tracking workflows that no longer exist — a stale
-        # entry does not error, it renders a green row for a workflow that is not there.
-        # The suite arrives with #4932; the guard keeps this workflow green whichever of the
-        # two merges first, rather than coupling two otherwise independent PRs.
+        # entry does not error, it renders a GREEN row for a workflow that is not there.
+        #
+        # The suite arrives with #4932, so its absence is tolerated to keep the two PRs
+        # independent in either merge order. That tolerance is deliberately narrow, because
+        # a step that passes when it tests nothing is the very failure this suite exists to
+        # catch. Two silent-pass paths are therefore closed explicitly:
+        #   * the anchor directory (already on main) must exist, so moving or renaming the
+        #     skill fails loudly instead of looking like "not merged yet";
+        #   * `unittest discover` exits 0 with "NO TESTS RAN" on an empty directory, so a
+        #     discovered count of zero is treated as a failure.
+        # Once #4932 has merged, drop the tolerance and call unittest directly.
         run: |
           set -euo pipefail
-          dir=.agents/skills/ci-status/scripts/tests
+          anchor=.agents/skills/ci-status/scripts
+          dir="$anchor/tests"
+          if [ ! -d "$anchor" ]; then
+            echo "::error::$anchor is missing — the ci-status skill moved or was renamed."
+            exit 1
+          fi
           if [ ! -d "$dir" ]; then
             echo "::notice::$dir not present yet (arrives with #4932); skipping."
             exit 0
           fi
           python3 -c "import yaml" 2>/dev/null || python3 -m pip install --quiet --break-system-packages pyyaml
-          python3 -m unittest discover -s "$dir" -p "test_*.py"
+          set +e
+          output=$(python3 -m unittest discover -s "$dir" -p "test_*.py" -v 2>&1)
+          status=$?
+          set -e
+          echo "$output"
+          if echo "$output" | grep -q "NO TESTS RAN"; then
+            echo "::error::$dir exists but contains no tests — the registry guard is not running."
+            exit 1
+          fi
+          exit $status
 
       - name: Run perf HTTP contract tests
         # Pins the RuntimeError contract that feed_versions, track.enumerate_feed_packages
