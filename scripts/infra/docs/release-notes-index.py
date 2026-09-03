@@ -32,6 +32,7 @@ import json
 import re
 import sys
 import urllib.request
+from datetime import date, timedelta
 from pathlib import Path
 
 # ── reuse release-notes-data.py's shared low-level helpers (one source of truth) ─────
@@ -89,13 +90,13 @@ def live_unreleased_versions():
 
 def fetch_chrome_schedule(milestone, timeout=8):
     # type: (int, int) -> dict
-    """Return real Chrome phase dates for ``milestone`` from Chromium Dash.
+    """Return SkiaSharp release dates derived from one Chromium milestone.
 
-    Returns ``{"beta", "early_stable", "stable_cut", "stable"}`` -> ISO date
-    string. The schedule is required, so any problem (offline, timeout,
-    HTTP/JSON error, missing milestone or missing phase date) raises
+    Preview is one day after branch point, RC is stable cut, and stable is one
+    day after Chrome Stable. The schedule is required, so any problem (offline,
+    timeout, HTTP/JSON error, missing milestone or missing phase date) raises
     ``RuntimeError`` and fails generation loudly rather than emitting a
-    placeholder — a retry once connectivity is back recreates the page.
+    placeholder.
     """
     url = CHROME_SCHEDULE_URL.format(milestone)
     try:
@@ -115,19 +116,20 @@ def fetch_chrome_schedule(milestone, timeout=8):
             "Chrome schedule for m{} returned no milestone data".format(milestone))
     ms = mstones[0]
     fields = {
-        "beta": "earliest_beta",
-        "early_stable": "early_stable",
-        "stable_cut": "stable_cut",
+        "preview": "branch_point",
+        "rc": "stable_cut",
         "stable": "stable_date",
     }
-    schedule = {}
+    dates = {}
     for phase, key in fields.items():
         value = ms.get(key)
         if not value:
             raise RuntimeError(
                 "Chrome schedule for m{} is missing '{}'".format(milestone, key))
-        schedule[phase] = value
-    return schedule
+        dates[phase] = date.fromisoformat(value[:10])
+    dates["preview"] += timedelta(days=1)
+    dates["stable"] += timedelta(days=1)
+    return {phase: value.isoformat() for phase, value in dates.items()}
 
 
 def _index_json_path():

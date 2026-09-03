@@ -170,6 +170,14 @@ Run this after previews and RCs as well as stable releases. Warnings about
 missing tags, milestones, or release boundaries block safe mutation and must
 be resolved rather than ignored.
 
+The maintained cadence follows Chromium's overlapping two-week trains:
+
+| Stage | Target date |
+| --- | --- |
+| Preview 1 | One day after Chromium branch point |
+| RC 1 | Chromium stable cut |
+| Stable | One day after Chromium Stable |
+
 ## 7. Complete the follow-up pull requests
 
 Review and merge the automation PRs through the normal repository process:

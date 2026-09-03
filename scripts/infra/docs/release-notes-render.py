@@ -681,14 +681,13 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
             "",
             "SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor "
             "version corresponds to a Chrome/Skia milestone and progresses through "
-            "four phases:",
+            "three phases:",
             "",
-            "| Chrome Event | SkiaSharp Release | Purpose |",
+            "| Timing | SkiaSharp Release | Purpose |",
             "|---|---|---|",
-            "| Beta Promotion | Preview 1 | Merge upstream Skia, ship initial preview |",
-            "| Early Stable | Preview 2 | Bug fixes and API additions from preview feedback |",
-            "| Stable Cut | RC | Critical bug fixes only, no new features |",
-            "| Stable Release | Stable | Ship to NuGet.org, tag and create GitHub Release |",
+            "| One day after branch point | Preview 1 | Merge upstream Skia and ship the initial preview |",
+            "| Stable cut | RC 1 | Incorporate preview feedback and stabilize |",
+            "| One day after Chrome Stable | Stable | Ship to NuGet.org, tag and create the GitHub Release |",
             "",
         ])
         lines.extend(render_cadence_timeline(
@@ -699,11 +698,10 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
             "phase, the next begins its preview phase.",
             "",
             "> [!NOTE]",
-            "> Starting with Chrome 153 (September 2026), Chrome moves from a "
-            "4-week to a 3-week release cycle. Because SkiaSharp's cadence is "
-            "driven by Chrome's actual schedule events, the phases above will "
-            "naturally compress — preview through stable will complete in ~3 weeks "
-            "instead of ~4.",
+            "> [Starting with Chrome 153](https://developer.chrome.com/blog/chrome-two-week-release) "
+            "(September 2026), Chrome ships milestones every two weeks. Each "
+            "milestone still takes about three weeks from branch point to Stable, "
+            "so adjacent release trains overlap.",
             "",
             "### Versioning",
             "",
@@ -712,7 +710,7 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
             "`" + next_ver + "` ships alongside Chrome " + str(next_ms) + "'s "
             "stable release.",
             "",
-            "- Preview: `" + next_ver + "-preview.1`, `" + next_ver + "-preview.2`",
+            "- Preview: `" + next_ver + "-preview.1`",
             "- Release candidate: `" + next_ver + "-rc.1`",
             "- Stable: `" + next_ver + "`",
             "",
@@ -792,10 +790,9 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
     schedule is a hard error — re-run release-notes-index.py to refresh index.json.
     """
     phases = [
-        ("Beta Promotion", "beta", ".0-preview.1"),
-        ("Early Stable", "early_stable", ".0-preview.2"),
-        ("Stable Cut", "stable_cut", ".0-rc.1"),
-        ("Stable Release", "stable", ".0"),
+        ("Preview 1", "preview", ".0-preview.1"),
+        ("RC 1", "rc", ".0-rc.1"),
+        ("Stable", "stable", ".0"),
     ]
     schedule_by_ms = schedule_by_ms or {}
     cur_sched = schedule_by_ms.get(str(cur_ms))

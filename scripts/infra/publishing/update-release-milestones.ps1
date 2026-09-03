@@ -38,9 +38,6 @@ $root = Get-GitRepositoryRoot
 $scheduleUrl = 'https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone={0}'
 $requiredScheduleFields = @(
     'branch_point',
-    'earliest_beta',
-    'early_stable_cut',
-    'early_stable',
     'stable_cut',
     'stable_date'
 )
@@ -125,40 +122,31 @@ function Get-ChromiumSchedule([int] $Milestone) {
     return $schedule
 }
 
-# Maps a Chromium schedule to the four SkiaSharp release milestones.
+# Maps a Chromium schedule to the preview, release candidate, and stable milestones.
 function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int] $Major) {
     $branch = ConvertTo-ScheduleDate $Schedule.branch_point
-    $beta = ConvertTo-ScheduleDate $Schedule.earliest_beta
-    $earlyCut = ConvertTo-ScheduleDate $Schedule.early_stable_cut
-    $earlyStable = ConvertTo-ScheduleDate $Schedule.early_stable
+    $preview = $branch.AddDays(1)
     $stableCut = ConvertTo-ScheduleDate $Schedule.stable_cut
-    $stable = ConvertTo-ScheduleDate $Schedule.stable_date
+    $chromeStable = ConvertTo-ScheduleDate $Schedule.stable_date
+    $stable = $chromeStable.AddDays(1)
     $base = "$Major.$Milestone.0"
     $separator = [char] 0x00b7
     return @(
         [pscustomobject] @{
             Title = "$base-preview.1"
-            Due = $beta
-            DueOn = Format-GitHubDueOn $beta
+            Due = $preview
+            DueOn = Format-GitHubDueOn $preview
             Description = (
                 "Skia m$Milestone preview.1 $separator Start $(Format-ScheduleDate $branch) $separator " +
-                'Merge Skia sync PR and ship preview.')
-        }
-        [pscustomobject] @{
-            Title = "$base-preview.2"
-            Due = $earlyStable
-            DueOn = Format-GitHubDueOn $earlyStable
-            Description = (
-                "Skia m$Milestone preview.2 $separator Start $(Format-ScheduleDate $earlyCut) $separator " +
-                'Bug fixes and API additions from preview.1 feedback.')
+                'Merge the Skia sync PR and ship the first preview one day after branch point.')
         }
         [pscustomobject] @{
             Title = "$base-rc.1"
             Due = $stableCut
             DueOn = Format-GitHubDueOn $stableCut
             Description = (
-                "Skia m$Milestone RC $separator Start $(Format-ScheduleDate $earlyStable) $separator " +
-                'Critical bug fixes only, no new features.')
+                "Skia m$Milestone RC $separator Start $(Format-ScheduleDate $preview) $separator " +
+                'Incorporate preview feedback and stabilize the release candidate.')
         }
         [pscustomobject] @{
             Title = $base
@@ -166,7 +154,7 @@ function New-DesiredReleaseMilestones([object] $Schedule, [int] $Milestone, [int
             DueOn = Format-GitHubDueOn $stable
             Description = (
                 "Skia m$Milestone stable $separator Start $(Format-ScheduleDate $stableCut) $separator " +
-                'Ship to NuGet.org, tag and create GitHub Release.')
+                "Critical fixes only; ship one day after Chrome Stable ($(Format-ScheduleDate $chromeStable)).")
         }
     )
 }
