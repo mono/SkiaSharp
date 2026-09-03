@@ -158,6 +158,29 @@ class SelectTests(unittest.TestCase):
         self.assertEqual([], select())
 
 
+class DefaultWiringTests(unittest.TestCase):
+    """select() must consult the real helpers when the caller injects nothing.
+
+    Every SelectTests case passes `stage=` and `reported=`, so the default arms never run
+    there. Rewriting `reported or (lambda pr: read_stamp(repo, pr))` to return None disables
+    dedupe outright — the ~1.1 GB-per-hour re-download this workflow exists to stop — and the
+    rest of the suite stays green, because it is testing injected fakes rather than the wiring.
+    """
+
+    def test_defaults_consult_the_real_helpers(self):
+        calls = []
+        original = f.packaged_at, f.read_stamp
+        f.packaged_at = lambda b, **kw: calls.append(("stage", b)) or T1
+        f.read_stamp = lambda repo, pr, **kw: calls.append(("stamp", pr)) or parse_iso_utc(T1)
+        try:
+            got = f.select("o/r", 2, builds=lambda: {10: build(500, 10)})
+        finally:
+            f.packaged_at, f.read_stamp = original
+        self.assertEqual([("stage", 500), ("stamp", 10)], calls,
+                         "select() bypassed a real helper, so its default wiring is untested")
+        self.assertEqual([], got, "a build already reported at that time must be skipped")
+
+
 class StampTests(unittest.TestCase):
     """Reading the stamp back out of the PR comment."""
 
