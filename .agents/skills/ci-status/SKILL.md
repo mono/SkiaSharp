@@ -86,6 +86,7 @@ standard Darc/Maestro stages.
 | Release - Milestones | mono/SkiaSharp | Workflow dispatch | Milestone reconciliation stops |
 | Update GitHub Release summaries | mono/SkiaSharp | Workflow dispatch | Release bodies go stale |
 | Release - Tooling Tests | mono/SkiaSharp | Push/PR to release tooling | Release scripts regress unnoticed |
+| Automation - Tooling Tests | mono/SkiaSharp | Push/PR to automation tooling | Automation scripts regress unnoticed |
 | PR - Backport | mono/SkiaSharp | PR label/comment | Cherry-picks to release branches fail |
 | PR - Rebase | mono/SkiaSharp | PR comment | PR rebase automation broken |
 | PR - Artifacts Comment | mono/SkiaSharp | Workflow run events | Build links not posted to PRs |
@@ -247,7 +248,7 @@ For each tracked GitHub Actions workflow:
     (broken = user-facing impact or release process blocked)
   - **Medium**: Sync - Docs Submodule, Sync - Skia Submodule, Fixer - Memory Leak, Fixer - Performance,
     Sync - Issue Triage, Sync - Issue Template Versions, Tests - Binding Generation Determinism,
-    Release - Milestones, Update GitHub Release summaries,
+    Automation - Tooling Tests, Release - Milestones, Update GitHub Release summaries,
     PR - Backport, Pages - Go Live! (broken = automation degraded, manual workaround exists)
   - **Low**: Pages - PR Staging - Cleanup, Pages - PR Staging - Sweep Stale, PR - Rebase, PR - Artifacts Comment,
     Merge Message, Track - Artifact Sizes, Track - Benchmarks,
