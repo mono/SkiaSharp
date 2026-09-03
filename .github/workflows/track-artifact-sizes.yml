@@ -74,6 +74,7 @@ jobs:
   # Shared entrypoint: pick the mode and, for PR work, resolve the builds to measure.
   # --------------------------------------------------------------------------- #
   resolve:
+    name: Resolve mode and PR builds
     if: github.repository_owner == 'mono'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -152,6 +153,7 @@ jobs:
   # Nightly: measure feed packages, persist history, render the dashboard.
   # --------------------------------------------------------------------------- #
   nightly:
+    name: Measure the nightly feed packages
     needs: resolve
     if: needs.resolve.outputs.mode == 'nightly'
     runs-on: ubuntu-latest
@@ -234,6 +236,7 @@ jobs:
   # PR: measure the packages a PR build produced and post a size-diff comment.
   # --------------------------------------------------------------------------- #
   pr:
+    name: Measure a PR build's packages
     needs: resolve
     if: needs.resolve.outputs.matrix != '[]'
     runs-on: ubuntu-latest
