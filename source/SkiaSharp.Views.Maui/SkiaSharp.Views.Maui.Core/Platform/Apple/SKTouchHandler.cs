@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using CoreGraphics;
 using Foundation;
@@ -8,13 +9,13 @@ using UIKit;
 
 namespace SkiaSharp.Views.Maui.Platform
 {
-	internal class SKTouchHandler : UIGestureRecognizer
+	internal sealed class SKTouchHandler
 	{
 		private Action<SKTouchEventArgs>? onTouchAction;
 		private Func<double, double, SKPoint>? scalePixels;
-		private UIHoverGestureRecognizer? hoverGestureRecognizer;
-		private UIPanGestureRecognizer? scrollGestureRecognizer;
-		private ScrollGestureRecognizerDelegate? scrollGestureRecognizerDelegate;
+		private readonly TouchGestureRecognizer touchGestureRecognizer;
+		private readonly UIGestureRecognizer[] gestureRecognizers;
+		private readonly ScrollGestureRecognizerDelegate? scrollGestureRecognizerDelegate;
 		private readonly LegacyWheelDeltaProjector wheelDeltaProjector = new();
 		private CGPoint? lastPointerLocation;
 
@@ -23,29 +24,64 @@ namespace SkiaSharp.Views.Maui.Platform
 			this.onTouchAction = onTouchAction;
 			this.scalePixels = scalePixels;
 
+			var recognizers = new List<UIGestureRecognizer>();
+
+			touchGestureRecognizer = new TouchGestureRecognizer(FireTouchEvent);
+			recognizers.Add(touchGestureRecognizer);
+
+			if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsMacCatalystVersionAtLeast(13))
+			{
+				recognizers.Add(new UIHoverGestureRecognizer(OnHover)
+				{
+					CancelsTouchesInView = false,
+				});
+			}
+
+			if (OperatingSystem.IsIOSVersionAtLeast(13, 4) || OperatingSystem.IsMacCatalystVersionAtLeast(13, 4))
+			{
+				scrollGestureRecognizerDelegate = new ScrollGestureRecognizerDelegate();
+				recognizers.Add(new UIPanGestureRecognizer(OnScroll)
+				{
+					AllowedScrollTypesMask = UIScrollTypeMask.All,
+					AllowedTouchTypes = Array.Empty<NSNumber>(),
+					MaximumNumberOfTouches = 0,
+					CancelsTouchesInView = false,
+					Delegate = scrollGestureRecognizerDelegate,
+				});
+			}
+
+			gestureRecognizers = recognizers.ToArray();
 			DisablesUserInteraction = false;
 		}
 
 		public bool DisablesUserInteraction { get; set; }
 
+		public UIView? View =>
+			touchGestureRecognizer.View;
+
 		public void SetEnabled(UIView view, bool enableTouchEvents)
 		{
-			if (view != null)
+			if (!view.UserInteractionEnabled || DisablesUserInteraction)
+				view.UserInteractionEnabled = enableTouchEvents;
+
+			if (enableTouchEvents)
 			{
-				if (!view.UserInteractionEnabled || DisablesUserInteraction)
+				foreach (var recognizer in gestureRecognizers)
 				{
-					view.UserInteractionEnabled = enableTouchEvents;
+					if (recognizer.View != view)
+						view.AddGestureRecognizer(recognizer);
 				}
-				if (enableTouchEvents && view.GestureRecognizers?.Contains(this) != true)
+			}
+			else
+			{
+				foreach (var recognizer in gestureRecognizers)
 				{
-					view.AddGestureRecognizer(this);
-					AddPointerRecognizers(view);
+					if (recognizer.View == view)
+						view.RemoveGestureRecognizer(recognizer);
 				}
-				else if (!enableTouchEvents && view.GestureRecognizers?.Contains(this) == true)
-				{
-					RemovePointerRecognizers(view);
-					view.RemoveGestureRecognizer(this);
-				}
+
+				wheelDeltaProjector.Reset();
+				lastPointerLocation = null;
 			}
 		}
 
@@ -54,98 +90,13 @@ namespace SkiaSharp.Views.Maui.Platform
 			// clean the view
 			SetEnabled(view, false);
 
-			hoverGestureRecognizer?.Dispose();
-			hoverGestureRecognizer = null;
-			scrollGestureRecognizer?.Dispose();
-			scrollGestureRecognizer = null;
+			foreach (var recognizer in gestureRecognizers)
+				recognizer.Dispose();
 			scrollGestureRecognizerDelegate?.Dispose();
-			scrollGestureRecognizerDelegate = null;
-			lastPointerLocation = null;
 
 			// remove references
 			onTouchAction = null;
 			scalePixels = null;
-		}
-
-		public override void TouchesBegan(NSSet touches, UIEvent evt)
-		{
-			base.TouchesBegan(touches, evt);
-
-			foreach (UITouch touch in touches.Cast<UITouch>())
-			{
-				if (!FireEvent(SKTouchAction.Pressed, touch, true))
-				{
-					IgnoreTouch(touch, evt);
-				}
-			}
-		}
-
-		public override void TouchesMoved(NSSet touches, UIEvent evt)
-		{
-			base.TouchesMoved(touches, evt);
-
-			foreach (UITouch touch in touches.Cast<UITouch>())
-			{
-				FireEvent(SKTouchAction.Moved, touch, true);
-			}
-		}
-
-		public override void TouchesEnded(NSSet touches, UIEvent evt)
-		{
-			base.TouchesEnded(touches, evt);
-
-			foreach (UITouch touch in touches.Cast<UITouch>())
-			{
-				FireEvent(SKTouchAction.Released, touch, false);
-			}
-		}
-
-		public override void TouchesCancelled(NSSet touches, UIEvent evt)
-		{
-			base.TouchesCancelled(touches, evt);
-
-			foreach (UITouch touch in touches.Cast<UITouch>())
-			{
-				FireEvent(SKTouchAction.Cancelled, touch, false);
-			}
-		}
-
-		private void AddPointerRecognizers(UIView view)
-		{
-			if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsMacCatalystVersionAtLeast(13))
-			{
-				hoverGestureRecognizer ??= new UIHoverGestureRecognizer(OnHover)
-				{
-					CancelsTouchesInView = false,
-				};
-				view.AddGestureRecognizer(hoverGestureRecognizer);
-			}
-
-			if (OperatingSystem.IsIOSVersionAtLeast(13, 4) || OperatingSystem.IsMacCatalystVersionAtLeast(13, 4))
-			{
-				scrollGestureRecognizerDelegate ??= new ScrollGestureRecognizerDelegate();
-				scrollGestureRecognizer ??= new UIPanGestureRecognizer(OnScroll)
-				{
-					AllowedScrollTypesMask = UIScrollTypeMask.All,
-					AllowedTouchTypes = Array.Empty<NSNumber>(),
-					MaximumNumberOfTouches = 0,
-					CancelsTouchesInView = false,
-					Delegate = scrollGestureRecognizerDelegate,
-				};
-				view.AddGestureRecognizer(scrollGestureRecognizer);
-			}
-		}
-
-		private void RemovePointerRecognizers(UIView view)
-		{
-			if (hoverGestureRecognizer != null && view.GestureRecognizers?.Contains(hoverGestureRecognizer) == true)
-				view.RemoveGestureRecognizer(hoverGestureRecognizer);
-
-			if (scrollGestureRecognizer != null && view.GestureRecognizers?.Contains(scrollGestureRecognizer) == true)
-				view.RemoveGestureRecognizer(scrollGestureRecognizer);
-
-			wheelDeltaProjector.Reset();
-			lastPointerLocation = null;
 		}
 
 		private void OnHover(UIHoverGestureRecognizer recognizer)
@@ -257,7 +208,7 @@ namespace SkiaSharp.Views.Maui.Platform
 				otherGestureRecognizer is UIPinchGestureRecognizer;
 		}
 
-		private bool FireEvent(SKTouchAction actionType, UITouch touch, bool inContact)
+		private bool FireTouchEvent(SKTouchAction actionType, UITouch touch, bool inContact)
 		{
 			if (onTouchAction == null || scalePixels == null)
 				return false;
@@ -270,6 +221,51 @@ namespace SkiaSharp.Views.Maui.Platform
 			var args = new SKTouchEventArgs(id, actionType, point, inContact);
 			onTouchAction(args);
 			return args.Handled;
+		}
+
+		private sealed class TouchGestureRecognizer : UIGestureRecognizer
+		{
+			private readonly Func<SKTouchAction, UITouch, bool, bool> fireEvent;
+
+			public TouchGestureRecognizer(Func<SKTouchAction, UITouch, bool, bool> fireEvent)
+			{
+				this.fireEvent = fireEvent;
+			}
+
+			public override void TouchesBegan(NSSet touches, UIEvent evt)
+			{
+				base.TouchesBegan(touches, evt);
+
+				foreach (UITouch touch in touches.Cast<UITouch>())
+				{
+					if (!fireEvent(SKTouchAction.Pressed, touch, true))
+						IgnoreTouch(touch, evt);
+				}
+			}
+
+			public override void TouchesMoved(NSSet touches, UIEvent evt)
+			{
+				base.TouchesMoved(touches, evt);
+
+				foreach (UITouch touch in touches.Cast<UITouch>())
+					fireEvent(SKTouchAction.Moved, touch, true);
+			}
+
+			public override void TouchesEnded(NSSet touches, UIEvent evt)
+			{
+				base.TouchesEnded(touches, evt);
+
+				foreach (UITouch touch in touches.Cast<UITouch>())
+					fireEvent(SKTouchAction.Released, touch, false);
+			}
+
+			public override void TouchesCancelled(NSSet touches, UIEvent evt)
+			{
+				base.TouchesCancelled(touches, evt);
+
+				foreach (UITouch touch in touches.Cast<UITouch>())
+					fireEvent(SKTouchAction.Cancelled, touch, false);
+			}
 		}
 	}
 }
