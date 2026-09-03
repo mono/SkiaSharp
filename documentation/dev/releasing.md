@@ -106,7 +106,9 @@ This extra package validation is optional. To run it, use the repository's
 `release-testing` skill on each desired host with this copy-pasteable prompt:
 
 ```text
-Use the release-testing skill to validate SkiaSharp {exact CI package version} from BAR {BAR ID}. Run the full available matrix on this host and produce the release approval report.
+Use the release-testing skill to validate SkiaSharp {exact CI package version}
+from BAR {BAR ID}. Run the full available matrix on this host and produce the
+release approval report.
 ```
 
 If you run this gate, keep its report with the BAR ID, Build link, source branch
