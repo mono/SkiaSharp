@@ -310,12 +310,13 @@ namespace SkiaSharp
 
 		public void Add (string name, SKRuntimeEffectUniform value)
 		{
-			var index = Array.IndexOf (names, name);
-
-			if (index == -1)
+			// A single dictionary lookup both locates the uniform and detects a missing name,
+			// replacing the prior Array.IndexOf(names, name) linear scan plus a separate
+			// uniforms[name] indexer lookup (two string-comparison passes for one result).
+			// The dictionary keys are exactly `names`, so a miss here means the same thing
+			// the IndexOf == -1 check meant, and the thrown exception is unchanged.
+			if (!uniforms.TryGetValue (name, out var uniform))
 				throw new ArgumentOutOfRangeException (name, $"Variable was not found for name: '{name}'.");
-
-			var uniform = uniforms[name];
 
 			// validate the types first
 			if (!ValidateTypes (value.Type, uniform.Type, uniform.Flags.HasFlag (SKRuntimeEffectUniformFlagsNative.Array), uniform.Count))
