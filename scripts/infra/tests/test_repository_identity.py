@@ -433,6 +433,42 @@ class RepositoryIdentityTests(unittest.TestCase):
                 IDENTITY.scan_identity_drift(root),
             )
 
+    def test_transition_allowlist_is_limited_to_declaration_spans(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess = __import__("subprocess")
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            workflow = root / ".github" / "workflows" / "merge-message.md"
+            workflow.parent.mkdir(parents=True)
+            workflow.write_text(
+                'allowed-repos: ["MoNo/SkIaShArP", "DoTnEt/SkIaShArP"]\n'
+                "allowed-repos:\n"
+                "  - mono/skia\n"
+                "  - dotnet/skia\n"
+                'allowed-repos: ["mono/skiasharp", "dotnet/skiasharp"]; '
+                "REPO=mono/SkiaSharp\n"
+                'allowed=["mono/skia","dotnet/skia"]\n',
+                encoding="utf-8",
+            )
+            unrelated = root / ".github" / "workflows" / "other.md"
+            unrelated.write_text(
+                'allowed-repos: ["mono/skiasharp", "dotnet/skiasharp"]\n',
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                [
+                    ".github/workflows/merge-message.md:5: "
+                    'allowed-repos: ["mono/skiasharp", '
+                    '"dotnet/skiasharp"]; REPO=mono/SkiaSharp',
+                    ".github/workflows/merge-message.md:6: "
+                    'allowed=["mono/skia","dotnet/skia"]',
+                    ".github/workflows/other.md:1: "
+                    'allowed-repos: ["mono/skiasharp", '
+                    '"dotnet/skiasharp"]',
+                ],
+                IDENTITY.scan_identity_drift(root),
+            )
+
     def test_identity_scan_catches_all_legacy_identity_shapes(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -629,8 +665,8 @@ class RepositoryIdentityTests(unittest.TestCase):
             )
             schema.parent.mkdir(parents=True)
             schema.write_text(
-                '"$id": "https://github.com/mono/SkiaSharp/'
-                'triage-schema.json"\n',
+                '{"$id":"https://github.com/mono/SkiaSharp/'
+                'triage-schema.json"}\n',
                 encoding="utf-8",
             )
             self.assertEqual([], IDENTITY.scan_identity_drift(root))

@@ -180,7 +180,7 @@ _LEGACY_LITERAL_ALLOWLIST = (
     (
         ".agents/skills/issue-fix/references/fix-schema.json",
         re.compile(
-            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'"\$id"\s*:\s*"https://github\.com/mono/SkiaSharp/'
             r'fix-schema\.json"',
             re.IGNORECASE,
         ),
@@ -189,7 +189,7 @@ _LEGACY_LITERAL_ALLOWLIST = (
     (
         ".agents/skills/issue-repro/references/repro-schema.json",
         re.compile(
-            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'"\$id"\s*:\s*"https://github\.com/mono/SkiaSharp/'
             r'repro-schema\.json"',
             re.IGNORECASE,
         ),
@@ -198,7 +198,7 @@ _LEGACY_LITERAL_ALLOWLIST = (
     (
         ".agents/skills/issue-triage/references/triage-schema.json",
         re.compile(
-            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'"\$id"\s*:\s*"https://github\.com/mono/SkiaSharp/'
             r'triage-schema\.json"',
             re.IGNORECASE,
         ),
@@ -207,7 +207,7 @@ _LEGACY_LITERAL_ALLOWLIST = (
     (
         ".agents/skills/review-skia-update/references/skia-review-schema.json",
         re.compile(
-            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'"\$id"\s*:\s*"https://github\.com/mono/SkiaSharp/'
             r'skia-review-schema\.json"',
             re.IGNORECASE,
         ),
@@ -216,7 +216,7 @@ _LEGACY_LITERAL_ALLOWLIST = (
     (
         ".agents/skills/sample-scout/references/sample-scout-schema.json",
         re.compile(
-            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'"\$id"\s*:\s*"https://github\.com/mono/SkiaSharp/'
             r'sample-scout-schema\.json"',
             re.IGNORECASE,
         ),
@@ -225,7 +225,7 @@ _LEGACY_LITERAL_ALLOWLIST = (
     (
         ".agents/skills/security-audit/references/security-audit-schema.json",
         re.compile(
-            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'"\$id"\s*:\s*"https://github\.com/mono/SkiaSharp/'
             r'security-audit-schema\.json"',
             re.IGNORECASE,
         ),
@@ -234,7 +234,7 @@ _LEGACY_LITERAL_ALLOWLIST = (
     (
         ".agents/skills/skia-analyst/references/skia-analyst-schema.json",
         re.compile(
-            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'"\$id"\s*:\s*"https://github\.com/mono/SkiaSharp/'
             r'skia-analyst-schema\.json"',
             re.IGNORECASE,
         ),
@@ -493,6 +493,82 @@ def _is_scanned_path(relative: str) -> bool:
     )
 
 
+def _is_transition_allowlist_occurrence(
+    relative: str,
+    line: str,
+    content: str,
+    line_number: int | None,
+    legacy_match: re.Match[str],
+) -> bool:
+    if relative not in _TRANSITION_WORKFLOWS:
+        return False
+
+    pairs = {
+        "mono/skiasharp": "dotnet/skiasharp",
+        "mono/skia": "dotnet/skia",
+    }
+    old = legacy_match.group(0).lower()
+    new = pairs.get(old)
+    if new is None:
+        return False
+
+    inline = re.match(
+        r"^\s*allowed-repos\s*:\s*\[(?P<values>[^\]]*)\]",
+        line,
+        re.IGNORECASE,
+    )
+    if inline and (
+        inline.start("values") <= legacy_match.start()
+        and legacy_match.end() <= inline.end("values")
+    ):
+        values = {
+            match.group(0).lower()
+            for match in re.finditer(
+                r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+",
+                inline.group("values"),
+            )
+        }
+        return old in values and new in values
+
+    if line_number is None:
+        return False
+
+    item_pattern = re.compile(
+        r"^(?P<indent>\s*)-\s*[\"']?"
+        r"(?P<slug>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)"
+        r"[\"']?\s*(?:#.*)?$",
+        re.IGNORECASE,
+    )
+    item = item_pattern.fullmatch(line)
+    if not item or not (
+        item.start("slug") <= legacy_match.start()
+        and legacy_match.end() <= item.end("slug")
+    ):
+        return False
+
+    lines = content.splitlines()
+    index = line_number - 1
+    start = index
+    while start > 0 and item_pattern.fullmatch(lines[start - 1]):
+        start -= 1
+    if start == 0 or not re.fullmatch(
+        r"\s*allowed-repos\s*:\s*",
+        lines[start - 1],
+        re.IGNORECASE,
+    ):
+        return False
+
+    end = index + 1
+    while end < len(lines) and item_pattern.fullmatch(lines[end]):
+        end += 1
+    values = {
+        match.group("slug").lower()
+        for candidate in lines[start:end]
+        if (match := item_pattern.fullmatch(candidate))
+    }
+    return old in values and new in values
+
+
 def _legacy_allowlist_reason(
     relative: str,
     line: str,
@@ -500,6 +576,7 @@ def _legacy_allowlist_reason(
     *,
     in_code_fence: bool = False,
     legacy_match: re.Match[str] | None = None,
+    line_number: int | None = None,
 ) -> str | None:
     legacy_match = legacy_match or _LEGACY_IDENTITY_RE.search(line)
     if legacy_match is None:
@@ -563,18 +640,14 @@ def _legacy_allowlist_reason(
         return "test fixture"
     if relative.endswith(".lock.yml"):
         return "generated workflow"
-    if relative in _TRANSITION_WORKFLOWS:
-        pairs = (
-            ("mono/skiasharp", "dotnet/skiasharp"),
-            ("mono/skia", "dotnet/skia"),
-        )
-        lowered_line = line.lower()
-        matched_identity = legacy_match.group(0).lower()
-        if any(
-            matched_identity == old and new in lowered_line
-            for old, new in pairs
-        ):
-            return "temporary dual-owner gh-aw transition allowlist"
+    if _is_transition_allowlist_occurrence(
+        relative,
+        line,
+        content,
+        line_number,
+        legacy_match,
+    ):
+        return "temporary dual-owner gh-aw transition allowlist"
     if (
         relative == ".agents/skills/ci-status/scripts/ci-status.py"
         and legacy_match.group(0).lower() == "mono-skiasharp"
@@ -654,6 +727,7 @@ def scan_identity_drift(root: Path) -> list[str]:
                     content,
                     in_code_fence=code_fence is not None,
                     legacy_match=legacy_match,
+                    line_number=number,
                 )
                 for legacy_match in legacy_matches
             ):
