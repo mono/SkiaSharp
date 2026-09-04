@@ -2,11 +2,11 @@
 description: "Daily upstream Skia milestone sync - merges new commits, resolves conflicts, builds, tests, and creates PRs."
 
 # -- Engine ------------------------------------------------------------
-# Use Claude Opus for the primary update work. A controlled Sonnet 5 evaluation
-# was cheaper when successful, but did not achieve the required reliability.
+# Pin GPT-5.6 Sol for the primary update work so scheduled runs never fall back
+# to a lower default model.
 engine:
   id: copilot
-model: claude-opus-4.8
+model: gpt-5.6-sol
 
 # -- Triggers ----------------------------------------------------------
 # One fuzzy schedule every 6h. Scheduled runs pass no target, so the detector ROTATES:

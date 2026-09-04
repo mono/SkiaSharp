@@ -21,9 +21,9 @@ environment: gh-aw-agents
 
 # -- Engine ------------------------------------------------------------
 # Perf reasoning (a faithful, bit-exact optimization that must not change
-# rendering output) is hard and benefits from the stronger model, matching
-# memory-leak-fixer's choice.
-model: claude-opus-4.8
+# rendering output) needs strong coding, while mandatory benchmarks and parity
+# tests make Terra the best cost/capability tradeoff for this twice-daily workflow.
+model: gpt-5.6-terra
 engine:
   id: copilot
 # -- Triggers ----------------------------------------------------------
