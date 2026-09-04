@@ -5,6 +5,7 @@ Single source of truth for native dependencies: what's used, what's not, and how
 ## Contents
 
 - [Active Dependencies](#active-dependencies) — What SkiaSharp actually compiles
+- [Build Source Reports](#build-source-reports) — Runtime evidence for compliance review
 - [cgmanifest.json](#cgmanifestjson) — CVE detection setup
 - [Known False Positives](#known-false-positives) — CVEs that don't affect SkiaSharp
 
@@ -45,6 +46,38 @@ SkiaSharp uses only a subset of Skia's dependencies. Unused dependencies are com
 |------------|---------|-----------|
 | **piex** | RAW preview | All except Windows, WASM |
 | **buildtools** | Compiler toolchain | All |
+
+---
+
+## Build Source Reports
+
+Every SkiaSharp build, test, package, signing, and analysis job in Azure Pipelines enables Git
+Trace2 before checkout and publishes a `source_dependencies_<job>_<attempt>` artifact at the end
+of the job, including failed jobs. The artifact contains:
+
+- `source-dependencies.json` for aggregation and compliance tooling.
+- `source-dependencies.md` for human review.
+
+The report combines three sources so it does not depend on one manifest being complete:
+
+1. Runtime Git events, including Git processes started indirectly by Cake, `git-sync-deps`, and
+   `gclient`.
+2. Remotes and exact revisions from checked-out repositories that remain in the workspace.
+3. Declared repository URLs from `.gitmodules`, `DEPS`, `cgmanifest.json`, Cake files, build
+   scripts, Dockerfiles, and pipeline YAML.
+
+Runtime events are marked `observed`; static-only entries are marked `declared`. The latter expose
+source paths that exist in another platform or target but were not exercised by the current job.
+Container bootstrapper runs write Trace2 data into the mounted workspace so they are included in
+the same report.
+
+The raw Trace2 events can contain command-line details, so they remain in the agent temporary
+directory and are deleted after the sanitized report is generated. Credentials, URL user info,
+queries, and fragments are never copied to the report.
+
+This report intentionally covers source repositories and repository-backed source downloads. It
+does not inventory package feeds, SDK installers, operating-system packages, or arbitrary tool
+downloads; those need a separate software-bill-of-materials or network-egress report.
 
 ---
 

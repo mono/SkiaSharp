@@ -48,7 +48,16 @@ stages:
                 artifactName: arcade_shipping_signed
                 targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
                 condition: succeeded()
+              - output: pipelineArtifact
+                displayName: Publish signing source dependency report
+                artifactName: source_dependencies_sign_nugets_$(System.JobAttempt)
+                targetPath: '$(Build.SourcesDirectory)\output\source-dependencies\sign_nugets'
+                condition: always()
+                isProduction: false
           preSteps:
+            - template: /scripts/azure-templates-steps-source-dependencies.yml@self
+              parameters:
+                mode: start
             - checkout: self
               clean: true
               fetchDepth: 1
@@ -80,6 +89,10 @@ stages:
               env:
                 SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+            - template: /scripts/azure-templates-steps-source-dependencies.yml@self
+              parameters:
+                mode: finish
+
   - ${{ if eq(parameters.publishAssets, true) }}:
     - stage: publish_assets
       displayName: Register Arcade assets
@@ -98,7 +111,18 @@ stages:
               publish:
                 logs:
                   name: arcade_publish_logs
+            templateContext:
+              outputs:
+                - output: pipelineArtifact
+                  displayName: Publish Arcade manifest source dependency report
+                  artifactName: source_dependencies_generate_arcade_manifest_$(System.JobAttempt)
+                  targetPath: '$(Build.SourcesDirectory)\output\source-dependencies\generate_arcade_manifest'
+                  condition: always()
+                  isProduction: false
             preSteps:
+              - template: /scripts/azure-templates-steps-source-dependencies.yml@self
+                parameters:
+                  mode: start
               - checkout: self
                 clean: true
                 fetchDepth: 1
@@ -132,6 +156,10 @@ stages:
                 displayName: Generate Arcade V3 asset manifest
                 env:
                   SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+              - template: /scripts/azure-templates-steps-source-dependencies.yml@self
+                parameters:
+                  mode: finish
 
         - template: /eng/common/templates-official/job/publish-build-assets.yml@self
           parameters:

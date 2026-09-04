@@ -9,7 +9,18 @@ stages:
       - job: prepare
         displayName: Prepare Build
         pool: ${{ parameters.buildAgentHost.pool }}
+        templateContext:
+          outputs:
+            - output: pipelineArtifact
+              displayName: Publish prepare source dependency report
+              artifactName: source_dependencies_prepare_$(System.JobAttempt)
+              targetPath: output/source-dependencies/prepare
+              condition: always()
+              isProduction: false
         steps:
+          - template: /scripts/azure-templates-steps-source-dependencies.yml@self
+            parameters:
+              mode: start
           - checkout: self
             submodules: false
             fetchDepth: 1
@@ -19,6 +30,8 @@ stages:
             displayName: Validate build identity rules
           - pwsh: ./scripts/infra/security/tests/PrepareApiScanInputs.Tests.ps1
             displayName: Validate API Scan input preparation
+          - pwsh: ./scripts/infra/security/tests/SourceDependencyReport.Tests.ps1
+            displayName: Validate source dependency reporting
           - bash: python3 scripts/infra/caching/repo-deps.py validate
             displayName: Validate cache config coverage
           - bash: |
@@ -31,3 +44,6 @@ stages:
               python3 scripts/infra/caching/repo-deps.py cache-key \
                 --job all --name prepare ${BASE:+--base "$BASE"}
             displayName: Show dependency tree
+          - template: /scripts/azure-templates-steps-source-dependencies.yml@self
+            parameters:
+              mode: finish

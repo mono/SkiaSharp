@@ -630,7 +630,18 @@ stages:
             - tests_netcore_windows
             - tests_netcore_macos
             - tests_netcore_linux
+          templateContext:
+            outputs:
+              - output: pipelineArtifact
+                displayName: Publish coverage source dependency report
+                artifactName: source_dependencies_coverage_reports_$(System.JobAttempt)
+                targetPath: output/source-dependencies/coverage_reports
+                condition: always()
+                isProduction: false
           steps:
+            - template: /scripts/azure-templates-steps-source-dependencies.yml@self
+              parameters:
+                mode: start
             - checkout: self
             - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
               displayName: Configure build variables
@@ -654,6 +665,9 @@ stages:
               inputs:
                 codeCoverageTool: Cobertura
                 summaryFileLocation: 'output/**/Cobertura.xml'
+            - template: /scripts/azure-templates-steps-source-dependencies.yml@self
+              parameters:
+                mode: finish
 
     - stage: samples
       displayName: Samples

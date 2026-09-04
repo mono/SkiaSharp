@@ -71,6 +71,12 @@ jobs:
           condition: failed()
           artifactName: ${{ parameters.name }}_failed_$(System.JobAttempt)
           targetPath: 'output'
+        - output: pipelineArtifact
+          displayName: 'Publish the ${{ parameters.name }} source dependency report'
+          condition: always()
+          artifactName: source_dependencies_${{ parameters.name }}_$(System.JobAttempt)
+          targetPath: 'output/source-dependencies/${{ parameters.name }}'
+          isProduction: false
         - ${{ each additionalArtifact in parameters.publishArtifacts }}:
           - output: pipelineArtifact
             displayName: 'Publish the ${{ additionalArtifact.name }} artifacts'
@@ -86,6 +92,10 @@ jobs:
               targetPath: ${{ additionalArtifact.path }}
 
     steps:
+      - template: /scripts/azure-templates-steps-source-dependencies.yml@self
+        parameters:
+          mode: start
+
       - pwsh: if ($IsLinux -or $IsMacOS) { df -h } else { Get-Volume }
         displayName: Get the volume information before the run
         condition: always()
@@ -450,7 +460,8 @@ jobs:
                 echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
                 sed -i 's/--gnArgs=\" \"//' cmd.sh
                 cat cmd.sh
-                : > docker.env
+                mkdir -p .source-dependency-trace
+                printf 'GIT_TRACE2_EVENT=/work/.source-dependency-trace\nGIT_TRACE_REDACT=1\n' > docker.env
               displayName: Generate the script for the Docker image
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - ${{ each pair in parameters.env }}:
@@ -477,7 +488,10 @@ jobs:
                 'dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}' | Add-Content cmd.cmd -Encoding ascii
                 Get-Content cmd.cmd
                 # Docker's env-file parser keeps a trailing CR as part of the value, so write LF only.
-                [IO.File]::WriteAllText("$PWD/docker.env", "")
+                [IO.Directory]::CreateDirectory("$PWD/.source-dependency-trace") | Out-Null
+                [IO.File]::WriteAllText(
+                  "$PWD/docker.env",
+                  "GIT_TRACE2_EVENT=C:\work\.source-dependency-trace`nGIT_TRACE_REDACT=1`n")
               displayName: Generate the script for the Docker image
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - ${{ each pair in parameters.env }}:
@@ -509,3 +523,7 @@ jobs:
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the entire run
         condition: always()
+
+      - template: /scripts/azure-templates-steps-source-dependencies.yml@self
+        parameters:
+          mode: finish

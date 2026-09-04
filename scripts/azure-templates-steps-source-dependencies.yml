@@ -1,0 +1,30 @@
+parameters:
+  - name: mode
+    type: string
+    values:
+      - start
+      - finish
+
+steps:
+  - ${{ if eq(parameters.mode, 'start') }}:
+    - pwsh: |
+        $traceDirectory = Join-Path `
+          $env:AGENT_TEMPDIRECTORY `
+          "skiasharp-source-dependencies-$env:SYSTEM_JOBID-$env:SYSTEM_JOBATTEMPT"
+        New-Item $traceDirectory -ItemType Directory -Force | Out-Null
+        Write-Host "##vso[task.setvariable variable=SOURCE_DEPENDENCY_TRACE_DIRECTORY]$traceDirectory"
+        Write-Host "##vso[task.setvariable variable=GIT_TRACE2_EVENT]$traceDirectory"
+        Write-Host "##vso[task.setvariable variable=GIT_TRACE_REDACT]1"
+        Write-Host "Git source dependency tracing enabled at '$traceDirectory'."
+      displayName: Start source dependency capture
+
+  - ${{ if eq(parameters.mode, 'finish') }}:
+    - pwsh: >
+        ./scripts/infra/security/source-dependency-report.ps1
+        -Finish
+        -TraceDirectory "$(SOURCE_DEPENDENCY_TRACE_DIRECTORY)"
+        -RepositoryRoot "$(Build.SourcesDirectory)"
+        -ReportDirectory "$(Build.SourcesDirectory)/output/source-dependencies/$(System.JobName)"
+        -RequireTrace
+      displayName: Create source dependency report
+      condition: always()
