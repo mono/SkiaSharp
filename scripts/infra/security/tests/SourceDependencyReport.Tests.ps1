@@ -86,6 +86,7 @@ var dawn = "https://github.com/google/dawn/releases/download/{TAG}/source.zip";
 {"event":"start","sid":"clone-session","argv":["git","clone","https://trace-user:trace-password@github.com/google/angle.git?token=hidden","externals/angle"]}
 {"event":"child_start","sid":"fetch-session","child_class":"transport/https","argv":["git","remote-https","origin","https://github.com/emscripten-core/emsdk.git"]}
 {"event":"start","sid":"checkout-session","argv":["git","-c","http.https://github.com/mono/SkiaSharp.extraheader=AUTHORIZATION: bearer secret","fetch","origin"]}
+{"event":"def_repo","sid":"container-session","worktree":"/work/externals/skia/third_party/externals/zlib"}
 not-json
 '@ | Set-Content (Join-Path $traceRoot 'trace-event')
 
@@ -137,6 +138,11 @@ not-json
         $report `
         'https://chromium.googlesource.com/chromium/src/third_party/zlib' `
         -Observed
+    $zlib = @($report.repositories | Where-Object url -eq `
+        'https://chromium.googlesource.com/chromium/src/third_party/zlib')[0]
+    if ($zlib.revisions.Count -ne 1) {
+        throw 'The mapped container worktree did not contribute its exact revision.'
+    }
     Assert-Repository $report `
         'https://chromium.googlesource.com/chromium/tools/depot_tools' `
         -Declared

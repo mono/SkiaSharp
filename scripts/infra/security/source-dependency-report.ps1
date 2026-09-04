@@ -332,6 +332,25 @@ $sessionOperations = @{}
 $traceWorktrees = [Collections.Generic.HashSet[string]]::new(
     [StringComparer]::OrdinalIgnoreCase)
 
+function ConvertTo-HostWorktreePath {
+    param([Parameter(Mandatory)][string] $Path)
+
+    if ($Path -eq '/work') {
+        return $RepositoryRoot
+    }
+    if ($Path.StartsWith('/work/', [StringComparison]::Ordinal)) {
+        return [IO.Path]::GetFullPath(
+            (Join-Path $RepositoryRoot $Path.Substring('/work/'.Length)))
+    }
+    if ($Path -match '^[A-Za-z]:[\\/]work(?:[\\/](?<relative>.*))?$') {
+        if ([string]::IsNullOrWhiteSpace($Matches.relative)) {
+            return $RepositoryRoot
+        }
+        return [IO.Path]::GetFullPath((Join-Path $RepositoryRoot $Matches.relative))
+    }
+    return [IO.Path]::GetFullPath($Path)
+}
+
 foreach ($directory in @($traceDirectories | Select-Object -Unique)) {
     if (-not (Test-Path $directory -PathType Container)) {
         continue
@@ -354,7 +373,7 @@ foreach ($directory in @($traceDirectories | Select-Object -Unique)) {
             if ($event.event -eq 'def_repo' -and
                 $event.PSObject.Properties.Name -contains 'worktree' -and
                 -not [string]::IsNullOrWhiteSpace($event.worktree)) {
-                $traceWorktrees.Add([IO.Path]::GetFullPath($event.worktree)) | Out-Null
+                $traceWorktrees.Add((ConvertTo-HostWorktreePath $event.worktree)) | Out-Null
                 continue
             }
 
@@ -444,6 +463,7 @@ foreach ($worktree in $traceWorktrees) {
 Add-GitWorktreeChildren (Join-Path $RepositoryRoot 'externals')
 Add-GitWorktreeChildren (Join-Path $RepositoryRoot 'externals/skia/third_party/externals')
 Add-GitWorktreeCandidate (Join-Path $RepositoryRoot 'externals/skia/buildtools')
+Add-GitWorktreeChildren (Join-Path $RepositoryRoot 'externals/skia/buildtools')
 
 foreach ($line in Invoke-Git $RepositoryRoot @('submodule', 'status', '--recursive')) {
     if ($line -match '^.?[0-9a-f]{40}\s+(?<path>.+?)(?:\s+\(.+\))?$') {
