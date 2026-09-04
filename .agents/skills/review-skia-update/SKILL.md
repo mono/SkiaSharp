@@ -21,7 +21,7 @@ review report. Reduces 100K–500K line diffs to focused, human-reviewable artif
 ## Overview
 
 A Skia update always involves two PRs that must be reviewed together:
-- **mono/skia PR** — the Skia submodule bump (C headers, DEPS, upstream merge)
+- **Paired Skia PR** — the Skia submodule bump (C headers, DEPS, upstream merge)
 - **SkiaSharp PR** — the companion C# changes (generated bindings, hand-written wrappers)
 
 ```

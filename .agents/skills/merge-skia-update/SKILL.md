@@ -32,8 +32,8 @@ and pair them using their reciprocal links and shared sync branches.
 
 For the selected pair, resolve and present:
 
-- the mono/skia PR number, head branch, and base branch;
-- the mono/SkiaSharp PR number, head branch, and base branch;
+- the paired Skia PR number, head branch, and base branch;
+- the SkiaSharp PR number, head branch, and base branch;
 - whether the parent targets `main` or an existing `release/A.B.x` branch.
 
 Only after the maintainer sees the exact selected pair, ask them to confirm:
@@ -82,7 +82,7 @@ without a push confirmation.
 
 ## 3. Prepare the mono/skia merge
 
-Invoke `pr-commit-message` for the resolved mono/skia PR and give its title and
+Invoke `pr-commit-message` for the resolved paired Skia PR and give its title and
 body to the maintainer.
 
 Tell the maintainer to merge mono/skia manually using **Create a merge commit**.
@@ -106,8 +106,8 @@ pwsh .agents/skills/merge-skia-update/scripts/Update-SkiaSharpSkiaCommit.ps1 `
 
 The default is a dry run. The script:
 
-1. reads the reviewed mono/skia commit from the parent PR gitlink;
-2. resolves the new tip of the supplied mono/skia base branch;
+1. reads the reviewed paired Skia commit from the parent PR gitlink;
+2. resolves the new tip of the supplied paired Skia base branch;
 3. requires that tip to be a two-parent merge containing the reviewed commit;
 4. requires the merged tree to equal the reviewed tree.
 
@@ -139,7 +139,7 @@ SHA. Do not generate the parent merge message until the dependent PR is merged.
 
 ## 5. Prepare the mono/SkiaSharp merge
 
-Invoke `pr-commit-message` for the updated mono/SkiaSharp PR and give its title
+Invoke `pr-commit-message` for the updated SkiaSharp PR and give its title
 and body to the maintainer.
 
 Tell the maintainer to merge it manually using the repository's normal merge
@@ -154,7 +154,7 @@ Stop. Continue only after the maintainer says mono/SkiaSharp is merged.
 Confirm:
 
 - both PRs are merged;
-- the resolved mono/SkiaSharp parent base branch points its gitlink and
+- the resolved SkiaSharp parent base branch points its gitlink and
   cgmanifest at the actual mono/skia merge commit;
 - CI has started on that parent base branch for the resulting SkiaSharp commit.
 
@@ -175,7 +175,7 @@ Stop when:
 - an existing release branch points at a different SHA;
 - a release source changes between dry run and `-Push`;
 - the parent head milestone regresses;
-- mono/skia was not merged with a two-parent merge commit;
+- the paired Skia PR was not merged with a two-parent merge commit;
 - that merge does not contain the parent PR's reviewed native commit;
 - the merged and reviewed native trees differ;
 - local repin was selected but the current checkout is not clean, on the parent

@@ -462,6 +462,10 @@ class RepositoryIdentityTests(unittest.TestCase):
             skill.parent.mkdir(parents=True)
             skill.write_text(
                 "The historical Mono/SkiaSharp project shipped this feature.\n"
+                "Create the PR in mono/SkiaSharp.\n"
+                "1. Push the branch to mono/SkiaSharp.\n"
+                "- Search mono/skia for the companion PR.\n"
+                "TARGET=mono/SkiaSharp\n"
                 "```bash\n"
                 "REPO=MoNo/SkIaShArP\n"
                 "echo mono-skia\n"
@@ -477,7 +481,27 @@ class RepositoryIdentityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             violations = IDENTITY.scan_identity_drift(root)
-            self.assertEqual(5, len(violations))
+            self.assertEqual(9, len(violations))
+
+    def test_identity_scan_allows_exact_historical_example_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess = __import__("subprocess")
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            example = (
+                root
+                / ".agents"
+                / "skills"
+                / "issue-fix"
+                / "references"
+                / "fix-examples.md"
+            )
+            example.parent.mkdir(parents=True)
+            example.write_text(
+                "This historical mono/SkiaSharp example documents PR #3501.\n",
+                encoding="utf-8",
+            )
+            self.assertEqual([], IDENTITY.scan_identity_drift(root))
 
 
 if __name__ == "__main__":

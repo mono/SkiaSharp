@@ -22,7 +22,7 @@ You analyze Skia features for SkiaSharp from two angles simultaneously:
 Every run produces both. Output is structured JSON and rendered GitHub-flavored Markdown.
 
 This skill always runs in a SkiaSharp checkout. It uses:
-- `externals/skia/` submodule for the C API (our fork at `mono/skia`)
+- `externals/skia/` submodule for the C API (the paired fork resolved from `.gitmodules`)
 - `binding/SkiaSharp/SkiaApi.generated.cs` for the C API reflected as P/Invoke externs
 - `binding/SkiaSharp/*.cs` for the C# wrappers
 - Upstream `google/skia` headers fetched via GitHub for hidden API comparison

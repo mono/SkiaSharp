@@ -19,7 +19,7 @@ description: >
 
 # Native Dependency Update Skill
 
-Update native dependencies in SkiaSharp's Skia fork (mono/skia).
+Update native dependencies in SkiaSharp's paired Skia fork.
 
 ## Key References
 
@@ -51,8 +51,8 @@ Before starting, confirm you will:
 
 | Repository | Protected Branches | Action Required |
 |------------|-------------------|-----------------|
-| **mono/SkiaSharp** (parent repo) | `main`, `release/*` | Create feature branch first |
-| **mono/skia** (`externals/skia` submodule) | `main`, `skiasharp` | Create feature branch first |
+| **Current SkiaSharp repository** | `main`, `release/*` | Create feature branch first |
+| **Paired Skia repository** (`externals/skia` submodule) | `main`, `skiasharp` | Create feature branch first |
 
 **Before ANY commit in either repository:**
 
@@ -142,7 +142,7 @@ If you're unsure which skia branch to target, **ask the user**. Do not guess.
 
 ### Phase 1: Discovery
 
-1. **Check for existing PRs** in mono/SkiaSharp and mono/skia
+1. **Check for existing PRs** in `$REPOSITORY` and `$SKIA_REPOSITORY`
 2. **Check current version** in `externals/skia/DEPS`
 3. **Find target version** — get commit hash with `git rev-parse {tag}^{commit}`
 
@@ -307,8 +307,8 @@ unset GH_TOKEN && gh pr edit {skiasharp_pr_number} --repo "$REPOSITORY" --body "
 Before proceeding, verify ALL of these:
 
 - [ ] Branch names follow `dev/update-{dep}` convention
-- [ ] mono/skia PR targets `{skia_target_branch}` branch
-- [ ] mono/SkiaSharp PR targets `{skiasharp_target_branch}` branch
+- [ ] Paired Skia PR targets `{skia_target_branch}` branch
+- [ ] SkiaSharp PR targets `{skiasharp_target_branch}` branch
 - [ ] **SkiaSharp's `externals/skia` submodule points to the paired Skia PR branch** (check with `git submodule status`)
 - [ ] `cgmanifest.json` updated with new version
 - [ ] `scripts/VERSIONS.txt` updated for independently-versioned deps (harfbuzz: `release`, `soname`, `file`, all `nuget` lines) — N/A for statically-linked deps
@@ -337,7 +337,7 @@ SkiaSharp uses Azure DevOps. mono/skia has no CI — relies on SkiaSharp's.
 
 #### Merge Sequence (MANDATORY)
 
-1. **Merge mono/skia PR first** — This creates a new squashed commit on `{skia_target_branch}`
+1. **Merge the paired Skia PR first** — This creates a new squashed commit on `{skia_target_branch}`
 2. **Fetch the updated `{skia_target_branch}`** and note the new commit SHA
 3. **Update the SkiaSharp submodule** to point to the new squashed commit (not the old branch commit)
 4. **Push the updated submodule reference** to the SkiaSharp PR branch
@@ -347,7 +347,7 @@ SkiaSharp uses Azure DevOps. mono/skia has no CI — relies on SkiaSharp's.
 
 Before proceeding past each step, verify:
 
-- [ ] mono/skia PR merged
+- [ ] Paired Skia PR merged
 - [ ] Fetched `{skia_target_branch}` to get new SHA
 - [ ] Updated SkiaSharp submodule to new SHA (`cd externals/skia && git checkout {new-sha}`)
 - [ ] Pushed submodule update to SkiaSharp PR branch

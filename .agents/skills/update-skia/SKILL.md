@@ -1,7 +1,7 @@
 ---
 name: update-skia
 description: >
-  Update the Skia graphics library to a new Chrome milestone in SkiaSharp's mono/skia fork.
+  Update the Skia graphics library to a new Chrome milestone in SkiaSharp's paired Skia fork.
   Handles upstream merge, fork-patch preservation, dependency compatibility, C API adaptation,
   binding regeneration, full backend testing, and coordinated dual-repo PRs.
 
@@ -34,8 +34,8 @@ names.
 | `{UPSTREAM_REF}` | `SKIA_SYNC_UPSTREAM_REF` | `chrome/m{TARGET}` or `main` |
 | `{BASE_BRANCH}` | `SKIA_SYNC_BASE_BRANCH` | Parent PR base |
 | `{PARENT_BASE_SHA}` | `SKIA_SYNC_PARENT_BASE_SHA` | Exact parent base commit used for metadata comparison |
-| `{SKIA_BASE_BRANCH}` | `SKIA_SYNC_SKIA_BASE_BRANCH` | mono/skia PR base |
-| `{SKIA_BASE_SHA}` | `SKIA_SYNC_SKIA_BASE_SHA` | Exact mono/skia commit recorded by the parent base |
+| `{SKIA_BASE_BRANCH}` | `SKIA_SYNC_SKIA_BASE_BRANCH` | Paired Skia PR base |
+| `{SKIA_BASE_SHA}` | `SKIA_SYNC_SKIA_BASE_SHA` | Exact paired Skia commit recorded by the parent base |
 | `{HEAD_BRANCH}` | `SKIA_SYNC_HEAD_BRANCH` | Feature branch used in both repositories |
 | `{IS_RELEASE}` | `SKIA_SYNC_IS_RELEASE` | Whether the selected base is a release line |
 | `{BASE_UPSTREAM_SHA}` | `SKIA_SYNC_BASE_UPSTREAM_SHA` | Exact upstream commit recorded by the parent base |
@@ -58,19 +58,19 @@ mkdir -p "$ARTIFACT_DIR"
 An update is complete only when:
 
 - The authoritative old-upstream-to-target range was analyzed before merging.
-- The mono/skia result is a genuine two-parent merge with every fork patch and dependency
+- The paired Skia result is a genuine two-parent merge with every fork patch and dependency
   decision accounted for.
 - The updated native source builds; downloaded old native artifacts were never substituted.
 - Bindings were regenerated and every required managed wrapper was reviewed.
 - The final **unfiltered** `tests/SkiaSharp.Tests.Console.slnx` run passes every host, including
   every GPU backend required by `GpuPolicy` on the validation host.
-- The parent points to the exact tested mono/skia commit.
+- The parent points to the exact tested paired Skia commit.
 - Both PR descriptions identify untested platforms and are ready for human review.
 
 ## Working rules
 
 - Create feature branches in both repositories before changes; never commit to protected branches.
-- Use a genuine two-parent merge in mono/skia; never use a tree-override merge.
+- Use a genuine two-parent merge in the paired Skia repository; never use a tree-override merge.
 - Preserve every fork patch unless upstream contains an equivalent or improved form.
 - Mark a removed patch `upstreamed` only after enumerating every independent behavior in its old
   delta and locating each one in the target; one upstreamed hunk does not cover another lost hunk.

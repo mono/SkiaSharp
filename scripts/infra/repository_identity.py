@@ -417,14 +417,17 @@ def _legacy_allowlist_reason(
         relative.endswith(".md")
         and not relative.startswith(".github/workflows/")
         and not in_code_fence
+        and not re.match(r"^\s*(?:[-*+]|\d+[.)]|\|)", line)
         and not re.match(
-            r"^\s*(?:Search|Query|Fetch|Read|Open|Run|Use|Check)\b",
+            r"^\s*(?:(?:[-*+]|\d+[.)])\s*)?"
+            r"(?:Create|Search|Query|Fetch|Read|Open|Run|Use|Check|Set|"
+            r"Resolve|Pass|Invoke|Call|Write|Update|Push|Merge)\b",
             line,
             re.IGNORECASE,
         )
         and not re.search(
             r"(?:--repo|repo:|repos/|https://github\.com/|CACHE=|REPOSITORY=|"
-            r"\b[A-Z_]*(?:REPO|REPOSITORY|CACHE|KEY)\s*=|"
+            r"\b[A-Z_][A-Z0-9_]*\s*=|"
             r"\b(?:gh|git|curl|python3|pwsh|bash|sh)\s)",
             line,
             re.IGNORECASE,

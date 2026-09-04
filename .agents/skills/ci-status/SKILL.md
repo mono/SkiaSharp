@@ -39,7 +39,7 @@ including the current dnceng Build and Tests pipelines.
 
 The collector script requires:
 - **`az` CLI** — authenticated with access to `dnceng-public/public` and `dnceng/internal`
-- **`gh` CLI** — authenticated with read access to `mono/SkiaSharp` and `mono/SkiaSharp-API-docs`
+- **`gh` CLI** — authenticated with read access to the current and `.gitmodules`-resolved API-docs repositories
 - **Git remotes** — fetched recently so `git branch -r` returns up-to-date release branches
 
 ### Public CI (dnceng-public/public org — triggers on push/PR to main and release/*)

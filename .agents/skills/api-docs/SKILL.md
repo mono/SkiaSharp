@@ -20,7 +20,7 @@ load only when needed.
 
 ## Key facts
 
-- `docs/` is the **`mono/SkiaSharp-API-docs`** submodule — one ECMA/mdoc **`.xml` per type**, generated
+- `docs/` is the API-docs submodule resolved from `.gitmodules` — one ECMA/mdoc **`.xml` per type**, generated
   from NuGet assemblies via `mdoc`. CDATA `<remarks>` may hold `csharp` code fences. Run
   `git submodule update --init docs` if it is empty.
 - Each `<Type>.xml` maps 1:1 to `binding/SkiaSharp/<Type>.cs` (or `binding/HarfBuzzSharp/`) → always read
@@ -71,5 +71,5 @@ All findings use one machine-parseable contract: `SEVERITY | class | file | docI
 ## Landing changes
 
 The `docs` submodule protects `main` — commit on a `dev/...` branch and open a PR (per-wave). Skill asset
-changes land in the parent `mono/SkiaSharp` repo; the `auto-api-docs-writer` agentic workflow that runs
-this skill on CI lives in `mono/SkiaSharp-API-docs`.
+changes land in the current SkiaSharp repository; the `auto-api-docs-writer` agentic workflow that runs
+this skill on CI lives in the API-docs repository resolved from `.gitmodules`.
