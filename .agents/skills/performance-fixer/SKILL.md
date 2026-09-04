@@ -142,11 +142,12 @@ The general .NET fast-API guidance behind the patterns above, with TFM guards.
 
 ## The autonomous workflow (scan → prove → fix → file)
 
-### Phase 0 — Setup
-`dotnet cake --target=externals-download` (pre-built natives; you never build native). The benchmark
-harness is `benchmarks/SkiaSharp.Benchmarks` — read [`benchmarks/README.md`](../../../benchmarks/README.md)
-and copy `Benchmarks/TemplateBenchmark.cs` to start; the test project is `tests/SkiaSharp.Tests.Console`.
-See [measuring.md](references/measuring.md) and [repo-helpers.md](references/repo-helpers.md).
+### Phase 0 — Prepare the scan (no native download)
+Read the benchmark harness documentation at
+[`benchmarks/README.md`](../../../benchmarks/README.md), the template benchmark, and the relevant
+proof references; the test project is `tests/SkiaSharp.Tests.Console`. Do not restore local tools
+or download pre-built natives during setup, source scanning, or de-duplication. A quiet or
+duplicate run ends before either operation.
 
 ### Phase 1 — Scan (find ONE candidate)
 **1.1 Pick a focus area (round-robin).** If the run supplies an explicit focus area (a bare number
@@ -157,7 +158,10 @@ DOY=$(date -u +%j); HOUR=$(date -u +%H)          # zero-padded day-of-year + hou
 FOCUS=$(( (10#$DOY * 24 + 10#$HOUR) % 5 ))       # 10# forces base-10; 0..4
 echo "focus area: $FOCUS"   # 0 geometry-math · 1 color · 2 handles-and-collections · 3 text-and-fonts · 4 pixels-and-images
 ```
-Open that `hot-paths/` reference and its **Where to look** grep. Widen to a neighbour only if it's
+Use this focus map to locate the exact reference first, then open that `hot-paths/` file and its
+**Where to look** grep: 0 `geometry-math`, 1 `color`, 2 `handles-and-collections`, 3
+`text-and-fonts`, 4 `pixels-and-images`. Read only the relevant section, bounded by its next
+heading; do not guess a line range or load unrelated references. Widen to a neighbour only if it's
 exhausted.
 
 **1.2 Establish the hot path and cost** — with `file:line` citations: the realistic caller and how
@@ -173,6 +177,16 @@ gh pr    list --repo "$GITHUB_REPOSITORY" --search 'SKMatrix in:title' --state o
 ```
 Respect in-flight work (#4241 SKMatrix, #4276/#3699 bench CI, #3489 CopyTo, #4182 dict sizing,
 #3033 DrawShapedText). Pick the ONE strongest candidate; if none convinces, **stop** (`noop`).
+
+**1.4 Bootstrap one qualified candidate.** Only after one managed-C# candidate has a citable hot
+path/invariant and clears the Phase 1.3 open-item de-dup gate, run this exact command **once per
+run**:
+```bash
+dotnet tool restore && dotnet cake --target=externals-download
+```
+This is the mandatory bootstrap before any source build, test, or benchmark, not a scan
+prerequisite. Do not run either command for a quiet/duplicate candidate, and do not repeat either
+command in later phases.
 
 ### Phase 2 — Prove it is faster
 Follow [measuring.md](references/measuring.md) §"Proof 1": a `New` vs `Old` benchmark in one process,
@@ -216,6 +230,10 @@ Two linked safe outputs so the finding auto-closes on merge:
 
 ### Phase 5 — Report
 Short summary: area, candidate (`file:line`), benchmark result (New vs Old, ratio, allocations),
-equivalence coverage, and the issue + PR links — or "no convincing candidate this run". End with the
-right safe output: the **issue + PR pair**, the **issue alone** (native/upstream), or a single
-**`noop`** (quiet/dry run). Never finish with no safe output.
+equivalence coverage, and the issue + PR links — or "no convincing candidate this run". Name the
+actual checked universe and evidence: for an exhaustive claim, name the bounded query/path and
+confirm that every returned result was inspected without truncation; for a sample, say it was
+representative and name the files or candidates actually opened. Never infer an exhaustive scan or
+aggregate count from a few representative reads. End with the right safe output: the **issue + PR
+pair**, the **issue alone** (native/upstream), or a single **`noop`** (quiet/dry run). Never finish
+with no safe output.

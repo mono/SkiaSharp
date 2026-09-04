@@ -73,7 +73,7 @@ Run the phases in order. The skill has two entry points:
 
 ---
 
-## Phase 0 — Setup
+## Phase 0 — Prepare the scan (no native download)
 
 > **CI runner reality:** this skill fixes **managed C# only** (`binding/**`, `source/**`).
 > The native library is consumed as a **pre-built package** (`externals-download`) — you
@@ -82,11 +82,9 @@ Run the phases in order. The skill has two entry points:
 > never open a PR you cannot validate.
 
 1. Confirm the SDK: `dotnet --version`.
-2. Restore the pre-built natives so the C# projects build and the tests run:
-
-   ```bash
-   dotnet cake --target=externals-download   # pre-built natives for managed-C# work
-   ```
+2. Read the ownership model and select the focus-area entry. Do not restore local tools or
+   download pre-built natives during setup, source scanning, or de-duplication. A quiet or
+   duplicate run must end without either operation.
 
 ---
 
@@ -117,8 +115,10 @@ Every focus area is drawn from a **real, historical SkiaSharp leak fix**. Now op
 **[references/types-of-leaks.md](references/types-of-leaks.md)** and load focus area `#FOCUS`: its
 **Where to look** line gives the path + grep starting points, and the rest of the entry is the
 description, why-it's-bad, a leak→fix example, and the per-area anti-pattern. **Read that
-focus area before scanning.** If it's exhausted (its leaks are already open issues/PRs — see 1.3),
-advance to the next index and load that focus area.
+focus area before scanning.** First use the quick index or a heading search to locate the exact
+`## # — ...` heading; then read only that bounded section, stopping before the next focus-area
+heading. Do not guess line ranges or load the full catalogue. If it's exhausted (its leaks are
+already open issues/PRs — see 1.3), advance to the next index and load that focus area the same way.
 
 ### 1.2 Establish the retention/ownership path
 For each candidate write the precise path **with `file:line` citations**:
@@ -161,6 +161,18 @@ Pick the ONE strongest candidate. If none is convincing, **stop** — a quiet ru
 (the surface is hardened; the value is catching *new* leaks as code lands). Do not keep
 digging past a reasonable single pass hoping to manufacture a finding: report the quiet result
 and emit a `noop` (Phase 5).
+
+### 1.4 Bootstrap one qualified candidate
+Only after one managed-C# candidate has a citable ownership path and clears the Phase 1.3
+open-item de-dup gate, prepare for empirical proof. Run this exact command **once per run**:
+
+```bash
+dotnet tool restore && dotnet cake --target=externals-download
+```
+
+This is the mandatory bootstrap before any source build or test, not a scan prerequisite. Do not
+run either command for a quiet/duplicate candidate, and do not repeat either command in later
+phases.
 
 ---
 
@@ -206,10 +218,10 @@ run via `tests/SkiaSharp.Tests.Console`). Model it on existing disposal/leak tes
 - For views: the handler pattern in
   `tests/SkiaSharp.Tests.Devices/Tests/Maui/MemoryLeakTests.cs`.
 
-Build and **confirm the test FAILS** on the current tree (proves it catches the leak):
+Using the one bootstrap from Phase 1.4, build and **confirm the test FAILS** on the current tree
+(proves it catches the leak):
 
 ```bash
-dotnet cake --target=externals-download      # pre-built natives
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "FullyQualifiedName~<YourTestName>"
 ```
@@ -308,8 +320,11 @@ proposed native fix — so nothing is lost.
 ## Phase 5 — Report
 
 Write a short summary: which focus area, the candidate (`file:line`), the proof result, and the
-resulting issue + PR links. When run from the agentic workflow, append this to the run's step
-summary.
+resulting issue + PR links. Name the actual checked universe and evidence: for an exhaustive claim,
+name the bounded query/path and confirm that every returned result was inspected without
+truncation; for a sample, say it was representative and name the files or candidates actually
+opened. Never infer an exhaustive scan or aggregate count from a few representative reads. When
+run from the agentic workflow, append this to the run's step summary.
 
 **End with the right safe output(s):**
 - **Confirmed + managed-C# fix** → the **issue + PR pair** from Phase 4 (the PR body carries

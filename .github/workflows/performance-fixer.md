@@ -197,16 +197,21 @@ those are repo artifacts, not scratch. Each bash call is a fresh subshell — re
    `Fixes #<that temporary_id>` so merging auto-closes the issue) — see skill Phase 4. If the only
    real win is native / upstream (out of scope) → emit the **`create-issue` alone**. If nothing
    clears the bar → exactly one **`noop`**. Never finish a run with no safe output at all.
-2. **De-dup first.** Run skill Phase 1.3 — skip any candidate already covered by an OPEN
-   `[performance]` / `perf(...)` / `Optimize …` issue or PR on `mono/SkiaSharp` (e.g. #4241,
-   #3489, #4182, #3033). A candidate whose only prior item is CLOSED may be re-filed.
+2. **Cheap discovery and de-dup before bootstrap.** Complete the focused source scan and skill
+   Phase 1.3 before any local-tool restore or native download; skip any candidate already covered
+   by an OPEN `[performance]` / `perf(...)` / `Optimize …` issue or PR on `mono/SkiaSharp`
+   (e.g. #4241, #3489, #4182, #3033). A candidate whose only prior item is CLOSED may be re-filed.
+   Only after one managed-C# candidate has a citable hot path/invariant and clears de-dup, run
+   `dotnet tool restore && dotnet cake --target=externals-download` exactly once. This remains
+   mandatory before any source build, test, or benchmark, but a quiet/duplicate run must not run
+   it and later phases must not repeat it.
 3. **Two proofs before you open a PR.** Only open a PR when you have (a) a BenchmarkDotNet
    New-vs-Old result showing a real, repeatable speedup with no allocation regression (skill
    Phase 2) **and** (b) an equivalence test proving the result is identical to the original/native
    path, including edge inputs, and that the test catches a deliberately-wrong result (skill
    Phase 3). No speedup ⇒ nothing to fix. Any behaviour change ⇒ reject the fix.
-4. **Managed-C# fixes only.** The fix must live in `binding/**` / `source/**`, bootstrapped with
-   `dotnet cake --target=externals-download` (pre-built natives), benchmarked with
+4. **Managed-C# fixes only.** The fix must live in `binding/**` / `source/**`, use the single
+   post-qualification `externals-download` bootstrap from Guardrail 2, be benchmarked with
    `dotnet run -c Release --project benchmarks/SkiaSharp.Benchmarks -- --filter ...`, and validated
    with `dotnet test`. If the strongest candidate's only real win is in native / upstream Skia
    (`externals/skia/**`, including the C shim), do **not** open an unvalidated PR — file a
@@ -240,14 +245,19 @@ those are repo artifacts, not scratch. Each bash call is a fresh subshell — re
    first-use → `perf/startup`; a bounded-previously-unbounded cache → `perf/memory-leak`; binary/
    package size → `perf/size`. If a fix removes both an allocation *and* a P/Invoke, label the one the
    benchmark shows is the **primary** driver.
+9. **Report only checked scope.** A summary may call a scan exhaustive only after inspecting every
+   result from a named, bounded, untruncated query/path. Otherwise say it was representative and
+   name the files/candidates actually opened. Locate the selected reference heading before
+   requesting its bounded section; do not guess line ranges or imply that reading a routing table
+   inspected its source sites.
 
 ## Step 3 — Report
 
 Append a short summary to `/tmp/gh-aw/agent/step-summary.md` (this file is symlinked to the run's
 step summary — do **not** use `$GITHUB_STEP_SUMMARY`): the optimization area, the candidate (with
-`file:line`), the benchmark result (New vs Old, ratio, allocations), the equivalence coverage, the
-`perf/*` label you chose (and why), and the resulting issue + PR links — or "no convincing candidate
-this run" for a quiet run.
+`file:line`), the benchmark result (New vs Old, ratio, allocations), the equivalence coverage,
+the exact checked query/path and files/candidates opened, the `perf/*` label you chose (and why),
+and the resulting issue + PR links — or "no convincing candidate this run" for a quiet run.
 
 Then make sure you have emitted the safe output(s) from Step 2.1: the **issue + PR pair** (or a
 `create-issue` alone when the fix is out of scope), or — for a dry run or a quiet run — a single

@@ -4,11 +4,9 @@ Every SkiaSharp perf fix needs **two proofs**, and this file is how to produce b
 repo's real harness. Neither alone is sufficient: a benchmark with no parity test can ship a
 rendering regression; a parity test with no benchmark can ship a "fix" that isn't faster.
 
-Bootstrap first (managed-C# work uses pre-built natives — see [repo-helpers.md](repo-helpers.md)):
-
-```bash
-dotnet cake --target=externals-download
-```
+Before either proof, ensure the autonomous workflow's one post-qualification bootstrap (Phase 1.4)
+has completed. Managed-C# work uses pre-built natives; the exact command and ordering are in
+[repo-helpers.md](repo-helpers.md). Do not repeat that bootstrap from this guide.
 
 ## Proof 1 — faster (BenchmarkDotNet, New vs Old, one process)
 

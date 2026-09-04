@@ -38,6 +38,13 @@ Quick index (the `#` is the rotating focus-area index the skill uses):
 | 9 | Stream / callback / delegate-proxy lifetime | `GCHandle`/proxy freed too early (dangling) or never (leak) |
 | 10 | Allocation-failure path | wrapper returned even when native create failed, or half-built object leaked |
 
+**Bounded reading.** Use this index or a heading search to locate the requested `## # — ...`
+section before requesting content. Read from that heading through the line before the next
+focus-area heading; do not guess a line range or load unrelated entries. The index enumerates the
+available focus areas, not the source sites inspected in a run. Report only the entries, queries,
+and source files actually checked; call a scan exhaustive only when every result in a named,
+untruncated bounded universe was examined.
+
 ---
 
 ## 0 — Undisposed native handle
