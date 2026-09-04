@@ -412,18 +412,50 @@ function Invoke-Git {
 
 $worktreeSet = [Collections.Generic.HashSet[string]]::new(
     [StringComparer]::OrdinalIgnoreCase)
-$worktreeSet.Add($RepositoryRoot) | Out-Null
+
+function Add-GitWorktreeCandidate {
+    param([Parameter(Mandatory)][string] $Path)
+
+    $fullPath = [IO.Path]::GetFullPath($Path)
+    if (Test-Path (Join-Path $fullPath '.git')) {
+        $worktreeSet.Add($fullPath) | Out-Null
+    }
+}
+
+function Add-GitWorktreeChildren {
+    param([Parameter(Mandatory)][string] $Path)
+
+    if (-not (Test-Path $Path -PathType Container)) {
+        return
+    }
+    foreach ($child in [IO.Directory]::EnumerateDirectories($Path)) {
+        Add-GitWorktreeCandidate $child
+    }
+}
+
+Add-GitWorktreeCandidate $RepositoryRoot
 foreach ($worktree in $traceWorktrees) {
     if ($worktree.StartsWith($RepositoryRoot, [StringComparison]::OrdinalIgnoreCase) -and
         (Test-Path (Join-Path $worktree '.git'))) {
-        $worktreeSet.Add($worktree) | Out-Null
+        Add-GitWorktreeCandidate $worktree
     }
 }
+
+Add-GitWorktreeChildren (Join-Path $RepositoryRoot 'externals')
+Add-GitWorktreeChildren (Join-Path $RepositoryRoot 'externals/skia/third_party/externals')
+Add-GitWorktreeCandidate (Join-Path $RepositoryRoot 'externals/skia/buildtools')
+
 foreach ($line in Invoke-Git $RepositoryRoot @('submodule', 'status', '--recursive')) {
     if ($line -match '^.?[0-9a-f]{40}\s+(?<path>.+?)(?:\s+\(.+\))?$') {
         $worktree = [IO.Path]::GetFullPath((Join-Path $RepositoryRoot $Matches.path))
-        if (Test-Path (Join-Path $worktree '.git')) {
-            $worktreeSet.Add($worktree) | Out-Null
+        Add-GitWorktreeCandidate $worktree
+    }
+}
+foreach ($parentWorktree in @($worktreeSet)) {
+    foreach ($line in Invoke-Git $parentWorktree @('submodule', 'status', '--recursive')) {
+        if ($line -match '^.?[0-9a-f]{40}\s+(?<path>.+?)(?:\s+\(.+\))?$') {
+            $worktree = [IO.Path]::GetFullPath((Join-Path $parentWorktree $Matches.path))
+            Add-GitWorktreeCandidate $worktree
         }
     }
 }
@@ -464,7 +496,7 @@ function Add-DeclarationsFromFile {
 
 $declarationFiles = @{}
 foreach ($worktree in $worktrees) {
-    foreach ($name in @('.gitmodules', 'DEPS')) {
+    foreach ($name in @('.gitmodules')) {
         $path = Join-Path $worktree $name
         if (Test-Path $path -PathType Leaf) {
             $displayPath = [IO.Path]::GetRelativePath($RepositoryRoot, $path).
@@ -596,7 +628,7 @@ $report = [ordered]@{
         methods = @(
             'Git Trace2 process events, including indirect Git calls from gclient and build scripts'
             'Git remotes and exact revisions from repositories remaining in the workspace'
-            'Repository URLs declared in .gitmodules, DEPS, Cake, scripts, Dockerfiles, and pipeline YAML'
+            'Repository URLs declared in .gitmodules, Cake, scripts, Dockerfiles, and pipeline YAML'
             'Pinned source identities from cgmanifest.json, excluding canonical upstream CVE aliases'
         )
         limitations = @(

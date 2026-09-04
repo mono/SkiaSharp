@@ -63,8 +63,8 @@ The report combines three sources so it does not depend on one manifest being co
 1. Runtime Git events, including Git processes started indirectly by Cake, `git-sync-deps`, and
    `gclient`.
 2. Remotes and exact revisions from checked-out repositories that remain in the workspace.
-3. Declared repository URLs from `.gitmodules`, `DEPS`, `cgmanifest.json`, Cake files, build
-   scripts, Dockerfiles, and pipeline YAML.
+3. Declared repository URLs from `.gitmodules`, pinned Skia DEPS identities in
+   `cgmanifest.json`, Cake files, build scripts, Dockerfiles, and pipeline YAML.
 
 Runtime events are marked `observed`; static-only entries are marked `declared`. The latter expose
 source paths that exist in another platform or target but were not exercised by the current job.

@@ -71,6 +71,17 @@ var dawn = "https://github.com/google/dawn/releases/download/{TAG}/source.zip";
     & git -C $sourceRoot add .
     & git -C $sourceRoot commit --quiet -m initial
 
+    $existingDependency = Join-Path $sourceRoot 'externals/skia/third_party/externals/zlib'
+    New-Item $existingDependency -ItemType Directory -Force | Out-Null
+    & git -C $existingDependency init --quiet
+    & git -C $existingDependency config user.email source-report@example.invalid
+    & git -C $existingDependency config user.name 'Source Report Tests'
+    'dependency' | Set-Content (Join-Path $existingDependency 'source.txt')
+    & git -C $existingDependency add source.txt
+    & git -C $existingDependency commit --quiet -m dependency
+    & git -C $existingDependency remote add origin `
+        'https://chromium.googlesource.com/chromium/src/third_party/zlib'
+
     @'
 {"event":"start","sid":"clone-session","argv":["git","clone","https://trace-user:trace-password@github.com/google/angle.git?token=hidden","externals/angle"]}
 {"event":"child_start","sid":"fetch-session","child_class":"transport/https","argv":["git","remote-https","origin","https://github.com/emscripten-core/emsdk.git"]}
@@ -122,6 +133,10 @@ not-json
     Assert-Repository $report 'https://github.com/google/angle' -Observed
     Assert-Repository $report 'https://github.com/emscripten-core/emsdk' -Observed
     Assert-Repository $report 'https://github.com/google/dawn' -Declared
+    Assert-Repository `
+        $report `
+        'https://chromium.googlesource.com/chromium/src/third_party/zlib' `
+        -Observed
     Assert-Repository $report `
         'https://chromium.googlesource.com/chromium/tools/depot_tools' `
         -Declared
