@@ -587,13 +587,27 @@ class RepositoryIdentityTests(unittest.TestCase):
 
             example.write_text(
                 example.read_text(encoding="utf-8")
-                + "TARGET=mono/SkiaSharp\n",
+                + "TARGET=mono/SkiaSharp # "
+                "https://github.com/mono/SkiaSharp/issues/2997\n",
                 encoding="utf-8",
             )
             self.assertEqual(
                 [
                     ".agents/skills/issue-fix/references/fix-examples.md:3: "
-                    "TARGET=mono/SkiaSharp"
+                    "TARGET=mono/SkiaSharp # "
+                    "https://github.com/mono/SkiaSharp/issues/2997"
+                ],
+                IDENTITY.scan_identity_drift(root),
+            )
+
+            example.write_text(
+                "Based on https://github.com/mono/SkiaSharp/issues/29970.\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                [
+                    ".agents/skills/issue-fix/references/fix-examples.md:1: "
+                    "Based on https://github.com/mono/SkiaSharp/issues/29970."
                 ],
                 IDENTITY.scan_identity_drift(root),
             )
@@ -615,17 +629,23 @@ class RepositoryIdentityTests(unittest.TestCase):
             )
             schema.parent.mkdir(parents=True)
             schema.write_text(
-                '{\n'
-                '  "$id": "https://github.com/mono/SkiaSharp/'
-                'triage-schema.json",\n'
-                '  "default": "mono/SkiaSharp"\n'
-                '}\n',
+                '"$id": "https://github.com/mono/SkiaSharp/'
+                'triage-schema.json"\n',
+                encoding="utf-8",
+            )
+            self.assertEqual([], IDENTITY.scan_identity_drift(root))
+
+            schema.write_text(
+                '{"$id":"https://github.com/mono/SkiaSharp/'
+                'triage-schema.json","default":"mono/SkiaSharp"}\n',
                 encoding="utf-8",
             )
             self.assertEqual(
                 [
                     ".agents/skills/issue-triage/references/"
-                    "triage-schema.json:3: \"default\": \"mono/SkiaSharp\""
+                    "triage-schema.json:1: "
+                    "{\"$id\":\"https://github.com/mono/SkiaSharp/"
+                    "triage-schema.json\",\"default\":\"mono/SkiaSharp\"}"
                 ],
                 IDENTITY.scan_identity_drift(root),
             )

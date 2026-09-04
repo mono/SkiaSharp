@@ -162,7 +162,8 @@ _LEGACY_LITERAL_ALLOWLIST = (
         ".agents/skills/issue-fix/references/fix-examples.md",
         re.compile(
             r"https://github\.com/mono/SkiaSharp/"
-            r"(?:issues/2997|pull/3501)",
+            r"(?:issues/2997|pull/3501)"
+            r"(?=$|[\s\"'<>)\],.;#?])",
             re.IGNORECASE,
         ),
         "exact historical issue and pull-request provenance",
@@ -170,7 +171,8 @@ _LEGACY_LITERAL_ALLOWLIST = (
     (
         ".agents/skills/issue-repro/references/repro-examples.md",
         re.compile(
-            r"https://github\.com/mono/SkiaSharp/issues/(?:2997|3422)",
+            r"https://github\.com/mono/SkiaSharp/issues/(?:2997|3422)"
+            r"(?=$|[\s\"'<>)\],.;#?])",
             re.IGNORECASE,
         ),
         "exact historical issue provenance",
@@ -497,14 +499,26 @@ def _legacy_allowlist_reason(
     content: str,
     *,
     in_code_fence: bool = False,
+    legacy_match: re.Match[str] | None = None,
 ) -> str | None:
+    legacy_match = legacy_match or _LEGACY_IDENTITY_RE.search(line)
+    if legacy_match is None:
+        return None
+
+    def overlaps(pattern: re.Pattern[str]) -> bool:
+        return any(
+            match.start() < legacy_match.end()
+            and legacy_match.start() < match.end()
+            for match in pattern.finditer(line)
+        )
+
     for path_pattern, line_pattern, reason in _LEGACY_LITERAL_ALLOWLIST:
-        if fnmatch.fnmatch(relative, path_pattern) and line_pattern.search(line):
+        if fnmatch.fnmatch(relative, path_pattern) and overlaps(line_pattern):
             return reason
     if relative.startswith("documentation/site/") and (
-        _CURRENT_REPOSITORY_URL_RE.search(line)
-        or _DOCS_REPOSITORY_URL_RE.search(line)
-        or _AW_DATA_URL_RE.search(line)
+        overlaps(_CURRENT_REPOSITORY_URL_RE)
+        or overlaps(_DOCS_REPOSITORY_URL_RE)
+        or overlaps(_AW_DATA_URL_RE)
     ):
         return "exact current-site URL rewritten by destination-render tests"
     if (
@@ -555,14 +569,21 @@ def _legacy_allowlist_reason(
             ("mono/skia", "dotnet/skia"),
         )
         lowered_line = line.lower()
+        matched_identity = legacy_match.group(0).lower()
         if any(
-            old in lowered_line and new in lowered_line
+            matched_identity == old and new in lowered_line
             for old, new in pairs
         ):
             return "temporary dual-owner gh-aw transition allowlist"
-    if relative == ".agents/skills/ci-status/scripts/ci-status.py" and "mono-SkiaSharp" in line:
+    if (
+        relative == ".agents/skills/ci-status/scripts/ci-status.py"
+        and legacy_match.group(0).lower() == "mono-skiasharp"
+    ):
         return "Azure pipeline 345 name is intentionally unchanged"
-    if relative == ".github/workflows/track-artifact-sizes.yml" and "mono-SkiaSharp" in line:
+    if (
+        relative == ".github/workflows/track-artifact-sizes.yml"
+        and legacy_match.group(0).lower() == "mono-skiasharp"
+    ):
         return "Azure Pipelines check name is intentionally unchanged"
     if (
         not relative.startswith(".agents/skills/")
@@ -572,7 +593,13 @@ def _legacy_allowlist_reason(
         return "non-executable comment"
     if (
         line.lstrip().startswith(("//", "*"))
-        and re.search(r"https://github\.com/mono/SkiaSharp/issues/\d+", line)
+        and overlaps(
+            re.compile(
+                r"https://github\.com/mono/SkiaSharp/issues/\d+"
+                r"(?=$|[\s\"'<>)\],.;#?])",
+                re.IGNORECASE,
+            )
+        )
     ):
         return "historical source issue citation"
     return None
@@ -617,13 +644,18 @@ def scan_identity_drift(root: Path) -> list[str]:
                 ):
                     code_fence = None
                     continue
-            if not _LEGACY_IDENTITY_RE.search(line):
+            legacy_matches = list(_LEGACY_IDENTITY_RE.finditer(line))
+            if not legacy_matches:
                 continue
-            if _legacy_allowlist_reason(
-                relative,
-                line,
-                content,
-                in_code_fence=code_fence is not None,
+            if all(
+                _legacy_allowlist_reason(
+                    relative,
+                    line,
+                    content,
+                    in_code_fence=code_fence is not None,
+                    legacy_match=legacy_match,
+                )
+                for legacy_match in legacy_matches
             ):
                 continue
             violations.append(f"{relative}:{number}: {line.strip()}")
