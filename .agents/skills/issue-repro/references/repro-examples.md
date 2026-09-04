@@ -2,6 +2,8 @@
 
 Reference examples showing valid `issue-repro` JSON output for different conclusion types.
 Each example conforms to [`repro-schema.json`](repro-schema.json).
+Replace `owner/repository` in generated output with the repository resolved by
+`python3 scripts/infra/repository_identity.py get repository`.
 
 ## Contents
 1. [Example 1: C# API Bug — `reproduced`](#example-1-c-api-bug--reproduced)
@@ -23,7 +25,7 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
   "meta": {
     "schemaVersion": "1.0",
     "number": 2997,
-    "repo": "mono/SkiaSharp",
+    "repo": "owner/repository",
     "analyzedAt": "2025-06-20T14:32:00Z"
   },
   "conclusion": "reproduced",
@@ -156,7 +158,7 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
   "meta": {
     "schemaVersion": "1.0",
     "number": 3422,
-    "repo": "mono/SkiaSharp",
+    "repo": "owner/repository",
     "analyzedAt": "2025-06-15T14:30:00Z"
   },
   "inputs": {
@@ -288,7 +290,7 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
   "meta": {
     "schemaVersion": "1.0",
     "number": 3540,
-    "repo": "mono/SkiaSharp",
+    "repo": "owner/repository",
     "analyzedAt": "2025-07-15T10:00:00Z"
   },
   "conclusion": "confirmed",

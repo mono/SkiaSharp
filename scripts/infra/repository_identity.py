@@ -150,6 +150,95 @@ _LEGACY_LITERAL_ALLOWLIST = (
         "legacy scalar-report fallback; new reports carry repository metadata",
     ),
     (
+        ".agents/skills/ci-status/references/report-schema.md",
+        re.compile(
+            r'"(?:name|pipeline)": "mono-SkiaSharp"|'
+            r'"pipelines": \["mono-SkiaSharp"',
+            re.IGNORECASE,
+        ),
+        "Azure pipeline 345 examples retain the permanent external display name",
+    ),
+    (
+        ".agents/skills/issue-fix/references/fix-examples.md",
+        re.compile(
+            r"https://github\.com/mono/SkiaSharp/"
+            r"(?:issues/2997|pull/3501)",
+            re.IGNORECASE,
+        ),
+        "exact historical issue and pull-request provenance",
+    ),
+    (
+        ".agents/skills/issue-repro/references/repro-examples.md",
+        re.compile(
+            r"https://github\.com/mono/SkiaSharp/issues/(?:2997|3422)",
+            re.IGNORECASE,
+        ),
+        "exact historical issue provenance",
+    ),
+    (
+        ".agents/skills/issue-fix/references/fix-schema.json",
+        re.compile(
+            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'fix-schema\.json"',
+            re.IGNORECASE,
+        ),
+        "stable JSON Schema identifier; not an execution target",
+    ),
+    (
+        ".agents/skills/issue-repro/references/repro-schema.json",
+        re.compile(
+            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'repro-schema\.json"',
+            re.IGNORECASE,
+        ),
+        "stable JSON Schema identifier; not an execution target",
+    ),
+    (
+        ".agents/skills/issue-triage/references/triage-schema.json",
+        re.compile(
+            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'triage-schema\.json"',
+            re.IGNORECASE,
+        ),
+        "stable JSON Schema identifier; not an execution target",
+    ),
+    (
+        ".agents/skills/review-skia-update/references/skia-review-schema.json",
+        re.compile(
+            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'skia-review-schema\.json"',
+            re.IGNORECASE,
+        ),
+        "stable JSON Schema identifier; not an execution target",
+    ),
+    (
+        ".agents/skills/sample-scout/references/sample-scout-schema.json",
+        re.compile(
+            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'sample-scout-schema\.json"',
+            re.IGNORECASE,
+        ),
+        "stable JSON Schema identifier; not an execution target",
+    ),
+    (
+        ".agents/skills/security-audit/references/security-audit-schema.json",
+        re.compile(
+            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'security-audit-schema\.json"',
+            re.IGNORECASE,
+        ),
+        "stable JSON Schema identifier; not an execution target",
+    ),
+    (
+        ".agents/skills/skia-analyst/references/skia-analyst-schema.json",
+        re.compile(
+            r'"\$id": "https://github\.com/mono/SkiaSharp/'
+            r'skia-analyst-schema\.json"',
+            re.IGNORECASE,
+        ),
+        "stable JSON Schema identifier; not an execution target",
+    ),
+    (
         "scripts/infra/docs/release-notes-paths.json",
         re.compile(r"mono/SkiaSharp-API-docs", re.IGNORECASE),
         "narrative explanation of the current docs gitlink classification",
@@ -458,10 +547,6 @@ def _legacy_allowlist_reason(
         return "contributor template retains live redirect URLs until cutover"
     if "/tests/" in relative or relative.endswith(("_test.py", ".test.sh")):
         return "test fixture"
-    if "/references/" in relative and any(
-        marker in relative for marker in ("examples", "schema")
-    ):
-        return "historical example or schema identifier"
     if relative.endswith(".lock.yml"):
         return "generated workflow"
     if relative in _TRANSITION_WORKFLOWS:

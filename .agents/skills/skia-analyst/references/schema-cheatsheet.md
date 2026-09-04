@@ -16,7 +16,7 @@
 |-------|----------|-------------|
 | `date` | Yes | YYYY-MM-DD |
 | `schemaVersion` | Yes | `"1.0"` |
-| `repo` | Yes | `"mono/SkiaSharp"` |
+| `repo` | Yes | Resolved current `owner/repository` |
 | `currentMilestone` | Yes | SkiaSharp's current Skia milestone |
 | `latestUpstreamMilestone` | Yes | Latest milestone in upstream Skia |
 | `releaseNotesSource` | Yes | URL to Skia RELEASE_NOTES.md |

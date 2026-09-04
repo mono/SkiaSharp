@@ -36,7 +36,7 @@ JSON schema for the security audit report. The AI generates this JSON as structu
 |-------|------|----------|-------------|
 | `date` | string | Yes | ISO date of the audit |
 | `schemaVersion` | string | Yes | Always `"1.0"` |
-| `skiaSubmoduleCommit` | string | Yes | mono/skia fork commit from `git submodule status` |
+| `skiaSubmoduleCommit` | string | Yes | Paired Skia fork commit from `git submodule status` |
 | `skiaUpstreamCommit` | string | Yes | google/skia chrome/mNNN branch tip (independently verified) |
 | `skiaMilestone` | integer | Yes | Verified from SkMilestone.h |
 | `upstreamVerified` | boolean | Yes | Whether `git merge-base --is-ancestor` confirmed upstream ancestry |

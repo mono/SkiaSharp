@@ -1,6 +1,8 @@
 # Triage Examples
 
 Full JSON examples for reference. Read once per session to calibrate output format.
+Replace `owner/repository` with the repository resolved by
+`python3 scripts/infra/repository_identity.py get repository`.
 
 ## Bug Example
 
@@ -11,7 +13,7 @@ Bug with bugSignals, codeInvestigation, resolution proposals, and simplified act
   "meta": {
     "schemaVersion": "1.0",
     "number": 1234,
-    "repo": "mono/SkiaSharp",
+    "repo": "owner/repository",
     "analyzedAt": "2026-02-08T15:00:00Z",
     "currentLabels": ["type/feature-request"]
   },
@@ -114,7 +116,7 @@ Question with resolution proposals, no bugSignals, close-as-not-a-bug action:
   "meta": {
     "schemaVersion": "1.0",
     "number": 5678,
-    "repo": "mono/SkiaSharp",
+    "repo": "owner/repository",
     "analyzedAt": "2026-02-08T15:00:00Z"
   },
   "summary": "How to load custom fonts in SkiaSharp on Linux",
@@ -181,7 +183,7 @@ Duplicate with link-duplicate action and linkedIssue:
   "meta": {
     "schemaVersion": "1.0",
     "number": 9999,
-    "repo": "mono/SkiaSharp",
+    "repo": "owner/repository",
     "analyzedAt": "2026-02-08T15:00:00Z"
   },
   "summary": "Duplicate of #1234 — same Android disposal crash",

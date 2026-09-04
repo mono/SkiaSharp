@@ -6,7 +6,7 @@ Read this BEFORE generating JSON. Full schema: `references/repro-schema.json`.
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `meta` | object | `schemaVersion` ("1.0"), `number` (int), `repo` ("mono/SkiaSharp"), `analyzedAt` (ISO 8601) |
+| `meta` | object | `schemaVersion` ("1.0"), `number` (int), `repo` (resolved current `owner/repository`), `analyzedAt` (ISO 8601) |
 | `conclusion` | string | One of the `conclusionValue` enum (see below) |
 | `notes` | string | Summary of what happened |
 | `reproductionSteps` | array | At least 1 step (see step fields below) |

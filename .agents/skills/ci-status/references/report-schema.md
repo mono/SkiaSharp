@@ -167,7 +167,7 @@ Array of chain analysis verdicts. One entry per branch with ≥1 red internal pi
   "workflows": [
     {
       "name": "Pages - Deploy",
-      "repo": "mono/SkiaSharp",
+      "repo": "{current}",
       "trigger": "push",
       "scope": "branch",
       "severity": "high",
@@ -222,7 +222,7 @@ Array of chain analysis verdicts. One entry per branch with ≥1 red internal pi
     "name": "build-and-deploy",
     "failedSteps": ["Run build", "Deploy to Azure"],
     "runId": 26651087356,
-    "runUrl": "https://github.com/mono/SkiaSharp/actions/runs/..."
+    "runUrl": "https://github.com/{current}/actions/runs/..."
   }
 ]
 ```

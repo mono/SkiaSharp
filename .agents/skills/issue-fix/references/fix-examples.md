@@ -2,6 +2,8 @@
 
 Reference examples showing valid `issue-fix` JSON output for different status values.
 Each example conforms to [`fix-schema.json`](fix-schema.json).
+Replace `owner/repository` in generated output with the repository resolved by
+`python3 scripts/infra/repository_identity.py get repository`.
 
 ## Contents
 1. [Example 1: Fixed — C# API Logic Error](#example-1-fixed--c-api-logic-error)
@@ -22,7 +24,7 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
   "meta": {
     "schemaVersion": "1.0",
     "number": 2997,
-    "repo": "mono/SkiaSharp",
+    "repo": "owner/repository",
     "analyzedAt": "2025-07-01T10:00:00Z"
   },
   "inputs": {
@@ -118,7 +120,7 @@ Based on a hypothetical issue.
   "meta": {
     "schemaVersion": "1.0",
     "number": 9999,
-    "repo": "mono/SkiaSharp",
+    "repo": "owner/repository",
     "analyzedAt": "2025-07-05T15:00:00Z"
   },
   "inputs": {

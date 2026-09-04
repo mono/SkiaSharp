@@ -531,7 +531,40 @@ class RepositoryIdentityTests(unittest.TestCase):
             )
         )
 
-    def test_identity_scan_allows_exact_historical_example_path(self) -> None:
+    def test_identity_scan_checks_reference_commands_and_assignments(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess = __import__("subprocess")
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            example = (
+                root
+                / ".agents"
+                / "skills"
+                / "sample"
+                / "references"
+                / "command-examples.md"
+            )
+            example.parent.mkdir(parents=True)
+            example.write_text(
+                "```bash\n"
+                "gh pr create --repo mono/SkiaSharp\n"
+                "```\n"
+                "TARGET=mono/SkiaSharp\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                [
+                    ".agents/skills/sample/references/command-examples.md:2: "
+                    "gh pr create --repo mono/SkiaSharp",
+                    ".agents/skills/sample/references/command-examples.md:4: "
+                    "TARGET=mono/SkiaSharp",
+                ],
+                IDENTITY.scan_identity_drift(root),
+            )
+
+    def test_identity_scan_allows_only_exact_historical_example_content(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             subprocess = __import__("subprocess")
@@ -546,10 +579,56 @@ class RepositoryIdentityTests(unittest.TestCase):
             )
             example.parent.mkdir(parents=True)
             example.write_text(
-                "This historical mono/SkiaSharp example documents PR #3501.\n",
+                "Based on https://github.com/mono/SkiaSharp/issues/2997.\n"
+                "Result: https://github.com/mono/SkiaSharp/pull/3501\n",
                 encoding="utf-8",
             )
             self.assertEqual([], IDENTITY.scan_identity_drift(root))
+
+            example.write_text(
+                example.read_text(encoding="utf-8")
+                + "TARGET=mono/SkiaSharp\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                [
+                    ".agents/skills/issue-fix/references/fix-examples.md:3: "
+                    "TARGET=mono/SkiaSharp"
+                ],
+                IDENTITY.scan_identity_drift(root),
+            )
+
+    def test_schema_identifier_allowlist_does_not_hide_operational_defaults(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess = __import__("subprocess")
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            schema = (
+                root
+                / ".agents"
+                / "skills"
+                / "issue-triage"
+                / "references"
+                / "triage-schema.json"
+            )
+            schema.parent.mkdir(parents=True)
+            schema.write_text(
+                '{\n'
+                '  "$id": "https://github.com/mono/SkiaSharp/'
+                'triage-schema.json",\n'
+                '  "default": "mono/SkiaSharp"\n'
+                '}\n',
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                [
+                    ".agents/skills/issue-triage/references/"
+                    "triage-schema.json:3: \"default\": \"mono/SkiaSharp\""
+                ],
+                IDENTITY.scan_identity_drift(root),
+            )
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 
 | Field | Type | Required Sub-fields |
 |-------|------|-------------------|
-| `meta` | object | `schemaVersion` ("1.0"), `number` (int), `repo` ("mono/SkiaSharp"), `analyzedAt` (ISO 8601) |
+| `meta` | object | `schemaVersion` ("1.0"), `number` (int), `repo` (resolved current `owner/repository`), `analyzedAt` (ISO 8601) |
 | `summary` | string | — (one-sentence description) |
 | `classification` | object | `type` + `area` (see below) |
 | `evidence` | object | — (no sub-fields required, but include what's relevant) |
