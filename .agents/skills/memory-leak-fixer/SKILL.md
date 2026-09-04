@@ -38,6 +38,9 @@ The leak catalogue is split into **11 focused references**, each with a descript
 a leak→fix code example, and a leak-specific anti-pattern. Phase 1 maps the selected focus area
 directly to its one reference file; consult that same file when writing a fix (Phase 3).
 
+**Code samples are illustrative and trimmed to the essential lines; real wrappers must retain
+normal argument validation and use `GC.KeepAlive` where lifetime requires it.**
+
 ## Golden rules (non-negotiable)
 
 1. **One leak per run.** Pick the single strongest candidate; do not batch.
