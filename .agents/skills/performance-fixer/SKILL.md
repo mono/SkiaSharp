@@ -111,10 +111,10 @@ the slow→fast, watch-out, and real PR.
 
 | `FOCUS` | SkiaSharp area | Where to look | Reference |
 |---:|---|---|---|
-| 0 | Geometry & math | Pure managed math on blittable value types in `binding/SkiaSharp/`, especially `SKMatrix.cs`, `SKRect.cs`, `SKPoint.cs`, and `SKSize.cs`. | [hot-paths/geometry-math.md](references/hot-paths/geometry-math.md) |
+| 0 | Geometry & math | Pure managed math on blittable value types in `binding/SkiaSharp/`, such as `SKMatrix.cs`, `MathTypes.cs`, `SKColorF.cs`, and `SKPMColor.cs`. | [hot-paths/geometry-math.md](references/hot-paths/geometry-math.md) |
 | 1 | Color parse / convert | Parse, format, and conversion helpers in `binding/SkiaSharp/` and `binding/HarfBuzzSharp/`. | [hot-paths/color.md](references/hot-paths/color.md) |
 | 2 | Handles & collections | Native-wrapper getters and object tracking in `binding/SkiaSharp/`, including `GetObject`, `OwnedBy`, and `HandleDictionary` paths. | [hot-paths/handles-and-collections.md](references/hot-paths/handles-and-collections.md) |
-| 3 | Text & fonts | Per-glyph/per-draw loops and string or array marshalling in `binding/SkiaSharp/` and `binding/HarfBuzzSharp/`. | [hot-paths/text-and-fonts.md](references/hot-paths/text-and-fonts.md) |
+| 3 | Text & fonts | Per-glyph/per-draw loops, string or array marshalling, and repeated invariant shaping work in `binding/SkiaSharp/` and `binding/HarfBuzzSharp/`. | [hot-paths/text-and-fonts.md](references/hot-paths/text-and-fonts.md) |
 | 4 | Pixels & images | Bulk pixel/scanline paths and array materialization in `SKBitmap.cs`, `SKPixmap.cs`, and `SKImage.cs`. | [hot-paths/pixels-and-images.md](references/hot-paths/pixels-and-images.md) |
 
 ## BCL pattern references — the techniques (foundation)
