@@ -205,7 +205,7 @@ function ConvertTo-CanonicalSourceUrl {
     }
 
     if ($sourceHost.EndsWith('.googlesource.com', [StringComparison]::OrdinalIgnoreCase)) {
-        $path = $path.Split('@')[0]
+        $path = $path.Split('@')[0].TrimEnd('/')
         $plus = $path.IndexOf('/+')
         if ($plus -ge 0) {
             $path = $path.Substring(0, $plus)
@@ -214,7 +214,7 @@ function ConvertTo-CanonicalSourceUrl {
         return "https://$sourceHost$path"
     }
 
-    $path = $path.Split('@')[0] -replace '\.git$', ''
+    $path = $path.Split('@')[0].TrimEnd('/') -replace '\.git$', ''
     return "${scheme}://$sourceHost$path"
 }
 
@@ -514,6 +514,48 @@ function Add-DeclarationsFromFile {
     }
 }
 
+function Add-ActiveDepsDeclarations {
+    param(
+        [Parameter(Mandatory)][string] $File,
+        [Parameter(Mandatory)][string] $DisplayPath
+    )
+
+    $lineNumber = 0
+    foreach ($line in [IO.File]::ReadLines($File)) {
+        $lineNumber++
+        $trimmed = $line.TrimStart()
+        if ($trimmed.StartsWith('#', [StringComparison]::Ordinal)) {
+            continue
+        }
+
+        $keyMatch = [regex]::Match(
+            $line,
+            '^\s*["'']?(?<key>[^"'':]+)["'']?\s*:')
+        if (-not $keyMatch.Success -or
+            $keyMatch.Groups['key'].Value.Trim() -in @('url', 'condition')) {
+            continue
+        }
+
+        foreach ($candidate in Get-SourceUrlCandidates $line) {
+            if ($candidate -notmatch '@(?<revision>[0-9a-fA-F]{40})(?:$|[/?#])') {
+                continue
+            }
+            $revision = $Matches.revision
+            $url = ConvertTo-CanonicalSourceUrl $candidate
+            if ($null -ne $url) {
+                Add-SourceRecord `
+                    $url `
+                    declared `
+                    'deps-manifest' `
+                    '' `
+                    $DisplayPath `
+                    $lineNumber `
+                    $revision
+            }
+        }
+    }
+}
+
 $declarationFiles = @{}
 foreach ($worktree in $worktrees) {
     foreach ($name in @('.gitmodules')) {
@@ -550,6 +592,11 @@ foreach ($trackedFile in Invoke-Git $RepositoryRoot @('ls-files')) {
 
 foreach ($entry in $declarationFiles.GetEnumerator()) {
     Add-DeclarationsFromFile $entry.Key $entry.Value
+}
+
+$skiaDepsPath = Join-Path $RepositoryRoot 'externals/skia/DEPS'
+if (Test-Path $skiaDepsPath -PathType Leaf) {
+    Add-ActiveDepsDeclarations $skiaDepsPath 'externals/skia/DEPS'
 }
 
 $componentManifestPath = Join-Path $RepositoryRoot 'cgmanifest.json'
@@ -648,7 +695,7 @@ $report = [ordered]@{
         methods = @(
             'Git Trace2 process events, including indirect Git calls from gclient and build scripts'
             'Git remotes and exact revisions from repositories remaining in the workspace'
-            'Repository URLs declared in .gitmodules, Cake, scripts, Dockerfiles, and pipeline YAML'
+            'Repository URLs declared in .gitmodules, active Skia DEPS entries, Cake, scripts, Dockerfiles, and pipeline YAML'
             'Pinned source identities from cgmanifest.json, excluding canonical upstream CVE aliases'
         )
         limitations = @(

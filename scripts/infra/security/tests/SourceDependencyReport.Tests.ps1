@@ -81,6 +81,16 @@ var dawn = "https://github.com/google/dawn/releases/download/{TAG}/source.zip";
     & git -C $existingDependency commit --quiet -m dependency
     & git -C $existingDependency remote add origin `
         'https://chromium.googlesource.com/chromium/src/third_party/zlib'
+    @'
+deps = {
+  "buildtools": "https://chromium.googlesource.com/chromium/src/buildtools.git@729495f2ffa69080907780591fa2a630b2556e98",
+  "agents/shared": "https://chromium.googlesource.com/chromium/agents/@e75efa515896f6bf1dea92eaffbcf8ee711a65d8",
+  "inactive": {
+    "url": "https://example.googlesource.com/inactive.git@1111111111111111111111111111111111111111",
+    "condition": "False",
+  },
+}
+'@ | Set-Content (Join-Path $sourceRoot 'externals/skia/DEPS')
 
     @'
 {"event":"start","sid":"clone-session","argv":["git","clone","https://trace-user:trace-password@github.com/google/angle.git?token=hidden","externals/angle"]}
@@ -138,6 +148,27 @@ not-json
         $report `
         'https://chromium.googlesource.com/chromium/src/third_party/zlib' `
         -Observed
+    Assert-Repository `
+        $report `
+        'https://chromium.googlesource.com/chromium/src/buildtools' `
+        -Declared
+    Assert-Repository `
+        $report `
+        'https://chromium.googlesource.com/chromium/agents' `
+        -Declared
+    $depsRevisions = @{
+        'https://chromium.googlesource.com/chromium/src/buildtools' =
+            '729495f2ffa69080907780591fa2a630b2556e98'
+        'https://chromium.googlesource.com/chromium/agents' =
+            'e75efa515896f6bf1dea92eaffbcf8ee711a65d8'
+    }
+    foreach ($entry in $depsRevisions.GetEnumerator()) {
+        $repository = @($report.repositories | Where-Object url -eq $entry.Key)[0]
+        if ($repository.revisions.Count -ne 1 -or
+            $repository.revisions[0] -ne $entry.Value) {
+            throw "DEPS revision for '$($entry.Key)' was not preserved."
+        }
+    }
     $zlib = @($report.repositories | Where-Object url -eq `
         'https://chromium.googlesource.com/chromium/src/third_party/zlib')[0]
     if ($zlib.revisions.Count -ne 1) {
@@ -151,6 +182,7 @@ not-json
         $_.url -in @(
             'https://dev.azure.com/example/project/_git/test-fixture'
             'https://github.com/upstream/not-actually-downloaded'
+            'https://example.googlesource.com/inactive'
         )
     }).Count -ne 0 -or $json -match 'SkiaSharp\.extraheader') {
         throw 'Test fixtures, Git auth config, or canonical CVE aliases leaked into the report.'
