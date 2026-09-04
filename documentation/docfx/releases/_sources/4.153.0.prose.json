@@ -1,0 +1,100 @@
+{
+  "theme": "Skia m153, Graphite bindings",
+  "highlights_headline": "SkiaSharp 4.153.0 updates to Skia m153 and ships new Graphite GPU backend bindings alongside several native leak fixes.",
+  "highlights_body": "It adds a Vulkan.Silk.NET package, backend-neutral async pixel reads, and fixes several use-after-free and undisposed-resource leaks discovered during a memory audit.",
+  "breaking": [
+    {
+      "title": "Linux font fallback may select a different face",
+      "body": "Skia now tries FcFontMatch before falling back to the previous FcFontSort path on Linux. Applications that depend on the exact fallback face picked by fontconfig may see different text metrics or glyphs after upgrading; use an explicit family/style or a bundled typeface when deterministic font selection matters.",
+      "prs": []
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to milestone m153",
+          "detail": "Brings the bundled Skia engine up to the m153 upstream release line, plus ongoing chrome/m151, m152, and m153 servicing bug-fix merges.",
+          "prs": [4826, 4927, 4651, 4538, 4568, 4808, 4537]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings added",
+          "detail": "Adds bindings for Skia's Graphite GPU backend across Vulkan, Metal, and Dawn.",
+          "prs": [3968]
+        },
+        {
+          "lead": "Backend-neutral async pixel reads",
+          "detail": "Adds an async RequestReadPixels API to SKImage and SKSurface that works across GPU backends.",
+          "prs": [4545]
+        },
+        {
+          "lead": "Vulkan via Silk.NET",
+          "detail": "Ships the SkiaSharp.Vulkan.Silk.NET package for applications using Silk.NET to create Vulkan contexts.",
+          "prs": [4527, 4841]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Native use-after-free and leaks fixed",
+          "detail": "Fixes native use-after-free crashes by keeping an SKRegion alive for its SpanIterator and rooting the pixel source of SKPixmap derived views. It also closes leaks in HarfBuzz blob conversion, failed raster-image creation, and SKRuntimeEffectUniforms.Reset().",
+          "prs": [4355, 4558, 4710, 4455, 4783]
+        },
+        {
+          "lead": "Nano Server font support restored",
+          "detail": "Uses FreeType for font support on Nano Server.",
+          "prs": [4280]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Managed hot paths optimized",
+          "detail": "Removes a defensive Feature[] copy in HarfBuzz Font.Shape, avoids char boxing in SKFourByteTag/Tag.ToString, caches a reflection-based skip-registration check, avoids a double buffer copy in SKData.SaveTo, pre-sizes the SKRuntimeEffectUniforms lookup map, and avoids an intermediate string allocation in GetEncodedText's null-terminated path.",
+          "prs": [4690, 4752, 4630, 4550, 4512, 4498]
+        },
+        {
+          "lead": "Binding generation made deterministic",
+          "detail": "Makes the generated binding output deterministic across build platforms.",
+          "prs": [4612]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Apple native symbol packages",
+          "detail": "Produces symbol packages with native dSYMs for macOS, iOS, Mac Catalyst, and tvOS, improving native debugging without changing the runtime packages.",
+          "prs": [4846]
+        },
+        {
+          "lead": "Containerized test coverage expanded",
+          "detail": "Adds containerized test legs for Azure Linux, Alpine/musl, and Nano Server.",
+          "prs": [4515]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Restored Nano Server font support by switching it to FreeType.",
+    "mmitche": "Fixed the Windows native build to initialize the MSVC environment only once per build.",
+    "ramezgerges": "Added the Graphite GPU backend bindings for Vulkan, Metal, and Dawn."
+  },
+  "preview_summaries": {
+    "v4.152.0-preview.1.1": "Preview 1 added the Graphite GPU backend bindings, the Vulkan.Silk.NET package, backend-neutral async pixel reads, and fixed several native memory leaks found during an audit.",
+    "v4.152.0-rc.1.26426.14": "Release Candidate 1 bumped to Skia m152, restored Vulkan.Silk.NET package production, added Apple native symbol packages, and fixed additional resource leaks."
+  },
+  "harfbuzz_summary": "Avoids a defensive Feature array copy in Font.Shape for lower per-call overhead.",
+  "release_summaries": {}
+}
