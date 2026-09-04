@@ -1060,17 +1060,15 @@ principles are fixed here.
      args that shape the native binaries, usually infra) and `docs` (the mdoc API-docs
      submodule that ships as IntelliSense XML — doc content, not behaviour).
    - **`internal`** — the `default`: touches none of those (CI, workflows, agent skills, docs
-     *site*, tests, samples, build/meta, and the `externals/depot_tools` build-toolchain
-     submodule). Dropped into the one collapse line.
+     *site*, tests, samples, and build/meta). Dropped into the one collapse line.
 
    `native/` shapes the shipped binaries and `docs` ships as doc XML, so neither is
    `internal`; but neither is a direct API/behaviour change, so both are `mixed` (inspected
    from the title) rather than firm `product`. `docs` and `externals/skia` are submodules, so
    in the parent repo they appear as bare gitlink paths (`docs`, `externals/skia`) and the
    prefixes match those exactly — the `externals/skia` prefix is deliberately not just
-   `externals/`, which would sweep in the sibling `externals/depot_tools` build-toolchain
-   submodule (internal) and `externals/.gitignore`; the `docs` prefix is slash-less so it hits
-   the gitlink without colliding with `documentation/`. Polish drops `internal`, writes up
+   `externals/`, which would sweep in `externals/.gitignore`; the `docs` prefix is slash-less
+   so it hits the gitlink without colliding with `documentation/`. Polish drops `internal`, writes up
    `product`, and inspects `mixed`; moving the classification out of the LLM (and into the
    JSON) makes product-focus reliable run-to-run.
 2. **Highlights are a hook, not a summary.** The `## Highlights` section always exists

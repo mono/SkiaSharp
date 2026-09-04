@@ -136,9 +136,9 @@ jobs:
         - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
           displayName: Configure build variables
 
-      # Native source builds only use Skia and depot_tools. Merge-only jobs use no submodules.
+      # Native source builds only use Skia. Merge-only jobs use no submodules.
       - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.skipSteps, 'true')) }}:
-        - pwsh: git submodule update --init --recursive externals/skia externals/depot_tools
+        - pwsh: git submodule update --init --recursive externals/skia
           displayName: Checkout native build submodules
           condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
       - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true), eq(parameters.checkoutSubmodules, 'true')) }}:

@@ -22,9 +22,9 @@
   ],
   "default": "internal",
   "notes": [
-    "`externals/skia` is intentionally exact, NOT `externals/`: the sibling `externals/depot_tools` (build toolchain) and `externals/.gitignore` are build infra and must stay `default` (internal).",
+    "`externals/skia` is intentionally exact, NOT `externals/`: `externals/.gitignore` is build infra and must stay `default` (internal).",
     "`docs` is the mono/SkiaSharp-API-docs submodule (mdoc XML that ships as the packages' IntelliSense docs). It is slash-less so it matches the bare `docs` gitlink and does not collide with `documentation/` - the docs site, which stays internal.",
     "`native/` covers the per-platform build config (gn args / compile flags) and the shipped WinUI native subtree under `native/winui/`.",
-    "Anything not matched (CI, workflows, agent skills, the `documentation/` docs site, tests, samples, build/meta files, and `externals/depot_tools`) falls through to `default`."
+    "Anything not matched (CI, workflows, agent skills, the `documentation/` docs site, tests, samples, and build/meta files) falls through to `default`."
   ]
 }

@@ -292,7 +292,7 @@ post-steps:
         {
           git diff --name-only
           git diff --cached --name-only
-        } | sort -u | grep -Ev '^(cgmanifest\.json|scripts/VERSIONS\.txt|scripts/azure-templates-variables\.yml|externals/skia|externals/depot_tools)$' || true
+        } | sort -u | grep -Ev '^(cgmanifest\.json|scripts/VERSIONS\.txt|scripts/azure-templates-variables\.yml|externals/skia)$' || true
       )
       if [ -n "$UNEXPECTED_CHANGES" ]; then
         echo "::error::The agent left uncommitted semantic changes:"
@@ -313,7 +313,7 @@ post-steps:
         git config user.email "devnull@localhost"
         git commit -m "[skia-sync] Finalize deterministic metadata"
       fi
-      git diff --quiet -- . ':(exclude)externals/depot_tools'
+      git diff --quiet
       git diff --cached --quiet
   - name: Push branches and create PRs
     env:
