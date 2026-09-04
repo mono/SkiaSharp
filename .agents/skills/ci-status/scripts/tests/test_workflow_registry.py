@@ -137,14 +137,24 @@ class RegistryTests(unittest.TestCase):
     def test_scheduled_workflows_really_have_a_cron(self):
         """A workflow tracked as scheduled but with no cron would always look idle."""
         missing = []
+        checked = 0
         for entry in local_workflows():
             if entry["trigger"] != "schedule":
                 continue
             if not os.path.isfile(os.path.join(WORKFLOW_DIR, entry["workflow"])):
                 continue
+            checked += 1
             if not crons_for(entry["workflow"]):
                 missing.append(entry["workflow"])
         self.assertEqual([], missing, f"Tracked as scheduled but define no cron: {missing}")
+        # `missing` is also empty when nothing was examined at all. Re-typing the tracked
+        # schedule entries to another trigger empties this loop while leaving the registry
+        # full, and it does not trip the trigger test either, because a scheduled workflow
+        # almost always declares workflow_dispatch as well. Assert the loop did work.
+        self.assertGreater(
+            checked, 0,
+            "No scheduled workflow was examined, so this test asserted nothing — "
+            "the registry has no entry with trigger='schedule'.")
 
 
 class SkillDocTests(unittest.TestCase):
@@ -176,6 +186,7 @@ class SkillDocTests(unittest.TestCase):
         by_name = {w["name"]: w["workflow"] for w in local_workflows()}
         stale = []
         unresolved = []
+        compared = 0
         for row in rows:
             cells = [c.strip() for c in row.strip().strip("|").split("|")]
             if len(cells) < 3 or cells[1] != "mono/SkiaSharp":
@@ -192,10 +203,12 @@ class SkillDocTests(unittest.TestCase):
             trigger_cell = cells[2]
 
             for literal in re.findall(r"`([^`]*\*[^`]*)`", trigger_cell):
+                compared += 1
                 if literal not in crons:
                     stale.append(f"{name}: documents cron {literal!r}, file has {crons}")
 
             for hh, mm in re.findall(r"\b(\d{1,2}):(\d{2}) UTC", trigger_cell):
+                compared += 1
                 actual = {(c.split()[1], c.split()[0]) for c in crons if len(c.split()) >= 2}
                 if (str(int(hh)), str(int(mm))) not in actual:
                     stale.append(f"{name}: documents {hh}:{mm} UTC, file has {crons}")
@@ -203,6 +216,144 @@ class SkillDocTests(unittest.TestCase):
         self.assertEqual([], stale, "; ".join(stale))
         self.assertEqual([], unresolved,
                          f"SKILL.md rows name untracked workflows: {unresolved}")
+        # A pass here means nothing unless at least one schedule was actually compared.
+        # Strip every documented time from the table and the loops above simply never run,
+        # leaving a green test that checks nothing — the same silent-pass shape this suite
+        # exists to catch. Hand-written workflows must keep their exact time documented;
+        # only gh-aw locks are allowed to be imprecise.
+        self.assertGreater(
+            compared, 0,
+            "No documented schedule was compared, so this test asserted nothing. "
+            "At least one SKILL.md row must state an exact 'HH:MM UTC' or literal cron "
+            "for a hand-written (non-lock) workflow.")
+
+
+class CollectorWiringTests(unittest.TestCase):
+    """The registry is only worth validating if the collector actually reads it.
+
+    Every other test here checks the *contents* of GITHUB_WORKFLOWS. None of them
+    execute ``collect_github_data``, so the line joining the registry to the collector
+    is untested: point that loop at an empty list, or at a hardcoded entry, and the
+    whole suite still passes while the dashboard reports nothing — or reports a
+    workflow that was never tracked, which is the exact failure this suite exists to
+    catch. This test covers the wiring rather than the parts.
+    """
+
+    def _collect_with_stubs(self):
+        """Run the collector with every network call replaced by a recorder."""
+        requested = []
+
+        def fake_runs(repo, workflow, branch, top=5):
+            requested.append((repo, workflow))
+            return []
+
+        original_runs = COLLECTOR.get_github_workflow_runs
+        original_enrich = COLLECTOR._enrich_failed_runs
+        COLLECTOR.get_github_workflow_runs = fake_runs
+        COLLECTOR._enrich_failed_runs = lambda wf_data: None
+        try:
+            collected = COLLECTOR.collect_github_data(["main"], 1)
+        finally:
+            COLLECTOR.get_github_workflow_runs = original_runs
+            COLLECTOR._enrich_failed_runs = original_enrich
+        return requested, collected
+
+    def test_collector_queries_exactly_the_tracked_workflows(self):
+        requested, collected = self._collect_with_stubs()
+        self.assertTrue(requested, "collect_github_data queried nothing at all.")
+        self.assertEqual(
+            {(w["repo"], w["workflow"]) for w in GITHUB_WORKFLOWS},
+            set(requested),
+            "collect_github_data did not query exactly the tracked workflows — the "
+            "registry and the collector have come apart.")
+        self.assertEqual(
+            len(GITHUB_WORKFLOWS), len(collected),
+            "collect_github_data returned a different number of entries than it tracks.")
+
+    def test_report_carries_the_collected_workflows_through_unchanged(self):
+        """The assembly layer must not drop or filter what the collector returned.
+
+        Covering collect_github_data is not enough: the payload is assembled a layer up,
+        and that join can silently narrow the result. Replacing the assignment with a
+        filtered comprehension — the same 'drop the branch-scoped entries' mistake this
+        suite catches one level down — leaves a report that still looks complete.
+        `branches=[]` skips the Azure DevOps loop entirely, so this needs no `az`.
+        """
+        # Shaped like a real entry so a filtering mutation fails on the assertion below
+        # rather than incidentally raising KeyError on a missing field.
+        sentinel = [
+            {"repo": "mono/SkiaSharp", "workflow": "sentinel-a.yml", "name": "Sentinel A",
+             "scope": "branch", "trigger": "push", "branches": [], "runs": [],
+             "stats": None, "error": None},
+            {"repo": "mono/SkiaSharp", "workflow": "sentinel-b.yml", "name": "Sentinel B",
+             "scope": "global", "trigger": "schedule", "branches": [], "runs": [],
+             "stats": None, "error": None},
+        ]
+        original = COLLECTOR.collect_github_data
+        COLLECTOR.collect_github_data = lambda branches, top_builds: list(sentinel)
+        try:
+            data = COLLECTOR.collect_data([], 1, False)
+        finally:
+            COLLECTOR.collect_github_data = original
+
+        self.assertEqual(
+            sentinel, data["github_actions"],
+            "The report did not carry through what collect_github_data returned — the "
+            "assembly layer dropped, filtered or replaced it.")
+        self.assertEqual(
+            GITHUB_WORKFLOWS, data["github_workflows"],
+            "The report's github_workflows payload is not the tracked registry.")
+
+
+class WorkflowInvokesWhatItGuardsTests(unittest.TestCase):
+    """The workflow that runs these suites must also trigger on what they cover.
+
+    Everything above tests the suite. Nothing tested the layer that *invokes* it, and
+    that layer has a silent failure of its own: delete an entry from the workflow's
+    `paths:` filter and the suite simply stops running for changes in that area. No
+    test fails, no run goes red — the guard is gone and CI stays green, which is the
+    same "healthy-looking but absent" shape this whole suite exists to catch.
+    """
+
+    WORKFLOW = "automation-tooling-tests.yml"
+
+    def _workflow(self):
+        path = os.path.join(WORKFLOW_DIR, self.WORKFLOW)
+        if not os.path.isfile(path):
+            self.skipTest(f"{self.WORKFLOW} is not present on this branch")
+        return load_workflow(self.WORKFLOW)
+
+    @staticmethod
+    def _suite_roots(workflow):
+        """Directories the workflow's steps actually execute tests from."""
+        roots = set()
+        for step in workflow["jobs"]["test"]["steps"]:
+            run = step.get("run", "")
+            if step.get("working-directory"):
+                roots.add(step["working-directory"].strip("/"))
+            # Anchored on `unittest discover` rather than a bare `-s`, which would also
+            # match unrelated shell options such as `shopt -s nullglob`.
+            for m in re.finditer(r"unittest\s+discover\s+-s\s+(\S+)", run):
+                roots.add(m.group(1).strip("/"))
+            for m in re.finditer(r"bash\s+(\S+\.sh)", run):
+                roots.add(os.path.dirname(m.group(1).strip("/")))
+        return {r for r in roots if r}
+
+    def test_every_suite_it_runs_is_in_its_own_paths_filter(self):
+        workflow = self._workflow()
+        block = on_block(workflow)
+        roots = self._suite_roots(workflow)
+        self.assertTrue(roots, "Found no test directories in the workflow's steps.")
+
+        for event in ("pull_request", "push"):
+            patterns = [p.rstrip("*").rstrip("/") for p in (block[event]["paths"] or [])]
+            uncovered = [r for r in roots
+                         if not any(r == p or r.startswith(p + "/") for p in patterns)]
+            self.assertEqual(
+                [], uncovered,
+                f"{self.WORKFLOW} runs suites under {uncovered} but its {event} "
+                f"paths filter does not cover them — a change there would not run "
+                f"them, and nothing would report that.")
 
 
 if __name__ == "__main__":
