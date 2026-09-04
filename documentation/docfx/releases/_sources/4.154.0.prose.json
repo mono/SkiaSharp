@@ -1,0 +1,79 @@
+{
+  "theme": "Skia m154 engine update",
+  "highlights_headline": "SkiaSharp 4.154.0 advances the bundled renderer to Skia m154 with updated native packages and runtime fixes.",
+  "highlights_body": "It adds Graphite GPU bindings and asynchronous pixel reads, improves native package coverage, and fixes object lifetime leaks. Linux font fallback can select a different face after the engine update, so applications that require deterministic text should use an explicit or bundled typeface.",
+  "breaking": [
+    {
+      "title": "Linux font fallback may select a different face",
+      "body": "Skia now tries FcFontMatch before the previous FcFontSort fallback path. Applications that depend on fontconfig selecting an exact fallback face may see different glyphs or text metrics. Specify an explicit family and style, or use a bundled typeface, when deterministic font selection matters.",
+      "prs": []
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated through milestone m154",
+          "detail": "The bundled renderer advances through the m152 and m153 updates to m154, including upstream m151 and m153 bug-fix syncs.",
+          "prs": [4538, 4568, 4651, 4808, 4826, 4927, 4945]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings",
+          "detail": "Graphite bindings are available for Vulkan, Metal, and Dawn, enabling applications to use Skia's newer GPU backend across those graphics APIs.",
+          "prs": [3968]
+        },
+        {
+          "lead": "Asynchronous pixel readback",
+          "detail": "SKImage and SKSurface gain backend-neutral asynchronous RequestReadPixels support for readback without blocking the calling path.",
+          "prs": [4545]
+        },
+        {
+          "lead": "Vulkan Silk.NET package restored",
+          "detail": "The SkiaSharp.Vulkan.Silk.NET package is available again, restoring the managed Vulkan integration package for Silk.NET consumers.",
+          "prs": [4527, 4841]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Pixel-backed objects retain their source",
+          "detail": "SKPixmap subset and With* operations, SKRegion.SpanIterator, and raster SKImage creation now keep required managed or native resources alive, preventing use-after-free and allocation leaks.",
+          "prs": [4355, 4455, 4558]
+        },
+        {
+          "lead": "Runtime-effect and data paths allocate less",
+          "detail": "Resetting SKRuntimeEffectUniforms releases the prior uniform buffer, uniform lookup storage is sized up front, and SKData.SaveTo and encoded-text access avoid unnecessary copies.",
+          "prs": [4498, 4512, 4550, 4783]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Native diagnostic and font packages improved",
+          "detail": "Apple native symbol packages are produced during packing, Android symbol identity is deterministic, and Nano Server gains FreeType-backed font support.",
+          "prs": [4280, 4843, 4846]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Added FreeType-backed font support for Nano Server",
+    "mmitche": "Improved Windows native-build environment initialization",
+    "ramezgerges": "Added Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "preview_summaries": {
+    "v4.152.0-preview.1.1": "Preview 1 introduced the m152 engine update, Graphite GPU bindings, asynchronous pixel readback, Vulkan Silk.NET packaging, and lifetime fixes for pixel-backed objects.",
+    "v4.152.0-rc.1.26426.14": "Release Candidate 1 added m152 servicing updates, Apple native symbol packages, HarfBuzz resource-lifetime fixes, and runtime-effect disposal improvements."
+  },
+  "harfbuzz_summary": "HarfBuzz shaping avoids copying feature arrays, and converting non-memory-backed Skia streams to HarfBuzz blobs now releases the temporary stream resource."
+}
