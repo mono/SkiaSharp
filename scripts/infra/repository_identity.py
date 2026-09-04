@@ -383,7 +383,8 @@ def _is_scanned_path(relative: str) -> bool:
     if path.suffix.lower() not in _SCANNED_SUFFIXES:
         return False
     return (
-        relative.startswith(".github/scripts/")
+        relative.startswith(".github/actions/")
+        or relative.startswith(".github/scripts/")
         or relative.startswith(".github/workflows/")
         or relative.startswith(".agents/skills/")
         or relative.startswith("scripts/")
@@ -392,6 +393,10 @@ def _is_scanned_path(relative: str) -> bool:
         or relative.startswith("documentation/site/")
         or relative.startswith("samples/Gallery/")
         or relative.startswith("samples/SkiaFiddle/")
+        or relative in {
+            "documentation/dev/site.md",
+            "documentation/dev/writing-docs.md",
+        }
         or relative == "documentation/docfx/TOC.yml"
         or relative == "documentation/docfx/docfx.json"
     )
@@ -415,8 +420,10 @@ def _legacy_allowlist_reason(
         return "exact current-site URL rewritten by destination-render tests"
     if (
         relative.endswith(".md")
+        and not relative.startswith(".agents/skills/")
         and not relative.startswith(".github/workflows/")
         and not in_code_fence
+        and not re.search(r"mono\.github\.io/SkiaSharp", line, re.IGNORECASE)
         and not re.match(r"^\s*(?:[-*+]|\d+[.)]|\|)", line)
         and not re.match(
             r"^\s*(?:(?:[-*+]|\d+[.)])\s*)?"
@@ -472,7 +479,11 @@ def _legacy_allowlist_reason(
         return "Azure pipeline 345 name is intentionally unchanged"
     if relative == ".github/workflows/track-artifact-sizes.yml" and "mono-SkiaSharp" in line:
         return "Azure Pipelines check name is intentionally unchanged"
-    if line.lstrip().startswith("#") and "https://github.com/" not in line:
+    if (
+        not relative.startswith(".agents/skills/")
+        and line.lstrip().startswith("#")
+        and "https://github.com/" not in line
+    ):
         return "non-executable comment"
     if (
         line.lstrip().startswith(("//", "*"))

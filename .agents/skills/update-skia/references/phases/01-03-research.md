@@ -58,7 +58,7 @@ DIFF_RANGE="${BASE_UPSTREAM_SHA}..${TARGET_UPSTREAM_REF}"
 ```
 
 Use ancestry, not SHA equality, to determine whether the target is already contained in the
-selected mono/skia base. If it is, stop before branching. A matching milestone number alone is
+selected paired Skia base. If it is, stop before branching. A matching milestone number alone is
 not proof of no work; same-milestone bug-fix commits still count.
 
 ## Phase 02 — analyze behavior, not only signatures

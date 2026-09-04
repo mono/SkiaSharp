@@ -481,7 +481,55 @@ class RepositoryIdentityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             violations = IDENTITY.scan_identity_drift(root)
-            self.assertEqual(9, len(violations))
+            self.assertEqual(10, len(violations))
+
+    def test_identity_scan_treats_agent_metadata_and_comments_as_operational(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess = __import__("subprocess")
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            files = {
+                ".agents/skills/ci-status/SKILL.md":
+                    "mono/SkiaSharp and mono/SkiaSharp-API-docs\n",
+                ".agents/skills/release-branch/SKILL.md":
+                    "# Create locally, push mono/skia then mono/SkiaSharp\n",
+                ".agents/skills/review-skia-update/SKILL.md":
+                    "Review a PR in mono/skia.\n",
+                ".agents/skills/merge-skia-update/SKILL.md":
+                    "Requires access to mono/skia and mono/SkiaSharp.\n",
+            }
+            for relative, content in files.items():
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
+            self.assertEqual(4, len(IDENTITY.scan_identity_drift(root)))
+
+    def test_identity_scan_covers_github_actions(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess = __import__("subprocess")
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            action = root / ".github" / "actions" / "copilot-cli" / "action.yml"
+            action.parent.mkdir(parents=True)
+            action.write_text("repository: MoNo/SkIaShArP\n", encoding="utf-8")
+            self.assertEqual(
+                [
+                    ".github/actions/copilot-cli/action.yml:1: "
+                    "repository: MoNo/SkIaShArP"
+                ],
+                IDENTITY.scan_identity_drift(root),
+            )
+
+    def test_pages_identity_is_not_narrative(self) -> None:
+        self.assertIsNone(
+            IDENTITY._legacy_allowlist_reason(
+                "documentation/dev/site.md",
+                "The site is at mono.github.io/SkiaSharp.",
+                "The site is at mono.github.io/SkiaSharp.",
+            )
+        )
 
     def test_identity_scan_allows_exact_historical_example_path(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

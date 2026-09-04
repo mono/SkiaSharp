@@ -133,5 +133,5 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filte
 Families `geometry-math` and `handles-and-collections` need you to verify an algorithm or a
 pointer-stability invariant in the pinned Skia C++. The runner does not check out the submodule, so
 read the SHA (`git submodule status externals/skia` or `.gitmodules`) and view the file in
-`mono/skia` at that commit, and cite it. This is **read-only** verification — never edit or build
+the paired Skia repository at that commit, and cite it. This is **read-only** verification — never edit or build
 native code.

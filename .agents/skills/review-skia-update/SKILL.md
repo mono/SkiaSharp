@@ -1,7 +1,7 @@
 ---
 name: review-skia-update
 description: >-
-  Review a Skia upstream merge PR in mono/skia. Produces a security-auditable
+  Review a Skia upstream merge PR in the paired Skia repository. Produces a security-auditable
   report by diffing against the upstream branch, verifying generated P/Invoke
   bindings, checking source integrity, and auditing DEPS changes.
   Triggers: "review skia update PR #NNN", "review skia PR", "review skia bump",
@@ -10,7 +10,7 @@ description: >-
 
 # Review Skia Update
 
-Analyze a Skia upstream merge PR in `mono/skia` and produce a structured, schema-validated
+Analyze a Skia upstream merge PR in the paired Skia repository and produce a structured, schema-validated
 review report. Reduces 100K–500K line diffs to focused, human-reviewable artifacts.
 
 ## ⛔ MANDATORY FIRST STEPS (do not skip)

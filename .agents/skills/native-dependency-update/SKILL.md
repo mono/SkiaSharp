@@ -255,7 +255,7 @@ Do NOT assume all entries use the same schema. Check `component.type` first.
 
 Both repos use branch name `dev/update-{dep}`. The skia branch was already created by the setup script.
 
-#### Step 1: Create mono/skia PR
+#### Step 1: Create the paired Skia PR
 
 The branch `dev/update-{dep}` already exists in `externals/skia` (created by setup script).
 
@@ -317,7 +317,7 @@ Before proceeding, verify ALL of these:
 
 ### Phase 6: Monitor CI
 
-SkiaSharp uses Azure DevOps. mono/skia has no CI — relies on SkiaSharp's.
+SkiaSharp uses Azure DevOps. The paired Skia repository has no CI and relies on SkiaSharp's.
 
 ### Phase 7: Merge
 
@@ -325,7 +325,7 @@ SkiaSharp uses Azure DevOps. mono/skia has no CI — relies on SkiaSharp's.
 
 > **🚨 CRITICAL: SQUASH MERGE CREATES NEW COMMITS**
 >
-> When you squash-merge mono/skia PR, GitHub creates a **NEW commit SHA** on the target branch.
+> When you squash-merge the paired Skia PR, GitHub creates a **NEW commit SHA** on the target branch.
 > The original commits on `dev/update-{dep}` become **orphaned** when the branch is deleted.
 > 
 > **If SkiaSharp's submodule still points to the old (orphaned) commit, it will BREAK:**
@@ -354,7 +354,7 @@ Before proceeding past each step, verify:
 - [ ] SkiaSharp PR merged
 
 > ❌ **NEVER** merge both PRs in quick succession without updating the submodule in between.
-> ❌ **NEVER** assume the submodule reference is correct after squash-merging mono/skia.
+> ❌ **NEVER** assume the submodule reference is correct after squash-merging the paired Skia PR.
 
 #### If You Must Amend a Pushed Commit
 If you must amend a commit in `externals/skia`:

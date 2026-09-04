@@ -50,7 +50,7 @@ It does **not** try to verify whether a shipped `release/*.x` line carries the l
 *within* its milestone (e.g. a cherry-picked CVE fix in `150.0.7871.x`). That within-milestone
 backport question belongs to the [Skia CVE resolution](skia-cve-resolution.md) process, which
 does proper merge-base ancestry against the upstream fix commit. A naive SHA comparison can't
-answer it anyway: our submodule pins the **mono/skia fork**, not upstream google/skia, so the
+answer it anyway: our submodule pins the **paired Skia fork**, not upstream google/skia, so the
 branch SHA and the channel's `hashes.skia` are not directly comparable.
 
 ## Data Access

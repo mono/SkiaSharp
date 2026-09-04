@@ -209,7 +209,7 @@ mis-stating what is supported, so treat it as a finding.
 ```bash
 # 1. Get the actual submodule commit
 git submodule status externals/skia
-# Output: 8c99e432... externals/skia (the mono/skia fork commit)
+# Output: 8c99e432... externals/skia (the paired Skia fork commit)
 
 # 2. Read the REAL milestone from the source
 cat externals/skia/include/core/SkMilestone.h

@@ -27,7 +27,7 @@ Local modes:
 # Create and validate local branches and commits
 ./scripts/infra/publishing/prepare-release.ps1 -Base main -Release 4.153.0-preview.1 -Mode Apply
 
-# Create locally, push mono/skia then mono/SkiaSharp, and create a stable bump PR
+# Create locally, push paired Skia then SkiaSharp, and create a stable bump PR
 ./scripts/infra/publishing/prepare-release.ps1 -Base main -Release 4.153.0-preview.1 -Mode Push
 ```
 

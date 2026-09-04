@@ -3,11 +3,11 @@ name: merge-skia-update
 description: >
   Guide a maintainer through manually landing an already reviewed Skia update.
   Use after review-skia-update has completed and the maintainer is happy with
-  the paired mono/skia and mono/SkiaSharp PRs. Optionally preserves the previous
-  release line, prepares the mono/skia merge message, pauses for the manual
+  the paired Skia and SkiaSharp PRs. Optionally preserves the previous
+  release line, prepares the paired Skia merge message, pauses for the manual
   native merge, repins the existing parent PR to the actual merged commit, then
   prepares the SkiaSharp merge message. This skill never merges either PR.
-compatibility: Requires git, gh, and PowerShell 7.4+ with access to mono/skia and mono/SkiaSharp.
+compatibility: Requires git, gh, and PowerShell 7.4+ with access to the paired Skia and current SkiaSharp repositories.
 ---
 
 # Merge Skia Update
@@ -68,28 +68,28 @@ The script determines the release action from the parent base branch:
 - `release/A.B.x`: reports a servicing sync and exits without creating refs.
 
 The script always defaults to a dry run. For a milestone bump targeting `main`,
-it reads the current SkiaSharp base tip and the exact mono/skia commit referenced
-by its `externals/skia` gitlink. It requires the supplied mono/skia base branch
+it reads the current SkiaSharp base tip and the exact paired Skia commit referenced
+by its `externals/skia` gitlink. It requires the supplied paired Skia base branch
 to point at that commit and preflights the derived release branch in both
 repositories.
 
 When the script reports a milestone bump, show the output and obtain
 confirmation. Rerun with the same inputs plus `-Push`. The script checks the
-source and destination refs again, creates the mono/skia release branch first,
-then the mono/SkiaSharp release branch, and verifies both. It never moves an
+source and destination refs again, creates the paired Skia release branch first,
+then the SkiaSharp release branch, and verifies both. It never moves an
 existing branch. When it reports a same-milestone or servicing sync, continue
 without a push confirmation.
 
-## 3. Prepare the mono/skia merge
+## 3. Prepare the paired Skia merge
 
 Invoke `pr-commit-message` for the resolved paired Skia PR and give its title and
 body to the maintainer.
 
-Tell the maintainer to merge mono/skia manually using **Create a merge commit**.
+Tell the maintainer to merge the paired Skia PR manually using **Create a merge commit**.
 Squash and rebase must not be used because upstream merge ancestry is part of
 the update history.
 
-Stop. Continue only after the maintainer says mono/skia is merged.
+Stop. Continue only after the maintainer says the paired Skia PR is merged.
 
 ## 4. Repin the existing SkiaSharp PR
 
@@ -112,13 +112,13 @@ The default is a dry run. The script:
 4. requires the merged tree to equal the reviewed tree.
 
 Show the output. If it is correct, rerun with `-Push`. The script updates only
-`externals/skia` and the mono/skia `commitHash` in `cgmanifest.json`, commits the
+`externals/skia` and the paired Skia `commitHash` in `cgmanifest.json`, commits the
 change, and pushes the existing SkiaSharp PR branch without force.
 
 If the current checkout is unsuitable, ask whether the maintainer wants to
 check out the parent PR branch or avoid a local checkout. For the no-checkout
 option, first verify the same two-parent ancestry and tree-equality conditions,
-record the exact verified mono/skia merge SHA, then trigger the existing
+record the exact verified paired Skia merge SHA, then trigger the existing
 workflow:
 
 ```shell
@@ -137,17 +137,17 @@ other than the recorded verified one. Wait for the maintainer to merge the
 dependent PR manually, then verify the parent PR still points to that exact
 SHA. Do not generate the parent merge message until the dependent PR is merged.
 
-## 5. Prepare the mono/SkiaSharp merge
+## 5. Prepare the SkiaSharp merge
 
 Invoke `pr-commit-message` for the updated SkiaSharp PR and give its title
 and body to the maintainer.
 
 Tell the maintainer to merge it manually using the repository's normal merge
 method. Do not wait for another PR CI run: the repin script proved that the
-merged mono/skia tree is identical to the reviewed PR tree. CI on the resolved
+merged paired Skia tree is identical to the reviewed PR tree. CI on the resolved
 parent base branch validates the resulting merge.
 
-Stop. Continue only after the maintainer says mono/SkiaSharp is merged.
+Stop. Continue only after the maintainer says the SkiaSharp PR is merged.
 
 ## 6. Post-merge check
 
@@ -155,7 +155,7 @@ Confirm:
 
 - both PRs are merged;
 - the resolved SkiaSharp parent base branch points its gitlink and
-  cgmanifest at the actual mono/skia merge commit;
+  cgmanifest at the actual paired Skia merge commit;
 - CI has started on that parent base branch for the resulting SkiaSharp commit.
 
 Report both merged SHAs and the preserved release branch, if created. Do not

@@ -4,7 +4,7 @@ description: >
   Check the CI build health and automation status of SkiaSharp across main and
   recent release branches. Collects the last N builds from the AzDO pipeline chain
   (Public plus the combined Build and connected Tests) and all GitHub Actions workflows from
-  mono/SkiaSharp and mono/SkiaSharp-API-docs, providing a daily dashboard view
+  the current SkiaSharp and `.gitmodules`-resolved API-docs repositories, providing a daily dashboard view
   with AI-powered analysis of failures, regressions, and flakes.
 
   Use when user asks to:

@@ -11,9 +11,9 @@ SkiaSharp provides two types of documentation: concept docs and API docs.
 
 ## Concept Docs
 
-The conceptual docs live on the `main` branch under `documentation/docfx/guides/` and are published to:
-
-- https://mono.github.io/SkiaSharp/docs/
+The conceptual docs live on the `main` branch under `documentation/docfx/guides/`. Their current
+public URL is the `publicSiteBaseUrl` in
+[`repository-identity.json`](../../scripts/infra/repository-identity.json), under `/docs/`.
 
 See [site.md](site.md) for how to build, preview, and customize the docs site.
 
@@ -21,9 +21,8 @@ See [site.md](site.md) for how to build, preview, and customize the docs site.
 
 The API docs are XML reference documentation generated from SkiaSharp assemblies using [mdoc](https://github.com/mono/api-doc-tools). They are published to https://docs.microsoft.com/dotnet/api/skiasharp.
 
-Because the docs are large and contain examples, images, and other assets, they are hosted in a separate repository:
-
-- https://github.com/mono/SkiaSharp-API-docs
+Because the docs are large and contain examples, images, and other assets, they are hosted in the
+API-docs repository resolved from the `docs` entry in [`.gitmodules`](../../.gitmodules).
 
 This repository is pulled into the main SkiaSharp repo as a Git submodule at `docs/`. The XML files live under `docs/SkiaSharpAPI/`.
 
@@ -37,14 +36,14 @@ repo), and the submodule-sync workflow is here:
 
 A single agentic workflow handles the entire pipeline — regenerating XML stubs from CI NuGet packages AND filling "To be added." placeholders with AI-written documentation:
 
-- **Workflow**: [`auto-api-docs-writer.md`](https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/auto-api-docs-writer.md) (agentic, in the **docs repo** `mono/SkiaSharp-API-docs` — it checks SkiaSharp out to borrow the engines, then writes the XML into the docs repo)
+- **Workflow**: [`auto-api-docs-writer.md`](../../docs/.github/workflows/auto-api-docs-writer.md) (agentic, in the **docs repo** resolved from `.gitmodules` — it checks SkiaSharp out to borrow the engines, then writes the XML into the docs repo)
 - **Schedule**: Daily at 8 AM UTC
 - **What it does**:
   1. **Pre-agent step**: Downloads latest NuGet packages from CI, runs `dotnet cake --target=update-docs` to regenerate XML stubs
   2. **AI agent**: Reads the `api-docs` skill, finds all "To be added." placeholders, reads C# source code, writes proper documentation
-  3. **Post-step**: Pushes branch and creates PR in `mono/SkiaSharp-API-docs`
-- **Output**: PR `automation/write-api-docs` → `main` in `mono/SkiaSharp-API-docs`
-- **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp-API-docs/actions/workflows/auto-api-docs-writer.lock.yml) → "Auto API Docs Writer" → "Run workflow"
+  3. **Post-step**: Pushes branch and creates a PR in the resolved API-docs repository
+- **Output**: PR `automation/write-api-docs` → `main` in the resolved API-docs repository
+- **Manual trigger**: Open Actions in the resolved API-docs repository → "Auto API Docs Writer" → "Run workflow"
 
 > **Runner note**: `mdoc.exe` is a .NET Framework executable, but `docs.cake` runs it
 > under **mono**, so the stub-regeneration job runs on a Linux runner with
@@ -52,13 +51,13 @@ A single agentic workflow handles the entire pipeline — regenerating XML stubs
 
 ### Step 2: Submodule sync (auto-docs-submodule-sync)
 
-After docs changes are merged to `mono/SkiaSharp-API-docs` `main` (whether from the AI pipeline, manual edits, or any other source), the submodule pointer in this repo needs to be updated:
+After docs changes are merged to the resolved API-docs repository's `main` branch (whether from the AI pipeline, manual edits, or any other source), the submodule pointer in this repo needs to be updated:
 
 - **Workflow**: [`auto-docs-submodule-sync.yml`](../../.github/workflows/auto-docs-submodule-sync.yml) (in this repo)
 - **Schedule**: Daily at 10 AM UTC
-- **What it does**: Compares the `docs/` submodule SHA with the latest `mono/SkiaSharp-API-docs` `main` SHA. If behind, creates a PR to bump the submodule.
-- **Output**: PR `automation/update-docs-submodule` → `main` in `mono/SkiaSharp`
-- **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp/actions/workflows/auto-docs-submodule-sync.yml) → "Sync - Docs Submodule" → "Run workflow"
+- **What it does**: Compares the `docs/` submodule SHA with the resolved API-docs repository's latest `main` SHA. If behind, creates a PR to bump the submodule.
+- **Output**: PR `automation/update-docs-submodule` → `main` in the current SkiaSharp repository
+- **Manual trigger**: Open Actions in the current SkiaSharp repository → "Sync - Docs Submodule" → "Run workflow"
 
 ### Pipeline timeline
 
@@ -133,7 +132,8 @@ dotnet cake --target=docs-format-docs
 
 This will report a summary of documentation coverage (types and members with missing docs).
 
-Once you are happy with your changes, push them to your fork of [`mono/SkiaSharp-API-docs`](https://github.com/mono/SkiaSharp-API-docs) and open a PR.
+Once you are happy with your changes, push them to your fork of the API-docs repository resolved
+from `.gitmodules` and open a PR.
 
 For detailed XML documentation patterns and review criteria, see:
 

@@ -46,7 +46,7 @@ Also watch for renamed/removed GN flags between milestones — obsolete flags ca
 
 ### 7. `.gitmodules` Branch Name
 
-When the mono/skia target branch name changes, `.gitmodules` must be updated to track the new branch. Easy to forget; causes silent submodule tracking failures.
+When the paired Skia target branch name changes, `.gitmodules` must be updated to track the new branch. Easy to forget; causes silent submodule tracking failures.
 
 ### 19. Fork-Only GN `declare_args` Cleanup
 

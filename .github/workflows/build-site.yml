@@ -151,13 +151,11 @@ jobs:
         run: |
           COMMIT_SHORT="${GITHUB_SHA:0:7}"
           APP_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
-          python3 scripts/infra/repository_identity.py \
-            --repository "$GITHUB_REPOSITORY" \
-            render-file documentation/docfx/TOC.yml
           jq --arg footer "$APP_FOOTER" \
             '.build.globalMetadata._appFooter = $footer' \
             documentation/docfx/docfx.json > documentation/docfx/docfx-build.json
-          dotnet docfx documentation/docfx/docfx-build.json
+          python3 scripts/build-docs-site.py \
+            --config documentation/docfx/docfx-build.json
 
       # ── Build Gallery Blazor WASM app ──────────────────────────
       - name: Build WASM native libraries
@@ -384,7 +382,7 @@ jobs:
           diff -u \
             "$RUNNER_TEMP/wasm-assets-before.sha256" \
             "$RUNNER_TEMP/wasm-assets-after.sha256"
-          if grep -R -nE '\{\{(Repository|SkiaRepository|DocsRepository)\}\}' \
+          if grep -R -nE '\{\{(Repository|SkiaRepository|DocsRepository|PublicSiteBaseUrl)\}\}' \
               site --exclude-dir=releases; then
             echo "::error::Unresolved repository identity placeholder in assembled site."
             exit 1

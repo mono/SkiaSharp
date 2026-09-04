@@ -1,6 +1,8 @@
 # Building the Website
 
-This guide covers how to build, preview, and iterate on the SkiaSharp documentation site at [mono.github.io/SkiaSharp](https://mono.github.io/SkiaSharp/).
+This guide covers how to build, preview, and iterate on the SkiaSharp documentation site. The
+current public URL is the `publicSiteBaseUrl` in
+[`repository-identity.json`](../../scripts/infra/repository-identity.json).
 
 ## Site Structure
 
@@ -20,7 +22,7 @@ The CI workflow (`build-site.yml`) builds all three in parallel, then assembles 
 dotnet tool restore   # installs DocFX and other tools
 ```
 
-You also need `python3` if you want to use the preview server script.
+You also need `python3` for the identity-safe DocFX builder and preview scripts.
 
 ## Building Locally
 
@@ -39,13 +41,13 @@ To preview in a browser, open `documentation/site/index.html` directly. Note tha
 Build the DocFX site locally to iterate on content, styling, templates, or configuration:
 
 ```bash
-dotnet docfx documentation/docfx/docfx.json
+python3 scripts/build-docs-site.py
 ```
 
 This outputs to `output/site/docs/`. To preview with live rebuild on changes:
 
 ```bash
-dotnet docfx documentation/docfx/docfx.json --serve
+python3 scripts/build-docs-site.py --serve
 ```
 
 This starts a local server (typically at `http://localhost:8080`) and watches for file changes. This is the fastest way to iterate on:
@@ -148,7 +150,7 @@ To customize the look of the DocFX site beyond what configuration offers, you ca
    ```json
    "template": ["default", "modern", "template"]
    ```
-4. Rebuild: `dotnet docfx documentation/docfx/docfx.json --serve`
+4. Rebuild: `python3 scripts/build-docs-site.py --serve`
 
 Common customizations:
 - **Styles:** Override CSS in `template/public/main.css`
@@ -185,5 +187,3 @@ scripts/
 .github/workflows/
   build-site.yml            # Unified build + deploy workflow
 ```
-
-
