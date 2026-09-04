@@ -247,44 +247,20 @@ class SkillDocTests(unittest.TestCase):
                          f"SKILL.md rows name untracked workflows: {unresolved}")
 
 
-class BackportWorkflowTests(unittest.TestCase):
-    def setUp(self):
-        self.path = os.path.join(WORKFLOW_DIR, "backport.yml")
-        self.data = load_workflow("backport.yml")
-        with open(self.path, encoding="utf-8") as stream:
-            self.text = stream.read()
-
-    def test_uses_pinned_arcade_contract(self):
-        self.assertEqual("PR - Backport", self.data["name"])
-        self.assertEqual(
-            {
-                "actions": "write",
-                "contents": "write",
-                "issues": "write",
-                "pull-requests": "write",
-            },
-            self.data["permissions"],
+class SubmoduleSyncIdentityTests(unittest.TestCase):
+    def test_identity_tooling_is_staged_before_target_checkout(self):
+        workflow = load_workflow("auto-skia-submodule-sync.yml")
+        steps = workflow["jobs"]["sync"]["steps"]
+        names = [step.get("name") for step in steps]
+        stage_index = names.index("Stage identity tooling")
+        checkout_index = names.index("Checkout SkiaSharp")
+        validate_index = names.index("Validate branches")
+        self.assertLess(stage_index, checkout_index)
+        self.assertLess(checkout_index, validate_index)
+        self.assertIn(
+            '$IDENTITY_SCRIPT" --root "$GITHUB_WORKSPACE"',
+            steps[validate_index]["run"],
         )
-        job = self.data["jobs"]["backport"]
-        self.assertEqual(
-            "dotnet/arcade/.github/workflows/backport-base.yml@"
-            "306225d7029934938d109e18df390f04e366a68d",
-            job["uses"],
-        )
-        self.assertEqual(
-            {
-                "repository_owners": "mono,dotnet",
-                "pr_title_template": "[%target_branch%] %source_pr_title%",
-                "pr_description_template":
-                    "Backport of #%source_pr_number% to %target_branch%",
-                "pr_labels": "backport",
-            },
-            job["with"],
-        )
-
-    def test_uses_comment_and_cleanup_triggers_without_tibdex(self):
-        self.assertEqual({"issue_comment", "schedule"}, on_keys(self.data))
-        self.assertNotIn("tibdex/backport", self.text)
 
 
 if __name__ == "__main__":

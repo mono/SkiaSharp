@@ -178,6 +178,44 @@ Assert-Equal "$($identityConfig.offlineRepository)|$expectedSkiaRemote" $offline
     'The offline repository fallback was not loaded.'
 Assert-Equal "dotnet/SkiaSharp|$expectedSkiaRemote" $runtimeIdentity.Trim() `
     'The runtime repository did not override only the current repository identity.'
+$transferRoot = Join-Path $PSScriptRoot ".identity-transfer-$([guid]::NewGuid().ToString('N'))"
+try {
+    $null = New-Item -ItemType Directory -Path $transferRoot
+    @'
+[submodule "externals/skia"]
+	path = externals/skia
+	url = https://github.com/dotnet/skia.git
+[submodule "docs"]
+	path = docs
+	url = https://github.com/dotnet/SkiaSharp-API-docs
+'@ | Set-Content (Join-Path $transferRoot '.gitmodules')
+    $transferConfig = $identityConfig.PSObject.Copy()
+    $transferConfig.offlineRepository = 'dotnet/SkiaSharp'
+    $transferConfig.publicSiteBaseUrl = 'https://docs.example/SkiaSharp'
+    $transferConfig | ConvertTo-Json -Depth 10 |
+        Set-Content (Join-Path $transferRoot 'repository-identity.json')
+    $oldConfig = $env:SKIASHARP_IDENTITY_CONFIG
+    $oldRoot = $env:SKIASHARP_REPOSITORY_ROOT
+    $oldRepository = $env:GITHUB_REPOSITORY
+    try {
+        Remove-Item Env:\GITHUB_REPOSITORY -ErrorAction SilentlyContinue
+        $env:SKIASHARP_IDENTITY_CONFIG = Join-Path $transferRoot 'repository-identity.json'
+        $env:SKIASHARP_REPOSITORY_ROOT = $transferRoot
+        $transferIdentity = @(
+            pwsh -NoLogo -NoProfile -Command (
+                "Import-Module '$commonPath' -Force; " +
+                'Write-Output "$ReleaseRepository|$ReleaseSkiaRemote"')
+        ) -join "`n"
+    } finally {
+        $env:SKIASHARP_IDENTITY_CONFIG = $oldConfig
+        $env:SKIASHARP_REPOSITORY_ROOT = $oldRoot
+        $env:GITHUB_REPOSITORY = $oldRepository
+    }
+    Assert-Equal 'dotnet/SkiaSharp|https://github.com/dotnet/skia.git' `
+        $transferIdentity.Trim() 'The complete transfer identity fixture was not resolved.'
+} finally {
+    Remove-Item $transferRoot -Recurse -Force -ErrorAction SilentlyContinue
+}
 $preview = Get-ReleaseIdentity '4.152.0-preview.1.26426.14'
 Assert-Equal 'release/4.152.0-preview.1' $preview.Branch 'Preview branch identity was incorrect.'
 Assert-Equal 'v4.152.0-preview.1.26426.14' $preview.Tag 'Preview tag identity was incorrect.'

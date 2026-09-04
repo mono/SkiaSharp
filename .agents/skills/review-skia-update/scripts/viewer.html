@@ -407,7 +407,7 @@
         // Fallback: not found in report, try opening on GitHub
         const meta = report.meta || {};
         const prHead = (meta.shas || {}).prHead || 'HEAD';
-        const repo = text(meta.repo, 'mono/skia');
+        const repo = text(meta.repo, 'unknown/skia');
         const url = `https://github.com/${repo}/blob/${prHead}/${targetPath}`;
         window.open(url, '_blank', 'noopener');
       }
@@ -546,7 +546,10 @@
         links.innerHTML = '';
         const owner = getOwner(repo);
         if (skiaSharpPrNumber) {
-          links.appendChild(createLinkButton(`https://github.com/mono/SkiaSharp/pull/${skiaSharpPrNumber}`, `SkiaSharp PR #${skiaSharpPrNumber}`, 'bi-box-arrow-up-right'));
+          const skiaSharpRepository = text(meta.skiasharpRepository, '');
+          if (skiaSharpRepository) {
+            links.appendChild(createLinkButton(`https://github.com/${skiaSharpRepository}/pull/${skiaSharpPrNumber}`, `SkiaSharp PR #${skiaSharpPrNumber}`, 'bi-box-arrow-up-right'));
+          }
         }
         if (skiaPrNumber && owner) {
           links.appendChild(createLinkButton(`https://github.com/${owner}/skia/pull/${skiaPrNumber}`, `Skia PR #${skiaPrNumber}`, 'bi-box-arrow-up-right', 'outline-secondary'));

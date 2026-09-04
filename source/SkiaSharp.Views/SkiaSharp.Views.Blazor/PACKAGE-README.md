@@ -60,13 +60,13 @@ The package supplies its browser interop automatically. Use .NET 8 or later for 
 
 ## See it running
 
-- [Live Blazor WebAssembly Gallery](https://mono.github.io/SkiaSharp/gallery/) - interactive SkiaSharp examples with no installation
+- [Live Blazor WebAssembly Gallery]({{DocumentationUrl}}/gallery/) - interactive SkiaSharp examples with no installation
 - [Buildable Blazor WebAssembly sample]({{RepositoryUrl}}/tree/main/samples/Basic/BlazorWebAssembly)
-- [SkiaFiddle](https://mono.github.io/SkiaSharp/fiddle/) - experiment with drawing code in your browser
+- [SkiaFiddle]({{DocumentationUrl}}/fiddle/) - experiment with drawing code in your browser
 
 ## Documentation and resources
 
-- [SkiaSharp documentation](https://mono.github.io/SkiaSharp/docs/)
+- [SkiaSharp documentation]({{DocumentationUrl}}/docs/)
 - [Blazor API reference on Microsoft Learn](https://learn.microsoft.com/dotnet/api/skiasharp.views.blazor)
 - [Core SkiaSharp API reference](https://learn.microsoft.com/dotnet/api/skiasharp)
 - [WebAssembly package guidance]({{RepositoryUrl}}/blob/main/documentation/dev/packages.md)

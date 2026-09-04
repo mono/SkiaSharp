@@ -91,7 +91,7 @@ resolved from `.gitmodules`.
 | Update GitHub Release summaries | `{current}` | Workflow dispatch | Release bodies go stale |
 | Release - Tooling Tests | `{current}` | Push/PR to release tooling | Release scripts regress unnoticed |
 | Automation - Tooling Tests | `{current}` | Push/PR to automation tooling | Automation scripts regress unnoticed |
-| PR - Backport | `{current}` | `/backport to <branch>` PR comment | Cherry-picks to release branches fail |
+| PR - Backport | `{current}` | PR label/comment | Cherry-picks to release branches fail |
 | PR - Rebase | `{current}` | PR comment | PR rebase automation broken |
 | PR - Artifacts Comment | `{current}` | Workflow run events | Build links not posted to PRs |
 | Merge Message | `{current}` | PR comment events | Merge commit messages not drafted |

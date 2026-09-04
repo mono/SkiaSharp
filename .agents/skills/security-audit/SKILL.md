@@ -59,6 +59,12 @@ combined into a single unified report.
 8. Check false positives
 9. Assemble structured JSON report
 10. Validate report (`validate-security-audit.py`)
+
+Set `meta.repository` and `meta.skiaRepository` from
+`python3 scripts/infra/repository_identity.py get repository` and
+`python3 scripts/infra/repository_identity.py get skiaRepository` so report links
+follow the repository transfer. Existing report items with a stored `url` remain
+authoritative.
 11. Render HTML (`render-security-audit.py`)
 12. Present markdown summary to user
 
@@ -66,13 +72,20 @@ combined into a single unified report.
 
 ### Step 1: Search Issues & PRs
 
-Search mono/SkiaSharp open issues for:
+Resolve the current and paired repositories:
+
+```bash
+REPOSITORY=$(python3 scripts/infra/repository_identity.py get repository)
+SKIA_REPOSITORY=$(python3 scripts/infra/repository_identity.py get skiaRepository)
+```
+
+Search `$REPOSITORY` open issues for:
 
 - CVE numbers (e.g., "CVE-2024")
 - Keywords: "security", "vulnerability"
 - Dependency names: skia, libpng, expat, zlib, webp, harfbuzz, freetype
 
-Search PRs in both `mono/SkiaSharp` and `mono/skia` for dependency updates already in flight.
+Search PRs in both `$REPOSITORY` and `$SKIA_REPOSITORY` for dependency updates already in flight.
 
 ---
 

@@ -65,10 +65,10 @@ Choose the package that matches the application framework:
 
 ## Documentation and resources
 
-- [SkiaSharp documentation](https://mono.github.io/SkiaSharp/docs/)
+- [SkiaSharp documentation]({{DocumentationUrl}}/docs/)
 - Platform API reference on Microsoft Learn: [Android](https://learn.microsoft.com/dotnet/api/skiasharp.views.android), [iOS and Mac Catalyst](https://learn.microsoft.com/dotnet/api/skiasharp.views.ios), [macOS](https://learn.microsoft.com/dotnet/api/skiasharp.views.mac), and [Tizen](https://learn.microsoft.com/dotnet/api/skiasharp.views.tizen)
 - [Platform samples]({{RepositoryUrl}}/tree/main/samples/Basic)
-- [Live SkiaSharp Gallery](https://mono.github.io/SkiaSharp/gallery/)
+- [Live SkiaSharp Gallery]({{DocumentationUrl}}/gallery/)
 - [Package selection and deployment guide]({{RepositoryUrl}}/blob/main/documentation/dev/packages.md)
 
 ## Feedback and contributing

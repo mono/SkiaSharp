@@ -187,7 +187,7 @@ Each bash call is a fresh subshell — re-`cd` as needed.
    of scope) → emit the **`create-issue` alone**. If nothing clears the bar → exactly one
    **`noop`**. Never finish a run with no safe output at all (that makes the run look incomplete).
 2. **De-dup first.** Run skill Phase 1.3 — skip any candidate already covered by an OPEN
-   `[memory-leak]` issue or PR on `mono/SkiaSharp`. A candidate whose only prior item is
+   `[memory-leak]` issue or PR on the current SkiaSharp repository. A candidate whose only prior item is
    CLOSED may be re-filed.
 3. **Validate before you open a PR.** Only open a PR when you have demonstrated the
    regression test **fails without the fix and passes with it** (skill Phase 3, both

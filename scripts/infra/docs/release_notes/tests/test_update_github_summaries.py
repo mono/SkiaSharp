@@ -11,7 +11,7 @@ _DOCS_DIR = Path(__file__).resolve().parents[2]
 if str(_DOCS_DIR) not in sys.path:
     sys.path.insert(0, str(_DOCS_DIR))
 
-from release_notes import github, update_github_summaries as updater
+from release_notes import common, github, update_github_summaries as updater
 
 GH = github
 
@@ -436,7 +436,10 @@ class RenderManagedSummaryTests(unittest.TestCase):
         )
         rendered = updater.render_managed_summary(candidate)
         self.assertIn("nuget.org/packages/SkiaSharp/4.151.0-preview.1", rendered)
-        self.assertIn("mono.github.io/SkiaSharp/docs/releases/4.151.0.html", rendered)
+        self.assertIn(
+            "{}/docs/releases/4.151.0.html".format(common.PUBLIC_SITE_BASE_URL),
+            rendered,
+        )
         self.assertIn(
             "github.com/mono/SkiaSharp/compare/v4.150.2...v4.151.0-preview.1", rendered
         )

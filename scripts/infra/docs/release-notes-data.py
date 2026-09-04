@@ -136,6 +136,9 @@ DEFAULT_POLISH_LIST = Path("output/files-to-polish.txt")
 _SKIA_REPOSITORIES = tuple(dict.fromkeys(
     (_REPOSITORY_IDENTITY["skiaRepository"], "mono/skia")
 ))
+# Keep the legacy slug as a historical parser during migration: old PR bodies
+# remain immutable. Review/remove it only after no supported release data needs
+# to discover companion links from pre-transfer text.
 _SKIA_REPOSITORY_PATTERN = "(?:{})".format(
     "|".join(re.escape(repository) for repository in _SKIA_REPOSITORIES)
 )

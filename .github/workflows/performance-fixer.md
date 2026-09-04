@@ -198,7 +198,7 @@ those are repo artifacts, not scratch. Each bash call is a fresh subshell — re
    real win is native / upstream (out of scope) → emit the **`create-issue` alone**. If nothing
    clears the bar → exactly one **`noop`**. Never finish a run with no safe output at all.
 2. **De-dup first.** Run skill Phase 1.3 — skip any candidate already covered by an OPEN
-   `[performance]` / `perf(...)` / `Optimize …` issue or PR on `mono/SkiaSharp` (e.g. #4241,
+   `[performance]` / `perf(...)` / `Optimize …` issue or PR on the current SkiaSharp repository (e.g. #4241,
    #3489, #4182, #3033). A candidate whose only prior item is CLOSED may be re-filed.
 3. **Two proofs before you open a PR.** Only open a PR when you have (a) a BenchmarkDotNet
    New-vs-Old result showing a real, repeatable speedup with no allocation regression (skill

@@ -25,23 +25,47 @@ _URL_PATTERNS = (
     re.compile(r"^git@github\.com:(?P<slug>[^/]+/[^/]+?)(?:\.git)?$"),
     re.compile(r"^ssh://git@github\.com/(?P<slug>[^/]+/[^/]+?)(?:\.git)?/?$"),
 )
+_REPOSITORY_BOUNDARY = (
+    r"(?=(?:/|\.git(?:[/?#]|$)|[?#]|[\s\"'<>),;:]|$))"
+)
+_CURRENT_REPOSITORY_URL_RE = re.compile(
+    r"https://github\.com/[^/]+/SkiaSharp" + _REPOSITORY_BOUNDARY,
+    re.IGNORECASE,
+)
+_DOCS_REPOSITORY_URL_RE = re.compile(
+    r"https://github\.com/[^/]+/SkiaSharp-API-docs"
+    + _REPOSITORY_BOUNDARY,
+    re.IGNORECASE,
+)
+_AW_DATA_URL_RE = re.compile(
+    r"https://raw\.githubusercontent\.com/[^/]+/SkiaSharp/aw-data/",
+    re.IGNORECASE,
+)
 _LEGACY_IDENTITY_RE = re.compile(
     r"mono/(?:SkiaSharp(?:-API-docs)?|skia)|"
     r"\bmono-(?:SkiaSharp|skia)\b|"
+    r"mono\.github\.io/SkiaSharp|"
     r"github\.com/orgs/mono/|"
-    r"repository_owners\s*:\s*mono(?:,|\b)|"
     r"github\.repository_owner\s*==\s*['\"]mono['\"]|"
-    r"github\.repository\s*==\s*['\"]mono/SkiaSharp['\"]"
+    r"github\.repository\s*==\s*['\"]mono/SkiaSharp['\"]",
+    re.IGNORECASE,
 )
 _SCANNED_SUFFIXES = {
     ".cake",
+    ".cs",
+    ".csproj",
+    ".html",
+    ".js",
+    ".json",
     ".md",
     ".props",
+    ".razor",
     ".ps1",
     ".psm1",
     ".py",
     ".sh",
     ".targets",
+    ".xaml",
     ".yaml",
     ".yml",
 }
@@ -55,8 +79,12 @@ _TRANSITION_WORKFLOWS = {
 _LEGACY_LITERAL_ALLOWLIST = (
     (
         "scripts/infra/repository-identity.json",
-        re.compile(r"mono/(?:SkiaSharp|skia)|mono-(?:SkiaSharp|skia)"),
-        "central offline fallback and retained legacy cache aliases",
+        re.compile(
+            r"mono/(?:SkiaSharp|skia)|mono-(?:SkiaSharp|skia)|"
+            r"mono\.github\.io/SkiaSharp",
+            re.IGNORECASE,
+        ),
+        "central offline fallback, live Pages base, and retained legacy cache aliases",
     ),
     (
         ".github/workflows/auto-triage.md",
@@ -67,11 +95,6 @@ _LEGACY_LITERAL_ALLOWLIST = (
         ".github/workflows/auto-triage.lock.yml",
         re.compile(r"github\.com/orgs/mono/projects/1"),
         "generated form of the current backlog project transition value",
-    ),
-    (
-        ".github/workflows/backport.yml",
-        re.compile(r"repository_owners\s*:\s*mono,dotnet"),
-        "temporary trusted-owner transition allowlist",
     ),
     (
         ".agents/skills/ci-status/scripts/ci-status.py",
@@ -113,6 +136,34 @@ _LEGACY_LITERAL_ALLOWLIST = (
         re.compile(r"mono/(?:SkiaSharp|skia)"),
         "immutable historical release sample",
     ),
+    (
+        ".agents/skills/**/evals/**",
+        re.compile(
+            r"mono/(?:SkiaSharp|skia)|mono-(?:SkiaSharp|skia)",
+            re.IGNORECASE,
+        ),
+        "fixed evaluation fixture for historical/current repository examples",
+    ),
+    (
+        ".agents/skills/security-audit/scripts/viewer.html",
+        re.compile(r"mono/SkiaSharp", re.IGNORECASE),
+        "legacy scalar-report fallback; new reports carry repository metadata",
+    ),
+    (
+        "scripts/infra/docs/release-notes-paths.json",
+        re.compile(r"mono/SkiaSharp-API-docs", re.IGNORECASE),
+        "narrative explanation of the current docs gitlink classification",
+    ),
+    (
+        "documentation/docfx/docfx.json",
+        re.compile(r"mono/SkiaSharp", re.IGNORECASE),
+        "current DocFX contribution source is rewritten in assembled output",
+    ),
+    (
+        "scripts/infra/perf/templates/dashboard.html",
+        re.compile(r"mono/SkiaSharp", re.IGNORECASE),
+        "current aw-data source is rewritten by tested exact-boundary rendering",
+    ),
 )
 
 
@@ -120,7 +171,10 @@ class IdentityError(RuntimeError):
     """A required repository identity could not be resolved safely."""
 
 
-def load_config(path: Path = CONFIG_PATH) -> dict:
+def load_config(path: Path | None = None) -> dict:
+    path = path or Path(
+        os.environ.get("SKIASHARP_IDENTITY_CONFIG", CONFIG_PATH)
+    )
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
@@ -194,12 +248,15 @@ def read_submodule_repository(root: Path, path: str) -> str:
 
 
 def resolve_identity(
-    root: Path = DEFAULT_ROOT,
+    root: Path | None = None,
     *,
     repository: str | None = None,
     environ: Mapping[str, str] | None = None,
-    config_path: Path = CONFIG_PATH,
+    config_path: Path | None = None,
 ) -> dict:
+    root = root or Path(
+        os.environ.get("SKIASHARP_REPOSITORY_ROOT", DEFAULT_ROOT)
+    )
     root = root.resolve()
     config = load_config(config_path)
     current = resolve_current_repository(repository, environ=environ, config=config)
@@ -253,32 +310,32 @@ def render_site_identity(directory: Path, identity: dict) -> int:
         raise IdentityError(f"Site directory does not exist: {directory}")
     replacements = (
         (
-            re.compile(r"https://github\.com/[^/]+/SkiaSharp-API-docs"),
+            _DOCS_REPOSITORY_URL_RE,
             identity["docsUrl"],
         ),
         (
-            re.compile(r"https://github\.com/[^/]+/SkiaSharp(?!-API-docs)"),
+            _CURRENT_REPOSITORY_URL_RE,
             identity["repositoryUrl"],
         ),
         (
-            re.compile(
-                r"https://raw\.githubusercontent\.com/[^/]+/SkiaSharp/aw-data/"
-            ),
+            _AW_DATA_URL_RE,
             f"https://raw.githubusercontent.com/{identity['repository']}/aw-data/",
         ),
         (
-            re.compile(
-                r"(?<![/A-Za-z0-9_.-])"
-                r"[A-Za-z0-9_.-]+/SkiaSharp-API-docs\b"
-            ),
+            re.compile(r"\{\{DocsRepository\}\}"),
             identity["docsRepository"],
         ),
         (
-            re.compile(
-                r"(?<![/A-Za-z0-9_.-])"
-                r"[A-Za-z0-9_.-]+/SkiaSharp(?!-API-docs)\b"
-            ),
+            re.compile(r"\{\{SkiaRepository\}\}"),
+            identity["skiaRepository"],
+        ),
+        (
+            re.compile(r"\{\{Repository\}\}"),
             identity["repository"],
+        ),
+        (
+            re.compile(r"\{\{PublicSiteBaseUrl\}\}"),
+            identity.get("publicSiteBaseUrl", "{{PublicSiteBaseUrl}}"),
         ),
     )
     changed = 0
@@ -286,7 +343,7 @@ def render_site_identity(directory: Path, identity: dict) -> int:
         if not path.is_file() or path.suffix.lower() not in {".html", ".json", ".js"}:
             continue
         relative = path.relative_to(directory)
-        if relative.parts and relative.parts[0] == "docs":
+        if relative.parts[:2] == ("docs", "releases"):
             continue
         original = path.read_text(encoding="utf-8")
         rendered = original
@@ -296,6 +353,29 @@ def render_site_identity(directory: Path, identity: dict) -> int:
             path.write_text(rendered, encoding="utf-8")
             changed += 1
     return changed
+
+
+def render_identity_file(path: Path, identity: dict) -> bool:
+    """Render one text identity template in place."""
+
+    original = path.read_text(encoding="utf-8")
+    rendered = original
+    rendered = rendered.replace(
+        "{{Repository}}", identity["repository"]
+    )
+    rendered = rendered.replace(
+        "{{SkiaRepository}}", identity["skiaRepository"]
+    )
+    rendered = rendered.replace(
+        "{{DocsRepository}}", identity["docsRepository"]
+    )
+    rendered = rendered.replace(
+        "{{PublicSiteBaseUrl}}", identity["publicSiteBaseUrl"]
+    )
+    if rendered != original:
+        path.write_text(rendered, encoding="utf-8")
+        return True
+    return False
 
 
 def _is_scanned_path(relative: str) -> bool:
@@ -310,22 +390,44 @@ def _is_scanned_path(relative: str) -> bool:
         or relative.startswith("binding/")
         or relative.startswith("source/")
         or relative.startswith("documentation/site/")
+        or relative.startswith("samples/Gallery/")
+        or relative.startswith("samples/SkiaFiddle/")
+        or relative == "documentation/docfx/TOC.yml"
+        or relative == "documentation/docfx/docfx.json"
     )
 
 
 def _legacy_allowlist_reason(
-    relative: str, line: str, content: str
+    relative: str,
+    line: str,
+    content: str,
+    *,
+    in_code_fence: bool = False,
 ) -> str | None:
     for path_pattern, line_pattern, reason in _LEGACY_LITERAL_ALLOWLIST:
         if fnmatch.fnmatch(relative, path_pattern) and line_pattern.search(line):
             return reason
+    if relative.startswith("documentation/site/") and (
+        _CURRENT_REPOSITORY_URL_RE.search(line)
+        or _DOCS_REPOSITORY_URL_RE.search(line)
+        or _AW_DATA_URL_RE.search(line)
+    ):
+        return "exact current-site URL rewritten by destination-render tests"
     if (
         relative.endswith(".md")
         and not relative.startswith(".github/workflows/")
+        and not in_code_fence
+        and not re.match(
+            r"^\s*(?:Search|Query|Fetch|Read|Open|Run|Use|Check)\b",
+            line,
+            re.IGNORECASE,
+        )
         and not re.search(
             r"(?:--repo|repo:|repos/|https://github\.com/|CACHE=|REPOSITORY=|"
-            r"\b(?:gh|git|curl)\s)",
+            r"\b[A-Z_]*(?:REPO|REPOSITORY|CACHE|KEY)\s*=|"
+            r"\b(?:gh|git|curl|python3|pwsh|bash|sh)\s)",
             line,
+            re.IGNORECASE,
         )
     ):
         return "non-executable narrative terminology"
@@ -357,8 +459,11 @@ def _legacy_allowlist_reason(
             ("mono/skiasharp", "dotnet/skiasharp"),
             ("mono/skia", "dotnet/skia"),
         )
-        lowered = content.lower()
-        if any(old in line.lower() and new in lowered for old, new in pairs):
+        lowered_line = line.lower()
+        if any(
+            old in lowered_line and new in lowered_line
+            for old, new in pairs
+        ):
             return "temporary dual-owner gh-aw transition allowlist"
     if relative == ".agents/skills/ci-status/scripts/ci-status.py" and "mono-SkiaSharp" in line:
         return "Azure pipeline 345 name is intentionally unchanged"
@@ -366,6 +471,11 @@ def _legacy_allowlist_reason(
         return "Azure Pipelines check name is intentionally unchanged"
     if line.lstrip().startswith("#") and "https://github.com/" not in line:
         return "non-executable comment"
+    if (
+        line.lstrip().startswith(("//", "*"))
+        and re.search(r"https://github\.com/mono/SkiaSharp/issues/\d+", line)
+    ):
+        return "historical source issue citation"
     return None
 
 
@@ -392,16 +502,30 @@ def scan_identity_drift(root: Path) -> list[str]:
             content = path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             continue
-        if (
-            "tibdex/backport" in content
-            and relative != "scripts/infra/repository_identity.py"
-            and "/tests/" not in relative
-        ):
-            violations.append(f"{relative}: forbidden executable tibdex/backport reference")
+        code_fence = None
         for number, line in enumerate(content.splitlines(), 1):
+            stripped = line.lstrip()
+            fence_match = re.match(r"^(`{3,}|~{3,})(.*)$", stripped)
+            if code_fence is None and fence_match:
+                marker = fence_match.group(1)
+                code_fence = (marker[0], len(marker))
+                continue
+            if code_fence is not None:
+                char, minimum = code_fence
+                if re.fullmatch(
+                    re.escape(char) + "{" + str(minimum) + r",}\s*",
+                    stripped,
+                ):
+                    code_fence = None
+                    continue
             if not _LEGACY_IDENTITY_RE.search(line):
                 continue
-            if _legacy_allowlist_reason(relative, line, content):
+            if _legacy_allowlist_reason(
+                relative,
+                line,
+                content,
+                in_code_fence=code_fence is not None,
+            ):
                 continue
             violations.append(f"{relative}:{number}: {line.strip()}")
     return violations
@@ -418,7 +542,8 @@ def _lookup(value: object, dotted_key: str) -> object:
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+    parser.add_argument("--root", type=Path)
+    parser.add_argument("--config", type=Path)
     parser.add_argument("--repository")
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser("json")
@@ -428,13 +553,19 @@ def create_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("scan")
     render_parser = subparsers.add_parser("render-site")
     render_parser.add_argument("directory", type=Path)
+    render_file_parser = subparsers.add_parser("render-file")
+    render_file_parser.add_argument("path", type=Path)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = create_parser().parse_args(argv)
     try:
-        identity = resolve_identity(args.root, repository=args.repository)
+        identity = resolve_identity(
+            args.root,
+            repository=args.repository,
+            config_path=args.config,
+        )
         if args.command == "json":
             print(json.dumps(identity, sort_keys=True))
         elif args.command == "get":
@@ -444,7 +575,12 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 print(value)
         elif args.command == "validate":
-            validate_manifest(args.root.resolve(), identity)
+            validate_manifest(
+                (args.root or Path(
+                    os.environ.get("SKIASHARP_REPOSITORY_ROOT", DEFAULT_ROOT)
+                )).resolve(),
+                identity,
+            )
             print(
                 f"Repository identity is valid: {identity['repository']} "
                 f"(ID {identity['canonicalRepositoryId']}), "
@@ -453,8 +589,19 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "render-site":
             count = render_site_identity(args.directory, identity)
             print(f"Rendered repository identity in {count} site file(s).")
+        elif args.command == "render-file":
+            changed = render_identity_file(args.path, identity)
+            print(
+                "Rendered repository identity in {}.".format(args.path)
+                if changed
+                else f"Repository identity already current in {args.path}."
+            )
         elif args.command == "scan":
-            violations = scan_identity_drift(args.root)
+            violations = scan_identity_drift(
+                args.root or Path(
+                    os.environ.get("SKIASHARP_REPOSITORY_ROOT", DEFAULT_ROOT)
+                )
+            )
             if violations:
                 raise IdentityError(
                     "Executable old-owner literals require migration review:\n"

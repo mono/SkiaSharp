@@ -32,6 +32,22 @@ jobs:
       SKIA_BRANCH: ${{ github.event.inputs.skia_branch || 'skiasharp' }}
 
     steps:
+      - name: Checkout identity tooling
+        uses: actions/checkout@v4
+        with:
+          path: .identity-source
+          sparse-checkout: |
+            scripts/infra/repository-identity.json
+            scripts/infra/repository_identity.py
+
+      - name: Stage identity tooling
+        run: |
+          IDENTITY_DIR="$RUNNER_TEMP/repository-identity"
+          mkdir -p "$IDENTITY_DIR"
+          cp .identity-source/scripts/infra/repository-identity.json "$IDENTITY_DIR/"
+          cp .identity-source/scripts/infra/repository_identity.py "$IDENTITY_DIR/"
+          echo "IDENTITY_SCRIPT=$IDENTITY_DIR/repository_identity.py" >> "$GITHUB_ENV"
+
       - name: Checkout SkiaSharp
         uses: actions/checkout@v4
         with:
@@ -41,7 +57,7 @@ jobs:
 
       - name: Validate branches
         run: |
-          IDENTITY=$(python3 scripts/infra/repository_identity.py json)
+          IDENTITY=$(python3 "$IDENTITY_SCRIPT" --root "$GITHUB_WORKSPACE" json)
           SKIA_REPOSITORY=$(jq -r '.skiaRepository' <<<"$IDENTITY")
           SKIA_GIT_URL=$(jq -r '.skiaGitUrl' <<<"$IDENTITY")
           {

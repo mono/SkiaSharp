@@ -25,12 +25,7 @@ checkout:
 
 tools:
   github:
-    allowed-repos:
-      - mono/skiasharp
-      - dotnet/skiasharp
-      - mono/skia
-      - dotnet/skia
-      - google/skia
+    allowed-repos: ["mono/skiasharp", "dotnet/skiasharp", "mono/skia", "dotnet/skia", "google/skia"]
     min-integrity: none
     toolsets:
       - context

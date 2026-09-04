@@ -24,11 +24,34 @@ def repository_identity():
     return resolve_identity(Path(repo_root))
 
 
-def output_directory(identity):
-    return Path("output/ai/repos") / identity["skiaRepositoryKey"] / "ai-review"
+def output_directories(identity, root=Path("output/ai/repos")):
+    keys = [
+        identity["skiaRepositoryKey"],
+        *identity["legacySkiaRepositoryKeys"],
+    ]
+    return [root / key / "ai-review" for key in keys]
+
+
+def output_directory(identity, root=Path("output/ai/repos")):
+    return output_directories(identity, root)[0]
+
+
+def find_existing_review(identity, number, root=Path("output/ai/repos")):
+    for directory in output_directories(identity, root):
+        candidate = directory / f"{number}.json"
+        if candidate.is_file():
+            return candidate
+    return None
 
 
 def main():
+    if len(sys.argv) == 3 and sys.argv[1] == "--find":
+        identity = repository_identity()
+        existing = find_existing_review(identity, sys.argv[2])
+        if existing:
+            print(existing)
+            return
+        sys.exit(1)
     if len(sys.argv) < 2:
         print("Usage: python3 persist-skia-review.py <path-to-json>")
         sys.exit(2)

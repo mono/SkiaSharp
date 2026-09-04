@@ -17,12 +17,20 @@ function ConvertTo-GitHubRepository([string] $Value) {
     throw "Unsupported GitHub repository identity: '$Value'."
 }
 
-$identityConfigPath = Join-Path (Split-Path $PSScriptRoot) 'repository-identity.json'
+$identityConfigPath = if ($env:SKIASHARP_IDENTITY_CONFIG) {
+    $env:SKIASHARP_IDENTITY_CONFIG
+} else {
+    Join-Path (Split-Path $PSScriptRoot) 'repository-identity.json'
+}
 if (!(Test-Path -LiteralPath $identityConfigPath -PathType Leaf)) {
     throw "Repository identity config does not exist: $identityConfigPath"
 }
 $identityConfig = Get-Content -LiteralPath $identityConfigPath -Raw | ConvertFrom-Json
-$repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '../../..')
+$repositoryRoot = if ($env:SKIASHARP_REPOSITORY_ROOT) {
+    Resolve-Path $env:SKIASHARP_REPOSITORY_ROOT
+} else {
+    Resolve-Path (Join-Path $PSScriptRoot '../../..')
+}
 $currentRepository = if ($env:GITHUB_REPOSITORY) {
     ConvertTo-GitHubRepository $env:GITHUB_REPOSITORY
 } else {

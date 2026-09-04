@@ -1,26 +1,33 @@
 name: PR - Backport
 
-# Comment `/backport to <branch>` or `/backport <branch>` on a merged pull request.
-# This intentionally replaces the old `backport/<branch>` label UX.
 on:
-  issue_comment:
+  pull_request_target:
     types:
-      - created
-  schedule:
-    # Once a day at 13:00 UTC to clean up completed runs of this workflow.
-    - cron: '0 13 * * *'
-
-permissions:
-  actions: write
-  contents: write
-  issues: write
-  pull-requests: write
+      - closed
+      - labeled
 
 jobs:
   backport:
-    uses: dotnet/arcade/.github/workflows/backport-base.yml@306225d7029934938d109e18df390f04e366a68d # main as of 2026-08-31
-    with:
-      repository_owners: mono,dotnet # Remove mono after the repository transfer.
-      pr_title_template: '[%target_branch%] %source_pr_title%'
-      pr_description_template: 'Backport of #%source_pr_number% to %target_branch%'
-      pr_labels: backport
+    name: Backport
+    runs-on: ubuntu-latest
+    # Only react to merged PRs for security reasons.
+    # See https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target.
+    if: >
+      github.event.pull_request.merged
+      && (
+        github.event.action == 'closed'
+        || (
+          github.event.action == 'labeled'
+          && contains(github.event.label.name, 'backport')
+        )
+      )
+    steps:
+      - uses: tibdex/backport@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          body_template: >
+             Backport of <%= mergeCommitSha %> from #<%= number %>.
+          head_template: "backport/pr-<%= number %>-to-<%= base %>"
+          label_pattern: "^backport/(?<base>([^ ]+))$"
+          labels_template: "[ \"backport\" ]"
+          title_template: "[<%= base %>] <%= title %>"

@@ -22,7 +22,7 @@ on:
         required: false
         type: string
       base_branch:
-        description: "Optional mono/SkiaSharp base branch override for manual workflow validation. Empty uses normal main/release detection."
+        description: "Optional SkiaSharp base branch override for manual workflow validation. Empty uses normal main/release detection."
         required: false
         type: string
 
@@ -319,7 +319,7 @@ post-steps:
       python3 "$SKIA_SYNC_SKILL_DIR/scripts/update_versions.py" --repo-root "$GITHUB_WORKSPACE"
 
       if ! git -C externals/skia diff --quiet || ! git -C externals/skia diff --cached --quiet; then
-        echo "::error::The finalizer changed mono/skia; the agent did not commit its native work."
+        echo "::error::The finalizer changed $SKIA_SYNC_SKIA_REPOSITORY; the agent did not commit its native work."
         exit 1
       fi
 

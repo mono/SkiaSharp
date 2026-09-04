@@ -17,7 +17,8 @@ The workflow only supplies resolved inputs, a prepared host, and automated PR de
 
 `Skia C++ -> SkiaSharp C API -> generated P/Invoke -> managed wrappers`
 
-Run from the mono/SkiaSharp repository root. Each phase lives in a separate reference so only
+Run from the current SkiaSharp repository root resolved by
+`python3 scripts/infra/repository_identity.py get repository`. Each phase lives in a separate reference so only
 the current work enters context.
 
 ## Start state

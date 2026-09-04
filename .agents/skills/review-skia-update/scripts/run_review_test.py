@@ -1,7 +1,10 @@
 import unittest
 from unittest.mock import patch
 import importlib.util
+import json
 from pathlib import Path
+import tempfile
+import jsonschema
 
 from run_review import (
     extract_skia_milestone_from_cgmanifest,
@@ -103,9 +106,41 @@ class RunReviewTests(unittest.TestCase):
         self.assertEqual(
             Path("output/ai/repos/github-52292286/ai-review"),
             PERSIST.output_directory(
-                {"skiaRepositoryKey": "github-52292286"}
+                {
+                    "skiaRepositoryKey": "github-52292286",
+                    "legacySkiaRepositoryKeys": ["mono-skia"],
+                }
             ),
         )
+
+    def test_review_reader_falls_back_to_legacy_skia_key(self) -> None:
+        identity = {
+            "skiaRepositoryKey": "github-52292286",
+            "legacySkiaRepositoryKeys": ["mono-skia"],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            legacy = root / "mono-skia" / "ai-review" / "354.json"
+            legacy.parent.mkdir(parents=True)
+            legacy.write_text("{}", encoding="utf-8")
+
+            self.assertEqual(
+                legacy,
+                PERSIST.find_existing_review(identity, "354", root),
+            )
+
+    def test_schema_accepts_current_and_destination_skia_repositories(self) -> None:
+        schema_path = (
+            Path(__file__).resolve().parent.parent
+            / "references"
+            / "skia-review-schema.json"
+        )
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        repo_schema = schema["properties"]["meta"]["properties"]["repo"]
+        jsonschema.validate("mono/skia", repo_schema)
+        jsonschema.validate("dotnet/skia", repo_schema)
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate("google/skia-extra", repo_schema)
 
 
 if __name__ == "__main__":

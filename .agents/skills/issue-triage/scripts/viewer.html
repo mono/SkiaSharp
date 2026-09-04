@@ -181,7 +181,7 @@ function renderOverview(data) {
   ].filter(Boolean).join(' ');
   document.getElementById('header-badges').innerHTML = badges;
   document.getElementById('header-subtitle').textContent =
-    `Issue #${meta.number || '?'} • ${meta.repo || 'mono/SkiaSharp'} • analyzed ${meta.analyzedAt || '—'}`;
+    `Issue #${meta.number || '?'} • ${meta.repo || 'unknown repository'} • analyzed ${meta.analyzedAt || '—'}`;
 
   document.getElementById('hero-story').textContent = data.summary || '—';
   document.getElementById('hero-analysis').textContent = (data.analysis || {}).summary || '—';

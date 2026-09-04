@@ -372,15 +372,19 @@ function renderFinding(f, idx) {
   if (f.latestVersion) body += `<tr><th>Latest</th><td>${esc(f.latestVersion)}</td></tr>`;
   if (f.issues && f.issues.length) body += `<tr><th>Issues</th><td>${f.issues.map(i => {
       const num = typeof i === 'object' ? i.number : i;
-      const repo = (typeof i === 'object' && i.repo) ? i.repo : 'mono/SkiaSharp';
+      const storedUrl = (typeof i === 'object' && i.url) ? i.url : '';
+      const repo = (typeof i === 'object' && i.repo) ? i.repo : ((DATA.meta || {}).repository || 'mono/SkiaSharp');
       const state = (typeof i === 'object' && i.state) ? ` (${i.state.toLowerCase()})` : '';
-      return `<a href="https://github.com/${repo}/issues/${num}" target="_blank">#${num}</a>${state}`;
+      const url = storedUrl || `https://github.com/${repo}/issues/${num}`;
+      return `<a href="${esc(url)}" target="_blank">#${num}</a>${state}`;
     }).join(', ')}</td></tr>`;
   if (f.prs && f.prs.length) body += `<tr><th>PRs</th><td>${f.prs.map(p => {
       const num = typeof p === 'object' ? p.number : p;
-      const repo = (typeof p === 'object' && p.repo) ? p.repo : 'mono/SkiaSharp';
+      const storedUrl = (typeof p === 'object' && p.url) ? p.url : '';
+      const repo = (typeof p === 'object' && p.repo) ? p.repo : ((DATA.meta || {}).repository || 'mono/SkiaSharp');
       const title = (typeof p === 'object' && p.title) ? ` &mdash; ${esc(p.title)}` : '';
-      return `<a href="https://github.com/${repo}/pull/${num}" target="_blank">#${num}</a>${title}`;
+      const url = storedUrl || `https://github.com/${repo}/pull/${num}`;
+      return `<a href="${esc(url)}" target="_blank">#${num}</a>${title}`;
     }).join('<br>')}</td></tr>`;
   body += `</tbody></table>`;
 
@@ -451,7 +455,9 @@ function renderUpstream(meta) {
   const el = document.getElementById('upstream-info');
   const milestoneNote = meta.upstreamVerified ? ' (verified from SkMilestone.h)' : ' <span class="text-danger">(NOT independently verified)</span>';
   const forkCommit = meta.skiaSubmoduleCommit
-    ? `<code><a href="https://github.com/mono/skia/commit/${esc(meta.skiaSubmoduleCommit)}" target="_blank">${esc(meta.skiaSubmoduleCommit)}</a></code>`
+    ? (meta.skiaRepository
+      ? `<code><a href="https://github.com/${esc(meta.skiaRepository)}/commit/${esc(meta.skiaSubmoduleCommit)}" target="_blank">${esc(meta.skiaSubmoduleCommit)}</a></code>`
+      : `<code>${esc(meta.skiaSubmoduleCommit)}</code>`)
     : '<span class="text-muted">not captured</span>';
   const upstreamCommit = meta.skiaUpstreamCommit
     ? `<code><a href="https://github.com/google/skia/commit/${esc(meta.skiaUpstreamCommit)}" target="_blank">${esc(meta.skiaUpstreamCommit)}</a></code>`

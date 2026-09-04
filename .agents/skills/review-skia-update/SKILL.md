@@ -147,6 +147,13 @@ to review the full contents (diffs, recommendations, dependency table, etc.). If
 ```bash
 SKIA_KEY=$(python3 scripts/infra/repository_identity.py get skiaRepositoryKey)
 open "output/ai/repos/$SKIA_KEY/ai-review/{pr_number}.html"  # macOS
+```
+
+To locate an existing review during the migration, probe the stable key first
+and retained legacy keys second:
+
+```bash
+python3 .agents/skills/review-skia-update/scripts/persist-skia-review.py --find {pr_number}
 # or: xdg-open ... (Linux) / start ... (Windows)
 ```
 

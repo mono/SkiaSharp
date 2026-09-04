@@ -8,7 +8,7 @@ Templates for formatting security audit findings. All dependencies — including
 ## Security Audit Report
 
 **Date:** {date}
-**Audited:** mono/SkiaSharp native dependencies (including Skia core)
+**Audited:** {repository} native dependencies (including Skia core)
 
 ### Summary
 

@@ -17,8 +17,11 @@ on:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".agents/skills/review-skia-update/**"
+      - ".agents/skills/security-audit/**"
       - ".agents/skills/issue-bulk-process/**"
       - "documentation/dev/issue-pipeline.md"
+      - "documentation/docfx/TOC.yml"
+      - "samples/Gallery/**"
       - ".github/scripts/**"
       - "scripts/infra/repository-identity.json"
       - "scripts/infra/repository_identity.py"
@@ -26,6 +29,7 @@ on:
       - "source/SkiaSharp.NuGet.targets"
       - "source/SkiaSharp.NuGet.props"
       - "binding/**/PACKAGE-README.md"
+      - "source/**/PACKAGE-README.md"
       - "documentation/site/**"
       - "scripts/infra/docs/generate-ai-dashboard.py"
       - "scripts/infra/caching/repo-deps.json"
@@ -38,8 +42,11 @@ on:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".agents/skills/review-skia-update/**"
+      - ".agents/skills/security-audit/**"
       - ".agents/skills/issue-bulk-process/**"
       - "documentation/dev/issue-pipeline.md"
+      - "documentation/docfx/TOC.yml"
+      - "samples/Gallery/**"
       - ".github/scripts/**"
       - "scripts/infra/repository-identity.json"
       - "scripts/infra/repository_identity.py"
@@ -47,6 +54,7 @@ on:
       - "source/SkiaSharp.NuGet.targets"
       - "source/SkiaSharp.NuGet.props"
       - "binding/**/PACKAGE-README.md"
+      - "source/**/PACKAGE-README.md"
       - "documentation/site/**"
       - "scripts/infra/docs/generate-ai-dashboard.py"
       - "scripts/infra/caching/repo-deps.json"
@@ -102,7 +110,10 @@ jobs:
 
       - name: Run review-skia tooling tests
         working-directory: .agents/skills/review-skia-update/scripts
-        run: python3 -m unittest discover -p "*_test.py" -v
+        run: |
+          python3 -c "import jsonschema" 2>/dev/null \
+            || python3 -m pip install --quiet --break-system-packages jsonschema
+          python3 -m unittest discover -p "*_test.py" -v
 
       - name: Run skia-sync work detector tests
         run: bash .github/scripts/tests/skia-sync-detect.test.sh
@@ -117,15 +128,60 @@ jobs:
 
       - name: Validate portable package README generation
         run: |
-          dotnet msbuild binding/SkiaSharp/SkiaSharp.csproj \
-            -t:_GeneratePackageReadmeFile \
+          set -euo pipefail
+          validate_readme() {
+            local project="$1"
+            local readme="$2"
+            local marker="$3"
+            dotnet msbuild "$project" \
+              -t:_GeneratePackageReadmeFile \
+              -p:TargetFramework=net10.0 \
+              -p:PackageDescription=Validation \
+              -p:SkiaSharpRepositoryUrl=https://github.com/dotnet/SkiaSharp \
+              -p:SkiaSharpDocumentationUrl=https://docs.example/SkiaSharp \
+              -v:minimal
+            grep -Fq "https://github.com/dotnet/SkiaSharp" "$readme"
+            grep -Fq "$marker" "$readme"
+            if grep -Fq '{{DocumentationUrl}}' \
+                "$(dirname "$project")/PACKAGE-README.md"; then
+              grep -Fq "https://docs.example/SkiaSharp" "$readme"
+            fi
+            ! grep -Fq '{{RepositoryUrl}}' "$readme"
+            ! grep -Fq '{{DocumentationUrl}}' "$readme"
+          }
+          validate_readme \
+            binding/SkiaSharp/SkiaSharp.csproj \
+            binding/SkiaSharp/obj/Debug/net10.0/README.md \
+            '**SkiaSharp**'
+          validate_readme \
+            binding/HarfBuzzSharp/HarfBuzzSharp.csproj \
+            binding/HarfBuzzSharp/obj/Debug/net10.0/README.md \
+            'foreach (var glyph'
+          validate_readme \
+            source/SkiaSharp.Views/SkiaSharp.Views/SkiaSharp.Views.csproj \
+            source/SkiaSharp.Views/SkiaSharp.Views/obj/Debug/net10.0/README.md \
+            'https://docs.example/SkiaSharp/docs/'
+          validate_readme \
+            source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj \
+            source/SkiaSharp.Views/SkiaSharp.Views.Blazor/obj/Debug/net10.0/README.md \
+            '<SKCanvasView'
+          validate_readme \
+            source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/SkiaSharp.Views.Maui.Controls.csproj \
+            source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/obj/Debug/net10.0/README.md \
+            '<ContentPage'
+
+      - name: Validate Gallery repository metadata
+        run: |
+          dotnet build samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj \
             -p:TargetFramework=net10.0 \
-            -p:PackageDescription=Validation \
+            -p:TargetFrameworks=net10.0 \
             -p:SkiaSharpRepositoryUrl=https://github.com/dotnet/SkiaSharp \
+            -p:WasmBuildNative=false \
+            -p:WasmNativeStrip=true \
             -v:minimal
-          readme=binding/SkiaSharp/obj/Debug/net10.0/README.md
-          grep -Fq "https://github.com/dotnet/SkiaSharp/issues" "$readme"
-          ! grep -Fq '{{RepositoryUrl}}' "$readme"
+          strings samples/Gallery/Shared/bin/Debug/net10.0/SkiaSharpSample.Shared.dll \
+            | grep -F 'RepositoryUrl#https://github.com/dotnet/SkiaSharp' \
+            > /dev/null
 
       - name: Validate portable PowerShell agent scripts
         shell: pwsh

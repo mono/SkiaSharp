@@ -73,10 +73,10 @@ Call `InvalidateSurface()` whenever state changes and the view should redraw. Us
 
 ## Documentation and resources
 
-- [SkiaSharp .NET MAUI guides](https://mono.github.io/SkiaSharp/docs/guides/)
+- [SkiaSharp .NET MAUI guides]({{DocumentationUrl}}/docs/guides/)
 - [API reference on Microsoft Learn](https://learn.microsoft.com/dotnet/api/skiasharp.views.maui.controls)
 - [Buildable .NET MAUI sample]({{RepositoryUrl}}/tree/main/samples/Basic/Maui)
-- [Live SkiaSharp Gallery](https://mono.github.io/SkiaSharp/gallery/) - explore the rendering API in your browser
+- [Live SkiaSharp Gallery]({{DocumentationUrl}}/gallery/) - explore the rendering API in your browser
 - [SkiaSharp package and deployment guide]({{RepositoryUrl}}/blob/main/documentation/dev/packages.md)
 
 ## Feedback and contributing
