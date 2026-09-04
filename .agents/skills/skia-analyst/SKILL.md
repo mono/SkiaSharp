@@ -51,7 +51,7 @@ If unclear, ask. But try to infer first.
 
 ```
 Phase 1: Setup (determine scan range, prepare sources)
-Phase 2: Launch dual-model agents (Opus + GPT in parallel)
+Phase 2: Launch independent GPT-5.6 Sol and Terra agents in parallel
 Phase 3: Synthesize — merge findings, dedupe, both lenses
 Phase 4: Generate outputs (JSON → validate → Markdown)
 Phase 5: Present results
@@ -100,13 +100,14 @@ For the C API headers (our fork), check `externals/skia/include/c/` and `externa
 If the submodule isn't checked out, agents can grep `SkiaApi.generated.cs` for `sk_*` and `gr_*`
 extern function names — this reflects the full C API surface.
 
-### Phase 2: Launch Dual-Model Agents
+### Phase 2: Launch Independent Agents
 
-Launch **two** background agents simultaneously on **different models**:
+Launch **two** background agents simultaneously: Sol for maximum depth and Terra
+for a cost-effective independent perspective.
 
 ```
-task agent_type=general-purpose mode=background model=claude-opus-4.7 name=analyst-opus:
-task agent_type=general-purpose mode=background model=gpt-5.4 name=analyst-gpt:
+task agent_type=general-purpose mode=background model=gpt-5.6-sol name=analyst-sol:
+task agent_type=general-purpose mode=background model=gpt-5.6-terra name=analyst-terra:
 ```
 
 Each agent does the complete job independently:

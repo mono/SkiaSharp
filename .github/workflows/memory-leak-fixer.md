@@ -20,8 +20,9 @@ environment: gh-aw-agents
 
 # -- Engine ------------------------------------------------------------
 # Leak reasoning (ownership tracing + a correct minimal fix) is hard and
-# benefits from the stronger model, matching auto-skia-sync's choice.
-model: claude-opus-4.8
+# needs strong coding, while the mandatory red-to-green proof makes Terra the
+# best cost/capability tradeoff for this twice-daily workflow.
+model: gpt-5.6-terra
 engine:
   id: copilot
 # -- Triggers ----------------------------------------------------------

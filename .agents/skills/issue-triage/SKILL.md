@@ -167,7 +167,7 @@ Skip this phase for duplicates and abandoned issues (omit `analysis.resolution`)
 
 If any proposal includes a `codeSnippet` or the `add-comment` `comment` contains code: **you must validate it** with 3 parallel agents per [references/workaround-validation.md](references/workaround-validation.md). Do not suggest code that has not been checked.
 
-**Agents** (parallel `explore` type, Haiku model):
+**Agents** (parallel `explore` type, GPT-5.6 Luna model):
 1. **API correctness** — do the SK* types/methods exist with correct signatures?
 2. **Behavioral correctness** — disposal, null-checks, threading, does it solve the problem?
 3. **Platform safety** — will it work on the reporter's platform?
