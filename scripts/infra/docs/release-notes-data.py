@@ -320,6 +320,47 @@ def load_notes_sidecar(stem, base_dir):
             "sha256": _sha256_bytes(notes_path.read_bytes())}
 
 
+def _notes_sidecar_has_page(stem, base_dir):
+    # type: (str, Path) -> bool
+    """Whether a manual sidecar belongs to a released or in-flight page."""
+    if (base_dir / "{}.md".format(stem)).is_file():
+        return True
+    return (not stem.endswith("-unreleased")
+            and (base_dir / "{}-unreleased.md".format(stem)).is_file())
+
+
+def load_notes_sidecars(stem, base_version, version, base_dir):
+    # type: (str, Optional[str], str, Path) -> list[dict]
+    """Load current-page notes plus notes from its cumulative version window."""
+    current = load_notes_sidecar(stem, base_dir)
+    if not base_version or stem.endswith("-unreleased"):
+        return [current] if current else []
+
+    lower = _core_tuple(base_version)
+    upper = _core_tuple(version)
+    found = {}  # type: dict[str, tuple[tuple, dict]]
+    sources = base_dir / "_sources"
+    if sources.is_dir():
+        for notes_path in sources.glob("*.notes.md"):
+            note_stem = notes_path.name[:-len(".notes.md")]
+            if not re.fullmatch(r"\d+(?:\.\d+){2,3}", note_stem):
+                continue
+            note_version = _core_tuple(note_stem)
+            if not (lower < note_version <= upper):
+                continue
+            if note_stem != stem and not _notes_sidecar_has_page(note_stem, base_dir):
+                continue
+            companion = load_notes_sidecar(note_stem, base_dir)
+            if companion:
+                found[companion["path"]] = (note_version, companion)
+
+    if current:
+        found[current["path"]] = (_core_tuple(version), current)
+
+    ordered = sorted(found.values(), key=lambda item: (item[0], item[1]["path"]))
+    return [companion for _, companion in ordered]
+
+
 def load_breaking_companions(line, base_dir):
     # type: (str, Path) -> Optional[dict]
     """The API breaking-diff companions for a line (spec §3.3/§4.7).
@@ -1887,8 +1928,10 @@ def build_data_json(prs, metadata):
             breaking_candidates.append(
                 {"source": "api-breaking-diff", "path": p,
                  "sha256": bc.get("sha256", ""), "prs": []})
-    if companions.get("notes"):
-        nc = companions["notes"]
+    notes = companions.get("notes") or []
+    if isinstance(notes, dict):
+        notes = [notes]
+    for nc in notes:
         breaking_candidates.append(
             {"source": "notes-sidecar", "path": nc.get("path"),
              "sha256": nc.get("sha256", ""), "prs": []})
@@ -2208,10 +2251,10 @@ def warn_orphan_notes_sidecars():
             if not f.is_file() or not f.name.endswith(".notes.md"):
                 continue
             stem = f.name[:-len(".notes.md")]
-            if not (base_dir / "{}.md".format(stem)).is_file():
+            if not _notes_sidecar_has_page(stem, base_dir):
                 log("WARNING: orphan manual notes sidecar {} has no matching "
-                    "page {}.md — ignoring it (spec §3.7). Did you mean a "
-                    "different stem?".format(f.name, stem))
+                    "page {}.md or {}-unreleased.md — ignoring it (spec §3.7). "
+                    "Did you mean a different stem?".format(f.name, stem, stem))
                 orphans.append(str(f))
     return orphans
 
@@ -2353,6 +2396,18 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         from_display = from_display[:12]
     diff_range_str = "{}..{}".format(from_display, to_display)
 
+    base_version = None
+    if from_display.startswith("release/"):
+        base_version = version_from_branch(from_display)
+    elif re.match(r"^\d+\.\d+\.\d+", from_display):
+        base_version = from_display
+    else:
+        # A bare commit SHA can come from a versions.json compare_to tag. Recover
+        # that core so cumulative manual notes use the same lower bound as git.
+        ce = _versions_config_lookup(version)
+        if ce and ce.get("compare_to"):
+            base_version = ce["compare_to"]
+
     status, superseded_by, supersedes = _compute_page_status(branch, version)
 
     if verbose:
@@ -2408,11 +2463,12 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         }
 
     # Companion files (spec §3.7/§4.7): the manual additions sidecar (keyed by the
-    # page STEM) and the API breaking-diff (under the line's <version>/ folder).
-    # Their content hashes are folded into data.json (build_data_json), so a
-    # companion-only edit changes data.json and re-polishes just this page (§4.6).
+    # page STEM, plus any skipped lines in this cumulative window) and the API
+    # breaking-diff (under the line's <version>/ folder). Their content hashes are
+    # folded into data.json (build_data_json), so a companion-only edit changes
+    # every affected data.json and re-polishes those pages (§4.6).
     stem = _page_filename(branch, version)[:-len(".md")]
-    notes_comp = load_notes_sidecar(stem, RELEASES_DIR)
+    notes_comp = load_notes_sidecars(stem, base_version, version, RELEASES_DIR)
     breaking_comp = (load_breaking_companions(version, RELEASES_DIR)
                      if not is_head else None)
 
@@ -2430,19 +2486,6 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # the trailing "## Preview N (date)" sections render. The lower bound is the
     # diff base, so a page naturally includes a skipped predecessor minor's
     # previews (the 4.148 page lists the 4.147 previews).
-    base_version = None
-    if from_display.startswith("release/"):
-        base_version = version_from_branch(from_display)
-    elif re.match(r"^\d+\.\d+\.\d+", from_display):
-        base_version = from_display
-    else:
-        # from_display is a bare commit SHA — happens when versions.json
-        # compare_to resolved to a `v<compare_to>` TAG (no release/* branch). The
-        # base core is then exactly that compare_to value; recover it so the
-        # milestone window stays bounded.
-        ce = _versions_config_lookup(version)
-        if ce and ce.get("compare_to"):
-            base_version = ce["compare_to"]
     preview_milestones = collect_preview_milestones(version, base_version)
 
     metadata = {

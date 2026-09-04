@@ -95,10 +95,11 @@ section on the SkiaSharp page (see `harfbuzz_summary` below). For **each** page:
    `shipments` (format 4+; the exact git tag(s) this page rolls up — a preview,
    an rc, and/or the stable release itself, see `release_summaries` below), and
    the banner/link facts.
-2. Read the breaking sources it points at, if present: the version's
-   `*.breaking.md` API diff and any `_sources/<version>.notes.md` sidecar. These
-   are your material for the `breaking` slot — the API diff gives signature
-   removals, the notes sidecar gives *behavioural* breaks (same signature, new
+2. Read every breaking source named in `breaking_candidates`, if present: the
+   version's `*.breaking.md` API diffs and every referenced `_sources/*.notes.md`
+   sidecar. A cumulative page may reference notes from a skipped preview-only line.
+   These are your material for the `breaking` slot — API diffs give signature
+   removals, while notes sidecars give *behavioural* breaks (same signature, new
    runtime behaviour) that no diff can detect.
 3. Write `documentation/docfx/releases/_sources/<version>.prose.json`
    (schema: `scripts/infra/docs/release-notes-schema/prose.schema.json`).

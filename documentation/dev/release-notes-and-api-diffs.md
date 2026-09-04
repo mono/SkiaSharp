@@ -870,10 +870,13 @@ material to surface.
   (`**/*.notes.md`) so it never becomes its own published page.
 - **Read by `release-notes-data.py` (hash only), read by the AI (content).** `release-notes-data.py`
   records its page-relative path (`_sources/<stem>.notes.md`) plus a `sha256` of its
-  bytes in `breaking_candidates[]` (§4.3/§4.7), so editing it changes the
-  timestamp-free data sidecar (§4.6) and re-polishes exactly that page. `release-notes-data.py`
-  never parses its *content*. The Polish AI opens and reads it and summarizes / weaves
-  it into the prose (§4.7).
+  bytes in `breaking_candidates[]` (§4.3/§4.7). A rollup page also references notes
+  from skipped preview-only lines inside its cumulative diff window, so behavioral
+  changes are not lost merely because their original line never shipped stable.
+  Editing a sidecar changes every affected page's timestamp-free data sidecar (§4.6)
+  and re-polishes those pages. `release-notes-data.py` never parses its *content*. The
+  Polish AI opens and reads each referenced sidecar and summarizes / weaves it into
+  the prose (§4.7).
 - **Orphan handling.** A `_sources/<stem>.notes.md` with no matching SkiaSharp page one
   directory up (neither `<stem>.md` nor `<stem>-unreleased.md` exists for its stem) is a
   maintainer typo; `release-notes-data.py` **warns** and ignores it, writing nothing on its
@@ -1238,15 +1241,15 @@ For a given SkiaSharp release page, `release-notes-data.py` records whichever of
 
 | Companion source | Path (page-relative) | Owner | Present when |
 |---|---|---|---|
-| **Manual additions** (§3.7) | `_sources/<stem>.notes.md` | maintainer (freeform md) | a human wrote one |
+| **Manual additions** (§3.7) | `_sources/<stem>.notes.md` | maintainer (freeform md) | a human wrote one for this page or a skipped line in its cumulative diff window |
 | **API breaking diff** (§3.3) | `<line>/<pkg>/<assembly>.breaking.md` | Cake | **real breaking changes exist** (Cake deletes an empty one, §5.2) |
 
 The full SkiaSharp API diff folder and the co-shipped HarfBuzzSharp API diff folder are
 already linked from the page (§4.4). What §4.7 adds is: **(a)** the maintainer-authored
 manual additions companion (§3.7); **(b)** teaching the Polish AI to open and summarize
 the manual notes and every breaking diff named by `data.json`; **(c)** hashing those
-companions into `data.json` (§4.6) so a companion-only edit re-polishes exactly that
-page.
+companions into `data.json` (§4.6) so a companion-only edit re-polishes that page,
+plus any later rollup page whose cumulative window includes that sidecar.
 
 Because `.breaking.md` exists **only when real breaking changes exist** (§5.2), its
 mere presence in `breaking_candidates` is the signal that this line broke something,
@@ -1258,7 +1261,8 @@ For each present companion, `release-notes-data.py` writes an entry into
 `breaking_candidates[]`:
 
 - `{"source": "notes-sidecar", "path": "_sources/<stem>.notes.md", "sha256": …}`
-  for the manual additions sidecar.
+  for each applicable manual additions sidecar, including skipped preview-only lines
+  inside the page's cumulative diff window.
 - `{"source": "api-breaking-diff", "path": "<line>/<pkg>/<assembly>.breaking.md", "sha256": …}`
   for each breaking diff file.
 
@@ -1303,11 +1307,12 @@ sources for "what's new" and "what broke".
 
 Reading a companion does not by itself change the page; deterministic re-polish is
 preserved by the hashes in `data.json` (§4.6). Editing `_sources/<stem>.notes.md`
-flips the `notes-sidecar` candidate hash; a breaking change appearing, disappearing,
-or changing flips the `api-breaking-diff` candidate hash. Either re-polishes **only**
-the affected page. The full non-breaking API diff is deliberately **not**
-folder-hashed (§4.6): its change signal is already carried by the PR set and the
-`api_links` entry, so a routine diff refresh does not force a spurious re-polish.
+flips the `notes-sidecar` candidate hash on its own page and any cumulative successor
+that references it; a breaking change appearing, disappearing, or changing flips the
+`api-breaking-diff` candidate hash on its line. The full non-breaking API diff is
+deliberately **not** folder-hashed (§4.6): its change signal is already carried by the
+PR set and the `api_links` entry, so a routine diff refresh does not force a spurious
+re-polish.
 
 ---
 
@@ -1639,8 +1644,9 @@ HarfBuzzSharp API diff.
     `data.json` records each present companion (manual additions sidecar §3.7,
     breaking diff §3.3) in `breaking_candidates[]` as a page-relative **path +
     `sha256`**, never inlined content. Those hashes join the content key (§4.6) so a
-    companion-only edit re-polishes exactly that page; the full non-breaking diff is
-    linked but not folder-hashed. The `_sources/*.notes.md` sidecar is a
+    companion-only edit re-polishes its own page and every cumulative successor that
+    references it; the full non-breaking diff is linked but not folder-hashed. The
+    `_sources/*.notes.md` sidecar is a
     **maintainer-owned freeform-Markdown input**: never machine-written, renamed, or
     cleared; docfx-excluded; skipped by page discovery. The Polish AI may **read** the
     referenced companions (a bounded allow-list) and summarize them, but writes only
