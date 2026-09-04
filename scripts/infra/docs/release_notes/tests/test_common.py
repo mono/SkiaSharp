@@ -119,6 +119,138 @@ class CoreTupleTests(unittest.TestCase):
         self.assertEqual(common.core_tuple("3.119.0.1"), (3, 119, 0, 1))
 
 
+class NotesSidecarTests(unittest.TestCase):
+    def setUp(self):
+        self.module = _load_release_notes_data_module()
+
+    @staticmethod
+    def _write_page_and_notes(releases, version, text):
+        (releases / "{}.md".format(version)).write_text("# {}".format(version))
+        notes = releases / "_sources" / "{}.notes.md".format(version)
+        notes.parent.mkdir(exist_ok=True)
+        notes.write_text(text)
+
+    def test_cumulative_page_carries_notes_after_its_stable_base(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            releases = Path(tmp_dir)
+            self._write_page_and_notes(releases, "4.151.2", "Already shipped")
+            self._write_page_and_notes(releases, "4.153.0", "Behavior changed")
+            self._write_page_and_notes(releases, "4.154.0", "Current note")
+
+            notes = self.module.load_notes_sidecars(
+                "4.154.0", "4.151.2", "4.154.0", releases
+            )
+
+            self.assertEqual(
+                [note["path"] for note in notes],
+                [
+                    "_sources/4.153.0.notes.md",
+                    "_sources/4.154.0.notes.md",
+                ],
+            )
+
+    def test_stable_baseline_stops_carrying_prior_notes(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            releases = Path(tmp_dir)
+            self._write_page_and_notes(releases, "4.153.0", "Already shipped")
+            self._write_page_and_notes(releases, "4.154.0", "Current note")
+
+            notes = self.module.load_notes_sidecars(
+                "4.154.0", "4.153.0", "4.154.0", releases
+            )
+
+            self.assertEqual(
+                [note["path"] for note in notes],
+                ["_sources/4.154.0.notes.md"],
+            )
+
+    def test_orphan_notes_do_not_leak_into_a_cumulative_page(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            releases = Path(tmp_dir)
+            sources = releases / "_sources"
+            sources.mkdir()
+            (sources / "4.153.0.notes.md").write_text("Orphan note")
+            self._write_page_and_notes(releases, "4.154.0", "Current note")
+
+            notes = self.module.load_notes_sidecars(
+                "4.154.0", "4.151.2", "4.154.0", releases
+            )
+
+            self.assertEqual(
+                [note["path"] for note in notes],
+                ["_sources/4.154.0.notes.md"],
+            )
+
+    def test_unreleased_head_uses_only_its_own_notes(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            releases = Path(tmp_dir)
+            self._write_page_and_notes(releases, "4.153.0", "Prior line")
+            (releases / "4.154.0-unreleased.md").write_text("# Unreleased")
+            notes = releases / "_sources" / "4.154.0-unreleased.notes.md"
+            notes.write_text("Head delta")
+
+            loaded = self.module.load_notes_sidecars(
+                "4.154.0-unreleased", "4.153.0", "4.154.0", releases
+            )
+
+            self.assertEqual(
+                [note["path"] for note in loaded],
+                ["_sources/4.154.0-unreleased.notes.md"],
+            )
+
+    def test_build_data_json_emits_each_cumulative_notes_candidate(self):
+        notes = [
+            {"path": "_sources/4.153.0.notes.md", "sha256": "sha256:153"},
+            {"path": "_sources/4.154.0.notes.md", "sha256": "sha256:154"},
+        ]
+
+        data = self.module.build_data_json(
+            [],
+            {
+                "version": "4.154.0",
+                "status": "unreleased",
+                "companions": {"notes": notes},
+            },
+        )
+
+        self.assertEqual(
+            data["breaking_candidates"],
+            [
+                {
+                    "source": "notes-sidecar",
+                    "path": "_sources/4.153.0.notes.md",
+                    "sha256": "sha256:153",
+                    "prs": [],
+                },
+                {
+                    "source": "notes-sidecar",
+                    "path": "_sources/4.154.0.notes.md",
+                    "sha256": "sha256:154",
+                    "prs": [],
+                },
+            ],
+        )
+
+    def test_stable_named_sidecar_matches_an_unreleased_page(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            releases = Path(tmp_dir)
+            (releases / "4.154.0-unreleased.md").write_text("# Unreleased")
+
+            self.assertTrue(
+                self.module._notes_sidecar_has_page("4.154.0", releases)
+            )
+
+
 class ReleaseGithubTests(unittest.TestCase):
     def test_owns_the_managed_markers(self):
         self.assertEqual(github.SUMMARY_START_MARKER, "<!-- SKIASHARP:RELEASE-SUMMARY:START -->")
