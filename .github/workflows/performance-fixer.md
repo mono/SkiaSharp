@@ -183,7 +183,9 @@ Guardrail 6).
 **Focus area override:** `${{ github.event.inputs.focus_area }}` — if that shows a bare number
 **0–4**, pass it to the skill's Phase 1.1 as the focus area and **skip the round-robin**
 computation. If it is blank (schedule / PR / dispatch without the input), use the normal
-time-based round-robin. This is only a testing knob to target a specific area on demand.
+time-based round-robin. Use the skill's **Hot-path references** table to identify the selected
+area's source surface and one reference file before scanning. This is only a testing knob to target
+a specific area on demand.
 
 Persist intermediate state (notes, benchmark logs) under `/tmp/gh-aw/agent/`. Commit the benchmark
 itself to `benchmarks/SkiaSharp.Benchmarks/Benchmarks/` and the equivalence test to `tests/Tests/` —

@@ -105,16 +105,17 @@ when you recommend the simpler option, report the faster high-complexity one and
 
 ## Hot-path references — where the wins live (primary)
 
-Route here from [signals.md](references/signals.md); each file has the *where to look* grep, the
-slow→fast, the watch-out, and the real PR.
+Route here from [signals.md](references/signals.md). Start with the selected `FOCUS` row, open only
+its linked reference, then use that file's full *Where to look* commands. Each reference also has
+the slow→fast, watch-out, and real PR.
 
-| SkiaSharp area | Reference |
-|---|---|
-| Geometry & math (SKMatrix/SKRect/SKPoint native-math ports) | [hot-paths/geometry-math.md](references/hot-paths/geometry-math.md) |
-| Color parse/convert (SKColor/SKColorF, span overloads) | [hot-paths/color.md](references/hot-paths/color.md) |
-| Handles & collections (getter caching, sizing, HandleDictionary) | [hot-paths/handles-and-collections.md](references/hot-paths/handles-and-collections.md) |
-| Text & fonts (glyph loops, HarfBuzz marshalling, shaping memoization) | [hot-paths/text-and-fonts.md](references/hot-paths/text-and-fonts.md) |
-| Pixels & images (bitmap/pixmap bulk copy, blittable reinterpret) | [hot-paths/pixels-and-images.md](references/hot-paths/pixels-and-images.md) |
+| `FOCUS` | SkiaSharp area | Where to look | Reference |
+|---:|---|---|---|
+| 0 | Geometry & math | Pure managed math on blittable value types in `binding/SkiaSharp/`, especially `SKMatrix.cs`, `SKRect.cs`, `SKPoint.cs`, and `SKSize.cs`. | [hot-paths/geometry-math.md](references/hot-paths/geometry-math.md) |
+| 1 | Color parse / convert | Parse, format, and conversion helpers in `binding/SkiaSharp/` and `binding/HarfBuzzSharp/`. | [hot-paths/color.md](references/hot-paths/color.md) |
+| 2 | Handles & collections | Native-wrapper getters and object tracking in `binding/SkiaSharp/`, including `GetObject`, `OwnedBy`, and `HandleDictionary` paths. | [hot-paths/handles-and-collections.md](references/hot-paths/handles-and-collections.md) |
+| 3 | Text & fonts | Per-glyph/per-draw loops and string or array marshalling in `binding/SkiaSharp/` and `binding/HarfBuzzSharp/`. | [hot-paths/text-and-fonts.md](references/hot-paths/text-and-fonts.md) |
+| 4 | Pixels & images | Bulk pixel/scanline paths and array materialization in `SKBitmap.cs`, `SKPixmap.cs`, and `SKImage.cs`. | [hot-paths/pixels-and-images.md](references/hot-paths/pixels-and-images.md) |
 
 ## BCL pattern references — the techniques (foundation)
 
@@ -158,11 +159,9 @@ DOY=$(date -u +%j); HOUR=$(date -u +%H)          # zero-padded day-of-year + hou
 FOCUS=$(( (10#$DOY * 24 + 10#$HOUR) % 5 ))       # 10# forces base-10; 0..4
 echo "focus area: $FOCUS"   # 0 geometry-math · 1 color · 2 handles-and-collections · 3 text-and-fonts · 4 pixels-and-images
 ```
-Use this focus map to locate the exact reference first, then open that `hot-paths/` file and its
-**Where to look** grep: 0 `geometry-math`, 1 `color`, 2 `handles-and-collections`, 3
-`text-and-fonts`, 4 `pixels-and-images`. Read only the relevant section, bounded by its next
-heading; do not guess a line range or load unrelated references. Widen to a neighbour only if it's
-exhausted.
+Use the focus table above to locate the exact reference first, then open that `hot-paths/` file and
+its **Where to look** commands. Read only the relevant section, bounded by its next heading; do not
+guess a line range or load unrelated references. Widen to a neighbour only if it's exhausted.
 
 **1.2 Establish the hot path and cost** — with `file:line` citations: the realistic caller and how
 often it runs; the concrete overhead (which the reference names); and the invariant that makes the
