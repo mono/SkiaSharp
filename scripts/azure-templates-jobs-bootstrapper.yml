@@ -146,6 +146,11 @@ jobs:
         - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
           displayName: Configure build variables
 
+      # Create this on the host before a root container creates output/ with restrictive ownership.
+      - pwsh: New-Item 'output/source-dependencies/${{ parameters.name }}' -ItemType Directory -Force | Out-Null
+        displayName: Prepare source dependency report directory
+        condition: always()
+
       # Native source builds only use Skia and depot_tools. Merge-only jobs use no submodules.
       - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.skipSteps, 'true')) }}:
         - pwsh: git submodule update --init --recursive externals/skia externals/depot_tools
