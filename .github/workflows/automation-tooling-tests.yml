@@ -38,6 +38,9 @@ concurrency:
 
 jobs:
   test:
+    # Named so the check-run is distinguishable in the PR checks list — several workflows
+    # use the job id 'test', and GitHub surfaces the job name, not the workflow name.
+    name: Automation tooling tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
