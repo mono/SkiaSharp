@@ -13,18 +13,18 @@ SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor version corre
 | Stable Cut | RC 1 | Critical bug fixes only, no new features |
 | Stable Date | Stable | Ship to NuGet.org, tag and create GitHub Release |
 
-**Schedule for the two milestones currently in flight (m153 and m154), from the [Chromium release schedule](https://chromiumdash.appspot.com/schedule):**
+**Schedule for the two milestones currently in flight (m154 and m155), from the [Chromium release schedule](https://chromiumdash.appspot.com/schedule):**
 
 | Date | Chromium marker | SkiaSharp release | Package |
 |---|---|---|---|
-| Aug 19 | m153 Earliest Beta | Preview 1 | `4.153.0-preview.1` |
-| Aug 25 | m153 Early Stable Cut | Preview 2 | `4.153.0-preview.2` |
-| Sep 1 | m153 Stable Cut | RC 1 | `4.153.0-rc.1` |
 | Sep 2 | m154 Earliest Beta | Preview 1 | `4.154.0-preview.1` |
-| Sep 8 | m153 Stable Date | Stable | `4.153.0` |
 | Sep 8 | m154 Early Stable Cut | Preview 2 | `4.154.0-preview.2` |
 | Sep 15 | m154 Stable Cut | RC 1 | `4.154.0-rc.1` |
+| Sep 16 | m155 Earliest Beta | Preview 1 | `4.155.0-preview.1` |
 | Sep 22 | m154 Stable Date | Stable | `4.154.0` |
+| Sep 22 | m155 Early Stable Cut | Preview 2 | `4.155.0-preview.2` |
+| Sep 29 | m155 Stable Cut | RC 1 | `4.155.0-rc.1` |
+| Oct 6 | m155 Stable Date | Stable | `4.155.0` |
 
 Two milestones are always in flight. Stable for one milestone and Preview 2 for the next intentionally share the same release date.
 
@@ -33,11 +33,11 @@ Two milestones are always in flight. Stable for one milestone and Preview 2 for 
 
 ### Versioning
 
-Packages follow the scheme `4.{chrome_milestone}.{patch}` — the middle number **is** the Chrome milestone number. For example, `4.154.0` ships alongside Chrome 154's stable release.
+Packages follow the scheme `4.{chrome_milestone}.{patch}` — the middle number **is** the Chrome milestone number. For example, `4.155.0` ships alongside Chrome 155's stable release.
 
-- Preview: `4.154.0-preview.1`, `4.154.0-preview.2`
-- Release candidate: `4.154.0-rc.1`
-- Stable: `4.154.0`
+- Preview: `4.155.0-preview.1`, `4.155.0-preview.2`
+- Release candidate: `4.155.0-rc.1`
+- Stable: `4.155.0`
 
 Prerelease suffixes follow [NuGet semver conventions](https://learn.microsoft.com/nuget/concepts/package-versioning#pre-release-versions).
 
@@ -80,8 +80,10 @@ These SkiaSharp 3.x and 4.x lines are no longer supported. They remain available
 <details>
 <summary>Show out-of-support releases</summary>
 
+- **Version 4.154.x**
+  - [Version 4.154.0 (Unreleased)](4.154.0-unreleased.md)
 - **Version 4.153.x**
-  - [Version 4.153.0 (Unreleased)](4.153.0-unreleased.md)
+  - [Version 4.153.0](4.153.0.md)
 - **Version 4.148.x**
   - [Version 4.148.1 (Unreleased)](4.148.1-unreleased.md)
   - [Version 4.148.0](4.148.0.md)
