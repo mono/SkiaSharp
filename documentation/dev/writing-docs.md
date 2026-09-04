@@ -3,9 +3,9 @@
 > **New here?** Read **[docs-overview.md](docs-overview.md)** first — it maps the whole
 > documentation system (the four artifacts, the engines, the skills, and the cross-repo
 > automation). This page is the hands-on **operator** guide for generating and editing
-> API docs and api diffs.
+> conceptual docs, API docs, and API diffs.
 
-This guide covers generating and updating SkiaSharp API documentation.
+This guide covers authoring conceptual guides and generating and updating SkiaSharp API documentation.
 
 SkiaSharp provides two types of documentation: concept docs and API docs.
 
@@ -16,6 +16,29 @@ The conceptual docs live on the `main` branch under `documentation/docfx/guides/
 - https://mono.github.io/SkiaSharp/docs/
 
 See [site.md](site.md) for how to build, preview, and customize the docs site.
+
+Use the conceptual-guide route in the [`api-docs` skill](../../.agents/skills/api-docs/SKILL.md) when
+authoring or reviewing these articles. Its
+[conceptual documentation router](../../.agents/skills/api-docs/references/conceptual/index.md) selects
+separate authoring, review, and validation procedures plus a blueprint for the reader's intent:
+
+- Verifying API, ownership, lifecycle, and platform claims against bindings, tests, and native build
+  configuration.
+- Structuring overviews, concepts, how-to guides, migrations, and troubleshooting articles around the
+  reader's starting state and outcome.
+- Producing safe, copyable samples that check failures and model native resource ownership.
+- Applying MicrosoftDocs/Contribute guidance for voice, procedures, links, alerts, global readiness, and
+  accessible images without copying Microsoft Learn-only metadata or publishing infrastructure.
+
+After changing conceptual docs, build the site:
+
+```bash
+dotnet tool restore
+dotnet docfx documentation/docfx/docfx.json
+```
+
+Use `--warningsAsErrors` when the baseline is clean. If the repository already has unrelated warnings,
+verify that none reference the changed articles or links.
 
 ## API Docs
 
