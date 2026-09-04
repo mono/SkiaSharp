@@ -74,6 +74,7 @@ var dawn = "https://github.com/google/dawn/releases/download/{TAG}/source.zip";
     @'
 {"event":"start","sid":"clone-session","argv":["git","clone","https://trace-user:trace-password@github.com/google/angle.git?token=hidden","externals/angle"]}
 {"event":"child_start","sid":"fetch-session","child_class":"transport/https","argv":["git","remote-https","origin","https://github.com/emscripten-core/emsdk.git"]}
+{"event":"start","sid":"checkout-session","argv":["git","-c","http.https://github.com/mono/SkiaSharp.extraheader=AUTHORIZATION: bearer secret","fetch","origin"]}
 not-json
 '@ | Set-Content (Join-Path $traceRoot 'trace-event')
 
@@ -91,6 +92,7 @@ not-json
         -TraceDirectory $traceRoot `
         -RepositoryRoot $sourceRoot `
         -ReportDirectory $reportRoot `
+        -JobName test_job `
         -RequireTrace
 
     $jsonPath = Join-Path $reportRoot 'source-dependencies.json'
@@ -107,6 +109,9 @@ not-json
     $report = $json | ConvertFrom-Json
     if ($report.schemaVersion -ne 1) {
         throw "Unexpected schema version '$($report.schemaVersion)'."
+    }
+    if ($report.build.jobName -ne 'test_job') {
+        throw "Unexpected report job name '$($report.build.jobName)'."
     }
     if ($report.coverage.gitTrace2.traceFiles -ne 1 -or
         $report.coverage.gitTrace2.malformedLines -ne 1) {
@@ -126,8 +131,8 @@ not-json
             'https://dev.azure.com/example/project/_git/test-fixture'
             'https://github.com/upstream/not-actually-downloaded'
         )
-    }).Count -ne 0) {
-        throw 'Test fixtures or canonical CVE aliases leaked into source declarations.'
+    }).Count -ne 0 -or $json -match 'SkiaSharp\.extraheader') {
+        throw 'Test fixtures, Git auth config, or canonical CVE aliases leaked into the report.'
     }
 
     if (Test-Path $traceRoot) {

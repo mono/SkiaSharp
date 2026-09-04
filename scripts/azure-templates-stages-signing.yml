@@ -92,6 +92,7 @@ stages:
             - template: /scripts/azure-templates-steps-source-dependencies.yml@self
               parameters:
                 mode: finish
+                reportName: sign_nugets
 
   - ${{ if eq(parameters.publishAssets, true) }}:
     - stage: publish_assets
@@ -160,6 +161,7 @@ stages:
               - template: /scripts/azure-templates-steps-source-dependencies.yml@self
                 parameters:
                   mode: finish
+                  reportName: generate_arcade_manifest
 
         - template: /eng/common/templates-official/job/publish-build-assets.yml@self
           parameters:

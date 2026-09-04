@@ -4,6 +4,9 @@ parameters:
     values:
       - start
       - finish
+  - name: reportName
+    type: string
+    default: ''
 
 steps:
   - ${{ if eq(parameters.mode, 'start') }}:
@@ -24,7 +27,8 @@ steps:
         -Finish
         -TraceDirectory "$(SOURCE_DEPENDENCY_TRACE_DIRECTORY)"
         -RepositoryRoot "$(Build.SourcesDirectory)"
-        -ReportDirectory "$(Build.SourcesDirectory)/output/source-dependencies/$(System.JobName)"
+        -ReportDirectory "$(Build.SourcesDirectory)/output/source-dependencies/${{ parameters.reportName }}"
+        -JobName "${{ parameters.reportName }}"
         -RequireTrace
       displayName: Create source dependency report
       condition: always()

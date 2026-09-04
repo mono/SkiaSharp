@@ -17,6 +17,9 @@ param(
     [string] $ReportDirectory,
 
     [Parameter(ParameterSetName = 'Finish')]
+    [string] $JobName,
+
+    [Parameter(ParameterSetName = 'Finish')]
     [switch] $RequireTrace,
 
     [Parameter(ParameterSetName = 'Finish')]
@@ -88,6 +91,9 @@ function Get-SourceUrlCandidates {
 
     $pattern = '(?i)(?:https?|ssh|git)://[^\s''"`<>]+|[A-Za-z0-9._-]+@[A-Za-z0-9.-]+:[^\s''"`<>]+'
     foreach ($match in [regex]::Matches($Text, $pattern)) {
+        if ($match.Value -match '(?i)\.extraheader(?:=|$)') {
+            continue
+        }
         $match.Value.TrimEnd('.', ',', ';', ':', ')', ']', '}')
     }
 }
@@ -158,6 +164,9 @@ function ConvertTo-CanonicalSourceUrl {
         if ($segments.Count -lt 2) {
             return $null
         }
+        if ($segments[0] -match '[$\{\}]' -or $segments[1] -match '[$\{\}]') {
+            return $null
+        }
         $repository = $segments[1].Split('@')[0] -replace '\.git$', ''
         return "https://bitbucket.org/$($segments[0])/$repository"
     }
@@ -177,6 +186,11 @@ function ConvertTo-CanonicalSourceUrl {
 
     if ($sourceHost -eq 'dev.azure.com' -and
         $path -match '^/(?<org>[^/]+)/(?<project>[^/]+)/_git/(?<repo>[^/]+)') {
+        if ($Matches.org -match '[$\{\}]' -or
+            $Matches.project -match '[$\{\}]' -or
+            $Matches.repo -match '[$\{\}]') {
+            return $null
+        }
         $repo = $Matches.repo.Split('@')[0] -replace '\.git$', ''
         return "https://dev.azure.com/$($Matches.org)/$($Matches.project)/_git/$repo"
     }
@@ -470,10 +484,11 @@ foreach ($trackedFile in Invoke-Git $RepositoryRoot @('ls-files')) {
     $isTestFixture =
         $normalized.Contains('/tests/', [StringComparison]::OrdinalIgnoreCase) -or
         [IO.Path]::GetFileName($normalized).Contains('.Tests.', [StringComparison]::OrdinalIgnoreCase)
+    $isReporter = $normalized -eq 'scripts/infra/security/source-dependency-report.ps1'
     $isScannable =
         $extension -in @('.cake', '.ps1', '.py', '.sh', '.yaml', '.yml') -or
         [IO.Path]::GetFileName($normalized) -eq 'Dockerfile'
-    if ($isBuildFile -and $isScannable -and -not $isTestFixture) {
+    if ($isBuildFile -and $isScannable -and -not $isTestFixture -and -not $isReporter) {
         $path = Join-Path $RepositoryRoot $trackedFile
         if (Test-Path $path -PathType Leaf) {
             $declarationFiles[$path] = $normalized
@@ -550,6 +565,11 @@ $repositoryOutput = @(
 
 $observedCount = @($repositoryOutput | Where-Object observed).Count
 $declaredOnlyCount = @($repositoryOutput | Where-Object { -not $_.observed }).Count
+$effectiveJobName = if ([string]::IsNullOrWhiteSpace($JobName)) {
+    Get-EnvironmentValue 'SYSTEM_JOBNAME'
+} else {
+    $JobName
+}
 $report = [ordered]@{
     schemaVersion = 1
     generatedAtUtc = [DateTime]::UtcNow.ToString('o')
@@ -557,7 +577,7 @@ $report = [ordered]@{
     build = [ordered]@{
         buildId = Get-EnvironmentValue 'BUILD_BUILDID'
         buildNumber = Get-EnvironmentValue 'BUILD_BUILDNUMBER'
-        jobName = Get-EnvironmentValue 'SYSTEM_JOBNAME'
+        jobName = $effectiveJobName
         jobAttempt = Get-EnvironmentValue 'SYSTEM_JOBATTEMPT'
         repository = Get-EnvironmentValue 'BUILD_REPOSITORY_URI'
         commit = Get-EnvironmentValue 'BUILD_SOURCEVERSION'
