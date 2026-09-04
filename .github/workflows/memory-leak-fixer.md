@@ -42,7 +42,7 @@ on:
         default: false
         type: boolean
       focus_area:
-        description: "Force a specific leak focus area 0-10 (see references/types-of-leaks.md) instead of the time-based round-robin. Leave blank to rotate."
+        description: "Force a specific leak focus area 0-10 (see the skill's per-focus references) instead of the time-based round-robin. Leave blank to rotate."
         required: false
         default: ""
         type: string
@@ -218,9 +218,9 @@ Each bash call is a fresh subshell — re-`cd` as needed.
    (framework bug vs footgun; empirically-proven vs statically-reasoned; ABI impact).
 8. **Report only checked scope.** A summary may call a scan exhaustive only after inspecting every
    result from a named, bounded, untruncated query/path. Otherwise say it was representative and
-   name the files/candidates actually opened. Locate the selected focus-area heading from the
-   reference index before requesting its bounded section; do not guess line ranges or imply that
-   reading the index inspected its source sites.
+   name the files/candidates actually opened. The skill maps each focus area to one self-contained
+   reference file; read that selected file, and do not imply that its historical examples are
+   source sites inspected in this run.
 
 ## Step 3 — Report
 

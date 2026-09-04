@@ -34,10 +34,9 @@ Read [`documentation/dev/memory-management.md`](../../../documentation/dev/memor
 first — it is the authoritative model (pointer types, `owns:` flag, ref-count rules, the
 same-instance-return contract). This skill assumes that model.
 
-The leak catalogue this skill scans against — **11 real focus areas**, each with a description,
-why it's bad, a leak→fix code example, and a leak-specific anti-pattern — is in
-[`references/types-of-leaks.md`](references/types-of-leaks.md). Read it before scanning
-(Phase 1) and consult the matching focus area when writing a fix (Phase 3).
+The leak catalogue is split into **11 focused references**, each with a description, why it's bad,
+a leak→fix code example, and a leak-specific anti-pattern. Phase 1 maps the selected focus area
+directly to its one reference file; consult that same file when writing a fix (Phase 3).
 
 ## Golden rules (non-negotiable)
 
@@ -111,14 +110,26 @@ The `10#` prefix is **required**: `date` zero-pads `%j`/`%H`, and `$(( 08 ))` is
 invalid-octal error without it. For a targeted local run, skip the rotation and just name the
 focus area you want.
 
-Every focus area is drawn from a **real, historical SkiaSharp leak fix**. Now open
-**[references/types-of-leaks.md](references/types-of-leaks.md)** and load focus area `#FOCUS`: its
-**Where to look** line gives the path + grep starting points, and the rest of the entry is the
-description, why-it's-bad, a leak→fix example, and the per-area anti-pattern. **Read that
-focus area before scanning.** First use the quick index or a heading search to locate the exact
-`## # — ...` heading; then read only that bounded section, stopping before the next focus-area
-heading. Do not guess line ranges or load the full catalogue. If it's exhausted (its leaks are
-already open issues/PRs — see 1.3), advance to the next index and load that focus area the same way.
+Every focus area is drawn from a **real, historical SkiaSharp leak fix**. Open the one file mapped
+to `FOCUS`, then read its **Where to look** line, description, why-it's-bad, leak→fix example, and
+per-area anti-pattern before scanning:
+
+| `FOCUS` | Reference |
+|---:|---|
+| 0 | [`references/leaks/undisposed-native-handle.md`](references/leaks/undisposed-native-handle.md) |
+| 1 | [`references/leaks/wrong-owns-flag.md`](references/leaks/wrong-owns-flag.md) |
+| 2 | [`references/leaks/same-instance-double-dispose.md`](references/leaks/same-instance-double-dispose.md) |
+| 3 | [`references/leaks/managed-retention-views.md`](references/leaks/managed-retention-views.md) |
+| 4 | [`references/leaks/fixed-pointer-lifetime.md`](references/leaks/fixed-pointer-lifetime.md) |
+| 5 | [`references/leaks/finalizer-collection-ordering.md`](references/leaks/finalizer-collection-ordering.md) |
+| 6 | [`references/leaks/clone-copy-double-free.md`](references/leaks/clone-copy-double-free.md) |
+| 7 | [`references/leaks/native-statics-singletons.md`](references/leaks/native-statics-singletons.md) |
+| 8 | [`references/leaks/field-not-nulled-on-dispose.md`](references/leaks/field-not-nulled-on-dispose.md) |
+| 9 | [`references/leaks/stream-callback-proxy-lifetime.md`](references/leaks/stream-callback-proxy-lifetime.md) |
+| 10 | [`references/leaks/allocation-failure-path.md`](references/leaks/allocation-failure-path.md) |
+
+If the selected focus area is exhausted (its leaks are already open issues/PRs — see 1.3), advance
+to the next index and load only its mapped reference file.
 
 ### 1.2 Establish the retention/ownership path
 For each candidate write the precise path **with `file:line` citations**:
@@ -229,10 +240,9 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filte
 If a test you *expected* to be red is green, your hypothesis is wrong — go back to Phase 1.
 
 ### 3.2 Implement the minimal idiomatic fix
-Apply the **Fix (✓)** for the matching focus area in
-[`references/types-of-leaks.md`](references/types-of-leaks.md) — every focus area has a worked
-before/after there. Then re-read that focus area's **Watch out (❌ don't):** note: it names the
-specific *wrong fix* that turns one leak into another (an unconditional `Dispose`, flipping
+Apply the **Fix (✓)** in the selected focus-area reference — every reference has a worked
+before/after. Then re-read that reference's **Watch out (❌ don't):** note: it names the specific
+*wrong fix* that turns one leak into another (an unconditional `Dispose`, flipping
 `owns:` blind, nulling a field before disposing, a pinned `GCHandle` where a plain field
 suffices, …).
 
@@ -261,9 +271,8 @@ instead of pushed and reverted. If any box can't be ticked, **fix it or stand do
 - [ ] The fix is inside `binding/**` / `source/**` only — no `*.generated.cs`, no
       `externals/skia/**`, no native / upstream change.
 - [ ] **No public signature changed** — overloads / internals only (ABI stable).
-- [ ] The matching focus area's **Watch out (❌ don't):** note in
-      [`references/types-of-leaks.md`](references/types-of-leaks.md) does **not** describe
-      what you just did (no unconditional same-instance `Dispose`, no blind `owns:` flip, no
+- [ ] The selected reference's **Watch out (❌ don't):** note does **not** describe what you just
+      did (no unconditional same-instance `Dispose`, no blind `owns:` flip, no
       field nulled before dispose, no pinned `GCHandle` or hand-rolled keep-alive field/`List<T>`
       where `SKObject.Referenced(...)` / `KeepAliveObjects` (or a plain field) suffices, …).
 - [ ] This is a real leak with a citable path — not hardened, documented code rationalised
