@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -30,6 +31,16 @@ namespace SkiaSharp.Tests
 			stream.Dispose();
 
 			Assert.Equal(0, dotnet.Position);
+		}
+
+		[Fact]
+		public async Task DisposedStreamDoesNotRetainBorrowedDotNetStream()
+		{
+			var (stream, weakReference) = CreateDisposedStreamWithBorrowedDotNetStream();
+
+			await AssertEx.EventuallyGC(weakReference);
+
+			GC.KeepAlive(stream);
 		}
 
 		[Fact]
@@ -147,6 +158,16 @@ namespace SkiaSharp.Tests
 
 				return SKDocument.CreatePdf(stream);
 			}
+
+		}
+
+		private static (SKManagedWStream Stream, WeakReference WeakReference) CreateDisposedStreamWithBorrowedDotNetStream()
+		{
+			var dotnet = new MemoryStream();
+			var weakReference = new WeakReference(dotnet);
+			var stream = new SKManagedWStream(dotnet, false);
+			stream.Dispose();
+			return (stream, weakReference);
 		}
 	}
 }
