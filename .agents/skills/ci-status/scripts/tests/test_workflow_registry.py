@@ -17,7 +17,7 @@ Two real examples this suite would have caught:
   removed 2026-06-18 when it was folded into "Sync - Release Notes & API Diffs"), so the
   row was a stale leftover quietly duplicating a workflow already listed below it.
 
-These tests assert that every ``mono/SkiaSharp`` entry names a file that exists on this
+These tests assert that every current-repository entry names a file that exists on this
 branch, that the declared ``trigger`` still matches that file's ``on:`` block, and that the
 display name matches. They parse the committed workflow YAML — including generated
 ``.lock.yml`` files, which carry their own ``on:`` block — so they never need the gh-aw
@@ -29,7 +29,9 @@ from __future__ import annotations
 import importlib.util
 import os
 import re
+import tempfile
 import unittest
+from pathlib import Path
 
 import yaml
 
@@ -37,6 +39,7 @@ SCRIPTS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKILL_DIR = os.path.dirname(SCRIPTS_DIR)
 REPO_ROOT = os.path.abspath(os.path.join(SKILL_DIR, "..", "..", ".."))
 WORKFLOW_DIR = os.path.join(REPO_ROOT, ".github", "workflows")
+IDENTITY_CONFIG = Path(REPO_ROOT) / "scripts" / "infra" / "repository-identity.json"
 
 
 def _load_collector():
@@ -50,6 +53,171 @@ def _load_collector():
 
 COLLECTOR = _load_collector()
 GITHUB_WORKFLOWS = COLLECTOR.GITHUB_WORKFLOWS
+
+EXPECTED_WORKFLOW_ROWS = (
+    ("build-site.yml", "Pages - Deploy", "branch", "push", "current"),
+    ("samples.yml", "Sync - Samples", "branch", "push", "current"),
+    (
+        "binding-generation-determinism.yml",
+        "Tests - Binding Generation Determinism",
+        "branch",
+        "push",
+        "current",
+    ),
+    (
+        "update-release-notes.lock.yml",
+        "Sync - Release Notes & API Diffs",
+        "branch",
+        "push",
+        "current",
+    ),
+    ("build-site-go-live.yml", "Pages - Go Live!", "global", "dispatch", "current"),
+    (
+        "build-site-cleanup.yml",
+        "Pages - PR Staging - Cleanup",
+        "global",
+        "event",
+        "current",
+    ),
+    (
+        "build-site-cleanup-stale.yml",
+        "Pages - PR Staging - Sweep Stale",
+        "global",
+        "schedule",
+        "current",
+    ),
+    (
+        "auto-docs-submodule-sync.yml",
+        "Sync - Docs Submodule",
+        "global",
+        "schedule",
+        "current",
+    ),
+    (
+        "auto-skia-submodule-sync.yml",
+        "Sync - Skia Submodule",
+        "global",
+        "schedule",
+        "current",
+    ),
+    (
+        "auto-skia-sync.lock.yml",
+        "Sync - Skia Upstream",
+        "global",
+        "schedule",
+        "current",
+    ),
+    (
+        "memory-leak-fixer.lock.yml",
+        "Fixer - Memory Leak",
+        "global",
+        "schedule",
+        "current",
+    ),
+    (
+        "performance-fixer.lock.yml",
+        "Fixer - Performance",
+        "global",
+        "schedule",
+        "current",
+    ),
+    (
+        "auto-triage.lock.yml",
+        "Sync - Issue Triage",
+        "global",
+        "schedule",
+        "current",
+    ),
+    (
+        "auto-update-issue-template-versions.yml",
+        "Sync - Issue Template Versions",
+        "global",
+        "schedule",
+        "current",
+    ),
+    (
+        "persist-aw-data.yml",
+        "Sync - Agentic Data",
+        "global",
+        "event",
+        "current",
+    ),
+    (
+        "track-artifact-sizes.yml",
+        "Track - Artifact Sizes",
+        "global",
+        "schedule",
+        "current",
+    ),
+    (
+        "track-benchmarks.yml",
+        "Track - Benchmarks",
+        "global",
+        "schedule",
+        "current",
+    ),
+    (
+        "release-prepare.yml",
+        "Release - Prepare",
+        "global",
+        "dispatch",
+        "current",
+    ),
+    (
+        "release-finish.yml",
+        "Release - Finish",
+        "global",
+        "dispatch",
+        "current",
+    ),
+    (
+        "release-milestones.yml",
+        "Release - Milestones",
+        "global",
+        "dispatch",
+        "current",
+    ),
+    (
+        "update-github-release-summaries.yml",
+        "Update GitHub Release summaries",
+        "global",
+        "dispatch",
+        "current",
+    ),
+    (
+        "release-tooling-tests.yml",
+        "Release - Tooling Tests",
+        "branch",
+        "push",
+        "current",
+    ),
+    (
+        "automation-tooling-tests.yml",
+        "Automation - Tooling Tests",
+        "branch",
+        "push",
+        "current",
+    ),
+    ("backport.yml", "PR - Backport", "global", "event", "current"),
+    ("rebase.yml", "PR - Rebase", "global", "event", "current"),
+    (
+        "pr-artifacts-comment.yml",
+        "PR - Artifacts Comment",
+        "global",
+        "event",
+        "current",
+    ),
+    ("merge-message.lock.yml", "Merge Message", "global", "event", "current"),
+    (
+        "auto-api-docs-writer.lock.yml",
+        "Auto API Docs Writer",
+        "global",
+        "schedule",
+        "docs",
+    ),
+    ("automerge-docs.yml", "Automerge Docs", "global", "event", "docs"),
+    ("go-live.yml", "Go Live", "global", "dispatch", "docs"),
+)
 
 # `on:` keys that satisfy each declared trigger. A workflow may legitimately carry more
 # triggers than it is tracked for (most also allow workflow_dispatch), so this checks the
@@ -65,9 +233,47 @@ TRIGGER_KEYS = {
 }
 
 
-def local_workflows():
-    """Entries owned by this repository (the rest live in mono/SkiaSharp-API-docs)."""
-    return [w for w in GITHUB_WORKFLOWS if w["repo"] == "mono/SkiaSharp"]
+def local_workflows(registry=GITHUB_WORKFLOWS, identity=None):
+    """Entries owned by this repository (the rest live in the docs repository)."""
+    identity = identity or COLLECTOR.REPOSITORY_IDENTITY
+    return [w for w in registry if w["repo"] == identity["repository"]]
+
+
+def registry_rows(registry, identity):
+    roles = {
+        identity["repository"]: "current",
+        identity["docsRepository"]: "docs",
+    }
+    return tuple(
+        (
+            entry["workflow"],
+            entry["name"],
+            entry["scope"],
+            entry["trigger"],
+            roles[entry["repo"]],
+        )
+        for entry in registry
+    )
+
+
+def simulated_identity(owner):
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        (root / ".gitmodules").write_text(
+            f"""[submodule "externals/skia"]
+\tpath = externals/skia
+\turl = https://github.com/{owner}/skia.git
+[submodule "docs"]
+\tpath = docs
+\turl = https://github.com/{owner}/SkiaSharp-API-docs.git
+""",
+            encoding="utf-8",
+        )
+        return COLLECTOR.resolve_identity(
+            root,
+            repository=f"{owner}/SkiaSharp",
+            config_path=IDENTITY_CONFIG,
+        )
 
 
 def load_workflow(name):
@@ -99,7 +305,27 @@ def crons_for(workflow_file):
 
 class RegistryTests(unittest.TestCase):
     def test_registry_is_not_empty(self):
-        self.assertTrue(local_workflows(), "No mono/SkiaSharp workflows are tracked.")
+        self.assertTrue(local_workflows(), "No current-repository workflows are tracked.")
+
+    def test_registry_contains_every_expected_workflow(self):
+        self.assertEqual(
+            EXPECTED_WORKFLOW_ROWS,
+            registry_rows(GITHUB_WORKFLOWS, COLLECTOR.REPOSITORY_IDENTITY),
+        )
+
+    def test_registry_resolves_current_and_destination_repositories(self):
+        for owner in ("mono", "dotnet"):
+            with self.subTest(owner=owner):
+                identity = simulated_identity(owner)
+                registry = COLLECTOR.workflow_registry(identity)
+                self.assertEqual(
+                    EXPECTED_WORKFLOW_ROWS,
+                    registry_rows(registry, identity),
+                )
+                self.assertEqual(
+                    {f"{owner}/SkiaSharp", f"{owner}/SkiaSharp-API-docs"},
+                    {entry["repo"] for entry in registry},
+                )
 
     def test_every_tracked_workflow_file_exists(self):
         missing = [w["workflow"] for w in local_workflows()
@@ -154,6 +380,47 @@ class SkillDocTests(unittest.TestCase):
         with open(os.path.join(SKILL_DIR, "SKILL.md"), encoding="utf-8") as fh:
             return fh.read()
 
+    def _workflow_rows(self):
+        rows = []
+        for line in self._skill_text().splitlines():
+            if not line.startswith("| "):
+                continue
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            if len(cells) >= 4 and cells[1] in ("`{current}`", "`{docs}`"):
+                rows.append(cells)
+        return rows
+
+    def test_every_documented_workflow_matches_the_registry(self):
+        rows = self._workflow_rows()
+        actual = {(cells[0], cells[1]) for cells in rows}
+        expected = {
+            (name, f"`{{{role}}}`")
+            for _, name, _, _, role in EXPECTED_WORKFLOW_ROWS
+        }
+        self.assertEqual(len(EXPECTED_WORKFLOW_ROWS), len(rows))
+        self.assertEqual(expected, actual)
+
+    def test_documented_workflows_resolve_in_both_repository_contexts(self):
+        rows = self._workflow_rows()
+        for owner in ("mono", "dotnet"):
+            with self.subTest(owner=owner):
+                identity = simulated_identity(owner)
+                repositories = {
+                    "`{current}`": identity["repository"],
+                    "`{docs}`": identity["docsRepository"],
+                }
+                documented = {
+                    (cells[0], repositories[cells[1]])
+                    for cells in rows
+                }
+                registry = COLLECTOR.workflow_registry(identity)
+                expected = {
+                    (entry["name"], entry["repo"])
+                    for entry in registry
+                }
+                self.assertEqual(len(EXPECTED_WORKFLOW_ROWS), len(documented))
+                self.assertEqual(expected, documented)
+
     def test_skill_table_only_names_tracked_workflows(self):
         rows = [ln for ln in self._skill_text().splitlines() if ln.startswith("| ")]
         tracked = {w["name"] for w in GITHUB_WORKFLOWS}
@@ -178,7 +445,7 @@ class SkillDocTests(unittest.TestCase):
         unresolved = []
         for row in rows:
             cells = [c.strip() for c in row.strip().strip("|").split("|")]
-            if len(cells) < 3 or cells[1] != "mono/SkiaSharp":
+            if len(cells) < 3 or cells[1] != "`{current}`":
                 continue  # header, separator, or a row owned by another repository
             name = cells[0]
             if name not in by_name:

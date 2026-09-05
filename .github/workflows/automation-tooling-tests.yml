@@ -20,6 +20,8 @@ on:
       - "scripts/infra/repository-identity.json"
       - "scripts/infra/repository_identity.py"
       - "scripts/infra/tests/test_repository_identity.py"
+      - "scripts/infra/docs/generate-ai-dashboard.py"
+      - "scripts/infra/docs/tests/test_generate_ai_dashboard.py"
       - "scripts/infra/caching/repo-deps.json"
       - ".gitmodules"
       - "cgmanifest.json"
@@ -35,6 +37,8 @@ on:
       - "scripts/infra/repository-identity.json"
       - "scripts/infra/repository_identity.py"
       - "scripts/infra/tests/test_repository_identity.py"
+      - "scripts/infra/docs/generate-ai-dashboard.py"
+      - "scripts/infra/docs/tests/test_generate_ai_dashboard.py"
       - "scripts/infra/caching/repo-deps.json"
       - ".gitmodules"
       - "cgmanifest.json"
@@ -69,6 +73,13 @@ jobs:
           python3 -c "import yaml" 2>/dev/null \
             || python3 -m pip install --quiet --break-system-packages pyyaml
           python3 -m unittest discover -s .agents/skills/ci-status/scripts/tests -p "test_*.py" -v
+
+      - name: Run AI dashboard rendering tests
+        run: |
+          python3 -m unittest discover \
+            -s scripts/infra/docs/tests \
+            -p "test_*.py" \
+            -v
 
       - name: Run update-skia tooling tests
         # These import their module under test by name, so they must run from their own
