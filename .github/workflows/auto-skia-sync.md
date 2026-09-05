@@ -69,11 +69,13 @@ jobs:
       base_branch: ${{ steps.detect.outputs.base_branch }}
       skia_base_branch: ${{ steps.detect.outputs.skia_base_branch }}
       head_branch: ${{ steps.detect.outputs.head_branch }}
-  # `needs` is additive for compiler-managed jobs: keep the generated activation gate and
-  # make pre_activation directly visible where the staged safe-output config is evaluated.
+  # `needs` is additive for compiler-managed jobs: keep the generated gates and make
+  # pre_activation directly visible wherever the staged safe-output config is evaluated.
   # Keep the supported hyphenated alias: gh-aw v0.87.10 normalizes it in the lockfile, while
   # the underscored spelling is misclassified during pre-activation discovery and forms a cycle.
   agent:
+    needs: [pre-activation]
+  safe_outputs:
     needs: [pre-activation]
 
 # -- Agent job gate --------------------------------------------------

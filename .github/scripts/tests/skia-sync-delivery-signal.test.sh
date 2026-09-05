@@ -107,7 +107,10 @@ for line in agent_lines[needs_start:]:
     else:
         break
 if agent_needs != ["activation", "pre_activation"]:
-    raise SystemExit(f"compiled agent dependencies do not preserve activation and directly include pre_activation: {agent_needs}")
+    raise SystemExit(
+        "compiled agent dependencies do not preserve activation and directly include "
+        f"pre_activation: {agent_needs}"
+    )
 
 prefix = "GH_AW_SAFE_OUTPUTS_CONFIG: "
 matches = [
@@ -127,6 +130,50 @@ if pull_request.get("base_branch") != placeholder:
 if pull_request.get("allowed_base_branches") != placeholder:
     raise SystemExit("compiled create_pull_request allowed_base_branches is not scoped to the resolved base")
 
+safe_outputs_headers = [index for index, line in enumerate(lines) if line == "  safe_outputs:"]
+if len(safe_outputs_headers) != 1:
+    raise SystemExit(f"expected one compiled safe_outputs job, found {len(safe_outputs_headers)}")
+
+safe_outputs_start = safe_outputs_headers[0]
+safe_outputs_end = next(
+    (
+        index
+        for index in range(safe_outputs_start + 1, len(lines))
+        if re.fullmatch(r"  [A-Za-z0-9_-]+:", lines[index])
+    ),
+    len(lines),
+)
+safe_outputs_lines = lines[safe_outputs_start:safe_outputs_end]
+safe_outputs_needs = []
+safe_outputs_needs_start = safe_outputs_lines.index("    needs:") + 1
+for line in safe_outputs_lines[safe_outputs_needs_start:]:
+    match = re.fullmatch(r"      - ([A-Za-z0-9_-]+)", line)
+    if match:
+        safe_outputs_needs.append(match.group(1))
+    else:
+        break
+expected_safe_outputs_needs = ["activation", "agent", "detection", "pre_activation"]
+if safe_outputs_needs != expected_safe_outputs_needs:
+    raise SystemExit(
+        "compiled safe_outputs dependencies do not preserve generated gates and directly "
+        f"include pre_activation: {safe_outputs_needs}"
+    )
+
+handler_prefix = "GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "
+handler_matches = [
+    line.strip()[len(handler_prefix):]
+    for line in safe_outputs_lines
+    if line.strip().startswith(handler_prefix)
+]
+if len(handler_matches) != 1:
+    raise SystemExit(f"expected one emitted safe-output handler config, found {len(handler_matches)}")
+handler_config = json.loads(json.loads(handler_matches[0]))
+handler_pull_request = handler_config["create_pull_request"]
+if handler_pull_request.get("base_branch") != placeholder:
+    raise SystemExit("safe_outputs handler base_branch cannot resolve the pre-activation base")
+if handler_pull_request.get("allowed_base_branches") != placeholder:
+    raise SystemExit("safe_outputs handler allowlist cannot resolve the pre-activation base")
+
 release_base = "release/3.151.x"
 runtime_config = json.loads(serialized_config.replace(placeholder, release_base))
 runtime_pull_request = runtime_config["create_pull_request"]
@@ -134,11 +181,59 @@ if runtime_pull_request["base_branch"] != release_base:
     raise SystemExit("release/manual base did not flow into emitted base_branch")
 if runtime_pull_request["allowed_base_branches"] != release_base:
     raise SystemExit("release/manual base allowlist is broader than the resolved branch")
+runtime_handler_config = json.loads(json.loads(handler_matches[0]).replace(placeholder, release_base))
+runtime_handler_pull_request = runtime_handler_config["create_pull_request"]
+if runtime_handler_pull_request["base_branch"] != release_base:
+    raise SystemExit("release/manual base did not flow into the safe_outputs handler")
+if runtime_handler_pull_request["allowed_base_branches"] != release_base:
+    raise SystemExit("safe_outputs handler release/manual allowlist is broader than the resolved branch")
 PY
   echo "PASS: compiled-release-base-config"
 }
 
+verify_delivery_source_hardening() {
+  python3 - "$PUSH_SCRIPT" <<'PY'
+import sys
+
+
+source = open(sys.argv[1], encoding="utf-8").read()
+
+if source.count("command -p python3 -I") != 2:
+    raise SystemExit("every trusted Python invocation must use isolated mode")
+
+signal_gate = source.index("\nvalidate_delivery_signal\n")
+token_capture = source.index('readonly WRITE_TOKEN="$GH_TOKEN"')
+token_removal = source.index("unset GH_TOKEN")
+artifact_gate = source.index('\nrequired_file "$SKIA_SUMMARY_FILE"')
+if not signal_gate < token_capture < token_removal < artifact_gate:
+    raise SystemExit("write credentials are not removed immediately after signal validation")
+
+if "remote set-url" in source:
+    raise SystemExit("credentialed delivery must not use agent-controlled remote metadata")
+if source.count("GIT_CONFIG_NOSYSTEM=1") != 2:
+    raise SystemExit("trusted Git commands do not consistently disable system configuration")
+if source.count("-c core.hooksPath=/dev/null") != 2:
+    raise SystemExit("trusted Git commands do not consistently disable hooks")
+if source.count("-c credential.helper=") != 2:
+    raise SystemExit("trusted Git commands do not consistently disable credential helpers")
+if '"${commit_sha}:refs/heads/${BRANCH}"' not in source:
+    raise SystemExit("delivery does not push the immutable validated commit")
+if 'push_branch "$TRUSTED_SKIA_REPO" mono/skia "$SKIA_VALIDATED_HEAD_SHA"' not in source:
+    raise SystemExit("mono/skia delivery is not bound to its validated head")
+if 'push_branch "$TRUSTED_SS_REPO" mono/SkiaSharp "$SS_VALIDATED_HEAD_SHA"' not in source:
+    raise SystemExit("mono/SkiaSharp delivery is not bound to its validated head")
+if '${SS_VALIDATED_HEAD_SHA}:cgmanifest.json' not in source:
+    raise SystemExit("manifest validation is not bound to the immutable SkiaSharp head")
+if '--merged-head "$SKIA_VALIDATED_HEAD_SHA"' not in source:
+    raise SystemExit("fork audit is not bound to the immutable Skia head")
+if 'ls-tree "$SS_VALIDATED_HEAD_SHA" externals/skia' not in source:
+    raise SystemExit("gitlink validation is not bound to the immutable SkiaSharp head")
+PY
+  echo "PASS: delivery-source-hardening"
+}
+
 verify_compiled_release_base_config
+verify_delivery_source_hardening
 
 record >"$SIGNAL_FILE"
 expect_success valid
