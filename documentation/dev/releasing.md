@@ -50,6 +50,10 @@ Prepare, Finish, and Milestones use the same two-dispatch pattern: first run
 with `push` unchecked to review a read-only plan, then run again with identical
 inputs and `push` checked.
 
+The workflows provision Python 3 for repository identity resolution. Running
+the publishing scripts locally requires `python3` on `PATH` in addition to
+PowerShell, Git, and the GitHub CLI.
+
 ## 1. Prepare the release branches
 
 Open

@@ -4,9 +4,71 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1')
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1')
 
+function Get-PublishingRepositoryIdentity(
+    [string] $Repository,
+    [string] $Root,
+    [string] $ConfigPath
+) {
+    $identityScript = Join-Path (Split-Path $PSScriptRoot) 'repository_identity.py'
+    if (!(Test-Path -LiteralPath $identityScript -PathType Leaf)) {
+        throw "Repository identity helper does not exist: $identityScript"
+    }
+    if (!(Get-Command python3 -CommandType Application -ErrorAction SilentlyContinue)) {
+        throw 'Python 3 is required to resolve repository identity; python3 was not found on PATH.'
+    }
+
+    $resolvedRoot = if ($Root) {
+        (Resolve-Path -LiteralPath $Root).Path
+    } else {
+        (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path
+    }
+    $resolvedConfig = if ($ConfigPath) {
+        $ConfigPath
+    } else {
+        Join-Path (Split-Path $PSScriptRoot) 'repository-identity.json'
+    }
+    $arguments = @(
+        $identityScript,
+        '--root', $resolvedRoot,
+        '--config', $resolvedConfig
+    )
+    if ($Repository) {
+        $arguments += @('--repository', $Repository)
+    }
+    $arguments += 'json'
+
+    $errorPath = [System.IO.Path]::GetTempFileName()
+    $nativePreference = $PSNativeCommandUseErrorActionPreference
+    $PSNativeCommandUseErrorActionPreference = $false
+    try {
+        $global:LASTEXITCODE = 0
+        $output = @(& python3 @arguments 2> $errorPath)
+        $exitCode = $global:LASTEXITCODE
+        $errorText = [string] (Get-Content -LiteralPath $errorPath -Raw)
+    } finally {
+        $PSNativeCommandUseErrorActionPreference = $nativePreference
+        Remove-Item -LiteralPath $errorPath -Force -ErrorAction SilentlyContinue
+    }
+    if ($exitCode -ne 0) {
+        throw "Repository identity helper failed ($exitCode): $($errorText.Trim())"
+    }
+
+    try {
+        $identity = (($output -join "`n") | ConvertFrom-Json)
+        if (!$identity) {
+            throw 'the helper returned no identity'
+        }
+        return $identity
+    } catch {
+        throw "Repository identity helper returned invalid JSON: $($_.Exception.Message)"
+    }
+}
+
+function Resolve-PublishingRepository([string] $Repository) {
+    return (Get-PublishingRepositoryIdentity -Repository $Repository).repository
+}
+
 # Shared repository paths and release contracts.
-New-Variable -Scope Script -Option ReadOnly -Name ReleaseRepository -Value 'mono/SkiaSharp'
-New-Variable -Scope Script -Option ReadOnly -Name ReleaseSkiaRemote -Value 'https://github.com/mono/skia.git'
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseSkiaPath -Value 'externals/skia'
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseVariablesPath -Value 'scripts/azure-templates-variables.yml'
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseVersionsPath -Value 'scripts/VERSIONS.txt'
@@ -466,6 +528,8 @@ function Publish-AutomationFilePullRequest(
 }
 
 Export-ModuleMember -Function @(
+    'Get-PublishingRepositoryIdentity',
+    'Resolve-PublishingRepository',
     'Write-ReleaseStatus',
     'Get-RepositoryReleaseVersion',
     'Push-ReleaseBranch',
@@ -482,8 +546,6 @@ Export-ModuleMember -Function @(
     'Test-AutomationFileBranch',
     'Publish-AutomationFilePullRequest'
 ) -Variable @(
-    'ReleaseRepository',
-    'ReleaseSkiaRemote',
     'ReleaseSkiaPath',
     'ReleaseVariablesPath',
     'ReleaseVersionsPath'

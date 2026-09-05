@@ -33,6 +33,7 @@ $Push = $false
 $writeRemote = $false
 $moveSettleAttempts = 5
 $moveSettleDelaySeconds = 0
+$testRepository = 'fixture/SkiaSharp'
 
 $script:TestsRun = 0
 
@@ -263,16 +264,16 @@ function global:gh {
     }
 }
 
-$map = Get-GitHubMilestoneMap -Repository 'mono/SkiaSharp'
+$map = Get-GitHubMilestoneMap -Repository $testRepository
 Assert-Equal 70 $map['4.152.0-preview.1'].number 'The fake-gh milestone response was not parsed.'
-$openItems = Get-OpenMilestoneItems -Repository 'mono/SkiaSharp' -MilestoneNumber 70
+$openItems = Get-OpenMilestoneItems -Repository $testRepository -MilestoneNumber 70
 Assert-Equal @('issue', 'pull-request') @($openItems.Kind) 'Issues and pull requests were not distinguished.'
-Assert-Equal @(12, 34, 56) @(Get-LinkedIssues -Repository 'mono/SkiaSharp' -PullRequest 77) `
+Assert-Equal @(12, 34, 56) @(Get-LinkedIssues -Repository $testRepository -PullRequest 77) `
     'GitHub references and closing keywords were not combined.'
 
 $callsBeforeDryRun = $script:FakeGhCalls.Count
 $dryRunOutput = @(
-    Invoke-GitHubMutation -Arguments @('api', 'repos/mono/SkiaSharp/milestones/70', '-X', 'PATCH', '-f', 'state=closed') `
+    Invoke-GitHubMutation -Arguments @('api', "repos/$testRepository/milestones/70", '-X', 'PATCH', '-f', 'state=closed') `
         -Description 'Close milestone' 6>&1
 ) -join "`n"
 Assert-Equal $callsBeforeDryRun $script:FakeGhCalls.Count 'A dry-run mutation invoked gh.'
@@ -293,7 +294,7 @@ $pushMilestones = @{
 $Push = $true
 $writeRemote = $true
 try {
-    Complete-GitHubMilestone -Repository 'mono/SkiaSharp' -Operation $pushOperation -Milestones $pushMilestones
+    Complete-GitHubMilestone -Repository $testRepository -Operation $pushOperation -Milestones $pushMilestones
 } finally {
     $Push = $false
     $writeRemote = $false
@@ -303,12 +304,12 @@ Assert-Equal 'closed' $script:FakeMilestoneState 'The fake-gh apply path did not
 
 $script:FakeGhScenario = 'new-item'
 Assert-Throws {
-    Wait-MilestoneMoves -Repository 'mono/SkiaSharp' -MilestoneNumber 1 -MovedNumbers @(99)
+    Wait-MilestoneMoves -Repository $testRepository -MilestoneNumber 1 -MovedNumbers @(99)
 } 'gained open items.*issue #101' 'A newly appeared item did not block milestone closure.'
 
 $script:FakeGhScenario = 'duplicate'
 Assert-Throws {
-    $null = Get-GitHubMilestoneMap -Repository 'mono/SkiaSharp'
+    $null = Get-GitHubMilestoneMap -Repository $testRepository
 } 'Multiple milestones' 'Ambiguous duplicate milestone titles were not rejected.'
 
 Remove-Item Function:\gh
