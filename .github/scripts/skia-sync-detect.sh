@@ -68,14 +68,11 @@ emit() { printf '%s=%s\n' "$1" "$2" >>"$OUT"; }
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
-IDENTITY_ROOT="${SKIA_SYNC_REPOSITORY_ROOT:-$REPO_ROOT}"
 : "${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
-IDENTITY_JSON=$(python3 "$REPO_ROOT/.github/scripts/skia_sync_identity.py" \
-  --root "$IDENTITY_ROOT" --repository "$GITHUB_REPOSITORY" json)
-REPOSITORY=$(jq -er '.repository' <<<"$IDENTITY_JSON")
-REPOSITORY_GIT_URL=$(jq -er '.repositoryGitUrl' <<<"$IDENTITY_JSON")
-SKIA_REPOSITORY=$(jq -er '.skiaRepository' <<<"$IDENTITY_JSON")
-SKIA_GIT_URL=$(jq -er '.skiaGitUrl' <<<"$IDENTITY_JSON")
+CURRENT_IDENTITY_JSON=$(python3 "$REPO_ROOT/.github/scripts/skia_sync_identity.py" \
+  --root "$REPO_ROOT" --repository "$GITHUB_REPOSITORY" current-json)
+REPOSITORY=$(jq -er '.repository' <<<"$CURRENT_IDENTITY_JSON")
+REPOSITORY_GIT_URL=$(jq -er '.repositoryGitUrl' <<<"$CURRENT_IDENTITY_JSON")
 UPSTREAM_SKIA_GIT_URL=https://github.com/google/skia.git
 
 # Milestone number from scripts/VERSIONS.txt at the given ref (remote read, no checkout).
@@ -238,17 +235,36 @@ elif [ -n "$RELEASE_BRANCH" ]; then
   BASE_BRANCH="$RELEASE_BRANCH"
   SKIA_BASE_BRANCH="$RELEASE_BRANCH"
   HEAD_BRANCH="skia-sync/${RELEASE_BRANCH//\//-}"
-  # The matching paired Skia release branch MUST already exist.
-  if [ -z "$(git ls-remote --heads "$SKIA_GIT_URL" "refs/heads/${SKIA_BASE_BRANCH}" | awk '{print $1}')" ]; then
-    echo "::error::${SKIA_REPOSITORY} branch '${SKIA_BASE_BRANCH}' does not exist. Release branches are owned by the Release - Prepare workflow — create it before running a release sync for m${TARGET}."
-    exit 1
-  fi
 elif [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then
   # A supported/rotation line older than main but with NO release/<major>.<TARGET>.x
   # branch has no home — do NOT merge an older milestone into main. Flag it so the work
   # check skips (fix versions.json 'support' if this milestone should still be synced).
   INVALID=true
   echo "::notice::milestone m${TARGET} is older than main (m${MAIN_MS}) but has no release/*.${TARGET}.x branch — nothing to sync."
+fi
+
+# Resolve the paired repository from the exact parent branch being synchronized, not
+# from the workflow revision. Release lines may intentionally carry different submodule
+# configuration while they remain supported.
+IDENTITY_REF="$REF_IMMUTABLE"
+if [ -n "$BASE_BRANCH_OVERRIDE" ] || [ "$IS_RELEASE" = true ]; then
+  IDENTITY_REF="$BASE_BRANCH"
+fi
+IDENTITY_ROOT=$(mktemp -d)
+trap 'rm -rf "$IDENTITY_ROOT"' EXIT
+gh api "repos/${REPOSITORY}/contents/.gitmodules?ref=${IDENTITY_REF}" \
+  --jq '.content' | base64 -d >"$IDENTITY_ROOT/.gitmodules"
+IDENTITY_JSON=$(python3 "$REPO_ROOT/.github/scripts/skia_sync_identity.py" \
+  --root "$IDENTITY_ROOT" --repository "$REPOSITORY" json)
+SKIA_REPOSITORY=$(jq -er '.skiaRepository' <<<"$IDENTITY_JSON")
+SKIA_GIT_URL=$(jq -er '.skiaGitUrl' <<<"$IDENTITY_JSON")
+
+if [ "$IS_RELEASE" = true ]; then
+  # The matching paired Skia release branch MUST already exist.
+  if [ -z "$(git ls-remote --heads "$SKIA_GIT_URL" "refs/heads/${SKIA_BASE_BRANCH}" | awk '{print $1}')" ]; then
+    echo "::error::${SKIA_REPOSITORY} branch '${SKIA_BASE_BRANCH}' does not exist. Release branches are owned by the Release - Prepare workflow — create it before running a release sync for m${TARGET}."
+    exit 1
+  fi
 fi
 
 # `current` = milestone of the BASE branch we sync INTO:

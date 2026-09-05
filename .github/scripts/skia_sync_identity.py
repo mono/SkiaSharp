@@ -65,10 +65,7 @@ def read_skia_repository(root: Path) -> str:
 
 
 def resolve_identity(root: Path, repository: str | None = None) -> dict[str, str]:
-    current = repository if repository is not None else os.environ.get("GITHUB_REPOSITORY")
-    if not current:
-        raise SyncIdentityError("GITHUB_REPOSITORY is required.")
-    current = normalize_repository(current)
+    current = resolve_current_repository(repository)
     skia = read_skia_repository(root)
     return {
         "repository": current,
@@ -76,6 +73,13 @@ def resolve_identity(root: Path, repository: str | None = None) -> dict[str, str
         "skiaRepository": skia,
         "skiaGitUrl": git_url(skia),
     }
+
+
+def resolve_current_repository(repository: str | None = None) -> str:
+    current = repository if repository is not None else os.environ.get("GITHUB_REPOSITORY")
+    if not current:
+        raise SyncIdentityError("GITHUB_REPOSITORY is required.")
+    return normalize_repository(current)
 
 
 def validate_manifest(root: Path, skia_git_url: str) -> None:
@@ -108,6 +112,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--repository")
     subparsers = parser.add_subparsers(dest="command", required=True)
+    subparsers.add_parser("current-json")
     subparsers.add_parser("json")
     subparsers.add_parser("validate-manifest")
     return parser
@@ -117,6 +122,19 @@ def main(argv: list[str] | None = None) -> int:
     args = create_parser().parse_args(argv)
     root = args.root.resolve()
     try:
+        if args.command == "current-json":
+            repository = resolve_current_repository(args.repository)
+            print(
+                json.dumps(
+                    {
+                        "repository": repository,
+                        "repositoryGitUrl": git_url(repository),
+                    },
+                    sort_keys=True,
+                )
+            )
+            return 0
+
         identity = resolve_identity(root, args.repository)
         if args.command == "json":
             print(json.dumps(identity, sort_keys=True))

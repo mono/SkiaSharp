@@ -40,7 +40,6 @@ on:
       uses: actions/checkout@v7.0.1
       with:
         sparse-checkout: |
-          .gitmodules
           .github/scripts
     - name: Detect milestone
       id: detect

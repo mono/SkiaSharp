@@ -49,7 +49,7 @@ run_case() {
   printf '%s\n' \
     '[submodule "externals/skia"]' \
     '	path = externals/skia' \
-    "	url = https://github.com/${skia_repository}.git" \
+    "	url = https://github.com/workflow-checkout/skia.git" \
     '[submodule "docs"]' \
     '	path = docs' \
     "	url = https://github.com/${owner}/SkiaSharp-API-docs" \
@@ -61,7 +61,6 @@ run_case() {
       GITHUB_REPOSITORY="$repository" \
       GITHUB_SHA=trigger-sha \
       GITHUB_REF=refs/heads/main \
-      SKIA_SYNC_REPOSITORY_ROOT="$case_dir" \
       TEST_MAIN_MS="$main_ms" \
       TEST_RELEASE_BRANCH="$release_branch" \
       TEST_RELEASE_SHA=release-sha \
@@ -123,7 +122,7 @@ run_compare_failure_case() {
   printf '%s\n' \
     '[submodule "externals/skia"]' \
     '	path = externals/skia' \
-    "	url = https://github.com/${skia_repository}.git" \
+    "	url = https://github.com/workflow-checkout/skia.git" \
     '[submodule "docs"]' \
     '	path = docs' \
     "	url = https://github.com/${owner}/SkiaSharp-API-docs" \
@@ -135,7 +134,6 @@ run_compare_failure_case() {
       GITHUB_REPOSITORY="$repository" \
       GITHUB_SHA=trigger-sha \
       GITHUB_REF=refs/heads/main \
-      SKIA_SYNC_REPOSITORY_ROOT="$case_dir" \
       TEST_MAIN_MS=152 \
       TEST_RELEASE_BRANCH="" \
       TEST_RELEASE_SHA=release-sha \

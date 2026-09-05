@@ -9,6 +9,13 @@ case "$endpoint" in
   repos/"$TEST_REPOSITORY"/contents/scripts/VERSIONS.txt\?ref=*)
     printf 'libSkiaSharp test milestone %s\n' "$TEST_MAIN_MS" | base64
     ;;
+  repos/"$TEST_REPOSITORY"/contents/.gitmodules\?ref=*)
+    printf '%s\n' \
+      '[submodule "externals/skia"]' \
+      '	path = externals/skia' \
+      "	url = https://github.com/${TEST_SKIA_REPOSITORY}.git" \
+      | base64
+    ;;
   repos/"$TEST_SKIA_REPOSITORY"/compare/*)
     printf '%s\n' "$endpoint" >>"$TEST_COMPARE_LOG"
     if [ "${TEST_COMPARE_FAIL:-false}" = true ]; then
