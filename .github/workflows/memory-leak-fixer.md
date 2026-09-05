@@ -54,7 +54,7 @@ on:
 
 # Only ever run on the canonical repo — never on forks.
 if: |
-  github.repository == 'mono/SkiaSharp'
+  github.repository_id == 52293126
 
 # Give the skill's Phase 5 report a writable step-summary sink (mirrors the
 # convention used by auto-triage).
@@ -92,7 +92,7 @@ permissions:
 tools:
   github:
     toolsets: [issues, pull_requests, search]
-    allowed-repos: ["mono/skiasharp"]
+    allowed-repos: ["mono/skiasharp", "dotnet/skiasharp"]
     min-integrity: none
   edit:
   bash: ["dotnet", "pwsh", "git", "gh", "find", "ls", "cat", "grep", "head", "tail", "wc", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "bash", "sh", "chmod", "cp", "mv", "rm"]
@@ -189,11 +189,12 @@ Each bash call is a fresh subshell — re-`cd` as needed.
    **`noop`**. Never finish a run with no safe output at all (that makes the run look incomplete).
 2. **Cheap discovery and de-dup before bootstrap.** Complete the focused source scan and skill
    Phase 1.3 before any local-tool restore or native download; skip any candidate already covered
-   by an OPEN `[memory-leak]` issue or PR on `mono/SkiaSharp`. A candidate whose only prior item is
-   CLOSED may be re-filed. Only after one managed-C# candidate has a citable ownership path and
-   clears de-dup, run `dotnet tool restore && dotnet cake --target=externals-download` exactly
-   once. This remains mandatory before any source build or test, but a quiet/duplicate run must
-   not run it and later phases must not repeat it.
+   by an OPEN `[memory-leak]` issue or PR on the current SkiaSharp repository. A candidate whose
+   only prior item is CLOSED may be re-filed. Only after one managed-C# candidate has a citable
+   ownership path and clears de-dup, run
+   `dotnet tool restore && dotnet cake --target=externals-download` exactly once. This remains
+   mandatory before any source build or test, but a quiet/duplicate run must not run it and later
+   phases must not repeat it.
 3. **Validate before you open a PR.** Only open a PR when you have demonstrated the
    regression test **fails without the fix and passes with it** (skill Phase 3, both
    directions). No red→green ⇒ no PR.

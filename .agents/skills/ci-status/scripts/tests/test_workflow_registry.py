@@ -22,11 +22,15 @@ branch, that the declared ``trigger`` still matches that file's ``on:`` block, a
 display name matches. They parse the committed workflow YAML — including generated
 ``.lock.yml`` files, which carry their own ``on:`` block — so they never need the gh-aw
 compiler to run and are not brittle to lock regeneration.
+
+The focused portability checks at the end cover only workflows whose canonical-repository
+gates and gh-aw repository allowlists must survive the mono-to-dotnet transfer.
 """
 
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import re
 import unittest
@@ -37,6 +41,32 @@ SCRIPTS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKILL_DIR = os.path.dirname(SCRIPTS_DIR)
 REPO_ROOT = os.path.abspath(os.path.join(SKILL_DIR, "..", "..", ".."))
 WORKFLOW_DIR = os.path.join(REPO_ROOT, ".github", "workflows")
+
+CANONICAL_REPOSITORY_GATE = "github.repository_id == 52293126"
+SCOPED_WORKFLOW_GATES = {
+    "memory-leak-fixer.md": [("if",)],
+    "performance-fixer.md": [("if",)],
+    "merge-message.md": [("if",)],
+    "pr-artifacts-comment.yml": [("jobs", "add-artifacts-comment", "if")],
+    "track-artifact-sizes.yml": [("jobs", "resolve", "if")],
+    "track-benchmarks.yml": [
+        ("jobs", "resolve", "if"),
+        ("jobs", "benchmark", "if"),
+        ("jobs", "benchmark-source", "if"),
+        ("jobs", "report", "if"),
+    ],
+}
+AGENTIC_ALLOWED_REPOS = {
+    "memory-leak-fixer.md": ["mono/skiasharp", "dotnet/skiasharp"],
+    "performance-fixer.md": ["mono/skiasharp", "dotnet/skiasharp"],
+    "merge-message.md": [
+        "mono/skiasharp",
+        "dotnet/skiasharp",
+        "mono/skia",
+        "dotnet/skia",
+        "google/skia",
+    ],
+}
 
 
 def _load_collector():
@@ -73,6 +103,29 @@ def local_workflows():
 def load_workflow(name):
     with open(os.path.join(WORKFLOW_DIR, name), encoding="utf-8") as fh:
         return yaml.safe_load(fh)
+
+
+def load_agentic_workflow(name):
+    with open(os.path.join(WORKFLOW_DIR, name), encoding="utf-8") as fh:
+        text = fh.read()
+    lines = text.splitlines()
+    if not lines or lines[0] != "---":
+        raise ValueError(f"{name} does not start with YAML frontmatter")
+    end = lines.index("---", 1)
+    frontmatter = "\n".join(lines[1:end])
+    return yaml.safe_load(frontmatter), text
+
+
+def read_workflow(name):
+    with open(os.path.join(WORKFLOW_DIR, name), encoding="utf-8") as fh:
+        return fh.read()
+
+
+def nested_value(data, path):
+    value = data
+    for key in path:
+        value = value[key]
+    return value
 
 
 def on_block(data):
@@ -145,6 +198,63 @@ class RegistryTests(unittest.TestCase):
             if not crons_for(entry["workflow"]):
                 missing.append(entry["workflow"])
         self.assertEqual([], missing, f"Tracked as scheduled but define no cron: {missing}")
+
+
+class PortableWorkflowGateTests(unittest.TestCase):
+    def test_scoped_workflows_use_the_stable_repository_id(self):
+        mutable_gates = (
+            "github.repository == 'mono/SkiaSharp'",
+            "github.repository_owner == 'mono'",
+        )
+        for workflow, paths in SCOPED_WORKFLOW_GATES.items():
+            if workflow.endswith(".md"):
+                data, text = load_agentic_workflow(workflow)
+            else:
+                data = load_workflow(workflow)
+                text = read_workflow(workflow)
+
+            with self.subTest(workflow=workflow):
+                for path in paths:
+                    self.assertIn(CANONICAL_REPOSITORY_GATE,
+                                  str(nested_value(data, path)).strip())
+                for mutable_gate in mutable_gates:
+                    self.assertNotIn(mutable_gate, text)
+
+    def test_agentic_workflows_have_exact_transition_allowlists(self):
+        for workflow, expected in AGENTIC_ALLOWED_REPOS.items():
+            source, _ = load_agentic_workflow(workflow)
+            lock = read_workflow(workflow.replace(".md", ".lock.yml"))
+            compact = json.dumps(expected, separators=(",", ":"))
+
+            with self.subTest(workflow=workflow):
+                self.assertEqual(expected, source["tools"]["github"]["allowed-repos"])
+                self.assertIn(f"GH_AW_GITHUB_REPOS: '{compact}'", lock)
+
+    def test_generated_agentic_locks_use_the_stable_repository_id(self):
+        mutable_gates = (
+            "github.repository == 'mono/SkiaSharp'",
+            "github.repository_owner == 'mono'",
+        )
+        for workflow in AGENTIC_ALLOWED_REPOS:
+            lock_name = workflow.replace(".md", ".lock.yml")
+            lock = read_workflow(lock_name)
+
+            with self.subTest(workflow=lock_name):
+                self.assertIn(CANONICAL_REPOSITORY_GATE, lock)
+                self.assertIn('GH_AW_ACTION_FAILURE_ISSUE_EXPIRES_HOURS: "0"', lock)
+                for mutable_gate in mutable_gates:
+                    self.assertNotIn(mutable_gate, lock)
+
+    def test_generated_fixer_locks_keep_same_repository_pr_guard(self):
+        same_repository_guard = (
+            "github.event_name != 'pull_request' || "
+            "github.event.pull_request.head.repo.id == github.repository_id"
+        )
+        for workflow in ("memory-leak-fixer.lock.yml", "performance-fixer.lock.yml"):
+            with self.subTest(workflow=workflow):
+                lock = " ".join(read_workflow(workflow).split())
+                self.assertIn(CANONICAL_REPOSITORY_GATE, lock)
+                self.assertIn(same_repository_guard, lock)
 
 
 class SkillDocTests(unittest.TestCase):

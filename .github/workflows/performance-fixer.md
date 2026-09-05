@@ -56,7 +56,7 @@ on:
 
 # Only ever run on the canonical repo — never on forks.
 if: |
-  github.repository == 'mono/SkiaSharp'
+  github.repository_id == 52293126
 
 # Give the skill's Phase 5 report a writable step-summary sink (mirrors the
 # convention used by memory-leak-fixer / auto-triage).
@@ -96,7 +96,7 @@ permissions:
 tools:
   github:
     toolsets: [issues, pull_requests, search]
-    allowed-repos: ["mono/skiasharp"]
+    allowed-repos: ["mono/skiasharp", "dotnet/skiasharp"]
     min-integrity: none
   edit:
   bash: ["dotnet", "pwsh", "git", "gh", "find", "ls", "cat", "grep", "head", "tail", "wc", "jq", "tee", "sed", "awk", "tr", "cut", "sort", "uniq", "xargs", "echo", "date", "mkdir", "test", "env", "basename", "dirname", "bash", "sh", "chmod", "cp", "mv", "rm"]
@@ -201,12 +201,12 @@ those are repo artifacts, not scratch. Each bash call is a fresh subshell — re
    clears the bar → exactly one **`noop`**. Never finish a run with no safe output at all.
 2. **Cheap discovery and de-dup before bootstrap.** Complete the focused source scan and skill
    Phase 1.3 before any local-tool restore or native download; skip any candidate already covered
-   by an OPEN `[performance]` / `perf(...)` / `Optimize …` issue or PR on `mono/SkiaSharp`
-   (e.g. #4241, #3489, #4182, #3033). A candidate whose only prior item is CLOSED may be re-filed.
-   Only after one managed-C# candidate has a citable hot path/invariant and clears de-dup, run
-   `dotnet tool restore && dotnet cake --target=externals-download` exactly once. This remains
-   mandatory before any source build, test, or benchmark, but a quiet/duplicate run must not run
-   it and later phases must not repeat it.
+   by an OPEN `[performance]` / `perf(...)` / `Optimize …` issue or PR on the current SkiaSharp
+   repository (e.g. #4241, #3489, #4182, #3033). A candidate whose only prior item is CLOSED may
+   be re-filed. Only after one managed-C# candidate has a citable hot path/invariant and clears
+   de-dup, run `dotnet tool restore && dotnet cake --target=externals-download` exactly once. This
+   remains mandatory before any source build, test, or benchmark, but a quiet/duplicate run must
+   not run it and later phases must not repeat it.
 3. **Two proofs before you open a PR.** Only open a PR when you have (a) a BenchmarkDotNet
    New-vs-Old result showing a real, repeatable speedup with no allocation regression (skill
    Phase 2) **and** (b) an equivalence test proving the result is identical to the original/native
