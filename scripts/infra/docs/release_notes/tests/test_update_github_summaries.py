@@ -11,7 +11,7 @@ _DOCS_DIR = Path(__file__).resolve().parents[2]
 if str(_DOCS_DIR) not in sys.path:
     sys.path.insert(0, str(_DOCS_DIR))
 
-from release_notes import github, update_github_summaries as updater
+from release_notes import common, github, update_github_summaries as updater
 
 GH = github
 
@@ -436,11 +436,67 @@ class RenderManagedSummaryTests(unittest.TestCase):
         )
         rendered = updater.render_managed_summary(candidate)
         self.assertIn("nuget.org/packages/SkiaSharp/4.151.0-preview.1", rendered)
-        self.assertIn("mono.github.io/SkiaSharp/docs/releases/4.151.0.html", rendered)
+        self.assertIn(
+            "{}/docs/releases/4.151.0.html".format(common.PUBLIC_SITE_BASE_URL),
+            rendered,
+        )
         self.assertIn(
             "github.com/mono/SkiaSharp/compare/v4.150.2...v4.151.0-preview.1", rendered
         )
         self.assertNotIn(updater.safety.RELEASE_LINKS_MARKER, rendered)
+
+    def test_uses_the_explicit_public_site_value_without_inferring_the_owner(self):
+        shipment = _shipment()
+        candidate = updater.Candidate(
+            tag=shipment["tag"],
+            prose_path=Path("prose.json"),
+            data_path=Path("data.json"),
+            prose=_prose(
+                summaries={
+                    shipment["tag"]: {"headline": "A focused preview release."}
+                }
+            ),
+            data=_data(shipments=[shipment]),
+            shipment=shipment,
+        )
+
+        rendered = updater.render_managed_summary(
+            candidate,
+            documentation_base_url="https://learn.microsoft.com/skiasharp/",
+        )
+
+        self.assertIn(
+            "https://learn.microsoft.com/skiasharp/docs/releases/4.151.0.html",
+            rendered,
+        )
+        self.assertIn("github.com/mono/SkiaSharp/compare/", rendered)
+
+    def test_default_public_site_value_is_read_at_call_time(self):
+        shipment = _shipment()
+        candidate = updater.Candidate(
+            tag=shipment["tag"],
+            prose_path=Path("prose.json"),
+            data_path=Path("data.json"),
+            prose=_prose(
+                summaries={
+                    shipment["tag"]: {"headline": "A focused preview release."}
+                }
+            ),
+            data=_data(shipments=[shipment]),
+            shipment=shipment,
+        )
+
+        with mock.patch.object(
+            common,
+            "PUBLIC_SITE_BASE_URL",
+            "https://skiasharp.example.test",
+        ):
+            rendered = updater.render_managed_summary(candidate)
+
+        self.assertIn(
+            "https://skiasharp.example.test/docs/releases/4.151.0.html",
+            rendered,
+        )
 
     def test_omits_the_changelog_link_for_the_first_ever_shipment(self):
         shipment = _shipment(previous_tag=None, changelog_url=None)
@@ -468,6 +524,29 @@ class RenderManagedSummaryTests(unittest.TestCase):
         with self.assertRaisesRegex(updater.UpdateError, "invalid changelog_url"):
             updater.render_managed_summary(candidate)
 
+    def test_rejects_a_changelog_url_for_a_different_repository_name(self):
+        shipment = _shipment(
+            changelog_url=(
+                "https://github.com/dotnet/NotSkiaSharp/compare/"
+                "v4.150.2...v4.151.0-preview.1"
+            )
+        )
+        candidate = updater.Candidate(
+            tag=shipment["tag"],
+            prose_path=Path("prose.json"),
+            data_path=Path("data.json"),
+            prose=_prose(
+                summaries={
+                    shipment["tag"]: {"headline": "A focused preview release."}
+                }
+            ),
+            data=_data(shipments=[shipment]),
+            shipment=shipment,
+        )
+
+        with self.assertRaisesRegex(updater.UpdateError, "invalid changelog_url"):
+            updater.render_managed_summary(candidate)
+
 
 class MainEndToEndTests(unittest.TestCase):
     def setUp(self):
@@ -476,17 +555,35 @@ class MainEndToEndTests(unittest.TestCase):
         self.fixture = _RepoFixture(self._tmp.name)
 
     def test_converges_a_push_event_and_reports_success(self):
-        self.fixture.write_page("4.151.0", data=_data(), prose=_prose())
+        destination_shipment = _shipment(
+            changelog_url=(
+                "https://github.com/dotnet/SkiaSharp/compare/"
+                "v4.150.2...v4.151.0-preview.1"
+            )
+        )
+        self.fixture.write_page(
+            "4.151.0",
+            data=_data(shipments=[destination_shipment]),
+            prose=_prose(),
+        )
         initial_body = GH.build_managed_body("", "## What's Changed\n")
         fake_client = FakeGitHubClient({"v4.151.0-preview.1": initial_body})
-        with mock.patch.object(GH, "RestGitHubClient", return_value=fake_client):
+        with mock.patch.object(
+            GH, "RestGitHubClient", return_value=fake_client
+        ) as client_type:
             exit_code = updater.main([
                 "--event", "push",
-                "--repository", "mono/SkiaSharp",
+                "--repository", "dotnet/SkiaSharp",
+                "--documentation-base-url", "https://skiasharp.example.test",
                 "--root", str(self.fixture.root),
             ])
         self.assertEqual(exit_code, 0)
         self.assertEqual(len(fake_client.writes), 1)
+        client_type.assert_called_once_with("dotnet/SkiaSharp")
+        self.assertIn(
+            "https://skiasharp.example.test/docs/releases/4.151.0.html",
+            fake_client.writes[0][1],
+        )
 
     def test_reports_a_nonzero_exit_and_writes_a_summary_on_failure(self):
         self.fixture.write_page("4.151.0", data=_data(format_version=3), prose=_prose())
@@ -499,6 +596,37 @@ class MainEndToEndTests(unittest.TestCase):
             ])
         self.assertEqual(exit_code, 1)
         self.assertEqual(fake_client.writes, [])
+
+    def test_omitted_site_argument_uses_the_refreshed_identity_value(self):
+        self.fixture.write_page("4.151.0", data=_data(), prose=_prose())
+        initial_body = GH.build_managed_body("", "## What's Changed\n")
+        fake_client = FakeGitHubClient(
+            {"v4.151.0-preview.1": initial_body}
+        )
+        with (
+            mock.patch.object(
+                common,
+                "configure_identity",
+                return_value={
+                    "repository": "dotnet/SkiaSharp",
+                    "publicSiteBaseUrl": "https://skiasharp.example.test",
+                },
+            ),
+            mock.patch.object(
+                GH, "RestGitHubClient", return_value=fake_client
+            ),
+        ):
+            exit_code = updater.main([
+                "--event", "push",
+                "--repository", "dotnet/SkiaSharp",
+                "--root", str(self.fixture.root),
+            ])
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn(
+            "https://skiasharp.example.test/docs/releases/4.151.0.html",
+            fake_client.writes[0][1],
+        )
 
     def test_a_quiet_run_with_no_eligible_summaries_still_exits_zero(self):
         fake_client = FakeGitHubClient({})

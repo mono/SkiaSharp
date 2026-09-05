@@ -3,12 +3,13 @@ from __future__ import annotations
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 _DOCS_DIR = Path(__file__).resolve().parents[2]
 if str(_DOCS_DIR) not in sys.path:
     sys.path.insert(0, str(_DOCS_DIR))
 
-from release_notes import shipments
+from release_notes import common, shipments
 
 
 # A realistic slice of this repository's actual tag history spanning a
@@ -139,7 +140,25 @@ class CollectShipmentsTests(unittest.TestCase):
         rc = next(item for item in result if item["tag"] == "v4.150.0-rc.1.1")
         self.assertEqual(
             rc["changelog_url"],
-            "https://github.com/mono/SkiaSharp/compare/v4.150.0-preview.2.1...v4.150.0-rc.1.1",
+            "https://github.com/{}/compare/"
+            "v4.150.0-preview.2.1...v4.150.0-rc.1.1".format(common.REPO),
+        )
+
+    def test_destination_repository_is_used_for_future_exact_shipments(self):
+        result = shipments.collect_shipments(
+            "4.151.0",
+            SAMPLE_TAGS,
+            tag_date=lambda tag: self.dates.get(tag, ""),
+            target_sha=lambda tag: self.shas.get(tag, "0" * 40),
+            prs_between=self.prs,
+            repository="dotnet/SkiaSharp",
+        )
+
+        [preview] = result
+        self.assertEqual(
+            preview["changelog_url"],
+            "https://github.com/dotnet/SkiaSharp/compare/"
+            "v4.150.2...v4.151.0-preview.1.1",
         )
 
     def test_prs_are_the_exact_delta_since_the_previous_tag(self):
@@ -244,6 +263,59 @@ class ValidateShipmentTests(unittest.TestCase):
     def test_rejects_a_changelog_url_outside_the_repository(self):
         errors = shipments.validate_shipment(
             _valid_shipment(changelog_url="https://evil.example/compare/a...b")
+        )
+        self.assertTrue(any("changelog_url" in error for error in errors))
+
+    def test_accepts_preserved_historical_owner_after_transfer(self):
+        shipment = _valid_shipment(
+            changelog_url=(
+                "https://github.com/mono/SkiaSharp/compare/"
+                "v4.150.2...v4.151.0-preview.1"
+            )
+        )
+        with mock.patch.object(common, "REPO", "dotnet/SkiaSharp"):
+            self.assertEqual([], shipments.validate_shipment(shipment))
+
+    def test_accepts_current_repository_case_insensitively(self):
+        shipment = _valid_shipment(
+            changelog_url=(
+                "https://github.com/dotnet/skiasharp/compare/"
+                "v4.150.2...v4.151.0-preview.1"
+            )
+        )
+        with mock.patch.object(common, "REPO", "dotnet/skiasharp"):
+            self.assertEqual([], shipments.validate_shipment(shipment))
+
+    def test_rejects_an_unrelated_owner_with_the_same_repository_name(self):
+        errors = shipments.validate_shipment(
+            _valid_shipment(
+                changelog_url=(
+                    "https://github.com/attacker/SkiaSharp/compare/"
+                    "v4.150.2...v4.151.0-preview.1"
+                )
+            )
+        )
+        self.assertTrue(any("changelog_url" in error for error in errors))
+
+    def test_rejects_a_compare_url_for_a_different_repository_name(self):
+        errors = shipments.validate_shipment(
+            _valid_shipment(
+                changelog_url=(
+                    "https://github.com/dotnet/NotSkiaSharp/compare/"
+                    "v4.150.2...v4.151.0-preview.1"
+                )
+            )
+        )
+        self.assertTrue(any("changelog_url" in error for error in errors))
+
+    def test_rejects_a_compare_url_with_a_malformed_owner(self):
+        errors = shipments.validate_shipment(
+            _valid_shipment(
+                changelog_url=(
+                    "https://github.com/bad owner/SkiaSharp/compare/"
+                    "v4.150.2...v4.151.0-preview.1"
+                )
+            )
         )
         self.assertTrue(any("changelog_url" in error for error in errors))
 

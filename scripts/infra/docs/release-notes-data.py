@@ -107,8 +107,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Tuple
 
+_INFRA_DIR = Path(__file__).resolve().parent.parent
+if str(_INFRA_DIR) not in sys.path:
+    sys.path.insert(0, str(_INFRA_DIR))
+from repository_identity import resolve_identity  # noqa: E402
 
-REPO = "mono/SkiaSharp"
+
+_REPOSITORY_IDENTITY = resolve_identity()
+REPO = _REPOSITORY_IDENTITY["repository"]
 RELEASES_DIR = Path("documentation/docfx/releases")
 
 # Make the sibling ``release_notes`` package importable regardless of how this
@@ -121,20 +127,40 @@ RELEASES_DIR = Path("documentation/docfx/releases")
 _THIS_DIR = Path(__file__).resolve().parent
 if str(_THIS_DIR) not in sys.path:
     sys.path.insert(0, str(_THIS_DIR))
-from release_notes import shipments as _release_shipments  # noqa: E402
+from release_notes import (  # noqa: E402
+    common as _release_common,
+    shipments as _release_shipments,
+)
 
 # The Prepare phase ALWAYS writes the machine-readable "Files to polish" list to a
 # file (overridable with --polish-list). output/ is gitignored, so the list stays
 # out of the working-tree patch the Prepare job hands to the Polish agent.
 DEFAULT_POLISH_LIST = Path("output/files-to-polish.txt")
 
-SKIA_PR_PATTERNS = [
-    re.compile(r"(?:companion|related)\s+(?:skia\s+)?pr[:\s]+https?://github\.com/mono/skia/pull/(\d+)", re.IGNORECASE),
-    re.compile(r"https?://github\.com/mono/skia/pull/(\d+)"),
-    re.compile(r"mono/skia#(\d+)"),
-]
+def _skia_pr_patterns(skia_repository):
+    repositories = tuple(dict.fromkeys((skia_repository, "mono/skia")))
+    # Old PR bodies are immutable, so retain mono/skia as a historical parser
+    # even after .gitmodules points future work at the destination repository.
+    repository_pattern = "(?:{})".format(
+        "|".join(re.escape(repository) for repository in repositories)
+    )
+    return [
+        re.compile(
+            rf"(?:companion|related)\s+(?:skia\s+)?pr[:\s]+"
+            rf"https?://github\.com/{repository_pattern}/pull/(\d+)",
+            re.IGNORECASE,
+        ),
+        re.compile(
+            rf"https?://github\.com/{repository_pattern}/pull/(\d+)",
+            re.IGNORECASE,
+        ),
+        re.compile(rf"{repository_pattern}#(\d+)", re.IGNORECASE),
+    ]
 
-# A skia bump commit in mono/skia names its own PR in its subject, either as a
+
+SKIA_PR_PATTERNS = _skia_pr_patterns(_REPOSITORY_IDENTITY["skiaRepository"])
+
+# A paired-Skia bump commit names its own PR in its subject, either as a
 # squash "(#N)" suffix or a "Merge pull request #N" merge subject. Used to
 # recover the companion link locally from the submodule when the SkiaSharp PR
 # body didn't spell it out (see resolve_skia_links).
@@ -144,7 +170,32 @@ _SKIA_SELF_PR_PATTERNS = [
 ]
 _SKIA_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 SKIA_SUBMODULE = Path("externals/skia")
-SKIA_REMOTE_URL = "https://github.com/mono/skia.git"
+SKIA_REMOTE_URL = _REPOSITORY_IDENTITY["skiaGitUrl"]
+
+
+def configure_repository_identity(
+    repository=None,
+    *,
+    root=None,
+    environ=None,
+    config_path=None,
+):
+    """Refresh mutable repository identities before a generator run."""
+
+    global REPO, SKIA_PR_PATTERNS, SKIA_REMOTE_URL, _REPOSITORY_IDENTITY
+    _REPOSITORY_IDENTITY = resolve_identity(
+        root=root,
+        repository=repository,
+        environ=environ,
+        config_path=config_path,
+    )
+    REPO = _REPOSITORY_IDENTITY["repository"]
+    SKIA_REMOTE_URL = _REPOSITORY_IDENTITY["skiaGitUrl"]
+    SKIA_PR_PATTERNS = _skia_pr_patterns(
+        _REPOSITORY_IDENTITY["skiaRepository"]
+    )
+    _release_common.configure_identity(identity=_REPOSITORY_IDENTITY)
+    return _REPOSITORY_IDENTITY
 
 # Noreply email pattern: {id}+{username}@users.noreply.github.com
 _NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
@@ -862,7 +913,7 @@ def _ensure_skia_repo():
 
 def resolve_skia_links(prs):
     # type: (list[dict]) -> list[dict]
-    """Fill in companion mono/skia PR numbers for skia-bump PRs, purely locally.
+    """Fill in companion paired-Skia PR numbers for Skia bump PRs, purely locally.
 
     Most SkiaSharp PRs that bump the ``externals/skia`` submodule don't spell out
     the companion PR in their body (dependency bumps, milestone merges). For
@@ -1114,6 +1165,7 @@ def collect_shipments_for_page(page_version):
         prs_between=lambda from_tag, to_tag: (
             get_prs_from_diff(from_tag, to_tag) if from_tag else []
         ),
+        repository=REPO,
     )
 
 
@@ -1712,7 +1764,7 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
         # Title is the subject minus the PR ref
         title = re.sub(r"\s*\(#\d+\)\s*$", "", subject)
 
-        # A companion mono/skia PR link, if the body references one. Parsed
+        # A companion paired-Skia PR link, if the body references one. Parsed
         # locally from the body — no network — so it stays a cheap hint for the
         # AI when writing notes about Skia bumps.
         skia_pr = None
@@ -1841,7 +1893,7 @@ def build_data_json(prs, metadata):
         "nuget_url": nuget_url,
         "preview_nuget_url": preview_nuget,
         "github_release_url": (
-            "https://github.com/mono/SkiaSharp/releases/tag/v{}".format(version)
+            "https://github.com/{}/releases/tag/v{}".format(REPO, version)
             if status == "stable" else None),
     }
     # HarfBuzz never releases on its own — it ships inside a SkiaSharp release
@@ -1853,7 +1905,7 @@ def build_data_json(prs, metadata):
         banner["date"] = None
         banner["ships_with"] = ships
         banner["github_release_url"] = (
-            "https://github.com/mono/SkiaSharp/releases/tag/v{}".format(ships["version"])
+            "https://github.com/{}/releases/tag/v{}".format(REPO, ships["version"])
             if ships.get("version") and status == "stable" else None)
 
     # Flat PR map + community flag (renderer derives ❤️ credit from this).
@@ -2013,6 +2065,85 @@ def build_data_json(prs, metadata):
         "shipments": shipments,
         "prs": pr_map,
     }
+
+
+_GITHUB_REPOSITORY_URL_RE = re.compile(
+    r"^https://github\.com/(?P<owner>[^/\s]+)/"
+    r"(?P<repository>[^/\s]+)(?P<suffix>/.*)?$"
+)
+_HISTORICAL_REPOSITORIES = ("mono/SkiaSharp",)
+
+
+def preserve_historical_github_urls(existing, generated):
+    """Keep an existing release-fact URL when only its owner would change."""
+
+    if isinstance(existing, str) and isinstance(generated, str):
+        old = _GITHUB_REPOSITORY_URL_RE.fullmatch(existing)
+        new = _GITHUB_REPOSITORY_URL_RE.fullmatch(generated)
+        allowed = {
+            repository.casefold()
+            for repository in (
+                _REPOSITORY_IDENTITY["repository"],
+            ) + _HISTORICAL_REPOSITORIES
+        }
+        old_repository = (
+            "{}/{}".format(old.group("owner"), old.group("repository"))
+            if old
+            else None
+        )
+        new_repository = (
+            "{}/{}".format(new.group("owner"), new.group("repository"))
+            if new
+            else None
+        )
+        if (
+            old
+            and new
+            and old_repository.casefold() in allowed
+            and new_repository.casefold() in allowed
+            and old.group("suffix") == new.group("suffix")
+        ):
+            return existing
+        return generated
+    if isinstance(existing, dict) and isinstance(generated, dict):
+        return {
+            key: (
+                preserve_historical_github_urls(existing[key], value)
+                if key in existing
+                else value
+            )
+            for key, value in generated.items()
+        }
+    if isinstance(existing, list) and isinstance(generated, list):
+        combined = existing + generated
+        for identity_field in ("tag", "key"):
+            if combined and all(
+                isinstance(item, dict)
+                and isinstance(item.get(identity_field), str)
+                for item in combined
+            ):
+                old_by_identity = {
+                    item[identity_field]: item for item in existing
+                }
+                return [
+                    (
+                        preserve_historical_github_urls(
+                            old_by_identity[item[identity_field]], item
+                        )
+                        if item[identity_field] in old_by_identity
+                        else item
+                    )
+                    for item in generated
+                ]
+        return [
+            (
+                preserve_historical_github_urls(existing[index], item)
+                if index < len(existing)
+                else item
+            )
+            for index, item in enumerate(generated)
+        ]
+    return generated
 
 
 def _sources_dir(page_path):
@@ -2549,8 +2680,15 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     #     summary for it. Now it is ALWAYS written (regardless of --force),
     #     but the reviewed prose is preserved and the page is never added to
     #     files-to-polish — there is nothing here for the Polish AI to do.
-    data = build_data_json(prs, metadata)
     data_path = _data_json_path(output_path)
+    data = build_data_json(prs, metadata)
+    if data_path.exists():
+        try:
+            existing_data = json.loads(data_path.read_text(encoding="utf-8"))
+        except ValueError:
+            existing_data = None
+        if isinstance(existing_data, dict):
+            data = preserve_historical_github_urls(existing_data, data)
     fully_unchanged = _data_json_unchanged(data_path, data)
     website_content_unchanged = _website_content_unchanged(data_path, data)
     action = _classify_data_write(fully_unchanged, website_content_unchanged, force)
@@ -2718,8 +2856,15 @@ def main():
         "--max-version", metavar="CORE", default=None,
         help="Upper bound (inclusive), e.g. '4.148.0'. Versions above it are left "
              "untouched.")
+    parser.add_argument(
+        "--repository",
+        default=None,
+        help="Current GitHub owner/repository. Defaults to GITHUB_REPOSITORY, then "
+             "the shared offline fallback.",
+    )
 
     args = parser.parse_args()
+    configure_repository_identity(args.repository)
 
     min_core = _core_tuple(args.min_version) if args.min_version else None
     max_core = _core_tuple(args.max_version) if args.max_version else None

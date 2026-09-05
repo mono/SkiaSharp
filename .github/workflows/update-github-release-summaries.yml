@@ -13,6 +13,8 @@ on:
       - "documentation/docfx/releases/_sources/*.prose.json"
       - "documentation/docfx/releases/_sources/*.data.json"
       - "scripts/infra/docs/release_notes/**"
+      - "scripts/infra/repository-identity.json"
+      - "scripts/infra/repository_identity.py"
       - ".github/workflows/update-github-release-summaries.yml"
   release:
     types: [published]
@@ -60,9 +62,13 @@ jobs:
           PYTHONDONTWRITEBYTECODE: "1"
         run: |
           set -euo pipefail
+          documentation_base_url=$(
+            python3 scripts/infra/repository_identity.py get publicSiteBaseUrl
+          )
           args=(
             --event "$EVENT_NAME"
             --repository "$REPOSITORY"
+            --documentation-base-url "$documentation_base_url"
           )
           if [ "$EVENT_NAME" = "release" ]; then
             args+=(--tag "$RELEASE_TAG")
