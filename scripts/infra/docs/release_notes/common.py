@@ -7,13 +7,80 @@ the package stays independently unit testable without a real repository.
 from __future__ import annotations
 
 import re
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 
-# The public GitHub repository these exact shipments and their GitHub Release
-# summaries belong to. Matches ``scripts/infra/docs/release-notes-data.py``'s
-# ``REPO`` -- kept as a separate literal here so this package has no required
-# import-time dependency on that sibling.
-REPO = "mono/SkiaSharp"
+_INFRA_DIR = Path(__file__).resolve().parents[2]
+if str(_INFRA_DIR) not in sys.path:
+    sys.path.insert(0, str(_INFRA_DIR))
+from repository_identity import (  # noqa: E402
+    IdentityError,
+    normalize_github_repository,
+    resolve_identity,
+)
+
+def configure_identity(
+    repository: str | None = None,
+    *,
+    root: Path | None = None,
+    environ=None,
+    config_path: Path | None = None,
+    identity: dict | None = None,
+) -> dict:
+    """Refresh shared release-note identity for a generator or updater run."""
+
+    global IDENTITY, PUBLIC_SITE_BASE_URL, REPO
+    IDENTITY = identity or resolve_identity(
+        root=root,
+        repository=repository,
+        environ=environ,
+        config_path=config_path,
+    )
+    REPO = IDENTITY["repository"]
+    PUBLIC_SITE_BASE_URL = IDENTITY["publicSiteBaseUrl"]
+    return IDENTITY
+
+
+configure_identity()
+_COMPARE_URL_RE = re.compile(
+    r"https://github\.com/(?P<owner>[^/\s]+)/(?P<repository>[^/\s]+)/compare/"
+    r"(?P<previous>[^/\s]+)\.\.\.(?P<tag>[^/\s]+)"
+)
+_HISTORICAL_REPOSITORIES = ("mono/SkiaSharp",)
+
+
+def is_skiasharp_compare_url(
+    value: object,
+    previous_tag: str | None = None,
+    tag: str | None = None,
+) -> bool:
+    """Return whether value is a safe SkiaSharp GitHub compare URL."""
+
+    if not isinstance(value, str):
+        return False
+    match = _COMPARE_URL_RE.fullmatch(value)
+    if match is None:
+        return False
+    try:
+        repository = normalize_github_repository(
+            "{}/{}".format(
+                match.group("owner"),
+                match.group("repository"),
+            )
+        )
+    except IdentityError:
+        return False
+    allowed = {
+        candidate.casefold()
+        for candidate in (REPO,) + _HISTORICAL_REPOSITORIES
+    }
+    return (
+        repository.casefold() in allowed
+        and (previous_tag is None or match.group("previous") == previous_tag)
+        and (tag is None or match.group("tag") == tag)
+    )
+
 
 # Bump together with ``scripts/infra/docs/release-notes-data.py``'s
 # ``_DATA_JSON_FORMAT_VERSION`` -- a test in this package's ``tests/`` folder
