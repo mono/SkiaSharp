@@ -232,6 +232,7 @@ detection_end = next(
 )
 detection_lines = lines[detection_start:detection_end]
 detection = "\n".join(detection_lines)
+restore_agent = detection.index("      - name: Download agent output artifact")
 prepare_detection = detection.index("      - name: Prepare threat detection files")
 checkout_attestation = detection.index("      - name: Check out trusted detector attestation code")
 download_attestation = detection.index("      - name: Download immutable detector attestation")
@@ -239,6 +240,12 @@ bind_attestation = detection.index("      - name: Bind threat detection to immut
 execute_detection = detection.index("      - name: Execute threat detection with AWF")
 if not prepare_detection < checkout_attestation < download_attestation < bind_attestation < execute_detection:
     raise SystemExit("immutable object attestation is not enforced before the threat-detection engine")
+if not restore_agent < prepare_detection:
+    raise SystemExit("detector preparation runs before the current-run agent artifact is restored")
+agent_restore_end = detection.find("\n      - ", restore_agent + 1)
+agent_restore = detection[restore_agent:agent_restore_end]
+if "path: /tmp/gh-aw/" not in agent_restore:
+    raise SystemExit("compiled detector does not restore agent Git inputs to /tmp/gh-aw")
 for name in (
     "Check out trusted detector attestation code",
     "Download immutable detector attestation",
@@ -341,6 +348,9 @@ upload_start = agent.index("name: Upload immutable delivery package")
 cleanup_start = agent.index("name: Clean staged delivery package")
 if not stage_start < upload_start < cleanup_start:
     raise SystemExit("delivery package is not staged, uploaded, and cleaned in order")
+stage_step = agent[stage_start:upload_start]
+if "SKIA_SYNC_THREAT_DETECTION_SOURCE_DIR=/tmp/gh-aw" not in stage_step:
+    raise SystemExit("package staging does not use gh-aw's host runtime root for detector inputs")
 upload_step = agent[upload_start:cleanup_start]
 if "name: skia-sync-delivery" not in upload_step:
     raise SystemExit("agent upload does not use the exact delivery artifact name")
@@ -349,6 +359,10 @@ if "path: ${{ env.SKIA_SYNC_DELIVERY_PACKAGE_DIR }}" not in upload_step:
 if "mktemp -d" not in agent[stage_start:upload_start] or \
         "skia-sync-delivery-package.XXXXXX" not in agent[stage_start:upload_start]:
     raise SystemExit("agent package is not rooted in a randomized runner-owned directory")
+agent_artifact_start = agent.index("      - name: Upload agent artifacts")
+agent_artifact = agent[agent_artifact_start:]
+if "/tmp/gh-aw/aw-*.patch" not in agent_artifact or "/tmp/gh-aw/aw-*.bundle" not in agent_artifact:
+    raise SystemExit("compiled agent artifact does not transfer /tmp/gh-aw Git inputs to detection")
 if compiled.count('GH_AW_ACTION_FAILURE_ISSUE_EXPIRES_HOURS: "0"') != 1:
     raise SystemExit("compiled failure issue expiry must remain exactly zero hours")
 finalizer_start = agent.index("name: Verify finalized sync metadata")
