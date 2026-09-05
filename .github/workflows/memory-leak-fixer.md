@@ -69,6 +69,7 @@ steps:
 concurrency:
   group: "memory-leak-fixer"
   cancel-in-progress: false
+  job-discriminator: ${{ github.run_id }}
 
 timeout-minutes: 120
 
@@ -176,7 +177,8 @@ computation. If it is blank (schedule / PR / dispatch without the input), use th
 time-based round-robin. This is only a testing knob to target a specific focus area on demand; it
 changes nothing else about the run.
 
-Persist all intermediate state (the `/tmp/leakprobe` project, notes) under `/tmp/gh-aw/agent/`.
+Persist all intermediate state (the `/tmp/gh-aw/agent/leakprobe` project, notes) under
+`/tmp/gh-aw/agent/`.
 Each bash call is a fresh subshell — re-`cd` as needed.
 
 ## Step 2 — Guardrails (in addition to the skill's golden rules)

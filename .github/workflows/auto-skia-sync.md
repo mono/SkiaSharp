@@ -83,6 +83,7 @@ max-ai-credits: 2000
 concurrency:
   group: skia-upstream-sync-${{ github.event.inputs.base_branch || 'auto' }}-${{ github.event.inputs.target || github.event.schedule || 'manual' }}
   cancel-in-progress: true
+  job-discriminator: ${{ github.run_id }}
 
 # -- Agent tools -----------------------------------------------------
 tools:

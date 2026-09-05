@@ -27,13 +27,12 @@ on:
       - "**"
       - "!documentation/docfx/releases/**"
       - "documentation/docfx/releases/**/*.notes.md"
-  schedule:
-    # Daily. Catches new stable tags (vX.Y.Z → page flips to "stable"), new
-    # release-branch commits (unreleased deltas), and newly published NuGets
-    # within ~24h. Quiet days are cheap: the generators are deterministic, so an
-    # unchanged run yields an empty Prepare patch and the agent + PR are skipped
-    # (see the `prepare` job's `has_changes` output and the top-level `if:`).
-    - cron: "0 0 * * *"
+  # Daily. Catches new stable tags (vX.Y.Z → page flips to "stable"), new
+  # release-branch commits (unreleased deltas), and newly published NuGets
+  # within ~24h. Quiet days are cheap: the generators are deterministic, so an
+  # unchanged run yields an empty Prepare patch and the agent + PR are skipped
+  # (see the `prepare` job's `has_changes` output and the top-level `if:`).
+  schedule: daily
   workflow_dispatch:
     inputs:
       source_branch:
@@ -60,6 +59,7 @@ on:
 concurrency:
   group: update-release-notes
   cancel-in-progress: true
+  job-discriminator: ${{ github.run_id }}
 # The agent only POLISHES prose now — the heavy, deterministic Prepare phase runs
 # in its own `prepare` job (below), so the agent's own budget is modest.
 timeout-minutes: 60
