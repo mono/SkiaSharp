@@ -24,6 +24,9 @@
   <!-- Stamp build metadata into assembly attributes -->
   <PropertyGroup>
     <BuildFooter></BuildFooter>
+    <_RepositoryIdentityJson>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\..\..\scripts\infra\repository-identity.json'))</_RepositoryIdentityJson>
+    <_RepositoryIdentitySlug>$([System.Text.RegularExpressions.Regex]::Match('$(_RepositoryIdentityJson)', '&quot;offlineRepository&quot;\s*:\s*&quot;(?&lt;value&gt;[^&quot;]+)&quot;').Groups['value'].Value)</_RepositoryIdentitySlug>
+    <SkiaSharpRepositoryUrl Condition="'$(SkiaSharpRepositoryUrl)' == ''">https://github.com/$(_RepositoryIdentitySlug)</SkiaSharpRepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
@@ -33,6 +36,10 @@
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>BuildFooter</_Parameter1>
       <_Parameter2>$(BuildFooter)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RepositoryUrl</_Parameter1>
+      <_Parameter2>$(SkiaSharpRepositoryUrl)</_Parameter2>
     </AssemblyAttribute>
   </ItemGroup>
 

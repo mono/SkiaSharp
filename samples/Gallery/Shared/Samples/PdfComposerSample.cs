@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using SkiaSharp;
 using SkiaSharpSample.Controls;
+using SkiaSharpSample.Services;
 
 namespace SkiaSharpSample.Samples;
 
@@ -214,7 +215,7 @@ public class PdfComposerSample : DocumentSampleBase
 		// Footer URL
 		using var footerFont = new SKFont(SampleMedia.Fonts.Default, 11);
 		using var footerPaint = new SKPaint { IsAntialias = true, Color = LinkColor };
-		var url = "https://github.com/mono/SkiaSharp";
+		var url = SampleService.RepositoryUrl;
 		var urlW = footerFont.MeasureText(url);
 		var urlX = (pageWidth - urlW) / 2;
 		var urlY = pageHeight - 50;

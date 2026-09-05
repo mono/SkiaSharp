@@ -16,7 +16,11 @@ on:
     paths:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
+      - "documentation/docfx/TOC.yml"
+      - "samples/Gallery/**"
       - ".github/scripts/**"
+      - "scripts/build-docs-site.py"
+      - "scripts/infra/tests/test_build_docs_site.py"
       # Any workflow edit, so the registry test re-checks its tracked list. '*.yml' already
       # covers the generated '*.lock.yml' files.
       - ".github/workflows/*.yml"
@@ -25,7 +29,11 @@ on:
     paths:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
+      - "documentation/docfx/TOC.yml"
+      - "samples/Gallery/**"
       - ".github/scripts/**"
+      - "scripts/build-docs-site.py"
+      - "scripts/infra/tests/test_build_docs_site.py"
       - ".github/workflows/*.yml"
   workflow_dispatch:
 
@@ -78,3 +86,26 @@ jobs:
 
       - name: Run skia-sync work detector tests
         run: bash .github/scripts/tests/skia-sync-detect.test.sh
+
+      - name: Run docs site tests
+        run: |
+          python3 -m unittest scripts/infra/tests/test_build_docs_site.py -v
+          python3 -m py_compile \
+            scripts/build-docs-site.py \
+            scripts/infra/tests/test_build_docs_site.py
+
+      - name: Validate Gallery repository metadata
+        run: |
+          dotnet build samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj \
+            -p:TargetFramework=net10.0 \
+            -p:TargetFrameworks=net10.0 \
+            -p:SkiaSharpRepositoryUrl=https://github.com/dotnet/SkiaSharp \
+            -p:WasmBuildNative=false \
+            -p:WasmNativeStrip=true \
+            -v:minimal
+          strings samples/Gallery/Shared/bin/Debug/net10.0/SkiaSharpSample.Shared.dll \
+            | grep -F 'RepositoryUrl#https://github.com/dotnet/SkiaSharp' \
+            > /dev/null
+      - name: Validate cache dependency coverage
+        run: python3 scripts/infra/caching/repo-deps.py validate
+        run: python3 scripts/infra/caching/repo-deps.py validate

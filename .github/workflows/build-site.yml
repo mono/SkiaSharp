@@ -97,6 +97,7 @@ jobs:
             BRANCH_NAME="${GITHUB_REF_NAME}"
           fi
 
+          REPOSITORY_NAME="${GITHUB_REPOSITORY#*/}"
           if [ -n "$PR_NUMBER" ]; then
             # Validate PR_NUMBER is a positive integer
             if ! [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
@@ -104,9 +105,9 @@ jobs:
               exit 1
             fi
             echo "artifact_name=staging-site-${PR_NUMBER}" >> $GITHUB_OUTPUT
-            echo "gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery/" >> $GITHUB_OUTPUT
-            echo "uno_gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery-uno/" >> $GITHUB_OUTPUT
-            echo "fiddle_base_href=/SkiaSharp/staging/${PR_NUMBER}/fiddle/" >> $GITHUB_OUTPUT
+            echo "gallery_base_href=/${REPOSITORY_NAME}/staging/${PR_NUMBER}/gallery/" >> $GITHUB_OUTPUT
+            echo "uno_gallery_base_href=/${REPOSITORY_NAME}/staging/${PR_NUMBER}/gallery-uno/" >> $GITHUB_OUTPUT
+            echo "fiddle_base_href=/${REPOSITORY_NAME}/staging/${PR_NUMBER}/fiddle/" >> $GITHUB_OUTPUT
             echo "is_staging=true" >> $GITHUB_OUTPUT
             echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
             echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
@@ -114,9 +115,9 @@ jobs:
             echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
           else
             echo "artifact_name=main-site" >> $GITHUB_OUTPUT
-            echo "gallery_base_href=/SkiaSharp/gallery/" >> $GITHUB_OUTPUT
-            echo "uno_gallery_base_href=/SkiaSharp/gallery-uno/" >> $GITHUB_OUTPUT
-            echo "fiddle_base_href=/SkiaSharp/fiddle/" >> $GITHUB_OUTPUT
+            echo "gallery_base_href=/${REPOSITORY_NAME}/gallery/" >> $GITHUB_OUTPUT
+            echo "uno_gallery_base_href=/${REPOSITORY_NAME}/gallery-uno/" >> $GITHUB_OUTPUT
+            echo "fiddle_base_href=/${REPOSITORY_NAME}/fiddle/" >> $GITHUB_OUTPUT
             echo "is_staging=false" >> $GITHUB_OUTPUT
             echo "pr_number=" >> $GITHUB_OUTPUT
             echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
@@ -146,13 +147,18 @@ jobs:
         env:
           SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
           BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
+          IS_STAGING: ${{ steps.vars.outputs.is_staging }}
+          PR_NUMBER: ${{ steps.vars.outputs.pr_number }}
         run: |
           COMMIT_SHORT="${GITHUB_SHA:0:7}"
           APP_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
-          jq --arg footer "$APP_FOOTER" \
-            '.build.globalMetadata._appFooter = $footer' \
-            documentation/docfx/docfx.json > documentation/docfx/docfx-build.json
-          dotnet docfx documentation/docfx/docfx-build.json
+          DOCFX_ARGS=(--app-footer "$APP_FOOTER")
+          if [ "$IS_STAGING" == "true" ]; then
+            REPOSITORY_NAME="${GITHUB_REPOSITORY#*/}"
+            STAGING_BASE_URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPOSITORY_NAME}/staging/${PR_NUMBER}"
+            DOCFX_ARGS+=(--public-site-base-url "$STAGING_BASE_URL")
+          fi
+          python3 scripts/build-docs-site.py "${DOCFX_ARGS[@]}"
 
       # ── Build Gallery Blazor WASM app ──────────────────────────
       - name: Build WASM native libraries
@@ -167,11 +173,13 @@ jobs:
         run: |
           COMMIT_SHORT="${GITHUB_SHA:0:7}"
           BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
+          REPOSITORY_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
           dotnet publish "samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj" \
             -c Release \
             -o output/gallery-publish \
             -p:PlatformTargetFrameworks="" \
-            -p:BuildFooter="$BUILD_FOOTER"
+            -p:BuildFooter="$BUILD_FOOTER" \
+            -p:SkiaSharpRepositoryUrl="$REPOSITORY_URL"
 
       # ── Build Gallery Uno Platform WASM app ──────────────────────
       - name: Publish Gallery Uno WASM
@@ -181,13 +189,15 @@ jobs:
         run: |
           COMMIT_SHORT="${GITHUB_SHA:0:7}"
           BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
+          REPOSITORY_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
           dotnet publish "samples/Gallery/Uno/SkiaSharpSample.Uno.csproj" \
             -c Release \
             -f net10.0-browserwasm \
             -o output/gallery-uno-publish \
             -p:PlatformTargetFrameworks="" \
             -p:WasmEnableSIMD=false \
-            -p:BuildFooter="$BUILD_FOOTER"
+            -p:BuildFooter="$BUILD_FOOTER" \
+            -p:SkiaSharpRepositoryUrl="$REPOSITORY_URL"
 
       - name: Smoke test Gallery Uno WASM
         run: |
@@ -211,13 +221,15 @@ jobs:
         run: |
           COMMIT_SHORT="${GITHUB_SHA:0:7}"
           BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
+          REPOSITORY_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
           dotnet publish "samples/SkiaFiddle/SkiaFiddle.csproj" \
             -c Release \
             -f net10.0-browserwasm \
             -o output/skia-fiddle-publish \
             -p:PlatformTargetFrameworks="" \
             -p:WasmEnableSIMD=false \
-            -p:BuildFooter="$BUILD_FOOTER"
+            -p:BuildFooter="$BUILD_FOOTER" \
+            -p:SkiaSharpRepositoryUrl="$REPOSITORY_URL"
 
       - name: Smoke test SkiaFiddle WASM
         run: |
@@ -360,6 +372,26 @@ jobs:
           # SkiaFiddle (Uno Platform) → /fiddle/
           cp -r output/skia-fiddle-publish/wwwroot site/fiddle
           uno_rewrite_dir site/fiddle "${FIDDLE_BASE_HREF%/}"
+
+          # Render only the landing and current DocFX identities. The helper
+          # deliberately excludes historical releases plus /ai/ and /perf/.
+          find site/gallery site/gallery-uno site/fiddle -type f -print0 \
+            | sort -z \
+            | xargs -0 sha256sum > "$RUNNER_TEMP/wasm-assets-before.sha256"
+          python3 scripts/infra/repository_identity.py \
+            --repository "$GITHUB_REPOSITORY" render-site site
+          find site/gallery site/gallery-uno site/fiddle -type f -print0 \
+            | sort -z \
+            | xargs -0 sha256sum > "$RUNNER_TEMP/wasm-assets-after.sha256"
+          diff -u \
+            "$RUNNER_TEMP/wasm-assets-before.sha256" \
+            "$RUNNER_TEMP/wasm-assets-after.sha256"
+          if grep -R -nE --exclude-dir=releases \
+              '\{\{(Repository|SkiaRepository|DocsRepository|PublicSiteBaseUrl)\}\}' \
+              site/index.html site/docs site/gallery site/gallery-uno site/fiddle; then
+            echo "::error::Unresolved repository identity placeholder in assembled site."
+            exit 1
+          fi
 
           echo "=== Site layout ==="
           find site -maxdepth 2 -type f | head -30
@@ -540,11 +572,12 @@ jobs:
         with:
           script: |
             const prNumber = ${{ needs.build.outputs.pr_number }};
-            const stagingUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/`;
-            const docsUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/docs/`;
-            const galleryUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/gallery/`;
-            const unoGalleryUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/gallery-uno/`;
-            const fiddleUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/fiddle/`;
+            const pagesBase = `https://${context.repo.owner}.github.io/${context.repo.repo}`;
+            const stagingUrl = `${pagesBase}/staging/${prNumber}/`;
+            const docsUrl = `${pagesBase}/staging/${prNumber}/docs/`;
+            const galleryUrl = `${pagesBase}/staging/${prNumber}/gallery/`;
+            const unoGalleryUrl = `${pagesBase}/staging/${prNumber}/gallery-uno/`;
+            const fiddleUrl = `${pagesBase}/staging/${prNumber}/fiddle/`;
 
             // Hidden marker to uniquely identify this workflow's comment
             const marker = '<!-- skiasharp-docs-staging-preview -->';
