@@ -28,7 +28,12 @@ jobs:
         run: |
           git submodule update --init -- docs
           cd docs
-          echo "DOCS_REPOSITORY_URL=$(git remote get-url origin)" >> "$GITHUB_ENV"
+          DOCS_REPOSITORY_URL=$(git remote get-url origin)
+          if [[ -z "$DOCS_REPOSITORY_URL" || "$DOCS_REPOSITORY_URL" == *$'\n'* ]]; then
+            echo "::error::The docs submodule origin URL is empty or contains a newline." >&2
+            exit 1
+          fi
+          printf 'DOCS_REPOSITORY_URL=%s\n' "$DOCS_REPOSITORY_URL" >> "$GITHUB_ENV"
           git fetch origin main
           git checkout origin/main
           cd ..
