@@ -119,6 +119,9 @@ network:
 # (the performance sub-type). See the perf/* taxonomy in the issue-triage skill
 # (.agents/skills/issue-triage/references/labels.md).
 safe-outputs:
+  # Structurally force preview mode for PR self-tests and explicit dry runs so
+  # model noncompliance cannot create GitHub resources.
+  staged: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
   create-pull-request:
     title-prefix: "[memory-leak] "
     labels: [tenet/performance, perf/memory-leak, partner/agentic-workflows]
