@@ -25,7 +25,9 @@ jobs:
           submodules: false
 
       - name: Initialize and update docs submodule
+        id: docs
         run: |
+          .github/scripts/docs-submodule-repository.sh >> "$GITHUB_OUTPUT"
           git submodule update --init -- docs
           cd docs
           git fetch origin main
@@ -50,6 +52,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           LATEST_MSG: ${{ steps.check.outputs.latest_msg }}
+          DOCS_REPOSITORY: ${{ steps.docs.outputs.repository }}
+          DOCS_REPOSITORY_URL: ${{ steps.docs.outputs.url }}
         run: |
           BRANCH="automation/update-docs-submodule"
 
@@ -91,7 +95,7 @@ jobs:
           else
             gh pr create --base main --head "$BRANCH" \
               --title "Update docs submodule to latest main" \
-              --body "Automated update of the \`docs/\` submodule to track \`mono/SkiaSharp-API-docs\` main.
+              --body "Automated update of the \`docs/\` submodule to track [\`$DOCS_REPOSITORY\`]($DOCS_REPOSITORY_URL) main.
 
           Created by [auto-docs-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-docs-submodule-sync.yml)."
           fi
