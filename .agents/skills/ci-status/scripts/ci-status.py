@@ -205,16 +205,14 @@ def workflow_registry(
     ]
 
 
-CURRENT_REPOSITORY = current_repository()
-DOCS_REPOSITORY = docs_repository()
-GITHUB_WORKFLOWS = workflow_registry(CURRENT_REPOSITORY, DOCS_REPOSITORY)
+GITHUB_WORKFLOWS = []
 
 
 def configure_workflow_repository(repository: str | None = None) -> None:
     """Apply an explicit current-repository override without changing the docs source."""
 
     global GITHUB_WORKFLOWS
-    GITHUB_WORKFLOWS = workflow_registry(repository, DOCS_REPOSITORY)
+    GITHUB_WORKFLOWS = workflow_registry(repository)
 
 
 def az(args: list[str]) -> str:

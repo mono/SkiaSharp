@@ -52,7 +52,12 @@ def _load_collector():
 
 
 COLLECTOR = _load_collector()
-GITHUB_WORKFLOWS = COLLECTOR.GITHUB_WORKFLOWS
+CURRENT_REPOSITORY = COLLECTOR.current_repository()
+DOCS_REPOSITORY = COLLECTOR.docs_repository()
+GITHUB_WORKFLOWS = COLLECTOR.workflow_registry(
+    CURRENT_REPOSITORY,
+    DOCS_REPOSITORY,
+)
 
 EXPECTED_WORKFLOW_ROWS = (
     ("build-site.yml", "Pages - Deploy", "branch", "push", "current"),
@@ -235,7 +240,7 @@ TRIGGER_KEYS = {
 
 def local_workflows(registry=GITHUB_WORKFLOWS, repository=None):
     """Entries owned by this repository (the rest live in the docs repository)."""
-    repository = repository or COLLECTOR.CURRENT_REPOSITORY
+    repository = repository or CURRENT_REPOSITORY
     return [w for w in registry if w["repo"] == repository]
 
 
@@ -315,8 +320,8 @@ class RegistryTests(unittest.TestCase):
             EXPECTED_WORKFLOW_ROWS,
             registry_rows(
                 GITHUB_WORKFLOWS,
-                COLLECTOR.CURRENT_REPOSITORY,
-                COLLECTOR.DOCS_REPOSITORY,
+                CURRENT_REPOSITORY,
+                DOCS_REPOSITORY,
             ),
         )
 
