@@ -40,23 +40,28 @@ Failed GPU bring-up is a test failure. If a local host cannot execute every back
 `GpuPolicy` for that platform, use the provisioned workflow instead of claiming successful
 validation from incomplete coverage.
 
-### Initial full solution
+### Canonical full solution
 
 ```bash
-dotnet build binding/SkiaSharp/SkiaSharp.csproj
-set -o pipefail
-dotnet test tests/SkiaSharp.Tests.Console.slnx \
-  -p:TargetFramework=net10.0 \
-  -p:TargetFrameworks=net10.0 \
-  2>&1 | tee "$ARTIFACT_DIR/initial-test-output.txt"
+rm -f "$ARTIFACT_DIR/test-output.txt" "$ARTIFACT_DIR/test-exit-code.txt"
+(
+  set +e
+  dotnet test tests/SkiaSharp.Tests.Console.slnx \
+    -p:TargetFramework=net10.0 \
+    -p:TargetFrameworks=net10.0 \
+    > "$ARTIFACT_DIR/test-output.txt" 2>&1
+  TEST_EXIT=$?
+  printf '%s\n' "$TEST_EXIT" > "$ARTIFACT_DIR/test-exit-code.txt"
+  exit "$TEST_EXIT"
+)
 ```
 
 Run the solution unfiltered. Confirm every maintained test host in the solution reported results.
 Run each full solution command as one foreground invocation and wait for it to return; do not
-background or poll it.
-The initial run exists to expose failures for the diagnostic loop below. A required host that runs
-zero tests or only skips tests is an infrastructure failure; test failures are expected inputs to
-diagnosis and must be fixed before the final run.
+background or poll it. The first green canonical run is final when the tested source and native
+binary do not change afterward. Read the captured artifact for results or targeted failure context;
+do not wrap the command in a parser. A required host that runs zero tests or only skips tests is an
+infrastructure failure.
 
 ### Focused diagnostics
 
@@ -91,25 +96,11 @@ Diagnose the failing behavior before editing:
 - After native changes, rebuild from source and prove the changed library is loaded.
 - If the C API surface changed, regenerate bindings and repeat Phase 09.
 
-A focused run proves a candidate fix only. Rerun the full unfiltered solution after every failure
-is fixed; only that final run satisfies the gate. Capture the complete final command output—not a
-manually written summary—in the canonical artifact:
-
-```bash
-rm -f "$ARTIFACT_DIR/test-output.txt"
-rm -f "$ARTIFACT_DIR/test-exit-code.txt"
-(
-  set +e
-  set -o pipefail
-  dotnet test tests/SkiaSharp.Tests.Console.slnx \
-    -p:TargetFramework=net10.0 \
-    -p:TargetFrameworks=net10.0 \
-    2>&1 | tee "$ARTIFACT_DIR/test-output.txt"
-  TEST_EXIT=${PIPESTATUS[0]}
-  printf '%s\n' "$TEST_EXIT" > "$ARTIFACT_DIR/test-exit-code.txt"
-  exit "$TEST_EXIT"
-)
-```
+A focused run proves a candidate fix only. Before replacing a failed canonical log, preserve it as
+`$ARTIFACT_DIR/test-attempt-<UTC timestamp>.txt`. After the fix, rerun the canonical full-solution
+command above; only a green canonical run against the unchanged final source satisfies the gate.
+Keep complete output in the artifact and inspect targeted failure excerpts instead of streaming the
+entire log into model context.
 
 ### Final deterministic reconciliation
 
@@ -149,8 +140,9 @@ mono/skia tree before moving to Phase 11:
 7. Verify no build-time side effects or unrelated files are staged.
 8. Verify the parent gitlink equals the mono/skia commit used by the green run.
 
-Any subsequent mono/skia or dependency change invalidates this reconciliation: return to step 1.
-Do not read Phase 11 until both commands above pass against final state.
+Any subsequent semantic or native change invalidates the green result and requires another
+canonical run. Deterministic metadata-only finalization does not. Do not read Phase 11 until both
+helpers above pass against final state.
 
 ## Gate
 

@@ -9,7 +9,7 @@ Complete this file before creating either feature branch.
 For a developer-run update:
 
 1. Confirm the parent and `externals/skia` worktrees are clean.
-2. Initialize submodules and verify `git`, `gh`, Python 3, and the .NET SDK are available.
+2. Initialize submodules and verify `git`, `gh`, Python 3.9 or newer, and the .NET SDK are available.
 3. Fetch the parent base candidates and mono/skia base candidates.
 4. Ensure mono/skia has an `upstream` remote for `https://github.com/google/skia.git`.
 5. Check both repositories for an existing PR or branch for the requested target. Continue an
@@ -57,9 +57,16 @@ export SKIA_SYNC_TARGET_UPSTREAM_SHA="$TARGET_UPSTREAM_SHA"
 DIFF_RANGE="${BASE_UPSTREAM_SHA}..${TARGET_UPSTREAM_REF}"
 ```
 
-Use ancestry, not SHA equality, to determine whether the target is already contained in the
-selected mono/skia base. If it is, stop before branching. A matching milestone number alone is
-not proof of no work; same-milestone bug-fix commits still count.
+Use ancestry in the correct direction, not SHA equality, to determine whether the target is already
+contained in the selected mono/skia base:
+
+```bash
+git -C externals/skia merge-base --is-ancestor \
+  "$SKIA_SYNC_TARGET_UPSTREAM_SHA" "$SKIA_SYNC_SKIA_BASE_SHA"
+```
+
+Exit 0 means stop before branching; exit 1 means work remains. A matching milestone number alone
+is not proof of no work because same-milestone bug-fix commits still count.
 
 ## Phase 02 — analyze behavior, not only signatures
 
@@ -73,6 +80,7 @@ Read [../breaking-changes-checklist.md](../breaking-changes-checklist.md). Audit
 - Shared, Ganesh, Graphite, Dawn, and platform backend implementation paths.
 - Wrapped factories/context creation: unchanged signatures can still add required context state,
   remove fallback behavior, or gain a null-return path.
+- In upstream-main mode, the target `SkMilestone.h` value versus the retained managed milestone.
 - `DEPS` differences between `origin/{SKIA_BASE_BRANCH}` and the target.
 
 Write `$ARTIFACT_DIR/skia-breaking-change-analysis.md`. Identify every HIGH/MEDIUM risk and state
@@ -94,15 +102,18 @@ and manifest action. Phase 07 fills the final URL/SHA/version columns from the d
 ## Phase 03 — independent discrepancy review
 
 Launch one synchronous, read-only validator using
-[../validation-prompt.md](../validation-prompt.md), substituting the exact range,
+[../validation-prompt.md](../validation-prompt.md), substituting the exact upstream base, target,
+and fork-base SHAs, plus
 `$ARTIFACT_DIR/skia-breaking-change-analysis.md`, and
 `$ARTIFACT_DIR/skia-dependency-decisions.md`. When the `task` tool is available, use
 `agent_type="task"`, `model="gpt-5.6-terra"`, and `mode="sync"`. Locally, use an independent
 reviewer if available; otherwise perform a distinct second pass and record that limitation.
 
 The review reports only missed items, incorrect classifications, unsafe dependency decisions, and
-a concise confirmation checklist. Write it to `$ARTIFACT_DIR/skia-validation-review.md` and
-integrate every finding into the primary analysis.
+a concise confirmation checklist. Save the validator response verbatim to
+`$ARTIFACT_DIR/skia-validation-review.md` and integrate every finding into the primary analysis.
+Never rewrite the independent review; record any later parent finding in
+`$ARTIFACT_DIR/skia-validation-followup.md`.
 
 ## Gate
 

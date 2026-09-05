@@ -6,6 +6,7 @@ description: "Daily upstream Skia milestone sync - merges new commits, resolves 
 # to a lower default model.
 engine:
   id: copilot
+  max-continuations: 3
 model: gpt-5.6-sol
 
 # -- Triggers ----------------------------------------------------------

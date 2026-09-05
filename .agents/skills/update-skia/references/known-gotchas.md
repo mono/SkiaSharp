@@ -106,7 +106,7 @@ Preserving every pin unconditionally is as unsafe as taking every upstream pin.
 
 HarfBuzz updates require hand-written C# delegate proxies and must be done via the `native-dependency-update` skill. During a milestone update, ALWAYS:
 1. Keep the fork's harfbuzz hash in DEPS
-2. Revert any generated HarfBuzz binding changes: `git checkout HEAD -- binding/HarfBuzzSharp/HarfBuzzApi.generated.cs`
+2. Start from a clean binding worktree; `regenerate_bindings.py` restores generated HarfBuzz drift
 
 ### 10. Enum Value Renumbering
 
@@ -141,7 +141,7 @@ Never use a tree-override merge (`git merge -s ours`, `git read-tree --reset`). 
 | File Category | Strategy |
 |--------------|----------|
 | `BUILD.gn` | **Combine both** — most complex; keep upstream structure AND SkiaSharp's platform flags/targets |
-| `DEPS` | **Combine** — keep our dependency pins, accept upstream structure |
+| `DEPS` | **Combine** — apply the evidence-backed preserve/accept/compatibility decision for each delta |
 | `RELEASE_NOTES.md`, `infra/` | **Take upstream** |
 | C API headers (`include/c/`) | **Keep SkiaSharp** — these don't exist upstream |
 | C API source (`src/c/`) | **Keep SkiaSharp + adapt** — fix includes and API calls in post-merge commits |
@@ -188,40 +188,11 @@ git log --oneline "$MB..{SKIA_BASE_BRANCH}" > "$ARTIFACT_DIR/fork-patches-before
 For **every conflicted file**, find which fork patch(es) from that list touch it and classify each as
 *upstreamed* or *re-applied* (above). Every such patch must appear in the mono/skia PR's "Conflicts
 resolved" table with its disposition. A fork patch on a conflicted file that is **neither** upstreamed
-nor re-applied is a lost patch — STOP and fix it before committing the merge. (Fork patches whose files
-did not conflict merge cleanly and need no listing.)
+nor re-applied is a lost patch — STOP and fix it before committing the merge. The conflict table may
+omit cleanly merged patches, but the Phase 05 diff-of-diffs audit must still account for them.
 
 **Key signal words** in commit messages that indicate intentional fork patches:
 `Restore`, `patch`, `fix for`, `platform`, `workaround`, `SkiaSharp`, `iOS`, `Tizen`, `[M1xx]`
-
-## Testing
-
-### 16. Version Compatibility Errors
-
-`InvalidOperationException: The version of the native libSkiaSharp library (X) is incompatible` means VERSIONS.txt wasn't fully updated. Fix the root cause — do NOT work around it.
-
-### 17. Pixel Value Precision
-
-Upstream periodically improves color conversion precision, shifting expected pixel values by ±1. When pixel-exact test assertions break, check if upstream changed the conversion and update expected values.
-
-### 18. Test Runner
-
-Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` for the full solution. Every host must run
-and all tests must pass. Do not filter the solution because projects with zero matches fail.
-After the solution identifies a failing host, use that host's project for focused diagnostic
-runs, then rerun the unfiltered solution. A focused project run is never final validation.
-GPU backends are gated by `GpuPolicy`: every backend required on the validation platform must
-initialize and pass.
-
-### 24. Satellite Test Hosts Are Part of the Gate
-
-The base test host does not contain every maintained test. Always run
-`tests/SkiaSharp.Tests.Console.slnx`, which includes singleton, Vulkan, Direct3D, and future
-satellite hosts, for initial and final validation. A project filter is permitted only after the
-solution exposes a failure in that host and must be followed by another unfiltered solution run.
-Confirm the final output reports results for every maintained host.
-
----
 
 ## Troubleshooting
 
@@ -232,9 +203,10 @@ Confirm the final output reports results for every maintained host.
 | `static_assert` sizeof failure | Upstream struct gained/lost fields | Update C API struct in `sk_types.h` |
 | `#include` file not found | Upstream moved file to new path | Search target branch, update path |
 | `LNK2001 unresolved external` | C function name mismatch or missing lib | Verify names; check system library linkage |
+| Native library version is incompatible | Managed/native milestone drift | Run `update_versions.py` and reconcile `SkMilestone.h` |
 | `Unknown GN flag` error | Obsolete build flag | Remove flag; diff target BUILD.gn; check `native/*/build.cake` |
 | `git blame` all from merge commit | Tree-override merge was used | Redo as genuine conflict-resolved merge |
-| Merge conflict in DEPS | Both forks updated deps | Keep our pins, accept upstream structure |
+| Merge conflict in DEPS | Both forks updated deps | Apply the Phase 05 evidence-backed decision for each delta |
 | Enum values don't match | Mid-sequence insertion | Regenerate bindings — never hand-edit |
 | Pixel mismatch by ±1 | Upstream precision change | Update expected test values |
 | GPU context C API returns nullptr | Backend compile flags, a newly required backend-context field, removed fallback behavior, or native initialization failure | Trace the managed→C API→native factory return path and diff its implementation before treating nearby warnings as causal; search analogous C shims for the established include/ownership pattern |
