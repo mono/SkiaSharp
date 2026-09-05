@@ -24,9 +24,10 @@
   <!-- Stamp build metadata into assembly attributes -->
   <PropertyGroup>
     <BuildFooter></BuildFooter>
-    <_RepositoryIdentityJson>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\..\..\scripts\infra\repository-identity.json'))</_RepositoryIdentityJson>
-    <_RepositoryIdentitySlug>$([System.Text.RegularExpressions.Regex]::Match('$(_RepositoryIdentityJson)', '&quot;offlineRepository&quot;\s*:\s*&quot;(?&lt;value&gt;[^&quot;]+)&quot;').Groups['value'].Value)</_RepositoryIdentitySlug>
-    <SkiaSharpRepositoryUrl Condition="'$(SkiaSharpRepositoryUrl)' == ''">https://github.com/$(_RepositoryIdentitySlug)</SkiaSharpRepositoryUrl>
+    <_RepositoryIdentityPath>$(MSBuildThisFileDirectory)..\..\..\scripts\infra\repository-identity.json</_RepositoryIdentityPath>
+    <_RepositoryIdentityJson Condition="'$(SkiaSharpRepositoryUrl)' == '' and Exists('$(_RepositoryIdentityPath)')">$([System.IO.File]::ReadAllText('$(_RepositoryIdentityPath)'))</_RepositoryIdentityJson>
+    <_RepositoryIdentitySlug Condition="'$(_RepositoryIdentityJson)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(_RepositoryIdentityJson)', '&quot;offlineRepository&quot;\s*:\s*&quot;(?&lt;value&gt;[^&quot;]+)&quot;').Groups['value'].Value)</_RepositoryIdentitySlug>
+    <SkiaSharpRepositoryUrl Condition="'$(SkiaSharpRepositoryUrl)' == '' and '$(_RepositoryIdentitySlug)' != ''">https://github.com/$(_RepositoryIdentitySlug)</SkiaSharpRepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">

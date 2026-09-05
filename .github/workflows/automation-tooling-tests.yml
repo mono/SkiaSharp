@@ -109,6 +109,13 @@ jobs:
 
       - name: Validate Gallery repository metadata
         run: |
+          dotnet cake --target=samples-generate
+          for tree in samples samples-preview; do
+            repository_url="$(dotnet msbuild \
+              "output/${tree}/Gallery/Shared/SkiaSharpSample.Shared.csproj" \
+              -getProperty:SkiaSharpRepositoryUrl)"
+            test "$repository_url" = "https://github.com/mono/SkiaSharp"
+          done
           dotnet build samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj \
             -p:TargetFramework=net10.0 \
             -p:TargetFrameworks=net10.0 \

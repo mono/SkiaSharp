@@ -1,6 +1,15 @@
 #addin nuget:?package=Cake.FileHelpers&version=4.0.1
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
+FilePath REPOSITORY_IDENTITY_PATH = ROOT_PATH.CombineWithFilePath("scripts/infra/repository-identity.json");
+
+var repositoryIdentityJson = FileReadText(REPOSITORY_IDENTITY_PATH);
+var repositoryIdentityMatch = Regex.Match(
+    repositoryIdentityJson,
+    @"""offlineRepository""\s*:\s*""(?<value>[^""]+)""");
+if (!repositoryIdentityMatch.Success)
+    throw new Exception($"Unable to read offlineRepository from {REPOSITORY_IDENTITY_PATH}.");
+var SKIASHARP_REPOSITORY_URL = $"https://github.com/{repositoryIdentityMatch.Groups["value"].Value}";
 
 #load "../shared/shared.cake"
 #load "../shared/msbuild.cake"
@@ -432,6 +441,20 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                     Debug($"Substituting SkiaSharpVersion for {skiaVersion}.");
                     ve.Value = skiaVersion;
                 }
+            }
+
+            // Generated sample archives do not contain scripts/infra. Resolve the
+            // centralized repository identity now and remove source-tree-only helpers.
+            foreach (var identityElement in xdoc.Descendants().Where(e =>
+                e.Name.LocalName == "_RepositoryIdentityPath" ||
+                e.Name.LocalName == "_RepositoryIdentityJson" ||
+                e.Name.LocalName == "_RepositoryIdentitySlug").ToArray()) {
+                identityElement.Remove();
+            }
+            foreach (var repositoryUrl in xdoc.Descendants().Where(e =>
+                e.Name.LocalName == "SkiaSharpRepositoryUrl").ToArray()) {
+                repositoryUrl.Value = SKIASHARP_REPOSITORY_URL;
+                repositoryUrl.Attribute("Condition")?.Remove();
             }
 
             // save the project
