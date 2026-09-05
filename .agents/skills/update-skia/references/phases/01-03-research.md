@@ -10,15 +10,15 @@ For a developer-run update:
 
 1. Confirm the parent and `externals/skia` worktrees are clean.
 2. Initialize submodules and verify `git`, `gh`, Python 3, and the .NET SDK are available.
-3. Fetch the parent base candidates and mono/skia base candidates.
-4. Ensure mono/skia has an `upstream` remote for `https://github.com/google/skia.git`.
+3. Fetch the parent base candidates and paired Skia base candidates.
+4. Ensure the paired Skia repository has an `upstream` remote for `https://github.com/google/skia.git`.
 5. Check both repositories for an existing PR or branch for the requested target. Continue an
    existing update only when its bases and upstream ref match; never overwrite unrelated work.
 
 Resolve these values, including `IS_RELEASE`, and export the corresponding `SKIA_SYNC_*`
 variables from `SKILL.md`:
 
-| Request | Parent base | mono/skia base | Upstream ref | Head |
+| Request | Parent base | Paired Skia base | Upstream ref | Head |
 |---|---|---|---|---|
 | Newest milestone | `main` | `skiasharp` | `chrome/m{TARGET}` | `skia-sync/m{TARGET}` |
 | Older supported milestone | existing matching release branch in both repos | same release branch | `chrome/m{TARGET}` | `skia-sync/release-…` |
@@ -36,8 +36,8 @@ For automation, consume the supplied values instead and verify the referenced br
 Fetch:
 
 - `origin/{BASE_BRANCH}` in the parent.
-- `origin/{SKIA_BASE_BRANCH}` in mono/skia.
-- `upstream/{UPSTREAM_REF}` in mono/skia.
+- `origin/{SKIA_BASE_BRANCH}` in the paired Skia repository.
+- `upstream/{UPSTREAM_REF}` in the paired Skia repository.
 - The base branch's recorded `upstream_merge_commit`, by SHA.
 
 Export the exact parent-base submodule pointer as `SKIA_SYNC_SKIA_BASE_SHA`; use it instead of a
@@ -58,7 +58,7 @@ DIFF_RANGE="${BASE_UPSTREAM_SHA}..${TARGET_UPSTREAM_REF}"
 ```
 
 Use ancestry, not SHA equality, to determine whether the target is already contained in the
-selected mono/skia base. If it is, stop before branching. A matching milestone number alone is
+selected paired Skia base. If it is, stop before branching. A matching milestone number alone is
 not proof of no work; same-milestone bug-fix commits still count.
 
 ## Phase 02 — analyze behavior, not only signatures

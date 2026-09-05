@@ -20,9 +20,9 @@ The helper fails instead of resetting existing branches or dirty files. On succe
 
 - the parent feature branch starts at `{PARENT_BASE_SHA}`;
 - every recursive submodule matches that parent commit;
-- the mono/skia pointer is verified against `{SKIA_BASE_SHA}` and
+- the paired Skia pointer is verified against `{SKIA_BASE_SHA}` and
   `origin/{SKIA_BASE_BRANCH}`; and
-- the mono/skia feature branch is created from that exact pointer.
+- the paired Skia feature branch is created from that exact pointer.
 
 If either feature branch already exists, stop and inspect its base and commits. Reuse it only when
 it is the intended continuation; never reset or overwrite unrelated work.
@@ -102,7 +102,7 @@ Before committing:
   row names the revision and enabled/commented state actually present in the merged file.
 - Run `git diff --check` and confirm no unresolved paths remain.
 
-Create the required two-parent merge commit. Verify its parents are the selected mono/skia base and
+Create the required two-parent merge commit. Verify its parents are the selected paired Skia base and
 the target upstream commit. Build-driven dependency or C API adaptations belong in later, separate
 commits after their need is proven.
 
@@ -128,7 +128,7 @@ file counts alone.
 
 ## Gate
 
-- Parent and mono/skia feature branches have the resolved bases.
+- Parent and paired Skia feature branches have the resolved bases.
 - The merge commit has exactly two parents.
 - Every fork patch and dependency difference is classified.
 - `audit_fork_patches.py --validate` passes with no provisional decisions.
