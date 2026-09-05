@@ -205,5 +205,21 @@ class SkillDocTests(unittest.TestCase):
                          f"SKILL.md rows name untracked workflows: {unresolved}")
 
 
+class SubmoduleSyncIdentityTests(unittest.TestCase):
+    def test_sync_identity_parser_is_staged_before_target_checkout(self):
+        workflow = load_workflow("auto-skia-submodule-sync.yml")
+        steps = workflow["jobs"]["sync"]["steps"]
+        names = [step.get("name") for step in steps]
+        stage_index = names.index("Stage sync identity parser")
+        checkout_index = names.index("Checkout SkiaSharp")
+        validate_index = names.index("Validate branches")
+        self.assertLess(stage_index, checkout_index)
+        self.assertLess(checkout_index, validate_index)
+        self.assertIn(
+            '--repository "$GITHUB_REPOSITORY" json',
+            steps[validate_index]["run"],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
