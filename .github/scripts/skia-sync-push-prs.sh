@@ -12,6 +12,96 @@ readonly ARTIFACT_DIR RUNTIME_DIR SKILL_DIR
 SKIA_SUMMARY_FILE="$ARTIFACT_DIR/skia-sync-skia-summary.md"
 SS_SUMMARY_FILE="$ARTIFACT_DIR/skia-sync-skiasharp-summary.md"
 
+signal_error() {
+  echo "::error::$*"
+  return 1
+}
+
+validate_delivery_signal() {
+  local path="$SKIA_SYNC_COMPLETION_SIGNAL_FILE"
+  local line
+  local record=""
+  local record_count=0
+
+  if [[ -L "$path" || ! -f "$path" || ! -s "$path" ]]; then
+    signal_error "The sync completion signal must be a nonempty regular, non-symlink file: $path"
+    return 1
+  fi
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    record_count=$((record_count + 1))
+    if ! jq -e -s 'length == 1 and ((.[0] | type) == "object")' <<<"$line" >/dev/null; then
+      signal_error "Sync completion signal line $record_count is not exactly one JSON object."
+      return 1
+    fi
+    record="$line"
+  done <"$path"
+
+  if [[ "$record_count" -ne 1 ]]; then
+    signal_error "Expected exactly one accepted terminal sync record, found $record_count."
+    return 1
+  fi
+
+  local type
+  local branch
+  local base_branch
+  local head_repo
+  local base_commit
+  local title
+  local value
+  if ! type=$(jq -er '.type | select(type == "string")' <<<"$record"); then
+    signal_error "The accepted terminal sync record has no string type."
+    return 1
+  fi
+  if [[ "$type" != "create_pull_request" ]]; then
+    signal_error "Expected terminal sync record type create_pull_request, found '$type'."
+    return 1
+  fi
+
+  for field in branch base_branch head_repo base_commit title; do
+    if ! value=$(jq -er --arg field "$field" '.[$field] | select(type == "string")' <<<"$record"); then
+      signal_error "The accepted create_pull_request record has no string $field."
+      return 1
+    fi
+    printf -v "$field" '%s' "$value"
+  done
+
+  if [[ "$branch" != "$SKIA_SYNC_HEAD_BRANCH" ]]; then
+    signal_error "Completion signal branch '$branch' does not match SKIA_SYNC_HEAD_BRANCH."
+    return 1
+  fi
+  if [[ "$base_branch" != "$SKIA_SYNC_BASE_BRANCH" ]]; then
+    signal_error "Completion signal base_branch '$base_branch' does not match SKIA_SYNC_BASE_BRANCH."
+    return 1
+  fi
+  if [[ "$head_repo" != "mono/SkiaSharp" ]]; then
+    signal_error "Completion signal head_repo '$head_repo' is not mono/SkiaSharp."
+    return 1
+  fi
+  if [[ "$base_commit" != "$SKIA_SYNC_PARENT_BASE_SHA" ]]; then
+    signal_error "Completion signal base_commit '$base_commit' does not match SKIA_SYNC_PARENT_BASE_SHA."
+    return 1
+  fi
+  if [[ "$title" != "[skia-sync]"* ]]; then
+    signal_error "Completion signal title must start with [skia-sync]."
+    return 1
+  fi
+}
+
+: "${SKIA_SYNC_COMPLETION_SIGNAL_FILE:?SKIA_SYNC_COMPLETION_SIGNAL_FILE is required}"
+: "${SKIA_SYNC_HEAD_BRANCH:?SKIA_SYNC_HEAD_BRANCH is required}"
+: "${SKIA_SYNC_BASE_BRANCH:?SKIA_SYNC_BASE_BRANCH is required}"
+: "${SKIA_SYNC_PARENT_BASE_SHA:?SKIA_SYNC_PARENT_BASE_SHA is required}"
+validate_delivery_signal
+
+if [[ "${SKIA_SYNC_VALIDATE_DELIVERY_SIGNAL_ONLY:-false}" == "true" ]]; then
+  if [[ -n "${GH_TOKEN:-}" ]]; then
+    signal_error "Delivery-signal-only validation is unavailable when write credentials are present."
+    exit 1
+  fi
+  exit 0
+fi
+
 required_file() {
   local path="$1"
   if [[ ! -s "$path" ]]; then
@@ -35,10 +125,8 @@ required_file "$ARTIFACT_DIR/test-exit-code.txt"
 : "${SKIA_SYNC_CURRENT:?SKIA_SYNC_CURRENT is required}"
 : "${SKIA_SYNC_UPSTREAM_REF:?SKIA_SYNC_UPSTREAM_REF is required}"
 : "${SKIA_SYNC_IS_RELEASE:?SKIA_SYNC_IS_RELEASE is required}"
-: "${SKIA_SYNC_BASE_BRANCH:?SKIA_SYNC_BASE_BRANCH is required}"
 : "${SKIA_SYNC_SKIA_BASE_BRANCH:?SKIA_SYNC_SKIA_BASE_BRANCH is required}"
 : "${SKIA_SYNC_SKIA_BASE_SHA:?SKIA_SYNC_SKIA_BASE_SHA is required}"
-: "${SKIA_SYNC_HEAD_BRANCH:?SKIA_SYNC_HEAD_BRANCH is required}"
 : "${SKIA_SYNC_BASE_UPSTREAM_SHA:?SKIA_SYNC_BASE_UPSTREAM_SHA is required}"
 : "${SKIA_SYNC_TARGET_UPSTREAM_SHA:?SKIA_SYNC_TARGET_UPSTREAM_SHA is required}"
 : "${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"
