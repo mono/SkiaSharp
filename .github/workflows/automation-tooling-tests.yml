@@ -109,6 +109,7 @@ jobs:
 
       - name: Validate Gallery repository metadata
         run: |
+          dotnet tool restore
           dotnet cake --target=samples-generate
           for tree in samples samples-preview; do
             repository_url="$(dotnet msbuild \
