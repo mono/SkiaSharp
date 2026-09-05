@@ -26,6 +26,8 @@ readonly DELIVERY_ARTIFACT_NAMES=(
 readonly DELIVERY_PACKAGE_PAYLOAD_NAMES=(
   skiasharp.bundle
   skia.bundle
+  skiasharp.patch
+  skia.patch
   metadata.json
   completion-signal.jsonl
   "${DELIVERY_ARTIFACT_NAMES[@]}"
@@ -230,6 +232,13 @@ stage_delivery_package() {
   local skia_repo="${SKIA_SYNC_SKIA_REPO_DIR:-$parent_repo/externals/skia}"
   local parent_head_sha
   local skia_head_sha
+  local parent_gitlink_sha
+  local parent_bundle_sha256
+  local skia_bundle_sha256
+  local parent_patch_sha256
+  local skia_patch_sha256
+  local safe_output_bundle
+  local threat_detection_dir="${SKIA_SYNC_THREAT_DETECTION_SOURCE_DIR:-${RUNNER_TEMP:?RUNNER_TEMP is required}/gh-aw}"
   local name
 
   : "${RUNNER_TEMP:?RUNNER_TEMP is required}"
@@ -281,10 +290,76 @@ PY
   skia_head_sha=$(package_git -C "$skia_repo" rev-parse "refs/heads/${SKIA_SYNC_HEAD_BRANCH}^{commit}")
   package_git -C "$parent_repo" merge-base --is-ancestor "$SKIA_SYNC_PARENT_BASE_SHA" "$parent_head_sha"
   package_git -C "$skia_repo" merge-base --is-ancestor "$SKIA_SYNC_SKIA_BASE_SHA" "$skia_head_sha"
+  # shellcheck disable=SC2016 # The awk field references must not expand in Bash.
+  parent_gitlink_sha=$(package_git -C "$parent_repo" ls-tree "$parent_head_sha" externals/skia |
+    command -p awk '$1 == "160000" && $2 == "commit" && $4 == "externals/skia" { print $3 }')
+  if [[ "$parent_gitlink_sha" != "$skia_head_sha" ]]; then
+    signal_error "The final parent gitlink does not match the final nested Skia head."
+    exit 1
+  fi
+
+  safe_output_bundle=$(command -p python3 -I - "$threat_detection_dir" <<'PY'
+import os
+import stat
+import sys
+
+root = sys.argv[1]
+entries = [
+    entry for entry in os.scandir(root)
+    if entry.name.startswith("aw-") and entry.name.endswith(".bundle")
+]
+if len(entries) != 1:
+    raise SystemExit(
+        f"::error::Expected exactly one staged create_pull_request bundle, found {len(entries)}."
+    )
+entry = entries[0]
+metadata = entry.stat(follow_symlinks=False)
+if (not stat.S_ISREG(metadata.st_mode) or entry.is_symlink()
+        or metadata.st_nlink != 1 or metadata.st_size == 0):
+    raise SystemExit(
+        "::error::The staged create_pull_request bundle must be a nonempty standalone regular file."
+    )
+sys.stdout.write(entry.path)
+PY
+  )
+  if [[ "$(package_git bundle list-heads "$safe_output_bundle")" != \
+        "$parent_head_sha refs/heads/$SKIA_SYNC_HEAD_BRANCH" ]]; then
+    signal_error "The staged create_pull_request bundle does not match the final parent head."
+    exit 1
+  fi
+
   package_git -C "$parent_repo" bundle create "$package_dir/skiasharp.bundle" \
     "refs/heads/$SKIA_SYNC_HEAD_BRANCH"
   package_git -C "$skia_repo" bundle create "$package_dir/skia.bundle" \
     "refs/heads/$SKIA_SYNC_HEAD_BRANCH"
+  package_git -C "$parent_repo" diff --binary --no-ext-diff --no-textconv \
+    "$SKIA_SYNC_PARENT_BASE_SHA" "$parent_head_sha" >"$package_dir/skiasharp.patch"
+  package_git -C "$skia_repo" diff --binary --no-ext-diff --no-textconv \
+    "$SKIA_SYNC_SKIA_BASE_SHA" "$skia_head_sha" >"$package_dir/skia.patch"
+  required_file "$package_dir/skiasharp.patch"
+  required_file "$package_dir/skia.patch"
+
+  read -r parent_bundle_sha256 skia_bundle_sha256 parent_patch_sha256 skia_patch_sha256 < <(
+    command -p python3 -I - \
+      "$package_dir/skiasharp.bundle" \
+      "$package_dir/skia.bundle" \
+      "$package_dir/skiasharp.patch" \
+      "$package_dir/skia.patch" <<'PY'
+import hashlib
+import sys
+
+
+def digest(path):
+    value = hashlib.sha256()
+    with open(path, "rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            value.update(chunk)
+    return value.hexdigest()
+
+
+print(*(digest(path) for path in sys.argv[1:]))
+PY
+  )
 
   for name in "${DELIVERY_ARTIFACT_NAMES[@]}"; do
     command -p install -m 600 "$ARTIFACT_DIR/$name" "$package_dir/$name"
@@ -309,6 +384,11 @@ PY
     --arg target_upstream_sha "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
     --arg parent_head_sha "$parent_head_sha" \
     --arg skia_head_sha "$skia_head_sha" \
+    --arg parent_gitlink_sha "$parent_gitlink_sha" \
+    --arg parent_bundle_sha256 "$parent_bundle_sha256" \
+    --arg skia_bundle_sha256 "$skia_bundle_sha256" \
+    --arg parent_patch_sha256 "$parent_patch_sha256" \
+    --arg skia_patch_sha256 "$skia_patch_sha256" \
     '{
       schema_version: $schema_version,
       repository: $repository,
@@ -325,7 +405,12 @@ PY
       base_upstream_sha: $base_upstream_sha,
       target_upstream_sha: $target_upstream_sha,
       parent_head_sha: $parent_head_sha,
-      skia_head_sha: $skia_head_sha
+      skia_head_sha: $skia_head_sha,
+      parent_gitlink_sha: $parent_gitlink_sha,
+      parent_bundle_sha256: $parent_bundle_sha256,
+      skia_bundle_sha256: $skia_bundle_sha256,
+      parent_patch_sha256: $parent_patch_sha256,
+      skia_patch_sha256: $skia_patch_sha256
     }' >"$package_dir/metadata.json"
 
   command -p rm -rf -- "$SKIA_SYNC_PACKAGE_GIT_HOME"
@@ -349,6 +434,25 @@ PY
   for name in "${DELIVERY_PACKAGE_PAYLOAD_NAMES[@]}" SHA256SUMS; do
     required_file "$package_dir/$name"
   done
+
+  for name in \
+    aw-final-skiasharp.bundle \
+    aw-final-skia.bundle \
+    aw-final-skiasharp.patch \
+    aw-final-skia.patch; do
+    if [[ -e "$threat_detection_dir/$name" || -L "$threat_detection_dir/$name" ]]; then
+      signal_error "Threat-detection input already exists: $threat_detection_dir/$name"
+      exit 1
+    fi
+  done
+  command -p install -m 600 "$package_dir/skiasharp.bundle" \
+    "$threat_detection_dir/aw-final-skiasharp.bundle"
+  command -p install -m 600 "$package_dir/skia.bundle" \
+    "$threat_detection_dir/aw-final-skia.bundle"
+  command -p install -m 600 "$package_dir/skiasharp.patch" \
+    "$threat_detection_dir/aw-final-skiasharp.patch"
+  command -p install -m 600 "$package_dir/skia.patch" \
+    "$threat_detection_dir/aw-final-skia.patch"
   echo "Staged immutable Skia sync delivery package."
 }
 
@@ -458,7 +562,8 @@ expected_keys = {
     "schema_version", "repository", "workflow_sha", "current", "target", "upstream_ref",
     "is_release", "base_branch", "skia_base_branch", "head_branch", "parent_base_sha",
     "skia_base_sha", "base_upstream_sha", "target_upstream_sha", "parent_head_sha",
-    "skia_head_sha",
+    "skia_head_sha", "parent_gitlink_sha", "parent_bundle_sha256", "skia_bundle_sha256",
+    "parent_patch_sha256", "skia_patch_sha256",
 }
 if type(metadata) is not dict or set(metadata) != expected_keys or metadata.get("schema_version") != 1:
     reject("Delivery package metadata does not match schema version 1.")
@@ -485,9 +590,21 @@ for key, expected_value in expected.items():
     if metadata.get(key) != expected_value:
         reject(f"Delivery package metadata mismatch: {key}")
 for key in ("workflow_sha", "parent_base_sha", "skia_base_sha", "base_upstream_sha",
-            "target_upstream_sha", "parent_head_sha", "skia_head_sha"):
+            "target_upstream_sha", "parent_head_sha", "skia_head_sha", "parent_gitlink_sha"):
     if not re.fullmatch(r"[0-9a-f]{40}", metadata[key]):
         reject(f"Delivery package metadata field is not a full lowercase SHA: {key}")
+if metadata["parent_gitlink_sha"] != metadata["skia_head_sha"]:
+    reject("Delivery package parent gitlink does not match the nested Skia head.")
+for field, name in {
+    "parent_bundle_sha256": "skiasharp.bundle",
+    "skia_bundle_sha256": "skia.bundle",
+    "parent_patch_sha256": "skiasharp.patch",
+    "skia_patch_sha256": "skia.patch",
+}.items():
+    if not re.fullmatch(r"[0-9a-f]{64}", metadata[field]):
+        reject(f"Delivery package metadata field is not a SHA-256 digest: {field}")
+    if metadata[field] != checksums[name]:
+        reject(f"Delivery package metadata digest mismatch: {field}")
 PY
 
   SKIA_SYNC_GIT_BIN=$(command -p -v git)
@@ -538,6 +655,19 @@ PY
   [[ "$(package_git -C "$skia_repo" rev-parse "refs/heads/${SKIA_SYNC_HEAD_BRANCH}^{commit}")" == "$skia_head_sha" ]]
   package_git -C "$parent_repo" merge-base --is-ancestor "$SKIA_SYNC_PARENT_BASE_SHA" "$parent_head_sha"
   package_git -C "$skia_repo" merge-base --is-ancestor "$SKIA_SYNC_SKIA_BASE_SHA" "$skia_head_sha"
+  # shellcheck disable=SC2016 # The awk field references must not expand in Bash.
+  if [[ "$(package_git -C "$parent_repo" ls-tree "$parent_head_sha" externals/skia |
+      command -p awk '$1 == "160000" && $2 == "commit" && $4 == "externals/skia" { print $3 }')" != \
+        "$skia_head_sha" ]]; then
+    signal_error "Verified parent gitlink does not match the verified nested Skia head."
+    exit 1
+  fi
+  package_git -C "$parent_repo" diff --binary --no-ext-diff --no-textconv \
+    "$SKIA_SYNC_PARENT_BASE_SHA" "$parent_head_sha" |
+    command -p cmp -s - "$package_dir/skiasharp.patch"
+  package_git -C "$skia_repo" diff --binary --no-ext-diff --no-textconv \
+    "$SKIA_SYNC_SKIA_BASE_SHA" "$skia_head_sha" |
+    command -p cmp -s - "$package_dir/skia.patch"
   command -p rm -rf -- "$SKIA_SYNC_PACKAGE_GIT_HOME"
 
   if [[ -n "${SKIA_SYNC_DELIVERY_ENV_FILE:-}" ]]; then
@@ -555,8 +685,100 @@ PY
   echo "Verified immutable Skia sync delivery package."
 }
 
+verify_detection_attestation() {
+  local package_dir="${SKIA_SYNC_DELIVERY_PACKAGE_DIR:?SKIA_SYNC_DELIVERY_PACKAGE_DIR is required}"
+  local detection_dir="${SKIA_SYNC_THREAT_DETECTION_DIR:?SKIA_SYNC_THREAT_DETECTION_DIR is required}"
+  local detection_verified_root
+
+  required_file "$package_dir/metadata.json"
+  detection_verified_root=$(command -p mktemp -d "${RUNNER_TEMP:-/tmp}/skia-sync-detection-verified.XXXXXX")
+  command -p chmod 700 "$detection_verified_root"
+  GITHUB_SHA=$(jq -er .workflow_sha "$package_dir/metadata.json")
+  SKIA_SYNC_CURRENT=$(jq -er .current "$package_dir/metadata.json")
+  SKIA_SYNC_TARGET=$(jq -er .target "$package_dir/metadata.json")
+  SKIA_SYNC_UPSTREAM_REF=$(jq -er .upstream_ref "$package_dir/metadata.json")
+  SKIA_SYNC_IS_RELEASE=$(jq -er .is_release "$package_dir/metadata.json")
+  SKIA_SYNC_BASE_BRANCH=$(jq -er .base_branch "$package_dir/metadata.json")
+  SKIA_SYNC_SKIA_BASE_BRANCH=$(jq -er .skia_base_branch "$package_dir/metadata.json")
+  SKIA_SYNC_HEAD_BRANCH=$(jq -er .head_branch "$package_dir/metadata.json")
+  SKIA_SYNC_EXPECTED_PARENT_BASE_SHA=$(jq -er .parent_base_sha "$package_dir/metadata.json")
+  SKIA_SYNC_EXPECTED_SKIA_BASE_SHA=$(jq -er .skia_base_sha "$package_dir/metadata.json")
+  SKIA_SYNC_VERIFIED_ROOT="$detection_verified_root"
+  SKIA_SYNC_DELIVERY_ENV_FILE=
+  export GITHUB_SHA SKIA_SYNC_CURRENT SKIA_SYNC_TARGET SKIA_SYNC_UPSTREAM_REF
+  export SKIA_SYNC_IS_RELEASE SKIA_SYNC_BASE_BRANCH SKIA_SYNC_SKIA_BASE_BRANCH
+  export SKIA_SYNC_HEAD_BRANCH SKIA_SYNC_EXPECTED_PARENT_BASE_SHA
+  export SKIA_SYNC_EXPECTED_SKIA_BASE_SHA SKIA_SYNC_VERIFIED_ROOT
+  export SKIA_SYNC_DELIVERY_ENV_FILE
+  verify_delivery_package
+  command -p rm -rf -- "$detection_verified_root"
+  command -p python3 -I - "$package_dir" "$detection_dir" <<'PY'
+import hashlib
+import os
+import stat
+import sys
+
+
+def reject(message):
+    raise SystemExit(f"::error::{message}")
+
+
+def digest_regular(path):
+    try:
+        metadata = os.lstat(path)
+    except OSError:
+        reject(f"Threat-detection input is missing: {path}")
+    if (not stat.S_ISREG(metadata.st_mode) or stat.S_ISLNK(metadata.st_mode)
+            or metadata.st_nlink != 1 or metadata.st_size == 0):
+        reject(f"Threat-detection input is not a nonempty standalone regular file: {path}")
+    value = hashlib.sha256()
+    with open(path, "rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            value.update(chunk)
+    return value.digest()
+
+
+package_dir, detection_dir = sys.argv[1:]
+mapping = {
+    "skiasharp.bundle": "aw-final-skiasharp.bundle",
+    "skia.bundle": "aw-final-skia.bundle",
+    "skiasharp.patch": "aw-final-skiasharp.patch",
+    "skia.patch": "aw-final-skia.patch",
+}
+for package_name, detection_name in mapping.items():
+    package_digest = digest_regular(os.path.join(package_dir, package_name))
+    detection_digest = digest_regular(os.path.join(detection_dir, detection_name))
+    if package_digest != detection_digest:
+        reject(f"Threat-detection input does not match immutable delivery payload: {detection_name}")
+
+verified_names = set(mapping.values())
+for entry in os.scandir(detection_dir):
+    if (entry.name.startswith("aw-")
+            and (entry.name.endswith(".bundle") or entry.name.endswith(".patch"))
+            and entry.name not in verified_names):
+        metadata = entry.stat(follow_symlinks=False)
+        if not stat.S_ISREG(metadata.st_mode) and not stat.S_ISLNK(metadata.st_mode):
+            reject(f"Unexpected non-file threat-detection input cannot be removed: {entry.path}")
+        os.unlink(entry.path)
+
+remaining = {
+    entry.name for entry in os.scandir(detection_dir)
+    if entry.name.startswith("aw-")
+    and (entry.name.endswith(".bundle") or entry.name.endswith(".patch"))
+}
+if remaining != verified_names:
+    reject("Threat detection does not contain exactly the verified final Git inputs.")
+PY
+  echo "Verified detector attestation inputs against the immutable delivery package."
+}
+
 if [[ "${1:-}" == "--stage-delivery-package" ]]; then
   stage_delivery_package
+  exit 0
+fi
+
+if [[ "${1:-}" == "--verify-detection-attestation" ]]; then
+  verify_detection_attestation
   exit 0
 fi
 

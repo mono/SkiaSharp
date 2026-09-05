@@ -218,6 +218,54 @@ for line in conclusion_lines[conclusion_needs_start:]:
 if conclusion_needs != ["activation", "agent", "detection", "safe_outputs"]:
     raise SystemExit(f"compiled conclusion does not have the required downstream topology: {conclusion_needs}")
 
+detection_headers = [index for index, line in enumerate(lines) if line == "  detection:"]
+if len(detection_headers) != 1:
+    raise SystemExit(f"expected one compiled detection job, found {len(detection_headers)}")
+detection_start = detection_headers[0]
+detection_end = next(
+    (
+        index
+        for index in range(detection_start + 1, len(lines))
+        if re.fullmatch(r"  [A-Za-z0-9_-]+:", lines[index])
+    ),
+    len(lines),
+)
+detection_lines = lines[detection_start:detection_end]
+detection = "\n".join(detection_lines)
+prepare_detection = detection.index("      - name: Prepare threat detection files")
+checkout_attestation = detection.index("      - name: Check out trusted detector attestation code")
+download_attestation = detection.index("      - name: Download immutable detector attestation")
+bind_attestation = detection.index("      - name: Bind threat detection to immutable delivery objects")
+execute_detection = detection.index("      - name: Execute threat detection with AWF")
+if not prepare_detection < checkout_attestation < download_attestation < bind_attestation < execute_detection:
+    raise SystemExit("immutable object attestation is not enforced before the threat-detection engine")
+for name in (
+    "Check out trusted detector attestation code",
+    "Download immutable detector attestation",
+    "Bind threat detection to immutable delivery objects",
+):
+    step_start = detection.index(f"      - name: {name}")
+    step_end = detection.find("\n      - ", step_start + 1)
+    if step_end < 0:
+        step_end = len(detection)
+    step = detection[step_start:step_end]
+    if "if: always() && steps.detection_guard.outputs.run_detection == 'true'" not in step:
+        raise SystemExit(f"detector attestation step is not coupled to threat detection: {name}")
+if "name: skia-sync-delivery" not in detection[download_attestation:bind_attestation]:
+    raise SystemExit("detector attestation download is not bound to the exact delivery artifact")
+detector_download = detection[download_attestation:bind_attestation]
+for fallback_key in ("pattern:", "merge-multiple:", "run-id:", "repository:", "github-token:"):
+    if fallback_key in detector_download:
+        raise SystemExit(f"detector artifact download can escape current-run exact-name binding: {fallback_key}")
+detector_binding_end = detection.find("\n      - ", bind_attestation + 1)
+detector_binding = detection[bind_attestation:detector_binding_end]
+if "--verify-detection-attestation" not in detector_binding:
+    raise SystemExit("detector does not validate package identity before AI analysis")
+if "continue-on-error:" in detector_binding:
+    raise SystemExit("detector attestation failure can be ignored")
+if "${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}" in detection:
+    raise SystemExit("write secret entered the threat-detection job")
+
 conclusion = "\n".join(conclusion_lines)
 gate_start = conclusion.index("      - name: Authorize downstream delivery")
 checkout_start = conclusion.index("      - name: Check out trusted delivery code")
@@ -270,8 +318,11 @@ for name in (
         raise SystemExit(f"downstream step can run without successful authorization: {name}")
 
 download_step = conclusion[download_start:validate_start]
-if "name: skia-sync-delivery" not in download_step or "pattern:" in download_step:
+if "name: skia-sync-delivery" not in download_step:
     raise SystemExit("delivery artifact download is not bound to one exact artifact name")
+for fallback_key in ("pattern:", "merge-multiple:", "run-id:", "repository:", "github-token:"):
+    if fallback_key in download_step:
+        raise SystemExit(f"delivery artifact download can escape current-run exact-name binding: {fallback_key}")
 if source.count("${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}") != 1:
     raise SystemExit("source workflow must reference the write secret exactly once")
 if compiled.count("${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}") != 1:
@@ -300,6 +351,11 @@ if "mktemp -d" not in agent[stage_start:upload_start] or \
     raise SystemExit("agent package is not rooted in a randomized runner-owned directory")
 if compiled.count('GH_AW_ACTION_FAILURE_ISSUE_EXPIRES_HOURS: "0"') != 1:
     raise SystemExit("compiled failure issue expiry must remain exactly zero hours")
+finalizer_start = agent.index("name: Verify finalized sync metadata")
+if not finalizer_start < stage_start:
+    raise SystemExit("deterministic finalization is not validated before immutable package staging")
+if "commit --no-verify" in agent[finalizer_start:stage_start]:
+    raise SystemExit("post-agent finalization can mutate the terminally attested commit")
 
 required_hardening = {
     "two POSIX-shell post steps": compiled.count("shell: /bin/sh -e {0}") >= 2,
@@ -386,6 +442,27 @@ if 'show "${SS_VALIDATED_HEAD_SHA}:cgmanifest.json"' not in source or \
     raise SystemExit("manifest validation is not performed in the clean delivery repository")
 if '--skia-root "$TRUSTED_SKIA_REPO"' not in source:
     raise SystemExit("fork validation is not performed in the clean delivery repository")
+required_attestation = [
+    'bundle list-heads "$safe_output_bundle"',
+    '"$parent_head_sha refs/heads/$SKIA_SYNC_HEAD_BRANCH"',
+    '"$package_dir/skiasharp.patch"',
+    '"$package_dir/skia.patch"',
+    '"parent_gitlink_sha"',
+    '"parent_bundle_sha256"',
+    '"skia_bundle_sha256"',
+    '"parent_patch_sha256"',
+    '"skia_patch_sha256"',
+    "verify_detection_attestation",
+    "Threat-detection input does not match immutable delivery payload",
+    "Threat detection does not contain exactly the verified final Git inputs.",
+    '"skiasharp.bundle": "aw-final-skiasharp.bundle"',
+    '"skia.bundle": "aw-final-skia.bundle"',
+    '"skiasharp.patch": "aw-final-skiasharp.patch"',
+    '"skia.patch": "aw-final-skia.patch"',
+]
+for attestation_check in required_attestation:
+    if attestation_check not in source:
+        raise SystemExit(f"delivery attestation is missing: {attestation_check}")
 required_pr_identity = [
     '--base "$base"',
     "headRepositoryOwner.login == $owner",
@@ -638,6 +715,7 @@ PACKAGE_WORKFLOW_SHA="1111111111111111111111111111111111111111"
 PACKAGE_PARENT_BASE_SHA=""
 PACKAGE_SKIA_BASE_SHA=""
 PACKAGE_SKIA_HEAD_SHA=""
+PACKAGE_THREAT_DIR="$PACKAGE_RUNNER_TEMP/gh-aw"
 
 create_package_fixture() {
   local name
@@ -646,19 +724,31 @@ create_package_fixture() {
   git init -q -b main "$PACKAGE_PARENT_REPO"
   git -C "$PACKAGE_PARENT_REPO" config user.name "Skia Sync Test"
   git -C "$PACKAGE_PARENT_REPO" config user.email "skia-sync@example.invalid"
-  git -C "$PACKAGE_PARENT_REPO" commit -q --allow-empty -m parent-base
+  printf 'parent base\n' >"$PACKAGE_PARENT_REPO/parent.txt"
+  git -C "$PACKAGE_PARENT_REPO" add parent.txt
+  git -C "$PACKAGE_PARENT_REPO" commit -q -m parent-base
   PACKAGE_PARENT_BASE_SHA=$(git -C "$PACKAGE_PARENT_REPO" rev-parse HEAD)
   git -C "$PACKAGE_PARENT_REPO" switch -q -c "$HEAD_BRANCH"
-  git -C "$PACKAGE_PARENT_REPO" commit -q --allow-empty -m parent-head
 
   git init -q -b main "$PACKAGE_SKIA_REPO"
   git -C "$PACKAGE_SKIA_REPO" config user.name "Skia Sync Test"
   git -C "$PACKAGE_SKIA_REPO" config user.email "skia-sync@example.invalid"
-  git -C "$PACKAGE_SKIA_REPO" commit -q --allow-empty -m skia-base
+  printf 'skia base\n' >"$PACKAGE_SKIA_REPO/skia.txt"
+  git -C "$PACKAGE_SKIA_REPO" add skia.txt
+  git -C "$PACKAGE_SKIA_REPO" commit -q -m skia-base
   PACKAGE_SKIA_BASE_SHA=$(git -C "$PACKAGE_SKIA_REPO" rev-parse HEAD)
   git -C "$PACKAGE_SKIA_REPO" switch -q -c "$HEAD_BRANCH"
-  git -C "$PACKAGE_SKIA_REPO" commit -q --allow-empty -m skia-head
+  printf 'skia head\n' >>"$PACKAGE_SKIA_REPO/skia.txt"
+  git -C "$PACKAGE_SKIA_REPO" commit -q -am skia-head
   PACKAGE_SKIA_HEAD_SHA=$(git -C "$PACKAGE_SKIA_REPO" rev-parse HEAD)
+  git -C "$PACKAGE_PARENT_REPO" update-index \
+    --add --cacheinfo "160000,$PACKAGE_SKIA_HEAD_SHA,externals/skia"
+  git -C "$PACKAGE_PARENT_REPO" commit -q -m parent-head
+
+  mkdir -p "$PACKAGE_THREAT_DIR"
+  git -C "$PACKAGE_PARENT_REPO" bundle create \
+    "$PACKAGE_THREAT_DIR/aw-create-pull-request.bundle" \
+    "refs/heads/$HEAD_BRANCH"
 
   for name in \
     skia-sync-skia-summary.md \
@@ -678,7 +768,10 @@ create_package_fixture() {
   record >"$SIGNAL_FILE"
   PACKAGE_GOLDEN=$(mktemp -d "$PACKAGE_RUNNER_TEMP/skia-sync-delivery-package.XXXXXX")
   chmod 700 "$PACKAGE_GOLDEN"
-  run_package_stage "$PACKAGE_GOLDEN"
+  if ! run_package_stage "$PACKAGE_GOLDEN"; then
+    cat "$LOG_FILE" >&2
+    fail "delivery-package-fixture: unable to stage golden package"
+  fi
 }
 
 run_package_stage() {
@@ -702,6 +795,7 @@ run_package_stage() {
     SKIA_SYNC_SKIA_REPO_DIR="$PACKAGE_SKIA_REPO" \
     SKIA_SYNC_TARGET=152 \
     SKIA_SYNC_TARGET_UPSTREAM_SHA="$PACKAGE_SKIA_HEAD_SHA" \
+    SKIA_SYNC_THREAT_DETECTION_SOURCE_DIR="$PACKAGE_THREAT_DIR" \
     SKIA_SYNC_UPSTREAM_REF=chrome/m152 \
     /bin/bash "$PUSH_SCRIPT" --stage-delivery-package >"$LOG_FILE" 2>&1
 }
@@ -718,6 +812,7 @@ refresh_package_digest() {
   local name="$2"
   python3 - "$package_dir" "$name" <<'PY'
 import hashlib
+import json
 import pathlib
 import re
 import sys
@@ -730,6 +825,26 @@ content = path.read_text(encoding="ascii")
 content, count = re.subn(rf"^[0-9a-f]{{64}}  {re.escape(name)}$", f"{digest}  {name}", content, flags=re.MULTILINE)
 if count != 1:
     raise SystemExit(f"checksum entry not found exactly once: {name}")
+digest_fields = {
+    "skiasharp.bundle": "parent_bundle_sha256",
+    "skia.bundle": "skia_bundle_sha256",
+    "skiasharp.patch": "parent_patch_sha256",
+    "skia.patch": "skia_patch_sha256",
+}
+if name in digest_fields:
+    metadata_path = root / "metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata[digest_fields[name]] = digest
+    metadata_path.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+    metadata_digest = hashlib.sha256(metadata_path.read_bytes()).hexdigest()
+    content, metadata_count = re.subn(
+        r"^[0-9a-f]{64}  metadata\.json$",
+        f"{metadata_digest}  metadata.json",
+        content,
+        flags=re.MULTILINE,
+    )
+    if metadata_count != 1:
+        raise SystemExit("checksum entry not found exactly once: metadata.json")
 path.write_text(content, encoding="ascii")
 PY
 }
@@ -781,12 +896,93 @@ expect_package_failure() {
   echo "PASS: $name"
 }
 
+run_detection_attestation() {
+  local package_dir="$1"
+  local detection_dir="$2"
+  env -u GH_TOKEN \
+    RUNNER_TEMP="$PACKAGE_RUNNER_TEMP" \
+    SKIA_SYNC_DELIVERY_PACKAGE_DIR="$package_dir" \
+    SKIA_SYNC_THREAT_DETECTION_DIR="$detection_dir" \
+    /bin/bash "$PUSH_SCRIPT" --verify-detection-attestation >"$LOG_FILE" 2>&1
+}
+
+copy_detector_inputs() {
+  local destination
+  destination=$(mktemp -d "$PACKAGE_RUNNER_TEMP/skia-sync-detector-inputs.XXXXXX")
+  for name in \
+    aw-final-skiasharp.bundle \
+    aw-final-skia.bundle \
+    aw-final-skiasharp.patch \
+    aw-final-skia.patch; do
+    cp "$PACKAGE_THREAT_DIR/$name" "$destination/$name"
+  done
+  printf '%s' "$destination"
+}
+
+expect_detection_failure() {
+  local name="$1"
+  local package_dir="$2"
+  local detection_dir="$3"
+  local expected="$4"
+  if run_detection_attestation "$package_dir" "$detection_dir"; then
+    fail "$name: detector attestation unexpectedly accepted stale inputs"
+  fi
+  if ! grep -Fq "$expected" "$LOG_FILE"; then
+    cat "$LOG_FILE" >&2
+    fail "$name: missing expected error '$expected'"
+  fi
+  echo "PASS: $name"
+}
+
+expect_stage_failure() {
+  local name="$1"
+  local expected="$2"
+  local package_dir
+  package_dir=$(mktemp -d "$PACKAGE_RUNNER_TEMP/skia-sync-delivery-package.XXXXXX")
+  chmod 700 "$package_dir"
+  if run_package_stage "$package_dir"; then
+    fail "$name: package staging unexpectedly accepted invalid terminal state"
+  fi
+  if ! grep -Fq "$expected" "$LOG_FILE"; then
+    cat "$LOG_FILE" >&2
+    fail "$name: missing expected error '$expected'"
+  fi
+  echo "PASS: $name"
+}
+
 verify_delivery_packages() {
   local package_dir
   local alternate_repo="$PACKAGE_ROOT/alternate"
+  local alternate_skia_repo="$PACKAGE_ROOT/alternate-skia"
+  local detection_dir
 
   create_package_fixture
   expect_package_success delivery-package-valid "$PACKAGE_GOLDEN"
+  detection_dir=$(copy_detector_inputs)
+  printf 'unverified fallback\n' >"$detection_dir/aw-fallback.patch"
+  if ! run_detection_attestation "$PACKAGE_GOLDEN" "$detection_dir"; then
+    cat "$LOG_FILE" >&2
+    fail "detector-attestation-valid: exact immutable inputs were rejected"
+  fi
+  if [[ -e "$detection_dir/aw-fallback.patch" ]]; then
+    fail "detector-attestation-valid: unverified fallback input remained visible to detection"
+  fi
+  echo "PASS: detector-attestation-valid"
+
+  detection_dir=$(copy_detector_inputs)
+  printf 'stale detector input\n' >>"$detection_dir/aw-final-skia.patch"
+  expect_detection_failure detector-attestation-stale "$PACKAGE_GOLDEN" "$detection_dir" \
+    "does not match immutable delivery payload"
+
+  package_dir=$(copy_package_fixture)
+  detection_dir=$(copy_detector_inputs)
+  if ! run_detection_attestation "$package_dir" "$detection_dir"; then
+    cat "$LOG_FILE" >&2
+    fail "post-detection-package-baseline: exact immutable inputs were rejected"
+  fi
+  printf 'post-detection mutation\n' >>"$package_dir/skia.patch"
+  expect_package_failure post-detection-package-mutation "$package_dir" \
+    "Delivery package digest mismatch"
 
   package_dir=$(copy_package_fixture)
   rm "$package_dir/test-output.txt"
@@ -845,6 +1041,41 @@ verify_delivery_packages() {
   expect_package_failure delivery-package-object-substitution "$package_dir" \
     "does not contain exactly the expected immutable head"
 
+  git init -q -b main "$alternate_skia_repo"
+  git -C "$alternate_skia_repo" config user.name "Skia Sync Test"
+  git -C "$alternate_skia_repo" config user.email "skia-sync@example.invalid"
+  printf 'alternate skia\n' >"$alternate_skia_repo/skia.txt"
+  git -C "$alternate_skia_repo" add skia.txt
+  git -C "$alternate_skia_repo" commit -q -m alternate-skia-base
+  git -C "$alternate_skia_repo" switch -q -c "$HEAD_BRANCH"
+  printf 'substituted\n' >>"$alternate_skia_repo/skia.txt"
+  git -C "$alternate_skia_repo" commit -q -am alternate-skia-head
+  package_dir=$(copy_package_fixture)
+  git -C "$alternate_skia_repo" bundle create "$package_dir/skia.bundle" \
+    "refs/heads/$HEAD_BRANCH"
+  refresh_package_digest "$package_dir" skia.bundle
+  expect_package_failure delivery-package-nested-bundle-substitution "$package_dir" \
+    "does not contain exactly the expected immutable head"
+
+  package_dir=$(copy_package_fixture)
+  jq '.parent_gitlink_sha = "5555555555555555555555555555555555555555"' \
+    "$package_dir/metadata.json" >"$package_dir/metadata.tmp"
+  mv "$package_dir/metadata.tmp" "$package_dir/metadata.json"
+  refresh_package_digest "$package_dir" metadata.json
+  expect_package_failure delivery-package-parent-gitlink-mismatch "$package_dir" \
+    "parent gitlink does not match the nested Skia head"
+
+  package_dir=$(copy_package_fixture)
+  jq '
+    .parent_bundle_sha256 as $parent
+    | .parent_bundle_sha256 = .skia_bundle_sha256
+    | .skia_bundle_sha256 = $parent
+  ' "$package_dir/metadata.json" >"$package_dir/metadata.tmp"
+  mv "$package_dir/metadata.tmp" "$package_dir/metadata.json"
+  refresh_package_digest "$package_dir" metadata.json
+  expect_package_failure delivery-package-artifact-digest-swap "$package_dir" \
+    "metadata digest mismatch"
+
   package_dir=$(copy_package_fixture)
   jq '.workflow_sha = "4444444444444444444444444444444444444444"' \
     "$package_dir/metadata.json" >"$package_dir/metadata.tmp"
@@ -866,6 +1097,36 @@ verify_delivery_packages() {
     fail "worktree-config-rejection: malicious worktree configuration was not safely rejected"
   fi
   echo "PASS: worktree-config-rejection"
+
+  git -C "$PACKAGE_PARENT_REPO" config --worktree --unset filter.attacker.clean
+  git -C "$PACKAGE_PARENT_REPO" config --unset extensions.worktreeConfig
+  rm -f "$PACKAGE_PARENT_REPO/.git/config.worktree"
+  rm -f "$PACKAGE_THREAT_DIR"/aw-final-*
+  mv "$PACKAGE_THREAT_DIR/aw-create-pull-request.bundle" \
+    "$PACKAGE_THREAT_DIR/create-pull-request.bundle"
+  expect_stage_failure safe-output-bundle-missing \
+    "Expected exactly one staged create_pull_request bundle, found 0"
+  mv "$PACKAGE_THREAT_DIR/create-pull-request.bundle" \
+    "$PACKAGE_THREAT_DIR/aw-create-pull-request.bundle"
+
+  cp "$PACKAGE_THREAT_DIR/aw-create-pull-request.bundle" \
+    "$PACKAGE_THREAT_DIR/aw-create-pull-request-duplicate.bundle"
+  expect_stage_failure safe-output-bundle-multiple \
+    "Expected exactly one staged create_pull_request bundle, found 2"
+  rm "$PACKAGE_THREAT_DIR/aw-create-pull-request-duplicate.bundle"
+
+  mv "$PACKAGE_THREAT_DIR/aw-create-pull-request.bundle" \
+    "$PACKAGE_THREAT_DIR/create-pull-request.bundle"
+  ln -s create-pull-request.bundle "$PACKAGE_THREAT_DIR/aw-create-pull-request.bundle"
+  expect_stage_failure safe-output-bundle-symlink \
+    "must be a nonempty standalone regular file"
+  rm "$PACKAGE_THREAT_DIR/aw-create-pull-request.bundle"
+  mv "$PACKAGE_THREAT_DIR/create-pull-request.bundle" \
+    "$PACKAGE_THREAT_DIR/aw-create-pull-request.bundle"
+
+  git -C "$PACKAGE_PARENT_REPO" commit -q --allow-empty -m post-signal-mutation
+  expect_stage_failure post-signal-finalizer-mutation \
+    "staged create_pull_request bundle does not match the final parent head"
 }
 
 verify_compiled_release_base_config

@@ -379,6 +379,41 @@ safe-outputs:
   # to file a "no-op runs" issue.
   noop:
     report-as-issue: false
+  threat-detection:
+    steps:
+      - name: Check out trusted detector attestation code
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts/skia-sync-push-prs.sh
+      - name: Download immutable detector attestation
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: skia-sync-delivery
+          path: ${{ runner.temp }}/skia-sync-detector-artifact
+      - name: Bind threat detection to immutable delivery objects
+        shell: /bin/sh -e {0}
+        env:
+          BASH_ENV: /dev/null
+          ENV: /dev/null
+          LD_AUDIT: ""
+          LD_LIBRARY_PATH: ""
+          LD_PRELOAD: ""
+        run: |
+          ATTESTATION_HOME=$(mktemp -d "$RUNNER_TEMP/skia-sync-attestation-home.XXXXXX")
+          chmod 700 "$ATTESTATION_HOME"
+          exec /usr/bin/env -i \
+            HOME="$ATTESTATION_HOME" \
+            PATH=/usr/bin:/bin \
+            GIT_CONFIG_GLOBAL=/dev/null \
+            GIT_CONFIG_NOSYSTEM=1 \
+            GIT_NO_REPLACE_OBJECTS=1 \
+            RUNNER_TEMP="$RUNNER_TEMP" \
+            SKIA_SYNC_DELIVERY_PACKAGE_DIR="$RUNNER_TEMP/skia-sync-detector-artifact" \
+            SKIA_SYNC_THREAT_DETECTION_DIR=/tmp/gh-aw/threat-detection \
+            /bin/bash --noprofile --norc \
+              "$GITHUB_WORKSPACE/.github/scripts/skia-sync-push-prs.sh" \
+              --verify-detection-attestation
 
 # -- Sandbox -----------------------------------------------------------
 # Mount host fontconfig config AND font files into the AWF chroot.
@@ -517,10 +552,10 @@ pre-agent-steps:
       fi
       echo "Verified deterministic software OpenGL through Mesa softpipe on Xvfb."
 # -- Post-agent steps -----------------------------------------------
-# Run AFTER the AI finishes. Finalize mechanical metadata and stage an immutable,
-# allowlisted handoff without any write credential.
+# Run AFTER the AI finishes. Verify that deterministic finalization happened before
+# the terminal safe-output call, then stage an immutable allowlisted handoff.
 post-steps:
-  - name: Finalize sync metadata
+  - name: Verify finalized sync metadata
     shell: /bin/sh -e {0}
     env:
       BASH_ENV: /dev/null
@@ -600,15 +635,11 @@ post-steps:
         exit 1
       fi
 
-      safe_git add cgmanifest.json scripts/VERSIONS.txt scripts/azure-templates-variables.yml externals/skia
-      if ! safe_git diff --cached --no-ext-diff --no-textconv --quiet; then
-        safe_git \
-          -c user.name="SkiaSharp Sync" \
-          -c user.email="devnull@localhost" \
-          commit --no-verify -m "[skia-sync] Finalize deterministic metadata"
+      if ! safe_git diff --no-ext-diff --no-textconv --quiet ||
+         ! safe_git diff --cached --no-ext-diff --no-textconv --quiet; then
+        echo "::error::The agent must finalize and commit deterministic metadata before create_pull_request."
+        exit 1
       fi
-      safe_git diff --no-ext-diff --no-textconv --quiet
-      safe_git diff --cached --no-ext-diff --no-textconv --quiet
       FINALIZE
   - name: Stage immutable delivery package
     shell: /bin/sh -e {0}
@@ -647,6 +678,7 @@ post-steps:
         SKIA_SYNC_SKILL_DIR="$SKIA_SYNC_SKILL_DIR" \
         SKIA_SYNC_TARGET="$SKIA_SYNC_TARGET" \
         SKIA_SYNC_TARGET_UPSTREAM_SHA="$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
+        SKIA_SYNC_THREAT_DETECTION_SOURCE_DIR="$RUNNER_TEMP/gh-aw" \
         SKIA_SYNC_UPSTREAM_REF="$SKIA_SYNC_UPSTREAM_REF" \
         SKIA_SYNC_DELIVERY_PACKAGE_DIR="$PACKAGE_DIR" \
         "$SKIA_SYNC_RUNTIME_DIR/skia-sync-push-prs.sh" \
@@ -731,5 +763,7 @@ the supplied values.
 
 After every gate passes, follow Phase 11's **Automated delivery** contract. Do not push branches or
 create real PRs/issues from the agent. Write the required artifacts under
-`/tmp/gh-aw/agent`, then invoke staged `create_pull_request` once as the completion signal.
-The deterministic post-step performs guarded pushes and creates the two cross-linked draft PRs.
+`/tmp/gh-aw/agent`, run the deterministic metadata finalizer, commit the final parent and nested
+heads, and only then invoke staged `create_pull_request` once as the terminal completion signal.
+Nothing may mutate either repository after that signal. The downstream conclusion job delivers
+only the exact detector-attested objects and creates the two cross-linked draft PRs.
