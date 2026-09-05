@@ -19,73 +19,118 @@ signal_error() {
 
 validate_delivery_signal() {
   local path="$SKIA_SYNC_COMPLETION_SIGNAL_FILE"
-  local line
-  local record=""
-  local record_count=0
 
-  if [[ -L "$path" || ! -f "$path" || ! -s "$path" ]]; then
-    signal_error "The sync completion signal must be a nonempty regular, non-symlink file: $path"
-    return 1
-  fi
+  python3 - "$path" <<'PY'
+import json
+import os
+import stat
+import sys
+import unicodedata
 
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    record_count=$((record_count + 1))
-    if ! jq -e -s 'length == 1 and ((.[0] | type) == "object")' <<<"$line" >/dev/null; then
-      signal_error "Sync completion signal line $record_count is not exactly one JSON object."
-      return 1
-    fi
-    record="$line"
-  done <"$path"
 
-  if [[ "$record_count" -ne 1 ]]; then
-    signal_error "Expected exactly one accepted terminal sync record, found $record_count."
-    return 1
-  fi
+def reject(message):
+    print(f"::error::{message}", file=sys.stderr)
+    raise SystemExit(1)
 
-  local type
-  local branch
-  local base_branch
-  local head_repo
-  local base_commit
-  local title
-  local value
-  if ! type=$(jq -er '.type | select(type == "string")' <<<"$record"); then
-    signal_error "The accepted terminal sync record has no string type."
-    return 1
-  fi
-  if [[ "$type" != "create_pull_request" ]]; then
-    signal_error "Expected terminal sync record type create_pull_request, found '$type'."
-    return 1
-  fi
 
-  for field in branch base_branch head_repo base_commit title; do
-    if ! value=$(jq -er --arg field "$field" '.[$field] | select(type == "string")' <<<"$record"); then
-      signal_error "The accepted create_pull_request record has no string $field."
-      return 1
-    fi
-    printf -v "$field" '%s' "$value"
-  done
+path = sys.argv[1]
+flags = os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW
+if hasattr(os, "O_CLOEXEC"):
+    flags |= os.O_CLOEXEC
 
-  if [[ "$branch" != "$SKIA_SYNC_HEAD_BRANCH" ]]; then
-    signal_error "Completion signal branch '$branch' does not match SKIA_SYNC_HEAD_BRANCH."
-    return 1
-  fi
-  if [[ "$base_branch" != "$SKIA_SYNC_BASE_BRANCH" ]]; then
-    signal_error "Completion signal base_branch '$base_branch' does not match SKIA_SYNC_BASE_BRANCH."
-    return 1
-  fi
-  if [[ "$head_repo" != "mono/SkiaSharp" ]]; then
-    signal_error "Completion signal head_repo '$head_repo' is not mono/SkiaSharp."
-    return 1
-  fi
-  if [[ "$base_commit" != "$SKIA_SYNC_PARENT_BASE_SHA" ]]; then
-    signal_error "Completion signal base_commit '$base_commit' does not match SKIA_SYNC_PARENT_BASE_SHA."
-    return 1
-  fi
-  if [[ "$title" != "[skia-sync]"* ]]; then
-    signal_error "Completion signal title must start with [skia-sync]."
-    return 1
-  fi
+try:
+    descriptor = os.open(path, flags)
+except OSError:
+    reject(f"The sync completion signal must be a nonempty regular, non-symlink file: {path}")
+
+metadata = os.fstat(descriptor)
+if not stat.S_ISREG(metadata.st_mode):
+    os.close(descriptor)
+    reject(f"The sync completion signal must be a nonempty regular, non-symlink file: {path}")
+
+with os.fdopen(descriptor, "rb") as signal_file:
+    content = signal_file.read()
+
+if not content:
+    reject(f"The sync completion signal must be a nonempty regular, non-symlink file: {path}")
+if b"\0" in content:
+    reject("The sync completion signal contains a NUL byte.")
+
+for offset, byte in enumerate(content):
+    if byte < 0x20 and byte != 0x0A:
+        reject(f"The sync completion signal contains an ambiguous control byte at offset {offset}.")
+
+# JSONL permits one final LF. Any LF remaining after removing it denotes an
+# additional or empty physical record and is rejected before JSON decoding.
+record_bytes = content[:-1] if content.endswith(b"\n") else content
+if b"\n" in record_bytes:
+    record_count = record_bytes.count(b"\n") + 1
+    reject(f"Expected exactly one accepted terminal sync record, found {record_count}.")
+if not record_bytes:
+    reject("Expected exactly one accepted terminal sync record, found 0.")
+
+try:
+    record_text = record_bytes.decode("utf-8")
+except UnicodeDecodeError:
+    reject("The sync completion signal record is not valid UTF-8.")
+
+
+def unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate key: {key}")
+        result[key] = value
+    return result
+
+
+try:
+    record = json.loads(
+        record_text,
+        object_pairs_hook=unique_object,
+        parse_constant=lambda value: (_ for _ in ()).throw(ValueError(f"invalid constant: {value}")),
+    )
+except (json.JSONDecodeError, ValueError):
+    reject("Sync completion signal line 1 is not exactly one JSON object.")
+
+if type(record) is not dict:
+    reject("Sync completion signal line 1 is not exactly one JSON object.")
+
+
+def require_clean_string(field):
+    value = record.get(field)
+    if type(value) is not str:
+        reject(f"The accepted create_pull_request record has no string {field}.")
+    if any(unicodedata.category(character) == "Cc" for character in value):
+        reject(f"The accepted create_pull_request record {field} contains an ambiguous control character.")
+    return value
+
+
+record_type = record.get("type")
+if type(record_type) is not str:
+    reject("The accepted terminal sync record has no string type.")
+if any(unicodedata.category(character) == "Cc" for character in record_type):
+    reject("The accepted terminal sync record type contains an ambiguous control character.")
+if record_type != "create_pull_request":
+    reject(f"Expected terminal sync record type create_pull_request, found '{record_type}'.")
+
+expected = {
+    "branch": (os.environ["SKIA_SYNC_HEAD_BRANCH"], "SKIA_SYNC_HEAD_BRANCH"),
+    "base_branch": (os.environ["SKIA_SYNC_BASE_BRANCH"], "SKIA_SYNC_BASE_BRANCH"),
+    "head_repo": ("mono/SkiaSharp", None),
+    "base_commit": (os.environ["SKIA_SYNC_PARENT_BASE_SHA"], "SKIA_SYNC_PARENT_BASE_SHA"),
+}
+for field, (expected_value, workflow_name) in expected.items():
+    value = require_clean_string(field)
+    if value != expected_value:
+        if field == "head_repo":
+            reject(f"Completion signal head_repo '{value}' is not mono/SkiaSharp.")
+        reject(f"Completion signal {field} '{value}' does not match {workflow_name}.")
+
+title = require_clean_string("title")
+if not title.startswith("[skia-sync]"):
+    reject("Completion signal title must start with [skia-sync].")
+PY
 }
 
 : "${SKIA_SYNC_COMPLETION_SIGNAL_FILE:?SKIA_SYNC_COMPLETION_SIGNAL_FILE is required}"

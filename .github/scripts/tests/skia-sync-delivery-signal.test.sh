@@ -92,6 +92,24 @@ expect_failure malformed-json "line 1 is not exactly one JSON object"
 
 {
   record
+  printf '\n'
+} >"$SIGNAL_FILE"
+expect_failure trailing-newline-record "Expected exactly one accepted terminal sync record, found 2"
+
+record | tr -d '\n' >"$SIGNAL_FILE"
+printf 'trailing-garbage' >>"$SIGNAL_FILE"
+expect_failure trailing-garbage "line 1 is not exactly one JSON object"
+
+record >"$SIGNAL_FILE"
+printf '\0trailing-garbage' >>"$SIGNAL_FILE"
+expect_failure nul-trailing-garbage "contains a NUL byte"
+
+record | tr -d '\n' >"$SIGNAL_FILE"
+printf '\t' >>"$SIGNAL_FILE"
+expect_failure ambiguous-control-byte "contains an ambiguous control byte"
+
+{
+  record
   record
 } >"$SIGNAL_FILE"
 expect_failure duplicate "Expected exactly one accepted terminal sync record, found 2"
@@ -105,6 +123,12 @@ expect_failure extra-terminal-type "Expected exactly one accepted terminal sync 
 record create_pull_request wrong-branch >"$SIGNAL_FILE"
 expect_failure branch-mismatch "does not match SKIA_SYNC_HEAD_BRANCH"
 
+record create_pull_request $'skia-sync/m152\n' >"$SIGNAL_FILE"
+expect_failure trailing-newline-branch "branch contains an ambiguous control character"
+
+record create_pull_request $'skia-sync/\nm152' >"$SIGNAL_FILE"
+expect_failure embedded-newline-branch "branch contains an ambiguous control character"
+
 record create_pull_request "$HEAD_BRANCH" release/3.152.x >"$SIGNAL_FILE"
 expect_failure base-branch-mismatch "does not match SKIA_SYNC_BASE_BRANCH"
 
@@ -116,6 +140,9 @@ expect_failure base-commit-mismatch "does not match SKIA_SYNC_PARENT_BASE_SHA"
 
 record create_pull_request "$HEAD_BRANCH" "$BASE_BRANCH" mono/SkiaSharp "$BASE_SHA" "Update skia" >"$SIGNAL_FILE"
 expect_failure title-prefix-mismatch "title must start with [skia-sync]"
+
+record create_pull_request "$HEAD_BRANCH" "$BASE_BRANCH" mono/SkiaSharp "$BASE_SHA" $'[skia-sync]\nUpdate skia' >"$SIGNAL_FILE"
+expect_failure title-control-character "title contains an ambiguous control character"
 
 record noop >"$SIGNAL_FILE"
 expect_failure terminal-type-mismatch "Expected terminal sync record type create_pull_request"
