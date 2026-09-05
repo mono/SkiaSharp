@@ -22,7 +22,7 @@ reader must be told about. Comment it and prove the four preconditions below.
 
 ### Where to look
 ```bash
-rg -n "GetObject<|GetObject \(|OwnedBy|owns: false|unrefExisting" binding/SkiaSharp --glob '!*.generated.cs'
+rg -n "GetObject<|GetObject \(|OwnedBy|owns: false|unrefExisting|WeakReference|\.IsAlive|\.Target|GetInstanceNoLocks|GetInstance\(|GetOrAddObject" binding/SkiaSharp --glob '!*.generated.cs'
 ```
 Candidates: `SKSurface.SurfaceProperties`/`Context`, `SKCanvas.Surface`/`Context`,
 `SKPictureRecorder.RecordingCanvas`, immutable-object accessors like `SKImage.ColorSpace` /
@@ -68,7 +68,62 @@ crash. `GC.KeepAlive(this)` after reading keeps the owner rooted.
 
 ---
 
-## B. Unsized / contended collections
+## B. Repeated weak-reference probes in a global handle lookup
+
+**The signature:** a global object-tracking lookup tests one `WeakReference` for liveness, then
+reads `Target` again for type, disposal, ownership, or debug-mismatch checks. Re-reading a weak
+reference can repeat work on every tracked-wrapper lookup. `HandleDictionary.GetInstanceNoLocks`
+is a representative place to inspect: `GetInstance` and `GetOrAddObject` route tracked wrapper
+lookups through it.
+
+**Candidate, not a blanket rule.** A single local `Target` snapshot can be a candidate when it
+removes repeated reads without changing what the lookup observes. It roots the observed target
+for the rest of the lookup, so it is not automatically equivalent to separate weak reads. Do not
+change every `WeakReference` use, and do not assume the current implementation is safely
+refactorable without the proof below.
+
+### Where to look
+```bash
+rg -n "WeakReference|\.IsAlive|\.Target|GetInstanceNoLocks|GetInstance\(|GetOrAddObject" binding/SkiaSharp --glob '!*.generated.cs'
+```
+
+Start at global lookup paths such as `HandleDictionary.GetInstanceNoLocks`, then trace the
+callers that make the path hot. Distinguish a repeated probe of the **same** weak reference from
+independent weak references or a read whose timing is itself part of the synchronization design.
+
+### Proof obligation
+
+Benchmark the **actual lookup method and its normal routing path** with BenchmarkDotNet `New` vs
+`Old`; do not benchmark a standalone `WeakReference` micro-loop. Use realistic tracked-wrapper
+workloads and report allocations as well as timing.
+
+Before changing the implementation, add an equivalence test that demonstrates the old and proposed
+paths are identical for:
+
+1. A live target of the requested type.
+2. A disposed target.
+3. A missing handle and a collected target.
+4. Ownership-sensitive paths, including the existing owned/non-owned behaviour.
+5. A Debug build with `THROW_OBJECT_EXCEPTIONS` enabled, covering both the wrong-`SKObject`-type
+   and unknown-object mismatch branches.
+6. Concurrent GC and public-dispose stress, so the snapshot neither returns an object the old path
+   would reject nor suppresses an existing safety check.
+
+Temporarily make the proposed lookup deliberately wrong (for example, bypass a mismatch or
+disposed-target branch) and prove the equivalence test goes red before removing that change. If
+the test cannot distinguish that error, strengthen it or leave this candidate alone.
+
+### Watch out (❌ don't)
+
+Do not collapse reads merely because they look redundant. A snapshot changes the lifetime of the
+observed object and can alter type, disposed, ownership, debug mismatch, or concurrent GC/dispose
+semantics. Preserve each existing check against the same local observation only when the test and
+stress evidence establish that this is behaviour-identical. If the benchmark is noise, the
+equivalence evidence is incomplete, or the concurrency model is unclear, record no candidate.
+
+---
+
+## C. Unsized / contended collections
 
 **The signature:** a collection central to object tracking is created with **default capacity /
 concurrency**, so it rehashes/resizes under load; or a shared structure serialises hot access
