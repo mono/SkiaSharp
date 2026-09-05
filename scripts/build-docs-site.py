@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build DocFX from temporary repository-identity-aware inputs."""
+"""Build DocFX from temporary repository-aware inputs."""
 
 from __future__ import annotations
 
@@ -16,22 +16,39 @@ from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCFX_DIR = ROOT / "documentation" / "docfx"
-IDENTITY_DIR = ROOT / "scripts" / "infra"
-PLACEHOLDERS = (
-    "{{Repository}}",
-    "{{SkiaRepository}}",
-    "{{DocsRepository}}",
-    "{{PublicSiteBaseUrl}}",
-)
+PUBLIC_SITE_METADATA = "_publicSiteBaseUrl"
+PLACEHOLDER = "{{PublicSiteBaseUrl}}"
 _TOC_HREF_RE = re.compile(
     r"^(?P<prefix>\s*href:\s*)(?P<quote>['\"]?)"
     r"(?P<href>[^'\"]+?)(?P=quote)(?P<ending>\s*)$"
+)
+_GITHUB_REMOTE_PATTERNS = (
+    re.compile(
+        r"https://github\.com/(?P<slug>[^/]+/[^/]+?)(?:\.git)?/?",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"git://github\.com/(?P<slug>[^/]+/[^/]+?)(?:\.git)?/?",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"git@github\.com:(?P<slug>[^/]+/[^/]+?)(?:\.git)?",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"ssh://git@github\.com/(?P<slug>[^/]+/[^/]+?)(?:\.git)?/?",
+        re.IGNORECASE,
+    ),
+)
+_GITHUB_SLUG_RE = re.compile(
+    r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?"
+    r"/[A-Za-z0-9._-]{1,100}"
 )
 
 
 def parse_args() -> tuple[argparse.Namespace, list[str]]:
     parser = argparse.ArgumentParser(
-        description="Build DocFX without modifying tracked identity templates.",
+        description="Build DocFX without modifying tracked templates.",
     )
     parser.add_argument(
         "--config",
@@ -40,12 +57,16 @@ def parse_args() -> tuple[argparse.Namespace, list[str]]:
         help="DocFX config path, relative to the repository root.",
     )
     parser.add_argument(
-        "--app-footer",
-        help="Optional DocFX _appFooter value for CI builds.",
+        "--repository-url",
+        help="Current GitHub repository URL; defaults to the validated origin remote.",
     )
     parser.add_argument(
         "--public-site-base-url",
-        help="Override the public site base for a staging build.",
+        help="Override the configured public site base for a staging build.",
+    )
+    parser.add_argument(
+        "--app-footer",
+        help="Optional DocFX _appFooter value for CI builds.",
     )
     return parser.parse_known_args()
 
@@ -58,6 +79,42 @@ def load_docfx_config(path: Path) -> dict:
     if not isinstance(config, dict) or not isinstance(config.get("build"), dict):
         raise ValueError(f"DocFX config {path} must contain a build object.")
     return config
+
+
+def normalize_github_repository_url(value: str) -> str:
+    if value != value.strip() or any(
+        character.isspace()
+        or ord(character) < 32
+        or ord(character) == 127
+        for character in value
+    ):
+        raise ValueError(f"Unsupported GitHub repository URL: {value!r}")
+    for pattern in _GITHUB_REMOTE_PATTERNS:
+        match = pattern.fullmatch(value)
+        if not match:
+            continue
+        slug = match.group("slug").removesuffix(".git")
+        if (
+            _GITHUB_SLUG_RE.fullmatch(slug)
+            and "--" not in slug.split("/", 1)[0]
+            and slug.split("/", 1)[1] not in {".", ".."}
+        ):
+            return f"https://github.com/{slug}"
+    raise ValueError(f"Unsupported GitHub repository URL: {value!r}")
+
+
+def repository_url_from_remote(root: Path) -> str:
+    result = subprocess.run(
+        ["git", "remote", "get-url", "origin"],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode:
+        message = result.stderr.strip() or "origin remote is unavailable"
+        raise ValueError(f"Unable to resolve local repository URL: {message}")
+    return normalize_github_repository_url(result.stdout.rstrip("\n"))
 
 
 def normalize_public_site_base_url(value: str) -> str:
@@ -76,7 +133,23 @@ def normalize_public_site_base_url(value: str) -> str:
     return value.rstrip("/")
 
 
-def prepare_config(config: dict, temporary_source: Path, identity: dict) -> None:
+def configured_public_site_base_url(config: dict) -> str:
+    metadata = config["build"].get("globalMetadata")
+    if not isinstance(metadata, dict):
+        raise ValueError("DocFX build.globalMetadata must be an object.")
+    value = metadata.get(PUBLIC_SITE_METADATA)
+    if not isinstance(value, str):
+        raise ValueError(
+            f"DocFX global metadata must contain {PUBLIC_SITE_METADATA!r}."
+        )
+    return normalize_public_site_base_url(value)
+
+
+def prepare_config(
+    config: dict,
+    temporary_source: Path,
+    repository_url: str,
+) -> None:
     build = config["build"]
     content = build.get("content")
     if (
@@ -89,7 +162,7 @@ def prepare_config(config: dict, temporary_source: Path, identity: dict) -> None
     exclusions = content[0].setdefault("exclude", [])
     if not isinstance(exclusions, list):
         raise ValueError("DocFX build.content[0].exclude must be a list.")
-    exclusions.extend(["TOC.yml", ".identity-preview.*/**"])
+    exclusions.extend(["TOC.yml", ".docfx-preview.*/**"])
     content.append(
         {
             "src": temporary_source.name,
@@ -105,7 +178,15 @@ def prepare_config(config: dict, temporary_source: Path, identity: dict) -> None
         raise ValueError(
             "DocFX build.globalMetadata._gitContribute must be an object."
         )
-    contribution["repo"] = identity["repositoryUrl"]
+    contribution["repo"] = repository_url
+
+
+def render_toc(path: Path, public_site_base_url: str) -> None:
+    text = path.read_text(encoding="utf-8")
+    path.write_text(
+        text.replace(PLACEHOLDER, public_site_base_url),
+        encoding="utf-8",
+    )
 
 
 def rebase_toc_relative_links(path: Path) -> None:
@@ -118,10 +199,7 @@ def rebase_toc_relative_links(path: Path) -> None:
             lines.append(line)
             continue
         href = match.group("href")
-        if (
-            "://" in href
-            or href.startswith(("/", "~", "#"))
-        ):
+        if "://" in href or href.startswith(("/", "~", "#")):
             lines.append(line)
             continue
         lines.append(
@@ -140,7 +218,7 @@ def find_unresolved_placeholders(destination: Path) -> list[Path]:
             text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             continue
-        if any(placeholder in text for placeholder in PLACEHOLDERS):
+        if PLACEHOLDER in text:
             unresolved.append(path)
     return unresolved
 
@@ -154,40 +232,41 @@ def main() -> int:
     config_directory = config_path.parent
     toc_source = config_directory / "TOC.yml"
 
-    sys.path.insert(0, str(IDENTITY_DIR))
-    import repository_identity
-
     try:
         config = load_docfx_config(config_path)
-        identity = repository_identity.resolve_identity(ROOT)
-        if args.public_site_base_url is not None:
-            identity = dict(identity)
-            identity["publicSiteBaseUrl"] = normalize_public_site_base_url(
-                args.public_site_base_url
-            )
+        repository_url = (
+            normalize_github_repository_url(args.repository_url)
+            if args.repository_url is not None
+            else repository_url_from_remote(ROOT)
+        )
+        public_site_base_url = (
+            normalize_public_site_base_url(args.public_site_base_url)
+            if args.public_site_base_url is not None
+            else configured_public_site_base_url(config)
+        )
         destination = Path(config["build"]["dest"])
         if not destination.is_absolute():
             destination = (config_directory / destination).resolve()
         if not toc_source.is_file():
             raise ValueError(f"DocFX TOC not found: {toc_source}")
-    except (KeyError, TypeError, ValueError, repository_identity.IdentityError) as exc:
+    except (KeyError, TypeError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
 
     with tempfile.TemporaryDirectory(
-        prefix=".identity-preview.",
+        prefix=".docfx-preview.",
         dir=config_directory,
     ) as temporary_source:
         temporary_source_path = Path(temporary_source)
         temporary_toc = temporary_source_path / "TOC.yml"
         temporary_toc.write_bytes(toc_source.read_bytes())
         try:
-            repository_identity.render_identity_file(temporary_toc, identity)
+            render_toc(temporary_toc, public_site_base_url)
             rebase_toc_relative_links(temporary_toc)
-            prepare_config(config, temporary_source_path, identity)
+            prepare_config(config, temporary_source_path, repository_url)
             if args.app_footer is not None:
                 config["build"]["globalMetadata"]["_appFooter"] = args.app_footer
-        except (ValueError, repository_identity.IdentityError) as exc:
+        except (OSError, ValueError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 2
 
@@ -217,7 +296,7 @@ def main() -> int:
     unresolved = find_unresolved_placeholders(destination)
     if unresolved:
         print(
-            "ERROR: Unresolved repository identity placeholder in DocFX output:\n"
+            "ERROR: Unresolved public site placeholder in DocFX output:\n"
             + "\n".join(str(path) for path in unresolved),
             file=sys.stderr,
         )

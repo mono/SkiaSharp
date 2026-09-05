@@ -152,7 +152,11 @@ jobs:
         run: |
           COMMIT_SHORT="${GITHUB_SHA:0:7}"
           APP_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
-          DOCFX_ARGS=(--app-footer "$APP_FOOTER")
+          REPOSITORY_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+          DOCFX_ARGS=(
+            --app-footer "$APP_FOOTER"
+            --repository-url "$REPOSITORY_URL"
+          )
           if [ "$IS_STAGING" == "true" ]; then
             REPOSITORY_NAME="${GITHUB_REPOSITORY#*/}"
             STAGING_BASE_URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPOSITORY_NAME}/staging/${PR_NUMBER}"
@@ -221,15 +225,13 @@ jobs:
         run: |
           COMMIT_SHORT="${GITHUB_SHA:0:7}"
           BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
-          REPOSITORY_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
           dotnet publish "samples/SkiaFiddle/SkiaFiddle.csproj" \
             -c Release \
             -f net10.0-browserwasm \
             -o output/skia-fiddle-publish \
             -p:PlatformTargetFrameworks="" \
             -p:WasmEnableSIMD=false \
-            -p:BuildFooter="$BUILD_FOOTER" \
-            -p:SkiaSharpRepositoryUrl="$REPOSITORY_URL"
+            -p:BuildFooter="$BUILD_FOOTER"
 
       - name: Smoke test SkiaFiddle WASM
         run: |
@@ -373,23 +375,9 @@ jobs:
           cp -r output/skia-fiddle-publish/wwwroot site/fiddle
           uno_rewrite_dir site/fiddle "${FIDDLE_BASE_HREF%/}"
 
-          # Render only the landing and current DocFX identities. The helper
-          # deliberately excludes historical releases plus /ai/ and /perf/.
-          find site/gallery site/gallery-uno site/fiddle -type f -print0 \
-            | sort -z \
-            | xargs -0 sha256sum > "$RUNNER_TEMP/wasm-assets-before.sha256"
-          python3 scripts/infra/repository_identity.py \
-            --repository "$GITHUB_REPOSITORY" render-site site
-          find site/gallery site/gallery-uno site/fiddle -type f -print0 \
-            | sort -z \
-            | xargs -0 sha256sum > "$RUNNER_TEMP/wasm-assets-after.sha256"
-          diff -u \
-            "$RUNNER_TEMP/wasm-assets-before.sha256" \
-            "$RUNNER_TEMP/wasm-assets-after.sha256"
           if grep -R -nE --exclude-dir=releases \
-              '\{\{(Repository|SkiaRepository|DocsRepository|PublicSiteBaseUrl)\}\}' \
-              site/index.html site/docs site/gallery site/gallery-uno site/fiddle; then
-            echo "::error::Unresolved repository identity placeholder in assembled site."
+              '\{\{PublicSiteBaseUrl\}\}' site/docs; then
+            echo "::error::Unresolved public site placeholder in assembled docs."
             exit 1
           fi
 

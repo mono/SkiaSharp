@@ -1,8 +1,8 @@
 # Building the Website
 
 This guide covers how to build, preview, and iterate on the SkiaSharp documentation site. The
-current public URL is the `publicSiteBaseUrl` in
-[`repository-identity.json`](../../scripts/infra/repository-identity.json).
+current public URL is `_publicSiteBaseUrl` in
+[`docfx.json`](../docfx/docfx.json).
 
 ## Site Structure
 
@@ -22,7 +22,7 @@ The CI workflow (`build-site.yml`) builds all three in parallel, then assembles 
 dotnet tool restore   # installs DocFX and other tools
 ```
 
-You also need `python3` for the identity-aware DocFX builder and preview scripts.
+You also need `python3` for the repository-aware DocFX builder and preview scripts.
 
 ## Building Locally
 

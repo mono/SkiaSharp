@@ -17,9 +17,11 @@ on:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - "documentation/docfx/TOC.yml"
+      - "documentation/docfx/docfx.json"
       - "samples/Gallery/**"
       - ".github/scripts/**"
       - "scripts/build-docs-site.py"
+      - "scripts/infra/caching/**"
       - "scripts/infra/tests/test_build_docs_site.py"
       # Any workflow edit, so the registry test re-checks its tracked list. '*.yml' already
       # covers the generated '*.lock.yml' files.
@@ -30,9 +32,11 @@ on:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - "documentation/docfx/TOC.yml"
+      - "documentation/docfx/docfx.json"
       - "samples/Gallery/**"
       - ".github/scripts/**"
       - "scripts/build-docs-site.py"
+      - "scripts/infra/caching/**"
       - "scripts/infra/tests/test_build_docs_site.py"
       - ".github/workflows/*.yml"
   workflow_dispatch:
@@ -115,5 +119,4 @@ jobs:
             | grep -F 'RepositoryUrl#https://github.com/dotnet/SkiaSharp' \
             > /dev/null
       - name: Validate cache dependency coverage
-        run: python3 scripts/infra/caching/repo-deps.py validate
         run: python3 scripts/infra/caching/repo-deps.py validate

@@ -12,8 +12,8 @@ SkiaSharp provides two types of documentation: concept docs and API docs.
 ## Concept Docs
 
 The conceptual docs live on the `main` branch under `documentation/docfx/guides/`. Their current
-public URL is the `publicSiteBaseUrl` in
-[`repository-identity.json`](../../scripts/infra/repository-identity.json), under `/docs/`.
+public URL is `_publicSiteBaseUrl` in
+[`docfx.json`](../docfx/docfx.json), under `/docs/`.
 
 See [site.md](site.md) for how to build, preview, and customize the docs site.
 
