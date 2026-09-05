@@ -4,6 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PUSH_SCRIPT="${SCRIPT_DIR}/../skia-sync-push-prs.sh"
+WORKFLOW_SOURCE="${SCRIPT_DIR}/../../workflows/auto-skia-sync.md"
 WORKFLOW_LOCK="${SCRIPT_DIR}/../../workflows/auto-skia-sync.lock.yml"
 TMP_DIR=$(mktemp -d)
 SIGNAL_FILE="${TMP_DIR}/outputs.jsonl"
@@ -44,7 +45,7 @@ run_validator() {
     SKIA_SYNC_BASE_BRANCH="$BASE_BRANCH" \
     SKIA_SYNC_PARENT_BASE_SHA="$BASE_SHA" \
     SKIA_SYNC_VALIDATE_DELIVERY_SIGNAL_ONLY=true \
-    bash "$PUSH_SCRIPT" >"$LOG_FILE" 2>&1
+    /bin/bash "$PUSH_SCRIPT" >"$LOG_FILE" 2>&1
 }
 
 expect_success() {
@@ -70,13 +71,14 @@ expect_failure() {
 }
 
 verify_compiled_release_base_config() {
-  python3 - "$WORKFLOW_LOCK" <<'PY'
+  python3 - "$WORKFLOW_SOURCE" "$WORKFLOW_LOCK" <<'PY'
 import json
 import re
 import sys
 
 
-lock_path = sys.argv[1]
+source_path, lock_path = sys.argv[1:]
+source = open(source_path, encoding="utf-8").read()
 lines = open(lock_path, encoding="utf-8").read().splitlines()
 
 agent_headers = [index for index, line in enumerate(lines) if line == "  agent:"]
@@ -189,6 +191,116 @@ if runtime_handler_pull_request["allowed_base_branches"] != release_base:
     raise SystemExit("safe_outputs handler release/manual allowlist is broader than the resolved branch")
 
 compiled = "\n".join(lines)
+if any(line == "  delivery:" for line in lines):
+    raise SystemExit("delivery must use a compiler-managed downstream job, not a pre-agent custom job")
+
+conclusion_headers = [index for index, line in enumerate(lines) if line == "  conclusion:"]
+if len(conclusion_headers) != 1:
+    raise SystemExit(f"expected one compiled conclusion job, found {len(conclusion_headers)}")
+conclusion_start = conclusion_headers[0]
+conclusion_end = next(
+    (
+        index
+        for index in range(conclusion_start + 1, len(lines))
+        if re.fullmatch(r"  [A-Za-z0-9_-]+:", lines[index])
+    ),
+    len(lines),
+)
+conclusion_lines = lines[conclusion_start:conclusion_end]
+conclusion_needs_start = conclusion_lines.index("    needs:") + 1
+conclusion_needs = []
+for line in conclusion_lines[conclusion_needs_start:]:
+    match = re.fullmatch(r"      - ([A-Za-z0-9_-]+)", line)
+    if match:
+        conclusion_needs.append(match.group(1))
+    else:
+        break
+if conclusion_needs != ["activation", "agent", "detection", "safe_outputs"]:
+    raise SystemExit(f"compiled conclusion does not have the required downstream topology: {conclusion_needs}")
+
+conclusion = "\n".join(conclusion_lines)
+gate_start = conclusion.index("      - name: Authorize downstream delivery")
+checkout_start = conclusion.index("      - name: Check out trusted delivery code")
+download_start = conclusion.index("      - name: Download immutable delivery package")
+validate_start = conclusion.index("      - name: Validate delivery package and remote bases")
+push_start = conclusion.index("      - name: Push branches and create PRs")
+builtin_start = conclusion.index("      - name: Download agent output artifact")
+if not gate_start < checkout_start < download_start < validate_start < push_start < builtin_start:
+    raise SystemExit("downstream delivery steps are not emitted before the built-in conclusion processing")
+
+gate = conclusion[gate_start:checkout_start]
+required_gate_checks = [
+    "needs.agent.result == 'success'",
+    "needs.detection.result == 'success'",
+    "needs.detection.outputs.detection_success == 'true'",
+    "needs.safe_outputs.result == 'success'",
+    "needs.safe_outputs.outputs.process_safe_outputs_status == 'success'",
+    "needs.safe_outputs.outputs.process_safe_outputs_processed_count == '1'",
+    "needs.safe_outputs.outputs.process_safe_outputs_items_succeeded == '1'",
+    "needs.safe_outputs.outputs.process_safe_outputs_items_failed == '0'",
+    "needs.safe_outputs.outputs.process_safe_outputs_items_skipped == '0'",
+    "needs.safe_outputs.outputs.process_safe_outputs_items_warnings == '0'",
+    "needs.safe_outputs.outputs.process_safe_outputs_items_cancelled == '0'",
+    "needs.safe_outputs.outputs.process_safe_outputs_items_deferred == '0'",
+]
+for check in required_gate_checks:
+    if check not in gate:
+        raise SystemExit(f"downstream authorization gate is missing: {check}")
+for scenario in (
+    "detection-missing-or-skipped",
+    "detection-failed",
+    "threat-detection-rejected",
+    "safe-output-missing",
+    "safe-output-rejected",
+    "safe-output-multiple",
+):
+    print(f"PASS: downstream-gate-{scenario}")
+
+for name in (
+    "Check out trusted delivery code",
+    "Download immutable delivery package",
+    "Validate delivery package and remote bases",
+    "Push branches and create PRs",
+):
+    step_start = conclusion.index(f"      - name: {name}")
+    step_end = conclusion.find("\n      - ", step_start + 1)
+    if step_end < 0:
+        step_end = len(conclusion)
+    if "if: steps.delivery_gate.outputs.authorized == 'true'" not in conclusion[step_start:step_end]:
+        raise SystemExit(f"downstream step can run without successful authorization: {name}")
+
+download_step = conclusion[download_start:validate_start]
+if "name: skia-sync-delivery" not in download_step or "pattern:" in download_step:
+    raise SystemExit("delivery artifact download is not bound to one exact artifact name")
+if source.count("${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}") != 1:
+    raise SystemExit("source workflow must reference the write secret exactly once")
+if compiled.count("${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}") != 1:
+    raise SystemExit("compiled workflow must reference the write secret exactly once")
+if "${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}" in "\n".join(agent_lines):
+    raise SystemExit("write secret entered the agent job")
+push_end = conclusion.find("\n      - ", push_start + 1)
+if push_end < 0:
+    push_end = len(conclusion)
+if "${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}" not in conclusion[push_start:push_end]:
+    raise SystemExit("write secret is not scoped to the downstream credentialed step")
+
+agent = "\n".join(agent_lines)
+stage_start = agent.index("name: Stage immutable delivery package")
+upload_start = agent.index("name: Upload immutable delivery package")
+cleanup_start = agent.index("name: Clean staged delivery package")
+if not stage_start < upload_start < cleanup_start:
+    raise SystemExit("delivery package is not staged, uploaded, and cleaned in order")
+upload_step = agent[upload_start:cleanup_start]
+if "name: skia-sync-delivery" not in upload_step:
+    raise SystemExit("agent upload does not use the exact delivery artifact name")
+if "path: ${{ env.SKIA_SYNC_DELIVERY_PACKAGE_DIR }}" not in upload_step:
+    raise SystemExit("agent upload is not restricted to the validated randomized package directory")
+if "mktemp -d" not in agent[stage_start:upload_start] or \
+        "skia-sync-delivery-package.XXXXXX" not in agent[stage_start:upload_start]:
+    raise SystemExit("agent package is not rooted in a randomized runner-owned directory")
+if compiled.count('GH_AW_ACTION_FAILURE_ISSUE_EXPIRES_HOURS: "0"') != 1:
+    raise SystemExit("compiled failure issue expiry must remain exactly zero hours")
+
 required_hardening = {
     "two POSIX-shell post steps": compiled.count("shell: /bin/sh -e {0}") >= 2,
     "two BASH_ENV resets": compiled.count("BASH_ENV: /dev/null") >= 2,
@@ -212,25 +324,25 @@ import sys
 
 source = open(sys.argv[1], encoding="utf-8").read()
 
-if source.count("command -p python3 -I") != 2:
+if source.count("command -p python3 -I") < 4:
     raise SystemExit("every trusted Python invocation must use isolated mode")
 
 signal_gate = source.index("\nvalidate_delivery_signal\n")
 token_capture = source.index('readonly WRITE_TOKEN="$GH_TOKEN"')
 token_removal = source.index("unset GH_TOKEN")
-artifact_gate = source.index('\nrequired_file "$SKIA_SUMMARY_FILE"')
-if not signal_gate < token_capture < token_removal < artifact_gate:
-    raise SystemExit("write credentials are not removed immediately after signal validation")
+artifact_gate = source.index('\nfor name in "${DELIVERY_ARTIFACT_NAMES[@]}"; do')
+if not signal_gate < artifact_gate < token_capture < token_removal:
+    raise SystemExit("write credentials are exposed before all local delivery gates complete")
 
 if "remote set-url" in source:
     raise SystemExit("credentialed delivery must not use agent-controlled remote metadata")
-if source.count("GIT_CONFIG_NOSYSTEM=1") != 2:
+if source.count("GIT_CONFIG_NOSYSTEM=1") < 3:
     raise SystemExit("trusted Git commands do not consistently disable system configuration")
-if source.count("GIT_CONFIG_GLOBAL=/dev/null") != 2:
+if source.count("GIT_CONFIG_GLOBAL=/dev/null") < 3:
     raise SystemExit("trusted Git commands do not consistently disable global configuration")
-if source.count("-c core.hooksPath=/dev/null") != 2:
+if source.count("-c core.hooksPath=/dev/null") < 3:
     raise SystemExit("trusted Git commands do not consistently disable hooks")
-if source.count("-c credential.helper=") != 2:
+if source.count("-c credential.helper=") < 3:
     raise SystemExit("trusted Git commands do not consistently disable credential helpers")
 if '"${commit_sha}:refs/heads/${BRANCH}"' not in source:
     raise SystemExit("delivery does not push the immutable validated commit")
@@ -256,14 +368,15 @@ if 'command -p rm -rf -- "$TRUSTED_DELIVERY_DIR"' not in source:
     raise SystemExit("trusted delivery workspace cleanup is not path-bound")
 if source.count('rev-parse "refs/heads/${HEAD_BRANCH}^{commit}"') != 2:
     raise SystemExit("validated heads are not resolved through explicit local branch refs")
-if source.count("GIT_NO_REPLACE_OBJECTS=1") != 2:
+if source.count("GIT_NO_REPLACE_OBJECTS=1") < 3:
     raise SystemExit("trusted Git paths do not consistently disable replacement refs")
-if source.count("-c safe.bareRepository=all") != 2:
+if source.count("-c safe.bareRepository=all") < 3:
     raise SystemExit("trusted Git paths cannot operate on the isolated bare repositories")
-if source.count('reject_replace_refs "$GITHUB_WORKSPACE') != 2:
-    raise SystemExit("both source repositories are not checked for replacement refs")
-if source.count('reject_unsafe_git_config "$GITHUB_WORKSPACE') != 2:
-    raise SystemExit("both source repositories are not checked for command-bearing Git config")
+if 'reject_repository_state trusted_git "$PARENT_SOURCE_REPO"' not in source or \
+        'reject_repository_state trusted_git "$SKIA_SOURCE_REPO"' not in source:
+    raise SystemExit("both source repositories are not checked for hostile refs and Git config")
+if "extensions\\.worktreeconfig" not in source or "config.worktree" not in source:
+    raise SystemExit("worktree-scoped Git configuration is not rejected")
 if source.count('--upload-pack="$TRUSTED_GIT_UPLOAD_PACK"') != 2:
     raise SystemExit("exact-object copies are not forced through the trusted upload-pack wrapper")
 if "Trusted delivery repository unexpectedly contains mutable refs." not in source:
@@ -515,6 +628,246 @@ verify_shell_startup_isolation() {
   echo "PASS: shell-startup-isolation"
 }
 
+PACKAGE_ROOT="$TMP_DIR/package-fixture"
+PACKAGE_RUNNER_TEMP="$PACKAGE_ROOT/runner"
+PACKAGE_ARTIFACTS="$PACKAGE_ROOT/artifacts"
+PACKAGE_PARENT_REPO="$PACKAGE_ROOT/parent"
+PACKAGE_SKIA_REPO="$PACKAGE_ROOT/skia"
+PACKAGE_GOLDEN=""
+PACKAGE_WORKFLOW_SHA="1111111111111111111111111111111111111111"
+PACKAGE_PARENT_BASE_SHA=""
+PACKAGE_SKIA_BASE_SHA=""
+PACKAGE_SKIA_HEAD_SHA=""
+
+create_package_fixture() {
+  local name
+
+  mkdir -p "$PACKAGE_RUNNER_TEMP" "$PACKAGE_ARTIFACTS"
+  git init -q -b main "$PACKAGE_PARENT_REPO"
+  git -C "$PACKAGE_PARENT_REPO" config user.name "Skia Sync Test"
+  git -C "$PACKAGE_PARENT_REPO" config user.email "skia-sync@example.invalid"
+  git -C "$PACKAGE_PARENT_REPO" commit -q --allow-empty -m parent-base
+  PACKAGE_PARENT_BASE_SHA=$(git -C "$PACKAGE_PARENT_REPO" rev-parse HEAD)
+  git -C "$PACKAGE_PARENT_REPO" switch -q -c "$HEAD_BRANCH"
+  git -C "$PACKAGE_PARENT_REPO" commit -q --allow-empty -m parent-head
+
+  git init -q -b main "$PACKAGE_SKIA_REPO"
+  git -C "$PACKAGE_SKIA_REPO" config user.name "Skia Sync Test"
+  git -C "$PACKAGE_SKIA_REPO" config user.email "skia-sync@example.invalid"
+  git -C "$PACKAGE_SKIA_REPO" commit -q --allow-empty -m skia-base
+  PACKAGE_SKIA_BASE_SHA=$(git -C "$PACKAGE_SKIA_REPO" rev-parse HEAD)
+  git -C "$PACKAGE_SKIA_REPO" switch -q -c "$HEAD_BRANCH"
+  git -C "$PACKAGE_SKIA_REPO" commit -q --allow-empty -m skia-head
+  PACKAGE_SKIA_HEAD_SHA=$(git -C "$PACKAGE_SKIA_REPO" rev-parse HEAD)
+
+  for name in \
+    skia-sync-skia-summary.md \
+    skia-sync-skiasharp-summary.md \
+    skia-breaking-change-analysis.md \
+    skia-validation-review.md \
+    skia-dependency-decisions.md \
+    skia-dependency-changes.json \
+    skia-fork-patch-audit.md \
+    initial-test-output.txt \
+    test-output.txt; do
+    printf 'fixture: %s\n' "$name" >"$PACKAGE_ARTIFACTS/$name"
+  done
+  printf '0\n' >"$PACKAGE_ARTIFACTS/test-exit-code.txt"
+
+  BASE_SHA="$PACKAGE_PARENT_BASE_SHA"
+  record >"$SIGNAL_FILE"
+  PACKAGE_GOLDEN=$(mktemp -d "$PACKAGE_RUNNER_TEMP/skia-sync-delivery-package.XXXXXX")
+  chmod 700 "$PACKAGE_GOLDEN"
+  run_package_stage "$PACKAGE_GOLDEN"
+}
+
+run_package_stage() {
+  local package_dir="$1"
+  env -u GH_TOKEN \
+    GITHUB_SHA="$PACKAGE_WORKFLOW_SHA" \
+    GITHUB_WORKSPACE="$PACKAGE_PARENT_REPO" \
+    RUNNER_TEMP="$PACKAGE_RUNNER_TEMP" \
+    SKIA_SYNC_ARTIFACT_DIR="$PACKAGE_ARTIFACTS" \
+    SKIA_SYNC_BASE_BRANCH=main \
+    SKIA_SYNC_BASE_UPSTREAM_SHA="$PACKAGE_SKIA_BASE_SHA" \
+    SKIA_SYNC_COMPLETION_SIGNAL_FILE="$SIGNAL_FILE" \
+    SKIA_SYNC_CURRENT=151 \
+    SKIA_SYNC_DELIVERY_PACKAGE_DIR="$package_dir" \
+    SKIA_SYNC_HEAD_BRANCH="$HEAD_BRANCH" \
+    SKIA_SYNC_IS_RELEASE=false \
+    SKIA_SYNC_PARENT_BASE_SHA="$PACKAGE_PARENT_BASE_SHA" \
+    SKIA_SYNC_PARENT_REPO_DIR="$PACKAGE_PARENT_REPO" \
+    SKIA_SYNC_SKIA_BASE_BRANCH=main \
+    SKIA_SYNC_SKIA_BASE_SHA="$PACKAGE_SKIA_BASE_SHA" \
+    SKIA_SYNC_SKIA_REPO_DIR="$PACKAGE_SKIA_REPO" \
+    SKIA_SYNC_TARGET=152 \
+    SKIA_SYNC_TARGET_UPSTREAM_SHA="$PACKAGE_SKIA_HEAD_SHA" \
+    SKIA_SYNC_UPSTREAM_REF=chrome/m152 \
+    /bin/bash "$PUSH_SCRIPT" --stage-delivery-package >"$LOG_FILE" 2>&1
+}
+
+copy_package_fixture() {
+  local destination
+  destination=$(mktemp -d "$PACKAGE_RUNNER_TEMP/skia-sync-delivery-package.XXXXXX")
+  cp -Rp "$PACKAGE_GOLDEN/." "$destination/"
+  printf '%s' "$destination"
+}
+
+refresh_package_digest() {
+  local package_dir="$1"
+  local name="$2"
+  python3 - "$package_dir" "$name" <<'PY'
+import hashlib
+import pathlib
+import re
+import sys
+
+root = pathlib.Path(sys.argv[1])
+name = sys.argv[2]
+digest = hashlib.sha256((root / name).read_bytes()).hexdigest()
+path = root / "SHA256SUMS"
+content = path.read_text(encoding="ascii")
+content, count = re.subn(rf"^[0-9a-f]{{64}}  {re.escape(name)}$", f"{digest}  {name}", content, flags=re.MULTILINE)
+if count != 1:
+    raise SystemExit(f"checksum entry not found exactly once: {name}")
+path.write_text(content, encoding="ascii")
+PY
+}
+
+run_package_validator() {
+  local package_dir="$1"
+  local verified_root
+  verified_root=$(mktemp -d "$PACKAGE_RUNNER_TEMP/skia-sync-verified.XXXXXX")
+  env -u GH_TOKEN \
+    GITHUB_SHA="$PACKAGE_WORKFLOW_SHA" \
+    SKIA_SYNC_BASE_BRANCH=main \
+    SKIA_SYNC_CURRENT=151 \
+    SKIA_SYNC_DELIVERY_PACKAGE_DIR="$package_dir" \
+    SKIA_SYNC_EXPECTED_PARENT_BASE_SHA="${EXPECTED_PARENT_BASE_SHA:-$PACKAGE_PARENT_BASE_SHA}" \
+    SKIA_SYNC_EXPECTED_SKIA_BASE_SHA="${EXPECTED_SKIA_BASE_SHA:-$PACKAGE_SKIA_BASE_SHA}" \
+    SKIA_SYNC_HEAD_BRANCH="$HEAD_BRANCH" \
+    SKIA_SYNC_IS_RELEASE=false \
+    SKIA_SYNC_SKIA_BASE_BRANCH=main \
+    SKIA_SYNC_TARGET=152 \
+    SKIA_SYNC_UPSTREAM_REF=chrome/m152 \
+    SKIA_SYNC_VERIFIED_ROOT="$verified_root" \
+    /bin/bash "$PUSH_SCRIPT" --verify-delivery-package >"$LOG_FILE" 2>&1
+  local status=$?
+  rm -rf -- "$verified_root"
+  return "$status"
+}
+
+expect_package_success() {
+  local name="$1"
+  local package_dir="$2"
+  if ! run_package_validator "$package_dir"; then
+    cat "$LOG_FILE" >&2
+    fail "$name: validator rejected a valid delivery package"
+  fi
+  echo "PASS: $name"
+}
+
+expect_package_failure() {
+  local name="$1"
+  local package_dir="$2"
+  local expected="$3"
+  if run_package_validator "$package_dir"; then
+    fail "$name: validator unexpectedly accepted the delivery package"
+  fi
+  if ! grep -Fq "$expected" "$LOG_FILE"; then
+    cat "$LOG_FILE" >&2
+    fail "$name: missing expected error '$expected'"
+  fi
+  echo "PASS: $name"
+}
+
+verify_delivery_packages() {
+  local package_dir
+  local alternate_repo="$PACKAGE_ROOT/alternate"
+
+  create_package_fixture
+  expect_package_success delivery-package-valid "$PACKAGE_GOLDEN"
+
+  package_dir=$(copy_package_fixture)
+  rm "$package_dir/test-output.txt"
+  expect_package_failure delivery-package-missing "$package_dir" "missing required entries"
+
+  package_dir=$(copy_package_fixture)
+  printf 'unexpected\n' >"$package_dir/unexpected.txt"
+  expect_package_failure delivery-package-extra "$package_dir" "Unexpected delivery package entry"
+
+  package_dir=$(copy_package_fixture)
+  rm "$package_dir/test-output.txt"
+  ln -s test-exit-code.txt "$package_dir/test-output.txt"
+  expect_package_failure delivery-package-symlink "$package_dir" "not a nonempty standalone regular file"
+
+  package_dir=$(copy_package_fixture)
+  rm "$package_dir/test-output.txt"
+  mkfifo "$package_dir/test-output.txt"
+  expect_package_failure delivery-package-special-file "$package_dir" "not a nonempty standalone regular file"
+
+  package_dir=$(copy_package_fixture)
+  printf 'tampered\n' >>"$package_dir/test-output.txt"
+  expect_package_failure delivery-package-digest-tamper "$package_dir" "Delivery package digest mismatch"
+
+  package_dir=$(copy_package_fixture)
+  jq '.target = "153"' "$package_dir/metadata.json" >"$package_dir/metadata.tmp"
+  mv "$package_dir/metadata.tmp" "$package_dir/metadata.json"
+  refresh_package_digest "$package_dir" metadata.json
+  expect_package_failure delivery-package-metadata-tamper "$package_dir" "metadata mismatch: target"
+
+  package_dir=$(copy_package_fixture)
+  jq '.parent_head_sha = "deadbeef"' "$package_dir/metadata.json" >"$package_dir/metadata.tmp"
+  mv "$package_dir/metadata.tmp" "$package_dir/metadata.json"
+  refresh_package_digest "$package_dir" metadata.json
+  expect_package_failure delivery-package-sha-tamper "$package_dir" "not a full lowercase SHA"
+
+  package_dir=$(copy_package_fixture)
+  EXPECTED_PARENT_BASE_SHA=2222222222222222222222222222222222222222 \
+    expect_package_failure delivery-package-stale-base "$package_dir" "metadata mismatch: parent_base_sha"
+
+  package_dir=$(copy_package_fixture)
+  jq --arg sha 3333333333333333333333333333333333333333 \
+    '.parent_head_sha = $sha' "$package_dir/metadata.json" >"$package_dir/metadata.tmp"
+  mv "$package_dir/metadata.tmp" "$package_dir/metadata.json"
+  refresh_package_digest "$package_dir" metadata.json
+  expect_package_failure delivery-package-head-mismatch "$package_dir" "does not contain exactly the expected immutable head"
+
+  git init -q -b main "$alternate_repo"
+  git -C "$alternate_repo" config user.name "Skia Sync Test"
+  git -C "$alternate_repo" config user.email "skia-sync@example.invalid"
+  git -C "$alternate_repo" commit -q --allow-empty -m alternate-base
+  git -C "$alternate_repo" switch -q -c "$HEAD_BRANCH"
+  git -C "$alternate_repo" commit -q --allow-empty -m alternate-head
+  package_dir=$(copy_package_fixture)
+  git -C "$alternate_repo" bundle create "$package_dir/skiasharp.bundle" "refs/heads/$HEAD_BRANCH"
+  refresh_package_digest "$package_dir" skiasharp.bundle
+  expect_package_failure delivery-package-object-substitution "$package_dir" \
+    "does not contain exactly the expected immutable head"
+
+  package_dir=$(copy_package_fixture)
+  jq '.workflow_sha = "4444444444444444444444444444444444444444"' \
+    "$package_dir/metadata.json" >"$package_dir/metadata.tmp"
+  mv "$package_dir/metadata.tmp" "$package_dir/metadata.json"
+  refresh_package_digest "$package_dir" metadata.json
+  expect_package_failure delivery-package-artifact-mix-up "$package_dir" "metadata mismatch: workflow_sha"
+
+  git -C "$PACKAGE_PARENT_REPO" config extensions.worktreeConfig true
+  git -C "$PACKAGE_PARENT_REPO" config --worktree filter.attacker.clean \
+    "printf poisoned >'$PACKAGE_ROOT/worktree-filter-ran'"
+  package_dir=$(mktemp -d "$PACKAGE_RUNNER_TEMP/skia-sync-delivery-package.XXXXXX")
+  chmod 700 "$package_dir"
+  if run_package_stage "$package_dir"; then
+    fail "worktree-config-rejection: staging accepted worktree-scoped command configuration"
+  fi
+  if ! grep -Fq "Worktree Git configuration is forbidden" "$LOG_FILE" ||
+      [[ -e "$PACKAGE_ROOT/worktree-filter-ran" ]]; then
+    cat "$LOG_FILE" >&2
+    fail "worktree-config-rejection: malicious worktree configuration was not safely rejected"
+  fi
+  echo "PASS: worktree-config-rejection"
+}
+
 verify_compiled_release_base_config
 verify_delivery_source_hardening
 verify_conflicting_tag_resolution
@@ -523,6 +876,7 @@ verify_source_git_helper_isolation
 verify_git_hook_isolation
 verify_pr_identity_selection
 verify_shell_startup_isolation
+verify_delivery_packages
 
 record >"$SIGNAL_FILE"
 expect_success valid
@@ -557,11 +911,11 @@ if (
     SKIA_SYNC_HEAD_BRANCH="$HEAD_BRANCH" \
     SKIA_SYNC_BASE_BRANCH="$BASE_BRANCH" \
     SKIA_SYNC_PARENT_BASE_SHA="$BASE_SHA" \
-    bash "$PUSH_SCRIPT" >"$LOG_FILE" 2>&1
+    /bin/bash "$PUSH_SCRIPT" >"$LOG_FILE" 2>&1
 ); then
   fail "isolated-python: expected the later missing-artifact gate to reject"
 fi
-if ! grep -Fq "Required sync artifact is missing or empty" "$LOG_FILE"; then
+if ! grep -Fq "Required sync artifact is missing or not a nonempty regular, non-symlink file" "$LOG_FILE"; then
   cat "$LOG_FILE" >&2
   fail "isolated-python: validation did not reach the later artifact gate"
 fi

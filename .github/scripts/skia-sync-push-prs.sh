@@ -11,6 +11,25 @@ SKILL_DIR="${SKIA_SYNC_SKILL_DIR:-$RUNTIME_DIR/update-skia}"
 readonly ARTIFACT_DIR RUNTIME_DIR SKILL_DIR
 SKIA_SUMMARY_FILE="$ARTIFACT_DIR/skia-sync-skia-summary.md"
 SS_SUMMARY_FILE="$ARTIFACT_DIR/skia-sync-skiasharp-summary.md"
+readonly DELIVERY_ARTIFACT_NAMES=(
+  skia-sync-skia-summary.md
+  skia-sync-skiasharp-summary.md
+  skia-breaking-change-analysis.md
+  skia-validation-review.md
+  skia-dependency-decisions.md
+  skia-dependency-changes.json
+  skia-fork-patch-audit.md
+  initial-test-output.txt
+  test-output.txt
+  test-exit-code.txt
+)
+readonly DELIVERY_PACKAGE_PAYLOAD_NAMES=(
+  skiasharp.bundle
+  skia.bundle
+  metadata.json
+  completion-signal.jsonl
+  "${DELIVERY_ARTIFACT_NAMES[@]}"
+)
 
 signal_error() {
   echo "::error::$*"
@@ -151,6 +170,401 @@ reject_ambiguous_controls(record)
 PY
 }
 
+required_file() {
+  local path="$1"
+  if [[ ! -f "$path" || -L "$path" || ! -s "$path" ]]; then
+    echo "::error::Required sync artifact is missing or not a nonempty regular, non-symlink file: $path"
+    exit 1
+  fi
+}
+
+package_git() {
+  env -i \
+    HOME="$SKIA_SYNC_PACKAGE_GIT_HOME" \
+    PATH="/usr/bin:/bin" \
+    GIT_CONFIG_GLOBAL=/dev/null \
+    GIT_CONFIG_NOSYSTEM=1 \
+    GIT_NO_REPLACE_OBJECTS=1 \
+    GIT_TERMINAL_PROMPT=0 \
+    "$SKIA_SYNC_GIT_BIN" \
+    -c core.hooksPath=/dev/null \
+    -c core.fsmonitor=false \
+    -c credential.helper= \
+    -c commit.gpgSign=false \
+    -c safe.bareRepository=all \
+    "$@"
+}
+
+reject_repository_state() {
+  local git_runner="$1"
+  local repo_dir="$2"
+  local git_dir
+  local local_config
+  local replace_refs
+  local unsafe_config
+
+  git_dir=$("$git_runner" -C "$repo_dir" rev-parse --absolute-git-dir)
+  if [[ -e "$git_dir/config.worktree" || -L "$git_dir/config.worktree" ]]; then
+    echo "::error::Worktree Git configuration is forbidden in $repo_dir."
+    exit 1
+  fi
+
+  local_config=$("$git_runner" -C "$repo_dir" config --local --no-includes --name-only --list)
+  unsafe_config=$(printf '%s\n' "$local_config" | tr '[:upper:]' '[:lower:]' | grep -E \
+    '^(extensions\.worktreeconfig|include(if\..*)?\.path|core\.(alternaterefscommand|attributesfile|editor|fsmonitor|hookspath|sshcommand|worktree)|diff\.(external|.*\.(command|textconv))|filter\..*\.(clean|smudge|process)|credential(\..*)?\.helper|remote\..*\.uploadpack|uploadpack\.packobjectshook|url\..*\.(insteadof|pushinsteadof)|commit\.gpgsign|gpg\..*|sequence\.editor)$' || true)
+  if [[ -n "$unsafe_config" ]]; then
+    echo "::error::Command-bearing local Git configuration is forbidden in $repo_dir: $unsafe_config"
+    exit 1
+  fi
+
+  replace_refs=$("$git_runner" -C "$repo_dir" for-each-ref --format='%(refname)' refs/replace)
+  if [[ -n "$replace_refs" ]]; then
+    echo "::error::Replacement refs are forbidden in the validated repository: $repo_dir."
+    exit 1
+  fi
+}
+
+stage_delivery_package() {
+  local package_dir="${SKIA_SYNC_DELIVERY_PACKAGE_DIR:?SKIA_SYNC_DELIVERY_PACKAGE_DIR is required}"
+  local parent_repo="${SKIA_SYNC_PARENT_REPO_DIR:-${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}}"
+  local skia_repo="${SKIA_SYNC_SKIA_REPO_DIR:-$parent_repo/externals/skia}"
+  local parent_head_sha
+  local skia_head_sha
+  local name
+
+  : "${RUNNER_TEMP:?RUNNER_TEMP is required}"
+  : "${GITHUB_SHA:?GITHUB_SHA is required}"
+  : "${SKIA_SYNC_COMPLETION_SIGNAL_FILE:?SKIA_SYNC_COMPLETION_SIGNAL_FILE is required}"
+  : "${SKIA_SYNC_HEAD_BRANCH:?SKIA_SYNC_HEAD_BRANCH is required}"
+  : "${SKIA_SYNC_BASE_BRANCH:?SKIA_SYNC_BASE_BRANCH is required}"
+  : "${SKIA_SYNC_PARENT_BASE_SHA:?SKIA_SYNC_PARENT_BASE_SHA is required}"
+  : "${SKIA_SYNC_SKIA_BASE_BRANCH:?SKIA_SYNC_SKIA_BASE_BRANCH is required}"
+  : "${SKIA_SYNC_SKIA_BASE_SHA:?SKIA_SYNC_SKIA_BASE_SHA is required}"
+  : "${SKIA_SYNC_CURRENT:?SKIA_SYNC_CURRENT is required}"
+  : "${SKIA_SYNC_TARGET:?SKIA_SYNC_TARGET is required}"
+  : "${SKIA_SYNC_UPSTREAM_REF:?SKIA_SYNC_UPSTREAM_REF is required}"
+  : "${SKIA_SYNC_IS_RELEASE:?SKIA_SYNC_IS_RELEASE is required}"
+  : "${SKIA_SYNC_BASE_UPSTREAM_SHA:?SKIA_SYNC_BASE_UPSTREAM_SHA is required}"
+  : "${SKIA_SYNC_TARGET_UPSTREAM_SHA:?SKIA_SYNC_TARGET_UPSTREAM_SHA is required}"
+
+  command -p python3 -I - "$RUNNER_TEMP" "$package_dir" <<'PY'
+import os
+import stat
+import sys
+
+runner_temp = os.path.realpath(sys.argv[1])
+package_dir = os.path.realpath(sys.argv[2])
+if os.path.dirname(package_dir) != runner_temp or not os.path.basename(package_dir).startswith("skia-sync-delivery-package."):
+    raise SystemExit("::error::The delivery package directory is not a runner-owned randomized path.")
+metadata = os.lstat(package_dir)
+if not stat.S_ISDIR(metadata.st_mode) or stat.S_ISLNK(metadata.st_mode) or metadata.st_uid != os.getuid():
+    raise SystemExit("::error::The delivery package directory is not a runner-owned regular directory.")
+if stat.S_IMODE(metadata.st_mode) & 0o077:
+    raise SystemExit("::error::The delivery package directory permissions are not private.")
+if os.listdir(package_dir):
+    raise SystemExit("::error::The delivery package directory must start empty.")
+PY
+
+  SKIA_SYNC_GIT_BIN=$(command -p -v git)
+  SKIA_SYNC_PACKAGE_GIT_HOME="$package_dir/.git-home"
+  export SKIA_SYNC_GIT_BIN SKIA_SYNC_PACKAGE_GIT_HOME
+  command -p mkdir -m 700 "$SKIA_SYNC_PACKAGE_GIT_HOME"
+
+  reject_repository_state package_git "$parent_repo"
+  reject_repository_state package_git "$skia_repo"
+  validate_delivery_signal
+  for name in "${DELIVERY_ARTIFACT_NAMES[@]}"; do
+    required_file "$ARTIFACT_DIR/$name"
+  done
+
+  parent_head_sha=$(package_git -C "$parent_repo" rev-parse "refs/heads/${SKIA_SYNC_HEAD_BRANCH}^{commit}")
+  skia_head_sha=$(package_git -C "$skia_repo" rev-parse "refs/heads/${SKIA_SYNC_HEAD_BRANCH}^{commit}")
+  package_git -C "$parent_repo" merge-base --is-ancestor "$SKIA_SYNC_PARENT_BASE_SHA" "$parent_head_sha"
+  package_git -C "$skia_repo" merge-base --is-ancestor "$SKIA_SYNC_SKIA_BASE_SHA" "$skia_head_sha"
+  package_git -C "$parent_repo" bundle create "$package_dir/skiasharp.bundle" \
+    "refs/heads/$SKIA_SYNC_HEAD_BRANCH"
+  package_git -C "$skia_repo" bundle create "$package_dir/skia.bundle" \
+    "refs/heads/$SKIA_SYNC_HEAD_BRANCH"
+
+  for name in "${DELIVERY_ARTIFACT_NAMES[@]}"; do
+    command -p install -m 600 "$ARTIFACT_DIR/$name" "$package_dir/$name"
+  done
+  command -p install -m 600 "$SKIA_SYNC_COMPLETION_SIGNAL_FILE" \
+    "$package_dir/completion-signal.jsonl"
+
+  jq -n \
+    --argjson schema_version 1 \
+    --arg repository mono/SkiaSharp \
+    --arg workflow_sha "$GITHUB_SHA" \
+    --arg current "$SKIA_SYNC_CURRENT" \
+    --arg target "$SKIA_SYNC_TARGET" \
+    --arg upstream_ref "$SKIA_SYNC_UPSTREAM_REF" \
+    --arg is_release "$SKIA_SYNC_IS_RELEASE" \
+    --arg base_branch "$SKIA_SYNC_BASE_BRANCH" \
+    --arg skia_base_branch "$SKIA_SYNC_SKIA_BASE_BRANCH" \
+    --arg head_branch "$SKIA_SYNC_HEAD_BRANCH" \
+    --arg parent_base_sha "$SKIA_SYNC_PARENT_BASE_SHA" \
+    --arg skia_base_sha "$SKIA_SYNC_SKIA_BASE_SHA" \
+    --arg base_upstream_sha "$SKIA_SYNC_BASE_UPSTREAM_SHA" \
+    --arg target_upstream_sha "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
+    --arg parent_head_sha "$parent_head_sha" \
+    --arg skia_head_sha "$skia_head_sha" \
+    '{
+      schema_version: $schema_version,
+      repository: $repository,
+      workflow_sha: $workflow_sha,
+      current: $current,
+      target: $target,
+      upstream_ref: $upstream_ref,
+      is_release: $is_release,
+      base_branch: $base_branch,
+      skia_base_branch: $skia_base_branch,
+      head_branch: $head_branch,
+      parent_base_sha: $parent_base_sha,
+      skia_base_sha: $skia_base_sha,
+      base_upstream_sha: $base_upstream_sha,
+      target_upstream_sha: $target_upstream_sha,
+      parent_head_sha: $parent_head_sha,
+      skia_head_sha: $skia_head_sha
+    }' >"$package_dir/metadata.json"
+
+  command -p rm -rf -- "$SKIA_SYNC_PACKAGE_GIT_HOME"
+  command -p python3 -I - "$package_dir" "${DELIVERY_PACKAGE_PAYLOAD_NAMES[@]}" <<'PY'
+import hashlib
+import os
+import sys
+
+root = sys.argv[1]
+names = sorted(sys.argv[2:])
+with open(os.path.join(root, "SHA256SUMS"), "x", encoding="ascii", newline="\n") as output:
+    for name in names:
+        path = os.path.join(root, name)
+        digest = hashlib.sha256()
+        with open(path, "rb") as payload:
+            for chunk in iter(lambda: payload.read(1024 * 1024), b""):
+                digest.update(chunk)
+        output.write(f"{digest.hexdigest()}  {name}\n")
+PY
+  command -p chmod 600 "$package_dir"/*
+  for name in "${DELIVERY_PACKAGE_PAYLOAD_NAMES[@]}" SHA256SUMS; do
+    required_file "$package_dir/$name"
+  done
+  echo "Staged immutable Skia sync delivery package."
+}
+
+verify_delivery_package() {
+  local package_dir="${SKIA_SYNC_DELIVERY_PACKAGE_DIR:?SKIA_SYNC_DELIVERY_PACKAGE_DIR is required}"
+  local verified_root="${SKIA_SYNC_VERIFIED_ROOT:?SKIA_SYNC_VERIFIED_ROOT is required}"
+  local metadata="$package_dir/metadata.json"
+  local parent_repo="$verified_root/skiasharp.git"
+  local skia_repo="$verified_root/skia.git"
+  local parent_head_sha
+  local skia_head_sha
+
+  : "${GITHUB_SHA:?GITHUB_SHA is required}"
+  : "${SKIA_SYNC_CURRENT:?SKIA_SYNC_CURRENT is required}"
+  : "${SKIA_SYNC_TARGET:?SKIA_SYNC_TARGET is required}"
+  : "${SKIA_SYNC_UPSTREAM_REF:?SKIA_SYNC_UPSTREAM_REF is required}"
+  : "${SKIA_SYNC_IS_RELEASE:?SKIA_SYNC_IS_RELEASE is required}"
+  : "${SKIA_SYNC_BASE_BRANCH:?SKIA_SYNC_BASE_BRANCH is required}"
+  : "${SKIA_SYNC_SKIA_BASE_BRANCH:?SKIA_SYNC_SKIA_BASE_BRANCH is required}"
+  : "${SKIA_SYNC_HEAD_BRANCH:?SKIA_SYNC_HEAD_BRANCH is required}"
+  : "${SKIA_SYNC_EXPECTED_PARENT_BASE_SHA:?SKIA_SYNC_EXPECTED_PARENT_BASE_SHA is required}"
+  : "${SKIA_SYNC_EXPECTED_SKIA_BASE_SHA:?SKIA_SYNC_EXPECTED_SKIA_BASE_SHA is required}"
+
+  command -p python3 -I - "$package_dir" "${DELIVERY_PACKAGE_PAYLOAD_NAMES[@]}" <<'PY'
+import hashlib
+import json
+import os
+import re
+import stat
+import sys
+import unicodedata
+
+
+def reject(message):
+    raise SystemExit(f"::error::{message}")
+
+
+root = sys.argv[1]
+payload_names = list(sys.argv[2:])
+allowed_names = set(payload_names) | {"SHA256SUMS"}
+try:
+    root_metadata = os.lstat(root)
+except OSError:
+    reject("The delivery package directory is missing.")
+if not stat.S_ISDIR(root_metadata.st_mode) or stat.S_ISLNK(root_metadata.st_mode):
+    reject("The delivery package path must be a regular, non-symlink directory.")
+
+entries = {}
+for entry in os.scandir(root):
+    if entry.name not in allowed_names:
+        reject(f"Unexpected delivery package entry: {entry.name}")
+    metadata = entry.stat(follow_symlinks=False)
+    if not stat.S_ISREG(metadata.st_mode) or entry.is_symlink() or metadata.st_nlink != 1 or metadata.st_size == 0:
+        reject(f"Delivery package entry is not a nonempty standalone regular file: {entry.name}")
+    entries[entry.name] = metadata
+if set(entries) != allowed_names:
+    missing = sorted(allowed_names - set(entries))
+    reject(f"Delivery package is missing required entries: {', '.join(missing)}")
+
+checksum_path = os.path.join(root, "SHA256SUMS")
+with open(checksum_path, "rb") as checksum_file:
+    checksum_content = checksum_file.read()
+if b"\0" in checksum_content:
+    reject("Delivery package checksums contain a NUL byte.")
+try:
+    checksum_text = checksum_content.decode("ascii")
+except UnicodeDecodeError:
+    reject("Delivery package checksums are not ASCII.")
+checksum_lines = checksum_text.splitlines()
+if len(checksum_lines) != len(payload_names):
+    reject("Delivery package checksum manifest has the wrong number of entries.")
+checksums = {}
+for line in checksum_lines:
+    match = re.fullmatch(r"([0-9a-f]{64})  ([A-Za-z0-9][A-Za-z0-9._-]*)", line)
+    if not match or match.group(2) in checksums:
+        reject("Delivery package checksum manifest is malformed.")
+    checksums[match.group(2)] = match.group(1)
+if set(checksums) != set(payload_names):
+    reject("Delivery package checksum manifest does not exactly match the allowlist.")
+for name in payload_names:
+    digest = hashlib.sha256()
+    with open(os.path.join(root, name), "rb") as payload:
+        for chunk in iter(lambda: payload.read(1024 * 1024), b""):
+            digest.update(chunk)
+    if digest.hexdigest() != checksums[name]:
+        reject(f"Delivery package digest mismatch: {name}")
+
+def unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate key: {key}")
+        result[key] = value
+    return result
+
+try:
+    with open(os.path.join(root, "metadata.json"), encoding="utf-8") as metadata_file:
+        metadata = json.load(
+            metadata_file,
+            object_pairs_hook=unique_object,
+            parse_constant=lambda value: (_ for _ in ()).throw(ValueError(value)),
+        )
+except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError):
+    reject("Delivery package metadata is malformed.")
+
+expected_keys = {
+    "schema_version", "repository", "workflow_sha", "current", "target", "upstream_ref",
+    "is_release", "base_branch", "skia_base_branch", "head_branch", "parent_base_sha",
+    "skia_base_sha", "base_upstream_sha", "target_upstream_sha", "parent_head_sha",
+    "skia_head_sha",
+}
+if type(metadata) is not dict or set(metadata) != expected_keys or metadata.get("schema_version") != 1:
+    reject("Delivery package metadata does not match schema version 1.")
+for key, value in metadata.items():
+    if key == "schema_version":
+        continue
+    if type(value) is not str or any(unicodedata.category(character) == "Cc" for character in value):
+        reject(f"Delivery package metadata field is not a clean string: {key}")
+
+expected = {
+    "repository": "mono/SkiaSharp",
+    "workflow_sha": os.environ["GITHUB_SHA"],
+    "current": os.environ["SKIA_SYNC_CURRENT"],
+    "target": os.environ["SKIA_SYNC_TARGET"],
+    "upstream_ref": os.environ["SKIA_SYNC_UPSTREAM_REF"],
+    "is_release": os.environ["SKIA_SYNC_IS_RELEASE"],
+    "base_branch": os.environ["SKIA_SYNC_BASE_BRANCH"],
+    "skia_base_branch": os.environ["SKIA_SYNC_SKIA_BASE_BRANCH"],
+    "head_branch": os.environ["SKIA_SYNC_HEAD_BRANCH"],
+    "parent_base_sha": os.environ["SKIA_SYNC_EXPECTED_PARENT_BASE_SHA"],
+    "skia_base_sha": os.environ["SKIA_SYNC_EXPECTED_SKIA_BASE_SHA"],
+}
+for key, expected_value in expected.items():
+    if metadata.get(key) != expected_value:
+        reject(f"Delivery package metadata mismatch: {key}")
+for key in ("workflow_sha", "parent_base_sha", "skia_base_sha", "base_upstream_sha",
+            "target_upstream_sha", "parent_head_sha", "skia_head_sha"):
+    if not re.fullmatch(r"[0-9a-f]{40}", metadata[key]):
+        reject(f"Delivery package metadata field is not a full lowercase SHA: {key}")
+PY
+
+  SKIA_SYNC_GIT_BIN=$(command -p -v git)
+  SKIA_SYNC_PACKAGE_GIT_HOME="$verified_root/home"
+  export SKIA_SYNC_GIT_BIN SKIA_SYNC_PACKAGE_GIT_HOME
+  if [[ ! -d "$verified_root" || -L "$verified_root" ||
+        -n "$(command -p find "$verified_root" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
+    signal_error "The verified delivery root must be an empty regular directory."
+    exit 1
+  fi
+  command -p chmod 700 "$verified_root"
+  command -p mkdir -m 700 "$SKIA_SYNC_PACKAGE_GIT_HOME"
+
+  parent_head_sha=$(jq -er .parent_head_sha "$metadata")
+  skia_head_sha=$(jq -er .skia_head_sha "$metadata")
+  SKIA_SYNC_PARENT_BASE_SHA=$(jq -er .parent_base_sha "$metadata")
+  SKIA_SYNC_SKIA_BASE_SHA=$(jq -er .skia_base_sha "$metadata")
+  SKIA_SYNC_BASE_UPSTREAM_SHA=$(jq -er .base_upstream_sha "$metadata")
+  SKIA_SYNC_TARGET_UPSTREAM_SHA=$(jq -er .target_upstream_sha "$metadata")
+  export SKIA_SYNC_PARENT_BASE_SHA SKIA_SYNC_SKIA_BASE_SHA
+  export SKIA_SYNC_BASE_UPSTREAM_SHA SKIA_SYNC_TARGET_UPSTREAM_SHA
+
+  SKIA_SYNC_COMPLETION_SIGNAL_FILE="$package_dir/completion-signal.jsonl"
+  export SKIA_SYNC_COMPLETION_SIGNAL_FILE
+  validate_delivery_signal
+
+  verify_bundle_head() {
+    local bundle="$1"
+    local expected_sha="$2"
+    local expected_ref="refs/heads/$SKIA_SYNC_HEAD_BRANCH"
+    local actual
+    actual=$(package_git bundle list-heads "$bundle")
+    if [[ "$actual" != "$expected_sha $expected_ref" ]]; then
+      signal_error "Delivery bundle does not contain exactly the expected immutable head: $bundle"
+      exit 1
+    fi
+  }
+
+  verify_bundle_head "$package_dir/skiasharp.bundle" "$parent_head_sha"
+  verify_bundle_head "$package_dir/skia.bundle" "$skia_head_sha"
+  package_git init --bare "$parent_repo" >/dev/null
+  package_git init --bare "$skia_repo" >/dev/null
+  package_git -C "$parent_repo" fetch --quiet --no-tags "$package_dir/skiasharp.bundle" \
+    "refs/heads/$SKIA_SYNC_HEAD_BRANCH:refs/heads/$SKIA_SYNC_HEAD_BRANCH"
+  package_git -C "$skia_repo" fetch --quiet --no-tags "$package_dir/skia.bundle" \
+    "refs/heads/$SKIA_SYNC_HEAD_BRANCH:refs/heads/$SKIA_SYNC_HEAD_BRANCH"
+  [[ "$(package_git -C "$parent_repo" rev-parse "refs/heads/${SKIA_SYNC_HEAD_BRANCH}^{commit}")" == "$parent_head_sha" ]]
+  [[ "$(package_git -C "$skia_repo" rev-parse "refs/heads/${SKIA_SYNC_HEAD_BRANCH}^{commit}")" == "$skia_head_sha" ]]
+  package_git -C "$parent_repo" merge-base --is-ancestor "$SKIA_SYNC_PARENT_BASE_SHA" "$parent_head_sha"
+  package_git -C "$skia_repo" merge-base --is-ancestor "$SKIA_SYNC_SKIA_BASE_SHA" "$skia_head_sha"
+  command -p rm -rf -- "$SKIA_SYNC_PACKAGE_GIT_HOME"
+
+  if [[ -n "${SKIA_SYNC_DELIVERY_ENV_FILE:-}" ]]; then
+    {
+      printf 'SKIA_SYNC_ARTIFACT_DIR=%s\n' "$package_dir"
+      printf 'SKIA_SYNC_COMPLETION_SIGNAL_FILE=%s\n' "$SKIA_SYNC_COMPLETION_SIGNAL_FILE"
+      printf 'SKIA_SYNC_PARENT_REPO_DIR=%s\n' "$parent_repo"
+      printf 'SKIA_SYNC_SKIA_REPO_DIR=%s\n' "$skia_repo"
+      printf 'SKIA_SYNC_PARENT_BASE_SHA=%s\n' "$SKIA_SYNC_PARENT_BASE_SHA"
+      printf 'SKIA_SYNC_SKIA_BASE_SHA=%s\n' "$SKIA_SYNC_SKIA_BASE_SHA"
+      printf 'SKIA_SYNC_BASE_UPSTREAM_SHA=%s\n' "$SKIA_SYNC_BASE_UPSTREAM_SHA"
+      printf 'SKIA_SYNC_TARGET_UPSTREAM_SHA=%s\n' "$SKIA_SYNC_TARGET_UPSTREAM_SHA"
+    } >>"$SKIA_SYNC_DELIVERY_ENV_FILE"
+  fi
+  echo "Verified immutable Skia sync delivery package."
+}
+
+if [[ "${1:-}" == "--stage-delivery-package" ]]; then
+  stage_delivery_package
+  exit 0
+fi
+
+if [[ "${1:-}" == "--verify-delivery-package" ]]; then
+  verify_delivery_package
+  exit 0
+fi
+
 : "${SKIA_SYNC_COMPLETION_SIGNAL_FILE:?SKIA_SYNC_COMPLETION_SIGNAL_FILE is required}"
 : "${SKIA_SYNC_HEAD_BRANCH:?SKIA_SYNC_HEAD_BRANCH is required}"
 : "${SKIA_SYNC_BASE_BRANCH:?SKIA_SYNC_BASE_BRANCH is required}"
@@ -165,28 +579,9 @@ if [[ "${SKIA_SYNC_VALIDATE_DELIVERY_SIGNAL_ONLY:-false}" == "true" ]]; then
   exit 0
 fi
 
-: "${GH_TOKEN:?GH_TOKEN is required}"
-readonly WRITE_TOKEN="$GH_TOKEN"
-unset GH_TOKEN
-
-required_file() {
-  local path="$1"
-  if [[ ! -s "$path" ]]; then
-    echo "::error::Required sync artifact is missing or empty: $path"
-    exit 1
-  fi
-}
-
-required_file "$SKIA_SUMMARY_FILE"
-required_file "$SS_SUMMARY_FILE"
-required_file "$ARTIFACT_DIR/skia-breaking-change-analysis.md"
-required_file "$ARTIFACT_DIR/skia-validation-review.md"
-required_file "$ARTIFACT_DIR/skia-dependency-decisions.md"
-required_file "$ARTIFACT_DIR/skia-dependency-changes.json"
-required_file "$ARTIFACT_DIR/skia-fork-patch-audit.md"
-required_file "$ARTIFACT_DIR/initial-test-output.txt"
-required_file "$ARTIFACT_DIR/test-output.txt"
-required_file "$ARTIFACT_DIR/test-exit-code.txt"
+for name in "${DELIVERY_ARTIFACT_NAMES[@]}"; do
+  required_file "$ARTIFACT_DIR/$name"
+done
 
 : "${SKIA_SYNC_TARGET:?SKIA_SYNC_TARGET is required}"
 : "${SKIA_SYNC_CURRENT:?SKIA_SYNC_CURRENT is required}"
@@ -196,7 +591,7 @@ required_file "$ARTIFACT_DIR/test-exit-code.txt"
 : "${SKIA_SYNC_SKIA_BASE_SHA:?SKIA_SYNC_SKIA_BASE_SHA is required}"
 : "${SKIA_SYNC_BASE_UPSTREAM_SHA:?SKIA_SYNC_BASE_UPSTREAM_SHA is required}"
 : "${SKIA_SYNC_TARGET_UPSTREAM_SHA:?SKIA_SYNC_TARGET_UPSTREAM_SHA is required}"
-: "${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"
+: "${RUNNER_TEMP:?RUNNER_TEMP is required}"
 
 TARGET="$SKIA_SYNC_TARGET"
 CURRENT="$SKIA_SYNC_CURRENT"
@@ -209,6 +604,9 @@ HEAD_BRANCH="$SKIA_SYNC_HEAD_BRANCH"
 BASE_UPSTREAM_SHA="$SKIA_SYNC_BASE_UPSTREAM_SHA"
 TARGET_UPSTREAM_SHA="$SKIA_SYNC_TARGET_UPSTREAM_SHA"
 SS_BASE_SHA="$SKIA_SYNC_PARENT_BASE_SHA"
+PARENT_SOURCE_REPO="${SKIA_SYNC_PARENT_REPO_DIR:-${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}}"
+SKIA_SOURCE_REPO="${SKIA_SYNC_SKIA_REPO_DIR:-$PARENT_SOURCE_REPO/externals/skia}"
+readonly PARENT_SOURCE_REPO SKIA_SOURCE_REPO
 
 GIT_BIN=$(command -p -v git)
 GH_BIN=$(command -p -v gh)
@@ -259,31 +657,6 @@ trusted_git() {
     "$@"
 }
 
-reject_replace_refs() {
-  local repo_dir="$1"
-  local replace_refs
-
-  replace_refs=$(trusted_git -C "$repo_dir" for-each-ref --format='%(refname)' refs/replace)
-  if [[ -n "$replace_refs" ]]; then
-    echo "::error::Replacement refs are forbidden in the validated repository: $repo_dir."
-    exit 1
-  fi
-}
-
-reject_unsafe_git_config() {
-  local repo_dir="$1"
-  local local_config
-  local unsafe_config
-
-  local_config=$(trusted_git -C "$repo_dir" config --local --no-includes --name-only --list)
-  unsafe_config=$(printf '%s\n' "$local_config" | tr '[:upper:]' '[:lower:]' | grep -E \
-    '^(include(if\..*)?\.path|core\.(alternaterefscommand|attributesfile|editor|fsmonitor|hookspath|sshcommand|worktree)|diff\.(external|.*\.(command|textconv))|filter\..*\.(clean|smudge|process)|remote\..*\.uploadpack|uploadpack\.packobjectshook)$' || true)
-  if [[ -n "$unsafe_config" ]]; then
-    echo "::error::Command-bearing local Git configuration is forbidden in $repo_dir: $unsafe_config"
-    exit 1
-  fi
-}
-
 prepare_push_repo() {
   local source_dir="$1"
   local destination="$2"
@@ -314,16 +687,14 @@ prepare_push_repo() {
   fi
 }
 
-reject_replace_refs "$GITHUB_WORKSPACE"
-reject_replace_refs "$GITHUB_WORKSPACE/externals/skia"
-reject_unsafe_git_config "$GITHUB_WORKSPACE"
-reject_unsafe_git_config "$GITHUB_WORKSPACE/externals/skia"
+reject_repository_state trusted_git "$PARENT_SOURCE_REPO"
+reject_repository_state trusted_git "$SKIA_SOURCE_REPO"
 
-SS_VALIDATED_HEAD_SHA=$(trusted_git -C "$GITHUB_WORKSPACE" rev-parse "refs/heads/${HEAD_BRANCH}^{commit}")
-SKIA_VALIDATED_HEAD_SHA=$(trusted_git -C "$GITHUB_WORKSPACE/externals/skia" rev-parse "refs/heads/${HEAD_BRANCH}^{commit}")
+SS_VALIDATED_HEAD_SHA=$(trusted_git -C "$PARENT_SOURCE_REPO" rev-parse "refs/heads/${HEAD_BRANCH}^{commit}")
+SKIA_VALIDATED_HEAD_SHA=$(trusted_git -C "$SKIA_SOURCE_REPO" rev-parse "refs/heads/${HEAD_BRANCH}^{commit}")
 readonly SS_VALIDATED_HEAD_SHA SKIA_VALIDATED_HEAD_SHA
-prepare_push_repo "$GITHUB_WORKSPACE" "$TRUSTED_SS_REPO" "$SS_VALIDATED_HEAD_SHA" "$SS_BASE_SHA"
-prepare_push_repo "$GITHUB_WORKSPACE/externals/skia" "$TRUSTED_SKIA_REPO" \
+prepare_push_repo "$PARENT_SOURCE_REPO" "$TRUSTED_SS_REPO" "$SS_VALIDATED_HEAD_SHA" "$SS_BASE_SHA"
+prepare_push_repo "$SKIA_SOURCE_REPO" "$TRUSTED_SKIA_REPO" \
   "$SKIA_VALIDATED_HEAD_SHA" "$SKIA_BASE_SHA"
 
 assert_resolved() {
@@ -772,6 +1143,10 @@ apply_labels() {
       + (if $bump then ["type/milestone-bump"] else [] end))}' >"$request"
   trusted_gh api --method POST "repos/${repo}/issues/${pr}/labels" --input "$request" >/dev/null
 }
+
+: "${GH_TOKEN:?GH_TOKEN is required}"
+readonly WRITE_TOKEN="$GH_TOKEN"
+unset GH_TOKEN
 
 echo "Pushing $BRANCH to mono/skia and mono/SkiaSharp with guarded leases..."
 # shellcheck disable=SC2016 # These variables expand only when Git invokes the generated helper.
