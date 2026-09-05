@@ -36,6 +36,7 @@ def collect_shipments(
     tag_date: Callable[[str], str],
     target_sha: Callable[[str], str],
     prs_between: Callable[[str | None, str], list[dict]],
+    repository: str | None = None,
 ) -> list[dict]:
     """Every exact shipment whose tag core matches ``page_version``.
 
@@ -48,6 +49,7 @@ def collect_shipments(
     preview correctly compares against the prior line's last release.
     """
 
+    repository = repository or common.REPO
     parsed_all = sorted(
         (parsed for tag in all_tags if (parsed := common.parse_tag(tag)) is not None),
         key=lambda parsed: parsed.sort_key,
@@ -76,7 +78,7 @@ def collect_shipments(
             "date": tag_date(item.tag),
             "changelog_url": (
                 "https://github.com/{}/compare/{}...{}".format(
-                    common.REPO, previous_tag, item.tag
+                    repository, previous_tag, item.tag
                 )
                 if previous_tag else None
             ),
@@ -136,12 +138,20 @@ def validate_shipment(shipment: object) -> list[str]:
     elif previous is not None and previous.sort_key >= parsed.sort_key:
         errors.append("shipment {} previous_tag must precede its tag".format(tag))
     changelog_url = shipment.get("changelog_url")
-    expected_changelog = (
-        "https://github.com/{}/compare/{}...{}".format(common.REPO, previous_tag, tag)
-        if previous is not None
-        else None
-    )
-    if changelog_url != expected_changelog:
+    expected_changelog = None
+    changelog_matches = changelog_url is None
+    if previous is not None:
+        expected_changelog = (
+            "https://github.com/<owner>/SkiaSharp/compare/{}...{}".format(
+                previous_tag, tag
+            )
+        )
+        changelog_matches = common.is_skiasharp_compare_url(
+            changelog_url,
+            previous_tag,
+            tag,
+        )
+    if not changelog_matches:
         errors.append(
             "shipment {} changelog_url for previous_tag {!r} is {!r}; expected {!r}".format(
                 tag, previous_tag, changelog_url, expected_changelog

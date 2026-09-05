@@ -8,8 +8,8 @@ Release body. On the first update it adds the managed regions around the
 existing release body; later updates preserve that body region byte-for-byte.
 It skips unpublished drafts, which converge after publication.
 
-    update_github_summaries.py --event push --repository mono/SkiaSharp
-    update_github_summaries.py --event release --repository mono/SkiaSharp --tag v4.151.0
+    update_github_summaries.py --event push --repository owner/SkiaSharp
+    update_github_summaries.py --event release --repository owner/SkiaSharp --tag v4.151.0
     update_github_summaries.py --event workflow_dispatch --tag v4.151.0-preview.1
 """
 
@@ -199,6 +199,7 @@ def select_candidates(
 def render_managed_summary(
     candidate: Candidate,
     renderer: Callable[[dict, dict, str], str] = render_summary.render_github_release_summary,
+    documentation_base_url: str | None = None,
 ) -> str:
     """Render ``candidate``'s summary body with its :data:`RELEASE_LINKS_MARKER`
     expanded into the exact deterministic links for this shipment."""
@@ -217,17 +218,28 @@ def render_managed_summary(
     shipment = candidate.shipment
     public_version = shipment["public_version"]
     core_version = shipment["core_version"]
+    if documentation_base_url is None:
+        documentation_base_url = common.PUBLIC_SITE_BASE_URL
     links = [
         "\U0001F4E6 [NuGet](https://www.nuget.org/packages/SkiaSharp/{})".format(
             public_version
         ),
         "\U0001F4D6 [Release notes]"
-        "(https://mono.github.io/SkiaSharp/docs/releases/{}.html)".format(core_version),
+        "({}/docs/releases/{}.html)".format(
+            documentation_base_url.rstrip("/"), core_version
+        ),
     ]
     changelog_url = shipment.get("changelog_url")
     if changelog_url:
-        expected_prefix = "https://github.com/{}/compare/".format(common.REPO)
-        if not isinstance(changelog_url, str) or not changelog_url.startswith(expected_prefix):
+        previous_tag = shipment.get("previous_tag")
+        if (
+            not isinstance(previous_tag, str)
+            or not common.is_skiasharp_compare_url(
+                changelog_url,
+                previous_tag,
+                candidate.tag,
+            )
+        ):
             raise UpdateError(
                 "{}: shipment has an invalid changelog_url".format(candidate.tag)
             )
@@ -263,6 +275,7 @@ def update_releases(
     client: GitHubSummaryClient,
     *,
     renderer: Callable[[dict, dict, str], str] = render_summary.render_github_release_summary,
+    documentation_base_url: str | None = None,
 ) -> UpdateResult:
     """Preflight every candidate, race-check every body, then write.
 
@@ -302,7 +315,11 @@ def update_releases(
                     "or the next run",
                 )
                 continue
-            summary_text = render_managed_summary(candidate, renderer)
+            summary_text = render_managed_summary(
+                candidate,
+                renderer,
+                documentation_base_url=documentation_base_url,
+            )
             new_body = github.replace_managed_summary(existing.body, summary_text)
             if new_body == existing.body:
                 result.add(
@@ -371,6 +388,10 @@ def create_parser() -> argparse.ArgumentParser:
         "--event", required=True, choices=("push", "release", "workflow_dispatch")
     )
     parser.add_argument("--repository", default=common.REPO)
+    parser.add_argument(
+        "--documentation-base-url",
+        default=None,
+    )
     parser.add_argument("--tag")
     parser.add_argument("--root", type=Path, default=Path.cwd())
     return parser
@@ -380,11 +401,21 @@ def main(argv: list[str] | None = None) -> int:
     args = create_parser().parse_args(argv)
     result = UpdateResult()
     try:
+        identity = common.configure_identity(repository=args.repository)
+        documentation_base_url = (
+            args.documentation_base_url
+            if args.documentation_base_url is not None
+            else identity["publicSiteBaseUrl"]
+        )
         repository = RepositoryView(args.root.resolve())
         tag = args.tag if args.event in ("release", "workflow_dispatch") else None
         candidates = select_candidates(repository, tag=tag)
         client = github.RestGitHubClient(args.repository)
-        result = update_releases(candidates, client)
+        result = update_releases(
+            candidates,
+            client,
+            documentation_base_url=documentation_base_url,
+        )
         _write_summary(result)
         return 0
     except (OSError, UpdateError) as exc:

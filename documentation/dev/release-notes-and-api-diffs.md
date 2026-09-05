@@ -1331,6 +1331,29 @@ exists so a **separate, deterministic, classic (non-agentic) GitHub Actions work
 maintainer-reviewed summary into the matching GitHub Release without waiting on, or
 gating, the release itself.
 
+**Repository identity and historical provenance.** Future PR, release, preview, and
+compare links use the current SkiaSharp repository resolved by
+`scripts/infra/repository_identity.py`; the paired Skia repository and clone URL come
+from the `externals/skia` entry in `.gitmodules`. The generator still recognizes
+explicit `mono/skia` references in immutable historical PR and commit text, but that
+legacy slug is a parser input only, not the default for newly generated links.
+
+Committed release facts are historical records. During an owner transfer, regenerating
+an existing page preserves a stored `https://github.com/<owner>/SkiaSharp/...` URL when
+the newly generated URL differs only by owner and has the same suffix. New preview or
+shipment records use the current owner. Shipment validation and the GitHub Release
+summary updater therefore accept the resolved current repository and the explicit
+historical `mono/SkiaSharp` repository, while still requiring the exact compare
+endpoints and exact tags. The renderer prefers stored fact URLs; only missing/future
+fallback links use the current repository.
+
+The public release-notes base is independently configured as `publicSiteBaseUrl` in
+`scripts/infra/repository-identity.json`. It is not inferred from the GitHub owner. The
+GitHub Release updater receives that exact configured value, so repository and public
+site transfers may be staged separately. Any malformed current identity or malformed
+configuration fails before generation or GitHub writes rather than silently falling
+back to a different owner or site.
+
 The implementation lives under `scripts/infra/docs/release_notes/`:
 
 - **`common.py`** — the exact-release tag grammar (`EXACT_RELEASE_TAG_RE`, stricter than
