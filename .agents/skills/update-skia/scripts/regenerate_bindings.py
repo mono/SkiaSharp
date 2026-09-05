@@ -7,6 +7,8 @@ functions that may need a hand-written wrapper decision. The generator itself
 owns deterministic ordering across hosts.
 """
 
+from __future__ import annotations
+
 import argparse
 import shutil
 import subprocess
