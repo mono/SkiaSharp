@@ -10,8 +10,8 @@
     the automation branch, commit, and pull request used by CI.
 
 .PARAMETER Repository
-    The GitHub repository whose published releases are read. Defaults to the
-    runtime or configured repository identity.
+    The GitHub repository whose published releases are read. Defaults to
+    GITHUB_REPOSITORY or an unambiguous validated origin remote.
 
 .PARAMETER File
     The issue-form path, relative to the repository root unless absolute.
