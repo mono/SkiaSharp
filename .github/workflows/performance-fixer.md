@@ -122,6 +122,9 @@ network:
 # real win is native / upstream Skia (out of scope here), the issue is filed
 # alone. Quiet/dry runs emit a noop.
 safe-outputs:
+  # Structurally force preview mode for PR self-tests and explicit dry runs so
+  # model noncompliance cannot create GitHub resources.
+  staged: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
   create-pull-request:
     title-prefix: "[performance] "
     labels: [tenet/performance, partner/agentic-workflows]
