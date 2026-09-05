@@ -128,12 +128,16 @@ permissions:
 # `create-pull-request` is declared ONLY as an honest completion signal: it is kept STAGED
 # (preview-only — NO real PR is created), so a successful sync registers as a pull-request
 # output instead of being mislabeled a "no-op". The agent calls it when work was done and
-# `noop` only when there genuinely was none.
+# `noop` only when there genuinely was none. Pin both the effective base and its override
+# allowlist to the detector's resolved branch so release/manual runs emit matching provenance.
 safe-outputs:
   staged: true
   create-pull-request:
     staged: true
     if-no-changes: ignore
+    base-branch: ${{ needs.pre_activation.outputs.base_branch }}
+    allowed-base-branches:
+      - ${{ needs.pre_activation.outputs.base_branch }}
   # report-as-issue defaults to true, but this workflow has no `issues: write` and a real sync
   # is NOT a no-op — disable the no-op→issue posting so genuine no-work runs don't try (and fail)
   # to file a "no-op runs" issue.

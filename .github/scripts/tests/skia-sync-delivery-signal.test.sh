@@ -4,6 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PUSH_SCRIPT="${SCRIPT_DIR}/../skia-sync-push-prs.sh"
+WORKFLOW_LOCK="${SCRIPT_DIR}/../../workflows/auto-skia-sync.lock.yml"
 TMP_DIR=$(mktemp -d)
 SIGNAL_FILE="${TMP_DIR}/outputs.jsonl"
 LOG_FILE="${TMP_DIR}/output.log"
@@ -68,8 +69,53 @@ expect_failure() {
   echo "PASS: $name"
 }
 
+verify_compiled_release_base_config() {
+  python3 - "$WORKFLOW_LOCK" <<'PY'
+import json
+import sys
+
+
+lock_path = sys.argv[1]
+prefix = "GH_AW_SAFE_OUTPUTS_CONFIG: "
+matches = [
+    line.strip()[len(prefix):]
+    for line in open(lock_path, encoding="utf-8")
+    if line.strip().startswith(prefix)
+]
+if len(matches) != 1:
+    raise SystemExit(f"expected one emitted safe-output config, found {len(matches)}")
+
+serialized_config = json.loads(matches[0])
+placeholder = "${{ needs.pre_activation.outputs.base_branch }}"
+config = json.loads(serialized_config)
+pull_request = config["create_pull_request"]
+if pull_request.get("base_branch") != placeholder:
+    raise SystemExit("compiled create_pull_request base_branch is not the resolved pre-activation base")
+if pull_request.get("allowed_base_branches") != placeholder:
+    raise SystemExit("compiled create_pull_request allowed_base_branches is not scoped to the resolved base")
+
+release_base = "release/3.151.x"
+runtime_config = json.loads(serialized_config.replace(placeholder, release_base))
+runtime_pull_request = runtime_config["create_pull_request"]
+if runtime_pull_request["base_branch"] != release_base:
+    raise SystemExit("release/manual base did not flow into emitted base_branch")
+if runtime_pull_request["allowed_base_branches"] != release_base:
+    raise SystemExit("release/manual base allowlist is broader than the resolved branch")
+PY
+  echo "PASS: compiled-release-base-config"
+}
+
+verify_compiled_release_base_config
+
 record >"$SIGNAL_FILE"
 expect_success valid
+
+BASE_BRANCH="release/3.151.x"
+BASE_SHA="abcdef0123456789abcdef0123456789abcdef01"
+record create_pull_request "$HEAD_BRANCH" "$BASE_BRANCH" mono/SkiaSharp "$BASE_SHA" >"$SIGNAL_FILE"
+expect_success release-base
+BASE_BRANCH="main"
+BASE_SHA="0123456789abcdef0123456789abcdef01234567"
 
 rm "$SIGNAL_FILE"
 expect_failure missing "must be a nonempty regular, non-symlink file"
