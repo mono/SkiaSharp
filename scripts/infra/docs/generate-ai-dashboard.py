@@ -45,6 +45,12 @@ import sys
 import urllib.request
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+INFRA_DIR = Path(__file__).resolve().parent.parent
+if str(INFRA_DIR) not in sys.path:
+    sys.path.insert(0, str(INFRA_DIR))
+from repository_identity import resolve_identity  # noqa: E402
+
 # ── Paths & constants ────────────────────────────────────────────────────────
 
 DEFAULT_OUTPUT = Path("documentation/site/ai/dashboard-data.json")
@@ -397,9 +403,7 @@ def build_cadence(existing):
         "asOf": today_iso(),
         "scheduleUrl": prev_cadence.get(
             "scheduleUrl", "https://chromiumdash.appspot.com/schedule"),
-        "prsUrl": prev_cadence.get(
-            "prsUrl",
-            "https://github.com/mono/SkiaSharp/pulls?q=is%3Apr+milestone+in%3Atitle"),
+        "prsUrl": prev_cadence.get("prsUrl", ""),
         "caption": prev_cadence.get(
             "caption",
             "AI opens, tests, and lands the sync PR; humans review the API."),
@@ -436,7 +440,22 @@ def load_existing(path):
     return {}
 
 
-def main(argv=None):
+def build_dashboard(existing, identity=None):
+    identity = identity or resolve_identity(REPO_ROOT)
+    cadence = dict(build_cadence(existing))
+    cadence["prsUrl"] = (
+        f"{identity['repositoryUrl']}/pulls?q=is%3Apr+milestone+in%3Atitle"
+    )
+    return {
+        "generatedAt": today_iso(),
+        "adoption": build_adoption(existing),
+        "cadence": cadence,
+        "cost": build_cost(existing),
+        "footerUrl": f"{identity['repositoryUrl']}/tree/main/.github/workflows",
+    }
+
+
+def main(argv=None, *, identity=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--output", type=Path, default=DEFAULT_OUTPUT,
@@ -453,16 +472,7 @@ def main(argv=None):
 
     base_path = args.base or args.output
     existing = load_existing(base_path)
-
-    result = {
-        "generatedAt": today_iso(),
-        "adoption": build_adoption(existing),
-        "cadence": build_cadence(existing),
-        "cost": build_cost(existing),
-        "footerUrl": existing.get(
-            "footerUrl",
-            "https://github.com/mono/SkiaSharp/tree/main/.github/workflows"),
-    }
+    result = build_dashboard(existing, identity)
 
     text = json.dumps(result, indent=2, ensure_ascii=False) + "\n"
     if args.check:
