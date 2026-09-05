@@ -56,7 +56,7 @@ env:
 
 jobs:
   resolve:
-    if: github.repository_owner == 'mono'
+    if: github.repository_id == 52293126
     runs-on: ubuntu-latest
     outputs:
       versions: ${{ steps.resolve.outputs.versions }}
@@ -77,7 +77,7 @@ jobs:
 
   benchmark:
     needs: resolve
-    if: github.repository_owner == 'mono'
+    if: github.repository_id == 52293126
     strategy:
       fail-fast: false
       matrix:
@@ -196,7 +196,7 @@ jobs:
     # behind) and never on manual dispatch, so `workflow_dispatch` behaves exactly like the
     # cron: an on-demand nightly run, just the persisted baselines.
     if: >
-      github.repository_owner == 'mono' &&
+      github.repository_id == 52293126 &&
       github.event_name == 'pull_request'
     strategy:
       fail-fast: false
@@ -366,7 +366,7 @@ jobs:
 
   report:
     needs: [benchmark, benchmark-source]
-    if: always() && github.repository_owner == 'mono'
+    if: always() && github.repository_id == 52293126
     runs-on: ubuntu-latest
     permissions:
       contents: read
