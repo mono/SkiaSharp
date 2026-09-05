@@ -4,7 +4,7 @@ Uno Platform host for the shared SkiaSharp gallery catalog
 (`samples/Gallery/Shared/`), alongside the existing Blazor gallery at
 `samples/Gallery/Blazor/`.
 
-**Hosted gallery (WebAssembly)**: https://mono.github.io/SkiaSharp/gallery-uno/ *(live after this feature merges)*
+**Hosted gallery (WebAssembly)**: published with the SkiaSharp project website.
 
 ## Target matrix
 

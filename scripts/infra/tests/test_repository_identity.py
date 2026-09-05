@@ -5,6 +5,7 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 
@@ -413,6 +414,144 @@ class RepositoryIdentityTests(unittest.TestCase):
                 identity["legacySkiaRepositoryKeys"],
             )
 
+    def test_renders_scoped_site_repository_links(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            site = Path(directory)
+            page = site / "index.html"
+            current_docs = site / "docs" / "reference.html"
+            historical = site / "docs" / "releases" / "4.150.0.html"
+            ai = site / "ai" / "index.html"
+            performance = site / "perf" / "index.html"
+            for path in (current_docs, historical, ai, performance):
+                path.parent.mkdir(parents=True, exist_ok=True)
+
+            page.write_text(
+                "https://github.com/mono/SkiaSharp/tree/main "
+                "https://github.com/mono/SkiaSharp-API-docs/issues "
+                "{{Repository}} {{SkiaRepository}} {{DocsRepository}} "
+                "{{PublicSiteBaseUrl}}",
+                encoding="utf-8",
+            )
+            current_docs.write_text(
+                "https://github.com/mono/SkiaSharp/blob/main/binding/SkiaSharp",
+                encoding="utf-8",
+            )
+            excluded = "https://github.com/mono/SkiaSharp"
+            historical.write_text(excluded, encoding="utf-8")
+            ai.write_text(excluded, encoding="utf-8")
+            performance.write_text(excluded, encoding="utf-8")
+
+            count = IDENTITY.render_site_identity(
+                site,
+                {
+                    "repository": "dotnet/SkiaSharp",
+                    "repositoryUrl": "https://github.com/dotnet/SkiaSharp",
+                    "skiaRepository": "dotnet/skia",
+                    "docsRepository": "dotnet/SkiaSharp-API-docs",
+                    "docsUrl": "https://github.com/dotnet/SkiaSharp-API-docs",
+                    "publicSiteBaseUrl": "https://docs.example/SkiaSharp",
+                },
+            )
+
+            self.assertEqual(2, count)
+            self.assertEqual(
+                "https://github.com/dotnet/SkiaSharp/tree/main "
+                "https://github.com/dotnet/SkiaSharp-API-docs/issues "
+                "dotnet/SkiaSharp dotnet/skia dotnet/SkiaSharp-API-docs "
+                "https://docs.example/SkiaSharp",
+                page.read_text(encoding="utf-8"),
+            )
+            self.assertIn(
+                "https://github.com/dotnet/SkiaSharp/blob/main/binding/SkiaSharp",
+                current_docs.read_text(encoding="utf-8"),
+            )
+            for path in (historical, ai, performance):
+                self.assertEqual(excluded, path.read_text(encoding="utf-8"))
+
+    def test_site_rendering_uses_exact_repository_boundaries(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            site = Path(directory)
+            page = site / "assets.js"
+            untouched = (
+                "_framework/SkiaSharp.dll\n"
+                "managed/SkiaSharp.dll\n"
+                "_content/SkiaSharp.Views.Blazor/module.js\n"
+                "api/SkiaSharp.SKCanvas.html\n"
+                "https://github.com/mono/SkiaSharp.Extended\n"
+                "mono/SkiaSharp.NativeAssets.Linux\n"
+                "https://www.nuget.org/packages/SkiaSharp\n"
+                "https://learn.microsoft.com/dotnet/api/skiasharp\n"
+                "../images/logo.png\n"
+                "./relative.js\n"
+            )
+            page.write_text(
+                untouched
+                + "https://github.com/mono/SkiaSharp\n"
+                + "https://github.com/MoNo/SkIaShArP/issues\n"
+                + "https://github.com/mono/SkiaSharp.git?ref=main\n",
+                encoding="utf-8",
+            )
+
+            IDENTITY.render_site_identity(
+                site,
+                {
+                    "repository": "dotnet/SkiaSharp",
+                    "repositoryUrl": "https://github.com/dotnet/SkiaSharp",
+                    "skiaRepository": "dotnet/skia",
+                    "docsRepository": "dotnet/SkiaSharp-API-docs",
+                    "docsUrl": "https://github.com/dotnet/SkiaSharp-API-docs",
+                    "publicSiteBaseUrl": "https://docs.example/SkiaSharp",
+                },
+            )
+
+            rendered = page.read_text(encoding="utf-8")
+            self.assertTrue(rendered.startswith(untouched))
+            self.assertIn("https://github.com/dotnet/SkiaSharp\n", rendered)
+            self.assertIn(
+                "https://github.com/dotnet/SkiaSharp/issues",
+                rendered,
+            )
+            self.assertIn(
+                "https://github.com/dotnet/SkiaSharp.git?ref=main",
+                rendered,
+            )
+
+    def test_renders_identity_template_without_mutating_source(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "TOC.yml"
+            rendered = root / "preview" / "TOC.yml"
+            rendered.parent.mkdir()
+            source.write_text(
+                'site: "{{PublicSiteBaseUrl}}/gallery/"\n'
+                'repo: "{{Repository}}"\n'
+                'skia: "{{SkiaRepository}}"\n'
+                'docs: "{{DocsRepository}}"\n',
+                encoding="utf-8",
+            )
+            shutil.copy2(source, rendered)
+            identity = {
+                "repository": "dotnet/SkiaSharp",
+                "skiaRepository": "dotnet/skia",
+                "docsRepository": "dotnet/SkiaSharp-API-docs",
+                "publicSiteBaseUrl": "https://docs.example/SkiaSharp",
+            }
+
+            self.assertTrue(
+                IDENTITY.render_identity_file(rendered, identity)
+            )
+            self.assertFalse(
+                IDENTITY.render_identity_file(rendered, identity)
+            )
+            self.assertIn(
+                "https://docs.example/SkiaSharp/gallery/",
+                rendered.read_text(encoding="utf-8"),
+            )
+            self.assertIn(
+                "{{PublicSiteBaseUrl}}",
+                source.read_text(encoding="utf-8"),
+            )
+
     def test_cli_json_get_validate_and_errors(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -455,6 +594,39 @@ class RepositoryIdentityTests(unittest.TestCase):
             self.assertIn(
                 "Repository identity is valid: dotnet/SkiaSharp",
                 stdout.getvalue(),
+            )
+
+            site = root / "site"
+            site.mkdir()
+            page = site / "index.html"
+            page.write_text(
+                "https://github.com/mono/SkiaSharp",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                self.assertEqual(
+                    0,
+                    IDENTITY.main([*common, "render-site", str(site)]),
+                )
+            self.assertIn("1 site file(s)", stdout.getvalue())
+            self.assertEqual(
+                "https://github.com/dotnet/SkiaSharp",
+                page.read_text(encoding="utf-8"),
+            )
+
+            template = root / "identity.txt"
+            template.write_text("{{Repository}}", encoding="utf-8")
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                self.assertEqual(
+                    0,
+                    IDENTITY.main([*common, "render-file", str(template)]),
+                )
+            self.assertIn("Rendered:", stdout.getvalue())
+            self.assertEqual(
+                "dotnet/SkiaSharp",
+                template.read_text(encoding="utf-8"),
             )
 
             stderr = io.StringIO()

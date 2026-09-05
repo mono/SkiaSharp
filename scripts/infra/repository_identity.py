@@ -40,6 +40,24 @@ _URL_PATTERNS = (
         re.IGNORECASE,
     ),
 )
+_REPOSITORY_BOUNDARY = (
+    r"(?=(?:/|\.git(?:[/?#]|$)|[?#]|[\s\"'<>),;:]|$))"
+)
+_CURRENT_REPOSITORY_URL_RE = re.compile(
+    r"https://github\.com/[^/]+/SkiaSharp" + _REPOSITORY_BOUNDARY,
+    re.IGNORECASE,
+)
+_DOCS_REPOSITORY_URL_RE = re.compile(
+    r"https://github\.com/[^/]+/SkiaSharp-API-docs"
+    + _REPOSITORY_BOUNDARY,
+    re.IGNORECASE,
+)
+_SITE_TEXT_SUFFIXES = {".html", ".js", ".json"}
+_SITE_EXCLUDED_PREFIXES = {
+    ("ai",),
+    ("perf",),
+    ("docs", "releases"),
+}
 _CONFIG_FIELDS = {
     "canonicalRepositoryId": int,
     "offlineRepository": str,
@@ -232,6 +250,84 @@ def resolve_identity(
     }
 
 
+def _is_excluded_site_path(relative: Path) -> bool:
+    return any(
+        relative.parts[:len(prefix)] == prefix
+        for prefix in _SITE_EXCLUDED_PREFIXES
+    )
+
+
+def render_site_identity(directory: Path, identity: dict) -> int:
+    """Render current site links without changing historical or owned dashboards."""
+
+    if not directory.is_dir():
+        raise IdentityError(f"Site directory does not exist: {directory}")
+
+    replacements = (
+        (_DOCS_REPOSITORY_URL_RE, identity["docsUrl"]),
+        (_CURRENT_REPOSITORY_URL_RE, identity["repositoryUrl"]),
+        (re.compile(r"\{\{DocsRepository\}\}"), identity["docsRepository"]),
+        (re.compile(r"\{\{SkiaRepository\}\}"), identity["skiaRepository"]),
+        (re.compile(r"\{\{Repository\}\}"), identity["repository"]),
+        (
+            re.compile(r"\{\{PublicSiteBaseUrl\}\}"),
+            identity["publicSiteBaseUrl"],
+        ),
+    )
+    changed = 0
+    for path in sorted(directory.rglob("*")):
+        if (
+            not path.is_file()
+            or path.suffix.lower() not in _SITE_TEXT_SUFFIXES
+        ):
+            continue
+        relative = path.relative_to(directory)
+        if _is_excluded_site_path(relative):
+            continue
+
+        try:
+            original = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError as exc:
+            raise IdentityError(
+                f"Site text file is not valid UTF-8: {path}"
+            ) from exc
+        rendered = original
+        for pattern, replacement in replacements:
+            rendered = pattern.sub(replacement, rendered)
+        if rendered != original:
+            path.write_text(rendered, encoding="utf-8")
+            changed += 1
+    return changed
+
+
+def render_identity_file(path: Path, identity: dict) -> bool:
+    """Render repository identity placeholders in one UTF-8 text file."""
+
+    try:
+        original = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        raise IdentityError(f"Unable to read identity template {path}: {exc}") from exc
+
+    rendered = original
+    for placeholder, replacement in (
+        ("{{Repository}}", identity["repository"]),
+        ("{{SkiaRepository}}", identity["skiaRepository"]),
+        ("{{DocsRepository}}", identity["docsRepository"]),
+        ("{{PublicSiteBaseUrl}}", identity["publicSiteBaseUrl"]),
+    ):
+        rendered = rendered.replace(placeholder, replacement)
+
+    if rendered == original:
+        return False
+    try:
+        path.write_text(rendered, encoding="utf-8")
+    except OSError as exc:
+        raise IdentityError(
+            f"Unable to write rendered identity template {path}: {exc}"
+        ) from exc
+    return True
+
+
 def validate_manifest(root: Path, identity: dict) -> None:
     manifest_path = root / "cgmanifest.json"
     try:
@@ -312,6 +408,10 @@ def create_parser() -> argparse.ArgumentParser:
     get_parser = subparsers.add_parser("get")
     get_parser.add_argument("field")
     subparsers.add_parser("validate")
+    render_site_parser = subparsers.add_parser("render-site")
+    render_site_parser.add_argument("directory", type=Path)
+    render_file_parser = subparsers.add_parser("render-file")
+    render_file_parser.add_argument("path", type=Path)
     return parser
 
 
@@ -340,6 +440,13 @@ def main(argv: list[str] | None = None) -> int:
                 f"Skia {identity['skiaRepository']}, "
                 f"docs {identity['docsRepository']}."
             )
+        elif args.command == "render-site":
+            count = render_site_identity(args.directory.resolve(), identity)
+            print(f"Rendered repository identity in {count} site file(s).")
+        elif args.command == "render-file":
+            changed = render_identity_file(args.path.resolve(), identity)
+            state = "Rendered" if changed else "Already current"
+            print(f"{state}: {args.path}")
         return 0
     except IdentityError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

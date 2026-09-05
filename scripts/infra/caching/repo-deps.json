@@ -25,12 +25,12 @@
     "externals/.gitignore",
     "native/.gitignore",
     "scripts/get-skiasharp-pr.*",
+    "scripts/build-docs-site.py",
     "scripts/infra/caching/**",
     "scripts/infra/publishing/**",
     "scripts/infra/perf/**",
     "cgmanifest.json",
-    "# Inert identity files; consumer PRs must add them to cache inputs when used.",
-    "scripts/infra/repository-identity.json",
+    "# Site-only identity tooling does not feed product cache outputs.",
     "scripts/infra/repository_identity.py",
     "utils/SkiaSharpGenerator/**",
     "utils/Utils.slnx",
@@ -174,7 +174,8 @@
             "samples": {
               "include": [
                 "samples/**",
-                "scripts/infra/samples/**"
+                "scripts/infra/samples/**",
+                "scripts/infra/repository-identity.json"
               ]
             }
           }
