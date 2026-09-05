@@ -25,6 +25,10 @@ reads the workflow-resolved `SKIA_SYNC_*` values in automation and implements al
 - Same-milestone bug-fix: keep versions and advance Skia hashes.
 - Upstream `main`: keep versions and advance the submodule/hash while still checking APIs.
 
+Before changing metadata, it verifies that `include/core/SkMilestone.h` matches the retained or
+target managed milestone. A mismatch is a required, evidence-backed fork adaptation to commit
+before the native build, not an expected build failure.
+
 It also compares exact fork-base and working-tree `DEPS`, writes
 `$ARTIFACT_DIR/skia-dependency-changes.json`, and mechanically synchronizes each tracked
 registration's `skia_dependency.revision` while recording old/new URLs and SHAs in the artifact.
@@ -99,16 +103,16 @@ compiler/linker flags merely to silence one host. A genuinely required GN choice
 affected platform's `native/**/build.cake` and must be reported for cross-platform review.
 
 When evidence disproves an earlier dependency or risk conclusion, update
-`skia-dependency-decisions.md`, `skia-breaking-change-analysis.md`, and the validation-review
-disposition together by replacing the provisional entry; do not append a contradictory "final"
-section. Commit each proven post-merge dependency/C API adaptation in mono/skia as a separate
-explanatory commit.
+`skia-dependency-decisions.md` and `skia-breaking-change-analysis.md` by replacing the provisional
+entry, and record the later finding and resolution in `skia-validation-followup.md`. Never rewrite
+the independent `skia-validation-review.md`. Commit each proven post-merge dependency/C API
+adaptation in mono/skia as a separate explanatory commit.
 
 After every mono/skia adaptation, rerun `audit_fork_patches.py` with the Phase 05 arguments. Fill
 new or changed rows and require `--validate` to pass again. Reuse the exact Phase 05
 `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py"`
-command rather than searching
-for another copy of the helper.
+command rather than searching for another copy of the helper. Once it passes for an unchanged set
+of input SHAs and decisions, do not immediately rerun it.
 
 Before Phase 08, rerun `update_versions.py` against final `DEPS`, then reconcile every row in
 `skia-dependency-changes.json` with the main decision table and the built source. Rewrite affected

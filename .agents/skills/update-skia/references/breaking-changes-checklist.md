@@ -11,11 +11,14 @@ layer **before** you start merging.
 Use the authoritative range prepared by Phase 2:
 
 ```bash
-git log --oneline "$DIFF_RANGE"
-git diff --stat "$DIFF_RANGE" -- src/ include/ BUILD.gn DEPS
+git log --format='%h %s' "$DIFF_RANGE" -- RELEASE_NOTES.md \
+  > "$ARTIFACT_DIR/skia-range-commits.txt"
+git diff --name-status "$DIFF_RANGE" -- src/ include/ modules/ BUILD.gn '*.gn' '*.gni' DEPS \
+  > "$ARTIFACT_DIR/skia-range-files.txt"
 ```
 
-Read the official release-note section for every milestone crossed as additional context.
+Read these inventories with bounded searches, then inspect the official release-note section for
+every milestone crossed as additional context. Keep the complete inventories out of tool output.
 
 ## Step 2: Filter by Relevance
 
@@ -128,18 +131,6 @@ presumed coupled until the older fork revision is proven to expose the target AP
 grep -rn "ENUM_NAME\|FUNCTION_NAME" binding/SkiaSharp/
 grep -rn "SYMBOL" binding/SkiaSharp/SkiaApi.generated.cs
 ```
-
-## Step 8: Build & Verify
-
-After applying fixes:
-1. Build native for the current host from source
-2. Regenerate: `python3 .agents/skills/update-skia/scripts/regenerate_bindings.py`
-3. Build C#: `dotnet build binding/SkiaSharp/SkiaSharp.csproj`
-4. Run `update_versions.py`; reconcile every `skia-dependency-changes.json` row and satisfy its
-   source-backed `cgmanifest.json` semantic-version gate
-5. Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` unfiltered
-6. If it fails, use the owning host project for filtered diagnostics
-7. Rerun the unfiltered solution; only that run is final validation
 
 ## Historical Examples
 
