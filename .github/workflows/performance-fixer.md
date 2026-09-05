@@ -22,8 +22,8 @@ environment: gh-aw-agents
 # -- Engine ------------------------------------------------------------
 # Perf reasoning (a faithful, bit-exact optimization that must not change
 # rendering output) needs strong coding, while mandatory benchmarks and parity
-# tests make Terra the best cost/capability tradeoff for this twice-daily workflow.
-model: gpt-5.6-terra
+# tests make Sol the appropriate capability tier for this twice-daily workflow.
+model: gpt-5.6-sol
 engine:
   id: copilot
 # -- Triggers ----------------------------------------------------------
