@@ -187,6 +187,20 @@ if runtime_handler_pull_request["base_branch"] != release_base:
     raise SystemExit("release/manual base did not flow into the safe_outputs handler")
 if runtime_handler_pull_request["allowed_base_branches"] != release_base:
     raise SystemExit("safe_outputs handler release/manual allowlist is broader than the resolved branch")
+
+compiled = "\n".join(lines)
+required_hardening = {
+    "two POSIX-shell post steps": compiled.count("shell: /bin/sh -e {0}") >= 2,
+    "two BASH_ENV resets": compiled.count("BASH_ENV: /dev/null") >= 2,
+    "loader-variable reset": compiled.count('LD_PRELOAD: ""') >= 2,
+    "sanitized finalizer": "GIT_NO_REPLACE_OBJECTS=1" in compiled
+    and "reject_unsafe_repository" in compiled,
+    "sanitized credentialed launch": "exec /usr/bin/env -i" in compiled
+    and "GH_TOKEN=" in compiled,
+}
+for contract, present in required_hardening.items():
+    if not present:
+        raise SystemExit(f"compiled workflow is missing {contract}")
 PY
   echo "PASS: compiled-release-base-config"
 }
@@ -212,6 +226,8 @@ if "remote set-url" in source:
     raise SystemExit("credentialed delivery must not use agent-controlled remote metadata")
 if source.count("GIT_CONFIG_NOSYSTEM=1") != 2:
     raise SystemExit("trusted Git commands do not consistently disable system configuration")
+if source.count("GIT_CONFIG_GLOBAL=/dev/null") != 2:
+    raise SystemExit("trusted Git commands do not consistently disable global configuration")
 if source.count("-c core.hooksPath=/dev/null") != 2:
     raise SystemExit("trusted Git commands do not consistently disable hooks")
 if source.count("-c credential.helper=") != 2:
@@ -240,6 +256,34 @@ if 'command -p rm -rf -- "$TRUSTED_DELIVERY_DIR"' not in source:
     raise SystemExit("trusted delivery workspace cleanup is not path-bound")
 if source.count('rev-parse "refs/heads/${HEAD_BRANCH}^{commit}"') != 2:
     raise SystemExit("validated heads are not resolved through explicit local branch refs")
+if source.count("GIT_NO_REPLACE_OBJECTS=1") != 2:
+    raise SystemExit("trusted Git paths do not consistently disable replacement refs")
+if source.count("-c safe.bareRepository=all") != 2:
+    raise SystemExit("trusted Git paths cannot operate on the isolated bare repositories")
+if source.count('reject_replace_refs "$GITHUB_WORKSPACE') != 2:
+    raise SystemExit("both source repositories are not checked for replacement refs")
+if source.count('reject_unsafe_git_config "$GITHUB_WORKSPACE') != 2:
+    raise SystemExit("both source repositories are not checked for command-bearing Git config")
+if source.count('--upload-pack="$TRUSTED_GIT_UPLOAD_PACK"') != 2:
+    raise SystemExit("exact-object copies are not forced through the trusted upload-pack wrapper")
+if "Trusted delivery repository unexpectedly contains mutable refs." not in source:
+    raise SystemExit("clean delivery repositories are not verified to be ref-free")
+if 'show "${SS_VALIDATED_HEAD_SHA}:cgmanifest.json"' not in source or \
+        '"$TRUSTED_SS_REPO"' not in source:
+    raise SystemExit("manifest validation is not performed in the clean delivery repository")
+if '--skia-root "$TRUSTED_SKIA_REPO"' not in source:
+    raise SystemExit("fork validation is not performed in the clean delivery repository")
+required_pr_identity = [
+    '--base "$base"',
+    "headRepositoryOwner.login == $owner",
+    "headRepository.nameWithOwner == $repo",
+    ".headRefName == $head",
+    ".headRefOid == $sha",
+    ".baseRefName == $base",
+]
+for identity_check in required_pr_identity:
+    if identity_check not in source:
+        raise SystemExit(f"existing PR reuse is missing identity check: {identity_check}")
 PY
   echo "PASS: delivery-source-hardening"
 }
@@ -269,9 +313,216 @@ verify_conflicting_tag_resolution() {
   echo "PASS: conflicting-tag-resolution"
 }
 
+verify_replacement_ref_rejection() {
+  local repo="$TMP_DIR/replacement-ref-repo"
+  local original_sha
+  local replacement_sha
+  local replaced_subject
+  local original_subject
+  local clean_subject
+  local clean_repo="$TMP_DIR/replacement-ref-clean.git"
+  local replace_refs
+
+  git init -q "$repo"
+  git -C "$repo" config user.name "Skia Sync Test"
+  git -C "$repo" config user.email "skia-sync@example.invalid"
+  git -C "$repo" commit -q --allow-empty -m original
+  original_sha=$(git -C "$repo" rev-parse HEAD)
+  git -C "$repo" commit -q --allow-empty -m replacement
+  replacement_sha=$(git -C "$repo" rev-parse HEAD)
+  git -C "$repo" replace "$original_sha" "$replacement_sha"
+
+  replaced_subject=$(git -C "$repo" show -s --format=%s "$original_sha")
+  original_subject=$(GIT_NO_REPLACE_OBJECTS=1 git -C "$repo" show -s --format=%s "$original_sha")
+  replace_refs=$(GIT_NO_REPLACE_OBJECTS=1 git -C "$repo" for-each-ref --format='%(refname)' refs/replace)
+  git init -q --bare "$clean_repo"
+  GIT_NO_REPLACE_OBJECTS=1 git -C "$clean_repo" \
+    -c safe.bareRepository=all fetch -q --no-tags "$repo" "$original_sha"
+  clean_subject=$(git -C "$clean_repo" -c safe.bareRepository=all show -s --format=%s FETCH_HEAD)
+  if [[ "$replaced_subject" != "replacement" ||
+        "$original_subject" != "original" ||
+        "$clean_subject" != "original" ||
+        "$replace_refs" != refs/replace/* ]]; then
+    echo "FAIL: replacement-ref-rejection"
+    exit 1
+  fi
+  echo "PASS: replacement-ref-rejection"
+}
+
+verify_source_git_helper_isolation() {
+  local repo="$TMP_DIR/source-helper-repo"
+  local clean_repo="$TMP_DIR/source-helper-clean.git"
+  local marker="$TMP_DIR/source-helper-ran"
+  local pack_objects="$TMP_DIR/trusted-pack-objects.sh"
+  local upload_pack="$TMP_DIR/trusted-upload-pack.sh"
+  local commit_sha
+  local fetched_sha
+  local refs
+
+  git init -q "$repo"
+  git -C "$repo" config user.name "Skia Sync Test"
+  git -C "$repo" config user.email "skia-sync@example.invalid"
+  git -C "$repo" commit -q --allow-empty -m source
+  commit_sha=$(git -C "$repo" rev-parse HEAD)
+  git -C "$repo" config uploadpack.packObjectsHook \
+    "printf poisoned >'$marker'; git pack-objects --revs --stdout"
+
+  # shellcheck disable=SC2016 # These variables expand only when Git invokes the fixture helper.
+  printf '%s\n' \
+    '#!/bin/sh' \
+    'test "$1" = git && test "$2" = pack-objects' \
+    'shift' \
+    'exec /usr/bin/git "$@"' >"$pack_objects"
+  printf '%s\n' \
+    '#!/bin/sh' \
+    "exec /usr/bin/git -c uploadpack.packObjectsHook='$pack_objects' upload-pack \"\$@\"" \
+    >"$upload_pack"
+  chmod 700 "$pack_objects" "$upload_pack"
+
+  git init -q --bare "$clean_repo"
+  GIT_NO_REPLACE_OBJECTS=1 git -C "$clean_repo" -c safe.bareRepository=all \
+    fetch -q --no-tags --upload-pack="$upload_pack" "$repo" "$commit_sha"
+  fetched_sha=$(git -C "$clean_repo" -c safe.bareRepository=all rev-parse FETCH_HEAD)
+  refs=$(git -C "$clean_repo" -c safe.bareRepository=all for-each-ref --format='%(refname)')
+  if [[ -e "$marker" || "$fetched_sha" != "$commit_sha" || -n "$refs" ]]; then
+    echo "FAIL: source-git-helper-isolation"
+    exit 1
+  fi
+  echo "PASS: source-git-helper-isolation"
+}
+
+verify_git_hook_isolation() {
+  local repo="$TMP_DIR/hook-isolation-repo"
+  local hooks="$TMP_DIR/malicious-hooks"
+  local marker="$TMP_DIR/git-hook-ran"
+
+  git init -q "$repo"
+  git -C "$repo" config user.name "Skia Sync Test"
+  git -C "$repo" config user.email "skia-sync@example.invalid"
+  mkdir "$hooks"
+  printf '%s\n' '#!/bin/sh' "printf poisoned >'$marker'" >"$hooks/pre-commit"
+  chmod 700 "$hooks/pre-commit"
+  git -C "$repo" config core.hooksPath "$hooks"
+  git -C "$repo" -c core.hooksPath=/dev/null commit -q --allow-empty -m isolated
+
+  if [[ -e "$marker" ]]; then
+    echo "FAIL: git-hook-isolation"
+    exit 1
+  fi
+  echo "PASS: git-hook-isolation"
+}
+
+verify_pr_identity_selection() {
+  local fixture="$TMP_DIR/pr-identity.json"
+  local filter="$TMP_DIR/pr-identity.jq"
+  local selected
+
+  jq -n '[
+    {
+      number: 1,
+      headRepositoryOwner: {login: "attacker"},
+      headRepository: {name: "SkiaSharp", nameWithOwner: "attacker/SkiaSharp"},
+      headRefName: "skia-sync/m152",
+      headRefOid: "validated",
+      baseRefName: "main"
+    },
+    {
+      number: 2,
+      headRepositoryOwner: {login: "mono"},
+      headRepository: {name: "SkiaSharp", nameWithOwner: "mono/SkiaSharp"},
+      headRefName: "skia-sync/m152",
+      headRefOid: "validated",
+      baseRefName: "release/incorrect"
+    },
+    {
+      number: 3,
+      headRepository: {name: "SkiaSharp", nameWithOwner: "mono/SkiaSharp"},
+      headRefName: "skia-sync/m152",
+      headRefOid: "validated",
+      baseRefName: "main"
+    },
+    {
+      number: 4,
+      headRepositoryOwner: {login: "mono"},
+      headRepository: {name: "SkiaSharp", nameWithOwner: "mono/SkiaSharp"},
+      headRefName: "skia-sync/m152",
+      headRefOid: "validated",
+      baseRefName: "main"
+    }
+  ]' >"$fixture"
+  cat >"$filter" <<'JQ'
+[
+  .[]
+  | select(
+      .headRepositoryOwner.login == $owner
+      and .headRepository.name == $repository_name
+      and .headRepository.nameWithOwner == $repo
+      and .headRefName == $head
+      and .headRefOid == $sha
+      and .baseRefName == $base
+    )
+]
+| if length > 1 then error("multiple exact delivery PRs") else .[0].number // empty end
+JQ
+  selected=$(jq -r \
+    --arg repo mono/SkiaSharp \
+    --arg owner mono \
+    --arg repository_name SkiaSharp \
+    --arg head skia-sync/m152 \
+    --arg base main \
+    --arg sha validated \
+    -f "$filter" "$fixture")
+  if [[ "$selected" != 4 ]]; then
+    echo "FAIL: pr-identity-selection"
+    exit 1
+  fi
+  if jq -e '[.[] | select(.number == 4)] + [.[] | select(.number == 4) | .number = 5]' "$fixture" |
+      jq -r \
+        --arg repo mono/SkiaSharp \
+        --arg owner mono \
+        --arg repository_name SkiaSharp \
+        --arg head skia-sync/m152 \
+        --arg base main \
+        --arg sha validated \
+        -f "$filter" >/dev/null 2>&1; then
+    echo "FAIL: pr-identity-selection"
+    exit 1
+  fi
+  echo "PASS: pr-identity-selection"
+}
+
+verify_shell_startup_isolation() {
+  local marker="$TMP_DIR/shell-startup-poisoned"
+  local poison="$TMP_DIR/shell-startup-poison.sh"
+  local probe="$TMP_DIR/shell-startup-probe.sh"
+  local inner="$TMP_DIR/shell-startup-inner.sh"
+
+  printf '%s\n' '#!/bin/sh' "printf poisoned >'$marker'" >"$poison"
+  printf '%s\n' \
+    '#!/bin/bash' \
+    "test -z \"\${BASH_ENV:-}\${ENV:-}\${LD_PRELOAD:-}\"" \
+    >"$inner"
+  printf '%s\n' \
+    "exec /usr/bin/env -i PATH=/usr/bin:/bin /bin/bash --noprofile --norc '$inner'" \
+    >"$probe"
+  chmod 700 "$poison" "$probe" "$inner"
+
+  BASH_ENV="$poison" ENV="$poison" LD_PRELOAD="" /bin/sh -e "$probe"
+  if [[ -e "$marker" ]]; then
+    echo "FAIL: shell-startup-isolation"
+    exit 1
+  fi
+  echo "PASS: shell-startup-isolation"
+}
+
 verify_compiled_release_base_config
 verify_delivery_source_hardening
 verify_conflicting_tag_resolution
+verify_replacement_ref_rejection
+verify_source_git_helper_isolation
+verify_git_hook_isolation
+verify_pr_identity_selection
+verify_shell_startup_isolation
 
 record >"$SIGNAL_FILE"
 expect_success valid

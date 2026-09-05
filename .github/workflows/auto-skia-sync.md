@@ -293,46 +293,127 @@ pre-agent-steps:
 # then push branches and create/update PRs with the write credential.
 post-steps:
   - name: Finalize sync metadata
+    shell: /bin/sh -e {0}
     env:
+      BASH_ENV: /dev/null
+      ENV: /dev/null
+      LD_AUDIT: ""
+      LD_LIBRARY_PATH: ""
+      LD_PRELOAD: ""
       SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/gh-aw/skia-sync-runtime
     run: |
-      set -euo pipefail
-      test "$(git branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
-      test "$(git -C externals/skia branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
+      /usr/bin/env -i \
+        HOME="$RUNNER_TEMP/skia-sync-finalizer-home" \
+        PATH=/usr/bin:/bin \
+        GIT_CONFIG_GLOBAL=/dev/null \
+        GIT_CONFIG_NOSYSTEM=1 \
+        GIT_NO_REPLACE_OBJECTS=1 \
+        GITHUB_WORKSPACE="$GITHUB_WORKSPACE" \
+        SKIA_SYNC_HEAD_BRANCH="$SKIA_SYNC_HEAD_BRANCH" \
+        SKIA_SYNC_SKILL_DIR="$SKIA_SYNC_SKILL_DIR" \
+        /bin/bash --noprofile --norc -euo pipefail <<'FINALIZE'
+      safe_git() {
+        command git \
+          -c core.hooksPath=/dev/null \
+          -c core.fsmonitor=false \
+          -c credential.helper= \
+          -c commit.gpgSign=false \
+          "$@"
+      }
+
+      reject_unsafe_repository() {
+        local repo="$1"
+        local local_config
+        local unsafe_config
+        local replace_refs
+
+        local_config=$(safe_git -C "$repo" config --local --no-includes --name-only --list)
+        unsafe_config=$(printf '%s\n' "$local_config" | tr '[:upper:]' '[:lower:]' | grep -E \
+          '^(include(if\..*)?\.path|core\.(alternaterefscommand|attributesfile|editor|fsmonitor|hookspath|sshcommand|worktree)|diff\.(external|.*\.(command|textconv))|filter\..*\.(clean|smudge|process)|credential(\..*)?\.helper|remote\..*\.uploadpack|uploadpack\.packobjectshook|url\..*\.(insteadof|pushinsteadof)|commit\.gpgsign|gpg\..*|sequence\.editor)$' || true)
+        if [[ -n "$unsafe_config" ]]; then
+          echo "::error::Unsafe local Git configuration is forbidden in $repo: $unsafe_config"
+          exit 1
+        fi
+        replace_refs=$(safe_git -C "$repo" for-each-ref --format='%(refname)' refs/replace)
+        if [[ -n "$replace_refs" ]]; then
+          echo "::error::Replacement refs are forbidden in $repo."
+          exit 1
+        fi
+      }
+
+      reject_unsafe_repository "$GITHUB_WORKSPACE"
+      reject_unsafe_repository "$GITHUB_WORKSPACE/externals/skia"
+      test "$(safe_git branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
+      test "$(safe_git -C externals/skia branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
 
       UNEXPECTED_CHANGES=$(
         {
-          git diff --name-only
-          git diff --cached --name-only
+          safe_git diff --no-ext-diff --no-textconv --name-only
+          safe_git diff --cached --no-ext-diff --no-textconv --name-only
         } | sort -u | grep -Ev '^(cgmanifest\.json|scripts/VERSIONS\.txt|scripts/azure-templates-variables\.yml|externals/skia)$' || true
       )
-      if [ -n "$UNEXPECTED_CHANGES" ]; then
+      if [[ -n "$UNEXPECTED_CHANGES" ]]; then
         echo "::error::The agent left uncommitted semantic changes:"
         echo "$UNEXPECTED_CHANGES"
         exit 1
       fi
 
-      python3 "$SKIA_SYNC_SKILL_DIR/scripts/update_versions.py" --repo-root "$GITHUB_WORKSPACE"
+      command python3 -I "$SKIA_SYNC_SKILL_DIR/scripts/update_versions.py" --repo-root "$GITHUB_WORKSPACE"
 
-      if ! git -C externals/skia diff --quiet || ! git -C externals/skia diff --cached --quiet; then
+      if ! safe_git -C externals/skia diff --no-ext-diff --no-textconv --quiet ||
+         ! safe_git -C externals/skia diff --cached --no-ext-diff --no-textconv --quiet; then
         echo "::error::The finalizer changed mono/skia; the agent did not commit its native work."
         exit 1
       fi
 
-      git add cgmanifest.json scripts/VERSIONS.txt scripts/azure-templates-variables.yml externals/skia
-      if ! git diff --cached --quiet; then
-        git config user.name "SkiaSharp Sync"
-        git config user.email "devnull@localhost"
-        git commit -m "[skia-sync] Finalize deterministic metadata"
+      safe_git add cgmanifest.json scripts/VERSIONS.txt scripts/azure-templates-variables.yml externals/skia
+      if ! safe_git diff --cached --no-ext-diff --no-textconv --quiet; then
+        safe_git \
+          -c user.name="SkiaSharp Sync" \
+          -c user.email="devnull@localhost" \
+          commit --no-verify -m "[skia-sync] Finalize deterministic metadata"
       fi
-      git diff --quiet
-      git diff --cached --quiet
+      safe_git diff --no-ext-diff --no-textconv --quiet
+      safe_git diff --cached --no-ext-diff --no-textconv --quiet
+      FINALIZE
   - name: Push branches and create PRs
+    shell: /bin/sh -e {0}
     env:
+      BASH_ENV: /dev/null
+      ENV: /dev/null
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+      LD_AUDIT: ""
+      LD_LIBRARY_PATH: ""
+      LD_PRELOAD: ""
       SKIA_SYNC_COMPLETION_SIGNAL_FILE: ${{ runner.temp }}/gh-aw/safeoutputs/outputs.jsonl
       SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/gh-aw/skia-sync-runtime
-    run: bash "$SKIA_SYNC_RUNTIME_DIR/skia-sync-push-prs.sh"
+    run: |
+      exec /usr/bin/env -i \
+        HOME="$RUNNER_TEMP/skia-sync-delivery-home" \
+        PATH=/usr/bin:/bin \
+        GIT_CONFIG_GLOBAL=/dev/null \
+        GIT_CONFIG_NOSYSTEM=1 \
+        GIT_NO_REPLACE_OBJECTS=1 \
+        GH_TOKEN="$GH_TOKEN" \
+        GITHUB_REPOSITORY="$GITHUB_REPOSITORY" \
+        GITHUB_WORKSPACE="$GITHUB_WORKSPACE" \
+        RUNNER_TEMP="$RUNNER_TEMP" \
+        SKIA_SYNC_ARTIFACT_DIR="$SKIA_SYNC_ARTIFACT_DIR" \
+        SKIA_SYNC_BASE_BRANCH="$SKIA_SYNC_BASE_BRANCH" \
+        SKIA_SYNC_BASE_UPSTREAM_SHA="$SKIA_SYNC_BASE_UPSTREAM_SHA" \
+        SKIA_SYNC_COMPLETION_SIGNAL_FILE="$SKIA_SYNC_COMPLETION_SIGNAL_FILE" \
+        SKIA_SYNC_CURRENT="$SKIA_SYNC_CURRENT" \
+        SKIA_SYNC_HEAD_BRANCH="$SKIA_SYNC_HEAD_BRANCH" \
+        SKIA_SYNC_IS_RELEASE="$SKIA_SYNC_IS_RELEASE" \
+        SKIA_SYNC_PARENT_BASE_SHA="$SKIA_SYNC_PARENT_BASE_SHA" \
+        SKIA_SYNC_RUNTIME_DIR="$SKIA_SYNC_RUNTIME_DIR" \
+        SKIA_SYNC_SKIA_BASE_BRANCH="$SKIA_SYNC_SKIA_BASE_BRANCH" \
+        SKIA_SYNC_SKIA_BASE_SHA="$SKIA_SYNC_SKIA_BASE_SHA" \
+        SKIA_SYNC_SKILL_DIR="$SKIA_SYNC_SKILL_DIR" \
+        SKIA_SYNC_TARGET="$SKIA_SYNC_TARGET" \
+        SKIA_SYNC_TARGET_UPSTREAM_SHA="$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
+        SKIA_SYNC_UPSTREAM_REF="$SKIA_SYNC_UPSTREAM_REF" \
+        "$SKIA_SYNC_RUNTIME_DIR/skia-sync-push-prs.sh"
 ---
 
 # Sync - Skia Upstream

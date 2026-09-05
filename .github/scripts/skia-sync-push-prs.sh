@@ -208,10 +208,123 @@ SKIA_BASE_SHA="$SKIA_SYNC_SKIA_BASE_SHA"
 HEAD_BRANCH="$SKIA_SYNC_HEAD_BRANCH"
 BASE_UPSTREAM_SHA="$SKIA_SYNC_BASE_UPSTREAM_SHA"
 TARGET_UPSTREAM_SHA="$SKIA_SYNC_TARGET_UPSTREAM_SHA"
+SS_BASE_SHA="$SKIA_SYNC_PARENT_BASE_SHA"
 
-SS_VALIDATED_HEAD_SHA=$(git -C "$GITHUB_WORKSPACE" rev-parse "refs/heads/${HEAD_BRANCH}^{commit}")
-SKIA_VALIDATED_HEAD_SHA=$(git -C "$GITHUB_WORKSPACE/externals/skia" rev-parse "refs/heads/${HEAD_BRANCH}^{commit}")
+GIT_BIN=$(command -p -v git)
+GH_BIN=$(command -p -v gh)
+TRUSTED_DELIVERY_DIR=$(command -p mktemp -d \
+  "${RUNNER_TEMP:?RUNNER_TEMP is required}/skia-sync-delivery.XXXXXX")
+TRUSTED_GIT_HOME="$TRUSTED_DELIVERY_DIR/home"
+TRUSTED_GIT_ASKPASS="$TRUSTED_DELIVERY_DIR/git-askpass.sh"
+TRUSTED_GIT_PACK_OBJECTS="$TRUSTED_DELIVERY_DIR/git-pack-objects.sh"
+TRUSTED_GIT_UPLOAD_PACK="$TRUSTED_DELIVERY_DIR/git-upload-pack.sh"
+TRUSTED_SKIA_REPO="$TRUSTED_DELIVERY_DIR/skia.git"
+TRUSTED_SS_REPO="$TRUSTED_DELIVERY_DIR/skiasharp.git"
+readonly GIT_BIN GH_BIN TRUSTED_DELIVERY_DIR TRUSTED_GIT_HOME TRUSTED_GIT_ASKPASS
+readonly TRUSTED_GIT_PACK_OBJECTS TRUSTED_GIT_UPLOAD_PACK
+readonly TRUSTED_SKIA_REPO TRUSTED_SS_REPO
+command -p chmod 700 "$TRUSTED_DELIVERY_DIR"
+
+cleanup_trusted_delivery() {
+  command -p rm -rf -- "$TRUSTED_DELIVERY_DIR"
+}
+trap cleanup_trusted_delivery EXIT
+
+command -p mkdir -p "$TRUSTED_GIT_HOME"
+# shellcheck disable=SC2016 # These variables expand only when Git invokes the generated helper.
+printf '%s\n' \
+  '#!/bin/sh' \
+  'test "$1" = git && test "$2" = pack-objects' \
+  'shift' \
+  "exec \"$GIT_BIN\" \"\$@\"" >"$TRUSTED_GIT_PACK_OBJECTS"
+printf '%s\n' \
+  '#!/bin/sh' \
+  "exec \"$GIT_BIN\" -c uploadpack.packObjectsHook=\"$TRUSTED_GIT_PACK_OBJECTS\" upload-pack \"\$@\"" \
+  >"$TRUSTED_GIT_UPLOAD_PACK"
+command -p chmod 700 "$TRUSTED_GIT_PACK_OBJECTS" "$TRUSTED_GIT_UPLOAD_PACK"
+
+trusted_git() {
+  env -i \
+    HOME="$TRUSTED_GIT_HOME" \
+    PATH="/usr/bin:/bin" \
+    GIT_CONFIG_GLOBAL=/dev/null \
+    GIT_CONFIG_NOSYSTEM=1 \
+    GIT_NO_REPLACE_OBJECTS=1 \
+    GIT_TERMINAL_PROMPT=0 \
+    "$GIT_BIN" \
+    -c core.hooksPath=/dev/null \
+    -c core.fsmonitor=false \
+    -c credential.helper= \
+    -c safe.bareRepository=all \
+    "$@"
+}
+
+reject_replace_refs() {
+  local repo_dir="$1"
+  local replace_refs
+
+  replace_refs=$(trusted_git -C "$repo_dir" for-each-ref --format='%(refname)' refs/replace)
+  if [[ -n "$replace_refs" ]]; then
+    echo "::error::Replacement refs are forbidden in the validated repository: $repo_dir."
+    exit 1
+  fi
+}
+
+reject_unsafe_git_config() {
+  local repo_dir="$1"
+  local local_config
+  local unsafe_config
+
+  local_config=$(trusted_git -C "$repo_dir" config --local --no-includes --name-only --list)
+  unsafe_config=$(printf '%s\n' "$local_config" | tr '[:upper:]' '[:lower:]' | grep -E \
+    '^(include(if\..*)?\.path|core\.(alternaterefscommand|attributesfile|editor|fsmonitor|hookspath|sshcommand|worktree)|diff\.(external|.*\.(command|textconv))|filter\..*\.(clean|smudge|process)|remote\..*\.uploadpack|uploadpack\.packobjectshook)$' || true)
+  if [[ -n "$unsafe_config" ]]; then
+    echo "::error::Command-bearing local Git configuration is forbidden in $repo_dir: $unsafe_config"
+    exit 1
+  fi
+}
+
+prepare_push_repo() {
+  local source_dir="$1"
+  local destination="$2"
+  local commit_sha="$3"
+  local base_sha="$4"
+  local fetched_sha
+
+  trusted_git init --bare "$destination" >/dev/null
+  trusted_git -C "$destination" fetch --quiet --no-tags \
+    --upload-pack="$TRUSTED_GIT_UPLOAD_PACK" "$source_dir" "$commit_sha"
+  fetched_sha=$(trusted_git -C "$destination" rev-parse "FETCH_HEAD^{commit}")
+  if [[ "$fetched_sha" != "$commit_sha" ]]; then
+    echo "::error::Trusted delivery repository did not capture validated commit ${commit_sha}."
+    exit 1
+  fi
+  if ! trusted_git -C "$destination" cat-file -e "${base_sha}^{commit}"; then
+    trusted_git -C "$destination" fetch --quiet --no-tags \
+      --upload-pack="$TRUSTED_GIT_UPLOAD_PACK" "$source_dir" "$base_sha"
+  fi
+  fetched_sha=$(trusted_git -C "$destination" rev-parse "${base_sha}^{commit}")
+  if [[ "$fetched_sha" != "$base_sha" ]]; then
+    echo "::error::Trusted delivery repository did not capture validated base ${base_sha}."
+    exit 1
+  fi
+  if [[ -n "$(trusted_git -C "$destination" for-each-ref --format='%(refname)')" ]]; then
+    echo "::error::Trusted delivery repository unexpectedly contains mutable refs."
+    exit 1
+  fi
+}
+
+reject_replace_refs "$GITHUB_WORKSPACE"
+reject_replace_refs "$GITHUB_WORKSPACE/externals/skia"
+reject_unsafe_git_config "$GITHUB_WORKSPACE"
+reject_unsafe_git_config "$GITHUB_WORKSPACE/externals/skia"
+
+SS_VALIDATED_HEAD_SHA=$(trusted_git -C "$GITHUB_WORKSPACE" rev-parse "refs/heads/${HEAD_BRANCH}^{commit}")
+SKIA_VALIDATED_HEAD_SHA=$(trusted_git -C "$GITHUB_WORKSPACE/externals/skia" rev-parse "refs/heads/${HEAD_BRANCH}^{commit}")
 readonly SS_VALIDATED_HEAD_SHA SKIA_VALIDATED_HEAD_SHA
+prepare_push_repo "$GITHUB_WORKSPACE" "$TRUSTED_SS_REPO" "$SS_VALIDATED_HEAD_SHA" "$SS_BASE_SHA"
+prepare_push_repo "$GITHUB_WORKSPACE/externals/skia" "$TRUSTED_SKIA_REPO" \
+  "$SKIA_VALIDATED_HEAD_SHA" "$SKIA_BASE_SHA"
 
 assert_resolved() {
   local artifact_name="$1"
@@ -224,7 +337,7 @@ assert_resolved() {
   fi
 }
 
-MANIFEST_JSON=$(git -C "$GITHUB_WORKSPACE" show "${SS_VALIDATED_HEAD_SHA}:cgmanifest.json")
+MANIFEST_JSON=$(trusted_git -C "$TRUSTED_SS_REPO" show "${SS_VALIDATED_HEAD_SHA}:cgmanifest.json")
 MANIFEST_SKIA_HEAD=$(jq -er '
   .registrations[]
   | select(.component.git.repositoryUrl == "https://github.com/mono/skia.git")
@@ -251,7 +364,7 @@ MANIFEST_UPSTREAM_VERSION=$(jq -er '
   | .component.other.version
 ' <<<"$MANIFEST_JSON")
 LOCAL_SKIA_HEAD="$SKIA_VALIDATED_HEAD_SHA"
-PARENT_GITLINK=$(git -C "$GITHUB_WORKSPACE" ls-tree "$SS_VALIDATED_HEAD_SHA" externals/skia | awk '{print $3}')
+PARENT_GITLINK=$(trusted_git -C "$TRUSTED_SS_REPO" ls-tree "$SS_VALIDATED_HEAD_SHA" externals/skia | awk '{print $3}')
 
 assert_resolved CGMANIFEST_SKIA_HEAD "$MANIFEST_SKIA_HEAD" LOCAL_SKIA_HEAD "$LOCAL_SKIA_HEAD"
 assert_resolved PARENT_GITLINK "$PARENT_GITLINK" LOCAL_SKIA_HEAD "$LOCAL_SKIA_HEAD"
@@ -273,7 +386,7 @@ UPDATED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 WORKFLOW_LINK="[skia-upstream-sync](https://github.com/${GITHUB_REPOSITORY:-mono/SkiaSharp}/actions/workflows/auto-skia-sync.lock.yml)"
 
 command -p python3 -I "$SKILL_DIR/scripts/audit_fork_patches.py" \
-  --skia-root "$GITHUB_WORKSPACE/externals/skia" \
+  --skia-root "$TRUSTED_SKIA_REPO" \
   --old-upstream "$BASE_UPSTREAM_SHA" \
   --new-upstream "$TARGET_UPSTREAM_SHA" \
   --fork-base "$SKIA_BASE_SHA" \
@@ -341,44 +454,21 @@ push_branch() {
   fi
 }
 
-prepare_push_repo() {
-  local source_dir="$1"
-  local destination="$2"
-  local commit_sha="$3"
-  local fetched_sha
-
-  trusted_git init --bare "$destination" >/dev/null
-  trusted_git -C "$destination" fetch --quiet --no-tags "$source_dir" "$commit_sha"
-  fetched_sha=$(trusted_git -C "$destination" rev-parse "FETCH_HEAD^{commit}")
-  if [[ "$fetched_sha" != "$commit_sha" ]]; then
-    echo "::error::Trusted delivery repository did not capture validated commit ${commit_sha}."
-    exit 1
-  fi
-}
-
-trusted_git() {
-  env -i \
-    HOME="$TRUSTED_GIT_HOME" \
-    PATH="/usr/bin:/bin" \
-    GIT_CONFIG_NOSYSTEM=1 \
-    GIT_TERMINAL_PROMPT=0 \
-    "$GIT_BIN" \
-    -c core.hooksPath=/dev/null \
-    -c credential.helper= \
-    "$@"
-}
-
 trusted_git_with_token() {
   env -i \
     HOME="$TRUSTED_GIT_HOME" \
     PATH="/usr/bin:/bin" \
     GIT_ASKPASS="$TRUSTED_GIT_ASKPASS" \
+    GIT_CONFIG_GLOBAL=/dev/null \
     GIT_CONFIG_NOSYSTEM=1 \
+    GIT_NO_REPLACE_OBJECTS=1 \
     GIT_TERMINAL_PROMPT=0 \
     SKIA_SYNC_WRITE_TOKEN="$WRITE_TOKEN" \
     "$GIT_BIN" \
     -c core.hooksPath=/dev/null \
+    -c core.fsmonitor=false \
     -c credential.helper= \
+    -c safe.bareRepository=all \
     "$@"
 }
 
@@ -401,7 +491,7 @@ changed_check() {
   local head="$3"
   shift 3
   local status
-  if git -C "$repo_dir" diff --quiet "origin/${base}...${head}" -- "$@"; then
+  if trusted_git -C "$repo_dir" diff --quiet "${base}...${head}" -- "$@"; then
     printf ' '
   else
     status=$?
@@ -493,9 +583,9 @@ EOF
     --arg BODY_INTRO "$SKIA_BODY_INTRO" \
     --arg WORKFLOW_LINK "$WORKFLOW_LINK" \
     --arg COMPANION_PR_URL "$companion_url" \
-    --arg CAPI_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" "$SKIA_VALIDATED_HEAD_SHA" include/c src/c)" \
-    --arg DEPS_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" "$SKIA_VALIDATED_HEAD_SHA" DEPS)" \
-    --arg BUILD_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" "$SKIA_VALIDATED_HEAD_SHA" BUILD.gn third_party)" \
+    --arg CAPI_CHECK "$(changed_check "$TRUSTED_SKIA_REPO" "$SKIA_BASE_SHA" "$SKIA_VALIDATED_HEAD_SHA" include/c src/c)" \
+    --arg DEPS_CHECK "$(changed_check "$TRUSTED_SKIA_REPO" "$SKIA_BASE_SHA" "$SKIA_VALIDATED_HEAD_SHA" DEPS)" \
+    --arg BUILD_CHECK "$(changed_check "$TRUSTED_SKIA_REPO" "$SKIA_BASE_SHA" "$SKIA_VALIDATED_HEAD_SHA" BUILD.gn third_party)" \
     --arg RENDERING_CHECK " " \
     --arg BASE_BRANCH "$SKIA_BASE" \
     --rawfile AUTOMATED_REPORT "$SKIA_SUMMARY_FILE" \
@@ -564,19 +654,19 @@ _Last rendered by the sync workflow: {{UPDATED_AT}}_
 EOF
 )
 
-  generated_check=$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" "$SS_VALIDATED_HEAD_SHA" ':(glob)**/*.generated.cs')
+  generated_check=$(changed_check "$TRUSTED_SS_REPO" "$SS_BASE_SHA" "$SS_VALIDATED_HEAD_SHA" ':(glob)**/*.generated.cs')
   jq -n \
     --arg BODY_INTRO "$SS_BODY_INTRO" \
     --arg WORKFLOW_LINK "$WORKFLOW_LINK" \
     --arg COMPANION_PR_URL "$companion_url" \
-    --arg MANAGED_CHECK "$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" "$SS_VALIDATED_HEAD_SHA" binding)" \
-    --arg NATIVE_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" "$SKIA_VALIDATED_HEAD_SHA" include/c src/c)" \
+    --arg MANAGED_CHECK "$(changed_check "$TRUSTED_SS_REPO" "$SS_BASE_SHA" "$SS_VALIDATED_HEAD_SHA" binding)" \
+    --arg NATIVE_CHECK "$(changed_check "$TRUSTED_SKIA_REPO" "$SKIA_BASE_SHA" "$SKIA_VALIDATED_HEAD_SHA" include/c src/c)" \
     --arg GENERATED_CHECK "$generated_check" \
-    --arg INTEGRATIONS_CHECK "$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" "$SS_VALIDATED_HEAD_SHA" views source)" \
+    --arg INTEGRATIONS_CHECK "$(changed_check "$TRUSTED_SS_REPO" "$SS_BASE_SHA" "$SS_VALIDATED_HEAD_SHA" views source)" \
     --arg RENDERING_CHECK " " \
-    --arg TESTS_CHECK "$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" "$SS_VALIDATED_HEAD_SHA" tests)" \
-    --arg BUILD_CHECK "$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" "$SS_VALIDATED_HEAD_SHA" native scripts .github)" \
-    --arg DOCS_CHECK "$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" "$SS_VALIDATED_HEAD_SHA" documentation samples)" \
+    --arg TESTS_CHECK "$(changed_check "$TRUSTED_SS_REPO" "$SS_BASE_SHA" "$SS_VALIDATED_HEAD_SHA" tests)" \
+    --arg BUILD_CHECK "$(changed_check "$TRUSTED_SS_REPO" "$SS_BASE_SHA" "$SS_VALIDATED_HEAD_SHA" native scripts .github)" \
+    --arg DOCS_CHECK "$(changed_check "$TRUSTED_SS_REPO" "$SS_BASE_SHA" "$SS_VALIDATED_HEAD_SHA" documentation samples)" \
     --arg DOCS_FOLLOWUP_CHECK "$([[ "$generated_check" == " " ]] && printf x || printf ' ')" \
     --rawfile AUTOMATED_REPORT "$SS_SUMMARY_FILE" \
     --arg UPDATED_AT "$UPDATED_AT" \
@@ -602,7 +692,38 @@ EOF
 
 find_pr() {
   local repo="$1"
-  trusted_gh pr list --repo "$repo" --head "$BRANCH" --state open --json number --jq '.[0].number // empty'
+  local base="$2"
+  local expected_sha="$3"
+  local repository_name="${repo#*/}"
+  local matches
+
+  matches=$(trusted_gh pr list \
+    --repo "$repo" \
+    --head "$BRANCH" \
+    --base "$base" \
+    --state open \
+    --json number,headRepository,headRepositoryOwner,headRefName,headRefOid,baseRefName)
+  jq -r \
+    --arg repo "$repo" \
+    --arg owner mono \
+    --arg repository_name "$repository_name" \
+    --arg head "$BRANCH" \
+    --arg base "$base" \
+    --arg sha "$expected_sha" \
+    '
+      [
+        .[]
+        | select(
+            .headRepositoryOwner.login == $owner
+            and .headRepository.name == $repository_name
+            and .headRepository.nameWithOwner == $repo
+            and .headRefName == $head
+            and .headRefOid == $sha
+            and .baseRefName == $base
+          )
+      ]
+      | if length > 1 then error("multiple exact delivery PRs") else .[0].number // empty end
+    ' <<<"$matches"
 }
 
 ensure_pr() {
@@ -610,9 +731,10 @@ ensure_pr() {
   local base="$2"
   local title="$3"
   local body_file="$4"
+  local expected_sha="$5"
   local pr
 
-  pr=$(find_pr "$repo")
+  pr=$(find_pr "$repo" "$base" "$expected_sha")
   if [[ -z "$pr" ]]; then
     trusted_gh pr create --repo "$repo" \
       --head "$BRANCH" \
@@ -620,7 +742,7 @@ ensure_pr() {
       --title "$title" \
       --draft \
       --body-file "$body_file" >/dev/null
-    pr=$(find_pr "$repo")
+    pr=$(find_pr "$repo" "$base" "$expected_sha")
   fi
   if [[ -z "$pr" ]]; then
     echo "::error::Failed to create or find the $repo PR for $BRANCH."
@@ -652,27 +774,6 @@ apply_labels() {
 }
 
 echo "Pushing $BRANCH to mono/skia and mono/SkiaSharp with guarded leases..."
-git -C "$GITHUB_WORKSPACE/externals/skia" rev-parse --verify "origin/${SKIA_BASE}^{commit}" >/dev/null
-git -C "$GITHUB_WORKSPACE" rev-parse --verify "origin/${SS_BASE}^{commit}" >/dev/null
-
-GIT_BIN=$(command -p -v git)
-GH_BIN=$(command -p -v gh)
-TRUSTED_DELIVERY_DIR=$(command -p mktemp -d \
-  "${RUNNER_TEMP:?RUNNER_TEMP is required}/skia-sync-delivery.XXXXXX")
-TRUSTED_GIT_HOME="$TRUSTED_DELIVERY_DIR/home"
-TRUSTED_GIT_ASKPASS="$TRUSTED_DELIVERY_DIR/git-askpass.sh"
-TRUSTED_SKIA_REPO="$TRUSTED_DELIVERY_DIR/skia.git"
-TRUSTED_SS_REPO="$TRUSTED_DELIVERY_DIR/skiasharp.git"
-readonly GIT_BIN GH_BIN TRUSTED_DELIVERY_DIR TRUSTED_GIT_HOME TRUSTED_GIT_ASKPASS
-readonly TRUSTED_SKIA_REPO TRUSTED_SS_REPO
-command -p chmod 700 "$TRUSTED_DELIVERY_DIR"
-
-cleanup_trusted_delivery() {
-  command -p rm -rf -- "$TRUSTED_DELIVERY_DIR"
-}
-trap cleanup_trusted_delivery EXIT
-
-command -p mkdir -p "$TRUSTED_GIT_HOME"
 # shellcheck disable=SC2016 # These variables expand only when Git invokes the generated helper.
 printf '%s\n' \
   '#!/bin/sh' \
@@ -683,8 +784,6 @@ printf '%s\n' \
   'esac' >"$TRUSTED_GIT_ASKPASS"
 command -p chmod 700 "$TRUSTED_GIT_ASKPASS"
 
-prepare_push_repo "$GITHUB_WORKSPACE/externals/skia" "$TRUSTED_SKIA_REPO" "$SKIA_VALIDATED_HEAD_SHA"
-prepare_push_repo "$GITHUB_WORKSPACE" "$TRUSTED_SS_REPO" "$SS_VALIDATED_HEAD_SHA"
 push_branch "$TRUSTED_SKIA_REPO" mono/skia "$SKIA_VALIDATED_HEAD_SHA"
 push_branch "$TRUSTED_SS_REPO" mono/SkiaSharp "$SS_VALIDATED_HEAD_SHA"
 
@@ -692,11 +791,11 @@ SKIA_BODY="$ARTIFACT_DIR/skia-pr-body.md"
 SS_BODY="$ARTIFACT_DIR/skiasharp-pr-body.md"
 
 render_skia_body "Pending companion PR creation in this workflow run." "$SKIA_BODY"
-SKIA_PR=$(ensure_pr mono/skia "$SKIA_BASE" "$SKIA_TITLE" "$SKIA_BODY")
+SKIA_PR=$(ensure_pr mono/skia "$SKIA_BASE" "$SKIA_TITLE" "$SKIA_BODY" "$SKIA_VALIDATED_HEAD_SHA")
 SKIA_PR_URL="https://github.com/mono/skia/pull/${SKIA_PR}"
 
 render_skiasharp_body "$SKIA_PR_URL" "$SS_BODY"
-SS_PR=$(ensure_pr mono/SkiaSharp "$SS_BASE" "$SS_TITLE" "$SS_BODY")
+SS_PR=$(ensure_pr mono/SkiaSharp "$SS_BASE" "$SS_TITLE" "$SS_BODY" "$SS_VALIDATED_HEAD_SHA")
 SS_PR_URL="https://github.com/mono/SkiaSharp/pull/${SS_PR}"
 
 render_skia_body "$SS_PR_URL" "$SKIA_BODY"
