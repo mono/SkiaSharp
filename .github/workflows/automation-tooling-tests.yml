@@ -16,10 +16,13 @@ on:
     paths:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
+      - "documentation/docfx/TOC.yml"
+      - "samples/Gallery/**"
       - ".github/scripts/**"
+      - "scripts/build-docs-site.py"
       - "scripts/infra/repository-identity.json"
       - "scripts/infra/repository_identity.py"
-      - "scripts/infra/tests/test_repository_identity.py"
+      - "scripts/infra/tests/test_*.py"
       - "scripts/infra/caching/repo-deps.json"
       - ".gitmodules"
       - "cgmanifest.json"
@@ -31,10 +34,13 @@ on:
     paths:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
+      - "documentation/docfx/TOC.yml"
+      - "samples/Gallery/**"
       - ".github/scripts/**"
+      - "scripts/build-docs-site.py"
       - "scripts/infra/repository-identity.json"
       - "scripts/infra/repository_identity.py"
-      - "scripts/infra/tests/test_repository_identity.py"
+      - "scripts/infra/tests/test_*.py"
       - "scripts/infra/caching/repo-deps.json"
       - ".gitmodules"
       - "cgmanifest.json"
@@ -93,8 +99,34 @@ jobs:
 
       - name: Run repository identity tests
         run: |
-          python3 -m unittest scripts/infra/tests/test_repository_identity.py -v
+          python3 -m unittest discover -s scripts/infra/tests -p "test_*.py" -v
           python3 scripts/infra/repository_identity.py validate
+          python3 -m py_compile \
+            scripts/build-docs-site.py \
+            scripts/infra/repository_identity.py \
+            scripts/infra/tests/test_build_docs_site.py \
+            scripts/infra/tests/test_repository_identity.py
+
+      - name: Validate Gallery repository metadata
+        run: |
+          dotnet tool restore
+          dotnet cake --target=samples-generate
+          for tree in samples samples-preview; do
+            repository_url="$(dotnet msbuild \
+              "output/${tree}/Gallery/Shared/SkiaSharpSample.Shared.csproj" \
+              -getProperty:SkiaSharpRepositoryUrl)"
+            test "$repository_url" = "https://github.com/mono/SkiaSharp"
+          done
+          dotnet build samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj \
+            -p:TargetFramework=net10.0 \
+            -p:TargetFrameworks=net10.0 \
+            -p:SkiaSharpRepositoryUrl=https://github.com/dotnet/SkiaSharp \
+            -p:WasmBuildNative=false \
+            -p:WasmNativeStrip=true \
+            -v:minimal
+          strings samples/Gallery/Shared/bin/Debug/net10.0/SkiaSharpSample.Shared.dll \
+            | grep -F 'RepositoryUrl#https://github.com/dotnet/SkiaSharp' \
+            > /dev/null
 
       - name: Validate cache dependency coverage
         run: python3 scripts/infra/caching/repo-deps.py validate

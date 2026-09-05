@@ -4,6 +4,10 @@ namespace SkiaSharpSample.Services;
 
 public class SampleService 
 {
+	public static string RepositoryUrl { get; } =
+		GetAssemblyMetadata("RepositoryUrl") ??
+		throw new InvalidOperationException("RepositoryUrl build metadata is missing.");
+
 	private readonly SampleBase[] samples;
 	private readonly SampleBase[] allSamples;
 
