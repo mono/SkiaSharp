@@ -17,7 +17,11 @@ from urllib.parse import urlsplit
 THIS_DIR = Path(__file__).resolve().parent
 DEFAULT_ROOT = THIS_DIR.parents[1]
 CONFIG_PATH = THIS_DIR / "repository-identity.json"
-_SLUG_RE = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+_SLUG_RE = re.compile(r"[^/]+/[^/]+")
+_OWNER_RE = re.compile(
+    r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?"
+)
+_REPOSITORY_RE = re.compile(r"[A-Za-z0-9._-]{1,100}")
 _URL_PATTERNS = (
     re.compile(
         r"https://github\.com/(?P<slug>[^/]+/[^/]+?)(?:\.git)?/?",
@@ -56,20 +60,36 @@ def _normalize_slug(value: str) -> str:
     slug = value.removesuffix(".git")
     if not _SLUG_RE.fullmatch(slug):
         raise IdentityError(f"Unsupported GitHub repository identity: {value!r}")
+
+    owner, repository = slug.split("/", 1)
+    if (
+        not _OWNER_RE.fullmatch(owner)
+        or "--" in owner
+        or not _REPOSITORY_RE.fullmatch(repository)
+        or repository in {".", ".."}
+    ):
+        raise IdentityError(f"Unsupported GitHub repository identity: {value!r}")
     return slug
 
 
 def normalize_github_repository(value: str) -> str:
     """Return an owner/repository slug for a supported GitHub URL or slug."""
 
-    candidate = (value or "").strip()
-    if _SLUG_RE.fullmatch(candidate):
-        return _normalize_slug(candidate)
+    if not isinstance(value, str):
+        raise IdentityError(f"Unsupported GitHub repository identity: {value!r}")
+    candidate = value
+    if candidate != candidate.strip() or any(
+        character.isspace()
+        or ord(character) < 32
+        or ord(character) == 127
+        for character in candidate
+    ):
+        raise IdentityError(f"Unsupported GitHub repository identity: {value!r}")
     for pattern in _URL_PATTERNS:
         match = pattern.fullmatch(candidate)
         if match:
             return _normalize_slug(match.group("slug"))
-    raise IdentityError(f"Unsupported GitHub repository identity: {value!r}")
+    return _normalize_slug(candidate)
 
 
 def github_url(repository: str, *, git: bool = False) -> str:
@@ -242,14 +262,32 @@ def validate_manifest(root: Path, identity: dict) -> None:
             )
         component = registration.get("component")
         if not isinstance(component, dict):
+            raise IdentityError(
+                f"{manifest_path} registration {index} component must "
+                "contain an object."
+            )
+        component_type = component.get("type")
+        if not isinstance(component_type, str) or not component_type:
+            raise IdentityError(
+                f"{manifest_path} registration {index} component type must "
+                "contain a string."
+            )
+        if component_type != "git":
             continue
+
         git = component.get("git")
-        if git is not None and not isinstance(git, dict):
+        if not isinstance(git, dict):
             raise IdentityError(
                 f"{manifest_path} registration {index} git component must "
                 "contain an object."
             )
-        if isinstance(git, dict) and git.get("repositoryUrl") == expected_url:
+        repository_url = git.get("repositoryUrl")
+        if not isinstance(repository_url, str) or not repository_url:
+            raise IdentityError(
+                f"{manifest_path} registration {index} repositoryUrl must "
+                "contain a string."
+            )
+        if repository_url == expected_url:
             matches.append(registration)
 
     if len(matches) != 1:

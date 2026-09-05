@@ -83,19 +83,30 @@ class RepositoryIdentityTests(unittest.TestCase):
         )
 
     def test_normalizes_supported_github_identities(self) -> None:
-        for value in (
-            "dotnet/SkiaSharp",
-            "dotnet/SkiaSharp.git",
-            " https://github.com/dotnet/SkiaSharp ",
-            "https://github.com/dotnet/SkiaSharp.git",
-            "https://github.com/dotnet/SkiaSharp/",
-            "git://github.com/dotnet/SkiaSharp.git",
-            "git@github.com:dotnet/SkiaSharp.git",
-            "ssh://git@github.com/dotnet/SkiaSharp.git",
+        for value, expected in (
+            ("dotnet/SkiaSharp", "dotnet/SkiaSharp"),
+            ("dotnet/SkiaSharp.git", "dotnet/SkiaSharp"),
+            (
+                "https://github.com/dotnet/SkiaSharp.git",
+                "dotnet/SkiaSharp",
+            ),
+            ("https://github.com/dotnet/SkiaSharp/", "dotnet/SkiaSharp"),
+            (
+                "git://github.com/dotnet/SkiaSharp.git",
+                "dotnet/SkiaSharp",
+            ),
+            ("git@github.com:dotnet/SkiaSharp.git", "dotnet/SkiaSharp"),
+            (
+                "ssh://git@github.com/dotnet/SkiaSharp.git",
+                "dotnet/SkiaSharp",
+            ),
+            ("owner-name/repo.name_with-dots", "owner-name/repo.name_with-dots"),
+            ("owner/.github", "owner/.github"),
+            ("owner/_private", "owner/_private"),
         ):
             with self.subTest(value=value):
                 self.assertEqual(
-                    "dotnet/SkiaSharp",
+                    expected,
                     IDENTITY.normalize_github_repository(value),
                 )
 
@@ -109,10 +120,22 @@ class RepositoryIdentityTests(unittest.TestCase):
     def test_rejects_non_github_and_ambiguous_identities(self) -> None:
         for value in (
             "",
+            " dotnet/SkiaSharp ",
             "SkiaSharp",
+            "./repo",
+            "../repo",
+            "owner/.",
+            "owner/..",
             "dotnet/",
             "dotnet/.git",
             "/SkiaSharp",
+            "-owner/repo",
+            "owner-/repo",
+            "owner--name/repo",
+            "owner_name/repo",
+            "owner/repo name",
+            "owner/repo\tname",
+            "owner/repo\x00name",
             "https://example.test/dotnet/SkiaSharp",
             "https://github.com/dotnet",
             "https://github.com/dotnet/SkiaSharp/issues/1",
@@ -297,6 +320,24 @@ class RepositoryIdentityTests(unittest.TestCase):
                     with self.assertRaises(IDENTITY.IdentityError):
                         IDENTITY.validate_manifest(root, identity)
 
+            (root / "cgmanifest.json").write_text(
+                json.dumps(
+                    {
+                        "registrations": [
+                            {
+                                "component": {
+                                    "type": "other",
+                                    "git": {"repositoryUrl": expected},
+                                }
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaises(IDENTITY.IdentityError):
+                IDENTITY.validate_manifest(root, identity)
+
     def test_rejects_malformed_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -307,9 +348,28 @@ class RepositoryIdentityTests(unittest.TestCase):
                 {},
                 {"registrations": {}},
                 {"registrations": ["invalid"]},
+                {"registrations": [{}]},
+                {"registrations": [{"component": "invalid"}]},
+                {"registrations": [{"component": {}}]},
+                {"registrations": [{"component": {"type": "git"}}]},
                 {
                     "registrations": [
-                        {"component": {"git": "invalid"}}
+                        {"component": {"type": "git", "git": "invalid"}}
+                    ]
+                },
+                {
+                    "registrations": [
+                        {"component": {"type": "git", "git": {}}}
+                    ]
+                },
+                {
+                    "registrations": [
+                        {
+                            "component": {
+                                "type": "git",
+                                "git": {"repositoryUrl": None},
+                            }
+                        }
                     ]
                 },
             )
