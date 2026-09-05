@@ -22,7 +22,7 @@ reader must be told about. Comment it and prove the four preconditions below.
 
 ### Where to look
 ```bash
-rg -n "GetObject<|GetObject \(|OwnedBy|owns: false|unrefExisting|WeakReference|\.IsAlive|\.Target|GetInstanceNoLocks|GetInstance\(|GetOrAddObject" binding/SkiaSharp --glob '!*.generated.cs'
+rg -n "GetObject<|GetObject \(|OwnedBy|owns: false|unrefExisting" binding/SkiaSharp --glob '!*.generated.cs'
 ```
 Candidates: `SKSurface.SurfaceProperties`/`Context`, `SKCanvas.Surface`/`Context`,
 `SKPictureRecorder.RecordingCanvas`, immutable-object accessors like `SKImage.ColorSpace` /
@@ -68,58 +68,57 @@ crash. `GC.KeepAlive(this)` after reading keeps the owner rooted.
 
 ---
 
-## B. Repeated weak-reference probes in a global handle lookup
+## B. Repeated invariant work in a global registry / handle lookup
 
-**The signature:** a global object-tracking lookup tests one `WeakReference` for liveness, then
-reads `Target` again for type, disposal, ownership, or debug-mismatch checks. Re-reading a weak
-reference can repeat work on every tracked-wrapper lookup. `HandleDictionary.GetInstanceNoLocks`
-is a representative place to inspect: `GetInstance` and `GetOrAddObject` route tracked wrapper
-lookups through it.
+**The signature:** a global object-tracking lookup repeats invariant reflection, metadata,
+liveness, or object-probe work for every lookup. The result may be stable for the relevant type,
+registry entry, or critical-section observation, but that is an invariant to establish, not an
+assumption.
 
-**Candidate, not a blanket rule.** A single local `Target` snapshot can be a candidate when it
-removes repeated reads without changing what the lookup observes. It roots the observed target
-for the rest of the lookup, so it is not automatically equivalent to separate weak reads. Do not
-change every `WeakReference` use, and do not assume the current implementation is safely
-refactorable without the proof below.
+**Historical case:** [#4629](https://github.com/mono/SkiaSharp/issues/4629) and
+[#4630](https://github.com/mono/SkiaSharp/pull/4630) found that the global `HandleDictionary`
+path re-evaluated a per-type reflection predicate for each `GetInstance`/`GetOrAddObject` call.
+PR #4630 cached that type-invariant registration decision, removing repeated work while preserving
+the existing behavior.
+
+**Candidate, not a blanket rule.** A cached or snapshotted observation can be a candidate only
+when it preserves the original observation's lifetime, type, disposal, ownership, concurrency,
+and debug behavior. Do not assume every repeated lookup is safely cacheable or that current code
+has a qualifying invariant.
 
 ### Where to look
 ```bash
-rg -n "WeakReference|\.IsAlive|\.Target|GetInstanceNoLocks|GetInstance\(|GetOrAddObject" binding/SkiaSharp --glob '!*.generated.cs'
+rg -n "HandleDictionary|GetInstance|GetOrAddObject|SkipObjectRegistration|ISKSkipObjectRegistration|IsAssignableFrom" binding/SkiaSharp --glob '!*.generated.cs'
 ```
 
-Start at global lookup paths such as `HandleDictionary.GetInstanceNoLocks`, then trace the
-callers that make the path hot. Distinguish a repeated probe of the **same** weak reference from
-independent weak references or a read whose timing is itself part of the synchronization design.
+Start at global registry and handle-lookup critical sections, then trace the callers that make a
+path hot. Look for computation that is repeated despite being invariant for the type, registry
+entry, or protected observation; distinguish it from a read whose timing is part of the
+synchronization design.
 
 ### Proof obligation
 
 Benchmark the **actual lookup method and its normal routing path** with BenchmarkDotNet `New` vs
-`Old`; do not benchmark a standalone `WeakReference` micro-loop. Use realistic tracked-wrapper
+`Old`; do not benchmark an isolated predicate or metadata read. Use realistic tracked-wrapper
 workloads and report allocations as well as timing.
 
-Before changing the implementation, add an equivalence test that demonstrates the old and proposed
-paths are identical for:
+Before changing the implementation, add an equivalence test over the behavior the existing lookup
+protects: successful and absent lookups, relevant type/disposal/ownership outcomes, Debug-only
+diagnostics, and concurrent GC/dispose/create pressure where those operations can interact. The
+test must establish that the retained observation has not weakened a safety check or changed which
+object is returned.
 
-1. A live target of the requested type.
-2. A disposed target.
-3. A missing handle and a collected target.
-4. Ownership-sensitive paths, including the existing owned/non-owned behaviour.
-5. A Debug build with `THROW_OBJECT_EXCEPTIONS` enabled, covering both the wrong-`SKObject`-type
-   and unknown-object mismatch branches.
-6. Concurrent GC and public-dispose stress, so the snapshot neither returns an object the old path
-   would reject nor suppresses an existing safety check.
-
-Temporarily make the proposed lookup deliberately wrong (for example, bypass a mismatch or
-disposed-target branch) and prove the equivalence test goes red before removing that change. If
-the test cannot distinguish that error, strengthen it or leave this candidate alone.
+Temporarily make the proposed optimization deliberately wrong, such as by inverting its cached
+decision or removing a protected outcome, and prove the equivalence test goes red before removing
+that change. If the test cannot distinguish the error, strengthen it or leave this candidate alone.
 
 ### Watch out (❌ don't)
 
-Do not collapse reads merely because they look redundant. A snapshot changes the lifetime of the
-observed object and can alter type, disposed, ownership, debug mismatch, or concurrent GC/dispose
-semantics. Preserve each existing check against the same local observation only when the test and
-stress evidence establish that this is behaviour-identical. If the benchmark is noise, the
-equivalence evidence is incomplete, or the concurrency model is unclear, record no candidate.
+Do not cache or snapshot work merely because it looks redundant. Changing when an observation is
+made or retained can alter lifetime, type, disposal, ownership, concurrency, or debug semantics.
+Preserve every existing check only when the test and stress evidence establish behavior parity. If
+the benchmark is noise, the equivalence evidence is incomplete, or the concurrency model is
+unclear, record no candidate.
 
 ---
 
