@@ -80,6 +80,12 @@ import sys
 source_path, lock_path = sys.argv[1:]
 source = open(source_path, encoding="utf-8").read()
 lines = open(lock_path, encoding="utf-8").read().splitlines()
+action_ref = re.compile(r"^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+@[0-9a-f]{40}$")
+for label, workflow in (("source", source), ("compiled", "\n".join(lines))):
+    refs = re.findall(r"^\s+uses:\s+([^\s#]+)", workflow, flags=re.MULTILINE)
+    mutable = [ref for ref in refs if not action_ref.fullmatch(ref)]
+    if mutable:
+        raise SystemExit(f"{label} workflow has mutable action refs: {mutable}")
 
 agent_headers = [index for index, line in enumerate(lines) if line == "  agent:"]
 if len(agent_headers) != 1:

@@ -37,7 +37,7 @@ on:
   # Outputs are available in the prompt via ${{ needs.pre_activation.outputs.* }}.
   steps:
     - name: Check out detection scripts
-      uses: actions/checkout@v7.0.1
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         sparse-checkout: .github/scripts
     - name: Detect milestone
@@ -100,7 +100,7 @@ jobs:
         run: printf 'authorized=true\n' >> "$GITHUB_OUTPUT"
       - name: Check out trusted delivery code
         if: steps.delivery_gate.outputs.authorized == 'true'
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           sparse-checkout: |
@@ -109,7 +109,7 @@ jobs:
             .github/scripts/skia-sync-push-prs.sh
       - name: Download immutable delivery package
         if: steps.delivery_gate.outputs.authorized == 'true'
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: skia-sync-delivery
           path: ${{ runner.temp }}/skia-sync-delivery-artifact
@@ -382,12 +382,12 @@ safe-outputs:
   threat-detection:
     steps:
       - name: Check out trusted detector attestation code
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           sparse-checkout: .github/scripts/skia-sync-push-prs.sh
       - name: Download immutable detector attestation
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: skia-sync-delivery
           path: ${{ runner.temp }}/skia-sync-detector-artifact
@@ -686,7 +686,7 @@ post-steps:
       trap - EXIT
       printf 'SKIA_SYNC_DELIVERY_PACKAGE_DIR=%s\n' "$PACKAGE_DIR" >> "$GITHUB_ENV"
   - name: Upload immutable delivery package
-    uses: actions/upload-artifact@v7.0.1
+    uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
     with:
       name: skia-sync-delivery
       path: ${{ env.SKIA_SYNC_DELIVERY_PACKAGE_DIR }}
