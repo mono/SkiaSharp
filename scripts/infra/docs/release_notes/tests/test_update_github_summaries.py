@@ -498,6 +498,27 @@ class RenderManagedSummaryTests(unittest.TestCase):
             rendered,
         )
 
+    def test_rejects_a_malformed_public_site_before_rendering(self):
+        shipment = _shipment()
+        candidate = updater.Candidate(
+            tag=shipment["tag"],
+            prose_path=Path("prose.json"),
+            data_path=Path("data.json"),
+            prose=_prose(
+                summaries={
+                    shipment["tag"]: {"headline": "A focused preview release."}
+                }
+            ),
+            data=_data(shipments=[shipment]),
+            shipment=shipment,
+        )
+
+        with self.assertRaises(common.RepositoryIdentityError):
+            updater.render_managed_summary(
+                candidate,
+                documentation_base_url="",
+            )
+
     def test_omits_the_changelog_link_for_the_first_ever_shipment(self):
         shipment = _shipment(previous_tag=None, changelog_url=None)
         candidate = updater.Candidate(
@@ -591,13 +612,14 @@ class MainEndToEndTests(unittest.TestCase):
         with mock.patch.object(GH, "RestGitHubClient", return_value=fake_client):
             exit_code = updater.main([
                 "--event", "workflow_dispatch",
+                "--repository", "mono/SkiaSharp",
                 "--tag", "v4.151.0-preview.1",
                 "--root", str(self.fixture.root),
             ])
         self.assertEqual(exit_code, 1)
         self.assertEqual(fake_client.writes, [])
 
-    def test_omitted_site_argument_uses_the_refreshed_identity_value(self):
+    def test_omitted_site_argument_uses_release_notes_cutover_constant(self):
         self.fixture.write_page("4.151.0", data=_data(), prose=_prose())
         initial_body = GH.build_managed_body("", "## What's Changed\n")
         fake_client = FakeGitHubClient(
@@ -606,11 +628,8 @@ class MainEndToEndTests(unittest.TestCase):
         with (
             mock.patch.object(
                 common,
-                "configure_identity",
-                return_value={
-                    "repository": "dotnet/SkiaSharp",
-                    "publicSiteBaseUrl": "https://skiasharp.example.test",
-                },
+                "PUBLIC_SITE_BASE_URL",
+                "https://skiasharp.example.test",
             ),
             mock.patch.object(
                 GH, "RestGitHubClient", return_value=fake_client
@@ -633,9 +652,35 @@ class MainEndToEndTests(unittest.TestCase):
         with mock.patch.object(GH, "RestGitHubClient", return_value=fake_client):
             exit_code = updater.main([
                 "--event", "push",
+                "--repository", "mono/SkiaSharp",
                 "--root", str(self.fixture.root),
             ])
         self.assertEqual(exit_code, 0)
+
+    def test_repository_fallback_uses_the_same_root_as_release_data(self):
+        fake_client = FakeGitHubClient({})
+        with (
+            mock.patch.object(
+                common,
+                "configure_repository",
+                return_value="mono/SkiaSharp",
+            ) as configure,
+            mock.patch.object(
+                GH,
+                "RestGitHubClient",
+                return_value=fake_client,
+            ),
+        ):
+            exit_code = updater.main([
+                "--event", "push",
+                "--root", str(self.fixture.root),
+            ])
+
+        self.assertEqual(exit_code, 0)
+        configure.assert_called_once_with(
+            None,
+            root=self.fixture.root.resolve(),
+        )
 
 
 if __name__ == "__main__":

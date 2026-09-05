@@ -107,14 +107,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Tuple
 
-_INFRA_DIR = Path(__file__).resolve().parent.parent
-if str(_INFRA_DIR) not in sys.path:
-    sys.path.insert(0, str(_INFRA_DIR))
-from repository_identity import resolve_identity  # noqa: E402
-
-
-_REPOSITORY_IDENTITY = resolve_identity()
-REPO = _REPOSITORY_IDENTITY["repository"]
 RELEASES_DIR = Path("documentation/docfx/releases")
 
 # Make the sibling ``release_notes`` package importable regardless of how this
@@ -130,6 +122,12 @@ if str(_THIS_DIR) not in sys.path:
 from release_notes import (  # noqa: E402
     common as _release_common,
     shipments as _release_shipments,
+)
+
+REPO = None
+_SKIA_REPOSITORY = _release_common.read_submodule_repository(
+    _release_common.DEFAULT_ROOT,
+    "externals/skia",
 )
 
 # The Prepare phase ALWAYS writes the machine-readable "Files to polish" list to a
@@ -158,7 +156,7 @@ def _skia_pr_patterns(skia_repository):
     ]
 
 
-SKIA_PR_PATTERNS = _skia_pr_patterns(_REPOSITORY_IDENTITY["skiaRepository"])
+SKIA_PR_PATTERNS = _skia_pr_patterns(_SKIA_REPOSITORY)
 
 # A paired-Skia bump commit names its own PR in its subject, either as a
 # squash "(#N)" suffix or a "Merge pull request #N" merge subject. Used to
@@ -170,32 +168,52 @@ _SKIA_SELF_PR_PATTERNS = [
 ]
 _SKIA_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 SKIA_SUBMODULE = Path("externals/skia")
-SKIA_REMOTE_URL = _REPOSITORY_IDENTITY["skiaGitUrl"]
+SKIA_REMOTE_URL = _release_common.github_url(_SKIA_REPOSITORY, git=True)
 
 
-def configure_repository_identity(
+def configure_repositories(
     repository=None,
     *,
     root=None,
     environ=None,
-    config_path=None,
+    remote_url=None,
 ):
     """Refresh mutable repository identities before a generator run."""
 
-    global REPO, SKIA_PR_PATTERNS, SKIA_REMOTE_URL, _REPOSITORY_IDENTITY
-    _REPOSITORY_IDENTITY = resolve_identity(
+    global REPO, SKIA_PR_PATTERNS, SKIA_REMOTE_URL, _SKIA_REPOSITORY
+    root = (root or _release_common.DEFAULT_ROOT).resolve()
+    repository = _release_common.resolve_current_repository(
+        repository,
         root=root,
-        repository=repository,
         environ=environ,
-        config_path=config_path,
+        remote_url=remote_url,
     )
-    REPO = _REPOSITORY_IDENTITY["repository"]
-    SKIA_REMOTE_URL = _REPOSITORY_IDENTITY["skiaGitUrl"]
-    SKIA_PR_PATTERNS = _skia_pr_patterns(
-        _REPOSITORY_IDENTITY["skiaRepository"]
+    skia_repository = _release_common.read_submodule_repository(
+        root,
+        "externals/skia",
     )
-    _release_common.configure_identity(identity=_REPOSITORY_IDENTITY)
-    return _REPOSITORY_IDENTITY
+    skia_remote_url = _release_common.github_url(
+        skia_repository,
+        git=True,
+    )
+    REPO = _release_common.configure_repository(repository)
+    _SKIA_REPOSITORY = skia_repository
+    SKIA_REMOTE_URL = skia_remote_url
+    SKIA_PR_PATTERNS = _skia_pr_patterns(skia_repository)
+    return {
+        "repository": REPO,
+        "skiaRepository": _SKIA_REPOSITORY,
+        "skiaGitUrl": SKIA_REMOTE_URL,
+    }
+
+
+def get_repository():
+    """Return the configured repository, resolving the checkout lazily."""
+
+    global REPO
+    if REPO is None:
+        REPO = _release_common.get_repository()
+    return REPO
 
 # Noreply email pattern: {id}+{username}@users.noreply.github.com
 _NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
@@ -694,7 +712,7 @@ def _graphql_pr_authors(numbers):
     ``GITHUB_TOKEN``); any failure yields an empty dict and callers fall back to
     the plain author name.
     """
-    owner, name = REPO.split("/")
+    owner, name = get_repository().split("/")
     aliases = "\n".join(
         "p{n}: pullRequest(number: {n}) {{ author {{ login }} }}".format(n=n)
         for n in numbers)
@@ -811,7 +829,7 @@ def _graphql_pr_fixed_issues(numbers):
     installed, authenticated ``gh`` CLI; any failure yields an empty dict and the
     caller falls back to the PR-body keyword regex.
     """
-    owner, name = REPO.split("/")
+    owner, name = get_repository().split("/")
     aliases = "\n".join(
         "p{n}: pullRequest(number: {n}) {{ closingIssuesReferences(first: 50) "
         "{{ nodes {{ number }} }} }}".format(n=n)
@@ -1165,7 +1183,7 @@ def collect_shipments_for_page(page_version):
         prs_between=lambda from_tag, to_tag: (
             get_prs_from_diff(from_tag, to_tag) if from_tag else []
         ),
-        repository=REPO,
+        repository=get_repository(),
     )
 
 
@@ -1244,7 +1262,9 @@ def collect_preview_milestones(page_version, base_version):
     for idx, m in enumerate(ordered):
         prev_tag = ordered[idx - 1]["tag"] if idx > 0 else global_pred
         compare_url = (
-            "https://github.com/{}/compare/{}...{}".format(REPO, prev_tag, m["tag"])
+            "https://github.com/{}/compare/{}...{}".format(
+                get_repository(), prev_tag, m["tag"]
+            )
             if prev_tag else None)
         result.append({
             "version": m["core"],
@@ -1786,7 +1806,9 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
                 "name": author_name,
                 "email": author_email,
             },
-            "url": "https://github.com/{}/pull/{}".format(REPO, num),
+            "url": "https://github.com/{}/pull/{}".format(
+                get_repository(), num
+            ),
             "number": num,
             "body": body,
             "commit": commit_hash,
@@ -1893,7 +1915,9 @@ def build_data_json(prs, metadata):
         "nuget_url": nuget_url,
         "preview_nuget_url": preview_nuget,
         "github_release_url": (
-            "https://github.com/{}/releases/tag/v{}".format(REPO, version)
+            "https://github.com/{}/releases/tag/v{}".format(
+                get_repository(), version
+            )
             if status == "stable" else None),
     }
     # HarfBuzz never releases on its own — it ships inside a SkiaSharp release
@@ -1905,7 +1929,9 @@ def build_data_json(prs, metadata):
         banner["date"] = None
         banner["ships_with"] = ships
         banner["github_release_url"] = (
-            "https://github.com/{}/releases/tag/v{}".format(REPO, ships["version"])
+            "https://github.com/{}/releases/tag/v{}".format(
+                get_repository(), ships["version"]
+            )
             if ships.get("version") and status == "stable" else None)
 
     # Flat PR map + community flag (renderer derives ❤️ credit from this).
@@ -2083,7 +2109,7 @@ def preserve_historical_github_urls(existing, generated):
         allowed = {
             repository.casefold()
             for repository in (
-                _REPOSITORY_IDENTITY["repository"],
+                get_repository(),
             ) + _HISTORICAL_REPOSITORIES
         }
         old_repository = (
@@ -2860,11 +2886,11 @@ def main():
         "--repository",
         default=None,
         help="Current GitHub owner/repository. Defaults to GITHUB_REPOSITORY, then "
-             "the shared offline fallback.",
+             "the validated origin remote.",
     )
 
     args = parser.parse_args()
-    configure_repository_identity(args.repository)
+    configure_repositories(args.repository)
 
     min_core = _core_tuple(args.min_version) if args.min_version else None
     max_core = _core_tuple(args.max_version) if args.max_version else None

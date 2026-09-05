@@ -102,7 +102,9 @@ def pr_links(nums, data):
     out = []
     for n in nums or []:
         pr = _pr(data, n)
-        url = pr["url"] if pr else "https://github.com/{}/pull/{}".format(_gen.REPO, n)
+        url = pr["url"] if pr else "https://github.com/{}/pull/{}".format(
+            _gen.get_repository(), n
+        )
         out.append("[#{}]({})".format(n, url))
     return ", ".join(out)
 
@@ -724,7 +726,7 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
             "[Chromium's release schedule](https://chromiumdash.appspot.com/schedule). "
             "SkiaSharp milestones are synced automatically from this schedule — "
             "check the [GitHub milestones](https://github.com/{}/milestones) "
-            .format(_gen.REPO) +
+            .format(_gen.get_repository()) +
             "for upcoming release dates.",
             "",
         ])

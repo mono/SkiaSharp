@@ -1332,11 +1332,13 @@ maintainer-reviewed summary into the matching GitHub Release without waiting on,
 gating, the release itself.
 
 **Repository identity and historical provenance.** Future PR, release, preview, and
-compare links use the current SkiaSharp repository resolved by
-`scripts/infra/repository_identity.py`; the paired Skia repository and clone URL come
-from the `externals/skia` entry in `.gitmodules`. The generator still recognizes
-explicit `mono/skia` references in immutable historical PR and commit text, but that
-legacy slug is a parser input only, not the default for newly generated links.
+compare links use the current SkiaSharp repository resolved by the release-notes
+tooling itself. Resolution is explicit `--repository`, then `GITHUB_REPOSITORY`, then
+the validated GitHub `origin` remote of the current checkout; there is no owner-specific
+fallback file. The paired Skia repository and clone URL come from the `externals/skia`
+entry in `.gitmodules`. The generator still recognizes explicit `mono/skia` references
+in immutable historical PR and commit text, but that legacy slug is a parser input only,
+not the default for newly generated links.
 
 Committed release facts are historical records. During an owner transfer, regenerating
 an existing page preserves a stored `https://github.com/<owner>/SkiaSharp/...` URL when
@@ -1347,16 +1349,19 @@ historical `mono/SkiaSharp` repository, while still requiring the exact compare
 endpoints and exact tags. The renderer prefers stored fact URLs; only missing/future
 fallback links use the current repository.
 
-The public release-notes base is independently configured as `publicSiteBaseUrl` in
-`scripts/infra/repository-identity.json`. It is not inferred from the GitHub owner. The
-GitHub Release updater receives that exact configured value, so repository and public
-site transfers may be staged separately. Any malformed current identity or malformed
-configuration fails before generation or GitHub writes rather than silently falling
-back to a different owner or site.
+The public release-notes base is the release-notes-specific
+`release_notes.common.PUBLIC_SITE_BASE_URL` constant, with
+`update_github_summaries.py --documentation-base-url` as the explicit override. It is
+not inferred from the GitHub owner, so repository and public-site cutovers may be staged
+separately. This constant is the one domain-specific site cutover point. A malformed
+explicit repository, malformed `GITHUB_REPOSITORY`, non-GitHub `origin`, or malformed
+paired-Skia URL fails before generation or GitHub writes rather than silently selecting
+another owner or site.
 
 The implementation lives under `scripts/infra/docs/release_notes/`:
 
-- **`common.py`** — the exact-release tag grammar (`EXACT_RELEASE_TAG_RE`, stricter than
+- **`common.py`** — current/paired repository resolution, the public-site cutover
+  constant, the exact-release tag grammar (`EXACT_RELEASE_TAG_RE`, stricter than
   `release-notes-data.py`'s lenient `_parse_tag`: it rejects decorative/legacy labels
   like `-beta` or `-gpu1` outright, so the exact-summary path never associates a summary
   with a tag it cannot confidently classify), and the `DATA_FORMAT` constant that must

@@ -220,6 +220,9 @@ def render_managed_summary(
     core_version = shipment["core_version"]
     if documentation_base_url is None:
         documentation_base_url = common.PUBLIC_SITE_BASE_URL
+    documentation_base_url = common.normalize_public_site_base_url(
+        documentation_base_url
+    )
     links = [
         "\U0001F4E6 [NuGet](https://www.nuget.org/packages/SkiaSharp/{})".format(
             public_version
@@ -387,7 +390,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--event", required=True, choices=("push", "release", "workflow_dispatch")
     )
-    parser.add_argument("--repository", default=common.REPO)
+    parser.add_argument("--repository", default=None)
     parser.add_argument(
         "--documentation-base-url",
         default=None,
@@ -401,16 +404,23 @@ def main(argv: list[str] | None = None) -> int:
     args = create_parser().parse_args(argv)
     result = UpdateResult()
     try:
-        identity = common.configure_identity(repository=args.repository)
+        root = args.root.resolve()
+        current_repository = common.configure_repository(
+            args.repository,
+            root=root,
+        )
         documentation_base_url = (
             args.documentation_base_url
             if args.documentation_base_url is not None
-            else identity["publicSiteBaseUrl"]
+            else common.PUBLIC_SITE_BASE_URL
         )
-        repository = RepositoryView(args.root.resolve())
+        documentation_base_url = common.normalize_public_site_base_url(
+            documentation_base_url
+        )
+        repository = RepositoryView(root)
         tag = args.tag if args.event in ("release", "workflow_dispatch") else None
         candidates = select_candidates(repository, tag=tag)
-        client = github.RestGitHubClient(args.repository)
+        client = github.RestGitHubClient(current_repository)
         result = update_releases(
             candidates,
             client,
@@ -418,7 +428,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         _write_summary(result)
         return 0
-    except (OSError, UpdateError) as exc:
+    except (OSError, UpdateError, common.RepositoryIdentityError) as exc:
         _write_summary(result, error_message=str(exc))
         print("ERROR: {}".format(exc), file=sys.stderr)
         return 1

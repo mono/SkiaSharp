@@ -9,9 +9,8 @@ from unittest import mock
 _DOCS_DIR = Path(__file__).resolve().parents[2]
 if str(_DOCS_DIR) not in sys.path:
     sys.path.insert(0, str(_DOCS_DIR))
-
 from release_notes import common, github
-from repository_identity import IdentityError
+from release_notes import common, github
 
 
 def _load_release_notes_data_module():
@@ -442,7 +441,7 @@ class DataJsonUnchangedIsStrictTests(unittest.TestCase):
 class PreserveHistoricalGitHubUrlsTests(unittest.TestCase):
     def setUp(self):
         self.module = _load_release_notes_data_module()
-        self.module.configure_repository_identity(
+        self.module.configure_repositories(
             repository="dotnet/SkiaSharp"
         )
 
@@ -581,12 +580,17 @@ class PreserveHistoricalGitHubUrlsTests(unittest.TestCase):
 
 class RepositoryIdentityIntegrationTests(unittest.TestCase):
     def setUp(self):
+        self.original_repository = common.REPO
+        self.addCleanup(
+            setattr,
+            common,
+            "REPO",
+            self.original_repository,
+        )
         self.module = _load_release_notes_data_module()
 
     @staticmethod
-    def _write_identity_fixture(root, *, repository, skia, site):
-        import json
-
+    def _write_gitmodules(root, *, skia):
         (root / ".gitmodules").write_text(
             '[submodule "externals/skia"]\n'
             "  path = externals/skia\n"
@@ -596,37 +600,125 @@ class RepositoryIdentityIntegrationTests(unittest.TestCase):
             "  url = https://github.com/dotnet/SkiaSharp-API-docs\n".format(skia),
             encoding="utf-8",
         )
-        config = root / "repository-identity.json"
-        config.write_text(
-            json.dumps(
-                {
-                    "canonicalRepositoryId": 52293126,
-                    "offlineRepository": repository,
-                    "upstreamSkiaRepository": "google/skia",
-                    "publicSiteBaseUrl": site,
-                    "skiaRepositoryKey": "github-52292286",
-                    "legacySkiaRepositoryKeys": ["mono-skia"],
-                }
-            ),
-            encoding="utf-8",
-        )
-        return config
 
-    def test_current_mono_identity_comes_from_the_shared_foundation(self):
+    def test_repository_resolution_precedence_is_explicit_then_environment_then_remote(self):
+        self.assertEqual(
+            common.resolve_current_repository(
+                "dotnet/SkiaSharp",
+                environ={"GITHUB_REPOSITORY": "mono/SkiaSharp"},
+                remote_url="https://github.com/other/SkiaSharp.git",
+            ),
+            "dotnet/SkiaSharp",
+        )
+        self.assertEqual(
+            common.resolve_current_repository(
+                environ={"GITHUB_REPOSITORY": "dotnet/SkiaSharp"},
+                remote_url="https://github.com/mono/SkiaSharp.git",
+            ),
+            "dotnet/SkiaSharp",
+        )
+        self.assertEqual(
+            common.resolve_current_repository(
+                environ={},
+                remote_url="git@github.com:mono/SkiaSharp.git",
+            ),
+            "mono/SkiaSharp",
+        )
+
+    def test_git_remote_fallback_requires_exactly_one_url(self):
+        completed = mock.Mock(returncode=0, stdout="https://github.com/mono/SkiaSharp.git\n")
+        with mock.patch.object(
+            common.subprocess,
+            "run",
+            return_value=completed,
+        ) as run:
+            self.assertEqual(
+                common.resolve_current_repository(
+                    environ={},
+                    root=Path("/tmp/repository"),
+                ),
+                "mono/SkiaSharp",
+            )
+        run.assert_called_once_with(
+            [
+                "git",
+                "-C",
+                str(Path("/tmp/repository").resolve()),
+                "remote",
+                "get-url",
+                "--all",
+                "origin",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        completed.stdout = (
+            "https://github.com/mono/SkiaSharp.git\n"
+            "https://github.com/dotnet/SkiaSharp.git\n"
+        )
+        with (
+            mock.patch.object(
+                common.subprocess,
+                "run",
+                return_value=completed,
+            ),
+            self.assertRaises(common.RepositoryIdentityError),
+        ):
+            common.resolve_current_repository(
+                environ={},
+                root=Path("/tmp/repository"),
+            )
+
+    def test_credentialed_github_remote_is_accepted_without_echoing_secrets(self):
+        self.assertEqual(
+            common.resolve_current_repository(
+                environ={},
+                remote_url=(
+                    "https://x-access-token:secret@github.com/"
+                    "mono/SkiaSharp.git"
+                ),
+            ),
+            "mono/SkiaSharp",
+        )
+        with self.assertRaises(common.RepositoryIdentityError) as error:
+            common.resolve_current_repository(
+                environ={},
+                remote_url="https://x-access-token:secret@example.test/repo.git",
+            )
+        self.assertNotIn("secret", str(error.exception))
+
+    def test_public_site_base_requires_absolute_https(self):
+        self.assertEqual(
+            common.normalize_public_site_base_url(
+                "https://mono.github.io/SkiaSharp/"
+            ),
+            "https://mono.github.io/SkiaSharp",
+        )
+        for value in (
+            "",
+            "/SkiaSharp",
+            "http://example.test/SkiaSharp",
+            "https://user@example.test/SkiaSharp",
+            "https://example.test/bad path",
+            "https://example.test/SkiaSharp?preview=1",
+            "https://example.test/SkiaSharp#preview",
+        ):
+            with self.subTest(value=value):
+                with self.assertRaises(common.RepositoryIdentityError):
+                    common.normalize_public_site_base_url(value)
+
+    def test_current_mono_identity_uses_validated_remote_and_gitmodules(self):
         import tempfile
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
-            config = self._write_identity_fixture(
-                root,
-                repository="mono/SkiaSharp",
-                skia="mono/skia",
-                site="https://mono.github.io/SkiaSharp",
-            )
-            identity = self.module.configure_repository_identity(
+            self._write_gitmodules(root, skia="mono/skia")
+            identity = self.module.configure_repositories(
                 root=root,
                 environ={},
-                config_path=config,
+                remote_url="https://github.com/mono/SkiaSharp.git",
             )
 
         self.assertEqual(self.module.REPO, "mono/SkiaSharp")
@@ -634,28 +726,23 @@ class RepositoryIdentityIntegrationTests(unittest.TestCase):
             self.module.SKIA_REMOTE_URL, "https://github.com/mono/skia.git"
         )
         self.assertEqual(
-            identity["publicSiteBaseUrl"], "https://mono.github.io/SkiaSharp"
+            common.PUBLIC_SITE_BASE_URL,
+            "https://mono.github.io/SkiaSharp",
         )
-        self.assertEqual(
-            common.PUBLIC_SITE_BASE_URL, common.IDENTITY["publicSiteBaseUrl"]
-        )
+        self.assertEqual(identity["repository"], "mono/SkiaSharp")
+        self.assertEqual(identity["skiaRepository"], "mono/skia")
 
     def test_simulated_transfer_flips_future_repository_skia_and_release_links(self):
         import tempfile
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
-            config = self._write_identity_fixture(
-                root,
-                repository="dotnet/SkiaSharp",
-                skia="dotnet/skia",
-                site="https://skiasharp.example.test",
-            )
+            self._write_gitmodules(root, skia="dotnet/skia")
 
-            identity = self.module.configure_repository_identity(
+            identity = self.module.configure_repositories(
+                repository="dotnet/SkiaSharp",
                 root=root,
                 environ={},
-                config_path=config,
             )
             shipments = self.module._release_shipments.collect_shipments(
                 "9.9.9",
@@ -674,12 +761,12 @@ class RepositoryIdentityIntegrationTests(unittest.TestCase):
                 },
             )
 
-        self.assertEqual(identity["publicSiteBaseUrl"], "https://skiasharp.example.test")
         self.assertEqual(self.module.REPO, "dotnet/SkiaSharp")
         self.assertEqual(
             self.module.SKIA_REMOTE_URL, "https://github.com/dotnet/skia.git"
         )
         self.assertEqual(self.module._release_common.REPO, "dotnet/SkiaSharp")
+        self.assertEqual(identity["skiaRepository"], "dotnet/skia")
         self.assertEqual(
             data["banner"]["github_release_url"],
             "https://github.com/dotnet/SkiaSharp/releases/tag/v9.9.9",
@@ -710,10 +797,10 @@ class RepositoryIdentityIntegrationTests(unittest.TestCase):
         )
 
     def test_destination_context_drives_renderer_fallback_links(self):
-        with mock.patch.dict(
-            "os.environ", {"GITHUB_REPOSITORY": "dotnet/SkiaSharp"}
-        ):
-            renderer = _load_release_notes_renderer_module()
+        common.configure_repository(
+            environ={"GITHUB_REPOSITORY": "dotnet/SkiaSharp"},
+        )
+        renderer = _load_release_notes_renderer_module()
 
         self.assertEqual(
             renderer.pr_links([42], {"prs": {}}),
@@ -734,7 +821,7 @@ class RepositoryIdentityIntegrationTests(unittest.TestCase):
         )
 
     def test_destination_context_drives_future_preview_compare_links(self):
-        self.module.configure_repository_identity(
+        self.module.configure_repositories(
             repository="dotnet/SkiaSharp"
         )
 
@@ -757,32 +844,49 @@ class RepositoryIdentityIntegrationTests(unittest.TestCase):
         )
 
     def test_malformed_runtime_repository_fails_loudly(self):
-        with mock.patch.dict("os.environ", {"GITHUB_REPOSITORY": "dotnet"}):
-            with self.assertRaises(IdentityError):
-                _load_release_notes_data_module()
+        with self.assertRaises(common.RepositoryIdentityError):
+            common.resolve_current_repository(
+                environ={"GITHUB_REPOSITORY": "dotnet"},
+                remote_url="https://github.com/mono/SkiaSharp.git",
+            )
 
-    def test_malformed_transfer_config_fails_before_state_changes(self):
-        import json
+    def test_malformed_or_ambiguous_remote_fails_without_a_fallback(self):
+        for remote_url in (
+            "https://gitlab.com/mono/SkiaSharp.git",
+            "https://github.com/mono/SkiaSharp.git\nhttps://github.com/dotnet/SkiaSharp.git",
+            "",
+        ):
+            with self.subTest(remote_url=remote_url):
+                with self.assertRaises(common.RepositoryIdentityError):
+                    common.resolve_current_repository(
+                        environ={},
+                        remote_url=remote_url,
+                    )
+
+    def test_explicit_malformed_repository_does_not_fall_back(self):
+        with self.assertRaises(common.RepositoryIdentityError):
+            common.resolve_current_repository(
+                "dotnet",
+                environ={"GITHUB_REPOSITORY": "mono/SkiaSharp"},
+                remote_url="https://github.com/mono/SkiaSharp.git",
+            )
+
+    def test_malformed_paired_skia_fails_before_identity_state_changes(self):
         import tempfile
 
         repository_before = self.module.REPO
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
-            config = self._write_identity_fixture(
+            self._write_gitmodules(
                 root,
-                repository="dotnet/SkiaSharp",
-                skia="dotnet/skia",
-                site="https://skiasharp.example.test",
+                skia="not-github.example/dotnet/skia",
             )
-            value = json.loads(config.read_text(encoding="utf-8"))
-            value["publicSiteBaseUrl"] = "not-a-url"
-            config.write_text(json.dumps(value), encoding="utf-8")
 
-            with self.assertRaises(IdentityError):
-                self.module.configure_repository_identity(
+            with self.assertRaises(common.RepositoryIdentityError):
+                self.module.configure_repositories(
+                    repository="dotnet/SkiaSharp",
                     root=root,
                     environ={},
-                    config_path=config,
                 )
 
         self.assertEqual(self.module.REPO, repository_before)

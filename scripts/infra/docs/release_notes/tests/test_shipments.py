@@ -141,7 +141,9 @@ class CollectShipmentsTests(unittest.TestCase):
         self.assertEqual(
             rc["changelog_url"],
             "https://github.com/{}/compare/"
-            "v4.150.0-preview.2.1...v4.150.0-rc.1.1".format(common.REPO),
+            "v4.150.0-preview.2.1...v4.150.0-rc.1.1".format(
+                common.get_repository()
+            ),
         )
 
     def test_destination_repository_is_used_for_future_exact_shipments(self):

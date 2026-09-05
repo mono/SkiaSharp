@@ -49,7 +49,7 @@ def collect_shipments(
     preview correctly compares against the prior line's last release.
     """
 
-    repository = repository or common.REPO
+    repository = repository or common.get_repository()
     parsed_all = sorted(
         (parsed for tag in all_tags if (parsed := common.parse_tag(tag)) is not None),
         key=lambda parsed: parsed.sort_key,
