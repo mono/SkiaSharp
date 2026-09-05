@@ -39,11 +39,17 @@ import argparse
 import datetime
 import gzip
 import json
+import os
 import re
 import subprocess
 import sys
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlparse
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+_OWNER_RE = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?")
+_REPOSITORY_RE = re.compile(r"[A-Za-z0-9_.-]+")
 
 # ── Paths & constants ────────────────────────────────────────────────────────
 
@@ -78,6 +84,67 @@ SKIASHARP_MAJOR = 4
 ADOPTION_LINE_COUNT = 5
 
 USER_AGENT = "SkiaSharp-ai-dashboard"
+
+
+def normalize_repository(value):
+    # type: (str) -> str
+    """Return a validated GitHub owner/repository slug."""
+    candidate = value.strip()
+    if candidate.startswith("git@github.com:"):
+        candidate = candidate.removeprefix("git@github.com:")
+    elif "://" in candidate:
+        parsed = urlparse(candidate)
+        if (
+            parsed.hostname != "github.com"
+            or parsed.query
+            or parsed.fragment
+            or parsed.params
+        ):
+            raise ValueError("Unsupported GitHub repository: {!r}".format(value))
+        candidate = parsed.path.lstrip("/")
+
+    candidate = candidate.removesuffix(".git").rstrip("/")
+    parts = candidate.split("/")
+    if (
+        len(parts) != 2
+        or not _OWNER_RE.fullmatch(parts[0])
+        or not _REPOSITORY_RE.fullmatch(parts[1])
+        or parts[1] in {".", ".."}
+    ):
+        raise ValueError("Unsupported GitHub repository: {!r}".format(value))
+    return candidate
+
+
+def repository_from_git_remote(root):
+    # type: (Path) -> str
+    urls = subprocess.run(
+        ["git", "-C", str(root), "remote", "get-url", "--all", "origin"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.splitlines()
+    repositories = set()
+    for url in urls:
+        try:
+            repositories.add(normalize_repository(url))
+        except ValueError:
+            continue
+    if len(repositories) != 1:
+        raise RuntimeError(
+            "Unable to resolve one GitHub repository from the origin remote; "
+            "pass --repository explicitly."
+        )
+    return repositories.pop()
+
+
+def current_repository(explicit=None, root=REPO_ROOT, environ=None):
+    # type: (str | None, Path, dict | None) -> str
+    if explicit:
+        return normalize_repository(explicit)
+    runtime = (environ if environ is not None else os.environ).get("GITHUB_REPOSITORY")
+    if runtime:
+        return normalize_repository(runtime)
+    return repository_from_git_remote(root)
 
 
 def log(*args):
@@ -397,9 +464,7 @@ def build_cadence(existing):
         "asOf": today_iso(),
         "scheduleUrl": prev_cadence.get(
             "scheduleUrl", "https://chromiumdash.appspot.com/schedule"),
-        "prsUrl": prev_cadence.get(
-            "prsUrl",
-            "https://github.com/mono/SkiaSharp/pulls?q=is%3Apr+milestone+in%3Atitle"),
+        "prsUrl": prev_cadence.get("prsUrl", ""),
         "caption": prev_cadence.get(
             "caption",
             "AI opens, tests, and lands the sync PR; humans review the API."),
@@ -436,6 +501,22 @@ def load_existing(path):
     return {}
 
 
+def build_dashboard(existing, repository=None):
+    repository = current_repository(repository)
+    repository_url = "https://github.com/{}".format(repository)
+    cadence = dict(build_cadence(existing))
+    cadence["prsUrl"] = (
+        "{}/pulls?q=is%3Apr+milestone+in%3Atitle".format(repository_url)
+    )
+    return {
+        "generatedAt": today_iso(),
+        "adoption": build_adoption(existing),
+        "cadence": cadence,
+        "cost": build_cost(existing),
+        "footerUrl": "{}/tree/main/.github/workflows".format(repository_url),
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -449,20 +530,14 @@ def main(argv=None):
     parser.add_argument(
         "--check", action="store_true",
         help="compute and print, but do not write the output file")
+    parser.add_argument(
+        "--repository",
+        help="current GitHub repository (default: context or unambiguous git remote)")
     args = parser.parse_args(argv)
 
     base_path = args.base or args.output
     existing = load_existing(base_path)
-
-    result = {
-        "generatedAt": today_iso(),
-        "adoption": build_adoption(existing),
-        "cadence": build_cadence(existing),
-        "cost": build_cost(existing),
-        "footerUrl": existing.get(
-            "footerUrl",
-            "https://github.com/mono/SkiaSharp/tree/main/.github/workflows"),
-    }
+    result = build_dashboard(existing, args.repository)
 
     text = json.dumps(result, indent=2, ensure_ascii=False) + "\n"
     if args.check:
