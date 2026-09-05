@@ -331,6 +331,100 @@ namespace SkiaSharp.Tests
 				Assert.Equal(uniforms, builder.Uniforms);
 			}
 
+			// The SKRuntimeEffectUniforms constructor pre-sizes its internal name->Variable map to
+			// the known uniform count (SKRuntimeEffect.cs). This asserts that building the map with an
+			// explicit capacity is behaviour-identical to the default-sized map for a many-uniform
+			// effect that exercises several rehash boundaries: every declared uniform must be listed,
+			// individually settable/gettable, and the packed uniform buffer must be identical whether
+			// written all-at-once or one entry at a time. A mis-sized, truncated, or corrupted map
+			// would drop or misplace an entry and fail one of these assertions.
+			[Fact]
+			public void UniformsMapIsCompleteForManyUniforms()
+			{
+				const int count = 24;
+
+				var declarations = new System.Text.StringBuilder();
+				for (var i = 0; i < count; i++)
+					declarations.AppendLine($"uniform float uniform_{i};");
+
+				var src = $"""
+					{declarations}
+					{EmptyMain}
+					""";
+
+				using var effect = SKRuntimeEffect.CreateShader(src, out var errorText);
+				Assert.Null(errorText);
+
+				var expectedNames = new string[count];
+				for (var i = 0; i < count; i++)
+					expectedNames[i] = $"uniform_{i}";
+
+				// Every uniform is present and in declaration order.
+				var uniforms = new SKRuntimeEffectUniforms(effect);
+				Assert.Equal(expectedNames, uniforms.Names);
+				Assert.Equal(count, uniforms.Count);
+
+				// Reference buffer: set each uniform via the indexer to a distinct value.
+				var reference = new SKRuntimeEffectUniforms(effect);
+				for (var i = 0; i < count; i++)
+					reference[$"uniform_{i}"] = i + 0.5f;
+				var referenceData = reference.ToData().ToArray();
+
+				// Same values applied in reverse order must produce the exact same packed buffer,
+				// proving the map maps each name to the correct offset regardless of insertion path.
+				var shuffled = new SKRuntimeEffectUniforms(effect);
+				for (var i = count - 1; i >= 0; i--)
+					shuffled[$"uniform_{i}"] = i + 0.5f;
+				Assert.Equal(referenceData, shuffled.ToData().ToArray());
+
+				// The packed buffer round-trips to the declared float values.
+				var floats = System.Runtime.InteropServices.MemoryMarshal.Cast<byte, float>(referenceData);
+				Assert.Equal(count, floats.Length);
+				for (var i = 0; i < count; i++)
+					Assert.Equal(i + 0.5f, floats[i]);
+			}
+
+			// SKRuntimeEffectUniforms.Reset() replaces its internal owned SKData buffer with a
+			// freshly-allocated one. The previous SKData is native ref-counted and owned by the
+			// uniforms object, so it must be disposed when it is replaced — otherwise every Reset()
+			// leaks a native SkData allocation that only the finalizer can reclaim. This asserts the
+			// old buffer's wrapper is deregistered from the handle dictionary (i.e. disposed)
+			// immediately after Reset(), without waiting for a GC.
+			[Fact]
+			public void ResetDisposesPreviousUniformBuffer()
+			{
+				SkipOnMono();
+
+				var src = $"""
+					uniform float uniform_float;
+					{EmptyMain}
+					""";
+
+				using var effect = SKRuntimeEffect.CreateShader(src, out var errorText);
+				Assert.Null(errorText);
+
+				var uniforms = new SKRuntimeEffectUniforms(effect);
+
+				var dataField = typeof(SKRuntimeEffectUniforms).GetField(
+					"data",
+					System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+				Assert.NotNull(dataField);
+
+				var oldData = (SKData)dataField.GetValue(uniforms);
+				var oldHandle = oldData.Handle;
+				Assert.NotEqual(IntPtr.Zero, oldHandle);
+
+				// the wrapper is currently registered against its handle
+				Assert.True(SKObject.GetInstance<SKData>(oldHandle, out _));
+
+				uniforms.Reset();
+
+				// after Reset(), the previous buffer must have been disposed and deregistered
+				Assert.False(SKObject.GetInstance<SKData>(oldHandle, out _));
+
+				uniforms.Dispose();
+			}
+
 			[Fact]
 			public void ChildrenWorksCorrectly()
 			{
@@ -1026,6 +1120,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[Collection(Visual.GpuRenderingCollection.Name)]
 		public unsafe class Gpu : TestEffectTests, IDisposable
 		{
 			GlContext glContext;

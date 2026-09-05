@@ -240,7 +240,7 @@ namespace SkiaSharp.Tests
 		[Obsolete ("Tests obsolete SKTypeface.CountGlyphs/GetGlyphs — see SKFontTest for non-obsolete equivalents")]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system fonts with emoji support");
+			SkipWhenNoSystemFontManager();
 
 			const string text = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
@@ -260,6 +260,7 @@ namespace SkiaSharp.Tests
 		[Obsolete ("Tests obsolete SKTypeface.ContainsGlyphs — see SKFontTest for non-obsolete equivalents")]
 		public void ContainsGlyphsWithByteSpanDoesNotStackOverflow ()
 		{
+			SkipWhenNoDefaultFont();
 			using var typeface = SKTypeface.Default;
 			var text = System.Text.Encoding.UTF8.GetBytes ("Hello");
 			ReadOnlySpan<byte> span = text;
@@ -556,6 +557,7 @@ namespace SkiaSharp.Tests
 		public unsafe void GCStillCollectsTypeface()
 		{
 			SkipOnNonWindows("Test uses Windows-specific font path");
+			SkipWhenNoSystemFontManager("Test resolves the 'Times New Roman' system font");
 
 			var handle = DoWork();
 
@@ -600,6 +602,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void DefaultFamilyNameIsNotNullOrEmpty()
 		{
+			SkipWhenNoDefaultFont();
 			Assert.NotNull(SKTypeface.Default.FamilyName);
 			Assert.NotEmpty(SKTypeface.Default.FamilyName);
 		}
@@ -607,6 +610,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void DefaultIsNotEmpty()
 		{
+			SkipWhenNoDefaultFont();
 			Assert.False(SKTypeface.Default.IsEmpty);
 			Assert.True(SKTypeface.Default.GlyphCount > 0);
 		}

@@ -12,8 +12,7 @@
 [![HarfBuzzSharp API Docs](https://img.shields.io/badge/docs-harfbuzzsharp-1faece.svg)](https://docs.microsoft.com/dotnet/api/SkiaSharp)
 [![SkiaSharp Guides](https://img.shields.io/badge/docs-guides-1faece.svg)](https://docs.microsoft.com/xamarin/graphics-games/skiasharp/)
 
-[![Build Status](https://dev.azure.com/devdiv/DevDiv/_apis/build/status/Xamarin/Components/SkiaSharp?branchName=main)](https://dev.azure.com/devdiv/DevDiv/_build/latest?definitionId=10789&branchName=main)
-[![Build Status](https://dev.azure.com/xamarin/public/_apis/build/status/mono/SkiaSharp/SkiaSharp%20(Public)?branchName=main)](https://dev.azure.com/xamarin/public/_build/latest?definitionId=4&branchName=main)
+[![Build Status](https://dev.azure.com/dnceng-public/public/_apis/build/status/345?branchName=main)](https://dev.azure.com/dnceng-public/public/_build?definitionId=345&branchName=main)
 
 SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's
 Skia Graphics Library ([skia.org](https://skia.org/)). It provides a comprehensive 2D API that can
@@ -49,10 +48,10 @@ nuget install SkiaSharp
 
 _Because there are multiple distros of Linux, and we cannot possibly support them all, we have a separate NuGet package that will contain the supported binaries for a few distros: [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux). ([distros](https://github.com/mono/SkiaSharp/issues/453)) ([more info](https://github.com/mono/SkiaSharp/issues/312))_
 
-There is also a early access feed that you can use to get the latest and greatest, before it goes out to the public:
+There is also an early access feed that you can use to get the latest and greatest, before it goes out to the public:
 
 ```
-https://aka.ms/skiasharp-eap/index.json
+https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json
 ```
 
 ## Building SkiaSharp

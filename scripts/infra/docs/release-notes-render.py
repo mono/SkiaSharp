@@ -683,27 +683,26 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
             "version corresponds to a Chrome/Skia milestone and progresses through "
             "four phases:",
             "",
-            "| Chrome Event | SkiaSharp Release | Purpose |",
+            "| Chromium marker | SkiaSharp release | Purpose |",
             "|---|---|---|",
-            "| Beta Promotion | Preview 1 | Merge upstream Skia, ship initial preview |",
-            "| Early Stable | Preview 2 | Bug fixes and API additions from preview feedback |",
-            "| Stable Cut | RC | Critical bug fixes only, no new features |",
-            "| Stable Release | Stable | Ship to NuGet.org, tag and create GitHub Release |",
+            "| Earliest Beta | Preview 1 | Merge upstream Skia, ship initial preview |",
+            "| Early Stable Cut | Preview 2 | Bug fixes and API additions from preview feedback |",
+            "| Stable Cut | RC 1 | Critical bug fixes only, no new features |",
+            "| Stable Date | Stable | Ship to NuGet.org, tag and create GitHub Release |",
             "",
         ])
         lines.extend(render_cadence_timeline(
             cur_ms, next_ms, cur_base, next_base, schedule_by_ms))
         lines.extend([
             "",
-            "Two milestones are always in flight — as one enters its RC/stable "
-            "phase, the next begins its preview phase.",
+            "Two milestones are always in flight. Stable for one milestone and "
+            "Preview 2 for the next intentionally share the same release date.",
             "",
             "> [!NOTE]",
-            "> Starting with Chrome 153 (September 2026), Chrome moves from a "
-            "4-week to a 3-week release cycle. Because SkiaSharp's cadence is "
-            "driven by Chrome's actual schedule events, the phases above will "
-            "naturally compress — preview through stable will complete in ~3 weeks "
-            "instead of ~4.",
+            "> [Starting with Chrome 153](https://developer.chrome.com/blog/chrome-two-week-release) "
+            "(September 2026), Chrome ships milestones every two weeks. Each "
+            "milestone still takes about three weeks from branch point to Stable, "
+            "so adjacent release trains overlap.",
             "",
             "### Versioning",
             "",
@@ -791,11 +790,12 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
     and committed in _sources/index.json, so this runs with no network. A missing
     schedule is a hard error — re-run release-notes-index.py to refresh index.json.
     """
+    # Keep this mapping in sync with update-release-milestones.ps1 New-DesiredReleaseMilestones.
     phases = [
-        ("Beta Promotion", "beta", ".0-preview.1"),
-        ("Early Stable", "early_stable", ".0-preview.2"),
-        ("Stable Cut", "stable_cut", ".0-rc.1"),
-        ("Stable Release", "stable", ".0"),
+        ("Earliest Beta", "earliest_beta", "Preview 1", ".0-preview.1"),
+        ("Early Stable Cut", "early_stable_cut", "Preview 2", ".0-preview.2"),
+        ("Stable Cut", "stable_cut", "RC 1", ".0-rc.1"),
+        ("Stable Date", "stable_date", "Stable", ".0"),
     ]
     schedule_by_ms = schedule_by_ms or {}
     cur_sched = schedule_by_ms.get(str(cur_ms))
@@ -805,23 +805,35 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
             "index.json is missing the Chrome schedule for m{} or m{} - re-run "
             "release-notes-index.py (the network Prepare step) to refresh "
             "_sources/index.json.".format(cur_ms, next_ms))
-    events = []  # type: list[tuple[str, str, str]]
+    events = []  # type: list[tuple[str, str, str, str]]
     for ms_num, base, sched in (
             (cur_ms, cur_base, cur_sched), (next_ms, next_base, next_sched)):
-        for label, key, suffix in phases:
-            iso = sched[key]
-            events.append((iso,
-                           "m{} {}".format(ms_num, label),
-                           "`{}{}`".format(base, suffix)))
-    events.sort(key=lambda e: e[0])
+        for marker, key, release, suffix in phases:
+            if key not in sched:
+                raise RuntimeError(
+                    "index.json is missing Chromium marker '{}' for m{} - re-run "
+                    "release-notes-index.py to refresh _sources/index.json."
+                    .format(key, ms_num))
+            events.append((
+                sched[key],
+                "m{} {}".format(ms_num, marker),
+                release,
+                "`{}{}`".format(base, suffix)))
+    events.sort(key=lambda e: (e[0], e[1]))
     header = (
         "**Schedule for the two milestones currently in flight "
         "(m{} and m{}), from the "
         "[Chromium release schedule](https://chromiumdash.appspot.com/schedule):**"
         .format(cur_ms, next_ms))
-    rows = ["| Date | Event | Package |", "|------|-------|---------|"]
-    rows += ["| {} | {} | {} |".format(format_schedule_date(iso), ev, pkg)
-             for iso, ev, pkg in events]
+    rows = [
+        "| Date | Chromium marker | SkiaSharp release | Package |",
+        "|---|---|---|---|",
+    ]
+    rows += [
+        "| {} | {} | {} | {} |".format(
+            format_schedule_date(marker_date), marker, release, package)
+        for marker_date, marker, release, package in events
+    ]
     return [header, ""] + rows
 
 

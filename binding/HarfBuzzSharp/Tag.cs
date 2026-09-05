@@ -47,7 +47,7 @@ namespace HarfBuzzSharp
 			return new Tag (c1, c2, c3, c4);
 		}
 
-		public override string ToString ()
+		public override unsafe string ToString ()
 		{
 			if (value == None) {
 				return nameof (None);
@@ -59,11 +59,16 @@ namespace HarfBuzzSharp
 				return nameof (MaxSigned);
 			}
 
-			return string.Concat (
-				(char)(byte)(value >> 24),
-				(char)(byte)(value >> 16),
-				(char)(byte)(value >> 8),
-				(char)(byte)value);
+			// Build the 4-character string directly from a stack buffer. Passing four
+			// chars to string.Concat binds to Concat(object, object, object, object),
+			// which boxes every char (four extra allocations per call); writing into a
+			// stackalloc'd buffer avoids that while producing the identical string.
+			char* chars = stackalloc char[4];
+			chars[0] = (char)(byte)(value >> 24);
+			chars[1] = (char)(byte)(value >> 16);
+			chars[2] = (char)(byte)(value >> 8);
+			chars[3] = (char)(byte)value;
+			return new string (chars, 0, 4);
 		}
 
 		public static implicit operator uint (Tag tag) => tag.value;

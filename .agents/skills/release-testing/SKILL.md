@@ -1,388 +1,192 @@
 ---
 name: release-testing
 description: >
-  Run integration tests to verify SkiaSharp NuGet packages work correctly before publishing.
-  
-  Use when user asks to:
-  - Test/verify packages before release
-  - Run integration tests
-  - Test on specific device (iPad, iPhone, Android emulator, Mac, Windows)
-  - Verify SkiaSharp rendering works
-  - Check if packages are ready for publishing
-  - Run smoke/console/blazor/maui tests
-  - Continue with release
-  - Test version X
-  
-  Triggers: "test the release", "verify packages", "run tests on iPad", "check ios tests",
-  "test mac catalyst", "run android tests", "continue", "test 3.119.2-preview.2".
+  Validate an exact SkiaSharp BAR package set on the current host. Use after the
+  release Build and Tests pipelines finish, before approving their packages for
+  team publication.
 ---
 
-# Release Testing Skill
+# Release Package Approval Testing
 
-Verify SkiaSharp packages work correctly before publishing.
-
-⚠️ **NO UNDO:** This is **Step 3 of 4** in the release pipeline. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
-
-**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) → [Step 2: release-status](../release-status/SKILL.md) → **Step 3 (this skill)** → [Step 4: release-publish](../release-publish/SKILL.md)
-
-## CRITICAL: ANY FAIL IS TOTAL FAIL
-
-- Test fails → Release FAILS
-- Test times out → Release FAILS  
-- Screenshot doesn't match → Release FAILS
-
-**Never rationalize failures.** Fix the issue before proceeding.
-
----
-
-## ⚠️ CRITICAL: Semver Version Ordering
-
-When identifying which release branch to test, you **MUST** use semver ordering, NOT alphabetical or `sort -V` ordering.
-
-**In semver, a bare version is ALWAYS newer than its prerelease variants:**
-
-```
-3.119.2-preview.1 < 3.119.2-preview.2 < 3.119.2-preview.3 < 3.119.2 (FINAL)
+```text
+dnceng Build/Tests + BAR -> release-testing -> team publication
 ```
 
-`release/3.119.2` is the **stable release** and is NEWER than `release/3.119.2-preview.3`.
+This skill is the human approval gate for one completed BAR build. It resolves
+that build's per-build Darc feed, verifies the package family, runs the approved
+host/device matrix, and reports the release decision. It never publishes
+packages, changes BAR state, creates tags/releases, or merges code.
 
-**To find the latest release branch:**
+## Boundaries
 
-1. List all release branches: `git branch -r | grep "release/"`
-2. Identify the highest base version (e.g., `3.119.2`)
-3. Check if a **bare version branch** exists (e.g., `release/3.119.2`) — if so, that is the latest
-4. If only preview branches exist, the highest preview number is the latest
+- Before planning, confirm the connected Build and Tests runs succeeded and the
+  Tests run consumed the exact Build resource selected for release. The planner
+  validates BAR/package identity, not pipeline status.
+- Start from the exact SkiaSharp package version selected for release. When
+  Maestro finds more than one producing BAR, require its exact `--bar-id`.
+- Reject a BAR that is already released; this workflow is a pre-publication
+  approval gate.
+- Verify `SkiaSharp`, `SkiaSharp.HarfBuzz`, and the bridge's concrete
+  `HarfBuzzSharp` dependency from the resolved BAR feed.
+- Require the three packages to agree on source branch/commit, then require
+  SkiaSharp's package metadata to match the selected BAR.
+- Pin the package versions and resolved feed in every runner command. Never
+  substitute another build, feed, package version, or target runtime. Runners
+  may choose a compatible profile/device only within the exact approved target.
+- Obtain approval for the exact host matrix before setup or execution.
+- Run every approved item once. A failure blocks release approval but does not
+  stop collection of unrelated results.
+- Platform runners validate their prerequisites; mobile runners own temporary
+  device lifecycle. Run mobile items sequentially and never delete user-owned
+  devices.
+- Appium and its platform drivers must meet the tested minimum versions. Use
+  Appium's npm-aware launcher and active extension context; do not infer driver
+  filesystem paths or force an exact newer version.
+- Product assertions and rendering differences remain failures. Do not change
+  expectations, skips, targets, or package pins to manufacture a pass.
+- Preserve every initial failure, repair, retry, and artifact review.
+- Release approval requires combined reports covering every required matrix ID.
+  Host-inapplicable and customized omissions remain blocking unless the release
+  owner explicitly records an override.
 
-**⚠️ Getting this wrong means testing the wrong version — wasting the entire process or shipping untested packages.**
+## Test matrix
 
----
+| ID | Coverage | Host |
+|----|----------|------|
+| `smoke` | Native loading | All |
+| `console` | Console and HarfBuzzSharp | All |
+| `linux` | Linux packages in Docker | All |
+| `blazor` | Native WASM in Chromium | All |
+| `android-26` | Minimum Android test target | All |
+| `android-37.1` | Maximum Android test target | All |
+| `maccatalyst` | Mac Catalyst rendering | macOS |
+| `ios-18.6` | Minimum iOS test target | macOS |
+| `ios-26.5` | Maximum iOS test target | macOS |
+| `windows` | MAUI Windows rendering | Windows |
 
-## Step 1: Check CI Status
+iOS 18.6 and Android 26 are minimum **release-test targets**, not product
+support minimums. Exact mobile targets must already be installed. The approved
+plan must state every host-inapplicable or intentionally omitted item.
 
-Before testing, verify CI builds have completed using the **release-status** skill:
+## Runner ownership
+
+| Script | Responsibility |
+|--------|----------------|
+| `scripts/plan-release-tests.py` | Resolve the BAR/feed, verify packages, and emit the host matrix. |
+| `scripts/prepare-test-run.ps1` | Restore pinned local tools and clear prior integration output once. |
+| `scripts/run-host-tests.py` | Run smoke, console, Docker/Linux, Blazor, Mac Catalyst, and Windows items. |
+| `scripts/run-android-tests.py` | Own Android/Appium setup, temporary or reused emulator, test, and cleanup. |
+| `scripts/run-ios-tests.py` | Own iOS/Appium setup, fresh simulator, test, and cleanup. |
+| `scripts/release_test_common.py` | Share package/feed arguments, heartbeats, prerequisite validation, and test invocation. |
+
+Do not manually duplicate runner-owned SDK, Appium, device, Docker, or test
+commands. Use [setup.md](references/setup.md) for prerequisites,
+[monitoring.md](references/monitoring.md) for live progress, and
+[troubleshooting.md](references/troubleshooting.md) after failures.
+
+## Runbook
+
+### 1. Resolve and verify the BAR package family
 
 ```bash
-python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+python3 .agents/skills/release-testing/scripts/plan-release-tests.py 4.150.3
 ```
 
-**Prerequisite:** The `SkiaSharp` pipeline (ID 10789) must have completed successfully — this is
-the pipeline that signs and publishes packages to the internal feed.
-
-`SkiaSharp-Tests` (ID 15756) should pass but does not block testing/publishing.
-
-See the [release-status skill](../release-status/SKILL.md) for full pipeline chain documentation,
-manual queries, and troubleshooting.
-
-### Extracting NuGet Version
-
-The build description contains the internal version in format: `#{base}-{label}.{build}+{branch}`
-
-**Preview example:** `#3.119.2-preview.2.3+3.119.2-preview.2 succeeded`
-- Internal version: `3.119.2-preview.2.3`
-- NuGet version: `3.119.2-preview.2.3` (same — build number is part of the prerelease tag)
-
-**Stable example:** `#3.119.2-stable.3+3.119.2 succeeded`
-- Internal version: `3.119.2-stable.3`
-- NuGet version: `3.119.2` (base only — build number is NEVER appended to stable versions)
-
-⚠️ **Stable versions never include a build number.** Each CI build of a stable release produces a different internal package (`3.119.2-stable.1`, `3.119.2-stable.2`, etc.) but the published NuGet version is always just `3.119.2`.
-
----
-
-## Step 2: Resolve Package Versions
-
-**DO NOT ask user for exact NuGet versions.** Resolve automatically:
-
-1. Fetch release branch and read version files:
-   ```bash
-   # Read base versions (format: "PackageName  nuget  version")
-   grep "^SkiaSharp\s" scripts/VERSIONS.txt | grep "nuget" | awk '{print $3}'
-   grep "^HarfBuzzSharp\s" scripts/VERSIONS.txt | grep "nuget" | awk '{print $3}'
-   
-   # Read preview label (remove surrounding quotes)
-   grep "PREVIEW_LABEL:" scripts/azure-templates-variables.yml | awk '{print $2}' | tr -d "'"
-   ```
-   - `SkiaSharp ... nuget` line → base version (e.g., `3.119.2`)
-   - `HarfBuzzSharp ... nuget` line → base version (e.g., `8.3.1.3`)
-   - `PREVIEW_LABEL` → label (e.g., `preview.2` or `stable`)
-
-2. **Search and filter for the SPECIFIC version:**
-
-   **For preview releases** (`PREVIEW_LABEL` is NOT `stable`):
-
-   ```bash
-   # Get ALL versions, then filter to match {base}-{label}.*
-   dotnet package search SkiaSharp \
-     --source "https://aka.ms/skiasharp-eap/index.json" \
-     --exact-match --prerelease --format json \
-     | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
-     | grep "^{base}-{label}\."
-   
-   # Example: Find 3.119.2-preview.3.* versions
-   ... | grep "^3.119.2-preview.3\."
-   ```
-
-   Pick the highest build number (e.g., `3.119.2-preview.3.1`). This IS the NuGet version.
-
-   **For stable releases** (`PREVIEW_LABEL` is `stable`):
-
-   ```bash
-   # Verify a stable build exists on the internal feed
-   dotnet package search SkiaSharp \
-     --source "https://aka.ms/skiasharp-eap/index.json" \
-     --exact-match --prerelease --format json \
-     | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
-     | grep "^{base}-stable\."
-   
-   # Example: Find 3.119.2-stable.* internal packages
-   ... | grep "^3.119.2-stable\."
-   ```
-
-   The internal feed has `{base}-stable.{build}` packages (e.g., `3.119.2-stable.3`), but the **NuGet version is just `{base}`** (e.g., `3.119.2`). The build number is never appended to stable versions.
-
-   ⚠️ **CRITICAL:** Use `.version` to get ALL versions, NOT `.latestVersion` which only returns the newest.
-   The feed contains multiple version streams (e.g., 3.119.2 AND 3.119.3), so you MUST filter
-   by the base version and preview label from the release branch.
-
-3. Pick the NuGet version:
-   - **Preview:** Highest build number from matching versions (e.g., `3.119.2-preview.3.1`)
-   - **Stable:** Just the base version (e.g., `3.119.2`) — no build number appended
-
-4. Report to user:
-
-   **Preview:**
-   ```
-   Resolved versions:
-     SkiaSharp:     3.119.2-preview.3.1
-     HarfBuzzSharp: 8.3.1.3-preview.3.1
-     Build number:  1
-   ```
-
-   **Stable:**
-   ```
-   Resolved versions:
-     SkiaSharp:     3.119.2
-     HarfBuzzSharp: 8.3.1.3
-     Internal build: 3.119.2-stable.3 (on feed)
-   ```
-
-**No packages found?** CI build hasn't completed. See [troubleshooting.md](references/troubleshooting.md#package-resolution-errors).
-
----
-
-## Step 3: Confirm Test Matrix
-
-**Before running tests**, determine and confirm the test matrix with the user.
-
-### Device Requirements
-
-| Platform | Old Version | New Version |
-|----------|-------------|-------------|
-| Android | API 21-23 (5.0-6.0) | API 35-36 (15-16) |
-| iOS | Oldest available runtime | Newest available runtime |
-
-👉 **See [setup.md](references/setup.md)** for device selection details and emulator creation.
-
-### Confirm with User
-
-```
-Planned test matrix:
-  - iOS (old):     [device] ([oldest available iOS runtime])
-  - iOS (new):     [device] ([newest available iOS runtime])
-  - Android (old): [device] (Android 6.0 / API 23)
-  - Android (new): [device] (Android 16 / API 36)
-  - Mac Catalyst:  Current macOS
-  - Blazor:        Chromium
-  - Console:       .NET runtime
-  - Linux (Docker): Docker container (mcr.microsoft.com/dotnet/sdk:8.0)
-
-Proceed with this matrix?
-```
-
----
-
-## Step 4: Run Integration Tests
-
-### Pre-Test Cleanup (REQUIRED)
-
-⚠️ **CRITICAL:** These steps MUST be done before ANY integration tests:
+The planner uses `darc get-asset` to find the producing BAR. If the version is
+ambiguous, rerun with the exact ID reported by the planner:
 
 ```bash
-# 1. Clear screenshot folder to ensure fresh results
-rm -rf output/logs/testlogs/integration/*
-mkdir -p output/logs/testlogs/integration
-
-# 2. Kill any running Android emulators
-adb devices | grep emulator | awk '{print $1}' | while read emu; do
-  adb -s $emu emu kill 2>/dev/null
-done
-sleep 5
-
-# 3. Verify clean state
-adb devices -l  # Should show NO emulators
-ls output/logs/testlogs/integration/  # Should be empty
+python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
+  4.150.3 --bar-id 329644
 ```
 
-### Run Tests
+Maestro queries default to the last 30 days. For an older release candidate,
+increase the search window explicitly with `--max-age {days}`; never use it to
+select a different package version.
 
-```bash
-cd tests/SkiaSharp.Tests.Integration
-dotnet test -p:SkiaSharpVersion={version} -p:HarfBuzzSharpVersion={hb-version}
+The planner:
+
+1. reads the BAR build, source branch/commit, build link, and Darc feed location;
+2. resolves that feed's GUID-backed NuGet flat-container endpoint;
+3. downloads the three anchor packages from that feed;
+4. verifies package IDs, versions, source metadata, and bridge dependency;
+5. requires package metadata to match the selected BAR; and
+6. emits host-specific commands with the exact versions and feed pinned.
+
+Render the plan:
+
+```markdown
+## Release package test plan
+
+**BAR:** `{release.barBuildId}` / `{release.buildNumber}`
+**Build:** `{release.buildLink}`
+**Source:** `{release.branch}` @ `{release.commit}`
+**Packages:** SkiaSharp `{release.ciPackages.SkiaSharp}`,
+HarfBuzzSharp `{release.ciPackages.HarfBuzzSharp}`
+**Darc location:** `{packageSources.barLocation}`
+**GUID feed:** `{packageSources.guidFeed}`
+**Host:** `{host.os}` / `{host.architecture}`
+
+| ID | Test | Target | Estimate |
+|----|------|--------|----------|
+| `{id}` | `{label}` | `{target}` | `{estimatedMinutes}` min |
 ```
 
-### Test Commands
+Include every `missingCoverage[]`.
 
-> **Note:** This project uses **Microsoft.Testing.Platform (MTP)** with xUnit v3 (since #4143).
-> The legacy VSTest `--filter "FullyQualifiedName~..."` syntax is **silently ignored** under MTP
-> and runs ALL tests. Use the MTP filter args after the `--` separator instead:
-> `--filter-class`, `--filter-method`, `--filter-namespace` (and `--filter-not-class`, etc.),
-> with `*` wildcards. MSBuild `-p:` properties (e.g. `-p:SkiaSharpVersion=`, `-p:iOSDevice=`)
-> must stay BEFORE the `--`; only the test-platform filter args go AFTER it.
+### 2. Approve the exact matrix
 
-```bash
-# Run by category
-dotnet test ... -- --filter-class "*SmokeTests"
-dotnet test ... -- --filter-class "*ConsoleTests"
-dotnet test ... -- --filter-class "*LinuxConsoleTests"
-dotnet test ... -- --filter-class "*BlazorTests"
-dotnet test -p:iOSDevice="iPhone 14 Pro" -p:iOSVersion="16.2" ... -- --filter-class "*MauiiOSTests"
-dotnet test ... -- --filter-class "*MauiMacCatalystTests"
+Use `ask_user`:
 
-# Android: specify device ID and expected API level for validation
-dotnet test ... \
-  -p:AndroidDeviceId="emulator-5554" \
-  -p:AndroidApiLevel="23" \
-  -- --filter-class "*MauiAndroidTests"
+1. `Run the full available matrix (Recommended)`
+2. `Customize the matrix`
+3. `Cancel release testing`
+
+After customization, confirm the exact final item IDs.
+
+### 3. Prepare once
+
+```powershell
+pwsh -NoLogo -NoProfile -File `
+  .agents/skills/release-testing/scripts/prepare-test-run.ps1
 ```
 
-### Android Emulator Workflow
+Keep preparation after approval: it changes local tool state and clears prior
+integration artifacts, while planning remains read-only.
 
-⚠️ **CRITICAL:** Run only ONE Android emulator at a time to avoid device confusion.
+### 4. Run every approved item
 
-1. **Verify no emulators running:**
-   ```bash
-   adb devices -l  # Should show empty or only physical devices
-   ```
+Run emitted commands sequentially:
 
-2. **Start emulator with WIPE and boot verification:**
-   ```bash
-   # Start emulator with -wipe-data to ensure clean state (use mode="async" to keep it running)
-   emulator -avd Pixel_API_23 -wipe-data -no-snapshot -no-audio
-   
-   # Wait for boot (check every 10s until returns "1")
-   # This can take 60-120s for a fresh wipe
-   adb shell getprop sys.boot_completed
-   
-   # Verify correct API level
-   adb shell getprop ro.build.version.sdk  # Should match expected (e.g., "23")
-   ```
+1. Show the exact command and full pending/running/passed/failed table.
+2. Use a visible terminal canvas; use attached async Bash only when unavailable.
+3. Relay new `[release-test]` output and refresh the complete table every five
+   seconds. Never duplicate a command after a delayed read.
+4. Record duration, failing phase, diagnostics, artifacts, and result.
+5. Continue after failure once runner-owned cleanup finishes.
 
-   ⚠️ **The `-wipe-data` flag is REQUIRED** to ensure a clean emulator state. Without it,
-   cached apps or system state from previous runs may interfere with tests.
+### 5. Repair and retry
 
-3. **Run tests with device validation:**
-   ```bash
-   DEVICE_ID=$(adb devices | grep emulator | awk '{print $1}')
-   API_LEVEL=$(adb -s $DEVICE_ID shell getprop ro.build.version.sdk | tr -d '\r')
-   
-   dotnet test \
-     -p:AndroidDeviceId="$DEVICE_ID" \
-     -p:AndroidApiLevel="$API_LEVEL" \
-     -p:SkiaSharpVersion={version} \
-     -p:HarfBuzzSharpVersion={hb-version} \
-     -- --filter-class "*MauiAndroidTests"
-   ```
+After every initial attempt, present the complete failure inventory and group
+shared root causes. Apply only concrete, safe environment repairs, then retry
+affected items. Ask before installing/upgrading software, changing permissions,
+or touching user-owned devices.
 
-4. **Shut down emulator before next test:**
-   ```bash
-   adb -s $DEVICE_ID emu kill
-   # Wait for it to stop
-   sleep 5
-   adb devices -l  # Verify empty
-   ```
+Archive the initial artifacts before a retry because fixed screenshot names may
+be overwritten. Preserve initial and retry outcomes.
 
-5. **Repeat for next API level** (start from step 1)
+### 6. Report and decide
 
-### Test Execution Order
+Review screenshots under `output/logs/testlogs/integration/`. Report:
 
-| Test | Run on Old | Run on New | Time |
-|------|------------|------------|------|
-| SmokeTests | Once | - | ~2s |
-| ConsoleTests | Once | - | ~20s |
-| LinuxConsoleTests | Once (Docker) | - | ~2min |
-| BlazorTests | Once | - | ~2min |
-| MauiMacCatalystTests | Once | - | ~2min |
-| MauiiOSTests | ✅ Yes | ✅ Yes | ~2min each |
-| MauiAndroidTests | ✅ Yes | ✅ Yes | ~2min each |
+- immutable BAR/build ID, build link, source branch/commit, and package feed;
+- exact SkiaSharp and HarfBuzzSharp versions;
+- every approved ID with initial, repair, retry, and final result;
+- missing or intentionally omitted host coverage; and
+- screenshot paths and review status.
 
-**iOS and Android run TWICE:** once on oldest, once on newest.
-
-### Providing User Feedback
-
-**CRITICAL:** Long-running tests need continuous feedback. Users should never wait more than 30 seconds without knowing what's happening.
-
-- Update the TODO checklist at each phase transition
-- When waiting with `read_bash`, note elapsed time: "⏳ Still building (~60s elapsed)"
-- Tell users what's normal: "MAUI Release builds take 30-120s, silence is expected"
-
-👉 **See [monitoring.md](references/monitoring.md)** for:
-- Phase timing and expected durations
-- Output indicators to detect which phase is active
-- Feedback templates and example output
-- Troubleshooting hangs and crashes
-
----
-
-## Step 5: Verify & Report
-
-### Release Criteria
-
-Proceed to **release-publish** ONLY when:
-
-- ✅ ALL tests pass (no failures)
-- ✅ iOS tests pass on BOTH oldest and newest runtime
-- ✅ Android tests pass on BOTH oldest (API 21-23) and newest (API 35-36)
-- ✅ Screenshots exist in `output/logs/testlogs/integration/`
-
-### Skip Policy
-
-**Hardware skips only:**
-- iOS/Mac tests on non-macOS → Skip (hardware unavailable)
-- Windows tests on non-Windows → Skip (hardware unavailable)
-
-**NOT valid skips:**
-- "No Android emulator" → Create one
-- "Android SDK not found" → Ask user for path
-- "No iOS simulators" → Install via Xcode
-- "Tool X not installed" → Install it
-
-**If environment is broken, FIX IT. Do not skip tests.**
-
-### Final Report Format
-
-```
-✅ Release Testing Complete
-
-| Test | Platform | Version | Status |
-|------|----------|---------|--------|
-| SmokeTests | .NET | - | ✅ Passed |
-| ConsoleTests | .NET | - | ✅ Passed |
-| LinuxConsoleTests | Docker Linux | - | ✅ Passed |
-| BlazorTests | Chromium | - | ✅ Passed |
-| MauiMacCatalystTests | macOS | - | ✅ Passed |
-| MauiiOSTests | iOS 16.2 (oldest) | iPhone 14 Pro | ✅ Passed |
-| MauiiOSTests | iOS 18.5 (newest) | iPhone 16 Pro | ✅ Passed |
-| MauiAndroidTests | Android 6.0 (API 23) | Pixel_API_23 | ✅ Passed |
-| MauiAndroidTests | Android 16 (API 36) | Pixel_API_36 | ✅ Passed |
-
-Ready for publishing.
-```
-
----
-
-## References
-
-- **Setup & device selection:** [references/setup.md](references/setup.md)
-- **Monitoring long-running tests:** [references/monitoring.md](references/monitoring.md)
-- **Troubleshooting errors:** [references/troubleshooting.md](references/troubleshooting.md)
+Combine host reports before deciding. Approve the exact BAR package family for
+team publication only when all required results and artifact checks pass, or
+when the release owner explicitly records an omission override. Otherwise state
+that release approval is blocked. This skill reports the decision but never
+performs the publication.

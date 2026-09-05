@@ -23,14 +23,19 @@ public class AppiumFixture : IAsyncLifetime
 
         Console.WriteLine($"[AppiumFixture] Starting Appium on port {Port}...");
         
+        // npm exec honors Appium's project-local or global extension context. --no prevents
+        // npm from downloading Appium when the approved installation is unavailable.
+        var (shell, shellArgs) = GetShellCommand($"npm exec --no -- appium --port {Port} --relaxed-security --log-timestamp");
+
         var psi = new ProcessStartInfo
         {
-            FileName = "appium",
-            Arguments = $"--port {Port} --relaxed-security --log-timestamp",
+            FileName = shell,
+            Arguments = shellArgs,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            WorkingDirectory = FindRepositoryRoot()
         };
 
         _appiumProcess = Process.Start(psi);
@@ -55,7 +60,9 @@ public class AppiumFixture : IAsyncLifetime
         if (_appiumProcess != null && !_appiumProcess.HasExited)
         {
             Console.WriteLine("[AppiumFixture] Stopping Appium...");
-            _appiumProcess.Kill();
+            // Appium runs as a child of the shell wrapper, so the whole tree must be killed —
+            // killing just the shell would leave the server alive and holding the port.
+            _appiumProcess.Kill(entireProcessTree: true);
             await _appiumProcess.WaitForExitAsync();
             _appiumProcess.Dispose();
         }
@@ -95,6 +102,23 @@ public class AppiumFixture : IAsyncLifetime
             await Task.Delay(1000);
         }
         return false;
+    }
+
+    private static (string Shell, string Arguments) GetShellCommand(string command) =>
+        OperatingSystem.IsWindows()
+            ? ("cmd.exe", $"/C {command}")
+            : ("/bin/bash", $"-c \"{command}\"");
+
+    private static string FindRepositoryRoot()
+    {
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory != null; directory = directory.Parent)
+        {
+            var git = Path.Combine(directory.FullName, ".git");
+            if (Directory.Exists(git) || File.Exists(git))
+                return directory.FullName;
+        }
+
+        return Directory.GetCurrentDirectory();
     }
 }
 

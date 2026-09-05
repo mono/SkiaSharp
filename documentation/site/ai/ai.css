@@ -8,8 +8,16 @@
 
 /* Human-review accent — used by the loop legend and "human" nodes.
    Theme-aware so it stays legible on both the light and dark themes. */
-:root { --human: #15a34a; }
-[data-theme="dark"] { --human: #2bd673; }
+:root {
+  --human: #315045;
+  --human-solid: #3e6357;
+  --negative: #9c3620;
+}
+[data-theme="dark"] {
+  --human: #90bcab;
+  --human-solid: #3e6357;
+  --negative: #f09274;
+}
 
 /* ── Hero additions ───────────────────────────────────────── */
 
@@ -125,7 +133,7 @@
 
 .swatch-agent { background: var(--accent); border-color: var(--accent); }
 .swatch-auto { background: var(--bg-subtle); }
-.swatch-human { background: var(--human); border-color: var(--human); }
+.swatch-human { background: var(--human-solid); border-color: var(--human-solid); }
 
 /* ── The loop / pipeline diagram ──────────────────────────── */
 
@@ -569,6 +577,12 @@ a.track-target:hover { text-decoration: underline; }
   align-items: start;
 }
 
+.dash-grid > *,
+.dash-panel,
+.dash-body {
+  min-width: 0;
+}
+
 /* The hero panel (cadence) spans the full width and leads visually. */
 .dash-panel-hero { grid-column: 1 / -1; order: -1; }
 
@@ -799,7 +813,7 @@ a.track-target:hover { text-decoration: underline; }
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #fff;
-  background: var(--human);
+  background: var(--human-solid);
   border-radius: 999px;
   padding: 1px 8px;
 }
@@ -838,12 +852,10 @@ a.track-target:hover { text-decoration: underline; }
 }
 
 .cad-delta-good { color: var(--human); background: color-mix(in srgb, var(--human) 15%, transparent); }
-.cad-delta-bad { color: #d1602a; background: color-mix(in srgb, #d1602a 15%, transparent); }
+.cad-delta-bad { color: var(--negative); background: color-mix(in srgb, var(--negative) 15%, transparent); }
 .cad-delta-flat { color: var(--text-secondary); background: var(--bg-subtle); }
 
 .cad-pct { opacity: 0.75; font-weight: 600; }
-
-[data-theme="dark"] .cad-delta-bad { color: #f0894f; }
 
 .cad-legend-note {
   margin-top: 12px;
@@ -869,9 +881,29 @@ a.track-target:hover { text-decoration: underline; }
 
 /* ── Panel 3: automation cost cards ───────────────────────── */
 
+.cost-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cost-summary .cost-metric {
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-subtle));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: var(--radius-sm);
+}
+
+.cost-window {
+  margin: 8px 0 14px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
 .cost-cards {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -894,14 +926,11 @@ a.track-target:hover { text-decoration: underline; }
 .cost-name a { color: var(--text); }
 .cost-name a:hover { color: var(--accent); }
 
-.cost-cadence {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  white-space: nowrap;
+.cost-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
-
-.cost-metrics { display: flex; gap: 20px; }
 
 .cost-num {
   display: block;
@@ -926,6 +955,49 @@ a.track-target:hover { text-decoration: underline; }
   line-height: 1.5;
 }
 
+.cost-average {
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.cost-stale {
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.cost-run {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.cost-model {
+  font-family: var(--font-mono);
+}
+
+.cost-run a {
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+}
+
+.cost-run a:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+
 @media (max-width: 720px) {
   .dash-grid { grid-template-columns: 1fr; }
+  .cost-cards { grid-template-columns: 1fr; }
+  .cost-summary { grid-template-columns: 1fr; }
+  .cost-window { text-align: left; }
+  .dash-panel { padding: 18px 16px 16px; }
+  .dash-head { align-items: flex-start; flex-wrap: wrap; }
 }

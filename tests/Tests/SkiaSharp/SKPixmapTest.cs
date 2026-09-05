@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -789,6 +790,59 @@ namespace SkiaSharp.Tests
 			{
 				Marshal.FreeCoTaskMem(buffer);
 			}
+		}
+
+		// A pixmap produced by ExtractSubset points into the source pixmap's pixel
+		// memory (native sk_pixmap_extract_subset does not copy). It must therefore
+		// root the ultimate pixel owner for its whole lifetime, exactly like the
+		// pixmaps returned by PeekPixels do (via pixelSource). Regression test for
+		// the missing managed root (use-after-free under GC pressure).
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static SKPixmap MakeSubsetPixmap(out WeakReference weakBitmap)
+		{
+			var bmp = new SKBitmap(new SKImageInfo(64, 64, SKColorType.Rgba8888, SKAlphaType.Premul));
+			bmp.Erase(SKColors.Red);
+			using var src = bmp.PeekPixels();
+			var subset = src.ExtractSubset(new SKRectI(0, 0, 32, 32));
+			weakBitmap = new WeakReference(bmp);
+			return subset;
+		}
+
+		[Fact]
+		public void ExtractSubsetKeepsPixelSourceAlive()
+		{
+			var subset = MakeSubsetPixmap(out var weakBitmap);
+
+			CollectGarbage();
+
+			Assert.True(weakBitmap.IsAlive, "The source SKBitmap was collected while an ExtractSubset pixmap pointing into its pixels was still alive.");
+
+			GC.KeepAlive(subset);
+			subset.Dispose();
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static SKPixmap MakeWithColorTypePixmap(out WeakReference weakBitmap)
+		{
+			var bmp = new SKBitmap(new SKImageInfo(64, 64, SKColorType.Rgba8888, SKAlphaType.Premul));
+			bmp.Erase(SKColors.Red);
+			using var src = bmp.PeekPixels();
+			var recolored = src.WithColorType(SKColorType.Bgra8888);
+			weakBitmap = new WeakReference(bmp);
+			return recolored;
+		}
+
+		[Fact]
+		public void WithColorTypeKeepsPixelSourceAlive()
+		{
+			var recolored = MakeWithColorTypePixmap(out var weakBitmap);
+
+			CollectGarbage();
+
+			Assert.True(weakBitmap.IsAlive, "The source SKBitmap was collected while a WithColorType pixmap pointing into its pixels was still alive.");
+
+			GC.KeepAlive(recolored);
+			recolored.Dispose();
 		}
 	}
 }

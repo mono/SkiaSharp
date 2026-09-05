@@ -9,6 +9,12 @@ what the code *does*, not just a token; then apply [decision-framework.md](decis
 Grep starting points to sweep the managed binding (`binding/**`, `source/**`; never
 `*.generated.cs` or `externals/skia/**`) are in each hot-path/bcl-pattern reference.
 
+**Bounded reading.** Use this routing table to select the relevant reference before opening it.
+Within that reference, locate the matching heading and read only through the next peer heading;
+do not guess line ranges or treat the table as evidence that its source sites were inspected. In
+the report, distinguish the references consulted from the exact queries and source files actually
+checked; an exhaustive claim requires every result in a named, untruncated bounded universe.
+
 | When the managed code does this | Consult |
 |---|---|
 | A property/method on a blittable struct (`SKMatrix`/`SKRect`/`SKPoint`/`SKColorF`) calls `SkiaApi.sk_*` to compute a few float ops — invert, concat, map point/vector/rect/radius | [hot-paths/geometry-math.md](hot-paths/geometry-math.md) |

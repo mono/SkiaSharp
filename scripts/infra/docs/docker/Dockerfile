@@ -12,7 +12,7 @@
 # mdoc ships as a .NET Framework executable (scripts/infra/docs/tools/mdoc.*/mdoc.exe).
 # docs.cake runs it under mono on non-Windows hosts, so the mdoc step runs on Linux:
 # this image and any plain Linux CI runner with mono installed run it identically.
-FROM mcr.microsoft.com/dotnet/sdk:10.0
+FROM mcr.microsoft.com/dotnet/sdk:10.0.400
 
 ENV DEBIAN_FRONTEND=noninteractive
 

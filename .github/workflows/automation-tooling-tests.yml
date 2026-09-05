@@ -1,0 +1,80 @@
+name: Automation - Tooling Tests
+
+# Runs the repository's non-release automation test suites. These all existed and passed
+# locally but were wired to no workflow, so a regression in them could reach `main`
+# silently:
+#
+#   * .agents/skills/ci-status/scripts/tests/       — the CI dashboard's workflow registry
+#   * .agents/skills/update-skia/scripts/*_test.py  — Skia milestone update tooling
+#   * .github/scripts/tests/skia-sync-detect.test.sh — the auto-skia-sync work detector
+#
+# Release publishing tooling is covered separately by release-tooling-tests.yml. Paths are
+# kept tight on purpose: this must not become a catch-all that runs on every change.
+
+on:
+  pull_request:
+    paths:
+      - ".agents/skills/ci-status/**"
+      - ".agents/skills/update-skia/**"
+      - ".github/scripts/**"
+      # Any workflow edit, so the registry test re-checks its tracked list. '*.yml' already
+      # covers the generated '*.lock.yml' files.
+      - ".github/workflows/*.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".agents/skills/ci-status/**"
+      - ".agents/skills/update-skia/**"
+      - ".github/scripts/**"
+      - ".github/workflows/*.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: automation-tooling-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run ci-status workflow registry tests
+        # Guards the CI dashboard against tracking workflows that no longer exist — a stale
+        # entry does not error, it renders a GREEN row for a workflow that is not there.
+        #
+        # Called directly rather than behind an existence check: on the runner's Python
+        # (3.12+) `unittest discover` fails loudly in both degenerate cases — exit 1
+        # (ImportError) if the directory is gone, exit 5 ("NO TESTS RAN") if it is empty.
+        # A guard here would only be able to turn those into a silent pass.
+        run: |
+          set -euo pipefail
+          python3 -c "import yaml" 2>/dev/null \
+            || python3 -m pip install --quiet --break-system-packages pyyaml
+          python3 -m unittest discover -s .agents/skills/ci-status/scripts/tests -p "test_*.py" -v
+
+      - name: Run update-skia tooling tests
+        # These import their module under test by name, so they must run from their own
+        # directory rather than through a repository-root discovery run.
+        working-directory: .agents/skills/update-skia/scripts
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          tests=(*_test.py)
+          if [ ${#tests[@]} -eq 0 ]; then
+            echo "::error::No *_test.py found — the update-skia tests moved or were renamed."
+            exit 1
+          fi
+          for test in "${tests[@]}"; do
+            echo "::group::$test"
+            python3 -m unittest "${test%.py}"
+            echo "::endgroup::"
+          done
+
+      - name: Run skia-sync work detector tests
+        run: bash .github/scripts/tests/skia-sync-detect.test.sh

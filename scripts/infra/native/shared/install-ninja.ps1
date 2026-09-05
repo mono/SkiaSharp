@@ -1,6 +1,9 @@
 $ErrorActionPreference = 'Stop'
 
-if ($IsMacOS) {
+if (Get-Command ninja -ErrorAction SilentlyContinue) {
+    ninja --version
+    exit $LASTEXITCODE
+} elseif ($IsMacOS) {
     brew install ninja
 } elseif ($IsLinux) {
     sudo apt install -y ninja-build

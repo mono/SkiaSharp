@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using CoreGraphics;
 using Foundation;
 using Metal;
+using SkiaSharp.Tests;
 using Xunit;
 
 namespace SkiaSharp.Views.iOS.Tests
@@ -105,8 +106,13 @@ namespace SkiaSharp.Views.iOS.Tests
 		[Fact]
 		public void GRContextDisposeDoesNotCrash()
 		{
-			var device = MTLDevice.SystemDefault!;
-			Assert.SkipWhen(device == null, "Metal is not supported on this device.");
+			GpuPolicy.RequireOrSkip(GpuBackends.GaneshMetal);
+
+			// Past the policy gate Metal must work here, so a missing device is a red
+			// test rather than a quiet pass.
+			var device = MTLDevice.SystemDefault
+				?? throw new InvalidOperationException(
+					"MTLDevice.SystemDefault returned null; no Metal device on this host.");
 
 			using var commandQueue = device.CreateCommandQueue();
 			using var backendContext = new GRMtlBackendContext()

@@ -142,16 +142,7 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
             </Project>
             """);
 
-        File.WriteAllText(Path.Combine(projectDir, "nuget.config"), """
-            <?xml version="1.0" encoding="utf-8"?>
-            <configuration>
-              <packageSources>
-                <clear />
-                <add key="SkiaSharp Preview" value="https://aka.ms/skiasharp-eap/index.json" />
-                <add key="NuGet.org" value="https://api.nuget.org/v3/index.json" />
-              </packageSources>
-            </configuration>
-            """);
+        WriteNuGetConfig(projectDir);
 
         // Build and run in Docker using dotnet publish (resolves RID-specific native assets)
         var dockerfile = Path.Combine(projectDir, "Dockerfile");

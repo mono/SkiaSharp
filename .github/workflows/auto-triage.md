@@ -1,5 +1,10 @@
 ---
 description: "Triage a SkiaSharp issue: classify, label, and update the backlog project board."
+engine:
+  id: copilot
+# Triage needs reliable code and issue reasoning, but its schema and validation
+# gates make Terra the balanced choice.
+model: gpt-5.6-terra
 on:
   schedule: daily
   workflow_dispatch:

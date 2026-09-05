@@ -1,0 +1,141 @@
+{
+  "skill_name": "merge-skia-update",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I reviewed and approved mono/skia#360 and mono/SkiaSharp#5000. Help me land them.",
+      "expected_output": "Resolves and presents the exact PR pair and base/head branches before asking for the short handoff confirmation, lets the preparation script derive and create the previous release branches when the parent targets main, generates the native merge message, and pauses for the maintainer's manual merge.",
+      "files": [],
+      "expectations": [
+        "Does not repeat the deep review.",
+        "Verifies that the two supplied PRs reciprocally link to each other.",
+        "Passes AI-resolved parent base/head and native base branch names to Prepare-SkiaReleaseBranches.ps1 without -Push before applying.",
+        "Invokes pr-commit-message for mono/skia.",
+        "Does not merge either PR."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Run merge-skia-update. There are two open Skia update pairs.",
+      "expected_output": "Discovers and presents both reciprocal mono/skia and mono/SkiaSharp PR pairs, asks the maintainer to select one, and does not ask for prerequisite approval or run scripts until a pair is selected.",
+      "files": [],
+      "expectations": [
+        "Does not guess which update pair to land.",
+        "Groups candidates as native and parent PR pairs using reciprocal links and sync branches.",
+        "Asks for one pair selection before the prerequisite checklist.",
+        "Does not run either helper script."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have not reviewed the Skia PRs yet, but start merging them.",
+      "expected_output": "Stops because the maintainer cannot confirm that review-skia-update ran and that they approved the update.",
+      "files": [],
+      "expectations": [
+        "Does not run mutation scripts.",
+        "Does not merge either PR.",
+        "Requires the simple pre-skill confirmation.",
+        "Routes review work outside this skill."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The M160 bump is approved. Create the previous release branches before I merge.",
+      "expected_output": "The AI passes the resolved parent base/head and native base branches; the script verifies that the parent milestone increases, derives release/A.B.x from the current SkiaSharp package version committed on main, then uses the parent base tip and its exact externals/skia gitlink to create matching branches, native first, after a confirmed dry run.",
+      "files": [],
+      "expectations": [
+        "The AI resolves the parent base/head and native base branches but does not calculate or pass the release line.",
+        "The script confirms that chrome_milestone increases from the parent base to the parent head.",
+        "The script derives release/A.B.x from scripts/VERSIONS.txt on the exact parent base commit.",
+        "Uses the native SHA referenced by the parent base.",
+        "Preflights both destinations before either write.",
+        "Never moves an existing release branch."
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "This approved Skia update targets main but stays on the current milestone. Prepare the merge.",
+      "expected_output": "Passes the resolved parent base/head and native base branches to the preparation script, which compares their committed chrome_milestone values, reports a same-milestone sync, creates no release refs, and continues to the native merge-message handoff.",
+      "files": [],
+      "expectations": [
+        "Does not create a release branch for a same-milestone main update.",
+        "Does not ask for a release-branch push confirmation.",
+        "Generates the native merge message.",
+        "Does not merge the native PR."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "This is an approved same-milestone servicing sync. Prepare the merge.",
+      "expected_output": "Passes the existing release/A.B.x parent target to the preparation script, which reports that this is a servicing sync and creates no refs; then generates the mono/skia merge message and pauses for the manual native merge.",
+      "files": [],
+      "expectations": [
+        "Does not create another release branch.",
+        "Still requires the pre-skill confirmation.",
+        "Generates the native merge message.",
+        "Does not merge the native PR."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "The release/A.B.x branch already exists at a different commit. Move it and continue.",
+      "expected_output": "Stops because an existing release branch is never moved or force-updated.",
+      "files": [],
+      "expectations": [
+        "Reports expected and existing SHAs.",
+        "Does not move the existing branch.",
+        "Does not partially create the paired branch.",
+        "Does not continue to merge preparation."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "mono/skia#360 is merged now. Continue with mono/SkiaSharp#5000.",
+      "expected_output": "Checks whether the current checkout is clean, on the parent head, and at its remote tip. If suitable, it passes the resolved parent head and native base branches to the repin script, first without -Push and then with -Push; requires the native merged tree to equal the reviewed gitlink tree, pushes only the gitlink/cgmanifest update, then generates the parent merge message.",
+      "files": [],
+      "expectations": [
+        "Resolves the actual mono/skia merge commit from the supplied native base branch.",
+        "Stops if the native trees differ.",
+        "Changes only externals/skia and cgmanifest.json.",
+        "Invokes pr-commit-message for mono/SkiaSharp."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "mono/skia#360 is merged, but I do not want to check out the SkiaSharp PR branch locally.",
+      "expected_output": "Records the exact verified native merge SHA after checking its ancestry and tree equality, offers the existing auto-skia-submodule-sync workflow with the parent PR head as target_branch, verifies the dependent PR pins that exact SHA in only the two intended files, waits for it to be manually merged, then generates the parent merge message.",
+      "files": [],
+      "expectations": [
+        "Does not require or modify a local parent PR checkout.",
+        "Passes the parent PR head to target_branch and the native base to skia_branch.",
+        "Explains that the workflow opens a dependent PR rather than updating the parent branch directly.",
+        "Stops if the workflow captures a branch tip other than the exact merge SHA verified before dispatch.",
+        "Does not merge the dependent PR or either update PR."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "The native PR was squash-merged. Update the parent anyway.",
+      "expected_output": "Stops because the native PR was not merged with the required merge-commit strategy and its authoritative ancestry was lost.",
+      "files": [],
+      "expectations": [
+        "Does not repin the parent.",
+        "Does not generate the parent merge message.",
+        "Requires a native merge commit.",
+        "Reports the incorrect merge result."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "The repin is pushed. Wait for all PR CI before giving me the SkiaSharp merge message.",
+      "expected_output": "Generates the SkiaSharp merge message without waiting for another PR CI run because tree equality proved the native content unchanged; it notes that CI on the resolved parent base branch validates the resulting merge.",
+      "files": [],
+      "expectations": [
+        "Does not rerun the deep review.",
+        "Does not wait for refreshed PR CI.",
+        "Generates the parent merge message and refers to CI on the resolved parent base branch rather than assuming main.",
+        "Leaves the parent merge to the maintainer."
+      ]
+    }
+  ]
+}

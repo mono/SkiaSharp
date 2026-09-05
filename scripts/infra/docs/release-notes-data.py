@@ -89,7 +89,7 @@ Reads scripts/infra/docs/versions.json (if present) for comparison overrides and
 supersession markers. versions.json is the single source of truth: only the
 versions listed there get a non-default baseline or a superseded marker.
 
-Requirements: git, Python 3.7+
+Requirements: git, Python 3.10+
 """
 
 from __future__ import annotations
@@ -110,6 +110,18 @@ from typing import Optional, Tuple
 
 REPO = "mono/SkiaSharp"
 RELEASES_DIR = Path("documentation/docfx/releases")
+
+# Make the sibling ``release_notes`` package importable regardless of how this
+# script itself was loaded (as ``__main__``, or via release-notes-render.py's
+# ``importlib`` spec load of this file, which does not itself add this
+# directory to sys.path). ``release_notes.shipments`` is the fresh-ported,
+# independently unit-tested exact-shipment model that turns this script's own
+# tag/PR-diff helpers into the ``shipments`` data.json field the GitHub
+# Release summary updater consumes (see collect_shipments_for_page below).
+_THIS_DIR = Path(__file__).resolve().parent
+if str(_THIS_DIR) not in sys.path:
+    sys.path.insert(0, str(_THIS_DIR))
+from release_notes import shipments as _release_shipments  # noqa: E402
 
 # The Prepare phase ALWAYS writes the machine-readable "Files to polish" list to a
 # file (overridable with --polish-list). output/ is gitignored, so the list stays
@@ -308,6 +320,47 @@ def load_notes_sidecar(stem, base_dir):
             "sha256": _sha256_bytes(notes_path.read_bytes())}
 
 
+def _notes_sidecar_has_page(stem, base_dir):
+    # type: (str, Path) -> bool
+    """Whether a manual sidecar belongs to a released or in-flight page."""
+    if (base_dir / "{}.md".format(stem)).is_file():
+        return True
+    return (not stem.endswith("-unreleased")
+            and (base_dir / "{}-unreleased.md".format(stem)).is_file())
+
+
+def load_notes_sidecars(stem, base_version, version, base_dir):
+    # type: (str, Optional[str], str, Path) -> list[dict]
+    """Load current-page notes plus notes from its cumulative version window."""
+    current = load_notes_sidecar(stem, base_dir)
+    if not base_version or stem.endswith("-unreleased"):
+        return [current] if current else []
+
+    lower = _core_tuple(base_version)
+    upper = _core_tuple(version)
+    found = {}  # type: dict[str, tuple[tuple, dict]]
+    sources = base_dir / "_sources"
+    if sources.is_dir():
+        for notes_path in sources.glob("*.notes.md"):
+            note_stem = notes_path.name[:-len(".notes.md")]
+            if not re.fullmatch(r"\d+(?:\.\d+){2,3}", note_stem):
+                continue
+            note_version = _core_tuple(note_stem)
+            if not (lower < note_version <= upper):
+                continue
+            if note_stem != stem and not _notes_sidecar_has_page(note_stem, base_dir):
+                continue
+            companion = load_notes_sidecar(note_stem, base_dir)
+            if companion:
+                found[companion["path"]] = (note_version, companion)
+
+    if current:
+        found[current["path"]] = (_core_tuple(version), current)
+
+    ordered = sorted(found.values(), key=lambda item: (item[0], item[1]["path"]))
+    return [companion for _, companion in ordered]
+
+
 def load_breaking_companions(line, base_dir):
     # type: (str, Path) -> Optional[dict]
     """The API breaking-diff companions for a line (spec §3.3/§4.7).
@@ -403,9 +456,8 @@ def version_key(version):
 
 # Chrome's public release schedule (Chromium Dash). Used to drive the release
 # cadence section with the real phase dates for the milestones currently in
-# flight. The four SkiaSharp cadence phases map onto these schedule fields:
-#   Beta Promotion -> earliest_beta   Early Stable  -> early_stable
-#   Stable Cut     -> stable_cut      Stable Release -> stable_date
+# flight. Chromium marker names remain separate from the SkiaSharp release
+# names that the index renderer maps onto them.
 CHROME_SCHEDULE_URL = (
     "https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone={}")
 
@@ -1030,6 +1082,39 @@ def _tag_date(tag):
     """ISO date (YYYY-MM-DD) of a tag's commit, or '' when unknown."""
     return run(["git", "log", "-1", "--format=%ad", "--date=short", tag],
                check=False).strip()
+
+
+def _tag_target_sha(tag):
+    # type: (str) -> str
+    """The 40-char commit SHA a tag points at, or '' when unknown."""
+    return run(["git", "rev-parse", "{}^{{commit}}".format(tag)],
+               check=False).strip()
+
+
+def collect_shipments_for_page(page_version):
+    # type: (str) -> list[dict]
+    """Every exact shipment (tag) for a RELEASED page's own core version.
+
+    A thin wrapper around ``release_notes.shipments.collect_shipments`` (the
+    fresh-ported, independently unit-tested exact-shipment model) that
+    supplies this script's own git-backed primitives -- ``git tag -l``,
+    ``_tag_date``, ``_tag_target_sha``, and ``get_prs_from_diff`` -- so the
+    generator and the model never disagree about tag parsing or PR deltas.
+    Only meaningful for a released (non-head) page; callers should not call
+    this for an unreleased head page (main/release/X.Y.x), which has no tag
+    of its own.
+    """
+    raw = run(["git", "tag", "-l", "v*"], check=False)
+    all_tags = [t.strip() for t in raw.splitlines() if t.strip()]
+    return _release_shipments.collect_shipments(
+        page_version,
+        all_tags,
+        tag_date=_tag_date,
+        target_sha=_tag_target_sha,
+        prs_between=lambda from_tag, to_tag: (
+            get_prs_from_diff(from_tag, to_tag) if from_tag else []
+        ),
+    )
 
 
 def collect_preview_milestones(page_version, base_version):
@@ -1698,7 +1783,15 @@ def _release_date_display(version):
 # Deterministic sidecar (`<version>.data.json`) FORMAT VERSION — the v2 pipeline
 # (data.json + prose.json + release-notes-render.py) keys change-detection on the whole
 # data.json dict. Bump when the data.json schema changes.
-_DATA_JSON_FORMAT_VERSION = 3
+#
+# 3 -> 4: added the "shipments" field (exact-shipment records for the GitHub
+# Release summary updater; see release_notes.shipments.collect_shipments).
+# This is the smallest compatible bump for that feature -- everything else
+# about the v3 shape is unchanged, and a v3 (or older) data.json is safely
+# skipped by the updater rather than rewritten (scripts/infra/docs/release_notes/
+# common.py's ``DATA_FORMAT`` must be bumped in lockstep -- a test in
+# release_notes/tests/test_common.py asserts the two stay equal).
+_DATA_JSON_FORMAT_VERSION = 4
 
 
 def _pr_is_community(pr):
@@ -1835,8 +1928,10 @@ def build_data_json(prs, metadata):
             breaking_candidates.append(
                 {"source": "api-breaking-diff", "path": p,
                  "sha256": bc.get("sha256", ""), "prs": []})
-    if companions.get("notes"):
-        nc = companions["notes"]
+    notes = companions.get("notes") or []
+    if isinstance(notes, dict):
+        notes = [notes]
+    for nc in notes:
         breaking_candidates.append(
             {"source": "notes-sidecar", "path": nc.get("path"),
              "sha256": nc.get("sha256", ""), "prs": []})
@@ -1887,6 +1982,20 @@ def build_data_json(prs, metadata):
         "internal": sum(1 for p in prs if p.get("category") == "internal"),
     }
 
+    # Exact-shipment records (format 4+): one per exact git tag whose core
+    # matches this page, keyed by tag rather than by preview/rc label so the
+    # GitHub Release summary updater can look one up directly. Only a
+    # RELEASED page has any (an unreleased head page is never tagged) --
+    # collect_shipments_for_page is only ever called for those. Validated
+    # here (not just trusted from the caller) so a bug in shipment collection
+    # fails the Prepare run loudly instead of shipping a malformed data.json.
+    shipments = metadata.get("shipments") or []
+    shipment_errors = _release_shipments.validate_shipments(shipments)
+    if shipment_errors:
+        raise ValueError(
+            "invalid shipments for {}: {}".format(version, "; ".join(shipment_errors))
+        )
+
     return {
         "format": _DATA_JSON_FORMAT_VERSION,
         "version": version,
@@ -1901,6 +2010,7 @@ def build_data_json(prs, metadata):
         "breaking_candidates": breaking_candidates,
         "contributors": contributors,
         "previews": previews,
+        "shipments": shipments,
         "prs": pr_map,
     }
 
@@ -1949,14 +2059,35 @@ def _prune_page_and_sources(page_path):
             gen.unlink()
 
 
+def _strip_format_and_shipments(data):
+    # type: (dict) -> dict
+    """``data`` with the "format" and "shipments" keys removed.
+
+    Shared by both change-detection comparisons below: neither key has any
+    bearing on the rendered WEBSITE page or the prose the Polish AI must
+    write. ``format`` is a code-owned migration marker (see
+    ``_DATA_JSON_FORMAT_VERSION``'s docstring); ``shipments`` (format 4+) is
+    exact-shipment data consumed only by the separate GitHub Release summary
+    updater (`release_notes.update_github_summaries`), never by
+    release-notes-render.py.
+    """
+    return {key: value for key, value in data.items()
+            if key not in ("format", "shipments")}
+
+
 def _data_json_unchanged(data_path, new_data):
     # type: (Path, dict) -> bool
-    """True when the committed data.json equals the freshly-computed facts.
+    """True when the committed data.json is byte-for-byte (dict-)identical to
+    the freshly-computed facts, INCLUDING ``format``/``shipments``.
 
-    data.json is the change-detection key (§4.6): it has no timestamp, so an
-    identical run yields an identical dict and the page is skipped. Any change to
-    the PRs, roster, previews, links, or a companion's folded sha256 flips it and
-    the page is re-polished. A missing or unparseable file counts as changed.
+    This is the genuine no-op check: only when this is true is there truly
+    nothing at all to write, so an unforced run may skip the page entirely
+    (§4.6). A missing or unparseable file counts as changed. Note this is
+    strictly narrower than ``_website_content_unchanged`` below — a page can
+    have unchanged *website content* (PRs/roster/previews/links) while still
+    being "changed" here because a new/altered exact shipment tag appeared;
+    callers must write the page in that case (see ``_write_page``) even
+    though it is not this function that gates whether to do so.
     """
     if not data_path.exists():
         return False
@@ -1965,6 +2096,68 @@ def _data_json_unchanged(data_path, new_data):
     except (ValueError, OSError):
         return False
     return old == new_data
+
+
+def _website_content_unchanged(data_path, new_data):
+    # type: (Path, dict) -> bool
+    """True when the WEBSITE-FACING content is unchanged, ignoring ``format``
+    and ``shipments``.
+
+    Any change to the PRs, roster, previews, links, or a companion's folded
+    sha256 flips this and the page must be re-polished (prose discarded,
+    returned for the files-to-polish list). It stays True across a bare
+    format bump or a shipments-only change (a new/altered exact tag with no
+    other fact moving) — see §4.8: that case still needs data.json rewritten
+    so the new/changed shipment is available to the GitHub Release summary
+    updater, but the reviewed website prose is still valid and must be
+    preserved, and the page must NOT be added to files-to-polish (there is
+    nothing for the Polish AI to do). A missing or unparseable file counts as
+    changed (matches ``_data_json_unchanged``).
+    """
+    if not data_path.exists():
+        return False
+    try:
+        old = json.loads(data_path.read_text())
+    except (ValueError, OSError):
+        return False
+    return _strip_format_and_shipments(old) == _strip_format_and_shipments(new_data)
+
+
+def _classify_data_write(fully_unchanged, website_content_unchanged, force):
+    # type: (bool, bool, bool) -> Optional[dict]
+    """Decide what ``_write_page`` must do with a freshly-computed data.json,
+    given the two change-detection facts above. Pure decision table (§4.8),
+    deliberately decoupled from git/file I/O so its three-way split is
+    directly unit testable without a real git repository:
+
+    * Returns ``None`` — skip entirely, no write at all. Only when nothing
+      whatsoever changed (``fully_unchanged``) and the caller did not force a
+      rebuild.
+    * Otherwise returns ``{"delete_prose": bool, "add_to_polish": bool}``:
+
+      - Website content changed (``website_content_unchanged`` is False) —
+        ``{"delete_prose": True, "add_to_polish": True}``. Same as before
+        exact shipments existed: the reviewed prose is stale by definition.
+      - Website content unchanged but format/shipments moved (a new/altered
+        exact shipment tag, or a bare format bump, with every other fact
+        identical) — ``{"delete_prose": False, "add_to_polish": False}``.
+        THIS is the case a prior version of this function got wrong: it must
+        still be WRITTEN (regardless of ``force``) so the new/changed
+        shipment reaches data.json for the GitHub summary updater to
+        converge, but the reviewed prose is untouched and there is nothing
+        for the Polish AI to do, so the page must not appear in
+        files-to-polish.
+      - Fully unchanged, reached only via an explicit ``force`` — preserves
+        the exact pre-shipments ``--force`` behavior:
+        ``{"delete_prose": False, "add_to_polish": True}``.
+    """
+    if not force and fully_unchanged:
+        return None
+    if not website_content_unchanged:
+        return {"delete_prose": True, "add_to_polish": True}
+    if fully_unchanged:
+        return {"delete_prose": False, "add_to_polish": True}
+    return {"delete_prose": False, "add_to_polish": False}
 
 
 # ── page-set discovery (shared by release-notes-index.py + release-notes-render.py) ──────
@@ -2058,10 +2251,10 @@ def warn_orphan_notes_sidecars():
             if not f.is_file() or not f.name.endswith(".notes.md"):
                 continue
             stem = f.name[:-len(".notes.md")]
-            if not (base_dir / "{}.md".format(stem)).is_file():
+            if not _notes_sidecar_has_page(stem, base_dir):
                 log("WARNING: orphan manual notes sidecar {} has no matching "
-                    "page {}.md — ignoring it (spec §3.7). Did you mean a "
-                    "different stem?".format(f.name, stem))
+                    "page {}.md or {}-unreleased.md — ignoring it (spec §3.7). "
+                    "Did you mean a different stem?".format(f.name, stem, stem))
                 orphans.append(str(f))
     return orphans
 
@@ -2203,6 +2396,18 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         from_display = from_display[:12]
     diff_range_str = "{}..{}".format(from_display, to_display)
 
+    base_version = None
+    if from_display.startswith("release/"):
+        base_version = version_from_branch(from_display)
+    elif re.match(r"^\d+\.\d+\.\d+", from_display):
+        base_version = from_display
+    else:
+        # A bare commit SHA can come from a versions.json compare_to tag. Recover
+        # that core so cumulative manual notes use the same lower bound as git.
+        ce = _versions_config_lookup(version)
+        if ce and ce.get("compare_to"):
+            base_version = ce["compare_to"]
+
     status, superseded_by, supersedes = _compute_page_status(branch, version)
 
     if verbose:
@@ -2258,11 +2463,12 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         }
 
     # Companion files (spec §3.7/§4.7): the manual additions sidecar (keyed by the
-    # page STEM) and the API breaking-diff (under the line's <version>/ folder).
-    # Their content hashes are folded into data.json (build_data_json), so a
-    # companion-only edit changes data.json and re-polishes just this page (§4.6).
+    # page STEM, plus any skipped lines in this cumulative window) and the API
+    # breaking-diff (under the line's <version>/ folder). Their content hashes are
+    # folded into data.json (build_data_json), so a companion-only edit changes
+    # every affected data.json and re-polishes those pages (§4.6).
     stem = _page_filename(branch, version)[:-len(".md")]
-    notes_comp = load_notes_sidecar(stem, RELEASES_DIR)
+    notes_comp = load_notes_sidecars(stem, base_version, version, RELEASES_DIR)
     breaking_comp = (load_breaking_companions(version, RELEASES_DIR)
                      if not is_head else None)
 
@@ -2280,19 +2486,6 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # the trailing "## Preview N (date)" sections render. The lower bound is the
     # diff base, so a page naturally includes a skipped predecessor minor's
     # previews (the 4.148 page lists the 4.147 previews).
-    base_version = None
-    if from_display.startswith("release/"):
-        base_version = version_from_branch(from_display)
-    elif re.match(r"^\d+\.\d+\.\d+", from_display):
-        base_version = from_display
-    else:
-        # from_display is a bare commit SHA — happens when versions.json
-        # compare_to resolved to a `v<compare_to>` TAG (no release/* branch). The
-        # base core is then exactly that compare_to value; recover it so the
-        # milestone window stays bounded.
-        ce = _versions_config_lookup(version)
-        if ce and ce.get("compare_to"):
-            base_version = ce["compare_to"]
     preview_milestones = collect_preview_milestones(version, base_version)
 
     metadata = {
@@ -2316,6 +2509,11 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         metadata["api_diff_link"] = api_diff_link
     if harfbuzz:
         metadata["harfbuzz"] = harfbuzz
+    if not is_head:
+        # A released page corresponds to real git tag(s) with GitHub Releases;
+        # an unreleased head page (main/release/X.Y.x) is never tagged, so it
+        # has no shipments at all.
+        metadata["shipments"] = collect_shipments_for_page(version)
     companions = {}  # type: dict
     if notes_comp:
         companions["notes"] = notes_comp
@@ -2331,32 +2529,69 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # identical run produces a byte-identical dict and the page is skipped. The
     # generator NEVER writes the .md — release-notes-render.py produces it from
     # data.json + prose.json during Polish.
+    #
+    # Three distinct outcomes (§4.8), not two — see _classify_data_write's
+    # docstring for the full decision table:
+    #
+    #  1. Fully unchanged (byte-identical dict, including format/shipments) —
+    #     the genuine no-op. Skipped entirely unless --force, matching the
+    #     exact prior (pre-shipments) behavior: a forced write here still
+    #     returns the page for polish without touching prose, since nothing
+    #     about it — including its shipments — actually changed.
+    #  2. Website content changed (PRs/roster/previews/links/companions) —
+    #     always written, prose discarded, page returned for polish. Same as
+    #     before shipments existed.
+    #  3. Website content UNCHANGED but format/shipments differ (e.g. a new or
+    #     re-tagged exact shipment appeared with no other fact moving) — this
+    #     is the bug this split fixes: previously such a page was silently
+    #     skipped (never written), so its new shipment never reached
+    #     data.json and the GitHub summary updater could never converge a
+    #     summary for it. Now it is ALWAYS written (regardless of --force),
+    #     but the reviewed prose is preserved and the page is never added to
+    #     files-to-polish — there is nothing here for the Polish AI to do.
     data = build_data_json(prs, metadata)
     data_path = _data_json_path(output_path)
-    changed = not _data_json_unchanged(data_path, data)
-    if not force and not changed:
+    fully_unchanged = _data_json_unchanged(data_path, data)
+    website_content_unchanged = _website_content_unchanged(data_path, data)
+    action = _classify_data_write(fully_unchanged, website_content_unchanged, force)
+
+    if action is None:
         log("  Skipping {} (unchanged)".format(output_path))
         return None
 
     data_path.parent.mkdir(parents=True, exist_ok=True)
     data_path.write_text(json.dumps(data, indent=2) + "\n")
-    log("  Wrote {} ({} PRs)".format(data_path, len(prs)))
-    if changed:
+
+    if action["delete_prose"]:
+        log("  Wrote {} ({} PRs)".format(data_path, len(prs)))
         # The facts moved (new/removed PRs, re-tags, roster shifts), so the committed
         # prose is stale by definition. DELETE it to FORCE the Polish agent to
         # re-author the page from the fresh data.json — instead of letting it judge
         # whether the old prose still "matches", which silently dropped brand-new
         # product PRs (§4.6). The human-owned <version>.notes.md sidecar is left in
         # place. render --all then hard-fails until fresh prose exists, so a changed
-        # page can never ship with stale prose. Scoped to a genuine change (not a bare
-        # --force re-render) so re-rendering after a format/skill tweak does not throw
+        # page can never ship with stale prose. Scoped to a genuine content change
+        # (not a bare --force re-render, and not a shipments-only change) so
+        # re-rendering after a format/skill tweak or a new preview tag does not throw
         # away good prose. The .md itself is not deleted — render overwrites it wholesale
         # from the new prose.
         prose_path = _prose_json_path(output_path)
         if prose_path.exists():
             prose_path.unlink()
             log("  Discarded {} (data changed — forcing full re-author)".format(prose_path))
-    return str(output_path)
+    elif fully_unchanged:
+        # Reached only via --force with truly nothing different (not even
+        # shipments). Preserve the exact pre-shipments --force behavior: still
+        # return the page for polish, but prose is untouched.
+        log("  Wrote {} ({} PRs, forced; unchanged)".format(data_path, len(prs)))
+    else:
+        # Website content is unchanged but format/shipments moved (a new/altered
+        # exact shipment, or a bare format bump) — write the updated facts so the
+        # GitHub summary updater sees them, but there is no polish work here.
+        log("  Wrote {} ({} PRs; shipment/format metadata only — prose preserved, "
+            "no polish needed)".format(data_path, len(prs)))
+
+    return str(output_path) if action["add_to_polish"] else None
 
 
 # ── Main ─────────────────────────────────────────────────────────────

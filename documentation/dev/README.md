@@ -6,7 +6,7 @@ SkiaSharp is a cross-platform 2D graphics API for .NET that wraps Google's Skia 
 
 Before building or contributing to SkiaSharp:
 
-- **.NET 8 SDK** - Pinned via `global.json` in the repository root
+- **.NET SDK pinned by the repository** - See the root `global.json` for the required version
 - **MAUI workload** - Required for mobile platform targets:
   ```bash
   dotnet workload install maui
@@ -54,10 +54,18 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 | [building.md](building.md) | Build on Windows & macOS |
 | [building-linux.md](building-linux.md) | Build native libraries for Linux |
 
+### Testing
+| Document | Description |
+|----------|-------------|
+| [golden-image-tests.md](golden-image-tests.md) | The cross-backend visual-regression matrix: scenes, renderers, goldens, tolerance and how to seed them |
+| [gpu-test-policy.md](gpu-test-policy.md) | When a GPU backend is required vs skipped, and the `SKIASHARP_TEST_SKIP_GPU` opt-out |
+| [containerized-testing.md](containerized-testing.md) | Run the console test suite inside a Docker container (Linux glibc/Alpine + Nano Server) via the bootstrapper `docker:` feature + the `tests-container` cake target |
+
 ### Releasing
 | Document | Description |
 |----------|-------------|
-| [releasing.md](releasing.md) | Complete release guide: branching, workflow, checklist |
+| [releasing.md](releasing.md) | Maintainer runbook: workflows, inputs, approvals, and release checklist |
+| [release-process-internals.md](release-process-internals.md) | Release automation architecture, state, invariants, and implementation map |
 | [versioning.md](versioning.md) | Version numbering scheme |
 
 ### Reference
@@ -72,7 +80,7 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 ```bash
 dotnet cake --target=externals-download  # Get native libs
 dotnet build binding/SkiaSharp/SkiaSharp.csproj  # Build managed
-dotnet test tests/SkiaSharp.Tests.Console.sln    # Run all tests
+dotnet test tests/SkiaSharp.Tests.Console.slnx    # Run all tests
 ```
 
 ## External Resources

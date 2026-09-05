@@ -59,16 +59,15 @@ namespace SkiaSharpGenerator
 
 		protected override bool OnInvoke(IEnumerable<string> extras)
 		{
-			var dir = Path.GetDirectoryName(OutputPath);
-			if (!Directory.Exists(dir))
-				Directory.CreateDirectory(dir);
+			var outputPath = Path.GetFullPath(OutputPath!);
+			var dir = Path.GetDirectoryName(outputPath)!;
+			Directory.CreateDirectory(dir);
 
-			var docStore = OutputPath is not null && File.Exists(OutputPath)
-				? new DocumentationStore(OutputPath)
+			var docStore = File.Exists(outputPath)
+				? new DocumentationStore(outputPath)
 				: null;
 
-			using var file = File.Create(OutputPath);
-			using var writer = new StreamWriter(file);
+			using var writer = CreateOutputWriter(outputPath);
 
 			var generator = new Generator(SourceRoot!, ConfigPath!, writer, docStore);
 			generator.Log = Program.Log;
@@ -92,6 +91,13 @@ namespace SkiaSharpGenerator
 			}
 
 			return true;
+		}
+
+		internal static StreamWriter CreateOutputWriter(string outputPath)
+		{
+			var writer = new StreamWriter(File.Create(outputPath));
+			writer.NewLine = "\n";
+			return writer;
 		}
 	}
 }

@@ -1,12 +1,10 @@
 ---
 description: "Regenerate website release notes AND API diffs daily (and on every main push) — new tags, releases, and release-branch commits are discovered automatically. One pipeline, one PR."
-# ENGINE — use the default Copilot model. The reworked pipeline hands the agent
-# fully-structured facts (per-page data.json + companion files) and a deterministic
-# renderer, so the Polish phase no longer needs a pinned stronger model (validated
-# by an A/B run: the default model matched — and on one behavioural breaking change
-# beat — the pinned Opus output). Recompile the .lock.yml after changing this.
+# ENGINE — deterministic preparation and rendering bound the task, but the prose
+# still requires nuanced API and breaking-change judgment, so use Terra.
 engine:
   id: copilot
+model: gpt-5.6-terra
 # TRIGGERS — main is the single source of truth for EVERY version/branch.
 # Deliberately NOT triggered by `release/**` pushes or `v*` tags: a push/tag event
 # runs the workflow copy that lives on THAT ref, not main's, so those triggers can
@@ -103,7 +101,7 @@ jobs:
       has_changes: ${{ steps.package.outputs.has_changes }}
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
       - name: Free up disk space
@@ -136,7 +134,7 @@ jobs:
           git fetch origin "$SOURCE_BRANCH" --quiet
           git checkout -B "$SOURCE_BRANCH" "origin/$SOURCE_BRANCH"
       - name: Setup .NET
-        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68  # v6.0.0
         with:
           global-json-file: global.json
       - name: Generate (verbose)
@@ -292,6 +290,8 @@ Follow the **release-notes skill**
 ([`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md))
 for **how** to write each page's prose and render it — the prose slots, the six
 categories, the breaking-change sources (`*.breaking.md` + `_sources/<version>.notes.md`),
+the optional per-shipment `release_summaries` slot that converges reviewed GitHub Release
+summaries (a separate, non-blocking surface from the website page — see the skill),
 the per-page `release-notes-render.py` validation, and the "never hand-edit the page" rules all
 live there. The renderer owns every heading, table, banner, `@handle`, ❤️, and PR link,
 so you only ever write prose.
@@ -312,6 +312,12 @@ This run's **CI-specific deltas** on top of the skill:
    committed JSON). If `--all` exits non-zero, fix the reported prose and re-run.
 4. Commit and open the PR (below). If, after `--all`, `git status` shows the working
    tree is genuinely unchanged, make no commit and exit; otherwise commit everything.
+
+`release_summaries` entries you write are **not** validated by
+`release-notes-render.py` (they render nowhere on the website page) — a separate,
+classic workflow (`update-github-release-summaries.yml`) validates and converges
+them into the matching GitHub Release afterwards, on its own schedule. Getting one
+wrong never blocks this PR or this run; fix it in a follow-up.
 
 ## How the PR is made
 

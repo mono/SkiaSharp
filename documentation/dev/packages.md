@@ -13,6 +13,7 @@ Reference for all NuGet packages produced by SkiaSharp — purpose, contents, an
   - [Platform Packages](#platform-packages) — Per-platform package details
   - [Auto-Included NativeAssets](#auto-included-nativeassets) — What's pulled in automatically by TFM
   - [Linux Package Selection Guide](#linux-package-selection-guide) — Which Linux package to use
+- [Build and Publishing](#build-and-publishing) — Signing, transport, symbols, and Arcade
 - [Deployment & Containers](#deployment--containers) — Container and publishing guidance
   - [Container Deployment](#container-deployment) — Which Linux package to use in containers
   - [Publishing Modes](#publishing-modes) — Framework-dependent, self-contained, single-file
@@ -129,6 +130,56 @@ The core `SkiaSharp` and `HarfBuzzSharp` packages automatically include NativeAs
 | Alpine Docker containers | `SkiaSharp.NativeAssets.Linux.NoDependencies` | Includes `linux-musl-*` variants, no deps |
 | Minimal/distroless containers | `SkiaSharp.NativeAssets.Linux.NoDependencies` | Zero third-party deps |
 | App needs system font enumeration | `SkiaSharp.NativeAssets.Linux` | Fontconfig required for `SKFontManager` system fonts |
+
+---
+
+## Build and Publishing
+
+`dotnet cake --target=nuget` produces the raw package directories and the
+prepared Arcade release views in one dependency graph. The Package stage
+publishes:
+
+- `nuget` — product packages and explicit `.symbols.nupkg` packages;
+- `nuget_special` — unsigned `_NuGets` and `_NativeAssets*` transport packages.
+
+It also publishes the deterministic release inputs created by Cake:
+
+- `arcade_shipping` — product and explicit symbol packages ready for signing;
+- `arcade_nonshipping` — the run's single unsigned transport family: PR-versioned
+  for PR artifact validation or branch-versioned for official BAR registration;
+- `PdbArtifacts` — loose implementation/runtime PDBs for product packages that
+  do not have an explicit symbol package. This is marked `isProduction: false`
+  for 1ES artifact metadata; it does not change Arcade shipping classification.
+
+Each build creates one transport family. Public PR validation creates
+PR-versioned packages for structural validation; all other builds create one
+branch-versioned package per transport ID. The same family appears in
+`nuget_special` and `arcade_nonshipping`, so BAR never receives duplicate IDs.
+
+Public CI ends after deterministic build, package, test, and artifact validation.
+The internal signing stage downloads only `arcade_shipping`, signs it, and
+republishes it as `arcade_shipping_signed`; transport packages never enter the
+signing job. A separate authenticated stage combines the signed Shipping and
+already-prepared NonShipping views by artifact download, generates the Arcade
+V3 manifest, and registers one BAR. Standard downstream Arcade stages validate
+the BAR and invoke Darc default-channel promotion. API Scan is an independent
+internal stage. This keeps package layout, transport filtering, PDB extraction,
+and artifact inspection public while internal jobs perform only operations that
+require protected identities or services.
+
+`eng/Signing.props` defines product signing. Normal and explicit symbol packages
+are signed together; dSYM DWARF files are not signing targets. PDBs are extracted
+before signing because package signing does not alter their contents.
+
+`eng/Publishing.props` publishes Shipping packages, NonShipping transport, and
+symbol blobs. `eng/SignCheckExclusionsFile.txt` marks transport packages
+`DO-NOT-SIGN, DO-NOT-UNPACK`.
+
+Official BARs publish one branch-versioned transport package per ID.
+
+See the [Release Guide](releasing.md) for the maintainer workflow and
+[Release process internals](release-process-internals.md) for branch, BAR,
+signing, testing, and publication mechanics.
 
 ---
 

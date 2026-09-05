@@ -53,17 +53,6 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    // patch the gclient_paths.py for Python 3.7
-    {
-        var gclient = DEPOT_PATH.CombineWithFilePath("gclient_paths.py");
-        var contents = System.IO.File.ReadAllText(gclient.FullPath);
-        var newContents = contents
-            .Replace("@functools.lru_cache", "@functools.lru_cache()")
-            .Replace("@functools.lru_cache()()", "@functools.lru_cache()");
-        if (contents != newContents)
-            System.IO.File.WriteAllText(gclient.FullPath, newContents);
-    }
-
     foreach (var arch in BUILD_ARCH) {
         if (Skip(arch)) return;
 
@@ -116,6 +105,7 @@ Task("libSkiaSharp")
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan=true " +
+            $"skia_enable_graphite=true " +
             bionicArgs +
             $"extra_asmflags=[] " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-stdlib=libc++'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +

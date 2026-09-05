@@ -266,7 +266,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (effect));
 
 			names = effect.Uniforms.ToArray ();
-			uniforms = new Dictionary<string, Variable> ();
+			uniforms = new Dictionary<string, Variable> (names.Length);
 			data = effect.UniformSize is int size && size > 0
 				? SKData.Create (effect.UniformSize)
 				: SKData.Empty;
@@ -296,7 +296,9 @@ namespace SkiaSharp
 			if (data.Size == 0)
 				return;
 
-			data = SKData.Create (data.Size);
+			var old = data;
+			data = SKData.Create (old.Size);
+			old.Dispose ();
 		}
 
 		public bool Contains (string name) =>

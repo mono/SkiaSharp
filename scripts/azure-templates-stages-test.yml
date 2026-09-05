@@ -1,7 +1,6 @@
 parameters:
-  - name: isSplitPipeline
-    type: boolean
-    default: false
+  - name: buildPipelineType
+    type: string
   - name: buildAgentHost
     type: object
   - name: buildAgentWindows
@@ -20,7 +19,7 @@ stages:
 
     - stage: managed
       displayName: Build Managed
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: native
@@ -79,38 +78,83 @@ stages:
 
     - stage: tests
       displayName: Tests
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: native
       jobs:
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|netfx (Windows)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (.NET Framework)
           parameters:
-            name: tests_netfx_windows
-            displayName: Windows (.NET Framework)
+            name: tests_netfx_windows_x64
+            displayName: Windows (.NET Framework, x64)
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: tests-netfx
-            additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            additionalArgs: --arch=x64 --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native
+            preBuildSteps:
+              # Provision a software GL driver (Mesa) and a software Vulkan ICD
+              # (SwiftShader) so ganesh-gl and ganesh-vulkan render here.
+              - pwsh: .\scripts\infra\native\windows\install-mesa-gl.ps1
+                displayName: Provision software OpenGL (Mesa) for the GL tests
+              - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
+                displayName: Provision software Vulkan (SwiftShader) for visual tests
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+                displayName: Extract visual-regression images for triage
                 condition: always()
               - task: PublishTestResults@2
-                displayName: Publish the .NET Framework test results
+                displayName: Publish the .NET Framework x64 test results
                 condition: always()
                 inputs:
                   testResultsFormat: VSTest
                   testResultsFiles: 'output/logs/testlogs/**/*.trx'
-                  testRunTitle: 'Windows .NET Framework Tests'
+                  testRunTitle: 'Windows .NET Framework x64 Tests'
             publishArtifacts:
-              - name: testlogs_netfx_windows
+              - name: testlogs_netfx_windows_x64
                 always: true
                 path: 'output/logs/testlogs'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|netcore (Windows)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (.NET Framework, x86)
+          parameters:
+            name: tests_netfx_windows_x86
+            displayName: Windows (.NET Framework, x86)
+            buildAgent: ${{ parameters.buildAgentWindows}}
+            target: tests-netfx
+            additionalArgs: --arch=x86 --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            # SwiftShader's LLVM JIT cannot resolve __chkstk in a 32-bit process, so
+            # the software Vulkan ICD crashes the host outright ("exit code is '7'")
+            # instead of failing a test. x64 runs the identical suite green, which is
+            # why the two architectures are separate jobs. OpenGL and Direct3D stay
+            # required on both — Mesa provisions fine in either bitness.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-vulkan,graphite-vulkan,ganesh-vulkan-sharpvk
+            preBuildSteps:
+              - pwsh: .\scripts\infra\native\windows\install-mesa-gl.ps1
+                displayName: Provision software OpenGL (Mesa) for the GL tests
+              - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
+                displayName: Provision software Vulkan (SwiftShader) for visual tests
+            postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+                displayName: Extract visual-regression images for triage
+                condition: always()
+              - task: PublishTestResults@2
+                displayName: Publish the .NET Framework x86 test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Windows .NET Framework x86 Tests'
+            publishArtifacts:
+              - name: testlogs_netfx_windows_x86
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (.NET Core)
           parameters:
             name: tests_netcore_windows
             displayName: Windows (.NET Core)
@@ -121,9 +165,16 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
+            preBuildSteps:
+              # Provision a software GL driver (Mesa) and a software Vulkan ICD
+              # (SwiftShader) so ganesh-gl and ganesh-vulkan render here.
+              - pwsh: .\scripts\infra\native\windows\install-mesa-gl.ps1
+                displayName: Provision software OpenGL (Mesa) for the GL tests
+              - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
+                displayName: Provision software Vulkan (SwiftShader) for visual tests
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+                displayName: Extract visual-regression images for triage
                 condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
@@ -138,20 +189,26 @@ stages:
                 path: 'output/logs/testlogs'
               - name: coverage_netcore_windows
                 path: 'output/coverage'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|netcore (macOS)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|macOS
           parameters:
             name: tests_netcore_macos
-            displayName: macOS (.NET Core)
+            displayName: macOS
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            # This pool is x64 and virtualizes Metal. Merely calling
+            # MTLCreateSystemDefaultDevice + newCommandQueue on that driver leaves
+            # state that never signals, so the test host hangs on shutdown until the
+            # job times out at 180 min — no results, no TRX. See #4598.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+                displayName: Extract visual-regression images for triage
                 condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
@@ -166,18 +223,15 @@ stages:
                 path: 'output/logs/testlogs'
               - name: coverage_netcore_macos
                 path: 'output/coverage'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|netcore (Linux)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux
           parameters:
             name: tests_netcore_linux
-            displayName: Linux (.NET Core)
+            displayName: Linux
             buildAgent: ${{ parameters.buildAgentLinux }}
-            # Software GL (Mesa llvmpipe) + software Vulkan (Mesa lavapipe) + a
-            # virtual X server give the headless agent deterministic GPU output so
-            # the visual-regression matrix can render and golden-compare ganesh-gl
-            # / ganesh-vulkan here. If any of this is missing the GPU cells skip
-            # (no display / no ICD), so this provisioning can only add coverage,
-            # never turn the build red.
-            packages: $(MANAGED_LINUX_PACKAGES) xvfb mesa-utils libgl1-mesa-dri mesa-vulkan-drivers vulkan-tools
+            # Software Vulkan (Mesa lavapipe) plus a virtual X server give the
+            # headless agent deterministic GPU output. ganesh-gl, ganesh-vulkan and
+            # graphite-vulkan are required here, so missing provisioning fails.
+            packages: $(MANAGED_LINUX_PACKAGES) xvfb mesa-utils libgl1-mesa-dri libglx-mesa0 mesa-vulkan-drivers vulkan-tools
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             installAndroidSdk: false
@@ -191,18 +245,24 @@ stages:
                   sleep 3
                   echo "Started Xvfb on :99"
                   # Expose the software-GPU environment to the test step. Forcing
-                  # Mesa llvmpipe (GL) and the lavapipe ICD (Vulkan) keeps output
-                  # deterministic; a wrong/absent ICD path just means the cell finds
-                  # no driver and skips, so this never turns the build red.
+                  # Mesa (GL) and the lavapipe ICD (Vulkan) keeps output deterministic.
+                  #
+                  # softpipe rather than llvmpipe for GL: llvmpipe's LLVM shader JIT
+                  # segfaults compiling the fragment shader Skia generates for a
+                  # runtime blender and takes the whole test host with it, which is
+                  # what made this leg lose all its results (#4590). softpipe is the
+                  # non-JIT gallium rasterizer and runs the same tests green. It
+                  # caps at GL 3.3, which is well past the 3.0 Ganesh needs. See
+                  # #4604 to move back to llvmpipe.
                   echo "##vso[task.setvariable variable=DISPLAY]:99"
                   echo "##vso[task.setvariable variable=LIBGL_ALWAYS_SOFTWARE]1"
-                  echo "##vso[task.setvariable variable=GALLIUM_DRIVER]llvmpipe"
+                  echo "##vso[task.setvariable variable=GALLIUM_DRIVER]softpipe"
                   echo "##vso[task.setvariable variable=VK_ICD_FILENAMES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
                   echo "##vso[task.setvariable variable=VK_DRIVER_FILES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
                 displayName: Start Xvfb and select software GPU (visual tests)
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+                displayName: Extract visual-regression images for triage
                 condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
@@ -217,10 +277,10 @@ stages:
                 path: 'output/logs/testlogs'
               - name: coverage_netcore_linux
                 path: 'output/coverage'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|android (Linux)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Android
           parameters:
             name: tests_android_linux
-            displayName: Android (Linux)
+            displayName: Android
             buildAgent: ${{ parameters.buildAgentAndroidTests }}
             target: tests-android
             additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
@@ -245,8 +305,8 @@ stages:
               - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
                 displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+                displayName: Extract visual-regression images for triage
                 condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the Android test results
@@ -259,19 +319,28 @@ stages:
               - name: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
                 always: true
                 path: 'output/logs/testlogs'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|ios (macOS)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|iOS
           parameters:
             name: tests_ios_macos
-            displayName: iOS (macOS)
+            displayName: iOS
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-ios
             additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
               - name: native
+            # The iOS *simulator* on the x64 macOS pool exposes a virtualized Metal
+            # device: creating a command queue on it leaves dispatch-queue state that
+            # never signals, hanging the test host's shutdown for hours. Declared here
+            # rather than sniffed at runtime — this describes the pool we run on today,
+            # so if the pool moves to Apple Silicon this line is what has to change.
+            # Same shutdown hang as #4598; the simulator additionally cannot compile
+            # Graphite's gradient pipeline (#4555). #4591 tracks the wider picture.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+                displayName: Extract visual-regression images for triage
                 condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the iOS test results
@@ -284,21 +353,27 @@ stages:
               - name: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
                 always: true
                 path: 'output/logs/testlogs'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|maccatalyst (macOS)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Mac Catalyst
           parameters:
             name: tests_maccatalyst_macos
-            displayName: Mac Catalyst (macOS)
-            continueOnError: true
+            displayName: Mac Catalyst
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-maccatalyst
             additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            # A Mac Catalyst app sees iOS-style Metal GPU families, never Mac2, so
+            # the device reports none of the families Ganesh or Graphite require and
+            # bring-up fails outright (#4599). macOS on this same pool is opted out
+            # too, for a different reason — its virtualized Metal hangs the host on
+            # shutdown (#4598). #4591 tracks the wider picture.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+                displayName: Extract visual-regression images for triage
                 condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the Mac Catalyst test results
@@ -311,23 +386,32 @@ stages:
               - name: testlogs_maccatalyst
                 always: true
                 path: 'output/logs/testlogs'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests [WASM] (Linux)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|WASM
           parameters:
             name: tests_wasm_linux
-            displayName: WASM (Linux)
+            displayName: WASM
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
             additionalArgs: --skipExternals="all" --coverage=false
+            # navigator.gpu.requestAdapter() returns null in the headless browser the
+            # DeviceRunners CLI launches, so Dawn has no adapter to bind to. Its
+            # `wasm test` command takes no browser arguments, so the WebGPU flags
+            # cannot be passed through without an upstream change to that package. See #4591.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: graphite-dawn
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
+            preBuildSteps:
+              - bash: bash ./scripts/infra/managed/install-chrome.sh
+                displayName: Install Chrome for WASM tests
             postBuildSteps:
-              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
-                displayName: Extract visual-regression failure images for triage
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+                displayName: Extract visual-regression images for triage
                 condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the WASM test results
@@ -347,17 +431,23 @@ stages:
             # mismatch in the native lib, fail CI. installPreviewSdk provisions the preview SDK +
             # wasm-tools workload (which bundles the matching emscripten) and pins global.json to it.
             name: tests_wasm_preview_linux
-            displayName: WASM Preview (Linux)
+            displayName: WASM (.NET Preview)
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
             additionalArgs: --skipExternals="all" --coverage=false --previewtfm=true
+            # See the WASM leg above: the headless browser exposes no WebGPU adapter (#4591).
+            env:
+              SKIASHARP_TEST_SKIP_GPU: graphite-dawn
             installAndroidSdk: false
             shouldPublish: false
             installPreviewSdk: true
             previewWorkloads: wasm-tools,android
             requiredArtifacts:
               - name: native
+            preBuildSteps:
+              - bash: bash ./scripts/infra/managed/install-chrome.sh
+                displayName: Install Chrome for WASM tests
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the WASM preview test results
@@ -370,9 +460,169 @@ stages:
               - name: testlogs_wasm_preview
                 always: true
                 path: 'output/logs/testlogs'
-        # TODO: add tests for linux alpine
-        # TODO: add tests for linux no dependencies
-        # TODO: add tests for windows nano server
+
+        # Containerized test legs — see documentation/dev/containerized-testing.md
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Azure Linux)
+          parameters:
+            name: tests_container_linux
+            # No GPU stack in these images, by design: they exist to prove SkiaSharp
+            # works without those dependencies, so OpenGL genuinely cannot come up.
+            # Declared here rather than inferred from the DllNotFoundException the
+            # test would otherwise throw; the desktop Linux and Windows legs carry
+            # the ganesh-gl coverage. Tracked by #4591.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
+            displayName: Linux (Azure Linux)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            docker: scripts/infra/tests/docker/azurelinux
+            target: tests-container
+            additionalArgs: --nativePlatform=linux
+            installAndroidSdk: false
+            installXcode: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Azure Linux container test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Linux (Azure Linux) Tests'
+            publishArtifacts:
+              - name: testlogs_container_linux
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Azure Linux, No Dependencies)
+          parameters:
+            name: tests_container_linux_nodeps
+            # No GPU stack in these images, by design: they exist to prove SkiaSharp
+            # works without those dependencies, so OpenGL genuinely cannot come up.
+            # Declared here rather than inferred from the DllNotFoundException the
+            # test would otherwise throw; the desktop Linux and Windows legs carry
+            # the ganesh-gl coverage. Tracked by #4591.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
+            displayName: Linux (Azure Linux, No Dependencies)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            docker: scripts/infra/tests/docker/azurelinux-nodeps
+            target: tests-container
+            additionalArgs: --nativePlatform=linuxnodeps
+            installAndroidSdk: false
+            installXcode: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Azure Linux NoDeps container test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Linux (Azure Linux, No Dependencies) Tests'
+            publishArtifacts:
+              - name: testlogs_container_linux_nodeps
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Alpine)
+          parameters:
+            name: tests_container_alpine_linux
+            # No GPU stack in these images, by design: they exist to prove SkiaSharp
+            # works without those dependencies, so OpenGL genuinely cannot come up.
+            # Declared here rather than inferred from the DllNotFoundException the
+            # test would otherwise throw; the desktop Linux and Windows legs carry
+            # the ganesh-gl coverage. Tracked by #4591.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
+            displayName: Linux (Alpine)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            docker: scripts/infra/tests/docker/alpine
+            target: tests-container
+            additionalArgs: --nativePlatform=alpine
+            installAndroidSdk: false
+            installXcode: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Alpine container test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Linux (Alpine) Tests'
+            publishArtifacts:
+              - name: testlogs_container_alpine
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Alpine, No Dependencies)
+          parameters:
+            name: tests_container_alpine_nodeps
+            # No GPU stack in these images, by design: they exist to prove SkiaSharp
+            # works without those dependencies, so OpenGL genuinely cannot come up.
+            # Declared here rather than inferred from the DllNotFoundException the
+            # test would otherwise throw; the desktop Linux and Windows legs carry
+            # the ganesh-gl coverage. Tracked by #4591.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
+            displayName: Linux (Alpine, No Dependencies)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            docker: scripts/infra/tests/docker/alpine-nodeps
+            target: tests-container
+            additionalArgs: --nativePlatform=alpinenodeps
+            installAndroidSdk: false
+            installXcode: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Alpine NoDeps container test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Linux (Alpine, No Dependencies) Tests'
+            publishArtifacts:
+              - name: testlogs_container_alpine_nodeps
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (Nano Server)
+          parameters:
+            name: tests_container_nanoserver_windows
+            # No GPU stack in these images, by design: they exist to prove SkiaSharp
+            # works without those dependencies, so OpenGL genuinely cannot come up.
+            # Declared here rather than inferred from the DllNotFoundException the
+            # test would otherwise throw; the desktop Linux and Windows legs carry
+            # the ganesh-gl coverage. Tracked by #4591.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
+            displayName: Windows (Nano Server)
+            buildAgent: ${{ parameters.buildAgentWindows }}
+            docker: scripts/infra/tests/docker/nanoserver
+            target: tests-container
+            additionalArgs: --nativePlatform=nanoserver
+            installAndroidSdk: false
+            installXcode: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Nano Server container test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Nano Server Container Tests'
+            publishArtifacts:
+              - name: testlogs_container_nanoserver
+                always: true
+                path: 'output/logs/testlogs'
+
         - job: coverage_reports                      # Coverage Reports
           displayName: Coverage Reports
           pool: ${{ parameters.buildAgentHost.pool }}
@@ -407,7 +657,7 @@ stages:
 
     - stage: samples
       displayName: Samples
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: package

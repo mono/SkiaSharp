@@ -103,6 +103,10 @@ Task ("tests-netcore")
     .IsDependentOn ("externals")
     .Does (() => RunCake ("./scripts/infra/tests/tests-netcore.cake", "Default"));
 
+Task ("tests-container")
+    .Description ("Run the console test suite against prebuilt natives (used by the containerized test legs).")
+    .Does (() => RunCake ("./scripts/infra/tests/tests-container.cake", "Default"));
+
 Task ("tests-android")
     .Description ("Run all Android tests.")
     .IsDependentOn ("externals")
@@ -130,7 +134,8 @@ Task ("tests-wasm")
 Task ("nuget")
     .Description ("Pack all NuGets.")
     .IsDependentOn ("nuget-normal")
-    .IsDependentOn ("nuget-special");
+    .IsDependentOn ("nuget-special")
+    .IsDependentOn ("nuget-assemble-arcade-assets");
 
 Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
@@ -139,8 +144,13 @@ Task ("nuget-normal")
 
 Task ("nuget-special")
     .Description ("Pack all special NuGets.")
-    .IsDependentOn ("libs")
+    .IsDependentOn ("nuget-normal")
     .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-special"));
+
+Task ("nuget-assemble-arcade-assets")
+    .Description ("Prepare the public Arcade Shipping, NonShipping, and PDB artifacts.")
+    .IsDependentOn ("nuget-special")
+    .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-assemble-arcade-assets"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DOCS - creating the xml, markdown and other documentation

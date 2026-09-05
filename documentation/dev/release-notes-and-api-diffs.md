@@ -68,6 +68,7 @@ behavior is to do the same full pipeline and let the engines skip safely.
   - §4.5 The HarfBuzz section on a SkiaSharp page
   - §4.6 How it runs
   - §4.7 Manual additions & breaking-change summaries (companion files)
+  - §4.8 Exact-shipment summaries and the GitHub Release updater (`release_notes/`, format 4+)
 - **§5 — API-diff engine (`api-diff.cake`)**
   - §5.1 Inputs & outputs
   - §5.2 Behavior
@@ -748,16 +749,16 @@ Either field may be a single string or a list. An absent or empty block makes ev
 line render as top-level/supported (the legacy flat layout), so the feature is purely
 additive.
 
-**Maintained by hand, on purpose (do not auto-sync).** The values *correspond to* Chrome's
-channels, but the block is a **human-curated grouping for the docs site**, not a mirror of
-the live channels — so it is edited by hand and must not be auto-derived from Chromium Dash.
-The reason is that SkiaSharp does not ship every Chrome milestone: if we **skip a bump**,
-blindly copying the live Chrome milestones in would point a tier at a milestone that has
-**no SkiaSharp release line**, and the page would then show the actually-released lines as
-out of support (worst case: "everything is unsupported"). A maintainer therefore sets each
-list to milestones we actually released. Automating this is only safe once the Skia-update
-pipeline is **fully automated and auto-merging every milestone** (so "skipped bump" can't
-happen); until then, treat these two lists as a manual editorial decision.
+**Release-driven membership; policy-driven removal.** Release Finish proposes a focused
+PR from the exact public SkiaSharp package version: previews and RCs add their line to
+`preview`, while stable releases add their line to `stable` and remove only that same
+line from `preview`. It never removes another supported line. Maintainers explicitly
+remove lines when support ends. The values *correspond to* Chrome's channels, but the block
+is a **release-backed, human-curated grouping for the docs site**, not a mirror of the live
+channels. SkiaSharp does not ship every Chrome milestone, so membership is derived only from
+versions that actually reached NuGet.org and never from Chromium Dash. Release Finish makes
+the safe monotonic additions and same-line promotion; support retirement remains an explicit
+editorial decision.
 
 **Drift is detected, not auto-fixed.** The security audit's milestone heads-up
 (`.agents/skills/security-audit/scripts/query-milestone-schedule.py`, Step 3) already
@@ -777,8 +778,8 @@ Extended/Stable/Beta and `stable*`/`preview*` = our newest stable/preview milest
 | `preview* ≤ S` | 🔴 drift — not a real preview |
 | `preview` empty | 🟡 warn — no preview documented |
 
-A `drift` verdict is an audit **finding**; the fix is always a manual edit of this block
-(never auto-written — see the manual-by-design note above).
+A `drift` verdict is an audit **finding**. A later actual release may resolve it through
+Release Finish; otherwise a maintainer reviews and edits the block explicitly.
 
 
 ### 3.6 The co-release map sidecar (Cake → release-notes-data.py)
@@ -869,10 +870,13 @@ material to surface.
   (`**/*.notes.md`) so it never becomes its own published page.
 - **Read by `release-notes-data.py` (hash only), read by the AI (content).** `release-notes-data.py`
   records its page-relative path (`_sources/<stem>.notes.md`) plus a `sha256` of its
-  bytes in `breaking_candidates[]` (§4.3/§4.7), so editing it changes the
-  timestamp-free data sidecar (§4.6) and re-polishes exactly that page. `release-notes-data.py`
-  never parses its *content*. The Polish AI opens and reads it and summarizes / weaves
-  it into the prose (§4.7).
+  bytes in `breaking_candidates[]` (§4.3/§4.7). A rollup page also references notes
+  from skipped preview-only lines inside its cumulative diff window, so behavioral
+  changes are not lost merely because their original line never shipped stable.
+  Editing a sidecar changes every affected page's timestamp-free data sidecar (§4.6)
+  and re-polishes those pages. `release-notes-data.py` never parses its *content*. The
+  Polish AI opens and reads each referenced sidecar and summarizes / weaves it into
+  the prose (§4.7).
 - **Orphan handling.** A `_sources/<stem>.notes.md` with no matching SkiaSharp page one
   directory up (neither `<stem>.md` nor `<stem>-unreleased.md` exists for its stem) is a
   maintainer typo; `release-notes-data.py` **warns** and ignores it, writing nothing on its
@@ -898,13 +902,14 @@ The release-notes pipeline has three script-owned producers, split by artifact:
   (§4.7). It emits `_sources/<stem>.data.json` for each changed SkiaSharp page and
   writes the Files-to-polish list to `output/files-to-polish.txt` (or
   `--polish-list`). On released pages it adds `data.harfbuzz` from the co-release map
-  and the HarfBuzz-owned path filter (§4.5). It owns the shared low-level helpers
-  (git/version parsing), the page-set discovery helper `get_version_files`, and
-  `cadence_milestones()`.
+  and the HarfBuzz-owned path filter (§4.5), and (format 4+) `data.shipments` — the
+  exact-tag facts the separate GitHub Release summary updater consumes (§4.8). It owns
+  the shared low-level helpers (git/version parsing), the page-set discovery helper
+  `get_version_files`, and `cadence_milestones()`.
 - **`release-notes-index.py` (Prepare, network-capable) — aggregate index data.** Inputs are
   the remote branch list and the live Chromium Dash schedule. It emits only
   `releases/_sources/index.json`:
-  `{"chrome_schedule": {"<milestone>": {beta, early_stable, stable_cut, stable}},
+  `{"chrome_schedule": {"<milestone>": {earliest_beta, early_stable_cut, stable_cut, stable_date}},
   "live_unreleased": ["<version>", …]}` — the schedule for the two milestones in
   flight, and the version cores whose `-unreleased` page is still a live head (the
   set `release-notes-render.py --all` prunes against, §4.2). It writes no Markdown, deletes
@@ -1058,17 +1063,15 @@ principles are fixed here.
      args that shape the native binaries, usually infra) and `docs` (the mdoc API-docs
      submodule that ships as IntelliSense XML — doc content, not behaviour).
    - **`internal`** — the `default`: touches none of those (CI, workflows, agent skills, docs
-     *site*, tests, samples, build/meta, and the `externals/depot_tools` build-toolchain
-     submodule). Dropped into the one collapse line.
+     *site*, tests, samples, and build/meta). Dropped into the one collapse line.
 
    `native/` shapes the shipped binaries and `docs` ships as doc XML, so neither is
    `internal`; but neither is a direct API/behaviour change, so both are `mixed` (inspected
    from the title) rather than firm `product`. `docs` and `externals/skia` are submodules, so
    in the parent repo they appear as bare gitlink paths (`docs`, `externals/skia`) and the
    prefixes match those exactly — the `externals/skia` prefix is deliberately not just
-   `externals/`, which would sweep in the sibling `externals/depot_tools` build-toolchain
-   submodule (internal) and `externals/.gitignore`; the `docs` prefix is slash-less so it hits
-   the gitlink without colliding with `documentation/`. Polish drops `internal`, writes up
+   `externals/`, which would sweep in `externals/.gitignore`; the `docs` prefix is slash-less
+   so it hits the gitlink without colliding with `documentation/`. Polish drops `internal`, writes up
    `product`, and inspects `mixed`; moving the classification out of the LLM (and into the
    JSON) makes product-focus reliable run-to-run.
 2. **Highlights are a hook, not a summary.** The `## Highlights` section always exists
@@ -1238,15 +1241,15 @@ For a given SkiaSharp release page, `release-notes-data.py` records whichever of
 
 | Companion source | Path (page-relative) | Owner | Present when |
 |---|---|---|---|
-| **Manual additions** (§3.7) | `_sources/<stem>.notes.md` | maintainer (freeform md) | a human wrote one |
+| **Manual additions** (§3.7) | `_sources/<stem>.notes.md` | maintainer (freeform md) | a human wrote one for this page or a skipped line in its cumulative diff window |
 | **API breaking diff** (§3.3) | `<line>/<pkg>/<assembly>.breaking.md` | Cake | **real breaking changes exist** (Cake deletes an empty one, §5.2) |
 
 The full SkiaSharp API diff folder and the co-shipped HarfBuzzSharp API diff folder are
 already linked from the page (§4.4). What §4.7 adds is: **(a)** the maintainer-authored
 manual additions companion (§3.7); **(b)** teaching the Polish AI to open and summarize
 the manual notes and every breaking diff named by `data.json`; **(c)** hashing those
-companions into `data.json` (§4.6) so a companion-only edit re-polishes exactly that
-page.
+companions into `data.json` (§4.6) so a companion-only edit re-polishes that page,
+plus any later rollup page whose cumulative window includes that sidecar.
 
 Because `.breaking.md` exists **only when real breaking changes exist** (§5.2), its
 mere presence in `breaking_candidates` is the signal that this line broke something,
@@ -1258,7 +1261,8 @@ For each present companion, `release-notes-data.py` writes an entry into
 `breaking_candidates[]`:
 
 - `{"source": "notes-sidecar", "path": "_sources/<stem>.notes.md", "sha256": …}`
-  for the manual additions sidecar.
+  for each applicable manual additions sidecar, including skipped preview-only lines
+  inside the page's cumulative diff window.
 - `{"source": "api-breaking-diff", "path": "<line>/<pkg>/<assembly>.breaking.md", "sha256": …}`
   for each breaking diff file.
 
@@ -1303,11 +1307,96 @@ sources for "what's new" and "what broke".
 
 Reading a companion does not by itself change the page; deterministic re-polish is
 preserved by the hashes in `data.json` (§4.6). Editing `_sources/<stem>.notes.md`
-flips the `notes-sidecar` candidate hash; a breaking change appearing, disappearing,
-or changing flips the `api-breaking-diff` candidate hash. Either re-polishes **only**
-the affected page. The full non-breaking API diff is deliberately **not**
-folder-hashed (§4.6): its change signal is already carried by the PR set and the
-`api_links` entry, so a routine diff refresh does not force a spurious re-polish.
+flips the `notes-sidecar` candidate hash on its own page and any cumulative successor
+that references it; a breaking change appearing, disappearing, or changing flips the
+`api-breaking-diff` candidate hash on its line. The full non-breaking API diff is
+deliberately **not** folder-hashed (§4.6): its change signal is already carried by the
+PR set and the `api_links` entry, so a routine diff refresh does not force a spurious
+re-polish.
+
+---
+
+### 4.8 Exact-shipment summaries and the GitHub Release updater (`release_notes/`, format 4+)
+
+A released page's `data.json` (format 4+; see `_DATA_JSON_FORMAT_VERSION`'s docstring
+in `release-notes-data.py`) carries one additional field, `shipments`: an array of one
+record per exact `v*` tag whose core matches this page — a preview, an rc, and/or the
+stable release itself — each with `tag`, `core_version`, `public_version`, `channel`
+(`preview`/`rc`/`stable`), `label`, `previous_tag` (the immediately preceding tag in
+GLOBAL sort order, not just this page's), `target_sha`, `date`, `changelog_url`, and the
+delta `prs` since `previous_tag`. It has no bearing on the rendered website page — it
+exists so a **separate, deterministic, classic (non-agentic) GitHub Actions workflow**,
+`update-github-release-summaries.yml`
+(`scripts/infra/docs/release_notes/update_github_summaries.py`), can converge a
+maintainer-reviewed summary into the matching GitHub Release without waiting on, or
+gating, the release itself.
+
+The implementation lives under `scripts/infra/docs/release_notes/`:
+
+- **`common.py`** — the exact-release tag grammar (`EXACT_RELEASE_TAG_RE`, stricter than
+  `release-notes-data.py`'s lenient `_parse_tag`: it rejects decorative/legacy labels
+  like `-beta` or `-gpu1` outright, so the exact-summary path never associates a summary
+  with a tag it cannot confidently classify), and the `DATA_FORMAT` constant that must
+  stay equal to `_DATA_JSON_FORMAT_VERSION` (a test enforces this).
+- **`shipments.py`** — `collect_shipments()`, the pure function (every git/PR access
+  injected) that builds the `shipments` array, and `validate_shipment(s)`, the
+  structural guard applied both when writing and when the updater reads it back.
+- **`safety.py`** — the prose-safety gate: no code fence, no
+  CVE/security/vulnerability wording, no unwritten placeholder, and a real
+  opening sentence. Prose must never contain the literal text of a managed marker (an
+  untrusted PR title an agent paraphrased, or a compromised prose.json entry, could
+  otherwise smuggle a marker byte sequence and corrupt the region boundaries the
+  updater trusts).
+- **`render_summary.py`** — turns one shipment + its reviewed
+  `prose.json["release_summaries"][tag]` entry (`{"headline": string, "body":
+  string|null}`) into the exact Markdown for the managed summary region. Scripts own
+  every heading, link, and contributor `@handle`; the agent supplies only the two prose
+  strings.
+- **`update_github_summaries.py`** — the workflow's entry point. It selects every exact
+  tag with both `shipments` facts and a `release_summaries` entry, and for each one:
+  preflights (skip — never an error — a release that does not exist, is still an
+  unpublished draft, or is already current), adds managed regions around an
+  unmarked body, re-reads every planned release immediately before the first
+  write as a race barrier (the REST API has no conditional PATCH), writes,
+  then re-reads and requires the stored body to equal the intended body
+  exactly. Any preflight or race failure aborts the **whole batch** before a
+  single write.
+
+**Drafts.** `update_releases()` skips any unpublished draft and converges after
+publication. The normal Finish flow publishes directly, but retaining this guard keeps
+the updater safe around manually created or legacy drafts.
+
+**Markers.** The exact-summary package owns the four managed marker constants and
+body helpers in `scripts/infra/docs/release_notes/github.py`. Its minimal REST client
+updates only published release bodies without a `gh` CLI dependency. On the
+first reviewed update it wraps the existing GitHub-generated body in the
+generated-notes region and adds the managed summary region. Later updates
+replace only the summary region. The summary converges whenever its
+release-notes PR merges; there is no release-critical deadline for it.
+
+**Change detection.** Format 4 includes `shipments` and uses three distinct
+comparisons:
+
+- `_data_json_unchanged()` is the genuine no-op check — strict equality, including
+  `format`/`shipments`. Only when this is true does an unforced run skip a page
+  entirely.
+- `_website_content_unchanged()` ignores `format`/`shipments` — it is true whenever
+  the PRs/roster/previews/links/companions a rendered page and its required prose
+  depend on have not moved, even across a format bump or a shipments-only change.
+- `_classify_data_write()` combines the two. A shipments-only change writes the
+  refreshed facts, preserves reviewed prose, and does not request another polish
+  pass. A website-content change writes the facts, discards stale prose, and
+  requests polish. A fully unchanged page skips unless `--force`.
+
+The updater skips data below format 4 during broad convergence. An explicitly
+requested tag on older data fails with an actionable regeneration error.
+
+**Agent side.** The `release-notes` skill's `release_summaries` slot
+(`.agents/skills/release-notes/SKILL.md`) is optional and per-tag: the agent may
+converge as many or as few of a page's `shipments` as it has crisp prose for, omitting
+the rest — an omitted tag is simply "not converged yet", never an error, and getting one
+entry wrong never blocks the website-notes PR (`safety.py`'s violations surface only
+when `update-github-release-summaries.yml` next runs).
 
 ---
 
@@ -1555,8 +1644,9 @@ HarfBuzzSharp API diff.
     `data.json` records each present companion (manual additions sidecar §3.7,
     breaking diff §3.3) in `breaking_candidates[]` as a page-relative **path +
     `sha256`**, never inlined content. Those hashes join the content key (§4.6) so a
-    companion-only edit re-polishes exactly that page; the full non-breaking diff is
-    linked but not folder-hashed. The `_sources/*.notes.md` sidecar is a
+    companion-only edit re-polishes its own page and every cumulative successor that
+    references it; the full non-breaking diff is linked but not folder-hashed. The
+    `_sources/*.notes.md` sidecar is a
     **maintainer-owned freeform-Markdown input**: never machine-written, renamed, or
     cleared; docfx-excluded; skipped by page discovery. The Polish AI may **read** the
     referenced companions (a bounded allow-list) and summarize them, but writes only
