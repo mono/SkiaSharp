@@ -71,6 +71,7 @@ steps:
 concurrency:
   group: "performance-fixer"
   cancel-in-progress: false
+  job-discriminator: ${{ github.run_id }}
 
 # Benchmarks (BenchmarkDotNet warms up + runs multiple iterations) plus a build
 # and the equivalence tests take real time, so keep the generous budget.

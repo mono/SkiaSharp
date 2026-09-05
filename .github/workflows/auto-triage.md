@@ -44,6 +44,8 @@ jobs:
     outputs:
       issue_number: ${{ steps.find-issue.outputs.issue_number }}
 if: needs.pre_activation.outputs.find-issue_result == 'success'
+concurrency:
+  job-discriminator: ${{ github.run_id }}
 steps:
   - name: Redirect step summary into agent-writable directory
     run: |
