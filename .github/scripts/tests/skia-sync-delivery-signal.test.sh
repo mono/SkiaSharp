@@ -143,6 +143,49 @@ verify_compiled_release_base_config
 record >"$SIGNAL_FILE"
 expect_success valid
 
+SHADOW_DIR="${TMP_DIR}/python-shadow"
+SHADOW_MARKER="${TMP_DIR}/python-shadow-loaded"
+MISSING_ARTIFACT_DIR="${TMP_DIR}/missing-artifacts"
+mkdir "$SHADOW_DIR"
+mkdir "$MISSING_ARTIFACT_DIR"
+cat >"${SHADOW_DIR}/json.py" <<'PY'
+import os
+
+with open(os.environ["SHADOW_MARKER"], "w", encoding="utf-8") as marker:
+    marker.write(os.environ.get("GH_TOKEN", "missing"))
+raise RuntimeError("checkout-local json module was imported")
+PY
+cat >"${SHADOW_DIR}/sitecustomize.py" <<'PY'
+import os
+
+with open(os.environ["SHADOW_MARKER"], "w", encoding="utf-8") as marker:
+    marker.write(os.environ.get("GH_TOKEN", "missing"))
+PY
+record >"$SIGNAL_FILE"
+if (
+  cd "$SHADOW_DIR"
+  env \
+    GH_TOKEN="test-write-token" \
+    PYTHONPATH="$SHADOW_DIR" \
+    SHADOW_MARKER="$SHADOW_MARKER" \
+    SKIA_SYNC_ARTIFACT_DIR="$MISSING_ARTIFACT_DIR" \
+    SKIA_SYNC_COMPLETION_SIGNAL_FILE="$SIGNAL_FILE" \
+    SKIA_SYNC_HEAD_BRANCH="$HEAD_BRANCH" \
+    SKIA_SYNC_BASE_BRANCH="$BASE_BRANCH" \
+    SKIA_SYNC_PARENT_BASE_SHA="$BASE_SHA" \
+    bash "$PUSH_SCRIPT" >"$LOG_FILE" 2>&1
+); then
+  fail "isolated-python: expected the later missing-artifact gate to reject"
+fi
+if ! grep -Fq "Required sync artifact is missing or empty" "$LOG_FILE"; then
+  cat "$LOG_FILE" >&2
+  fail "isolated-python: validation did not reach the later artifact gate"
+fi
+if [[ -e "$SHADOW_MARKER" ]]; then
+  fail "isolated-python: checkout-local Python startup/import code observed GH_TOKEN"
+fi
+echo "PASS: isolated-python"
+
 BASE_BRANCH="release/3.151.x"
 BASE_SHA="abcdef0123456789abcdef0123456789abcdef01"
 record create_pull_request "$HEAD_BRANCH" "$BASE_BRANCH" mono/SkiaSharp "$BASE_SHA" >"$SIGNAL_FILE"
@@ -222,6 +265,21 @@ expect_failure title-prefix-mismatch "title must start with [skia-sync]"
 
 record create_pull_request "$HEAD_BRANCH" "$BASE_BRANCH" mono/SkiaSharp "$BASE_SHA" $'[skia-sync]\nUpdate skia' >"$SIGNAL_FILE"
 expect_failure title-control-character "title contains an ambiguous control character"
+
+record | jq -c '.body = "Line one\nLine two\tTabbed\r\n"' >"$SIGNAL_FILE"
+expect_success body-formatting
+
+record | jq -c '.body = "Unexpected DEL: \u007f"' >"$SIGNAL_FILE"
+expect_failure body-del-control "record contains an ambiguous control character"
+
+record | jq -c '.body = "Unexpected C1: \u0085"' >"$SIGNAL_FILE"
+expect_failure body-c1-control "record contains an ambiguous control character"
+
+record | jq -c '.extra = {"nested": ["Unexpected C1: \u0085"]}' >"$SIGNAL_FILE"
+expect_failure nested-c1-control "record contains an ambiguous control character"
+
+record | jq -c '. + {"Unexpected DEL \u007f key": "value"}' >"$SIGNAL_FILE"
+expect_failure key-del-control "record contains an ambiguous control character"
 
 record noop >"$SIGNAL_FILE"
 expect_failure terminal-type-mismatch "Expected terminal sync record type create_pull_request"

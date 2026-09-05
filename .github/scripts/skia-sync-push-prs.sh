@@ -20,7 +20,7 @@ signal_error() {
 validate_delivery_signal() {
   local path="$SKIA_SYNC_COMPLETION_SIGNAL_FILE"
 
-  python3 - "$path" <<'PY'
+  command -p python3 -I - "$path" <<'PY'
 import json
 import os
 import stat
@@ -97,6 +97,22 @@ if type(record) is not dict:
     reject("Sync completion signal line 1 is not exactly one JSON object.")
 
 
+def reject_ambiguous_controls(value, path=()):
+    if type(value) is str:
+        for character in value:
+            if unicodedata.category(character) == "Cc":
+                if path == ("body",) and character in "\t\n\r":
+                    continue
+                reject("The accepted create_pull_request record contains an ambiguous control character.")
+    elif type(value) is list:
+        for index, item in enumerate(value):
+            reject_ambiguous_controls(item, path + (index,))
+    elif type(value) is dict:
+        for key, item in value.items():
+            reject_ambiguous_controls(key)
+            reject_ambiguous_controls(item, path + (key,))
+
+
 def require_clean_string(field):
     value = record.get(field)
     if type(value) is not str:
@@ -130,6 +146,8 @@ for field, (expected_value, workflow_name) in expected.items():
 title = require_clean_string("title")
 if not title.startswith("[skia-sync]"):
     reject("Completion signal title must start with [skia-sync].")
+
+reject_ambiguous_controls(record)
 PY
 }
 
