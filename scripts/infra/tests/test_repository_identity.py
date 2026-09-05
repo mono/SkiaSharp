@@ -21,8 +21,6 @@ BASE_CONFIG = {
     "offlineRepository": "mono/SkiaSharp",
     "upstreamSkiaRepository": "google/skia",
     "publicSiteBaseUrl": "https://mono.github.io/SkiaSharp",
-    "repositoryKey": "github-52293126",
-    "legacyRepositoryKeys": ["mono-SkiaSharp"],
     "skiaRepositoryKey": "github-52292286",
     "legacySkiaRepositoryKeys": ["mono-skia"],
 }
@@ -152,8 +150,6 @@ class RepositoryIdentityTests(unittest.TestCase):
         self.assertEqual(52293126, config["canonicalRepositoryId"])
         self.assertEqual("mono/SkiaSharp", config["offlineRepository"])
         self.assertEqual("google/skia", config["upstreamSkiaRepository"])
-        self.assertEqual("github-52293126", config["repositoryKey"])
-        self.assertEqual(["mono-SkiaSharp"], config["legacyRepositoryKeys"])
         self.assertEqual("github-52292286", config["skiaRepositoryKey"])
         self.assertEqual(["mono-skia"], config["legacySkiaRepositoryKeys"])
 
@@ -170,8 +166,8 @@ class RepositoryIdentityTests(unittest.TestCase):
                 {**BASE_CONFIG, "canonicalRepositoryId": True},
                 {**BASE_CONFIG, "offlineRepository": ""},
                 {**BASE_CONFIG, "offlineRepository": "SkiaSharp"},
-                {**BASE_CONFIG, "legacyRepositoryKeys": []},
-                {**BASE_CONFIG, "legacyRepositoryKeys": [1]},
+                {**BASE_CONFIG, "legacySkiaRepositoryKeys": []},
+                {**BASE_CONFIG, "legacySkiaRepositoryKeys": [1]},
                 {**BASE_CONFIG, "publicSiteBaseUrl": "http://example.test"},
                 {
                     **BASE_CONFIG,
@@ -254,14 +250,6 @@ class RepositoryIdentityTests(unittest.TestCase):
                 self.assertEqual(
                     "google/skia",
                     identity["upstreamSkiaRepository"],
-                )
-                self.assertEqual(
-                    "github-52293126",
-                    identity["repositoryKey"],
-                )
-                self.assertEqual(
-                    ["mono-SkiaSharp"],
-                    identity["legacyRepositoryKeys"],
                 )
                 self.assertEqual(
                     "github-52292286",
@@ -419,12 +407,7 @@ class RepositoryIdentityTests(unittest.TestCase):
                 identity["publicSiteBaseUrl"],
             )
             self.assertEqual(52293126, identity["canonicalRepositoryId"])
-            self.assertEqual("github-52293126", identity["repositoryKey"])
             self.assertEqual("github-52292286", identity["skiaRepositoryKey"])
-            self.assertEqual(
-                ["mono-SkiaSharp"],
-                identity["legacyRepositoryKeys"],
-            )
             self.assertEqual(
                 ["mono-skia"],
                 identity["legacySkiaRepositoryKeys"],
@@ -462,9 +445,9 @@ class RepositoryIdentityTests(unittest.TestCase):
             with redirect_stdout(stdout):
                 self.assertEqual(
                     0,
-                    IDENTITY.main([*common, "get", "legacyRepositoryKeys"]),
+                    IDENTITY.main([*common, "get", "legacySkiaRepositoryKeys"]),
                 )
-            self.assertEqual('["mono-SkiaSharp"]\n', stdout.getvalue())
+            self.assertEqual('["mono-skia"]\n', stdout.getvalue())
 
             stdout = io.StringIO()
             with redirect_stdout(stdout):

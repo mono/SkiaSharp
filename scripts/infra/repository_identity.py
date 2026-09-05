@@ -45,8 +45,6 @@ _CONFIG_FIELDS = {
     "offlineRepository": str,
     "upstreamSkiaRepository": str,
     "publicSiteBaseUrl": str,
-    "repositoryKey": str,
-    "legacyRepositoryKeys": list,
     "skiaRepositoryKey": str,
     "legacySkiaRepositoryKeys": list,
 }
@@ -133,19 +131,17 @@ def load_config(path: Path | None = None) -> dict:
         "offlineRepository",
         "upstreamSkiaRepository",
         "publicSiteBaseUrl",
-        "repositoryKey",
         "skiaRepositoryKey",
     ):
         _require_nonempty_string(value, key)
-    for key in ("legacyRepositoryKeys", "legacySkiaRepositoryKeys"):
-        entries = value[key]
-        if not entries or any(
-            not isinstance(entry, str) or not entry.strip() for entry in entries
-        ):
-            raise IdentityError(
-                f"Repository identity config field {key!r} must contain "
-                "non-empty strings."
-            )
+    entries = value["legacySkiaRepositoryKeys"]
+    if not entries or any(
+        not isinstance(entry, str) or not entry.strip() for entry in entries
+    ):
+        raise IdentityError(
+            "Repository identity config field 'legacySkiaRepositoryKeys' "
+            "must contain non-empty strings."
+        )
 
     normalize_github_repository(value["offlineRepository"])
     normalize_github_repository(value["upstreamSkiaRepository"])
@@ -222,8 +218,6 @@ def resolve_identity(
         "repository": current,
         "repositoryUrl": github_url(current),
         "repositoryGitUrl": github_url(current, git=True),
-        "repositoryKey": config["repositoryKey"],
-        "legacyRepositoryKeys": list(config["legacyRepositoryKeys"]),
         "skiaRepository": skia,
         "skiaUrl": github_url(skia),
         "skiaGitUrl": github_url(skia, git=True),
