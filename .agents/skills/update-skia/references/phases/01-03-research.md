@@ -97,7 +97,7 @@ Launch one synchronous, read-only validator using
 [../validation-prompt.md](../validation-prompt.md), substituting the exact range,
 `$ARTIFACT_DIR/skia-breaking-change-analysis.md`, and
 `$ARTIFACT_DIR/skia-dependency-decisions.md`. When the `task` tool is available, use
-`agent_type="explore"`, `model="gpt-5.6-terra"`, and `mode="sync"`. Locally, use an independent
+`agent_type="task"`, `model="gpt-5.6-terra"`, and `mode="sync"`. Locally, use an independent
 reviewer if available; otherwise perform a distinct second pass and record that limitation.
 
 The review reports only missed items, incorrect classifications, unsafe dependency decisions, and
