@@ -38,9 +38,9 @@ $(PackageNotes)</PackageDescription>
   <Target Name="_GeneratePackageReadmeFile"
           BeforeTargets="_GetPackageFiles"
           Condition="'$(PackageDescription)' != ''">
-    <Error Text="SkiaSharpRepositoryUrl could not be resolved from an explicit override or the repository identity config."
+    <Error Text="SkiaSharpRepositoryUrl could not be resolved from an explicit override or the package default."
            Condition="'$(SkiaSharpRepositoryUrl)' == ''" />
-    <Error Text="SkiaSharpDocumentationUrl could not be resolved from an explicit override or the repository identity config."
+    <Error Text="SkiaSharpDocumentationUrl could not be resolved from an explicit override or the package default."
            Condition="'$(SkiaSharpDocumentationUrl)' == ''" />
     <PropertyGroup>
       <_PackageReadmeOutput>$(IntermediateOutputPath)$(PackageReadmeFile)</_PackageReadmeOutput>

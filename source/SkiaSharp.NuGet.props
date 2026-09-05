@@ -1,12 +1,8 @@
 <Project>
 
   <PropertyGroup>
-    <_RepositoryIdentityConfig Condition="'$(_RepositoryIdentityConfig)' == ''">$(MSBuildThisFileDirectory)..\scripts\infra\repository-identity.json</_RepositoryIdentityConfig>
-    <_RepositoryIdentityJson Condition="'$(SkiaSharpRepositoryUrl)' == '' or '$(SkiaSharpDocumentationUrl)' == ''">$([System.IO.File]::ReadAllText($(_RepositoryIdentityConfig)))</_RepositoryIdentityJson>
-    <_RepositoryIdentitySlug Condition="'$(SkiaSharpRepositoryUrl)' == ''">$([System.Text.RegularExpressions.Regex]::Match('$(_RepositoryIdentityJson)', '&quot;offlineRepository&quot;\s*:\s*&quot;(?&lt;value&gt;[^&quot;]+)&quot;').Groups['value'].Value)</_RepositoryIdentitySlug>
-    <_RepositoryIdentitySite Condition="'$(SkiaSharpDocumentationUrl)' == ''">$([System.Text.RegularExpressions.Regex]::Match('$(_RepositoryIdentityJson)', '&quot;publicSiteBaseUrl&quot;\s*:\s*&quot;(?&lt;value&gt;[^&quot;]+)&quot;').Groups['value'].Value.TrimEnd('/'))</_RepositoryIdentitySite>
-    <SkiaSharpRepositoryUrl Condition="'$(SkiaSharpRepositoryUrl)' == '' and '$(_RepositoryIdentitySlug)' != ''">https://github.com/$(_RepositoryIdentitySlug)</SkiaSharpRepositoryUrl>
-    <SkiaSharpDocumentationUrl Condition="'$(SkiaSharpDocumentationUrl)' == ''">$(_RepositoryIdentitySite)</SkiaSharpDocumentationUrl>
+    <SkiaSharpRepositoryUrl Condition="'$(SkiaSharpRepositoryUrl)' == ''">https://github.com/mono/SkiaSharp</SkiaSharpRepositoryUrl>
+    <SkiaSharpDocumentationUrl Condition="'$(SkiaSharpDocumentationUrl)' == ''">https://mono.github.io/SkiaSharp</SkiaSharpDocumentationUrl>
     
     <!-- package -->
     <PackageProjectUrl>https://go.microsoft.com/fwlink/?linkid=868515</PackageProjectUrl>

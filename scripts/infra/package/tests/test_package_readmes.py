@@ -165,9 +165,6 @@ class PackageReadmeTests(unittest.TestCase):
             properties = {
                 "SkiaSharpRepositoryUrl": repository_url,
                 "SkiaSharpDocumentationUrl": documentation_url,
-                "_RepositoryIdentityConfig": str(
-                    template.parent / "missing-repository-identity.json"
-                ),
             }
 
         actual, _ = self.render_readme(
@@ -248,17 +245,12 @@ class PackageReadmeTests(unittest.TestCase):
             metadata,
         )
 
-    def test_explicit_identity_overrides_do_not_require_offline_config(
-        self,
-    ) -> None:
+    def test_explicit_identity_overrides_replace_package_defaults(self) -> None:
         readme, metadata = self.render_readme(
             "Test.Package",
             properties={
                 "SkiaSharpRepositoryUrl": DESTINATION_REPOSITORY_URL,
                 "SkiaSharpDocumentationUrl": DESTINATION_DOCUMENTATION_URL,
-                "_RepositoryIdentityConfig": str(
-                    ROOT / "does-not-exist" / "repository-identity.json"
-                ),
             },
         )
 
@@ -294,9 +286,6 @@ class PackageReadmeTests(unittest.TestCase):
                     {
                         "SkiaSharpRepositoryUrl": repository_url,
                         "SkiaSharpDocumentationUrl": documentation_url,
-                        "_RepositoryIdentityConfig": str(
-                            ROOT / "missing-repository-identity.json"
-                        ),
                     }
                 )
             with self.subTest(repository_url=repository_url):
