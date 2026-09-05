@@ -50,15 +50,19 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.x"
       - name: Reconcile release assignments
         if: inputs.reconcile
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           PUSH: ${{ inputs.push }}
+          REPOSITORY: ${{ github.repository }}
           VERSION: ${{ inputs.version }}
         run: |
-          $arguments = @{ Version = $env:VERSION }
+          $arguments = @{ Repository = $env:REPOSITORY; Version = $env:VERSION }
           if ($env:PUSH -eq 'true') {
             $arguments.Push = $true
           }
@@ -71,8 +75,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PUSH: ${{ inputs.push }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          $arguments = @{}
+          $arguments = @{ Repository = $env:REPOSITORY }
           if ($env:PUSH -eq 'true') {
             $arguments.Push = $true
           }

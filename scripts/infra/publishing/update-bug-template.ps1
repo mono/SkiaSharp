@@ -10,7 +10,8 @@
     the automation branch, commit, and pull request used by CI.
 
 .PARAMETER Repository
-    The GitHub repository whose published releases are read.
+    The GitHub repository whose published releases are read. Defaults to the
+    runtime or configured repository identity.
 
 .PARAMETER File
     The issue-form path, relative to the repository root unless absolute.
@@ -23,7 +24,7 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^[^/]+/[^/]+$')]
-    [string] $Repository = 'mono/SkiaSharp',
+    [string] $Repository,
 
     [string] $File = '.github/ISSUE_TEMPLATE/bug-report.yml',
 
@@ -37,6 +38,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
+$Repository = Resolve-PublishingRepository $Repository
 $modeDescription = $Mode.ToLowerInvariant()
 $automationBranch = 'automation/update-issue-template-versions'
 $otherOption = 'Other (Please indicate in the description)'

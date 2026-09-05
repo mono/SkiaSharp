@@ -15,6 +15,10 @@ $milestonesPath = Join-Path $publishingRoot 'update-release-milestones.ps1'
 $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '../../../..')
 $prepareWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-prepare.yml'
 $finishWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-finish.yml'
+$milestonesWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-milestones.yml'
+$bugTemplateWorkflowPath = Join-Path $repositoryRoot '.github/workflows/auto-update-issue-template-versions.yml'
+$toolingWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-tooling-tests.yml'
+$testRepository = 'fixture/SkiaSharp'
 
 Import-Module $gitCommonPath -Force
 Import-Module $gitHubCommonPath -Force
@@ -106,6 +110,16 @@ Assert-True ($reconcileParameters -contains 'Version' -and $reconcileParameters 
 Assert-True ($milestoneParameters -contains 'Count' -and $milestoneParameters -contains 'Push' -and
     $milestoneParameters -notcontains 'Apply' -and $milestoneParameters -notcontains 'Version') `
     'The milestone updater must expose Count and Push but not Apply or Version.'
+foreach ($parameters in @(
+    $prepareParameters,
+    $finishParameters,
+    $bugTemplateParameters,
+    $reconcileParameters,
+    $milestoneParameters
+)) {
+    Assert-True ($parameters -contains 'Repository') `
+        'Every publishing entry point must accept an explicit Repository override.'
+}
 Assert-RejectsApply $reconcilePath @('-Version', '4.152.0')
 Assert-RejectsApply $milestonesPath @()
 foreach ($workflowPath in @($prepareWorkflowPath, $finishWorkflowPath)) {
@@ -118,6 +132,29 @@ foreach ($workflowPath in @($prepareWorkflowPath, $finishWorkflowPath)) {
     Assert-True ($workflow.Contains("MODE: `${{ inputs.push && 'Push' || 'DryRun' }}")) `
         "$workflowName does not map its push checkbox to DryRun or Push."
 }
+foreach ($workflowPath in @(
+    $prepareWorkflowPath,
+    $finishWorkflowPath,
+    $milestonesWorkflowPath,
+    $bugTemplateWorkflowPath
+)) {
+    $workflow = Get-Content $workflowPath -Raw
+    $workflowName = [IO.Path]::GetFileName($workflowPath)
+    Assert-True ($workflow -match 'actions/setup-python@[0-9a-f]{40}\s+# v5') `
+        "$workflowName does not provision the repository identity helper dependency."
+    Assert-True ($workflow.Contains('REPOSITORY: ${{ github.repository }}')) `
+        "$workflowName does not source repository identity from the workflow runtime."
+    Assert-True ($workflow.Contains('Repository = $env:REPOSITORY')) `
+        "$workflowName does not pass runtime repository identity to its publishing script."
+}
+$toolingWorkflow = Get-Content $toolingWorkflowPath -Raw
+Assert-True ($toolingWorkflow.Contains('scripts/infra/repository-identity.json') -and
+    $toolingWorkflow.Contains('scripts/infra/repository_identity.py')) `
+    'Release Tooling Tests does not run when the repository identity contract changes.'
+Assert-True ($toolingWorkflow.Contains('.github/workflows/auto-update-issue-template-versions.yml')) `
+    'Release Tooling Tests does not run when the issue-template workflow changes.'
+Assert-True ($toolingWorkflow -match 'actions/setup-python@[0-9a-f]{40}\s+# v5') `
+    'Release Tooling Tests does not provision Python for publishing tests.'
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
 $commonScript = Get-Content $commonPath -Raw
 Assert-True ($commonScript -match '--force-with-lease') `
@@ -139,7 +176,90 @@ foreach ($productionFile in $productionFiles) {
         "$($productionFile.Name) contains a retired command or dot-source guard."
 }
 
-# Exercises shared release identities, pagination, mutation safety, and repository versions.
+# Exercises shared repository and release identities, pagination, mutation safety, and repository versions.
+$identityConfigPath = Join-Path $repositoryRoot 'scripts/infra/repository-identity.json'
+$identityConfig = Get-Content -LiteralPath $identityConfigPath -Raw | ConvertFrom-Json
+$configuredSkiaUrl = (& git -C $repositoryRoot config -f .gitmodules --get submodule.externals/skia.url).Trim()
+$configuredSkiaRepository = [regex]::Match(
+    $configuredSkiaUrl,
+    '(?i)github\.com[/:](?<repository>[^/:\s]+/[^/\s]+?)(?:\.git)?$'
+).Groups['repository'].Value
+$expectedSkiaRemote = "https://github.com/$configuredSkiaRepository.git"
+$initialRuntimeRepository = $env:GITHUB_REPOSITORY
+$expectedCurrentRepository = if ($initialRuntimeRepository) {
+    $initialRuntimeRepository
+} else {
+    $identityConfig.offlineRepository
+}
+$currentIdentity = Get-PublishingRepositoryIdentity
+Assert-Equal $expectedCurrentRepository $currentIdentity.repository `
+    'The shared publishing default did not follow runtime context or the configured fallback.'
+Assert-Equal $expectedSkiaRemote $currentIdentity.skiaGitUrl `
+    'The paired Skia remote was not derived from .gitmodules.'
+
+try {
+    Remove-Item Env:\GITHUB_REPOSITORY -ErrorAction SilentlyContinue
+    $offlineIdentity = Get-PublishingRepositoryIdentity
+    Assert-Equal $identityConfig.offlineRepository $offlineIdentity.repository `
+        'The configured offline repository was not used outside GitHub Actions.'
+
+    $env:GITHUB_REPOSITORY = 'runtime/SkiaSharp'
+    $runtimeIdentity = Get-PublishingRepositoryIdentity
+    Assert-Equal 'runtime/SkiaSharp' $runtimeIdentity.repository `
+        'The GitHub Actions runtime repository did not override the configured fallback.'
+    Assert-Equal 'explicit/SkiaSharp' (Resolve-PublishingRepository 'explicit/SkiaSharp') `
+        'An explicit repository did not override the GitHub Actions runtime repository.'
+    $env:GITHUB_REPOSITORY = 'not-valid'
+    Assert-Equal 'explicit/SkiaSharp' (Resolve-PublishingRepository 'explicit/SkiaSharp') `
+        'A malformed lower-priority runtime repository blocked an explicit repository.'
+    Assert-Throws {
+        Resolve-PublishingRepository
+    } 'Repository identity helper failed.*Unsupported GitHub repository identity' `
+        'A malformed runtime repository was not rejected when no explicit override was supplied.'
+} finally {
+    $env:GITHUB_REPOSITORY = $initialRuntimeRepository
+}
+
+$transferRoot = Join-Path $PSScriptRoot ".identity-transfer-$([guid]::NewGuid().ToString('N'))"
+try {
+    $null = New-Item -ItemType Directory -Path $transferRoot
+    @'
+[submodule "externals/skia"]
+	path = externals/skia
+	url = https://github.com/destination/skia.git
+[submodule "docs"]
+	path = docs
+	url = https://github.com/destination/SkiaSharp-API-docs
+'@ | Set-Content (Join-Path $transferRoot '.gitmodules')
+    $transferConfig = $identityConfig.PSObject.Copy()
+    $transferConfig.offlineRepository = 'destination/SkiaSharp'
+    $transferConfig.publicSiteBaseUrl = 'https://docs.example/SkiaSharp'
+    $transferConfigPath = Join-Path $transferRoot 'repository-identity.json'
+    $transferConfig | ConvertTo-Json -Depth 10 | Set-Content $transferConfigPath
+
+    $previousRepository = $env:GITHUB_REPOSITORY
+    try {
+        Remove-Item Env:\GITHUB_REPOSITORY -ErrorAction SilentlyContinue
+        $transferIdentity = Get-PublishingRepositoryIdentity `
+            -Root $transferRoot `
+            -ConfigPath $transferConfigPath
+    } finally {
+        $env:GITHUB_REPOSITORY = $previousRepository
+    }
+    Assert-Equal 'destination/SkiaSharp' $transferIdentity.repository `
+        'The transfer fixture did not use its configured repository.'
+    Assert-Equal 'https://github.com/destination/skia.git' $transferIdentity.skiaGitUrl `
+        'The transfer fixture did not derive the paired Skia remote.'
+    Assert-Throws {
+        Get-PublishingRepositoryIdentity `
+            -Root $transferRoot `
+            -ConfigPath (Join-Path $transferRoot 'missing.json')
+    } 'Repository identity helper failed.*Unable to read' `
+        'A repository identity helper failure was not surfaced explicitly.'
+} finally {
+    Remove-Item $transferRoot -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 $preview = Get-ReleaseIdentity '4.152.0-preview.1.26426.14'
 Assert-Equal 'release/4.152.0-preview.1' $preview.Branch 'Preview branch identity was incorrect.'
 Assert-Equal 'v4.152.0-preview.1.26426.14' $preview.Tag 'Preview tag identity was incorrect.'
@@ -174,7 +294,7 @@ function global:gh {
     throw 'Dry-run unexpectedly called gh.'
 }
 $dryMutation = @(Invoke-GitHubMutation `
-    -Arguments @('api', 'repos/mono/SkiaSharp/issues/1', '-X', 'PATCH') `
+    -Arguments @('api', "repos/$testRepository/issues/1", '-X', 'PATCH') `
     -Description 'Update issue' 6>&1) -join "`n"
 Assert-Equal 0 $script:FakeGhCalls 'A dry-run GitHub mutation invoked gh.'
 Assert-True ($dryMutation -match 'requires -Push') 'A dry-run GitHub mutation did not explain its guard.'
@@ -500,7 +620,7 @@ function global:gh {
 ]
 '@
 }
-$publishedVersions = @(Get-PublishedReleaseVersions 'mono/SkiaSharp')
+$publishedVersions = @(Get-PublishedReleaseVersions $testRepository)
 Remove-Item Function:\gh
 Assert-Equal 4 $publishedVersions.Count 'Published release filtering or de-duplication was incorrect.'
 Assert-Equal 'v4.152.0-preview.1.26426.14' `
@@ -571,7 +691,7 @@ try {
     try {
         Publish-AutomationFilePullRequest `
             -Root $automationRoot `
-            -Repository 'mono/SkiaSharp' `
+            -Repository $testRepository `
             -Branch automation/apply `
             -BaseBranch main `
             -Files ([ordered] @{ 'template.yml' = "applied`n" }) `

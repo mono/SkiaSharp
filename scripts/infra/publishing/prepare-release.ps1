@@ -2,7 +2,7 @@
 
 <#
 .SYNOPSIS
-    Prepares matching SkiaSharp and mono/skia release branches.
+    Prepares matching SkiaSharp and paired Skia release branches.
 
 .DESCRIPTION
     SkiaSharp and HarfBuzzSharp package versions move together. Label-only
@@ -18,6 +18,10 @@
 .PARAMETER Base
     The SkiaSharp branch or commit SHA from which to create the release.
 
+.PARAMETER Repository
+    The GitHub repository to maintain. Defaults to the runtime or configured
+    repository identity.
+
 .PARAMETER Mode
     DryRun reports actions, Apply creates and validates local branches and
     commits, and Push also publishes branches and creates the stable bump PR.
@@ -31,6 +35,9 @@ param(
     [Parameter(Mandatory)]
     [string] $Base,
 
+    [ValidatePattern('^[^/]+/[^/]+$')]
+    [string] $Repository,
+
     [ValidateSet('DryRun', 'Apply', 'Push')]
     [string] $Mode = 'DryRun'
 )
@@ -41,11 +48,13 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
+$publishingIdentity = Get-PublishingRepositoryIdentity -Repository $Repository
+$repository = $publishingIdentity.repository
 $writeLocal = $Mode -ne 'DryRun'
 $writeRemote = $Mode -eq 'Push'
 $modeDescription = $Mode.ToLowerInvariant()
 $root = Get-GitRepositoryRoot
-$skiaRemote = $ReleaseSkiaRemote
+$skiaRemote = $publishingIdentity.skiaGitUrl
 $skiaPath = $ReleaseSkiaPath
 $skiaRepository = Join-Path $root $skiaPath
 $variablesPath = $ReleaseVariablesPath
@@ -181,7 +190,7 @@ function Assert-VersionMetadata(
     }
     $actualSkiaSha = Get-GitTreeEntrySha -Root $root -Commit $Commit -Path $skiaPath
     if ($actualSkiaSha -ne $ExpectedSkiaSha) {
-        throw "$Branch at $Commit references mono/skia $actualSkiaSha, expected $ExpectedSkiaSha."
+        throw "$Branch at $Commit references Skia $actualSkiaSha, expected $ExpectedSkiaSha."
     }
 }
 
@@ -281,15 +290,15 @@ function Ensure-VersionBranch(
     return [pscustomobject] @{ Branch = $Branch; LocalSha = $localSha; RemoteSha = $remoteSha }
 }
 
-# Converges the local mono/skia branch to the parent repository's gitlink.
+# Converges the local paired Skia branch to the parent repository's gitlink.
 function Ensure-SkiaBranch([string] $Branch, [string] $ExpectedSha) {
     # A matching remote branch is complete, regardless of stale local checkout state.
     $remoteSha = Get-RemoteBranchSha -Root $root -Remote $skiaRemote -Branch $Branch
     if ($remoteSha -and $remoteSha -ne $ExpectedSha) {
-        throw "mono/skia $Branch exists at $remoteSha, expected $ExpectedSha."
+        throw "Skia $Branch exists at $remoteSha, expected $ExpectedSha."
     }
     if ($remoteSha) {
-        Write-ReleaseStatus ready "mono/skia $Branch exists at $remoteSha."
+        Write-ReleaseStatus ready "Skia $Branch exists at $remoteSha."
         return [pscustomobject] @{ Branch = $Branch; LocalSha = $null; RemoteSha = $remoteSha }
     }
 
@@ -298,16 +307,16 @@ function Ensure-SkiaBranch([string] $Branch, [string] $ExpectedSha) {
     if (Test-Path "$skiaRepository/.git") {
         $localSha = Get-LocalBranchSha -Root $skiaRepository -Branch $Branch
         if ($localSha -and $localSha -ne $ExpectedSha) {
-            throw "Local mono/skia $Branch is at $localSha, expected $ExpectedSha."
+            throw "Local Skia $Branch is at $localSha, expected $ExpectedSha."
         }
     }
 
     # Report the local branch action without initializing the submodule in dry-run mode.
     if (!$writeLocal) {
         if ($localSha) {
-            Write-ReleaseStatus ready "mono/skia $Branch is local at $localSha and would be pushed."
+            Write-ReleaseStatus ready "Skia $Branch is local at $localSha and would be pushed."
         } else {
-            Write-ReleaseStatus plan "Create mono/skia $Branch at $ExpectedSha."
+            Write-ReleaseStatus plan "Create Skia $Branch at $ExpectedSha."
         }
         return [pscustomobject] @{ Branch = $Branch; LocalSha = $localSha; RemoteSha = $remoteSha }
     }
@@ -318,7 +327,7 @@ function Ensure-SkiaBranch([string] $Branch, [string] $ExpectedSha) {
     $localSha = Get-LocalBranchSha -Root $skiaRepository -Branch $Branch
     if ($localSha) {
         if ($localSha -ne $ExpectedSha) {
-            throw "Local mono/skia $Branch is at $localSha, expected $ExpectedSha."
+            throw "Local Skia $Branch is at $localSha, expected $ExpectedSha."
         }
         $null = Invoke-Git -Root $skiaRepository -Arguments @('switch', $Branch) -WriteOutput
     } else {
@@ -326,7 +335,7 @@ function Ensure-SkiaBranch([string] $Branch, [string] $ExpectedSha) {
         $localSha = $ExpectedSha
     }
 
-    Write-ReleaseStatus applied "mono/skia $Branch is local at $localSha."
+    Write-ReleaseStatus applied "Skia $Branch is local at $localSha."
     return [pscustomobject] @{ Branch = $Branch; LocalSha = $localSha; RemoteSha = $remoteSha }
 }
 
@@ -356,7 +365,7 @@ function Get-BumpPullRequest([string] $Branch, [string] $BaseBranch) {
     $pullRequests = @(
         Invoke-GitHubJsonWithRetry -Arguments @(
             'pr', 'list',
-            '--repo', $ReleaseRepository,
+            '--repo', $repository,
             '--head', $Branch,
             '--base', $BaseBranch,
             '--state', 'all',
@@ -431,7 +440,7 @@ The release preparation script verified the version transformation.
     $null = Invoke-GitHub `
         -Arguments @(
             'pr', 'create',
-            '--repo', $ReleaseRepository,
+            '--repo', $repository,
             '--head', $Branch,
             '--base', $BaseBranch,
             '--title', "Bump to the next version ($NextVersion) after release",
@@ -499,7 +508,7 @@ $releaseState = Ensure-VersionBranch `
     -ExpectedSkiaSha $baseSkiaSha `
     -CommitMessage "Create release branch for $identity"
 
-# 2.5 Ensure mono/skia has the matching branch at the exact gitlink.
+# 2.5 Ensure the paired Skia repository has the matching branch at the exact gitlink.
 $releaseCommit = if ($releaseState.LocalSha) {
     $releaseState.LocalSha
 } elseif ($releaseState.RemoteSha) {
@@ -566,14 +575,14 @@ if ($writeRemote) {
     Enable-GitHubGitAuthentication
 }
 
-# 4.1 Push mono/skia before the SkiaSharp branch that references it.
+# 4.1 Push Skia before the SkiaSharp branch that references it.
 Push-ReleaseBranch `
     -Root $skiaRepository `
     -Remote $skiaRemote `
     -Branch $skiaState.Branch `
     -LocalSha $skiaState.LocalSha `
     -RemoteSha $skiaState.RemoteSha `
-    -Description 'mono/skia' `
+    -Description 'Skia' `
     -Push:$writeRemote
 
 # 4.2 Push the exact SkiaSharp release branch.

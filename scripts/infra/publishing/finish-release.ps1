@@ -13,6 +13,10 @@
     A stable version or prerelease identity. A prerelease build revision may be
     omitted when exactly one matching SkiaSharp version exists on NuGet.org.
 
+.PARAMETER Repository
+    The GitHub repository to maintain. Defaults to the runtime or configured
+    repository identity.
+
 .PARAMETER Mode
     DryRun is read-only, Apply writes the proposed support update locally, and
     Push publishes the tag, release, support PR, and follow-up workflows.
@@ -22,6 +26,9 @@
 param(
     [Parameter(Mandatory)]
     [string] $Version,
+
+    [ValidatePattern('^[^/]+/[^/]+$')]
+    [string] $Repository,
 
     [ValidateSet('DryRun', 'Apply', 'Push')]
     [string] $Mode = 'DryRun'
@@ -36,7 +43,7 @@ Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
 $writeRemote = $Mode -eq 'Push'
 $modeDescription = $Mode.ToLowerInvariant()
 $root = Get-GitRepositoryRoot -Path $PSScriptRoot
-$repository = $ReleaseRepository
+$repository = Resolve-PublishingRepository $Repository
 
 # Validates release identity and the title of an existing draft.
 function Assert-GitHubRelease([pscustomobject] $Release, [pscustomobject] $GitHubRelease) {
