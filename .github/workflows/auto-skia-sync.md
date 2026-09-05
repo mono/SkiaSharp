@@ -37,7 +37,7 @@ on:
   # Outputs are available in the prompt via ${{ needs.pre_activation.outputs.* }}.
   steps:
     - name: Check out detection scripts
-      uses: actions/checkout@v7.0.1
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         sparse-checkout: .github/scripts
     - name: Detect milestone
@@ -69,6 +69,242 @@ jobs:
       base_branch: ${{ steps.detect.outputs.base_branch }}
       skia_base_branch: ${{ steps.detect.outputs.skia_base_branch }}
       head_branch: ${{ steps.detect.outputs.head_branch }}
+  # `needs` is additive for compiler-managed jobs: keep the generated gates and make
+  # pre_activation directly visible wherever the staged safe-output config is evaluated.
+  # Keep the supported hyphenated alias: gh-aw v0.87.10 normalizes it in the lockfile, while
+  # the underscored spelling is misclassified during pre-activation discovery and forms a cycle.
+  agent:
+    needs: [pre-activation]
+  safe_outputs:
+    needs: [pre-activation]
+  conclusion:
+    # The compiler-generated conclusion job is the fresh downstream trust
+    # boundary: it already needs agent, detection, and safe_outputs.
+    pre-steps:
+      - name: Authorize downstream delivery
+        id: delivery_gate
+        if: >-
+          needs.agent.result == 'success' &&
+          needs.detection.result == 'success' &&
+          needs.detection.outputs.detection_success == 'true' &&
+          needs.safe_outputs.result == 'success' &&
+          needs.safe_outputs.outputs.process_safe_outputs_status == 'success' &&
+          needs.safe_outputs.outputs.process_safe_outputs_processed_count == '1' &&
+          needs.safe_outputs.outputs.process_safe_outputs_items_succeeded == '1' &&
+          needs.safe_outputs.outputs.process_safe_outputs_items_failed == '0' &&
+          needs.safe_outputs.outputs.process_safe_outputs_items_skipped == '0' &&
+          needs.safe_outputs.outputs.process_safe_outputs_items_warnings == '0' &&
+          needs.safe_outputs.outputs.process_safe_outputs_items_cancelled == '0' &&
+          needs.safe_outputs.outputs.process_safe_outputs_items_deferred == '0'
+        shell: /bin/sh -e {0}
+        run: printf 'authorized=true\n' >> "$GITHUB_OUTPUT"
+      - name: Check out trusted delivery code
+        if: steps.delivery_gate.outputs.authorized == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .agents/skills/update-skia
+            .github/scripts/skia-sync-detect.sh
+            .github/scripts/skia-sync-push-prs.sh
+      - name: Download immutable delivery package
+        if: steps.delivery_gate.outputs.authorized == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: skia-sync-delivery
+          path: ${{ runner.temp }}/skia-sync-delivery-artifact
+      - name: Validate delivery package and remote bases
+        if: steps.delivery_gate.outputs.authorized == 'true'
+        shell: /bin/sh -e {0}
+        env:
+          BASH_ENV: /dev/null
+          ENV: /dev/null
+          GH_TOKEN: ${{ github.token }}
+          INPUT_BASE_BRANCH: ${{ github.event.inputs.base_branch }}
+          INPUT_TARGET: ${{ github.event.inputs.target }}
+          LD_AUDIT: ""
+          LD_LIBRARY_PATH: ""
+          LD_PRELOAD: ""
+        run: |
+          DELIVERY_HOME=$(mktemp -d "$RUNNER_TEMP/skia-sync-delivery-home.XXXXXX")
+          VERIFIED_ROOT=$(mktemp -d "$RUNNER_TEMP/skia-sync-verified.XXXXXX")
+          chmod 700 "$DELIVERY_HOME" "$VERIFIED_ROOT"
+          {
+            printf 'SKIA_SYNC_DELIVERY_HOME=%s\n' "$DELIVERY_HOME"
+            printf 'SKIA_SYNC_VERIFIED_ROOT=%s\n' "$VERIFIED_ROOT"
+          } >> "$GITHUB_ENV"
+
+          RESOLVED_ENV="$DELIVERY_HOME/resolved.env"
+          /usr/bin/env -i \
+            HOME="$DELIVERY_HOME" \
+            PATH=/usr/bin:/bin \
+            GIT_CONFIG_GLOBAL=/dev/null \
+            GIT_CONFIG_NOSYSTEM=1 \
+            GIT_NO_REPLACE_OBJECTS=1 \
+            GIT_TERMINAL_PROMPT=0 \
+            GH_TOKEN="$GH_TOKEN" \
+            GITHUB_REF="$GITHUB_REF" \
+            GITHUB_REPOSITORY="$GITHUB_REPOSITORY" \
+            GITHUB_RUN_NUMBER="$GITHUB_RUN_NUMBER" \
+            GITHUB_SHA="$GITHUB_SHA" \
+            /bin/bash --noprofile --norc \
+              "$GITHUB_WORKSPACE/.github/scripts/skia-sync-detect.sh" \
+              --resolve-only \
+              --target "$INPUT_TARGET" \
+              --base-branch "$INPUT_BASE_BRANCH" \
+              --output "$RESOLVED_ENV"
+          /usr/bin/python3 -I - "$RESOLVED_ENV" "$DELIVERY_HOME/resolved.sh" "$GITHUB_ENV" <<'PY'
+          import shlex
+          import sys
+          import unicodedata
+
+          source, shell_output, github_env = sys.argv[1:]
+          names = {
+              "base_branch": "SKIA_SYNC_BASE_BRANCH",
+              "current": "SKIA_SYNC_CURRENT",
+              "head_branch": "SKIA_SYNC_HEAD_BRANCH",
+              "is_release": "SKIA_SYNC_IS_RELEASE",
+              "mode": "SKIA_SYNC_MODE",
+              "skia_base_branch": "SKIA_SYNC_SKIA_BASE_BRANCH",
+              "target": "SKIA_SYNC_TARGET",
+              "upstream_ref": "SKIA_SYNC_UPSTREAM_REF",
+          }
+          values = {}
+          with open(source, encoding="utf-8") as stream:
+              for raw_line in stream:
+                  key, separator, value = raw_line.rstrip("\n").partition("=")
+                  if not separator or key not in names or key in values:
+                      raise SystemExit("::error::Resolved delivery metadata is malformed.")
+                  if not value or any(unicodedata.category(character) == "Cc" for character in value):
+                      raise SystemExit("::error::Resolved delivery metadata contains an invalid value.")
+                  values[key] = value
+          if set(values) != set(names):
+              raise SystemExit("::error::Resolved delivery metadata is incomplete.")
+          with open(shell_output, "w", encoding="utf-8") as shell_stream, \
+                  open(github_env, "a", encoding="utf-8") as env_stream:
+              for key, env_name in sorted(names.items()):
+                  value = values[key]
+                  shell_stream.write(f"export {env_name}={shlex.quote(value)}\n")
+                  env_stream.write(f"{env_name}={value}\n")
+          PY
+          # shellcheck disable=SC1090
+          . "$DELIVERY_HOME/resolved.sh"
+          unset GH_TOKEN
+
+          resolve_remote_head() {
+            repo="$1"
+            branch="$2"
+            output=$(mktemp "$RUNNER_TEMP/skia-sync-remote-head.XXXXXX")
+            /usr/bin/env -i \
+              HOME="$DELIVERY_HOME" \
+              PATH=/usr/bin:/bin \
+              GIT_CONFIG_GLOBAL=/dev/null \
+              GIT_CONFIG_NOSYSTEM=1 \
+              GIT_NO_REPLACE_OBJECTS=1 \
+              GIT_TERMINAL_PROMPT=0 \
+              /usr/bin/git \
+                -c core.hooksPath=/dev/null \
+                -c core.fsmonitor=false \
+                -c credential.helper= \
+                ls-remote --exit-code --heads "https://github.com/${repo}.git" \
+                "refs/heads/${branch}" >"$output"
+            /usr/bin/python3 -I - "$output" "refs/heads/${branch}" <<'PY'
+          import re
+          import sys
+
+          content = open(sys.argv[1], "rb").read()
+          match = re.fullmatch(rb"([0-9a-f]{40})\t" + re.escape(sys.argv[2].encode()) + rb"\n?", content)
+          if not match:
+              raise SystemExit("::error::Remote base branch did not resolve to exactly one immutable commit.")
+          print(match.group(1).decode())
+          PY
+            rm -f -- "$output"
+          }
+
+          PARENT_BASE_SHA=$(resolve_remote_head mono/SkiaSharp "$SKIA_SYNC_BASE_BRANCH")
+          SKIA_BASE_SHA=$(resolve_remote_head mono/skia "$SKIA_SYNC_SKIA_BASE_BRANCH")
+          {
+            printf 'SKIA_SYNC_EXPECTED_PARENT_BASE_SHA=%s\n' "$PARENT_BASE_SHA"
+            printf 'SKIA_SYNC_EXPECTED_SKIA_BASE_SHA=%s\n' "$SKIA_BASE_SHA"
+          } >> "$GITHUB_ENV"
+
+          /usr/bin/env -i \
+            HOME="$DELIVERY_HOME" \
+            PATH=/usr/bin:/bin \
+            GIT_CONFIG_GLOBAL=/dev/null \
+            GIT_CONFIG_NOSYSTEM=1 \
+            GIT_NO_REPLACE_OBJECTS=1 \
+            GITHUB_SHA="$GITHUB_SHA" \
+            SKIA_SYNC_BASE_BRANCH="$SKIA_SYNC_BASE_BRANCH" \
+            SKIA_SYNC_CURRENT="$SKIA_SYNC_CURRENT" \
+            SKIA_SYNC_DELIVERY_ENV_FILE="$GITHUB_ENV" \
+            SKIA_SYNC_DELIVERY_PACKAGE_DIR="$RUNNER_TEMP/skia-sync-delivery-artifact" \
+            SKIA_SYNC_EXPECTED_PARENT_BASE_SHA="$PARENT_BASE_SHA" \
+            SKIA_SYNC_EXPECTED_SKIA_BASE_SHA="$SKIA_BASE_SHA" \
+            SKIA_SYNC_HEAD_BRANCH="$SKIA_SYNC_HEAD_BRANCH" \
+            SKIA_SYNC_IS_RELEASE="$SKIA_SYNC_IS_RELEASE" \
+            SKIA_SYNC_SKIA_BASE_BRANCH="$SKIA_SYNC_SKIA_BASE_BRANCH" \
+            SKIA_SYNC_TARGET="$SKIA_SYNC_TARGET" \
+            SKIA_SYNC_UPSTREAM_REF="$SKIA_SYNC_UPSTREAM_REF" \
+            SKIA_SYNC_VERIFIED_ROOT="$VERIFIED_ROOT" \
+            /bin/bash --noprofile --norc \
+              "$GITHUB_WORKSPACE/.github/scripts/skia-sync-push-prs.sh" \
+              --verify-delivery-package
+      - name: Push branches and create PRs
+        if: steps.delivery_gate.outputs.authorized == 'true'
+        shell: /bin/sh -e {0}
+        env:
+          BASH_ENV: /dev/null
+          ENV: /dev/null
+          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          LD_AUDIT: ""
+          LD_LIBRARY_PATH: ""
+          LD_PRELOAD: ""
+        run: |
+          exec /usr/bin/env -i \
+            HOME="$SKIA_SYNC_DELIVERY_HOME" \
+            PATH=/usr/bin:/bin \
+            GIT_CONFIG_GLOBAL=/dev/null \
+            GIT_CONFIG_NOSYSTEM=1 \
+            GIT_NO_REPLACE_OBJECTS=1 \
+            GH_TOKEN="$GH_TOKEN" \
+            GITHUB_REPOSITORY="$GITHUB_REPOSITORY" \
+            RUNNER_TEMP="$RUNNER_TEMP" \
+            SKIA_SYNC_ARTIFACT_DIR="$SKIA_SYNC_ARTIFACT_DIR" \
+            SKIA_SYNC_BASE_BRANCH="$SKIA_SYNC_BASE_BRANCH" \
+            SKIA_SYNC_BASE_UPSTREAM_SHA="$SKIA_SYNC_BASE_UPSTREAM_SHA" \
+            SKIA_SYNC_COMPLETION_SIGNAL_FILE="$SKIA_SYNC_COMPLETION_SIGNAL_FILE" \
+            SKIA_SYNC_CURRENT="$SKIA_SYNC_CURRENT" \
+            SKIA_SYNC_HEAD_BRANCH="$SKIA_SYNC_HEAD_BRANCH" \
+            SKIA_SYNC_IS_RELEASE="$SKIA_SYNC_IS_RELEASE" \
+            SKIA_SYNC_PARENT_BASE_SHA="$SKIA_SYNC_PARENT_BASE_SHA" \
+            SKIA_SYNC_PARENT_REPO_DIR="$SKIA_SYNC_PARENT_REPO_DIR" \
+            SKIA_SYNC_RUNTIME_DIR="$GITHUB_WORKSPACE" \
+            SKIA_SYNC_SKIA_BASE_BRANCH="$SKIA_SYNC_SKIA_BASE_BRANCH" \
+            SKIA_SYNC_SKIA_BASE_SHA="$SKIA_SYNC_SKIA_BASE_SHA" \
+            SKIA_SYNC_SKIA_REPO_DIR="$SKIA_SYNC_SKIA_REPO_DIR" \
+            SKIA_SYNC_SKILL_DIR="$GITHUB_WORKSPACE/.agents/skills/update-skia" \
+            SKIA_SYNC_TARGET="$SKIA_SYNC_TARGET" \
+            SKIA_SYNC_TARGET_UPSTREAM_SHA="$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
+            SKIA_SYNC_UPSTREAM_REF="$SKIA_SYNC_UPSTREAM_REF" \
+            /bin/bash --noprofile --norc \
+              "$GITHUB_WORKSPACE/.github/scripts/skia-sync-push-prs.sh"
+      - name: Clean delivery workspace
+        if: always()
+        shell: /bin/sh -e {0}
+        env:
+          BASH_ENV: /dev/null
+          ENV: /dev/null
+          LD_AUDIT: ""
+          LD_LIBRARY_PATH: ""
+          LD_PRELOAD: ""
+        run: |
+          case "${SKIA_SYNC_DELIVERY_HOME:-}" in
+            "$RUNNER_TEMP"/skia-sync-delivery-home.*) rm -rf -- "$SKIA_SYNC_DELIVERY_HOME" ;;
+          esac
+          case "${SKIA_SYNC_VERIFIED_ROOT:-}" in
+            "$RUNNER_TEMP"/skia-sync-verified.*) rm -rf -- "$SKIA_SYNC_VERIFIED_ROOT" ;;
+          esac
 
 # -- Agent job gate --------------------------------------------------
 # Only run the agent if pre-activation succeeded and explicitly found work to do.
@@ -120,25 +356,64 @@ permissions:
   pull-requests: read
 
 # -- Safe outputs ------------------------------------------------------
-# All real GitHub writes (push, both PRs) are done in the post-step via bash with
-# SKIASHARP_AUTOBUMP_TOKEN — gh-aw can't create the mono/skia PR (the submodule's merge
-# commits live in a nested repo gh-aw sees only as a gitlink) and `staged: true` keeps the
-# agent from creating anything directly.
+# All real GitHub writes (push, both PRs) are done in the downstream delivery job.
+# SKIASHARP_AUTOBUMP_TOKEN never enters the agent job. gh-aw can't create the mono/skia PR
+# (the submodule's merge commits live in a nested repo gh-aw sees only as a gitlink), and
+# `staged: true` keeps the agent from creating anything directly.
 #
 # `create-pull-request` is declared ONLY as an honest completion signal: it is kept STAGED
 # (preview-only — NO real PR is created), so a successful sync registers as a pull-request
 # output instead of being mislabeled a "no-op". The agent calls it when work was done and
-# `noop` only when there genuinely was none.
+# `noop` only when there genuinely was none. Pin both the effective base and its override
+# allowlist to the detector's resolved branch so release/manual runs emit matching provenance.
 safe-outputs:
   staged: true
   create-pull-request:
     staged: true
     if-no-changes: ignore
+    base-branch: ${{ needs.pre_activation.outputs.base_branch }}
+    allowed-base-branches:
+      - ${{ needs.pre_activation.outputs.base_branch }}
   # report-as-issue defaults to true, but this workflow has no `issues: write` and a real sync
   # is NOT a no-op — disable the no-op→issue posting so genuine no-work runs don't try (and fail)
   # to file a "no-op runs" issue.
   noop:
     report-as-issue: false
+  threat-detection:
+    steps:
+      - name: Check out trusted detector attestation code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts/skia-sync-push-prs.sh
+      - name: Download immutable detector attestation
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: skia-sync-delivery
+          path: ${{ runner.temp }}/skia-sync-detector-artifact
+      - name: Bind threat detection to immutable delivery objects
+        shell: /bin/sh -e {0}
+        env:
+          BASH_ENV: /dev/null
+          ENV: /dev/null
+          LD_AUDIT: ""
+          LD_LIBRARY_PATH: ""
+          LD_PRELOAD: ""
+        run: |
+          ATTESTATION_HOME=$(mktemp -d "$RUNNER_TEMP/skia-sync-attestation-home.XXXXXX")
+          chmod 700 "$ATTESTATION_HOME"
+          exec /usr/bin/env -i \
+            HOME="$ATTESTATION_HOME" \
+            PATH=/usr/bin:/bin \
+            GIT_CONFIG_GLOBAL=/dev/null \
+            GIT_CONFIG_NOSYSTEM=1 \
+            GIT_NO_REPLACE_OBJECTS=1 \
+            RUNNER_TEMP="$RUNNER_TEMP" \
+            SKIA_SYNC_DELIVERY_PACKAGE_DIR="$RUNNER_TEMP/skia-sync-detector-artifact" \
+            SKIA_SYNC_THREAT_DETECTION_DIR=/tmp/gh-aw/threat-detection \
+            /bin/bash --noprofile --norc \
+              "$GITHUB_WORKSPACE/.github/scripts/skia-sync-push-prs.sh" \
+              --verify-detection-attestation
 
 # -- Sandbox -----------------------------------------------------------
 # Mount host fontconfig config AND font files into the AWF chroot.
@@ -158,11 +433,11 @@ steps:
     run: |
       mkdir -p /tmp/gh-aw/agent
   - name: Prepare Skia checkout
-    # Same target resolution as the pre_activation detect step (see there). The agent job
-    # can't read pre_activation's outputs (it only `needs:` activation), so re-run the
-    # same committed detector to recover base_branch / skia_base_branch, then prepare the
-    # submodule and exact upstream analysis range. For rotation runs (empty target), the
-    # detector picks the SAME line as pre_activation because the round-robin index is
+    # Same target resolution as the pre_activation detect step (see there). The direct job
+    # dependency makes those outputs available to the staged safe-output config; this step
+    # re-runs the committed detector to materialize all resolved values as shell environment
+    # and prepare the submodule plus exact upstream analysis range. For rotation runs (empty
+    # target), both resolutions select the SAME line because the round-robin index is
     # GITHUB_RUN_NUMBER (identical across jobs) and main's config is read at the immutable
     # $GITHUB_SHA. skia-sync-detect.sh is the single source of truth.
     env:
@@ -277,49 +552,161 @@ pre-agent-steps:
       fi
       echo "Verified deterministic software OpenGL through Mesa softpipe on Xvfb."
 # -- Post-agent steps -----------------------------------------------
-# Run AFTER the AI finishes. Finalize mechanical metadata without credentials,
-# then push branches and create/update PRs with the write credential.
+# Run AFTER the AI finishes. Verify that deterministic finalization happened before
+# the terminal safe-output call, then stage an immutable allowlisted handoff.
 post-steps:
-  - name: Finalize sync metadata
+  - name: Verify finalized sync metadata
+    shell: /bin/sh -e {0}
     env:
+      BASH_ENV: /dev/null
+      ENV: /dev/null
+      LD_AUDIT: ""
+      LD_LIBRARY_PATH: ""
+      LD_PRELOAD: ""
       SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/gh-aw/skia-sync-runtime
     run: |
-      set -euo pipefail
-      test "$(git branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
-      test "$(git -C externals/skia branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
+      /usr/bin/env -i \
+        HOME="$RUNNER_TEMP/skia-sync-finalizer-home" \
+        PATH=/usr/bin:/bin \
+        GIT_CONFIG_GLOBAL=/dev/null \
+        GIT_CONFIG_NOSYSTEM=1 \
+        GIT_NO_REPLACE_OBJECTS=1 \
+        GITHUB_WORKSPACE="$GITHUB_WORKSPACE" \
+        SKIA_SYNC_HEAD_BRANCH="$SKIA_SYNC_HEAD_BRANCH" \
+        SKIA_SYNC_SKILL_DIR="$SKIA_SYNC_SKILL_DIR" \
+        /bin/bash --noprofile --norc -euo pipefail <<'FINALIZE'
+      safe_git() {
+        command git \
+          -c core.hooksPath=/dev/null \
+          -c core.fsmonitor=false \
+          -c credential.helper= \
+          -c commit.gpgSign=false \
+          "$@"
+      }
+
+      reject_unsafe_repository() {
+        local repo="$1"
+        local git_dir
+        local local_config
+        local unsafe_config
+        local replace_refs
+
+        git_dir=$(safe_git -C "$repo" rev-parse --absolute-git-dir)
+        if [[ -e "$git_dir/config.worktree" || -L "$git_dir/config.worktree" ]]; then
+          echo "::error::Worktree Git configuration is forbidden in $repo."
+          exit 1
+        fi
+        local_config=$(safe_git -C "$repo" config --local --no-includes --name-only --list)
+        unsafe_config=$(printf '%s\n' "$local_config" | tr '[:upper:]' '[:lower:]' | grep -E \
+          '^(extensions\.worktreeconfig|include(if\..*)?\.path|core\.(alternaterefscommand|attributesfile|editor|fsmonitor|hookspath|sshcommand|worktree)|diff\.(external|.*\.(command|textconv))|filter\..*\.(clean|smudge|process)|credential(\..*)?\.helper|remote\..*\.uploadpack|uploadpack\.packobjectshook|url\..*\.(insteadof|pushinsteadof)|commit\.gpgsign|gpg\..*|sequence\.editor)$' || true)
+        if [[ -n "$unsafe_config" ]]; then
+          echo "::error::Unsafe local Git configuration is forbidden in $repo: $unsafe_config"
+          exit 1
+        fi
+        replace_refs=$(safe_git -C "$repo" for-each-ref --format='%(refname)' refs/replace)
+        if [[ -n "$replace_refs" ]]; then
+          echo "::error::Replacement refs are forbidden in $repo."
+          exit 1
+        fi
+      }
+
+      reject_unsafe_repository "$GITHUB_WORKSPACE"
+      reject_unsafe_repository "$GITHUB_WORKSPACE/externals/skia"
+      test "$(safe_git branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
+      test "$(safe_git -C externals/skia branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
 
       UNEXPECTED_CHANGES=$(
         {
-          git diff --name-only
-          git diff --cached --name-only
+          safe_git diff --no-ext-diff --no-textconv --name-only
+          safe_git diff --cached --no-ext-diff --no-textconv --name-only
         } | sort -u | grep -Ev '^(cgmanifest\.json|scripts/VERSIONS\.txt|scripts/azure-templates-variables\.yml|externals/skia)$' || true
       )
-      if [ -n "$UNEXPECTED_CHANGES" ]; then
+      if [[ -n "$UNEXPECTED_CHANGES" ]]; then
         echo "::error::The agent left uncommitted semantic changes:"
         echo "$UNEXPECTED_CHANGES"
         exit 1
       fi
 
-      python3 "$SKIA_SYNC_SKILL_DIR/scripts/update_versions.py" --repo-root "$GITHUB_WORKSPACE"
+      command python3 -I "$SKIA_SYNC_SKILL_DIR/scripts/update_versions.py" --repo-root "$GITHUB_WORKSPACE"
 
-      if ! git -C externals/skia diff --quiet || ! git -C externals/skia diff --cached --quiet; then
+      if ! safe_git -C externals/skia diff --no-ext-diff --no-textconv --quiet ||
+         ! safe_git -C externals/skia diff --cached --no-ext-diff --no-textconv --quiet; then
         echo "::error::The finalizer changed mono/skia; the agent did not commit its native work."
         exit 1
       fi
 
-      git add cgmanifest.json scripts/VERSIONS.txt scripts/azure-templates-variables.yml externals/skia
-      if ! git diff --cached --quiet; then
-        git config user.name "SkiaSharp Sync"
-        git config user.email "devnull@localhost"
-        git commit -m "[skia-sync] Finalize deterministic metadata"
+      if ! safe_git diff --no-ext-diff --no-textconv --quiet ||
+         ! safe_git diff --cached --no-ext-diff --no-textconv --quiet; then
+        echo "::error::The agent must finalize and commit deterministic metadata before create_pull_request."
+        exit 1
       fi
-      git diff --quiet
-      git diff --cached --quiet
-  - name: Push branches and create PRs
+      FINALIZE
+  - name: Stage immutable delivery package
+    shell: /bin/sh -e {0}
     env:
-      GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+      BASH_ENV: /dev/null
+      ENV: /dev/null
+      LD_AUDIT: ""
+      LD_LIBRARY_PATH: ""
+      LD_PRELOAD: ""
+      SKIA_SYNC_COMPLETION_SIGNAL_FILE: ${{ runner.temp }}/gh-aw/safeoutputs/outputs.jsonl
       SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/gh-aw/skia-sync-runtime
-    run: bash "$SKIA_SYNC_RUNTIME_DIR/skia-sync-push-prs.sh"
+    run: |
+      PACKAGE_DIR=$(mktemp -d "$RUNNER_TEMP/skia-sync-delivery-package.XXXXXX")
+      chmod 700 "$PACKAGE_DIR"
+      trap 'rm -rf -- "$PACKAGE_DIR"' EXIT
+      /usr/bin/env -i \
+        HOME="$RUNNER_TEMP/skia-sync-package-home" \
+        PATH=/usr/bin:/bin \
+        GIT_CONFIG_GLOBAL=/dev/null \
+        GIT_CONFIG_NOSYSTEM=1 \
+        GIT_NO_REPLACE_OBJECTS=1 \
+        GITHUB_SHA="$GITHUB_SHA" \
+        GITHUB_WORKSPACE="$GITHUB_WORKSPACE" \
+        RUNNER_TEMP="$RUNNER_TEMP" \
+        SKIA_SYNC_ARTIFACT_DIR="$SKIA_SYNC_ARTIFACT_DIR" \
+        SKIA_SYNC_BASE_BRANCH="$SKIA_SYNC_BASE_BRANCH" \
+        SKIA_SYNC_BASE_UPSTREAM_SHA="$SKIA_SYNC_BASE_UPSTREAM_SHA" \
+        SKIA_SYNC_COMPLETION_SIGNAL_FILE="$SKIA_SYNC_COMPLETION_SIGNAL_FILE" \
+        SKIA_SYNC_CURRENT="$SKIA_SYNC_CURRENT" \
+        SKIA_SYNC_HEAD_BRANCH="$SKIA_SYNC_HEAD_BRANCH" \
+        SKIA_SYNC_IS_RELEASE="$SKIA_SYNC_IS_RELEASE" \
+        SKIA_SYNC_PARENT_BASE_SHA="$SKIA_SYNC_PARENT_BASE_SHA" \
+        SKIA_SYNC_RUNTIME_DIR="$SKIA_SYNC_RUNTIME_DIR" \
+        SKIA_SYNC_SKIA_BASE_BRANCH="$SKIA_SYNC_SKIA_BASE_BRANCH" \
+        SKIA_SYNC_SKIA_BASE_SHA="$SKIA_SYNC_SKIA_BASE_SHA" \
+        SKIA_SYNC_SKILL_DIR="$SKIA_SYNC_SKILL_DIR" \
+        SKIA_SYNC_TARGET="$SKIA_SYNC_TARGET" \
+        SKIA_SYNC_TARGET_UPSTREAM_SHA="$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
+        SKIA_SYNC_THREAT_DETECTION_SOURCE_DIR=/tmp/gh-aw \
+        SKIA_SYNC_UPSTREAM_REF="$SKIA_SYNC_UPSTREAM_REF" \
+        SKIA_SYNC_DELIVERY_PACKAGE_DIR="$PACKAGE_DIR" \
+        "$SKIA_SYNC_RUNTIME_DIR/skia-sync-push-prs.sh" \
+          --stage-delivery-package
+      trap - EXIT
+      printf 'SKIA_SYNC_DELIVERY_PACKAGE_DIR=%s\n' "$PACKAGE_DIR" >> "$GITHUB_ENV"
+  - name: Upload immutable delivery package
+    uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+    with:
+      name: skia-sync-delivery
+      path: ${{ env.SKIA_SYNC_DELIVERY_PACKAGE_DIR }}
+      if-no-files-found: error
+      retention-days: 1
+  - name: Clean staged delivery package
+    if: always()
+    shell: /bin/sh -e {0}
+    env:
+      BASH_ENV: /dev/null
+      ENV: /dev/null
+      LD_AUDIT: ""
+      LD_LIBRARY_PATH: ""
+      LD_PRELOAD: ""
+    run: |
+      case "${SKIA_SYNC_DELIVERY_PACKAGE_DIR:-}" in
+        "$RUNNER_TEMP"/skia-sync-delivery-package.*)
+          rm -rf -- "$SKIA_SYNC_DELIVERY_PACKAGE_DIR"
+          ;;
+      esac
 ---
 
 # Sync - Skia Upstream
@@ -376,5 +763,7 @@ the supplied values.
 
 After every gate passes, follow Phase 11's **Automated delivery** contract. Do not push branches or
 create real PRs/issues from the agent. Write the required artifacts under
-`/tmp/gh-aw/agent`, then invoke staged `create_pull_request` once as the completion signal.
-The deterministic post-step performs guarded pushes and creates the two cross-linked draft PRs.
+`/tmp/gh-aw/agent`, run the deterministic metadata finalizer, commit the final parent and nested
+heads, and only then invoke staged `create_pull_request` once as the terminal completion signal.
+Nothing may mutate either repository after that signal. The downstream conclusion job delivers
+only the exact detector-attested objects and creates the two cross-linked draft PRs.
