@@ -42,7 +42,7 @@ causes the helper to fail until you:
 A revision-only roll may retain the same semantic version, but still requires the final reviewed
 identity and source evidence. The helper rejects a manifest version bump when that dependency's
 DEPS identity did not change. It is idempotent; rerun it after every final DEPS/native adaptation
-and after the final mono/skia fix commit so the parent records the exact tested state.
+and after the final paired Skia fix commit so the parent records the exact tested state.
 Every tracked registration, including an unchanged legacy entry, must have non-empty
 `version_source` evidence. Backfill missing `skia_dependency` evidence from the hydrated source so
 supported branches become compliant over time without changing semantic versions unnecessarily.
@@ -101,10 +101,10 @@ affected platform's `native/**/build.cake` and must be reported for cross-platfo
 When evidence disproves an earlier dependency or risk conclusion, update
 `skia-dependency-decisions.md`, `skia-breaking-change-analysis.md`, and the validation-review
 disposition together by replacing the provisional entry; do not append a contradictory "final"
-section. Commit each proven post-merge dependency/C API adaptation in mono/skia as a separate
+section. Commit each proven post-merge dependency/C API adaptation in the paired Skia repository as a separate
 explanatory commit.
 
-After every mono/skia adaptation, rerun `audit_fork_patches.py` with the Phase 05 arguments. Fill
+After every paired Skia adaptation, rerun `audit_fork_patches.py` with the Phase 05 arguments. Fill
 new or changed rows and require `--validate` to pass again. Reuse the exact Phase 05
 `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py"`
 command rather than searching

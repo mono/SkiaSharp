@@ -11,7 +11,7 @@ on:
         default: main
         type: string
       skia_branch:
-        description: "mono/skia branch to sync from"
+        description: "Paired Skia repository branch to sync from"
         required: false
         default: skiasharp
         type: string
@@ -32,6 +32,22 @@ jobs:
       SKIA_BRANCH: ${{ github.event.inputs.skia_branch || 'skiasharp' }}
 
     steps:
+      - name: Checkout identity tooling
+        uses: actions/checkout@v4
+        with:
+          path: .identity-source
+          sparse-checkout: |
+            scripts/infra/repository-identity.json
+            scripts/infra/repository_identity.py
+
+      - name: Stage identity tooling
+        run: |
+          IDENTITY_DIR="$RUNNER_TEMP/repository-identity"
+          mkdir -p "$IDENTITY_DIR"
+          cp .identity-source/scripts/infra/repository-identity.json "$IDENTITY_DIR/"
+          cp .identity-source/scripts/infra/repository_identity.py "$IDENTITY_DIR/"
+          echo "IDENTITY_SCRIPT=$IDENTITY_DIR/repository_identity.py" >> "$GITHUB_ENV"
+
       - name: Checkout SkiaSharp
         uses: actions/checkout@v4
         with:
@@ -41,6 +57,13 @@ jobs:
 
       - name: Validate branches
         run: |
+          IDENTITY=$(python3 "$IDENTITY_SCRIPT" --root "$GITHUB_WORKSPACE" json)
+          SKIA_REPOSITORY=$(jq -r '.skiaRepository' <<<"$IDENTITY")
+          SKIA_GIT_URL=$(jq -r '.skiaGitUrl' <<<"$IDENTITY")
+          {
+            echo "SKIA_REPOSITORY=$SKIA_REPOSITORY"
+            echo "SKIA_GIT_URL=$SKIA_GIT_URL"
+          } >> "$GITHUB_ENV"
           git check-ref-format --branch "$TARGET_BRANCH"
           if ! git show-ref --verify --quiet "refs/remotes/origin/$TARGET_BRANCH"; then
             echo "Target branch does not exist on origin: $TARGET_BRANCH"
@@ -48,9 +71,8 @@ jobs:
           fi
 
           git check-ref-format --branch "$SKIA_BRANCH"
-          SKIA_URL=$(git config -f .gitmodules --get submodule.externals/skia.url)
-          if ! git ls-remote --exit-code --heads "$SKIA_URL" "refs/heads/$SKIA_BRANCH" >/dev/null; then
-            echo "Skia branch does not exist on origin: $SKIA_BRANCH"
+          if ! git ls-remote --exit-code --heads "$SKIA_GIT_URL" "refs/heads/$SKIA_BRANCH" >/dev/null; then
+            echo "$SKIA_REPOSITORY branch does not exist on origin: $SKIA_BRANCH"
             exit 1
           fi
 
@@ -63,29 +85,20 @@ jobs:
           git -C externals/skia checkout --detach "refs/remotes/origin/$SKIA_BRANCH"
 
           SKIA_SHA=$(git -C externals/skia rev-parse HEAD)
-          SKIA_URL=$(git config -f .gitmodules --get submodule.externals/skia.url)
-          EXPECTED_SKIA_SHA=$(git ls-remote --exit-code --heads "$SKIA_URL" "refs/heads/$SKIA_BRANCH" | awk '{print $1}')
+          EXPECTED_SKIA_SHA=$(git ls-remote --exit-code --heads "$SKIA_GIT_URL" "refs/heads/$SKIA_BRANCH" | awk '{print $1}')
           if [ "$SKIA_SHA" != "$EXPECTED_SKIA_SHA" ]; then
-            echo "Checked out $SKIA_SHA, but mono/skia branch $SKIA_BRANCH points to $EXPECTED_SKIA_SHA"
+            echo "Checked out $SKIA_SHA, but $SKIA_REPOSITORY branch $SKIA_BRANCH points to $EXPECTED_SKIA_SHA"
             exit 1
           fi
 
-          MANIFEST_MATCHES=$(jq '[.registrations[] | select(
-            .component.type == "git"
-            and .component.git.repositoryUrl == "https://github.com/mono/skia.git"
-          )] | length' cgmanifest.json)
-
-          if [ "$MANIFEST_MATCHES" -ne 1 ]; then
-            echo "Expected exactly one mono/skia git registration in cgmanifest.json, found $MANIFEST_MATCHES"
-            exit 1
-          fi
+          python3 "$IDENTITY_SCRIPT" --root "$GITHUB_WORKSPACE" validate
 
           TMP=$(mktemp)
-          jq --arg sha "$SKIA_SHA" '
+          jq --arg sha "$SKIA_SHA" --arg skia_url "$SKIA_GIT_URL" '
             (.registrations[]
               | select(
                 .component.type == "git"
-                and .component.git.repositoryUrl == "https://github.com/mono/skia.git"
+                and .component.git.repositoryUrl == $skia_url
               )
               | .component.git.commitHash) = $sha
           ' cgmanifest.json > "$TMP"
@@ -154,11 +167,11 @@ jobs:
           fi
 
           TITLE="Sync Skia submodule and cgmanifest into $TARGET_BRANCH"
-          BODY="Automated update of the \`externals/skia/\` submodule to track \`mono/skia\`'s \`$SKIA_BRANCH\` branch.
+          BODY="Automated update of the \`externals/skia/\` submodule to track \`$SKIA_REPOSITORY\`'s \`$SKIA_BRANCH\` branch.
 
           This pull request targets the \`$TARGET_BRANCH\` branch in \`${{ github.repository }}\`.
 
-          The \`mono/skia\` git registration in \`cgmanifest.json\` is derived from the checked-out submodule SHA. The workflow opens a PR when either the submodule pointer or manifest hash changes, so it also repairs manifest drift.
+          The \`$SKIA_REPOSITORY\` git registration in \`cgmanifest.json\` is derived from the checked-out submodule SHA. The workflow opens a PR when either the submodule pointer or manifest hash changes, so it also repairs manifest drift.
 
           Created by [auto-skia-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-skia-submodule-sync.yml)."
 
