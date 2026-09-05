@@ -657,13 +657,21 @@ git -C "$GITHUB_WORKSPACE" rev-parse --verify "origin/${SS_BASE}^{commit}" >/dev
 
 GIT_BIN=$(command -p -v git)
 GH_BIN=$(command -p -v gh)
-TRUSTED_DELIVERY_DIR=$(command -p mktemp -d "${RUNTIME_DIR}/delivery.XXXXXX")
+TRUSTED_DELIVERY_DIR=$(command -p mktemp -d \
+  "${RUNNER_TEMP:?RUNNER_TEMP is required}/skia-sync-delivery.XXXXXX")
 TRUSTED_GIT_HOME="$TRUSTED_DELIVERY_DIR/home"
 TRUSTED_GIT_ASKPASS="$TRUSTED_DELIVERY_DIR/git-askpass.sh"
 TRUSTED_SKIA_REPO="$TRUSTED_DELIVERY_DIR/skia.git"
 TRUSTED_SS_REPO="$TRUSTED_DELIVERY_DIR/skiasharp.git"
 readonly GIT_BIN GH_BIN TRUSTED_DELIVERY_DIR TRUSTED_GIT_HOME TRUSTED_GIT_ASKPASS
 readonly TRUSTED_SKIA_REPO TRUSTED_SS_REPO
+command -p chmod 700 "$TRUSTED_DELIVERY_DIR"
+
+cleanup_trusted_delivery() {
+  command -p rm -rf -- "$TRUSTED_DELIVERY_DIR"
+}
+trap cleanup_trusted_delivery EXIT
+
 command -p mkdir -p "$TRUSTED_GIT_HOME"
 # shellcheck disable=SC2016 # These variables expand only when Git invokes the generated helper.
 printf '%s\n' \

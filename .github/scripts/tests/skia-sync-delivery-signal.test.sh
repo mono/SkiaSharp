@@ -228,6 +228,16 @@ if '--merged-head "$SKIA_VALIDATED_HEAD_SHA"' not in source:
     raise SystemExit("fork audit is not bound to the immutable Skia head")
 if 'ls-tree "$SS_VALIDATED_HEAD_SHA" externals/skia' not in source:
     raise SystemExit("gitlink validation is not bound to the immutable SkiaSharp head")
+if '"${RUNNER_TEMP:?RUNNER_TEMP is required}/skia-sync-delivery.XXXXXX"' not in source:
+    raise SystemExit("trusted delivery workspace is not rooted in runner-owned temporary storage")
+if '"${RUNTIME_DIR}/delivery.XXXXXX"' in source:
+    raise SystemExit("trusted delivery workspace cannot be created in immutable runtime assets")
+if 'command -p chmod 700 "$TRUSTED_DELIVERY_DIR"' not in source:
+    raise SystemExit("trusted delivery workspace permissions are not explicitly private")
+if "trap cleanup_trusted_delivery EXIT" not in source:
+    raise SystemExit("trusted delivery workspace cleanup is not unconditional")
+if 'command -p rm -rf -- "$TRUSTED_DELIVERY_DIR"' not in source:
+    raise SystemExit("trusted delivery workspace cleanup is not path-bound")
 PY
   echo "PASS: delivery-source-hardening"
 }
