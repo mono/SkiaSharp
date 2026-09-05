@@ -70,10 +70,9 @@ crash. `GC.KeepAlive(this)` after reading keeps the owner rooted.
 
 ## B. Repeated invariant work in a global registry / handle lookup
 
-**The signature:** a global object-tracking lookup repeats invariant reflection, metadata,
-liveness, or object-probe work for every lookup. The result may be stable for the relevant type,
-registry entry, or critical-section observation, but that is an invariant to establish, not an
-assumption.
+**The signature:** a global object-tracking lookup repeats invariant reflection or stable metadata
+work for every lookup. The result may be stable for the relevant type or registry entry, but that
+is an invariant to establish, not an assumption.
 
 **Historical case:** [#4629](https://github.com/mono/SkiaSharp/issues/4629) and
 [#4630](https://github.com/mono/SkiaSharp/pull/4630) found that the global `HandleDictionary`
@@ -81,10 +80,9 @@ path re-evaluated a per-type reflection predicate for each `GetInstance`/`GetOrA
 PR #4630 cached that type-invariant registration decision, removing repeated work while preserving
 the existing behavior.
 
-**Candidate, not a blanket rule.** A cached or snapshotted observation can be a candidate only
-when it preserves the original observation's lifetime, type, disposal, ownership, concurrency,
-and debug behavior. Do not assume every repeated lookup is safely cacheable or that current code
-has a qualifying invariant.
+**Candidate, not a blanket rule.** Caching a result can be a candidate only when it preserves
+existing lifetime, type, disposal, ownership, concurrency, and debug behavior. Do not assume every
+repeated lookup is safely cacheable or that current code has a qualifying invariant.
 
 ### Where to look
 ```bash
@@ -92,9 +90,8 @@ rg -n "HandleDictionary|GetInstance|GetOrAddObject|SkipObjectRegistration|ISKSki
 ```
 
 Start at global registry and handle-lookup critical sections, then trace the callers that make a
-path hot. Look for computation that is repeated despite being invariant for the type, registry
-entry, or protected observation; distinguish it from a read whose timing is part of the
-synchronization design.
+path hot. Look for computation that is repeated despite being invariant for the type or registry
+entry; distinguish it from work whose timing is part of the synchronization design.
 
 ### Proof obligation
 
@@ -104,9 +101,8 @@ workloads and report allocations as well as timing.
 
 Before changing the implementation, add an equivalence test over the behavior the existing lookup
 protects: successful and absent lookups, relevant type/disposal/ownership outcomes, Debug-only
-diagnostics, and concurrent GC/dispose/create pressure where those operations can interact. The
-test must establish that the retained observation has not weakened a safety check or changed which
-object is returned.
+diagnostics, and concurrent operations where they can interact. The test must establish that the
+cached result has not weakened a safety check or changed which object is returned.
 
 Temporarily make the proposed optimization deliberately wrong, such as by inverting its cached
 decision or removing a protected outcome, and prove the equivalence test goes red before removing
@@ -114,11 +110,10 @@ that change. If the test cannot distinguish the error, strengthen it or leave th
 
 ### Watch out (❌ don't)
 
-Do not cache or snapshot work merely because it looks redundant. Changing when an observation is
-made or retained can alter lifetime, type, disposal, ownership, concurrency, or debug semantics.
-Preserve every existing check only when the test and stress evidence establish behavior parity. If
-the benchmark is noise, the equivalence evidence is incomplete, or the concurrency model is
-unclear, record no candidate.
+Do not cache work merely because it looks redundant. Changing how a result is retained can alter
+lifetime, type, disposal, ownership, concurrency, or debug semantics. Preserve every existing
+check only when the test and stress evidence establish behavior parity. If the benchmark is noise,
+the equivalence evidence is incomplete, or the concurrency model is unclear, record no candidate.
 
 ---
 
