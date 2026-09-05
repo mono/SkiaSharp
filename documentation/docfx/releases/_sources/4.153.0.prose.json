@@ -1,0 +1,88 @@
+{
+  "theme": "Skia m153 and Graphite",
+  "highlights_headline": "SkiaSharp 4.153.0 updates to Skia m153 and adds Graphite bindings for modern GPU backends.",
+  "highlights_body": "It also adds asynchronous pixel readback, restores Vulkan Silk.NET packages, improves native symbols and font support, and fixes several lifetime issues. Linux font fallback can select a different face after the engine update.",
+  "breaking": [
+    {
+      "title": "Linux font fallback may select a different face",
+      "body": "Skia now tries FcFontMatch before the previous FcFontSort fallback path. Applications that depend on an exact fontconfig fallback face may see different glyphs or text metrics; specify an explicit family and style, or bundle a typeface, when selection must be deterministic."
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated through milestone m153",
+          "detail": "The bundled rendering engine advances through the m151 and m152 servicing updates to m153, including upstream Chromium stability fixes.",
+          "prs": [4537, 4538, 4568, 4651, 4808, 4826, 4927]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings",
+          "detail": "New bindings expose Graphite for Vulkan, Metal, and Dawn, enabling managed applications to work with Skia's newer GPU architecture.",
+          "prs": [3968]
+        },
+        {
+          "lead": "Asynchronous pixel readback",
+          "detail": "SKImage and SKSurface gain backend-neutral asynchronous RequestReadPixels support for reading pixels without blocking the rendering path.",
+          "prs": [4545]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Native pixel-source lifetimes protected",
+          "detail": "SKRegion span iteration and SKPixmap subsets or derived pixmaps now retain their native sources, preventing use-after-free failures.",
+          "prs": [4355, 4558]
+        },
+        {
+          "lead": "Raster image allocation and runtime-effect cleanup fixed",
+          "detail": "Raster-image creation no longer leaks its pixel buffer on failure, and resetting runtime-effect uniforms disposes the previous uniform buffer.",
+          "prs": [4455, 4783]
+        },
+        {
+          "lead": "Reduced allocations in common managed operations",
+          "detail": "Saving SKData, decoding null-terminated text, formatting four-byte tags, and using runtime-effect uniforms avoid unnecessary allocations and lookup overhead.",
+          "prs": [4498, 4512, 4550, 4630, 4752]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Vulkan Silk.NET packages restored",
+          "detail": "The SkiaSharp.Vulkan.Silk.NET package is again produced alongside the existing Vulkan support.",
+          "prs": [4527, 4841]
+        },
+        {
+          "lead": "Nano Server gains FreeType font support",
+          "detail": "Native packages use FreeType on Nano Server so font rendering is available on that Windows container target.",
+          "prs": [4280]
+        },
+        {
+          "lead": "Apple native symbol packages generated",
+          "detail": "Apple native packages now include generated symbols to improve diagnosis of native crashes.",
+          "prs": [4846]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Added FreeType-backed font support for Nano Server",
+    "mmitche": "Improved Windows native-build environment initialization",
+    "ramezgerges": "Added Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "preview_summaries": {
+    "v4.152.0-rc.1.26426.14": "Release Candidate 1 brought the m152 servicing engine update, native symbol packages, Vulkan Silk.NET package production, and lifetime fixes.",
+    "v4.152.0-preview.1.1": "Preview 1 introduced Graphite GPU bindings, asynchronous pixel readback, Vulkan Silk.NET support, Nano Server fonts, and managed allocation improvements."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp avoids a defensive feature-array copy during shaping and fixes disposal of non-memory-backed stream assets used to create HarfBuzz blobs."
+}
