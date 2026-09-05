@@ -28,6 +28,8 @@ jobs:
         run: |
           git submodule update --init -- docs
           cd docs
+          DOCS_REPOSITORY_URL=$(git remote get-url origin)
+          printf 'DOCS_REPOSITORY_URL=%s\n' "$DOCS_REPOSITORY_URL" >> "$GITHUB_ENV"
           git fetch origin main
           git checkout origin/main
           cd ..
@@ -91,7 +93,7 @@ jobs:
           else
             gh pr create --base main --head "$BRANCH" \
               --title "Update docs submodule to latest main" \
-              --body "Automated update of the \`docs/\` submodule to track \`mono/SkiaSharp-API-docs\` main.
+              --body "Automated update of the [\`docs/\`]($DOCS_REPOSITORY_URL) submodule to track main.
 
           Created by [auto-docs-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-docs-submodule-sync.yml)."
           fi
