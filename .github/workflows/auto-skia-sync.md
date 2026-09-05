@@ -69,6 +69,12 @@ jobs:
       base_branch: ${{ steps.detect.outputs.base_branch }}
       skia_base_branch: ${{ steps.detect.outputs.skia_base_branch }}
       head_branch: ${{ steps.detect.outputs.head_branch }}
+  # `needs` is additive for compiler-managed jobs: keep the generated activation gate and
+  # make pre_activation directly visible where the staged safe-output config is evaluated.
+  # Keep the supported hyphenated alias: gh-aw v0.87.10 normalizes it in the lockfile, while
+  # the underscored spelling is misclassified during pre-activation discovery and forms a cycle.
+  agent:
+    needs: [pre-activation]
 
 # -- Agent job gate --------------------------------------------------
 # Only run the agent if pre-activation succeeded and explicitly found work to do.
@@ -162,11 +168,11 @@ steps:
     run: |
       mkdir -p /tmp/gh-aw/agent
   - name: Prepare Skia checkout
-    # Same target resolution as the pre_activation detect step (see there). The agent job
-    # can't read pre_activation's outputs (it only `needs:` activation), so re-run the
-    # same committed detector to recover base_branch / skia_base_branch, then prepare the
-    # submodule and exact upstream analysis range. For rotation runs (empty target), the
-    # detector picks the SAME line as pre_activation because the round-robin index is
+    # Same target resolution as the pre_activation detect step (see there). The direct job
+    # dependency makes those outputs available to the staged safe-output config; this step
+    # re-runs the committed detector to materialize all resolved values as shell environment
+    # and prepare the submodule plus exact upstream analysis range. For rotation runs (empty
+    # target), both resolutions select the SAME line because the round-robin index is
     # GITHUB_RUN_NUMBER (identical across jobs) and main's config is read at the immutable
     # $GITHUB_SHA. skia-sync-detect.sh is the single source of truth.
     env:

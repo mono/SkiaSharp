@@ -72,18 +72,51 @@ expect_failure() {
 verify_compiled_release_base_config() {
   python3 - "$WORKFLOW_LOCK" <<'PY'
 import json
+import re
 import sys
 
 
 lock_path = sys.argv[1]
+lines = open(lock_path, encoding="utf-8").read().splitlines()
+
+agent_headers = [index for index, line in enumerate(lines) if line == "  agent:"]
+if len(agent_headers) != 1:
+    raise SystemExit(f"expected one compiled agent job, found {len(agent_headers)}")
+
+agent_start = agent_headers[0]
+agent_end = next(
+    (
+        index
+        for index in range(agent_start + 1, len(lines))
+        if re.fullmatch(r"  [A-Za-z0-9_-]+:", lines[index])
+    ),
+    len(lines),
+)
+agent_lines = lines[agent_start:agent_end]
+
+needs_headers = [index for index, line in enumerate(agent_lines) if line == "    needs:"]
+if len(needs_headers) != 1:
+    raise SystemExit(f"expected one compiled agent needs list, found {len(needs_headers)}")
+
+needs_start = needs_headers[0] + 1
+agent_needs = []
+for line in agent_lines[needs_start:]:
+    match = re.fullmatch(r"      - ([A-Za-z0-9_-]+)", line)
+    if match:
+        agent_needs.append(match.group(1))
+    else:
+        break
+if agent_needs != ["activation", "pre_activation"]:
+    raise SystemExit(f"compiled agent dependencies do not preserve activation and directly include pre_activation: {agent_needs}")
+
 prefix = "GH_AW_SAFE_OUTPUTS_CONFIG: "
 matches = [
     line.strip()[len(prefix):]
-    for line in open(lock_path, encoding="utf-8")
+    for line in agent_lines
     if line.strip().startswith(prefix)
 ]
 if len(matches) != 1:
-    raise SystemExit(f"expected one emitted safe-output config, found {len(matches)}")
+    raise SystemExit(f"expected one emitted safe-output config in the agent job, found {len(matches)}")
 
 serialized_config = json.loads(matches[0])
 placeholder = "${{ needs.pre_activation.outputs.base_branch }}"
