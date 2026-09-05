@@ -1,0 +1,83 @@
+{
+  "theme": "Skia m154 engine update",
+  "highlights_headline": "SkiaSharp 4.154.0 updates the bundled renderer to Skia m154 while retaining the recent GPU and readback improvements.",
+  "highlights_body": "This cumulative release includes Graphite GPU bindings, asynchronous pixel readback, and managed lifetime corrections. Linux applications that rely on fontconfig fallback should review the changed font selection behavior.",
+  "breaking": [
+    {
+      "title": "Linux font fallback can select a different face",
+      "body": "Skia now tries FcFontMatch before the previous FcFontSort fallback path, which can change text metrics or glyphs. Specify an explicit family and style, or use a bundled typeface, when deterministic font selection matters."
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia advanced through m152, m153, and m154",
+          "detail": "Updates the bundled rendering engine with the m152 release and servicing fixes, the m153 stability updates, and the m154 engine update.",
+          "prs": [4651, 4808, 4826, 4927, 4945]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings added",
+          "detail": "Adds Graphite bindings for Vulkan, Metal, and Dawn so applications can target Skia's newer GPU rendering architecture.",
+          "prs": [3968]
+        },
+        {
+          "lead": "Asynchronous pixel readback added",
+          "detail": "SKImage and SKSurface now provide backend-neutral RequestReadPixels APIs for asynchronous pixel retrieval.",
+          "prs": [4545]
+        },
+        {
+          "lead": "Vulkan Silk.NET package added",
+          "detail": "Provides a SkiaSharp.Vulkan.Silk.NET package for applications using Silk.NET's Vulkan bindings.",
+          "prs": [4527]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Pixel source lifetime issues corrected",
+          "detail": "Prevents native use-after-free errors when iterating SKRegion spans or creating SKPixmap subsets and derived pixmaps.",
+          "prs": [4355, 4558]
+        },
+        {
+          "lead": "Raster and runtime-effect resources released correctly",
+          "detail": "Fixes an allocation leak after failed raster image creation and releases the previous uniform buffer when SKRuntimeEffectUniforms is reset.",
+          "prs": [4455, 4783]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Nano Server font support improved",
+          "detail": "Uses FreeType to make font support available on Nano Server.",
+          "prs": [4280]
+        },
+        {
+          "lead": "Apple native symbols packaged",
+          "detail": "Generates native symbol packages for Apple platforms during packaging to improve native crash diagnostics.",
+          "prs": [4846]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Improved Nano Server font support with FreeType",
+    "mmitche": "Improved Windows native-build environment initialization",
+    "ramezgerges": "Added Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "preview_summaries": {
+    "v4.152.0-rc.1.26426.14": "Release Candidate 1 completed the m152 engine update with native symbol packaging, Vulkan package production, and managed lifetime fixes.",
+    "v4.152.0-preview.1.1": "Preview 1 introduced the m152 engine update, Graphite bindings, asynchronous readback APIs, and platform support improvements."
+  },
+  "harfbuzz_summary": "Improves HarfBuzz packaging and shaping efficiency, and fixes the lifetime of stream-backed blobs."
+}
