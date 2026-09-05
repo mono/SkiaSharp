@@ -238,12 +238,40 @@ if "trap cleanup_trusted_delivery EXIT" not in source:
     raise SystemExit("trusted delivery workspace cleanup is not unconditional")
 if 'command -p rm -rf -- "$TRUSTED_DELIVERY_DIR"' not in source:
     raise SystemExit("trusted delivery workspace cleanup is not path-bound")
+if source.count('rev-parse "refs/heads/${HEAD_BRANCH}^{commit}"') != 2:
+    raise SystemExit("validated heads are not resolved through explicit local branch refs")
 PY
   echo "PASS: delivery-source-hardening"
 }
 
+verify_conflicting_tag_resolution() {
+  local repo="$TMP_DIR/conflicting-ref-repo"
+  local branch="skia-sync/m152"
+  local branch_sha
+  local resolved_sha
+  local tag_sha
+
+  git init -q "$repo"
+  git -C "$repo" config user.name "Skia Sync Test"
+  git -C "$repo" config user.email "skia-sync@example.invalid"
+  git -C "$repo" commit -q --allow-empty -m tag-target
+  tag_sha=$(git -C "$repo" rev-parse HEAD)
+  git -C "$repo" tag "$branch"
+  git -C "$repo" switch -q -c "$branch"
+  git -C "$repo" commit -q --allow-empty -m branch-target
+  branch_sha=$(git -C "$repo" rev-parse "refs/heads/${branch}^{commit}")
+  resolved_sha=$(git -C "$repo" rev-parse "refs/heads/${branch}^{commit}")
+
+  if [[ "$resolved_sha" != "$branch_sha" || "$resolved_sha" == "$tag_sha" ]]; then
+    echo "FAIL: conflicting-tag-resolution"
+    exit 1
+  fi
+  echo "PASS: conflicting-tag-resolution"
+}
+
 verify_compiled_release_base_config
 verify_delivery_source_hardening
+verify_conflicting_tag_resolution
 
 record >"$SIGNAL_FILE"
 expect_success valid
