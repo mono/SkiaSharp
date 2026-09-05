@@ -17,6 +17,12 @@ on:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
+      - "scripts/infra/repository-identity.json"
+      - "scripts/infra/repository_identity.py"
+      - "scripts/infra/tests/test_repository_identity.py"
+      - "scripts/infra/caching/repo-deps.json"
+      - ".gitmodules"
+      - "cgmanifest.json"
       # Any workflow edit, so the registry test re-checks its tracked list. '*.yml' already
       # covers the generated '*.lock.yml' files.
       - ".github/workflows/*.yml"
@@ -26,6 +32,12 @@ on:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
+      - "scripts/infra/repository-identity.json"
+      - "scripts/infra/repository_identity.py"
+      - "scripts/infra/tests/test_repository_identity.py"
+      - "scripts/infra/caching/repo-deps.json"
+      - ".gitmodules"
+      - "cgmanifest.json"
       - ".github/workflows/*.yml"
   workflow_dispatch:
 
@@ -78,3 +90,11 @@ jobs:
 
       - name: Run skia-sync work detector tests
         run: bash .github/scripts/tests/skia-sync-detect.test.sh
+
+      - name: Run repository identity tests
+        run: |
+          python3 -m unittest scripts/infra/tests/test_repository_identity.py -v
+          python3 scripts/infra/repository_identity.py validate
+
+      - name: Validate cache dependency coverage
+        run: python3 scripts/infra/caching/repo-deps.py validate
