@@ -251,6 +251,51 @@ class NotesSidecarTests(unittest.TestCase):
             )
 
 
+class PreviewBannerTests(unittest.TestCase):
+    def setUp(self):
+        self.module = _load_release_notes_data_module()
+
+    def test_uses_latest_exact_prerelease_for_nuget_url(self):
+        shipment = {
+            "tag": "v4.152.0-rc.1.26426.14",
+            "core_version": "4.152.0",
+            "public_version": "4.152.0-rc.1.26426.14",
+            "channel": "rc",
+            "label": "Release Candidate 1 (Build 26426.14)",
+            "previous_tag": None,
+            "target_sha": "a" * 40,
+            "date": "2026-08-26",
+            "changelog_url": None,
+            "prs": [],
+        }
+
+        data = self.module.build_data_json(
+            [],
+            {
+                "version": "4.152.0",
+                "status": "preview",
+                "shipments": [shipment],
+            },
+        )
+
+        self.assertEqual(
+            data["banner"]["preview_nuget_url"],
+            "https://www.nuget.org/packages/SkiaSharp/4.152.0-rc.1.26426.14",
+        )
+
+    def test_does_not_invent_prerelease_url_without_exact_shipment(self):
+        data = self.module.build_data_json(
+            [],
+            {
+                "version": "4.152.0",
+                "status": "preview",
+                "shipments": [],
+            },
+        )
+
+        self.assertIsNone(data["banner"]["preview_nuget_url"])
+
+
 class ReleaseGithubTests(unittest.TestCase):
     def test_owns_the_managed_markers(self):
         self.assertEqual(github.SUMMARY_START_MARKER, "<!-- SKIASHARP:RELEASE-SUMMARY:START -->")
@@ -273,11 +318,7 @@ class DataFormatSyncTests(unittest.TestCase):
 
 
 class WebsiteContentUnchangedTests(unittest.TestCase):
-    """_website_content_unchanged() ignores "format" and "shipments" -- a
-    format bump (3 -> 4) or a shipments-only change must never, by itself,
-    make it report "changed": that drives whether prose is discarded and the
-    page is added to files-to-polish, and neither should happen just because
-    a new/altered exact shipment tag appeared with no other fact moving."""
+    """Prose-independent metadata must not discard reviewed prose."""
 
     def setUp(self):
         self.module = _load_release_notes_data_module()
@@ -307,6 +348,36 @@ class WebsiteContentUnchangedTests(unittest.TestCase):
             "version": "4.150.0",
             "prs": {},
             "shipments": [{"tag": "v4.150.0", "target_sha": "a" * 40}],
+        }
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = self._write(tmp_dir, old)
+            self.assertTrue(self.module._website_content_unchanged(path, new))
+
+    def test_exact_prerelease_url_change_alone_is_unchanged(self):
+        import tempfile
+
+        old = {
+            "format": 4,
+            "version": "4.152.0",
+            "banner": {
+                "kind": "preview",
+                "preview_nuget_url": (
+                    "https://www.nuget.org/packages/SkiaSharp/4.152.0-preview"
+                ),
+            },
+            "shipments": [],
+        }
+        new = {
+            "format": 4,
+            "version": "4.152.0",
+            "banner": {
+                "kind": "preview",
+                "preview_nuget_url": (
+                    "https://www.nuget.org/packages/"
+                    "SkiaSharp/4.152.0-rc.1.26426.14"
+                ),
+            },
+            "shipments": [],
         }
         with tempfile.TemporaryDirectory() as tmp_dir:
             path = self._write(tmp_dir, old)

@@ -154,8 +154,15 @@ def banner_line(data, prose):
     links = []
     if b.get("nuget_url"):
         links.append("[NuGet]({})".format(b["nuget_url"]))
-    if b.get("preview_nuget_url"):
-        links.append("[NuGet (prerelease)]({})".format(b["preview_nuget_url"]))
+    preview_nuget_url = b.get("preview_nuget_url")
+    if b.get("kind") == "preview":
+        preview_nuget_url = _gen.exact_prerelease_nuget_url(
+            "SkiaSharp",
+            data.get("shipments"),
+            data.get("previews"),
+        )
+    if preview_nuget_url:
+        links.append("[NuGet (prerelease)]({})".format(preview_nuget_url))
     if b.get("github_release_url"):
         links.append("[GitHub Release]({})".format(b["github_release_url"]))
     return "> " + " · ".join(parts + links)

@@ -44,7 +44,7 @@ behavior is to do the same full pipeline and let the engines skip safely.
 - **§1 — The shared versioning model (the rules)**
   - §1.1 One artifact per release *line*, keyed by the version core
   - §1.2 `versions.json` — the only override surface
-  - §1.3 Default comparison: the previous emitted line
+  - §1.3 Default comparison: stable-delimited rollups
   - §1.4 Which lines get an artifact (emission)
   - §1.5 HarfBuzzSharp co-ships inside SkiaSharp pages
 - **§2 — Skill layout & orchestration**
@@ -92,9 +92,10 @@ they diff and the *file layout* they emit (§3).
 
 A **line** is a version with its prerelease label stripped: `4.148.0-rc.1.2` →
 `4.148.0`. Every preview/rc of a line collapses into that line's single artifact,
-named by the **core** (`4.148.0`). The artifact is a **rollup** of everything in the
-line. (The 4th segment of a genuine 4-part *stable* like `1.49.2.1` is preserved;
-only the prerelease suffix is stripped.)
+named by the **core** (`4.148.0`). The artifact includes everything shipped within
+that line, and a stable artifact also rolls up any preview-only lines since the
+preceding stable (§1.3). (The 4th segment of a genuine 4-part *stable* like
+`1.49.2.1` is preserved; only the prerelease suffix is stripped.)
 
 Throughout this doc, the path placeholder **`<line>`** means exactly this version
 core.
@@ -161,12 +162,20 @@ There is intentionally **no** heuristic that infers any of this from git/NuGet. 
 release needs special handling, it gets an entry here. Nothing else.
 
 
-### 1.3 Default comparison: the previous emitted line
+### 1.3 Default comparison: stable-delimited rollups
 
-With no `compare_to` override, a line is diffed against **the most recent line before
-it that was itself emitted** (§1.4), **skipping** any `status: "superseded"` line
-(§1.2). Superseded/abandoned lines are therefore transparent: the next emitted line
-diffs past them and rolls their work up.
+With no `compare_to` override, the baseline depends on whether the current line has
+shipped stable:
+
+- A **preview-only line** is diffed against the most recent emitted line before it.
+  Consecutive preview-only lines therefore remain separate instead of repeatedly
+  showing the full delta from the last stable.
+- A **stable line** is diffed against the most recent prior stable line. It therefore
+  rolls up every preview-only line since that stable.
+
+Both searches skip any `status: "superseded"` line (§1.2). Superseded/abandoned
+lines remain transparent and their work is included by the next eligible baseline
+window.
 
 Release notes resolve this rule for **SkiaSharp lines only**. The API-diff engine
 resolves the same rule inside each package-version bucket it emits (`skiasharp` and
@@ -174,20 +183,20 @@ resolves the same rule inside each package-version bucket it emits (`skiasharp` 
 scheme (§3.4). There is no HarfBuzzSharp release-notes baseline: its notes are a
 section of the co-shipping SkiaSharp page (§1.5/§4.5).
 
-If there is **no prior emitted line at all** (the first line a bucket ever emits), the
-baseline is **empty**: the API diff is the full public surface and the release notes
-list every PR in the range.
+If there is **no eligible prior line at all** (the first line a bucket ever emits, or
+the first stable in that bucket), the baseline is **empty**: the API diff is the full
+public surface and the release notes list every PR in the range.
 
 Worked examples (today's SkiaSharp versions):
 
-- `4.148.0` → the previous emitted line is the superseded `4.147.0`, which is
-  skipped, so the baseline is the last stable `3.119.4`; `4.148` thus rolls up all of
-  the `4.147` work. (`versions.json` also records `compare_to: "3.119.4"` for it — an
-  explicit belt-and-braces that produces the same result the skip rule would.)
-- `4.150.0` → the previous emitted line is `4.148.0` (a preview-only line ahead of
-  the latest stable still counts as emitted, §1.4), so the baseline is `4.148.0`.
-
-There is no "previous *stable* only" rule and no other heuristic.
+- Preview-only `4.152.0`, `4.153.0`, and `4.154.0` → each line uses the immediately
+  preceding emitted line, so all three artifacts remain separate.
+- If `4.153.0` ships stable while `4.152.0` remains preview-only, `4.153.0` uses the
+  preceding stable as its baseline and rolls up both `4.152.0` and `4.153.0`;
+  preview-only `4.154.0` remains separate.
+- If `4.154.0` is the next stable instead, it rolls up `4.152.0` through `4.154.0`.
+- If `4.152.0` ships stable, later preview-only `4.153.0` and `4.154.0` remain
+  separate until another stable line creates a new rollup boundary.
 
 
 ### 1.4 Which lines get an artifact (emission)
@@ -940,12 +949,13 @@ exist.
 A SkiaSharp version's *released* and *unreleased* states are **orthogonal** and get
 **separate pages** (§3.2) that coexist while the version is in flight:
 
-- **Released `<line>.md`** — the full cumulative **rollup** of a line's shipped
-  prerelease/stable from its baseline (§1.3), carrying preview-milestone sections
-  (§4.3), supersede banners, API-diff links, and (when the co-release map has an entry)
-  the folded HarfBuzzSharp section (§4.5). Its milestones come from the line's `v*`
-  **tags** (§4.1) while the commit range comes from the matching `release/X.Y.Z`
-  **branch** checkout (§4.6) — tags name the previews, the branch supplies the commits.
+- **Released `<line>.md`** — a preview-only line contains its own delta, while a stable
+  line is the cumulative **rollup** since the preceding stable (§1.3). It carries
+  preview-milestone sections (§4.3), supersede banners, API-diff links, and (when the
+  co-release map has an entry) the folded HarfBuzzSharp section (§4.5). Its milestones
+  come from the line's `v*` **tags** (§4.1) while the commit range comes from the
+  matching `release/X.Y.Z` **branch** checkout (§4.6) — tags name the previews, the
+  branch supplies the commits.
 - **Unreleased `<line>-unreleased.md`** — a **small delta** from the **last release on
   that same line** to the head branch (`main`, or a servicing `release/X.Y.x`) —
   "what may ship next". It is **not** a rollup: it ignores `compare_to`, never
@@ -990,7 +1000,8 @@ built from. It is timestamp-free and includes, at minimum:
 
 - `format` (`_DATA_JSON_FORMAT_VERSION`), `version`, `family`, and `status`.
 - `banner`, `supersedes`, `superseded_by`, and `api_links` — all script-owned link /
-  banner facts.
+  banner facts. A preview banner links to the newest exact preview/RC shipment version
+  from `shipments`; it never synthesizes an `X.Y.Z-preview` package URL.
 - `harfbuzz` on released pages — `{ "version", "api_diff_link", "prs" }` for the
   co-shipped HarfBuzzSharp section (§4.5). It is absent on `-unreleased` pages.
 - `prs` — the flat PR map, including title, URL, author, `community`, and the
@@ -1380,9 +1391,10 @@ comparisons:
 - `_data_json_unchanged()` is the genuine no-op check — strict equality, including
   `format`/`shipments`. Only when this is true does an unforced run skip a page
   entirely.
-- `_website_content_unchanged()` ignores `format`/`shipments` — it is true whenever
-  the PRs/roster/previews/links/companions a rendered page and its required prose
-  depend on have not moved, even across a format bump or a shipments-only change.
+- `_website_content_unchanged()` ignores prose-independent metadata — `format`,
+  `shipments`, and the exact preview NuGet URL derived from those shipments. It is
+  true whenever the PRs/roster/previews/links/companions the prose depends on have
+  not moved.
 - `_classify_data_write()` combines the two. A shipments-only change writes the
   refreshed facts, preserves reviewed prose, and does not request another polish
   pass. A website-content change writes the facts, discards stale prose, and
