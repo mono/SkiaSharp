@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Create matched SkiaSharp and mono/skia update branches from exact bases."""
+"""Create matched SkiaSharp and paired Skia update branches from exact bases."""
 
 import argparse
 import os
@@ -152,7 +152,7 @@ def prepare_branches(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Create matched SkiaSharp and mono/skia update branches."
+        description="Create matched SkiaSharp and paired Skia update branches."
     )
     parser.add_argument(
         "--repo-root",

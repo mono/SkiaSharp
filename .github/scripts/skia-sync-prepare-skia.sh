@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# skia-sync-prepare-skia.sh — Prepare the mono/skia checkout for the sync agent.
+# skia-sync-prepare-skia.sh — Prepare the paired Skia checkout for the sync agent.
 #
 # The agent job checks out the workflow branch (usually main), so the submodule may
 # sit at a different SHA than the base branch (`main` or a release line) expects. The
-# submodule tracks `$skia_base_branch` in mono/skia (skiasharp for a main sync,
+# submodule tracks `$skia_base_branch` in the paired Skia repository (skiasharp for a main sync,
 # release/<major>.<milestone>.x for a release sync), so the base-branch submodule SHA
 # should be a commit on that branch.
 #
@@ -13,7 +13,7 @@
 #
 # Requires (source skia-sync-detect.sh's output first):
 #   base_branch        parent base branch (main or release/<major>.<ms>.x)
-#   skia_base_branch   mono/skia base branch (skiasharp or release/<major>.<ms>.x)
+#   skia_base_branch   paired Skia base branch (skiasharp or release/<major>.<ms>.x)
 #   current            milestone currently shipped by the base branch
 #   upstream_ref       google/skia branch to merge
 #   GITHUB_WORKSPACE   parent repository checkout
@@ -23,13 +23,14 @@ set -euo pipefail
 
 BASE_BRANCH="${base_branch:?base_branch not set — source skia-sync-detect.sh first}"
 SKIA_BASE_BRANCH="${skia_base_branch:?skia_base_branch not set — source skia-sync-detect.sh first}"
+SKIA_REPOSITORY="${skia_repository:?skia_repository not set — source skia-sync-detect.sh first}"
 CURRENT="${current:?current not set — source skia-sync-detect.sh first}"
 UPSTREAM_REF="${upstream_ref:?upstream_ref not set — source skia-sync-detect.sh first}"
 WORKSPACE="${GITHUB_WORKSPACE:?GITHUB_WORKSPACE not set}"
 ENV_FILE="${GITHUB_ENV:?GITHUB_ENV not set}"
 SKIA_DIR="${WORKSPACE}/externals/skia"
 
-echo "Aligning submodule to origin/${BASE_BRANCH} (mono/skia ${SKIA_BASE_BRANCH})"
+echo "Aligning submodule to origin/${BASE_BRANCH} (${SKIA_REPOSITORY} ${SKIA_BASE_BRANCH})"
 git -C "$WORKSPACE" fetch origin "$BASE_BRANCH" 2>&1
 PARENT_BASE_SHA=$(git -C "$WORKSPACE" rev-parse "origin/${BASE_BRANCH}^{commit}")
 BASE_SUB_SHA=$(git -C "$WORKSPACE" ls-tree "origin/${BASE_BRANCH}" -- externals/skia | awk '{print $3}')

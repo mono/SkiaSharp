@@ -6,6 +6,7 @@ name: Automation - Tooling Tests
 #
 #   * .agents/skills/ci-status/scripts/tests/       — the CI dashboard's workflow registry
 #   * .agents/skills/update-skia/scripts/*_test.py  — Skia milestone update tooling
+#   * .github/scripts/tests/skia_sync_identity_test.py — sync-local repository identity
 #   * .github/scripts/tests/skia-sync-detect.test.sh — the auto-skia-sync work detector
 #
 # Release publishing tooling is covered separately by release-tooling-tests.yml. Paths are
@@ -76,5 +77,7 @@ jobs:
             echo "::endgroup::"
           done
 
-      - name: Run skia-sync work detector tests
-        run: bash .github/scripts/tests/skia-sync-detect.test.sh
+      - name: Run skia-sync tests
+        run: |
+          python3 .github/scripts/tests/skia_sync_identity_test.py -v
+          bash .github/scripts/tests/skia-sync-detect.test.sh

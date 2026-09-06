@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+[ "${1:-}" = ls-remote ] || { echo "unexpected git command: $*" >&2; exit 1; }
+shift
+if [ "${1:-}" = --heads ]; then
+  shift
+fi
+
+url="${1:?missing remote URL}"
+ref="${2:?missing remote ref}"
+
+case "$url" in
+  https://github.com/google/skia.git)
+    printf '%s\t%s\n' "$TEST_UPSTREAM_SHA" "$ref"
+    ;;
+  "$TEST_REPOSITORY_GIT_URL")
+    if [ -n "${TEST_RELEASE_BRANCH:-}" ]; then
+      printf '%s\trefs/heads/%s\n' "$TEST_RELEASE_SHA" "$TEST_RELEASE_BRANCH"
+    fi
+    ;;
+  "$TEST_SKIA_GIT_URL")
+    if [ -n "${TEST_SYNC_BRANCH:-}" ] &&
+        [ "$ref" = "refs/heads/${TEST_SYNC_BRANCH}" ]; then
+      printf '%s\t%s\n' "$TEST_SYNC_SHA" "$ref"
+    elif [ "$ref" = "refs/heads/${TEST_SKIA_BASE_BRANCH}" ]; then
+      printf '%s\t%s\n' "$TEST_BASE_SHA" "$ref"
+    fi
+    ;;
+  *)
+    echo "unexpected git remote: $url" >&2
+    exit 1
+    ;;
+esac

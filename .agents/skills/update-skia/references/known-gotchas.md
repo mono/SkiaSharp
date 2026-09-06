@@ -46,7 +46,7 @@ Also watch for renamed/removed GN flags between milestones — obsolete flags ca
 
 ### 7. `.gitmodules` Branch Name
 
-When the mono/skia target branch name changes, `.gitmodules` must be updated to track the new branch. Easy to forget; causes silent submodule tracking failures.
+When the paired Skia target branch name changes, `.gitmodules` must be updated to track the new branch. Easy to forget; causes silent submodule tracking failures.
 
 ### 19. Fork-Only GN `declare_args` Cleanup
 
@@ -186,7 +186,7 @@ git log --oneline "$MB..{SKIA_BASE_BRANCH}" > "$ARTIFACT_DIR/fork-patches-before
 ```
 
 For **every conflicted file**, find which fork patch(es) from that list touch it and classify each as
-*upstreamed* or *re-applied* (above). Every such patch must appear in the mono/skia PR's "Conflicts
+*upstreamed* or *re-applied* (above). Every such patch must appear in the paired Skia PR's "Conflicts
 resolved" table with its disposition. A fork patch on a conflicted file that is **neither** upstreamed
 nor re-applied is a lost patch — STOP and fix it before committing the merge. (Fork patches whose files
 did not conflict merge cleanly and need no listing.)

@@ -39,6 +39,10 @@ required_file "$ARTIFACT_DIR/test-exit-code.txt"
 : "${SKIA_SYNC_SKIA_BASE_BRANCH:?SKIA_SYNC_SKIA_BASE_BRANCH is required}"
 : "${SKIA_SYNC_SKIA_BASE_SHA:?SKIA_SYNC_SKIA_BASE_SHA is required}"
 : "${SKIA_SYNC_HEAD_BRANCH:?SKIA_SYNC_HEAD_BRANCH is required}"
+: "${SKIA_SYNC_REPOSITORY:?SKIA_SYNC_REPOSITORY is required}"
+: "${SKIA_SYNC_REPOSITORY_GIT_URL:?SKIA_SYNC_REPOSITORY_GIT_URL is required}"
+: "${SKIA_SYNC_SKIA_REPOSITORY:?SKIA_SYNC_SKIA_REPOSITORY is required}"
+: "${SKIA_SYNC_SKIA_GIT_URL:?SKIA_SYNC_SKIA_GIT_URL is required}"
 : "${SKIA_SYNC_BASE_UPSTREAM_SHA:?SKIA_SYNC_BASE_UPSTREAM_SHA is required}"
 : "${SKIA_SYNC_TARGET_UPSTREAM_SHA:?SKIA_SYNC_TARGET_UPSTREAM_SHA is required}"
 : "${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"
@@ -52,6 +56,10 @@ BASE_BRANCH="$SKIA_SYNC_BASE_BRANCH"
 SKIA_BASE_BRANCH="$SKIA_SYNC_SKIA_BASE_BRANCH"
 SKIA_BASE_SHA="$SKIA_SYNC_SKIA_BASE_SHA"
 HEAD_BRANCH="$SKIA_SYNC_HEAD_BRANCH"
+REPOSITORY="$SKIA_SYNC_REPOSITORY"
+REPOSITORY_GIT_URL="$SKIA_SYNC_REPOSITORY_GIT_URL"
+SKIA_REPOSITORY="$SKIA_SYNC_SKIA_REPOSITORY"
+SKIA_GIT_URL="$SKIA_SYNC_SKIA_GIT_URL"
 BASE_UPSTREAM_SHA="$SKIA_SYNC_BASE_UPSTREAM_SHA"
 TARGET_UPSTREAM_SHA="$SKIA_SYNC_TARGET_UPSTREAM_SHA"
 
@@ -67,9 +75,9 @@ assert_resolved() {
 }
 
 MANIFEST_JSON=$(git -C "$GITHUB_WORKSPACE" show "${HEAD_BRANCH}:cgmanifest.json")
-MANIFEST_SKIA_HEAD=$(jq -er '
+MANIFEST_SKIA_HEAD=$(jq -er --arg skia_url "$SKIA_GIT_URL" '
   .registrations[]
-  | select(.component.git.repositoryUrl == "https://github.com/mono/skia.git")
+  | select(.component.git.repositoryUrl == $skia_url)
   | .component.git.commitHash
 ' <<<"$MANIFEST_JSON")
 MANIFEST_UPSTREAM_SHA=$(jq -er '
@@ -112,7 +120,7 @@ SS_BASE="$BASE_BRANCH"
 SKIA_BASE="$SKIA_BASE_BRANCH"
 IS_RELEASE="${IS_RELEASE:-false}"
 UPDATED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-WORKFLOW_LINK="[skia-upstream-sync](https://github.com/${GITHUB_REPOSITORY:-mono/SkiaSharp}/actions/workflows/auto-skia-sync.lock.yml)"
+WORKFLOW_LINK="[skia-upstream-sync](https://github.com/${REPOSITORY}/actions/workflows/auto-skia-sync.lock.yml)"
 
 python3 "$SKILL_DIR/scripts/audit_fork_patches.py" \
   --skia-root "$GITHUB_WORKSPACE/externals/skia" \
@@ -152,7 +160,7 @@ else
   IS_MILESTONE_BUMP=true
 fi
 if [[ "$IS_RELEASE" == "true" ]]; then
-  SS_BODY_INTRO+=" Targeting release branch \`${SS_BASE}\` (mono/skia \`${SKIA_BASE}\`)."
+  SS_BODY_INTRO+=" Targeting release branch \`${SS_BASE}\` (${SKIA_REPOSITORY} \`${SKIA_BASE}\`)."
 fi
 
 require_branch() {
@@ -269,7 +277,7 @@ Requires {{COMPANION_PR_URL}}
 
 - [x] Targets the `{{BASE_BRANCH}}` branch
 - [x] `Changes` above lists every added/changed C API export or states that none changed
-- [x] Companion `mono/SkiaSharp` PR linked above
+- [x] Companion `{{SKIASHARP_REPOSITORY}}` PR linked above
 
 _Last rendered by the sync workflow: {{UPDATED_AT}}_
 EOF
@@ -284,6 +292,7 @@ EOF
     --arg BUILD_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" BUILD.gn third_party)" \
     --arg RENDERING_CHECK " " \
     --arg BASE_BRANCH "$SKIA_BASE" \
+    --arg SKIASHARP_REPOSITORY "$REPOSITORY" \
     --rawfile AUTOMATED_REPORT "$SKIA_SUMMARY_FILE" \
     --arg UPDATED_AT "$UPDATED_AT" \
     '{
@@ -295,6 +304,7 @@ EOF
       BUILD_CHECK: $BUILD_CHECK,
       RENDERING_CHECK: $RENDERING_CHECK,
       BASE_BRANCH: $BASE_BRANCH,
+      SKIASHARP_REPOSITORY: $SKIASHARP_REPOSITORY,
       AUTOMATED_REPORT: $AUTOMATED_REPORT,
       UPDATED_AT: $UPDATED_AT
     }' >"$values"
@@ -344,7 +354,7 @@ Requires {{COMPANION_PR_URL}}
 - [x] Tests added or updated when behavior required them, or the report explains why not
 - [x] `Changes` above lists all public API and behavioral changes or states that none changed
 - [{{DOCS_FOLLOWUP_CHECK}}] Documentation follow-up filed, or no public API changed
-- [x] Companion `mono/skia` PR linked above and bindings regenerated
+- [x] Companion `{{SKIA_REPOSITORY}}` PR linked above and bindings regenerated
 
 _Last rendered by the sync workflow: {{UPDATED_AT}}_
 EOF
@@ -364,6 +374,7 @@ EOF
     --arg BUILD_CHECK "$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" native scripts .github)" \
     --arg DOCS_CHECK "$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" documentation samples)" \
     --arg DOCS_FOLLOWUP_CHECK "$([[ "$generated_check" == " " ]] && printf x || printf ' ')" \
+    --arg SKIA_REPOSITORY "$SKIA_REPOSITORY" \
     --rawfile AUTOMATED_REPORT "$SS_SUMMARY_FILE" \
     --arg UPDATED_AT "$UPDATED_AT" \
     '{
@@ -379,6 +390,7 @@ EOF
       BUILD_CHECK: $BUILD_CHECK,
       DOCS_CHECK: $DOCS_CHECK,
       DOCS_FOLLOWUP_CHECK: $DOCS_FOLLOWUP_CHECK,
+      SKIA_REPOSITORY: $SKIA_REPOSITORY,
       AUTOMATED_REPORT: $AUTOMATED_REPORT,
       UPDATED_AT: $UPDATED_AT
     }' >"$values"
@@ -437,29 +449,29 @@ apply_labels() {
   gh api --method POST "repos/${repo}/issues/${pr}/labels" --input "$request" >/dev/null
 }
 
-echo "Pushing $BRANCH to mono/skia and mono/SkiaSharp with guarded leases..."
+echo "Pushing $BRANCH to $SKIA_REPOSITORY and $REPOSITORY with guarded leases..."
 git -C "$GITHUB_WORKSPACE/externals/skia" rev-parse --verify "origin/${SKIA_BASE}^{commit}" >/dev/null
 git -C "$GITHUB_WORKSPACE" rev-parse --verify "origin/${SS_BASE}^{commit}" >/dev/null
-push_branch "$GITHUB_WORKSPACE/externals/skia" mono/skia
-push_branch "$GITHUB_WORKSPACE" mono/SkiaSharp
+push_branch "$GITHUB_WORKSPACE/externals/skia" "$SKIA_REPOSITORY"
+push_branch "$GITHUB_WORKSPACE" "$REPOSITORY"
 
 SKIA_BODY="$ARTIFACT_DIR/skia-pr-body.md"
 SS_BODY="$ARTIFACT_DIR/skiasharp-pr-body.md"
 
 render_skia_body "Pending companion PR creation in this workflow run." "$SKIA_BODY"
-SKIA_PR=$(ensure_pr mono/skia "$SKIA_BASE" "$SKIA_TITLE" "$SKIA_BODY")
-SKIA_PR_URL="https://github.com/mono/skia/pull/${SKIA_PR}"
+SKIA_PR=$(ensure_pr "$SKIA_REPOSITORY" "$SKIA_BASE" "$SKIA_TITLE" "$SKIA_BODY")
+SKIA_PR_URL="https://github.com/${SKIA_REPOSITORY}/pull/${SKIA_PR}"
 
 render_skiasharp_body "$SKIA_PR_URL" "$SS_BODY"
-SS_PR=$(ensure_pr mono/SkiaSharp "$SS_BASE" "$SS_TITLE" "$SS_BODY")
-SS_PR_URL="https://github.com/mono/SkiaSharp/pull/${SS_PR}"
+SS_PR=$(ensure_pr "$REPOSITORY" "$SS_BASE" "$SS_TITLE" "$SS_BODY")
+SS_PR_URL="https://github.com/${REPOSITORY}/pull/${SS_PR}"
 
 render_skia_body "$SS_PR_URL" "$SKIA_BODY"
 render_skiasharp_body "$SKIA_PR_URL" "$SS_BODY"
-patch_pr mono/skia "$SKIA_PR" "$SKIA_TITLE" "$SKIA_BODY"
-patch_pr mono/SkiaSharp "$SS_PR" "$SS_TITLE" "$SS_BODY"
-apply_labels mono/skia "$SKIA_PR"
-apply_labels mono/SkiaSharp "$SS_PR"
+patch_pr "$SKIA_REPOSITORY" "$SKIA_PR" "$SKIA_TITLE" "$SKIA_BODY"
+patch_pr "$REPOSITORY" "$SS_PR" "$SS_TITLE" "$SS_BODY"
+apply_labels "$SKIA_REPOSITORY" "$SKIA_PR"
+apply_labels "$REPOSITORY" "$SS_PR"
 
 echo "Created or updated reciprocal draft PRs:"
 echo "  $SKIA_PR_URL"

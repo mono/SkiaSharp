@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Audit mono/skia fork-patch integrity during Phases 05 and 10.
+"""Audit paired Skia fork-patch integrity during Phases 05 and 10.
 
 The upstream merge may silently drop or alter a fork patch without producing a
 conflict. This helper compares the old and new upstream-relative fork deltas,
@@ -252,7 +252,7 @@ def validate(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Audit old and new mono/skia fork deltas and validate dispositions."
+        description="Audit old and new paired Skia fork deltas and validate dispositions."
     )
     parser.add_argument("--skia-root", type=Path, default=Path("externals/skia"))
     parser.add_argument("--old-upstream", required=True)

@@ -16,7 +16,18 @@ import json
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
+
+SYNC_IDENTITY_DIR = Path(
+    os.environ.get(
+        "SKIA_SYNC_IDENTITY_DIR",
+        Path(__file__).resolve().parents[4] / ".github" / "scripts",
+    )
+)
+if str(SYNC_IDENTITY_DIR) not in sys.path:
+    sys.path.insert(0, str(SYNC_IDENTITY_DIR))
+from skia_sync_identity import git_url, read_skia_repository, validate_manifest  # noqa: E402
 
 
 # Keys are the final path segments used in Skia DEPS. A path rename must fail loudly
@@ -485,13 +496,15 @@ def update_versions(
             r"\g<1>0",
             "SK_C_INCREMENT",
         )
+    skia_git_url = git_url(read_skia_repository(repo_root))
+    validate_manifest(repo_root, skia_git_url)
     git_registration = None
     version_registration = None
     for registration in cgmanifest["registrations"]:
         component = registration.get("component", {})
         git_component = component.get("git", {})
         other_component = component.get("other", {})
-        if git_component.get("repositoryUrl", "").endswith("/mono/skia.git"):
+        if git_component.get("repositoryUrl") == skia_git_url:
             git_component["commitHash"] = submodule_hash
             git_registration = registration
         if other_component.get("name") == "skia":
