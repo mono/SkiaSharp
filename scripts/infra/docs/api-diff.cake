@@ -117,10 +117,10 @@ Task ("docs-api-diff")
         // Collapse the feed into one entry per release LINE, keyed by the numeric
         // version core with the prerelease label stripped (4.148.0-rc.1.2 ->
         // 4.148.0; the 4th digit of a real 4-part stable like 1.49.2.1 is kept).
-        // Each line's api diff is a rollup named by that core, diffed against the
-        // line's representative package: the newest stable if it shipped,
-        // otherwise the newest prerelease. This mirrors the release-notes pages,
-        // which are stable-named rollups of all the previews in between.
+        // Each line's api diff is named by that core and uses the line's
+        // representative package: the newest stable if it shipped, otherwise the
+        // newest prerelease. Preview-only lines compare with the preceding line;
+        // stable lines roll up every line since the preceding stable.
         var lines = allVersions
             .GroupBy (v => v.ToNormalizedString ().Split ('-') [0])
             .Select (g => {
@@ -183,11 +183,14 @@ Task ("docs-api-diff")
             // Pick the baseline to diff against (spec §1.3):
             //   1. An explicit compare_to override in versions.json wins
             //      (e.g. 4.148 -> 3.119.4, deliberately skipping 4.147).
-            //   2. Otherwise diff against the most recent previous EMITTED line that
-            //      is NOT itself superseded — a superseded line still gets its own
-            //      page but must never serve as a baseline (spec §1.2/§1.3), so the
-            //      next line diffs past it and rolls its work up.
-            //   3. The LOWEST emitted line (the history-floor line) has no emitted
+            //   2. A preview-only line diffs against the most recent previous
+            //      EMITTED line that is not superseded, keeping consecutive preview
+            //      lines separate.
+            //   3. A stable line diffs against the most recent previous stable,
+            //      non-superseded line, rolling up every preview-only line between.
+            //      A superseded line still gets its own page but never acts as a
+            //      baseline (spec §1.2/§1.3).
+            //   4. The LOWEST emitted line (the history-floor line) has no emitted
             //      predecessor: its real baseline sits BELOW the floor and was filtered
             //      out of `emit`. Falling through with a null baseline would diff it
             //      against an empty assembly (0.0.0.0) and re-emit its ENTIRE API as
@@ -199,10 +202,13 @@ Task ("docs-api-diff")
             //      also the baseline of the next line up), so the floor's perf win — not
             //      rebuilding the whole obsolete back-catalogue — is preserved.
             var previous = FindCompareToBaseline (versionsConfig, version, allVersions);
+            var currentIsStable = !emit [idx].rep.IsPrerelease
+                && !IsVersionSuperseded (versionsConfig, version);
             if (previous == null) {
                 for (var j = idx - 1; j >= 0; j--) {
                     var candidate = emit [j].rep.ToNormalizedString ();
-                    if (!IsVersionSuperseded (versionsConfig, candidate)) {
+                    if (!IsVersionSuperseded (versionsConfig, candidate)
+                        && (!currentIsStable || !emit [j].rep.IsPrerelease)) {
                         previous = candidate;
                         break;
                     }
@@ -218,7 +224,8 @@ Task ("docs-api-diff")
                     .OrderByDescending (l => l.rep);
                 foreach (var l in below) {
                     var candidate = l.rep.ToNormalizedString ();
-                    if (!IsVersionSuperseded (versionsConfig, candidate)) {
+                    if (!IsVersionSuperseded (versionsConfig, candidate)
+                        && (!currentIsStable || !l.rep.IsPrerelease)) {
                         previous = candidate;
                         break;
                     }
@@ -537,9 +544,16 @@ void WriteApiDiffFolderIndex (DirectoryPath lineDir, string line)
     if (!hasContent)
         return;
 
-    var n = Environment.NewLine;
-    var text = $"{API_DIFF_MARKER} {line}{n}{n}> Back to [release notes](../{line}.md).{n}{n}{body}";
     var indexPath = lineDir.CombineWithFilePath ("index.md");
+    var n = Environment.NewLine;
+    var trailingNewline = n;
+    if (FileExists (indexPath)) {
+        var existing = System.IO.File.ReadAllText (indexPath.FullPath);
+        if (existing.EndsWith (n + n, StringComparison.Ordinal))
+            trailingNewline = n + n;
+    }
+    var text = $"{API_DIFF_MARKER} {line}{n}{n}> Back to [release notes](../{line}.md).{n}{n}{body}"
+        .TrimEnd () + trailingNewline;
     System.IO.File.WriteAllText (indexPath.FullPath, text);
 }
 
@@ -579,10 +593,11 @@ void CopyApiDiffs (DirectoryPath diffRoot, string id, DirectoryPath lineDir)
             }
             var apiDiffPath = lineDir.Combine (id).CombineWithFilePath ($"{dllName}.md");
             EnsureDirectoryExists (apiDiffPath.GetDirectory ());
-            CopyFile (file, apiDiffPath);
             var apiDiffOutputPath = (FilePath)$"{ROOT_PATH}/output/logs/api-diffs/{id}/{lineDir.GetDirectoryName ()}/{dllName}.md";
             EnsureDirectoryExists (apiDiffOutputPath.GetDirectory ());
-            CopyFile (file, apiDiffOutputPath);
+            var normalized = System.IO.File.ReadAllText (file.FullPath).TrimEnd () + Environment.NewLine;
+            System.IO.File.WriteAllText (apiDiffPath.FullPath, normalized);
+            System.IO.File.WriteAllText (apiDiffOutputPath.FullPath, normalized);
         }
     }
 }

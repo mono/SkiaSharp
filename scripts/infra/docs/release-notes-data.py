@@ -48,9 +48,10 @@ A version's "released" and "unreleased" states are orthogonal and get SEPARATE
 pages that coexist while the version is in flight:
 
   * RELEASED  ``{version}.md``            <- a VERSIONED branch (release/X.Y.Z and
-    its -rc/-preview prereleases; highest/canonical wins across a full run). Full
-    cumulative ROLLUP from the previous-stable base, honoring versions.json
-    `compare_to`, carrying preview-milestone sections + supersede banners.
+    its -rc/-preview prereleases; highest/canonical wins across a full run).
+    Preview-only lines start at the preceding emitted line; once the line ships
+    stable it rolls up from the preceding stable. Explicit versions.json
+    `compare_to` overrides either default.
 
   * UNRELEASED ``{version}-unreleased.md`` <- a HEAD branch (main, or servicing
     release/X.Y.x). Small DELTA from the last release to the head ("what may ship
@@ -574,6 +575,18 @@ def _is_valid_stable_base(branch):
     if entry and entry.get("status") == "superseded":
         return False
     return _version_has_stable_tag(version)
+
+
+def _latest_branch_for_version(all_branches, version):
+    # type: (list[str], str) -> Optional[str]
+    """Return the highest versioned branch whose core is exactly ``version``."""
+    candidates = [
+        branch for branch in all_branches
+        if not branch.endswith(".x") and version_from_branch(branch) == version
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=release_branch_sort_key)
 
 
 def _login_from_email(email):
@@ -1261,8 +1274,8 @@ def find_previous_stable_base(all_branches, major, minor_num, patch, subpatch=0)
     """Find the previous stable release branch to use as the cumulative diff base.
 
     For version X.Y.Z[.W]:
-    0. If W > 0 (a 4-segment build such as 1.68.1.1): use the previous build in
-       the same patch line, walking down to the plain X.Y.Z release.
+    0. If W > 0 (a 4-segment build such as 1.68.1.1): use the previous stable
+       build in the same patch line, walking down to the plain X.Y.Z release.
     1. If Z > 0: use the most recent previous patch that shipped stable,
        skipping preview-only / superseded patches (cumulative rollup).
     2. If Z == 0: look for the latest branch from a previous minor/major that
@@ -1273,25 +1286,23 @@ def find_previous_stable_base(all_branches, major, minor_num, patch, subpatch=0)
     """
     minor = "{}.{}".format(major, minor_num)
 
-    # Case 0: W > 0 — a 4-segment build (e.g. 1.68.1.1). The cumulative base is
-    # the previous build in the same patch line (1.68.1.1 -> 1.68.1), so the 4th
-    # segment is never dropped (which would wrongly base on 1.68.0). Falls
-    # through to the patch-based search when the X.Y.Z line cannot be resolved.
+    # Case 0: W > 0 — search earlier stable builds in the same patch line before
+    # falling through to the patch-based search. The 4th segment must be
+    # preserved, but an exact branch without a stable tag is still preview-only.
     if subpatch > 0:
         patch_base = "{}.{}".format(minor, patch)
         for sp in range(subpatch - 1, 0, -1):
-            cand = "release/{}.{}".format(patch_base, sp)
-            if cand in all_branches:
-                return cand
-        plain = "release/{}".format(patch_base)
-        if plain in all_branches:
-            return plain
-        prev_previews = [b for b in all_branches
-                         if b.startswith("release/{}-preview.".format(patch_base))]
-        if prev_previews:
-            prev_previews.sort(key=release_branch_sort_key)
-            return prev_previews[-1]
-        # X.Y.Z line not found as a branch — fall through to the patch search.
+            candidate_version = "{}.{}".format(patch_base, sp)
+            if _version_has_stable_tag(candidate_version):
+                candidate_branch = _latest_branch_for_version(
+                    all_branches, candidate_version)
+                if candidate_branch:
+                    return candidate_branch
+        if _version_has_stable_tag(patch_base):
+            plain = _latest_branch_for_version(all_branches, patch_base)
+            if plain:
+                return plain
+        # No stable build found in the X.Y.Z line — fall through to the patch search.
 
     # Case 1: Z > 0 — the cumulative base is the most recent PREVIOUS patch
     # that actually shipped as stable. Preview-only / superseded patches are
@@ -1307,21 +1318,13 @@ def find_previous_stable_base(all_branches, major, minor_num, patch, subpatch=0)
             # skips the superseded 3.119.3 and bases on 3.119.2).
             if _version_is_superseded(prev_version):
                 continue
-            # A stable release/X.Y.Z branch (exact, no -preview) or a stable
-            # tag both signal that this patch shipped (or is shipping) stable.
-            prev_stable = "release/{}".format(prev_version)
-            has_stable_branch = prev_stable in all_branches
-            if not has_stable_branch and not _version_has_stable_tag(prev_version):
+            # Only a stable tag proves that this patch shipped stable. An exact
+            # release/X.Y.Z branch may exist for a preview-only line.
+            if not _version_has_stable_tag(prev_version):
                 continue
-            if has_stable_branch:
-                return prev_stable
-            # Stable tag but no exact branch — use its latest preview branch.
-            prev_candidates = [b for b in all_branches
-                               if b.startswith("release/{}-preview.".format(
-                                   prev_version))]
-            if prev_candidates:
-                prev_candidates.sort(key=release_branch_sort_key)
-                return prev_candidates[-1]
+            previous = _latest_branch_for_version(all_branches, prev_version)
+            if previous:
+                return previous
         # No previous patch shipped stable — fall through to Case 2.
 
     # Case 2: Z == 0 (or no previous patch found) — search previous minors
@@ -1340,10 +1343,36 @@ def find_previous_stable_base(all_branches, major, minor_num, patch, subpatch=0)
                   if _is_valid_stable_base(b)]
         if stable:
             return stable[-1]
-        # No stable predecessor found — fall back to the latest candidate.
-        return candidates[-1]
 
     return None
+
+
+def find_previous_line_base(all_branches, version):
+    # type: (list[str], str) -> Optional[str]
+    """Find the latest non-superseded versioned branch before ``version``.
+
+    Preview-only lines use this narrow baseline so consecutive prerelease lines
+    remain separate. When a later line ships stable, ``determine_diff_range``
+    switches to ``find_previous_stable_base`` and rolls every intervening line
+    into that stable release.
+    """
+    target = _core_tuple(version)
+    canonical = {}  # type: dict[str, str]
+    for branch in all_branches:
+        if branch.endswith(".x"):
+            continue
+        candidate_version = version_from_branch(branch)
+        if (_core_tuple(candidate_version) >= target
+                or _version_is_superseded(candidate_version)):
+            continue
+        current = canonical.get(candidate_version)
+        if (current is None
+                or release_branch_sort_key(branch) > release_branch_sort_key(current)):
+            canonical[candidate_version] = branch
+
+    if not canonical:
+        return None
+    return max(canonical.values(), key=release_branch_sort_key)
 
 
 def _resolve_compare_to(compare_to, to_ref, version, all_branches):
@@ -1384,8 +1413,9 @@ def determine_diff_range(branch):
     # type: (str) -> Tuple[str, str, str]
     """Determine the git diff range for a branch.
 
-    Uses cumulative diffs: always diffs from the previous stable base,
-    so that previews produce a full rollup of all changes.
+    Preview-only released lines diff from the preceding emitted line. Stable
+    released lines diff from the preceding stable, rolling up any intervening
+    preview-only lines. Explicit ``compare_to`` configuration wins.
 
     Returns (from_ref, to_ref, version_display).
     """
@@ -1506,9 +1536,17 @@ def determine_diff_range(branch):
             return resolved
         # Override could not be resolved — fall through to auto-detection.
 
-    # Find the cumulative base: previous stable (or previous minor for Z==0)
-    base = find_previous_stable_base(all_branches, major, minor_num, patch,
-                                     subpatch)
+    # Preview-only lines remain independent. Once this line gains a stable tag,
+    # it becomes the rollup boundary and reaches back to the preceding stable.
+    current_is_stable = (
+        _version_has_stable_tag(version)
+        and not _version_is_superseded(version)
+    )
+    if current_is_stable:
+        base = find_previous_stable_base(
+            all_branches, major, minor_num, patch, subpatch)
+    else:
+        base = find_previous_line_base(all_branches, version)
 
     if base:
         return ("origin/{}".format(base),
@@ -1801,6 +1839,29 @@ def _pr_is_community(pr):
     return bool(login) and login != "mattleibow" and not _is_bot_login(login)
 
 
+def exact_prerelease_nuget_url(package, shipments=None, previews=None):
+    # type: (str, Optional[list], Optional[list]) -> Optional[str]
+    """Return the newest real prerelease package URL, never a synthetic version."""
+    versions = []
+    for shipment in shipments or []:
+        if shipment.get("channel") in ("preview", "rc"):
+            public_version = shipment.get("public_version")
+            if public_version:
+                versions.append(public_version)
+    if not versions:
+        for preview in previews or []:
+            tag = preview.get("tag") or preview.get("key")
+            if isinstance(tag, str) and tag.startswith("v"):
+                versions.append(tag[1:])
+    if not versions:
+        return None
+    latest = max(
+        versions,
+        key=lambda version: release_branch_sort_key("release/" + version),
+    )
+    return "https://www.nuget.org/packages/{}/{}".format(package, latest)
+
+
 def build_data_json(prs, metadata):
     # type: (list[dict], dict) -> dict
     """Emit the deterministic facts a release page is built from (v2 pipeline).
@@ -1820,6 +1881,15 @@ def build_data_json(prs, metadata):
     pkg = metadata.get("package", "SkiaSharp")
     nuget = "https://www.nuget.org/packages/{}".format(pkg)
 
+    # Exact-shipment records (format 4+): one per real git tag whose core matches
+    # this page. Validate them before using the latest prerelease to build the
+    # banner's NuGet URL; never invent a synthetic ``X.Y.Z-preview`` version.
+    shipments = metadata.get("shipments") or []
+    shipment_errors = _release_shipments.validate_shipments(shipments)
+    if shipment_errors:
+        raise ValueError(
+            "invalid shipments for {}: {}".format(version, "; ".join(shipment_errors))
+        )
     released = _release_date_display(version) if status == "stable" else None
 
     # Banner facts — the renderer owns the shape, we own date + links.
@@ -1828,7 +1898,11 @@ def build_data_json(prs, metadata):
         preview_nuget = None
     elif status == "preview" or metadata.get("superseded_by"):
         kind, nuget_url = "preview", None
-        preview_nuget = "{}/{}-preview".format(nuget, version)
+        preview_nuget = exact_prerelease_nuget_url(
+            pkg,
+            shipments,
+            metadata.get("preview_milestones"),
+        )
     elif status == "unreleased":
         kind, nuget_url, preview_nuget = "unreleased", None, None
     else:
@@ -1982,20 +2056,6 @@ def build_data_json(prs, metadata):
         "internal": sum(1 for p in prs if p.get("category") == "internal"),
     }
 
-    # Exact-shipment records (format 4+): one per exact git tag whose core
-    # matches this page, keyed by tag rather than by preview/rc label so the
-    # GitHub Release summary updater can look one up directly. Only a
-    # RELEASED page has any (an unreleased head page is never tagged) --
-    # collect_shipments_for_page is only ever called for those. Validated
-    # here (not just trusted from the caller) so a bug in shipment collection
-    # fails the Prepare run loudly instead of shipping a malformed data.json.
-    shipments = metadata.get("shipments") or []
-    shipment_errors = _release_shipments.validate_shipments(shipments)
-    if shipment_errors:
-        raise ValueError(
-            "invalid shipments for {}: {}".format(version, "; ".join(shipment_errors))
-        )
-
     return {
         "format": _DATA_JSON_FORMAT_VERSION,
         "version": version,
@@ -2059,20 +2119,27 @@ def _prune_page_and_sources(page_path):
             gen.unlink()
 
 
-def _strip_format_and_shipments(data):
+def _strip_prose_independent_data(data):
     # type: (dict) -> dict
-    """``data`` with the "format" and "shipments" keys removed.
+    """``data`` with facts that cannot stale reviewed prose removed.
 
-    Shared by both change-detection comparisons below: neither key has any
-    bearing on the rendered WEBSITE page or the prose the Polish AI must
-    write. ``format`` is a code-owned migration marker (see
+    Shared by the prose change-detection comparison below. ``format`` is a
+    code-owned migration marker (see
     ``_DATA_JSON_FORMAT_VERSION``'s docstring); ``shipments`` (format 4+) is
-    exact-shipment data consumed only by the separate GitHub Release summary
-    updater (`release_notes.update_github_summaries`), never by
-    release-notes-render.py.
+    exact-shipment data consumed by the GitHub Release summary updater. The
+    preview NuGet URL is derived from those exact shipments. All three can
+    change without changing any prose slot.
     """
-    return {key: value for key, value in data.items()
-            if key not in ("format", "shipments")}
+    stripped = {
+        key: value for key, value in data.items()
+        if key not in ("format", "shipments")
+    }
+    banner = stripped.get("banner")
+    if isinstance(banner, dict):
+        banner = dict(banner)
+        banner.pop("preview_nuget_url", None)
+        stripped["banner"] = banner
+    return stripped
 
 
 def _data_json_unchanged(data_path, new_data):
@@ -2103,16 +2170,14 @@ def _website_content_unchanged(data_path, new_data):
     """True when the WEBSITE-FACING content is unchanged, ignoring ``format``
     and ``shipments``.
 
-    Any change to the PRs, roster, previews, links, or a companion's folded
-    sha256 flips this and the page must be re-polished (prose discarded,
-    returned for the files-to-polish list). It stays True across a bare
-    format bump or a shipments-only change (a new/altered exact tag with no
-    other fact moving) — see §4.8: that case still needs data.json rewritten
-    so the new/changed shipment is available to the GitHub Release summary
-    updater, but the reviewed website prose is still valid and must be
-    preserved, and the page must NOT be added to files-to-polish (there is
-    nothing for the Polish AI to do). A missing or unparseable file counts as
-    changed (matches ``_data_json_unchanged``).
+    Any change to the PRs, roster, previews, prose-relevant links, or a
+    companion's folded sha256 flips this and the page must be re-polished
+    (prose discarded, returned for the files-to-polish list). It stays True
+    across a bare format bump, a shipments-only change, or the exact preview
+    NuGet URL derived from those shipments. Those cases still need data.json
+    rewritten, but the reviewed website prose remains valid and must be
+    preserved. A missing or unparseable file counts as changed (matches
+    ``_data_json_unchanged``).
     """
     if not data_path.exists():
         return False
@@ -2120,7 +2185,10 @@ def _website_content_unchanged(data_path, new_data):
         old = json.loads(data_path.read_text())
     except (ValueError, OSError):
         return False
-    return _strip_format_and_shipments(old) == _strip_format_and_shipments(new_data)
+    return (
+        _strip_prose_independent_data(old)
+        == _strip_prose_independent_data(new_data)
+    )
 
 
 def _classify_data_write(fully_unchanged, website_content_unchanged, force):
@@ -2138,9 +2206,9 @@ def _classify_data_write(fully_unchanged, website_content_unchanged, force):
       - Website content changed (``website_content_unchanged`` is False) —
         ``{"delete_prose": True, "add_to_polish": True}``. Same as before
         exact shipments existed: the reviewed prose is stale by definition.
-      - Website content unchanged but format/shipments moved (a new/altered
-        exact shipment tag, or a bare format bump, with every other fact
-        identical) — ``{"delete_prose": False, "add_to_polish": False}``.
+      - Website content unchanged but prose-independent metadata moved (a
+        new/altered exact shipment tag, its derived preview NuGet URL, or a bare
+        format bump) — ``{"delete_prose": False, "add_to_polish": False}``.
         THIS is the case a prior version of this function got wrong: it must
         still be WRITTEN (regardless of ``force``) so the new/changed
         shipment reaches data.json for the GitHub summary updater to
@@ -2309,9 +2377,10 @@ def _page_filename(branch, version):
     pages model the orthogonal "released" vs "unreleased" states of a version:
 
       * A VERSIONED branch (``release/X.Y.Z`` and its ``-rc``/``-preview``
-        prereleases) renders the RELEASED ``{version}.md`` — the full cumulative
-        rollup of the shipped prerelease/stable, with preview-milestone sections
-        and supersede banners. One page per version (the canonical / highest
+        prereleases) renders the RELEASED ``{version}.md``. Preview-only lines
+        contain only their own delta; a stable line rolls up every line since the
+        preceding stable. Preview-milestone sections and supersede banners remain
+        attached to that range. One page per version (the canonical / highest
         versioned branch wins across a full run; see _canonical_branches_by_version).
 
       * A HEAD branch (``main`` or servicing ``release/X.Y.x``) renders the
@@ -2463,7 +2532,7 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         }
 
     # Companion files (spec §3.7/§4.7): the manual additions sidecar (keyed by the
-    # page STEM, plus any skipped lines in this cumulative window) and the API
+    # page STEM, plus any rolled-up lines in this page's window) and the API
     # breaking-diff (under the line's <version>/ folder). Their content hashes are
     # folded into data.json (build_data_json), so a companion-only edit changes
     # every affected data.json and re-polishes those pages (§4.6).
@@ -2482,10 +2551,10 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # milestone tooling. Same steady-state cost profile as author resolution.
     resolve_fixed_issues(prs)
 
-    # Enumerate the preview/rc milestones this page rolls up (regression R3), so
-    # the trailing "## Preview N (date)" sections render. The lower bound is the
-    # diff base, so a page naturally includes a skipped predecessor minor's
-    # previews (the 4.148 page lists the 4.147 previews).
+    # Enumerate the preview/rc milestones in this page's range (regression R3), so
+    # the trailing "## Preview N (date)" sections render. A preview-only page gets
+    # only its own line; a stable page naturally includes every preview-only line
+    # since the preceding stable (the 4.148 page lists the 4.147 previews).
     preview_milestones = collect_preview_milestones(version, base_version)
 
     metadata = {
@@ -2541,8 +2610,8 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     #  2. Website content changed (PRs/roster/previews/links/companions) —
     #     always written, prose discarded, page returned for polish. Same as
     #     before shipments existed.
-    #  3. Website content UNCHANGED but format/shipments differ (e.g. a new or
-    #     re-tagged exact shipment appeared with no other fact moving) — this
+    #  3. Website content UNCHANGED but prose-independent metadata differs (e.g.
+    #     a new/re-tagged exact shipment or its derived preview NuGet URL) — this
     #     is the bug this split fixes: previously such a page was silently
     #     skipped (never written), so its new shipment never reached
     #     data.json and the GitHub summary updater could never converge a
@@ -2585,10 +2654,9 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         # return the page for polish, but prose is untouched.
         log("  Wrote {} ({} PRs, forced; unchanged)".format(data_path, len(prs)))
     else:
-        # Website content is unchanged but format/shipments moved (a new/altered
-        # exact shipment, or a bare format bump) — write the updated facts so the
-        # GitHub summary updater sees them, but there is no polish work here.
-        log("  Wrote {} ({} PRs; shipment/format metadata only — prose preserved, "
+        # Website content is unchanged but prose-independent metadata moved —
+        # write the updated facts, but preserve the still-valid prose.
+        log("  Wrote {} ({} PRs; non-prose metadata only — prose preserved, "
             "no polish needed)".format(data_path, len(prs)))
 
     return str(output_path) if action["add_to_polish"] else None
