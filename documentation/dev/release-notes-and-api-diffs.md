@@ -1394,8 +1394,8 @@ The implementation lives under `scripts/infra/docs/release_notes/`:
   ```
 - **`update_github_summaries.py`** — the workflow's entry point. It selects every exact
   tag with both `shipments` facts and a `release_summaries` entry, and for each one:
-  preflights (skip — never an error — a release that does not exist, is still an
-  unpublished draft, or is already current), renders the complete reviewed
+  preflights (skip — never an error — a release that does not exist or is already
+  current), renders the complete reviewed
   body from committed facts/prose, then replaces the live body. It re-reads every planned release immediately before the first
   write as a race barrier (the REST API has no conditional PATCH), writes,
   then re-reads and requires the stored body to equal the intended body
@@ -1403,10 +1403,6 @@ The implementation lives under `scripts/infra/docs/release_notes/`:
   single write. `--dry-run` performs the same live reads and validation but
   reports the old and intended body sizes without sending any PATCH
   request.
-
-**Drafts.** `update_releases()` skips any unpublished draft and converges after
-publication. The normal Finish flow publishes directly, but retaining this guard keeps
-the updater safe around manually created or legacy drafts.
 
 **Markers and body ownership.** The exact-summary package owns the complete body
 and its summary marker envelope in

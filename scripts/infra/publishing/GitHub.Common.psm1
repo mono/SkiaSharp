@@ -103,7 +103,7 @@ function Get-GitHubRelease([string] $Repository, [string] $Tag) {
     $result = Invoke-GitHub -Arguments @(
         'release', 'view', $Tag,
         '--repo', $Repository,
-        '--json', 'tagName,name,isDraft,isPrerelease,targetCommitish,body,url'
+        '--json', 'tagName,name,isPrerelease,targetCommitish,body,url'
     ) -AllowFailure
     if ($result.ExitCode -eq 0) {
         return $result.Output | ConvertFrom-Json

@@ -38,102 +38,48 @@ $modeDescription = $Mode.ToLowerInvariant()
 $root = Get-GitRepositoryRoot -Path $PSScriptRoot
 $repository = $ReleaseRepository
 
-# Validates release identity and the title of an existing draft.
+# Validates release identity.
 function Assert-GitHubRelease([pscustomobject] $Release, [pscustomobject] $GitHubRelease) {
     if ($GitHubRelease.tagName -ne $Release.Tag -or
         [bool] $GitHubRelease.isPrerelease -ne $Release.IsPrerelease) {
         throw "GitHub Release $($Release.Tag) has conflicting metadata."
     }
-    if ($GitHubRelease.isDraft) {
-        if ($GitHubRelease.name -ne $Release.Title) {
-            throw "GitHub Release draft $($Release.Tag) has conflicting metadata."
-        }
-    }
 }
 
-# Generates the exact notes body used when an existing draft must be resumed.
-function Get-GitHubGeneratedReleaseNotes(
-    [pscustomobject] $Release,
-    [string] $SourceCommit,
-    [string] $PreviousTag
-) {
-    $arguments = @(
-        'api',
-        '--method', 'POST',
-        "repos/$repository/releases/generate-notes",
-        '-f', "tag_name=$($Release.Tag)",
-        '-f', "target_commitish=$SourceCommit"
-    )
-    if ($PreviousTag) {
-        $arguments += @('-f', "previous_tag_name=$PreviousTag")
-    }
-    $generated = Invoke-GitHubJsonWithRetry -Arguments $arguments
-    if (!$generated.body) {
-        throw "GitHub did not generate release notes for $($Release.Tag)."
-    }
-    return [string] $generated.body
-}
-
-# Creates or resumes one published GitHub Release.
+# Creates one published GitHub Release.
 function Publish-GitHubRelease(
     [pscustomobject] $Release,
     [string] $SourceCommit,
     [string] $PreviousTag,
     [pscustomobject] $Existing
 ) {
-    if ($Existing -and !$Existing.isDraft) {
+    if ($Existing) {
         Write-ReleaseStatus ready "GitHub Release $($Release.Tag) is published."
         return
     }
     if (!$writeRemote) {
-        $action = if ($Existing) {
-            'Regenerate notes and publish existing draft'
-        } else {
-            'Create and publish'
-        }
-        Write-ReleaseStatus plan "$action GitHub Release $($Release.Tag)."
+        Write-ReleaseStatus plan "Create and publish GitHub Release $($Release.Tag)."
         return
     }
 
-    if ($Existing) {
-        Assert-GitHubRelease $Release $Existing
-        $notes = Get-GitHubGeneratedReleaseNotes $Release $SourceCommit $PreviousTag
-        $notesPath = [IO.Path]::GetTempFileName()
-        try {
-            [IO.File]::WriteAllText($notesPath, $notes, [Text.UTF8Encoding]::new($false))
-            $null = Invoke-GitHub `
-                -Arguments @(
-                    'release', 'edit', $Release.Tag,
-                    '--repo', $repository,
-                    '--target', $SourceCommit,
-                    '--verify-tag',
-                    '--notes-file', $notesPath,
-                    '--draft=false'
-                ) `
-                -WriteOutput
-        } finally {
-            Remove-Item $notesPath -Force -ErrorAction SilentlyContinue
-        }
-    } else {
-        $arguments = @(
-            'release', 'create', $Release.Tag,
-            '--repo', $repository,
-            '--title', $Release.Title,
-            '--generate-notes',
-            '--target', $SourceCommit,
-            '--verify-tag'
-        )
-        if ($PreviousTag) {
-            $arguments += @('--notes-start-tag', $PreviousTag)
-        }
-        if ($Release.IsPrerelease) {
-            $arguments += @('--prerelease', '--latest=false')
-        }
-        $null = Invoke-GitHub -Arguments $arguments -WriteOutput
+    $arguments = @(
+        'release', 'create', $Release.Tag,
+        '--repo', $repository,
+        '--title', $Release.Title,
+        '--generate-notes',
+        '--target', $SourceCommit,
+        '--verify-tag'
+    )
+    if ($PreviousTag) {
+        $arguments += @('--notes-start-tag', $PreviousTag)
     }
+    if ($Release.IsPrerelease) {
+        $arguments += @('--prerelease', '--latest=false')
+    }
+    $null = Invoke-GitHub -Arguments $arguments -WriteOutput
 
     $published = Get-GitHubRelease -Repository $repository -Tag $Release.Tag
-    if (!$published -or $published.isDraft) {
+    if (!$published) {
         throw "GitHub Release $($Release.Tag) was not published."
     }
     Assert-GitHubRelease $Release $published

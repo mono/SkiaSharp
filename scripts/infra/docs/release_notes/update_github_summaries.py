@@ -6,7 +6,6 @@ this package owns Markdown structure; this script selects exact tags, expands
 deterministic links, and replaces the complete GitHub Release body. Each
 canonical body is recreated solely from committed release facts and reviewed
 prose; legacy GitHub-generated notes are migration input, never output.
-It skips unpublished drafts, which converge after publication.
 
     update_github_summaries.py --event push --repository mono/SkiaSharp
     update_github_summaries.py --event release --repository mono/SkiaSharp --tag v4.151.0
@@ -298,8 +297,8 @@ def update_releases(
     convention:
 
     1. **Preflight** -- fetch each release, skip it (never an error) when it
-       does not exist or is still an unpublished draft, then recreate the
-       complete canonical body from committed data/prose.
+       does not exist, then recreate the complete canonical body from committed
+       data/prose.
        It skips only when that canonical body is already current. Any hard error
        here aborts the WHOLE batch before a single write is sent.
     2. **Race barrier** -- immediately before the first write, re-fetch every
@@ -320,15 +319,6 @@ def update_releases(
             existing = client.get_release(candidate.tag)
             if existing is None:
                 result.add(candidate.tag, "skipped", "GitHub Release does not exist")
-                continue
-            if existing.is_draft:
-                # Never patch an unpublished draft; converge after publication.
-                result.add(
-                    candidate.tag,
-                    "skipped",
-                    "release is an unpublished draft -- converges on publish "
-                    "or the next run",
-                )
                 continue
             summary_text = render_managed_summary(candidate, renderer)
             new_body = github.replace_managed_summary(existing.body, summary_text)

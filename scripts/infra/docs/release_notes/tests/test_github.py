@@ -34,7 +34,6 @@ class RestGitHubClientTests(unittest.TestCase):
             "id": 42,
             "tag_name": "v4.152.0",
             "name": "Version 4.152.0",
-            "draft": False,
             "prerelease": False,
             "target_commitish": "a" * 40,
             "body": "old",

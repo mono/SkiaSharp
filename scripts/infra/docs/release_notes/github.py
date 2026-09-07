@@ -24,7 +24,6 @@ class GitHubError(RuntimeError):
 class ReleaseInfo:
     tag_name: str
     name: str
-    is_draft: bool
     is_prerelease: bool
     target_commitish: str
     body: str
@@ -138,7 +137,6 @@ class RestGitHubClient:
             result = ReleaseInfo(
                 tag_name=payload["tag_name"],
                 name=payload["name"] or "",
-                is_draft=payload["draft"],
                 is_prerelease=payload["prerelease"],
                 target_commitish=payload["target_commitish"],
                 body=payload["body"] or "",

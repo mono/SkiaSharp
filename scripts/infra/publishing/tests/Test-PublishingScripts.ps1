@@ -345,23 +345,11 @@ Invoke-Expression (Get-ScriptFunctionText $finishPath)
 $publishedHistorical = [pscustomobject] @{
     tagName = $preview.Tag
     name = 'Historical title'
-    isDraft = $false
     isPrerelease = $true
     body = 'Historical body'
 }
 Assert-Equal $null (Assert-GitHubRelease $preview $publishedHistorical) `
     'A published historical release was rejected.'
-$draft = [pscustomobject] @{
-    tagName = $preview.Tag
-    name = $preview.Title
-    isDraft = $true
-    isPrerelease = $true
-    body = 'Draft notes'
-}
-Assert-Equal $null (Assert-GitHubRelease $preview $draft) 'A valid draft was rejected.'
-$draft.name = 'Wrong title'
-Assert-Throws { Assert-GitHubRelease $preview $draft } 'conflicting metadata' `
-    'A draft with the wrong title was accepted.'
 $powerShellReleaseText = (Get-Content $finishPath -Raw) + (Get-Content $commonPath -Raw)
 Assert-True ($powerShellReleaseText -notmatch 'SKIASHARP:(?:RELEASE-SUMMARY|GITHUB-GENERATED-NOTES)') `
     'PowerShell unexpectedly owns release-summary body markers.'
@@ -374,9 +362,11 @@ function global:gh {
     throw 'Finish dry-run unexpectedly called gh.'
 }
 $publishPlan = @(Publish-GitHubRelease $preview '0' $null 6>&1) -join "`n"
+$existingPlan = @(Publish-GitHubRelease $preview '0' $null $publishedHistorical 6>&1) -join "`n"
 $followUpPlan = @(Invoke-ReleaseFollowUpWorkflows $preview 6>&1) -join "`n"
 Assert-Equal 0 $script:FakeGhCalls 'Finish dry-run invoked gh.'
 Assert-True ($publishPlan -match 'Create and publish') 'Finish did not plan release publication.'
+Assert-True ($existingPlan -match 'is published') 'Finish did not preserve published-release idempotency.'
 Assert-True ($followUpPlan -match 'release-note generation') 'Finish did not plan release-note follow-up.'
 Remove-Item Function:\gh
 
@@ -401,7 +391,6 @@ $script:FakeGhCommands = [System.Collections.Generic.List[string]]::new()
 $script:FakePublishedRelease = [pscustomobject] @{
     tagName = $preview.Tag
     name = $preview.Title
-    isDraft = $false
     isPrerelease = $true
     targetCommitish = '0'
     body = 'Generated notes'
@@ -434,57 +423,10 @@ Assert-True ([bool] (
             $_ -match '--notes-start-tag v4\.151\.2'
         }
 )) 'Finish did not give GitHub-generated notes the selected predecessor tag.'
-
-$draftRelease = [pscustomobject] @{
-    tagName = $preview.Tag
-    name = $preview.Title
-    isDraft = $true
-    isPrerelease = $true
-    targetCommitish = '0'
-    body = 'Incorrectly bounded draft notes'
-    url = "https://github.com/mono/SkiaSharp/releases/tag/$($preview.Tag)"
-}
-$script:FakeGhCommands = [System.Collections.Generic.List[string]]::new()
-$script:FakeDraftNotes = $null
-function global:gh {
-    $command = $args -join ' '
-    $script:FakeGhCommands.Add($command)
-    $global:LASTEXITCODE = 0
-    if ($command -match '^api ') {
-        return @{ body = 'Bounded generated notes' } | ConvertTo-Json -Compress
-    }
-    if ($command -match '^release edit ') {
-        $notesIndex = [Array]::IndexOf($args, '--notes-file')
-        $script:FakeDraftNotes = [IO.File]::ReadAllText($args[$notesIndex + 1])
-    }
-    if ($command -match '^release view ') {
-        return $script:FakePublishedRelease | ConvertTo-Json -Compress
-    }
-}
-$writeRemote = $true
-try {
-    $null = Publish-GitHubRelease `
-        -Release $preview `
-        -SourceCommit '0' `
-        -PreviousTag 'v4.151.2' `
-        -Existing $draftRelease
-} finally {
-    $writeRemote = $false
-    Remove-Item Function:\gh
-}
-Assert-True ([bool] (
+Assert-True (-not [bool] (
     $script:FakeGhCommands |
-        Where-Object {
-            $_ -match '^api .*releases/generate-notes' -and
-            $_ -match 'previous_tag_name=v4\.151\.2'
-        }
-)) 'Finish did not regenerate draft notes from the selected predecessor tag.'
-Assert-True ([bool] (
-    $script:FakeGhCommands |
-        Where-Object { $_ -match '^release edit .*--notes-file .*--draft=false' }
-)) 'Finish did not publish the regenerated draft notes.'
-Assert-Equal 'Bounded generated notes' $script:FakeDraftNotes `
-    'Finish did not replace the draft body with the bounded generated notes.'
+        Where-Object { $_ -match '^release create .*--draft(?:\s|=|$)' }
+)) 'Finish unexpectedly created a draft release.'
 
 # Exercises exact-release support-tier additions and promotions.
 $supportConfig = @'
