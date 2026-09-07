@@ -8,7 +8,8 @@
     The number of Chromium milestones whose release milestones are maintained.
 
 .PARAMETER Repository
-    The GitHub repository whose milestones are maintained.
+    The GitHub repository whose milestones are maintained. Defaults to
+    GITHUB_REPOSITORY or an unambiguous validated origin remote.
 
 .PARAMETER Push
     Performs GitHub milestone mutations. Without this switch, the script is
@@ -21,7 +22,7 @@ param(
     [int] $Count = 3,
 
     [ValidatePattern('^[^/]+/[^/]+$')]
-    [string] $Repository = 'mono/SkiaSharp',
+    [string] $Repository,
 
     [switch] $Push
 )
@@ -32,9 +33,10 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
+$root = Get-GitRepositoryRoot
+$Repository = Resolve-PublishingRepository -Repository $Repository -Root $root
 $writeRemote = $Push
 $mode = if ($writeRemote) { 'push' } else { 'dry run' }
-$root = Get-GitRepositoryRoot
 $scheduleUrl = 'https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone={0}'
 $requiredScheduleFields = @(
     'branch_point',

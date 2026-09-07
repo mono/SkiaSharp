@@ -50,6 +50,11 @@ Prepare, Finish, and Milestones use the same two-dispatch pattern: first run
 with `push` unchecked to review a read-only plan, then run again with identical
 inputs and `push` checked.
 
+For local publishing-script runs, pass `-Repository owner/name` when the
+checkout is not connected to its canonical GitHub repository. Without that
+parameter, the scripts use `GITHUB_REPOSITORY` or require the `origin` fetch
+and push URLs to identify exactly one valid GitHub repository.
+
 ## 1. Prepare the release branches
 
 Open

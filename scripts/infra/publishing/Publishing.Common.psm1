@@ -4,9 +4,101 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1')
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1')
 
+function ConvertTo-GitHubRepository([string] $Value, [switch] $RequireUrl) {
+    if ([string]::IsNullOrWhiteSpace($Value) -or
+        $Value -ne $Value.Trim() -or
+        $Value -match '[\s\x00-\x1f\x7f]') {
+        throw "Unsupported GitHub repository identity: '$Value'."
+    }
+
+    $urlPatterns = @(
+        '(?i)^https://github\.com/(?<slug>[^/]+/[^/]+?)(?:\.git)?/?$',
+        '(?i)^git://github\.com/(?<slug>[^/]+/[^/]+?)(?:\.git)?/?$',
+        '(?i)^git@github\.com:(?<slug>[^/]+/[^/]+?)(?:\.git)?$',
+        '(?i)^ssh://git@github\.com/(?<slug>[^/]+/[^/]+?)(?:\.git)?/?$'
+    )
+    $slug = $null
+    foreach ($pattern in $urlPatterns) {
+        $match = [regex]::Match($Value, $pattern)
+        if ($match.Success) {
+            $slug = $match.Groups['slug'].Value
+            break
+        }
+    }
+    if (!$slug -and !$RequireUrl -and $Value -match '^(?<slug>[^/]+/[^/]+)$') {
+        $slug = $Matches.slug
+    }
+    if (!$slug) {
+        throw "Unsupported GitHub repository identity: '$Value'."
+    }
+
+    $owner, $name = $slug.Split('/', 2)
+    if ($owner -notmatch '^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$' -or
+        $owner.Contains('--') -or
+        $name -notmatch '^[A-Za-z0-9._-]{1,100}$' -or
+        $name -in @('.', '..')) {
+        throw "Unsupported GitHub repository identity: '$Value'."
+    }
+    return $slug
+}
+
+function Get-PublishingRemoteRepository([string] $Root, [string] $Remote = 'origin') {
+    $urls = [System.Collections.Generic.List[string]]::new()
+    foreach ($arguments in @(
+        @('remote', 'get-url', '--all', $Remote),
+        @('remote', 'get-url', '--push', '--all', $Remote)
+    )) {
+        $result = Invoke-Git -Root $Root -Arguments $arguments -AllowFailure
+        if ($result.ExitCode -eq 0) {
+            foreach ($url in @($result.Output -split "`r?`n" | Where-Object { $_ })) {
+                $urls.Add($url)
+            }
+        }
+    }
+    if ($urls.Count -eq 0) {
+        throw (
+            "Repository identity is required. Pass -Repository, set GITHUB_REPOSITORY, " +
+            "or configure one unambiguous GitHub URL on remote '$Remote'.")
+    }
+
+    $repositories = [Collections.Generic.Dictionary[string, string]]::new(
+        [StringComparer]::OrdinalIgnoreCase)
+    foreach ($url in $urls) {
+        $repository = ConvertTo-GitHubRepository $url -RequireUrl
+        $repositories[$repository] = $repository
+    }
+    if ($repositories.Count -ne 1) {
+        throw (
+            "Remote '$Remote' has ambiguous GitHub repository identities: " +
+            "$(@($repositories.Values | Sort-Object) -join ', ').")
+    }
+    return @($repositories.Values)[0]
+}
+
+function Resolve-PublishingRepository([string] $Repository, [string] $Root) {
+    if ($Repository) {
+        return ConvertTo-GitHubRepository $Repository
+    }
+    if ($env:GITHUB_REPOSITORY) {
+        return ConvertTo-GitHubRepository $env:GITHUB_REPOSITORY
+    }
+    $resolvedRoot = if ($Root) { $Root } else { Get-GitRepositoryRoot -Path $PSScriptRoot }
+    return Get-PublishingRemoteRepository -Root $resolvedRoot
+}
+
+function Get-PublishingSkiaRemote([string] $Root) {
+    $resolvedRoot = if ($Root) { $Root } else { Get-GitRepositoryRoot -Path $PSScriptRoot }
+    $url = (Invoke-Git `
+        -Root $resolvedRoot `
+        -Arguments @('config', '-f', '.gitmodules', '--get', 'submodule.externals/skia.url')).Output
+    if (!$url) {
+        throw '.gitmodules does not define submodule.externals/skia.url.'
+    }
+    $repository = ConvertTo-GitHubRepository $url -RequireUrl
+    return "https://github.com/$repository.git"
+}
+
 # Shared repository paths and release contracts.
-New-Variable -Scope Script -Option ReadOnly -Name ReleaseRepository -Value 'mono/SkiaSharp'
-New-Variable -Scope Script -Option ReadOnly -Name ReleaseSkiaRemote -Value 'https://github.com/mono/skia.git'
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseSkiaPath -Value 'externals/skia'
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseVariablesPath -Value 'scripts/azure-templates-variables.yml'
 New-Variable -Scope Script -Option ReadOnly -Name ReleaseVersionsPath -Value 'scripts/VERSIONS.txt'
@@ -466,6 +558,9 @@ function Publish-AutomationFilePullRequest(
 }
 
 Export-ModuleMember -Function @(
+    'ConvertTo-GitHubRepository',
+    'Resolve-PublishingRepository',
+    'Get-PublishingSkiaRemote',
     'Write-ReleaseStatus',
     'Get-RepositoryReleaseVersion',
     'Push-ReleaseBranch',
@@ -482,8 +577,6 @@ Export-ModuleMember -Function @(
     'Test-AutomationFileBranch',
     'Publish-AutomationFilePullRequest'
 ) -Variable @(
-    'ReleaseRepository',
-    'ReleaseSkiaRemote',
     'ReleaseSkiaPath',
     'ReleaseVariablesPath',
     'ReleaseVersionsPath'

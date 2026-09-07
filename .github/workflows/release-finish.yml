@@ -36,8 +36,13 @@ jobs:
         env:
           GH_TOKEN: ${{ inputs.push && secrets.SKIASHARP_AUTOBUMP_TOKEN || github.token }}
           MODE: ${{ inputs.push && 'Push' || 'DryRun' }}
+          REPOSITORY: ${{ github.repository }}
           VERSION: ${{ inputs.version }}
         run: |
-          $arguments = @{ Mode = $env:MODE; Version = $env:VERSION }
+          $arguments = @{
+            Mode = $env:MODE
+            Repository = $env:REPOSITORY
+            Version = $env:VERSION
+          }
           ./scripts/infra/publishing/finish-release.ps1 @arguments *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append

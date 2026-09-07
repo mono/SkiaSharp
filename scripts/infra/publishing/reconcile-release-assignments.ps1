@@ -8,7 +8,8 @@
     The released numeric SkiaSharp version, such as 4.153.0 or 4.153.0.1.
 
 .PARAMETER Repository
-    The GitHub repository whose release assignments are maintained.
+    The GitHub repository whose release assignments are maintained. Defaults
+    to GITHUB_REPOSITORY or an unambiguous validated origin remote.
 
 .PARAMETER Push
     Performs GitHub milestone assignments. Without this switch, the script is
@@ -22,7 +23,7 @@ param(
     [string] $Version,
 
     [ValidatePattern('^[^/]+/[^/]+$')]
-    [string] $Repository = 'mono/SkiaSharp',
+    [string] $Repository,
 
     [switch] $Push
 )
@@ -33,9 +34,10 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
+$root = Get-GitRepositoryRoot
+$Repository = Resolve-PublishingRepository -Repository $Repository -Root $root
 $writeRemote = $Push
 $mode = if ($writeRemote) { 'push' } else { 'dry run' }
-$root = Get-GitRepositoryRoot
 
 # Reads one pull request.
 function Get-GitHubPullRequest([string] $Repository, [int] $Number) {
