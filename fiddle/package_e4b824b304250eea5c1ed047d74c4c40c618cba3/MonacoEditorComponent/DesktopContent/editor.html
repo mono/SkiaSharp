@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monaco Editor</title>
+    <!-- Monaco Editor styles (extracted by esbuild from Monaco ESM CSS imports) -->
+    <link rel="stylesheet" href="uno-monaco-helpers.css">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            /* Default light background to prevent white flash */
+            background-color: #ffffff;
+        }
+        /* Match OS dark theme immediately -- prevents white flash before Monaco loads */
+        @media (prefers-color-scheme: dark) {
+            html, body {
+                background-color: #1e1e1e;
+            }
+        }
+        #editor-container {
+            width: 100%;
+            height: 100%;
+        }
+        #dynamic {
+            /* Dynamic styles injected by the editor component */
+        }
+    </style>
+    <style id="dynamic"></style>
+</head>
+<body>
+    <div id="editor-container"></div>
+
+    <!-- All scripts are classic (no type="module") to avoid file:// CORS on macOS/Linux -->
+    <!-- Single IIFE bundle: Monaco + helpers + vscode-jsonrpc bridge -->
+    <script src="uno-monaco-helpers.js"></script>
+</body>
+</html>

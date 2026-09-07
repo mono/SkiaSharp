@@ -1,0 +1,175 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 4.158.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 4.158.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.158.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-41580">Version 4.158.0</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:6 version:4.158.0 -->
+
+<blockquote>
+<p><strong>Skia m158 rendering corrections</strong> · Released November 26, 2026 · <a href="https://www.nuget.org/packages/SkiaSharp/4.158.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v4.158.0">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="4.158.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/15.0.0/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 4.158.0 brings Skia m158 with corrections to filtered images, glyph rendering and GPU failure handling. The SkiaSharp managed API remains unchanged. Co-shipping HarfBuzzSharp upgrades to HarfBuzz 15.0.0 and adds named script constants while preserving its existing Script programming model.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>Skia m158</strong> — Updates the bundled renderer to milestone 158 and incorporates subsequent m158 fixes without changing the SkiaSharp managed binding surface. (<a href="https://github.com/mono/SkiaSharp/pull/5634">#5634</a>, <a href="https://github.com/mono/SkiaSharp/pull/5702">#5702</a>, <a href="https://github.com/mono/SkiaSharp/pull/5839">#5839</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Filtered images stay within their intended pixels</strong> — Antialiased, minified and skewed draws retain texture-subset clamping where needed, and filtered scratch images avoid sampling unwritten mipmap texels. Displacement offsets now use the same precision as filter bounds, and image-filter cache equality agrees with hashing. (<a href="https://github.com/mono/SkiaSharp/pull/5712">#5712</a>, <a href="https://github.com/mono/SkiaSharp/pull/5768">#5768</a>, <a href="https://github.com/mono/SkiaSharp/pull/5839">#5839</a>)</li>
+<li><strong>Glyph formats and LCD cropping respected</strong> — Mask-filtered glyphs use regenerated outlines and compatible mask formats, clear clipped output and preserve full 3D plane strides. FreeType LCD16 glyph bounds are converted to pixel coordinates before consistent cropping, with checks on bitmap dimensions and buffer bounds. (<a href="https://github.com/mono/SkiaSharp/pull/5739">#5739</a>, <a href="https://github.com/mono/SkiaSharp/pull/5839">#5839</a>)</li>
+<li><strong>Hairline caps and text-atlas selection corrected</strong> — Reflected transforms no longer incorrectly enlarge zero-length square-capped hairlines. Text-atlas sampler selection tolerates interpolation imprecision for ordinary and LCD glyph lookups. (<a href="https://github.com/mono/SkiaSharp/pull/5669">#5669</a>)</li>
+<li><strong>GPU failures and oversized allocations handled safely</strong> — Ganesh propagates native flush and synchronous Vulkan wait failures; GRContext.Submit remains void. Invalid buffer sizes and oversized Imagination MSAA attachments are rejected. Affected ARM Vulkan device-loss paths delay teardown, and Imagination out-of-memory paths avoid unsafe descriptor-pool destruction. (<a href="https://github.com/mono/SkiaSharp/pull/5669">#5669</a>, <a href="https://github.com/mono/SkiaSharp/pull/5712">#5712</a>, <a href="https://github.com/mono/SkiaSharp/pull/5839">#5839</a>)</li>
+<li><strong>GPU draw bounds and ordering preserved</strong> — Destination reads are constrained to their intended bounds. Graphite rejects draws whose clips cannot fit a fresh render pass and resets depth after full-overwrite draws to preserve painter order. (<a href="https://github.com/mono/SkiaSharp/pull/5669">#5669</a>, <a href="https://github.com/mono/SkiaSharp/pull/5839">#5839</a>)</li>
+</ul>
+<h2 id="lifecycle--internals">Lifecycle &amp; Internals</h2>
+<ul>
+<li><strong>Hash-code seed uses OS randomness</strong> — The shared HashCode polyfill in SkiaSharp and HarfBuzzSharp now uses cryptographic randomness for its seed. Hash codes remain randomized between processes and stable within a process; first use now initializes the cryptography library. — ❤️ <a href="https://github.com/rolfbjarne">@rolfbjarne</a> (<a href="https://github.com/mono/SkiaSharp/pull/5408">#5408</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-1500">HarfBuzzSharp 15.0.0</h2>
+<p>Upgrades bundled HarfBuzz to 15.0.0 and adds 30 named Script constants, including Jurchen, ProtoCuneiform and Seal. Existing constants, parsing, numeric conversions and horizontal-direction lookup are preserved; Font(Face) continues to construct fonts through hb_font_create.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/rolfbjarne">@rolfbjarne</a></td>
+<td>Updated the shared hash-code seed to OS-generated randomness and added analyzer safeguards for shipped code. (<a href="https://github.com/mono/SkiaSharp/pull/5408">#5408</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="release-candidate-1-november-17-2026">Release Candidate 1 (November 17, 2026)</h2>
+<p>Release Candidate 1 corrected antialiased texture-subset clamping and image-filter cache key equality. Mask-filtered glyph rendering now respects regenerated paths, compatible formats and clipped plane layouts.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.158.0-preview.3.26563.17...v4.158.0-rc.1.26567.14">Full changelog</a></p>
+<h2 id="preview-3-november-13-2026">Preview 3 (November 13, 2026)</h2>
+<p>Preview 3 aligned displacement offsets with filter-bounds precision and corrected native synchronous Vulkan wait failure reporting without changing GRContext.Submit. The shared hash-code polyfill switched to OS-generated randomness.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.158.0-preview.2.26560.5...v4.158.0-preview.3.26563.17">Full changelog</a></p>
+<h2 id="preview-2-november-9-2026">Preview 2 (November 9, 2026)</h2>
+<p>Preview 2 upgraded HarfBuzzSharp to HarfBuzz 15.0.0 and added 30 named Script constants. GPU fixes covered reflected hairline caps, text-atlas selection, Graphite clip limits and device-loss teardown on affected ARM Vulkan drivers.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.158.0-preview.1.26556.2...v4.158.0-preview.2.26560.5">Full changelog</a></p>
+<h2 id="preview-1-november-6-2026">Preview 1 (November 6, 2026)</h2>
+<p>Preview 1 introduced Skia m158 without changing the managed binding surface. HarfBuzzSharp moved to package revision 14.4.0.300 while its native engine remained at 14.4.0.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.157.0...v4.158.0-preview.1.26556.2">Full changelog</a></p>
+<hr>
+<p><small class="text-body-secondary">Release notes generated on 2026-11-27 at 13:55 UTC.</small></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.158.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · 6bce7eb
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,343 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Compare images | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Compare images | SkiaSharp ">
+      
+      <meta name="description" content="Use SkiaSharp.Testing to compare rendered images, set tolerances and budgets, and generate failure diagnostics.">
+      <link rel="icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../TOC.html">
+      <meta name="docfx:tocrel" content="../TOC.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/guides/testing/image-comparison.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="compare-images">Compare images</h1>
+
+<p><code>SkiaSharp.Testing</code> compares decoded <code>SKImage</code>, <code>SKBitmap</code> or <code>SKPixmap</code> objects.
+Use it to check rendered output, allow small differences and save diagnostic
+images when a test fails.</p>
+<h2 id="getting-started">Getting started</h2>
+<p>Install <code>SkiaSharp.Testing</code> alongside the matching SkiaSharp release and your
+application's existing native-assets setup:</p>
+<pre><code class="lang-bash">dotnet add package SkiaSharp.Testing
+</code></pre>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>This API is experimental and may change between releases.
+Opt in by suppressing the <code>SKIA4001</code> diagnostic:</p>
+</div>
+<pre><code class="lang-xml">&lt;PropertyGroup&gt;
+  &lt;NoWarn&gt;$(NoWarn);SKIA4001&lt;/NoWarn&gt;
+&lt;/PropertyGroup&gt;
+</code></pre>
+<h2 id="compare-two-images">Compare two images</h2>
+<table>
+<thead>
+<tr>
+<th>Expected</th>
+<th>Actual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="images/expected-preview.png" alt="Expected rendering."></td>
+<td><img src="images/actual-preview.png" alt="Actual rendering with color, opacity and shape changes."></td>
+</tr>
+</tbody>
+</table>
+<p>The panel has a small color change, the circle has a transparency change,
+the square is new, and the ellipse's gradient has been replaced with a solid fill.</p>
+<pre><code class="lang-csharp">using System.IO;
+using SkiaSharp;
+using SkiaSharp.Testing;
+
+using var expected = SKImage.FromEncodedData(&quot;expected.png&quot;);
+using var actual = SKImage.FromEncodedData(&quot;actual.png&quot;);
+var result = SKImageComparison.Compare(expected, actual);
+if (!result.IsMatch)
+{
+    using var difference = SKImageComparison.GenerateDifferenceImage(expected, actual);
+    using var png = difference.Encode(SKEncodedImageFormat.Png, 100);
+    File.WriteAllBytes(&quot;difference.png&quot;, png.ToArray());
+}
+</code></pre>
+<p><img src="images/comparison-exact-preview.png" alt="Exact RGBA comparison highlights the changed regions over the actual image."></p>
+<p>Defaults are exact RGBA after normalization to unpremultiplied 8-bit pixels.
+The default diagnostic blends red highlights over the actual image, preserving
+detail. Inputs must have equal, nonempty dimensions and readable pixels.
+Control capture size, scale, fonts and animation time before comparison.</p>
+<h2 id="allow-small-differences">Allow small differences</h2>
+<p>Tolerance decides <strong>which pixels mismatch</strong>. A pixel mismatches if any enabled
+channel exceeds its allowance:</p>
+<pre><code class="lang-csharp">var options = new SKComparisonOptions
+{
+    RedTolerance = SKPixelTolerance.Absolute(2),
+    GreenTolerance = SKPixelTolerance.Absolute(2),
+    BlueTolerance = SKPixelTolerance.Absolute(2),
+    AlphaTolerance = null,
+};
+var result = SKImageComparison.Compare(expected, actual, options);
+using var difference = SKImageComparison.GenerateDifferenceImage(
+    expected, actual, options: options);
+using var png = difference.Encode(SKEncodedImageFormat.Png, 100);
+File.WriteAllBytes(&quot;difference-tolerant.png&quot;, png.ToArray());
+</code></pre>
+<p><img src="images/comparison-tolerant-preview.png" alt="The panel is tolerated and alpha is excluded; the square and ellipse still mismatch."></p>
+<p>The panel's two-level RGB change is now amber-tinted. Alpha is disabled, so the
+circle is not highlighted; the square and ellipse still mismatch. Generate the
+diagnostic with the same options as the comparison.</p>
+<p><code>null</code> disables a channel; zero requires an exact match. <code>Absolute</code> uses byte
+levels, and tolerance <code>Percent</code> uses percentage points of the full 255 range.
+Boundaries are inclusive.</p>
+<h2 id="set-a-mismatch-budget">Set a mismatch budget</h2>
+<p>A budget decides <strong>how many mismatches are acceptable</strong>, after tolerance has
+classified the pixels. Starting with the options above:</p>
+<pre><code class="lang-csharp">options.MismatchBudget = SKPixelMismatchBudget.Pixels(20);
+var result = SKImageComparison.Compare(expected, actual, options);
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Budget</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Pixels(20)</code></td>
+<td>At most 20 mismatched pixels</td>
+</tr>
+<tr>
+<td><code>Percent(0.2)</code></td>
+<td>At most 0.2% of compared pixels, not a fraction of 0.2</td>
+</tr>
+<tr>
+<td><code>Both(20, 0.2)</code></td>
+<td>Both limits must pass</td>
+</tr>
+</tbody>
+</table>
+<p>Count limits are inclusive; percentage limits floor to a whole-pixel count.
+With no budget or magnitude gate, zero pixels may mismatch.</p>
+<p>Budgets affect <code>IsMatch</code>, not the diagnostic colors. A passing comparison
+can still contain highlighted mismatches.</p>
+<p>For a magnitude-based gate instead, set <code>MaxNormalizedMeanAbsoluteError</code> or
+<code>MaxNormalizedRootMeanSquaredError</code> from 0 to 1. A normalized MAE limit of <code>0.01</code>
+allows an average absolute channel difference of 2.55 byte levels, not 1%
+mismatched pixels. All configured gates must pass; a magnitude-only gate does
+not limit the mismatch count.</p>
+<p><code>RawMetrics</code> includes errors before tolerance filtering. <code>ThresholdedMetrics</code>
+zeros tolerated differences but retains the full magnitude of exceeding errors.
+Both use <code>ComparedPixelCount * ChannelCount</code> samples.</p>
+<h2 id="choose-a-diagnostic">Choose a diagnostic</h2>
+<p>Pass <code>SKDifferenceStyle</code> to <code>GenerateDifferenceImage</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Actual</th>
+<th>Threshold overlay (default)</th>
+<th>Threshold map</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="images/actual-preview.png" alt="Actual rendering."></td>
+<td><img src="images/threshold-overlay-preview.png" alt="Classification tinted over the actual image."></td>
+<td><img src="images/threshold-map-preview.png" alt="Solid classification colors."></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Binary mask</th>
+<th>Channel difference</th>
+<th>Heatmap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="images/binary-mask-preview.png" alt="Mismatched pixels in white."></td>
+<td><img src="images/channel-difference-preview.png" alt="Absolute RGB channel differences."></td>
+<td><img src="images/heatmap-preview.png" alt="Selected-channel error magnitudes from blue to red."></td>
+</tr>
+</tbody>
+</table>
+<p>These examples use RGB tolerance <strong>2</strong> and exact alpha:</p>
+<ul>
+<li><code>ThresholdOverlay</code> tints mismatches red, tolerated differences amber and ignored
+pixels gray at 50% over the actual image, flattening transparency onto white.</li>
+<li><code>ThresholdMap</code> uses solid red, amber and gray, with dimmed actual colors for
+exact matches.</li>
+<li><code>BinaryMask</code> shows mismatches in white and everything else in black.</li>
+<li><code>ChannelDifference</code> shows raw RGB differences, including disabled RGB channels,
+but cannot represent alpha differences.</li>
+<li><code>Heatmap</code> colors the largest raw enabled-channel difference on a fixed 0–255
+scale: blue through cyan and yellow to red. Exact matches are black; ignored
+pixels are gray.</li>
+</ul>
+<p>Both magnitude styles show tolerated differences too. All diagnostic images are opaque.</p>
+<h2 id="alpha-only-differences">Alpha-only differences</h2>
+<p>The circle's RGB is unchanged; only its alpha changes. RGBA comparison detects
+the change, while a raw RGB difference image cannot show it:</p>
+<table>
+<thead>
+<tr>
+<th>RGBA overlay</th>
+<th>RGB difference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="images/comparison-exact-preview.png" alt="The circle's alpha change is highlighted."></td>
+<td><img src="images/channel-difference-preview.png" alt="Other RGB changes remain, but the circle has no RGB difference."></td>
+</tr>
+</tbody>
+</table>
+<p><code>ChannelDifference</code> cannot show the circle's alpha delta, although the other
+RGB changes remain visible. Exclude alpha only intentionally. Comparing
+premultiplied RGB can still reflect opacity even when alpha is disabled.</p>
+<h2 id="tolerance-and-ignore-masks">Tolerance and ignore masks</h2>
+<p>Masks are <code>SKImage</code> objects with the same dimensions as the inputs. These
+examples use exact RGB and <code>AlphaTolerance = null</code>.</p>
+<h3 id="tolerate-a-region">Tolerate a region</h3>
+<table>
+<thead>
+<tr>
+<th>Tolerance mask</th>
+<th>Overlay</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="images/tolerance-mask-preview.png" alt="Gray RGB32 panel on a black tolerance mask."></td>
+<td><img src="images/comparison-tolerance-preview.png" alt="Tolerated panel with raw measurements retained."></td>
+</tr>
+</tbody>
+</table>
+<p><code>ToleranceMask</code> widens each enabled channel's allowance using that mask byte.
+The panel's RGB <strong>(32, 32, 32)</strong> allows 32 levels there; black outside allows zero.
+The panel's two-level RGB differences are tolerated but stay in raw measurements
+and the sample denominator. Mask alpha is an alpha allowance, not coverage.</p>
+<h3 id="exclude-a-region">Exclude a region</h3>
+<table>
+<thead>
+<tr>
+<th>Ignore mask</th>
+<th>Overlay</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="images/ignore-mask-preview.png" alt="White excluded panel on a black ignore mask."></td>
+<td><img src="images/comparison-ignore-preview.png" alt="Excluded panel marked by a gray tint."></td>
+</tr>
+</tbody>
+</table>
+<p><code>IgnoreMask</code> removes entire pixels: black compares, any nonzero decoded RGB
+excludes, independently of mask alpha. The panel contributes no errors, bounds,
+maxima or metric samples. The square and ellipse remain mismatches in both examples.</p>
+<p><code>TotalPixels</code> is the full image area; fractions and budgets use
+<code>ComparedPixelCount</code>. At least one pixel must remain compared. Inputs and masks
+must remain alive and unmodified during a call; dispose returned diagnostic images.</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/guides/testing/image-comparison.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · 6bce7eb
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

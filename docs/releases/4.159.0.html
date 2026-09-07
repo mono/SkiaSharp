@@ -1,0 +1,192 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 4.159.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 4.159.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.159.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-41590">Version 4.159.0</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:6 version:4.159.0 -->
+
+<blockquote>
+<p><strong>Programmable meshes and image comparisons</strong> · <a href="https://www.nuget.org/packages/SkiaSharp/4.159.0-rc.2.26576.7">NuGet (prerelease)</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="4.159.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/15.0.0.100/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 4.159 previews Skia m159 with programmable GPU meshes and an experimental image-comparison package. This line also corrects Windows image-decoding crashes, runtime-effect uniform initialization, and Apple device frameworks. WebAssembly now requires .NET 9 or later, and Linux x86 native assets are no longer packaged.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<ul>
+<li><strong>Move WebAssembly apps to .NET 9 or later</strong> — SkiaSharp and HarfBuzzSharp no longer provide .NET 8 WebAssembly native assets; unsupported WASM targets are rejected during the build. Retarget WebAssembly apps to .NET 9 or later and use the matching runtime assets. Non-WebAssembly .NET 8 support is unchanged. (<a href="https://github.com/mono/SkiaSharp/pull/5700">#5700</a>)</li>
+<li><strong>Move Linux x86 deployments to a supported architecture</strong> — Linux x86 native assets are no longer built or included in NuGet packages for SkiaSharp and HarfBuzzSharp. Move 32-bit Linux deployments to a supported architecture, such as x64 or ARM64, before upgrading. (<a href="https://github.com/mono/SkiaSharp/pull/5784">#5784</a>)</li>
+</ul>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>Skia m159 and servicing updates</strong> — Updates the native renderer to m159, bringing WebAssembly SIMD CPU rasterization and Windows font-loading improvements. Subsequent m159 fixes harden mask-filtered glyph reloads, correct image-filter cache-key equality, and work around Imagination Vulkan descriptor-allocation failures without changing the milestone. (<a href="https://github.com/mono/SkiaSharp/pull/5685">#5685</a>, <a href="https://github.com/mono/SkiaSharp/pull/5741">#5741</a>, <a href="https://github.com/mono/SkiaSharp/pull/5769">#5769</a>, <a href="https://github.com/mono/SkiaSharp/pull/5841">#5841</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>Programmable GPU meshes</strong> — SKMeshSpecification, indexed and non-indexed mesh builders, vertex/index buffers and SKCanvas.DrawMesh expose custom SkSL vertex and fragment programs. Built meshes retain their native dependencies after the source wrappers are disposed. Drawing requires a GPU-backed surface; raster drawing is a no-op. (<a href="https://github.com/mono/SkiaSharp/pull/5760">#5760</a>)</li>
+<li><strong>Experimental image-comparison package</strong> — SkiaSharp.Testing adds SKImageComparison for images, bitmaps and pixmaps, with channel tolerances, masks, mismatch budgets, error metrics and difference images. The separate package is experimental: acknowledge diagnostic SKIA4001 to opt in. Returned comparison results retain no native handles; difference images belong to the caller. (<a href="https://github.com/mono/SkiaSharp/pull/5293">#5293</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Windows x64 image error recovery</strong> — Fixes process termination during libjpeg/libpng longjmp error recovery in x64 clang-built natives, including malformed JPEG decoding and PDF output with lazy non-JPEG images. Control Flow Guard remains enabled; x86, ARM64 and MSVC builds are unchanged. — ❤️ <a href="https://github.com/SimonCropp">@SimonCropp</a> (<a href="https://github.com/mono/SkiaSharp/pull/5827">#5827</a>)</li>
+<li><strong>Zero-initialized runtime-effect uniforms</strong> — New SKRuntimeEffectUniforms blocks now start at zero rather than containing leftover memory. Reset clears the existing buffer in place, avoiding a native buffer and managed wrapper allocation on each call; the fix also covers mesh uniforms. — ❤️ <a href="https://github.com/taublast">@taublast</a> (<a href="https://github.com/mono/SkiaSharp/pull/5843">#5843</a>)</li>
+<li><strong>Filtered texture edges and Tizen blurs</strong> — Ganesh sampling clamps slightly inside texture subsets to avoid undefined exterior texels; CPU and Graphite sampling are unchanged. Tizen now applies its intended CPU blur-path selection when compiling Skia. Texture-edge pixels and Tizen blur output or performance may differ; Tizen performance was not measured. (<a href="https://github.com/mono/SkiaSharp/pull/5679">#5679</a>)</li>
+<li><strong>Correct iOS and tvOS device frameworks</strong> — SkiaSharp and HarfBuzzSharp device frameworks now contain only arm64 device binaries and device platform metadata, avoiding the simulator slices and metadata that could trigger App Store error ITMS-90087. Separate simulator frameworks and their x64/arm64 slices remain available. — ❤️ <a href="https://github.com/kdpkke">@kdpkke</a> (<a href="https://github.com/mono/SkiaSharp/pull/5649">#5649</a>)</li>
+<li><strong>Trim-safe MAUI SKGLView binding</strong> — Replaces the string-path Window binding with a typed expression, removing the trimming warning when constructing SKGLView in trimmed MAUI apps without changing the binding's intended behavior. — ❤️ <a href="https://github.com/bhall-ctre">@bhall-ctre</a> (<a href="https://github.com/mono/SkiaSharp/pull/5320">#5320</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-1500100">HarfBuzzSharp 15.0.0.100</h2>
+<p>HarfBuzzSharp now requires .NET 9 or later for WebAssembly and no longer packages Linux x86 native assets. Its iOS/tvOS device frameworks now contain only arm64 device slices and the correct device metadata, while separate simulator frameworks remain available.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/taublast">@taublast</a></td>
+<td>Zero-initialized runtime-effect uniforms, allocation-free buffer resets and test snapshot disposal. (<a href="https://github.com/mono/SkiaSharp/pull/5843">#5843</a>, <a href="https://github.com/mono/SkiaSharp/pull/5846">#5846</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/bhall-ctre">@bhall-ctre</a></td>
+<td>Trim-safe Window binding for MAUI SKGLView. (<a href="https://github.com/mono/SkiaSharp/pull/5320">#5320</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/kdpkke">@kdpkke</a></td>
+<td>Correct iOS and tvOS device-framework packaging while preserving simulator slices. (<a href="https://github.com/mono/SkiaSharp/pull/5649">#5649</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/ramezgerges">@ramezgerges</a></td>
+<td>Restored the Uno Gallery and its views projects to the Windows sample solution. (<a href="https://github.com/mono/SkiaSharp/pull/5145">#5145</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/SimonCropp">@SimonCropp</a></td>
+<td>Windows x64 libjpeg/libpng error-recovery crash fix. (<a href="https://github.com/mono/SkiaSharp/pull/5827">#5827</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="release-candidate-2-november-26-2026">Release Candidate 2 (November 26, 2026)</h2>
+<p>Release Candidate 2 adds experimental SkiaSharp.Testing image comparisons, zero-initialized runtime-effect uniforms and trim-safe MAUI SKGLView binding. It also fixes Windows x64 image error-recovery crashes, adjusts Ganesh texture sampling and Tizen CPU blurs, and removes Linux x86 native assets.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.159.0-rc.1.26567.13...v4.159.0-rc.2.26576.7">Full changelog</a></p>
+<h2 id="release-candidate-1-november-17-2026">Release Candidate 1 (November 17, 2026)</h2>
+<p>Release Candidate 1 adds programmable GPU mesh drawing and corrects SkiaSharp and HarfBuzzSharp iOS/tvOS device frameworks. It also incorporates glyph-rendering, image-filter cache and Imagination Vulkan allocation fixes.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.159.0-preview.1.26563.22...v4.159.0-rc.1.26567.13">Full changelog</a></p>
+<h2 id="preview-1-november-14-2026">Preview 1 (November 14, 2026)</h2>
+<p>Preview 1 introduces Skia m159, including WebAssembly SIMD CPU rasterization and Windows font-loading improvements. WebAssembly apps now require .NET 9 or later; non-WebAssembly .NET 8 support is unchanged.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.158.0...v4.159.0-preview.1.26563.22">Full changelog</a></p>
+<hr>
+<p><small class="text-body-secondary">Release notes generated on 2026-11-27 at 17:05 UTC.</small></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.159.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · 6bce7eb
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 4.152.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 4.152.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.152.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-41520">Version 4.152.0</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:6 version:4.152.0 -->
+
+<blockquote>
+<p><strong>Graphite and asynchronous readback</strong> · Released September 5, 2026 · <a href="https://www.nuget.org/packages/SkiaSharp/4.152.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v4.152.0">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="4.152.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/14.2.1.200/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 4.152.0 introduces Graphite GPU bindings and backend-neutral asynchronous pixel readback. Built on Skia m152, this release adds Silk.NET Vulkan helpers and explicit font loading on Nano Server, while correcting source lifetimes and reducing text and data-copy overhead.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>Skia m152</strong> — Updates the renderer to milestone 152 and VulkanMemoryAllocator to 3.4.0, preserving the allocator fallback used by SkiaSharp callers. (<a href="https://github.com/mono/SkiaSharp/pull/4651">#4651</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>Graphite GPU backend</strong> — Adds contexts, recorders, recordings and texture wrappers for Vulkan, Metal and Dawn, including browser WebGPU. Graphite uses explicit record, snap, insert and submit operations; existing Ganesh APIs remain unchanged. — ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/3968">#3968</a>)</li>
+<li><strong>Asynchronous pixel readback</strong> — Adds RequestReadPixels to SKImage and SKSurface. Results are callback-scoped: copy data inside the callback to retain it, and handle a null result on failure. Ganesh completion requires submission and CheckAsyncWorkCompletion; Graphite surfaces use asynchronous rather than synchronous readback. — ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/4545">#4545</a>, <a href="https://github.com/mono/SkiaSharp/pull/3968">#3968</a>)</li>
+<li><strong>Silk.NET Vulkan integration</strong> — Adds SkiaSharp.Vulkan.Silk.NET with typed backend-context and extension helpers, and makes the GRVkExtensions constructor public. The existing SharpVk package remains available; package production now includes the Silk.NET helper. (<a href="https://github.com/mono/SkiaSharp/pull/4527">#4527</a>, <a href="https://github.com/mono/SkiaSharp/pull/4841">#4841</a>)</li>
+</ul>
+<h2 id="lifecycle--internals">Lifecycle &amp; Internals</h2>
+<ul>
+<li><strong>Keep borrowed native sources alive</strong> — Region iterators retain their source region, and pixmap subsets and With* results retain the ultimate pixel owner, preventing premature finalization while derived objects are still in use. (<a href="https://github.com/mono/SkiaSharp/pull/4355">#4355</a>, <a href="https://github.com/mono/SkiaSharp/pull/4558">#4558</a>)</li>
+<li><strong>Deterministic resource cleanup</strong> — Releases the previous uniform buffer on Reset, disposes copied stream assets when HarfBuzz blobs release them, and frees raster pixel storage when image creation fails. Native cached-data destruction now releases its mutex guard before deleting the owner. (<a href="https://github.com/mono/SkiaSharp/pull/4783">#4783</a>, <a href="https://github.com/mono/SkiaSharp/pull/4710">#4710</a>, <a href="https://github.com/mono/SkiaSharp/pull/4455">#4455</a>, <a href="https://github.com/mono/SkiaSharp/pull/4925">#4925</a>)</li>
+<li><strong>Less copying and allocation</strong> — Font.Shape avoids copying an existing feature array, tag formatting avoids boxed characters, and text marshalling and uniform lookup construction allocate less. SKData.SaveTo writes native spans directly on span-capable targets; .NET Framework and netstandard2.0 retain buffered copying. (<a href="https://github.com/mono/SkiaSharp/pull/4690">#4690</a>, <a href="https://github.com/mono/SkiaSharp/pull/4752">#4752</a>, <a href="https://github.com/mono/SkiaSharp/pull/4498">#4498</a>, <a href="https://github.com/mono/SkiaSharp/pull/4512">#4512</a>, <a href="https://github.com/mono/SkiaSharp/pull/4550">#4550</a>, <a href="https://github.com/mono/SkiaSharp/pull/4630">#4630</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Do not read stale GPU textures</strong> — Ganesh readbacks no longer return stale texture data when prerequisite render tasks fail to flush; additional font-rendering and Ganesh stability corrections are included. (<a href="https://github.com/mono/SkiaSharp/pull/4538">#4538</a>, <a href="https://github.com/mono/SkiaSharp/pull/4568">#4568</a>)</li>
+</ul>
+<h2 id="platform">Platform</h2>
+<ul>
+<li><strong>Explicit Nano Server font loading</strong> — The Nano Server native build uses FreeType so fonts loaded from files, streams or data can render. It still has no system font manager: load a typeface explicitly rather than relying on the default font. Normal Windows builds retain DirectWrite. — ❤️ <a href="https://github.com/jeffska">@jeffska</a> (<a href="https://github.com/mono/SkiaSharp/pull/4280">#4280</a>)</li>
+<li><strong>Native debugging assets</strong> — Produces separate Apple symbol packages with complete dSYM bundles for SkiaSharp and HarfBuzzSharp, without adding symbols to customer runtime packages. Android libraries retain matching build IDs and split-debug identities. (<a href="https://github.com/mono/SkiaSharp/pull/4846">#4846</a>, <a href="https://github.com/mono/SkiaSharp/pull/4843">#4843</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-1421200">HarfBuzzSharp 14.2.1.200</h2>
+<p>Font.Shape avoids a defensive feature-array copy, and Tag.ToString avoids character boxing. Apple symbol packages and deterministic Android debug identities improve native diagnostics; NuGet READMEs provide package-specific guidance.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/jeffska">@jeffska</a></td>
+<td>Enabled FreeType-backed font loading on Windows Nano Server. (<a href="https://github.com/mono/SkiaSharp/pull/4280">#4280</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/mmitche">@mmitche</a></td>
+<td>Reduced Windows native build overhead by initializing the Visual C++ environment once per build. (<a href="https://github.com/mono/SkiaSharp/pull/4570">#4570</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/ramezgerges">@ramezgerges</a></td>
+<td>Introduced Graphite GPU backend bindings for Vulkan, Metal and Dawn. (<a href="https://github.com/mono/SkiaSharp/pull/3968">#3968</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="release-candidate-1-august-26-2026">Release Candidate 1 (August 26, 2026)</h2>
+<p>Reduced shaping and tag-formatting overhead, corrected uniform-buffer and blob-stream cleanup, restored Silk.NET package production and added native debugging assets.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.152.0-preview.1.1...v4.152.0-rc.1.26426.14">Full changelog</a></p>
+<h2 id="preview-1-august-5-2026">Preview 1 (August 5, 2026)</h2>
+<p>Introduced Skia m152, Graphite, asynchronous pixel readback and Silk.NET Vulkan helpers. Also enabled explicit Nano Server font loading and corrected region, pixmap and failed-image source lifetimes.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.151.6...v4.152.0-preview.1.1">Full changelog</a></p>
+<hr>
+<p><small class="text-body-secondary">Release notes generated on 2026-11-09 at 18:12 UTC.</small></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.152.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · 6bce7eb
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

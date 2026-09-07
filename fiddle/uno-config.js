@@ -1,0 +1,27 @@
+let config = {};
+config.uno_remote_managedpath = "_framework";
+config.uno_app_base = "./package_e4b824b304250eea5c1ed047d74c4c40c618cba3";
+config.dotnet_js_filename = "dotnet.7ex14ltfll.js";
+config.uno_dependencies = ["./package_e4b824b304250eea5c1ed047d74c4c40c618cba3/uno-monaco-helpers", "./package_e4b824b304250eea5c1ed047d74c4c40c618cba3/workers.editor.worker", "./package_e4b824b304250eea5c1ed047d74c4c40c618cba3/Uno.Runtime.Wasm", "./package_e4b824b304250eea5c1ed047d74c4c40c618cba3/setImmediate", "./package_e4b824b304250eea5c1ed047d74c4c40c618cba3/Uno.Wasm", "./package_e4b824b304250eea5c1ed047d74c4c40c618cba3/MonacoFocusGuard", "./package_e4b824b304250eea5c1ed047d74c4c40c618cba3/AppManifest"];
+config.uno_runtime_options = [];
+config.enable_pwa = false;
+config.uno_pwa_precache_exclude = [];
+config.offline_files = ['./', ];
+config.uno_shell_mode = "Browser";
+config.uno_debugging_enabled = false;
+config.uno_enable_tracing = false;
+config.uno_load_all_satellite_resources = false;
+config.uno_vfs_framework_assembly_load = false;
+config.uno_vfs_framework_assembly_load_cleanup = false;
+config.emcc_exported_runtime_methods = ['WebGPU','GL','IDBFS']
+config.environmentVariables = config.environmentVariables || {};
+config.environmentVariables["UNO_BOOTSTRAP_MONO_RUNTIME_MODE"] = "Interpreter";
+config.environmentVariables["UNO_BOOTSTRAP_MONO_PROFILED_AOT"] = "False";
+config.environmentVariables["UNO_BOOTSTRAP_LINKER_ENABLED"] = "False";
+config.environmentVariables["UNO_BOOTSTRAP_DEBUGGER_ENABLED"] = "False";
+config.environmentVariables["UNO_BOOTSTRAP_FETCH_RETRIES"] = "1";
+config.environmentVariables["UNO_BOOTSTRAP_MONO_RUNTIME_CONFIGURATION"] = "Release";
+config.environmentVariables["UNO_BOOTSTRAP_MONO_RUNTIME_FEATURES"] = "";
+config.environmentVariables["UNO_BOOTSTRAP_APP_BASE"] = "package_e4b824b304250eea5c1ed047d74c4c40c618cba3";
+config.environmentVariables["UNO_BOOTSTRAP_WEBAPP_BASE_PATH"] = "./";
+export { config };
