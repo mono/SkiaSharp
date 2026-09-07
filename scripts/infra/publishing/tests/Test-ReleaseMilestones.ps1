@@ -104,15 +104,181 @@ $greatestTag = Get-ShippedTag '4.152.0-preview.1' @(
 Assert-Equal 'v4.152.0-preview.1.26426.14' $greatestTag 'The greatest dnceng build tuple was not selected.'
 Assert-Equal 'v4.152.0' (Get-ShippedTag '4.152.0' @('v4.152.0')) 'A stable exact tag was not detected.'
 
-$previousBranches = @(
-    ConvertTo-ReleaseMilestone 'release/4.150.2'
-    ConvertTo-ReleaseMilestone 'release/4.150.3'
+$topologyTags = @(
+    'v4.152.0-preview.1.1',
+    'v4.153.0-preview.1.1',
+    'v4.153.0-rc.1.1',
+    'v4.154.0-preview.1.1'
 )
-$previousShipped = Get-PreviousStableBranch `
-    -Branches $previousBranches `
-    -Version '4.151.0' `
-    -Tags @('v4.150.2')
-Assert-Equal '4.150.2' $previousShipped.Title 'An unshipped stable branch became the previous release boundary.'
+$shippedTopology = @(Get-ShippedReleases -Tags $topologyTags)
+Assert-Equal @(
+    '4.152.0-preview.1',
+    '4.153.0-preview.1',
+    '4.153.0-rc.1',
+    '4.154.0-preview.1'
+) @($shippedTopology.Title) 'Shipped releases were not ordered by release identity.'
+$sameMilestoneTags = @(Get-ShippedReleases -Tags @(
+    'v4.153.0-preview.1.1',
+    'v4.153.0-preview.1.2'
+))
+Assert-Equal 2 $sameMilestoneTags.Count `
+    'Multiple exact tags for one shipped milestone were not preserved as topology inputs.'
+
+$boundaryRoot = Join-Path $PSScriptRoot ".boundary-test-$([guid]::NewGuid().ToString('N'))"
+try {
+    $null = New-Item -ItemType Directory -Path $boundaryRoot
+    & git -C $boundaryRoot init --quiet
+    & git -C $boundaryRoot config user.name 'Release Boundary Tests'
+    & git -C $boundaryRoot config user.email 'release-boundaries@example.invalid'
+    Assert-Equal @('4.153.0-preview.1', '4.153.0-rc.1') @(
+        (Get-ReleaseMilestones `
+            -Root $boundaryRoot `
+            -Version '4.153.0' `
+            -ShippedReleases $shippedTopology).Title
+    ) 'Shipped tag identities disappeared when their release branches were absent.'
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Previous release boundary'
+    & git -C $boundaryRoot tag v4.152.0-preview.1.1
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Shared m153 line work (#4826)'
+    $m153LinePoint = (& git -C $boundaryRoot rev-parse HEAD).Trim()
+    & git -C $boundaryRoot branch m153-servicing
+    & git -C $boundaryRoot branch m153-preview
+    & git -C $boundaryRoot switch --quiet m153-preview
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Create m153 preview release branch'
+    & git -C $boundaryRoot tag v4.153.0-preview.1.1
+    & git -C $boundaryRoot switch --quiet m153-servicing
+    & git -C $boundaryRoot branch m154-preview
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Later m153 servicing work (#5000)'
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Create later m153 RC release branch'
+    & git -C $boundaryRoot tag v4.153.0-rc.1.1
+    & git -C $boundaryRoot switch --quiet m154-preview
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'm154-only work (#4945)'
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Create m154 preview release branch'
+    & git -C $boundaryRoot tag v4.154.0-preview.1.1
+
+    $m153Preview = $shippedTopology | Where-Object Title -eq '4.153.0-preview.1'
+    $m153PreviewBoundary = Get-PreviousShippedBoundary `
+        -Root $boundaryRoot `
+        -Releases $shippedTopology `
+        -CurrentRelease $m153Preview
+    Assert-Equal 'v4.152.0-preview.1.1' $m153PreviewBoundary.Tag `
+        'A later numeric release became the boundary for an earlier release line.'
+    Assert-Equal @(4826) @(Get-ReleasePullRequests `
+        -Root $boundaryRoot `
+        -Releases $shippedTopology `
+        -CurrentRelease $m153Preview) `
+        'The m153 preview range did not begin at the previous release-line branch commit.'
+
+    $m154Preview = $shippedTopology | Where-Object Title -eq '4.154.0-preview.1'
+    $m154Boundary = Get-PreviousShippedBoundary `
+        -Root $boundaryRoot `
+        -Releases $shippedTopology `
+        -CurrentRelease $m154Preview
+    Assert-Equal $m153LinePoint $m154Boundary.Start `
+        'A parallel m153 release did not preserve the shared m154 branch commit boundary.'
+    Assert-Equal @(4945) @(Get-ReleasePullRequests `
+        -Root $boundaryRoot `
+        -Releases $shippedTopology `
+        -CurrentRelease $m154Preview) `
+        'The m154 range included work from its parallel m153 release branch.'
+
+    $m153Rc = $shippedTopology | Where-Object Title -eq '4.153.0-rc.1'
+    $m153RcBoundary = Get-PreviousShippedBoundary `
+        -Root $boundaryRoot `
+        -Releases $shippedTopology `
+        -CurrentRelease $m153Rc
+    Assert-Equal @(5000) @(Get-ReleasePullRequests `
+        -Root $boundaryRoot `
+        -Releases $shippedTopology `
+        -CurrentRelease $m153Rc) `
+        'A later m153 RC did not retain its own servicing-branch range.'
+} finally {
+    if (Test-Path -LiteralPath $boundaryRoot) {
+        Remove-Item -LiteralPath $boundaryRoot -Recurse -Force
+    }
+}
+
+$assignmentMilestones = @{
+    '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
+    '4.154.0-preview.1' = [pscustomobject] @{ number = 75; state = 'closed' }
+}
+$assignmentTags = @(
+    'v4.153.0-preview.1.26454.6',
+    'v4.154.0-preview.1.26454.9',
+    'v4.153.0-rc.1.26455.1'
+)
+$pullAssignment = Get-ReleaseAssignmentPlan `
+    -Kind 'pull-request' `
+    -Number 4826 `
+    -ViaPullRequest $null `
+    -CurrentMilestone '4.154.0-preview.1' `
+    -TargetMilestone '4.153.0-preview.1' `
+    -Milestones $assignmentMilestones `
+    -Tags $assignmentTags
+Assert-Equal 'assign' $pullAssignment.Status 'A pull request could not be repaired to its first shipped milestone.'
+Assert-Equal 74 $pullAssignment.Operation.ToMilestoneNumber 'A pull request repair targeted the wrong milestone.'
+
+$issueAssignment = Get-ReleaseAssignmentPlan `
+    -Kind 'issue' `
+    -Number 1234 `
+    -ViaPullRequest 4826 `
+    -CurrentMilestone '4.154.0-preview.1' `
+    -TargetMilestone '4.153.0-preview.1' `
+    -Milestones $assignmentMilestones `
+    -Tags $assignmentTags
+Assert-Equal 'assign' $issueAssignment.Status 'A linked issue could not be repaired to its first shipped milestone.'
+Assert-Equal 4826 $issueAssignment.Operation.ViaPullRequest 'A linked issue lost its source pull request.'
+
+$unshippedRollForward = Get-ReleaseAssignmentPlan `
+    -Kind 'pull-request' `
+    -Number 2000 `
+    -ViaPullRequest $null `
+    -CurrentMilestone '4.152.0-preview.1' `
+    -TargetMilestone '4.152.0-rc.1' `
+    -Milestones @{
+        '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'open' }
+        '4.152.0-rc.1' = [pscustomobject] @{ number = 73; state = 'closed' }
+    } `
+    -Tags @('v4.152.0-rc.1.26426.14')
+Assert-Equal 'assign' $unshippedRollForward.Status `
+    'An unshipped preview could not roll forward to the next shipped milestone in its numeric line.'
+
+foreach ($unsafe in @(
+    Get-ReleaseAssignmentPlan `
+        -Kind 'pull-request' `
+        -Number 4826 `
+        -ViaPullRequest $null `
+        -CurrentMilestone '4.153.0-preview.1' `
+        -TargetMilestone '4.154.0-preview.1' `
+        -Milestones $assignmentMilestones `
+        -Tags $assignmentTags
+    Get-ReleaseAssignmentPlan `
+        -Kind 'issue' `
+        -Number 1234 `
+        -ViaPullRequest 4826 `
+        -CurrentMilestone '4.153.0-preview.1' `
+        -TargetMilestone '4.154.0-preview.1' `
+        -Milestones $assignmentMilestones `
+        -Tags $assignmentTags
+)) {
+    Assert-Equal 'blocked' $unsafe.Status `
+        'A forward move out of an earlier closed and shipped milestone was not blocked.'
+    Assert-True ($unsafe.Warning -match 'Refusing to move .* from earlier milestone') `
+        'A blocked assignment did not explain the safety invariant.'
+}
+
+$closedOnlyGuard = Get-ReleaseAssignmentPlan `
+    -Kind 'issue' `
+    -Number 4321 `
+    -ViaPullRequest 2000 `
+    -CurrentMilestone '4.152.0-preview.1' `
+    -TargetMilestone '4.153.0-preview.1' `
+    -Milestones @{
+        '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'closed' }
+        '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
+    } `
+    -Tags @('v4.153.0-preview.1.26454.6')
+Assert-Equal 'blocked' $closedOnlyGuard.Status `
+    'A forward move out of an earlier closed milestone was not blocked without a shipped tag.'
 
 $schedule = [pscustomobject] @{
     branch_point = '2026-07-27T00:00:00Z'
@@ -188,13 +354,47 @@ try {
     & git -C $gitRoot config user.name 'Release Milestone Tests'
     & git -C $gitRoot config user.email 'release-milestones@example.invalid'
     & git -C $gitRoot commit --quiet --allow-empty -m 'Boundary'
-    $start = (& git -C $gitRoot rev-parse HEAD).Trim()
+    $defaultBranch = (& git -C $gitRoot branch --show-current).Trim()
+    & git -C $gitRoot tag v1.0.0
     & git -C $gitRoot commit --quiet --allow-empty -m 'Merge feature (#42)'
+    & git -C $gitRoot branch nested-pr
+    & git -C $gitRoot switch --quiet nested-pr
+    & git -C $gitRoot commit --quiet --allow-empty -m 'Nested shipped change (#44)'
+    & git -C $gitRoot switch --quiet $defaultBranch
+    & git -C $gitRoot merge --quiet --no-ff nested-pr -m 'Merge pull request #43 from test/nested-pr'
     & git -C $gitRoot commit --quiet --allow-empty -m 'Commit without pull request'
     & git -C $gitRoot commit --quiet --allow-empty -m 'Revert "Feature (#4087)" (#4091)'
-    $end = (& git -C $gitRoot rev-parse HEAD).Trim()
-    Assert-Equal @(42, 4091) @(Get-ReleasePullRequests -Root $gitRoot -Start $start -End $end) `
-        'First-parent Git history did not yield trailing merged pull request numbers.'
+    & git -C $gitRoot tag v1.1.0
+    $releaseDag = @(Get-ShippedReleases -Tags @('v1.0.0', 'v1.1.0'))
+    $currentDagRelease = $releaseDag | Where-Object Title -eq '1.1.0'
+    Assert-Equal @(42, 43, 44, 4091) @(Get-ReleasePullRequests `
+        -Root $gitRoot `
+        -Releases $releaseDag `
+        -CurrentRelease $currentDagRelease) `
+        'Release membership did not include squash, merge, and nested DAG pull requests.'
+
+    & git -C $gitRoot commit --quiet --allow-empty -m 'Initial preview fix (#45)'
+    & git -C $gitRoot tag v1.2.0-preview.2.1
+    & git -C $gitRoot commit --quiet --allow-empty -m 'Relanded later preview fix (#45)'
+    & git -C $gitRoot tag v1.2.0-preview.10.1
+    & git -C $gitRoot commit --quiet --allow-empty -m 'Relanded stable fix (#45)'
+    & git -C $gitRoot tag v1.2.0
+    $previewDag = @(Get-ShippedReleases -Tags @(
+        'v1.0.0',
+        'v1.1.0',
+        'v1.2.0-preview.2.1',
+        'v1.2.0-preview.10.1',
+        'v1.2.0'
+    ))
+    Assert-Equal @(
+        '1.2.0-preview.2',
+        '1.2.0-preview.10',
+        '1.2.0'
+    ) @($previewDag | Where-Object NumericKey -eq $previewDag[-1].NumericKey | ForEach-Object Title) `
+        'Multi-digit preview iterations were not ordered semantically before stable.'
+    $previewOwners = Get-ReleasePullRequestOwners -Root $gitRoot -Releases $previewDag
+    Assert-Equal '1.2.0-preview.2' $previewOwners[45].Title `
+        'A later preview or stable reland overrode the first shipped preview owner.'
 } finally {
     if (Test-Path -LiteralPath $gitRoot) {
         Remove-Item -LiteralPath $gitRoot -Recurse -Force
@@ -205,6 +405,35 @@ $script:FakeGhCalls = [System.Collections.Generic.List[string]]::new()
 $script:FakeGhScenario = 'read'
 $script:FakeMilestoneState = 'open'
 $script:FakeItemMilestone = '4.152.0-preview.1'
+$script:FakeLiveReleaseTags = @()
+$script:FakeLiveReleaseTagReads = 0
+$script:FakeTargetOwnsRelease = $true
+$script:FakeOwnershipKind = ''
+function Get-CurrentRemoteReleaseTags([string] $Root) {
+    $script:FakeLiveReleaseTagReads++
+    if (
+        $script:FakeGhScenario -in @('post-write-shipment-race', 'post-write-unassigned-race') -and
+        $script:FakeLiveReleaseTagReads -gt 1
+    ) {
+        return @(
+            'v4.152.0-preview.1.26426.14',
+            'v4.153.0-preview.1.26454.6'
+        )
+    }
+    return $script:FakeLiveReleaseTags
+}
+function Test-LiveReleaseAssignmentOwnership(
+    [string] $Root,
+    [string] $Repository,
+    [string[]] $Tags,
+    [string] $TargetMilestone,
+    [string] $Kind,
+    [int] $Number,
+    [object] $ViaPullRequest
+) {
+    $script:FakeOwnershipKind = $Kind
+    return $script:FakeTargetOwnsRelease
+}
 function global:gh {
     $command = $args -join ' '
     $script:FakeGhCalls.Add($command)
@@ -236,6 +465,78 @@ function global:gh {
     if ($script:FakeGhScenario -eq 'duplicate' -and $command -match 'milestones\?state=all') {
         return '[[{"number":1,"title":"duplicate"},{"number":2,"title":"duplicate"}]]'
     }
+    if ($script:FakeGhScenario -eq 'assignment-race') {
+        if ($command -match 'issues/4826 .*PATCH') {
+            throw 'Unsafe raced assignment reached PATCH.'
+        } elseif ($command -match 'issues/4826$') {
+            return '{"number":4826,"milestone":{"number":74,"title":"4.153.0-preview.1","state":"closed"}}'
+        }
+    }
+    if ($script:FakeGhScenario -eq 'closure-race') {
+        if ($command -match 'issues/6000 .*PATCH') {
+            throw 'Unsafe closure-raced assignment reached PATCH.'
+        } elseif ($command -match 'issues/6000$') {
+            return '{"number":6000,"milestone":{"number":72,"title":"4.152.0-preview.1","state":"closed"}}'
+        }
+    }
+    if ($script:FakeGhScenario -eq 'shipment-race') {
+        if ($command -match 'issues/6001 .*PATCH') {
+            throw 'Unsafe shipment-raced assignment reached PATCH.'
+        } elseif ($command -match 'issues/6001$') {
+            return '{"number":6001,"milestone":{"number":72,"title":"4.152.0-preview.1","state":"open"}}'
+        }
+    }
+    if ($script:FakeGhScenario -eq 'post-write-shipment-race') {
+        if ($command -match 'issues/6002 .*PATCH.*milestone=74') {
+            $script:FakeItemMilestone = '4.153.0-preview.1'
+            return '{"number":6002}'
+        } elseif ($command -match 'issues/6002 .*PATCH.*milestone=72') {
+            $script:FakeItemMilestone = '4.152.0-preview.1'
+            return '{"number":6002}'
+        } elseif ($command -match 'issues/6002$') {
+            $milestoneNumber = if ($script:FakeItemMilestone -eq '4.152.0-preview.1') { 72 } else { 74 }
+            return [pscustomobject] @{
+                number = 6002
+                milestone = [pscustomobject] @{
+                    number = $milestoneNumber
+                    title = $script:FakeItemMilestone
+                    state = 'open'
+                }
+            } | ConvertTo-Json -Compress
+        } elseif ($command -match 'milestones\?state=all') {
+            return @'
+[[{"number":72,"title":"4.152.0-preview.1","state":"open"},{"number":74,"title":"4.153.0-preview.1","state":"closed"}]]
+'@
+        }
+    }
+    if ($script:FakeGhScenario -eq 'ownership-race') {
+        if ($command -match 'issues/6003 .*PATCH') {
+            throw 'Unsafe ownership-raced assignment reached PATCH.'
+        } elseif ($command -match 'issues/6003$') {
+            return '{"number":6003,"milestone":null}'
+        }
+    }
+    if ($script:FakeGhScenario -eq 'issue-ownership-race') {
+        if ($command -match 'issues/6005 .*PATCH') {
+            throw 'Unsafe issue ownership-raced assignment reached PATCH.'
+        } elseif ($command -match 'issues/6005$') {
+            return '{"number":6005,"milestone":null}'
+        }
+    }
+    if ($script:FakeGhScenario -eq 'post-write-unassigned-race') {
+        if ($command -match 'issues/6004 .*PATCH.*milestone=74') {
+            $script:FakeItemMilestone = '4.153.0-preview.1'
+            return '{"number":6004}'
+        } elseif ($command -match 'issues/6004 .*PATCH.*milestone=null') {
+            $script:FakeItemMilestone = ''
+            return '{"number":6004}'
+        } elseif ($command -match 'issues/6004$') {
+            if ($script:FakeItemMilestone) {
+                return '{"number":6004,"milestone":{"number":74,"title":"4.153.0-preview.1","state":"closed"}}'
+            }
+            return '{"number":6004,"milestone":null}'
+        }
+    }
     if ($command -match 'milestones\?state=all') {
         @'
 [[{"number":70,"title":"4.152.0-preview.1","state":"open"}]]
@@ -255,7 +556,28 @@ function global:gh {
 ]
 '@
     } elseif ($command -match 'graphql') {
-        '{"data":{"repository":{"pullRequest":{"closingIssuesReferences":{"nodes":[{"number":12}]}}}}}'
+        if ($command -match 'closedByPullRequestsReferences') {
+            return @'
+[
+  {"data":{"repository":{"issue":{"closedByPullRequestsReferences":{"nodes":[
+    {"number":77,"repository":{"nameWithOwner":"mono/SkiaSharp"}},
+    {"number":88,"repository":{"nameWithOwner":"mono/SkiaSharp"}},
+    {"number":99,"repository":{"nameWithOwner":"other/repository"}}
+  ]}}}}}
+]
+'@
+        }
+        @'
+[
+  {"data":{"repository":{"pullRequest":{"closingIssuesReferences":{"nodes":[
+    {"number":12,"repository":{"nameWithOwner":"mono/SkiaSharp"}},
+    {"number":410,"repository":{"nameWithOwner":"appium/appium-mac2-driver"}}
+  ]}}}}},
+  {"data":{"repository":{"pullRequest":{"closingIssuesReferences":{"nodes":[
+    {"number":13,"repository":{"nameWithOwner":"mono/SkiaSharp"}}
+  ]}}}}}
+]
+'@
     } elseif ($command -match 'pulls/77') {
         '{"body":"Fixes #34 and resolved: #56"}'
     } else {
@@ -267,8 +589,18 @@ $map = Get-GitHubMilestoneMap -Repository 'mono/SkiaSharp'
 Assert-Equal 70 $map['4.152.0-preview.1'].number 'The fake-gh milestone response was not parsed.'
 $openItems = Get-OpenMilestoneItems -Repository 'mono/SkiaSharp' -MilestoneNumber 70
 Assert-Equal @('issue', 'pull-request') @($openItems.Kind) 'Issues and pull requests were not distinguished.'
-Assert-Equal @(12, 34, 56) @(Get-LinkedIssues -Repository 'mono/SkiaSharp' -PullRequest 77) `
+Assert-Equal @(12, 13, 34, 56) @(Get-LinkedIssues -Repository 'mono/SkiaSharp' -PullRequest 77) `
     'GitHub references and closing keywords were not combined.'
+$linkedIssueOwner = Get-LinkedIssueOwner `
+    -Repository 'mono/SkiaSharp' `
+    -Issue 12 `
+    -ViaPullRequest 77 `
+    -PullRequestOwners @{
+        77 = [pscustomobject] @{ Title = '4.153.0-preview.1'; SortKey = '153'; Tag = 'm153' }
+        88 = [pscustomobject] @{ Title = '4.152.0-rc.1'; SortKey = '152'; Tag = 'm152' }
+    }
+Assert-Equal '4.152.0-rc.1' $linkedIssueOwner.Title `
+    'A linked issue did not select its lowest semantic owner across closing pull requests.'
 
 $callsBeforeDryRun = $script:FakeGhCalls.Count
 $dryRunOutput = @(
@@ -300,6 +632,205 @@ try {
 }
 Assert-Equal '4.152.0-preview.2' $script:FakeItemMilestone 'The fake-gh apply path did not move open work.'
 Assert-Equal 'closed' $script:FakeMilestoneState 'The fake-gh apply path did not close the emptied milestone.'
+
+$script:FakeGhScenario = 'assignment-race'
+$script:FakeLiveReleaseTags = @(
+    'v4.153.0-preview.1.26454.6',
+    'v4.154.0-preview.1.26454.9'
+)
+$racedOperation = [pscustomobject] @{
+    Kind = 'pull-request'
+    Number = 4826
+    ViaPullRequest = $null
+    FromMilestone = ''
+    ToMilestone = '4.154.0-preview.1'
+    ToMilestoneNumber = 75
+}
+Assert-Throws {
+    Set-PlannedReleaseAssignment `
+        -Root 'fake-root' `
+        -Repository 'mono/SkiaSharp' `
+        -Item $racedOperation `
+        -PlanningTags $script:FakeLiveReleaseTags `
+        -Milestones @{
+            '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
+            '4.154.0-preview.1' = [pscustomobject] @{ number = 75; state = 'closed' }
+        } `
+        -Push
+} 'Refusing to move pull-request #4826' `
+    'A concurrent earlier shipped assignment was not revalidated before PATCH.'
+
+$script:FakeGhScenario = 'closure-race'
+$script:FakeLiveReleaseTags = @('v4.153.0-preview.1.26454.6')
+$closureRacedOperation = [pscustomobject] @{
+    Kind = 'pull-request'
+    Number = 6000
+    ViaPullRequest = $null
+    FromMilestone = '4.152.0-preview.1'
+    ToMilestone = '4.153.0-preview.1'
+    ToMilestoneNumber = 74
+}
+Assert-Throws {
+    Set-PlannedReleaseAssignment `
+        -Root 'fake-root' `
+        -Repository 'mono/SkiaSharp' `
+        -Item $closureRacedOperation `
+        -PlanningTags $script:FakeLiveReleaseTags `
+        -Milestones @{
+            '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'open' }
+            '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
+        } `
+        -Push
+} 'Refusing to move pull-request #6000' `
+    'A source milestone closed after planning was not revalidated before PATCH.'
+
+$script:FakeGhScenario = 'shipment-race'
+$script:FakeLiveReleaseTags = @(
+    'v4.152.0-preview.1.26426.14',
+    'v4.153.0-preview.1.26454.6'
+)
+$shipmentRacedOperation = [pscustomobject] @{
+    Kind = 'pull-request'
+    Number = 6001
+    ViaPullRequest = $null
+    FromMilestone = '4.152.0-preview.1'
+    ToMilestone = '4.153.0-preview.1'
+    ToMilestoneNumber = 74
+}
+Assert-Throws {
+    Set-PlannedReleaseAssignment `
+        -Root 'fake-root' `
+        -Repository 'mono/SkiaSharp' `
+        -Item $shipmentRacedOperation `
+        -PlanningTags @('v4.153.0-preview.1.26454.6') `
+        -Milestones @{
+            '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'open' }
+            '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
+        } `
+        -Push
+} 'Refusing to move pull-request #6001.*shipped as v4.152.0-preview.1.26426.14' `
+    'A source milestone shipped after planning was not revalidated before PATCH.'
+
+$script:FakeGhScenario = 'post-write-shipment-race'
+$script:FakeItemMilestone = '4.152.0-preview.1'
+$script:FakeLiveReleaseTagReads = 0
+$script:FakeLiveReleaseTags = @('v4.153.0-preview.1.26454.6')
+$script:FakeTargetOwnsRelease = $false
+$postWriteRacedOperation = [pscustomobject] @{
+    Kind = 'pull-request'
+    Number = 6002
+    ViaPullRequest = $null
+    FromMilestone = '4.152.0-preview.1'
+    FromMilestoneNumber = 72
+    ToMilestone = '4.153.0-preview.1'
+    ToMilestoneNumber = 74
+}
+Assert-Throws {
+    Set-PlannedReleaseAssignment `
+        -Root 'fake-root' `
+        -Repository 'mono/SkiaSharp' `
+        -Item $postWriteRacedOperation `
+        -PlanningTags $script:FakeLiveReleaseTags `
+        -Milestones @{
+            '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'open' }
+            '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
+        } `
+        -Push
+} 'Release ownership changed during mutation.*assignment was restored' `
+    'A source milestone shipped between revalidation and PATCH without restoring the assignment.'
+Assert-Equal '4.152.0-preview.1' $script:FakeItemMilestone `
+    'A raced assignment was not restored to its newly shipped source milestone.'
+
+$script:FakeGhScenario = 'ownership-race'
+$script:FakeLiveReleaseTags = @(
+    'v4.152.0-preview.1.26426.14',
+    'v4.153.0-preview.1.26454.6'
+)
+$script:FakeTargetOwnsRelease = $false
+$ownershipRacedOperation = [pscustomobject] @{
+    Kind = 'pull-request'
+    Number = 6003
+    ViaPullRequest = $null
+    FromMilestone = ''
+    FromMilestoneNumber = $null
+    ToMilestone = '4.153.0-preview.1'
+    ToMilestoneNumber = 74
+}
+Assert-Throws {
+    Set-PlannedReleaseAssignment `
+        -Root 'fake-root' `
+        -Repository 'mono/SkiaSharp' `
+        -Item $ownershipRacedOperation `
+        -PlanningTags @('v4.153.0-preview.1.26454.6') `
+        -Milestones @{
+            '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'open' }
+            '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
+        } `
+        -Push
+} 'Release ownership changed after planning.*no longer owns pull request #6003' `
+    'A new predecessor tag did not invalidate an unassigned item before PATCH.'
+
+$script:FakeGhScenario = 'issue-ownership-race'
+$script:FakeOwnershipKind = ''
+$script:FakeLiveReleaseTags = @(
+    'v4.152.0-preview.1.26426.14',
+    'v4.153.0-preview.1.26454.6'
+)
+$script:FakeTargetOwnsRelease = $false
+$issueOwnershipRacedOperation = [pscustomobject] @{
+    Kind = 'issue'
+    Number = 6005
+    ViaPullRequest = 7000
+    FromMilestone = ''
+    FromMilestoneNumber = $null
+    ToMilestone = '4.153.0-preview.1'
+    ToMilestoneNumber = 74
+}
+Assert-Throws {
+    Set-PlannedReleaseAssignment `
+        -Root 'fake-root' `
+        -Repository 'mono/SkiaSharp' `
+        -Item $issueOwnershipRacedOperation `
+        -PlanningTags @('v4.153.0-preview.1.26454.6') `
+        -Milestones @{
+            '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'open' }
+            '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
+        } `
+        -Push
+} 'Release ownership changed after planning.*issue #6005 across its shipped closing pull requests' `
+    'A newly shipped earlier closing PR did not invalidate an issue assignment before PATCH.'
+Assert-Equal 'issue' $script:FakeOwnershipKind `
+    'Issue ownership revalidation used only the originally observed closing pull request.'
+
+$script:FakeGhScenario = 'post-write-unassigned-race'
+$script:FakeItemMilestone = ''
+$script:FakeLiveReleaseTagReads = 0
+$script:FakeLiveReleaseTags = @('v4.153.0-preview.1.26454.6')
+$script:FakeTargetOwnsRelease = $false
+$postWriteUnassignedOperation = [pscustomobject] @{
+    Kind = 'pull-request'
+    Number = 6004
+    ViaPullRequest = $null
+    FromMilestone = ''
+    FromMilestoneNumber = $null
+    ToMilestone = '4.153.0-preview.1'
+    ToMilestoneNumber = 74
+}
+Assert-Throws {
+    Set-PlannedReleaseAssignment `
+        -Root 'fake-root' `
+        -Repository 'mono/SkiaSharp' `
+        -Item $postWriteUnassignedOperation `
+        -PlanningTags $script:FakeLiveReleaseTags `
+        -Milestones @{
+            '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'open' }
+            '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
+        } `
+        -Push
+} 'Release ownership changed during mutation.*assignment was restored' `
+    'A new predecessor tag during PATCH did not restore an originally unassigned item.'
+Assert-Equal '' $script:FakeItemMilestone `
+    'A raced unassigned item was not restored to having no milestone.'
 
 $script:FakeGhScenario = 'new-item'
 Assert-Throws {
