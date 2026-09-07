@@ -1,0 +1,452 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>API diff: SkiaSharp.dll | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="API diff: SkiaSharp.dll | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.152.0/SkiaSharp/SkiaSharp.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="api-diff-skiasharpdll">API diff: SkiaSharp.dll</h1>
+
+<h2 id="skiasharpdll">SkiaSharp.dll</h2>
+<blockquote>
+<p>Assembly Version Changed: 4.152.0.0 vs 4.151.0.0</p>
+</blockquote>
+<h3 id="namespace-skiasharp">Namespace SkiaSharp</h3>
+<h4 id="type-changed-skiasharpgrcontext">Type Changed: SkiaSharp.GRContext</h4>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public void CheckAsyncWorkCompletion ();
+</code></pre>
+<h4 id="type-changed-skiasharpgrvkextensions">Type Changed: SkiaSharp.GRVkExtensions</h4>
+<p>Added constructor:</p>
+<pre><code class="lang-csharp">public GRVkExtensions ();
+</code></pre>
+<h4 id="type-changed-skiasharpskimage">Type Changed: SkiaSharp.SKImage</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType);
+public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorSpace);
+public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorSpace, SKGraphiteReleaseDelegate releaseProc);
+public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, System.Action&lt;SKImageReadPixelsResult&gt; callback);
+public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, System.Action&lt;SKImageReadPixelsResult&gt; callback);
+public SKImage ToTextureImage (SKGraphiteRecorder recorder);
+public SKImage ToTextureImage (SKGraphiteRecorder recorder, bool mipmapped);
+</code></pre>
+<h4 id="type-changed-skiasharpsksurface">Type Changed: SkiaSharp.SKSurface</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info);
+public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType);
+public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, SKSurfaceProperties props);
+public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, bool mipmapped);
+public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace);
+public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, bool mipmapped, SKSurfaceProperties props);
+public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace, SKSurfaceProperties props);
+public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace, SKSurfaceProperties props, SKGraphiteReleaseDelegate releaseProc);
+public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, System.Action&lt;SKImageReadPixelsResult&gt; callback);
+public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, System.Action&lt;SKImageReadPixelsResult&gt; callback);
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitebackend">New Type: SkiaSharp.SKGraphiteBackend</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKGraphiteBackend {
+	Dawn = 0,
+	Metal = 1,
+	Unknown = -1,
+	Vulkan = 2,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitebackendtexture">New Type: SkiaSharp.SKGraphiteBackendTexture</h4>
+<pre><code class="lang-csharp">public class SKGraphiteBackendTexture : SkiaSharp.SKObject, System.IDisposable {
+	// properties
+	public SKGraphiteBackend Backend { get; }
+	public SKSizeI Dimensions { get; }
+	public bool IsValid { get; }
+	// methods
+	public static SKGraphiteBackendTexture CreateDawn (IntPtr wgpuTexture);
+	public static SKGraphiteBackendTexture CreateMetal (int width, int height, IntPtr mtlTexture);
+	public static SKGraphiteBackendTexture CreateVulkan (int width, int height, SKGraphiteVkTextureInfo info, int imageLayout, uint queueFamilyIndex, IntPtr vkImage);
+	protected override void DisposeNative ();
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitecontext">New Type: SkiaSharp.SKGraphiteContext</h4>
+<pre><code class="lang-csharp">public class SKGraphiteContext : SkiaSharp.SKObject, System.IDisposable {
+	// properties
+	public SKGraphiteBackend Backend { get; }
+	public long CurrentBudgetedBytes { get; }
+	public bool IsDeviceLost { get; }
+	public long MaxBudgetedBytes { get; set; }
+	public int MaxTextureSize { get; }
+	public bool SupportsProtectedContent { get; }
+	// methods
+	public void CheckAsyncWorkCompletion ();
+	public static SKGraphiteContext CreateDawn (SKGraphiteDawnBackendContext backendContext);
+	public static SKGraphiteContext CreateDawn (SKGraphiteDawnBackendContext backendContext, SKGraphiteContextOptions options);
+	public static SKGraphiteContext CreateMetal (SKGraphiteMtlBackendContext backendContext);
+	public static SKGraphiteContext CreateMetal (SKGraphiteMtlBackendContext backendContext, SKGraphiteContextOptions options);
+	public SKGraphiteRecorder CreateRecorder (long recorderBudgetBytes);
+	public SKGraphiteRecorder CreateRecorder (long recorderBudgetBytes, SKGraphiteFindOrCreateImageDelegate findOrCreate, System.Action findOrCreateDispose);
+	public static SKGraphiteContext CreateVulkan (SKGraphiteVkBackendContext backendContext);
+	public static SKGraphiteContext CreateVulkan (SKGraphiteVkBackendContext backendContext, SKGraphiteContextOptions options);
+	public void DeleteBackendTexture (SKGraphiteBackendTexture backendTexture);
+	protected override void DisposeNative ();
+	public void FreeGpuResources ();
+	public SKGraphiteInsertStatus InsertRecording (SKGraphiteInsertRecordingInfo info);
+	public SKGraphiteInsertStatus InsertRecording (SKGraphiteRecording recording);
+	public static bool IsBackendAvailable (SKGraphiteBackend backend);
+	public void PerformDeferredCleanup (System.TimeSpan duration);
+	public void RequestReadPixels (SKSurface surface, SKImageInfo dstInfo, SKRectI srcRect, System.Action&lt;SKImageReadPixelsResult&gt; callback);
+	public void RequestReadPixels (SKSurface surface, SKImageInfo dstInfo, SKRectI srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, System.Action&lt;SKImageReadPixelsResult&gt; callback);
+	public bool Submit ();
+	public bool Submit (SKGraphiteSubmitInfo submitInfo);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitecontextoptions">New Type: SkiaSharp.SKGraphiteContextOptions</h4>
+<pre><code class="lang-csharp">public struct SKGraphiteContextOptions, System.IEquatable&lt;SKGraphiteContextOptions&gt; {
+	// properties
+	public bool DisableDriverCorrectnessWorkarounds { get; set; }
+	public long GpuBudgetInBytes { get; set; }
+	public int InternalMultisampleCount { get; set; }
+	public bool RequireOrderedRecordings { get; set; }
+	public bool SetBackendLabels { get; set; }
+	// methods
+	public virtual bool Equals (SKGraphiteContextOptions obj);
+	public override bool Equals (object obj);
+	public override int GetHashCode ();
+	public static bool op_Equality (SKGraphiteContextOptions left, SKGraphiteContextOptions right);
+	public static bool op_Inequality (SKGraphiteContextOptions left, SKGraphiteContextOptions right);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitedawnbackendcontext">New Type: SkiaSharp.SKGraphiteDawnBackendContext</h4>
+<pre><code class="lang-csharp">public class SKGraphiteDawnBackendContext : System.IDisposable {
+	// constructors
+	public SKGraphiteDawnBackendContext ();
+	// properties
+	public IntPtr WgpuDevice { get; set; }
+	public IntPtr WgpuInstance { get; set; }
+	public IntPtr WgpuQueue { get; set; }
+	// methods
+	public virtual void Dispose ();
+	protected virtual void Dispose (bool disposing);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitedawnbackendcontextinit">New Type: SkiaSharp.SKGraphiteDawnBackendContextInit</h4>
+<pre><code class="lang-csharp">public struct SKGraphiteDawnBackendContextInit, System.IEquatable&lt;SKGraphiteDawnBackendContextInit&gt; {
+	// properties
+	public void* Device { get; set; }
+	public void* Instance { get; set; }
+	public bool NonYielding { get; set; }
+	public void* Queue { get; set; }
+	// methods
+	public virtual bool Equals (SKGraphiteDawnBackendContextInit obj);
+	public override bool Equals (object obj);
+	public override int GetHashCode ();
+	public static bool op_Equality (SKGraphiteDawnBackendContextInit left, SKGraphiteDawnBackendContextInit right);
+	public static bool op_Inequality (SKGraphiteDawnBackendContextInit left, SKGraphiteDawnBackendContextInit right);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitefindorcreateimagedelegate">New Type: SkiaSharp.SKGraphiteFindOrCreateImageDelegate</h4>
+<pre><code class="lang-csharp">public sealed delegate SKGraphiteFindOrCreateImageDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public SKGraphiteFindOrCreateImageDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (SKGraphiteRecorder recorder, SKImage image, bool mipmapped, System.AsyncCallback callback, object object);
+	public virtual SKImage EndInvoke (System.IAsyncResult result);
+	public virtual SKImage Invoke (SKGraphiteRecorder recorder, SKImage image, bool mipmapped);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphiteimagecache">New Type: SkiaSharp.SKGraphiteImageCache</h4>
+<pre><code class="lang-csharp">public sealed class SKGraphiteImageCache : System.IDisposable {
+	// constructors
+	public SKGraphiteImageCache ();
+	// methods
+	public virtual void Dispose ();
+	public SKImage FindOrCreate (SKGraphiteRecorder recorder, SKImage image, bool mipmapped);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphiteinsertrecordinginfo">New Type: SkiaSharp.SKGraphiteInsertRecordingInfo</h4>
+<pre><code class="lang-csharp">public struct SKGraphiteInsertRecordingInfo, System.IEquatable&lt;SKGraphiteInsertRecordingInfo&gt; {
+	// properties
+	public IntPtr Recording { get; set; }
+	public SKRectI TargetClip { get; set; }
+	public IntPtr TargetSurface { get; set; }
+	public int TargetTranslationX { get; set; }
+	public int TargetTranslationY { get; set; }
+	// methods
+	public virtual bool Equals (SKGraphiteInsertRecordingInfo obj);
+	public override bool Equals (object obj);
+	public override int GetHashCode ();
+	public static bool op_Equality (SKGraphiteInsertRecordingInfo left, SKGraphiteInsertRecordingInfo right);
+	public static bool op_Inequality (SKGraphiteInsertRecordingInfo left, SKGraphiteInsertRecordingInfo right);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphiteinsertstatus">New Type: SkiaSharp.SKGraphiteInsertStatus</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKGraphiteInsertStatus {
+	AddCommandsFailed = 3,
+	AsyncShaderCompilesFailed = 4,
+	InvalidRecording = 1,
+	OutOfOrderRecording = 5,
+	PromiseInstantiationFailed = 2,
+	Success = 0,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitemtlbackendcontext">New Type: SkiaSharp.SKGraphiteMtlBackendContext</h4>
+<pre><code class="lang-csharp">public class SKGraphiteMtlBackendContext : System.IDisposable {
+	// constructors
+	public SKGraphiteMtlBackendContext ();
+	// properties
+	public IntPtr MtlDevice { get; set; }
+	public IntPtr MtlQueue { get; set; }
+	// methods
+	public virtual void Dispose ();
+	protected virtual void Dispose (bool disposing);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitemtlbackendcontextinit">New Type: SkiaSharp.SKGraphiteMtlBackendContextInit</h4>
+<pre><code class="lang-csharp">public struct SKGraphiteMtlBackendContextInit, System.IEquatable&lt;SKGraphiteMtlBackendContextInit&gt; {
+	// properties
+	public void* Device { get; set; }
+	public void* Queue { get; set; }
+	// methods
+	public virtual bool Equals (SKGraphiteMtlBackendContextInit obj);
+	public override bool Equals (object obj);
+	public override int GetHashCode ();
+	public static bool op_Equality (SKGraphiteMtlBackendContextInit left, SKGraphiteMtlBackendContextInit right);
+	public static bool op_Inequality (SKGraphiteMtlBackendContextInit left, SKGraphiteMtlBackendContextInit right);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphiterecorder">New Type: SkiaSharp.SKGraphiteRecorder</h4>
+<pre><code class="lang-csharp">public class SKGraphiteRecorder : SkiaSharp.SKObject, System.IDisposable {
+	// properties
+	public SKGraphiteBackend Backend { get; }
+	public int MaxTextureSize { get; }
+	// methods
+	public SKGraphiteBackendTexture CreateBackendTexture (int width, int height, SKGraphiteTextureInfo info);
+	public void DeleteBackendTexture (SKGraphiteBackendTexture backendTexture);
+	protected override void DisposeNative ();
+	public SKGraphiteRecording Snap ();
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphiterecording">New Type: SkiaSharp.SKGraphiteRecording</h4>
+<pre><code class="lang-csharp">public class SKGraphiteRecording : SkiaSharp.SKObject, System.IDisposable {
+	// methods
+	protected override void DisposeNative ();
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitereleasedelegate">New Type: SkiaSharp.SKGraphiteReleaseDelegate</h4>
+<pre><code class="lang-csharp">public sealed delegate SKGraphiteReleaseDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public SKGraphiteReleaseDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (System.AsyncCallback callback, object object);
+	public virtual void EndInvoke (System.IAsyncResult result);
+	public virtual void Invoke ();
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitesubmitinfo">New Type: SkiaSharp.SKGraphiteSubmitInfo</h4>
+<pre><code class="lang-csharp">public struct SKGraphiteSubmitInfo, System.IEquatable&lt;SKGraphiteSubmitInfo&gt; {
+	// properties
+	public ulong FrameID { get; set; }
+	public bool MarkBoundary { get; set; }
+	public bool Sync { get; set; }
+	// methods
+	public virtual bool Equals (SKGraphiteSubmitInfo obj);
+	public override bool Equals (object obj);
+	public override int GetHashCode ();
+	public static bool op_Equality (SKGraphiteSubmitInfo left, SKGraphiteSubmitInfo right);
+	public static bool op_Inequality (SKGraphiteSubmitInfo left, SKGraphiteSubmitInfo right);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitetextureinfo">New Type: SkiaSharp.SKGraphiteTextureInfo</h4>
+<pre><code class="lang-csharp">public class SKGraphiteTextureInfo : SkiaSharp.SKObject, System.IDisposable {
+	// properties
+	public SKGraphiteBackend Backend { get; }
+	public bool IsValid { get; }
+	public bool Mipmapped { get; }
+	public int SampleCount { get; }
+	// methods
+	public static SKGraphiteTextureInfo CreateVulkan (SKGraphiteVkTextureInfo info);
+	protected override void DisposeNative ();
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitevkbackendcontext">New Type: SkiaSharp.SKGraphiteVkBackendContext</h4>
+<pre><code class="lang-csharp">public class SKGraphiteVkBackendContext : System.IDisposable {
+	// constructors
+	public SKGraphiteVkBackendContext ();
+	// properties
+	public SKGraphiteVkGetProcedureAddressDelegate GetProcedureAddress { get; set; }
+	public uint GraphicsQueueIndex { get; set; }
+	public uint MaxApiVersion { get; set; }
+	public bool ProtectedContext { get; set; }
+	public IntPtr VkDevice { get; set; }
+	public IntPtr VkInstance { get; set; }
+	public IntPtr VkPhysicalDevice { get; set; }
+	public IntPtr VkQueue { get; set; }
+	// methods
+	public virtual void Dispose ();
+	protected override void ~SKGraphiteVkBackendContext ();
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitevkgetprocedureaddressdelegate">New Type: SkiaSharp.SKGraphiteVkGetProcedureAddressDelegate</h4>
+<pre><code class="lang-csharp">public sealed delegate SKGraphiteVkGetProcedureAddressDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public SKGraphiteVkGetProcedureAddressDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (string name, IntPtr instance, IntPtr device, System.AsyncCallback callback, object object);
+	public virtual IntPtr EndInvoke (System.IAsyncResult result);
+	public virtual IntPtr Invoke (string name, IntPtr instance, IntPtr device);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskgraphitevktextureinfo">New Type: SkiaSharp.SKGraphiteVkTextureInfo</h4>
+<pre><code class="lang-csharp">public struct SKGraphiteVkTextureInfo, System.IEquatable&lt;SKGraphiteVkTextureInfo&gt; {
+	// properties
+	public uint AspectMask { get; set; }
+	public uint Flags { get; set; }
+	public int Format { get; set; }
+	public int ImageTiling { get; set; }
+	public uint ImageUsageFlags { get; set; }
+	public bool Mipmapped { get; set; }
+	public int SampleCount { get; set; }
+	public int SharingMode { get; set; }
+	// methods
+	public virtual bool Equals (SKGraphiteVkTextureInfo obj);
+	public override bool Equals (object obj);
+	public override int GetHashCode ();
+	public static bool op_Equality (SKGraphiteVkTextureInfo left, SKGraphiteVkTextureInfo right);
+	public static bool op_Inequality (SKGraphiteVkTextureInfo left, SKGraphiteVkTextureInfo right);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskimagereadpixelsresult">New Type: SkiaSharp.SKImageReadPixelsResult</h4>
+<pre><code class="lang-csharp">public sealed class SKImageReadPixelsResult : System.IDisposable {
+	// properties
+	public int PlaneCount { get; }
+	// methods
+	public void CopyPlaneTo (int planeIndex, System.Span&lt;byte&gt; destination);
+	public virtual void Dispose ();
+	public System.ReadOnlySpan&lt;byte&gt; GetPlaneData (int planeIndex);
+	public int GetPlaneRowBytes (int planeIndex);
+	public byte[] ToArray (int planeIndex);
+	public SKBitmap ToBitmap ();
+	public SKImage ToImage ();
+}
+</code></pre>
+<h4 id="new-type-skiasharpskimagerescalegamma">New Type: SkiaSharp.SKImageRescaleGamma</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKImageRescaleGamma {
+	Linear = 1,
+	Src = 0,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskimagerescalemode">New Type: SkiaSharp.SKImageRescaleMode</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKImageRescaleMode {
+	Linear = 1,
+	Nearest = 0,
+	RepeatedCubic = 3,
+	RepeatedLinear = 2,
+}
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.152.0/SkiaSharp/SkiaSharp.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · 0e1d5f7
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
