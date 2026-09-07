@@ -1,11 +1,11 @@
 {
-  "theme": "v4 preview foundations",
-  "highlights_headline": "SkiaSharp 4.147.0 previews the v4 engine update with variable fonts, animated WebP encoding, and new surface-draw sampling.",
-  "highlights_body": "This preview moves the bundled renderer through Skia m147, adds zero-copy stream data access, and expands platform support. It begins the v4 breaking-change transition, including a Vulkan YCbCr type rename and changed equality support.",
+  "theme": "First v4 previews",
+  "highlights_headline": "SkiaSharp 4.147.0 previews the v4 line with Skia m147, variable fonts, and animated WebP encoding.",
+  "highlights_body": "The preview series also adds sampling control for surface draws and zero-copy stream-to-data conversion, broadens native platform support, and fixes a finalizer crash. It includes a breaking Vulkan API rename; review the migration note before testing an upgrade.",
   "breaking": [
     {
-      "title": "Vulkan YCbCr conversion info type renamed",
-      "body": "GRVkImageInfo.YcbcrConversionInfo now uses GRVkYcbcrConversionInfo instead of GrVkYcbcrConversionInfo. Update references to the renamed type and replace uses of its removed equality interface and equality operators with explicit field comparisons where needed.",
+      "title": "Vulkan YCbCr conversion info has a new type name",
+      "body": "`GRVkImageInfo.YcbcrConversionInfo` now uses `GRVkYcbcrConversionInfo` instead of `GrVkYcbcrConversionInfo`. Update references and equality comparisons when rebuilding Vulkan code, because the former type's value-equality interface and operators are removed.",
       "prs": []
     }
   ],
@@ -14,13 +14,13 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia upgraded through milestone m147",
-          "detail": "The bundled Skia engine advances from m132 through m147, bringing upstream rendering fixes and improvements across supported platforms.",
+          "lead": "Skia advances to milestone m147",
+          "detail": "The v4 preview line moves the bundled renderer through Skia milestones m132, m133, and m147.",
           "prs": [3560, 3660, 3702]
         },
         {
-          "lead": "Variable fonts and color font palettes",
-          "detail": "SkiaSharp and HarfBuzzSharp add variable-font support, while SKFont and SKTypeface gain color-palette selection and more robust variable-font handling.",
+          "lead": "Variable and color font support",
+          "detail": "Variable fonts flow through SkiaSharp and HarfBuzzSharp, while color font palette selection and variable-font handling are improved.",
           "prs": [3703, 3742]
         }
       ]
@@ -29,18 +29,18 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Sampling options for surface drawing",
-          "detail": "New SKSurface.Draw and SKCanvas.DrawSurface overloads accept SKSamplingOptions, so callers can choose filtering and mipmap behavior for surface-to-surface draws.",
+          "lead": "Sampling control for surface draws",
+          "detail": "New surface-draw overloads accept `SKSamplingOptions`, allowing callers to choose filter and mipmap behavior.",
           "prs": [3491]
         },
         {
-          "lead": "Animated WebP encoding and zero-copy stream data",
-          "detail": "SKWebpEncoder can produce animated WebP files, and SKStream.GetData converts a seekable stream to SKData without an intermediate byte array.",
+          "lead": "Animated WebP and stream data conversion",
+          "detail": "`SKWebpEncoder` can encode frame sequences as animated WebP, and `SKStream.GetData()` converts seekable streams to `SKData` without an intermediate byte array.",
           "prs": [3771, 3772]
         },
         {
-          "lead": "HarfBuzz color and wrapper APIs",
-          "detail": "HarfBuzzSharp adds an HBColor value type and fills in missing or inconsistently named binding wrappers.",
+          "lead": "HarfBuzz value and wrapper additions",
+          "detail": "HarfBuzzSharp adds the `HBColor` representation and fills in missing wrappers with consistent naming.",
           "prs": [4000, 4001]
         }
       ]
@@ -49,13 +49,13 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "SKPath finalizer ordering crash fixed",
-          "detail": "Finalization no longer crashes when an SKPathBuilder is collected before an SKPath created from it.",
+          "lead": "SKPath finalizer crash fixed",
+          "detail": "A collection-order bug no longer crashes finalization when an `SKPathBuilder` is collected before an `SKPath` it created.",
           "prs": [3796]
         },
         {
-          "lead": "Android SKGLView survives MAUI tab changes",
-          "detail": "SKGLView is reattached correctly after a MAUI TabBar view switch, preventing a blank rendering surface.",
+          "lead": "MAUI Android tab switching restores SKGLView",
+          "detail": "SKGLView is reattached after returning to a MAUI TabBar tab instead of remaining blank.",
           "prs": [3076]
         }
       ]
@@ -64,19 +64,14 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "New Linux Bionic and 64-bit Tizen native assets",
-          "detail": "Android-hosted Linux is supported through linux-bionic assets, and Tizen gains x64 and arm64 native builds.",
+          "lead": "Additional Linux and Tizen native assets",
+          "detail": "Android-hosted Linux Bionic and Tizen x64 and arm64 are available as native targets.",
           "prs": [3217, 3620]
         },
         {
-          "lead": "Updated Apple target framework alignment",
-          "detail": "Libraries target versioned Apple TFMs while sample apps use unversioned TFMs, aligning the packages with current .NET SDK guidance.",
-          "prs": [3798]
-        },
-        {
-          "lead": "WASM now requires .NET 8 or later",
-          "detail": "Pre-.NET 8 Emscripten native runtime assets are no longer included in SkiaSharp WASM packages.",
-          "prs": [4022]
+          "lead": "Updated Apple and WASM targeting",
+          "detail": "Apple libraries align with current versioned TFMs, and WASM native assets now require .NET 8 or later.",
+          "prs": [3798, 4022]
         }
       ]
     },
@@ -84,38 +79,38 @@
       "heading": "Security",
       "bullets": [
         {
-          "lead": "Bundled native dependencies refreshed",
-          "detail": "The release updates libexpat, libpng, zlib, FreeType, and libjpeg-turbo to newer upstream versions.",
+          "lead": "Bundled native libraries refreshed",
+          "detail": "The bundled libexpat, libpng, zlib, FreeType, and libjpeg-turbo dependencies have been updated.",
           "prs": [3717, 3718, 3720, 3726, 4012]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Skia milestone updates, variable-font support, the managed default-typeface fix, and the SKPath finalizer crash fix",
+    "ramezgerges": "Skia milestone and variable-font work, managed default-typeface resolution, the SKPath finalizer fix, and sample improvements",
     "4Darmygeometry": "Linux Bionic native assets and C# 13 support for legacy target frameworks",
-    "ebariche": "Uno-side sample and integration fixes",
-    "sasakrsmanovic": "Sample and infrastructure fixes",
-    "SimonvBez": "Fixed SKGLView rendering after MAUI TabBar tab switches on Android"
+    "ebariche": "Uno sample and integration improvements",
+    "sasakrsmanovic": "Sample and infrastructure improvements",
+    "SimonvBez": "The Android MAUI TabBar fix for SKGLView rendering"
   },
   "preview_summaries": {
-    "v4.147.0-preview.1.1": "Preview 1 opened the v4 line with the Skia m132 through m147 engine updates, variable fonts, color font palettes, surface-draw sampling, Linux Bionic, and 64-bit Tizen support.",
-    "v4.147.0-preview.2.1": "Preview 2 added animated WebP encoding, zero-copy SKStream.GetData access, the SKPath finalizer fix, and Apple TFM alignment.",
-    "v4.147.0-preview.3.1": "Preview 3 added HBColor and missing HarfBuzz wrappers, removed pre-.NET 8 WASM runtime assets, and refreshed FreeType, zlib, and libjpeg-turbo."
+    "v4.147.0-preview.1.1": "Preview 1 opened the v4 line with the Skia m147 engine update, variable fonts, surface sampling options, and expanded Linux and Tizen support.",
+    "v4.147.0-preview.2.1": "Preview 2 added animated WebP encoding, zero-copy `SKStream.GetData()`, and the SKPath finalizer fix.",
+    "v4.147.0-preview.3.1": "Preview 3 added HBColor and HarfBuzz wrapper improvements, refreshed bundled dependencies, and updated WASM targeting."
   },
-  "harfbuzz_summary": "HarfBuzzSharp 8.3.1.6 includes variable-font and color-palette support, the HBColor value type, and additional binding wrappers.",
+  "harfbuzz_summary": "Adds variable-font and color-palette support, the HBColor value type, and missing HarfBuzz wrappers.",
   "release_summaries": {
     "v4.147.0-preview.1.1": {
-      "headline": "SkiaSharp 4.147.0 Preview 1 opens the v4 line with the Skia m147 engine update.",
-      "body": "It adds variable fonts, color font palettes, surface-draw sampling controls, and new Linux Bionic and 64-bit Tizen native assets."
+      "headline": "SkiaSharp 4.147.0 Preview 1 opens the v4 line on Skia m147.",
+      "body": "It adds variable fonts, surface sampling options, and expanded Linux and Tizen native support."
     },
     "v4.147.0-preview.2.1": {
-      "headline": "SkiaSharp 4.147.0 Preview 2 adds animated WebP encoding and zero-copy stream data access.",
-      "body": "It also fixes an SKPath finalizer ordering crash and aligns Apple target frameworks with current .NET SDK guidance."
+      "headline": "SkiaSharp 4.147.0 Preview 2 adds animated WebP encoding and stream-to-data conversion.",
+      "body": "It also fixes the SKPath finalizer collection-order crash."
     },
     "v4.147.0-preview.3.1": {
-      "headline": "SkiaSharp 4.147.0 Preview 3 expands HarfBuzzSharp APIs and updates bundled dependencies.",
-      "body": "It adds HBColor and missing HarfBuzz wrappers, requires .NET 8 or later for WASM runtime assets, and refreshes FreeType, zlib, and libjpeg-turbo."
+      "headline": "SkiaSharp 4.147.0 Preview 3 completes the preview line with HarfBuzz and platform updates.",
+      "body": "It adds HBColor, improves HarfBuzz wrappers, and updates WASM targeting."
     }
   }
 }

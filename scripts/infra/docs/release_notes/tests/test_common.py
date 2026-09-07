@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -317,6 +318,19 @@ class DataFormatSyncTests(unittest.TestCase):
     def test_matches_release_notes_data_format_version(self):
         module = _load_release_notes_data_module()
         self.assertEqual(module._DATA_JSON_FORMAT_VERSION, common.DATA_FORMAT)
+
+
+class ApiDiffScopedRefreshTests(unittest.TestCase):
+    def test_scoped_refresh_clears_only_the_current_package_folder(self):
+        source = (_DOCS_DIR / "api-diff.cake").read_text(encoding="utf-8")
+        self.assertRegex(
+            source,
+            re.compile(
+                r"var packageDir = lineDir\.Combine \(id\);"
+                r".*?ClearGeneratedApiDiffsIn \(packageDir\.FullPath\);",
+                re.DOTALL,
+            ),
+        )
 
 
 class WebsiteContentUnchangedTests(unittest.TestCase):

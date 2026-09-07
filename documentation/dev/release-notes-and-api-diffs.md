@@ -1556,9 +1556,10 @@ boolean argument); `prepare.sh` translates its shell flags to those names.
   rebuilds the whole back-catalogue. This is the only way to force old committed API
   diffs to regenerate after the diff tooling itself changes.
 - **Incremental/scoped clearing.** Any run that is not a full forced rebuild leaves
-  cached lines untouched. For each line it does rebuild, it clears that line's generated
-  files immediately before copying the new diff, so stale `*.breaking.md` files cannot
-  survive while unrelated cached lines remain intact.
+  cached lines untouched. For each package in a line it does rebuild, it clears that
+  package's generated files immediately before copying its new diff, so stale
+  `*.breaking.md` files cannot survive while earlier package output in the same line
+  remains intact.
 
 The target clears **only** generated API-diff files as defined in §3.5 — files whose
 first line starts with `# API diff:` and that are not retired `*.humanreadable.md` files.
