@@ -5,4 +5,3 @@
 ## SkiaSharp.Direct3D.Vortice
 
 - [SkiaSharp.Direct3D.Vortice](SkiaSharp.Direct3D.Vortice/SkiaSharp.Direct3D.Vortice.md)
-
