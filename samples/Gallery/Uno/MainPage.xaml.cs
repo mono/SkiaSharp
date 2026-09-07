@@ -11,6 +11,7 @@ public sealed partial class MainPage : Page
     public MainPage()
     {
         this.InitializeComponent();
+        RepositoryLink.NavigateUri = new Uri(SampleService.RepositoryUrl);
         Current = this;
         // ActualTheme is unreliable before the visual tree is loaded.
         Loaded += (_, _) =>

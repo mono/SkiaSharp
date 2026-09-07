@@ -24,6 +24,7 @@
   <!-- Stamp build metadata into assembly attributes -->
   <PropertyGroup>
     <BuildFooter></BuildFooter>
+    <SkiaSharpRepositoryUrl Condition="'$(SkiaSharpRepositoryUrl)' == ''">https://github.com/mono/SkiaSharp</SkiaSharpRepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
@@ -33,6 +34,10 @@
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>BuildFooter</_Parameter1>
       <_Parameter2>$(BuildFooter)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RepositoryUrl</_Parameter1>
+      <_Parameter2>$(SkiaSharpRepositoryUrl)</_Parameter2>
     </AssemblyAttribute>
   </ItemGroup>
 
