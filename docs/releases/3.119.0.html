@@ -1,0 +1,217 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 3.119.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 3.119.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/3.119.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-31190">Version 3.119.0</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:6 version:3.119.0 -->
+
+<blockquote>
+<p><strong>Skia m119 and wider GPU support</strong> · Released April 25, 2025 · <a href="https://www.nuget.org/packages/SkiaSharp/3.119.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v3.119.0">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>Supersedes <a href="3.118.0.html">3.118.0</a></strong> · Rolls up preview-only work that was never released as stable — those changes are included cumulatively below.</p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="3.119.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/8.3.1.1/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 3.119.0 adds Direct3D on Windows and broadens Linux architecture support on the Skia m119 engine. Windows ARM gains OpenGL, tvOS gains SKMetalView, and Android libraries support 16 KB pages. New save-layer and color-filter APIs accompany fixes for WebAssembly, legacy .NET packaging, and image creation.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>Skia m119 baseline</strong> — Advances through the m117 and m118 previews to Skia m119, with updated GPU context bindings and a new color type. (<a href="https://github.com/mono/SkiaSharp/pull/3047">#3047</a>, <a href="https://github.com/mono/SkiaSharp/pull/3048">#3048</a>, <a href="https://github.com/mono/SkiaSharp/pull/3062">#3062</a>)</li>
+</ul>
+<h2 id="platform">Platform</h2>
+<ul>
+<li><strong>More GPU backends and views</strong> — Adds Direct3D bindings and native support on Windows, enables OpenGL on Windows ARM, and adds tvOS SKMetalView. Metal render-target APIs are available across platforms, and iOS Simulator Metal performance is improved. — ❤️ <a href="https://github.com/Kation">@Kation</a>, <a href="https://github.com/MartinZikmund">@MartinZikmund</a>, <a href="https://github.com/spouliot">@spouliot</a>, <a href="https://github.com/taublast">@taublast</a> (<a href="https://github.com/mono/SkiaSharp/pull/2823">#2823</a>, <a href="https://github.com/mono/SkiaSharp/pull/3189">#3189</a>, <a href="https://github.com/mono/SkiaSharp/pull/3114">#3114</a>, <a href="https://github.com/mono/SkiaSharp/pull/3070">#3070</a>, <a href="https://github.com/mono/SkiaSharp/pull/3156">#3156</a>)</li>
+<li><strong>Linux architectures and Android page sizes</strong> — Adds RISC-V 64-bit and LoongArch64 native build support, extends Alpine cross-compilation, and broadens Linux coverage using Debian 10. Android native libraries move to NDK r27c with 16 KB alignment. — ❤️ <a href="https://github.com/kasperk81">@kasperk81</a>, <a href="https://github.com/4Darmygeometry">@4Darmygeometry</a> (<a href="https://github.com/mono/SkiaSharp/pull/3192">#3192</a>, <a href="https://github.com/mono/SkiaSharp/pull/3198">#3198</a>, <a href="https://github.com/mono/SkiaSharp/pull/3200">#3200</a>, <a href="https://github.com/mono/SkiaSharp/pull/3209">#3209</a>, <a href="https://github.com/mono/SkiaSharp/pull/3096">#3096</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>Layer and color-filter control</strong> — Exposes SkCanvas SaveLayerRec through the managed API and adds missing SKColorFilter types. — ❤️ <a href="https://github.com/ahmed605">@ahmed605</a> (<a href="https://github.com/mono/SkiaSharp/pull/2962">#2962</a>, <a href="https://github.com/mono/SkiaSharp/pull/2882">#2882</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>WebAssembly application compatibility</strong> — Fixes .NET 9 Blazor behavior and base-path imports, and applies the WASM workaround even when applications do not use Blazor views. (<a href="https://github.com/mono/SkiaSharp/pull/3064">#3064</a>, <a href="https://github.com/mono/SkiaSharp/pull/3082">#3082</a>, <a href="https://github.com/mono/SkiaSharp/pull/3088">#3088</a>, <a href="https://github.com/mono/SkiaSharp/pull/3092">#3092</a>)</li>
+<li><strong>Legacy project restore and picture images</strong> — Restores .NET Framework and Mono projects using packages.config, corrects native package path metadata, and fixes SKImage.FromPicture. — ❤️ <a href="https://github.com/sungaila">@sungaila</a> (<a href="https://github.com/mono/SkiaSharp/pull/3112">#3112</a>, <a href="https://github.com/mono/SkiaSharp/pull/3100">#3100</a>, <a href="https://github.com/mono/SkiaSharp/pull/3231">#3231</a>)</li>
+</ul>
+<h2 id="security">Security</h2>
+<ul>
+<li><strong>Native dependency updates</strong> — Refreshes libpng to 1.6.44, libexpat to 2.6.4, FreeType to a 2.13.3-based revision, and VulkanMemoryAllocator to 3.2.1, alongside the libjpeg-turbo dependency refresh. — ❤️ <a href="https://github.com/kasperk81">@kasperk81</a> (<a href="https://github.com/mono/SkiaSharp/pull/3059">#3059</a>, <a href="https://github.com/mono/SkiaSharp/pull/3056">#3056</a>, <a href="https://github.com/mono/SkiaSharp/pull/3061">#3061</a>, <a href="https://github.com/mono/SkiaSharp/pull/3196">#3196</a>, <a href="https://github.com/mono/SkiaSharp/pull/3060">#3060</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-8311">HarfBuzzSharp 8.3.1.1</h2>
+<p>HarfBuzzSharp native assets gain RISC-V and LoongArch64 support and Android 16 KB alignment. Package-path and WASM integration fixes are included; the 8.3.1.1 package revision does not imply a new HarfBuzz engine.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/kasperk81">@kasperk81</a></td>
+<td>RISC-V native support, Alpine cross-build coverage, Linux test fixes, and VulkanMemoryAllocator updates. (<a href="https://github.com/mono/SkiaSharp/pull/3192">#3192</a>, <a href="https://github.com/mono/SkiaSharp/pull/3194">#3194</a>, <a href="https://github.com/mono/SkiaSharp/pull/3196">#3196</a>, <a href="https://github.com/mono/SkiaSharp/pull/3200">#3200</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/4Darmygeometry">@4Darmygeometry</a></td>
+<td>LoongArch64 native build and package support. (<a href="https://github.com/mono/SkiaSharp/pull/3198">#3198</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/ahmed605">@ahmed605</a></td>
+<td>Managed SaveLayerRec support. (<a href="https://github.com/mono/SkiaSharp/pull/2962">#2962</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Kation">@Kation</a></td>
+<td>Windows Direct3D backend bindings and native builds. (<a href="https://github.com/mono/SkiaSharp/pull/2823">#2823</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/kkwpsv">@kkwpsv</a></td>
+<td>Correction of an incorrect API call. (<a href="https://github.com/mono/SkiaSharp/pull/3143">#3143</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MartinZikmund">@MartinZikmund</a></td>
+<td>SKMetalView support on tvOS. (<a href="https://github.com/mono/SkiaSharp/pull/3114">#3114</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/pjcollins">@pjcollins</a></td>
+<td>Development dependency update for Microsoft.DotNet.Interactive. (<a href="https://github.com/mono/SkiaSharp/pull/3166">#3166</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/spouliot">@spouliot</a></td>
+<td>Cross-platform Metal render-target API availability. (<a href="https://github.com/mono/SkiaSharp/pull/3070">#3070</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/sungaila">@sungaila</a></td>
+<td>packages.config compatibility for .NET Framework and Mono. (<a href="https://github.com/mono/SkiaSharp/pull/3112">#3112</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/taublast">@taublast</a></td>
+<td>Metal performance improvements in the iOS Simulator. (<a href="https://github.com/mono/SkiaSharp/pull/3156">#3156</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="preview-1-march-31-2025">Preview 1 (March 31, 2025)</h2>
+<p>Moved to Skia m119 with Windows Direct3D, Windows ARM OpenGL, tvOS Metal views, and broader Linux architecture coverage. Added Android 16 KB alignment and repaired packages.config support.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.118.0-preview.2.3...v3.119.0-preview.1.2">Full changelog</a></p>
+<h2 id="preview-2-december-5-2024">Preview 2 (December 5, 2024)</h2>
+<p>Improved .NET 9 WebAssembly compatibility and base-path imports, exposed Metal render-target APIs across platforms, and refreshed native dependencies.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.118.0-preview.1.2...v3.118.0-preview.2.3">Full changelog</a></p>
+<h2 id="preview-1-november-6-2024">Preview 1 (November 6, 2024)</h2>
+<p>Updated the engine to Skia m118 and refreshed the HarfBuzz dependency to 8.3.1.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.116.1...v3.118.0-preview.1.2">Full changelog</a></p>
+<hr>
+<p><small class="text-body-secondary">Release notes generated on 2026-10-31 at 03:37 UTC.</small></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/3.119.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · 525a25f
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

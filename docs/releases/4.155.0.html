@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 4.155.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 4.155.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.155.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-41550">Version 4.155.0</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:6 version:4.155.0 -->
+
+<blockquote>
+<p><strong>HarfBuzz refresh and font matching</strong> · Released October 29, 2026 · <a href="https://www.nuget.org/packages/SkiaSharp/4.155.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v4.155.0">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="4.155.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/14.4.0/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 4.155.0 combines Skia m155 with HarfBuzz 14.4.0 and Linux font-matching corrections. The release improves failed-flush cache cleanup and updates HarfBuzz shaping behavior. Built-in RAW/DNG decoding and embedded RAW-preview extraction are disabled.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<ul>
+<li><strong>Decode RAW and DNG images outside SkiaSharp</strong> — The bundled DNG SDK and PIEX decoding routes are disabled, including extraction of embedded JPEG previews from RAW files. Use an external decoder and pass pixels or an extracted JPEG to SkiaSharp. SKEncodedImageFormat.Dng remains for compatibility, but no replacement RAW backend is included. (<a href="https://github.com/mono/SkiaSharp/pull/5162">#5162</a>)</li>
+<li><strong>Review cross-direction mark positioning</strong> — HarfBuzz 14.4.0 intentionally changes cross-direction mark positioning for DirectWrite and Core Text compatibility. Review text layouts and rendering baselines that depend on the previous mark positions when upgrading. (<a href="https://github.com/mono/SkiaSharp/pull/5135">#5135</a>)</li>
+</ul>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>Skia m155</strong> — Updates the bundled renderer to milestone 155 while preserving the managed API and the explicit bounds behavior of rotation-scale text runs. (<a href="https://github.com/mono/SkiaSharp/pull/5081">#5081</a>)</li>
+<li><strong>HarfBuzz 14.4.0</strong> — Updates the shaping engine with intentional cross-direction mark-positioning changes, glyph-position saturation, malformed-font crash and hang fixes, and shaping and subsetting performance work. HarfBuzzSharp packages start a new 14.4.0 revision line. (<a href="https://github.com/mono/SkiaSharp/pull/5135">#5135</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>OpenType tag enums</strong> — Adds OpenTypeBitsTag and OpenTypeNumberTag enum values for the updated native source. The raw fetch functions remain internal; no Face wrappers are introduced. (<a href="https://github.com/mono/SkiaSharp/pull/5135">#5135</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Linux font-family candidate matching</strong> — Checks family acceptability only on the first valid sorted fontconfig candidate, rather than accepting a lower-ranked metric-compatible substitute and preventing the caller from trying its next requested family. (<a href="https://github.com/mono/SkiaSharp/pull/5286">#5286</a>)</li>
+<li><strong>Failed-flush cache cleanup</strong> — Drops uniquely held Ganesh thread-safe-cache entries after a failed flush so later draws cannot reuse those entries' uninitialized textures. (<a href="https://github.com/mono/SkiaSharp/pull/5286">#5286</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-1440">HarfBuzzSharp 14.4.0</h2>
+<p>Updates native HarfBuzz to 14.4.0, including cross-direction mark-positioning changes, glyph-position saturation and malformed-font fixes. Adds OpenTypeBitsTag and OpenTypeNumberTag enums while keeping the raw fetch functions internal.</p>
+<h2 id="release-candidate-1-october-12-2026">Release Candidate 1 (October 12, 2026)</h2>
+<p>Corrected Ganesh cache cleanup after failed flushes and Linux fontconfig first-candidate matching.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.155.0-preview.2.26479.13...v4.155.0-rc.1.26512.8">Full changelog</a></p>
+<h2 id="preview-2-september-29-2026">Preview 2 (September 29, 2026)</h2>
+<p>Updated HarfBuzz to 14.4.0 with intentional cross-direction mark-positioning changes and new OpenType tag enums. Disabled built-in RAW/DNG decoding and embedded RAW-preview extraction.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.155.0-preview.1.26471.14...v4.155.0-preview.2.26479.13">Full changelog</a></p>
+<h2 id="preview-1-september-22-2026">Preview 1 (September 22, 2026)</h2>
+<p>Opened the Skia m155 line without changing the managed API surface.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.154.1...v4.155.0-preview.1.26471.14">Full changelog</a></p>
+<hr>
+<p><small class="text-body-secondary">Release notes generated on 2026-11-09 at 18:54 UTC.</small></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.155.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · 525a25f
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

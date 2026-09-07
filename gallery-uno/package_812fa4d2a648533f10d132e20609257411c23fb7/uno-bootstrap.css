@@ -1,0 +1,178 @@
+﻿.uno-loader {
+    background-color: var(--light-theme-bg-color, #F3F3F3);
+    z-index: 5000;
+}
+
+@media (prefers-color-scheme: dark) {
+    .uno-loader {
+        background-color: var(--dark-theme-bg-color, #202020);
+    }
+}
+
+.uno-loader {
+    /* Main container of the loader */
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+    .uno-loader .logo {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: min(90%, 620px);
+        max-height: min(90%, 300px);
+        width: auto;
+        height: auto;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 620px 300px;
+        pointer-events: none;
+    }
+
+    .uno-loader progress {
+        /* Reset the default appearance */
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        /* Get rid of default border in Firefox. */
+        border: none;
+        /* Dimensions */
+        width: calc(100% - 16px);
+        height: 4px;
+        position: absolute;
+        /* Position */
+        bottom: 8px;
+        left: 8px;
+        right: 8px;
+        /* Styling */
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .uno-loader img[src=''] {
+        visibility: collapse;
+    }
+
+    .uno-loader progress::-moz-progress-bar {
+        /* Firefox */
+        background-color: var(--accent-color, #159bff);
+        border-radius: 2px;
+        /* Smooth animation between progress updates */
+        transition: width 300ms ease-out;
+    }
+
+    .uno-loader progress::-webkit-progress-value {
+        /* Chrome & Safari */
+        background-color: var(--accent-color, #159bff);
+        border-radius: 2px;
+        /* Smooth animation between progress updates */
+        transition: width 300ms ease-out;
+    }
+
+    .uno-loader[loading-position='top'] progress {
+        bottom: auto;
+        top: 8px;
+        color: var(--accent-color, #159bff);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .uno-loader progress::-moz-progress-bar {
+            background-color: var(--dark-theme-accent-color, var(--accent-color, #159bff));
+            border-radius: 2px;
+            /* Smooth animation between progress updates */
+            transition: width 300ms ease-out;
+        }
+
+        .uno-loader progress::-webkit-progress-value {
+            background-color: var(--dark-theme-accent-color, var(--accent-color, #159bff));
+            border-radius: 2px;
+            /* Smooth animation between progress updates */
+            transition: width 300ms ease-out;
+        }
+
+        .uno-loader[loading-position='top'] progress {
+            color: var(--dark-theme-accent-color, var(--accent-color, #159bff));
+        }
+    }
+
+    .uno-loader[loading-position='top'] .alert {
+        bottom: auto;
+        top: 10px;
+    }
+
+    .uno-loader[loading-alert] .alert {
+        /* Position */
+        display: block;
+        position: absolute;
+        bottom: 10px;
+        height: 32px;
+        font-weight: normal;
+        font-size: 14px;
+        font-family: monospace;
+        color: var(--accent-color, #f85977);
+        width: 32px;
+        background: whitesmoke;
+        border-radius: 50%;
+        transition: all 400ms ease;
+        transform-origin: 50% 50%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+        @media (prefers-color-scheme: dark) {
+            .uno-loader[loading-alert] .alert {
+                color: var(--dark-theme-accent-color, var(--accent-color, #f85977));
+            }
+        }
+
+        .uno-loader[loading-alert] .alert:after {
+            text-align: center;
+            display: block;
+            width: 100%;
+            position: absolute;
+            top: 0;
+        }
+
+    .uno-loader[loading-alert='none'] .alert {
+        display: none;
+    }
+
+    .uno-loader[loading-alert='error'] .alert:after {
+        animation-name: pulse;
+        animation-duration: 2500ms;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+    }
+
+    .uno-loader[loading-alert='warning'] .alert:after,
+    .uno-loader[loading-alert='error'] .alert:after {
+        top: 2px;
+        font-size: 26px;
+        content: '\26A0';
+    }
+
+    .uno-loader[loading-alert='warning'] .alert:after {
+        color: DarkGoldenRod;
+    }
+
+    .uno-loader[loading-alert='error'] .alert:after {
+        color: DarkRed;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(0.85);
+        }
+
+        50% {
+            transform: scale(1.15);
+        }
+
+        100% {
+            transform: scale(0.85);
+        }
+    }
