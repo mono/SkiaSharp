@@ -44,20 +44,13 @@ jobs:
       - name: Remove .git directory
         run: rm -rf .git
 
-      - name: Prepare public Pages artifact
-        run: |
-          mkdir -p /tmp/pages-public
-          find . -mindepth 1 -maxdepth 1 \
-            -not -name 'staging' \
-            -exec cp -a {} /tmp/pages-public/ \;
-
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: /tmp/pages-public
+          path: .
 
       - name: Deploy to GitHub Pages
         id: deployment
