@@ -1,35 +1,32 @@
 {
   "theme": "Skia m153 preview",
-  "highlights_headline": "SkiaSharp 4.153.0 previews the Skia m153 engine update and its first upstream bug-fix merge.",
-  "highlights_body": "This preview is intentionally small, focusing on the renderer refresh and the platform behavior that comes with it.",
-  "breaking": [
-    {
-      "title": "Linux font fallback may choose a different face",
-      "body": "Skia now tries `FcFontMatch` before the older `FcFontSort` fallback path on Linux. If your app depends on the exact fallback face that fontconfig chose before, set an explicit family/style or bundle the typeface you need.",
-      "prs": [4826, 4927]
-    }
-  ],
+  "highlights_headline": "SkiaSharp 4.153.0 previews the Skia m153 engine update.",
+  "highlights_body": "The bundled renderer includes current upstream fixes. Linux applications relying on fontconfig fallback should verify text output after upgrading.",
+  "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
           "lead": "Skia updated to milestone m153",
-          "detail": "Moves the bundled renderer onto the m153 line and immediately folds in the first upstream chrome/m153 bug-fix merge.",
-          "prs": [4826, 4927]
+          "detail": "Updates the bundled renderer with the latest upstream fixes. On Linux, font fallback now tries FcFontMatch before FcFontSort, which can select a different fallback face; specify a family and style or bundle a typeface when exact metrics and glyphs matter.",
+          "prs": [
+            4826,
+            4927
+          ]
         }
       ]
     }
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.153.0-preview.1.26454.6": "Preview 1 opens the m153 line with the engine refresh and its first upstream bug-fix merge, while otherwise keeping the release intentionally narrow."
+    "v4.153.0-preview.1.26454.6": "Preview 1 opens the 4.153 line with the Skia m153 engine update and its upstream fixes."
   },
   "harfbuzz_summary": null,
   "release_summaries": {
     "v4.153.0-preview.1.26454.6": {
       "headline": "SkiaSharp 4.153.0 Preview 1 updates the bundled renderer to Skia m153.",
-      "body": "It also rolls in the first chrome/m153 bug-fix merge and may change Linux font fallback selection in apps that relied on fontconfig's previous fallback path."
+      "body": "The preview includes current upstream engine fixes. Linux applications that rely on fontconfig fallback should verify text output, as a different fallback face may be selected."
     }
   }
 }
