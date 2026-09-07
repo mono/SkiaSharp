@@ -2,14 +2,14 @@
 """Collect CI build status for SkiaSharp main and recent release branches.
 
 Usage:
-    ci-status.py [--branches N] [--builds N] [--output FILE] [--json FILE]
+    ci-status.py [--branches N] [--builds N] [--json FILE] [--repository OWNER/REPO]
 
 Options:
     --branches N    Number of most recent release branches to include (default: 3)
     --builds N      Number of recent builds per pipeline per branch (default: 5)
-    --output FILE   Write a formatted markdown report to FILE
     --json FILE     Write raw structured JSON data to FILE (for AI analysis)
     --no-issues     Skip fetching errors/warnings (faster)
+    --repository    Override the current GitHub repository
 
 Queries Azure DevOps for:
   Public CI:  mono-SkiaSharp — dnceng-public/public, def 345
@@ -17,13 +17,21 @@ Queries Azure DevOps for:
 """
 
 import argparse
+import configparser
 import json
 import os
+import re
 import subprocess
 import sys
 import urllib.request
 from datetime import datetime, timezone
 from collections import defaultdict
+from pathlib import Path
+from urllib.parse import urlparse
+
+REPO_ROOT = Path(__file__).resolve().parents[4]
+_OWNER_RE = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?")
+_REPOSITORY_RE = re.compile(r"[A-Za-z0-9_.-]+")
 
 ORG_DNCENG = "https://dev.azure.com/dnceng"
 PROJECT_DNCENG = "internal"
@@ -60,46 +68,151 @@ ICONS = {
 # trigger: "push" = push/PR, "schedule" = cron, "dispatch" = manual, "event" = PR/issue events
 # branches: (optional) override which branches to query for branch-scoped workflows.
 #           If omitted, uses the full set (main + release/*).
-GITHUB_WORKFLOWS = [
-    # mono/SkiaSharp — Build & Docs (push-triggered, main + release/*)
-    {"repo": "mono/SkiaSharp", "workflow": "build-site.yml", "name": "Pages - Deploy", "scope": "branch", "trigger": "push"},
-    {"repo": "mono/SkiaSharp", "workflow": "samples.yml", "name": "Sync - Samples", "scope": "branch", "trigger": "push"},
-    {"repo": "mono/SkiaSharp", "workflow": "binding-generation-determinism.yml", "name": "Tests - Binding Generation Determinism", "scope": "branch", "trigger": "push"},
-    # mono/SkiaSharp — Release-path push workflow (main + release/*)
-    {"repo": "mono/SkiaSharp", "workflow": "update-release-notes.lock.yml", "name": "Sync - Release Notes & API Diffs", "scope": "branch", "trigger": "push"},
-    # mono/SkiaSharp — Automation & Sync (global: scheduled/dispatch, not branch-specific)
-    {"repo": "mono/SkiaSharp", "workflow": "build-site-go-live.yml", "name": "Pages - Go Live!", "scope": "global", "trigger": "dispatch"},
-    {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup.yml", "name": "Pages - PR Staging - Cleanup", "scope": "global", "trigger": "event"},
-    {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup-stale.yml", "name": "Pages - PR Staging - Sweep Stale", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp", "workflow": "auto-docs-submodule-sync.yml", "name": "Sync - Docs Submodule", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp", "workflow": "auto-skia-submodule-sync.yml", "name": "Sync - Skia Submodule", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp", "workflow": "auto-skia-sync.lock.yml", "name": "Sync - Skia Upstream", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp", "workflow": "memory-leak-fixer.lock.yml", "name": "Fixer - Memory Leak", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp", "workflow": "performance-fixer.lock.yml", "name": "Fixer - Performance", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp", "workflow": "auto-triage.lock.yml", "name": "Sync - Issue Triage", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp", "workflow": "auto-update-issue-template-versions.yml", "name": "Sync - Issue Template Versions", "scope": "global", "trigger": "schedule"},
+_GITHUB_WORKFLOWS = [
+    # Current repository — Build & Docs (push-triggered, main + release/*)
+    {"repo": "current", "workflow": "build-site.yml", "name": "Pages - Deploy", "scope": "branch", "trigger": "push"},
+    {"repo": "current", "workflow": "samples.yml", "name": "Sync - Samples", "scope": "branch", "trigger": "push"},
+    {"repo": "current", "workflow": "binding-generation-determinism.yml", "name": "Tests - Binding Generation Determinism", "scope": "branch", "trigger": "push"},
+    # Current repository — Release-path push workflow (main + release/*)
+    {"repo": "current", "workflow": "update-release-notes.lock.yml", "name": "Sync - Release Notes & API Diffs", "scope": "branch", "trigger": "push"},
+    # Current repository — Automation & Sync (global: scheduled/dispatch, not branch-specific)
+    {"repo": "current", "workflow": "build-site-go-live.yml", "name": "Pages - Go Live!", "scope": "global", "trigger": "dispatch"},
+    {"repo": "current", "workflow": "build-site-cleanup.yml", "name": "Pages - PR Staging - Cleanup", "scope": "global", "trigger": "event"},
+    {"repo": "current", "workflow": "build-site-cleanup-stale.yml", "name": "Pages - PR Staging - Sweep Stale", "scope": "global", "trigger": "schedule"},
+    {"repo": "current", "workflow": "auto-docs-submodule-sync.yml", "name": "Sync - Docs Submodule", "scope": "global", "trigger": "schedule"},
+    {"repo": "current", "workflow": "auto-skia-submodule-sync.yml", "name": "Sync - Skia Submodule", "scope": "global", "trigger": "schedule"},
+    {"repo": "current", "workflow": "auto-skia-sync.lock.yml", "name": "Sync - Skia Upstream", "scope": "global", "trigger": "schedule"},
+    {"repo": "current", "workflow": "memory-leak-fixer.lock.yml", "name": "Fixer - Memory Leak", "scope": "global", "trigger": "schedule"},
+    {"repo": "current", "workflow": "performance-fixer.lock.yml", "name": "Fixer - Performance", "scope": "global", "trigger": "schedule"},
+    {"repo": "current", "workflow": "auto-triage.lock.yml", "name": "Sync - Issue Triage", "scope": "global", "trigger": "schedule"},
+    {"repo": "current", "workflow": "auto-update-issue-template-versions.yml", "name": "Sync - Issue Template Versions", "scope": "global", "trigger": "schedule"},
     # persist-aw-data runs off workflow_run, not push — see tests/test_workflow_registry.py
-    {"repo": "mono/SkiaSharp", "workflow": "persist-aw-data.yml", "name": "Sync - Agentic Data", "scope": "global", "trigger": "event"},
-    # mono/SkiaSharp — Tracking dashboards (global: scheduled)
-    {"repo": "mono/SkiaSharp", "workflow": "track-artifact-sizes.yml", "name": "Track - Artifact Sizes", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp", "workflow": "track-benchmarks.yml", "name": "Track - Benchmarks", "scope": "global", "trigger": "schedule"},
-    # mono/SkiaSharp — Release path (dispatch-driven, plus the tooling test gate)
-    {"repo": "mono/SkiaSharp", "workflow": "release-prepare.yml", "name": "Release - Prepare", "scope": "global", "trigger": "dispatch"},
-    {"repo": "mono/SkiaSharp", "workflow": "release-finish.yml", "name": "Release - Finish", "scope": "global", "trigger": "dispatch"},
-    {"repo": "mono/SkiaSharp", "workflow": "release-milestones.yml", "name": "Release - Milestones", "scope": "global", "trigger": "dispatch"},
-    {"repo": "mono/SkiaSharp", "workflow": "update-github-release-summaries.yml", "name": "Update GitHub Release summaries", "scope": "global", "trigger": "dispatch"},
-    {"repo": "mono/SkiaSharp", "workflow": "release-tooling-tests.yml", "name": "Release - Tooling Tests", "scope": "branch", "trigger": "push"},
-    {"repo": "mono/SkiaSharp", "workflow": "automation-tooling-tests.yml", "name": "Automation - Tooling Tests", "scope": "branch", "trigger": "push"},
-    # mono/SkiaSharp — PR Utilities (global: triggered by PR events, not branch-specific)
-    {"repo": "mono/SkiaSharp", "workflow": "backport.yml", "name": "PR - Backport", "scope": "global", "trigger": "event"},
-    {"repo": "mono/SkiaSharp", "workflow": "rebase.yml", "name": "PR - Rebase", "scope": "global", "trigger": "event"},
-    {"repo": "mono/SkiaSharp", "workflow": "pr-artifacts-comment.yml", "name": "PR - Artifacts Comment", "scope": "global", "trigger": "event"},
-    {"repo": "mono/SkiaSharp", "workflow": "merge-message.lock.yml", "name": "Merge Message", "scope": "global", "trigger": "event"},
-    # mono/SkiaSharp-API-docs (global: scheduled/dispatch/PR events)
-    {"repo": "mono/SkiaSharp-API-docs", "workflow": "auto-api-docs-writer.lock.yml", "name": "Auto API Docs Writer", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp-API-docs", "workflow": "automerge-docs.yml", "name": "Automerge Docs", "scope": "global", "trigger": "event"},
-    {"repo": "mono/SkiaSharp-API-docs", "workflow": "go-live.yml", "name": "Go Live", "scope": "global", "trigger": "dispatch"},
+    {"repo": "current", "workflow": "persist-aw-data.yml", "name": "Sync - Agentic Data", "scope": "global", "trigger": "event"},
+    # Current repository — Tracking dashboards (global: scheduled)
+    {"repo": "current", "workflow": "track-artifact-sizes.yml", "name": "Track - Artifact Sizes", "scope": "global", "trigger": "schedule"},
+    {"repo": "current", "workflow": "track-benchmarks.yml", "name": "Track - Benchmarks", "scope": "global", "trigger": "schedule"},
+    # Current repository — Release path (dispatch-driven, plus the tooling test gate)
+    {"repo": "current", "workflow": "release-prepare.yml", "name": "Release - Prepare", "scope": "global", "trigger": "dispatch"},
+    {"repo": "current", "workflow": "release-finish.yml", "name": "Release - Finish", "scope": "global", "trigger": "dispatch"},
+    {"repo": "current", "workflow": "release-milestones.yml", "name": "Release - Milestones", "scope": "global", "trigger": "dispatch"},
+    {"repo": "current", "workflow": "update-github-release-summaries.yml", "name": "Update GitHub Release summaries", "scope": "global", "trigger": "dispatch"},
+    {"repo": "current", "workflow": "release-tooling-tests.yml", "name": "Release - Tooling Tests", "scope": "branch", "trigger": "push"},
+    {"repo": "current", "workflow": "automation-tooling-tests.yml", "name": "Automation - Tooling Tests", "scope": "branch", "trigger": "push"},
+    # Current repository — PR Utilities (global: triggered by PR events, not branch-specific)
+    {"repo": "current", "workflow": "backport.yml", "name": "PR - Backport", "scope": "global", "trigger": "event"},
+    {"repo": "current", "workflow": "rebase.yml", "name": "PR - Rebase", "scope": "global", "trigger": "event"},
+    {"repo": "current", "workflow": "pr-artifacts-comment.yml", "name": "PR - Artifacts Comment", "scope": "global", "trigger": "event"},
+    {"repo": "current", "workflow": "merge-message.lock.yml", "name": "Merge Message", "scope": "global", "trigger": "event"},
+    # API docs repository (global: scheduled/dispatch/PR events)
+    {"repo": "docs", "workflow": "auto-api-docs-writer.lock.yml", "name": "Auto API Docs Writer", "scope": "global", "trigger": "schedule"},
+    {"repo": "docs", "workflow": "automerge-docs.yml", "name": "Automerge Docs", "scope": "global", "trigger": "event"},
+    {"repo": "docs", "workflow": "go-live.yml", "name": "Go Live", "scope": "global", "trigger": "dispatch"},
 ]
+
+
+def normalize_repository(value: str) -> str:
+    """Return a validated GitHub owner/repository slug."""
+
+    candidate = value.strip()
+    if candidate.startswith("git@github.com:"):
+        candidate = candidate.removeprefix("git@github.com:")
+    elif "://" in candidate:
+        parsed = urlparse(candidate)
+        if (
+            parsed.hostname != "github.com"
+            or parsed.query
+            or parsed.fragment
+            or parsed.params
+        ):
+            raise ValueError(f"Unsupported GitHub repository: {value!r}")
+        candidate = parsed.path.lstrip("/")
+
+    candidate = candidate.removesuffix(".git").rstrip("/")
+    parts = candidate.split("/")
+    if (
+        len(parts) != 2
+        or not _OWNER_RE.fullmatch(parts[0])
+        or not _REPOSITORY_RE.fullmatch(parts[1])
+        or parts[1] in {".", ".."}
+    ):
+        raise ValueError(f"Unsupported GitHub repository: {value!r}")
+    return candidate
+
+
+def repository_from_git_remote(root: Path) -> str:
+    """Resolve one unambiguous GitHub repository from the checkout's origin."""
+
+    urls = subprocess.run(
+        ["git", "-C", str(root), "remote", "get-url", "--all", "origin"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.splitlines()
+    repositories = set()
+    for url in urls:
+        try:
+            repositories.add(normalize_repository(url))
+        except ValueError:
+            continue
+
+    if len(repositories) != 1:
+        raise RuntimeError(
+            "Unable to resolve one GitHub repository from the origin remote; "
+            "pass --repository explicitly."
+        )
+    return repositories.pop()
+
+
+def current_repository(
+    explicit: str | None = None,
+    *,
+    root: Path = REPO_ROOT,
+    environ: dict[str, str] | None = None,
+) -> str:
+    if explicit:
+        return normalize_repository(explicit)
+    runtime = (environ if environ is not None else os.environ).get("GITHUB_REPOSITORY")
+    if runtime:
+        return normalize_repository(runtime)
+    return repository_from_git_remote(root)
+
+
+def docs_repository(root: Path = REPO_ROOT) -> str:
+    parser = configparser.ConfigParser(interpolation=None)
+    gitmodules = root / ".gitmodules"
+    with gitmodules.open(encoding="utf-8") as stream:
+        parser.read_file(stream)
+    section = 'submodule "docs"'
+    if not parser.has_option(section, "url"):
+        raise RuntimeError(f"{gitmodules} has no URL for the docs submodule.")
+    return normalize_repository(parser.get(section, "url"))
+
+
+def workflow_registry(
+    repository: str | None = None,
+    docs: str | None = None,
+    *,
+    root: Path = REPO_ROOT,
+    environ: dict[str, str] | None = None,
+) -> list[dict]:
+    repositories = {
+        "current": current_repository(repository, root=root, environ=environ),
+        "docs": normalize_repository(docs) if docs else docs_repository(root),
+    }
+    return [
+        {**entry, "repo": repositories[entry["repo"]]}
+        for entry in _GITHUB_WORKFLOWS
+    ]
+
+
+GITHUB_WORKFLOWS = []
+
+
+def configure_workflow_repository(repository: str | None = None) -> None:
+    """Apply an explicit current-repository override without changing the docs source."""
+
+    global GITHUB_WORKFLOWS
+    GITHUB_WORKFLOWS = workflow_registry(repository)
 
 
 def az(args: list[str]) -> str:
@@ -801,7 +914,13 @@ def main():
         "--json", type=str, default=None, dest="json_output",
         help="Write raw structured JSON data to the specified file (for AI analysis)"
     )
+    parser.add_argument(
+        "--repository",
+        default=None,
+        help="Current GitHub repository override (default: context or origin remote)",
+    )
     args = parser.parse_args()
+    configure_workflow_repository(args.repository)
 
     # Collect branches to check
     branches = ["main"]
