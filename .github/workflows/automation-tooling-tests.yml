@@ -18,8 +18,9 @@ on:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
-      # Any workflow edit, so the registry test re-checks its tracked list. '*.yml' already
-      # covers the generated '*.lock.yml' files.
+      # Any workflow edit, so the registry and safety tests re-check source and generated
+      # configuration. '*.yml' covers the generated '*.lock.yml' files.
+      - ".github/workflows/*.md"
       - ".github/workflows/*.yml"
   push:
     branches: [main]
@@ -27,6 +28,7 @@ on:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
+      - ".github/workflows/*.md"
       - ".github/workflows/*.yml"
   workflow_dispatch:
 

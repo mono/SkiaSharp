@@ -11,6 +11,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 WORKFLOW_DIR = REPO_ROOT / ".github" / "workflows"
+TOOLING_WORKFLOW = WORKFLOW_DIR / "automation-tooling-tests.yml"
 FIXER_WORKFLOWS = ("memory-leak-fixer", "performance-fixer")
 STAGED_EXPRESSION = (
     "${{ github.event_name == 'pull_request' || "
@@ -51,6 +52,19 @@ def find_mapping_values(value, key):
 
 
 class FixerWorkflowSafetyTests(unittest.TestCase):
+    def test_tooling_workflow_runs_for_agentic_source_changes(self):
+        workflow = yaml.load(
+            TOOLING_WORKFLOW.read_text(encoding="utf-8"),
+            Loader=yaml.BaseLoader,
+        )
+        triggers = workflow["on"]
+        for event in ("pull_request", "push"):
+            with self.subTest(event=event):
+                self.assertIn(
+                    ".github/workflows/*.md",
+                    triggers[event]["paths"],
+                )
+
     def test_source_stages_all_dry_run_triggers(self):
         for workflow in FIXER_WORKFLOWS:
             with self.subTest(workflow=workflow):
