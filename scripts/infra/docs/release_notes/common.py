@@ -6,14 +6,250 @@ the package stays independently unit testable without a real repository.
 
 from __future__ import annotations
 
+import configparser
+import os
 import re
+import subprocess
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Mapping
+from urllib.parse import urlsplit
 
-# The public GitHub repository these exact shipments and their GitHub Release
-# summaries belong to. Matches ``scripts/infra/docs/release-notes-data.py``'s
-# ``REPO`` -- kept as a separate literal here so this package has no required
-# import-time dependency on that sibling.
-REPO = "mono/SkiaSharp"
+DEFAULT_ROOT = Path(__file__).resolve().parents[4]
+PUBLIC_SITE_BASE_URL = "https://mono.github.io/SkiaSharp"
+_SLUG_RE = re.compile(r"[^/]+/[^/]+")
+_OWNER_RE = re.compile(
+    r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?"
+)
+_REPOSITORY_RE = re.compile(r"[A-Za-z0-9._-]{1,100}")
+_URL_PATTERNS = (
+    re.compile(
+        r"https://github\.com/(?P<slug>[^/]+/[^/]+?)(?:\.git)?/?",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"git://github\.com/(?P<slug>[^/]+/[^/]+?)(?:\.git)?/?",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"git@github\.com:(?P<slug>[^/]+/[^/]+?)(?:\.git)?",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"ssh://git@github\.com/(?P<slug>[^/]+/[^/]+?)(?:\.git)?/?",
+        re.IGNORECASE,
+    ),
+)
+
+
+class RepositoryIdentityError(RuntimeError):
+    """Release-note repository identity could not be resolved safely."""
+
+
+def normalize_github_repository(value: str) -> str:
+    """Return a validated owner/repository slug for a GitHub URL or slug."""
+
+    if not isinstance(value, str):
+        raise RepositoryIdentityError("Unsupported GitHub repository identity.")
+    candidate = value
+    if candidate != candidate.strip() or any(
+        character.isspace()
+        or ord(character) < 32
+        or ord(character) == 127
+        for character in candidate
+    ):
+        raise RepositoryIdentityError("Unsupported GitHub repository identity.")
+    parsed = urlsplit(candidate)
+    if parsed.scheme.lower() == "https" and parsed.hostname == "github.com":
+        if parsed.query or parsed.fragment:
+            raise RepositoryIdentityError(
+                "Unsupported GitHub repository identity."
+            )
+        candidate = parsed.path.removeprefix("/")
+    else:
+        for pattern in _URL_PATTERNS:
+            match = pattern.fullmatch(candidate)
+            if match:
+                candidate = match.group("slug")
+                break
+    candidate = candidate.removesuffix(".git")
+    if not _SLUG_RE.fullmatch(candidate):
+        raise RepositoryIdentityError("Unsupported GitHub repository identity.")
+    owner, repository = candidate.split("/", 1)
+    if (
+        not _OWNER_RE.fullmatch(owner)
+        or "--" in owner
+        or not _REPOSITORY_RE.fullmatch(repository)
+        or repository in {".", ".."}
+    ):
+        raise RepositoryIdentityError("Unsupported GitHub repository identity.")
+    return candidate
+
+
+def github_url(repository: str, *, git: bool = False) -> str:
+    suffix = ".git" if git else ""
+    return "https://github.com/{}{}".format(
+        normalize_github_repository(repository),
+        suffix,
+    )
+
+
+def normalize_public_site_base_url(value: str) -> str:
+    """Validate and normalize the release-notes public-site base URL."""
+
+    if (
+        not isinstance(value, str)
+        or value != value.strip()
+        or any(
+            character.isspace()
+            or ord(character) < 32
+            or ord(character) == 127
+            for character in value
+        )
+    ):
+        raise RepositoryIdentityError(
+            "Public site base URL must be an absolute HTTPS URL."
+        )
+    parsed = urlsplit(value)
+    if (
+        parsed.scheme != "https"
+        or not parsed.netloc
+        or parsed.username
+        or parsed.password
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise RepositoryIdentityError(
+            "Public site base URL must be an absolute HTTPS URL "
+            "without credentials, query, or fragment."
+        )
+    return value.rstrip("/")
+
+
+def _origin_remote(root: Path) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(root), "remote", "get-url", "--all", "origin"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    values = [
+        line.strip()
+        for line in result.stdout.splitlines()
+        if line.strip()
+    ]
+    if result.returncode != 0 or len(values) != 1:
+        raise RepositoryIdentityError(
+            "Unable to resolve one unambiguous current repository from "
+            "git remote 'origin'."
+        )
+    return values[0]
+
+
+def resolve_current_repository(
+    explicit: str | None = None,
+    *,
+    environ: Mapping[str, str] | None = None,
+    root: Path | None = None,
+    remote_url: str | None = None,
+) -> str:
+    """Resolve explicit CLI, GitHub Actions, then validated origin identity."""
+
+    if explicit is not None:
+        return normalize_github_repository(explicit)
+    values = environ if environ is not None else os.environ
+    runtime = values.get("GITHUB_REPOSITORY")
+    if runtime:
+        return normalize_github_repository(runtime)
+    root = (root or DEFAULT_ROOT).resolve()
+    value = remote_url if remote_url is not None else _origin_remote(root)
+    return normalize_github_repository(value)
+
+
+def read_submodule_repository(root: Path, path: str) -> str:
+    gitmodules = root / ".gitmodules"
+    parser = configparser.ConfigParser(interpolation=None)
+    try:
+        with gitmodules.open(encoding="utf-8") as stream:
+            parser.read_file(stream)
+    except (OSError, configparser.Error) as exc:
+        raise RepositoryIdentityError(
+            "Unable to read {}: {}".format(gitmodules, exc)
+        ) from exc
+    section = 'submodule "{}"'.format(path)
+    if not parser.has_option(section, "url"):
+        raise RepositoryIdentityError(
+            "{} has no URL for submodule {!r}.".format(gitmodules, path)
+        )
+    return normalize_github_repository(parser.get(section, "url"))
+
+
+def configure_repository(
+    repository: str | None = None,
+    *,
+    root: Path | None = None,
+    environ=None,
+    remote_url: str | None = None,
+) -> str:
+    """Refresh the current release-note repository for a generator run."""
+
+    global REPO
+    REPO = resolve_current_repository(
+        repository,
+        environ=environ,
+        root=root,
+        remote_url=remote_url,
+    )
+    return REPO
+
+
+REPO: str | None = None
+
+
+def get_repository() -> str:
+    """Return the configured repository, resolving the checkout lazily."""
+
+    return REPO or configure_repository()
+
+
+_COMPARE_URL_RE = re.compile(
+    r"https://github\.com/(?P<owner>[^/\s]+)/(?P<repository>[^/\s]+)/compare/"
+    r"(?P<previous>[^/\s]+)\.\.\.(?P<tag>[^/\s]+)"
+)
+_HISTORICAL_REPOSITORIES = ("mono/SkiaSharp",)
+
+
+def is_skiasharp_compare_url(
+    value: object,
+    previous_tag: str | None = None,
+    tag: str | None = None,
+) -> bool:
+    """Return whether value is a safe SkiaSharp GitHub compare URL."""
+
+    if not isinstance(value, str):
+        return False
+    match = _COMPARE_URL_RE.fullmatch(value)
+    if match is None:
+        return False
+    try:
+        repository = normalize_github_repository(
+            "{}/{}".format(
+                match.group("owner"),
+                match.group("repository"),
+            )
+        )
+    except RepositoryIdentityError:
+        return False
+    allowed = {
+        candidate.casefold()
+        for candidate in (get_repository(),) + _HISTORICAL_REPOSITORIES
+    }
+    return (
+        repository.casefold() in allowed
+        and (previous_tag is None or match.group("previous") == previous_tag)
+        and (tag is None or match.group("tag") == tag)
+    )
+
 
 # Bump together with ``scripts/infra/docs/release-notes-data.py``'s
 # ``_DATA_JSON_FORMAT_VERSION`` -- a test in this package's ``tests/`` folder
