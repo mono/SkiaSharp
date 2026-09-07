@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SkiaSharp perf tracker</title>
+<!--
+  Unified SkiaSharp perf dashboard — time, allocations, and package/native size.
+
+  Grid-first: a Tabulator data grid is the primary surface. Each row is a benchmark
+  "feature" (class.method + parameters + OS, or package + target for size), grouped
+  and sorted however you like. Ticking rows plots their trends in the chart below.
+
+  Data modes (no code difference):
+    * Embedded — CI injects `window.__PERF_DATA__ = {benchmarks:{...}, sizes:{...}}`
+      before </body>, producing an offline file you download from a run artifact.
+    * Live     — with no embedded data, fetch the JSON histories from the `aw-data`
+      branch (benchmarks/index.json + sizes/index.json), or any `?data=<base-url>`.
+
+  Libraries (CDN, need internet to render): ECharts (chart) + Tabulator (grid).
+  Producers: scripts/infra/perf/benchmarks/track.py and .../sizes/track.py.
+-->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
+<style>
+  :root {
+    --bg:#0a0d13; --bg2:#0d1117; --panel:#141a23; --panel2:#1a2130;
+    --border:#242c38; --border2:#333d4d; --text:#e9eef5; --muted:#93a0b1; --faint:#6b7686;
+    --accent:#5aa2ff; --pr:#d6acff; --chip:#1e2632; --sel:#1b2942;
+    --up:#ff6b6b; --down:#4ad991; --shadow:0 8px 30px rgba(0,0,0,.40); --grad:linear-gradient(135deg,#5aa2ff,#8a7bff);
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg:#eef1f6; --bg2:#fff; --panel:#fff; --panel2:#f5f7fa;
+      --border:#e0e5ec; --border2:#c4ccd6; --text:#1a1f27; --muted:#59636e; --faint:#818b96;
+      --accent:#2563eb; --pr:#7c3aed; --chip:#eef2f7; --sel:#dbe8fc;
+      --up:#dc2626; --down:#16a34a; --shadow:0 8px 26px rgba(90,105,140,.14); --grad:linear-gradient(135deg,#2563eb,#7c3aed);
+    }
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; }
+  body { background:var(--bg); color:var(--text); overflow:hidden;
+    font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+  .app { display:flex; flex-direction:column; height:100vh; }
+  /* ---- top bar ---- */
+  .topbar { display:flex; flex-direction:column; gap:8px; padding:9px 16px 10px;
+    border-bottom:1px solid var(--border); background:var(--bg2); z-index:5; }
+  .topbar-row { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .brand { display:flex; align-items:baseline; gap:10px; min-width:0; }
+  .brand .logo { width:26px; height:26px; border-radius:7px; background:var(--grad); display:grid; place-items:center; font-size:14px; flex:none; align-self:center; }
+  .brand h1 { font-size:14px; margin:0; font-weight:680; white-space:nowrap; }
+  .brand .sub { color:var(--muted); font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .brand .sub code { background:var(--chip); padding:0 5px; border-radius:4px; }
+  .ctl { display:flex; align-items:center; gap:8px; }
+  .lab { color:var(--faint); font-size:10px; text-transform:uppercase; letter-spacing:.06em; font-weight:700; }
+  .seg,.chips { display:inline-flex; background:var(--panel); border:1px solid var(--border); border-radius:9px; padding:3px; gap:2px; }
+  .seg button,.chips button { background:transparent; color:var(--muted); border:0; border-radius:6px; padding:5px 11px; font-size:12px; font-weight:600; cursor:pointer; transition:.14s; white-space:nowrap; }
+  .seg button:hover,.chips button:hover { color:var(--text); }
+  .seg button.on { background:var(--accent); color:#fff; }
+  .chips button.on { background:var(--chip); color:var(--text); box-shadow:inset 0 0 0 1px var(--border2); }
+  .chips button .ord { font-size:9px; opacity:.7; margin-left:3px; }
+  .search { background:var(--panel); color:var(--text); border:1px solid var(--border); border-radius:9px; padding:6px 11px; font-size:12px; width:190px; }
+  .search::placeholder { color:var(--faint); }
+  .search:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent); }
+  /* ---- panes ---- */
+  .grid-pane { flex:1 1 auto; min-height:120px; position:relative; }
+  #grid { position:absolute; inset:0; }
+  .splitter { height:7px; background:var(--bg2); cursor:row-resize; flex:none; position:relative; border-top:1px solid var(--border); }
+  .splitter::after { content:""; position:absolute; left:50%; top:2px; width:38px; height:3px; transform:translateX(-50%); background:var(--border2); border-radius:2px; }
+  .splitter:hover::after { background:var(--accent); }
+  .chart-pane { flex:none; height:320px; min-height:0; display:flex; flex-direction:column; background:var(--panel); border-top:1px solid var(--border); }
+  .chart-head { display:flex; align-items:center; gap:12px; padding:7px 14px; border-bottom:1px solid var(--border); }
+  .chart-head h2 { font-size:11px; margin:0; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  .chart-head .selinfo { color:var(--faint); font-size:11px; margin-left:auto; }
+  .chart-head .minibtn { background:var(--chip); color:var(--muted); border:1px solid var(--border); border-radius:6px; padding:3px 9px; font-size:11px; font-weight:600; cursor:pointer; }
+  .chart-head .minibtn:hover { color:var(--text); }
+  .chart-head .seg { padding:2px; }
+  .chart-head .seg button { padding:3px 9px; font-size:11px; }
+  #chart { flex:1; min-height:0; }
+  .hint { color:var(--faint); display:grid; place-items:center; height:100%; font-size:12.5px; text-align:center; padding:0 20px; }
+  /* ---- value cells ---- */
+  .up { color:var(--up); font-weight:600; } .down { color:var(--down); font-weight:600; } .dim { color:var(--faint); }
+  /* time-metric status pill + "denoised" marker (both only appear for the noisy Time metric) */
+  .st { font-weight:600; font-size:11.5px; white-space:nowrap; }
+  .st-bad{ color:var(--up); } .st-good{ color:var(--down); } .st-ok{ color:var(--muted); font-weight:500; }
+  .st-noisy{ color:#e3b341; } .st-na{ color:var(--faint); }
+  .sm{ color:var(--faint); font-weight:600; margin-left:2px; font-size:10px; }
+  .sw2 { display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:8px; vertical-align:middle; box-shadow:0 0 0 2px color-mix(in srgb,currentColor 22%,transparent); }
+  .gcount { color:var(--faint); font-weight:500; font-size:11px; margin-left:6px; }
+  /* ---- Tabulator theming ---- */
+  .tabulator { background:transparent; border:0; font-size:12.5px; }
+  .tabulator .tabulator-header, .tabulator .tabulator-col { background:var(--panel2); border-color:var(--border); color:var(--muted); }
+  .tabulator .tabulator-header { border-bottom:2px solid var(--border); }
+  .tabulator .tabulator-col .tabulator-col-title { color:var(--muted); text-transform:uppercase; font-size:10px; letter-spacing:.04em; font-weight:700; }
+  .tabulator .tabulator-col.tabulator-sortable:hover { background:var(--chip); }
+  .tabulator .tabulator-col .tabulator-header-filter input { background:var(--bg2); color:var(--text); border:1px solid var(--border); border-radius:6px; font-size:11px; padding:3px 6px; }
+  .tabulator .tabulator-row { background:var(--panel); border-bottom:1px solid var(--border); color:var(--text); }
+  .tabulator .tabulator-row.tabulator-row-even { background:var(--panel); }
+  .tabulator .tabulator-row:hover { background:var(--chip)!important; }
+  .tabulator .tabulator-row.tabulator-selected, .tabulator .tabulator-row.tabulator-selected:hover { background:var(--sel)!important; }
+  .tabulator .tabulator-row .tabulator-cell { border-right:1px solid transparent; padding:5px 10px; cursor:pointer; }
+  .tabulator .tabulator-row .tabulator-cell.col-pr { color:var(--pr); }
+  .tabulator .tabulator-tableholder { background:var(--panel); }
+  .tabulator .tabulator-table { background:transparent; }
+  .tabulator-row .tabulator-cell.tabulator-frozen { background:var(--panel); }
+  .tabulator .tabulator-header .tabulator-col.tabulator-frozen { background:var(--panel2); }
+  .tabulator .tabulator-row.tabulator-selected .tabulator-cell.tabulator-frozen { background:var(--sel); }
+  .tabulator .tabulator-group { background:var(--panel2); color:var(--text); font-weight:650; border-bottom:1px solid var(--border); border-top:1px solid var(--border); }
+  .tabulator .tabulator-group.tabulator-group-level-1 { padding-left:26px; }
+  .tabulator .tabulator-group .tabulator-arrow { border-left-color:var(--accent); }
+  .tabulator .tabulator-tableholder { background:var(--panel); }
+  .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-sorter .tabulator-arrow { border-bottom-color:var(--muted); border-top-color:var(--muted); }
+  .tabulator .tabulator-cell .tabulator-responsive-collapse-toggle, .tabulator .tabulator-row .tabulator-cell input[type=checkbox] { accent-color:var(--accent); }
+  .tabulator-edit-select-list { background:var(--panel); border:1px solid var(--border); }
+  .tabulator .tabulator-footer { background:var(--panel2); border-top:1px solid var(--border); color:var(--muted); }
+  ::-webkit-scrollbar { width:11px; height:11px; }
+  ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:6px; border:2px solid transparent; background-clip:content-box; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--faint); background-clip:content-box; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div class="brand">
+        <div class="logo">📊</div>
+        <h1>SkiaSharp perf</h1>
+        <div class="sub" id="subtitle">Loading…</div>
+      </div>
+    </div>
+    <div class="topbar-row">
+      <div class="ctl"><span class="lab" title="What is being measured — switches the metric plotted in the chart and shown in the table.">Metric</span>
+        <div class="seg" id="metric">
+          <button data-m="time" class="on" title="Execution time per operation (mean nanoseconds).">Time</button>
+          <button data-m="alloc" title="Managed memory allocated per operation (bytes) — deterministic, hardware-independent.">Allocations</button>
+          <button data-m="size" title="On-disk size of the NuGet packages and native binaries (bytes).">Size</button>
+        </div>
+      </div>
+      <div class="ctl"><span class="lab" title="Group the table rows by one or more dimensions. Click a chip to toggle; the number shows grouping order.">Group</span><div class="chips" id="groupby"></div></div>
+      <div class="ctl" id="osfilter-ctl"><span class="lab" title="Filter which operating systems appear in the table. All are shown by default.">OS</span><div class="chips" id="osfilter"></div></div>
+      <div class="ctl"><span class="lab" title="Regression threshold — the minimum change vs the baseline before a row is flagged faster/slower. Smaller values flag smaller differences.">Δ ≥</span>
+        <div class="seg" id="threshold">
+          <button data-t="0" title="Flag any non-zero change.">0%</button>
+          <button data-t="0.0001" title="Flag changes of at least 0.01% vs the baseline.">0.01%</button>
+          <button data-t="0.001" title="Flag changes of at least 0.1% vs the baseline.">0.1%</button>
+          <button data-t="0.01" title="Flag changes of at least 1% vs the baseline.">1%</button>
+          <button data-t="0.05" class="on" title="Flag changes of at least 5% (default) — ignores sub-5% noise.">5%</button>
+        </div>
+      </div>
+      <div class="ctl" id="denoise-ctl"><span class="lab" title="Whether to denoise the chart line and the table's headline number. The averaging amount is set by Span. Per-metric: On for Time, Off for the deterministic Allocations/Size.">Smoothing</span>
+        <div class="seg" id="denoise">
+          <button data-d="on" title="Denoise the chart line and headline number with a rolling median over the Span window (plus a ±MAD band when one series is selected).">On</button>
+          <button data-d="off" class="on" title="Plot the raw measured values exactly, with no smoothing. (The Status column still uses the Span window.)">Off</button>
+        </div>
+      </div>
+      <div class="ctl"><span class="lab" title="Averaging window for smoothing and the Status column — medians are taken over runs within this many days. Longer = steadier but slower to react to a real change. Time-based, so it holds regardless of run cadence.">Span</span>
+        <div class="seg" id="span">
+          <button data-days="1" title="Average over 1 day of runs — most responsive, least smoothing.">1d</button>
+          <button data-days="3" class="on" title="Average over 3 days of runs (default) — balanced for the 6-hourly cadence (~12 runs).">3d</button>
+          <button data-days="7" title="Average over 7 days of runs — steadiest; matches the old daily-cadence feel.">7d</button>
+        </div>
+      </div>
+      <div class="ctl" style="margin-left:auto"><input class="search" id="gridsearch" placeholder="🔍  filter rows…" title="Filter table rows by text across the visible dimension columns." /></div>
+    </div>
+  </div>
+  <div class="grid-pane"><div id="grid"></div></div>
+  <div class="splitter" id="splitter"></div>
+  <div class="chart-pane">
+    <div class="chart-head">
+      <h2 id="chart-title">Trend</h2>
+      <div class="ctl"><span class="lab" title="Time window for the chart — plots only points within this many days of the most recent run (baselines are always shown).">Window</span>
+        <div class="seg" id="range">
+          <button data-r="1" title="Last 1 day of runs.">1d</button>
+          <button data-r="7" title="Last 7 days of runs.">7d</button>
+          <button data-r="30" class="on" title="Last 30 days of runs (default).">30d</button>
+          <button data-r="60" title="Last 60 days of runs.">60d</button>
+          <button data-r="120" title="Last 120 days of runs.">120d</button>
+          <button data-r="0" title="All retained history (up to ~1 year).">All</button>
+        </div>
+      </div>
+      <div class="ctl"><span class="lab" title="Y-axis scale for the chart.">Scale</span>
+        <div class="seg" id="scale">
+          <button data-s="absolute" class="on" title="Absolute values on a linear axis.">Abs</button>
+          <button data-s="relative" title="Relative to the curr-stable baseline (100% = curr-stable).">Rel %</button>
+          <button data-s="log" title="Logarithmic y-axis — good when values span a wide range.">Log</button>
+        </div>
+      </div>
+      <span class="selinfo" id="selinfo"></span>
+      <button class="minibtn" id="clearsel" title="Clear the chart selection.">Clear</button>
+    </div>
+    <div id="chart"><div class="hint">Click a benchmark to plot it — tick the checkboxes to compare several.</div></div>
+  </div>
+</div>
+<script>
+"use strict";
+(function () {
+  const RAW_BASE = "https://raw.githubusercontent.com/mono/SkiaSharp/aw-data/";
+  const BENCH_PREFIX = "SkiaSharp.Benchmarks.Tracking.";
+  const BASELINE_ROLES = ["latest","curr-stable","prev-stable","prev-major"];
+  const OS_ORDER = ["Linux","Windows","macOS"];
+  const PALETTE = ["#58a6ff","#3fb950","#f0883e","#d2a8ff","#f85149","#56d4dd","#e3b341","#db61a2",
+                   "#a5d6ff","#7ee787","#ffab70","#e2c5ff","#ff9492","#6ee7d6","#f2cc60","#ffa8cc",
+                   "#79c0ff","#56d364","#e09b3a","#b083f0"];
+  const METRICS = {
+    time:  { label:"Time", unit:"ns", domain:"benchmarks", key:"meanNs" },
+    alloc: { label:"Allocations", unit:"bytes", domain:"benchmarks", key:"allocatedBytes" },
+    size:  { label:"Size", unit:"bytes", domain:"sizes" },
+  };
+  const DIMS = {
+    benchmarks: [ {key:"benchmark",label:"Benchmark"}, {key:"param",label:"Param"}, {key:"os",label:"OS"} ],
+    sizes:      [ {key:"package",label:"Package"}, {key:"target",label:"Target"} ],
+  };
+  const ROLES = {
+    benchmarks: ["pr","nightly","latest","curr-stable","prev-stable","prev-major"],
+    sizes:      ["nightly","latest","curr-stable","prev-stable","prev-major"],
+  };
+  const ROLE_TITLE = { pr:"★ PR", nightly:"nightly", latest:"latest", "curr-stable":"curr-stable", "prev-stable":"prev-stable", "prev-major":"prev-major" };
+  const WITH_DELTA = new Set(["pr","nightly","latest"]);
+
+  const state = { data:{benchmarks:{},sizes:{}}, metric:"time", scale:"absolute", range:30, smoothDays:3, threshold:0.05, denoise:{time:true, alloc:false, size:false}, groupBy:[], osFilter:new Set(), table:null, chart:null };
+
+  // ---------- formatting ----------
+  const fmtTime = ns => ns==null?"·": ns<1e3?ns.toFixed(1)+" ns": ns<1e6?(ns/1e3).toFixed(2)+" µs": ns<1e9?(ns/1e6).toFixed(2)+" ms":(ns/1e9).toFixed(2)+" s";
+  const fmtBytes = b => { if(b==null)return"·"; if(b<1024)return Math.round(b)+" B"; const k=b/1024; return k<1024?k.toFixed(1)+" KB":(k/1024).toFixed(2)+" MB"; };
+  const fmtVal = (v,unit) => unit==="ns"?fmtTime(v):fmtBytes(v);
+  const dateMs = d => new Date(/[T ]/.test(d) ? d : d+"T00:00:00Z").getTime();
+  const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const getCss = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888";
+
+  // ---------- robust smoothing / change-detection (optional "Smoothing" toggle) ----------
+  // Time is dominated by ~10% between-run CI-runner jitter (within-run stdDev is <0.5%), so a
+  // single point is unreliable. When Smoothing is ON these add a rolling-median trend + a
+  // ±k·MAD band on the chart and a windowed delta + Status pill in the grid — for EVERY metric.
+  // Allocations/size are deterministic, so smoothing is a visual no-op there and Status simply
+  // reports any sustained change — so it defaults ON for Time (noisy) and OFF for alloc/size,
+  // and the choice is remembered per metric.
+  const BAND_K = 3, NOISY_MAD = 0.06, DAY_MS = 86400000;
+  // Smoothing/statistics window is TIME-based (state.smoothDays), so it stays meaningful
+  // whatever the run cadence is — a fixed point count would drift as the schedule changes.
+  const smoothSpanMs = () => (state.smoothDays||0)*DAY_MS;
+  const smoothingOn = () => !!state.denoise[state.metric];
+  const _median = arr => { const a=arr.filter(v=>v!=null).slice().sort((x,y)=>x-y); const n=a.length; return n ? (n%2 ? a[(n-1)/2] : (a[n/2-1]+a[n/2])/2) : null; };
+  const _mad = arr => { const m=_median(arr); return m==null ? 0 : _median(arr.map(v=>Math.abs(v-m))); };
+  const _madRel = arr => { const m=_median(arr); return (m==null||!m) ? 0 : _mad(arr)/m; };
+  const trendVals = trend => (trend||[]).map(p=>p[1]).filter(v=>v!=null);
+  // Time-windowed median/MAD over a trend of [t, value, version] points. `span` ms is the
+  // total width; the trailing variant covers the last `span`, the rolling ones are centered.
+  const trailMedianT = (trend,span) => { if(!trend||!trend.length) return null; const t0=trend[trend.length-1][0]-span; return _median(trend.filter(p=>p[0]>=t0).map(p=>p[1])); };
+  const pctSigned = d => (d>0?"+":"−")+(Math.abs(d)*100).toFixed(Math.abs(d)>=0.1?0:1)+"%";
+  const rollingMedianT = (trend,span) => { const h=span/2; return trend.map(p0=>_median(trend.filter(p=>Math.abs(p[0]-p0[0])<=h).map(p=>p[1]))); };
+  const rollingMadT = (trend,span) => { const h=span/2; return trend.map(p0=>_mad(trend.filter(p=>Math.abs(p[0]-p0[0])<=h).map(p=>p[1]))); };
+
+  // parse "BitmapDrawBenchmark.DrawScaledTiles(Tiles: 256)" -> {benchmark, param}
+  function parseBench(full) {
+    let n = full.startsWith(BENCH_PREFIX) ? full.slice(BENCH_PREFIX.length) : full;
+    let param = ""; const m = n.match(/^(.*?)\((.*)\)$/);
+    if (m) { n = m[1]; param = m[2]; }
+    return { benchmark:n, param };
+  }
+
+  // ---------- adapters -> flat Series [{id,color,dims,label,unit,trend,baselines,pr,nightly}] ----------
+  const latestDay = doc => (doc && doc.days && doc.days.length) ? doc.days[doc.days.length-1] : null;
+  const benchLegs = () => (state.data.benchmarks && state.data.benchmarks.legs) || {};
+  function normBench(files){ const h={}; for(const k in files){ const d=files[k]; if(d&&d.os)(h[d.os]||(h[d.os]={}))[d.role||"nightly"]=d; } return h; }
+
+  function seriesBenchmarks(key, unit) {
+    const h = normBench(benchLegs()); const out=[];
+    const oses = OS_ORDER.filter(o=>h[o]).concat(Object.keys(h).filter(o=>!OS_ORDER.includes(o)).sort());
+    for (const os of oses) {
+      const roles = h[os]; const names = new Set();
+      ["pr","nightly"].concat(BASELINE_ROLES).forEach(r=>{ const d=latestDay(roles[r]); if(d) Object.keys(d.benchmarks||{}).forEach(n=>names.add(n)); });
+      for (const name of [...names].sort()) {
+        const trend = ((roles.nightly&&roles.nightly.days)||[]).map(d=>[dateMs(d.date),(d.benchmarks[name]||{})[key],d.version]).filter(p=>p[1]!=null);
+        const baselines={}; for(const r of BASELINE_ROLES){ const d=latestDay(roles[r]); const v=d&&(d.benchmarks[name]||{})[key]; if(v!=null) baselines[r]=v; }
+        const prd=latestDay(roles.pr); const pr=prd?(prd.benchmarks[name]||{})[key]:null;
+        if(!trend.length && !Object.keys(baselines).length && pr==null) continue;
+        const pb = parseBench(name);
+        out.push({ id:os+"|"+name, dims:{benchmark:pb.benchmark, param:pb.param||"—", os}, label:pb.benchmark+(pb.param?" ("+pb.param+")":"")+" · "+os,
+                   unit, trend, baselines, pr, nightly: trend.length?trend[trend.length-1][1]:null });
+      }
+    }
+    return out;
+  }
+
+  function seriesSizes() {
+    const doc=state.data.sizes; if(!doc) return [];
+    const nightly=doc.nightly||[], roles=doc.roles||{}, cache=doc.releasedCache||{};
+    const last=nightly[nightly.length-1]; if(!last) return [];
+    const out=[];
+    for (const pkg of Object.keys(last.packages||{}).sort()) {
+      const targets=[]; if(last.packages[pkg].nupkg!=null) targets.push({t:"nupkg",label:"nupkg"});
+      for(const np of Object.keys(last.packages[pkg].natives||{})) targets.push({t:np,label:np.replace(/^runtimes\//,"").replace(/\/native\//," · ")});
+      for (const tg of targets) {
+        const getv=day=>{ const p=(day.packages||{})[pkg]; if(!p)return null; return tg.t==="nupkg"?p.nupkg:(p.natives||{})[tg.t]; };
+        const trend=nightly.map(d=>[dateMs(d.date),getv(d),d.version]).filter(p=>p[1]!=null);
+        const baselines={}; for(const r of BASELINE_ROLES){ const ver=(roles[r]||{})[pkg]; if(!ver)continue; const ent=cache[pkg+"@"+ver]; if(!ent)continue; const v=tg.t==="nupkg"?ent.nupkg:(ent.natives||{})[tg.t]; if(v!=null) baselines[r]=v; }
+        if(!trend.length && !Object.keys(baselines).length) continue;
+        out.push({ id:pkg+"|"+tg.t, dims:{package:pkg, target:tg.label}, label:pkg+" · "+tg.label,
+                   unit:"bytes", trend, baselines, pr:null, nightly: trend.length?trend[trend.length-1][1]:null });
+      }
+    }
+    return out;
+  }
+
+  function allSeries() {
+    const m = METRICS[state.metric];
+    const list = m.domain==="sizes" ? seriesSizes() : seriesBenchmarks(m.key, m.unit);
+    list.forEach((s,i)=> s.color = PALETTE[i % PALETTE.length]);
+    return list;
+  }
+  let SERIES = [], SBYID = {};
+  function refreshSeries(){ SERIES = allSeries(); SBYID = {}; SERIES.forEach(s=>SBYID[s.id]=s); }
+
+  // ---------- grid ----------
+  function rows() {
+    const roles = ROLES[METRICS[state.metric].domain];
+    return SERIES.map(s => { const r={ id:s.id, color:s.color, trend:s.trend }; Object.assign(r, s.dims);
+      for(const role of roles) r[role] = role==="pr" ? s.pr : role==="nightly" ? s.nightly : (s.baselines[role]!=null?s.baselines[role]:null);
+      return r; });
+  }
+  function spark(trend, color) {
+    if(!trend||!trend.length) return "";
+    const vals=trend.map(p=>p[1]).filter(v=>v!=null); if(!vals.length) return "";
+    const w=84,h=22,pad=3,n=trend.length,min=Math.min(...vals),max=Math.max(...vals),span=(max-min)||1;
+    const x=i=> n<=1?w/2:pad+i*(w-2*pad)/(n-1), y=v=>h-pad-(v-min)/span*(h-2*pad);
+    const pts=trend.map((p,i)=>p[1]==null?null:`${x(i).toFixed(1)},${y(p[1]).toFixed(1)}`).filter(Boolean).join(" ");
+    const lx=x(n-1).toFixed(1), ly=y(vals[vals.length-1]).toFixed(1);
+    const line = n>1 ? `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5"/>` : `<circle cx="${x(0).toFixed(1)}" cy="${y(vals[0]).toFixed(1)}" r="2.4" fill="${color}"/>`;
+    return `<svg width="${w}" height="${h}" style="vertical-align:middle">${line}<circle cx="${lx}" cy="${ly}" r="2.2" fill="${color}"/></svg>`;
+  }
+  const refOf = r => r["curr-stable"]!=null?r["curr-stable"]:(r["prev-stable"]!=null?r["prev-stable"]:r["prev-major"]);
+  function pctStr(d){ const p=Math.abs(d*100), dp=p>=10?0:p>=1?1:2; return (d>0?"▲":"▼")+p.toFixed(dp)+"%"; }
+  function cellVal(cell, unit, withDelta, role) {
+    const row=cell.getRow().getData();
+    const v=cell.getValue(); if(v==null) return `<span class="dim">·</span>`;
+    const noisy=smoothingOn();
+    // Smoothing on: headline the denoised trailing-window median for the nightly trend
+    // (the raw points stay visible in the sparkline). Other roles are single measurements.
+    let compareV=v, displayV=v, smoothed=false;
+    if(noisy && role==="nightly"){ const wm=trailMedianT(row.trend, smoothSpanMs()); if(wm!=null){ compareV=wm; displayV=wm; smoothed=true; } }
+    let s=fmtVal(displayV,unit);
+    if(smoothed) s=`<span title="denoised: median of the last ${state.smoothDays}d of runs">${s}<span class="sm">≈</span></span>`;
+    if(withDelta){ const ref=refOf(row);
+      if(ref!=null && ref!==0){
+        // Smoothing on: only flag deltas that clear this row's own noise floor
+        // (max of the chosen Δ and 3·relMAD), so vs-baseline badges stop flickering.
+        const thr = noisy ? Math.max(state.threshold, BAND_K*_madRel(trendVals(row.trend))) : state.threshold;
+        const d=(compareV-ref)/ref;
+        if(d!==0 && Math.abs(d)>=thr) s+=` <span class="${d>0?'up':'down'}">${pctStr(d)}</span>`;
+      } }
+    return s;
+  }
+  // TIME + Smoothing only: has the nightly trend shifted beyond its own noise band?
+  // Compares the last window's median to the prior window's, gated by a robust 3·MAD band.
+  // Using window medians makes it insensitive to one-off spikes (a "sustained shift" test).
+  function statusCell(row){
+    const trend=(row.trend||[]).filter(p=>p[1]!=null), span=smoothSpanMs();
+    const tLast=trend.length?trend[trend.length-1][0]:0;
+    const recent=trend.filter(p=>p[0]>tLast-span).map(p=>p[1]);
+    const prior =trend.filter(p=>p[0]<=tLast-span && p[0]>tLast-2*span).map(p=>p[1]);
+    if(recent.length<3 || prior.length<3) return `<span class="st st-na" title="need ~2×${state.smoothDays}d of runs to judge">—</span>`;
+    const pm=_median(prior), rm=_median(recent);
+    if(pm==null||rm==null||!pm) return `<span class="st st-na">—</span>`;
+    const bandRel=Math.max(state.threshold, BAND_K*_madRel(prior)), shift=(rm-pm)/pm;
+    if(Math.abs(shift)>bandRel){ const worse=shift>0;  // time up = slower = regression
+      return `<span class="st ${worse?'st-bad':'st-good'}" title="${state.smoothDays}d median moved ${pctSigned(shift)} vs the prior ${state.smoothDays}d (noise band ±${(bandRel*100).toFixed(1)}%)">${worse?'▲ regressed':'▼ improved'} ${pctSigned(shift)}</span>`; }
+    if(_madRel(recent) > NOISY_MAD) return `<span class="st st-noisy" title="run-to-run spread ±${(_madRel(recent)*100).toFixed(1)}% — too noisy to call">noisy</span>`;
+    return `<span class="st st-ok" title="within noise band ±${(bandRel*100).toFixed(1)}%">stable</span>`;
+  }
+  // grid-only filters (OS + text search) — do not touch selection / chart
+  function gridFilter(data, params){
+    if(params.os instanceof Set && !params.os.has(data.os)) return false;
+    const q=(params.q||"").toLowerCase();
+    if(q && !DIMS[METRICS[state.metric].domain].some(d=>String(data[d.key]==null?"":data[d.key]).toLowerCase().includes(q))) return false;
+    return true;
+  }
+  function applyFilter(){ if(!state.table) return;
+    const hasOs = DIMS[METRICS[state.metric].domain].some(d=>d.key==="os");
+    const q=(document.getElementById("gridsearch").value||"").trim();
+    state.table.setFilter(gridFilter, { q, os: hasOs ? state.osFilter : null }); }
+  function resetOsFilter(){ state.osFilter = new Set(SERIES.map(s=>s.dims.os).filter(Boolean)); }
+  function renderOsFilter(){
+    const ctl=document.getElementById("osfilter-ctl");
+    const set=new Set(SERIES.map(s=>s.dims.os).filter(Boolean));
+    const list=OS_ORDER.filter(o=>set.has(o)).concat([...set].filter(o=>!OS_ORDER.includes(o)));
+    ctl.style.display = list.length ? "" : "none"; if(!list.length) return;
+    const el=document.getElementById("osfilter"); el.innerHTML="";
+    list.forEach(o=>{ const b=document.createElement("button"); b.className=state.osFilter.has(o)?"on":""; b.textContent=o;
+      b.title = "Show " + o + " rows in the table (toggle).";
+      b.onclick=()=>{ state.osFilter.has(o)?state.osFilter.delete(o):state.osFilter.add(o); renderOsFilter(); applyFilter(); };
+      el.appendChild(b); });
+  }
+  function columns() {
+    const m=METRICS[state.metric], dims=DIMS[m.domain], roles=ROLES[m.domain];
+    const cols=[{ formatter:"rowSelection", titleFormatter:"rowSelection", titleFormatterParams:{rowRange:"active"}, headerSort:false, resizable:false, frozen:true, width:40, hozAlign:"center", cssClass:"col-sel" }];
+    dims.forEach((d,i)=> cols.push({ title:d.label, field:d.key, frozen:i===0, resizable:true, minWidth:i===0?150:80,
+      formatter: i===0 ? (c)=>`<span class="sw2" style="background:${c.getRow().getData().color}"></span>${esc(c.getValue())}` : (c)=>esc(c.getValue()) }));
+    cols.push({ title:"Trend", field:"trend", headerSort:false, resizable:true, width:100, hozAlign:"center", formatter:(c)=>spark(c.getValue(), c.getRow().getData().color) });
+    // Status (the robust regression/improvement verdict) is always shown, for every metric.
+    cols.push({ title:"Status", field:"trend", headerSort:false, resizable:true, width:140, hozAlign:"left", formatter:(c)=>statusCell(c.getRow().getData()) });
+    const hasPr = SERIES.some(s=>s.pr!=null);   // drop the PR column entirely when no PR build is present (e.g. the live/main site)
+    roles.filter(role=> role!=="pr" || hasPr).forEach(role=> cols.push({ title:ROLE_TITLE[role], field:role, hozAlign:"right", sorter:"number", resizable:true, width:120,
+      cssClass: role==="pr"?"col-pr":"", formatter:(c)=>cellVal(c, m.unit, WITH_DELTA.has(role), role) }));
+    return cols;
+  }
+  function buildTable() {
+    if(state.table){ try{ state.table.destroy(); }catch(e){} state.table=null; }
+    state.table = new Tabulator("#grid", {
+      data: rows(), columns: columns(), index:"id", height:"100%", layout:"fitData",
+      groupBy: state.groupBy, groupStartOpen:true, movableColumns:true, selectableRows:true, reactiveData:false,
+      groupHeader:(value,count)=>`${esc(value===""||value==null?"—":value)} <span class="gcount">${count}</span>`,
+      placeholder:"No data.",
+    });
+    state.table.on("rowSelectionChanged", updateChart);
+    // Interaction: clicking a row body REPLACES the selection with just that benchmark; the
+    // checkbox column is the explicit add/remove for comparing several at once.
+    state.table.on("cellClick", (e, cell)=>{
+      if(cell.getColumn().getDefinition().formatter === "rowSelection") return; // checkbox handles add/remove
+      const row=cell.getRow(), sel=state.table.getSelectedRows();
+      if(sel.length===1 && sel[0].getData().id===row.getData().id) return; // already the sole selection
+      state.table.deselectRow(); row.select();
+    });
+    state.table.on("tableBuilt", ()=>{ selectDefault(); });
+  }
+  function selectDefault() {
+    const gk = DIMS[METRICS[state.metric].domain][0].key;
+    const first = SERIES.length ? SERIES[0].dims[gk] : null;
+    const ids = SERIES.filter(s=>s.dims[gk]===first).map(s=>s.id);
+    if(ids.length) state.table.selectRow(ids);
+  }
+
+  // ---------- chart (driven by grid selection) ----------
+  function refValue(s){ if(s.baselines["curr-stable"]!=null) return s.baselines["curr-stable"]; return s.trend.length?s.trend[0][1]:null; }
+  function updateChart() {
+    const sel = (state.table? state.table.getSelectedData():[]).map(r=>SBYID[r.id]).filter(Boolean);
+    document.getElementById("selinfo").textContent = sel.length ? `${sel.length} selected` : "";
+    const el = document.getElementById("chart");
+    const m = METRICS[state.metric];
+    document.getElementById("chart-title").textContent = m.label + (state.scale==="relative"?" — relative %":state.scale==="log"?" — log":"");
+    if(!sel.length){ if(state.chart){ state.chart.dispose(); state.chart=null; } el.innerHTML=`<div class="hint">Click a benchmark to plot it — tick the checkboxes to compare several.</div>`; return; }
+    if(!state.chart || el.querySelector(".hint")){ el.innerHTML=""; state.chart = echarts.init(el, null, {renderer:"canvas"}); }
+    const rel=state.scale==="relative", single=sel.length===1, noisy=smoothingOn(), band=noisy && single && state.scale!=="log";
+    const echSeries = [];
+    // Time-window filter: keep only points within state.range days of the most recent
+    // point across the selected series (0 = All). Anchoring to the latest data point
+    // (not wall-clock) keeps the window meaningful even for an older embedded snapshot.
+    let cutoff = -Infinity;
+    if (state.range) {
+      let tmax = -Infinity;
+      sel.forEach(s => s.trend.forEach(p => { if (p[0] > tmax) tmax = p[0]; }));
+      if (tmax > -Infinity) cutoff = tmax - state.range*86400000;
+    }
+    const clip = tr => cutoff===-Infinity ? tr : tr.filter(p => p[0] >= cutoff);
+    sel.forEach(s=>{
+      const tr = clip(s.trend);
+      const ref = rel?refValue(s):null;
+      const tx = v => (v==null?null:(rel&&ref?100*v/ref:v));
+      const data = tr.map(p=>[p[0], tx(p[1]), p[2]]);
+      // single-selection decorations: dashed baseline markLines + the PR pin
+      const decorate = ser => {
+        if(!single) return ser;
+        const ml = BASELINE_ROLES.filter(r=>s.baselines[r]!=null).map(r=>({ yAxis: rel&&ref?100*s.baselines[r]/ref:s.baselines[r], label:{formatter:r,position:"insideEndTop",color:getCss("--muted"),fontSize:10}, lineStyle:{color:getCss("--muted"),type:"dashed",width:1} }));
+        if(ml.length) ser.markLine={symbol:"none",data:ml};
+        if(s.pr!=null && tr.length){ const py=rel&&ref?100*s.pr/ref:s.pr; ser.markPoint={symbol:"pin",symbolSize:40,data:[{coord:[tr[tr.length-1][0],py],value:"PR",itemStyle:{color:getCss("--pr")},label:{formatter:"PR",color:"#fff",fontSize:10}}]}; }
+        return ser;
+      };
+      if(!noisy){
+        // allocations, size, or Smoothing=Off: plot the raw values exactly, no smoothing.
+        echSeries.push(decorate({ name:s.label, type:"line", showSymbol:tr.length<=60, symbolSize:5, smooth:false, connectNulls:true, lineStyle:{width:2}, itemStyle:{color:s.color}, data }));
+        return;
+      }
+      // TIME + Smoothing: faint raw dots + a rolling-median trend, and (single) a ±k·MAD band.
+      const med=rollingMedianT(tr, smoothSpanMs());
+      const smooth=tr.map((p,i)=>[p[0], tx(med[i]), p[2]]);
+      echSeries.push({ name:s.label+" (raw)", type:"line", showSymbol:tr.length<=60, symbolSize:3, smooth:false, connectNulls:true, silent:true, z:1, lineStyle:{width:1,opacity:.25,color:s.color}, itemStyle:{color:s.color,opacity:.45}, data });
+      if(band){
+        const madv=rollingMadT(tr, smoothSpanMs());
+        const lo=tr.map((p,i)=>[p[0], tx(med[i]-BAND_K*madv[i])]);
+        const hi=tr.map((p,i)=>[p[0], tx(med[i]+BAND_K*madv[i])-tx(med[i]-BAND_K*madv[i])]);
+        echSeries.push({ name:"__band_lo", type:"line", stack:"band", symbol:"none", silent:true, z:0, lineStyle:{opacity:0}, areaStyle:{opacity:0}, data:lo });
+        echSeries.push({ name:"__band_hi", type:"line", stack:"band", symbol:"none", silent:true, z:0, lineStyle:{opacity:0}, areaStyle:{opacity:.10,color:s.color}, data:hi });
+      }
+      echSeries.push(decorate({ name:s.label, type:"line", showSymbol:false, smooth:false, connectNulls:true, z:3, lineStyle:{width:2.5,color:s.color}, itemStyle:{color:s.color}, data:smooth }));
+    });
+    const many=sel.length>8;
+    const fmtY = v => rel?(v==null?"·":v.toFixed(1)+"%"):fmtVal(v,m.unit);
+    const dstr = t => { const s=new Date(t).toISOString(); return s.slice(11,16)==="00:00" ? s.slice(0,10) : s.slice(0,10)+" "+s.slice(11,16)+"Z"; };
+    state.chart.setOption({
+      color:PALETTE, animation:false, grid:{left:66,right:20,top:14,bottom:52},
+      tooltip: many
+        ? {trigger:"item",confine:true,backgroundColor:getCss("--panel2"),borderColor:getCss("--border"),textStyle:{color:getCss("--text")},
+           formatter:(p)=>`${esc(p.seriesName)}<br/><span style="color:${getCss('--muted')};font-size:11px">${dstr(p.value[0])}${p.value[2]?" · "+esc(p.value[2]):""}</span><br/><b>${fmtY(p.value[1])}</b>`}
+        : {trigger:"axis",confine:true,backgroundColor:getCss("--panel2"),borderColor:getCss("--border"),textStyle:{color:getCss("--text")},
+           formatter:(ps)=>{ ps=(ps||[]).filter(p=>p.seriesName && !p.seriesName.startsWith("__band") && !p.seriesName.endsWith(" (raw)")); if(!ps.length) return ""; const ver=ps[0].value[2];
+             let h=`<div style="font-size:11px;color:${getCss('--muted')};margin-bottom:4px">${dstr(ps[0].value[0])}${ver?` · <b style="color:${getCss('--text')}">${esc(ver)}</b>`:""}</div>`;
+             ps.forEach(p=>{ h+=`<div>${p.marker} ${esc(p.seriesName)} &nbsp;<b>${fmtY(p.value[1])}</b></div>`; }); return h; }},
+      legend:{show:false},
+      xAxis:{type:"time",boundaryGap:false,axisLabel:{color:getCss("--muted")},axisLine:{lineStyle:{color:getCss("--border")}},splitLine:{show:false}},
+      yAxis:{type:state.scale==="log"?"log":"value",name:rel?"% of curr-stable":m.unit,nameGap:12,nameTextStyle:{color:getCss("--faint"),align:"left",fontSize:10},axisLabel:{color:getCss("--muted"),formatter:(v)=>rel?v+"%":fmtVal(v,m.unit)},axisLine:{show:false},axisTick:{show:false},splitLine:{lineStyle:{color:getCss("--border"),opacity:.35}}},
+      dataZoom:[{type:"inside"},{type:"slider",height:16,bottom:14,borderColor:"transparent",fillerColor:"rgba(90,162,255,.15)",handleStyle:{color:getCss("--accent")},textStyle:{color:getCss("--faint")}}],
+      series: echSeries,
+    }, true);
+    state.chart.resize();
+  }
+
+  // ---------- group-by chips ----------
+  function renderGroupby() {
+    const dims = DIMS[METRICS[state.metric].domain];
+    const el = document.getElementById("groupby"); el.innerHTML="";
+    dims.forEach(d=>{
+      const b=document.createElement("button"); const idx=state.groupBy.indexOf(d.key);
+      b.className = idx>=0?"on":""; b.innerHTML = d.label + (idx>=0?`<span class="ord">${idx+1}</span>`:"");
+      b.title = "Group table rows by " + d.label + " (toggle; grouping order shown when active).";
+      b.onclick = ()=>{ const i=state.groupBy.indexOf(d.key); if(i>=0) state.groupBy.splice(i,1); else state.groupBy.push(d.key);
+        renderGroupby(); if(state.table) state.table.setGroupBy(state.groupBy.length?state.groupBy:false); };
+      el.appendChild(b);
+    });
+  }
+
+  // ---------- denoise (smoothing) toggle ----------
+  // Available for every metric; the On/Off state is per-metric (default On for Time, Off for
+  // the deterministic alloc/size), so switching metrics reflects that metric's own setting.
+  function renderDenoise(){ const c=document.getElementById("denoise-ctl"); if(!c) return; c.style.display="";
+    const on=!!state.denoise[state.metric]; document.querySelectorAll("#denoise button").forEach(b=>b.classList.toggle("on",(b.dataset.d==="on")===on)); }
+  // Smoothing only affects cell rendering + the chart (the Status column is always shown), so a
+  // redraw in place is enough — no column rebuild, and the selection is preserved.
+  function applyDenoise(){ if(!state.table) return; state.table.redraw(true); updateChart(); }
+
+  // ---------- metric switch ----------
+  function switchMetric(mk) {
+    state.metric = mk;
+    document.querySelectorAll("#metric button").forEach(b=>b.classList.toggle("on",b.dataset.m===mk));
+    state.groupBy = [ DIMS[METRICS[mk].domain][0].key ];   // default: group by first dim
+    const s=document.getElementById("gridsearch"); if(s) s.value="";
+    refreshSeries(); resetOsFilter(); renderGroupby(); renderOsFilter(); renderDenoise(); buildTable();
+  }
+
+  // ---------- boot ----------
+  function boot(data) {
+    state.data = { benchmarks:data.benchmarks||{}, sizes:data.sizes||null };
+    const legs=benchLegs(); const hasBench=Object.keys(legs).length>0;
+    const hasSize=!!(state.data.sizes&&(state.data.sizes.nightly||[]).length);
+    if(!hasBench && !hasSize){ document.getElementById("subtitle").textContent="No perf data available yet."; return; }
+    // subtitle
+    const h=normBench(legs); const parts=Object.keys(h).map(o=>{ const d=latestDay(h[o].nightly); return d?`${o} <code>${d.version}</code>`:null; }).filter(Boolean);
+    const sz=hasSize?(state.data.sizes.nightly.slice(-1)[0]||{}).version:null;
+    document.getElementById("subtitle").innerHTML=(parts.length?"Nightly "+parts.join(" · "):"")+(sz?`  ·  sizes <code>${sz}</code>`:"")||"Ready.";
+    if(!hasBench && hasSize) state.metric="size";
+    document.querySelectorAll("#metric button").forEach(b=>b.classList.toggle("on",b.dataset.m===state.metric));
+    state.groupBy=[ DIMS[METRICS[state.metric].domain][0].key ];
+    refreshSeries(); resetOsFilter(); renderGroupby(); renderOsFilter(); renderDenoise(); buildTable();
+    // controls
+    document.querySelectorAll("#metric button").forEach(b=>b.onclick=()=>switchMetric(b.dataset.m));
+    document.querySelectorAll("#scale button").forEach(b=>b.onclick=()=>{ state.scale=b.dataset.s; document.querySelectorAll("#scale button").forEach(x=>x.classList.toggle("on",x===b)); updateChart(); });
+    document.querySelectorAll("#range button").forEach(b=>b.onclick=()=>{ state.range=+b.dataset.r; document.querySelectorAll("#range button").forEach(x=>x.classList.toggle("on",x===b)); updateChart(); });
+    document.querySelectorAll("#threshold button").forEach(b=>b.onclick=()=>{ state.threshold=parseFloat(b.dataset.t); document.querySelectorAll("#threshold button").forEach(x=>x.classList.toggle("on",x===b)); if(state.table) state.table.redraw(true); });
+    document.querySelectorAll("#denoise button").forEach(b=>b.onclick=()=>{ state.denoise[state.metric]=(b.dataset.d==="on"); document.querySelectorAll("#denoise button").forEach(x=>x.classList.toggle("on",x===b)); applyDenoise(); });
+    document.querySelectorAll("#span button").forEach(b=>b.onclick=()=>{ state.smoothDays=+b.dataset.days; document.querySelectorAll("#span button").forEach(x=>x.classList.toggle("on",x===b)); if(state.table) state.table.redraw(true); updateChart(); });
+    document.getElementById("gridsearch").oninput = () => applyFilter();
+    document.getElementById("clearsel").onclick=()=>{ if(state.table) state.table.deselectRow(); };
+    initSplitter();
+    window.addEventListener("resize", ()=>{ if(state.chart) state.chart.resize(); });
+  }
+
+  function initSplitter() {
+    const sp=document.getElementById("splitter"), pane=document.querySelector(".chart-pane");
+    let startY, startH;
+    const move=e=>{ const dy=startY-(e.touches?e.touches[0].clientY:e.clientY); let h=Math.min(Math.max(startH+dy,90), window.innerHeight-180); pane.style.height=h+"px"; if(state.chart) state.chart.resize(); };
+    const up=()=>{ document.removeEventListener("mousemove",move); document.removeEventListener("mouseup",up); document.removeEventListener("touchmove",move); document.removeEventListener("touchend",up); document.body.style.userSelect=""; };
+    const down=e=>{ startY=e.touches?e.touches[0].clientY:e.clientY; startH=pane.getBoundingClientRect().height; document.body.style.userSelect="none";
+      document.addEventListener("mousemove",move); document.addEventListener("mouseup",up); document.addEventListener("touchmove",move,{passive:false}); document.addEventListener("touchend",up); };
+    sp.addEventListener("mousedown",down); sp.addEventListener("touchstart",down,{passive:true});
+  }
+
+  // ---------- data loading ----------
+  async function fetchJson(u){ try{ const r=await fetch(u,{cache:"no-cache"}); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } }
+  async function fetchLive(){ const base=new URLSearchParams(location.search).get("data")||RAW_BASE; const b=base.endsWith("/")?base:base+"/";
+    document.getElementById("subtitle").textContent="Loading live data…";
+    const [benchmarks,sizes]=await Promise.all([fetchJson(b+"benchmarks/index.json"),fetchJson(b+"sizes/index.json")]); boot({benchmarks:benchmarks||{},sizes}); }
+  const start=()=>{ if(window.__PERF_DATA__) boot(window.__PERF_DATA__); else fetchLive(); };
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",start); else start();
+})();
+</script>
+</body>
+</html>
