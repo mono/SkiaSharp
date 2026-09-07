@@ -104,36 +104,25 @@ $greatestTag = Get-ShippedTag '4.152.0-preview.1' @(
 Assert-Equal 'v4.152.0-preview.1.26426.14' $greatestTag 'The greatest dnceng build tuple was not selected.'
 Assert-Equal 'v4.152.0' (Get-ShippedTag '4.152.0' @('v4.152.0')) 'A stable exact tag was not detected.'
 
-$chronologyBranches = @(
+$topologyBranches = @(
     ConvertTo-ReleaseMilestone 'release/4.152.0-preview.1'
     ConvertTo-ReleaseMilestone 'release/4.153.0-preview.1'
     ConvertTo-ReleaseMilestone 'release/4.153.0-rc.1'
     ConvertTo-ReleaseMilestone 'release/4.154.0-preview.1'
 )
-$chronologyTags = @(
+$topologyTags = @(
     'v4.152.0-preview.1.1',
     'v4.153.0-preview.1.1',
     'v4.153.0-rc.1.1',
     'v4.154.0-preview.1.1'
 )
-$chronologyPublished = @{
-    'v4.153.0-preview.1.1' = [datetimeoffset] '2026-09-05T00:00:00Z'
-    'v4.154.0-preview.1.1' = [datetimeoffset] '2026-09-06T00:00:00Z'
-    'v4.153.0-rc.1.1' = [datetimeoffset] '2026-09-07T00:00:00Z'
-}
-$shippedChronology = @(Get-ShippedReleases `
-    -Branches $chronologyBranches `
-    -Tags $chronologyTags `
-    -PublishedReleases $chronologyPublished)
+$shippedTopology = @(Get-ShippedReleases -Branches $topologyBranches -Tags $topologyTags)
 Assert-Equal @(
+    '4.152.0-preview.1',
     '4.153.0-preview.1',
-    '4.154.0-preview.1',
-    '4.153.0-rc.1'
-) @($shippedChronology | Where-Object PublishedAt | ForEach-Object Title) `
-    'Shipped releases were not ordered by publication chronology.'
-Assert-Equal @('v4.152.0-preview.1.1') `
-    @($shippedChronology | Where-Object { !$_.PublishedAt } | ForEach-Object Tag) `
-    'A shipped release without publication chronology was silently omitted.'
+    '4.153.0-rc.1',
+    '4.154.0-preview.1'
+) @($shippedTopology.Title) 'Shipped releases were not ordered by release identity.'
 
 $boundaryRoot = Join-Path $PSScriptRoot ".boundary-test-$([guid]::NewGuid().ToString('N'))"
 try {
@@ -141,74 +130,61 @@ try {
     & git -C $boundaryRoot init --quiet
     & git -C $boundaryRoot config user.name 'Release Boundary Tests'
     & git -C $boundaryRoot config user.email 'release-boundaries@example.invalid'
-    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Shared boundary'
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Previous release boundary'
     & git -C $boundaryRoot tag v4.152.0-preview.1.1
-    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Ship m153 preview (#4826)'
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Shared m153 line work (#4826)'
+    $m153LinePoint = (& git -C $boundaryRoot rev-parse HEAD).Trim()
+    & git -C $boundaryRoot branch m153-servicing
+    & git -C $boundaryRoot branch m153-preview
+    & git -C $boundaryRoot switch --quiet m153-preview
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Create m153 preview release branch'
     & git -C $boundaryRoot tag v4.153.0-preview.1.1
-    & git -C $boundaryRoot branch later-m153-rc
-    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Ship m154 preview (#4945)'
-    & git -C $boundaryRoot tag v4.154.0-preview.1.1
-    & git -C $boundaryRoot switch --quiet later-m153-rc
-    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Backport already-shipped m154 change (#4945)'
-    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Ship later m153 RC (#5000)'
+    & git -C $boundaryRoot switch --quiet m153-servicing
+    & git -C $boundaryRoot branch m154-preview
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Later m153 servicing work (#5000)'
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Create later m153 RC release branch'
     & git -C $boundaryRoot tag v4.153.0-rc.1.1
+    & git -C $boundaryRoot switch --quiet m154-preview
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'm154-only work (#4945)'
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Create m154 preview release branch'
+    & git -C $boundaryRoot tag v4.154.0-preview.1.1
 
-    $m154Plan = Get-FirstShippedPullRequests `
+    $m153Preview = $shippedTopology | Where-Object Title -eq '4.153.0-preview.1'
+    $m153PreviewBoundary = Get-PreviousShippedBoundary `
         -Root $boundaryRoot `
-        -Releases $shippedChronology `
-        -CurrentTag 'v4.154.0-preview.1.1' `
-        -CurrentPublishedAt $chronologyPublished['v4.154.0-preview.1.1']
-    Assert-Equal @(4945) @($m154Plan.PullRequests) `
-        'A later shipment from an earlier numeric line changed the first-shipped m154 pull requests.'
-    Assert-Equal @() @($m154Plan.Ambiguities) `
-        'An unrelated undated release made a target shipment ambiguous.'
+        -Releases $shippedTopology `
+        -CurrentRelease $m153Preview
+    Assert-Equal 'v4.152.0-preview.1.1' $m153PreviewBoundary.Tag `
+        'A later numeric release became the boundary for an earlier release line.'
+    Assert-Equal @(4826) @(Get-ReleasePullRequests `
+        -Root $boundaryRoot `
+        -Start $m153PreviewBoundary.Start `
+        -End $m153PreviewBoundary.End) `
+        'The m153 preview range did not begin at the previous release-line branch commit.'
 
-    $laterM153Plan = Get-FirstShippedPullRequests `
+    $m154Preview = $shippedTopology | Where-Object Title -eq '4.154.0-preview.1'
+    $m154Boundary = Get-PreviousShippedBoundary `
         -Root $boundaryRoot `
-        -Releases $shippedChronology `
-        -CurrentTag 'v4.153.0-rc.1.1' `
-        -CurrentPublishedAt $chronologyPublished['v4.153.0-rc.1.1']
-    Assert-Equal @(5000) @($laterM153Plan.PullRequests) `
-        'A parallel release reclaimed a pull request first shipped from another numeric line.'
+        -Releases $shippedTopology `
+        -CurrentRelease $m154Preview
+    Assert-Equal $m153LinePoint $m154Boundary.Start `
+        'A parallel m153 release did not preserve the shared m154 branch commit boundary.'
+    Assert-Equal @(4945) @(Get-ReleasePullRequests `
+        -Root $boundaryRoot `
+        -Start $m154Boundary.Start `
+        -End $m154Boundary.End) `
+        'The m154 range included work from its parallel m153 release branch.'
 
-    $undatedOverlap = Get-FirstShippedPullRequests `
+    $m153Rc = $shippedTopology | Where-Object Title -eq '4.153.0-rc.1'
+    $m153RcBoundary = Get-PreviousShippedBoundary `
         -Root $boundaryRoot `
-        -Releases @(
-            [pscustomobject] @{
-                Title = '4.153.0-preview.1'
-                Tag = 'v4.153.0-preview.1.1'
-                PublishedAt = $null
-            }
-            [pscustomobject] @{
-                Title = '4.154.0-preview.1'
-                Tag = 'v4.154.0-preview.1.1'
-                PublishedAt = $chronologyPublished['v4.154.0-preview.1.1']
-            }
-        ) `
-        -CurrentTag 'v4.154.0-preview.1.1' `
-        -CurrentPublishedAt $chronologyPublished['v4.154.0-preview.1.1']
-    Assert-Equal @('v4.153.0-preview.1.1') @($undatedOverlap.Ambiguities.Tag) `
-        'An undated shipped release overlapping the target was not ambiguous.'
-
-    $sameTimestamp = [datetimeoffset] '2026-09-06T22:48:14Z'
-    $equalTimeOverlap = Get-FirstShippedPullRequests `
+        -Releases $shippedTopology `
+        -CurrentRelease $m153Rc
+    Assert-Equal @(5000) @(Get-ReleasePullRequests `
         -Root $boundaryRoot `
-        -Releases @(
-            [pscustomobject] @{
-                Title = '4.153.0-preview.1'
-                Tag = 'v4.153.0-preview.1.1'
-                PublishedAt = $sameTimestamp
-            }
-            [pscustomobject] @{
-                Title = '4.154.0-preview.1'
-                Tag = 'v4.154.0-preview.1.1'
-                PublishedAt = $sameTimestamp
-            }
-        ) `
-        -CurrentTag 'v4.154.0-preview.1.1' `
-        -CurrentPublishedAt $sameTimestamp
-    Assert-Equal @('v4.153.0-preview.1.1') @($equalTimeOverlap.Ambiguities.Tag) `
-        'Equal-time overlapping shipments were resolved by invocation order instead of blocked.'
+        -Start $m153RcBoundary.Start `
+        -End $m153RcBoundary.End) `
+        'A later m153 RC did not retain its own servicing-branch range.'
 } finally {
     if (Test-Path -LiteralPath $boundaryRoot) {
         Remove-Item -LiteralPath $boundaryRoot -Recurse -Force
@@ -224,11 +200,6 @@ $assignmentTags = @(
     'v4.154.0-preview.1.26454.9',
     'v4.153.0-rc.1.26455.1'
 )
-$assignmentPublished = @{
-    'v4.153.0-preview.1.26454.6' = [datetimeoffset] '2026-09-05T18:37:49Z'
-    'v4.154.0-preview.1.26454.9' = [datetimeoffset] '2026-09-06T22:48:14Z'
-    'v4.153.0-rc.1.26455.1' = [datetimeoffset] '2026-09-07T12:00:00Z'
-}
 $pullAssignment = Get-ReleaseAssignmentPlan `
     -Kind 'pull-request' `
     -Number 4826 `
@@ -236,8 +207,7 @@ $pullAssignment = Get-ReleaseAssignmentPlan `
     -CurrentMilestone '4.154.0-preview.1' `
     -TargetMilestone '4.153.0-preview.1' `
     -Milestones $assignmentMilestones `
-    -Tags $assignmentTags `
-    -PublishedReleases $assignmentPublished
+    -Tags $assignmentTags
 Assert-Equal 'assign' $pullAssignment.Status 'A pull request could not be repaired to its first shipped milestone.'
 Assert-Equal 74 $pullAssignment.Operation.ToMilestoneNumber 'A pull request repair targeted the wrong milestone.'
 
@@ -248,8 +218,7 @@ $issueAssignment = Get-ReleaseAssignmentPlan `
     -CurrentMilestone '4.154.0-preview.1' `
     -TargetMilestone '4.153.0-preview.1' `
     -Milestones $assignmentMilestones `
-    -Tags $assignmentTags `
-    -PublishedReleases $assignmentPublished
+    -Tags $assignmentTags
 Assert-Equal 'assign' $issueAssignment.Status 'A linked issue could not be repaired to its first shipped milestone.'
 Assert-Equal 4826 $issueAssignment.Operation.ViaPullRequest 'A linked issue lost its source pull request.'
 
@@ -263,10 +232,7 @@ $unshippedRollForward = Get-ReleaseAssignmentPlan `
         '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'open' }
         '4.152.0-rc.1' = [pscustomobject] @{ number = 73; state = 'closed' }
     } `
-    -Tags @('v4.152.0-rc.1.26426.14') `
-    -PublishedReleases @{
-        'v4.152.0-rc.1.26426.14' = [datetimeoffset] '2026-09-03T02:22:44Z'
-    }
+    -Tags @('v4.152.0-rc.1.26426.14')
 Assert-Equal 'assign' $unshippedRollForward.Status `
     'An unshipped preview could not roll forward to the next shipped milestone in its numeric line.'
 
@@ -278,8 +244,7 @@ foreach ($unsafe in @(
         -CurrentMilestone '4.153.0-preview.1' `
         -TargetMilestone '4.154.0-preview.1' `
         -Milestones $assignmentMilestones `
-        -Tags $assignmentTags `
-        -PublishedReleases $assignmentPublished
+        -Tags $assignmentTags
     Get-ReleaseAssignmentPlan `
         -Kind 'issue' `
         -Number 1234 `
@@ -287,8 +252,7 @@ foreach ($unsafe in @(
         -CurrentMilestone '4.153.0-preview.1' `
         -TargetMilestone '4.154.0-preview.1' `
         -Milestones $assignmentMilestones `
-        -Tags $assignmentTags `
-        -PublishedReleases $assignmentPublished
+        -Tags $assignmentTags
 )) {
     Assert-Equal 'blocked' $unsafe.Status `
         'A forward move out of an earlier closed and shipped milestone was not blocked.'
@@ -306,27 +270,9 @@ $closedOnlyGuard = Get-ReleaseAssignmentPlan `
         '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'closed' }
         '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
     } `
-    -Tags @('v4.153.0-preview.1.26454.6') `
-    -PublishedReleases @{
-        'v4.153.0-preview.1.26454.6' = [datetimeoffset] '2026-09-05T18:37:49Z'
-    }
+    -Tags @('v4.153.0-preview.1.26454.6')
 Assert-Equal 'blocked' $closedOnlyGuard.Status `
     'A forward move out of an earlier closed milestone was not blocked without a shipped tag.'
-
-$parallelLineGuard = Get-ReleaseAssignmentPlan `
-    -Kind 'pull-request' `
-    -Number 4945 `
-    -ViaPullRequest $null `
-    -CurrentMilestone '4.154.0-preview.1' `
-    -TargetMilestone '4.153.0-rc.1' `
-    -Milestones @{
-        '4.153.0-rc.1' = [pscustomobject] @{ number = 76; state = 'closed' }
-        '4.154.0-preview.1' = [pscustomobject] @{ number = 75; state = 'closed' }
-    } `
-    -Tags $assignmentTags `
-    -PublishedReleases $assignmentPublished
-Assert-Equal 'blocked' $parallelLineGuard.Status `
-    'A later shipment from an earlier numeric line stole an item from its first shipped milestone.'
 
 $schedule = [pscustomobject] @{
     branch_point = '2026-07-27T00:00:00Z'
@@ -419,6 +365,18 @@ $script:FakeGhCalls = [System.Collections.Generic.List[string]]::new()
 $script:FakeGhScenario = 'read'
 $script:FakeMilestoneState = 'open'
 $script:FakeItemMilestone = '4.152.0-preview.1'
+$script:FakeLiveReleaseTags = @()
+$script:FakeLiveReleaseTagReads = 0
+function Get-CurrentRemoteReleaseTags([string] $Root) {
+    $script:FakeLiveReleaseTagReads++
+    if ($script:FakeGhScenario -eq 'post-write-shipment-race' -and $script:FakeLiveReleaseTagReads -gt 1) {
+        return @(
+            'v4.152.0-preview.1.26426.14',
+            'v4.153.0-preview.1.26454.6'
+        )
+    }
+    return $script:FakeLiveReleaseTags
+}
 function global:gh {
     $command = $args -join ' '
     $script:FakeGhCalls.Add($command)
@@ -462,6 +420,36 @@ function global:gh {
             throw 'Unsafe closure-raced assignment reached PATCH.'
         } elseif ($command -match 'issues/6000$') {
             return '{"number":6000,"milestone":{"number":72,"title":"4.152.0-preview.1","state":"closed"}}'
+        }
+    }
+    if ($script:FakeGhScenario -eq 'shipment-race') {
+        if ($command -match 'issues/6001 .*PATCH') {
+            throw 'Unsafe shipment-raced assignment reached PATCH.'
+        } elseif ($command -match 'issues/6001$') {
+            return '{"number":6001,"milestone":{"number":72,"title":"4.152.0-preview.1","state":"open"}}'
+        }
+    }
+    if ($script:FakeGhScenario -eq 'post-write-shipment-race') {
+        if ($command -match 'issues/6002 .*PATCH.*milestone=74') {
+            $script:FakeItemMilestone = '4.153.0-preview.1'
+            return '{"number":6002}'
+        } elseif ($command -match 'issues/6002 .*PATCH.*milestone=72') {
+            $script:FakeItemMilestone = '4.152.0-preview.1'
+            return '{"number":6002}'
+        } elseif ($command -match 'issues/6002$') {
+            $milestoneNumber = if ($script:FakeItemMilestone -eq '4.152.0-preview.1') { 72 } else { 74 }
+            return [pscustomobject] @{
+                number = 6002
+                milestone = [pscustomobject] @{
+                    number = $milestoneNumber
+                    title = $script:FakeItemMilestone
+                    state = 'open'
+                }
+            } | ConvertTo-Json -Compress
+        } elseif ($command -match 'milestones\?state=all') {
+            return @'
+[[{"number":72,"title":"4.152.0-preview.1","state":"open"},{"number":74,"title":"4.153.0-preview.1","state":"closed"}]]
+'@
         }
     }
     if ($command -match 'milestones\?state=all') {
@@ -530,6 +518,10 @@ Assert-Equal '4.152.0-preview.2' $script:FakeItemMilestone 'The fake-gh apply pa
 Assert-Equal 'closed' $script:FakeMilestoneState 'The fake-gh apply path did not close the emptied milestone.'
 
 $script:FakeGhScenario = 'assignment-race'
+$script:FakeLiveReleaseTags = @(
+    'v4.153.0-preview.1.26454.6',
+    'v4.154.0-preview.1.26454.9'
+)
 $racedOperation = [pscustomobject] @{
     Kind = 'pull-request'
     Number = 4826
@@ -540,25 +532,19 @@ $racedOperation = [pscustomobject] @{
 }
 Assert-Throws {
     Set-PlannedReleaseAssignment `
+        -Root 'fake-root' `
         -Repository 'mono/SkiaSharp' `
         -Item $racedOperation `
         -Milestones @{
             '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
             '4.154.0-preview.1' = [pscustomobject] @{ number = 75; state = 'closed' }
         } `
-        -Tags @(
-            'v4.153.0-preview.1.26454.6',
-            'v4.154.0-preview.1.26454.9'
-        ) `
-        -PublishedReleases @{
-            'v4.153.0-preview.1.26454.6' = [datetimeoffset] '2026-09-05T18:37:49Z'
-            'v4.154.0-preview.1.26454.9' = [datetimeoffset] '2026-09-06T22:48:14Z'
-        } `
         -Push
 } 'Refusing to move pull-request #4826' `
     'A concurrent earlier shipped assignment was not revalidated before PATCH.'
 
 $script:FakeGhScenario = 'closure-race'
+$script:FakeLiveReleaseTags = @('v4.153.0-preview.1.26454.6')
 $closureRacedOperation = [pscustomobject] @{
     Kind = 'pull-request'
     Number = 6000
@@ -569,19 +555,70 @@ $closureRacedOperation = [pscustomobject] @{
 }
 Assert-Throws {
     Set-PlannedReleaseAssignment `
+        -Root 'fake-root' `
         -Repository 'mono/SkiaSharp' `
         -Item $closureRacedOperation `
         -Milestones @{
             '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'open' }
             '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
         } `
-        -Tags @('v4.153.0-preview.1.26454.6') `
-        -PublishedReleases @{
-            'v4.153.0-preview.1.26454.6' = [datetimeoffset] '2026-09-05T18:37:49Z'
-        } `
         -Push
 } 'Refusing to move pull-request #6000' `
     'A source milestone closed after planning was not revalidated before PATCH.'
+
+$script:FakeGhScenario = 'shipment-race'
+$script:FakeLiveReleaseTags = @(
+    'v4.152.0-preview.1.26426.14',
+    'v4.153.0-preview.1.26454.6'
+)
+$shipmentRacedOperation = [pscustomobject] @{
+    Kind = 'pull-request'
+    Number = 6001
+    ViaPullRequest = $null
+    FromMilestone = '4.152.0-preview.1'
+    ToMilestone = '4.153.0-preview.1'
+    ToMilestoneNumber = 74
+}
+Assert-Throws {
+    Set-PlannedReleaseAssignment `
+        -Root 'fake-root' `
+        -Repository 'mono/SkiaSharp' `
+        -Item $shipmentRacedOperation `
+        -Milestones @{
+            '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'open' }
+            '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
+        } `
+        -Push
+} 'Refusing to move pull-request #6001.*shipped as v4.152.0-preview.1.26426.14' `
+    'A source milestone shipped after planning was not revalidated before PATCH.'
+
+$script:FakeGhScenario = 'post-write-shipment-race'
+$script:FakeItemMilestone = '4.152.0-preview.1'
+$script:FakeLiveReleaseTagReads = 0
+$script:FakeLiveReleaseTags = @('v4.153.0-preview.1.26454.6')
+$postWriteRacedOperation = [pscustomobject] @{
+    Kind = 'pull-request'
+    Number = 6002
+    ViaPullRequest = $null
+    FromMilestone = '4.152.0-preview.1'
+    FromMilestoneNumber = 72
+    ToMilestone = '4.153.0-preview.1'
+    ToMilestoneNumber = 74
+}
+Assert-Throws {
+    Set-PlannedReleaseAssignment `
+        -Root 'fake-root' `
+        -Repository 'mono/SkiaSharp' `
+        -Item $postWriteRacedOperation `
+        -Milestones @{
+            '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'open' }
+            '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
+        } `
+        -Push
+} 'Refusing to move pull-request #6002.*concurrent change was detected after mutation.*restored' `
+    'A source milestone shipped between revalidation and PATCH without restoring the assignment.'
+Assert-Equal '4.152.0-preview.1' $script:FakeItemMilestone `
+    'A raced assignment was not restored to its newly shipped source milestone.'
 
 $script:FakeGhScenario = 'new-item'
 Assert-Throws {

@@ -93,121 +93,70 @@ function Get-ReleaseBranches([string] $Root, [string] $Version) {
     return [pscustomobject] @{ Selected = $selected; All = $all }
 }
 
-# Reads the publication time for every published GitHub Release.
-function Get-GitHubPublishedReleaseMap([string] $Repository) {
-    $pages = Invoke-GitHubJsonWithRetry -Arguments @(
-        'api',
-        '--paginate',
-        '--slurp',
-        "repos/$Repository/releases?per_page=100"
-    )
-    $result = @{}
-    foreach ($release in Expand-GitHubPages $pages) {
-        $tag = [string] $release.tag_name
-        if (!$release.draft -and $release.published_at -and $tag) {
-            $result[$tag] = [datetimeoffset] $release.published_at
-        }
-    }
-    return $result
-}
-
-# Combines exact shipped tags with their publication chronology.
-function Get-ShippedReleases(
-    [object[]] $Branches,
-    [string[]] $Tags,
-    [hashtable] $PublishedReleases
-) {
+# Combines release identities with their exact shipped tags.
+function Get-ShippedReleases([object[]] $Branches, [string[]] $Tags) {
     $result = foreach ($branch in $Branches) {
         $tag = Get-ShippedTag -Title $branch.Title -Tags $Tags
         if ($tag) {
             [pscustomobject] @{
                 Title = $branch.Title
                 Tag = $tag
-                PublishedAt = if ($PublishedReleases.ContainsKey($tag)) {
-                    [datetimeoffset] $PublishedReleases[$tag]
-                } else {
-                    $null
-                }
+                NumericKey = $branch.NumericKey
+                SortKey = $branch.SortKey
             }
         }
     }
-    return @($result | Sort-Object `
-        @{ Expression = { $null -eq $_.PublishedAt }; Ascending = $true },
-        PublishedAt,
-        Tag)
+    return @($result | Sort-Object SortKey, Tag)
 }
 
-# Extracts every merged pull request through one first-parent release history.
-function Get-ReleasePullRequestsThrough([string] $Root, [string] $End) {
-    $output = (Invoke-Git -Root $Root -Arguments @(
-        'log',
-        '--format=%s',
-        '--first-parent',
-        $End
-    )).Output
-    $numbers = foreach ($subject in @($output -split "`r?`n")) {
-        $match = [regex]::Match($subject, '\(#(?<number>\d+)\)$')
-        if ($match.Success) {
-            [int] $match.Groups['number'].Value
-        }
-    }
-    return @($numbers | Sort-Object -Unique)
+# Refreshes remote release tags immediately before a write.
+function Get-CurrentRemoteReleaseTags([string] $Root) {
+    return Get-RemoteReleaseTags -Root $Root
 }
 
-# Selects pull requests first seen in one shipment across parallel release histories.
-function Get-FirstShippedPullRequests(
+# Finds the nearest branch commit shared with a semantically earlier shipped release.
+function Get-PreviousShippedBoundary(
     [string] $Root,
     [object[]] $Releases,
-    [string] $CurrentTag,
-    [datetimeoffset] $CurrentPublishedAt
+    [object] $CurrentRelease
 ) {
-    $previouslyShipped = [System.Collections.Generic.HashSet[int]]::new()
-    foreach ($release in @($Releases | Where-Object PublishedAt)) {
-        if ($release.PublishedAt -ge $CurrentPublishedAt) {
-            break
+    $end = (Invoke-Git -Root $Root -Arguments @(
+        'rev-parse',
+        "refs/tags/$($CurrentRelease.Tag)`^{commit}"
+    )).Output
+    $candidates = foreach ($release in $Releases) {
+        if ($release.SortKey -ge $CurrentRelease.SortKey) {
+            continue
         }
-        foreach ($pullRequest in Get-ReleasePullRequestsThrough `
-            -Root $Root `
-            -End "refs/tags/$($release.Tag)") {
-            $null = $previouslyShipped.Add($pullRequest)
+        $start = (Invoke-Git -Root $Root -Arguments @(
+            'merge-base',
+            "refs/tags/$($release.Tag)",
+            "refs/tags/$($CurrentRelease.Tag)"
+        )).Output
+        if (!$start) {
+            continue
         }
-    }
-    $firstShipped = @(
-        Get-ReleasePullRequestsThrough -Root $Root -End "refs/tags/$CurrentTag" |
-            Where-Object { !$previouslyShipped.Contains($_) }
-    )
-    $firstShippedSet = [System.Collections.Generic.HashSet[int]]::new()
-    foreach ($pullRequest in $firstShipped) {
-        $null = $firstShippedSet.Add($pullRequest)
-    }
-    $ambiguousReleases = foreach ($release in @($Releases | Where-Object {
-        !$_.PublishedAt -or
-        ($_.Tag -ne $CurrentTag -and $_.PublishedAt -eq $CurrentPublishedAt)
-    })) {
-        $claimsTargetPullRequest = $false
-        foreach ($pullRequest in Get-ReleasePullRequestsThrough `
-            -Root $Root `
-            -End "refs/tags/$($release.Tag)") {
-            if ($firstShippedSet.Contains($pullRequest)) {
-                $claimsTargetPullRequest = $true
-                break
-            }
-        }
-        if ($claimsTargetPullRequest) {
-            [pscustomobject] @{
-                Tag = $release.Tag
-                Reason = if ($release.PublishedAt) {
-                    "has the same published timestamp as $CurrentTag"
-                } else {
-                    'has no published GitHub Release timestamp'
-                }
-            }
+        $distance = (Invoke-Git -Root $Root -Arguments @(
+            'rev-list',
+            '--count',
+            '--first-parent',
+            "$start..$end"
+        )).Output
+        [pscustomobject] @{
+            Title = $release.Title
+            Tag = $release.Tag
+            Start = $start
+            End = $end
+            Distance = [long] $distance
+            SortKey = $release.SortKey
         }
     }
-    return [pscustomobject] @{
-        PullRequests = $firstShipped
-        Ambiguities = @($ambiguousReleases)
-    }
+    return $candidates |
+        Sort-Object `
+            @{ Expression = 'Distance'; Ascending = $true },
+            @{ Expression = 'SortKey'; Descending = $true },
+            @{ Expression = 'Tag'; Descending = $true } |
+        Select-Object -First 1
 }
 
 # Rolls each unshipped branch forward to the next branch that was shipped.
@@ -265,8 +214,7 @@ function Get-ReleaseAssignmentPlan(
     [string] $CurrentMilestone,
     [string] $TargetMilestone,
     [hashtable] $Milestones,
-    [string[]] $Tags,
-    [hashtable] $PublishedReleases
+    [string[]] $Tags
 ) {
     if ($CurrentMilestone -eq $TargetMilestone) {
         return [pscustomobject] @{ Status = 'correct'; Operation = $null; Warning = $null }
@@ -281,34 +229,10 @@ function Get-ReleaseAssignmentPlan(
             ''
         }
         $currentTag = Get-ShippedTag -Title $currentRelease.Title -Tags $Tags
-        if ($currentState -eq 'closed' -or $currentTag) {
-            $targetTag = Get-ShippedTag -Title $targetRelease.Title -Tags $Tags
-            $targetPublished = if ($targetTag -and $PublishedReleases.ContainsKey($targetTag)) {
-                [datetimeoffset] $PublishedReleases[$targetTag]
-            } else {
-                $null
-            }
-            $currentPublished = if ($currentTag -and $PublishedReleases.ContainsKey($currentTag)) {
-                [datetimeoffset] $PublishedReleases[$currentTag]
-            } else {
-                $null
-            }
-            $targetShippedEarlier = $targetPublished -and $currentPublished -and
-                $targetPublished -lt $currentPublished
-            if ($targetShippedEarlier) {
-                return [pscustomobject] @{
-                    Status = 'assign'
-                    Warning = $null
-                    Operation = [pscustomobject] @{
-                        Kind = $Kind
-                        Number = $Number
-                        ViaPullRequest = $ViaPullRequest
-                        FromMilestone = $CurrentMilestone
-                        ToMilestone = $TargetMilestone
-                        ToMilestoneNumber = [int] $Milestones[$TargetMilestone].number
-                    }
-                }
-            }
+        if (
+            $currentRelease.SortKey -lt $targetRelease.SortKey -and
+            ($currentState -eq 'closed' -or $currentTag)
+        ) {
             $via = if ($ViaPullRequest) { " via pull request #$ViaPullRequest" } else { '' }
             $reason = if ($currentTag) { "shipped as $currentTag" } else { 'is closed' }
             return [pscustomobject] @{
@@ -329,6 +253,11 @@ function Get-ReleaseAssignmentPlan(
             Number = $Number
             ViaPullRequest = $ViaPullRequest
             FromMilestone = $CurrentMilestone
+            FromMilestoneNumber = if ($Milestones.ContainsKey($CurrentMilestone)) {
+                [int] $Milestones[$CurrentMilestone].number
+            } else {
+                $null
+            }
             ToMilestone = $TargetMilestone
             ToMilestoneNumber = [int] $Milestones[$TargetMilestone].number
         }
@@ -337,15 +266,15 @@ function Get-ReleaseAssignmentPlan(
 
 # Revalidates a planned assignment immediately before a remote mutation.
 function Set-PlannedReleaseAssignment(
+    [string] $Root,
     [string] $Repository,
     [object] $Item,
     [hashtable] $Milestones,
-    [string[]] $Tags,
-    [hashtable] $PublishedReleases,
     [switch] $Push
 ) {
     if ($Push) {
         $live = Get-GitHubIssue -Repository $Repository -Number $Item.Number
+        $liveTags = Get-CurrentRemoteReleaseTags -Root $Root
         $liveMilestones = $Milestones.Clone()
         $liveMilestoneTitle = [string] $live.milestone.title
         if ($liveMilestoneTitle) {
@@ -358,8 +287,7 @@ function Set-PlannedReleaseAssignment(
             -CurrentMilestone $liveMilestoneTitle `
             -TargetMilestone $Item.ToMilestone `
             -Milestones $liveMilestones `
-            -Tags $Tags `
-            -PublishedReleases $PublishedReleases
+            -Tags $liveTags
         if ($livePlan.Status -eq 'correct') {
             Write-ReleaseStatus checked (
                 "$($Item.Kind) #$($Item.Number) is already assigned to $($Item.ToMilestone).")
@@ -379,6 +307,40 @@ function Set-PlannedReleaseAssignment(
         -MilestoneTitle $Item.ToMilestone `
         -Description $description `
         -Push:$Push
+
+    $sourceRelease = ConvertTo-ReleaseMilestone $Item.FromMilestone
+    $targetRelease = ConvertTo-ReleaseMilestone $Item.ToMilestone
+    if ($Push -and $sourceRelease -and $targetRelease -and $sourceRelease.SortKey -lt $targetRelease.SortKey) {
+        $postWriteMilestones = Get-GitHubMilestoneMap -Repository $Repository
+        $postWriteTags = Get-CurrentRemoteReleaseTags -Root $Root
+        $postWritePlan = Get-ReleaseAssignmentPlan `
+            -Kind $Item.Kind `
+            -Number $Item.Number `
+            -ViaPullRequest $Item.ViaPullRequest `
+            -CurrentMilestone $Item.FromMilestone `
+            -TargetMilestone $Item.ToMilestone `
+            -Milestones $postWriteMilestones `
+            -Tags $postWriteTags
+        if ($postWritePlan.Status -eq 'blocked') {
+            if (!$Item.FromMilestoneNumber) {
+                throw "$($postWritePlan.Warning) The assignment changed before it could be restored."
+            }
+            $postWriteItem = Get-GitHubIssue -Repository $Repository -Number $Item.Number
+            if ([string] $postWriteItem.milestone.title -ne $Item.ToMilestone) {
+                throw (
+                    "$($postWritePlan.Warning) The item changed again after mutation; " +
+                    'no automatic restoration was attempted.')
+            }
+            Set-GitHubItemMilestone `
+                -Repository $Repository `
+                -Number $Item.Number `
+                -MilestoneNumber $Item.FromMilestoneNumber `
+                -MilestoneTitle $Item.FromMilestone `
+                -Description "Restore $($Item.Kind) #$($Item.Number) to $($Item.FromMilestone)" `
+                -Push
+            throw "$($postWritePlan.Warning) The concurrent change was detected after mutation and the assignment was restored."
+        }
+    }
 }
 
 # 1. Reconcile shipped commits, pull requests, and linked issues.
@@ -390,11 +352,9 @@ $tags = Get-RemoteReleaseTags -Root $root
 $branchSet = Get-ReleaseBranches -Root $root -Version $Version
 $branches = @($branchSet.Selected)
 $warnings = [System.Collections.Generic.List[string]]::new()
-$publishedReleases = Get-GitHubPublishedReleaseMap -Repository $Repository
 $shippedReleases = @(Get-ShippedReleases `
     -Branches $branchSet.All `
-    -Tags $tags `
-    -PublishedReleases $publishedReleases)
+    -Tags $tags)
 
 # 1.2 Roll unshipped milestones forward and inspect each shipped tag range once.
 $effective = @(Get-EffectiveMilestoneTitles -Branches $branches -Tags $tags)
@@ -410,27 +370,27 @@ foreach ($targetTitle in $targetTitles) {
         $warnings.Add("Release milestone $targetTitle has no exact shipped tag.")
         continue
     }
-    $currentRelease = $shippedReleases |
-        Where-Object { $_.Tag -eq $currentTag -and $_.PublishedAt } |
-        Select-Object -First 1
+    $currentRelease = $shippedReleases | Where-Object Tag -eq $currentTag | Select-Object -First 1
     if (!$currentRelease) {
-        $warnings.Add("Release milestone $targetTitle has no published shipment chronology.")
+        $warnings.Add("Release milestone $targetTitle has no shipped release identity.")
         continue
     }
     if (!$milestones.ContainsKey($targetTitle)) {
         $warnings.Add("Milestone $targetTitle does not exist.")
         continue
     }
-    $shipmentPlan = Get-FirstShippedPullRequests `
+    $boundary = Get-PreviousShippedBoundary `
         -Root $root `
         -Releases $shippedReleases `
-        -CurrentTag $currentTag `
-        -CurrentPublishedAt $currentRelease.PublishedAt
-    foreach ($ambiguity in $shipmentPlan.Ambiguities) {
-        $warnings.Add(
-            "Shipped tag $($ambiguity.Tag) $($ambiguity.Reason) and overlaps $currentTag.")
+        -CurrentRelease $currentRelease
+    if (!$boundary) {
+        $warnings.Add("Release boundary before $targetTitle is missing.")
+        continue
     }
-    foreach ($pullRequest in $shipmentPlan.PullRequests) {
+    foreach ($pullRequest in Get-ReleasePullRequests `
+        -Root $root `
+        -Start $boundary.Start `
+        -End $boundary.End) {
         if (!$seenPullRequests.Add($pullRequest)) {
             continue
         }
@@ -443,8 +403,7 @@ foreach ($targetTitle in $targetTitles) {
             -CurrentMilestone $current `
             -TargetMilestone $targetTitle `
             -Milestones $milestones `
-            -Tags $tags `
-            -PublishedReleases $publishedReleases
+            -Tags $tags
         if ($pullPlan.Status -eq 'correct') {
             $correct++
         } elseif ($pullPlan.Status -eq 'blocked') {
@@ -465,8 +424,7 @@ foreach ($targetTitle in $targetTitles) {
                 -CurrentMilestone $linkedCurrent `
                 -TargetMilestone $targetTitle `
                 -Milestones $milestones `
-                -Tags $tags `
-                -PublishedReleases $publishedReleases
+                -Tags $tags
             if ($issuePlan.Status -eq 'correct') {
                 $correct++
             } elseif ($issuePlan.Status -eq 'blocked') {
@@ -491,11 +449,10 @@ if ($warnings.Count -gt 0) {
 }
 foreach ($item in $operations) {
     Set-PlannedReleaseAssignment `
+        -Root $root `
         -Repository $Repository `
         -Item $item `
         -Milestones $milestones `
-        -Tags $tags `
-        -PublishedReleases $publishedReleases `
         -Push:$Push
 }
 if ($warnings.Count -eq 0) {
