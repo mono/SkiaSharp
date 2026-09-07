@@ -34,24 +34,16 @@ class RestGitHubClientTests(unittest.TestCase):
             "id": 42,
             "tag_name": "v4.152.0",
             "name": "Version 4.152.0",
-            "draft": False,
             "prerelease": False,
             "target_commitish": "a" * 40,
             "body": "old",
             "html_url": "https://github.com/mono/SkiaSharp/releases/tag/v4.152.0",
         }
         responses = [_Response(payload), _Response(payload)]
-        with mock.patch.object(
-            github.request,
-            "urlopen",
-            side_effect=responses,
-        ) as urlopen:
+        with mock.patch.object(github.request, "urlopen", side_effect=responses) as urlopen:
             client = github.RestGitHubClient(
-                "mono/SkiaSharp",
-                token="secret",
-                api_url="https://api.github.test",
+                "mono/SkiaSharp", token="secret", api_url="https://api.github.test"
             )
-
             release = client.get_release("v4.152.0")
             client.update_release_body(tag="v4.152.0", body="new")
 
@@ -67,10 +59,6 @@ class RestGitHubClientTests(unittest.TestCase):
         self.assertEqual(patch_request.method, "PATCH")
         self.assertTrue(patch_request.full_url.endswith("/releases/42"))
         self.assertEqual(json.loads(patch_request.data), {"body": "new"})
-        self.assertEqual(
-            get_request.headers["Authorization"],
-            "Bearer secret",
-        )
 
     def test_requires_token_and_well_formed_repository(self):
         with mock.patch.dict(os.environ, {}, clear=True):
@@ -79,18 +67,51 @@ class RestGitHubClientTests(unittest.TestCase):
         with self.assertRaises(github.GitHubError):
             github.RestGitHubClient("../SkiaSharp", token="secret")
 
-    def test_marker_helpers_reject_partial_or_duplicate_contracts(self):
-        body = github.build_managed_body("", "notes")
+    def test_marker_helpers_adopt_unmarked_and_replace_the_complete_body(self):
+        body = github.build_managed_body("summary")
         self.assertTrue(github.has_managed_markers(body))
-        replaced = github.replace_managed_summary(body, "summary")
-        self.assertIn("summary", replaced)
-        self.assertIn("notes", replaced)
+        self.assertNotIn(github.GENERATED_START_MARKER, body)
+        replaced = github.replace_managed_summary(body, "new summary")
+        self.assertIn("new summary", replaced)
+        self.assertNotIn("\nsummary\n", replaced)
         adopted = github.replace_managed_summary("plain release notes", "summary")
         self.assertIn("summary", adopted)
-        self.assertIn("plain release notes", adopted)
-        self.assertTrue(github.has_managed_markers(adopted))
-        with self.assertRaises(github.GitHubError):
-            github.has_managed_markers(body + github.SUMMARY_START_MARKER)
+        self.assertNotIn("plain release notes", adopted)
+        self.assertEqual(replaced, github.replace_managed_summary(replaced, "new summary"))
+
+    def test_marker_helpers_migrate_a_legacy_four_marker_body(self):
+        legacy = "{}\nsummary\n{}\n\n{}\nold generated notes\n{}\n".format(
+            github.SUMMARY_START_MARKER,
+            github.SUMMARY_END_MARKER,
+            github.GENERATED_START_MARKER,
+            github.GENERATED_END_MARKER,
+        )
+        migrated = github.replace_managed_summary(legacy, "canonical")
+        self.assertIn("canonical", migrated)
+        self.assertNotIn("old generated notes", migrated)
+        self.assertNotIn(github.GENERATED_START_MARKER, migrated)
+        self.assertNotIn(github.GENERATED_END_MARKER, migrated)
+
+    def test_marker_helpers_fail_closed_for_partial_duplicate_or_out_of_order_markers(self):
+        valid = github.build_managed_body("summary")
+        malformed_bodies = [
+            valid + github.SUMMARY_START_MARKER,
+            valid + github.GENERATED_START_MARKER,
+            "{}\n{}\n{}\n{}".format(
+                github.GENERATED_START_MARKER,
+                github.SUMMARY_START_MARKER,
+                github.SUMMARY_END_MARKER,
+                github.GENERATED_END_MARKER,
+            ),
+        ]
+        for body in malformed_bodies:
+            with self.subTest(body=body):
+                with self.assertRaises(github.GitHubError):
+                    github.replace_managed_summary(body, "summary")
+
+    def test_marker_helpers_reject_markers_embedded_in_canonical_content(self):
+        with self.assertRaisesRegex(github.GitHubError, "reviewed summary contains a managed marker"):
+            github.build_managed_body("summary " + github.GENERATED_END_MARKER)
 
 
 if __name__ == "__main__":

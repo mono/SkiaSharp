@@ -1,4 +1,4 @@
-"""Deterministically render one exact shipment's reviewed GitHub Release summary.
+"""Deterministically render one exact shipment's complete GitHub Release body.
 
 Scripts own every heading, link, and contributor credit; the agent supplies
 only ``headline``/``body`` prose strings in ``prose.json["release_summaries"]``.
@@ -21,31 +21,49 @@ def _shipment_map(data: dict) -> dict[str, dict]:
     }
 
 
-def _contributor_credits(data: dict, shipment: dict) -> list[str]:
-    """Community contributors credited with @handles for this exact shipment.
+def _append_once(values: list[str], seen: set[str], value: str) -> None:
+    key = value.casefold()
+    if key not in seen:
+        seen.add(key)
+        values.append(value)
 
-    Derived entirely from data.json's already-vetted ``contributors`` roster
-    (which already excludes the maintainer and bot accounts) intersected with
-    this shipment's own PR numbers -- never from agent prose, so a credit can
-    never be invented or omitted by the polish step.
-    """
 
-    pr_numbers = set(shipment.get("prs") or [])
-    credited = []
-    for contributor in data.get("contributors") or []:
-        if not isinstance(contributor, dict):
-            continue
-        login = safety.safe_login(contributor.get("login"))
-        if login is None:
-            continue
-        prs = {n for n in (contributor.get("prs") or []) if isinstance(n, int)}
-        if prs & pr_numbers:
-            credited.append(login)
-    return sorted(credited)
+def _contributor_credits(
+    data: dict, shipment: dict
+) -> tuple[list[str], list[str], list[str]]:
+    """Return exact-shipment humans, first-timers, and automation/AI credits."""
+    humans: list[str] = []
+    first_time: list[str] = []
+    assistance: list[str] = []
+    seen_humans: set[str] = set()
+    seen_first_time: set[str] = set()
+    seen_assistance: set[str] = set()
+    for attribution in shipment.get("attributions") or []:
+        if not isinstance(attribution, dict):
+            raise ValueError("shipment has an invalid attribution")
+        display = attribution.get("display")
+        kind = attribution.get("kind")
+        if not isinstance(display, str) or kind not in ("human", "automation", "ai"):
+            raise ValueError("shipment has an invalid attribution")
+        if (
+            display.startswith("@")
+            and safety.safe_login(display[1:]) is None
+        ) or (
+            not display.startswith("@")
+            and safety.safe_display_label(display) is None
+        ):
+            raise ValueError("shipment has an unsafe attribution")
+        if kind == "human":
+            _append_once(humans, seen_humans, display)
+            if attribution.get("first_time") is True:
+                _append_once(first_time, seen_first_time, display)
+        else:
+            _append_once(assistance, seen_assistance, display)
+    return humans, first_time, assistance
 
 
 def render_github_release_summary(data: dict, prose: dict, tag: str) -> str:
-    """Render the managed-summary Markdown for exact tag ``tag``.
+    """Render the complete canonical Markdown for exact tag ``tag``.
 
     Raises ``KeyError`` when ``tag`` has no shipment fact or no reviewed
     summary yet (both are legitimate "not ready" states the caller should
@@ -69,11 +87,23 @@ def render_github_release_summary(data: dict, prose: dict, tag: str) -> str:
     body = (summary.get("body") or "").strip()
     if body:
         lines += ["", body]
-    credits = _contributor_credits(data, shipment)
-    if credits:
+    lines += ["", safety.RELEASE_LINKS_MARKER]
+    contributors, first_time, assistance = _contributor_credits(data, shipment)
+    if contributors:
         lines += [
             "",
-            "Thanks to our contributors: " + ", ".join("@{}".format(login) for login in credits),
+            "\U0001F465 Contributors: {}.".format(", ".join(contributors)),
         ]
-    lines += ["", safety.RELEASE_LINKS_MARKER]
+    if first_time:
+        lines += [
+            "",
+            "\U0001F389 First-time contributors: {}.".format(", ".join(first_time)),
+        ]
+    if assistance:
+        lines += [
+            "",
+            "\U0001F916 Automation and AI assistance: {}.".format(
+                ", ".join(assistance)
+            ),
+        ]
     return "\n".join(lines) + "\n"

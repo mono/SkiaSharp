@@ -92,7 +92,7 @@ section on the SkiaSharp page (see `harfbuzz_summary` below). For **each** page:
 1. Read its `_sources/<version>.data.json`. It has:
    `prs` (title, author, community, tag), `previews` (each with its PR list),
    `contributors` (the authoritative roster), `breaking_candidates`, `tallies`,
-   `shipments` (format 4+; the exact git tag(s) this page rolls up — a preview,
+   `shipments` (format 5+; the exact git tag(s) this page rolls up — a preview,
    an rc, and/or the stable release itself, see `release_summaries` below), and
    the banner/link facts.
 2. Read every breaking source named in `breaking_candidates`, if present: the
@@ -221,14 +221,23 @@ heading, the ❤️ credit and the PR links.
 This slot writes for a **different reader and a different surface** than
 everything above: instead of the website page, it converges the reviewed
 **GitHub Release** summary for one exact tag. A separate deterministic
-updater (`scripts/infra/docs/release_notes/update_github_summaries.py`) folds
-each entry into the managed `<!-- SKIASHARP:RELEASE-SUMMARY -->` region of
-that exact tag's GitHub Release, next to GitHub's own generated notes — which
-it never touches. A release ships immediately with GitHub-generated notes
-only; this slot's prose converges later, whenever this PR merges. There is no
-release-critical deadline for it.
+updater (`scripts/infra/docs/release_notes/update_github_summaries.py`) renders
+each entry into the complete canonical body of that exact tag's GitHub Release.
+The updater recreates the entire body from the reviewed prose and committed
+exact-shipment facts: deterministic links, all human contributors, the
+first-time-human subset, and substantiated automation/AI assistance. It never
+emits a PR list, preserves old body text, or asks GitHub to generate a live
+region, so an old generated body is safely replaced rather than preserved.
+There is no release-critical deadline for it.
 
-`data.shipments` (format 4+, present only on a **released** page) lists every
+The visible body stays short: script-owned shipment label + reviewed headline,
+optional reviewed body, one compact Release notes/NuGet/Full changelog line,
+then optional `👥 Contributors`, `🎉 First-time contributors`, and
+`🤖 Automation and AI assistance` lines. First-timers intentionally appear in
+both human lines. There is never a `What's Changed` section or PR bullet list;
+the website release notes are authoritative for detail.
+
+`data.shipments` (format 5+, present only on a **released** page) lists every
 exact tag this page rolls up — a preview, an rc, and/or the stable release
 itself — each with its own `tag` (e.g. `"v4.151.0-preview.1.1"`), `label`
 (e.g. `"Preview 1"`), and delta `prs` since the previous tag (globally, not
@@ -243,8 +252,9 @@ Each entry is `{"headline": string, "body": string|null}`:
 
 - `headline` — one plain-language sentence naming what this exact shipment is
   about. The updater prefixes it with the shipment's own script-owned label
-  (`**Preview 1**`) and appends deterministic NuGet/release-notes/changelog
-  links — never write a heading, a link, or `@handle` yourself.
+  (`**Preview 1**`) and appends deterministic release-notes/NuGet/changelog
+  links and exact-shipment attribution lines — never write a heading, link,
+  contributor, or `@handle` yourself.
 - `body` — optional, 1-3 sentences of extra detail; `null` when the headline
   says enough.
 

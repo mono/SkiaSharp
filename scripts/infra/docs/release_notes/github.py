@@ -24,7 +24,6 @@ class GitHubError(RuntimeError):
 class ReleaseInfo:
     tag_name: str
     name: str
-    is_draft: bool
     is_prerelease: bool
     target_commitish: str
     body: str
@@ -32,48 +31,72 @@ class ReleaseInfo:
 
 
 def _marker_positions(body: str) -> tuple[int, int, int, int] | None:
-    markers = (
-        SUMMARY_START_MARKER,
-        SUMMARY_END_MARKER,
-        GENERATED_START_MARKER,
-        GENERATED_END_MARKER,
-    )
-    counts = [body.count(marker) for marker in markers]
-    if counts == [0, 0, 0, 0]:
+    summary_counts = [
+        body.count(SUMMARY_START_MARKER),
+        body.count(SUMMARY_END_MARKER),
+    ]
+    generated_counts = [
+        body.count(GENERATED_START_MARKER),
+        body.count(GENERATED_END_MARKER),
+    ]
+    if summary_counts == [0, 0] and generated_counts == [0, 0]:
         return None
-    if counts != [1, 1, 1, 1]:
+    if summary_counts != [1, 1]:
         raise GitHubError("release body has incomplete or duplicate managed markers")
-    positions = tuple(body.index(marker) for marker in markers)
-    if not positions[0] < positions[1] < positions[2] < positions[3]:
+    summary_start, summary_end = (
+        body.index(SUMMARY_START_MARKER),
+        body.index(SUMMARY_END_MARKER),
+    )
+    if summary_start >= summary_end:
         raise GitHubError("release body managed markers are out of order")
-    return positions
+    if generated_counts == [0, 0]:
+        return (summary_start, summary_end, -1, -1)
+    if generated_counts != [1, 1]:
+        raise GitHubError("release body has incomplete or duplicate managed markers")
+    generated_start, generated_end = (
+        body.index(GENERATED_START_MARKER),
+        body.index(GENERATED_END_MARKER),
+    )
+    if not summary_start < summary_end < generated_start < generated_end:
+        raise GitHubError("release body managed markers are out of order")
+    return (summary_start, summary_end, generated_start, generated_end)
 
 
 def has_managed_markers(body: str) -> bool:
     return _marker_positions(body) is not None
 
 
-def build_managed_body(summary: str, existing_body: str) -> str:
-    preserved = existing_body
-    separator = "" if not preserved or preserved.endswith("\n") else "\n"
-    return "{}\n{}\n{}\n\n{}\n{}{}{}\n".format(
+def _validate_summary_content(content: str) -> None:
+    if not isinstance(content, str) or not content.strip():
+        raise GitHubError("reviewed summary must be a nonempty string")
+    if any(marker in content for marker in (
+        SUMMARY_START_MARKER,
+        SUMMARY_END_MARKER,
+        GENERATED_START_MARKER,
+        GENERATED_END_MARKER,
+    )):
+        raise GitHubError("reviewed summary contains a managed marker")
+
+
+def build_managed_body(summary: str) -> str:
+    """Build the complete, script-owned Release body.
+
+    The legacy generated-notes markers are read only to validate migration
+    input. They are never emitted: committed release facts and reviewed prose
+    recreate the entire canonical body on every convergence.
+    """
+    _validate_summary_content(summary)
+    return "{}\n{}\n{}\n".format(
         SUMMARY_START_MARKER,
         summary.strip(),
         SUMMARY_END_MARKER,
-        GENERATED_START_MARKER,
-        preserved,
-        separator,
-        GENERATED_END_MARKER,
     )
 
 
 def replace_managed_summary(body: str, summary: str) -> str:
-    positions = _marker_positions(body)
-    if positions is None:
-        return build_managed_body(summary, body)
-    summary_start, summary_end, _, _ = positions
-    owned_start = summary_start + len(SUMMARY_START_MARKER)
-    return body[:owned_start] + "\n" + summary.strip() + "\n" + body[summary_end:]
+    """Validate existing input and return the complete canonical replacement."""
+    _marker_positions(body)
+    return build_managed_body(summary)
 
 
 class RestGitHubClient:
@@ -114,7 +137,6 @@ class RestGitHubClient:
             result = ReleaseInfo(
                 tag_name=payload["tag_name"],
                 name=payload["name"] or "",
-                is_draft=payload["draft"],
                 is_prerelease=payload["prerelease"],
                 target_commitish=payload["target_commitish"],
                 body=payload["body"] or "",

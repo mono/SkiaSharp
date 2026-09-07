@@ -62,7 +62,7 @@ Task ("docs-api-diff")
 
     // A FULL forced rebuild is authoritative: wipe every owned folder up front so a
     // stale *.breaking.md (after a baseline change) or a removed package is pruned.
-    // An incremental/scoped run must NOT wipe cached lines — it clears each line's
+    // An incremental/scoped run must NOT wipe cached lines — it clears each package
     // folder individually right before rebuilding it (below), leaving skipped lines
     // (and, in a scoped run, out-of-range lines) exactly as committed. The human
     // pages (<line>.md, TOC.yml, index.md) are owned by the Python engine either way.
@@ -246,12 +246,13 @@ Task ("docs-api-diff")
             Debug ($"Running a diff on '{previous}' vs '{version}' of '{id}'...");
             var diffRoot = $"{baseDir}/{id}/{apiDiffVersion}";
             // Incremental runs skipped the up-front ClearOwnedApiDiffFolders, so clear
-            // just THIS line's generated files before rebuilding it — a stale
-            // *.breaking.md must not survive when the line is regenerated. (A full
-            // forced rebuild already wiped everything up front, so this is a no-op
-            // there; a brand-new line has no folder yet, so guard on existence.)
-            if (!(force && !isScoped) && DirectoryExists (lineDir))
-                ClearGeneratedApiDiffsIn (lineDir.FullPath);
+            // just THIS package's generated files before rebuilding it. Clearing the
+            // whole line here would erase diffs copied by earlier package iterations.
+            // (A full forced rebuild already wiped everything up front, so this is a
+            // no-op there; a brand-new package folder has no files to clear.)
+            var packageDir = lineDir.Combine (id);
+            if (!(force && !isScoped) && DirectoryExists (packageDir))
+                ClearGeneratedApiDiffsIn (packageDir.FullPath);
             // Stage this package's own SkiaSharp/HarfBuzz dependencies at the versions it
             // was built against (read from its nuspec) so inherited types resolve to the
             // contemporaneous assembly, then remove them so they never leak into the next

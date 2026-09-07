@@ -22,7 +22,15 @@ SAMPLE_TAGS = [
     "v4.150.0",
     "v4.150.1",
     "v4.150.2",
+    "v4.150.3",
+    "v4.151.0",
+    "v4.151.1",
+    "v4.151.2",
     "v4.151.0-preview.1.1",
+    "v4.152.0-preview.1.1",
+    "v4.152.0-rc.1.26426.14",
+    "v4.153.0-preview.1.26454.6",
+    "v4.154.0-preview.1.26454.9",
     # Decorative/legacy tags that must never become shipments.
     "v4.150.0-gpu1",
     "v1.49.2.1-beta",
@@ -49,6 +57,14 @@ class CollectShipmentsTests(unittest.TestCase):
             "v4.150.1": "2026-01-29",
             "v4.150.2": "2026-02-05",
             "v4.151.0-preview.1.1": "2026-02-12",
+            "v4.150.3": "2026-08-29",
+            "v4.151.0": "2026-07-30",
+            "v4.151.1": "2026-08-05",
+            "v4.151.2": "2026-08-29",
+            "v4.152.0-preview.1.1": "2026-08-05",
+            "v4.152.0-rc.1.26426.14": "2026-08-26",
+            "v4.153.0-preview.1.26454.6": "2026-09-03",
+            "v4.154.0-preview.1.26454.9": "2026-09-04",
         }
         self.shas = {tag: "{:040x}".format(index) for index, tag in enumerate(self.dates, 1)}
         self.prs = _fake_prs_between({
@@ -59,6 +75,8 @@ class CollectShipmentsTests(unittest.TestCase):
             ("v4.150.0", "v4.150.1"): [5],
             ("v4.150.1", "v4.150.2"): [6, 7],
             ("v4.150.2", "v4.151.0-preview.1.1"): [8],
+            ("v4.152.0-rc.1.26426.14", "v4.153.0-preview.1.26454.6"): [9],
+            ("v4.153.0-preview.1.26454.6", "v4.154.0-preview.1.26454.9"): [10],
         })
 
     def _collect(self, page_version):
@@ -117,10 +135,18 @@ class CollectShipmentsTests(unittest.TestCase):
 
     def test_previous_tag_is_the_global_predecessor_not_page_scoped(self):
         result = self._collect("4.151.0")
-        [only] = result
-        # 4.151.0-preview.1's predecessor is 4.150.2 -- the last GLOBAL tag,
-        # even though it belongs to a different core version/page.
-        self.assertEqual(only["previous_tag"], "v4.150.2")
+        preview = next(
+            item for item in result if item["tag"] == "v4.151.0-preview.1.1"
+        )
+        # A later patch on the parallel 4.150 line remains topologically before
+        # the first 4.151 preview, even though the tags belong to other pages.
+        self.assertEqual(preview["previous_tag"], "v4.150.3")
+
+    def test_preview_only_lines_follow_the_global_release_topology(self):
+        [m153] = self._collect("4.153.0")
+        [m154] = self._collect("4.154.0")
+        self.assertEqual(m153["previous_tag"], "v4.152.0-rc.1.26426.14")
+        self.assertEqual(m154["previous_tag"], "v4.153.0-preview.1.26454.6")
 
     def test_earliest_shipment_on_a_page_has_no_previous_tag_when_it_is_first_ever(self):
         result = shipments.collect_shipments(
@@ -148,6 +174,66 @@ class CollectShipmentsTests(unittest.TestCase):
         self.assertEqual(stable["prs"], [4])
         preview1 = next(item for item in result if item["tag"] == "v4.150.0-preview.1.1")
         self.assertEqual(preview1["prs"], [1, 2])
+
+    def test_carries_ordered_attribution_facts_for_the_exact_delta(self):
+        result = shipments.collect_shipments(
+            "1.0.0",
+            ["v1.0.0"],
+            tag_date=lambda tag: "2020-01-01",
+            target_sha=lambda tag: "a" * 40,
+            prs_between=lambda a, b: [
+                {
+                    "number": 7,
+                    "attributions": [
+                        {"display": "@person", "kind": "human", "first_time": True},
+                        {"display": "GitHub Copilot", "kind": "ai"},
+                    ],
+                }
+            ],
+        )
+        [only] = result
+        self.assertEqual(
+            only["attributions"],
+            [
+                {"display": "@person", "kind": "human", "first_time": True},
+                {"display": "GitHub Copilot", "kind": "ai"},
+            ],
+        )
+
+    def test_deduplicates_attributions_and_merges_first_time_status(self):
+        result = shipments.collect_shipments(
+            "1.0.0",
+            ["v1.0.0"],
+            tag_date=lambda tag: "2020-01-01",
+            target_sha=lambda tag: "a" * 40,
+            prs_between=lambda a, b: [
+                {
+                    "number": 7,
+                    "attributions": [
+                        {"display": "@person", "kind": "human", "first_time": False},
+                        {"display": "@ramezgerges", "kind": "human"},
+                        {"display": "GitHub Copilot", "kind": "ai"},
+                    ],
+                },
+                {
+                    "number": 8,
+                    "attributions": [
+                        {"display": "@PERSON", "kind": "human", "first_time": True},
+                        {"display": "Ramez Gerges", "kind": "human"},
+                        {"display": "github copilot", "kind": "ai"},
+                    ],
+                },
+            ],
+        )
+        [only] = result
+        self.assertEqual(
+            only["attributions"],
+            [
+                {"display": "@person", "kind": "human", "first_time": True},
+                {"display": "@ramezgerges", "kind": "human"},
+                {"display": "GitHub Copilot", "kind": "ai"},
+            ],
+        )
 
     def test_decorative_legacy_tags_are_never_shipments(self):
         result = self._collect("4.150.0")
@@ -191,6 +277,7 @@ def _valid_shipment(**overrides):
         "date": "2026-01-01",
         "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.150.2...v4.151.0-preview.1",
         "prs": [1, 2],
+        "attributions": [],
     }
     shipment.update(overrides)
     return shipment

@@ -3,10 +3,9 @@
 
 The release-notes workflow and skill own summary prose (headline/body) and
 this package owns Markdown structure; this script selects exact tags, expands
-deterministic links, and replaces the managed summary region of a GitHub
-Release body. On the first update it adds the managed regions around the
-existing release body; later updates preserve that body region byte-for-byte.
-It skips unpublished drafts, which converge after publication.
+deterministic links, and replaces the complete GitHub Release body. Each
+canonical body is recreated solely from committed release facts and reviewed
+prose; legacy GitHub-generated notes are migration input, never output.
 
     update_github_summaries.py --event push --repository mono/SkiaSharp
     update_github_summaries.py --event release --repository mono/SkiaSharp --tag v4.151.0
@@ -20,6 +19,7 @@ from dataclasses import dataclass, field
 import json
 import os
 from pathlib import Path
+import re
 import sys
 from typing import Callable, Protocol
 
@@ -31,6 +31,7 @@ if str(_DOCS_DIR) not in sys.path:
 from release_notes import common, github, render_summary, safety, shipments as shipments_module
 
 SOURCES_DIR = "documentation/docfx/releases/_sources"
+VERSIONS_PATH = "scripts/infra/docs/versions.json"
 
 
 class UpdateError(RuntimeError):
@@ -88,6 +89,18 @@ class RepositoryView:
             return []
         return sorted(directory.glob("*.data.json"))
 
+    def history_floor(self) -> tuple[int, int, int, int] | None:
+        path = self.root / VERSIONS_PATH
+        data = self.read_json(path)
+        if data is None:
+            return None
+        floor = (data.get("history_floor") or {}).get("skiasharp")
+        if floor is None:
+            return None
+        if not isinstance(floor, str) or not re.fullmatch(r"\d+\.\d+\.\d+(?:\.\d+)?", floor):
+            raise UpdateError("versions.json history_floor.skiasharp must be a version string")
+        return common.core_tuple(floor)
+
     def read_json(self, path: Path) -> dict | None:
         if not path.exists():
             return None
@@ -136,6 +149,12 @@ def select_candidates(
         if parsed is None:
             raise UpdateError("invalid exact release tag {!r}".format(tag))
         requested_core = parsed.core
+    floor = repository.history_floor()
+    if requested_core is not None and floor is not None:
+        if common.core_tuple(requested_core) < floor:
+            raise UpdateError(
+                "requested tag {} is below the configured history floor".format(tag)
+            )
 
     candidates: list[Candidate] = []
     seen_tags: dict[str, Path] = {}
@@ -143,6 +162,13 @@ def select_candidates(
         version = _version_from_data_path(data_path)
         if version.endswith("-unreleased"):
             continue  # An unreleased head page is never tagged; no shipments.
+        try:
+            below_floor = floor is not None and common.core_tuple(version) < floor
+        except ValueError:
+            # A malformed old filename must not be inspected or block a current run.
+            continue
+        if below_floor:
+            continue
         data = repository.read_json(data_path)
         if data is None:
             continue
@@ -218,11 +244,11 @@ def render_managed_summary(
     public_version = shipment["public_version"]
     core_version = shipment["core_version"]
     links = [
+        "\U0001F4D6 [Release notes]"
+        "(https://mono.github.io/SkiaSharp/docs/releases/{}.html)".format(core_version),
         "\U0001F4E6 [NuGet](https://www.nuget.org/packages/SkiaSharp/{})".format(
             public_version
         ),
-        "\U0001F4D6 [Release notes]"
-        "(https://mono.github.io/SkiaSharp/docs/releases/{}.html)".format(core_version),
     ]
     changelog_url = shipment.get("changelog_url")
     if changelog_url:
@@ -263,6 +289,7 @@ def update_releases(
     client: GitHubSummaryClient,
     *,
     renderer: Callable[[dict, dict, str], str] = render_summary.render_github_release_summary,
+    dry_run: bool = False,
 ) -> UpdateResult:
     """Preflight every candidate, race-check every body, then write.
 
@@ -270,10 +297,10 @@ def update_releases(
     convention:
 
     1. **Preflight** -- fetch each release, skip it (never an error) when it
-       does not exist or is still an unpublished draft, adopt an unmarked body
-       on its first reviewed update, skip when the computed body is already
-       current (idempotent), else render + validate and stage a plan. Any hard
-       error here aborts the WHOLE batch before a single write is sent.
+       does not exist, then recreate the complete canonical body from committed
+       data/prose.
+       It skips only when that canonical body is already current. Any hard error
+       here aborts the WHOLE batch before a single write is sent.
     2. **Race barrier** -- immediately before the first write, re-fetch every
        staged release and require its body to be byte-identical to what
        preflight read. The REST API has no conditional PATCH, so this
@@ -293,15 +320,6 @@ def update_releases(
             if existing is None:
                 result.add(candidate.tag, "skipped", "GitHub Release does not exist")
                 continue
-            if existing.is_draft:
-                # Never patch an unpublished draft; converge after publication.
-                result.add(
-                    candidate.tag,
-                    "skipped",
-                    "release is an unpublished draft -- converges on publish "
-                    "or the next run",
-                )
-                continue
             summary_text = render_managed_summary(candidate, renderer)
             new_body = github.replace_managed_summary(existing.body, summary_text)
             if new_body == existing.body:
@@ -309,7 +327,9 @@ def update_releases(
                     candidate.tag, "unchanged", "managed summary already matches reviewed prose"
                 )
                 continue
-            plans.append(PlannedUpdate(candidate, existing.body, new_body))
+            plans.append(
+                PlannedUpdate(candidate, existing.body, new_body)
+            )
         except UpdateError as exc:
             errors.append("{}: {}".format(candidate.tag, exc))
         except github.GitHubError as exc:
@@ -319,6 +339,20 @@ def update_releases(
         raise UpdateError(
             "preflight failed before any release update: " + "; ".join(errors)
         )
+
+    if dry_run:
+        for plan in plans:
+            result.add(
+                plan.candidate.tag,
+                "planned",
+                "would replace {}-byte release body with {}-byte canonical body "
+                "(previous tag: {})".format(
+                    len(plan.previous_body.encode("utf-8")),
+                    len(plan.new_body.encode("utf-8")),
+                    plan.candidate.shipment.get("previous_tag") or "none",
+                ),
+            )
+        return result
 
     # Race barrier: re-read every planned release immediately before the
     # first write.
@@ -351,7 +385,7 @@ def update_releases(
         result.add(
             plan.candidate.tag,
             "updated",
-            "managed summary replaced and verified",
+            "complete canonical release body replaced and verified",
         )
     return result
 
@@ -373,6 +407,11 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument("--repository", default=common.REPO)
     parser.add_argument("--tag")
     parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="read live releases and report planned convergence without PATCH requests",
+    )
     return parser
 
 
@@ -384,7 +423,7 @@ def main(argv: list[str] | None = None) -> int:
         tag = args.tag if args.event in ("release", "workflow_dispatch") else None
         candidates = select_candidates(repository, tag=tag)
         client = github.RestGitHubClient(args.repository)
-        result = update_releases(candidates, client)
+        result = update_releases(candidates, client, dry_run=args.dry_run)
         _write_summary(result)
         return 0
     except (OSError, UpdateError) as exc:

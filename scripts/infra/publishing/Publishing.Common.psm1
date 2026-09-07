@@ -140,6 +140,57 @@ function Get-RemoteReleaseTags([string] $Root) {
     return @($tags | Sort-Object -Unique)
 }
 
+# Parses an exact shipped tag into the same global release topology used by
+# release_notes/common.py. Decorative legacy tags are not release boundaries.
+function ConvertTo-ExactReleaseTag([string] $Tag) {
+    $match = [regex]::Match(
+        $Tag,
+        '^v(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(?:\.(?<hotfix>\d+))?' +
+            '(?:-(?<channel>preview|rc)\.(?<iteration>\d+)' +
+            '(?:\.(?<build1>\d+)(?:\.(?<build2>\d+))?)?)?$')
+    if (!$match.Success) {
+        return $null
+    }
+    $channel = if ($match.Groups['channel'].Success) {
+        $match.Groups['channel'].Value
+    } else {
+        $null
+    }
+    $channelRank = switch ($channel) {
+        'preview' { 0 }
+        'rc' { 1 }
+        default { 2 }
+    }
+    $value = {
+        param([string] $Name)
+        if ($match.Groups[$Name].Success) { [long] $match.Groups[$Name].Value } else { [long] 0 }
+    }
+    $sortKey = '{0:D10}.{1:D10}.{2:D10}.{3:D10}.{4:D2}.{5:D10}.{6:D20}.{7:D20}' -f
+        (& $value 'major'), (& $value 'minor'), (& $value 'patch'), (& $value 'hotfix'),
+        $channelRank, (& $value 'iteration'), (& $value 'build1'), (& $value 'build2')
+    return [pscustomobject] @{
+        Tag = $Tag
+        SortKey = $sortKey
+    }
+}
+
+# Selects the immediately preceding exact shipment across preview, RC, stable,
+# patch, and parallel release lines. Ordering is semantic release topology, not
+# GitHub's "latest stable" heuristic or wall-clock publication order.
+function Get-PreviousShippedTag([string] $Tag, [string[]] $Tags) {
+    $current = ConvertTo-ExactReleaseTag $Tag
+    if (!$current) {
+        throw "$Tag is not an exact shipped release tag."
+    }
+    $candidates = foreach ($candidateTag in $Tags) {
+        $candidate = ConvertTo-ExactReleaseTag $candidateTag
+        if ($candidate -and $candidate.SortKey -lt $current.SortKey) {
+            $candidate
+        }
+    }
+    return ($candidates | Sort-Object SortKey -Descending | Select-Object -First 1).Tag
+}
+
 # Assigns one issue or pull request to a milestone and verifies remote writes.
 function Set-GitHubItemMilestone(
     [string] $Repository,
@@ -472,6 +523,8 @@ Export-ModuleMember -Function @(
     'ConvertTo-ReleaseMilestone',
     'Get-ShippedTag',
     'Get-RemoteReleaseTags',
+    'ConvertTo-ExactReleaseTag',
+    'Get-PreviousShippedTag',
     'Set-GitHubItemMilestone',
     'Get-ReleaseIdentity',
     'Resolve-NuGetPackageVersion',

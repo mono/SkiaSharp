@@ -28,7 +28,20 @@ _REQUIRED_FIELDS = (
     "date",
     "changelog_url",
     "prs",
+    "attributions",
 )
+
+
+def _attribution_identity_key(attribution: dict) -> tuple[str, str]:
+    kind = str(attribution.get("kind", ""))
+    display = str(attribution.get("display", ""))
+    if kind == "human":
+        display = re.sub(r"[^a-z0-9]", "", display.casefold())
+    else:
+        display = display.casefold()
+    return kind, display
+
+
 def collect_shipments(
     page_version: str,
     all_tags: Iterable[str],
@@ -65,7 +78,12 @@ def collect_shipments(
             for pr in prs
             if isinstance(number := pr.get("number"), int)
         })
-        shipments.append({
+        facts_by_number = {
+            pr["number"]: pr.get("attributions") or []
+            for pr in prs
+            if isinstance(pr.get("number"), int)
+        }
+        shipment = {
             "tag": item.tag,
             "core_version": item.core,
             "public_version": item.public_version,
@@ -81,7 +99,23 @@ def collect_shipments(
                 if previous_tag else None
             ),
             "prs": pr_numbers,
-        })
+        }
+        attributions = []
+        attribution_indexes = {}
+        for number in pr_numbers:
+            for attribution in facts_by_number.get(number, []):
+                display = attribution.get("display")
+                if not isinstance(display, str):
+                    continue
+                key = _attribution_identity_key(attribution)
+                existing_index = attribution_indexes.get(key)
+                if existing_index is None:
+                    attribution_indexes[key] = len(attributions)
+                    attributions.append(dict(attribution))
+                elif attribution.get("first_time") is True:
+                    attributions[existing_index]["first_time"] = True
+        shipment["attributions"] = attributions
+        shipments.append(shipment)
     return shipments
 
 
@@ -129,6 +163,31 @@ def validate_shipment(shipment: object) -> list[str]:
     prs = shipment.get("prs")
     if not isinstance(prs, list) or not all(isinstance(n, int) for n in prs):
         errors.append("shipment {} prs must be an array of integers".format(tag))
+    attributions = shipment.get("attributions")
+    if attributions is not None:
+        if not isinstance(attributions, list):
+            errors.append("shipment {} attributions must be an array".format(tag))
+        else:
+            for attribution in attributions:
+                if not isinstance(attribution, dict):
+                    errors.append(
+                        "shipment {} has an invalid attribution".format(tag)
+                    )
+                    continue
+                if attribution.get("kind") not in ("human", "automation", "ai"):
+                    errors.append(
+                        "shipment {} has an invalid attribution kind".format(tag)
+                    )
+                if not isinstance(attribution.get("display"), str):
+                    errors.append(
+                        "shipment {} has an invalid attribution display".format(tag)
+                    )
+                if "first_time" in attribution and not isinstance(
+                    attribution["first_time"], bool
+                ):
+                    errors.append(
+                        "shipment {} has an invalid first_time attribution".format(tag)
+                    )
     previous_tag = shipment.get("previous_tag")
     previous = common.parse_tag(previous_tag) if isinstance(previous_tag, str) else None
     if previous_tag is not None and previous is None:

@@ -38,57 +38,48 @@ $modeDescription = $Mode.ToLowerInvariant()
 $root = Get-GitRepositoryRoot -Path $PSScriptRoot
 $repository = $ReleaseRepository
 
-# Validates release identity and the title of an existing draft.
+# Validates release identity.
 function Assert-GitHubRelease([pscustomobject] $Release, [pscustomobject] $GitHubRelease) {
     if ($GitHubRelease.tagName -ne $Release.Tag -or
         [bool] $GitHubRelease.isPrerelease -ne $Release.IsPrerelease) {
         throw "GitHub Release $($Release.Tag) has conflicting metadata."
     }
-    if ($GitHubRelease.isDraft) {
-        if ($GitHubRelease.name -ne $Release.Title) {
-            throw "GitHub Release draft $($Release.Tag) has conflicting metadata."
-        }
-    }
 }
 
-# Creates or resumes one published GitHub Release.
+# Creates one published GitHub Release.
 function Publish-GitHubRelease(
     [pscustomobject] $Release,
     [string] $SourceCommit,
+    [string] $PreviousTag,
     [pscustomobject] $Existing
 ) {
-    if ($Existing -and !$Existing.isDraft) {
+    if ($Existing) {
         Write-ReleaseStatus ready "GitHub Release $($Release.Tag) is published."
         return
     }
     if (!$writeRemote) {
-        $action = if ($Existing) { 'Publish existing draft' } else { 'Create and publish' }
-        Write-ReleaseStatus plan "$action GitHub Release $($Release.Tag)."
+        Write-ReleaseStatus plan "Create and publish GitHub Release $($Release.Tag)."
         return
     }
 
-    if ($Existing) {
-        Assert-GitHubRelease $Release $Existing
-        $null = Invoke-GitHub `
-            -Arguments @('release', 'edit', $Release.Tag, '--repo', $repository, '--verify-tag', '--draft=false') `
-            -WriteOutput
-    } else {
-        $arguments = @(
-            'release', 'create', $Release.Tag,
-            '--repo', $repository,
-            '--title', $Release.Title,
-            '--generate-notes',
-            '--target', $SourceCommit,
-            '--verify-tag'
-        )
-        if ($Release.IsPrerelease) {
-            $arguments += @('--prerelease', '--latest=false')
-        }
-        $null = Invoke-GitHub -Arguments $arguments -WriteOutput
+    $arguments = @(
+        'release', 'create', $Release.Tag,
+        '--repo', $repository,
+        '--title', $Release.Title,
+        '--generate-notes',
+        '--target', $SourceCommit,
+        '--verify-tag'
+    )
+    if ($PreviousTag) {
+        $arguments += @('--notes-start-tag', $PreviousTag)
     }
+    if ($Release.IsPrerelease) {
+        $arguments += @('--prerelease', '--latest=false')
+    }
+    $null = Invoke-GitHub -Arguments $arguments -WriteOutput
 
     $published = Get-GitHubRelease -Repository $repository -Tag $Release.Tag
-    if (!$published -or $published.isDraft) {
+    if (!$published) {
         throw "GitHub Release $($Release.Tag) was not published."
     }
     Assert-GitHubRelease $Release $published
@@ -267,6 +258,13 @@ if ($initialRelease) {
 if ($writeRemote) {
     Enable-GitHubGitAuthentication
 }
+$releaseTags = Get-RemoteReleaseTags -Root $root
+$previousTag = Get-PreviousShippedTag -Tag $release.Tag -Tags $releaseTags
+if ($previousTag) {
+    Write-ReleaseStatus ready "GitHub-generated notes will start after $previousTag."
+} else {
+    Write-ReleaseStatus warning 'No previous exact shipped tag exists; generated notes will use repository history.'
+}
 
 # 2.2 Ensure the tag points to the package source commit.
 Push-ReleaseTag `
@@ -280,6 +278,7 @@ Push-ReleaseTag `
 Publish-GitHubRelease `
     -Release $release `
     -SourceCommit $packageSource.Commit `
+    -PreviousTag $previousTag `
     -Existing $initialRelease
 
 # 4. Propose the released line's deterministic support-tier update.

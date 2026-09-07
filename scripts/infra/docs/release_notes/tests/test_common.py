@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import re
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 # scripts/infra/docs/release_notes/tests/ -> parents[2] == scripts/infra/docs
 _DOCS_DIR = Path(__file__).resolve().parents[2]
@@ -267,6 +269,7 @@ class PreviewBannerTests(unittest.TestCase):
             "date": "2026-08-26",
             "changelog_url": None,
             "prs": [],
+            "attributions": [],
         }
 
         data = self.module.build_data_json(
@@ -315,6 +318,19 @@ class DataFormatSyncTests(unittest.TestCase):
     def test_matches_release_notes_data_format_version(self):
         module = _load_release_notes_data_module()
         self.assertEqual(module._DATA_JSON_FORMAT_VERSION, common.DATA_FORMAT)
+
+
+class ApiDiffScopedRefreshTests(unittest.TestCase):
+    def test_scoped_refresh_clears_only_the_current_package_folder(self):
+        source = (_DOCS_DIR / "api-diff.cake").read_text(encoding="utf-8")
+        self.assertRegex(
+            source,
+            re.compile(
+                r"var packageDir = lineDir\.Combine \(id\);"
+                r".*?ClearGeneratedApiDiffsIn \(packageDir\.FullPath\);",
+                re.DOTALL,
+            ),
+        )
 
 
 class WebsiteContentUnchangedTests(unittest.TestCase):
@@ -706,6 +722,238 @@ class WritePageShipmentOnlyChangeRegressionTests(unittest.TestCase):
             self.assertEqual(data_path.stat().st_mtime_ns, before)
             self.assertTrue(prose_path.exists())
 
+
+class FirstTimeContributorFactsTests(unittest.TestCase):
+    def setUp(self):
+        self.module = _load_release_notes_data_module()
+
+    def test_graphql_resolver_uses_earliest_pull_request(self):
+        response = {
+            "data": {
+                "u0": {"nodes": [{"number": 10}]},
+                "u1": {"nodes": [{"number": 11}]},
+                "u2": {"nodes": []},
+            }
+        }
+        with mock.patch.object(
+            self.module, "run", return_value=__import__("json").dumps(response)
+        ) as run:
+            resolved = self.module._graphql_earliest_pull_requests(
+                ["community", "maintainer", "missing"]
+            )
+        self.assertEqual(resolved, {"community": 10, "maintainer": 11})
+        self.assertIn("is:merged", run.call_args.args[0][-1])
+        self.assertIn("sort:created-asc", run.call_args.args[0][-1])
+
+    def test_resolver_uses_cached_earliest_pr_for_human_facts(self):
+        prs = [
+            {"number": 10, "author": {"login": "community"}, "category": "product"},
+            {"number": 11, "author": {"login": "mattleibow"}, "category": "product"},
+            {"number": 12, "author": {"login": "dependabot[bot]"}, "category": "product"},
+        ]
+        with mock.patch.object(
+            self.module,
+            "load_first_time_contributors_cache",
+            return_value={"community": 10, "mattleibow": 1},
+        ), mock.patch.object(self.module, "_graphql_earliest_pull_requests") as query:
+            self.module.resolve_first_time_contributors(prs)
+        query.assert_not_called()
+        self.assertEqual([pr["first_time_contributor"] for pr in prs], [True, False, False])
+
+    def test_resolver_uses_the_first_merged_pr_not_an_earlier_closed_pr(self):
+        prs = [
+            {"number": 10, "author": {"login": "community"}},
+            {"number": 11, "author": {"login": "community"}},
+        ]
+        with mock.patch.object(
+            self.module,
+            "load_first_time_contributors_cache",
+            return_value={"community": 11},
+        ):
+            self.module.resolve_first_time_contributors(prs)
+        self.assertEqual([pr["first_time_contributor"] for pr in prs], [False, True])
+
+    def test_resolver_caches_earliest_prs_for_human_authors(self):
+        prs = [
+            {"number": 10, "author": {"login": "mattleibow"}},
+            {"number": 11, "author": {"login": "community"}},
+            {"number": 12, "author": {"login": "dependabot[bot]"}},
+        ]
+        with mock.patch.object(
+            self.module, "load_first_time_contributors_cache", return_value={}
+        ), mock.patch.object(
+            self.module,
+            "_graphql_earliest_pull_requests",
+            return_value={"community": 11, "mattleibow": 1},
+        ), mock.patch.object(self.module, "save_first_time_contributors_cache") as save:
+            self.module.resolve_first_time_contributors(prs)
+        save.assert_called_once_with({"community": 11, "mattleibow": 1})
+        self.assertEqual([pr["first_time_contributor"] for pr in prs], [False, True, False])
+
+    def test_legacy_boolean_cache_entries_are_ignored(self):
+        import json
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cache_path = Path(tmp_dir) / "pr-first-time-contributors.json"
+            cache_path.write_text(
+                json.dumps({"3966": False, "community": 10}), encoding="utf-8"
+            )
+            with mock.patch.object(
+                self.module, "_FIRST_TIME_CONTRIBUTORS_CACHE_PATH", cache_path
+            ):
+                self.assertEqual(
+                    self.module.load_first_time_contributors_cache(),
+                    {"community": 10},
+                )
+
+    def test_release_attributions_include_maintainers_and_first_time_humans(self):
+        pr = {
+            "number": 11,
+            "author": {"login": "mattleibow"},
+            "first_time_contributor": True,
+        }
+        self.assertEqual(
+            self.module._release_attributions(pr),
+            [{"display": "@mattleibow", "kind": "human", "first_time": True}],
+        )
+
+    def test_release_attributions_keep_a_safe_primary_name_without_a_handle(self):
+        pr = {
+            "number": 11,
+            "author": {"login": None, "name": "Deleted Contributor"},
+            "first_time_contributor": False,
+        }
+        self.assertEqual(
+            self.module._release_attributions(pr),
+            [
+                {
+                    "display": "Deleted Contributor",
+                    "kind": "human",
+                    "first_time": False,
+                }
+            ],
+        )
+
+    def test_coauthor_attributions_classify_humans_automation_and_ai(self):
+        body = "\n".join(
+            [
+                "Co-authored-by: Person <123+person@users.noreply.github.com>",
+                "Co-authored-by: Actions <41898282+github-actions[bot]@users.noreply.github.com>",
+                "Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+                "Co-authored-by: Copilot <noreply@github.com>",
+                "Co-authored-by: Claude <noreply@anthropic.com>",
+                "Co-authored-by: Unknown <personal@example.com>",
+            ]
+        )
+        self.assertEqual(
+            self.module._coauthor_attributions(body),
+            [
+                {"display": "@person", "kind": "human"},
+                {"display": "@github-actions[bot]", "kind": "automation"},
+                {"display": "GitHub Copilot", "kind": "ai"},
+                {"display": "Claude", "kind": "ai"},
+                {"display": "Unknown", "kind": "human"},
+            ],
+        )
+
+    def test_ai_name_without_a_recognized_identity_remains_human(self):
+        self.assertEqual(
+            self.module._coauthor_attributions(
+                "Co-authored-by: Claude <claude@example.com>"
+            ),
+            [{"display": "Claude", "kind": "human"}],
+        )
+
+    def test_resolves_primary_and_coauthor_attributions_in_stable_order(self):
+        prs = [
+            {
+                "number": 10,
+                "author": {
+                    "login": "alice",
+                    "name": "Alice Example",
+                    "email": "alice@example.com",
+                },
+                "first_time_contributor": True,
+                "body": "\n".join(
+                    [
+                        "Co-authored-by: Alice Example <alice@example.com>",
+                        "Co-authored-by: Bob Builder <bob@example.com>",
+                        "Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+                        "Co-authored-by: Actions <41898282+github-actions[bot]@users.noreply.github.com>",
+                        "Co-authored-by: v <v@v.v>",
+                        "Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+                    ]
+                ),
+            },
+            {
+                "number": 11,
+                "author": {"login": "mattleibow"},
+                "first_time_contributor": False,
+                "body": "",
+            },
+        ]
+
+        self.module.resolve_release_attributions(prs)
+
+        self.assertEqual(
+            prs[0]["attributions"],
+            [
+                {"display": "@alice", "kind": "human", "first_time": True},
+                {"display": "Bob Builder", "kind": "human"},
+                {"display": "GitHub Copilot", "kind": "ai"},
+                {"display": "@github-actions[bot]", "kind": "automation"},
+            ],
+        )
+        self.assertEqual(
+            prs[1]["attributions"],
+            [{"display": "@mattleibow", "kind": "human", "first_time": False}],
+        )
+
+    def test_resolver_reuses_a_validated_handle_for_a_matching_primary_name(self):
+        prs = [
+            {
+                "number": 10,
+                "author": {
+                    "login": "mattleibow",
+                    "name": "Matthew Leibowitz",
+                    "email": "mattleibow@live.com",
+                },
+                "body": "",
+            },
+            {
+                "number": 11,
+                "author": {
+                    "login": None,
+                    "name": "Matthew Leibowitz",
+                    "email": "mattleibow@live.com",
+                },
+                "body": "",
+            },
+        ]
+
+        self.module.resolve_release_attributions(prs)
+
+        self.assertEqual(prs[1]["attributions"][0]["display"], "@mattleibow")
+
+    def test_resolver_accepts_aliases_validated_outside_the_shipment(self):
+        prs = [
+            {
+                "number": 11,
+                "author": {
+                    "login": None,
+                    "name": "Matthew Leibowitz",
+                    "email": "mattleibow@live.com",
+                },
+                "body": "",
+            },
+        ]
+
+        self.module.resolve_release_attributions(
+            prs, known_humans={"mattleibow@live.com": "mattleibow"}
+        )
+
+        self.assertEqual(prs[0]["attributions"][0]["display"], "@mattleibow")
 
 if __name__ == "__main__":
     unittest.main()

@@ -35,11 +35,12 @@ _PLACEHOLDER_PATTERNS = (
     re.compile(r"^(?:no|none|n/a)\.?$", re.IGNORECASE),
 )
 
-# GitHub login grammar: alphanumeric/hyphen, max 39 characters, never starting
-# with a hyphen. Used before interpolating any login into a rendered summary
-# (an untrusted PR author/contributor login is still just JSON text by the
-# time it reaches here) so a malformed login can never inject Markdown.
-LOGIN_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$")
+# GitHub login grammar plus GitHub App's canonical ``name[bot]`` identities.
+# Used before interpolating any login into a rendered summary (an untrusted PR
+# author/contributor login is still just JSON text by the time it reaches here)
+# so a malformed login can never inject Markdown.
+LOGIN_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:\[bot\])?$")
+DISPLAY_LABEL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 .'-]{1,78}$")
 
 HEADLINE_WORD_CAP = 40
 BODY_WORD_CAP = 120
@@ -126,4 +127,12 @@ def safe_login(login: object) -> str | None:
 
     if isinstance(login, str) and LOGIN_RE.fullmatch(login):
         return login
+    return None
+
+
+def safe_display_label(value: object) -> str | None:
+    """Return a controlled non-handle attribution label, or ``None``."""
+
+    if isinstance(value, str) and DISPLAY_LABEL_RE.fullmatch(value):
+        return value
     return None
