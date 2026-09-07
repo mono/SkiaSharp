@@ -68,7 +68,56 @@ crash. `GC.KeepAlive(this)` after reading keeps the owner rooted.
 
 ---
 
-## B. Unsized / contended collections
+## B. Repeated invariant work in a global registry / handle lookup
+
+**The signature:** a global object-tracking lookup repeats invariant reflection or stable metadata
+work for every lookup. The result may be stable for the relevant type or registry entry, but that
+is an invariant to establish, not an assumption.
+
+**Historical case:** [#4629](https://github.com/mono/SkiaSharp/issues/4629) and
+[#4630](https://github.com/mono/SkiaSharp/pull/4630) found that the global `HandleDictionary`
+path re-evaluated a per-type reflection predicate for each `GetInstance`/`GetOrAddObject` call.
+PR #4630 cached that type-invariant registration decision, removing repeated work while preserving
+the existing behavior.
+
+**Candidate, not a blanket rule.** Caching a result can be a candidate only when it preserves
+existing lifetime, type, disposal, ownership, concurrency, and debug behavior. Do not assume every
+repeated lookup is safely cacheable or that current code has a qualifying invariant.
+
+### Where to look
+```bash
+rg -n "HandleDictionary|GetInstance|GetOrAddObject|SkipObjectRegistration|ISKSkipObjectRegistration|IsAssignableFrom" binding/SkiaSharp --glob '!*.generated.cs'
+```
+
+Start at global registry and handle-lookup critical sections, then trace the callers that make a
+path hot. Look for computation that is repeated despite being invariant for the type or registry
+entry; distinguish it from work whose timing is part of the synchronization design.
+
+### Proof obligation
+
+Benchmark the **actual lookup method and its normal routing path** with BenchmarkDotNet `New` vs
+`Old`; do not benchmark an isolated predicate or metadata read. Use realistic tracked-wrapper
+workloads and report allocations as well as timing.
+
+Before changing the implementation, add an equivalence test over the behavior the existing lookup
+protects: successful and absent lookups, relevant type/disposal/ownership outcomes, Debug-only
+diagnostics, and concurrent operations where they can interact. The test must establish that the
+cached result has not weakened a safety check or changed which object is returned.
+
+Temporarily make the proposed optimization deliberately wrong, such as by inverting its cached
+decision or removing a protected outcome, and prove the equivalence test goes red before removing
+that change. If the test cannot distinguish the error, strengthen it or leave this candidate alone.
+
+### Watch out (❌ don't)
+
+Do not cache work merely because it looks redundant. Changing how a result is retained can alter
+lifetime, type, disposal, ownership, concurrency, or debug semantics. Preserve every existing
+check only when the test and stress evidence establish behavior parity. If the benchmark is noise,
+the equivalence evidence is incomplete, or the concurrency model is unclear, record no candidate.
+
+---
+
+## C. Unsized / contended collections
 
 **The signature:** a collection central to object tracking is created with **default capacity /
 concurrency**, so it rehashes/resizes under load; or a shared structure serialises hot access
