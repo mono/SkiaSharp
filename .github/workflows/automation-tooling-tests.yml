@@ -7,6 +7,7 @@ name: Automation - Tooling Tests
 #   * .agents/skills/ci-status/scripts/tests/       — the CI dashboard's workflow registry
 #   * .agents/skills/update-skia/scripts/*_test.py  — Skia milestone update tooling
 #   * .github/scripts/tests/skia-sync-detect.test.sh — the auto-skia-sync work detector
+#   * scripts/infra/perf/**/tests/                   — the artifact-size PR intake
 #
 # Release publishing tooling is covered separately by release-tooling-tests.yml. Paths are
 # kept tight on purpose: this must not become a catch-all that runs on every change.
@@ -17,6 +18,7 @@ on:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
+      - "scripts/infra/perf/**"
       # Any workflow edit, so the registry test re-checks its tracked list. '*.yml' already
       # covers the generated '*.lock.yml' files.
       - ".github/workflows/*.yml"
@@ -26,6 +28,7 @@ on:
       - ".agents/skills/ci-status/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
+      - "scripts/infra/perf/**"
       - ".github/workflows/*.yml"
   workflow_dispatch:
 
@@ -57,6 +60,21 @@ jobs:
           python3 -c "import yaml" 2>/dev/null \
             || python3 -m pip install --quiet --break-system-packages pyyaml
           python3 -m unittest discover -s .agents/skills/ci-status/scripts/tests -p "test_*.py" -v
+
+      - name: Run artifact-size intake tests
+        # Covers the hourly PR sweep: which builds are selected, and the comment stamp that
+        # keeps a measured build from being re-downloaded. Parses the workflow YAML, so
+        # PyYAML must be present.
+        run: |
+          set -euo pipefail
+          python3 -c "import yaml" 2>/dev/null \
+            || python3 -m pip install --quiet --break-system-packages pyyaml
+          python3 -m unittest discover -s scripts/infra/perf/sizes/tests -p "test_*.py" -v
+
+      - name: Run perf HTTP contract tests
+        # Pins the RuntimeError contract that feed_versions, track.enumerate_feed_packages
+        # and measure_pr.resolve_pr_number all rely on to mean "absent".
+        run: python3 -m unittest discover -s scripts/infra/perf/tests -p "test_*.py" -v
 
       - name: Run update-skia tooling tests
         # These import their module under test by name, so they must run from their own

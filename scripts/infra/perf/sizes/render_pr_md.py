@@ -27,8 +27,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # sizes/
 from render_md import friendly_native_label, human  # noqa: E402
 from track import _is_native_entry  # noqa: E402
 
-MARKER = "<!-- skiasharp-pr-artifact-sizes -->"
-
 # Below this, a size change is treated as noise (matches the nightly tracker) and the
 # package is considered unchanged.
 NOISE_BYTES = 50 * 1024
@@ -106,12 +104,15 @@ def baseline_nupkg(baseline_pkg: dict) -> int | None:
 # --------------------------------------------------------------------------- #
 
 def render(pr: dict, baseline: dict | None, *, build_url: str | None) -> str:
+    """The report body only. pr_comment.py prepends the marker and the dedupe stamp, so
+    this must not emit either: two markers would let the comment lookup match the wrong
+    half, and a second stamp would shadow the real one for the intake's regex."""
     pr_pkgs: dict[str, dict] = pr.get("packages", {})
     base_pkgs: dict[str, dict] = (baseline or {}).get("packages", {})
 
-    lines: list[str] = [MARKER, "## 📦 Artifact size report", ""]
-
     build_id = pr.get("buildId")
+    lines: list[str] = ["## 📦 Artifact size report", ""]
+
     build_ref = f"[`{build_id}`]({build_url})" if build_url else f"`{build_id}`"
     if baseline:
         lines.append(
