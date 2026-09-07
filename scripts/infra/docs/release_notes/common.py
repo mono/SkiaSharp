@@ -17,12 +17,10 @@ REPO = "mono/SkiaSharp"
 
 # Bump together with ``scripts/infra/docs/release-notes-data.py``'s
 # ``_DATA_JSON_FORMAT_VERSION`` -- a test in this package's ``tests/`` folder
-# asserts the two stay equal. This is the smallest compatible format bump
-# needed to add ``shipments`` (facts) to data.json; it intentionally does NOT
-# revisit the rest of the v3 shape. A data.json whose ``format`` is below this
-# value has no ``shipments`` and is safely skipped by the updater rather than
-# rewritten.
-DATA_FORMAT = 4
+# asserts the two stay equal. Format 5 adds exact-shipment contributor,
+# first-time, automation, and AI attribution facts. Older data is safely skipped
+# until Prepare regenerates it rather than rendering an incomplete canonical body.
+DATA_FORMAT = 5
 
 # An exact release tag: ``vMAJOR.MINOR.PATCH[.HOTFIX][-{preview,rc}.N[.BUILD]]``.
 # Deliberately narrower than release-notes-data.py's lenient ``_parse_tag``

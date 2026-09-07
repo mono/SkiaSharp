@@ -3,9 +3,9 @@
 
 The release-notes workflow and skill own summary prose (headline/body) and
 this package owns Markdown structure; this script selects exact tags, expands
-deterministic links, and replaces the managed summary region of a GitHub
-Release body. Once reviewed prose exists it becomes the complete canonical body;
-GitHub-generated notes remain only until that convergence.
+deterministic links, and replaces the complete GitHub Release body. Each
+canonical body is recreated solely from committed release facts and reviewed
+prose; legacy GitHub-generated notes are migration input, never output.
 It skips unpublished drafts, which converge after publication.
 
     update_github_summaries.py --event push --repository mono/SkiaSharp
@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 import json
 import os
 from pathlib import Path
+import re
 import sys
 from typing import Callable, Protocol
 
@@ -31,6 +32,7 @@ if str(_DOCS_DIR) not in sys.path:
 from release_notes import common, github, render_summary, safety, shipments as shipments_module
 
 SOURCES_DIR = "documentation/docfx/releases/_sources"
+VERSIONS_PATH = "scripts/infra/docs/versions.json"
 
 
 class UpdateError(RuntimeError):
@@ -88,6 +90,18 @@ class RepositoryView:
             return []
         return sorted(directory.glob("*.data.json"))
 
+    def history_floor(self) -> tuple[int, int, int, int] | None:
+        path = self.root / VERSIONS_PATH
+        data = self.read_json(path)
+        if data is None:
+            return None
+        floor = (data.get("history_floor") or {}).get("skiasharp")
+        if floor is None:
+            return None
+        if not isinstance(floor, str) or not re.fullmatch(r"\d+\.\d+\.\d+(?:\.\d+)?", floor):
+            raise UpdateError("versions.json history_floor.skiasharp must be a version string")
+        return common.core_tuple(floor)
+
     def read_json(self, path: Path) -> dict | None:
         if not path.exists():
             return None
@@ -136,6 +150,12 @@ def select_candidates(
         if parsed is None:
             raise UpdateError("invalid exact release tag {!r}".format(tag))
         requested_core = parsed.core
+    floor = repository.history_floor()
+    if requested_core is not None and floor is not None:
+        if common.core_tuple(requested_core) < floor:
+            raise UpdateError(
+                "requested tag {} is below the configured history floor".format(tag)
+            )
 
     candidates: list[Candidate] = []
     seen_tags: dict[str, Path] = {}
@@ -143,6 +163,13 @@ def select_candidates(
         version = _version_from_data_path(data_path)
         if version.endswith("-unreleased"):
             continue  # An unreleased head page is never tagged; no shipments.
+        try:
+            below_floor = floor is not None and common.core_tuple(version) < floor
+        except ValueError:
+            # A malformed old filename must not be inspected or block a current run.
+            continue
+        if below_floor:
+            continue
         data = repository.read_json(data_path)
         if data is None:
             continue
@@ -218,11 +245,11 @@ def render_managed_summary(
     public_version = shipment["public_version"]
     core_version = shipment["core_version"]
     links = [
+        "\U0001F4D6 [Release notes]"
+        "(https://mono.github.io/SkiaSharp/docs/releases/{}.html)".format(core_version),
         "\U0001F4E6 [NuGet](https://www.nuget.org/packages/SkiaSharp/{})".format(
             public_version
         ),
-        "\U0001F4D6 [Release notes]"
-        "(https://mono.github.io/SkiaSharp/docs/releases/{}.html)".format(core_version),
     ]
     changelog_url = shipment.get("changelog_url")
     if changelog_url:
@@ -271,10 +298,10 @@ def update_releases(
     convention:
 
     1. **Preflight** -- fetch each release, skip it (never an error) when it
-       does not exist or is still an unpublished draft, replace an unreviewed or
-       legacy body with the canonical reviewed body, skip when it is already
-       current (idempotent), else render + validate and stage a plan. Any hard
-       error here aborts the WHOLE batch before a single write is sent.
+       does not exist or is still an unpublished draft, then recreate the
+       complete canonical body from committed data/prose.
+       It skips only when that canonical body is already current. Any hard error
+       here aborts the WHOLE batch before a single write is sent.
     2. **Race barrier** -- immediately before the first write, re-fetch every
        staged release and require its body to be byte-identical to what
        preflight read. The REST API has no conditional PATCH, so this
@@ -310,7 +337,9 @@ def update_releases(
                     candidate.tag, "unchanged", "managed summary already matches reviewed prose"
                 )
                 continue
-            plans.append(PlannedUpdate(candidate, existing.body, new_body))
+            plans.append(
+                PlannedUpdate(candidate, existing.body, new_body)
+            )
         except UpdateError as exc:
             errors.append("{}: {}".format(candidate.tag, exc))
         except github.GitHubError as exc:
@@ -326,7 +355,7 @@ def update_releases(
             result.add(
                 plan.candidate.tag,
                 "planned",
-                "would replace {}-byte release body with {}-byte reviewed body "
+                "would replace {}-byte release body with {}-byte canonical body "
                 "(previous tag: {})".format(
                     len(plan.previous_body.encode("utf-8")),
                     len(plan.new_body.encode("utf-8")),
@@ -366,7 +395,7 @@ def update_releases(
         result.add(
             plan.candidate.tag,
             "updated",
-            "reviewed release body replaced and verified",
+            "complete canonical release body replaced and verified",
         )
     return result
 

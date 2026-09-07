@@ -149,6 +149,14 @@ SKIA_REMOTE_URL = "https://github.com/mono/skia.git"
 
 # Noreply email pattern: {id}+{username}@users.noreply.github.com
 _NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
+_ANY_NOREPLY_RE = re.compile(
+    r"^(?:\d+\+)?(.+)@users\.noreply\.github\.com$", re.IGNORECASE
+)
+_COAUTHOR_RE = re.compile(
+    r"^Co-authored-by:\s*(.*?)\s*<([^<>]+)>\s*$", re.IGNORECASE | re.MULTILINE
+)
+_SAFE_LOGIN_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:\[bot\])?$")
+_SAFE_DISPLAY_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 .'-]{1,78}$")
 
 # Versions config (loaded lazily from scripts/infra/docs/versions.json)
 _VERSIONS_CONFIG = {}  # type: dict[str, list[dict]]
@@ -851,6 +859,104 @@ def resolve_fixed_issues(prs):
     return prs
 
 
+# ── GitHub first-time contributor resolution ─────────────────────────
+
+_FIRST_TIME_CONTRIBUTORS_CACHE_PATH = (
+    RELEASES_DIR / "_sources" / "pr-first-time-contributors.json"
+)
+
+
+def load_first_time_contributors_cache():
+    # type: () -> dict
+    """Load the PR-number -> author-association result cache.
+
+    The cached Boolean is the direct GitHub GraphQL classification, retained
+    even for a bot or maintainer PR. Emission applies the human-identity rule
+    separately, so changing that policy does not discard authoritative facts.
+    """
+    try:
+        cache = json.loads(_FIRST_TIME_CONTRIBUTORS_CACHE_PATH.read_text())
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(cache, dict):
+        return {}
+    return {str(key): value for key, value in cache.items() if isinstance(value, bool)}
+
+
+def save_first_time_contributors_cache(cache):
+    # type: (dict) -> None
+    """Persist author-association results sorted by PR number."""
+    try:
+        ordered = {key: cache[key] for key in sorted(cache, key=lambda n: int(n))}
+    except ValueError:
+        ordered = cache
+    _FIRST_TIME_CONTRIBUTORS_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _FIRST_TIME_CONTRIBUTORS_CACHE_PATH.write_text(json.dumps(ordered, indent=2) + "\n")
+
+
+def _graphql_pr_first_time_contributors(numbers):
+    # type: (list[int]) -> dict
+    """Resolve GitHub's author-association classification for a batch of PRs."""
+    owner, name = REPO.split("/")
+    aliases = "\n".join(
+        "p{n}: pullRequest(number: {n}) {{ authorAssociation }}".format(n=n)
+        for n in numbers)
+    query = 'query {{ repository(owner: "{}", name: "{}") {{\n{}\n}} }}'.format(
+        owner, name, aliases)
+    try:
+        out = run(["gh", "api", "graphql", "-f", "query=" + query], check=False)
+    except FileNotFoundError:
+        return {}
+    try:
+        repo = json.loads(out)["data"]["repository"]
+    except (ValueError, KeyError, TypeError):
+        return {}
+    resolved = {}
+    for n in numbers:
+        node = repo.get("p{}".format(n))
+        if not isinstance(node, dict):
+            continue
+        association = node.get("authorAssociation")
+        if association is None:
+            continue
+        resolved[n] = association in ("FIRST_TIMER", "FIRST_TIME_CONTRIBUTOR")
+    return resolved
+
+
+def resolve_first_time_contributors(prs):
+    # type: (list[dict]) -> list[dict]
+    """Attach a human-author first-contribution fact to every PR.
+
+    GitHub author association is cached for every resolved PR. The public
+    ``first_time_contributor`` fact is true only when that association qualifies
+    and the primary PR author is a human. Automation and AI identities are never
+    classified as first-time human contributors.
+    """
+    numbers = sorted({pr["number"] for pr in prs if pr.get("number")})
+    if not numbers:
+        return prs
+    cache = load_first_time_contributors_cache()
+    to_query = [number for number in numbers if str(number) not in cache]
+    if to_query:
+        log("  Resolving first-time contributor facts for {} PR(s) via GitHub API...".format(
+            len(to_query)))
+        dirty = False
+        for i in range(0, len(to_query), _GRAPHQL_BATCH):
+            resolved = _graphql_pr_first_time_contributors(
+                to_query[i:i + _GRAPHQL_BATCH])
+            for number, is_first_time in resolved.items():
+                cache[str(number)] = is_first_time
+                dirty = True
+        if dirty:
+            save_first_time_contributors_cache(cache)
+    for pr in prs:
+        number = pr.get("number")
+        if number:
+            pr["first_time_contributor"] = (
+                cache.get(str(number), False) and _primary_author_kind(pr) == "human"
+            )
+    return prs
+
 def _ensure_skia_repo():
     # type: () -> bool
     """Make ``externals/skia`` usable as a local object store for ``git log``.
@@ -1104,8 +1210,8 @@ def _tag_target_sha(tag):
                check=False).strip()
 
 
-def collect_shipments_for_page(page_version):
-    # type: (str) -> list[dict]
+def collect_shipments_for_page(page_version, page_prs=None):
+    # type: (str, Optional[list[dict]]) -> list[dict]
     """Every exact shipment (tag) for a RELEASED page's own core version.
 
     A thin wrapper around ``release_notes.shipments.collect_shipments`` (the
@@ -1119,14 +1225,21 @@ def collect_shipments_for_page(page_version):
     """
     raw = run(["git", "tag", "-l", "v*"], check=False)
     all_tags = [t.strip() for t in raw.splitlines() if t.strip()]
+    known_humans = _known_human_aliases(page_prs or [])
+
+    def shipment_prs(from_tag, to_tag):
+        prs = get_prs_from_diff(from_tag, to_tag) if from_tag else []
+        resolve_pr_authors(prs)
+        resolve_first_time_contributors(prs)
+        resolve_release_attributions(prs, known_humans=known_humans)
+        return prs
+
     return _release_shipments.collect_shipments(
         page_version,
         all_tags,
         tag_date=_tag_date,
         target_sha=_tag_target_sha,
-        prs_between=lambda from_tag, to_tag: (
-            get_prs_from_diff(from_tag, to_tag) if from_tag else []
-        ),
+        prs_between=shipment_prs,
     )
 
 
@@ -1623,7 +1736,31 @@ def _pr_category(files):
 # Automation accounts — never credited as human contributors (§4.5). The workflow
 # already skips these when authoring, but data.json still records them (they open
 # release-notes and bump PRs), so Polish must exclude them from the contributor table.
-_BOT_LOGINS = frozenset({"github-actions[bot]", "github-actions", "copilot", "dependabot"})
+_BOT_LOGINS = frozenset(
+    {"github-actions[bot]", "github-actions", "copilot", "dependabot", "skia-sync"}
+)
+_AI_LOGIN_LABELS = {
+    "copilot": "GitHub Copilot",
+    "copilot[bot]": "GitHub Copilot",
+    "claude[bot]": "Claude",
+    "chatgpt[bot]": "ChatGPT",
+    "codex[bot]": "OpenAI Codex",
+    "gemini[bot]": "Gemini",
+}
+_AI_NAME_LABELS = {
+    "copilot": "GitHub Copilot",
+    "copilot app": "GitHub Copilot",
+    "claude": "Claude",
+    "claude code": "Claude",
+    "chatgpt": "ChatGPT",
+    "openai codex": "OpenAI Codex",
+    "gemini": "Gemini",
+}
+_AI_EMAIL_DOMAINS = {
+    "anthropic.com": frozenset({"claude", "claude code"}),
+    "openai.com": frozenset({"chatgpt", "openai codex"}),
+    "google.com": frozenset({"gemini"}),
+}
 
 
 def _is_bot_login(login):
@@ -1633,6 +1770,145 @@ def _is_bot_login(login):
         return False
     low = login.lower()
     return low in _BOT_LOGINS or low.endswith("[bot]")
+
+
+def _controlled_ai_label(login=None, name=None, email=None):
+    # type: (Optional[str], Optional[str], Optional[str]) -> Optional[str]
+    """Return a controlled display label for a substantiated AI identity."""
+    low_login = (login or "").strip().lower()
+    if low_login in _AI_LOGIN_LABELS:
+        return _AI_LOGIN_LABELS[low_login]
+    low_name = (name or "").strip().lower()
+    low_email = (email or "").strip().lower()
+    if "anthropic.com" in low_email and low_name.startswith("claude"):
+        return "Claude"
+    if "223556219+copilot@users.noreply.github.com" == low_email:
+        return "GitHub Copilot"
+    if low_email == "noreply@github.com" and low_name in _AI_NAME_LABELS:
+        return _AI_NAME_LABELS[low_name]
+    for domain, names in _AI_EMAIL_DOMAINS.items():
+        if low_email.endswith("@{}".format(domain)) and low_name in names:
+            return _AI_NAME_LABELS[low_name]
+    return None
+
+
+def _identity_attribution(login=None, name=None, email=None):
+    # type: (Optional[str], Optional[str], Optional[str]) -> Optional[dict]
+    """Normalize a validated GitHub or controlled AI identity for committed facts."""
+    ai_label = _controlled_ai_label(login=login, name=name, email=email)
+    if ai_label:
+        return {"display": ai_label, "kind": "ai"}
+    if login:
+        if not _SAFE_LOGIN_RE.fullmatch(login):
+            return None
+        kind = "automation" if _is_bot_login(login) else "human"
+        return {"display": "@{}".format(login), "kind": kind}
+    if name and _SAFE_DISPLAY_NAME_RE.fullmatch(name):
+        return {"display": " ".join(name.split()), "kind": "human"}
+    return None
+
+
+def _coauthor_attributions(body, known_humans=None):
+    # type: (str, Optional[dict[str, str]]) -> list[dict]
+    """Extract substantiated co-author trailers without guessing GitHub handles."""
+    known_humans = known_humans or {}
+    result = []
+    seen = set()
+    for match in _COAUTHOR_RE.finditer(body or ""):
+        name, email = match.group(1).strip(), match.group(2).strip()
+        noreply = _ANY_NOREPLY_RE.fullmatch(email)
+        login = noreply.group(1) if noreply else None
+        known_login = (
+            known_humans.get(email.casefold())
+            or known_humans.get(name.casefold())
+        )
+        attribution = _identity_attribution(
+            login=login or known_login,
+            name=name,
+            email=email,
+        )
+        if attribution is None:
+            continue
+        key = (attribution["kind"], attribution["display"].casefold())
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(attribution)
+    return result
+
+
+def _known_human_aliases(prs):
+    # type: (list[dict]) -> dict[str, str]
+    """Map validated human names/emails to their GitHub handles."""
+    known_humans = {}
+    for pr in prs:
+        author = pr.get("author") or {}
+        login = author.get("login")
+        if login and _primary_author_kind(pr) == "human":
+            for value in (author.get("name"), author.get("email")):
+                if value:
+                    known_humans[value.strip().casefold()] = login
+    return known_humans
+
+
+def resolve_release_attributions(prs, known_humans=None):
+    # type: (list[dict], Optional[dict[str, str]]) -> list[dict]
+    """Attach normalized primary/co-author attribution facts to every PR."""
+    known_humans = {
+        **(known_humans or {}),
+        **_known_human_aliases(prs),
+    }
+    for pr in prs:
+        pr["coauthors"] = _coauthor_attributions(
+            pr.get("body", ""), known_humans=known_humans
+        )
+        pr["attributions"] = _release_attributions(
+            pr, known_humans=known_humans
+        )
+    return prs
+
+
+def _primary_author_kind(pr):
+    # type: (dict) -> Optional[str]
+    author = pr.get("author") or {}
+    attribution = _identity_attribution(
+        login=author.get("login"),
+        name=author.get("name"),
+        email=author.get("email"),
+    )
+    return attribution["kind"] if attribution else None
+
+
+def _release_attributions(pr, known_humans=None):
+    # type: (dict, Optional[dict[str, str]]) -> list[dict]
+    """Build ordered, deduplicated author/co-author facts for one PR."""
+    known_humans = known_humans or {}
+    author = pr.get("author") or {}
+    login = (
+        author.get("login")
+        or known_humans.get(str(author.get("email") or "").casefold())
+        or known_humans.get(str(author.get("name") or "").casefold())
+    )
+    primary = _identity_attribution(
+        login=login,
+        name=author.get("name"),
+        email=author.get("email"),
+    )
+    values = ([primary] if primary else []) + list(pr.get("coauthors") or [])
+    result = []
+    seen = set()
+    for value in values:
+        if not isinstance(value, dict):
+            continue
+        key = (value.get("kind"), str(value.get("display", "")).casefold())
+        if key in seen:
+            continue
+        seen.add(key)
+        fact = {"display": value["display"], "kind": value["kind"]}
+        if value is primary and value["kind"] == "human":
+            fact["first_time"] = bool(pr.get("first_time_contributor"))
+        result.append(fact)
+    return result
 
 
 def _contributor_roster(prs):
@@ -1775,6 +2051,7 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
             "url": "https://github.com/{}/pull/{}".format(REPO, num),
             "number": num,
             "body": body,
+            "coauthors": _coauthor_attributions(body),
             "commit": commit_hash,
             "skiaPr": skia_pr,
             "category": _pr_category(files_by.get(commit_hash, set())),
@@ -1829,7 +2106,9 @@ def _release_date_display(version):
 # skipped by the updater rather than rewritten (scripts/infra/docs/release_notes/
 # common.py's ``DATA_FORMAT`` must be bumped in lockstep -- a test in
 # release_notes/tests/test_common.py asserts the two stay equal).
-_DATA_JSON_FORMAT_VERSION = 4
+# 4 -> 5: added an exact-shipment human/automation/AI attribution roster. Human
+# first-time status comes from the committed raw GraphQL classification cache.
+_DATA_JSON_FORMAT_VERSION = 5
 
 
 def _pr_is_community(pr):
@@ -1881,7 +2160,7 @@ def build_data_json(prs, metadata):
     pkg = metadata.get("package", "SkiaSharp")
     nuget = "https://www.nuget.org/packages/{}".format(pkg)
 
-    # Exact-shipment records (format 4+): one per real git tag whose core matches
+    # Exact-shipment records (format 5+): one per real git tag whose core matches
     # this page. Validate them before using the latest prerelease to build the
     # banner's NuGet URL; never invent a synthetic ``X.Y.Z-preview`` version.
     shipments = metadata.get("shipments") or []
@@ -2125,10 +2404,10 @@ def _strip_prose_independent_data(data):
 
     Shared by the prose change-detection comparison below. ``format`` is a
     code-owned migration marker (see
-    ``_DATA_JSON_FORMAT_VERSION``'s docstring); ``shipments`` (format 4+) is
+    ``_DATA_JSON_FORMAT_VERSION``'s docstring); ``shipments`` (format 5+) is
     exact-shipment data consumed by the GitHub Release summary updater. The
-    preview NuGet URL is derived from those exact shipments. All three can
-    change without changing any prose slot.
+    preview NuGet URL is derived from those exact shipments. These facts can
+    change without changing website prose slots.
     """
     stripped = {
         key: value for key, value in data.items()
@@ -2545,6 +2824,8 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # needed to build data.json, and it's cheap in steady state — only genuinely
     # new PRs miss the cache and hit the network; every old version is a cache hit.
     resolve_pr_authors(prs)
+    resolve_first_time_contributors(prs)
+    resolve_release_attributions(prs)
     resolve_skia_links(prs)
     # Resolve the issues each PR closes (linked-issue graph ∪ body keywords,
     # cached in pr-fixed-issues.json) so data.json records them for downstream
@@ -2582,7 +2863,7 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         # A released page corresponds to real git tag(s) with GitHub Releases;
         # an unreleased head page (main/release/X.Y.x) is never tagged, so it
         # has no shipments at all.
-        metadata["shipments"] = collect_shipments_for_page(version)
+        metadata["shipments"] = collect_shipments_for_page(version, prs)
     companions = {}  # type: dict
     if notes_comp:
         companions["notes"] = notes_comp

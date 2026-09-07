@@ -175,6 +175,66 @@ class CollectShipmentsTests(unittest.TestCase):
         preview1 = next(item for item in result if item["tag"] == "v4.150.0-preview.1.1")
         self.assertEqual(preview1["prs"], [1, 2])
 
+    def test_carries_ordered_attribution_facts_for_the_exact_delta(self):
+        result = shipments.collect_shipments(
+            "1.0.0",
+            ["v1.0.0"],
+            tag_date=lambda tag: "2020-01-01",
+            target_sha=lambda tag: "a" * 40,
+            prs_between=lambda a, b: [
+                {
+                    "number": 7,
+                    "attributions": [
+                        {"display": "@person", "kind": "human", "first_time": True},
+                        {"display": "GitHub Copilot", "kind": "ai"},
+                    ],
+                }
+            ],
+        )
+        [only] = result
+        self.assertEqual(
+            only["attributions"],
+            [
+                {"display": "@person", "kind": "human", "first_time": True},
+                {"display": "GitHub Copilot", "kind": "ai"},
+            ],
+        )
+
+    def test_deduplicates_attributions_and_merges_first_time_status(self):
+        result = shipments.collect_shipments(
+            "1.0.0",
+            ["v1.0.0"],
+            tag_date=lambda tag: "2020-01-01",
+            target_sha=lambda tag: "a" * 40,
+            prs_between=lambda a, b: [
+                {
+                    "number": 7,
+                    "attributions": [
+                        {"display": "@person", "kind": "human", "first_time": False},
+                        {"display": "@ramezgerges", "kind": "human"},
+                        {"display": "GitHub Copilot", "kind": "ai"},
+                    ],
+                },
+                {
+                    "number": 8,
+                    "attributions": [
+                        {"display": "@PERSON", "kind": "human", "first_time": True},
+                        {"display": "Ramez Gerges", "kind": "human"},
+                        {"display": "github copilot", "kind": "ai"},
+                    ],
+                },
+            ],
+        )
+        [only] = result
+        self.assertEqual(
+            only["attributions"],
+            [
+                {"display": "@person", "kind": "human", "first_time": True},
+                {"display": "@ramezgerges", "kind": "human"},
+                {"display": "GitHub Copilot", "kind": "ai"},
+            ],
+        )
+
     def test_decorative_legacy_tags_are_never_shipments(self):
         result = self._collect("4.150.0")
         self.assertNotIn("v4.150.0-gpu1", [item["tag"] for item in result])
@@ -217,6 +277,7 @@ def _valid_shipment(**overrides):
         "date": "2026-01-01",
         "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.150.2...v4.151.0-preview.1",
         "prs": [1, 2],
+        "attributions": [],
     }
     shipment.update(overrides)
     return shipment

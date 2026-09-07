@@ -11,7 +11,7 @@ _DOCS_DIR = Path(__file__).resolve().parents[2]
 if str(_DOCS_DIR) not in sys.path:
     sys.path.insert(0, str(_DOCS_DIR))
 
-from release_notes import github, update_github_summaries as updater
+from release_notes import common, github, update_github_summaries as updater
 
 GH = github
 
@@ -79,17 +79,29 @@ def _shipment(**overrides):
         "date": "2026-01-01",
         "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.150.2...v4.151.0-preview.1",
         "prs": [4294],
+        "attributions": [
+            {"display": "@contributor", "kind": "human", "first_time": True}
+        ],
     }
     shipment.update(overrides)
     return shipment
 
 
-def _data(*, shipments=None, format_version=4, **overrides):
+def _data(*, shipments=None, format_version=common.DATA_FORMAT, **overrides):
     data = {
         "format": format_version,
         "version": "4.151.0",
         "shipments": shipments if shipments is not None else [_shipment()],
         "contributors": [],
+        "prs": {
+            "4294": {
+                "title": "A shipped change",
+                "url": "https://github.com/mono/SkiaSharp/pull/4294",
+                "author": "contributor",
+                "community": True,
+                "first_time_contributor": True,
+            },
+        },
     }
     data.update(overrides)
     return data
@@ -118,6 +130,14 @@ class _RepoFixture:
             (self.sources / "{}.prose.json".format(version)).write_text(
                 json.dumps(prose), encoding="utf-8"
             )
+
+    def write_versions(self, history_floor):
+        path = self.root / updater.VERSIONS_PATH
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps({"history_floor": {"skiasharp": history_floor}}),
+            encoding="utf-8",
+        )
 
 
 class SelectCandidatesTests(unittest.TestCase):
@@ -209,7 +229,7 @@ class SelectCandidatesTests(unittest.TestCase):
         self.fixture.write_page(
             "4.151.0",
             data={
-                "format": 4,
+                "format": common.DATA_FORMAT,
                 "version": "4.151.0",
                 "shipments": {},
                 "contributors": [],
@@ -224,7 +244,7 @@ class SelectCandidatesTests(unittest.TestCase):
         self.fixture.write_page(
             "4.151.0b",
             data={
-                "format": 4,
+                "format": common.DATA_FORMAT,
                 "version": "4.151.0b",
                 "shipments": [_shipment()],
             },
@@ -241,6 +261,28 @@ class SelectCandidatesTests(unittest.TestCase):
     def test_invalid_requested_tag_is_rejected(self):
         with self.assertRaisesRegex(updater.UpdateError, "invalid exact release tag"):
             updater.select_candidates(self.repository, tag="not-a-tag")
+
+    def test_broad_selection_does_not_inspect_data_below_the_history_floor(self):
+        self.fixture.write_versions("4.151.0")
+        (self.fixture.sources / "4.150.0.data.json").write_text(
+            "{ malformed legacy data", encoding="utf-8"
+        )
+        self.fixture.write_page("4.151.0", data=_data(), prose=_prose())
+        candidates = updater.select_candidates(self.repository)
+        self.assertEqual([candidate.tag for candidate in candidates], ["v4.151.0-preview.1"])
+
+    def test_explicit_tag_below_history_floor_fails_before_inspecting_its_page(self):
+        self.fixture.write_versions("4.151.0")
+        (self.fixture.sources / "4.150.0.data.json").write_text(
+            "{ malformed legacy data", encoding="utf-8"
+        )
+        with self.assertRaisesRegex(updater.UpdateError, "below the configured history floor"):
+            updater.select_candidates(self.repository, tag="v4.150.0")
+
+    def test_rejects_an_invalid_history_floor(self):
+        self.fixture.write_versions("not-a-version")
+        with self.assertRaisesRegex(updater.UpdateError, "must be a version string"):
+            updater.select_candidates(self.repository)
 
 
 class UpdateReleasesTests(unittest.TestCase):
@@ -264,18 +306,7 @@ class UpdateReleasesTests(unittest.TestCase):
         result = updater.update_releases([candidate], client)
         self.assertEqual([e.status for e in result.entries], ["updated"])
         self.assertEqual(len(client.writes), 1)
-
-    def test_replaces_an_unmarked_generated_body_with_the_reviewed_body(self):
-        candidate = self._candidate()
-        generated = "## What's Changed\n" + ("* A PR by @a\n" * 500)
-        client = FakeGitHubClient({candidate.tag: generated})
-        updater.update_releases([candidate], client)
-        (_, written_body) = client.writes[0]
-        self.assertNotIn("## What's Changed", written_body)
-        self.assertNotIn(GH.GENERATED_START_MARKER, written_body)
-        self.assertLess(len(written_body), len(generated))
-
-    def test_replaces_only_the_managed_summary_region(self):
+    def test_replaces_the_complete_legacy_body_with_the_canonical_body(self):
         candidate = self._candidate()
         client = FakeGitHubClient({candidate.tag: self.initial_body})
         updater.update_releases([candidate], client)
@@ -283,6 +314,8 @@ class UpdateReleasesTests(unittest.TestCase):
         self.assertIn("A focused preview release.", written_body)
         self.assertIn(GH.SUMMARY_START_MARKER, written_body)
         self.assertIn(GH.SUMMARY_END_MARKER, written_body)
+        self.assertNotIn(GH.GENERATED_START_MARKER, written_body)
+        self.assertNotIn(GH.GENERATED_END_MARKER, written_body)
 
     def test_skips_a_release_that_does_not_exist(self):
         candidate = self._candidate()
@@ -291,7 +324,7 @@ class UpdateReleasesTests(unittest.TestCase):
         self.assertEqual(result.entries[0].status, "skipped")
         self.assertEqual(client.writes, [])
 
-    def test_adopts_an_unmarked_release_and_discards_temporary_generated_body(self):
+    def test_adopts_an_unmarked_release(self):
         candidate = self._candidate()
         original = "Just a plain GitHub-generated release body."
         client = FakeGitHubClient({candidate.tag: original})
@@ -301,7 +334,7 @@ class UpdateReleasesTests(unittest.TestCase):
         (_, written_body) = client.writes[0]
         self.assertNotIn(original, written_body)
         self.assertIn(GH.SUMMARY_START_MARKER, written_body)
-        self.assertNotIn(GH.GENERATED_START_MARKER, written_body)
+        self.assertNotIn("## What's Changed", written_body)
 
     def test_migrates_the_v4_150_2_duplicate_legacy_shape_exactly_once(self):
         candidate = self._candidate(
@@ -332,6 +365,7 @@ class UpdateReleasesTests(unittest.TestCase):
         self.assertEqual(second.entries[0].status, "unchanged")
         self.assertEqual(final.count("A focused preview release."), 1)
         self.assertEqual(final.count(candidate.shipment["changelog_url"]), 1)
+        self.assertNotIn("## What's Changed", final)
         self.assertNotIn(GH.GENERATED_START_MARKER, final)
 
     def test_dry_run_reads_and_plans_without_writing(self):
@@ -359,8 +393,7 @@ class UpdateReleasesTests(unittest.TestCase):
             {candidate.tag: self.initial_body}, draft_tags={candidate.tag}
         )
         updater.update_releases([candidate], client)
-        # The draft's body -- including its GitHub-generated notes region --
-        # is byte-for-byte untouched; no PATCH was ever attempted.
+        # The draft body is byte-for-byte untouched; no PATCH was attempted.
         self.assertEqual(client.bodies[candidate.tag], self.initial_body)
         self.assertEqual(client.writes, [])
 

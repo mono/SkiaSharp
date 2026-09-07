@@ -68,7 +68,7 @@ behavior is to do the same full pipeline and let the engines skip safely.
   - §4.5 The HarfBuzz section on a SkiaSharp page
   - §4.6 How it runs
   - §4.7 Manual additions & breaking-change summaries (companion files)
-  - §4.8 Exact-shipment summaries and the GitHub Release updater (`release_notes/`, format 4+)
+  - §4.8 Exact-shipment summaries and the GitHub Release updater (`release_notes/`, format 5+)
 - **§5 — API-diff engine (`api-diff.cake`)**
   - §5.1 Inputs & outputs
   - §5.2 Behavior
@@ -334,7 +334,8 @@ the AI's instructions (`SKILL.md`, `samples/`): the entrypoints *redirect* to th
 real engine under `scripts/infra/docs/`, so the skill stays a simple, stable
 surface while the implementation can be edited underneath it. (The committed page
 inputs — `_sources/*.data.json`, `*.prose.json`, `co-release-map.json`, `index.json`,
-and the `pr-authors.json` author cache — live under `releases/_sources/`.)
+and the `pr-authors.json` / `pr-first-time-contributors.json` caches — live under
+`releases/_sources/`.)
 
 ```
 scripts/infra/docs/                (all doc engines, together)
@@ -911,7 +912,7 @@ The release-notes pipeline has three script-owned producers, split by artifact:
   (§4.7). It emits `_sources/<stem>.data.json` for each changed SkiaSharp page and
   writes the Files-to-polish list to `output/files-to-polish.txt` (or
   `--polish-list`). On released pages it adds `data.harfbuzz` from the co-release map
-  and the HarfBuzz-owned path filter (§4.5), and (format 4+) `data.shipments` — the
+  and the HarfBuzz-owned path filter (§4.5), and (format 5+) `data.shipments` — the
   exact-tag facts the separate GitHub Release summary updater consumes (§4.8). It owns
   the shared low-level helpers (git/version parsing), the page-set discovery helper
   `get_version_files`, and `cadence_milestones()`.
@@ -939,9 +940,9 @@ branches only; a version-scoped run (`--min-version` / `--max-version`) naturall
 covers the folded HarfBuzz section for those SkiaSharp pages because the HarfBuzz facts
 are stored in the same `data.json`.
 
-**No GitHub API for content** — PRs come from commit messages. A cached, best-effort
-GraphQL lookup only upgrades author *handles*; it never affects which PRs or pages
-exist.
+**No GitHub API for content** — PRs come from commit messages. Cached, best-effort
+GraphQL lookups only upgrade author *handles* and classify first-time contributors;
+they never affect which PRs or pages exist.
 
 
 ### 4.2 Released vs unreleased — two coexisting pages
@@ -1004,7 +1005,8 @@ built from. It is timestamp-free and includes, at minimum:
   from `shipments`; it never synthesizes an `X.Y.Z-preview` package URL.
 - `harfbuzz` on released pages — `{ "version", "api_diff_link", "prs" }` for the
   co-shipped HarfBuzzSharp section (§4.5). It is absent on `-unreleased` pages.
-- `prs` — the flat PR map, including title, URL, author, `community`, and the
+- `prs` — the flat PR map, including title, URL, author, `community`,
+  `first_time_contributor`, and the
   deterministic `tag` (`product`, `mixed`, or `internal`). Each entry may also carry
   `fixes` — the sorted list of issue numbers the PR closes — emitted **only when
   non-empty** so pages with no issue-closing PRs stay byte-identical. It is the union of
@@ -1012,6 +1014,11 @@ built from. It is timestamp-free and includes, at minimum:
   and cached in `_sources/pr-fixed-issues.json`) and the `Fixes/Closes/Resolves #NNN`
   keywords in the PR body (the offline fallback). Downstream post-release tooling reads
   `fixes` to apply the release milestone to the closed issues; the renderer ignores it.
+  `first_time_contributor` is true only for a resolved human author whose
+  cached GraphQL `authorAssociation` is `FIRST_TIMER` or
+  `FIRST_TIME_CONTRIBUTOR`. The raw association-derived Boolean is cached for
+  every resolved PR in `_sources/pr-first-time-contributors.json`, including
+  bots and maintainers; the emitted field reapplies human/bot/AI classification.
 - `contributors` — the authoritative non-maintainer, non-bot roster the renderer uses
   for the community table.
 - `previews` — per-preview/RC buckets, when present. Each carries a `key`, the human
@@ -1327,9 +1334,9 @@ re-polish.
 
 ---
 
-### 4.8 Exact-shipment summaries and the GitHub Release updater (`release_notes/`, format 4+)
+### 4.8 Exact-shipment summaries and the GitHub Release updater (`release_notes/`, format 5+)
 
-A released page's `data.json` (format 4+; see `_DATA_JSON_FORMAT_VERSION`'s docstring
+A released page's `data.json` (format 5+; see `_DATA_JSON_FORMAT_VERSION`'s docstring
 in `release-notes-data.py`) carries one additional field, `shipments`: an array of one
 record per exact `v*` tag whose core matches this page — a preview, an rc, and/or the
 stable release itself — each with `tag`, `core_version`, `public_version`, `channel`
@@ -1360,54 +1367,86 @@ The implementation lives under `scripts/infra/docs/release_notes/`:
   updater trusts).
 - **`render_summary.py`** — turns one shipment + its reviewed
   `prose.json["release_summaries"][tag]` entry (`{"headline": string, "body":
-  string|null}`) into the exact Markdown for the managed summary region. Scripts own
-  every heading, link, and contributor `@handle`; the agent supplies only the two prose
-  strings.
+  string|null}`) into the complete canonical body. Scripts own every heading,
+  link, punctuation, and attribution; the agent supplies only the two prose
+  strings. The short body deliberately has no `## What's Changed` section or
+  per-PR list because the website release notes are the detailed source.
+  Exact-shipment facts render up to three footer lines: all validated human
+  contributors (including maintainers), the first-time subset (intentionally
+  repeated), and substantiated automation/AI assistance. GitHub noreply
+  co-author trailers preserve validated `@handles`; controlled labels identify
+  GitHub Copilot, Claude, and other recognized AI identities when no handle
+  should be emitted. A safe co-author display name is retained when a personal
+  email cannot be mapped to a known GitHub login; no handle is guessed.
+
+  The visible body shape is compact and omits empty optional lines:
+
+  ```markdown
+  **{shipment label}** — {reviewed headline}
+
+  {optional reviewed body}
+
+  📖 Release notes · 📦 NuGet · 🔀 Full changelog
+
+  👥 Contributors: @human1, @human2.
+  🎉 First-time contributors: @human2.
+  🤖 Automation and AI assistance: @automation[bot], GitHub Copilot.
+  ```
 - **`update_github_summaries.py`** — the workflow's entry point. It selects every exact
   tag with both `shipments` facts and a `release_summaries` entry, and for each one:
   preflights (skip — never an error — a release that does not exist, is still an
-  unpublished draft, or is already current), replaces the temporary
-  GitHub-generated or legacy body with the canonical reviewed body, re-reads
-  every planned release immediately before the first
+  unpublished draft, or is already current), renders the complete reviewed
+  body from committed facts/prose, then replaces the live body. It re-reads every planned release immediately before the first
   write as a race barrier (the REST API has no conditional PATCH), writes,
   then re-reads and requires the stored body to equal the intended body
   exactly. Any preflight or race failure aborts the **whole batch** before a
   single write. `--dry-run` performs the same live reads and validation but
-  reports the old and intended body sizes without sending any PATCH request.
+  reports the old and intended body sizes without sending any PATCH
+  request.
 
 **Drafts.** `update_releases()` skips any unpublished draft and converges after
 publication. The normal Finish flow publishes directly, but retaining this guard keeps
 the updater safe around manually created or legacy drafts.
 
-**Markers and body ownership.** The exact-summary package owns the summary marker
-pair and body helpers in `scripts/infra/docs/release_notes/github.py`. Its minimal
-REST client updates only published release bodies without a `gh` CLI dependency.
-GitHub-generated notes are temporary publication output. On the first reviewed
-update the complete body becomes the one summary region; later updates replace
-that same region exactly. The package still recognizes the retired
-`GITHUB-GENERATED-NOTES` marker pair so old four-marker bodies can migrate in one
-convergent write, but it never emits that pair. This prevents a legacy summary or
-an incorrectly bounded generated changelog from surviving beside the reviewed
-summary. The summary converges whenever its release-notes PR merges; there is no
-release-critical deadline for it.
+**Markers and body ownership.** The exact-summary package owns the complete body
+and its summary marker envelope in
+`scripts/infra/docs/release_notes/github.py`. Its minimal REST client updates only
+published release bodies without a `gh` CLI dependency. Every canonical body is
+recreated from committed data/prose, including reviewed prose, short links,
+human/first-time attribution, and automation/AI assistance; no live
+GitHub-generated content is preserved or injected. The old four-marker
+`GITHUB-GENERATED-NOTES` shape is accepted only as migration input and is never
+emitted. An unmarked body is adopted, while partial, duplicate, or out-of-order
+markers fail closed before any PATCH. The summary converges whenever its
+release-notes PR merges; there is no release-critical deadline for it.
 
-**Change detection.** Format 4 includes `shipments` and uses three distinct
+**Attribution facts.** Format 5 records an ordered, deduplicated `attributions`
+roster on each exact shipment, derived from its resolved primary PR authors and
+validated `Co-authored-by` trailers. Each identity is classified as `human`,
+`automation`, or `ai`. Primary human authors carry their cached GitHub
+`authorAssociation` first-time fact; bots and AI are never first-time humans.
+These attribution-only facts affect the GitHub Release body, not website prose.
+
+**Change detection.** Format 5 includes `shipments` and attribution
+facts and uses three distinct
 comparisons:
 
 - `_data_json_unchanged()` is the genuine no-op check — strict equality, including
   `format`/`shipments`. Only when this is true does an unforced run skip a page
   entirely.
 - `_website_content_unchanged()` ignores prose-independent metadata — `format`,
-  `shipments`, and the exact preview NuGet URL derived from those shipments. It is
-  true whenever the PRs/roster/previews/links/companions the prose depends on have
-  not moved.
+  `shipments`, and the exact preview NuGet URL derived
+  from those shipments. It is true whenever the PRs/roster/previews/links/
+  companions the prose depends on have not moved.
 - `_classify_data_write()` combines the two. A shipments-only change writes the
   refreshed facts, preserves reviewed prose, and does not request another polish
   pass. A website-content change writes the facts, discards stale prose, and
   requests polish. A fully unchanged page skips unless `--force`.
 
-The updater skips data below format 4 during broad convergence. An explicitly
-requested tag on older data fails with an actionable regeneration error.
+The updater skips data below format 5 during broad convergence. It also reads
+`versions.json` and does not inspect or mutate pages below
+`history_floor.skiasharp`; an explicitly requested tag below that floor, or on
+older data, fails with an actionable error.
 
 **Agent side.** The `release-notes` skill's `release_summaries` slot
 (`.agents/skills/release-notes/SKILL.md`) is optional and per-tag: the agent may
