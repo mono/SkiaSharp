@@ -1005,8 +1005,7 @@ built from. It is timestamp-free and includes, at minimum:
   from `shipments`; it never synthesizes an `X.Y.Z-preview` package URL.
 - `harfbuzz` on released pages — `{ "version", "api_diff_link", "prs" }` for the
   co-shipped HarfBuzzSharp section (§4.5). It is absent on `-unreleased` pages.
-- `prs` — the flat PR map, including title, URL, author, `community`,
-  `first_time_contributor`, and the
+- `prs` — the flat PR map, including title, URL, author, `community`, and the
   deterministic `tag` (`product`, `mixed`, or `internal`). Each entry may also carry
   `fixes` — the sorted list of issue numbers the PR closes — emitted **only when
   non-empty** so pages with no issue-closing PRs stay byte-identical. It is the union of
@@ -1014,11 +1013,6 @@ built from. It is timestamp-free and includes, at minimum:
   and cached in `_sources/pr-fixed-issues.json`) and the `Fixes/Closes/Resolves #NNN`
   keywords in the PR body (the offline fallback). Downstream post-release tooling reads
   `fixes` to apply the release milestone to the closed issues; the renderer ignores it.
-  `first_time_contributor` is true only for a resolved human author whose
-  cached GraphQL `authorAssociation` is `FIRST_TIMER` or
-  `FIRST_TIME_CONTRIBUTOR`. The raw association-derived Boolean is cached for
-  every resolved PR in `_sources/pr-first-time-contributors.json`, including
-  bots and maintainers; the emitted field reapplies human/bot/AI classification.
 - `contributors` — the authoritative non-maintainer, non-bot roster the renderer uses
   for the community table.
 - `previews` — per-preview/RC buckets, when present. Each carries a `key`, the human
@@ -1419,8 +1413,9 @@ release-notes PR merges; there is no release-critical deadline for it.
 **Attribution facts.** Format 5 records an ordered, deduplicated `attributions`
 roster on each exact shipment, derived from its resolved primary PR authors and
 validated `Co-authored-by` trailers. Each identity is classified as `human`,
-`automation`, or `ai`. Primary human authors carry their cached GitHub
-`authorAssociation` first-time fact; bots and AI are never first-time humans.
+`automation`, or `ai`. Primary human authors carry their cached earliest-merged-PR
+first-time fact. The login-to-earliest-merged-PR mapping is committed in
+`_sources/pr-first-time-contributors.json`; bots and AI are never first-time humans.
 These attribution-only facts affect the GitHub Release body, not website prose.
 
 **Change detection.** Format 5 includes `shipments` and attribution

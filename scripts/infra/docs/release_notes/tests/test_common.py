@@ -713,21 +713,25 @@ class FirstTimeContributorFactsTests(unittest.TestCase):
     def setUp(self):
         self.module = _load_release_notes_data_module()
 
-    def test_graphql_resolver_uses_author_association(self):
+    def test_graphql_resolver_uses_earliest_pull_request(self):
         response = {
             "data": {
-                "repository": {
-                    "p10": {"authorAssociation": "FIRST_TIMER"},
-                    "p11": {"authorAssociation": "FIRST_TIME_CONTRIBUTOR"},
-                    "p12": {"authorAssociation": "CONTRIBUTOR"},
-                }
+                "u0": {"nodes": [{"number": 10}]},
+                "u1": {"nodes": [{"number": 11}]},
+                "u2": {"nodes": []},
             }
         }
-        with mock.patch.object(self.module, "run", return_value=__import__("json").dumps(response)):
-            resolved = self.module._graphql_pr_first_time_contributors([10, 11, 12])
-        self.assertEqual(resolved, {10: True, 11: True, 12: False})
+        with mock.patch.object(
+            self.module, "run", return_value=__import__("json").dumps(response)
+        ) as run:
+            resolved = self.module._graphql_earliest_pull_requests(
+                ["community", "maintainer", "missing"]
+            )
+        self.assertEqual(resolved, {"community": 10, "maintainer": 11})
+        self.assertIn("is:merged", run.call_args.args[0][-1])
+        self.assertIn("sort:created-asc", run.call_args.args[0][-1])
 
-    def test_resolver_retains_cached_association_but_emits_only_human_facts(self):
+    def test_resolver_uses_cached_earliest_pr_for_human_facts(self):
         prs = [
             {"number": 10, "author": {"login": "community"}, "category": "product"},
             {"number": 11, "author": {"login": "mattleibow"}, "category": "product"},
@@ -736,27 +740,58 @@ class FirstTimeContributorFactsTests(unittest.TestCase):
         with mock.patch.object(
             self.module,
             "load_first_time_contributors_cache",
-            return_value={"10": True, "11": True, "12": True},
-        ), mock.patch.object(self.module, "_graphql_pr_first_time_contributors") as query:
+            return_value={"community": 10, "mattleibow": 1},
+        ), mock.patch.object(self.module, "_graphql_earliest_pull_requests") as query:
             self.module.resolve_first_time_contributors(prs)
         query.assert_not_called()
-        self.assertEqual([pr["first_time_contributor"] for pr in prs], [True, True, False])
+        self.assertEqual([pr["first_time_contributor"] for pr in prs], [True, False, False])
 
-    def test_resolver_caches_associations_for_excluded_authors(self):
+    def test_resolver_uses_the_first_merged_pr_not_an_earlier_closed_pr(self):
+        prs = [
+            {"number": 10, "author": {"login": "community"}},
+            {"number": 11, "author": {"login": "community"}},
+        ]
+        with mock.patch.object(
+            self.module,
+            "load_first_time_contributors_cache",
+            return_value={"community": 11},
+        ):
+            self.module.resolve_first_time_contributors(prs)
+        self.assertEqual([pr["first_time_contributor"] for pr in prs], [False, True])
+
+    def test_resolver_caches_earliest_prs_for_human_authors(self):
         prs = [
             {"number": 10, "author": {"login": "mattleibow"}},
-            {"number": 11, "author": {"login": "dependabot[bot]"}},
+            {"number": 11, "author": {"login": "community"}},
+            {"number": 12, "author": {"login": "dependabot[bot]"}},
         ]
         with mock.patch.object(
             self.module, "load_first_time_contributors_cache", return_value={}
         ), mock.patch.object(
             self.module,
-            "_graphql_pr_first_time_contributors",
-            return_value={10: True, 11: True},
+            "_graphql_earliest_pull_requests",
+            return_value={"community": 11, "mattleibow": 1},
         ), mock.patch.object(self.module, "save_first_time_contributors_cache") as save:
             self.module.resolve_first_time_contributors(prs)
-        save.assert_called_once_with({"10": True, "11": True})
-        self.assertEqual([pr["first_time_contributor"] for pr in prs], [True, False])
+        save.assert_called_once_with({"community": 11, "mattleibow": 1})
+        self.assertEqual([pr["first_time_contributor"] for pr in prs], [False, True, False])
+
+    def test_legacy_boolean_cache_entries_are_ignored(self):
+        import json
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cache_path = Path(tmp_dir) / "pr-first-time-contributors.json"
+            cache_path.write_text(
+                json.dumps({"3966": False, "community": 10}), encoding="utf-8"
+            )
+            with mock.patch.object(
+                self.module, "_FIRST_TIME_CONTRIBUTORS_CACHE_PATH", cache_path
+            ):
+                self.assertEqual(
+                    self.module.load_first_time_contributors_cache(),
+                    {"community": 10},
+                )
 
     def test_release_attributions_include_maintainers_and_first_time_humans(self):
         pr = {

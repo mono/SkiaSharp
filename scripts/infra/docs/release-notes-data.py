@@ -867,59 +867,70 @@ _FIRST_TIME_CONTRIBUTORS_CACHE_PATH = (
 
 
 def load_first_time_contributors_cache():
-    # type: () -> dict
-    """Load the PR-number -> author-association result cache.
-
-    The cached Boolean is the direct GitHub GraphQL classification, retained
-    even for a bot or maintainer PR. Emission applies the human-identity rule
-    separately, so changing that policy does not discard authoritative facts.
-    """
+    # type: () -> dict[str, int]
+    """Load the human-login -> earliest merged repository PR-number cache."""
     try:
         cache = json.loads(_FIRST_TIME_CONTRIBUTORS_CACHE_PATH.read_text())
     except (OSError, ValueError):
         return {}
     if not isinstance(cache, dict):
         return {}
-    return {str(key): value for key, value in cache.items() if isinstance(value, bool)}
+    return {
+        key.casefold(): value
+        for key, value in cache.items()
+        if (
+            isinstance(key, str)
+            and _SAFE_LOGIN_RE.fullmatch(key)
+            and type(value) is int
+            and value > 0
+        )
+    }
 
 
 def save_first_time_contributors_cache(cache):
-    # type: (dict) -> None
-    """Persist author-association results sorted by PR number."""
-    try:
-        ordered = {key: cache[key] for key in sorted(cache, key=lambda n: int(n))}
-    except ValueError:
-        ordered = cache
+    # type: (dict[str, int]) -> None
+    """Persist earliest merged repository PR numbers by normalized GitHub login."""
+    ordered = {key: cache[key] for key in sorted(cache)}
     _FIRST_TIME_CONTRIBUTORS_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
     _FIRST_TIME_CONTRIBUTORS_CACHE_PATH.write_text(json.dumps(ordered, indent=2) + "\n")
 
 
-def _graphql_pr_first_time_contributors(numbers):
-    # type: (list[int]) -> dict
-    """Resolve GitHub's author-association classification for a batch of PRs."""
-    owner, name = REPO.split("/")
+def _graphql_earliest_pull_requests(logins):
+    # type: (list[str]) -> dict[str, int]
+    """Resolve each human login's first merged repository pull request.
+
+    ``PullRequest.authorAssociation`` changes as people make later
+    contributions, so it cannot classify an already shipped release. GitHub's
+    merged created-order search remains stable for an immutable PR number.
+    """
     aliases = "\n".join(
-        "p{n}: pullRequest(number: {n}) {{ authorAssociation }}".format(n=n)
-        for n in numbers)
-    query = 'query {{ repository(owner: "{}", name: "{}") {{\n{}\n}} }}'.format(
-        owner, name, aliases)
+        (
+            'u{index}: search(query: "repo:{repo} is:pr is:merged author:{login} '
+            'sort:created-asc", type: ISSUE, first: 1) '
+            "{{ nodes {{ ... on PullRequest {{ number }} }} }}"
+        ).format(index=index, repo=REPO, login=login)
+        for index, login in enumerate(logins)
+    )
+    query = "query {{\n{}\n}}".format(aliases)
     try:
         out = run(["gh", "api", "graphql", "-f", "query=" + query], check=False)
     except FileNotFoundError:
         return {}
     try:
-        repo = json.loads(out)["data"]["repository"]
+        data = json.loads(out)["data"]
     except (ValueError, KeyError, TypeError):
         return {}
     resolved = {}
-    for n in numbers:
-        node = repo.get("p{}".format(n))
+    for index, login in enumerate(logins):
+        node = data.get("u{}".format(index))
         if not isinstance(node, dict):
             continue
-        association = node.get("authorAssociation")
-        if association is None:
+        nodes = node.get("nodes")
+        if not isinstance(nodes, list) or len(nodes) != 1:
             continue
-        resolved[n] = association in ("FIRST_TIMER", "FIRST_TIME_CONTRIBUTOR")
+        number = nodes[0].get("number") if isinstance(nodes[0], dict) else None
+        if isinstance(number, int) and number > 0:
+            resolved[login] = number
     return resolved
 
 
@@ -927,34 +938,51 @@ def resolve_first_time_contributors(prs):
     # type: (list[dict]) -> list[dict]
     """Attach a human-author first-contribution fact to every PR.
 
-    GitHub author association is cached for every resolved PR. The public
-    ``first_time_contributor`` fact is true only when that association qualifies
-    and the primary PR author is a human. Automation and AI identities are never
-    classified as first-time human contributors.
+    A contributor is first-time when this exact PR is their earliest merged
+    GitHub PR in SkiaSharp. The stable earliest-merged-PR fact is cached by
+    login, and automation and AI identities are never classified as first-time
+    human contributors.
     """
-    numbers = sorted({pr["number"] for pr in prs if pr.get("number")})
-    if not numbers:
+    by_login = {}
+    for pr in prs:
+        author = pr.get("author") or {}
+        login = author.get("login")
+        number = pr.get("number")
+        if (
+            not isinstance(login, str)
+            or not isinstance(number, int)
+            or _primary_author_kind(pr) != "human"
+        ):
+            continue
+        by_login.setdefault(login.casefold(), []).append(pr)
+    if not by_login:
         return prs
+
     cache = load_first_time_contributors_cache()
-    to_query = [number for number in numbers if str(number) not in cache]
+    to_query = sorted(login for login in by_login if login not in cache)
     if to_query:
-        log("  Resolving first-time contributor facts for {} PR(s) via GitHub API...".format(
+        log("  Resolving first-time contributor facts for {} author(s) via GitHub API...".format(
             len(to_query)))
         dirty = False
         for i in range(0, len(to_query), _GRAPHQL_BATCH):
-            resolved = _graphql_pr_first_time_contributors(
+            resolved = _graphql_earliest_pull_requests(
                 to_query[i:i + _GRAPHQL_BATCH])
-            for number, is_first_time in resolved.items():
-                cache[str(number)] = is_first_time
+            for login, number in resolved.items():
+                cache[login] = number
                 dirty = True
         if dirty:
             save_first_time_contributors_cache(cache)
+
     for pr in prs:
+        author = pr.get("author") or {}
+        login = author.get("login")
         number = pr.get("number")
-        if number:
-            pr["first_time_contributor"] = (
-                cache.get(str(number), False) and _primary_author_kind(pr) == "human"
-            )
+        pr["first_time_contributor"] = (
+            isinstance(login, str)
+            and isinstance(number, int)
+            and _primary_author_kind(pr) == "human"
+            and cache.get(login.casefold()) == number
+        )
     return prs
 
 def _ensure_skia_repo():
@@ -2107,7 +2135,7 @@ def _release_date_display(version):
 # common.py's ``DATA_FORMAT`` must be bumped in lockstep -- a test in
 # release_notes/tests/test_common.py asserts the two stay equal).
 # 4 -> 5: added an exact-shipment human/automation/AI attribution roster. Human
-# first-time status comes from the committed raw GraphQL classification cache.
+# first-time status comes from the committed earliest-PR-per-login cache.
 _DATA_JSON_FORMAT_VERSION = 5
 
 
@@ -2823,9 +2851,9 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # Resolve the true GitHub handles (API, cached in pr-authors.json). This is
     # needed to build data.json, and it's cheap in steady state — only genuinely
     # new PRs miss the cache and hit the network; every old version is a cache hit.
+    # First-time and co-author attribution is only an exact-shipment fact, so
+    # collect_shipments_for_page resolves it for released pages below.
     resolve_pr_authors(prs)
-    resolve_first_time_contributors(prs)
-    resolve_release_attributions(prs)
     resolve_skia_links(prs)
     # Resolve the issues each PR closes (linked-issue graph ∪ body keywords,
     # cached in pr-fixed-issues.json) so data.json records them for downstream
