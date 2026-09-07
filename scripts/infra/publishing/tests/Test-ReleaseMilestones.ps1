@@ -108,11 +108,124 @@ $previousBranches = @(
     ConvertTo-ReleaseMilestone 'release/4.150.2'
     ConvertTo-ReleaseMilestone 'release/4.150.3'
 )
-$previousShipped = Get-PreviousStableBranch `
+$previousShipped = Get-PreviousShippedBranch `
     -Branches $previousBranches `
     -Version '4.151.0' `
     -Tags @('v4.150.2')
 Assert-Equal '4.150.2' $previousShipped.Title 'An unshipped stable branch became the previous release boundary.'
+
+$previewOnlyBranches = @(
+    ConvertTo-ReleaseMilestone 'release/4.151.2'
+    ConvertTo-ReleaseMilestone 'release/4.152.0-preview.1'
+    ConvertTo-ReleaseMilestone 'release/4.152.0-rc.1'
+    ConvertTo-ReleaseMilestone 'release/4.153.0-preview.1'
+    ConvertTo-ReleaseMilestone 'release/4.153.0-rc.1'
+    ConvertTo-ReleaseMilestone 'release/4.154.0-preview.1'
+)
+$previousPreviewOnly = Get-PreviousShippedBranch `
+    -Branches $previewOnlyBranches `
+    -Version '4.154.0' `
+    -Tags @(
+        'v4.151.2',
+        'v4.152.0-rc.1.26426.14',
+        'v4.153.0-preview.1.26454.6',
+        'v4.154.0-preview.1.26454.9'
+    )
+Assert-Equal '4.153.0-preview.1' $previousPreviewOnly.Title `
+    'A consecutive preview-only release line was skipped as the previous shipped boundary.'
+
+$hotfixBoundary = Get-PreviousShippedBranch `
+    -Branches @(
+        ConvertTo-ReleaseMilestone 'release/4.151.0-preview.1'
+        ConvertTo-ReleaseMilestone 'release/4.151.0'
+        ConvertTo-ReleaseMilestone 'release/4.151.1-preview.1'
+    ) `
+    -Version '4.151.1' `
+    -Tags @('v4.151.0-preview.1.1', 'v4.151.0')
+Assert-Equal '4.151.0' $hotfixBoundary.Title `
+    'Stable release ordering regressed when selecting a hotfix boundary.'
+
+$assignmentMilestones = @{
+    '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
+    '4.154.0-preview.1' = [pscustomobject] @{ number = 75; state = 'closed' }
+}
+$assignmentTags = @(
+    'v4.153.0-preview.1.26454.6',
+    'v4.154.0-preview.1.26454.9'
+)
+$pullAssignment = Get-ReleaseAssignmentPlan `
+    -Kind 'pull-request' `
+    -Number 4826 `
+    -ViaPullRequest $null `
+    -CurrentMilestone '4.154.0-preview.1' `
+    -TargetMilestone '4.153.0-preview.1' `
+    -Milestones $assignmentMilestones `
+    -Tags $assignmentTags
+Assert-Equal 'assign' $pullAssignment.Status 'A pull request could not be repaired to its first shipped milestone.'
+Assert-Equal 74 $pullAssignment.Operation.ToMilestoneNumber 'A pull request repair targeted the wrong milestone.'
+
+$issueAssignment = Get-ReleaseAssignmentPlan `
+    -Kind 'issue' `
+    -Number 1234 `
+    -ViaPullRequest 4826 `
+    -CurrentMilestone '4.154.0-preview.1' `
+    -TargetMilestone '4.153.0-preview.1' `
+    -Milestones $assignmentMilestones `
+    -Tags $assignmentTags
+Assert-Equal 'assign' $issueAssignment.Status 'A linked issue could not be repaired to its first shipped milestone.'
+Assert-Equal 4826 $issueAssignment.Operation.ViaPullRequest 'A linked issue lost its source pull request.'
+
+$unshippedRollForward = Get-ReleaseAssignmentPlan `
+    -Kind 'pull-request' `
+    -Number 2000 `
+    -ViaPullRequest $null `
+    -CurrentMilestone '4.152.0-preview.1' `
+    -TargetMilestone '4.152.0-rc.1' `
+    -Milestones @{
+        '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'open' }
+        '4.152.0-rc.1' = [pscustomobject] @{ number = 73; state = 'closed' }
+    } `
+    -Tags @('v4.152.0-rc.1.26426.14')
+Assert-Equal 'assign' $unshippedRollForward.Status `
+    'An unshipped preview could not roll forward to the next shipped milestone in its numeric line.'
+
+foreach ($unsafe in @(
+    Get-ReleaseAssignmentPlan `
+        -Kind 'pull-request' `
+        -Number 4826 `
+        -ViaPullRequest $null `
+        -CurrentMilestone '4.153.0-preview.1' `
+        -TargetMilestone '4.154.0-preview.1' `
+        -Milestones $assignmentMilestones `
+        -Tags $assignmentTags
+    Get-ReleaseAssignmentPlan `
+        -Kind 'issue' `
+        -Number 1234 `
+        -ViaPullRequest 4826 `
+        -CurrentMilestone '4.153.0-preview.1' `
+        -TargetMilestone '4.154.0-preview.1' `
+        -Milestones $assignmentMilestones `
+        -Tags $assignmentTags
+)) {
+    Assert-Equal 'blocked' $unsafe.Status `
+        'A forward move out of an earlier closed and shipped milestone was not blocked.'
+    Assert-True ($unsafe.Warning -match 'Refusing to move .* from earlier milestone') `
+        'A blocked assignment did not explain the safety invariant.'
+}
+
+$closedOnlyGuard = Get-ReleaseAssignmentPlan `
+    -Kind 'issue' `
+    -Number 4321 `
+    -ViaPullRequest 2000 `
+    -CurrentMilestone '4.152.0-preview.1' `
+    -TargetMilestone '4.153.0-preview.1' `
+    -Milestones @{
+        '4.152.0-preview.1' = [pscustomobject] @{ number = 72; state = 'closed' }
+        '4.153.0-preview.1' = [pscustomobject] @{ number = 74; state = 'closed' }
+    } `
+    -Tags @('v4.153.0-preview.1.26454.6')
+Assert-Equal 'blocked' $closedOnlyGuard.Status `
+    'A forward move out of an earlier closed milestone was not blocked without a shipped tag.'
 
 $schedule = [pscustomobject] @{
     branch_point = '2026-07-27T00:00:00Z'

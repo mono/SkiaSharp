@@ -93,12 +93,12 @@ function Get-ReleaseBranches([string] $Root, [string] $Version) {
     return [pscustomobject] @{ Selected = $selected; All = $all }
 }
 
-# Finds the latest shipped stable branch before the requested numeric line.
-function Get-PreviousStableBranch([object[]] $Branches, [string] $Version, [string[]] $Tags) {
+# Finds the latest shipped release branch before the requested numeric line.
+function Get-PreviousShippedBranch([object[]] $Branches, [string] $Version, [string[]] $Tags) {
     $target = ConvertTo-ReleaseMilestone $Version
     $candidates = $Branches |
-        Where-Object { !$_.Channel -and $_.NumericKey -lt $target.NumericKey } |
-        Sort-Object NumericKey -Descending
+        Where-Object { $_.NumericKey -lt $target.NumericKey } |
+        Sort-Object SortKey -Descending
     foreach ($candidate in $candidates) {
         if (Get-ShippedTag -Title $candidate.Title -Tags $Tags) {
             return $candidate
@@ -154,6 +154,56 @@ function Get-LinkedIssues([string] $Repository, [int] $PullRequest) {
     return @($numbers | Sort-Object)
 }
 
+# Plans one assignment and blocks forward moves out of earlier closed or shipped milestones.
+function Get-ReleaseAssignmentPlan(
+    [string] $Kind,
+    [int] $Number,
+    [object] $ViaPullRequest,
+    [string] $CurrentMilestone,
+    [string] $TargetMilestone,
+    [hashtable] $Milestones,
+    [string[]] $Tags
+) {
+    if ($CurrentMilestone -eq $TargetMilestone) {
+        return [pscustomobject] @{ Status = 'correct'; Operation = $null; Warning = $null }
+    }
+
+    $currentRelease = ConvertTo-ReleaseMilestone $CurrentMilestone
+    $targetRelease = ConvertTo-ReleaseMilestone $TargetMilestone
+    if ($currentRelease -and $targetRelease -and $currentRelease.SortKey -lt $targetRelease.SortKey) {
+        $currentState = if ($Milestones.ContainsKey($CurrentMilestone)) {
+            [string] $Milestones[$CurrentMilestone].state
+        } else {
+            ''
+        }
+        $currentTag = Get-ShippedTag -Title $currentRelease.Title -Tags $Tags
+        if ($currentState -eq 'closed' -or $currentTag) {
+            $via = if ($ViaPullRequest) { " via pull request #$ViaPullRequest" } else { '' }
+            $reason = if ($currentTag) { "shipped as $currentTag" } else { 'is closed' }
+            return [pscustomobject] @{
+                Status = 'blocked'
+                Operation = $null
+                Warning = (
+                    "Refusing to move $Kind #$Number$via from earlier milestone " +
+                    "$CurrentMilestone ($reason) to $TargetMilestone.")
+            }
+        }
+    }
+
+    return [pscustomobject] @{
+        Status = 'assign'
+        Warning = $null
+        Operation = [pscustomobject] @{
+            Kind = $Kind
+            Number = $Number
+            ViaPullRequest = $ViaPullRequest
+            FromMilestone = $CurrentMilestone
+            ToMilestone = $TargetMilestone
+            ToMilestoneNumber = [int] $Milestones[$TargetMilestone].number
+        }
+    }
+}
+
 # 1. Reconcile shipped commits, pull requests, and linked issues.
 Write-ReleaseStatus start "Release assignment reconciliation for $Version ($mode)."
 
@@ -162,13 +212,13 @@ $null = Invoke-Git -Root $root -Arguments @('fetch', 'origin', '--prune', '--tag
 $tags = Get-RemoteReleaseTags -Root $root
 $branchSet = Get-ReleaseBranches -Root $root -Version $Version
 $branches = @($branchSet.Selected)
-$previous = Get-PreviousStableBranch -Branches $branchSet.All -Version $Version -Tags $tags
+$previous = Get-PreviousShippedBranch -Branches $branchSet.All -Version $Version -Tags $tags
 $warnings = [System.Collections.Generic.List[string]]::new()
 $previousTag = if ($previous) { Get-ShippedTag -Title $previous.Title -Tags $tags } else { $null }
 if (!$previous) {
-    $warnings.Add("No previous stable release boundary exists for $Version.")
+    $warnings.Add("No previous shipped release boundary exists for $Version.")
 } elseif (!$previousTag) {
-    $warnings.Add("Previous stable release $($previous.Title) has no exact shipped tag.")
+    $warnings.Add("Previous shipped release $($previous.Title) has no exact shipped tag.")
 }
 
 # 1.2 Roll unshipped milestones forward and inspect each shipped tag range once.
@@ -212,17 +262,20 @@ foreach ($targetTitle in $targetTitles) {
         }
         $pull = Get-GitHubIssue -Repository $Repository -Number $pullRequest
         $current = [string] $pull.milestone.title
-        if ($current -eq $targetTitle) {
+        $pullPlan = Get-ReleaseAssignmentPlan `
+            -Kind 'pull-request' `
+            -Number $pullRequest `
+            -ViaPullRequest $null `
+            -CurrentMilestone $current `
+            -TargetMilestone $targetTitle `
+            -Milestones $milestones `
+            -Tags $tags
+        if ($pullPlan.Status -eq 'correct') {
             $correct++
+        } elseif ($pullPlan.Status -eq 'blocked') {
+            $warnings.Add($pullPlan.Warning)
         } else {
-            $operations.Add([pscustomobject] @{
-                Kind = 'pull-request'
-                Number = $pullRequest
-                ViaPullRequest = $null
-                FromMilestone = $current
-                ToMilestone = $targetTitle
-                ToMilestoneNumber = [int] $milestones[$targetTitle].number
-            })
+            $operations.Add($pullPlan.Operation)
         }
         foreach ($linked in Get-LinkedIssues -Repository $Repository -PullRequest $pullRequest) {
             if (!$seenIssues.Add($linked)) {
@@ -230,17 +283,20 @@ foreach ($targetTitle in $targetTitles) {
             }
             $issue = Get-GitHubIssue -Repository $Repository -Number $linked
             $linkedCurrent = [string] $issue.milestone.title
-            if ($linkedCurrent -eq $targetTitle) {
+            $issuePlan = Get-ReleaseAssignmentPlan `
+                -Kind 'issue' `
+                -Number $linked `
+                -ViaPullRequest $pullRequest `
+                -CurrentMilestone $linkedCurrent `
+                -TargetMilestone $targetTitle `
+                -Milestones $milestones `
+                -Tags $tags
+            if ($issuePlan.Status -eq 'correct') {
                 $correct++
+            } elseif ($issuePlan.Status -eq 'blocked') {
+                $warnings.Add($issuePlan.Warning)
             } else {
-                $operations.Add([pscustomobject] @{
-                    Kind = 'issue'
-                    Number = $linked
-                    ViaPullRequest = $pullRequest
-                    FromMilestone = $linkedCurrent
-                    ToMilestone = $targetTitle
-                    ToMilestoneNumber = [int] $milestones[$targetTitle].number
-                })
+                $operations.Add($issuePlan.Operation)
             }
         }
     }
