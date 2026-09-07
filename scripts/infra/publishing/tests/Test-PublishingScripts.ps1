@@ -162,6 +162,29 @@ foreach ($invalid in @('4.152.0-preview.0', '4.152.0-rc.0', '4.152.0-beta.1', '4
     Assert-Equal $invalid (Resolve-NuGetPackageVersion 'SkiaSharp' $invalid) `
         "A non-resolvable version ($invalid) was not passed through unchanged."
 }
+$releaseTopology = @(
+    'v2.88.4-preview.95',
+    'v4.150.2',
+    'v4.150.3',
+    'v4.151.0',
+    'v4.151.1',
+    'v4.151.2',
+    'v4.152.0-preview.1.1',
+    'v4.152.0-rc.1.26426.14',
+    'v4.153.0-preview.1.26454.6',
+    'v4.154.0-preview.1.26454.9',
+    'v4.154.0-gpu1'
+)
+Assert-Equal 'v4.152.0-rc.1.26426.14' `
+    (Get-PreviousShippedTag 'v4.153.0-preview.1.26454.6' $releaseTopology) `
+    'The 4.153 preview fell back past the 4.152 RC shipment.'
+Assert-Equal 'v4.153.0-preview.1.26454.6' `
+    (Get-PreviousShippedTag 'v4.154.0-preview.1.26454.9' $releaseTopology) `
+    'The 4.154 preview fell back past the 4.153 preview shipment.'
+Assert-Equal 'v4.150.2' (Get-PreviousShippedTag 'v4.150.3' $releaseTopology) `
+    'A parallel 4.150 patch did not stay on its own semantic release line.'
+Assert-Throws { Get-PreviousShippedTag 'v4.154.0-beta.1' $releaseTopology } 'not an exact' `
+    'A decorative tag was accepted as a shipment.'
 $pages = @(
     @([pscustomobject] @{ number = 1 }, [pscustomobject] @{ number = 2 }),
     @([pscustomobject] @{ number = 3 })
@@ -373,6 +396,95 @@ Assert-True ([bool] (
     $script:FakeGhCommands |
         Where-Object { $_ -match 'auto-update-issue-template-versions\.yml.*-f mode=Push' }
 )) 'Stable Finish did not dispatch the issue-template workflow in Push mode.'
+
+$script:FakeGhCommands = [System.Collections.Generic.List[string]]::new()
+$script:FakePublishedRelease = [pscustomobject] @{
+    tagName = $preview.Tag
+    name = $preview.Title
+    isDraft = $false
+    isPrerelease = $true
+    targetCommitish = '0'
+    body = 'Generated notes'
+    url = "https://github.com/mono/SkiaSharp/releases/tag/$($preview.Tag)"
+}
+function global:gh {
+    $command = $args -join ' '
+    $script:FakeGhCommands.Add($command)
+    $global:LASTEXITCODE = 0
+    if ($command -match '^release view ') {
+        return $script:FakePublishedRelease | ConvertTo-Json -Compress
+    }
+}
+$writeRemote = $true
+try {
+    $null = Publish-GitHubRelease `
+        -Release $preview `
+        -SourceCommit '0' `
+        -PreviousTag 'v4.151.2' `
+        -Existing $null
+} finally {
+    $writeRemote = $false
+    Remove-Item Function:\gh
+}
+Assert-True ([bool] (
+    $script:FakeGhCommands |
+        Where-Object {
+            $_ -match '^release create ' -and
+            $_ -match '--generate-notes' -and
+            $_ -match '--notes-start-tag v4\.151\.2'
+        }
+)) 'Finish did not give GitHub-generated notes the selected predecessor tag.'
+
+$draftRelease = [pscustomobject] @{
+    tagName = $preview.Tag
+    name = $preview.Title
+    isDraft = $true
+    isPrerelease = $true
+    targetCommitish = '0'
+    body = 'Incorrectly bounded draft notes'
+    url = "https://github.com/mono/SkiaSharp/releases/tag/$($preview.Tag)"
+}
+$script:FakeGhCommands = [System.Collections.Generic.List[string]]::new()
+$script:FakeDraftNotes = $null
+function global:gh {
+    $command = $args -join ' '
+    $script:FakeGhCommands.Add($command)
+    $global:LASTEXITCODE = 0
+    if ($command -match '^api ') {
+        return @{ body = 'Bounded generated notes' } | ConvertTo-Json -Compress
+    }
+    if ($command -match '^release edit ') {
+        $notesIndex = [Array]::IndexOf($args, '--notes-file')
+        $script:FakeDraftNotes = [IO.File]::ReadAllText($args[$notesIndex + 1])
+    }
+    if ($command -match '^release view ') {
+        return $script:FakePublishedRelease | ConvertTo-Json -Compress
+    }
+}
+$writeRemote = $true
+try {
+    $null = Publish-GitHubRelease `
+        -Release $preview `
+        -SourceCommit '0' `
+        -PreviousTag 'v4.151.2' `
+        -Existing $draftRelease
+} finally {
+    $writeRemote = $false
+    Remove-Item Function:\gh
+}
+Assert-True ([bool] (
+    $script:FakeGhCommands |
+        Where-Object {
+            $_ -match '^api .*releases/generate-notes' -and
+            $_ -match 'previous_tag_name=v4\.151\.2'
+        }
+)) 'Finish did not regenerate draft notes from the selected predecessor tag.'
+Assert-True ([bool] (
+    $script:FakeGhCommands |
+        Where-Object { $_ -match '^release edit .*--notes-file .*--draft=false' }
+)) 'Finish did not publish the regenerated draft notes.'
+Assert-Equal 'Bounded generated notes' $script:FakeDraftNotes `
+    'Finish did not replace the draft body with the bounded generated notes.'
 
 # Exercises exact-release support-tier additions and promotions.
 $supportConfig = @'

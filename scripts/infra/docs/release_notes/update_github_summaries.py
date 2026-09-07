@@ -4,8 +4,8 @@
 The release-notes workflow and skill own summary prose (headline/body) and
 this package owns Markdown structure; this script selects exact tags, expands
 deterministic links, and replaces the managed summary region of a GitHub
-Release body. On the first update it adds the managed regions around the
-existing release body; later updates preserve that body region byte-for-byte.
+Release body. Once reviewed prose exists it becomes the complete canonical body;
+GitHub-generated notes remain only until that convergence.
 It skips unpublished drafts, which converge after publication.
 
     update_github_summaries.py --event push --repository mono/SkiaSharp
@@ -263,6 +263,7 @@ def update_releases(
     client: GitHubSummaryClient,
     *,
     renderer: Callable[[dict, dict, str], str] = render_summary.render_github_release_summary,
+    dry_run: bool = False,
 ) -> UpdateResult:
     """Preflight every candidate, race-check every body, then write.
 
@@ -270,8 +271,8 @@ def update_releases(
     convention:
 
     1. **Preflight** -- fetch each release, skip it (never an error) when it
-       does not exist or is still an unpublished draft, adopt an unmarked body
-       on its first reviewed update, skip when the computed body is already
+       does not exist or is still an unpublished draft, replace an unreviewed or
+       legacy body with the canonical reviewed body, skip when it is already
        current (idempotent), else render + validate and stage a plan. Any hard
        error here aborts the WHOLE batch before a single write is sent.
     2. **Race barrier** -- immediately before the first write, re-fetch every
@@ -320,6 +321,20 @@ def update_releases(
             "preflight failed before any release update: " + "; ".join(errors)
         )
 
+    if dry_run:
+        for plan in plans:
+            result.add(
+                plan.candidate.tag,
+                "planned",
+                "would replace {}-byte release body with {}-byte reviewed body "
+                "(previous tag: {})".format(
+                    len(plan.previous_body.encode("utf-8")),
+                    len(plan.new_body.encode("utf-8")),
+                    plan.candidate.shipment.get("previous_tag") or "none",
+                ),
+            )
+        return result
+
     # Race barrier: re-read every planned release immediately before the
     # first write.
     for plan in plans:
@@ -351,7 +366,7 @@ def update_releases(
         result.add(
             plan.candidate.tag,
             "updated",
-            "managed summary replaced and verified",
+            "reviewed release body replaced and verified",
         )
     return result
 
@@ -373,6 +388,11 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument("--repository", default=common.REPO)
     parser.add_argument("--tag")
     parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="read live releases and report planned convergence without PATCH requests",
+    )
     return parser
 
 
@@ -384,7 +404,7 @@ def main(argv: list[str] | None = None) -> int:
         tag = args.tag if args.event in ("release", "workflow_dispatch") else None
         candidates = select_candidates(repository, tag=tag)
         client = github.RestGitHubClient(args.repository)
-        result = update_releases(candidates, client)
+        result = update_releases(candidates, client, dry_run=args.dry_run)
         _write_summary(result)
         return 0
     except (OSError, UpdateError) as exc:

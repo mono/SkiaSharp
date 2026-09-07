@@ -288,10 +288,12 @@ In `Push` mode, Finish:
 
 1. creates the exact `vPUBLIC_VERSION` tag at the package source commit, or
    verifies an identical existing tag;
-2. creates and publishes a GitHub-generated Release, marking previews and RCs
-   as prereleases;
-3. rejects conflicting existing tag or Release metadata; and
-4. never moves or replaces published state.
+2. selects the immediately preceding exact shipment in global semantic release
+   topology across preview, RC, stable, patch, and parallel lines;
+3. creates and publishes a GitHub-generated Release with that explicit notes
+   boundary, marking previews and RCs as prereleases;
+4. rejects conflicting existing tag or Release metadata; and
+5. never moves or replaces published state.
 
 Prerelease tags include the appended build revision. Stable tags use only the
 numeric version.

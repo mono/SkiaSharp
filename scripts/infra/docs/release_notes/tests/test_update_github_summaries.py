@@ -245,7 +245,7 @@ class SelectCandidatesTests(unittest.TestCase):
 
 class UpdateReleasesTests(unittest.TestCase):
     def setUp(self):
-        self.initial_body = GH.build_managed_body("", "## What's Changed\n* A PR by @a\n")
+        self.initial_body = GH.build_managed_body("Old reviewed summary.")
 
     def _candidate(self, **shipment_overrides):
         shipment = _shipment(**shipment_overrides)
@@ -265,18 +265,15 @@ class UpdateReleasesTests(unittest.TestCase):
         self.assertEqual([e.status for e in result.entries], ["updated"])
         self.assertEqual(len(client.writes), 1)
 
-    def test_preserves_the_generated_notes_region_byte_for_byte(self):
+    def test_replaces_an_unmarked_generated_body_with_the_reviewed_body(self):
         candidate = self._candidate()
-        client = FakeGitHubClient({candidate.tag: self.initial_body})
+        generated = "## What's Changed\n" + ("* A PR by @a\n" * 500)
+        client = FakeGitHubClient({candidate.tag: generated})
         updater.update_releases([candidate], client)
         (_, written_body) = client.writes[0]
-        start = written_body.index(GH.GENERATED_START_MARKER)
-        end = written_body.index(GH.GENERATED_END_MARKER) + len(GH.GENERATED_END_MARKER)
-        original_start = self.initial_body.index(GH.GENERATED_START_MARKER)
-        original_end = (
-            self.initial_body.index(GH.GENERATED_END_MARKER) + len(GH.GENERATED_END_MARKER)
-        )
-        self.assertEqual(written_body[start:end], self.initial_body[original_start:original_end])
+        self.assertNotIn("## What's Changed", written_body)
+        self.assertNotIn(GH.GENERATED_START_MARKER, written_body)
+        self.assertLess(len(written_body), len(generated))
 
     def test_replaces_only_the_managed_summary_region(self):
         candidate = self._candidate()
@@ -294,7 +291,7 @@ class UpdateReleasesTests(unittest.TestCase):
         self.assertEqual(result.entries[0].status, "skipped")
         self.assertEqual(client.writes, [])
 
-    def test_adopts_an_unmarked_release_and_preserves_its_body(self):
+    def test_adopts_an_unmarked_release_and_discards_temporary_generated_body(self):
         candidate = self._candidate()
         original = "Just a plain GitHub-generated release body."
         client = FakeGitHubClient({candidate.tag: original})
@@ -302,9 +299,48 @@ class UpdateReleasesTests(unittest.TestCase):
         self.assertEqual(result.entries[0].status, "updated")
         self.assertEqual(len(client.writes), 1)
         (_, written_body) = client.writes[0]
-        self.assertIn(original, written_body)
+        self.assertNotIn(original, written_body)
         self.assertIn(GH.SUMMARY_START_MARKER, written_body)
-        self.assertIn(GH.GENERATED_START_MARKER, written_body)
+        self.assertNotIn(GH.GENERATED_START_MARKER, written_body)
+
+    def test_migrates_the_v4_150_2_duplicate_legacy_shape_exactly_once(self):
+        candidate = self._candidate(
+            tag="v4.150.2",
+            core_version="4.150.2",
+            public_version="4.150.2",
+            channel="stable",
+            label="Stable",
+            previous_tag="v4.150.1",
+            changelog_url=(
+                "https://github.com/mono/SkiaSharp/compare/v4.150.1...v4.150.2"
+            ),
+        )
+        summary = updater.render_managed_summary(candidate)
+        legacy = "{}\n{}\n{}\n\n{}\n{}\n{}\n".format(
+            GH.SUMMARY_START_MARKER,
+            summary,
+            GH.SUMMARY_END_MARKER,
+            GH.GENERATED_START_MARKER,
+            summary,
+            GH.GENERATED_END_MARKER,
+        )
+        client = FakeGitHubClient({candidate.tag: legacy})
+        first = updater.update_releases([candidate], client)
+        second = updater.update_releases([candidate], client)
+        final = client.bodies[candidate.tag]
+        self.assertEqual(first.entries[0].status, "updated")
+        self.assertEqual(second.entries[0].status, "unchanged")
+        self.assertEqual(final.count("A focused preview release."), 1)
+        self.assertEqual(final.count(candidate.shipment["changelog_url"]), 1)
+        self.assertNotIn(GH.GENERATED_START_MARKER, final)
+
+    def test_dry_run_reads_and_plans_without_writing(self):
+        candidate = self._candidate()
+        client = FakeGitHubClient({candidate.tag: "## What's Changed\n* Generated\n"})
+        result = updater.update_releases([candidate], client, dry_run=True)
+        self.assertEqual(result.entries[0].status, "planned")
+        self.assertIn("previous tag: v4.150.2", result.entries[0].detail)
+        self.assertEqual(client.writes, [])
 
     def test_skips_an_unpublished_draft_without_any_patch(self):
         # Summary convergence must never edit an unpublished draft.
@@ -477,7 +513,7 @@ class MainEndToEndTests(unittest.TestCase):
 
     def test_converges_a_push_event_and_reports_success(self):
         self.fixture.write_page("4.151.0", data=_data(), prose=_prose())
-        initial_body = GH.build_managed_body("", "## What's Changed\n")
+        initial_body = GH.build_managed_body("Old summary.")
         fake_client = FakeGitHubClient({"v4.151.0-preview.1": initial_body})
         with mock.patch.object(GH, "RestGitHubClient", return_value=fake_client):
             exit_code = updater.main([

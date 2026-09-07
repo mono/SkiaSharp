@@ -1366,24 +1366,30 @@ The implementation lives under `scripts/infra/docs/release_notes/`:
 - **`update_github_summaries.py`** — the workflow's entry point. It selects every exact
   tag with both `shipments` facts and a `release_summaries` entry, and for each one:
   preflights (skip — never an error — a release that does not exist, is still an
-  unpublished draft, or is already current), adds managed regions around an
-  unmarked body, re-reads every planned release immediately before the first
+  unpublished draft, or is already current), replaces the temporary
+  GitHub-generated or legacy body with the canonical reviewed body, re-reads
+  every planned release immediately before the first
   write as a race barrier (the REST API has no conditional PATCH), writes,
   then re-reads and requires the stored body to equal the intended body
   exactly. Any preflight or race failure aborts the **whole batch** before a
-  single write.
+  single write. `--dry-run` performs the same live reads and validation but
+  reports the old and intended body sizes without sending any PATCH request.
 
 **Drafts.** `update_releases()` skips any unpublished draft and converges after
 publication. The normal Finish flow publishes directly, but retaining this guard keeps
 the updater safe around manually created or legacy drafts.
 
-**Markers.** The exact-summary package owns the four managed marker constants and
-body helpers in `scripts/infra/docs/release_notes/github.py`. Its minimal REST client
-updates only published release bodies without a `gh` CLI dependency. On the
-first reviewed update it wraps the existing GitHub-generated body in the
-generated-notes region and adds the managed summary region. Later updates
-replace only the summary region. The summary converges whenever its
-release-notes PR merges; there is no release-critical deadline for it.
+**Markers and body ownership.** The exact-summary package owns the summary marker
+pair and body helpers in `scripts/infra/docs/release_notes/github.py`. Its minimal
+REST client updates only published release bodies without a `gh` CLI dependency.
+GitHub-generated notes are temporary publication output. On the first reviewed
+update the complete body becomes the one summary region; later updates replace
+that same region exactly. The package still recognizes the retired
+`GITHUB-GENERATED-NOTES` marker pair so old four-marker bodies can migrate in one
+convergent write, but it never emits that pair. This prevents a legacy summary or
+an incorrectly bounded generated changelog from surviving beside the reviewed
+summary. The summary converges whenever its release-notes PR merges; there is no
+release-critical deadline for it.
 
 **Change detection.** Format 4 includes `shipments` and uses three distinct
 comparisons:

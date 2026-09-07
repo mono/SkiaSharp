@@ -1,11 +1,10 @@
 name: Update GitHub Release summaries
 
 # A classic, deterministic workflow -- never agentic. It only selects exact
-# tags, expands deterministic links, and adds or replaces the managed summary
-# region of a GitHub Release body (see
+# tags, expands deterministic links, and replaces a GitHub-generated or legacy
+# body with the canonical reviewed summary (see
 # scripts/infra/docs/release_notes/update_github_summaries.py). It never
-# builds/tags/publishes a release and never touches GitHub's own generated
-# notes region.
+# builds, tags, or publishes a release.
 on:
   push:
     branches: [main]

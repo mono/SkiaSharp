@@ -10,6 +10,8 @@ from urllib import error, parse, request
 
 SUMMARY_START_MARKER = "<!-- SKIASHARP:RELEASE-SUMMARY:START -->"
 SUMMARY_END_MARKER = "<!-- SKIASHARP:RELEASE-SUMMARY:END -->"
+# Read-only compatibility markers. Older updater versions wrapped the original
+# release body in this pair; current convergence validates and removes them.
 GENERATED_START_MARKER = "<!-- SKIASHARP:GITHUB-GENERATED-NOTES:START -->"
 GENERATED_END_MARKER = "<!-- SKIASHARP:GITHUB-GENERATED-NOTES:END -->"
 
@@ -31,49 +33,58 @@ class ReleaseInfo:
     url: str
 
 
-def _marker_positions(body: str) -> tuple[int, int, int, int] | None:
-    markers = (
-        SUMMARY_START_MARKER,
-        SUMMARY_END_MARKER,
-        GENERATED_START_MARKER,
-        GENERATED_END_MARKER,
-    )
-    counts = [body.count(marker) for marker in markers]
-    if counts == [0, 0, 0, 0]:
-        return None
-    if counts != [1, 1, 1, 1]:
+def _marker_state(body: str) -> str:
+    summary_counts = [
+        body.count(SUMMARY_START_MARKER),
+        body.count(SUMMARY_END_MARKER),
+    ]
+    generated_counts = [
+        body.count(GENERATED_START_MARKER),
+        body.count(GENERATED_END_MARKER),
+    ]
+    if summary_counts == [0, 0] and generated_counts == [0, 0]:
+        return "unmanaged"
+    if summary_counts != [1, 1]:
         raise GitHubError("release body has incomplete or duplicate managed markers")
-    positions = tuple(body.index(marker) for marker in markers)
-    if not positions[0] < positions[1] < positions[2] < positions[3]:
+    summary_start = body.index(SUMMARY_START_MARKER)
+    summary_end = body.index(SUMMARY_END_MARKER)
+    if summary_start >= summary_end:
         raise GitHubError("release body managed markers are out of order")
-    return positions
+    if generated_counts == [0, 0]:
+        return "managed"
+    if generated_counts != [1, 1]:
+        raise GitHubError("release body has incomplete or duplicate managed markers")
+    generated_start = body.index(GENERATED_START_MARKER)
+    generated_end = body.index(GENERATED_END_MARKER)
+    if not summary_start < summary_end < generated_start < generated_end:
+        raise GitHubError("release body managed markers are out of order")
+    return "legacy"
 
 
 def has_managed_markers(body: str) -> bool:
-    return _marker_positions(body) is not None
+    return _marker_state(body) != "unmanaged"
 
 
-def build_managed_body(summary: str, existing_body: str) -> str:
-    preserved = existing_body
-    separator = "" if not preserved or preserved.endswith("\n") else "\n"
-    return "{}\n{}\n{}\n\n{}\n{}{}{}\n".format(
+def build_managed_body(summary: str) -> str:
+    return "{}\n{}\n{}\n".format(
         SUMMARY_START_MARKER,
         summary.strip(),
         SUMMARY_END_MARKER,
-        GENERATED_START_MARKER,
-        preserved,
-        separator,
-        GENERATED_END_MARKER,
     )
 
 
 def replace_managed_summary(body: str, summary: str) -> str:
-    positions = _marker_positions(body)
-    if positions is None:
-        return build_managed_body(summary, body)
-    summary_start, summary_end, _, _ = positions
-    owned_start = summary_start + len(SUMMARY_START_MARKER)
-    return body[:owned_start] + "\n" + summary.strip() + "\n" + body[summary_end:]
+    """Return the one canonical reviewed body.
+
+    GitHub-generated notes are useful only until reviewed prose is available.
+    Once a summary is reviewed, this package owns the complete body so legacy
+    summaries, duplicate links, and incorrectly bounded generated changelogs
+    cannot survive beside it. ``_marker_state`` still rejects malformed marker
+    contracts before convergence.
+    """
+
+    _marker_state(body)
+    return build_managed_body(summary)
 
 
 class RestGitHubClient:

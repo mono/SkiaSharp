@@ -35,9 +35,10 @@ checked after approval. The equivalent local commands are:
 An abbreviated prerelease identity must resolve to exactly one public SkiaSharp
 package version. The `Push` run reads that package's source commit, creates the
 immutable exact NuGet version tag at that commit, publishes a GitHub-generated
-Release, opens or updates the released line's support-tier PR, and dispatches
-release-note generation. Run **Release - Milestones** separately when milestone
-reconciliation is needed.
+Release whose generated notes start at the immediately preceding exact shipment
+in global release topology, opens or updates the released line's support-tier
+PR, and dispatches release-note generation. Run **Release - Milestones**
+separately when milestone reconciliation is needed.
 
 Always present the dry-run and obtain confirmation before `-Mode Push`. Never move
 or delete a tag, replace a published release, or substitute a newer package.

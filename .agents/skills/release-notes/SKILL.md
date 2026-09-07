@@ -221,12 +221,11 @@ heading, the ❤️ credit and the PR links.
 This slot writes for a **different reader and a different surface** than
 everything above: instead of the website page, it converges the reviewed
 **GitHub Release** summary for one exact tag. A separate deterministic
-updater (`scripts/infra/docs/release_notes/update_github_summaries.py`) folds
-each entry into the managed `<!-- SKIASHARP:RELEASE-SUMMARY -->` region of
-that exact tag's GitHub Release, next to GitHub's own generated notes — which
-it never touches. A release ships immediately with GitHub-generated notes
-only; this slot's prose converges later, whenever this PR merges. There is no
-release-critical deadline for it.
+updater (`scripts/infra/docs/release_notes/update_github_summaries.py`) renders
+each entry as the complete managed `<!-- SKIASHARP:RELEASE-SUMMARY -->` body
+of that exact tag's GitHub Release. A release ships immediately with temporary
+GitHub-generated notes; this reviewed prose replaces them whenever its PR
+merges. There is no release-critical deadline for it.
 
 `data.shipments` (format 4+, present only on a **released** page) lists every
 exact tag this page rolls up — a preview, an rc, and/or the stable release

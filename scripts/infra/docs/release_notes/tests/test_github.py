@@ -80,17 +80,28 @@ class RestGitHubClientTests(unittest.TestCase):
             github.RestGitHubClient("../SkiaSharp", token="secret")
 
     def test_marker_helpers_reject_partial_or_duplicate_contracts(self):
-        body = github.build_managed_body("", "notes")
+        body = github.build_managed_body("summary")
         self.assertTrue(github.has_managed_markers(body))
-        replaced = github.replace_managed_summary(body, "summary")
-        self.assertIn("summary", replaced)
-        self.assertIn("notes", replaced)
+        replaced = github.replace_managed_summary(body, "new summary")
+        self.assertIn("new summary", replaced)
+        self.assertNotIn("\nsummary\n", replaced)
         adopted = github.replace_managed_summary("plain release notes", "summary")
         self.assertIn("summary", adopted)
-        self.assertIn("plain release notes", adopted)
+        self.assertNotIn("plain release notes", adopted)
         self.assertTrue(github.has_managed_markers(adopted))
         with self.assertRaises(github.GitHubError):
             github.has_managed_markers(body + github.SUMMARY_START_MARKER)
+
+    def test_migrates_legacy_generated_notes_wrapper_to_one_managed_region(self):
+        legacy = "{}\nold summary\n{}\n\n{}\nold generated notes\n{}\n".format(
+            github.SUMMARY_START_MARKER,
+            github.SUMMARY_END_MARKER,
+            github.GENERATED_START_MARKER,
+            github.GENERATED_END_MARKER,
+        )
+        migrated = github.replace_managed_summary(legacy, "reviewed summary")
+        self.assertEqual(migrated, github.build_managed_body("reviewed summary"))
+        self.assertNotIn(github.GENERATED_START_MARKER, migrated)
 
 
 if __name__ == "__main__":

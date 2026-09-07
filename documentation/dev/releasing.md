@@ -146,7 +146,8 @@ update, and follow-up workflows. After the push run, verify:
 
 - the immutable exact-version tag was created or verified at the package's
   source commit;
-- the GitHub Release is published with the correct prerelease state;
+- the GitHub Release is published with the correct prerelease state and its
+  generated changelog starts at the preceding exact shipment shown in the plan;
 - the support state was already correct or the release-support PR was opened
   or updated; and
 - release-note generation was dispatched.
