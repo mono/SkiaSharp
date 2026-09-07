@@ -1,0 +1,149 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 4.155.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 4.155.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.155.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-41550">Version 4.155.0</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:5 version:4.155.0 -->
+
+<blockquote>
+<p><strong>Skia m155 preview</strong> · <a href="https://www.nuget.org/packages/SkiaSharp/4.155.0-preview.2.26479.13">NuGet (prerelease)</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="4.155.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/14.4.0/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 4.155.0 previews Skia m155 with updated HarfBuzz and GLES interop. It disables RAW and DNG decoding, updates HarfBuzz to 14.4.0, and incorporates current m155 renderer fixes.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<ul>
+<li><strong>RAW and DNG decoding disabled</strong> — The bundled codec no longer decodes RAW or DNG images. Decode these formats with a dedicated library and provide a supported raster image to SkiaSharp instead. (<a href="https://github.com/mono/SkiaSharp/pull/5162">#5162</a>)</li>
+</ul>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>Skia updated to milestone m155</strong> — The bundled renderer moves to Chrome milestone 155 and includes the latest upstream bug-fix sync. (<a href="https://github.com/mono/SkiaSharp/pull/5081">#5081</a>, <a href="https://github.com/mono/SkiaSharp/pull/5196">#5196</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>Pointer-based GLES interop</strong> — GLES interop signatures use pointer-based forms for direct native interoperation. (<a href="https://github.com/mono/SkiaSharp/pull/5155">#5155</a>)</li>
+</ul>
+<h2 id="lifecycle--internals">Lifecycle &amp; Internals</h2>
+<ul>
+<li><strong>HarfBuzz updated to 14.4.0</strong> — Updates the bundled HarfBuzz engine and its corresponding HarfBuzzSharp release. (<a href="https://github.com/mono/SkiaSharp/pull/5135">#5135</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-1440">HarfBuzzSharp 14.4.0</h2>
+<p>Updates the bundled HarfBuzz engine and HarfBuzzSharp release to version 14.4.0.</p>
+<h2 id="preview-2-september-29-2026">Preview 2 (September 29, 2026)</h2>
+<p>Preview 2 added the HarfBuzz 14.4.0 update, pointer-based GLES interop, m155 bug fixes, and disabled RAW and DNG decoding.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.155.0-preview.1.26471.14...v4.155.0-preview.2.26479.13">Full changelog</a></p>
+<h2 id="preview-1-september-22-2026">Preview 1 (September 22, 2026)</h2>
+<p>Preview 1 opened the m155 line with the Skia milestone update.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.154.0-rc.1.26479.14...v4.155.0-preview.1.26471.14">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.155.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · 2c10114
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
