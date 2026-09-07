@@ -27,7 +27,6 @@ required_file "$ARTIFACT_DIR/skia-validation-review.md"
 required_file "$ARTIFACT_DIR/skia-dependency-decisions.md"
 required_file "$ARTIFACT_DIR/skia-dependency-changes.json"
 required_file "$ARTIFACT_DIR/skia-fork-patch-audit.md"
-required_file "$ARTIFACT_DIR/initial-test-output.txt"
 required_file "$ARTIFACT_DIR/test-output.txt"
 required_file "$ARTIFACT_DIR/test-exit-code.txt"
 

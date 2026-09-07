@@ -10,6 +10,8 @@ revision or enabled state changed and whose final state is enabled remain a
 Phase 07 reconciliation because they come from each dependency's own metadata.
 """
 
+from __future__ import annotations
+
 import argparse
 import ast
 import json
@@ -42,6 +44,24 @@ TRACKED_SKIA_DEPENDENCIES = {
 
 class DependencyReviewRequired(RuntimeError):
     pass
+
+
+def write_text(path: Path, content: str) -> None:
+    with path.open("w", encoding="utf-8", newline="") as output:
+        output.write(content)
+
+
+def require_native_milestone(path: Path, expected: int, upstream_ref: str) -> None:
+    content = path.read_text(encoding="utf-8-sig")
+    match = re.search(r"^#define\s+SK_MILESTONE\s+(\d+)\s*$", content, re.MULTILINE)
+    if not match:
+        raise RuntimeError(f"Could not read SK_MILESTONE from {path}.")
+    actual = int(match.group(1))
+    if actual != expected:
+        raise RuntimeError(
+            f"{path} defines SK_MILESTONE {actual}, expected {expected} for {upstream_ref}. "
+            "Commit an evidence-backed fork adaptation before the native build."
+        )
 
 
 def run_git(cwd: Path, *args: str) -> str:
@@ -401,8 +421,12 @@ def update_versions(
     pipeline_path = repo_root / "scripts" / "azure-templates-variables.yml"
     cgmanifest_path = repo_root / "cgmanifest.json"
     sk_types_path = repo_root / "externals" / "skia" / "include" / "c" / "sk_types.h"
+    sk_milestone_path = (
+        repo_root / "externals" / "skia" / "include" / "core" / "SkMilestone.h"
+    )
     skia_root = repo_root / "externals" / "skia"
 
+    require_native_milestone(sk_milestone_path, target, upstream_ref)
     submodule_hash = run_git(skia_root, "rev-parse", "HEAD")
     upstream_hash = run_git(
         skia_root,
@@ -535,18 +559,18 @@ def update_versions(
         ):
             raise RuntimeError("SKIASHARP_VERSION does not match the target NuGet version.")
 
-        versions_path.write_text(versions, encoding="utf-8", newline="")
-        pipeline_path.write_text(pipeline, encoding="utf-8", newline="")
-        sk_types_path.write_text(sk_types, encoding="utf-8", newline="")
+        write_text(versions_path, versions)
+        write_text(pipeline_path, pipeline)
+        write_text(sk_types_path, sk_types)
 
-    cgmanifest_path.write_text(
+    write_text(
+        cgmanifest_path,
         json.dumps(cgmanifest, indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-        newline="",
     )
     if artifact_dir:
         artifact_dir.mkdir(parents=True, exist_ok=True)
-        (artifact_dir / "skia-dependency-changes.json").write_text(
+        write_text(
+            artifact_dir / "skia-dependency-changes.json",
             json.dumps(
                 {
                     "baseSkiaSha": skia_base_sha,
@@ -556,8 +580,6 @@ def update_versions(
                 indent=2,
             )
             + "\n",
-            encoding="utf-8",
-            newline="",
         )
 
     if dependency_changes:
