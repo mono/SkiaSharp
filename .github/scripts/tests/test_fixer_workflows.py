@@ -59,11 +59,9 @@ class FixerWorkflowSafetyTests(unittest.TestCase):
         )
         triggers = workflow["on"]
         for event in ("pull_request", "push"):
-            with self.subTest(event=event):
-                self.assertIn(
-                    ".github/workflows/*.md",
-                    triggers[event]["paths"],
-                )
+            for path in (".github/workflows/*.md", ".github/workflows/*.yml"):
+                with self.subTest(event=event, path=path):
+                    self.assertIn(path, triggers[event]["paths"])
 
     def test_source_stages_all_dry_run_triggers(self):
         for workflow in FIXER_WORKFLOWS:
