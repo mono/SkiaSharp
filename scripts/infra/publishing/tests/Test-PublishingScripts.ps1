@@ -116,7 +116,7 @@ Assert-True ($milestoneParameters -contains 'Count' -and $milestoneParameters -c
     'The milestone updater must expose its modes through Mode only.'
 Assert-True ($auditParameters -contains 'Version' -and $auditParameters -contains 'Discover' -and
     $auditParameters -contains 'MaxAge' -and $auditParameters -contains 'Quiet' -and
-    $auditParameters -contains 'Json' -and
+    $auditParameters -contains 'Json' -and $auditParameters -contains 'IncludeMilestoneAssignments' -and
     $auditParameters -notcontains 'Push' -and $auditParameters -notcontains 'Mode' -and
     $auditParameters -notcontains 'Apply') `
     'The release-state audit must expose read-only target selection and no mutation mode.'
@@ -127,6 +127,9 @@ Assert-True ($auditScript.Contains('Get-RemoteBranches') -and
     $auditScript.Contains('Get-NuGetPackageVersions') -and
     $auditScript.Contains('Get-MaestroReleaseReceiptForBranch') -and
     $auditScript.Contains('Get-MaestroReleaseReceipt') -and
+    $auditScript.Contains('IncludeMilestoneAssignments') -and
+    $auditScript -match 'if \(\$IncludeMilestoneAssignments -and \$powerShell\)' -and
+    $auditScript -match "State 'skipped'" -and
     $auditScript.Contains('Invoke-OwnerCheck') -and
     $auditScript -notmatch 'ReleaseAudit\.Common|release_state_audit\.py') `
     'The release-state audit must coordinate owner checks without snapshot parsing.'

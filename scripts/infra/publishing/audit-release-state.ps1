@@ -21,6 +21,9 @@
 
 .PARAMETER Json
     Emit the compact machine-readable result instead of the status table.
+
+.PARAMETER IncludeMilestoneAssignments
+    Include the potentially long-running PR and issue milestone reconciliation.
 #>
 [CmdletBinding()]
 param(
@@ -37,7 +40,9 @@ param(
 
     [switch] $Quiet,
 
-    [switch] $Json
+    [switch] $Json,
+
+    [switch] $IncludeMilestoneAssignments
 )
 
 $ErrorActionPreference = 'Stop'
@@ -354,7 +359,15 @@ if ($script:ShowAuditProgress) {
     }
     Write-Host '[matched] shared checks:'
     foreach ($core in @($targets.Core | Sort-Object -Unique)) {
-        Write-Host "  - ${core}: website and assignments"
+        $checks = if ($IncludeMilestoneAssignments) {
+            'Website release notes and Release - Milestone assignments'
+        } else {
+            'Website release notes'
+        }
+        Write-Host "  - ${core}: $checks"
+    }
+    if (!$IncludeMilestoneAssignments) {
+        Write-Host '  - matched cores: Release - Milestone assignments skipped (pass -IncludeMilestoneAssignments)'
     }
     Write-Host '  - all: milestones'
 }
@@ -444,7 +457,7 @@ foreach ($core in @($targets.Core | Sort-Object -Unique)) {
     }
 }
 $cores = @($targets.Core | Sort-Object -Unique)
-if ($powerShell) {
+if ($IncludeMilestoneAssignments -and $powerShell) {
     $assignmentArguments = @(
         '-NoLogo',
         '-NoProfile',
@@ -461,6 +474,18 @@ if ($powerShell) {
         -Executable $powerShell `
         -Arguments $assignmentArguments `
         -WorkingDirectory $root))
+} elseif (!$IncludeMilestoneAssignments) {
+    $assignmentTarget = "$($cores.Count) matched core(s)"
+    $results.Add((New-AuditResult `
+        -Target $assignmentTarget `
+        -Phase 'Release - Milestone assignments' `
+        -State 'skipped' `
+        -Code 0 `
+        -Output 'Skipped by default; rerun with -IncludeMilestoneAssignments.'))
+    Write-AuditProgress `
+        -State 'skipped' `
+        -Target $assignmentTarget `
+        -Phase 'Release - Milestone assignments'
 }
 if ($powerShell) {
     $results.Add((Invoke-OwnerCheck `
@@ -478,9 +503,10 @@ $exitCode = if (@($results | Where-Object Code -eq 2).Count) {
 } else {
     0
 }
+$hasSkippedChecks = @($results | Where-Object State -eq 'skipped').Count -gt 0
 if ($Json) {
     [pscustomobject] @{ exitCode = $exitCode; results = @($results) } | ConvertTo-Json -Depth 5
-} elseif (!$Quiet -or $exitCode -ne 0) {
+} elseif (!$Quiet -or $exitCode -ne 0 -or $hasSkippedChecks) {
     $results | Format-Table Target, Phase, State, Elapsed -AutoSize | Out-Host
     foreach ($result in $results | Where-Object { $_.Code -ne 0 }) {
         if ($result.Output) {

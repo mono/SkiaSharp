@@ -66,6 +66,7 @@ topology.
 ./scripts/infra/publishing/audit-release-state.ps1 -Discover
 ./scripts/infra/publishing/audit-release-state.ps1 -Version '4.150.*'
 ./scripts/infra/publishing/audit-release-state.ps1 -Version '4.15*'
+./scripts/infra/publishing/audit-release-state.ps1 -Version '4.153.*' -IncludeMilestoneAssignments
 ```
 
 The report identifies the owner of each phase: Prepare checks paired branches,
@@ -80,6 +81,11 @@ unavailable. By default, the audit prints the wildcard's matched targets and a
 start/finish line for every phase before the final summary. `-Quiet` suppresses
 a fully clean report, and `-Json` emits the same aggregate status and raw owner
 findings for automation.
+
+PR and issue milestone assignment reconciliation can take several minutes for
+large historical wildcard ranges, so it is opt-in. Add
+`-IncludeMilestoneAssignments` when that check is needed; otherwise the report
+shows it as skipped while still running fast milestone maintenance.
 
 The checks run in release order: **Prepare**, **BAR/channel**, **public
 Finish**, **GitHub summary**, **website notes**, **milestone assignments**, and
