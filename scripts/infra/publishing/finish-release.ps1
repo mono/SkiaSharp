@@ -239,9 +239,20 @@ $requestedVersion = $Version
 if ($isCheck) {
     try {
         $findings = [System.Collections.Generic.List[string]]::new()
-        $Version = Resolve-NuGetPackageVersion -PackageId 'SkiaSharp' -Version $Version
-        $release = Get-ReleaseIdentity -PublicVersion $Version
-        $packageSource = Get-NuGetPackageSource -PackageId 'SkiaSharp' -PackageVersion $Version
+        $publication = Get-NuGetPublicationReceipt -Version $Version
+        if ($publication.State -ne 'complete') {
+            [Console]::Error.WriteLine($publication.Message)
+            if ($publication.State -eq 'unavailable') {
+                exit 2
+            }
+            exit 1
+        }
+        $Version = $publication.Value.Version
+        $release = $publication.Value.Release
+        $packageSource = [pscustomobject] @{
+            Branch = $publication.Value.Branch
+            Commit = $publication.Value.Commit
+        }
         if ($packageSource.Branch -ne $release.Branch) {
             $findings.Add("SkiaSharp $Version names $($packageSource.Branch), expected $($release.Branch).")
         }

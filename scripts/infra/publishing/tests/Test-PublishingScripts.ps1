@@ -127,6 +127,7 @@ Assert-True ($auditScript.Contains('Get-RemoteBranches') -and
     $auditScript.Contains('Get-NuGetPackageVersions') -and
     $auditScript.Contains('Get-MaestroReleaseReceiptForBranch') -and
     $auditScript.Contains('Get-MaestroReleaseReceipt') -and
+    $auditScript.Contains('Get-NuGetPublicationReceipt') -and
     $auditScript.Contains('IncludeMilestoneAssignments') -and
     $auditScript -match 'if \(\$IncludeMilestoneAssignments -and \$powerShell\)' -and
     $auditScript -match "State 'skipped'" -and

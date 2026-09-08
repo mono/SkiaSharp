@@ -70,9 +70,10 @@ topology.
 ```
 
 The report identifies the owner of each phase: Prepare checks paired branches,
-Finish checks public package/tag/Release/support state, the release-note tools
-check committed facts and rendering, and `Maestro.Common.psm1` checks BAR
-provenance and `.NET Libraries` channel membership. The
+`Maestro.Common.psm1` checks BAR provenance and `.NET Libraries` channel
+membership, Published to NuGet.org checks the external publication receipt, and
+Finish checks the tag, GitHub Release, and support state after publication. The
+release-note tools check committed facts and rendering. The
 reconciliation and milestone scripts check GitHub planning. The coordinator
 does not invoke the pre-publication `release-testing` system. No phase mutates
 state. Exit `0` means all checks are complete, `1` means pending or inconsistent
@@ -87,12 +88,14 @@ large historical wildcard ranges, so it is opt-in. Add
 `-IncludeMilestoneAssignments` when that check is needed; otherwise the report
 shows it as skipped while still running fast milestone maintenance.
 
-The checks run in release order: **Prepare**, **BAR/channel**, **public
-Finish**, **GitHub summary**, **website notes**, **milestone assignments**, and
-**milestone maintenance**. BAR receipt lookup starts from an exact public
-package version so it never guesses among builds. For a branch-only release,
-the audit resolves that branch's exact BAR reference and verifies the matching
-Darc asset before checking the still-pending public Finish boundary.
+The checks run in release order: **Release - Prepare**, **Maestro BAR and
+channel**, **Published to NuGet.org**, **Release - Finish**, **GitHub Release
+summary**, **Website release notes**, **Release - Milestone assignments**, and
+**Release - Milestone maintenance**. BAR receipt lookup starts from an exact
+public package version so it never guesses among builds. For a branch-only
+release, the audit resolves that branch's exact BAR reference and verifies the
+matching Darc asset before checking the still-pending NuGet publication
+boundary.
 
 ## 1. Prepare the release branches
 

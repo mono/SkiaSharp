@@ -241,6 +241,57 @@ function Invoke-MaestroCheck(
         -Details $details
 }
 
+function Invoke-NuGetPublicationCheck(
+    [string] $Target,
+    [string] $Version,
+    [string] $ExpectedBranch = '',
+    [string] $ExpectedCommit = ''
+) {
+    $phase = 'Published to NuGet.org'
+    Write-AuditProgress -State 'checking' -Target $Target -Phase $phase
+    $stopwatch = [Diagnostics.Stopwatch]::StartNew()
+    try {
+        $receipt = Get-NuGetPublicationReceipt `
+            -Version $Version `
+            -ExpectedBranch $ExpectedBranch `
+            -ExpectedCommit $ExpectedCommit
+        $state = $receipt.State
+        $code = switch ($state) {
+            'complete' { 0 }
+            'unavailable' { 2 }
+            default { 1 }
+        }
+        $output = $receipt.Message
+        $details = $receipt.Value
+        $detail = if ($state -eq 'complete') {
+            "$($details.Version); $($details.Branch)@$($details.Commit.Substring(0, 12))"
+        } else {
+            ''
+        }
+    } catch {
+        $state = 'unavailable'
+        $code = 2
+        $output = $_.Exception.Message
+        $details = $null
+        $detail = ''
+    }
+    $stopwatch.Stop()
+    Write-AuditProgress `
+        -State $state `
+        -Target $Target `
+        -Phase $phase `
+        -ElapsedSeconds $stopwatch.Elapsed.TotalSeconds `
+        -Detail $detail
+    return New-AuditResult `
+        -Target $Target `
+        -Phase $phase `
+        -State $state `
+        -Code $code `
+        -Output $output `
+        -ElapsedSeconds $stopwatch.Elapsed.TotalSeconds `
+        -Details $details
+}
+
 $root = Get-GitRepositoryRoot -Path $PSScriptRoot
 $versionsPath = Join-Path $root 'scripts/infra/docs/versions.json'
 try {
@@ -405,32 +456,64 @@ foreach ($release in @($releasesByTitle.Values | Sort-Object SortKey)) {
     $releaseTargets = @($targets | Where-Object Title -eq $release.Title)
     $releasePublicTargets = @($releaseTargets | Where-Object PublicVersion)
     if (!$releasePublicTargets.Count) {
-        $results.Add((Invoke-MaestroCheck `
+        $maestroCheck = Invoke-MaestroCheck `
             -Target $release.Title `
             -Version '' `
             -BarId 0 `
             -MaxAge $MaxAge `
-            -Branch "release/$($release.Title)"))
+            -Branch "release/$($release.Title)"
+        $results.Add($maestroCheck)
+        $publishedVersion = if ($maestroCheck.Details) {
+            $maestroCheck.Details.SkiaSharpVersion
+        } else {
+            $release.Title
+        }
+        $publicationCheck = Invoke-NuGetPublicationCheck `
+            -Target $release.Title `
+            -Version $publishedVersion `
+            -ExpectedBranch "release/$($release.Title)" `
+            -ExpectedCommit $(if ($maestroCheck.Details) { $maestroCheck.Details.SourceCommit } else { '' })
+        $results.Add($publicationCheck)
         if ($powerShell) {
-            $results.Add((Invoke-OwnerCheck `
-                -Target $release.Title `
-                -Phase 'Release - Finish (public package)' `
-                -Executable $powerShell `
-                -Arguments @('-NoLogo', '-NoProfile', '-File', (Join-Path $PSScriptRoot 'finish-release.ps1'), '-Version', $release.Title, '-Mode', 'Check') `
-                -WorkingDirectory $root))
+            if ($publicationCheck.State -eq 'complete') {
+                $results.Add((Invoke-OwnerCheck `
+                    -Target $release.Title `
+                    -Phase 'Release - Finish' `
+                    -Executable $powerShell `
+                    -Arguments @('-NoLogo', '-NoProfile', '-File', (Join-Path $PSScriptRoot 'finish-release.ps1'), '-Version', $publicationCheck.Details.Version, '-Mode', 'Check') `
+                    -WorkingDirectory $root))
+            } else {
+                $results.Add((New-AuditResult `
+                    -Target $release.Title `
+                    -Phase 'Release - Finish' `
+                    -State 'waiting' `
+                    -Code 0 `
+                    -Output 'Waiting for Published to NuGet.org.'))
+                Write-AuditProgress `
+                    -State 'waiting' `
+                    -Target $release.Title `
+                    -Phase 'Release - Finish'
+            }
         }
     }
     foreach ($target in $releasePublicTargets) {
-        $results.Add((Invoke-MaestroCheck `
+        $maestroCheck = Invoke-MaestroCheck `
             -Target $target.Value `
             -Version $target.PublicVersion `
             -BarId $BarId `
             -MaxAge $MaxAge `
-            -Branch "release/$($release.Title)"))
+            -Branch "release/$($release.Title)"
+        $results.Add($maestroCheck)
+        $publicationCheck = Invoke-NuGetPublicationCheck `
+            -Target $target.Value `
+            -Version $target.PublicVersion `
+            -ExpectedBranch "release/$($release.Title)" `
+            -ExpectedCommit $(if ($maestroCheck.Details) { $maestroCheck.Details.SourceCommit } else { '' })
+        $results.Add($publicationCheck)
         if ($powerShell) {
             $results.Add((Invoke-OwnerCheck `
                 -Target $target.Value `
-                -Phase 'Release - Finish (public package)' `
+                -Phase 'Release - Finish' `
                 -Executable $powerShell `
                 -Arguments @('-NoLogo', '-NoProfile', '-File', (Join-Path $PSScriptRoot 'finish-release.ps1'), '-Version', $target.PublicVersion, '-Mode', 'Check') `
                 -WorkingDirectory $root))
@@ -503,12 +586,12 @@ $exitCode = if (@($results | Where-Object Code -eq 2).Count) {
 } else {
     0
 }
-$hasSkippedChecks = @($results | Where-Object State -eq 'skipped').Count -gt 0
+$hasDeferredChecks = @($results | Where-Object { $_.State -in @('skipped', 'waiting') }).Count -gt 0
 if ($Json) {
     [pscustomobject] @{ exitCode = $exitCode; results = @($results) } | ConvertTo-Json -Depth 5
-} elseif (!$Quiet -or $exitCode -ne 0 -or $hasSkippedChecks) {
+} elseif (!$Quiet -or $exitCode -ne 0 -or $hasDeferredChecks) {
     $results | Format-Table Target, Phase, State, Elapsed -AutoSize | Out-Host
-    foreach ($result in $results | Where-Object { $_.Code -ne 0 }) {
+    foreach ($result in $results | Where-Object { $_.Code -ne 0 -or $_.State -in @('skipped', 'waiting') }) {
         if ($result.Output) {
             Write-Output "[$($result.Target):$($result.Phase)]"
             Write-Output $result.Output

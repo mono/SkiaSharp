@@ -274,6 +274,58 @@ function Resolve-NuGetPackageVersion([string] $PackageId, [string] $Version) {
     return $versionsFound[0]
 }
 
+# Verifies that one expected release package is public and has the expected source provenance.
+function Get-NuGetPublicationReceipt(
+    [string] $Version,
+    [string] $ExpectedBranch = '',
+    [string] $ExpectedCommit = ''
+) {
+    try {
+        $publicVersion = Resolve-NuGetPackageVersion -PackageId 'SkiaSharp' -Version $Version
+        $release = Get-ReleaseIdentity -PublicVersion $publicVersion
+        $source = Get-NuGetPackageSource -PackageId 'SkiaSharp' -PackageVersion $publicVersion
+    } catch {
+        $message = $_.Exception.Message
+        if ($message -match '404|not found|must match exactly one public NuGet version; found none') {
+            return [pscustomobject] @{
+                State = 'pending'
+                Message = "SkiaSharp $Version is not published to NuGet.org."
+                Value = $null
+            }
+        }
+        if ($message -match 'must match exactly one public NuGet version; found') {
+            return [pscustomobject] @{
+                State = 'pending'
+                Message = "NuGet publication is ambiguous: $message"
+                Value = $null
+            }
+        }
+        return [pscustomobject] @{
+            State = 'unavailable'
+            Message = "NuGet publication check unavailable: $message"
+            Value = $null
+        }
+    }
+
+    $findings = [System.Collections.Generic.List[string]]::new()
+    if ($ExpectedBranch -and $source.Branch -ne $ExpectedBranch) {
+        $findings.Add("SkiaSharp $publicVersion names $($source.Branch), expected $ExpectedBranch.")
+    }
+    if ($ExpectedCommit -and $source.Commit -ne $ExpectedCommit) {
+        $findings.Add("SkiaSharp $publicVersion is built from $($source.Commit), expected $ExpectedCommit.")
+    }
+    return [pscustomobject] @{
+        State = if ($findings.Count) { 'pending' } else { 'complete' }
+        Message = $findings -join ' '
+        Value = [pscustomobject] @{
+            Version = $publicVersion
+            Release = $release
+            Branch = $source.Branch
+            Commit = $source.Commit
+        }
+    }
+}
+
 # Reads the repository branch and commit from one public NuGet nuspec.
 function Get-NuGetPackageSource([string] $PackageId, [string] $PackageVersion) {
     $lowerId = $PackageId.ToLowerInvariant()
@@ -539,6 +591,7 @@ Export-ModuleMember -Function @(
     'Get-ReleaseIdentity',
     'Get-NuGetPackageVersions',
     'Resolve-NuGetPackageVersion',
+    'Get-NuGetPublicationReceipt',
     'Get-NuGetPackageSource',
     'Invoke-GitHubMutation',
     'Push-ReleaseTag',
