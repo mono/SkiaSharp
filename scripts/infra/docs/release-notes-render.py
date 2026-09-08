@@ -475,6 +475,25 @@ def format_schedule_date(iso):
     return "{} {}".format(_MONTH_ABBR[int(month) - 1], int(day))
 
 
+def sort_navigation_entries(entries):
+    # type: (list[tuple[str, bool]]) -> list[tuple[str, bool]]
+    """Sort one minor line's pages: unreleased first, then semantic descending.
+
+    An unreleased head is the current page for its line, even when a stable page
+    has the same core or the head is the next servicing patch. Sorting by version
+    first retains semantic descending order inside each status partition.
+    """
+    by_version = sorted(entries, key=lambda entry: version_key(entry[0]), reverse=True)
+    return sorted(by_version, key=lambda entry: not entry[1])
+
+
+def navigation_href(entry):
+    # type: (tuple[str, bool]) -> str
+    """Return the release-notes path for a sorted navigation entry."""
+    version, is_unreleased = entry
+    return "{}{}.md".format(version, "-unreleased" if is_unreleased else "")
+
+
 def _toc_folded_section(title, groups, stable_groups, unreleased_groups):
     # type: (str, list[str], dict, dict) -> list[str]
     """Render a collapsed parent TOC node nesting its minor groups (spec §3.5).
@@ -489,21 +508,21 @@ def _toc_folded_section(title, groups, stable_groups, unreleased_groups):
     out = []  # type: list[str]
     if not groups:
         return out
-    head_members = stable_groups.get(groups[0]) or unreleased_groups.get(groups[0])
-    head = ("{}.md".format(head_members[0]) if groups[0] in stable_groups
-            else "{}-unreleased.md".format(head_members[0]))
+    head_entries = sort_navigation_entries(
+        [(v, True) for v in unreleased_groups.get(groups[0], [])] +
+        [(v, False) for v in stable_groups.get(groups[0], [])])
+    head = navigation_href(head_entries[0])
     out.append("- name: {}".format(title))
     out.append("  href: {}".format(head))
     out.append("  items:")
     for g in groups:
         stable = stable_groups.get(g, [])
         unreleased = unreleased_groups.get(g, [])
-        entries = [(v, True) for v in unreleased] + [(v, False) for v in stable]
+        entries = sort_navigation_entries(
+            [(v, True) for v in unreleased] + [(v, False) for v in stable])
         if not entries:
             continue
-        entries.sort(key=lambda t: version_key(t[0]), reverse=True)
-        g_header = ("{}.md".format(stable[0]) if stable
-                    else "{}-unreleased.md".format(unreleased[0]))
+        g_header = navigation_href(entries[0])
         out.append("    - name: Version {}.x".format(g))
         out.append("      href: {}".format(g_header))
         if len(entries) > 1:
@@ -558,13 +577,12 @@ def generate_toc(versions, next_versions):
     for g in supported:
         stable = stable_groups.get(g, [])
         unreleased = unreleased_groups.get(g, [])
-        header = "{}.md".format(stable[0]) if stable \
-            else "{}-unreleased.md".format(unreleased[0])
+        entries = sort_navigation_entries(
+            [(v, True) for v in unreleased] + [(v, False) for v in stable])
+        header = navigation_href(entries[0])
         lines.append("- name: Version {}.x".format(g))
         lines.append("  href: {}".format(header))
         lines.append("  items:")
-        entries = [(v, True) for v in unreleased] + [(v, False) for v in stable]
-        entries.sort(key=lambda t: version_key(t[0]), reverse=True)
         for v, is_unrel in entries:
             if is_unrel:
                 lines.append("    - name: Version {} (Unreleased)".format(v))
@@ -621,7 +639,7 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
 
     def render_group(g, with_label):
         # type: (str, bool) -> list[str]
-        members = sorted(minor_map[g], key=lambda t: version_key(t[0]), reverse=True)
+        members = sort_navigation_entries(minor_map[g])
         label = channels.get(g)
         if with_label and label:
             out = ["- **Version {}.x** — {}".format(g, label)]
@@ -646,7 +664,7 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
         Prefers the newest *released* page; falls back to the newest unreleased
         page when a line has shipped no stable page yet (spec §3.5).
         """
-        members = sorted(minor_map[g], key=lambda t: version_key(t[0]), reverse=True)
+        members = sort_navigation_entries(minor_map[g])
         released = [(v, u) for v, u in members if not u]
         v, is_unrel = released[0] if released else members[0]
         if is_unrel:

@@ -718,6 +718,10 @@ not a HarfBuzzSharp release index. Both aggregates are assembled by
 timeline reads the Chrome schedule from the committed `releases/_sources/index.json`
 that `release-notes-index.py` wrote during Prepare.
 
+Within every minor line in both aggregates, an unreleased page always precedes all
+released pages, including when it has the same core as a released page or is the next
+servicing patch. Released pages then appear in descending semantic-version order.
+
 ##### Support tiers (the `support` block)
 
 Both `TOC.yml` and `index.md` are organised by a **support tier** so the navigation
