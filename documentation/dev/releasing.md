@@ -50,6 +50,44 @@ Prepare, Finish, and Milestones use the same two-dispatch pattern: first run
 with `push` unchecked to review a read-only plan, then run again with identical
 inputs and `push` checked.
 
+## Audit release state
+
+The read-only coordinator delegates each release phase to the script or module
+that owns it. `-Version` accepts one literal PowerShell wildcard matched against
+real release identities and exact public package versions. For example, use
+`4.15*` for all 4.15x releases, `4.150.*` for one servicing family, or one
+exact package version. Quote wildcards when the calling shell expands `*`.
+`-Discover` inventories real SkiaSharp `release/*` branches, exact remote
+release tags, and public NuGet package versions. Broad inventory respects
+`history_floor.skiasharp`; the audit never invents an expected release
+topology.
+
+```powershell
+./scripts/infra/publishing/audit-release-state.ps1 -Discover
+./scripts/infra/publishing/audit-release-state.ps1 -Version '4.150.*'
+./scripts/infra/publishing/audit-release-state.ps1 -Version '4.15*'
+```
+
+The report identifies the owner of each phase: Prepare checks paired branches,
+Finish checks public package/tag/Release/support state, the release-note tools
+check committed facts and rendering, and `Maestro.Common.psm1` checks BAR
+provenance and `.NET Libraries` channel membership. The
+reconciliation and milestone scripts check GitHub planning. The coordinator
+does not invoke the pre-publication `release-testing` system. No phase mutates
+state. Exit `0` means all checks are complete, `1` means pending or inconsistent
+state, and `2` means a required service, credential, or prerequisite is
+unavailable. By default, the audit prints the wildcard's matched targets and a
+start/finish line for every phase before the final summary. `-Quiet` suppresses
+a fully clean report, and `-Json` emits the same aggregate status and raw owner
+findings for automation.
+
+The checks run in release order: **Prepare**, **BAR/channel**, **public
+Finish**, **GitHub summary**, **website notes**, **milestone assignments**, and
+**milestone maintenance**. BAR receipt lookup starts from an exact public
+package version so it never guesses among builds. For a branch-only release,
+the audit resolves that branch's exact BAR reference and verifies the matching
+Darc asset before checking the still-pending public Finish boundary.
+
 ## 1. Prepare the release branches
 
 Open

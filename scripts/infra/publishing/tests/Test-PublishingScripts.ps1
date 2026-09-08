@@ -6,18 +6,22 @@ $PSNativeCommandUseErrorActionPreference = $true
 $publishingRoot = Split-Path $PSScriptRoot
 $gitCommonPath = Join-Path $publishingRoot 'Git.Common.psm1'
 $gitHubCommonPath = Join-Path $publishingRoot 'GitHub.Common.psm1'
+$maestroCommonPath = Join-Path $publishingRoot 'Maestro.Common.psm1'
 $commonPath = Join-Path $publishingRoot 'Publishing.Common.psm1'
 $preparePath = Join-Path $publishingRoot 'prepare-release.ps1'
 $finishPath = Join-Path $publishingRoot 'finish-release.ps1'
 $bugTemplatePath = Join-Path $publishingRoot 'update-bug-template.ps1'
 $reconcilePath = Join-Path $publishingRoot 'reconcile-release-assignments.ps1'
 $milestonesPath = Join-Path $publishingRoot 'update-release-milestones.ps1'
+$auditPath = Join-Path $publishingRoot 'audit-release-state.ps1'
 $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '../../../..')
 $prepareWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-prepare.yml'
 $finishWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-finish.yml'
+$milestonesWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-milestones.yml'
 
 Import-Module $gitCommonPath -Force
 Import-Module $gitHubCommonPath -Force
+Import-Module $maestroCommonPath -Force
 Import-Module $commonPath -Force
 $script:TestsRun = 0
 
@@ -92,20 +96,40 @@ $finishParameters = (Get-Command $finishPath).Parameters.Keys
 $bugTemplateParameters = (Get-Command $bugTemplatePath).Parameters.Keys
 $reconcileParameters = (Get-Command $reconcilePath).Parameters.Keys
 $milestoneParameters = (Get-Command $milestonesPath).Parameters.Keys
-Assert-True ($prepareParameters -contains 'Mode' -and
+$auditCommand = Get-Command $auditPath
+$auditParameters = $auditCommand.Parameters.Keys
+Assert-True ($prepareParameters -contains 'Mode' -and $prepareParameters -notcontains 'Check' -and
     $prepareParameters -notcontains 'Apply' -and $prepareParameters -notcontains 'Push') `
-    'Prepare must expose only the three-state Mode parameter.'
-Assert-True ($finishParameters -contains 'Mode' -and
+    'Prepare must expose Check through its Mode parameter only.'
+Assert-True ($finishParameters -contains 'Mode' -and $finishParameters -notcontains 'Check' -and
     $finishParameters -notcontains 'Apply' -and $finishParameters -notcontains 'Push') `
-    'Finish must expose only the three-state Mode parameter.'
+    'Finish must expose Check through its Mode parameter only.'
 Assert-True ($bugTemplateParameters -contains 'Mode' -and
     $bugTemplateParameters -notcontains 'Apply' -and $bugTemplateParameters -notcontains 'Push') `
     'The bug-template updater must expose only the three-state Mode parameter.'
-Assert-True ($reconcileParameters -contains 'Version' -and $reconcileParameters -contains 'Push' -and
-    $reconcileParameters -notcontains 'Apply') 'Assignment reconciliation must expose Version and Push but not Apply.'
-Assert-True ($milestoneParameters -contains 'Count' -and $milestoneParameters -contains 'Push' -and
+Assert-True ($reconcileParameters -contains 'Version' -and $reconcileParameters -contains 'Mode' -and
+    $reconcileParameters -notcontains 'Push' -and $reconcileParameters -notcontains 'Check' -and
+    $reconcileParameters -notcontains 'Apply') 'Assignment reconciliation must expose its modes through Mode only.'
+Assert-True ($milestoneParameters -contains 'Count' -and $milestoneParameters -contains 'Mode' -and
+    $milestoneParameters -notcontains 'Push' -and $milestoneParameters -notcontains 'Check' -and
     $milestoneParameters -notcontains 'Apply' -and $milestoneParameters -notcontains 'Version') `
-    'The milestone updater must expose Count and Push but not Apply or Version.'
+    'The milestone updater must expose its modes through Mode only.'
+Assert-True ($auditParameters -contains 'Version' -and $auditParameters -contains 'Discover' -and
+    $auditParameters -contains 'MaxAge' -and $auditParameters -contains 'Quiet' -and
+    $auditParameters -contains 'Json' -and
+    $auditParameters -notcontains 'Push' -and $auditParameters -notcontains 'Mode' -and
+    $auditParameters -notcontains 'Apply') `
+    'The release-state audit must expose read-only target selection and no mutation mode.'
+Assert-Equal 'System.String' $auditCommand.Parameters['Version'].ParameterType.FullName `
+    'The release-state audit Version parameter must be one literal wildcard string.'
+$auditScript = Get-Content $auditPath -Raw
+Assert-True ($auditScript.Contains('Get-RemoteBranches') -and
+    $auditScript.Contains('Get-NuGetPackageVersions') -and
+    $auditScript.Contains('Get-MaestroReleaseReceiptForBranch') -and
+    $auditScript.Contains('Get-MaestroReleaseReceipt') -and
+    $auditScript.Contains('Invoke-OwnerCheck') -and
+    $auditScript -notmatch 'ReleaseAudit\.Common|release_state_audit\.py') `
+    'The release-state audit must coordinate owner checks without snapshot parsing.'
 Assert-RejectsApply $reconcilePath @('-Version', '4.152.0')
 Assert-RejectsApply $milestonesPath @()
 foreach ($workflowPath in @($prepareWorkflowPath, $finishWorkflowPath)) {
@@ -118,6 +142,10 @@ foreach ($workflowPath in @($prepareWorkflowPath, $finishWorkflowPath)) {
     Assert-True ($workflow.Contains("MODE: `${{ inputs.push && 'Push' || 'DryRun' }}")) `
         "$workflowName does not map its push checkbox to DryRun or Push."
 }
+$milestonesWorkflow = Get-Content $milestonesWorkflowPath -Raw
+Assert-True ($milestonesWorkflow.Contains("MODE: `${{ inputs.push && 'Push' || 'DryRun' }}") -and
+    $milestonesWorkflow -notmatch '\$arguments\.Push') `
+    'The milestone workflow does not map its push checkbox through Mode.'
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
 $commonScript = Get-Content $commonPath -Raw
 Assert-True ($commonScript -match '--force-with-lease') `
@@ -162,6 +190,188 @@ foreach ($invalid in @('4.152.0-preview.0', '4.152.0-rc.0', '4.152.0-beta.1', '4
     Assert-Equal $invalid (Resolve-NuGetPackageVersion 'SkiaSharp' $invalid) `
         "A non-resolvable version ($invalid) was not passed through unchanged."
 }
+$script:NuGetCatalogueUri = $null
+function global:Invoke-RestMethod {
+    param([string] $Uri)
+    $script:NuGetCatalogueUri = $Uri
+    return [pscustomobject] @{
+        versions = @(
+            '4.153.0-preview.1.26454.6',
+            '4.153.0-preview.1.26454.7'
+        )
+    }
+}
+try {
+    Assert-Equal @(
+        '4.153.0-preview.1.26454.6',
+        '4.153.0-preview.1.26454.7'
+    ) @(Get-NuGetPackageVersions 'SkiaSharp') `
+        'The shared NuGet catalogue reader did not return all public versions.'
+    Assert-True ($script:NuGetCatalogueUri -match '/skiasharp/index\.json$') `
+        'The shared NuGet catalogue reader did not use the SkiaSharp flat container.'
+} finally {
+    Remove-Item Function:\Invoke-RestMethod
+}
+$releaseMilestone = ConvertTo-ReleaseMilestone '4.153.0-preview.1'
+Assert-Equal '4.153.0' $releaseMilestone.Numeric `
+    'Release milestone parsing did not retain the numeric release core.'
+
+# The coordinator must retain every exact shipment and select only the
+# identities explicitly named by a PowerShell wildcard.
+Invoke-Expression (Get-ScriptFunctionText $auditPath)
+$auditKnown = @(
+    New-AuditTarget (ConvertTo-ReleaseMilestone '4.152.0-preview.1') '4.152.0-preview.1.26426.14'
+    New-AuditTarget (ConvertTo-ReleaseMilestone '4.153.0-preview.1') $null
+    New-AuditTarget (ConvertTo-ReleaseMilestone '4.153.0-preview.1') '4.153.0-preview.1.26454.6'
+    New-AuditTarget (ConvertTo-ReleaseMilestone '4.153.0-preview.1') '4.153.0-preview.1.26454.7'
+    New-AuditTarget (ConvertTo-ReleaseMilestone '4.153.0-rc.1') '4.153.0-rc.1.26455.1'
+    New-AuditTarget (ConvertTo-ReleaseMilestone '4.153.0') '4.153.0'
+    New-AuditTarget (ConvertTo-ReleaseMilestone '4.153.0.1') '4.153.0.1'
+    New-AuditTarget (ConvertTo-ReleaseMilestone '4.154.0-preview.1') '4.154.0-preview.1.26456.1'
+)
+Assert-Equal @(
+    '4.153.0-preview.1',
+    '4.153.0-preview.1.26454.6',
+    '4.153.0-preview.1.26454.7',
+    '4.153.0-rc.1.26455.1',
+    '4.153.0',
+    '4.153.0.1'
+) @((Get-AuditTargetMatches $auditKnown '4.153.*').Value) `
+    'A literal wildcard did not expand all matching release identities.'
+Assert-Equal 8 @(Get-AuditTargetMatches $auditKnown '4.15*').Count `
+    'A broad literal wildcard did not select all matching release identities.'
+Assert-Equal @('4.153.0-preview.1.26454.6') @(
+    (Get-AuditTargetMatches $auditKnown '4.153.0-preview.1.26454.6').Value
+) 'An exact public shipment selected another build.'
+$auditTargets = @{}
+$floor = ConvertTo-ReleaseMilestone '4.153.0'
+foreach ($target in $auditKnown) {
+    Add-AuditTarget $auditTargets $target.Release $target.PublicVersion $floor
+}
+Assert-Equal 7 $auditTargets.Count `
+    'The audit did not preserve all in-scope exact shipments or exclude the pre-floor release.'
+Assert-True ($auditTargets.ContainsKey('public:4.153.0-preview.1.26454.6') -and
+    $auditTargets.ContainsKey('public:4.153.0-preview.1.26454.7')) `
+    'The audit collapsed multiple exact public builds into one target.'
+$barAssets = @(
+    [pscustomobject] @{
+        name = 'SkiaSharp'
+        version = '4.153.0-preview.1.26454.6'
+        build = [pscustomobject] @{
+            id = 123
+            branch = 'refs/heads/release/4.153.0-preview.1'
+            commit = ('a' * 40) -join ''
+            released = $false
+            channels = @('.NET Libraries')
+            buildNumber = '4.153.0-preview.1.26454.6'
+            buildLink = 'https://example.invalid/build/123'
+        }
+        locations = @('https://pkgs.dev.azure.com/dnceng/public/_packaging/test/nuget/v3/index.json')
+    }
+)
+$barBuild = Resolve-MaestroReleaseBuild `
+    -Assets $barAssets `
+    -Version '4.153.0-preview.1.26454.6' `
+    -BarId 0
+Assert-Equal 'complete' $barBuild.State 'A unique promoted BAR was not selected.'
+Assert-Equal 'release/4.153.0-preview.1' $barBuild.Value.Branch `
+    'A BAR source branch was not normalized.'
+Assert-Equal $false $barBuild.Value.IsReleased `
+    'The BAR receipt incorrectly treats the unrelated released flag as channel promotion.'
+Assert-Equal 'complete' (Resolve-MaestroReleaseBuild `
+    -Assets $barAssets `
+    -Version '4.153.0-preview.1.26454.6' `
+    -BarId 0 `
+    -ExpectedBranch 'release/4.153.0-preview.1' `
+    -ExpectedCommit $barAssets[0].build.commit).State `
+    'A BAR matching its release branch tip was rejected.'
+$mismatchedBar = Resolve-MaestroReleaseBuild `
+    -Assets $barAssets `
+    -Version '4.153.0-preview.1.26454.6' `
+    -BarId 0 `
+    -ExpectedBranch 'release/4.153.0-preview.1' `
+    -ExpectedCommit (('b' * 40) -join '')
+Assert-Equal 'pending' $mismatchedBar.State `
+    'A BAR at a different commit was accepted for the release branch tip.'
+Assert-True ($mismatchedBar.Message -match 'release/4\.153\.0-preview\.1@a{40}' -and
+    $mismatchedBar.Message -match 'release/4\.153\.0-preview\.1@b{40}') `
+    'A branch-tip mismatch did not name both Darc and expected commits.'
+Assert-Equal 'pending' (Resolve-MaestroReleaseBuild `
+    -Assets @() `
+    -Version '4.153.0-preview.1.26454.6' `
+    -BarId 0).State 'A missing BAR was not reported as pending release state.'
+$unchanneledAssets = @(
+    [pscustomobject] @{
+        name = $barAssets[0].name
+        version = $barAssets[0].version
+        build = [pscustomobject] @{
+            id = $barAssets[0].build.id
+            branch = $barAssets[0].build.branch
+            commit = $barAssets[0].build.commit
+            released = $true
+            channels = @()
+        }
+        locations = $barAssets[0].locations
+    }
+)
+Assert-Equal 'pending' (Resolve-MaestroReleaseBuild `
+    -Assets $unchanneledAssets `
+    -Version '4.153.0-preview.1.26454.6' `
+    -BarId 0).State 'A BAR outside the .NET Libraries channel was accepted as a release receipt.'
+$barPackages = @(
+    [pscustomobject] @{
+        Id = 'SkiaSharp'
+        Branch = 'release/4.153.0-preview.1'
+        Commit = ('a' * 40) -join ''
+    }
+    [pscustomobject] @{
+        Id = 'SkiaSharp.HarfBuzz'
+        Branch = 'release/4.153.0-preview.1'
+        Commit = ('a' * 40) -join ''
+    }
+    [pscustomobject] @{
+        Id = 'HarfBuzzSharp'
+        Branch = 'release/4.153.0-preview.1'
+        Commit = ('a' * 40) -join ''
+    }
+)
+Assert-Equal 'complete' (Test-MaestroPackageSources `
+    -Build $barBuild.Value `
+    -Packages $barPackages).State 'Matching BAR package sources were rejected.'
+$barPackages[2].Commit = ('b' * 40) -join ''
+Assert-Equal 'pending' (Test-MaestroPackageSources `
+    -Build $barBuild.Value `
+    -Packages $barPackages).State 'A mismatched BAR package source was accepted.'
+$testPowerShell = Get-Command pwsh -CommandType Application |
+    Select-Object -First 1 -ExpandProperty Source
+$completeOwnerCheck = Invoke-OwnerCheck `
+    -Target 'test' `
+    -Phase 'owner' `
+    -Executable $testPowerShell `
+    -Arguments @('-NoLogo', '-NoProfile', '-Command', 'exit 0') `
+    -WorkingDirectory $repositoryRoot
+Assert-Equal 0 $completeOwnerCheck.Code `
+    'The audit coordinator did not preserve a completed child process status.'
+$pendingOwnerCheck = Invoke-OwnerCheck `
+    -Target 'test' `
+    -Phase 'owner' `
+    -Executable $testPowerShell `
+    -Arguments @('-NoLogo', '-NoProfile', '-Command', 'exit 1') `
+    -WorkingDirectory $repositoryRoot
+Assert-Equal 'pending' $pendingOwnerCheck.State `
+    'The audit coordinator did not preserve a pending child process status.'
+$script:ShowAuditProgress = $true
+$progressRecords = @(Invoke-OwnerCheck `
+    -Target 'test' `
+    -Phase 'owner' `
+    -Executable $testPowerShell `
+    -Arguments @('-NoLogo', '-NoProfile', '-Command', 'exit 0') `
+    -WorkingDirectory $repositoryRoot 6>&1)
+$script:ShowAuditProgress = $false
+$progressText = $progressRecords -join "`n"
+Assert-True ($progressText -match '\[checking\] test: owner' -and
+    $progressText -match '\[complete\] test: owner') `
+    'The audit coordinator did not report child-check progress.'
 $releaseTopology = @(
     'v2.88.4-preview.95',
     'v4.150.2',
@@ -190,6 +400,31 @@ $pages = @(
     @([pscustomobject] @{ number = 3 })
 )
 Assert-Equal @(1, 2, 3) @((Expand-GitHubPages $pages).number) 'GitHub pages were not flattened.'
+
+$script:ReleaseViewArguments = @()
+function global:gh {
+    $script:ReleaseViewArguments = @($args)
+    $global:LASTEXITCODE = 0
+    [pscustomobject]@{
+        tagName = 'v4.153.0-preview.1.26454.6'
+        name = 'Version 4.153.0 (Preview 1)'
+        isDraft = $true
+        isPrerelease = $true
+        targetCommitish = 'f82c5845d7ee6e5ba415cec351d8ec640fb0fd8c'
+        body = 'Draft body'
+        url = 'https://example.invalid/release'
+    } | ConvertTo-Json -Compress
+}
+try {
+    $draftRelease = Get-GitHubRelease `
+        -Repository 'mono/SkiaSharp' `
+        -Tag 'v4.153.0-preview.1.26454.6'
+} finally {
+    Remove-Item Function:\gh
+}
+Assert-Equal $true $draftRelease.isDraft 'GitHub release reads must preserve draft state for the audit.'
+Assert-True (($script:ReleaseViewArguments -join ' ') -match '--json .*isDraft') `
+    'GitHub release reads did not request draft state.'
 
 $script:FakeGhCalls = 0
 function global:gh {
@@ -673,3 +908,4 @@ try {
 }
 
 Write-Output "All $script:TestsRun publishing script tests passed."
+$global:LASTEXITCODE = 0

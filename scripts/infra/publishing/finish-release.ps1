@@ -15,7 +15,8 @@
 
 .PARAMETER Mode
     DryRun is read-only, Apply writes the proposed support update locally, and
-    Push publishes the tag, release, support PR, and follow-up workflows.
+    Push publishes the tag, release, support PR, and follow-up workflows. Check
+    quietly validates durable public release completion without making changes.
 #>
 
 [CmdletBinding()]
@@ -23,7 +24,7 @@ param(
     [Parameter(Mandatory)]
     [string] $Version,
 
-    [ValidateSet('DryRun', 'Apply', 'Push')]
+    [ValidateSet('DryRun', 'Apply', 'Push', 'Check')]
     [string] $Mode = 'DryRun'
 )
 
@@ -34,6 +35,7 @@ Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
 $writeRemote = $Mode -eq 'Push'
+$isCheck = $Mode -eq 'Check'
 $modeDescription = $Mode.ToLowerInvariant()
 $root = Get-GitRepositoryRoot -Path $PSScriptRoot
 $repository = $ReleaseRepository
@@ -234,6 +236,65 @@ The publishing tests cover preview, RC, stable promotion, idempotency, multiple 
 # 1. Resolve the exact public release.
 # 1.1 Resolve an abbreviated prerelease identity to one public NuGet version.
 $requestedVersion = $Version
+if ($isCheck) {
+    try {
+        $findings = [System.Collections.Generic.List[string]]::new()
+        $Version = Resolve-NuGetPackageVersion -PackageId 'SkiaSharp' -Version $Version
+        $release = Get-ReleaseIdentity -PublicVersion $Version
+        $packageSource = Get-NuGetPackageSource -PackageId 'SkiaSharp' -PackageVersion $Version
+        if ($packageSource.Branch -ne $release.Branch) {
+            $findings.Add("SkiaSharp $Version names $($packageSource.Branch), expected $($release.Branch).")
+        }
+        $tagSha = Get-RemoteTagSha -Root $root -Remote origin -Tag $release.Tag
+        if (!$tagSha) {
+            $findings.Add("Missing tag $($release.Tag).")
+        } elseif ($tagSha -ne $packageSource.Commit) {
+            $findings.Add("$($release.Tag) points to $tagSha, expected $($packageSource.Commit).")
+        }
+        $githubRelease = Get-GitHubRelease -Repository $repository -Tag $release.Tag
+        if (!$githubRelease) {
+            $findings.Add("Missing GitHub Release $($release.Tag).")
+        } else {
+            try {
+                Assert-GitHubRelease -Release $release -GitHubRelease $githubRelease
+                if ($githubRelease.isDraft) {
+                    $findings.Add("GitHub Release $($release.Tag) is still a draft.")
+                }
+                if ([string] $githubRelease.targetCommitish -ne $packageSource.Commit) {
+                    $findings.Add("GitHub Release $($release.Tag) targets $($githubRelease.targetCommitish), expected $($packageSource.Commit).")
+                }
+            } catch {
+                $findings.Add($_.Exception.Message)
+            }
+        }
+        $support = (Get-GitFileText `
+            -Root $root `
+            -Commit 'HEAD' `
+            -Path 'scripts/infra/docs/versions.json') | ConvertFrom-Json
+        $line = ($release.Numeric -split '\.')[0..1] -join '.'
+        $tiers = if ($release.IsPrerelease) { @($support.support.preview) + @($support.support.stable) } else { @($support.support.stable) }
+        if ($tiers -notcontains $line) {
+            $findings.Add("$line is missing from the committed release support tier.")
+        }
+        if ($findings.Count) {
+            $findings | Write-Output
+            exit 1
+        }
+        exit 0
+    } catch {
+        $message = $_.Exception.Message
+        if ($message -match '404|not found|must match exactly one public NuGet version; found none') {
+            [Console]::Error.WriteLine("SkiaSharp $Version is not public on NuGet.org.")
+            exit 1
+        }
+        if ($message -match 'must match exactly one public NuGet version; found') {
+            [Console]::Error.WriteLine("Release finish check incomplete: $message")
+            exit 1
+        }
+        [Console]::Error.WriteLine("Release finish check unavailable: $message")
+        exit 2
+    }
+}
 Write-Host "Finishing $requestedVersion ($modeDescription)"
 $Version = Resolve-NuGetPackageVersion -PackageId 'SkiaSharp' -Version $Version
 if ($Version -ne $requestedVersion) {

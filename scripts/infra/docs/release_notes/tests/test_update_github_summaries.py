@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import contextlib
+import io
 import sys
 import tempfile
 import unittest
@@ -56,6 +58,34 @@ class FakeGitHubClient:
         self.writes.append((tag, body))
         if tag not in self.fail_write_tags:
             self.bodies[tag] = body
+
+
+class GhCliReleaseClientTests(unittest.TestCase):
+    @mock.patch.object(updater.subprocess, "run")
+    def test_reads_a_release_through_gh(self, run):
+        run.return_value = mock.Mock(
+            returncode=0,
+            stdout=json.dumps({
+                "tagName": "v4.151.0-preview.1",
+                "name": "Version 4.151.0 (Preview 1)",
+                "isPrerelease": True,
+                "targetCommitish": "a" * 40,
+                "body": "Reviewed summary",
+                "url": "https://example.invalid/release",
+            }),
+            stderr="",
+        )
+
+        release = updater.GhCliReleaseClient("mono/SkiaSharp").get_release(
+            "v4.151.0-preview.1"
+        )
+
+        self.assertEqual(release.tag_name, "v4.151.0-preview.1")
+        self.assertTrue(release.is_prerelease)
+        self.assertEqual(
+            run.call_args.args[0][:4],
+            ["gh", "release", "view", "v4.151.0-preview.1"],
+        )
 
 
 def _shipment(**overrides):
@@ -291,6 +321,34 @@ class UpdateReleasesTests(unittest.TestCase):
             shipment=shipment,
         )
 
+    def test_check_requires_an_exact_canonical_live_body(self):
+        candidate = self._candidate()
+        repository = mock.Mock()
+        repository.history_floor.return_value = None
+        with mock.patch.object(updater, "select_candidates", return_value=[candidate]):
+            body = GH.replace_managed_summary(
+                self.initial_body, updater.render_managed_summary(candidate)
+            )
+            client = FakeGitHubClient({candidate.tag: body})
+            updater.check_release(repository, client, candidate.tag)
+            self.assertEqual(client.writes, [])
+
+    def test_check_reports_a_missing_release_without_writing(self):
+        candidate = self._candidate()
+        repository = mock.Mock()
+        with mock.patch.object(updater, "select_candidates", return_value=[candidate]):
+            with self.assertRaisesRegex(updater.UpdateError, "does not exist"):
+                updater.check_release(repository, FakeGitHubClient(), candidate.tag)
+
+    def test_check_reports_a_stale_body_without_writing(self):
+        candidate = self._candidate()
+        repository = mock.Mock()
+        with mock.patch.object(updater, "select_candidates", return_value=[candidate]):
+            client = FakeGitHubClient({candidate.tag: "legacy body"})
+            with self.assertRaisesRegex(updater.UpdateError, "canonical replacement"):
+                updater.check_release(repository, client, candidate.tag)
+            self.assertEqual(client.writes, [])
+
     def test_updates_a_marked_release_and_reports_updated(self):
         candidate = self._candidate()
         client = FakeGitHubClient({candidate.tag: self.initial_body})
@@ -504,6 +562,40 @@ class MainEndToEndTests(unittest.TestCase):
             ])
         self.assertEqual(exit_code, 0)
         self.assertEqual(len(fake_client.writes), 1)
+
+    def test_check_is_quiet_when_the_exact_body_is_canonical(self):
+        self.fixture.write_page("4.151.0", data=_data(), prose=_prose())
+        candidate = updater.select_candidates(
+            updater.RepositoryView(self.fixture.root), tag="v4.151.0-preview.1"
+        )[0]
+        body = GH.replace_managed_summary(
+            GH.build_managed_body("Old summary."),
+            updater.render_managed_summary(candidate),
+        )
+        fake_client = FakeGitHubClient({candidate.tag: body})
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with mock.patch.object(updater, "GhCliReleaseClient", return_value=fake_client), \
+                contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            exit_code = updater.main([
+                "--check", "--tag", candidate.tag, "--root", str(self.fixture.root),
+            ])
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(stderr.getvalue(), "")
+
+    def test_check_classifies_malformed_legacy_markers_as_incomplete(self):
+        self.fixture.write_page("4.151.0", data=_data(), prose=_prose())
+        malformed_body = "{}\nold summary\n{}".format(
+            GH.SUMMARY_START_MARKER, GH.SUMMARY_START_MARKER
+        )
+        fake_client = FakeGitHubClient({"v4.151.0-preview.1": malformed_body})
+        with mock.patch.object(updater, "GhCliReleaseClient", return_value=fake_client), \
+                contextlib.redirect_stderr(io.StringIO()):
+            exit_code = updater.main([
+                "--check", "--tag", "v4.151.0-preview.1",
+                "--root", str(self.fixture.root),
+            ])
+        self.assertEqual(exit_code, 1)
 
     def test_reports_a_nonzero_exit_and_writes_a_summary_on_failure(self):
         self.fixture.write_page("4.151.0", data=_data(format_version=3), prose=_prose())

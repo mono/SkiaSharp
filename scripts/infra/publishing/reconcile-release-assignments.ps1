@@ -5,26 +5,27 @@
     Reconciles merged pull requests and linked issues to shipped release milestones.
 
 .PARAMETER Version
-    The released numeric SkiaSharp version, such as 4.153.0 or 4.153.0.1.
+    One or more released numeric SkiaSharp versions, such as 4.153.0 or
+    4.153.0.1.
 
 .PARAMETER Repository
     The GitHub repository whose release assignments are maintained.
 
-.PARAMETER Push
-    Performs GitHub milestone assignments. Without this switch, the script is
-    read-only and reports exact skipped mutations.
+.PARAMETER Mode
+    DryRun reports planned assignment changes, Push applies them, and Check
+    quietly returns whether the calculated plan has work remaining.
 #>
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [ValidatePattern('^\d+\.\d+\.\d+(?:\.\d+)?$')]
-    [string] $Version,
+    [string[]] $Version,
 
     [ValidatePattern('^[^/]+/[^/]+$')]
     [string] $Repository = 'mono/SkiaSharp',
 
-    [switch] $Push
+    [ValidateSet('DryRun', 'Push', 'Check')]
+    [string] $Mode = 'DryRun'
 )
 
 # 0. Initialize shared helpers, execution mode, and repository state.
@@ -33,9 +34,24 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
-$writeRemote = $Push
-$mode = if ($writeRemote) { 'push' } else { 'dry run' }
+$writeRemote = $Mode -eq 'Push'
+$isCheck = $Mode -eq 'Check'
+$mode = $Mode.ToLowerInvariant()
 $root = Get-GitRepositoryRoot
+$releaseVersions = @(
+    foreach ($value in $Version) {
+        foreach ($item in $value -split ',') {
+            if (![string]::IsNullOrWhiteSpace($item)) {
+                $item.Trim()
+            }
+        }
+    }
+)
+if (!$releaseVersions.Count -or @(
+    $releaseVersions | Where-Object { $_ -notmatch '^\d+\.\d+\.\d+(?:\.\d+)?$' }
+).Count) {
+    throw '-Version must contain one or more numeric release versions.'
+}
 
 # Reads one pull request.
 function Get-GitHubPullRequest([string] $Repository, [int] $Number) {
@@ -571,7 +587,9 @@ function Set-PlannedReleaseAssignment(
 }
 
 # 1. Reconcile shipped commits, pull requests, and linked issues.
-Write-ReleaseStatus start "Release assignment reconciliation for $Version ($mode)."
+if (!$isCheck) {
+    Write-ReleaseStatus start "Release assignment reconciliation for $($releaseVersions -join ', ') ($mode)."
+}
 
 # 1.1 Refresh release refs and identify shipped milestones in release order.
 $null = Invoke-Git -Root $root -Arguments @('fetch', 'origin', '--prune', '--tags')
@@ -579,14 +597,20 @@ $tags = Get-RemoteReleaseTags -Root $root
 $warnings = [System.Collections.Generic.List[string]]::new()
 $shippedReleases = @(Get-ShippedReleases -Tags $tags)
 $pullRequestOwners = Get-ReleasePullRequestOwners -Root $root -Releases $shippedReleases
-$branches = @(Get-ReleaseMilestones `
-    -Root $root `
-    -Version $Version `
-    -ShippedReleases $shippedReleases)
-
 # 1.2 Roll unshipped milestones forward and inspect each shipped tag range once.
-$effective = @(Get-EffectiveMilestoneTitles -Branches $branches -Tags $tags)
-$targetTitles = @($effective | Where-Object { $_ } | Select-Object -Unique)
+$effectiveTitles = [System.Collections.Generic.List[string]]::new()
+foreach ($releaseVersion in $releaseVersions) {
+    $branches = @(Get-ReleaseMilestones `
+        -Root $root `
+        -Version $releaseVersion `
+        -ShippedReleases $shippedReleases)
+    foreach ($title in @(Get-EffectiveMilestoneTitles -Branches $branches -Tags $tags)) {
+        if ($title) {
+            $effectiveTitles.Add($title)
+        }
+    }
+}
+$targetTitles = @($effectiveTitles | Select-Object -Unique)
 $milestones = Get-GitHubMilestoneMap -Repository $Repository
 $operations = [System.Collections.Generic.List[object]]::new()
 $seenPullRequests = [System.Collections.Generic.HashSet[int]]::new()
@@ -673,6 +697,19 @@ foreach ($targetTitle in $targetTitles) {
     }
 }
 
+if ($isCheck) {
+    if ($warnings.Count -eq 0 -and $operations.Count -eq 0) {
+        exit 0
+    }
+    Write-Output "Release assignments: $($operations.Count) pending, $($warnings.Count) warning(s)."
+    foreach ($warning in $warnings) {
+        Write-Output $warning
+    }
+    foreach ($operation in $operations) {
+        Write-Output "$($operation.Kind) #$($operation.Number): $($operation.FromMilestone) -> $($operation.ToMilestone)"
+    }
+    exit 1
+}
 foreach ($warning in $warnings) {
     Write-Warning $warning
 }
@@ -691,7 +728,7 @@ foreach ($item in $operations) {
         -Item $item `
         -Milestones $milestones `
         -PlanningTags $tags `
-        -Push:$Push
+        -Push:$writeRemote
 }
 if ($warnings.Count -eq 0) {
     Write-ReleaseStatus checked (

@@ -336,8 +336,8 @@ scripts.
 - assigns shipped PRs and issues to the milestone where they first shipped.
 
 Unshipped intermediate branches roll forward to the next shipped boundary.
-Missing tags, milestones, or boundaries produce warnings; a `-Push` run refuses
-to mutate when those warnings make the result unsafe.
+Missing tags, milestones, or boundaries produce warnings; a `-Mode Push` run
+refuses to mutate when those warnings make the result unsafe.
 
 `update-release-milestones.ps1`:
 
@@ -390,6 +390,11 @@ scripts can be run locally for diagnostics or recovery.
   -Base main `
   -Release 4.153.0-preview.1 `
   -Mode Push
+
+# Quietly check existing paired release branches
+./scripts/infra/publishing/prepare-release.ps1 `
+  -Release 4.153.0-preview.1 `
+  -Mode Check
 ```
 
 Local `Apply` and `Push` require a clean SkiaSharp worktree. If the Skia
@@ -413,6 +418,11 @@ Prepare initializes it at the pinned commit.
 ./scripts/infra/publishing/finish-release.ps1 `
   -Version 4.153.0-preview.1 `
   -Mode Push
+
+# Quietly check durable public release state
+./scripts/infra/publishing/finish-release.ps1 `
+  -Version 4.153.0-preview.1 `
+  -Mode Check
 ```
 
 ### Milestones
@@ -420,14 +430,21 @@ Prepare initializes it at the pinned commit.
 ```powershell
 # Read-only
 ./scripts/infra/publishing/reconcile-release-assignments.ps1 `
-  -Version 4.153.0
-./scripts/infra/publishing/update-release-milestones.ps1
+  -Version '4.153.0,4.154.0' `
+  -Mode DryRun
+./scripts/infra/publishing/update-release-milestones.ps1 -Mode DryRun
+
+# Quietly check durable state for the audit coordinator
+./scripts/infra/publishing/reconcile-release-assignments.ps1 `
+  -Version '4.153.0,4.154.0' `
+  -Mode Check
+./scripts/infra/publishing/update-release-milestones.ps1 -Mode Check
 
 # Apply
 ./scripts/infra/publishing/reconcile-release-assignments.ps1 `
-  -Version 4.153.0 `
-  -Push
-./scripts/infra/publishing/update-release-milestones.ps1 -Push
+  -Version '4.153.0,4.154.0' `
+  -Mode Push
+./scripts/infra/publishing/update-release-milestones.ps1 -Mode Push
 ```
 
 ### Issue-template versions

@@ -16,11 +16,13 @@
     4.153.0-stable. Stable is normalized to the release/4.153.0 branch.
 
 .PARAMETER Base
-    The SkiaSharp branch or commit SHA from which to create the release.
+    The SkiaSharp branch or commit SHA from which to create the release. It is
+    required except when Check validates an existing release branch.
 
 .PARAMETER Mode
     DryRun reports actions, Apply creates and validates local branches and
-    commits, and Push also publishes branches and creates the stable bump PR.
+    commits, Push also publishes branches and creates the stable bump PR, and
+    Check quietly validates existing paired release branches without changes.
 #>
 
 [CmdletBinding()]
@@ -28,10 +30,9 @@ param(
     [Parameter(Mandatory)]
     [string] $Release,
 
-    [Parameter(Mandatory)]
     [string] $Base,
 
-    [ValidateSet('DryRun', 'Apply', 'Push')]
+    [ValidateSet('DryRun', 'Apply', 'Push', 'Check')]
     [string] $Mode = 'DryRun'
 )
 
@@ -41,7 +42,8 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
-$writeLocal = $Mode -ne 'DryRun'
+$isCheck = $Mode -eq 'Check'
+$writeLocal = $Mode -in @('Apply', 'Push')
 $writeRemote = $Mode -eq 'Push'
 $modeDescription = $Mode.ToLowerInvariant()
 $root = Get-GitRepositoryRoot
@@ -52,6 +54,9 @@ $variablesPath = $ReleaseVariablesPath
 $versionsPath = $ReleaseVersionsPath
 $variablesFile = Join-Path $root $variablesPath
 $versionsFile = Join-Path $root $versionsPath
+if (!$isCheck -and [string]::IsNullOrWhiteSpace($Base)) {
+    throw '-Base is required unless -Mode Check is specified.'
+}
 
 # Rewrites the SkiaSharp version and release label in the pipeline variables.
 function Set-VersionVariables([string] $Text, [string] $SkiaSharpVersion, [string] $PreviewLabel) {
@@ -456,6 +461,43 @@ $isStable = [bool] $Matches.stable
 $label = if ($isStable) { 'stable' } else { "$($Matches.channel).$($Matches.iteration)" }
 $identity = if ($isStable) { $version } else { $Release }
 $releaseBranch = "release/$identity"
+if ($isCheck) {
+    try {
+        $findings = [System.Collections.Generic.List[string]]::new()
+        $parentSha = Get-RemoteBranchSha -Root $root -Remote origin -Branch $releaseBranch
+        if (!$parentSha) {
+            $findings.Add("Missing SkiaSharp branch $releaseBranch.")
+        } else {
+            try {
+                $parentSha = Get-ResolvedGitCommit -Root $root -Reference $releaseBranch
+                $state = Get-VersionState -Commit $parentSha
+                if (!(Test-VersionMetadata `
+                    -Commit $parentSha `
+                    -SkiaSharpVersion $version `
+                    -PreviewLabel $label `
+                    -HarfBuzzSharpVersion $state.HarfBuzzSharp)) {
+                    $findings.Add("$releaseBranch has different version metadata.")
+                }
+            } catch {
+                $findings.Add("Cannot validate version metadata for ${releaseBranch}: $($_.Exception.Message)")
+            }
+            $skiaSha = Get-RemoteBranchSha -Root $root -Remote $skiaRemote -Branch $releaseBranch
+            if (!$skiaSha) {
+                $findings.Add("Missing mono/skia branch $releaseBranch.")
+            } elseif ((Get-GitTreeEntrySha -Root $root -Commit $parentSha -Path $skiaPath) -ne $skiaSha) {
+                $findings.Add("$releaseBranch does not reference mono/skia $skiaSha.")
+            }
+        }
+        if ($findings.Count) {
+            $findings | Write-Output
+            exit 1
+        }
+        exit 0
+    } catch {
+        [Console]::Error.WriteLine("Release preparation check unavailable: $($_.Exception.Message)")
+        exit 2
+    }
+}
 Write-Host "Preparing $identity ($modeDescription)"
 
 # 2. Prepare the exact release branches.
