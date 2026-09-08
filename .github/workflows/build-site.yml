@@ -5,44 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-    types: [ opened, synchronize, reopened ]
-    # Skip building a staging preview when a PR touches ONLY files that can never
-    # change the rendered site. This is a conservative EXCLUDE list (paths-ignore),
-    # which is fail-safe: the full build still runs unless EVERY changed file matches
-    # a pattern below, so anything we did not anticipate still gets a preview.
-    #
-    # The site is built from:
-    #   documentation/docfx/**  -> /docs/ and the release notes
-    #   documentation/site/**   -> the landing page and /ai/
-    #   samples/**              -> the /gallery/, /gallery-uno/ and /fiddle/ apps,
-    #                              which ProjectReference binding/** + source/** and
-    #                              load WASM native libs built from native/wasm/**,
-    #                              scripts/infra/native/{wasm,shared}/** + externals/skia
-    # None of the paths below feed any of those, so they cannot alter the preview.
-    # (Applies to PR previews only; pushes to main always redeploy the root site.)
-    paths-ignore:
-      - 'tests/**'                     # test projects — never built for the site
-      - 'benchmarks/**'                # benchmark projects — not on the site
-      - 'documentation/dev/**'         # dev docs — NOT in the docfx content root
-      - 'native/android/**'            # non-WASM native — galleries are WASM only
-      - 'native/ios/**'
-      - 'native/maccatalyst/**'
-      - 'native/macos/**'
-      - 'native/tvos/**'
-      - 'native/tizen/**'
-      - 'native/windows/**'
-      - 'native/winui/**'
-      - 'native/winui-angle/**'
-      - 'native/linux/**'
-      - 'native/linux-clang-cross/**'
-      - 'native/linuxnodeps/**'
-      - 'native/nanoserver/**'
-      - 'README.md'                    # repo meta docs — not rendered on the site
-      - 'CONTRIBUTING.md'
-      - 'CODE-OF-CONDUCT.md'
-      - 'SECURITY.md'                  # not present today; kept so adding it stays a no-op
-      - '.agents/**'                   # agent skills/workflows — not built into the site
-      - 'cgmanifest.json'              # component-governance manifest — not a site input
+    types: [ opened, synchronize, reopened, labeled ]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -67,9 +30,14 @@ jobs:
   # ── Build the complete site ──────────────────────────────────
   build:
     name: Build Site
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       contains(github.event.pull_request.labels.*.name, 'automation/staging'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: read
     outputs:
       artifact_name: ${{ steps.vars.outputs.artifact_name }}
       is_staging: ${{ steps.vars.outputs.is_staging }}
@@ -81,6 +49,8 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           PR_NUMBER_EVENT: ${{ github.event.number }}
           PR_NUMBER_INPUT: ${{ inputs.pr_number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         shell: bash
         run: |
           if [ "$EVENT_NAME" == "pull_request" ]; then
@@ -89,6 +59,21 @@ jobs:
             BRANCH_NAME="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
           elif [ "$EVENT_NAME" == "workflow_dispatch" ] && [ -n "$PR_NUMBER_INPUT" ]; then
             PR_NUMBER="$PR_NUMBER_INPUT"
+            # Staging is an explicit opt-in even for manual dispatches.
+            if ! [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+              echo "Invalid PR number: $PR_NUMBER"
+              exit 1
+            fi
+            PR_JSON="$(gh pr view "$PR_NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --json headRepository,labels)"
+            if ! jq -e --arg repository "$GITHUB_REPOSITORY" \
+              '.headRepository.nameWithOwner == $repository and
+               any(.labels[].name; . == "automation/staging")' \
+              <<<"$PR_JSON" >/dev/null; then
+              echo "PR #$PR_NUMBER must be from this repository and have the automation/staging label"
+              exit 1
+            fi
             CHECKOUT_REF="refs/pull/${PR_NUMBER}/merge"
             BRANCH_NAME="pr/${PR_NUMBER}"
           else
