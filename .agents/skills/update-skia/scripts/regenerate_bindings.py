@@ -129,18 +129,12 @@ def regenerate(repo_root: Path, config: str | None = None) -> None:
             "--output",
             str(output_path),
         )
-        if config_name == "libHarfBuzzSharp.json":
-            # HarfBuzz has an independent version policy. Generate it only into
-            # the review artifact so this helper never changes its worktree tree.
-            output_path = generated_directory / "HarfBuzzSharp"
-            command = command[:-1] + (str(output_path),)
         print(" ".join(str(part) for part in command))
         run(repo_root, *command)
-        if config_name != "libHarfBuzzSharp.json":
-            destination = generated_directory / output_path.parent.name
-            if destination.exists():
-                shutil.rmtree(destination)
-            shutil.copytree(output_path, destination)
+        destination = generated_directory / output_path.parent.name
+        if destination.exists():
+            shutil.rmtree(destination)
+        shutil.copytree(output_path, destination)
 
     changes = generated_file_changes(repo_root, projects)
     print("Generated binding file changes:")
