@@ -10,8 +10,8 @@ python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/regenerate_b
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
-The helper runs every maintained generator configuration, restores HarfBuzz, reports generated
-changes, and lists new native functions. Never edit a generated file manually.
+The helper runs every maintained generator configuration from the checked-out source, reports
+generated changes, and lists new native functions. Never edit a generated file manually.
 
 ## Phase 09 — review the managed surface
 

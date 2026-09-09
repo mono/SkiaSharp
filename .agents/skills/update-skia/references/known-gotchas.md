@@ -102,11 +102,18 @@ Classify every changed active entry:
 
 Preserving every pin unconditionally is as unsafe as taking every upstream pin.
 
-### 9. HarfBuzz — ALWAYS Separate
+### 9. HarfBuzz Bindings Follow DEPS
 
-HarfBuzz updates require hand-written C# delegate proxies and must be done via the `native-dependency-update` skill. During a milestone update, ALWAYS:
-1. Keep the fork's harfbuzz hash in DEPS
-2. Start from a clean binding worktree; `regenerate_bindings.py` restores generated HarfBuzz drift
+HarfBuzz uses the same generation workflow as every other binding configuration. Whenever the
+final `DEPS` file selects a HarfBuzz revision:
+
+1. Build native assets from that checked-out source.
+2. Regenerate HarfBuzzSharp with that same source and review the generated diff.
+3. Exclude unsupported API families or new types in `libHarfBuzzSharp.json`; do not switch to an
+   older HarfBuzz checkout or restore a previous generated output.
+
+Use the `native-dependency-update` skill only when deliberately rolling HarfBuzz independently
+of a Skia update.
 
 ### 10. Enum Value Renumbering
 

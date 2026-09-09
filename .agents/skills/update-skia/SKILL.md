@@ -136,8 +136,8 @@ needed for that phase.
   running helpers from that staged directory rather than the branch-local `.agents` tree.
 - `scripts/update_versions.py` updates and validates version surfaces, Skia hashes, and deterministic
   DEPS-to-Component-Governance identity/review signals.
-- `scripts/regenerate_bindings.py` runs every binding configuration, restores HarfBuzz,
-  and reports new native functions.
+- `scripts/regenerate_bindings.py` runs every binding configuration from the checked-out
+  source and reports new native functions.
 - `scripts/audit_fork_patches.py` compares the old and new fork deltas and fails while any
   added, removed, or changed patch lacks a final evidence-backed disposition.
 
