@@ -86,9 +86,9 @@ For a compatibility-sensitive revision, inspect the upstream roll commit and its
 changes, then verify the selected revision contains every required field/function. Preserving every
 pin unconditionally is as unsafe as accepting every target pin.
 
-Update `$ARTIFACT_DIR/skia-dependency-decisions.md` with the final merged dispositions, including
-HarfBuzz. Replace provisional rows rather than appending a second conclusion. A row that says
-accept-target while merged `DEPS` retains the fork revision is a gate failure.
+Update `$ARTIFACT_DIR/skia-dependency-decisions.md` with the final merged dispositions. Replace
+provisional rows rather than appending a second conclusion. A row that says accept-target while
+merged `DEPS` retains the fork revision is a gate failure.
 
 ### Complete the merge
 
