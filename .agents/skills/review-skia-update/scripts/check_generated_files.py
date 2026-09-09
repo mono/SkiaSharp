@@ -23,7 +23,11 @@ def compare_trees(expected: Path, actual: Path) -> list[str]:
     differences = [
         *(f"deleted: {path}" for path in comparison.left_only),
         *(f"added: {path}" for path in comparison.right_only),
-        *(f"modified: {path}" for path in comparison.diff_files),
+        *(
+            f"modified: {path}"
+            for path in comparison.common_files
+            if not filecmp.cmp(expected / path, actual / path, shallow=False)
+        ),
     ]
     for directory in comparison.common_dirs:
         differences.extend(

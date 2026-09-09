@@ -84,20 +84,18 @@ def added_internal_functions_from_diffs(diffs: list[str]) -> list[str]:
 
 
 def generated_file_changes(repo_root: Path, projects) -> list[str]:
-    """List added, modified, and deleted generated files across every output tree."""
-    return [
-        line
-        for _, _, output in projects
-        for line in run(
-            repo_root,
-            "git",
-            "diff",
-            "--name-status",
-            "--",
-            f"binding/{output}",
-            capture=True,
-        ).splitlines()
-    ]
+    """List tracked and untracked generated-file changes across every output tree."""
+    paths = [f"binding/{output}" for _, _, output in projects]
+    return run(
+        repo_root,
+        "git",
+        "status",
+        "--short",
+        "--untracked-files=all",
+        "--",
+        *paths,
+        capture=True,
+    ).splitlines()
 
 
 def regenerate(repo_root: Path, config: str | None = None) -> None:

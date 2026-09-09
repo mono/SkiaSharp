@@ -17,7 +17,7 @@ Task("externals-interop")
     });
 
     var settings = new ProcessSettings {
-        Arguments = "diff --name-status -- ':(glob)binding/**/*.generated.cs'",
+        Arguments = "status --short --untracked-files=all -- ':(glob)binding/**/*.generated.cs'",
         WorkingDirectory = ROOT_PATH,
         RedirectStandardOutput = true,
     };
