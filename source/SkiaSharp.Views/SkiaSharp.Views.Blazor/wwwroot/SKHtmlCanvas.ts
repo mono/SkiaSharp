@@ -48,7 +48,6 @@ export class SKHtmlCanvas {
 		element = element || document.querySelector('[' + elementId + ']');
 		var htmlCanvas = element as SKHtmlCanvasElement;
 		if (!htmlCanvas) {
-			console.error(`No canvas element was provided.`);
 			return null;
 		}
 
