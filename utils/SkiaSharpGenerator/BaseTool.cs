@@ -21,7 +21,7 @@ namespace SkiaSharpGenerator
 		protected readonly Dictionary<string, bool> skiaTypes = new Dictionary<string, bool>();
 
 		protected readonly HashSet<string> excludedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-		protected readonly List<string> excludedTypes = new List<string>();
+		protected readonly List<string> excludedSymbols = new List<string>();
 
 		protected CppCompilation compilation = new CppCompilation();
 		protected Config config = new Config();
@@ -173,12 +173,7 @@ namespace SkiaSharpGenerator
 				Directory.EnumerateFiles)
 				.Select(path => StableOrdering.NormalizePath(SkiaRoot, path)));
 
-			foreach (var filter in config.Exclude.Types)
-			{
-				excludedTypes.Add(filter);
-				excludedTypes.Add(filter + "*");
-				excludedTypes.Add(filter + "**");
-			}
+			excludedSymbols.AddRange(config.Exclude.Symbols);
 
 			foreach (var f in excludedFiles)
 				Log?.LogVerbose("Skipping everything in: " + f);
@@ -526,6 +521,16 @@ namespace SkiaSharpGenerator
 			}
 
 			return true;
+		}
+
+		protected bool IsExcludedSymbol(string name)
+		{
+			var pointerIndex = name.IndexOfAny(['*', '&']);
+			if (pointerIndex >= 0)
+				name = name[..pointerIndex];
+
+			return excludedSymbols.Any(pattern =>
+				Regex.IsMatch(name, $"^{Regex.Escape(pattern).Replace(@"\*", ".*")}$"));
 		}
 
 		protected string GetNamespace(string name)

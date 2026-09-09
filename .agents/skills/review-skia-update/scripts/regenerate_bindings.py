@@ -104,18 +104,6 @@ def regenerate(repo_root: Path, config: str | None = None) -> None:
         run(repo_root, *command)
         shutil.copy2(output_path, generated_directory / output_path.name)
 
-    harfbuzz = "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs"
-    harfbuzz_status = subprocess.run(
-        ["git", "diff", "--quiet", "--", harfbuzz],
-        cwd=repo_root,
-        check=False,
-    ).returncode
-    if harfbuzz_status == 1:
-        run(repo_root, "git", "restore", "--source=HEAD", "--", harfbuzz)
-        print(f"Reverted {harfbuzz}; HarfBuzz updates are separate.")
-    elif harfbuzz_status != 0:
-        raise RuntimeError("Could not inspect the HarfBuzz binding diff.")
-
     binding_stat = run(repo_root, "git", "diff", "--stat", "--", "binding/", capture=True)
     print("Binding diff summary:")
     print(binding_stat.rstrip() or "  No binding changes.")
