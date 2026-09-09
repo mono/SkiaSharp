@@ -95,10 +95,6 @@ Then map in `libSkiaSharp.json`:
 - [ ] Did NOT manually edit any `*.generated.cs` file
 - [ ] Verified JSON config maps new types and members correctly
 
-If HarfBuzz headers changed, generate from the DEPS-pinned source in the working tree: it is the
-same source used for the native build. Never switch to an older checkout or restore the generated
-output.
-
 ## Phase 5: Add C# Wrapper
 
 Apply the rules from [api-design-rules.md](api-design-rules.md):
