@@ -49,6 +49,7 @@ Task("libSkiaSharp")
         var win_sdk_version = string.IsNullOrEmpty(WINDOWS_SDK_VERSION) ? "" : $"win_sdk_version='{WINDOWS_SDK_VERSION}' ";
         var vcVarsArchitecture = skiaArch == "x64" ? "amd64" : $"amd64_{skiaArch}";
         var d = CONFIGURATION.ToLower() == "release" ? "" : "d";
+        var linker_opt = CONFIGURATION.ToLower() == "release" ? "" : "NO";
         var spectreLibPath = GetSpectreLibPath(arch);
         var nativeOutDir = $"{VARIANT}/{arch}";
 
@@ -78,7 +79,7 @@ Task("libSkiaSharp")
             win_vcvars_version +
             win_sdk_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
-            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}', '/DELAYLOAD:d3d12.dll', '/DELAYLOAD:dxgi.dll', '/DELAYLOAD:D3DCOMPILER_47.dll', '/DEFAULTLIB:delayimp' ] " +
+            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}', '/DELAYLOAD:d3d12.dll', '/DELAYLOAD:dxgi.dll', '/DELAYLOAD:D3DCOMPILER_47.dll', '/DEFAULTLIB:delayimp', '/OPT:{linker_opt}REF', '/OPT:{linker_opt}ICF' ] " +
             ADDITIONAL_GN_ARGS);
 
         RunNinjaWithVcVars(
