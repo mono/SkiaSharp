@@ -35,6 +35,25 @@ namespace HarfBuzzSharp
 			(hb_ot_metrics_get_position_delegate ??= GetSymbol<Delegates.hb_ot_metrics_get_position> ("hb_ot_metrics_get_position")).Invoke (font, metrics_tag, position);
 		#endif
 
+		// extern void hb_ot_metrics_get_position_with_fallback(hb_font_t* font, hb_ot_metrics_tag_t metrics_tag, hb_position_t* position)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_ot_metrics_get_position_with_fallback (IntPtr font, OpenTypeMetricsTag metrics_tag, Int32* position);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_ot_metrics_get_position_with_fallback (IntPtr font, OpenTypeMetricsTag metrics_tag, Int32* position);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_ot_metrics_get_position_with_fallback (IntPtr font, OpenTypeMetricsTag metrics_tag, Int32* position);
+		}
+		private static Delegates.hb_ot_metrics_get_position_with_fallback hb_ot_metrics_get_position_with_fallback_delegate;
+		internal static void hb_ot_metrics_get_position_with_fallback (IntPtr font, OpenTypeMetricsTag metrics_tag, Int32* position) =>
+			(hb_ot_metrics_get_position_with_fallback_delegate ??= GetSymbol<Delegates.hb_ot_metrics_get_position_with_fallback> ("hb_ot_metrics_get_position_with_fallback")).Invoke (font, metrics_tag, position);
+		#endif
+
 		// extern float hb_ot_metrics_get_variation(hb_font_t* font, hb_ot_metrics_tag_t metrics_tag)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT

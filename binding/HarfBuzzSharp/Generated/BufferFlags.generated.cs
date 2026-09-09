@@ -25,5 +25,11 @@ namespace HarfBuzzSharp
 		RemoveDefaultIgnorables = 8,
 		// HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE = 0x00000010u
 		DoNotInsertDottedCircle = 16,
+		// HB_BUFFER_FLAG_VERIFY = 0x00000020u
+		Verify = 32,
+		// HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT = 0x00000040u
+		ProduceUnsafeToConcat = 64,
+		// HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL = 0x00000080u
+		ProduceSafeToInsertTatweel = 128,
 	}
 }

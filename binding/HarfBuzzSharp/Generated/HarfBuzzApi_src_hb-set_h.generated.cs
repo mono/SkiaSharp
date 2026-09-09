@@ -51,6 +51,25 @@ namespace HarfBuzzSharp
 			(hb_set_add_range_delegate ??= GetSymbol<Delegates.hb_set_add_range> ("hb_set_add_range")).Invoke (set, first, last);
 		#endif
 
+		// extern void hb_set_add_sorted_array(hb_set_t* set, const hb_codepoint_t* sorted_codepoints, unsigned int num_codepoints)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_set_add_sorted_array (IntPtr set, UInt32* sorted_codepoints, UInt32 num_codepoints);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_set_add_sorted_array (IntPtr set, UInt32* sorted_codepoints, UInt32 num_codepoints);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_set_add_sorted_array (IntPtr set, UInt32* sorted_codepoints, UInt32 num_codepoints);
+		}
+		private static Delegates.hb_set_add_sorted_array hb_set_add_sorted_array_delegate;
+		internal static void hb_set_add_sorted_array (IntPtr set, UInt32* sorted_codepoints, UInt32 num_codepoints) =>
+			(hb_set_add_sorted_array_delegate ??= GetSymbol<Delegates.hb_set_add_sorted_array> ("hb_set_add_sorted_array")).Invoke (set, sorted_codepoints, num_codepoints);
+		#endif
+
 		// extern hb_bool_t hb_set_allocation_successful(const hb_set_t* set)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -285,6 +304,25 @@ namespace HarfBuzzSharp
 			(hb_set_has_delegate ??= GetSymbol<Delegates.hb_set_has> ("hb_set_has")).Invoke (set, codepoint);
 		#endif
 
+		// extern unsigned int hb_set_hash(const hb_set_t* set)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial UInt32 hb_set_hash (IntPtr set);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 hb_set_hash (IntPtr set);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt32 hb_set_hash (IntPtr set);
+		}
+		private static Delegates.hb_set_hash hb_set_hash_delegate;
+		internal static UInt32 hb_set_hash (IntPtr set) =>
+			(hb_set_hash_delegate ??= GetSymbol<Delegates.hb_set_hash> ("hb_set_hash")).Invoke (set);
+		#endif
+
 		// extern void hb_set_intersect(hb_set_t* set, const hb_set_t* other)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -302,6 +340,25 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_set_intersect hb_set_intersect_delegate;
 		internal static void hb_set_intersect (IntPtr set, IntPtr other) =>
 			(hb_set_intersect_delegate ??= GetSymbol<Delegates.hb_set_intersect> ("hb_set_intersect")).Invoke (set, other);
+		#endif
+
+		// extern void hb_set_invert(hb_set_t* set)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_set_invert (IntPtr set);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_set_invert (IntPtr set);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_set_invert (IntPtr set);
+		}
+		private static Delegates.hb_set_invert hb_set_invert_delegate;
+		internal static void hb_set_invert (IntPtr set) =>
+			(hb_set_invert_delegate ??= GetSymbol<Delegates.hb_set_invert> ("hb_set_invert")).Invoke (set);
 		#endif
 
 		// extern hb_bool_t hb_set_is_empty(const hb_set_t* set)
@@ -348,6 +405,28 @@ namespace HarfBuzzSharp
 			(hb_set_is_equal_delegate ??= GetSymbol<Delegates.hb_set_is_equal> ("hb_set_is_equal")).Invoke (set, other);
 		#endif
 
+		// extern hb_bool_t hb_set_is_inverted(const hb_set_t* set)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool hb_set_is_inverted (IntPtr set);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool hb_set_is_inverted (IntPtr set);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool hb_set_is_inverted (IntPtr set);
+		}
+		private static Delegates.hb_set_is_inverted hb_set_is_inverted_delegate;
+		internal static bool hb_set_is_inverted (IntPtr set) =>
+			(hb_set_is_inverted_delegate ??= GetSymbol<Delegates.hb_set_is_inverted> ("hb_set_is_inverted")).Invoke (set);
+		#endif
+
 		// extern hb_bool_t hb_set_is_subset(const hb_set_t* set, const hb_set_t* larger_set)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -390,6 +469,25 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_set_next hb_set_next_delegate;
 		internal static bool hb_set_next (IntPtr set, UInt32* codepoint) =>
 			(hb_set_next_delegate ??= GetSymbol<Delegates.hb_set_next> ("hb_set_next")).Invoke (set, codepoint);
+		#endif
+
+		// extern unsigned int hb_set_next_many(const hb_set_t* set, hb_codepoint_t codepoint, hb_codepoint_t* out, unsigned int size)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial UInt32 hb_set_next_many (IntPtr set, UInt32 codepoint, UInt32* @out, UInt32 size);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 hb_set_next_many (IntPtr set, UInt32 codepoint, UInt32* @out, UInt32 size);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt32 hb_set_next_many (IntPtr set, UInt32 codepoint, UInt32* @out, UInt32 size);
+		}
+		private static Delegates.hb_set_next_many hb_set_next_many_delegate;
+		internal static UInt32 hb_set_next_many (IntPtr set, UInt32 codepoint, UInt32* @out, UInt32 size) =>
+			(hb_set_next_many_delegate ??= GetSymbol<Delegates.hb_set_next_many> ("hb_set_next_many")).Invoke (set, codepoint, @out, size);
 		#endif
 
 		// extern hb_bool_t hb_set_next_range(const hb_set_t* set, hb_codepoint_t* first, hb_codepoint_t* last)

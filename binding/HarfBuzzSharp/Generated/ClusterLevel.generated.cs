@@ -18,6 +18,8 @@ namespace HarfBuzzSharp
 		MonotoneCharacters = 1,
 		// HB_BUFFER_CLUSTER_LEVEL_CHARACTERS = 2
 		Characters = 2,
+		// HB_BUFFER_CLUSTER_LEVEL_GRAPHEMES = 3
+		Graphemes = 3,
 		// HB_BUFFER_CLUSTER_LEVEL_DEFAULT = HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES
 		Default = 0,
 	}

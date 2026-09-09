@@ -149,7 +149,7 @@ namespace HarfBuzzSharp
 			(hb_buffer_allocation_successful_delegate ??= GetSymbol<Delegates.hb_buffer_allocation_successful> ("hb_buffer_allocation_successful")).Invoke (buffer);
 		#endif
 
-		// extern void hb_buffer_append(hb_buffer_t* buffer, hb_buffer_t* source, unsigned int start, unsigned int end)
+		// extern void hb_buffer_append(hb_buffer_t* buffer, const hb_buffer_t* source, unsigned int start, unsigned int end)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
@@ -166,6 +166,25 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_buffer_append hb_buffer_append_delegate;
 		internal static void hb_buffer_append (IntPtr buffer, IntPtr source, UInt32 start, UInt32 end) =>
 			(hb_buffer_append_delegate ??= GetSymbol<Delegates.hb_buffer_append> ("hb_buffer_append")).Invoke (buffer, source, start, end);
+		#endif
+
+		// extern void hb_buffer_changed(hb_buffer_t* buffer)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_buffer_changed (IntPtr buffer);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_buffer_changed (IntPtr buffer);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_buffer_changed (IntPtr buffer);
+		}
+		private static Delegates.hb_buffer_changed hb_buffer_changed_delegate;
+		internal static void hb_buffer_changed (IntPtr buffer) =>
+			(hb_buffer_changed_delegate ??= GetSymbol<Delegates.hb_buffer_changed> ("hb_buffer_changed")).Invoke (buffer);
 		#endif
 
 		// extern void hb_buffer_clear_contents(hb_buffer_t* buffer)
@@ -204,6 +223,25 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_buffer_create hb_buffer_create_delegate;
 		internal static IntPtr hb_buffer_create () =>
 			(hb_buffer_create_delegate ??= GetSymbol<Delegates.hb_buffer_create> ("hb_buffer_create")).Invoke ();
+		#endif
+
+		// extern hb_buffer_t* hb_buffer_create_similar(const hb_buffer_t* src)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial IntPtr hb_buffer_create_similar (IntPtr src);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern IntPtr hb_buffer_create_similar (IntPtr src);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate IntPtr hb_buffer_create_similar (IntPtr src);
+		}
+		private static Delegates.hb_buffer_create_similar hb_buffer_create_similar_delegate;
+		internal static IntPtr hb_buffer_create_similar (IntPtr src) =>
+			(hb_buffer_create_similar_delegate ??= GetSymbol<Delegates.hb_buffer_create_similar> ("hb_buffer_create_similar")).Invoke (src);
 		#endif
 
 		// extern hb_bool_t hb_buffer_deserialize_glyphs(hb_buffer_t* buffer, const char* buf, int buf_len, const char** end_ptr, hb_font_t* font, hb_buffer_serialize_format_t format)
@@ -288,7 +326,7 @@ namespace HarfBuzzSharp
 			(hb_buffer_diff_delegate ??= GetSymbol<Delegates.hb_buffer_diff> ("hb_buffer_diff")).Invoke (buffer, reference, dottedcircle_glyph, position_fuzz);
 		#endif
 
-		// extern hb_buffer_cluster_level_t hb_buffer_get_cluster_level(hb_buffer_t* buffer)
+		// extern hb_buffer_cluster_level_t hb_buffer_get_cluster_level(const hb_buffer_t* buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
@@ -307,7 +345,7 @@ namespace HarfBuzzSharp
 			(hb_buffer_get_cluster_level_delegate ??= GetSymbol<Delegates.hb_buffer_get_cluster_level> ("hb_buffer_get_cluster_level")).Invoke (buffer);
 		#endif
 
-		// extern hb_buffer_content_type_t hb_buffer_get_content_type(hb_buffer_t* buffer)
+		// extern hb_buffer_content_type_t hb_buffer_get_content_type(const hb_buffer_t* buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
@@ -326,7 +364,7 @@ namespace HarfBuzzSharp
 			(hb_buffer_get_content_type_delegate ??= GetSymbol<Delegates.hb_buffer_get_content_type> ("hb_buffer_get_content_type")).Invoke (buffer);
 		#endif
 
-		// extern hb_direction_t hb_buffer_get_direction(hb_buffer_t* buffer)
+		// extern hb_direction_t hb_buffer_get_direction(const hb_buffer_t* buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
@@ -364,7 +402,7 @@ namespace HarfBuzzSharp
 			(hb_buffer_get_empty_delegate ??= GetSymbol<Delegates.hb_buffer_get_empty> ("hb_buffer_get_empty")).Invoke ();
 		#endif
 
-		// extern hb_buffer_flags_t hb_buffer_get_flags(hb_buffer_t* buffer)
+		// extern hb_buffer_flags_t hb_buffer_get_flags(const hb_buffer_t* buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
@@ -421,7 +459,7 @@ namespace HarfBuzzSharp
 			(hb_buffer_get_glyph_positions_delegate ??= GetSymbol<Delegates.hb_buffer_get_glyph_positions> ("hb_buffer_get_glyph_positions")).Invoke (buffer, length);
 		#endif
 
-		// extern hb_codepoint_t hb_buffer_get_invisible_glyph(hb_buffer_t* buffer)
+		// extern hb_codepoint_t hb_buffer_get_invisible_glyph(const hb_buffer_t* buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
@@ -440,7 +478,7 @@ namespace HarfBuzzSharp
 			(hb_buffer_get_invisible_glyph_delegate ??= GetSymbol<Delegates.hb_buffer_get_invisible_glyph> ("hb_buffer_get_invisible_glyph")).Invoke (buffer);
 		#endif
 
-		// extern hb_language_t hb_buffer_get_language(hb_buffer_t* buffer)
+		// extern hb_language_t hb_buffer_get_language(const hb_buffer_t* buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
@@ -459,7 +497,7 @@ namespace HarfBuzzSharp
 			(hb_buffer_get_language_delegate ??= GetSymbol<Delegates.hb_buffer_get_language> ("hb_buffer_get_language")).Invoke (buffer);
 		#endif
 
-		// extern unsigned int hb_buffer_get_length(hb_buffer_t* buffer)
+		// extern unsigned int hb_buffer_get_length(const hb_buffer_t* buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
@@ -478,7 +516,64 @@ namespace HarfBuzzSharp
 			(hb_buffer_get_length_delegate ??= GetSymbol<Delegates.hb_buffer_get_length> ("hb_buffer_get_length")).Invoke (buffer);
 		#endif
 
-		// extern hb_codepoint_t hb_buffer_get_replacement_codepoint(hb_buffer_t* buffer)
+		// extern hb_codepoint_t hb_buffer_get_not_found_glyph(const hb_buffer_t* buffer)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial UInt32 hb_buffer_get_not_found_glyph (IntPtr buffer);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 hb_buffer_get_not_found_glyph (IntPtr buffer);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt32 hb_buffer_get_not_found_glyph (IntPtr buffer);
+		}
+		private static Delegates.hb_buffer_get_not_found_glyph hb_buffer_get_not_found_glyph_delegate;
+		internal static UInt32 hb_buffer_get_not_found_glyph (IntPtr buffer) =>
+			(hb_buffer_get_not_found_glyph_delegate ??= GetSymbol<Delegates.hb_buffer_get_not_found_glyph> ("hb_buffer_get_not_found_glyph")).Invoke (buffer);
+		#endif
+
+		// extern hb_codepoint_t hb_buffer_get_not_found_variation_selector_glyph(const hb_buffer_t* buffer)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial UInt32 hb_buffer_get_not_found_variation_selector_glyph (IntPtr buffer);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 hb_buffer_get_not_found_variation_selector_glyph (IntPtr buffer);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt32 hb_buffer_get_not_found_variation_selector_glyph (IntPtr buffer);
+		}
+		private static Delegates.hb_buffer_get_not_found_variation_selector_glyph hb_buffer_get_not_found_variation_selector_glyph_delegate;
+		internal static UInt32 hb_buffer_get_not_found_variation_selector_glyph (IntPtr buffer) =>
+			(hb_buffer_get_not_found_variation_selector_glyph_delegate ??= GetSymbol<Delegates.hb_buffer_get_not_found_variation_selector_glyph> ("hb_buffer_get_not_found_variation_selector_glyph")).Invoke (buffer);
+		#endif
+
+		// extern unsigned int hb_buffer_get_random_state(const hb_buffer_t* buffer)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial UInt32 hb_buffer_get_random_state (IntPtr buffer);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 hb_buffer_get_random_state (IntPtr buffer);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt32 hb_buffer_get_random_state (IntPtr buffer);
+		}
+		private static Delegates.hb_buffer_get_random_state hb_buffer_get_random_state_delegate;
+		internal static UInt32 hb_buffer_get_random_state (IntPtr buffer) =>
+			(hb_buffer_get_random_state_delegate ??= GetSymbol<Delegates.hb_buffer_get_random_state> ("hb_buffer_get_random_state")).Invoke (buffer);
+		#endif
+
+		// extern hb_codepoint_t hb_buffer_get_replacement_codepoint(const hb_buffer_t* buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
@@ -497,7 +592,7 @@ namespace HarfBuzzSharp
 			(hb_buffer_get_replacement_codepoint_delegate ??= GetSymbol<Delegates.hb_buffer_get_replacement_codepoint> ("hb_buffer_get_replacement_codepoint")).Invoke (buffer);
 		#endif
 
-		// extern hb_script_t hb_buffer_get_script(hb_buffer_t* buffer)
+		// extern hb_script_t hb_buffer_get_script(const hb_buffer_t* buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
@@ -516,7 +611,7 @@ namespace HarfBuzzSharp
 			(hb_buffer_get_script_delegate ??= GetSymbol<Delegates.hb_buffer_get_script> ("hb_buffer_get_script")).Invoke (buffer);
 		#endif
 
-		// extern hb_unicode_funcs_t* hb_buffer_get_unicode_funcs(hb_buffer_t* buffer)
+		// extern hb_unicode_funcs_t* hb_buffer_get_unicode_funcs(const hb_buffer_t* buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
@@ -979,6 +1074,63 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_buffer_set_message_func hb_buffer_set_message_func_delegate;
 		internal static void hb_buffer_set_message_func (IntPtr buffer, BufferMessageProxyDelegate func, void* user_data, DestroyProxyDelegate destroy) =>
 			(hb_buffer_set_message_func_delegate ??= GetSymbol<Delegates.hb_buffer_set_message_func> ("hb_buffer_set_message_func")).Invoke (buffer, func, user_data, destroy);
+		#endif
+
+		// extern void hb_buffer_set_not_found_glyph(hb_buffer_t* buffer, hb_codepoint_t not_found)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_buffer_set_not_found_glyph (IntPtr buffer, UInt32 not_found);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_buffer_set_not_found_glyph (IntPtr buffer, UInt32 not_found);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_buffer_set_not_found_glyph (IntPtr buffer, UInt32 not_found);
+		}
+		private static Delegates.hb_buffer_set_not_found_glyph hb_buffer_set_not_found_glyph_delegate;
+		internal static void hb_buffer_set_not_found_glyph (IntPtr buffer, UInt32 not_found) =>
+			(hb_buffer_set_not_found_glyph_delegate ??= GetSymbol<Delegates.hb_buffer_set_not_found_glyph> ("hb_buffer_set_not_found_glyph")).Invoke (buffer, not_found);
+		#endif
+
+		// extern void hb_buffer_set_not_found_variation_selector_glyph(hb_buffer_t* buffer, hb_codepoint_t not_found_variation_selector)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_buffer_set_not_found_variation_selector_glyph (IntPtr buffer, UInt32 not_found_variation_selector);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_buffer_set_not_found_variation_selector_glyph (IntPtr buffer, UInt32 not_found_variation_selector);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_buffer_set_not_found_variation_selector_glyph (IntPtr buffer, UInt32 not_found_variation_selector);
+		}
+		private static Delegates.hb_buffer_set_not_found_variation_selector_glyph hb_buffer_set_not_found_variation_selector_glyph_delegate;
+		internal static void hb_buffer_set_not_found_variation_selector_glyph (IntPtr buffer, UInt32 not_found_variation_selector) =>
+			(hb_buffer_set_not_found_variation_selector_glyph_delegate ??= GetSymbol<Delegates.hb_buffer_set_not_found_variation_selector_glyph> ("hb_buffer_set_not_found_variation_selector_glyph")).Invoke (buffer, not_found_variation_selector);
+		#endif
+
+		// extern void hb_buffer_set_random_state(hb_buffer_t* buffer, unsigned int state)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_buffer_set_random_state (IntPtr buffer, UInt32 state);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_buffer_set_random_state (IntPtr buffer, UInt32 state);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_buffer_set_random_state (IntPtr buffer, UInt32 state);
+		}
+		private static Delegates.hb_buffer_set_random_state hb_buffer_set_random_state_delegate;
+		internal static void hb_buffer_set_random_state (IntPtr buffer, UInt32 state) =>
+			(hb_buffer_set_random_state_delegate ??= GetSymbol<Delegates.hb_buffer_set_random_state> ("hb_buffer_set_random_state")).Invoke (buffer, state);
 		#endif
 
 		// extern void hb_buffer_set_replacement_codepoint(hb_buffer_t* buffer, hb_codepoint_t replacement)

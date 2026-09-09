@@ -54,6 +54,44 @@ namespace HarfBuzzSharp
 			(hb_face_builder_create_delegate ??= GetSymbol<Delegates.hb_face_builder_create> ("hb_face_builder_create")).Invoke ();
 		#endif
 
+		// extern void hb_face_builder_sort_tables(hb_face_t* face, const hb_tag_t* tags)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_face_builder_sort_tables (IntPtr face, UInt32* tags);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_face_builder_sort_tables (IntPtr face, UInt32* tags);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_face_builder_sort_tables (IntPtr face, UInt32* tags);
+		}
+		private static Delegates.hb_face_builder_sort_tables hb_face_builder_sort_tables_delegate;
+		internal static void hb_face_builder_sort_tables (IntPtr face, UInt32* tags) =>
+			(hb_face_builder_sort_tables_delegate ??= GetSymbol<Delegates.hb_face_builder_sort_tables> ("hb_face_builder_sort_tables")).Invoke (face, tags);
+		#endif
+
+		// extern void hb_face_collect_nominal_glyph_mapping(hb_face_t* face, hb_map_t* mapping, hb_set_t* unicodes)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_face_collect_nominal_glyph_mapping (IntPtr face, IntPtr mapping, IntPtr unicodes);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_face_collect_nominal_glyph_mapping (IntPtr face, IntPtr mapping, IntPtr unicodes);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_face_collect_nominal_glyph_mapping (IntPtr face, IntPtr mapping, IntPtr unicodes);
+		}
+		private static Delegates.hb_face_collect_nominal_glyph_mapping hb_face_collect_nominal_glyph_mapping_delegate;
+		internal static void hb_face_collect_nominal_glyph_mapping (IntPtr face, IntPtr mapping, IntPtr unicodes) =>
+			(hb_face_collect_nominal_glyph_mapping_delegate ??= GetSymbol<Delegates.hb_face_collect_nominal_glyph_mapping> ("hb_face_collect_nominal_glyph_mapping")).Invoke (face, mapping, unicodes);
+		#endif
+
 		// extern void hb_face_collect_unicodes(hb_face_t* face, hb_set_t* out)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -166,6 +204,82 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_face_create_for_tables hb_face_create_for_tables_delegate;
 		internal static IntPtr hb_face_create_for_tables (ReferenceTableProxyDelegate reference_table_func, void* user_data, DestroyProxyDelegate destroy) =>
 			(hb_face_create_for_tables_delegate ??= GetSymbol<Delegates.hb_face_create_for_tables> ("hb_face_create_for_tables")).Invoke (reference_table_func, user_data, destroy);
+		#endif
+
+		// extern hb_face_t* hb_face_create_from_file_or_fail(const char* file_name, unsigned int index)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial IntPtr hb_face_create_from_file_or_fail (/* char */ void* file_name, UInt32 index);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern IntPtr hb_face_create_from_file_or_fail (/* char */ void* file_name, UInt32 index);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate IntPtr hb_face_create_from_file_or_fail (/* char */ void* file_name, UInt32 index);
+		}
+		private static Delegates.hb_face_create_from_file_or_fail hb_face_create_from_file_or_fail_delegate;
+		internal static IntPtr hb_face_create_from_file_or_fail (/* char */ void* file_name, UInt32 index) =>
+			(hb_face_create_from_file_or_fail_delegate ??= GetSymbol<Delegates.hb_face_create_from_file_or_fail> ("hb_face_create_from_file_or_fail")).Invoke (file_name, index);
+		#endif
+
+		// extern hb_face_t* hb_face_create_from_file_or_fail_using(const char* file_name, unsigned int index, const char* loader_name)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial IntPtr hb_face_create_from_file_or_fail_using (/* char */ void* file_name, UInt32 index, /* char */ void* loader_name);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern IntPtr hb_face_create_from_file_or_fail_using (/* char */ void* file_name, UInt32 index, /* char */ void* loader_name);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate IntPtr hb_face_create_from_file_or_fail_using (/* char */ void* file_name, UInt32 index, /* char */ void* loader_name);
+		}
+		private static Delegates.hb_face_create_from_file_or_fail_using hb_face_create_from_file_or_fail_using_delegate;
+		internal static IntPtr hb_face_create_from_file_or_fail_using (/* char */ void* file_name, UInt32 index, /* char */ void* loader_name) =>
+			(hb_face_create_from_file_or_fail_using_delegate ??= GetSymbol<Delegates.hb_face_create_from_file_or_fail_using> ("hb_face_create_from_file_or_fail_using")).Invoke (file_name, index, loader_name);
+		#endif
+
+		// extern hb_face_t* hb_face_create_or_fail(hb_blob_t* blob, unsigned int index)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial IntPtr hb_face_create_or_fail (IntPtr blob, UInt32 index);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern IntPtr hb_face_create_or_fail (IntPtr blob, UInt32 index);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate IntPtr hb_face_create_or_fail (IntPtr blob, UInt32 index);
+		}
+		private static Delegates.hb_face_create_or_fail hb_face_create_or_fail_delegate;
+		internal static IntPtr hb_face_create_or_fail (IntPtr blob, UInt32 index) =>
+			(hb_face_create_or_fail_delegate ??= GetSymbol<Delegates.hb_face_create_or_fail> ("hb_face_create_or_fail")).Invoke (blob, index);
+		#endif
+
+		// extern hb_face_t* hb_face_create_or_fail_using(hb_blob_t* blob, unsigned int index, const char* loader_name)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial IntPtr hb_face_create_or_fail_using (IntPtr blob, UInt32 index, /* char */ void* loader_name);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern IntPtr hb_face_create_or_fail_using (IntPtr blob, UInt32 index, /* char */ void* loader_name);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate IntPtr hb_face_create_or_fail_using (IntPtr blob, UInt32 index, /* char */ void* loader_name);
+		}
+		private static Delegates.hb_face_create_or_fail_using hb_face_create_or_fail_using_delegate;
+		internal static IntPtr hb_face_create_or_fail_using (IntPtr blob, UInt32 index, /* char */ void* loader_name) =>
+			(hb_face_create_or_fail_using_delegate ??= GetSymbol<Delegates.hb_face_create_or_fail_using> ("hb_face_create_or_fail_using")).Invoke (blob, index, loader_name);
 		#endif
 
 		// extern void hb_face_destroy(hb_face_t* face)
@@ -282,7 +396,7 @@ namespace HarfBuzzSharp
 			(hb_face_get_upem_delegate ??= GetSymbol<Delegates.hb_face_get_upem> ("hb_face_get_upem")).Invoke (face);
 		#endif
 
-		// extern hb_bool_t hb_face_is_immutable(const hb_face_t* face)
+		// extern hb_bool_t hb_face_is_immutable(hb_face_t* face)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
@@ -302,6 +416,25 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_face_is_immutable hb_face_is_immutable_delegate;
 		internal static bool hb_face_is_immutable (IntPtr face) =>
 			(hb_face_is_immutable_delegate ??= GetSymbol<Delegates.hb_face_is_immutable> ("hb_face_is_immutable")).Invoke (face);
+		#endif
+
+		// extern const char** hb_face_list_loaders()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial /* char */ void** hb_face_list_loaders ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* char */ void** hb_face_list_loaders ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* char */ void** hb_face_list_loaders ();
+		}
+		private static Delegates.hb_face_list_loaders hb_face_list_loaders_delegate;
+		internal static /* char */ void** hb_face_list_loaders () =>
+			(hb_face_list_loaders_delegate ??= GetSymbol<Delegates.hb_face_list_loaders> ("hb_face_list_loaders")).Invoke ();
 		#endif
 
 		// extern void hb_face_make_immutable(hb_face_t* face)

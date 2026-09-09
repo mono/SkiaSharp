@@ -13,6 +13,25 @@ namespace HarfBuzzSharp
 	{
 		#region hb-common.h
 
+		// extern void* hb_calloc(size_t nmemb, size_t size)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void* hb_calloc (/* size_t */ IntPtr nmemb, /* size_t */ IntPtr size);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void* hb_calloc (/* size_t */ IntPtr nmemb, /* size_t */ IntPtr size);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void* hb_calloc (/* size_t */ IntPtr nmemb, /* size_t */ IntPtr size);
+		}
+		private static Delegates.hb_calloc hb_calloc_delegate;
+		internal static void* hb_calloc (/* size_t */ IntPtr nmemb, /* size_t */ IntPtr size) =>
+			(hb_calloc_delegate ??= GetSymbol<Delegates.hb_calloc> ("hb_calloc")).Invoke (nmemb, size);
+		#endif
+
 		// extern uint8_t hb_color_get_alpha(hb_color_t color)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -168,6 +187,25 @@ namespace HarfBuzzSharp
 			(hb_feature_to_string_delegate ??= GetSymbol<Delegates.hb_feature_to_string> ("hb_feature_to_string")).Invoke (feature, buf, size);
 		#endif
 
+		// extern void hb_free(void* ptr)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_free (void* ptr);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_free (void* ptr);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_free (void* ptr);
+		}
+		private static Delegates.hb_free hb_free_delegate;
+		internal static void hb_free (void* ptr) =>
+			(hb_free_delegate ??= GetSymbol<Delegates.hb_free> ("hb_free")).Invoke (ptr);
+		#endif
+
 		// extern hb_language_t hb_language_from_string(const char* str, int len)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -206,6 +244,28 @@ namespace HarfBuzzSharp
 			(hb_language_get_default_delegate ??= GetSymbol<Delegates.hb_language_get_default> ("hb_language_get_default")).Invoke ();
 		#endif
 
+		// extern hb_bool_t hb_language_matches(hb_language_t language, hb_language_t specific)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool hb_language_matches (IntPtr language, IntPtr specific);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool hb_language_matches (IntPtr language, IntPtr specific);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool hb_language_matches (IntPtr language, IntPtr specific);
+		}
+		private static Delegates.hb_language_matches hb_language_matches_delegate;
+		internal static bool hb_language_matches (IntPtr language, IntPtr specific) =>
+			(hb_language_matches_delegate ??= GetSymbol<Delegates.hb_language_matches> ("hb_language_matches")).Invoke (language, specific);
+		#endif
+
 		// extern const char* hb_language_to_string(hb_language_t language)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -223,6 +283,44 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_language_to_string hb_language_to_string_delegate;
 		internal static /* char */ void* hb_language_to_string (IntPtr language) =>
 			(hb_language_to_string_delegate ??= GetSymbol<Delegates.hb_language_to_string> ("hb_language_to_string")).Invoke (language);
+		#endif
+
+		// extern void* hb_malloc(size_t size)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void* hb_malloc (/* size_t */ IntPtr size);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void* hb_malloc (/* size_t */ IntPtr size);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void* hb_malloc (/* size_t */ IntPtr size);
+		}
+		private static Delegates.hb_malloc hb_malloc_delegate;
+		internal static void* hb_malloc (/* size_t */ IntPtr size) =>
+			(hb_malloc_delegate ??= GetSymbol<Delegates.hb_malloc> ("hb_malloc")).Invoke (size);
+		#endif
+
+		// extern void* hb_realloc(void* ptr, size_t size)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void* hb_realloc (void* ptr, /* size_t */ IntPtr size);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void* hb_realloc (void* ptr, /* size_t */ IntPtr size);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void* hb_realloc (void* ptr, /* size_t */ IntPtr size);
+		}
+		private static Delegates.hb_realloc hb_realloc_delegate;
+		internal static void* hb_realloc (void* ptr, /* size_t */ IntPtr size) =>
+			(hb_realloc_delegate ??= GetSymbol<Delegates.hb_realloc> ("hb_realloc")).Invoke (ptr, size);
 		#endif
 
 		// extern hb_script_t hb_script_from_iso15924_tag(hb_tag_t tag)

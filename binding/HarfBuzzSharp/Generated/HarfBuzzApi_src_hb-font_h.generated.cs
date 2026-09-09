@@ -32,6 +32,25 @@ namespace HarfBuzzSharp
 			(hb_font_add_glyph_origin_for_direction_delegate ??= GetSymbol<Delegates.hb_font_add_glyph_origin_for_direction> ("hb_font_add_glyph_origin_for_direction")).Invoke (font, glyph, direction, x, y);
 		#endif
 
+		// extern void hb_font_changed(hb_font_t* font)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_font_changed (IntPtr font);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_font_changed (IntPtr font);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_font_changed (IntPtr font);
+		}
+		private static Delegates.hb_font_changed hb_font_changed_delegate;
+		internal static void hb_font_changed (IntPtr font) =>
+			(hb_font_changed_delegate ??= GetSymbol<Delegates.hb_font_changed> ("hb_font_changed")).Invoke (font);
+		#endif
+
 		// extern hb_font_t* hb_font_create(hb_face_t* face)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -816,6 +835,28 @@ namespace HarfBuzzSharp
 			(hb_font_get_glyph_h_origin_delegate ??= GetSymbol<Delegates.hb_font_get_glyph_h_origin> ("hb_font_get_glyph_h_origin")).Invoke (font, glyph, x, y);
 		#endif
 
+		// extern hb_bool_t hb_font_get_glyph_h_origins(hb_font_t* font, unsigned int count, const hb_codepoint_t* first_glyph, unsigned int glyph_stride, hb_position_t* first_x, unsigned int x_stride, hb_position_t* first_y, unsigned int y_stride)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool hb_font_get_glyph_h_origins (IntPtr font, UInt32 count, UInt32* first_glyph, UInt32 glyph_stride, Int32* first_x, UInt32 x_stride, Int32* first_y, UInt32 y_stride);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool hb_font_get_glyph_h_origins (IntPtr font, UInt32 count, UInt32* first_glyph, UInt32 glyph_stride, Int32* first_x, UInt32 x_stride, Int32* first_y, UInt32 y_stride);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool hb_font_get_glyph_h_origins (IntPtr font, UInt32 count, UInt32* first_glyph, UInt32 glyph_stride, Int32* first_x, UInt32 x_stride, Int32* first_y, UInt32 y_stride);
+		}
+		private static Delegates.hb_font_get_glyph_h_origins hb_font_get_glyph_h_origins_delegate;
+		internal static bool hb_font_get_glyph_h_origins (IntPtr font, UInt32 count, UInt32* first_glyph, UInt32 glyph_stride, Int32* first_x, UInt32 x_stride, Int32* first_y, UInt32 y_stride) =>
+			(hb_font_get_glyph_h_origins_delegate ??= GetSymbol<Delegates.hb_font_get_glyph_h_origins> ("hb_font_get_glyph_h_origins")).Invoke (font, count, first_glyph, glyph_stride, first_x, x_stride, first_y, y_stride);
+		#endif
+
 		// extern void hb_font_get_glyph_kerning_for_direction(hb_font_t* font, hb_codepoint_t first_glyph, hb_codepoint_t second_glyph, hb_direction_t direction, hb_position_t* x, hb_position_t* y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -934,6 +975,28 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_font_get_glyph_v_origin hb_font_get_glyph_v_origin_delegate;
 		internal static bool hb_font_get_glyph_v_origin (IntPtr font, UInt32 glyph, Int32* x, Int32* y) =>
 			(hb_font_get_glyph_v_origin_delegate ??= GetSymbol<Delegates.hb_font_get_glyph_v_origin> ("hb_font_get_glyph_v_origin")).Invoke (font, glyph, x, y);
+		#endif
+
+		// extern hb_bool_t hb_font_get_glyph_v_origins(hb_font_t* font, unsigned int count, const hb_codepoint_t* first_glyph, unsigned int glyph_stride, hb_position_t* first_x, unsigned int x_stride, hb_position_t* first_y, unsigned int y_stride)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool hb_font_get_glyph_v_origins (IntPtr font, UInt32 count, UInt32* first_glyph, UInt32 glyph_stride, Int32* first_x, UInt32 x_stride, Int32* first_y, UInt32 y_stride);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool hb_font_get_glyph_v_origins (IntPtr font, UInt32 count, UInt32* first_glyph, UInt32 glyph_stride, Int32* first_x, UInt32 x_stride, Int32* first_y, UInt32 y_stride);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool hb_font_get_glyph_v_origins (IntPtr font, UInt32 count, UInt32* first_glyph, UInt32 glyph_stride, Int32* first_x, UInt32 x_stride, Int32* first_y, UInt32 y_stride);
+		}
+		private static Delegates.hb_font_get_glyph_v_origins hb_font_get_glyph_v_origins_delegate;
+		internal static bool hb_font_get_glyph_v_origins (IntPtr font, UInt32 count, UInt32* first_glyph, UInt32 glyph_stride, Int32* first_x, UInt32 x_stride, Int32* first_y, UInt32 y_stride) =>
+			(hb_font_get_glyph_v_origins_delegate ??= GetSymbol<Delegates.hb_font_get_glyph_v_origins> ("hb_font_get_glyph_v_origins")).Invoke (font, count, first_glyph, glyph_stride, first_x, x_stride, first_y, y_stride);
 		#endif
 
 		// extern hb_bool_t hb_font_get_h_extents(hb_font_t* font, hb_font_extents_t* extents)
@@ -1075,6 +1138,63 @@ namespace HarfBuzzSharp
 			(hb_font_get_scale_delegate ??= GetSymbol<Delegates.hb_font_get_scale> ("hb_font_get_scale")).Invoke (font, x_scale, y_scale);
 		#endif
 
+		// extern unsigned int hb_font_get_serial(hb_font_t* font)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial UInt32 hb_font_get_serial (IntPtr font);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 hb_font_get_serial (IntPtr font);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt32 hb_font_get_serial (IntPtr font);
+		}
+		private static Delegates.hb_font_get_serial hb_font_get_serial_delegate;
+		internal static UInt32 hb_font_get_serial (IntPtr font) =>
+			(hb_font_get_serial_delegate ??= GetSymbol<Delegates.hb_font_get_serial> ("hb_font_get_serial")).Invoke (font);
+		#endif
+
+		// extern void hb_font_get_synthetic_bold(hb_font_t* font, float* x_embolden, float* y_embolden, hb_bool_t* in_place)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_font_get_synthetic_bold (IntPtr font, Single* x_embolden, Single* y_embolden, Boolean* in_place);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_font_get_synthetic_bold (IntPtr font, Single* x_embolden, Single* y_embolden, Boolean* in_place);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_font_get_synthetic_bold (IntPtr font, Single* x_embolden, Single* y_embolden, Boolean* in_place);
+		}
+		private static Delegates.hb_font_get_synthetic_bold hb_font_get_synthetic_bold_delegate;
+		internal static void hb_font_get_synthetic_bold (IntPtr font, Single* x_embolden, Single* y_embolden, Boolean* in_place) =>
+			(hb_font_get_synthetic_bold_delegate ??= GetSymbol<Delegates.hb_font_get_synthetic_bold> ("hb_font_get_synthetic_bold")).Invoke (font, x_embolden, y_embolden, in_place);
+		#endif
+
+		// extern float hb_font_get_synthetic_slant(hb_font_t* font)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial Single hb_font_get_synthetic_slant (IntPtr font);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Single hb_font_get_synthetic_slant (IntPtr font);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Single hb_font_get_synthetic_slant (IntPtr font);
+		}
+		private static Delegates.hb_font_get_synthetic_slant hb_font_get_synthetic_slant_delegate;
+		internal static Single hb_font_get_synthetic_slant (IntPtr font) =>
+			(hb_font_get_synthetic_slant_delegate ??= GetSymbol<Delegates.hb_font_get_synthetic_slant> ("hb_font_get_synthetic_slant")).Invoke (font);
+		#endif
+
 		// extern hb_bool_t hb_font_get_v_extents(hb_font_t* font, hb_font_extents_t* extents)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -1097,6 +1217,25 @@ namespace HarfBuzzSharp
 			(hb_font_get_v_extents_delegate ??= GetSymbol<Delegates.hb_font_get_v_extents> ("hb_font_get_v_extents")).Invoke (font, extents);
 		#endif
 
+		// extern const float* hb_font_get_var_coords_design(hb_font_t* font, unsigned int* length)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial Single* hb_font_get_var_coords_design (IntPtr font, UInt32* length);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Single* hb_font_get_var_coords_design (IntPtr font, UInt32* length);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Single* hb_font_get_var_coords_design (IntPtr font, UInt32* length);
+		}
+		private static Delegates.hb_font_get_var_coords_design hb_font_get_var_coords_design_delegate;
+		internal static Single* hb_font_get_var_coords_design (IntPtr font, UInt32* length) =>
+			(hb_font_get_var_coords_design_delegate ??= GetSymbol<Delegates.hb_font_get_var_coords_design> ("hb_font_get_var_coords_design")).Invoke (font, length);
+		#endif
+
 		// extern const int* hb_font_get_var_coords_normalized(hb_font_t* font, unsigned int* length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -1114,6 +1253,25 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_font_get_var_coords_normalized hb_font_get_var_coords_normalized_delegate;
 		internal static Int32* hb_font_get_var_coords_normalized (IntPtr font, UInt32* length) =>
 			(hb_font_get_var_coords_normalized_delegate ??= GetSymbol<Delegates.hb_font_get_var_coords_normalized> ("hb_font_get_var_coords_normalized")).Invoke (font, length);
+		#endif
+
+		// extern unsigned int hb_font_get_var_named_instance(hb_font_t* font)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial UInt32 hb_font_get_var_named_instance (IntPtr font);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 hb_font_get_var_named_instance (IntPtr font);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt32 hb_font_get_var_named_instance (IntPtr font);
+		}
+		private static Delegates.hb_font_get_var_named_instance hb_font_get_var_named_instance_delegate;
+		internal static UInt32 hb_font_get_var_named_instance (IntPtr font) =>
+			(hb_font_get_var_named_instance_delegate ??= GetSymbol<Delegates.hb_font_get_var_named_instance> ("hb_font_get_var_named_instance")).Invoke (font);
 		#endif
 
 		// extern hb_bool_t hb_font_get_variation_glyph(hb_font_t* font, hb_codepoint_t unicode, hb_codepoint_t variation_selector, hb_codepoint_t* glyph)
@@ -1199,6 +1357,47 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_font_is_immutable hb_font_is_immutable_delegate;
 		internal static bool hb_font_is_immutable (IntPtr font) =>
 			(hb_font_is_immutable_delegate ??= GetSymbol<Delegates.hb_font_is_immutable> ("hb_font_is_immutable")).Invoke (font);
+		#endif
+
+		// extern hb_bool_t hb_font_is_synthetic(hb_font_t* font)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool hb_font_is_synthetic (IntPtr font);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool hb_font_is_synthetic (IntPtr font);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool hb_font_is_synthetic (IntPtr font);
+		}
+		private static Delegates.hb_font_is_synthetic hb_font_is_synthetic_delegate;
+		internal static bool hb_font_is_synthetic (IntPtr font) =>
+			(hb_font_is_synthetic_delegate ??= GetSymbol<Delegates.hb_font_is_synthetic> ("hb_font_is_synthetic")).Invoke (font);
+		#endif
+
+		// extern const char** hb_font_list_funcs()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial /* char */ void** hb_font_list_funcs ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* char */ void** hb_font_list_funcs ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* char */ void** hb_font_list_funcs ();
+		}
+		private static Delegates.hb_font_list_funcs hb_font_list_funcs_delegate;
+		internal static /* char */ void** hb_font_list_funcs () =>
+			(hb_font_list_funcs_delegate ??= GetSymbol<Delegates.hb_font_list_funcs> ("hb_font_list_funcs")).Invoke ();
 		#endif
 
 		// extern void hb_font_make_immutable(hb_font_t* font)
@@ -1296,6 +1495,28 @@ namespace HarfBuzzSharp
 			(hb_font_set_funcs_data_delegate ??= GetSymbol<Delegates.hb_font_set_funcs_data> ("hb_font_set_funcs_data")).Invoke (font, font_data, destroy);
 		#endif
 
+		// extern hb_bool_t hb_font_set_funcs_using(hb_font_t* font, const char* name)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool hb_font_set_funcs_using (IntPtr font, /* char */ void* name);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool hb_font_set_funcs_using (IntPtr font, /* char */ void* name);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool hb_font_set_funcs_using (IntPtr font, /* char */ void* name);
+		}
+		private static Delegates.hb_font_set_funcs_using hb_font_set_funcs_using_delegate;
+		internal static bool hb_font_set_funcs_using (IntPtr font, /* char */ void* name) =>
+			(hb_font_set_funcs_using_delegate ??= GetSymbol<Delegates.hb_font_set_funcs_using> ("hb_font_set_funcs_using")).Invoke (font, name);
+		#endif
+
 		// extern void hb_font_set_parent(hb_font_t* font, hb_font_t* parent)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -1372,6 +1593,44 @@ namespace HarfBuzzSharp
 			(hb_font_set_scale_delegate ??= GetSymbol<Delegates.hb_font_set_scale> ("hb_font_set_scale")).Invoke (font, x_scale, y_scale);
 		#endif
 
+		// extern void hb_font_set_synthetic_bold(hb_font_t* font, float x_embolden, float y_embolden, hb_bool_t in_place)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_font_set_synthetic_bold (IntPtr font, Single x_embolden, Single y_embolden, [MarshalAs (UnmanagedType.I1)] bool in_place);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_font_set_synthetic_bold (IntPtr font, Single x_embolden, Single y_embolden, [MarshalAs (UnmanagedType.I1)] bool in_place);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_font_set_synthetic_bold (IntPtr font, Single x_embolden, Single y_embolden, [MarshalAs (UnmanagedType.I1)] bool in_place);
+		}
+		private static Delegates.hb_font_set_synthetic_bold hb_font_set_synthetic_bold_delegate;
+		internal static void hb_font_set_synthetic_bold (IntPtr font, Single x_embolden, Single y_embolden, [MarshalAs (UnmanagedType.I1)] bool in_place) =>
+			(hb_font_set_synthetic_bold_delegate ??= GetSymbol<Delegates.hb_font_set_synthetic_bold> ("hb_font_set_synthetic_bold")).Invoke (font, x_embolden, y_embolden, in_place);
+		#endif
+
+		// extern void hb_font_set_synthetic_slant(hb_font_t* font, float slant)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_font_set_synthetic_slant (IntPtr font, Single slant);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_font_set_synthetic_slant (IntPtr font, Single slant);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_font_set_synthetic_slant (IntPtr font, Single slant);
+		}
+		private static Delegates.hb_font_set_synthetic_slant hb_font_set_synthetic_slant_delegate;
+		internal static void hb_font_set_synthetic_slant (IntPtr font, Single slant) =>
+			(hb_font_set_synthetic_slant_delegate ??= GetSymbol<Delegates.hb_font_set_synthetic_slant> ("hb_font_set_synthetic_slant")).Invoke (font, slant);
+		#endif
+
 		// extern void hb_font_set_var_coords_design(hb_font_t* font, const float* coords, unsigned int coords_length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -1427,6 +1686,25 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_font_set_var_named_instance hb_font_set_var_named_instance_delegate;
 		internal static void hb_font_set_var_named_instance (IntPtr font, UInt32 instance_index) =>
 			(hb_font_set_var_named_instance_delegate ??= GetSymbol<Delegates.hb_font_set_var_named_instance> ("hb_font_set_var_named_instance")).Invoke (font, instance_index);
+		#endif
+
+		// extern void hb_font_set_variation(hb_font_t* font, hb_tag_t tag, float value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_font_set_variation (IntPtr font, UInt32 tag, Single value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_font_set_variation (IntPtr font, UInt32 tag, Single value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_font_set_variation (IntPtr font, UInt32 tag, Single value);
+		}
+		private static Delegates.hb_font_set_variation hb_font_set_variation_delegate;
+		internal static void hb_font_set_variation (IntPtr font, UInt32 tag, Single value) =>
+			(hb_font_set_variation_delegate ??= GetSymbol<Delegates.hb_font_set_variation> ("hb_font_set_variation")).Invoke (font, tag, value);
 		#endif
 
 		// extern void hb_font_set_variations(hb_font_t* font, const hb_variation_t* variations, unsigned int variations_length)
