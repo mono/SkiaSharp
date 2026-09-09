@@ -1,16 +1,13 @@
 // READ FIRST: documentation/dev/release-notes-and-api-diffs.md is the behavior
-// spec for the API-diff engine. This file holds the *shared* Cake machinery
-// that both the API-diff target (scripts/infra/docs/api-diff.cake)
-// and the mdoc XML generators (scripts/infra/docs/docs.cake) depend on:
+// spec for the API-diff engine. This file holds the Cake machinery used by
+// scripts/infra/docs/api-diff.cake:
 //
 //   - CreateNuGetDiffAsync : the NuGet-diff comparer factory (+ its dependency loader)
 //   - GetPlatformDirectories / DecompressArchive : package layout helpers
 //   - versions.json loading : LoadVersionsConfig / IsVersionSuperseded / FindCompareToBaseline
 //
-// Per the spec (§2.1) these are the only pieces shared between the two engines, so
-// they live alongside both consumers here instead of being duplicated. The heavy
-// NuGet-diff #addins live here too, so only the two consumers that #load this file
-// pay for them.
+// The heavy NuGet-diff #addins live here so the API-diff target is the only
+// release-notes path that pays for them.
 //
 // CONSUMERS MUST #load "shared.cake" BEFORE this file: it relies on ROOT_PATH,
 // PACKAGE_CACHE_PATH, GetVersion, TRACKED_NUGETS, etc. defined there.
@@ -67,9 +64,8 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     // generation time. The patterns are anchored under "SkiaSharp.Views." and require
     // "Resource"/"GlobalStaticResources" to be a whole trailing name segment, so the real
     // API lookalikes outside that namespace are untouched (SkiaSharp.Resources.*,
-    // SkiaSharp.GR*TextureResourceInfo). The mdoc engine applies the equivalent exclusion
-    // itself (scripts/infra/docs/docs.cake); this property only affects the api-diff path,
-    // since docs.cake consumes this comparer solely for its SearchPaths.
+    // SkiaSharp.GR*TextureResourceInfo). This property applies only to API
+    // diff generation.
     comparer.IgnoreMemberRegex.Add (@"^SkiaSharp\.Views\.[\w.]+\.Resource([.:+/ ]|$)");
     comparer.IgnoreMemberRegex.Add (@"^SkiaSharp\.Views\.[\w.]+\.GlobalStaticResources([.:+/ ]|$)");
 
@@ -372,34 +368,6 @@ void DecompressArchive(FilePath archive, DirectoryPath outputDir)
     }
 }
 
-string GetPlatformLabel (string tfm)
-{
-    var d = tfm.ToLowerInvariant ();
-    if (d.StartsWith("monoandroid") || (d.StartsWith("net") && d.Contains("-android")))
-        return "android";
-    if (d.StartsWith("net4"))
-        return "net";
-    if (d.StartsWith("uap"))
-        return "uwp";
-    if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios") || (d.StartsWith("net") && d.Contains("-ios")))
-        return "ios";
-    if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac") || (d.StartsWith("net") && d.Contains("-macos")))
-        return "macos";
-    if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos") || (d.StartsWith("net") && d.Contains("-tvos")))
-        return "tvos";
-    if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos") || (d.StartsWith("net") && d.Contains("-watchos")))
-        return "watchos";
-    if (d.StartsWith("tizen") || (d.StartsWith("net") && d.Contains("-tizen")))
-        return "tizen";
-    if (d.StartsWith("net") && d.Contains("-windows"))
-        return "windows";
-    if (d.StartsWith("net") && d.Contains("-maccatalyst"))
-        return "maccatalyst";
-    if (d.StartsWith("netcoreapp"))
-        return null;
-    throw new Exception($"Unknown platform '{tfm}'.");
-}
-
 IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(DirectoryPath rootDir)
 {
     var platformDirs = GetDirectories($"{rootDir}/*");
@@ -444,9 +412,31 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
 
     // there were no cross-platform libraries, so process each platform
     foreach (var dir in platformDirs) {
-        var platform = GetPlatformLabel (dir.GetDirectoryName ());
-        if (platform != null)
-            yield return (dir, platform);
+        var d = dir.GetDirectoryName().ToLower();
+        if (d.StartsWith("monoandroid") || (d.StartsWith("net") && d.Contains("-android")))
+            yield return (dir, "android");
+        else if (d.StartsWith("net4"))
+            yield return (dir, "net");
+        else if (d.StartsWith("uap"))
+            yield return (dir, "uwp");
+        else if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios") || (d.StartsWith("net") && d.Contains("-ios")))
+            yield return (dir, "ios");
+        else if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac") || (d.StartsWith("net") && d.Contains("-macos")))
+            yield return (dir, "macos");
+        else if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos") || (d.StartsWith("net") && d.Contains("-tvos")))
+            yield return (dir, "tvos");
+        else if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos") || (d.StartsWith("net") && d.Contains("-watchos")))
+            yield return (dir, "watchos");
+        else if (d.StartsWith("tizen") || (d.StartsWith("net") && d.Contains("-tizen")))
+            yield return (dir, "tizen");
+        else if (d.StartsWith("net") && d.Contains("-windows"))
+            yield return (dir, "windows");
+        else if (d.StartsWith("net") && d.Contains("-maccatalyst"))
+            yield return (dir, "maccatalyst");
+        else if (d.StartsWith("netcoreapp"))
+            continue; // skip this one for now
+        else
+            throw new Exception($"Unknown platform '{d}' found at '{dir}'.");
     }
 }
 
