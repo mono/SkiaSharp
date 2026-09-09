@@ -19,7 +19,7 @@
 # api-docs) both rely on that.
 #
 # Usage:
-#   generate-api-docs.sh [--skip-download] [extra cake args for update-docs...]
+#   generate-api-docs.sh [--skip-download] [--docs-output-root PATH] [extra cake args for update-docs...]
 #
 #   --skip-download   Reuse the existing output/nugets instead of re-downloading (e.g.
 #                     when a local package build already populated it). Errors if empty.
@@ -36,10 +36,14 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 cd "$REPO_ROOT"
 
 skip_download=0
+docs_output_root=
 cake_args=()
 while [ $# -gt 0 ]; do
     case "$1" in
         --skip-download) skip_download=1; shift ;;
+        --docs-output-root)
+            [ $# -ge 2 ] || { echo "ERROR: --docs-output-root requires a path." >&2; exit 2; }
+            docs_output_root="$2"; shift 2 ;;
         *)               cake_args+=("$1"); shift ;;
     esac
 done
@@ -70,4 +74,11 @@ else
 fi
 
 echo "==> [2/2] Regenerating XML docs (cake update-docs)"
+if [ -n "$docs_output_root" ]; then
+    case "$docs_output_root" in
+        /*) ;;
+        *) docs_output_root="$REPO_ROOT/$docs_output_root" ;;
+    esac
+    cake_args+=("--docsOutputRoot=$docs_output_root")
+fi
 dotnet cake --target=update-docs "${cake_args[@]}"
