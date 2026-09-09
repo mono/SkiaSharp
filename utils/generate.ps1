@@ -5,11 +5,11 @@ param(
 $ErrorActionPreference = "Stop"
 
 $projects = @(
-    @{ Json="libSkiaSharp.json";            Root="externals/skia";                                  Output="SkiaSharp/SkiaApi.generated.cs"                  },
-    @{ Json="libSkiaSharp.Skottie.json";    Root="externals/skia";                                  Output="SkiaSharp.Skottie/SkottieApi.generated.cs"       },
-    @{ Json="libSkiaSharp.SceneGraph.json"; Root="externals/skia";                                  Output="SkiaSharp.SceneGraph/SceneGraphApi.generated.cs" },
-    @{ Json="libSkiaSharp.Resources.json";  Root="externals/skia";                                  Output="SkiaSharp.Resources/ResourcesApi.generated.cs"   },
-    @{ Json="libHarfBuzzSharp.json";        Root="externals/skia/third_party/externals/harfbuzz";   Output="HarfBuzzSharp/HarfBuzzApi.generated.cs"          }
+    @{ Json="libSkiaSharp.json";            Root="externals/skia";                                  Output="SkiaSharp/Generated";            Legacy="SkiaSharp/SkiaApi.generated.cs"                  },
+    @{ Json="libSkiaSharp.Skottie.json";    Root="externals/skia";                                  Output="SkiaSharp.Skottie/Generated";    Legacy="SkiaSharp.Skottie/SkottieApi.generated.cs"       },
+    @{ Json="libSkiaSharp.SceneGraph.json"; Root="externals/skia";                                  Output="SkiaSharp.SceneGraph/Generated"; Legacy="SkiaSharp.SceneGraph/SceneGraphApi.generated.cs" },
+    @{ Json="libSkiaSharp.Resources.json";  Root="externals/skia";                                  Output="SkiaSharp.Resources/Generated";  Legacy="SkiaSharp.Resources/ResourcesApi.generated.cs"   },
+    @{ Json="libHarfBuzzSharp.json";        Root="externals/skia/third_party/externals/harfbuzz";   Output="HarfBuzzSharp/Generated";        Legacy="HarfBuzzSharp/HarfBuzzApi.generated.cs"          }
 )
 
 # Filter to specific config if provided
@@ -31,7 +31,7 @@ foreach ($proj in $projects) {
     $json = $proj.Json;
     $output = $proj.Output;
     $root = $proj.Root;
-    $filename = Split-Path $output -Leaf
+    $projectName = Split-Path (Split-Path $output -Parent) -Leaf
 
     $runArgs = @("run", "--no-build", "--no-launch-profile",
               "--project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj",
@@ -47,7 +47,13 @@ foreach ($proj in $projects) {
         continue
     }
 
-    Copy-Item -Path binding/$output -Destination output/generated/$filename -Force
+    Remove-Item -Path "binding/$($proj.Legacy)" -Force -ErrorAction SilentlyContinue
+
+    $destination = Join-Path "output/generated" $projectName
+    if (Test-Path $destination) {
+        Remove-Item -Path $destination -Recurse -Force
+    }
+    Copy-Item -Path binding/$output -Destination $destination -Recurse -Force
 }
 
 if ($failed) {

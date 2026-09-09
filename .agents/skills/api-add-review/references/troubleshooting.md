@@ -21,7 +21,7 @@ git add externals/skia  # NOW stage in parent
 
 **Fix:** Run `pwsh ./utils/generate.ps1` — NEVER skip this
 
-**Verify:** `git diff binding/SkiaSharp/SkiaApi.generated.cs` should show new function
+**Verify:** `git diff binding/SkiaSharp/Generated` should show new function
 
 ## EntryPointNotFoundException at runtime
 

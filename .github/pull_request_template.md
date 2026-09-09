@@ -27,7 +27,7 @@ Touching the C API or the externals/skia submodule? Replace "None." above with:
 Requires https://github.com/mono/skia/pull/<number>
 
 Native changes also require committing inside externals/skia (then `git add externals/skia`
-here) and re-running `pwsh ./utils/generate.ps1` to regenerate + commit SkiaApi.generated.cs.
+here) and re-running `pwsh ./utils/generate.ps1` to regenerate + commit Generated/.
 -->
 
 **Areas affected**

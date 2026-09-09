@@ -17,7 +17,7 @@ Task("externals-interop")
     });
 
     var settings = new ProcessSettings {
-        Arguments = "diff --name-only binding/*/*.generated.cs",
+        Arguments = "diff --name-only -- ':(glob)binding/**/*.generated.cs'",
         WorkingDirectory = ROOT_PATH,
         RedirectStandardOutput = true,
     };

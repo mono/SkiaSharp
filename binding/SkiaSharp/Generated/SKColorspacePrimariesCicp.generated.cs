@@ -1,0 +1,40 @@
+using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+#region Namespaces
+
+
+#endregion
+
+namespace SkiaSharp
+{
+
+	// sk_colorspace_primaries_cicp_t
+	public enum SKColorspacePrimariesCicp {
+		// UNKNOWN_SK_COLORSPACE_PRIMARIES_CICP = 0
+		Unknown = 0,
+		// REC709_SK_COLORSPACE_PRIMARIES_CICP = 1
+		Rec709 = 1,
+		// REC470_SYSTEM_M_SK_COLORSPACE_PRIMARIES_CICP = 4
+		Rec470SystemM = 4,
+		// REC470_SYSTEM_BG_SK_COLORSPACE_PRIMARIES_CICP = 5
+		Rec470SystemBg = 5,
+		// REC601_SK_COLORSPACE_PRIMARIES_CICP = 6
+		Rec601 = 6,
+		// SMPTE_ST240_SK_COLORSPACE_PRIMARIES_CICP = 7
+		SmpteSt240 = 7,
+		// GENERIC_FILM_SK_COLORSPACE_PRIMARIES_CICP = 8
+		GenericFilm = 8,
+		// REC2020_SK_COLORSPACE_PRIMARIES_CICP = 9
+		Rec2020 = 9,
+		// SMPTE_ST428_1_SK_COLORSPACE_PRIMARIES_CICP = 10
+		SmpteSt4281 = 10,
+		// SMPTE_RP431_2_SK_COLORSPACE_PRIMARIES_CICP = 11
+		SmpteRp4312 = 11,
+		// SMPTE_EG432_1_SK_COLORSPACE_PRIMARIES_CICP = 12
+		SmpteEg4321 = 12,
+		// ITU_T_H273_VALUE22_SK_COLORSPACE_PRIMARIES_CICP = 22
+		ItuTH273Value22 = 22,
+	}
+}

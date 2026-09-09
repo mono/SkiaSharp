@@ -8,9 +8,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace SkiaSharpGenerator;
 
-public sealed class DocumentationStore(string sourceFile)
+public sealed class DocumentationStore(IEnumerable<string> sourceFiles)
 {
-    private readonly string _source = File.ReadAllText(sourceFile);
+    private readonly IEnumerable<string> _sourceFiles = sourceFiles;
     private readonly Dictionary<string, string> _docs = new(StringComparer.Ordinal);
 
     public static string Type(string name) =>
@@ -25,12 +25,15 @@ public sealed class DocumentationStore(string sourceFile)
     public void Load()
     {
         var options = new CSharpParseOptions(kind: SourceCodeKind.Regular, documentationMode: DocumentationMode.Parse);
-        var tree = CSharpSyntaxTree.ParseText(_source, options);
-        var root = tree.GetCompilationUnitRoot();
-
-        foreach (var member in root.Members)
+        foreach (var sourceFile in _sourceFiles.OrderBy(path => path, StringComparer.Ordinal))
         {
-            ProcessMember(member, null);
+            var tree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFile), options);
+            var root = tree.GetCompilationUnitRoot();
+
+            foreach (var member in root.Members)
+            {
+                ProcessMember(member, null);
+            }
         }
     }
 

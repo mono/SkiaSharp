@@ -1,0 +1,44 @@
+using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+#region Namespaces
+
+
+#endregion
+
+namespace SkiaSharp
+{
+
+	// sk_colorspace_transfer_fn_cicp_t
+	public enum SKColorspaceTransferFnCicp {
+		// UNKNOWN_SK_COLORSPACE_TRANSFER_FN_CICP = 0
+		Unknown = 0,
+		// REC709_SK_COLORSPACE_TRANSFER_FN_CICP = 1
+		Rec709 = 1,
+		// REC470_SYSTEM_M_SK_COLORSPACE_TRANSFER_FN_CICP = 4
+		Rec470SystemM = 4,
+		// REC470_SYSTEM_BG_SK_COLORSPACE_TRANSFER_FN_CICP = 5
+		Rec470SystemBg = 5,
+		// REC601_SK_COLORSPACE_TRANSFER_FN_CICP = 6
+		Rec601 = 6,
+		// SMPTE_ST240_SK_COLORSPACE_TRANSFER_FN_CICP = 7
+		SmpteSt240 = 7,
+		// LINEAR_SK_COLORSPACE_TRANSFER_FN_CICP = 8
+		Linear = 8,
+		// IEC61966_2_4_SK_COLORSPACE_TRANSFER_FN_CICP = 11
+		Iec6196624 = 11,
+		// IEC61966_2_1_SK_COLORSPACE_TRANSFER_FN_CICP = 13
+		Iec6196621 = 13,
+		// REC2020_10BIT_SK_COLORSPACE_TRANSFER_FN_CICP = 14
+		Rec202010bit = 14,
+		// REC2020_12BIT_SK_COLORSPACE_TRANSFER_FN_CICP = 15
+		Rec202012bit = 15,
+		// PQ_SK_COLORSPACE_TRANSFER_FN_CICP = 16
+		Pq = 16,
+		// SMPTE_ST428_1_SK_COLORSPACE_TRANSFER_FN_CICP = 17
+		SmpteSt4281 = 17,
+		// HLG_SK_COLORSPACE_TRANSFER_FN_CICP = 18
+		Hlg = 18,
+	}
+}

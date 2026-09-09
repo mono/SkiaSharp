@@ -2,7 +2,7 @@
 """Check companion SkiaSharp PR: categorize changed files and produce diffs.
 
 Compares the companion PR branch against the companion PR's actual base commit.
-Filters out generated files (*Api.generated.cs) and produces the same
+Filters out generated files (*.generated.cs) and produces the same
 sourceFile structure used by upstream/interop integrity checks.
 """
 import fnmatch
@@ -11,10 +11,6 @@ import subprocess
 import sys
 
 # Files matching these patterns are auto-generated and skipped
-GENERATED_PATTERNS = [
-    "*Api.generated.cs",
-]
-
 # Files matching these patterns are skipped (not interesting for review)
 SKIP_PATTERNS = [
     "*.generated.cs",

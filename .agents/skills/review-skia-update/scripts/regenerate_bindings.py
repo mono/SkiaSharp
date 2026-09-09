@@ -17,27 +17,27 @@ PROJECTS = (
     (
         "libSkiaSharp.json",
         "externals/skia",
-        "SkiaSharp/SkiaApi.generated.cs",
+        "SkiaSharp/Generated",
     ),
     (
         "libSkiaSharp.Skottie.json",
         "externals/skia",
-        "SkiaSharp.Skottie/SkottieApi.generated.cs",
+        "SkiaSharp.Skottie/Generated",
     ),
     (
         "libSkiaSharp.SceneGraph.json",
         "externals/skia",
-        "SkiaSharp.SceneGraph/SceneGraphApi.generated.cs",
+        "SkiaSharp.SceneGraph/Generated",
     ),
     (
         "libSkiaSharp.Resources.json",
         "externals/skia",
-        "SkiaSharp.Resources/ResourcesApi.generated.cs",
+        "SkiaSharp.Resources/Generated",
     ),
     (
         "libHarfBuzzSharp.json",
         "externals/skia/third_party/externals/harfbuzz",
-        "HarfBuzzSharp/HarfBuzzApi.generated.cs",
+        "HarfBuzzSharp/Generated",
     ),
 )
 
@@ -110,9 +110,18 @@ def regenerate(repo_root: Path, config: str | None = None) -> None:
             "--output",
             str(output_path),
         )
+        if config_name == "libHarfBuzzSharp.json":
+            # HarfBuzz has an independent version policy. Generate it only into
+            # the review artifact so this helper never changes its worktree tree.
+            output_path = generated_directory / "HarfBuzzSharp"
+            command = command[:-1] + (str(output_path),)
         print(" ".join(str(part) for part in command))
         run(repo_root, *command)
-        shutil.copy2(output_path, generated_directory / output_path.name)
+        if config_name != "libHarfBuzzSharp.json":
+            destination = generated_directory / output_path.parent.name
+            if destination.exists():
+                shutil.rmtree(destination)
+            shutil.copytree(output_path, destination)
 
     binding_stat = run(repo_root, "git", "diff", "--stat", "--", "binding/", capture=True)
     print("Binding diff summary:")

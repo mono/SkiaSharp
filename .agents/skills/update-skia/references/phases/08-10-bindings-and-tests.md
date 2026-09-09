@@ -18,7 +18,7 @@ generated changes, and lists new native functions. Never edit a generated file m
 For every newly generated native function:
 
 ```bash
-git diff "origin/{BASE_BRANCH}" -- binding/SkiaSharp/SkiaApi.generated.cs |
+git diff "origin/{BASE_BRANCH}" -- binding/SkiaSharp/Generated |
   grep '^+.*internal static'
 grep -rn "<native-function>" binding/SkiaSharp --exclude='*.generated.cs'
 ```
