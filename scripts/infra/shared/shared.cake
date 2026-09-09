@@ -87,14 +87,6 @@ DirectoryPath OUTPUT_NUGETS_PATH = ROOT_OUTPUT_PATH.Combine("nugets");
 DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = ROOT_OUTPUT_PATH.Combine("nugets-special");
 DirectoryPath OUTPUT_ARCADE_ASSETS_PATH = ROOT_OUTPUT_PATH.Combine("arcade-assets");
 DirectoryPath OUTPUT_PDB_ARTIFACTS_PATH = ROOT_OUTPUT_PATH.Combine("pdbs");
-// The API-docs repository is no longer a required submodule.  Keep the
-// historical in-tree default for local users, while allowing cross-repo
-// callers to place generated ECMA output in an explicit external checkout.
-DirectoryPath DOCS_ROOT_PATH = MakeAbsolute (Directory (Argument (
-    "docsOutputRoot",
-    Argument ("docsRoot", ROOT_PATH.Combine ("docs").FullPath))));
-DirectoryPath DOCS_PATH = DOCS_ROOT_PATH.Combine("SkiaSharpAPI");
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // BUILD OPTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
