@@ -18,20 +18,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_ot_var_find_axis_info (IntPtr face, UInt32 axis_tag, OpenTypeVarAxisInfo* axis_info);
+		internal static partial bool hb_ot_var_find_axis_info (hb_face_t face, UInt32 axis_tag, OpenTypeVarAxisInfo* axis_info);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_ot_var_find_axis_info (IntPtr face, UInt32 axis_tag, OpenTypeVarAxisInfo* axis_info);
+		internal static extern bool hb_ot_var_find_axis_info (hb_face_t face, UInt32 axis_tag, OpenTypeVarAxisInfo* axis_info);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_ot_var_find_axis_info (IntPtr face, UInt32 axis_tag, OpenTypeVarAxisInfo* axis_info);
+			internal delegate bool hb_ot_var_find_axis_info (hb_face_t face, UInt32 axis_tag, OpenTypeVarAxisInfo* axis_info);
 		}
 		private static Delegates.hb_ot_var_find_axis_info hb_ot_var_find_axis_info_delegate;
-		internal static bool hb_ot_var_find_axis_info (IntPtr face, UInt32 axis_tag, OpenTypeVarAxisInfo* axis_info) =>
+		internal static bool hb_ot_var_find_axis_info (hb_face_t face, UInt32 axis_tag, OpenTypeVarAxisInfo* axis_info) =>
 			(hb_ot_var_find_axis_info_delegate ??= GetSymbol<Delegates.hb_ot_var_find_axis_info> ("hb_ot_var_find_axis_info")).Invoke (face, axis_tag, axis_info);
 		#endif
 
@@ -39,18 +39,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_ot_var_get_axis_count (IntPtr face);
+		internal static partial UInt32 hb_ot_var_get_axis_count (hb_face_t face);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_var_get_axis_count (IntPtr face);
+		internal static extern UInt32 hb_ot_var_get_axis_count (hb_face_t face);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_var_get_axis_count (IntPtr face);
+			internal delegate UInt32 hb_ot_var_get_axis_count (hb_face_t face);
 		}
 		private static Delegates.hb_ot_var_get_axis_count hb_ot_var_get_axis_count_delegate;
-		internal static UInt32 hb_ot_var_get_axis_count (IntPtr face) =>
+		internal static UInt32 hb_ot_var_get_axis_count (hb_face_t face) =>
 			(hb_ot_var_get_axis_count_delegate ??= GetSymbol<Delegates.hb_ot_var_get_axis_count> ("hb_ot_var_get_axis_count")).Invoke (face);
 		#endif
 
@@ -58,18 +58,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_ot_var_get_axis_infos (IntPtr face, UInt32 start_offset, UInt32* axes_count, OpenTypeVarAxisInfo* axes_array);
+		internal static partial UInt32 hb_ot_var_get_axis_infos (hb_face_t face, UInt32 start_offset, UInt32* axes_count, OpenTypeVarAxisInfo* axes_array);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_var_get_axis_infos (IntPtr face, UInt32 start_offset, UInt32* axes_count, OpenTypeVarAxisInfo* axes_array);
+		internal static extern UInt32 hb_ot_var_get_axis_infos (hb_face_t face, UInt32 start_offset, UInt32* axes_count, OpenTypeVarAxisInfo* axes_array);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_var_get_axis_infos (IntPtr face, UInt32 start_offset, UInt32* axes_count, OpenTypeVarAxisInfo* axes_array);
+			internal delegate UInt32 hb_ot_var_get_axis_infos (hb_face_t face, UInt32 start_offset, UInt32* axes_count, OpenTypeVarAxisInfo* axes_array);
 		}
 		private static Delegates.hb_ot_var_get_axis_infos hb_ot_var_get_axis_infos_delegate;
-		internal static UInt32 hb_ot_var_get_axis_infos (IntPtr face, UInt32 start_offset, UInt32* axes_count, OpenTypeVarAxisInfo* axes_array) =>
+		internal static UInt32 hb_ot_var_get_axis_infos (hb_face_t face, UInt32 start_offset, UInt32* axes_count, OpenTypeVarAxisInfo* axes_array) =>
 			(hb_ot_var_get_axis_infos_delegate ??= GetSymbol<Delegates.hb_ot_var_get_axis_infos> ("hb_ot_var_get_axis_infos")).Invoke (face, start_offset, axes_count, axes_array);
 		#endif
 
@@ -77,18 +77,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_ot_var_get_named_instance_count (IntPtr face);
+		internal static partial UInt32 hb_ot_var_get_named_instance_count (hb_face_t face);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_var_get_named_instance_count (IntPtr face);
+		internal static extern UInt32 hb_ot_var_get_named_instance_count (hb_face_t face);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_var_get_named_instance_count (IntPtr face);
+			internal delegate UInt32 hb_ot_var_get_named_instance_count (hb_face_t face);
 		}
 		private static Delegates.hb_ot_var_get_named_instance_count hb_ot_var_get_named_instance_count_delegate;
-		internal static UInt32 hb_ot_var_get_named_instance_count (IntPtr face) =>
+		internal static UInt32 hb_ot_var_get_named_instance_count (hb_face_t face) =>
 			(hb_ot_var_get_named_instance_count_delegate ??= GetSymbol<Delegates.hb_ot_var_get_named_instance_count> ("hb_ot_var_get_named_instance_count")).Invoke (face);
 		#endif
 
@@ -97,20 +97,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_ot_var_has_data (IntPtr face);
+		internal static partial bool hb_ot_var_has_data (hb_face_t face);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_ot_var_has_data (IntPtr face);
+		internal static extern bool hb_ot_var_has_data (hb_face_t face);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_ot_var_has_data (IntPtr face);
+			internal delegate bool hb_ot_var_has_data (hb_face_t face);
 		}
 		private static Delegates.hb_ot_var_has_data hb_ot_var_has_data_delegate;
-		internal static bool hb_ot_var_has_data (IntPtr face) =>
+		internal static bool hb_ot_var_has_data (hb_face_t face) =>
 			(hb_ot_var_has_data_delegate ??= GetSymbol<Delegates.hb_ot_var_has_data> ("hb_ot_var_has_data")).Invoke (face);
 		#endif
 
@@ -118,18 +118,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_ot_var_named_instance_get_design_coords (IntPtr face, UInt32 instance_index, UInt32* coords_length, Single* coords);
+		internal static partial UInt32 hb_ot_var_named_instance_get_design_coords (hb_face_t face, UInt32 instance_index, UInt32* coords_length, Single* coords);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_var_named_instance_get_design_coords (IntPtr face, UInt32 instance_index, UInt32* coords_length, Single* coords);
+		internal static extern UInt32 hb_ot_var_named_instance_get_design_coords (hb_face_t face, UInt32 instance_index, UInt32* coords_length, Single* coords);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_var_named_instance_get_design_coords (IntPtr face, UInt32 instance_index, UInt32* coords_length, Single* coords);
+			internal delegate UInt32 hb_ot_var_named_instance_get_design_coords (hb_face_t face, UInt32 instance_index, UInt32* coords_length, Single* coords);
 		}
 		private static Delegates.hb_ot_var_named_instance_get_design_coords hb_ot_var_named_instance_get_design_coords_delegate;
-		internal static UInt32 hb_ot_var_named_instance_get_design_coords (IntPtr face, UInt32 instance_index, UInt32* coords_length, Single* coords) =>
+		internal static UInt32 hb_ot_var_named_instance_get_design_coords (hb_face_t face, UInt32 instance_index, UInt32* coords_length, Single* coords) =>
 			(hb_ot_var_named_instance_get_design_coords_delegate ??= GetSymbol<Delegates.hb_ot_var_named_instance_get_design_coords> ("hb_ot_var_named_instance_get_design_coords")).Invoke (face, instance_index, coords_length, coords);
 		#endif
 
@@ -137,18 +137,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial OpenTypeNameId hb_ot_var_named_instance_get_postscript_name_id (IntPtr face, UInt32 instance_index);
+		internal static partial OpenTypeNameId hb_ot_var_named_instance_get_postscript_name_id (hb_face_t face, UInt32 instance_index);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern OpenTypeNameId hb_ot_var_named_instance_get_postscript_name_id (IntPtr face, UInt32 instance_index);
+		internal static extern OpenTypeNameId hb_ot_var_named_instance_get_postscript_name_id (hb_face_t face, UInt32 instance_index);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate OpenTypeNameId hb_ot_var_named_instance_get_postscript_name_id (IntPtr face, UInt32 instance_index);
+			internal delegate OpenTypeNameId hb_ot_var_named_instance_get_postscript_name_id (hb_face_t face, UInt32 instance_index);
 		}
 		private static Delegates.hb_ot_var_named_instance_get_postscript_name_id hb_ot_var_named_instance_get_postscript_name_id_delegate;
-		internal static OpenTypeNameId hb_ot_var_named_instance_get_postscript_name_id (IntPtr face, UInt32 instance_index) =>
+		internal static OpenTypeNameId hb_ot_var_named_instance_get_postscript_name_id (hb_face_t face, UInt32 instance_index) =>
 			(hb_ot_var_named_instance_get_postscript_name_id_delegate ??= GetSymbol<Delegates.hb_ot_var_named_instance_get_postscript_name_id> ("hb_ot_var_named_instance_get_postscript_name_id")).Invoke (face, instance_index);
 		#endif
 
@@ -156,18 +156,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial OpenTypeNameId hb_ot_var_named_instance_get_subfamily_name_id (IntPtr face, UInt32 instance_index);
+		internal static partial OpenTypeNameId hb_ot_var_named_instance_get_subfamily_name_id (hb_face_t face, UInt32 instance_index);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern OpenTypeNameId hb_ot_var_named_instance_get_subfamily_name_id (IntPtr face, UInt32 instance_index);
+		internal static extern OpenTypeNameId hb_ot_var_named_instance_get_subfamily_name_id (hb_face_t face, UInt32 instance_index);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate OpenTypeNameId hb_ot_var_named_instance_get_subfamily_name_id (IntPtr face, UInt32 instance_index);
+			internal delegate OpenTypeNameId hb_ot_var_named_instance_get_subfamily_name_id (hb_face_t face, UInt32 instance_index);
 		}
 		private static Delegates.hb_ot_var_named_instance_get_subfamily_name_id hb_ot_var_named_instance_get_subfamily_name_id_delegate;
-		internal static OpenTypeNameId hb_ot_var_named_instance_get_subfamily_name_id (IntPtr face, UInt32 instance_index) =>
+		internal static OpenTypeNameId hb_ot_var_named_instance_get_subfamily_name_id (hb_face_t face, UInt32 instance_index) =>
 			(hb_ot_var_named_instance_get_subfamily_name_id_delegate ??= GetSymbol<Delegates.hb_ot_var_named_instance_get_subfamily_name_id> ("hb_ot_var_named_instance_get_subfamily_name_id")).Invoke (face, instance_index);
 		#endif
 
@@ -175,18 +175,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_ot_var_normalize_coords (IntPtr face, UInt32 coords_length, Single* design_coords, Int32* normalized_coords);
+		internal static partial void hb_ot_var_normalize_coords (hb_face_t face, UInt32 coords_length, Single* design_coords, Int32* normalized_coords);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_ot_var_normalize_coords (IntPtr face, UInt32 coords_length, Single* design_coords, Int32* normalized_coords);
+		internal static extern void hb_ot_var_normalize_coords (hb_face_t face, UInt32 coords_length, Single* design_coords, Int32* normalized_coords);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_ot_var_normalize_coords (IntPtr face, UInt32 coords_length, Single* design_coords, Int32* normalized_coords);
+			internal delegate void hb_ot_var_normalize_coords (hb_face_t face, UInt32 coords_length, Single* design_coords, Int32* normalized_coords);
 		}
 		private static Delegates.hb_ot_var_normalize_coords hb_ot_var_normalize_coords_delegate;
-		internal static void hb_ot_var_normalize_coords (IntPtr face, UInt32 coords_length, Single* design_coords, Int32* normalized_coords) =>
+		internal static void hb_ot_var_normalize_coords (hb_face_t face, UInt32 coords_length, Single* design_coords, Int32* normalized_coords) =>
 			(hb_ot_var_normalize_coords_delegate ??= GetSymbol<Delegates.hb_ot_var_normalize_coords> ("hb_ot_var_normalize_coords")).Invoke (face, coords_length, design_coords, normalized_coords);
 		#endif
 
@@ -194,18 +194,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_ot_var_normalize_variations (IntPtr face, Variation* variations, UInt32 variations_length, Int32* coords, UInt32 coords_length);
+		internal static partial void hb_ot_var_normalize_variations (hb_face_t face, Variation* variations, UInt32 variations_length, Int32* coords, UInt32 coords_length);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_ot_var_normalize_variations (IntPtr face, Variation* variations, UInt32 variations_length, Int32* coords, UInt32 coords_length);
+		internal static extern void hb_ot_var_normalize_variations (hb_face_t face, Variation* variations, UInt32 variations_length, Int32* coords, UInt32 coords_length);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_ot_var_normalize_variations (IntPtr face, Variation* variations, UInt32 variations_length, Int32* coords, UInt32 coords_length);
+			internal delegate void hb_ot_var_normalize_variations (hb_face_t face, Variation* variations, UInt32 variations_length, Int32* coords, UInt32 coords_length);
 		}
 		private static Delegates.hb_ot_var_normalize_variations hb_ot_var_normalize_variations_delegate;
-		internal static void hb_ot_var_normalize_variations (IntPtr face, Variation* variations, UInt32 variations_length, Int32* coords, UInt32 coords_length) =>
+		internal static void hb_ot_var_normalize_variations (hb_face_t face, Variation* variations, UInt32 variations_length, Int32* coords, UInt32 coords_length) =>
 			(hb_ot_var_normalize_variations_delegate ??= GetSymbol<Delegates.hb_ot_var_normalize_variations> ("hb_ot_var_normalize_variations")).Invoke (face, variations, variations_length, coords, coords_length);
 		#endif
 

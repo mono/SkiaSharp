@@ -13,7 +13,7 @@ namespace SkiaSharp
 	// typedef bool (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_hasPosition_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
-	internal unsafe delegate bool SKManagedStreamHasPositionProxyDelegate(IntPtr s, void* context);
+	internal unsafe delegate bool SKManagedStreamHasPositionProxyDelegate(sk_stream_managedstream_t s, void* context);
 
 }
 #endif // !USE_LIBRARY_IMPORT

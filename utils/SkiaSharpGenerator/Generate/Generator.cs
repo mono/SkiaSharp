@@ -45,6 +45,8 @@ namespace SkiaSharpGenerator
 		{
 			Log?.LogVerbose("Writing C# API...");
 
+			WriteNativeAliases();
+
 			var delegates = StableOrdering.ByName(
 				compilation.Typedefs.Where(IsFunctionPointer).Where(t => !IsExcludedSymbol(t.GetDisplayName())).Where(t => IncludeNamespace(t.GetDisplayName())),
 				t => t.GetDisplayName());
@@ -518,33 +520,24 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"#endregion");
 		}
 
-		private void WriteClasses(TextWriter writer)
+		private void WriteNativeAliases()
 		{
-			Log?.LogVerbose("  Writing usings...");
-
-			writer.WriteLine($"#region Class declarations");
-			writer.WriteLine();
+			Log?.LogVerbose("  Writing native type aliases...");
 
 			var classes = StableOrdering.ByName(
 				compilation.Classes,
 				c => c.GetDisplayName())
-				.ToList();
+				.Where(c => c.SizeOf == 0);
+			using var writer = GenerateCommand.CreateOutputWriter(Path.Combine(OutputDirectory, "NativeAliases.generated.cs"));
 			foreach (var klass in classes)
 			{
 				var type = klass.GetDisplayName();
 				if (IsExcludedSymbol(type))
 					continue;
 
-				skiaTypes.Add(type, klass.SizeOf != 0);
-
 				Log?.LogVerbose($"    {klass.GetDisplayName()}");
-
-				if (klass.SizeOf == 0)
-					writer.WriteLine($"using {klass.GetDisplayName()} = System.IntPtr;");
+				writer.WriteLine($"global using {type} = System.IntPtr;");
 			}
-
-			writer.WriteLine();
-			writer.WriteLine($"#endregion");
 		}
 
 		private void WriteFunctions(TextWriter writer, string sourcePath)

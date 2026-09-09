@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_dynamicmemorywstream_copy_to (IntPtr cstream, void* data);
+		internal static partial void sk_dynamicmemorywstream_copy_to (sk_wstream_dynamicmemorystream_t cstream, void* data);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_dynamicmemorywstream_copy_to (IntPtr cstream, void* data);
+		internal static extern void sk_dynamicmemorywstream_copy_to (sk_wstream_dynamicmemorystream_t cstream, void* data);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_dynamicmemorywstream_copy_to (IntPtr cstream, void* data);
+			internal delegate void sk_dynamicmemorywstream_copy_to (sk_wstream_dynamicmemorystream_t cstream, void* data);
 		}
 		private static Delegates.sk_dynamicmemorywstream_copy_to sk_dynamicmemorywstream_copy_to_delegate;
-		internal static void sk_dynamicmemorywstream_copy_to (IntPtr cstream, void* data) =>
+		internal static void sk_dynamicmemorywstream_copy_to (sk_wstream_dynamicmemorystream_t cstream, void* data) =>
 			(sk_dynamicmemorywstream_copy_to_delegate ??= GetSymbol<Delegates.sk_dynamicmemorywstream_copy_to> ("sk_dynamicmemorywstream_copy_to")).Invoke (cstream, data);
 		#endif
 
@@ -36,18 +36,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_dynamicmemorywstream_destroy (IntPtr cstream);
+		internal static partial void sk_dynamicmemorywstream_destroy (sk_wstream_dynamicmemorystream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_dynamicmemorywstream_destroy (IntPtr cstream);
+		internal static extern void sk_dynamicmemorywstream_destroy (sk_wstream_dynamicmemorystream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_dynamicmemorywstream_destroy (IntPtr cstream);
+			internal delegate void sk_dynamicmemorywstream_destroy (sk_wstream_dynamicmemorystream_t cstream);
 		}
 		private static Delegates.sk_dynamicmemorywstream_destroy sk_dynamicmemorywstream_destroy_delegate;
-		internal static void sk_dynamicmemorywstream_destroy (IntPtr cstream) =>
+		internal static void sk_dynamicmemorywstream_destroy (sk_wstream_dynamicmemorystream_t cstream) =>
 			(sk_dynamicmemorywstream_destroy_delegate ??= GetSymbol<Delegates.sk_dynamicmemorywstream_destroy> ("sk_dynamicmemorywstream_destroy")).Invoke (cstream);
 		#endif
 
@@ -55,18 +55,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_dynamicmemorywstream_detach_as_data (IntPtr cstream);
+		internal static partial sk_data_t sk_dynamicmemorywstream_detach_as_data (sk_wstream_dynamicmemorystream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_dynamicmemorywstream_detach_as_data (IntPtr cstream);
+		internal static extern sk_data_t sk_dynamicmemorywstream_detach_as_data (sk_wstream_dynamicmemorystream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_dynamicmemorywstream_detach_as_data (IntPtr cstream);
+			internal delegate sk_data_t sk_dynamicmemorywstream_detach_as_data (sk_wstream_dynamicmemorystream_t cstream);
 		}
 		private static Delegates.sk_dynamicmemorywstream_detach_as_data sk_dynamicmemorywstream_detach_as_data_delegate;
-		internal static IntPtr sk_dynamicmemorywstream_detach_as_data (IntPtr cstream) =>
+		internal static sk_data_t sk_dynamicmemorywstream_detach_as_data (sk_wstream_dynamicmemorystream_t cstream) =>
 			(sk_dynamicmemorywstream_detach_as_data_delegate ??= GetSymbol<Delegates.sk_dynamicmemorywstream_detach_as_data> ("sk_dynamicmemorywstream_detach_as_data")).Invoke (cstream);
 		#endif
 
@@ -74,18 +74,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_dynamicmemorywstream_detach_as_stream (IntPtr cstream);
+		internal static partial sk_stream_asset_t sk_dynamicmemorywstream_detach_as_stream (sk_wstream_dynamicmemorystream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_dynamicmemorywstream_detach_as_stream (IntPtr cstream);
+		internal static extern sk_stream_asset_t sk_dynamicmemorywstream_detach_as_stream (sk_wstream_dynamicmemorystream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_dynamicmemorywstream_detach_as_stream (IntPtr cstream);
+			internal delegate sk_stream_asset_t sk_dynamicmemorywstream_detach_as_stream (sk_wstream_dynamicmemorystream_t cstream);
 		}
 		private static Delegates.sk_dynamicmemorywstream_detach_as_stream sk_dynamicmemorywstream_detach_as_stream_delegate;
-		internal static IntPtr sk_dynamicmemorywstream_detach_as_stream (IntPtr cstream) =>
+		internal static sk_stream_asset_t sk_dynamicmemorywstream_detach_as_stream (sk_wstream_dynamicmemorystream_t cstream) =>
 			(sk_dynamicmemorywstream_detach_as_stream_delegate ??= GetSymbol<Delegates.sk_dynamicmemorywstream_detach_as_stream> ("sk_dynamicmemorywstream_detach_as_stream")).Invoke (cstream);
 		#endif
 
@@ -93,18 +93,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_dynamicmemorywstream_new ();
+		internal static partial sk_wstream_dynamicmemorystream_t sk_dynamicmemorywstream_new ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_dynamicmemorywstream_new ();
+		internal static extern sk_wstream_dynamicmemorystream_t sk_dynamicmemorywstream_new ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_dynamicmemorywstream_new ();
+			internal delegate sk_wstream_dynamicmemorystream_t sk_dynamicmemorywstream_new ();
 		}
 		private static Delegates.sk_dynamicmemorywstream_new sk_dynamicmemorywstream_new_delegate;
-		internal static IntPtr sk_dynamicmemorywstream_new () =>
+		internal static sk_wstream_dynamicmemorystream_t sk_dynamicmemorywstream_new () =>
 			(sk_dynamicmemorywstream_new_delegate ??= GetSymbol<Delegates.sk_dynamicmemorywstream_new> ("sk_dynamicmemorywstream_new")).Invoke ();
 		#endif
 
@@ -113,20 +113,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_dynamicmemorywstream_write_to_stream (IntPtr cstream, IntPtr dst);
+		internal static partial bool sk_dynamicmemorywstream_write_to_stream (sk_wstream_dynamicmemorystream_t cstream, sk_wstream_t dst);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_dynamicmemorywstream_write_to_stream (IntPtr cstream, IntPtr dst);
+		internal static extern bool sk_dynamicmemorywstream_write_to_stream (sk_wstream_dynamicmemorystream_t cstream, sk_wstream_t dst);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_dynamicmemorywstream_write_to_stream (IntPtr cstream, IntPtr dst);
+			internal delegate bool sk_dynamicmemorywstream_write_to_stream (sk_wstream_dynamicmemorystream_t cstream, sk_wstream_t dst);
 		}
 		private static Delegates.sk_dynamicmemorywstream_write_to_stream sk_dynamicmemorywstream_write_to_stream_delegate;
-		internal static bool sk_dynamicmemorywstream_write_to_stream (IntPtr cstream, IntPtr dst) =>
+		internal static bool sk_dynamicmemorywstream_write_to_stream (sk_wstream_dynamicmemorystream_t cstream, sk_wstream_t dst) =>
 			(sk_dynamicmemorywstream_write_to_stream_delegate ??= GetSymbol<Delegates.sk_dynamicmemorywstream_write_to_stream> ("sk_dynamicmemorywstream_write_to_stream")).Invoke (cstream, dst);
 		#endif
 
@@ -134,18 +134,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_filestream_destroy (IntPtr cstream);
+		internal static partial void sk_filestream_destroy (sk_stream_filestream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_filestream_destroy (IntPtr cstream);
+		internal static extern void sk_filestream_destroy (sk_stream_filestream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_filestream_destroy (IntPtr cstream);
+			internal delegate void sk_filestream_destroy (sk_stream_filestream_t cstream);
 		}
 		private static Delegates.sk_filestream_destroy sk_filestream_destroy_delegate;
-		internal static void sk_filestream_destroy (IntPtr cstream) =>
+		internal static void sk_filestream_destroy (sk_stream_filestream_t cstream) =>
 			(sk_filestream_destroy_delegate ??= GetSymbol<Delegates.sk_filestream_destroy> ("sk_filestream_destroy")).Invoke (cstream);
 		#endif
 
@@ -154,20 +154,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_filestream_is_valid (IntPtr cstream);
+		internal static partial bool sk_filestream_is_valid (sk_stream_filestream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_filestream_is_valid (IntPtr cstream);
+		internal static extern bool sk_filestream_is_valid (sk_stream_filestream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_filestream_is_valid (IntPtr cstream);
+			internal delegate bool sk_filestream_is_valid (sk_stream_filestream_t cstream);
 		}
 		private static Delegates.sk_filestream_is_valid sk_filestream_is_valid_delegate;
-		internal static bool sk_filestream_is_valid (IntPtr cstream) =>
+		internal static bool sk_filestream_is_valid (sk_stream_filestream_t cstream) =>
 			(sk_filestream_is_valid_delegate ??= GetSymbol<Delegates.sk_filestream_is_valid> ("sk_filestream_is_valid")).Invoke (cstream);
 		#endif
 
@@ -175,18 +175,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_filestream_new (/* char */ void* path);
+		internal static partial sk_stream_filestream_t sk_filestream_new (/* char */ void* path);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_filestream_new (/* char */ void* path);
+		internal static extern sk_stream_filestream_t sk_filestream_new (/* char */ void* path);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_filestream_new (/* char */ void* path);
+			internal delegate sk_stream_filestream_t sk_filestream_new (/* char */ void* path);
 		}
 		private static Delegates.sk_filestream_new sk_filestream_new_delegate;
-		internal static IntPtr sk_filestream_new (/* char */ void* path) =>
+		internal static sk_stream_filestream_t sk_filestream_new (/* char */ void* path) =>
 			(sk_filestream_new_delegate ??= GetSymbol<Delegates.sk_filestream_new> ("sk_filestream_new")).Invoke (path);
 		#endif
 
@@ -194,18 +194,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_filewstream_destroy (IntPtr cstream);
+		internal static partial void sk_filewstream_destroy (sk_wstream_filestream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_filewstream_destroy (IntPtr cstream);
+		internal static extern void sk_filewstream_destroy (sk_wstream_filestream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_filewstream_destroy (IntPtr cstream);
+			internal delegate void sk_filewstream_destroy (sk_wstream_filestream_t cstream);
 		}
 		private static Delegates.sk_filewstream_destroy sk_filewstream_destroy_delegate;
-		internal static void sk_filewstream_destroy (IntPtr cstream) =>
+		internal static void sk_filewstream_destroy (sk_wstream_filestream_t cstream) =>
 			(sk_filewstream_destroy_delegate ??= GetSymbol<Delegates.sk_filewstream_destroy> ("sk_filewstream_destroy")).Invoke (cstream);
 		#endif
 
@@ -214,20 +214,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_filewstream_is_valid (IntPtr cstream);
+		internal static partial bool sk_filewstream_is_valid (sk_wstream_filestream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_filewstream_is_valid (IntPtr cstream);
+		internal static extern bool sk_filewstream_is_valid (sk_wstream_filestream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_filewstream_is_valid (IntPtr cstream);
+			internal delegate bool sk_filewstream_is_valid (sk_wstream_filestream_t cstream);
 		}
 		private static Delegates.sk_filewstream_is_valid sk_filewstream_is_valid_delegate;
-		internal static bool sk_filewstream_is_valid (IntPtr cstream) =>
+		internal static bool sk_filewstream_is_valid (sk_wstream_filestream_t cstream) =>
 			(sk_filewstream_is_valid_delegate ??= GetSymbol<Delegates.sk_filewstream_is_valid> ("sk_filewstream_is_valid")).Invoke (cstream);
 		#endif
 
@@ -235,18 +235,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_filewstream_new (/* char */ void* path);
+		internal static partial sk_wstream_filestream_t sk_filewstream_new (/* char */ void* path);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_filewstream_new (/* char */ void* path);
+		internal static extern sk_wstream_filestream_t sk_filewstream_new (/* char */ void* path);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_filewstream_new (/* char */ void* path);
+			internal delegate sk_wstream_filestream_t sk_filewstream_new (/* char */ void* path);
 		}
 		private static Delegates.sk_filewstream_new sk_filewstream_new_delegate;
-		internal static IntPtr sk_filewstream_new (/* char */ void* path) =>
+		internal static sk_wstream_filestream_t sk_filewstream_new (/* char */ void* path) =>
 			(sk_filewstream_new_delegate ??= GetSymbol<Delegates.sk_filewstream_new> ("sk_filewstream_new")).Invoke (path);
 		#endif
 
@@ -254,18 +254,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_memorystream_destroy (IntPtr cstream);
+		internal static partial void sk_memorystream_destroy (sk_stream_memorystream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_memorystream_destroy (IntPtr cstream);
+		internal static extern void sk_memorystream_destroy (sk_stream_memorystream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_memorystream_destroy (IntPtr cstream);
+			internal delegate void sk_memorystream_destroy (sk_stream_memorystream_t cstream);
 		}
 		private static Delegates.sk_memorystream_destroy sk_memorystream_destroy_delegate;
-		internal static void sk_memorystream_destroy (IntPtr cstream) =>
+		internal static void sk_memorystream_destroy (sk_stream_memorystream_t cstream) =>
 			(sk_memorystream_destroy_delegate ??= GetSymbol<Delegates.sk_memorystream_destroy> ("sk_memorystream_destroy")).Invoke (cstream);
 		#endif
 
@@ -273,18 +273,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_memorystream_new ();
+		internal static partial sk_stream_memorystream_t sk_memorystream_new ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_memorystream_new ();
+		internal static extern sk_stream_memorystream_t sk_memorystream_new ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_memorystream_new ();
+			internal delegate sk_stream_memorystream_t sk_memorystream_new ();
 		}
 		private static Delegates.sk_memorystream_new sk_memorystream_new_delegate;
-		internal static IntPtr sk_memorystream_new () =>
+		internal static sk_stream_memorystream_t sk_memorystream_new () =>
 			(sk_memorystream_new_delegate ??= GetSymbol<Delegates.sk_memorystream_new> ("sk_memorystream_new")).Invoke ();
 		#endif
 
@@ -292,18 +292,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_memorystream_new_with_data (void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
+		internal static partial sk_stream_memorystream_t sk_memorystream_new_with_data (void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_memorystream_new_with_data (void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
+		internal static extern sk_stream_memorystream_t sk_memorystream_new_with_data (void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_memorystream_new_with_data (void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
+			internal delegate sk_stream_memorystream_t sk_memorystream_new_with_data (void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
 		}
 		private static Delegates.sk_memorystream_new_with_data sk_memorystream_new_with_data_delegate;
-		internal static IntPtr sk_memorystream_new_with_data (void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData) =>
+		internal static sk_stream_memorystream_t sk_memorystream_new_with_data (void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData) =>
 			(sk_memorystream_new_with_data_delegate ??= GetSymbol<Delegates.sk_memorystream_new_with_data> ("sk_memorystream_new_with_data")).Invoke (data, length, copyData);
 		#endif
 
@@ -311,18 +311,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_memorystream_new_with_length (/* size_t */ IntPtr length);
+		internal static partial sk_stream_memorystream_t sk_memorystream_new_with_length (/* size_t */ IntPtr length);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_memorystream_new_with_length (/* size_t */ IntPtr length);
+		internal static extern sk_stream_memorystream_t sk_memorystream_new_with_length (/* size_t */ IntPtr length);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_memorystream_new_with_length (/* size_t */ IntPtr length);
+			internal delegate sk_stream_memorystream_t sk_memorystream_new_with_length (/* size_t */ IntPtr length);
 		}
 		private static Delegates.sk_memorystream_new_with_length sk_memorystream_new_with_length_delegate;
-		internal static IntPtr sk_memorystream_new_with_length (/* size_t */ IntPtr length) =>
+		internal static sk_stream_memorystream_t sk_memorystream_new_with_length (/* size_t */ IntPtr length) =>
 			(sk_memorystream_new_with_length_delegate ??= GetSymbol<Delegates.sk_memorystream_new_with_length> ("sk_memorystream_new_with_length")).Invoke (length);
 		#endif
 
@@ -330,18 +330,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_memorystream_new_with_skdata (IntPtr data);
+		internal static partial sk_stream_memorystream_t sk_memorystream_new_with_skdata (sk_data_t data);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_memorystream_new_with_skdata (IntPtr data);
+		internal static extern sk_stream_memorystream_t sk_memorystream_new_with_skdata (sk_data_t data);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_memorystream_new_with_skdata (IntPtr data);
+			internal delegate sk_stream_memorystream_t sk_memorystream_new_with_skdata (sk_data_t data);
 		}
 		private static Delegates.sk_memorystream_new_with_skdata sk_memorystream_new_with_skdata_delegate;
-		internal static IntPtr sk_memorystream_new_with_skdata (IntPtr data) =>
+		internal static sk_stream_memorystream_t sk_memorystream_new_with_skdata (sk_data_t data) =>
 			(sk_memorystream_new_with_skdata_delegate ??= GetSymbol<Delegates.sk_memorystream_new_with_skdata> ("sk_memorystream_new_with_skdata")).Invoke (data);
 		#endif
 
@@ -349,18 +349,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_memorystream_set_memory (IntPtr cmemorystream, void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
+		internal static partial void sk_memorystream_set_memory (sk_stream_memorystream_t cmemorystream, void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_memorystream_set_memory (IntPtr cmemorystream, void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
+		internal static extern void sk_memorystream_set_memory (sk_stream_memorystream_t cmemorystream, void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_memorystream_set_memory (IntPtr cmemorystream, void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
+			internal delegate void sk_memorystream_set_memory (sk_stream_memorystream_t cmemorystream, void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
 		}
 		private static Delegates.sk_memorystream_set_memory sk_memorystream_set_memory_delegate;
-		internal static void sk_memorystream_set_memory (IntPtr cmemorystream, void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData) =>
+		internal static void sk_memorystream_set_memory (sk_stream_memorystream_t cmemorystream, void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData) =>
 			(sk_memorystream_set_memory_delegate ??= GetSymbol<Delegates.sk_memorystream_set_memory> ("sk_memorystream_set_memory")).Invoke (cmemorystream, data, length, copyData);
 		#endif
 
@@ -368,18 +368,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_stream_asset_destroy (IntPtr cstream);
+		internal static partial void sk_stream_asset_destroy (sk_stream_asset_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_stream_asset_destroy (IntPtr cstream);
+		internal static extern void sk_stream_asset_destroy (sk_stream_asset_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_stream_asset_destroy (IntPtr cstream);
+			internal delegate void sk_stream_asset_destroy (sk_stream_asset_t cstream);
 		}
 		private static Delegates.sk_stream_asset_destroy sk_stream_asset_destroy_delegate;
-		internal static void sk_stream_asset_destroy (IntPtr cstream) =>
+		internal static void sk_stream_asset_destroy (sk_stream_asset_t cstream) =>
 			(sk_stream_asset_destroy_delegate ??= GetSymbol<Delegates.sk_stream_asset_destroy> ("sk_stream_asset_destroy")).Invoke (cstream);
 		#endif
 
@@ -387,18 +387,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_stream_destroy (IntPtr cstream);
+		internal static partial void sk_stream_destroy (sk_stream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_stream_destroy (IntPtr cstream);
+		internal static extern void sk_stream_destroy (sk_stream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_stream_destroy (IntPtr cstream);
+			internal delegate void sk_stream_destroy (sk_stream_t cstream);
 		}
 		private static Delegates.sk_stream_destroy sk_stream_destroy_delegate;
-		internal static void sk_stream_destroy (IntPtr cstream) =>
+		internal static void sk_stream_destroy (sk_stream_t cstream) =>
 			(sk_stream_destroy_delegate ??= GetSymbol<Delegates.sk_stream_destroy> ("sk_stream_destroy")).Invoke (cstream);
 		#endif
 
@@ -406,18 +406,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_stream_duplicate (IntPtr cstream);
+		internal static partial sk_stream_t sk_stream_duplicate (sk_stream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_stream_duplicate (IntPtr cstream);
+		internal static extern sk_stream_t sk_stream_duplicate (sk_stream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_stream_duplicate (IntPtr cstream);
+			internal delegate sk_stream_t sk_stream_duplicate (sk_stream_t cstream);
 		}
 		private static Delegates.sk_stream_duplicate sk_stream_duplicate_delegate;
-		internal static IntPtr sk_stream_duplicate (IntPtr cstream) =>
+		internal static sk_stream_t sk_stream_duplicate (sk_stream_t cstream) =>
 			(sk_stream_duplicate_delegate ??= GetSymbol<Delegates.sk_stream_duplicate> ("sk_stream_duplicate")).Invoke (cstream);
 		#endif
 
@@ -425,18 +425,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_stream_fork (IntPtr cstream);
+		internal static partial sk_stream_t sk_stream_fork (sk_stream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_stream_fork (IntPtr cstream);
+		internal static extern sk_stream_t sk_stream_fork (sk_stream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_stream_fork (IntPtr cstream);
+			internal delegate sk_stream_t sk_stream_fork (sk_stream_t cstream);
 		}
 		private static Delegates.sk_stream_fork sk_stream_fork_delegate;
-		internal static IntPtr sk_stream_fork (IntPtr cstream) =>
+		internal static sk_stream_t sk_stream_fork (sk_stream_t cstream) =>
 			(sk_stream_fork_delegate ??= GetSymbol<Delegates.sk_stream_fork> ("sk_stream_fork")).Invoke (cstream);
 		#endif
 
@@ -444,18 +444,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_stream_get_data (IntPtr cstream);
+		internal static partial sk_data_t sk_stream_get_data (sk_stream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_stream_get_data (IntPtr cstream);
+		internal static extern sk_data_t sk_stream_get_data (sk_stream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_stream_get_data (IntPtr cstream);
+			internal delegate sk_data_t sk_stream_get_data (sk_stream_t cstream);
 		}
 		private static Delegates.sk_stream_get_data sk_stream_get_data_delegate;
-		internal static IntPtr sk_stream_get_data (IntPtr cstream) =>
+		internal static sk_data_t sk_stream_get_data (sk_stream_t cstream) =>
 			(sk_stream_get_data_delegate ??= GetSymbol<Delegates.sk_stream_get_data> ("sk_stream_get_data")).Invoke (cstream);
 		#endif
 
@@ -463,18 +463,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial /* size_t */ IntPtr sk_stream_get_length (IntPtr cstream);
+		internal static partial /* size_t */ IntPtr sk_stream_get_length (sk_stream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr sk_stream_get_length (IntPtr cstream);
+		internal static extern /* size_t */ IntPtr sk_stream_get_length (sk_stream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate /* size_t */ IntPtr sk_stream_get_length (IntPtr cstream);
+			internal delegate /* size_t */ IntPtr sk_stream_get_length (sk_stream_t cstream);
 		}
 		private static Delegates.sk_stream_get_length sk_stream_get_length_delegate;
-		internal static /* size_t */ IntPtr sk_stream_get_length (IntPtr cstream) =>
+		internal static /* size_t */ IntPtr sk_stream_get_length (sk_stream_t cstream) =>
 			(sk_stream_get_length_delegate ??= GetSymbol<Delegates.sk_stream_get_length> ("sk_stream_get_length")).Invoke (cstream);
 		#endif
 
@@ -482,18 +482,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void* sk_stream_get_memory_base (IntPtr cstream);
+		internal static partial void* sk_stream_get_memory_base (sk_stream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void* sk_stream_get_memory_base (IntPtr cstream);
+		internal static extern void* sk_stream_get_memory_base (sk_stream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void* sk_stream_get_memory_base (IntPtr cstream);
+			internal delegate void* sk_stream_get_memory_base (sk_stream_t cstream);
 		}
 		private static Delegates.sk_stream_get_memory_base sk_stream_get_memory_base_delegate;
-		internal static void* sk_stream_get_memory_base (IntPtr cstream) =>
+		internal static void* sk_stream_get_memory_base (sk_stream_t cstream) =>
 			(sk_stream_get_memory_base_delegate ??= GetSymbol<Delegates.sk_stream_get_memory_base> ("sk_stream_get_memory_base")).Invoke (cstream);
 		#endif
 
@@ -501,18 +501,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial /* size_t */ IntPtr sk_stream_get_position (IntPtr cstream);
+		internal static partial /* size_t */ IntPtr sk_stream_get_position (sk_stream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr sk_stream_get_position (IntPtr cstream);
+		internal static extern /* size_t */ IntPtr sk_stream_get_position (sk_stream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate /* size_t */ IntPtr sk_stream_get_position (IntPtr cstream);
+			internal delegate /* size_t */ IntPtr sk_stream_get_position (sk_stream_t cstream);
 		}
 		private static Delegates.sk_stream_get_position sk_stream_get_position_delegate;
-		internal static /* size_t */ IntPtr sk_stream_get_position (IntPtr cstream) =>
+		internal static /* size_t */ IntPtr sk_stream_get_position (sk_stream_t cstream) =>
 			(sk_stream_get_position_delegate ??= GetSymbol<Delegates.sk_stream_get_position> ("sk_stream_get_position")).Invoke (cstream);
 		#endif
 
@@ -521,20 +521,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_has_length (IntPtr cstream);
+		internal static partial bool sk_stream_has_length (sk_stream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_has_length (IntPtr cstream);
+		internal static extern bool sk_stream_has_length (sk_stream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_has_length (IntPtr cstream);
+			internal delegate bool sk_stream_has_length (sk_stream_t cstream);
 		}
 		private static Delegates.sk_stream_has_length sk_stream_has_length_delegate;
-		internal static bool sk_stream_has_length (IntPtr cstream) =>
+		internal static bool sk_stream_has_length (sk_stream_t cstream) =>
 			(sk_stream_has_length_delegate ??= GetSymbol<Delegates.sk_stream_has_length> ("sk_stream_has_length")).Invoke (cstream);
 		#endif
 
@@ -543,20 +543,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_has_position (IntPtr cstream);
+		internal static partial bool sk_stream_has_position (sk_stream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_has_position (IntPtr cstream);
+		internal static extern bool sk_stream_has_position (sk_stream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_has_position (IntPtr cstream);
+			internal delegate bool sk_stream_has_position (sk_stream_t cstream);
 		}
 		private static Delegates.sk_stream_has_position sk_stream_has_position_delegate;
-		internal static bool sk_stream_has_position (IntPtr cstream) =>
+		internal static bool sk_stream_has_position (sk_stream_t cstream) =>
 			(sk_stream_has_position_delegate ??= GetSymbol<Delegates.sk_stream_has_position> ("sk_stream_has_position")).Invoke (cstream);
 		#endif
 
@@ -565,20 +565,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_is_at_end (IntPtr cstream);
+		internal static partial bool sk_stream_is_at_end (sk_stream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_is_at_end (IntPtr cstream);
+		internal static extern bool sk_stream_is_at_end (sk_stream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_is_at_end (IntPtr cstream);
+			internal delegate bool sk_stream_is_at_end (sk_stream_t cstream);
 		}
 		private static Delegates.sk_stream_is_at_end sk_stream_is_at_end_delegate;
-		internal static bool sk_stream_is_at_end (IntPtr cstream) =>
+		internal static bool sk_stream_is_at_end (sk_stream_t cstream) =>
 			(sk_stream_is_at_end_delegate ??= GetSymbol<Delegates.sk_stream_is_at_end> ("sk_stream_is_at_end")).Invoke (cstream);
 		#endif
 
@@ -587,20 +587,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_move (IntPtr cstream, Int32 offset);
+		internal static partial bool sk_stream_move (sk_stream_t cstream, Int32 offset);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_move (IntPtr cstream, Int32 offset);
+		internal static extern bool sk_stream_move (sk_stream_t cstream, Int32 offset);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_move (IntPtr cstream, Int32 offset);
+			internal delegate bool sk_stream_move (sk_stream_t cstream, Int32 offset);
 		}
 		private static Delegates.sk_stream_move sk_stream_move_delegate;
-		internal static bool sk_stream_move (IntPtr cstream, Int32 offset) =>
+		internal static bool sk_stream_move (sk_stream_t cstream, Int32 offset) =>
 			(sk_stream_move_delegate ??= GetSymbol<Delegates.sk_stream_move> ("sk_stream_move")).Invoke (cstream, offset);
 		#endif
 
@@ -608,18 +608,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial /* size_t */ IntPtr sk_stream_peek (IntPtr cstream, void* buffer, /* size_t */ IntPtr size);
+		internal static partial /* size_t */ IntPtr sk_stream_peek (sk_stream_t cstream, void* buffer, /* size_t */ IntPtr size);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr sk_stream_peek (IntPtr cstream, void* buffer, /* size_t */ IntPtr size);
+		internal static extern /* size_t */ IntPtr sk_stream_peek (sk_stream_t cstream, void* buffer, /* size_t */ IntPtr size);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate /* size_t */ IntPtr sk_stream_peek (IntPtr cstream, void* buffer, /* size_t */ IntPtr size);
+			internal delegate /* size_t */ IntPtr sk_stream_peek (sk_stream_t cstream, void* buffer, /* size_t */ IntPtr size);
 		}
 		private static Delegates.sk_stream_peek sk_stream_peek_delegate;
-		internal static /* size_t */ IntPtr sk_stream_peek (IntPtr cstream, void* buffer, /* size_t */ IntPtr size) =>
+		internal static /* size_t */ IntPtr sk_stream_peek (sk_stream_t cstream, void* buffer, /* size_t */ IntPtr size) =>
 			(sk_stream_peek_delegate ??= GetSymbol<Delegates.sk_stream_peek> ("sk_stream_peek")).Invoke (cstream, buffer, size);
 		#endif
 
@@ -627,18 +627,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial /* size_t */ IntPtr sk_stream_read (IntPtr cstream, void* buffer, /* size_t */ IntPtr size);
+		internal static partial /* size_t */ IntPtr sk_stream_read (sk_stream_t cstream, void* buffer, /* size_t */ IntPtr size);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr sk_stream_read (IntPtr cstream, void* buffer, /* size_t */ IntPtr size);
+		internal static extern /* size_t */ IntPtr sk_stream_read (sk_stream_t cstream, void* buffer, /* size_t */ IntPtr size);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate /* size_t */ IntPtr sk_stream_read (IntPtr cstream, void* buffer, /* size_t */ IntPtr size);
+			internal delegate /* size_t */ IntPtr sk_stream_read (sk_stream_t cstream, void* buffer, /* size_t */ IntPtr size);
 		}
 		private static Delegates.sk_stream_read sk_stream_read_delegate;
-		internal static /* size_t */ IntPtr sk_stream_read (IntPtr cstream, void* buffer, /* size_t */ IntPtr size) =>
+		internal static /* size_t */ IntPtr sk_stream_read (sk_stream_t cstream, void* buffer, /* size_t */ IntPtr size) =>
 			(sk_stream_read_delegate ??= GetSymbol<Delegates.sk_stream_read> ("sk_stream_read")).Invoke (cstream, buffer, size);
 		#endif
 
@@ -647,20 +647,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_read_bool (IntPtr cstream, Byte* buffer);
+		internal static partial bool sk_stream_read_bool (sk_stream_t cstream, Byte* buffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_read_bool (IntPtr cstream, Byte* buffer);
+		internal static extern bool sk_stream_read_bool (sk_stream_t cstream, Byte* buffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_read_bool (IntPtr cstream, Byte* buffer);
+			internal delegate bool sk_stream_read_bool (sk_stream_t cstream, Byte* buffer);
 		}
 		private static Delegates.sk_stream_read_bool sk_stream_read_bool_delegate;
-		internal static bool sk_stream_read_bool (IntPtr cstream, Byte* buffer) =>
+		internal static bool sk_stream_read_bool (sk_stream_t cstream, Byte* buffer) =>
 			(sk_stream_read_bool_delegate ??= GetSymbol<Delegates.sk_stream_read_bool> ("sk_stream_read_bool")).Invoke (cstream, buffer);
 		#endif
 
@@ -669,20 +669,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_read_s16 (IntPtr cstream, Int16* buffer);
+		internal static partial bool sk_stream_read_s16 (sk_stream_t cstream, Int16* buffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_read_s16 (IntPtr cstream, Int16* buffer);
+		internal static extern bool sk_stream_read_s16 (sk_stream_t cstream, Int16* buffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_read_s16 (IntPtr cstream, Int16* buffer);
+			internal delegate bool sk_stream_read_s16 (sk_stream_t cstream, Int16* buffer);
 		}
 		private static Delegates.sk_stream_read_s16 sk_stream_read_s16_delegate;
-		internal static bool sk_stream_read_s16 (IntPtr cstream, Int16* buffer) =>
+		internal static bool sk_stream_read_s16 (sk_stream_t cstream, Int16* buffer) =>
 			(sk_stream_read_s16_delegate ??= GetSymbol<Delegates.sk_stream_read_s16> ("sk_stream_read_s16")).Invoke (cstream, buffer);
 		#endif
 
@@ -691,20 +691,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_read_s32 (IntPtr cstream, Int32* buffer);
+		internal static partial bool sk_stream_read_s32 (sk_stream_t cstream, Int32* buffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_read_s32 (IntPtr cstream, Int32* buffer);
+		internal static extern bool sk_stream_read_s32 (sk_stream_t cstream, Int32* buffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_read_s32 (IntPtr cstream, Int32* buffer);
+			internal delegate bool sk_stream_read_s32 (sk_stream_t cstream, Int32* buffer);
 		}
 		private static Delegates.sk_stream_read_s32 sk_stream_read_s32_delegate;
-		internal static bool sk_stream_read_s32 (IntPtr cstream, Int32* buffer) =>
+		internal static bool sk_stream_read_s32 (sk_stream_t cstream, Int32* buffer) =>
 			(sk_stream_read_s32_delegate ??= GetSymbol<Delegates.sk_stream_read_s32> ("sk_stream_read_s32")).Invoke (cstream, buffer);
 		#endif
 
@@ -713,20 +713,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_read_s8 (IntPtr cstream, SByte* buffer);
+		internal static partial bool sk_stream_read_s8 (sk_stream_t cstream, SByte* buffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_read_s8 (IntPtr cstream, SByte* buffer);
+		internal static extern bool sk_stream_read_s8 (sk_stream_t cstream, SByte* buffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_read_s8 (IntPtr cstream, SByte* buffer);
+			internal delegate bool sk_stream_read_s8 (sk_stream_t cstream, SByte* buffer);
 		}
 		private static Delegates.sk_stream_read_s8 sk_stream_read_s8_delegate;
-		internal static bool sk_stream_read_s8 (IntPtr cstream, SByte* buffer) =>
+		internal static bool sk_stream_read_s8 (sk_stream_t cstream, SByte* buffer) =>
 			(sk_stream_read_s8_delegate ??= GetSymbol<Delegates.sk_stream_read_s8> ("sk_stream_read_s8")).Invoke (cstream, buffer);
 		#endif
 
@@ -735,20 +735,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_read_u16 (IntPtr cstream, UInt16* buffer);
+		internal static partial bool sk_stream_read_u16 (sk_stream_t cstream, UInt16* buffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_read_u16 (IntPtr cstream, UInt16* buffer);
+		internal static extern bool sk_stream_read_u16 (sk_stream_t cstream, UInt16* buffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_read_u16 (IntPtr cstream, UInt16* buffer);
+			internal delegate bool sk_stream_read_u16 (sk_stream_t cstream, UInt16* buffer);
 		}
 		private static Delegates.sk_stream_read_u16 sk_stream_read_u16_delegate;
-		internal static bool sk_stream_read_u16 (IntPtr cstream, UInt16* buffer) =>
+		internal static bool sk_stream_read_u16 (sk_stream_t cstream, UInt16* buffer) =>
 			(sk_stream_read_u16_delegate ??= GetSymbol<Delegates.sk_stream_read_u16> ("sk_stream_read_u16")).Invoke (cstream, buffer);
 		#endif
 
@@ -757,20 +757,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_read_u32 (IntPtr cstream, UInt32* buffer);
+		internal static partial bool sk_stream_read_u32 (sk_stream_t cstream, UInt32* buffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_read_u32 (IntPtr cstream, UInt32* buffer);
+		internal static extern bool sk_stream_read_u32 (sk_stream_t cstream, UInt32* buffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_read_u32 (IntPtr cstream, UInt32* buffer);
+			internal delegate bool sk_stream_read_u32 (sk_stream_t cstream, UInt32* buffer);
 		}
 		private static Delegates.sk_stream_read_u32 sk_stream_read_u32_delegate;
-		internal static bool sk_stream_read_u32 (IntPtr cstream, UInt32* buffer) =>
+		internal static bool sk_stream_read_u32 (sk_stream_t cstream, UInt32* buffer) =>
 			(sk_stream_read_u32_delegate ??= GetSymbol<Delegates.sk_stream_read_u32> ("sk_stream_read_u32")).Invoke (cstream, buffer);
 		#endif
 
@@ -779,20 +779,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_read_u8 (IntPtr cstream, Byte* buffer);
+		internal static partial bool sk_stream_read_u8 (sk_stream_t cstream, Byte* buffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_read_u8 (IntPtr cstream, Byte* buffer);
+		internal static extern bool sk_stream_read_u8 (sk_stream_t cstream, Byte* buffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_read_u8 (IntPtr cstream, Byte* buffer);
+			internal delegate bool sk_stream_read_u8 (sk_stream_t cstream, Byte* buffer);
 		}
 		private static Delegates.sk_stream_read_u8 sk_stream_read_u8_delegate;
-		internal static bool sk_stream_read_u8 (IntPtr cstream, Byte* buffer) =>
+		internal static bool sk_stream_read_u8 (sk_stream_t cstream, Byte* buffer) =>
 			(sk_stream_read_u8_delegate ??= GetSymbol<Delegates.sk_stream_read_u8> ("sk_stream_read_u8")).Invoke (cstream, buffer);
 		#endif
 
@@ -801,20 +801,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_rewind (IntPtr cstream);
+		internal static partial bool sk_stream_rewind (sk_stream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_rewind (IntPtr cstream);
+		internal static extern bool sk_stream_rewind (sk_stream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_rewind (IntPtr cstream);
+			internal delegate bool sk_stream_rewind (sk_stream_t cstream);
 		}
 		private static Delegates.sk_stream_rewind sk_stream_rewind_delegate;
-		internal static bool sk_stream_rewind (IntPtr cstream) =>
+		internal static bool sk_stream_rewind (sk_stream_t cstream) =>
 			(sk_stream_rewind_delegate ??= GetSymbol<Delegates.sk_stream_rewind> ("sk_stream_rewind")).Invoke (cstream);
 		#endif
 
@@ -823,20 +823,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_seek (IntPtr cstream, /* size_t */ IntPtr position);
+		internal static partial bool sk_stream_seek (sk_stream_t cstream, /* size_t */ IntPtr position);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_seek (IntPtr cstream, /* size_t */ IntPtr position);
+		internal static extern bool sk_stream_seek (sk_stream_t cstream, /* size_t */ IntPtr position);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_seek (IntPtr cstream, /* size_t */ IntPtr position);
+			internal delegate bool sk_stream_seek (sk_stream_t cstream, /* size_t */ IntPtr position);
 		}
 		private static Delegates.sk_stream_seek sk_stream_seek_delegate;
-		internal static bool sk_stream_seek (IntPtr cstream, /* size_t */ IntPtr position) =>
+		internal static bool sk_stream_seek (sk_stream_t cstream, /* size_t */ IntPtr position) =>
 			(sk_stream_seek_delegate ??= GetSymbol<Delegates.sk_stream_seek> ("sk_stream_seek")).Invoke (cstream, position);
 		#endif
 
@@ -844,18 +844,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial /* size_t */ IntPtr sk_stream_skip (IntPtr cstream, /* size_t */ IntPtr size);
+		internal static partial /* size_t */ IntPtr sk_stream_skip (sk_stream_t cstream, /* size_t */ IntPtr size);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr sk_stream_skip (IntPtr cstream, /* size_t */ IntPtr size);
+		internal static extern /* size_t */ IntPtr sk_stream_skip (sk_stream_t cstream, /* size_t */ IntPtr size);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate /* size_t */ IntPtr sk_stream_skip (IntPtr cstream, /* size_t */ IntPtr size);
+			internal delegate /* size_t */ IntPtr sk_stream_skip (sk_stream_t cstream, /* size_t */ IntPtr size);
 		}
 		private static Delegates.sk_stream_skip sk_stream_skip_delegate;
-		internal static /* size_t */ IntPtr sk_stream_skip (IntPtr cstream, /* size_t */ IntPtr size) =>
+		internal static /* size_t */ IntPtr sk_stream_skip (sk_stream_t cstream, /* size_t */ IntPtr size) =>
 			(sk_stream_skip_delegate ??= GetSymbol<Delegates.sk_stream_skip> ("sk_stream_skip")).Invoke (cstream, size);
 		#endif
 
@@ -863,18 +863,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial /* size_t */ IntPtr sk_wstream_bytes_written (IntPtr cstream);
+		internal static partial /* size_t */ IntPtr sk_wstream_bytes_written (sk_wstream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr sk_wstream_bytes_written (IntPtr cstream);
+		internal static extern /* size_t */ IntPtr sk_wstream_bytes_written (sk_wstream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate /* size_t */ IntPtr sk_wstream_bytes_written (IntPtr cstream);
+			internal delegate /* size_t */ IntPtr sk_wstream_bytes_written (sk_wstream_t cstream);
 		}
 		private static Delegates.sk_wstream_bytes_written sk_wstream_bytes_written_delegate;
-		internal static /* size_t */ IntPtr sk_wstream_bytes_written (IntPtr cstream) =>
+		internal static /* size_t */ IntPtr sk_wstream_bytes_written (sk_wstream_t cstream) =>
 			(sk_wstream_bytes_written_delegate ??= GetSymbol<Delegates.sk_wstream_bytes_written> ("sk_wstream_bytes_written")).Invoke (cstream);
 		#endif
 
@@ -882,18 +882,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_wstream_flush (IntPtr cstream);
+		internal static partial void sk_wstream_flush (sk_wstream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_wstream_flush (IntPtr cstream);
+		internal static extern void sk_wstream_flush (sk_wstream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_wstream_flush (IntPtr cstream);
+			internal delegate void sk_wstream_flush (sk_wstream_t cstream);
 		}
 		private static Delegates.sk_wstream_flush sk_wstream_flush_delegate;
-		internal static void sk_wstream_flush (IntPtr cstream) =>
+		internal static void sk_wstream_flush (sk_wstream_t cstream) =>
 			(sk_wstream_flush_delegate ??= GetSymbol<Delegates.sk_wstream_flush> ("sk_wstream_flush")).Invoke (cstream);
 		#endif
 
@@ -921,20 +921,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_newline (IntPtr cstream);
+		internal static partial bool sk_wstream_newline (sk_wstream_t cstream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_newline (IntPtr cstream);
+		internal static extern bool sk_wstream_newline (sk_wstream_t cstream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_newline (IntPtr cstream);
+			internal delegate bool sk_wstream_newline (sk_wstream_t cstream);
 		}
 		private static Delegates.sk_wstream_newline sk_wstream_newline_delegate;
-		internal static bool sk_wstream_newline (IntPtr cstream) =>
+		internal static bool sk_wstream_newline (sk_wstream_t cstream) =>
 			(sk_wstream_newline_delegate ??= GetSymbol<Delegates.sk_wstream_newline> ("sk_wstream_newline")).Invoke (cstream);
 		#endif
 
@@ -943,20 +943,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_write (IntPtr cstream, void* buffer, /* size_t */ IntPtr size);
+		internal static partial bool sk_wstream_write (sk_wstream_t cstream, void* buffer, /* size_t */ IntPtr size);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_write (IntPtr cstream, void* buffer, /* size_t */ IntPtr size);
+		internal static extern bool sk_wstream_write (sk_wstream_t cstream, void* buffer, /* size_t */ IntPtr size);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_write (IntPtr cstream, void* buffer, /* size_t */ IntPtr size);
+			internal delegate bool sk_wstream_write (sk_wstream_t cstream, void* buffer, /* size_t */ IntPtr size);
 		}
 		private static Delegates.sk_wstream_write sk_wstream_write_delegate;
-		internal static bool sk_wstream_write (IntPtr cstream, void* buffer, /* size_t */ IntPtr size) =>
+		internal static bool sk_wstream_write (sk_wstream_t cstream, void* buffer, /* size_t */ IntPtr size) =>
 			(sk_wstream_write_delegate ??= GetSymbol<Delegates.sk_wstream_write> ("sk_wstream_write")).Invoke (cstream, buffer, size);
 		#endif
 
@@ -965,20 +965,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_write_16 (IntPtr cstream, UInt16 value);
+		internal static partial bool sk_wstream_write_16 (sk_wstream_t cstream, UInt16 value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_write_16 (IntPtr cstream, UInt16 value);
+		internal static extern bool sk_wstream_write_16 (sk_wstream_t cstream, UInt16 value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_write_16 (IntPtr cstream, UInt16 value);
+			internal delegate bool sk_wstream_write_16 (sk_wstream_t cstream, UInt16 value);
 		}
 		private static Delegates.sk_wstream_write_16 sk_wstream_write_16_delegate;
-		internal static bool sk_wstream_write_16 (IntPtr cstream, UInt16 value) =>
+		internal static bool sk_wstream_write_16 (sk_wstream_t cstream, UInt16 value) =>
 			(sk_wstream_write_16_delegate ??= GetSymbol<Delegates.sk_wstream_write_16> ("sk_wstream_write_16")).Invoke (cstream, value);
 		#endif
 
@@ -987,20 +987,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_write_32 (IntPtr cstream, UInt32 value);
+		internal static partial bool sk_wstream_write_32 (sk_wstream_t cstream, UInt32 value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_write_32 (IntPtr cstream, UInt32 value);
+		internal static extern bool sk_wstream_write_32 (sk_wstream_t cstream, UInt32 value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_write_32 (IntPtr cstream, UInt32 value);
+			internal delegate bool sk_wstream_write_32 (sk_wstream_t cstream, UInt32 value);
 		}
 		private static Delegates.sk_wstream_write_32 sk_wstream_write_32_delegate;
-		internal static bool sk_wstream_write_32 (IntPtr cstream, UInt32 value) =>
+		internal static bool sk_wstream_write_32 (sk_wstream_t cstream, UInt32 value) =>
 			(sk_wstream_write_32_delegate ??= GetSymbol<Delegates.sk_wstream_write_32> ("sk_wstream_write_32")).Invoke (cstream, value);
 		#endif
 
@@ -1009,20 +1009,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_write_8 (IntPtr cstream, Byte value);
+		internal static partial bool sk_wstream_write_8 (sk_wstream_t cstream, Byte value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_write_8 (IntPtr cstream, Byte value);
+		internal static extern bool sk_wstream_write_8 (sk_wstream_t cstream, Byte value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_write_8 (IntPtr cstream, Byte value);
+			internal delegate bool sk_wstream_write_8 (sk_wstream_t cstream, Byte value);
 		}
 		private static Delegates.sk_wstream_write_8 sk_wstream_write_8_delegate;
-		internal static bool sk_wstream_write_8 (IntPtr cstream, Byte value) =>
+		internal static bool sk_wstream_write_8 (sk_wstream_t cstream, Byte value) =>
 			(sk_wstream_write_8_delegate ??= GetSymbol<Delegates.sk_wstream_write_8> ("sk_wstream_write_8")).Invoke (cstream, value);
 		#endif
 
@@ -1031,20 +1031,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_write_bigdec_as_text (IntPtr cstream, Int64 value, Int32 minDigits);
+		internal static partial bool sk_wstream_write_bigdec_as_text (sk_wstream_t cstream, Int64 value, Int32 minDigits);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_write_bigdec_as_text (IntPtr cstream, Int64 value, Int32 minDigits);
+		internal static extern bool sk_wstream_write_bigdec_as_text (sk_wstream_t cstream, Int64 value, Int32 minDigits);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_write_bigdec_as_text (IntPtr cstream, Int64 value, Int32 minDigits);
+			internal delegate bool sk_wstream_write_bigdec_as_text (sk_wstream_t cstream, Int64 value, Int32 minDigits);
 		}
 		private static Delegates.sk_wstream_write_bigdec_as_text sk_wstream_write_bigdec_as_text_delegate;
-		internal static bool sk_wstream_write_bigdec_as_text (IntPtr cstream, Int64 value, Int32 minDigits) =>
+		internal static bool sk_wstream_write_bigdec_as_text (sk_wstream_t cstream, Int64 value, Int32 minDigits) =>
 			(sk_wstream_write_bigdec_as_text_delegate ??= GetSymbol<Delegates.sk_wstream_write_bigdec_as_text> ("sk_wstream_write_bigdec_as_text")).Invoke (cstream, value, minDigits);
 		#endif
 
@@ -1053,20 +1053,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_write_bool (IntPtr cstream, [MarshalAs (UnmanagedType.I1)] bool value);
+		internal static partial bool sk_wstream_write_bool (sk_wstream_t cstream, [MarshalAs (UnmanagedType.I1)] bool value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_write_bool (IntPtr cstream, [MarshalAs (UnmanagedType.I1)] bool value);
+		internal static extern bool sk_wstream_write_bool (sk_wstream_t cstream, [MarshalAs (UnmanagedType.I1)] bool value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_write_bool (IntPtr cstream, [MarshalAs (UnmanagedType.I1)] bool value);
+			internal delegate bool sk_wstream_write_bool (sk_wstream_t cstream, [MarshalAs (UnmanagedType.I1)] bool value);
 		}
 		private static Delegates.sk_wstream_write_bool sk_wstream_write_bool_delegate;
-		internal static bool sk_wstream_write_bool (IntPtr cstream, [MarshalAs (UnmanagedType.I1)] bool value) =>
+		internal static bool sk_wstream_write_bool (sk_wstream_t cstream, [MarshalAs (UnmanagedType.I1)] bool value) =>
 			(sk_wstream_write_bool_delegate ??= GetSymbol<Delegates.sk_wstream_write_bool> ("sk_wstream_write_bool")).Invoke (cstream, value);
 		#endif
 
@@ -1075,20 +1075,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_write_dec_as_text (IntPtr cstream, Int32 value);
+		internal static partial bool sk_wstream_write_dec_as_text (sk_wstream_t cstream, Int32 value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_write_dec_as_text (IntPtr cstream, Int32 value);
+		internal static extern bool sk_wstream_write_dec_as_text (sk_wstream_t cstream, Int32 value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_write_dec_as_text (IntPtr cstream, Int32 value);
+			internal delegate bool sk_wstream_write_dec_as_text (sk_wstream_t cstream, Int32 value);
 		}
 		private static Delegates.sk_wstream_write_dec_as_text sk_wstream_write_dec_as_text_delegate;
-		internal static bool sk_wstream_write_dec_as_text (IntPtr cstream, Int32 value) =>
+		internal static bool sk_wstream_write_dec_as_text (sk_wstream_t cstream, Int32 value) =>
 			(sk_wstream_write_dec_as_text_delegate ??= GetSymbol<Delegates.sk_wstream_write_dec_as_text> ("sk_wstream_write_dec_as_text")).Invoke (cstream, value);
 		#endif
 
@@ -1097,20 +1097,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_write_hex_as_text (IntPtr cstream, UInt32 value, Int32 minDigits);
+		internal static partial bool sk_wstream_write_hex_as_text (sk_wstream_t cstream, UInt32 value, Int32 minDigits);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_write_hex_as_text (IntPtr cstream, UInt32 value, Int32 minDigits);
+		internal static extern bool sk_wstream_write_hex_as_text (sk_wstream_t cstream, UInt32 value, Int32 minDigits);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_write_hex_as_text (IntPtr cstream, UInt32 value, Int32 minDigits);
+			internal delegate bool sk_wstream_write_hex_as_text (sk_wstream_t cstream, UInt32 value, Int32 minDigits);
 		}
 		private static Delegates.sk_wstream_write_hex_as_text sk_wstream_write_hex_as_text_delegate;
-		internal static bool sk_wstream_write_hex_as_text (IntPtr cstream, UInt32 value, Int32 minDigits) =>
+		internal static bool sk_wstream_write_hex_as_text (sk_wstream_t cstream, UInt32 value, Int32 minDigits) =>
 			(sk_wstream_write_hex_as_text_delegate ??= GetSymbol<Delegates.sk_wstream_write_hex_as_text> ("sk_wstream_write_hex_as_text")).Invoke (cstream, value, minDigits);
 		#endif
 
@@ -1119,20 +1119,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_write_packed_uint (IntPtr cstream, /* size_t */ IntPtr value);
+		internal static partial bool sk_wstream_write_packed_uint (sk_wstream_t cstream, /* size_t */ IntPtr value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_write_packed_uint (IntPtr cstream, /* size_t */ IntPtr value);
+		internal static extern bool sk_wstream_write_packed_uint (sk_wstream_t cstream, /* size_t */ IntPtr value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_write_packed_uint (IntPtr cstream, /* size_t */ IntPtr value);
+			internal delegate bool sk_wstream_write_packed_uint (sk_wstream_t cstream, /* size_t */ IntPtr value);
 		}
 		private static Delegates.sk_wstream_write_packed_uint sk_wstream_write_packed_uint_delegate;
-		internal static bool sk_wstream_write_packed_uint (IntPtr cstream, /* size_t */ IntPtr value) =>
+		internal static bool sk_wstream_write_packed_uint (sk_wstream_t cstream, /* size_t */ IntPtr value) =>
 			(sk_wstream_write_packed_uint_delegate ??= GetSymbol<Delegates.sk_wstream_write_packed_uint> ("sk_wstream_write_packed_uint")).Invoke (cstream, value);
 		#endif
 
@@ -1141,20 +1141,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_write_scalar (IntPtr cstream, Single value);
+		internal static partial bool sk_wstream_write_scalar (sk_wstream_t cstream, Single value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_write_scalar (IntPtr cstream, Single value);
+		internal static extern bool sk_wstream_write_scalar (sk_wstream_t cstream, Single value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_write_scalar (IntPtr cstream, Single value);
+			internal delegate bool sk_wstream_write_scalar (sk_wstream_t cstream, Single value);
 		}
 		private static Delegates.sk_wstream_write_scalar sk_wstream_write_scalar_delegate;
-		internal static bool sk_wstream_write_scalar (IntPtr cstream, Single value) =>
+		internal static bool sk_wstream_write_scalar (sk_wstream_t cstream, Single value) =>
 			(sk_wstream_write_scalar_delegate ??= GetSymbol<Delegates.sk_wstream_write_scalar> ("sk_wstream_write_scalar")).Invoke (cstream, value);
 		#endif
 
@@ -1163,20 +1163,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_write_scalar_as_text (IntPtr cstream, Single value);
+		internal static partial bool sk_wstream_write_scalar_as_text (sk_wstream_t cstream, Single value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_write_scalar_as_text (IntPtr cstream, Single value);
+		internal static extern bool sk_wstream_write_scalar_as_text (sk_wstream_t cstream, Single value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_write_scalar_as_text (IntPtr cstream, Single value);
+			internal delegate bool sk_wstream_write_scalar_as_text (sk_wstream_t cstream, Single value);
 		}
 		private static Delegates.sk_wstream_write_scalar_as_text sk_wstream_write_scalar_as_text_delegate;
-		internal static bool sk_wstream_write_scalar_as_text (IntPtr cstream, Single value) =>
+		internal static bool sk_wstream_write_scalar_as_text (sk_wstream_t cstream, Single value) =>
 			(sk_wstream_write_scalar_as_text_delegate ??= GetSymbol<Delegates.sk_wstream_write_scalar_as_text> ("sk_wstream_write_scalar_as_text")).Invoke (cstream, value);
 		#endif
 
@@ -1185,20 +1185,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_write_stream (IntPtr cstream, IntPtr input, /* size_t */ IntPtr length);
+		internal static partial bool sk_wstream_write_stream (sk_wstream_t cstream, sk_stream_t input, /* size_t */ IntPtr length);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_write_stream (IntPtr cstream, IntPtr input, /* size_t */ IntPtr length);
+		internal static extern bool sk_wstream_write_stream (sk_wstream_t cstream, sk_stream_t input, /* size_t */ IntPtr length);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_write_stream (IntPtr cstream, IntPtr input, /* size_t */ IntPtr length);
+			internal delegate bool sk_wstream_write_stream (sk_wstream_t cstream, sk_stream_t input, /* size_t */ IntPtr length);
 		}
 		private static Delegates.sk_wstream_write_stream sk_wstream_write_stream_delegate;
-		internal static bool sk_wstream_write_stream (IntPtr cstream, IntPtr input, /* size_t */ IntPtr length) =>
+		internal static bool sk_wstream_write_stream (sk_wstream_t cstream, sk_stream_t input, /* size_t */ IntPtr length) =>
 			(sk_wstream_write_stream_delegate ??= GetSymbol<Delegates.sk_wstream_write_stream> ("sk_wstream_write_stream")).Invoke (cstream, input, length);
 		#endif
 
@@ -1207,20 +1207,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_wstream_write_text (IntPtr cstream, [MarshalAs (UnmanagedType.LPStr)] String value);
+		internal static partial bool sk_wstream_write_text (sk_wstream_t cstream, [MarshalAs (UnmanagedType.LPStr)] String value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_wstream_write_text (IntPtr cstream, [MarshalAs (UnmanagedType.LPStr)] String value);
+		internal static extern bool sk_wstream_write_text (sk_wstream_t cstream, [MarshalAs (UnmanagedType.LPStr)] String value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_wstream_write_text (IntPtr cstream, [MarshalAs (UnmanagedType.LPStr)] String value);
+			internal delegate bool sk_wstream_write_text (sk_wstream_t cstream, [MarshalAs (UnmanagedType.LPStr)] String value);
 		}
 		private static Delegates.sk_wstream_write_text sk_wstream_write_text_delegate;
-		internal static bool sk_wstream_write_text (IntPtr cstream, [MarshalAs (UnmanagedType.LPStr)] String value) =>
+		internal static bool sk_wstream_write_text (sk_wstream_t cstream, [MarshalAs (UnmanagedType.LPStr)] String value) =>
 			(sk_wstream_write_text_delegate ??= GetSymbol<Delegates.sk_wstream_write_text> ("sk_wstream_write_text")).Invoke (cstream, value);
 		#endif
 

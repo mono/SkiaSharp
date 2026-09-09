@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_maskfilter_new_blur (SKBlurStyle param0, Single sigma);
+		internal static partial sk_maskfilter_t sk_maskfilter_new_blur (SKBlurStyle param0, Single sigma);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_maskfilter_new_blur (SKBlurStyle param0, Single sigma);
+		internal static extern sk_maskfilter_t sk_maskfilter_new_blur (SKBlurStyle param0, Single sigma);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_maskfilter_new_blur (SKBlurStyle param0, Single sigma);
+			internal delegate sk_maskfilter_t sk_maskfilter_new_blur (SKBlurStyle param0, Single sigma);
 		}
 		private static Delegates.sk_maskfilter_new_blur sk_maskfilter_new_blur_delegate;
-		internal static IntPtr sk_maskfilter_new_blur (SKBlurStyle param0, Single sigma) =>
+		internal static sk_maskfilter_t sk_maskfilter_new_blur (SKBlurStyle param0, Single sigma) =>
 			(sk_maskfilter_new_blur_delegate ??= GetSymbol<Delegates.sk_maskfilter_new_blur> ("sk_maskfilter_new_blur")).Invoke (param0, sigma);
 		#endif
 
@@ -36,18 +36,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, [MarshalAs (UnmanagedType.I1)] bool respectCTM);
+		internal static partial sk_maskfilter_t sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, [MarshalAs (UnmanagedType.I1)] bool respectCTM);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, [MarshalAs (UnmanagedType.I1)] bool respectCTM);
+		internal static extern sk_maskfilter_t sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, [MarshalAs (UnmanagedType.I1)] bool respectCTM);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, [MarshalAs (UnmanagedType.I1)] bool respectCTM);
+			internal delegate sk_maskfilter_t sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, [MarshalAs (UnmanagedType.I1)] bool respectCTM);
 		}
 		private static Delegates.sk_maskfilter_new_blur_with_flags sk_maskfilter_new_blur_with_flags_delegate;
-		internal static IntPtr sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, [MarshalAs (UnmanagedType.I1)] bool respectCTM) =>
+		internal static sk_maskfilter_t sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, [MarshalAs (UnmanagedType.I1)] bool respectCTM) =>
 			(sk_maskfilter_new_blur_with_flags_delegate ??= GetSymbol<Delegates.sk_maskfilter_new_blur_with_flags> ("sk_maskfilter_new_blur_with_flags")).Invoke (param0, sigma, respectCTM);
 		#endif
 
@@ -55,18 +55,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_maskfilter_new_clip (Byte min, Byte max);
+		internal static partial sk_maskfilter_t sk_maskfilter_new_clip (Byte min, Byte max);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_maskfilter_new_clip (Byte min, Byte max);
+		internal static extern sk_maskfilter_t sk_maskfilter_new_clip (Byte min, Byte max);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_maskfilter_new_clip (Byte min, Byte max);
+			internal delegate sk_maskfilter_t sk_maskfilter_new_clip (Byte min, Byte max);
 		}
 		private static Delegates.sk_maskfilter_new_clip sk_maskfilter_new_clip_delegate;
-		internal static IntPtr sk_maskfilter_new_clip (Byte min, Byte max) =>
+		internal static sk_maskfilter_t sk_maskfilter_new_clip (Byte min, Byte max) =>
 			(sk_maskfilter_new_clip_delegate ??= GetSymbol<Delegates.sk_maskfilter_new_clip> ("sk_maskfilter_new_clip")).Invoke (min, max);
 		#endif
 
@@ -74,18 +74,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_maskfilter_new_gamma (Single gamma);
+		internal static partial sk_maskfilter_t sk_maskfilter_new_gamma (Single gamma);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_maskfilter_new_gamma (Single gamma);
+		internal static extern sk_maskfilter_t sk_maskfilter_new_gamma (Single gamma);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_maskfilter_new_gamma (Single gamma);
+			internal delegate sk_maskfilter_t sk_maskfilter_new_gamma (Single gamma);
 		}
 		private static Delegates.sk_maskfilter_new_gamma sk_maskfilter_new_gamma_delegate;
-		internal static IntPtr sk_maskfilter_new_gamma (Single gamma) =>
+		internal static sk_maskfilter_t sk_maskfilter_new_gamma (Single gamma) =>
 			(sk_maskfilter_new_gamma_delegate ??= GetSymbol<Delegates.sk_maskfilter_new_gamma> ("sk_maskfilter_new_gamma")).Invoke (gamma);
 		#endif
 
@@ -93,18 +93,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_maskfilter_new_shader (IntPtr cshader);
+		internal static partial sk_maskfilter_t sk_maskfilter_new_shader (sk_shader_t cshader);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_maskfilter_new_shader (IntPtr cshader);
+		internal static extern sk_maskfilter_t sk_maskfilter_new_shader (sk_shader_t cshader);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_maskfilter_new_shader (IntPtr cshader);
+			internal delegate sk_maskfilter_t sk_maskfilter_new_shader (sk_shader_t cshader);
 		}
 		private static Delegates.sk_maskfilter_new_shader sk_maskfilter_new_shader_delegate;
-		internal static IntPtr sk_maskfilter_new_shader (IntPtr cshader) =>
+		internal static sk_maskfilter_t sk_maskfilter_new_shader (sk_shader_t cshader) =>
 			(sk_maskfilter_new_shader_delegate ??= GetSymbol<Delegates.sk_maskfilter_new_shader> ("sk_maskfilter_new_shader")).Invoke (cshader);
 		#endif
 
@@ -112,18 +112,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_maskfilter_new_table (Byte* table);
+		internal static partial sk_maskfilter_t sk_maskfilter_new_table (Byte* table);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_maskfilter_new_table (Byte* table);
+		internal static extern sk_maskfilter_t sk_maskfilter_new_table (Byte* table);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_maskfilter_new_table (Byte* table);
+			internal delegate sk_maskfilter_t sk_maskfilter_new_table (Byte* table);
 		}
 		private static Delegates.sk_maskfilter_new_table sk_maskfilter_new_table_delegate;
-		internal static IntPtr sk_maskfilter_new_table (Byte* table) =>
+		internal static sk_maskfilter_t sk_maskfilter_new_table (Byte* table) =>
 			(sk_maskfilter_new_table_delegate ??= GetSymbol<Delegates.sk_maskfilter_new_table> ("sk_maskfilter_new_table")).Invoke (table);
 		#endif
 
@@ -131,18 +131,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_maskfilter_ref (IntPtr param0);
+		internal static partial void sk_maskfilter_ref (sk_maskfilter_t param0);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_maskfilter_ref (IntPtr param0);
+		internal static extern void sk_maskfilter_ref (sk_maskfilter_t param0);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_maskfilter_ref (IntPtr param0);
+			internal delegate void sk_maskfilter_ref (sk_maskfilter_t param0);
 		}
 		private static Delegates.sk_maskfilter_ref sk_maskfilter_ref_delegate;
-		internal static void sk_maskfilter_ref (IntPtr param0) =>
+		internal static void sk_maskfilter_ref (sk_maskfilter_t param0) =>
 			(sk_maskfilter_ref_delegate ??= GetSymbol<Delegates.sk_maskfilter_ref> ("sk_maskfilter_ref")).Invoke (param0);
 		#endif
 
@@ -150,18 +150,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_maskfilter_unref (IntPtr param0);
+		internal static partial void sk_maskfilter_unref (sk_maskfilter_t param0);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_maskfilter_unref (IntPtr param0);
+		internal static extern void sk_maskfilter_unref (sk_maskfilter_t param0);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_maskfilter_unref (IntPtr param0);
+			internal delegate void sk_maskfilter_unref (sk_maskfilter_t param0);
 		}
 		private static Delegates.sk_maskfilter_unref sk_maskfilter_unref_delegate;
-		internal static void sk_maskfilter_unref (IntPtr param0) =>
+		internal static void sk_maskfilter_unref (sk_maskfilter_t param0) =>
 			(sk_maskfilter_unref_delegate ??= GetSymbol<Delegates.sk_maskfilter_unref> ("sk_maskfilter_unref")).Invoke (param0);
 		#endif
 

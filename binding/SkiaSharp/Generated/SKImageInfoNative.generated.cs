@@ -14,7 +14,7 @@ namespace SkiaSharp
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKImageInfoNative : IEquatable<SKImageInfoNative> {
 		// public sk_colorspace_t* colorspace
-		public IntPtr colorspace;
+		public sk_colorspace_t colorspace;
 
 		// public int32_t width
 		public Int32 width;

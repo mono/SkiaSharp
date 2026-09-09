@@ -15,35 +15,35 @@ namespace SkiaSharp
 	internal unsafe partial struct SKManagedDrawableDelegates : IEquatable<SKManagedDrawableDelegates> {
 		// public sk_manageddrawable_draw_proc fDraw
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <IntPtr, void*, IntPtr, void> fDraw;
+		public delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, sk_canvas_t, void> fDraw;
 #else
 		public SKManagedDrawableDrawProxyDelegate fDraw;
 #endif
 
 		// public sk_manageddrawable_getBounds_proc fGetBounds
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <IntPtr, void*, SKRect*, void> fGetBounds;
+		public delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, SKRect*, void> fGetBounds;
 #else
 		public SKManagedDrawableGetBoundsProxyDelegate fGetBounds;
 #endif
 
 		// public sk_manageddrawable_approximateBytesUsed_proc fApproximateBytesUsed
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <IntPtr, void*, /* size_t */ IntPtr> fApproximateBytesUsed;
+		public delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, /* size_t */ IntPtr> fApproximateBytesUsed;
 #else
 		public SKManagedDrawableApproximateBytesUsedProxyDelegate fApproximateBytesUsed;
 #endif
 
 		// public sk_manageddrawable_makePictureSnapshot_proc fMakePictureSnapshot
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <IntPtr, void*, IntPtr> fMakePictureSnapshot;
+		public delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, sk_picture_t> fMakePictureSnapshot;
 #else
 		public SKManagedDrawableMakePictureSnapshotProxyDelegate fMakePictureSnapshot;
 #endif
 
 		// public sk_manageddrawable_destroy_proc fDestroy
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <IntPtr, void*, void> fDestroy;
+		public delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, void> fDestroy;
 #else
 		public SKManagedDrawableDestroyProxyDelegate fDestroy;
 #endif

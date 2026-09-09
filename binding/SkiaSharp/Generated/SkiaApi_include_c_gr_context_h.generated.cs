@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_backendrendertarget_delete (IntPtr rendertarget);
+		internal static partial void gr_backendrendertarget_delete (gr_backendrendertarget_t rendertarget);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_backendrendertarget_delete (IntPtr rendertarget);
+		internal static extern void gr_backendrendertarget_delete (gr_backendrendertarget_t rendertarget);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_backendrendertarget_delete (IntPtr rendertarget);
+			internal delegate void gr_backendrendertarget_delete (gr_backendrendertarget_t rendertarget);
 		}
 		private static Delegates.gr_backendrendertarget_delete gr_backendrendertarget_delete_delegate;
-		internal static void gr_backendrendertarget_delete (IntPtr rendertarget) =>
+		internal static void gr_backendrendertarget_delete (gr_backendrendertarget_t rendertarget) =>
 			(gr_backendrendertarget_delete_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_delete> ("gr_backendrendertarget_delete")).Invoke (rendertarget);
 		#endif
 
@@ -36,18 +36,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial GRBackendNative gr_backendrendertarget_get_backend (IntPtr rendertarget);
+		internal static partial GRBackendNative gr_backendrendertarget_get_backend (gr_backendrendertarget_t rendertarget);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRBackendNative gr_backendrendertarget_get_backend (IntPtr rendertarget);
+		internal static extern GRBackendNative gr_backendrendertarget_get_backend (gr_backendrendertarget_t rendertarget);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate GRBackendNative gr_backendrendertarget_get_backend (IntPtr rendertarget);
+			internal delegate GRBackendNative gr_backendrendertarget_get_backend (gr_backendrendertarget_t rendertarget);
 		}
 		private static Delegates.gr_backendrendertarget_get_backend gr_backendrendertarget_get_backend_delegate;
-		internal static GRBackendNative gr_backendrendertarget_get_backend (IntPtr rendertarget) =>
+		internal static GRBackendNative gr_backendrendertarget_get_backend (gr_backendrendertarget_t rendertarget) =>
 			(gr_backendrendertarget_get_backend_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_get_backend> ("gr_backendrendertarget_get_backend")).Invoke (rendertarget);
 		#endif
 
@@ -56,20 +56,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool gr_backendrendertarget_get_gl_framebufferinfo (IntPtr rendertarget, GRGlFramebufferInfo* glInfo);
+		internal static partial bool gr_backendrendertarget_get_gl_framebufferinfo (gr_backendrendertarget_t rendertarget, GRGlFramebufferInfo* glInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool gr_backendrendertarget_get_gl_framebufferinfo (IntPtr rendertarget, GRGlFramebufferInfo* glInfo);
+		internal static extern bool gr_backendrendertarget_get_gl_framebufferinfo (gr_backendrendertarget_t rendertarget, GRGlFramebufferInfo* glInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool gr_backendrendertarget_get_gl_framebufferinfo (IntPtr rendertarget, GRGlFramebufferInfo* glInfo);
+			internal delegate bool gr_backendrendertarget_get_gl_framebufferinfo (gr_backendrendertarget_t rendertarget, GRGlFramebufferInfo* glInfo);
 		}
 		private static Delegates.gr_backendrendertarget_get_gl_framebufferinfo gr_backendrendertarget_get_gl_framebufferinfo_delegate;
-		internal static bool gr_backendrendertarget_get_gl_framebufferinfo (IntPtr rendertarget, GRGlFramebufferInfo* glInfo) =>
+		internal static bool gr_backendrendertarget_get_gl_framebufferinfo (gr_backendrendertarget_t rendertarget, GRGlFramebufferInfo* glInfo) =>
 			(gr_backendrendertarget_get_gl_framebufferinfo_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_get_gl_framebufferinfo> ("gr_backendrendertarget_get_gl_framebufferinfo")).Invoke (rendertarget, glInfo);
 		#endif
 
@@ -77,18 +77,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 gr_backendrendertarget_get_height (IntPtr rendertarget);
+		internal static partial Int32 gr_backendrendertarget_get_height (gr_backendrendertarget_t rendertarget);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 gr_backendrendertarget_get_height (IntPtr rendertarget);
+		internal static extern Int32 gr_backendrendertarget_get_height (gr_backendrendertarget_t rendertarget);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 gr_backendrendertarget_get_height (IntPtr rendertarget);
+			internal delegate Int32 gr_backendrendertarget_get_height (gr_backendrendertarget_t rendertarget);
 		}
 		private static Delegates.gr_backendrendertarget_get_height gr_backendrendertarget_get_height_delegate;
-		internal static Int32 gr_backendrendertarget_get_height (IntPtr rendertarget) =>
+		internal static Int32 gr_backendrendertarget_get_height (gr_backendrendertarget_t rendertarget) =>
 			(gr_backendrendertarget_get_height_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_get_height> ("gr_backendrendertarget_get_height")).Invoke (rendertarget);
 		#endif
 
@@ -96,18 +96,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 gr_backendrendertarget_get_samples (IntPtr rendertarget);
+		internal static partial Int32 gr_backendrendertarget_get_samples (gr_backendrendertarget_t rendertarget);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 gr_backendrendertarget_get_samples (IntPtr rendertarget);
+		internal static extern Int32 gr_backendrendertarget_get_samples (gr_backendrendertarget_t rendertarget);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 gr_backendrendertarget_get_samples (IntPtr rendertarget);
+			internal delegate Int32 gr_backendrendertarget_get_samples (gr_backendrendertarget_t rendertarget);
 		}
 		private static Delegates.gr_backendrendertarget_get_samples gr_backendrendertarget_get_samples_delegate;
-		internal static Int32 gr_backendrendertarget_get_samples (IntPtr rendertarget) =>
+		internal static Int32 gr_backendrendertarget_get_samples (gr_backendrendertarget_t rendertarget) =>
 			(gr_backendrendertarget_get_samples_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_get_samples> ("gr_backendrendertarget_get_samples")).Invoke (rendertarget);
 		#endif
 
@@ -115,18 +115,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 gr_backendrendertarget_get_stencils (IntPtr rendertarget);
+		internal static partial Int32 gr_backendrendertarget_get_stencils (gr_backendrendertarget_t rendertarget);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 gr_backendrendertarget_get_stencils (IntPtr rendertarget);
+		internal static extern Int32 gr_backendrendertarget_get_stencils (gr_backendrendertarget_t rendertarget);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 gr_backendrendertarget_get_stencils (IntPtr rendertarget);
+			internal delegate Int32 gr_backendrendertarget_get_stencils (gr_backendrendertarget_t rendertarget);
 		}
 		private static Delegates.gr_backendrendertarget_get_stencils gr_backendrendertarget_get_stencils_delegate;
-		internal static Int32 gr_backendrendertarget_get_stencils (IntPtr rendertarget) =>
+		internal static Int32 gr_backendrendertarget_get_stencils (gr_backendrendertarget_t rendertarget) =>
 			(gr_backendrendertarget_get_stencils_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_get_stencils> ("gr_backendrendertarget_get_stencils")).Invoke (rendertarget);
 		#endif
 
@@ -134,18 +134,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 gr_backendrendertarget_get_width (IntPtr rendertarget);
+		internal static partial Int32 gr_backendrendertarget_get_width (gr_backendrendertarget_t rendertarget);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 gr_backendrendertarget_get_width (IntPtr rendertarget);
+		internal static extern Int32 gr_backendrendertarget_get_width (gr_backendrendertarget_t rendertarget);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 gr_backendrendertarget_get_width (IntPtr rendertarget);
+			internal delegate Int32 gr_backendrendertarget_get_width (gr_backendrendertarget_t rendertarget);
 		}
 		private static Delegates.gr_backendrendertarget_get_width gr_backendrendertarget_get_width_delegate;
-		internal static Int32 gr_backendrendertarget_get_width (IntPtr rendertarget) =>
+		internal static Int32 gr_backendrendertarget_get_width (gr_backendrendertarget_t rendertarget) =>
 			(gr_backendrendertarget_get_width_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_get_width> ("gr_backendrendertarget_get_width")).Invoke (rendertarget);
 		#endif
 
@@ -154,20 +154,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool gr_backendrendertarget_is_valid (IntPtr rendertarget);
+		internal static partial bool gr_backendrendertarget_is_valid (gr_backendrendertarget_t rendertarget);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool gr_backendrendertarget_is_valid (IntPtr rendertarget);
+		internal static extern bool gr_backendrendertarget_is_valid (gr_backendrendertarget_t rendertarget);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool gr_backendrendertarget_is_valid (IntPtr rendertarget);
+			internal delegate bool gr_backendrendertarget_is_valid (gr_backendrendertarget_t rendertarget);
 		}
 		private static Delegates.gr_backendrendertarget_is_valid gr_backendrendertarget_is_valid_delegate;
-		internal static bool gr_backendrendertarget_is_valid (IntPtr rendertarget) =>
+		internal static bool gr_backendrendertarget_is_valid (gr_backendrendertarget_t rendertarget) =>
 			(gr_backendrendertarget_is_valid_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_is_valid> ("gr_backendrendertarget_is_valid")).Invoke (rendertarget);
 		#endif
 
@@ -175,18 +175,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
 		}
 		private static Delegates.gr_backendrendertarget_new_direct3d gr_backendrendertarget_new_direct3d_delegate;
-		internal static IntPtr gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo) =>
+		internal static gr_backendrendertarget_t gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo) =>
 			(gr_backendrendertarget_new_direct3d_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_direct3d> ("gr_backendrendertarget_new_direct3d")).Invoke (width, height, d3dInfo);
 		#endif
 
@@ -194,18 +194,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_backendrendertarget_new_gl (Int32 width, Int32 height, Int32 samples, Int32 stencils, GRGlFramebufferInfo* glInfo);
+		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_gl (Int32 width, Int32 height, Int32 samples, Int32 stencils, GRGlFramebufferInfo* glInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_backendrendertarget_new_gl (Int32 width, Int32 height, Int32 samples, Int32 stencils, GRGlFramebufferInfo* glInfo);
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_gl (Int32 width, Int32 height, Int32 samples, Int32 stencils, GRGlFramebufferInfo* glInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_backendrendertarget_new_gl (Int32 width, Int32 height, Int32 samples, Int32 stencils, GRGlFramebufferInfo* glInfo);
+			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_gl (Int32 width, Int32 height, Int32 samples, Int32 stencils, GRGlFramebufferInfo* glInfo);
 		}
 		private static Delegates.gr_backendrendertarget_new_gl gr_backendrendertarget_new_gl_delegate;
-		internal static IntPtr gr_backendrendertarget_new_gl (Int32 width, Int32 height, Int32 samples, Int32 stencils, GRGlFramebufferInfo* glInfo) =>
+		internal static gr_backendrendertarget_t gr_backendrendertarget_new_gl (Int32 width, Int32 height, Int32 samples, Int32 stencils, GRGlFramebufferInfo* glInfo) =>
 			(gr_backendrendertarget_new_gl_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_gl> ("gr_backendrendertarget_new_gl")).Invoke (width, height, samples, stencils, glInfo);
 		#endif
 
@@ -213,18 +213,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo);
+		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo);
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo);
+			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo);
 		}
 		private static Delegates.gr_backendrendertarget_new_metal gr_backendrendertarget_new_metal_delegate;
-		internal static IntPtr gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo) =>
+		internal static gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo) =>
 			(gr_backendrendertarget_new_metal_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_metal> ("gr_backendrendertarget_new_metal")).Invoke (width, height, mtlInfo);
 		#endif
 
@@ -232,18 +232,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo);
+		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo);
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo);
+			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo);
 		}
 		private static Delegates.gr_backendrendertarget_new_vulkan gr_backendrendertarget_new_vulkan_delegate;
-		internal static IntPtr gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo) =>
+		internal static gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo) =>
 			(gr_backendrendertarget_new_vulkan_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_vulkan> ("gr_backendrendertarget_new_vulkan")).Invoke (width, height, vkImageInfo);
 		#endif
 
@@ -251,18 +251,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_backendtexture_delete (IntPtr texture);
+		internal static partial void gr_backendtexture_delete (gr_backendtexture_t texture);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_backendtexture_delete (IntPtr texture);
+		internal static extern void gr_backendtexture_delete (gr_backendtexture_t texture);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_backendtexture_delete (IntPtr texture);
+			internal delegate void gr_backendtexture_delete (gr_backendtexture_t texture);
 		}
 		private static Delegates.gr_backendtexture_delete gr_backendtexture_delete_delegate;
-		internal static void gr_backendtexture_delete (IntPtr texture) =>
+		internal static void gr_backendtexture_delete (gr_backendtexture_t texture) =>
 			(gr_backendtexture_delete_delegate ??= GetSymbol<Delegates.gr_backendtexture_delete> ("gr_backendtexture_delete")).Invoke (texture);
 		#endif
 
@@ -270,18 +270,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial GRBackendNative gr_backendtexture_get_backend (IntPtr texture);
+		internal static partial GRBackendNative gr_backendtexture_get_backend (gr_backendtexture_t texture);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRBackendNative gr_backendtexture_get_backend (IntPtr texture);
+		internal static extern GRBackendNative gr_backendtexture_get_backend (gr_backendtexture_t texture);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate GRBackendNative gr_backendtexture_get_backend (IntPtr texture);
+			internal delegate GRBackendNative gr_backendtexture_get_backend (gr_backendtexture_t texture);
 		}
 		private static Delegates.gr_backendtexture_get_backend gr_backendtexture_get_backend_delegate;
-		internal static GRBackendNative gr_backendtexture_get_backend (IntPtr texture) =>
+		internal static GRBackendNative gr_backendtexture_get_backend (gr_backendtexture_t texture) =>
 			(gr_backendtexture_get_backend_delegate ??= GetSymbol<Delegates.gr_backendtexture_get_backend> ("gr_backendtexture_get_backend")).Invoke (texture);
 		#endif
 
@@ -290,20 +290,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool gr_backendtexture_get_gl_textureinfo (IntPtr texture, GRGlTextureInfo* glInfo);
+		internal static partial bool gr_backendtexture_get_gl_textureinfo (gr_backendtexture_t texture, GRGlTextureInfo* glInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool gr_backendtexture_get_gl_textureinfo (IntPtr texture, GRGlTextureInfo* glInfo);
+		internal static extern bool gr_backendtexture_get_gl_textureinfo (gr_backendtexture_t texture, GRGlTextureInfo* glInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool gr_backendtexture_get_gl_textureinfo (IntPtr texture, GRGlTextureInfo* glInfo);
+			internal delegate bool gr_backendtexture_get_gl_textureinfo (gr_backendtexture_t texture, GRGlTextureInfo* glInfo);
 		}
 		private static Delegates.gr_backendtexture_get_gl_textureinfo gr_backendtexture_get_gl_textureinfo_delegate;
-		internal static bool gr_backendtexture_get_gl_textureinfo (IntPtr texture, GRGlTextureInfo* glInfo) =>
+		internal static bool gr_backendtexture_get_gl_textureinfo (gr_backendtexture_t texture, GRGlTextureInfo* glInfo) =>
 			(gr_backendtexture_get_gl_textureinfo_delegate ??= GetSymbol<Delegates.gr_backendtexture_get_gl_textureinfo> ("gr_backendtexture_get_gl_textureinfo")).Invoke (texture, glInfo);
 		#endif
 
@@ -311,18 +311,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 gr_backendtexture_get_height (IntPtr texture);
+		internal static partial Int32 gr_backendtexture_get_height (gr_backendtexture_t texture);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 gr_backendtexture_get_height (IntPtr texture);
+		internal static extern Int32 gr_backendtexture_get_height (gr_backendtexture_t texture);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 gr_backendtexture_get_height (IntPtr texture);
+			internal delegate Int32 gr_backendtexture_get_height (gr_backendtexture_t texture);
 		}
 		private static Delegates.gr_backendtexture_get_height gr_backendtexture_get_height_delegate;
-		internal static Int32 gr_backendtexture_get_height (IntPtr texture) =>
+		internal static Int32 gr_backendtexture_get_height (gr_backendtexture_t texture) =>
 			(gr_backendtexture_get_height_delegate ??= GetSymbol<Delegates.gr_backendtexture_get_height> ("gr_backendtexture_get_height")).Invoke (texture);
 		#endif
 
@@ -330,18 +330,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 gr_backendtexture_get_width (IntPtr texture);
+		internal static partial Int32 gr_backendtexture_get_width (gr_backendtexture_t texture);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 gr_backendtexture_get_width (IntPtr texture);
+		internal static extern Int32 gr_backendtexture_get_width (gr_backendtexture_t texture);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 gr_backendtexture_get_width (IntPtr texture);
+			internal delegate Int32 gr_backendtexture_get_width (gr_backendtexture_t texture);
 		}
 		private static Delegates.gr_backendtexture_get_width gr_backendtexture_get_width_delegate;
-		internal static Int32 gr_backendtexture_get_width (IntPtr texture) =>
+		internal static Int32 gr_backendtexture_get_width (gr_backendtexture_t texture) =>
 			(gr_backendtexture_get_width_delegate ??= GetSymbol<Delegates.gr_backendtexture_get_width> ("gr_backendtexture_get_width")).Invoke (texture);
 		#endif
 
@@ -350,20 +350,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool gr_backendtexture_has_mipmaps (IntPtr texture);
+		internal static partial bool gr_backendtexture_has_mipmaps (gr_backendtexture_t texture);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool gr_backendtexture_has_mipmaps (IntPtr texture);
+		internal static extern bool gr_backendtexture_has_mipmaps (gr_backendtexture_t texture);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool gr_backendtexture_has_mipmaps (IntPtr texture);
+			internal delegate bool gr_backendtexture_has_mipmaps (gr_backendtexture_t texture);
 		}
 		private static Delegates.gr_backendtexture_has_mipmaps gr_backendtexture_has_mipmaps_delegate;
-		internal static bool gr_backendtexture_has_mipmaps (IntPtr texture) =>
+		internal static bool gr_backendtexture_has_mipmaps (gr_backendtexture_t texture) =>
 			(gr_backendtexture_has_mipmaps_delegate ??= GetSymbol<Delegates.gr_backendtexture_has_mipmaps> ("gr_backendtexture_has_mipmaps")).Invoke (texture);
 		#endif
 
@@ -372,20 +372,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool gr_backendtexture_is_valid (IntPtr texture);
+		internal static partial bool gr_backendtexture_is_valid (gr_backendtexture_t texture);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool gr_backendtexture_is_valid (IntPtr texture);
+		internal static extern bool gr_backendtexture_is_valid (gr_backendtexture_t texture);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool gr_backendtexture_is_valid (IntPtr texture);
+			internal delegate bool gr_backendtexture_is_valid (gr_backendtexture_t texture);
 		}
 		private static Delegates.gr_backendtexture_is_valid gr_backendtexture_is_valid_delegate;
-		internal static bool gr_backendtexture_is_valid (IntPtr texture) =>
+		internal static bool gr_backendtexture_is_valid (gr_backendtexture_t texture) =>
 			(gr_backendtexture_is_valid_delegate ??= GetSymbol<Delegates.gr_backendtexture_is_valid> ("gr_backendtexture_is_valid")).Invoke (texture);
 		#endif
 
@@ -393,18 +393,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		internal static partial gr_backendtexture_t gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		internal static extern gr_backendtexture_t gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+			internal delegate gr_backendtexture_t gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
 		}
 		private static Delegates.gr_backendtexture_new_direct3d gr_backendtexture_new_direct3d_delegate;
-		internal static IntPtr gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo) =>
+		internal static gr_backendtexture_t gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo) =>
 			(gr_backendtexture_new_direct3d_delegate ??= GetSymbol<Delegates.gr_backendtexture_new_direct3d> ("gr_backendtexture_new_direct3d")).Invoke (width, height, d3dInfo);
 		#endif
 
@@ -412,18 +412,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_backendtexture_new_gl (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRGlTextureInfo* glInfo);
+		internal static partial gr_backendtexture_t gr_backendtexture_new_gl (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRGlTextureInfo* glInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_backendtexture_new_gl (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRGlTextureInfo* glInfo);
+		internal static extern gr_backendtexture_t gr_backendtexture_new_gl (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRGlTextureInfo* glInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_backendtexture_new_gl (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRGlTextureInfo* glInfo);
+			internal delegate gr_backendtexture_t gr_backendtexture_new_gl (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRGlTextureInfo* glInfo);
 		}
 		private static Delegates.gr_backendtexture_new_gl gr_backendtexture_new_gl_delegate;
-		internal static IntPtr gr_backendtexture_new_gl (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRGlTextureInfo* glInfo) =>
+		internal static gr_backendtexture_t gr_backendtexture_new_gl (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRGlTextureInfo* glInfo) =>
 			(gr_backendtexture_new_gl_delegate ??= GetSymbol<Delegates.gr_backendtexture_new_gl> ("gr_backendtexture_new_gl")).Invoke (width, height, mipmapped, glInfo);
 		#endif
 
@@ -431,18 +431,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo);
+		internal static partial gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo);
+		internal static extern gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo);
+			internal delegate gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo);
 		}
 		private static Delegates.gr_backendtexture_new_metal gr_backendtexture_new_metal_delegate;
-		internal static IntPtr gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo) =>
+		internal static gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo) =>
 			(gr_backendtexture_new_metal_delegate ??= GetSymbol<Delegates.gr_backendtexture_new_metal> ("gr_backendtexture_new_metal")).Invoke (width, height, mipmapped, mtlInfo);
 		#endif
 
@@ -450,18 +450,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_backendtexture_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkInfo);
+		internal static partial gr_backendtexture_t gr_backendtexture_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_backendtexture_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkInfo);
+		internal static extern gr_backendtexture_t gr_backendtexture_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_backendtexture_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkInfo);
+			internal delegate gr_backendtexture_t gr_backendtexture_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkInfo);
 		}
 		private static Delegates.gr_backendtexture_new_vulkan gr_backendtexture_new_vulkan_delegate;
-		internal static IntPtr gr_backendtexture_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkInfo) =>
+		internal static gr_backendtexture_t gr_backendtexture_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkInfo) =>
 			(gr_backendtexture_new_vulkan_delegate ??= GetSymbol<Delegates.gr_backendtexture_new_vulkan> ("gr_backendtexture_new_vulkan")).Invoke (width, height, vkInfo);
 		#endif
 
@@ -469,18 +469,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_abandon_context (IntPtr context);
+		internal static partial void gr_direct_context_abandon_context (gr_direct_context_t context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_abandon_context (IntPtr context);
+		internal static extern void gr_direct_context_abandon_context (gr_direct_context_t context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_abandon_context (IntPtr context);
+			internal delegate void gr_direct_context_abandon_context (gr_direct_context_t context);
 		}
 		private static Delegates.gr_direct_context_abandon_context gr_direct_context_abandon_context_delegate;
-		internal static void gr_direct_context_abandon_context (IntPtr context) =>
+		internal static void gr_direct_context_abandon_context (gr_direct_context_t context) =>
 			(gr_direct_context_abandon_context_delegate ??= GetSymbol<Delegates.gr_direct_context_abandon_context> ("gr_direct_context_abandon_context")).Invoke (context);
 		#endif
 
@@ -488,18 +488,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_check_async_work_completion (IntPtr context);
+		internal static partial void gr_direct_context_check_async_work_completion (gr_direct_context_t context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_check_async_work_completion (IntPtr context);
+		internal static extern void gr_direct_context_check_async_work_completion (gr_direct_context_t context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_check_async_work_completion (IntPtr context);
+			internal delegate void gr_direct_context_check_async_work_completion (gr_direct_context_t context);
 		}
 		private static Delegates.gr_direct_context_check_async_work_completion gr_direct_context_check_async_work_completion_delegate;
-		internal static void gr_direct_context_check_async_work_completion (IntPtr context) =>
+		internal static void gr_direct_context_check_async_work_completion (gr_direct_context_t context) =>
 			(gr_direct_context_check_async_work_completion_delegate ??= GetSymbol<Delegates.gr_direct_context_check_async_work_completion> ("gr_direct_context_check_async_work_completion")).Invoke (context);
 		#endif
 
@@ -507,18 +507,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_dump_memory_statistics (IntPtr context, IntPtr dump);
+		internal static partial void gr_direct_context_dump_memory_statistics (gr_direct_context_t context, sk_tracememorydump_t dump);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_dump_memory_statistics (IntPtr context, IntPtr dump);
+		internal static extern void gr_direct_context_dump_memory_statistics (gr_direct_context_t context, sk_tracememorydump_t dump);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_dump_memory_statistics (IntPtr context, IntPtr dump);
+			internal delegate void gr_direct_context_dump_memory_statistics (gr_direct_context_t context, sk_tracememorydump_t dump);
 		}
 		private static Delegates.gr_direct_context_dump_memory_statistics gr_direct_context_dump_memory_statistics_delegate;
-		internal static void gr_direct_context_dump_memory_statistics (IntPtr context, IntPtr dump) =>
+		internal static void gr_direct_context_dump_memory_statistics (gr_direct_context_t context, sk_tracememorydump_t dump) =>
 			(gr_direct_context_dump_memory_statistics_delegate ??= GetSymbol<Delegates.gr_direct_context_dump_memory_statistics> ("gr_direct_context_dump_memory_statistics")).Invoke (context, dump);
 		#endif
 
@@ -526,18 +526,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_flush (IntPtr context);
+		internal static partial void gr_direct_context_flush (gr_direct_context_t context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_flush (IntPtr context);
+		internal static extern void gr_direct_context_flush (gr_direct_context_t context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_flush (IntPtr context);
+			internal delegate void gr_direct_context_flush (gr_direct_context_t context);
 		}
 		private static Delegates.gr_direct_context_flush gr_direct_context_flush_delegate;
-		internal static void gr_direct_context_flush (IntPtr context) =>
+		internal static void gr_direct_context_flush (gr_direct_context_t context) =>
 			(gr_direct_context_flush_delegate ??= GetSymbol<Delegates.gr_direct_context_flush> ("gr_direct_context_flush")).Invoke (context);
 		#endif
 
@@ -545,18 +545,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_flush_and_submit (IntPtr context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		internal static partial void gr_direct_context_flush_and_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_flush_and_submit (IntPtr context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		internal static extern void gr_direct_context_flush_and_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_flush_and_submit (IntPtr context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+			internal delegate void gr_direct_context_flush_and_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
 		}
 		private static Delegates.gr_direct_context_flush_and_submit gr_direct_context_flush_and_submit_delegate;
-		internal static void gr_direct_context_flush_and_submit (IntPtr context, [MarshalAs (UnmanagedType.I1)] bool syncCpu) =>
+		internal static void gr_direct_context_flush_and_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu) =>
 			(gr_direct_context_flush_and_submit_delegate ??= GetSymbol<Delegates.gr_direct_context_flush_and_submit> ("gr_direct_context_flush_and_submit")).Invoke (context, syncCpu);
 		#endif
 
@@ -564,18 +564,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_flush_image (IntPtr context, IntPtr image);
+		internal static partial void gr_direct_context_flush_image (gr_direct_context_t context, sk_image_t image);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_flush_image (IntPtr context, IntPtr image);
+		internal static extern void gr_direct_context_flush_image (gr_direct_context_t context, sk_image_t image);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_flush_image (IntPtr context, IntPtr image);
+			internal delegate void gr_direct_context_flush_image (gr_direct_context_t context, sk_image_t image);
 		}
 		private static Delegates.gr_direct_context_flush_image gr_direct_context_flush_image_delegate;
-		internal static void gr_direct_context_flush_image (IntPtr context, IntPtr image) =>
+		internal static void gr_direct_context_flush_image (gr_direct_context_t context, sk_image_t image) =>
 			(gr_direct_context_flush_image_delegate ??= GetSymbol<Delegates.gr_direct_context_flush_image> ("gr_direct_context_flush_image")).Invoke (context, image);
 		#endif
 
@@ -583,18 +583,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_flush_surface (IntPtr context, IntPtr surface);
+		internal static partial void gr_direct_context_flush_surface (gr_direct_context_t context, sk_surface_t surface);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_flush_surface (IntPtr context, IntPtr surface);
+		internal static extern void gr_direct_context_flush_surface (gr_direct_context_t context, sk_surface_t surface);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_flush_surface (IntPtr context, IntPtr surface);
+			internal delegate void gr_direct_context_flush_surface (gr_direct_context_t context, sk_surface_t surface);
 		}
 		private static Delegates.gr_direct_context_flush_surface gr_direct_context_flush_surface_delegate;
-		internal static void gr_direct_context_flush_surface (IntPtr context, IntPtr surface) =>
+		internal static void gr_direct_context_flush_surface (gr_direct_context_t context, sk_surface_t surface) =>
 			(gr_direct_context_flush_surface_delegate ??= GetSymbol<Delegates.gr_direct_context_flush_surface> ("gr_direct_context_flush_surface")).Invoke (context, surface);
 		#endif
 
@@ -602,18 +602,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_free_gpu_resources (IntPtr context);
+		internal static partial void gr_direct_context_free_gpu_resources (gr_direct_context_t context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_free_gpu_resources (IntPtr context);
+		internal static extern void gr_direct_context_free_gpu_resources (gr_direct_context_t context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_free_gpu_resources (IntPtr context);
+			internal delegate void gr_direct_context_free_gpu_resources (gr_direct_context_t context);
 		}
 		private static Delegates.gr_direct_context_free_gpu_resources gr_direct_context_free_gpu_resources_delegate;
-		internal static void gr_direct_context_free_gpu_resources (IntPtr context) =>
+		internal static void gr_direct_context_free_gpu_resources (gr_direct_context_t context) =>
 			(gr_direct_context_free_gpu_resources_delegate ??= GetSymbol<Delegates.gr_direct_context_free_gpu_resources> ("gr_direct_context_free_gpu_resources")).Invoke (context);
 		#endif
 
@@ -621,18 +621,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial /* size_t */ IntPtr gr_direct_context_get_resource_cache_limit (IntPtr context);
+		internal static partial /* size_t */ IntPtr gr_direct_context_get_resource_cache_limit (gr_direct_context_t context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr gr_direct_context_get_resource_cache_limit (IntPtr context);
+		internal static extern /* size_t */ IntPtr gr_direct_context_get_resource_cache_limit (gr_direct_context_t context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate /* size_t */ IntPtr gr_direct_context_get_resource_cache_limit (IntPtr context);
+			internal delegate /* size_t */ IntPtr gr_direct_context_get_resource_cache_limit (gr_direct_context_t context);
 		}
 		private static Delegates.gr_direct_context_get_resource_cache_limit gr_direct_context_get_resource_cache_limit_delegate;
-		internal static /* size_t */ IntPtr gr_direct_context_get_resource_cache_limit (IntPtr context) =>
+		internal static /* size_t */ IntPtr gr_direct_context_get_resource_cache_limit (gr_direct_context_t context) =>
 			(gr_direct_context_get_resource_cache_limit_delegate ??= GetSymbol<Delegates.gr_direct_context_get_resource_cache_limit> ("gr_direct_context_get_resource_cache_limit")).Invoke (context);
 		#endif
 
@@ -640,18 +640,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_get_resource_cache_usage (IntPtr context, Int32* maxResources, /* size_t */ IntPtr* maxResourceBytes);
+		internal static partial void gr_direct_context_get_resource_cache_usage (gr_direct_context_t context, Int32* maxResources, /* size_t */ IntPtr* maxResourceBytes);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_get_resource_cache_usage (IntPtr context, Int32* maxResources, /* size_t */ IntPtr* maxResourceBytes);
+		internal static extern void gr_direct_context_get_resource_cache_usage (gr_direct_context_t context, Int32* maxResources, /* size_t */ IntPtr* maxResourceBytes);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_get_resource_cache_usage (IntPtr context, Int32* maxResources, /* size_t */ IntPtr* maxResourceBytes);
+			internal delegate void gr_direct_context_get_resource_cache_usage (gr_direct_context_t context, Int32* maxResources, /* size_t */ IntPtr* maxResourceBytes);
 		}
 		private static Delegates.gr_direct_context_get_resource_cache_usage gr_direct_context_get_resource_cache_usage_delegate;
-		internal static void gr_direct_context_get_resource_cache_usage (IntPtr context, Int32* maxResources, /* size_t */ IntPtr* maxResourceBytes) =>
+		internal static void gr_direct_context_get_resource_cache_usage (gr_direct_context_t context, Int32* maxResources, /* size_t */ IntPtr* maxResourceBytes) =>
 			(gr_direct_context_get_resource_cache_usage_delegate ??= GetSymbol<Delegates.gr_direct_context_get_resource_cache_usage> ("gr_direct_context_get_resource_cache_usage")).Invoke (context, maxResources, maxResourceBytes);
 		#endif
 
@@ -660,20 +660,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool gr_direct_context_is_abandoned (IntPtr context);
+		internal static partial bool gr_direct_context_is_abandoned (gr_direct_context_t context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool gr_direct_context_is_abandoned (IntPtr context);
+		internal static extern bool gr_direct_context_is_abandoned (gr_direct_context_t context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool gr_direct_context_is_abandoned (IntPtr context);
+			internal delegate bool gr_direct_context_is_abandoned (gr_direct_context_t context);
 		}
 		private static Delegates.gr_direct_context_is_abandoned gr_direct_context_is_abandoned_delegate;
-		internal static bool gr_direct_context_is_abandoned (IntPtr context) =>
+		internal static bool gr_direct_context_is_abandoned (gr_direct_context_t context) =>
 			(gr_direct_context_is_abandoned_delegate ??= GetSymbol<Delegates.gr_direct_context_is_abandoned> ("gr_direct_context_is_abandoned")).Invoke (context);
 		#endif
 
@@ -681,18 +681,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext);
+		internal static partial gr_direct_context_t gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext);
+		internal static extern gr_direct_context_t gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext);
+			internal delegate gr_direct_context_t gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext);
 		}
 		private static Delegates.gr_direct_context_make_direct3d gr_direct_context_make_direct3d_delegate;
-		internal static IntPtr gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext) =>
+		internal static gr_direct_context_t gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext) =>
 			(gr_direct_context_make_direct3d_delegate ??= GetSymbol<Delegates.gr_direct_context_make_direct3d> ("gr_direct_context_make_direct3d")).Invoke (d3dBackendContext);
 		#endif
 
@@ -700,18 +700,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options);
+		internal static partial gr_direct_context_t gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options);
+		internal static extern gr_direct_context_t gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options);
+			internal delegate gr_direct_context_t gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options);
 		}
 		private static Delegates.gr_direct_context_make_direct3d_with_options gr_direct_context_make_direct3d_with_options_delegate;
-		internal static IntPtr gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options) =>
+		internal static gr_direct_context_t gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options) =>
 			(gr_direct_context_make_direct3d_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_direct3d_with_options> ("gr_direct_context_make_direct3d_with_options")).Invoke (d3dBackendContext, options);
 		#endif
 
@@ -719,18 +719,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_direct_context_make_gl (IntPtr glInterface);
+		internal static partial gr_direct_context_t gr_direct_context_make_gl (gr_glinterface_t glInterface);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_direct_context_make_gl (IntPtr glInterface);
+		internal static extern gr_direct_context_t gr_direct_context_make_gl (gr_glinterface_t glInterface);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_direct_context_make_gl (IntPtr glInterface);
+			internal delegate gr_direct_context_t gr_direct_context_make_gl (gr_glinterface_t glInterface);
 		}
 		private static Delegates.gr_direct_context_make_gl gr_direct_context_make_gl_delegate;
-		internal static IntPtr gr_direct_context_make_gl (IntPtr glInterface) =>
+		internal static gr_direct_context_t gr_direct_context_make_gl (gr_glinterface_t glInterface) =>
 			(gr_direct_context_make_gl_delegate ??= GetSymbol<Delegates.gr_direct_context_make_gl> ("gr_direct_context_make_gl")).Invoke (glInterface);
 		#endif
 
@@ -738,18 +738,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_direct_context_make_gl_with_options (IntPtr glInterface, GRContextOptionsNative* options);
+		internal static partial gr_direct_context_t gr_direct_context_make_gl_with_options (gr_glinterface_t glInterface, GRContextOptionsNative* options);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_direct_context_make_gl_with_options (IntPtr glInterface, GRContextOptionsNative* options);
+		internal static extern gr_direct_context_t gr_direct_context_make_gl_with_options (gr_glinterface_t glInterface, GRContextOptionsNative* options);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_direct_context_make_gl_with_options (IntPtr glInterface, GRContextOptionsNative* options);
+			internal delegate gr_direct_context_t gr_direct_context_make_gl_with_options (gr_glinterface_t glInterface, GRContextOptionsNative* options);
 		}
 		private static Delegates.gr_direct_context_make_gl_with_options gr_direct_context_make_gl_with_options_delegate;
-		internal static IntPtr gr_direct_context_make_gl_with_options (IntPtr glInterface, GRContextOptionsNative* options) =>
+		internal static gr_direct_context_t gr_direct_context_make_gl_with_options (gr_glinterface_t glInterface, GRContextOptionsNative* options) =>
 			(gr_direct_context_make_gl_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_gl_with_options> ("gr_direct_context_make_gl_with_options")).Invoke (glInterface, options);
 		#endif
 
@@ -757,18 +757,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_direct_context_make_metal (void* device, void* queue);
+		internal static partial gr_direct_context_t gr_direct_context_make_metal (void* device, void* queue);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_direct_context_make_metal (void* device, void* queue);
+		internal static extern gr_direct_context_t gr_direct_context_make_metal (void* device, void* queue);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_direct_context_make_metal (void* device, void* queue);
+			internal delegate gr_direct_context_t gr_direct_context_make_metal (void* device, void* queue);
 		}
 		private static Delegates.gr_direct_context_make_metal gr_direct_context_make_metal_delegate;
-		internal static IntPtr gr_direct_context_make_metal (void* device, void* queue) =>
+		internal static gr_direct_context_t gr_direct_context_make_metal (void* device, void* queue) =>
 			(gr_direct_context_make_metal_delegate ??= GetSymbol<Delegates.gr_direct_context_make_metal> ("gr_direct_context_make_metal")).Invoke (device, queue);
 		#endif
 
@@ -776,18 +776,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_direct_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options);
+		internal static partial gr_direct_context_t gr_direct_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_direct_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options);
+		internal static extern gr_direct_context_t gr_direct_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_direct_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options);
+			internal delegate gr_direct_context_t gr_direct_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options);
 		}
 		private static Delegates.gr_direct_context_make_metal_with_options gr_direct_context_make_metal_with_options_delegate;
-		internal static IntPtr gr_direct_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options) =>
+		internal static gr_direct_context_t gr_direct_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options) =>
 			(gr_direct_context_make_metal_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_metal_with_options> ("gr_direct_context_make_metal_with_options")).Invoke (device, queue, options);
 		#endif
 
@@ -795,18 +795,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_direct_context_make_vulkan (GRVkBackendContextNative vkBackendContext);
+		internal static partial gr_direct_context_t gr_direct_context_make_vulkan (GRVkBackendContextNative vkBackendContext);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_direct_context_make_vulkan (GRVkBackendContextNative vkBackendContext);
+		internal static extern gr_direct_context_t gr_direct_context_make_vulkan (GRVkBackendContextNative vkBackendContext);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_direct_context_make_vulkan (GRVkBackendContextNative vkBackendContext);
+			internal delegate gr_direct_context_t gr_direct_context_make_vulkan (GRVkBackendContextNative vkBackendContext);
 		}
 		private static Delegates.gr_direct_context_make_vulkan gr_direct_context_make_vulkan_delegate;
-		internal static IntPtr gr_direct_context_make_vulkan (GRVkBackendContextNative vkBackendContext) =>
+		internal static gr_direct_context_t gr_direct_context_make_vulkan (GRVkBackendContextNative vkBackendContext) =>
 			(gr_direct_context_make_vulkan_delegate ??= GetSymbol<Delegates.gr_direct_context_make_vulkan> ("gr_direct_context_make_vulkan")).Invoke (vkBackendContext);
 		#endif
 
@@ -814,18 +814,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_direct_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options);
+		internal static partial gr_direct_context_t gr_direct_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_direct_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options);
+		internal static extern gr_direct_context_t gr_direct_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_direct_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options);
+			internal delegate gr_direct_context_t gr_direct_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options);
 		}
 		private static Delegates.gr_direct_context_make_vulkan_with_options gr_direct_context_make_vulkan_with_options_delegate;
-		internal static IntPtr gr_direct_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options) =>
+		internal static gr_direct_context_t gr_direct_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options) =>
 			(gr_direct_context_make_vulkan_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_vulkan_with_options> ("gr_direct_context_make_vulkan_with_options")).Invoke (vkBackendContext, options);
 		#endif
 
@@ -833,18 +833,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_perform_deferred_cleanup (IntPtr context, Int64 ms);
+		internal static partial void gr_direct_context_perform_deferred_cleanup (gr_direct_context_t context, Int64 ms);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_perform_deferred_cleanup (IntPtr context, Int64 ms);
+		internal static extern void gr_direct_context_perform_deferred_cleanup (gr_direct_context_t context, Int64 ms);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_perform_deferred_cleanup (IntPtr context, Int64 ms);
+			internal delegate void gr_direct_context_perform_deferred_cleanup (gr_direct_context_t context, Int64 ms);
 		}
 		private static Delegates.gr_direct_context_perform_deferred_cleanup gr_direct_context_perform_deferred_cleanup_delegate;
-		internal static void gr_direct_context_perform_deferred_cleanup (IntPtr context, Int64 ms) =>
+		internal static void gr_direct_context_perform_deferred_cleanup (gr_direct_context_t context, Int64 ms) =>
 			(gr_direct_context_perform_deferred_cleanup_delegate ??= GetSymbol<Delegates.gr_direct_context_perform_deferred_cleanup> ("gr_direct_context_perform_deferred_cleanup")).Invoke (context, ms);
 		#endif
 
@@ -852,18 +852,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_purge_unlocked_resources (IntPtr context, [MarshalAs (UnmanagedType.I1)] bool scratchResourcesOnly);
+		internal static partial void gr_direct_context_purge_unlocked_resources (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool scratchResourcesOnly);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_purge_unlocked_resources (IntPtr context, [MarshalAs (UnmanagedType.I1)] bool scratchResourcesOnly);
+		internal static extern void gr_direct_context_purge_unlocked_resources (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool scratchResourcesOnly);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_purge_unlocked_resources (IntPtr context, [MarshalAs (UnmanagedType.I1)] bool scratchResourcesOnly);
+			internal delegate void gr_direct_context_purge_unlocked_resources (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool scratchResourcesOnly);
 		}
 		private static Delegates.gr_direct_context_purge_unlocked_resources gr_direct_context_purge_unlocked_resources_delegate;
-		internal static void gr_direct_context_purge_unlocked_resources (IntPtr context, [MarshalAs (UnmanagedType.I1)] bool scratchResourcesOnly) =>
+		internal static void gr_direct_context_purge_unlocked_resources (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool scratchResourcesOnly) =>
 			(gr_direct_context_purge_unlocked_resources_delegate ??= GetSymbol<Delegates.gr_direct_context_purge_unlocked_resources> ("gr_direct_context_purge_unlocked_resources")).Invoke (context, scratchResourcesOnly);
 		#endif
 
@@ -871,18 +871,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_purge_unlocked_resources_bytes (IntPtr context, /* size_t */ IntPtr bytesToPurge, [MarshalAs (UnmanagedType.I1)] bool preferScratchResources);
+		internal static partial void gr_direct_context_purge_unlocked_resources_bytes (gr_direct_context_t context, /* size_t */ IntPtr bytesToPurge, [MarshalAs (UnmanagedType.I1)] bool preferScratchResources);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_purge_unlocked_resources_bytes (IntPtr context, /* size_t */ IntPtr bytesToPurge, [MarshalAs (UnmanagedType.I1)] bool preferScratchResources);
+		internal static extern void gr_direct_context_purge_unlocked_resources_bytes (gr_direct_context_t context, /* size_t */ IntPtr bytesToPurge, [MarshalAs (UnmanagedType.I1)] bool preferScratchResources);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_purge_unlocked_resources_bytes (IntPtr context, /* size_t */ IntPtr bytesToPurge, [MarshalAs (UnmanagedType.I1)] bool preferScratchResources);
+			internal delegate void gr_direct_context_purge_unlocked_resources_bytes (gr_direct_context_t context, /* size_t */ IntPtr bytesToPurge, [MarshalAs (UnmanagedType.I1)] bool preferScratchResources);
 		}
 		private static Delegates.gr_direct_context_purge_unlocked_resources_bytes gr_direct_context_purge_unlocked_resources_bytes_delegate;
-		internal static void gr_direct_context_purge_unlocked_resources_bytes (IntPtr context, /* size_t */ IntPtr bytesToPurge, [MarshalAs (UnmanagedType.I1)] bool preferScratchResources) =>
+		internal static void gr_direct_context_purge_unlocked_resources_bytes (gr_direct_context_t context, /* size_t */ IntPtr bytesToPurge, [MarshalAs (UnmanagedType.I1)] bool preferScratchResources) =>
 			(gr_direct_context_purge_unlocked_resources_bytes_delegate ??= GetSymbol<Delegates.gr_direct_context_purge_unlocked_resources_bytes> ("gr_direct_context_purge_unlocked_resources_bytes")).Invoke (context, bytesToPurge, preferScratchResources);
 		#endif
 
@@ -890,18 +890,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_release_resources_and_abandon_context (IntPtr context);
+		internal static partial void gr_direct_context_release_resources_and_abandon_context (gr_direct_context_t context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_release_resources_and_abandon_context (IntPtr context);
+		internal static extern void gr_direct_context_release_resources_and_abandon_context (gr_direct_context_t context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_release_resources_and_abandon_context (IntPtr context);
+			internal delegate void gr_direct_context_release_resources_and_abandon_context (gr_direct_context_t context);
 		}
 		private static Delegates.gr_direct_context_release_resources_and_abandon_context gr_direct_context_release_resources_and_abandon_context_delegate;
-		internal static void gr_direct_context_release_resources_and_abandon_context (IntPtr context) =>
+		internal static void gr_direct_context_release_resources_and_abandon_context (gr_direct_context_t context) =>
 			(gr_direct_context_release_resources_and_abandon_context_delegate ??= GetSymbol<Delegates.gr_direct_context_release_resources_and_abandon_context> ("gr_direct_context_release_resources_and_abandon_context")).Invoke (context);
 		#endif
 
@@ -909,18 +909,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_reset_context (IntPtr context, UInt32 state);
+		internal static partial void gr_direct_context_reset_context (gr_direct_context_t context, UInt32 state);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_reset_context (IntPtr context, UInt32 state);
+		internal static extern void gr_direct_context_reset_context (gr_direct_context_t context, UInt32 state);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_reset_context (IntPtr context, UInt32 state);
+			internal delegate void gr_direct_context_reset_context (gr_direct_context_t context, UInt32 state);
 		}
 		private static Delegates.gr_direct_context_reset_context gr_direct_context_reset_context_delegate;
-		internal static void gr_direct_context_reset_context (IntPtr context, UInt32 state) =>
+		internal static void gr_direct_context_reset_context (gr_direct_context_t context, UInt32 state) =>
 			(gr_direct_context_reset_context_delegate ??= GetSymbol<Delegates.gr_direct_context_reset_context> ("gr_direct_context_reset_context")).Invoke (context, state);
 		#endif
 
@@ -928,18 +928,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_direct_context_set_resource_cache_limit (IntPtr context, /* size_t */ IntPtr maxResourceBytes);
+		internal static partial void gr_direct_context_set_resource_cache_limit (gr_direct_context_t context, /* size_t */ IntPtr maxResourceBytes);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_set_resource_cache_limit (IntPtr context, /* size_t */ IntPtr maxResourceBytes);
+		internal static extern void gr_direct_context_set_resource_cache_limit (gr_direct_context_t context, /* size_t */ IntPtr maxResourceBytes);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_set_resource_cache_limit (IntPtr context, /* size_t */ IntPtr maxResourceBytes);
+			internal delegate void gr_direct_context_set_resource_cache_limit (gr_direct_context_t context, /* size_t */ IntPtr maxResourceBytes);
 		}
 		private static Delegates.gr_direct_context_set_resource_cache_limit gr_direct_context_set_resource_cache_limit_delegate;
-		internal static void gr_direct_context_set_resource_cache_limit (IntPtr context, /* size_t */ IntPtr maxResourceBytes) =>
+		internal static void gr_direct_context_set_resource_cache_limit (gr_direct_context_t context, /* size_t */ IntPtr maxResourceBytes) =>
 			(gr_direct_context_set_resource_cache_limit_delegate ??= GetSymbol<Delegates.gr_direct_context_set_resource_cache_limit> ("gr_direct_context_set_resource_cache_limit")).Invoke (context, maxResourceBytes);
 		#endif
 
@@ -948,20 +948,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool gr_direct_context_submit (IntPtr context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		internal static partial bool gr_direct_context_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool gr_direct_context_submit (IntPtr context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		internal static extern bool gr_direct_context_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool gr_direct_context_submit (IntPtr context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+			internal delegate bool gr_direct_context_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
 		}
 		private static Delegates.gr_direct_context_submit gr_direct_context_submit_delegate;
-		internal static bool gr_direct_context_submit (IntPtr context, [MarshalAs (UnmanagedType.I1)] bool syncCpu) =>
+		internal static bool gr_direct_context_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu) =>
 			(gr_direct_context_submit_delegate ??= GetSymbol<Delegates.gr_direct_context_submit> ("gr_direct_context_submit")).Invoke (context, syncCpu);
 		#endif
 
@@ -969,18 +969,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_glinterface_assemble_gl_interface (void* ctx, void* get);
+		internal static partial gr_glinterface_t gr_glinterface_assemble_gl_interface (void* ctx, void* get);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_glinterface_assemble_gl_interface (void* ctx, GRGlGetProcProxyDelegate get);
+		internal static extern gr_glinterface_t gr_glinterface_assemble_gl_interface (void* ctx, GRGlGetProcProxyDelegate get);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_glinterface_assemble_gl_interface (void* ctx, GRGlGetProcProxyDelegate get);
+			internal delegate gr_glinterface_t gr_glinterface_assemble_gl_interface (void* ctx, GRGlGetProcProxyDelegate get);
 		}
 		private static Delegates.gr_glinterface_assemble_gl_interface gr_glinterface_assemble_gl_interface_delegate;
-		internal static IntPtr gr_glinterface_assemble_gl_interface (void* ctx, GRGlGetProcProxyDelegate get) =>
+		internal static gr_glinterface_t gr_glinterface_assemble_gl_interface (void* ctx, GRGlGetProcProxyDelegate get) =>
 			(gr_glinterface_assemble_gl_interface_delegate ??= GetSymbol<Delegates.gr_glinterface_assemble_gl_interface> ("gr_glinterface_assemble_gl_interface")).Invoke (ctx, get);
 		#endif
 
@@ -988,18 +988,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_glinterface_assemble_gles_interface (void* ctx, void* get);
+		internal static partial gr_glinterface_t gr_glinterface_assemble_gles_interface (void* ctx, void* get);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_glinterface_assemble_gles_interface (void* ctx, GRGlGetProcProxyDelegate get);
+		internal static extern gr_glinterface_t gr_glinterface_assemble_gles_interface (void* ctx, GRGlGetProcProxyDelegate get);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_glinterface_assemble_gles_interface (void* ctx, GRGlGetProcProxyDelegate get);
+			internal delegate gr_glinterface_t gr_glinterface_assemble_gles_interface (void* ctx, GRGlGetProcProxyDelegate get);
 		}
 		private static Delegates.gr_glinterface_assemble_gles_interface gr_glinterface_assemble_gles_interface_delegate;
-		internal static IntPtr gr_glinterface_assemble_gles_interface (void* ctx, GRGlGetProcProxyDelegate get) =>
+		internal static gr_glinterface_t gr_glinterface_assemble_gles_interface (void* ctx, GRGlGetProcProxyDelegate get) =>
 			(gr_glinterface_assemble_gles_interface_delegate ??= GetSymbol<Delegates.gr_glinterface_assemble_gles_interface> ("gr_glinterface_assemble_gles_interface")).Invoke (ctx, get);
 		#endif
 
@@ -1007,18 +1007,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_glinterface_assemble_interface (void* ctx, void* get);
+		internal static partial gr_glinterface_t gr_glinterface_assemble_interface (void* ctx, void* get);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_glinterface_assemble_interface (void* ctx, GRGlGetProcProxyDelegate get);
+		internal static extern gr_glinterface_t gr_glinterface_assemble_interface (void* ctx, GRGlGetProcProxyDelegate get);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_glinterface_assemble_interface (void* ctx, GRGlGetProcProxyDelegate get);
+			internal delegate gr_glinterface_t gr_glinterface_assemble_interface (void* ctx, GRGlGetProcProxyDelegate get);
 		}
 		private static Delegates.gr_glinterface_assemble_interface gr_glinterface_assemble_interface_delegate;
-		internal static IntPtr gr_glinterface_assemble_interface (void* ctx, GRGlGetProcProxyDelegate get) =>
+		internal static gr_glinterface_t gr_glinterface_assemble_interface (void* ctx, GRGlGetProcProxyDelegate get) =>
 			(gr_glinterface_assemble_interface_delegate ??= GetSymbol<Delegates.gr_glinterface_assemble_interface> ("gr_glinterface_assemble_interface")).Invoke (ctx, get);
 		#endif
 
@@ -1026,18 +1026,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_glinterface_assemble_webgl_interface (void* ctx, void* get);
+		internal static partial gr_glinterface_t gr_glinterface_assemble_webgl_interface (void* ctx, void* get);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_glinterface_assemble_webgl_interface (void* ctx, GRGlGetProcProxyDelegate get);
+		internal static extern gr_glinterface_t gr_glinterface_assemble_webgl_interface (void* ctx, GRGlGetProcProxyDelegate get);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_glinterface_assemble_webgl_interface (void* ctx, GRGlGetProcProxyDelegate get);
+			internal delegate gr_glinterface_t gr_glinterface_assemble_webgl_interface (void* ctx, GRGlGetProcProxyDelegate get);
 		}
 		private static Delegates.gr_glinterface_assemble_webgl_interface gr_glinterface_assemble_webgl_interface_delegate;
-		internal static IntPtr gr_glinterface_assemble_webgl_interface (void* ctx, GRGlGetProcProxyDelegate get) =>
+		internal static gr_glinterface_t gr_glinterface_assemble_webgl_interface (void* ctx, GRGlGetProcProxyDelegate get) =>
 			(gr_glinterface_assemble_webgl_interface_delegate ??= GetSymbol<Delegates.gr_glinterface_assemble_webgl_interface> ("gr_glinterface_assemble_webgl_interface")).Invoke (ctx, get);
 		#endif
 
@@ -1045,18 +1045,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_glinterface_create_native_interface ();
+		internal static partial gr_glinterface_t gr_glinterface_create_native_interface ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_glinterface_create_native_interface ();
+		internal static extern gr_glinterface_t gr_glinterface_create_native_interface ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_glinterface_create_native_interface ();
+			internal delegate gr_glinterface_t gr_glinterface_create_native_interface ();
 		}
 		private static Delegates.gr_glinterface_create_native_interface gr_glinterface_create_native_interface_delegate;
-		internal static IntPtr gr_glinterface_create_native_interface () =>
+		internal static gr_glinterface_t gr_glinterface_create_native_interface () =>
 			(gr_glinterface_create_native_interface_delegate ??= GetSymbol<Delegates.gr_glinterface_create_native_interface> ("gr_glinterface_create_native_interface")).Invoke ();
 		#endif
 
@@ -1065,20 +1065,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool gr_glinterface_has_extension (IntPtr glInterface, [MarshalAs (UnmanagedType.LPStr)] String extension);
+		internal static partial bool gr_glinterface_has_extension (gr_glinterface_t glInterface, [MarshalAs (UnmanagedType.LPStr)] String extension);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool gr_glinterface_has_extension (IntPtr glInterface, [MarshalAs (UnmanagedType.LPStr)] String extension);
+		internal static extern bool gr_glinterface_has_extension (gr_glinterface_t glInterface, [MarshalAs (UnmanagedType.LPStr)] String extension);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool gr_glinterface_has_extension (IntPtr glInterface, [MarshalAs (UnmanagedType.LPStr)] String extension);
+			internal delegate bool gr_glinterface_has_extension (gr_glinterface_t glInterface, [MarshalAs (UnmanagedType.LPStr)] String extension);
 		}
 		private static Delegates.gr_glinterface_has_extension gr_glinterface_has_extension_delegate;
-		internal static bool gr_glinterface_has_extension (IntPtr glInterface, [MarshalAs (UnmanagedType.LPStr)] String extension) =>
+		internal static bool gr_glinterface_has_extension (gr_glinterface_t glInterface, [MarshalAs (UnmanagedType.LPStr)] String extension) =>
 			(gr_glinterface_has_extension_delegate ??= GetSymbol<Delegates.gr_glinterface_has_extension> ("gr_glinterface_has_extension")).Invoke (glInterface, extension);
 		#endif
 
@@ -1086,18 +1086,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_glinterface_unref (IntPtr glInterface);
+		internal static partial void gr_glinterface_unref (gr_glinterface_t glInterface);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_glinterface_unref (IntPtr glInterface);
+		internal static extern void gr_glinterface_unref (gr_glinterface_t glInterface);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_glinterface_unref (IntPtr glInterface);
+			internal delegate void gr_glinterface_unref (gr_glinterface_t glInterface);
 		}
 		private static Delegates.gr_glinterface_unref gr_glinterface_unref_delegate;
-		internal static void gr_glinterface_unref (IntPtr glInterface) =>
+		internal static void gr_glinterface_unref (gr_glinterface_t glInterface) =>
 			(gr_glinterface_unref_delegate ??= GetSymbol<Delegates.gr_glinterface_unref> ("gr_glinterface_unref")).Invoke (glInterface);
 		#endif
 
@@ -1106,20 +1106,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool gr_glinterface_validate (IntPtr glInterface);
+		internal static partial bool gr_glinterface_validate (gr_glinterface_t glInterface);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool gr_glinterface_validate (IntPtr glInterface);
+		internal static extern bool gr_glinterface_validate (gr_glinterface_t glInterface);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool gr_glinterface_validate (IntPtr glInterface);
+			internal delegate bool gr_glinterface_validate (gr_glinterface_t glInterface);
 		}
 		private static Delegates.gr_glinterface_validate gr_glinterface_validate_delegate;
-		internal static bool gr_glinterface_validate (IntPtr glInterface) =>
+		internal static bool gr_glinterface_validate (gr_glinterface_t glInterface) =>
 			(gr_glinterface_validate_delegate ??= GetSymbol<Delegates.gr_glinterface_validate> ("gr_glinterface_validate")).Invoke (glInterface);
 		#endif
 
@@ -1127,18 +1127,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial GRBackendNative gr_recording_context_get_backend (IntPtr context);
+		internal static partial GRBackendNative gr_recording_context_get_backend (gr_recording_context_t context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRBackendNative gr_recording_context_get_backend (IntPtr context);
+		internal static extern GRBackendNative gr_recording_context_get_backend (gr_recording_context_t context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate GRBackendNative gr_recording_context_get_backend (IntPtr context);
+			internal delegate GRBackendNative gr_recording_context_get_backend (gr_recording_context_t context);
 		}
 		private static Delegates.gr_recording_context_get_backend gr_recording_context_get_backend_delegate;
-		internal static GRBackendNative gr_recording_context_get_backend (IntPtr context) =>
+		internal static GRBackendNative gr_recording_context_get_backend (gr_recording_context_t context) =>
 			(gr_recording_context_get_backend_delegate ??= GetSymbol<Delegates.gr_recording_context_get_backend> ("gr_recording_context_get_backend")).Invoke (context);
 		#endif
 
@@ -1146,18 +1146,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_recording_context_get_direct_context (IntPtr context);
+		internal static partial gr_direct_context_t gr_recording_context_get_direct_context (gr_recording_context_t context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_recording_context_get_direct_context (IntPtr context);
+		internal static extern gr_direct_context_t gr_recording_context_get_direct_context (gr_recording_context_t context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_recording_context_get_direct_context (IntPtr context);
+			internal delegate gr_direct_context_t gr_recording_context_get_direct_context (gr_recording_context_t context);
 		}
 		private static Delegates.gr_recording_context_get_direct_context gr_recording_context_get_direct_context_delegate;
-		internal static IntPtr gr_recording_context_get_direct_context (IntPtr context) =>
+		internal static gr_direct_context_t gr_recording_context_get_direct_context (gr_recording_context_t context) =>
 			(gr_recording_context_get_direct_context_delegate ??= GetSymbol<Delegates.gr_recording_context_get_direct_context> ("gr_recording_context_get_direct_context")).Invoke (context);
 		#endif
 
@@ -1165,18 +1165,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 gr_recording_context_get_max_surface_sample_count_for_color_type (IntPtr context, SKColorTypeNative colorType);
+		internal static partial Int32 gr_recording_context_get_max_surface_sample_count_for_color_type (gr_recording_context_t context, SKColorTypeNative colorType);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 gr_recording_context_get_max_surface_sample_count_for_color_type (IntPtr context, SKColorTypeNative colorType);
+		internal static extern Int32 gr_recording_context_get_max_surface_sample_count_for_color_type (gr_recording_context_t context, SKColorTypeNative colorType);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 gr_recording_context_get_max_surface_sample_count_for_color_type (IntPtr context, SKColorTypeNative colorType);
+			internal delegate Int32 gr_recording_context_get_max_surface_sample_count_for_color_type (gr_recording_context_t context, SKColorTypeNative colorType);
 		}
 		private static Delegates.gr_recording_context_get_max_surface_sample_count_for_color_type gr_recording_context_get_max_surface_sample_count_for_color_type_delegate;
-		internal static Int32 gr_recording_context_get_max_surface_sample_count_for_color_type (IntPtr context, SKColorTypeNative colorType) =>
+		internal static Int32 gr_recording_context_get_max_surface_sample_count_for_color_type (gr_recording_context_t context, SKColorTypeNative colorType) =>
 			(gr_recording_context_get_max_surface_sample_count_for_color_type_delegate ??= GetSymbol<Delegates.gr_recording_context_get_max_surface_sample_count_for_color_type> ("gr_recording_context_get_max_surface_sample_count_for_color_type")).Invoke (context, colorType);
 		#endif
 
@@ -1185,20 +1185,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool gr_recording_context_is_abandoned (IntPtr context);
+		internal static partial bool gr_recording_context_is_abandoned (gr_recording_context_t context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool gr_recording_context_is_abandoned (IntPtr context);
+		internal static extern bool gr_recording_context_is_abandoned (gr_recording_context_t context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool gr_recording_context_is_abandoned (IntPtr context);
+			internal delegate bool gr_recording_context_is_abandoned (gr_recording_context_t context);
 		}
 		private static Delegates.gr_recording_context_is_abandoned gr_recording_context_is_abandoned_delegate;
-		internal static bool gr_recording_context_is_abandoned (IntPtr context) =>
+		internal static bool gr_recording_context_is_abandoned (gr_recording_context_t context) =>
 			(gr_recording_context_is_abandoned_delegate ??= GetSymbol<Delegates.gr_recording_context_is_abandoned> ("gr_recording_context_is_abandoned")).Invoke (context);
 		#endif
 
@@ -1206,18 +1206,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 gr_recording_context_max_render_target_size (IntPtr context);
+		internal static partial Int32 gr_recording_context_max_render_target_size (gr_recording_context_t context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 gr_recording_context_max_render_target_size (IntPtr context);
+		internal static extern Int32 gr_recording_context_max_render_target_size (gr_recording_context_t context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 gr_recording_context_max_render_target_size (IntPtr context);
+			internal delegate Int32 gr_recording_context_max_render_target_size (gr_recording_context_t context);
 		}
 		private static Delegates.gr_recording_context_max_render_target_size gr_recording_context_max_render_target_size_delegate;
-		internal static Int32 gr_recording_context_max_render_target_size (IntPtr context) =>
+		internal static Int32 gr_recording_context_max_render_target_size (gr_recording_context_t context) =>
 			(gr_recording_context_max_render_target_size_delegate ??= GetSymbol<Delegates.gr_recording_context_max_render_target_size> ("gr_recording_context_max_render_target_size")).Invoke (context);
 		#endif
 
@@ -1225,18 +1225,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 gr_recording_context_max_texture_size (IntPtr context);
+		internal static partial Int32 gr_recording_context_max_texture_size (gr_recording_context_t context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 gr_recording_context_max_texture_size (IntPtr context);
+		internal static extern Int32 gr_recording_context_max_texture_size (gr_recording_context_t context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 gr_recording_context_max_texture_size (IntPtr context);
+			internal delegate Int32 gr_recording_context_max_texture_size (gr_recording_context_t context);
 		}
 		private static Delegates.gr_recording_context_max_texture_size gr_recording_context_max_texture_size_delegate;
-		internal static Int32 gr_recording_context_max_texture_size (IntPtr context) =>
+		internal static Int32 gr_recording_context_max_texture_size (gr_recording_context_t context) =>
 			(gr_recording_context_max_texture_size_delegate ??= GetSymbol<Delegates.gr_recording_context_max_texture_size> ("gr_recording_context_max_texture_size")).Invoke (context);
 		#endif
 
@@ -1244,18 +1244,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_recording_context_unref (IntPtr context);
+		internal static partial void gr_recording_context_unref (gr_recording_context_t context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_recording_context_unref (IntPtr context);
+		internal static extern void gr_recording_context_unref (gr_recording_context_t context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_recording_context_unref (IntPtr context);
+			internal delegate void gr_recording_context_unref (gr_recording_context_t context);
 		}
 		private static Delegates.gr_recording_context_unref gr_recording_context_unref_delegate;
-		internal static void gr_recording_context_unref (IntPtr context) =>
+		internal static void gr_recording_context_unref (gr_recording_context_t context) =>
 			(gr_recording_context_unref_delegate ??= GetSymbol<Delegates.gr_recording_context_unref> ("gr_recording_context_unref")).Invoke (context);
 		#endif
 
@@ -1263,18 +1263,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_vk_extensions_delete (IntPtr extensions);
+		internal static partial void gr_vk_extensions_delete (gr_vk_extensions_t extensions);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_vk_extensions_delete (IntPtr extensions);
+		internal static extern void gr_vk_extensions_delete (gr_vk_extensions_t extensions);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_vk_extensions_delete (IntPtr extensions);
+			internal delegate void gr_vk_extensions_delete (gr_vk_extensions_t extensions);
 		}
 		private static Delegates.gr_vk_extensions_delete gr_vk_extensions_delete_delegate;
-		internal static void gr_vk_extensions_delete (IntPtr extensions) =>
+		internal static void gr_vk_extensions_delete (gr_vk_extensions_t extensions) =>
 			(gr_vk_extensions_delete_delegate ??= GetSymbol<Delegates.gr_vk_extensions_delete> ("gr_vk_extensions_delete")).Invoke (extensions);
 		#endif
 
@@ -1283,20 +1283,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool gr_vk_extensions_has_extension (IntPtr extensions, [MarshalAs (UnmanagedType.LPStr)] String ext, UInt32 minVersion);
+		internal static partial bool gr_vk_extensions_has_extension (gr_vk_extensions_t extensions, [MarshalAs (UnmanagedType.LPStr)] String ext, UInt32 minVersion);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool gr_vk_extensions_has_extension (IntPtr extensions, [MarshalAs (UnmanagedType.LPStr)] String ext, UInt32 minVersion);
+		internal static extern bool gr_vk_extensions_has_extension (gr_vk_extensions_t extensions, [MarshalAs (UnmanagedType.LPStr)] String ext, UInt32 minVersion);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool gr_vk_extensions_has_extension (IntPtr extensions, [MarshalAs (UnmanagedType.LPStr)] String ext, UInt32 minVersion);
+			internal delegate bool gr_vk_extensions_has_extension (gr_vk_extensions_t extensions, [MarshalAs (UnmanagedType.LPStr)] String ext, UInt32 minVersion);
 		}
 		private static Delegates.gr_vk_extensions_has_extension gr_vk_extensions_has_extension_delegate;
-		internal static bool gr_vk_extensions_has_extension (IntPtr extensions, [MarshalAs (UnmanagedType.LPStr)] String ext, UInt32 minVersion) =>
+		internal static bool gr_vk_extensions_has_extension (gr_vk_extensions_t extensions, [MarshalAs (UnmanagedType.LPStr)] String ext, UInt32 minVersion) =>
 			(gr_vk_extensions_has_extension_delegate ??= GetSymbol<Delegates.gr_vk_extensions_has_extension> ("gr_vk_extensions_has_extension")).Invoke (extensions, ext, minVersion);
 		#endif
 
@@ -1304,18 +1304,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void gr_vk_extensions_init (IntPtr extensions, void* getProc, void* userData, IntPtr instance, IntPtr physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions);
+		internal static partial void gr_vk_extensions_init (gr_vk_extensions_t extensions, void* getProc, void* userData, vk_instance_t instance, vk_physical_device_t physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_vk_extensions_init (IntPtr extensions, GRVkGetProcProxyDelegate getProc, void* userData, IntPtr instance, IntPtr physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions);
+		internal static extern void gr_vk_extensions_init (gr_vk_extensions_t extensions, GRVkGetProcProxyDelegate getProc, void* userData, vk_instance_t instance, vk_physical_device_t physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_vk_extensions_init (IntPtr extensions, GRVkGetProcProxyDelegate getProc, void* userData, IntPtr instance, IntPtr physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions);
+			internal delegate void gr_vk_extensions_init (gr_vk_extensions_t extensions, GRVkGetProcProxyDelegate getProc, void* userData, vk_instance_t instance, vk_physical_device_t physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions);
 		}
 		private static Delegates.gr_vk_extensions_init gr_vk_extensions_init_delegate;
-		internal static void gr_vk_extensions_init (IntPtr extensions, GRVkGetProcProxyDelegate getProc, void* userData, IntPtr instance, IntPtr physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions) =>
+		internal static void gr_vk_extensions_init (gr_vk_extensions_t extensions, GRVkGetProcProxyDelegate getProc, void* userData, vk_instance_t instance, vk_physical_device_t physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions) =>
 			(gr_vk_extensions_init_delegate ??= GetSymbol<Delegates.gr_vk_extensions_init> ("gr_vk_extensions_init")).Invoke (extensions, getProc, userData, instance, physDev, instanceExtensionCount, instanceExtensions, deviceExtensionCount, deviceExtensions);
 		#endif
 
@@ -1323,18 +1323,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr gr_vk_extensions_new ();
+		internal static partial gr_vk_extensions_t gr_vk_extensions_new ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr gr_vk_extensions_new ();
+		internal static extern gr_vk_extensions_t gr_vk_extensions_new ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr gr_vk_extensions_new ();
+			internal delegate gr_vk_extensions_t gr_vk_extensions_new ();
 		}
 		private static Delegates.gr_vk_extensions_new gr_vk_extensions_new_delegate;
-		internal static IntPtr gr_vk_extensions_new () =>
+		internal static gr_vk_extensions_t gr_vk_extensions_new () =>
 			(gr_vk_extensions_new_delegate ??= GetSymbol<Delegates.gr_vk_extensions_new> ("gr_vk_extensions_new")).Invoke ();
 		#endif
 

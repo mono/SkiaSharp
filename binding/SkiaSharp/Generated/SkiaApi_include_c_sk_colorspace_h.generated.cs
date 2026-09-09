@@ -56,20 +56,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_colorspace_equals (IntPtr src, IntPtr dst);
+		internal static partial bool sk_colorspace_equals (sk_colorspace_t src, sk_colorspace_t dst);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_equals (IntPtr src, IntPtr dst);
+		internal static extern bool sk_colorspace_equals (sk_colorspace_t src, sk_colorspace_t dst);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_colorspace_equals (IntPtr src, IntPtr dst);
+			internal delegate bool sk_colorspace_equals (sk_colorspace_t src, sk_colorspace_t dst);
 		}
 		private static Delegates.sk_colorspace_equals sk_colorspace_equals_delegate;
-		internal static bool sk_colorspace_equals (IntPtr src, IntPtr dst) =>
+		internal static bool sk_colorspace_equals (sk_colorspace_t src, sk_colorspace_t dst) =>
 			(sk_colorspace_equals_delegate ??= GetSymbol<Delegates.sk_colorspace_equals> ("sk_colorspace_equals")).Invoke (src, dst);
 		#endif
 
@@ -78,20 +78,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_colorspace_gamma_close_to_srgb (IntPtr colorspace);
+		internal static partial bool sk_colorspace_gamma_close_to_srgb (sk_colorspace_t colorspace);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_gamma_close_to_srgb (IntPtr colorspace);
+		internal static extern bool sk_colorspace_gamma_close_to_srgb (sk_colorspace_t colorspace);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_colorspace_gamma_close_to_srgb (IntPtr colorspace);
+			internal delegate bool sk_colorspace_gamma_close_to_srgb (sk_colorspace_t colorspace);
 		}
 		private static Delegates.sk_colorspace_gamma_close_to_srgb sk_colorspace_gamma_close_to_srgb_delegate;
-		internal static bool sk_colorspace_gamma_close_to_srgb (IntPtr colorspace) =>
+		internal static bool sk_colorspace_gamma_close_to_srgb (sk_colorspace_t colorspace) =>
 			(sk_colorspace_gamma_close_to_srgb_delegate ??= GetSymbol<Delegates.sk_colorspace_gamma_close_to_srgb> ("sk_colorspace_gamma_close_to_srgb")).Invoke (colorspace);
 		#endif
 
@@ -100,20 +100,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_colorspace_gamma_is_linear (IntPtr colorspace);
+		internal static partial bool sk_colorspace_gamma_is_linear (sk_colorspace_t colorspace);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_gamma_is_linear (IntPtr colorspace);
+		internal static extern bool sk_colorspace_gamma_is_linear (sk_colorspace_t colorspace);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_colorspace_gamma_is_linear (IntPtr colorspace);
+			internal delegate bool sk_colorspace_gamma_is_linear (sk_colorspace_t colorspace);
 		}
 		private static Delegates.sk_colorspace_gamma_is_linear sk_colorspace_gamma_is_linear_delegate;
-		internal static bool sk_colorspace_gamma_is_linear (IntPtr colorspace) =>
+		internal static bool sk_colorspace_gamma_is_linear (sk_colorspace_t colorspace) =>
 			(sk_colorspace_gamma_is_linear_delegate ??= GetSymbol<Delegates.sk_colorspace_gamma_is_linear> ("sk_colorspace_gamma_is_linear")).Invoke (colorspace);
 		#endif
 
@@ -121,18 +121,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_colorspace_icc_profile_delete (IntPtr profile);
+		internal static partial void sk_colorspace_icc_profile_delete (sk_colorspace_icc_profile_t profile);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_colorspace_icc_profile_delete (IntPtr profile);
+		internal static extern void sk_colorspace_icc_profile_delete (sk_colorspace_icc_profile_t profile);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_colorspace_icc_profile_delete (IntPtr profile);
+			internal delegate void sk_colorspace_icc_profile_delete (sk_colorspace_icc_profile_t profile);
 		}
 		private static Delegates.sk_colorspace_icc_profile_delete sk_colorspace_icc_profile_delete_delegate;
-		internal static void sk_colorspace_icc_profile_delete (IntPtr profile) =>
+		internal static void sk_colorspace_icc_profile_delete (sk_colorspace_icc_profile_t profile) =>
 			(sk_colorspace_icc_profile_delete_delegate ??= GetSymbol<Delegates.sk_colorspace_icc_profile_delete> ("sk_colorspace_icc_profile_delete")).Invoke (profile);
 		#endif
 
@@ -140,18 +140,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Byte* sk_colorspace_icc_profile_get_buffer (IntPtr profile, UInt32* size);
+		internal static partial Byte* sk_colorspace_icc_profile_get_buffer (sk_colorspace_icc_profile_t profile, UInt32* size);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Byte* sk_colorspace_icc_profile_get_buffer (IntPtr profile, UInt32* size);
+		internal static extern Byte* sk_colorspace_icc_profile_get_buffer (sk_colorspace_icc_profile_t profile, UInt32* size);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Byte* sk_colorspace_icc_profile_get_buffer (IntPtr profile, UInt32* size);
+			internal delegate Byte* sk_colorspace_icc_profile_get_buffer (sk_colorspace_icc_profile_t profile, UInt32* size);
 		}
 		private static Delegates.sk_colorspace_icc_profile_get_buffer sk_colorspace_icc_profile_get_buffer_delegate;
-		internal static Byte* sk_colorspace_icc_profile_get_buffer (IntPtr profile, UInt32* size) =>
+		internal static Byte* sk_colorspace_icc_profile_get_buffer (sk_colorspace_icc_profile_t profile, UInt32* size) =>
 			(sk_colorspace_icc_profile_get_buffer_delegate ??= GetSymbol<Delegates.sk_colorspace_icc_profile_get_buffer> ("sk_colorspace_icc_profile_get_buffer")).Invoke (profile, size);
 		#endif
 
@@ -160,20 +160,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_colorspace_icc_profile_get_to_xyzd50 (IntPtr profile, SKColorSpaceXyz* toXYZD50);
+		internal static partial bool sk_colorspace_icc_profile_get_to_xyzd50 (sk_colorspace_icc_profile_t profile, SKColorSpaceXyz* toXYZD50);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_icc_profile_get_to_xyzd50 (IntPtr profile, SKColorSpaceXyz* toXYZD50);
+		internal static extern bool sk_colorspace_icc_profile_get_to_xyzd50 (sk_colorspace_icc_profile_t profile, SKColorSpaceXyz* toXYZD50);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_colorspace_icc_profile_get_to_xyzd50 (IntPtr profile, SKColorSpaceXyz* toXYZD50);
+			internal delegate bool sk_colorspace_icc_profile_get_to_xyzd50 (sk_colorspace_icc_profile_t profile, SKColorSpaceXyz* toXYZD50);
 		}
 		private static Delegates.sk_colorspace_icc_profile_get_to_xyzd50 sk_colorspace_icc_profile_get_to_xyzd50_delegate;
-		internal static bool sk_colorspace_icc_profile_get_to_xyzd50 (IntPtr profile, SKColorSpaceXyz* toXYZD50) =>
+		internal static bool sk_colorspace_icc_profile_get_to_xyzd50 (sk_colorspace_icc_profile_t profile, SKColorSpaceXyz* toXYZD50) =>
 			(sk_colorspace_icc_profile_get_to_xyzd50_delegate ??= GetSymbol<Delegates.sk_colorspace_icc_profile_get_to_xyzd50> ("sk_colorspace_icc_profile_get_to_xyzd50")).Invoke (profile, toXYZD50);
 		#endif
 
@@ -181,18 +181,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_colorspace_icc_profile_new ();
+		internal static partial sk_colorspace_icc_profile_t sk_colorspace_icc_profile_new ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_colorspace_icc_profile_new ();
+		internal static extern sk_colorspace_icc_profile_t sk_colorspace_icc_profile_new ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_colorspace_icc_profile_new ();
+			internal delegate sk_colorspace_icc_profile_t sk_colorspace_icc_profile_new ();
 		}
 		private static Delegates.sk_colorspace_icc_profile_new sk_colorspace_icc_profile_new_delegate;
-		internal static IntPtr sk_colorspace_icc_profile_new () =>
+		internal static sk_colorspace_icc_profile_t sk_colorspace_icc_profile_new () =>
 			(sk_colorspace_icc_profile_new_delegate ??= GetSymbol<Delegates.sk_colorspace_icc_profile_new> ("sk_colorspace_icc_profile_new")).Invoke ();
 		#endif
 
@@ -201,20 +201,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_colorspace_icc_profile_parse (void* buffer, /* size_t */ IntPtr length, IntPtr profile);
+		internal static partial bool sk_colorspace_icc_profile_parse (void* buffer, /* size_t */ IntPtr length, sk_colorspace_icc_profile_t profile);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_icc_profile_parse (void* buffer, /* size_t */ IntPtr length, IntPtr profile);
+		internal static extern bool sk_colorspace_icc_profile_parse (void* buffer, /* size_t */ IntPtr length, sk_colorspace_icc_profile_t profile);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_colorspace_icc_profile_parse (void* buffer, /* size_t */ IntPtr length, IntPtr profile);
+			internal delegate bool sk_colorspace_icc_profile_parse (void* buffer, /* size_t */ IntPtr length, sk_colorspace_icc_profile_t profile);
 		}
 		private static Delegates.sk_colorspace_icc_profile_parse sk_colorspace_icc_profile_parse_delegate;
-		internal static bool sk_colorspace_icc_profile_parse (void* buffer, /* size_t */ IntPtr length, IntPtr profile) =>
+		internal static bool sk_colorspace_icc_profile_parse (void* buffer, /* size_t */ IntPtr length, sk_colorspace_icc_profile_t profile) =>
 			(sk_colorspace_icc_profile_parse_delegate ??= GetSymbol<Delegates.sk_colorspace_icc_profile_parse> ("sk_colorspace_icc_profile_parse")).Invoke (buffer, length, profile);
 		#endif
 
@@ -223,20 +223,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_colorspace_is_numerical_transfer_fn (IntPtr colorspace, SKColorSpaceTransferFn* transferFn);
+		internal static partial bool sk_colorspace_is_numerical_transfer_fn (sk_colorspace_t colorspace, SKColorSpaceTransferFn* transferFn);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_is_numerical_transfer_fn (IntPtr colorspace, SKColorSpaceTransferFn* transferFn);
+		internal static extern bool sk_colorspace_is_numerical_transfer_fn (sk_colorspace_t colorspace, SKColorSpaceTransferFn* transferFn);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_colorspace_is_numerical_transfer_fn (IntPtr colorspace, SKColorSpaceTransferFn* transferFn);
+			internal delegate bool sk_colorspace_is_numerical_transfer_fn (sk_colorspace_t colorspace, SKColorSpaceTransferFn* transferFn);
 		}
 		private static Delegates.sk_colorspace_is_numerical_transfer_fn sk_colorspace_is_numerical_transfer_fn_delegate;
-		internal static bool sk_colorspace_is_numerical_transfer_fn (IntPtr colorspace, SKColorSpaceTransferFn* transferFn) =>
+		internal static bool sk_colorspace_is_numerical_transfer_fn (sk_colorspace_t colorspace, SKColorSpaceTransferFn* transferFn) =>
 			(sk_colorspace_is_numerical_transfer_fn_delegate ??= GetSymbol<Delegates.sk_colorspace_is_numerical_transfer_fn> ("sk_colorspace_is_numerical_transfer_fn")).Invoke (colorspace, transferFn);
 		#endif
 
@@ -245,20 +245,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_colorspace_is_srgb (IntPtr colorspace);
+		internal static partial bool sk_colorspace_is_srgb (sk_colorspace_t colorspace);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_is_srgb (IntPtr colorspace);
+		internal static extern bool sk_colorspace_is_srgb (sk_colorspace_t colorspace);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_colorspace_is_srgb (IntPtr colorspace);
+			internal delegate bool sk_colorspace_is_srgb (sk_colorspace_t colorspace);
 		}
 		private static Delegates.sk_colorspace_is_srgb sk_colorspace_is_srgb_delegate;
-		internal static bool sk_colorspace_is_srgb (IntPtr colorspace) =>
+		internal static bool sk_colorspace_is_srgb (sk_colorspace_t colorspace) =>
 			(sk_colorspace_is_srgb_delegate ??= GetSymbol<Delegates.sk_colorspace_is_srgb> ("sk_colorspace_is_srgb")).Invoke (colorspace);
 		#endif
 
@@ -266,18 +266,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_colorspace_make_linear_gamma (IntPtr colorspace);
+		internal static partial sk_colorspace_t sk_colorspace_make_linear_gamma (sk_colorspace_t colorspace);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_colorspace_make_linear_gamma (IntPtr colorspace);
+		internal static extern sk_colorspace_t sk_colorspace_make_linear_gamma (sk_colorspace_t colorspace);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_colorspace_make_linear_gamma (IntPtr colorspace);
+			internal delegate sk_colorspace_t sk_colorspace_make_linear_gamma (sk_colorspace_t colorspace);
 		}
 		private static Delegates.sk_colorspace_make_linear_gamma sk_colorspace_make_linear_gamma_delegate;
-		internal static IntPtr sk_colorspace_make_linear_gamma (IntPtr colorspace) =>
+		internal static sk_colorspace_t sk_colorspace_make_linear_gamma (sk_colorspace_t colorspace) =>
 			(sk_colorspace_make_linear_gamma_delegate ??= GetSymbol<Delegates.sk_colorspace_make_linear_gamma> ("sk_colorspace_make_linear_gamma")).Invoke (colorspace);
 		#endif
 
@@ -285,18 +285,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_colorspace_make_srgb_gamma (IntPtr colorspace);
+		internal static partial sk_colorspace_t sk_colorspace_make_srgb_gamma (sk_colorspace_t colorspace);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_colorspace_make_srgb_gamma (IntPtr colorspace);
+		internal static extern sk_colorspace_t sk_colorspace_make_srgb_gamma (sk_colorspace_t colorspace);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_colorspace_make_srgb_gamma (IntPtr colorspace);
+			internal delegate sk_colorspace_t sk_colorspace_make_srgb_gamma (sk_colorspace_t colorspace);
 		}
 		private static Delegates.sk_colorspace_make_srgb_gamma sk_colorspace_make_srgb_gamma_delegate;
-		internal static IntPtr sk_colorspace_make_srgb_gamma (IntPtr colorspace) =>
+		internal static sk_colorspace_t sk_colorspace_make_srgb_gamma (sk_colorspace_t colorspace) =>
 			(sk_colorspace_make_srgb_gamma_delegate ??= GetSymbol<Delegates.sk_colorspace_make_srgb_gamma> ("sk_colorspace_make_srgb_gamma")).Invoke (colorspace);
 		#endif
 
@@ -304,18 +304,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics);
+		internal static partial sk_colorspace_t sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics);
+		internal static extern sk_colorspace_t sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics);
+			internal delegate sk_colorspace_t sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics);
 		}
 		private static Delegates.sk_colorspace_new_cicp sk_colorspace_new_cicp_delegate;
-		internal static IntPtr sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics) =>
+		internal static sk_colorspace_t sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics) =>
 			(sk_colorspace_new_cicp_delegate ??= GetSymbol<Delegates.sk_colorspace_new_cicp> ("sk_colorspace_new_cicp")).Invoke (colorPrimaries, transferCharacteristics);
 		#endif
 
@@ -323,18 +323,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_colorspace_new_icc (IntPtr profile);
+		internal static partial sk_colorspace_t sk_colorspace_new_icc (sk_colorspace_icc_profile_t profile);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_colorspace_new_icc (IntPtr profile);
+		internal static extern sk_colorspace_t sk_colorspace_new_icc (sk_colorspace_icc_profile_t profile);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_colorspace_new_icc (IntPtr profile);
+			internal delegate sk_colorspace_t sk_colorspace_new_icc (sk_colorspace_icc_profile_t profile);
 		}
 		private static Delegates.sk_colorspace_new_icc sk_colorspace_new_icc_delegate;
-		internal static IntPtr sk_colorspace_new_icc (IntPtr profile) =>
+		internal static sk_colorspace_t sk_colorspace_new_icc (sk_colorspace_icc_profile_t profile) =>
 			(sk_colorspace_new_icc_delegate ??= GetSymbol<Delegates.sk_colorspace_new_icc> ("sk_colorspace_new_icc")).Invoke (profile);
 		#endif
 
@@ -342,18 +342,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_colorspace_new_rgb (SKColorSpaceTransferFn* transferFn, SKColorSpaceXyz* toXYZD50);
+		internal static partial sk_colorspace_t sk_colorspace_new_rgb (SKColorSpaceTransferFn* transferFn, SKColorSpaceXyz* toXYZD50);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_colorspace_new_rgb (SKColorSpaceTransferFn* transferFn, SKColorSpaceXyz* toXYZD50);
+		internal static extern sk_colorspace_t sk_colorspace_new_rgb (SKColorSpaceTransferFn* transferFn, SKColorSpaceXyz* toXYZD50);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_colorspace_new_rgb (SKColorSpaceTransferFn* transferFn, SKColorSpaceXyz* toXYZD50);
+			internal delegate sk_colorspace_t sk_colorspace_new_rgb (SKColorSpaceTransferFn* transferFn, SKColorSpaceXyz* toXYZD50);
 		}
 		private static Delegates.sk_colorspace_new_rgb sk_colorspace_new_rgb_delegate;
-		internal static IntPtr sk_colorspace_new_rgb (SKColorSpaceTransferFn* transferFn, SKColorSpaceXyz* toXYZD50) =>
+		internal static sk_colorspace_t sk_colorspace_new_rgb (SKColorSpaceTransferFn* transferFn, SKColorSpaceXyz* toXYZD50) =>
 			(sk_colorspace_new_rgb_delegate ??= GetSymbol<Delegates.sk_colorspace_new_rgb> ("sk_colorspace_new_rgb")).Invoke (transferFn, toXYZD50);
 		#endif
 
@@ -361,18 +361,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_colorspace_new_srgb ();
+		internal static partial sk_colorspace_t sk_colorspace_new_srgb ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_colorspace_new_srgb ();
+		internal static extern sk_colorspace_t sk_colorspace_new_srgb ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_colorspace_new_srgb ();
+			internal delegate sk_colorspace_t sk_colorspace_new_srgb ();
 		}
 		private static Delegates.sk_colorspace_new_srgb sk_colorspace_new_srgb_delegate;
-		internal static IntPtr sk_colorspace_new_srgb () =>
+		internal static sk_colorspace_t sk_colorspace_new_srgb () =>
 			(sk_colorspace_new_srgb_delegate ??= GetSymbol<Delegates.sk_colorspace_new_srgb> ("sk_colorspace_new_srgb")).Invoke ();
 		#endif
 
@@ -380,18 +380,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_colorspace_new_srgb_linear ();
+		internal static partial sk_colorspace_t sk_colorspace_new_srgb_linear ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_colorspace_new_srgb_linear ();
+		internal static extern sk_colorspace_t sk_colorspace_new_srgb_linear ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_colorspace_new_srgb_linear ();
+			internal delegate sk_colorspace_t sk_colorspace_new_srgb_linear ();
 		}
 		private static Delegates.sk_colorspace_new_srgb_linear sk_colorspace_new_srgb_linear_delegate;
-		internal static IntPtr sk_colorspace_new_srgb_linear () =>
+		internal static sk_colorspace_t sk_colorspace_new_srgb_linear () =>
 			(sk_colorspace_new_srgb_linear_delegate ??= GetSymbol<Delegates.sk_colorspace_new_srgb_linear> ("sk_colorspace_new_srgb_linear")).Invoke ();
 		#endif
 
@@ -421,18 +421,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_colorspace_ref (IntPtr colorspace);
+		internal static partial void sk_colorspace_ref (sk_colorspace_t colorspace);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_colorspace_ref (IntPtr colorspace);
+		internal static extern void sk_colorspace_ref (sk_colorspace_t colorspace);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_colorspace_ref (IntPtr colorspace);
+			internal delegate void sk_colorspace_ref (sk_colorspace_t colorspace);
 		}
 		private static Delegates.sk_colorspace_ref sk_colorspace_ref_delegate;
-		internal static void sk_colorspace_ref (IntPtr colorspace) =>
+		internal static void sk_colorspace_ref (sk_colorspace_t colorspace) =>
 			(sk_colorspace_ref_delegate ??= GetSymbol<Delegates.sk_colorspace_ref> ("sk_colorspace_ref")).Invoke (colorspace);
 		#endif
 
@@ -440,18 +440,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_colorspace_to_profile (IntPtr colorspace, IntPtr profile);
+		internal static partial void sk_colorspace_to_profile (sk_colorspace_t colorspace, sk_colorspace_icc_profile_t profile);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_colorspace_to_profile (IntPtr colorspace, IntPtr profile);
+		internal static extern void sk_colorspace_to_profile (sk_colorspace_t colorspace, sk_colorspace_icc_profile_t profile);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_colorspace_to_profile (IntPtr colorspace, IntPtr profile);
+			internal delegate void sk_colorspace_to_profile (sk_colorspace_t colorspace, sk_colorspace_icc_profile_t profile);
 		}
 		private static Delegates.sk_colorspace_to_profile sk_colorspace_to_profile_delegate;
-		internal static void sk_colorspace_to_profile (IntPtr colorspace, IntPtr profile) =>
+		internal static void sk_colorspace_to_profile (sk_colorspace_t colorspace, sk_colorspace_icc_profile_t profile) =>
 			(sk_colorspace_to_profile_delegate ??= GetSymbol<Delegates.sk_colorspace_to_profile> ("sk_colorspace_to_profile")).Invoke (colorspace, profile);
 		#endif
 
@@ -460,20 +460,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_colorspace_to_xyzd50 (IntPtr colorspace, SKColorSpaceXyz* toXYZD50);
+		internal static partial bool sk_colorspace_to_xyzd50 (sk_colorspace_t colorspace, SKColorSpaceXyz* toXYZD50);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_to_xyzd50 (IntPtr colorspace, SKColorSpaceXyz* toXYZD50);
+		internal static extern bool sk_colorspace_to_xyzd50 (sk_colorspace_t colorspace, SKColorSpaceXyz* toXYZD50);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_colorspace_to_xyzd50 (IntPtr colorspace, SKColorSpaceXyz* toXYZD50);
+			internal delegate bool sk_colorspace_to_xyzd50 (sk_colorspace_t colorspace, SKColorSpaceXyz* toXYZD50);
 		}
 		private static Delegates.sk_colorspace_to_xyzd50 sk_colorspace_to_xyzd50_delegate;
-		internal static bool sk_colorspace_to_xyzd50 (IntPtr colorspace, SKColorSpaceXyz* toXYZD50) =>
+		internal static bool sk_colorspace_to_xyzd50 (sk_colorspace_t colorspace, SKColorSpaceXyz* toXYZD50) =>
 			(sk_colorspace_to_xyzd50_delegate ??= GetSymbol<Delegates.sk_colorspace_to_xyzd50> ("sk_colorspace_to_xyzd50")).Invoke (colorspace, toXYZD50);
 		#endif
 
@@ -636,18 +636,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_colorspace_unref (IntPtr colorspace);
+		internal static partial void sk_colorspace_unref (sk_colorspace_t colorspace);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_colorspace_unref (IntPtr colorspace);
+		internal static extern void sk_colorspace_unref (sk_colorspace_t colorspace);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_colorspace_unref (IntPtr colorspace);
+			internal delegate void sk_colorspace_unref (sk_colorspace_t colorspace);
 		}
 		private static Delegates.sk_colorspace_unref sk_colorspace_unref_delegate;
-		internal static void sk_colorspace_unref (IntPtr colorspace) =>
+		internal static void sk_colorspace_unref (sk_colorspace_t colorspace) =>
 			(sk_colorspace_unref_delegate ??= GetSymbol<Delegates.sk_colorspace_unref> ("sk_colorspace_unref")).Invoke (colorspace);
 		#endif
 

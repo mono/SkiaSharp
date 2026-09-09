@@ -12,7 +12,7 @@ namespace SkiaSharp
 {
 	// typedef void (*)(sk_manageddrawable_t* d, void* context)* sk_manageddrawable_destroy_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKManagedDrawableDestroyProxyDelegate(IntPtr d, void* context);
+	internal unsafe delegate void SKManagedDrawableDestroyProxyDelegate(sk_manageddrawable_t d, void* context);
 
 }
 #endif // !USE_LIBRARY_IMPORT

@@ -13,13 +13,13 @@ namespace SkiaSharp
 	{
 	/// Proxy for sk_manageddrawable_approximateBytesUsed_proc native function.
 #if USE_LIBRARY_IMPORT
-	public static readonly delegate* unmanaged[Cdecl] <IntPtr, void*, /* size_t */ IntPtr> SKManagedDrawableApproximateBytesUsedProxy = &SKManagedDrawableApproximateBytesUsedProxyImplementation;
+	public static readonly delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, /* size_t */ IntPtr> SKManagedDrawableApproximateBytesUsedProxy = &SKManagedDrawableApproximateBytesUsedProxyImplementation;
 	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 	public static readonly SKManagedDrawableApproximateBytesUsedProxyDelegate SKManagedDrawableApproximateBytesUsedProxy = SKManagedDrawableApproximateBytesUsedProxyImplementation;
 	[MonoPInvokeCallback (typeof (SKManagedDrawableApproximateBytesUsedProxyDelegate))]
 #endif
-	private static partial /* size_t */ IntPtr SKManagedDrawableApproximateBytesUsedProxyImplementation(IntPtr d,void* context);
+	private static partial /* size_t */ IntPtr SKManagedDrawableApproximateBytesUsedProxyImplementation(sk_manageddrawable_t d,void* context);
 
 	}
 }

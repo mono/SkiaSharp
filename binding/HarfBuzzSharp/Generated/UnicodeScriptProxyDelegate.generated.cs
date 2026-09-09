@@ -12,7 +12,7 @@ namespace HarfBuzzSharp
 {
 	// typedef hb_script_t (*)(hb_unicode_funcs_t* ufuncs, hb_codepoint_t unicode, void* user_data)* hb_unicode_script_func_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate UInt32 UnicodeScriptProxyDelegate(IntPtr ufuncs, UInt32 unicode, void* user_data);
+	internal unsafe delegate UInt32 UnicodeScriptProxyDelegate(hb_unicode_funcs_t ufuncs, UInt32 unicode, void* user_data);
 
 }
 #endif // !USE_LIBRARY_IMPORT

@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_path_effect_create_1d_path (IntPtr path, Single advance, Single phase, SKPath1DPathEffectStyle style);
+		internal static partial sk_path_effect_t sk_path_effect_create_1d_path (sk_path_t path, Single advance, Single phase, SKPath1DPathEffectStyle style);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_path_effect_create_1d_path (IntPtr path, Single advance, Single phase, SKPath1DPathEffectStyle style);
+		internal static extern sk_path_effect_t sk_path_effect_create_1d_path (sk_path_t path, Single advance, Single phase, SKPath1DPathEffectStyle style);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_path_effect_create_1d_path (IntPtr path, Single advance, Single phase, SKPath1DPathEffectStyle style);
+			internal delegate sk_path_effect_t sk_path_effect_create_1d_path (sk_path_t path, Single advance, Single phase, SKPath1DPathEffectStyle style);
 		}
 		private static Delegates.sk_path_effect_create_1d_path sk_path_effect_create_1d_path_delegate;
-		internal static IntPtr sk_path_effect_create_1d_path (IntPtr path, Single advance, Single phase, SKPath1DPathEffectStyle style) =>
+		internal static sk_path_effect_t sk_path_effect_create_1d_path (sk_path_t path, Single advance, Single phase, SKPath1DPathEffectStyle style) =>
 			(sk_path_effect_create_1d_path_delegate ??= GetSymbol<Delegates.sk_path_effect_create_1d_path> ("sk_path_effect_create_1d_path")).Invoke (path, advance, phase, style);
 		#endif
 
@@ -36,18 +36,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_path_effect_create_2d_line (Single width, SKMatrix* matrix);
+		internal static partial sk_path_effect_t sk_path_effect_create_2d_line (Single width, SKMatrix* matrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_path_effect_create_2d_line (Single width, SKMatrix* matrix);
+		internal static extern sk_path_effect_t sk_path_effect_create_2d_line (Single width, SKMatrix* matrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_path_effect_create_2d_line (Single width, SKMatrix* matrix);
+			internal delegate sk_path_effect_t sk_path_effect_create_2d_line (Single width, SKMatrix* matrix);
 		}
 		private static Delegates.sk_path_effect_create_2d_line sk_path_effect_create_2d_line_delegate;
-		internal static IntPtr sk_path_effect_create_2d_line (Single width, SKMatrix* matrix) =>
+		internal static sk_path_effect_t sk_path_effect_create_2d_line (Single width, SKMatrix* matrix) =>
 			(sk_path_effect_create_2d_line_delegate ??= GetSymbol<Delegates.sk_path_effect_create_2d_line> ("sk_path_effect_create_2d_line")).Invoke (width, matrix);
 		#endif
 
@@ -55,18 +55,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_path_effect_create_2d_path (SKMatrix* matrix, IntPtr path);
+		internal static partial sk_path_effect_t sk_path_effect_create_2d_path (SKMatrix* matrix, sk_path_t path);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_path_effect_create_2d_path (SKMatrix* matrix, IntPtr path);
+		internal static extern sk_path_effect_t sk_path_effect_create_2d_path (SKMatrix* matrix, sk_path_t path);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_path_effect_create_2d_path (SKMatrix* matrix, IntPtr path);
+			internal delegate sk_path_effect_t sk_path_effect_create_2d_path (SKMatrix* matrix, sk_path_t path);
 		}
 		private static Delegates.sk_path_effect_create_2d_path sk_path_effect_create_2d_path_delegate;
-		internal static IntPtr sk_path_effect_create_2d_path (SKMatrix* matrix, IntPtr path) =>
+		internal static sk_path_effect_t sk_path_effect_create_2d_path (SKMatrix* matrix, sk_path_t path) =>
 			(sk_path_effect_create_2d_path_delegate ??= GetSymbol<Delegates.sk_path_effect_create_2d_path> ("sk_path_effect_create_2d_path")).Invoke (matrix, path);
 		#endif
 
@@ -74,18 +74,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_path_effect_create_compose (IntPtr outer, IntPtr inner);
+		internal static partial sk_path_effect_t sk_path_effect_create_compose (sk_path_effect_t outer, sk_path_effect_t inner);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_path_effect_create_compose (IntPtr outer, IntPtr inner);
+		internal static extern sk_path_effect_t sk_path_effect_create_compose (sk_path_effect_t outer, sk_path_effect_t inner);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_path_effect_create_compose (IntPtr outer, IntPtr inner);
+			internal delegate sk_path_effect_t sk_path_effect_create_compose (sk_path_effect_t outer, sk_path_effect_t inner);
 		}
 		private static Delegates.sk_path_effect_create_compose sk_path_effect_create_compose_delegate;
-		internal static IntPtr sk_path_effect_create_compose (IntPtr outer, IntPtr inner) =>
+		internal static sk_path_effect_t sk_path_effect_create_compose (sk_path_effect_t outer, sk_path_effect_t inner) =>
 			(sk_path_effect_create_compose_delegate ??= GetSymbol<Delegates.sk_path_effect_create_compose> ("sk_path_effect_create_compose")).Invoke (outer, inner);
 		#endif
 
@@ -93,18 +93,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_path_effect_create_corner (Single radius);
+		internal static partial sk_path_effect_t sk_path_effect_create_corner (Single radius);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_path_effect_create_corner (Single radius);
+		internal static extern sk_path_effect_t sk_path_effect_create_corner (Single radius);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_path_effect_create_corner (Single radius);
+			internal delegate sk_path_effect_t sk_path_effect_create_corner (Single radius);
 		}
 		private static Delegates.sk_path_effect_create_corner sk_path_effect_create_corner_delegate;
-		internal static IntPtr sk_path_effect_create_corner (Single radius) =>
+		internal static sk_path_effect_t sk_path_effect_create_corner (Single radius) =>
 			(sk_path_effect_create_corner_delegate ??= GetSymbol<Delegates.sk_path_effect_create_corner> ("sk_path_effect_create_corner")).Invoke (radius);
 		#endif
 
@@ -112,18 +112,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_path_effect_create_dash (Single* intervals, Int32 count, Single phase);
+		internal static partial sk_path_effect_t sk_path_effect_create_dash (Single* intervals, Int32 count, Single phase);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_path_effect_create_dash (Single* intervals, Int32 count, Single phase);
+		internal static extern sk_path_effect_t sk_path_effect_create_dash (Single* intervals, Int32 count, Single phase);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_path_effect_create_dash (Single* intervals, Int32 count, Single phase);
+			internal delegate sk_path_effect_t sk_path_effect_create_dash (Single* intervals, Int32 count, Single phase);
 		}
 		private static Delegates.sk_path_effect_create_dash sk_path_effect_create_dash_delegate;
-		internal static IntPtr sk_path_effect_create_dash (Single* intervals, Int32 count, Single phase) =>
+		internal static sk_path_effect_t sk_path_effect_create_dash (Single* intervals, Int32 count, Single phase) =>
 			(sk_path_effect_create_dash_delegate ??= GetSymbol<Delegates.sk_path_effect_create_dash> ("sk_path_effect_create_dash")).Invoke (intervals, count, phase);
 		#endif
 
@@ -131,18 +131,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_path_effect_create_discrete (Single segLength, Single deviation, UInt32 seedAssist);
+		internal static partial sk_path_effect_t sk_path_effect_create_discrete (Single segLength, Single deviation, UInt32 seedAssist);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_path_effect_create_discrete (Single segLength, Single deviation, UInt32 seedAssist);
+		internal static extern sk_path_effect_t sk_path_effect_create_discrete (Single segLength, Single deviation, UInt32 seedAssist);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_path_effect_create_discrete (Single segLength, Single deviation, UInt32 seedAssist);
+			internal delegate sk_path_effect_t sk_path_effect_create_discrete (Single segLength, Single deviation, UInt32 seedAssist);
 		}
 		private static Delegates.sk_path_effect_create_discrete sk_path_effect_create_discrete_delegate;
-		internal static IntPtr sk_path_effect_create_discrete (Single segLength, Single deviation, UInt32 seedAssist) =>
+		internal static sk_path_effect_t sk_path_effect_create_discrete (Single segLength, Single deviation, UInt32 seedAssist) =>
 			(sk_path_effect_create_discrete_delegate ??= GetSymbol<Delegates.sk_path_effect_create_discrete> ("sk_path_effect_create_discrete")).Invoke (segLength, deviation, seedAssist);
 		#endif
 
@@ -150,18 +150,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_path_effect_create_sum (IntPtr first, IntPtr second);
+		internal static partial sk_path_effect_t sk_path_effect_create_sum (sk_path_effect_t first, sk_path_effect_t second);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_path_effect_create_sum (IntPtr first, IntPtr second);
+		internal static extern sk_path_effect_t sk_path_effect_create_sum (sk_path_effect_t first, sk_path_effect_t second);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_path_effect_create_sum (IntPtr first, IntPtr second);
+			internal delegate sk_path_effect_t sk_path_effect_create_sum (sk_path_effect_t first, sk_path_effect_t second);
 		}
 		private static Delegates.sk_path_effect_create_sum sk_path_effect_create_sum_delegate;
-		internal static IntPtr sk_path_effect_create_sum (IntPtr first, IntPtr second) =>
+		internal static sk_path_effect_t sk_path_effect_create_sum (sk_path_effect_t first, sk_path_effect_t second) =>
 			(sk_path_effect_create_sum_delegate ??= GetSymbol<Delegates.sk_path_effect_create_sum> ("sk_path_effect_create_sum")).Invoke (first, second);
 		#endif
 
@@ -169,18 +169,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_path_effect_create_trim (Single start, Single stop, SKTrimPathEffectMode mode);
+		internal static partial sk_path_effect_t sk_path_effect_create_trim (Single start, Single stop, SKTrimPathEffectMode mode);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_path_effect_create_trim (Single start, Single stop, SKTrimPathEffectMode mode);
+		internal static extern sk_path_effect_t sk_path_effect_create_trim (Single start, Single stop, SKTrimPathEffectMode mode);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_path_effect_create_trim (Single start, Single stop, SKTrimPathEffectMode mode);
+			internal delegate sk_path_effect_t sk_path_effect_create_trim (Single start, Single stop, SKTrimPathEffectMode mode);
 		}
 		private static Delegates.sk_path_effect_create_trim sk_path_effect_create_trim_delegate;
-		internal static IntPtr sk_path_effect_create_trim (Single start, Single stop, SKTrimPathEffectMode mode) =>
+		internal static sk_path_effect_t sk_path_effect_create_trim (Single start, Single stop, SKTrimPathEffectMode mode) =>
 			(sk_path_effect_create_trim_delegate ??= GetSymbol<Delegates.sk_path_effect_create_trim> ("sk_path_effect_create_trim")).Invoke (start, stop, mode);
 		#endif
 
@@ -188,18 +188,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_path_effect_unref (IntPtr t);
+		internal static partial void sk_path_effect_unref (sk_path_effect_t t);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_effect_unref (IntPtr t);
+		internal static extern void sk_path_effect_unref (sk_path_effect_t t);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_effect_unref (IntPtr t);
+			internal delegate void sk_path_effect_unref (sk_path_effect_t t);
 		}
 		private static Delegates.sk_path_effect_unref sk_path_effect_unref_delegate;
-		internal static void sk_path_effect_unref (IntPtr t) =>
+		internal static void sk_path_effect_unref (sk_path_effect_t t) =>
 			(sk_path_effect_unref_delegate ??= GetSymbol<Delegates.sk_path_effect_unref> ("sk_path_effect_unref")).Invoke (t);
 		#endif
 

@@ -17,18 +17,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_blob_copy_writable_or_fail (IntPtr blob);
+		internal static partial hb_blob_t hb_blob_copy_writable_or_fail (hb_blob_t blob);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_blob_copy_writable_or_fail (IntPtr blob);
+		internal static extern hb_blob_t hb_blob_copy_writable_or_fail (hb_blob_t blob);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_blob_copy_writable_or_fail (IntPtr blob);
+			internal delegate hb_blob_t hb_blob_copy_writable_or_fail (hb_blob_t blob);
 		}
 		private static Delegates.hb_blob_copy_writable_or_fail hb_blob_copy_writable_or_fail_delegate;
-		internal static IntPtr hb_blob_copy_writable_or_fail (IntPtr blob) =>
+		internal static hb_blob_t hb_blob_copy_writable_or_fail (hb_blob_t blob) =>
 			(hb_blob_copy_writable_or_fail_delegate ??= GetSymbol<Delegates.hb_blob_copy_writable_or_fail> ("hb_blob_copy_writable_or_fail")).Invoke (blob);
 		#endif
 
@@ -36,18 +36,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_blob_create (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, void* destroy);
+		internal static partial hb_blob_t hb_blob_create (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, void* destroy);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_blob_create (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy);
+		internal static extern hb_blob_t hb_blob_create (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_blob_create (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy);
+			internal delegate hb_blob_t hb_blob_create (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy);
 		}
 		private static Delegates.hb_blob_create hb_blob_create_delegate;
-		internal static IntPtr hb_blob_create (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy) =>
+		internal static hb_blob_t hb_blob_create (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy) =>
 			(hb_blob_create_delegate ??= GetSymbol<Delegates.hb_blob_create> ("hb_blob_create")).Invoke (data, length, mode, user_data, destroy);
 		#endif
 
@@ -55,18 +55,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] String file_name);
+		internal static partial hb_blob_t hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] String file_name);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] String file_name);
+		internal static extern hb_blob_t hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] String file_name);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] String file_name);
+			internal delegate hb_blob_t hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] String file_name);
 		}
 		private static Delegates.hb_blob_create_from_file hb_blob_create_from_file_delegate;
-		internal static IntPtr hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] String file_name) =>
+		internal static hb_blob_t hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] String file_name) =>
 			(hb_blob_create_from_file_delegate ??= GetSymbol<Delegates.hb_blob_create_from_file> ("hb_blob_create_from_file")).Invoke (file_name);
 		#endif
 
@@ -74,18 +74,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_blob_create_from_file_or_fail (/* char */ void* file_name);
+		internal static partial hb_blob_t hb_blob_create_from_file_or_fail (/* char */ void* file_name);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_blob_create_from_file_or_fail (/* char */ void* file_name);
+		internal static extern hb_blob_t hb_blob_create_from_file_or_fail (/* char */ void* file_name);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_blob_create_from_file_or_fail (/* char */ void* file_name);
+			internal delegate hb_blob_t hb_blob_create_from_file_or_fail (/* char */ void* file_name);
 		}
 		private static Delegates.hb_blob_create_from_file_or_fail hb_blob_create_from_file_or_fail_delegate;
-		internal static IntPtr hb_blob_create_from_file_or_fail (/* char */ void* file_name) =>
+		internal static hb_blob_t hb_blob_create_from_file_or_fail (/* char */ void* file_name) =>
 			(hb_blob_create_from_file_or_fail_delegate ??= GetSymbol<Delegates.hb_blob_create_from_file_or_fail> ("hb_blob_create_from_file_or_fail")).Invoke (file_name);
 		#endif
 
@@ -93,18 +93,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_blob_create_or_fail (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, void* destroy);
+		internal static partial hb_blob_t hb_blob_create_or_fail (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, void* destroy);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_blob_create_or_fail (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy);
+		internal static extern hb_blob_t hb_blob_create_or_fail (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_blob_create_or_fail (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy);
+			internal delegate hb_blob_t hb_blob_create_or_fail (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy);
 		}
 		private static Delegates.hb_blob_create_or_fail hb_blob_create_or_fail_delegate;
-		internal static IntPtr hb_blob_create_or_fail (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy) =>
+		internal static hb_blob_t hb_blob_create_or_fail (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy) =>
 			(hb_blob_create_or_fail_delegate ??= GetSymbol<Delegates.hb_blob_create_or_fail> ("hb_blob_create_or_fail")).Invoke (data, length, mode, user_data, destroy);
 		#endif
 
@@ -112,18 +112,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_blob_create_sub_blob (IntPtr parent, UInt32 offset, UInt32 length);
+		internal static partial hb_blob_t hb_blob_create_sub_blob (hb_blob_t parent, UInt32 offset, UInt32 length);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_blob_create_sub_blob (IntPtr parent, UInt32 offset, UInt32 length);
+		internal static extern hb_blob_t hb_blob_create_sub_blob (hb_blob_t parent, UInt32 offset, UInt32 length);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_blob_create_sub_blob (IntPtr parent, UInt32 offset, UInt32 length);
+			internal delegate hb_blob_t hb_blob_create_sub_blob (hb_blob_t parent, UInt32 offset, UInt32 length);
 		}
 		private static Delegates.hb_blob_create_sub_blob hb_blob_create_sub_blob_delegate;
-		internal static IntPtr hb_blob_create_sub_blob (IntPtr parent, UInt32 offset, UInt32 length) =>
+		internal static hb_blob_t hb_blob_create_sub_blob (hb_blob_t parent, UInt32 offset, UInt32 length) =>
 			(hb_blob_create_sub_blob_delegate ??= GetSymbol<Delegates.hb_blob_create_sub_blob> ("hb_blob_create_sub_blob")).Invoke (parent, offset, length);
 		#endif
 
@@ -131,18 +131,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_blob_destroy (IntPtr blob);
+		internal static partial void hb_blob_destroy (hb_blob_t blob);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_blob_destroy (IntPtr blob);
+		internal static extern void hb_blob_destroy (hb_blob_t blob);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_blob_destroy (IntPtr blob);
+			internal delegate void hb_blob_destroy (hb_blob_t blob);
 		}
 		private static Delegates.hb_blob_destroy hb_blob_destroy_delegate;
-		internal static void hb_blob_destroy (IntPtr blob) =>
+		internal static void hb_blob_destroy (hb_blob_t blob) =>
 			(hb_blob_destroy_delegate ??= GetSymbol<Delegates.hb_blob_destroy> ("hb_blob_destroy")).Invoke (blob);
 		#endif
 
@@ -150,18 +150,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial /* char */ void* hb_blob_get_data (IntPtr blob, UInt32* length);
+		internal static partial /* char */ void* hb_blob_get_data (hb_blob_t blob, UInt32* length);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* char */ void* hb_blob_get_data (IntPtr blob, UInt32* length);
+		internal static extern /* char */ void* hb_blob_get_data (hb_blob_t blob, UInt32* length);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate /* char */ void* hb_blob_get_data (IntPtr blob, UInt32* length);
+			internal delegate /* char */ void* hb_blob_get_data (hb_blob_t blob, UInt32* length);
 		}
 		private static Delegates.hb_blob_get_data hb_blob_get_data_delegate;
-		internal static /* char */ void* hb_blob_get_data (IntPtr blob, UInt32* length) =>
+		internal static /* char */ void* hb_blob_get_data (hb_blob_t blob, UInt32* length) =>
 			(hb_blob_get_data_delegate ??= GetSymbol<Delegates.hb_blob_get_data> ("hb_blob_get_data")).Invoke (blob, length);
 		#endif
 
@@ -169,18 +169,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial /* char */ void* hb_blob_get_data_writable (IntPtr blob, UInt32* length);
+		internal static partial /* char */ void* hb_blob_get_data_writable (hb_blob_t blob, UInt32* length);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* char */ void* hb_blob_get_data_writable (IntPtr blob, UInt32* length);
+		internal static extern /* char */ void* hb_blob_get_data_writable (hb_blob_t blob, UInt32* length);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate /* char */ void* hb_blob_get_data_writable (IntPtr blob, UInt32* length);
+			internal delegate /* char */ void* hb_blob_get_data_writable (hb_blob_t blob, UInt32* length);
 		}
 		private static Delegates.hb_blob_get_data_writable hb_blob_get_data_writable_delegate;
-		internal static /* char */ void* hb_blob_get_data_writable (IntPtr blob, UInt32* length) =>
+		internal static /* char */ void* hb_blob_get_data_writable (hb_blob_t blob, UInt32* length) =>
 			(hb_blob_get_data_writable_delegate ??= GetSymbol<Delegates.hb_blob_get_data_writable> ("hb_blob_get_data_writable")).Invoke (blob, length);
 		#endif
 
@@ -188,18 +188,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_blob_get_empty ();
+		internal static partial hb_blob_t hb_blob_get_empty ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_blob_get_empty ();
+		internal static extern hb_blob_t hb_blob_get_empty ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_blob_get_empty ();
+			internal delegate hb_blob_t hb_blob_get_empty ();
 		}
 		private static Delegates.hb_blob_get_empty hb_blob_get_empty_delegate;
-		internal static IntPtr hb_blob_get_empty () =>
+		internal static hb_blob_t hb_blob_get_empty () =>
 			(hb_blob_get_empty_delegate ??= GetSymbol<Delegates.hb_blob_get_empty> ("hb_blob_get_empty")).Invoke ();
 		#endif
 
@@ -207,18 +207,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_blob_get_length (IntPtr blob);
+		internal static partial UInt32 hb_blob_get_length (hb_blob_t blob);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_blob_get_length (IntPtr blob);
+		internal static extern UInt32 hb_blob_get_length (hb_blob_t blob);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_blob_get_length (IntPtr blob);
+			internal delegate UInt32 hb_blob_get_length (hb_blob_t blob);
 		}
 		private static Delegates.hb_blob_get_length hb_blob_get_length_delegate;
-		internal static UInt32 hb_blob_get_length (IntPtr blob) =>
+		internal static UInt32 hb_blob_get_length (hb_blob_t blob) =>
 			(hb_blob_get_length_delegate ??= GetSymbol<Delegates.hb_blob_get_length> ("hb_blob_get_length")).Invoke (blob);
 		#endif
 
@@ -227,20 +227,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_blob_is_immutable (IntPtr blob);
+		internal static partial bool hb_blob_is_immutable (hb_blob_t blob);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_blob_is_immutable (IntPtr blob);
+		internal static extern bool hb_blob_is_immutable (hb_blob_t blob);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_blob_is_immutable (IntPtr blob);
+			internal delegate bool hb_blob_is_immutable (hb_blob_t blob);
 		}
 		private static Delegates.hb_blob_is_immutable hb_blob_is_immutable_delegate;
-		internal static bool hb_blob_is_immutable (IntPtr blob) =>
+		internal static bool hb_blob_is_immutable (hb_blob_t blob) =>
 			(hb_blob_is_immutable_delegate ??= GetSymbol<Delegates.hb_blob_is_immutable> ("hb_blob_is_immutable")).Invoke (blob);
 		#endif
 
@@ -248,18 +248,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_blob_make_immutable (IntPtr blob);
+		internal static partial void hb_blob_make_immutable (hb_blob_t blob);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_blob_make_immutable (IntPtr blob);
+		internal static extern void hb_blob_make_immutable (hb_blob_t blob);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_blob_make_immutable (IntPtr blob);
+			internal delegate void hb_blob_make_immutable (hb_blob_t blob);
 		}
 		private static Delegates.hb_blob_make_immutable hb_blob_make_immutable_delegate;
-		internal static void hb_blob_make_immutable (IntPtr blob) =>
+		internal static void hb_blob_make_immutable (hb_blob_t blob) =>
 			(hb_blob_make_immutable_delegate ??= GetSymbol<Delegates.hb_blob_make_immutable> ("hb_blob_make_immutable")).Invoke (blob);
 		#endif
 
@@ -267,18 +267,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_blob_reference (IntPtr blob);
+		internal static partial hb_blob_t hb_blob_reference (hb_blob_t blob);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_blob_reference (IntPtr blob);
+		internal static extern hb_blob_t hb_blob_reference (hb_blob_t blob);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_blob_reference (IntPtr blob);
+			internal delegate hb_blob_t hb_blob_reference (hb_blob_t blob);
 		}
 		private static Delegates.hb_blob_reference hb_blob_reference_delegate;
-		internal static IntPtr hb_blob_reference (IntPtr blob) =>
+		internal static hb_blob_t hb_blob_reference (hb_blob_t blob) =>
 			(hb_blob_reference_delegate ??= GetSymbol<Delegates.hb_blob_reference> ("hb_blob_reference")).Invoke (blob);
 		#endif
 

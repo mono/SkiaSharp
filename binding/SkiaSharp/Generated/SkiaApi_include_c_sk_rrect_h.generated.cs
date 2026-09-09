@@ -18,20 +18,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_rrect_contains (IntPtr rrect, SKRect* rect);
+		internal static partial bool sk_rrect_contains (sk_rrect_t rrect, SKRect* rect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_rrect_contains (IntPtr rrect, SKRect* rect);
+		internal static extern bool sk_rrect_contains (sk_rrect_t rrect, SKRect* rect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_rrect_contains (IntPtr rrect, SKRect* rect);
+			internal delegate bool sk_rrect_contains (sk_rrect_t rrect, SKRect* rect);
 		}
 		private static Delegates.sk_rrect_contains sk_rrect_contains_delegate;
-		internal static bool sk_rrect_contains (IntPtr rrect, SKRect* rect) =>
+		internal static bool sk_rrect_contains (sk_rrect_t rrect, SKRect* rect) =>
 			(sk_rrect_contains_delegate ??= GetSymbol<Delegates.sk_rrect_contains> ("sk_rrect_contains")).Invoke (rrect, rect);
 		#endif
 
@@ -39,18 +39,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_rrect_delete (IntPtr rrect);
+		internal static partial void sk_rrect_delete (sk_rrect_t rrect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_rrect_delete (IntPtr rrect);
+		internal static extern void sk_rrect_delete (sk_rrect_t rrect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_rrect_delete (IntPtr rrect);
+			internal delegate void sk_rrect_delete (sk_rrect_t rrect);
 		}
 		private static Delegates.sk_rrect_delete sk_rrect_delete_delegate;
-		internal static void sk_rrect_delete (IntPtr rrect) =>
+		internal static void sk_rrect_delete (sk_rrect_t rrect) =>
 			(sk_rrect_delete_delegate ??= GetSymbol<Delegates.sk_rrect_delete> ("sk_rrect_delete")).Invoke (rrect);
 		#endif
 
@@ -58,18 +58,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Single sk_rrect_get_height (IntPtr rrect);
+		internal static partial Single sk_rrect_get_height (sk_rrect_t rrect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Single sk_rrect_get_height (IntPtr rrect);
+		internal static extern Single sk_rrect_get_height (sk_rrect_t rrect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Single sk_rrect_get_height (IntPtr rrect);
+			internal delegate Single sk_rrect_get_height (sk_rrect_t rrect);
 		}
 		private static Delegates.sk_rrect_get_height sk_rrect_get_height_delegate;
-		internal static Single sk_rrect_get_height (IntPtr rrect) =>
+		internal static Single sk_rrect_get_height (sk_rrect_t rrect) =>
 			(sk_rrect_get_height_delegate ??= GetSymbol<Delegates.sk_rrect_get_height> ("sk_rrect_get_height")).Invoke (rrect);
 		#endif
 
@@ -77,18 +77,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_rrect_get_radii (IntPtr rrect, SKRoundRectCorner corner, SKPoint* radii);
+		internal static partial void sk_rrect_get_radii (sk_rrect_t rrect, SKRoundRectCorner corner, SKPoint* radii);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_rrect_get_radii (IntPtr rrect, SKRoundRectCorner corner, SKPoint* radii);
+		internal static extern void sk_rrect_get_radii (sk_rrect_t rrect, SKRoundRectCorner corner, SKPoint* radii);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_rrect_get_radii (IntPtr rrect, SKRoundRectCorner corner, SKPoint* radii);
+			internal delegate void sk_rrect_get_radii (sk_rrect_t rrect, SKRoundRectCorner corner, SKPoint* radii);
 		}
 		private static Delegates.sk_rrect_get_radii sk_rrect_get_radii_delegate;
-		internal static void sk_rrect_get_radii (IntPtr rrect, SKRoundRectCorner corner, SKPoint* radii) =>
+		internal static void sk_rrect_get_radii (sk_rrect_t rrect, SKRoundRectCorner corner, SKPoint* radii) =>
 			(sk_rrect_get_radii_delegate ??= GetSymbol<Delegates.sk_rrect_get_radii> ("sk_rrect_get_radii")).Invoke (rrect, corner, radii);
 		#endif
 
@@ -96,18 +96,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_rrect_get_rect (IntPtr rrect, SKRect* rect);
+		internal static partial void sk_rrect_get_rect (sk_rrect_t rrect, SKRect* rect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_rrect_get_rect (IntPtr rrect, SKRect* rect);
+		internal static extern void sk_rrect_get_rect (sk_rrect_t rrect, SKRect* rect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_rrect_get_rect (IntPtr rrect, SKRect* rect);
+			internal delegate void sk_rrect_get_rect (sk_rrect_t rrect, SKRect* rect);
 		}
 		private static Delegates.sk_rrect_get_rect sk_rrect_get_rect_delegate;
-		internal static void sk_rrect_get_rect (IntPtr rrect, SKRect* rect) =>
+		internal static void sk_rrect_get_rect (sk_rrect_t rrect, SKRect* rect) =>
 			(sk_rrect_get_rect_delegate ??= GetSymbol<Delegates.sk_rrect_get_rect> ("sk_rrect_get_rect")).Invoke (rrect, rect);
 		#endif
 
@@ -115,18 +115,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial SKRoundRectType sk_rrect_get_type (IntPtr rrect);
+		internal static partial SKRoundRectType sk_rrect_get_type (sk_rrect_t rrect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKRoundRectType sk_rrect_get_type (IntPtr rrect);
+		internal static extern SKRoundRectType sk_rrect_get_type (sk_rrect_t rrect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate SKRoundRectType sk_rrect_get_type (IntPtr rrect);
+			internal delegate SKRoundRectType sk_rrect_get_type (sk_rrect_t rrect);
 		}
 		private static Delegates.sk_rrect_get_type sk_rrect_get_type_delegate;
-		internal static SKRoundRectType sk_rrect_get_type (IntPtr rrect) =>
+		internal static SKRoundRectType sk_rrect_get_type (sk_rrect_t rrect) =>
 			(sk_rrect_get_type_delegate ??= GetSymbol<Delegates.sk_rrect_get_type> ("sk_rrect_get_type")).Invoke (rrect);
 		#endif
 
@@ -134,18 +134,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Single sk_rrect_get_width (IntPtr rrect);
+		internal static partial Single sk_rrect_get_width (sk_rrect_t rrect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Single sk_rrect_get_width (IntPtr rrect);
+		internal static extern Single sk_rrect_get_width (sk_rrect_t rrect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Single sk_rrect_get_width (IntPtr rrect);
+			internal delegate Single sk_rrect_get_width (sk_rrect_t rrect);
 		}
 		private static Delegates.sk_rrect_get_width sk_rrect_get_width_delegate;
-		internal static Single sk_rrect_get_width (IntPtr rrect) =>
+		internal static Single sk_rrect_get_width (sk_rrect_t rrect) =>
 			(sk_rrect_get_width_delegate ??= GetSymbol<Delegates.sk_rrect_get_width> ("sk_rrect_get_width")).Invoke (rrect);
 		#endif
 
@@ -153,18 +153,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_rrect_inset (IntPtr rrect, Single dx, Single dy);
+		internal static partial void sk_rrect_inset (sk_rrect_t rrect, Single dx, Single dy);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_rrect_inset (IntPtr rrect, Single dx, Single dy);
+		internal static extern void sk_rrect_inset (sk_rrect_t rrect, Single dx, Single dy);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_rrect_inset (IntPtr rrect, Single dx, Single dy);
+			internal delegate void sk_rrect_inset (sk_rrect_t rrect, Single dx, Single dy);
 		}
 		private static Delegates.sk_rrect_inset sk_rrect_inset_delegate;
-		internal static void sk_rrect_inset (IntPtr rrect, Single dx, Single dy) =>
+		internal static void sk_rrect_inset (sk_rrect_t rrect, Single dx, Single dy) =>
 			(sk_rrect_inset_delegate ??= GetSymbol<Delegates.sk_rrect_inset> ("sk_rrect_inset")).Invoke (rrect, dx, dy);
 		#endif
 
@@ -173,20 +173,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_rrect_is_valid (IntPtr rrect);
+		internal static partial bool sk_rrect_is_valid (sk_rrect_t rrect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_rrect_is_valid (IntPtr rrect);
+		internal static extern bool sk_rrect_is_valid (sk_rrect_t rrect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_rrect_is_valid (IntPtr rrect);
+			internal delegate bool sk_rrect_is_valid (sk_rrect_t rrect);
 		}
 		private static Delegates.sk_rrect_is_valid sk_rrect_is_valid_delegate;
-		internal static bool sk_rrect_is_valid (IntPtr rrect) =>
+		internal static bool sk_rrect_is_valid (sk_rrect_t rrect) =>
 			(sk_rrect_is_valid_delegate ??= GetSymbol<Delegates.sk_rrect_is_valid> ("sk_rrect_is_valid")).Invoke (rrect);
 		#endif
 
@@ -194,18 +194,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_rrect_new ();
+		internal static partial sk_rrect_t sk_rrect_new ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_rrect_new ();
+		internal static extern sk_rrect_t sk_rrect_new ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_rrect_new ();
+			internal delegate sk_rrect_t sk_rrect_new ();
 		}
 		private static Delegates.sk_rrect_new sk_rrect_new_delegate;
-		internal static IntPtr sk_rrect_new () =>
+		internal static sk_rrect_t sk_rrect_new () =>
 			(sk_rrect_new_delegate ??= GetSymbol<Delegates.sk_rrect_new> ("sk_rrect_new")).Invoke ();
 		#endif
 
@@ -213,18 +213,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_rrect_new_copy (IntPtr rrect);
+		internal static partial sk_rrect_t sk_rrect_new_copy (sk_rrect_t rrect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_rrect_new_copy (IntPtr rrect);
+		internal static extern sk_rrect_t sk_rrect_new_copy (sk_rrect_t rrect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_rrect_new_copy (IntPtr rrect);
+			internal delegate sk_rrect_t sk_rrect_new_copy (sk_rrect_t rrect);
 		}
 		private static Delegates.sk_rrect_new_copy sk_rrect_new_copy_delegate;
-		internal static IntPtr sk_rrect_new_copy (IntPtr rrect) =>
+		internal static sk_rrect_t sk_rrect_new_copy (sk_rrect_t rrect) =>
 			(sk_rrect_new_copy_delegate ??= GetSymbol<Delegates.sk_rrect_new_copy> ("sk_rrect_new_copy")).Invoke (rrect);
 		#endif
 
@@ -232,18 +232,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_rrect_offset (IntPtr rrect, Single dx, Single dy);
+		internal static partial void sk_rrect_offset (sk_rrect_t rrect, Single dx, Single dy);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_rrect_offset (IntPtr rrect, Single dx, Single dy);
+		internal static extern void sk_rrect_offset (sk_rrect_t rrect, Single dx, Single dy);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_rrect_offset (IntPtr rrect, Single dx, Single dy);
+			internal delegate void sk_rrect_offset (sk_rrect_t rrect, Single dx, Single dy);
 		}
 		private static Delegates.sk_rrect_offset sk_rrect_offset_delegate;
-		internal static void sk_rrect_offset (IntPtr rrect, Single dx, Single dy) =>
+		internal static void sk_rrect_offset (sk_rrect_t rrect, Single dx, Single dy) =>
 			(sk_rrect_offset_delegate ??= GetSymbol<Delegates.sk_rrect_offset> ("sk_rrect_offset")).Invoke (rrect, dx, dy);
 		#endif
 
@@ -251,18 +251,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_rrect_outset (IntPtr rrect, Single dx, Single dy);
+		internal static partial void sk_rrect_outset (sk_rrect_t rrect, Single dx, Single dy);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_rrect_outset (IntPtr rrect, Single dx, Single dy);
+		internal static extern void sk_rrect_outset (sk_rrect_t rrect, Single dx, Single dy);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_rrect_outset (IntPtr rrect, Single dx, Single dy);
+			internal delegate void sk_rrect_outset (sk_rrect_t rrect, Single dx, Single dy);
 		}
 		private static Delegates.sk_rrect_outset sk_rrect_outset_delegate;
-		internal static void sk_rrect_outset (IntPtr rrect, Single dx, Single dy) =>
+		internal static void sk_rrect_outset (sk_rrect_t rrect, Single dx, Single dy) =>
 			(sk_rrect_outset_delegate ??= GetSymbol<Delegates.sk_rrect_outset> ("sk_rrect_outset")).Invoke (rrect, dx, dy);
 		#endif
 
@@ -270,18 +270,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_rrect_set_empty (IntPtr rrect);
+		internal static partial void sk_rrect_set_empty (sk_rrect_t rrect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_rrect_set_empty (IntPtr rrect);
+		internal static extern void sk_rrect_set_empty (sk_rrect_t rrect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_rrect_set_empty (IntPtr rrect);
+			internal delegate void sk_rrect_set_empty (sk_rrect_t rrect);
 		}
 		private static Delegates.sk_rrect_set_empty sk_rrect_set_empty_delegate;
-		internal static void sk_rrect_set_empty (IntPtr rrect) =>
+		internal static void sk_rrect_set_empty (sk_rrect_t rrect) =>
 			(sk_rrect_set_empty_delegate ??= GetSymbol<Delegates.sk_rrect_set_empty> ("sk_rrect_set_empty")).Invoke (rrect);
 		#endif
 
@@ -289,18 +289,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_rrect_set_nine_patch (IntPtr rrect, SKRect* rect, Single leftRad, Single topRad, Single rightRad, Single bottomRad);
+		internal static partial void sk_rrect_set_nine_patch (sk_rrect_t rrect, SKRect* rect, Single leftRad, Single topRad, Single rightRad, Single bottomRad);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_rrect_set_nine_patch (IntPtr rrect, SKRect* rect, Single leftRad, Single topRad, Single rightRad, Single bottomRad);
+		internal static extern void sk_rrect_set_nine_patch (sk_rrect_t rrect, SKRect* rect, Single leftRad, Single topRad, Single rightRad, Single bottomRad);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_rrect_set_nine_patch (IntPtr rrect, SKRect* rect, Single leftRad, Single topRad, Single rightRad, Single bottomRad);
+			internal delegate void sk_rrect_set_nine_patch (sk_rrect_t rrect, SKRect* rect, Single leftRad, Single topRad, Single rightRad, Single bottomRad);
 		}
 		private static Delegates.sk_rrect_set_nine_patch sk_rrect_set_nine_patch_delegate;
-		internal static void sk_rrect_set_nine_patch (IntPtr rrect, SKRect* rect, Single leftRad, Single topRad, Single rightRad, Single bottomRad) =>
+		internal static void sk_rrect_set_nine_patch (sk_rrect_t rrect, SKRect* rect, Single leftRad, Single topRad, Single rightRad, Single bottomRad) =>
 			(sk_rrect_set_nine_patch_delegate ??= GetSymbol<Delegates.sk_rrect_set_nine_patch> ("sk_rrect_set_nine_patch")).Invoke (rrect, rect, leftRad, topRad, rightRad, bottomRad);
 		#endif
 
@@ -308,18 +308,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_rrect_set_oval (IntPtr rrect, SKRect* rect);
+		internal static partial void sk_rrect_set_oval (sk_rrect_t rrect, SKRect* rect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_rrect_set_oval (IntPtr rrect, SKRect* rect);
+		internal static extern void sk_rrect_set_oval (sk_rrect_t rrect, SKRect* rect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_rrect_set_oval (IntPtr rrect, SKRect* rect);
+			internal delegate void sk_rrect_set_oval (sk_rrect_t rrect, SKRect* rect);
 		}
 		private static Delegates.sk_rrect_set_oval sk_rrect_set_oval_delegate;
-		internal static void sk_rrect_set_oval (IntPtr rrect, SKRect* rect) =>
+		internal static void sk_rrect_set_oval (sk_rrect_t rrect, SKRect* rect) =>
 			(sk_rrect_set_oval_delegate ??= GetSymbol<Delegates.sk_rrect_set_oval> ("sk_rrect_set_oval")).Invoke (rrect, rect);
 		#endif
 
@@ -327,18 +327,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_rrect_set_rect (IntPtr rrect, SKRect* rect);
+		internal static partial void sk_rrect_set_rect (sk_rrect_t rrect, SKRect* rect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_rrect_set_rect (IntPtr rrect, SKRect* rect);
+		internal static extern void sk_rrect_set_rect (sk_rrect_t rrect, SKRect* rect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_rrect_set_rect (IntPtr rrect, SKRect* rect);
+			internal delegate void sk_rrect_set_rect (sk_rrect_t rrect, SKRect* rect);
 		}
 		private static Delegates.sk_rrect_set_rect sk_rrect_set_rect_delegate;
-		internal static void sk_rrect_set_rect (IntPtr rrect, SKRect* rect) =>
+		internal static void sk_rrect_set_rect (sk_rrect_t rrect, SKRect* rect) =>
 			(sk_rrect_set_rect_delegate ??= GetSymbol<Delegates.sk_rrect_set_rect> ("sk_rrect_set_rect")).Invoke (rrect, rect);
 		#endif
 
@@ -346,18 +346,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_rrect_set_rect_radii (IntPtr rrect, SKRect* rect, SKPoint* radii);
+		internal static partial void sk_rrect_set_rect_radii (sk_rrect_t rrect, SKRect* rect, SKPoint* radii);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_rrect_set_rect_radii (IntPtr rrect, SKRect* rect, SKPoint* radii);
+		internal static extern void sk_rrect_set_rect_radii (sk_rrect_t rrect, SKRect* rect, SKPoint* radii);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_rrect_set_rect_radii (IntPtr rrect, SKRect* rect, SKPoint* radii);
+			internal delegate void sk_rrect_set_rect_radii (sk_rrect_t rrect, SKRect* rect, SKPoint* radii);
 		}
 		private static Delegates.sk_rrect_set_rect_radii sk_rrect_set_rect_radii_delegate;
-		internal static void sk_rrect_set_rect_radii (IntPtr rrect, SKRect* rect, SKPoint* radii) =>
+		internal static void sk_rrect_set_rect_radii (sk_rrect_t rrect, SKRect* rect, SKPoint* radii) =>
 			(sk_rrect_set_rect_radii_delegate ??= GetSymbol<Delegates.sk_rrect_set_rect_radii> ("sk_rrect_set_rect_radii")).Invoke (rrect, rect, radii);
 		#endif
 
@@ -365,18 +365,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_rrect_set_rect_xy (IntPtr rrect, SKRect* rect, Single xRad, Single yRad);
+		internal static partial void sk_rrect_set_rect_xy (sk_rrect_t rrect, SKRect* rect, Single xRad, Single yRad);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_rrect_set_rect_xy (IntPtr rrect, SKRect* rect, Single xRad, Single yRad);
+		internal static extern void sk_rrect_set_rect_xy (sk_rrect_t rrect, SKRect* rect, Single xRad, Single yRad);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_rrect_set_rect_xy (IntPtr rrect, SKRect* rect, Single xRad, Single yRad);
+			internal delegate void sk_rrect_set_rect_xy (sk_rrect_t rrect, SKRect* rect, Single xRad, Single yRad);
 		}
 		private static Delegates.sk_rrect_set_rect_xy sk_rrect_set_rect_xy_delegate;
-		internal static void sk_rrect_set_rect_xy (IntPtr rrect, SKRect* rect, Single xRad, Single yRad) =>
+		internal static void sk_rrect_set_rect_xy (sk_rrect_t rrect, SKRect* rect, Single xRad, Single yRad) =>
 			(sk_rrect_set_rect_xy_delegate ??= GetSymbol<Delegates.sk_rrect_set_rect_xy> ("sk_rrect_set_rect_xy")).Invoke (rrect, rect, xRad, yRad);
 		#endif
 
@@ -385,20 +385,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_rrect_transform (IntPtr rrect, SKMatrix* matrix, IntPtr dest);
+		internal static partial bool sk_rrect_transform (sk_rrect_t rrect, SKMatrix* matrix, sk_rrect_t dest);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_rrect_transform (IntPtr rrect, SKMatrix* matrix, IntPtr dest);
+		internal static extern bool sk_rrect_transform (sk_rrect_t rrect, SKMatrix* matrix, sk_rrect_t dest);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_rrect_transform (IntPtr rrect, SKMatrix* matrix, IntPtr dest);
+			internal delegate bool sk_rrect_transform (sk_rrect_t rrect, SKMatrix* matrix, sk_rrect_t dest);
 		}
 		private static Delegates.sk_rrect_transform sk_rrect_transform_delegate;
-		internal static bool sk_rrect_transform (IntPtr rrect, SKMatrix* matrix, IntPtr dest) =>
+		internal static bool sk_rrect_transform (sk_rrect_t rrect, SKMatrix* matrix, sk_rrect_t dest) =>
 			(sk_rrect_transform_delegate ??= GetSymbol<Delegates.sk_rrect_transform> ("sk_rrect_transform")).Invoke (rrect, matrix, dest);
 		#endif
 

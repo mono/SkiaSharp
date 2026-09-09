@@ -13,13 +13,13 @@ namespace SkiaSharp
 	{
 	/// Proxy for sk_manageddrawable_makePictureSnapshot_proc native function.
 #if USE_LIBRARY_IMPORT
-	public static readonly delegate* unmanaged[Cdecl] <IntPtr, void*, IntPtr> SKManagedDrawableMakePictureSnapshotProxy = &SKManagedDrawableMakePictureSnapshotProxyImplementation;
+	public static readonly delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, sk_picture_t> SKManagedDrawableMakePictureSnapshotProxy = &SKManagedDrawableMakePictureSnapshotProxyImplementation;
 	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 	public static readonly SKManagedDrawableMakePictureSnapshotProxyDelegate SKManagedDrawableMakePictureSnapshotProxy = SKManagedDrawableMakePictureSnapshotProxyImplementation;
 	[MonoPInvokeCallback (typeof (SKManagedDrawableMakePictureSnapshotProxyDelegate))]
 #endif
-	private static partial IntPtr SKManagedDrawableMakePictureSnapshotProxyImplementation(IntPtr d,void* context);
+	private static partial sk_picture_t SKManagedDrawableMakePictureSnapshotProxyImplementation(sk_manageddrawable_t d,void* context);
 
 	}
 }

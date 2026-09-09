@@ -13,13 +13,13 @@ namespace SkiaSharp
 	{
 	/// Proxy for sk_glyph_path_proc native function.
 #if USE_LIBRARY_IMPORT
-	public static readonly delegate* unmanaged[Cdecl] <IntPtr, SKMatrix*, void*, void> SKGlyphPathProxy = &SKGlyphPathProxyImplementation;
+	public static readonly delegate* unmanaged[Cdecl] <sk_path_t, SKMatrix*, void*, void> SKGlyphPathProxy = &SKGlyphPathProxyImplementation;
 	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 	public static readonly SKGlyphPathProxyDelegate SKGlyphPathProxy = SKGlyphPathProxyImplementation;
 	[MonoPInvokeCallback (typeof (SKGlyphPathProxyDelegate))]
 #endif
-	private static partial void SKGlyphPathProxyImplementation(IntPtr pathOrNull,SKMatrix* matrix,void* context);
+	private static partial void SKGlyphPathProxyImplementation(sk_path_t pathOrNull,SKMatrix* matrix,void* context);
 
 	}
 }

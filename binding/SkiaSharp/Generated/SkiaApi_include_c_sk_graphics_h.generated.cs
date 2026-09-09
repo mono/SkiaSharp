@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_graphics_dump_memory_statistics (IntPtr dump);
+		internal static partial void sk_graphics_dump_memory_statistics (sk_tracememorydump_t dump);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_graphics_dump_memory_statistics (IntPtr dump);
+		internal static extern void sk_graphics_dump_memory_statistics (sk_tracememorydump_t dump);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_graphics_dump_memory_statistics (IntPtr dump);
+			internal delegate void sk_graphics_dump_memory_statistics (sk_tracememorydump_t dump);
 		}
 		private static Delegates.sk_graphics_dump_memory_statistics sk_graphics_dump_memory_statistics_delegate;
-		internal static void sk_graphics_dump_memory_statistics (IntPtr dump) =>
+		internal static void sk_graphics_dump_memory_statistics (sk_tracememorydump_t dump) =>
 			(sk_graphics_dump_memory_statistics_delegate ??= GetSymbol<Delegates.sk_graphics_dump_memory_statistics> ("sk_graphics_dump_memory_statistics")).Invoke (dump);
 		#endif
 

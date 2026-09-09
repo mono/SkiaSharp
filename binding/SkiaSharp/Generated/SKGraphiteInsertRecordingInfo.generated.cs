@@ -14,15 +14,15 @@ namespace SkiaSharp
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKGraphiteInsertRecordingInfo : IEquatable<SKGraphiteInsertRecordingInfo> {
 		// public sk_graphite_recording_t* fRecording
-		private IntPtr fRecording;
-		public IntPtr Recording {
+		private sk_graphite_recording_t fRecording;
+		public sk_graphite_recording_t Recording {
 			readonly get => fRecording;
 			set => fRecording = value;
 		}
 
 		// public sk_surface_t* fTargetSurface
-		private IntPtr fTargetSurface;
-		public IntPtr TargetSurface {
+		private sk_surface_t fTargetSurface;
+		public sk_surface_t TargetSurface {
 			readonly get => fTargetSurface;
 			set => fTargetSurface = value;
 		}

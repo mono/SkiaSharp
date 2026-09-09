@@ -17,10 +17,10 @@ namespace SkiaSharp
 		public SKRect* fBounds;
 
 		// public sk_paint_t* fPaint
-		public IntPtr fPaint;
+		public sk_paint_t fPaint;
 
 		// public sk_imagefilter_t* fBackdrop
-		public IntPtr fBackdrop;
+		public sk_imagefilter_t fBackdrop;
 
 		// public sk_canvas_savelayerrec_flags_t fFlags
 		public SKCanvasSaveLayerRecFlags fFlags;

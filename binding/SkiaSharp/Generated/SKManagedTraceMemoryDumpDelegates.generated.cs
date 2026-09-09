@@ -15,14 +15,14 @@ namespace SkiaSharp
 	internal unsafe partial struct SKManagedTraceMemoryDumpDelegates : IEquatable<SKManagedTraceMemoryDumpDelegates> {
 		// public sk_managedtraceMemoryDump_dumpNumericValue_proc fDumpNumericValue
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <IntPtr, void*, /* char */ void*, /* char */ void*, /* char */ void*, UInt64, void> fDumpNumericValue;
+		public delegate* unmanaged[Cdecl] <sk_managedtracememorydump_t, void*, /* char */ void*, /* char */ void*, /* char */ void*, UInt64, void> fDumpNumericValue;
 #else
 		public SKManagedTraceMemoryDumpDumpNumericValueProxyDelegate fDumpNumericValue;
 #endif
 
 		// public sk_managedtraceMemoryDump_dumpStringValue_proc fDumpStringValue
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <IntPtr, void*, /* char */ void*, /* char */ void*, /* char */ void*, void> fDumpStringValue;
+		public delegate* unmanaged[Cdecl] <sk_managedtracememorydump_t, void*, /* char */ void*, /* char */ void*, /* char */ void*, void> fDumpStringValue;
 #else
 		public SKManagedTraceMemoryDumpDumpStringValueProxyDelegate fDumpStringValue;
 #endif

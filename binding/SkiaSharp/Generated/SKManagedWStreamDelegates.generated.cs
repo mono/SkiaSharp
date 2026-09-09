@@ -15,28 +15,28 @@ namespace SkiaSharp
 	internal unsafe partial struct SKManagedWStreamDelegates : IEquatable<SKManagedWStreamDelegates> {
 		// public sk_managedwstream_write_proc fWrite
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <IntPtr, void*, void*, /* size_t */ IntPtr, bool> fWrite;
+		public delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, void*, /* size_t */ IntPtr, bool> fWrite;
 #else
 		public SKManagedWStreamWriteProxyDelegate fWrite;
 #endif
 
 		// public sk_managedwstream_flush_proc fFlush
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <IntPtr, void*, void> fFlush;
+		public delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, void> fFlush;
 #else
 		public SKManagedWStreamFlushProxyDelegate fFlush;
 #endif
 
 		// public sk_managedwstream_bytesWritten_proc fBytesWritten
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <IntPtr, void*, /* size_t */ IntPtr> fBytesWritten;
+		public delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, /* size_t */ IntPtr> fBytesWritten;
 #else
 		public SKManagedWStreamBytesWrittenProxyDelegate fBytesWritten;
 #endif
 
 		// public sk_managedwstream_destroy_proc fDestroy
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <IntPtr, void*, void> fDestroy;
+		public delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, void> fDestroy;
 #else
 		public SKManagedWStreamDestroyProxyDelegate fDestroy;
 #endif

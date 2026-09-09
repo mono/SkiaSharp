@@ -14,16 +14,16 @@ namespace SkiaSharp
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKGraphiteVkBackendContextNative : IEquatable<SKGraphiteVkBackendContextNative> {
 		// public vk_instance_t* fInstance
-		public IntPtr fInstance;
+		public vk_instance_t fInstance;
 
 		// public vk_physical_device_t* fPhysicalDevice
-		public IntPtr fPhysicalDevice;
+		public vk_physical_device_t fPhysicalDevice;
 
 		// public vk_device_t* fDevice
-		public IntPtr fDevice;
+		public vk_device_t fDevice;
 
 		// public vk_queue_t* fQueue
-		public IntPtr fQueue;
+		public vk_queue_t fQueue;
 
 		// public uint32_t fGraphicsQueueIndex
 		public UInt32 fGraphicsQueueIndex;
@@ -33,7 +33,7 @@ namespace SkiaSharp
 
 		// public sk_graphite_vk_get_proc fGetProc
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <void*, /* char */ void*, IntPtr, IntPtr, IntPtr> fGetProc;
+		public delegate* unmanaged[Cdecl] <void*, /* char */ void*, vk_instance_t, vk_device_t, IntPtr> fGetProc;
 #else
 		public SKGraphiteVkGetProxyDelegate fGetProc;
 #endif

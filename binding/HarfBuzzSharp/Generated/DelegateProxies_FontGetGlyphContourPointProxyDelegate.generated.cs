@@ -13,14 +13,14 @@ namespace HarfBuzzSharp
 	{
 	/// Proxy for hb_font_get_glyph_contour_point_func_t native function.
 #if USE_LIBRARY_IMPORT
-	public static readonly delegate* unmanaged[Cdecl] <IntPtr, void*, UInt32, UInt32, Int32*, Int32*, void*, bool> FontGetGlyphContourPointProxy = &FontGetGlyphContourPointProxyImplementation;
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, UInt32, UInt32, Int32*, Int32*, void*, bool> FontGetGlyphContourPointProxy = &FontGetGlyphContourPointProxyImplementation;
 	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 	public static readonly FontGetGlyphContourPointProxyDelegate FontGetGlyphContourPointProxy = FontGetGlyphContourPointProxyImplementation;
 	[MonoPInvokeCallback (typeof (FontGetGlyphContourPointProxyDelegate))]
 #endif
 	[return: MarshalAs (UnmanagedType.I1)]
-	private static partial bool FontGetGlyphContourPointProxyImplementation(IntPtr font,void* font_data,UInt32 glyph,UInt32 point_index,Int32* x,Int32* y,void* user_data);
+	private static partial bool FontGetGlyphContourPointProxyImplementation(hb_font_t font,void* font_data,UInt32 glyph,UInt32 point_index,Int32* x,Int32* y,void* user_data);
 
 	}
 }

@@ -12,7 +12,7 @@ namespace SkiaSharp
 {
 	// typedef void (*)(sk_wstream_managedstream_t* s, void* context)* sk_managedwstream_destroy_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKManagedWStreamDestroyProxyDelegate(IntPtr s, void* context);
+	internal unsafe delegate void SKManagedWStreamDestroyProxyDelegate(sk_wstream_managedstream_t s, void* context);
 
 }
 #endif // !USE_LIBRARY_IMPORT

@@ -17,18 +17,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_set_add (IntPtr set, UInt32 codepoint);
+		internal static partial void hb_set_add (hb_set_t set, UInt32 codepoint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_set_add (IntPtr set, UInt32 codepoint);
+		internal static extern void hb_set_add (hb_set_t set, UInt32 codepoint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_set_add (IntPtr set, UInt32 codepoint);
+			internal delegate void hb_set_add (hb_set_t set, UInt32 codepoint);
 		}
 		private static Delegates.hb_set_add hb_set_add_delegate;
-		internal static void hb_set_add (IntPtr set, UInt32 codepoint) =>
+		internal static void hb_set_add (hb_set_t set, UInt32 codepoint) =>
 			(hb_set_add_delegate ??= GetSymbol<Delegates.hb_set_add> ("hb_set_add")).Invoke (set, codepoint);
 		#endif
 
@@ -36,18 +36,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_set_add_range (IntPtr set, UInt32 first, UInt32 last);
+		internal static partial void hb_set_add_range (hb_set_t set, UInt32 first, UInt32 last);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_set_add_range (IntPtr set, UInt32 first, UInt32 last);
+		internal static extern void hb_set_add_range (hb_set_t set, UInt32 first, UInt32 last);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_set_add_range (IntPtr set, UInt32 first, UInt32 last);
+			internal delegate void hb_set_add_range (hb_set_t set, UInt32 first, UInt32 last);
 		}
 		private static Delegates.hb_set_add_range hb_set_add_range_delegate;
-		internal static void hb_set_add_range (IntPtr set, UInt32 first, UInt32 last) =>
+		internal static void hb_set_add_range (hb_set_t set, UInt32 first, UInt32 last) =>
 			(hb_set_add_range_delegate ??= GetSymbol<Delegates.hb_set_add_range> ("hb_set_add_range")).Invoke (set, first, last);
 		#endif
 
@@ -55,18 +55,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_set_add_sorted_array (IntPtr set, UInt32* sorted_codepoints, UInt32 num_codepoints);
+		internal static partial void hb_set_add_sorted_array (hb_set_t set, UInt32* sorted_codepoints, UInt32 num_codepoints);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_set_add_sorted_array (IntPtr set, UInt32* sorted_codepoints, UInt32 num_codepoints);
+		internal static extern void hb_set_add_sorted_array (hb_set_t set, UInt32* sorted_codepoints, UInt32 num_codepoints);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_set_add_sorted_array (IntPtr set, UInt32* sorted_codepoints, UInt32 num_codepoints);
+			internal delegate void hb_set_add_sorted_array (hb_set_t set, UInt32* sorted_codepoints, UInt32 num_codepoints);
 		}
 		private static Delegates.hb_set_add_sorted_array hb_set_add_sorted_array_delegate;
-		internal static void hb_set_add_sorted_array (IntPtr set, UInt32* sorted_codepoints, UInt32 num_codepoints) =>
+		internal static void hb_set_add_sorted_array (hb_set_t set, UInt32* sorted_codepoints, UInt32 num_codepoints) =>
 			(hb_set_add_sorted_array_delegate ??= GetSymbol<Delegates.hb_set_add_sorted_array> ("hb_set_add_sorted_array")).Invoke (set, sorted_codepoints, num_codepoints);
 		#endif
 
@@ -75,20 +75,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_set_allocation_successful (IntPtr set);
+		internal static partial bool hb_set_allocation_successful (hb_set_t set);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_set_allocation_successful (IntPtr set);
+		internal static extern bool hb_set_allocation_successful (hb_set_t set);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_set_allocation_successful (IntPtr set);
+			internal delegate bool hb_set_allocation_successful (hb_set_t set);
 		}
 		private static Delegates.hb_set_allocation_successful hb_set_allocation_successful_delegate;
-		internal static bool hb_set_allocation_successful (IntPtr set) =>
+		internal static bool hb_set_allocation_successful (hb_set_t set) =>
 			(hb_set_allocation_successful_delegate ??= GetSymbol<Delegates.hb_set_allocation_successful> ("hb_set_allocation_successful")).Invoke (set);
 		#endif
 
@@ -96,18 +96,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_set_clear (IntPtr set);
+		internal static partial void hb_set_clear (hb_set_t set);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_set_clear (IntPtr set);
+		internal static extern void hb_set_clear (hb_set_t set);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_set_clear (IntPtr set);
+			internal delegate void hb_set_clear (hb_set_t set);
 		}
 		private static Delegates.hb_set_clear hb_set_clear_delegate;
-		internal static void hb_set_clear (IntPtr set) =>
+		internal static void hb_set_clear (hb_set_t set) =>
 			(hb_set_clear_delegate ??= GetSymbol<Delegates.hb_set_clear> ("hb_set_clear")).Invoke (set);
 		#endif
 
@@ -115,18 +115,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_set_copy (IntPtr set);
+		internal static partial hb_set_t hb_set_copy (hb_set_t set);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_set_copy (IntPtr set);
+		internal static extern hb_set_t hb_set_copy (hb_set_t set);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_set_copy (IntPtr set);
+			internal delegate hb_set_t hb_set_copy (hb_set_t set);
 		}
 		private static Delegates.hb_set_copy hb_set_copy_delegate;
-		internal static IntPtr hb_set_copy (IntPtr set) =>
+		internal static hb_set_t hb_set_copy (hb_set_t set) =>
 			(hb_set_copy_delegate ??= GetSymbol<Delegates.hb_set_copy> ("hb_set_copy")).Invoke (set);
 		#endif
 
@@ -134,18 +134,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_set_create ();
+		internal static partial hb_set_t hb_set_create ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_set_create ();
+		internal static extern hb_set_t hb_set_create ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_set_create ();
+			internal delegate hb_set_t hb_set_create ();
 		}
 		private static Delegates.hb_set_create hb_set_create_delegate;
-		internal static IntPtr hb_set_create () =>
+		internal static hb_set_t hb_set_create () =>
 			(hb_set_create_delegate ??= GetSymbol<Delegates.hb_set_create> ("hb_set_create")).Invoke ();
 		#endif
 
@@ -153,18 +153,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_set_del (IntPtr set, UInt32 codepoint);
+		internal static partial void hb_set_del (hb_set_t set, UInt32 codepoint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_set_del (IntPtr set, UInt32 codepoint);
+		internal static extern void hb_set_del (hb_set_t set, UInt32 codepoint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_set_del (IntPtr set, UInt32 codepoint);
+			internal delegate void hb_set_del (hb_set_t set, UInt32 codepoint);
 		}
 		private static Delegates.hb_set_del hb_set_del_delegate;
-		internal static void hb_set_del (IntPtr set, UInt32 codepoint) =>
+		internal static void hb_set_del (hb_set_t set, UInt32 codepoint) =>
 			(hb_set_del_delegate ??= GetSymbol<Delegates.hb_set_del> ("hb_set_del")).Invoke (set, codepoint);
 		#endif
 
@@ -172,18 +172,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_set_del_range (IntPtr set, UInt32 first, UInt32 last);
+		internal static partial void hb_set_del_range (hb_set_t set, UInt32 first, UInt32 last);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_set_del_range (IntPtr set, UInt32 first, UInt32 last);
+		internal static extern void hb_set_del_range (hb_set_t set, UInt32 first, UInt32 last);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_set_del_range (IntPtr set, UInt32 first, UInt32 last);
+			internal delegate void hb_set_del_range (hb_set_t set, UInt32 first, UInt32 last);
 		}
 		private static Delegates.hb_set_del_range hb_set_del_range_delegate;
-		internal static void hb_set_del_range (IntPtr set, UInt32 first, UInt32 last) =>
+		internal static void hb_set_del_range (hb_set_t set, UInt32 first, UInt32 last) =>
 			(hb_set_del_range_delegate ??= GetSymbol<Delegates.hb_set_del_range> ("hb_set_del_range")).Invoke (set, first, last);
 		#endif
 
@@ -191,18 +191,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_set_destroy (IntPtr set);
+		internal static partial void hb_set_destroy (hb_set_t set);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_set_destroy (IntPtr set);
+		internal static extern void hb_set_destroy (hb_set_t set);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_set_destroy (IntPtr set);
+			internal delegate void hb_set_destroy (hb_set_t set);
 		}
 		private static Delegates.hb_set_destroy hb_set_destroy_delegate;
-		internal static void hb_set_destroy (IntPtr set) =>
+		internal static void hb_set_destroy (hb_set_t set) =>
 			(hb_set_destroy_delegate ??= GetSymbol<Delegates.hb_set_destroy> ("hb_set_destroy")).Invoke (set);
 		#endif
 
@@ -210,18 +210,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_set_get_empty ();
+		internal static partial hb_set_t hb_set_get_empty ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_set_get_empty ();
+		internal static extern hb_set_t hb_set_get_empty ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_set_get_empty ();
+			internal delegate hb_set_t hb_set_get_empty ();
 		}
 		private static Delegates.hb_set_get_empty hb_set_get_empty_delegate;
-		internal static IntPtr hb_set_get_empty () =>
+		internal static hb_set_t hb_set_get_empty () =>
 			(hb_set_get_empty_delegate ??= GetSymbol<Delegates.hb_set_get_empty> ("hb_set_get_empty")).Invoke ();
 		#endif
 
@@ -229,18 +229,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_set_get_max (IntPtr set);
+		internal static partial UInt32 hb_set_get_max (hb_set_t set);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_set_get_max (IntPtr set);
+		internal static extern UInt32 hb_set_get_max (hb_set_t set);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_set_get_max (IntPtr set);
+			internal delegate UInt32 hb_set_get_max (hb_set_t set);
 		}
 		private static Delegates.hb_set_get_max hb_set_get_max_delegate;
-		internal static UInt32 hb_set_get_max (IntPtr set) =>
+		internal static UInt32 hb_set_get_max (hb_set_t set) =>
 			(hb_set_get_max_delegate ??= GetSymbol<Delegates.hb_set_get_max> ("hb_set_get_max")).Invoke (set);
 		#endif
 
@@ -248,18 +248,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_set_get_min (IntPtr set);
+		internal static partial UInt32 hb_set_get_min (hb_set_t set);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_set_get_min (IntPtr set);
+		internal static extern UInt32 hb_set_get_min (hb_set_t set);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_set_get_min (IntPtr set);
+			internal delegate UInt32 hb_set_get_min (hb_set_t set);
 		}
 		private static Delegates.hb_set_get_min hb_set_get_min_delegate;
-		internal static UInt32 hb_set_get_min (IntPtr set) =>
+		internal static UInt32 hb_set_get_min (hb_set_t set) =>
 			(hb_set_get_min_delegate ??= GetSymbol<Delegates.hb_set_get_min> ("hb_set_get_min")).Invoke (set);
 		#endif
 
@@ -267,18 +267,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_set_get_population (IntPtr set);
+		internal static partial UInt32 hb_set_get_population (hb_set_t set);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_set_get_population (IntPtr set);
+		internal static extern UInt32 hb_set_get_population (hb_set_t set);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_set_get_population (IntPtr set);
+			internal delegate UInt32 hb_set_get_population (hb_set_t set);
 		}
 		private static Delegates.hb_set_get_population hb_set_get_population_delegate;
-		internal static UInt32 hb_set_get_population (IntPtr set) =>
+		internal static UInt32 hb_set_get_population (hb_set_t set) =>
 			(hb_set_get_population_delegate ??= GetSymbol<Delegates.hb_set_get_population> ("hb_set_get_population")).Invoke (set);
 		#endif
 
@@ -287,20 +287,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_set_has (IntPtr set, UInt32 codepoint);
+		internal static partial bool hb_set_has (hb_set_t set, UInt32 codepoint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_set_has (IntPtr set, UInt32 codepoint);
+		internal static extern bool hb_set_has (hb_set_t set, UInt32 codepoint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_set_has (IntPtr set, UInt32 codepoint);
+			internal delegate bool hb_set_has (hb_set_t set, UInt32 codepoint);
 		}
 		private static Delegates.hb_set_has hb_set_has_delegate;
-		internal static bool hb_set_has (IntPtr set, UInt32 codepoint) =>
+		internal static bool hb_set_has (hb_set_t set, UInt32 codepoint) =>
 			(hb_set_has_delegate ??= GetSymbol<Delegates.hb_set_has> ("hb_set_has")).Invoke (set, codepoint);
 		#endif
 
@@ -308,18 +308,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_set_hash (IntPtr set);
+		internal static partial UInt32 hb_set_hash (hb_set_t set);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_set_hash (IntPtr set);
+		internal static extern UInt32 hb_set_hash (hb_set_t set);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_set_hash (IntPtr set);
+			internal delegate UInt32 hb_set_hash (hb_set_t set);
 		}
 		private static Delegates.hb_set_hash hb_set_hash_delegate;
-		internal static UInt32 hb_set_hash (IntPtr set) =>
+		internal static UInt32 hb_set_hash (hb_set_t set) =>
 			(hb_set_hash_delegate ??= GetSymbol<Delegates.hb_set_hash> ("hb_set_hash")).Invoke (set);
 		#endif
 
@@ -327,18 +327,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_set_intersect (IntPtr set, IntPtr other);
+		internal static partial void hb_set_intersect (hb_set_t set, hb_set_t other);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_set_intersect (IntPtr set, IntPtr other);
+		internal static extern void hb_set_intersect (hb_set_t set, hb_set_t other);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_set_intersect (IntPtr set, IntPtr other);
+			internal delegate void hb_set_intersect (hb_set_t set, hb_set_t other);
 		}
 		private static Delegates.hb_set_intersect hb_set_intersect_delegate;
-		internal static void hb_set_intersect (IntPtr set, IntPtr other) =>
+		internal static void hb_set_intersect (hb_set_t set, hb_set_t other) =>
 			(hb_set_intersect_delegate ??= GetSymbol<Delegates.hb_set_intersect> ("hb_set_intersect")).Invoke (set, other);
 		#endif
 
@@ -346,18 +346,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_set_invert (IntPtr set);
+		internal static partial void hb_set_invert (hb_set_t set);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_set_invert (IntPtr set);
+		internal static extern void hb_set_invert (hb_set_t set);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_set_invert (IntPtr set);
+			internal delegate void hb_set_invert (hb_set_t set);
 		}
 		private static Delegates.hb_set_invert hb_set_invert_delegate;
-		internal static void hb_set_invert (IntPtr set) =>
+		internal static void hb_set_invert (hb_set_t set) =>
 			(hb_set_invert_delegate ??= GetSymbol<Delegates.hb_set_invert> ("hb_set_invert")).Invoke (set);
 		#endif
 
@@ -366,20 +366,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_set_is_empty (IntPtr set);
+		internal static partial bool hb_set_is_empty (hb_set_t set);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_set_is_empty (IntPtr set);
+		internal static extern bool hb_set_is_empty (hb_set_t set);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_set_is_empty (IntPtr set);
+			internal delegate bool hb_set_is_empty (hb_set_t set);
 		}
 		private static Delegates.hb_set_is_empty hb_set_is_empty_delegate;
-		internal static bool hb_set_is_empty (IntPtr set) =>
+		internal static bool hb_set_is_empty (hb_set_t set) =>
 			(hb_set_is_empty_delegate ??= GetSymbol<Delegates.hb_set_is_empty> ("hb_set_is_empty")).Invoke (set);
 		#endif
 
@@ -388,20 +388,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_set_is_equal (IntPtr set, IntPtr other);
+		internal static partial bool hb_set_is_equal (hb_set_t set, hb_set_t other);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_set_is_equal (IntPtr set, IntPtr other);
+		internal static extern bool hb_set_is_equal (hb_set_t set, hb_set_t other);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_set_is_equal (IntPtr set, IntPtr other);
+			internal delegate bool hb_set_is_equal (hb_set_t set, hb_set_t other);
 		}
 		private static Delegates.hb_set_is_equal hb_set_is_equal_delegate;
-		internal static bool hb_set_is_equal (IntPtr set, IntPtr other) =>
+		internal static bool hb_set_is_equal (hb_set_t set, hb_set_t other) =>
 			(hb_set_is_equal_delegate ??= GetSymbol<Delegates.hb_set_is_equal> ("hb_set_is_equal")).Invoke (set, other);
 		#endif
 
@@ -410,20 +410,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_set_is_inverted (IntPtr set);
+		internal static partial bool hb_set_is_inverted (hb_set_t set);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_set_is_inverted (IntPtr set);
+		internal static extern bool hb_set_is_inverted (hb_set_t set);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_set_is_inverted (IntPtr set);
+			internal delegate bool hb_set_is_inverted (hb_set_t set);
 		}
 		private static Delegates.hb_set_is_inverted hb_set_is_inverted_delegate;
-		internal static bool hb_set_is_inverted (IntPtr set) =>
+		internal static bool hb_set_is_inverted (hb_set_t set) =>
 			(hb_set_is_inverted_delegate ??= GetSymbol<Delegates.hb_set_is_inverted> ("hb_set_is_inverted")).Invoke (set);
 		#endif
 
@@ -432,20 +432,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_set_is_subset (IntPtr set, IntPtr larger_set);
+		internal static partial bool hb_set_is_subset (hb_set_t set, hb_set_t larger_set);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_set_is_subset (IntPtr set, IntPtr larger_set);
+		internal static extern bool hb_set_is_subset (hb_set_t set, hb_set_t larger_set);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_set_is_subset (IntPtr set, IntPtr larger_set);
+			internal delegate bool hb_set_is_subset (hb_set_t set, hb_set_t larger_set);
 		}
 		private static Delegates.hb_set_is_subset hb_set_is_subset_delegate;
-		internal static bool hb_set_is_subset (IntPtr set, IntPtr larger_set) =>
+		internal static bool hb_set_is_subset (hb_set_t set, hb_set_t larger_set) =>
 			(hb_set_is_subset_delegate ??= GetSymbol<Delegates.hb_set_is_subset> ("hb_set_is_subset")).Invoke (set, larger_set);
 		#endif
 
@@ -454,20 +454,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_set_next (IntPtr set, UInt32* codepoint);
+		internal static partial bool hb_set_next (hb_set_t set, UInt32* codepoint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_set_next (IntPtr set, UInt32* codepoint);
+		internal static extern bool hb_set_next (hb_set_t set, UInt32* codepoint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_set_next (IntPtr set, UInt32* codepoint);
+			internal delegate bool hb_set_next (hb_set_t set, UInt32* codepoint);
 		}
 		private static Delegates.hb_set_next hb_set_next_delegate;
-		internal static bool hb_set_next (IntPtr set, UInt32* codepoint) =>
+		internal static bool hb_set_next (hb_set_t set, UInt32* codepoint) =>
 			(hb_set_next_delegate ??= GetSymbol<Delegates.hb_set_next> ("hb_set_next")).Invoke (set, codepoint);
 		#endif
 
@@ -475,18 +475,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_set_next_many (IntPtr set, UInt32 codepoint, UInt32* @out, UInt32 size);
+		internal static partial UInt32 hb_set_next_many (hb_set_t set, UInt32 codepoint, UInt32* @out, UInt32 size);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_set_next_many (IntPtr set, UInt32 codepoint, UInt32* @out, UInt32 size);
+		internal static extern UInt32 hb_set_next_many (hb_set_t set, UInt32 codepoint, UInt32* @out, UInt32 size);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_set_next_many (IntPtr set, UInt32 codepoint, UInt32* @out, UInt32 size);
+			internal delegate UInt32 hb_set_next_many (hb_set_t set, UInt32 codepoint, UInt32* @out, UInt32 size);
 		}
 		private static Delegates.hb_set_next_many hb_set_next_many_delegate;
-		internal static UInt32 hb_set_next_many (IntPtr set, UInt32 codepoint, UInt32* @out, UInt32 size) =>
+		internal static UInt32 hb_set_next_many (hb_set_t set, UInt32 codepoint, UInt32* @out, UInt32 size) =>
 			(hb_set_next_many_delegate ??= GetSymbol<Delegates.hb_set_next_many> ("hb_set_next_many")).Invoke (set, codepoint, @out, size);
 		#endif
 
@@ -495,20 +495,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_set_next_range (IntPtr set, UInt32* first, UInt32* last);
+		internal static partial bool hb_set_next_range (hb_set_t set, UInt32* first, UInt32* last);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_set_next_range (IntPtr set, UInt32* first, UInt32* last);
+		internal static extern bool hb_set_next_range (hb_set_t set, UInt32* first, UInt32* last);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_set_next_range (IntPtr set, UInt32* first, UInt32* last);
+			internal delegate bool hb_set_next_range (hb_set_t set, UInt32* first, UInt32* last);
 		}
 		private static Delegates.hb_set_next_range hb_set_next_range_delegate;
-		internal static bool hb_set_next_range (IntPtr set, UInt32* first, UInt32* last) =>
+		internal static bool hb_set_next_range (hb_set_t set, UInt32* first, UInt32* last) =>
 			(hb_set_next_range_delegate ??= GetSymbol<Delegates.hb_set_next_range> ("hb_set_next_range")).Invoke (set, first, last);
 		#endif
 
@@ -517,20 +517,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_set_previous (IntPtr set, UInt32* codepoint);
+		internal static partial bool hb_set_previous (hb_set_t set, UInt32* codepoint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_set_previous (IntPtr set, UInt32* codepoint);
+		internal static extern bool hb_set_previous (hb_set_t set, UInt32* codepoint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_set_previous (IntPtr set, UInt32* codepoint);
+			internal delegate bool hb_set_previous (hb_set_t set, UInt32* codepoint);
 		}
 		private static Delegates.hb_set_previous hb_set_previous_delegate;
-		internal static bool hb_set_previous (IntPtr set, UInt32* codepoint) =>
+		internal static bool hb_set_previous (hb_set_t set, UInt32* codepoint) =>
 			(hb_set_previous_delegate ??= GetSymbol<Delegates.hb_set_previous> ("hb_set_previous")).Invoke (set, codepoint);
 		#endif
 
@@ -539,20 +539,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_set_previous_range (IntPtr set, UInt32* first, UInt32* last);
+		internal static partial bool hb_set_previous_range (hb_set_t set, UInt32* first, UInt32* last);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_set_previous_range (IntPtr set, UInt32* first, UInt32* last);
+		internal static extern bool hb_set_previous_range (hb_set_t set, UInt32* first, UInt32* last);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_set_previous_range (IntPtr set, UInt32* first, UInt32* last);
+			internal delegate bool hb_set_previous_range (hb_set_t set, UInt32* first, UInt32* last);
 		}
 		private static Delegates.hb_set_previous_range hb_set_previous_range_delegate;
-		internal static bool hb_set_previous_range (IntPtr set, UInt32* first, UInt32* last) =>
+		internal static bool hb_set_previous_range (hb_set_t set, UInt32* first, UInt32* last) =>
 			(hb_set_previous_range_delegate ??= GetSymbol<Delegates.hb_set_previous_range> ("hb_set_previous_range")).Invoke (set, first, last);
 		#endif
 
@@ -560,18 +560,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_set_reference (IntPtr set);
+		internal static partial hb_set_t hb_set_reference (hb_set_t set);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_set_reference (IntPtr set);
+		internal static extern hb_set_t hb_set_reference (hb_set_t set);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_set_reference (IntPtr set);
+			internal delegate hb_set_t hb_set_reference (hb_set_t set);
 		}
 		private static Delegates.hb_set_reference hb_set_reference_delegate;
-		internal static IntPtr hb_set_reference (IntPtr set) =>
+		internal static hb_set_t hb_set_reference (hb_set_t set) =>
 			(hb_set_reference_delegate ??= GetSymbol<Delegates.hb_set_reference> ("hb_set_reference")).Invoke (set);
 		#endif
 
@@ -579,18 +579,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_set_set (IntPtr set, IntPtr other);
+		internal static partial void hb_set_set (hb_set_t set, hb_set_t other);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_set_set (IntPtr set, IntPtr other);
+		internal static extern void hb_set_set (hb_set_t set, hb_set_t other);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_set_set (IntPtr set, IntPtr other);
+			internal delegate void hb_set_set (hb_set_t set, hb_set_t other);
 		}
 		private static Delegates.hb_set_set hb_set_set_delegate;
-		internal static void hb_set_set (IntPtr set, IntPtr other) =>
+		internal static void hb_set_set (hb_set_t set, hb_set_t other) =>
 			(hb_set_set_delegate ??= GetSymbol<Delegates.hb_set_set> ("hb_set_set")).Invoke (set, other);
 		#endif
 
@@ -598,18 +598,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_set_subtract (IntPtr set, IntPtr other);
+		internal static partial void hb_set_subtract (hb_set_t set, hb_set_t other);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_set_subtract (IntPtr set, IntPtr other);
+		internal static extern void hb_set_subtract (hb_set_t set, hb_set_t other);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_set_subtract (IntPtr set, IntPtr other);
+			internal delegate void hb_set_subtract (hb_set_t set, hb_set_t other);
 		}
 		private static Delegates.hb_set_subtract hb_set_subtract_delegate;
-		internal static void hb_set_subtract (IntPtr set, IntPtr other) =>
+		internal static void hb_set_subtract (hb_set_t set, hb_set_t other) =>
 			(hb_set_subtract_delegate ??= GetSymbol<Delegates.hb_set_subtract> ("hb_set_subtract")).Invoke (set, other);
 		#endif
 
@@ -617,18 +617,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_set_symmetric_difference (IntPtr set, IntPtr other);
+		internal static partial void hb_set_symmetric_difference (hb_set_t set, hb_set_t other);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_set_symmetric_difference (IntPtr set, IntPtr other);
+		internal static extern void hb_set_symmetric_difference (hb_set_t set, hb_set_t other);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_set_symmetric_difference (IntPtr set, IntPtr other);
+			internal delegate void hb_set_symmetric_difference (hb_set_t set, hb_set_t other);
 		}
 		private static Delegates.hb_set_symmetric_difference hb_set_symmetric_difference_delegate;
-		internal static void hb_set_symmetric_difference (IntPtr set, IntPtr other) =>
+		internal static void hb_set_symmetric_difference (hb_set_t set, hb_set_t other) =>
 			(hb_set_symmetric_difference_delegate ??= GetSymbol<Delegates.hb_set_symmetric_difference> ("hb_set_symmetric_difference")).Invoke (set, other);
 		#endif
 
@@ -636,18 +636,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_set_union (IntPtr set, IntPtr other);
+		internal static partial void hb_set_union (hb_set_t set, hb_set_t other);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_set_union (IntPtr set, IntPtr other);
+		internal static extern void hb_set_union (hb_set_t set, hb_set_t other);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_set_union (IntPtr set, IntPtr other);
+			internal delegate void hb_set_union (hb_set_t set, hb_set_t other);
 		}
 		private static Delegates.hb_set_union hb_set_union_delegate;
-		internal static void hb_set_union (IntPtr set, IntPtr other) =>
+		internal static void hb_set_union (hb_set_t set, hb_set_t other) =>
 			(hb_set_union_delegate ??= GetSymbol<Delegates.hb_set_union> ("hb_set_union")).Invoke (set, other);
 		#endif
 

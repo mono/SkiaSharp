@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_region_cliperator_delete (IntPtr iter);
+		internal static partial void sk_region_cliperator_delete (sk_region_cliperator_t iter);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_region_cliperator_delete (IntPtr iter);
+		internal static extern void sk_region_cliperator_delete (sk_region_cliperator_t iter);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_region_cliperator_delete (IntPtr iter);
+			internal delegate void sk_region_cliperator_delete (sk_region_cliperator_t iter);
 		}
 		private static Delegates.sk_region_cliperator_delete sk_region_cliperator_delete_delegate;
-		internal static void sk_region_cliperator_delete (IntPtr iter) =>
+		internal static void sk_region_cliperator_delete (sk_region_cliperator_t iter) =>
 			(sk_region_cliperator_delete_delegate ??= GetSymbol<Delegates.sk_region_cliperator_delete> ("sk_region_cliperator_delete")).Invoke (iter);
 		#endif
 
@@ -37,20 +37,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_cliperator_done (IntPtr iter);
+		internal static partial bool sk_region_cliperator_done (sk_region_cliperator_t iter);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_cliperator_done (IntPtr iter);
+		internal static extern bool sk_region_cliperator_done (sk_region_cliperator_t iter);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_cliperator_done (IntPtr iter);
+			internal delegate bool sk_region_cliperator_done (sk_region_cliperator_t iter);
 		}
 		private static Delegates.sk_region_cliperator_done sk_region_cliperator_done_delegate;
-		internal static bool sk_region_cliperator_done (IntPtr iter) =>
+		internal static bool sk_region_cliperator_done (sk_region_cliperator_t iter) =>
 			(sk_region_cliperator_done_delegate ??= GetSymbol<Delegates.sk_region_cliperator_done> ("sk_region_cliperator_done")).Invoke (iter);
 		#endif
 
@@ -58,18 +58,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_region_cliperator_new (IntPtr region, SKRectI* clip);
+		internal static partial sk_region_cliperator_t sk_region_cliperator_new (sk_region_t region, SKRectI* clip);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_region_cliperator_new (IntPtr region, SKRectI* clip);
+		internal static extern sk_region_cliperator_t sk_region_cliperator_new (sk_region_t region, SKRectI* clip);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_region_cliperator_new (IntPtr region, SKRectI* clip);
+			internal delegate sk_region_cliperator_t sk_region_cliperator_new (sk_region_t region, SKRectI* clip);
 		}
 		private static Delegates.sk_region_cliperator_new sk_region_cliperator_new_delegate;
-		internal static IntPtr sk_region_cliperator_new (IntPtr region, SKRectI* clip) =>
+		internal static sk_region_cliperator_t sk_region_cliperator_new (sk_region_t region, SKRectI* clip) =>
 			(sk_region_cliperator_new_delegate ??= GetSymbol<Delegates.sk_region_cliperator_new> ("sk_region_cliperator_new")).Invoke (region, clip);
 		#endif
 
@@ -77,18 +77,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_region_cliperator_next (IntPtr iter);
+		internal static partial void sk_region_cliperator_next (sk_region_cliperator_t iter);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_region_cliperator_next (IntPtr iter);
+		internal static extern void sk_region_cliperator_next (sk_region_cliperator_t iter);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_region_cliperator_next (IntPtr iter);
+			internal delegate void sk_region_cliperator_next (sk_region_cliperator_t iter);
 		}
 		private static Delegates.sk_region_cliperator_next sk_region_cliperator_next_delegate;
-		internal static void sk_region_cliperator_next (IntPtr iter) =>
+		internal static void sk_region_cliperator_next (sk_region_cliperator_t iter) =>
 			(sk_region_cliperator_next_delegate ??= GetSymbol<Delegates.sk_region_cliperator_next> ("sk_region_cliperator_next")).Invoke (iter);
 		#endif
 
@@ -96,18 +96,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_region_cliperator_rect (IntPtr iter, SKRectI* rect);
+		internal static partial void sk_region_cliperator_rect (sk_region_cliperator_t iter, SKRectI* rect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_region_cliperator_rect (IntPtr iter, SKRectI* rect);
+		internal static extern void sk_region_cliperator_rect (sk_region_cliperator_t iter, SKRectI* rect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_region_cliperator_rect (IntPtr iter, SKRectI* rect);
+			internal delegate void sk_region_cliperator_rect (sk_region_cliperator_t iter, SKRectI* rect);
 		}
 		private static Delegates.sk_region_cliperator_rect sk_region_cliperator_rect_delegate;
-		internal static void sk_region_cliperator_rect (IntPtr iter, SKRectI* rect) =>
+		internal static void sk_region_cliperator_rect (sk_region_cliperator_t iter, SKRectI* rect) =>
 			(sk_region_cliperator_rect_delegate ??= GetSymbol<Delegates.sk_region_cliperator_rect> ("sk_region_cliperator_rect")).Invoke (iter, rect);
 		#endif
 
@@ -116,20 +116,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_contains (IntPtr r, IntPtr region);
+		internal static partial bool sk_region_contains (sk_region_t r, sk_region_t region);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_contains (IntPtr r, IntPtr region);
+		internal static extern bool sk_region_contains (sk_region_t r, sk_region_t region);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_contains (IntPtr r, IntPtr region);
+			internal delegate bool sk_region_contains (sk_region_t r, sk_region_t region);
 		}
 		private static Delegates.sk_region_contains sk_region_contains_delegate;
-		internal static bool sk_region_contains (IntPtr r, IntPtr region) =>
+		internal static bool sk_region_contains (sk_region_t r, sk_region_t region) =>
 			(sk_region_contains_delegate ??= GetSymbol<Delegates.sk_region_contains> ("sk_region_contains")).Invoke (r, region);
 		#endif
 
@@ -138,20 +138,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_contains_point (IntPtr r, Int32 x, Int32 y);
+		internal static partial bool sk_region_contains_point (sk_region_t r, Int32 x, Int32 y);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_contains_point (IntPtr r, Int32 x, Int32 y);
+		internal static extern bool sk_region_contains_point (sk_region_t r, Int32 x, Int32 y);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_contains_point (IntPtr r, Int32 x, Int32 y);
+			internal delegate bool sk_region_contains_point (sk_region_t r, Int32 x, Int32 y);
 		}
 		private static Delegates.sk_region_contains_point sk_region_contains_point_delegate;
-		internal static bool sk_region_contains_point (IntPtr r, Int32 x, Int32 y) =>
+		internal static bool sk_region_contains_point (sk_region_t r, Int32 x, Int32 y) =>
 			(sk_region_contains_point_delegate ??= GetSymbol<Delegates.sk_region_contains_point> ("sk_region_contains_point")).Invoke (r, x, y);
 		#endif
 
@@ -160,20 +160,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_contains_rect (IntPtr r, SKRectI* rect);
+		internal static partial bool sk_region_contains_rect (sk_region_t r, SKRectI* rect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_contains_rect (IntPtr r, SKRectI* rect);
+		internal static extern bool sk_region_contains_rect (sk_region_t r, SKRectI* rect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_contains_rect (IntPtr r, SKRectI* rect);
+			internal delegate bool sk_region_contains_rect (sk_region_t r, SKRectI* rect);
 		}
 		private static Delegates.sk_region_contains_rect sk_region_contains_rect_delegate;
-		internal static bool sk_region_contains_rect (IntPtr r, SKRectI* rect) =>
+		internal static bool sk_region_contains_rect (sk_region_t r, SKRectI* rect) =>
 			(sk_region_contains_rect_delegate ??= GetSymbol<Delegates.sk_region_contains_rect> ("sk_region_contains_rect")).Invoke (r, rect);
 		#endif
 
@@ -181,18 +181,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_region_delete (IntPtr r);
+		internal static partial void sk_region_delete (sk_region_t r);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_region_delete (IntPtr r);
+		internal static extern void sk_region_delete (sk_region_t r);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_region_delete (IntPtr r);
+			internal delegate void sk_region_delete (sk_region_t r);
 		}
 		private static Delegates.sk_region_delete sk_region_delete_delegate;
-		internal static void sk_region_delete (IntPtr r) =>
+		internal static void sk_region_delete (sk_region_t r) =>
 			(sk_region_delete_delegate ??= GetSymbol<Delegates.sk_region_delete> ("sk_region_delete")).Invoke (r);
 		#endif
 
@@ -201,20 +201,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_get_boundary_path (IntPtr r, IntPtr path);
+		internal static partial bool sk_region_get_boundary_path (sk_region_t r, sk_path_t path);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_get_boundary_path (IntPtr r, IntPtr path);
+		internal static extern bool sk_region_get_boundary_path (sk_region_t r, sk_path_t path);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_get_boundary_path (IntPtr r, IntPtr path);
+			internal delegate bool sk_region_get_boundary_path (sk_region_t r, sk_path_t path);
 		}
 		private static Delegates.sk_region_get_boundary_path sk_region_get_boundary_path_delegate;
-		internal static bool sk_region_get_boundary_path (IntPtr r, IntPtr path) =>
+		internal static bool sk_region_get_boundary_path (sk_region_t r, sk_path_t path) =>
 			(sk_region_get_boundary_path_delegate ??= GetSymbol<Delegates.sk_region_get_boundary_path> ("sk_region_get_boundary_path")).Invoke (r, path);
 		#endif
 
@@ -222,18 +222,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_region_get_bounds (IntPtr r, SKRectI* rect);
+		internal static partial void sk_region_get_bounds (sk_region_t r, SKRectI* rect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_region_get_bounds (IntPtr r, SKRectI* rect);
+		internal static extern void sk_region_get_bounds (sk_region_t r, SKRectI* rect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_region_get_bounds (IntPtr r, SKRectI* rect);
+			internal delegate void sk_region_get_bounds (sk_region_t r, SKRectI* rect);
 		}
 		private static Delegates.sk_region_get_bounds sk_region_get_bounds_delegate;
-		internal static void sk_region_get_bounds (IntPtr r, SKRectI* rect) =>
+		internal static void sk_region_get_bounds (sk_region_t r, SKRectI* rect) =>
 			(sk_region_get_bounds_delegate ??= GetSymbol<Delegates.sk_region_get_bounds> ("sk_region_get_bounds")).Invoke (r, rect);
 		#endif
 
@@ -242,20 +242,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_intersects (IntPtr r, IntPtr src);
+		internal static partial bool sk_region_intersects (sk_region_t r, sk_region_t src);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_intersects (IntPtr r, IntPtr src);
+		internal static extern bool sk_region_intersects (sk_region_t r, sk_region_t src);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_intersects (IntPtr r, IntPtr src);
+			internal delegate bool sk_region_intersects (sk_region_t r, sk_region_t src);
 		}
 		private static Delegates.sk_region_intersects sk_region_intersects_delegate;
-		internal static bool sk_region_intersects (IntPtr r, IntPtr src) =>
+		internal static bool sk_region_intersects (sk_region_t r, sk_region_t src) =>
 			(sk_region_intersects_delegate ??= GetSymbol<Delegates.sk_region_intersects> ("sk_region_intersects")).Invoke (r, src);
 		#endif
 
@@ -264,20 +264,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_intersects_rect (IntPtr r, SKRectI* rect);
+		internal static partial bool sk_region_intersects_rect (sk_region_t r, SKRectI* rect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_intersects_rect (IntPtr r, SKRectI* rect);
+		internal static extern bool sk_region_intersects_rect (sk_region_t r, SKRectI* rect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_intersects_rect (IntPtr r, SKRectI* rect);
+			internal delegate bool sk_region_intersects_rect (sk_region_t r, SKRectI* rect);
 		}
 		private static Delegates.sk_region_intersects_rect sk_region_intersects_rect_delegate;
-		internal static bool sk_region_intersects_rect (IntPtr r, SKRectI* rect) =>
+		internal static bool sk_region_intersects_rect (sk_region_t r, SKRectI* rect) =>
 			(sk_region_intersects_rect_delegate ??= GetSymbol<Delegates.sk_region_intersects_rect> ("sk_region_intersects_rect")).Invoke (r, rect);
 		#endif
 
@@ -286,20 +286,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_is_complex (IntPtr r);
+		internal static partial bool sk_region_is_complex (sk_region_t r);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_is_complex (IntPtr r);
+		internal static extern bool sk_region_is_complex (sk_region_t r);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_is_complex (IntPtr r);
+			internal delegate bool sk_region_is_complex (sk_region_t r);
 		}
 		private static Delegates.sk_region_is_complex sk_region_is_complex_delegate;
-		internal static bool sk_region_is_complex (IntPtr r) =>
+		internal static bool sk_region_is_complex (sk_region_t r) =>
 			(sk_region_is_complex_delegate ??= GetSymbol<Delegates.sk_region_is_complex> ("sk_region_is_complex")).Invoke (r);
 		#endif
 
@@ -308,20 +308,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_is_empty (IntPtr r);
+		internal static partial bool sk_region_is_empty (sk_region_t r);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_is_empty (IntPtr r);
+		internal static extern bool sk_region_is_empty (sk_region_t r);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_is_empty (IntPtr r);
+			internal delegate bool sk_region_is_empty (sk_region_t r);
 		}
 		private static Delegates.sk_region_is_empty sk_region_is_empty_delegate;
-		internal static bool sk_region_is_empty (IntPtr r) =>
+		internal static bool sk_region_is_empty (sk_region_t r) =>
 			(sk_region_is_empty_delegate ??= GetSymbol<Delegates.sk_region_is_empty> ("sk_region_is_empty")).Invoke (r);
 		#endif
 
@@ -330,20 +330,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_is_rect (IntPtr r);
+		internal static partial bool sk_region_is_rect (sk_region_t r);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_is_rect (IntPtr r);
+		internal static extern bool sk_region_is_rect (sk_region_t r);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_is_rect (IntPtr r);
+			internal delegate bool sk_region_is_rect (sk_region_t r);
 		}
 		private static Delegates.sk_region_is_rect sk_region_is_rect_delegate;
-		internal static bool sk_region_is_rect (IntPtr r) =>
+		internal static bool sk_region_is_rect (sk_region_t r) =>
 			(sk_region_is_rect_delegate ??= GetSymbol<Delegates.sk_region_is_rect> ("sk_region_is_rect")).Invoke (r);
 		#endif
 
@@ -351,18 +351,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_region_iterator_delete (IntPtr iter);
+		internal static partial void sk_region_iterator_delete (sk_region_iterator_t iter);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_region_iterator_delete (IntPtr iter);
+		internal static extern void sk_region_iterator_delete (sk_region_iterator_t iter);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_region_iterator_delete (IntPtr iter);
+			internal delegate void sk_region_iterator_delete (sk_region_iterator_t iter);
 		}
 		private static Delegates.sk_region_iterator_delete sk_region_iterator_delete_delegate;
-		internal static void sk_region_iterator_delete (IntPtr iter) =>
+		internal static void sk_region_iterator_delete (sk_region_iterator_t iter) =>
 			(sk_region_iterator_delete_delegate ??= GetSymbol<Delegates.sk_region_iterator_delete> ("sk_region_iterator_delete")).Invoke (iter);
 		#endif
 
@@ -371,20 +371,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_iterator_done (IntPtr iter);
+		internal static partial bool sk_region_iterator_done (sk_region_iterator_t iter);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_iterator_done (IntPtr iter);
+		internal static extern bool sk_region_iterator_done (sk_region_iterator_t iter);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_iterator_done (IntPtr iter);
+			internal delegate bool sk_region_iterator_done (sk_region_iterator_t iter);
 		}
 		private static Delegates.sk_region_iterator_done sk_region_iterator_done_delegate;
-		internal static bool sk_region_iterator_done (IntPtr iter) =>
+		internal static bool sk_region_iterator_done (sk_region_iterator_t iter) =>
 			(sk_region_iterator_done_delegate ??= GetSymbol<Delegates.sk_region_iterator_done> ("sk_region_iterator_done")).Invoke (iter);
 		#endif
 
@@ -392,18 +392,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_region_iterator_new (IntPtr region);
+		internal static partial sk_region_iterator_t sk_region_iterator_new (sk_region_t region);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_region_iterator_new (IntPtr region);
+		internal static extern sk_region_iterator_t sk_region_iterator_new (sk_region_t region);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_region_iterator_new (IntPtr region);
+			internal delegate sk_region_iterator_t sk_region_iterator_new (sk_region_t region);
 		}
 		private static Delegates.sk_region_iterator_new sk_region_iterator_new_delegate;
-		internal static IntPtr sk_region_iterator_new (IntPtr region) =>
+		internal static sk_region_iterator_t sk_region_iterator_new (sk_region_t region) =>
 			(sk_region_iterator_new_delegate ??= GetSymbol<Delegates.sk_region_iterator_new> ("sk_region_iterator_new")).Invoke (region);
 		#endif
 
@@ -411,18 +411,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_region_iterator_next (IntPtr iter);
+		internal static partial void sk_region_iterator_next (sk_region_iterator_t iter);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_region_iterator_next (IntPtr iter);
+		internal static extern void sk_region_iterator_next (sk_region_iterator_t iter);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_region_iterator_next (IntPtr iter);
+			internal delegate void sk_region_iterator_next (sk_region_iterator_t iter);
 		}
 		private static Delegates.sk_region_iterator_next sk_region_iterator_next_delegate;
-		internal static void sk_region_iterator_next (IntPtr iter) =>
+		internal static void sk_region_iterator_next (sk_region_iterator_t iter) =>
 			(sk_region_iterator_next_delegate ??= GetSymbol<Delegates.sk_region_iterator_next> ("sk_region_iterator_next")).Invoke (iter);
 		#endif
 
@@ -430,18 +430,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_region_iterator_rect (IntPtr iter, SKRectI* rect);
+		internal static partial void sk_region_iterator_rect (sk_region_iterator_t iter, SKRectI* rect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_region_iterator_rect (IntPtr iter, SKRectI* rect);
+		internal static extern void sk_region_iterator_rect (sk_region_iterator_t iter, SKRectI* rect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_region_iterator_rect (IntPtr iter, SKRectI* rect);
+			internal delegate void sk_region_iterator_rect (sk_region_iterator_t iter, SKRectI* rect);
 		}
 		private static Delegates.sk_region_iterator_rect sk_region_iterator_rect_delegate;
-		internal static void sk_region_iterator_rect (IntPtr iter, SKRectI* rect) =>
+		internal static void sk_region_iterator_rect (sk_region_iterator_t iter, SKRectI* rect) =>
 			(sk_region_iterator_rect_delegate ??= GetSymbol<Delegates.sk_region_iterator_rect> ("sk_region_iterator_rect")).Invoke (iter, rect);
 		#endif
 
@@ -450,20 +450,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_iterator_rewind (IntPtr iter);
+		internal static partial bool sk_region_iterator_rewind (sk_region_iterator_t iter);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_iterator_rewind (IntPtr iter);
+		internal static extern bool sk_region_iterator_rewind (sk_region_iterator_t iter);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_iterator_rewind (IntPtr iter);
+			internal delegate bool sk_region_iterator_rewind (sk_region_iterator_t iter);
 		}
 		private static Delegates.sk_region_iterator_rewind sk_region_iterator_rewind_delegate;
-		internal static bool sk_region_iterator_rewind (IntPtr iter) =>
+		internal static bool sk_region_iterator_rewind (sk_region_iterator_t iter) =>
 			(sk_region_iterator_rewind_delegate ??= GetSymbol<Delegates.sk_region_iterator_rewind> ("sk_region_iterator_rewind")).Invoke (iter);
 		#endif
 
@@ -471,18 +471,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_region_new ();
+		internal static partial sk_region_t sk_region_new ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_region_new ();
+		internal static extern sk_region_t sk_region_new ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_region_new ();
+			internal delegate sk_region_t sk_region_new ();
 		}
 		private static Delegates.sk_region_new sk_region_new_delegate;
-		internal static IntPtr sk_region_new () =>
+		internal static sk_region_t sk_region_new () =>
 			(sk_region_new_delegate ??= GetSymbol<Delegates.sk_region_new> ("sk_region_new")).Invoke ();
 		#endif
 
@@ -491,20 +491,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_op (IntPtr r, IntPtr region, SKRegionOperation op);
+		internal static partial bool sk_region_op (sk_region_t r, sk_region_t region, SKRegionOperation op);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_op (IntPtr r, IntPtr region, SKRegionOperation op);
+		internal static extern bool sk_region_op (sk_region_t r, sk_region_t region, SKRegionOperation op);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_op (IntPtr r, IntPtr region, SKRegionOperation op);
+			internal delegate bool sk_region_op (sk_region_t r, sk_region_t region, SKRegionOperation op);
 		}
 		private static Delegates.sk_region_op sk_region_op_delegate;
-		internal static bool sk_region_op (IntPtr r, IntPtr region, SKRegionOperation op) =>
+		internal static bool sk_region_op (sk_region_t r, sk_region_t region, SKRegionOperation op) =>
 			(sk_region_op_delegate ??= GetSymbol<Delegates.sk_region_op> ("sk_region_op")).Invoke (r, region, op);
 		#endif
 
@@ -513,20 +513,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_op_rect (IntPtr r, SKRectI* rect, SKRegionOperation op);
+		internal static partial bool sk_region_op_rect (sk_region_t r, SKRectI* rect, SKRegionOperation op);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_op_rect (IntPtr r, SKRectI* rect, SKRegionOperation op);
+		internal static extern bool sk_region_op_rect (sk_region_t r, SKRectI* rect, SKRegionOperation op);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_op_rect (IntPtr r, SKRectI* rect, SKRegionOperation op);
+			internal delegate bool sk_region_op_rect (sk_region_t r, SKRectI* rect, SKRegionOperation op);
 		}
 		private static Delegates.sk_region_op_rect sk_region_op_rect_delegate;
-		internal static bool sk_region_op_rect (IntPtr r, SKRectI* rect, SKRegionOperation op) =>
+		internal static bool sk_region_op_rect (sk_region_t r, SKRectI* rect, SKRegionOperation op) =>
 			(sk_region_op_rect_delegate ??= GetSymbol<Delegates.sk_region_op_rect> ("sk_region_op_rect")).Invoke (r, rect, op);
 		#endif
 
@@ -535,20 +535,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_quick_contains (IntPtr r, SKRectI* rect);
+		internal static partial bool sk_region_quick_contains (sk_region_t r, SKRectI* rect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_quick_contains (IntPtr r, SKRectI* rect);
+		internal static extern bool sk_region_quick_contains (sk_region_t r, SKRectI* rect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_quick_contains (IntPtr r, SKRectI* rect);
+			internal delegate bool sk_region_quick_contains (sk_region_t r, SKRectI* rect);
 		}
 		private static Delegates.sk_region_quick_contains sk_region_quick_contains_delegate;
-		internal static bool sk_region_quick_contains (IntPtr r, SKRectI* rect) =>
+		internal static bool sk_region_quick_contains (sk_region_t r, SKRectI* rect) =>
 			(sk_region_quick_contains_delegate ??= GetSymbol<Delegates.sk_region_quick_contains> ("sk_region_quick_contains")).Invoke (r, rect);
 		#endif
 
@@ -557,20 +557,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_quick_reject (IntPtr r, IntPtr region);
+		internal static partial bool sk_region_quick_reject (sk_region_t r, sk_region_t region);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_quick_reject (IntPtr r, IntPtr region);
+		internal static extern bool sk_region_quick_reject (sk_region_t r, sk_region_t region);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_quick_reject (IntPtr r, IntPtr region);
+			internal delegate bool sk_region_quick_reject (sk_region_t r, sk_region_t region);
 		}
 		private static Delegates.sk_region_quick_reject sk_region_quick_reject_delegate;
-		internal static bool sk_region_quick_reject (IntPtr r, IntPtr region) =>
+		internal static bool sk_region_quick_reject (sk_region_t r, sk_region_t region) =>
 			(sk_region_quick_reject_delegate ??= GetSymbol<Delegates.sk_region_quick_reject> ("sk_region_quick_reject")).Invoke (r, region);
 		#endif
 
@@ -579,20 +579,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_quick_reject_rect (IntPtr r, SKRectI* rect);
+		internal static partial bool sk_region_quick_reject_rect (sk_region_t r, SKRectI* rect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_quick_reject_rect (IntPtr r, SKRectI* rect);
+		internal static extern bool sk_region_quick_reject_rect (sk_region_t r, SKRectI* rect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_quick_reject_rect (IntPtr r, SKRectI* rect);
+			internal delegate bool sk_region_quick_reject_rect (sk_region_t r, SKRectI* rect);
 		}
 		private static Delegates.sk_region_quick_reject_rect sk_region_quick_reject_rect_delegate;
-		internal static bool sk_region_quick_reject_rect (IntPtr r, SKRectI* rect) =>
+		internal static bool sk_region_quick_reject_rect (sk_region_t r, SKRectI* rect) =>
 			(sk_region_quick_reject_rect_delegate ??= GetSymbol<Delegates.sk_region_quick_reject_rect> ("sk_region_quick_reject_rect")).Invoke (r, rect);
 		#endif
 
@@ -601,20 +601,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_set_empty (IntPtr r);
+		internal static partial bool sk_region_set_empty (sk_region_t r);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_set_empty (IntPtr r);
+		internal static extern bool sk_region_set_empty (sk_region_t r);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_set_empty (IntPtr r);
+			internal delegate bool sk_region_set_empty (sk_region_t r);
 		}
 		private static Delegates.sk_region_set_empty sk_region_set_empty_delegate;
-		internal static bool sk_region_set_empty (IntPtr r) =>
+		internal static bool sk_region_set_empty (sk_region_t r) =>
 			(sk_region_set_empty_delegate ??= GetSymbol<Delegates.sk_region_set_empty> ("sk_region_set_empty")).Invoke (r);
 		#endif
 
@@ -623,20 +623,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_set_path (IntPtr r, IntPtr t, IntPtr clip);
+		internal static partial bool sk_region_set_path (sk_region_t r, sk_path_t t, sk_region_t clip);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_set_path (IntPtr r, IntPtr t, IntPtr clip);
+		internal static extern bool sk_region_set_path (sk_region_t r, sk_path_t t, sk_region_t clip);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_set_path (IntPtr r, IntPtr t, IntPtr clip);
+			internal delegate bool sk_region_set_path (sk_region_t r, sk_path_t t, sk_region_t clip);
 		}
 		private static Delegates.sk_region_set_path sk_region_set_path_delegate;
-		internal static bool sk_region_set_path (IntPtr r, IntPtr t, IntPtr clip) =>
+		internal static bool sk_region_set_path (sk_region_t r, sk_path_t t, sk_region_t clip) =>
 			(sk_region_set_path_delegate ??= GetSymbol<Delegates.sk_region_set_path> ("sk_region_set_path")).Invoke (r, t, clip);
 		#endif
 
@@ -645,20 +645,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_set_rect (IntPtr r, SKRectI* rect);
+		internal static partial bool sk_region_set_rect (sk_region_t r, SKRectI* rect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_set_rect (IntPtr r, SKRectI* rect);
+		internal static extern bool sk_region_set_rect (sk_region_t r, SKRectI* rect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_set_rect (IntPtr r, SKRectI* rect);
+			internal delegate bool sk_region_set_rect (sk_region_t r, SKRectI* rect);
 		}
 		private static Delegates.sk_region_set_rect sk_region_set_rect_delegate;
-		internal static bool sk_region_set_rect (IntPtr r, SKRectI* rect) =>
+		internal static bool sk_region_set_rect (sk_region_t r, SKRectI* rect) =>
 			(sk_region_set_rect_delegate ??= GetSymbol<Delegates.sk_region_set_rect> ("sk_region_set_rect")).Invoke (r, rect);
 		#endif
 
@@ -667,20 +667,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_set_rects (IntPtr r, SKRectI* rects, Int32 count);
+		internal static partial bool sk_region_set_rects (sk_region_t r, SKRectI* rects, Int32 count);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_set_rects (IntPtr r, SKRectI* rects, Int32 count);
+		internal static extern bool sk_region_set_rects (sk_region_t r, SKRectI* rects, Int32 count);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_set_rects (IntPtr r, SKRectI* rects, Int32 count);
+			internal delegate bool sk_region_set_rects (sk_region_t r, SKRectI* rects, Int32 count);
 		}
 		private static Delegates.sk_region_set_rects sk_region_set_rects_delegate;
-		internal static bool sk_region_set_rects (IntPtr r, SKRectI* rects, Int32 count) =>
+		internal static bool sk_region_set_rects (sk_region_t r, SKRectI* rects, Int32 count) =>
 			(sk_region_set_rects_delegate ??= GetSymbol<Delegates.sk_region_set_rects> ("sk_region_set_rects")).Invoke (r, rects, count);
 		#endif
 
@@ -689,20 +689,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_set_region (IntPtr r, IntPtr region);
+		internal static partial bool sk_region_set_region (sk_region_t r, sk_region_t region);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_set_region (IntPtr r, IntPtr region);
+		internal static extern bool sk_region_set_region (sk_region_t r, sk_region_t region);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_set_region (IntPtr r, IntPtr region);
+			internal delegate bool sk_region_set_region (sk_region_t r, sk_region_t region);
 		}
 		private static Delegates.sk_region_set_region sk_region_set_region_delegate;
-		internal static bool sk_region_set_region (IntPtr r, IntPtr region) =>
+		internal static bool sk_region_set_region (sk_region_t r, sk_region_t region) =>
 			(sk_region_set_region_delegate ??= GetSymbol<Delegates.sk_region_set_region> ("sk_region_set_region")).Invoke (r, region);
 		#endif
 
@@ -710,18 +710,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_region_spanerator_delete (IntPtr iter);
+		internal static partial void sk_region_spanerator_delete (sk_region_spanerator_t iter);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_region_spanerator_delete (IntPtr iter);
+		internal static extern void sk_region_spanerator_delete (sk_region_spanerator_t iter);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_region_spanerator_delete (IntPtr iter);
+			internal delegate void sk_region_spanerator_delete (sk_region_spanerator_t iter);
 		}
 		private static Delegates.sk_region_spanerator_delete sk_region_spanerator_delete_delegate;
-		internal static void sk_region_spanerator_delete (IntPtr iter) =>
+		internal static void sk_region_spanerator_delete (sk_region_spanerator_t iter) =>
 			(sk_region_spanerator_delete_delegate ??= GetSymbol<Delegates.sk_region_spanerator_delete> ("sk_region_spanerator_delete")).Invoke (iter);
 		#endif
 
@@ -729,18 +729,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_region_spanerator_new (IntPtr region, Int32 y, Int32 left, Int32 right);
+		internal static partial sk_region_spanerator_t sk_region_spanerator_new (sk_region_t region, Int32 y, Int32 left, Int32 right);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_region_spanerator_new (IntPtr region, Int32 y, Int32 left, Int32 right);
+		internal static extern sk_region_spanerator_t sk_region_spanerator_new (sk_region_t region, Int32 y, Int32 left, Int32 right);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_region_spanerator_new (IntPtr region, Int32 y, Int32 left, Int32 right);
+			internal delegate sk_region_spanerator_t sk_region_spanerator_new (sk_region_t region, Int32 y, Int32 left, Int32 right);
 		}
 		private static Delegates.sk_region_spanerator_new sk_region_spanerator_new_delegate;
-		internal static IntPtr sk_region_spanerator_new (IntPtr region, Int32 y, Int32 left, Int32 right) =>
+		internal static sk_region_spanerator_t sk_region_spanerator_new (sk_region_t region, Int32 y, Int32 left, Int32 right) =>
 			(sk_region_spanerator_new_delegate ??= GetSymbol<Delegates.sk_region_spanerator_new> ("sk_region_spanerator_new")).Invoke (region, y, left, right);
 		#endif
 
@@ -749,20 +749,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_region_spanerator_next (IntPtr iter, Int32* left, Int32* right);
+		internal static partial bool sk_region_spanerator_next (sk_region_spanerator_t iter, Int32* left, Int32* right);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_spanerator_next (IntPtr iter, Int32* left, Int32* right);
+		internal static extern bool sk_region_spanerator_next (sk_region_spanerator_t iter, Int32* left, Int32* right);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_region_spanerator_next (IntPtr iter, Int32* left, Int32* right);
+			internal delegate bool sk_region_spanerator_next (sk_region_spanerator_t iter, Int32* left, Int32* right);
 		}
 		private static Delegates.sk_region_spanerator_next sk_region_spanerator_next_delegate;
-		internal static bool sk_region_spanerator_next (IntPtr iter, Int32* left, Int32* right) =>
+		internal static bool sk_region_spanerator_next (sk_region_spanerator_t iter, Int32* left, Int32* right) =>
 			(sk_region_spanerator_next_delegate ??= GetSymbol<Delegates.sk_region_spanerator_next> ("sk_region_spanerator_next")).Invoke (iter, left, right);
 		#endif
 
@@ -770,18 +770,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_region_translate (IntPtr r, Int32 x, Int32 y);
+		internal static partial void sk_region_translate (sk_region_t r, Int32 x, Int32 y);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_region_translate (IntPtr r, Int32 x, Int32 y);
+		internal static extern void sk_region_translate (sk_region_t r, Int32 x, Int32 y);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_region_translate (IntPtr r, Int32 x, Int32 y);
+			internal delegate void sk_region_translate (sk_region_t r, Int32 x, Int32 y);
 		}
 		private static Delegates.sk_region_translate sk_region_translate_delegate;
-		internal static void sk_region_translate (IntPtr r, Int32 x, Int32 y) =>
+		internal static void sk_region_translate (sk_region_t r, Int32 x, Int32 y) =>
 			(sk_region_translate_delegate ??= GetSymbol<Delegates.sk_region_translate> ("sk_region_translate")).Invoke (r, x, y);
 		#endif
 

@@ -382,8 +382,8 @@ namespace SkiaSharpGenerator
 			{
 				if (!isStruct)
 					return pointers.Length == 0
-						? nameof(IntPtr)
-						: nameof(IntPtr) + pointers[1..];
+						? noPointers
+						: noPointers + pointers[1..];
 				if (typeMappings.TryGetValue(noPointers, out var map))
 					return (map.CsType ?? CleanName(noPointers)) + pointers;
 			}

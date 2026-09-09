@@ -12,7 +12,7 @@ namespace SkiaSharp
 {
 	// typedef sk_picture_t* (*)(sk_manageddrawable_t* d, void* context)* sk_manageddrawable_makePictureSnapshot_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate IntPtr SKManagedDrawableMakePictureSnapshotProxyDelegate(IntPtr d, void* context);
+	internal unsafe delegate sk_picture_t SKManagedDrawableMakePictureSnapshotProxyDelegate(sk_manageddrawable_t d, void* context);
 
 }
 #endif // !USE_LIBRARY_IMPORT

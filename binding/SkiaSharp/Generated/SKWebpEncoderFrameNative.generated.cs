@@ -14,7 +14,7 @@ namespace SkiaSharp
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKWebpEncoderFrameNative : IEquatable<SKWebpEncoderFrameNative> {
 		// public const sk_pixmap_t* pixmap
-		public IntPtr pixmap;
+		public sk_pixmap_t pixmap;
 
 		// public int duration
 		public Int32 duration;

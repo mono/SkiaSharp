@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_svgcanvas_create_with_stream (SKRect* bounds, IntPtr stream);
+		internal static partial sk_canvas_t sk_svgcanvas_create_with_stream (SKRect* bounds, sk_wstream_t stream);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_svgcanvas_create_with_stream (SKRect* bounds, IntPtr stream);
+		internal static extern sk_canvas_t sk_svgcanvas_create_with_stream (SKRect* bounds, sk_wstream_t stream);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_svgcanvas_create_with_stream (SKRect* bounds, IntPtr stream);
+			internal delegate sk_canvas_t sk_svgcanvas_create_with_stream (SKRect* bounds, sk_wstream_t stream);
 		}
 		private static Delegates.sk_svgcanvas_create_with_stream sk_svgcanvas_create_with_stream_delegate;
-		internal static IntPtr sk_svgcanvas_create_with_stream (SKRect* bounds, IntPtr stream) =>
+		internal static sk_canvas_t sk_svgcanvas_create_with_stream (SKRect* bounds, sk_wstream_t stream) =>
 			(sk_svgcanvas_create_with_stream_delegate ??= GetSymbol<Delegates.sk_svgcanvas_create_with_stream> ("sk_svgcanvas_create_with_stream")).Invoke (bounds, stream);
 		#endif
 

@@ -23,7 +23,7 @@ namespace SkiaSharp
 		private readonly SKJpegEncoderAlphaOption fAlphaOption;
 
 		// public const sk_data_t* xmpMetadata
-		private readonly IntPtr xmpMetadata;
+		private readonly sk_data_t xmpMetadata;
 
 		// public int32_t fOrigin
 		private readonly Int32 fOrigin;

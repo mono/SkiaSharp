@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_blend (SKBlendMode mode, IntPtr dst, IntPtr src);
+		internal static partial sk_shader_t sk_shader_new_blend (SKBlendMode mode, sk_shader_t dst, sk_shader_t src);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_blend (SKBlendMode mode, IntPtr dst, IntPtr src);
+		internal static extern sk_shader_t sk_shader_new_blend (SKBlendMode mode, sk_shader_t dst, sk_shader_t src);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_blend (SKBlendMode mode, IntPtr dst, IntPtr src);
+			internal delegate sk_shader_t sk_shader_new_blend (SKBlendMode mode, sk_shader_t dst, sk_shader_t src);
 		}
 		private static Delegates.sk_shader_new_blend sk_shader_new_blend_delegate;
-		internal static IntPtr sk_shader_new_blend (SKBlendMode mode, IntPtr dst, IntPtr src) =>
+		internal static sk_shader_t sk_shader_new_blend (SKBlendMode mode, sk_shader_t dst, sk_shader_t src) =>
 			(sk_shader_new_blend_delegate ??= GetSymbol<Delegates.sk_shader_new_blend> ("sk_shader_new_blend")).Invoke (mode, dst, src);
 		#endif
 
@@ -36,18 +36,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_blender (IntPtr blender, IntPtr dst, IntPtr src);
+		internal static partial sk_shader_t sk_shader_new_blender (sk_blender_t blender, sk_shader_t dst, sk_shader_t src);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_blender (IntPtr blender, IntPtr dst, IntPtr src);
+		internal static extern sk_shader_t sk_shader_new_blender (sk_blender_t blender, sk_shader_t dst, sk_shader_t src);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_blender (IntPtr blender, IntPtr dst, IntPtr src);
+			internal delegate sk_shader_t sk_shader_new_blender (sk_blender_t blender, sk_shader_t dst, sk_shader_t src);
 		}
 		private static Delegates.sk_shader_new_blender sk_shader_new_blender_delegate;
-		internal static IntPtr sk_shader_new_blender (IntPtr blender, IntPtr dst, IntPtr src) =>
+		internal static sk_shader_t sk_shader_new_blender (sk_blender_t blender, sk_shader_t dst, sk_shader_t src) =>
 			(sk_shader_new_blender_delegate ??= GetSymbol<Delegates.sk_shader_new_blender> ("sk_shader_new_blender")).Invoke (blender, dst, src);
 		#endif
 
@@ -55,18 +55,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_color (UInt32 color);
+		internal static partial sk_shader_t sk_shader_new_color (UInt32 color);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_color (UInt32 color);
+		internal static extern sk_shader_t sk_shader_new_color (UInt32 color);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_color (UInt32 color);
+			internal delegate sk_shader_t sk_shader_new_color (UInt32 color);
 		}
 		private static Delegates.sk_shader_new_color sk_shader_new_color_delegate;
-		internal static IntPtr sk_shader_new_color (UInt32 color) =>
+		internal static sk_shader_t sk_shader_new_color (UInt32 color) =>
 			(sk_shader_new_color_delegate ??= GetSymbol<Delegates.sk_shader_new_color> ("sk_shader_new_color")).Invoke (color);
 		#endif
 
@@ -74,18 +74,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_color4f (SKColorF* color, IntPtr colorspace);
+		internal static partial sk_shader_t sk_shader_new_color4f (SKColorF* color, sk_colorspace_t colorspace);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_color4f (SKColorF* color, IntPtr colorspace);
+		internal static extern sk_shader_t sk_shader_new_color4f (SKColorF* color, sk_colorspace_t colorspace);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_color4f (SKColorF* color, IntPtr colorspace);
+			internal delegate sk_shader_t sk_shader_new_color4f (SKColorF* color, sk_colorspace_t colorspace);
 		}
 		private static Delegates.sk_shader_new_color4f sk_shader_new_color4f_delegate;
-		internal static IntPtr sk_shader_new_color4f (SKColorF* color, IntPtr colorspace) =>
+		internal static sk_shader_t sk_shader_new_color4f (SKColorF* color, sk_colorspace_t colorspace) =>
 			(sk_shader_new_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_color4f> ("sk_shader_new_color4f")).Invoke (color, colorspace);
 		#endif
 
@@ -93,18 +93,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_empty ();
+		internal static partial sk_shader_t sk_shader_new_empty ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_empty ();
+		internal static extern sk_shader_t sk_shader_new_empty ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_empty ();
+			internal delegate sk_shader_t sk_shader_new_empty ();
 		}
 		private static Delegates.sk_shader_new_empty sk_shader_new_empty_delegate;
-		internal static IntPtr sk_shader_new_empty () =>
+		internal static sk_shader_t sk_shader_new_empty () =>
 			(sk_shader_new_empty_delegate ??= GetSymbol<Delegates.sk_shader_new_empty> ("sk_shader_new_empty")).Invoke ();
 		#endif
 
@@ -112,18 +112,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_linear_gradient (SKPoint* points, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		internal static partial sk_shader_t sk_shader_new_linear_gradient (SKPoint* points, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_linear_gradient (SKPoint* points, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_new_linear_gradient (SKPoint* points, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_linear_gradient (SKPoint* points, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+			internal delegate sk_shader_t sk_shader_new_linear_gradient (SKPoint* points, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		}
 		private static Delegates.sk_shader_new_linear_gradient sk_shader_new_linear_gradient_delegate;
-		internal static IntPtr sk_shader_new_linear_gradient (SKPoint* points, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix) =>
+		internal static sk_shader_t sk_shader_new_linear_gradient (SKPoint* points, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix) =>
 			(sk_shader_new_linear_gradient_delegate ??= GetSymbol<Delegates.sk_shader_new_linear_gradient> ("sk_shader_new_linear_gradient")).Invoke (points, colors, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
@@ -131,18 +131,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_linear_gradient_color4f (SKPoint* points, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		internal static partial sk_shader_t sk_shader_new_linear_gradient_color4f (SKPoint* points, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_linear_gradient_color4f (SKPoint* points, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_new_linear_gradient_color4f (SKPoint* points, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_linear_gradient_color4f (SKPoint* points, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+			internal delegate sk_shader_t sk_shader_new_linear_gradient_color4f (SKPoint* points, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		}
 		private static Delegates.sk_shader_new_linear_gradient_color4f sk_shader_new_linear_gradient_color4f_delegate;
-		internal static IntPtr sk_shader_new_linear_gradient_color4f (SKPoint* points, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix) =>
+		internal static sk_shader_t sk_shader_new_linear_gradient_color4f (SKPoint* points, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix) =>
 			(sk_shader_new_linear_gradient_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_linear_gradient_color4f> ("sk_shader_new_linear_gradient_color4f")).Invoke (points, colors, colorspace, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
@@ -150,18 +150,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_perlin_noise_fractal_noise (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
+		internal static partial sk_shader_t sk_shader_new_perlin_noise_fractal_noise (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_perlin_noise_fractal_noise (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
+		internal static extern sk_shader_t sk_shader_new_perlin_noise_fractal_noise (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_perlin_noise_fractal_noise (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
+			internal delegate sk_shader_t sk_shader_new_perlin_noise_fractal_noise (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
 		}
 		private static Delegates.sk_shader_new_perlin_noise_fractal_noise sk_shader_new_perlin_noise_fractal_noise_delegate;
-		internal static IntPtr sk_shader_new_perlin_noise_fractal_noise (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize) =>
+		internal static sk_shader_t sk_shader_new_perlin_noise_fractal_noise (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize) =>
 			(sk_shader_new_perlin_noise_fractal_noise_delegate ??= GetSymbol<Delegates.sk_shader_new_perlin_noise_fractal_noise> ("sk_shader_new_perlin_noise_fractal_noise")).Invoke (baseFrequencyX, baseFrequencyY, numOctaves, seed, tileSize);
 		#endif
 
@@ -169,18 +169,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_perlin_noise_turbulence (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
+		internal static partial sk_shader_t sk_shader_new_perlin_noise_turbulence (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_perlin_noise_turbulence (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
+		internal static extern sk_shader_t sk_shader_new_perlin_noise_turbulence (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_perlin_noise_turbulence (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
+			internal delegate sk_shader_t sk_shader_new_perlin_noise_turbulence (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
 		}
 		private static Delegates.sk_shader_new_perlin_noise_turbulence sk_shader_new_perlin_noise_turbulence_delegate;
-		internal static IntPtr sk_shader_new_perlin_noise_turbulence (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize) =>
+		internal static sk_shader_t sk_shader_new_perlin_noise_turbulence (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize) =>
 			(sk_shader_new_perlin_noise_turbulence_delegate ??= GetSymbol<Delegates.sk_shader_new_perlin_noise_turbulence> ("sk_shader_new_perlin_noise_turbulence")).Invoke (baseFrequencyX, baseFrequencyY, numOctaves, seed, tileSize);
 		#endif
 
@@ -188,18 +188,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_radial_gradient (SKPoint* center, Single radius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		internal static partial sk_shader_t sk_shader_new_radial_gradient (SKPoint* center, Single radius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_radial_gradient (SKPoint* center, Single radius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_new_radial_gradient (SKPoint* center, Single radius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_radial_gradient (SKPoint* center, Single radius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+			internal delegate sk_shader_t sk_shader_new_radial_gradient (SKPoint* center, Single radius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		}
 		private static Delegates.sk_shader_new_radial_gradient sk_shader_new_radial_gradient_delegate;
-		internal static IntPtr sk_shader_new_radial_gradient (SKPoint* center, Single radius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix) =>
+		internal static sk_shader_t sk_shader_new_radial_gradient (SKPoint* center, Single radius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix) =>
 			(sk_shader_new_radial_gradient_delegate ??= GetSymbol<Delegates.sk_shader_new_radial_gradient> ("sk_shader_new_radial_gradient")).Invoke (center, radius, colors, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
@@ -207,18 +207,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_radial_gradient_color4f (SKPoint* center, Single radius, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		internal static partial sk_shader_t sk_shader_new_radial_gradient_color4f (SKPoint* center, Single radius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_radial_gradient_color4f (SKPoint* center, Single radius, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_new_radial_gradient_color4f (SKPoint* center, Single radius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_radial_gradient_color4f (SKPoint* center, Single radius, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+			internal delegate sk_shader_t sk_shader_new_radial_gradient_color4f (SKPoint* center, Single radius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		}
 		private static Delegates.sk_shader_new_radial_gradient_color4f sk_shader_new_radial_gradient_color4f_delegate;
-		internal static IntPtr sk_shader_new_radial_gradient_color4f (SKPoint* center, Single radius, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix) =>
+		internal static sk_shader_t sk_shader_new_radial_gradient_color4f (SKPoint* center, Single radius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix) =>
 			(sk_shader_new_radial_gradient_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_radial_gradient_color4f> ("sk_shader_new_radial_gradient_color4f")).Invoke (center, radius, colors, colorspace, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
@@ -226,18 +226,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_sweep_gradient (SKPoint* center, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
+		internal static partial sk_shader_t sk_shader_new_sweep_gradient (SKPoint* center, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_sweep_gradient (SKPoint* center, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_new_sweep_gradient (SKPoint* center, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_sweep_gradient (SKPoint* center, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
+			internal delegate sk_shader_t sk_shader_new_sweep_gradient (SKPoint* center, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
 		}
 		private static Delegates.sk_shader_new_sweep_gradient sk_shader_new_sweep_gradient_delegate;
-		internal static IntPtr sk_shader_new_sweep_gradient (SKPoint* center, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix) =>
+		internal static sk_shader_t sk_shader_new_sweep_gradient (SKPoint* center, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix) =>
 			(sk_shader_new_sweep_gradient_delegate ??= GetSymbol<Delegates.sk_shader_new_sweep_gradient> ("sk_shader_new_sweep_gradient")).Invoke (center, colors, colorPos, colorCount, tileMode, startAngle, endAngle, localMatrix);
 		#endif
 
@@ -245,18 +245,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_sweep_gradient_color4f (SKPoint* center, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
+		internal static partial sk_shader_t sk_shader_new_sweep_gradient_color4f (SKPoint* center, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_sweep_gradient_color4f (SKPoint* center, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_new_sweep_gradient_color4f (SKPoint* center, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_sweep_gradient_color4f (SKPoint* center, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
+			internal delegate sk_shader_t sk_shader_new_sweep_gradient_color4f (SKPoint* center, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
 		}
 		private static Delegates.sk_shader_new_sweep_gradient_color4f sk_shader_new_sweep_gradient_color4f_delegate;
-		internal static IntPtr sk_shader_new_sweep_gradient_color4f (SKPoint* center, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix) =>
+		internal static sk_shader_t sk_shader_new_sweep_gradient_color4f (SKPoint* center, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix) =>
 			(sk_shader_new_sweep_gradient_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_sweep_gradient_color4f> ("sk_shader_new_sweep_gradient_color4f")).Invoke (center, colors, colorspace, colorPos, colorCount, tileMode, startAngle, endAngle, localMatrix);
 		#endif
 
@@ -264,18 +264,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_two_point_conical_gradient (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		internal static partial sk_shader_t sk_shader_new_two_point_conical_gradient (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_two_point_conical_gradient (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_new_two_point_conical_gradient (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_two_point_conical_gradient (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+			internal delegate sk_shader_t sk_shader_new_two_point_conical_gradient (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		}
 		private static Delegates.sk_shader_new_two_point_conical_gradient sk_shader_new_two_point_conical_gradient_delegate;
-		internal static IntPtr sk_shader_new_two_point_conical_gradient (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix) =>
+		internal static sk_shader_t sk_shader_new_two_point_conical_gradient (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix) =>
 			(sk_shader_new_two_point_conical_gradient_delegate ??= GetSymbol<Delegates.sk_shader_new_two_point_conical_gradient> ("sk_shader_new_two_point_conical_gradient")).Invoke (start, startRadius, end, endRadius, colors, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
@@ -283,18 +283,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_new_two_point_conical_gradient_color4f (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		internal static partial sk_shader_t sk_shader_new_two_point_conical_gradient_color4f (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_new_two_point_conical_gradient_color4f (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_new_two_point_conical_gradient_color4f (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_new_two_point_conical_gradient_color4f (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+			internal delegate sk_shader_t sk_shader_new_two_point_conical_gradient_color4f (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 		}
 		private static Delegates.sk_shader_new_two_point_conical_gradient_color4f sk_shader_new_two_point_conical_gradient_color4f_delegate;
-		internal static IntPtr sk_shader_new_two_point_conical_gradient_color4f (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, IntPtr colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix) =>
+		internal static sk_shader_t sk_shader_new_two_point_conical_gradient_color4f (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix) =>
 			(sk_shader_new_two_point_conical_gradient_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_two_point_conical_gradient_color4f> ("sk_shader_new_two_point_conical_gradient_color4f")).Invoke (start, startRadius, end, endRadius, colors, colorspace, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
@@ -302,18 +302,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_shader_ref (IntPtr shader);
+		internal static partial void sk_shader_ref (sk_shader_t shader);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_shader_ref (IntPtr shader);
+		internal static extern void sk_shader_ref (sk_shader_t shader);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_shader_ref (IntPtr shader);
+			internal delegate void sk_shader_ref (sk_shader_t shader);
 		}
 		private static Delegates.sk_shader_ref sk_shader_ref_delegate;
-		internal static void sk_shader_ref (IntPtr shader) =>
+		internal static void sk_shader_ref (sk_shader_t shader) =>
 			(sk_shader_ref_delegate ??= GetSymbol<Delegates.sk_shader_ref> ("sk_shader_ref")).Invoke (shader);
 		#endif
 
@@ -321,18 +321,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_shader_unref (IntPtr shader);
+		internal static partial void sk_shader_unref (sk_shader_t shader);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_shader_unref (IntPtr shader);
+		internal static extern void sk_shader_unref (sk_shader_t shader);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_shader_unref (IntPtr shader);
+			internal delegate void sk_shader_unref (sk_shader_t shader);
 		}
 		private static Delegates.sk_shader_unref sk_shader_unref_delegate;
-		internal static void sk_shader_unref (IntPtr shader) =>
+		internal static void sk_shader_unref (sk_shader_t shader) =>
 			(sk_shader_unref_delegate ??= GetSymbol<Delegates.sk_shader_unref> ("sk_shader_unref")).Invoke (shader);
 		#endif
 
@@ -340,18 +340,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_with_color_filter (IntPtr shader, IntPtr filter);
+		internal static partial sk_shader_t sk_shader_with_color_filter (sk_shader_t shader, sk_colorfilter_t filter);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_with_color_filter (IntPtr shader, IntPtr filter);
+		internal static extern sk_shader_t sk_shader_with_color_filter (sk_shader_t shader, sk_colorfilter_t filter);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_with_color_filter (IntPtr shader, IntPtr filter);
+			internal delegate sk_shader_t sk_shader_with_color_filter (sk_shader_t shader, sk_colorfilter_t filter);
 		}
 		private static Delegates.sk_shader_with_color_filter sk_shader_with_color_filter_delegate;
-		internal static IntPtr sk_shader_with_color_filter (IntPtr shader, IntPtr filter) =>
+		internal static sk_shader_t sk_shader_with_color_filter (sk_shader_t shader, sk_colorfilter_t filter) =>
 			(sk_shader_with_color_filter_delegate ??= GetSymbol<Delegates.sk_shader_with_color_filter> ("sk_shader_with_color_filter")).Invoke (shader, filter);
 		#endif
 
@@ -359,18 +359,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_shader_with_local_matrix (IntPtr shader, SKMatrix* localMatrix);
+		internal static partial sk_shader_t sk_shader_with_local_matrix (sk_shader_t shader, SKMatrix* localMatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_shader_with_local_matrix (IntPtr shader, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_with_local_matrix (sk_shader_t shader, SKMatrix* localMatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_shader_with_local_matrix (IntPtr shader, SKMatrix* localMatrix);
+			internal delegate sk_shader_t sk_shader_with_local_matrix (sk_shader_t shader, SKMatrix* localMatrix);
 		}
 		private static Delegates.sk_shader_with_local_matrix sk_shader_with_local_matrix_delegate;
-		internal static IntPtr sk_shader_with_local_matrix (IntPtr shader, SKMatrix* localMatrix) =>
+		internal static sk_shader_t sk_shader_with_local_matrix (sk_shader_t shader, SKMatrix* localMatrix) =>
 			(sk_shader_with_local_matrix_delegate ??= GetSymbol<Delegates.sk_shader_with_local_matrix> ("sk_shader_with_local_matrix")).Invoke (shader, localMatrix);
 		#endif
 

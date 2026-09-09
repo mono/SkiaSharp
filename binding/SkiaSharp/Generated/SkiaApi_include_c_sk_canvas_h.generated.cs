@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_clear (IntPtr ccanvas, UInt32 color);
+		internal static partial void sk_canvas_clear (sk_canvas_t ccanvas, UInt32 color);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_clear (IntPtr ccanvas, UInt32 color);
+		internal static extern void sk_canvas_clear (sk_canvas_t ccanvas, UInt32 color);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_clear (IntPtr ccanvas, UInt32 color);
+			internal delegate void sk_canvas_clear (sk_canvas_t ccanvas, UInt32 color);
 		}
 		private static Delegates.sk_canvas_clear sk_canvas_clear_delegate;
-		internal static void sk_canvas_clear (IntPtr ccanvas, UInt32 color) =>
+		internal static void sk_canvas_clear (sk_canvas_t ccanvas, UInt32 color) =>
 			(sk_canvas_clear_delegate ??= GetSymbol<Delegates.sk_canvas_clear> ("sk_canvas_clear")).Invoke (ccanvas, color);
 		#endif
 
@@ -36,18 +36,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_clear_color4f (IntPtr ccanvas, SKColorF color);
+		internal static partial void sk_canvas_clear_color4f (sk_canvas_t ccanvas, SKColorF color);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_clear_color4f (IntPtr ccanvas, SKColorF color);
+		internal static extern void sk_canvas_clear_color4f (sk_canvas_t ccanvas, SKColorF color);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_clear_color4f (IntPtr ccanvas, SKColorF color);
+			internal delegate void sk_canvas_clear_color4f (sk_canvas_t ccanvas, SKColorF color);
 		}
 		private static Delegates.sk_canvas_clear_color4f sk_canvas_clear_color4f_delegate;
-		internal static void sk_canvas_clear_color4f (IntPtr ccanvas, SKColorF color) =>
+		internal static void sk_canvas_clear_color4f (sk_canvas_t ccanvas, SKColorF color) =>
 			(sk_canvas_clear_color4f_delegate ??= GetSymbol<Delegates.sk_canvas_clear_color4f> ("sk_canvas_clear_color4f")).Invoke (ccanvas, color);
 		#endif
 
@@ -55,18 +55,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_clip_path_with_operation (IntPtr ccanvas, IntPtr cpath, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+		internal static partial void sk_canvas_clip_path_with_operation (sk_canvas_t ccanvas, sk_path_t cpath, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_clip_path_with_operation (IntPtr ccanvas, IntPtr cpath, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+		internal static extern void sk_canvas_clip_path_with_operation (sk_canvas_t ccanvas, sk_path_t cpath, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_clip_path_with_operation (IntPtr ccanvas, IntPtr cpath, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+			internal delegate void sk_canvas_clip_path_with_operation (sk_canvas_t ccanvas, sk_path_t cpath, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
 		}
 		private static Delegates.sk_canvas_clip_path_with_operation sk_canvas_clip_path_with_operation_delegate;
-		internal static void sk_canvas_clip_path_with_operation (IntPtr ccanvas, IntPtr cpath, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA) =>
+		internal static void sk_canvas_clip_path_with_operation (sk_canvas_t ccanvas, sk_path_t cpath, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA) =>
 			(sk_canvas_clip_path_with_operation_delegate ??= GetSymbol<Delegates.sk_canvas_clip_path_with_operation> ("sk_canvas_clip_path_with_operation")).Invoke (ccanvas, cpath, op, doAA);
 		#endif
 
@@ -74,18 +74,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_clip_rect_with_operation (IntPtr ccanvas, SKRect* crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+		internal static partial void sk_canvas_clip_rect_with_operation (sk_canvas_t ccanvas, SKRect* crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_clip_rect_with_operation (IntPtr ccanvas, SKRect* crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+		internal static extern void sk_canvas_clip_rect_with_operation (sk_canvas_t ccanvas, SKRect* crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_clip_rect_with_operation (IntPtr ccanvas, SKRect* crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+			internal delegate void sk_canvas_clip_rect_with_operation (sk_canvas_t ccanvas, SKRect* crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
 		}
 		private static Delegates.sk_canvas_clip_rect_with_operation sk_canvas_clip_rect_with_operation_delegate;
-		internal static void sk_canvas_clip_rect_with_operation (IntPtr ccanvas, SKRect* crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA) =>
+		internal static void sk_canvas_clip_rect_with_operation (sk_canvas_t ccanvas, SKRect* crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA) =>
 			(sk_canvas_clip_rect_with_operation_delegate ??= GetSymbol<Delegates.sk_canvas_clip_rect_with_operation> ("sk_canvas_clip_rect_with_operation")).Invoke (ccanvas, crect, op, doAA);
 		#endif
 
@@ -93,18 +93,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_clip_region (IntPtr ccanvas, IntPtr region, SKClipOperation op);
+		internal static partial void sk_canvas_clip_region (sk_canvas_t ccanvas, sk_region_t region, SKClipOperation op);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_clip_region (IntPtr ccanvas, IntPtr region, SKClipOperation op);
+		internal static extern void sk_canvas_clip_region (sk_canvas_t ccanvas, sk_region_t region, SKClipOperation op);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_clip_region (IntPtr ccanvas, IntPtr region, SKClipOperation op);
+			internal delegate void sk_canvas_clip_region (sk_canvas_t ccanvas, sk_region_t region, SKClipOperation op);
 		}
 		private static Delegates.sk_canvas_clip_region sk_canvas_clip_region_delegate;
-		internal static void sk_canvas_clip_region (IntPtr ccanvas, IntPtr region, SKClipOperation op) =>
+		internal static void sk_canvas_clip_region (sk_canvas_t ccanvas, sk_region_t region, SKClipOperation op) =>
 			(sk_canvas_clip_region_delegate ??= GetSymbol<Delegates.sk_canvas_clip_region> ("sk_canvas_clip_region")).Invoke (ccanvas, region, op);
 		#endif
 
@@ -112,18 +112,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_clip_rrect_with_operation (IntPtr ccanvas, IntPtr crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+		internal static partial void sk_canvas_clip_rrect_with_operation (sk_canvas_t ccanvas, sk_rrect_t crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_clip_rrect_with_operation (IntPtr ccanvas, IntPtr crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+		internal static extern void sk_canvas_clip_rrect_with_operation (sk_canvas_t ccanvas, sk_rrect_t crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_clip_rrect_with_operation (IntPtr ccanvas, IntPtr crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+			internal delegate void sk_canvas_clip_rrect_with_operation (sk_canvas_t ccanvas, sk_rrect_t crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
 		}
 		private static Delegates.sk_canvas_clip_rrect_with_operation sk_canvas_clip_rrect_with_operation_delegate;
-		internal static void sk_canvas_clip_rrect_with_operation (IntPtr ccanvas, IntPtr crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA) =>
+		internal static void sk_canvas_clip_rrect_with_operation (sk_canvas_t ccanvas, sk_rrect_t crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA) =>
 			(sk_canvas_clip_rrect_with_operation_delegate ??= GetSymbol<Delegates.sk_canvas_clip_rrect_with_operation> ("sk_canvas_clip_rrect_with_operation")).Invoke (ccanvas, crect, op, doAA);
 		#endif
 
@@ -131,18 +131,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_concat (IntPtr ccanvas, SKMatrix44* cmatrix);
+		internal static partial void sk_canvas_concat (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_concat (IntPtr ccanvas, SKMatrix44* cmatrix);
+		internal static extern void sk_canvas_concat (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_concat (IntPtr ccanvas, SKMatrix44* cmatrix);
+			internal delegate void sk_canvas_concat (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
 		}
 		private static Delegates.sk_canvas_concat sk_canvas_concat_delegate;
-		internal static void sk_canvas_concat (IntPtr ccanvas, SKMatrix44* cmatrix) =>
+		internal static void sk_canvas_concat (sk_canvas_t ccanvas, SKMatrix44* cmatrix) =>
 			(sk_canvas_concat_delegate ??= GetSymbol<Delegates.sk_canvas_concat> ("sk_canvas_concat")).Invoke (ccanvas, cmatrix);
 		#endif
 
@@ -150,18 +150,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_destroy (IntPtr ccanvas);
+		internal static partial void sk_canvas_destroy (sk_canvas_t ccanvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_destroy (IntPtr ccanvas);
+		internal static extern void sk_canvas_destroy (sk_canvas_t ccanvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_destroy (IntPtr ccanvas);
+			internal delegate void sk_canvas_destroy (sk_canvas_t ccanvas);
 		}
 		private static Delegates.sk_canvas_destroy sk_canvas_destroy_delegate;
-		internal static void sk_canvas_destroy (IntPtr ccanvas) =>
+		internal static void sk_canvas_destroy (sk_canvas_t ccanvas) =>
 			(sk_canvas_destroy_delegate ??= GetSymbol<Delegates.sk_canvas_destroy> ("sk_canvas_destroy")).Invoke (ccanvas);
 		#endif
 
@@ -169,18 +169,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_discard (IntPtr ccanvas);
+		internal static partial void sk_canvas_discard (sk_canvas_t ccanvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_discard (IntPtr ccanvas);
+		internal static extern void sk_canvas_discard (sk_canvas_t ccanvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_discard (IntPtr ccanvas);
+			internal delegate void sk_canvas_discard (sk_canvas_t ccanvas);
 		}
 		private static Delegates.sk_canvas_discard sk_canvas_discard_delegate;
-		internal static void sk_canvas_discard (IntPtr ccanvas) =>
+		internal static void sk_canvas_discard (sk_canvas_t ccanvas) =>
 			(sk_canvas_discard_delegate ??= GetSymbol<Delegates.sk_canvas_discard> ("sk_canvas_discard")).Invoke (ccanvas);
 		#endif
 
@@ -188,18 +188,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_annotation (IntPtr t, SKRect* rect, /* char */ void* key, IntPtr value);
+		internal static partial void sk_canvas_draw_annotation (sk_canvas_t t, SKRect* rect, /* char */ void* key, sk_data_t value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_annotation (IntPtr t, SKRect* rect, /* char */ void* key, IntPtr value);
+		internal static extern void sk_canvas_draw_annotation (sk_canvas_t t, SKRect* rect, /* char */ void* key, sk_data_t value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_annotation (IntPtr t, SKRect* rect, /* char */ void* key, IntPtr value);
+			internal delegate void sk_canvas_draw_annotation (sk_canvas_t t, SKRect* rect, /* char */ void* key, sk_data_t value);
 		}
 		private static Delegates.sk_canvas_draw_annotation sk_canvas_draw_annotation_delegate;
-		internal static void sk_canvas_draw_annotation (IntPtr t, SKRect* rect, /* char */ void* key, IntPtr value) =>
+		internal static void sk_canvas_draw_annotation (sk_canvas_t t, SKRect* rect, /* char */ void* key, sk_data_t value) =>
 			(sk_canvas_draw_annotation_delegate ??= GetSymbol<Delegates.sk_canvas_draw_annotation> ("sk_canvas_draw_annotation")).Invoke (t, rect, key, value);
 		#endif
 
@@ -207,18 +207,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_arc (IntPtr ccanvas, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool useCenter, IntPtr paint);
+		internal static partial void sk_canvas_draw_arc (sk_canvas_t ccanvas, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool useCenter, sk_paint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_arc (IntPtr ccanvas, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool useCenter, IntPtr paint);
+		internal static extern void sk_canvas_draw_arc (sk_canvas_t ccanvas, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool useCenter, sk_paint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_arc (IntPtr ccanvas, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool useCenter, IntPtr paint);
+			internal delegate void sk_canvas_draw_arc (sk_canvas_t ccanvas, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool useCenter, sk_paint_t paint);
 		}
 		private static Delegates.sk_canvas_draw_arc sk_canvas_draw_arc_delegate;
-		internal static void sk_canvas_draw_arc (IntPtr ccanvas, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool useCenter, IntPtr paint) =>
+		internal static void sk_canvas_draw_arc (sk_canvas_t ccanvas, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool useCenter, sk_paint_t paint) =>
 			(sk_canvas_draw_arc_delegate ??= GetSymbol<Delegates.sk_canvas_draw_arc> ("sk_canvas_draw_arc")).Invoke (ccanvas, oval, startAngle, sweepAngle, useCenter, paint);
 		#endif
 
@@ -226,18 +226,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_atlas (IntPtr ccanvas, IntPtr atlas, SKRotationScaleMatrix* xform, SKRect* tex, UInt32* colors, Int32 count, SKBlendMode mode, SKSamplingOptions* sampling, SKRect* cullRect, IntPtr paint);
+		internal static partial void sk_canvas_draw_atlas (sk_canvas_t ccanvas, sk_image_t atlas, SKRotationScaleMatrix* xform, SKRect* tex, UInt32* colors, Int32 count, SKBlendMode mode, SKSamplingOptions* sampling, SKRect* cullRect, sk_paint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_atlas (IntPtr ccanvas, IntPtr atlas, SKRotationScaleMatrix* xform, SKRect* tex, UInt32* colors, Int32 count, SKBlendMode mode, SKSamplingOptions* sampling, SKRect* cullRect, IntPtr paint);
+		internal static extern void sk_canvas_draw_atlas (sk_canvas_t ccanvas, sk_image_t atlas, SKRotationScaleMatrix* xform, SKRect* tex, UInt32* colors, Int32 count, SKBlendMode mode, SKSamplingOptions* sampling, SKRect* cullRect, sk_paint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_atlas (IntPtr ccanvas, IntPtr atlas, SKRotationScaleMatrix* xform, SKRect* tex, UInt32* colors, Int32 count, SKBlendMode mode, SKSamplingOptions* sampling, SKRect* cullRect, IntPtr paint);
+			internal delegate void sk_canvas_draw_atlas (sk_canvas_t ccanvas, sk_image_t atlas, SKRotationScaleMatrix* xform, SKRect* tex, UInt32* colors, Int32 count, SKBlendMode mode, SKSamplingOptions* sampling, SKRect* cullRect, sk_paint_t paint);
 		}
 		private static Delegates.sk_canvas_draw_atlas sk_canvas_draw_atlas_delegate;
-		internal static void sk_canvas_draw_atlas (IntPtr ccanvas, IntPtr atlas, SKRotationScaleMatrix* xform, SKRect* tex, UInt32* colors, Int32 count, SKBlendMode mode, SKSamplingOptions* sampling, SKRect* cullRect, IntPtr paint) =>
+		internal static void sk_canvas_draw_atlas (sk_canvas_t ccanvas, sk_image_t atlas, SKRotationScaleMatrix* xform, SKRect* tex, UInt32* colors, Int32 count, SKBlendMode mode, SKSamplingOptions* sampling, SKRect* cullRect, sk_paint_t paint) =>
 			(sk_canvas_draw_atlas_delegate ??= GetSymbol<Delegates.sk_canvas_draw_atlas> ("sk_canvas_draw_atlas")).Invoke (ccanvas, atlas, xform, tex, colors, count, mode, sampling, cullRect, paint);
 		#endif
 
@@ -245,18 +245,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_circle (IntPtr ccanvas, Single cx, Single cy, Single rad, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_circle (sk_canvas_t ccanvas, Single cx, Single cy, Single rad, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_circle (IntPtr ccanvas, Single cx, Single cy, Single rad, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_circle (sk_canvas_t ccanvas, Single cx, Single cy, Single rad, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_circle (IntPtr ccanvas, Single cx, Single cy, Single rad, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_circle (sk_canvas_t ccanvas, Single cx, Single cy, Single rad, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_circle sk_canvas_draw_circle_delegate;
-		internal static void sk_canvas_draw_circle (IntPtr ccanvas, Single cx, Single cy, Single rad, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_circle (sk_canvas_t ccanvas, Single cx, Single cy, Single rad, sk_paint_t cpaint) =>
 			(sk_canvas_draw_circle_delegate ??= GetSymbol<Delegates.sk_canvas_draw_circle> ("sk_canvas_draw_circle")).Invoke (ccanvas, cx, cy, rad, cpaint);
 		#endif
 
@@ -264,18 +264,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_color (IntPtr ccanvas, UInt32 color, SKBlendMode cmode);
+		internal static partial void sk_canvas_draw_color (sk_canvas_t ccanvas, UInt32 color, SKBlendMode cmode);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_color (IntPtr ccanvas, UInt32 color, SKBlendMode cmode);
+		internal static extern void sk_canvas_draw_color (sk_canvas_t ccanvas, UInt32 color, SKBlendMode cmode);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_color (IntPtr ccanvas, UInt32 color, SKBlendMode cmode);
+			internal delegate void sk_canvas_draw_color (sk_canvas_t ccanvas, UInt32 color, SKBlendMode cmode);
 		}
 		private static Delegates.sk_canvas_draw_color sk_canvas_draw_color_delegate;
-		internal static void sk_canvas_draw_color (IntPtr ccanvas, UInt32 color, SKBlendMode cmode) =>
+		internal static void sk_canvas_draw_color (sk_canvas_t ccanvas, UInt32 color, SKBlendMode cmode) =>
 			(sk_canvas_draw_color_delegate ??= GetSymbol<Delegates.sk_canvas_draw_color> ("sk_canvas_draw_color")).Invoke (ccanvas, color, cmode);
 		#endif
 
@@ -283,18 +283,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_color4f (IntPtr ccanvas, SKColorF color, SKBlendMode cmode);
+		internal static partial void sk_canvas_draw_color4f (sk_canvas_t ccanvas, SKColorF color, SKBlendMode cmode);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_color4f (IntPtr ccanvas, SKColorF color, SKBlendMode cmode);
+		internal static extern void sk_canvas_draw_color4f (sk_canvas_t ccanvas, SKColorF color, SKBlendMode cmode);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_color4f (IntPtr ccanvas, SKColorF color, SKBlendMode cmode);
+			internal delegate void sk_canvas_draw_color4f (sk_canvas_t ccanvas, SKColorF color, SKBlendMode cmode);
 		}
 		private static Delegates.sk_canvas_draw_color4f sk_canvas_draw_color4f_delegate;
-		internal static void sk_canvas_draw_color4f (IntPtr ccanvas, SKColorF color, SKBlendMode cmode) =>
+		internal static void sk_canvas_draw_color4f (sk_canvas_t ccanvas, SKColorF color, SKBlendMode cmode) =>
 			(sk_canvas_draw_color4f_delegate ??= GetSymbol<Delegates.sk_canvas_draw_color4f> ("sk_canvas_draw_color4f")).Invoke (ccanvas, color, cmode);
 		#endif
 
@@ -302,18 +302,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_drawable (IntPtr ccanvas, IntPtr cdrawable, SKMatrix* cmatrix);
+		internal static partial void sk_canvas_draw_drawable (sk_canvas_t ccanvas, sk_drawable_t cdrawable, SKMatrix* cmatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_drawable (IntPtr ccanvas, IntPtr cdrawable, SKMatrix* cmatrix);
+		internal static extern void sk_canvas_draw_drawable (sk_canvas_t ccanvas, sk_drawable_t cdrawable, SKMatrix* cmatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_drawable (IntPtr ccanvas, IntPtr cdrawable, SKMatrix* cmatrix);
+			internal delegate void sk_canvas_draw_drawable (sk_canvas_t ccanvas, sk_drawable_t cdrawable, SKMatrix* cmatrix);
 		}
 		private static Delegates.sk_canvas_draw_drawable sk_canvas_draw_drawable_delegate;
-		internal static void sk_canvas_draw_drawable (IntPtr ccanvas, IntPtr cdrawable, SKMatrix* cmatrix) =>
+		internal static void sk_canvas_draw_drawable (sk_canvas_t ccanvas, sk_drawable_t cdrawable, SKMatrix* cmatrix) =>
 			(sk_canvas_draw_drawable_delegate ??= GetSymbol<Delegates.sk_canvas_draw_drawable> ("sk_canvas_draw_drawable")).Invoke (ccanvas, cdrawable, cmatrix);
 		#endif
 
@@ -321,18 +321,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_drrect (IntPtr ccanvas, IntPtr outer, IntPtr inner, IntPtr paint);
+		internal static partial void sk_canvas_draw_drrect (sk_canvas_t ccanvas, sk_rrect_t outer, sk_rrect_t inner, sk_paint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_drrect (IntPtr ccanvas, IntPtr outer, IntPtr inner, IntPtr paint);
+		internal static extern void sk_canvas_draw_drrect (sk_canvas_t ccanvas, sk_rrect_t outer, sk_rrect_t inner, sk_paint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_drrect (IntPtr ccanvas, IntPtr outer, IntPtr inner, IntPtr paint);
+			internal delegate void sk_canvas_draw_drrect (sk_canvas_t ccanvas, sk_rrect_t outer, sk_rrect_t inner, sk_paint_t paint);
 		}
 		private static Delegates.sk_canvas_draw_drrect sk_canvas_draw_drrect_delegate;
-		internal static void sk_canvas_draw_drrect (IntPtr ccanvas, IntPtr outer, IntPtr inner, IntPtr paint) =>
+		internal static void sk_canvas_draw_drrect (sk_canvas_t ccanvas, sk_rrect_t outer, sk_rrect_t inner, sk_paint_t paint) =>
 			(sk_canvas_draw_drrect_delegate ??= GetSymbol<Delegates.sk_canvas_draw_drrect> ("sk_canvas_draw_drrect")).Invoke (ccanvas, outer, inner, paint);
 		#endif
 
@@ -340,18 +340,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_image (IntPtr ccanvas, IntPtr cimage, Single x, Single y, SKSamplingOptions* sampling, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_image (sk_canvas_t ccanvas, sk_image_t cimage, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_image (IntPtr ccanvas, IntPtr cimage, Single x, Single y, SKSamplingOptions* sampling, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_image (sk_canvas_t ccanvas, sk_image_t cimage, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_image (IntPtr ccanvas, IntPtr cimage, Single x, Single y, SKSamplingOptions* sampling, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_image (sk_canvas_t ccanvas, sk_image_t cimage, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_image sk_canvas_draw_image_delegate;
-		internal static void sk_canvas_draw_image (IntPtr ccanvas, IntPtr cimage, Single x, Single y, SKSamplingOptions* sampling, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_image (sk_canvas_t ccanvas, sk_image_t cimage, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t cpaint) =>
 			(sk_canvas_draw_image_delegate ??= GetSymbol<Delegates.sk_canvas_draw_image> ("sk_canvas_draw_image")).Invoke (ccanvas, cimage, x, y, sampling, cpaint);
 		#endif
 
@@ -359,18 +359,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_image_lattice (IntPtr ccanvas, IntPtr image, SKLatticeInternal* lattice, SKRect* dst, SKFilterMode mode, IntPtr paint);
+		internal static partial void sk_canvas_draw_image_lattice (sk_canvas_t ccanvas, sk_image_t image, SKLatticeInternal* lattice, SKRect* dst, SKFilterMode mode, sk_paint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_image_lattice (IntPtr ccanvas, IntPtr image, SKLatticeInternal* lattice, SKRect* dst, SKFilterMode mode, IntPtr paint);
+		internal static extern void sk_canvas_draw_image_lattice (sk_canvas_t ccanvas, sk_image_t image, SKLatticeInternal* lattice, SKRect* dst, SKFilterMode mode, sk_paint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_image_lattice (IntPtr ccanvas, IntPtr image, SKLatticeInternal* lattice, SKRect* dst, SKFilterMode mode, IntPtr paint);
+			internal delegate void sk_canvas_draw_image_lattice (sk_canvas_t ccanvas, sk_image_t image, SKLatticeInternal* lattice, SKRect* dst, SKFilterMode mode, sk_paint_t paint);
 		}
 		private static Delegates.sk_canvas_draw_image_lattice sk_canvas_draw_image_lattice_delegate;
-		internal static void sk_canvas_draw_image_lattice (IntPtr ccanvas, IntPtr image, SKLatticeInternal* lattice, SKRect* dst, SKFilterMode mode, IntPtr paint) =>
+		internal static void sk_canvas_draw_image_lattice (sk_canvas_t ccanvas, sk_image_t image, SKLatticeInternal* lattice, SKRect* dst, SKFilterMode mode, sk_paint_t paint) =>
 			(sk_canvas_draw_image_lattice_delegate ??= GetSymbol<Delegates.sk_canvas_draw_image_lattice> ("sk_canvas_draw_image_lattice")).Invoke (ccanvas, image, lattice, dst, mode, paint);
 		#endif
 
@@ -378,18 +378,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_image_nine (IntPtr ccanvas, IntPtr image, SKRectI* center, SKRect* dst, SKFilterMode mode, IntPtr paint);
+		internal static partial void sk_canvas_draw_image_nine (sk_canvas_t ccanvas, sk_image_t image, SKRectI* center, SKRect* dst, SKFilterMode mode, sk_paint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_image_nine (IntPtr ccanvas, IntPtr image, SKRectI* center, SKRect* dst, SKFilterMode mode, IntPtr paint);
+		internal static extern void sk_canvas_draw_image_nine (sk_canvas_t ccanvas, sk_image_t image, SKRectI* center, SKRect* dst, SKFilterMode mode, sk_paint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_image_nine (IntPtr ccanvas, IntPtr image, SKRectI* center, SKRect* dst, SKFilterMode mode, IntPtr paint);
+			internal delegate void sk_canvas_draw_image_nine (sk_canvas_t ccanvas, sk_image_t image, SKRectI* center, SKRect* dst, SKFilterMode mode, sk_paint_t paint);
 		}
 		private static Delegates.sk_canvas_draw_image_nine sk_canvas_draw_image_nine_delegate;
-		internal static void sk_canvas_draw_image_nine (IntPtr ccanvas, IntPtr image, SKRectI* center, SKRect* dst, SKFilterMode mode, IntPtr paint) =>
+		internal static void sk_canvas_draw_image_nine (sk_canvas_t ccanvas, sk_image_t image, SKRectI* center, SKRect* dst, SKFilterMode mode, sk_paint_t paint) =>
 			(sk_canvas_draw_image_nine_delegate ??= GetSymbol<Delegates.sk_canvas_draw_image_nine> ("sk_canvas_draw_image_nine")).Invoke (ccanvas, image, center, dst, mode, paint);
 		#endif
 
@@ -397,18 +397,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_image_rect (IntPtr ccanvas, IntPtr cimage, SKRect* csrcR, SKRect* cdstR, SKSamplingOptions* sampling, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_image_rect (sk_canvas_t ccanvas, sk_image_t cimage, SKRect* csrcR, SKRect* cdstR, SKSamplingOptions* sampling, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_image_rect (IntPtr ccanvas, IntPtr cimage, SKRect* csrcR, SKRect* cdstR, SKSamplingOptions* sampling, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_image_rect (sk_canvas_t ccanvas, sk_image_t cimage, SKRect* csrcR, SKRect* cdstR, SKSamplingOptions* sampling, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_image_rect (IntPtr ccanvas, IntPtr cimage, SKRect* csrcR, SKRect* cdstR, SKSamplingOptions* sampling, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_image_rect (sk_canvas_t ccanvas, sk_image_t cimage, SKRect* csrcR, SKRect* cdstR, SKSamplingOptions* sampling, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_image_rect sk_canvas_draw_image_rect_delegate;
-		internal static void sk_canvas_draw_image_rect (IntPtr ccanvas, IntPtr cimage, SKRect* csrcR, SKRect* cdstR, SKSamplingOptions* sampling, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_image_rect (sk_canvas_t ccanvas, sk_image_t cimage, SKRect* csrcR, SKRect* cdstR, SKSamplingOptions* sampling, sk_paint_t cpaint) =>
 			(sk_canvas_draw_image_rect_delegate ??= GetSymbol<Delegates.sk_canvas_draw_image_rect> ("sk_canvas_draw_image_rect")).Invoke (ccanvas, cimage, csrcR, cdstR, sampling, cpaint);
 		#endif
 
@@ -416,18 +416,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_line (IntPtr ccanvas, Single x0, Single y0, Single x1, Single y1, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_line (sk_canvas_t ccanvas, Single x0, Single y0, Single x1, Single y1, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_line (IntPtr ccanvas, Single x0, Single y0, Single x1, Single y1, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_line (sk_canvas_t ccanvas, Single x0, Single y0, Single x1, Single y1, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_line (IntPtr ccanvas, Single x0, Single y0, Single x1, Single y1, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_line (sk_canvas_t ccanvas, Single x0, Single y0, Single x1, Single y1, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_line sk_canvas_draw_line_delegate;
-		internal static void sk_canvas_draw_line (IntPtr ccanvas, Single x0, Single y0, Single x1, Single y1, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_line (sk_canvas_t ccanvas, Single x0, Single y0, Single x1, Single y1, sk_paint_t cpaint) =>
 			(sk_canvas_draw_line_delegate ??= GetSymbol<Delegates.sk_canvas_draw_line> ("sk_canvas_draw_line")).Invoke (ccanvas, x0, y0, x1, y1, cpaint);
 		#endif
 
@@ -435,18 +435,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_link_destination_annotation (IntPtr t, SKRect* rect, IntPtr value);
+		internal static partial void sk_canvas_draw_link_destination_annotation (sk_canvas_t t, SKRect* rect, sk_data_t value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_link_destination_annotation (IntPtr t, SKRect* rect, IntPtr value);
+		internal static extern void sk_canvas_draw_link_destination_annotation (sk_canvas_t t, SKRect* rect, sk_data_t value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_link_destination_annotation (IntPtr t, SKRect* rect, IntPtr value);
+			internal delegate void sk_canvas_draw_link_destination_annotation (sk_canvas_t t, SKRect* rect, sk_data_t value);
 		}
 		private static Delegates.sk_canvas_draw_link_destination_annotation sk_canvas_draw_link_destination_annotation_delegate;
-		internal static void sk_canvas_draw_link_destination_annotation (IntPtr t, SKRect* rect, IntPtr value) =>
+		internal static void sk_canvas_draw_link_destination_annotation (sk_canvas_t t, SKRect* rect, sk_data_t value) =>
 			(sk_canvas_draw_link_destination_annotation_delegate ??= GetSymbol<Delegates.sk_canvas_draw_link_destination_annotation> ("sk_canvas_draw_link_destination_annotation")).Invoke (t, rect, value);
 		#endif
 
@@ -454,18 +454,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_named_destination_annotation (IntPtr t, SKPoint* point, IntPtr value);
+		internal static partial void sk_canvas_draw_named_destination_annotation (sk_canvas_t t, SKPoint* point, sk_data_t value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_named_destination_annotation (IntPtr t, SKPoint* point, IntPtr value);
+		internal static extern void sk_canvas_draw_named_destination_annotation (sk_canvas_t t, SKPoint* point, sk_data_t value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_named_destination_annotation (IntPtr t, SKPoint* point, IntPtr value);
+			internal delegate void sk_canvas_draw_named_destination_annotation (sk_canvas_t t, SKPoint* point, sk_data_t value);
 		}
 		private static Delegates.sk_canvas_draw_named_destination_annotation sk_canvas_draw_named_destination_annotation_delegate;
-		internal static void sk_canvas_draw_named_destination_annotation (IntPtr t, SKPoint* point, IntPtr value) =>
+		internal static void sk_canvas_draw_named_destination_annotation (sk_canvas_t t, SKPoint* point, sk_data_t value) =>
 			(sk_canvas_draw_named_destination_annotation_delegate ??= GetSymbol<Delegates.sk_canvas_draw_named_destination_annotation> ("sk_canvas_draw_named_destination_annotation")).Invoke (t, point, value);
 		#endif
 
@@ -473,18 +473,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_oval (IntPtr ccanvas, SKRect* crect, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_oval (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_oval (IntPtr ccanvas, SKRect* crect, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_oval (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_oval (IntPtr ccanvas, SKRect* crect, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_oval (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_oval sk_canvas_draw_oval_delegate;
-		internal static void sk_canvas_draw_oval (IntPtr ccanvas, SKRect* crect, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_oval (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint) =>
 			(sk_canvas_draw_oval_delegate ??= GetSymbol<Delegates.sk_canvas_draw_oval> ("sk_canvas_draw_oval")).Invoke (ccanvas, crect, cpaint);
 		#endif
 
@@ -492,18 +492,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_paint (IntPtr ccanvas, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_paint (sk_canvas_t ccanvas, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_paint (IntPtr ccanvas, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_paint (sk_canvas_t ccanvas, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_paint (IntPtr ccanvas, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_paint (sk_canvas_t ccanvas, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_paint sk_canvas_draw_paint_delegate;
-		internal static void sk_canvas_draw_paint (IntPtr ccanvas, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_paint (sk_canvas_t ccanvas, sk_paint_t cpaint) =>
 			(sk_canvas_draw_paint_delegate ??= GetSymbol<Delegates.sk_canvas_draw_paint> ("sk_canvas_draw_paint")).Invoke (ccanvas, cpaint);
 		#endif
 
@@ -511,18 +511,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_patch (IntPtr ccanvas, SKPoint* cubics, UInt32* colors, SKPoint* texCoords, SKBlendMode mode, IntPtr paint);
+		internal static partial void sk_canvas_draw_patch (sk_canvas_t ccanvas, SKPoint* cubics, UInt32* colors, SKPoint* texCoords, SKBlendMode mode, sk_paint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_patch (IntPtr ccanvas, SKPoint* cubics, UInt32* colors, SKPoint* texCoords, SKBlendMode mode, IntPtr paint);
+		internal static extern void sk_canvas_draw_patch (sk_canvas_t ccanvas, SKPoint* cubics, UInt32* colors, SKPoint* texCoords, SKBlendMode mode, sk_paint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_patch (IntPtr ccanvas, SKPoint* cubics, UInt32* colors, SKPoint* texCoords, SKBlendMode mode, IntPtr paint);
+			internal delegate void sk_canvas_draw_patch (sk_canvas_t ccanvas, SKPoint* cubics, UInt32* colors, SKPoint* texCoords, SKBlendMode mode, sk_paint_t paint);
 		}
 		private static Delegates.sk_canvas_draw_patch sk_canvas_draw_patch_delegate;
-		internal static void sk_canvas_draw_patch (IntPtr ccanvas, SKPoint* cubics, UInt32* colors, SKPoint* texCoords, SKBlendMode mode, IntPtr paint) =>
+		internal static void sk_canvas_draw_patch (sk_canvas_t ccanvas, SKPoint* cubics, UInt32* colors, SKPoint* texCoords, SKBlendMode mode, sk_paint_t paint) =>
 			(sk_canvas_draw_patch_delegate ??= GetSymbol<Delegates.sk_canvas_draw_patch> ("sk_canvas_draw_patch")).Invoke (ccanvas, cubics, colors, texCoords, mode, paint);
 		#endif
 
@@ -530,18 +530,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_path (IntPtr ccanvas, IntPtr cpath, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_path (sk_canvas_t ccanvas, sk_path_t cpath, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_path (IntPtr ccanvas, IntPtr cpath, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_path (sk_canvas_t ccanvas, sk_path_t cpath, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_path (IntPtr ccanvas, IntPtr cpath, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_path (sk_canvas_t ccanvas, sk_path_t cpath, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_path sk_canvas_draw_path_delegate;
-		internal static void sk_canvas_draw_path (IntPtr ccanvas, IntPtr cpath, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_path (sk_canvas_t ccanvas, sk_path_t cpath, sk_paint_t cpaint) =>
 			(sk_canvas_draw_path_delegate ??= GetSymbol<Delegates.sk_canvas_draw_path> ("sk_canvas_draw_path")).Invoke (ccanvas, cpath, cpaint);
 		#endif
 
@@ -549,18 +549,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_picture (IntPtr ccanvas, IntPtr cpicture, SKMatrix* cmatrix, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_picture (sk_canvas_t ccanvas, sk_picture_t cpicture, SKMatrix* cmatrix, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_picture (IntPtr ccanvas, IntPtr cpicture, SKMatrix* cmatrix, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_picture (sk_canvas_t ccanvas, sk_picture_t cpicture, SKMatrix* cmatrix, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_picture (IntPtr ccanvas, IntPtr cpicture, SKMatrix* cmatrix, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_picture (sk_canvas_t ccanvas, sk_picture_t cpicture, SKMatrix* cmatrix, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_picture sk_canvas_draw_picture_delegate;
-		internal static void sk_canvas_draw_picture (IntPtr ccanvas, IntPtr cpicture, SKMatrix* cmatrix, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_picture (sk_canvas_t ccanvas, sk_picture_t cpicture, SKMatrix* cmatrix, sk_paint_t cpaint) =>
 			(sk_canvas_draw_picture_delegate ??= GetSymbol<Delegates.sk_canvas_draw_picture> ("sk_canvas_draw_picture")).Invoke (ccanvas, cpicture, cmatrix, cpaint);
 		#endif
 
@@ -568,18 +568,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_point (IntPtr ccanvas, Single x, Single y, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_point (sk_canvas_t ccanvas, Single x, Single y, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_point (IntPtr ccanvas, Single x, Single y, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_point (sk_canvas_t ccanvas, Single x, Single y, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_point (IntPtr ccanvas, Single x, Single y, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_point (sk_canvas_t ccanvas, Single x, Single y, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_point sk_canvas_draw_point_delegate;
-		internal static void sk_canvas_draw_point (IntPtr ccanvas, Single x, Single y, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_point (sk_canvas_t ccanvas, Single x, Single y, sk_paint_t cpaint) =>
 			(sk_canvas_draw_point_delegate ??= GetSymbol<Delegates.sk_canvas_draw_point> ("sk_canvas_draw_point")).Invoke (ccanvas, x, y, cpaint);
 		#endif
 
@@ -587,18 +587,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_points (IntPtr ccanvas, SKPointMode pointMode, /* size_t */ IntPtr count, SKPoint* points, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_points (sk_canvas_t ccanvas, SKPointMode pointMode, /* size_t */ IntPtr count, SKPoint* points, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_points (IntPtr ccanvas, SKPointMode pointMode, /* size_t */ IntPtr count, SKPoint* points, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_points (sk_canvas_t ccanvas, SKPointMode pointMode, /* size_t */ IntPtr count, SKPoint* points, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_points (IntPtr ccanvas, SKPointMode pointMode, /* size_t */ IntPtr count, SKPoint* points, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_points (sk_canvas_t ccanvas, SKPointMode pointMode, /* size_t */ IntPtr count, SKPoint* points, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_points sk_canvas_draw_points_delegate;
-		internal static void sk_canvas_draw_points (IntPtr ccanvas, SKPointMode pointMode, /* size_t */ IntPtr count, SKPoint* points, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_points (sk_canvas_t ccanvas, SKPointMode pointMode, /* size_t */ IntPtr count, SKPoint* points, sk_paint_t cpaint) =>
 			(sk_canvas_draw_points_delegate ??= GetSymbol<Delegates.sk_canvas_draw_points> ("sk_canvas_draw_points")).Invoke (ccanvas, pointMode, count, points, cpaint);
 		#endif
 
@@ -606,18 +606,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_rect (IntPtr ccanvas, SKRect* crect, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_rect (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_rect (IntPtr ccanvas, SKRect* crect, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_rect (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_rect (IntPtr ccanvas, SKRect* crect, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_rect (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_rect sk_canvas_draw_rect_delegate;
-		internal static void sk_canvas_draw_rect (IntPtr ccanvas, SKRect* crect, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_rect (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint) =>
 			(sk_canvas_draw_rect_delegate ??= GetSymbol<Delegates.sk_canvas_draw_rect> ("sk_canvas_draw_rect")).Invoke (ccanvas, crect, cpaint);
 		#endif
 
@@ -625,18 +625,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_region (IntPtr ccanvas, IntPtr cregion, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_region (sk_canvas_t ccanvas, sk_region_t cregion, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_region (IntPtr ccanvas, IntPtr cregion, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_region (sk_canvas_t ccanvas, sk_region_t cregion, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_region (IntPtr ccanvas, IntPtr cregion, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_region (sk_canvas_t ccanvas, sk_region_t cregion, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_region sk_canvas_draw_region_delegate;
-		internal static void sk_canvas_draw_region (IntPtr ccanvas, IntPtr cregion, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_region (sk_canvas_t ccanvas, sk_region_t cregion, sk_paint_t cpaint) =>
 			(sk_canvas_draw_region_delegate ??= GetSymbol<Delegates.sk_canvas_draw_region> ("sk_canvas_draw_region")).Invoke (ccanvas, cregion, cpaint);
 		#endif
 
@@ -644,18 +644,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_round_rect (IntPtr ccanvas, SKRect* crect, Single rx, Single ry, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_round_rect (sk_canvas_t ccanvas, SKRect* crect, Single rx, Single ry, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_round_rect (IntPtr ccanvas, SKRect* crect, Single rx, Single ry, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_round_rect (sk_canvas_t ccanvas, SKRect* crect, Single rx, Single ry, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_round_rect (IntPtr ccanvas, SKRect* crect, Single rx, Single ry, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_round_rect (sk_canvas_t ccanvas, SKRect* crect, Single rx, Single ry, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_round_rect sk_canvas_draw_round_rect_delegate;
-		internal static void sk_canvas_draw_round_rect (IntPtr ccanvas, SKRect* crect, Single rx, Single ry, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_round_rect (sk_canvas_t ccanvas, SKRect* crect, Single rx, Single ry, sk_paint_t cpaint) =>
 			(sk_canvas_draw_round_rect_delegate ??= GetSymbol<Delegates.sk_canvas_draw_round_rect> ("sk_canvas_draw_round_rect")).Invoke (ccanvas, crect, rx, ry, cpaint);
 		#endif
 
@@ -663,18 +663,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_rrect (IntPtr ccanvas, IntPtr crect, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_rrect (sk_canvas_t ccanvas, sk_rrect_t crect, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_rrect (IntPtr ccanvas, IntPtr crect, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_rrect (sk_canvas_t ccanvas, sk_rrect_t crect, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_rrect (IntPtr ccanvas, IntPtr crect, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_rrect (sk_canvas_t ccanvas, sk_rrect_t crect, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_rrect sk_canvas_draw_rrect_delegate;
-		internal static void sk_canvas_draw_rrect (IntPtr ccanvas, IntPtr crect, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_rrect (sk_canvas_t ccanvas, sk_rrect_t crect, sk_paint_t cpaint) =>
 			(sk_canvas_draw_rrect_delegate ??= GetSymbol<Delegates.sk_canvas_draw_rrect> ("sk_canvas_draw_rrect")).Invoke (ccanvas, crect, cpaint);
 		#endif
 
@@ -682,18 +682,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_simple_text (IntPtr ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, IntPtr cfont, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_simple_text (sk_canvas_t ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, sk_font_t cfont, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_simple_text (IntPtr ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, IntPtr cfont, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_simple_text (sk_canvas_t ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, sk_font_t cfont, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_simple_text (IntPtr ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, IntPtr cfont, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_simple_text (sk_canvas_t ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, sk_font_t cfont, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_simple_text sk_canvas_draw_simple_text_delegate;
-		internal static void sk_canvas_draw_simple_text (IntPtr ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, IntPtr cfont, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_simple_text (sk_canvas_t ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, sk_font_t cfont, sk_paint_t cpaint) =>
 			(sk_canvas_draw_simple_text_delegate ??= GetSymbol<Delegates.sk_canvas_draw_simple_text> ("sk_canvas_draw_simple_text")).Invoke (ccanvas, text, byte_length, encoding, x, y, cfont, cpaint);
 		#endif
 
@@ -701,18 +701,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_text_blob (IntPtr ccanvas, IntPtr text, Single x, Single y, IntPtr cpaint);
+		internal static partial void sk_canvas_draw_text_blob (sk_canvas_t ccanvas, sk_textblob_t text, Single x, Single y, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_text_blob (IntPtr ccanvas, IntPtr text, Single x, Single y, IntPtr cpaint);
+		internal static extern void sk_canvas_draw_text_blob (sk_canvas_t ccanvas, sk_textblob_t text, Single x, Single y, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_text_blob (IntPtr ccanvas, IntPtr text, Single x, Single y, IntPtr cpaint);
+			internal delegate void sk_canvas_draw_text_blob (sk_canvas_t ccanvas, sk_textblob_t text, Single x, Single y, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_draw_text_blob sk_canvas_draw_text_blob_delegate;
-		internal static void sk_canvas_draw_text_blob (IntPtr ccanvas, IntPtr text, Single x, Single y, IntPtr cpaint) =>
+		internal static void sk_canvas_draw_text_blob (sk_canvas_t ccanvas, sk_textblob_t text, Single x, Single y, sk_paint_t cpaint) =>
 			(sk_canvas_draw_text_blob_delegate ??= GetSymbol<Delegates.sk_canvas_draw_text_blob> ("sk_canvas_draw_text_blob")).Invoke (ccanvas, text, x, y, cpaint);
 		#endif
 
@@ -720,18 +720,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_url_annotation (IntPtr t, SKRect* rect, IntPtr value);
+		internal static partial void sk_canvas_draw_url_annotation (sk_canvas_t t, SKRect* rect, sk_data_t value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_url_annotation (IntPtr t, SKRect* rect, IntPtr value);
+		internal static extern void sk_canvas_draw_url_annotation (sk_canvas_t t, SKRect* rect, sk_data_t value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_url_annotation (IntPtr t, SKRect* rect, IntPtr value);
+			internal delegate void sk_canvas_draw_url_annotation (sk_canvas_t t, SKRect* rect, sk_data_t value);
 		}
 		private static Delegates.sk_canvas_draw_url_annotation sk_canvas_draw_url_annotation_delegate;
-		internal static void sk_canvas_draw_url_annotation (IntPtr t, SKRect* rect, IntPtr value) =>
+		internal static void sk_canvas_draw_url_annotation (sk_canvas_t t, SKRect* rect, sk_data_t value) =>
 			(sk_canvas_draw_url_annotation_delegate ??= GetSymbol<Delegates.sk_canvas_draw_url_annotation> ("sk_canvas_draw_url_annotation")).Invoke (t, rect, value);
 		#endif
 
@@ -739,18 +739,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_draw_vertices (IntPtr ccanvas, IntPtr vertices, SKBlendMode mode, IntPtr paint);
+		internal static partial void sk_canvas_draw_vertices (sk_canvas_t ccanvas, sk_vertices_t vertices, SKBlendMode mode, sk_paint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_vertices (IntPtr ccanvas, IntPtr vertices, SKBlendMode mode, IntPtr paint);
+		internal static extern void sk_canvas_draw_vertices (sk_canvas_t ccanvas, sk_vertices_t vertices, SKBlendMode mode, sk_paint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_draw_vertices (IntPtr ccanvas, IntPtr vertices, SKBlendMode mode, IntPtr paint);
+			internal delegate void sk_canvas_draw_vertices (sk_canvas_t ccanvas, sk_vertices_t vertices, SKBlendMode mode, sk_paint_t paint);
 		}
 		private static Delegates.sk_canvas_draw_vertices sk_canvas_draw_vertices_delegate;
-		internal static void sk_canvas_draw_vertices (IntPtr ccanvas, IntPtr vertices, SKBlendMode mode, IntPtr paint) =>
+		internal static void sk_canvas_draw_vertices (sk_canvas_t ccanvas, sk_vertices_t vertices, SKBlendMode mode, sk_paint_t paint) =>
 			(sk_canvas_draw_vertices_delegate ??= GetSymbol<Delegates.sk_canvas_draw_vertices> ("sk_canvas_draw_vertices")).Invoke (ccanvas, vertices, mode, paint);
 		#endif
 
@@ -759,20 +759,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_canvas_get_device_clip_bounds (IntPtr ccanvas, SKRectI* cbounds);
+		internal static partial bool sk_canvas_get_device_clip_bounds (sk_canvas_t ccanvas, SKRectI* cbounds);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_canvas_get_device_clip_bounds (IntPtr ccanvas, SKRectI* cbounds);
+		internal static extern bool sk_canvas_get_device_clip_bounds (sk_canvas_t ccanvas, SKRectI* cbounds);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_canvas_get_device_clip_bounds (IntPtr ccanvas, SKRectI* cbounds);
+			internal delegate bool sk_canvas_get_device_clip_bounds (sk_canvas_t ccanvas, SKRectI* cbounds);
 		}
 		private static Delegates.sk_canvas_get_device_clip_bounds sk_canvas_get_device_clip_bounds_delegate;
-		internal static bool sk_canvas_get_device_clip_bounds (IntPtr ccanvas, SKRectI* cbounds) =>
+		internal static bool sk_canvas_get_device_clip_bounds (sk_canvas_t ccanvas, SKRectI* cbounds) =>
 			(sk_canvas_get_device_clip_bounds_delegate ??= GetSymbol<Delegates.sk_canvas_get_device_clip_bounds> ("sk_canvas_get_device_clip_bounds")).Invoke (ccanvas, cbounds);
 		#endif
 
@@ -781,20 +781,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_canvas_get_local_clip_bounds (IntPtr ccanvas, SKRect* cbounds);
+		internal static partial bool sk_canvas_get_local_clip_bounds (sk_canvas_t ccanvas, SKRect* cbounds);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_canvas_get_local_clip_bounds (IntPtr ccanvas, SKRect* cbounds);
+		internal static extern bool sk_canvas_get_local_clip_bounds (sk_canvas_t ccanvas, SKRect* cbounds);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_canvas_get_local_clip_bounds (IntPtr ccanvas, SKRect* cbounds);
+			internal delegate bool sk_canvas_get_local_clip_bounds (sk_canvas_t ccanvas, SKRect* cbounds);
 		}
 		private static Delegates.sk_canvas_get_local_clip_bounds sk_canvas_get_local_clip_bounds_delegate;
-		internal static bool sk_canvas_get_local_clip_bounds (IntPtr ccanvas, SKRect* cbounds) =>
+		internal static bool sk_canvas_get_local_clip_bounds (sk_canvas_t ccanvas, SKRect* cbounds) =>
 			(sk_canvas_get_local_clip_bounds_delegate ??= GetSymbol<Delegates.sk_canvas_get_local_clip_bounds> ("sk_canvas_get_local_clip_bounds")).Invoke (ccanvas, cbounds);
 		#endif
 
@@ -802,18 +802,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_get_matrix (IntPtr ccanvas, SKMatrix44* cmatrix);
+		internal static partial void sk_canvas_get_matrix (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_get_matrix (IntPtr ccanvas, SKMatrix44* cmatrix);
+		internal static extern void sk_canvas_get_matrix (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_get_matrix (IntPtr ccanvas, SKMatrix44* cmatrix);
+			internal delegate void sk_canvas_get_matrix (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
 		}
 		private static Delegates.sk_canvas_get_matrix sk_canvas_get_matrix_delegate;
-		internal static void sk_canvas_get_matrix (IntPtr ccanvas, SKMatrix44* cmatrix) =>
+		internal static void sk_canvas_get_matrix (sk_canvas_t ccanvas, SKMatrix44* cmatrix) =>
 			(sk_canvas_get_matrix_delegate ??= GetSymbol<Delegates.sk_canvas_get_matrix> ("sk_canvas_get_matrix")).Invoke (ccanvas, cmatrix);
 		#endif
 
@@ -821,18 +821,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 sk_canvas_get_save_count (IntPtr ccanvas);
+		internal static partial Int32 sk_canvas_get_save_count (sk_canvas_t ccanvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_canvas_get_save_count (IntPtr ccanvas);
+		internal static extern Int32 sk_canvas_get_save_count (sk_canvas_t ccanvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 sk_canvas_get_save_count (IntPtr ccanvas);
+			internal delegate Int32 sk_canvas_get_save_count (sk_canvas_t ccanvas);
 		}
 		private static Delegates.sk_canvas_get_save_count sk_canvas_get_save_count_delegate;
-		internal static Int32 sk_canvas_get_save_count (IntPtr ccanvas) =>
+		internal static Int32 sk_canvas_get_save_count (sk_canvas_t ccanvas) =>
 			(sk_canvas_get_save_count_delegate ??= GetSymbol<Delegates.sk_canvas_get_save_count> ("sk_canvas_get_save_count")).Invoke (ccanvas);
 		#endif
 
@@ -841,20 +841,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_canvas_is_clip_empty (IntPtr ccanvas);
+		internal static partial bool sk_canvas_is_clip_empty (sk_canvas_t ccanvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_canvas_is_clip_empty (IntPtr ccanvas);
+		internal static extern bool sk_canvas_is_clip_empty (sk_canvas_t ccanvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_canvas_is_clip_empty (IntPtr ccanvas);
+			internal delegate bool sk_canvas_is_clip_empty (sk_canvas_t ccanvas);
 		}
 		private static Delegates.sk_canvas_is_clip_empty sk_canvas_is_clip_empty_delegate;
-		internal static bool sk_canvas_is_clip_empty (IntPtr ccanvas) =>
+		internal static bool sk_canvas_is_clip_empty (sk_canvas_t ccanvas) =>
 			(sk_canvas_is_clip_empty_delegate ??= GetSymbol<Delegates.sk_canvas_is_clip_empty> ("sk_canvas_is_clip_empty")).Invoke (ccanvas);
 		#endif
 
@@ -863,20 +863,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_canvas_is_clip_rect (IntPtr ccanvas);
+		internal static partial bool sk_canvas_is_clip_rect (sk_canvas_t ccanvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_canvas_is_clip_rect (IntPtr ccanvas);
+		internal static extern bool sk_canvas_is_clip_rect (sk_canvas_t ccanvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_canvas_is_clip_rect (IntPtr ccanvas);
+			internal delegate bool sk_canvas_is_clip_rect (sk_canvas_t ccanvas);
 		}
 		private static Delegates.sk_canvas_is_clip_rect sk_canvas_is_clip_rect_delegate;
-		internal static bool sk_canvas_is_clip_rect (IntPtr ccanvas) =>
+		internal static bool sk_canvas_is_clip_rect (sk_canvas_t ccanvas) =>
 			(sk_canvas_is_clip_rect_delegate ??= GetSymbol<Delegates.sk_canvas_is_clip_rect> ("sk_canvas_is_clip_rect")).Invoke (ccanvas);
 		#endif
 
@@ -884,18 +884,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_canvas_new_from_bitmap (IntPtr bitmap);
+		internal static partial sk_canvas_t sk_canvas_new_from_bitmap (sk_bitmap_t bitmap);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_canvas_new_from_bitmap (IntPtr bitmap);
+		internal static extern sk_canvas_t sk_canvas_new_from_bitmap (sk_bitmap_t bitmap);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_canvas_new_from_bitmap (IntPtr bitmap);
+			internal delegate sk_canvas_t sk_canvas_new_from_bitmap (sk_bitmap_t bitmap);
 		}
 		private static Delegates.sk_canvas_new_from_bitmap sk_canvas_new_from_bitmap_delegate;
-		internal static IntPtr sk_canvas_new_from_bitmap (IntPtr bitmap) =>
+		internal static sk_canvas_t sk_canvas_new_from_bitmap (sk_bitmap_t bitmap) =>
 			(sk_canvas_new_from_bitmap_delegate ??= GetSymbol<Delegates.sk_canvas_new_from_bitmap> ("sk_canvas_new_from_bitmap")).Invoke (bitmap);
 		#endif
 
@@ -903,18 +903,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_canvas_new_from_raster (SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, IntPtr props);
+		internal static partial sk_canvas_t sk_canvas_new_from_raster (SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, sk_surfaceprops_t props);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_canvas_new_from_raster (SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, IntPtr props);
+		internal static extern sk_canvas_t sk_canvas_new_from_raster (SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, sk_surfaceprops_t props);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_canvas_new_from_raster (SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, IntPtr props);
+			internal delegate sk_canvas_t sk_canvas_new_from_raster (SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, sk_surfaceprops_t props);
 		}
 		private static Delegates.sk_canvas_new_from_raster sk_canvas_new_from_raster_delegate;
-		internal static IntPtr sk_canvas_new_from_raster (SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, IntPtr props) =>
+		internal static sk_canvas_t sk_canvas_new_from_raster (SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, sk_surfaceprops_t props) =>
 			(sk_canvas_new_from_raster_delegate ??= GetSymbol<Delegates.sk_canvas_new_from_raster> ("sk_canvas_new_from_raster")).Invoke (cinfo, pixels, rowBytes, props);
 		#endif
 
@@ -923,20 +923,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_canvas_quick_reject (IntPtr ccanvas, SKRect* crect);
+		internal static partial bool sk_canvas_quick_reject (sk_canvas_t ccanvas, SKRect* crect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_canvas_quick_reject (IntPtr ccanvas, SKRect* crect);
+		internal static extern bool sk_canvas_quick_reject (sk_canvas_t ccanvas, SKRect* crect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_canvas_quick_reject (IntPtr ccanvas, SKRect* crect);
+			internal delegate bool sk_canvas_quick_reject (sk_canvas_t ccanvas, SKRect* crect);
 		}
 		private static Delegates.sk_canvas_quick_reject sk_canvas_quick_reject_delegate;
-		internal static bool sk_canvas_quick_reject (IntPtr ccanvas, SKRect* crect) =>
+		internal static bool sk_canvas_quick_reject (sk_canvas_t ccanvas, SKRect* crect) =>
 			(sk_canvas_quick_reject_delegate ??= GetSymbol<Delegates.sk_canvas_quick_reject> ("sk_canvas_quick_reject")).Invoke (ccanvas, crect);
 		#endif
 
@@ -944,18 +944,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_reset_matrix (IntPtr ccanvas);
+		internal static partial void sk_canvas_reset_matrix (sk_canvas_t ccanvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_reset_matrix (IntPtr ccanvas);
+		internal static extern void sk_canvas_reset_matrix (sk_canvas_t ccanvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_reset_matrix (IntPtr ccanvas);
+			internal delegate void sk_canvas_reset_matrix (sk_canvas_t ccanvas);
 		}
 		private static Delegates.sk_canvas_reset_matrix sk_canvas_reset_matrix_delegate;
-		internal static void sk_canvas_reset_matrix (IntPtr ccanvas) =>
+		internal static void sk_canvas_reset_matrix (sk_canvas_t ccanvas) =>
 			(sk_canvas_reset_matrix_delegate ??= GetSymbol<Delegates.sk_canvas_reset_matrix> ("sk_canvas_reset_matrix")).Invoke (ccanvas);
 		#endif
 
@@ -963,18 +963,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_restore (IntPtr ccanvas);
+		internal static partial void sk_canvas_restore (sk_canvas_t ccanvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_restore (IntPtr ccanvas);
+		internal static extern void sk_canvas_restore (sk_canvas_t ccanvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_restore (IntPtr ccanvas);
+			internal delegate void sk_canvas_restore (sk_canvas_t ccanvas);
 		}
 		private static Delegates.sk_canvas_restore sk_canvas_restore_delegate;
-		internal static void sk_canvas_restore (IntPtr ccanvas) =>
+		internal static void sk_canvas_restore (sk_canvas_t ccanvas) =>
 			(sk_canvas_restore_delegate ??= GetSymbol<Delegates.sk_canvas_restore> ("sk_canvas_restore")).Invoke (ccanvas);
 		#endif
 
@@ -982,18 +982,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_restore_to_count (IntPtr ccanvas, Int32 saveCount);
+		internal static partial void sk_canvas_restore_to_count (sk_canvas_t ccanvas, Int32 saveCount);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_restore_to_count (IntPtr ccanvas, Int32 saveCount);
+		internal static extern void sk_canvas_restore_to_count (sk_canvas_t ccanvas, Int32 saveCount);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_restore_to_count (IntPtr ccanvas, Int32 saveCount);
+			internal delegate void sk_canvas_restore_to_count (sk_canvas_t ccanvas, Int32 saveCount);
 		}
 		private static Delegates.sk_canvas_restore_to_count sk_canvas_restore_to_count_delegate;
-		internal static void sk_canvas_restore_to_count (IntPtr ccanvas, Int32 saveCount) =>
+		internal static void sk_canvas_restore_to_count (sk_canvas_t ccanvas, Int32 saveCount) =>
 			(sk_canvas_restore_to_count_delegate ??= GetSymbol<Delegates.sk_canvas_restore_to_count> ("sk_canvas_restore_to_count")).Invoke (ccanvas, saveCount);
 		#endif
 
@@ -1001,18 +1001,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_rotate_degrees (IntPtr ccanvas, Single degrees);
+		internal static partial void sk_canvas_rotate_degrees (sk_canvas_t ccanvas, Single degrees);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_rotate_degrees (IntPtr ccanvas, Single degrees);
+		internal static extern void sk_canvas_rotate_degrees (sk_canvas_t ccanvas, Single degrees);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_rotate_degrees (IntPtr ccanvas, Single degrees);
+			internal delegate void sk_canvas_rotate_degrees (sk_canvas_t ccanvas, Single degrees);
 		}
 		private static Delegates.sk_canvas_rotate_degrees sk_canvas_rotate_degrees_delegate;
-		internal static void sk_canvas_rotate_degrees (IntPtr ccanvas, Single degrees) =>
+		internal static void sk_canvas_rotate_degrees (sk_canvas_t ccanvas, Single degrees) =>
 			(sk_canvas_rotate_degrees_delegate ??= GetSymbol<Delegates.sk_canvas_rotate_degrees> ("sk_canvas_rotate_degrees")).Invoke (ccanvas, degrees);
 		#endif
 
@@ -1020,18 +1020,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_rotate_radians (IntPtr ccanvas, Single radians);
+		internal static partial void sk_canvas_rotate_radians (sk_canvas_t ccanvas, Single radians);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_rotate_radians (IntPtr ccanvas, Single radians);
+		internal static extern void sk_canvas_rotate_radians (sk_canvas_t ccanvas, Single radians);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_rotate_radians (IntPtr ccanvas, Single radians);
+			internal delegate void sk_canvas_rotate_radians (sk_canvas_t ccanvas, Single radians);
 		}
 		private static Delegates.sk_canvas_rotate_radians sk_canvas_rotate_radians_delegate;
-		internal static void sk_canvas_rotate_radians (IntPtr ccanvas, Single radians) =>
+		internal static void sk_canvas_rotate_radians (sk_canvas_t ccanvas, Single radians) =>
 			(sk_canvas_rotate_radians_delegate ??= GetSymbol<Delegates.sk_canvas_rotate_radians> ("sk_canvas_rotate_radians")).Invoke (ccanvas, radians);
 		#endif
 
@@ -1039,18 +1039,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 sk_canvas_save (IntPtr ccanvas);
+		internal static partial Int32 sk_canvas_save (sk_canvas_t ccanvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_canvas_save (IntPtr ccanvas);
+		internal static extern Int32 sk_canvas_save (sk_canvas_t ccanvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 sk_canvas_save (IntPtr ccanvas);
+			internal delegate Int32 sk_canvas_save (sk_canvas_t ccanvas);
 		}
 		private static Delegates.sk_canvas_save sk_canvas_save_delegate;
-		internal static Int32 sk_canvas_save (IntPtr ccanvas) =>
+		internal static Int32 sk_canvas_save (sk_canvas_t ccanvas) =>
 			(sk_canvas_save_delegate ??= GetSymbol<Delegates.sk_canvas_save> ("sk_canvas_save")).Invoke (ccanvas);
 		#endif
 
@@ -1058,18 +1058,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 sk_canvas_save_layer (IntPtr ccanvas, SKRect* crect, IntPtr cpaint);
+		internal static partial Int32 sk_canvas_save_layer (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_canvas_save_layer (IntPtr ccanvas, SKRect* crect, IntPtr cpaint);
+		internal static extern Int32 sk_canvas_save_layer (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 sk_canvas_save_layer (IntPtr ccanvas, SKRect* crect, IntPtr cpaint);
+			internal delegate Int32 sk_canvas_save_layer (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
 		}
 		private static Delegates.sk_canvas_save_layer sk_canvas_save_layer_delegate;
-		internal static Int32 sk_canvas_save_layer (IntPtr ccanvas, SKRect* crect, IntPtr cpaint) =>
+		internal static Int32 sk_canvas_save_layer (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint) =>
 			(sk_canvas_save_layer_delegate ??= GetSymbol<Delegates.sk_canvas_save_layer> ("sk_canvas_save_layer")).Invoke (ccanvas, crect, cpaint);
 		#endif
 
@@ -1077,18 +1077,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 sk_canvas_save_layer_rec (IntPtr ccanvas, SKCanvasSaveLayerRecNative* crec);
+		internal static partial Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKCanvasSaveLayerRecNative* crec);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_canvas_save_layer_rec (IntPtr ccanvas, SKCanvasSaveLayerRecNative* crec);
+		internal static extern Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKCanvasSaveLayerRecNative* crec);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 sk_canvas_save_layer_rec (IntPtr ccanvas, SKCanvasSaveLayerRecNative* crec);
+			internal delegate Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKCanvasSaveLayerRecNative* crec);
 		}
 		private static Delegates.sk_canvas_save_layer_rec sk_canvas_save_layer_rec_delegate;
-		internal static Int32 sk_canvas_save_layer_rec (IntPtr ccanvas, SKCanvasSaveLayerRecNative* crec) =>
+		internal static Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKCanvasSaveLayerRecNative* crec) =>
 			(sk_canvas_save_layer_rec_delegate ??= GetSymbol<Delegates.sk_canvas_save_layer_rec> ("sk_canvas_save_layer_rec")).Invoke (ccanvas, crec);
 		#endif
 
@@ -1096,18 +1096,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_scale (IntPtr ccanvas, Single sx, Single sy);
+		internal static partial void sk_canvas_scale (sk_canvas_t ccanvas, Single sx, Single sy);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_scale (IntPtr ccanvas, Single sx, Single sy);
+		internal static extern void sk_canvas_scale (sk_canvas_t ccanvas, Single sx, Single sy);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_scale (IntPtr ccanvas, Single sx, Single sy);
+			internal delegate void sk_canvas_scale (sk_canvas_t ccanvas, Single sx, Single sy);
 		}
 		private static Delegates.sk_canvas_scale sk_canvas_scale_delegate;
-		internal static void sk_canvas_scale (IntPtr ccanvas, Single sx, Single sy) =>
+		internal static void sk_canvas_scale (sk_canvas_t ccanvas, Single sx, Single sy) =>
 			(sk_canvas_scale_delegate ??= GetSymbol<Delegates.sk_canvas_scale> ("sk_canvas_scale")).Invoke (ccanvas, sx, sy);
 		#endif
 
@@ -1115,18 +1115,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_set_matrix (IntPtr ccanvas, SKMatrix44* cmatrix);
+		internal static partial void sk_canvas_set_matrix (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_set_matrix (IntPtr ccanvas, SKMatrix44* cmatrix);
+		internal static extern void sk_canvas_set_matrix (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_set_matrix (IntPtr ccanvas, SKMatrix44* cmatrix);
+			internal delegate void sk_canvas_set_matrix (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
 		}
 		private static Delegates.sk_canvas_set_matrix sk_canvas_set_matrix_delegate;
-		internal static void sk_canvas_set_matrix (IntPtr ccanvas, SKMatrix44* cmatrix) =>
+		internal static void sk_canvas_set_matrix (sk_canvas_t ccanvas, SKMatrix44* cmatrix) =>
 			(sk_canvas_set_matrix_delegate ??= GetSymbol<Delegates.sk_canvas_set_matrix> ("sk_canvas_set_matrix")).Invoke (ccanvas, cmatrix);
 		#endif
 
@@ -1134,18 +1134,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_skew (IntPtr ccanvas, Single sx, Single sy);
+		internal static partial void sk_canvas_skew (sk_canvas_t ccanvas, Single sx, Single sy);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_skew (IntPtr ccanvas, Single sx, Single sy);
+		internal static extern void sk_canvas_skew (sk_canvas_t ccanvas, Single sx, Single sy);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_skew (IntPtr ccanvas, Single sx, Single sy);
+			internal delegate void sk_canvas_skew (sk_canvas_t ccanvas, Single sx, Single sy);
 		}
 		private static Delegates.sk_canvas_skew sk_canvas_skew_delegate;
-		internal static void sk_canvas_skew (IntPtr ccanvas, Single sx, Single sy) =>
+		internal static void sk_canvas_skew (sk_canvas_t ccanvas, Single sx, Single sy) =>
 			(sk_canvas_skew_delegate ??= GetSymbol<Delegates.sk_canvas_skew> ("sk_canvas_skew")).Invoke (ccanvas, sx, sy);
 		#endif
 
@@ -1153,18 +1153,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_translate (IntPtr ccanvas, Single dx, Single dy);
+		internal static partial void sk_canvas_translate (sk_canvas_t ccanvas, Single dx, Single dy);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_translate (IntPtr ccanvas, Single dx, Single dy);
+		internal static extern void sk_canvas_translate (sk_canvas_t ccanvas, Single dx, Single dy);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_translate (IntPtr ccanvas, Single dx, Single dy);
+			internal delegate void sk_canvas_translate (sk_canvas_t ccanvas, Single dx, Single dy);
 		}
 		private static Delegates.sk_canvas_translate sk_canvas_translate_delegate;
-		internal static void sk_canvas_translate (IntPtr ccanvas, Single dx, Single dy) =>
+		internal static void sk_canvas_translate (sk_canvas_t ccanvas, Single dx, Single dy) =>
 			(sk_canvas_translate_delegate ??= GetSymbol<Delegates.sk_canvas_translate> ("sk_canvas_translate")).Invoke (ccanvas, dx, dy);
 		#endif
 
@@ -1172,18 +1172,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_get_recording_context (IntPtr canvas);
+		internal static partial gr_recording_context_t sk_get_recording_context (sk_canvas_t canvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_get_recording_context (IntPtr canvas);
+		internal static extern gr_recording_context_t sk_get_recording_context (sk_canvas_t canvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_get_recording_context (IntPtr canvas);
+			internal delegate gr_recording_context_t sk_get_recording_context (sk_canvas_t canvas);
 		}
 		private static Delegates.sk_get_recording_context sk_get_recording_context_delegate;
-		internal static IntPtr sk_get_recording_context (IntPtr canvas) =>
+		internal static gr_recording_context_t sk_get_recording_context (sk_canvas_t canvas) =>
 			(sk_get_recording_context_delegate ??= GetSymbol<Delegates.sk_get_recording_context> ("sk_get_recording_context")).Invoke (canvas);
 		#endif
 
@@ -1191,18 +1191,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_get_surface (IntPtr canvas);
+		internal static partial sk_surface_t sk_get_surface (sk_canvas_t canvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_get_surface (IntPtr canvas);
+		internal static extern sk_surface_t sk_get_surface (sk_canvas_t canvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_get_surface (IntPtr canvas);
+			internal delegate sk_surface_t sk_get_surface (sk_canvas_t canvas);
 		}
 		private static Delegates.sk_get_surface sk_get_surface_delegate;
-		internal static IntPtr sk_get_surface (IntPtr canvas) =>
+		internal static sk_surface_t sk_get_surface (sk_canvas_t canvas) =>
 			(sk_get_surface_delegate ??= GetSymbol<Delegates.sk_get_surface> ("sk_get_surface")).Invoke (canvas);
 		#endif
 
@@ -1210,18 +1210,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_nodraw_canvas_destroy (IntPtr t);
+		internal static partial void sk_nodraw_canvas_destroy (sk_nodraw_canvas_t t);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_nodraw_canvas_destroy (IntPtr t);
+		internal static extern void sk_nodraw_canvas_destroy (sk_nodraw_canvas_t t);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_nodraw_canvas_destroy (IntPtr t);
+			internal delegate void sk_nodraw_canvas_destroy (sk_nodraw_canvas_t t);
 		}
 		private static Delegates.sk_nodraw_canvas_destroy sk_nodraw_canvas_destroy_delegate;
-		internal static void sk_nodraw_canvas_destroy (IntPtr t) =>
+		internal static void sk_nodraw_canvas_destroy (sk_nodraw_canvas_t t) =>
 			(sk_nodraw_canvas_destroy_delegate ??= GetSymbol<Delegates.sk_nodraw_canvas_destroy> ("sk_nodraw_canvas_destroy")).Invoke (t);
 		#endif
 
@@ -1229,18 +1229,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_nodraw_canvas_new (Int32 width, Int32 height);
+		internal static partial sk_nodraw_canvas_t sk_nodraw_canvas_new (Int32 width, Int32 height);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_nodraw_canvas_new (Int32 width, Int32 height);
+		internal static extern sk_nodraw_canvas_t sk_nodraw_canvas_new (Int32 width, Int32 height);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_nodraw_canvas_new (Int32 width, Int32 height);
+			internal delegate sk_nodraw_canvas_t sk_nodraw_canvas_new (Int32 width, Int32 height);
 		}
 		private static Delegates.sk_nodraw_canvas_new sk_nodraw_canvas_new_delegate;
-		internal static IntPtr sk_nodraw_canvas_new (Int32 width, Int32 height) =>
+		internal static sk_nodraw_canvas_t sk_nodraw_canvas_new (Int32 width, Int32 height) =>
 			(sk_nodraw_canvas_new_delegate ??= GetSymbol<Delegates.sk_nodraw_canvas_new> ("sk_nodraw_canvas_new")).Invoke (width, height);
 		#endif
 
@@ -1248,18 +1248,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_nway_canvas_add_canvas (IntPtr t, IntPtr canvas);
+		internal static partial void sk_nway_canvas_add_canvas (sk_nway_canvas_t t, sk_canvas_t canvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_nway_canvas_add_canvas (IntPtr t, IntPtr canvas);
+		internal static extern void sk_nway_canvas_add_canvas (sk_nway_canvas_t t, sk_canvas_t canvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_nway_canvas_add_canvas (IntPtr t, IntPtr canvas);
+			internal delegate void sk_nway_canvas_add_canvas (sk_nway_canvas_t t, sk_canvas_t canvas);
 		}
 		private static Delegates.sk_nway_canvas_add_canvas sk_nway_canvas_add_canvas_delegate;
-		internal static void sk_nway_canvas_add_canvas (IntPtr t, IntPtr canvas) =>
+		internal static void sk_nway_canvas_add_canvas (sk_nway_canvas_t t, sk_canvas_t canvas) =>
 			(sk_nway_canvas_add_canvas_delegate ??= GetSymbol<Delegates.sk_nway_canvas_add_canvas> ("sk_nway_canvas_add_canvas")).Invoke (t, canvas);
 		#endif
 
@@ -1267,18 +1267,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_nway_canvas_destroy (IntPtr t);
+		internal static partial void sk_nway_canvas_destroy (sk_nway_canvas_t t);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_nway_canvas_destroy (IntPtr t);
+		internal static extern void sk_nway_canvas_destroy (sk_nway_canvas_t t);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_nway_canvas_destroy (IntPtr t);
+			internal delegate void sk_nway_canvas_destroy (sk_nway_canvas_t t);
 		}
 		private static Delegates.sk_nway_canvas_destroy sk_nway_canvas_destroy_delegate;
-		internal static void sk_nway_canvas_destroy (IntPtr t) =>
+		internal static void sk_nway_canvas_destroy (sk_nway_canvas_t t) =>
 			(sk_nway_canvas_destroy_delegate ??= GetSymbol<Delegates.sk_nway_canvas_destroy> ("sk_nway_canvas_destroy")).Invoke (t);
 		#endif
 
@@ -1286,18 +1286,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_nway_canvas_new (Int32 width, Int32 height);
+		internal static partial sk_nway_canvas_t sk_nway_canvas_new (Int32 width, Int32 height);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_nway_canvas_new (Int32 width, Int32 height);
+		internal static extern sk_nway_canvas_t sk_nway_canvas_new (Int32 width, Int32 height);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_nway_canvas_new (Int32 width, Int32 height);
+			internal delegate sk_nway_canvas_t sk_nway_canvas_new (Int32 width, Int32 height);
 		}
 		private static Delegates.sk_nway_canvas_new sk_nway_canvas_new_delegate;
-		internal static IntPtr sk_nway_canvas_new (Int32 width, Int32 height) =>
+		internal static sk_nway_canvas_t sk_nway_canvas_new (Int32 width, Int32 height) =>
 			(sk_nway_canvas_new_delegate ??= GetSymbol<Delegates.sk_nway_canvas_new> ("sk_nway_canvas_new")).Invoke (width, height);
 		#endif
 
@@ -1305,18 +1305,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_nway_canvas_remove_all (IntPtr t);
+		internal static partial void sk_nway_canvas_remove_all (sk_nway_canvas_t t);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_nway_canvas_remove_all (IntPtr t);
+		internal static extern void sk_nway_canvas_remove_all (sk_nway_canvas_t t);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_nway_canvas_remove_all (IntPtr t);
+			internal delegate void sk_nway_canvas_remove_all (sk_nway_canvas_t t);
 		}
 		private static Delegates.sk_nway_canvas_remove_all sk_nway_canvas_remove_all_delegate;
-		internal static void sk_nway_canvas_remove_all (IntPtr t) =>
+		internal static void sk_nway_canvas_remove_all (sk_nway_canvas_t t) =>
 			(sk_nway_canvas_remove_all_delegate ??= GetSymbol<Delegates.sk_nway_canvas_remove_all> ("sk_nway_canvas_remove_all")).Invoke (t);
 		#endif
 
@@ -1324,18 +1324,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_nway_canvas_remove_canvas (IntPtr t, IntPtr canvas);
+		internal static partial void sk_nway_canvas_remove_canvas (sk_nway_canvas_t t, sk_canvas_t canvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_nway_canvas_remove_canvas (IntPtr t, IntPtr canvas);
+		internal static extern void sk_nway_canvas_remove_canvas (sk_nway_canvas_t t, sk_canvas_t canvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_nway_canvas_remove_canvas (IntPtr t, IntPtr canvas);
+			internal delegate void sk_nway_canvas_remove_canvas (sk_nway_canvas_t t, sk_canvas_t canvas);
 		}
 		private static Delegates.sk_nway_canvas_remove_canvas sk_nway_canvas_remove_canvas_delegate;
-		internal static void sk_nway_canvas_remove_canvas (IntPtr t, IntPtr canvas) =>
+		internal static void sk_nway_canvas_remove_canvas (sk_nway_canvas_t t, sk_canvas_t canvas) =>
 			(sk_nway_canvas_remove_canvas_delegate ??= GetSymbol<Delegates.sk_nway_canvas_remove_canvas> ("sk_nway_canvas_remove_canvas")).Invoke (t, canvas);
 		#endif
 
@@ -1343,18 +1343,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_overdraw_canvas_destroy (IntPtr canvas);
+		internal static partial void sk_overdraw_canvas_destroy (sk_overdraw_canvas_t canvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_overdraw_canvas_destroy (IntPtr canvas);
+		internal static extern void sk_overdraw_canvas_destroy (sk_overdraw_canvas_t canvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_overdraw_canvas_destroy (IntPtr canvas);
+			internal delegate void sk_overdraw_canvas_destroy (sk_overdraw_canvas_t canvas);
 		}
 		private static Delegates.sk_overdraw_canvas_destroy sk_overdraw_canvas_destroy_delegate;
-		internal static void sk_overdraw_canvas_destroy (IntPtr canvas) =>
+		internal static void sk_overdraw_canvas_destroy (sk_overdraw_canvas_t canvas) =>
 			(sk_overdraw_canvas_destroy_delegate ??= GetSymbol<Delegates.sk_overdraw_canvas_destroy> ("sk_overdraw_canvas_destroy")).Invoke (canvas);
 		#endif
 
@@ -1362,18 +1362,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_overdraw_canvas_new (IntPtr canvas);
+		internal static partial sk_overdraw_canvas_t sk_overdraw_canvas_new (sk_canvas_t canvas);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_overdraw_canvas_new (IntPtr canvas);
+		internal static extern sk_overdraw_canvas_t sk_overdraw_canvas_new (sk_canvas_t canvas);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_overdraw_canvas_new (IntPtr canvas);
+			internal delegate sk_overdraw_canvas_t sk_overdraw_canvas_new (sk_canvas_t canvas);
 		}
 		private static Delegates.sk_overdraw_canvas_new sk_overdraw_canvas_new_delegate;
-		internal static IntPtr sk_overdraw_canvas_new (IntPtr canvas) =>
+		internal static sk_overdraw_canvas_t sk_overdraw_canvas_new (sk_canvas_t canvas) =>
 			(sk_overdraw_canvas_new_delegate ??= GetSymbol<Delegates.sk_overdraw_canvas_new> ("sk_overdraw_canvas_new")).Invoke (canvas);
 		#endif
 

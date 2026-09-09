@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_bitmap_destructor (IntPtr cbitmap);
+		internal static partial void sk_bitmap_destructor (sk_bitmap_t cbitmap);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_destructor (IntPtr cbitmap);
+		internal static extern void sk_bitmap_destructor (sk_bitmap_t cbitmap);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_bitmap_destructor (IntPtr cbitmap);
+			internal delegate void sk_bitmap_destructor (sk_bitmap_t cbitmap);
 		}
 		private static Delegates.sk_bitmap_destructor sk_bitmap_destructor_delegate;
-		internal static void sk_bitmap_destructor (IntPtr cbitmap) =>
+		internal static void sk_bitmap_destructor (sk_bitmap_t cbitmap) =>
 			(sk_bitmap_destructor_delegate ??= GetSymbol<Delegates.sk_bitmap_destructor> ("sk_bitmap_destructor")).Invoke (cbitmap);
 		#endif
 
@@ -36,18 +36,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_bitmap_erase (IntPtr cbitmap, UInt32 color);
+		internal static partial void sk_bitmap_erase (sk_bitmap_t cbitmap, UInt32 color);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_erase (IntPtr cbitmap, UInt32 color);
+		internal static extern void sk_bitmap_erase (sk_bitmap_t cbitmap, UInt32 color);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_bitmap_erase (IntPtr cbitmap, UInt32 color);
+			internal delegate void sk_bitmap_erase (sk_bitmap_t cbitmap, UInt32 color);
 		}
 		private static Delegates.sk_bitmap_erase sk_bitmap_erase_delegate;
-		internal static void sk_bitmap_erase (IntPtr cbitmap, UInt32 color) =>
+		internal static void sk_bitmap_erase (sk_bitmap_t cbitmap, UInt32 color) =>
 			(sk_bitmap_erase_delegate ??= GetSymbol<Delegates.sk_bitmap_erase> ("sk_bitmap_erase")).Invoke (cbitmap, color);
 		#endif
 
@@ -55,18 +55,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_bitmap_erase_rect (IntPtr cbitmap, UInt32 color, SKRectI* rect);
+		internal static partial void sk_bitmap_erase_rect (sk_bitmap_t cbitmap, UInt32 color, SKRectI* rect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_erase_rect (IntPtr cbitmap, UInt32 color, SKRectI* rect);
+		internal static extern void sk_bitmap_erase_rect (sk_bitmap_t cbitmap, UInt32 color, SKRectI* rect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_bitmap_erase_rect (IntPtr cbitmap, UInt32 color, SKRectI* rect);
+			internal delegate void sk_bitmap_erase_rect (sk_bitmap_t cbitmap, UInt32 color, SKRectI* rect);
 		}
 		private static Delegates.sk_bitmap_erase_rect sk_bitmap_erase_rect_delegate;
-		internal static void sk_bitmap_erase_rect (IntPtr cbitmap, UInt32 color, SKRectI* rect) =>
+		internal static void sk_bitmap_erase_rect (sk_bitmap_t cbitmap, UInt32 color, SKRectI* rect) =>
 			(sk_bitmap_erase_rect_delegate ??= GetSymbol<Delegates.sk_bitmap_erase_rect> ("sk_bitmap_erase_rect")).Invoke (cbitmap, color, rect);
 		#endif
 
@@ -75,20 +75,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_bitmap_extract_alpha (IntPtr cbitmap, IntPtr dst, IntPtr paint, SKPointI* offset);
+		internal static partial bool sk_bitmap_extract_alpha (sk_bitmap_t cbitmap, sk_bitmap_t dst, sk_paint_t paint, SKPointI* offset);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_bitmap_extract_alpha (IntPtr cbitmap, IntPtr dst, IntPtr paint, SKPointI* offset);
+		internal static extern bool sk_bitmap_extract_alpha (sk_bitmap_t cbitmap, sk_bitmap_t dst, sk_paint_t paint, SKPointI* offset);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_bitmap_extract_alpha (IntPtr cbitmap, IntPtr dst, IntPtr paint, SKPointI* offset);
+			internal delegate bool sk_bitmap_extract_alpha (sk_bitmap_t cbitmap, sk_bitmap_t dst, sk_paint_t paint, SKPointI* offset);
 		}
 		private static Delegates.sk_bitmap_extract_alpha sk_bitmap_extract_alpha_delegate;
-		internal static bool sk_bitmap_extract_alpha (IntPtr cbitmap, IntPtr dst, IntPtr paint, SKPointI* offset) =>
+		internal static bool sk_bitmap_extract_alpha (sk_bitmap_t cbitmap, sk_bitmap_t dst, sk_paint_t paint, SKPointI* offset) =>
 			(sk_bitmap_extract_alpha_delegate ??= GetSymbol<Delegates.sk_bitmap_extract_alpha> ("sk_bitmap_extract_alpha")).Invoke (cbitmap, dst, paint, offset);
 		#endif
 
@@ -97,20 +97,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_bitmap_extract_subset (IntPtr cbitmap, IntPtr dst, SKRectI* subset);
+		internal static partial bool sk_bitmap_extract_subset (sk_bitmap_t cbitmap, sk_bitmap_t dst, SKRectI* subset);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_bitmap_extract_subset (IntPtr cbitmap, IntPtr dst, SKRectI* subset);
+		internal static extern bool sk_bitmap_extract_subset (sk_bitmap_t cbitmap, sk_bitmap_t dst, SKRectI* subset);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_bitmap_extract_subset (IntPtr cbitmap, IntPtr dst, SKRectI* subset);
+			internal delegate bool sk_bitmap_extract_subset (sk_bitmap_t cbitmap, sk_bitmap_t dst, SKRectI* subset);
 		}
 		private static Delegates.sk_bitmap_extract_subset sk_bitmap_extract_subset_delegate;
-		internal static bool sk_bitmap_extract_subset (IntPtr cbitmap, IntPtr dst, SKRectI* subset) =>
+		internal static bool sk_bitmap_extract_subset (sk_bitmap_t cbitmap, sk_bitmap_t dst, SKRectI* subset) =>
 			(sk_bitmap_extract_subset_delegate ??= GetSymbol<Delegates.sk_bitmap_extract_subset> ("sk_bitmap_extract_subset")).Invoke (cbitmap, dst, subset);
 		#endif
 
@@ -118,18 +118,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void* sk_bitmap_get_addr (IntPtr cbitmap, Int32 x, Int32 y);
+		internal static partial void* sk_bitmap_get_addr (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void* sk_bitmap_get_addr (IntPtr cbitmap, Int32 x, Int32 y);
+		internal static extern void* sk_bitmap_get_addr (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void* sk_bitmap_get_addr (IntPtr cbitmap, Int32 x, Int32 y);
+			internal delegate void* sk_bitmap_get_addr (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		}
 		private static Delegates.sk_bitmap_get_addr sk_bitmap_get_addr_delegate;
-		internal static void* sk_bitmap_get_addr (IntPtr cbitmap, Int32 x, Int32 y) =>
+		internal static void* sk_bitmap_get_addr (sk_bitmap_t cbitmap, Int32 x, Int32 y) =>
 			(sk_bitmap_get_addr_delegate ??= GetSymbol<Delegates.sk_bitmap_get_addr> ("sk_bitmap_get_addr")).Invoke (cbitmap, x, y);
 		#endif
 
@@ -137,18 +137,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial UInt16* sk_bitmap_get_addr_16 (IntPtr cbitmap, Int32 x, Int32 y);
+		internal static partial UInt16* sk_bitmap_get_addr_16 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt16* sk_bitmap_get_addr_16 (IntPtr cbitmap, Int32 x, Int32 y);
+		internal static extern UInt16* sk_bitmap_get_addr_16 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt16* sk_bitmap_get_addr_16 (IntPtr cbitmap, Int32 x, Int32 y);
+			internal delegate UInt16* sk_bitmap_get_addr_16 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		}
 		private static Delegates.sk_bitmap_get_addr_16 sk_bitmap_get_addr_16_delegate;
-		internal static UInt16* sk_bitmap_get_addr_16 (IntPtr cbitmap, Int32 x, Int32 y) =>
+		internal static UInt16* sk_bitmap_get_addr_16 (sk_bitmap_t cbitmap, Int32 x, Int32 y) =>
 			(sk_bitmap_get_addr_16_delegate ??= GetSymbol<Delegates.sk_bitmap_get_addr_16> ("sk_bitmap_get_addr_16")).Invoke (cbitmap, x, y);
 		#endif
 
@@ -156,18 +156,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial UInt32* sk_bitmap_get_addr_32 (IntPtr cbitmap, Int32 x, Int32 y);
+		internal static partial UInt32* sk_bitmap_get_addr_32 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32* sk_bitmap_get_addr_32 (IntPtr cbitmap, Int32 x, Int32 y);
+		internal static extern UInt32* sk_bitmap_get_addr_32 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32* sk_bitmap_get_addr_32 (IntPtr cbitmap, Int32 x, Int32 y);
+			internal delegate UInt32* sk_bitmap_get_addr_32 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		}
 		private static Delegates.sk_bitmap_get_addr_32 sk_bitmap_get_addr_32_delegate;
-		internal static UInt32* sk_bitmap_get_addr_32 (IntPtr cbitmap, Int32 x, Int32 y) =>
+		internal static UInt32* sk_bitmap_get_addr_32 (sk_bitmap_t cbitmap, Int32 x, Int32 y) =>
 			(sk_bitmap_get_addr_32_delegate ??= GetSymbol<Delegates.sk_bitmap_get_addr_32> ("sk_bitmap_get_addr_32")).Invoke (cbitmap, x, y);
 		#endif
 
@@ -175,18 +175,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Byte* sk_bitmap_get_addr_8 (IntPtr cbitmap, Int32 x, Int32 y);
+		internal static partial Byte* sk_bitmap_get_addr_8 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Byte* sk_bitmap_get_addr_8 (IntPtr cbitmap, Int32 x, Int32 y);
+		internal static extern Byte* sk_bitmap_get_addr_8 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Byte* sk_bitmap_get_addr_8 (IntPtr cbitmap, Int32 x, Int32 y);
+			internal delegate Byte* sk_bitmap_get_addr_8 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		}
 		private static Delegates.sk_bitmap_get_addr_8 sk_bitmap_get_addr_8_delegate;
-		internal static Byte* sk_bitmap_get_addr_8 (IntPtr cbitmap, Int32 x, Int32 y) =>
+		internal static Byte* sk_bitmap_get_addr_8 (sk_bitmap_t cbitmap, Int32 x, Int32 y) =>
 			(sk_bitmap_get_addr_8_delegate ??= GetSymbol<Delegates.sk_bitmap_get_addr_8> ("sk_bitmap_get_addr_8")).Invoke (cbitmap, x, y);
 		#endif
 
@@ -194,18 +194,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial /* size_t */ IntPtr sk_bitmap_get_byte_count (IntPtr cbitmap);
+		internal static partial /* size_t */ IntPtr sk_bitmap_get_byte_count (sk_bitmap_t cbitmap);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr sk_bitmap_get_byte_count (IntPtr cbitmap);
+		internal static extern /* size_t */ IntPtr sk_bitmap_get_byte_count (sk_bitmap_t cbitmap);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate /* size_t */ IntPtr sk_bitmap_get_byte_count (IntPtr cbitmap);
+			internal delegate /* size_t */ IntPtr sk_bitmap_get_byte_count (sk_bitmap_t cbitmap);
 		}
 		private static Delegates.sk_bitmap_get_byte_count sk_bitmap_get_byte_count_delegate;
-		internal static /* size_t */ IntPtr sk_bitmap_get_byte_count (IntPtr cbitmap) =>
+		internal static /* size_t */ IntPtr sk_bitmap_get_byte_count (sk_bitmap_t cbitmap) =>
 			(sk_bitmap_get_byte_count_delegate ??= GetSymbol<Delegates.sk_bitmap_get_byte_count> ("sk_bitmap_get_byte_count")).Invoke (cbitmap);
 		#endif
 
@@ -213,18 +213,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_bitmap_get_info (IntPtr cbitmap, SKImageInfoNative* info);
+		internal static partial void sk_bitmap_get_info (sk_bitmap_t cbitmap, SKImageInfoNative* info);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_get_info (IntPtr cbitmap, SKImageInfoNative* info);
+		internal static extern void sk_bitmap_get_info (sk_bitmap_t cbitmap, SKImageInfoNative* info);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_bitmap_get_info (IntPtr cbitmap, SKImageInfoNative* info);
+			internal delegate void sk_bitmap_get_info (sk_bitmap_t cbitmap, SKImageInfoNative* info);
 		}
 		private static Delegates.sk_bitmap_get_info sk_bitmap_get_info_delegate;
-		internal static void sk_bitmap_get_info (IntPtr cbitmap, SKImageInfoNative* info) =>
+		internal static void sk_bitmap_get_info (sk_bitmap_t cbitmap, SKImageInfoNative* info) =>
 			(sk_bitmap_get_info_delegate ??= GetSymbol<Delegates.sk_bitmap_get_info> ("sk_bitmap_get_info")).Invoke (cbitmap, info);
 		#endif
 
@@ -232,18 +232,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial UInt32 sk_bitmap_get_pixel_color (IntPtr cbitmap, Int32 x, Int32 y);
+		internal static partial UInt32 sk_bitmap_get_pixel_color (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 sk_bitmap_get_pixel_color (IntPtr cbitmap, Int32 x, Int32 y);
+		internal static extern UInt32 sk_bitmap_get_pixel_color (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 sk_bitmap_get_pixel_color (IntPtr cbitmap, Int32 x, Int32 y);
+			internal delegate UInt32 sk_bitmap_get_pixel_color (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 		}
 		private static Delegates.sk_bitmap_get_pixel_color sk_bitmap_get_pixel_color_delegate;
-		internal static UInt32 sk_bitmap_get_pixel_color (IntPtr cbitmap, Int32 x, Int32 y) =>
+		internal static UInt32 sk_bitmap_get_pixel_color (sk_bitmap_t cbitmap, Int32 x, Int32 y) =>
 			(sk_bitmap_get_pixel_color_delegate ??= GetSymbol<Delegates.sk_bitmap_get_pixel_color> ("sk_bitmap_get_pixel_color")).Invoke (cbitmap, x, y);
 		#endif
 
@@ -251,18 +251,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_bitmap_get_pixel_colors (IntPtr cbitmap, UInt32* colors);
+		internal static partial void sk_bitmap_get_pixel_colors (sk_bitmap_t cbitmap, UInt32* colors);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_get_pixel_colors (IntPtr cbitmap, UInt32* colors);
+		internal static extern void sk_bitmap_get_pixel_colors (sk_bitmap_t cbitmap, UInt32* colors);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_bitmap_get_pixel_colors (IntPtr cbitmap, UInt32* colors);
+			internal delegate void sk_bitmap_get_pixel_colors (sk_bitmap_t cbitmap, UInt32* colors);
 		}
 		private static Delegates.sk_bitmap_get_pixel_colors sk_bitmap_get_pixel_colors_delegate;
-		internal static void sk_bitmap_get_pixel_colors (IntPtr cbitmap, UInt32* colors) =>
+		internal static void sk_bitmap_get_pixel_colors (sk_bitmap_t cbitmap, UInt32* colors) =>
 			(sk_bitmap_get_pixel_colors_delegate ??= GetSymbol<Delegates.sk_bitmap_get_pixel_colors> ("sk_bitmap_get_pixel_colors")).Invoke (cbitmap, colors);
 		#endif
 
@@ -270,18 +270,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void* sk_bitmap_get_pixels (IntPtr cbitmap, /* size_t */ IntPtr* length);
+		internal static partial void* sk_bitmap_get_pixels (sk_bitmap_t cbitmap, /* size_t */ IntPtr* length);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void* sk_bitmap_get_pixels (IntPtr cbitmap, /* size_t */ IntPtr* length);
+		internal static extern void* sk_bitmap_get_pixels (sk_bitmap_t cbitmap, /* size_t */ IntPtr* length);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void* sk_bitmap_get_pixels (IntPtr cbitmap, /* size_t */ IntPtr* length);
+			internal delegate void* sk_bitmap_get_pixels (sk_bitmap_t cbitmap, /* size_t */ IntPtr* length);
 		}
 		private static Delegates.sk_bitmap_get_pixels sk_bitmap_get_pixels_delegate;
-		internal static void* sk_bitmap_get_pixels (IntPtr cbitmap, /* size_t */ IntPtr* length) =>
+		internal static void* sk_bitmap_get_pixels (sk_bitmap_t cbitmap, /* size_t */ IntPtr* length) =>
 			(sk_bitmap_get_pixels_delegate ??= GetSymbol<Delegates.sk_bitmap_get_pixels> ("sk_bitmap_get_pixels")).Invoke (cbitmap, length);
 		#endif
 
@@ -289,18 +289,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial /* size_t */ IntPtr sk_bitmap_get_row_bytes (IntPtr cbitmap);
+		internal static partial /* size_t */ IntPtr sk_bitmap_get_row_bytes (sk_bitmap_t cbitmap);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr sk_bitmap_get_row_bytes (IntPtr cbitmap);
+		internal static extern /* size_t */ IntPtr sk_bitmap_get_row_bytes (sk_bitmap_t cbitmap);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate /* size_t */ IntPtr sk_bitmap_get_row_bytes (IntPtr cbitmap);
+			internal delegate /* size_t */ IntPtr sk_bitmap_get_row_bytes (sk_bitmap_t cbitmap);
 		}
 		private static Delegates.sk_bitmap_get_row_bytes sk_bitmap_get_row_bytes_delegate;
-		internal static /* size_t */ IntPtr sk_bitmap_get_row_bytes (IntPtr cbitmap) =>
+		internal static /* size_t */ IntPtr sk_bitmap_get_row_bytes (sk_bitmap_t cbitmap) =>
 			(sk_bitmap_get_row_bytes_delegate ??= GetSymbol<Delegates.sk_bitmap_get_row_bytes> ("sk_bitmap_get_row_bytes")).Invoke (cbitmap);
 		#endif
 
@@ -309,20 +309,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_bitmap_install_pixels (IntPtr cbitmap, SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, void* releaseProc, void* context);
+		internal static partial bool sk_bitmap_install_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, void* releaseProc, void* context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_bitmap_install_pixels (IntPtr cbitmap, SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, SKBitmapReleaseProxyDelegate releaseProc, void* context);
+		internal static extern bool sk_bitmap_install_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, SKBitmapReleaseProxyDelegate releaseProc, void* context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_bitmap_install_pixels (IntPtr cbitmap, SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, SKBitmapReleaseProxyDelegate releaseProc, void* context);
+			internal delegate bool sk_bitmap_install_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, SKBitmapReleaseProxyDelegate releaseProc, void* context);
 		}
 		private static Delegates.sk_bitmap_install_pixels sk_bitmap_install_pixels_delegate;
-		internal static bool sk_bitmap_install_pixels (IntPtr cbitmap, SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, SKBitmapReleaseProxyDelegate releaseProc, void* context) =>
+		internal static bool sk_bitmap_install_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, SKBitmapReleaseProxyDelegate releaseProc, void* context) =>
 			(sk_bitmap_install_pixels_delegate ??= GetSymbol<Delegates.sk_bitmap_install_pixels> ("sk_bitmap_install_pixels")).Invoke (cbitmap, cinfo, pixels, rowBytes, releaseProc, context);
 		#endif
 
@@ -331,20 +331,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_bitmap_install_pixels_with_pixmap (IntPtr cbitmap, IntPtr cpixmap);
+		internal static partial bool sk_bitmap_install_pixels_with_pixmap (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_bitmap_install_pixels_with_pixmap (IntPtr cbitmap, IntPtr cpixmap);
+		internal static extern bool sk_bitmap_install_pixels_with_pixmap (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_bitmap_install_pixels_with_pixmap (IntPtr cbitmap, IntPtr cpixmap);
+			internal delegate bool sk_bitmap_install_pixels_with_pixmap (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
 		}
 		private static Delegates.sk_bitmap_install_pixels_with_pixmap sk_bitmap_install_pixels_with_pixmap_delegate;
-		internal static bool sk_bitmap_install_pixels_with_pixmap (IntPtr cbitmap, IntPtr cpixmap) =>
+		internal static bool sk_bitmap_install_pixels_with_pixmap (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap) =>
 			(sk_bitmap_install_pixels_with_pixmap_delegate ??= GetSymbol<Delegates.sk_bitmap_install_pixels_with_pixmap> ("sk_bitmap_install_pixels_with_pixmap")).Invoke (cbitmap, cpixmap);
 		#endif
 
@@ -353,20 +353,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_bitmap_is_immutable (IntPtr cbitmap);
+		internal static partial bool sk_bitmap_is_immutable (sk_bitmap_t cbitmap);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_bitmap_is_immutable (IntPtr cbitmap);
+		internal static extern bool sk_bitmap_is_immutable (sk_bitmap_t cbitmap);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_bitmap_is_immutable (IntPtr cbitmap);
+			internal delegate bool sk_bitmap_is_immutable (sk_bitmap_t cbitmap);
 		}
 		private static Delegates.sk_bitmap_is_immutable sk_bitmap_is_immutable_delegate;
-		internal static bool sk_bitmap_is_immutable (IntPtr cbitmap) =>
+		internal static bool sk_bitmap_is_immutable (sk_bitmap_t cbitmap) =>
 			(sk_bitmap_is_immutable_delegate ??= GetSymbol<Delegates.sk_bitmap_is_immutable> ("sk_bitmap_is_immutable")).Invoke (cbitmap);
 		#endif
 
@@ -375,20 +375,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_bitmap_is_null (IntPtr cbitmap);
+		internal static partial bool sk_bitmap_is_null (sk_bitmap_t cbitmap);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_bitmap_is_null (IntPtr cbitmap);
+		internal static extern bool sk_bitmap_is_null (sk_bitmap_t cbitmap);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_bitmap_is_null (IntPtr cbitmap);
+			internal delegate bool sk_bitmap_is_null (sk_bitmap_t cbitmap);
 		}
 		private static Delegates.sk_bitmap_is_null sk_bitmap_is_null_delegate;
-		internal static bool sk_bitmap_is_null (IntPtr cbitmap) =>
+		internal static bool sk_bitmap_is_null (sk_bitmap_t cbitmap) =>
 			(sk_bitmap_is_null_delegate ??= GetSymbol<Delegates.sk_bitmap_is_null> ("sk_bitmap_is_null")).Invoke (cbitmap);
 		#endif
 
@@ -396,18 +396,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_bitmap_make_shader (IntPtr cbitmap, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+		internal static partial sk_shader_t sk_bitmap_make_shader (sk_bitmap_t cbitmap, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions* sampling, SKMatrix* cmatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_bitmap_make_shader (IntPtr cbitmap, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+		internal static extern sk_shader_t sk_bitmap_make_shader (sk_bitmap_t cbitmap, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions* sampling, SKMatrix* cmatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_bitmap_make_shader (IntPtr cbitmap, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+			internal delegate sk_shader_t sk_bitmap_make_shader (sk_bitmap_t cbitmap, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions* sampling, SKMatrix* cmatrix);
 		}
 		private static Delegates.sk_bitmap_make_shader sk_bitmap_make_shader_delegate;
-		internal static IntPtr sk_bitmap_make_shader (IntPtr cbitmap, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions* sampling, SKMatrix* cmatrix) =>
+		internal static sk_shader_t sk_bitmap_make_shader (sk_bitmap_t cbitmap, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions* sampling, SKMatrix* cmatrix) =>
 			(sk_bitmap_make_shader_delegate ??= GetSymbol<Delegates.sk_bitmap_make_shader> ("sk_bitmap_make_shader")).Invoke (cbitmap, tmx, tmy, sampling, cmatrix);
 		#endif
 
@@ -415,18 +415,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_bitmap_new ();
+		internal static partial sk_bitmap_t sk_bitmap_new ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_bitmap_new ();
+		internal static extern sk_bitmap_t sk_bitmap_new ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_bitmap_new ();
+			internal delegate sk_bitmap_t sk_bitmap_new ();
 		}
 		private static Delegates.sk_bitmap_new sk_bitmap_new_delegate;
-		internal static IntPtr sk_bitmap_new () =>
+		internal static sk_bitmap_t sk_bitmap_new () =>
 			(sk_bitmap_new_delegate ??= GetSymbol<Delegates.sk_bitmap_new> ("sk_bitmap_new")).Invoke ();
 		#endif
 
@@ -434,18 +434,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_bitmap_notify_pixels_changed (IntPtr cbitmap);
+		internal static partial void sk_bitmap_notify_pixels_changed (sk_bitmap_t cbitmap);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_notify_pixels_changed (IntPtr cbitmap);
+		internal static extern void sk_bitmap_notify_pixels_changed (sk_bitmap_t cbitmap);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_bitmap_notify_pixels_changed (IntPtr cbitmap);
+			internal delegate void sk_bitmap_notify_pixels_changed (sk_bitmap_t cbitmap);
 		}
 		private static Delegates.sk_bitmap_notify_pixels_changed sk_bitmap_notify_pixels_changed_delegate;
-		internal static void sk_bitmap_notify_pixels_changed (IntPtr cbitmap) =>
+		internal static void sk_bitmap_notify_pixels_changed (sk_bitmap_t cbitmap) =>
 			(sk_bitmap_notify_pixels_changed_delegate ??= GetSymbol<Delegates.sk_bitmap_notify_pixels_changed> ("sk_bitmap_notify_pixels_changed")).Invoke (cbitmap);
 		#endif
 
@@ -454,20 +454,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_bitmap_peek_pixels (IntPtr cbitmap, IntPtr cpixmap);
+		internal static partial bool sk_bitmap_peek_pixels (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_bitmap_peek_pixels (IntPtr cbitmap, IntPtr cpixmap);
+		internal static extern bool sk_bitmap_peek_pixels (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_bitmap_peek_pixels (IntPtr cbitmap, IntPtr cpixmap);
+			internal delegate bool sk_bitmap_peek_pixels (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
 		}
 		private static Delegates.sk_bitmap_peek_pixels sk_bitmap_peek_pixels_delegate;
-		internal static bool sk_bitmap_peek_pixels (IntPtr cbitmap, IntPtr cpixmap) =>
+		internal static bool sk_bitmap_peek_pixels (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap) =>
 			(sk_bitmap_peek_pixels_delegate ??= GetSymbol<Delegates.sk_bitmap_peek_pixels> ("sk_bitmap_peek_pixels")).Invoke (cbitmap, cpixmap);
 		#endif
 
@@ -476,20 +476,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_bitmap_ready_to_draw (IntPtr cbitmap);
+		internal static partial bool sk_bitmap_ready_to_draw (sk_bitmap_t cbitmap);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_bitmap_ready_to_draw (IntPtr cbitmap);
+		internal static extern bool sk_bitmap_ready_to_draw (sk_bitmap_t cbitmap);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_bitmap_ready_to_draw (IntPtr cbitmap);
+			internal delegate bool sk_bitmap_ready_to_draw (sk_bitmap_t cbitmap);
 		}
 		private static Delegates.sk_bitmap_ready_to_draw sk_bitmap_ready_to_draw_delegate;
-		internal static bool sk_bitmap_ready_to_draw (IntPtr cbitmap) =>
+		internal static bool sk_bitmap_ready_to_draw (sk_bitmap_t cbitmap) =>
 			(sk_bitmap_ready_to_draw_delegate ??= GetSymbol<Delegates.sk_bitmap_ready_to_draw> ("sk_bitmap_ready_to_draw")).Invoke (cbitmap);
 		#endif
 
@@ -497,18 +497,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_bitmap_reset (IntPtr cbitmap);
+		internal static partial void sk_bitmap_reset (sk_bitmap_t cbitmap);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_reset (IntPtr cbitmap);
+		internal static extern void sk_bitmap_reset (sk_bitmap_t cbitmap);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_bitmap_reset (IntPtr cbitmap);
+			internal delegate void sk_bitmap_reset (sk_bitmap_t cbitmap);
 		}
 		private static Delegates.sk_bitmap_reset sk_bitmap_reset_delegate;
-		internal static void sk_bitmap_reset (IntPtr cbitmap) =>
+		internal static void sk_bitmap_reset (sk_bitmap_t cbitmap) =>
 			(sk_bitmap_reset_delegate ??= GetSymbol<Delegates.sk_bitmap_reset> ("sk_bitmap_reset")).Invoke (cbitmap);
 		#endif
 
@@ -516,18 +516,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_bitmap_set_immutable (IntPtr cbitmap);
+		internal static partial void sk_bitmap_set_immutable (sk_bitmap_t cbitmap);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_set_immutable (IntPtr cbitmap);
+		internal static extern void sk_bitmap_set_immutable (sk_bitmap_t cbitmap);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_bitmap_set_immutable (IntPtr cbitmap);
+			internal delegate void sk_bitmap_set_immutable (sk_bitmap_t cbitmap);
 		}
 		private static Delegates.sk_bitmap_set_immutable sk_bitmap_set_immutable_delegate;
-		internal static void sk_bitmap_set_immutable (IntPtr cbitmap) =>
+		internal static void sk_bitmap_set_immutable (sk_bitmap_t cbitmap) =>
 			(sk_bitmap_set_immutable_delegate ??= GetSymbol<Delegates.sk_bitmap_set_immutable> ("sk_bitmap_set_immutable")).Invoke (cbitmap);
 		#endif
 
@@ -535,18 +535,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_bitmap_set_pixels (IntPtr cbitmap, void* pixels);
+		internal static partial void sk_bitmap_set_pixels (sk_bitmap_t cbitmap, void* pixels);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_set_pixels (IntPtr cbitmap, void* pixels);
+		internal static extern void sk_bitmap_set_pixels (sk_bitmap_t cbitmap, void* pixels);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_bitmap_set_pixels (IntPtr cbitmap, void* pixels);
+			internal delegate void sk_bitmap_set_pixels (sk_bitmap_t cbitmap, void* pixels);
 		}
 		private static Delegates.sk_bitmap_set_pixels sk_bitmap_set_pixels_delegate;
-		internal static void sk_bitmap_set_pixels (IntPtr cbitmap, void* pixels) =>
+		internal static void sk_bitmap_set_pixels (sk_bitmap_t cbitmap, void* pixels) =>
 			(sk_bitmap_set_pixels_delegate ??= GetSymbol<Delegates.sk_bitmap_set_pixels> ("sk_bitmap_set_pixels")).Invoke (cbitmap, pixels);
 		#endif
 
@@ -554,18 +554,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_bitmap_swap (IntPtr cbitmap, IntPtr cother);
+		internal static partial void sk_bitmap_swap (sk_bitmap_t cbitmap, sk_bitmap_t cother);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_swap (IntPtr cbitmap, IntPtr cother);
+		internal static extern void sk_bitmap_swap (sk_bitmap_t cbitmap, sk_bitmap_t cother);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_bitmap_swap (IntPtr cbitmap, IntPtr cother);
+			internal delegate void sk_bitmap_swap (sk_bitmap_t cbitmap, sk_bitmap_t cother);
 		}
 		private static Delegates.sk_bitmap_swap sk_bitmap_swap_delegate;
-		internal static void sk_bitmap_swap (IntPtr cbitmap, IntPtr cother) =>
+		internal static void sk_bitmap_swap (sk_bitmap_t cbitmap, sk_bitmap_t cother) =>
 			(sk_bitmap_swap_delegate ??= GetSymbol<Delegates.sk_bitmap_swap> ("sk_bitmap_swap")).Invoke (cbitmap, cother);
 		#endif
 
@@ -574,20 +574,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_bitmap_try_alloc_pixels (IntPtr cbitmap, SKImageInfoNative* requestedInfo, /* size_t */ IntPtr rowBytes);
+		internal static partial bool sk_bitmap_try_alloc_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, /* size_t */ IntPtr rowBytes);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_bitmap_try_alloc_pixels (IntPtr cbitmap, SKImageInfoNative* requestedInfo, /* size_t */ IntPtr rowBytes);
+		internal static extern bool sk_bitmap_try_alloc_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, /* size_t */ IntPtr rowBytes);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_bitmap_try_alloc_pixels (IntPtr cbitmap, SKImageInfoNative* requestedInfo, /* size_t */ IntPtr rowBytes);
+			internal delegate bool sk_bitmap_try_alloc_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, /* size_t */ IntPtr rowBytes);
 		}
 		private static Delegates.sk_bitmap_try_alloc_pixels sk_bitmap_try_alloc_pixels_delegate;
-		internal static bool sk_bitmap_try_alloc_pixels (IntPtr cbitmap, SKImageInfoNative* requestedInfo, /* size_t */ IntPtr rowBytes) =>
+		internal static bool sk_bitmap_try_alloc_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, /* size_t */ IntPtr rowBytes) =>
 			(sk_bitmap_try_alloc_pixels_delegate ??= GetSymbol<Delegates.sk_bitmap_try_alloc_pixels> ("sk_bitmap_try_alloc_pixels")).Invoke (cbitmap, requestedInfo, rowBytes);
 		#endif
 
@@ -596,20 +596,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_bitmap_try_alloc_pixels_with_flags (IntPtr cbitmap, SKImageInfoNative* requestedInfo, UInt32 flags);
+		internal static partial bool sk_bitmap_try_alloc_pixels_with_flags (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, UInt32 flags);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_bitmap_try_alloc_pixels_with_flags (IntPtr cbitmap, SKImageInfoNative* requestedInfo, UInt32 flags);
+		internal static extern bool sk_bitmap_try_alloc_pixels_with_flags (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, UInt32 flags);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_bitmap_try_alloc_pixels_with_flags (IntPtr cbitmap, SKImageInfoNative* requestedInfo, UInt32 flags);
+			internal delegate bool sk_bitmap_try_alloc_pixels_with_flags (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, UInt32 flags);
 		}
 		private static Delegates.sk_bitmap_try_alloc_pixels_with_flags sk_bitmap_try_alloc_pixels_with_flags_delegate;
-		internal static bool sk_bitmap_try_alloc_pixels_with_flags (IntPtr cbitmap, SKImageInfoNative* requestedInfo, UInt32 flags) =>
+		internal static bool sk_bitmap_try_alloc_pixels_with_flags (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, UInt32 flags) =>
 			(sk_bitmap_try_alloc_pixels_with_flags_delegate ??= GetSymbol<Delegates.sk_bitmap_try_alloc_pixels_with_flags> ("sk_bitmap_try_alloc_pixels_with_flags")).Invoke (cbitmap, requestedInfo, flags);
 		#endif
 

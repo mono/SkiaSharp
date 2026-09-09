@@ -14,16 +14,16 @@ namespace SkiaSharp
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct GRD3DBackendContextNative : IEquatable<GRD3DBackendContextNative> {
 		// public d3d_dxgi_adapter_t* fAdapter
-		public IntPtr fAdapter;
+		public d3d_dxgi_adapter_t fAdapter;
 
 		// public d3d_d12_device_t* fDevice
-		public IntPtr fDevice;
+		public d3d_d12_device_t fDevice;
 
 		// public d3d_d12_command_queue_t* fQueue
-		public IntPtr fQueue;
+		public d3d_d12_command_queue_t fQueue;
 
 		// public gr_d3d_memory_allocator_t* fMemoryAllocator
-		public IntPtr fMemoryAllocator;
+		public gr_d3d_memory_allocator_t fMemoryAllocator;
 
 		// public bool fProtectedContext
 		public Byte fProtectedContext;

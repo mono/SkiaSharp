@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_compatpaint_clone (IntPtr paint);
+		internal static partial sk_compatpaint_t sk_compatpaint_clone (sk_compatpaint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_compatpaint_clone (IntPtr paint);
+		internal static extern sk_compatpaint_t sk_compatpaint_clone (sk_compatpaint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_compatpaint_clone (IntPtr paint);
+			internal delegate sk_compatpaint_t sk_compatpaint_clone (sk_compatpaint_t paint);
 		}
 		private static Delegates.sk_compatpaint_clone sk_compatpaint_clone_delegate;
-		internal static IntPtr sk_compatpaint_clone (IntPtr paint) =>
+		internal static sk_compatpaint_t sk_compatpaint_clone (sk_compatpaint_t paint) =>
 			(sk_compatpaint_clone_delegate ??= GetSymbol<Delegates.sk_compatpaint_clone> ("sk_compatpaint_clone")).Invoke (paint);
 		#endif
 
@@ -36,18 +36,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_compatpaint_delete (IntPtr paint);
+		internal static partial void sk_compatpaint_delete (sk_compatpaint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_compatpaint_delete (IntPtr paint);
+		internal static extern void sk_compatpaint_delete (sk_compatpaint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_compatpaint_delete (IntPtr paint);
+			internal delegate void sk_compatpaint_delete (sk_compatpaint_t paint);
 		}
 		private static Delegates.sk_compatpaint_delete sk_compatpaint_delete_delegate;
-		internal static void sk_compatpaint_delete (IntPtr paint) =>
+		internal static void sk_compatpaint_delete (sk_compatpaint_t paint) =>
 			(sk_compatpaint_delete_delegate ??= GetSymbol<Delegates.sk_compatpaint_delete> ("sk_compatpaint_delete")).Invoke (paint);
 		#endif
 
@@ -55,18 +55,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 sk_compatpaint_get_filter_quality (IntPtr paint);
+		internal static partial Int32 sk_compatpaint_get_filter_quality (sk_compatpaint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_compatpaint_get_filter_quality (IntPtr paint);
+		internal static extern Int32 sk_compatpaint_get_filter_quality (sk_compatpaint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 sk_compatpaint_get_filter_quality (IntPtr paint);
+			internal delegate Int32 sk_compatpaint_get_filter_quality (sk_compatpaint_t paint);
 		}
 		private static Delegates.sk_compatpaint_get_filter_quality sk_compatpaint_get_filter_quality_delegate;
-		internal static Int32 sk_compatpaint_get_filter_quality (IntPtr paint) =>
+		internal static Int32 sk_compatpaint_get_filter_quality (sk_compatpaint_t paint) =>
 			(sk_compatpaint_get_filter_quality_delegate ??= GetSymbol<Delegates.sk_compatpaint_get_filter_quality> ("sk_compatpaint_get_filter_quality")).Invoke (paint);
 		#endif
 
@@ -74,18 +74,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_compatpaint_get_font (IntPtr paint);
+		internal static partial sk_font_t sk_compatpaint_get_font (sk_compatpaint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_compatpaint_get_font (IntPtr paint);
+		internal static extern sk_font_t sk_compatpaint_get_font (sk_compatpaint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_compatpaint_get_font (IntPtr paint);
+			internal delegate sk_font_t sk_compatpaint_get_font (sk_compatpaint_t paint);
 		}
 		private static Delegates.sk_compatpaint_get_font sk_compatpaint_get_font_delegate;
-		internal static IntPtr sk_compatpaint_get_font (IntPtr paint) =>
+		internal static sk_font_t sk_compatpaint_get_font (sk_compatpaint_t paint) =>
 			(sk_compatpaint_get_font_delegate ??= GetSymbol<Delegates.sk_compatpaint_get_font> ("sk_compatpaint_get_font")).Invoke (paint);
 		#endif
 
@@ -94,20 +94,20 @@ namespace SkiaSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_compatpaint_get_lcd_render_text (IntPtr paint);
+		internal static partial bool sk_compatpaint_get_lcd_render_text (sk_compatpaint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_compatpaint_get_lcd_render_text (IntPtr paint);
+		internal static extern bool sk_compatpaint_get_lcd_render_text (sk_compatpaint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_compatpaint_get_lcd_render_text (IntPtr paint);
+			internal delegate bool sk_compatpaint_get_lcd_render_text (sk_compatpaint_t paint);
 		}
 		private static Delegates.sk_compatpaint_get_lcd_render_text sk_compatpaint_get_lcd_render_text_delegate;
-		internal static bool sk_compatpaint_get_lcd_render_text (IntPtr paint) =>
+		internal static bool sk_compatpaint_get_lcd_render_text (sk_compatpaint_t paint) =>
 			(sk_compatpaint_get_lcd_render_text_delegate ??= GetSymbol<Delegates.sk_compatpaint_get_lcd_render_text> ("sk_compatpaint_get_lcd_render_text")).Invoke (paint);
 		#endif
 
@@ -115,18 +115,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial SKTextAlign sk_compatpaint_get_text_align (IntPtr paint);
+		internal static partial SKTextAlign sk_compatpaint_get_text_align (sk_compatpaint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKTextAlign sk_compatpaint_get_text_align (IntPtr paint);
+		internal static extern SKTextAlign sk_compatpaint_get_text_align (sk_compatpaint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate SKTextAlign sk_compatpaint_get_text_align (IntPtr paint);
+			internal delegate SKTextAlign sk_compatpaint_get_text_align (sk_compatpaint_t paint);
 		}
 		private static Delegates.sk_compatpaint_get_text_align sk_compatpaint_get_text_align_delegate;
-		internal static SKTextAlign sk_compatpaint_get_text_align (IntPtr paint) =>
+		internal static SKTextAlign sk_compatpaint_get_text_align (sk_compatpaint_t paint) =>
 			(sk_compatpaint_get_text_align_delegate ??= GetSymbol<Delegates.sk_compatpaint_get_text_align> ("sk_compatpaint_get_text_align")).Invoke (paint);
 		#endif
 
@@ -134,18 +134,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial SKTextEncoding sk_compatpaint_get_text_encoding (IntPtr paint);
+		internal static partial SKTextEncoding sk_compatpaint_get_text_encoding (sk_compatpaint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKTextEncoding sk_compatpaint_get_text_encoding (IntPtr paint);
+		internal static extern SKTextEncoding sk_compatpaint_get_text_encoding (sk_compatpaint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate SKTextEncoding sk_compatpaint_get_text_encoding (IntPtr paint);
+			internal delegate SKTextEncoding sk_compatpaint_get_text_encoding (sk_compatpaint_t paint);
 		}
 		private static Delegates.sk_compatpaint_get_text_encoding sk_compatpaint_get_text_encoding_delegate;
-		internal static SKTextEncoding sk_compatpaint_get_text_encoding (IntPtr paint) =>
+		internal static SKTextEncoding sk_compatpaint_get_text_encoding (sk_compatpaint_t paint) =>
 			(sk_compatpaint_get_text_encoding_delegate ??= GetSymbol<Delegates.sk_compatpaint_get_text_encoding> ("sk_compatpaint_get_text_encoding")).Invoke (paint);
 		#endif
 
@@ -153,18 +153,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_compatpaint_make_font (IntPtr paint);
+		internal static partial sk_font_t sk_compatpaint_make_font (sk_compatpaint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_compatpaint_make_font (IntPtr paint);
+		internal static extern sk_font_t sk_compatpaint_make_font (sk_compatpaint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_compatpaint_make_font (IntPtr paint);
+			internal delegate sk_font_t sk_compatpaint_make_font (sk_compatpaint_t paint);
 		}
 		private static Delegates.sk_compatpaint_make_font sk_compatpaint_make_font_delegate;
-		internal static IntPtr sk_compatpaint_make_font (IntPtr paint) =>
+		internal static sk_font_t sk_compatpaint_make_font (sk_compatpaint_t paint) =>
 			(sk_compatpaint_make_font_delegate ??= GetSymbol<Delegates.sk_compatpaint_make_font> ("sk_compatpaint_make_font")).Invoke (paint);
 		#endif
 
@@ -172,18 +172,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_compatpaint_new_with_font (IntPtr font);
+		internal static partial sk_compatpaint_t sk_compatpaint_new_with_font (sk_font_t font);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_compatpaint_new_with_font (IntPtr font);
+		internal static extern sk_compatpaint_t sk_compatpaint_new_with_font (sk_font_t font);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_compatpaint_new_with_font (IntPtr font);
+			internal delegate sk_compatpaint_t sk_compatpaint_new_with_font (sk_font_t font);
 		}
 		private static Delegates.sk_compatpaint_new_with_font sk_compatpaint_new_with_font_delegate;
-		internal static IntPtr sk_compatpaint_new_with_font (IntPtr font) =>
+		internal static sk_compatpaint_t sk_compatpaint_new_with_font (sk_font_t font) =>
 			(sk_compatpaint_new_with_font_delegate ??= GetSymbol<Delegates.sk_compatpaint_new_with_font> ("sk_compatpaint_new_with_font")).Invoke (font);
 		#endif
 
@@ -191,18 +191,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_compatpaint_reset (IntPtr paint, IntPtr font);
+		internal static partial void sk_compatpaint_reset (sk_compatpaint_t paint, sk_font_t font);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_compatpaint_reset (IntPtr paint, IntPtr font);
+		internal static extern void sk_compatpaint_reset (sk_compatpaint_t paint, sk_font_t font);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_compatpaint_reset (IntPtr paint, IntPtr font);
+			internal delegate void sk_compatpaint_reset (sk_compatpaint_t paint, sk_font_t font);
 		}
 		private static Delegates.sk_compatpaint_reset sk_compatpaint_reset_delegate;
-		internal static void sk_compatpaint_reset (IntPtr paint, IntPtr font) =>
+		internal static void sk_compatpaint_reset (sk_compatpaint_t paint, sk_font_t font) =>
 			(sk_compatpaint_reset_delegate ??= GetSymbol<Delegates.sk_compatpaint_reset> ("sk_compatpaint_reset")).Invoke (paint, font);
 		#endif
 
@@ -210,18 +210,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_compatpaint_set_filter_quality (IntPtr paint, Int32 quality);
+		internal static partial void sk_compatpaint_set_filter_quality (sk_compatpaint_t paint, Int32 quality);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_compatpaint_set_filter_quality (IntPtr paint, Int32 quality);
+		internal static extern void sk_compatpaint_set_filter_quality (sk_compatpaint_t paint, Int32 quality);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_compatpaint_set_filter_quality (IntPtr paint, Int32 quality);
+			internal delegate void sk_compatpaint_set_filter_quality (sk_compatpaint_t paint, Int32 quality);
 		}
 		private static Delegates.sk_compatpaint_set_filter_quality sk_compatpaint_set_filter_quality_delegate;
-		internal static void sk_compatpaint_set_filter_quality (IntPtr paint, Int32 quality) =>
+		internal static void sk_compatpaint_set_filter_quality (sk_compatpaint_t paint, Int32 quality) =>
 			(sk_compatpaint_set_filter_quality_delegate ??= GetSymbol<Delegates.sk_compatpaint_set_filter_quality> ("sk_compatpaint_set_filter_quality")).Invoke (paint, quality);
 		#endif
 
@@ -229,18 +229,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_compatpaint_set_is_antialias (IntPtr paint, [MarshalAs (UnmanagedType.I1)] bool antialias);
+		internal static partial void sk_compatpaint_set_is_antialias (sk_compatpaint_t paint, [MarshalAs (UnmanagedType.I1)] bool antialias);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_compatpaint_set_is_antialias (IntPtr paint, [MarshalAs (UnmanagedType.I1)] bool antialias);
+		internal static extern void sk_compatpaint_set_is_antialias (sk_compatpaint_t paint, [MarshalAs (UnmanagedType.I1)] bool antialias);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_compatpaint_set_is_antialias (IntPtr paint, [MarshalAs (UnmanagedType.I1)] bool antialias);
+			internal delegate void sk_compatpaint_set_is_antialias (sk_compatpaint_t paint, [MarshalAs (UnmanagedType.I1)] bool antialias);
 		}
 		private static Delegates.sk_compatpaint_set_is_antialias sk_compatpaint_set_is_antialias_delegate;
-		internal static void sk_compatpaint_set_is_antialias (IntPtr paint, [MarshalAs (UnmanagedType.I1)] bool antialias) =>
+		internal static void sk_compatpaint_set_is_antialias (sk_compatpaint_t paint, [MarshalAs (UnmanagedType.I1)] bool antialias) =>
 			(sk_compatpaint_set_is_antialias_delegate ??= GetSymbol<Delegates.sk_compatpaint_set_is_antialias> ("sk_compatpaint_set_is_antialias")).Invoke (paint, antialias);
 		#endif
 
@@ -248,18 +248,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_compatpaint_set_lcd_render_text (IntPtr paint, [MarshalAs (UnmanagedType.I1)] bool lcdRenderText);
+		internal static partial void sk_compatpaint_set_lcd_render_text (sk_compatpaint_t paint, [MarshalAs (UnmanagedType.I1)] bool lcdRenderText);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_compatpaint_set_lcd_render_text (IntPtr paint, [MarshalAs (UnmanagedType.I1)] bool lcdRenderText);
+		internal static extern void sk_compatpaint_set_lcd_render_text (sk_compatpaint_t paint, [MarshalAs (UnmanagedType.I1)] bool lcdRenderText);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_compatpaint_set_lcd_render_text (IntPtr paint, [MarshalAs (UnmanagedType.I1)] bool lcdRenderText);
+			internal delegate void sk_compatpaint_set_lcd_render_text (sk_compatpaint_t paint, [MarshalAs (UnmanagedType.I1)] bool lcdRenderText);
 		}
 		private static Delegates.sk_compatpaint_set_lcd_render_text sk_compatpaint_set_lcd_render_text_delegate;
-		internal static void sk_compatpaint_set_lcd_render_text (IntPtr paint, [MarshalAs (UnmanagedType.I1)] bool lcdRenderText) =>
+		internal static void sk_compatpaint_set_lcd_render_text (sk_compatpaint_t paint, [MarshalAs (UnmanagedType.I1)] bool lcdRenderText) =>
 			(sk_compatpaint_set_lcd_render_text_delegate ??= GetSymbol<Delegates.sk_compatpaint_set_lcd_render_text> ("sk_compatpaint_set_lcd_render_text")).Invoke (paint, lcdRenderText);
 		#endif
 
@@ -267,18 +267,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_compatpaint_set_text_align (IntPtr paint, SKTextAlign align);
+		internal static partial void sk_compatpaint_set_text_align (sk_compatpaint_t paint, SKTextAlign align);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_compatpaint_set_text_align (IntPtr paint, SKTextAlign align);
+		internal static extern void sk_compatpaint_set_text_align (sk_compatpaint_t paint, SKTextAlign align);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_compatpaint_set_text_align (IntPtr paint, SKTextAlign align);
+			internal delegate void sk_compatpaint_set_text_align (sk_compatpaint_t paint, SKTextAlign align);
 		}
 		private static Delegates.sk_compatpaint_set_text_align sk_compatpaint_set_text_align_delegate;
-		internal static void sk_compatpaint_set_text_align (IntPtr paint, SKTextAlign align) =>
+		internal static void sk_compatpaint_set_text_align (sk_compatpaint_t paint, SKTextAlign align) =>
 			(sk_compatpaint_set_text_align_delegate ??= GetSymbol<Delegates.sk_compatpaint_set_text_align> ("sk_compatpaint_set_text_align")).Invoke (paint, align);
 		#endif
 
@@ -286,18 +286,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_compatpaint_set_text_encoding (IntPtr paint, SKTextEncoding encoding);
+		internal static partial void sk_compatpaint_set_text_encoding (sk_compatpaint_t paint, SKTextEncoding encoding);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_compatpaint_set_text_encoding (IntPtr paint, SKTextEncoding encoding);
+		internal static extern void sk_compatpaint_set_text_encoding (sk_compatpaint_t paint, SKTextEncoding encoding);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_compatpaint_set_text_encoding (IntPtr paint, SKTextEncoding encoding);
+			internal delegate void sk_compatpaint_set_text_encoding (sk_compatpaint_t paint, SKTextEncoding encoding);
 		}
 		private static Delegates.sk_compatpaint_set_text_encoding sk_compatpaint_set_text_encoding_delegate;
-		internal static void sk_compatpaint_set_text_encoding (IntPtr paint, SKTextEncoding encoding) =>
+		internal static void sk_compatpaint_set_text_encoding (sk_compatpaint_t paint, SKTextEncoding encoding) =>
 			(sk_compatpaint_set_text_encoding_delegate ??= GetSymbol<Delegates.sk_compatpaint_set_text_encoding> ("sk_compatpaint_set_text_encoding")).Invoke (paint, encoding);
 		#endif
 

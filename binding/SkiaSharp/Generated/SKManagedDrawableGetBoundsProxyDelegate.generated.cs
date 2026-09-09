@@ -12,7 +12,7 @@ namespace SkiaSharp
 {
 	// typedef void (*)(sk_manageddrawable_t* d, void* context, sk_rect_t* rect)* sk_manageddrawable_getBounds_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKManagedDrawableGetBoundsProxyDelegate(IntPtr d, void* context, SKRect* rect);
+	internal unsafe delegate void SKManagedDrawableGetBoundsProxyDelegate(sk_manageddrawable_t d, void* context, SKRect* rect);
 
 }
 #endif // !USE_LIBRARY_IMPORT

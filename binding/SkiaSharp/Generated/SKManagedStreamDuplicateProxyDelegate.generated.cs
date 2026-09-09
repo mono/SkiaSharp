@@ -12,7 +12,7 @@ namespace SkiaSharp
 {
 	// typedef sk_stream_managedstream_t* (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_duplicate_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate IntPtr SKManagedStreamDuplicateProxyDelegate(IntPtr s, void* context);
+	internal unsafe delegate sk_stream_managedstream_t SKManagedStreamDuplicateProxyDelegate(sk_stream_managedstream_t s, void* context);
 
 }
 #endif // !USE_LIBRARY_IMPORT

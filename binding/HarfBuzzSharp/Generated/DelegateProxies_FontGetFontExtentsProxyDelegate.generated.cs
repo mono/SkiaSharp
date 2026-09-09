@@ -13,14 +13,14 @@ namespace HarfBuzzSharp
 	{
 	/// Proxy for hb_font_get_font_extents_func_t native function.
 #if USE_LIBRARY_IMPORT
-	public static readonly delegate* unmanaged[Cdecl] <IntPtr, void*, FontExtents*, void*, bool> FontGetFontExtentsProxy = &FontGetFontExtentsProxyImplementation;
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, FontExtents*, void*, bool> FontGetFontExtentsProxy = &FontGetFontExtentsProxyImplementation;
 	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 	public static readonly FontGetFontExtentsProxyDelegate FontGetFontExtentsProxy = FontGetFontExtentsProxyImplementation;
 	[MonoPInvokeCallback (typeof (FontGetFontExtentsProxyDelegate))]
 #endif
 	[return: MarshalAs (UnmanagedType.I1)]
-	private static partial bool FontGetFontExtentsProxyImplementation(IntPtr font,void* font_data,FontExtents* extents,void* user_data);
+	private static partial bool FontGetFontExtentsProxyImplementation(hb_font_t font,void* font_data,FontExtents* extents,void* user_data);
 
 	}
 }

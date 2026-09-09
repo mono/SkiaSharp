@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_manageddrawable_new (void* context);
+		internal static partial sk_manageddrawable_t sk_manageddrawable_new (void* context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_manageddrawable_new (void* context);
+		internal static extern sk_manageddrawable_t sk_manageddrawable_new (void* context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_manageddrawable_new (void* context);
+			internal delegate sk_manageddrawable_t sk_manageddrawable_new (void* context);
 		}
 		private static Delegates.sk_manageddrawable_new sk_manageddrawable_new_delegate;
-		internal static IntPtr sk_manageddrawable_new (void* context) =>
+		internal static sk_manageddrawable_t sk_manageddrawable_new (void* context) =>
 			(sk_manageddrawable_new_delegate ??= GetSymbol<Delegates.sk_manageddrawable_new> ("sk_manageddrawable_new")).Invoke (context);
 		#endif
 
@@ -55,18 +55,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_manageddrawable_unref (IntPtr param0);
+		internal static partial void sk_manageddrawable_unref (sk_manageddrawable_t param0);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_manageddrawable_unref (IntPtr param0);
+		internal static extern void sk_manageddrawable_unref (sk_manageddrawable_t param0);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_manageddrawable_unref (IntPtr param0);
+			internal delegate void sk_manageddrawable_unref (sk_manageddrawable_t param0);
 		}
 		private static Delegates.sk_manageddrawable_unref sk_manageddrawable_unref_delegate;
-		internal static void sk_manageddrawable_unref (IntPtr param0) =>
+		internal static void sk_manageddrawable_unref (sk_manageddrawable_t param0) =>
 			(sk_manageddrawable_unref_delegate ??= GetSymbol<Delegates.sk_manageddrawable_unref> ("sk_manageddrawable_unref")).Invoke (param0);
 		#endif
 

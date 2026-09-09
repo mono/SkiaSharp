@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_managedstream_destroy (IntPtr s);
+		internal static partial void sk_managedstream_destroy (sk_stream_managedstream_t s);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_managedstream_destroy (IntPtr s);
+		internal static extern void sk_managedstream_destroy (sk_stream_managedstream_t s);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_managedstream_destroy (IntPtr s);
+			internal delegate void sk_managedstream_destroy (sk_stream_managedstream_t s);
 		}
 		private static Delegates.sk_managedstream_destroy sk_managedstream_destroy_delegate;
-		internal static void sk_managedstream_destroy (IntPtr s) =>
+		internal static void sk_managedstream_destroy (sk_stream_managedstream_t s) =>
 			(sk_managedstream_destroy_delegate ??= GetSymbol<Delegates.sk_managedstream_destroy> ("sk_managedstream_destroy")).Invoke (s);
 		#endif
 
@@ -36,18 +36,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_managedstream_new (void* context);
+		internal static partial sk_stream_managedstream_t sk_managedstream_new (void* context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_managedstream_new (void* context);
+		internal static extern sk_stream_managedstream_t sk_managedstream_new (void* context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_managedstream_new (void* context);
+			internal delegate sk_stream_managedstream_t sk_managedstream_new (void* context);
 		}
 		private static Delegates.sk_managedstream_new sk_managedstream_new_delegate;
-		internal static IntPtr sk_managedstream_new (void* context) =>
+		internal static sk_stream_managedstream_t sk_managedstream_new (void* context) =>
 			(sk_managedstream_new_delegate ??= GetSymbol<Delegates.sk_managedstream_new> ("sk_managedstream_new")).Invoke (context);
 		#endif
 
@@ -74,18 +74,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_managedwstream_destroy (IntPtr s);
+		internal static partial void sk_managedwstream_destroy (sk_wstream_managedstream_t s);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_managedwstream_destroy (IntPtr s);
+		internal static extern void sk_managedwstream_destroy (sk_wstream_managedstream_t s);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_managedwstream_destroy (IntPtr s);
+			internal delegate void sk_managedwstream_destroy (sk_wstream_managedstream_t s);
 		}
 		private static Delegates.sk_managedwstream_destroy sk_managedwstream_destroy_delegate;
-		internal static void sk_managedwstream_destroy (IntPtr s) =>
+		internal static void sk_managedwstream_destroy (sk_wstream_managedstream_t s) =>
 			(sk_managedwstream_destroy_delegate ??= GetSymbol<Delegates.sk_managedwstream_destroy> ("sk_managedwstream_destroy")).Invoke (s);
 		#endif
 
@@ -93,18 +93,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_managedwstream_new (void* context);
+		internal static partial sk_wstream_managedstream_t sk_managedwstream_new (void* context);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_managedwstream_new (void* context);
+		internal static extern sk_wstream_managedstream_t sk_managedwstream_new (void* context);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_managedwstream_new (void* context);
+			internal delegate sk_wstream_managedstream_t sk_managedwstream_new (void* context);
 		}
 		private static Delegates.sk_managedwstream_new sk_managedwstream_new_delegate;
-		internal static IntPtr sk_managedwstream_new (void* context) =>
+		internal static sk_wstream_managedstream_t sk_managedwstream_new (void* context) =>
 			(sk_managedwstream_new_delegate ??= GetSymbol<Delegates.sk_managedwstream_new> ("sk_managedwstream_new")).Invoke (context);
 		#endif
 

@@ -14,16 +14,16 @@ namespace SkiaSharp
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct GRVkBackendContextNative : IEquatable<GRVkBackendContextNative> {
 		// public vk_instance_t* fInstance
-		public IntPtr fInstance;
+		public vk_instance_t fInstance;
 
 		// public vk_physical_device_t* fPhysicalDevice
-		public IntPtr fPhysicalDevice;
+		public vk_physical_device_t fPhysicalDevice;
 
 		// public vk_device_t* fDevice
-		public IntPtr fDevice;
+		public vk_device_t fDevice;
 
 		// public vk_queue_t* fQueue
-		public IntPtr fQueue;
+		public vk_queue_t fQueue;
 
 		// public uint32_t fGraphicsQueueIndex
 		public UInt32 fGraphicsQueueIndex;
@@ -32,20 +32,20 @@ namespace SkiaSharp
 		public UInt32 fMaxAPIVersion;
 
 		// public const gr_vk_extensions_t* fVkExtensions
-		public IntPtr fVkExtensions;
+		public gr_vk_extensions_t fVkExtensions;
 
 		// public const vk_physical_device_features_t* fDeviceFeatures
-		public IntPtr fDeviceFeatures;
+		public vk_physical_device_features_t fDeviceFeatures;
 
 		// public const vk_physical_device_features_2_t* fDeviceFeatures2
-		public IntPtr fDeviceFeatures2;
+		public vk_physical_device_features_2_t fDeviceFeatures2;
 
 		// public gr_vk_memory_allocator_t* fMemoryAllocator
-		public IntPtr fMemoryAllocator;
+		public gr_vk_memory_allocator_t fMemoryAllocator;
 
 		// public gr_vk_get_proc fGetProc
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <void*, /* char */ void*, IntPtr, IntPtr, IntPtr> fGetProc;
+		public delegate* unmanaged[Cdecl] <void*, /* char */ void*, vk_instance_t, vk_device_t, IntPtr> fGetProc;
 #else
 		public GRVkGetProcProxyDelegate fGetProc;
 #endif

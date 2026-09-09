@@ -13,14 +13,14 @@ namespace HarfBuzzSharp
 	{
 	/// Proxy for hb_unicode_compose_func_t native function.
 #if USE_LIBRARY_IMPORT
-	public static readonly delegate* unmanaged[Cdecl] <IntPtr, UInt32, UInt32, UInt32*, void*, bool> UnicodeComposeProxy = &UnicodeComposeProxyImplementation;
+	public static readonly delegate* unmanaged[Cdecl] <hb_unicode_funcs_t, UInt32, UInt32, UInt32*, void*, bool> UnicodeComposeProxy = &UnicodeComposeProxyImplementation;
 	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 	public static readonly UnicodeComposeProxyDelegate UnicodeComposeProxy = UnicodeComposeProxyImplementation;
 	[MonoPInvokeCallback (typeof (UnicodeComposeProxyDelegate))]
 #endif
 	[return: MarshalAs (UnmanagedType.I1)]
-	private static partial bool UnicodeComposeProxyImplementation(IntPtr ufuncs,UInt32 a,UInt32 b,UInt32* ab,void* user_data);
+	private static partial bool UnicodeComposeProxyImplementation(hb_unicode_funcs_t ufuncs,UInt32 a,UInt32 b,UInt32* ab,void* user_data);
 
 	}
 }

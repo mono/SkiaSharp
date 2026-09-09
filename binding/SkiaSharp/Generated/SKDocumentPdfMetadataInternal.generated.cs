@@ -14,22 +14,22 @@ namespace SkiaSharp
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKDocumentPdfMetadataInternal : IEquatable<SKDocumentPdfMetadataInternal> {
 		// public sk_string_t* fTitle
-		public IntPtr fTitle;
+		public sk_string_t fTitle;
 
 		// public sk_string_t* fAuthor
-		public IntPtr fAuthor;
+		public sk_string_t fAuthor;
 
 		// public sk_string_t* fSubject
-		public IntPtr fSubject;
+		public sk_string_t fSubject;
 
 		// public sk_string_t* fKeywords
-		public IntPtr fKeywords;
+		public sk_string_t fKeywords;
 
 		// public sk_string_t* fCreator
-		public IntPtr fCreator;
+		public sk_string_t fCreator;
 
 		// public sk_string_t* fProducer
-		public IntPtr fProducer;
+		public sk_string_t fProducer;
 
 		// public sk_document_pdf_datetime_t* fCreation
 		public SKTimeDateTimeInternal* fCreation;

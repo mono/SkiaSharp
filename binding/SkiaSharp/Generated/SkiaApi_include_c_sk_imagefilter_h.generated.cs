@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_arithmetic (Single k1, Single k2, Single k3, Single k4, [MarshalAs (UnmanagedType.I1)] bool enforcePMColor, IntPtr background, IntPtr foreground, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_arithmetic (Single k1, Single k2, Single k3, Single k4, [MarshalAs (UnmanagedType.I1)] bool enforcePMColor, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_arithmetic (Single k1, Single k2, Single k3, Single k4, [MarshalAs (UnmanagedType.I1)] bool enforcePMColor, IntPtr background, IntPtr foreground, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_arithmetic (Single k1, Single k2, Single k3, Single k4, [MarshalAs (UnmanagedType.I1)] bool enforcePMColor, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_arithmetic (Single k1, Single k2, Single k3, Single k4, [MarshalAs (UnmanagedType.I1)] bool enforcePMColor, IntPtr background, IntPtr foreground, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_arithmetic (Single k1, Single k2, Single k3, Single k4, [MarshalAs (UnmanagedType.I1)] bool enforcePMColor, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_arithmetic sk_imagefilter_new_arithmetic_delegate;
-		internal static IntPtr sk_imagefilter_new_arithmetic (Single k1, Single k2, Single k3, Single k4, [MarshalAs (UnmanagedType.I1)] bool enforcePMColor, IntPtr background, IntPtr foreground, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_arithmetic (Single k1, Single k2, Single k3, Single k4, [MarshalAs (UnmanagedType.I1)] bool enforcePMColor, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect) =>
 			(sk_imagefilter_new_arithmetic_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_arithmetic> ("sk_imagefilter_new_arithmetic")).Invoke (k1, k2, k3, k4, enforcePMColor, background, foreground, cropRect);
 		#endif
 
@@ -36,18 +36,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_blend (SKBlendMode mode, IntPtr background, IntPtr foreground, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_blend (SKBlendMode mode, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_blend (SKBlendMode mode, IntPtr background, IntPtr foreground, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_blend (SKBlendMode mode, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_blend (SKBlendMode mode, IntPtr background, IntPtr foreground, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_blend (SKBlendMode mode, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_blend sk_imagefilter_new_blend_delegate;
-		internal static IntPtr sk_imagefilter_new_blend (SKBlendMode mode, IntPtr background, IntPtr foreground, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_blend (SKBlendMode mode, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect) =>
 			(sk_imagefilter_new_blend_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_blend> ("sk_imagefilter_new_blend")).Invoke (mode, background, foreground, cropRect);
 		#endif
 
@@ -55,18 +55,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_blender (IntPtr blender, IntPtr background, IntPtr foreground, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_blender (sk_blender_t blender, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_blender (IntPtr blender, IntPtr background, IntPtr foreground, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_blender (sk_blender_t blender, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_blender (IntPtr blender, IntPtr background, IntPtr foreground, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_blender (sk_blender_t blender, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_blender sk_imagefilter_new_blender_delegate;
-		internal static IntPtr sk_imagefilter_new_blender (IntPtr blender, IntPtr background, IntPtr foreground, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_blender (sk_blender_t blender, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect) =>
 			(sk_imagefilter_new_blender_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_blender> ("sk_imagefilter_new_blender")).Invoke (blender, background, foreground, cropRect);
 		#endif
 
@@ -74,18 +74,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, SKShaderTileMode tileMode, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, SKShaderTileMode tileMode, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, SKShaderTileMode tileMode, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, SKShaderTileMode tileMode, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, SKShaderTileMode tileMode, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, SKShaderTileMode tileMode, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_blur sk_imagefilter_new_blur_delegate;
-		internal static IntPtr sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, SKShaderTileMode tileMode, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, SKShaderTileMode tileMode, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_blur_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_blur> ("sk_imagefilter_new_blur")).Invoke (sigmaX, sigmaY, tileMode, input, cropRect);
 		#endif
 
@@ -93,18 +93,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_color_filter (IntPtr cf, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_color_filter (sk_colorfilter_t cf, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_color_filter (IntPtr cf, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_color_filter (sk_colorfilter_t cf, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_color_filter (IntPtr cf, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_color_filter (sk_colorfilter_t cf, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_color_filter sk_imagefilter_new_color_filter_delegate;
-		internal static IntPtr sk_imagefilter_new_color_filter (IntPtr cf, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_color_filter (sk_colorfilter_t cf, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_color_filter_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_color_filter> ("sk_imagefilter_new_color_filter")).Invoke (cf, input, cropRect);
 		#endif
 
@@ -112,18 +112,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_compose (IntPtr outer, IntPtr inner);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_compose (sk_imagefilter_t outer, sk_imagefilter_t inner);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_compose (IntPtr outer, IntPtr inner);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_compose (sk_imagefilter_t outer, sk_imagefilter_t inner);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_compose (IntPtr outer, IntPtr inner);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_compose (sk_imagefilter_t outer, sk_imagefilter_t inner);
 		}
 		private static Delegates.sk_imagefilter_new_compose sk_imagefilter_new_compose_delegate;
-		internal static IntPtr sk_imagefilter_new_compose (IntPtr outer, IntPtr inner) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_compose (sk_imagefilter_t outer, sk_imagefilter_t inner) =>
 			(sk_imagefilter_new_compose_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_compose> ("sk_imagefilter_new_compose")).Invoke (outer, inner);
 		#endif
 
@@ -131,18 +131,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, IntPtr input);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, IntPtr input);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, IntPtr input);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
 		}
 		private static Delegates.sk_imagefilter_new_crop sk_imagefilter_new_crop_delegate;
-		internal static IntPtr sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, IntPtr input) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input) =>
 			(sk_imagefilter_new_crop_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_crop> ("sk_imagefilter_new_crop")).Invoke (rect, tileMode, input);
 		#endif
 
@@ -150,18 +150,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_dilate (Single radiusX, Single radiusY, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_dilate (Single radiusX, Single radiusY, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_dilate (Single radiusX, Single radiusY, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_dilate (Single radiusX, Single radiusY, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_dilate (Single radiusX, Single radiusY, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_dilate (Single radiusX, Single radiusY, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_dilate sk_imagefilter_new_dilate_delegate;
-		internal static IntPtr sk_imagefilter_new_dilate (Single radiusX, Single radiusY, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_dilate (Single radiusX, Single radiusY, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_dilate_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_dilate> ("sk_imagefilter_new_dilate")).Invoke (radiusX, radiusY, input, cropRect);
 		#endif
 
@@ -169,18 +169,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_displacement_map_effect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, Single scale, IntPtr displacement, IntPtr color, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_displacement_map_effect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, Single scale, sk_imagefilter_t displacement, sk_imagefilter_t color, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_displacement_map_effect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, Single scale, IntPtr displacement, IntPtr color, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_displacement_map_effect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, Single scale, sk_imagefilter_t displacement, sk_imagefilter_t color, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_displacement_map_effect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, Single scale, IntPtr displacement, IntPtr color, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_displacement_map_effect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, Single scale, sk_imagefilter_t displacement, sk_imagefilter_t color, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_displacement_map_effect sk_imagefilter_new_displacement_map_effect_delegate;
-		internal static IntPtr sk_imagefilter_new_displacement_map_effect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, Single scale, IntPtr displacement, IntPtr color, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_displacement_map_effect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, Single scale, sk_imagefilter_t displacement, sk_imagefilter_t color, SKRect* cropRect) =>
 			(sk_imagefilter_new_displacement_map_effect_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_displacement_map_effect> ("sk_imagefilter_new_displacement_map_effect")).Invoke (xChannelSelector, yChannelSelector, scale, displacement, color, cropRect);
 		#endif
 
@@ -188,18 +188,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_distant_lit_diffuse (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single kd, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_distant_lit_diffuse (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_distant_lit_diffuse (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single kd, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_distant_lit_diffuse (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_distant_lit_diffuse (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single kd, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_distant_lit_diffuse (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_distant_lit_diffuse sk_imagefilter_new_distant_lit_diffuse_delegate;
-		internal static IntPtr sk_imagefilter_new_distant_lit_diffuse (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single kd, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_distant_lit_diffuse (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_distant_lit_diffuse_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_distant_lit_diffuse> ("sk_imagefilter_new_distant_lit_diffuse")).Invoke (direction, lightColor, surfaceScale, kd, input, cropRect);
 		#endif
 
@@ -207,18 +207,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_distant_lit_specular (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_distant_lit_specular (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_distant_lit_specular (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_distant_lit_specular (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_distant_lit_specular (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_distant_lit_specular (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_distant_lit_specular sk_imagefilter_new_distant_lit_specular_delegate;
-		internal static IntPtr sk_imagefilter_new_distant_lit_specular (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_distant_lit_specular (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_distant_lit_specular_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_distant_lit_specular> ("sk_imagefilter_new_distant_lit_specular")).Invoke (direction, lightColor, surfaceScale, ks, shininess, input, cropRect);
 		#endif
 
@@ -226,18 +226,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_drop_shadow sk_imagefilter_new_drop_shadow_delegate;
-		internal static IntPtr sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_drop_shadow_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_drop_shadow> ("sk_imagefilter_new_drop_shadow")).Invoke (dx, dy, sigmaX, sigmaY, color, input, cropRect);
 		#endif
 
@@ -245,18 +245,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_drop_shadow_only sk_imagefilter_new_drop_shadow_only_delegate;
-		internal static IntPtr sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_drop_shadow_only_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_drop_shadow_only> ("sk_imagefilter_new_drop_shadow_only")).Invoke (dx, dy, sigmaX, sigmaY, color, input, cropRect);
 		#endif
 
@@ -264,18 +264,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_empty ();
+		internal static partial sk_imagefilter_t sk_imagefilter_new_empty ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_empty ();
+		internal static extern sk_imagefilter_t sk_imagefilter_new_empty ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_empty ();
+			internal delegate sk_imagefilter_t sk_imagefilter_new_empty ();
 		}
 		private static Delegates.sk_imagefilter_new_empty sk_imagefilter_new_empty_delegate;
-		internal static IntPtr sk_imagefilter_new_empty () =>
+		internal static sk_imagefilter_t sk_imagefilter_new_empty () =>
 			(sk_imagefilter_new_empty_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_empty> ("sk_imagefilter_new_empty")).Invoke ();
 		#endif
 
@@ -283,18 +283,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_erode (Single radiusX, Single radiusY, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_erode (Single radiusX, Single radiusY, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_erode (Single radiusX, Single radiusY, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_erode (Single radiusX, Single radiusY, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_erode (Single radiusX, Single radiusY, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_erode (Single radiusX, Single radiusY, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_erode sk_imagefilter_new_erode_delegate;
-		internal static IntPtr sk_imagefilter_new_erode (Single radiusX, Single radiusY, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_erode (Single radiusX, Single radiusY, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_erode_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_erode> ("sk_imagefilter_new_erode")).Invoke (radiusX, radiusY, input, cropRect);
 		#endif
 
@@ -302,18 +302,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_image (IntPtr image, SKRect* srcRect, SKRect* dstRect, SKSamplingOptions* sampling);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_image (sk_image_t image, SKRect* srcRect, SKRect* dstRect, SKSamplingOptions* sampling);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_image (IntPtr image, SKRect* srcRect, SKRect* dstRect, SKSamplingOptions* sampling);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_image (sk_image_t image, SKRect* srcRect, SKRect* dstRect, SKSamplingOptions* sampling);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_image (IntPtr image, SKRect* srcRect, SKRect* dstRect, SKSamplingOptions* sampling);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_image (sk_image_t image, SKRect* srcRect, SKRect* dstRect, SKSamplingOptions* sampling);
 		}
 		private static Delegates.sk_imagefilter_new_image sk_imagefilter_new_image_delegate;
-		internal static IntPtr sk_imagefilter_new_image (IntPtr image, SKRect* srcRect, SKRect* dstRect, SKSamplingOptions* sampling) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_image (sk_image_t image, SKRect* srcRect, SKRect* dstRect, SKSamplingOptions* sampling) =>
 			(sk_imagefilter_new_image_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_image> ("sk_imagefilter_new_image")).Invoke (image, srcRect, dstRect, sampling);
 		#endif
 
@@ -321,18 +321,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_image_simple (IntPtr image, SKSamplingOptions* sampling);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_image_simple (sk_image_t image, SKSamplingOptions* sampling);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_image_simple (IntPtr image, SKSamplingOptions* sampling);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_image_simple (sk_image_t image, SKSamplingOptions* sampling);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_image_simple (IntPtr image, SKSamplingOptions* sampling);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_image_simple (sk_image_t image, SKSamplingOptions* sampling);
 		}
 		private static Delegates.sk_imagefilter_new_image_simple sk_imagefilter_new_image_simple_delegate;
-		internal static IntPtr sk_imagefilter_new_image_simple (IntPtr image, SKSamplingOptions* sampling) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_image_simple (sk_image_t image, SKSamplingOptions* sampling) =>
 			(sk_imagefilter_new_image_simple_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_image_simple> ("sk_imagefilter_new_image_simple")).Invoke (image, sampling);
 		#endif
 
@@ -340,18 +340,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_magnifier (SKRect* lensBounds, Single zoomAmount, Single inset, SKSamplingOptions* sampling, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_magnifier (SKRect* lensBounds, Single zoomAmount, Single inset, SKSamplingOptions* sampling, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_magnifier (SKRect* lensBounds, Single zoomAmount, Single inset, SKSamplingOptions* sampling, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_magnifier (SKRect* lensBounds, Single zoomAmount, Single inset, SKSamplingOptions* sampling, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_magnifier (SKRect* lensBounds, Single zoomAmount, Single inset, SKSamplingOptions* sampling, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_magnifier (SKRect* lensBounds, Single zoomAmount, Single inset, SKSamplingOptions* sampling, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_magnifier sk_imagefilter_new_magnifier_delegate;
-		internal static IntPtr sk_imagefilter_new_magnifier (SKRect* lensBounds, Single zoomAmount, Single inset, SKSamplingOptions* sampling, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_magnifier (SKRect* lensBounds, Single zoomAmount, Single inset, SKSamplingOptions* sampling, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_magnifier_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_magnifier> ("sk_imagefilter_new_magnifier")).Invoke (lensBounds, zoomAmount, inset, sampling, input, cropRect);
 		#endif
 
@@ -359,18 +359,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKShaderTileMode ctileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKShaderTileMode ctileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKShaderTileMode ctileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKShaderTileMode ctileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKShaderTileMode ctileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKShaderTileMode ctileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_matrix_convolution sk_imagefilter_new_matrix_convolution_delegate;
-		internal static IntPtr sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKShaderTileMode ctileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKShaderTileMode ctileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_matrix_convolution_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_matrix_convolution> ("sk_imagefilter_new_matrix_convolution")).Invoke (kernelSize, kernel, gain, bias, kernelOffset, ctileMode, convolveAlpha, input, cropRect);
 		#endif
 
@@ -378,18 +378,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_matrix_transform (SKMatrix* cmatrix, SKSamplingOptions* sampling, IntPtr input);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_matrix_transform (SKMatrix* cmatrix, SKSamplingOptions* sampling, sk_imagefilter_t input);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_matrix_transform (SKMatrix* cmatrix, SKSamplingOptions* sampling, IntPtr input);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_matrix_transform (SKMatrix* cmatrix, SKSamplingOptions* sampling, sk_imagefilter_t input);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_matrix_transform (SKMatrix* cmatrix, SKSamplingOptions* sampling, IntPtr input);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_matrix_transform (SKMatrix* cmatrix, SKSamplingOptions* sampling, sk_imagefilter_t input);
 		}
 		private static Delegates.sk_imagefilter_new_matrix_transform sk_imagefilter_new_matrix_transform_delegate;
-		internal static IntPtr sk_imagefilter_new_matrix_transform (SKMatrix* cmatrix, SKSamplingOptions* sampling, IntPtr input) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_matrix_transform (SKMatrix* cmatrix, SKSamplingOptions* sampling, sk_imagefilter_t input) =>
 			(sk_imagefilter_new_matrix_transform_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_matrix_transform> ("sk_imagefilter_new_matrix_transform")).Invoke (cmatrix, sampling, input);
 		#endif
 
@@ -397,18 +397,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_merge (IntPtr* cfilters, Int32 count, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_merge (sk_imagefilter_t* cfilters, Int32 count, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_merge (IntPtr* cfilters, Int32 count, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_merge (sk_imagefilter_t* cfilters, Int32 count, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_merge (IntPtr* cfilters, Int32 count, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_merge (sk_imagefilter_t* cfilters, Int32 count, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_merge sk_imagefilter_new_merge_delegate;
-		internal static IntPtr sk_imagefilter_new_merge (IntPtr* cfilters, Int32 count, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_merge (sk_imagefilter_t* cfilters, Int32 count, SKRect* cropRect) =>
 			(sk_imagefilter_new_merge_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_merge> ("sk_imagefilter_new_merge")).Invoke (cfilters, count, cropRect);
 		#endif
 
@@ -416,18 +416,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_merge_simple (IntPtr first, IntPtr second, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_merge_simple (sk_imagefilter_t first, sk_imagefilter_t second, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_merge_simple (IntPtr first, IntPtr second, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_merge_simple (sk_imagefilter_t first, sk_imagefilter_t second, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_merge_simple (IntPtr first, IntPtr second, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_merge_simple (sk_imagefilter_t first, sk_imagefilter_t second, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_merge_simple sk_imagefilter_new_merge_simple_delegate;
-		internal static IntPtr sk_imagefilter_new_merge_simple (IntPtr first, IntPtr second, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_merge_simple (sk_imagefilter_t first, sk_imagefilter_t second, SKRect* cropRect) =>
 			(sk_imagefilter_new_merge_simple_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_merge_simple> ("sk_imagefilter_new_merge_simple")).Invoke (first, second, cropRect);
 		#endif
 
@@ -435,18 +435,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_offset (Single dx, Single dy, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_offset (Single dx, Single dy, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_offset (Single dx, Single dy, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_offset (Single dx, Single dy, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_offset (Single dx, Single dy, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_offset (Single dx, Single dy, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_offset sk_imagefilter_new_offset_delegate;
-		internal static IntPtr sk_imagefilter_new_offset (Single dx, Single dy, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_offset (Single dx, Single dy, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_offset_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_offset> ("sk_imagefilter_new_offset")).Invoke (dx, dy, input, cropRect);
 		#endif
 
@@ -454,18 +454,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_picture (IntPtr picture);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_picture (sk_picture_t picture);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_picture (IntPtr picture);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_picture (sk_picture_t picture);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_picture (IntPtr picture);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_picture (sk_picture_t picture);
 		}
 		private static Delegates.sk_imagefilter_new_picture sk_imagefilter_new_picture_delegate;
-		internal static IntPtr sk_imagefilter_new_picture (IntPtr picture) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_picture (sk_picture_t picture) =>
 			(sk_imagefilter_new_picture_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_picture> ("sk_imagefilter_new_picture")).Invoke (picture);
 		#endif
 
@@ -473,18 +473,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_picture_with_rect (IntPtr picture, SKRect* targetRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_picture_with_rect (sk_picture_t picture, SKRect* targetRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_picture_with_rect (IntPtr picture, SKRect* targetRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_picture_with_rect (sk_picture_t picture, SKRect* targetRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_picture_with_rect (IntPtr picture, SKRect* targetRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_picture_with_rect (sk_picture_t picture, SKRect* targetRect);
 		}
 		private static Delegates.sk_imagefilter_new_picture_with_rect sk_imagefilter_new_picture_with_rect_delegate;
-		internal static IntPtr sk_imagefilter_new_picture_with_rect (IntPtr picture, SKRect* targetRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_picture_with_rect (sk_picture_t picture, SKRect* targetRect) =>
 			(sk_imagefilter_new_picture_with_rect_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_picture_with_rect> ("sk_imagefilter_new_picture_with_rect")).Invoke (picture, targetRect);
 		#endif
 
@@ -492,18 +492,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_point_lit_diffuse (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single kd, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_point_lit_diffuse (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_point_lit_diffuse (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single kd, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_point_lit_diffuse (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_point_lit_diffuse (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single kd, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_point_lit_diffuse (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_point_lit_diffuse sk_imagefilter_new_point_lit_diffuse_delegate;
-		internal static IntPtr sk_imagefilter_new_point_lit_diffuse (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single kd, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_point_lit_diffuse (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_point_lit_diffuse_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_point_lit_diffuse> ("sk_imagefilter_new_point_lit_diffuse")).Invoke (location, lightColor, surfaceScale, kd, input, cropRect);
 		#endif
 
@@ -511,18 +511,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_point_lit_specular (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_point_lit_specular (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_point_lit_specular (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_point_lit_specular (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_point_lit_specular (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_point_lit_specular (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_point_lit_specular sk_imagefilter_new_point_lit_specular_delegate;
-		internal static IntPtr sk_imagefilter_new_point_lit_specular (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_point_lit_specular (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_point_lit_specular_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_point_lit_specular> ("sk_imagefilter_new_point_lit_specular")).Invoke (location, lightColor, surfaceScale, ks, shininess, input, cropRect);
 		#endif
 
@@ -530,18 +530,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_shader (IntPtr shader, [MarshalAs (UnmanagedType.I1)] bool dither, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_shader (sk_shader_t shader, [MarshalAs (UnmanagedType.I1)] bool dither, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_shader (IntPtr shader, [MarshalAs (UnmanagedType.I1)] bool dither, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_shader (sk_shader_t shader, [MarshalAs (UnmanagedType.I1)] bool dither, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_shader (IntPtr shader, [MarshalAs (UnmanagedType.I1)] bool dither, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_shader (sk_shader_t shader, [MarshalAs (UnmanagedType.I1)] bool dither, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_shader sk_imagefilter_new_shader_delegate;
-		internal static IntPtr sk_imagefilter_new_shader (IntPtr shader, [MarshalAs (UnmanagedType.I1)] bool dither, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_shader (sk_shader_t shader, [MarshalAs (UnmanagedType.I1)] bool dither, SKRect* cropRect) =>
 			(sk_imagefilter_new_shader_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_shader> ("sk_imagefilter_new_shader")).Invoke (shader, dither, cropRect);
 		#endif
 
@@ -549,18 +549,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_spot_lit_diffuse (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single kd, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_spot_lit_diffuse (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_spot_lit_diffuse (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single kd, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_spot_lit_diffuse (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_spot_lit_diffuse (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single kd, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_spot_lit_diffuse (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_spot_lit_diffuse sk_imagefilter_new_spot_lit_diffuse_delegate;
-		internal static IntPtr sk_imagefilter_new_spot_lit_diffuse (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single kd, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_spot_lit_diffuse (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_spot_lit_diffuse_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_spot_lit_diffuse> ("sk_imagefilter_new_spot_lit_diffuse")).Invoke (location, target, specularExponent, cutoffAngle, lightColor, surfaceScale, kd, input, cropRect);
 		#endif
 
@@ -568,18 +568,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_spot_lit_specular (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, IntPtr input, SKRect* cropRect);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_spot_lit_specular (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_spot_lit_specular (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, IntPtr input, SKRect* cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_spot_lit_specular (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_spot_lit_specular (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, IntPtr input, SKRect* cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_spot_lit_specular (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_spot_lit_specular sk_imagefilter_new_spot_lit_specular_delegate;
-		internal static IntPtr sk_imagefilter_new_spot_lit_specular (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, IntPtr input, SKRect* cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_spot_lit_specular (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_spot_lit_specular_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_spot_lit_specular> ("sk_imagefilter_new_spot_lit_specular")).Invoke (location, target, specularExponent, cutoffAngle, lightColor, surfaceScale, ks, shininess, input, cropRect);
 		#endif
 
@@ -587,18 +587,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_imagefilter_new_tile (SKRect* src, SKRect* dst, IntPtr input);
+		internal static partial sk_imagefilter_t sk_imagefilter_new_tile (SKRect* src, SKRect* dst, sk_imagefilter_t input);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_imagefilter_new_tile (SKRect* src, SKRect* dst, IntPtr input);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_tile (SKRect* src, SKRect* dst, sk_imagefilter_t input);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_imagefilter_new_tile (SKRect* src, SKRect* dst, IntPtr input);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_tile (SKRect* src, SKRect* dst, sk_imagefilter_t input);
 		}
 		private static Delegates.sk_imagefilter_new_tile sk_imagefilter_new_tile_delegate;
-		internal static IntPtr sk_imagefilter_new_tile (SKRect* src, SKRect* dst, IntPtr input) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_tile (SKRect* src, SKRect* dst, sk_imagefilter_t input) =>
 			(sk_imagefilter_new_tile_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_tile> ("sk_imagefilter_new_tile")).Invoke (src, dst, input);
 		#endif
 
@@ -606,18 +606,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_imagefilter_unref (IntPtr cfilter);
+		internal static partial void sk_imagefilter_unref (sk_imagefilter_t cfilter);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_imagefilter_unref (IntPtr cfilter);
+		internal static extern void sk_imagefilter_unref (sk_imagefilter_t cfilter);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_imagefilter_unref (IntPtr cfilter);
+			internal delegate void sk_imagefilter_unref (sk_imagefilter_t cfilter);
 		}
 		private static Delegates.sk_imagefilter_unref sk_imagefilter_unref_delegate;
-		internal static void sk_imagefilter_unref (IntPtr cfilter) =>
+		internal static void sk_imagefilter_unref (sk_imagefilter_t cfilter) =>
 			(sk_imagefilter_unref_delegate ??= GetSymbol<Delegates.sk_imagefilter_unref> ("sk_imagefilter_unref")).Invoke (cfilter);
 		#endif
 

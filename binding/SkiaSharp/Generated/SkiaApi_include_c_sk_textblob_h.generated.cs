@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_textblob_builder_alloc_run (IntPtr builder, IntPtr font, Int32 count, Single x, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static partial void sk_textblob_builder_alloc_run (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_builder_alloc_run (IntPtr builder, IntPtr font, Int32 count, Single x, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static extern void sk_textblob_builder_alloc_run (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_textblob_builder_alloc_run (IntPtr builder, IntPtr font, Int32 count, Single x, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
+			internal delegate void sk_textblob_builder_alloc_run (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		}
 		private static Delegates.sk_textblob_builder_alloc_run sk_textblob_builder_alloc_run_delegate;
-		internal static void sk_textblob_builder_alloc_run (IntPtr builder, IntPtr font, Int32 count, Single x, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
+		internal static void sk_textblob_builder_alloc_run (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
 			(sk_textblob_builder_alloc_run_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run> ("sk_textblob_builder_alloc_run")).Invoke (builder, font, count, x, y, bounds, runbuffer);
 		#endif
 
@@ -36,18 +36,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_textblob_builder_alloc_run_pos (IntPtr builder, IntPtr font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static partial void sk_textblob_builder_alloc_run_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_builder_alloc_run_pos (IntPtr builder, IntPtr font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static extern void sk_textblob_builder_alloc_run_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_textblob_builder_alloc_run_pos (IntPtr builder, IntPtr font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
+			internal delegate void sk_textblob_builder_alloc_run_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		}
 		private static Delegates.sk_textblob_builder_alloc_run_pos sk_textblob_builder_alloc_run_pos_delegate;
-		internal static void sk_textblob_builder_alloc_run_pos (IntPtr builder, IntPtr font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
+		internal static void sk_textblob_builder_alloc_run_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
 			(sk_textblob_builder_alloc_run_pos_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_pos> ("sk_textblob_builder_alloc_run_pos")).Invoke (builder, font, count, bounds, runbuffer);
 		#endif
 
@@ -55,18 +55,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_textblob_builder_alloc_run_pos_h (IntPtr builder, IntPtr font, Int32 count, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static partial void sk_textblob_builder_alloc_run_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_builder_alloc_run_pos_h (IntPtr builder, IntPtr font, Int32 count, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static extern void sk_textblob_builder_alloc_run_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_textblob_builder_alloc_run_pos_h (IntPtr builder, IntPtr font, Int32 count, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
+			internal delegate void sk_textblob_builder_alloc_run_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		}
 		private static Delegates.sk_textblob_builder_alloc_run_pos_h sk_textblob_builder_alloc_run_pos_h_delegate;
-		internal static void sk_textblob_builder_alloc_run_pos_h (IntPtr builder, IntPtr font, Int32 count, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
+		internal static void sk_textblob_builder_alloc_run_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
 			(sk_textblob_builder_alloc_run_pos_h_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_pos_h> ("sk_textblob_builder_alloc_run_pos_h")).Invoke (builder, font, count, y, bounds, runbuffer);
 		#endif
 
@@ -74,18 +74,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_textblob_builder_alloc_run_rsxform (IntPtr builder, IntPtr font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static partial void sk_textblob_builder_alloc_run_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_builder_alloc_run_rsxform (IntPtr builder, IntPtr font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static extern void sk_textblob_builder_alloc_run_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_textblob_builder_alloc_run_rsxform (IntPtr builder, IntPtr font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
+			internal delegate void sk_textblob_builder_alloc_run_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		}
 		private static Delegates.sk_textblob_builder_alloc_run_rsxform sk_textblob_builder_alloc_run_rsxform_delegate;
-		internal static void sk_textblob_builder_alloc_run_rsxform (IntPtr builder, IntPtr font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
+		internal static void sk_textblob_builder_alloc_run_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
 			(sk_textblob_builder_alloc_run_rsxform_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_rsxform> ("sk_textblob_builder_alloc_run_rsxform")).Invoke (builder, font, count, bounds, runbuffer);
 		#endif
 
@@ -93,18 +93,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_textblob_builder_alloc_run_text (IntPtr builder, IntPtr font, Int32 count, Single x, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static partial void sk_textblob_builder_alloc_run_text (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_builder_alloc_run_text (IntPtr builder, IntPtr font, Int32 count, Single x, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static extern void sk_textblob_builder_alloc_run_text (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_textblob_builder_alloc_run_text (IntPtr builder, IntPtr font, Int32 count, Single x, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+			internal delegate void sk_textblob_builder_alloc_run_text (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		}
 		private static Delegates.sk_textblob_builder_alloc_run_text sk_textblob_builder_alloc_run_text_delegate;
-		internal static void sk_textblob_builder_alloc_run_text (IntPtr builder, IntPtr font, Int32 count, Single x, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
+		internal static void sk_textblob_builder_alloc_run_text (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
 			(sk_textblob_builder_alloc_run_text_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_text> ("sk_textblob_builder_alloc_run_text")).Invoke (builder, font, count, x, y, textByteCount, bounds, runbuffer);
 		#endif
 
@@ -112,18 +112,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_textblob_builder_alloc_run_text_pos (IntPtr builder, IntPtr font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static partial void sk_textblob_builder_alloc_run_text_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_builder_alloc_run_text_pos (IntPtr builder, IntPtr font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static extern void sk_textblob_builder_alloc_run_text_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_textblob_builder_alloc_run_text_pos (IntPtr builder, IntPtr font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+			internal delegate void sk_textblob_builder_alloc_run_text_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		}
 		private static Delegates.sk_textblob_builder_alloc_run_text_pos sk_textblob_builder_alloc_run_text_pos_delegate;
-		internal static void sk_textblob_builder_alloc_run_text_pos (IntPtr builder, IntPtr font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
+		internal static void sk_textblob_builder_alloc_run_text_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
 			(sk_textblob_builder_alloc_run_text_pos_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_text_pos> ("sk_textblob_builder_alloc_run_text_pos")).Invoke (builder, font, count, textByteCount, bounds, runbuffer);
 		#endif
 
@@ -131,18 +131,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_textblob_builder_alloc_run_text_pos_h (IntPtr builder, IntPtr font, Int32 count, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static partial void sk_textblob_builder_alloc_run_text_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_builder_alloc_run_text_pos_h (IntPtr builder, IntPtr font, Int32 count, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static extern void sk_textblob_builder_alloc_run_text_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_textblob_builder_alloc_run_text_pos_h (IntPtr builder, IntPtr font, Int32 count, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+			internal delegate void sk_textblob_builder_alloc_run_text_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		}
 		private static Delegates.sk_textblob_builder_alloc_run_text_pos_h sk_textblob_builder_alloc_run_text_pos_h_delegate;
-		internal static void sk_textblob_builder_alloc_run_text_pos_h (IntPtr builder, IntPtr font, Int32 count, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
+		internal static void sk_textblob_builder_alloc_run_text_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
 			(sk_textblob_builder_alloc_run_text_pos_h_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_text_pos_h> ("sk_textblob_builder_alloc_run_text_pos_h")).Invoke (builder, font, count, y, textByteCount, bounds, runbuffer);
 		#endif
 
@@ -150,18 +150,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_textblob_builder_alloc_run_text_rsxform (IntPtr builder, IntPtr font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static partial void sk_textblob_builder_alloc_run_text_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_builder_alloc_run_text_rsxform (IntPtr builder, IntPtr font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static extern void sk_textblob_builder_alloc_run_text_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_textblob_builder_alloc_run_text_rsxform (IntPtr builder, IntPtr font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+			internal delegate void sk_textblob_builder_alloc_run_text_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
 		}
 		private static Delegates.sk_textblob_builder_alloc_run_text_rsxform sk_textblob_builder_alloc_run_text_rsxform_delegate;
-		internal static void sk_textblob_builder_alloc_run_text_rsxform (IntPtr builder, IntPtr font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
+		internal static void sk_textblob_builder_alloc_run_text_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer) =>
 			(sk_textblob_builder_alloc_run_text_rsxform_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_text_rsxform> ("sk_textblob_builder_alloc_run_text_rsxform")).Invoke (builder, font, count, textByteCount, bounds, runbuffer);
 		#endif
 
@@ -169,18 +169,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_textblob_builder_delete (IntPtr builder);
+		internal static partial void sk_textblob_builder_delete (sk_textblob_builder_t builder);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_builder_delete (IntPtr builder);
+		internal static extern void sk_textblob_builder_delete (sk_textblob_builder_t builder);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_textblob_builder_delete (IntPtr builder);
+			internal delegate void sk_textblob_builder_delete (sk_textblob_builder_t builder);
 		}
 		private static Delegates.sk_textblob_builder_delete sk_textblob_builder_delete_delegate;
-		internal static void sk_textblob_builder_delete (IntPtr builder) =>
+		internal static void sk_textblob_builder_delete (sk_textblob_builder_t builder) =>
 			(sk_textblob_builder_delete_delegate ??= GetSymbol<Delegates.sk_textblob_builder_delete> ("sk_textblob_builder_delete")).Invoke (builder);
 		#endif
 
@@ -188,18 +188,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_textblob_builder_make (IntPtr builder);
+		internal static partial sk_textblob_t sk_textblob_builder_make (sk_textblob_builder_t builder);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_textblob_builder_make (IntPtr builder);
+		internal static extern sk_textblob_t sk_textblob_builder_make (sk_textblob_builder_t builder);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_textblob_builder_make (IntPtr builder);
+			internal delegate sk_textblob_t sk_textblob_builder_make (sk_textblob_builder_t builder);
 		}
 		private static Delegates.sk_textblob_builder_make sk_textblob_builder_make_delegate;
-		internal static IntPtr sk_textblob_builder_make (IntPtr builder) =>
+		internal static sk_textblob_t sk_textblob_builder_make (sk_textblob_builder_t builder) =>
 			(sk_textblob_builder_make_delegate ??= GetSymbol<Delegates.sk_textblob_builder_make> ("sk_textblob_builder_make")).Invoke (builder);
 		#endif
 
@@ -207,18 +207,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial IntPtr sk_textblob_builder_new ();
+		internal static partial sk_textblob_builder_t sk_textblob_builder_new ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr sk_textblob_builder_new ();
+		internal static extern sk_textblob_builder_t sk_textblob_builder_new ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr sk_textblob_builder_new ();
+			internal delegate sk_textblob_builder_t sk_textblob_builder_new ();
 		}
 		private static Delegates.sk_textblob_builder_new sk_textblob_builder_new_delegate;
-		internal static IntPtr sk_textblob_builder_new () =>
+		internal static sk_textblob_builder_t sk_textblob_builder_new () =>
 			(sk_textblob_builder_new_delegate ??= GetSymbol<Delegates.sk_textblob_builder_new> ("sk_textblob_builder_new")).Invoke ();
 		#endif
 
@@ -226,18 +226,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_textblob_get_bounds (IntPtr blob, SKRect* bounds);
+		internal static partial void sk_textblob_get_bounds (sk_textblob_t blob, SKRect* bounds);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_get_bounds (IntPtr blob, SKRect* bounds);
+		internal static extern void sk_textblob_get_bounds (sk_textblob_t blob, SKRect* bounds);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_textblob_get_bounds (IntPtr blob, SKRect* bounds);
+			internal delegate void sk_textblob_get_bounds (sk_textblob_t blob, SKRect* bounds);
 		}
 		private static Delegates.sk_textblob_get_bounds sk_textblob_get_bounds_delegate;
-		internal static void sk_textblob_get_bounds (IntPtr blob, SKRect* bounds) =>
+		internal static void sk_textblob_get_bounds (sk_textblob_t blob, SKRect* bounds) =>
 			(sk_textblob_get_bounds_delegate ??= GetSymbol<Delegates.sk_textblob_get_bounds> ("sk_textblob_get_bounds")).Invoke (blob, bounds);
 		#endif
 
@@ -245,18 +245,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial Int32 sk_textblob_get_intercepts (IntPtr blob, Single* bounds, Single* intervals, IntPtr paint);
+		internal static partial Int32 sk_textblob_get_intercepts (sk_textblob_t blob, Single* bounds, Single* intervals, sk_paint_t paint);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_textblob_get_intercepts (IntPtr blob, Single* bounds, Single* intervals, IntPtr paint);
+		internal static extern Int32 sk_textblob_get_intercepts (sk_textblob_t blob, Single* bounds, Single* intervals, sk_paint_t paint);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 sk_textblob_get_intercepts (IntPtr blob, Single* bounds, Single* intervals, IntPtr paint);
+			internal delegate Int32 sk_textblob_get_intercepts (sk_textblob_t blob, Single* bounds, Single* intervals, sk_paint_t paint);
 		}
 		private static Delegates.sk_textblob_get_intercepts sk_textblob_get_intercepts_delegate;
-		internal static Int32 sk_textblob_get_intercepts (IntPtr blob, Single* bounds, Single* intervals, IntPtr paint) =>
+		internal static Int32 sk_textblob_get_intercepts (sk_textblob_t blob, Single* bounds, Single* intervals, sk_paint_t paint) =>
 			(sk_textblob_get_intercepts_delegate ??= GetSymbol<Delegates.sk_textblob_get_intercepts> ("sk_textblob_get_intercepts")).Invoke (blob, bounds, intervals, paint);
 		#endif
 
@@ -264,18 +264,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial UInt32 sk_textblob_get_unique_id (IntPtr blob);
+		internal static partial UInt32 sk_textblob_get_unique_id (sk_textblob_t blob);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 sk_textblob_get_unique_id (IntPtr blob);
+		internal static extern UInt32 sk_textblob_get_unique_id (sk_textblob_t blob);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 sk_textblob_get_unique_id (IntPtr blob);
+			internal delegate UInt32 sk_textblob_get_unique_id (sk_textblob_t blob);
 		}
 		private static Delegates.sk_textblob_get_unique_id sk_textblob_get_unique_id_delegate;
-		internal static UInt32 sk_textblob_get_unique_id (IntPtr blob) =>
+		internal static UInt32 sk_textblob_get_unique_id (sk_textblob_t blob) =>
 			(sk_textblob_get_unique_id_delegate ??= GetSymbol<Delegates.sk_textblob_get_unique_id> ("sk_textblob_get_unique_id")).Invoke (blob);
 		#endif
 
@@ -283,18 +283,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_textblob_ref (IntPtr blob);
+		internal static partial void sk_textblob_ref (sk_textblob_t blob);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_ref (IntPtr blob);
+		internal static extern void sk_textblob_ref (sk_textblob_t blob);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_textblob_ref (IntPtr blob);
+			internal delegate void sk_textblob_ref (sk_textblob_t blob);
 		}
 		private static Delegates.sk_textblob_ref sk_textblob_ref_delegate;
-		internal static void sk_textblob_ref (IntPtr blob) =>
+		internal static void sk_textblob_ref (sk_textblob_t blob) =>
 			(sk_textblob_ref_delegate ??= GetSymbol<Delegates.sk_textblob_ref> ("sk_textblob_ref")).Invoke (blob);
 		#endif
 
@@ -302,18 +302,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_textblob_unref (IntPtr blob);
+		internal static partial void sk_textblob_unref (sk_textblob_t blob);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_unref (IntPtr blob);
+		internal static extern void sk_textblob_unref (sk_textblob_t blob);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_textblob_unref (IntPtr blob);
+			internal delegate void sk_textblob_unref (sk_textblob_t blob);
 		}
 		private static Delegates.sk_textblob_unref sk_textblob_unref_delegate;
-		internal static void sk_textblob_unref (IntPtr blob) =>
+		internal static void sk_textblob_unref (sk_textblob_t blob) =>
 			(sk_textblob_unref_delegate ??= GetSymbol<Delegates.sk_textblob_unref> ("sk_textblob_unref")).Invoke (blob);
 		#endif
 

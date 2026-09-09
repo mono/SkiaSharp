@@ -14,10 +14,10 @@ namespace SkiaSharp
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct GRD3DTextureResourceInfoNative : IEquatable<GRD3DTextureResourceInfoNative> {
 		// public d3d_d12_resource_t* fResource
-		public IntPtr fResource;
+		public d3d_d12_resource_t fResource;
 
 		// public d3d_alloc_t* fAlloc
-		public IntPtr fAlloc;
+		public d3d_alloc_t fAlloc;
 
 		// public uint32_t fResourceState
 		public UInt32 fResourceState;

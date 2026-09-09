@@ -17,18 +17,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_shape (IntPtr font, IntPtr buffer, Feature* features, UInt32 num_features);
+		internal static partial void hb_shape (hb_font_t font, hb_buffer_t buffer, Feature* features, UInt32 num_features);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_shape (IntPtr font, IntPtr buffer, Feature* features, UInt32 num_features);
+		internal static extern void hb_shape (hb_font_t font, hb_buffer_t buffer, Feature* features, UInt32 num_features);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_shape (IntPtr font, IntPtr buffer, Feature* features, UInt32 num_features);
+			internal delegate void hb_shape (hb_font_t font, hb_buffer_t buffer, Feature* features, UInt32 num_features);
 		}
 		private static Delegates.hb_shape hb_shape_delegate;
-		internal static void hb_shape (IntPtr font, IntPtr buffer, Feature* features, UInt32 num_features) =>
+		internal static void hb_shape (hb_font_t font, hb_buffer_t buffer, Feature* features, UInt32 num_features) =>
 			(hb_shape_delegate ??= GetSymbol<Delegates.hb_shape> ("hb_shape")).Invoke (font, buffer, features, num_features);
 		#endif
 
@@ -37,20 +37,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_shape_full (IntPtr font, IntPtr buffer, Feature* features, UInt32 num_features, /* char */ void** shaper_list);
+		internal static partial bool hb_shape_full (hb_font_t font, hb_buffer_t buffer, Feature* features, UInt32 num_features, /* char */ void** shaper_list);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_shape_full (IntPtr font, IntPtr buffer, Feature* features, UInt32 num_features, /* char */ void** shaper_list);
+		internal static extern bool hb_shape_full (hb_font_t font, hb_buffer_t buffer, Feature* features, UInt32 num_features, /* char */ void** shaper_list);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_shape_full (IntPtr font, IntPtr buffer, Feature* features, UInt32 num_features, /* char */ void** shaper_list);
+			internal delegate bool hb_shape_full (hb_font_t font, hb_buffer_t buffer, Feature* features, UInt32 num_features, /* char */ void** shaper_list);
 		}
 		private static Delegates.hb_shape_full hb_shape_full_delegate;
-		internal static bool hb_shape_full (IntPtr font, IntPtr buffer, Feature* features, UInt32 num_features, /* char */ void** shaper_list) =>
+		internal static bool hb_shape_full (hb_font_t font, hb_buffer_t buffer, Feature* features, UInt32 num_features, /* char */ void** shaper_list) =>
 			(hb_shape_full_delegate ??= GetSymbol<Delegates.hb_shape_full> ("hb_shape_full")).Invoke (font, buffer, features, num_features, shaper_list);
 		#endif
 

@@ -18,20 +18,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_map_allocation_successful (IntPtr map);
+		internal static partial bool hb_map_allocation_successful (hb_map_t map);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_map_allocation_successful (IntPtr map);
+		internal static extern bool hb_map_allocation_successful (hb_map_t map);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_map_allocation_successful (IntPtr map);
+			internal delegate bool hb_map_allocation_successful (hb_map_t map);
 		}
 		private static Delegates.hb_map_allocation_successful hb_map_allocation_successful_delegate;
-		internal static bool hb_map_allocation_successful (IntPtr map) =>
+		internal static bool hb_map_allocation_successful (hb_map_t map) =>
 			(hb_map_allocation_successful_delegate ??= GetSymbol<Delegates.hb_map_allocation_successful> ("hb_map_allocation_successful")).Invoke (map);
 		#endif
 
@@ -39,18 +39,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_map_clear (IntPtr map);
+		internal static partial void hb_map_clear (hb_map_t map);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_map_clear (IntPtr map);
+		internal static extern void hb_map_clear (hb_map_t map);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_map_clear (IntPtr map);
+			internal delegate void hb_map_clear (hb_map_t map);
 		}
 		private static Delegates.hb_map_clear hb_map_clear_delegate;
-		internal static void hb_map_clear (IntPtr map) =>
+		internal static void hb_map_clear (hb_map_t map) =>
 			(hb_map_clear_delegate ??= GetSymbol<Delegates.hb_map_clear> ("hb_map_clear")).Invoke (map);
 		#endif
 
@@ -58,18 +58,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_map_copy (IntPtr map);
+		internal static partial hb_map_t hb_map_copy (hb_map_t map);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_map_copy (IntPtr map);
+		internal static extern hb_map_t hb_map_copy (hb_map_t map);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_map_copy (IntPtr map);
+			internal delegate hb_map_t hb_map_copy (hb_map_t map);
 		}
 		private static Delegates.hb_map_copy hb_map_copy_delegate;
-		internal static IntPtr hb_map_copy (IntPtr map) =>
+		internal static hb_map_t hb_map_copy (hb_map_t map) =>
 			(hb_map_copy_delegate ??= GetSymbol<Delegates.hb_map_copy> ("hb_map_copy")).Invoke (map);
 		#endif
 
@@ -77,18 +77,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_map_create ();
+		internal static partial hb_map_t hb_map_create ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_map_create ();
+		internal static extern hb_map_t hb_map_create ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_map_create ();
+			internal delegate hb_map_t hb_map_create ();
 		}
 		private static Delegates.hb_map_create hb_map_create_delegate;
-		internal static IntPtr hb_map_create () =>
+		internal static hb_map_t hb_map_create () =>
 			(hb_map_create_delegate ??= GetSymbol<Delegates.hb_map_create> ("hb_map_create")).Invoke ();
 		#endif
 
@@ -96,18 +96,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_map_del (IntPtr map, UInt32 key);
+		internal static partial void hb_map_del (hb_map_t map, UInt32 key);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_map_del (IntPtr map, UInt32 key);
+		internal static extern void hb_map_del (hb_map_t map, UInt32 key);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_map_del (IntPtr map, UInt32 key);
+			internal delegate void hb_map_del (hb_map_t map, UInt32 key);
 		}
 		private static Delegates.hb_map_del hb_map_del_delegate;
-		internal static void hb_map_del (IntPtr map, UInt32 key) =>
+		internal static void hb_map_del (hb_map_t map, UInt32 key) =>
 			(hb_map_del_delegate ??= GetSymbol<Delegates.hb_map_del> ("hb_map_del")).Invoke (map, key);
 		#endif
 
@@ -115,18 +115,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_map_destroy (IntPtr map);
+		internal static partial void hb_map_destroy (hb_map_t map);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_map_destroy (IntPtr map);
+		internal static extern void hb_map_destroy (hb_map_t map);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_map_destroy (IntPtr map);
+			internal delegate void hb_map_destroy (hb_map_t map);
 		}
 		private static Delegates.hb_map_destroy hb_map_destroy_delegate;
-		internal static void hb_map_destroy (IntPtr map) =>
+		internal static void hb_map_destroy (hb_map_t map) =>
 			(hb_map_destroy_delegate ??= GetSymbol<Delegates.hb_map_destroy> ("hb_map_destroy")).Invoke (map);
 		#endif
 
@@ -134,18 +134,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_map_get (IntPtr map, UInt32 key);
+		internal static partial UInt32 hb_map_get (hb_map_t map, UInt32 key);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_map_get (IntPtr map, UInt32 key);
+		internal static extern UInt32 hb_map_get (hb_map_t map, UInt32 key);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_map_get (IntPtr map, UInt32 key);
+			internal delegate UInt32 hb_map_get (hb_map_t map, UInt32 key);
 		}
 		private static Delegates.hb_map_get hb_map_get_delegate;
-		internal static UInt32 hb_map_get (IntPtr map, UInt32 key) =>
+		internal static UInt32 hb_map_get (hb_map_t map, UInt32 key) =>
 			(hb_map_get_delegate ??= GetSymbol<Delegates.hb_map_get> ("hb_map_get")).Invoke (map, key);
 		#endif
 
@@ -153,18 +153,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_map_get_empty ();
+		internal static partial hb_map_t hb_map_get_empty ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_map_get_empty ();
+		internal static extern hb_map_t hb_map_get_empty ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_map_get_empty ();
+			internal delegate hb_map_t hb_map_get_empty ();
 		}
 		private static Delegates.hb_map_get_empty hb_map_get_empty_delegate;
-		internal static IntPtr hb_map_get_empty () =>
+		internal static hb_map_t hb_map_get_empty () =>
 			(hb_map_get_empty_delegate ??= GetSymbol<Delegates.hb_map_get_empty> ("hb_map_get_empty")).Invoke ();
 		#endif
 
@@ -172,18 +172,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_map_get_population (IntPtr map);
+		internal static partial UInt32 hb_map_get_population (hb_map_t map);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_map_get_population (IntPtr map);
+		internal static extern UInt32 hb_map_get_population (hb_map_t map);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_map_get_population (IntPtr map);
+			internal delegate UInt32 hb_map_get_population (hb_map_t map);
 		}
 		private static Delegates.hb_map_get_population hb_map_get_population_delegate;
-		internal static UInt32 hb_map_get_population (IntPtr map) =>
+		internal static UInt32 hb_map_get_population (hb_map_t map) =>
 			(hb_map_get_population_delegate ??= GetSymbol<Delegates.hb_map_get_population> ("hb_map_get_population")).Invoke (map);
 		#endif
 
@@ -192,20 +192,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_map_has (IntPtr map, UInt32 key);
+		internal static partial bool hb_map_has (hb_map_t map, UInt32 key);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_map_has (IntPtr map, UInt32 key);
+		internal static extern bool hb_map_has (hb_map_t map, UInt32 key);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_map_has (IntPtr map, UInt32 key);
+			internal delegate bool hb_map_has (hb_map_t map, UInt32 key);
 		}
 		private static Delegates.hb_map_has hb_map_has_delegate;
-		internal static bool hb_map_has (IntPtr map, UInt32 key) =>
+		internal static bool hb_map_has (hb_map_t map, UInt32 key) =>
 			(hb_map_has_delegate ??= GetSymbol<Delegates.hb_map_has> ("hb_map_has")).Invoke (map, key);
 		#endif
 
@@ -213,18 +213,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_map_hash (IntPtr map);
+		internal static partial UInt32 hb_map_hash (hb_map_t map);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_map_hash (IntPtr map);
+		internal static extern UInt32 hb_map_hash (hb_map_t map);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_map_hash (IntPtr map);
+			internal delegate UInt32 hb_map_hash (hb_map_t map);
 		}
 		private static Delegates.hb_map_hash hb_map_hash_delegate;
-		internal static UInt32 hb_map_hash (IntPtr map) =>
+		internal static UInt32 hb_map_hash (hb_map_t map) =>
 			(hb_map_hash_delegate ??= GetSymbol<Delegates.hb_map_hash> ("hb_map_hash")).Invoke (map);
 		#endif
 
@@ -233,20 +233,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_map_is_empty (IntPtr map);
+		internal static partial bool hb_map_is_empty (hb_map_t map);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_map_is_empty (IntPtr map);
+		internal static extern bool hb_map_is_empty (hb_map_t map);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_map_is_empty (IntPtr map);
+			internal delegate bool hb_map_is_empty (hb_map_t map);
 		}
 		private static Delegates.hb_map_is_empty hb_map_is_empty_delegate;
-		internal static bool hb_map_is_empty (IntPtr map) =>
+		internal static bool hb_map_is_empty (hb_map_t map) =>
 			(hb_map_is_empty_delegate ??= GetSymbol<Delegates.hb_map_is_empty> ("hb_map_is_empty")).Invoke (map);
 		#endif
 
@@ -255,20 +255,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_map_is_equal (IntPtr map, IntPtr other);
+		internal static partial bool hb_map_is_equal (hb_map_t map, hb_map_t other);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_map_is_equal (IntPtr map, IntPtr other);
+		internal static extern bool hb_map_is_equal (hb_map_t map, hb_map_t other);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_map_is_equal (IntPtr map, IntPtr other);
+			internal delegate bool hb_map_is_equal (hb_map_t map, hb_map_t other);
 		}
 		private static Delegates.hb_map_is_equal hb_map_is_equal_delegate;
-		internal static bool hb_map_is_equal (IntPtr map, IntPtr other) =>
+		internal static bool hb_map_is_equal (hb_map_t map, hb_map_t other) =>
 			(hb_map_is_equal_delegate ??= GetSymbol<Delegates.hb_map_is_equal> ("hb_map_is_equal")).Invoke (map, other);
 		#endif
 
@@ -276,18 +276,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_map_keys (IntPtr map, IntPtr keys);
+		internal static partial void hb_map_keys (hb_map_t map, hb_set_t keys);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_map_keys (IntPtr map, IntPtr keys);
+		internal static extern void hb_map_keys (hb_map_t map, hb_set_t keys);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_map_keys (IntPtr map, IntPtr keys);
+			internal delegate void hb_map_keys (hb_map_t map, hb_set_t keys);
 		}
 		private static Delegates.hb_map_keys hb_map_keys_delegate;
-		internal static void hb_map_keys (IntPtr map, IntPtr keys) =>
+		internal static void hb_map_keys (hb_map_t map, hb_set_t keys) =>
 			(hb_map_keys_delegate ??= GetSymbol<Delegates.hb_map_keys> ("hb_map_keys")).Invoke (map, keys);
 		#endif
 
@@ -296,20 +296,20 @@ namespace HarfBuzzSharp
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool hb_map_next (IntPtr map, Int32* idx, UInt32* key, UInt32* value);
+		internal static partial bool hb_map_next (hb_map_t map, Int32* idx, UInt32* key, UInt32* value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool hb_map_next (IntPtr map, Int32* idx, UInt32* key, UInt32* value);
+		internal static extern bool hb_map_next (hb_map_t map, Int32* idx, UInt32* key, UInt32* value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool hb_map_next (IntPtr map, Int32* idx, UInt32* key, UInt32* value);
+			internal delegate bool hb_map_next (hb_map_t map, Int32* idx, UInt32* key, UInt32* value);
 		}
 		private static Delegates.hb_map_next hb_map_next_delegate;
-		internal static bool hb_map_next (IntPtr map, Int32* idx, UInt32* key, UInt32* value) =>
+		internal static bool hb_map_next (hb_map_t map, Int32* idx, UInt32* key, UInt32* value) =>
 			(hb_map_next_delegate ??= GetSymbol<Delegates.hb_map_next> ("hb_map_next")).Invoke (map, idx, key, value);
 		#endif
 
@@ -317,18 +317,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial IntPtr hb_map_reference (IntPtr map);
+		internal static partial hb_map_t hb_map_reference (hb_map_t map);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_map_reference (IntPtr map);
+		internal static extern hb_map_t hb_map_reference (hb_map_t map);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_map_reference (IntPtr map);
+			internal delegate hb_map_t hb_map_reference (hb_map_t map);
 		}
 		private static Delegates.hb_map_reference hb_map_reference_delegate;
-		internal static IntPtr hb_map_reference (IntPtr map) =>
+		internal static hb_map_t hb_map_reference (hb_map_t map) =>
 			(hb_map_reference_delegate ??= GetSymbol<Delegates.hb_map_reference> ("hb_map_reference")).Invoke (map);
 		#endif
 
@@ -336,18 +336,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_map_set (IntPtr map, UInt32 key, UInt32 value);
+		internal static partial void hb_map_set (hb_map_t map, UInt32 key, UInt32 value);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_map_set (IntPtr map, UInt32 key, UInt32 value);
+		internal static extern void hb_map_set (hb_map_t map, UInt32 key, UInt32 value);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_map_set (IntPtr map, UInt32 key, UInt32 value);
+			internal delegate void hb_map_set (hb_map_t map, UInt32 key, UInt32 value);
 		}
 		private static Delegates.hb_map_set hb_map_set_delegate;
-		internal static void hb_map_set (IntPtr map, UInt32 key, UInt32 value) =>
+		internal static void hb_map_set (hb_map_t map, UInt32 key, UInt32 value) =>
 			(hb_map_set_delegate ??= GetSymbol<Delegates.hb_map_set> ("hb_map_set")).Invoke (map, key, value);
 		#endif
 
@@ -355,18 +355,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_map_update (IntPtr map, IntPtr other);
+		internal static partial void hb_map_update (hb_map_t map, hb_map_t other);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_map_update (IntPtr map, IntPtr other);
+		internal static extern void hb_map_update (hb_map_t map, hb_map_t other);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_map_update (IntPtr map, IntPtr other);
+			internal delegate void hb_map_update (hb_map_t map, hb_map_t other);
 		}
 		private static Delegates.hb_map_update hb_map_update_delegate;
-		internal static void hb_map_update (IntPtr map, IntPtr other) =>
+		internal static void hb_map_update (hb_map_t map, hb_map_t other) =>
 			(hb_map_update_delegate ??= GetSymbol<Delegates.hb_map_update> ("hb_map_update")).Invoke (map, other);
 		#endif
 
@@ -374,18 +374,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_map_values (IntPtr map, IntPtr values);
+		internal static partial void hb_map_values (hb_map_t map, hb_set_t values);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_map_values (IntPtr map, IntPtr values);
+		internal static extern void hb_map_values (hb_map_t map, hb_set_t values);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_map_values (IntPtr map, IntPtr values);
+			internal delegate void hb_map_values (hb_map_t map, hb_set_t values);
 		}
 		private static Delegates.hb_map_values hb_map_values_delegate;
-		internal static void hb_map_values (IntPtr map, IntPtr values) =>
+		internal static void hb_map_values (hb_map_t map, hb_set_t values) =>
 			(hb_map_values_delegate ??= GetSymbol<Delegates.hb_map_values> ("hb_map_values")).Invoke (map, values);
 		#endif
 

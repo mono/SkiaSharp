@@ -17,18 +17,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_ot_name_get_utf16 (IntPtr face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt16* text);
+		internal static partial UInt32 hb_ot_name_get_utf16 (hb_face_t face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt16* text);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_name_get_utf16 (IntPtr face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt16* text);
+		internal static extern UInt32 hb_ot_name_get_utf16 (hb_face_t face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt16* text);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_name_get_utf16 (IntPtr face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt16* text);
+			internal delegate UInt32 hb_ot_name_get_utf16 (hb_face_t face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt16* text);
 		}
 		private static Delegates.hb_ot_name_get_utf16 hb_ot_name_get_utf16_delegate;
-		internal static UInt32 hb_ot_name_get_utf16 (IntPtr face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt16* text) =>
+		internal static UInt32 hb_ot_name_get_utf16 (hb_face_t face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt16* text) =>
 			(hb_ot_name_get_utf16_delegate ??= GetSymbol<Delegates.hb_ot_name_get_utf16> ("hb_ot_name_get_utf16")).Invoke (face, name_id, language, text_size, text);
 		#endif
 
@@ -36,18 +36,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_ot_name_get_utf32 (IntPtr face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt32* text);
+		internal static partial UInt32 hb_ot_name_get_utf32 (hb_face_t face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt32* text);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_name_get_utf32 (IntPtr face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt32* text);
+		internal static extern UInt32 hb_ot_name_get_utf32 (hb_face_t face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt32* text);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_name_get_utf32 (IntPtr face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt32* text);
+			internal delegate UInt32 hb_ot_name_get_utf32 (hb_face_t face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt32* text);
 		}
 		private static Delegates.hb_ot_name_get_utf32 hb_ot_name_get_utf32_delegate;
-		internal static UInt32 hb_ot_name_get_utf32 (IntPtr face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt32* text) =>
+		internal static UInt32 hb_ot_name_get_utf32 (hb_face_t face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, UInt32* text) =>
 			(hb_ot_name_get_utf32_delegate ??= GetSymbol<Delegates.hb_ot_name_get_utf32> ("hb_ot_name_get_utf32")).Invoke (face, name_id, language, text_size, text);
 		#endif
 
@@ -55,18 +55,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial UInt32 hb_ot_name_get_utf8 (IntPtr face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, /* char */ void* text);
+		internal static partial UInt32 hb_ot_name_get_utf8 (hb_face_t face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, /* char */ void* text);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_name_get_utf8 (IntPtr face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, /* char */ void* text);
+		internal static extern UInt32 hb_ot_name_get_utf8 (hb_face_t face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, /* char */ void* text);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_name_get_utf8 (IntPtr face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, /* char */ void* text);
+			internal delegate UInt32 hb_ot_name_get_utf8 (hb_face_t face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, /* char */ void* text);
 		}
 		private static Delegates.hb_ot_name_get_utf8 hb_ot_name_get_utf8_delegate;
-		internal static UInt32 hb_ot_name_get_utf8 (IntPtr face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, /* char */ void* text) =>
+		internal static UInt32 hb_ot_name_get_utf8 (hb_face_t face, OpenTypeNameId name_id, IntPtr language, UInt32* text_size, /* char */ void* text) =>
 			(hb_ot_name_get_utf8_delegate ??= GetSymbol<Delegates.hb_ot_name_get_utf8> ("hb_ot_name_get_utf8")).Invoke (face, name_id, language, text_size, text);
 		#endif
 
@@ -74,18 +74,18 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
-		internal static partial OpenTypeNameEntry* hb_ot_name_list_names (IntPtr face, UInt32* num_entries);
+		internal static partial OpenTypeNameEntry* hb_ot_name_list_names (hb_face_t face, UInt32* num_entries);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern OpenTypeNameEntry* hb_ot_name_list_names (IntPtr face, UInt32* num_entries);
+		internal static extern OpenTypeNameEntry* hb_ot_name_list_names (hb_face_t face, UInt32* num_entries);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate OpenTypeNameEntry* hb_ot_name_list_names (IntPtr face, UInt32* num_entries);
+			internal delegate OpenTypeNameEntry* hb_ot_name_list_names (hb_face_t face, UInt32* num_entries);
 		}
 		private static Delegates.hb_ot_name_list_names hb_ot_name_list_names_delegate;
-		internal static OpenTypeNameEntry* hb_ot_name_list_names (IntPtr face, UInt32* num_entries) =>
+		internal static OpenTypeNameEntry* hb_ot_name_list_names (hb_face_t face, UInt32* num_entries) =>
 			(hb_ot_name_list_names_delegate ??= GetSymbol<Delegates.hb_ot_name_list_names> ("hb_ot_name_list_names")).Invoke (face, num_entries);
 		#endif
 
