@@ -119,6 +119,8 @@ export class SKHtmlCanvas {
 
 			// read values
 			const GLctx = SKHtmlCanvas.getGLctx();
+			SKHtmlCanvas.installLargeHeapUploadFallback(GLctx);
+
 			const fbo = GLctx.getParameter(GLctx.FRAMEBUFFER_BINDING);
 			this.glInfo = {
 				context: ctx,
@@ -233,6 +235,46 @@ export class SKHtmlCanvas {
 		}
 
 		return ctx;
+	}
+
+	static installLargeHeapUploadFallback(gl: WebGLRenderingContext | WebGL2RenderingContext) {
+		if (!gl || (gl as any).__skiaSharpLargeHeapUploadFallback)
+			return;
+
+		const maxSignedInt = 0x7fffffff;
+		const uploadMethods = [
+			'texImage2D',
+			'texSubImage2D',
+			'compressedTexImage2D',
+			'compressedTexSubImage2D',
+		];
+
+		const copyLargeHeapView = (value: any) => {
+			if (!ArrayBuffer.isView(value) || !value.buffer || value.buffer.byteLength <= maxSignedInt || value.byteLength > maxSignedInt)
+				return value;
+
+			if (typeof value.slice === 'function')
+				return value.slice();
+
+			const buffer = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength);
+			return new value.constructor(buffer);
+		};
+
+		for (const method of uploadMethods) {
+			const original = (gl as any)[method];
+			if (typeof original !== 'function')
+				continue;
+
+			(gl as any)[method] = function (...args: any[]) {
+				for (let i = 0; i < args.length; i++) {
+					args[i] = copyLargeHeapView(args[i]);
+				}
+
+				return original.apply(this, args);
+			};
+		}
+
+		(gl as any).__skiaSharpLargeHeapUploadFallback = true;
 	}
 
 	static getGL(): any {
