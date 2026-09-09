@@ -4,7 +4,7 @@ description: >
   Check the CI build health and automation status of SkiaSharp across main and
   recent release branches. Collects the last N builds from the AzDO pipeline chain
   (Public plus the combined Build and connected Tests) and all GitHub Actions workflows from
-  mono/SkiaSharp and mono/SkiaSharp-API-docs, providing a daily dashboard view
+  mono/SkiaSharp, providing a daily dashboard view
   with AI-powered analysis of failures, regressions, and flakes.
 
   Use when user asks to:
@@ -39,7 +39,7 @@ including the current dnceng Build and Tests pipelines.
 
 The collector script requires:
 - **`az` CLI** — authenticated with access to `dnceng-public/public` and `dnceng/internal`
-- **`gh` CLI** — authenticated with read access to `mono/SkiaSharp` and `mono/SkiaSharp-API-docs`
+- **`gh` CLI** — authenticated with read access to `mono/SkiaSharp`
 - **Git remotes** — fetched recently so `git branch -r` returns up-to-date release branches
 
 ### Public CI (dnceng-public/public org — triggers on push/PR to main and release/*)
@@ -60,7 +60,7 @@ Tests consumes the folder-qualified pipeline resource
 managed compilation, real signing, BAR registration/validation, and Arcade's
 standard Darc/Maestro stages.
 
-### GitHub Actions (mono/SkiaSharp and mono/SkiaSharp-API-docs)
+### GitHub Actions (mono/SkiaSharp)
 
 | Workflow | Repository | Trigger | Why Track |
 |----------|------------|---------|-----------|
@@ -90,9 +90,6 @@ standard Darc/Maestro stages.
 | PR - Rebase | mono/SkiaSharp | PR comment | PR rebase automation broken |
 | PR - Artifacts Comment | mono/SkiaSharp | Workflow run events | Build links not posted to PRs |
 | Merge Message | mono/SkiaSharp | PR comment events | Merge commit messages not drafted |
-| Auto API Docs Writer | mono/SkiaSharp-API-docs | Scheduled/dispatch | XML docs stop being written |
-| Automerge Docs | mono/SkiaSharp-API-docs | PR events | Doc PRs won't auto-merge |
-| Go Live | mono/SkiaSharp-API-docs | Workflow dispatch | Docs don't publish to live |
 
 > Schedules above are deliberately imprecise for gh-aw generated `*.lock.yml` workflows
 > ("Every 6h", "Daily"). The compiler re-jitters their cron on every upgrade, so a literal
