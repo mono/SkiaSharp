@@ -282,6 +282,17 @@ Assert-Equal 'release/4.153.0-preview.1' $barBuild.Value.Branch `
     'A BAR source branch was not normalized.'
 Assert-Equal $false $barBuild.Value.IsReleased `
     'The BAR receipt incorrectly treats the unrelated released flag as channel promotion.'
+$nuGetBarAsset = [pscustomobject] @{
+    name = $barAssets[0].name
+    version = $barAssets[0].version
+    build = $barAssets[0].build
+    locations = @('https://api.nuget.org/v3/index.json')
+}
+Assert-Equal 'complete' (Resolve-MaestroReleaseBuild `
+    -Assets @($nuGetBarAsset) `
+    -Version '4.153.0-preview.1.26454.6' `
+    -BarId 0).State `
+    'A BAR receipt published directly to NuGet.org was rejected.'
 Assert-Equal 'complete' (Resolve-MaestroReleaseBuild `
     -Assets $barAssets `
     -Version '4.153.0-preview.1.26454.6' `

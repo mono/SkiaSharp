@@ -144,7 +144,8 @@ function Resolve-MaestroReleaseBuild(
     $feeds = @(
         $asset.locations |
             Where-Object {
-                [string] $_ -match '/_packaging/[^/]+/nuget/v3/index\.json$'
+                [string] $_ -match '/_packaging/[^/]+/nuget/v3/index\.json$' -or
+                [string] $_ -eq 'https://api.nuget.org/v3/index.json'
             }
     )
     if ($feeds.Count -ne 1) {
