@@ -21,7 +21,12 @@ git add externals/skia  # NOW stage in parent
 
 **Fix:** Run `pwsh ./utils/generate.ps1` — NEVER skip this
 
-**Verify:** `git diff binding/SkiaSharp/Generated` should show new function
+**Verify:** Inventory the whole generated tree, including untracked new files:
+
+```bash
+git status --short --untracked-files=all -- binding/SkiaSharp/Generated
+git diff HEAD -- binding/SkiaSharp/Generated
+```
 
 ## EntryPointNotFoundException at runtime
 

@@ -83,6 +83,25 @@ def added_internal_functions_from_diffs(diffs: list[str]) -> list[str]:
     ]
 
 
+def untracked_generated_diffs(repo_root: Path, projects) -> list[str]:
+    """Represent untracked generated files as added Git diffs for review."""
+    paths = [f"binding/{output}" for _, _, output in projects]
+    files = run(
+        repo_root,
+        "git",
+        "ls-files",
+        "--others",
+        "--exclude-standard",
+        "--",
+        *paths,
+        capture=True,
+    ).splitlines()
+    return [
+        "\n".join(f"+{line}" for line in (repo_root / path).read_text().splitlines())
+        for path in files
+    ]
+
+
 def generated_file_changes(repo_root: Path, projects) -> list[str]:
     """List tracked and untracked generated-file changes across every output tree."""
     paths = [f"binding/{output}" for _, _, output in projects]
@@ -136,9 +155,10 @@ def regenerate(repo_root: Path, config: str | None = None) -> None:
     print("Generated binding file changes:")
     print("\n".join(f"  {change}" for change in changes) or "  No generated binding changes.")
 
+    paths = [f"binding/{output}" for _, _, output in projects]
     diffs = [
-        run(repo_root, "git", "diff", "--", f"binding/{output}", capture=True)
-        for _, _, output in projects
+        run(repo_root, "git", "diff", "HEAD", "--", *paths, capture=True),
+        *untracked_generated_diffs(repo_root, projects),
     ]
     functions = added_internal_functions_from_diffs(diffs)
     if functions:
