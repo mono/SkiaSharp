@@ -100,5 +100,4 @@ this in to show the difference:
 
 - [ ] Tests added or updated (if omitted, explain why above)
 - [ ] `Changes` above lists all public API and behavioral changes (or "None.")
-- [ ] New/changed public API? Filed a docs issue in [mono/SkiaSharp-API-docs](https://github.com/mono/SkiaSharp-API-docs/issues) so reference docs can be written later
 - [ ] Native change? Companion `mono/skia` PR linked above and bindings regenerated
