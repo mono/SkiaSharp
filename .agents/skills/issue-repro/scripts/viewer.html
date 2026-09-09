@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Reproduction Report</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1300px; }
+    .sticky-header {
+      position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border);
+    }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .metric-card { background: linear-gradient(180deg, #fff, #fafbfc); }
+    .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .metric-value { font-size: 1.2rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre {
+      white-space: pre-wrap; word-break: break-word; background: #0d1117; color: #e6edf3;
+      border-radius: 0.75rem; padding: 0.9rem; font-size: 0.85rem;
+    }
+    .badge-soft { background: #eef2ff; color: #3730a3; }
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .nav-tabs .nav-link { font-weight: 600; color: #495057; }
+    .nav-tabs .nav-link.active { color: #0d6efd; }
+    .text-wrap-pre { white-space: pre-wrap; }
+    .empty-state {
+      color: var(--muted); font-style: italic; border: 1px dashed var(--border);
+      border-radius: 0.75rem; background: #fbfcfd; padding: 1rem;
+    }
+    .step-success { border-left: 4px solid #198754; }
+    .step-failure { border-left: 4px solid #dc3545; }
+    .step-wrong-output { border-left: 4px solid #fd7e14; }
+    .step-skip { border-left: 4px solid #6c757d; }
+  </style>
+</head>
+<body>
+<!--INJECT_DATA_HERE-->
+<div class="page-shell mx-auto px-3 py-4">
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-bug me-2"></i>Issue Reproduction Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges" class="d-flex gap-2 flex-wrap"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="metric-cards"></div>
+
+  <div class="row g-3 mb-4" id="hero-cards">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-primary-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-clipboard-check text-primary fs-5"></i>
+            <h6 class="card-title mb-0">Conclusion</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-conclusion"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-info-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-pc-display text-info fs-5"></i>
+            <h6 class="card-title mb-0">Environment</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-environment"></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-warning-subtle">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-journal-text text-warning fs-5"></i>
+            <h6 class="card-title mb-0">Notes</h6>
+          </div>
+          <p class="mb-0 text-wrap-pre" id="hero-notes"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="repro-tabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#steps" type="button">Steps</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#versions" type="button">Versions</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#output" type="button">Output</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
+  </ul>
+  <div class="tab-content mb-4">
+    <div class="tab-pane fade show active" id="steps"></div>
+    <div class="tab-pane fade" id="versions"></div>
+    <div class="tab-pane fade" id="output"></div>
+    <div class="tab-pane fade" id="raw"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function esc(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function badge(text, cls='bg-secondary-subtle text-secondary-emphasis') {
+  return `<span class="badge rounded-pill ${cls}">${esc(text)}</span>`;
+}
+
+function fmtConfidence(v) {
+  return typeof v === 'number' ? `${v.toFixed(2)} (${Math.round(v*100)}%)` : '—';
+}
+
+function table(rows) {
+  return `<table class="table table-sm table-borderless mb-0">${rows.map(([k,v]) =>
+    `<tr><td class="text-muted" style="width:180px">${esc(k)}</td><td>${v}</td></tr>`).join('')}</table>`;
+}
+
+function section(title, body) {
+  return `<h5 class="mt-4 mb-3">${esc(title)}</h5>${body}`;
+}
+
+function conclusionBadge(conclusion) {
+  const map = {
+    'reproduced': 'bg-danger text-white',
+    'not-reproduced': 'bg-success text-white',
+    'confirmed': 'bg-danger text-white',
+    'not-confirmed': 'bg-success text-white',
+    'needs-platform': 'bg-warning text-dark',
+    'needs-hardware': 'bg-warning text-dark',
+    'partial': 'bg-info text-dark',
+    'inconclusive': 'bg-secondary text-white'
+  };
+  return badge(conclusion, map[conclusion] || 'bg-secondary-subtle text-secondary-emphasis');
+}
+
+function stepBorderClass(result) {
+  const map = { success: 'step-success', failure: 'step-failure', 'wrong-output': 'step-wrong-output', skip: 'step-skip' };
+  return map[result] || '';
+}
+
+function stepIcon(result) {
+  const map = { success: '✅', failure: '❌', 'wrong-output': '⚠️', skip: '⏭️' };
+  return map[result] || '❓';
+}
+
+// ── Metric Cards ──
+
+function renderMetricCards(data) {
+  const steps = data.reproductionSteps || [];
+  const successCount = steps.filter(s => s.result === 'success').length;
+  const failCount = steps.filter(s => s.result === 'failure' || s.result === 'wrong-output').length;
+  const versions = data.versionResults || [];
+
+  const cards = [
+    { label: 'Conclusion', value: data.conclusion || '—', icon: 'bi-clipboard-check' },
+    { label: 'Steps', value: `${steps.length} (${successCount}✅ ${failCount}❌)`, icon: 'bi-list-check' },
+    { label: 'Versions Tested', value: `${versions.length}`, icon: 'bi-tag' },
+    { label: 'Environment', value: `${data.environment?.os || '?'} ${data.environment?.arch || ''}`, icon: 'bi-pc-display' }
+  ];
+
+  document.getElementById('metric-cards').innerHTML = cards.map(c => `
+    <div class="col-6 col-md-3">
+      <div class="card metric-card text-center py-3 h-100">
+        <div class="metric-label mb-1"><i class="bi ${c.icon} me-1"></i>${esc(c.label)}</div>
+        <div class="metric-value">${esc(c.value)}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Hero Cards ──
+
+function renderHeroCards(data) {
+  const meta = data.meta || {};
+  document.getElementById('header-subtitle').textContent = `Issue #${meta.number || '?'} • ${meta.repo || '—'} • ${meta.analyzedAt || '—'}`;
+  document.getElementById('header-badges').innerHTML = conclusionBadge(data.conclusion || '?');
+
+  document.getElementById('hero-conclusion').innerHTML = `<strong>${esc(data.conclusion || '—')}</strong>`;
+  const env = data.environment || {};
+  document.getElementById('hero-environment').textContent = `${env.os || '?'} ${env.arch || ''}, SDK ${env.dotnetSdkVersion || env.dotnetVersion || '?'}, SkiaSharp ${env.skiaSharpVersion || '?'}${env.dockerUsed ? ' (Docker)' : ''}`;
+  document.getElementById('hero-notes').textContent = data.notes || '—';
+}
+
+// ── Steps Tab ──
+
+function renderSteps(data) {
+  const steps = data.reproductionSteps || [];
+  if (!steps.length) {
+    document.getElementById('steps').innerHTML = '<div class="empty-state">No reproduction steps recorded.</div>';
+    return;
+  }
+
+  document.getElementById('steps').innerHTML = steps.map(s => `
+    <div class="card mb-3 ${stepBorderClass(s.result)}">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${stepIcon(s.result)} Step ${s.stepNumber}: ${esc(s.description || '')}</h6>
+          <div class="d-flex gap-2">
+            ${badge(s.layer || '?', 'badge-soft')}
+            ${badge(s.result || '?', s.result === 'success' ? 'bg-success-subtle text-success-emphasis' :
+              s.result === 'failure' ? 'bg-danger-subtle text-danger-emphasis' :
+              s.result === 'wrong-output' ? 'bg-warning-subtle text-warning-emphasis' : 'bg-secondary-subtle text-secondary-emphasis')}
+          </div>
+        </div>
+        ${s.command ? `<p class="mb-1"><strong>Command:</strong> <code>${esc(s.command)}</code></p>` : ''}
+        ${s.exitCode !== undefined && s.exitCode !== null ? `<p class="mb-1"><strong>Exit code:</strong> ${s.exitCode}</p>` : ''}
+        ${s.filesCreated?.length ? s.filesCreated.map(f => `<p class="mb-1"><strong>${esc(f.filename)}:</strong></p><pre>${esc(f.content || '')}</pre>`).join('') : ''}
+        ${s.output ? `<details><summary>Output (${s.output.length} chars)</summary><pre>${esc(s.output)}</pre></details>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// ── Versions Tab ──
+
+function renderVersions(data) {
+  const versions = data.versionResults || [];
+  if (!versions.length) {
+    document.getElementById('versions').innerHTML = '<div class="empty-state">No version results recorded.</div>';
+    return;
+  }
+
+  let html = `<table class="table"><thead><tr><th>Version</th><th>Source</th><th>Platform</th><th>Result</th><th>Notes</th></tr></thead><tbody>`;
+  for (const vr of versions) {
+    const cls = (vr.result === 'reproduced' || vr.result === 'confirmed') ? 'table-danger' :
+                (vr.result === 'not-reproduced' || vr.result === 'not-confirmed') ? 'table-success' : '';
+    html += `<tr class="${cls}"><td>${esc(vr.version)}</td><td>${esc(vr.source || '—')}</td><td>${esc(vr.platform || '—')}</td><td><strong>${esc(vr.result)}</strong></td><td>${esc(vr.notes || '—')}</td></tr>`;
+  }
+  html += '</tbody></table>';
+
+  // Error details
+  const err = data.errorMessages;
+  if (err) {
+    html += section('Error Details', `
+      ${err.primary ? `<p><strong>Primary:</strong> ${esc(err.primary)}</p>` : ''}
+      ${err.stackTrace ? `<pre>${esc(err.stackTrace)}</pre>` : ''}
+    `);
+  }
+
+  // Scope
+  if (data.scope) {
+    html += section('Scope', `<p>${esc(data.scope)}</p>`);
+  }
+
+  // Blockers
+  if (data.blockers?.length) {
+    html += section('Blockers', `<ul>${data.blockers.map(b => `<li>${esc(b)}</li>`).join('')}</ul>`);
+  }
+
+  document.getElementById('versions').innerHTML = html;
+}
+
+// ── Output Tab ──
+
+function renderOutput(data) {
+  const output = data.output;
+  if (!output) {
+    document.getElementById('output').innerHTML = '<div class="empty-state">No output section (blocked conclusion).</div>';
+    return;
+  }
+
+  let html = section('Actionability', table([
+    ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
+    ['Confidence', fmtConfidence(output.actionability?.confidence)],
+    ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`]
+  ]));
+
+  if (output.workarounds?.length) {
+    html += section('Workarounds', `<ul>${output.workarounds.map(w => `<li>${esc(w)}</li>`).join('')}</ul>`);
+  }
+
+  if (output.missingInfo?.length) {
+    html += section('Missing Info', `<ul>${output.missingInfo.map(i => `<li>${esc(i)}</li>`).join('')}</ul>`);
+  }
+
+  const actions = output.actions || [];
+  html += section('Automatable Actions', actions.length ? actions.map(action => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <h6 class="mb-0">${esc(action.type || 'action')}</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            ${action.risk ? badge(`risk:${action.risk}`, 'bg-danger-subtle text-danger-emphasis') : ''}
+            ${typeof action.confidence === 'number' ? badge(`confidence:${fmtConfidence(action.confidence)}`, 'bg-info-subtle text-info-emphasis') : ''}
+          </div>
+        </div>
+        <p class="mb-2 text-wrap-pre">${esc(action.description || '—')}</p>
+        ${action.labels?.length ? `<p><strong>Labels:</strong> ${action.labels.map(l => esc(l)).join(', ')}</p>` : ''}
+        ${action.linkedIssue ? `<p><strong>Linked issue:</strong> #${action.linkedIssue}</p>` : ''}
+        ${action.stateReason ? `<p><strong>State reason:</strong> ${esc(action.stateReason)}</p>` : ''}
+        ${action.comment ? `<h6>Comment Draft</h6><pre>${esc(action.comment)}</pre>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No automatable actions recorded.</div>');
+
+  if (output.proposedResponse) {
+    html += section('Proposed Response', `
+      <p>${badge(output.proposedResponse.status || '?', output.proposedResponse.status === 'ready' ? 'bg-success-subtle text-success-emphasis' : 'bg-warning-subtle text-warning-emphasis')}</p>
+      <pre>${esc(output.proposedResponse.body || '—')}</pre>
+    `);
+  }
+
+  // Feedback
+  if (data.feedback?.corrections?.length) {
+    html += section('Triage Feedback', `<table class="table table-sm"><thead><tr><th>Topic</th><th>Upstream</th><th>Corrected</th></tr></thead><tbody>${
+      data.feedback.corrections.map(c => `<tr><td>${esc(c.topic)}</td><td>${esc(c.upstream)}</td><td>${esc(c.corrected)}</td></tr>`).join('')
+    }</tbody></table>`);
+  }
+
+  document.getElementById('output').innerHTML = html;
+}
+
+// ── Raw JSON ──
+
+function renderRaw(data) {
+  document.getElementById('raw').innerHTML = `<pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+
+renderMetricCards(DATA);
+renderHeroCards(DATA);
+renderSteps(DATA);
+renderVersions(DATA);
+renderOutput(DATA);
+renderRaw(DATA);
+</script>
+</body>
+</html>
