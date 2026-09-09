@@ -99,12 +99,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.artifact }}
-          path: |
-            binding/HarfBuzzSharp/Generated
-            binding/SkiaSharp.Resources/Generated
-            binding/SkiaSharp.SceneGraph/Generated
-            binding/SkiaSharp.Skottie/Generated
-            binding/SkiaSharp/Generated
+          path: output/generated
           if-no-files-found: error
           retention-days: 7
 
@@ -153,7 +148,7 @@ jobs:
           check_freshness() {
             name="$1"
             committed="$2"
-            generated="generated/bindings-linux/${name}/Generated"
+            generated="generated/bindings-linux/${name}"
             detail="comparison/committed-${name}.diff"
 
             if diff -qr "$committed" "$generated" > /dev/null; then

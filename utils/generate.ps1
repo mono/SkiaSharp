@@ -22,6 +22,8 @@ if ($Config) {
     }
 }
 
+New-Item -ItemType Directory -Force -Path "output/generated/" | Out-Null
+
 dotnet build utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj
 
 $failed = $false
@@ -29,6 +31,7 @@ foreach ($proj in $projects) {
     $json = $proj.Json;
     $output = $proj.Output;
     $root = $proj.Root;
+    $projectName = Split-Path (Split-Path $output -Parent) -Leaf
 
     $runArgs = @("run", "--no-build", "--no-launch-profile",
               "--project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj",
@@ -44,6 +47,11 @@ foreach ($proj in $projects) {
         continue
     }
 
+    $destination = Join-Path "output/generated" $projectName
+    if (Test-Path $destination) {
+        Remove-Item -Path $destination -Recurse -Force
+    }
+    Copy-Item -Path binding/$output -Destination $destination -Recurse -Force
 }
 
 if ($failed) {
