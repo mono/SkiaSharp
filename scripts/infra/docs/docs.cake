@@ -18,18 +18,100 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 #load "../shared/download.cake"
 #load "api-diff-tools.cake"
 
-// Count every type (including nested) in an assembly. Used to keep the richest
-// build when several TFM folders contribute an assembly with the same file name
-// to a single docs moniker (see the staging loop in docs-update-frameworks).
-int CountAssemblyTypes (string path)
+Dictionary<string, string> ReadCompilerDocIds (FilePath xml, FilePath dll)
 {
-    try {
-        using (var asm = Mono.Cecil.AssemblyDefinition.ReadAssembly (path))
-            return asm.Modules.Sum (m => m.GetTypes ().Count ());
-    } catch (Exception ex) {
-        Warning ("Could not read types from '{0}': {1}", path, ex.Message);
-        return 0;
+    var doc = XDocument.Load (xml.FullPath);
+    var documentedAssembly = doc.Root?.Element ("assembly")?.Element ("name")?.Value;
+    using (var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (dll.FullPath)) {
+        if (!string.Equals (documentedAssembly, assembly.Name.Name, StringComparison.Ordinal))
+            throw new Exception ($"Compiler XML '{xml}' identifies '{documentedAssembly}', but paired DLL '{dll}' identifies '{assembly.Name.Name}'.");
     }
+
+    var members = doc.Root?.Element ("members")?.Elements ("member")
+        .Where (m => !string.IsNullOrEmpty ((string) m.Attribute ("name")))
+        .GroupBy (m => (string) m.Attribute ("name"), StringComparer.Ordinal)
+        ?? Enumerable.Empty<IGrouping<string, XElement>> ();
+    var result = new Dictionary<string, string> (StringComparer.Ordinal);
+    foreach (var group in members) {
+        var payloads = group
+            .Select (m => string.Concat (m.Nodes ().Select (n => n.ToString (SaveOptions.DisableFormatting))))
+            .Distinct (StringComparer.Ordinal)
+            .ToList ();
+        if (payloads.Count != 1)
+            throw new Exception ($"Compiler XML '{xml}' contains unequal duplicate DocId '{group.Key}'.");
+        result.Add (group.Key, payloads[0]);
+    }
+    return result;
+}
+
+bool IsPublicApiType (Mono.Cecil.TypeDefinition type)
+{
+    if (type.DeclaringType != null && !IsPublicApiType (type.DeclaringType))
+        return false;
+    return type.IsPublic || type.IsNestedPublic || type.IsNestedFamily || type.IsNestedFamilyOrAssembly;
+}
+
+bool IsPublicApiMember (Mono.Cecil.IMemberDefinition member)
+{
+    if (member is Mono.Cecil.MethodDefinition method)
+        return method.IsPublic || method.IsFamily || method.IsFamilyOrAssembly;
+    if (member is Mono.Cecil.FieldDefinition field)
+        return field.IsPublic || field.IsFamily || field.IsFamilyOrAssembly;
+    if (member is Mono.Cecil.PropertyDefinition property)
+        return (property.GetMethod != null && IsPublicApiMember (property.GetMethod)) ||
+            (property.SetMethod != null && IsPublicApiMember (property.SetMethod));
+    if (member is Mono.Cecil.EventDefinition @event)
+        return (@event.AddMethod != null && IsPublicApiMember (@event.AddMethod)) ||
+            (@event.RemoveMethod != null && IsPublicApiMember (@event.RemoveMethod));
+    return false;
+}
+
+string MetadataTypeName (Mono.Cecil.TypeReference type) =>
+    type.FullName.Replace ("/", ".");
+
+string MetadataMemberDocId (Mono.Cecil.IMemberDefinition member)
+{
+    var typeName = MetadataTypeName (member.DeclaringType);
+    if (member is Mono.Cecil.FieldDefinition)
+        return $"F:{typeName}.{member.Name}";
+    if (member is Mono.Cecil.EventDefinition)
+        return $"E:{typeName}.{member.Name}";
+    if (member is Mono.Cecil.PropertyDefinition property)
+        return $"P:{typeName}.{property.Name}" +
+            (property.Parameters.Any () ? $"({string.Join (",", property.Parameters.Select (p => MetadataTypeName (p.ParameterType)))})" : "");
+    var method = (Mono.Cecil.MethodDefinition) member;
+    return $"M:{typeName}.{method.Name}" +
+        (method.HasGenericParameters ? $"``{method.GenericParameters.Count}" : "") +
+        (method.Parameters.Any () ? $"({string.Join (",", method.Parameters.Select (p => MetadataTypeName (p.ParameterType)))})" : "");
+}
+
+HashSet<string> ReadPublicApiDocIds (FilePath dll)
+{
+    using (var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (dll.FullPath)) {
+        var api = new HashSet<string> (StringComparer.Ordinal);
+        foreach (var type in assembly.Modules.SelectMany (m => m.GetTypes ()).Where (IsPublicApiType)) {
+            api.Add ($"T:{MetadataTypeName (type)}");
+            foreach (var member in type.Fields.Cast<Mono.Cecil.IMemberDefinition> ()
+                .Concat (type.Methods)
+                .Concat (type.Properties)
+                .Concat (type.Events)
+                .Where (IsPublicApiMember)) {
+                if (member is Mono.Cecil.MethodDefinition method &&
+                    (method.IsGetter || method.IsSetter || method.IsAddOn || method.IsRemoveOn))
+                    continue;
+                api.Add (MetadataMemberDocId (member));
+            }
+        }
+        return api;
+    }
+}
+
+int CompareTfm (string left, string right)
+{
+    // Stable tie-breaker for equal public DocId sets. A lexical fallback makes
+    // unknown future TFMs deterministic without silently preferring directory
+    // enumeration order.
+    return string.Compare (left, right, StringComparison.Ordinal);
 }
 
 // mdoc ships as a .NET Framework executable (mdoc.exe). On Windows it runs natively;
@@ -249,6 +331,7 @@ Task ("docs-update-frameworks")
     // 'docs-download-output' first (or a local build) to populate output/nugets.
     var xFrameworks = new XElement ("Frameworks");
     var monikers = new List<string> ();
+    var byMoniker = new Dictionary<string, List<(FilePath dll, FilePath xml, string tfm)>> (StringComparer.Ordinal);
     foreach (var id in SUPPORTED_NUGETS.Keys) {
         // skip doc generation for Uno, this is the same as WinUI and it is not needed
         if (id.StartsWith ("SkiaSharp.Views.Uno"))
@@ -282,11 +365,44 @@ Task ("docs-update-frameworks")
         // those members from ref/, so documenting ref/ removes the unorderable pair and
         // makes mdoc idempotent. Only SkiaSharp.dll ships ref/; every other package
         // is lib-only and falls back to lib/ unchanged.
-        var refDirs = GetPlatformDirectories ($"{packagePath}/ref").ToList ();
-        var dirs = refDirs.Any ()
-            ? refDirs
-            : GetPlatformDirectories ($"{packagePath}/lib").ToList ();
-        foreach (var (path, platform) in dirs) {
+        // Do not use GetPlatformDirectories here: its plain-TFM short-circuit
+        // intentionally suits API diffs, but would suppress platform heads
+        // (including MAUI) from the API reference generator.
+        var candidates = new List<(FilePath dll, FilePath xml, string tfm, string platform)> ();
+        var tfms = GetDirectories ($"{packagePath}/ref/*")
+            .Concat (GetDirectories ($"{packagePath}/lib/*"))
+            .Select (d => d.GetDirectoryName ())
+            .Distinct (StringComparer.Ordinal)
+            .OrderBy (tfm => tfm, StringComparer.Ordinal);
+        foreach (var tfm in tfms) {
+            var refDir = (DirectoryPath) $"{packagePath}/ref/{tfm}";
+            var libDir = (DirectoryPath) $"{packagePath}/lib/{tfm}";
+            var refDlls = DirectoryExists (refDir)
+                ? GetFiles ($"{refDir}/*.dll").OrderBy (d => d.FullPath, StringComparer.Ordinal).ToList ()
+                : new List<FilePath> ();
+            var referenceNames = new HashSet<string> (refDlls.Select (d => d.GetFilename ().ToString ()), StringComparer.Ordinal);
+            var platform = tfm.Contains ("-") ? GetPlatformLabel (tfm) : null;
+
+            // Ref wins per (TFM, assembly), not per package. A lib-only sibling
+            // remains a candidate even where the package also has a ref tree.
+            foreach (var dll in refDlls) {
+                var xml = libDir.CombineWithFilePath ($"{dll.GetFilenameWithoutExtension ()}.xml");
+                if (!FileExists (xml))
+                    throw new Exception ($"Missing compiler XML '{xml}' paired with reference DLL '{dll}'.");
+                candidates.Add ((dll, xml, tfm, platform));
+            }
+            if (DirectoryExists (libDir)) {
+                foreach (var dll in GetFiles ($"{libDir}/*.dll").OrderBy (d => d.FullPath, StringComparer.Ordinal)
+                    .Where (d => !referenceNames.Contains (d.GetFilename ().ToString ()))) {
+                    var xml = libDir.CombineWithFilePath ($"{dll.GetFilenameWithoutExtension ()}.xml");
+                    if (!FileExists (xml))
+                        throw new Exception ($"Missing compiler XML '{xml}' paired with lib-only DLL '{dll}'.");
+                    candidates.Add ((dll, xml, tfm, platform));
+                }
+            }
+        }
+
+        foreach (var candidate in candidates.OrderBy (c => c.tfm, StringComparer.Ordinal).ThenBy (c => c.dll.FullPath, StringComparer.Ordinal)) {
             string moniker;
             if (id.StartsWith ("SkiaSharp.Views.Maui"))
                 moniker = "skiasharp-views-maui";
@@ -296,10 +412,10 @@ Task ("docs-update-frameworks")
                 moniker = "skiasharp-direct3d";
             else if (id.StartsWith ("SkiaSharp.Vulkan"))
                 moniker = "skiasharp-vulkan";
-            else if (platform == null)
+            else if (candidate.platform == null)
                 moniker = $"{id.ToLower ().Replace (".", "-")}";
             else
-                moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}";
+                moniker = $"{id.ToLower ().Replace (".", "-")}-{candidate.platform}";
 
             // record the moniker in frameworks.xml (once per moniker)
             if (!monikers.Contains (moniker)) {
@@ -310,30 +426,43 @@ Task ("docs-update-frameworks")
                         new XAttribute ("Source", moniker)));
             }
 
-            // stage this moniker's assemblies for mdoc to read. Several TFM folders
-            // feed the same family moniker (e.g. every SkiaSharp.Views.* ->
-            // skiasharp-views), and different TFMs can ship an assembly with the SAME
-            // file name but a different API surface. For example SkiaSharp.Views.iOS.dll
-            // exists for both net*-ios (which includes SKGLView / SKGLLayer /
-            // SKPaintGLSurfaceEventArgs) and net*-maccatalyst (which excludes them via
-            // #if !__MACCATALYST__). A plain copy lets whichever TFM is staged last win,
-            // so the GL-less MacCatalyst build can clobber the richer iOS build and
-            // mdoc's --delete then drops those real types from the committed docs. Keep
-            // the assembly with the most types on a name collision so no platform's API
-            // surface is lost.
-            var o = $"{docsTempPathFrameowrks}/{moniker}";
-            EnsureDirectoryExists (o);
-            foreach (var dll in GetFiles ($"{path}/*.dll")) {
-                FilePath dest = $"{o}/{dll.GetFilename ()}";
-                if (FileExists (dest) && CountAssemblyTypes (dll.FullPath) <= CountAssemblyTypes (dest.FullPath)) {
-                    Verbose ("Keeping richer staged '{0}' for moniker '{1}'; skipping copy from '{2}'.", dll.GetFilename (), moniker, path);
-                    continue;
-                }
-                CopyFile (dll, dest);
-            }
+            if (!byMoniker.ContainsKey (moniker))
+                byMoniker[moniker] = new List<(FilePath dll, FilePath xml, string tfm)> ();
+            byMoniker[moniker].Add ((candidate.dll, candidate.xml, candidate.tfm));
         }
     }
     monikers.Sort ();
+
+    foreach (var moniker in monikers) {
+        var output = (DirectoryPath) $"{docsTempPathFrameowrks}/{moniker}";
+        EnsureDirectoryExists (output);
+        foreach (var group in byMoniker[moniker].GroupBy (c => c.dll.GetFilename ().ToString (), StringComparer.Ordinal).OrderBy (g => g.Key, StringComparer.Ordinal)) {
+            var indexed = group.Select (c => new { candidate = c, api = ReadPublicApiDocIds (c.dll) })
+                .OrderBy (c => c.candidate.tfm, StringComparer.Ordinal).ToList ();
+            var winners = indexed.Where (candidate => indexed.All (other =>
+                !other.api.Except (candidate.api).Any ())).ToList ();
+            if (!winners.Any ()) {
+                var differences = string.Join ("; ", indexed.SelectMany (candidate => indexed
+                    .Where (other => other != candidate)
+                    .Select (other => $"{candidate.candidate.tfm} vs {other.candidate.tfm}: candidate-only [{string.Join (",", candidate.api.Except (other.api).OrderBy (x => x, StringComparer.Ordinal))}], other-only [{string.Join (",", other.api.Except (candidate.api).OrderBy (x => x, StringComparer.Ordinal))}]")));
+                throw new Exception ($"No public API DocId superset exists for '{group.Key}' in '{moniker}': {differences}");
+            }
+            var selected = winners.OrderBy (c => c.candidate.tfm, Comparer<string>.Create (CompareTfm)).First ();
+            var compilerDocs = group.Select (c => new { candidate = c, docs = ReadCompilerDocIds (c.xml, c.dll) })
+                .OrderBy (c => c.candidate.tfm, StringComparer.Ordinal).ToList ();
+            foreach (var docId in compilerDocs.SelectMany (c => c.docs).GroupBy (p => p.Key, StringComparer.Ordinal)) {
+                if (docId.Select (p => p.Value).Distinct (StringComparer.Ordinal).Count () != 1)
+                    throw new Exception ($"Compiler XML payload mismatch for DocId '{docId.Key}' in '{group.Key}' ({moniker}) across TFMs: {string.Join (", ", compilerDocs.Where (c => c.docs.ContainsKey (docId.Key)).Select (c => c.candidate.tfm).OrderBy (tfm => tfm, StringComparer.Ordinal))}.");
+            }
+
+            var dllOutput = output.CombineWithFilePath (selected.candidate.dll.GetFilename ());
+            var xmlOutput = output.CombineWithFilePath (selected.candidate.xml.GetFilename ());
+            CopyFile (selected.candidate.dll, dllOutput);
+            CopyFile (selected.candidate.xml, xmlOutput);
+            xFrameworks.Elements ("Framework").First (f => (string) f.Attribute ("Name") == moniker)
+                .Add (new XElement ("import", $"{moniker}/{xmlOutput.GetFilename ()}"));
+        }
+    }
 
     // save the frameworks.xml
     var fwxml = $"{docsTempPathFrameowrks}/frameworks.xml";
@@ -397,7 +526,7 @@ Task ("docs-format-docs")
     .Does (() =>
 {
     // process the generated docs
-    var docFiles = GetFiles ($"{ROOT_PATH}/docs/**/*.xml");
+    var docFiles = GetFiles ($"{DOCS_PATH}/**/*.xml").OrderBy (f => f.FullPath, StringComparer.Ordinal);
     float typeCount = 0;
     float memberCount = 0;
     float totalTypes = 0;

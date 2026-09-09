@@ -372,6 +372,34 @@ void DecompressArchive(FilePath archive, DirectoryPath outputDir)
     }
 }
 
+string GetPlatformLabel (string tfm)
+{
+    var d = tfm.ToLowerInvariant ();
+    if (d.StartsWith("monoandroid") || (d.StartsWith("net") && d.Contains("-android")))
+        return "android";
+    if (d.StartsWith("net4"))
+        return "net";
+    if (d.StartsWith("uap"))
+        return "uwp";
+    if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios") || (d.StartsWith("net") && d.Contains("-ios")))
+        return "ios";
+    if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac") || (d.StartsWith("net") && d.Contains("-macos")))
+        return "macos";
+    if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos") || (d.StartsWith("net") && d.Contains("-tvos")))
+        return "tvos";
+    if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos") || (d.StartsWith("net") && d.Contains("-watchos")))
+        return "watchos";
+    if (d.StartsWith("tizen") || (d.StartsWith("net") && d.Contains("-tizen")))
+        return "tizen";
+    if (d.StartsWith("net") && d.Contains("-windows"))
+        return "windows";
+    if (d.StartsWith("net") && d.Contains("-maccatalyst"))
+        return "maccatalyst";
+    if (d.StartsWith("netcoreapp"))
+        return null;
+    throw new Exception($"Unknown platform '{tfm}'.");
+}
+
 IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(DirectoryPath rootDir)
 {
     var platformDirs = GetDirectories($"{rootDir}/*");
@@ -416,31 +444,9 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
 
     // there were no cross-platform libraries, so process each platform
     foreach (var dir in platformDirs) {
-        var d = dir.GetDirectoryName().ToLower();
-        if (d.StartsWith("monoandroid") || (d.StartsWith("net") && d.Contains("-android")))
-            yield return (dir, "android");
-        else if (d.StartsWith("net4"))
-            yield return (dir, "net");
-        else if (d.StartsWith("uap"))
-            yield return (dir, "uwp");
-        else if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios") || (d.StartsWith("net") && d.Contains("-ios")))
-            yield return (dir, "ios");
-        else if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac") || (d.StartsWith("net") && d.Contains("-macos")))
-            yield return (dir, "macos");
-        else if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos") || (d.StartsWith("net") && d.Contains("-tvos")))
-            yield return (dir, "tvos");
-        else if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos") || (d.StartsWith("net") && d.Contains("-watchos")))
-            yield return (dir, "watchos");
-        else if (d.StartsWith("tizen") || (d.StartsWith("net") && d.Contains("-tizen")))
-            yield return (dir, "tizen");
-        else if (d.StartsWith("net") && d.Contains("-windows"))
-            yield return (dir, "windows");
-        else if (d.StartsWith("net") && d.Contains("-maccatalyst"))
-            yield return (dir, "maccatalyst");
-        else if (d.StartsWith("netcoreapp"))
-            continue; // skip this one for now
-        else
-            throw new Exception($"Unknown platform '{d}' found at '{dir}'.");
+        var platform = GetPlatformLabel (dir.GetDirectoryName ());
+        if (platform != null)
+            yield return (dir, platform);
     }
 }
 
