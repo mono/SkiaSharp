@@ -20,7 +20,11 @@ PROJECTS = (
 
 def compare_trees(expected: Path, actual: Path) -> list[str]:
     comparison = filecmp.dircmp(expected, actual)
-    differences = comparison.left_only + comparison.right_only + comparison.diff_files
+    differences = [
+        *(f"deleted: {path}" for path in comparison.left_only),
+        *(f"added: {path}" for path in comparison.right_only),
+        *(f"modified: {path}" for path in comparison.diff_files),
+    ]
     for directory in comparison.common_dirs:
         differences.extend(
             f"{directory}/{difference}"

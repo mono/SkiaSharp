@@ -83,6 +83,23 @@ def added_internal_functions_from_diffs(diffs: list[str]) -> list[str]:
     ]
 
 
+def generated_file_changes(repo_root: Path, projects) -> list[str]:
+    """List added, modified, and deleted generated files across every output tree."""
+    return [
+        line
+        for _, _, output in projects
+        for line in run(
+            repo_root,
+            "git",
+            "diff",
+            "--name-status",
+            "--",
+            f"binding/{output}",
+            capture=True,
+        ).splitlines()
+    ]
+
+
 def regenerate(repo_root: Path, config: str | None = None) -> None:
     """Run every selected generator and summarize wrapper work."""
     generator_project = (
@@ -123,9 +140,9 @@ def regenerate(repo_root: Path, config: str | None = None) -> None:
                 shutil.rmtree(destination)
             shutil.copytree(output_path, destination)
 
-    binding_stat = run(repo_root, "git", "diff", "--stat", "--", "binding/", capture=True)
-    print("Binding diff summary:")
-    print(binding_stat.rstrip() or "  No binding changes.")
+    changes = generated_file_changes(repo_root, projects)
+    print("Generated binding file changes:")
+    print("\n".join(f"  {change}" for change in changes) or "  No generated binding changes.")
 
     diffs = [
         run(repo_root, "git", "diff", "--", f"binding/{output}", capture=True)

@@ -11,13 +11,15 @@ dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
 The helper runs every maintained generator configuration from the checked-out source, reports
-generated changes, and lists new native functions. Never edit a generated file manually.
+added, modified, and deleted files across every generated binding tree, and lists new native
+functions. Never edit a generated file manually.
 
 ## Phase 09 — review the managed surface
 
 For every newly generated native function:
 
 ```bash
+git diff --name-status "origin/{BASE_BRANCH}" -- binding/SkiaSharp/Generated
 git diff "origin/{BASE_BRANCH}" -- binding/SkiaSharp/Generated |
   grep '^+.*internal static'
 grep -rn "<native-function>" binding/SkiaSharp --exclude='*.generated.cs'
