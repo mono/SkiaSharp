@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Type Name="SKImageReadPixelsResult" FullName="SkiaSharp.SKImageReadPixelsResult">
+  <TypeSignature Language="C#" Value="public sealed class SKImageReadPixelsResult : IDisposable" />
+  <TypeSignature Language="DocId" Value="T:SkiaSharp.SKImageReadPixelsResult" />
+  <Docs>
+    <summary>Holds pixel planes produced by an asynchronous read request.</summary>
+    <remarks><![CDATA[
+The result is valid only during the callback. Accessing any member after disposal throws
+<xref:System.ObjectDisposedException>.
+
+```csharp
+using var source = SKImage.FromBitmap(new SKBitmap(200, 200));
+var info = new SKImageInfo(100, 100);
+SKBitmap result = null;
+source.RequestReadPixels(info, new SKRectI(0, 0, 200, 200), r =>
+{
+    if (r != null)
+        result = r.ToBitmap();
+});
+```
+]]></remarks>
+  </Docs>
+  <Members>
+    <Member MemberName="CopyPlaneTo">
+      <MemberSignature Language="C#" Value="public void CopyPlaneTo (int planeIndex, Span&lt;byte&gt; destination);" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageReadPixelsResult.CopyPlaneTo(System.Int32,System.Span{System.Byte})" />
+      <Docs>
+        <summary>Copies a plane into <paramref name="destination" />.</summary>
+        <param name="planeIndex">The plane index.</param>
+        <param name="destination">The destination buffer.</param>
+        <exception cref="T:System.ObjectDisposedException">The result has been disposed.</exception>
+        <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="planeIndex" /> is invalid.</exception>
+        <exception cref="T:System.ArgumentException"><paramref name="destination" /> is too small.</exception>
+        <exception cref="T:System.InvalidOperationException">The plane data is unavailable.</exception>
+      </Docs>
+    </Member>
+    <Member MemberName="Dispose">
+      <MemberSignature Language="C#" Value="public void Dispose ();" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageReadPixelsResult.Dispose" />
+      <Docs>
+        <summary>Releases the result.</summary>
+        <remarks>After disposal, accessing any other member throws <see cref="T:System.ObjectDisposedException" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetPlaneData">
+      <MemberSignature Language="C#" Value="public ReadOnlySpan&lt;byte&gt; GetPlaneData (int planeIndex);" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageReadPixelsResult.GetPlaneData(System.Int32)" />
+      <Docs>
+        <summary>Gets a view over a plane.</summary>
+        <param name="planeIndex">The plane index.</param>
+        <returns>The plane data.</returns>
+        <exception cref="T:System.ObjectDisposedException">The result has been disposed.</exception>
+        <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="planeIndex" /> is invalid.</exception>
+      </Docs>
+    </Member>
+    <Member MemberName="GetPlaneRowBytes">
+      <MemberSignature Language="C#" Value="public int GetPlaneRowBytes (int planeIndex);" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageReadPixelsResult.GetPlaneRowBytes(System.Int32)" />
+      <Docs>
+        <summary>Gets the row stride of a plane.</summary>
+        <param name="planeIndex">The plane index.</param>
+        <returns>The number of bytes per row.</returns>
+        <exception cref="T:System.ObjectDisposedException">The result has been disposed.</exception>
+        <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="planeIndex" /> is invalid.</exception>
+      </Docs>
+    </Member>
+    <Member MemberName="PlaneCount">
+      <MemberSignature Language="C#" Value="public int PlaneCount { get; }" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKImageReadPixelsResult.PlaneCount" />
+      <Docs>
+        <summary>Gets the number of pixel planes.</summary>
+        <value>The number of pixel planes.</value>
+        <exception cref="T:System.ObjectDisposedException">The result has been disposed.</exception>
+      </Docs>
+    </Member>
+    <Member MemberName="ToArray">
+      <MemberSignature Language="C#" Value="public byte[] ToArray (int planeIndex = 0);" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageReadPixelsResult.ToArray(System.Int32)" />
+      <Docs>
+        <summary>Returns a tightly packed copy of a plane.</summary>
+        <param name="planeIndex">The plane index.</param>
+        <returns>A new byte array.</returns>
+        <exception cref="T:System.ObjectDisposedException">The result has been disposed.</exception>
+        <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="planeIndex" /> is invalid.</exception>
+        <exception cref="T:System.InvalidOperationException">The plane data is unavailable.</exception>
+      </Docs>
+    </Member>
+    <Member MemberName="ToBitmap">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKBitmap ToBitmap ();" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageReadPixelsResult.ToBitmap" />
+      <Docs>
+        <summary>Creates an owned bitmap containing the read pixels.</summary>
+        <returns>A new bitmap.</returns>
+        <exception cref="T:System.ObjectDisposedException">The result has been disposed.</exception>
+        <exception cref="T:System.InvalidOperationException">The result is not single-plane or its data is unavailable.</exception>
+      </Docs>
+    </Member>
+    <Member MemberName="ToImage">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKImage ToImage ();" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageReadPixelsResult.ToImage" />
+      <Docs>
+        <summary>Creates an owned image containing the read pixels.</summary>
+        <returns>A new image.</returns>
+        <exception cref="T:System.ObjectDisposedException">The result has been disposed.</exception>
+        <exception cref="T:System.InvalidOperationException">The result is not single-plane or its data is unavailable.</exception>
+      </Docs>
+    </Member>
+  </Members>
+</Type>
