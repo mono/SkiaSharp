@@ -102,13 +102,7 @@ Classify every changed active entry:
 
 Preserving every pin unconditionally is as unsafe as taking every upstream pin.
 
-### 9. HarfBuzz — Generate with the DEPS Checkout
-
-HarfBuzz is generated and verified with every other binding output. When `DEPS` changes its
-revision, sync dependencies and regenerate the complete binding set; the generated HarfBuzz tree
-must match that checkout.
-
-### 10. Enum Value Renumbering
+### 9. Enum Value Renumbering
 
 When upstream inserts new enum values mid-sequence, ALL subsequent values shift. This affects `sk_enums.cpp`, `Definitions.cs`, `EnumMappings.cs`, and any test hardcoding enum integers. Always regenerate bindings — never hand-edit enum values.
 
