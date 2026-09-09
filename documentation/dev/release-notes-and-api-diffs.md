@@ -23,11 +23,6 @@ SkiaSharp generates two version-indexed artifacts from one shared versioning mod
 Both live in the docfx site under `documentation/docfx/releases/` (§3) and are
 produced by one self-contained skill (§2). A full feature comparison is in §6.
 
-> **Looking for the big picture instead of the rules?** This document is the deep
-> behavior spec. For a one-screen map of the *whole* documentation system — all four
-> artifacts, the engines, the skills, and the cross-repo CI — start at
-> [docs-overview.md](docs-overview.md).
-
 Both are **agent/CI tooling, not human-facing CLIs.** The public entrypoints keep
 a deliberately small, uniform interface: `--force`, `--min-version`, and
 `--max-version` for the shell orchestrators (§2.2), translated to Cake's
@@ -342,9 +337,7 @@ scripts/infra/docs/                (all doc engines, together)
   api-diff.cake                API-diff engine (§5), used by the single
                                top-level `docs-api-diff` target
   api-diff-tools.cake          shared NuGet-diff comparer + layout helpers (§5),
-                               #loaded by api-diff.cake AND docs.cake
-  docs.cake                    mdoc-based docs/ XML generators (a different concern)
-  generate-api-docs.sh         Path 3 runner: cake update-docs (mdoc under mono)
+                               #loaded by api-diff.cake
   release-notes-data.py        Prepare data engine (§4) — emits _sources/<version>.data.json,
                                owns shared git/version helpers and page-set discovery
   release-notes-index.py       Prepare index-data engine (§4) — emits _sources/index.json
@@ -385,8 +378,8 @@ skia-sync and nuget-feed all read it), not release-notes-private.
 The general-purpose Cake machinery (`shared.cake`, `download.cake`) stays under
 `scripts/infra/shared/` and is `#load`ed by the engines. `api-diff-tools.cake` (the
 NuGet-diff comparer factory, the breaking/full-diff runner, and `versions.json`
-loading) is used by *only* the two doc engines (`api-diff.cake` and the mdoc
-generators in `docs.cake`), so it sits next to them in `scripts/infra/docs/`.
+loading) is used by the API-diff engine, so it sits beside it in
+`scripts/infra/docs/`.
 
 
 ### 2.2 Two phases: Prepare → Polish
@@ -1076,8 +1069,7 @@ principles are fixed here.
      submodule, with its vendored HarfBuzz). Written up.
    - **`mixed`** — affects the shipped package but is not itself an API/behaviour change, so
      Polish judges from the title: `native/` (per-platform build config — compile flags/gn
-     args that shape the native binaries, usually infra) and `docs` (the mdoc API-docs
-     submodule that ships as IntelliSense XML — doc content, not behaviour).
+     args that shape the native binaries, usually infra).
    - **`internal`** — the `default`: touches none of those (CI, workflows, agent skills, docs
      *site*, tests, samples, and build/meta). Dropped into the one collapse line.
 
