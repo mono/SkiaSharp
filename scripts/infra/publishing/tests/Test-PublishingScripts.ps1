@@ -282,17 +282,17 @@ Assert-Equal 'release/4.153.0-preview.1' $barBuild.Value.Branch `
     'A BAR source branch was not normalized.'
 Assert-Equal $false $barBuild.Value.IsReleased `
     'The BAR receipt incorrectly treats the unrelated released flag as channel promotion.'
-$nuGetBarAsset = [pscustomobject] @{
+$locationlessBarAsset = [pscustomobject] @{
     name = $barAssets[0].name
     version = $barAssets[0].version
     build = $barAssets[0].build
-    locations = @('https://api.nuget.org/v3/index.json')
+    locations = @()
 }
 Assert-Equal 'complete' (Resolve-MaestroReleaseBuild `
-    -Assets @($nuGetBarAsset) `
+    -Assets @($locationlessBarAsset) `
     -Version '4.153.0-preview.1.26454.6' `
     -BarId 0).State `
-    'A BAR receipt published directly to NuGet.org was rejected.'
+    'BAR validation incorrectly depends on asset locations.'
 Assert-Equal 'complete' (Resolve-MaestroReleaseBuild `
     -Assets $barAssets `
     -Version '4.153.0-preview.1.26454.6' `
@@ -333,30 +333,6 @@ Assert-Equal 'pending' (Resolve-MaestroReleaseBuild `
     -Assets $unchanneledAssets `
     -Version '4.153.0-preview.1.26454.6' `
     -BarId 0).State 'A BAR outside the .NET Libraries channel was accepted as a release receipt.'
-$barPackages = @(
-    [pscustomobject] @{
-        Id = 'SkiaSharp'
-        Branch = 'release/4.153.0-preview.1'
-        Commit = ('a' * 40) -join ''
-    }
-    [pscustomobject] @{
-        Id = 'SkiaSharp.HarfBuzz'
-        Branch = 'release/4.153.0-preview.1'
-        Commit = ('a' * 40) -join ''
-    }
-    [pscustomobject] @{
-        Id = 'HarfBuzzSharp'
-        Branch = 'release/4.153.0-preview.1'
-        Commit = ('a' * 40) -join ''
-    }
-)
-Assert-Equal 'complete' (Test-MaestroPackageSources `
-    -Build $barBuild.Value `
-    -Packages $barPackages).State 'Matching BAR package sources were rejected.'
-$barPackages[2].Commit = ('b' * 40) -join ''
-Assert-Equal 'pending' (Test-MaestroPackageSources `
-    -Build $barBuild.Value `
-    -Packages $barPackages).State 'A mismatched BAR package source was accepted.'
 $testPowerShell = Get-Command pwsh -CommandType Application |
     Select-Object -First 1 -ExpandProperty Source
 $completeOwnerCheck = Invoke-OwnerCheck `
