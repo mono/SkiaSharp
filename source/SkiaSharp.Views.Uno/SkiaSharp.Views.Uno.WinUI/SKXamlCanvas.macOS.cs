@@ -24,6 +24,9 @@ namespace SkiaSharp.Views.UWP
 			Initialize();
 		}
 
+		/// <summary>Gets a value indicating whether the canvas is opaque.</summary>
+		/// <value><see langword="false" /> because the canvas supports transparency.</value>
+		/// <remarks />
 		public override bool IsOpaque => false;
 
 		partial void DoLoaded() =>
@@ -35,6 +38,9 @@ namespace SkiaSharp.Views.UWP
 		private void DoInvalidate() =>
 			NeedsDisplay = true;
 
+		/// <summary>Draws the canvas in the specified rectangle.</summary>
+		/// <param name="dirtyRect">The rectangle that needs to be redrawn.</param>
+		/// <remarks />
 		public override void DrawRect(CGRect dirtyRect)
 		{
 			base.DrawRect(dirtyRect);

@@ -36,6 +36,9 @@ namespace SkiaSharp.Views.UWP
 		private void DoInvalidate() =>
 			SetNeedsDisplay();
 
+		/// <summary>Draws the canvas in the specified rectangle.</summary>
+		/// <param name="dirtyRect">The rectangle that needs to be redrawn.</param>
+		/// <remarks />
 		public override void Draw(CGRect dirtyRect)
 		{
 			base.Draw(dirtyRect);
@@ -73,6 +76,9 @@ namespace SkiaSharp.Views.UWP
 			drawable.DrawSurface(ctx, Bounds, info, surface);
 		}
 
+		/// <summary>Notifies the canvas that it is moving to the specified window.</summary>
+		/// <param name="window">The destination window, or <see langword="null" /> when the canvas is removed.</param>
+		/// <remarks />
 		public override void WillMoveToWindow(UIWindow window)
 		{
 			if (drawable != null)
