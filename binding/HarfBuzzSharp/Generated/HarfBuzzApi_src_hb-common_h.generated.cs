@@ -13,25 +13,6 @@ namespace HarfBuzzSharp
 	{
 		#region hb-common.h
 
-		// extern void* hb_calloc(size_t nmemb, size_t size)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (HARFBUZZ)]
-		internal static partial void* hb_calloc (/* size_t */ IntPtr nmemb, /* size_t */ IntPtr size);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void* hb_calloc (/* size_t */ IntPtr nmemb, /* size_t */ IntPtr size);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void* hb_calloc (/* size_t */ IntPtr nmemb, /* size_t */ IntPtr size);
-		}
-		private static Delegates.hb_calloc hb_calloc_delegate;
-		internal static void* hb_calloc (/* size_t */ IntPtr nmemb, /* size_t */ IntPtr size) =>
-			(hb_calloc_delegate ??= GetSymbol<Delegates.hb_calloc> ("hb_calloc")).Invoke (nmemb, size);
-		#endif
-
 		// extern uint8_t hb_color_get_alpha(hb_color_t color)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
