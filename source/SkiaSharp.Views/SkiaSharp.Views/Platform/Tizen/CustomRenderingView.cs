@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using ElmSharp;
 using SkiaSharp.Views.Tizen.Interop;
 
 namespace SkiaSharp.Views.Tizen
 {
+	/// <summary>An abstract view that can be inherited from to allow drawing on using SkiaSharp drawing commands.</summary>
+	/// <remarks />
 	public abstract class CustomRenderingView : Widget
 	{
 		private readonly Evas.ImagePixelsSetCallback redrawCallback;
@@ -11,8 +13,13 @@ namespace SkiaSharp.Views.Tizen
 		private IntPtr animator;
 		private RenderingMode renderingMode = RenderingMode.WhenDirty;
 
+		/// <summary>The pointer to the underlying control which provides the native drawing surface.</summary>
+		/// <remarks />
 		protected IntPtr evasImage;
 
+		/// <param name="parent">The parent object.</param>
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> class.</summary>
+		/// <remarks>Use this constructor when creating the view programmatically from code.</remarks>
 		public CustomRenderingView(EvasObject parent)
 			: base(parent)
 		{
@@ -20,8 +27,14 @@ namespace SkiaSharp.Views.Tizen
 			redrawCallback = (d, o) => OnDrawFrame();
 		}
 
+		/// <summary>Gets the current canvas size.</summary>
+		/// <value>The current canvas size in pixels.</value>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize => GetSurfaceSize();
 
+		/// <summary>Gets or sets the rendering mode.</summary>
+		/// <value>The rendering mode.</value>
+		/// <remarks />
 		public RenderingMode RenderingMode
 		{
 			get { return renderingMode; }
@@ -39,40 +52,67 @@ namespace SkiaSharp.Views.Tizen
 			}
 		}
 
+		/// <summary>Invalidates the entire surface of the control and causes the control to be redrawn.</summary>
+		/// <remarks />
 		public void Invalidate()
 		{
 			if (RenderingMode == RenderingMode.WhenDirty)
 				Evas.evas_object_image_pixels_dirty_set(evasImage, true);
 		}
 
+		/// <param name="parent">The parent object.</param>
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to create the native resources which should be present throughout whole life of the control.</summary>
+		/// <remarks />
 		protected virtual void CreateNativeResources(EvasObject parent)
 		{
 			// empty on purpose
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to destroy the native resources.</summary>
+		/// <remarks />
 		protected virtual void DestroyNativeResources()
 		{
 			// empty on purpose
 		}
 
+		/// <summary>Invalidates the entire surface of the control and causes the control to be redrawn.</summary>
+		/// <remarks />
 		protected abstract void OnDrawFrame();
 
+		/// <param name="geometry">The current geometry of the control.</param>
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to update the drawing surface dimensions.</summary>
+		/// <returns>Returns <see langword="true" /> if the size has changed, otherwise <see langword="false" />.</returns>
+		/// <remarks />
 		protected abstract bool UpdateSurfaceSize(Rect geometry);
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to provide the dimensions of the current drawing surface.</summary>
+		/// <returns>Returns the current drawing surface dimensions.</returns>
+		/// <remarks />
 		protected abstract SKSizeI GetSurfaceSize();
 
+		/// <summary>Gets the raw pixel size of the drawing surface.</summary>
+		/// <returns>Returns the raw pixel size of the drawing surface.</returns>
+		/// <remarks />
 		protected virtual SKSizeI GetRawSurfaceSize() => GetSurfaceSize();
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to construct the drawing surface.</summary>
+		/// <remarks />
 		protected virtual void CreateDrawingSurface()
 		{
 			// empty on purpose
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to destroy the drawing surface.</summary>
+		/// <remarks />
 		protected virtual void DestroyDrawingSurface()
 		{
 			// empty on purpose
 		}
 
+		/// <param name="parent">The parent object.</param>
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to creates a Widget handle.</summary>
+		/// <returns>Returns the pointer to the new handle.</returns>
+		/// <remarks />
 		protected sealed override IntPtr CreateHandle(EvasObject parent)
 		{
 			var handle = Interop.Elementary.elm_layout_add(parent);
@@ -90,6 +130,8 @@ namespace SkiaSharp.Views.Tizen
 			return handle;
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to clean up resources used by the control.</summary>
+		/// <remarks />
 		protected sealed override void OnUnrealize()
 		{
 			DestroyAnimator();
@@ -99,6 +141,8 @@ namespace SkiaSharp.Views.Tizen
 			base.OnUnrealize();
 		}
 
+		/// <summary>Indicate to the control that the it has been resized.</summary>
+		/// <remarks />
 		protected void OnResized()
 		{
 			var geometry = Geometry;

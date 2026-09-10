@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.ComponentModel;
@@ -8,34 +8,59 @@ using GRBackendObject = System.IntPtr;
 
 namespace SkiaSharp
 {
+	/// <summary>Various flags for the <see cref="M:SkiaSharp.GRContext.ResetContext(SkiaSharp.GRGlBackendState)" /> method when using a <see cref="F:SkiaSharp.GRBackend.OpenGL" /> backend.</summary>
+	/// <remarks />
 	[Flags]
 	public enum GRGlBackendState : UInt32
 	{
+		/// <summary>Reset nothing.</summary>
 		None = 0,
+		/// <summary>Reset the render target.</summary>
 		RenderTarget = 1 << 0,
+		/// <summary>Reset the texture binding state.</summary>
 		TextureBinding = 1 << 1,
+		/// <summary>Reset the scissor and viewport state.</summary>
 		View = 1 << 2, // scissor and viewport
+		/// <summary>Reset the blend state.</summary>
 		Blend = 1 << 3,
+		/// <summary>Reset the MSAA state.</summary>
 		MSAAEnable = 1 << 4,
+		/// <summary>Reset the vertex buffer state.</summary>
 		Vertex = 1 << 5,
+		/// <summary>Reset the stencil state.</summary>
 		Stencil = 1 << 6,
+		/// <summary>Reset the pixel store state.</summary>
 		PixelStore = 1 << 7,
+		/// <summary>Reset the program state.</summary>
 		Program = 1 << 8,
+		/// <summary>Reset the fixed function state.</summary>
 		FixedFunction = 1 << 9,
+		/// <summary>Reset miscellaneous state.</summary>
 		Misc = 1 << 10,
+		/// <summary>Reset the path rendering state.</summary>
 		PathRendering = 1 << 11,
+		/// <summary>Reset all the context state.</summary>
 		All = 0xffff
 	}
 
+	/// <summary>Various flags for the <see cref="M:SkiaSharp.GRContext.ResetContext(SkiaSharp.GRBackendState)" /> method.</summary>
+	/// <remarks />
 	[Flags]
 	public enum GRBackendState : UInt32
 	{
+		/// <summary>Reset nothing.</summary>
 		None = 0,
+		/// <summary>Reset all the context state for any backend.</summary>
 		All = 0xffffffff,
 	}
 
+	/// <summary>Represents a handle to an existing OpenGL framebuffer.</summary>
+	/// <remarks />
 	public partial struct GRGlFramebufferInfo
 	{
+		/// <summary>Creates a new <see cref="T:SkiaSharp.GRGlFramebufferInfo" /> with the specified parameters.</summary>
+		/// <param name="fboId">The OpenGL framebuffer ID.</param>
+		/// <remarks />
 		public GRGlFramebufferInfo (uint fboId)
 		{
 			fProtected = default;
@@ -44,6 +69,10 @@ namespace SkiaSharp
 			fFormat = 0;
 		}
 
+		/// <summary>Creates a new <see cref="T:SkiaSharp.GRGlFramebufferInfo" /> with the specified parameters.</summary>
+		/// <param name="fboId">The OpenGL framebuffer ID.</param>
+		/// <param name="format">The sized, internal format of the OpenGL framebuffer.</param>
+		/// <remarks />
 		public GRGlFramebufferInfo (uint fboId, uint format)
 		{
 			fProtected = default;
@@ -53,8 +82,14 @@ namespace SkiaSharp
 		}
 	}
 
+	/// <summary>Represents a handle to an existing OpenGL texture.</summary>
+	/// <remarks />
 	public partial struct GRGlTextureInfo
 	{
+		/// <summary>Creates a new <see cref="T:SkiaSharp.GRGlTextureInfo" /> with the specified parameters.</summary>
+		/// <param name="target">The OpenGL texture target (for example, GL_TEXTURE_2D).</param>
+		/// <param name="id">The OpenGL texture ID.</param>
+		/// <remarks />
 		public GRGlTextureInfo (uint target, uint id)
 		{
 			fProtected = default;
@@ -64,6 +99,11 @@ namespace SkiaSharp
 			fFormat = 0;
 		}
 
+		/// <summary>Creates a new <see cref="T:SkiaSharp.GRGlTextureInfo" /> with the specified parameters.</summary>
+		/// <param name="target">The OpenGL texture target.</param>
+		/// <param name="id">The OpenGL texture ID.</param>
+		/// <param name="format">The sized, internal format of the OpenGL texture.</param>
+		/// <remarks />
 		public GRGlTextureInfo (uint target, uint id, uint format)
 		{
 			fProtected = default;
@@ -74,15 +114,23 @@ namespace SkiaSharp
 		}
 	}
 
+	/// <summary>Represents information about a Metal texture used as a backend texture in SkiaSharp.</summary>
+	/// <remarks />
 	public unsafe partial struct GRMtlTextureInfo
 	{
 		private IntPtr _textureHandle;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.GRMtlTextureInfo" /> struct with the specified texture handle.</summary>
+		/// <param name="textureHandle">The native handle to the Metal texture (MTLTexture).</param>
+		/// <remarks />
 		public GRMtlTextureInfo (IntPtr textureHandle)
 		{
 			TextureHandle = textureHandle;
 		}
 
+		/// <summary>Gets or sets the native handle to the Metal texture (MTLTexture).</summary>
+		/// <value>The native pointer to the Metal texture.</value>
+		/// <remarks />
 		public IntPtr TextureHandle {
 			readonly get => _textureHandle;
 			set {
@@ -95,11 +143,18 @@ namespace SkiaSharp
 
 #if __IOS__ || __MACOS__ || __TVOS__
 		private Metal.IMTLTexture _texture;
+
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.GRMtlTextureInfo" /> struct with the specified Metal texture.</summary>
+		/// <param name="texture">The Metal texture.</param>
+		/// <remarks />
 		public GRMtlTextureInfo (Metal.IMTLTexture texture)
 		{
 			Texture = texture;
 		}
 
+		/// <summary>Gets or sets the Metal texture.</summary>
+		/// <value>The Metal texture.</value>
+		/// <remarks />
 		public Metal.IMTLTexture Texture {
 			readonly get => _texture;
 			set {
@@ -114,18 +169,39 @@ namespace SkiaSharp
 				fTexture = (void*)TextureHandle
 			};
 
+		/// <summary>Determines whether the specified <see cref="T:SkiaSharp.GRMtlTextureInfo" /> is equal to the current instance.</summary>
+		/// <param name="obj">The <see cref="T:SkiaSharp.GRMtlTextureInfo" /> to compare with this instance.</param>
+		/// <returns><see langword="true" /> if the specified object is equal to the current instance; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public readonly bool Equals (GRMtlTextureInfo obj) =>
 			TextureHandle == obj.TextureHandle;
 
+		/// <summary>Determines whether the specified object is equal to the current instance.</summary>
+		/// <param name="obj">The object to compare with this instance.</param>
+		/// <returns><see langword="true" /> if the specified object is equal to the current instance; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public readonly override bool Equals (object obj) =>
 			obj is GRMtlTextureInfo f && Equals (f);
 
+		/// <summary>Determines whether two <see cref="T:SkiaSharp.GRMtlTextureInfo" /> instances are equal.</summary>
+		/// <param name="left">The first <see cref="T:SkiaSharp.GRMtlTextureInfo" /> to compare.</param>
+		/// <param name="right">The second <see cref="T:SkiaSharp.GRMtlTextureInfo" /> to compare.</param>
+		/// <returns><see langword="true" /> if the two instances are equal; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public static bool operator == (GRMtlTextureInfo left, GRMtlTextureInfo right) =>
 			left.Equals (right);
 
+		/// <summary>Determines whether two <see cref="T:SkiaSharp.GRMtlTextureInfo" /> instances are not equal.</summary>
+		/// <param name="left">The first <see cref="T:SkiaSharp.GRMtlTextureInfo" /> to compare.</param>
+		/// <param name="right">The second <see cref="T:SkiaSharp.GRMtlTextureInfo" /> to compare.</param>
+		/// <returns><see langword="true" /> if the two instances are not equal; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public static bool operator != (GRMtlTextureInfo left, GRMtlTextureInfo right) =>
 			!left.Equals (right);
 
+		/// <summary>Returns the hash code for this instance.</summary>
+		/// <returns>A 32-bit signed integer hash code.</returns>
+		/// <remarks />
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -136,6 +212,10 @@ namespace SkiaSharp
 
 	public static partial class SkiaExtensions
 	{
+		/// <summary>Converts a <see cref="T:SkiaSharp.SKColorType" /> to the equivalent OpenGL sized format, if possible.</summary>
+		/// <param name="colorType">The <see cref="T:SkiaSharp.SKColorType" /> to convert.</param>
+		/// <returns>Returns the equivalent OpenGL sized format, or 0 if there is none.</returns>
+		/// <remarks />
 		public static uint ToGlSizedFormat (this SKColorType colorType) =>
 			colorType switch {
 				SKColorType.Unknown => 0,
@@ -292,27 +372,73 @@ namespace SkiaSharp
 		internal const uint COMPRESSED_ETC1_RGB8 = 0x8D64;
 	}
 
+	/// <summary>Represents legacy Vulkan YCbCr conversion information.</summary>
+	/// <remarks />
 	[Obsolete ("Use GRVkYcbcrConversionInfo instead.")]
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct GrVkYcbcrConversionInfo
 	{
 		private GRVkYcbcrConversionInfo inner;
 
+		/// <summary>Gets or sets the Vulkan format.</summary>
+		/// <value>The Vulkan format.</value>
+		/// <remarks />
 		public UInt32 Format { readonly get => inner.Format; set => inner.Format = value; }
+		/// <summary>Gets or sets the external Vulkan format.</summary>
+		/// <value>The external Vulkan format.</value>
+		/// <remarks />
 		public UInt64 ExternalFormat { readonly get => inner.ExternalFormat; set => inner.ExternalFormat = value; }
+		/// <summary>Gets or sets the YCbCr model conversion.</summary>
+		/// <value>The YCbCr model conversion.</value>
+		/// <remarks />
 		public UInt32 YcbcrModel { readonly get => inner.YcbcrModel; set => inner.YcbcrModel = value; }
+		/// <summary>Gets or sets the YCbCr range.</summary>
+		/// <value>The YCbCr range.</value>
+		/// <remarks />
 		public UInt32 YcbcrRange { readonly get => inner.YcbcrRange; set => inner.YcbcrRange = value; }
+		/// <summary>Gets or sets the X chroma offset.</summary>
+		/// <value>The X chroma offset.</value>
+		/// <remarks />
 		public UInt32 XChromaOffset { readonly get => inner.XChromaOffset; set => inner.XChromaOffset = value; }
+		/// <summary>Gets or sets the Y chroma offset.</summary>
+		/// <value>The Y chroma offset.</value>
+		/// <remarks />
 		public UInt32 YChromaOffset { readonly get => inner.YChromaOffset; set => inner.YChromaOffset = value; }
+		/// <summary>Gets or sets the chroma filter.</summary>
+		/// <value>The chroma filter.</value>
+		/// <remarks />
 		public UInt32 ChromaFilter { readonly get => inner.ChromaFilter; set => inner.ChromaFilter = value; }
+		/// <summary>Gets or sets the explicit reconstruction setting.</summary>
+		/// <value>The explicit reconstruction setting.</value>
+		/// <remarks />
 		public UInt32 ForceExplicitReconstruction { readonly get => inner.ForceExplicitReconstruction; set => inner.ForceExplicitReconstruction = value; }
+		/// <summary>Gets or sets the YCbCr component mapping.</summary>
+		/// <value>The YCbcr component mapping.</value>
+		/// <remarks />
 		public GRVkYcbcrComponents Components { readonly get => inner.Components; set => inner.Components = value; }
+		/// <summary>Gets or sets the legacy format features.</summary>
+		/// <value>The legacy format features.</value>
+		/// <remarks />
 		[Obsolete ("FormatFeatures is no longer supported in the native API.")]
 		public UInt32 FormatFeatures { readonly get => 0; set { } }
+		/// <summary>Gets or sets a value indicating whether the sampler filter must match the chroma filter.</summary>
+		/// <value><see langword="true" /> if the sampler filter must match the chroma filter; otherwise, <see langword="false" />.</value>
+		/// <remarks />
 		public bool SamplerFilterMustMatchChromaFilter { readonly get => inner.SamplerFilterMustMatchChromaFilter; set => inner.SamplerFilterMustMatchChromaFilter = value; }
+		/// <summary>Gets or sets a value indicating whether linear filtering is supported.</summary>
+		/// <value><see langword="true" /> if linear filtering is supported; otherwise, <see langword="false" />.</value>
+		/// <remarks />
 		public bool SupportsLinearFilter { readonly get => inner.SupportsLinearFilter; set => inner.SupportsLinearFilter = value; }
 
+		/// <summary>Converts legacy YCbCr conversion information to Vulkan YCbCr conversion information.</summary>
+		/// <param name="value">The legacy conversion information.</param>
+		/// <returns>The converted conversion information.</returns>
+		/// <remarks />
 		public static implicit operator GRVkYcbcrConversionInfo (GrVkYcbcrConversionInfo value) => value.inner;
+		/// <summary>Converts Vulkan YCbCr conversion information to legacy YCbCr conversion information.</summary>
+		/// <param name="value">The conversion information.</param>
+		/// <returns>The converted legacy conversion information.</returns>
+		/// <remarks />
 		public static implicit operator GrVkYcbcrConversionInfo (GRVkYcbcrConversionInfo value) => new GrVkYcbcrConversionInfo { inner = value };
 	}
 }

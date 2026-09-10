@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 
@@ -26,6 +26,8 @@ namespace SkiaSharp.Views.UWP
 		private int pixelHeight;
 		private WriteableBitmap bitmap;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKXamlCanvas" /> class.</summary>
+		/// <remarks />
 		public SKXamlCanvas()
 		{
 			Initialize();

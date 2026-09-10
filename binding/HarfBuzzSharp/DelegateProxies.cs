@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Runtime.CompilerServices;
@@ -6,8 +6,15 @@ using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
+	/// <summary>The delegate that will be invoked when a resource is ready to be discarded.</summary>
+	/// <remarks />
 	public delegate void ReleaseDelegate ();
 
+	/// <summary>Represents a callback method that retrieves a font table blob.</summary>
+	/// <param name="face">The font face being queried.</param>
+	/// <param name="tag">The table tag to retrieve.</param>
+	/// <returns>A <see cref="T:HarfBuzzSharp.Blob" /> containing the table data, or <see langword="null" /> if not found.</returns>
+	/// <remarks />
 	public delegate Blob GetTableDelegate (Face face, Tag tag);
 
 	internal static unsafe partial class DelegateProxies

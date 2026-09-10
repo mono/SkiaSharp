@@ -4,8 +4,15 @@ using Silk.NET.Vulkan;
 
 namespace SkiaSharp
 {
+	/// <summary>Represents a callback that resolves Vulkan procedure addresses from Silk.NET handles.</summary>
+	/// <param name="name">The Vulkan procedure name.</param>
+	/// <param name="instance">The Vulkan instance.</param>
+	/// <param name="device">The Vulkan device.</param>
+	/// <returns>The address of the Vulkan procedure.</returns>
 	public delegate IntPtr GRSilkNetGetProcedureAddressDelegate(string name, Instance instance, Device device);
 
+	/// <summary>Represents a Vulkan backend context that uses Silk.NET Vulkan handles.</summary>
+	/// <remarks />
 	public class GRSilkNetBackendContext : GRVkBackendContext
 	{
 		private Instance vkInstance;
@@ -17,6 +24,9 @@ namespace SkiaSharp
 
 		private GCHandle devFeaturesHandle;
 
+		/// <summary>Releases the resources used by this backend context.</summary>
+		/// <param name="disposing"><see langword="true" /> to release managed resources; otherwise, <see langword="false" />.</param>
+		/// <remarks />
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
@@ -31,6 +41,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Gets or sets the Silk.NET Vulkan instance.</summary>
+		/// <value>The Vulkan instance.</value>
+		/// <remarks />
 		public new Instance VkInstance
 		{
 			get => vkInstance;
@@ -41,6 +54,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Gets or sets the Silk.NET Vulkan physical device.</summary>
+		/// <value>The Vulkan physical device.</value>
+		/// <remarks />
 		public new PhysicalDevice VkPhysicalDevice
 		{
 			get => vkPhysicalDevice;
@@ -51,6 +67,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Gets or sets the Silk.NET Vulkan logical device.</summary>
+		/// <value>The Vulkan logical device.</value>
+		/// <remarks />
 		public new Device VkDevice
 		{
 			get => vkDevice;
@@ -61,6 +80,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Gets or sets the Silk.NET Vulkan graphics queue.</summary>
+		/// <value>The Vulkan graphics queue.</value>
+		/// <remarks />
 		public new Queue VkQueue
 		{
 			get => vkQueue;
@@ -71,6 +93,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Gets or sets the Silk.NET Vulkan physical device features.</summary>
+		/// <value>The physical device features, or <see langword="null" />.</value>
+		/// <remarks />
 		public new PhysicalDeviceFeatures? VkPhysicalDeviceFeatures
 		{
 			get => vkPhysicalDeviceFeatures;
@@ -94,6 +119,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Gets or sets the callback that resolves Vulkan procedure addresses.</summary>
+		/// <value>The Vulkan procedure address callback.</value>
+		/// <remarks />
 		public new GRSilkNetGetProcedureAddressDelegate GetProcedureAddress
 		{
 			get => getProc;

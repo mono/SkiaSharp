@@ -9,6 +9,31 @@ namespace SkiaSharp
 	using GCHandle = SkiaSharp.GCHandleProxy;
 #endif
 
+	/// <summary>Represents a Graphite GPU context that owns backend resources and executes recordings against a Dawn, Metal, or Vulkan backend.</summary>
+	/// <remarks>
+	///       <format type="text/markdown"><![CDATA[
+	/// ## Remarks
+	///
+	/// Create a context from a backend-specific backend context, for example <xref:SkiaSharp.SKGraphiteContext.CreateVulkan(SkiaSharp.SKGraphiteVkBackendContext)>, <xref:SkiaSharp.SKGraphiteContext.CreateMetal(SkiaSharp.SKGraphiteMtlBackendContext)>, or <xref:SkiaSharp.SKGraphiteContext.CreateDawn(SkiaSharp.SKGraphiteDawnBackendContext)>. Create one or more recorders with <xref:SkiaSharp.SKGraphiteContext.CreateRecorder(System.Int64)>, draw into Graphite-backed surfaces, snap the work into recordings, insert them into the context, and submit.
+	///
+	/// This type wraps a native Skia resource and implements `IDisposable`. Dispose it after all its recorders and surfaces have been disposed.
+	///
+	/// ## Examples
+	///
+	/// ```csharp
+	/// using var context = SKGraphiteContext.CreateMetal(backendContext);
+	/// using var recorder = context.CreateRecorder();
+	///
+	/// var info = new SKImageInfo(256, 256);
+	/// using var surface = SKSurface.Create(recorder, info);
+	/// surface.Canvas.Clear(SKColors.CornflowerBlue);
+	///
+	/// using var recording = recorder.Snap();
+	/// context.InsertRecording(recording);
+	/// context.Submit();
+	/// ```
+	/// ]]></format>
+	///     </remarks>
 	public unsafe class SKGraphiteContext : SKObject
 	{
 		// Pinned managed delegate the Vulkan dispatch lambda calls back into. Ownership is transferred
@@ -34,6 +59,11 @@ namespace SkiaSharp
 			pinnedBackendDelegate = gch;
 		}
 
+		/// <param name="backend">One of the enumeration values that specifies the backend to check.</param>
+		/// <summary>Determines whether the specified Graphite backend is available in this build of SkiaSharp.</summary>
+		/// <returns>
+		///           <see langword="true" /> if the backend is available; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public static bool IsBackendAvailable (SKGraphiteBackend backend) =>
 			SkiaApi.sk_graphite_backend_is_available (backend);
 
@@ -47,15 +77,32 @@ namespace SkiaSharp
 		// release defaults, so only the budget needs seeding here.)
 		private static readonly SKGraphiteContextOptions DefaultOptions = new () { GpuBudgetInBytes = -1 };
 
+		/// <param name="backendContext">The Vulkan backend context that supplies the device and function loader.</param>
+		/// <summary>Creates a Vulkan-backed Graphite context using the default options.</summary>
+		/// <returns>A new <see cref="T:SkiaSharp.SKGraphiteContext" />, or <see langword="null" /> if it could not be created.</returns>
+		/// <remarks />
 		public static SKGraphiteContext CreateVulkan (SKGraphiteVkBackendContext backendContext) =>
 			CreateVulkan (backendContext, DefaultOptions);
 
+		/// <param name="backendContext">The Metal backend context that supplies the device and queue.</param>
+		/// <summary>Creates a Metal-backed Graphite context using the default options.</summary>
+		/// <returns>A new <see cref="T:SkiaSharp.SKGraphiteContext" />, or <see langword="null" /> if it could not be created.</returns>
+		/// <remarks />
 		public static SKGraphiteContext CreateMetal (SKGraphiteMtlBackendContext backendContext) =>
 			CreateMetal (backendContext, DefaultOptions);
 
+		/// <param name="backendContext">The Dawn backend context that supplies the instance, device, and queue.</param>
+		/// <summary>Creates a Dawn (WebGPU) backed Graphite context using the default options.</summary>
+		/// <returns>A new <see cref="T:SkiaSharp.SKGraphiteContext" />, or <see langword="null" /> if it could not be created.</returns>
+		/// <remarks />
 		public static SKGraphiteContext CreateDawn (SKGraphiteDawnBackendContext backendContext) =>
 			CreateDawn (backendContext, DefaultOptions);
 
+		/// <param name="backendContext">The Dawn backend context that supplies the instance, device, and queue.</param>
+		/// <param name="options">The options that configure the context.</param>
+		/// <summary>Creates a Dawn (WebGPU) backed Graphite context using the specified options.</summary>
+		/// <returns>A new <see cref="T:SkiaSharp.SKGraphiteContext" />, or <see langword="null" /> if it could not be created.</returns>
+		/// <remarks />
 		public static SKGraphiteContext CreateDawn (SKGraphiteDawnBackendContext backendContext, SKGraphiteContextOptions options)
 		{
 			if (backendContext is null)
@@ -72,6 +119,11 @@ namespace SkiaSharp
 			};
 		}
 
+		/// <param name="backendContext">The Metal backend context that supplies the device and queue.</param>
+		/// <param name="options">The options that configure the context.</param>
+		/// <summary>Creates a Metal-backed Graphite context using the specified options.</summary>
+		/// <returns>A new <see cref="T:SkiaSharp.SKGraphiteContext" />, or <see langword="null" /> if it could not be created.</returns>
+		/// <remarks />
 		public static SKGraphiteContext CreateMetal (SKGraphiteMtlBackendContext backendContext, SKGraphiteContextOptions options)
 		{
 			if (backendContext is null)
@@ -86,6 +138,11 @@ namespace SkiaSharp
 			return new SKGraphiteContext (handle, true);
 		}
 
+		/// <param name="backendContext">The Vulkan backend context that supplies the device and function loader.</param>
+		/// <param name="options">The options that configure the context.</param>
+		/// <summary>Creates a Vulkan-backed Graphite context using the specified options.</summary>
+		/// <returns>A new <see cref="T:SkiaSharp.SKGraphiteContext" />, or <see langword="null" /> if it could not be created.</returns>
+		/// <remarks />
 		public static SKGraphiteContext CreateVulkan (SKGraphiteVkBackendContext backendContext, SKGraphiteContextOptions options)
 		{
 			if (backendContext is null)
@@ -121,6 +178,8 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Releases the native resources used by the context.</summary>
+		/// <remarks />
 		protected override void DisposeNative ()
 		{
 			SkiaApi.sk_graphite_context_delete (Handle);
@@ -134,21 +193,41 @@ namespace SkiaSharp
 
 		// Properties
 
+		/// <summary>Gets the graphics backend that this context uses.</summary>
+		/// <value>One of the enumeration values that indicates the backend.</value>
+		/// <remarks />
 		public SKGraphiteBackend Backend =>
 			SkiaApi.sk_graphite_context_get_backend (Handle);
 
+		/// <summary>Gets a value indicating whether the underlying GPU device has been lost.</summary>
+		/// <value>
+		///           <see langword="true" /> if the device has been lost; otherwise, <see langword="false" />.</value>
+		/// <remarks />
 		public bool IsDeviceLost =>
 			SkiaApi.sk_graphite_context_is_device_lost (Handle);
 
+		/// <summary>Gets the maximum texture dimension supported by the context's backend, in pixels.</summary>
+		/// <value>The maximum texture size, in pixels.</value>
+		/// <remarks />
 		public int MaxTextureSize =>
 			SkiaApi.sk_graphite_context_get_max_texture_size (Handle);
 
+		/// <summary>Gets a value indicating whether the context supports protected content.</summary>
+		/// <value>
+		///           <see langword="true" /> if protected content is supported; otherwise, <see langword="false" />.</value>
+		/// <remarks />
 		public bool SupportsProtectedContent =>
 			SkiaApi.sk_graphite_context_supports_protected_content (Handle);
 
+		/// <summary>Gets the number of bytes of GPU memory currently used by budgeted resources.</summary>
+		/// <value>The current budgeted GPU memory usage, in bytes.</value>
+		/// <remarks />
 		public long CurrentBudgetedBytes =>
 			SkiaApi.sk_graphite_context_get_current_budgeted_bytes (Handle);
 
+		/// <summary>Gets or sets the maximum number of bytes of GPU memory the resource cache may use.</summary>
+		/// <value>The maximum budgeted GPU memory, in bytes.</value>
+		/// <remarks />
 		public long MaxBudgetedBytes {
 			get => SkiaApi.sk_graphite_context_get_max_budgeted_bytes (Handle);
 			set {
@@ -160,9 +239,19 @@ namespace SkiaSharp
 
 		// Recording
 
+		/// <param name="recorderBudgetBytes">The GPU memory budget for the recorder, in bytes, or -1 to use the Skia default.</param>
+		/// <summary>Creates a new recorder owned by this context.</summary>
+		/// <returns>A new <see cref="T:SkiaSharp.SKGraphiteRecorder" />, or <see langword="null" /> if it could not be created.</returns>
+		/// <remarks />
 		public SKGraphiteRecorder CreateRecorder (long recorderBudgetBytes = -1) =>
 			CreateRecorder (recorderBudgetBytes, findOrCreate: null, findOrCreateDispose: null);
 
+		/// <param name="recorderBudgetBytes">The GPU memory budget for the recorder, in bytes, or -1 to use the Skia default.</param>
+		/// <param name="findOrCreate">The callback that finds or uploads a Graphite-backed image for a source image, or <see langword="null" /> for none.</param>
+		/// <param name="findOrCreateDispose">An optional cleanup action invoked before the recorder is destroyed, or <see langword="null" /> for none.</param>
+		/// <summary>Creates a new recorder owned by this context, using the specified callback to provide Graphite-backed images.</summary>
+		/// <returns>A new <see cref="T:SkiaSharp.SKGraphiteRecorder" />, or <see langword="null" /> if it could not be created.</returns>
+		/// <remarks />
 		public SKGraphiteRecorder CreateRecorder (
 			long recorderBudgetBytes,
 			SKGraphiteFindOrCreateImageDelegate findOrCreate,
@@ -228,6 +317,10 @@ namespace SkiaSharp
 			return raw;
 		}
 
+		/// <param name="recording">The recording to insert.</param>
+		/// <summary>Inserts a recording into the context so its commands are executed on the next submit.</summary>
+		/// <returns>One of the enumeration values that indicates the result of the insertion.</returns>
+		/// <remarks />
 		public SKGraphiteInsertStatus InsertRecording (SKGraphiteRecording recording)
 		{
 			if (recording is null)
@@ -239,12 +332,25 @@ namespace SkiaSharp
 			return SkiaApi.sk_graphite_context_insert_recording (Handle, &info);
 		}
 
+		/// <param name="info">The parameters that describe the recording to insert and where to place it.</param>
+		/// <summary>Inserts a recording into the context using the specified insertion parameters.</summary>
+		/// <returns>One of the enumeration values that indicates the result of the insertion.</returns>
+		/// <remarks />
 		public SKGraphiteInsertStatus InsertRecording (SKGraphiteInsertRecordingInfo info) =>
 			SkiaApi.sk_graphite_context_insert_recording (Handle, &info);
 
+		/// <summary>Submits all inserted recordings to the GPU without waiting for completion.</summary>
+		/// <returns>
+		///           <see langword="true" /> if the work was submitted successfully; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public bool Submit () =>
 			SkiaApi.sk_graphite_context_submit (Handle, null);
 
+		/// <param name="submitInfo">The options that control how the work is submitted.</param>
+		/// <summary>Submits all inserted recordings to the GPU using the specified submission options.</summary>
+		/// <returns>
+		///           <see langword="true" /> if the work was submitted successfully; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public bool Submit (SKGraphiteSubmitInfo submitInfo)
 		{
 			if (submitInfo.Sync && isNonYielding)
@@ -256,9 +362,14 @@ namespace SkiaSharp
 
 		// Resource management
 
+		/// <summary>Frees GPU resources held by the context's resource cache.</summary>
+		/// <remarks />
 		public void FreeGpuResources () =>
 			SkiaApi.sk_graphite_context_free_gpu_resources (Handle);
 
+		/// <param name="duration">The minimum time a resource must have been unused before it is purged.</param>
+		/// <summary>Purges GPU resources that have not been used for at least the specified duration.</summary>
+		/// <remarks />
 		public void PerformDeferredCleanup (TimeSpan duration)
 		{
 			if (duration < TimeSpan.Zero)
@@ -266,6 +377,9 @@ namespace SkiaSharp
 			SkiaApi.sk_graphite_context_perform_deferred_cleanup (Handle, (long)duration.TotalMilliseconds);
 		}
 
+		/// <param name="backendTexture">The backend texture to delete.</param>
+		/// <summary>Deletes a backend texture that was created by this context.</summary>
+		/// <remarks />
 		public void DeleteBackendTexture (SKGraphiteBackendTexture backendTexture)
 		{
 			if (backendTexture == null)
@@ -273,9 +387,19 @@ namespace SkiaSharp
 			SkiaApi.sk_graphite_context_delete_backend_texture (Handle, backendTexture.Handle);
 		}
 
+		/// <summary>Checks for and processes any completed asynchronous GPU work, invoking pending callbacks.</summary>
+		/// <remarks />
 		public void CheckAsyncWorkCompletion () =>
 			SkiaApi.sk_graphite_context_check_async_work_completion (Handle);
 
+		/// <param name="surface">The surface to read pixels from.</param>
+		/// <param name="dstInfo">The image info describing the desired size and format of the result.</param>
+		/// <param name="srcRect">The rectangle of the surface to read, in pixels.</param>
+		/// <param name="rescaleGamma">One of the enumeration values that specifies the gamma space used for rescaling.</param>
+		/// <param name="rescaleMode">One of the enumeration values that specifies the sampling algorithm used for rescaling.</param>
+		/// <param name="callback">The callback invoked with the read result, which is valid only for the duration of the call.</param>
+		/// <summary>Asynchronously reads and rescales pixels from the specified surface into a result delivered to a callback.</summary>
+		/// <remarks />
 		public void RequestReadPixels (
 			SKSurface surface,
 			SKImageInfo dstInfo,
@@ -307,6 +431,12 @@ namespace SkiaSharp
 			GC.KeepAlive (surface);
 		}
 
+		/// <param name="surface">The surface to read pixels from.</param>
+		/// <param name="dstInfo">The image info describing the desired size and format of the result.</param>
+		/// <param name="srcRect">The rectangle of the surface to read, in pixels.</param>
+		/// <param name="callback">The callback invoked with the read result, which is valid only for the duration of the call.</param>
+		/// <summary>Asynchronously reads pixels from the specified surface into a result delivered to a callback, using nearest sampling.</summary>
+		/// <remarks />
 		public void RequestReadPixels (
 			SKSurface surface,
 			SKImageInfo dstInfo,

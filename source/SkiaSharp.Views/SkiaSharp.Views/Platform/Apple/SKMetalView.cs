@@ -1,4 +1,4 @@
-﻿#if __IOS__ || __MACOS__ || __TVOS__
+#if __IOS__ || __MACOS__ || __TVOS__
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -15,6 +15,8 @@ namespace SkiaSharp.Views.Mac
 namespace SkiaSharp.Views.tvOS
 #endif
 {
+	/// <summary>A hardware-accelerated view that uses Metal to render SkiaSharp drawing commands.</summary>
+	/// <remarks>This view provides the best performance on devices that support Metal. For devices that do not support Metal, use <see cref="SKCanvasView" /> instead.</remarks>
 	[Register(nameof(SKMetalView))]
 	[DesignTimeVisible(true)]
 	public class SKMetalView : MTKView, IMTKViewDelegate, IComponent
@@ -45,12 +47,17 @@ namespace SkiaSharp.Views.tvOS
 		private GRContext context;
 
 		// created in code
+		/// <summary>Initializes a new instance of the <see cref="SKMetalView" /> class.</summary>
+		/// <remarks />
 		public SKMetalView()
 			: this(CGRect.Empty)
 		{
 		}
 
 		// created in code
+		/// <param name="frame">The frame used by the view, expressed in points.</param>
+		/// <summary>Initializes the <see cref="SKMetalView" /> with the specified frame.</summary>
+		/// <remarks />
 		public SKMetalView(CGRect frame)
 			: base(frame, null)
 		{
@@ -58,6 +65,10 @@ namespace SkiaSharp.Views.tvOS
 		}
 
 		// created in code
+		/// <param name="frame">The frame used by the view, expressed in points.</param>
+		/// <param name="device">The Metal device to use for rendering.</param>
+		/// <summary>Initializes the <see cref="SKMetalView" /> with the specified frame and Metal device.</summary>
+		/// <remarks />
 		public SKMetalView(CGRect frame, IMTLDevice device)
 			: base(frame, device)
 		{
@@ -65,12 +76,17 @@ namespace SkiaSharp.Views.tvOS
 		}
 
 		// created via designer
+		/// <param name="p">The pointer (handle) to the unmanaged object.</param>
+		/// <summary>Initializes a new instance of the <see cref="SKMetalView" /> class from a native handle.</summary>
+		/// <remarks>This constructor is used by the Apple platform runtime when creating managed representations of unmanaged objects. It is not intended to be called directly from user code.</remarks>
 		public SKMetalView(IntPtr p)
 			: base(p)
 		{
 		}
 
 		// created via designer
+		/// <summary>Called after the object has been loaded from the nib file. Overriders must call the base method.</summary>
+		/// <remarks />
 		public override void AwakeFromNib()
 		{
 			Initialize();
@@ -120,10 +136,20 @@ namespace SkiaSharp.Views.tvOS
 			Delegate = this;
 		}
 
+		/// <summary>Gets the current canvas size.</summary>
+		/// <value>The current canvas size in pixels.</value>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize { get; private set; }
 
+		/// <summary>Gets the current GPU context.</summary>
+		/// <value>The GPU context used by the Metal backend.</value>
+		/// <remarks />
 		public GRContext GRContext => context;
 
+		/// <param name="view">The view whose drawable size changed.</param>
+		/// <param name="size">The new drawable size.</param>
+		/// <summary>Implements the IMTKViewDelegate.DrawableSizeWillChange method to handle size changes.</summary>
+		/// <remarks />
 		void IMTKViewDelegate.DrawableSizeWillChange(MTKView view, CGSize size)
 		{
 			CanvasSize = size.ToSKSize();
@@ -136,6 +162,9 @@ namespace SkiaSharp.Views.tvOS
 #endif
 		}
 
+		/// <param name="view">The view that triggered the draw request.</param>
+		/// <summary>Implements the IMTKViewDelegate.Draw method to render the SkiaSharp content.</summary>
+		/// <remarks />
 		void IMTKViewDelegate.Draw(MTKView view)
 		{
 			if (designMode)
@@ -178,8 +207,13 @@ namespace SkiaSharp.Views.tvOS
 			commandBuffer.Commit();
 		}
 
+		/// <summary>Occurs when the surface needs to be redrawn.</summary>
+		/// <remarks>There are two ways to draw on this surface: by overriding <c>OnPaintSurface</c>, or by attaching a handler to <c>PaintSurface</c>.</remarks>
 		public event EventHandler<SKPaintMetalSurfaceEventArgs> PaintSurface;
 
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <summary>Implement this to draw on the canvas.</summary>
+		/// <remarks>There are two ways to draw on this surface: by overriding <c>OnPaintSurface</c>, or by attaching a handler to <c>PaintSurface</c>. If this method is overridden, then the base must be called, otherwise the event will not be fired.</remarks>
 		protected virtual void OnPaintSurface(SKPaintMetalSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);

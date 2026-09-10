@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -24,6 +24,8 @@ using OpenTK.Mathematics;
 
 namespace SkiaSharp.Views.WPF
 {
+	/// <summary>A WPF element that uses OpenGL for hardware-accelerated SkiaSharp rendering.</summary>
+	/// <remarks />
 	[DefaultEvent("PaintSurface")]
 	[DefaultProperty("Name")]
 	public class SKGLElement : GLWpfControl, IDisposable
@@ -41,6 +43,8 @@ namespace SkiaSharp.Views.WPF
 
 		private SKSizeI lastSize;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.WPF.SKGLElement" /> class.</summary>
+		/// <remarks />
 		public SKGLElement()
 			: base()
 		{
@@ -73,10 +77,18 @@ namespace SkiaSharp.Views.WPF
 			InvalidateVisual();
 		}
 
+		/// <summary>Gets the current canvas size in pixels.</summary>
+		/// <value>The current canvas size in pixels.</value>
+		/// <remarks />
 		public SKSize CanvasSize => lastSize;
 
+		/// <summary>Gets the GPU context used for rendering.</summary>
+		/// <value>The GPU context.</value>
+		/// <remarks />
 		public GRContext GRContext => grContext;
 
+		/// <summary>Occurs when the surface needs to be redrawn.</summary>
+		/// <remarks />
 		[Category("Appearance")]
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
@@ -105,6 +117,9 @@ namespace SkiaSharp.Views.WPF
 			return new SKSizeI((int)(currentWidth * dpiX), (int)(currentHeight * dpiY));
 		}
 
+		/// <param name="drawingContext">The WPF drawing context for this render pass.</param>
+		/// <summary>Participates in rendering operations when overridden in a derived class.</summary>
+		/// <remarks />
 		protected override void OnRender(DrawingContext drawingContext)
 		{
 			if (grContext != null)
@@ -114,6 +129,9 @@ namespace SkiaSharp.Views.WPF
 			base.OnRender(drawingContext);
 		}
 
+		/// <param name="e">The elapsed time since the last paint event.</param>
+		/// <summary>Called when the control needs to be painted.</summary>
+		/// <remarks />
 		protected virtual void OnPaint(TimeSpan e)
 		{
 			if (disposed)
@@ -180,6 +198,9 @@ namespace SkiaSharp.Views.WPF
 			canvas.Flush();
 		}
 
+		/// <param name="e">The event arguments containing the surface and drawing information.</param>
+		/// <summary>Raises the <see cref="E:SkiaSharp.Views.WPF.SKGLElement.PaintSurface" /> event.</summary>
+		/// <remarks />
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
 			// invoke the event
@@ -189,6 +210,10 @@ namespace SkiaSharp.Views.WPF
 		private bool disposed = false;
 
 
+		/// <param name="disposing">
+		///           <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <summary>Releases the unmanaged resources used by the element and optionally releases the managed resources.</summary>
+		/// <remarks />
 		protected virtual void Dispose(bool disposing)
 		{
 			if (disposed)
@@ -212,6 +237,8 @@ namespace SkiaSharp.Views.WPF
 			grContext = null;
 		}
 
+		/// <summary>Releases all resources used by the element.</summary>
+		/// <remarks />
 		public void Dispose()
         {
             Dispose(true);

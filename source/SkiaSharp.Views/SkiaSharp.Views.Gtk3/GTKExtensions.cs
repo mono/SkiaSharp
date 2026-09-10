@@ -1,18 +1,28 @@
-﻿using Gdk;
+using Gdk;
 
 using GC = System.GC;
 
 namespace SkiaSharp.Views.Gtk
 {
+	/// <summary>Provides extension methods for converting between SkiaSharp types and GTK types.</summary>
+	/// <remarks />
 	public static class GTKExtensions
 	{
 		// Point
 
+		/// <summary>Converts a <see cref="T:Gdk.Point" /> to an <see cref="T:SkiaSharp.SKPointI" />.</summary>
+		/// <param name="point">The GDK point to convert.</param>
+		/// <returns>The converted SkiaSharp integer point.</returns>
+		/// <remarks />
 		public static SKPointI ToSKPointI(this Point point)
 		{
 			return new SKPointI(point.X, point.Y);
 		}
 
+		/// <param name="point">The SkiaSharp point to convert.</param>
+		/// <summary>Converts an <see cref="T:SkiaSharp.SKPointI" /> to a <see cref="T:Gdk.Point" />.</summary>
+		/// <returns>The converted GDK point.</returns>
+		/// <remarks />
 		public static Point ToPoint(this SKPointI point)
 		{
 			return new Point(point.X, point.Y);
@@ -20,11 +30,19 @@ namespace SkiaSharp.Views.Gtk
 
 		// Rectangle
 
+		/// <summary>Converts a <see cref="T:Gdk.Rectangle" /> to an <see cref="T:SkiaSharp.SKRectI" />.</summary>
+		/// <param name="rect">The GDK rectangle to convert.</param>
+		/// <returns>The converted SkiaSharp integer rectangle.</returns>
+		/// <remarks />
 		public static SKRectI ToSKRectI(this Rectangle rect)
 		{
 			return new SKRectI(rect.Left, rect.Top, rect.Right, rect.Bottom);
 		}
 
+		/// <param name="rect">The SkiaSharp rectangle to convert.</param>
+		/// <summary>Converts an <see cref="T:SkiaSharp.SKRectI" /> to a <see cref="T:Gdk.Rectangle" />.</summary>
+		/// <returns>The converted GDK rectangle.</returns>
+		/// <remarks />
 		public static Rectangle ToRect(this SKRectI rect)
 		{
 			return new Rectangle(rect.Left, rect.Top, rect.Right, rect.Bottom);
@@ -32,11 +50,19 @@ namespace SkiaSharp.Views.Gtk
 
 		// Size
 
+		/// <summary>Converts a <see cref="T:Gdk.Size" /> to an <see cref="T:SkiaSharp.SKSizeI" />.</summary>
+		/// <param name="size">The GDK size to convert.</param>
+		/// <returns>The converted SkiaSharp integer size.</returns>
+		/// <remarks />
 		public static SKSizeI ToSKSizeI(this Size size)
 		{
 			return new SKSizeI(size.Width, size.Height);
 		}
 
+		/// <param name="size">The SkiaSharp size to convert.</param>
+		/// <summary>Converts an <see cref="T:SkiaSharp.SKSizeI" /> to a <see cref="T:Gdk.Size" />.</summary>
+		/// <returns>The converted GDK size.</returns>
+		/// <remarks />
 		public static Size ToSize(this SKSizeI size)
 		{
 			return new Size(size.Width, size.Height);
@@ -46,6 +72,10 @@ namespace SkiaSharp.Views.Gtk
 
 		private const float ColorMultiplier = 65535f / 255f;
 
+		/// <summary>Converts a <see cref="T:Gdk.Color" /> to an <see cref="T:SkiaSharp.SKColor" />.</summary>
+		/// <param name="color">The GDK color to convert.</param>
+		/// <returns>The converted SkiaSharp color.</returns>
+		/// <remarks />
 		public static SKColor ToSKColor(this Color color)
 		{
 			var r = color.Red / ColorMultiplier;
@@ -54,6 +84,10 @@ namespace SkiaSharp.Views.Gtk
 			return new SKColor((byte)r, (byte)g, (byte)b);
 		}
 
+		/// <param name="color">The SkiaSharp color to convert.</param>
+		/// <summary>Converts a <see cref="T:SkiaSharp.SKColor" /> to a <see cref="T:Gdk.Color" />.</summary>
+		/// <returns>The converted GDK color.</returns>
+		/// <remarks />
 		public static Color ToColor(this SKColor color)
 		{
 			return new Color(color.Red, color.Green, color.Blue);
@@ -61,6 +95,11 @@ namespace SkiaSharp.Views.Gtk
 
 		// Pixbuf
 
+		/// <param name="picture">The SkiaSharp picture to convert.</param>
+		/// <param name="dimensions">The dimensions for the resulting pixbuf.</param>
+		/// <summary>Converts an <see cref="T:SkiaSharp.SKPicture" /> to a <see cref="T:Gdk.Pixbuf" /> with the specified dimensions.</summary>
+		/// <returns>The converted GDK pixbuf.</returns>
+		/// <remarks />
 		public static Pixbuf ToPixbuf(this SKPicture picture, SKSizeI dimensions)
 		{
 			using (var image = SKImage.FromPicture(picture, dimensions))
@@ -69,6 +108,10 @@ namespace SkiaSharp.Views.Gtk
 			}
 		}
 
+		/// <param name="skiaImage">The SkiaSharp image to convert.</param>
+		/// <summary>Converts an <see cref="T:SkiaSharp.SKImage" /> to a <see cref="T:Gdk.Pixbuf" />.</summary>
+		/// <returns>The converted GDK pixbuf.</returns>
+		/// <remarks />
 		public static Pixbuf ToPixbuf(this SKImage skiaImage)
 		{
 			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
@@ -91,6 +134,10 @@ namespace SkiaSharp.Views.Gtk
 			return pix;
 		}
 
+		/// <param name="skiaBitmap">The SkiaSharp bitmap to convert.</param>
+		/// <summary>Converts an <see cref="T:SkiaSharp.SKBitmap" /> to a <see cref="T:Gdk.Pixbuf" />.</summary>
+		/// <returns>The converted GDK pixbuf.</returns>
+		/// <remarks />
 		public static Pixbuf ToPixbuf(this SKBitmap skiaBitmap)
 		{
 			using (var pixmap = skiaBitmap.PeekPixels())
@@ -102,6 +149,10 @@ namespace SkiaSharp.Views.Gtk
 			}
 		}
 
+		/// <param name="pixmap">The SkiaSharp pixmap to convert.</param>
+		/// <summary>Converts an <see cref="T:SkiaSharp.SKPixmap" /> to a <see cref="T:Gdk.Pixbuf" />.</summary>
+		/// <returns>The converted GDK pixbuf.</returns>
+		/// <remarks />
 		public static Pixbuf ToPixbuf(this SKPixmap pixmap)
 		{
 			using (var image = SKImage.FromPixels(pixmap))
@@ -110,6 +161,10 @@ namespace SkiaSharp.Views.Gtk
 			}
 		}
 
+		/// <summary>Converts a <see cref="T:Gdk.Pixbuf" /> to an <see cref="T:SkiaSharp.SKBitmap" />.</summary>
+		/// <param name="pixbuf">The GDK pixbuf to convert.</param>
+		/// <returns>The converted SkiaSharp bitmap.</returns>
+		/// <remarks />
 		public static SKBitmap ToSKBitmap(this Pixbuf pixbuf)
 		{
 			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
@@ -123,6 +178,10 @@ namespace SkiaSharp.Views.Gtk
 			return skiaBitmap;
 		}
 
+		/// <summary>Converts a <see cref="T:Gdk.Pixbuf" /> to an <see cref="T:SkiaSharp.SKImage" />.</summary>
+		/// <param name="pixbuf">The GDK pixbuf to convert.</param>
+		/// <returns>The converted SkiaSharp image.</returns>
+		/// <remarks />
 		public static SKImage ToSKImage(this Pixbuf pixbuf)
 		{
 			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
@@ -136,6 +195,10 @@ namespace SkiaSharp.Views.Gtk
 			return image;
 		}
 
+		/// <summary>Copies pixels from a <see cref="T:Gdk.Pixbuf" /> to an <see cref="T:SkiaSharp.SKPixmap" />.</summary>
+		/// <param name="pixbuf">The GDK pixbuf to convert.</param>
+		/// <param name="pixmap">The SkiaSharp pixmap that receives the pixels.</param>
+		/// <remarks />
 		public static void ToSKPixmap(this Pixbuf pixbuf, SKPixmap pixmap)
 		{
 			// TODO: maybe keep the same color types where we can, instead of just going to the platform default

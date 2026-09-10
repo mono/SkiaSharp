@@ -6,8 +6,14 @@ using UIKit;
 
 namespace SkiaSharp.Views.Maui.Handlers
 {
+	/// <summary>Provides Apple platform images for SkiaSharp image sources.</summary>
 	public partial class SKImageSourceService
 	{
+		/// <summary>Asynchronously obtains a platform image for the specified image source.</summary>
+		/// <param name="imageSource">The image source to convert.</param>
+		/// <param name="scale">The display scale to use.</param>
+		/// <param name="cancellationToken">The token used to cancel the operation.</param>
+		/// <returns>A result containing the platform image, or <see langword="null" /> if no image is available.</returns>
 		public override Task<IImageSourceServiceResult<UIImage>?> GetImageAsync(IImageSource imageSource, float scale = 1, CancellationToken cancellationToken = default)
 		{
 			var image = imageSource switch

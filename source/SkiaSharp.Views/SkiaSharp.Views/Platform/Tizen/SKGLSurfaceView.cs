@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using ElmSharp;
 using SkiaSharp.Views.GlesInterop;
@@ -7,6 +7,8 @@ using Tizen;
 
 namespace SkiaSharp.Views.Tizen
 {
+	/// <summary>A hardware-accelerated view that can be drawn on using SkiaSharp drawing commands.</summary>
+	/// <remarks />
 	public class SKGLSurfaceView : CustomRenderingView
 	{
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
@@ -26,6 +28,9 @@ namespace SkiaSharp.Views.Tizen
 		private SKCanvas canvas;
 		private SKSizeI surfaceSize;
 
+		/// <param name="parent">The parent object.</param>
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Tizen.SKGLSurfaceView" /> class.</summary>
+		/// <remarks>Use this constructor when creating the view programmatically from code.</remarks>
 		public SKGLSurfaceView(EvasObject parent)
 			: base(parent)
 		{
@@ -40,17 +45,91 @@ namespace SkiaSharp.Views.Tizen
 			};
 		}
 
+		/// <summary>Occurs when the surface needs to be redrawn.</summary>
+		/// <remarks>
+		///           <format type="text/markdown"><![CDATA[
+		/// ## Remarks
+		///
+		/// There are two ways to draw on this surface: by overriding the
+		/// <xref:SkiaSharp.Views.Tizen.SKGLSurfaceView.OnDrawFrame(SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs)>
+		/// method, or by attaching a handler to the
+		/// <xref:SkiaSharp.Views.Tizen.SKGLSurfaceView.PaintSurface>
+		/// event.
+		///
+		/// ## Examples
+		///
+		/// ```csharp
+		/// myView.PaintSurface += (sender, e) => {
+		///     var surface = e.Surface;
+		///     var surfaceWidth = e.BackendRenderTarget.Width;
+		///     var surfaceHeight = e.BackendRenderTarget.Height;
+		///
+		///     var canvas = surface.Canvas;
+		///
+		///     // draw on the canvas
+		///
+		///     canvas.Flush ();
+		/// };
+		/// ```
+		/// ]]></format>
+		///         </remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
+		/// <summary>Gets the current GPU context.</summary>
+		/// <value>The current GPU context.</value>
+		/// <remarks />
 		public GRContext GRContext => context;
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to provide the dimensions of the current drawing surface.</summary>
+		/// <returns>Returns the current drawing surface dimensions.</returns>
+		/// <remarks />
 		protected override SKSizeI GetSurfaceSize() => surfaceSize;
 
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <summary>Implement this to draw on the canvas.</summary>
+		/// <remarks>
+		///           <format type="text/markdown"><![CDATA[
+		/// ## Remarks
+		///
+		/// There are two ways to draw on this surface: by overriding the
+		/// <xref:SkiaSharp.Views.Tizen.SKGLSurfaceView.OnDrawFrame(SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs)>
+		/// method, or by attaching a handler to the
+		/// <xref:SkiaSharp.Views.Tizen.SKGLSurfaceView.PaintSurface>
+		/// event.
+		///
+		/// > [!IMPORTANT]
+		/// > If this method is overridden, then the base must be called, otherwise the
+		/// > event will not be fired.
+		///
+		/// ## Examples
+		///
+		/// ```csharp
+		/// protected override void OnDrawFrame (SKPaintGLSurfaceEventArgs e)
+		/// {
+		///     // call the base method
+		///     base.OnPaintSurface (e);
+		///
+		///     var surface = e.Surface;
+		///     var surfaceWidth = e.BackendRenderTarget.Width;
+		///     var surfaceHeight = e.BackendRenderTarget.Height;
+		///
+		///     var canvas = surface.Canvas;
+		///
+		///     // draw on the canvas
+		///
+		///     canvas.Flush ();
+		/// }
+		/// ```
+		/// ]]></format>
+		///         </remarks>
 		protected virtual void OnDrawFrame(SKPaintGLSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
 		}
 
+		/// <param name="parent">The parent object.</param>
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to create the native resources which should be present throughout whole life of the control.</summary>
+		/// <remarks />
 		protected sealed override void CreateNativeResources(EvasObject parent)
 		{
 			if (glEvas == IntPtr.Zero)
@@ -81,6 +160,8 @@ namespace SkiaSharp.Views.Tizen
 			}
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to destroy the native resources.</summary>
+		/// <remarks />
 		protected sealed override void DestroyNativeResources()
 		{
 			if (glEvas != IntPtr.Zero)
@@ -99,6 +180,8 @@ namespace SkiaSharp.Views.Tizen
 			}
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to draw the next frame or paint the control.</summary>
+		/// <remarks />
 		protected sealed override void OnDrawFrame()
 		{
 			if (glSurface != IntPtr.Zero)
@@ -120,6 +203,10 @@ namespace SkiaSharp.Views.Tizen
 			}
 		}
 
+		/// <param name="geometry">The current geometry of the control.</param>
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to update the drawing surface dimensions.</summary>
+		/// <returns>Returns <see langword="true" /> if the size has changed, otherwise <see langword="false" />.</returns>
+		/// <remarks />
 		protected sealed override bool UpdateSurfaceSize(Rect geometry)
 		{
 			var changed =
@@ -136,6 +223,8 @@ namespace SkiaSharp.Views.Tizen
 			return changed;
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to construct the drawing surface.</summary>
+		/// <remarks />
 		protected sealed override void CreateDrawingSurface()
 		{
 			if (glSurface == IntPtr.Zero)
@@ -182,6 +271,8 @@ namespace SkiaSharp.Views.Tizen
 			}
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to destroy the drawing surface.</summary>
+		/// <remarks />
 		protected sealed override void DestroyDrawingSurface()
 		{
 			if (glSurface != IntPtr.Zero)

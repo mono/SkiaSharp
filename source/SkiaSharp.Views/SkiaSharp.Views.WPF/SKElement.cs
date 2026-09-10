@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -11,6 +11,8 @@ using SkiaSharp.Views.Desktop;
 
 namespace SkiaSharp.Views.WPF
 {
+	/// <summary>A visual element that can be drawn on using SkiaSharp drawing commands.</summary>
+	/// <remarks />
 	[DefaultEvent("PaintSurface")]
 	[DefaultProperty("Name")]
 	public class SKElement : FrameworkElement
@@ -22,13 +24,22 @@ namespace SkiaSharp.Views.WPF
 		private WriteableBitmap bitmap;
 		private bool ignorePixelScaling;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.WPF.SKElement" /> class.</summary>
+		/// <remarks />
 		public SKElement()
 		{
 			designMode = DesignerProperties.GetIsInDesignMode(this);
 		}
 
+		/// <summary>Gets the current canvas size.</summary>
+		/// <value>The size of the canvas in pixels.</value>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize { get; private set; }
 
+		/// <summary>Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.</summary>
+		/// <value>
+		///           <see langword="true" /> to ignore pixel scaling; otherwise, <see langword="false" />.</value>
+		/// <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.</remarks>
 		public bool IgnorePixelScaling
 		{
 			get => ignorePixelScaling;
@@ -39,9 +50,14 @@ namespace SkiaSharp.Views.WPF
 			}
 		}
 
+		/// <summary>Occurs when the canvas needs to be redrawn.</summary>
+		/// <remarks />
 		[Category("Appearance")]
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
+		/// <param name="drawingContext">The drawing instructions for a specific element. This context is provided to the layout system.</param>
+		/// <summary>When overridden in a derived class, participates in rendering operations that are directed by the layout system. The rendering instructions for this element are not used directly when this method is invoked, and are instead preserved for later asynchronous use by layout and drawing.</summary>
+		/// <remarks />
 		protected override void OnRender(DrawingContext drawingContext)
 		{
 			base.OnRender(drawingContext);
@@ -88,12 +104,18 @@ namespace SkiaSharp.Views.WPF
 			drawingContext.DrawImage(bitmap, new Rect(0, 0, ActualWidth, ActualHeight));
 		}
 
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <summary>Implement this to draw on the canvas.</summary>
+		/// <remarks />
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
 		{
 			// invoke the event
 			PaintSurface?.Invoke(this, e);
 		}
 
+		/// <param name="sizeInfo">Details of the old and new size involved in the change.</param>
+		/// <summary>Raises the SizeChanged event, using the specified information as part of the eventual event data.</summary>
+		/// <remarks />
 		protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
 		{
 			base.OnRenderSizeChanged(sizeInfo);

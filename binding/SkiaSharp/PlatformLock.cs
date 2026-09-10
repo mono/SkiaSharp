@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Runtime.CompilerServices;
@@ -22,50 +22,51 @@ using System.Threading;
 
 namespace SkiaSharp.Internals
 {
-	/// <summary>
-	/// Abstracts a platform dependant lock implementation
-	/// </summary>
+	/// <summary>Defines a platform-specific reader-writer lock for thread synchronization.</summary>
+	/// <remarks />
 	public interface IPlatformLock
 	{
+		/// <summary>Acquires a read lock, allowing multiple concurrent readers.</summary>
+		/// <remarks />
 		void EnterReadLock ();
+		/// <summary>Releases the read lock.</summary>
+		/// <remarks />
 		void ExitReadLock ();
+		/// <summary>Acquires a write lock, providing exclusive access.</summary>
+		/// <remarks />
 		void EnterWriteLock ();
+		/// <summary>Releases the write lock.</summary>
+		/// <remarks />
 		void ExitWriteLock ();
+		/// <summary>Acquires an upgradeable read lock that can later be upgraded to a write lock.</summary>
+		/// <remarks />
 		void EnterUpgradeableReadLock ();
+		/// <summary>Releases the upgradeable read lock.</summary>
+		/// <remarks />
 		void ExitUpgradeableReadLock ();
 	}
 
-	/// <summary>
-	/// Helper class to create a IPlatformLock instance, by default according to the current platform
-	/// but also client toolkits can plugin their own implementation.
-	/// </summary>
+	/// <summary>Provides a factory for creating platform-specific synchronization locks.</summary>
+	/// <remarks />
 	public static partial class PlatformLock
 	{
-		/// <summary>
-		/// Creates a platform lock
-		/// </summary>
-		/// <returns></returns>
+		/// <summary>Creates a new platform lock instance using the current factory.</summary>
+		/// <returns>A new <see cref="T:SkiaSharp.Internals.IPlatformLock" /> instance.</returns>
+		/// <remarks />
 		public static IPlatformLock Create ()
 		{
 			// Just call the factory
 			return Factory ();
 		}
 
-		/// <summary>
-		/// The factory for creating platform locks
-		/// </summary>
-		/// <remarks>
-		/// Use this to plugin your own lock implementation.  Must be set
-		/// before using other SkiaSharp functionality that causes the lock
-		/// to be created (currently only used by SkiaSharps internal
-		/// HandleDictionary).
-		/// </remarks>
+		/// <summary>Gets or sets the factory function used to create new platform lock instances.</summary>
+		/// <value>A function that creates <see cref="T:SkiaSharp.Internals.IPlatformLock" /> instances.</value>
+		/// <remarks />
 		public static Func<IPlatformLock> Factory { get; set; } = DefaultFactory;
 
-		/// <summary>
-		/// Default platform lock factory
-		/// </summary>
-		/// <returns>A reference to a new platform lock implementation</returns>
+		/// <summary>Creates a new platform lock instance using the default implementation.</summary>
+		/// <returns>A new <see cref="T:SkiaSharp.Internals.IPlatformLock" /> instance using the default reader-writer lock.</returns>
+		/// <remarks />
 		public static IPlatformLock DefaultFactory ()
 		{
 #if !(__IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__)

@@ -10,26 +10,61 @@ namespace SkiaSharp
 	using GCHandle = SkiaSharp.GCHandleProxy;
 #endif
 
+	/// <summary>Supplies the Vulkan instance, devices, queue, and function loader used to create a Vulkan-backed <see cref="T:SkiaSharp.SKGraphiteContext" />.</summary>
+	/// <remarks>
+	///       <format type="text/markdown"><![CDATA[
+	/// ## Remarks
+	///
+	/// Populate the Vulkan handles and the <xref:SkiaSharp.SKGraphiteVkBackendContext.GetProcedureAddress> loader, then pass this object to <xref:SkiaSharp.SKGraphiteContext.CreateVulkan(SkiaSharp.SKGraphiteVkBackendContext)>. Ownership of the delegate that keeps the function loader alive is transferred to the context, so you can dispose this object as soon as the context has been created.
+	///
+	/// This type implements `IDisposable`.
+	/// ]]></format>
+	///     </remarks>
 	public unsafe class SKGraphiteVkBackendContext : IDisposable
 	{
 		private SKGraphiteVkGetProcedureAddressDelegate getProc;
 		private GCHandle getProcHandle;
 		private void* getProcContext;
 
+		/// <summary>Gets or sets the handle to the Vulkan instance.</summary>
+		/// <value>A handle to the Vulkan instance.</value>
+		/// <remarks />
 		public IntPtr VkInstance { get; set; }
 
+		/// <summary>Gets or sets the handle to the Vulkan physical device.</summary>
+		/// <value>A handle to the Vulkan physical device.</value>
+		/// <remarks />
 		public IntPtr VkPhysicalDevice { get; set; }
 
+		/// <summary>Gets or sets the handle to the Vulkan logical device.</summary>
+		/// <value>A handle to the Vulkan logical device.</value>
+		/// <remarks />
 		public IntPtr VkDevice { get; set; }
 
+		/// <summary>Gets or sets the handle to the Vulkan queue.</summary>
+		/// <value>A handle to the Vulkan queue.</value>
+		/// <remarks />
 		public IntPtr VkQueue { get; set; }
 
+		/// <summary>Gets or sets the index of the Vulkan queue family used for graphics operations.</summary>
+		/// <value>The graphics queue family index.</value>
+		/// <remarks />
 		public uint GraphicsQueueIndex { get; set; }
 
+		/// <summary>Gets or sets the maximum Vulkan API version that Skia may use.</summary>
+		/// <value>The packed maximum Vulkan API version, or 0 to let Skia choose.</value>
+		/// <remarks />
 		public uint MaxApiVersion { get; set; }
 
+		/// <summary>Gets or sets a value indicating whether the context uses Vulkan protected content.</summary>
+		/// <value>
+		///           <see langword="true" /> if the context uses protected content; otherwise, <see langword="false" />.</value>
+		/// <remarks />
 		public bool ProtectedContext { get; set; }
 
+		/// <summary>Gets or sets the delegate that resolves Vulkan function addresses by name.</summary>
+		/// <value>The Vulkan function loader delegate, or <see langword="null" /> if none is set.</value>
+		/// <remarks />
 		public SKGraphiteVkGetProcedureAddressDelegate GetProcedureAddress {
 			get => getProc;
 			set {
@@ -90,6 +125,8 @@ namespace SkiaSharp
 		// finalizer can't both fall through to GCHandle.Free.
 		private int disposed;
 
+		/// <summary>Releases the resources used by the current instance of the <see cref="T:SkiaSharp.SKGraphiteVkBackendContext" /> class.</summary>
+		/// <remarks />
 		public void Dispose ()
 		{
 			DisposeCore ();
@@ -105,6 +142,8 @@ namespace SkiaSharp
 				getProcHandle.Free ();
 		}
 
+		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKGraphiteVkBackendContext" /> before it is reclaimed by garbage collection.</summary>
+		/// <remarks />
 		~SKGraphiteVkBackendContext () => DisposeCore ();
 	}
 }

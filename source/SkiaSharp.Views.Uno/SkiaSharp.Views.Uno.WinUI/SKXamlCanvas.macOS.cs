@@ -1,4 +1,4 @@
-﻿using AppKit;
+using AppKit;
 using CoreGraphics;
 using SkiaSharp.Views.Mac;
 #if WINUI
@@ -17,6 +17,8 @@ namespace SkiaSharp.Views.UWP
 	{
 		private SKCGSurfaceFactory drawable;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKXamlCanvas" /> class.</summary>
+		/// <remarks />
 		public SKXamlCanvas()
 		{
 			Initialize();

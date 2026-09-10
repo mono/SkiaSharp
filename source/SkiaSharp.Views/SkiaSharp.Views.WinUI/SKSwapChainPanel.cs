@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using SkiaSharp.Views.GlesInterop;
 using Windows.Foundation;
 
@@ -8,6 +8,8 @@ namespace SkiaSharp.Views.Windows
 namespace SkiaSharp.Views.UWP
 #endif
 {
+	/// <summary>A XAML control that uses hardware-accelerated rendering via ANGLE to draw using SkiaSharp.</summary>
+	/// <remarks>This control uses an OpenGL ES context via ANGLE to provide GPU-accelerated SkiaSharp drawing. It inherits from <see cref="T:SkiaSharp.Views.Windows.AngleSwapChainPanel" /> and provides SkiaSharp-specific rendering functionality.</remarks>
 	public class SKSwapChainPanel : AngleSwapChainPanel
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
@@ -22,22 +24,38 @@ namespace SkiaSharp.Views.UWP
 
 		private SKSizeI lastSize;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKSwapChainPanel" /> class.</summary>
+		/// <remarks />
 		public SKSwapChainPanel()
 		{
 		}
 
+		/// <summary>Gets the current canvas size in pixels.</summary>
+		/// <value>The size of the drawing canvas in pixels.</value>
+		/// <remarks />
 		public SKSize CanvasSize => lastSize;
 
+		/// <summary>Gets the GPU context used for rendering.</summary>
+		/// <value>The <see cref="T:SkiaSharp.GRContext" /> used for GPU-accelerated rendering.</value>
+		/// <remarks />
 		public GRContext GRContext => context;
 
+		/// <summary>Occurs when the surface needs to be repainted.</summary>
+		/// <remarks>Handle this event to perform drawing operations on the GPU-accelerated surface.</remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
+		/// <summary>Raises the <see cref="E:SkiaSharp.Views.Windows.SKSwapChainPanel.PaintSurface" /> event.</summary>
+		/// <param name="e">The event arguments containing the surface and render target information.</param>
+		/// <remarks>Override this method to perform custom drawing on the surface without subscribing to the <see cref="E:SkiaSharp.Views.Windows.SKSwapChainPanel.PaintSurface" /> event.</remarks>
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
 			// invoke the event
 			PaintSurface?.Invoke(this, e);
 		}
 
+		/// <param name="rect">The rectangle defining the render area dimensions.</param>
+		/// <summary>Called when a frame should be rendered.</summary>
+		/// <remarks>This method creates the SkiaSharp context and surface, then invokes <see cref="M:SkiaSharp.Views.Windows.SKSwapChainPanel.OnPaintSurface(SkiaSharp.Views.Windows.SKPaintGLSurfaceEventArgs)" /> to perform the actual drawing.</remarks>
 		protected override void OnRenderFrame(Rect rect)
 		{
 			// clear everything
@@ -97,6 +115,8 @@ namespace SkiaSharp.Views.UWP
 			context.Flush();
 		}
 
+		/// <summary>Called when the OpenGL ES context is being destroyed.</summary>
+		/// <remarks>Override this method to clean up SkiaSharp and OpenGL resources before the context is destroyed.</remarks>
 		protected override void OnDestroyingContext()
 		{
 			base.OnDestroyingContext();

@@ -1,12 +1,18 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 
 using HarfBuzzSharp;
 
 namespace SkiaSharp.HarfBuzz
 {
+	/// <summary>Various extension methods to integrate SkiaSharp and a HarfBuzz <see cref="T:HarfBuzzSharp.Blob" />.</summary>
+	/// <remarks />
 	public static class BlobExtensions
 	{
+		/// <param name="asset">The stream to convert into a <see cref="T:HarfBuzzSharp.Blob" />.</param>
+		/// <summary>Converts a seekable stream into a <see cref="T:HarfBuzzSharp.Blob" />.</summary>
+		/// <returns>Returns the new <see cref="T:HarfBuzzSharp.Blob" /> instance.</returns>
+		/// <remarks />
 		public static Blob ToHarfBuzzBlob(this SKStreamAsset asset)
 		{
 			if (asset == null)

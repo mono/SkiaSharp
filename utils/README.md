@@ -61,3 +61,47 @@ dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- cooki
   Read the assembly and log any missing interops.
 * `--type <full type name>`  
   The type containing the interops.
+
+## ApiDocsMigrator
+
+Migrates compiler XML documentation from an extracted NuGet package sidecar
+into C# `///` documentation comments. The initial focused scope is
+`binding/SkiaSharp`, including its split generated source files.
+
+```pwsh
+dotnet run --project utils/ApiDocsMigrator -- `
+  --package-xml artifacts/ci-3070267/core/SkiaSharp.xml `
+  --source binding/SkiaSharp `
+  --apply-resolved
+```
+
+Use `--dry-run` to report proposed changes without writing files. The default
+mode is strict and makes no changes when package DocIds are missing or
+ambiguous. `--apply-resolved` writes exact matches and exits nonzero with the
+remaining DocIds listed for later manual resolution.
+
+The migration preserves XML content, including Markdown CDATA, examples, and
+media references. It emits documentation elements in this deterministic order:
+
+1. `summary`, `inheritdoc`, and `include`
+2. `typeparam`
+3. `param`
+4. `returns` or `value`
+5. `exception`
+6. `remarks`
+7. `example`
+8. `seealso`
+9. `permission`
+
+Compare the compiler-emitted XML against the package baseline with:
+
+```pwsh
+dotnet run --project utils/ApiDocsMigrator -- `
+  --package-xml artifacts/ci-3070267/core/SkiaSharp.xml `
+  --compare-xml binding/SkiaSharp/bin/Debug/net10.0/SkiaSharp.xml
+```
+
+The comparison normalizes package constructor IDs (`C:` versus compiler
+`M:#ctor`), nested type separators, insignificant XML indentation, Markdown
+CDATA indentation, and historical non-breaking-space suffixes in
+`paramref` names. It still reports missing, unexpected, and changed members.

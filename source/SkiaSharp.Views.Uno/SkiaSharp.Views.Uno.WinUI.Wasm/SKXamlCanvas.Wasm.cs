@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using Uno.Foundation;
 using Uno.UI.Runtime.WebAssembly;
@@ -28,6 +28,8 @@ namespace SkiaSharp.Views.UWP
 		private int pixelWidth;
 		private int pixelHeight;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKXamlCanvas" /> class.</summary>
+		/// <remarks />
 		public SKXamlCanvas()
 		{
 			Initialize();
