@@ -17,12 +17,14 @@ Task("externals-interop")
     });
 
     var settings = new ProcessSettings {
-        Arguments = "status --short --untracked-files=all -- \":(glob)binding/**/*.generated.cs\"",
+        Arguments = "status --short --untracked-files=all -- binding",
         WorkingDirectory = ROOT_PATH,
         RedirectStandardOutput = true,
     };
     var result = StartProcess("git", settings, out var filesOutput);
-    var files = filesOutput.ToArray();
+    var files = filesOutput
+        .Where(file => file.EndsWith(".generated.cs", StringComparison.OrdinalIgnoreCase))
+        .ToArray();
     if (result != 0) {
         throw new Exception($"Process 'git' failed with error: {result}");
     }

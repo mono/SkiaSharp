@@ -179,6 +179,10 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
+		/// <summary>Converts a Windows <see cref="T:Microsoft.UI.Xaml.Media.Imaging.WriteableBitmap" /> to a SkiaSharp bitmap.</summary>
+		/// <param name="bitmap">The Windows bitmap to convert.</param>
+		/// <returns>The converted SkiaSharp bitmap.</returns>
+		/// <remarks />
 		public static SKBitmap ToSKBitmap(this WriteableBitmap bitmap)
 		{
 			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
@@ -192,6 +196,10 @@ namespace SkiaSharp.Views.UWP
 			return skiaBitmap;
 		}
 
+		/// <summary>Converts a Windows <see cref="T:Microsoft.UI.Xaml.Media.Imaging.WriteableBitmap" /> to a SkiaSharp image.</summary>
+		/// <param name="bitmap">The Windows bitmap to convert.</param>
+		/// <returns>The converted SkiaSharp image.</returns>
+		/// <remarks />
 		public static SKImage ToSKImage(this WriteableBitmap bitmap)
 		{
 			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
@@ -205,6 +213,11 @@ namespace SkiaSharp.Views.UWP
 			return image;
 		}
 
+		/// <summary>Copies pixels from a Windows <see cref="T:Microsoft.UI.Xaml.Media.Imaging.WriteableBitmap" /> to a SkiaSharp pixmap.</summary>
+		/// <param name="bitmap">The Windows bitmap to convert.</param>
+		/// <param name="pixmap">The SkiaSharp pixmap that receives the pixels.</param>
+		/// <returns><see langword="true" /> if the pixels were copied; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public static bool ToSKPixmap(this WriteableBitmap bitmap, SKPixmap pixmap)
 		{
 			// TODO: maybe keep the same color types where we can, instead of just going to the platform default

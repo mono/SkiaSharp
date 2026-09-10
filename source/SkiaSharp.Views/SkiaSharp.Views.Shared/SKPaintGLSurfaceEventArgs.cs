@@ -24,7 +24,7 @@ namespace SkiaSharp.Views.Windows
 namespace SkiaSharp.Views.Blazor
 #endif
 {
-	#if __ANDROID__
+	#if __ANDROID__ && !HAS_UNO
 	/// <summary>Provides data for the <c>PaintSurface</c> events raised by <see cref="SkiaSharp.Views.Android.SKGLSurfaceView" /> and <see cref="SkiaSharp.Views.Android.SKGLTextureView" />.</summary>
 	/// <remarks />
 	#elif (WINDOWS || HAS_UNO_WINUI) && !__DESKTOP__
