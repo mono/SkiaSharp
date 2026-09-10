@@ -42,7 +42,7 @@ namespace HarfBuzzSharp
 		/// <remarks />
 		public static readonly Script Armenian = new Script (new Tag ('A', 'r', 'm', 'n'));
 		// 1.1
-		/// <summary>The Bengali (Beng) script typically used with text in the Bengali (bn) language originating from Bangladesh.</summary>
+		/// <summary>The Bengali (Beng) script typically used with text in the Bangla (bn) language originating from Bangladesh.</summary>
 		/// <remarks />
 		public static readonly Script Bengali = new Script (new Tag ('B', 'e', 'n', 'g'));
 		// 1.1
@@ -106,7 +106,7 @@ namespace HarfBuzzSharp
 		/// <remarks />
 		public static readonly Script Malayalam = new Script (new Tag ('M', 'l', 'y', 'm'));
 		// 1.1
-		/// <summary>The Oriya (Orya) script typically used with text in the Oriya (or) language originating from India.</summary>
+		/// <summary>The Oriya (Orya) script typically used with text in the Odia (or) language originating from India.</summary>
 		/// <remarks />
 		public static readonly Script Oriya = new Script (new Tag ('O', 'r', 'y', 'a'));
 		// 1.1
@@ -178,7 +178,7 @@ namespace HarfBuzzSharp
 		/// <remarks />
 		public static readonly Script Thaana = new Script (new Tag ('T', 'h', 'a', 'a'));
 		// 3.0
-		/// <summary>The Yi (Yiii) script typically used with text in the Sichuan Yi (ii) language originating from China.</summary>
+		/// <summary>The Yi (Yiii) script typically used with text in the Yi (ii) language originating from China.</summary>
 		/// <remarks />
 		public static readonly Script Yi = new Script (new Tag ('Y', 'i', 'i', 'i'));
 		// 3.1
@@ -441,7 +441,7 @@ namespace HarfBuzzSharp
 		/// <remarks />
 		public static readonly Script BassaVah = new Script (new Tag ('B', 'a', 's', 's'));
 		// 7.0
-		/// <summary>The Caucasian Albanian (Aghb) script typically used with text in the Lezgian (lez) language originating from Russia.</summary>
+		/// <summary>The Caucasian Albanian (Aghb) script typically used with Caucasian Albanian text.</summary>
 		/// <remarks />
 		public static readonly Script CaucasianAlbanian = new Script (new Tag ('A', 'g', 'h', 'b'));
 		// 7.0
