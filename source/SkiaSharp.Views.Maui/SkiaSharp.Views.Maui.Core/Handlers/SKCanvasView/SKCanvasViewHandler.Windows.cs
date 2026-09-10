@@ -15,6 +15,9 @@ namespace SkiaSharp.Views.Maui.Handlers
 		/// <remarks>Returns an Android SKCanvasView, iOS SKCanvasView, or Windows SKXamlCanvas depending on the platform.</remarks>
 		protected override SKXamlCanvas CreatePlatformView() => new SKXamlCanvas();
 
+		/// <summary>Connects the handler to the specified Windows canvas view.</summary>
+		/// <param name="platformView">The Windows canvas view to connect.</param>
+		/// <remarks />
 		protected override void ConnectHandler(SKXamlCanvas platformView)
 		{
 			platformView.PaintSurface += OnPaintSurface;
@@ -22,6 +25,9 @@ namespace SkiaSharp.Views.Maui.Handlers
 			base.ConnectHandler(platformView);
 		}
 
+		/// <summary>Disconnects the handler from the specified Windows canvas view.</summary>
+		/// <param name="platformView">The Windows canvas view to disconnect.</param>
+		/// <remarks />
 		protected override void DisconnectHandler(SKXamlCanvas platformView)
 		{
 			touchHandler?.Detach(platformView);

@@ -8,7 +8,13 @@ namespace SkiaSharp.Views.Maui.Handlers
 {
 	public partial class SKImageSourceService
 	{
-		public override Task<IImageSourceServiceResult<WImageSource>?> GetImageSourceAsync(IImageSource imageSource, float scale = 1, CancellationToken cancellationToken = default)
+	/// <summary>Creates a Windows image source from the specified SkiaSharp image source.</summary>
+	/// <param name="imageSource">The SkiaSharp image source to convert.</param>
+	/// <param name="scale">The requested display scale.</param>
+	/// <param name="cancellationToken">The token used to cancel the operation.</param>
+	/// <returns>A result containing the converted Windows image source, or <see langword="null" /> when conversion is unavailable.</returns>
+	/// <remarks />
+	public override Task<IImageSourceServiceResult<WImageSource>?> GetImageSourceAsync(IImageSource imageSource, float scale = 1, CancellationToken cancellationToken = default)
 		{
 			var bitmap = imageSource switch
 			{

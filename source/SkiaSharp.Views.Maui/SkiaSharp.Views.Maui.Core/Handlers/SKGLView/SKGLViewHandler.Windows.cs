@@ -15,6 +15,9 @@ namespace SkiaSharp.Views.Maui.Handlers
 		/// <remarks>Returns an Android SKGLTextureView (OpenGL ES), Mac Catalyst SKMetalView (Metal), or Windows SKSwapChainPanel (DirectX via ANGLE) depending on the platform.</remarks>
 		protected override SKSwapChainPanel CreatePlatformView() => new MauiSKSwapChainPanel();
 
+		/// <summary>Connects the handler to the specified Windows GPU canvas view.</summary>
+		/// <param name="platformView">The Windows GPU canvas view to connect.</param>
+		/// <remarks />
 		protected override void ConnectHandler(SKSwapChainPanel platformView)
 		{
 			platformView.PaintSurface += OnPaintSurface;
@@ -22,6 +25,9 @@ namespace SkiaSharp.Views.Maui.Handlers
 			base.ConnectHandler(platformView);
 		}
 
+		/// <summary>Disconnects the handler from the specified Windows GPU canvas view.</summary>
+		/// <param name="platformView">The Windows GPU canvas view to disconnect.</param>
+		/// <remarks />
 		protected override void DisconnectHandler(SKSwapChainPanel platformView)
 		{
 			touchHandler?.Detach(platformView);
@@ -89,6 +95,10 @@ namespace SkiaSharp.Views.Maui.Handlers
 			handler.touchHandler?.SetEnabled(handler.PlatformView, view.EnableTouchEvents);
 		}
 
+		/// <summary>Maps the <see cref="P:SkiaSharp.Views.Maui.ISKGLView.Background" /> property to the Windows GPU view.</summary>
+		/// <param name="handler">The handler instance.</param>
+		/// <param name="view">The view whose property changed.</param>
+		/// <remarks>The underlying Windows <c>SwapChainPanel</c> does not support the <c>Background</c> property.</remarks>
 		public static void MapBackground(SKGLViewHandler handler, ISKGLView view)
 		{
 			// WinUI 3 limitation:
