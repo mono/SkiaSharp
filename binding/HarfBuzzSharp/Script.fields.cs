@@ -42,7 +42,7 @@ namespace HarfBuzzSharp
 		/// <remarks />
 		public static readonly Script Armenian = new Script (new Tag ('A', 'r', 'm', 'n'));
 		// 1.1
-		/// <summary>The Bengali (Beng) script typically used with text in the Bangla (bn) language originating from Bangladesh.</summary>
+		/// <summary>The Bangla (Beng) script typically used with text in the Bangla (bn) language originating from Bangladesh.</summary>
 		/// <remarks />
 		public static readonly Script Bengali = new Script (new Tag ('B', 'e', 'n', 'g'));
 		// 1.1
@@ -106,7 +106,7 @@ namespace HarfBuzzSharp
 		/// <remarks />
 		public static readonly Script Malayalam = new Script (new Tag ('M', 'l', 'y', 'm'));
 		// 1.1
-		/// <summary>The Oriya (Orya) script typically used with text in the Odia (or) language originating from India.</summary>
+		/// <summary>The Odia (Orya) script typically used with text in the Odia (or) language originating from India.</summary>
 		/// <remarks />
 		public static readonly Script Oriya = new Script (new Tag ('O', 'r', 'y', 'a'));
 		// 1.1
