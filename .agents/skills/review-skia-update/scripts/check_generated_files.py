@@ -5,8 +5,7 @@ Assumes the working tree is already checked out to the correct state
 (SkiaSharp companion PR + skia submodule at PR head — done by the orchestrator).
 Runs the local Python binding helper, then uses git diff to
 check if the regenerated files match what's checked in. Any diff = FAIL.
-The generator owns deterministic ordering across hosts. The helper restores
-HarfBuzzSharp because HarfBuzz updates are separate.
+The generator owns deterministic ordering across hosts.
 """
 import argparse
 import os
@@ -18,9 +17,8 @@ GENERATED_FILES = [
     "binding/SkiaSharp.Skottie/SkottieApi.generated.cs",
     "binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs",
     "binding/SkiaSharp.Resources/ResourcesApi.generated.cs",
+    "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs",
 ]
-
-HARFBUZZ_GENERATED_FILE = "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs"
 
 
 def eprint(*args, **kwargs):
@@ -97,25 +95,7 @@ def run_check(repo_root: str, output_dir: str) -> dict:
             "generatorLog": generator_log,
         }
 
-    # --- Step 2: Revert HarfBuzz to HEAD (not part of Skia updates) ---
-    eprint(f"🔄 Reverting {HARFBUZZ_GENERATED_FILE} to HEAD (harfbuzz excluded from Skia updates)")
-    revert_result = subprocess.run(
-        ["git", "checkout", "HEAD", "--", HARFBUZZ_GENERATED_FILE],
-        cwd=repo_root,
-        capture_output=True,
-        text=True,
-    )
-    if revert_result.returncode != 0:
-        eprint(f"❌ Failed to revert {HARFBUZZ_GENERATED_FILE}: {revert_result.stderr.strip()}")
-        return {
-            "status": "FAIL",
-            "checked": [],
-            "mismatches": [],
-            "generatorError": f"Failed to revert HarfBuzz generated file: {revert_result.stderr.strip()}",
-            "generatorLog": generator_log,
-        }
-
-    # --- Step 3: git diff each generated file — any diff = FAIL ---
+    # --- Step 2: git diff each generated file — any diff = FAIL ---
     checked = []
     mismatches = []
 

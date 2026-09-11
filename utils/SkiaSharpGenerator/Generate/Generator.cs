@@ -83,6 +83,7 @@ namespace SkiaSharpGenerator
 			var delegates = StableOrdering.ByName(
 				compilation.Typedefs
 				.Where(t => t.ElementType.TypeKind == CppTypeKind.Pointer)
+				.Where(t => !IsExcludedSymbol(t.GetDisplayName()))
 				.Where(t => IncludeNamespace(t.GetDisplayName())),
 				t => t.GetDisplayName())
 				.GroupBy(t => GetNamespace(t.GetDisplayName()));
@@ -169,7 +170,7 @@ namespace SkiaSharpGenerator
 		{
 			var cppClassName = klass.GetDisplayName();
 
-			if (excludedTypes.Contains(cppClassName) == true)
+			if (IsExcludedSymbol(cppClassName))
 			{
 				Log?.LogVerbose($"    Skipping struct '{cppClassName}' because it was in the exclude list.");
 				return;
@@ -377,7 +378,7 @@ namespace SkiaSharpGenerator
 			}
 
 			typeMappings.TryGetValue(cppEnumName, out var map);
-			if (map?.Generate == false)
+			if (map?.Generate == false || IsExcludedSymbol(cppEnumName))
 				return;
 
 			Log?.LogVerbose($"    {cppEnumName}");
@@ -458,6 +459,9 @@ namespace SkiaSharpGenerator
 			foreach (var klass in classes)
 			{
 				var type = klass.GetDisplayName();
+				if (IsExcludedSymbol(type))
+					continue;
+
 				skiaTypes.Add(type, klass.SizeOf != 0);
 
 				Log?.LogVerbose($"    {klass.GetDisplayName()}");
@@ -475,7 +479,9 @@ namespace SkiaSharpGenerator
 			Log?.LogVerbose("  Writing p/invokes...");
 
 			var functions = StableOrdering.ByPathThenName(
-				compilation.Functions.Where(f => IncludeNamespace(f.Name)),
+				compilation.Functions
+				.Where(f => IncludeNamespace(f.Name))
+				.Where(f => !IsExcludedSymbol(f.Name)),
 				SkiaRoot,
 				f => f.Span.Start.File,
 				f => f.Name);
@@ -518,7 +524,7 @@ namespace SkiaSharpGenerator
 						t2 ??= t1;
 
 						var cppT = GetCppType(p.Type);
-						if (excludedTypes.Contains(cppT) == true)
+						if (IsExcludedSymbol(cppT))
 						{
 							Log?.LogVerbose($"    Skipping function '{function.Name}' because parameter '{cppT}' was in the exclude list.");
 							skipFunction = true;
@@ -535,6 +541,13 @@ namespace SkiaSharpGenerator
 
 					if (skipFunction)
 						continue;
+
+					var returnCppType = GetCppType(function.ReturnType);
+					if (IsExcludedSymbol(returnCppType))
+					{
+						Log?.LogVerbose($"    Skipping function '{function.Name}' because return type '{returnCppType}' was in the exclude list.");
+						continue;
+					}
 
 					var returnType = GetType(function.ReturnType);
 					var retAttr = "";
@@ -591,6 +604,7 @@ namespace SkiaSharpGenerator
 			var delegates = StableOrdering.ByName(
 				compilation.Typedefs
 				.Where(t => t.ElementType.TypeKind == CppTypeKind.Pointer)
+				.Where(t => !IsExcludedSymbol(t.GetDisplayName()))
 				.Where(t => IncludeNamespace(t.GetDisplayName())),
 				t => t.GetDisplayName())
 				.GroupBy(t => GetNamespace(t.GetDisplayName()));

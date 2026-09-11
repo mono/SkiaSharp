@@ -8,7 +8,7 @@ namespace SkiaSharpGenerator
 		[JsonPropertyName("files")]
 		public List<string> Files { get; set; } = new List<string>();
 
-		[JsonPropertyName("types")]
-		public List<string> Types { get; set; } = new List<string>();
+		[JsonPropertyName("symbols")]
+		public List<string> Symbols { get; set; } = new List<string>();
 	}
 }

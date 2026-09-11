@@ -141,7 +141,7 @@ jobs:
           done
           exit "$status"
 
-      - name: Compare checked-in Skia bindings
+      - name: Compare checked-in bindings
         shell: bash
         run: |
           status=0
@@ -162,8 +162,6 @@ jobs:
             fi
           }
 
-          # HarfBuzz bindings are versioned separately from Skia's DEPS checkout,
-          # so freshness is enforced for the four Skia outputs only.
           check_freshness \
             "SkiaApi.generated.cs" \
             "binding/SkiaSharp/SkiaApi.generated.cs"
@@ -176,6 +174,9 @@ jobs:
           check_freshness \
             "ResourcesApi.generated.cs" \
             "binding/SkiaSharp.Resources/ResourcesApi.generated.cs"
+          check_freshness \
+            "HarfBuzzApi.generated.cs" \
+            "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs"
 
           exit "$status"
 

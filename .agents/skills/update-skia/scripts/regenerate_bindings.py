@@ -76,6 +76,15 @@ def added_internal_functions(diff: str) -> list[str]:
     ]
 
 
+def added_internal_functions_from_diffs(diffs: list[str]) -> list[str]:
+    """Collect newly generated P/Invokes from every selected binding output."""
+    return [
+        function
+        for diff in diffs
+        for function in added_internal_functions(diff)
+    ]
+
+
 def regenerate(repo_root: Path, config: str | None = None) -> None:
     """Run every selected generator and summarize wrapper work."""
     generator_project = (
@@ -83,9 +92,10 @@ def regenerate(repo_root: Path, config: str | None = None) -> None:
     )
     generated_directory = repo_root / "output" / "generated"
     generated_directory.mkdir(parents=True, exist_ok=True)
+    projects = select_projects(config)
 
     run(repo_root, "dotnet", "build", str(generator_project))
-    for config_name, source_root, output in select_projects(config):
+    for config_name, source_root, output in projects:
         output_path = repo_root / "binding" / output
         command = (
             "dotnet",
@@ -106,31 +116,15 @@ def regenerate(repo_root: Path, config: str | None = None) -> None:
         run(repo_root, *command)
         shutil.copy2(output_path, generated_directory / output_path.name)
 
-    harfbuzz = "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs"
-    harfbuzz_status = subprocess.run(
-        ["git", "diff", "--quiet", "--", harfbuzz],
-        cwd=repo_root,
-        check=False,
-    ).returncode
-    if harfbuzz_status == 1:
-        run(repo_root, "git", "restore", "--source=HEAD", "--", harfbuzz)
-        print(f"Reverted {harfbuzz}; HarfBuzz updates are separate.")
-    elif harfbuzz_status != 0:
-        raise RuntimeError("Could not inspect the HarfBuzz binding diff.")
-
     binding_stat = run(repo_root, "git", "diff", "--stat", "--", "binding/", capture=True)
     print("Binding diff summary:")
     print(binding_stat.rstrip() or "  No binding changes.")
 
-    skia_diff = run(
-        repo_root,
-        "git",
-        "diff",
-        "--",
-        "binding/SkiaSharp/SkiaApi.generated.cs",
-        capture=True,
-    )
-    functions = added_internal_functions(skia_diff)
+    diffs = [
+        run(repo_root, "git", "diff", "--", f"binding/{output}", capture=True)
+        for _, _, output in projects
+    ]
+    functions = added_internal_functions_from_diffs(diffs)
     if functions:
         print("New generated functions requiring wrapper review:")
         for function in functions:
