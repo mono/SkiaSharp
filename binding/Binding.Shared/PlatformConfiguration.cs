@@ -117,8 +117,7 @@ namespace SkiaSharp.Internals
 		private static readonly Lazy<bool> isGlibcLazy = new Lazy<bool> (IsGlibcImplementation);
 
 		/// <summary>Gets a value indicating whether the current Linux system uses glibc.</summary>
-		/// <value>
-		///           <see langword="true" /> if running on a glibc-based Linux system; otherwise, <see langword="false" />.</value>
+		/// <value><see langword="true" /> if running on a glibc-based Linux system; otherwise, <see langword="false" />.</value>
 		/// <remarks />
 		public static bool IsGlibc => IsLinux && isGlibcLazy.Value;
 

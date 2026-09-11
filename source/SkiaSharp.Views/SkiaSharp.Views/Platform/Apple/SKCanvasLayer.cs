@@ -34,8 +34,7 @@ namespace SkiaSharp.Views.Mac
 		public SKSize CanvasSize { get; private set; }
 
 		/// <summary>Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.</summary>
-		/// <value>
-		///           <see langword="true" /> if the canvas should ignore pixel scaling; otherwise, <see langword="false" />.</value>
+		/// <value><see langword="true" /> if the canvas should ignore pixel scaling; otherwise, <see langword="false" />.</value>
 		/// <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.</remarks>
 		public bool IgnorePixelScaling
 		{
@@ -47,8 +46,8 @@ namespace SkiaSharp.Views.Mac
 			}
 		}
 
-		/// <param name="ctx">The prepared context to draw into.</param>
 		/// <summary>Draws the layer on the specified context.</summary>
+		/// <param name="ctx">The prepared context to draw into.</param>
 		/// <remarks />
 		public override void DrawInContext(CGContext ctx)
 		{
@@ -84,13 +83,12 @@ namespace SkiaSharp.Views.Mac
 		}
 
 		/// <summary>Occurs when the canvas needs to be redrawn.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
-		/// <c>OnPaintSurface</c> method, or by attaching a handler to the
-		/// <c>PaintSurface</c> event.
+		/// `OnPaintSurface` method, or by attaching a handler to the
+		/// `PaintSurface` event.
 		///
 		/// ## Examples
 		///
@@ -107,19 +105,17 @@ namespace SkiaSharp.Views.Mac
 		///     canvas.Flush ();
 		/// };
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
-		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
 		/// <summary>Implement this to draw on the canvas.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
-		/// <c>OnPaintSurface</c> method, or by attaching a handler to the
-		/// <c>PaintSurface</c> event.
+		/// `OnPaintSurface` method, or by attaching a handler to the
+		/// `PaintSurface` event.
 		///
 		/// > [!IMPORTANT]
 		/// > If this method is overridden, then the base must be called, otherwise the
@@ -144,16 +140,14 @@ namespace SkiaSharp.Views.Mac
 		///     canvas.Flush ();
 		/// }
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
 		}
 
-		/// <param name="disposing">
-		///           <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <summary>Releases the unmanaged resources used by the <see cref="SKCanvasLayer" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <remarks>Always dispose the object before you release your last reference to the <see cref="SKCanvasLayer" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose(bool disposing)
 		{

@@ -8,15 +8,13 @@ using Metal;
 namespace SkiaSharp
 {
 	/// <summary>Supplies the Metal device and command queue used to create a Metal-backed <see cref="T:SkiaSharp.SKGraphiteContext" />.</summary>
-	/// <remarks>
-	///       <format type="text/markdown"><![CDATA[
+	/// <remarks><format type="text/markdown"><![CDATA[
 	/// ## Remarks
 	///
 	/// Populate the <xref:SkiaSharp.SKGraphiteMtlBackendContext.MtlDevice> and <xref:SkiaSharp.SKGraphiteMtlBackendContext.MtlQueue> handles, then pass this object to <xref:SkiaSharp.SKGraphiteContext.CreateMetal(SkiaSharp.SKGraphiteMtlBackendContext)>. You can dispose it as soon as the context has been created.
 	///
 	/// On Apple platforms you can also assign the strongly typed `Device` and `Queue` properties instead of raw handles.
-	/// ]]></format>
-	///     </remarks>
+	/// ]]></format></remarks>
 	public unsafe class SKGraphiteMtlBackendContext : IDisposable
 	{
 		private IntPtr mtlDevice;
@@ -87,9 +85,8 @@ namespace SkiaSharp
 			};
 		}
 
-		/// <param name="disposing">
-		///           <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKGraphiteMtlBackendContext" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <remarks />
 		protected virtual void Dispose (bool disposing)
 		{

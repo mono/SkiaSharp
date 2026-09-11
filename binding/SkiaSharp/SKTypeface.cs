@@ -63,7 +63,7 @@ namespace SkiaSharp
 
 		/// <summary>Gets a shared empty <see cref="T:SkiaSharp.SKTypeface" /> instance.</summary>
 		/// <value>A shared <see cref="T:SkiaSharp.SKTypeface" /> instance that represents an empty typeface.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public static SKTypeface Empty =>
 			LazyInitializer.EnsureInitialized (
 				ref empty, ref emptyInitialized, ref emptyLock,
@@ -73,7 +73,7 @@ namespace SkiaSharp
 
 		/// <summary>Gets a value indicating whether this typeface is the empty typeface.</summary>
 		/// <value><see langword="true" /> if this typeface is the empty typeface; otherwise, <see langword="false" />.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public bool IsEmpty => GlyphCount == 0;
 
 		/// <summary>Creates a new <see cref="T:SkiaSharp.SKTypeface" /> which is the default, Normal typeface.</summary>
@@ -654,7 +654,7 @@ namespace SkiaSharp
 
 		/// <summary>Gets the number of variation design parameters (axes) in this typeface.</summary>
 		/// <value>The number of variation axes defined in this typeface's fvar table.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public int VariationDesignParameterCount {
 			get {
 				var r = SkiaApi.sk_typeface_get_variation_design_parameters (Handle, null, 0);
@@ -665,7 +665,7 @@ namespace SkiaSharp
 
 		/// <summary>Gets all variation design parameters (axes) defined in this typeface.</summary>
 		/// <value>An array of <see cref="T:SkiaSharp.SKFontVariationAxis" /> describing each variation axis, or an empty array if this typeface has no variation axes.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public SKFontVariationAxis[] VariationDesignParameters
 		{
 			get {
@@ -712,7 +712,7 @@ namespace SkiaSharp
 
 		/// <summary>Gets the number of axes in the current variation design position of this typeface.</summary>
 		/// <value>The number of variation axes for which the typeface has a current design-space position.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public int VariationDesignPositionCount {
 			get {
 				var r = SkiaApi.sk_typeface_get_variation_design_position (Handle, null, 0);
@@ -723,7 +723,7 @@ namespace SkiaSharp
 
 		/// <summary>Gets the current variation design position of this typeface.</summary>
 		/// <value>An array of <see cref="T:SkiaSharp.SKFontVariationPositionCoordinate" /> representing the current design-space position for each variation axis.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public SKFontVariationPositionCoordinate[] VariationDesignPosition
 		{
 			get {
@@ -784,7 +784,7 @@ namespace SkiaSharp
 		/// <summary>Creates a new typeface derived from this typeface using the specified color palette index.</summary>
 		/// <param name="paletteIndex">The zero-based index of the color palette to use in the cloned typeface.</param>
 		/// <returns>A new <see cref="T:SkiaSharp.SKTypeface" /> based on this typeface with the specified color palette.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public SKTypeface Clone (int paletteIndex)
 		{
 			if (paletteIndex < 0)
@@ -797,7 +797,7 @@ namespace SkiaSharp
 		/// <summary>Creates a new typeface derived from this typeface with the specified font arguments.</summary>
 		/// <param name="args">The font arguments specifying palette, variation settings, and other parameters to apply to the clone.</param>
 		/// <returns>A new <see cref="T:SkiaSharp.SKTypeface" /> based on this typeface with the specified font arguments applied.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public SKTypeface Clone (SKFontArguments args)
 		{
 			fixed (SKFontVariationPositionCoordinate* posPtr = args.VariationDesignPosition)

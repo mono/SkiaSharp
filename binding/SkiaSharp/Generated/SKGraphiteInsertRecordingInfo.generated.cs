@@ -65,38 +65,34 @@ namespace SkiaSharp
 			set => fTargetClip = value;
 		}
 
-		/// <param name="obj">The recording insertion info to compare with the current recording insertion info.</param>
 		/// <summary>Determines whether the specified recording insertion info is equal to the current recording insertion info.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
+		/// <param name="obj">The recording insertion info to compare with the current recording insertion info.</param>
+		/// <returns><see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public readonly bool Equals (SKGraphiteInsertRecordingInfo obj) =>
 #pragma warning disable CS8909
 			fRecording == obj.fRecording && fTargetSurface == obj.fTargetSurface && fTargetTranslationX == obj.fTargetTranslationX && fTargetTranslationY == obj.fTargetTranslationY && fTargetClip == obj.fTargetClip;
 #pragma warning restore CS8909
 
-		/// <param name="obj">The object to compare with the current recording insertion info.</param>
 		/// <summary>Determines whether the specified object is equal to the current recording insertion info.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the specified object is equal to the current value; otherwise, <see langword="false" />.</returns>
+		/// <param name="obj">The object to compare with the current recording insertion info.</param>
+		/// <returns><see langword="true" /> if the specified object is equal to the current value; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public readonly override bool Equals (object obj) =>
 			obj is SKGraphiteInsertRecordingInfo f && Equals (f);
 
+		/// <summary>Indicates whether two recording insertion info values are equal.</summary>
 		/// <param name="left">The first value to compare.</param>
 		/// <param name="right">The second value to compare.</param>
-		/// <summary>Indicates whether two recording insertion info values are equal.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
+		/// <returns><see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public static bool operator == (SKGraphiteInsertRecordingInfo left, SKGraphiteInsertRecordingInfo right) =>
 			left.Equals (right);
 
+		/// <summary>Indicates whether two recording insertion info values are not equal.</summary>
 		/// <param name="left">The first value to compare.</param>
 		/// <param name="right">The second value to compare.</param>
-		/// <summary>Indicates whether two recording insertion info values are not equal.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the two values are not equal; otherwise, <see langword="false" />.</returns>
+		/// <returns><see langword="true" /> if the two values are not equal; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public static bool operator != (SKGraphiteInsertRecordingInfo left, SKGraphiteInsertRecordingInfo right) =>
 			!left.Equals (right);

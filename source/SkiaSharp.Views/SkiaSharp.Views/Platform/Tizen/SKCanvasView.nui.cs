@@ -17,8 +17,7 @@ namespace SkiaSharp.Views.Tizen.NUI
 		}
 
 		/// <summary>Gets or sets a value indicating whether the drawing canvas should ignore the device pixel scaling.</summary>
-		/// <value>
-		///           <see langword="true" /> to use the view size as the canvas size; <see langword="false" /> to scale the canvas to match the device pixel density. The default is <see langword="false" />.</value>
+		/// <value><see langword="true" /> to use the view size as the canvas size; <see langword="false" /> to scale the canvas to match the device pixel density. The default is <see langword="false" />.</value>
 		/// <remarks>When set to <see langword="true" />, the canvas size will match the view size in points rather than pixels. This can simplify drawing code but may result in lower quality output on high-DPI displays.</remarks>
 		public bool IgnorePixelScaling
 		{

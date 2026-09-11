@@ -9,24 +9,24 @@ namespace SkiaSharp.Views.Mac
 namespace SkiaSharp.Views.tvOS
 #endif
 {
-	/// <summary>Provides data for the <c>PaintSurface</c> event.</summary>
+	/// <summary>Provides data for the <see cref="SKMetalView.PaintSurface" /> event.</summary>
 	/// <remarks />
 	public class SKPaintMetalSurfaceEventArgs : EventArgs
 	{
+		/// <summary>Initializes a new instance of the <see cref="SKPaintMetalSurfaceEventArgs" /> event arguments.</summary>
 		/// <param name="surface">The surface that is being drawn on.</param>
 		/// <param name="renderTarget">The render target that is currently being drawn.</param>
-		/// <summary>Initializes a new instance of the <see cref="SKPaintMetalSurfaceEventArgs" /> class.</summary>
 		/// <remarks />
 		public SKPaintMetalSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget)
 			: this(surface, renderTarget, GRSurfaceOrigin.TopLeft, SKColorType.Rgba8888)
 		{
 		}
 
+		/// <summary>Initializes a new instance of the <see cref="SKPaintMetalSurfaceEventArgs" /> event arguments.</summary>
 		/// <param name="surface">The surface that is being drawn on.</param>
 		/// <param name="renderTarget">The render target that is currently being drawn.</param>
 		/// <param name="origin">The surface origin of the render target.</param>
 		/// <param name="colorType">The color type of the render target.</param>
-		/// <summary>Initializes a new instance of the <see cref="SKPaintMetalSurfaceEventArgs" /> class.</summary>
 		/// <remarks />
 		public SKPaintMetalSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType)
 		{
@@ -38,23 +38,23 @@ namespace SkiaSharp.Views.tvOS
 			RawInfo = Info;
 		}
 
+		/// <summary>Initializes a new instance of the <see cref="SKPaintMetalSurfaceEventArgs" /> event arguments.</summary>
 		/// <param name="surface">The surface that is being drawn on.</param>
 		/// <param name="renderTarget">The render target that is currently being drawn.</param>
 		/// <param name="origin">The surface origin of the render target.</param>
 		/// <param name="info">The image information describing the surface.</param>
-		/// <summary>Initializes a new instance of the <see cref="SKPaintMetalSurfaceEventArgs" /> class.</summary>
 		/// <remarks />
 		public SKPaintMetalSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKImageInfo info)
 			: this(surface, renderTarget, origin, info, info)
 		{
 		}
 
+		/// <summary>Initializes a new instance of the <see cref="SKPaintMetalSurfaceEventArgs" /> event arguments.</summary>
 		/// <param name="surface">The surface that is being drawn on.</param>
 		/// <param name="renderTarget">The render target that is currently being drawn.</param>
 		/// <param name="origin">The surface origin of the render target.</param>
 		/// <param name="info">The image information describing the surface.</param>
 		/// <param name="rawInfo">The raw image information describing the surface without any applied scaling.</param>
-		/// <summary>Initializes a new instance of the <see cref="SKPaintMetalSurfaceEventArgs" /> class.</summary>
 		/// <remarks />
 		public SKPaintMetalSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKImageInfo info, SKImageInfo rawInfo)
 		{

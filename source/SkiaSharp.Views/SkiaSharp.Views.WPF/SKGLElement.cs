@@ -117,8 +117,8 @@ namespace SkiaSharp.Views.WPF
 			return new SKSizeI((int)(currentWidth * dpiX), (int)(currentHeight * dpiY));
 		}
 
-		/// <param name="drawingContext">The WPF drawing context for this render pass.</param>
 		/// <summary>Participates in rendering operations when overridden in a derived class.</summary>
+		/// <param name="drawingContext">The WPF drawing context for this render pass.</param>
 		/// <remarks />
 		protected override void OnRender(DrawingContext drawingContext)
 		{
@@ -129,8 +129,8 @@ namespace SkiaSharp.Views.WPF
 			base.OnRender(drawingContext);
 		}
 
-		/// <param name="e">The elapsed time since the last paint event.</param>
 		/// <summary>Called when the control needs to be painted.</summary>
+		/// <param name="e">The elapsed time since the last paint event.</param>
 		/// <remarks />
 		protected virtual void OnPaint(TimeSpan e)
 		{
@@ -198,8 +198,8 @@ namespace SkiaSharp.Views.WPF
 			canvas.Flush();
 		}
 
-		/// <param name="e">The event arguments containing the surface and drawing information.</param>
 		/// <summary>Raises the <see cref="E:SkiaSharp.Views.WPF.SKGLElement.PaintSurface" /> event.</summary>
+		/// <param name="e">The event arguments containing the surface and drawing information.</param>
 		/// <remarks />
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
@@ -210,9 +210,8 @@ namespace SkiaSharp.Views.WPF
 		private bool disposed = false;
 
 
-		/// <param name="disposing">
-		///           <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <summary>Releases the unmanaged resources used by the element and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <remarks />
 		protected virtual void Dispose(bool disposing)
 		{

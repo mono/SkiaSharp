@@ -11,8 +11,8 @@ namespace SkiaSharp.Views.WPF
 	{
 		// Point
 
-		/// <param name="point">The Windows point.</param>
 		/// <summary>Converts a Windows point into a SkiaSharp point.</summary>
+		/// <param name="point">The Windows point.</param>
 		/// <returns>Returns a SkiaSharp point.</returns>
 		/// <remarks />
 		public static SKPoint ToSKPoint(this Point point)
@@ -20,8 +20,8 @@ namespace SkiaSharp.Views.WPF
 			return new SKPoint((float)point.X, (float)point.Y);
 		}
 
-		/// <param name="point">The SkiaSharp point.</param>
 		/// <summary>Converts a SkiaSharp point into a Windows point.</summary>
+		/// <param name="point">The SkiaSharp point.</param>
 		/// <returns>Returns a Windows point.</returns>
 		/// <remarks />
 		public static Point ToPoint(this SKPoint point)
@@ -31,8 +31,8 @@ namespace SkiaSharp.Views.WPF
 
 		// Rect
 
-		/// <param name="rect">The Windows rectangle.</param>
 		/// <summary>Converts a Windows rectangle into a SkiaSharp rectangle.</summary>
+		/// <param name="rect">The Windows rectangle.</param>
 		/// <returns>Returns a SkiaSharp rectangle.</returns>
 		/// <remarks />
 		public static SKRect ToSKRect(this Rect rect)
@@ -40,8 +40,8 @@ namespace SkiaSharp.Views.WPF
 			return new SKRect((float)rect.Left, (float)rect.Top, (float)rect.Right, (float)rect.Bottom);
 		}
 
-		/// <param name="rect">The SkiaSharp rectangle.</param>
 		/// <summary>Converts a SkiaSharp rectangle into a Windows rectangle.</summary>
+		/// <param name="rect">The SkiaSharp rectangle.</param>
 		/// <returns>Returns a Windows rectangle.</returns>
 		/// <remarks />
 		public static Rect ToRect(this SKRect rect)
@@ -51,8 +51,8 @@ namespace SkiaSharp.Views.WPF
 
 		// Size
 
-		/// <param name="size">The Windows size.</param>
 		/// <summary>Converts a Windows size into a SkiaSharp size.</summary>
+		/// <param name="size">The Windows size.</param>
 		/// <returns>Returns a SkiaSharp size.</returns>
 		/// <remarks />
 		public static SKSize ToSKSize(this Size size)
@@ -60,8 +60,8 @@ namespace SkiaSharp.Views.WPF
 			return new SKSize((float)size.Width, (float)size.Height);
 		}
 
-		/// <param name="size">The SkiaSharp size.</param>
 		/// <summary>Converts a SkiaSharp size into a Windows size.</summary>
+		/// <param name="size">The SkiaSharp size.</param>
 		/// <returns>Returns a Windows size.</returns>
 		/// <remarks />
 		public static Size ToSize(this SKSize size)
@@ -71,8 +71,8 @@ namespace SkiaSharp.Views.WPF
 
 		// Color
 
-		/// <param name="color">The Windows color.</param>
 		/// <summary>Converts a Windows color into a SkiaSharp color.</summary>
+		/// <param name="color">The Windows color.</param>
 		/// <returns>Returns a SkiaSharp color.</returns>
 		/// <remarks />
 		public static SKColor ToSKColor(this Color color)
@@ -80,8 +80,8 @@ namespace SkiaSharp.Views.WPF
 			return new SKColor(color.R, color.G, color.B, color.A);
 		}
 
-		/// <param name="color">The SkiaSharp color.</param>
 		/// <summary>Converts a SkiaSharp color into a Windows color.</summary>
+		/// <param name="color">The SkiaSharp color.</param>
 		/// <returns>Returns a Windows color.</returns>
 		/// <remarks />
 		public static Color ToColor(this SKColor color)
@@ -91,9 +91,9 @@ namespace SkiaSharp.Views.WPF
 
 		// WriteableBitmap
 
+		/// <summary>Converts a SkiaSharp picture into a Windows WriteableBitmap.</summary>
 		/// <param name="picture">The SkiaSharp picture.</param>
 		/// <param name="dimensions">The dimensions of the picture.</param>
-		/// <summary>Converts a SkiaSharp picture into a Windows WriteableBitmap.</summary>
 		/// <returns>Returns a copy of the picture as a Windows WriteableBitmap.</returns>
 		/// <remarks />
 		public static WriteableBitmap ToWriteableBitmap(this SKPicture picture, SKSizeI dimensions)
@@ -102,8 +102,8 @@ namespace SkiaSharp.Views.WPF
 			return image.ToWriteableBitmap();
 		}
 
-		/// <param name="skiaImage">The SkiaSharp image.</param>
 		/// <summary>Converts a SkiaSharp image into a Windows WriteableBitmap.</summary>
+		/// <param name="skiaImage">The SkiaSharp image.</param>
 		/// <returns>Returns a copy of the image data as a Windows WriteableBitmap.</returns>
 		/// <remarks />
 		public static WriteableBitmap ToWriteableBitmap(this SKImage skiaImage)
@@ -125,8 +125,8 @@ namespace SkiaSharp.Views.WPF
 			return bitmap;
 		}
 
-		/// <param name="skiaBitmap">The SkiaSharp bitmap.</param>
 		/// <summary>Converts a SkiaSharp bitmap into a Windows WriteableBitmap.</summary>
+		/// <param name="skiaBitmap">The SkiaSharp bitmap.</param>
 		/// <returns>Returns a copy of the bitmap data as a Windows WriteableBitmap.</returns>
 		/// <remarks />
 		public static WriteableBitmap ToWriteableBitmap(this SKBitmap skiaBitmap)
@@ -138,8 +138,8 @@ namespace SkiaSharp.Views.WPF
 			return wb;
 		}
 
-		/// <param name="pixmap">The SkiaSharp pixmap.</param>
 		/// <summary>Converts a SkiaSharp pixmap into a Windows WriteableBitmap.</summary>
+		/// <param name="pixmap">The SkiaSharp pixmap.</param>
 		/// <returns>Returns a copy of the pixel data as a Windows WriteableBitmap.</returns>
 		/// <remarks />
 		public static WriteableBitmap ToWriteableBitmap(this SKPixmap pixmap)
@@ -148,8 +148,8 @@ namespace SkiaSharp.Views.WPF
 			return image.ToWriteableBitmap();
 		}
 
-		/// <param name="bitmap">The Windows BitmapSource to convert.</param>
 		/// <summary>Converts a Windows BitmapSource into a SkiaSharp bitmap.</summary>
+		/// <param name="bitmap">The Windows BitmapSource to convert.</param>
 		/// <returns>Returns a copy of the bitmap data as a SkiaSharp bitmap.</returns>
 		/// <remarks />
 		public static SKBitmap ToSKBitmap(this BitmapSource bitmap)
@@ -165,8 +165,8 @@ namespace SkiaSharp.Views.WPF
 			return skiaBitmap;
 		}
 
-		/// <param name="bitmap">The Windows BitmapSource to convert.</param>
 		/// <summary>Converts a Windows BitmapSource into a SkiaSharp image.</summary>
+		/// <param name="bitmap">The Windows BitmapSource to convert.</param>
 		/// <returns>Returns a copy of the bitmap data as a SkiaSharp image.</returns>
 		/// <remarks />
 		public static SKImage ToSKImage(this BitmapSource bitmap)
@@ -182,9 +182,9 @@ namespace SkiaSharp.Views.WPF
 			return image;
 		}
 
+		/// <summary>Converts a Windows BitmapSource into a SkiaSharp pixmap.</summary>
 		/// <param name="bitmap">The Windows BitmapSource to convert.</param>
 		/// <param name="pixmap">The SkiaSharp pixmap to hold the copy of the bitmap data.</param>
-		/// <summary>Converts a Windows BitmapSource into a SkiaSharp pixmap.</summary>
 		/// <remarks />
 		public static void ToSKPixmap(this BitmapSource bitmap, SKPixmap pixmap)
 		{

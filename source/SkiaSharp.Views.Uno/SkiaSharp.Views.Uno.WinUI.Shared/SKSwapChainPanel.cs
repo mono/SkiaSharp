@@ -113,8 +113,8 @@ namespace SkiaSharp.Views.UWP
 		/// <remarks>Handle this event to perform drawing operations on the GPU-accelerated surface.</remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
-		/// <param name="e">The event arguments containing the surface and render target information.</param>
 		/// <summary>Raises the <see cref="E:SkiaSharp.Views.Windows.SKSwapChainPanel.PaintSurface" /> event.</summary>
+		/// <param name="e">The event arguments containing the surface and render target information.</param>
 		/// <remarks>Override this method to perform custom drawing on the surface without subscribing to the <see cref="E:SkiaSharp.Views.Windows.SKSwapChainPanel.PaintSurface" /> event.</remarks>
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{

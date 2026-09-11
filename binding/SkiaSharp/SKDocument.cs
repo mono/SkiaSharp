@@ -152,7 +152,7 @@ namespace SkiaSharp
 		/// <param name="path">The file path to which the XPS document will be written.</param>
 		/// <param name="options">The <see cref="T:SkiaSharp.SKDocumentXpsOptions" /> structure that specifies the options for creating the XPS document.</param>
 		/// <returns>A new <see cref="T:SkiaSharp.SKDocument" /> for writing XPS content, or <see langword="null" /> if XPS is not supported on the current platform.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public static SKDocument CreateXps (string path, SKDocumentXpsOptions options)
 		{
 			if (path == null) {
@@ -167,7 +167,7 @@ namespace SkiaSharp
 		/// <param name="stream">The managed stream to which the XPS document will be written.</param>
 		/// <param name="options">The <see cref="T:SkiaSharp.SKDocumentXpsOptions" /> structure that specifies the options for creating the XPS document.</param>
 		/// <returns>A new <see cref="T:SkiaSharp.SKDocument" /> for writing XPS content, or <see langword="null" /> if XPS is not supported on the current platform.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public static SKDocument CreateXps (Stream stream, SKDocumentXpsOptions options)
 		{
 			if (stream == null) {
@@ -182,7 +182,7 @@ namespace SkiaSharp
 		/// <param name="stream">The stream to which the XPS document will be written.</param>
 		/// <param name="options">The <see cref="T:SkiaSharp.SKDocumentXpsOptions" /> structure that specifies the options for creating the XPS document.</param>
 		/// <returns>A new <see cref="T:SkiaSharp.SKDocument" /> for writing XPS content, or <see langword="null" /> if XPS is not supported on the current platform.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public static SKDocument CreateXps (SKWStream stream, SKDocumentXpsOptions options)
 		{
 			if (stream == null) {

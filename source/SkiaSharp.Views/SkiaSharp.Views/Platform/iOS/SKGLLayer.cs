@@ -40,7 +40,7 @@ namespace SkiaSharp.Views.iOS
 		private SKSizeI lastSize;
 		private bool recreateSurface = true;
 
-		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.iOS.SKGLLayer" /> class.</summary>
+		/// <summary>Initializes a new instance of the <see cref="SKGLLayer" /> class.</summary>
 		/// <remarks />
 		public SKGLLayer()
 		{
@@ -143,15 +143,12 @@ namespace SkiaSharp.Views.iOS
 		}
 
 		/// <summary>Occurs when the canvas needs to be redrawn.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
-		/// <xref:SkiaSharp.Views.iOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs)>
-		/// method, or by attaching a handler to the
-		/// <xref:SkiaSharp.Views.iOS.SKGLLayer.PaintSurface>
-		/// event.
+		/// `OnPaintSurface` method, or by attaching a handler to the
+		/// `PaintSurface` event.
 		///
 		/// ## Examples
 		///
@@ -168,21 +165,17 @@ namespace SkiaSharp.Views.iOS
 		///     canvas.Flush ();
 		/// };
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
-		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
 		/// <summary>Implement this to draw on the canvas.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
-		/// <xref:SkiaSharp.Views.iOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs)>
-		/// method, or by attaching a handler to the
-		/// <xref:SkiaSharp.Views.iOS.SKGLLayer.PaintSurface>
-		/// event.
+		/// `OnPaintSurface` method, or by attaching a handler to the
+		/// `PaintSurface` event.
 		///
 		/// > [!IMPORTANT]
 		/// > If this method is overridden, then the base must be called, otherwise the
@@ -207,8 +200,7 @@ namespace SkiaSharp.Views.iOS
 		///     canvas.Flush ();
 		/// }
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
@@ -256,10 +248,9 @@ namespace SkiaSharp.Views.iOS
 			recreateSurface = true;
 		}
 
-		/// <param name="disposing">
-		///           <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
-		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.Views.iOS.SKGLLayer" /> and optionally releases the managed resources.</summary>
-		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.Views.iOS.SKGLLayer" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
+		/// <summary>Releases the unmanaged resources used by the <see cref="SKGLLayer" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="SKGLLayer" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);

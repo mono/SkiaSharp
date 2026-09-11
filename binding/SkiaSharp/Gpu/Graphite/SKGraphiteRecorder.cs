@@ -10,15 +10,13 @@ namespace SkiaSharp
 #endif
 
 	/// <summary>Records drawing commands issued against Graphite-backed surfaces and snapshots them into recordings for insertion into a <see cref="T:SkiaSharp.SKGraphiteContext" />.</summary>
-	/// <remarks>
-	///       <format type="text/markdown"><![CDATA[
+	/// <remarks><format type="text/markdown"><![CDATA[
 	/// ## Remarks
 	///
 	/// Create a recorder from a context with <xref:SkiaSharp.SKGraphiteContext.CreateRecorder(System.Int64)>. Draw into Graphite-backed surfaces created for the recorder, call <xref:SkiaSharp.SKGraphiteRecorder.Snap> to capture the work as a <xref:SkiaSharp.SKGraphiteRecording>, then insert and submit the recording through the context.
 	///
 	/// A recorder is not thread-safe; use one recorder per thread. This type wraps a native Skia resource and implements `IDisposable`.
-	/// ]]></format>
-	///     </remarks>
+	/// ]]></format></remarks>
 	public unsafe class SKGraphiteRecorder : SKObject
 	{
 		// Pin keeping the user's image-upload callback alive while Skia's FfiImageProvider
@@ -78,10 +76,10 @@ namespace SkiaSharp
 			return handle == IntPtr.Zero ? null : new SKGraphiteRecording (handle, true);
 		}
 
+		/// <summary>Creates a new backend texture that is owned by the recorder's context.</summary>
 		/// <param name="width">The width of the texture, in pixels.</param>
 		/// <param name="height">The height of the texture, in pixels.</param>
 		/// <param name="info">The texture descriptor.</param>
-		/// <summary>Creates a new backend texture that is owned by the recorder's context.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKGraphiteBackendTexture" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public SKGraphiteBackendTexture CreateBackendTexture (int width, int height, SKGraphiteTextureInfo info)
@@ -96,8 +94,8 @@ namespace SkiaSharp
 			return handle == IntPtr.Zero ? null : new SKGraphiteBackendTexture (handle, true);
 		}
 
-		/// <param name="backendTexture">The backend texture to delete.</param>
 		/// <summary>Deletes a backend texture that was created by this recorder.</summary>
+		/// <param name="backendTexture">The backend texture to delete.</param>
 		/// <remarks />
 		public void DeleteBackendTexture (SKGraphiteBackendTexture backendTexture)
 		{

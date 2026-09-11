@@ -44,8 +44,7 @@ namespace SkiaSharp.Views.Blazor
 		public Action<SKPaintGLSurfaceEventArgs>? OnPaintSurface { get; set; }
 
 		/// <summary>Gets or sets a value indicating whether continuous rendering is enabled.</summary>
-		/// <value>
-		///           <see langword="true" /> to render continuously using requestAnimationFrame; <see langword="false" /> to render only when <see cref="M:SkiaSharp.Views.Blazor.SKGLView.Invalidate" /> is called.</value>
+		/// <value><see langword="true" /> to render continuously using requestAnimationFrame; <see langword="false" /> to render only when <see cref="M:SkiaSharp.Views.Blazor.SKGLView.Invalidate" /> is called.</value>
 		/// <remarks>Enable this for animations that need to update every frame. Disable for static content to conserve GPU resources and battery.</remarks>
 		[Parameter]
 		public bool EnableRenderLoop
@@ -62,8 +61,7 @@ namespace SkiaSharp.Views.Blazor
 		}
 
 		/// <summary>Gets or sets a value indicating whether the canvas should ignore the device pixel ratio.</summary>
-		/// <value>
-		///           <see langword="true" /> to use logical pixels matching the CSS size; <see langword="false" /> to use physical pixels scaled by the DPI.</value>
+		/// <value><see langword="true" /> to use logical pixels matching the CSS size; <see langword="false" /> to use physical pixels scaled by the DPI.</value>
 		/// <remarks>When <see langword="false" /> (the default), the canvas is scaled to match the physical pixel density, resulting in sharper rendering on high-DPI displays. When <see langword="true" />, drawing coordinates match the CSS pixel size.</remarks>
 		[Parameter]
 		public bool IgnorePixelScaling
@@ -90,9 +88,8 @@ namespace SkiaSharp.Views.Blazor
 		/// <remarks>This value is automatically updated when the browser's DPI changes, such as when moving windows between monitors with different scaling.</remarks>
 		public double Dpi => dpi;
 
-		/// <param name="firstRender">
-		///           <see langword="true" /> if this is the first time the component has been rendered; otherwise, <see langword="false" />.</param>
 		/// <summary>Called after the component has rendered.</summary>
+		/// <param name="firstRender"><see langword="true" /> if this is the first time the component has been rendered; otherwise, <see langword="false" />.</param>
 		/// <returns>A task representing the asynchronous operation.</returns>
 		/// <remarks>On first render, this method initializes the WebGL context, creates the GPU context and surface, and sets up DPI and size change watchers.</remarks>
 		protected override async Task OnAfterRenderAsync(bool firstRender)

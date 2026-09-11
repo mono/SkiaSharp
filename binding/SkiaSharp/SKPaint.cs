@@ -1248,7 +1248,7 @@ namespace SkiaSharp
 		/// <param name="src">The source path to fill.</param>
 		/// <param name="dst">The <see cref="T:SkiaSharp.SKPathBuilder" /> to which the filled path is written.</param>
 		/// <returns><see langword="true" /> if the fill path was successfully computed; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public bool GetFillPath (SKPath src, SKPathBuilder dst)
 			=> GetFillPath (src, dst, (SKRect*)null, SKMatrix.Identity);
 
@@ -1257,7 +1257,7 @@ namespace SkiaSharp
 		/// <param name="dst">The <see cref="T:SkiaSharp.SKPathBuilder" /> to which the filled path is written.</param>
 		/// <param name="resScale">The scale factor used to determine resolution-dependent path simplification.</param>
 		/// <returns><see langword="true" /> if the fill path was successfully computed; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public bool GetFillPath (SKPath src, SKPathBuilder dst, float resScale)
 			=> GetFillPath (src, dst, (SKRect*)null, SKMatrix.CreateScale (resScale, resScale));
 
@@ -1266,7 +1266,7 @@ namespace SkiaSharp
 		/// <param name="dst">The <see cref="T:SkiaSharp.SKPathBuilder" /> to which the filled path is written.</param>
 		/// <param name="matrix">The transformation matrix to apply before computing the fill.</param>
 		/// <returns><see langword="true" /> if the fill path was successfully computed; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public bool GetFillPath (SKPath src, SKPathBuilder dst, SKMatrix matrix)
 			=> GetFillPath (src, dst, (SKRect*)null, matrix);
 
@@ -1275,7 +1275,7 @@ namespace SkiaSharp
 		/// <param name="dst">The <see cref="T:SkiaSharp.SKPathBuilder" /> to which the filled path is written.</param>
 		/// <param name="cullRect">A rectangle used to cull path elements that lie entirely outside its bounds.</param>
 		/// <returns><see langword="true" /> if the fill path was successfully computed; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public bool GetFillPath (SKPath src, SKPathBuilder dst, SKRect cullRect)
 			=> GetFillPath (src, dst, &cullRect, SKMatrix.Identity);
 
@@ -1285,7 +1285,7 @@ namespace SkiaSharp
 		/// <param name="cullRect">A rectangle used to cull path elements that lie entirely outside its bounds.</param>
 		/// <param name="resScale">The scale factor used to determine resolution-dependent path simplification.</param>
 		/// <returns><see langword="true" /> if the fill path was successfully computed; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public bool GetFillPath (SKPath src, SKPathBuilder dst, SKRect cullRect, float resScale)
 			=> GetFillPath (src, dst, &cullRect, SKMatrix.CreateScale (resScale, resScale));
 
@@ -1295,7 +1295,7 @@ namespace SkiaSharp
 		/// <param name="cullRect">A rectangle used to cull path elements that lie entirely outside its bounds.</param>
 		/// <param name="matrix">The transformation matrix to apply before computing the fill.</param>
 		/// <returns><see langword="true" /> if the fill path was successfully computed; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public bool GetFillPath (SKPath src, SKPathBuilder dst, SKRect cullRect, SKMatrix matrix)
 			=> GetFillPath (src, dst, &cullRect, matrix);
 

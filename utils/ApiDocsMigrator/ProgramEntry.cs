@@ -6,6 +6,19 @@ internal static class ProgramEntry
 	{
 		if (args.Length == 1 && args[0] == "--self-test")
 			return await MigratorSelfTest.RunAsync();
+		if (args.Length == 2 && args[0] == "--format-source")
+		{
+			var sourceRoot = Path.GetFullPath(args[1]);
+			if (!Directory.Exists(sourceRoot))
+			{
+				Console.Error.WriteLine($"Source root does not exist: {sourceRoot}");
+				return 2;
+			}
+
+			var result = DocumentationSourceFormatter.Format(sourceRoot);
+			Console.WriteLine($"Formatted {result.DocumentationCommentCount} documentation comments in {result.UpdatedFileCount} files.");
+			return 0;
+		}
 
 		try
 		{

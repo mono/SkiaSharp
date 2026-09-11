@@ -20,8 +20,8 @@ namespace SkiaSharp.HarfBuzz
 	/// ]]></remarks>
 	public static class ColorExtensions
 	{
-		/// <param name="hbColor">The <see cref="T:HarfBuzzSharp.HBColor" /> to convert.</param>
 		/// <summary>Converts an <see cref="T:HarfBuzzSharp.HBColor" /> to an <see cref="T:SkiaSharp.SKColor" />.</summary>
+		/// <param name="hbColor">The <see cref="T:HarfBuzzSharp.HBColor" /> to convert.</param>
 		/// <returns>An <see cref="T:SkiaSharp.SKColor" /> representing the same color.</returns>
 		/// <remarks></remarks>
 		public static SKColor ToSKColor (this HBColor hbColor)
@@ -29,8 +29,8 @@ namespace SkiaSharp.HarfBuzz
 			return new SKColor (hbColor.Red, hbColor.Green, hbColor.Blue, hbColor.Alpha);
 		}
 
-		/// <param name="hbColor">The <see cref="T:HarfBuzzSharp.HBColor" /> to convert.</param>
 		/// <summary>Converts an <see cref="T:HarfBuzzSharp.HBColor" /> to an <see cref="T:SkiaSharp.SKColorF" />.</summary>
+		/// <param name="hbColor">The <see cref="T:HarfBuzzSharp.HBColor" /> to convert.</param>
 		/// <returns>An <see cref="T:SkiaSharp.SKColorF" /> representing the same color with each channel normalized to the range [0, 1].</returns>
 		/// <remarks></remarks>
 		public static SKColorF ToSKColorF (this HBColor hbColor)
@@ -42,8 +42,8 @@ namespace SkiaSharp.HarfBuzz
 				hbColor.Alpha / 255f);
 		}
 
-		/// <param name="hbColors">The array of <see cref="T:HarfBuzzSharp.HBColor" /> values to convert.</param>
 		/// <summary>Converts an array of <see cref="T:HarfBuzzSharp.HBColor" /> values to an array of <see cref="T:SkiaSharp.SKColor" /> values.</summary>
+		/// <param name="hbColors">The array of <see cref="T:HarfBuzzSharp.HBColor" /> values to convert.</param>
 		/// <returns>An array of <see cref="T:SkiaSharp.SKColor" /> values corresponding to each element of <paramref name="hbColors" />.</returns>
 		/// <remarks></remarks>
 		public static SKColor[] ToSKColors (this HBColor[] hbColors)
@@ -57,8 +57,8 @@ namespace SkiaSharp.HarfBuzz
 			return result;
 		}
 
-		/// <param name="color">The <see cref="T:SkiaSharp.SKColor" /> to convert.</param>
 		/// <summary>Converts an <see cref="T:SkiaSharp.SKColor" /> to an <see cref="T:HarfBuzzSharp.HBColor" />.</summary>
+		/// <param name="color">The <see cref="T:SkiaSharp.SKColor" /> to convert.</param>
 		/// <returns>An <see cref="T:HarfBuzzSharp.HBColor" /> representing the same color.</returns>
 		/// <remarks></remarks>
 		public static HBColor ToHBColor (this SKColor color)
@@ -66,8 +66,8 @@ namespace SkiaSharp.HarfBuzz
 			return new HBColor (color.Red, color.Green, color.Blue, color.Alpha);
 		}
 
-		/// <param name="color">The <see cref="T:SkiaSharp.SKColorF" /> to convert.</param>
 		/// <summary>Converts an <see cref="T:SkiaSharp.SKColorF" /> to an <see cref="T:HarfBuzzSharp.HBColor" />.</summary>
+		/// <param name="color">The <see cref="T:SkiaSharp.SKColorF" /> to convert.</param>
 		/// <returns>An <see cref="T:HarfBuzzSharp.HBColor" /> representing the same color with each channel quantized to 8 bits.</returns>
 		/// <remarks></remarks>
 		public static HBColor ToHBColor (this SKColorF color)

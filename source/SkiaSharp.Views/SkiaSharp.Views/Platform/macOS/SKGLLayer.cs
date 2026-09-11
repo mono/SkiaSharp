@@ -41,8 +41,7 @@ namespace SkiaSharp.Views.Mac
 		public GRContext GRContext => context;
 
 		/// <summary>Occurs when the canvas needs to be redrawn.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -66,14 +65,12 @@ namespace SkiaSharp.Views.Mac
 		///     canvas.Flush ();
 		/// };
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
-		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
 		/// <summary>Implement this to draw on the canvas.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -105,18 +102,17 @@ namespace SkiaSharp.Views.Mac
 		///     canvas.Flush ();
 		/// }
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
 		}
 
+		/// <summary>Draws the OpenGL content for the specified time.</summary>
 		/// <param name="glContext">The rendering context in to which the OpenGL content should be rendered.</param>
 		/// <param name="pixelFormat">The pixel format used when the context was created.</param>
 		/// <param name="timeInterval">The current layer time.</param>
 		/// <param name="timeStamp">The display timestamp associated with the time interval. Can be <see langword="null" />.</param>
-		/// <summary>Draws the OpenGL content for the specified time.</summary>
 		/// <remarks />
 		public override void DrawInCGLContext(CGLContext glContext, CGLPixelFormat pixelFormat, double timeInterval, ref CVTimeStamp timeStamp)
 		{
@@ -178,8 +174,8 @@ namespace SkiaSharp.Views.Mac
 			base.DrawInCGLContext(glContext, pixelFormat, timeInterval, ref timeStamp);
 		}
 
-		/// <param name="glContext">The rendering context to release.</param>
 		/// <summary>Releases the specified rendering context.</summary>
+		/// <param name="glContext">The rendering context to release.</param>
 		/// <remarks />
 		public override void Release(CGLContext glContext)
 		{

@@ -688,39 +688,37 @@ namespace SkiaSharp
 
 		// Graphite-backed render target
 
+		/// <summary>Creates a Graphite-backed surface for the specified recorder.</summary>
 		/// <param name="recorder">The recorder that the surface is created for.</param>
 		/// <param name="info">The image info describing the size and format of the surface.</param>
-		/// <summary>Creates a Graphite-backed surface for the specified recorder.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info) =>
 			Create (recorder, info, mipmapped: false, props: null);
 
+		/// <summary>Creates a Graphite-backed surface for the specified recorder, optionally with mipmaps.</summary>
 		/// <param name="recorder">The recorder that the surface is created for.</param>
 		/// <param name="info">The image info describing the size and format of the surface.</param>
-		/// <param name="mipmapped">
-		///           <see langword="true" /> to allocate the surface with mipmaps; otherwise, <see langword="false" />.</param>
-		/// <summary>Creates a Graphite-backed surface for the specified recorder, optionally with mipmaps.</summary>
+		/// <param name="mipmapped"><see langword="true" /> to allocate the surface with mipmaps; otherwise, <see langword="false" />.</param>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, bool mipmapped) =>
 			Create (recorder, info, mipmapped, props: null);
 
+		/// <summary>Creates a Graphite-backed surface for the specified recorder, using the specified surface properties.</summary>
 		/// <param name="recorder">The recorder that the surface is created for.</param>
 		/// <param name="info">The image info describing the size and format of the surface.</param>
 		/// <param name="props">The surface properties to use.</param>
-		/// <summary>Creates a Graphite-backed surface for the specified recorder, using the specified surface properties.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, SKSurfaceProperties props) =>
 			Create (recorder, info, mipmapped: false, props);
 
+		/// <summary>Creates a Graphite-backed surface for the specified recorder, optionally with mipmaps and using the specified surface properties.</summary>
 		/// <param name="recorder">The recorder that the surface is created for.</param>
 		/// <param name="info">The image info describing the size and format of the surface.</param>
-		/// <param name="mipmapped">
-		///           <see langword="true" /> to allocate the surface with mipmaps; otherwise, <see langword="false" />.</param>
+		/// <param name="mipmapped"><see langword="true" /> to allocate the surface with mipmaps; otherwise, <see langword="false" />.</param>
 		/// <param name="props">The surface properties to use.</param>
-		/// <summary>Creates a Graphite-backed surface for the specified recorder, optionally with mipmaps and using the specified surface properties.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, bool mipmapped, SKSurfaceProperties props)
@@ -734,43 +732,43 @@ namespace SkiaSharp
 
 		// Graphite-backed surface wrapping a caller-allocated GPU texture
 
+		/// <summary>Creates a Graphite-backed surface that renders into an existing backend texture.</summary>
 		/// <param name="recorder">The recorder that the surface is created for.</param>
 		/// <param name="backendTexture">The backend texture to render into.</param>
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the texture.</param>
-		/// <summary>Creates a Graphite-backed surface that renders into an existing backend texture.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType) =>
 			Create (recorder, backendTexture, colorType, colorSpace: null, props: null);
 
+		/// <summary>Creates a Graphite-backed surface that renders into an existing backend texture, using the specified color space.</summary>
 		/// <param name="recorder">The recorder that the surface is created for.</param>
 		/// <param name="backendTexture">The backend texture to render into.</param>
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the texture.</param>
 		/// <param name="colorSpace">The color space of the texture, or <see langword="null" /> to use no color space.</param>
-		/// <summary>Creates a Graphite-backed surface that renders into an existing backend texture, using the specified color space.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace) =>
 			Create (recorder, backendTexture, colorType, colorSpace, props: null);
 
+		/// <summary>Creates a Graphite-backed surface that renders into an existing backend texture, using the specified color space and surface properties.</summary>
 		/// <param name="recorder">The recorder that the surface is created for.</param>
 		/// <param name="backendTexture">The backend texture to render into.</param>
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the texture.</param>
 		/// <param name="colorSpace">The color space of the texture, or <see langword="null" /> to use no color space.</param>
 		/// <param name="props">The surface properties to use.</param>
-		/// <summary>Creates a Graphite-backed surface that renders into an existing backend texture, using the specified color space and surface properties.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace, SKSurfaceProperties props) =>
 			Create (recorder, backendTexture, colorType, colorSpace, props, releaseProc: null);
 
+		/// <summary>Creates a Graphite-backed surface that renders into an existing backend texture, invoking a callback when Skia no longer needs the texture.</summary>
 		/// <param name="recorder">The recorder that the surface is created for.</param>
 		/// <param name="backendTexture">The backend texture to render into.</param>
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the texture.</param>
 		/// <param name="colorSpace">The color space of the texture, or <see langword="null" /> to use no color space.</param>
 		/// <param name="props">The surface properties to use.</param>
 		/// <param name="releaseProc">The callback invoked when Skia is finished using the texture, or <see langword="null" /> for none.</param>
-		/// <summary>Creates a Graphite-backed surface that renders into an existing backend texture, invoking a callback when Skia no longer needs the texture.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace, SKSurfaceProperties props, SKGraphiteReleaseDelegate releaseProc)
@@ -795,18 +793,19 @@ namespace SkiaSharp
 
 #if __MACOS__ || __IOS__ || __TVOS__
 
+		/// <summary>Creates a GPU-backed surface that renders into a Metal layer.</summary>
 		/// <param name="context">The GPU context that the surface is created for.</param>
 		/// <param name="layer">The Metal layer to render into.</param>
 		/// <param name="origin">One of the enumeration values that specifies the surface origin.</param>
 		/// <param name="sampleCount">The number of samples per pixel.</param>
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the surface.</param>
 		/// <param name="drawable">When this method returns, contains the Metal drawable associated with the surface.</param>
-		/// <summary>Creates a GPU-backed surface that renders into a Metal layer.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (GRContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, out CoreAnimation.ICAMetalDrawable drawable) =>
 			Create ((GRRecordingContext)context, layer, origin, sampleCount, colorType, out drawable);
 
+		/// <summary>Creates a GPU-backed surface that renders into a Metal layer using the specified color space.</summary>
 		/// <param name="context">The GPU context that the surface is created for.</param>
 		/// <param name="layer">The Metal layer to render into.</param>
 		/// <param name="origin">One of the enumeration values that specifies the surface origin.</param>
@@ -814,12 +813,12 @@ namespace SkiaSharp
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the surface.</param>
 		/// <param name="colorspace">The color space of the surface, or <see langword="null" /> to use no color space.</param>
 		/// <param name="drawable">When this method returns, contains the Metal drawable associated with the surface.</param>
-		/// <summary>Creates a GPU-backed surface that renders into a Metal layer using the specified color space.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (GRContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, out CoreAnimation.ICAMetalDrawable drawable) =>
 			Create ((GRRecordingContext)context, layer, origin, sampleCount, colorType, colorspace, out drawable);
 
+		/// <summary>Creates a GPU-backed surface that renders into a Metal layer using the specified color space and surface properties.</summary>
 		/// <param name="context">The GPU context that the surface is created for.</param>
 		/// <param name="layer">The Metal layer to render into.</param>
 		/// <param name="origin">One of the enumeration values that specifies the surface origin.</param>
@@ -828,24 +827,24 @@ namespace SkiaSharp
 		/// <param name="colorspace">The color space of the surface, or <see langword="null" /> to use no color space.</param>
 		/// <param name="props">The surface properties to use.</param>
 		/// <param name="drawable">When this method returns, contains the Metal drawable associated with the surface.</param>
-		/// <summary>Creates a GPU-backed surface that renders into a Metal layer using the specified color space and surface properties.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (GRContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props, out CoreAnimation.ICAMetalDrawable drawable) =>
 			Create ((GRRecordingContext)context, layer, origin, sampleCount, colorType, colorspace, props, out drawable);
 
+		/// <summary>Creates a GPU-backed surface that renders into a Metal layer.</summary>
 		/// <param name="context">The GPU context that the surface is created for.</param>
 		/// <param name="layer">The Metal layer to render into.</param>
 		/// <param name="origin">One of the enumeration values that specifies the surface origin.</param>
 		/// <param name="sampleCount">The number of samples per pixel.</param>
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the surface.</param>
 		/// <param name="drawable">When this method returns, contains the Metal drawable associated with the surface.</param>
-		/// <summary>Creates a GPU-backed surface that renders into a Metal layer.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (GRRecordingContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, out CoreAnimation.ICAMetalDrawable drawable) =>
 			Create (context, layer, origin, sampleCount, colorType, null, null, out drawable);
 
+		/// <summary>Creates a GPU-backed surface that renders into a Metal layer using the specified color space.</summary>
 		/// <param name="context">The GPU context that the surface is created for.</param>
 		/// <param name="layer">The Metal layer to render into.</param>
 		/// <param name="origin">One of the enumeration values that specifies the surface origin.</param>
@@ -853,12 +852,12 @@ namespace SkiaSharp
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the surface.</param>
 		/// <param name="colorspace">The color space of the surface, or <see langword="null" /> to use no color space.</param>
 		/// <param name="drawable">When this method returns, contains the Metal drawable associated with the surface.</param>
-		/// <summary>Creates a GPU-backed surface that renders into a Metal layer using the specified color space.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (GRRecordingContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, out CoreAnimation.ICAMetalDrawable drawable) =>
 			Create (context, layer, origin, sampleCount, colorType, colorspace, null, out drawable);
 
+		/// <summary>Creates a GPU-backed surface that renders into a Metal layer using the specified color space and surface properties.</summary>
 		/// <param name="context">The GPU context that the surface is created for.</param>
 		/// <param name="layer">The Metal layer to render into.</param>
 		/// <param name="origin">One of the enumeration values that specifies the surface origin.</param>
@@ -867,7 +866,6 @@ namespace SkiaSharp
 		/// <param name="colorspace">The color space of the surface, or <see langword="null" /> to use no color space.</param>
 		/// <param name="props">The surface properties to use.</param>
 		/// <param name="drawable">When this method returns, contains the Metal drawable associated with the surface.</param>
-		/// <summary>Creates a GPU-backed surface that renders into a Metal layer using the specified color space and surface properties.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (GRRecordingContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props, out CoreAnimation.ICAMetalDrawable drawable)
@@ -881,29 +879,30 @@ namespace SkiaSharp
 			return surface;
 		}
 
+		/// <summary>Creates a GPU-backed surface that renders into a Metal view.</summary>
 		/// <param name="context">The GPU context that the surface is created for.</param>
 		/// <param name="view">The Metal view to render into.</param>
 		/// <param name="origin">One of the enumeration values that specifies the surface origin.</param>
 		/// <param name="sampleCount">The number of samples per pixel.</param>
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the surface.</param>
-		/// <summary>Creates a GPU-backed surface that renders into a Metal view.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (GRRecordingContext context, MetalKit.MTKView view, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType) =>
 			Create (context, view, origin, sampleCount, colorType, null, null);
 
+		/// <summary>Creates a GPU-backed surface that renders into a Metal view using the specified color space.</summary>
 		/// <param name="context">The GPU context that the surface is created for.</param>
 		/// <param name="view">The Metal view to render into.</param>
 		/// <param name="origin">One of the enumeration values that specifies the surface origin.</param>
 		/// <param name="sampleCount">The number of samples per pixel.</param>
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the surface.</param>
 		/// <param name="colorspace">The color space of the surface, or <see langword="null" /> to use no color space.</param>
-		/// <summary>Creates a GPU-backed surface that renders into a Metal view using the specified color space.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (GRRecordingContext context, MetalKit.MTKView view, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace) =>
 			Create (context, view, origin, sampleCount, colorType, colorspace, null);
 
+		/// <summary>Creates a GPU-backed surface that renders into a Metal view using the specified color space and surface properties.</summary>
 		/// <param name="context">The GPU context that the surface is created for.</param>
 		/// <param name="view">The Metal view to render into.</param>
 		/// <param name="origin">One of the enumeration values that specifies the surface origin.</param>
@@ -911,7 +910,6 @@ namespace SkiaSharp
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the surface.</param>
 		/// <param name="colorspace">The color space of the surface, or <see langword="null" /> to use no color space.</param>
 		/// <param name="props">The surface properties to use.</param>
-		/// <summary>Creates a GPU-backed surface that renders into a Metal view using the specified color space and surface properties.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKSurface" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKSurface Create (GRRecordingContext context, MetalKit.MTKView view, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props)
@@ -1017,7 +1015,7 @@ namespace SkiaSharp
 		/// <param name="p">The location at which to draw the upper-left corner of the surface.</param>
 		/// <param name="sampling">The sampling options to apply when scaling or filtering the surface.</param>
 		/// <param name="paint">The paint to use when drawing the surface, or <see langword="null" /> for default rendering.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		public void Draw (SKCanvas canvas, SKPoint p, SKSamplingOptions sampling, SKPaint paint = null)
 		{
 			Draw (canvas, p.X, p.Y, sampling, paint);
@@ -1029,7 +1027,7 @@ namespace SkiaSharp
 		/// <param name="y">The y-coordinate of the destination position.</param>
 		/// <param name="sampling">The sampling options to use when drawing.</param>
 		/// <param name="paint">The paint to apply when drawing, or <see langword="null" /> to use default paint settings.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		public void Draw (SKCanvas canvas, float x, float y, SKSamplingOptions sampling, SKPaint paint = null)
 		{
 			if (canvas == null)
@@ -1091,20 +1089,20 @@ namespace SkiaSharp
 
 		// RequestReadPixels
 
+		/// <summary>Asynchronously reads pixels from the surface into a result delivered to a callback, using nearest sampling.</summary>
 		/// <param name="info">The image info describing the desired size and format of the result.</param>
 		/// <param name="srcRect">The rectangle of the surface to read, in pixels.</param>
-		/// <param name="callback">The callback invoked with the read result, which is valid only for the duration of the call.</param>
-		/// <summary>Asynchronously reads pixels from the surface into a result delivered to a callback, using nearest sampling.</summary>
+		/// <param name="callback">The callback invoked with the read result, or <see langword="null" /> if the read fails; the result is valid only for the duration of the call.</param>
 		/// <remarks />
 		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, Action<SKImageReadPixelsResult> callback) =>
 			RequestReadPixels (info, srcRect, SKImageRescaleGamma.Src, SKImageRescaleMode.Nearest, callback);
 
+		/// <summary>Asynchronously reads and rescales pixels from the surface into a result delivered to a callback.</summary>
 		/// <param name="info">The image info describing the desired size and format of the result.</param>
 		/// <param name="srcRect">The rectangle of the surface to read, in pixels.</param>
 		/// <param name="rescaleGamma">One of the enumeration values that specifies the gamma space used for rescaling.</param>
 		/// <param name="rescaleMode">One of the enumeration values that specifies the sampling algorithm used for rescaling.</param>
-		/// <param name="callback">The callback invoked with the read result, which is valid only for the duration of the call.</param>
-		/// <summary>Asynchronously reads and rescales pixels from the surface into a result delivered to a callback.</summary>
+		/// <param name="callback">The callback invoked with the read result, or <see langword="null" /> if the read fails; the result is valid only for the duration of the call.</param>
 		/// <remarks />
 		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, Action<SKImageReadPixelsResult> callback)
 		{

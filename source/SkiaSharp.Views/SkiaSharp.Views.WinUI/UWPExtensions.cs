@@ -30,8 +30,8 @@ namespace SkiaSharp.Views.UWP
 	{
 		// Point
 
-		/// <param name="point">The Windows point.</param>
 		/// <summary>Converts a Windows point into a SkiaSharp point.</summary>
+		/// <param name="point">The Windows point.</param>
 		/// <returns>Returns a SkiaSharp point.</returns>
 		/// <remarks />
 		public static SKPoint ToSKPoint(this Point point)
@@ -50,8 +50,8 @@ namespace SkiaSharp.Views.UWP
 
 		// Rect
 
-		/// <param name="rect">The Windows rectangle.</param>
 		/// <summary>Converts a Windows rectangle into a SkiaSharp rectangle.</summary>
+		/// <param name="rect">The Windows rectangle.</param>
 		/// <returns>Returns a SkiaSharp rectangle.</returns>
 		/// <remarks />
 		public static SKRect ToSKRect(this Rect rect)
@@ -70,8 +70,8 @@ namespace SkiaSharp.Views.UWP
 
 		// Size
 
-		/// <param name="size">The Windows size.</param>
 		/// <summary>Converts a Windows size into a SkiaSharp size.</summary>
+		/// <param name="size">The Windows size.</param>
 		/// <returns>Returns a SkiaSharp size.</returns>
 		/// <remarks />
 		public static SKSize ToSKSize(this Size size)
@@ -90,8 +90,8 @@ namespace SkiaSharp.Views.UWP
 
 		// Color
 
-		/// <param name="color">The Windows color.</param>
 		/// <summary>Converts a Windows color into a SkiaSharp color.</summary>
+		/// <param name="color">The Windows color.</param>
 		/// <returns>Returns a SkiaSharp color.</returns>
 		/// <remarks />
 		public static SKColor ToSKColor(this Color color)

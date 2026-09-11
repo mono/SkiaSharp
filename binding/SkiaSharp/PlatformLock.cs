@@ -78,9 +78,7 @@ namespace SkiaSharp.Internals
 		}
 
 
-		/// <summary>
-		/// Non-Windows platform lock uses ReaderWriteLockSlim
-		/// </summary>
+		/// <summary>Non-Windows platform lock uses ReaderWriteLockSlim</summary>
 		class ReadWriteLock : IPlatformLock
 		{
 			public void EnterReadLock () => _lock.EnterReadLock ();
@@ -94,9 +92,7 @@ namespace SkiaSharp.Internals
 		}
 
 #if !(__IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__)
-		/// <summary>
-		/// Windows platform lock uses Win32 CRITICAL_SECTION
-		/// </summary>
+		/// <summary>Windows platform lock uses Win32 CRITICAL_SECTION</summary>
 		partial class NonAlertableWin32Lock : IPlatformLock
 		{
 			public NonAlertableWin32Lock ()

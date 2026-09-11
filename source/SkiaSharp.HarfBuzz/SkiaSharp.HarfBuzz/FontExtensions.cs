@@ -8,8 +8,8 @@ namespace SkiaSharp.HarfBuzz
 	/// <remarks />
 	public static class FontExtensions
 	{
-		/// <param name="font">The font to retrieve the scale.</param>
 		/// <summary>Retrieves the font scale.</summary>
+		/// <param name="font">The font to retrieve the scale.</param>
 		/// <returns>Returns the font scale.</returns>
 		/// <remarks />
 		public static SKSizeI GetScale(this Font font)
@@ -23,9 +23,9 @@ namespace SkiaSharp.HarfBuzz
 			return new SKSizeI(scaleX, scaleY);
 		}
 
+		/// <summary>Sets the font scale.</summary>
 		/// <param name="font">The font to set the scale.</param>
 		/// <param name="scale">The scale to set.</param>
-		/// <summary>Sets the font scale.</summary>
 		/// <remarks />
 		public static void SetScale(this Font font, SKSizeI scale)
 		{

@@ -104,7 +104,7 @@ namespace SkiaSharp
 		/// <summary>Creates a mask filter that uses the specified shader to generate the mask.</summary>
 		/// <param name="shader">The shader to use to produce the mask.</param>
 		/// <returns>A new <see cref="T:SkiaSharp.SKMaskFilter" /> that uses the shader to generate coverage masks.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public static SKMaskFilter CreateShader (SKShader shader)
 		{
 			if (shader == null)

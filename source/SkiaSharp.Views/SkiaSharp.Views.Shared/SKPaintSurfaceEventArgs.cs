@@ -104,8 +104,8 @@ namespace SkiaSharp.Views.Blazor
 		public SKImageInfo Info { get; }
 
 		#if __ANDROID__
-		/// <summary>Gets the raw image information of the surface.</summary>
-		/// <value>The raw image information of the surface.</value>
+		/// <summary>Gets the raw image information of the underlying surface.</summary>
+		/// <value>The <see cref="T:SkiaSharp.SKImageInfo" /> containing the actual dimensions and color type of the underlying surface.</value>
 		/// <remarks />
 		#else
 		/// <summary>Gets the raw image information of the underlying surface.</summary>

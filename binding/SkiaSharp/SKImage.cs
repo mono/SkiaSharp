@@ -14,7 +14,7 @@ namespace SkiaSharp
 	// TODO: `MakeColorSpace`
 
 	/// <summary>An abstraction for drawing a rectangle of pixels.</summary>
-	/// <remarks><para>An image is an abstraction of pixels, though the particular type of image could be actually storing its data on the GPU, or as drawing commands (picture or PDF or otherwise), ready to be played back into another canvas.</para><para /><para>The content of an image is always immutable, though the actual storage may change, if for example that image can be recreated via encoded data or other means.</para><para /><para>An image always has a non-zero dimensions. If there is a request to create a new image, either directly or via a surface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para></remarks>
+	/// <remarks><para>An image is an abstraction of pixels, though the particular type of image could be actually storing its data on the GPU, or as drawing commands (picture or PDF or otherwise), ready to be played back into another canvas.</para><para></para><para>The content of an image is always immutable, though the actual storage may change, if for example that image can be recreated via encoded data or other means.</para><para></para><para>An image always has a non-zero dimensions. If there is a request to create a new image, either directly or via a surface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para></remarks>
 	public unsafe class SKImage : SKObject, ISKReferenceCounted
 	{
 		internal SKImage (IntPtr x, bool owns)
@@ -337,34 +337,34 @@ namespace SkiaSharp
 
 		// Graphite-backed: wrap a backend texture as a sampling image
 
+		/// <summary>Creates an image that samples from an existing Graphite backend texture.</summary>
 		/// <param name="recorder">The recorder that the image is created for.</param>
 		/// <param name="backendTexture">The backend texture to sample from.</param>
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the texture.</param>
 		/// <param name="alphaType">One of the enumeration values that specifies the alpha type of the texture.</param>
-		/// <summary>Creates an image that samples from an existing Graphite backend texture.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKImage" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType) =>
 			FromTexture (recorder, backendTexture, colorType, alphaType, colorSpace: null);
 
+		/// <summary>Creates an image that samples from an existing Graphite backend texture, using the specified color space.</summary>
 		/// <param name="recorder">The recorder that the image is created for.</param>
 		/// <param name="backendTexture">The backend texture to sample from.</param>
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the texture.</param>
 		/// <param name="alphaType">One of the enumeration values that specifies the alpha type of the texture.</param>
 		/// <param name="colorSpace">The color space of the texture, or <see langword="null" /> to use no color space.</param>
-		/// <summary>Creates an image that samples from an existing Graphite backend texture, using the specified color space.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKImage" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorSpace) =>
 			FromTexture (recorder, backendTexture, colorType, alphaType, colorSpace, releaseProc: null);
 
+		/// <summary>Creates an image that samples from an existing Graphite backend texture, invoking a callback when Skia no longer needs the texture.</summary>
 		/// <param name="recorder">The recorder that the image is created for.</param>
 		/// <param name="backendTexture">The backend texture to sample from.</param>
 		/// <param name="colorType">One of the enumeration values that specifies the color type of the texture.</param>
 		/// <param name="alphaType">One of the enumeration values that specifies the alpha type of the texture.</param>
 		/// <param name="colorSpace">The color space of the texture, or <see langword="null" /> to use no color space.</param>
 		/// <param name="releaseProc">The callback invoked when Skia is finished using the texture, or <see langword="null" /> for none.</param>
-		/// <summary>Creates an image that samples from an existing Graphite backend texture, invoking a callback when Skia no longer needs the texture.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKImage" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorSpace, SKGraphiteReleaseDelegate releaseProc)
@@ -1159,20 +1159,20 @@ namespace SkiaSharp
 
 		// RequestReadPixels
 
+		/// <summary>Asynchronously reads pixels from the image into a result delivered to a callback, using nearest sampling.</summary>
 		/// <param name="info">The image info describing the desired size and format of the result.</param>
 		/// <param name="srcRect">The rectangle of the image to read, in pixels.</param>
-		/// <param name="callback">The callback invoked with the read result, which is valid only for the duration of the call.</param>
-		/// <summary>Asynchronously reads pixels from the image into a result delivered to a callback, using nearest sampling.</summary>
+		/// <param name="callback">The callback invoked with the read result, or <see langword="null" /> if the read fails; the result is valid only for the duration of the call.</param>
 		/// <remarks />
 		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, Action<SKImageReadPixelsResult> callback) =>
 			RequestReadPixels (info, srcRect, SKImageRescaleGamma.Src, SKImageRescaleMode.Nearest, callback);
 
+		/// <summary>Asynchronously reads and rescales pixels from the image into a result delivered to a callback.</summary>
 		/// <param name="info">The image info describing the desired size and format of the result.</param>
 		/// <param name="srcRect">The rectangle of the image to read, in pixels.</param>
 		/// <param name="rescaleGamma">One of the enumeration values that specifies the gamma space used for rescaling.</param>
 		/// <param name="rescaleMode">One of the enumeration values that specifies the sampling algorithm used for rescaling.</param>
-		/// <param name="callback">The callback invoked with the read result, which is valid only for the duration of the call.</param>
-		/// <summary>Asynchronously reads and rescales pixels from the image into a result delivered to a callback.</summary>
+		/// <param name="callback">The callback invoked with the read result, or <see langword="null" /> if the read fails; the result is valid only for the duration of the call.</param>
 		/// <remarks />
 		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, Action<SKImageReadPixelsResult> callback)
 		{
@@ -1324,17 +1324,16 @@ namespace SkiaSharp
 		// (tracking happens at the recorder/context level), so the API is narrower
 		// than the Ganesh overloads above.
 
-		/// <param name="recorder">The recorder to upload the image to.</param>
 		/// <summary>Returns a version of this image that is uploaded to the GPU as a Graphite-backed texture.</summary>
+		/// <param name="recorder">The recorder to upload the image to.</param>
 		/// <returns>A Graphite-backed <see cref="T:SkiaSharp.SKImage" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public SKImage ToTextureImage (SKGraphiteRecorder recorder) =>
 			ToTextureImage (recorder, this, false);
 
-		/// <param name="recorder">The recorder to upload the image to.</param>
-		/// <param name="mipmapped">
-		///           <see langword="true" /> to create the texture with mipmaps; otherwise, <see langword="false" />.</param>
 		/// <summary>Returns a version of this image that is uploaded to the GPU as a Graphite-backed texture, optionally with mipmaps.</summary>
+		/// <param name="recorder">The recorder to upload the image to.</param>
+		/// <param name="mipmapped"><see langword="true" /> to create the texture with mipmaps; otherwise, <see langword="false" />.</param>
 		/// <returns>A Graphite-backed <see cref="T:SkiaSharp.SKImage" />, or <see langword="null" /> if it could not be created.</returns>
 		/// <remarks />
 		public SKImage ToTextureImage (SKGraphiteRecorder recorder, bool mipmapped) =>

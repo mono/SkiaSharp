@@ -53,10 +53,10 @@ namespace SkiaSharp
 	/// <remarks />
 	public delegate IntPtr GRVkGetProcedureAddressDelegate (string name, IntPtr instance, IntPtr device);
 
+	/// <summary>Represents the method that resolves the address of a Vulkan function by name.</summary>
 	/// <param name="name">The name of the Vulkan function to resolve.</param>
 	/// <param name="instance">The Vulkan instance handle to resolve the function against, or <see langword="null" /> when resolving a global or device-level function.</param>
 	/// <param name="device">The Vulkan device handle to resolve the function against, or <see langword="null" /> when resolving a global or instance-level function.</param>
-	/// <summary>Represents the method that resolves the address of a Vulkan function by name.</summary>
 	/// <returns>A pointer to the resolved Vulkan function, or <see cref="F:System.IntPtr.Zero" /> if the function could not be found.</returns>
 	/// <remarks />
 	public delegate IntPtr SKGraphiteVkGetProcedureAddressDelegate (string name, IntPtr instance, IntPtr device);

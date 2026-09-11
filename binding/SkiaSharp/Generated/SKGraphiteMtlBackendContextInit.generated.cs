@@ -35,38 +35,34 @@ namespace SkiaSharp
 			set => fQueue = value;
 		}
 
-		/// <param name="obj">The Metal backend initialization data to compare with the current Metal backend initialization data.</param>
 		/// <summary>Determines whether the specified Metal backend initialization data is equal to the current Metal backend initialization data.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
+		/// <param name="obj">The Metal backend initialization data to compare with the current Metal backend initialization data.</param>
+		/// <returns><see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public readonly bool Equals (SKGraphiteMtlBackendContextInit obj) =>
 #pragma warning disable CS8909
 			fDevice == obj.fDevice && fQueue == obj.fQueue;
 #pragma warning restore CS8909
 
-		/// <param name="obj">The object to compare with the current Metal backend initialization data.</param>
 		/// <summary>Determines whether the specified object is equal to the current Metal backend initialization data.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the specified object is equal to the current value; otherwise, <see langword="false" />.</returns>
+		/// <param name="obj">The object to compare with the current Metal backend initialization data.</param>
+		/// <returns><see langword="true" /> if the specified object is equal to the current value; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public readonly override bool Equals (object obj) =>
 			obj is SKGraphiteMtlBackendContextInit f && Equals (f);
 
+		/// <summary>Indicates whether two Metal backend initialization data values are equal.</summary>
 		/// <param name="left">The first value to compare.</param>
 		/// <param name="right">The second value to compare.</param>
-		/// <summary>Indicates whether two Metal backend initialization data values are equal.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
+		/// <returns><see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public static bool operator == (SKGraphiteMtlBackendContextInit left, SKGraphiteMtlBackendContextInit right) =>
 			left.Equals (right);
 
+		/// <summary>Indicates whether two Metal backend initialization data values are not equal.</summary>
 		/// <param name="left">The first value to compare.</param>
 		/// <param name="right">The second value to compare.</param>
-		/// <summary>Indicates whether two Metal backend initialization data values are not equal.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the two values are not equal; otherwise, <see langword="false" />.</returns>
+		/// <returns><see langword="true" /> if the two values are not equal; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public static bool operator != (SKGraphiteMtlBackendContextInit left, SKGraphiteMtlBackendContextInit right) =>
 			!left.Equals (right);

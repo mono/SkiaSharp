@@ -1380,7 +1380,7 @@ namespace SkiaSharp
 		/// <param name="p">The location at which to draw the upper-left corner of the bitmap.</param>
 		/// <param name="sampling">The sampling options to apply when scaling or filtering the bitmap.</param>
 		/// <param name="paint">The paint to use when drawing the bitmap, or <see langword="null" /> for default rendering.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		public void DrawBitmap (SKBitmap bitmap, SKPoint p, SKSamplingOptions sampling, SKPaint paint = null) =>
 			DrawBitmap (bitmap, p.X, p.Y, sampling, paint);
 
@@ -1390,7 +1390,7 @@ namespace SkiaSharp
 		/// <param name="y">The y-coordinate of the top edge of the bitmap.</param>
 		/// <param name="sampling">The sampling options to apply when scaling or filtering the bitmap.</param>
 		/// <param name="paint">The paint to use when drawing the bitmap, or <see langword="null" /> for default rendering.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		public void DrawBitmap (SKBitmap bitmap, float x, float y, SKSamplingOptions sampling, SKPaint paint = null)
 		{
 			using var image = SKImage.FromBitmap (bitmap);
@@ -1402,7 +1402,7 @@ namespace SkiaSharp
 		/// <param name="dest">The destination rectangle on the canvas.</param>
 		/// <param name="sampling">The sampling options to use when scaling the bitmap.</param>
 		/// <param name="paint">The paint to apply, or <see langword="null" /> to use default paint settings.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		public void DrawBitmap (SKBitmap bitmap, SKRect dest, SKSamplingOptions sampling, SKPaint paint = null)
 		{
 			using var image = SKImage.FromBitmap (bitmap);
@@ -1415,7 +1415,7 @@ namespace SkiaSharp
 		/// <param name="dest">The destination rectangle on the canvas.</param>
 		/// <param name="sampling">The sampling options to use when scaling the bitmap.</param>
 		/// <param name="paint">The paint to apply, or <see langword="null" /> to use default paint settings.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		public void DrawBitmap (SKBitmap bitmap, SKRect source, SKRect dest, SKSamplingOptions sampling, SKPaint paint = null)
 		{
 			using var image = SKImage.FromBitmap (bitmap);
@@ -1453,7 +1453,7 @@ namespace SkiaSharp
 		/// <param name="p">The location at which to draw the upper-left corner of the surface.</param>
 		/// <param name="sampling">The sampling options to use when drawing the surface.</param>
 		/// <param name="paint">The paint to apply, or <see langword="null" /> to use default paint settings.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		public void DrawSurface (SKSurface surface, SKPoint p, SKSamplingOptions sampling, SKPaint paint = null)
 		{
 			DrawSurface (surface, p.X, p.Y, sampling, paint);
@@ -1465,7 +1465,7 @@ namespace SkiaSharp
 		/// <param name="y">The y-coordinate of the destination position on the canvas.</param>
 		/// <param name="sampling">The sampling options to use when drawing the surface.</param>
 		/// <param name="paint">The paint to apply, or <see langword="null" /> to use default paint settings.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		public void DrawSurface (SKSurface surface, float x, float y, SKSamplingOptions sampling, SKPaint paint = null)
 		{
 			if (surface == null)
@@ -1521,7 +1521,7 @@ namespace SkiaSharp
 		/// <param name="p">The origin point of the text baseline.</param>
 		/// <param name="font">The font to use for rendering the text.</param>
 		/// <param name="paint">The paint to apply when drawing.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		[Obsolete ("Use DrawText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: false)]
 		public void DrawText (string text, SKPoint p, SKFont font, SKPaint paint) =>
 			DrawText (text, p, paint.GetLegacyTextAlign (), font, paint);
@@ -1542,7 +1542,7 @@ namespace SkiaSharp
 		/// <param name="y">The y-coordinate of the text baseline origin.</param>
 		/// <param name="font">The font to use for rendering the text.</param>
 		/// <param name="paint">The paint to apply when drawing.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		[Obsolete ("Use DrawText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: false)]
 		public void DrawText (string text, float x, float y, SKFont font, SKPaint paint) =>
 			DrawText (text, x, y, paint.GetLegacyTextAlign (), font, paint);
@@ -2048,8 +2048,8 @@ namespace SkiaSharp
 		public void SetMatrix (in SKMatrix matrix) =>
 			SetMatrix ((SKMatrix44)matrix);
 
-		/// <param name="matrix">The matrix to set as the current transformation matrix.</param>
 		/// <summary>Replaces the current matrix with a copy of the specified matrix.</summary>
+		/// <param name="matrix">The matrix to set as the current transformation matrix.</param>
 		/// <remarks />
 		[Obsolete("Use SetMatrix(in SKMatrix) instead.", true)]
 		public void SetMatrix (SKMatrix matrix) =>

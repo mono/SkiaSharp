@@ -14,8 +14,8 @@ namespace SkiaSharp.HarfBuzz
 		private Font hbFont;
 		private Buffer hbBuffer;
 
-		/// <param name="typeface">The typeface to use for the text shaping.</param>
 		/// <summary>Creates a new <see cref="T:SkiaSharp.HarfBuzz.SKShaper" /> instance using the specified typeface.</summary>
+		/// <param name="typeface">The typeface to use for the text shaping.</param>
 		/// <remarks />
 		public SKShaper(SKTypeface typeface)
 		{
@@ -50,39 +50,39 @@ namespace SkiaSharp.HarfBuzz
 			hbBuffer?.Dispose();
 		}
 
+		/// <summary>Shapes the text in the specified buffer using the properties from the paint.</summary>
 		/// <param name="buffer">The HarfBuzz buffer containing the text to shape.</param>
 		/// <param name="paint">The paint to use for shaping.</param>
-		/// <summary>Shapes the text in the specified buffer using the properties from the paint.</summary>
 		/// <returns>Returns the results of the shaping operation.</returns>
 		/// <remarks />
 		[Obsolete("Use Shape(Buffer buffer, SKFont font) instead.", error: true)]
 		public Result Shape(Buffer buffer, SKPaint paint) =>
 			Shape(buffer, 0, 0, paint.GetLegacyFont());
 
+		/// <summary>Shapes the text in the specified buffer using the properties from the paint, with the specified offset.</summary>
 		/// <param name="buffer">The HarfBuzz buffer containing the text to shape.</param>
 		/// <param name="xOffset">The x-offset to apply to the glyph positions.</param>
 		/// <param name="yOffset">The y-offset to apply to the glyph positions.</param>
 		/// <param name="paint">The paint to use for shaping.</param>
-		/// <summary>Shapes the text in the specified buffer using the properties from the paint, with the specified offset.</summary>
 		/// <returns>Returns the results of the shaping operation.</returns>
 		/// <remarks />
 		[Obsolete("Use Shape(Buffer buffer, float xOffset, float yOffset, SKFont font) instead.", error: true)]
 		public Result Shape(Buffer buffer, float xOffset, float yOffset, SKPaint paint) =>
 			Shape(buffer, xOffset, yOffset, paint.GetLegacyFont());
 
+		/// <summary>Shapes the text in the specified buffer using the font.</summary>
 		/// <param name="buffer">The HarfBuzz buffer containing the text to shape.</param>
 		/// <param name="font">The font to use for shaping.</param>
-		/// <summary>Shapes the text in the specified buffer using the font.</summary>
 		/// <returns>Returns the results of the shaping operation.</returns>
 		/// <remarks />
 		public Result Shape(Buffer buffer, SKFont font) =>
 			Shape(buffer, 0, 0, font);
 
+		/// <summary>Shapes the text in the specified buffer using the font, with the specified offset.</summary>
 		/// <param name="buffer">The HarfBuzz buffer containing the text to shape.</param>
 		/// <param name="xOffset">The x-offset to apply to the glyph positions.</param>
 		/// <param name="yOffset">The y-offset to apply to the glyph positions.</param>
 		/// <param name="font">The font to use for shaping.</param>
-		/// <summary>Shapes the text in the specified buffer using the font, with the specified offset.</summary>
 		/// <returns>Returns the results of the shaping operation.</returns>
 		/// <remarks />
 		public Result Shape(Buffer buffer, float xOffset, float yOffset, SKFont font)
@@ -134,20 +134,20 @@ namespace SkiaSharp.HarfBuzz
 			return new Result(codepoints, clusters, points, width);
 		}
 
+		/// <summary>Shapes the specified text using the properties from the paint.</summary>
 		/// <param name="text">The text to shape.</param>
 		/// <param name="paint">The paint to use.</param>
-		/// <summary>Shapes the specified text using the properties from the paint.</summary>
 		/// <returns>Returns the results of the shaping operation.</returns>
 		/// <remarks />
 		[Obsolete("Use Shape(string text, SKFont font) instead.", error: true)]
 		public Result Shape(string text, SKPaint paint) =>
 			Shape(text, 0, 0, paint.GetLegacyFont());
 
+		/// <summary>Shapes the specified text using the properties from the paint.</summary>
 		/// <param name="text">The text to shape.</param>
 		/// <param name="xOffset">The x-offset to use when creating the shaping result.</param>
 		/// <param name="yOffset">The y-offset to use when creating the shaping result.</param>
 		/// <param name="paint">The paint to use.</param>
-		/// <summary>Shapes the specified text using the properties from the paint.</summary>
 		/// <returns>Returns the results of the shaping operation.</returns>
 		/// <remarks />
 		[Obsolete("Use Shape(string text, float xOffset, float yOffset, SKFont font) instead.", error: true)]
@@ -180,19 +180,19 @@ namespace SkiaSharp.HarfBuzz
 			return Shape(buffer, xOffset, yOffset, paint);
 		}
 
+		/// <summary>Shapes the specified text using the font.</summary>
 		/// <param name="text">The text to shape.</param>
 		/// <param name="font">The font to use for shaping.</param>
-		/// <summary>Shapes the specified text using the font.</summary>
 		/// <returns>Returns the results of the shaping operation.</returns>
 		/// <remarks />
 		public Result Shape(string text, SKFont font) =>
 			Shape(text, 0, 0, font);
 
+		/// <summary>Shapes the specified text using the font, with the specified offset.</summary>
 		/// <param name="text">The text to shape.</param>
 		/// <param name="xOffset">The x-offset to apply to the glyph positions.</param>
 		/// <param name="yOffset">The y-offset to apply to the glyph positions.</param>
 		/// <param name="font">The font to use for shaping.</param>
-		/// <summary>Shapes the specified text using the font, with the specified offset.</summary>
 		/// <returns>Returns the results of the shaping operation.</returns>
 		/// <remarks />
 		public Result Shape(string text, float xOffset, float yOffset, SKFont font)
@@ -224,10 +224,10 @@ namespace SkiaSharp.HarfBuzz
 				Width = 0f;
 			}
 
+			/// <summary>Creates a new <see cref="T:SkiaSharp.HarfBuzz.SKShaper.Result" /> instance using the specified values.</summary>
 			/// <param name="codepoints">The glyph Unicode code points.</param>
 			/// <param name="clusters">The glyph clusters.</param>
 			/// <param name="points">The glyph positions.</param>
-			/// <summary>Creates a new <see cref="T:SkiaSharp.HarfBuzz.SKShaper.Result" /> instance using the specified values.</summary>
 			/// <remarks />
 			public Result(uint[] codepoints, uint[] clusters, SKPoint[] points)
 			{
@@ -237,11 +237,11 @@ namespace SkiaSharp.HarfBuzz
 				Width = 0;
 			}
 
+			/// <summary>Creates a new <see cref="T:SkiaSharp.HarfBuzz.SKShaper.Result" /> instance using the specified values.</summary>
 			/// <param name="codepoints">The glyph Unicode code points.</param>
 			/// <param name="clusters">The glyph clusters.</param>
 			/// <param name="points">The glyph positions.</param>
 			/// <param name="width">The total width of the shaped text.</param>
-			/// <summary>Creates a new <see cref="T:SkiaSharp.HarfBuzz.SKShaper.Result" /> instance using the specified values.</summary>
 			/// <remarks />
 			public Result(uint[] codepoints, uint[] clusters, SKPoint[] points, float width)
 			{

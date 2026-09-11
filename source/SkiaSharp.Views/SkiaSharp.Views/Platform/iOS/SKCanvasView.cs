@@ -32,7 +32,7 @@ namespace SkiaSharp.Views.iOS
 		private bool ignorePixelScaling;
 
 		// created in code
-		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.iOS.SKCanvasView" /> class.</summary>
+		/// <summary>Initializes a new instance of the <see cref="SKCanvasView" /> class.</summary>
 		/// <remarks />
 		public SKCanvasView()
 		{
@@ -40,8 +40,8 @@ namespace SkiaSharp.Views.iOS
 		}
 
 		// created in code
-		/// <param name="frame">The frame used by the view, expressed in iOS points.</param>
-		/// <summary>Initializes the <see cref="T:SkiaSharp.Views.iOS.SKCanvasView" /> with the specified frame.</summary>
+		/// <summary>Initializes the <see cref="SKCanvasView" /> with the specified frame.</summary>
+		/// <param name="frame">The frame used by the view, expressed in points.</param>
 		/// <remarks />
 		public SKCanvasView(CGRect frame)
 			: base(frame)
@@ -50,9 +50,9 @@ namespace SkiaSharp.Views.iOS
 		}
 
 		// created via designer
+		/// <summary>Initializes a new instance of the <see cref="SKCanvasView" /> class from a native handle.</summary>
 		/// <param name="p">The pointer (handle) to the unmanaged object.</param>
-		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.iOS.SKCanvasView" /> class from a native handle.</summary>
-		/// <remarks>This constructor is used by the Xamarin.iOS runtime when creating managed representations of unmanaged objects. It is not intended to be called directly from user code.</remarks>
+		/// <remarks>This constructor is used by the platform runtime when creating managed representations of unmanaged objects. It is not intended to be called directly from user code.</remarks>
 		public SKCanvasView(IntPtr p)
 			: base(p)
 		{
@@ -82,8 +82,7 @@ namespace SkiaSharp.Views.iOS
 		public SKSize CanvasSize { get; private set; }
 
 		/// <summary>Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.</summary>
-		/// <value>
-		///           <see langword="true" /> to ignore pixel scaling; otherwise, <see langword="false" />.</value>
+		/// <value><see langword="true" /> to ignore pixel scaling; otherwise, <see langword="false" />.</value>
 		/// <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.</remarks>
 		public bool IgnorePixelScaling
 		{
@@ -95,8 +94,8 @@ namespace SkiaSharp.Views.iOS
 			}
 		}
 
-		/// <param name="rect">The rectangle to draw.</param>
 		/// <summary>Draws the view within the passed-in rectangle.</summary>
+		/// <param name="rect">The rectangle to draw.</param>
 		/// <remarks />
 		public override void Draw(CGRect rect)
 		{
@@ -136,8 +135,8 @@ namespace SkiaSharp.Views.iOS
 			drawable.DrawSurface(ctx, Bounds, info, surface);
 		}
 
-		/// <param name="window">The window to which the view is being added, or <see langword="null" /> if the view is being removed from a window.</param>
-		/// <summary>Called when the view is about to move to a window.</summary>
+		/// <summary>Called before the view is added to or removed from a window.</summary>
+		/// <param name="window">The window object, or <see langword="null" /> if the view is being removed from a window.</param>
 		/// <remarks />
 		public override void WillMoveToWindow(UIWindow window)
 		{
@@ -154,15 +153,12 @@ namespace SkiaSharp.Views.iOS
 		}
 
 		/// <summary>Occurs when the canvas needs to be redrawn.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
-		/// <xref:SkiaSharp.Views.iOS.SKCanvasView.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs)>
-		/// method, or by attaching a handler to the
-		/// <xref:SkiaSharp.Views.iOS.SKCanvasView.PaintSurface>
-		/// event.
+		/// `OnPaintSurface` method, or by attaching a handler to the
+		/// `PaintSurface` event.
 		///
 		/// ## Examples
 		///
@@ -179,21 +175,17 @@ namespace SkiaSharp.Views.iOS
 		///     canvas.Flush ();
 		/// };
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
-		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
 		/// <summary>Implement this to draw on the canvas.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
-		/// <xref:SkiaSharp.Views.iOS.SKCanvasView.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs)>
-		/// method, or by attaching a handler to the
-		/// <xref:SkiaSharp.Views.iOS.SKCanvasView.PaintSurface>
-		/// event.
+		/// `OnPaintSurface` method, or by attaching a handler to the
+		/// `PaintSurface` event.
 		///
 		/// > [!IMPORTANT]
 		/// > If this method is overridden, then the base must be called, otherwise the
@@ -218,8 +210,7 @@ namespace SkiaSharp.Views.iOS
 		///     canvas.Flush ();
 		/// }
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
@@ -234,10 +225,9 @@ namespace SkiaSharp.Views.iOS
 			Layer.SetNeedsDisplay();
 		}
 
-		/// <param name="disposing">
-		///           <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
-		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.Views.iOS.SKCanvasView" /> and optionally releases the managed resources.</summary>
-		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.Views.iOS.SKCanvasView" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
+		/// <summary>Releases the unmanaged resources used by the <see cref="SKCanvasView" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="SKCanvasView" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);

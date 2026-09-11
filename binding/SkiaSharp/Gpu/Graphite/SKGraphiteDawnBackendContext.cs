@@ -6,15 +6,13 @@ using System.Runtime.InteropServices;
 namespace SkiaSharp
 {
 	/// <summary>Supplies the Dawn (WebGPU) instance, device, and queue used to create a Dawn-backed <see cref="T:SkiaSharp.SKGraphiteContext" />.</summary>
-	/// <remarks>
-	///       <format type="text/markdown"><![CDATA[
+	/// <remarks><format type="text/markdown"><![CDATA[
 	/// ## Remarks
 	///
 	/// Populate the <xref:SkiaSharp.SKGraphiteDawnBackendContext.WgpuInstance>, <xref:SkiaSharp.SKGraphiteDawnBackendContext.WgpuDevice>, and <xref:SkiaSharp.SKGraphiteDawnBackendContext.WgpuQueue> handles, then pass this object to <xref:SkiaSharp.SKGraphiteContext.CreateDawn(SkiaSharp.SKGraphiteDawnBackendContext)>. You can dispose it as soon as the context has been created.
 	///
 	/// On non-yielding environments such as the browser (WASM), the Dawn event loop cannot be pumped from inside a managed call frame, so synchronous submits are rejected; drive readbacks with <xref:SkiaSharp.SKGraphiteContext.CheckAsyncWorkCompletion> instead.
-	/// ]]></format>
-	///     </remarks>
+	/// ]]></format></remarks>
 	public unsafe class SKGraphiteDawnBackendContext : IDisposable
 	{
 		private static readonly OSPlatform Browser = OSPlatform.Create ("BROWSER");
@@ -56,9 +54,8 @@ namespace SkiaSharp
 			};
 		}
 
-		/// <param name="disposing">
-		///           <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKGraphiteDawnBackendContext" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <remarks />
 		protected virtual void Dispose (bool disposing)
 		{

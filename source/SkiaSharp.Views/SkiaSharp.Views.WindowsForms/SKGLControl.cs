@@ -53,8 +53,8 @@ namespace SkiaSharp.Views.Desktop
 			Initialize();
 		}
 
-		/// <param name="mode">The OpenTK graphics mode that defines the color, depth, stencil, and accumulation buffer configuration for the control.</param>
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Desktop.SKGLControl" /> class with the specified graphics mode.</summary>
+		/// <param name="mode">The OpenTK graphics mode that defines the color, depth, stencil, and accumulation buffer configuration for the control.</param>
 		/// <remarks></remarks>
 		public SKGLControl(GraphicsMode mode)
 			: base(mode)
@@ -62,11 +62,11 @@ namespace SkiaSharp.Views.Desktop
 			Initialize();
 		}
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Desktop.SKGLControl" /> class with the specified graphics mode, OpenGL version, and context flags.</summary>
 		/// <param name="mode">The OpenTK graphics mode that defines the color, depth, stencil, and accumulation buffer configuration.</param>
 		/// <param name="major">The major version number of the OpenGL context to create.</param>
 		/// <param name="minor">The minor version number of the OpenGL context to create.</param>
 		/// <param name="flags">A bitwise combination of <see cref="T:OpenTK.Graphics.GraphicsContextFlags" /> values that control context creation.</param>
-		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Desktop.SKGLControl" /> class with the specified graphics mode, OpenGL version, and context flags.</summary>
 		/// <remarks></remarks>
 		public SKGLControl(GraphicsMode mode, int major, int minor, GraphicsContextFlags flags)
 			: base(mode, major, minor, flags)
@@ -91,8 +91,7 @@ namespace SkiaSharp.Views.Desktop
 		public GRContext GRContext => grContext;
 
 		/// <summary>Occurs when the surface needs to be redrawn.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -116,13 +115,12 @@ namespace SkiaSharp.Views.Desktop
 		///     canvas.Flush ();
 		/// };
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		[Category("Appearance")]
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
-		/// <param name="e">A PaintEventArgs that contains the event data.</param>
 		/// <summary>Raises the Paint event.</summary>
+		/// <param name="e">A PaintEventArgs that contains the event data.</param>
 		/// <remarks />
 		protected override void OnPaint(PaintEventArgs e)
 		{
@@ -188,10 +186,9 @@ namespace SkiaSharp.Views.Desktop
 			SwapBuffers();
 		}
 
-		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
 		/// <summary>Implement this to draw on the canvas.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -223,17 +220,15 @@ namespace SkiaSharp.Views.Desktop
 		///     canvas.Flush ();
 		/// }
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
 			// invoke the event
 			PaintSurface?.Invoke(this, e);
 		}
 
-		/// <param name="disposing">
-		///           <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.Views.Desktop.SKGLControl" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.Views.Desktop.SKGLControl" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose(bool disposing)
 		{

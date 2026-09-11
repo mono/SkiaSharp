@@ -41,7 +41,7 @@ namespace SkiaSharp
 		// defensively.
 		/// <summary>Gets or sets the handle to the underlying native path object.</summary>
 		/// <value>The underlying native <c>sk_path_t</c> handle.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public override IntPtr Handle {
 			get {
 				if (!IsDisposed)
@@ -389,7 +389,7 @@ namespace SkiaSharp
 
 		/// <summary>Computes a bounds that is conservatively "snug" around the path.</summary>
 		/// <returns>Returns the bounds.</returns>
-		/// <remarks><para>This assumes that the path will be filled.</para><para /><para>It does not attempt to collapse away contours that are logically empty (e.g. MoveTo(x, y) + LineTo(x, y)) but will include them in the calculation.</para></remarks>
+		/// <remarks><para>This assumes that the path will be filled.</para><para></para><para>It does not attempt to collapse away contours that are logically empty (e.g. MoveTo(x, y) + LineTo(x, y)) but will include them in the calculation.</para></remarks>
 		public SKRect ComputeTightBounds ()
 		{
 			SKRect rect;
@@ -424,16 +424,16 @@ namespace SkiaSharp
 			GC.KeepAlive (this);
 		}
 
-		/// <param name="matrix">The matrix to use for transformation.</param>
 		/// <summary>Applies a transformation matrix to all elements in the path.</summary>
+		/// <param name="matrix">The matrix to use for transformation.</param>
 		/// <remarks />
 		[Obsolete("Use Transform(in SKMatrix) instead.", true)]
 		public void Transform (SKMatrix matrix) =>
 			Transform (in matrix);
 
+		/// <summary>Applies a transformation matrix to all elements and stores the result in the destination path.</summary>
 		/// <param name="matrix">The matrix to use for transformation.</param>
 		/// <param name="destination">The path that will receive the transformed result.</param>
-		/// <summary>Applies a transformation matrix to all elements and stores the result in the destination path.</summary>
 		/// <remarks />
 		[Obsolete("Use Transform(in SKMatrix matrix, SKPath destination) instead.", true)]
 		public void Transform (SKMatrix matrix, SKPath destination) =>

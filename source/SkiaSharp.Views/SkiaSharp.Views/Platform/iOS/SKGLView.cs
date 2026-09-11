@@ -61,7 +61,7 @@ namespace SkiaSharp.Views.iOS
 		private SKSizeI lastSize;
 
 		// created in code
-		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.iOS.SKGLView" /> class.</summary>
+		/// <summary>Initializes a new instance of the <see cref="SKGLView" /> class.</summary>
 		/// <remarks />
 		public SKGLView()
 		{
@@ -69,8 +69,8 @@ namespace SkiaSharp.Views.iOS
 		}
 
 		// created in code
-		/// <param name="frame">The frame used by the view, expressed in iOS points.</param>
-		/// <summary>Initializes the <see cref="T:SkiaSharp.Views.iOS.SKGLView" /> with the specified frame.</summary>
+		/// <summary>Initializes the <see cref="SKGLView" /> with the specified frame.</summary>
+		/// <param name="frame">The frame used by the view, expressed in points.</param>
 		/// <remarks />
 		public SKGLView(CGRect frame)
 			: base(frame)
@@ -79,9 +79,9 @@ namespace SkiaSharp.Views.iOS
 		}
 
 		// created via designer
+		/// <summary>Initializes a new instance of the <see cref="SKGLView" /> class from a native handle.</summary>
 		/// <param name="p">The pointer (handle) to the unmanaged object.</param>
-		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.iOS.SKGLView" /> class from a native handle.</summary>
-		/// <remarks>This constructor is used by the Xamarin.iOS runtime when creating managed representations of unmanaged objects. It is not intended to be called directly from user code.</remarks>
+		/// <remarks>This constructor is used by the platform runtime when creating managed representations of unmanaged objects. It is not intended to be called directly from user code.</remarks>
 		public SKGLView(IntPtr p)
 			: base(p)
 		{
@@ -123,9 +123,9 @@ namespace SkiaSharp.Views.iOS
 		/// <remarks />
 		public GRContext GRContext => context;
 
+		/// <summary>Draws the view within the passed-in rectangle.</summary>
 		/// <param name="view">The view to draw on.</param>
 		/// <param name="rect">The rectangle to draw.</param>
-		/// <summary>Draws the view within the passed-in rectangle.</summary>
 		/// <remarks />
 		public new void DrawInRect(GLKView view, CGRect rect)
 		{
@@ -187,15 +187,12 @@ namespace SkiaSharp.Views.iOS
 		}
 
 		/// <summary>Occurs when the surface needs to be redrawn.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
-		/// <xref:SkiaSharp.Views.iOS.SKGLView.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs)>
-		/// method, or by attaching a handler to the
-		/// <xref:SkiaSharp.Views.iOS.SKGLView.PaintSurface>
-		/// event.
+		/// `OnPaintSurface` method, or by attaching a handler to the
+		/// `PaintSurface` event.
 		///
 		/// ## Examples
 		///
@@ -212,21 +209,17 @@ namespace SkiaSharp.Views.iOS
 		///     canvas.Flush ();
 		/// };
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
-		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
 		/// <summary>Implement this to draw on the canvas.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
-		/// <xref:SkiaSharp.Views.iOS.SKGLView.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs)>
-		/// method, or by attaching a handler to the
-		/// <xref:SkiaSharp.Views.iOS.SKGLView.PaintSurface>
-		/// event.
+		/// `OnPaintSurface` method, or by attaching a handler to the
+		/// `PaintSurface` event.
 		///
 		/// > [!IMPORTANT]
 		/// > If this method is overridden, then the base must be called, otherwise the
@@ -251,8 +244,7 @@ namespace SkiaSharp.Views.iOS
 		///     canvas.Flush ();
 		/// }
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);

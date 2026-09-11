@@ -18,8 +18,7 @@ namespace SkiaSharp
 		// public bool fSync
 		private Byte fSync;
 		/// <summary>Gets or sets a value indicating whether the submit call blocks until the GPU has finished the submitted work.</summary>
-		/// <value>
-		///           <see langword="true" /> to wait for the GPU to finish; otherwise, <see langword="false" />.</value>
+		/// <value><see langword="true" /> to wait for the GPU to finish; otherwise, <see langword="false" />.</value>
 		/// <remarks />
 		public bool Sync {
 			readonly get => fSync > 0;
@@ -29,8 +28,7 @@ namespace SkiaSharp
 		// public bool fMarkBoundary
 		private Byte fMarkBoundary;
 		/// <summary>Gets or sets a value indicating whether the submission marks a frame boundary.</summary>
-		/// <value>
-		///           <see langword="true" /> to mark a frame boundary; otherwise, <see langword="false" />.</value>
+		/// <value><see langword="true" /> to mark a frame boundary; otherwise, <see langword="false" />.</value>
 		/// <remarks />
 		public bool MarkBoundary {
 			readonly get => fMarkBoundary > 0;
@@ -47,38 +45,34 @@ namespace SkiaSharp
 			set => fFrameID = value;
 		}
 
-		/// <param name="obj">The submission info to compare with the current submission info.</param>
 		/// <summary>Determines whether the specified submission info is equal to the current submission info.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
+		/// <param name="obj">The submission info to compare with the current submission info.</param>
+		/// <returns><see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public readonly bool Equals (SKGraphiteSubmitInfo obj) =>
 #pragma warning disable CS8909
 			fSync == obj.fSync && fMarkBoundary == obj.fMarkBoundary && fFrameID == obj.fFrameID;
 #pragma warning restore CS8909
 
-		/// <param name="obj">The object to compare with the current submission info.</param>
 		/// <summary>Determines whether the specified object is equal to the current submission info.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the specified object is equal to the current value; otherwise, <see langword="false" />.</returns>
+		/// <param name="obj">The object to compare with the current submission info.</param>
+		/// <returns><see langword="true" /> if the specified object is equal to the current value; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public readonly override bool Equals (object obj) =>
 			obj is SKGraphiteSubmitInfo f && Equals (f);
 
+		/// <summary>Indicates whether two submission info values are equal.</summary>
 		/// <param name="left">The first value to compare.</param>
 		/// <param name="right">The second value to compare.</param>
-		/// <summary>Indicates whether two submission info values are equal.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
+		/// <returns><see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public static bool operator == (SKGraphiteSubmitInfo left, SKGraphiteSubmitInfo right) =>
 			left.Equals (right);
 
+		/// <summary>Indicates whether two submission info values are not equal.</summary>
 		/// <param name="left">The first value to compare.</param>
 		/// <param name="right">The second value to compare.</param>
-		/// <summary>Indicates whether two submission info values are not equal.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the two values are not equal; otherwise, <see langword="false" />.</returns>
+		/// <returns><see langword="true" /> if the two values are not equal; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public static bool operator != (SKGraphiteSubmitInfo left, SKGraphiteSubmitInfo right) =>
 			!left.Equals (right);

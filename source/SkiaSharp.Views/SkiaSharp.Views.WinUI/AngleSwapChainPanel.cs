@@ -128,8 +128,8 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
-		/// <param name="rect">The rectangle defining the render area dimensions in pixels.</param>
 		/// <summary>Called when a frame should be rendered.</summary>
+		/// <param name="rect">The rectangle defining the render area dimensions in pixels.</param>
 		/// <remarks>Override this method to perform OpenGL rendering operations.</remarks>
 		protected virtual void OnRenderFrame(Rect rect)
 		{

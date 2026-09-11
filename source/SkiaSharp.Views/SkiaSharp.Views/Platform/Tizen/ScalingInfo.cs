@@ -42,20 +42,20 @@ namespace SkiaSharp.Views.Tizen
 		/// <remarks />
 		public static double ScalingFactor => scalingFactorOverride ?? scalingFactor.Value;
 
-		/// <param name="v">The raw pixel dimension.</param>
 		/// <summary>Convert from raw pixels into device-independent pixels.</summary>
+		/// <param name="v">The raw pixel dimension.</param>
 		/// <returns>Returns the device-independent pixel dimension.</returns>
 		/// <remarks />
 		public static double FromPixel(double v) => v / ScalingFactor;
 
-		/// <param name="v">The device-independent pixel dimension.</param>
 		/// <summary>Convert from device-independent pixels into raw pixels.</summary>
+		/// <param name="v">The device-independent pixel dimension.</param>
 		/// <returns>Returns the raw pixel dimension.</returns>
 		/// <remarks />
 		public static double ToPixel(double v) => v * ScalingFactor;
 
-		/// <param name="scalingFactor">The scaling factor to use, or <see langword="null" /> to reset to the default.</param>
 		/// <summary>Sets or resets the scaling factor used to convert between raw pixels and device-independent pixels.</summary>
+		/// <param name="scalingFactor">The scaling factor to use, or <see langword="null" /> to reset to the default.</param>
 		/// <remarks />
 		public static void SetScalingFactor(double? scalingFactor)
 		{

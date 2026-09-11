@@ -153,7 +153,7 @@ namespace SkiaSharp.Views.Blazor
 
 		#if __ANDROID__
 		/// <summary>Gets the surface that is currently being drawn on.</summary>
-		/// <value>The surface being drawn on.</value>
+		/// <value>The current surface.</value>
 		/// <remarks />
 		#else
 		/// <summary>Gets the surface that is currently being drawn on.</summary>
@@ -164,7 +164,7 @@ namespace SkiaSharp.Views.Blazor
 
 		#if __ANDROID__
 		/// <summary>Gets the render target that is currently being drawn.</summary>
-		/// <value>The render target being drawn.</value>
+		/// <value>The current render target.</value>
 		/// <remarks />
 		#else
 		/// <summary>Gets the render target that is currently being drawn.</summary>
@@ -185,7 +185,7 @@ namespace SkiaSharp.Views.Blazor
 
 		#if __ANDROID__
 		/// <summary>Gets the image information of the surface.</summary>
-		/// <value>The image information of the surface.</value>
+		/// <value>The <see cref="T:SkiaSharp.SKImageInfo" /> containing the dimensions and color type of the surface.</value>
 		/// <remarks />
 		#else
 		/// <summary>Gets the image information of the surface.</summary>
@@ -195,8 +195,8 @@ namespace SkiaSharp.Views.Blazor
 		public SKImageInfo Info { get; private set; }
 
 		#if __ANDROID__
-		/// <summary>Gets the raw image information of the surface.</summary>
-		/// <value>The raw image information of the surface.</value>
+		/// <summary>Gets the raw image information of the underlying render target.</summary>
+		/// <value>The <see cref="T:SkiaSharp.SKImageInfo" /> containing the actual dimensions and color type of the underlying render target.</value>
 		/// <remarks />
 		#else
 		/// <summary>Gets the raw image information of the underlying render target.</summary>

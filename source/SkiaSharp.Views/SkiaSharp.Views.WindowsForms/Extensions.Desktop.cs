@@ -8,8 +8,8 @@ namespace SkiaSharp.Views.Desktop
 	{
 		// System.Drawing.Point*
 
-		/// <param name="point">The System.Drawing point.</param>
 		/// <summary>Converts a System.Drawing point into a SkiaSharp point.</summary>
+		/// <param name="point">The System.Drawing point.</param>
 		/// <returns>Returns a SkiaSharp point.</returns>
 		/// <remarks />
 		public static SKPoint ToSKPoint(this System.Drawing.PointF point)
@@ -17,8 +17,8 @@ namespace SkiaSharp.Views.Desktop
 			return new SKPoint(point.X, point.Y);
 		}
 
-		/// <param name="point">The System.Drawing point.</param>
 		/// <summary>Converts a System.Drawing point into a SkiaSharp point.</summary>
+		/// <param name="point">The System.Drawing point.</param>
 		/// <returns>Returns a SkiaSharp point.</returns>
 		/// <remarks />
 		public static SKPointI ToSKPoint(this System.Drawing.Point point)
@@ -26,8 +26,8 @@ namespace SkiaSharp.Views.Desktop
 			return new SKPointI(point.X, point.Y);
 		}
 
-		/// <param name="point">The SkiaSharp point.</param>
 		/// <summary>Converts a SkiaSharp point into a System.Drawing point.</summary>
+		/// <param name="point">The SkiaSharp point.</param>
 		/// <returns>Returns a System.Drawing point.</returns>
 		/// <remarks />
 		public static System.Drawing.PointF ToDrawingPoint(this SKPoint point)
@@ -35,8 +35,8 @@ namespace SkiaSharp.Views.Desktop
 			return new System.Drawing.PointF(point.X, point.Y);
 		}
 
-		/// <param name="point">The SkiaSharp point.</param>
 		/// <summary>Converts a SkiaSharp point into a System.Drawing point.</summary>
+		/// <param name="point">The SkiaSharp point.</param>
 		/// <returns>Returns a System.Drawing point.</returns>
 		/// <remarks />
 		public static System.Drawing.Point ToDrawingPoint(this SKPointI point)
@@ -46,8 +46,8 @@ namespace SkiaSharp.Views.Desktop
 
 		// System.Drawing.Rectangle*
 
-		/// <param name="rect">The System.Drawing rectangle.</param>
 		/// <summary>Converts a System.Drawing rectangle into a SkiaSharp rectangle.</summary>
+		/// <param name="rect">The System.Drawing rectangle.</param>
 		/// <returns>Returns a SkiaSharp rectangle.</returns>
 		/// <remarks />
 		public static SKRect ToSKRect(this System.Drawing.RectangleF rect)
@@ -55,8 +55,8 @@ namespace SkiaSharp.Views.Desktop
 			return new SKRect(rect.Left, rect.Top, rect.Right, rect.Bottom);
 		}
 
-		/// <param name="rect">The System.Drawing rectangle.</param>
 		/// <summary>Converts a System.Drawing rectangle into a SkiaSharp rectangle.</summary>
+		/// <param name="rect">The System.Drawing rectangle.</param>
 		/// <returns>Returns a SkiaSharp rectangle.</returns>
 		/// <remarks />
 		public static SKRectI ToSKRect(this System.Drawing.Rectangle rect)
@@ -64,8 +64,8 @@ namespace SkiaSharp.Views.Desktop
 			return new SKRectI(rect.Left, rect.Top, rect.Right, rect.Bottom);
 		}
 
-		/// <param name="rect">The SkiaSharp rectangle.</param>
 		/// <summary>Converts a SkiaSharp rectangle into a System.Drawing rectangle.</summary>
+		/// <param name="rect">The SkiaSharp rectangle.</param>
 		/// <returns>Returns a System.Drawing rectangle.</returns>
 		/// <remarks />
 		public static System.Drawing.RectangleF ToDrawingRect(this SKRect rect)
@@ -73,8 +73,8 @@ namespace SkiaSharp.Views.Desktop
 			return System.Drawing.RectangleF.FromLTRB(rect.Left, rect.Top, rect.Right, rect.Bottom);
 		}
 
-		/// <param name="rect">The SkiaSharp rectangle.</param>
 		/// <summary>Converts a SkiaSharp rectangle into a System.Drawing rectangle.</summary>
+		/// <param name="rect">The SkiaSharp rectangle.</param>
 		/// <returns>Returns a System.Drawing rectangle.</returns>
 		/// <remarks />
 		public static System.Drawing.Rectangle ToDrawingRect(this SKRectI rect)
@@ -84,8 +84,8 @@ namespace SkiaSharp.Views.Desktop
 
 		// System.Drawing.Size*
 
-		/// <param name="size">The System.Drawing size.</param>
 		/// <summary>Converts a System.Drawing size into a SkiaSharp size.</summary>
+		/// <param name="size">The System.Drawing size.</param>
 		/// <returns>Returns a SkiaSharp size.</returns>
 		/// <remarks />
 		public static SKSize ToSKSize(this System.Drawing.SizeF size)
@@ -93,8 +93,8 @@ namespace SkiaSharp.Views.Desktop
 			return new SKSize(size.Width, size.Height);
 		}
 
-		/// <param name="size">The System.Drawing size.</param>
 		/// <summary>Converts a System.Drawing size into a SkiaSharp size.</summary>
+		/// <param name="size">The System.Drawing size.</param>
 		/// <returns>Returns a SkiaSharp size.</returns>
 		/// <remarks />
 		public static SKSizeI ToSKSize(this System.Drawing.Size size)
@@ -102,8 +102,8 @@ namespace SkiaSharp.Views.Desktop
 			return new SKSizeI(size.Width, size.Height);
 		}
 
-		/// <param name="size">The SkiaSharp size.</param>
 		/// <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
+		/// <param name="size">The SkiaSharp size.</param>
 		/// <returns>Returns a System.Drawing size.</returns>
 		/// <remarks />
 		public static System.Drawing.SizeF ToDrawingSize(this SKSize size)
@@ -111,8 +111,8 @@ namespace SkiaSharp.Views.Desktop
 			return new System.Drawing.SizeF(size.Width, size.Height);
 		}
 
-		/// <param name="size">The SkiaSharp size.</param>
 		/// <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
+		/// <param name="size">The SkiaSharp size.</param>
 		/// <returns>Returns a System.Drawing size.</returns>
 		/// <remarks />
 		public static System.Drawing.Size ToDrawingSize(this SKSizeI size)
@@ -122,9 +122,9 @@ namespace SkiaSharp.Views.Desktop
 
 		// System.Drawing.Bitmap
 
+		/// <summary>Converts a SkiaSharp picture into a System.Drawing bitmap.</summary>
 		/// <param name="picture">The SkiaSharp picture.</param>
 		/// <param name="dimensions">The dimensions of the picture.</param>
-		/// <summary>Converts a SkiaSharp picture into a System.Drawing bitmap.</summary>
 		/// <returns>Returns a copy of the picture as a System.Drawing bitmap.</returns>
 		/// <remarks />
 		public static System.Drawing.Bitmap ToBitmap(this SKPicture picture, SKSizeI dimensions)
@@ -135,8 +135,8 @@ namespace SkiaSharp.Views.Desktop
 			}
 		}
 
-		/// <param name="skiaImage">The SkiaSharp image.</param>
 		/// <summary>Converts a SkiaSharp image into a System.Drawing bitmap.</summary>
+		/// <param name="skiaImage">The SkiaSharp image.</param>
 		/// <returns>Returns a copy of the image data as a System.Drawing bitmap.</returns>
 		/// <remarks />
 		public static System.Drawing.Bitmap ToBitmap(this SKImage skiaImage)
@@ -156,8 +156,8 @@ namespace SkiaSharp.Views.Desktop
 			return bitmap;
 		}
 
-		/// <param name="skiaBitmap">The SkiaSharp bitmap.</param>
 		/// <summary>Converts a SkiaSharp bitmap into a System.Drawing bitmap.</summary>
+		/// <param name="skiaBitmap">The SkiaSharp bitmap.</param>
 		/// <returns>Returns a copy of the bitmap data as a System.Drawing bitmap.</returns>
 		/// <remarks />
 		public static System.Drawing.Bitmap ToBitmap(this SKBitmap skiaBitmap)
@@ -171,8 +171,8 @@ namespace SkiaSharp.Views.Desktop
 			}
 		}
 
-		/// <param name="pixmap">The SkiaSharp pixmap.</param>
 		/// <summary>Converts a SkiaSharp pixmap into a System.Drawing bitmap.</summary>
+		/// <param name="pixmap">The SkiaSharp pixmap.</param>
 		/// <returns>Returns a copy of the pixel data as a System.Drawing bitmap.</returns>
 		/// <remarks />
 		public static System.Drawing.Bitmap ToBitmap(this SKPixmap pixmap)
@@ -183,8 +183,8 @@ namespace SkiaSharp.Views.Desktop
 			}
 		}
 
-		/// <param name="bitmap">The System.Drawing bitmap.</param>
 		/// <summary>Converts a System.Drawing bitmap into a SkiaSharp bitmap.</summary>
+		/// <param name="bitmap">The System.Drawing bitmap.</param>
 		/// <returns>Returns a copy of the bitmap data as a SkiaSharp bitmap.</returns>
 		/// <remarks />
 		public static SKBitmap ToSKBitmap(this System.Drawing.Bitmap bitmap)
@@ -200,8 +200,8 @@ namespace SkiaSharp.Views.Desktop
 			return skiaBitmap;
 		}
 
-		/// <param name="bitmap">The System.Drawing bitmap.</param>
 		/// <summary>Converts a System.Drawing bitmap into a SkiaSharp image.</summary>
+		/// <param name="bitmap">The System.Drawing bitmap.</param>
 		/// <returns>Returns a copy of the bitmap data as a SkiaSharp image.</returns>
 		/// <remarks />
 		public static SKImage ToSKImage(this System.Drawing.Bitmap bitmap)
@@ -217,9 +217,9 @@ namespace SkiaSharp.Views.Desktop
 			return image;
 		}
 
+		/// <summary>Converts a System.Drawing bitmap into a SkiaSharp pixmap.</summary>
 		/// <param name="bitmap">The System.Drawing bitmap.</param>
 		/// <param name="pixmap">The SkiaSharp pixmap to hold the copy of the bitmap data.</param>
-		/// <summary>Converts a System.Drawing bitmap into a SkiaSharp pixmap.</summary>
 		/// <remarks />
 		public static void ToSKPixmap(this System.Drawing.Bitmap bitmap, SKPixmap pixmap)
 		{
@@ -251,8 +251,8 @@ namespace SkiaSharp.Views.Desktop
 
 		// System.Drawing.Color
 
-		/// <param name="color">The System.Drawing color.</param>
 		/// <summary>Converts a System.Drawing color into a SkiaSharp color.</summary>
+		/// <param name="color">The System.Drawing color.</param>
 		/// <returns>Returns a SkiaSharp color.</returns>
 		/// <remarks />
 		public static SKColor ToSKColor(this System.Drawing.Color color)
@@ -260,8 +260,8 @@ namespace SkiaSharp.Views.Desktop
 			return (SKColor)(uint)color.ToArgb();
 		}
 
-		/// <param name="color">The SkiaSharp color.</param>
 		/// <summary>Converts a SkiaSharp color into a System.Drawing color.</summary>
+		/// <param name="color">The SkiaSharp color.</param>
 		/// <returns>Returns a System.Drawing color.</returns>
 		/// <remarks />
 		public static System.Drawing.Color ToDrawingColor(this SKColor color)

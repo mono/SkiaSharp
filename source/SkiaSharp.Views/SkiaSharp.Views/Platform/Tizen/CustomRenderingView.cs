@@ -17,8 +17,8 @@ namespace SkiaSharp.Views.Tizen
 		/// <remarks />
 		protected IntPtr evasImage;
 
-		/// <param name="parent">The parent object.</param>
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> class.</summary>
+		/// <param name="parent">The parent object.</param>
 		/// <remarks>Use this constructor when creating the view programmatically from code.</remarks>
 		public CustomRenderingView(EvasObject parent)
 			: base(parent)
@@ -60,8 +60,8 @@ namespace SkiaSharp.Views.Tizen
 				Evas.evas_object_image_pixels_dirty_set(evasImage, true);
 		}
 
-		/// <param name="parent">The parent object.</param>
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to create the native resources which should be present throughout whole life of the control.</summary>
+		/// <param name="parent">The parent object.</param>
 		/// <remarks />
 		protected virtual void CreateNativeResources(EvasObject parent)
 		{
@@ -79,8 +79,8 @@ namespace SkiaSharp.Views.Tizen
 		/// <remarks />
 		protected abstract void OnDrawFrame();
 
-		/// <param name="geometry">The current geometry of the control.</param>
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to update the drawing surface dimensions.</summary>
+		/// <param name="geometry">The current geometry of the control.</param>
 		/// <returns>Returns <see langword="true" /> if the size has changed, otherwise <see langword="false" />.</returns>
 		/// <remarks />
 		protected abstract bool UpdateSurfaceSize(Rect geometry);
@@ -109,8 +109,8 @@ namespace SkiaSharp.Views.Tizen
 			// empty on purpose
 		}
 
-		/// <param name="parent">The parent object.</param>
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to creates a Widget handle.</summary>
+		/// <param name="parent">The parent object.</param>
 		/// <returns>Returns the pointer to the new handle.</returns>
 		/// <remarks />
 		protected sealed override IntPtr CreateHandle(EvasObject parent)

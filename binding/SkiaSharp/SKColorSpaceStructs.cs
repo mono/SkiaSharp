@@ -81,7 +81,7 @@ namespace SkiaSharp
 	}
 
 	/// <summary>Represents the coefficients for a common transfer function equation.</summary>
-	/// <remarks><para>The coefficients are specified as a transformation from a curved space to linear.</para><para /><para>LinearVal = C*InputVal + F;   (for 0.0f &lt;= InputVal &lt; D)</para><para>LinearVal = (A*InputVal + B)^G + E;   (for D &lt;= InputVal &lt;= 1.0f)</para><para /><para>Function is undefined if InputVal is not in [ 0.0f, 1.0f ].</para><para>Resulting LinearVals must be in [ 0.0f, 1.0f ].</para><para>Function must be positive and increasing.</para></remarks>
+	/// <remarks><para>The coefficients are specified as a transformation from a curved space to linear.</para><para></para><para>LinearVal = C*InputVal + F;   (for 0.0f &lt;= InputVal &lt; D)</para><para>LinearVal = (A*InputVal + B)^G + E;   (for D &lt;= InputVal &lt;= 1.0f)</para><para></para><para>Function is undefined if InputVal is not in [ 0.0f, 1.0f ].</para><para>Resulting LinearVals must be in [ 0.0f, 1.0f ].</para><para>Function must be positive and increasing.</para></remarks>
 	public unsafe partial struct SKColorSpaceTransferFn
 	{
 		/// <summary>Gets the transfer function for the sRGB color space.</summary>

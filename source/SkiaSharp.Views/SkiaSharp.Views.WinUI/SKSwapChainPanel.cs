@@ -53,8 +53,8 @@ namespace SkiaSharp.Views.UWP
 			PaintSurface?.Invoke(this, e);
 		}
 
-		/// <param name="rect">The rectangle defining the render area dimensions.</param>
 		/// <summary>Called when a frame should be rendered.</summary>
+		/// <param name="rect">The rectangle defining the render area dimensions.</param>
 		/// <remarks>This method creates the SkiaSharp context and surface, then invokes <see cref="M:SkiaSharp.Views.Windows.SKSwapChainPanel.OnPaintSurface(SkiaSharp.Views.Windows.SKPaintGLSurfaceEventArgs)" /> to perform the actual drawing.</remarks>
 		protected override void OnRenderFrame(Rect rect)
 		{

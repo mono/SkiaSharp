@@ -28,8 +28,7 @@ namespace SkiaSharp
 		// public bool fMipmapped
 		private Byte fMipmapped;
 		/// <summary>Gets or sets a value indicating whether the texture has mipmaps.</summary>
-		/// <value>
-		///           <see langword="true" /> if the texture has mipmaps; otherwise, <see langword="false" />.</value>
+		/// <value><see langword="true" /> if the texture has mipmaps; otherwise, <see langword="false" />.</value>
 		/// <remarks />
 		public bool Mipmapped {
 			readonly get => fMipmapped > 0;
@@ -96,38 +95,34 @@ namespace SkiaSharp
 			set => fAspectMask = value;
 		}
 
-		/// <param name="obj">The Vulkan texture info to compare with the current Vulkan texture info.</param>
 		/// <summary>Determines whether the specified Vulkan texture info is equal to the current Vulkan texture info.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
+		/// <param name="obj">The Vulkan texture info to compare with the current Vulkan texture info.</param>
+		/// <returns><see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public readonly bool Equals (SKGraphiteVkTextureInfo obj) =>
 #pragma warning disable CS8909
 			fSampleCount == obj.fSampleCount && fMipmapped == obj.fMipmapped && fFlags == obj.fFlags && fFormat == obj.fFormat && fImageTiling == obj.fImageTiling && fImageUsageFlags == obj.fImageUsageFlags && fSharingMode == obj.fSharingMode && fAspectMask == obj.fAspectMask;
 #pragma warning restore CS8909
 
-		/// <param name="obj">The object to compare with the current Vulkan texture info.</param>
 		/// <summary>Determines whether the specified object is equal to the current Vulkan texture info.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the specified object is equal to the current value; otherwise, <see langword="false" />.</returns>
+		/// <param name="obj">The object to compare with the current Vulkan texture info.</param>
+		/// <returns><see langword="true" /> if the specified object is equal to the current value; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public readonly override bool Equals (object obj) =>
 			obj is SKGraphiteVkTextureInfo f && Equals (f);
 
+		/// <summary>Indicates whether two Vulkan texture info values are equal.</summary>
 		/// <param name="left">The first value to compare.</param>
 		/// <param name="right">The second value to compare.</param>
-		/// <summary>Indicates whether two Vulkan texture info values are equal.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
+		/// <returns><see langword="true" /> if the two values are equal; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public static bool operator == (SKGraphiteVkTextureInfo left, SKGraphiteVkTextureInfo right) =>
 			left.Equals (right);
 
+		/// <summary>Indicates whether two Vulkan texture info values are not equal.</summary>
 		/// <param name="left">The first value to compare.</param>
 		/// <param name="right">The second value to compare.</param>
-		/// <summary>Indicates whether two Vulkan texture info values are not equal.</summary>
-		/// <returns>
-		///           <see langword="true" /> if the two values are not equal; otherwise, <see langword="false" />.</returns>
+		/// <returns><see langword="true" /> if the two values are not equal; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public static bool operator != (SKGraphiteVkTextureInfo left, SKGraphiteVkTextureInfo right) =>
 			!left.Equals (right);

@@ -34,7 +34,7 @@ public static unsafe class SKWebpEncoder
 	/// <param name="src">The pixel data to encode.</param>
 	/// <param name="options">The WebP encoder options, such as quality and compression method.</param>
 	/// <returns><see langword="true" /> if encoding succeeded; otherwise, <see langword="false" />.</returns>
-	/// <remarks />
+	/// <remarks></remarks>
 	public static bool Encode (SKWStream dst, SKPixmap src, SKWebpEncoderOptions options)
 	{
 		_ = dst ?? throw new ArgumentNullException (nameof (dst));
@@ -51,7 +51,7 @@ public static unsafe class SKWebpEncoder
 	/// <param name="src">The pixel data to encode.</param>
 	/// <param name="options">The WebP encoder options, such as quality and compression method.</param>
 	/// <returns><see langword="true" /> if encoding succeeded; otherwise, <see langword="false" />.</returns>
-	/// <remarks />
+	/// <remarks></remarks>
 	public static bool Encode (Stream dst, SKPixmap src, SKWebpEncoderOptions options)
 	{
 		_ = dst ?? throw new ArgumentNullException (nameof (dst));
@@ -65,7 +65,7 @@ public static unsafe class SKWebpEncoder
 	/// <param name="src">The pixel data to encode.</param>
 	/// <param name="options">The WebP encoder options, such as quality and compression method.</param>
 	/// <returns>A new <see cref="T:SkiaSharp.SKData" /> containing the encoded WebP data, or <see langword="null" /> if encoding failed.</returns>
-	/// <remarks />
+	/// <remarks></remarks>
 	public static SKData? Encode (SKPixmap src, SKWebpEncoderOptions options)
 	{
 		_ = src ?? throw new ArgumentNullException (nameof (src));

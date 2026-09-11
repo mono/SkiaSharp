@@ -31,7 +31,7 @@ public readonly struct SKFourByteTag : IEquatable<SKFourByteTag>
 
 	/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKFourByteTag" /> struct from a raw 32-bit value.</summary>
 	/// <param name="value">The raw 32-bit packed tag value.</param>
-	/// <remarks />
+	/// <remarks></remarks>
 	public SKFourByteTag (uint value)
 	{
 		this.value = value;
@@ -42,7 +42,7 @@ public readonly struct SKFourByteTag : IEquatable<SKFourByteTag>
 	/// <param name="c2">The second character of the tag.</param>
 	/// <param name="c3">The third character of the tag.</param>
 	/// <param name="c4">The fourth (least significant) character of the tag.</param>
-	/// <remarks />
+	/// <remarks></remarks>
 	public SKFourByteTag (char c1, char c2, char c3, char c4)
 	{
 		value = (uint)(((byte)c1 << 24) | ((byte)c2 << 16) | ((byte)c3 << 8) | (byte)c4);
@@ -51,14 +51,14 @@ public readonly struct SKFourByteTag : IEquatable<SKFourByteTag>
 	/// <summary>Parses a string of up to four ASCII characters into an <see cref="T:SkiaSharp.SKFourByteTag" />.</summary>
 	/// <param name="tag">A string of up to four ASCII characters. Shorter strings are padded with spaces on the right; longer strings are truncated.</param>
 	/// <returns>An <see cref="T:SkiaSharp.SKFourByteTag" /> representing the four-byte packed tag.</returns>
-	/// <remarks />
+	/// <remarks></remarks>
 	public static SKFourByteTag Parse (string? tag) =>
 		Parse (tag.AsSpan ());
 
 	/// <summary>Parses a span of up to four ASCII characters into an <see cref="T:SkiaSharp.SKFourByteTag" />.</summary>
 	/// <param name="tag">A span of up to four ASCII characters. Shorter spans are padded with spaces on the right; longer spans are truncated.</param>
 	/// <returns>An <see cref="T:SkiaSharp.SKFourByteTag" /> representing the four-byte packed tag.</returns>
-	/// <remarks />
+	/// <remarks></remarks>
 	public static SKFourByteTag Parse (ReadOnlySpan<char> tag)
 	{
 		if (tag.IsEmpty)
@@ -78,7 +78,7 @@ public readonly struct SKFourByteTag : IEquatable<SKFourByteTag>
 
 	/// <summary>Returns the four-character ASCII string representation of this tag.</summary>
 	/// <returns>A four-character ASCII string representation of this tag.</returns>
-	/// <remarks />
+	/// <remarks></remarks>
 	public override unsafe string ToString ()
 	{
 		// Build the 4-character string directly from a stack buffer. Passing four
@@ -96,44 +96,44 @@ public readonly struct SKFourByteTag : IEquatable<SKFourByteTag>
 	/// <summary>Implicitly converts an <see cref="T:SkiaSharp.SKFourByteTag" /> to its underlying 32-bit unsigned integer value.</summary>
 	/// <param name="tag">The <see cref="T:SkiaSharp.SKFourByteTag" /> to convert.</param>
 	/// <returns>The underlying 32-bit packed value of the tag.</returns>
-	/// <remarks />
+	/// <remarks></remarks>
 	public static implicit operator uint (SKFourByteTag tag) => tag.value;
 
 	/// <summary>Implicitly converts a 32-bit unsigned integer to an <see cref="T:SkiaSharp.SKFourByteTag" />.</summary>
 	/// <param name="tag">The raw 32-bit packed value to store.</param>
 	/// <returns>An <see cref="T:SkiaSharp.SKFourByteTag" /> wrapping the specified value.</returns>
-	/// <remarks />
+	/// <remarks></remarks>
 	public static implicit operator SKFourByteTag (uint tag) => new SKFourByteTag (tag);
 
 	/// <summary>Indicates whether this tag is equal to the specified object.</summary>
 	/// <param name="obj">The object to compare with this instance.</param>
 	/// <returns><see langword="true" /> if <paramref name="obj" /> is an <see cref="T:SkiaSharp.SKFourByteTag" /> with the same packed value; otherwise, <see langword="false" />.</returns>
-	/// <remarks />
+	/// <remarks></remarks>
 	public override bool Equals (object? obj) =>
 		obj is SKFourByteTag tag && value.Equals (tag.value);
 
 	/// <summary>Indicates whether this tag is equal to another <see cref="T:SkiaSharp.SKFourByteTag" />.</summary>
 	/// <param name="other">The <see cref="T:SkiaSharp.SKFourByteTag" /> to compare with this instance.</param>
 	/// <returns><see langword="true" /> if both tags have the same packed value; otherwise, <see langword="false" />.</returns>
-	/// <remarks />
+	/// <remarks></remarks>
 	public bool Equals (SKFourByteTag other) => value == other.value;
 
 	/// <summary>Returns a hash code for this tag.</summary>
 	/// <returns>A hash code for this <see cref="T:SkiaSharp.SKFourByteTag" /> instance.</returns>
-	/// <remarks />
+	/// <remarks></remarks>
 	public override int GetHashCode () => (int)value;
 
 	/// <summary>Determines whether two <see cref="T:SkiaSharp.SKFourByteTag" /> values are equal.</summary>
 	/// <param name="left">The first <see cref="T:SkiaSharp.SKFourByteTag" /> to compare.</param>
 	/// <param name="right">The second <see cref="T:SkiaSharp.SKFourByteTag" /> to compare.</param>
 	/// <returns><see langword="true" /> if <paramref name="left" /> and <paramref name="right" /> are equal; otherwise, <see langword="false" />.</returns>
-	/// <remarks />
+	/// <remarks></remarks>
 	public static bool operator == (SKFourByteTag left, SKFourByteTag right) => left.Equals (right);
 
 	/// <summary>Determines whether two <see cref="T:SkiaSharp.SKFourByteTag" /> values are not equal.</summary>
 	/// <param name="left">The first <see cref="T:SkiaSharp.SKFourByteTag" /> to compare.</param>
 	/// <param name="right">The second <see cref="T:SkiaSharp.SKFourByteTag" /> to compare.</param>
 	/// <returns><see langword="true" /> if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, <see langword="false" />.</returns>
-	/// <remarks />
+	/// <remarks></remarks>
 	public static bool operator != (SKFourByteTag left, SKFourByteTag right) => !left.Equals (right);
 }

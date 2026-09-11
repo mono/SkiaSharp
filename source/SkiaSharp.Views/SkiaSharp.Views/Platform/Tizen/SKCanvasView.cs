@@ -12,8 +12,8 @@ namespace SkiaSharp.Views.Tizen
 		private SKImageInfo info;
 		private SKSizeI canvasSize;
 
-		/// <param name="parent">The parent object.</param>
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Tizen.SKCanvasView" /> class.</summary>
+		/// <param name="parent">The parent object.</param>
 		/// <remarks>Use this constructor when creating the view programmatically from code.</remarks>
 		public SKCanvasView(EvasObject parent)
 			: base(parent)
@@ -22,8 +22,7 @@ namespace SkiaSharp.Views.Tizen
 		}
 
 		/// <summary>Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.</summary>
-		/// <value>
-		///           <see langword="true" /> to ignore pixel scaling; otherwise, <see langword="false" />.</value>
+		/// <value><see langword="true" /> to ignore pixel scaling; otherwise, <see langword="false" />.</value>
 		/// <remarks>By default, when <see langword="false" />, the canvas is resized to 1 canvas pixel per display pixel. When <see langword="true" />, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.</remarks>
 		public bool IgnorePixelScaling
 		{
@@ -40,8 +39,7 @@ namespace SkiaSharp.Views.Tizen
 		}
 
 		/// <summary>Occurs when the surface needs to be redrawn.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -65,8 +63,7 @@ namespace SkiaSharp.Views.Tizen
 		///     canvas.Flush ();
 		/// };
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to provide the dimensions of the current drawing surface.</summary>
@@ -79,10 +76,9 @@ namespace SkiaSharp.Views.Tizen
 		/// <remarks />
 		protected override SKSizeI GetRawSurfaceSize() => info.Size;
 
-		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
 		/// <summary>Implement this to draw on the canvas.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -114,8 +110,7 @@ namespace SkiaSharp.Views.Tizen
 		///     canvas.Flush ();
 		/// }
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		protected virtual void OnDrawFrame(SKPaintSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
@@ -143,8 +138,8 @@ namespace SkiaSharp.Views.Tizen
 			surface.Canvas.Flush();
 		}
 
-		/// <param name="geometry">The current geometry of the control.</param>
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to update the drawing surface dimensions.</summary>
+		/// <param name="geometry">The current geometry of the control.</param>
 		/// <returns>Returns <see langword="true" /> if the size has changed, otherwise <see langword="false" />.</returns>
 		/// <remarks />
 		protected sealed override bool UpdateSurfaceSize(Rect geometry)

@@ -25,8 +25,7 @@ namespace SkiaSharp.Views.Gtk
 		public SKSize CanvasSize => pix == null ? SKSize.Empty : new SKSize(pix.Width, pix.Height);
 
 		/// <summary>Occurs when the canvas needs to be redrawn.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -49,15 +48,14 @@ namespace SkiaSharp.Views.Gtk
 		///     canvas.Flush ();
 		/// };
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		[Category("Appearance")]
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
-		/// <summary>Handles the GTK draw event.</summary>
-		/// <param name="cr">The Cairo context used to paint the widget.</param>
-		/// <returns><see langword="true" /> to stop event propagation; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <summary>Default handler for the Gtk.Widget.Drawn event.</summary>
+		/// <param name="cr">The <see cref="T:Cairo.Context" /> to be used to paint the widget.</param>
+		/// <returns>Returns <see langword="true" /> to stop other handlers from being invoked for the event, or <see langword="false" /> to continue the event propagation.</returns>
+		/// <remarks>Override this method in a subclass to provide a default handler for the Gtk.Widget.Drawn event. The <see cref="T:Cairo.Context" /> will be disposed after this method returns, so you should not keep a reference to it outside of the scope of this method.</remarks>
 		protected override bool OnDrawn(Context cr)
 		{
 			// get the pixbuf
@@ -92,10 +90,9 @@ namespace SkiaSharp.Views.Gtk
 			return true;
 		}
 
-		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
 		/// <summary>Implement this to draw on the canvas.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -127,17 +124,15 @@ namespace SkiaSharp.Views.Gtk
 		///     canvas.Flush ();
 		/// }
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
 		{
 			// invoke the event
 			PaintSurface?.Invoke(this, e);
 		}
 
-		/// <param name="disposing">
-		///           <see langword="true" /> to release both managed and native resources; <see langword="false" /> to release only native resources.</param>
 		/// <summary>Releases the resources used by this <see cref="T:SkiaSharp.Views.Gtk.SKDrawingArea" />.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and native resources; <see langword="false" /> to release only native resources.</param>
 		/// <remarks></remarks>
 		protected override void Dispose(bool disposing)
 		{

@@ -273,7 +273,7 @@ namespace SkiaSharp
 
 		/// <summary>Flushes any pending GPU drawing work associated with the specified image.</summary>
 		/// <param name="image">The image whose associated GPU work should be flushed.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		public void Flush (SKImage image)
 		{
 			if (image == null) {
@@ -287,7 +287,7 @@ namespace SkiaSharp
 
 		/// <summary>Flushes any pending GPU drawing work associated with the specified surface.</summary>
 		/// <param name="surface">The surface whose associated GPU work should be flushed.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		public void Flush (SKSurface surface)
 		{
 			if (surface == null) {

@@ -37,7 +37,7 @@ namespace SkiaSharp
 		private SKFourByteTag axis;
 		/// <summary>Gets or sets the four-byte tag of the variation axis this coordinate applies to.</summary>
 		/// <value>The four-byte tag identifying the variation axis (for example, <c>wght</c> for weight).</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public SKFourByteTag Axis {
 			readonly get => axis;
 			set => axis = value;
@@ -47,7 +47,7 @@ namespace SkiaSharp
 		private Single value;
 		/// <summary>Gets or sets the design-space value for this axis coordinate.</summary>
 		/// <value>The design-space value for the variation axis identified by <see cref="P:SkiaSharp.SKFontVariationPositionCoordinate.Axis" />.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public Single Value {
 			readonly get => this.value;
 			set => this.value = value;
@@ -56,7 +56,7 @@ namespace SkiaSharp
 		/// <summary>Indicates whether this coordinate is equal to another <see cref="T:SkiaSharp.SKFontVariationPositionCoordinate" />.</summary>
 		/// <param name="obj">The <see cref="T:SkiaSharp.SKFontVariationPositionCoordinate" /> to compare with this instance.</param>
 		/// <returns><see langword="true" /> if both coordinates have the same axis tag and value; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public readonly bool Equals (SKFontVariationPositionCoordinate obj) =>
 #pragma warning disable CS8909
 			axis == obj.axis && value == obj.value;
@@ -65,7 +65,7 @@ namespace SkiaSharp
 		/// <summary>Indicates whether this coordinate is equal to the specified object.</summary>
 		/// <param name="obj">The object to compare with this instance.</param>
 		/// <returns><see langword="true" /> if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKFontVariationPositionCoordinate" /> with the same axis tag and value; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public readonly override bool Equals (object obj) =>
 			obj is SKFontVariationPositionCoordinate f && Equals (f);
 
@@ -73,7 +73,7 @@ namespace SkiaSharp
 		/// <param name="left">The first <see cref="T:SkiaSharp.SKFontVariationPositionCoordinate" /> to compare.</param>
 		/// <param name="right">The second <see cref="T:SkiaSharp.SKFontVariationPositionCoordinate" /> to compare.</param>
 		/// <returns><see langword="true" /> if <paramref name="left" /> and <paramref name="right" /> are equal; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public static bool operator == (SKFontVariationPositionCoordinate left, SKFontVariationPositionCoordinate right) =>
 			left.Equals (right);
 
@@ -81,13 +81,13 @@ namespace SkiaSharp
 		/// <param name="left">The first <see cref="T:SkiaSharp.SKFontVariationPositionCoordinate" /> to compare.</param>
 		/// <param name="right">The second <see cref="T:SkiaSharp.SKFontVariationPositionCoordinate" /> to compare.</param>
 		/// <returns><see langword="true" /> if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public static bool operator != (SKFontVariationPositionCoordinate left, SKFontVariationPositionCoordinate right) =>
 			!left.Equals (right);
 
 		/// <summary>Returns a hash code for this coordinate.</summary>
 		/// <returns>A hash code for this <see cref="T:SkiaSharp.SKFontVariationPositionCoordinate" /> instance.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();

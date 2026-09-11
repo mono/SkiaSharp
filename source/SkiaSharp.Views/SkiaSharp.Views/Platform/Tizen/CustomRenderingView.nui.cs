@@ -62,8 +62,8 @@ namespace SkiaSharp.Views.Tizen.NUI
 		/// <remarks>Derived classes must override this method to perform custom drawing operations.</remarks>
 		protected abstract void OnDrawFrame();
 
-		/// <param name="e">The event arguments containing the surface and canvas information.</param>
 		/// <summary>Raises the <see cref="E:SkiaSharp.Views.Tizen.NUI.CustomRenderingView.PaintSurface" /> event.</summary>
+		/// <param name="e">The event arguments containing the surface and canvas information.</param>
 		/// <remarks>Derived classes should call this method to notify subscribers that the surface is ready to be painted.</remarks>
 		protected void SendPaintSurface(SKPaintSurfaceEventArgs e)
 		{

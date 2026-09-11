@@ -11,15 +11,13 @@ namespace SkiaSharp
 #endif
 
 	/// <summary>Supplies the Vulkan instance, devices, queue, and function loader used to create a Vulkan-backed <see cref="T:SkiaSharp.SKGraphiteContext" />.</summary>
-	/// <remarks>
-	///       <format type="text/markdown"><![CDATA[
+	/// <remarks><format type="text/markdown"><![CDATA[
 	/// ## Remarks
 	///
 	/// Populate the Vulkan handles and the <xref:SkiaSharp.SKGraphiteVkBackendContext.GetProcedureAddress> loader, then pass this object to <xref:SkiaSharp.SKGraphiteContext.CreateVulkan(SkiaSharp.SKGraphiteVkBackendContext)>. Ownership of the delegate that keeps the function loader alive is transferred to the context, so you can dispose this object as soon as the context has been created.
 	///
 	/// This type implements `IDisposable`.
-	/// ]]></format>
-	///     </remarks>
+	/// ]]></format></remarks>
 	public unsafe class SKGraphiteVkBackendContext : IDisposable
 	{
 		private SKGraphiteVkGetProcedureAddressDelegate getProc;
@@ -57,8 +55,7 @@ namespace SkiaSharp
 		public uint MaxApiVersion { get; set; }
 
 		/// <summary>Gets or sets a value indicating whether the context uses Vulkan protected content.</summary>
-		/// <value>
-		///           <see langword="true" /> if the context uses protected content; otherwise, <see langword="false" />.</value>
+		/// <value><see langword="true" /> if the context uses protected content; otherwise, <see langword="false" />.</value>
 		/// <remarks />
 		public bool ProtectedContext { get; set; }
 

@@ -486,19 +486,13 @@ namespace SkiaSharp
 		}
 	}
 
-	/// <summary>
-	/// This should be implemented on all types that inherit directly or
-	/// indirectly from SkRefCnt or SkRefCntBase
-	/// </summary>
+	/// <summary>This should be implemented on all types that inherit directly or indirectly from SkRefCnt or SkRefCntBase</summary>
 	internal interface ISKReferenceCounted
 	{
 		IntPtr Handle { get; }
 	}
 
-	/// <summary>
-	/// This should be implemented on all types that inherit directly or
-	/// indirectly from SkNVRefCnt
-	/// </summary>
+	/// <summary>This should be implemented on all types that inherit directly or indirectly from SkNVRefCnt</summary>
 	internal interface ISKNonVirtualReferenceCounted : ISKReferenceCounted
 	{
 		void ReferenceNative ();
@@ -506,12 +500,7 @@ namespace SkiaSharp
 		void UnreferenceNative ();
 	}
 
-	/// <summary>
-	/// This should be implemented on all types that can skip the expensive
-	/// registration in the global dictionary. Typically this would be the case
-	/// if the type os _only_ constructed by the user and not provided as a
-	/// return type for _any_ member.
-	/// </summary>
+	/// <summary>This should be implemented on all types that can skip the expensive registration in the global dictionary. Typically this would be the case if the type os _only_ constructed by the user and not provided as a return type for _any_ member.</summary>
 	internal interface ISKSkipObjectRegistration
 	{
 	}

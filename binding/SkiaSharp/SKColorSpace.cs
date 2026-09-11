@@ -197,7 +197,7 @@ namespace SkiaSharp
 		/// <param name="colorPrimaries">One of the enumeration values that specifies the CICP color primaries.</param>
 		/// <param name="transferCharacteristics">One of the enumeration values that specifies the CICP transfer function.</param>
 		/// <returns>A new <see cref="T:SkiaSharp.SKColorSpace" />, or <see langword="null" /> if the specified CICP parameters do not define a supported color space.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public static SKColorSpace CreateCicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics) =>
 			GetObject (SkiaApi.sk_colorspace_new_cicp (colorPrimaries, transferCharacteristics));
 

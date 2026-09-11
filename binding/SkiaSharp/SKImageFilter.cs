@@ -19,8 +19,8 @@ namespace SkiaSharp
 
 		// CreateMatrix
 
-		/// <param name="matrix">The transformation matrix.</param>
 		/// <summary>Creates an image filter that applies a transformation matrix.</summary>
+		/// <param name="matrix">The transformation matrix.</param>
 		/// <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or <see langword="null" /> on error.</returns>
 		/// <remarks />
 		[Obsolete("Use SetMatrix(in SKMatrix) instead.", true)]

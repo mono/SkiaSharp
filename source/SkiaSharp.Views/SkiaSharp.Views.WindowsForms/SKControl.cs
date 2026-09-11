@@ -28,8 +28,7 @@ namespace SkiaSharp.Views.Desktop
 		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.Width, bitmap.Height);
 
 		/// <summary>Occurs when the canvas needs to be redrawn.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -53,13 +52,12 @@ namespace SkiaSharp.Views.Desktop
 		///     canvas.Flush ();
 		/// };
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		[Category("Appearance")]
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
-		/// <param name="e">A PaintEventArgs that contains the event data.</param>
 		/// <summary>Raises the Paint event.</summary>
+		/// <param name="e">A PaintEventArgs that contains the event data.</param>
 		/// <remarks />
 		protected override void OnPaint(PaintEventArgs e)
 		{
@@ -90,10 +88,9 @@ namespace SkiaSharp.Views.Desktop
 			e.Graphics.DrawImage(bitmap, 0, 0);
 		}
 
-		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
 		/// <summary>Implement this to draw on the canvas.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -125,17 +122,15 @@ namespace SkiaSharp.Views.Desktop
 		///     canvas.Flush ();
 		/// }
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
 		{
 			// invoke the event
 			PaintSurface?.Invoke(this, e);
 		}
 
-		/// <param name="disposing">
-		///           <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.Views.Desktop.SKControl" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.Views.Desktop.SKControl" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose(bool disposing)
 		{

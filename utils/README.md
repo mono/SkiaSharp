@@ -93,6 +93,11 @@ media references. It emits documentation elements in this deterministic order:
 8. `seealso`
 9. `permission`
 
+Use `--format-source <directory>` to normalize existing `///` comments without
+importing documentation. It applies the same element ordering and whitespace
+rules to every active and conditional-compilation branch it finds, preserves
+Markdown CDATA verbatim, and is idempotent.
+
 Compare the compiler-emitted XML against the package baseline with:
 
 ```pwsh

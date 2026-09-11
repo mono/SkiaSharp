@@ -26,7 +26,9 @@ namespace SkiaSharp
 	/// ```csharp
 	/// using var colorSpace = SKColorSpace.CreateCicp(
 	///     SKColorspacePrimariesCicp.Rec2020,
-	///     SKColorspaceTransferFnCicp.Pq);
+	///     SKColorspaceTransferFnCicp.Pq,
+	///     SKColorspaceMatrixCoefficients.Identity,
+	///     SKColorspaceRange.Full);
 	/// ```
 	/// ]]></remarks>
 	public enum SKColorspaceTransferFnCicp {

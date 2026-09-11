@@ -5,15 +5,13 @@ using System;
 namespace SkiaSharp
 {
 	/// <summary>Represents the pixel data returned by an asynchronous read-pixels request, valid only for the duration of the callback.</summary>
-	/// <remarks>
-	///       <format type="text/markdown"><![CDATA[
+	/// <remarks><format type="text/markdown"><![CDATA[
 	/// ## Remarks
 	///
 	/// An instance is passed to the callback supplied to <xref:SkiaSharp.SKImage.RequestReadPixels(SkiaSharp.SKImageInfo,SkiaSharp.SKRectI,System.Action{SkiaSharp.SKImageReadPixelsResult})> or the equivalent method on <xref:SkiaSharp.SKSurface> and <xref:SkiaSharp.SKGraphiteContext>. The underlying pixels are only valid while the callback runs; to keep the data, copy it out with <xref:SkiaSharp.SKImageReadPixelsResult.ToArray(System.Int32)>, <xref:SkiaSharp.SKImageReadPixelsResult.ToBitmap>, or <xref:SkiaSharp.SKImageReadPixelsResult.ToImage>.
 	///
 	/// Results may be planar (for example, a YUV read has more than one plane); use <xref:SkiaSharp.SKImageReadPixelsResult.PlaneCount> to enumerate the planes.
-	/// ]]></format>
-	///     </remarks>
+	/// ]]></format></remarks>
 	public sealed unsafe class SKImageReadPixelsResult : IDisposable
 	{
 		private IntPtr handle;
@@ -35,8 +33,8 @@ namespace SkiaSharp
 			}
 		}
 
-		/// <param name="planeIndex">The zero-based index of the plane.</param>
 		/// <summary>Gets the number of bytes per row of the specified plane, including any padding.</summary>
+		/// <param name="planeIndex">The zero-based index of the plane.</param>
 		/// <returns>The number of bytes per row of the plane.</returns>
 		/// <remarks />
 		public int GetPlaneRowBytes (int planeIndex)
@@ -47,8 +45,8 @@ namespace SkiaSharp
 			return (int)SkiaApi.sk_image_async_read_result_get_row_bytes (handle, planeIndex);
 		}
 
-		/// <param name="planeIndex">The zero-based index of the plane.</param>
 		/// <summary>Gets a read-only view over the raw pixel data of the specified plane, including any per-row padding.</summary>
+		/// <param name="planeIndex">The zero-based index of the plane.</param>
 		/// <returns>A read-only span over the plane's pixel data, valid only for the duration of the callback.</returns>
 		/// <remarks />
 		public ReadOnlySpan<byte> GetPlaneData (int planeIndex)
@@ -70,9 +68,9 @@ namespace SkiaSharp
 
 		// Copies the plane into destination as tightly-packed pixels (any transfer-buffer row
 		// padding is stripped, so the destination stride is info.RowBytes).
+		/// <summary>Copies the specified plane into the destination as tightly-packed pixels, stripping any per-row padding.</summary>
 		/// <param name="planeIndex">The zero-based index of the plane to copy.</param>
 		/// <param name="destination">The span to copy the tightly-packed pixels into.</param>
-		/// <summary>Copies the specified plane into the destination as tightly-packed pixels, stripping any per-row padding.</summary>
 		/// <remarks />
 		public void CopyPlaneTo (int planeIndex, Span<byte> destination)
 		{
@@ -108,8 +106,8 @@ namespace SkiaSharp
 		}
 
 		// Returns a tightly-packed copy of the plane that outlives the callback.
-		/// <param name="planeIndex">The zero-based index of the plane to copy.</param>
 		/// <summary>Copies the specified plane into a new tightly-packed byte array that outlives the callback.</summary>
+		/// <param name="planeIndex">The zero-based index of the plane to copy.</param>
 		/// <returns>A new byte array containing the tightly-packed plane data.</returns>
 		/// <remarks />
 		public byte[] ToArray (int planeIndex = 0)

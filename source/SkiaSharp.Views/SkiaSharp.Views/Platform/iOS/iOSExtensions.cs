@@ -14,8 +14,8 @@ namespace SkiaSharp.Views.iOS
 	{
 		// UIColor
 
-		/// <param name="color">The UIKit color.</param>
 		/// <summary>Converts a UIKit color into a SkiaSharp color.</summary>
+		/// <param name="color">The UIKit color.</param>
 		/// <returns>Returns a SkiaSharp color.</returns>
 		/// <remarks />
 		public static SKColor ToSKColor(this UIColor color)
@@ -25,8 +25,8 @@ namespace SkiaSharp.Views.iOS
 			return new SKColor((byte)(r * 255), (byte)(g * 255), (byte)(b * 255), (byte)(a * 255));
 		}
 
-		/// <param name="color">The UIKit color.</param>
 		/// <summary>Converts a UIKit color into a SkiaSharp floating-point color.</summary>
+		/// <param name="color">The UIKit color.</param>
 		/// <returns>Returns a SkiaSharp floating-point color.</returns>
 		/// <remarks />
 		public static SKColorF ToSKColorF(this UIColor color)
@@ -36,15 +36,15 @@ namespace SkiaSharp.Views.iOS
 			return new SKColorF((float)r, (float)g, (float)b, (float)a);
 		}
 
-		/// <param name="color">The SkiaSharp color.</param>
 		/// <summary>Converts a SkiaSharp color into a UIKit color.</summary>
+		/// <param name="color">The SkiaSharp color.</param>
 		/// <returns>Returns a UIKit color.</returns>
 		/// <remarks />
 		public static UIColor ToUIColor(this SKColor color) =>
 			UIColor.FromRGBA(color.Red, color.Green, color.Blue, color.Alpha);
 
-		/// <param name="color">The SkiaSharp floating-point color.</param>
 		/// <summary>Converts a SkiaSharp floating-point color into a UIKit color.</summary>
+		/// <param name="color">The SkiaSharp floating-point color.</param>
 		/// <returns>Returns a UIKit color.</returns>
 		/// <remarks />
 		public static UIColor ToUIColor(this SKColorF color) =>
@@ -52,8 +52,8 @@ namespace SkiaSharp.Views.iOS
 
 		// UIImage
 
-		/// <param name="uiImage">The UIKit image.</param>
 		/// <summary>Converts a UIKit image into a SkiaSharp image.</summary>
+		/// <param name="uiImage">The UIKit image.</param>
 		/// <returns>Returns a copy of the image data as a SkiaSharp image.</returns>
 		/// <remarks />
 		public static SKImage ToSKImage(this UIImage uiImage)
@@ -71,8 +71,8 @@ namespace SkiaSharp.Views.iOS
 			return null;
 		}
 
-		/// <param name="uiImage">The UIKit image.</param>
 		/// <summary>Converts a UIKit image into a SkiaSharp bitmap.</summary>
+		/// <param name="uiImage">The UIKit image.</param>
 		/// <returns>Returns a copy of the image data as a SkiaSharp bitmap.</returns>
 		/// <remarks />
 		public static SKBitmap ToSKBitmap(this UIImage uiImage)
@@ -90,9 +90,9 @@ namespace SkiaSharp.Views.iOS
 			return null;
 		}
 
+		/// <summary>Converts a SkiaSharp pixmap into a UIKit image.</summary>
 		/// <param name="uiImage">The UIKit image.</param>
 		/// <param name="pixmap">The SkiaSharp pixmap to hold the copy of the image data.</param>
-		/// <summary>Converts a SkiaSharp pixmap into a UIKit image.</summary>
 		/// <returns>Returns <see langword="true" /> if the copy was successful, otherwise <see langword="false" />.</returns>
 		/// <remarks />
 		public static bool ToSKPixmap(this UIImage uiImage, SKPixmap pixmap)
@@ -112,11 +112,11 @@ namespace SkiaSharp.Views.iOS
 			return false;
 		}
 
+		/// <summary>Converts a SkiaSharp picture into a UIKit image.</summary>
 		/// <param name="skiaPicture">The SkiaSharp picture.</param>
 		/// <param name="dimensions">The dimensions of the picture.</param>
 		/// <param name="scale">The scale factor for the image. A factor of 1.0 is the original size of the image.</param>
 		/// <param name="orientation">The rotation that is to be applied to the image.</param>
-		/// <summary>Converts a SkiaSharp picture into a UIKit image.</summary>
 		/// <returns>Returns a copy of the picture as a UIKit image.</returns>
 		/// <remarks />
 		public static UIImage ToUIImage(this SKPicture skiaPicture, SKSizeI dimensions, nfloat scale, UIImageOrientation orientation)
@@ -125,9 +125,9 @@ namespace SkiaSharp.Views.iOS
 			return new UIImage(cgImage, scale, orientation);
 		}
 
+		/// <summary>Converts a SkiaSharp picture into a UIKit image.</summary>
 		/// <param name="skiaPicture">The SkiaSharp picture.</param>
 		/// <param name="dimensions">The dimensions of the picture.</param>
-		/// <summary>Converts a SkiaSharp picture into a UIKit image.</summary>
 		/// <returns>Returns a copy of the picture as a UIKit image.</returns>
 		/// <remarks />
 		public static UIImage ToUIImage(this SKPicture skiaPicture, SKSizeI dimensions)
@@ -136,8 +136,8 @@ namespace SkiaSharp.Views.iOS
 			return new UIImage(cgImage);
 		}
 
-		/// <param name="skiaImage">The SkiaSharp image.</param>
 		/// <summary>Converts a SkiaSharp image into a UIKit image.</summary>
+		/// <param name="skiaImage">The SkiaSharp image.</param>
 		/// <returns>Returns a copy of the image data as a UIKit image.</returns>
 		/// <remarks />
 		public static UIImage ToUIImage(this SKImage skiaImage)
@@ -146,10 +146,10 @@ namespace SkiaSharp.Views.iOS
 			return new UIImage(cgImage);
 		}
 
+		/// <summary>Converts a SkiaSharp pixmap into a UIKit image.</summary>
 		/// <param name="skiaPixmap">The SkiaSharp pixmap.</param>
 		/// <param name="scale">The scale factor for the image. A factor of 1.0 is the original size of the image.</param>
 		/// <param name="orientation">The rotation that is to be applied to the image.</param>
-		/// <summary>Converts a SkiaSharp pixmap into a UIKit image.</summary>
 		/// <returns>Returns a copy of the pixel data as a UIKit image.</returns>
 		/// <remarks />
 		public static UIImage ToUIImage(this SKPixmap skiaPixmap, nfloat scale, UIImageOrientation orientation)
@@ -158,8 +158,8 @@ namespace SkiaSharp.Views.iOS
 			return new UIImage(cgImage, scale, orientation);
 		}
 
-		/// <param name="skiaPixmap">The SkiaSharp pixmap.</param>
 		/// <summary>Converts a SkiaSharp pixmap into a UIKit image.</summary>
+		/// <param name="skiaPixmap">The SkiaSharp pixmap.</param>
 		/// <returns>Returns a copy of the pixel data as a UIKit image.</returns>
 		/// <remarks />
 		public static UIImage ToUIImage(this SKPixmap skiaPixmap)
@@ -168,10 +168,10 @@ namespace SkiaSharp.Views.iOS
 			return new UIImage(cgImage);
 		}
 
+		/// <summary>Converts a SkiaSharp bitmap into a UIKit image.</summary>
 		/// <param name="skiaBitmap">The SkiaSharp bitmap.</param>
 		/// <param name="scale">The scale factor for the image. A factor of 1.0 is the original size of the image.</param>
 		/// <param name="orientation">The rotation that is to be applied to the image.</param>
-		/// <summary>Converts a SkiaSharp bitmap into a UIKit image.</summary>
 		/// <returns>Returns a copy of the bitmap data as a UIKit image.</returns>
 		/// <remarks />
 		public static UIImage ToUIImage(this SKBitmap skiaBitmap, nfloat scale, UIImageOrientation orientation)
@@ -180,8 +180,8 @@ namespace SkiaSharp.Views.iOS
 			return new UIImage(cgImage, scale, orientation);
 		}
 
-		/// <param name="skiaBitmap">The SkiaSharp bitmap.</param>
 		/// <summary>Converts a SkiaSharp bitmap into a UIKit image.</summary>
+		/// <param name="skiaBitmap">The SkiaSharp bitmap.</param>
 		/// <returns>Returns a copy of the bitmap data as a UIKit image.</returns>
 		/// <remarks />
 		public static UIImage ToUIImage(this SKBitmap skiaBitmap)

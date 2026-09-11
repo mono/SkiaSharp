@@ -205,7 +205,7 @@ namespace SkiaSharp
 		/// <param name="dst">The <see cref="T:SkiaSharp.SKPathBuilder" /> to receive the extracted path segment.</param>
 		/// <param name="startWithMoveTo"><see langword="true" /> to start the segment with a move-to command; otherwise, <see langword="false" />.</param>
 		/// <returns><see langword="true" /> if a valid segment was extracted; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public bool GetSegment (float start, float stop, SKPathBuilder dst, bool startWithMoveTo)
 		{
 			if (dst == null)
@@ -222,7 +222,7 @@ namespace SkiaSharp
 		/// <param name="dst">The <see cref="T:SkiaSharp.SKPath" /> to which the extracted segment contour is appended.</param>
 		/// <param name="startWithMoveTo"><see langword="true" /> to prepend a move-to verb at the start position of the segment; otherwise, <see langword="false" />.</param>
 		/// <returns><see langword="true" /> if the segment was successfully extracted; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		[Obsolete ("Use the SKPathBuilder overload instead.")]
 		public bool GetSegment (float start, float stop, SKPath dst, bool startWithMoveTo)
 		{

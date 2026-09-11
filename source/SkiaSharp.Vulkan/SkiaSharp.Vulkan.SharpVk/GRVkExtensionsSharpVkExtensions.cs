@@ -7,22 +7,22 @@ namespace SkiaSharp
 	/// <remarks />
 	public static class GRVkExtensionsSharpVkExtensions
 	{
+		/// <summary>Initializes the extensions object with the specified SharpVk Vulkan instance and physical device.</summary>
 		/// <param name="extensions">The <see cref="T:SkiaSharp.GRVkExtensions" /> instance to initialize.</param>
 		/// <param name="getProc">The delegate used to retrieve Vulkan procedure addresses.</param>
 		/// <param name="instance">The SharpVk Vulkan instance.</param>
 		/// <param name="physicalDevice">The SharpVk Vulkan physical device.</param>
-		/// <summary>Initializes the extensions object with the specified SharpVk Vulkan instance and physical device.</summary>
 		/// <remarks />
 		public static void Initialize(this GRVkExtensions extensions, GRSharpVkGetProcedureAddressDelegate getProc, Instance instance, PhysicalDevice physicalDevice) =>
 			extensions.Initialize(getProc, instance, physicalDevice, null, null);
 
+		/// <summary>Initializes the extensions object with the specified SharpVk Vulkan objects and extensions.</summary>
 		/// <param name="extensions">The <see cref="T:SkiaSharp.GRVkExtensions" /> instance to initialize.</param>
 		/// <param name="getProc">The delegate used to retrieve Vulkan procedure addresses.</param>
 		/// <param name="instance">The SharpVk Vulkan instance.</param>
 		/// <param name="physicalDevice">The SharpVk Vulkan physical device.</param>
 		/// <param name="instanceExtensions">The array of enabled Vulkan instance extension names.</param>
 		/// <param name="deviceExtensions">The array of enabled Vulkan device extension names.</param>
-		/// <summary>Initializes the extensions object with the specified SharpVk Vulkan objects and extensions.</summary>
 		/// <remarks />
 		public static void Initialize(this GRVkExtensions extensions, GRSharpVkGetProcedureAddressDelegate getProc, Instance instance, PhysicalDevice physicalDevice, string[] instanceExtensions, string[] deviceExtensions)
 		{

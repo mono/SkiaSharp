@@ -14,7 +14,8 @@ internal sealed record MigrationOptions(
 	public const string Usage =
 		"Usage: dotnet run --project utils/ApiDocsMigrator -- (--docs <SkiaSharp-API-docs path> | --package-xml <NuGet XML path>) --source <source directory, e.g. binding/SkiaSharp> [--dry-run] [--apply-resolved] [--only-undocumented]\n" +
 		"   or: dotnet run --project utils/ApiDocsMigrator -- --package-xml <NuGet XML path> --project <project file> --framework <target framework> [--dry-run] [--apply-resolved]\n" +
-		"   or: dotnet run --project utils/ApiDocsMigrator -- --package-xml <NuGet XML path> --compare-xml <compiled XML path>";
+		"   or: dotnet run --project utils/ApiDocsMigrator -- --package-xml <NuGet XML path> --compare-xml <compiled XML path>\n" +
+		"   or: dotnet run --project utils/ApiDocsMigrator -- --format-source <source directory>";
 
 	public static MigrationOptions Parse(IReadOnlyList<string> args)
 	{

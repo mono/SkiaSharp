@@ -45,8 +45,8 @@ namespace SkiaSharp.Views.Mac
 		}
 
 		// created in code
-		/// <param name="frame">The frame used by the view, expressed in Mac points.</param>
 		/// <summary>Initializes the <see cref="T:SkiaSharp.Views.Mac.SKGLView" /> with the specified frame.</summary>
+		/// <param name="frame">The frame used by the view, expressed in Mac points.</param>
 		/// <remarks />
 		public SKGLView(CGRect frame)
 			: base(frame)
@@ -55,8 +55,8 @@ namespace SkiaSharp.Views.Mac
 		}
 
 		// created via designer
-		/// <param name="p">The pointer (handle) to the unmanaged object.</param>
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Mac.SKGLView" /> class from a native handle.</summary>
+		/// <param name="p">The pointer (handle) to the unmanaged object.</param>
 		/// <remarks>This constructor is used by the Xamarin.Mac runtime when creating managed representations of unmanaged objects. It is not intended to be called directly from user code.</remarks>
 		public SKGLView(IntPtr p)
 			: base(p)
@@ -127,8 +127,8 @@ namespace SkiaSharp.Views.Mac
 
 		private nfloat lastBackingScaleFactor = 0;
 
-		/// <param name="dirtyRect">The rectangle to draw.</param>
 		/// <summary>Draws the view within the passed-in rectangle.</summary>
+		/// <param name="dirtyRect">The rectangle to draw.</param>
 		/// <remarks />
 		public override void DrawRect(CGRect dirtyRect)
 		{
@@ -201,8 +201,7 @@ namespace SkiaSharp.Views.Mac
 		}
 
 		/// <summary>Occurs when the surface needs to be redrawn.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -226,14 +225,12 @@ namespace SkiaSharp.Views.Mac
 		///     canvas.Flush ();
 		/// };
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
-		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
 		/// <summary>Implement this to draw on the canvas.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -265,8 +262,7 @@ namespace SkiaSharp.Views.Mac
 		///     canvas.Flush ();
 		/// }
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);

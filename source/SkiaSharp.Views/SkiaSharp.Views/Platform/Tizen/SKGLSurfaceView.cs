@@ -28,8 +28,8 @@ namespace SkiaSharp.Views.Tizen
 		private SKCanvas canvas;
 		private SKSizeI surfaceSize;
 
-		/// <param name="parent">The parent object.</param>
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Tizen.SKGLSurfaceView" /> class.</summary>
+		/// <param name="parent">The parent object.</param>
 		/// <remarks>Use this constructor when creating the view programmatically from code.</remarks>
 		public SKGLSurfaceView(EvasObject parent)
 			: base(parent)
@@ -46,8 +46,7 @@ namespace SkiaSharp.Views.Tizen
 		}
 
 		/// <summary>Occurs when the surface needs to be redrawn.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -71,8 +70,7 @@ namespace SkiaSharp.Views.Tizen
 		///     canvas.Flush ();
 		/// };
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
 		/// <summary>Gets the current GPU context.</summary>
@@ -85,10 +83,9 @@ namespace SkiaSharp.Views.Tizen
 		/// <remarks />
 		protected override SKSizeI GetSurfaceSize() => surfaceSize;
 
-		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
 		/// <summary>Implement this to draw on the canvas.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -120,15 +117,14 @@ namespace SkiaSharp.Views.Tizen
 		///     canvas.Flush ();
 		/// }
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		protected virtual void OnDrawFrame(SKPaintGLSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
 		}
 
-		/// <param name="parent">The parent object.</param>
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to create the native resources which should be present throughout whole life of the control.</summary>
+		/// <param name="parent">The parent object.</param>
 		/// <remarks />
 		protected sealed override void CreateNativeResources(EvasObject parent)
 		{
@@ -203,8 +199,8 @@ namespace SkiaSharp.Views.Tizen
 			}
 		}
 
-		/// <param name="geometry">The current geometry of the control.</param>
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to update the drawing surface dimensions.</summary>
+		/// <param name="geometry">The current geometry of the control.</param>
 		/// <returns>Returns <see langword="true" /> if the size has changed, otherwise <see langword="false" />.</returns>
 		/// <remarks />
 		protected sealed override bool UpdateSurfaceSize(Rect geometry)

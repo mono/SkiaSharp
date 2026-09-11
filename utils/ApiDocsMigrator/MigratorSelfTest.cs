@@ -13,6 +13,7 @@ internal static class MigratorSelfTest
 		{
 			var sourcePath = Path.Combine(root, "Widget.cs");
 			var generatedPath = Path.Combine(root, "Generated.generated.cs");
+			var conditionalPath = Path.Combine(root, "Conditional.cs");
 			var packageXmlPath = Path.Combine(root, "SkiaSharp.xml");
 			await File.WriteAllTextAsync(sourcePath, """
 				namespace Fixtures;
@@ -40,6 +41,24 @@ internal static class MigratorSelfTest
 				public enum Generated
 				{
 				    Value,
+				}
+				""");
+			await File.WriteAllTextAsync(conditionalPath, """
+				namespace Fixtures;
+
+				public sealed class Conditional
+				{
+				#if __APPLE__
+				    /// <param name="name">The widget name.</param>
+				    /// <summary>Creates a conditional widget.</summary>
+				    /// <returns>
+				    ///     The widget.
+				    /// </returns>
+				    public string Create(string name) => name;
+
+				    /// Plain-text documentation is preserved.
+				    public string Preserve() => string.Empty;
+				#endif
 				}
 				""");
 			await File.WriteAllTextAsync(packageXmlPath, """
@@ -92,6 +111,9 @@ internal static class MigratorSelfTest
 			var second = await new PackageDocumentationMigrator(options).RunAsync();
 			var secondSource = await File.ReadAllTextAsync(sourcePath);
 			var secondGenerated = await File.ReadAllTextAsync(generatedPath);
+			var formattedFirst = DocumentationSourceFormatter.Format(root);
+			var formattedConditional = await File.ReadAllTextAsync(conditionalPath);
+			var formattedSecond = DocumentationSourceFormatter.Format(root);
 
 			if (first.UpdatedDocumentCount != 6 ||
 				first.UpdatedFileCount != 3 ||
@@ -109,6 +131,12 @@ internal static class MigratorSelfTest
 					firstSource.IndexOf("/// <param name=\"name\">The widget name.</param>", StringComparison.Ordinal) ||
 				!firstGenerated.Contains("/// <summary>Represents a generated enumeration.</summary>", StringComparison.Ordinal) ||
 				!firstGenerated.Contains("/// <summary>Represents the generated value.</summary>", StringComparison.Ordinal) ||
+				formattedFirst.UpdatedFileCount == 0 ||
+				formattedSecond.UpdatedFileCount != 0 ||
+				formattedConditional.IndexOf("/// <summary>Creates a conditional widget.</summary>", StringComparison.Ordinal) >
+					formattedConditional.IndexOf("/// <param name=\"name\">The widget name.</param>", StringComparison.Ordinal) ||
+				!formattedConditional.Contains("/// <returns>The widget.</returns>", StringComparison.Ordinal) ||
+				!formattedConditional.Contains("/// Plain-text documentation is preserved.", StringComparison.Ordinal) ||
 				HasSyntaxErrors(firstSource) ||
 				HasSyntaxErrors(firstGenerated))
 			{
@@ -117,15 +145,20 @@ internal static class MigratorSelfTest
 					$"First: docs={first.UpdatedDocumentCount}, files={first.UpdatedFileCount}, unresolved={first.Unresolved.Count}; " +
 					$"second: docs={second.UpdatedDocumentCount}, files={second.UpdatedFileCount}, unresolved={second.Unresolved.Count}; " +
 					$"widget={firstSource.Contains("/// <summary>Represents a widget.</summary>", StringComparison.Ordinal)}, " +
+					$"source-idempotent={firstSource == secondSource}, generated-idempotent={firstGenerated == secondGenerated}, " +
+					$"platform-clean={!firstPlatform.Contains("///", StringComparison.Ordinal)}, " +
 					$"markdown={firstSource.Contains("type=\"text/markdown\"", StringComparison.Ordinal) && firstSource.Contains("<![CDATA[", StringComparison.Ordinal)}, " +
 					$"returns={firstSource.Contains("/// <returns>The new widget.</returns>", StringComparison.Ordinal)}, " +
+					$"paramref={!firstSource.Contains("&amp;nbsp;", StringComparison.Ordinal)}, " +
+					$"ordered={firstSource.IndexOf("/// <summary>Initializes a widget.</summary>", StringComparison.Ordinal) <= firstSource.IndexOf("/// <param name=\"name\">The widget name.</param>", StringComparison.Ordinal)}, " +
 					$"generated-type={firstGenerated.Contains("/// <summary>Represents a generated enumeration.</summary>", StringComparison.Ordinal)}, " +
 					$"generated-member={firstGenerated.Contains("/// <summary>Represents the generated value.</summary>", StringComparison.Ordinal)}, " +
+					$"conditional-format=first:{formattedFirst.UpdatedFileCount},second:{formattedSecond.UpdatedFileCount}, " +
 					$"source-errors={HasSyntaxErrors(firstSource)}, generated-errors={HasSyntaxErrors(firstGenerated)}.");
 				return 1;
 			}
 
-			Console.WriteLine("Self-test passed: package XML migration, Markdown CDATA, generated declarations, and idempotence.");
+			Console.WriteLine("Self-test passed: package XML migration, Markdown CDATA, generated declarations, conditional formatting, and idempotence.");
 			return 0;
 		}
 		finally

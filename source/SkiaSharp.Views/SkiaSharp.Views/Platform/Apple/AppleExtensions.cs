@@ -24,8 +24,8 @@ namespace SkiaSharp.Views.Mac
 	{
 		// CGPoint
 
-		/// <param name="point">The CoreGraphics point.</param>
 		/// <summary>Converts a CoreGraphics point into a SkiaSharp point.</summary>
+		/// <param name="point">The CoreGraphics point.</param>
 		/// <returns>Returns a SkiaSharp point.</returns>
 		/// <remarks />
 		public static SKPoint ToSKPoint(this CGPoint point)
@@ -33,8 +33,8 @@ namespace SkiaSharp.Views.Mac
 			return new SKPoint((float)point.X, (float)point.Y);
 		}
 
-		/// <param name="point">The SkiaSharp point.</param>
 		/// <summary>Converts a SkiaSharp point into a CoreGraphics point.</summary>
+		/// <param name="point">The SkiaSharp point.</param>
 		/// <returns>Returns a CoreGraphics point.</returns>
 		/// <remarks />
 		public static CGPoint ToPoint(this SKPoint point)
@@ -44,8 +44,8 @@ namespace SkiaSharp.Views.Mac
 
 		// CGRect
 
-		/// <param name="rect">The CoreGraphics rectangle.</param>
 		/// <summary>Converts a CoreGraphics rectangle into a SkiaSharp rectangle.</summary>
+		/// <param name="rect">The CoreGraphics rectangle.</param>
 		/// <returns>Returns a SkiaSharp rectangle.</returns>
 		/// <remarks />
 		public static SKRect ToSKRect(this CGRect rect)
@@ -53,8 +53,8 @@ namespace SkiaSharp.Views.Mac
 			return new SKRect((float)rect.Left, (float)rect.Top, (float)rect.Right, (float)rect.Bottom);
 		}
 
-		/// <param name="rect">The SkiaSharp rectangle.</param>
 		/// <summary>Converts a SkiaSharp rectangle into a CoreGraphics rectangle.</summary>
+		/// <param name="rect">The SkiaSharp rectangle.</param>
 		/// <returns>Returns a CoreGraphics rectangle.</returns>
 		/// <remarks />
 		public static CGRect ToRect(this SKRect rect)
@@ -64,8 +64,8 @@ namespace SkiaSharp.Views.Mac
 
 		// CGSize
 
-		/// <param name="size">The CoreGraphics size.</param>
 		/// <summary>Converts a CoreGraphics size into a SkiaSharp size.</summary>
+		/// <param name="size">The CoreGraphics size.</param>
 		/// <returns>Returns a SkiaSharp size.</returns>
 		/// <remarks />
 		public static SKSize ToSKSize(this CGSize size)
@@ -73,8 +73,8 @@ namespace SkiaSharp.Views.Mac
 			return new SKSize((float)size.Width, (float)size.Height);
 		}
 
-		/// <param name="size">The SkiaSharp size.</param>
 		/// <summary>Converts a SkiaSharp size into a CoreGraphics size.</summary>
+		/// <param name="size">The SkiaSharp size.</param>
 		/// <returns>Returns a CoreGraphics size.</returns>
 		/// <remarks />
 		public static CGSize ToSize(this SKSize size)
@@ -84,22 +84,22 @@ namespace SkiaSharp.Views.Mac
 
 		// CGColor
 
-		/// <param name="color">The CoreGraphics color.</param>
 		/// <summary>Converts a CoreGraphics color into a SkiaSharp color.</summary>
+		/// <param name="color">The CoreGraphics color.</param>
 		/// <returns>Returns a SkiaSharp color.</returns>
 		/// <remarks />
 		public static SKColor ToSKColor(this CGColor color) =>
 			UIColor.FromCGColor(color).ToSKColor();
 
+		/// <summary>Converts a CoreGraphics color into a SkiaSharp color.</summary>
 		/// <param name="color">The CoreGraphics color.</param>
-		/// <summary>Converts a CoreGraphics color into a SkiaSharp floating-point color.</summary>
-		/// <returns>Returns a SkiaSharp floating-point color.</returns>
+		/// <returns>Returns a SkiaSharp color.</returns>
 		/// <remarks />
 		public static SKColorF ToSKColorF(this CGColor color) =>
 			UIColor.FromCGColor(color).ToSKColorF();
 
-		/// <param name="color">The SkiaSharp color.</param>
 		/// <summary>Converts a SkiaSharp color into a CoreGraphics color.</summary>
+		/// <param name="color">The SkiaSharp color.</param>
 		/// <returns>Returns a CoreGraphics color.</returns>
 		/// <remarks />
 		public static CGColor ToCGColor(this SKColor color)
@@ -112,8 +112,8 @@ namespace SkiaSharp.Views.Mac
 #endif
 		}
 
-		/// <param name="color">The SkiaSharp color with floating-point components.</param>
-		/// <summary>Converts a SkiaSharp floating-point color into a CoreGraphics color.</summary>
+		/// <summary>Converts a SkiaSharp color into a CoreGraphics color.</summary>
+		/// <param name="color">The SkiaSharp color.</param>
 		/// <returns>Returns a CoreGraphics color.</returns>
 		/// <remarks />
 		public static CGColor ToCGColor(this SKColorF color)
@@ -128,29 +128,29 @@ namespace SkiaSharp.Views.Mac
 
 		// CIColor
 
-		/// <param name="color">The CoreImage color.</param>
 		/// <summary>Converts a CoreImage color into a SkiaSharp color.</summary>
+		/// <param name="color">The CoreImage color.</param>
 		/// <returns>Returns a SkiaSharp color.</returns>
 		/// <remarks />
 		public static SKColor ToSKColor(this CIColor color) =>
 			UIColor.FromCIColor(color).ToSKColor();
 
+		/// <summary>Converts a CoreImage color into a SkiaSharp color.</summary>
 		/// <param name="color">The CoreImage color.</param>
-		/// <summary>Converts a CoreImage color into a SkiaSharp floating-point color.</summary>
-		/// <returns>Returns a SkiaSharp floating-point color.</returns>
+		/// <returns>Returns a SkiaSharp color.</returns>
 		/// <remarks />
 		public static SKColorF ToSKColorF(this CIColor color) =>
 			UIColor.FromCIColor(color).ToSKColorF();
 
-		/// <param name="color">The SkiaSharp color.</param>
 		/// <summary>Converts a SkiaSharp color into a CoreImage color.</summary>
+		/// <param name="color">The SkiaSharp color.</param>
 		/// <returns>Returns a CoreImage color.</returns>
 		/// <remarks />
 		public static CIColor ToCIColor(this SKColor color) =>
 			new CIColor(color.Red / 255f, color.Green / 255f, color.Blue / 255f, color.Alpha / 255f);
 
-		/// <param name="color">The SkiaSharp color with floating-point components.</param>
-		/// <summary>Converts a SkiaSharp floating-point color into a CoreImage color.</summary>
+		/// <summary>Converts a SkiaSharp color into a CoreImage color.</summary>
+		/// <param name="color">The SkiaSharp color.</param>
 		/// <returns>Returns a CoreImage color.</returns>
 		/// <remarks />
 		public static CIColor ToCIColor(this SKColorF color) =>
@@ -158,9 +158,9 @@ namespace SkiaSharp.Views.Mac
 
 		// CGImage
 
+		/// <summary>Converts a CoreGraphics image into a SkiaSharp pixmap.</summary>
 		/// <param name="cgImage">The CoreGraphics image.</param>
 		/// <param name="pixmap">The SkiaSharp pixmap to hold the copy of the image data.</param>
-		/// <summary>Converts a CoreGraphics image into a SkiaSharp pixmap.</summary>
 		/// <remarks />
 		public static void ToSKPixmap(this CGImage cgImage, SKPixmap pixmap)
 		{
@@ -171,8 +171,8 @@ namespace SkiaSharp.Views.Mac
 			context.DrawImage(rect, cgImage);
 		}
 
-		/// <param name="cgImage">The CoreGraphics image.</param>
 		/// <summary>Converts a CoreGraphics image into a SkiaSharp image.</summary>
+		/// <param name="cgImage">The CoreGraphics image.</param>
 		/// <returns>Returns a copy of the image data as a SkiaSharp image.</returns>
 		/// <remarks />
 		public static SKImage ToSKImage(this CGImage cgImage)
@@ -186,8 +186,8 @@ namespace SkiaSharp.Views.Mac
 			return image;
 		}
 
-		/// <param name="cgImage">The CoreGraphics image.</param>
 		/// <summary>Converts a CoreGraphics image into a SkiaSharp bitmap.</summary>
+		/// <param name="cgImage">The CoreGraphics image.</param>
 		/// <returns>Returns a copy of the image data as a SkiaSharp bitmap.</returns>
 		/// <remarks />
 		public static SKBitmap ToSKBitmap(this CGImage cgImage)
@@ -201,9 +201,9 @@ namespace SkiaSharp.Views.Mac
 			return bitmap;
 		}
 
+		/// <summary>Converts a SkiaSharp picture into a CoreGraphics image.</summary>
 		/// <param name="skiaPicture">The SkiaSharp picture.</param>
 		/// <param name="dimensions">The dimensions of the picture.</param>
-		/// <summary>Converts a SkiaSharp picture into a CoreGraphics image.</summary>
 		/// <returns>Returns a copy of the picture as a CoreGraphics image.</returns>
 		/// <remarks />
 		public static CGImage ToCGImage(this SKPicture skiaPicture, SKSizeI dimensions)
@@ -212,8 +212,8 @@ namespace SkiaSharp.Views.Mac
 			return img.ToCGImage();
 		}
 
-		/// <param name="skiaImage">The SkiaSharp image.</param>
 		/// <summary>Converts a SkiaSharp image into a CoreGraphics image.</summary>
+		/// <param name="skiaImage">The SkiaSharp image.</param>
 		/// <returns>Returns a copy of the image data as a CoreGraphics image.</returns>
 		/// <remarks />
 		public static CGImage ToCGImage(this SKImage skiaImage)
@@ -222,8 +222,8 @@ namespace SkiaSharp.Views.Mac
 			return bmp.ToCGImage();
 		}
 
-		/// <param name="skiaPixmap">The SkiaSharp pixmap.</param>
 		/// <summary>Converts a SkiaSharp pixmap into a CoreGraphics image.</summary>
+		/// <param name="skiaPixmap">The SkiaSharp pixmap.</param>
 		/// <returns>Returns a copy of the pixel data as a CoreGraphics image.</returns>
 		/// <remarks />
 		public static CGImage ToCGImage(this SKPixmap skiaPixmap)
@@ -245,8 +245,8 @@ namespace SkiaSharp.Views.Mac
 			return cgImage;
 		}
 
-		/// <param name="skiaBitmap">The SkiaSharp bitmap.</param>
 		/// <summary>Converts a SkiaSharp bitmap into a CoreGraphics image.</summary>
+		/// <param name="skiaBitmap">The SkiaSharp bitmap.</param>
 		/// <returns>Returns a copy of the bitmap data as a CoreGraphics image.</returns>
 		/// <remarks />
 		public static CGImage ToCGImage(this SKBitmap skiaBitmap)
@@ -272,9 +272,9 @@ namespace SkiaSharp.Views.Mac
 
 		// CIImage
 
+		/// <summary>Converts a CoreImage image into a SkiaSharp pixmap.</summary>
 		/// <param name="ciImage">The CoreImage image.</param>
 		/// <param name="pixmap">The SkiaSharp pixmap to hold the copy of the image data.</param>
-		/// <summary>Converts a CoreImage image into a SkiaSharp pixmap.</summary>
 		/// <remarks />
 		public static void ToSKPixmap(this CIImage ciImage, SKPixmap pixmap)
 		{
@@ -283,8 +283,8 @@ namespace SkiaSharp.Views.Mac
 			context.RenderToBitmap(ciImage, pixmap.GetPixels(), pixmap.RowBytes, ciImage.Extent, (int)CIFormat.kRGBA8, colorSpace);
 		}
 
-		/// <param name="ciImage">The CoreImage image.</param>
 		/// <summary>Converts a CoreImage image into a SkiaSharp image.</summary>
+		/// <param name="ciImage">The CoreImage image.</param>
 		/// <returns>Returns a copy of the image data as a SkiaSharp image.</returns>
 		/// <remarks />
 		public static SKImage ToSKImage(this CIImage ciImage)
@@ -299,8 +299,8 @@ namespace SkiaSharp.Views.Mac
 			return image;
 		}
 
-		/// <param name="ciImage">The CoreImage image.</param>
 		/// <summary>Converts a CoreImage image into a SkiaSharp bitmap.</summary>
+		/// <param name="ciImage">The CoreImage image.</param>
 		/// <returns>Returns a copy of the image data as a SkiaSharp bitmap.</returns>
 		/// <remarks />
 		public static SKBitmap ToSKBitmap(this CIImage ciImage)
@@ -315,9 +315,9 @@ namespace SkiaSharp.Views.Mac
 			return image;
 		}
 
+		/// <summary>Converts a SkiaSharp picture into a CoreImage image.</summary>
 		/// <param name="skiaPicture">The SkiaSharp picture.</param>
 		/// <param name="dimensions">The dimensions of the picture.</param>
-		/// <summary>Converts a SkiaSharp picture into a CoreImage image.</summary>
 		/// <returns>Returns a copy of the picture as a CoreImage image.</returns>
 		/// <remarks />
 		public static CIImage ToCIImage(this SKPicture skiaPicture, SKSizeI dimensions)
@@ -325,8 +325,8 @@ namespace SkiaSharp.Views.Mac
 			return skiaPicture.ToCGImage(dimensions);
 		}
 
-		/// <param name="skiaImage">The SkiaSharp image.</param>
 		/// <summary>Converts a SkiaSharp image into a CoreImage image.</summary>
+		/// <param name="skiaImage">The SkiaSharp image.</param>
 		/// <returns>Returns a copy of the image data as a CoreImage image.</returns>
 		/// <remarks />
 		public static CIImage ToCIImage(this SKImage skiaImage)
@@ -334,8 +334,8 @@ namespace SkiaSharp.Views.Mac
 			return skiaImage.ToCGImage();
 		}
 
-		/// <param name="skiaPixmap">The SkiaSharp pixmap.</param>
 		/// <summary>Converts a SkiaSharp pixmap into a CoreImage image.</summary>
+		/// <param name="skiaPixmap">The SkiaSharp pixmap.</param>
 		/// <returns>Returns a copy of the pixel data as a CoreImage image.</returns>
 		/// <remarks />
 		public static CIImage ToCIImage(this SKPixmap skiaPixmap)
@@ -343,8 +343,8 @@ namespace SkiaSharp.Views.Mac
 			return skiaPixmap.ToCGImage();
 		}
 
-		/// <param name="skiaBitmap">The SkiaSharp bitmap.</param>
 		/// <summary>Converts a SkiaSharp bitmap into a CoreImage image.</summary>
+		/// <param name="skiaBitmap">The SkiaSharp bitmap.</param>
 		/// <returns>Returns a copy of the bitmap data as a CoreImage image.</returns>
 		/// <remarks />
 		public static CIImage ToCIImage(this SKBitmap skiaBitmap)
@@ -354,8 +354,8 @@ namespace SkiaSharp.Views.Mac
 
 		// NSData
 
-		/// <param name="skiaData">The SkiaSharp data object.</param>
 		/// <summary>Converts a SkiaSharp data object into a NSData.</summary>
+		/// <param name="skiaData">The SkiaSharp data object.</param>
 		/// <returns>Returns a copy of the data as a NSData.</returns>
 		/// <remarks />
 		public static NSData ToNSData(this SKData skiaData)
@@ -363,8 +363,8 @@ namespace SkiaSharp.Views.Mac
 			return NSData.FromBytes(skiaData.Data, (nuint)skiaData.Size);
 		}
 
-		/// <param name="nsData">The NSData.</param>
 		/// <summary>Converts a NSData into a SkiaSharp data object.</summary>
+		/// <param name="nsData">The NSData.</param>
 		/// <returns>Returns a copy of the data as a SkiaSharp data object.</returns>
 		/// <remarks />
 		public static SKData ToSKData(this NSData nsData)

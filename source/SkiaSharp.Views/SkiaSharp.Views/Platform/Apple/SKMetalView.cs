@@ -55,8 +55,8 @@ namespace SkiaSharp.Views.tvOS
 		}
 
 		// created in code
-		/// <param name="frame">The frame used by the view, expressed in points.</param>
 		/// <summary>Initializes the <see cref="SKMetalView" /> with the specified frame.</summary>
+		/// <param name="frame">The frame used by the view, expressed in points.</param>
 		/// <remarks />
 		public SKMetalView(CGRect frame)
 			: base(frame, null)
@@ -65,9 +65,9 @@ namespace SkiaSharp.Views.tvOS
 		}
 
 		// created in code
+		/// <summary>Initializes the <see cref="SKMetalView" /> with the specified frame and Metal device.</summary>
 		/// <param name="frame">The frame used by the view, expressed in points.</param>
 		/// <param name="device">The Metal device to use for rendering.</param>
-		/// <summary>Initializes the <see cref="SKMetalView" /> with the specified frame and Metal device.</summary>
 		/// <remarks />
 		public SKMetalView(CGRect frame, IMTLDevice device)
 			: base(frame, device)
@@ -76,9 +76,9 @@ namespace SkiaSharp.Views.tvOS
 		}
 
 		// created via designer
-		/// <param name="p">The pointer (handle) to the unmanaged object.</param>
 		/// <summary>Initializes a new instance of the <see cref="SKMetalView" /> class from a native handle.</summary>
-		/// <remarks>This constructor is used by the Apple platform runtime when creating managed representations of unmanaged objects. It is not intended to be called directly from user code.</remarks>
+		/// <param name="p">The pointer (handle) to the unmanaged object.</param>
+		/// <remarks>This constructor is used by the platform runtime when creating managed representations of unmanaged objects. It is not intended to be called directly from user code.</remarks>
 		public SKMetalView(IntPtr p)
 			: base(p)
 		{
@@ -146,9 +146,9 @@ namespace SkiaSharp.Views.tvOS
 		/// <remarks />
 		public GRContext GRContext => context;
 
+		/// <summary>Implements the IMTKViewDelegate.DrawableSizeWillChange method to handle size changes.</summary>
 		/// <param name="view">The view whose drawable size changed.</param>
 		/// <param name="size">The new drawable size.</param>
-		/// <summary>Implements the IMTKViewDelegate.DrawableSizeWillChange method to handle size changes.</summary>
 		/// <remarks />
 		void IMTKViewDelegate.DrawableSizeWillChange(MTKView view, CGSize size)
 		{
@@ -162,8 +162,8 @@ namespace SkiaSharp.Views.tvOS
 #endif
 		}
 
-		/// <param name="view">The view that triggered the draw request.</param>
 		/// <summary>Implements the IMTKViewDelegate.Draw method to render the SkiaSharp content.</summary>
+		/// <param name="view">The view that triggered the draw request.</param>
 		/// <remarks />
 		void IMTKViewDelegate.Draw(MTKView view)
 		{
@@ -208,12 +208,12 @@ namespace SkiaSharp.Views.tvOS
 		}
 
 		/// <summary>Occurs when the surface needs to be redrawn.</summary>
-		/// <remarks>There are two ways to draw on this surface: by overriding <c>OnPaintSurface</c>, or by attaching a handler to <c>PaintSurface</c>.</remarks>
+		/// <remarks>There are two ways to draw on this surface: by overriding <see cref="OnPaintSurface" /> or by attaching a handler to <see cref="PaintSurface" />.</remarks>
 		public event EventHandler<SKPaintMetalSurfaceEventArgs> PaintSurface;
 
-		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
 		/// <summary>Implement this to draw on the canvas.</summary>
-		/// <remarks>There are two ways to draw on this surface: by overriding <c>OnPaintSurface</c>, or by attaching a handler to <c>PaintSurface</c>. If this method is overridden, then the base must be called, otherwise the event will not be fired.</remarks>
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks>There are two ways to draw on this surface: by overriding <see cref="OnPaintSurface" /> or by attaching a handler to <see cref="PaintSurface" />. If this method is overridden, then the base must be called, otherwise the event will not be fired.</remarks>
 		protected virtual void OnPaintSurface(SKPaintMetalSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);

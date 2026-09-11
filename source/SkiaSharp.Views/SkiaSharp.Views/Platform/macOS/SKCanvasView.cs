@@ -24,8 +24,8 @@ namespace SkiaSharp.Views.Mac
 		}
 
 		// created in code
-		/// <param name="frame">The frame used by the view.</param>
 		/// <summary>Initializes the <see cref="T:SkiaSharp.Views.Mac.SKCanvasView" /> with the specified frame.</summary>
+		/// <param name="frame">The frame used by the view.</param>
 		/// <remarks />
 		public SKCanvasView(CGRect frame)
 			: base(frame)
@@ -34,8 +34,8 @@ namespace SkiaSharp.Views.Mac
 		}
 
 		// created via designer
-		/// <param name="p">The pointer (handle) to the unmanaged object.</param>
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Mac.SKCanvasView" /> class from a native handle.</summary>
+		/// <param name="p">The pointer (handle) to the unmanaged object.</param>
 		/// <remarks>This constructor is used by the Xamarin.Mac runtime when creating managed representations of unmanaged objects. It is not intended to be called directly from user code.</remarks>
 		public SKCanvasView(IntPtr p)
 			: base(p)
@@ -61,8 +61,7 @@ namespace SkiaSharp.Views.Mac
 		public SKSize CanvasSize { get; private set; }
 
 		/// <summary>Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.</summary>
-		/// <value>
-		///           <see langword="true" /> if the canvas should ignore pixel scaling; otherwise, <see langword="false" />.</value>
+		/// <value><see langword="true" /> if the canvas should ignore pixel scaling; otherwise, <see langword="false" />.</value>
 		/// <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.</remarks>
 		public bool IgnorePixelScaling
 		{
@@ -75,8 +74,7 @@ namespace SkiaSharp.Views.Mac
 		}
 
 		/// <summary>Occurs when the canvas needs to be redrawn.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -100,14 +98,12 @@ namespace SkiaSharp.Views.Mac
 		///     canvas.Flush ();
 		/// };
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
-		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
 		/// <summary>Implement this to draw on the canvas.</summary>
-		/// <remarks>
-		///           <format type="text/markdown"><![CDATA[
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
 		/// ## Remarks
 		///
 		/// There are two ways to draw on this surface: by overriding the
@@ -139,15 +135,14 @@ namespace SkiaSharp.Views.Mac
 		///     canvas.Flush ();
 		/// }
 		/// ```
-		/// ]]></format>
-		///         </remarks>
+		/// ]]></format></remarks>
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
 		}
 
-		/// <param name="dirtyRect">The rectangle to draw.</param>
 		/// <summary>Draws the view within the passed-in rectangle.</summary>
+		/// <param name="dirtyRect">The rectangle to draw.</param>
 		/// <remarks />
 		public override void DrawRect(CGRect dirtyRect)
 		{
@@ -186,9 +181,8 @@ namespace SkiaSharp.Views.Mac
 			}
 		}
 
-		/// <param name="disposing">
-		///           <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.Views.Mac.SKCanvasView" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.Views.Mac.SKCanvasView" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose(bool disposing)
 		{

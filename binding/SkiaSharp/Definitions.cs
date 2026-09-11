@@ -1031,7 +1031,7 @@ namespace SkiaSharp
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKWebpEncoderFrame" /> struct from a pixmap and a display duration.</summary>
 		/// <param name="pixmap">The pixmap containing the pixel data for this frame.</param>
 		/// <param name="duration">The display duration of this frame.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		public SKWebpEncoderFrame (SKPixmap pixmap, TimeSpan duration)
 		{
 			Pixmap = pixmap ?? throw new ArgumentNullException (nameof (pixmap));
@@ -1041,7 +1041,7 @@ namespace SkiaSharp
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKWebpEncoderFrame" /> struct from a bitmap and a display duration.</summary>
 		/// <param name="bitmap">The bitmap whose pixel data will be used for this frame.</param>
 		/// <param name="duration">The display duration of this frame.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		public SKWebpEncoderFrame (SKBitmap bitmap, TimeSpan duration)
 		{
 			_ = bitmap ?? throw new ArgumentNullException (nameof (bitmap));
@@ -1052,7 +1052,7 @@ namespace SkiaSharp
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKWebpEncoderFrame" /> struct from an image and a display duration.</summary>
 		/// <param name="image">The image whose pixel data will be used for this frame.</param>
 		/// <param name="duration">The display duration of this frame.</param>
-		/// <remarks />
+		/// <remarks></remarks>
 		public SKWebpEncoderFrame (SKImage image, TimeSpan duration)
 		{
 			_ = image ?? throw new ArgumentNullException (nameof (image));
@@ -1062,12 +1062,12 @@ namespace SkiaSharp
 
 		/// <summary>Gets or sets the pixel data for this frame.</summary>
 		/// <value>The <see cref="T:SkiaSharp.SKPixmap" /> containing the pixel data for this frame.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public SKPixmap Pixmap { readonly get; set; }
 
 		/// <summary>Gets or sets the display duration of this frame.</summary>
 		/// <value>The length of time this frame is displayed during animation playback.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public TimeSpan Duration { readonly get; set; }
 	}
 

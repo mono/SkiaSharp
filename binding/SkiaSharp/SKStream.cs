@@ -284,7 +284,7 @@ namespace SkiaSharp
 
 		/// <summary>Returns the entire contents of the stream as an <see cref="T:SkiaSharp.SKData" /> object.</summary>
 		/// <returns>A new <see cref="T:SkiaSharp.SKData" /> containing the entire contents of the stream.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public SKData GetData ()
 		{
 			var result = SKData.GetObject (SkiaApi.sk_stream_get_data (Handle));

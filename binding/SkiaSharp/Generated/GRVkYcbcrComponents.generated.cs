@@ -39,7 +39,7 @@ namespace SkiaSharp
 		private UInt32 r;
 		/// <summary>Gets or sets the Vulkan component swizzle for the red channel.</summary>
 		/// <value>A <c>VkComponentSwizzle</c> value indicating the source for the red output channel.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public UInt32 R {
 			readonly get => r;
 			set => r = value;
@@ -49,7 +49,7 @@ namespace SkiaSharp
 		private UInt32 g;
 		/// <summary>Gets or sets the Vulkan component swizzle for the green channel.</summary>
 		/// <value>A <c>VkComponentSwizzle</c> value indicating the source for the green output channel.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public UInt32 G {
 			readonly get => g;
 			set => g = value;
@@ -59,7 +59,7 @@ namespace SkiaSharp
 		private UInt32 b;
 		/// <summary>Gets or sets the Vulkan component swizzle for the blue channel.</summary>
 		/// <value>A <c>VkComponentSwizzle</c> value indicating the source for the blue output channel.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public UInt32 B {
 			readonly get => b;
 			set => b = value;
@@ -69,7 +69,7 @@ namespace SkiaSharp
 		private UInt32 a;
 		/// <summary>Gets or sets the Vulkan component swizzle for the alpha channel.</summary>
 		/// <value>A <c>VkComponentSwizzle</c> value indicating the source for the alpha output channel.</value>
-		/// <remarks />
+		/// <remarks></remarks>
 		public UInt32 A {
 			readonly get => a;
 			set => a = value;
@@ -78,7 +78,7 @@ namespace SkiaSharp
 		/// <summary>Indicates whether this component mapping is equal to another <see cref="T:SkiaSharp.GRVkYcbcrComponents" />.</summary>
 		/// <param name="obj">The <see cref="T:SkiaSharp.GRVkYcbcrComponents" /> to compare with this instance.</param>
 		/// <returns><see langword="true" /> if both instances have identical component swizzle values; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public readonly bool Equals (GRVkYcbcrComponents obj) =>
 #pragma warning disable CS8909
 			r == obj.r && g == obj.g && b == obj.b && a == obj.a;
@@ -87,7 +87,7 @@ namespace SkiaSharp
 		/// <summary>Indicates whether this component mapping is equal to the specified object.</summary>
 		/// <param name="obj">The object to compare with this instance.</param>
 		/// <returns><see langword="true" /> if <paramref name="obj" /> is a <see cref="T:SkiaSharp.GRVkYcbcrComponents" /> with identical component swizzle values; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public readonly override bool Equals (object obj) =>
 			obj is GRVkYcbcrComponents f && Equals (f);
 
@@ -95,7 +95,7 @@ namespace SkiaSharp
 		/// <param name="left">The first <see cref="T:SkiaSharp.GRVkYcbcrComponents" /> to compare.</param>
 		/// <param name="right">The second <see cref="T:SkiaSharp.GRVkYcbcrComponents" /> to compare.</param>
 		/// <returns><see langword="true" /> if <paramref name="left" /> and <paramref name="right" /> are equal; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public static bool operator == (GRVkYcbcrComponents left, GRVkYcbcrComponents right) =>
 			left.Equals (right);
 
@@ -103,13 +103,13 @@ namespace SkiaSharp
 		/// <param name="left">The first <see cref="T:SkiaSharp.GRVkYcbcrComponents" /> to compare.</param>
 		/// <param name="right">The second <see cref="T:SkiaSharp.GRVkYcbcrComponents" /> to compare.</param>
 		/// <returns><see langword="true" /> if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public static bool operator != (GRVkYcbcrComponents left, GRVkYcbcrComponents right) =>
 			!left.Equals (right);
 
 		/// <summary>Returns a hash code for this component mapping.</summary>
 		/// <returns>A hash code for this <see cref="T:SkiaSharp.GRVkYcbcrComponents" /> instance.</returns>
-		/// <remarks />
+		/// <remarks></remarks>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();

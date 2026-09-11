@@ -93,9 +93,8 @@ namespace SkiaSharp.Views.Tizen.NUI
 			UpdateTexture();
 		}
 
-		/// <param name="disposing">
-		///           <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <summary>Releases the unmanaged resources used by the view and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <remarks>This method releases the OpenGL context and any GPU resources associated with the view.</remarks>
 		protected override void Dispose(bool disposing)
 		{

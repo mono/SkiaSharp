@@ -49,7 +49,7 @@ namespace SkiaSharp.Views.Android
 		private IGLWrapper glWrapper;
 		private int eglContextClientVersion;
 
-		/// <summary>Initializes a new instance of the <see cref="GLTextureView" /> class.</summary>
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.GLTextureView" /> class.</summary>
 		/// <param name="context">The <see cref="T:Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
 		/// <remarks>Use this constructor when creating the view programmatically from code.</remarks>
 		public GLTextureView(Context context)
@@ -58,7 +58,7 @@ namespace SkiaSharp.Views.Android
 			Initialize();
 		}
 
-		/// <summary>Initializes a new instance of the <see cref="GLTextureView" /> class with the specified XML attributes.</summary>
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.GLTextureView" /> class with the specified XML attributes.</summary>
 		/// <param name="context">The <see cref="T:Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
 		/// <param name="attrs">The attributes of the XML tag that is inflating the view.</param>
 		/// <remarks>This constructor is called when inflating the view from an Android XML layout file.</remarks>
@@ -76,9 +76,9 @@ namespace SkiaSharp.Views.Android
 			AddOnLayoutChangeListener(this);
 		}
 
-		/// <summary>Releases the unmanaged resources used by the <see cref="GLTextureView" /> and optionally releases the managed resources.</summary>
+		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.Views.Android.GLTextureView" /> and optionally releases the managed resources.</summary>
 		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
-		/// <remarks>Always dispose the object before you release your last reference to the <see cref="GLTextureView" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.Views.Android.GLTextureView" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose(bool disposing)
 		{
 			if (disposing)
@@ -136,7 +136,7 @@ namespace SkiaSharp.Views.Android
 
 		/// <summary>Install a custom context factory.</summary>
 		/// <param name="factory">The custom context factory.</param>
-		/// <remarks>If this method is called, it must be called before <c>SetRenderer</c> is called.</remarks>
+		/// <remarks>If this method is called, it must be called before <see cref="M:SkiaSharp.Views.Android.GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
 		public void SetEGLContextFactory(IEGLContextFactory factory)
 		{
 			CheckRenderThreadState();
@@ -145,7 +145,7 @@ namespace SkiaSharp.Views.Android
 
 		/// <summary>Install a custom window surface factory.</summary>
 		/// <param name="factory">The custom window surface factory.</param>
-		/// <remarks>If this method is called, it must be called before <c>SetRenderer</c> is called.</remarks>
+		/// <remarks>If this method is called, it must be called before <see cref="M:SkiaSharp.Views.Android.GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
 		public void SetEGLWindowSurfaceFactory(IEGLWindowSurfaceFactory factory)
 		{
 			CheckRenderThreadState();
@@ -161,7 +161,7 @@ namespace SkiaSharp.Views.Android
 		/// 888 surface with a depth buffer depth of at least 16 bits.
 		///
 		/// If this method is called, it must be called before
-		/// <c>SetRenderer</c> is called.
+		/// <xref:SkiaSharp.Views.Android.GLTextureView.SetRenderer%2A> is called.
 		/// ]]></format></remarks>
 		public void SetEGLConfigChooser(IEGLConfigChooser configChooser)
 		{
@@ -178,7 +178,7 @@ namespace SkiaSharp.Views.Android
 		/// 888 surface with a depth buffer depth of at least 16 bits.
 		///
 		/// If this method is called, it must be called before
-		/// <c>SetRenderer</c> is called.
+		/// <xref:SkiaSharp.Views.Android.GLTextureView.SetRenderer%2A> is called.
 		/// ]]></format></remarks>
 		public void SetEGLConfigChooser(bool needDepth)
 		{
@@ -199,7 +199,7 @@ namespace SkiaSharp.Views.Android
 		/// 888 surface with a depth buffer depth of at least 16 bits.
 		///
 		/// If this method is called, it must be called before
-		/// <c>SetRenderer</c> is called.
+		/// <xref:SkiaSharp.Views.Android.GLTextureView.SetRenderer%2A> is called.
 		/// ]]></format></remarks>
 		public void SetEGLConfigChooser(int redSize, int greenSize, int blueSize, int alphaSize, int depthSize, int stencilSize)
 		{
@@ -208,7 +208,7 @@ namespace SkiaSharp.Views.Android
 
 		/// <summary>Inform the default context factory and default config chooser which context client version to pick.</summary>
 		/// <param name="version">The context client version to choose. Use 2 for OpenGL ES 2.0.</param>
-		/// <remarks>If this method is called, it must be called before <c>SetRenderer</c> is called.</remarks>
+		/// <remarks>If this method is called, it must be called before <see cref="M:SkiaSharp.Views.Android.GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
 		public void SetEGLContextClientVersion(int version)
 		{
 			CheckRenderThreadState();

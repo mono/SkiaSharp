@@ -31,7 +31,7 @@ namespace SkiaSharp
 
 		/// <summary>Gets or sets a value indicating whether to allow path mask textures to be cached.</summary>
 		/// <value><see langword="true" /> if path mask textures can be cached; otherwise, <see langword="false" />.</value>
-		/// <remarks>This is only really useful if paths are commonly rendered at the same scale and fractional translation. Default is <see langword="true" />.</remarks>
+		/// <remarks>This is only really useful if paths are commonly rendered at the same scale and fractional translation. Default is <see langword="false" />.</remarks>
 		public bool AllowPathMaskCaching { get; set; } = true;
 
 		/// <summary>Gets or sets a value indicating whether to construct mipmaps manually, via repeated downsampling draw-calls.</summary>

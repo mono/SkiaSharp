@@ -32,21 +32,21 @@ public ref struct SKFontArguments
 {
 	/// <summary>Gets or sets the variation design position to apply to the cloned typeface.</summary>
 	/// <value>A read-only span of <see cref="T:SkiaSharp.SKFontVariationPositionCoordinate" /> values specifying a design-space value for each variation axis.</value>
-	/// <remarks />
+	/// <remarks></remarks>
 	public ReadOnlySpan<SKFontVariationPositionCoordinate> VariationDesignPosition { get; set; }
 
 	/// <summary>Gets or sets the index of the desired typeface within a font collection.</summary>
 	/// <value>The zero-based index of the typeface within a TTC (TrueType Collection) font file.</value>
-	/// <remarks />
+	/// <remarks></remarks>
 	public int CollectionIndex { get; set; }
 
 	/// <summary>Gets or sets the color palette index to use when cloning the typeface.</summary>
 	/// <value>The zero-based index of the color palette from the font's CPAL table to use.</value>
-	/// <remarks />
+	/// <remarks></remarks>
 	public int PaletteIndex { get; set; }
 
 	/// <summary>Gets or sets the per-entry color overrides to apply to the palette.</summary>
 	/// <value>A read-only span of <see cref="T:SkiaSharp.SKFontPaletteOverride" /> values that override specific color entries in the chosen palette.</value>
-	/// <remarks />
+	/// <remarks></remarks>
 	public ReadOnlySpan<SKFontPaletteOverride> PaletteOverrides { get; set; }
 }

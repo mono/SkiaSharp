@@ -327,8 +327,45 @@ internal sealed class DocumentationMigrator(MigrationOptions options)
 			foreach (var paramRef in element.DescendantsAndSelf("paramref"))
 				if (paramRef.Attribute("name") is { } name)
 					name.Value = name.Value.Replace("&nbsp;", "", StringComparison.Ordinal).Replace("\u00a0", "", StringComparison.Ordinal).Trim();
-		return string.Join("\n", elements.Select(element => element.ToString(SaveOptions.None)));
+		RemoveInsignificantWhitespace(elements);
+		return string.Join("\n", elements
+			.OrderBy(element => DocumentationElementOrder(element.Name.LocalName))
+			.Select(element => element.ToString(SaveOptions.DisableFormatting)));
 	}
+
+	private static void RemoveInsignificantWhitespace(IEnumerable<XElement> elements)
+	{
+		foreach (var element in elements.SelectMany(element => element.DescendantsAndSelf()))
+		{
+			if (!element.Elements().Any())
+				continue;
+
+			foreach (var whitespace in element.Nodes()
+				.OfType<XText>()
+				.Where(text => text is not XCData && string.IsNullOrWhiteSpace(text.Value))
+				.ToArray())
+			{
+				whitespace.Remove();
+			}
+		}
+	}
+
+	private static int DocumentationElementOrder(string name) =>
+		name switch
+		{
+			"summary" => 0,
+			"inheritdoc" => 0,
+			"include" => 0,
+			"typeparam" => 1,
+			"param" => 2,
+			"returns" or "value" => 3,
+			"exception" => 4,
+			"remarks" => 5,
+			"example" => 6,
+			"seealso" => 7,
+			"permission" => 8,
+			_ => 9,
+		};
 
 	private static int ApplyChanges(IEnumerable<FileChange> changes, bool dryRun)
 	{
