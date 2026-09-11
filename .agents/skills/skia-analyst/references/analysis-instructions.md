@@ -24,7 +24,7 @@ Extract features per milestone. For windowed/diff mode, focus on the relevant ra
 For types SkiaSharp already binds, fetch upstream C++ headers from `google/skia` and compare
 against what SkiaSharp exposes:
 - **Upstream C++ headers**: fetch from GitHub (`owner=google, repo=skia, path=include/core/SkImage.h`)
-- **SkiaSharp C API**: grep `binding/SkiaSharp/SkiaApi.generated.cs` for `sk_*` / `gr_*` P/Invoke externs.
+- **SkiaSharp C API**: grep `binding/SkiaSharp/Generated` for `sk_*` / `gr_*` P/Invoke externs.
   This reflects the full C API surface even if `externals/skia/include/c/` isn't checked out.
 - **SkiaSharp C# wrappers**: `binding/SkiaSharp/*.cs`
 
@@ -149,5 +149,5 @@ For `changeType: "dependency"` findings, include `dependencyName`, `dependencyFr
 - Don't confuse enum values with full support
 - Check the actual C# method, not just the class
 - Verify C# wrappers call the right C API
-- Check SkiaApi.generated.cs for hidden plumbing
+- Check Generated/ for hidden plumbing
 - milestone fields must be integers (133 not "m133")

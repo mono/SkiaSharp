@@ -19,27 +19,27 @@ PROJECTS = (
     (
         "libSkiaSharp.json",
         "externals/skia",
-        "SkiaSharp/SkiaApi.generated.cs",
+        "SkiaSharp/Generated",
     ),
     (
         "libSkiaSharp.Skottie.json",
         "externals/skia",
-        "SkiaSharp.Skottie/SkottieApi.generated.cs",
+        "SkiaSharp.Skottie/Generated",
     ),
     (
         "libSkiaSharp.SceneGraph.json",
         "externals/skia",
-        "SkiaSharp.SceneGraph/SceneGraphApi.generated.cs",
+        "SkiaSharp.SceneGraph/Generated",
     ),
     (
         "libSkiaSharp.Resources.json",
         "externals/skia",
-        "SkiaSharp.Resources/ResourcesApi.generated.cs",
+        "SkiaSharp.Resources/Generated",
     ),
     (
         "libHarfBuzzSharp.json",
         "externals/skia/third_party/externals/harfbuzz",
-        "HarfBuzzSharp/HarfBuzzApi.generated.cs",
+        "HarfBuzzSharp/Generated",
     ),
 )
 
@@ -85,6 +85,40 @@ def added_internal_functions_from_diffs(diffs: list[str]) -> list[str]:
     ]
 
 
+def untracked_generated_diffs(repo_root: Path, projects) -> list[str]:
+    """Represent untracked generated files as added Git diffs for review."""
+    paths = [f"binding/{output}" for _, _, output in projects]
+    files = run(
+        repo_root,
+        "git",
+        "ls-files",
+        "--others",
+        "--exclude-standard",
+        "--",
+        *paths,
+        capture=True,
+    ).splitlines()
+    return [
+        "\n".join(f"+{line}" for line in (repo_root / path).read_text().splitlines())
+        for path in files
+    ]
+
+
+def generated_file_changes(repo_root: Path, projects) -> list[str]:
+    """List tracked and untracked generated-file changes across every output tree."""
+    paths = [f"binding/{output}" for _, _, output in projects]
+    return run(
+        repo_root,
+        "git",
+        "status",
+        "--short",
+        "--untracked-files=all",
+        "--",
+        *paths,
+        capture=True,
+    ).splitlines()
+
+
 def regenerate(repo_root: Path, config: str | None = None) -> None:
     """Run every selected generator and summarize wrapper work."""
     generator_project = (
@@ -114,15 +148,19 @@ def regenerate(repo_root: Path, config: str | None = None) -> None:
         )
         print(" ".join(str(part) for part in command))
         run(repo_root, *command)
-        shutil.copy2(output_path, generated_directory / output_path.name)
+        destination = generated_directory / output_path.parent.name
+        if destination.exists():
+            shutil.rmtree(destination)
+        shutil.copytree(output_path, destination)
 
-    binding_stat = run(repo_root, "git", "diff", "--stat", "--", "binding/", capture=True)
-    print("Binding diff summary:")
-    print(binding_stat.rstrip() or "  No binding changes.")
+    changes = generated_file_changes(repo_root, projects)
+    print("Generated binding file changes:")
+    print("\n".join(f"  {change}" for change in changes) or "  No generated binding changes.")
 
+    paths = [f"binding/{output}" for _, _, output in projects]
     diffs = [
-        run(repo_root, "git", "diff", "--", f"binding/{output}", capture=True)
-        for _, _, output in projects
+        run(repo_root, "git", "diff", "HEAD", "--", *paths, capture=True),
+        *untracked_generated_diffs(repo_root, projects),
     ]
     functions = added_internal_functions_from_diffs(diffs)
     if functions:

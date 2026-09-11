@@ -129,7 +129,7 @@ presumed coupled until the older fork revision is proven to expose the target AP
 
 ```bash
 grep -rn "ENUM_NAME\|FUNCTION_NAME" binding/SkiaSharp/
-grep -rn "SYMBOL" binding/SkiaSharp/SkiaApi.generated.cs
+grep -rn "SYMBOL" binding/SkiaSharp/Generated
 ```
 
 ## Historical Examples

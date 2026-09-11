@@ -94,7 +94,7 @@ Classify every changed active entry:
 
 - Preserve the fork revision and enabled/commented state when a fork build file or patch
   depends on it. Common customized entries include libwebp, brotli, expat, libpng, zlib,
-  vulkanmemoryallocator, spirv-cross, and **harfbuzz**.
+  vulkanmemoryallocator, and spirv-cross.
 - Accept an upstream revision only after verifying no fork customization depends on the old
   revision.
 - Roll for compatibility when target Skia source uses API absent from the fork revision.
@@ -102,20 +102,7 @@ Classify every changed active entry:
 
 Preserving every pin unconditionally is as unsafe as taking every upstream pin.
 
-### 9. HarfBuzz Bindings Follow DEPS
-
-HarfBuzz uses the same generation workflow as every other binding configuration. Whenever the
-final `DEPS` file selects a HarfBuzz revision:
-
-1. Build native assets from that checked-out source.
-2. Regenerate HarfBuzzSharp with that same source and review the generated diff.
-3. Exclude unsupported API families or new types in `libHarfBuzzSharp.json`; do not switch to an
-   older HarfBuzz checkout or restore a previous generated output.
-
-Use the `native-dependency-update` skill only when deliberately rolling HarfBuzz independently
-of a Skia update.
-
-### 10. Enum Value Renumbering
+### 9. Enum Value Renumbering
 
 When upstream inserts new enum values mid-sequence, ALL subsequent values shift. This affects `sk_enums.cpp`, `Definitions.cs`, `EnumMappings.cs`, and any test hardcoding enum integers. Always regenerate bindings — never hand-edit enum values.
 

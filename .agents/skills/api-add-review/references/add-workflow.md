@@ -91,13 +91,9 @@ Then map in `libSkiaSharp.json`:
 ## Phase 4: Generate Bindings
 
 - [ ] Ran `pwsh ./utils/generate.ps1`
-- [ ] Verified `SkiaApi.generated.cs` contains new function
+- [ ] Verified `Generated/` contains new function
 - [ ] Did NOT manually edit any `*.generated.cs` file
 - [ ] Verified JSON config maps new types and members correctly
-
-If HarfBuzz headers changed, generate from the DEPS-pinned source in the working tree: it is the
-same source used for the native build. Never switch to an older checkout or restore the generated
-output.
 
 ## Phase 5: Add C# Wrapper
 
