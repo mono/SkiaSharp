@@ -140,6 +140,8 @@ SkiaSharp is an open-source project from Microsoft, released under the [MIT lice
 		<ItemGroup>
 			<TfmSpecificPackageFile Include="$(TargetRefPath)" PackagePath="ref\$(NuGetShortFolderName)\$(TargetFileName)"
                               Condition="Exists('$(TargetRefPath)')" />
+			<TfmSpecificPackageFile Include="$(MDocOutputPath)" PackagePath="ref\$(NuGetShortFolderName)\$(MDocOutputName)"
+                              Exclude="@(DocumentationProjectOutputGroupOutput)" Condition="Exists('$(TargetRefPath)') and Exists('$(MDocOutputPath)')" />
 		</ItemGroup>
 	</Target>
   

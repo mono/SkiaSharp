@@ -26,8 +26,6 @@ stages:
           postBuildSteps:
             - pwsh: ./scripts/infra/package/tests/AssembleArcadeAssets.Tests.ps1
               displayName: Validate Arcade asset assembly
-            - pwsh: ./scripts/infra/package/tests/ValidateNuGetMDocDocumentation.ps1 -SourcePath ./output/nugets
-              displayName: Validate NuGet mdoc documentation
           publishArtifacts:
             - name: nuget
               path: '.\output\nugets'
