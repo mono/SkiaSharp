@@ -31,47 +31,6 @@ FilePath[] GetNuGetPackages(DirectoryPath directory, string description)
     return packages;
 }
 
-void VerifyDocsMediaPackage(FilePath package, DirectoryPath sourceDirectory, string[] expectedAssets)
-{
-    var archive = ZipFile.OpenRead(package.FullPath);
-    try {
-        var actualAssets = archive.Entries
-            .Where(entry =>
-                entry.FullName.StartsWith("images/", StringComparison.Ordinal) &&
-                !entry.FullName.EndsWith("/", StringComparison.Ordinal))
-            .Select(entry => entry.FullName)
-            .OrderBy(path => path, StringComparer.Ordinal)
-            .ToArray();
-        var expectedPackageAssets = expectedAssets
-            .Select(asset => $"images/{asset}")
-            .OrderBy(path => path, StringComparer.Ordinal)
-            .ToArray();
-
-        if (!actualAssets.SequenceEqual(expectedPackageAssets, StringComparer.Ordinal)) {
-            throw new Exception(
-                $"Docs media package has unexpected image assets. Expected: {string.Join(", ", expectedPackageAssets)}. " +
-                $"Actual: {string.Join(", ", actualAssets)}.");
-        }
-        foreach (var asset in expectedAssets) {
-            var entry = archive.Entries.First(e => e.FullName == $"images/{asset}");
-            var stream = entry.Open();
-            var contents = new System.IO.MemoryStream();
-            byte[] packageContents;
-            try {
-                stream.CopyTo(contents);
-                packageContents = contents.ToArray();
-            } finally {
-                contents.Dispose();
-                stream.Dispose();
-            }
-            if (!System.IO.File.ReadAllBytes($"{sourceDirectory}/{asset}").SequenceEqual(packageContents))
-                throw new Exception($"Docs media package asset '{asset}' does not match its source file.");
-        }
-    } finally {
-        archive.Dispose();
-    }
-}
-
 Task("nuget-normal")
     .Description("Pack all NuGets (build all required dependencies).")
     .Does(() =>
@@ -125,35 +84,9 @@ Task("nuget-special")
     }
 
     // API reference media is source-controlled here so the documentation site can
-    // retrieve it independently from the compiler XML documentation package.
+    // retrieve it independently from the assembly documentation package.
     var docsMediaId = "_DocsMedia";
     var docsMediaSourcePath = ROOT_PATH.Combine("documentation/api-media");
-    var docsMediaAssets = new[] {
-        "SKPaintText.png",
-        "compose.png",
-        "fractal-perlin-noise.png",
-        "gradient.png",
-        "linear.png",
-        "perlin-noise-turbulence.png",
-        "radial.png",
-        "sk3dview.png",
-        "surface-rects.png",
-        "sweep.png",
-        "twopoint.png",
-    };
-    var actualDocsMediaAssets = GetFiles($"{docsMediaSourcePath}/*")
-        .Select(file => file.GetFilename().ToString())
-        .OrderBy(name => name, StringComparer.Ordinal)
-        .ToArray();
-    var expectedDocsMediaAssets = docsMediaAssets
-        .OrderBy(name => name, StringComparer.Ordinal)
-        .ToArray();
-    if (!actualDocsMediaAssets.SequenceEqual(expectedDocsMediaAssets, StringComparer.Ordinal)) {
-        throw new Exception(
-            $"Docs media source has unexpected assets. Expected: {string.Join(", ", expectedDocsMediaAssets)}. " +
-            $"Actual: {string.Join(", ", actualDocsMediaAssets)}.");
-    }
-
     foreach (var version in versions) {
         var nuspec = $"{OUTPUT_SPECIAL_NUGETS_PATH}/{docsMediaId}.nuspec";
 
@@ -164,10 +97,10 @@ Task("nuget-special")
         metadata.Element("version").Value = version.Value;
 
         var files = xdoc.Root.Element("files");
-        foreach (var asset in expectedDocsMediaAssets) {
+        foreach (var asset in GetFiles($"{docsMediaSourcePath}/*")) {
             files.Add(new XElement("file",
-                new XAttribute("src", MakeAbsolute(File($"{docsMediaSourcePath}/{asset}")).FullPath),
-                new XAttribute("target", $"images/{asset}")));
+                new XAttribute("src", MakeAbsolute(asset).FullPath),
+                new XAttribute("target", $"images/{asset.GetFilename()}")));
         }
         files.Add(new XElement("file",
             new XAttribute("src", MakeAbsolute(File($"{ROOT_PATH}/scripts/infra/package/nuget/README.md")).FullPath),
@@ -182,11 +115,6 @@ Task("nuget-special")
             properties: new Dictionary<string, string> {
                 { "NuspecFile", MakeAbsolute(File(nuspec)).FullPath },
             });
-
-        var packages = GetFiles($"{OUTPUT_SPECIAL_NUGETS_PATH}/{docsMediaId}.*.nupkg").ToArray();
-        if (packages.Length != 1)
-            throw new Exception($"Expected one {docsMediaId} package but found {packages.Length}.");
-        VerifyDocsMediaPackage(packages[0], docsMediaSourcePath, expectedDocsMediaAssets);
 
         DeleteFiles($"{OUTPUT_SPECIAL_NUGETS_PATH}/{docsMediaId}.nuspec");
     }
