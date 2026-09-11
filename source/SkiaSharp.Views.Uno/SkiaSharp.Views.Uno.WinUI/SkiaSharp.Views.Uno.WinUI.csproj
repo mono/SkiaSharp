@@ -21,6 +21,7 @@
     <ProjectReference Include="..\SkiaSharp.Views.Uno.WinUI.Wasm\SkiaSharp.Views.Uno.WinUI.Wasm.csproj" Condition="!$(TargetFramework.Contains('-'))" ReferenceOutputAssembly="False" OutputItemType="UnoRuntimeOutput" UnoRuntimeType="webassembly" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
+    <ProjectReference Include="..\..\..\binding\HarfBuzzSharp.NativeAssets.WebAssembly\HarfBuzzSharp.NativeAssets.WebAssembly.csproj" Condition="!$(TargetFramework.Contains('-'))" />
     <ProjectReference Include="..\..\..\binding\SkiaSharp.NativeAssets.WebAssembly\SkiaSharp.NativeAssets.WebAssembly.csproj" Condition="!$(TargetFramework.Contains('-'))" />
   </ItemGroup>
   <ItemGroup>
