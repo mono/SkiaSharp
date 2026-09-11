@@ -83,6 +83,42 @@ Task("nuget-special")
         Information("  - {0}" + " ".PadRight(max - version.Key.Length) + "=> {1}", version.Key, version.Value);
     }
 
+    // API reference media is source-controlled here so the documentation site can
+    // retrieve it independently from the assembly documentation package.
+    var docsMediaId = "_DocsMedia";
+    var docsMediaSourcePath = ROOT_PATH.Combine("documentation/api-media");
+    foreach (var version in versions) {
+        var nuspec = $"{OUTPUT_SPECIAL_NUGETS_PATH}/{docsMediaId}.nuspec";
+
+        DeleteFiles($"{OUTPUT_SPECIAL_NUGETS_PATH}/{docsMediaId}.nuspec");
+
+        var xdoc = XDocument.Load($"{ROOT_PATH}/scripts/infra/package/nuget/{docsMediaId}.nuspec");
+        var metadata = xdoc.Root.Element("metadata");
+        metadata.Element("version").Value = version.Value;
+
+        var files = xdoc.Root.Element("files");
+        foreach (var asset in GetFiles($"{docsMediaSourcePath}/*")) {
+            files.Add(new XElement("file",
+                new XAttribute("src", MakeAbsolute(asset).FullPath),
+                new XAttribute("target", $"images/{asset.GetFilename()}")));
+        }
+        files.Add(new XElement("file",
+            new XAttribute("src", MakeAbsolute(File($"{ROOT_PATH}/scripts/infra/package/nuget/README.md")).FullPath),
+            new XAttribute("target", "README.md")));
+
+        xdoc.Save(nuspec);
+        RunDotNetPack(
+            $"{ROOT_PATH}/scripts/infra/package/nuget/NuGet.csproj",
+            OUTPUT_SPECIAL_NUGETS_PATH,
+            bl: $".{docsMediaId}.{version.Key}",
+            additionalArgs: "/restore /nologo",
+            properties: new Dictionary<string, string> {
+                { "NuspecFile", MakeAbsolute(File(nuspec)).FullPath },
+            });
+
+        DeleteFiles($"{OUTPUT_SPECIAL_NUGETS_PATH}/{docsMediaId}.nuspec");
+    }
+
     // _NativeAssets handling(per-platform raw native binaries)
     var nativePlatforms = GetDirectories($"{ROOT_PATH}/output/native/*")
         .Select(d => d.GetDirectoryName())
