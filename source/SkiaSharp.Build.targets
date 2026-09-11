@@ -210,7 +210,7 @@ internal partial class VersionConstants {
     This runs during the build phase.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' and $(IsWindows) and '$(Configuration)' == 'Release' ">
+  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' and '$(GenerateDocumentationFile)' != 'true' and $(IsWindows) and '$(Configuration)' == 'Release' ">
     <MDocGenerateDocsAfterTargets>
       CoreCompile
     </MDocGenerateDocsAfterTargets>
@@ -227,7 +227,7 @@ internal partial class VersionConstants {
       <_MDocInputs Include="$(MDocDocumentationDirectory)\**\*" />
     </ItemGroup>
   </Target>
-  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' and $(IsWindows) and '$(Configuration)' == 'Release' "
+  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' and '$(GenerateDocumentationFile)' != 'true' and $(IsWindows) and '$(Configuration)' == 'Release' "
           AfterTargets="$(MDocGenerateDocsAfterTargets)" DependsOnTargets="_MDocGenerateDocsDep"
           Inputs="@(_MDocInputs)" Outputs="$(MDocIntermediateOutputPath)$(MDocOutputName)">
     <MakeDir Condition=" '$(_ShouldGenerateDocs)' == 'true' "
