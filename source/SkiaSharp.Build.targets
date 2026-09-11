@@ -220,6 +220,7 @@ internal partial class VersionConstants {
       <MDocToolPath>$(Pkgmdoc)\tools\mdoc.exe</MDocToolPath>
       <MDocOutputName>$(TargetName).xml</MDocOutputName>
       <MDocOutputPath>$(TargetDir)$(MDocOutputName)</MDocOutputPath>
+      <MDocSourceOutputName Condition="'$(MDocSourceOutputName)' == ''">$(MDocOutputName)</MDocSourceOutputName>
       <MDocIntermediateOutputPath>$(IntermediateOutputPath)mdoc\</MDocIntermediateOutputPath>
       <_ShouldGenerateDocs Condition=" '$(MDocDocumentationDirectory)' != '' and Exists('$(MDocDocumentationDirectory)\index.xml') ">true</_ShouldGenerateDocs>
     </PropertyGroup>
@@ -235,8 +236,8 @@ internal partial class VersionConstants {
     <Exec Condition=" '$(_ShouldGenerateDocs)' == 'true' "
           WorkingDirectory="$(MDocIntermediateOutputPath)"
           Command="$(_ManagedExeLauncher) &quot;$(MDocToolPath)&quot; export-msxdoc --quiet=true &quot;$(MDocDocumentationDirectory)&quot;" />
-    <Copy Condition=" Exists('$(MDocIntermediateOutputPath)$(MDocOutputName)') "
-          SourceFiles="$(MDocIntermediateOutputPath)$(MDocOutputName)"
+    <Copy Condition=" Exists('$(MDocIntermediateOutputPath)$(MDocSourceOutputName)') "
+          SourceFiles="$(MDocIntermediateOutputPath)$(MDocSourceOutputName)"
           DestinationFiles="$(MDocOutputPath)"
           ContinueOnError="false"
           Retries="0" />
