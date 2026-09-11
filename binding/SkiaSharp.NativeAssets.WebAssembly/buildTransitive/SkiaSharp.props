@@ -3,6 +3,12 @@
 
   <PropertyGroup>
     <SkiaSharpStaticLibraryPath>$(MSBuildThisFileDirectory)libSkiaSharp.a</SkiaSharpStaticLibraryPath>
+    <!--
+      Consumed by SkiaSharp.targets' _SkiaSharpCheckWasmAssetsReferenced target,
+      shipped from the main SkiaSharp package. When set, the WASM-project error
+      is suppressed — indicates that the WebAssembly native assets are wired up.
+    -->
+    <_SkiaSharpWasmAssetsReferenced>true</_SkiaSharpWasmAssetsReferenced>
   </PropertyGroup>
 
   <ItemGroup>
