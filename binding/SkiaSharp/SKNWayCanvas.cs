@@ -23,6 +23,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (canvas));
 
 			SkiaApi.sk_nway_canvas_add_canvas (Handle, canvas.Handle);
+			Referenced (this, canvas);
 			GC.KeepAlive (canvas);
 			GC.KeepAlive (this);
 		}
@@ -33,6 +34,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (canvas));
 
 			SkiaApi.sk_nway_canvas_remove_canvas (Handle, canvas.Handle);
+			Unreferenced (this, canvas);
 			GC.KeepAlive (canvas);
 			GC.KeepAlive (this);
 		}
@@ -40,6 +42,7 @@ namespace SkiaSharp
 		public void RemoveAll ()
 		{
 			SkiaApi.sk_nway_canvas_remove_all (Handle);
+			UnreferencedAll (this);
 			GC.KeepAlive (this);
 		}
 	}
