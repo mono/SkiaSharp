@@ -16,6 +16,12 @@ namespace SkiaSharp
 		private ID3D12Device2? _device;
 		private ID3D12CommandQueue? _queue;
 
+		/// <summary>Initializes a new instance of the <see cref="GRVorticeD3DBackendContext" /> class.</summary>
+		/// <remarks />
+		public GRVorticeD3DBackendContext()
+		{
+		}
+
 		/// <summary>Gets or sets the Vortice DXGI adapter.</summary>
 		/// <value>The Vortice DXGI adapter, or <see langword="null" />.</value>
 		/// <remarks />

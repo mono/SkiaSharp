@@ -17,6 +17,12 @@ namespace SkiaSharp
 	{
 		private static readonly OSPlatform Browser = OSPlatform.Create ("BROWSER");
 
+		/// <summary>Initializes a new instance of the <see cref="SKGraphiteDawnBackendContext" /> class.</summary>
+		/// <remarks />
+		public SKGraphiteDawnBackendContext ()
+		{
+		}
+
 		/// <summary>Gets or sets the handle to the WebGPU instance.</summary>
 		/// <value>A handle to the WebGPU instance.</value>
 		/// <remarks />

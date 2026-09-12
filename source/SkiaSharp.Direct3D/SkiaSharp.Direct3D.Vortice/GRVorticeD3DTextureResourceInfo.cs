@@ -14,6 +14,12 @@ namespace SkiaSharp
 	{
 		private ID3D12Resource? _resource;
 
+		/// <summary>Initializes a new instance of the <see cref="GRVorticeD3DTextureResourceInfo" /> class.</summary>
+		/// <remarks />
+		public GRVorticeD3DTextureResourceInfo()
+		{
+		}
+
 		/// <summary>Gets or sets the Vortice Direct3D 12 resource.</summary>
 		/// <value>The Vortice Direct3D 12 resource, or <see langword="null" />.</value>
 		/// <remarks />

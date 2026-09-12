@@ -24,6 +24,12 @@ namespace SkiaSharp
 		private GCHandle getProcHandle;
 		private void* getProcContext;
 
+		/// <summary>Initializes a new instance of the <see cref="SKGraphiteVkBackendContext" /> class.</summary>
+		/// <remarks />
+		public SKGraphiteVkBackendContext ()
+		{
+		}
+
 		/// <summary>Gets or sets the handle to the Vulkan instance.</summary>
 		/// <value>A handle to the Vulkan instance.</value>
 		/// <remarks />
