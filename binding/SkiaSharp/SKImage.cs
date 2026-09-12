@@ -73,9 +73,7 @@ namespace SkiaSharp
 		{
 			if (pixels == null)
 				throw new ArgumentNullException (nameof (pixels));
-			using (var data = SKData.CreateCopy (pixels)) {
-				return FromPixels (info, data, rowBytes);
-			}
+			return FromPixelCopy (info, pixels.AsSpan (), rowBytes);
 		}
 
 		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels) =>
@@ -104,6 +102,17 @@ namespace SkiaSharp
 
 		public static SKImage FromPixelCopy (SKImageInfo info, ReadOnlySpan<byte> pixels, int rowBytes)
 		{
+			var minRowBytes = info.RowBytes64;
+			var requiredBytes = (long)(info.Height - 1) * rowBytes + minRowBytes;
+			if (!info.IsEmpty &&
+				info.ColorType != SKColorType.Unknown &&
+				rowBytes >= minRowBytes &&
+				requiredBytes <= pixels.Length) {
+				fixed (byte* p = pixels) {
+					return FromPixelCopy (info, (IntPtr)p, rowBytes);
+				}
+			}
+
 			using (var data = SKData.CreateCopy (pixels)) {
 				return FromPixels (info, data, rowBytes);
 			}
