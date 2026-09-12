@@ -146,5 +146,28 @@ namespace HarfBuzzSharp.Tests
 				Assert.Equal(7331, second);
 			}
 		}
+
+		[Fact]
+		public void BufferUnicodeFunctionsGetterDoesNotOwnBorrowedHandle()
+		{
+			// hb_buffer_get_unicode_funcs returns a borrowed (transfer-none) reference
+			// owned by the buffer. Disposing the wrapper returned by the getter must not
+			// destroy that shared handle out from under the still-alive buffer.
+			var destroyed = false;
+
+			var unicodeFunctions = new UnicodeFunctions(UnicodeFunctions.Default);
+			unicodeFunctions.SetScriptDelegate((f, cp) => Script.Unknown, () => destroyed = true);
+
+			// The buffer is kept alive (via using) so its funcs reference stays valid
+			// through the assertion, and is disposed cleanly at the end of the scope.
+			using var buffer = new Buffer();
+			buffer.UnicodeFunctions = unicodeFunctions;
+
+			var borrowed = buffer.UnicodeFunctions;
+			borrowed.Dispose();
+			unicodeFunctions.Dispose();
+
+			Assert.False(destroyed, "buffer.UnicodeFunctions getter over-freed a borrowed handle.");
+		}
 	}
 }

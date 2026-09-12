@@ -132,7 +132,9 @@ namespace HarfBuzzSharp
 
 		public UnicodeFunctions UnicodeFunctions {
 			get {
-				var r = new UnicodeFunctions (HarfBuzzApi.hb_buffer_get_unicode_funcs (Handle));
+				// hb_buffer_get_unicode_funcs returns a borrowed (transfer-none) reference
+				// owned by the buffer, so the wrapper must not destroy it on dispose.
+				var r = new UnicodeFunctions (HarfBuzzApi.hb_buffer_get_unicode_funcs (Handle), owns: false);
 				GC.KeepAlive (this);
 				return r;
 			}
