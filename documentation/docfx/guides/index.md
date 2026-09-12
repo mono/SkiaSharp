@@ -1,27 +1,29 @@
 ---
-title: "Overview"
-description: "SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products such as Google Chrome, ChromeOS, and Android, in Chromium-based products like Microsoft Edge, in applications like LibreOffice, and in .NET UI frameworks like Uno Platform. This guide explains how to use SkiaSharp for 2D graphics in your .NET MAUI applications."
+title: "SkiaSharp guides"
+description: "Learn how to use SkiaSharp across .NET applications, from drawing basics to surfaces, document output, and platform views."
 ---
 
-# SkiaSharp Graphics in .NET MAUI
+# SkiaSharp guides
 
-_Use SkiaSharp for 2D graphics in your .NET MAUI applications_
+_Use SkiaSharp for 2D graphics in .NET applications_
 
-SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products such as Google Chrome, ChromeOS, and Android, in Chromium-based products like Microsoft Edge, in applications like LibreOffice, and in .NET UI frameworks like Uno Platform. You can use SkiaSharp in your .NET MAUI applications to draw 2D vector graphics, bitmaps, and text.
+SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products such as Google Chrome, ChromeOS, and Android, in Chromium-based products like Microsoft Edge, in applications like LibreOffice, and in .NET UI frameworks like Uno Platform. You can use SkiaSharp to draw 2D vector graphics, bitmaps, and text in UI, offscreen, document, and headless workloads.
+
+The introductory drawing articles use .NET MAUI views for their examples, but the underlying `SKCanvas` drawing APIs apply across SkiaSharp integrations. The [drawing destinations](surfaces/index.md) section covers manually managed surfaces, document output, and platform-specific views.
+
+## Get started with .NET MAUI
 
 > [!IMPORTANT]
 > In .NET MAUI, you must initialize SkiaSharp by calling `UseSkiaSharp()` on the `MauiAppBuilder` in your `MauiProgram.cs` file. This requires adding a `using` directive for the `SkiaSharp.Views.Maui.Controls.Hosting` namespace.
 
-This guide assumes that you are familiar with .NET MAUI programming.
+The introductory articles assume that you are familiar with .NET MAUI programming.
 
-## SkiaSharp Preliminaries
-
-SkiaSharp for .NET MAUI is packaged as a NuGet package. After you've created a .NET MAUI solution in Visual Studio or Visual Studio for Mac, you can use the NuGet package manager to search for the **SkiaSharp.Views.Maui.Controls** package and add it to your solution. If you check the **References** section of each project after adding SkiaSharp, you can see that various **SkiaSharp** libraries have been added to each of the projects in the solution.
+After creating a .NET MAUI project, add the **SkiaSharp.Views.Maui.Controls** NuGet package. The package brings in the SkiaSharp libraries required by the target platforms.
 
 In any C# page that uses SkiaSharp you'll want to include a `using` directive for the [`SkiaSharp`](xref:SkiaSharp) namespace, which encompasses all the SkiaSharp classes, structures, and enumerations that you'll use in your graphics programming. You'll also want a `using` directive for the [`SkiaSharp.Views.Maui.Controls`](xref:SkiaSharp.Views.Maui.Controls) namespace for the classes specific to .NET MAUI. This is a much smaller namespace, with the most important class being [`SKCanvasView`](xref:SkiaSharp.Views.Maui.Controls.SKCanvasView). This class derives from the .NET MAUI `View` class and hosts your SkiaSharp graphics output.
 
 > [!IMPORTANT]
-> The `SkiaSharp.Views.Maui.Controls` namespace also contains an `SKGLView` class that derives from `View` but uses OpenGL for rendering graphics. For purposes of simplicity, this guide restricts itself to `SKCanvasView`, but using `SKGLView` instead is quite similar.
+> The `SkiaSharp.Views.Maui.Controls` namespace also contains an `SKGLView` class that derives from `View` and uses a GPU backend selected by the platform handler. These introductory articles use `SKCanvasView`; see [Render with SkiaSharp in .NET MAUI](surfaces/views/maui.md) before choosing `SKGLView`.
 
 ## [SkiaSharp Drawing Basics](basics/index.md)
 
@@ -46,6 +48,10 @@ Bitmaps are rectangular arrays of bits corresponding to the pixels of a display 
 ## [SkiaSharp Effects](effects/index.md)
 
 Effects are properties that alter the normal display of graphics, including linear and circular gradients, bitmap tiling, blend modes, blur, and others.
+
+## [Drawing destinations](surfaces/index.md)
+
+Choose a manually managed raster, Ganesh, or Graphite surface; draw into PDF, SVG, or XPS documents; or let a platform view manage its surface and presentation.
 
 ## Related Links
 
