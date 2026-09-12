@@ -9,4 +9,5 @@ public enum SamplePage
 	GpuGL,
 	GpuMetal,
 	Drawing,
+	Graphite,
 }
