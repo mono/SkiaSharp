@@ -193,6 +193,26 @@ namespace SkiaSharp
 			return owner;
 		}
 
+		// remove a single keep-alive reference previously added via Referenced,
+		// allowing the child to be collected once nothing else references it
+		internal static T Unreferenced<T> (T owner, SKObject child)
+			where T : SKObject
+		{
+			if (child != null && owner != null)
+				owner.keepAliveObjects?.TryRemove (child.Handle, out _);
+
+			return owner;
+		}
+
+		// remove all keep-alive references previously added via Referenced
+		internal static T UnreferencedAll<T> (T owner)
+			where T : SKObject
+		{
+			owner?.keepAliveObjects?.Clear ();
+
+			return owner;
+		}
+
 		internal void RevokeOwnership (SKObject newOwner)
 		{
 			// We cannot dispose this wrapper because the native object might
