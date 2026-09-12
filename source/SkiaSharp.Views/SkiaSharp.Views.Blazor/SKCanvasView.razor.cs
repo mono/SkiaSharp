@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.CompilerServices;
+using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.JSInterop;
 using SkiaSharp.Views.Blazor.Internal;
 
@@ -12,7 +14,7 @@ namespace SkiaSharp.Views.Blazor
 	/// <summary>A Blazor component that provides a SkiaSharp drawing surface using software rendering.</summary>
 	/// <remarks>This component renders to an HTML canvas element using WebAssembly. The drawing surface is CPU-based and renders each frame by transferring pixel data to the browser canvas. For GPU-accelerated rendering, use <see cref="T:SkiaSharp.Views.Blazor.SKGLView" /> instead.</remarks>
 	[SupportedOSPlatform("browser")]
-	public partial class SKCanvasView : IDisposable
+	public partial class SKCanvasView : ComponentBase, IDisposable
 	{
 		private SKHtmlCanvasInterop interop = null!;
 		private SizeWatcherInterop sizeWatcher = null!;
@@ -26,6 +28,12 @@ namespace SkiaSharp.Views.Blazor
 		private double dpi;
 		private SKSize canvasSize;
 		private bool enableRenderLoop;
+
+		/// <summary>Initializes a new instance of the <see cref="SKCanvasView" /> class.</summary>
+		/// <remarks />
+		public SKCanvasView()
+		{
+		}
 
 		[Inject]
 		IJSRuntime JS { get; set; } = null!;
@@ -200,6 +208,20 @@ namespace SkiaSharp.Views.Blazor
 			interop?.Dispose();
 
 			FreeBitmap();
+		}
+
+		/// <summary>Builds the render tree for the canvas element.</summary>
+		/// <param name="__builder">The builder used to construct the render tree.</param>
+		/// <remarks>Renders a canvas element, applies <see cref="AdditionalAttributes" />, and captures its element reference.</remarks>
+		protected override void BuildRenderTree(RenderTreeBuilder __builder)
+		{
+			__builder.OpenElement(0, "canvas");
+			__builder.AddMultipleAttributes(1, RuntimeHelpers.TypeCheck((IEnumerable<KeyValuePair<string, object>>)AdditionalAttributes!));
+			__builder.AddElementReferenceCapture(2, delegate(ElementReference __value)
+			{
+				htmlCanvas = __value;
+			});
+			__builder.CloseElement();
 		}
 	}
 }
