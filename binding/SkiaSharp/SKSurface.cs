@@ -86,9 +86,13 @@ namespace SkiaSharp
 			var del = releaseProc != null && context != null
 				? new SKSurfaceReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
-			DelegateProxies.Create (del, out _, out var ctx);
+			DelegateProxies.Create (del, out var gch, out var ctx);
 			var proxy = del != null ? DelegateProxies.SKSurfaceRasterReleaseProxy : null;
 			var surface = GetObject (SkiaApi.sk_surface_new_raster_direct (&cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx, props?.Handle ?? IntPtr.Zero));
+			// if the native surface was not created, the release proc will never be
+			// invoked by native code, so we must free the GC handle here to avoid a leak
+			if (surface is null && del is not null)
+				gch.Free ();
 			GC.KeepAlive (props);
 			return surface;
 		}
