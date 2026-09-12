@@ -2,6 +2,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace SkiaSharp
 {
@@ -15,13 +16,19 @@ namespace SkiaSharp
 		private GCHandle getProcHandle;
 		private void* getProcContext;
 
+		// 0 = not disposed, 1 = disposed. Interlocked.Exchange makes the
+		// "claim ownership of the cleanup" step atomic, so a racing Dispose +
+		// finalizer can't both fall through to GCHandle.Free.
+		private int disposed;
+
 		protected virtual void Dispose (bool disposing)
 		{
-			if (disposing) {
-				if (getProcHandle.IsAllocated) {
-					getProcHandle.Free ();
-					getProcHandle = default;
-				}
+			if (Interlocked.Exchange (ref disposed, 1) != 0)
+				return;
+
+			if (getProcHandle.IsAllocated) {
+				getProcHandle.Free ();
+				getProcHandle = default;
 			}
 		}
 
@@ -30,6 +37,13 @@ namespace SkiaSharp
 			Dispose (disposing: true);
 			GC.SuppressFinalize (this);
 		}
+
+		// The GetProcedureAddress setter pins the delegate with a strong GCHandle.
+		// Without a finalizer a caller who forgets to Dispose () would leak that
+		// handle (and everything the delegate closure roots) for the process
+		// lifetime. This mirrors the finalizer on the sibling
+		// SKGraphiteVkBackendContext.
+		~GRVkBackendContext () => Dispose (disposing: false);
 
 		public IntPtr VkInstance { get; set; }
 
