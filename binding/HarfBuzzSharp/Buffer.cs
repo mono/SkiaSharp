@@ -260,7 +260,23 @@ namespace HarfBuzzSharp
 			GC.KeepAlive (this);
 		}
 
-		public void AddUtf32 (string text) => AddUtf32 (Encoding.UTF32.GetBytes (text));
+		public void AddUtf32 (string text)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+
+			var maxByteCount = Encoding.UTF32.GetMaxByteCount (text.Length);
+			var utf32bytes = ArrayPool<byte>.Shared.Rent (maxByteCount);
+			try {
+				fixed (char* chars = text)
+				fixed (byte* bytes = utf32bytes) {
+					var byteCount = Encoding.UTF32.GetBytes (chars, text.Length, bytes, utf32bytes.Length);
+					AddUtf32 ((IntPtr)bytes, byteCount / sizeof (uint));
+				}
+			} finally {
+				ArrayPool<byte>.Shared.Return (utf32bytes);
+			}
+		}
 
 		public unsafe void AddUtf32 (ReadOnlySpan<byte> text)
 		{
