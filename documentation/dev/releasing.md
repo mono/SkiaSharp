@@ -50,6 +50,53 @@ Prepare, Finish, and Milestones use the same two-dispatch pattern: first run
 with `push` unchecked to review a read-only plan, then run again with identical
 inputs and `push` checked.
 
+## Audit release state
+
+The read-only coordinator delegates each release phase to the script or module
+that owns it. `-Version` accepts one literal PowerShell wildcard matched against
+real release identities and exact public package versions. For example, use
+`4.15*` for all 4.15x releases, `4.150.*` for one servicing family, or one
+exact package version. Quote wildcards when the calling shell expands `*`.
+`-Discover` inventories real SkiaSharp `release/*` branches, exact remote
+release tags, and public NuGet package versions. Broad inventory respects
+`history_floor.skiasharp`; the audit never invents an expected release
+topology.
+
+```powershell
+./scripts/infra/publishing/audit-release-state.ps1 -Discover
+./scripts/infra/publishing/audit-release-state.ps1 -Version '4.150.*'
+./scripts/infra/publishing/audit-release-state.ps1 -Version '4.15*'
+./scripts/infra/publishing/audit-release-state.ps1 -Version '4.153.*' -IncludeMilestoneAssignments
+```
+
+The report identifies the owner of each phase: Prepare checks paired branches,
+`Maestro.Common.psm1` checks BAR provenance and `.NET Libraries` channel
+membership, Published to NuGet.org checks the external publication receipt, and
+Finish checks the tag, GitHub Release, and support state after publication. The
+release-note tools check committed facts and rendering. The
+reconciliation and milestone scripts check GitHub planning. The coordinator
+does not invoke the pre-publication `release-testing` system. No phase mutates
+state. Exit `0` means all checks are complete, `1` means pending or inconsistent
+state, and `2` means a required service, credential, or prerequisite is
+unavailable. By default, the audit prints the wildcard's matched targets and a
+start/finish line for every phase before the final summary. `-Quiet` suppresses
+a fully clean report, and `-Json` emits the same aggregate status and raw owner
+findings for automation.
+
+PR and issue milestone assignment reconciliation can take several minutes for
+large historical wildcard ranges, so it is opt-in. Add
+`-IncludeMilestoneAssignments` when that check is needed; otherwise the report
+shows it as skipped while still running fast milestone maintenance.
+
+The checks run in release order: **Release - Prepare**, **Maestro BAR and
+channel**, **Published to NuGet.org**, **Release - Finish**, **GitHub Release
+summary**, **Website release notes**, **Release - Milestone assignments**, and
+**Release - Milestone maintenance**. BAR receipt lookup starts from an exact
+public package version so it never guesses among builds. For a branch-only
+release, the audit resolves that branch's exact BAR reference and verifies the
+matching Darc asset before checking the still-pending NuGet publication
+boundary.
+
 ## 1. Prepare the release branches
 
 Open

@@ -4,6 +4,7 @@ $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
 $publishingRoot = Split-Path $PSScriptRoot
+$milestonesPath = Join-Path $publishingRoot 'update-release-milestones.ps1'
 Import-Module (Join-Path $publishingRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $publishingRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $publishingRoot 'Publishing.Common.psm1') -Force
@@ -29,10 +30,15 @@ function Get-ScriptFunctionText([string] $Path) {
 
 Invoke-Expression (Get-ScriptFunctionText (Join-Path $publishingRoot 'reconcile-release-assignments.ps1'))
 Invoke-Expression (Get-ScriptFunctionText (Join-Path $publishingRoot 'update-release-milestones.ps1'))
-$Push = $false
 $writeRemote = $false
 $moveSettleAttempts = 5
 $moveSettleDelaySeconds = 0
+
+$milestoneScript = Get-Content $milestonesPath -Raw
+if ($milestoneScript -notmatch "ValidateSet\('DryRun', 'Push', 'Check'\)" -or
+    $milestoneScript -notmatch '\$isCheck') {
+    throw 'The milestone updater does not expose Check through its Mode parameter.'
+}
 
 $script:TestsRun = 0
 
@@ -844,3 +850,4 @@ Assert-Throws {
 
 Remove-Item Function:\gh
 Write-Output "All $script:TestsRun publishing milestone tests passed."
+$global:LASTEXITCODE = 0

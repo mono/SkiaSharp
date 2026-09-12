@@ -20,6 +20,7 @@ import json
 import os
 from pathlib import Path
 import re
+import subprocess
 import sys
 from typing import Callable, Protocol
 
@@ -222,6 +223,38 @@ def select_candidates(
     return candidates
 
 
+def check_release(
+    repository: RepositoryView,
+    client: "GitHubSummaryClient",
+    tag: str,
+    *,
+    renderer: Callable[[dict, dict, str], str] = render_summary.render_github_release_summary,
+) -> None:
+    """Require one exact shipment's live body to equal its canonical body."""
+
+    candidates = select_candidates(repository, tag=tag)
+    if len(candidates) != 1:
+        raise UpdateError(
+            "{}: format-{} facts and reviewed prose are required".format(
+                tag, common.DATA_FORMAT
+            )
+        )
+    candidate = candidates[0]
+    release = client.get_release(tag)
+    if release is None:
+        raise UpdateError("{}: GitHub Release does not exist".format(tag))
+    try:
+        canonical = github.replace_managed_summary(
+            release.body, render_managed_summary(candidate, renderer)
+        )
+    except github.GitHubError as exc:
+        # Invalid legacy markers are durable release state, not a GitHub
+        # transport or credential failure.
+        raise UpdateError("{}: {}".format(tag, exc)) from exc
+    if release.body != canonical:
+        raise UpdateError("{}: GitHub Release body needs canonical replacement".format(tag))
+
+
 def render_managed_summary(
     candidate: Candidate,
     renderer: Callable[[dict, dict, str], str] = render_summary.render_github_release_summary,
@@ -275,6 +308,54 @@ class GitHubSummaryClient(Protocol):
 
     def update_release_body(self, *, tag: str, body: str) -> None:
         ...
+
+
+class GhCliReleaseClient:
+    """Read GitHub Releases through the caller's authenticated gh session."""
+
+    def __init__(self, repository: str):
+        self.repository = repository
+
+    def get_release(self, tag: str) -> github.ReleaseInfo | None:
+        try:
+            result = subprocess.run(
+                [
+                    "gh",
+                    "release",
+                    "view",
+                    tag,
+                    "--repo",
+                    self.repository,
+                    "--json",
+                    "tagName,name,isPrerelease,targetCommitish,body,url",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        except FileNotFoundError as exc:
+            raise github.GitHubError("gh is not installed or is not on PATH") from exc
+        except subprocess.TimeoutExpired as exc:
+            raise github.GitHubError("gh release view timed out") from exc
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout).strip()
+            if "release not found" in detail.lower() or "http 404" in detail.lower():
+                return None
+            raise github.GitHubError("gh release view failed: {}".format(detail))
+        try:
+            payload = json.loads(result.stdout)
+            return github.ReleaseInfo(
+                tag_name=payload["tagName"],
+                name=payload["name"] or "",
+                is_prerelease=payload["isPrerelease"],
+                target_commitish=payload["targetCommitish"],
+                body=payload["body"] or "",
+                url=payload["url"],
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise github.GitHubError(
+                "gh release view returned an incomplete release response"
+            ) from exc
 
 
 @dataclass(frozen=True)
@@ -402,11 +483,12 @@ def _write_summary(result: UpdateResult, *, error_message: str | None = None) ->
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--event", required=True, choices=("push", "release", "workflow_dispatch")
+        "--event", choices=("push", "release", "workflow_dispatch")
     )
     parser.add_argument("--repository", default=common.REPO)
     parser.add_argument("--tag")
     parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--check", action="store_true")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -420,13 +502,30 @@ def main(argv: list[str] | None = None) -> int:
     result = UpdateResult()
     try:
         repository = RepositoryView(args.root.resolve())
+        if args.check:
+            if not args.tag:
+                raise UpdateError("--check requires --tag")
+            check_release(repository, GhCliReleaseClient(args.repository), args.tag)
+            return 0
+        if not args.event:
+            raise UpdateError("--event is required unless --check is specified")
         tag = args.tag if args.event in ("release", "workflow_dispatch") else None
         candidates = select_candidates(repository, tag=tag)
         client = github.RestGitHubClient(args.repository)
         result = update_releases(candidates, client, dry_run=args.dry_run)
         _write_summary(result)
         return 0
+    except github.GitHubError as exc:
+        if args.check:
+            print("GitHub Release check unavailable: {}".format(exc), file=sys.stderr)
+            return 2
+        _write_summary(result, error_message=str(exc))
+        print("ERROR: {}".format(exc), file=sys.stderr)
+        return 1
     except (OSError, UpdateError) as exc:
+        if args.check:
+            print(str(exc), file=sys.stderr)
+            return 1
         _write_summary(result, error_message=str(exc))
         print("ERROR: {}".format(exc), file=sys.stderr)
         return 1

@@ -10,9 +10,10 @@
 .PARAMETER Repository
     The GitHub repository whose milestones are maintained.
 
-.PARAMETER Push
-    Performs GitHub milestone mutations. Without this switch, the script is
-    read-only and reports exact skipped mutations.
+.PARAMETER Mode
+    DryRun reports planned milestone changes, Push applies them, and Check
+    quietly returns whether the calculated schedule and closure plan has work
+    remaining.
 #>
 
 [CmdletBinding()]
@@ -23,7 +24,8 @@ param(
     [ValidatePattern('^[^/]+/[^/]+$')]
     [string] $Repository = 'mono/SkiaSharp',
 
-    [switch] $Push
+    [ValidateSet('DryRun', 'Push', 'Check')]
+    [string] $Mode = 'DryRun'
 )
 
 # 0. Initialize shared helpers, execution mode, and repository state.
@@ -32,8 +34,9 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
-$writeRemote = $Push
-$mode = if ($writeRemote) { 'push' } else { 'dry run' }
+$writeRemote = $Mode -eq 'Push'
+$isCheck = $Mode -eq 'Check'
+$mode = $Mode.ToLowerInvariant()
 $root = Get-GitRepositoryRoot
 $scheduleUrl = 'https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone={0}'
 $requiredScheduleFields = @(
@@ -277,7 +280,7 @@ function Sync-GitHubMilestone([string] $Repository, [object] $Operation) {
     } else {
         return
     }
-    $null = Invoke-GitHubMutation -Arguments $arguments -Description $description -Push:$Push
+    $null = Invoke-GitHubMutation -Arguments $arguments -Description $description -Push:$writeRemote
     if ($writeRemote) {
         $milestones = Get-GitHubMilestoneMap -Repository $Repository
         $actual = $milestones[$Operation.Title]
@@ -327,7 +330,7 @@ function Complete-GitHubMilestone([string] $Repository, [object] $Operation, [ha
                 -MilestoneNumber ([int] $target.number) `
                 -MilestoneTitle $Operation.MoveTo `
                 -Description $description `
-                -Push:$Push
+                -Push:$writeRemote
         }
     }
     if ($writeRemote) {
@@ -346,7 +349,7 @@ function Complete-GitHubMilestone([string] $Repository, [object] $Operation, [ha
         '-f', 'state=closed'
     )
     $description = "Close shipped milestone $($Operation.Title)"
-    $null = Invoke-GitHubMutation -Arguments $arguments -Description $description -Push:$Push
+    $null = Invoke-GitHubMutation -Arguments $arguments -Description $description -Push:$writeRemote
     if ($writeRemote) {
         $actual = (Get-GitHubMilestoneMap -Repository $Repository)[$Operation.Title]
         if ([string] $actual.state -ne 'closed') {
@@ -357,7 +360,9 @@ function Complete-GitHubMilestone([string] $Repository, [object] $Operation, [ha
 }
 
 # 1. Maintain Chromium-derived dates, roll open work, and close shipped milestones.
-Write-ReleaseStatus start "Release milestone update ($mode)."
+if (!$isCheck) {
+    Write-ReleaseStatus start "Release milestone update ($mode)."
+}
 
 # 1.1 Build the desired milestone schedule from repository and Chromium state.
 $currentVersion = Get-RepositoryReleaseVersion -Root $root
@@ -394,7 +399,28 @@ $closurePlan = Get-MilestoneClosureOperations `
         Get-OpenMilestoneItems -Repository $Repository -MilestoneNumber $number
     }
 foreach ($warning in $closurePlan.Warnings) {
-    Write-Warning $warning
+    if (!$isCheck) {
+        Write-Warning $warning
+    }
+}
+ $creates = @($scheduleOperations | Where-Object Action -eq 'create').Count
+ $updates = @($scheduleOperations | Where-Object Action -eq 'update').Count
+ $closes = @($closurePlan.Operations | Where-Object Status -eq 'pending').Count
+if ($isCheck) {
+    if ($creates -eq 0 -and $updates -eq 0 -and $closes -eq 0 -and $closurePlan.Warnings.Count -eq 0) {
+        exit 0
+    }
+    Write-Output "Release milestones: $creates create(s), $updates update(s), $closes closure(s), $($closurePlan.Warnings.Count) warning(s)."
+    foreach ($warning in $closurePlan.Warnings) {
+        Write-Output $warning
+    }
+    foreach ($operation in @($scheduleOperations | Where-Object Action -ne 'none')) {
+        Write-Output "$($operation.Action): $($operation.Title)"
+    }
+    foreach ($operation in @($closurePlan.Operations | Where-Object Status -eq 'pending')) {
+        Write-Output "close: $($operation.Title)"
+    }
+    exit 1
 }
 if ($closurePlan.Warnings.Count -gt 0) {
     if ($writeRemote) {
@@ -420,9 +446,6 @@ if (!$writeRemote) {
 foreach ($operation in $closurePlan.Operations | Where-Object Status -eq 'pending') {
     Complete-GitHubMilestone -Repository $Repository -Operation $operation -Milestones $milestonesAfterSync
 }
-$creates = @($scheduleOperations | Where-Object Action -eq 'create').Count
-$updates = @($scheduleOperations | Where-Object Action -eq 'update').Count
-$closes = @($closurePlan.Operations | Where-Object Status -eq 'pending').Count
 Write-ReleaseStatus checked "Advancement: $creates create(s), $updates update(s), $closes closure(s)."
 
 Write-ReleaseStatus complete "Release milestone update completed ($mode)."
