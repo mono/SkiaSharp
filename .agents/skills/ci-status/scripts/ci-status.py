@@ -71,7 +71,6 @@ GITHUB_WORKFLOWS = [
     {"repo": "mono/SkiaSharp", "workflow": "build-site-go-live.yml", "name": "Pages - Go Live!", "scope": "global", "trigger": "dispatch"},
     {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup.yml", "name": "Pages - PR Staging - Cleanup", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup-stale.yml", "name": "Pages - PR Staging - Sweep Stale", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp", "workflow": "auto-docs-submodule-sync.yml", "name": "Sync - Docs Submodule", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-skia-submodule-sync.yml", "name": "Sync - Skia Submodule", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-skia-sync.lock.yml", "name": "Sync - Skia Upstream", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "memory-leak-fixer.lock.yml", "name": "Fixer - Memory Leak", "scope": "global", "trigger": "schedule"},
@@ -95,9 +94,7 @@ GITHUB_WORKFLOWS = [
     {"repo": "mono/SkiaSharp", "workflow": "rebase.yml", "name": "PR - Rebase", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "pr-artifacts-comment.yml", "name": "PR - Artifacts Comment", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "merge-message.lock.yml", "name": "Merge Message", "scope": "global", "trigger": "event"},
-    # mono/SkiaSharp-API-docs (global: scheduled/dispatch/PR events)
-    {"repo": "mono/SkiaSharp-API-docs", "workflow": "auto-api-docs-writer.lock.yml", "name": "Auto API Docs Writer", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp-API-docs", "workflow": "automerge-docs.yml", "name": "Automerge Docs", "scope": "global", "trigger": "event"},
+    # mono/SkiaSharp-API-docs owns generated ECMA output and Microsoft Learn publication.
     {"repo": "mono/SkiaSharp-API-docs", "workflow": "go-live.yml", "name": "Go Live", "scope": "global", "trigger": "dispatch"},
 ]
 

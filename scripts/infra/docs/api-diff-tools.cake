@@ -1,16 +1,13 @@
 // READ FIRST: documentation/dev/release-notes-and-api-diffs.md is the behavior
-// spec for the API-diff engine. This file holds the *shared* Cake machinery
-// that both the API-diff target (scripts/infra/docs/api-diff.cake)
-// and the mdoc XML generators (scripts/infra/docs/docs.cake) depend on:
+// spec for the API-diff engine. This file holds the Cake machinery used by
+// scripts/infra/docs/api-diff.cake:
 //
 //   - CreateNuGetDiffAsync : the NuGet-diff comparer factory (+ its dependency loader)
 //   - GetPlatformDirectories / DecompressArchive : package layout helpers
 //   - versions.json loading : LoadVersionsConfig / IsVersionSuperseded / FindCompareToBaseline
 //
-// Per the spec (§2.1) these are the only pieces shared between the two engines, so
-// they live alongside both consumers here instead of being duplicated. The heavy
-// NuGet-diff #addins live here too, so only the two consumers that #load this file
-// pay for them.
+// The heavy NuGet-diff #addins live here so the API-diff target is the only
+// release-notes path that pays for them.
 //
 // CONSUMERS MUST #load "shared.cake" BEFORE this file: it relies on ROOT_PATH,
 // PACKAGE_CACHE_PATH, GetVersion, TRACKED_NUGETS, etc. defined there.
@@ -67,9 +64,8 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     // generation time. The patterns are anchored under "SkiaSharp.Views." and require
     // "Resource"/"GlobalStaticResources" to be a whole trailing name segment, so the real
     // API lookalikes outside that namespace are untouched (SkiaSharp.Resources.*,
-    // SkiaSharp.GR*TextureResourceInfo). The mdoc engine applies the equivalent exclusion
-    // itself (scripts/infra/docs/docs.cake); this property only affects the api-diff path,
-    // since docs.cake consumes this comparer solely for its SearchPaths.
+    // SkiaSharp.GR*TextureResourceInfo). This property applies only to API
+    // diff generation.
     comparer.IgnoreMemberRegex.Add (@"^SkiaSharp\.Views\.[\w.]+\.Resource([.:+/ ]|$)");
     comparer.IgnoreMemberRegex.Add (@"^SkiaSharp\.Views\.[\w.]+\.GlobalStaticResources([.:+/ ]|$)");
 
