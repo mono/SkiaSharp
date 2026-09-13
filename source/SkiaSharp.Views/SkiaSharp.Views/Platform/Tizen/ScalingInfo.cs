@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using ElmSharp;
 using Tizen.System;
 
 namespace SkiaSharp.Views.Tizen
 {
+	/// <summary>A utility class that can be used to determine screen densities.</summary>
+	/// <remarks />
 	public static class ScalingInfo
 	{
 		private static readonly Lazy<string> profile = new Lazy<string>(() => Elementary.GetProfile());
@@ -25,16 +27,36 @@ namespace SkiaSharp.Views.Tizen
 
 		private static double? scalingFactorOverride;
 
+		/// <summary>Gets the device profile.</summary>
+		/// <value>The device profile name.</value>
+		/// <remarks />
 		public static string Profile => profile.Value;
 
+		/// <summary>Gets the DPI of the screen.</summary>
+		/// <value>The screen DPI.</value>
+		/// <remarks />
 		public static int Dpi => dpi.Value;
 
+		/// <summary>The scaling factor to convert between raw pixels and device-independent pixels.</summary>
+		/// <value>The scaling factor.</value>
+		/// <remarks />
 		public static double ScalingFactor => scalingFactorOverride ?? scalingFactor.Value;
 
+		/// <summary>Convert from raw pixels into device-independent pixels.</summary>
+		/// <param name="v">The raw pixel dimension.</param>
+		/// <returns>Returns the device-independent pixel dimension.</returns>
+		/// <remarks />
 		public static double FromPixel(double v) => v / ScalingFactor;
 
+		/// <summary>Convert from device-independent pixels into raw pixels.</summary>
+		/// <param name="v">The device-independent pixel dimension.</param>
+		/// <returns>Returns the raw pixel dimension.</returns>
+		/// <remarks />
 		public static double ToPixel(double v) => v * ScalingFactor;
 
+		/// <summary>Sets or resets the scaling factor used to convert between raw pixels and device-independent pixels.</summary>
+		/// <param name="scalingFactor">The scaling factor to use, or <see langword="null" /> to reset to the default.</param>
+		/// <remarks />
 		public static void SetScalingFactor(double? scalingFactor)
 		{
 			scalingFactorOverride = scalingFactor;

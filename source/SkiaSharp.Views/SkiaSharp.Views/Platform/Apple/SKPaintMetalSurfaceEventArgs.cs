@@ -1,4 +1,4 @@
-﻿#if __IOS__ || __MACOS__ || __TVOS__
+#if __IOS__ || __MACOS__ || __TVOS__
 using System;
 
 #if __IOS__
@@ -9,13 +9,25 @@ namespace SkiaSharp.Views.Mac
 namespace SkiaSharp.Views.tvOS
 #endif
 {
+	/// <summary>Provides data for the <see cref="SKMetalView.PaintSurface" /> event.</summary>
+	/// <remarks />
 	public class SKPaintMetalSurfaceEventArgs : EventArgs
 	{
+		/// <summary>Initializes a new instance of the <see cref="SKPaintMetalSurfaceEventArgs" /> event arguments.</summary>
+		/// <param name="surface">The surface that is being drawn on.</param>
+		/// <param name="renderTarget">The render target that is currently being drawn.</param>
+		/// <remarks />
 		public SKPaintMetalSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget)
 			: this(surface, renderTarget, GRSurfaceOrigin.TopLeft, SKColorType.Rgba8888)
 		{
 		}
 
+		/// <summary>Initializes a new instance of the <see cref="SKPaintMetalSurfaceEventArgs" /> event arguments.</summary>
+		/// <param name="surface">The surface that is being drawn on.</param>
+		/// <param name="renderTarget">The render target that is currently being drawn.</param>
+		/// <param name="origin">The surface origin of the render target.</param>
+		/// <param name="colorType">The color type of the render target.</param>
+		/// <remarks />
 		public SKPaintMetalSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType)
 		{
 			Surface = surface;
@@ -26,11 +38,24 @@ namespace SkiaSharp.Views.tvOS
 			RawInfo = Info;
 		}
 
+		/// <summary>Initializes a new instance of the <see cref="SKPaintMetalSurfaceEventArgs" /> event arguments.</summary>
+		/// <param name="surface">The surface that is being drawn on.</param>
+		/// <param name="renderTarget">The render target that is currently being drawn.</param>
+		/// <param name="origin">The surface origin of the render target.</param>
+		/// <param name="info">The image information describing the surface.</param>
+		/// <remarks />
 		public SKPaintMetalSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKImageInfo info)
 			: this(surface, renderTarget, origin, info, info)
 		{
 		}
 
+		/// <summary>Initializes a new instance of the <see cref="SKPaintMetalSurfaceEventArgs" /> event arguments.</summary>
+		/// <param name="surface">The surface that is being drawn on.</param>
+		/// <param name="renderTarget">The render target that is currently being drawn.</param>
+		/// <param name="origin">The surface origin of the render target.</param>
+		/// <param name="info">The image information describing the surface.</param>
+		/// <param name="rawInfo">The raw image information describing the surface without any applied scaling.</param>
+		/// <remarks />
 		public SKPaintMetalSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKImageInfo info, SKImageInfo rawInfo)
 		{
 			Surface = surface;
@@ -41,16 +66,34 @@ namespace SkiaSharp.Views.tvOS
 			RawInfo = rawInfo;
 		}
 
+		/// <summary>Gets the surface that is currently being drawn on.</summary>
+		/// <value>The current drawing surface.</value>
+		/// <remarks />
 		public SKSurface Surface { get; private set; }
 
+		/// <summary>Gets the render target that is currently being drawn.</summary>
+		/// <value>The current render target.</value>
+		/// <remarks />
 		public GRBackendRenderTarget BackendRenderTarget { get; private set; }
 
+		/// <summary>Gets the color type of the render target.</summary>
+		/// <value>The color type of the render target.</value>
+		/// <remarks />
 		public SKColorType ColorType { get; private set; }
 
+		/// <summary>Gets the surface origin of the render target.</summary>
+		/// <value>The surface origin of the render target.</value>
+		/// <remarks />
 		public GRSurfaceOrigin Origin { get; private set; }
 
+		/// <summary>Gets the image information describing the surface that is currently being drawn.</summary>
+		/// <value>The surface image information.</value>
+		/// <remarks />
 		public SKImageInfo Info { get; private set; }
 
+		/// <summary>Gets the raw image information describing the surface without any applied scaling.</summary>
+		/// <value>The raw surface image information.</value>
+		/// <remarks />
 		public SKImageInfo RawInfo { get; private set; }
 	}
 }

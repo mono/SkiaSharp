@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Tizen.NUI;
@@ -6,6 +6,8 @@ using NGeometry = Tizen.NUI.Geometry;
 
 namespace SkiaSharp.Views.Tizen.NUI
 {
+	/// <summary>A GPU-accelerated view for drawing SkiaSharp content using OpenGL ES in a Tizen NUI application.</summary>
+	/// <remarks>This view uses hardware-accelerated rendering for improved performance. For software rendering, use <see cref="T:SkiaSharp.Views.Tizen.NUI.SKCanvasView" /> instead.</remarks>
 	public class SKGLSurfaceView : CustomRenderingView
 	{
 		static readonly string VERTEX_SHADER =
@@ -42,6 +44,8 @@ namespace SkiaSharp.Views.Tizen.NUI
 		Texture? _texture;
 		TextureSet? _textureSet;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Tizen.NUI.SKGLSurfaceView" /> class.</summary>
+		/// <remarks />
 		public SKGLSurfaceView()
 		{
 			_geometry = CreateQuadGeometry();
@@ -49,6 +53,8 @@ namespace SkiaSharp.Views.Tizen.NUI
 			OnResized();
 		}
 
+		/// <summary>Called when the view needs to render a frame.</summary>
+		/// <remarks>This method sets up the OpenGL context and raises the <see cref="E:SkiaSharp.Views.Tizen.NUI.CustomRenderingView.PaintSurface" /> event.</remarks>
 		protected override void OnDrawFrame()
 		{
 			if (Size.Width == 0 || Size.Height == 0)
@@ -75,6 +81,8 @@ namespace SkiaSharp.Views.Tizen.NUI
 			}
 		}
 
+		/// <summary>Called when the view has been resized.</summary>
+		/// <remarks>This method updates the GPU render target to match the new view dimensions.</remarks>
 		protected override void OnResized()
 		{
 			if (Size.Width == 0 || Size.Height == 0)
@@ -85,6 +93,9 @@ namespace SkiaSharp.Views.Tizen.NUI
 			UpdateTexture();
 		}
 
+		/// <summary>Releases the unmanaged resources used by the view and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <remarks>This method releases the OpenGL context and any GPU resources associated with the view.</remarks>
 		protected override void Dispose(bool disposing)
 		{
 			if (disposing)

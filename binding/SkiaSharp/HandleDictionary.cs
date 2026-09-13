@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -40,9 +40,7 @@ namespace SkiaSharp
 
 		internal static readonly IPlatformLock instancesLock = PlatformLock.Create ();
 
-		/// <summary>
-		/// Retrieve the living instance if there is one, or null if not.
-		/// </summary>
+		/// <summary>Retrieve the living instance if there is one, or null if not.</summary>
 		/// <returns>The instance if it is alive, or null if there is none.</returns>
 		internal static bool GetInstance<TSkiaObject> (IntPtr handle, out TSkiaObject instance)
 			where TSkiaObject : SKObject
@@ -65,22 +63,13 @@ namespace SkiaSharp
 			}
 		}
 
-		/// <summary>
-		/// Retrieve or create an instance for the native handle.
-		/// </summary>
+		/// <summary>Retrieve or create an instance for the native handle.</summary>
 		/// <returns>The instance, or null if the handle was null.</returns>
 		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject =>
 			GetOrAddObject (handle, owns, unrefExisting, disposeProtected: false, objectFactory);
 
-		/// <summary>
-		/// Retrieve or create an instance for the native handle. When <paramref name="disposeProtected"/> is true,
-		/// IgnorePublicDispose is set via PreventPublicDisposal on the wrapper that is returned (whether an
-		/// existing one was found or a new one was created).
-		/// This is safe because this method holds the upgradeable-read lock for its whole duration, which is
-		/// mutually exclusive with the write lock public Dispose() holds around its IgnorePublicDispose check —
-		/// so the flag set cannot race a concurrent public disposal. (PreventPublicDisposal itself takes no lock.)
-		/// </summary>
+		/// <summary>Retrieve or create an instance for the native handle. When<paramref name="disposeProtected" />is true, IgnorePublicDispose is set via PreventPublicDisposal on the wrapper that is returned (whether an existing one was found or a new one was created). This is safe because this method holds the upgradeable-read lock for its whole duration, which is mutually exclusive with the write lock public Dispose() holds around its IgnorePublicDispose check — so the flag set cannot race a concurrent public disposal. (PreventPublicDisposal itself takes no lock.)</summary>
 		/// <returns>The instance, or null if the handle was null.</returns>
 		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool disposeProtected, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
@@ -135,9 +124,7 @@ namespace SkiaSharp
 			}
 		}
 
-		/// <summary>
-		/// Retrieve the living instance if there is one, or null if not. This does not use locks.
-		/// </summary>
+		/// <summary>Retrieve the living instance if there is one, or null if not. This does not use locks.</summary>
 		/// <returns>The instance if it is alive, or null if there is none.</returns>
 		private static bool GetInstanceNoLocks<TSkiaObject> (IntPtr handle, out TSkiaObject instance)
 			where TSkiaObject : SKObject
@@ -167,9 +154,7 @@ namespace SkiaSharp
 			return false;
 		}
 
-		/// <summary>
-		/// Registers the specified instance with the dictionary.
-		/// </summary>
+		/// <summary>Registers the specified instance with the dictionary.</summary>
 		internal static void RegisterHandle (IntPtr handle, SKObject instance)
 		{
 			if (handle == IntPtr.Zero || instance == null)
@@ -208,9 +193,7 @@ namespace SkiaSharp
 			objectToDispose?.DisposeInternal ();
 		}
 
-		/// <summary>
-		/// Removes the registered instance from the dictionary.
-		/// </summary>
+		/// <summary>Removes the registered instance from the dictionary.</summary>
 		internal static void DeregisterHandle (IntPtr handle, SKObject instance)
 		{
 			if (handle == IntPtr.Zero)

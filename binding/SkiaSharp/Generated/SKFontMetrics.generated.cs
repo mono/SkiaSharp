@@ -61,20 +61,41 @@ namespace SkiaSharp
 		// public float fStrikeoutPosition
 		private Single fStrikeoutPosition;
 
+		/// <summary>Determines whether the specified <see cref="T:SkiaSharp.SKFontMetrics" /> is equal to the current instance.</summary>
+		/// <param name="obj">The <see cref="T:SkiaSharp.SKFontMetrics" /> to compare with this instance.</param>
+		/// <returns><see langword="true" /> if the specified object is equal to the current instance; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public readonly bool Equals (SKFontMetrics obj) =>
 #pragma warning disable CS8909
 			fFlags == obj.fFlags && fTop == obj.fTop && fAscent == obj.fAscent && fDescent == obj.fDescent && fBottom == obj.fBottom && fLeading == obj.fLeading && fAvgCharWidth == obj.fAvgCharWidth && fMaxCharWidth == obj.fMaxCharWidth && fXMin == obj.fXMin && fXMax == obj.fXMax && fXHeight == obj.fXHeight && fCapHeight == obj.fCapHeight && fUnderlineThickness == obj.fUnderlineThickness && fUnderlinePosition == obj.fUnderlinePosition && fStrikeoutThickness == obj.fStrikeoutThickness && fStrikeoutPosition == obj.fStrikeoutPosition;
 #pragma warning restore CS8909
 
+		/// <summary>Determines whether the specified object is equal to the current instance.</summary>
+		/// <param name="obj">The object to compare with the current instance.</param>
+		/// <returns><see langword="true" /> if the specified object is equal to the current instance; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public readonly override bool Equals (object obj) =>
 			obj is SKFontMetrics f && Equals (f);
 
+		/// <summary>Determines whether two specified instances are equal.</summary>
+		/// <param name="left">The first value to compare.</param>
+		/// <param name="right">The second value to compare.</param>
+		/// <returns><see langword="true" /> if <paramref name="left" /> equals <paramref name="right" />; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public static bool operator == (SKFontMetrics left, SKFontMetrics right) =>
 			left.Equals (right);
 
+		/// <summary>Determines whether two specified instances are not equal.</summary>
+		/// <param name="left">The first value to compare.</param>
+		/// <param name="right">The second value to compare.</param>
+		/// <returns><see langword="true" /> if <paramref name="left" /> does not equal <paramref name="right" />; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public static bool operator != (SKFontMetrics left, SKFontMetrics right) =>
 			!left.Equals (right);
 
+		/// <summary>Returns the hash code for this instance.</summary>
+		/// <returns>A 32-bit signed integer hash code.</returns>
+		/// <remarks />
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();

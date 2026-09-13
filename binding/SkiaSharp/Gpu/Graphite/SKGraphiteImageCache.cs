@@ -5,6 +5,14 @@ using System.Collections.Generic;
 
 namespace SkiaSharp
 {
+	/// <summary>Provides a bounded, least-recently-used cache of Graphite-backed textures keyed by source image, for reuse across recordings.</summary>
+	/// <remarks><format type="text/markdown"><![CDATA[
+	/// ## Remarks
+	///
+	/// Use this cache as the callback body for <xref:SkiaSharp.SKGraphiteContext.CreateRecorder(System.Int64,SkiaSharp.SKGraphiteFindOrCreateImageDelegate,System.Action)> so that repeatedly drawn images are uploaded to the GPU only once. The cache holds a reference to each cached texture until the entry is evicted or the cache is disposed.
+	///
+	/// This type implements `IDisposable`. Dispose it while its owning recorder is still alive so the cached textures can be released safely.
+	/// ]]></format></remarks>
 	public sealed class SKGraphiteImageCache : IDisposable
 	{
 		// LRU cap — keeps memory bounded when callers decode fresh SkImages
@@ -20,6 +28,18 @@ namespace SkiaSharp
 		private readonly LinkedList<(uint UniqueId, bool Mipmapped)> lruOrder = new ();
 		private readonly Dictionary<(uint UniqueId, bool Mipmapped), (LinkedListNode<(uint UniqueId, bool Mipmapped)> node, IntPtr handle)> cache = new ();
 
+		/// <summary>Initializes a new instance of the <see cref="SKGraphiteImageCache" /> class.</summary>
+		/// <remarks />
+		public SKGraphiteImageCache ()
+		{
+		}
+
+		/// <summary>Returns the cached Graphite-backed texture for the specified image, uploading and caching it on the recorder if it is not already present.</summary>
+		/// <param name="recorder">The recorder to upload the image to on a cache miss.</param>
+		/// <param name="image">The source image to find or upload.</param>
+		/// <param name="mipmapped"><see langword="true" /> to create the texture with mipmaps; otherwise, <see langword="false" />.</param>
+		/// <returns>A Graphite-backed image, or <see langword="null" /> if the image could not be uploaded.</returns>
+		/// <remarks />
 		public SKImage FindOrCreate (SKGraphiteRecorder recorder, SKImage image, bool mipmapped)
 		{
 			if (recorder is null)
@@ -67,6 +87,8 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Releases all cached textures held by the cache.</summary>
+		/// <remarks />
 		public void Dispose ()
 		{
 			lock (cacheLock) {

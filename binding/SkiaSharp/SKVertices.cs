@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Runtime.InteropServices;
@@ -8,6 +8,8 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
+	/// <summary>Represents an immutable set of vertex data that can be used with <see cref="M:SkiaSharp.SKCanvas.DrawVertices(SkiaSharp.SKVertices,SkiaSharp.SKBlendMode,SkiaSharp.SKPaint)" />.</summary>
+	/// <remarks />
 	public unsafe class SKVertices : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal SKVertices (IntPtr x, bool owns)
@@ -15,6 +17,9 @@ namespace SkiaSharp
 		{
 		}
 
+		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKVertices" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.SKVertices" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
@@ -22,16 +27,37 @@ namespace SkiaSharp
 
 		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_vertices_unref (Handle);
 
+		/// <summary>Creates a new <see cref="T:SkiaSharp.SKVertices" /> instance, making a copy of the vertices and related data.</summary>
+		/// <param name="vmode">How to interpret the array of vertices.</param>
+		/// <param name="positions">The array of vertices for the mesh.</param>
+		/// <param name="colors">The color for each vertex, to be interpolated across the triangle. May be <see langword="null" />.</param>
+		/// <returns>Returns the new <see cref="T:SkiaSharp.SKVertices" /> instance.</returns>
+		/// <remarks />
 		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKColor[] colors)
 		{
 			return CreateCopy (vmode, positions, null, colors, null);
 		}
 
+		/// <summary>Creates a new <see cref="T:SkiaSharp.SKVertices" /> instance, making a copy of the vertices and related data.</summary>
+		/// <param name="vmode">How to interpret the array of vertices.</param>
+		/// <param name="positions">The array of vertices for the mesh.</param>
+		/// <param name="texs">The coordinates in texture space (not UV space) for each vertex. May be <see langword="null" />.</param>
+		/// <param name="colors">The color for each vertex, to be interpolated across the triangle. May be <see langword="null" />.</param>
+		/// <returns>Returns the new <see cref="T:SkiaSharp.SKVertices" /> instance.</returns>
+		/// <remarks />
 		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors)
 		{
 			return CreateCopy (vmode, positions, texs, colors, null);
 		}
 
+		/// <summary>Creates a new <see cref="T:SkiaSharp.SKVertices" /> instance, making a copy of the vertices and related data.</summary>
+		/// <param name="vmode">How to interpret the array of vertices.</param>
+		/// <param name="positions">The array of vertices for the mesh.</param>
+		/// <param name="texs">The coordinates in texture space (not UV space) for each vertex. May be <see langword="null" />.</param>
+		/// <param name="colors">The color for each vertex, to be interpolated across the triangle. May be <see langword="null" />.</param>
+		/// <param name="indices">The array of indices to reference into the vertex (texture coordinates, colors) array.</param>
+		/// <returns>Returns the new <see cref="T:SkiaSharp.SKVertices" /> instance.</returns>
+		/// <remarks />
 		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors, UInt16[] indices)
 		{
 			if (positions == null)
