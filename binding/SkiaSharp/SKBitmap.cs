@@ -669,10 +669,15 @@ namespace SkiaSharp
 			var del = releaseProc != null && context != null
 				? new SKBitmapReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
-			DelegateProxies.Create (del, out _, out var ctx);
+			DelegateProxies.Create (del, out var gch, out var ctx);
 			var proxy = del is not null ? DelegateProxies.SKBitmapReleaseProxy : null;
 			var result = SkiaApi.sk_bitmap_install_pixels (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx);
 			GC.KeepAlive (this);
+			if (!result && del is not null) {
+				// the pixels were not installed, so the release proc will never run to
+				// free the delegate's GCHandle - free it now to avoid leaking the handle
+				gch.Free ();
+			}
 			return result;
 		}
 
