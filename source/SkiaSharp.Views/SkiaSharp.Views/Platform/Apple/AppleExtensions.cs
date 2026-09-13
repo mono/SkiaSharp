@@ -91,9 +91,9 @@ namespace SkiaSharp.Views.Mac
 		public static SKColor ToSKColor(this CGColor color) =>
 			UIColor.FromCGColor(color).ToSKColor();
 
-		/// <summary>Converts a CoreGraphics color into a SkiaSharp color.</summary>
+		/// <summary>Converts a CoreGraphics color into a SkiaSharp floating-point color.</summary>
 		/// <param name="color">The CoreGraphics color.</param>
-		/// <returns>Returns a SkiaSharp color.</returns>
+		/// <returns>Returns a SkiaSharp floating-point color.</returns>
 		/// <remarks />
 		public static SKColorF ToSKColorF(this CGColor color) =>
 			UIColor.FromCGColor(color).ToSKColorF();
@@ -112,8 +112,8 @@ namespace SkiaSharp.Views.Mac
 #endif
 		}
 
-		/// <summary>Converts a SkiaSharp color into a CoreGraphics color.</summary>
-		/// <param name="color">The SkiaSharp color.</param>
+		/// <summary>Converts a SkiaSharp floating-point color into a CoreGraphics color.</summary>
+		/// <param name="color">The SkiaSharp color with floating-point components.</param>
 		/// <returns>Returns a CoreGraphics color.</returns>
 		/// <remarks />
 		public static CGColor ToCGColor(this SKColorF color)
@@ -135,9 +135,9 @@ namespace SkiaSharp.Views.Mac
 		public static SKColor ToSKColor(this CIColor color) =>
 			UIColor.FromCIColor(color).ToSKColor();
 
-		/// <summary>Converts a CoreImage color into a SkiaSharp color.</summary>
+		/// <summary>Converts a CoreImage color into a SkiaSharp floating-point color.</summary>
 		/// <param name="color">The CoreImage color.</param>
-		/// <returns>Returns a SkiaSharp color.</returns>
+		/// <returns>Returns a SkiaSharp floating-point color.</returns>
 		/// <remarks />
 		public static SKColorF ToSKColorF(this CIColor color) =>
 			UIColor.FromCIColor(color).ToSKColorF();
@@ -149,8 +149,8 @@ namespace SkiaSharp.Views.Mac
 		public static CIColor ToCIColor(this SKColor color) =>
 			new CIColor(color.Red / 255f, color.Green / 255f, color.Blue / 255f, color.Alpha / 255f);
 
-		/// <summary>Converts a SkiaSharp color into a CoreImage color.</summary>
-		/// <param name="color">The SkiaSharp color.</param>
+		/// <summary>Converts a SkiaSharp floating-point color into a CoreImage color.</summary>
+		/// <param name="color">The SkiaSharp color with floating-point components.</param>
 		/// <returns>Returns a CoreImage color.</returns>
 		/// <remarks />
 		public static CIColor ToCIColor(this SKColorF color) =>

@@ -5,7 +5,6 @@ using UIKit;
 
 namespace SkiaSharp.Views.Maui.Handlers
 {
-/// <summary>Handles <see cref="T:SkiaSharp.Views.Maui.ISKCanvasView" /> instances on Apple platforms.</summary>
 public partial class SKCanvasViewHandler : ViewHandler<ISKCanvasView, SKCanvasView>
 	{
 		private PaintSurfaceProxy? paintSurfaceProxy;

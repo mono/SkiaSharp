@@ -179,9 +179,9 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
-		/// <summary>Converts a Windows <see cref="T:Microsoft.UI.Xaml.Media.Imaging.WriteableBitmap" /> to a SkiaSharp bitmap.</summary>
-		/// <param name="bitmap">The Windows bitmap to convert.</param>
-		/// <returns>The converted SkiaSharp bitmap.</returns>
+		/// <summary>Converts a Windows WriteableBitmap into a SkiaSharp bitmap.</summary>
+		/// <param name="bitmap">The Windows WriteableBitmap to convert.</param>
+		/// <returns>Returns a new <see cref="T:SkiaSharp.SKBitmap" /> containing a copy of the bitmap data.</returns>
 		/// <remarks />
 		public static SKBitmap ToSKBitmap(this WriteableBitmap bitmap)
 		{
@@ -196,9 +196,9 @@ namespace SkiaSharp.Views.UWP
 			return skiaBitmap;
 		}
 
-		/// <summary>Converts a Windows <see cref="T:Microsoft.UI.Xaml.Media.Imaging.WriteableBitmap" /> to a SkiaSharp image.</summary>
-		/// <param name="bitmap">The Windows bitmap to convert.</param>
-		/// <returns>The converted SkiaSharp image.</returns>
+		/// <summary>Converts a Windows WriteableBitmap into a SkiaSharp image.</summary>
+		/// <param name="bitmap">The Windows WriteableBitmap to convert.</param>
+		/// <returns>Returns a new <see cref="T:SkiaSharp.SKImage" /> containing a copy of the image data.</returns>
 		/// <remarks />
 		public static SKImage ToSKImage(this WriteableBitmap bitmap)
 		{
@@ -213,10 +213,10 @@ namespace SkiaSharp.Views.UWP
 			return image;
 		}
 
-		/// <summary>Copies pixels from a Windows <see cref="T:Microsoft.UI.Xaml.Media.Imaging.WriteableBitmap" /> to a SkiaSharp pixmap.</summary>
-		/// <param name="bitmap">The Windows bitmap to convert.</param>
-		/// <param name="pixmap">The SkiaSharp pixmap that receives the pixels.</param>
-		/// <returns><see langword="true" /> if the pixels were copied; otherwise, <see langword="false" />.</returns>
+		/// <summary>Copies the pixel data from a Windows WriteableBitmap into an existing SkiaSharp pixmap.</summary>
+		/// <param name="bitmap">The Windows WriteableBitmap to convert.</param>
+		/// <param name="pixmap">The destination pixmap to copy the pixel data into.</param>
+		/// <returns><see langword="true" /> if the copy was successful; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
 		public static bool ToSKPixmap(this WriteableBitmap bitmap, SKPixmap pixmap)
 		{

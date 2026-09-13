@@ -6,7 +6,6 @@ using UIKit;
 
 namespace SkiaSharp.Views.Maui.Handlers
 {
-	/// <summary>Provides Apple platform images for SkiaSharp image sources.</summary>
 	public partial class SKImageSourceService
 	{
 		/// <summary>Asynchronously obtains a platform image for the specified image source.</summary>

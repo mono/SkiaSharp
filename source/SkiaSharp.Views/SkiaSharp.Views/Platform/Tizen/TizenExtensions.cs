@@ -64,8 +64,8 @@ namespace SkiaSharp.Views.Tizen
 
 		// Size
 
-		/// <summary>Converts a Tizen NUI size into a SkiaSharp size.</summary>
-		/// <param name="size">The Tizen NUI size.</param>
+		/// <summary>Converts a Tizen size into a SkiaSharp size.</summary>
+		/// <param name="size">The Tizen size.</param>
 		/// <returns>Returns a SkiaSharp size.</returns>
 		/// <remarks />
 		public static SKSize ToSKSize(this Size size)

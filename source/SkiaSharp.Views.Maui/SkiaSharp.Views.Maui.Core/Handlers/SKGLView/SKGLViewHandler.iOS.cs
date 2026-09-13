@@ -9,7 +9,6 @@ using UIKit;
 
 namespace SkiaSharp.Views.Maui.Handlers
 {
-	/// <summary>Handles <see cref="T:SkiaSharp.Views.Maui.ISKGLView" /> instances on iOS and tvOS.</summary>
 	[ObsoletedOSPlatform("ios12.0", "Use 'Metal' instead.")]
 	[ObsoletedOSPlatform("tvos12.0", "Use 'Metal' instead.")]
 	[SupportedOSPlatform("ios")]
