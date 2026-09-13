@@ -1,15 +1,26 @@
 {
   "theme": "Skia m154 preview",
-  "highlights_headline": "SkiaSharp 4.154.0 Preview 1 updates the bundled renderer to Skia m154.",
-  "highlights_body": null,
-  "breaking": [],
+  "highlights_headline": "SkiaSharp 4.154.0 previews the Skia m154 engine update and corrects HarfBuzzSharp enum compatibility.",
+  "highlights_body": "The preview moves the bundled renderer to the m154 line. HarfBuzzSharp follows current upstream enum names and removes aggregate mask constants that should not be passed as independent options.",
+  "breaking": [
+    {
+      "title": "UnicodeCombiningClass.CCC133 renamed to CCC132",
+      "body": "The misspelled HarfBuzz enum member is corrected to `CCC132`; its numeric value remains 132. Update source code that references `CCC133` and rebuild.",
+      "prs": []
+    },
+    {
+      "title": "Aggregate HarfBuzz flag masks are unavailable",
+      "body": "`GlyphFlags.Defined` is removed, and aggregate `Defined` members are not exposed for buffer-related flag enums. Combine the concrete flags your code requires instead of using an aggregate mask.",
+      "prs": []
+    }
+  ],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia m154",
-          "detail": "Updates the bundled rendering engine from the previous preview line to upstream milestone 154.",
+          "lead": "Skia updated to milestone m154",
+          "detail": "Moves the bundled renderer onto the Skia m154 line for preview consumers.",
           "prs": [
             4945
           ]
@@ -19,13 +30,13 @@
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.154.0-preview.1.26454.9": "Preview 1 introduces the Skia m154 engine update."
+    "v4.154.0-preview.1.26454.9": "Preview 1 introduces the Skia m154 engine update and the accompanying HarfBuzzSharp compatibility corrections."
   },
   "harfbuzz_summary": null,
   "release_summaries": {
     "v4.154.0-preview.1.26454.9": {
-      "headline": "SkiaSharp 4.154.0 Preview 1 updates the bundled renderer to Skia m154.",
-      "body": "This shipment contains the milestone 154 engine update since the 4.153 Preview 1 release."
+      "headline": "SkiaSharp 4.154.0 previews the Skia m154 engine update.",
+      "body": "It updates the bundled renderer for the new release line and includes HarfBuzzSharp compatibility corrections."
     }
   }
 }
