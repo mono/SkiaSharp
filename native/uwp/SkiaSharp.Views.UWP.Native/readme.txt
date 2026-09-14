@@ -3,10 +3,9 @@
 ========================================================================
 
 This project demonstrates how to get started authoring Windows Runtime
-classes directly with standard C++, using the Windows App SDK and
-C++/WinRT packages to generate implementation headers from interface
-(IDL) files.  The generated Windows Runtime component binary and WinMD
-files should then be bundled with the app consuming them.
+classes directly with standard C++, using the C++/WinRT package to
+generate implementation headers from interface (IDL) files. It targets
+UWP (Windows.UI.Xaml) and does not use the Windows App SDK.
 
 Steps:
 1. Create an interface (IDL) file to define your Windows Runtime class,

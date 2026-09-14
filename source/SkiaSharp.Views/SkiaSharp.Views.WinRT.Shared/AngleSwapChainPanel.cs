@@ -309,11 +309,11 @@ namespace SkiaSharp.Views.UWP
 						tcs.SetResult();
 					});
 #else
-					Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+					_ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
 					{
 						RenderFrame();
 						tcs.SetResult();
-					}).AsTask().Wait();
+					});
 #endif
 					tcs.Task.Wait();
 				}

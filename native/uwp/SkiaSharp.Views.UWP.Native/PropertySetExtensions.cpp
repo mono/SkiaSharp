@@ -12,8 +12,8 @@ namespace winrt::SkiaSharp::Views::UWP::Native::implementation
         propertySet.Insert(key, PropertyValue::CreateSingle(value));
     }
 
-    void PropertySetExtensions::AddSize(PropertySet const& propertySet, hstring const& key, Size const& height)
+    void PropertySetExtensions::AddSize(PropertySet const& propertySet, hstring const& key, Size const& value)
     {
-        propertySet.Insert(key, PropertyValue::CreateSize(height));
+        propertySet.Insert(key, PropertyValue::CreateSize(value));
     }
 }

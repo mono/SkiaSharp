@@ -123,6 +123,7 @@ var SUPPORTED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.NativeAssets.tvOS",                   new Version (2, 80, 0) },
     { "SkiaSharp.NativeAssets.Win32",                  new Version (2, 80, 0) },
     { "SkiaSharp.NativeAssets.WinUI",                  new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.UWP",                    new Version (2, 80, 0) },
     { "SkiaSharp.Views",                               new Version (2, 80, 0) },
     { "SkiaSharp.Views.Desktop.Common",                new Version (2, 80, 0) },
     { "SkiaSharp.Views.Gtk3",                          new Version (2, 80, 0) },
@@ -131,6 +132,7 @@ var SUPPORTED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.WPF",                           new Version (2, 80, 0) },
     { "SkiaSharp.Views.Uno.WinUI",                     new Version (2, 80, 0) },
     { "SkiaSharp.Views.WinUI",                         new Version (2, 80, 0) },
+    { "SkiaSharp.Views.UWP",                           new Version (4, 154, 0) },
     { "SkiaSharp.Views.Maui.Core",                     new Version (2, 88, 0) },
     { "SkiaSharp.Views.Maui.Controls",                 new Version (2, 88, 0) },
     { "SkiaSharp.Views.Blazor",                        new Version (2, 80, 0) },
@@ -157,7 +159,6 @@ var SUPPORTED_NUGETS = new Dictionary<string, Version> {
 
 var OBSOLETED_NUGETS = new Dictionary<string, Version> {
     // Obsolete packages no longer built but still tracked for documentation
-    { "SkiaSharp.NativeAssets.UWP",                    new Version (2, 80, 0) },
     { "SkiaSharp.NativeAssets.watchOS",                new Version (2, 80, 0) },
     { "SkiaSharp.Views.Gtk2",                          new Version (2, 80, 0) },
     { "SkiaSharp.Views.Maui.Controls.Compatibility",   new Version (2, 88, 0) },
