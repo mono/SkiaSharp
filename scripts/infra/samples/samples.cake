@@ -137,10 +137,8 @@ Task ("samples-run")
 
         Information ($"Building sample {sln} ({platform})...");
         try {
-            if (isUwp) {
-                DotNetRestore (sln.FullPath);
-                RunMSBuild (sln, restore:false);
-            }
+            if (isUwp)
+                RunMSBuild (sln);
             else
                 RunDotNetBuild (sln);
         } catch (Exception ex) {
