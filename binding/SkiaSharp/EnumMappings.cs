@@ -1,17 +1,25 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.ComponentModel;
 
 namespace SkiaSharp
 {
+	/// <summary>Possible 3D APIs that may be used by Ganesh.</summary>
+	/// <remarks />
 	public enum GRBackend
 	{
+		/// <summary>Use the Metal 3D backend. (not yet supported)</summary>
 		Metal = 0,
+		/// <summary>Use the OpenGL 3D backend.</summary>
 		OpenGL = 1,
+		/// <summary>Use the Vulkan 3D backend. (not yet supported)</summary>
 		Vulkan = 2,
+		/// <summary>Use the Dawn (WebGPU) 3D backend.</summary>
 		Dawn = 3,
+		/// <summary>Use the Direct3D 3D backend.</summary>
 		Direct3D = 4,
+		/// <summary>The backend is not supported on this platform.</summary>
 		Unsupported = 5,
 	}
 

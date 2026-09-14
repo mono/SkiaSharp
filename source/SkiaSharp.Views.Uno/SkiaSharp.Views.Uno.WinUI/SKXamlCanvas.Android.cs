@@ -1,4 +1,4 @@
-﻿using Android.Graphics;
+using Android.Graphics;
 using Windows.Graphics.Display;
 #if WINUI
 using Microsoft.UI.Xaml;
@@ -16,6 +16,8 @@ namespace SkiaSharp.Views.UWP
 	{
 		private SurfaceFactory surfaceFactory;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKXamlCanvas" /> class.</summary>
+		/// <remarks />
 		public SKXamlCanvas()
 		{
 			surfaceFactory = new SurfaceFactory();
@@ -32,6 +34,8 @@ namespace SkiaSharp.Views.UWP
 			base.Invalidate();
 		}
 
+		/// <summary>Draws the current Skia surface into the specified Android canvas.</summary>
+		/// <param name="canvas">The Android canvas that receives the rendered surface.</param>
 		protected override void OnDraw(Canvas canvas)
 		{
 			base.OnDraw(canvas);

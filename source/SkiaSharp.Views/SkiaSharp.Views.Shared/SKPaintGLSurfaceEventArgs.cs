@@ -1,4 +1,4 @@
-﻿#if !MACCATALYST || HAS_UNO_WINUI
+#if !MACCATALYST || HAS_UNO_WINUI
 using System;
 using System.ComponentModel;
 
@@ -60,8 +60,14 @@ namespace SkiaSharp.Views.Blazor
 
 		public GRBackendRenderTarget BackendRenderTarget { get; private set; }
 
+		/// <summary>Gets the color type of the render target.</summary>
+		/// <value>The color type of the render target.</value>
+		/// <remarks />
 		public SKColorType ColorType { get; private set; }
 
+		/// <summary>Gets the surface origin of the render target.</summary>
+		/// <value>The surface origin of the render target.</value>
+		/// <remarks />
 		public GRSurfaceOrigin Origin { get; private set; }
 
 		public SKImageInfo Info { get; private set; }

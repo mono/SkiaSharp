@@ -1,4 +1,4 @@
-﻿#if __MACCATALYST__
+#if __MACCATALYST__
 using System;
 using System.Threading;
 using Uno.Foundation;
@@ -12,6 +12,8 @@ namespace SkiaSharp.Views.Windows
 {
 	public partial class SKSwapChainPanel
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKSwapChainPanel" /> class.</summary>
+		/// <remarks />
 		public SKSwapChainPanel()
 		{
 			if (RaiseOnUnsupported)

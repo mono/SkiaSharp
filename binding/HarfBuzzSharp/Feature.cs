@@ -1,24 +1,39 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
+	/// <summary>Various font features and variations.</summary>
+	/// <remarks />
 	public unsafe partial struct Feature
 	{
 		private const int MaxFeatureStringSize = 128;
 
+		/// <summary>Initializes a new instance of the <see cref="T:HarfBuzzSharp.Feature" /> struct with the specified tag.</summary>
+		/// <param name="tag">The tag to use.</param>
+		/// <remarks />
 		public Feature (Tag tag)
 			: this (tag, 1u, 0, uint.MaxValue)
 		{
 		}
 
+		/// <summary>Initializes a new instance of the <see cref="T:HarfBuzzSharp.Feature" /> struct with the specified tag.</summary>
+		/// <param name="tag">The tag to use.</param>
+		/// <param name="value">The value to use.</param>
+		/// <remarks />
 		public Feature (Tag tag, uint value)
 			: this (tag, value, 0, uint.MaxValue)
 		{
 		}
 
+		/// <summary>Initializes a new instance of the <see cref="T:HarfBuzzSharp.Feature" /> struct with the specified tag.</summary>
+		/// <param name="tag">The tag to use.</param>
+		/// <param name="value">The value to use.</param>
+		/// <param name="start">The start value.</param>
+		/// <param name="end">The end value.</param>
+		/// <remarks />
 		public Feature (Tag tag, uint value, uint start, uint end)
 		{
 			this.tag = tag;
@@ -27,26 +42,41 @@ namespace HarfBuzzSharp
 			this.end = end;
 		}
 
+		/// <summary>Gets or sets the tag identifying the feature.</summary>
+		/// <value>The tag identifying the feature.</value>
+		/// <remarks />
 		public Tag Tag {
 			readonly get => tag;
 			set => tag = value;
 		}
 
+		/// <summary>Gets or sets the value of the feature.</summary>
+		/// <value>The value of the feature.</value>
+		/// <remarks />
 		public uint Value {
 			readonly get => value;
 			set => this.value = value;
 		}
 
+		/// <summary>Gets or sets the start position of the feature application range.</summary>
+		/// <value>The start position of the feature application range.</value>
+		/// <remarks />
 		public uint Start {
 			readonly get => start;
 			set => start = value;
 		}
 
+		/// <summary>Gets or sets the end position of the feature application range.</summary>
+		/// <value>The end position of the feature application range.</value>
+		/// <remarks />
 		public uint End {
 			readonly get => end;
 			set => end = value;
 		}
 
+		/// <summary>Returns the string representation of the feature.</summary>
+		/// <returns>Returns the string representation of the feature.</returns>
+		/// <remarks />
 		public override string ToString ()
 		{
 			fixed (Feature* f = &this) {
@@ -58,6 +88,11 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>Tries to parse the feature string.</summary>
+		/// <param name="s">The feature string to parse.</param>
+		/// <param name="feature">The feature.</param>
+		/// <returns><see langword="true" /> on success; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public static bool TryParse (string s, out Feature feature)
 		{
 			fixed (Feature* f = &feature) {
@@ -65,6 +100,10 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>Parses a feature string.</summary>
+		/// <param name="s">The feature string to parse.</param>
+		/// <returns>Returns the new feature.</returns>
+		/// <remarks />
 		public static Feature Parse (string s) =>
 			TryParse (s, out var feature) ? feature : throw new FormatException ("Unrecognized feature string format.");
 	}
