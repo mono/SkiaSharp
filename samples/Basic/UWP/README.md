@@ -49,11 +49,14 @@ A freehand drawing canvas with a floating toolbox for choosing colors and brush 
 ## Requirements
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) or later
-- Windows 10 (build 26100 or later)
+- Visual Studio 2026 (the `dotnet` CLI and Visual Studio 2022 MSBuild cannot build modern UWP)
+- Windows 10 version 1809 (build 17763) or later
 
 ## Running the Sample
 
-Build and run with MSBuild (Windows only):
+Open `SkiaSharpSample.slnx` in Visual Studio, select a platform (x64, x86 or arm64) and run. Deploying copies the native libraries into the app package.
+
+To build only, from the command line:
 
 ```bash
 msbuild SkiaSharpSample/SkiaSharpSample.csproj /p:Platform=x64 /restore
