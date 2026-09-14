@@ -2,11 +2,12 @@
 description: "Daily upstream Skia milestone sync - merges new commits, resolves conflicts, builds, tests, and creates PRs."
 
 # -- Engine ------------------------------------------------------------
-# Use Claude Opus for the primary update work. A controlled Sonnet 5 evaluation
-# was cheaper when successful, but did not achieve the required reliability.
+# Pin GPT-5.6 Sol for the primary update work so scheduled runs never fall back
+# to a lower default model.
 engine:
   id: copilot
-model: claude-opus-4.8
+  max-continuations: 3
+model: gpt-5.6-sol
 
 # -- Triggers ----------------------------------------------------------
 # One fuzzy schedule every 6h. Scheduled runs pass no target, so the detector ROTATES:
@@ -83,6 +84,7 @@ max-ai-credits: 2000
 concurrency:
   group: skia-upstream-sync-${{ github.event.inputs.base_branch || 'auto' }}-${{ github.event.inputs.target || github.event.schedule || 'manual' }}
   cancel-in-progress: true
+  job-discriminator: ${{ github.run_id }}
 
 # -- Agent tools -----------------------------------------------------
 tools:
@@ -292,7 +294,7 @@ post-steps:
         {
           git diff --name-only
           git diff --cached --name-only
-        } | sort -u | grep -Ev '^(cgmanifest\.json|scripts/VERSIONS\.txt|scripts/azure-templates-variables\.yml|externals/skia|externals/depot_tools)$' || true
+        } | sort -u | grep -Ev '^(cgmanifest\.json|scripts/VERSIONS\.txt|scripts/azure-templates-variables\.yml|externals/skia)$' || true
       )
       if [ -n "$UNEXPECTED_CHANGES" ]; then
         echo "::error::The agent left uncommitted semantic changes:"
@@ -313,7 +315,7 @@ post-steps:
         git config user.email "devnull@localhost"
         git commit -m "[skia-sync] Finalize deterministic metadata"
       fi
-      git diff --quiet -- . ':(exclude)externals/depot_tools'
+      git diff --quiet
       git diff --cached --quiet
   - name: Push branches and create PRs
     env:

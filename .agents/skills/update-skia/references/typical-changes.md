@@ -15,7 +15,7 @@
 | mono/SkiaSharp | `cgmanifest.json` | Security tracking |
 | mono/SkiaSharp | `scripts/azure-templates-variables.yml` | CI config (`SKIASHARP_VERSION`) |
 | mono/SkiaSharp | `native/*/build.cake` | Per-platform GN flag updates (check for removed declare_args) |
-| mono/SkiaSharp | `binding/SkiaSharp/SkiaApi.generated.cs` | Regenerated |
+| mono/SkiaSharp | `binding/SkiaSharp/Generated` | Regenerated |
 | mono/SkiaSharp | `binding/SkiaSharp/Definitions.cs` | Type definitions, new enums |
 | mono/SkiaSharp | `binding/SkiaSharp/EnumMappings.cs` | Enum mappings |
 | mono/SkiaSharp | `binding/SkiaSharp/GRDefinitions.cs` | GPU type changes |

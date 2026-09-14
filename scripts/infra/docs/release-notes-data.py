@@ -48,9 +48,10 @@ A version's "released" and "unreleased" states are orthogonal and get SEPARATE
 pages that coexist while the version is in flight:
 
   * RELEASED  ``{version}.md``            <- a VERSIONED branch (release/X.Y.Z and
-    its -rc/-preview prereleases; highest/canonical wins across a full run). Full
-    cumulative ROLLUP from the previous-stable base, honoring versions.json
-    `compare_to`, carrying preview-milestone sections + supersede banners.
+    its -rc/-preview prereleases; highest/canonical wins across a full run).
+    Preview-only lines start at the preceding emitted line; once the line ships
+    stable it rolls up from the preceding stable. Explicit versions.json
+    `compare_to` overrides either default.
 
   * UNRELEASED ``{version}-unreleased.md`` <- a HEAD branch (main, or servicing
     release/X.Y.x). Small DELTA from the last release to the head ("what may ship
@@ -89,7 +90,7 @@ Reads scripts/infra/docs/versions.json (if present) for comparison overrides and
 supersession markers. versions.json is the single source of truth: only the
 versions listed there get a non-default baseline or a superseded marker.
 
-Requirements: git, Python 3.7+
+Requirements: git, Python 3.10+
 """
 
 from __future__ import annotations
@@ -110,6 +111,18 @@ from typing import Optional, Tuple
 
 REPO = "mono/SkiaSharp"
 RELEASES_DIR = Path("documentation/docfx/releases")
+
+# Make the sibling ``release_notes`` package importable regardless of how this
+# script itself was loaded (as ``__main__``, or via release-notes-render.py's
+# ``importlib`` spec load of this file, which does not itself add this
+# directory to sys.path). ``release_notes.shipments`` is the fresh-ported,
+# independently unit-tested exact-shipment model that turns this script's own
+# tag/PR-diff helpers into the ``shipments`` data.json field the GitHub
+# Release summary updater consumes (see collect_shipments_for_page below).
+_THIS_DIR = Path(__file__).resolve().parent
+if str(_THIS_DIR) not in sys.path:
+    sys.path.insert(0, str(_THIS_DIR))
+from release_notes import shipments as _release_shipments  # noqa: E402
 
 # The Prepare phase ALWAYS writes the machine-readable "Files to polish" list to a
 # file (overridable with --polish-list). output/ is gitignored, so the list stays
@@ -136,6 +149,14 @@ SKIA_REMOTE_URL = "https://github.com/mono/skia.git"
 
 # Noreply email pattern: {id}+{username}@users.noreply.github.com
 _NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
+_ANY_NOREPLY_RE = re.compile(
+    r"^(?:\d+\+)?(.+)@users\.noreply\.github\.com$", re.IGNORECASE
+)
+_COAUTHOR_RE = re.compile(
+    r"^Co-authored-by:\s*(.*?)\s*<([^<>]+)>\s*$", re.IGNORECASE | re.MULTILINE
+)
+_SAFE_LOGIN_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:\[bot\])?$")
+_SAFE_DISPLAY_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 .'-]{1,78}$")
 
 # Versions config (loaded lazily from scripts/infra/docs/versions.json)
 _VERSIONS_CONFIG = {}  # type: dict[str, list[dict]]
@@ -308,6 +329,47 @@ def load_notes_sidecar(stem, base_dir):
             "sha256": _sha256_bytes(notes_path.read_bytes())}
 
 
+def _notes_sidecar_has_page(stem, base_dir):
+    # type: (str, Path) -> bool
+    """Whether a manual sidecar belongs to a released or in-flight page."""
+    if (base_dir / "{}.md".format(stem)).is_file():
+        return True
+    return (not stem.endswith("-unreleased")
+            and (base_dir / "{}-unreleased.md".format(stem)).is_file())
+
+
+def load_notes_sidecars(stem, base_version, version, base_dir):
+    # type: (str, Optional[str], str, Path) -> list[dict]
+    """Load current-page notes plus notes from its cumulative version window."""
+    current = load_notes_sidecar(stem, base_dir)
+    if not base_version or stem.endswith("-unreleased"):
+        return [current] if current else []
+
+    lower = _core_tuple(base_version)
+    upper = _core_tuple(version)
+    found = {}  # type: dict[str, tuple[tuple, dict]]
+    sources = base_dir / "_sources"
+    if sources.is_dir():
+        for notes_path in sources.glob("*.notes.md"):
+            note_stem = notes_path.name[:-len(".notes.md")]
+            if not re.fullmatch(r"\d+(?:\.\d+){2,3}", note_stem):
+                continue
+            note_version = _core_tuple(note_stem)
+            if not (lower < note_version <= upper):
+                continue
+            if note_stem != stem and not _notes_sidecar_has_page(note_stem, base_dir):
+                continue
+            companion = load_notes_sidecar(note_stem, base_dir)
+            if companion:
+                found[companion["path"]] = (note_version, companion)
+
+    if current:
+        found[current["path"]] = (_core_tuple(version), current)
+
+    ordered = sorted(found.values(), key=lambda item: (item[0], item[1]["path"]))
+    return [companion for _, companion in ordered]
+
+
 def load_breaking_companions(line, base_dir):
     # type: (str, Path) -> Optional[dict]
     """The API breaking-diff companions for a line (spec §3.3/§4.7).
@@ -403,9 +465,8 @@ def version_key(version):
 
 # Chrome's public release schedule (Chromium Dash). Used to drive the release
 # cadence section with the real phase dates for the milestones currently in
-# flight. The four SkiaSharp cadence phases map onto these schedule fields:
-#   Beta Promotion -> earliest_beta   Early Stable  -> early_stable
-#   Stable Cut     -> stable_cut      Stable Release -> stable_date
+# flight. Chromium marker names remain separate from the SkiaSharp release
+# names that the index renderer maps onto them.
 CHROME_SCHEDULE_URL = (
     "https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone={}")
 
@@ -522,6 +583,18 @@ def _is_valid_stable_base(branch):
     if entry and entry.get("status") == "superseded":
         return False
     return _version_has_stable_tag(version)
+
+
+def _latest_branch_for_version(all_branches, version):
+    # type: (list[str], str) -> Optional[str]
+    """Return the highest versioned branch whose core is exactly ``version``."""
+    candidates = [
+        branch for branch in all_branches
+        if not branch.endswith(".x") and version_from_branch(branch) == version
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=release_branch_sort_key)
 
 
 def _login_from_email(email):
@@ -786,6 +859,132 @@ def resolve_fixed_issues(prs):
     return prs
 
 
+# ── GitHub first-time contributor resolution ─────────────────────────
+
+_FIRST_TIME_CONTRIBUTORS_CACHE_PATH = (
+    RELEASES_DIR / "_sources" / "pr-first-time-contributors.json"
+)
+
+
+def load_first_time_contributors_cache():
+    # type: () -> dict[str, int]
+    """Load the human-login -> earliest merged repository PR-number cache."""
+    try:
+        cache = json.loads(_FIRST_TIME_CONTRIBUTORS_CACHE_PATH.read_text())
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(cache, dict):
+        return {}
+    return {
+        key.casefold(): value
+        for key, value in cache.items()
+        if (
+            isinstance(key, str)
+            and _SAFE_LOGIN_RE.fullmatch(key)
+            and type(value) is int
+            and value > 0
+        )
+    }
+
+
+def save_first_time_contributors_cache(cache):
+    # type: (dict[str, int]) -> None
+    """Persist earliest merged repository PR numbers by normalized GitHub login."""
+    ordered = {key: cache[key] for key in sorted(cache)}
+    _FIRST_TIME_CONTRIBUTORS_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _FIRST_TIME_CONTRIBUTORS_CACHE_PATH.write_text(json.dumps(ordered, indent=2) + "\n")
+
+
+def _graphql_earliest_pull_requests(logins):
+    # type: (list[str]) -> dict[str, int]
+    """Resolve each human login's first merged repository pull request.
+
+    ``PullRequest.authorAssociation`` changes as people make later
+    contributions, so it cannot classify an already shipped release. GitHub's
+    merged created-order search remains stable for an immutable PR number.
+    """
+    aliases = "\n".join(
+        (
+            'u{index}: search(query: "repo:{repo} is:pr is:merged author:{login} '
+            'sort:created-asc", type: ISSUE, first: 1) '
+            "{{ nodes {{ ... on PullRequest {{ number }} }} }}"
+        ).format(index=index, repo=REPO, login=login)
+        for index, login in enumerate(logins)
+    )
+    query = "query {{\n{}\n}}".format(aliases)
+    try:
+        out = run(["gh", "api", "graphql", "-f", "query=" + query], check=False)
+    except FileNotFoundError:
+        return {}
+    try:
+        data = json.loads(out)["data"]
+    except (ValueError, KeyError, TypeError):
+        return {}
+    resolved = {}
+    for index, login in enumerate(logins):
+        node = data.get("u{}".format(index))
+        if not isinstance(node, dict):
+            continue
+        nodes = node.get("nodes")
+        if not isinstance(nodes, list) or len(nodes) != 1:
+            continue
+        number = nodes[0].get("number") if isinstance(nodes[0], dict) else None
+        if isinstance(number, int) and number > 0:
+            resolved[login] = number
+    return resolved
+
+
+def resolve_first_time_contributors(prs):
+    # type: (list[dict]) -> list[dict]
+    """Attach a human-author first-contribution fact to every PR.
+
+    A contributor is first-time when this exact PR is their earliest merged
+    GitHub PR in SkiaSharp. The stable earliest-merged-PR fact is cached by
+    login, and automation and AI identities are never classified as first-time
+    human contributors.
+    """
+    by_login = {}
+    for pr in prs:
+        author = pr.get("author") or {}
+        login = author.get("login")
+        number = pr.get("number")
+        if (
+            not isinstance(login, str)
+            or not isinstance(number, int)
+            or _primary_author_kind(pr) != "human"
+        ):
+            continue
+        by_login.setdefault(login.casefold(), []).append(pr)
+    if not by_login:
+        return prs
+
+    cache = load_first_time_contributors_cache()
+    to_query = sorted(login for login in by_login if login not in cache)
+    if to_query:
+        log("  Resolving first-time contributor facts for {} author(s) via GitHub API...".format(
+            len(to_query)))
+        dirty = False
+        for i in range(0, len(to_query), _GRAPHQL_BATCH):
+            resolved = _graphql_earliest_pull_requests(
+                to_query[i:i + _GRAPHQL_BATCH])
+            for login, number in resolved.items():
+                cache[login] = number
+                dirty = True
+        if dirty:
+            save_first_time_contributors_cache(cache)
+
+    for pr in prs:
+        author = pr.get("author") or {}
+        login = author.get("login")
+        number = pr.get("number")
+        pr["first_time_contributor"] = (
+            isinstance(login, str)
+            and isinstance(number, int)
+            and _primary_author_kind(pr) == "human"
+            and cache.get(login.casefold()) == number
+        )
+    return prs
+
 def _ensure_skia_repo():
     # type: () -> bool
     """Make ``externals/skia`` usable as a local object store for ``git log``.
@@ -1032,6 +1231,46 @@ def _tag_date(tag):
                check=False).strip()
 
 
+def _tag_target_sha(tag):
+    # type: (str) -> str
+    """The 40-char commit SHA a tag points at, or '' when unknown."""
+    return run(["git", "rev-parse", "{}^{{commit}}".format(tag)],
+               check=False).strip()
+
+
+def collect_shipments_for_page(page_version, page_prs=None):
+    # type: (str, Optional[list[dict]]) -> list[dict]
+    """Every exact shipment (tag) for a RELEASED page's own core version.
+
+    A thin wrapper around ``release_notes.shipments.collect_shipments`` (the
+    fresh-ported, independently unit-tested exact-shipment model) that
+    supplies this script's own git-backed primitives -- ``git tag -l``,
+    ``_tag_date``, ``_tag_target_sha``, and ``get_prs_from_diff`` -- so the
+    generator and the model never disagree about tag parsing or PR deltas.
+    Only meaningful for a released (non-head) page; callers should not call
+    this for an unreleased head page (main/release/X.Y.x), which has no tag
+    of its own.
+    """
+    raw = run(["git", "tag", "-l", "v*"], check=False)
+    all_tags = [t.strip() for t in raw.splitlines() if t.strip()]
+    known_humans = _known_human_aliases(page_prs or [])
+
+    def shipment_prs(from_tag, to_tag):
+        prs = get_prs_from_diff(from_tag, to_tag) if from_tag else []
+        resolve_pr_authors(prs)
+        resolve_first_time_contributors(prs)
+        resolve_release_attributions(prs, known_humans=known_humans)
+        return prs
+
+    return _release_shipments.collect_shipments(
+        page_version,
+        all_tags,
+        tag_date=_tag_date,
+        target_sha=_tag_target_sha,
+        prs_between=shipment_prs,
+    )
+
+
 def collect_preview_milestones(page_version, base_version):
     # type: (str, Optional[str]) -> list[dict]
     """Preview/rc milestones rolled up into a page, newest first (regression R3).
@@ -1176,8 +1415,8 @@ def find_previous_stable_base(all_branches, major, minor_num, patch, subpatch=0)
     """Find the previous stable release branch to use as the cumulative diff base.
 
     For version X.Y.Z[.W]:
-    0. If W > 0 (a 4-segment build such as 1.68.1.1): use the previous build in
-       the same patch line, walking down to the plain X.Y.Z release.
+    0. If W > 0 (a 4-segment build such as 1.68.1.1): use the previous stable
+       build in the same patch line, walking down to the plain X.Y.Z release.
     1. If Z > 0: use the most recent previous patch that shipped stable,
        skipping preview-only / superseded patches (cumulative rollup).
     2. If Z == 0: look for the latest branch from a previous minor/major that
@@ -1188,25 +1427,23 @@ def find_previous_stable_base(all_branches, major, minor_num, patch, subpatch=0)
     """
     minor = "{}.{}".format(major, minor_num)
 
-    # Case 0: W > 0 — a 4-segment build (e.g. 1.68.1.1). The cumulative base is
-    # the previous build in the same patch line (1.68.1.1 -> 1.68.1), so the 4th
-    # segment is never dropped (which would wrongly base on 1.68.0). Falls
-    # through to the patch-based search when the X.Y.Z line cannot be resolved.
+    # Case 0: W > 0 — search earlier stable builds in the same patch line before
+    # falling through to the patch-based search. The 4th segment must be
+    # preserved, but an exact branch without a stable tag is still preview-only.
     if subpatch > 0:
         patch_base = "{}.{}".format(minor, patch)
         for sp in range(subpatch - 1, 0, -1):
-            cand = "release/{}.{}".format(patch_base, sp)
-            if cand in all_branches:
-                return cand
-        plain = "release/{}".format(patch_base)
-        if plain in all_branches:
-            return plain
-        prev_previews = [b for b in all_branches
-                         if b.startswith("release/{}-preview.".format(patch_base))]
-        if prev_previews:
-            prev_previews.sort(key=release_branch_sort_key)
-            return prev_previews[-1]
-        # X.Y.Z line not found as a branch — fall through to the patch search.
+            candidate_version = "{}.{}".format(patch_base, sp)
+            if _version_has_stable_tag(candidate_version):
+                candidate_branch = _latest_branch_for_version(
+                    all_branches, candidate_version)
+                if candidate_branch:
+                    return candidate_branch
+        if _version_has_stable_tag(patch_base):
+            plain = _latest_branch_for_version(all_branches, patch_base)
+            if plain:
+                return plain
+        # No stable build found in the X.Y.Z line — fall through to the patch search.
 
     # Case 1: Z > 0 — the cumulative base is the most recent PREVIOUS patch
     # that actually shipped as stable. Preview-only / superseded patches are
@@ -1222,21 +1459,13 @@ def find_previous_stable_base(all_branches, major, minor_num, patch, subpatch=0)
             # skips the superseded 3.119.3 and bases on 3.119.2).
             if _version_is_superseded(prev_version):
                 continue
-            # A stable release/X.Y.Z branch (exact, no -preview) or a stable
-            # tag both signal that this patch shipped (or is shipping) stable.
-            prev_stable = "release/{}".format(prev_version)
-            has_stable_branch = prev_stable in all_branches
-            if not has_stable_branch and not _version_has_stable_tag(prev_version):
+            # Only a stable tag proves that this patch shipped stable. An exact
+            # release/X.Y.Z branch may exist for a preview-only line.
+            if not _version_has_stable_tag(prev_version):
                 continue
-            if has_stable_branch:
-                return prev_stable
-            # Stable tag but no exact branch — use its latest preview branch.
-            prev_candidates = [b for b in all_branches
-                               if b.startswith("release/{}-preview.".format(
-                                   prev_version))]
-            if prev_candidates:
-                prev_candidates.sort(key=release_branch_sort_key)
-                return prev_candidates[-1]
+            previous = _latest_branch_for_version(all_branches, prev_version)
+            if previous:
+                return previous
         # No previous patch shipped stable — fall through to Case 2.
 
     # Case 2: Z == 0 (or no previous patch found) — search previous minors
@@ -1255,10 +1484,36 @@ def find_previous_stable_base(all_branches, major, minor_num, patch, subpatch=0)
                   if _is_valid_stable_base(b)]
         if stable:
             return stable[-1]
-        # No stable predecessor found — fall back to the latest candidate.
-        return candidates[-1]
 
     return None
+
+
+def find_previous_line_base(all_branches, version):
+    # type: (list[str], str) -> Optional[str]
+    """Find the latest non-superseded versioned branch before ``version``.
+
+    Preview-only lines use this narrow baseline so consecutive prerelease lines
+    remain separate. When a later line ships stable, ``determine_diff_range``
+    switches to ``find_previous_stable_base`` and rolls every intervening line
+    into that stable release.
+    """
+    target = _core_tuple(version)
+    canonical = {}  # type: dict[str, str]
+    for branch in all_branches:
+        if branch.endswith(".x"):
+            continue
+        candidate_version = version_from_branch(branch)
+        if (_core_tuple(candidate_version) >= target
+                or _version_is_superseded(candidate_version)):
+            continue
+        current = canonical.get(candidate_version)
+        if (current is None
+                or release_branch_sort_key(branch) > release_branch_sort_key(current)):
+            canonical[candidate_version] = branch
+
+    if not canonical:
+        return None
+    return max(canonical.values(), key=release_branch_sort_key)
 
 
 def _resolve_compare_to(compare_to, to_ref, version, all_branches):
@@ -1299,8 +1554,9 @@ def determine_diff_range(branch):
     # type: (str) -> Tuple[str, str, str]
     """Determine the git diff range for a branch.
 
-    Uses cumulative diffs: always diffs from the previous stable base,
-    so that previews produce a full rollup of all changes.
+    Preview-only released lines diff from the preceding emitted line. Stable
+    released lines diff from the preceding stable, rolling up any intervening
+    preview-only lines. Explicit ``compare_to`` configuration wins.
 
     Returns (from_ref, to_ref, version_display).
     """
@@ -1421,9 +1677,17 @@ def determine_diff_range(branch):
             return resolved
         # Override could not be resolved — fall through to auto-detection.
 
-    # Find the cumulative base: previous stable (or previous minor for Z==0)
-    base = find_previous_stable_base(all_branches, major, minor_num, patch,
-                                     subpatch)
+    # Preview-only lines remain independent. Once this line gains a stable tag,
+    # it becomes the rollup boundary and reaches back to the preceding stable.
+    current_is_stable = (
+        _version_has_stable_tag(version)
+        and not _version_is_superseded(version)
+    )
+    if current_is_stable:
+        base = find_previous_stable_base(
+            all_branches, major, minor_num, patch, subpatch)
+    else:
+        base = find_previous_line_base(all_branches, version)
 
     if base:
         return ("origin/{}".format(base),
@@ -1500,7 +1764,31 @@ def _pr_category(files):
 # Automation accounts — never credited as human contributors (§4.5). The workflow
 # already skips these when authoring, but data.json still records them (they open
 # release-notes and bump PRs), so Polish must exclude them from the contributor table.
-_BOT_LOGINS = frozenset({"github-actions[bot]", "github-actions", "copilot", "dependabot"})
+_BOT_LOGINS = frozenset(
+    {"github-actions[bot]", "github-actions", "copilot", "dependabot", "skia-sync"}
+)
+_AI_LOGIN_LABELS = {
+    "copilot": "GitHub Copilot",
+    "copilot[bot]": "GitHub Copilot",
+    "claude[bot]": "Claude",
+    "chatgpt[bot]": "ChatGPT",
+    "codex[bot]": "OpenAI Codex",
+    "gemini[bot]": "Gemini",
+}
+_AI_NAME_LABELS = {
+    "copilot": "GitHub Copilot",
+    "copilot app": "GitHub Copilot",
+    "claude": "Claude",
+    "claude code": "Claude",
+    "chatgpt": "ChatGPT",
+    "openai codex": "OpenAI Codex",
+    "gemini": "Gemini",
+}
+_AI_EMAIL_DOMAINS = {
+    "anthropic.com": frozenset({"claude", "claude code"}),
+    "openai.com": frozenset({"chatgpt", "openai codex"}),
+    "google.com": frozenset({"gemini"}),
+}
 
 
 def _is_bot_login(login):
@@ -1510,6 +1798,145 @@ def _is_bot_login(login):
         return False
     low = login.lower()
     return low in _BOT_LOGINS or low.endswith("[bot]")
+
+
+def _controlled_ai_label(login=None, name=None, email=None):
+    # type: (Optional[str], Optional[str], Optional[str]) -> Optional[str]
+    """Return a controlled display label for a substantiated AI identity."""
+    low_login = (login or "").strip().lower()
+    if low_login in _AI_LOGIN_LABELS:
+        return _AI_LOGIN_LABELS[low_login]
+    low_name = (name or "").strip().lower()
+    low_email = (email or "").strip().lower()
+    if "anthropic.com" in low_email and low_name.startswith("claude"):
+        return "Claude"
+    if "223556219+copilot@users.noreply.github.com" == low_email:
+        return "GitHub Copilot"
+    if low_email == "noreply@github.com" and low_name in _AI_NAME_LABELS:
+        return _AI_NAME_LABELS[low_name]
+    for domain, names in _AI_EMAIL_DOMAINS.items():
+        if low_email.endswith("@{}".format(domain)) and low_name in names:
+            return _AI_NAME_LABELS[low_name]
+    return None
+
+
+def _identity_attribution(login=None, name=None, email=None):
+    # type: (Optional[str], Optional[str], Optional[str]) -> Optional[dict]
+    """Normalize a validated GitHub or controlled AI identity for committed facts."""
+    ai_label = _controlled_ai_label(login=login, name=name, email=email)
+    if ai_label:
+        return {"display": ai_label, "kind": "ai"}
+    if login:
+        if not _SAFE_LOGIN_RE.fullmatch(login):
+            return None
+        kind = "automation" if _is_bot_login(login) else "human"
+        return {"display": "@{}".format(login), "kind": kind}
+    if name and _SAFE_DISPLAY_NAME_RE.fullmatch(name):
+        return {"display": " ".join(name.split()), "kind": "human"}
+    return None
+
+
+def _coauthor_attributions(body, known_humans=None):
+    # type: (str, Optional[dict[str, str]]) -> list[dict]
+    """Extract substantiated co-author trailers without guessing GitHub handles."""
+    known_humans = known_humans or {}
+    result = []
+    seen = set()
+    for match in _COAUTHOR_RE.finditer(body or ""):
+        name, email = match.group(1).strip(), match.group(2).strip()
+        noreply = _ANY_NOREPLY_RE.fullmatch(email)
+        login = noreply.group(1) if noreply else None
+        known_login = (
+            known_humans.get(email.casefold())
+            or known_humans.get(name.casefold())
+        )
+        attribution = _identity_attribution(
+            login=login or known_login,
+            name=name,
+            email=email,
+        )
+        if attribution is None:
+            continue
+        key = (attribution["kind"], attribution["display"].casefold())
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(attribution)
+    return result
+
+
+def _known_human_aliases(prs):
+    # type: (list[dict]) -> dict[str, str]
+    """Map validated human names/emails to their GitHub handles."""
+    known_humans = {}
+    for pr in prs:
+        author = pr.get("author") or {}
+        login = author.get("login")
+        if login and _primary_author_kind(pr) == "human":
+            for value in (author.get("name"), author.get("email")):
+                if value:
+                    known_humans[value.strip().casefold()] = login
+    return known_humans
+
+
+def resolve_release_attributions(prs, known_humans=None):
+    # type: (list[dict], Optional[dict[str, str]]) -> list[dict]
+    """Attach normalized primary/co-author attribution facts to every PR."""
+    known_humans = {
+        **(known_humans or {}),
+        **_known_human_aliases(prs),
+    }
+    for pr in prs:
+        pr["coauthors"] = _coauthor_attributions(
+            pr.get("body", ""), known_humans=known_humans
+        )
+        pr["attributions"] = _release_attributions(
+            pr, known_humans=known_humans
+        )
+    return prs
+
+
+def _primary_author_kind(pr):
+    # type: (dict) -> Optional[str]
+    author = pr.get("author") or {}
+    attribution = _identity_attribution(
+        login=author.get("login"),
+        name=author.get("name"),
+        email=author.get("email"),
+    )
+    return attribution["kind"] if attribution else None
+
+
+def _release_attributions(pr, known_humans=None):
+    # type: (dict, Optional[dict[str, str]]) -> list[dict]
+    """Build ordered, deduplicated author/co-author facts for one PR."""
+    known_humans = known_humans or {}
+    author = pr.get("author") or {}
+    login = (
+        author.get("login")
+        or known_humans.get(str(author.get("email") or "").casefold())
+        or known_humans.get(str(author.get("name") or "").casefold())
+    )
+    primary = _identity_attribution(
+        login=login,
+        name=author.get("name"),
+        email=author.get("email"),
+    )
+    values = ([primary] if primary else []) + list(pr.get("coauthors") or [])
+    result = []
+    seen = set()
+    for value in values:
+        if not isinstance(value, dict):
+            continue
+        key = (value.get("kind"), str(value.get("display", "")).casefold())
+        if key in seen:
+            continue
+        seen.add(key)
+        fact = {"display": value["display"], "kind": value["kind"]}
+        if value is primary and value["kind"] == "human":
+            fact["first_time"] = bool(pr.get("first_time_contributor"))
+        result.append(fact)
+    return result
 
 
 def _contributor_roster(prs):
@@ -1652,6 +2079,7 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
             "url": "https://github.com/{}/pull/{}".format(REPO, num),
             "number": num,
             "body": body,
+            "coauthors": _coauthor_attributions(body),
             "commit": commit_hash,
             "skiaPr": skia_pr,
             "category": _pr_category(files_by.get(commit_hash, set())),
@@ -1698,7 +2126,17 @@ def _release_date_display(version):
 # Deterministic sidecar (`<version>.data.json`) FORMAT VERSION — the v2 pipeline
 # (data.json + prose.json + release-notes-render.py) keys change-detection on the whole
 # data.json dict. Bump when the data.json schema changes.
-_DATA_JSON_FORMAT_VERSION = 3
+#
+# 3 -> 4: added the "shipments" field (exact-shipment records for the GitHub
+# Release summary updater; see release_notes.shipments.collect_shipments).
+# This is the smallest compatible bump for that feature -- everything else
+# about the v3 shape is unchanged, and a v3 (or older) data.json is safely
+# skipped by the updater rather than rewritten (scripts/infra/docs/release_notes/
+# common.py's ``DATA_FORMAT`` must be bumped in lockstep -- a test in
+# release_notes/tests/test_common.py asserts the two stay equal).
+# 4 -> 5: added an exact-shipment human/automation/AI attribution roster. Human
+# first-time status comes from the committed earliest-PR-per-login cache.
+_DATA_JSON_FORMAT_VERSION = 5
 
 
 def _pr_is_community(pr):
@@ -1706,6 +2144,29 @@ def _pr_is_community(pr):
     """Community test for crediting an author (§4.5)."""
     login = (pr.get("author") or {}).get("login")
     return bool(login) and login != "mattleibow" and not _is_bot_login(login)
+
+
+def exact_prerelease_nuget_url(package, shipments=None, previews=None):
+    # type: (str, Optional[list], Optional[list]) -> Optional[str]
+    """Return the newest real prerelease package URL, never a synthetic version."""
+    versions = []
+    for shipment in shipments or []:
+        if shipment.get("channel") in ("preview", "rc"):
+            public_version = shipment.get("public_version")
+            if public_version:
+                versions.append(public_version)
+    if not versions:
+        for preview in previews or []:
+            tag = preview.get("tag") or preview.get("key")
+            if isinstance(tag, str) and tag.startswith("v"):
+                versions.append(tag[1:])
+    if not versions:
+        return None
+    latest = max(
+        versions,
+        key=lambda version: release_branch_sort_key("release/" + version),
+    )
+    return "https://www.nuget.org/packages/{}/{}".format(package, latest)
 
 
 def build_data_json(prs, metadata):
@@ -1727,6 +2188,15 @@ def build_data_json(prs, metadata):
     pkg = metadata.get("package", "SkiaSharp")
     nuget = "https://www.nuget.org/packages/{}".format(pkg)
 
+    # Exact-shipment records (format 5+): one per real git tag whose core matches
+    # this page. Validate them before using the latest prerelease to build the
+    # banner's NuGet URL; never invent a synthetic ``X.Y.Z-preview`` version.
+    shipments = metadata.get("shipments") or []
+    shipment_errors = _release_shipments.validate_shipments(shipments)
+    if shipment_errors:
+        raise ValueError(
+            "invalid shipments for {}: {}".format(version, "; ".join(shipment_errors))
+        )
     released = _release_date_display(version) if status == "stable" else None
 
     # Banner facts — the renderer owns the shape, we own date + links.
@@ -1735,7 +2205,11 @@ def build_data_json(prs, metadata):
         preview_nuget = None
     elif status == "preview" or metadata.get("superseded_by"):
         kind, nuget_url = "preview", None
-        preview_nuget = "{}/{}-preview".format(nuget, version)
+        preview_nuget = exact_prerelease_nuget_url(
+            pkg,
+            shipments,
+            metadata.get("preview_milestones"),
+        )
     elif status == "unreleased":
         kind, nuget_url, preview_nuget = "unreleased", None, None
     else:
@@ -1835,8 +2309,10 @@ def build_data_json(prs, metadata):
             breaking_candidates.append(
                 {"source": "api-breaking-diff", "path": p,
                  "sha256": bc.get("sha256", ""), "prs": []})
-    if companions.get("notes"):
-        nc = companions["notes"]
+    notes = companions.get("notes") or []
+    if isinstance(notes, dict):
+        notes = [notes]
+    for nc in notes:
         breaking_candidates.append(
             {"source": "notes-sidecar", "path": nc.get("path"),
              "sha256": nc.get("sha256", ""), "prs": []})
@@ -1901,6 +2377,7 @@ def build_data_json(prs, metadata):
         "breaking_candidates": breaking_candidates,
         "contributors": contributors,
         "previews": previews,
+        "shipments": shipments,
         "prs": pr_map,
     }
 
@@ -1949,14 +2426,42 @@ def _prune_page_and_sources(page_path):
             gen.unlink()
 
 
+def _strip_prose_independent_data(data):
+    # type: (dict) -> dict
+    """``data`` with facts that cannot stale reviewed prose removed.
+
+    Shared by the prose change-detection comparison below. ``format`` is a
+    code-owned migration marker (see
+    ``_DATA_JSON_FORMAT_VERSION``'s docstring); ``shipments`` (format 5+) is
+    exact-shipment data consumed by the GitHub Release summary updater. The
+    preview NuGet URL is derived from those exact shipments. These facts can
+    change without changing website prose slots.
+    """
+    stripped = {
+        key: value for key, value in data.items()
+        if key not in ("format", "shipments")
+    }
+    banner = stripped.get("banner")
+    if isinstance(banner, dict):
+        banner = dict(banner)
+        banner.pop("preview_nuget_url", None)
+        stripped["banner"] = banner
+    return stripped
+
+
 def _data_json_unchanged(data_path, new_data):
     # type: (Path, dict) -> bool
-    """True when the committed data.json equals the freshly-computed facts.
+    """True when the committed data.json is byte-for-byte (dict-)identical to
+    the freshly-computed facts, INCLUDING ``format``/``shipments``.
 
-    data.json is the change-detection key (§4.6): it has no timestamp, so an
-    identical run yields an identical dict and the page is skipped. Any change to
-    the PRs, roster, previews, links, or a companion's folded sha256 flips it and
-    the page is re-polished. A missing or unparseable file counts as changed.
+    This is the genuine no-op check: only when this is true is there truly
+    nothing at all to write, so an unforced run may skip the page entirely
+    (§4.6). A missing or unparseable file counts as changed. Note this is
+    strictly narrower than ``_website_content_unchanged`` below — a page can
+    have unchanged *website content* (PRs/roster/previews/links) while still
+    being "changed" here because a new/altered exact shipment tag appeared;
+    callers must write the page in that case (see ``_write_page``) even
+    though it is not this function that gates whether to do so.
     """
     if not data_path.exists():
         return False
@@ -1965,6 +2470,69 @@ def _data_json_unchanged(data_path, new_data):
     except (ValueError, OSError):
         return False
     return old == new_data
+
+
+def _website_content_unchanged(data_path, new_data):
+    # type: (Path, dict) -> bool
+    """True when the WEBSITE-FACING content is unchanged, ignoring ``format``
+    and ``shipments``.
+
+    Any change to the PRs, roster, previews, prose-relevant links, or a
+    companion's folded sha256 flips this and the page must be re-polished
+    (prose discarded, returned for the files-to-polish list). It stays True
+    across a bare format bump, a shipments-only change, or the exact preview
+    NuGet URL derived from those shipments. Those cases still need data.json
+    rewritten, but the reviewed website prose remains valid and must be
+    preserved. A missing or unparseable file counts as changed (matches
+    ``_data_json_unchanged``).
+    """
+    if not data_path.exists():
+        return False
+    try:
+        old = json.loads(data_path.read_text())
+    except (ValueError, OSError):
+        return False
+    return (
+        _strip_prose_independent_data(old)
+        == _strip_prose_independent_data(new_data)
+    )
+
+
+def _classify_data_write(fully_unchanged, website_content_unchanged, force):
+    # type: (bool, bool, bool) -> Optional[dict]
+    """Decide what ``_write_page`` must do with a freshly-computed data.json,
+    given the two change-detection facts above. Pure decision table (§4.8),
+    deliberately decoupled from git/file I/O so its three-way split is
+    directly unit testable without a real git repository:
+
+    * Returns ``None`` — skip entirely, no write at all. Only when nothing
+      whatsoever changed (``fully_unchanged``) and the caller did not force a
+      rebuild.
+    * Otherwise returns ``{"delete_prose": bool, "add_to_polish": bool}``:
+
+      - Website content changed (``website_content_unchanged`` is False) —
+        ``{"delete_prose": True, "add_to_polish": True}``. Same as before
+        exact shipments existed: the reviewed prose is stale by definition.
+      - Website content unchanged but prose-independent metadata moved (a
+        new/altered exact shipment tag, its derived preview NuGet URL, or a bare
+        format bump) — ``{"delete_prose": False, "add_to_polish": False}``.
+        THIS is the case a prior version of this function got wrong: it must
+        still be WRITTEN (regardless of ``force``) so the new/changed
+        shipment reaches data.json for the GitHub summary updater to
+        converge, but the reviewed prose is untouched and there is nothing
+        for the Polish AI to do, so the page must not appear in
+        files-to-polish.
+      - Fully unchanged, reached only via an explicit ``force`` — preserves
+        the exact pre-shipments ``--force`` behavior:
+        ``{"delete_prose": False, "add_to_polish": True}``.
+    """
+    if not force and fully_unchanged:
+        return None
+    if not website_content_unchanged:
+        return {"delete_prose": True, "add_to_polish": True}
+    if fully_unchanged:
+        return {"delete_prose": False, "add_to_polish": True}
+    return {"delete_prose": False, "add_to_polish": False}
 
 
 # ── page-set discovery (shared by release-notes-index.py + release-notes-render.py) ──────
@@ -2058,10 +2626,10 @@ def warn_orphan_notes_sidecars():
             if not f.is_file() or not f.name.endswith(".notes.md"):
                 continue
             stem = f.name[:-len(".notes.md")]
-            if not (base_dir / "{}.md".format(stem)).is_file():
+            if not _notes_sidecar_has_page(stem, base_dir):
                 log("WARNING: orphan manual notes sidecar {} has no matching "
-                    "page {}.md — ignoring it (spec §3.7). Did you mean a "
-                    "different stem?".format(f.name, stem))
+                    "page {}.md or {}-unreleased.md — ignoring it (spec §3.7). "
+                    "Did you mean a different stem?".format(f.name, stem, stem))
                 orphans.append(str(f))
     return orphans
 
@@ -2116,9 +2684,10 @@ def _page_filename(branch, version):
     pages model the orthogonal "released" vs "unreleased" states of a version:
 
       * A VERSIONED branch (``release/X.Y.Z`` and its ``-rc``/``-preview``
-        prereleases) renders the RELEASED ``{version}.md`` — the full cumulative
-        rollup of the shipped prerelease/stable, with preview-milestone sections
-        and supersede banners. One page per version (the canonical / highest
+        prereleases) renders the RELEASED ``{version}.md``. Preview-only lines
+        contain only their own delta; a stable line rolls up every line since the
+        preceding stable. Preview-milestone sections and supersede banners remain
+        attached to that range. One page per version (the canonical / highest
         versioned branch wins across a full run; see _canonical_branches_by_version).
 
       * A HEAD branch (``main`` or servicing ``release/X.Y.x``) renders the
@@ -2203,6 +2772,18 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         from_display = from_display[:12]
     diff_range_str = "{}..{}".format(from_display, to_display)
 
+    base_version = None
+    if from_display.startswith("release/"):
+        base_version = version_from_branch(from_display)
+    elif re.match(r"^\d+\.\d+\.\d+", from_display):
+        base_version = from_display
+    else:
+        # A bare commit SHA can come from a versions.json compare_to tag. Recover
+        # that core so cumulative manual notes use the same lower bound as git.
+        ce = _versions_config_lookup(version)
+        if ce and ce.get("compare_to"):
+            base_version = ce["compare_to"]
+
     status, superseded_by, supersedes = _compute_page_status(branch, version)
 
     if verbose:
@@ -2258,17 +2839,20 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         }
 
     # Companion files (spec §3.7/§4.7): the manual additions sidecar (keyed by the
-    # page STEM) and the API breaking-diff (under the line's <version>/ folder).
-    # Their content hashes are folded into data.json (build_data_json), so a
-    # companion-only edit changes data.json and re-polishes just this page (§4.6).
+    # page STEM, plus any rolled-up lines in this page's window) and the API
+    # breaking-diff (under the line's <version>/ folder). Their content hashes are
+    # folded into data.json (build_data_json), so a companion-only edit changes
+    # every affected data.json and re-polishes those pages (§4.6).
     stem = _page_filename(branch, version)[:-len(".md")]
-    notes_comp = load_notes_sidecar(stem, RELEASES_DIR)
+    notes_comp = load_notes_sidecars(stem, base_version, version, RELEASES_DIR)
     breaking_comp = (load_breaking_companions(version, RELEASES_DIR)
                      if not is_head else None)
 
     # Resolve the true GitHub handles (API, cached in pr-authors.json). This is
     # needed to build data.json, and it's cheap in steady state — only genuinely
     # new PRs miss the cache and hit the network; every old version is a cache hit.
+    # First-time and co-author attribution is only an exact-shipment fact, so
+    # collect_shipments_for_page resolves it for released pages below.
     resolve_pr_authors(prs)
     resolve_skia_links(prs)
     # Resolve the issues each PR closes (linked-issue graph ∪ body keywords,
@@ -2276,23 +2860,10 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # milestone tooling. Same steady-state cost profile as author resolution.
     resolve_fixed_issues(prs)
 
-    # Enumerate the preview/rc milestones this page rolls up (regression R3), so
-    # the trailing "## Preview N (date)" sections render. The lower bound is the
-    # diff base, so a page naturally includes a skipped predecessor minor's
-    # previews (the 4.148 page lists the 4.147 previews).
-    base_version = None
-    if from_display.startswith("release/"):
-        base_version = version_from_branch(from_display)
-    elif re.match(r"^\d+\.\d+\.\d+", from_display):
-        base_version = from_display
-    else:
-        # from_display is a bare commit SHA — happens when versions.json
-        # compare_to resolved to a `v<compare_to>` TAG (no release/* branch). The
-        # base core is then exactly that compare_to value; recover it so the
-        # milestone window stays bounded.
-        ce = _versions_config_lookup(version)
-        if ce and ce.get("compare_to"):
-            base_version = ce["compare_to"]
+    # Enumerate the preview/rc milestones in this page's range (regression R3), so
+    # the trailing "## Preview N (date)" sections render. A preview-only page gets
+    # only its own line; a stable page naturally includes every preview-only line
+    # since the preceding stable (the 4.148 page lists the 4.147 previews).
     preview_milestones = collect_preview_milestones(version, base_version)
 
     metadata = {
@@ -2316,6 +2887,11 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         metadata["api_diff_link"] = api_diff_link
     if harfbuzz:
         metadata["harfbuzz"] = harfbuzz
+    if not is_head:
+        # A released page corresponds to real git tag(s) with GitHub Releases;
+        # an unreleased head page (main/release/X.Y.x) is never tagged, so it
+        # has no shipments at all.
+        metadata["shipments"] = collect_shipments_for_page(version, prs)
     companions = {}  # type: dict
     if notes_comp:
         companions["notes"] = notes_comp
@@ -2331,32 +2907,68 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # identical run produces a byte-identical dict and the page is skipped. The
     # generator NEVER writes the .md — release-notes-render.py produces it from
     # data.json + prose.json during Polish.
+    #
+    # Three distinct outcomes (§4.8), not two — see _classify_data_write's
+    # docstring for the full decision table:
+    #
+    #  1. Fully unchanged (byte-identical dict, including format/shipments) —
+    #     the genuine no-op. Skipped entirely unless --force, matching the
+    #     exact prior (pre-shipments) behavior: a forced write here still
+    #     returns the page for polish without touching prose, since nothing
+    #     about it — including its shipments — actually changed.
+    #  2. Website content changed (PRs/roster/previews/links/companions) —
+    #     always written, prose discarded, page returned for polish. Same as
+    #     before shipments existed.
+    #  3. Website content UNCHANGED but prose-independent metadata differs (e.g.
+    #     a new/re-tagged exact shipment or its derived preview NuGet URL) — this
+    #     is the bug this split fixes: previously such a page was silently
+    #     skipped (never written), so its new shipment never reached
+    #     data.json and the GitHub summary updater could never converge a
+    #     summary for it. Now it is ALWAYS written (regardless of --force),
+    #     but the reviewed prose is preserved and the page is never added to
+    #     files-to-polish — there is nothing here for the Polish AI to do.
     data = build_data_json(prs, metadata)
     data_path = _data_json_path(output_path)
-    changed = not _data_json_unchanged(data_path, data)
-    if not force and not changed:
+    fully_unchanged = _data_json_unchanged(data_path, data)
+    website_content_unchanged = _website_content_unchanged(data_path, data)
+    action = _classify_data_write(fully_unchanged, website_content_unchanged, force)
+
+    if action is None:
         log("  Skipping {} (unchanged)".format(output_path))
         return None
 
     data_path.parent.mkdir(parents=True, exist_ok=True)
     data_path.write_text(json.dumps(data, indent=2) + "\n")
-    log("  Wrote {} ({} PRs)".format(data_path, len(prs)))
-    if changed:
+
+    if action["delete_prose"]:
+        log("  Wrote {} ({} PRs)".format(data_path, len(prs)))
         # The facts moved (new/removed PRs, re-tags, roster shifts), so the committed
         # prose is stale by definition. DELETE it to FORCE the Polish agent to
         # re-author the page from the fresh data.json — instead of letting it judge
         # whether the old prose still "matches", which silently dropped brand-new
         # product PRs (§4.6). The human-owned <version>.notes.md sidecar is left in
         # place. render --all then hard-fails until fresh prose exists, so a changed
-        # page can never ship with stale prose. Scoped to a genuine change (not a bare
-        # --force re-render) so re-rendering after a format/skill tweak does not throw
+        # page can never ship with stale prose. Scoped to a genuine content change
+        # (not a bare --force re-render, and not a shipments-only change) so
+        # re-rendering after a format/skill tweak or a new preview tag does not throw
         # away good prose. The .md itself is not deleted — render overwrites it wholesale
         # from the new prose.
         prose_path = _prose_json_path(output_path)
         if prose_path.exists():
             prose_path.unlink()
             log("  Discarded {} (data changed — forcing full re-author)".format(prose_path))
-    return str(output_path)
+    elif fully_unchanged:
+        # Reached only via --force with truly nothing different (not even
+        # shipments). Preserve the exact pre-shipments --force behavior: still
+        # return the page for polish, but prose is untouched.
+        log("  Wrote {} ({} PRs, forced; unchanged)".format(data_path, len(prs)))
+    else:
+        # Website content is unchanged but prose-independent metadata moved —
+        # write the updated facts, but preserve the still-valid prose.
+        log("  Wrote {} ({} PRs; non-prose metadata only — prose preserved, "
+            "no polish needed)".format(data_path, len(prs)))
+
+    return str(output_path) if action["add_to_polish"] else None
 
 
 # ── Main ─────────────────────────────────────────────────────────────

@@ -18,5 +18,3 @@ public static class ColorExtensions {
 	public static SkiaSharp.SKColor[] ToSKColors (this HarfBuzzSharp.HBColor[] hbColors);
 }
 ```
-
-

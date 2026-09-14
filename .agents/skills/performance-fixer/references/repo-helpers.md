@@ -63,11 +63,17 @@ possible:
 ## Bootstrapping (managed-C# work)
 
 The native library is consumed as a **pre-built package** — you never build native code for this
-skill:
+skill. In every mode, bootstrap only after the source candidate has a citable hot path/invariant
+and clears de-dup, then run this command exactly once:
 
 ```bash
-dotnet cake --target=externals-download
+dotnet tool restore && dotnet cake --target=externals-download
 ```
+
+Do not restore tools or download natives while selecting a focus area, scanning source, or
+checking duplicates; quiet and duplicate runs do neither. Autonomous runs perform this in Phase
+1.4; interactive modes perform it after selecting a candidate and before the first proof. Any
+source build, test, or benchmark reuses that bootstrap rather than running it again.
 
 If you have modified anything under `externals/skia/**` you are out of scope for this skill (that
 requires a source build). This skill's fixes are always managed-C# only.

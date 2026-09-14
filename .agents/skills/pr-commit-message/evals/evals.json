@@ -42,6 +42,110 @@
       "prompt": "Write a concise but informative merge commit message for PR #3614 in mono/SkiaSharp. It removes a cached designMode field and LicenseManager check from SKControl and SKGLControl because the built-in DesignMode property already handles Windows Forms design-time detection correctly. The change was extracted from #3553.",
       "expected_output": "The message should stay compact, explain that the custom design-time detection was redundant, and optionally preserve the provenance that this was extracted from a broader PR.",
       "files": []
+    },
+    {
+      "id": 8,
+      "name": "shared-mechanism-topic-count",
+      "prompt": "Write the squash commit message for PR #5120 in acme/toolbox. I am offline, so work only from this dump; do not try to fetch anything.\n\nPR title: [build] Replace ad-hoc shell invocations in the packaging scripts\nPR description, in the author's own words: \"Cleans up the three packaging scripts and adds some tests.\"\n\nChanged files:\n  M scripts/pack-nuget.ps1\n  M scripts/sign-artifacts.ps1\n  M scripts/publish-feed.ps1\n  A scripts/Exec.Common.psm1\n  A scripts/Feed.Common.psm1\n  A tests/Packaging.Tests.ps1\n  M (26 more files, almost all call-site updates)\n\nNotes I took while reading the diff, in no particular order:\n\n- publish-feed.ps1 used to take its feed URL from an environment variable. That is how run 88213 pushed to a public feed. It now requires an explicit -Feed and rejects any feed outside the allow-list.\n- Exec.Common.psm1 runs every external process from an explicit repository root.\n- pack-nuget.ps1 read versions from a checked-in copy of versions.props that had drifted, so packages shipped with the previous night's version number. It now reads the generated Versions.g.props.\n- Feed.Common.psm1 retries transient feed reads three times with backoff.\n- sign-artifacts.ps1 signed everything under artifacts/, including *.symbols.nupkg, which the signing service rejects, so the signing step failed intermittently. It now filters to *.nupkg excluding *.symbols.nupkg.\n- Both modules print any skipped mutation as a copyable command that names the -Push guard which suppressed it.\n- After this PR, no production entry point calls git or dotnet nuget directly; every call goes through the two modules.\n- tests/Packaging.Tests.ps1 has 41 tests. They assert: no production script contains a direct git or dotnet nuget call; the Versions.g.props selection; the symbols filter; the allow-list rejection; and that skipped mutations print their guard name. Nothing in it contacts a feed.\n- Harness passes 41/41 at head. A publish-feed.ps1 dry run printed 6 skipped commands and wrote nothing.",
+      "expected_output": "Four named topic sections, one of them dedicated to the shared execution/guard modules and their harness rather than distributing that guarantee across the three script sections.",
+      "files": [],
+      "expectations": [
+        "The shared execution/guard layer (Exec.Common.psm1 and Feed.Common.psm1) has its own named topic section rather than appearing only as sentences inside the three per-script sections",
+        "The section covering the shared layer carries the guarantees that belong to it: the explicit repository root, the three-retry backoff, the guard-named skipped-mutation output, and that no production entry point calls git or dotnet nuget directly",
+        "All three per-script root-cause anchors survive and stay attached to their own script: the drifted versions.props copy, the rejected *.symbols.nupkg, and run 88213",
+        "The message does not claim the harness covers real feed publication, and describes its coverage in the terms the 41 tests assert",
+        "The message does not adopt the author's vague framing ('cleans up the three packaging scripts and adds some tests') as the overview"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "heterogeneous-family-universals",
+      "prompt": "Draft the merge commit message for PR #5188 in acme/toolbox. Offline: use only what is below.\n\nThe PR description says, verbatim:\n\n  \"Adds the packaging workflow family. Every one of these workflows is a\n  maintainer-triggered manual job that defaults its mutation inputs to false\n  and refuses to run off the default branch, so nothing here can fire on its\n  own. Also drops the old publisher tool.\"\n\nHere are the `on:` blocks I pulled out of the four added workflow files:\n\n.github/workflows/pack-dispatch.yml\n  on:\n    workflow_dispatch:\n      inputs: {base, release, apply, push}\n\n.github/workflows/sign-dispatch.yml\n  on:\n    workflow_dispatch:\n      inputs: {version, push}\n\n.github/workflows/packaging-tests.yml\n  on:\n    pull_request:\n      paths: [\"scripts/**\", \".github/workflows/*.yml\"]\n    push:\n      branches: [main]\n\n.github/workflows/refresh-allowlist.yml\n  on:\n    schedule:\n      - cron: \"0 7 * * *\"\n    workflow_dispatch:\n\nOther things in the diff: pack-dispatch and sign-dispatch both default apply/push to false and have a job-level guard that exits unless the ref is the default branch. sign-dispatch.yml ends with a step that dispatches refresh-allowlist, wrapped in `if: inputs.version does not contain '-'`. The PR also deletes tools/legacy-publisher/ (publisher.py, publisher_feed.py, 22 tests); feed publication moved to the hosted packaging pipeline and nothing in the repo calls the tool now.",
+      "expected_output": "No false universal about how the workflows are triggered; the CI-only and scheduled workflows are both represented; the stable-only dispatch is stated as conditional; the deleted tool is named with its reason.",
+      "files": [],
+      "expectations": [
+        "The message does not repeat the PR description's universal claim that every workflow is a manually triggered job that cannot fire on its own",
+        "packaging-tests.yml is represented as running on pull requests and pushes to main, and is not described as manually dispatched or guarded by a mutation input",
+        "refresh-allowlist.yml is represented as running on a daily schedule in addition to manual dispatch",
+        "The mutation-input default and default-branch guard are attributed only to pack-dispatch and sign-dispatch, not to the whole family",
+        "The follow-on allow-list dispatch is described as conditional on a stable (non-prerelease) version rather than unconditional",
+        "The removed tools/legacy-publisher is named explicitly, with what it did and where that responsibility now lives"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "coverage-and-safety-claims",
+      "prompt": "Write the merge commit message for PR #5205 in acme/toolbox. Offline; use only what is below.\n\nThe PR description says, verbatim:\n\n  \"Makes release verification safe and read-only. The suite fully covers the\n  publish and release path, so we can trust the result end to end.\"\n\nCommits on the branch, oldest first:\n  a1c9f02  2026-03-02  Add verification receipt check\n  7b31e88  2026-03-04  Address review: drop the commit-status wait\n  e04ad51  2026-03-06  Rescan coverage after rebase   <- current head\n\nCoverage scan output found in the PR conversation:\n  posted 2026-03-02 -> \"1,204 tracked files, 3 uncovered\"; resolver picked runtime 9.0.0-nightly.25510.4\n  posted 2026-03-06 -> \"1,231 tracked files, 0 uncovered\"; resolver picked runtime 9.0.0-nightly.25522.1\n\nWhat the diff actually does: the verification workflow writes its result into the job summary. Nothing in the publish path reads it. The workflow has no write permissions on releases or tags. Before this PR the workflow set a commit status and the publish job had a `needs`/wait on that status; that wait is deleted in 7b31e88.\n\ntests/Verify.Tests.ps1, full list of test names:\n  RejectsMissingReceipt, RejectsMalformedReceipt, RejectsEmptyReceipt, RejectsUnsignedReceipt,\n  RejectsMismatchedCommit, RejectsMismatchedBranch, RejectsMismatchedRepo, RejectsShortSha,\n  AcceptsExactVersion, AcceptsExactVersionWithBuildMetadata, AcceptsStableVersion, AcceptsHotfixVersion, AcceptsRcVersion,\n  PrintsSkippedCommands, PrintsGuardName, PrintsCopyablePush,\n  DoesNotWriteWhenPushIsFalse, DoesNotWriteWhenValidationFails\nThere is no test that runs the publish job and none that calls a real GitHub release.",
+      "expected_output": "Uses only the current-head measurements, states concretely what the workflow cannot do rather than relying on an adjective, and scopes the test claim to what the 18 tests assert.",
+      "files": [],
+      "expectations": [
+        "The message reports 1,231 tracked files with none uncovered as the shipped measurement and does not present the 1,204/3-uncovered figures as the result of this change",
+        "The message reports runtime 9.0.0-nightly.25522.1 and does not present 25510.4 as the shipped value",
+        "The message does not repeat the PR description's claim that the suite fully covers the publish and release path",
+        "Test coverage is described in the terms the 18 test names actually assert (receipt validation, identity mismatch rejection, version acceptance, skipped-command output, no-write behaviour) rather than as end-to-end release verification",
+        "The message states concretely what the verification workflow cannot do (does not gate, block, or mutate publication, holds no release/tag write permission) rather than relying only on adjectives such as safe, read-only, or advisory",
+        "The message records that the publish job's wait on the verification commit status was removed"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "stacked-pr-relationships",
+      "prompt": "Create the squash commit message for PR #5240 in acme/toolbox. Offline; use only what is below.\n\nBranch topology I pulled with `gh pr view --json headRefName,baseRefName`:\n  #5188  head: feat/pkg-workflows      base: main\n  #5205  head: feat/verify-advisory    base: feat/pkg-workflows\n  #5240  head: feat/verify-template    base: feat/verify-advisory\nAll three are still open.\n\nThe #5240 description says, verbatim:\n\n  \"Part of the packaging workflow effort. Requires #5188. Also needs the\n  shared template change in acme/pipeline-templates#77 before the template\n  reference resolves. Fixes #5100. See also #4990.\"\n\nI checked the linked items:\n  #5100 -> issue, \"verification receipts disagree between the two dispatch workflows\", open, and this PR closes it\n  #4990 -> issue, \"packaging pipeline design notes\", open, background discussion only, this PR does not close it\n  #5188 -> pull request, \"Add packaging workflow family\"\n  acme/pipeline-templates#77 -> pull request, \"Add shared verification receipt template\", open, must merge first\n\n#5240 does not modify any file that #5188 touches; all of its changes are on top of files #5205 introduced.\n\nThe change itself: the verification workflow now reads its receipt from the shared template instead of an inline copy, which removes the drift that made the two dispatch workflows report disagreeing receipts.",
+      "expected_output": "Fixes for #5100 only; Requires names the immediate parent #5205 and the cross-repo companion; #5188 is Context or omitted, never a requirement; #4990 is Context.",
+      "files": [],
+      "expectations": [
+        "Issue #5100 appears under a Fixes: label",
+        "PR #5205 appears under a Requires: label as the dependency this change is built on",
+        "acme/pipeline-templates#77 appears under a Requires: label",
+        "PR #5188 is not placed under a Requires: label despite the PR description saying 'Requires #5188'; it appears as Context: or is omitted",
+        "Issue #4990 is not presented as fixed or required; it appears as Context: or is omitted",
+        "No reference is mislabelled by entity type \u2014 the issues are not called PRs and the PRs are not called issues"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "mixed-context-configuration",
+      "prompt": "Write the merge commit message for PR #5262 in acme/toolbox. Offline; use only what is below.\n\nThe diff touches three things.\n\n(a) tests/integration/NuGet.config \u2014 the `acme-builds` source is removed, leaving:\n      nuget.org, dotnet-public\n\n(b) tests/integration/IntegrationHostBase.cs and tests/integration/LinuxSmokeTests.cs \u2014 both build a temporary NuGet.config at runtime, and both still write three sources:\n      nuget.org, dotnet-public, acme-builds\n    Neither file is changed by this PR.\n\n(c) docs/dev/package-sources.md \u2014 new file.\n\nFrom the PR conversation:\n  - A reviewer on the earlier PR #5199 wrote: \"these two configs should match, let's just add acme-builds to the checked-in one so the sources are consistent everywhere.\" That change was made in #5199.\n  - Verification run 91104, after #5199 merged, reported success for version 2.4.0. Investigating it showed the package it restored came from acme-builds, not from nuget.org.\n  - The post-publication verification run is the thing that uses the checked-in config; its whole purpose is to prove that a published version resolves from the public source.\n  - The runtime-generated configs are used by ordinary CI and by the nightly job, which have to restore packages that are not published anywhere public yet.\n\nVerification on this PR: both service indexes returned HTTP 200, and the three integration smoke tests passed against 2.4.0 and 2.4.0-rc.2.",
+      "expected_output": "Both configurations named with their contexts and source lists, the reason the split is deliberate, and enough for a future maintainer not to re-unify it.",
+      "files": [],
+      "expectations": [
+        "The message states that the checked-in integration config drops acme-builds while the runtime-generated configs from IntegrationHostBase/LinuxSmokeTests deliberately keep it",
+        "The message explains why the split is deliberate: post-publication verification must prove resolution from the public source, while CI and nightly runs must restore unpublished build-feed packages",
+        "The message preserves the concrete failure anchor \u2014 run 91104 reporting success against a package restored from acme-builds",
+        "The message does not describe the difference between the two configurations as an inconsistency, drift, or cleanup to be unified",
+        "The message gives a future maintainer the reason not to re-add acme-builds to the checked-in config"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "attribution-verified-emails",
+      "prompt": "Draft the squash commit message and trailers for PR #5301 in acme/toolbox. Offline; this is the complete evidence set I pulled.\n\n`gh pr view 5301 --json commits` gave, per commit:\n  c1 authors: [{name: Dana Whitfield, email: dana@whitfield.dev}]  messageBody: \"\"\n  c2 authors: [{name: Dana Whitfield, email: dana@whitfield.dev}]  messageBody: \"Co-authored-by: Priya Raman <priya.raman@example.org>\"\n  c3 authors: [{name: Dana Whitfield, email: dana@whitfield.dev}]  messageBody: \"co-authored-by: Dana Whitfield <dana@whitfield.dev>\"\n  c4 authors: [{name: Dana Whitfield, email: dana@whitfield.dev}]  messageBody: \"Co-authored-by: Priya Raman <priya.raman@example.org>\"\n  c5 authors: [{name: renovate[bot], email: bot@renovateapp.com}]  messageBody: \"\"\n\nReviews on #5301:\n  @sam-oduya \u2014 substantive review that changed the design; they asked for the retry to be bounded, and it now retries three times instead of looping forever. `gh api users/sam-oduya` returns \"email\": null.\n  @copilot-pull-request-reviewer[bot] \u2014 automated review, no feedback adopted.\n\nSuperseded PR #5290 was closed in favour of this one and its implementation was carried over wholesale. `gh pr view 5290 --json commits` gives one commit authored by [{name: Lin Huang, email: lin.huang@example.org}].\n\nThe change itself: the feed client retried transient reads in an unbounded loop, so a feed outage hung the packaging job until the six-hour runner timeout. It now retries three times with backoff and then fails with the underlying status code.",
+      "expected_output": "Verified co-authors once each including the carried-forward author, bots excluded, and a Missing context line for the reviewer with no verifiable email placed outside the commit message.",
+      "files": [],
+      "expectations": [
+        "Dana Whitfield appears exactly once in the trailers despite appearing as a commit author on four commits and in a lowercase co-author trailer",
+        "Priya Raman appears exactly once as a co-author trailer despite appearing on two commits",
+        "Lin Huang appears as a co-author trailer because the superseded PR's implementation was carried forward",
+        "Neither renovate[bot] nor the automated review account appears in the trailers",
+        "No email is invented for @sam-oduya; a 'Missing context: verified email for @sam-oduya' line appears outside the fenced commit message",
+        "Every email in the trailers appears verbatim in the supplied evidence \u2014 no address is constructed, and no GitHub noreply address is invented for anyone"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "control-single-topic-compact",
+      "prompt": "Write a merge commit message for PR #5318 in acme/toolbox. Offline; this is everything.\n\n`gh pr view 5318 --json commits` gives two commits, both authored by [{name: Rui Almeida, email: rui@almeida.dev}], with empty messageBody. There are no reviews and no comments.\n\nThe diff removes a cached `_isDesignMode` field and a `LicenseManager` probe from HostPanel and GLHostPanel, and points the four read sites at the base class's own `DesignMode` property, which already reports design time correctly on every runtime the project still supports. Four files, about 30 deleted lines. No runtime behaviour change and no new tests; the existing designer tests were not touched.\n\nThe PR description says it was split out of #5277, which is still open.",
+      "expected_output": "A compact single-topic message with no forced section markers that still explains the redundancy and keeps the #5277 provenance.",
+      "files": [],
+      "expectations": [
+        "The message contains no `~~ ... ~~` section markers",
+        "The body prose is short \u2014 roughly 12 lines or fewer, excluding subject, reference lines, and trailers",
+        "The message explains that the per-class design-time detection was redundant because the base DesignMode property already reports correctly",
+        "PR #5277 is not placed under a Requires: label; it appears as Context: or the provenance is stated without claiming a dependency",
+        "Rui Almeida appears as the only credited human, and no additional co-author is invented",
+        "No trailer uses an address absent from the supplied evidence \u2014 in particular no constructed GitHub noreply address, and no automated-tool trailer that the evidence does not record",
+        "The message invents no verification evidence, test runs, or issue references that the notes do not support"
+      ]
     }
   ]
 }

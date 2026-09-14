@@ -8,12 +8,12 @@ if (!string.IsNullOrEmpty(PYTHON_EXE) && FileExists(PYTHON_EXE)) {
     System.Environment.SetEnvironmentVariable("PATH", dir.FullPath + System.IO.Path.PathSeparator + oldPath);
 }
 
-DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
 DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia/third_party/externals/harfbuzz"));
 
 var EXE_EXTENSION = IsRunningOnWindows() ? ".exe" : "";
 var GN_EXE = Argument("gn", EnvironmentVariable("GN_EXE") ?? SKIA_PATH.CombineWithFilePath($"bin/gn{EXE_EXTENSION}").FullPath);
+var NINJA_EXE = Argument("ninja", EnvironmentVariable("NINJA_EXE") ?? "ninja");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // TASKS
@@ -194,9 +194,10 @@ void RunGn(DirectoryPath working, DirectoryPath outDir, string args = "")
 
 void RunNinja(DirectoryPath working, DirectoryPath outDir, string target = "")
 {
-    var script = DEPOT_PATH.CombineWithFilePath("ninja.py");
-
-    RunPython(working, script, $"-C {outDir} {target}");
+    RunProcess(NINJA_EXE, new ProcessSettings {
+        Arguments = $"-C \"{outDir.FullPath}\" {target}",
+        WorkingDirectory = working.FullPath,
+    });
 }
 
 void GenerateGnBuild(DirectoryPath outDir, string skiaArgs)

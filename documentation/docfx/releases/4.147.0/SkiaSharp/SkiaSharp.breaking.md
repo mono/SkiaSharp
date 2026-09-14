@@ -31,6 +31,3 @@ public virtual bool Equals (GrVkYcbcrConversionInfo obj);
 public static bool op_Equality (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right);
 public static bool op_Inequality (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right);
 ```
-
-
-

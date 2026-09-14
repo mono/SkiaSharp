@@ -8,11 +8,11 @@ on:
     # files are inputs because generation preserves their XML documentation.
     paths:
       - '.github/workflows/binding-generation-determinism.yml'
-      - 'binding/HarfBuzzSharp/HarfBuzzApi.generated.cs'
-      - 'binding/SkiaSharp.Resources/ResourcesApi.generated.cs'
-      - 'binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs'
-      - 'binding/SkiaSharp.Skottie/SkottieApi.generated.cs'
-      - 'binding/SkiaSharp/SkiaApi.generated.cs'
+      - 'binding/HarfBuzzSharp/Generated/**'
+      - 'binding/SkiaSharp.Resources/Generated/**'
+      - 'binding/SkiaSharp.SceneGraph/Generated/**'
+      - 'binding/SkiaSharp.Skottie/Generated/**'
+      - 'binding/SkiaSharp/Generated/**'
       - 'binding/libHarfBuzzSharp.json'
       - 'binding/libSkiaSharp.Resources.json'
       - 'binding/libSkiaSharp.SceneGraph.json'
@@ -26,11 +26,11 @@ on:
     # Same automatic-trigger whitelist as push.
     paths:
       - '.github/workflows/binding-generation-determinism.yml'
-      - 'binding/HarfBuzzSharp/HarfBuzzApi.generated.cs'
-      - 'binding/SkiaSharp.Resources/ResourcesApi.generated.cs'
-      - 'binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs'
-      - 'binding/SkiaSharp.Skottie/SkottieApi.generated.cs'
-      - 'binding/SkiaSharp/SkiaApi.generated.cs'
+      - 'binding/HarfBuzzSharp/Generated/**'
+      - 'binding/SkiaSharp.Resources/Generated/**'
+      - 'binding/SkiaSharp.SceneGraph/Generated/**'
+      - 'binding/SkiaSharp.Skottie/Generated/**'
+      - 'binding/SkiaSharp/Generated/**'
       - 'binding/libHarfBuzzSharp.json'
       - 'binding/libSkiaSharp.Resources.json'
       - 'binding/libSkiaSharp.SceneGraph.json'
@@ -141,7 +141,7 @@ jobs:
           done
           exit "$status"
 
-      - name: Compare checked-in Skia bindings
+      - name: Compare checked-in bindings
         shell: bash
         run: |
           status=0
@@ -151,7 +151,7 @@ jobs:
             generated="generated/bindings-linux/${name}"
             detail="comparison/committed-${name}.diff"
 
-            if cmp -s "$committed" "$generated"; then
+            if diff -qr "$committed" "$generated" > /dev/null; then
               echo "${committed} is current."
             else
               status=1
@@ -162,20 +162,21 @@ jobs:
             fi
           }
 
-          # HarfBuzz bindings are versioned separately from Skia's DEPS checkout,
-          # so freshness is enforced for the four Skia outputs only.
           check_freshness \
-            "SkiaApi.generated.cs" \
-            "binding/SkiaSharp/SkiaApi.generated.cs"
+            "SkiaSharp" \
+            "binding/SkiaSharp/Generated"
           check_freshness \
-            "SkottieApi.generated.cs" \
-            "binding/SkiaSharp.Skottie/SkottieApi.generated.cs"
+            "SkiaSharp.Skottie" \
+            "binding/SkiaSharp.Skottie/Generated"
           check_freshness \
-            "SceneGraphApi.generated.cs" \
-            "binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs"
+            "SkiaSharp.SceneGraph" \
+            "binding/SkiaSharp.SceneGraph/Generated"
           check_freshness \
-            "ResourcesApi.generated.cs" \
-            "binding/SkiaSharp.Resources/ResourcesApi.generated.cs"
+            "SkiaSharp.Resources" \
+            "binding/SkiaSharp.Resources/Generated"
+          check_freshness \
+            "HarfBuzzSharp" \
+            "binding/HarfBuzzSharp/Generated"
 
           exit "$status"
 

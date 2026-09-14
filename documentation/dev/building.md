@@ -19,7 +19,7 @@ This guide covers building SkiaSharp on Windows and macOS.
 
 Before building SkiaSharp, ensure you have:
 
-- **.NET 8 SDK** - The repository uses `global.json` to pin the SDK version
+- **.NET SDK pinned by the repository** - See `global.json` for the required version
 - **MAUI workload** - Required for mobile platform targets:
   ```bash
   dotnet workload install maui
@@ -48,7 +48,7 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 ### Dependencies
 
 **All Platforms:**
-- **.NET 8 SDK** - Pinned via `global.json`
+- **.NET SDK pinned by the repository** - See `global.json` for the required version
 - **MAUI workload** - `dotnet workload install maui`
 - **Cake .NET Tool** - `dotnet tool install -g cake.tool`
 
@@ -73,13 +73,7 @@ The latest master build bits can be downloaded by running the `externals-downloa
 > dotnet cake --target=externals-download
 ```
 
-If you need a specific build, you can specify the commit SHA from the git history:
-
-```
-> dotnet cake --target=externals-download --gitSha=<git-sha>
-```
-
-If you want the latest from a specific branch, you can also pass the branch name:
+To use a promoted build from a specific branch, pass the branch name:
 
 ```
 > dotnet cake --target=externals-download --gitBranch=<git-branch>
@@ -169,6 +163,6 @@ dotnet cake --target=externals-linux --arch=x64
 ## Generating Documentation
 
 ```
-dotnet cake --target=docs-download-output [--gitSha=<git-sha> | --gitBranch=<git-branch>]
+dotnet cake --target=docs-download-output [--gitBranch=<git-branch>]
 dotnet cake --target=update-docs
 ```

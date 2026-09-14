@@ -177,7 +177,7 @@ fi
 # A maintenance line lives under the SAME branch name in both mono/SkiaSharp and
 # mono/skia. We only look for one when TARGET is strictly OLDER than main's milestone;
 # the newest line is always served by `main`. The release branch itself is owned by
-# the release process (release-branch skill), NOT this sync.
+# the release process (Release - Prepare workflow), NOT this sync.
 #
 # The `main` (tip) mode targets the newest line too (TARGET == MAIN_MS, so the
 # release-detection block below stays skipped), but uses a DISTINCT head branch
@@ -228,7 +228,7 @@ elif [ -n "$RELEASE_BRANCH" ]; then
   HEAD_BRANCH="skia-sync/${RELEASE_BRANCH//\//-}"
   # The matching mono/skia release branch MUST already exist.
   if [ -z "$(git ls-remote --heads https://github.com/mono/skia.git "refs/heads/${SKIA_BASE_BRANCH}" | awk '{print $1}')" ]; then
-    echo "::error::mono/skia branch '${SKIA_BASE_BRANCH}' does not exist. Release branches are owned by the release process (release-branch skill) — create it before running a release sync for m${TARGET}."
+    echo "::error::mono/skia branch '${SKIA_BASE_BRANCH}' does not exist. Release branches are owned by the Release - Prepare workflow — create it before running a release sync for m${TARGET}."
     exit 1
   fi
 elif [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then

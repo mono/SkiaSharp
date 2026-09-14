@@ -1,0 +1,80 @@
+name: Release - Milestones
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Released numeric version (required for reconciliation)
+        required: false
+        default: ""
+        type: string
+      reconcile:
+        description: Reconcile shipped pull requests and linked issues
+        required: true
+        default: true
+        type: boolean
+      update:
+        description: Update dates, roll open work, and close shipped milestones
+        required: true
+        default: true
+        type: boolean
+      push:
+        description: Apply GitHub milestone changes
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release-milestones
+      cancel-in-progress: false
+    steps:
+      - name: Validate request
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          RECONCILE: ${{ inputs.reconcile }}
+          UPDATE: ${{ inputs.update }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          test "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH"
+          test "$RECONCILE" = "true" || test "$UPDATE" = "true"
+          test "$RECONCILE" != "true" || test -n "$VERSION"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reconcile release assignments
+        if: inputs.reconcile
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUSH: ${{ inputs.push }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          $arguments = @{ Version = $env:VERSION }
+          if ($env:PUSH -eq 'true') {
+            $arguments.Push = $true
+          }
+          ./scripts/infra/publishing/reconcile-release-assignments.ps1 @arguments *>&1 |
+            Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
+
+      - name: Update release milestones
+        if: inputs.update
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUSH: ${{ inputs.push }}
+        run: |
+          $arguments = @{}
+          if ($env:PUSH -eq 'true') {
+            $arguments.Push = $true
+          }
+          ./scripts/infra/publishing/update-release-milestones.ps1 @arguments *>&1 |
+            Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append

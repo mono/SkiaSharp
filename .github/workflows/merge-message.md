@@ -12,6 +12,8 @@ if: github.repository == 'mono/SkiaSharp'
 environment: gh-aw-agents
 
 engine: copilot
+# Detailed evidence synthesis benefits from Terra, but does not need Sol's
+# repo-scale planning tier.
 model: gpt-5.6-terra
 
 permissions:

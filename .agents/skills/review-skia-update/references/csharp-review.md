@@ -8,7 +8,7 @@ with file lists, diffs, and categories (added/changed). Your job is to:
 
 ## What to Ignore
 
-- **All `*Api.generated.cs` files** — already filtered out by `check_companion.py`
+- **All `*.generated.cs` files** — already filtered out by `check_companion.py`
 - **Whitespace-only changes** — not worth reviewing
 - **Comment-only changes** — unless they document a behavioral change
 

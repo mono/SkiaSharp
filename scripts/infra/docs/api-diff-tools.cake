@@ -449,9 +449,9 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
 // versions.json — the shared version-comparison config
 //
 // scripts/infra/docs/versions.json is the single source of truth for how versions
-// relate to each other (spec §1.2). It is "override only": versions NOT listed fall
-// back to the default behaviour of diffing against the immediately-preceding
-// published version.
+// relate to each other (spec §1.2). It is "override only": versions NOT listed use
+// stable-delimited defaults — preview-only lines compare with the preceding emitted
+// line, while stable lines roll up from the preceding stable.
 //
 // versions.json is family-bucketed: { "skiasharp": { "<line>": {...} },
 // "harfbuzzsharp": { ... } }. This loader flattens the requested family's bucket
@@ -511,13 +511,12 @@ bool IsBelowHistoryFloor (string normalizedVersion, string family = "skiasharp")
 // selection: it is excluded from acting as a *baseline* for other versions, so a
 // later release diffs against the last real predecessor instead. A superseded line
 // is NOT dropped from emission — it still gets its own artifact/page (spec §1.2 and
-// §1.4 rule 2); it is simply transparent as a diff baseline. Matched on
-// major.minor.patch, so an entry for "4.147.0" covers every 4.147.0-preview.* (all
-// previews of that exact patch), but not a different patch.
+// §1.4 rule 2); it is simply transparent as a diff baseline. Matched on the full
+// version core, so an entry for "4.147.0" covers every 4.147.0-preview.* while a
+// genuine four-segment line such as "1.68.1.1" remains distinct.
 bool IsVersionSuperseded (JArray config, string normalizedVersion)
 {
-    var nv = new NuGetVersion (normalizedVersion);
-    var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
+    var key = normalizedVersion.Split ('-') [0];
     return config.Any (v => (string)v ["version"] == key && (string)v ["status"] == "superseded");
 }
 
@@ -525,29 +524,27 @@ bool IsVersionSuperseded (JArray config, string normalizedVersion)
 // and/or a status). Per spec §1.4 rule 2 a tracked line is always EMITTED — it gets
 // its own artifact even when it is a preview-only line behind the latest stable
 // (e.g. the superseded 4.147 / 3.0.0 lines, which are shipped previews that still
-// need their own api diff/page). Matched on major.minor.patch.
+// need their own api diff/page). Matched on the full version core.
 bool IsVersionListed (JArray config, string normalizedVersion)
 {
-    var nv = new NuGetVersion (normalizedVersion);
-    var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
+    var key = normalizedVersion.Split ('-') [0];
     return config.Any (v => (string)v ["version"] == key);
 }
 
 // Return the explicit "compare_to" baseline declared for a version in
 // versions.json (e.g. 4.148 → 3.119.4, deliberately skipping 4.147), resolved to
-// the newest actual package that matches that major.minor.patch. Returns null
+// the newest actual package that matches that full version core. Returns null
 // when no override exists, in which case the caller falls back to a walk-back.
 string FindCompareToBaseline (JArray config, string normalizedVersion, NuGetVersion[] allVersions)
 {
-    var nv = new NuGetVersion (normalizedVersion);
-    var key = $"{nv.Major}.{nv.Minor}.{nv.Patch}";
+    var key = normalizedVersion.Split ('-') [0];
     var entry = config.FirstOrDefault (v => (string)v ["version"] == key && v ["compare_to"] != null);
     if (entry == null)
         return null;
 
     var compareTo = (string)entry ["compare_to"];
     var candidates = allVersions
-        .Where (v => $"{v.Major}.{v.Minor}.{v.Patch}" == compareTo)
+        .Where (v => v.ToNormalizedString ().Split ('-') [0] == compareTo)
         .OrderByDescending (v => v)
         .ToArray ();
     return candidates.Length > 0 ? candidates [0].ToNormalizedString () : null;

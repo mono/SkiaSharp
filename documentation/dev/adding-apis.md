@@ -85,7 +85,7 @@ void sk_paint_set_antialias(sk_paint_t* paint, bool aa) {
 }
 ```
 
-**P/Invoke** (generated in `SkiaApi.generated.cs` after running generator):
+**P/Invoke** (generated under `Generated/` after running generator):
 ```csharp
 [DllImport(SKIA)] public static extern bool sk_paint_is_antialias(sk_paint_t t);
 [DllImport(SKIA)] public static extern void sk_paint_set_antialias(sk_paint_t t, bool aa);
@@ -147,7 +147,7 @@ Run the generator to create P/Invoke declarations from C API headers:
 pwsh ./utils/generate.ps1
 ```
 
-This generates in `SkiaApi.generated.cs`:
+This generates a header-grouped file under `Generated/`:
 ```csharp
 [DllImport("libSkiaSharp", CallingConvention = CallingConvention.Cdecl)]
 public static extern void sk_canvas_draw_circle(sk_canvas_t canvas, float cx, 
@@ -210,7 +210,7 @@ public static SKImage FromEncodedData(SKData data) {
 
 **Phase 4: Regenerate Bindings**
 - [ ] **Regenerated P/Invoke** (`pwsh ./utils/generate.ps1`) — **MANDATORY, never skip**
-- [ ] Verified `SkiaApi.generated.cs` updated correctly
+- [ ] Verified `Generated/` updated correctly
 
 **Phase 5: C# Wrapper**
 - [ ] Added C# wrapper method

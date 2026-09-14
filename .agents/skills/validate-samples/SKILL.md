@@ -40,25 +40,32 @@ dotnet nuget locals all --clear
 
 ### Step 2: Download CI packages
 
-Downloads the latest NuGet packages from the CI feed into `output/nugets/`.
-This target clears `./output/` first.
+Choose the source that actually owns the packages.
+
+For the latest promoted build from `main` or another promoted branch, use the
+transport feed:
 
 ```powershell
 dotnet cake --target=docs-download-output
-```
-
-To download from a specific source instead of the latest main build:
-
-```powershell
-# From a PR
-dotnet cake --target=docs-download-output --previewLabel=pr.3553
 
 # From a specific branch
 dotnet cake --target=docs-download-output --gitBranch=release/3.119.4
-
-# From a specific commit
-dotnet cake --target=docs-download-output --gitSha=abc123def456
 ```
+
+PR builds are pipeline artifacts and are not published to the transport feed.
+Download them with the repository helper, then copy the packages into the
+sample workflow's expected directory:
+
+```powershell
+pwsh scripts/get-skiasharp-pr.ps1 3553 -Force
+New-Item output/nugets -ItemType Directory -Force | Out-Null
+Copy-Item ~/.skiasharp/hives/pr-3553/packages/*.nupkg output/nugets/
+```
+
+For an exact non-PR commit, resolve its public definition-345 Build ID, download
+that run's canonical `nuget` artifact, and extract non-symbol `.nupkg` files into
+`output/nugets/`. Do not query the transport feed by SHA; BAR publishes one
+branch-versioned transport package per ID.
 
 ### Step 3: Detect the preview version
 
@@ -117,5 +124,5 @@ The `samples-prepare` target copies nupkgs there automatically.
 
 ## Further Reading
 
-See [Building Samples](../../documentation/dev/building-samples.md) for version construction
+See [Building Samples](../../../documentation/dev/building-samples.md) for version construction
 details, download resolution, cake arguments reference, and how `samples-generate` works.

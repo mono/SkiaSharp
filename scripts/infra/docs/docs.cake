@@ -212,7 +212,6 @@ Task ("docs-download-output")
     CleanDir ("./output");
 
     await DownloadPackageAsync ("_nugets", OUTPUT_NUGETS_PATH);
-    await DownloadPackageAsync ("_nugetspreview", OUTPUT_NUGETS_PATH);
 });
 
 
@@ -233,9 +232,9 @@ Task ("docs-update-frameworks")
     // document, and simply drop out of the docs.
     foreach (var id in SUPPORTED_NUGETS.Keys) {
         var version = GetVersion (id);
-        var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
-            ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
-            : version;
+        var localNugetVersion = string.IsNullOrEmpty (PREVIEW_NUGET_SUFFIX)
+            ? version
+            : $"{version}-{PREVIEW_NUGET_SUFFIX}";
         var name = $"{id}.{localNugetVersion}.nupkg";
         var nupkg = $"{OUTPUT_NUGETS_PATH}/{name}";
         if (!FileExists (nupkg))

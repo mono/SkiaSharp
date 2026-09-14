@@ -90,6 +90,48 @@ namespace SkiaSharp.Tests
 			Assert.Equal ("abcd", tag.ToString ());
 		}
 
+		// The verbatim ORIGINAL shipped ToString() body — the oracle. The optimized
+		// implementation (a stackalloc buffer instead of the char-boxing string.Concat)
+		// must agree with this exactly across every value.
+		private static string OldToString (uint value) =>
+			string.Concat (
+				(char)(byte)(value >> 24),
+				(char)(byte)(value >> 16),
+				(char)(byte)(value >> 8),
+				(char)(byte)value);
+
+		[Theory]
+		[InlineData (0x77676874u, "wght")]
+		[InlineData (0x77647468u, "wdth")]
+		[InlineData (0x736C6E74u, "slnt")]
+		[InlineData (0x6F70737Au, "opsz")]
+		[InlineData (0x6974616Cu, "ital")]
+		[InlineData (0x47535542u, "GSUB")]
+		[InlineData (0x4F532F32u, "OS/2")]
+		[InlineData (0x61202020u, "a   ")]
+		[InlineData (0x61622020u, "ab  ")]
+		[InlineData (0x20202020u, "    ")]
+		[InlineData (0x00000000u, "\0\0\0\0")]
+		[InlineData (0x090D0A20u, "\t\r\n ")]
+		[InlineData (0xE9E9FF7Au, "\u00e9\u00e9\u00ffz")]
+		[InlineData (0xFFFFFFFFu, "\u00ff\u00ff\u00ff\u00ff")]
+		public void FourByteTagToStringProducesExpectedValue (uint value, string expected)
+		{
+			var tag = new SKFourByteTag (value);
+			// Optimized ToString matches the precomputed constant.
+			Assert.Equal (expected, tag.ToString ());
+			// And agrees with the original shipped algorithm (the oracle).
+			Assert.Equal (OldToString (value), tag.ToString ());
+		}
+
+		// Guards the oracle itself: a deliberately-wrong expected value must fail, proving the
+		// ToString equivalence assertions actually discriminate.
+		[Fact]
+		public void FourByteTagToStringOracleCatchesWrongResult ()
+		{
+			Assert.NotEqual ("XXXX", new SKFourByteTag (0x77676874u).ToString ());
+		}
+
 		[Fact]
 		public void FourByteTagKnownTagValues ()
 		{

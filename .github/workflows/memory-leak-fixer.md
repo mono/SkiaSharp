@@ -20,8 +20,9 @@ environment: gh-aw-agents
 
 # -- Engine ------------------------------------------------------------
 # Leak reasoning (ownership tracing + a correct minimal fix) is hard and
-# benefits from the stronger model, matching auto-skia-sync's choice.
-model: claude-opus-4.8
+# needs strong coding, while the mandatory red-to-green proof makes Terra the
+# best cost/capability tradeoff for this twice-daily workflow.
+model: gpt-5.6-terra
 engine:
   id: copilot
 # -- Triggers ----------------------------------------------------------
@@ -41,7 +42,7 @@ on:
         default: false
         type: boolean
       focus_area:
-        description: "Force a specific leak focus area 0-10 (see references/types-of-leaks.md) instead of the time-based round-robin. Leave blank to rotate."
+        description: "Force a specific leak focus area 0-10 (see the skill's per-focus references) instead of the time-based round-robin. Leave blank to rotate."
         required: false
         default: ""
         type: string
@@ -68,6 +69,7 @@ steps:
 concurrency:
   group: "memory-leak-fixer"
   cancel-in-progress: false
+  job-discriminator: ${{ github.run_id }}
 
 timeout-minutes: 120
 
@@ -118,6 +120,9 @@ network:
 # (the performance sub-type). See the perf/* taxonomy in the issue-triage skill
 # (.agents/skills/issue-triage/references/labels.md).
 safe-outputs:
+  # Structurally force preview mode for PR self-tests and explicit dry runs so
+  # model noncompliance cannot create GitHub resources.
+  staged: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
   create-pull-request:
     title-prefix: "[memory-leak] "
     labels: [tenet/performance, perf/memory-leak, partner/agentic-workflows]
@@ -175,7 +180,8 @@ computation. If it is blank (schedule / PR / dispatch without the input), use th
 time-based round-robin. This is only a testing knob to target a specific focus area on demand; it
 changes nothing else about the run.
 
-Persist all intermediate state (the `/tmp/leakprobe` project, notes) under `/tmp/gh-aw/agent/`.
+Persist all intermediate state (the `/tmp/gh-aw/agent/leakprobe` project, notes) under
+`/tmp/gh-aw/agent/`.
 Each bash call is a fresh subshell — re-`cd` as needed.
 
 ## Step 2 — Guardrails (in addition to the skill's golden rules)
@@ -186,14 +192,18 @@ Each bash call is a fresh subshell — re-`cd` as needed.
    auto-closes the issue) — see skill Phase 4. If the only correct fix is native / upstream (out
    of scope) → emit the **`create-issue` alone**. If nothing clears the bar → exactly one
    **`noop`**. Never finish a run with no safe output at all (that makes the run look incomplete).
-2. **De-dup first.** Run skill Phase 1.3 — skip any candidate already covered by an OPEN
-   `[memory-leak]` issue or PR on `mono/SkiaSharp`. A candidate whose only prior item is
-   CLOSED may be re-filed.
+2. **Cheap discovery and de-dup before bootstrap.** Complete the focused source scan and skill
+   Phase 1.3 before any local-tool restore or native download; skip any candidate already covered
+   by an OPEN `[memory-leak]` issue or PR on `mono/SkiaSharp`. A candidate whose only prior item is
+   CLOSED may be re-filed. Only after one managed-C# candidate has a citable ownership path and
+   clears de-dup, run `dotnet tool restore && dotnet cake --target=externals-download` exactly
+   once. This remains mandatory before any source build or test, but a quiet/duplicate run must
+   not run it and later phases must not repeat it.
 3. **Validate before you open a PR.** Only open a PR when you have demonstrated the
    regression test **fails without the fix and passes with it** (skill Phase 3, both
    directions). No red→green ⇒ no PR.
-4. **Managed-C# fixes only.** The fix must live in `binding/**` / `source/**`, bootstrapped
-   with `dotnet cake --target=externals-download` (pre-built natives) and validated with
+4. **Managed-C# fixes only.** The fix must live in `binding/**` / `source/**`, use the single
+   post-qualification `externals-download` bootstrap from Guardrail 2, and be validated with
    `dotnet test`. If the strongest candidate's only correct fix is in native / upstream Skia
    (`externals/skia/**`, including the C shim), do **not** open an unvalidated PR — file a
    `[memory-leak]` issue with the Phase 1–2 evidence and the proposed fix instead.
@@ -211,13 +221,19 @@ Each bash call is a fresh subshell — re-`cd` as needed.
 7. **AI attribution.** Every PR/issue body must clearly state it was produced by this
    agentic workflow + the `memory-leak-fixer` skill, and include an honest scope note
    (framework bug vs footgun; empirically-proven vs statically-reasoned; ABI impact).
+8. **Report only checked scope.** A summary may call a scan exhaustive only after inspecting every
+   result from a named, bounded, untruncated query/path. Otherwise say it was representative and
+   name the files/candidates actually opened. The skill maps each focus area to one self-contained
+   reference file; read that selected file, and do not imply that its historical examples are
+   source sites inspected in this run.
 
 ## Step 3 — Report
 
 Append a short summary to `/tmp/gh-aw/agent/step-summary.md` (this file is symlinked to the
 run's step summary — do **not** use `$GITHUB_STEP_SUMMARY`): the leak focus area, the candidate
-(with `file:line`), the proof result (alive/collected counts or red→green status), and the
-resulting issue + PR links — or "no convincing candidate this run" for a quiet run.
+(with `file:line`), the proof result (alive/collected counts or red→green status), the exact
+checked query/path and files/candidates opened, and the resulting issue + PR links — or "no
+convincing candidate this run" for a quiet run.
 
 Then make sure you have emitted the safe output(s) from Step 2.1: the **issue + PR pair** (or a
 `create-issue` alone when the fix is out of scope), or — for a dry run or a quiet run — a single

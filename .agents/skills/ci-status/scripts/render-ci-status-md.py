@@ -165,7 +165,7 @@ def render(data):
     if chain:
         lines.append("## Pipeline Chain Analysis")
         lines.append("")
-        lines.append("The internal chain is sequential: **Native → Managed → Tests**. "
+        lines.append("The internal chain is sequential: **Build -> Tests**. "
                      "Failures may cascade downstream.")
         lines.append("")
         for entry in chain:

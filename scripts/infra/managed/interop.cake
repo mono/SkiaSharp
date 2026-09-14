@@ -17,7 +17,7 @@ Task("externals-interop")
     });
 
     var settings = new ProcessSettings {
-        Arguments = "diff --name-only binding/*/*.generated.cs",
+        Arguments = "status --short --untracked-files=all -- \":(glob)binding/**/*.generated.cs\"",
         WorkingDirectory = ROOT_PATH,
         RedirectStandardOutput = true,
     };
@@ -28,7 +28,7 @@ Task("externals-interop")
     }
 
     if (files.Any()) {
-        Information("Generated files have changed:");
+        Information("Generated file changes:");
         foreach (var file in files) {
             Information($" - {file}");
         }

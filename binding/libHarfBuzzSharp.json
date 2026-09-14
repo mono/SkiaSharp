@@ -29,10 +29,28 @@
       "src/hb-shape-plan.h",
       "src/hb-ot-deprecated.h"
     ],
-    "types": [
+    "symbols": [
       "hb_segment_properties_t",
       "hb_user_data_key_t",
-      "_hb_var_int_t"
+      "_hb_var_int_t",
+      "_hb_var_num_t",
+      "hb_color_line_*",
+      "hb_color_stop_t",
+      "hb_draw_*",
+      "hb_paint_*",
+      "hb_font_draw_*",
+      "hb_font_paint_*",
+      "hb_font_funcs_set_draw_*",
+      "hb_font_funcs_set_paint_*",
+      "hb_font_get_glyph_origins_func_t",
+      "hb_font_get_glyph_h_origins_func_t",
+      "hb_font_get_glyph_v_origins_func_t",
+      "hb_font_get_glyph_shape_func_t",
+      "hb_get_table_tags_func_t",
+      "hb_face_set_get_table_tags_func",
+      "hb_ot_math_kern_entry_t",
+      "hb_ot_name_id_predefined_t",
+      "hb_style_tag_t"
     ]
   },
   "mappings": {
@@ -112,12 +130,16 @@
         "flags": true,
         "members": {
           "HB_BUFFER_FLAG_BOT": "BeginningOfText",
-          "HB_BUFFER_FLAG_EOT": "EndOfText"
+          "HB_BUFFER_FLAG_EOT": "EndOfText",
+          "HB_BUFFER_FLAG_DEFINED": ""
         }
       },
       "hb_buffer_serialize_flags_t": {
         "flags": true,
-        "cs": "SerializeFlag"
+        "cs": "SerializeFlag",
+        "members": {
+          "HB_BUFFER_SERIALIZE_FLAG_DEFINED": ""
+        }
       },
       "hb_buffer_content_type_t": {
         "cs": "ContentType"
@@ -208,11 +230,14 @@
           "HB_UNICODE_COMBINING_CLASS_CCC122": "CCC122",
           "HB_UNICODE_COMBINING_CLASS_CCC129": "CCC129",
           "HB_UNICODE_COMBINING_CLASS_CCC130": "CCC130",
-          "HB_UNICODE_COMBINING_CLASS_CCC133": "CCC133"
+          "HB_UNICODE_COMBINING_CLASS_CCC132": "CCC132"
         }
       },
       "hb_glyph_flags_t": {
-        "flags": true
+        "flags": true,
+        "members": {
+          "HB_GLYPH_FLAG_DEFINED": ""
+        }
       },
       "hb_script_t": {
         "cs": "UInt32",

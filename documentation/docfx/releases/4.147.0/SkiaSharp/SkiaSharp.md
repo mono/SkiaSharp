@@ -585,5 +585,3 @@ public struct SKWebpEncoderFrame {
 	public SKPixmap Pixmap { get; set; }
 }
 ```
-
-

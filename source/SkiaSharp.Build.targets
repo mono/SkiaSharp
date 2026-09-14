@@ -240,6 +240,10 @@ internal partial class VersionConstants {
           DestinationFiles="$(MDocOutputPath)"
           ContinueOnError="false"
           Retries="0" />
+    <WriteLinesToFile Condition=" !Exists('$(MDocOutputPath)') "
+                      File="$(MDocOutputPath)"
+                      Lines="&lt;doc&gt;&lt;assembly&gt;&lt;name&gt;$(AssemblyName)&lt;/name&gt;&lt;/assembly&gt;&lt;members /&gt;&lt;/doc&gt;"
+                      Overwrite="true" />
     <ItemGroup Condition=" '$(_ShouldGenerateDocs)' == 'true' ">
       <FileWrites Include="$(MDocOutputPath)" />
       <FileWrites Include="$(MDocIntermediateOutputPath)\*" />

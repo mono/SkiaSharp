@@ -39,8 +39,8 @@ dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- verif
   The path to the JSON file that help generate a useful set of p/invoke definions and structures.
 * `--skia externals/skia`  
   The path to the root of the skia source.
-* `--output binding/Binding/SkiaApi.generated.cs`  
-  The path to the generated file.
+* `--output binding/Binding/Generated`
+  The output directory for the generated source tree.
 
 ### Cookie Detector
 
@@ -61,5 +61,3 @@ dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- cooki
   Read the assembly and log any missing interops.
 * `--type <full type name>`  
   The type containing the interops.
-
-

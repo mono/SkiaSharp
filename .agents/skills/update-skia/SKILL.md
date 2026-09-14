@@ -97,6 +97,8 @@ An update is complete only when:
 - Run long builds and full test suites in the foreground as one shell invocation. Do not use
   `nohup`, `&`, or agent-turn progress polling. If the shell tool keeps a command running, block on
   that existing session and inspect its output once after it exits.
+- Keep complete logs and broad diffs in `$ARTIFACT_DIR`; inspect bounded excerpts instead of
+  streaming large generated files, manifests, or successful build/test logs into model context.
 - Do not create PRs, write automation handoff files, or report completion while any gate fails.
 - In automation, no-work is handled before the agent starts. A started agent that cannot
   complete must fail rather than return success-shaped output.
@@ -113,7 +115,8 @@ An update is complete only when:
 
 ## Phase router
 
-Read **only the current phase file**, complete its gate, then move to the next row.
+Open the router's exact linked phase file once, complete its gate, then move to the next row. Do not
+glob for alternate phase names or reread an unchanged phase file.
 
 | Phases | Read when starting | Required outcome |
 |---|---|---|
@@ -123,7 +126,7 @@ Read **only the current phase file**, complete its gate, then move to the next r
 | 08–10 Bindings & tests | [references/phases/08-10-bindings-and-tests.md](references/phases/08-10-bindings-and-tests.md) | Bindings reviewed and final unfiltered solution green |
 | 11–11 Ship | [references/phases/11-11-ship.md](references/phases/11-11-ship.md) | Local PRs or automation handoff; no merge without approval |
 
-Do not preload all phase files. The current phase file names any narrower reference section
+Do not preload other phase files. The current phase file names any narrower reference section
 needed for that phase.
 
 ## Deterministic helpers
@@ -133,8 +136,8 @@ needed for that phase.
   running helpers from that staged directory rather than the branch-local `.agents` tree.
 - `scripts/update_versions.py` updates and validates version surfaces, Skia hashes, and deterministic
   DEPS-to-Component-Governance identity/review signals.
-- `scripts/regenerate_bindings.py` runs every binding configuration, restores HarfBuzz,
-  and reports new native functions.
+- `scripts/regenerate_bindings.py` runs every binding configuration from the checked-out
+  source and reports new native functions.
 - `scripts/audit_fork_patches.py` compares the old and new fork deltas and fails while any
   added, removed, or changed patch lacks a final evidence-backed disposition.
 

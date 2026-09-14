@@ -23,7 +23,10 @@ import urllib.request
 USER_AGENT = "skiasharp-perf-tracker/1.0 (+https://github.com/mono/SkiaSharp)"
 
 # SkiaSharp package feeds.
-EAP_INDEX_URL = "https://aka.ms/skiasharp-eap/index.json"       # daily -nightly.* builds
+EAP_INDEX_URL = (
+    "https://pkgs.dev.azure.com/dnceng/public/"
+    "_packaging/dotnet-libraries/nuget/v3/index.json"
+)  # daily -nightly.* builds
 NUGET_FLATCONTAINER = "https://api.nuget.org/v3-flatcontainer"  # released stables
 
 _SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?(?:-(.+))?$")
@@ -112,7 +115,7 @@ def feed_versions(flat_base: str, package: str) -> list[str]:
 
 
 def eap_versions(package: str = "SkiaSharp") -> list[str]:
-    """All versions of ``package`` on the SkiaSharp EAP feed (hosts the -nightly.* builds)."""
+    """All versions of ``package`` on dotnet-libraries (hosts the -nightly.* builds)."""
     resources = http_get_json(EAP_INDEX_URL).get("resources", [])
     flat = pick_resource(resources, "PackageBaseAddress/")
     if not flat:

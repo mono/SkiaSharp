@@ -444,7 +444,10 @@ namespace HarfBuzzSharp
 				shapersPtrs[i] = null;
 			}
 
-			var featuresArray = features?.ToArray ();
+			// Avoid a defensive copy when the caller already handed us an array (the common
+			// `params Feature[]` path). hb_shape_full only reads the features, so pinning the
+			// caller's array directly is safe and identical.
+			var featuresArray = features as Feature[] ?? features?.ToArray ();
 
 			fixed (Feature* fPtr = featuresArray)
 			fixed (void** sPtr = shapersPtrs) {

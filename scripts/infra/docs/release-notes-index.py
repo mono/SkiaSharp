@@ -89,13 +89,12 @@ def live_unreleased_versions():
 
 def fetch_chrome_schedule(milestone, timeout=8):
     # type: (int, int) -> dict
-    """Return real Chrome phase dates for ``milestone`` from Chromium Dash.
+    """Return the Chromium release markers for one milestone.
 
-    Returns ``{"beta", "early_stable", "stable_cut", "stable"}`` -> ISO date
-    string. The schedule is required, so any problem (offline, timeout,
-    HTTP/JSON error, missing milestone or missing phase date) raises
-    ``RuntimeError`` and fails generation loudly rather than emitting a
-    placeholder — a retry once connectivity is back recreates the page.
+    Returns the Chromium markers that drive the SkiaSharp release cadence. The
+    schedule is required, so any problem (offline, timeout, HTTP/JSON error,
+    missing milestone or missing marker) raises ``RuntimeError`` and fails
+    generation loudly.
     """
     url = CHROME_SCHEDULE_URL.format(milestone)
     try:
@@ -114,19 +113,14 @@ def fetch_chrome_schedule(milestone, timeout=8):
         raise RuntimeError(
             "Chrome schedule for m{} returned no milestone data".format(milestone))
     ms = mstones[0]
-    fields = {
-        "beta": "earliest_beta",
-        "early_stable": "early_stable",
-        "stable_cut": "stable_cut",
-        "stable": "stable_date",
-    }
+    fields = ("earliest_beta", "early_stable_cut", "stable_cut", "stable_date")
     schedule = {}
-    for phase, key in fields.items():
+    for key in fields:
         value = ms.get(key)
         if not value:
             raise RuntimeError(
                 "Chrome schedule for m{} is missing '{}'".format(milestone, key))
-        schedule[phase] = value
+        schedule[key] = value
     return schedule
 
 

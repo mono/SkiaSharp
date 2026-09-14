@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <PublishingVersion>3</PublishingVersion>
+    <!-- The public Package stage prepares explicit symbols and loose PDBs so
+         authenticated publishing never generates symbols for transport packages. -->
+    <AutoGenerateSymbolPackages>false</AutoGenerateSymbolPackages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Artifact Include="$(ArtifactsShippingPackagesDir)**\*.nupkg"
+              Kind="Package" />
+    <Artifact Include="$(ArtifactsNonShippingPackagesDir)**\*.nupkg"
+              Kind="Package"
+              IsShipping="false" />
+  </ItemGroup>
+</Project>

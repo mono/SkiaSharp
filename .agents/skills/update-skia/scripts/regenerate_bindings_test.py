@@ -3,6 +3,7 @@ import unittest
 from regenerate_bindings import (
     PROJECTS,
     added_internal_functions,
+    added_internal_functions_from_diffs,
     select_projects,
 )
 
@@ -29,6 +30,20 @@ class RegenerateBindingsTests(unittest.TestCase):
         self.assertEqual(
             ["internal static void sk_new_api();"],
             added_internal_functions(diff),
+        )
+
+    def test_collects_added_functions_from_all_generated_outputs(self) -> None:
+        self.assertEqual(
+            [
+                "internal static void sk_new_api();",
+                "internal static void hb_new_api();",
+            ],
+            added_internal_functions_from_diffs(
+                [
+                    "+ internal static void sk_new_api();\n",
+                    "+ internal static void hb_new_api();\n",
+                ]
+            ),
         )
 
 if __name__ == "__main__":
