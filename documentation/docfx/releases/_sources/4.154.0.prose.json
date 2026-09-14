@@ -1,15 +1,26 @@
 {
   "theme": "Skia m154 preview",
-  "highlights_headline": "SkiaSharp 4.154.0 Preview 1 updates the bundled renderer to Skia m154.",
-  "highlights_body": null,
-  "breaking": [],
+  "highlights_headline": "SkiaSharp 4.154.0 Preview 1 updates the bundled graphics engine to Skia m154.",
+  "highlights_body": "This preview starts the 4.154 line with the current upstream renderer. Review the HarfBuzzSharp compatibility changes before upgrading.",
+  "breaking": [
+    {
+      "title": "UnicodeCombiningClass.CCC133 renamed to CCC132",
+      "body": "The misspelled `CCC133` member is replaced by the upstream-correct `CCC132` name while retaining numeric value 132. Update source references to the corrected member name.",
+      "prs": []
+    },
+    {
+      "title": "GlyphFlags.Defined is no longer available",
+      "body": "The aggregate `GlyphFlags.Defined` mask is removed because it is not an independent option. Combine the concrete glyph flags required by your application instead.",
+      "prs": []
+    }
+  ],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia m154",
-          "detail": "Updates the bundled rendering engine from the previous preview line to upstream milestone 154.",
+          "lead": "Skia updated to milestone m154",
+          "detail": "Aligns the bundled graphics engine with Chrome milestone 154, bringing the latest upstream rendering work to the 4.154 preview line.",
           "prs": [
             4945
           ]
@@ -19,13 +30,13 @@
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.154.0-preview.1.26454.9": "Preview 1 introduces the Skia m154 engine update."
+    "v4.154.0-preview.1.26454.9": "Preview 1 opens the 4.154 line with the Skia m154 engine update."
   },
   "harfbuzz_summary": null,
   "release_summaries": {
     "v4.154.0-preview.1.26454.9": {
-      "headline": "SkiaSharp 4.154.0 Preview 1 updates the bundled renderer to Skia m154.",
-      "body": "This shipment contains the milestone 154 engine update since the 4.153 Preview 1 release."
+      "headline": "SkiaSharp 4.154.0 Preview 1 updates the bundled graphics engine to Skia m154.",
+      "body": "It opens the 4.154 release line with the current upstream renderer."
     }
   }
 }
