@@ -188,9 +188,8 @@ def render(data, prose):
     if sb:
         banner_blocks.append("> **Superseded by [{}]({})** · {}".format(
             sb["version"], sb["href"], sb.get("note", "")))
-    api_links = existing_api_links(data)
-    if api_links:
-        api = " · ".join("[{}]({})".format(l["label"], l["href"]) for l in api_links)
+    if data.get("api_links"):
+        api = " · ".join("[{}]({})".format(l["label"], l["href"]) for l in data["api_links"])
         banner_blocks.append("> **API changes** · {}".format(api))
     for i, blk in enumerate(banner_blocks):
         if i:
@@ -291,16 +290,6 @@ def _finish_text(L):
     if not text.endswith("\n"):
         text += "\n"
     return text
-
-
-def existing_api_links(data):
-    """Return only local API-diff links whose generated target exists."""
-    page_directory = RELEASES_DIR / (
-        "harfbuzzsharp" if data.get("family") == "harfbuzzsharp" else "")
-    return [
-        link for link in data.get("api_links") or []
-        if (page_directory / link.get("href", "")).is_file()
-    ]
 
 
 # ── enforcement ──────────────────────────────────────────────────────────────

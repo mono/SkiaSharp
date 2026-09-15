@@ -2337,35 +2337,25 @@ def build_data_json(prs, metadata):
     # SkiaSharp page shows its own diff + the co-shipped HarfBuzz diff (from the
     # co-release map), and a HarfBuzz page shows its own diff + the SkiaSharp
     # release it ships within. Own-family first.
-    def existing_api_diff_link(href):
-        page_directory = RELEASES_DIR / (
-            "harfbuzzsharp" if family == "harfbuzzsharp" else "")
-        path = page_directory / href
-        return href if path.is_file() else None
-
     api_links = []
     if family == "harfbuzzsharp":
-        own_api_diff_link = existing_api_diff_link(metadata.get("api_diff_link", ""))
-        if own_api_diff_link:
+        if metadata.get("api_diff_link"):
             api_links.append({"label": "HarfBuzzSharp API diff",
-                              "href": own_api_diff_link})
+                              "href": metadata["api_diff_link"]})
         ships = metadata.get("ships_with") or {}
-        skia_api_diff_link = existing_api_diff_link(
-            "../{}/index.md".format(ships.get("version", "")))
-        if own_api_diff_link and skia_api_diff_link:
+        # Only when this HarfBuzz line is published (its own diff exists) does the
+        # canonical SkiaSharp release's diff folder exist too.
+        if metadata.get("api_diff_link") and ships.get("version"):
             api_links.append({"label": "SkiaSharp API diff",
-                              "href": skia_api_diff_link})
+                              "href": "../{}/index.md".format(ships["version"])})
     else:
-        own_api_diff_link = existing_api_diff_link(metadata.get("api_diff_link", ""))
-        if own_api_diff_link:
+        if metadata.get("api_diff_link"):
             api_links.append({"label": "SkiaSharp API diff",
-                              "href": own_api_diff_link})
+                              "href": metadata["api_diff_link"]})
         hb = metadata.get("harfbuzz")
-        hb_api_diff_link = existing_api_diff_link(
-            hb.get("api_diff_link", "") if hb else "")
-        if hb_api_diff_link:
+        if hb and hb.get("api_diff_link"):
             api_links.append({"label": "HarfBuzzSharp API diff",
-                              "href": hb_api_diff_link})
+                              "href": hb["api_diff_link"]})
 
     tallies = {
         "product": sum(1 for p in prs if p.get("category") == "product"),

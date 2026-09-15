@@ -320,8 +320,9 @@ is deterministic and script-owned — the AI never computes it.
 
 ### 2.1 Where the engines live
 
-All three doc-generation engines live together under `scripts/infra/docs/` (local
-runs, CI, and the docs Docker image share one copy). The **release-notes engine** —
+The parent-owned API-diff and release-notes engines live together under
+`scripts/infra/docs/` (local runs, CI, and the docs Docker image share one copy).
+The **release-notes engine** —
 its data builders, renderer and prose schema — sits **beside the API-diff engine and
 the shared Cake machinery** it runs with, rather than in the skill folder. The
 skill keeps only the thin, stable **entrypoints** (`prepare.sh`, `render.sh`) plus
