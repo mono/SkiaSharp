@@ -17,18 +17,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptions* opts);
+		internal static partial sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptionsNative* opts);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptions* opts);
+		internal static extern sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptionsNative* opts);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptions* opts);
+			internal delegate sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptionsNative* opts);
 		}
 		private static Delegates.sk_graphite_context_make_vulkan sk_graphite_context_make_vulkan_delegate;
-		internal static sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptions* opts) =>
+		internal static sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptionsNative* opts) =>
 			(sk_graphite_context_make_vulkan_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_vulkan> ("sk_graphite_context_make_vulkan")).Invoke (init, opts);
 		#endif
 
