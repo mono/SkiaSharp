@@ -4,6 +4,16 @@ Validate C# source comments through managed compilation and the package
 contract. Do not validate by editing, formatting, or regenerating ECMA/mdoc or
 compiler XML by hand.
 
+## 0. Refresh conventions from official sources
+
+For a broad documentation pass or when a convention is uncertain, retrieve the
+current [C# recommended XML tag guidance](https://learn.microsoft.com/dotnet/csharp/language-reference/xmldoc/recommended-tags),
+[documentation rules](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/documentation-warnings),
+and [CA1200 `cref` guidance](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1200).
+Compare any change against the managed build and the external API-docs
+consumer. Official style guidance does not by itself justify rewriting valid
+repository-specific rich Markdown/CDATA comments or their media links.
+
 ## 1. Build the changed managed project
 
 Build each project that owns changed source comments. For core SkiaSharp:

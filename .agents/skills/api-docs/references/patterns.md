@@ -12,6 +12,23 @@ SkiaSharp/HarfBuzzSharp facts, read
 These patterns follow the [official .NET API documentation
 guidelines](https://github.com/dotnet/dotnet-api-docs/wiki).
 
+## Official sources and refresh policy
+
+Before a broad authoring or review pass, retrieve the current first-party
+guidance and apply it together with the repository-specific contracts:
+
+- [Recommended XML tags for C# documentation comments](https://learn.microsoft.com/dotnet/csharp/language-reference/xmldoc/recommended-tags)
+- [Documentation rules](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/documentation-warnings)
+- [CA1200: Avoid using `cref` tags with a prefix](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1200)
+- [.NET API Docs writing guidelines](https://github.com/dotnet/dotnet-api-docs/wiki)
+
+Use the current official material to refresh this guidance when it changes.
+Validate any proposed convention against the managed build and the external
+package/XML consumer before updating existing source comments. Do not
+mechanically rewrite valid historical forms only for style: preserve the
+repository's rich Markdown/CDATA remarks, `_DocsMedia` references, and
+external-rendering behavior unless a replacement is proven equivalent.
+
 ## Contents
 
 - [Syntax reference](#syntax-reference)
@@ -215,23 +232,23 @@ public class GetPropertyValueEventArgs<T> : EventArgs
 
 ## Cross-references and escaping
 
-Use the repository's compiler-supported DocId convention for standard XML
-`cref` values, such as `T:`, `M:`, `P:`, and `F:` prefixes. In a rich
-Markdown/CDATA `<remarks>` block, use the external renderer's bare
-`<xref:...>` syntax instead. Both forms are already authoritative source
-comment formats; do not rewrite one into the other without validating the
-external rendering result.
+For newly authored standard XML comments, use compiler-resolvable `cref`
+values without DocId prefixes so the compiler and IDE can validate and update
+them during refactoring. In a rich Markdown/CDATA `<remarks>` block, preserve
+the external renderer's bare `<xref:...>` syntax. Existing prefixed `cref`
+forms are historical source; do not convert them in bulk unless the managed
+build and external rendering prove the migration equivalent.
 
 ```csharp
-/// <summary>Draws to an <see cref="T:SkiaSharp.SKCanvas" />.</summary>
-/// <seealso cref="T:SkiaSharp.SKPaint" />
+/// <summary>Draws to an <see cref="SKCanvas" />.</summary>
+/// <seealso cref="SKPaint" />
 ```
 
-For overload disambiguation, use the fully-qualified DocId and build to
-confirm it:
+For overload disambiguation, use a compiler-resolvable C# signature and build
+to confirm it:
 
 ```csharp
-/// <seealso cref="M:SkiaSharp.SKCanvas.DrawRect(SkiaSharp.SKRect,SkiaSharp.SKPaint)" />
+/// <seealso cref="SKCanvas.DrawRect(SKRect, SKPaint)" />
 ```
 
 Escape XML metacharacters in prose and code:

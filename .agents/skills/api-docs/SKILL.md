@@ -35,11 +35,16 @@ and publishes Learn. Do not edit that repository or generated output here.
    authoring or [`references/reviewing.md`](references/reviewing.md) for a
    source-first review. Apply the detailed syntax and prose rules in
    [`references/patterns.md`](references/patterns.md).
-5. Verify SkiaSharp and HarfBuzzSharp facts in
+5. Refresh documentation-convention knowledge from the first-party sources
+   listed in [`references/patterns.md`](references/patterns.md) before a
+   broad authoring or review pass. Reconcile a changed official convention
+   with existing source forms and external rendering before applying it; do
+   not mechanically rewrite source comments merely to match a style rule.
+6. Verify SkiaSharp and HarfBuzzSharp facts in
    [`references/skia-patterns.md`](references/skia-patterns.md), and ensure
    examples avoid error-obsolete APIs with
    [`references/obsolete-api-map.md`](references/obsolete-api-map.md).
-6. Classify findings with [`references/checklist.md`](references/checklist.md)
+7. Classify findings with [`references/checklist.md`](references/checklist.md)
    and perform the build, compiler-XML, and package checks in
    [`references/validation.md`](references/validation.md).
 
