@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
@@ -10,6 +11,8 @@ namespace SkiaSharpSample;
 
 public partial class DrawingPage : ContentPage
 {
+	const float WheelDeltaPerNotch = 120f;
+
 	static readonly (SKColor Light, SKColor Dark)[] colorPalette =
 	{
 		(SKColors.Black, SKColors.White),
@@ -21,7 +24,11 @@ public partial class DrawingPage : ContentPage
 	};
 
 	readonly List<(SKPath Path, SKColor Color, float Width)> strokes = new();
+	readonly Dictionary<long, SKPoint> activeTouches = new();
 	SKPathBuilder? currentBuilder;
+	long? strokeTouchId;
+	float? previousPinchDistance;
+	SKPoint? hoverPoint;
 	SKColor currentColor;
 	float brushSize = 4f;
 
@@ -68,34 +75,87 @@ public partial class DrawingPage : ContentPage
 	{
 		switch (e.ActionType)
 		{
+			case SKTouchAction.Entered:
+				hoverPoint = e.Location;
+				skiaView.InvalidateSurface();
+				break;
+
 			case SKTouchAction.Pressed:
-				currentBuilder = new SKPathBuilder();
-				currentBuilder.MoveTo(e.Location);
+				activeTouches[e.Id] = e.Location;
+				hoverPoint = null;
+				if (activeTouches.Count == 1)
+				{
+					strokeTouchId = e.Id;
+					currentBuilder = new SKPathBuilder();
+					currentBuilder.MoveTo(e.Location);
+				}
+				else if (activeTouches.Count >= 2)
+				{
+					currentBuilder?.Dispose();
+					currentBuilder = null;
+					strokeTouchId = null;
+					previousPinchDistance = activeTouches.Count == 2 ? GetPinchDistance() : null;
+				}
 				break;
 
 			case SKTouchAction.Moved:
-				currentBuilder?.LineTo(e.Location);
+				if (!e.InContact)
+				{
+					hoverPoint = e.Location;
+				}
+				else
+				{
+					activeTouches[e.Id] = e.Location;
+					if (activeTouches.Count == 2)
+					{
+						var distance = GetPinchDistance();
+						if (previousPinchDistance is > 0)
+							SetBrushSize(brushSize * distance / previousPinchDistance.Value);
+						previousPinchDistance = distance;
+					}
+					else if (activeTouches.Count > 2)
+					{
+						previousPinchDistance = null;
+					}
+					else if (strokeTouchId == e.Id)
+					{
+						currentBuilder?.LineTo(e.Location);
+					}
+				}
 				skiaView.InvalidateSurface();
 				break;
 
 			case SKTouchAction.Released:
-				if (currentBuilder != null)
+				activeTouches.Remove(e.Id);
+				if (strokeTouchId == e.Id && currentBuilder != null)
 				{
 					strokes.Add((currentBuilder.Detach(), currentColor, brushSize));
 					currentBuilder = null;
-					skiaView.InvalidateSurface();
 				}
+				if (strokeTouchId == e.Id)
+					strokeTouchId = null;
+				previousPinchDistance = activeTouches.Count == 2 ? GetPinchDistance() : null;
+				skiaView.InvalidateSurface();
 				break;
 
 			case SKTouchAction.Cancelled:
-				currentBuilder?.Dispose();
-				currentBuilder = null;
+				activeTouches.Remove(e.Id);
+				if (strokeTouchId == e.Id)
+				{
+					currentBuilder?.Dispose();
+					currentBuilder = null;
+					strokeTouchId = null;
+				}
+				previousPinchDistance = activeTouches.Count == 2 ? GetPinchDistance() : null;
+				break;
+
+			case SKTouchAction.Exited:
+				hoverPoint = null;
+				skiaView.InvalidateSurface();
 				break;
 
 			case SKTouchAction.WheelChanged:
-				brushSize = Math.Clamp(brushSize + e.WheelDelta, 1f, 50f);
-				brushSlider.Value = brushSize;
-				brushLabel.Text = $"{brushSize:F0}";
+				SetBrushSize(brushSize + e.WheelDelta / WheelDeltaPerNotch);
 				break;
 		}
 		e.Handled = true;
@@ -128,6 +188,27 @@ public partial class DrawingPage : ContentPage
 			paint.StrokeWidth = brushSize;
 			canvas.DrawPath(path, paint);
 		}
+
+		if (hoverPoint is { } hover)
+		{
+			paint.Color = currentColor.WithAlpha(128);
+			paint.StrokeWidth = 1;
+			canvas.DrawCircle(hover, brushSize / 2f + 2f, paint);
+		}
+	}
+
+	private float GetPinchDistance()
+	{
+		var points = activeTouches.Values.Take(2).ToArray();
+		return points.Length == 2 ? SKPoint.Distance(points[0], points[1]) : 0;
+	}
+
+	private void SetBrushSize(float value)
+	{
+		brushSize = Math.Clamp(value, 1f, 50f);
+		brushSlider.Value = brushSize;
+		brushLabel.Text = $"{brushSize:F0}";
+		skiaView.InvalidateSurface();
 	}
 
 	private void OnColorClicked(object sender, EventArgs e)
@@ -150,8 +231,7 @@ public partial class DrawingPage : ContentPage
 
 	private void OnSliderValueChanged(object sender, ValueChangedEventArgs e)
 	{
-		brushSize = (float)e.NewValue;
-		brushLabel.Text = $"{brushSize:F0}";
+		SetBrushSize((float)e.NewValue);
 	}
 
 	private void OnClearClicked(object sender, EventArgs e)
@@ -161,6 +241,9 @@ public partial class DrawingPage : ContentPage
 		strokes.Clear();
 		currentBuilder?.Dispose();
 		currentBuilder = null;
+		activeTouches.Clear();
+		strokeTouchId = null;
+		previousPinchDistance = null;
 		skiaView.InvalidateSurface();
 	}
 }
