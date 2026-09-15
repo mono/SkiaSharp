@@ -87,9 +87,6 @@ DirectoryPath OUTPUT_NUGETS_PATH = ROOT_OUTPUT_PATH.Combine("nugets");
 DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = ROOT_OUTPUT_PATH.Combine("nugets-special");
 DirectoryPath OUTPUT_ARCADE_ASSETS_PATH = ROOT_OUTPUT_PATH.Combine("arcade-assets");
 DirectoryPath OUTPUT_PDB_ARTIFACTS_PATH = ROOT_OUTPUT_PATH.Combine("pdbs");
-DirectoryPath DOCS_ROOT_PATH = ROOT_PATH.Combine("docs");
-DirectoryPath DOCS_PATH = DOCS_ROOT_PATH.Combine("SkiaSharpAPI");
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // BUILD OPTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
