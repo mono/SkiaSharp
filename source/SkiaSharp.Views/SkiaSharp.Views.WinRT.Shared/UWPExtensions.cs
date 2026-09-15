@@ -22,7 +22,8 @@ namespace SkiaSharp.Views.Windows
 namespace SkiaSharp.Views.UWP
 #endif
 {
-#if WINUI
+	// WindowsExtensions for SkiaSharp.Views.WinUI; UWPExtensions for UWP and Uno
+#if WINUI && WINDOWS
 	public static class WindowsExtensions
 #else
 	public static class UWPExtensions
