@@ -48,6 +48,21 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void RotationScaleRunWithLegacyBoundsAllocates()
+		{
+			var font = new SKFont();
+
+			using var builder = new SKTextBlobBuilder();
+
+			var run = builder.AllocateRotationScaleRun(font, 2, SKRect.Create(10, 20, 30, 40));
+			Assert.Equal(2, run.Glyphs.Length);
+			Assert.Equal(2, run.Positions.Length);
+
+			using var blob = builder.Build();
+			Assert.NotNull(blob);
+		}
+
+		[Fact]
 		public void TextRunsAllocateTextSpan()
 		{
 			var font = new SKFont();
