@@ -1,93 +1,83 @@
-# Adding docs for new APIs
+# Adding source API documentation
 
-Use this when new APIs have shipped and their doc files contain `To be added.` placeholders (typically
-triggered by the daily `auto-api-docs-writer` workflow after a NuGet/CI update). You edit the mdoc XML
-directly.
+Write C# XML documentation comments with the public API change. A `///` block
+immediately preceding the public declaration is the source of truth; the
+managed build generates compiler XML from it. Do not write or edit an XML file
+for this work.
 
-You run this yourself, end to end — one agent. Accuracy comes from reading the C#
-source first; prose comes from the .NET conventions in the reference files. You write for developers who
-copy your examples into real code, so every claim must be true and every example must compile.
+## Required reading
 
-## Required reading (first)
+1. [`patterns.md`](patterns.md) for C# XML syntax, declaration patterns, and
+   examples.
+2. [`skia-patterns.md`](skia-patterns.md) for verified ownership, threading,
+   color, default-value, and standards facts.
+3. [`obsolete-api-map.md`](obsolete-api-map.md) before placing an API in an
+   example.
 
-1. [`patterns.md`](patterns.md) — .NET XML doc syntax, verb conventions, summary/param/return patterns.
-2. [`skia-patterns.md`](skia-patterns.md) — SkiaSharp/HarfBuzz domain facts (color layouts, struct
-   defaults, standard-based enums, caller-owned vs parent-owned).
-3. [`obsolete-api-map.md`](obsolete-api-map.md) — members that must never appear in an example, and
-   replacements.
+## Source-first procedure
 
-Apply these facts; do not restate them in the docs. If a fact is in a reference file, trust it over your
-own recollection.
+1. Identify every new or changed consumer-visible type, constructor, member,
+   generic parameter, and parameter under `binding/` or `source/`. A member
+   emitted only by an implementation assembly is not a new public-reference
+   documentation obligation.
+2. Read the declaration *and implementation* before authoring. Record:
+   - accessor shape (`get`, `set`, `init`);
+   - nullability, validation, exceptions, and factory failure behavior;
+   - actual default values and numeric constants;
+   - ownership and threading rules; and
+   - native layout or external-standard facts, after checking the relevant
+     native header where applicable.
+3. Put an accurate `///` block directly above each public declaration. Add
+   `<summary>` for the API, then only the useful supporting elements:
+   `<param>`, `<typeparam>`, `<returns>`, `<value>`, `<exception>`,
+   `<remarks>`, and `<example>`. Match names and behavior exactly.
+4. Treat the source as authoritative over the name. In particular, do not
+   infer that a parameter rejects an input when the code pads, truncates,
+   clamps, or otherwise accepts it; do not infer a struct default from a
+   sibling constant.
+5. For a generated binding declaration, edit only the source-controlled `///`
+   comment trivia in that generated file, then regenerate:
 
-## Procedure
-
-1. **Regenerate stubs (only if new APIs were added).** Skip if you are editing existing docs or the
-   automated workflow already ran this as a pre-step.
    ```bash
-   dotnet tool restore
-   dotnet cake --target=docs-download-output   # latest NuGets from the CI feed
-   dotnet cake --target=update-docs            # mdoc update + format → "To be added." placeholders
+   pwsh -NoLogo -NoProfile -File ./utils/generate.ps1
    ```
 
-2. **List the docs to fill.** Right after a stub regen the new placeholders show up as changed files:
-   ```bash
-   git -C docs diff --name-only --diff-filter=ACM
-   ```
-   Map each `<Type>.xml` to its source at `binding/<Namespace>/<Type>.cs` (if the guess is wrong, `grep`
-   for the type). Shard the result into ~25–40-file batches.
+   Confirm the regenerated file preserves the intended comment. Do not manually
+   change generated declarations, interop code, or implementation.
+6. Add remarks or an example when they make a non-obvious API usable. Verify
+   every type, overload, identifier, null path, and disposal action against
+   current source. Examples must be self-contained and use no error-obsolete
+   API.
+7. Run the concrete checks in [`validation.md`](validation.md).
 
-3. **Write (per file).** A field is **in scope to fill** when it is empty, self-closing, or still a
-   placeholder (`To be added.`, or a bracketed remarks scaffold like `[Describe …]`). Do not rewrite
-   already-written prose.
-   1. **Read the C# source first.** From the filename, locate the type in `binding/` and read it. Build a
-      fact sheet: constructors, method overloads, property accessors (`{ get; }` vs `{ get; set; }`),
-      validation behavior (throws? clamps? pads? truncates?), numeric constants, and defaults. The source
-      is authoritative — never document from the member name alone.
-   2. **Open the `.xml` and locate each `<Docs>` block.** Each `<Member>`/type carries a
-      `MemberSignature[@Language='DocId']` you use as the stable id. Fill the in-scope children:
-      `<summary>`, `<param>`, `<returns>`, `<value>`, `<typeparam>`, `<exception>`, and `<remarks>`.
-   3. **Match the accessor verb to the signature**, not to intuition: `{ get; set; }` → "Gets or sets …",
-      `{ get; }` → "Gets …". Many struct properties look read-only but are settable — check the signature.
-   4. **Defaults come from the source.** A struct property with no field initializer defaults to
-      `0`/`null`/`false`; do not copy a "typical" sibling constant.
-   5. **Standard-citing enum members:** read the C/C++ header where the enum is defined and verify the
-      number AND the behavior against the member name.
-   6. **Remarks:** type-level entries get a real `<remarks>` (description + disposal note if applicable +
-      one compiling example). Simple members get self-closing `<remarks />`. Inside CDATA remarks use
-      `<xref:Bare.Uid>` with **no** `T:`/`M:`/`P:` prefix; `<see cref>` (with prefix) is for non-CDATA prose.
-   7. **Examples must compile and be self-contained:** declare every variable; never use an obsolete member
-      (check the obsolete map); never `using`/`Dispose` a parent-owned object (e.g. `SKSurface.Canvas`).
-   8. **Save the file**, preserving CDATA and all signature elements. Change only `<Docs>` content.
+## Factual requirements
 
-4. **Review** the files just written with the review checks ([`reviewing.md`](reviewing.md) §Checks), then
-   fix CRITICAL findings by editing the XML directly.
+- **Accessor wording:** inspect the declaration. A getter-only property starts
+  “Gets”; a writable property starts “Gets or sets.” An `init` accessor is
+  writable during initialization, so describe it precisely rather than calling
+  it read-only.
+- **Defaults:** state a default only when source establishes it. A
+  zero-initialized struct member defaults to `0`, `false`, or `null` absent an
+  initializer; a useful constant elsewhere is not its default.
+- **Exceptions and failure:** document an exception only when the public API
+  actually throws it. For factories, distinguish a `null`/invalid result from
+  an exception and follow the declared nullability.
+- **Standards and layout:** verify both the standard identifier and behavior,
+  and verify channel/byte/bit order in the native definition. Do not transfer
+  a HarfBuzzSharp convention to SkiaSharp or vice versa.
+- **Lifetime:** state caller disposal, parent ownership, or threading limits
+  only when source establishes the rule. In an example, never dispose a canvas
+  owned by `SKDocument` or `SKSurface`.
 
-5. **Validate & format** ([`validation.md`](validation.md)): run `docs-format-docs` — it formats and runs
-   the deterministic checks; fix any build-failing broken-XML errors.
+## Completion record
 
-6. **Land:** commit on a `dev/...` branch in the `docs` submodule and open a PR (the submodule protects
-   `main`).
+For a focused authoring pass, report each changed declaration rather than a
+generated-document file:
 
-## Output
-
-After all files, emit a compact manifest — one line per file:
-
-```
-WROTE | <file> | summaries:<n> params:<n> returns:<n> remarks:<n> | source:<binding path or NONE>
+```text
+WROTE | <source file>:<line> | <type/member> | summary:<yes/no> params:<n> returns:<yes/no> remarks:<yes/no>
 ```
 
-Then list any field you intentionally left as a placeholder (ran out of certainty/time) so the next run
-re-detects it:
-
-```
-DEFERRED | <file> | <docId> | <field> | <reason>
-```
-
-## Boundaries
-
-- Edit only the in-scope `.xml` files, and only `<Docs>` content — never touch `MemberSignature`,
-  `TypeSignature`, or generated files (`index.xml`, `ns-*.xml`, `_filter.xml`, `FrameworksIndex/`).
-- Never invent an API, overload, or numeric value. If you cannot verify it, leave the field deferred.
-- The writer only fills in-scope (empty/placeholder) fields; it does not rewrite existing prose.
-- If a large type runs out of certainty, leave its placeholder intact (`DEFERRED`) so the next run
-  re-detects it — the file stays clean and well-formed either way.
+If a fact cannot be verified, omit the unsupported claim and report the
+uncertainty; do not add a placeholder or fabricate documentation. The external
+API-docs repository owns any later ECMA/mdoc representation.

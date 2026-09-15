@@ -94,7 +94,8 @@ GITHUB_WORKFLOWS = [
     {"repo": "mono/SkiaSharp", "workflow": "rebase.yml", "name": "PR - Rebase", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "pr-artifacts-comment.yml", "name": "PR - Artifacts Comment", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "merge-message.lock.yml", "name": "Merge Message", "scope": "global", "trigger": "event"},
-    # mono/SkiaSharp-API-docs owns generated ECMA output and Microsoft Learn publication.
+    # API-docs publishes independently. Regeneration workflow names are intentionally
+    # not tracked until they are stable; Go Live is the established publish workflow.
     {"repo": "mono/SkiaSharp-API-docs", "workflow": "go-live.yml", "name": "Go Live", "scope": "global", "trigger": "dispatch"},
 ]
 

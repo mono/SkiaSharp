@@ -31,6 +31,60 @@ FilePath[] GetNuGetPackages(DirectoryPath directory, string description)
     return packages;
 }
 
+bool ZipEntriesMatch(ZipArchiveEntry first, ZipArchiveEntry second)
+{
+    var firstStream = first.Open();
+    var secondStream = second.Open();
+    try {
+        while (true) {
+            var firstByte = firstStream.ReadByte();
+            var secondByte = secondStream.ReadByte();
+            if (firstByte != secondByte)
+                return false;
+            if (firstByte == -1)
+                return true;
+        }
+    } finally {
+        secondStream.Dispose();
+        firstStream.Dispose();
+    }
+}
+
+void ValidateCompilerDocumentationFiles(FilePath[] packages)
+{
+    foreach (var package in packages) {
+        var archive = ZipFile.OpenRead(package.FullPath);
+        try {
+            var entries = new HashSet<string>(
+                archive.Entries.Select(entry => entry.FullName.Replace('\\', '/')),
+                StringComparer.OrdinalIgnoreCase);
+            var referenceAssemblies = entries
+                .Where(entry => entry.StartsWith("ref/", StringComparison.OrdinalIgnoreCase))
+                .Where(entry => entry.EndsWith(".dll", StringComparison.OrdinalIgnoreCase));
+
+            foreach (var referenceAssembly in referenceAssemblies) {
+                var referenceXml = System.IO.Path.ChangeExtension(referenceAssembly, ".xml");
+                var implementationAssembly = "lib/" + referenceAssembly.Substring("ref/".Length);
+                var implementationXml = System.IO.Path.ChangeExtension(implementationAssembly, ".xml");
+                if (!entries.Contains(referenceXml) || !entries.Contains(implementationAssembly) ||
+                    !entries.Contains(implementationXml)) {
+                    throw new Exception(
+                        $"Managed package '{package.GetFilename()}' must include the reference assembly " +
+                        $"and compiler XML at '{referenceAssembly}' and '{referenceXml}', plus matching " +
+                        $"implementation files at '{implementationAssembly}' and '{implementationXml}'.");
+                }
+                if (!ZipEntriesMatch(archive.GetEntry(referenceXml), archive.GetEntry(implementationXml))) {
+                    throw new Exception(
+                        $"Managed package '{package.GetFilename()}' must copy identical compiler XML to " +
+                        $"both '{referenceXml}' and '{implementationXml}'.");
+                }
+            }
+        } finally {
+            archive.Dispose();
+        }
+    }
+}
+
 Task("nuget-normal")
     .Description("Pack all NuGets (build all required dependencies).")
     .Does(() =>
@@ -325,6 +379,7 @@ Task("nuget-assemble-arcade-assets")
 {
     var productPackages = GetNuGetPackages(OUTPUT_NUGETS_PATH, "product");
     var transportPackages = GetNuGetPackages(OUTPUT_SPECIAL_NUGETS_PATH, "transport");
+    ValidateCompilerDocumentationFiles(productPackages);
 
     var shipping = OUTPUT_ARCADE_ASSETS_PATH.Combine("Shipping");
     var nonShipping = OUTPUT_ARCADE_ASSETS_PATH.Combine("NonShipping");

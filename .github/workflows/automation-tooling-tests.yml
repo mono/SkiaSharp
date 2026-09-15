@@ -16,6 +16,7 @@ on:
   pull_request:
     paths:
       - ".agents/skills/ci-status/**"
+      - ".agents/skills/review-skia-update/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
       # Any workflow edit, so the registry and safety tests re-check source and generated
@@ -26,6 +27,7 @@ on:
     branches: [main]
     paths:
       - ".agents/skills/ci-status/**"
+      - ".agents/skills/review-skia-update/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
       - ".github/workflows/*.md"
@@ -78,6 +80,9 @@ jobs:
             python3 -m unittest "${test%.py}"
             echo "::endgroup::"
           done
+
+      - name: Run review-skia-update tooling tests
+        run: python3 .agents/skills/review-skia-update/scripts/check_companion_test.py
 
       - name: Run workflow safety tests
         run: python3 -m unittest discover -s .github/scripts/tests -p "test_*.py" -v

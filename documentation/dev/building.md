@@ -13,7 +13,7 @@ This guide covers building SkiaSharp on Windows and macOS.
     * [Building](#building)
  * [Native Building](#native-building)
     * [Dependencies](#dependencies-1)
- * [Generating Documentation](#generating-documentation)
+ * [Documentation Outputs](#documentation-outputs)
 
 ## Prerequisites
 
@@ -160,9 +160,12 @@ dotnet cake --target=externals-linux --arch=x64
 
 > **Tip:** Native builds can take 10-30 minutes depending on your machine. Only build for platforms you need to test.
 
-## Generating Documentation
+## Documentation Outputs
 
-```
-dotnet cake --target=docs-download-output [--gitBranch=<git-branch>]
-dotnet cake --target=update-docs
-```
+Public API documentation is authored as `///` comments in managed source. A
+managed build generates compiler XML and packages it beside matching `lib` and
+`ref` assemblies. See [writing-docs.md](writing-docs.md) for the package
+contract and supported package acquisition paths. The external
+`mono/SkiaSharp-API-docs` repository owns ECMA/mdoc generation and Microsoft
+Learn publication; this repository has no local API-reference generation
+target.
