@@ -62,6 +62,8 @@ All findings use one machine-parseable contract: `SEVERITY | class | file | docI
 
 ## Tooling & validation
 
+- Both procedures consume the same pre-generated supplemental issue descriptions through
+  [`references/issue-context.md`](references/issue-context.md). The skill does not query GitHub.
 - Format + checks (one Cake target in `scripts/infra/docs/docs.cake`): `docs-format-docs` formats every
   type file and runs the deterministic content checks — warnings for missing/quality issues, build-failing
   errors for broken XML/CDATA. See [`references/validation.md`](references/validation.md).
