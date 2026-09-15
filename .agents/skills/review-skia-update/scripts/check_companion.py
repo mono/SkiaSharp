@@ -84,25 +84,30 @@ def run_check(
         cwd=repo_root,
     )
 
-    # Parse into (status, path) tuples
+    # Parse into (status, destination path, paths for diff) tuples. Rename/copy
+    # records carry old and new paths; the destination is the reviewable file.
     file_entries = []
     for line in diff_output.strip().split("\n"):
         if not line.strip():
             continue
-        parts = line.split("\t", 1)
-        if len(parts) == 2:
-            status_code, path = parts[0].strip(), parts[1].strip()
-            file_entries.append((status_code, path))
+        parts = line.split("\t")
+        status_code = parts[0].strip()
+        if status_code.startswith(("R", "C")) and len(parts) == 3:
+            old_path, path = parts[1].strip(), parts[2].strip()
+            file_entries.append((status_code, path, (old_path, path)))
+        elif len(parts) == 2:
+            path = parts[1].strip()
+            file_entries.append((status_code, path, (path,)))
 
     # Filter and categorize
     added_files = []
     changed_files = []
     skipped_count = 0
 
-    for status_code, path in file_entries:
+    for status_code, path, diff_paths in file_entries:
         if is_generated(path):
             generated_diff = git_run(
-                ["diff", f"{merge_base}..{pr_ref}", "--", path],
+                ["diff", f"{merge_base}..{pr_ref}", "--", *diff_paths],
                 cwd=repo_root,
             )
             if not has_generated_documentation_changes(generated_diff):
@@ -110,31 +115,31 @@ def run_check(
                 continue
 
         if status_code == "A":
-            added_files.append(path)
+            added_files.append((path, diff_paths))
         elif status_code in ("M", "R", "C", "T"):
-            changed_files.append(path)
+            changed_files.append((path, diff_paths))
         elif status_code.startswith("R") or status_code.startswith("C"):
             # Renamed/copied with similarity — treat as changed
-            changed_files.append(path)
+            changed_files.append((path, diff_paths))
         # D (deleted) is unusual for a companion PR but we skip it
 
-    added_files.sort()
-    changed_files.sort()
+    added_files.sort(key=lambda entry: entry[0])
+    changed_files.sort(key=lambda entry: entry[0])
 
     # Build result arrays with diffs
     added = []
-    for path in added_files:
+    for path, diff_paths in added_files:
         diff = git_run(
-            ["diff", f"{merge_base}..{pr_ref}", "--", path],
+            ["diff", f"{merge_base}..{pr_ref}", "--", *diff_paths],
             cwd=repo_root,
         ).strip()
         added.append({"path": path, "diff": diff})
 
     changed = []
-    for path in changed_files:
+    for path, diff_paths in changed_files:
         # Direct diff: merge_base → PR head (what actually changed)
         diff = git_run(
-            ["diff", f"{merge_base}..{pr_ref}", "--", path],
+            ["diff", f"{merge_base}..{pr_ref}", "--", *diff_paths],
             cwd=repo_root,
         ).strip()
         changed.append({"path": path, "diff": diff})
