@@ -73,6 +73,7 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 |----------|-------------|
 | [dependencies.md](dependencies.md) | Native dependencies: security relevance, CVE tracking, cgmanifest.json |
 | [debugging-methodology.md](debugging-methodology.md) | Best practices for complex debugging |
+| [views-compile-symbols.md](views-compile-symbols.md) | Compilation symbols per WinUI, UWP and Uno view build |
 
 
 ## Quick Build
