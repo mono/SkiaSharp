@@ -13,11 +13,12 @@
 #   docker build --build-arg BUILD_ARCH=arm64 .
 #   docker build --build-arg BUILD_ARCH=x64 .
 #
-# NOTE: x86 uses a separate directory (glibc-x86/) with its own Dockerfile
-# because the .NET team doesn't ship libc++ for x86.
+# NOTE: x86 and ppc64le use separate directories (glibc-x86/ and glibc-ppc64le/) with their own Dockerfiles
+# because the .NET team doesn't ship libc++ for x86 and ppc64le.
 #
 # Supported architectures: arm, arm64, x64, riscv64, loongarch64
 # (x86 uses glibc-x86/Dockerfile instead)
+# (ppc64le uses glibc-ppc64le/Dockerfile instead)
 
 ARG BUILD_ARCH=arm64
 
@@ -59,6 +60,7 @@ RUN case "${BUILD_ARCH}" in \
                    TOOLCHAIN_ARCH_SHORT=loong64; \
                    TOOLCHAIN_ARCH_TARGET=loongarch64-linux-gnu; \
                    ROOTFS_DIR=/crossrootfs/loongarch64 ;; \
+      ppc64le)     echo "FATAL: ppc64le must use glibc-ppc64le/Dockerfile (.NET doesn't ship libc++ for ppc64le)" && exit 1 ;; \
       x86)         echo "FATAL: x86 must use glibc-x86/Dockerfile (.NET doesn't ship libc++ for x86)" && exit 1 ;; \
       *) echo "FATAL: Unsupported BUILD_ARCH=${BUILD_ARCH}" && exit 1 ;; \
     esac \
