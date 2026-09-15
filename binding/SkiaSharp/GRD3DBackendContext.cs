@@ -8,6 +8,12 @@ namespace SkiaSharp
 	/// <remarks />
 	public class GRD3DBackendContext : IDisposable
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.GRD3DBackendContext" /> class.</summary>
+		/// <remarks />
+		public GRD3DBackendContext()
+		{
+		}
+
 		/// <summary>Gets or sets the native pointer to the DXGI adapter (IDXGIAdapter).</summary>
 		/// <value>The native pointer to the DXGI adapter.</value>
 		/// <remarks />

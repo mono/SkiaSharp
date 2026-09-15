@@ -22,6 +22,12 @@ namespace SkiaSharp.Views.Android
 #endif
 	abstract partial class SKGLTextureViewRenderer : Java.Lang.Object, GLTextureView.IRenderer
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKGLTextureViewRenderer" /> class.</summary>
+		/// <remarks />
+		public SKGLTextureViewRenderer()
+		{
+		}
+
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
 

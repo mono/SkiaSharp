@@ -13,6 +13,12 @@ namespace SkiaSharp
 	/// <remarks />
 	public unsafe class GRVkBackendContext : IDisposable
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.GRVkBackendContext" /> class.</summary>
+		/// <remarks />
+		public GRVkBackendContext()
+		{
+		}
+
 		private GRVkGetProcedureAddressDelegate getProc;
 		private GCHandle getProcHandle;
 		private void* getProcContext;

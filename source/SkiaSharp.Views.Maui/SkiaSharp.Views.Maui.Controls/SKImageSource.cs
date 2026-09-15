@@ -9,6 +9,12 @@ namespace SkiaSharp.Views.Maui.Controls
 	/// <remarks>Use this class to display SkiaSharp images in MAUI <c>Image</c> controls. SKImage is immutable and can be safely shared across threads.</remarks>
 	public sealed partial class SKImageImageSource : ImageSource, ISKImageImageSource
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Maui.Controls.SKImageImageSource" /> class.</summary>
+		/// <remarks />
+		public SKImageImageSource()
+		{
+		}
+
 		/// <summary>Identifies the <see cref="P:SkiaSharp.Views.Maui.Controls.SKImageImageSource.Image" /> bindable property.</summary>
 		/// <remarks />
 		public static readonly BindableProperty ImageProperty = BindableProperty.Create(nameof(Image), typeof(SKImage), typeof(SKImageImageSource), default(SKImage));
@@ -66,6 +72,12 @@ namespace SkiaSharp.Views.Maui.Controls
 	/// <remarks>Use this class to display SkiaSharp bitmaps in MAUI <c>Image</c> controls. Implicit conversions are provided for convenience.</remarks>
 	public sealed partial class SKBitmapImageSource : ImageSource, ISKBitmapImageSource
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Maui.Controls.SKBitmapImageSource" /> class.</summary>
+		/// <remarks />
+		public SKBitmapImageSource()
+		{
+		}
+
 		/// <summary>Identifies the <see cref="P:SkiaSharp.Views.Maui.Controls.SKBitmapImageSource.Bitmap" /> bindable property.</summary>
 		/// <remarks />
 		public static readonly BindableProperty BitmapProperty = BindableProperty.Create(nameof(Bitmap), typeof(SKBitmap), typeof(SKBitmapImageSource), default(SKBitmap));
@@ -123,6 +135,12 @@ namespace SkiaSharp.Views.Maui.Controls
 	/// <remarks>Use this class to display SkiaSharp pixmaps in MAUI <c>Image</c> controls. A pixmap provides direct access to pixel data and can be used for low-level image manipulation.</remarks>
 	public sealed partial class SKPixmapImageSource : ImageSource, ISKPixmapImageSource
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Maui.Controls.SKPixmapImageSource" /> class.</summary>
+		/// <remarks />
+		public SKPixmapImageSource()
+		{
+		}
+
 		/// <summary>Identifies the <see cref="P:SkiaSharp.Views.Maui.Controls.SKPixmapImageSource.Pixmap" /> bindable property.</summary>
 		/// <remarks />
 		public static readonly BindableProperty PixmapProperty = BindableProperty.Create(nameof(Pixmap), typeof(SKPixmap), typeof(SKPixmapImageSource), default(SKPixmap));
@@ -180,6 +198,12 @@ namespace SkiaSharp.Views.Maui.Controls
 	/// <remarks>Use this class to display SkiaSharp pictures (recorded drawing commands) in MAUI <c>Image</c> controls. Pictures are resolution-independent and can be rendered at any size specified by <see cref="P:SkiaSharp.Views.Maui.Controls.SKPictureImageSource.Dimensions" />.</remarks>
 	public sealed partial class SKPictureImageSource : ImageSource, ISKPictureImageSource
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Maui.Controls.SKPictureImageSource" /> class.</summary>
+		/// <remarks />
+		public SKPictureImageSource()
+		{
+		}
+
 		/// <summary>Identifies the <see cref="P:SkiaSharp.Views.Maui.Controls.SKPictureImageSource.Picture" /> bindable property.</summary>
 		/// <remarks />
 		public static readonly BindableProperty PictureProperty = BindableProperty.Create(nameof(Picture), typeof(SKPicture), typeof(SKPictureImageSource), default(SKPicture));

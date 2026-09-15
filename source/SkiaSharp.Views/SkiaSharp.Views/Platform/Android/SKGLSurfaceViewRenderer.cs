@@ -11,6 +11,12 @@ namespace SkiaSharp.Views.Android
 	/// <remarks />
 	public abstract class SKGLSurfaceViewRenderer : Java.Lang.Object, GLSurfaceView.IRenderer
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKGLSurfaceViewRenderer" /> class.</summary>
+		/// <remarks />
+		public SKGLSurfaceViewRenderer()
+		{
+		}
+
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
 

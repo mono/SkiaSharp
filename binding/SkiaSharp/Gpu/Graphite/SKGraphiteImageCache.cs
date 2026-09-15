@@ -28,6 +28,12 @@ namespace SkiaSharp
 		private readonly LinkedList<(uint UniqueId, bool Mipmapped)> lruOrder = new ();
 		private readonly Dictionary<(uint UniqueId, bool Mipmapped), (LinkedListNode<(uint UniqueId, bool Mipmapped)> node, IntPtr handle)> cache = new ();
 
+		/// <summary>Initializes a new instance of the <see cref="SKGraphiteImageCache" /> class.</summary>
+		/// <remarks />
+		public SKGraphiteImageCache ()
+		{
+		}
+
 		/// <summary>Returns the cached Graphite-backed texture for the specified image, uploading and caching it on the recorder if it is not already present.</summary>
 		/// <param name="recorder">The recorder to upload the image to on a cache miss.</param>
 		/// <param name="image">The source image to find or upload.</param>

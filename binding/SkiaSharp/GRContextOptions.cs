@@ -8,6 +8,12 @@ namespace SkiaSharp
 	/// <remarks />
 	public class GRContextOptions
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.GRContextOptions" /> class.</summary>
+		/// <remarks />
+		public GRContextOptions()
+		{
+		}
+
 		/// <summary>Gets or sets a value indicating whether to avoid allocating stencil buffers.</summary>
 		/// <value><see langword="true" /> if stencil buffer allocation should be avoided; otherwise, <see langword="false" />.</value>
 		/// <remarks>Bugs on certain drivers cause stencil buffers to leak. This flag causes Skia to avoid allocating stencil buffers and use alternate rasterization paths, avoiding the leak.</remarks>
