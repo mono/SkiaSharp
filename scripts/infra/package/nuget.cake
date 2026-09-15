@@ -135,7 +135,7 @@ Task("nuget-special")
     }
     foreach (var version in versions) {
         Information("  - {0}" + " ".PadRight(max - version.Key.Length) + "=> {1}", version.Key, version.Value);
-        Information("##vso[build.addbuildtag]Transport - {0}", version.Value.Substring("0.0.0-".Length));
+        Console.WriteLine("##vso[build.addbuildtag]Transport - {0}", version.Value.Substring("0.0.0-".Length));
     }
 
     // API reference media is source-controlled here so the documentation site can
