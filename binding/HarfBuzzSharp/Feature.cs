@@ -2,6 +2,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace HarfBuzzSharp
 {
@@ -49,13 +50,15 @@ namespace HarfBuzzSharp
 
 		public override string ToString ()
 		{
-			fixed (Feature* f = &this) {
-				var buffer = Marshal.AllocHGlobal (MaxFeatureStringSize);
-				HarfBuzzApi.hb_feature_to_string (f, (void*)buffer, MaxFeatureStringSize);
-				var str = Marshal.PtrToStringAnsi (buffer);
-				Marshal.FreeHGlobal (buffer);
-				return str;
+			Span<byte> buffer = stackalloc byte[MaxFeatureStringSize];
+			fixed (Feature* f = &this)
+			fixed (byte* b = buffer) {
+				HarfBuzzApi.hb_feature_to_string (f, b, MaxFeatureStringSize);
 			}
+			var len = buffer.IndexOf ((byte)0);
+			if (len < 0)
+				len = MaxFeatureStringSize;
+			return len == 0 ? string.Empty : Encoding.ASCII.GetString (buffer.Slice (0, len));
 		}
 
 		public static bool TryParse (string s, out Feature feature)
