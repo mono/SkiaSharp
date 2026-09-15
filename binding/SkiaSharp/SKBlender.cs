@@ -1,8 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SkiaSharp;
 
+/// <summary>Represents a custom blending function that combines source and destination colors.</summary>
+/// <remarks />
 public unsafe class SKBlender : SKObject, ISKReferenceCounted
 {
 	private static readonly Dictionary<SKBlendMode, SKBlender> blendModeBlenders;
@@ -55,9 +57,16 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 	{
 	}
 
+	/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKBlender" /> and optionally releases the managed resources.</summary>
+	/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+	/// <remarks />
 	protected override void Dispose (bool disposing) =>
 		base.Dispose (disposing);
 
+	/// <summary>Creates a blender that applies the specified blend mode.</summary>
+	/// <param name="mode">The blend mode to use.</param>
+	/// <returns>A new blender that applies the blend mode.</returns>
+	/// <remarks />
 	public static SKBlender CreateBlendMode (SKBlendMode mode)
 	{
 		if (!blendModeBlenders.TryGetValue (mode, out var value))
@@ -65,6 +74,14 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 		return value;
 	}
 
+	/// <summary>Creates a blender that applies the arithmetic formula: k1 * src * dst + k2 * src + k3 * dst + k4.</summary>
+	/// <param name="k1">The coefficient for source * destination.</param>
+	/// <param name="k2">The coefficient for source.</param>
+	/// <param name="k3">The coefficient for destination.</param>
+	/// <param name="k4">The constant offset added to the result.</param>
+	/// <param name="enforcePMColor">If <see langword="true" />, clamps the result to valid premultiplied color values.</param>
+	/// <returns>A new blender that applies the arithmetic combination.</returns>
+	/// <remarks />
 	public static SKBlender CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor) =>
 		GetObject (SkiaApi.sk_blender_new_arithmetic (k1, k2, k3, k4, enforcePMColor));
 

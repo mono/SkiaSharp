@@ -1,4 +1,4 @@
-﻿using Microsoft.Maui.Handlers;
+using Microsoft.Maui.Handlers;
 using SkiaSharp.Views.Maui.Platform;
 using SkiaSharp.Views.Windows;
 
@@ -10,8 +10,14 @@ namespace SkiaSharp.Views.Maui.Handlers
 		private GRContext? lastGRContext;
 		private SKTouchHandler? touchHandler;
 
+		/// <summary>Creates the platform-specific GPU view for the current platform.</summary>
+		/// <returns>The platform-specific GPU-backed view instance.</returns>
+		/// <remarks>Returns an Android SKGLTextureView (OpenGL ES), Mac Catalyst SKMetalView (Metal), or Windows SKSwapChainPanel (DirectX via ANGLE) depending on the platform.</remarks>
 		protected override SKSwapChainPanel CreatePlatformView() => new MauiSKSwapChainPanel();
 
+		/// <summary>Connects the handler to the specified Windows GPU canvas view.</summary>
+		/// <param name="platformView">The Windows GPU canvas view to connect.</param>
+		/// <remarks />
 		protected override void ConnectHandler(SKSwapChainPanel platformView)
 		{
 			platformView.PaintSurface += OnPaintSurface;
@@ -19,6 +25,9 @@ namespace SkiaSharp.Views.Maui.Handlers
 			base.ConnectHandler(platformView);
 		}
 
+		/// <summary>Disconnects the handler from the specified Windows GPU canvas view.</summary>
+		/// <param name="platformView">The Windows GPU canvas view to disconnect.</param>
+		/// <remarks />
 		protected override void DisconnectHandler(SKSwapChainPanel platformView)
 		{
 			touchHandler?.Detach(platformView);
@@ -31,6 +40,11 @@ namespace SkiaSharp.Views.Maui.Handlers
 
 		// Mapper actions / properties
 
+		/// <summary>Handles the <see cref="M:SkiaSharp.Views.Maui.ISKGLView.InvalidateSurface" /> command to trigger a redraw.</summary>
+		/// <param name="handler">The handler instance.</param>
+		/// <param name="view">The view requesting invalidation.</param>
+		/// <param name="args">Optional arguments (not used).</param>
+		/// <remarks>This method is called when the cross-platform control requests a surface invalidation, causing the native GPU view to repaint.</remarks>
 		public static void OnInvalidateSurface(SKGLViewHandler handler, ISKGLView view, object? args)
 		{
 			if (handler?.PlatformView == null)
@@ -40,6 +54,10 @@ namespace SkiaSharp.Views.Maui.Handlers
 				handler.PlatformView.Invalidate();
 		}
 
+		/// <summary>Maps the <see cref="P:SkiaSharp.Views.Maui.ISKGLView.IgnorePixelScaling" /> property to the platform view.</summary>
+		/// <param name="handler">The handler instance.</param>
+		/// <param name="view">The view whose property changed.</param>
+		/// <remarks>This method is called when the IgnorePixelScaling property changes to update the native view's pixel scaling behavior.</remarks>
 		public static void MapIgnorePixelScaling(SKGLViewHandler handler, ISKGLView view)
 		{
 			if (handler?.PlatformView is not MauiSKSwapChainPanel pv)
@@ -49,6 +67,10 @@ namespace SkiaSharp.Views.Maui.Handlers
 			pv.Invalidate();
 		}
 
+		/// <summary>Maps the <see cref="P:SkiaSharp.Views.Maui.ISKGLView.HasRenderLoop" /> property to the platform view.</summary>
+		/// <param name="handler">The handler instance.</param>
+		/// <param name="view">The view whose property changed.</param>
+		/// <remarks>This method is called when the HasRenderLoop property changes to enable or disable continuous rendering on the native view.</remarks>
 		public static void MapHasRenderLoop(SKGLViewHandler handler, ISKGLView view)
 		{
 			if (handler?.PlatformView == null)
@@ -57,6 +79,10 @@ namespace SkiaSharp.Views.Maui.Handlers
 			handler.PlatformView.EnableRenderLoop = view.HasRenderLoop;
 		}
 
+		/// <summary>Maps the <see cref="P:SkiaSharp.Views.Maui.ISKGLView.EnableTouchEvents" /> property to the platform view.</summary>
+		/// <param name="handler">The handler instance.</param>
+		/// <param name="view">The view whose property changed.</param>
+		/// <remarks>This method is called when the EnableTouchEvents property changes to update the native view's touch handling.</remarks>
 		public static void MapEnableTouchEvents(SKGLViewHandler handler, ISKGLView view)
 		{
 			if (handler?.PlatformView == null)
@@ -69,6 +95,10 @@ namespace SkiaSharp.Views.Maui.Handlers
 			handler.touchHandler?.SetEnabled(handler.PlatformView, view.EnableTouchEvents);
 		}
 
+		/// <summary>Maps the <see cref="P:SkiaSharp.Views.Maui.ISKGLView.Background" /> property to the Windows GPU view.</summary>
+		/// <param name="handler">The handler instance.</param>
+		/// <param name="view">The view whose property changed.</param>
+		/// <remarks>The underlying Windows <c>SwapChainPanel</c> does not support the <c>Background</c> property.</remarks>
 		public static void MapBackground(SKGLViewHandler handler, ISKGLView view)
 		{
 			// WinUI 3 limitation:

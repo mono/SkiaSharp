@@ -15,6 +15,9 @@ namespace SkiaSharp
 	public unsafe partial struct SKMatrix44 : IEquatable<SKMatrix44> {
 		// public float m00
 		private Single m00;
+		/// <summary>Gets or sets the value at row 0, column 0.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M00 {
 			readonly get => m00;
 			set => m00 = value;
@@ -22,6 +25,9 @@ namespace SkiaSharp
 
 		// public float m01
 		private Single m01;
+		/// <summary>Gets or sets the value at row 0, column 1.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M01 {
 			readonly get => m01;
 			set => m01 = value;
@@ -29,6 +35,9 @@ namespace SkiaSharp
 
 		// public float m02
 		private Single m02;
+		/// <summary>Gets or sets the value at row 0, column 2.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M02 {
 			readonly get => m02;
 			set => m02 = value;
@@ -36,6 +45,9 @@ namespace SkiaSharp
 
 		// public float m03
 		private Single m03;
+		/// <summary>Gets or sets the value at row 0, column 3.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M03 {
 			readonly get => m03;
 			set => m03 = value;
@@ -43,6 +55,9 @@ namespace SkiaSharp
 
 		// public float m10
 		private Single m10;
+		/// <summary>Gets or sets the value at row 1, column 0.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M10 {
 			readonly get => m10;
 			set => m10 = value;
@@ -50,6 +65,9 @@ namespace SkiaSharp
 
 		// public float m11
 		private Single m11;
+		/// <summary>Gets or sets the value at row 1, column 1.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M11 {
 			readonly get => m11;
 			set => m11 = value;
@@ -57,6 +75,9 @@ namespace SkiaSharp
 
 		// public float m12
 		private Single m12;
+		/// <summary>Gets or sets the value at row 1, column 2.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M12 {
 			readonly get => m12;
 			set => m12 = value;
@@ -64,6 +85,9 @@ namespace SkiaSharp
 
 		// public float m13
 		private Single m13;
+		/// <summary>Gets or sets the value at row 1, column 3.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M13 {
 			readonly get => m13;
 			set => m13 = value;
@@ -71,6 +95,9 @@ namespace SkiaSharp
 
 		// public float m20
 		private Single m20;
+		/// <summary>Gets or sets the value at row 2, column 0.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M20 {
 			readonly get => m20;
 			set => m20 = value;
@@ -78,6 +105,9 @@ namespace SkiaSharp
 
 		// public float m21
 		private Single m21;
+		/// <summary>Gets or sets the value at row 2, column 1.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M21 {
 			readonly get => m21;
 			set => m21 = value;
@@ -85,6 +115,9 @@ namespace SkiaSharp
 
 		// public float m22
 		private Single m22;
+		/// <summary>Gets or sets the value at row 2, column 2.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M22 {
 			readonly get => m22;
 			set => m22 = value;
@@ -92,6 +125,9 @@ namespace SkiaSharp
 
 		// public float m23
 		private Single m23;
+		/// <summary>Gets or sets the value at row 2, column 3.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M23 {
 			readonly get => m23;
 			set => m23 = value;
@@ -99,6 +135,9 @@ namespace SkiaSharp
 
 		// public float m30
 		private Single m30;
+		/// <summary>Gets or sets the value at row 3, column 0.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M30 {
 			readonly get => m30;
 			set => m30 = value;
@@ -106,6 +145,9 @@ namespace SkiaSharp
 
 		// public float m31
 		private Single m31;
+		/// <summary>Gets or sets the value at row 3, column 1.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M31 {
 			readonly get => m31;
 			set => m31 = value;
@@ -113,6 +155,9 @@ namespace SkiaSharp
 
 		// public float m32
 		private Single m32;
+		/// <summary>Gets or sets the value at row 3, column 2.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M32 {
 			readonly get => m32;
 			set => m32 = value;
@@ -120,25 +165,49 @@ namespace SkiaSharp
 
 		// public float m33
 		private Single m33;
+		/// <summary>Gets or sets the value at row 3, column 3.</summary>
+		/// <value>The matrix element value.</value>
+		/// <remarks />
 		public Single M33 {
 			readonly get => m33;
 			set => m33 = value;
 		}
 
+		/// <summary>Determines whether this matrix is equal to another matrix.</summary>
+		/// <param name="obj">The <see cref="T:SkiaSharp.SKMatrix44" /> to compare with this instance.</param>
+		/// <returns>Returns <see langword="true" /> if the matrices are equal, otherwise <see langword="false" />.</returns>
+		/// <remarks />
 		public readonly bool Equals (SKMatrix44 obj) =>
 #pragma warning disable CS8909
 			m00 == obj.m00 && m01 == obj.m01 && m02 == obj.m02 && m03 == obj.m03 && m10 == obj.m10 && m11 == obj.m11 && m12 == obj.m12 && m13 == obj.m13 && m20 == obj.m20 && m21 == obj.m21 && m22 == obj.m22 && m23 == obj.m23 && m30 == obj.m30 && m31 == obj.m31 && m32 == obj.m32 && m33 == obj.m33;
 #pragma warning restore CS8909
 
+		/// <summary>Determines whether this matrix is equal to another object.</summary>
+		/// <param name="obj">The object to compare with this instance.</param>
+		/// <returns>Returns <see langword="true" /> if the object is an <see cref="T:SkiaSharp.SKMatrix44" /> and is equal to this instance, otherwise <see langword="false" />.</returns>
+		/// <remarks />
 		public readonly override bool Equals (object obj) =>
 			obj is SKMatrix44 f && Equals (f);
 
+		/// <summary>Determines whether two matrices are equal.</summary>
+		/// <param name="left">The first matrix to compare.</param>
+		/// <param name="right">The second matrix to compare.</param>
+		/// <returns>Returns <see langword="true" /> if the matrices are equal, otherwise <see langword="false" />.</returns>
+		/// <remarks />
 		public static bool operator == (SKMatrix44 left, SKMatrix44 right) =>
 			left.Equals (right);
 
+		/// <summary>Determines whether two matrices are not equal.</summary>
+		/// <param name="left">The first matrix to compare.</param>
+		/// <param name="right">The second matrix to compare.</param>
+		/// <returns>Returns <see langword="true" /> if the matrices are not equal, otherwise <see langword="false" />.</returns>
+		/// <remarks />
 		public static bool operator != (SKMatrix44 left, SKMatrix44 right) =>
 			!left.Equals (right);
 
+		/// <summary>Returns the hash code for this matrix.</summary>
+		/// <returns>Returns the hash code.</returns>
+		/// <remarks />
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
