@@ -364,6 +364,28 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKRuntimeEffectUniforms" /> class for the uniforms declared by a mesh specification.</summary>
+		/// <param name="specification">The mesh specification whose uniforms are exposed.</param>
+		/// <remarks />
+		public SKRuntimeEffectUniforms (SKMeshSpecification specification)
+		{
+			if (specification == null)
+				throw new ArgumentNullException (nameof (specification));
+
+			names = specification.Uniforms.ToArray ();
+			uniforms = new Dictionary<string, Variable> ();
+			data = specification.UniformSize is int size && size > 0
+				? SKData.Create (specification.UniformSize)
+				: SKData.Empty;
+
+			for (var i = 0; i < names.Length; i++) {
+				var name = names[i];
+				SKRuntimeEffectUniformNative uniform;
+				SkiaApi.sk_meshspecification_get_uniform_from_index (specification.Handle, i, &uniform);
+				uniforms[name] = new Variable (i, name, uniform);
+			}
+		}
+
 		/// <summary>Gets the list of uniform names defined by the runtime effect.</summary>
 		/// <value>A read-only list of uniform names.</value>
 		/// <remarks />
@@ -514,6 +536,17 @@ namespace SkiaSharp
 			_ = effect ?? throw new ArgumentNullException (nameof (effect));
 
 			names = effect.Children.ToArray ();
+			children = new SKObject[names.Length];
+		}
+
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKRuntimeEffectChildren" /> class for the child slots declared by a mesh specification.</summary>
+		/// <param name="specification">The mesh specification whose child slots are exposed.</param>
+		/// <remarks />
+		public SKRuntimeEffectChildren (SKMeshSpecification specification)
+		{
+			_ = specification ?? throw new ArgumentNullException (nameof (specification));
+
+			names = specification.Children.ToArray ();
 			children = new SKObject[names.Length];
 		}
 
