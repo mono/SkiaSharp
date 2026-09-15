@@ -17,6 +17,7 @@ namespace SkiaSharp.Views.Maui.Handlers
 			: this(null)
 		{
 		}
+
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Maui.Handlers.SKImageSourceService" /> class with the specified logger.</summary>
 		/// <param name="logger">The logger to use for diagnostic output, or <see langword="null" /> for no logging.</param>
 		/// <remarks />

@@ -28,6 +28,12 @@ namespace SkiaSharp
 		private PhysicalDeviceFeaturesNative devFeatures;
 		private GCHandle devFeaturesHandle;
 
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.GRSharpVkBackendContext" />.</summary>
+		/// <remarks />
+		public GRSharpVkBackendContext()
+		{
+		}
+
 		/// <summary>Releases the unmanaged resources used by the object and optionally releases the managed resources.</summary>
 		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <remarks />

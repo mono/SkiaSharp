@@ -11,6 +11,12 @@ namespace SkiaSharp
 	/// <remarks />
 	public class GRMtlBackendContext : IDisposable
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.GRMtlBackendContext" /> class.</summary>
+		/// <remarks />
+		public GRMtlBackendContext()
+		{
+		}
+
 		private IntPtr _deviceHandle, _queueHandle;
 
 		/// <summary>Gets or sets the native handle to the Metal device (MTLDevice).</summary>

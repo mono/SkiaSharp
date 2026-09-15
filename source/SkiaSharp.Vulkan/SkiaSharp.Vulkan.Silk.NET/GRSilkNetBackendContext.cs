@@ -61,6 +61,12 @@ namespace SkiaSharp
 
 		private GCHandle devFeaturesHandle;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.GRSilkNetBackendContext" /> class.</summary>
+		/// <remarks />
+		public GRSilkNetBackendContext()
+		{
+		}
+
 		/// <summary>Releases the unmanaged resources used by the object and optionally releases the managed resources.</summary>
 		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <remarks />

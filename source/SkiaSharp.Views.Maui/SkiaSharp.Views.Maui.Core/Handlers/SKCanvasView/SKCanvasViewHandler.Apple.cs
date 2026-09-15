@@ -5,7 +5,7 @@ using UIKit;
 
 namespace SkiaSharp.Views.Maui.Handlers
 {
-	public partial class SKCanvasViewHandler : ViewHandler<ISKCanvasView, SKCanvasView>
+public partial class SKCanvasViewHandler : ViewHandler<ISKCanvasView, SKCanvasView>
 	{
 		private PaintSurfaceProxy? paintSurfaceProxy;
 		private SKTouchHandlerProxy? touchProxy;

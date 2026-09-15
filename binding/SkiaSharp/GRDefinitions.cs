@@ -143,6 +143,7 @@ namespace SkiaSharp
 
 #if __IOS__ || __MACOS__ || __TVOS__
 		private Metal.IMTLTexture _texture;
+
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.GRMtlTextureInfo" /> struct with the specified Metal texture.</summary>
 		/// <param name="texture">The Metal texture.</param>
 		/// <remarks />

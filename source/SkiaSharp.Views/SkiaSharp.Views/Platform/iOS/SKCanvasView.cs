@@ -20,7 +20,13 @@ namespace SkiaSharp.Views.iOS
 #pragma warning disable 67
 		private event EventHandler DisposedInternal;
 #pragma warning restore 67
+		/// <summary>Gets or sets the site that provides design-time services for this component.</summary>
+		/// <value>The site for this component, or <see langword="null" /> if the component is not sited.</value>
+		/// <remarks />
 		ISite IComponent.Site { get; set; }
+
+		/// <summary>Occurs when the component is disposed.</summary>
+		/// <remarks>Use this event to release resources associated with this component.</remarks>
 		event EventHandler IComponent.Disposed
 		{
 			add { DisposedInternal += value; }

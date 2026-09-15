@@ -8,6 +8,12 @@ namespace SkiaSharp
 	/// <remarks />
 	public class GRD3DTextureResourceInfo : IDisposable
 	{
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.GRD3DTextureResourceInfo" />.</summary>
+		/// <remarks />
+		public GRD3DTextureResourceInfo()
+		{
+		}
+
 		/// <summary>Gets or sets the pointer to the underlying Direct3D resource.</summary>
 		/// <value>The native pointer to the ID3D12Resource.</value>
 		/// <remarks />

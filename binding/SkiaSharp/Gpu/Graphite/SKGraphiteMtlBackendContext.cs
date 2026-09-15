@@ -20,6 +20,12 @@ namespace SkiaSharp
 		private IntPtr mtlDevice;
 		private IntPtr mtlQueue;
 
+		/// <summary>Initializes a new instance of the <see cref="SKGraphiteMtlBackendContext" /> class.</summary>
+		/// <remarks />
+		public SKGraphiteMtlBackendContext ()
+		{
+		}
+
 		/// <summary>Gets or sets the handle to the Metal device.</summary>
 		/// <value>A handle to the Metal device.</value>
 		/// <remarks />
