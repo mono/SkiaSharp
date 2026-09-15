@@ -2,16 +2,16 @@
 """Check companion SkiaSharp PR: categorize changed files and produce diffs.
 
 Compares the companion PR branch against the companion PR's actual base commit.
-Filters out generated files (*.generated.cs) and produces the same
-sourceFile structure used by upstream/interop integrity checks.
+Skips generator-owned generated changes but retains source-controlled ``///``
+documentation-comment edits in generated files for review.
 """
 import fnmatch
 import os
 import subprocess
 import sys
 
-# Files matching these patterns are auto-generated and skipped
-# Files matching these patterns are skipped (not interesting for review)
+# Files matching these patterns are generated. Their declaration and interop
+# diffs are skipped, but source-controlled documentation-comment edits remain.
 SKIP_PATTERNS = [
     "*.generated.cs",
 ]
@@ -36,12 +36,20 @@ def git_run(args: list, cwd: str) -> str:
 
 
 def is_generated(path: str) -> bool:
-    """Check if a file matches any generated/skip pattern."""
+    """Check if a file matches a generated-file pattern."""
     basename = os.path.basename(path)
     for pat in SKIP_PATTERNS:
         if fnmatch.fnmatch(basename, pat):
             return True
     return False
+
+
+def has_generated_documentation_changes(diff: str) -> bool:
+    """Return whether a generated-file diff changes C# documentation trivia."""
+    return any(
+        line[:1] in {"+", "-"} and line[1:].lstrip().startswith("///")
+        for line in diff.splitlines()
+    )
 
 
 def run_check(
@@ -76,52 +84,62 @@ def run_check(
         cwd=repo_root,
     )
 
-    # Parse into (status, path) tuples
+    # Parse into (status, destination path, paths for diff) tuples. Rename/copy
+    # records carry old and new paths; the destination is the reviewable file.
     file_entries = []
     for line in diff_output.strip().split("\n"):
         if not line.strip():
             continue
-        parts = line.split("\t", 1)
-        if len(parts) == 2:
-            status_code, path = parts[0].strip(), parts[1].strip()
-            file_entries.append((status_code, path))
+        parts = line.split("\t")
+        status_code = parts[0].strip()
+        if status_code.startswith(("R", "C")) and len(parts) == 3:
+            old_path, path = parts[1].strip(), parts[2].strip()
+            file_entries.append((status_code, path, (old_path, path)))
+        elif len(parts) == 2:
+            path = parts[1].strip()
+            file_entries.append((status_code, path, (path,)))
 
     # Filter and categorize
     added_files = []
     changed_files = []
     skipped_count = 0
 
-    for status_code, path in file_entries:
+    for status_code, path, diff_paths in file_entries:
         if is_generated(path):
-            skipped_count += 1
-            continue
+            generated_diff = git_run(
+                ["diff", f"{merge_base}..{pr_ref}", "--", *diff_paths],
+                cwd=repo_root,
+            )
+            if not has_generated_documentation_changes(generated_diff):
+                skipped_count += 1
+                continue
 
         if status_code == "A":
-            added_files.append(path)
+            added_files.append((path, diff_paths))
         elif status_code in ("M", "R", "C", "T"):
-            changed_files.append(path)
+            changed_files.append((path, diff_paths))
         elif status_code.startswith("R") or status_code.startswith("C"):
             # Renamed/copied with similarity — treat as changed
-            changed_files.append(path)
+            changed_files.append((path, diff_paths))
         # D (deleted) is unusual for a companion PR but we skip it
 
-    added_files.sort()
-    changed_files.sort()
+    added_files.sort(key=lambda entry: entry[0])
+    changed_files.sort(key=lambda entry: entry[0])
 
     # Build result arrays with diffs
     added = []
-    for path in added_files:
+    for path, diff_paths in added_files:
         diff = git_run(
-            ["diff", f"{merge_base}..{pr_ref}", "--", path],
+            ["diff", f"{merge_base}..{pr_ref}", "--", *diff_paths],
             cwd=repo_root,
         ).strip()
         added.append({"path": path, "diff": diff})
 
     changed = []
-    for path in changed_files:
+    for path, diff_paths in changed_files:
         # Direct diff: merge_base → PR head (what actually changed)
         diff = git_run(
-            ["diff", f"{merge_base}..{pr_ref}", "--", path],
+            ["diff", f"{merge_base}..{pr_ref}", "--", *diff_paths],
             cwd=repo_root,
         ).strip()
         changed.append({"path": path, "diff": diff})
@@ -143,9 +161,9 @@ def run_check(
 
     eprint()
     eprint(f"  Total files in PR: {len(file_entries)}")
-    eprint(f"  Skipped (generated): {skipped_count}")
+    eprint(f"  Skipped (generator-owned): {skipped_count}")
     if status == "PASS":
-        eprint(f"  ✅ Companion PR: PASS — no non-generated changes")
+        eprint(f"  ✅ Companion PR: PASS — no reviewable changes")
     else:
         eprint(f"  🔍 Companion PR: REVIEW_REQUIRED")
         if added:
@@ -156,7 +174,7 @@ def run_check(
             eprint(f"     Changed ({len(changed)}):")
             for c in changed:
                 eprint(f"       ~ {c['path']}")
-        eprint(f"     Unchanged (generated/skipped): {skipped_count}")
+        eprint(f"     Unchanged (generator-owned/skipped): {skipped_count}")
 
     return {
         "status": status,

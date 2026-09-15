@@ -48,6 +48,10 @@ $emptyPackages = Join-Path $emptyOutput 'arcade-assets'
 $emptyPdbs = Join-Path $emptyOutput 'pdbs'
 $escapingOutput = Join-Path $root 'escaping'
 $escapingProduct = Join-Path $escapingOutput 'nugets'
+$missingDocsOutput = Join-Path $root 'missing-docs'
+$missingDocsProduct = Join-Path $missingDocsOutput 'nugets'
+$mismatchedDocsOutput = Join-Path $root 'mismatched-docs'
+$mismatchedDocsProduct = Join-Path $mismatchedDocsOutput 'nugets'
 $cake = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../nuget.cake'))
 
 function Invoke-Assembly {
@@ -82,13 +86,23 @@ try {
     New-Item (Join-Path $emptyOutput 'nugets-special') -ItemType Directory -Force | Out-Null
     New-Item $escapingProduct -ItemType Directory -Force | Out-Null
     New-Item (Join-Path $escapingOutput 'nugets-special') -ItemType Directory -Force | Out-Null
+    New-Item $missingDocsProduct -ItemType Directory -Force | Out-Null
+    New-Item (Join-Path $missingDocsOutput 'nugets-special') -ItemType Directory -Force | Out-Null
+    New-Item $mismatchedDocsProduct -ItemType Directory -Force | Out-Null
+    New-Item (Join-Path $mismatchedDocsOutput 'nugets-special') -ItemType Directory -Force | Out-Null
 
     New-Package (Join-Path $product 'Foo.1.0.0.nupkg') @{
         'lib/net8.0/Foo.dll' = 'dll8'
+        'lib/net8.0/Foo.xml' = '<doc />'
         'lib/net8.0/Foo.pdb' = 'pdb8'
         'lib/net9.0/Foo.dll' = 'dll9'
+        'lib/net9.0/Foo.xml' = '<doc />'
         'lib/net9.0/Foo.pdb' = 'pdb9'
+        'ref/net8.0/Foo.dll' = 'ref8'
+        'ref/net8.0/Foo.xml' = '<doc />'
         'ref/net8.0/Foo.pdb' = 'reference'
+        'ref/net9.0/Foo.dll' = 'ref9'
+        'ref/net9.0/Foo.xml' = '<doc />'
         'runtimes/win-x64/native/Foo.pdb' = 'native'
     }
     New-Package (Join-Path $product 'Bar.1.0.0.nupkg') @{
@@ -173,6 +187,22 @@ try {
     if (Test-Path (Join-Path $escapingOutput 'pdbs/escape.pdb')) {
         throw 'An escaping PDB path wrote outside its package extraction root.'
     }
+
+    New-Package (Join-Path $missingDocsProduct 'MissingDocs.1.0.0.nupkg') @{
+        'lib/net8.0/MissingDocs.dll' = 'dll'
+        'ref/net8.0/MissingDocs.dll' = 'reference'
+    }
+    Copy-Item (Join-Path $transport '*') (Join-Path $missingDocsOutput 'nugets-special') -Recurse
+    Invoke-Assembly -OutputDirectory $missingDocsOutput -ExpectFailure
+
+    New-Package (Join-Path $mismatchedDocsProduct 'MismatchedDocs.1.0.0.nupkg') @{
+        'lib/net8.0/MismatchedDocs.dll' = 'dll'
+        'lib/net8.0/MismatchedDocs.xml' = '<doc>implementation</doc>'
+        'ref/net8.0/MismatchedDocs.dll' = 'reference'
+        'ref/net8.0/MismatchedDocs.xml' = '<doc>reference</doc>'
+    }
+    Copy-Item (Join-Path $transport '*') (Join-Path $mismatchedDocsOutput 'nugets-special') -Recurse
+    Invoke-Assembly -OutputDirectory $mismatchedDocsOutput -ExpectFailure
 
     Write-Host 'Arcade asset assembly tests passed.'
 } finally {

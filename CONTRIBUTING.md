@@ -51,7 +51,7 @@ We greatly welcome PRs with fixes and improvements from the community!
 
 1. **Follow existing patterns** - Study similar APIs before adding new ones
 2. **Add tests** - All new features and bug fixes should include tests
-3. **Update documentation** - If you're changing public APIs
+3. **Document public APIs in source** - Add accurate `///` comments with every new or changed public API; managed builds package compiler XML beside `lib` and `ref` assemblies
 4. **Memory management** - Ensure proper disposal and pointer type handling (see [documentation/dev/memory-management.md](documentation/dev/memory-management.md))
 5. **Error handling** - Validate parameters and handle errors appropriately (see [documentation/dev/error-handling.md](documentation/dev/error-handling.md))
 

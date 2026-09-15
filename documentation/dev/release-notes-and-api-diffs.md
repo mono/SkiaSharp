@@ -23,11 +23,6 @@ SkiaSharp generates two version-indexed artifacts from one shared versioning mod
 Both live in the docfx site under `documentation/docfx/releases/` (§3) and are
 produced by one self-contained skill (§2). A full feature comparison is in §6.
 
-> **Looking for the big picture instead of the rules?** This document is the deep
-> behavior spec. For a one-screen map of the *whole* documentation system — all four
-> artifacts, the engines, the skills, and the cross-repo CI — start at
-> [docs-overview.md](docs-overview.md).
-
 Both are **agent/CI tooling, not human-facing CLIs.** The public entrypoints keep
 a deliberately small, uniform interface: `--force`, `--min-version`, and
 `--max-version` for the shell orchestrators (§2.2), translated to Cake's
@@ -325,8 +320,9 @@ is deterministic and script-owned — the AI never computes it.
 
 ### 2.1 Where the engines live
 
-All three doc-generation engines live together under `scripts/infra/docs/` (local
-runs, CI, and the docs Docker image share one copy). The **release-notes engine** —
+The parent-owned API-diff and release-notes engines live together under
+`scripts/infra/docs/` (local runs, CI, and the docs Docker image share one copy).
+The **release-notes engine** —
 its data builders, renderer and prose schema — sits **beside the API-diff engine and
 the shared Cake machinery** it runs with, rather than in the skill folder. The
 skill keeps only the thin, stable **entrypoints** (`prepare.sh`, `render.sh`) plus
@@ -342,9 +338,7 @@ scripts/infra/docs/                (all doc engines, together)
   api-diff.cake                API-diff engine (§5), used by the single
                                top-level `docs-api-diff` target
   api-diff-tools.cake          shared NuGet-diff comparer + layout helpers (§5),
-                               #loaded by api-diff.cake AND docs.cake
-  docs.cake                    mdoc-based docs/ XML generators (a different concern)
-  generate-api-docs.sh         Path 3 runner: cake update-docs (mdoc under mono)
+                               #loaded by api-diff.cake
   release-notes-data.py        Prepare data engine (§4) — emits _sources/<version>.data.json,
                                owns shared git/version helpers and page-set discovery
   release-notes-index.py       Prepare index-data engine (§4) — emits _sources/index.json
@@ -385,8 +379,8 @@ skia-sync and nuget-feed all read it), not release-notes-private.
 The general-purpose Cake machinery (`shared.cake`, `download.cake`) stays under
 `scripts/infra/shared/` and is `#load`ed by the engines. `api-diff-tools.cake` (the
 NuGet-diff comparer factory, the breaking/full-diff runner, and `versions.json`
-loading) is used by *only* the two doc engines (`api-diff.cake` and the mdoc
-generators in `docs.cake`), so it sits next to them in `scripts/infra/docs/`.
+loading) is used by the API-diff engine, so it sits beside it in
+`scripts/infra/docs/`.
 
 
 ### 2.2 Two phases: Prepare → Polish
@@ -1076,20 +1070,19 @@ principles are fixed here.
      submodule, with its vendored HarfBuzz). Written up.
    - **`mixed`** — affects the shipped package but is not itself an API/behaviour change, so
      Polish judges from the title: `native/` (per-platform build config — compile flags/gn
-     args that shape the native binaries, usually infra) and `docs` (the mdoc API-docs
-     submodule that ships as IntelliSense XML — doc content, not behaviour).
+     args that shape the native binaries, usually infra).
    - **`internal`** — the `default`: touches none of those (CI, workflows, agent skills, docs
      *site*, tests, samples, and build/meta). Dropped into the one collapse line.
 
-   `native/` shapes the shipped binaries and `docs` ships as doc XML, so neither is
-   `internal`; but neither is a direct API/behaviour change, so both are `mixed` (inspected
-   from the title) rather than firm `product`. `docs` and `externals/skia` are submodules, so
-   in the parent repo they appear as bare gitlink paths (`docs`, `externals/skia`) and the
-   prefixes match those exactly — the `externals/skia` prefix is deliberately not just
-   `externals/`, which would sweep in `externals/.gitignore`; the `docs` prefix is slash-less
-   so it hits the gitlink without colliding with `documentation/`. Polish drops `internal`, writes up
-   `product`, and inspects `mixed`; moving the classification out of the LLM (and into the
-   JSON) makes product-focus reliable run-to-run.
+   `native/` shapes the shipped binaries, so it is `mixed` and is inspected from
+   the title rather than treated as a firm product change. The parent repository
+   no longer carries a documentation submodule; documentation site, release-note,
+   test, workflow, skill, and build/meta paths fall through to `internal`.
+   `externals/skia` remains a bare gitlink path in the parent, so its prefix is
+   deliberately exact rather than `externals/`, which would sweep in
+   `externals/.gitignore`. Polish drops `internal`, writes up `product`, and
+   inspects `mixed`; moving the classification out of the LLM (and into the JSON)
+   makes product-focus reliable run-to-run.
 2. **Highlights are a hook, not a summary.** The `## Highlights` section always exists
    and is assembled by `release-notes-render.py`. The prose targets ~80 words and is hard-capped
    at 100 words total across `highlights_headline` + `highlights_body`, naming only the

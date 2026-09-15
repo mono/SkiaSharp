@@ -25,24 +25,22 @@ The wrapper packages use `0.0.0-{source}.{build}` versioning to identify their C
 
 Building samples requires two separate sets of arguments because the CI feed version and the NuGet package version are different things:
 
-### Step 1: Download packages
+### Step 1: Acquire packages
 
-Promoted branch builds are available from the transport feed:
+For a pull request build, use the supported repository helper and copy its
+packages into the sample workflow directory:
 
-| Argument | Resolves to | Use case |
-|----------|------------|----------|
-| `--gitBranch=release/3.119.4` | `0.0.0-branch.release.3.119.4.*` | Release branch |
-| `--gitBranch=main` | `0.0.0-branch.main.*` | Main branch (nightly) |
-| *(no args)* | `0.0.0-branch.main.*` | Default: latest from main |
+```powershell
+pwsh scripts/get-skiasharp-pr.ps1 3553 -SuccessfulOnly -Force
+New-Item output/nugets -ItemType Directory -Force | Out-Null
+Copy-Item ~/.skiasharp/hives/pr-3553/packages/*.nupkg output/nugets/
+```
 
-The `.*` wildcard selects the **latest** matching build from the feed.
-
-PR builds are not published to that feed. Use `scripts/get-skiasharp-pr.ps1`
-or `.sh`, then copy packages from
-`~/.skiasharp/hives/pr-{number}/packages/` to `output/nugets/`.
-
-For another exact public build, download its canonical `nuget` pipeline artifact
-and extract non-symbol packages to `output/nugets/`.
+For an exact public build, download its canonical `nuget` pipeline artifact
+and extract non-symbol packages to `output/nugets/`. For a promoted branch
+build, retrieve and extract the matching branch-versioned `_NuGets` transport
+package from the public `dotnet-libraries-transport` feed. Do not use a
+retired parent documentation-download Cake target.
 
 ### Step 2: Build samples — use the real NuGet version
 
@@ -84,15 +82,6 @@ exact `{base_version}` with `--dotNetFinalVersionKind=release`.
 
 ## Cake Arguments
 
-### For downloading (`docs-download-output`)
-
-These arguments control **which CI build** to fetch from the feed:
-
-| Argument | Environment variable | Default | Purpose |
-|----------|---------------------|---------|---------|
-| `--gitBranch` | `GIT_BRANCH_NAME` | `""` | Fetch by branch name |
-| `--previewFeed` | — | dotnet-libraries-transport URL | Override the NuGet feed |
-
 ### For building samples (`samples`)
 
 These arguments control the **NuGet version suffix** used when rewriting package references:
@@ -104,13 +93,14 @@ These arguments control the **NuGet version suffix** used when rewriting package
 | `--dotNetFinalVersionKind` | `DOTNET_FINAL_VERSION_KIND` | `""` | Set to `release` for an exact stable version |
 | `--sample` | — | `""` | Filter to build a specific sample |
 
-> **Note:** `--previewLabel` serves double duty: it selects the CI artifact during download AND forms the NuGet suffix during sample generation. For nightly builds from main, you typically run download with default args, then set `--previewLabel` and `--buildNumber` to match the extracted packages.
+> **Note:** `--previewLabel` and `--buildNumber` only control the package version
+> used while sample generation rewrites package references. Acquire packages
+> first, then derive both values from the downloaded package filenames.
 
 ## Cake Targets
 
 | Target | What it does | Output directory |
 |--------|-------------|-----------------|
-| `docs-download-output` | Downloads the build's NuGet package family from the CI feed | `output/nugets/` |
 | `samples-generate` | Copies samples to `output/`, converts ProjectRef → PackageRef | `output/samples/`, `output/samples-preview/` |
 | `samples-prepare` | Clears cached SkiaSharp/HarfBuzz packages, copies nupkgs for Docker | — |
 | `samples-run` | Builds all generated samples from `output/` | — |

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using SkiaSharp.Views.GlesInterop;
 using Windows.ApplicationModel;
@@ -24,6 +24,8 @@ namespace SkiaSharp.Views.Windows
 namespace SkiaSharp.Views.UWP
 #endif
 {
+	/// <summary>A XAML SwapChainPanel that uses ANGLE to provide an OpenGL ES rendering context.</summary>
+	/// <remarks>This is the base class for <see cref="T:SkiaSharp.Views.Windows.SKSwapChainPanel" /> and provides the OpenGL ES context management via ANGLE (Almost Native Graphics Layer Engine).</remarks>
 	public partial class AngleSwapChainPanel : SwapChainPanel
 	{
 		private static readonly DependencyProperty ProxyVisibilityProperty =
@@ -52,6 +54,8 @@ namespace SkiaSharp.Views.UWP
 
 		private bool pendingSizeChange = false;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.AngleSwapChainPanel" /> class.</summary>
+		/// <remarks />
 		public AngleSwapChainPanel()
 		{
 			lastCompositionScaleX = CompositionScaleX;
@@ -81,10 +85,19 @@ namespace SkiaSharp.Views.UWP
 			SetBinding(ProxyVisibilityProperty, binding);
 		}
 
+		/// <summary>Gets or sets a value indicating whether rendering should occur on a background thread.</summary>
+		/// <value><see langword="true" /> if rendering should occur on a background thread; otherwise, <see langword="false" />. The default is <see langword="false" />.</value>
+		/// <remarks />
 		public bool DrawInBackground { get; set; }
 
+		/// <summary>Gets the scale factor applied to the contents of the panel.</summary>
+		/// <value>The current composition scale factor, typically matching the display's DPI scaling.</value>
+		/// <remarks />
 		public double ContentsScale { get; private set; }
 
+		/// <summary>Gets or sets a value indicating whether a continuous render loop is enabled.</summary>
+		/// <value><see langword="true" /> if continuous rendering is enabled; otherwise, <see langword="false" />. The default is <see langword="false" />.</value>
+		/// <remarks>When enabled, the panel will continuously render frames. When disabled, call <see cref="M:SkiaSharp.Views.Windows.AngleSwapChainPanel.Invalidate" /> to request a single frame render.</remarks>
 		public bool EnableRenderLoop
 		{
 			get => enableRenderLoop;
@@ -98,6 +111,8 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
+		/// <summary>Requests that the panel render a new frame.</summary>
+		/// <remarks>This method has no effect when <see cref="P:SkiaSharp.Views.Windows.AngleSwapChainPanel.EnableRenderLoop" /> is <see langword="true" /> or when the panel is not loaded.</remarks>
 		public void Invalidate()
 		{
 			if (!isLoaded || EnableRenderLoop)
@@ -121,10 +136,15 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
+		/// <summary>Called when a frame should be rendered.</summary>
+		/// <param name="rect">The rectangle defining the render area dimensions in pixels.</param>
+		/// <remarks>Override this method to perform OpenGL rendering operations.</remarks>
 		protected virtual void OnRenderFrame(Rect rect)
 		{
 		}
 
+		/// <summary>Called when the OpenGL ES context is being destroyed.</summary>
+		/// <remarks>Override this method to perform cleanup of any OpenGL resources before the context is destroyed.</remarks>
 		protected virtual void OnDestroyingContext()
 		{
 		}

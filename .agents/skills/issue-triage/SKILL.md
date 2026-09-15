@@ -100,8 +100,8 @@ GitHub MCP issue/PR retrieval tools are equally valid if the environment exposes
 |----------------|-------------------|
 | NativeAssets, DllNotFoundException, container, WASM | [documentation/dev/packages.md](../../../documentation/dev/packages.md) |
 | Platform quirks, common traps | [references/skia-patterns.md](references/skia-patterns.md) |
-| Specific SkiaSharp types or methods | `docs/SkiaSharpAPI/*.xml` |
-| How-to about drawing, paths, bitmaps | `.docs/docs/docs/` |
+| Specific SkiaSharp types or methods | C# `///` comments and compiler XML from a matching package; use Microsoft Learn for published reference |
+| How-to about drawing, paths, bitmaps | `documentation/docfx/guides/` and `samples/` |
 | Non-SkiaSharp tech (MAUI, Blazor, WPF) | `mslearn`/`microsoft_docs_search` MCP tool |
 
 ---
