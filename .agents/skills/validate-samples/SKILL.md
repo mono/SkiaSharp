@@ -42,16 +42,6 @@ dotnet nuget locals all --clear
 
 Choose the source that actually owns the packages.
 
-For the latest promoted build from `main` or another promoted branch, use the
-transport feed:
-
-```powershell
-dotnet cake --target=docs-download-output
-
-# From a specific branch
-dotnet cake --target=docs-download-output --gitBranch=release/3.119.4
-```
-
 PR builds are pipeline artifacts and are not published to the transport feed.
 Download them with the repository helper, then copy the packages into the
 sample workflow's expected directory:
@@ -64,8 +54,10 @@ Copy-Item ~/.skiasharp/hives/pr-3553/packages/*.nupkg output/nugets/
 
 For an exact non-PR commit, resolve its public definition-345 Build ID, download
 that run's canonical `nuget` artifact, and extract non-symbol `.nupkg` files into
-`output/nugets/`. Do not query the transport feed by SHA; BAR publishes one
-branch-versioned transport package per ID.
+`output/nugets/`. For a promoted branch build, retrieve and extract its
+branch-versioned `_NuGets` transport package from the public
+`dotnet-libraries-transport` feed. Do not query that feed by SHA or use a
+retired parent documentation-download Cake target.
 
 ### Step 3: Detect the preview version
 

@@ -1073,15 +1073,15 @@ principles are fixed here.
    - **`internal`** — the `default`: touches none of those (CI, workflows, agent skills, docs
      *site*, tests, samples, and build/meta). Dropped into the one collapse line.
 
-   `native/` shapes the shipped binaries and `docs` ships as doc XML, so neither is
-   `internal`; but neither is a direct API/behaviour change, so both are `mixed` (inspected
-   from the title) rather than firm `product`. `docs` and `externals/skia` are submodules, so
-   in the parent repo they appear as bare gitlink paths (`docs`, `externals/skia`) and the
-   prefixes match those exactly — the `externals/skia` prefix is deliberately not just
-   `externals/`, which would sweep in `externals/.gitignore`; the `docs` prefix is slash-less
-   so it hits the gitlink without colliding with `documentation/`. Polish drops `internal`, writes up
-   `product`, and inspects `mixed`; moving the classification out of the LLM (and into the
-   JSON) makes product-focus reliable run-to-run.
+   `native/` shapes the shipped binaries, so it is `mixed` and is inspected from
+   the title rather than treated as a firm product change. The parent repository
+   no longer carries a documentation submodule; documentation site, release-note,
+   test, workflow, skill, and build/meta paths fall through to `internal`.
+   `externals/skia` remains a bare gitlink path in the parent, so its prefix is
+   deliberately exact rather than `externals/`, which would sweep in
+   `externals/.gitignore`. Polish drops `internal`, writes up `product`, and
+   inspects `mixed`; moving the classification out of the LLM (and into the JSON)
+   makes product-focus reliable run-to-run.
 2. **Highlights are a hook, not a summary.** The `## Highlights` section always exists
    and is assembled by `release-notes-render.py`. The prose targets ~80 words and is hard-capped
    at 100 words total across `highlights_headline` + `highlights_body`, naming only the

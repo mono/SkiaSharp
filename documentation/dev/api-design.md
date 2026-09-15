@@ -578,9 +578,19 @@ constructors, equality, edge cases (null, empty, short strings, known hex values
 
 ## XML Documentation
 
-Do **not** add triple-slash XML doc comments (`/// <summary>`) to new APIs.
-Documentation is generated from a separate localized repository and inserted via an
-automated process. Adding them manually creates merge conflicts with that process.
+New and changed consumer-visible APIs **must** include accurate triple-slash XML
+documentation comments (`///`). Source comments are authoritative public API
+prose, and managed builds generate compiler XML from them.
+
+The package includes the same compiler XML beside both the implementation
+assembly under `lib/` and the reference assembly under `ref/`. The `ref` copy
+defines the consumer-visible documentation surface; implementation-only XML
+entries do not require public documentation. `mono/SkiaSharp-API-docs`
+independently consumes published package/XML/media inputs and owns ECMA/mdoc
+generation and Microsoft Learn publication.
+
+Generated binding comments remain source-controlled. Change generator inputs and
+regenerate them; never manually bypass `utils/SkiaSharpGenerator`.
 
 ---
 
@@ -604,6 +614,7 @@ When designing a new API:
 - [ ] Same-instance returns handled correctly?
 - [ ] Memory ownership clearly documented?
 - [ ] Thread safety documented?
+- [ ] New or changed public APIs have accurate `///` documentation?
 - [ ] ABI stable (no breaking changes)?
 - [ ] Deprecated APIs use `[Obsolete]` (not removed)?
 

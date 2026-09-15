@@ -16,8 +16,8 @@ Search in this order. Stop as soon as you find a viable workaround, but always c
 | 2 | Closed issues with comments (GitHub via `gh` or MCP) | Reporters post "I solved it by..." | Never — always check |
 | 3 | Known patterns (`references/skia-patterns.md`, `documentation/dev/packages.md`) | Curated heuristics for common traps | Never — always check |
 | 4 | SkiaSharp source code (`binding/SkiaSharp/*.cs`) | Alternative APIs visible in the class | Skip if issue is deployment/packaging |
-| 5 | API docs (`docs/SkiaSharpAPI/SkiaSharp/*.xml`) | Method docs mention alternatives | Skip if issue is deployment/packaging |
-| 6 | Tutorials (`.docs/docs/docs/`) | Step-by-step examples of correct usage | Skip if not a usage/how-to issue |
+| 5 | API source comments, matching package compiler XML, or published Microsoft Learn reference | Confirms documented alternatives and behavior | Skip if issue is deployment/packaging |
+| 6 | Tutorials (`documentation/docfx/guides/`) | Step-by-step examples of correct usage | Skip if not a usage/how-to issue |
 | 7 | Samples (`samples/`) | Working code for specific platforms | Skip if not a platform integration issue |
 | 8 | GitHub closed issues (broader search) | Broader search when earlier targeted checks found nothing | Only if targeted search found nothing |
 | 9 | Web search (Stack Overflow, MS Learn) | Community solutions, framework-side fixes | Only if all local sources exhausted |
@@ -161,21 +161,24 @@ grep -rln "{METHOD}\|{CONCEPT}" binding/SkiaSharp/*.cs
 
 ---
 
-## Step 6 — Search API Docs
+## Step 6 — Search API Documentation
 
 ```bash
-grep -rn "FromEncodedData\|FromEncoded" docs/SkiaSharpAPI/SkiaSharp/{CLASS}.xml
-grep -rln "thread\|dispose\|alternative" docs/SkiaSharpAPI/SkiaSharp/
+# Source comments are authoritative for unpublished or in-flight APIs.
+grep -rn "FromEncodedData\|FromEncoded" binding/SkiaSharp/{CLASS}.cs
+# For released APIs, consult https://learn.microsoft.com/dotnet/api/skiasharp
 ```
 
-Look for: `<remarks>` mentioning alternatives, `<returns>` mentioning null (factory-null-on-failure), `<see cref="..."/>` cross-references.
+Look for comments and published reference material mentioning alternatives,
+factory-null-on-failure, ownership, and threading. If package-level detail is
+needed, inspect compiler XML adjacent to the matching `ref/<tfm>` assembly.
 
 ---
 
 ## Step 7 — Search Tutorials and Samples
 
 ```bash
-grep -rln "KEYWORD" .docs/docs/docs/
+grep -rln "KEYWORD" documentation/docfx/guides/
 grep -rln "KEYWORD" samples/ --include="*.cs" | head -10
 ```
 

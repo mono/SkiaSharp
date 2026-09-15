@@ -107,7 +107,8 @@ Apply the rules from [api-design-rules.md](api-design-rules.md):
 - [ ] Ref struct parameter bag if many optional params
 - [ ] Common-case shortcut overloads
 - [ ] File-scoped namespace
-- [ ] No XML doc comments
+- [ ] Accurate `///` documentation for every new or changed public API
+- [ ] Generated binding comments changed through generator inputs and regenerated
 - [ ] Null validation with ArgumentNullException
 - [ ] Index validation with ArgumentOutOfRangeException
 - [ ] Wrapper type for typedefs (Parse, ToString, implicit conversion)

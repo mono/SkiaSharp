@@ -66,7 +66,7 @@ TRIGGER_KEYS = {
 
 
 def local_workflows():
-    """Entries owned by this repository (the rest live in mono/SkiaSharp-API-docs)."""
+    """Entries owned by this repository."""
     return [w for w in GITHUB_WORKFLOWS if w["repo"] == "mono/SkiaSharp"]
 
 
@@ -134,6 +134,20 @@ class RegistryTests(unittest.TestCase):
         seen = [(w["repo"], w["workflow"]) for w in GITHUB_WORKFLOWS]
         self.assertEqual(len(seen), len(set(seen)), "Duplicate workflow entries are tracked.")
 
+    def test_external_registry_only_tracks_the_stable_publish_workflow(self):
+        """External regeneration is deliberately untracked while its name is in flux."""
+        external = [w for w in GITHUB_WORKFLOWS if w["repo"] != "mono/SkiaSharp"]
+        self.assertEqual(
+            [{
+                "repo": "mono/SkiaSharp-API-docs",
+                "workflow": "go-live.yml",
+                "name": "Go Live",
+                "scope": "global",
+                "trigger": "dispatch",
+            }],
+            external,
+        )
+
     def test_scheduled_workflows_really_have_a_cron(self):
         """A workflow tracked as scheduled but with no cron would always look idle."""
         missing = []
@@ -164,6 +178,14 @@ class SkillDocTests(unittest.TestCase):
             self.assertEqual(
                 [], offending,
                 f"SKILL.md still advertises {removed!r}, which no tracked workflow provides.")
+
+    def test_skill_explains_external_regeneration_monitoring_gap(self):
+        text = self._skill_text()
+        self.assertIn(
+            "External API documentation regeneration is intentionally not tracked.",
+            text,
+        )
+        self.assertNotIn("Auto API Docs Writer", text)
 
     def test_documented_schedules_match_the_workflow(self):
         """Any schedule the table states must be true of the workflow it names.

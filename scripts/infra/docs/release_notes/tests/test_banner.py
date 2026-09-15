@@ -40,6 +40,27 @@ class PreviewBannerRenderTests(unittest.TestCase):
         )
         self.assertNotIn("SkiaSharp/1.49.0-preview)", line)
 
+    def test_omits_api_diff_links_without_generated_targets(self):
+        links = self.renderer.existing_api_links({
+            "api_links": [
+                {"label": "HarfBuzzSharp API diff",
+                 "href": "harfbuzzsharp/8.3.1/index.md"},
+            ],
+        })
+
+        self.assertEqual([], links)
+
+    def test_resolves_harfbuzz_api_diff_relative_to_harfbuzz_page(self):
+        links = self.renderer.existing_api_links({
+            "family": "harfbuzzsharp",
+            "api_links": [
+                {"label": "HarfBuzzSharp API diff",
+                 "href": "8.3.1.3/index.md"},
+            ],
+        })
+
+        self.assertEqual(1, len(links))
+
 
 if __name__ == "__main__":
     unittest.main()

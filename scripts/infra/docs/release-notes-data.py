@@ -1707,8 +1707,8 @@ def determine_diff_range(branch):
 # The path→tag mapping is NOT hardcoded here: it lives in the committed
 # scripts/infra/docs/release-notes-paths.json, the single deterministic place to edit it
 # (ordered tiers of prefixes/globs + a default). See that file's `description`/`notes`
-# and spec §4.4 for the rationale (why `externals/skia` is exact, why `docs` is
-# slash-less, why `native/` is mixed, etc.).
+# and spec §4.4 for the rationale (why `externals/skia` is exact and why
+# `native/` is mixed).
 
 
 def _load_path_tags():
@@ -1738,8 +1738,8 @@ def _path_matches(path, pattern):
     """Does a file ``path`` match a config ``pattern``?
 
     Plain patterns are PREFIXES (``str.startswith`` — so ``binding/`` catches everything
-    under it and a bare submodule gitlink like ``externals/skia`` / ``docs`` matches
-    itself). A pattern containing a glob metacharacter (``* ? [``) is matched with
+    under it and a bare submodule gitlink like ``externals/skia`` matches itself). A
+    pattern containing a glob metacharacter (``* ? [``) is matched with
     ``fnmatch.fnmatchcase`` (case-sensitive, platform-independent) instead.
     """
     if any(c in pattern for c in "*?["):
@@ -2337,25 +2337,35 @@ def build_data_json(prs, metadata):
     # SkiaSharp page shows its own diff + the co-shipped HarfBuzz diff (from the
     # co-release map), and a HarfBuzz page shows its own diff + the SkiaSharp
     # release it ships within. Own-family first.
+    def existing_api_diff_link(href):
+        page_directory = RELEASES_DIR / (
+            "harfbuzzsharp" if family == "harfbuzzsharp" else "")
+        path = page_directory / href
+        return href if path.is_file() else None
+
     api_links = []
     if family == "harfbuzzsharp":
-        if metadata.get("api_diff_link"):
+        own_api_diff_link = existing_api_diff_link(metadata.get("api_diff_link", ""))
+        if own_api_diff_link:
             api_links.append({"label": "HarfBuzzSharp API diff",
-                              "href": metadata["api_diff_link"]})
+                              "href": own_api_diff_link})
         ships = metadata.get("ships_with") or {}
-        # Only when this HarfBuzz line is published (its own diff exists) does the
-        # canonical SkiaSharp release's diff folder exist too.
-        if metadata.get("api_diff_link") and ships.get("version"):
+        skia_api_diff_link = existing_api_diff_link(
+            "../{}/index.md".format(ships.get("version", "")))
+        if own_api_diff_link and skia_api_diff_link:
             api_links.append({"label": "SkiaSharp API diff",
-                              "href": "../{}/index.md".format(ships["version"])})
+                              "href": skia_api_diff_link})
     else:
-        if metadata.get("api_diff_link"):
+        own_api_diff_link = existing_api_diff_link(metadata.get("api_diff_link", ""))
+        if own_api_diff_link:
             api_links.append({"label": "SkiaSharp API diff",
-                              "href": metadata["api_diff_link"]})
+                              "href": own_api_diff_link})
         hb = metadata.get("harfbuzz")
-        if hb and hb.get("api_diff_link"):
+        hb_api_diff_link = existing_api_diff_link(
+            hb.get("api_diff_link", "") if hb else "")
+        if hb_api_diff_link:
             api_links.append({"label": "HarfBuzzSharp API diff",
-                              "href": hb["api_diff_link"]})
+                              "href": hb_api_diff_link})
 
     tallies = {
         "product": sum(1 for p in prs if p.get("category") == "product"),

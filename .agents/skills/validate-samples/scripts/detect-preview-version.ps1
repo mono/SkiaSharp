@@ -15,7 +15,7 @@ $pkg = Get-ChildItem "$NugetsDir/SkiaSharp.*.nupkg" -ErrorAction SilentlyContinu
     Select-Object -First 1
 
 if (-not $pkg) {
-    Write-Error "No preview SkiaSharp package found in $NugetsDir. Run 'dotnet cake --target=docs-download-output' first."
+    Write-Error "No preview SkiaSharp package found in $NugetsDir. Download a PR artifact with scripts/get-skiasharp-pr.ps1 or extract a supported CI package artifact first."
     exit 1
 }
 

@@ -74,7 +74,9 @@ Read [api-design-rules.md](api-design-rules.md) and verify each item:
 - [ ] No validation in C layer (trust caller pattern)
 
 ### Documentation
-- [ ] No triple-slash XML doc comments (inserted by separate process)
+- [ ] Every new or changed public API has accurate `///` documentation
+- [ ] Documentation accurately describes ownership, null/failure behavior, and threading where applicable
+- [ ] Generated binding comments come from source-controlled generator inputs
 - [ ] No #nullable disable unless needed for reference-type fields
 
 ### Style
@@ -186,7 +188,7 @@ minimal safe fixes for high-confidence issues:
 - Add missing Count properties
 - Replace default parameters with overloads
 - Add missing negative index validation
-- Remove XML doc comments
+- Add or correct missing and inaccurate XML doc comments
 - Switch to file-scoped namespaces
 - Add missing test cases
 

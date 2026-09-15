@@ -1,205 +1,78 @@
-# SkiaSharp documentation — how the pieces fit together
+# SkiaSharp documentation architecture
 
-This is the **map** of SkiaSharp's documentation system: what gets generated, by
-which engine, driven by which skill, on which workflow, and in which repository.
-Start here for the big picture, then jump to a deep dive.
+SkiaSharp documentation has separate source, package, and publishing
+responsibilities. This guide is the operator map; see
+[writing-docs.md](writing-docs.md) for commands and
+[release-notes-and-api-diffs.md](release-notes-and-api-diffs.md) for the
+release-note and API-diff specification.
 
-## Start here — what are you trying to do?
+| Artifact | Source of truth | Owner |
+|---|---|---|
+| Conceptual site documentation | `documentation/docfx/guides/` | `mono/SkiaSharp` |
+| Public API prose | C# `///` comments in `binding/` and `source/` | `mono/SkiaSharp` |
+| Compiler XML and package sidecars | Managed build output; adjacent to `lib/<tfm>` and `ref/<tfm>` assemblies | `mono/SkiaSharp` |
+| ECMA/mdoc API reference and Microsoft Learn | Package/XML/media inputs | `mono/SkiaSharp-API-docs` |
+| Release notes and public API diffs | `documentation/docfx/releases/` | `mono/SkiaSharp` |
 
-| If you want to… | Go to |
-|---|---|
-| **Understand the whole system** at a glance | This page (the map) — read on |
-| **Generate or edit docs by hand** — prerequisites, local commands, editing API docs, the Cake target reference | [writing-docs.md](writing-docs.md) |
-| **Change how release notes or API diffs behave** — the versioning model, `versions.json`, file layout, per-engine rules | [release-notes-and-api-diffs.md](release-notes-and-api-diffs.md) (the behavior **spec**; read before changing either generator) |
-| **Work on the docs website** — build, preview, theming | [site.md](site.md) |
-
-## Contents
-
-- [The four kinds of documentation](#the-four-kinds-of-documentation)
-- [Two repositories](#two-repositories)
-- [The engines (`scripts/infra/docs/`)](#the-engines-scriptsinfradocs)
-- [The skills](#the-skills)
-- [CI automation (cross-repo)](#ci-automation-cross-repo)
-- [Local generation & Docker](#local-generation--docker)
-- [Where to go next](#where-to-go-next)
-
----
-
-## The four kinds of documentation
-
-SkiaSharp ships four distinct documentation artifacts. They are produced by
-different tools and live in different places, which is the main reason the system can
-feel sprawling — this table is the whole story on one screen:
-
-| # | Artifact | What it is | Source of truth | Engine |
-|---|----------|------------|-----------------|--------|
-| 1 | **Conceptual docs** | Hand-written guides & tutorials on the docs site | `documentation/docfx/guides/` (this repo) | docfx ([site.md](site.md)) |
-| 2 | **API reference docs** | Per-type/per-member XML reference (→ learn.microsoft.com) | `docs/SkiaSharpAPI/` (the **docs submodule**) | `docs.cake` (mdoc) |
-| 3 | **Release notes** | Human "what's new" pages, AI-polished | `documentation/docfx/releases/` (this repo) | `release-notes` skill (`prepare.sh` → `render.sh`) |
-| 4 | **API diffs** | Machine-generated public-API diffs, no AI | `documentation/docfx/releases/` (this repo) | `api-diff.cake` |
-
-Artifacts **3** and **4** share one versioning model and one config file
-(`versions.json`); that shared model is the subject of the
-[behavior spec](release-notes-and-api-diffs.md). Artifact **2** is a separate
-concern (mdoc), but it shares the same NuGet-diff plumbing
-(`api-diff-tools.cake`) and lives next to the others.
-
----
-
-## Two repositories
+## Public API documentation flow
 
 ```mermaid
 flowchart LR
-  subgraph A["mono/SkiaSharp (this repo)"]
-    conceptual["documentation/docfx/guides/ — concept docs"]
-    releases["documentation/docfx/releases/ — release notes + API diffs"]
-    engines["scripts/infra/docs/ — the engines"]
-    submodule["docs/ (git submodule)"]
-  end
-  subgraph B["mono/SkiaSharp-API-docs (the docs repo)"]
-    xml["SkiaSharpAPI/ — mdoc XML reference docs"]
-  end
-  submodule -. "points at" .-> B
-  engines --> releases
-  engines -. "mdoc writes into" .-> xml
+  Source["C# /// source comments"] --> Build["Managed build compiler XML"]
+  Build --> Package["lib/ref XML sidecars"]
+  Media["documentation/api-media (_DocsMedia)"] --> External
+  Package --> External["mono/SkiaSharp-API-docs"]
+  External --> ECMA["ECMA/mdoc + validation"]
+  ECMA --> Learn["Microsoft Learn"]
 ```
 
-- **`mono/SkiaSharp`** (this repo) holds the conceptual docs, the release
-  notes/api diffs tree, and **all the generation engines**
-  (`scripts/infra/docs/`).
-- **`mono/SkiaSharp-API-docs`** (the *docs repo*) holds the large mdoc XML
-  reference docs and their images/examples. It is pulled into this repo as a git
-  **submodule** at `docs/`, so the XML lives at `docs/SkiaSharpAPI/`. The engines
-  in this repo run mdoc *into* that submodule.
+`///` comments are authoritative. Managed builds generate the compiler XML and
+NuGet packaging intentionally copies that same file beside both the
+implementation (`lib`) and reference (`ref`) assemblies. Consumers should treat
+the `ref` XML as authoritative because its reference assembly defines the
+consumer-visible API surface. Implementation-only XML entries are not public
+API documentation.
 
-Because the engines live here but the XML output lives there, the API-reference
-path is inherently **cross-repo** — see the automation section below.
+Generated binding comments are source-controlled and preserved by
+`utils/SkiaSharpGenerator`. Change generator inputs and regenerate; do not
+hand-edit generated binding output.
 
----
+## External API reference boundary
 
-## The engines (`scripts/infra/docs/`)
+The parent repository has no `docs` submodule, mdoc generator, documentation
+sync workflow, or direct XML-editing workflow. `mono/SkiaSharp-API-docs`
+independently retrieves published managed packages, compiler XML, and
+`_DocsMedia`, generates ECMA/mdoc, validates it, and publishes Microsoft Learn.
+It currently defers Uno output; that repository owns re-enabling it. Parent
+contributors author and review source comments with API changes rather than
+filing a later documentation issue.
 
-All generation code lives together under `scripts/infra/docs/` — the **API-diff +
-mdoc engines** (Cake) and the **release-notes engine** (Python) side by side. The
-`release-notes` skill keeps only the thin, stable **entrypoints** (`prepare.sh`,
-`render.sh`) that redirect to that engine, plus the AI's instructions. Nothing can
-drift because each path has a single canonical entry point.
+`documentation/api-media/` is versioned input for the `_DocsMedia` package.
+`_DocsMedia` is nonshipping and unsigned like the other transport artifacts;
+it is not a product dependency. Its matching artifact is retrieved alongside
+the package family by the external consumer, which owns its use and
+publication.
 
-| File | Role |
-|------|------|
-| `docs.cake` | mdoc-based XML reference-doc generator (artifact **2**) |
-| `api-diff.cake` | API-diff engine used by the top-level `docs-api-diff` Cake target (artifact **4**) |
-| `api-diff-tools.cake` | shared NuGet-diff comparer + layout helpers, `#load`ed by both `api-diff.cake` and `docs.cake` |
-| `versions.json` | the **only** override surface — supersession + comparison baselines, honored identically by the Cake and Python engines |
-| `generate-api-docs.sh` | **Path 3** runner → `cake update-docs` (mdoc under mono) |
-| `release-notes-data.py` | Path 2 release-notes engine (artifact **3**): per-page `_sources/<v>.data.json` facts + Files-to-polish list |
-| `release-notes-index.py` | Path 2 index engine: `_sources/index.json` (Chrome schedule + live-head set) |
-| `release-notes-render.py` | Path 2 renderer: all Markdown (pages + `TOC.yml` + `index.md`) |
-| `release-notes-schema/prose.schema.json` | the prose contract the Polish agent fills |
-| `docker/` | the local reproducibility image + `run.sh` wrapper; its `api-diffs` subcommand invokes `docs-api-diff` directly |
-| *(in the `release-notes` skill)* `prepare.sh` | Prepare entrypoint → `docs-api-diff` → `release-notes-data.py` → `release-notes-index.py`; accepts `--force` / `--min-version` / `--max-version` |
-| *(in the skill)* `render.sh` | Polish-Finalize entrypoint: offline `release-notes-render.py --all` (same three flags for a uniform interface) |
-| *(committed under `releases/_sources/`)* `pr-authors.json` | PR-author cache for the release-notes engine (offline author resolution) |
+## Parent-owned site and release documentation
 
-Each path's **entry point** is its single source of truth: a developer, the CI
-workflows, and the Docker wrapper all invoke the same target or script, so a
-command can never drift between local and CI. Path 1 is the `docs-api-diff` Cake
-target, run directly by `prepare.sh` step 1 and by the Docker `api-diffs`
-subcommand; Path 2 runs from the release-notes skill's `prepare.sh` and
-`render.sh`; Path 3 runs from `generate-api-docs.sh`. The shared,
-general-purpose Cake machinery (`shared.cake`, `download.cake`) stays under
-`scripts/infra/shared/`.
+Conceptual DocFX content remains in `documentation/docfx/guides/`. Release-note
+facts, prose sources, rendered release pages, and per-assembly API diffs remain
+under `documentation/docfx/releases/`. The release-notes Prepare and render
+entry points are:
 
-### The three generation paths
-
-| Path | Produces | Entry point | Needs |
-|------|----------|--------------|-------|
-| **1 — API diffs** | artifact 4 | `docs-api-diff` Cake target | dotnet (+ NuGet feed) |
-| **2 — Release notes** | artifact 3 | `.agents/skills/release-notes/scripts/prepare.sh` + `render.sh` | dotnet, python3, **git history**, **gh** (PR authors); render is offline |
-| **3 — API reference (mdoc)** | artifact 2 | `generate-api-docs.sh` | dotnet, **mono** (to run `mdoc.exe`) |
-
-`mdoc.exe` is a .NET Framework executable. `docs.cake` invokes it under **mono** when
-not on Windows, so Path 3 runs on any host with `mono-complete` installed — a Linux CI
-runner or the local Docker image, not only Windows.
-
----
-
-## The skills
-
-Three Copilot skills drive or assist these paths (`.agents/skills/`):
-
-| Skill | Owns | Phase it performs |
-|-------|------|-------------------|
-| **`release-notes`** | artifacts 3 + 4 | Runs **Prepare** (the deterministic engines, via `scripts/prepare.sh`) then **Polish** and **Finalize** (AI rewrites only prose JSON, then `scripts/render.sh` renders offline). See spec §2.2/§4.4. |
-| **`api-docs`** | artifact 2 | Fills the `"To be added."` placeholders mdoc leaves in the XML with real prose, following the .NET doc guidelines. |
-| **`skia-analyst`** | analysis | Diffs versions / surfaces what changed and what's missing; used for release announcements and gap analysis, not for writing the committed artifacts. |
-
-The `release-notes` skill exposes the whole Path 2 engine through two thin
-entrypoints under its own `scripts/`: `scripts/prepare.sh` is the Prepare
-orchestrator — it calls the `docs-api-diff` Cake target directly, then the engine's
-`release-notes-data.py` and `release-notes-index.py`; `scripts/render.sh` is the
-offline finalizer around `release-notes-render.py --all`. The engine those
-entrypoints run — `release-notes-data.py`, `release-notes-index.py`,
-`release-notes-render.py` — lives under `scripts/infra/docs/` alongside the API-diff
-and mdoc engines; the shared, general-purpose Cake machinery (`shared.cake`,
-`download.cake`) stays under `scripts/infra/shared/`.
-
----
-
-## CI automation (cross-repo)
-
-```mermaid
-flowchart TB
-  subgraph this["mono/SkiaSharp"]
-    urn["update-release-notes\n(ubuntu-latest)"]
-    sync["auto-docs-submodule-sync\n(ubuntu-latest)"]
-  end
-  subgraph docsrepo["mono/SkiaSharp-API-docs"]
-    writer["auto-api-docs-writer\n(Linux + mono)"]
-  end
-  urn -->|"Prepare engines 3+4,\nthen AI Polish → one PR"| prRel["PR: release notes + api diffs\n(this repo)"]
-  writer -->|"mdoc stubs +\nAI placeholder fill → PR"| prDocs["PR: XML docs\n(docs repo)"]
-  prDocs -->|"merged"| sync
-  sync -->|"bump docs/ submodule → PR"| prBump["PR: update submodule\n(this repo)"]
+```bash
+.agents/skills/release-notes/scripts/prepare.sh [--force] [--min-version X --max-version Y]
+.agents/skills/release-notes/scripts/render.sh [--min-version X --max-version Y]
 ```
 
-| Workflow | Repo | Runner | Produces | Paths |
-|----------|------|--------|----------|-------|
-| [`update-release-notes`](../../.github/workflows/update-release-notes.md) | this repo | `ubuntu-latest` (native dotnet + python) | one PR with release notes **and** API diffs | 1 + 2 |
-| `auto-api-docs-writer` | [docs repo](https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/auto-api-docs-writer.md) | Linux + mono | PR with regenerated + AI-filled XML docs | 3 |
-| [`auto-docs-submodule-sync`](../../.github/workflows/auto-docs-submodule-sync.yml) | this repo | `ubuntu-latest` | PR bumping the `docs/` submodule pointer | — |
+The parent docs Docker image supports those release-note/API-diff paths only.
+It intentionally has no API-reference generation dependencies.
 
-Key points:
+## Validation contract
 
-| Point | What it means |
-|---|---|
-| **Paths 1 + 2 = one pipeline, one PR** | `update-release-notes` runs the deterministic Prepare phase (Cake API diffs + Python notes) in its own job, hands off to the AI Polish phase via an artifact, and opens a **single** rolling PR with both. Triggers: pushes to `main` and a daily cron — `main` walks every `release/*` ref and reads `v*` tags itself, so release branches/tags need no trigger of their own. If nothing changed, **no PR is opened** (spec §2.3). |
-| **Path 3 is cross-repo** | The engines live in *this* repo but the XML lives in the *docs* repo, so `auto-api-docs-writer` lives in the docs repo, checks SkiaSharp out to borrow the engines, regenerates the stubs, AI-fills placeholders, and opens its PR there. |
-| **`auto-docs-submodule-sync` closes the loop** | Once the docs-repo PR merges, it bumps this repo's `docs/` submodule pointer so the new XML is picked up here. |
-
----
-
-## Local generation & Docker
-
-Everything CI does can be reproduced locally by calling the **same** entry points.
-The only host requirement beyond the .NET SDK is **mono** for Path 3, and **gh** for
-Path 2's PR-author lookup.
-
-| Mode | What it is | When to use |
-|---|---|---|
-| **Native** | Install the deps yourself and call the entry points (`dotnet cake --target=docs-api-diff --nugetDiffPrerelease=true`, `prepare.sh`/`render.sh`, `generate-api-docs.sh`) or the related Cake targets in [writing-docs.md](writing-docs.md). | When you've installed the deps yourself. |
-| **Docker** (`scripts/infra/docs/docker/run.sh`) | A **local-only** convenience image that pre-installs dotnet + mono + python + gh and runs the same targets/scripts against a bind-mounted checkout, so a local run reproduces what CI produces. Its `api-diffs` subcommand invokes `docs-api-diff` directly. | A one-command reproducible run without installing the deps yourself. |
-
-> **Docker is for local reproducibility only — CI does not use it.** The CI runners
-> install the same dependencies natively on Linux and call the same entry points. The image
-> simply mirrors that dependency surface so the two stay identical.
-
----
-
-## Where to go next
-
-- Generating or editing docs by hand → **[writing-docs.md](writing-docs.md)**
-- Changing how release notes or API diffs behave →
-  **[release-notes-and-api-diffs.md](release-notes-and-api-diffs.md)** (change the
-  spec first, then the code)
-- The docs **website** (concept docs, theming, preview) → **[site.md](site.md)**
+1. Build each changed managed project so compiler XML is generated.
+2. Run the repository package-content test for the managed `lib`/`ref` XML
+   sidecar contract.
+3. Use the external repository's validation and publishing flow for ECMA/mdoc
+   and Microsoft Learn. Do not duplicate or edit its generated output here.
+4. Build conceptual site changes with DocFX when applicable.

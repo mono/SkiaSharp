@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 #
-# run.sh — run any SkiaSharp documentation-generation step inside the docs Docker image
+# run.sh — run parent release-notes/API-diff generation inside the docs Docker image
 # (scripts/infra/docs/docker/Dockerfile) for LOCAL testing. The image mirrors the
-# dependency surface CI installs natively and runs the very same per-path scripts, so a
-# local run reproduces what CI produces. (CI itself does NOT use Docker — its Linux
-# runners install dotnet/mono/python directly and call the same scripts.) The repo is
+# dependency surface CI installs natively and runs the very same scripts, so a local
+# run reproduces what CI produces. (CI itself does NOT use Docker — its Linux runners
+# install dotnet/python directly and call the same scripts.) The repo is
 # bind-mounted at /work, so externals/package_cache and output/ persist between runs
 # (a "warm" cache). Set COLD=1 to force a fresh, empty package cache for a
 # from-scratch download.
 #
 # The container runs as the host user so every file it writes (regenerated
-# API diffs, docs XML, output/) is owned by you, not root.
+# API diffs and output/) is owned by you, not root.
 #
 # GitHub auth: GITHUB_TOKEN and GH_TOKEN are forwarded from the host environment.
 # The release-notes generator REQUIRES gh for PR author resolution — it must never
