@@ -17,13 +17,16 @@ example, a views or HarfBuzzSharp project). Treat compiler warnings about
 malformed documentation, unresolved `cref`, or invalid `inheritdoc` as
 documentation defects and correct the source comment.
 
-When generated bindings changed, first regenerate from the authoritative
-generator inputs:
+When generated binding documentation changed, edit only the `///` trivia in
+the source-controlled generated file, then run a preservation round trip:
 
 ```bash
 pwsh -NoLogo -NoProfile -File ./utils/generate.ps1
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
+
+Verify the intended comments remain and no generated declarations or interop
+implementation were manually changed.
 
 ## 2. Confirm compiler XML
 

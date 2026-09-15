@@ -589,8 +589,9 @@ entries do not require public documentation. `mono/SkiaSharp-API-docs`
 independently consumes published package/XML/media inputs and owns ECMA/mdoc
 generation and Microsoft Learn publication.
 
-Generated binding comments remain source-controlled. Change generator inputs and
-regenerate them; never manually bypass `utils/SkiaSharpGenerator`.
+Generated binding comments remain source-controlled. Edit their `///` trivia
+directly, regenerate with `utils/SkiaSharpGenerator`, and verify it preserves
+the comment. Never manually change generated declarations or interop code.
 
 ---
 

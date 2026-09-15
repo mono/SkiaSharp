@@ -50,6 +50,8 @@ $escapingOutput = Join-Path $root 'escaping'
 $escapingProduct = Join-Path $escapingOutput 'nugets'
 $missingDocsOutput = Join-Path $root 'missing-docs'
 $missingDocsProduct = Join-Path $missingDocsOutput 'nugets'
+$mismatchedDocsOutput = Join-Path $root 'mismatched-docs'
+$mismatchedDocsProduct = Join-Path $mismatchedDocsOutput 'nugets'
 $cake = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../nuget.cake'))
 
 function Invoke-Assembly {
@@ -86,6 +88,8 @@ try {
     New-Item (Join-Path $escapingOutput 'nugets-special') -ItemType Directory -Force | Out-Null
     New-Item $missingDocsProduct -ItemType Directory -Force | Out-Null
     New-Item (Join-Path $missingDocsOutput 'nugets-special') -ItemType Directory -Force | Out-Null
+    New-Item $mismatchedDocsProduct -ItemType Directory -Force | Out-Null
+    New-Item (Join-Path $mismatchedDocsOutput 'nugets-special') -ItemType Directory -Force | Out-Null
 
     New-Package (Join-Path $product 'Foo.1.0.0.nupkg') @{
         'lib/net8.0/Foo.dll' = 'dll8'
@@ -190,6 +194,15 @@ try {
     }
     Copy-Item (Join-Path $transport '*') (Join-Path $missingDocsOutput 'nugets-special') -Recurse
     Invoke-Assembly -OutputDirectory $missingDocsOutput -ExpectFailure
+
+    New-Package (Join-Path $mismatchedDocsProduct 'MismatchedDocs.1.0.0.nupkg') @{
+        'lib/net8.0/MismatchedDocs.dll' = 'dll'
+        'lib/net8.0/MismatchedDocs.xml' = '<doc>implementation</doc>'
+        'ref/net8.0/MismatchedDocs.dll' = 'reference'
+        'ref/net8.0/MismatchedDocs.xml' = '<doc>reference</doc>'
+    }
+    Copy-Item (Join-Path $transport '*') (Join-Path $mismatchedDocsOutput 'nugets-special') -Recurse
+    Invoke-Assembly -OutputDirectory $mismatchedDocsOutput -ExpectFailure
 
     Write-Host 'Arcade asset assembly tests passed.'
 } finally {

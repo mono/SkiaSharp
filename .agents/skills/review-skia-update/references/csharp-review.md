@@ -8,7 +8,9 @@ with file lists, diffs, and categories (added/changed). Your job is to:
 
 ## What to Ignore
 
-- **All `*.generated.cs` files** — already filtered out by `check_companion.py`
+- **Generator-owned declaration and interop changes in `*.generated.cs`** —
+  unless the diff changes source-controlled `///` documentation trivia, which
+  `check_companion.py` includes for review
 - **Whitespace-only changes** — not worth reviewing
 - **Comment-only changes** — unless they document a behavioral change
 

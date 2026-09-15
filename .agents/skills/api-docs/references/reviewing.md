@@ -40,9 +40,9 @@ example APIs.
    - SkiaSharp and HarfBuzzSharp conventions remain distinct.
 6. Deduplicate findings by source location and issue. Use the highest
    applicable severity from [`checklist.md`](checklist.md).
-7. If corrections are requested, change the source comment (or the generator
-   input for a generated binding), regenerate where necessary, and run
-   [`validation.md`](validation.md).
+7. If corrections are requested, change the source comment. For a generated
+   binding, edit only its `///` comment trivia, regenerate, and verify the
+   comment survives; then run [`validation.md`](validation.md).
 
 ## Review checks
 
@@ -80,8 +80,8 @@ example APIs.
   declaration exactly?
 - Is an `inheritdoc` reference resolvable and appropriate to the inherited
   contract?
-- Has a generated binding comment been changed through
-  `utils/SkiaSharpGenerator`, rather than by manually editing generated output?
+- Was a generated binding's direct `///` comment edit preserved by
+  `utils/SkiaSharpGenerator`, with no manual declaration or interop-code edit?
 
 ## Reporting
 

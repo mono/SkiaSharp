@@ -57,7 +57,8 @@ Read [api-design-rules.md](api-design-rules.md) and verify each item:
 - [ ] Mapped in JSON config so generated structs use the type
 
 ### Generated Code
-- [ ] No manual edits to *.generated.cs
+- [ ] No manual edits to generated declarations or interop code
+- [ ] Any direct generated-file `///` edits survive regeneration
 - [ ] JSON config maps types and member names correctly
 - [ ] Generator was re-run after any C API changes
 
@@ -76,7 +77,7 @@ Read [api-design-rules.md](api-design-rules.md) and verify each item:
 ### Documentation
 - [ ] Every new or changed public API has accurate `///` documentation
 - [ ] Documentation accurately describes ownership, null/failure behavior, and threading where applicable
-- [ ] Generated binding comments come from source-controlled generator inputs
+- [ ] Generated binding `///` comments were edited directly only as needed and preserved by regeneration
 - [ ] No #nullable disable unless needed for reference-type fields
 
 ### Style

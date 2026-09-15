@@ -37,8 +37,9 @@ reference assembly.
   exception relation, or parameter/generic-parameter name.
 - An example is non-self-contained, dereferences a nullable factory result,
   uses a warning-obsolete API, or disposes a parent-owned object.
-- A generated binding comment was edited directly rather than changed through
-  `utils/SkiaSharpGenerator` and regeneration.
+- Generated binding declarations, interop code, or implementation were edited
+  directly, or a direct `///` comment edit was not verified through a
+  `utils/SkiaSharpGenerator` regeneration round trip.
 
 ## MINOR — improve when practical
 

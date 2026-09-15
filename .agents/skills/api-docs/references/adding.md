@@ -35,14 +35,15 @@ for this work.
    infer that a parameter rejects an input when the code pads, truncates,
    clamps, or otherwise accepts it; do not infer a struct default from a
    sibling constant.
-5. For a generated binding declaration, modify the source-controlled
-   generator input/comment in `utils/SkiaSharpGenerator`, then regenerate:
+5. For a generated binding declaration, edit only the source-controlled `///`
+   comment trivia in that generated file, then regenerate:
 
    ```bash
    pwsh -NoLogo -NoProfile -File ./utils/generate.ps1
    ```
 
-   Review the regenerated comment, but never hand-edit the generated file.
+   Confirm the regenerated file preserves the intended comment. Do not manually
+   change generated declarations, interop code, or implementation.
 6. Add remarks or an example when they make a non-obvious API usable. Verify
    every type, overload, identifier, null path, and disposal action against
    current source. Examples must be self-contained and use no error-obsolete

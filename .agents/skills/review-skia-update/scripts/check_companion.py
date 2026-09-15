@@ -2,16 +2,16 @@
 """Check companion SkiaSharp PR: categorize changed files and produce diffs.
 
 Compares the companion PR branch against the companion PR's actual base commit.
-Filters out generated files (*.generated.cs) and produces the same
-sourceFile structure used by upstream/interop integrity checks.
+Skips generator-owned generated changes but retains source-controlled ``///``
+documentation-comment edits in generated files for review.
 """
 import fnmatch
 import os
 import subprocess
 import sys
 
-# Files matching these patterns are auto-generated and skipped
-# Files matching these patterns are skipped (not interesting for review)
+# Files matching these patterns are generated. Their declaration and interop
+# diffs are skipped, but source-controlled documentation-comment edits remain.
 SKIP_PATTERNS = [
     "*.generated.cs",
 ]
@@ -36,12 +36,20 @@ def git_run(args: list, cwd: str) -> str:
 
 
 def is_generated(path: str) -> bool:
-    """Check if a file matches any generated/skip pattern."""
+    """Check if a file matches a generated-file pattern."""
     basename = os.path.basename(path)
     for pat in SKIP_PATTERNS:
         if fnmatch.fnmatch(basename, pat):
             return True
     return False
+
+
+def has_generated_documentation_changes(diff: str) -> bool:
+    """Return whether a generated-file diff changes C# documentation trivia."""
+    return any(
+        line[:1] in {"+", "-"} and line[1:].lstrip().startswith("///")
+        for line in diff.splitlines()
+    )
 
 
 def run_check(
@@ -93,8 +101,13 @@ def run_check(
 
     for status_code, path in file_entries:
         if is_generated(path):
-            skipped_count += 1
-            continue
+            generated_diff = git_run(
+                ["diff", f"{merge_base}..{pr_ref}", "--", path],
+                cwd=repo_root,
+            )
+            if not has_generated_documentation_changes(generated_diff):
+                skipped_count += 1
+                continue
 
         if status_code == "A":
             added_files.append(path)
@@ -143,9 +156,9 @@ def run_check(
 
     eprint()
     eprint(f"  Total files in PR: {len(file_entries)}")
-    eprint(f"  Skipped (generated): {skipped_count}")
+    eprint(f"  Skipped (generator-owned): {skipped_count}")
     if status == "PASS":
-        eprint(f"  ✅ Companion PR: PASS — no non-generated changes")
+        eprint(f"  ✅ Companion PR: PASS — no reviewable changes")
     else:
         eprint(f"  🔍 Companion PR: REVIEW_REQUIRED")
         if added:
@@ -156,7 +169,7 @@ def run_check(
             eprint(f"     Changed ({len(changed)}):")
             for c in changed:
                 eprint(f"       ~ {c['path']}")
-        eprint(f"     Unchanged (generated/skipped): {skipped_count}")
+        eprint(f"     Unchanged (generator-owned/skipped): {skipped_count}")
 
     return {
         "status": status,

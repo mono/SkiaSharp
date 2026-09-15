@@ -31,6 +31,25 @@ FilePath[] GetNuGetPackages(DirectoryPath directory, string description)
     return packages;
 }
 
+bool ZipEntriesMatch(ZipArchiveEntry first, ZipArchiveEntry second)
+{
+    var firstStream = first.Open();
+    var secondStream = second.Open();
+    try {
+        while (true) {
+            var firstByte = firstStream.ReadByte();
+            var secondByte = secondStream.ReadByte();
+            if (firstByte != secondByte)
+                return false;
+            if (firstByte == -1)
+                return true;
+        }
+    } finally {
+        secondStream.Dispose();
+        firstStream.Dispose();
+    }
+}
+
 void ValidateCompilerDocumentationFiles(FilePath[] packages)
 {
     foreach (var package in packages) {
@@ -53,6 +72,11 @@ void ValidateCompilerDocumentationFiles(FilePath[] packages)
                         $"Managed package '{package.GetFilename()}' must include the reference assembly " +
                         $"and compiler XML at '{referenceAssembly}' and '{referenceXml}', plus matching " +
                         $"implementation files at '{implementationAssembly}' and '{implementationXml}'.");
+                }
+                if (!ZipEntriesMatch(archive.GetEntry(referenceXml), archive.GetEntry(implementationXml))) {
+                    throw new Exception(
+                        $"Managed package '{package.GetFilename()}' must copy identical compiler XML to " +
+                        $"both '{referenceXml}' and '{implementationXml}'.");
                 }
             }
         } finally {

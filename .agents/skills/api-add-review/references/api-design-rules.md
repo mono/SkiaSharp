@@ -46,7 +46,8 @@ Every array API needs three members:
 
 ## Don't
 - Do not omit accurate `///` comments on new or changed public APIs
-- Do not hand-edit generated binding output; update generator inputs and regenerate
+- Do not hand-edit generated declarations or interop code; source-controlled
+  `///` comments are the exception and must survive regeneration
 - No `#nullable disable` unless needed
 - No fabricated fonts — use real fonts
 - No early returns that hide test failures

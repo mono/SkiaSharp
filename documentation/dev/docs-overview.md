@@ -34,8 +34,9 @@ consumer-visible API surface. Implementation-only XML entries are not public
 API documentation.
 
 Generated binding comments are source-controlled and preserved by
-`utils/SkiaSharpGenerator`. Change generator inputs and regenerate; do not
-hand-edit generated binding output.
+`utils/SkiaSharpGenerator`. Edit only their `///` trivia directly, then
+regenerate and verify preservation; do not hand-edit generated declarations or
+interop code.
 
 ## External API reference boundary
 

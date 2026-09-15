@@ -29,14 +29,15 @@ The two XML files intentionally originate from the same compiler output. The
 reference assembly and its XML define the consumer-visible documentation
 surface; implementation-only XML entries do not make an API public.
 
-Generated binding comments are source-controlled. Update their generator input
-and run:
+Generated binding comments are source-controlled. Edit only their `///` trivia
+directly and run:
 
 ```bash
 pwsh -NoLogo -NoProfile -File ./utils/generate.ps1
 ```
 
-Never directly edit generated bindings or compiler XML.
+Verify the comment survives regeneration. Never directly edit generated
+declarations, interop code, or compiler XML.
 
 ### Build and package validation
 

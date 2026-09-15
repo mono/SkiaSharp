@@ -27,10 +27,10 @@ and publishes Learn. Do not edit that repository or generated output here.
    any prose. Implementation-assembly XML does not make an API public.
 2. Add or correct accurate `///` comments immediately above public
    declarations. Work from the source declaration, never from compiler XML.
-3. If the declaration is in a generated binding, change its source-controlled
-   input in `utils/SkiaSharpGenerator` and run
-   `pwsh -NoLogo -NoProfile -File ./utils/generate.ps1`; never hand-edit
-   generated bindings or their comments.
+3. Generated bindings are source-controlled. Edit only their `///` comment
+   trivia directly, then run `pwsh -NoLogo -NoProfile -File
+   ./utils/generate.ps1` and verify it preserves the intended comments. Never
+   manually change generated declarations, interop code, or implementation.
 4. Follow [`references/adding.md`](references/adding.md) for source-first
    authoring or [`references/reviewing.md`](references/reviewing.md) for a
    source-first review. Apply the detailed syntax and prose rules in
@@ -69,8 +69,9 @@ and publishes Learn. Do not edit that repository or generated output here.
 
 ## Boundaries
 
-- Do not manually edit compiler-generated XML, ECMA/mdoc files, or generated
-  bindings.
+- Do not manually edit compiler-generated XML or ECMA/mdoc files. In generated
+  bindings, edit only source-controlled `///` comment trivia and verify a
+  generator round trip preserves it.
 - Do not remove valid public source comments to defer documentation elsewhere.
   Missing or inaccurate public documentation blocks API review.
 - Do not claim defaults, validation, ownership, threading, native layout, or

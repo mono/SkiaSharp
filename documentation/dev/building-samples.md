@@ -93,7 +93,9 @@ These arguments control the **NuGet version suffix** used when rewriting package
 | `--dotNetFinalVersionKind` | `DOTNET_FINAL_VERSION_KIND` | `""` | Set to `release` for an exact stable version |
 | `--sample` | — | `""` | Filter to build a specific sample |
 
-> **Note:** `--previewLabel` serves double duty: it selects the CI artifact during download AND forms the NuGet suffix during sample generation. For nightly builds from main, you typically run download with default args, then set `--previewLabel` and `--buildNumber` to match the extracted packages.
+> **Note:** `--previewLabel` and `--buildNumber` only control the package version
+> used while sample generation rewrites package references. Acquire packages
+> first, then derive both values from the downloaded package filenames.
 
 ## Cake Targets
 

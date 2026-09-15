@@ -45,7 +45,7 @@ Both modes share the same design rules and quality bar.
 | Shortcut | Consequence |
 |----------|-------------|
 | Commit directly to `main` or `skiasharp` | Policy violation |
-| Edit `*.generated.cs` manually | Overwritten on regenerate |
+| Edit generated declarations or interop code manually | Overwritten on regenerate; edit only source-controlled `///` trivia and verify preservation |
 | Skip native build after C API change | `EntryPointNotFoundException` |
 | Skip tests | Unacceptable |
 | Skip tests because they fail | Unacceptable — fix the issue |

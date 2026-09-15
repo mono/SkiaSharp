@@ -1,9 +1,12 @@
 # C# XML documentation patterns
 
 Use C# `///` comments immediately above the public declaration they document.
-Managed compilation generates compiler XML; do not put ECMA/mdoc-specific
-markup, DocId prefixes, CDATA wrappers, or DocFX `xref` syntax in source
-comments. For SkiaSharp/HarfBuzzSharp facts, read
+Managed compilation generates compiler XML. Use standard compiler XML elements
+for concise documentation. Existing source comments also use the supported rich
+form `<format type="text/markdown"><![CDATA[...]]></format>` in `<remarks>`;
+preserve that form, its bare DocFX `<xref:...>` links, and `_DocsMedia` image
+references unless an equivalent external-rendering migration is validated. For
+SkiaSharp/HarfBuzzSharp facts, read
 [`skia-patterns.md`](skia-patterns.md).
 
 These patterns follow the [official .NET API documentation
@@ -36,7 +39,7 @@ attribute, directive, or declaration between it and the documented member.
 /// <exception cref="ArgumentNullException">
 /// <paramref name="data" /> is <see langword="null" />.
 /// </exception>
-public static SKImage? FromEncodedData(SKData data)
+public static SKImage FromEncodedData(SKData data)
 ```
 
 | Element | Use |
@@ -87,21 +90,26 @@ what distinguishes overloads.
 public SKPaint()
 
 /// <summary>
-/// Initializes a new instance of the <see cref="SKBitmap" /> class with the
-/// specified dimensions.
+/// Creates a bitmap with the specified dimensions and opacity.
 /// </summary>
-/// <param name="width">The width of the bitmap in pixels.</param>
-/// <param name="height">The height of the bitmap in pixels.</param>
-public SKBitmap(int width, int height)
+/// <param name="width">The desired width in pixels.</param>
+/// <param name="height">The desired height in pixels.</param>
+/// <param name="isOpaque">
+/// <see langword="true" /> to create an opaque bitmap; otherwise,
+/// <see langword="false" />.
+/// </param>
+public SKBitmap(int width, int height, bool isOpaque = false)
 
 /// <summary>Initializes a new instance of the <see cref="SKPoint" /> struct.</summary>
+/// <param name="x">The horizontal position of the point.</param>
+/// <param name="y">The vertical position of the point.</param>
 public SKPoint(float x, float y)
 
 /// <summary>
 /// Called from derived-class constructors to initialize the
-/// <see cref="SKObject" /> class.
+/// <see cref="SKDrawable" /> class.
 /// </summary>
-protected SKObject()
+protected SKDrawable()
 ```
 
 ### Properties, indexers, fields, events, and methods
@@ -127,9 +135,11 @@ public int Width { get; }
 public bool IsEmpty { get; }
 
 /// <summary>Occurs when the surface needs to be repainted.</summary>
-public event EventHandler? PaintSurface;
+public event EventHandler<SKPaintSurfaceEventArgs>? PaintSurface;
 
 /// <summary>Draws a rectangle using the specified paint.</summary>
+/// <param name="rect">The rectangle to draw.</param>
+/// <param name="paint">The paint to use for drawing.</param>
 public void DrawRect(SKRect rect, SKPaint paint)
 ```
 
@@ -149,30 +159,32 @@ declaration. Use `paramref` when mentioning them in prose.
 /// <param name="paint">The paint to use for drawing.</param>
 public void DrawRect(SKRect rect, SKPaint paint)
 
-/// <summary>Sets whether anti-aliasing is enabled.</summary>
-/// <param name="antialias">
-/// <see langword="true" /> to enable anti-aliasing; otherwise,
+/// <summary>Creates an iterator that scans the path's segments.</summary>
+/// <param name="forceClose">
+/// <see langword="true" /> to close each contour while iterating; otherwise,
 /// <see langword="false" />.
 /// </param>
-public void SetAntialias(bool antialias)
+/// <returns>An iterator for the path's segments.</returns>
+public Iterator CreateIterator(bool forceClose)
 
 /// <summary>Attempts to parse a color from a string.</summary>
-/// <param name="value">The string to parse.</param>
+/// <param name="hexString">The hexadecimal color string to parse.</param>
 /// <param name="color">
-/// When this method returns, contains the parsed color if successful. This
-/// parameter is treated as uninitialized.
+/// When this method returns, contains the parsed color if successful;
+/// otherwise, <see cref="SKColor.Empty" />.
 /// </param>
 /// <returns>
 /// <see langword="true" /> if parsing succeeded; otherwise,
 /// <see langword="false" />.
 /// </returns>
-public static bool TryParse(string value, out SKColor color)
+public static bool TryParse(string hexString, out SKColor color)
 
 /// <summary>Gets an image from the encoded data.</summary>
+/// <param name="data">The encoded image data.</param>
 /// <returns>
 /// A new image, or <see langword="null" /> if the data is invalid.
 /// </returns>
-public static SKImage? FromEncodedData(SKData data)
+public static SKImage FromEncodedData(SKData data)
 ```
 
 - Boolean **parameters** say “`true` to…”.
@@ -184,46 +196,42 @@ public static SKImage? FromEncodedData(SKData data)
 - Use `<value>` for a property/indexer value. Do not document a default based
   on a typical constant; verify its initializer or zero-initialized state.
 
-Document only exceptions that are part of the observed public behavior:
-
-```csharp
-/// <exception cref="ArgumentNullException">
-/// <paramref name="paint" /> is <see langword="null" />.
-/// </exception>
-/// <exception cref="ArgumentOutOfRangeException">
-/// <paramref name="width" /> is less than zero.
-/// </exception>
-```
+Document only exceptions that are part of the observed public behavior, on the
+same declaration that performs the validation. Never copy an exception element
+into an unrelated member merely to demonstrate XML syntax.
 
 For generic APIs, use `typeparam` and `typeparamref`:
 
 ```csharp
-/// <summary>Creates a value by using the specified factory.</summary>
-/// <typeparam name="T">The type of value to create.</typeparam>
-/// <param name="factory">The factory that creates the value.</param>
-/// <returns>A value of type <typeparamref name="T" />.</returns>
-public static T Create<T>(Func<T> factory)
+/// <summary>Provides event data for retrieving a property value from a renderer.</summary>
+/// <typeparam name="T">The type of the property value to retrieve.</typeparam>
+public class GetPropertyValueEventArgs<T> : EventArgs
+{
+    /// <summary>Gets or sets the property value.</summary>
+    /// <value>The property value of type <typeparamref name="T" />.</value>
+    public T Value { get; set; }
+}
 ```
 
 ## Cross-references and escaping
 
-Use C# compiler-resolved, unprefixed `cref` values. Let the compiler resolve
-the target; do not write ECMA DocIds such as `T:`, `M:`, `P:`, or `F:`, and do
-not use DocFX `<xref:…>` syntax or CDATA in source comments.
+Use the repository's compiler-supported DocId convention for standard XML
+`cref` values, such as `T:`, `M:`, `P:`, and `F:` prefixes. In a rich
+Markdown/CDATA `<remarks>` block, use the external renderer's bare
+`<xref:...>` syntax instead. Both forms are already authoritative source
+comment formats; do not rewrite one into the other without validating the
+external rendering result.
 
 ```csharp
-/// <summary>Draws to an <see cref="SKCanvas" />.</summary>
-/// <seealso cref="SKPaint" />
-/// <exception cref="ArgumentNullException">
-/// <paramref name="canvas" /> is <see langword="null" />.
-/// </exception>
+/// <summary>Draws to an <see cref="T:SkiaSharp.SKCanvas" />.</summary>
+/// <seealso cref="T:SkiaSharp.SKPaint" />
 ```
 
-For overload disambiguation, use a legal C# member signature that compiler XML
-can resolve, and build to confirm it:
+For overload disambiguation, use the fully-qualified DocId and build to
+confirm it:
 
 ```csharp
-/// <seealso cref="SKCanvas.DrawRect(SKRect, SKPaint)" />
+/// <seealso cref="M:SkiaSharp.SKCanvas.DrawRect(SkiaSharp.SKRect,SkiaSharp.SKPaint)" />
 ```
 
 Escape XML metacharacters in prose and code:
@@ -235,9 +243,9 @@ Escape XML metacharacters in prose and code:
 | `&` | `&amp;` |
 
 For a code comparison, prefer `<c>value &lt; limit</c>`. Never place
-unescaped markup-looking text in a summary. CDATA and external renderer
-cross-reference rules belong to the independent API-docs repository, not to
-C# source comments.
+unescaped markup-looking text in a summary. In existing rich Markdown/CDATA
+source comments, preserve bare `<xref:...>` cross-references and renderer
+syntax because the external API-docs repository consumes that compiler XML.
 
 ## Punctuation and common mistakes
 
@@ -246,6 +254,9 @@ outside closing XML tags and after inline elements:
 
 ```csharp
 /// <returns>The result.</returns>
+```
+
+```csharp
 /// <returns><see langword="true" /> if successful; otherwise, <see langword="false" />.</returns>
 ```
 
@@ -255,6 +266,9 @@ sentence. A clarifying parenthetical in a sentence still takes a period:
 
 ```csharp
 /// <summary>Gets the Euclidean distance from the origin (0, 0).</summary>
+```
+
+```csharp
 /// <summary>Swizzles pixels, swapping R and B (RGBA ↔ BGRA)</summary>
 ```
 
@@ -271,9 +285,9 @@ Common mistakes:
 - A parameter `name`, `paramref`, `typeparam`, or `cref` that does not resolve.
 - Unsupported claims that a method must reject input, has a default, or owns a
   returned object without reading implementation.
-- Empty boilerplate tags, XML copied from generated compiler output, `xref`,
-  DocId prefixes, CDATA, or an `inheritdoc` used where the inherited contract
-  differs.
+- Empty boilerplate tags, an `inheritdoc` used where the inherited contract
+  differs, or standard and rich cross-reference formats mixed in the same
+  context. Preserve existing valid DocIds and rich Markdown/CDATA comments.
 
 ## Extension methods
 
@@ -283,11 +297,14 @@ its own summary but does not duplicate member documentation in generated
 artifacts.
 
 ```csharp
-/// <summary>Draws the specified rectangle using the specified paint.</summary>
+/// <summary>Draws shaped text on the canvas at the specified point with the specified alignment.</summary>
 /// <param name="canvas">The canvas to draw on.</param>
-/// <param name="rect">The rectangle to draw.</param>
-/// <param name="paint">The paint to use for drawing.</param>
-public static void Draw(this SKCanvas canvas, SKRect rect, SKPaint paint)
+/// <param name="text">The text to draw.</param>
+/// <param name="p">The point at which to draw the text.</param>
+/// <param name="textAlign">The text alignment to use when drawing the text.</param>
+/// <param name="font">The font to use when shaping and drawing the text.</param>
+/// <param name="paint">The paint to use when drawing the text.</param>
+public static void DrawShapedText(this SKCanvas canvas, string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint)
 ```
 
 Check the extension's receiver, overload, nullability, and ownership against
@@ -307,6 +324,7 @@ remarks.
 /// <summary>
 /// Initializes a new instance of the <see cref="SKCanvasView" /> class.
 /// </summary>
+/// <param name="context">The context in which the view runs.</param>
 /// <remarks>Use this constructor when creating the view programmatically.</remarks>
 public SKCanvasView(Context context)
 
@@ -314,16 +332,20 @@ public SKCanvasView(Context context)
 /// Initializes a new instance of the <see cref="SKCanvasView" /> class with
 /// the specified XML attributes.
 /// </summary>
+/// <param name="context">The context in which the view runs.</param>
+/// <param name="attrs">The XML attributes used to inflate the view.</param>
 /// <remarks>
 /// This constructor is called when inflating the view from an Android XML
 /// layout file.
 /// </remarks>
-public SKCanvasView(Context context, IAttributeSet? attrs)
+public SKCanvasView(Context context, IAttributeSet attrs)
 
 /// <summary>
 /// Initializes a new instance of the <see cref="SKCanvasView" /> class from a
 /// JNI object reference.
 /// </summary>
+/// <param name="javaReference">The JNI object reference.</param>
+/// <param name="transfer">The ownership mode for the Java reference.</param>
 /// <remarks>
 /// This constructor is used by the Android runtime when creating managed
 /// representations of JNI objects. It is not intended for direct user code.
@@ -338,18 +360,20 @@ protected SKCanvasView(IntPtr javaReference, JniHandleOwnership transfer)
 /// Initializes a new instance of the <see cref="SKCanvasView" /> class with
 /// the specified frame.
 /// </summary>
+/// <param name="frame">The frame used by the view, expressed in points.</param>
 public SKCanvasView(CGRect frame)
 
 /// <summary>
 /// Initializes a new instance of the <see cref="SKCanvasView" /> class from a
 /// native handle.
 /// </summary>
+/// <param name="p">The pointer to the unmanaged object.</param>
 /// <remarks>
 /// This constructor is used by the Apple runtime when creating managed
 /// representations of unmanaged objects. It is not intended for direct user
 /// code.
 /// </remarks>
-protected SKCanvasView(NativeHandle handle)
+public SKCanvasView(IntPtr p)
 ```
 
 ### Tizen and cross-platform views
@@ -370,23 +394,24 @@ checking its source.
 ## Rich remarks and examples
 
 Use `<remarks>` for non-obvious behavior and `<example>` for an important
-usage pattern. C# source comments can use XML markup directly; use
-`<code>` for a code block, rather than CDATA/markdown renderer constructs.
+usage pattern. Existing rich source comments use a supported Markdown/CDATA
+format inside `<remarks>`; preserve that format when updating rich prose,
+examples, cross-references, or `_DocsMedia` images.
 
 ```csharp
 /// <summary>Provides the style and color information for drawing operations.</summary>
-/// <remarks>
-/// <para>
+/// <remarks><format type="text/markdown"><![CDATA[
+/// ## Remarks
+///
 /// Configure an instance and pass it to drawing operations on
-/// <see cref="SKCanvas" />.
-/// </para>
-/// <para>
-/// This type wraps a native resource. Dispose caller-owned instances when they
-/// are no longer needed.
-/// </para>
-/// </remarks>
-/// <example>
-/// <code>
+/// <xref:SkiaSharp.SKCanvas>. Dispose caller-owned instances when they are no
+/// longer needed.
+///
+/// ## Examples
+///
+/// ```csharp
+/// using var bitmap = new SKBitmap(256, 256);
+/// using var canvas = new SKCanvas(bitmap);
 /// using var paint = new SKPaint
 /// {
 ///     Color = SKColors.CornflowerBlue,
@@ -394,8 +419,8 @@ usage pattern. C# source comments can use XML markup directly; use
 ///     Style = SKPaintStyle.Fill,
 /// };
 /// canvas.DrawCircle(128, 128, 80, paint);
-/// </code>
-/// </example>
+/// ```
+/// ]]></format></remarks>
 public class SKPaint
 ```
 
