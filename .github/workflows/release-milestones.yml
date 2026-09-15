@@ -55,13 +55,10 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          PUSH: ${{ inputs.push }}
+          MODE: ${{ inputs.push && 'Push' || 'DryRun' }}
           VERSION: ${{ inputs.version }}
         run: |
-          $arguments = @{ Version = $env:VERSION }
-          if ($env:PUSH -eq 'true') {
-            $arguments.Push = $true
-          }
+          $arguments = @{ Version = $env:VERSION; Mode = $env:MODE }
           ./scripts/infra/publishing/reconcile-release-assignments.ps1 @arguments *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
 
@@ -70,11 +67,8 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          PUSH: ${{ inputs.push }}
+          MODE: ${{ inputs.push && 'Push' || 'DryRun' }}
         run: |
-          $arguments = @{}
-          if ($env:PUSH -eq 'true') {
-            $arguments.Push = $true
-          }
+          $arguments = @{ Mode = $env:MODE }
           ./scripts/infra/publishing/update-release-milestones.ps1 @arguments *>&1 |
             Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append

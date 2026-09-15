@@ -80,6 +80,17 @@ function Get-RemoteBranchSha([string] $Root, [string] $Remote, [string] $Branch)
     return Get-RemoteRefSha -Root $Root -Remote $Remote -Ref "refs/heads/$Branch"
 }
 
+# Lists remote branch names matching one refs/heads prefix or wildcard in a single request.
+function Get-RemoteBranches([string] $Root, [string] $Remote, [string] $Pattern = 'refs/heads/*') {
+    $output = (Invoke-Git -Root $Root -Arguments @('ls-remote', '--heads', $Remote, $Pattern)).Output
+    $branches = foreach ($line in @($output -split "`r?`n")) {
+        if ($line -match '^[^\s]+\s+refs/heads/(?<branch>.+)$') {
+            $Matches.branch
+        }
+    }
+    return @($branches | Sort-Object -Unique)
+}
+
 # Resolves one remote tag SHA.
 function Get-RemoteTagSha([string] $Root, [string] $Remote, [string] $Tag) {
     return Get-RemoteRefSha -Root $Root -Remote $Remote -Ref "refs/tags/$Tag"
@@ -124,6 +135,7 @@ Export-ModuleMember -Function @(
     'Assert-GitWorktreeClean',
     'Get-RemoteRefSha',
     'Get-RemoteBranchSha',
+    'Get-RemoteBranches',
     'Get-RemoteTagSha',
     'Get-LocalBranchSha',
     'Get-ResolvedGitCommit',

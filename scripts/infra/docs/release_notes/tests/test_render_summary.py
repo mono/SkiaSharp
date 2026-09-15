@@ -1,14 +1,67 @@
 from __future__ import annotations
 
 import sys
+import contextlib
+import importlib.util
+import io
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 _DOCS_DIR = Path(__file__).resolve().parents[2]
 if str(_DOCS_DIR) not in sys.path:
     sys.path.insert(0, str(_DOCS_DIR))
 
 from release_notes import render_summary, safety
+
+_RENDER_PATH = _DOCS_DIR / "release-notes-render.py"
+_RENDER_SPEC = importlib.util.spec_from_file_location("release_notes_renderer", _RENDER_PATH)
+renderer = importlib.util.module_from_spec(_RENDER_SPEC)
+_RENDER_SPEC.loader.exec_module(renderer)
+
+
+class ReleaseNotesCheckTests(unittest.TestCase):
+    def test_check_is_quiet_when_the_rendered_page_matches(self):
+        with tempfile.TemporaryDirectory() as directory:
+            releases = Path(directory)
+            sources = releases / "_sources"
+            sources.mkdir()
+            (sources / "4.151.0.data.json").write_text("{}")
+            (sources / "4.151.0.prose.json").write_text("{}")
+            (releases / "4.151.0.md").write_text("expected")
+            stdout, stderr = io.StringIO(), io.StringIO()
+            original = renderer.RELEASES_DIR
+            renderer.RELEASES_DIR = releases
+            try:
+                with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr), \
+                        mock.patch.object(renderer, "validate", return_value=[]), \
+                        mock.patch.object(renderer, "render", return_value="expected"):
+                    code = renderer.main(["release-notes-render.py", "--check", "4.151.0"])
+            finally:
+                renderer.RELEASES_DIR = original
+            self.assertEqual(code, 0)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(stderr.getvalue(), "")
+
+    def test_check_classifies_invalid_committed_json_as_incomplete(self):
+        with tempfile.TemporaryDirectory() as directory:
+            releases = Path(directory)
+            sources = releases / "_sources"
+            sources.mkdir()
+            (sources / "4.151.0.data.json").write_text("{ invalid")
+            (sources / "4.151.0.prose.json").write_text("{}")
+            (releases / "4.151.0.md").write_text("expected")
+            stderr = io.StringIO()
+            original = renderer.RELEASES_DIR
+            renderer.RELEASES_DIR = releases
+            try:
+                with contextlib.redirect_stderr(stderr):
+                    code = renderer.main(["release-notes-render.py", "--check", "4.151.0"])
+            finally:
+                renderer.RELEASES_DIR = original
+            self.assertEqual(code, 1)
+            self.assertIn("invalid committed release notes", stderr.getvalue())
 
 
 def _sample_data(**overrides):

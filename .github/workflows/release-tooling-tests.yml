@@ -8,6 +8,7 @@ on:
       - ".agents/skills/release-notes/**"
       - ".agents/skills/release-publish/**"
       - ".agents/skills/release-testing/**"
+      - ".agents/skills/release-audit/**"
       - "tests/SkiaSharp.Tests.Integration/**"
       - ".github/workflows/release-*.yml"
       - ".github/workflows/update-github-release-summaries.yml"
@@ -22,6 +23,7 @@ on:
       - ".agents/skills/release-notes/**"
       - ".agents/skills/release-publish/**"
       - ".agents/skills/release-testing/**"
+      - ".agents/skills/release-audit/**"
       - "tests/SkiaSharp.Tests.Integration/**"
       - ".github/workflows/release-*.yml"
       - ".github/workflows/update-github-release-summaries.yml"
@@ -71,6 +73,7 @@ jobs:
           Get-Help ./scripts/infra/publishing/update-bug-template.ps1 -Full > $null
           Get-Help ./scripts/infra/publishing/reconcile-release-assignments.ps1 -Full > $null
           Get-Help ./scripts/infra/publishing/update-release-milestones.ps1 -Full > $null
+          Get-Help ./scripts/infra/publishing/audit-release-state.ps1 -Full > $null
 
       - name: Run publishing PowerShell tests
         shell: pwsh

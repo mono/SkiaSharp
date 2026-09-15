@@ -1005,6 +1005,44 @@ def main(argv):
     flags = [a for a in argv[1:] if a.startswith("-")]
     args = [a for a in argv[1:] if not a.startswith("-")]
 
+    if "--check" in flags:
+        if len(args) != 1:
+            print("--check requires one release core", file=sys.stderr)
+            return 2
+        core = args[0]
+        data_path = RELEASES_DIR / "_sources" / (core + ".data.json")
+        prose_path = RELEASES_DIR / "_sources" / (core + ".prose.json")
+        page_path = RELEASES_DIR / (core + ".md")
+        if not data_path.is_file() or not prose_path.is_file() or not page_path.is_file():
+            print("{}: committed data, prose, and rendered page are required".format(core), file=sys.stderr)
+            return 1
+        try:
+            data = json.loads(data_path.read_text())
+            prose = json.loads(prose_path.read_text())
+        except ValueError as exc:
+            print("{}: invalid committed release notes: {}".format(core, exc), file=sys.stderr)
+            return 1
+        except OSError as exc:
+            print("{}: release notes check unavailable: {}".format(core, exc), file=sys.stderr)
+            return 2
+        try:
+            errors = validate(data, prose)
+            rendered = render(data, prose)
+            actual = page_path.read_text()
+        except (KeyError, ValueError) as exc:
+            print("{}: invalid committed release notes: {}".format(core, exc), file=sys.stderr)
+            return 1
+        except OSError as exc:
+            print("{}: release notes check unavailable: {}".format(core, exc), file=sys.stderr)
+            return 2
+        if errors:
+            print("{}: {}".format(core, "; ".join(errors)), file=sys.stderr)
+            return 1
+        if actual != rendered:
+            print("{}: rendered release notes page is stale".format(core), file=sys.stderr)
+            return 1
+        return 0
+
     # --all: the final Polish pass. Regenerate every page + TOC/index from the
     # committed JSON, offline. Takes no positional args. Returns non-zero if any
     # committed prose.json failed validation (a bad page must never ship).

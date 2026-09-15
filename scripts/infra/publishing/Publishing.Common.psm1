@@ -95,6 +95,7 @@ function ConvertTo-ReleaseMilestone([string] $Value) {
     }
     return [pscustomobject] @{
         Title = $title
+        Numeric = $numericText
         NumericKey = '{0:D10}.{1:D10}.{2:D10}.{3:D10}' -f $parts[0], $parts[1], $parts[2], $hotfix
         Channel = $channel
         SortKey = '{0:D10}.{1:D10}.{2:D10}.{3:D10}.{4:D2}.{5:D10}' -f
@@ -245,16 +246,25 @@ function Get-ReleaseIdentity([string] $PublicVersion) {
     throw "Version must be stable X.Y.Z[.F] or an exact public X.Y.Z[.F]-(preview|rc).N.BUILD version."
 }
 
+# Lists all public versions of one package from NuGet's immutable catalogue.
+function Get-NuGetPackageVersions([string] $PackageId) {
+    $lowerId = $PackageId.ToLowerInvariant()
+    $uri = "https://api.nuget.org/v3-flatcontainer/$lowerId/index.json"
+    $response = Invoke-RestMethod -Uri $uri
+    if ($null -eq $response.versions) {
+        throw "NuGet catalogue for $PackageId does not contain a versions array."
+    }
+    return @($response.versions | ForEach-Object { [string] $_ })
+}
+
 # Resolves a prerelease identity to its one exact public NuGet package version.
 function Resolve-NuGetPackageVersion([string] $PackageId, [string] $Version) {
     if ($Version -notmatch '^\d+\.\d+\.\d+(?:\.\d+)?-(?:preview|rc)\.[1-9]\d*$') {
         return $Version
     }
 
-    $lowerId = $PackageId.ToLowerInvariant()
-    $uri = "https://api.nuget.org/v3-flatcontainer/$lowerId/index.json"
     $versionsFound = @(
-        (Invoke-RestMethod -Uri $uri).versions |
+        (Get-NuGetPackageVersions -PackageId $PackageId) |
             Where-Object { $_ -match "^$([regex]::Escape($Version))\.\d+(?:\.\d+)?$" }
     )
     if ($versionsFound.Count -ne 1) {
@@ -262,6 +272,58 @@ function Resolve-NuGetPackageVersion([string] $PackageId, [string] $Version) {
         throw "$PackageId $Version must match exactly one public NuGet version; found $found."
     }
     return $versionsFound[0]
+}
+
+# Verifies that one expected release package is public and has the expected source provenance.
+function Get-NuGetPublicationReceipt(
+    [string] $Version,
+    [string] $ExpectedBranch = '',
+    [string] $ExpectedCommit = ''
+) {
+    try {
+        $publicVersion = Resolve-NuGetPackageVersion -PackageId 'SkiaSharp' -Version $Version
+        $release = Get-ReleaseIdentity -PublicVersion $publicVersion
+        $source = Get-NuGetPackageSource -PackageId 'SkiaSharp' -PackageVersion $publicVersion
+    } catch {
+        $message = $_.Exception.Message
+        if ($message -match '404|not found|must match exactly one public NuGet version; found none') {
+            return [pscustomobject] @{
+                State = 'pending'
+                Message = "SkiaSharp $Version is not published to NuGet.org."
+                Value = $null
+            }
+        }
+        if ($message -match 'must match exactly one public NuGet version; found') {
+            return [pscustomobject] @{
+                State = 'pending'
+                Message = "NuGet publication is ambiguous: $message"
+                Value = $null
+            }
+        }
+        return [pscustomobject] @{
+            State = 'unavailable'
+            Message = "NuGet publication check unavailable: $message"
+            Value = $null
+        }
+    }
+
+    $findings = [System.Collections.Generic.List[string]]::new()
+    if ($ExpectedBranch -and $source.Branch -ne $ExpectedBranch) {
+        $findings.Add("SkiaSharp $publicVersion names $($source.Branch), expected $ExpectedBranch.")
+    }
+    if ($ExpectedCommit -and $source.Commit -ne $ExpectedCommit) {
+        $findings.Add("SkiaSharp $publicVersion is built from $($source.Commit), expected $ExpectedCommit.")
+    }
+    return [pscustomobject] @{
+        State = if ($findings.Count) { 'pending' } else { 'complete' }
+        Message = $findings -join ' '
+        Value = [pscustomobject] @{
+            Version = $publicVersion
+            Release = $release
+            Branch = $source.Branch
+            Commit = $source.Commit
+        }
+    }
 }
 
 # Reads the repository branch and commit from one public NuGet nuspec.
@@ -527,7 +589,9 @@ Export-ModuleMember -Function @(
     'Get-PreviousShippedTag',
     'Set-GitHubItemMilestone',
     'Get-ReleaseIdentity',
+    'Get-NuGetPackageVersions',
     'Resolve-NuGetPackageVersion',
+    'Get-NuGetPublicationReceipt',
     'Get-NuGetPackageSource',
     'Invoke-GitHubMutation',
     'Push-ReleaseTag',
