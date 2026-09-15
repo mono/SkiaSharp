@@ -22,10 +22,6 @@ stages:
           postBuildSteps:
             - pwsh: ./scripts/infra/package/tests/AssembleArcadeAssets.Tests.ps1
               displayName: Validate Arcade asset assembly
-            - pwsh: ./scripts/infra/package/tests/TransportBuildTag.Tests.ps1
-              displayName: Validate transport build tag
-            - pwsh: ./scripts/infra/package/add-transport-build-tag.ps1 -PackageDirectory ./output/nugets-special -EmitBuildTag
-              displayName: Tag transport package
           publishArtifacts:
             - name: nuget
               path: '.\output\nugets'
