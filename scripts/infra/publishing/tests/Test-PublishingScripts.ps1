@@ -119,7 +119,10 @@ foreach ($workflowPath in @($prepareWorkflowPath, $finishWorkflowPath)) {
         "$workflowName does not map its push checkbox to DryRun or Push."
 }
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
+$gitCommonScript = Get-Content $gitCommonPath -Raw
 $commonScript = Get-Content $commonPath -Raw
+Assert-True ($gitCommonScript -notmatch 'FETCH_HEAD') `
+    'Shared branch resolution must not use process-global FETCH_HEAD.'
 Assert-True ($commonScript -match '--force-with-lease') `
     'The shared automation branch helper must use force-with-lease.'
 Assert-True ($commonScript -notmatch '(?m)git push[^\r\n]*--force(?:\s|$)') `
@@ -191,6 +194,55 @@ $pages = @(
 )
 Assert-Equal @(1, 2, 3) @((Expand-GitHubPages $pages).number) 'GitHub pages were not flattened.'
 
+$script:PullListArguments = @()
+function global:gh {
+    $script:PullListArguments = @($args)
+    $global:LASTEXITCODE = 0
+    @'
+[
+  {
+    "number": 5062,
+    "title": "[skia-sync] Merge upstream chrome/m153 bug fixes",
+    "headRefName": "skia-sync/release-4.153.x",
+    "headRefOid": "2222222222222222222222222222222222222222",
+    "baseRefName": "release/4.153.x",
+    "baseRefOid": "1111111111111111111111111111111111111111",
+    "isDraft": false,
+    "mergeStateStatus": "BLOCKED",
+    "url": "https://github.com/mono/SkiaSharp/pull/5062"
+  }
+]
+'@
+}
+try {
+    $openPullRequests = @(Get-GitHubOpenPullRequests `
+        -Repository 'mono/SkiaSharp' `
+        -Head 'skia-sync/release-4.153.x' `
+        -Base 'release/4.153.x')
+} finally {
+    Remove-Item Function:\gh
+}
+Assert-Equal @(5062) @($openPullRequests.number) `
+    'The exact open maintenance pull request was not returned.'
+Assert-True (($script:PullListArguments -join ' ') -match '--head skia-sync/release-4\.153\.x' -and
+    ($script:PullListArguments -join ' ') -match '--base release/4\.153\.x') `
+    'The maintenance pull request query was not scoped to the expected head/base pair.'
+$script:PullListArguments = @()
+function global:gh {
+    $script:PullListArguments = @($args)
+    $global:LASTEXITCODE = 0
+    '[]'
+}
+try {
+    Assert-Equal 0 @(Get-GitHubOpenPullRequests `
+        -Repository 'mono/SkiaSharp' `
+        -Head 'skia-sync/release-4.152.x' `
+        -Base 'release/4.152.x').Count `
+        'An empty pull request query produced a phantom result.'
+} finally {
+    Remove-Item Function:\gh
+}
+
 $script:FakeGhCalls = 0
 function global:gh {
     $script:FakeGhCalls++
@@ -256,6 +308,11 @@ try {
     & git -C $readerRoot cat-file -e "$localSha`^{commit}"
     Assert-Equal 0 $LASTEXITCODE `
         'The remote branch map did not fetch the advertised parent commit.'
+    Assert-Equal $localSha (Get-ResolvedGitCommit `
+        -Root $readerRoot `
+        -Reference 'release/test' `
+        -Remote $bareRoot) `
+        'A remote branch did not resolve through its immutable advertised commit.'
     $dryBranch = @(Push-ReleaseBranch `
         -Root $gitRoot `
         -Remote $bareRoot `
@@ -698,7 +755,8 @@ Assert-Equal 'System.String' $auditCommand.Parameters['Version'].ParameterType.F
     'The release-line audit Version parameter must be a string.'
 $auditScript = Get-Content $auditPath -Raw
 Assert-True ($auditScript.Contains('Format-Table -AutoSize -Wrap') -and
-    $auditScript.Contains('$PSStyle.Bold')) `
+    $auditScript.Contains('$PSStyle.Bold') -and
+    $auditScript.Contains('Get-GitHubOpenPullRequests')) `
     'The release-line audit must use PowerShell table formatting and host-aware emphasis.'
 $auditFunctions = Get-ScriptFunctionText $auditPath
 Invoke-Expression $auditFunctions
@@ -721,6 +779,27 @@ function New-AuditRelease([string] $Tag, [string] $Commit, [bool] $Prerelease = 
         targetCommitish = $Commit
         isDraft = $false
         isPrerelease = $Prerelease
+    }
+}
+
+function New-AuditPullRequest(
+    [int] $Number,
+    [string] $Head,
+    [string] $HeadSha,
+    [string] $Base,
+    [string] $BaseSha,
+    [bool] $Draft = $false
+) {
+    return [pscustomobject] @{
+        number = $Number
+        title = 'Sync more Skia changes'
+        headRefName = $Head
+        headRefOid = $HeadSha
+        baseRefName = $Base
+        baseRefOid = $BaseSha
+        isDraft = $Draft
+        mergeStateStatus = if ($Draft) { 'BEHIND' } else { 'BLOCKED' }
+        url = "https://github.com/mono/SkiaSharp/pull/$Number"
     }
 }
 
@@ -770,6 +849,39 @@ $stable = New-AuditBranch '4.152.0' $sha0
 $stablePackage = New-AuditPackage '4.152.0' $stable.Name $sha0
 $stableTag = 'v4.152.0'
 $stableRelease = New-AuditRelease $stableTag $sha0
+Assert-Equal 'skia-sync/release-4.152.x' (Get-ExpectedSyncBranch $maintenance.Branch) `
+    'The servicing-line sync branch name was not derived.'
+Assert-Equal 'skia-sync/main' (Get-ExpectedSyncBranch 'main') `
+    'The main sync branch name was not derived.'
+$openSyncPullRequest = Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha $sha1 `
+    -PullRequests @(
+        New-AuditPullRequest 5062 'skia-sync/release-4.152.x' $sha1 $maintenance.Branch $maintenance.Sha
+    )
+Assert-Equal 'open' $openSyncPullRequest.State 'A ready incoming maintenance PR was not detected.'
+Assert-Equal $true $openSyncPullRequest.BlocksRelease `
+    'A ready incoming maintenance PR did not block a new release cut.'
+$draftSyncPullRequest = Get-IncomingReleasePullRequest `
+    -Maintenance ([pscustomobject] @{ Branch = 'main'; Sha = $sha2; Version = '4.154.0' }) `
+    -SyncBranchSha $sha1 `
+    -PullRequests @(
+        New-AuditPullRequest 5021 'skia-sync/main' $sha1 'main' $sha0 $true
+    )
+Assert-Equal 'draft' $draftSyncPullRequest.State 'A draft incoming sync PR was not identified.'
+Assert-Equal $false $draftSyncPullRequest.BlocksRelease `
+    'A draft incoming sync PR incorrectly blocked a release cut.'
+$orphanedSyncBranch = Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha $sha1 `
+    -PullRequests @()
+Assert-Equal 'inconsistent' $orphanedSyncBranch.State `
+    'A sync branch without an open pull request was not reported.'
+Assert-Equal $null (Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha '' `
+    -PullRequests $null) `
+    'An absent sync branch and empty pull request query produced a phantom incoming PR.'
 
 $bumpOnly = New-AuditDelta 'version bump only'
 $state = Get-ReleaseAuditState `
@@ -785,6 +897,20 @@ $state = Get-ReleaseAuditState `
     -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } -Delta $realChanges
 Assert-True (@($state.Actions.Kind) -contains 'start') 'Real maintenance changes did not recommend the next release.'
 Assert-True ((@($state.Actions.Command) -join "`n") -match '4\.152\.1-stable') 'The stable/patch next identity was not derived.'
+$blockedBySync = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -IncomingPullRequest $openSyncPullRequest
+Assert-True (@($blockedBySync.Actions.Kind) -contains 'merge-sync') `
+    'An incoming maintenance PR did not produce a merge action.'
+Assert-True (@($blockedBySync.Actions.Kind) -notcontains 'start') `
+    'A new release was recommended before the incoming maintenance PR was merged.'
+$draftDoesNotBlock = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -IncomingPullRequest $draftSyncPullRequest
+Assert-True (@($draftDoesNotBlock.Actions.Kind) -contains 'start') `
+    'A draft incoming sync PR incorrectly suppressed a release cut.'
 
 $oldPreview = New-AuditBranch '4.153.0-preview.1' $sha0
 $latestRc = New-AuditBranch '4.153.0-rc.1' $sha1
@@ -873,6 +999,12 @@ Assert-True ($plainLatestUnpublishedReport -match '(?m)^Identity\s+Branch SHA\s+
     'The report did not render an aligned PowerShell table.'
 Assert-True ($plainLatestUnpublishedReport -notmatch '\| Identity \|') `
     'The report still rendered the old Markdown table.'
+$incomingPullRequestReport = [regex]::Replace(
+    (@(Write-ReleaseAuditReport $blockedBySync) -join "`n"),
+    "$([char] 0x1b)\[[0-9;]*m",
+    '')
+Assert-True ($incomingPullRequestReport -match '(?m)^Incoming sync PR:\s+#5062 ') `
+    'The incoming maintenance PR was not shown in the report summary.'
 Assert-Equal 'main' $mainMaintenance.Branch 'A matching current main was not usable as maintenance.'
 Assert-Equal '4.154.0-preview.1' (Get-NextReleaseIdentity '4.154' $null '4.154.0') `
     'A first release identity was not preview.1.'

@@ -135,6 +135,81 @@ function Get-NextReleaseIdentity(
     return $null
 }
 
+function Get-ExpectedSyncBranch([string] $MaintenanceBranch) {
+    if ($MaintenanceBranch -eq 'main') {
+        return 'skia-sync/main'
+    }
+    if ($MaintenanceBranch -match '^release/\d+\.\d+\.x$') {
+        return "skia-sync/$($MaintenanceBranch.Replace('/', '-'))"
+    }
+    return $null
+}
+
+function Get-IncomingReleasePullRequest(
+    [pscustomobject] $Maintenance,
+    [string] $SyncBranchSha,
+    [object[]] $PullRequests
+) {
+    if (!$Maintenance) {
+        return $null
+    }
+    $headBranch = Get-ExpectedSyncBranch -MaintenanceBranch $Maintenance.Branch
+    if (!$headBranch) {
+        return $null
+    }
+    $pullRequests = @($PullRequests | Where-Object { $null -ne $_ })
+    if (!$SyncBranchSha -and !$pullRequests.Count) {
+        return $null
+    }
+    if ($pullRequests.Count -ne 1) {
+        $message = if ($pullRequests.Count) {
+            "$($pullRequests.Count) open pull requests use $headBranch -> $($Maintenance.Branch)."
+        } else {
+            "$headBranch exists at $SyncBranchSha without an open pull request to $($Maintenance.Branch)."
+        }
+        return [pscustomobject] @{
+            Number = $null
+            Title = ''
+            Url = ''
+            HeadBranch = $headBranch
+            HeadSha = $SyncBranchSha
+            BaseBranch = $Maintenance.Branch
+            BaseSha = $Maintenance.Sha
+            IsDraft = $false
+            MergeState = 'UNKNOWN'
+            State = 'inconsistent'
+            BlocksRelease = $true
+            Message = $message
+        }
+    }
+
+    $pullRequest = $pullRequests[0]
+    $issues = [Collections.Generic.List[string]]::new()
+    if (!$SyncBranchSha) {
+        $issues.Add("$headBranch does not exist on origin.")
+    } elseif ([string] $pullRequest.headRefOid -ne $SyncBranchSha) {
+        $issues.Add("PR head $($pullRequest.headRefOid) does not match $headBranch at $SyncBranchSha.")
+    }
+    if ([string] $pullRequest.baseRefName -ne $Maintenance.Branch) {
+        $issues.Add("PR targets $($pullRequest.baseRefName), expected $($Maintenance.Branch).")
+    }
+    $isDraft = [bool] $pullRequest.isDraft
+    return [pscustomobject] @{
+        Number = [int] $pullRequest.number
+        Title = [string] $pullRequest.title
+        Url = [string] $pullRequest.url
+        HeadBranch = [string] $pullRequest.headRefName
+        HeadSha = [string] $pullRequest.headRefOid
+        BaseBranch = [string] $pullRequest.baseRefName
+        BaseSha = [string] $pullRequest.baseRefOid
+        IsDraft = $isDraft
+        MergeState = [string] $pullRequest.mergeStateStatus
+        State = if ($issues.Count) { 'inconsistent' } elseif ($isDraft) { 'draft' } else { 'open' }
+        BlocksRelease = $issues.Count -gt 0 -or !$isDraft
+        Message = $issues -join ' '
+    }
+}
+
 function New-ReleaseAuditAction([string] $Kind, [string] $Message, [string] $Command = '') {
     return [pscustomobject] @{
         Kind = $Kind
@@ -150,7 +225,8 @@ function Get-ReleaseAuditState(
     [object[]] $Packages,
     [hashtable] $TagShas,
     [hashtable] $GitHubReleases,
-    [pscustomobject] $Delta
+    [pscustomobject] $Delta,
+    [pscustomobject] $IncomingPullRequest = $null
 ) {
     $specific = @($Branches | Where-Object {
         $_.Name -match "^release/$([regex]::Escape($Line))\.\d+(?:\.\d+)?(?:-(?:preview|rc)\.[1-9]\d*)?$"
@@ -301,18 +377,37 @@ function Get-ReleaseAuditState(
             -Kind 'publish' `
             -Message "Publish packages from $($latest.Name) through the protected BAR-to-NuGet process. Optionally validate its exact BAR with release-testing first."))
     }
+    if ($IncomingPullRequest -and $IncomingPullRequest.BlocksRelease) {
+        if ($IncomingPullRequest.Number -and $IncomingPullRequest.State -ne 'inconsistent') {
+            $actions.Add((New-ReleaseAuditAction `
+                -Kind 'merge-sync' `
+                -Message "Review and merge incoming maintenance PR #$($IncomingPullRequest.Number): $($IncomingPullRequest.Title)." `
+                -Command "gh pr view $($IncomingPullRequest.Number) --repo $ReleaseRepository --web"))
+        } else {
+            $message = if ($IncomingPullRequest.Number) {
+                "Investigate incoming maintenance PR #$($IncomingPullRequest.Number): $($IncomingPullRequest.Message)"
+            } else {
+                $IncomingPullRequest.Message
+            }
+            $actions.Add((New-ReleaseAuditAction `
+                -Kind 'investigate-sync' `
+                -Message $message))
+        }
+    }
     if ($Maintenance -and !$latest) {
-        $next = Get-NextReleaseIdentity -Line $Line -Latest $null -MaintenanceVersion $Maintenance.Version
-        $actions.Add((New-ReleaseAuditAction `
-            -Kind 'start' `
-            -Message "Start the first release from $($Maintenance.Branch)." `
-            -Command "pwsh ./scripts/infra/publishing/prepare-release.ps1 -Base $($Maintenance.Branch) -Release $next -Mode DryRun"))
+        if (!$IncomingPullRequest -or !$IncomingPullRequest.BlocksRelease) {
+            $next = Get-NextReleaseIdentity -Line $Line -Latest $null -MaintenanceVersion $Maintenance.Version
+            $actions.Add((New-ReleaseAuditAction `
+                -Kind 'start' `
+                -Message "Start the first release from $($Maintenance.Branch)." `
+                -Command "pwsh ./scripts/infra/publishing/prepare-release.ps1 -Base $($Maintenance.Branch) -Release $next -Mode DryRun"))
+        }
     } elseif ($Maintenance -and $Delta.Queued.Count) {
         if ($latest -and !$latestPublic.Count) {
             $actions.Add((New-ReleaseAuditAction `
                 -Kind 'queued' `
                 -Message "$($Delta.Queued.Count) newer maintenance commit(s) are queued until $($latest.Name) is published."))
-        } elseif (!$latest -or $latestFinished) {
+        } elseif ((!$IncomingPullRequest -or !$IncomingPullRequest.BlocksRelease) -and (!$latest -or $latestFinished)) {
             $next = Get-NextReleaseIdentity -Line $Line -Latest $latest -MaintenanceVersion $Maintenance.Version
             if ($next) {
                 $actions.Add((New-ReleaseAuditAction `
@@ -331,6 +426,7 @@ function Get-ReleaseAuditState(
         Maintenance = $Maintenance
         LatestSpecificBranch = $latest
         MaintenanceDelta = $Delta
+        IncomingPullRequest = $IncomingPullRequest
         Releases = @($rows)
         Actions = @($actions)
     }
@@ -406,6 +502,23 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
     } else {
         'none'
     }
+    $incoming = if ($State.IncomingPullRequest) {
+        if ($State.IncomingPullRequest.Number) {
+            $headSha = if ($State.IncomingPullRequest.HeadSha.Length -ge 12) {
+                $State.IncomingPullRequest.HeadSha.Substring(0, 12)
+            } else {
+                $State.IncomingPullRequest.HeadSha
+            }
+            "#$($State.IncomingPullRequest.Number) " +
+                "$($State.IncomingPullRequest.HeadBranch)@$headSha " +
+                "-> $($State.IncomingPullRequest.BaseBranch) " +
+                "($($State.IncomingPullRequest.State), $($State.IncomingPullRequest.MergeState))"
+        } else {
+            $State.IncomingPullRequest.Message
+        }
+    } else {
+        'none'
+    }
     Write-Output (Format-ReleaseAuditField `
         -Label 'Release line' `
         -Value $State.Line `
@@ -416,6 +529,14 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
         -Label 'Maintenance delta' `
         -Value $State.MaintenanceDelta.Text `
         -ValueStyle $(if ($State.MaintenanceDelta.Queued.Count) {
+            $PSStyle.Foreground.Yellow
+        } else {
+            $PSStyle.Foreground.Green
+        }))
+    Write-Output (Format-ReleaseAuditField `
+        -Label 'Incoming sync PR' `
+        -Value $incoming `
+        -ValueStyle $(if ($State.IncomingPullRequest) {
             $PSStyle.Foreground.Yellow
         } else {
             $PSStyle.Foreground.Green
@@ -482,6 +603,21 @@ try {
             $null
         }
     }
+    $incomingPullRequest = $null
+    if ($maintenance) {
+        $syncBranch = Get-ExpectedSyncBranch -MaintenanceBranch $maintenance.Branch
+        if ($syncBranch) {
+            $syncSha = Get-RemoteBranchSha -Root $root -Remote origin -Branch $syncBranch
+            $syncPullRequests = Get-GitHubOpenPullRequests `
+                -Repository $ReleaseRepository `
+                -Head $syncBranch `
+                -Base $maintenance.Branch
+            $incomingPullRequest = Get-IncomingReleasePullRequest `
+                -Maintenance $maintenance `
+                -SyncBranchSha $syncSha `
+                -PullRequests $syncPullRequests
+        }
+    }
     $branches = @(Get-ReleaseBranches -Root $root -Line $Version)
     $linePackages = foreach ($publicVersion in Get-NuGetPackageVersions -PackageId 'SkiaSharp') {
         if ($publicVersion -match "^$([regex]::Escape($Version))\.\d+(?:\.\d+)?(?:-(?:preview|rc)\.[1-9]\d*\.\d+(?:\.\d+)?)?$") {
@@ -506,7 +642,8 @@ try {
         -Packages $linePackages `
         -TagShas $tagShas `
         -GitHubReleases $githubReleases `
-        -Delta $delta
+        -Delta $delta `
+        -IncomingPullRequest $incomingPullRequest
     $exitCode = if ($state.Actions.Count) { 1 } else { 0 }
     if ($Json) {
         [ordered] @{
@@ -514,6 +651,7 @@ try {
             maintenance = $state.Maintenance
             latestSpecificBranch = $state.LatestSpecificBranch
             maintenanceDelta = $state.MaintenanceDelta
+            incomingPullRequest = $state.IncomingPullRequest
             releases = $state.Releases
             actions = $state.Actions
             exitCode = $exitCode

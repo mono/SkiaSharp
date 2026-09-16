@@ -148,18 +148,21 @@ function Get-LocalBranchSha([string] $Root, [string] $Branch) {
 # Resolves a remote branch or SHA to one immutable commit.
 function Get-ResolvedGitCommit([string] $Root, [string] $Reference, [string] $Remote = 'origin') {
     if ($Reference -match '^[0-9a-fA-F]{40}$') {
+        $commit = $Reference
         $null = Invoke-Git `
             -Root $Root `
-            -Arguments @('fetch', '--quiet', '--no-recurse-submodules', '--no-tags', $Remote, $Reference)
-        $resolvedRef = $Reference
+            -Arguments @('fetch', '--quiet', '--no-recurse-submodules', '--no-tags', $Remote, $commit)
     } else {
         $branch = $Reference -replace '^(refs/heads/|origin/)'
+        $commit = Get-RemoteBranchSha -Root $Root -Remote $Remote -Branch $branch
+        if (!$commit) {
+            throw "$Remote branch $branch does not exist."
+        }
         $null = Invoke-Git `
             -Root $Root `
-            -Arguments @('fetch', '--quiet', '--no-recurse-submodules', '--no-tags', $Remote, "refs/heads/$branch")
-        $resolvedRef = 'FETCH_HEAD'
+            -Arguments @('fetch', '--quiet', '--no-recurse-submodules', '--no-tags', $Remote, $commit)
     }
-    return (Invoke-Git -Root $Root -Arguments @('rev-parse', '--verify', "$resolvedRef`^{commit}")).Output
+    return (Invoke-Git -Root $Root -Arguments @('rev-parse', '--verify', "$commit`^{commit}")).Output
 }
 
 # Reads one text file from a commit using consistent newline normalization.

@@ -135,6 +135,23 @@ function Get-GitHubReleaseMap([string] $Repository) {
     return $releases
 }
 
+# Reads open pull requests for one exact head/base branch pair.
+function Get-GitHubOpenPullRequests(
+    [string] $Repository,
+    [string] $Head,
+    [string] $Base
+) {
+    $result = Invoke-GitHubJsonWithRetry -Arguments @(
+            'pr', 'list',
+            '--repo', $Repository,
+            '--state', 'open',
+            '--head', $Head,
+            '--base', $Base,
+            '--json', 'number,title,headRefName,headRefOid,baseRefName,baseRefOid,isDraft,mergeStateStatus,url'
+        )
+    return @($result | Where-Object { $null -ne $_ })
+}
+
 # Creates one pull request.
 function New-GitHubPullRequest(
     [string] $Repository,
@@ -169,6 +186,7 @@ Export-ModuleMember -Function @(
     'Get-GitHubIssue',
     'Get-GitHubRelease',
     'Get-GitHubReleaseMap',
+    'Get-GitHubOpenPullRequests',
     'New-GitHubPullRequest',
     'Enable-GitHubGitAuthentication'
 )
