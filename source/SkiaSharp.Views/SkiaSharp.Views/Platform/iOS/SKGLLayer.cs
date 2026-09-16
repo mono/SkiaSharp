@@ -49,7 +49,10 @@ namespace SkiaSharp.Views.iOS
 
 		/// <summary>Gets the current canvas size.</summary>
 		/// <value>The current canvas size.</value>
-		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
+		/// <remarks><format type="text/markdown"><![CDATA[
+		/// The canvas size may be different to the view size as a result of the current
+		/// device's pixel density.
+		/// ]]></format></remarks>
 		public SKSize CanvasSize => lastSize;
 
 		/// <summary>Gets the current GPU context.</summary>
@@ -250,7 +253,11 @@ namespace SkiaSharp.Views.iOS
 
 		/// <summary>Releases the unmanaged resources used by the <see cref="SKGLLayer" /> and optionally releases the managed resources.</summary>
 		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
-		/// <remarks>Always dispose the object before you release your last reference to the <see cref="SKGLLayer" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
+		/// <remarks><format type="text/markdown"><![CDATA[
+		/// Always dispose the object before you release your last reference to the
+		/// <xref:SkiaSharp.Views.iOS.SKGLLayer>. Otherwise, the resources it is using
+		/// will not be freed until the garbage collector calls the finalizer.
+		/// ]]></format></remarks>
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
