@@ -73,6 +73,9 @@ maintenance; those remain owned by their detailed workflows. Exit `0` means no
 action is needed, `1` means release work remains, and `2` means a required
 remote service or tool was unavailable.
 
+Interactive output uses PowerShell's aligned table formatting and host-aware
+emphasis. Redirected output is plain text, and `-Json` remains undecorated.
+
 ## 1. Prepare the release branches
 
 Open

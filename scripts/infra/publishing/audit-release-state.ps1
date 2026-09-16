@@ -336,6 +336,65 @@ function Get-ReleaseAuditState(
     }
 }
 
+function Format-ReleaseAuditField(
+    [string] $Label,
+    [string] $Value,
+    [string] $ValueStyle = ''
+) {
+    $labelText = '{0,-19}' -f "${Label}:"
+    if (!(Test-ReleaseAuditStyling)) {
+        return "$labelText $Value"
+    }
+    return "$($PSStyle.Bold)$labelText$($PSStyle.Reset) $ValueStyle$Value$($PSStyle.Reset)"
+}
+
+function Test-ReleaseAuditStyling {
+    if ([Console]::IsOutputRedirected -or $null -eq $PSStyle) {
+        return $false
+    }
+    return [string] $PSStyle.OutputRendering -ne 'PlainText'
+}
+
+function Get-ReleaseAuditOutputWidth {
+    try {
+        $width = [int] $Host.UI.RawUI.BufferSize.Width
+        if ($width -gt 0) {
+            return [Math]::Max(180, [Math]::Min(240, $width - 1))
+        }
+    } catch {
+        # Non-interactive hosts may not expose terminal dimensions.
+    }
+    return 200
+}
+
+function Get-ReleaseAuditTableRows([pscustomobject] $State) {
+    return @(
+        foreach ($release in $State.Releases) {
+            $branchSha = if ($release.BranchSha -eq '-') {
+                '-'
+            } else {
+                $release.BranchSha.Substring(0, 12)
+            }
+            $state = if (
+                $release.Action -eq '-' -or
+                $release.Action.Equals($release.State, [StringComparison]::OrdinalIgnoreCase)
+            ) {
+                $release.State
+            } else {
+                "$($release.State); $($release.Action)"
+            }
+            [pscustomobject] [ordered] @{
+                Identity = $release.Identity
+                'Branch SHA' = $branchSha
+                NuGet = $release.NuGet
+                Tag = $release.Tag
+                'GitHub Release' = $release.GitHubRelease
+                'State / action' = $state
+            }
+        }
+    )
+}
+
 function Write-ReleaseAuditReport([pscustomobject] $State) {
     $maintenance = if ($State.Maintenance) {
         "$($State.Maintenance.Branch)@$($State.Maintenance.Sha.Substring(0, 12)) $($State.Maintenance.Version) ($($State.Maintenance.Label))"
@@ -347,26 +406,40 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
     } else {
         'none'
     }
-    Write-Output "Release line: $($State.Line)"
-    Write-Output "Maintenance:  $maintenance"
-    Write-Output "Latest branch: $latest"
-    Write-Output "Maintenance delta: $($State.MaintenanceDelta.Text)"
-    Write-Output ''
-    Write-Output '| Identity | Branch SHA | NuGet | Tag | GitHub Release | State / action |'
-    Write-Output '| --- | --- | --- | --- | --- | --- |'
-    foreach ($release in $State.Releases) {
-        $branchSha = if ($release.BranchSha -eq '-') { '-' } else { $release.BranchSha.Substring(0, 12) }
-        $action = if (
-            $release.Action -eq '-' -or
-            $release.Action.Equals($release.State, [StringComparison]::OrdinalIgnoreCase)
-        ) {
-            $release.State
+    Write-Output (Format-ReleaseAuditField `
+        -Label 'Release line' `
+        -Value $State.Line `
+        -ValueStyle $PSStyle.Foreground.BrightCyan)
+    Write-Output (Format-ReleaseAuditField -Label 'Maintenance' -Value $maintenance)
+    Write-Output (Format-ReleaseAuditField -Label 'Latest branch' -Value $latest)
+    Write-Output (Format-ReleaseAuditField `
+        -Label 'Maintenance delta' `
+        -Value $State.MaintenanceDelta.Text `
+        -ValueStyle $(if ($State.MaintenanceDelta.Queued.Count) {
+            $PSStyle.Foreground.Yellow
         } else {
-            "$($release.State); $($release.Action)"
-        }
-        Write-Output "| $($release.Identity) | $branchSha | $($release.NuGet) | $($release.Tag) | $($release.GitHubRelease) | $action |"
+            $PSStyle.Foreground.Green
+        }))
+    Write-Output ''
+    $rows = @(Get-ReleaseAuditTableRows -State $State)
+    if ($rows.Count) {
+        $table = $rows |
+            Format-Table -AutoSize -Wrap |
+            Out-String -Width (Get-ReleaseAuditOutputWidth)
+        Write-Output $table.TrimEnd()
+    } else {
+        Write-Output 'No specific release branches or public shipments.'
     }
-    Write-Output 'Next actions:'
+    $nextActionsStyle = if ($State.Actions.Count) {
+        $PSStyle.Foreground.Yellow
+    } else {
+        $PSStyle.Foreground.Green
+    }
+    if (Test-ReleaseAuditStyling) {
+        Write-Output "$($PSStyle.Bold)$($nextActionsStyle)Next actions:$($PSStyle.Reset)"
+    } else {
+        Write-Output 'Next actions:'
+    }
     if (!$State.Actions.Count) {
         Write-Output '1. None.'
     } else {

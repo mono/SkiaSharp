@@ -684,6 +684,10 @@ Assert-Equal @('Json', 'Version') @($auditParameters | Sort-Object) `
     'The release-line audit must expose only Version and Json.'
 Assert-Equal 'System.String' $auditCommand.Parameters['Version'].ParameterType.FullName `
     'The release-line audit Version parameter must be a string.'
+$auditScript = Get-Content $auditPath -Raw
+Assert-True ($auditScript.Contains('Format-Table -AutoSize -Wrap') -and
+    $auditScript.Contains('$PSStyle.Bold')) `
+    'The release-line audit must use PowerShell table formatting and host-aware emphasis.'
 $auditFunctions = Get-ScriptFunctionText $auditPath
 Invoke-Expression $auditFunctions
 
@@ -845,8 +849,18 @@ $firstRelease = Get-ReleaseAuditState `
 Assert-True ((@($firstRelease.Actions.Command) -join "`n") -match '4\.155\.0-preview\.1') `
     'A maintained line with no release branch did not recommend its first preview.'
 $latestUnpublishedReport = @(Write-ReleaseAuditReport $latestUnpublished) -join "`n"
+$plainLatestUnpublishedReport = [regex]::Replace(
+    $latestUnpublishedReport,
+    "$([char] 0x1b)\[[0-9;]*m",
+    '')
 Assert-True ($latestUnpublishedReport -notmatch 'publish release branch; Publish release branch') `
     'The human-readable report duplicated equivalent state and action text.'
+Assert-True ($plainLatestUnpublishedReport -match '(?m)^Release line:\s+4\.153$') `
+    'The report summary fields were not aligned.'
+Assert-True ($plainLatestUnpublishedReport -match '(?m)^Identity\s+Branch SHA\s+NuGet\s+Tag\s+GitHub Release\s+State / action$') `
+    'The report did not render an aligned PowerShell table.'
+Assert-True ($plainLatestUnpublishedReport -notmatch '\| Identity \|') `
+    'The report still rendered the old Markdown table.'
 Assert-Equal 'main' $mainMaintenance.Branch 'A matching current main was not usable as maintenance.'
 Assert-Equal '4.154.0-preview.1' (Get-NextReleaseIdentity '4.154' $null '4.154.0') `
     'A first release identity was not preview.1.'
