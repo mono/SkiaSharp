@@ -80,6 +80,45 @@ function Get-RemoteBranchSha([string] $Root, [string] $Remote, [string] $Branch)
     return Get-RemoteRefSha -Root $Root -Remote $Remote -Ref "refs/heads/$Branch"
 }
 
+# Lists remote branch names matching one refs/heads prefix or wildcard in a single request.
+function Get-RemoteBranches([string] $Root, [string] $Remote, [string] $Pattern = 'refs/heads/*') {
+    $output = (Invoke-Git -Root $Root -Arguments @('ls-remote', '--heads', $Remote, $Pattern)).Output
+    $branches = foreach ($line in @($output -split "`r?`n")) {
+        if ($line -match '^[^\s]+\s+refs/heads/(?<branch>.+)$') {
+            $Matches.branch
+        }
+    }
+    return @($branches | Sort-Object -Unique)
+}
+
+# Reads matching remote branches and their immutable tip commits in one request.
+function Get-RemoteBranchMap([string] $Root, [string] $Remote, [string] $Pattern = 'refs/heads/*') {
+    $output = (Invoke-Git -Root $Root -Arguments @('ls-remote', '--heads', $Remote, $Pattern)).Output
+    $branches = @{}
+    foreach ($line in @($output -split "`r?`n")) {
+        if ($line -match '^(?<sha>[0-9a-f]{40})\s+refs/heads/(?<branch>.+)$') {
+            $branches[$Matches.branch] = $Matches.sha
+        }
+    }
+    return $branches
+}
+
+# Reads matching remote tags and their peeled commits in one request.
+function Get-RemoteTagMap([string] $Root, [string] $Remote, [string] $Pattern = 'refs/tags/*') {
+    $output = (Invoke-Git -Root $Root -Arguments @('ls-remote', '--tags', $Remote, $Pattern)).Output
+    $tags = @{}
+    foreach ($line in @($output -split "`r?`n")) {
+        if ($line -match '^(?<sha>[0-9a-f]{40})\s+refs/tags/(?<tag>.+)\^\{\}$') {
+            $tags[$Matches.tag] = $Matches.sha
+        } elseif ($line -match '^(?<sha>[0-9a-f]{40})\s+refs/tags/(?<tag>.+)$') {
+            if (!$tags.ContainsKey($Matches.tag)) {
+                $tags[$Matches.tag] = $Matches.sha
+            }
+        }
+    }
+    return $tags
+}
+
 # Resolves one remote tag SHA.
 function Get-RemoteTagSha([string] $Root, [string] $Remote, [string] $Tag) {
     return Get-RemoteRefSha -Root $Root -Remote $Remote -Ref "refs/tags/$Tag"
@@ -124,7 +163,10 @@ Export-ModuleMember -Function @(
     'Assert-GitWorktreeClean',
     'Get-RemoteRefSha',
     'Get-RemoteBranchSha',
+    'Get-RemoteBranches',
+    'Get-RemoteBranchMap',
     'Get-RemoteTagSha',
+    'Get-RemoteTagMap',
     'Get-LocalBranchSha',
     'Get-ResolvedGitCommit',
     'Get-GitFileText',

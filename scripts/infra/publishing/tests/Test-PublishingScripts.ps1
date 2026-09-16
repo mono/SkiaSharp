@@ -672,4 +672,189 @@ try {
     Remove-Item $automationRoot, $automationBare -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# Exercises the focused release-line audit without contacting GitHub or NuGet.
+$auditPath = Join-Path $publishingRoot 'audit-release-state.ps1'
+$auditCommand = Get-Command $auditPath
+$auditParameters = @($auditCommand.Parameters.Keys | Where-Object {
+    $_ -notin @('Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'InformationAction',
+        'ProgressAction', 'ErrorVariable', 'WarningVariable', 'InformationVariable',
+        'OutVariable', 'OutBuffer', 'PipelineVariable')
+})
+Assert-Equal @('Json', 'Version') @($auditParameters | Sort-Object) `
+    'The release-line audit must expose only Version and Json.'
+Assert-Equal 'System.String' $auditCommand.Parameters['Version'].ParameterType.FullName `
+    'The release-line audit Version parameter must be a string.'
+$auditFunctions = Get-ScriptFunctionText $auditPath
+Invoke-Expression $auditFunctions
+
+function New-AuditBranch([string] $Identity, [string] $Sha) {
+    return [pscustomobject] @{
+        Name = "release/$Identity"
+        Sha = $Sha
+        Identity = ConvertTo-ReleaseMilestone $Identity
+    }
+}
+
+function New-AuditPackage([string] $Version, [string] $Branch, [string] $Commit) {
+    return [pscustomobject] @{ Version = $Version; Branch = $Branch; Commit = $Commit }
+}
+
+function New-AuditRelease([string] $Tag, [string] $Commit, [bool] $Prerelease = $false) {
+    return [pscustomobject] @{
+        tagName = $Tag
+        targetCommitish = $Commit
+        isDraft = $false
+        isPrerelease = $Prerelease
+    }
+}
+
+function New-AuditDelta([string] $Text, [int] $Queued = 0) {
+    return [pscustomobject] @{
+        Text = $Text
+        Queued = if ($Queued) {
+            @(1..$Queued | ForEach-Object { [pscustomobject] @{ Sha = "$_"; Subject = 'Change' } })
+        } else {
+            @()
+        }
+    }
+}
+
+$sha0 = '0' * 40
+$sha1 = '1' * 40
+$sha2 = '2' * 40
+$script:AuditDeltaSubjects = @(
+    [pscustomobject] @{ Sha = $sha0; Subject = 'Bump to the next version (4.152.1)' }
+)
+function global:Invoke-Git {
+    param([string] $Root, [string[]] $Arguments)
+    if ($Arguments[0] -eq 'log') {
+        $lines = $script:AuditDeltaSubjects | ForEach-Object {
+            "$($_.Sha)$([char] 0x1f)$($_.Subject)"
+        }
+        return [pscustomobject] @{ Output = $lines -join "`n" }
+    }
+    if ($Arguments[0] -eq 'diff-tree') {
+        return [pscustomobject] @{
+            Output = "scripts/VERSIONS.txt`nscripts/azure-templates-variables.yml"
+        }
+    }
+    throw "Unexpected audit test git invocation: $($Arguments -join ' ')"
+}
+try {
+    $delta = Get-MaintenanceDelta -Root . -MaintenanceSha $sha2 -ReleaseSha $sha0
+    Assert-Equal 'version bump only' $delta.Text 'The automatic version bump was not ignored.'
+    $script:AuditDeltaSubjects += [pscustomobject] @{ Sha = $sha1; Subject = 'Fix release branch' }
+    $delta = Get-MaintenanceDelta -Root . -MaintenanceSha $sha2 -ReleaseSha $sha0
+    Assert-Equal '1 queued release commit' $delta.Text 'A real maintenance commit was not retained.'
+} finally {
+    Remove-Item Function:\Invoke-Git
+}
+$maintenance = [pscustomobject] @{ Branch = 'release/4.152.x'; Sha = $sha2; Version = '4.152.1' }
+$stable = New-AuditBranch '4.152.0' $sha0
+$stablePackage = New-AuditPackage '4.152.0' $stable.Name $sha0
+$stableTag = 'v4.152.0'
+$stableRelease = New-AuditRelease $stableTag $sha0
+
+$bumpOnly = New-AuditDelta 'version bump only'
+$state = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } -Delta $bumpOnly
+Assert-Equal 0 $state.Actions.Count 'A maintenance-only version bump unexpectedly started a release.'
+Assert-Equal 'version bump only' $state.MaintenanceDelta.Text 'The bump-only maintenance state was lost.'
+Assert-Equal $sha0 $state.Releases[0].SourceCommit 'NuGet source provenance was omitted from the audit state.'
+
+$realChanges = New-AuditDelta '2 queued release commits' 2
+$state = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } -Delta $realChanges
+Assert-True (@($state.Actions.Kind) -contains 'start') 'Real maintenance changes did not recommend the next release.'
+Assert-True ((@($state.Actions.Command) -join "`n") -match '4\.152\.1-stable') 'The stable/patch next identity was not derived.'
+
+$oldPreview = New-AuditBranch '4.153.0-preview.1' $sha0
+$latestRc = New-AuditBranch '4.153.0-rc.1' $sha1
+$latestUnpublished = Get-ReleaseAuditState `
+    -Line '4.153' -Maintenance ([pscustomobject] @{ Branch = 'main'; Sha = $sha1; Version = '4.153.0' }) `
+    -Branches @($oldPreview, $latestRc) -Packages @() -TagShas @{} -GitHubReleases @{} `
+    -Delta (New-AuditDelta '1 queued release commit' 1)
+Assert-Equal 'superseded' ($latestUnpublished.Releases | Where-Object Branch -eq $oldPreview.Name).State `
+    'An older unpublished branch was not superseded.'
+Assert-True (@($latestUnpublished.Actions.Kind) -contains 'publish') 'The latest unpublished branch was not publishable.'
+Assert-True (@($latestUnpublished.Actions.Kind) -contains 'queued') 'Maintenance changes were not queued behind an unpublished branch.'
+Assert-True (@($latestUnpublished.Actions.Kind) -notcontains 'start') 'An unpublished latest branch incorrectly started another release.'
+
+$state = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{} -GitHubReleases @{ $stableTag = $stableRelease } -Delta (New-AuditDelta 'none')
+Assert-True (@($state.Actions.Kind) -contains 'finish') 'A public package without a tag did not require Finish.'
+$state = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha1 } -GitHubReleases @{ $stableTag = $stableRelease } -Delta (New-AuditDelta 'none')
+Assert-True (@($state.Actions.Kind) -contains 'finish') 'A mismatched tag did not require Finish.'
+$state = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{} -Delta (New-AuditDelta 'none')
+Assert-True (@($state.Actions.Kind) -contains 'finish') 'A missing GitHub Release did not require Finish.'
+$stalePackage = New-AuditPackage '4.152.0' $stable.Name $sha1
+$state = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stalePackage) `
+    -TagShas @{ $stableTag = $sha1 } -GitHubReleases @{ $stableTag = (New-AuditRelease $stableTag $sha1) } `
+    -Delta (New-AuditDelta 'none')
+Assert-True (@($state.Actions.Kind) -contains 'investigate') `
+    'A public package from another commit did not require provenance investigation.'
+Assert-True (@($state.Actions.Kind) -notcontains 'publish') `
+    'A public package from another commit incorrectly suggested republishing an immutable version.'
+
+$preview = New-AuditBranch '4.153.0-preview.1' $sha0
+$previewPackages = @(
+    New-AuditPackage '4.153.0-preview.1.1' $preview.Name $sha0
+    New-AuditPackage '4.153.0-preview.1.2' $preview.Name $sha0
+)
+$state = Get-ReleaseAuditState `
+    -Line '4.153' -Maintenance $null -Branches @($preview) -Packages $previewPackages `
+    -TagShas @{ 'v4.153.0-preview.1.1' = $sha0; 'v4.153.0-preview.1.2' = $sha0 } `
+    -GitHubReleases @{
+        'v4.153.0-preview.1.1' = New-AuditRelease 'v4.153.0-preview.1.1' $sha0 $true
+        'v4.153.0-preview.1.2' = New-AuditRelease 'v4.153.0-preview.1.2' $sha0 $true
+    } -Delta (New-AuditDelta 'none')
+Assert-Equal 2 @($state.Releases | Where-Object NuGet -match 'preview').Count `
+    'Exact public prerelease shipments were collapsed.'
+
+$mainMaintenance = [pscustomobject] @{ Branch = 'main'; Sha = $sha1; Version = '4.154.0' }
+$mainPreview = New-AuditBranch '4.154.0-preview.1' $sha0
+$mainPreviewPackage = New-AuditPackage '4.154.0-preview.1.1' $mainPreview.Name $sha0
+$mainPreviewTag = 'v4.154.0-preview.1.1'
+$state = Get-ReleaseAuditState `
+    -Line '4.154' -Maintenance $mainMaintenance -Branches @($mainPreview) -Packages @($mainPreviewPackage) `
+    -TagShas @{ $mainPreviewTag = $sha0 } `
+    -GitHubReleases @{ $mainPreviewTag = (New-AuditRelease $mainPreviewTag $sha0 $true) } `
+    -Delta (New-AuditDelta '1 queued release commit' 1)
+Assert-True ((@($state.Actions.Command) -join "`n") -match '-Base main') `
+    'Matching main was not used when no servicing branch exists.'
+$inactive = Get-ReleaseAuditState `
+    -Line '4.150' -Maintenance $null -Branches @() -Packages @() -TagShas @{} -GitHubReleases @{} `
+    -Delta (New-AuditDelta 'none')
+Assert-Equal 0 $inactive.Actions.Count 'An inactive old release line should not invent work.'
+$firstRelease = Get-ReleaseAuditState `
+    -Line '4.155' `
+    -Maintenance ([pscustomobject] @{ Branch = 'main'; Sha = $sha1; Version = '4.155.0' }) `
+    -Branches @() `
+    -Packages @() `
+    -TagShas @{} `
+    -GitHubReleases @{} `
+    -Delta (New-AuditDelta 'none')
+Assert-True ((@($firstRelease.Actions.Command) -join "`n") -match '4\.155\.0-preview\.1') `
+    'A maintained line with no release branch did not recommend its first preview.'
+$latestUnpublishedReport = @(Write-ReleaseAuditReport $latestUnpublished) -join "`n"
+Assert-True ($latestUnpublishedReport -notmatch 'publish release branch; Publish release branch') `
+    'The human-readable report duplicated equivalent state and action text.'
+Assert-Equal 'main' $mainMaintenance.Branch 'A matching current main was not usable as maintenance.'
+Assert-Equal '4.154.0-preview.1' (Get-NextReleaseIdentity '4.154' $null '4.154.0') `
+    'A first release identity was not preview.1.'
+Assert-Equal '4.154.0-preview.2' (Get-NextReleaseIdentity '4.154' (New-AuditBranch '4.154.0-preview.1' $sha0) '4.154.0') `
+    'Preview.1 did not advance to preview.2.'
+Assert-Equal '4.154.0-rc.1' (Get-NextReleaseIdentity '4.154' (New-AuditBranch '4.154.0-preview.2' $sha0) '4.154.0') `
+    'Later previews did not advance to RC.1.'
+Assert-Equal '4.154.0-stable' (Get-NextReleaseIdentity '4.154' (New-AuditBranch '4.154.0-rc.1' $sha0) '4.154.0') `
+    'RC did not advance to stable.'
+
 Write-Output "All $script:TestsRun publishing script tests passed."

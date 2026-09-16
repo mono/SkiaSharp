@@ -7,18 +7,16 @@ function Invoke-GitHub(
     [switch] $AllowFailure,
     [switch] $WriteOutput
 ) {
-    $errorPath = [System.IO.Path]::GetTempFileName()
     $nativePreference = $PSNativeCommandUseErrorActionPreference
     $PSNativeCommandUseErrorActionPreference = $false
     try {
         $LASTEXITCODE = 0
-        $output = @(& gh @Arguments 2> $errorPath)
+        $output = @(& gh @Arguments 2>&1)
         $exitCode = $LASTEXITCODE
-        $errorText = [string] (Get-Content $errorPath -Raw)
     } finally {
         $PSNativeCommandUseErrorActionPreference = $nativePreference
-        Remove-Item $errorPath -Force -ErrorAction SilentlyContinue
     }
+    $errorText = if ($exitCode -eq 0) { '' } else { $output -join "`n" }
     if ($WriteOutput -and $output) {
         $output | Out-Host
     }
@@ -103,7 +101,7 @@ function Get-GitHubRelease([string] $Repository, [string] $Tag) {
     $result = Invoke-GitHub -Arguments @(
         'release', 'view', $Tag,
         '--repo', $Repository,
-        '--json', 'tagName,name,isPrerelease,targetCommitish,body,url'
+        '--json', 'tagName,name,isDraft,isPrerelease,targetCommitish,body,url'
     ) -AllowFailure
     if ($result.ExitCode -eq 0) {
         return $result.Output | ConvertFrom-Json
@@ -113,6 +111,28 @@ function Get-GitHubRelease([string] $Repository, [string] $Tag) {
         return $null
     }
     throw "Unable to read GitHub Release $Tag`: $detail"
+}
+
+# Reads all GitHub Releases once, keyed by exact tag name.
+function Get-GitHubReleaseMap([string] $Repository) {
+    $pages = Invoke-GitHubJsonWithRetry -Arguments @(
+        'api',
+        '--paginate',
+        '--slurp',
+        "repos/$Repository/releases?per_page=100"
+    )
+    $releases = @{}
+    foreach ($release in Expand-GitHubPages $pages) {
+        $releases[[string] $release.tag_name] = [pscustomobject] @{
+            tagName = [string] $release.tag_name
+            targetCommitish = [string] $release.target_commitish
+            isDraft = [bool] $release.draft
+            isPrerelease = [bool] $release.prerelease
+            name = [string] $release.name
+            url = [string] $release.html_url
+        }
+    }
+    return $releases
 }
 
 # Creates one pull request.
@@ -148,6 +168,7 @@ Export-ModuleMember -Function @(
     'Get-GitHubMilestoneMap',
     'Get-GitHubIssue',
     'Get-GitHubRelease',
+    'Get-GitHubReleaseMap',
     'New-GitHubPullRequest',
     'Enable-GitHubGitAuthentication'
 )

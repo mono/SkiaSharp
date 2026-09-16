@@ -50,6 +50,29 @@ Prepare, Finish, and Milestones use the same two-dispatch pattern: first run
 with `push` unchecked to review a read-only plan, then run again with identical
 inputs and `push` checked.
 
+## Audit a release line
+
+Use the focused, read-only summary for one major/minor line:
+
+```powershell
+pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.152
+```
+
+The command accepts exactly `A.B`, with optional `-Json`. It selects
+`release/A.B.x` as maintenance when present; otherwise it uses `main` only when
+its checked-in SkiaSharp version belongs to that line. It lists real specific
+release branches and every exact public SkiaSharp package version, including
+multiple prerelease builds. It checks each public shipment's NuGet provenance,
+exact tag, and GitHub Release.
+
+The report recommends only the next owner action: protected BAR-to-NuGet
+publication, `finish-release.ps1 -Mode DryRun`, or
+`prepare-release.ps1 -Mode DryRun`. It intentionally does not inspect BAR
+details, release notes, support metadata, milestone assignments, or milestone
+maintenance; those remain owned by their detailed workflows. Exit `0` means no
+action is needed, `1` means release work remains, and `2` means a required
+remote service or tool was unavailable.
+
 ## 1. Prepare the release branches
 
 Open

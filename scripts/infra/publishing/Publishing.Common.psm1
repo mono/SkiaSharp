@@ -95,6 +95,7 @@ function ConvertTo-ReleaseMilestone([string] $Value) {
     }
     return [pscustomobject] @{
         Title = $title
+        Numeric = $numericText
         NumericKey = '{0:D10}.{1:D10}.{2:D10}.{3:D10}' -f $parts[0], $parts[1], $parts[2], $hotfix
         Channel = $channel
         SortKey = '{0:D10}.{1:D10}.{2:D10}.{3:D10}.{4:D2}.{5:D10}' -f
@@ -245,16 +246,25 @@ function Get-ReleaseIdentity([string] $PublicVersion) {
     throw "Version must be stable X.Y.Z[.F] or an exact public X.Y.Z[.F]-(preview|rc).N.BUILD version."
 }
 
+# Lists all public versions of one package from NuGet's immutable catalogue.
+function Get-NuGetPackageVersions([string] $PackageId) {
+    $lowerId = $PackageId.ToLowerInvariant()
+    $uri = "https://api.nuget.org/v3-flatcontainer/$lowerId/index.json"
+    $response = Invoke-RestMethod -Uri $uri
+    if ($null -eq $response.versions) {
+        throw "NuGet catalogue for $PackageId does not contain a versions array."
+    }
+    return @($response.versions | ForEach-Object { [string] $_ })
+}
+
 # Resolves a prerelease identity to its one exact public NuGet package version.
 function Resolve-NuGetPackageVersion([string] $PackageId, [string] $Version) {
     if ($Version -notmatch '^\d+\.\d+\.\d+(?:\.\d+)?-(?:preview|rc)\.[1-9]\d*$') {
         return $Version
     }
 
-    $lowerId = $PackageId.ToLowerInvariant()
-    $uri = "https://api.nuget.org/v3-flatcontainer/$lowerId/index.json"
     $versionsFound = @(
-        (Invoke-RestMethod -Uri $uri).versions |
+        (Get-NuGetPackageVersions -PackageId $PackageId) |
             Where-Object { $_ -match "^$([regex]::Escape($Version))\.\d+(?:\.\d+)?$" }
     )
     if ($versionsFound.Count -ne 1) {
@@ -527,6 +537,7 @@ Export-ModuleMember -Function @(
     'Get-PreviousShippedTag',
     'Set-GitHubItemMilestone',
     'Get-ReleaseIdentity',
+    'Get-NuGetPackageVersions',
     'Resolve-NuGetPackageVersion',
     'Get-NuGetPackageSource',
     'Invoke-GitHubMutation',
