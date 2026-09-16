@@ -64,9 +64,12 @@ its checked-in SkiaSharp version belongs to that line. It lists real specific
 release branches and every exact public SkiaSharp package version, including
 multiple prerelease builds. It checks each public shipment's NuGet provenance,
 exact tag, and GitHub Release. It also checks the expected incoming Skia sync
-branch and open pull request (`skia-sync/release-A.B.x` or `skia-sync/main`).
-A non-draft incoming PR is shown as work to merge before cutting the next
-release; a draft PR is visible but does not block the release recommendation.
+branch and open pull request (`skia-sync/release-A.B.x` for a servicing line or
+`skia-sync/mMILESTONE` for the current line on `main`). The separate
+`skia-sync/main` branch follows the bleeding-edge Google Skia `main` tip and is
+not the milestone sync used to decide release readiness. A non-draft incoming
+milestone PR is shown as work to merge before cutting the next release; a draft
+PR is visible but does not block the release recommendation.
 
 The report recommends only the next owner action: protected BAR-to-NuGet
 publication, `finish-release.ps1 -Mode DryRun`, or

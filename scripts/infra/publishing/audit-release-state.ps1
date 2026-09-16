@@ -24,13 +24,21 @@ Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
 
-function Get-SkiaSharpVersionAtCommit([string] $Root, [string] $Commit) {
+function Get-SkiaSharpReleaseInfoAtCommit([string] $Root, [string] $Commit) {
     $versions = Get-GitFileText -Root $Root -Commit $Commit -Path 'scripts/VERSIONS.txt'
-    $match = [regex]::Match($versions, '(?m)^\s*SkiaSharp\s+nuget\s+(?<version>\d+\.\d+\.\d+(?:\.\d+)?)\s*$')
-    if (!$match.Success) {
-        throw "Could not read the SkiaSharp NuGet version at $Commit."
+    $versionMatch = [regex]::Match(
+        $versions,
+        '(?m)^\s*SkiaSharp\s+nuget\s+(?<version>\d+\.\d+\.\d+(?:\.\d+)?)\s*$')
+    $milestoneMatch = [regex]::Match(
+        $versions,
+        '(?m)^\s*libSkiaSharp\s+milestone\s+(?<milestone>\d+)\s*$')
+    if (!$versionMatch.Success -or !$milestoneMatch.Success) {
+        throw "Could not read the SkiaSharp NuGet version and Skia milestone at $Commit."
     }
-    return $match.Groups['version'].Value
+    return [pscustomobject] @{
+        Version = $versionMatch.Groups['version'].Value
+        SkiaMilestone = [int] $milestoneMatch.Groups['milestone'].Value
+    }
 }
 
 function Get-ReleaseBranches([string] $Root, [string] $Line) {
@@ -135,12 +143,19 @@ function Get-NextReleaseIdentity(
     return $null
 }
 
-function Get-ExpectedSyncBranch([string] $MaintenanceBranch) {
-    if ($MaintenanceBranch -eq 'main') {
-        return 'skia-sync/main'
+function Get-ExpectedSyncBranch([pscustomobject] $Maintenance) {
+    if (!$Maintenance) {
+        return $null
     }
-    if ($MaintenanceBranch -match '^release/\d+\.\d+\.x$') {
-        return "skia-sync/$($MaintenanceBranch.Replace('/', '-'))"
+    if ($Maintenance.Branch -eq 'main') {
+        $milestone = [int] $Maintenance.SkiaMilestone
+        if ($milestone -lt 1) {
+            throw 'The current main line does not have a valid Skia milestone.'
+        }
+        return "skia-sync/m$milestone"
+    }
+    if ($Maintenance.Branch -match '^release/\d+\.\d+\.x$') {
+        return "skia-sync/$($Maintenance.Branch.Replace('/', '-'))"
     }
     return $null
 }
@@ -153,7 +168,7 @@ function Get-IncomingReleasePullRequest(
     if (!$Maintenance) {
         return $null
     }
-    $headBranch = Get-ExpectedSyncBranch -MaintenanceBranch $Maintenance.Branch
+    $headBranch = Get-ExpectedSyncBranch -Maintenance $Maintenance
     if (!$headBranch) {
         return $null
     }
@@ -583,20 +598,23 @@ try {
         $maintenanceSha = Get-ResolvedGitCommit `
             -Root $root `
             -Reference $maintenanceBranch
+        $releaseInfo = Get-SkiaSharpReleaseInfoAtCommit -Root $root -Commit $maintenanceSha
         $maintenance = [pscustomobject] @{
             Branch = $maintenanceBranch
             Sha = $maintenanceSha
-            Version = Get-SkiaSharpVersionAtCommit -Root $root -Commit $maintenanceSha
+            Version = $releaseInfo.Version
+            SkiaMilestone = $releaseInfo.SkiaMilestone
             Label = 'servicing'
         }
     } else {
         $mainSha = Get-ResolvedGitCommit -Root $root -Reference 'main'
-        $mainVersion = Get-SkiaSharpVersionAtCommit -Root $root -Commit $mainSha
-        $maintenance = if ($mainVersion -match "^$([regex]::Escape($Version))\.") {
+        $mainReleaseInfo = Get-SkiaSharpReleaseInfoAtCommit -Root $root -Commit $mainSha
+        $maintenance = if ($mainReleaseInfo.Version -match "^$([regex]::Escape($Version))\.") {
             [pscustomobject] @{
                 Branch = 'main'
                 Sha = $mainSha
-                Version = $mainVersion
+                Version = $mainReleaseInfo.Version
+                SkiaMilestone = $mainReleaseInfo.SkiaMilestone
                 Label = 'current main'
             }
         } else {
@@ -605,7 +623,7 @@ try {
     }
     $incomingPullRequest = $null
     if ($maintenance) {
-        $syncBranch = Get-ExpectedSyncBranch -MaintenanceBranch $maintenance.Branch
+        $syncBranch = Get-ExpectedSyncBranch -Maintenance $maintenance
         if ($syncBranch) {
             $syncSha = Get-RemoteBranchSha -Root $root -Remote origin -Branch $syncBranch
             $syncPullRequests = Get-GitHubOpenPullRequests `

@@ -844,15 +844,36 @@ try {
 } finally {
     Remove-Item Function:\Invoke-Git
 }
-$maintenance = [pscustomobject] @{ Branch = 'release/4.152.x'; Sha = $sha2; Version = '4.152.1' }
+function Get-GitFileText([string] $Root, [string] $Commit, [string] $Path) {
+    return "SkiaSharp nuget 4.154.0`nlibSkiaSharp milestone 154`n"
+}
+try {
+    $releaseInfo = Get-SkiaSharpReleaseInfoAtCommit -Root . -Commit $sha2
+    Assert-Equal '4.154.0' $releaseInfo.Version 'The SkiaSharp version was not read from VERSIONS.txt.'
+    Assert-Equal 154 $releaseInfo.SkiaMilestone 'The Skia milestone was not read from VERSIONS.txt.'
+} finally {
+    Remove-Item Function:\Get-GitFileText
+}
+$maintenance = [pscustomobject] @{
+    Branch = 'release/4.152.x'
+    Sha = $sha2
+    Version = '4.152.1'
+    SkiaMilestone = 152
+}
+$mainMaintenance = [pscustomobject] @{
+    Branch = 'main'
+    Sha = $sha2
+    Version = '4.154.0'
+    SkiaMilestone = 154
+}
 $stable = New-AuditBranch '4.152.0' $sha0
 $stablePackage = New-AuditPackage '4.152.0' $stable.Name $sha0
 $stableTag = 'v4.152.0'
 $stableRelease = New-AuditRelease $stableTag $sha0
-Assert-Equal 'skia-sync/release-4.152.x' (Get-ExpectedSyncBranch $maintenance.Branch) `
+Assert-Equal 'skia-sync/release-4.152.x' (Get-ExpectedSyncBranch $maintenance) `
     'The servicing-line sync branch name was not derived.'
-Assert-Equal 'skia-sync/main' (Get-ExpectedSyncBranch 'main') `
-    'The main sync branch name was not derived.'
+Assert-Equal 'skia-sync/m154' (Get-ExpectedSyncBranch $mainMaintenance) `
+    'The current-line milestone sync branch name was not derived.'
 $openSyncPullRequest = Get-IncomingReleasePullRequest `
     -Maintenance $maintenance `
     -SyncBranchSha $sha1 `
@@ -862,11 +883,21 @@ $openSyncPullRequest = Get-IncomingReleasePullRequest `
 Assert-Equal 'open' $openSyncPullRequest.State 'A ready incoming maintenance PR was not detected.'
 Assert-Equal $true $openSyncPullRequest.BlocksRelease `
     'A ready incoming maintenance PR did not block a new release cut.'
-$draftSyncPullRequest = Get-IncomingReleasePullRequest `
-    -Maintenance ([pscustomobject] @{ Branch = 'main'; Sha = $sha2; Version = '4.154.0' }) `
+$mainSyncPullRequest = Get-IncomingReleasePullRequest `
+    -Maintenance $mainMaintenance `
     -SyncBranchSha $sha1 `
     -PullRequests @(
-        New-AuditPullRequest 5021 'skia-sync/main' $sha1 'main' $sha0 $true
+        New-AuditPullRequest 5054 'skia-sync/m154' $sha1 'main' $sha0
+    )
+Assert-Equal 'skia-sync/m154' $mainSyncPullRequest.HeadBranch `
+    'The current line inspected the upstream-tip sync branch instead of the milestone branch.'
+Assert-Equal $true $mainSyncPullRequest.BlocksRelease `
+    'A ready current-line milestone PR did not block a new release cut.'
+$draftSyncPullRequest = Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha $sha1 `
+    -PullRequests @(
+        New-AuditPullRequest 5063 'skia-sync/release-4.152.x' $sha1 $maintenance.Branch $sha0 $true
     )
 Assert-Equal 'draft' $draftSyncPullRequest.State 'A draft incoming sync PR was not identified.'
 Assert-Equal $false $draftSyncPullRequest.BlocksRelease `
@@ -961,7 +992,6 @@ $state = Get-ReleaseAuditState `
 Assert-Equal 2 @($state.Releases | Where-Object NuGet -match 'preview').Count `
     'Exact public prerelease shipments were collapsed.'
 
-$mainMaintenance = [pscustomobject] @{ Branch = 'main'; Sha = $sha1; Version = '4.154.0' }
 $mainPreview = New-AuditBranch '4.154.0-preview.1' $sha0
 $mainPreviewPackage = New-AuditPackage '4.154.0-preview.1.1' $mainPreview.Name $sha0
 $mainPreviewTag = 'v4.154.0-preview.1.1'
@@ -978,7 +1008,12 @@ $inactive = Get-ReleaseAuditState `
 Assert-Equal 0 $inactive.Actions.Count 'An inactive old release line should not invent work.'
 $firstRelease = Get-ReleaseAuditState `
     -Line '4.155' `
-    -Maintenance ([pscustomobject] @{ Branch = 'main'; Sha = $sha1; Version = '4.155.0' }) `
+    -Maintenance ([pscustomobject] @{
+        Branch = 'main'
+        Sha = $sha1
+        Version = '4.155.0'
+        SkiaMilestone = 155
+    }) `
     -Branches @() `
     -Packages @() `
     -TagShas @{} `
