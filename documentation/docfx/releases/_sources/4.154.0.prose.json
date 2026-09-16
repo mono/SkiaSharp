@@ -1,31 +1,34 @@
 {
   "theme": "Skia m154 preview",
-  "highlights_headline": "SkiaSharp 4.154.0 Preview 1 updates the bundled renderer to Skia m154.",
-  "highlights_body": null,
-  "breaking": [],
+  "highlights_headline": "SkiaSharp 4.154.0 preview updates the bundled renderer to Skia m154.",
+  "highlights_body": "It also aligns HarfBuzzSharp binding generation with the native source pinned by the bundled Skia build.",
+  "breaking": [
+    {
+      "title": "UnicodeCombiningClass.CCC133 was renamed",
+      "body": "Use `UnicodeCombiningClass.CCC132` instead of `CCC133`. The numeric value remains 132, but the managed name now matches corrected upstream HarfBuzz naming.",
+      "prs": []
+    },
+    {
+      "title": "GlyphFlags.Defined was removed",
+      "body": "Combine the concrete `GlyphFlags` values your code needs instead of using the aggregate `GlyphFlags.Defined` mask.",
+      "prs": []
+    }
+  ],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia m154",
-          "detail": "Updates the bundled rendering engine from the previous preview line to upstream milestone 154.",
-          "prs": [
-            4945
-          ]
+          "lead": "Updated to Skia m154",
+          "detail": "Moves the bundled graphics engine to Chrome milestone 154.",
+          "prs": [4945]
         }
       ]
     }
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.154.0-preview.1.26454.9": "Preview 1 introduces the Skia m154 engine update."
+    "v4.154.0-preview.1.26454.9": "Preview 1 opens the m154 line with the bundled engine update and synchronized HarfBuzzSharp generation."
   },
-  "harfbuzz_summary": null,
-  "release_summaries": {
-    "v4.154.0-preview.1.26454.9": {
-      "headline": "SkiaSharp 4.154.0 Preview 1 updates the bundled renderer to Skia m154.",
-      "body": "This shipment contains the milestone 154 engine update since the 4.153 Preview 1 release."
-    }
-  }
+  "harfbuzz_summary": null
 }

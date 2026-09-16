@@ -1,18 +1,22 @@
 {
-  "theme": "Platforms, GTK4, and .NET 10",
-  "highlights_headline": "SkiaSharp 3.119.4 adds GTK4 views, Linux Bionic, Tizen x64/arm64 support, and .NET 10 SDK compatibility.",
-  "highlights_body": "New platform support spans Linux Bionic (Android-like) native assets, GTK4 via GirCore, Tizen on x64 and arm64, and a .NET 10 SDK upgrade. On Windows, MAUI TabBar SKGLView rendering is fixed and net48 full-framework targeting is added. Security mitigations and multiple native dependency updates are also included.",
-  "breaking": [],
+  "theme": "Expanded platform support",
+  "highlights_headline": "SkiaSharp 3.119.4 expands Linux, Tizen, GTK4, and .NET 10 support with targeted platform fixes.",
+  "highlights_body": "This stable servicing release also adds native hardening, updates bundled dependencies, and rolls up the unreleased 3.119.3 preview.",
+  "breaking": [
+    {
+      "title": "Blazor _Imports is no longer a component",
+      "body": "The generated `SkiaSharp.Views.Blazor._Imports` type no longer derives from `ComponentBase` or implements Blazor component interfaces. Do not use this implementation detail as a component base class.",
+      "prs": []
+    }
+  ],
   "categories": [
     {
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "SKManagedStream reworked: parent/child chain replaced with SKData snapshot",
-          "detail": "The internal stream lifetime model is replaced with a cleaner SKData snapshot approach, fixing edge-case disposal issues and simplifying the ownership model.",
-          "prs": [
-            3589
-          ]
+          "lead": "GTK4 drawing-area integration added",
+          "detail": "Adds SkiaSharp.Views.Gtk4 for applications using GirCore.Gtk-4.0 bindings.",
+          "prs": [3527]
         }
       ]
     },
@@ -20,40 +24,9 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "MAUI TabBar SKGLView rendering fixed",
-          "detail": "SKGLView no longer stops rendering after a tab switch in a MAUI TabBar on Android.",
-          "prs": [
-            3076
-          ]
-        },
-        {
-          "lead": "GTK4 Cairo assertion crash fixed",
-          "detail": "SKDrawingArea in GTK4 was triggering a Cairo assertion failure; the rendering path has been corrected.",
-          "prs": [
-            3562
-          ]
-        },
-        {
-          "lead": "AoT crash with IlcDisableReflection fixed",
-          "detail": "Native AoT builds using IlcDisableReflection=true no longer crash at startup.",
-          "prs": [
-            3485
-          ]
-        },
-        {
-          "lead": "tvOS native builds split to device and simulator frameworks",
-          "detail": "tvOS NativeReference targets now correctly separate device and simulator slices, matching the iOS pattern.",
-          "prs": [
-            3563,
-            3561
-          ]
-        },
-        {
-          "lead": "DesignMode detection uses property directly in WinForms",
-          "detail": "SkiaSharp.Views.WindowsForms now uses the DesignMode property directly rather than reflection-based detection.",
-          "prs": [
-            3614
-          ]
+          "lead": "Desktop, Android, and native loading fixes",
+          "detail": "Fixes GTK4 Cairo assertions, Android SKGLView rendering after MAUI tab switches, Linux ARM64 dependencies, and systems without DirectX 12.",
+          "prs": [3562, 3076, 3494, 3633]
         }
       ]
     },
@@ -61,47 +34,9 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Linux Bionic native assets added",
-          "detail": "Native library assets for Linux Bionic (the Android-like Linux variant) are now included, enabling SkiaSharp use in Bionic-based environments.",
-          "prs": [
-            3217
-          ]
-        },
-        {
-          "lead": "GTK4 view added via GirCore bindings",
-          "detail": "A new SkiaSharp.Views.Gtk4 package provides SKDrawingArea for GTK4 applications using the GirCore.Gtk-4.0 bindings.",
-          "prs": [
-            3527
-          ]
-        },
-        {
-          "lead": "Tizen x64 and arm64 native builds added",
-          "detail": "Tizen support expands to x64 and arm64 architectures with updated Studio 6.1 tooling and TFM fixes.",
-          "prs": [
-            3620,
-            3619
-          ]
-        },
-        {
-          "lead": ".NET 10 SDK with workload version pinning",
-          "detail": "The build system is updated to the .NET 10 SDK with explicit workload version pinning for reproducible builds.",
-          "prs": [
-            3514
-          ]
-        },
-        {
-          "lead": "net48 full-framework target added",
-          "detail": "A net48 (Windows .NET Framework 4.8) full-framework build target is added for Windows validation scenarios.",
-          "prs": [
-            3631
-          ]
-        },
-        {
-          "lead": "C# 13 support on legacy TFMs via PolySharp",
-          "detail": "PolySharp is used to polyfill C# 13 language features on legacy target frameworks, keeping the codebase on the latest language version everywhere.",
-          "prs": [
-            3642
-          ]
+          "lead": "Linux Bionic, Tizen 64-bit, and .NET 10 support",
+          "detail": "Adds Linux Bionic native assets, Tizen x64 and arm64 builds, a net48 target for Windows validation, and .NET 10 SDK workload alignment.",
+          "prs": [3217, 3620, 3619, 3631, 3514]
         }
       ]
     },
@@ -109,35 +44,22 @@
       "heading": "Security",
       "bullets": [
         {
-          "lead": "Spectre mitigations enabled for all native binaries",
-          "detail": "Spectre v1 mitigation flags are now applied to both libSkiaSharp.dll (Windows) and libSkiaSharp.so (Linux/Android).",
-          "prs": [
-            3502,
-            3496
-          ]
-        },
-        {
-          "lead": "Native dependencies updated",
-          "detail": "libpng updated to 1.6.58 (from 1.6.54), libwebp to 1.6.0, brotli to 1.2.0, and unused dependencies have been removed.",
-          "prs": [
-            3723,
-            3478,
-            3469,
-            3463
-          ]
+          "lead": "Native dependencies and binary safeguards refreshed",
+          "detail": "Updates libpng, libwebp, Brotli, and libexpat and carries additional native binary mitigations into the stable release.",
+          "prs": [3723, 3478, 3469, 3458, 3496, 3502]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "4Darmygeometry": "Added Linux Bionic native assets support and HarfBuzz platform improvements",
-    "sshumakov": "Enabled Spectre mitigation flags for Windows and Linux native binaries",
-    "ramezgerges": "Improved the Android NDK build configuration",
-    "SimonvBez": "Fixed SKGLView not rendering after tab switch in MAUI TabBar"
+    "4Darmygeometry": "Linux Bionic native assets and legacy target framework support",
+    "sshumakov": "Native binary mitigation support",
+    "ramezgerges": "Release support and integration improvements",
+    "SimonvBez": "Android SKGLView rendering fix for MAUI tab switches"
   },
   "preview_summaries": {
-    "v3.119.4-preview.1.1": "Preview 1 introduced Linux Bionic support, GTK4 views, Tizen x64/arm64 builds, .NET 10 SDK, the MAUI TabBar fix, tvOS build splits, GTK4 crash fix, SKManagedStream rework, and numerous dependency updates.",
-    "v3.119.3-preview.1.1": "Preview 1 of 3.119.3 delivered Spectre mitigations for Linux, the AoT reflection fix, Linux ARM64 crash fix, and libpng/libwebp/brotli updates."
+    "v3.119.4-preview.1.1": "Preview 1 expanded Linux, Tizen, GTK4, and .NET 10 support with platform reliability fixes.",
+    "v3.119.3-preview.1.1": "The rolled-up 3.119.3 preview added AOT and Linux ARM64 fixes plus dependency refreshes."
   },
-  "harfbuzz_summary": "Ships HarfBuzzSharp 8.3.1.5 with Linux Bionic support, tvOS build fixes, and the .NET 10 SDK update from this release."
+  "harfbuzz_summary": "Carries forward the synchronized HarfBuzzSharp servicing updates with the modernized platform support."
 }
