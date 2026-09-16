@@ -239,7 +239,7 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
-		internal static IntPtr GetPixels(this WriteableBitmap bitmap) =>
+		public static IntPtr GetPixels(this WriteableBitmap bitmap) =>
 			bitmap.PixelBuffer.GetByteBuffer();
 
 		internal static IntPtr GetByteBuffer(this IBuffer buffer) =>
