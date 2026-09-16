@@ -1,25 +1,16 @@
 {
-  "theme": "Security and dependency updates",
-  "highlights_headline": "SkiaSharp 3.119.3 is a preview focused on native security mitigations and dependency refreshes.",
-  "highlights_body": "Spectre mitigations are added for Linux, native dependencies including libwebp and brotli are updated, and an AoT crash with IlcDisableReflection is fixed.",
+  "theme": "Runtime reliability preview",
+  "highlights_headline": "SkiaSharp 3.119.3 previews runtime stability fixes, updated native dependencies, and hardened native packages.",
+  "highlights_body": "It addresses an AOT startup crash and Linux ARM64 runtime loading while refreshing the bundled rendering dependencies.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "AoT crash with IlcDisableReflection fixed",
-          "detail": "Applications using Native AoT with IlcDisableReflection=true were crashing; the reflection-dependent code path has been removed.",
-          "prs": [
-            3485
-          ]
-        },
-        {
-          "lead": "Linux ARM64 fontconfig runtime dependency added",
-          "detail": "A missing fontconfig runtime library has been added to the Linux ARM64 cross-compile sysroot, fixing crashes on ARM64 Linux.",
-          "prs": [
-            3494
-          ]
+          "lead": "AOT and Linux ARM64 startup fixes",
+          "detail": "Fixes an AOT crash when reflection is disabled and includes fontconfig in the Linux ARM64 cross-compile sysroot.",
+          "prs": [3485, 3494]
         }
       ]
     },
@@ -27,30 +18,34 @@
       "heading": "Security",
       "bullets": [
         {
-          "lead": "Spectre mitigations enabled for Linux native binaries",
-          "detail": "Spectre v1 mitigation flags are now applied to libSkiaSharp.so on Linux, complementing the Windows mitigations from 3.119.2.",
-          "prs": [
-            3502,
-            3496
-          ]
-        },
+          "lead": "Bundled native dependencies refreshed",
+          "detail": "Updates libpng, libwebp, Brotli, and related native dependency metadata.",
+          "prs": [3452, 3463, 3469, 3478]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
         {
-          "lead": "Native dependencies updated",
-          "detail": "libpng updated to 1.6.54, libwebp to 1.6.0, brotli to 1.2.0, and unused dependencies have been removed.",
-          "prs": [
-            3452,
-            3478,
-            3469,
-            3463
-          ]
+          "lead": "Native packages gain additional mitigations",
+          "detail": "Windows and Linux native libraries are built with the Spectre mitigation options.",
+          "prs": [3496, 3502]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "sshumakov": "Enabled Spectre mitigation flags for Windows and Linux native binaries"
+    "sshumakov": "Added Windows and Linux native Spectre mitigation flags"
   },
   "preview_summaries": {
-    "v3.119.3-preview.1.1": "Preview 1 delivered Spectre mitigations for Linux, AoT reflection fix, Linux ARM64 crash fix, and updates for libpng, libwebp, and brotli."
+    "v3.119.3-preview.1.1": "Preview 1 delivers AOT and Linux ARM64 fixes, dependency updates, and native binary hardening."
+  },
+  "harfbuzz_summary": null,
+  "release_summaries": {
+    "v3.119.3-preview.1.1": {
+      "headline": "SkiaSharp 3.119.3 Preview 1 improves runtime reliability and native package hardening.",
+      "body": "It fixes an AOT startup issue, improves Linux ARM64 runtime support, and refreshes bundled native dependencies."
+    }
   }
 }

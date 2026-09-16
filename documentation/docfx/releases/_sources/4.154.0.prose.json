@@ -1,31 +1,50 @@
 {
   "theme": "Skia m154 preview",
-  "highlights_headline": "SkiaSharp 4.154.0 Preview 1 updates the bundled renderer to Skia m154.",
-  "highlights_body": null,
-  "breaking": [],
+  "highlights_headline": "SkiaSharp 4.154.0 previews the Skia m154 engine update and aligns HarfBuzz binding generation with bundled native sources.",
+  "highlights_body": "The HarfBuzz managed surface follows the pinned native revision while correcting a combining-class name and removing aggregate flag masks.",
+  "breaking": [
+    {
+      "title": "UnicodeCombiningClass.CCC133 was renamed",
+      "body": "The misspelled `CCC133` member is now `CCC132`, matching the upstream HarfBuzz name while retaining numeric value 132. Replace references to the old member before upgrading.",
+      "prs": []
+    },
+    {
+      "title": "Aggregate HarfBuzz flag masks are unavailable",
+      "body": "`GlyphFlags.Defined` is removed, and equivalent aggregate `Defined` masks are not exposed for buffer flags. Combine the concrete flags your code requires instead.",
+      "prs": []
+    }
+  ],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia m154",
-          "detail": "Updates the bundled rendering engine from the previous preview line to upstream milestone 154.",
-          "prs": [
-            4945
-          ]
+          "lead": "Skia updated to milestone m154",
+          "detail": "The bundled renderer moves to the Skia m154 release line.",
+          "prs": [4945]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "HarfBuzz bindings follow bundled native sources",
+          "detail": "Binding generation now derives from the HarfBuzz revision pinned in Skia DEPS, keeping supported types and enum values synchronized with the library shipped in the package.",
+          "prs": []
         }
       ]
     }
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.154.0-preview.1.26454.9": "Preview 1 introduces the Skia m154 engine update."
+    "v4.154.0-preview.1.26454.9": "Preview 1 introduces the Skia m154 engine update and the aligned HarfBuzz binding-generation model."
   },
   "harfbuzz_summary": null,
   "release_summaries": {
     "v4.154.0-preview.1.26454.9": {
-      "headline": "SkiaSharp 4.154.0 Preview 1 updates the bundled renderer to Skia m154.",
-      "body": "This shipment contains the milestone 154 engine update since the 4.153 Preview 1 release."
+      "headline": "SkiaSharp 4.154.0 Preview 1 introduces the Skia m154 engine update.",
+      "body": "It also aligns HarfBuzz binding generation with the native source bundled in the package."
     }
   }
 }
