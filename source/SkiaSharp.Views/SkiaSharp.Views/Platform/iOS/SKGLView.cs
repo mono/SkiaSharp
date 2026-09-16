@@ -49,7 +49,9 @@ namespace SkiaSharp.Views.iOS
 		ISite IComponent.Site { get; set; }
 
 		/// <summary>Occurs when the component is disposed.</summary>
-		/// <remarks>Use this event to release resources associated with this component.</remarks>
+		/// <remarks><format type="text/markdown"><![CDATA[
+		/// Use this event to release resources associated with this component.
+		/// ]]></format></remarks>
 		event EventHandler IComponent.Disposed
 		{
 			add { DisposedInternal += value; }
@@ -87,7 +89,11 @@ namespace SkiaSharp.Views.iOS
 		// created via designer
 		/// <summary>Initializes a new instance of the <see cref="SKGLView" /> class from a native handle.</summary>
 		/// <param name="p">The pointer (handle) to the unmanaged object.</param>
-		/// <remarks>This constructor is used by the platform runtime when creating managed representations of unmanaged objects. It is not intended to be called directly from user code.</remarks>
+		/// <remarks><format type="text/markdown"><![CDATA[
+		/// This constructor is used by the platform runtime when creating managed
+		/// representations of unmanaged objects. It is not intended to be called
+		/// directly from user code.
+		/// ]]></format></remarks>
 		public SKGLView(IntPtr p)
 			: base(p)
 		{
@@ -121,7 +127,10 @@ namespace SkiaSharp.Views.iOS
 
 		/// <summary>Gets the current canvas size.</summary>
 		/// <value>The current canvas size in pixels.</value>
-		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
+		/// <remarks><format type="text/markdown"><![CDATA[
+		/// The canvas size may be different to the view size as a result of the current
+		/// device's pixel density.
+		/// ]]></format></remarks>
 		public SKSize CanvasSize => lastSize;
 
 		/// <summary>Gets the current GPU context.</summary>
