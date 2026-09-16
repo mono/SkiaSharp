@@ -91,7 +91,7 @@ function Get-RemoteBranches([string] $Root, [string] $Remote, [string] $Pattern 
     return @($branches | Sort-Object -Unique)
 }
 
-# Reads matching remote branches and their immutable tip commits in one request.
+# Reads matching remote branches and fetches their parent-repository tip commits.
 function Get-RemoteBranchMap([string] $Root, [string] $Remote, [string] $Pattern = 'refs/heads/*') {
     $output = (Invoke-Git -Root $Root -Arguments @('ls-remote', '--heads', $Remote, $Pattern)).Output
     $branches = @{}
@@ -99,6 +99,18 @@ function Get-RemoteBranchMap([string] $Root, [string] $Remote, [string] $Pattern
         if ($line -match '^(?<sha>[0-9a-f]{40})\s+refs/heads/(?<branch>.+)$') {
             $branches[$Matches.branch] = $Matches.sha
         }
+    }
+    $commits = @($branches.Values | Sort-Object -Unique)
+    if ($commits.Count) {
+        $null = Invoke-Git `
+            -Root $Root `
+            -Arguments (@(
+                'fetch',
+                '--quiet',
+                '--no-recurse-submodules',
+                '--no-tags',
+                $Remote
+            ) + $commits)
     }
     return $branches
 }
@@ -136,11 +148,15 @@ function Get-LocalBranchSha([string] $Root, [string] $Branch) {
 # Resolves a remote branch or SHA to one immutable commit.
 function Get-ResolvedGitCommit([string] $Root, [string] $Reference, [string] $Remote = 'origin') {
     if ($Reference -match '^[0-9a-fA-F]{40}$') {
-        $null = Invoke-Git -Root $Root -Arguments @('fetch', '--quiet', $Remote, $Reference)
+        $null = Invoke-Git `
+            -Root $Root `
+            -Arguments @('fetch', '--quiet', '--no-recurse-submodules', '--no-tags', $Remote, $Reference)
         $resolvedRef = $Reference
     } else {
         $branch = $Reference -replace '^(refs/heads/|origin/)'
-        $null = Invoke-Git -Root $Root -Arguments @('fetch', '--quiet', $Remote, "refs/heads/$branch")
+        $null = Invoke-Git `
+            -Root $Root `
+            -Arguments @('fetch', '--quiet', '--no-recurse-submodules', '--no-tags', $Remote, "refs/heads/$branch")
         $resolvedRef = 'FETCH_HEAD'
     }
     return (Invoke-Git -Root $Root -Arguments @('rev-parse', '--verify', "$resolvedRef`^{commit}")).Output

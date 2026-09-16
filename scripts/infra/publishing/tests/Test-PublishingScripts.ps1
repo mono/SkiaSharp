@@ -219,6 +219,7 @@ libSkiaSharp     milestone   152
 
 $gitRoot = Join-Path $PSScriptRoot ".common-git-$([guid]::NewGuid().ToString('N'))"
 $bareRoot = "$gitRoot.git"
+$readerRoot = "$gitRoot-reader"
 try {
     $null = New-Item -ItemType Directory -Path $gitRoot
     & git -C $gitRoot init --quiet
@@ -244,6 +245,17 @@ try {
         -Push
     Assert-Equal $localSha (Get-RemoteBranchSha -Root $gitRoot -Remote $bareRoot -Branch release/test) `
         'A local test branch was not pushed.'
+    $null = New-Item -ItemType Directory -Path $readerRoot
+    & git -C $readerRoot init --quiet
+    $branchMap = Get-RemoteBranchMap `
+        -Root $readerRoot `
+        -Remote $bareRoot `
+        -Pattern 'refs/heads/release/*'
+    Assert-Equal $localSha $branchMap['release/test'] `
+        'The remote branch map did not return the advertised branch tip.'
+    & git -C $readerRoot cat-file -e "$localSha`^{commit}"
+    Assert-Equal 0 $LASTEXITCODE `
+        'The remote branch map did not fetch the advertised parent commit.'
     $dryBranch = @(Push-ReleaseBranch `
         -Root $gitRoot `
         -Remote $bareRoot `
@@ -307,7 +319,7 @@ try {
         -Tag v9.9.9 `
         -SourceCommit $otherSha } 'expected' 'A dry run ignored a conflicting release tag.'
 } finally {
-    Remove-Item $gitRoot, $bareRoot -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item $gitRoot, $bareRoot, $readerRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 # Loads and exercises Prepare's pure version transformation functions.

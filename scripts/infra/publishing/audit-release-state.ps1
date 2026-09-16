@@ -459,6 +459,9 @@ try {
     $maintenanceBranch = "release/$Version.x"
     $maintenanceSha = Get-RemoteBranchSha -Root $root -Remote origin -Branch $maintenanceBranch
     if ($maintenanceSha) {
+        $maintenanceSha = Get-ResolvedGitCommit `
+            -Root $root `
+            -Reference $maintenanceBranch
         $maintenance = [pscustomobject] @{
             Branch = $maintenanceBranch
             Sha = $maintenanceSha
@@ -466,7 +469,7 @@ try {
             Label = 'servicing'
         }
     } else {
-        $mainSha = Get-RemoteBranchSha -Root $root -Remote origin -Branch 'main'
+        $mainSha = Get-ResolvedGitCommit -Root $root -Reference 'main'
         $mainVersion = Get-SkiaSharpVersionAtCommit -Root $root -Commit $mainSha
         $maintenance = if ($mainVersion -match "^$([regex]::Escape($Version))\.") {
             [pscustomobject] @{
