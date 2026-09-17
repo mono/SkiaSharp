@@ -10,21 +10,23 @@ namespace SkiaSharp.Tests.Visual
 	/// Resolves and loads golden images for the visual-regression matrix, and
 	/// encodes captured pixels to PNG for emission into the test log.
 	///
-	/// <para><b>Layered lookup, generalizing over platform only.</b> A test
+	/// <para><b>Layered lookup, generalizing over host tags.</b> A test
 	/// resolves the first of:</para>
 	/// <list type="number">
+	///   <item><c>Content/Goldens/{renderer}.{platform-architecture}/{scene}.png</c> —
+	///         architecture override, used when the same platform diverges.</item>
 	///   <item><c>Content/Goldens/{renderer}.{platform}/{scene}.png</c> —
-	///         per-platform override, used when this OS/driver diverges.</item>
+	///         platform override, used when this OS/driver diverges.</item>
 	///   <item><c>Content/Goldens/{renderer}/{scene}.png</c> — the renderer's
 	///         golden shared across platforms, used when the backend produces the
 	///         same pixels everywhere (the common case for CPU raster and for
 	///         software GL).</item>
 	/// </list>
 	///
-	/// <para>The fallback deliberately generalizes only over <b>platform</b>, never
-	/// over <b>renderer</b>: different backends legitimately differ (antialiasing,
-	/// driver), so a test never falls back to another backend's bytes and a GPU
-	/// result is never compared against the CPU baseline.</para>
+	/// <para>The fallback deliberately generalizes only over <b>host tags</b>,
+	/// never over <b>renderer</b>: different backends legitimately differ
+	/// (antialiasing, driver), so a test never falls back to another backend's
+	/// bytes and a GPU result is never compared against the CPU baseline.</para>
 	///
 	/// <para><b>No record mode.</b> Goldens are seeded by harvesting the captured
 	/// PNGs that every test emits into the test results (TRX) and committing them
@@ -62,8 +64,8 @@ namespace SkiaSharp.Tests.Visual
 
 		/// <summary>
 		/// The default golden key for a test, relative to the <c>Goldens</c> root:
-		/// <c>{renderer}.{platform}/{scene}.png</c> using the most-specific platform
-		/// tag. This is the path the image markers carry and the harvest script
+		/// <c>{renderer}.{host-tag}/{scene}.png</c> using the most-specific host tag.
+		/// This is the path the image markers carry and the harvest script
 		/// writes to by default; a promoted, platform-portable golden lives at the
 		/// shared <c>{renderer}/{scene}.png</c> key instead.
 		/// </summary>
@@ -72,7 +74,7 @@ namespace SkiaSharp.Tests.Visual
 
 		/// <summary>
 		/// Golden keys for a test in lookup order (most specific first):
-		/// each per-platform tag, then the platform-portable renderer golden.
+		/// each host tag, then the platform-portable renderer golden.
 		/// </summary>
 		public static IEnumerable<string> Candidates(string rendererName, string sceneName)
 		{

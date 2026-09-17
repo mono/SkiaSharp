@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Tests.Visual
 {
 	/// <summary>
 	/// Golden directory tags for the current host, most specific first (e.g.
-	/// <c>ganesh-gl.macos</c>). The same renderer produces different pixels on
-	/// different platforms/drivers, so every test records its golden per platform.
+	/// <c>ganesh-gl.macos-arm64</c>, then <c>ganesh-gl.macos</c>). The same
+	/// renderer can produce different pixels on different platforms, architectures,
+	/// or drivers, so every test records its golden using layered host tags.
 	/// </summary>
 	internal static class VisualPlatform
 	{
@@ -22,6 +24,12 @@ namespace SkiaSharp.Tests.Visual
 				yield return TestPlatforms.NanoServer.ToString().ToLowerInvariant();
 				yield return TestPlatforms.Windows.ToString().ToLowerInvariant();
 				yield break;
+			}
+
+			if (TestConfig.Current.Platform == TestPlatforms.MacOS)
+			{
+				var architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+				yield return $"{TestConfig.Current.PlatformName}-{architecture}";
 			}
 
 			yield return TestConfig.Current.PlatformName;
