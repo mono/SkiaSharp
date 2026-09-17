@@ -1,27 +1,18 @@
 {
-  "theme": "Documentation delivery improvements",
-  "highlights_headline": "SkiaSharp 4.154.0 improves consumer API documentation delivery and keeps the bundled renderer current with Chrome m154.",
-  "highlights_body": "Package XML documentation now travels with managed assemblies, while generated bindings and HarfBuzzSharp metadata remain aligned with the bundled native sources.",
-  "breaking": [
-    {
-      "title": "HarfBuzz combining-class enum name corrected",
-      "body": "UnicodeCombiningClass.CCC133 has been renamed to CCC132 to match HarfBuzz. Replace the old member name in source code.",
-      "prs": [5057]
-    },
-    {
-      "title": "GlyphFlags.Defined removed",
-      "body": "The aggregate GlyphFlags.Defined mask is no longer exposed. Combine the concrete flags your code needs instead.",
-      "prs": [5057]
-    }
-  ],
+  "theme": "Documentation delivery refresh",
+  "highlights_headline": "The next SkiaSharp release will ship compiler XML documentation alongside its managed packages.",
+  "highlights_body": "API documentation is now maintained with the C# source, while package and binding-generation changes make the consumer-facing documentation more consistent.",
+  "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Chrome m154 fixes merged",
-          "detail": "The pending release incorporates the latest upstream m154 renderer fixes.",
-          "prs": [5054]
+          "lead": "Skia m154 fixes integrated",
+          "detail": "Incorporates the latest upstream Chrome m154 renderer bug fixes into the forthcoming release line.",
+          "prs": [
+            5054
+          ]
         }
       ]
     },
@@ -30,13 +21,33 @@
       "bullets": [
         {
           "lead": "API documentation ships with packages",
-          "detail": "Managed package assemblies now include compiler-generated XML documentation sidecars for IDE consumers.",
-          "prs": [5064, 5066, 5078, 5080]
+          "detail": "Managed packages now include compiler XML documentation generated from the C# API comments, improving editor help for package consumers.",
+          "prs": [
+            5064,
+            5066,
+            5078,
+            5080,
+            5053
+          ]
+        },
+        {
+          "lead": "Generated bindings organized by type",
+          "detail": "Splits generated P/Invoke bindings into per-type files and generates HarfBuzz bindings from the dependency-pinned source for more consistent binding output.",
+          "prs": [
+            5056,
+            5057
+          ]
+        },
+        {
+          "lead": "View documentation supports Markdown",
+          "detail": "View remarks can now be authored as Markdown for clearer rendered API documentation.",
+          "prs": [
+            5091
+          ]
         }
       ]
     }
   ],
   "contributor_summaries": {},
-  "preview_summaries": {},
-  "harfbuzz_summary": null
+  "preview_summaries": {}
 }

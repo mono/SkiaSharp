@@ -1,16 +1,23 @@
 {
-  "theme": "Skia m152 and GPU APIs",
-  "highlights_headline": "SkiaSharp 4.152.0 advances to Skia m152 with Graphite bindings, asynchronous pixel reads, and runtime safety fixes.",
-  "highlights_body": "It adds modern GPU capabilities while correcting ownership issues in image, region, pixmap, and runtime-effect paths.",
+  "theme": "Graphite and m152",
+  "highlights_headline": "SkiaSharp 4.152.0 adds Graphite GPU bindings and updates the bundled renderer to Skia m152.",
+  "highlights_body": "The release also adds asynchronous GPU readback, restores Vulkan Silk.NET packages, and improves native asset and lifetime reliability across supported platforms.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia updated to milestone m152",
-          "detail": "The release includes the m152 upstream renderer update and subsequent servicing corrections.",
-          "prs": [4505, 4690]
+          "lead": "Skia updated through milestone m152",
+          "detail": "Updates the bundled rendering engine to Chrome milestone 152 and incorporates subsequent upstream stability and servicing fixes.",
+          "prs": [
+            4651,
+            4808,
+            4925,
+            4568,
+            4538,
+            4537
+          ]
         }
       ]
     },
@@ -18,9 +25,26 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Graphite and asynchronous pixel-read APIs",
-          "detail": "New bindings expose Graphite backends and backend-neutral asynchronous RequestReadPixels operations on images and surfaces.",
-          "prs": [4570, 4630]
+          "lead": "Graphite GPU backends exposed",
+          "detail": "Adds bindings for Graphite on Vulkan, Metal, and Dawn, enabling applications to use Skia's newer GPU rendering architecture.",
+          "prs": [
+            3968
+          ]
+        },
+        {
+          "lead": "Asynchronous pixel readback added",
+          "detail": "SKImage and SKSurface now offer backend-neutral asynchronous RequestReadPixels operations for GPU readback workflows.",
+          "prs": [
+            4545
+          ]
+        },
+        {
+          "lead": "Vulkan Silk.NET support restored",
+          "detail": "Restores the SkiaSharp.Vulkan.Silk.NET package and its native package production for consumers using Silk.NET Vulkan integration.",
+          "prs": [
+            4527,
+            4841
+          ]
         }
       ]
     },
@@ -28,9 +52,50 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Native object lifetime fixes",
-          "detail": "Region iteration, pixmap subsets, raster image creation, and runtime-effect uniform resets correctly retain or release their native resources.",
-          "prs": [4528, 4515, 4698, 4714]
+          "lead": "Pixel and iterator sources remain alive",
+          "detail": "Prevents native use-after-free failures when using SKRegion span iterators and SKPixmap subset or transformation operations.",
+          "prs": [
+            4355,
+            4558
+          ]
+        },
+        {
+          "lead": "Failed raster image creation releases buffers",
+          "detail": "Correctly releases CoTaskMem pixel buffers when SKImage.Create cannot create a raster image.",
+          "prs": [
+            4455
+          ]
+        },
+        {
+          "lead": "Runtime effect resets release prior uniform buffers",
+          "detail": "Resetting SKRuntimeEffectUniforms now disposes the previously allocated uniform buffer instead of retaining it.",
+          "prs": [
+            4783
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Managed hot paths allocate less",
+          "detail": "Reduces unnecessary copying, boxing, reflection, and temporary strings in shaping, tag formatting, data saving, and runtime-effect lookups.",
+          "prs": [
+            4690,
+            4752,
+            4630,
+            4550,
+            4498,
+            4512
+          ]
+        },
+        {
+          "lead": "Binding output is reproducible",
+          "detail": "Makes generated bindings deterministic across build platforms, improving consistency for consumers building SkiaSharp from source.",
+          "prs": [
+            4612
+          ]
         }
       ]
     },
@@ -38,21 +103,38 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Vulkan support and native symbols strengthened",
-          "detail": "The Vulkan Silk.NET package returns to production and native symbol packaging improves diagnostics on Apple and Android.",
-          "prs": [4499, 4650, 4694]
+          "lead": "Native symbols and fonts improved",
+          "detail": "Produces Apple native symbol packages and uses FreeType to provide font support on Nano Server.",
+          "prs": [
+            4846,
+            4280
+          ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "jeffska": "Contributed Graphite GPU backend bindings",
-    "mmitche": "Contributed backend-neutral asynchronous pixel-read APIs",
-    "ramezgerges": "Contributed managed and native runtime safety improvements"
+    "jeffska": "Added FreeType-backed font support for Nano Server",
+    "mmitche": "Improved Windows native-build initialization",
+    "ramezgerges": "Added Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
   },
   "preview_summaries": {
-    "v4.152.0-rc.1.26426.14": "The release candidate completed m152 servicing, GPU support, and resource-lifetime fixes.",
-    "v4.152.0-preview.1.1": "Preview 1 introduced Skia m152, Graphite bindings, asynchronous pixel reads, and runtime safety work."
+    "v4.152.0-preview.1.1": "Preview 1 opened the m152 release line with Graphite GPU bindings, asynchronous pixel readback, Vulkan Silk.NET support, and managed reliability improvements.",
+    "v4.152.0-rc.1.26426.14": "Release Candidate 1 added m152 servicing updates, native symbol packages, and fixes for runtime-effect and HarfBuzz resource handling."
   },
-  "harfbuzz_summary": "HarfBuzzSharp receives managed performance and binding updates with the 4.152 release line."
+  "harfbuzz_summary": "Improves shaping performance by avoiding a defensive feature-array copy and fixes disposal of non-memory-backed stream assets used to create HarfBuzz blobs.",
+  "release_summaries": {
+    "v4.152.0-preview.1.1": {
+      "headline": "SkiaSharp 4.152.0 Preview 1 introduces Graphite GPU bindings and the Skia m152 engine update.",
+      "body": "It also adds backend-neutral asynchronous pixel readback, Vulkan Silk.NET support, and reliability improvements for managed and native resources."
+    },
+    "v4.152.0-rc.1.26426.14": {
+      "headline": "SkiaSharp 4.152.0 Release Candidate 1 prepares the m152 release with servicing and reliability updates.",
+      "body": "It includes Apple native symbols, improved HarfBuzz resource cleanup, and fixes for runtime-effect uniform buffers."
+    },
+    "v4.152.0": {
+      "headline": "SkiaSharp 4.152.0 is the stable release built on the Skia m152 renderer.",
+      "body": "It delivers Graphite GPU bindings, asynchronous pixel readback, Vulkan Silk.NET support, and managed lifetime improvements."
+    }
+  }
 }
