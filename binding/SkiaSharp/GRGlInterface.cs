@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.ComponentModel;
@@ -12,6 +12,8 @@ using System.Runtime.CompilerServices;
 
 namespace SkiaSharp
 {
+	/// <summary>The <see cref="T:SkiaSharp.GRGlInterface" /> is used to interface with OpenGL.</summary>
+	/// <remarks>A <see cref="T:SkiaSharp.GRContext" /> does not interact directly with the underlying backend, instead it uses an OpenGL interface.</remarks>
 	public unsafe partial class GRGlInterface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal GRGlInterface (IntPtr h, bool owns)
@@ -19,11 +21,17 @@ namespace SkiaSharp
 		{
 		}
 
+		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.GRGlInterface" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.GRGlInterface" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
 		// Create* (defaults)
 
+		/// <summary>Creates a new OpenGL interface for the current platform.</summary>
+		/// <returns>A new <see cref="T:SkiaSharp.GRGlInterface" />, or <see langword="null" /> if no OpenGL context is available.</returns>
+		/// <remarks />
 		public static GRGlInterface Create () =>
 			CreateGl () ?? CreateAngle ();
 
@@ -33,6 +41,9 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.gr_glinterface_create_native_interface ());
 		}
 
+		/// <summary>Creates a new OpenGL interface for ANGLE.</summary>
+		/// <returns>A new <see cref="T:SkiaSharp.GRGlInterface" /> for ANGLE, or <see langword="null" /> if ANGLE is not available.</returns>
+		/// <remarks />
 		public static GRGlInterface CreateAngle ()
 		{
 #if (NETSTANDARD || NET6_0_OR_GREATER || NET40_OR_GREATER) && (!NETPLATFORM || WINDOWS) // a cross-platform TFM or windows-only
@@ -49,6 +60,10 @@ namespace SkiaSharp
 
 		// Create* (assemble)
 
+		/// <summary>Creates a new OpenGL interface using the specified function resolver.</summary>
+		/// <param name="get">A delegate that returns the address of an OpenGL function.</param>
+		/// <returns>A new <see cref="T:SkiaSharp.GRGlInterface" />, or <see langword="null" /> if the interface could not be created.</returns>
+		/// <remarks />
 		public static GRGlInterface Create (GRGlGetProcedureAddressDelegate get)
 		{
 			DelegateProxies.Create (get, out var gch, out var ctx);
@@ -60,9 +75,17 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Creates a new OpenGL interface for ANGLE using the specified function resolver.</summary>
+		/// <param name="get">A delegate that returns the address of an OpenGL function.</param>
+		/// <returns>A new <see cref="T:SkiaSharp.GRGlInterface" /> for ANGLE, or <see langword="null" /> if the interface could not be created.</returns>
+		/// <remarks />
 		public static GRGlInterface CreateAngle (GRGlGetProcedureAddressDelegate get) =>
 			CreateGles (get); // ANGLE is just a GLES v2 over DX v9+
 
+		/// <summary>Creates a new desktop OpenGL interface using the specified function resolver.</summary>
+		/// <param name="get">A delegate that returns the address of an OpenGL function.</param>
+		/// <returns>A new <see cref="T:SkiaSharp.GRGlInterface" /> for desktop OpenGL, or <see langword="null" /> if the interface could not be created.</returns>
+		/// <remarks />
 		public static GRGlInterface CreateOpenGl (GRGlGetProcedureAddressDelegate get)
 		{
 			DelegateProxies.Create (get, out var gch, out var ctx);
@@ -74,6 +97,10 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Creates a new OpenGL ES interface using the specified function resolver.</summary>
+		/// <param name="get">A delegate that returns the address of an OpenGL ES function.</param>
+		/// <returns>A new <see cref="T:SkiaSharp.GRGlInterface" /> for OpenGL ES, or <see langword="null" /> if the interface could not be created.</returns>
+		/// <remarks />
 		public static GRGlInterface CreateGles (GRGlGetProcedureAddressDelegate get)
 		{
 			DelegateProxies.Create (get, out var gch, out var ctx);
@@ -85,6 +112,10 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Creates a new WebGL interface using the specified function resolver.</summary>
+		/// <param name="get">A delegate that returns the address of a WebGL function.</param>
+		/// <returns>A new <see cref="T:SkiaSharp.GRGlInterface" /> for WebGL, or <see langword="null" /> if the interface could not be created.</returns>
+		/// <remarks />
 		public static GRGlInterface CreateWebGl (GRGlGetProcedureAddressDelegate get)
 		{
 			DelegateProxies.Create (get, out var gch, out var ctx);
@@ -96,6 +127,10 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Creates a new OpenGL interface for Tizen Evas.</summary>
+		/// <param name="evas">A pointer to the Evas GL context.</param>
+		/// <returns>A new <see cref="T:SkiaSharp.GRGlInterface" /> for Evas, or <see langword="null" /> if the interface could not be created.</returns>
+		/// <remarks />
 		public static GRGlInterface CreateEvas (IntPtr evas)
 		{
 #if __TIZEN__
@@ -108,6 +143,9 @@ namespace SkiaSharp
 
 		//
 
+		/// <summary>Validates that the <see cref="T:SkiaSharp.GRGlInterface" /> supports its advertised standard.</summary>
+		/// <returns><see langword="true" /> if all the entry points are specified, and any required extensions exist.</returns>
+		/// <remarks />
 		public bool Validate ()
 		{
 			var result = SkiaApi.gr_glinterface_validate (Handle);
@@ -115,6 +153,10 @@ namespace SkiaSharp
 			return result;
 		}
 
+		/// <summary>Checks to see if the underlying OpenGL backend has the specified extension.</summary>
+		/// <param name="extension">The extension to check for.</param>
+		/// <returns><see langword="true" /> if the backend has the extension; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
 		public bool HasExtension (string extension)
 		{
 			var result = SkiaApi.gr_glinterface_has_extension (Handle, extension);

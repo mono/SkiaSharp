@@ -11,7 +11,9 @@ dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
 The helper runs every maintained generator configuration from the checked-out source, reports
-generated changes, and lists new native functions. Never edit a generated file manually.
+generated changes, and lists new native functions. Never manually edit generated
+declarations or interop code. Source-controlled `///` comment trivia is the
+exception: edit it directly when needed, regenerate, and verify preservation.
 
 ## Phase 09 — review the managed surface
 

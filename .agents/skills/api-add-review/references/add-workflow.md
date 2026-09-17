@@ -92,7 +92,8 @@ Then map in `libSkiaSharp.json`:
 
 - [ ] Ran `pwsh ./utils/generate.ps1`
 - [ ] Verified `Generated/` contains new function
-- [ ] Did NOT manually edit any `*.generated.cs` file
+- [ ] Did not manually edit generated declarations or interop code
+- [ ] Edited generated `///` comments directly only when needed and verified regeneration preserves them
 - [ ] Verified JSON config maps new types and members correctly
 
 ## Phase 5: Add C# Wrapper
@@ -107,7 +108,8 @@ Apply the rules from [api-design-rules.md](api-design-rules.md):
 - [ ] Ref struct parameter bag if many optional params
 - [ ] Common-case shortcut overloads
 - [ ] File-scoped namespace
-- [ ] No XML doc comments
+- [ ] Accurate `///` documentation for every new or changed public API
+- [ ] Generated binding `///` comments edited directly only as needed, then preserved through regeneration
 - [ ] Null validation with ArgumentNullException
 - [ ] Index validation with ArgumentOutOfRangeException
 - [ ] Wrapper type for typedefs (Parse, ToString, implicit conversion)

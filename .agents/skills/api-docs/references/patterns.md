@@ -1,471 +1,483 @@
-# XML Documentation Patterns
+# C# XML documentation patterns
 
-.NET XML documentation formatting rules. For SkiaSharp/HarfBuzz domain knowledge, see [skia-patterns.md](skia-patterns.md).
+Use C# `///` comments immediately above the public declaration they document.
+Managed compilation generates compiler XML. Use standard compiler XML elements
+for concise documentation. Existing source comments also use the supported rich
+form `<format type="text/markdown"><![CDATA[...]]></format>` in `<remarks>`;
+preserve that form, its bare DocFX `<xref:...>` links, and `_DocsMedia` image
+references unless an equivalent external-rendering migration is validated. For
+SkiaSharp/HarfBuzzSharp facts, read
+[`skia-patterns.md`](skia-patterns.md).
 
-Based on [official .NET API documentation guidelines](https://github.com/dotnet/dotnet-api-docs/wiki).
+These patterns follow the [official .NET API documentation
+guidelines](https://github.com/dotnet/dotnet-api-docs/wiki).
+
+## Official sources and refresh policy
+
+Before a broad authoring or review pass, retrieve the current first-party
+guidance and apply it together with the repository-specific contracts:
+
+- [Recommended XML tags for C# documentation comments](https://learn.microsoft.com/dotnet/csharp/language-reference/xmldoc/recommended-tags)
+- [Documentation rules](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/documentation-warnings)
+- [CA1200: Avoid using `cref` tags with a prefix](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1200)
+- [.NET API Docs writing guidelines](https://github.com/dotnet/dotnet-api-docs/wiki)
+
+Use the current official material to refresh this guidance when it changes.
+Validate any proposed convention against the managed build and the external
+package/XML consumer before updating existing source comments. Do not
+mechanically rewrite valid historical forms only for style: preserve the
+repository's rich Markdown/CDATA remarks, `_DocsMedia` references, and
+external-rendering behavior unless a replacement is proven equivalent.
 
 ## Contents
 
-- [File Structure](#file-structure)
-- [Syntax Reference](#syntax-reference)
-- [Summary Patterns](#summary-patterns)
-- [Parameters](#parameters)
-- [Return Values](#return-values)
-- [Punctuation Exceptions](#punctuation-exceptions)
-- [Common Mistakes](#common-mistakes)
-- [Extension Methods](#extension-methods)
-- [Platform View Constructors](#platform-view-constructors)
-- [Rich Remarks and Examples](#rich-remarks-and-examples)
-- [Type-Level Documentation](#type-level-documentation)
+- [Syntax reference](#syntax-reference)
+- [Summary and declaration patterns](#summary-and-declaration-patterns)
+- [Parameters, returns, values, and exceptions](#parameters-returns-values-and-exceptions)
+- [Cross-references and escaping](#cross-references-and-escaping)
+- [Punctuation and common mistakes](#punctuation-and-common-mistakes)
+- [Extension methods](#extension-methods)
+- [Platform view constructors](#platform-view-constructors)
+- [Rich remarks and examples](#rich-remarks-and-examples)
+- [Type-level documentation](#type-level-documentation)
 
-## File Structure
+## Syntax reference
 
-Each type has its own XML file with this structure:
+Put the `///` block directly above the declaration, with no unrelated
+attribute, directive, or declaration between it and the documented member.
 
-```xml
-<Type Name="SKCanvas" FullName="SkiaSharp.SKCanvas">
-  <Docs>
-    <summary>Encapsulates all of the state about drawing into a device.</summary>
-    <remarks>...</remarks>
-  </Docs>
-  <Members>
-    <Member MemberName="DrawRect">
-      <Docs>
-        <summary>Draws a rectangle using the specified paint.</summary>
-        <param name="rect">The rectangle to draw.</param>
-        <param name="paint">The paint to use for drawing.</param>
-        <remarks />
-      </Docs>
-    </Member>
-  </Members>
-</Type>
+```csharp
+/// <summary>Creates an image from the specified encoded data.</summary>
+/// <param name="data">The encoded image data.</param>
+/// <returns>
+/// A new image, or <see langword="null" /> if <paramref name="data" /> is
+/// invalid.
+/// </returns>
+/// <exception cref="ArgumentNullException">
+/// <paramref name="data" /> is <see langword="null" />.
+/// </exception>
+public static SKImage FromEncodedData(SKData data)
 ```
 
-## Syntax Reference
+| Element | Use |
+|---|---|
+| `<summary>` | Concise description of every public type/member. |
+| `<param name="…">` | Description for a method or constructor parameter. |
+| `<typeparam name="…">` | Description for a generic type or method parameter. |
+| `<returns>` | Meaning and nullable/failure condition of a return value. |
+| `<value>` | Value and state of a property or indexer. |
+| `<exception cref="…">` | An exception actually thrown for a documented condition. |
+| `<remarks>` | Important context, lifetime/threading constraints, or extended usage. |
+| `<example>` | A short compilable usage example; `<code>` can contain source. |
+| `<see cref="…">`, `<seealso cref="…">` | Compiler-resolved type/member links. |
+| `<paramref name="…">`, `<typeparamref name="…">` | A parameter or generic parameter in prose. |
+| `<c>…</c>` / `<code>…</code>` | Inline code or a code block. |
+| `<inheritdoc />` | Inherit a suitable base/interface contract when it is the same API contract. |
 
-### XML Tags
+Use a self-closing element when it has no content: `<inheritdoc />` and
+`<see langword="null" />`. Do not add empty summary, parameter, return, value,
+or exception elements merely to make a list look complete.
 
-| Tag | Usage |
-|-----|-------|
-| `<summary>` | Brief description (required) |
-| `<param name="x">` | Parameter description |
-| `<returns>` | Return value description |
-| `<value>` | Property value description |
-| `<remarks>` | Extended details (use `<remarks />` if empty) |
-| `<exception cref="T:...">` | Exception documentation |
+## Summary and declaration patterns
 
-### Cross-References
+Summaries are complete, concise sentences. Methods normally begin with a
+present-tense third-person verb; type and enum summaries state what the type
+represents. Add real context rather than repeating the identifier.
 
-```xml
-<see cref="T:SkiaSharp.SKCanvas" />           <!-- Type -->
-<see cref="M:SkiaSharp.SKCanvas.DrawRect" />  <!-- Method -->
-<see cref="P:SkiaSharp.SKPaint.Color" />      <!-- Property -->
-<see cref="F:SkiaSharp.SKColors.Red" />       <!-- Field -->
-<paramref name="paint" />                      <!-- Parameter in same method -->
-```
+### Types and enums
 
-### Keywords
+```csharp
+/// <summary>Represents a two-dimensional point using single-precision values.</summary>
+public struct SKPoint
 
-```xml
-<see langword="true" />
-<see langword="false" />
-<see langword="null" />
-```
+/// <summary>Specifies the blend mode for drawing operations.</summary>
+public enum SKBlendMode
 
-### Escaping
-
-| Character | Escape |
-|-----------|--------|
-| `<` | `&lt;` |
-| `>` | `&gt;` |
-| `&` | `&amp;` |
-
-## Summary Patterns
-
-**Key rules from Microsoft guidelines:**
-- Begin with a present-tense, third-person verb
-- Do NOT merely repeat the member name - provide meaningful context
-- Use language-neutral text (no C#/VB-specific terms)
-- Avoid parameter names or self-referential names in summaries
-
-### Classes
-
-```xml
-<summary>Holds the style and color information about how to draw geometries, text and bitmaps.</summary>
+/// <summary>Source pixels replace destination pixels.</summary>
+Src
 ```
 
 ### Constructors
 
-Always open with the exact .NET phrase **"Initializes a new instance of the `<see cref>` class."** — use "struct" instead of "class" for value types. The type kind (class vs struct) is in the entry's `signature` field (e.g. `public readonly struct HBColor`). A shortened form like "Initializes a new `<see cref>` from a packed value" is a guideline violation.
-
-```xml
-<!-- Class constructor -->
-<summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKPaint" /> class.</summary>
-
-<!-- With parameters - describe what makes this overload different -->
-<summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKBitmap" /> class with the specified dimensions.</summary>
-<param name="width">The width of the bitmap.</param>
-<param name="height">The height of the bitmap.</param>
-
-<!-- Struct constructor (note "struct", not "class") -->
-<summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKPoint" /> struct.</summary>
-
-<!-- Abstract class constructor -->
-<summary>Called from constructors in derived classes to initialize the <see cref="T:SkiaSharp.SKObject" /> class.</summary>
-
-<!-- ❌ WRONG — omits "instance of the ... struct" (a real mistake from a past batch) -->
-<summary>Initializes a new <see cref="T:HarfBuzzSharp.HBColor" /> from a packed BGRA value.</summary>
-<!-- ✅ Right -->
-<summary>Initializes a new instance of the <see cref="T:HarfBuzzSharp.HBColor" /> struct from a packed BGRA value.</summary>
-```
-
-### Properties
-
-The opening verb is decided by the accessor, which is shown verbatim in the entry's `signature` field — read it, don't infer from the property's purpose. `{ get; set; }` → **"Gets or sets"**; `{ get; }` → **"Gets"**. Struct properties are an easy trap: many look read-only but are actually settable (e.g. every property on `SKFontVariationAxis` is `{ get; set; }`).
-
-```xml
-<!-- Read/write — signature: public SKColor Color { get; set; } -->
-<summary>Gets or sets the color.</summary>
-<value>The color value.</value>
-
-<!-- Read-only — signature: public int Width { get; } (do NOT say "This property is read-only") -->
-<summary>Gets the width of the bitmap.</summary>
-<value>The width in pixels.</value>
-
-<!-- Boolean read/write -->
-<summary>Gets or sets a value indicating whether anti-aliasing is enabled.</summary>
-<value><see langword="true" /> if anti-aliasing is enabled; otherwise, <see langword="false" />.</value>
-
-<!-- Boolean read-only -->
-<summary>Gets a value indicating whether the path is empty.</summary>
-<value><see langword="true" /> if the path contains no lines or curves; otherwise, <see langword="false" />.</value>
-
-<!-- ❌ WRONG — signature is { get; set; } but summary says only "Gets" -->
-<summary>Gets the variation axis minimum value.</summary>   <!-- should be "Gets or sets" -->
-```
-
-### Methods
-
-```xml
-<!-- General method - begin with present-tense third-person verb -->
-<summary>Draws a rectangle using the specified paint.</summary>
-<param name="rect">The rectangle to draw.</param>
-<param name="paint">The paint to use.</param>
-
-<!-- Async method -->
-<summary>Asynchronously encodes the image to the specified format.</summary>
-
-<!-- Factory method -->
-<summary>Creates a new image from encoded data.</summary>
-<param name="data">The encoded image data.</param>
-<returns>A new image, or <see langword="null" /> if the data is invalid.</returns>
-
-<!-- Try pattern -->
-<summary>Attempts to parse the color from a string.</summary>
-<param name="value">The string to parse.</param>
-<param name="color">When this method returns, contains the parsed color if successful. This parameter is treated as uninitialized.</param>
-<returns><see langword="true" /> if the parsing succeeded; otherwise, <see langword="false" />.</returns>
-
-<!-- Dispose() -->
-<summary>Releases the resources used by the current instance of the <see cref="T:SkiaSharp.SKPaint" /> class.</summary>
-
-<!-- Dispose(Boolean) -->
-<summary>Called by the <see cref="M:SkiaSharp.SKPaint.Dispose" /> and <see cref="M:System.Object.Finalize" /> methods to release the managed and unmanaged resources used by the current instance of the <see cref="T:SkiaSharp.SKPaint" /> class.</summary>
-```
-
-### Events
-
-```xml
-<summary>Occurs when the surface needs to be repainted.</summary>
-```
-
-### Enums
-
-```xml
-<!-- Type -->
-<summary>Specifies the blend mode for drawing operations.</summary>
-
-<!-- Members - no verb needed -->
-<summary>Source pixels replace destination pixels.</summary>
-<summary>Source and destination pixels are blended.</summary>
-```
-
-### Parameters
-
-**Key rules:**
-- Noun phrase without specifying the data type
-- Begin with an article (The, A, An)
-- Do NOT use "true if..." for booleans - use "true to..."
-
-```xml
-<!-- Class/struct parameter -->
-<param name="rect">The rectangle to draw.</param>
-
-<!-- Boolean parameter: "true to...", NOT "true if..." -->
-<param name="antialias"><see langword="true" /> to enable anti-aliasing; otherwise, <see langword="false" />.</param>
-
-<!-- Enum parameter -->
-<param name="blendMode">One of the enumeration values that specifies the blend mode.</param>
-
-<!-- Flag enum parameter -->
-<param name="flags">A bitwise combination of the enumeration values that specifies the options.</param>
-
-<!-- out parameter -->
-<param name="result">When this method returns, contains the parsed value if successful. This parameter is treated as uninitialized.</param>
-```
-
-### Return Values
-
-**Key rules:**
-- Noun phrase without specifying the data type
-- For booleans: "true if...", NOT "true to..."
-
-```xml
-<!-- Object -->
-<returns>A new image.</returns>
-
-<!-- Nullable -->
-<returns>A new image, or <see langword="null" /> if the data is invalid.</returns>
-
-<!-- Boolean: "true if...", NOT "true to..." -->
-<returns><see langword="true" /> if the operation succeeded; otherwise, <see langword="false" />.</returns>
-
-<!-- Enum -->
-<returns>One of the enumeration values that indicates the result.</returns>
-```
-
-### Exceptions
-
-```xml
-<exception cref="T:System.ArgumentNullException"><paramref name="paint" /> is <see langword="null" />.</exception>
-<exception cref="T:System.ArgumentOutOfRangeException"><paramref name="width" /> is less than zero.</exception>
-```
-
-### Internal APIs
-
-```xml
-<summary>This member supports the SkiaSharp infrastructure and is not intended to be used directly from your code.</summary>
-```
-
-## Punctuation Exceptions
-
-**Do NOT add trailing period after:**
-
-```xml
-<!-- Bracket annotations (category labels) -->
-<summary>Darkens the backdrop color to reflect the source color. [Separable Blend Modes]</summary>
-
-<!-- Status parentheticals -->
-<summary>Draws using the legacy compatibility path (deprecated)</summary>
-
-<!-- Technical notation -->
-<summary>Swizzles pixels, swapping R and B (RGBA ↔ BGRA)</summary>
-```
-
-**DO use period after clarifying parentheticals:**
-
-```xml
-<summary>Gets the Euclidean distance from the origin (0, 0).</summary>
-<summary>Clamps values to the range [0..1].</summary>
-```
-
-## Common Mistakes
-
-```xml
-<!-- ❌ Trailing space -->
-<returns>The result. </returns>
-
-<!-- ✅ Correct -->
-<returns>The result.</returns>
-
-<!-- ❌ Space before period -->
-<returns>Returns <see langword="true" /> .</returns>
-
-<!-- ✅ Correct -->
-<returns>Returns <see langword="true" />.</returns>
-
-<!-- ❌ Backtick keywords -->
-This may return `null` if not found.
-
-<!-- ✅ Use langword -->
-This may return <see langword="null" /> if not found.
-
-<!-- ❌ Boolean param with "true if" -->
-<param name="enable"><see langword="true" /> if enabling; otherwise, <see langword="false" />.</param>
-
-<!-- ✅ Boolean param with "true to" -->
-<param name="enable"><see langword="true" /> to enable; otherwise, <see langword="false" />.</param>
-
-<!-- ❌ Just repeating the name -->
-<summary>Gets the width.</summary>
-
-<!-- ✅ Meaningful description -->
-<summary>Gets the width of the bitmap in pixels.</summary>
-```
-
-## Extension Methods
-
-Extension method docs appear in two places:
-1. **Type file** (e.g., `SkiaSharp/SKCanvasExtensions.xml`) - **Edit this one**
-2. **index.xml** - Auto-synced by `docs-format-docs`, don't edit manually
-
-## Platform View Constructors
-
-Native platform views have special constructors with specific purposes. Always include a `<remarks>` tag explaining when/why each constructor is called.
-
-### Android Views
-
-```xml
-<!-- Default constructor - used when creating programmatically -->
-<summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKCanvasView" /> class.</summary>
-<remarks>Use this constructor when creating the view programmatically from code.</remarks>
-
-<!-- XML inflation constructor -->
-<summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKCanvasView" /> class with the specified XML attributes.</summary>
-<remarks>This constructor is called when inflating the view from an Android XML layout file.</remarks>
-
-<!-- XML inflation with style constructor -->
-<summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKCanvasView" /> class with the specified XML attributes and style.</summary>
-<remarks>This constructor is called when inflating the view from an Android XML layout file and applying a class-specific base style from a theme attribute.</remarks>
-
-<!-- JNI constructor - runtime use only -->
-<summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKCanvasView" /> class from a JNI object reference.</summary>
-<remarks>This constructor is used by the Xamarin.Android runtime when creating managed representations of JNI objects. It is not intended to be called directly from user code.</remarks>
-```
-
-### iOS/tvOS/Mac Views
-
-```xml
-<!-- Default constructor -->
-<summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.iOS.SKCanvasView" /> class.</summary>
-<remarks />
-
-<!-- Frame constructor -->
-<summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.iOS.SKCanvasView" /> class with the specified frame.</summary>
-<remarks />
-
-<!-- Native handle constructor - runtime use only -->
-<summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.iOS.SKCanvasView" /> class from a native handle.</summary>
-<remarks>This constructor is used by the Xamarin.iOS runtime when creating managed representations of unmanaged objects. It is not intended to be called directly from user code.</remarks>
-```
-
-### Tizen Views
-
-```xml
-<!-- Default constructor -->
-<summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Tizen.SKCanvasView" /> class.</summary>
-<remarks>Use this constructor when creating the view programmatically from code.</remarks>
-```
-
-### Cross-Platform Views (Forms/MAUI/Blazor/WPF/Desktop)
-
-```xml
-<!-- Simple default constructor - no special remarks needed -->
-<summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Forms.SKCanvasView" /> class.</summary>
-<remarks />
-```
-
-## Rich Remarks and Examples
-
-The best SkiaSharp docs use markdown-in-CDATA for rich content. This is the convention for type-level remarks and important factory methods.
-
-### When to Write Rich Remarks
-
-| API type | Remarks level |
-|----------|--------------|
-| Types (classes/structs) | Rich: overview, usage example, disposal notes, threading |
-| Factory methods (`Create*`) | Rich: code example showing common usage |
-| Important methods (`Draw*`, `Save`/`Restore`) | Brief explanation + link to related concepts |
-| Simple properties, getters, overloads | `<remarks />` (empty) is fine |
-| Enum members | No remarks needed |
-
-### Rich Remarks Format (Markdown in CDATA)
-
-For types and important methods, wrap markdown content in `<format type="text/markdown"><![CDATA[...]]></format>`. Microsoft Learn renders the CDATA content as full markdown.
-
-Example remarks value for a type:
-
-````xml
-<format type="text/markdown"><![CDATA[
-## Remarks
-
-`SKPaint` controls how drawing operations render on the canvas, including
-color, stroke width, anti-aliasing, blend modes, shaders, and text properties.
-Create an instance, configure the desired properties, and pass it to drawing
-methods on `SKCanvas`.
-
-This type wraps a native Skia resource and implements `IDisposable`. Always
-dispose of it when done, either with a `using` statement or by calling
-`Dispose()` directly.
-
-## Examples
+Use the full constructor form, choosing `class` or `struct` correctly. Explain
+what distinguishes overloads.
 
 ```csharp
-using var paint = new SKPaint
+/// <summary>Initializes a new instance of the <see cref="SKPaint" /> class.</summary>
+public SKPaint()
+
+/// <summary>
+/// Creates a bitmap with the specified dimensions and opacity.
+/// </summary>
+/// <param name="width">The desired width in pixels.</param>
+/// <param name="height">The desired height in pixels.</param>
+/// <param name="isOpaque">
+/// <see langword="true" /> to create an opaque bitmap; otherwise,
+/// <see langword="false" />.
+/// </param>
+public SKBitmap(int width, int height, bool isOpaque = false)
+
+/// <summary>Initializes a new instance of the <see cref="SKPoint" /> struct.</summary>
+/// <param name="x">The horizontal position of the point.</param>
+/// <param name="y">The vertical position of the point.</param>
+public SKPoint(float x, float y)
+
+/// <summary>
+/// Called from derived-class constructors to initialize the
+/// <see cref="SKDrawable" /> class.
+/// </summary>
+protected SKDrawable()
+```
+
+### Properties, indexers, fields, events, and methods
+
+Inspect accessors rather than inferring them. Getter-only properties start
+“Gets”; writable properties start “Gets or sets.” Boolean properties use
+“Gets [or sets] a value indicating whether…”.
+
+```csharp
+/// <summary>Gets or sets the color used for drawing.</summary>
+/// <value>The drawing color.</value>
+public SKColor Color { get; set; }
+
+/// <summary>Gets the width of the bitmap in pixels.</summary>
+/// <value>The width in pixels.</value>
+public int Width { get; }
+
+/// <summary>Gets a value indicating whether the path is empty.</summary>
+/// <value>
+/// <see langword="true" /> if the path contains no lines or curves; otherwise,
+/// <see langword="false" />.
+/// </value>
+public bool IsEmpty { get; }
+
+/// <summary>Occurs when the surface needs to be repainted.</summary>
+public event EventHandler<SKPaintSurfaceEventArgs>? PaintSurface;
+
+/// <summary>Draws a rectangle using the specified paint.</summary>
+/// <param name="rect">The rectangle to draw.</param>
+/// <param name="paint">The paint to use for drawing.</param>
+public void DrawRect(SKRect rect, SKPaint paint)
+```
+
+For an `init` accessor, say it can be set during initialization if that
+distinction matters. Do not call it read-only simply because it cannot be
+assigned later.
+
+## Parameters, returns, values, and exceptions
+
+Use an article and a noun phrase for ordinary parameter and return
+descriptions. Parameter names in `name` attributes must exactly match the
+declaration. Use `paramref` when mentioning them in prose.
+
+```csharp
+/// <summary>Draws a rectangle using the specified paint.</summary>
+/// <param name="rect">The rectangle to draw.</param>
+/// <param name="paint">The paint to use for drawing.</param>
+public void DrawRect(SKRect rect, SKPaint paint)
+
+/// <summary>Creates an iterator that scans the path's segments.</summary>
+/// <param name="forceClose">
+/// <see langword="true" /> to close each contour while iterating; otherwise,
+/// <see langword="false" />.
+/// </param>
+/// <returns>An iterator for the path's segments.</returns>
+public Iterator CreateIterator(bool forceClose)
+
+/// <summary>Attempts to parse a color from a string.</summary>
+/// <param name="hexString">The hexadecimal color string to parse.</param>
+/// <param name="color">
+/// When this method returns, contains the parsed color if successful;
+/// otherwise, <see cref="SKColor.Empty" />.
+/// </param>
+/// <returns>
+/// <see langword="true" /> if parsing succeeded; otherwise,
+/// <see langword="false" />.
+/// </returns>
+public static bool TryParse(string hexString, out SKColor color)
+
+/// <summary>Gets an image from the encoded data.</summary>
+/// <param name="data">The encoded image data.</param>
+/// <returns>
+/// A new image, or <see langword="null" /> if the data is invalid.
+/// </returns>
+public static SKImage FromEncodedData(SKData data)
+```
+
+- Boolean **parameters** say “`true` to…”.
+- Boolean **returns** and property **values** say “`true` if…”.
+- Use `<see langword="null" />`, `<see langword="true" />`, and
+  `<see langword="false" />`, not backticks or bare keywords.
+- Describe `out`/`ref` behavior precisely. Do not claim a constraint, default,
+  or failure result that source does not establish.
+- Use `<value>` for a property/indexer value. Do not document a default based
+  on a typical constant; verify its initializer or zero-initialized state.
+
+Document only exceptions that are part of the observed public behavior, on the
+same declaration that performs the validation. Never copy an exception element
+into an unrelated member merely to demonstrate XML syntax.
+
+For generic APIs, use `typeparam` and `typeparamref`:
+
+```csharp
+/// <summary>Provides event data for retrieving a property value from a renderer.</summary>
+/// <typeparam name="T">The type of the property value to retrieve.</typeparam>
+public class GetPropertyValueEventArgs<T> : EventArgs
 {
-    Color = SKColors.CornflowerBlue,
-    IsAntialias = true,
-    Style = SKPaintStyle.Fill,
-};
-canvas.DrawCircle(128, 128, 80, paint);
-```
-]]></format>
-````
-
-### Type-Level Remarks Template
-
-For classes and structs, follow this structure inside the CDATA:
-
-1. `## Remarks` heading
-2. One paragraph: what the type does and when to use it
-3. Optional: how to create instances — constructor vs factory methods
-4. Optional: disposal pattern for `SKObject` subclasses
-5. Optional: threading notes — Skia is NOT thread-safe for mutable types
-6. `## Examples` heading
-7. One ` ```csharp ``` ` block showing the most common usage pattern
-
-### What Makes Good Examples
-
-- **Show the most common use case** — not edge cases
-- **Include using/disposal** — SkiaSharp objects are IDisposable (but never `using` a parent-owned object like the canvas from `SKDocument.BeginPage`)
-- **Show the full picture** — create + configure + use, not just one call
-- **Keep it short** — 5-15 lines, enough to understand the pattern
-- **Use realistic values** — not `0, 0, 0, 0` but actual coordinates/colors
-- **Be self-contained** — every variable referenced must be declared in the snippet; a stray `bitmap2` that was never created won't compile
-
-Look at `samples/Gallery/Shared/Samples/` for real usage patterns. These samples show how developers actually use the APIs.
-
-### Cross-References in Rich Remarks
-
-Inside CDATA blocks, use `<xref:...>` (NOT `<see cref>`). An `xref` takes the **bare DocFX UID** — the fully-qualified name with **no `T:`/`M:`/`P:`/`F:` prefix**. Those DocId prefixes belong only to `<see cref>`; carrying them into an `xref` produces a broken link.
-
-```
-✅ See <xref:SkiaSharp.SKCanvas> for drawing operations.
-✅ Use <xref:SkiaSharp.SKPathBuilder> to construct paths incrementally.
-✅ Call <xref:SkiaSharp.SKPathBuilder.MoveTo(System.Single,System.Single)> to start a contour.
-
-❌ See <xref:T:SkiaSharp.SKCanvas> ...      (drop the T:)
-❌ Use <xref:P:SkiaSharp.SKPaint.Color> ... (drop the P:)
+    /// <summary>Gets or sets the property value.</summary>
+    /// <value>The property value of type <typeparamref name="T" />.</value>
+    public T Value { get; set; }
+}
 ```
 
-Outside CDATA (in summary/param/returns), use `<see cref="T:..." />` **with** the prefix as usual. So the same type is `<see cref="T:SkiaSharp.SKCanvas" />` in a summary but `<xref:SkiaSharp.SKCanvas>` in a remarks CDATA block.
+## Cross-references and escaping
 
-## Type-Level Documentation
+For newly authored standard XML comments, use compiler-resolvable `cref`
+values without DocId prefixes so the compiler and IDE can validate and update
+them during refactoring. In a rich Markdown/CDATA `<remarks>` block, preserve
+the external renderer's bare `<xref:...>` syntax. Existing prefixed `cref`
+forms are historical source; do not convert them in bulk unless the managed
+build and external rendering prove the migration equivalent.
 
-Types that wrap native resources (`IDisposable`) should have remarks that cover:
-1. What the type does and when to use it
-2. How to create instances (constructor vs factory)
-3. Disposal pattern — always show `using` in examples
-4. Threading constraints if applicable
+```csharp
+/// <summary>Draws to an <see cref="SKCanvas" />.</summary>
+/// <seealso cref="SKPaint" />
+```
 
-**remarks** should use the CDATA format shown above with `## Remarks`, disposal note, and `## Examples` with a code block.
+For overload disambiguation, use a compiler-resolvable C# signature and build
+to confirm it:
 
-### Code Example Best Practices
+```csharp
+/// <seealso cref="SKCanvas.DrawRect(SKRect, SKPaint)" />
+```
 
-- **Show disposal** — if the type is `IDisposable`, examples must use `using` or call `Dispose()` — *except* for objects owned by a parent (e.g. the canvas from `SKDocument.BeginPage` or `SKSurface.Canvas`), which the parent disposes
-- **Show the full picture** — create + configure + use, not just one call
-- **Use realistic values** — not `0, 0, 0, 0` but actual coordinates/colors
-- **Keep it short** — 5-15 lines, enough to understand the pattern
-- **Be self-contained and compilable** — every variable referenced must be declared in the snippet; a stray identifier (e.g. `bitmap2` when only `bitmap` was created) is a compile error
-- **Only use real APIs** — verify every method/overload exists in source before using in an example
-- **Never use obsolete APIs** — a member marked `[Obsolete("...", true)]` is a compile error, so an example using it is broken. Check every example against `references/obsolete-api-map.md`, which names the replacement (and in §2 disambiguates the overloads that share a name with the modern API). The classic SkiaSharp trap is legacy text rendering (see skia-patterns.md "Obsolete APIs").
+Escape XML metacharacters in prose and code:
+
+| Character | Write |
+|---|---|
+| `<` | `&lt;` |
+| `>` | `&gt;` |
+| `&` | `&amp;` |
+
+For a code comparison, prefer `<c>value &lt; limit</c>`. Never place
+unescaped markup-looking text in a summary. In existing rich Markdown/CDATA
+source comments, preserve bare `<xref:...>` cross-references and renderer
+syntax because the external API-docs repository consumes that compiler XML.
+
+## Punctuation and common mistakes
+
+Use normal sentence punctuation and no trailing whitespace. Keep punctuation
+outside closing XML tags and after inline elements:
+
+```csharp
+/// <returns>The result.</returns>
+```
+
+```csharp
+/// <returns><see langword="true" /> if successful; otherwise, <see langword="false" />.</returns>
+```
+
+Avoid a trailing period only when the summary deliberately ends in a bracket
+annotation, status parenthetical, or technical notation that is not a
+sentence. A clarifying parenthetical in a sentence still takes a period:
+
+```csharp
+/// <summary>Gets the Euclidean distance from the origin (0, 0).</summary>
+```
+
+```csharp
+/// <summary>Swizzles pixels, swapping R and B (RGBA ↔ BGRA)</summary>
+```
+
+Common mistakes:
+
+- `/// <summary>Gets the width.</summary>` merely repeats a name; add context
+  such as the object and unit.
+- “Gets” on `{ get; set; }`, “Gets or sets” on `{ get; }`, or calling an
+  `init` accessor immutable.
+- A shortened constructor phrase such as “Initializes a new `SKPoint`…”
+  instead of “Initializes a new instance of the … struct…”.
+- “`true` if” for an input parameter, or “`true` to” for a result/value.
+- Backticked `null`, `true`, or `false` instead of `langword`.
+- A parameter `name`, `paramref`, `typeparam`, or `cref` that does not resolve.
+- Unsupported claims that a method must reject input, has a default, or owns a
+  returned object without reading implementation.
+- Empty boilerplate tags, an `inheritdoc` used where the inherited contract
+  differs, or standard and rich cross-reference formats mixed in the same
+  context. Preserve existing valid DocIds and rich Markdown/CDATA comments.
+
+## Extension methods
+
+Document an extension method at its C# declaration, including the `this`
+parameter when its purpose is not obvious. The extension container type needs
+its own summary but does not duplicate member documentation in generated
+artifacts.
+
+```csharp
+/// <summary>Draws shaped text on the canvas at the specified point with the specified alignment.</summary>
+/// <param name="canvas">The canvas to draw on.</param>
+/// <param name="text">The text to draw.</param>
+/// <param name="p">The point at which to draw the text.</param>
+/// <param name="textAlign">The text alignment to use when drawing the text.</param>
+/// <param name="font">The font to use when shaping and drawing the text.</param>
+/// <param name="paint">The paint to use when drawing the text.</param>
+public static void DrawShapedText(this SKCanvas canvas, string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint)
+```
+
+Check the extension's receiver, overload, nullability, and ownership against
+the implementation just as for an instance method. Do not maintain a second
+copy of its prose in compiler XML or external generated reference output.
+
+## Platform view constructors
+
+Platform view constructors have runtime-specific purposes. Document them as
+C# source comments beside the actual constructor. Preserve exact type names
+and parameter names from source; the following patterns show the intended
+remarks.
+
+### Android
+
+```csharp
+/// <summary>
+/// Initializes a new instance of the <see cref="SKCanvasView" /> class.
+/// </summary>
+/// <param name="context">The context in which the view runs.</param>
+/// <remarks>Use this constructor when creating the view programmatically.</remarks>
+public SKCanvasView(Context context)
+
+/// <summary>
+/// Initializes a new instance of the <see cref="SKCanvasView" /> class with
+/// the specified XML attributes.
+/// </summary>
+/// <param name="context">The context in which the view runs.</param>
+/// <param name="attrs">The XML attributes used to inflate the view.</param>
+/// <remarks>
+/// This constructor is called when inflating the view from an Android XML
+/// layout file.
+/// </remarks>
+public SKCanvasView(Context context, IAttributeSet attrs)
+
+/// <summary>
+/// Initializes a new instance of the <see cref="SKCanvasView" /> class from a
+/// JNI object reference.
+/// </summary>
+/// <param name="javaReference">The JNI object reference.</param>
+/// <param name="transfer">The ownership mode for the Java reference.</param>
+/// <remarks>
+/// This constructor is used by the Android runtime when creating managed
+/// representations of JNI objects. It is not intended for direct user code.
+/// </remarks>
+protected SKCanvasView(IntPtr javaReference, JniHandleOwnership transfer)
+```
+
+### iOS, tvOS, and Mac
+
+```csharp
+/// <summary>
+/// Initializes a new instance of the <see cref="SKCanvasView" /> class with
+/// the specified frame.
+/// </summary>
+/// <param name="frame">The frame used by the view, expressed in points.</param>
+public SKCanvasView(CGRect frame)
+
+/// <summary>
+/// Initializes a new instance of the <see cref="SKCanvasView" /> class from a
+/// native handle.
+/// </summary>
+/// <param name="p">The pointer to the unmanaged object.</param>
+/// <remarks>
+/// This constructor is used by the Apple runtime when creating managed
+/// representations of unmanaged objects. It is not intended for direct user
+/// code.
+/// </remarks>
+public SKCanvasView(IntPtr p)
+```
+
+### Tizen and cross-platform views
+
+```csharp
+/// <summary>
+/// Initializes a new instance of the <see cref="SKCanvasView" /> class.
+/// </summary>
+/// <remarks>Use this constructor when creating the view programmatically.</remarks>
+public SKCanvasView()
+```
+
+For Forms, MAUI, Blazor, WPF, and desktop views, a plain default-constructor
+summary is normally enough unless source gives it a platform/runtime role.
+Never copy a platform-specific runtime assertion to another view without
+checking its source.
+
+## Rich remarks and examples
+
+Use `<remarks>` for non-obvious behavior and `<example>` for an important
+usage pattern. Existing rich source comments use a supported Markdown/CDATA
+format inside `<remarks>`; preserve that format when updating rich prose,
+examples, cross-references, or `_DocsMedia` images.
+
+```csharp
+/// <summary>Provides the style and color information for drawing operations.</summary>
+/// <remarks><format type="text/markdown"><![CDATA[
+/// ## Remarks
+///
+/// Configure an instance and pass it to drawing operations on
+/// <xref:SkiaSharp.SKCanvas>. Dispose caller-owned instances when they are no
+/// longer needed.
+///
+/// ## Examples
+///
+/// ```csharp
+/// using var bitmap = new SKBitmap(256, 256);
+/// using var canvas = new SKCanvas(bitmap);
+/// using var paint = new SKPaint
+/// {
+///     Color = SKColors.CornflowerBlue,
+///     IsAntialias = true,
+///     Style = SKPaintStyle.Fill,
+/// };
+/// canvas.DrawCircle(128, 128, 80, paint);
+/// ```
+/// ]]></format></remarks>
+public class SKPaint
+```
+
+Use rich remarks for types, important factory methods, and operations whose
+lifetime, threading, interoperability, or order of use is significant. Simple
+properties and overloads rarely need an example. A type-level example should
+show the normal creation/configuration/use path, not an edge case.
+
+Before publishing an example:
+
+1. Read the actual C# declaration and implementation for each call and check
+   that its exact overload exists.
+2. Declare every identifier or state the precondition in the surrounding
+   comments. Do not reference an undeclared `bitmap2`, assumed `canvas`, or
+   unstated receiver.
+3. Handle nullable factory results before dereference when source can return
+   `null`.
+4. Use `using` only for objects the caller owns. Do not dispose the canvas
+   returned from `SKDocument.BeginPage` or `SKSurface.Canvas`; their parent
+   owns it.
+5. Use current APIs. In particular, text examples use `SKFont` and the
+   `SKCanvas` overload that accepts it, never an error-obsolete `SKPaint` text
+   API. See [`obsolete-api-map.md`](obsolete-api-map.md).
+6. State disposal and threading rules only after verifying the type category
+   and ownership in [`skia-patterns.md`](skia-patterns.md) and source.
+
+Prefer real, current patterns from `samples/` only after validating their
+signatures against the current declaration. An example is public API guidance:
+it must be self-contained, factual, and compilable.
+
+## Type-level documentation
+
+Public types need a meaningful `<summary>` and, when the type has non-obvious
+creation, lifetime, threading, or interoperability requirements, a
+`<remarks>` section and a short `<example>`. Keep details on the type where
+they apply broadly; member comments should focus on the member's own behavior.
+
+For a type wrapping a caller-owned native resource, explain the disposal
+contract and show disposal in a type-level example. For a parent-owned
+resource, say that its parent controls its lifetime and do not show
+`using`/`Dispose`. For mutable Skia objects, document a threading restriction
+only after confirming it in source and [`skia-patterns.md`](skia-patterns.md).
+Value types normally need neither disposal nor threading guidance.

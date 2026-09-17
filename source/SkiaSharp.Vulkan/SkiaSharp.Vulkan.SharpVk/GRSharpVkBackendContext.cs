@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using SharpVk;
 
@@ -6,8 +6,16 @@ using PhysicalDeviceFeaturesNative = SharpVk.Interop.PhysicalDeviceFeatures;
 
 namespace SkiaSharp
 {
+	/// <summary>Represents a method that retrieves Vulkan procedure addresses using SharpVk types.</summary>
+	/// <param name="name">The name of the Vulkan procedure to retrieve.</param>
+	/// <param name="instance">The SharpVk Vulkan instance, or <see langword="null" /> for global functions.</param>
+	/// <param name="device">The SharpVk Vulkan device, or <see langword="null" /> for instance-level functions.</param>
+	/// <returns>A pointer to the requested Vulkan procedure, or <see cref="F:System.IntPtr.Zero" /> if not found.</returns>
+	/// <remarks />
 	public delegate IntPtr GRSharpVkGetProcedureAddressDelegate(string name, Instance instance, Device device);
 
+	/// <summary>A Vulkan backend context that uses SharpVk types for Vulkan interoperability.</summary>
+	/// <remarks />
 	public unsafe class GRSharpVkBackendContext : GRVkBackendContext
 	{
 		private Instance vkInstance;
@@ -20,6 +28,15 @@ namespace SkiaSharp
 		private PhysicalDeviceFeaturesNative devFeatures;
 		private GCHandle devFeaturesHandle;
 
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.GRSharpVkBackendContext" />.</summary>
+		/// <remarks />
+		public GRSharpVkBackendContext()
+		{
+		}
+
+		/// <summary>Releases the unmanaged resources used by the object and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <remarks />
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
@@ -34,6 +51,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Gets or sets the Vulkan instance.</summary>
+		/// <value>The SharpVk instance.</value>
+		/// <remarks />
 		public new Instance VkInstance
 		{
 			get => vkInstance;
@@ -44,6 +64,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Gets or sets the Vulkan physical device.</summary>
+		/// <value>The SharpVk physical device.</value>
+		/// <remarks />
 		public new PhysicalDevice VkPhysicalDevice
 		{
 			get => vkPhysicalDevice;
@@ -54,6 +77,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Gets or sets the Vulkan logical device.</summary>
+		/// <value>The SharpVk device.</value>
+		/// <remarks />
 		public new Device VkDevice
 		{
 			get => vkDevice;
@@ -64,6 +90,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Gets or sets the Vulkan queue.</summary>
+		/// <value>The SharpVk queue.</value>
+		/// <remarks />
 		public new Queue VkQueue
 		{
 			get => vkQueue;
@@ -74,6 +103,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Gets or sets the optional Vulkan physical device features.</summary>
+		/// <value>The SharpVk physical device features, or <see langword="null" />.</value>
+		/// <remarks />
 		public new PhysicalDeviceFeatures? VkPhysicalDeviceFeatures
 		{
 			get => vkPhysicalDeviceFeatures;
@@ -97,6 +129,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Gets or sets the delegate for resolving Vulkan function addresses.</summary>
+		/// <value>The delegate for resolving Vulkan function addresses.</value>
+		/// <remarks />
 		public new GRSharpVkGetProcedureAddressDelegate GetProcedureAddress
 		{
 			get => getProc;

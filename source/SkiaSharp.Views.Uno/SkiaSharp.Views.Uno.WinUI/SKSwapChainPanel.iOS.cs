@@ -1,4 +1,4 @@
-﻿#if !__MACCATALYST__
+#if !__MACCATALYST__
 using CoreAnimation;
 using Foundation;
 #if WINUI
@@ -20,6 +20,8 @@ namespace SkiaSharp.Views.UWP
 		private SKGLView glView;
 		private CADisplayLink displayLink;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKSwapChainPanel" /> class.</summary>
+		/// <remarks />
 		public SKSwapChainPanel()
 		{
 			Initialize();

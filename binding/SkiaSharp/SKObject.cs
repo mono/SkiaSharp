@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Collections.Concurrent;
@@ -7,6 +7,8 @@ using System.Threading;
 
 namespace SkiaSharp
 {
+	/// <summary>Represents a tracked native object.</summary>
+	/// <remarks>This object wraps a native handle and keeps track of its lifetime for the garbage collector. For a simple object, use <see cref="T:SkiaSharp.SKNativeObject" />.</remarks>
 	public abstract class SKObject : SKNativeObject
 	{
 		private readonly object locker = new object ();
@@ -41,9 +43,15 @@ namespace SkiaSharp
 		{
 		}
 
+		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKObject" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.SKObject" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
+		/// <summary>Gets or sets the handle to the underlying native object.</summary>
+		/// <value>The pointer to the native object.</value>
+		/// <remarks>Setting this value will register this object with the lifetime tracker.</remarks>
 		public override IntPtr Handle {
 			get => base.Handle;
 			protected set {
@@ -57,6 +65,8 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKObject" /> types to dispose managed objects that are not owned by this instance.</summary>
+		/// <remarks>This method is called during disposal to clean up managed objects that were created by native code but are not owned by this instance. The default implementation disposes any child objects that don't own their handles.</remarks>
 		protected override void DisposeUnownedManaged ()
 		{
 			if (ownedObjects != null) {
@@ -67,6 +77,8 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKObject" /> types to destroy any managed objects.</summary>
+		/// <remarks />
 		protected override void DisposeManaged ()
 		{
 			if (ownedObjects != null) {
@@ -79,6 +91,8 @@ namespace SkiaSharp
 			keepAliveObjects?.Clear ();
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKObject" /> types to destroy any native objects.</summary>
+		/// <remarks />
 		protected override void DisposeNative ()
 		{
 			if (this is ISKReferenceCounted refcnt)
@@ -216,6 +230,8 @@ namespace SkiaSharp
 		}
 	}
 
+	/// <summary>Represents a native object.</summary>
+	/// <remarks>This object just wraps a native handle with the managed dispose pattern. For a tracked object, use <see cref="T:SkiaSharp.SKObject" />.</remarks>
 	public abstract class SKNativeObject : IDisposable
 	{
 		internal bool fromFinalizer = false;
@@ -239,6 +255,8 @@ namespace SkiaSharp
 			OwnsHandle = ownsHandle;
 		}
 
+		/// <summary>Allows an object to try to free resources and perform other cleanup operations before it is reclaimed by garbage collection.</summary>
+		/// <remarks />
 		~SKNativeObject ()
 		{
 			fromFinalizer = true;
@@ -250,8 +268,14 @@ namespace SkiaSharp
 			Dispose (false);
 		}
 
+		/// <summary>Gets or sets the handle to the underlying native object.</summary>
+		/// <value>The native object handle.</value>
+		/// <remarks />
 		public virtual IntPtr Handle { get; protected set; }
 
+		/// <summary>Gets or sets a value indicating whether this object owns its handle and should destroy the native object when it is disposed.</summary>
+		/// <value><see langword="true" /> if the object owns the handle and will destroy it when disposed; otherwise, <see langword="false" />.</value>
+		/// <remarks />
 		protected internal virtual bool OwnsHandle { get; protected set; }
 
 		// One-way latch: once set to true, only stays true. Use PreventPublicDisposal() to set.
@@ -260,6 +284,9 @@ namespace SkiaSharp
 		// paired with the isDisposed CAS. So the latch can never be set on an instance that is concurrently
 		// claiming public disposal. (The only unpaired read is the post-disposal diagnostic
 		// re-check in Dispose(), which runs after isDisposed is already set.)
+		/// <summary>Gets a value indicating whether the call the public <see cref="M:SkiaSharp.SKNativeObject.Dispose" /> should be no-op.</summary>
+		/// <value><see langword="true" /> if the public Dispose call should be ignored; otherwise, <see langword="false" />.</value>
+		/// <remarks>This only affects the public disposal. Objects that own this one can still forcefull trigger a dispose using <see cref="M:SkiaSharp.SKNativeObject.DisposeInternal" />.</remarks>
 		protected internal bool IgnorePublicDispose { get; private set; }
 
 		// Make this wrapper unreachable via the public Dispose() method.
@@ -294,18 +321,27 @@ namespace SkiaSharp
 		// post-refactor design relies on HandleDictionary.GetInstanceNoLocks reading
 		// this property to filter out disposed wrappers, so a stale read could let a
 		// disposed wrapper escape the filter and become the cached singleton.
+		/// <summary>Gets a value indicating whether the object has already been disposed.</summary>
+		/// <value><see langword="true" /> if the object has been disposed; otherwise, <see langword="false" />.</value>
+		/// <remarks />
 		protected internal bool IsDisposed => Volatile.Read (ref isDisposed) == 1;
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKNativeObject" /> types to dispose managed objects that are not owned by this instance.</summary>
+		/// <remarks>This method is called during disposal to clean up managed objects that were created by native code but are not owned by this instance.</remarks>
 		protected virtual void DisposeUnownedManaged ()
 		{
 			// dispose of any managed resources that are not actually owned
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKNativeObject" /> types to destroy any managed objects.</summary>
+		/// <remarks />
 		protected virtual void DisposeManaged ()
 		{
 			// dispose of any managed resources
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKNativeObject" /> types to destroy any native objects.</summary>
+		/// <remarks />
 		protected virtual void DisposeNative ()
 		{
 			// dispose of any unmanaged resources
@@ -316,6 +352,9 @@ namespace SkiaSharp
 		// can be paired atomically with whatever check it needs (e.g. Dispose's
 		// IgnorePublicDispose check under the HandleDictionary write lock). This method now assumes
 		// the caller has already claimed the disposal — it is the cleanup body only.
+		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKNativeObject" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.SKNativeObject" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected virtual void Dispose (bool disposing)
 		{
 			// dispose any objects that are owned/created by native code
@@ -333,6 +372,8 @@ namespace SkiaSharp
 			Handle = IntPtr.Zero;
 		}
 
+		/// <summary>Releases all resources used by this <see cref="T:SkiaSharp.SKNativeObject" />.</summary>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.SKNativeObject" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		public void Dispose ()
 		{
 			// Hold the HandleDictionary write lock only across the flag check + the isDisposed CAS.
@@ -387,6 +428,8 @@ namespace SkiaSharp
 #endif
 		}
 
+		/// <summary>Triggers a dispose, ignoring the value of <see cref="P:SkiaSharp.SKNativeObject.IgnorePublicDispose" />.</summary>
+		/// <remarks />
 		protected internal void DisposeInternal ()
 		{
 			// Claim disposal via the CAS; if already claimed, no-op. No outer HandleDictionary lock —
@@ -443,19 +486,13 @@ namespace SkiaSharp
 		}
 	}
 
-	/// <summary>
-	/// This should be implemented on all types that inherit directly or
-	/// indirectly from SkRefCnt or SkRefCntBase
-	/// </summary>
+	/// <summary>This should be implemented on all types that inherit directly or indirectly from SkRefCnt or SkRefCntBase</summary>
 	internal interface ISKReferenceCounted
 	{
 		IntPtr Handle { get; }
 	}
 
-	/// <summary>
-	/// This should be implemented on all types that inherit directly or
-	/// indirectly from SkNVRefCnt
-	/// </summary>
+	/// <summary>This should be implemented on all types that inherit directly or indirectly from SkNVRefCnt</summary>
 	internal interface ISKNonVirtualReferenceCounted : ISKReferenceCounted
 	{
 		void ReferenceNative ();
@@ -463,12 +500,7 @@ namespace SkiaSharp
 		void UnreferenceNative ();
 	}
 
-	/// <summary>
-	/// This should be implemented on all types that can skip the expensive
-	/// registration in the global dictionary. Typically this would be the case
-	/// if the type os _only_ constructed by the user and not provided as a
-	/// return type for _any_ member.
-	/// </summary>
+	/// <summary>This should be implemented on all types that can skip the expensive registration in the global dictionary. Typically this would be the case if the type os _only_ constructed by the user and not provided as a return type for _any_ member.</summary>
 	internal interface ISKSkipObjectRegistration
 	{
 	}

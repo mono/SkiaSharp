@@ -1707,8 +1707,8 @@ def determine_diff_range(branch):
 # The path→tag mapping is NOT hardcoded here: it lives in the committed
 # scripts/infra/docs/release-notes-paths.json, the single deterministic place to edit it
 # (ordered tiers of prefixes/globs + a default). See that file's `description`/`notes`
-# and spec §4.4 for the rationale (why `externals/skia` is exact, why `docs` is
-# slash-less, why `native/` is mixed, etc.).
+# and spec §4.4 for the rationale (why `externals/skia` is exact and why
+# `native/` is mixed).
 
 
 def _load_path_tags():
@@ -1738,8 +1738,8 @@ def _path_matches(path, pattern):
     """Does a file ``path`` match a config ``pattern``?
 
     Plain patterns are PREFIXES (``str.startswith`` — so ``binding/`` catches everything
-    under it and a bare submodule gitlink like ``externals/skia`` / ``docs`` matches
-    itself). A pattern containing a glob metacharacter (``* ? [``) is matched with
+    under it and a bare submodule gitlink like ``externals/skia`` matches itself). A
+    pattern containing a glob metacharacter (``* ? [``) is matched with
     ``fnmatch.fnmatchcase`` (case-sensitive, platform-independent) instead.
     """
     if any(c in pattern for c in "*?["):

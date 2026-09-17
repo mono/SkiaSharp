@@ -52,7 +52,7 @@ but they modify the local tool installation. Ask before running either script.
 The runner requires the `maui` workload for mobile/desktop MAUI tests and
 `wasm-tools` for Blazor. It reports a missing workload without installing it.
 
-Every test command pins `BaseFramework=net10.0`, `SdkVersion=10.0.400`, and
+Every test command pins `BaseFramework=net10.0`, `SdkVersion=10.0.401`, and
 `SdkAllowPrerelease=false`. Override all three together only when the approved
 release test intentionally targets another SDK band.
 

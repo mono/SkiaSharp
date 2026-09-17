@@ -1,51 +1,89 @@
-# Validation & formatting
+# API documentation validation
 
-Agents edit the `.xml` directly. **One** Cake target does both the formatting and the deterministic,
-no-LLM checks — run it before opening a PR:
+Validate C# source comments through managed compilation and the package
+contract. Do not validate by editing, formatting, or regenerating ECMA/mdoc or
+compiler XML by hand.
+
+## 0. Refresh conventions from official sources
+
+For a broad documentation pass or when a convention is uncertain, retrieve the
+current [C# recommended XML tag guidance](https://learn.microsoft.com/dotnet/csharp/language-reference/xmldoc/recommended-tags),
+[documentation rules](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/documentation-warnings),
+and [CA1200 `cref` guidance](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1200).
+Compare any change against the managed build and the external API-docs
+consumer. Official style guidance does not by itself justify rewriting valid
+repository-specific rich Markdown/CDATA comments or their media links.
+
+## 1. Build the changed managed project
+
+Build each project that owns changed source comments. For core SkiaSharp:
 
 ```bash
-dotnet cake --target=docs-format-docs
+dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
-It walks **every** type file in `docs/`, normalizes whitespace/attribute order (so diffs stay minimal and
-reviewable), and runs the content checks below. The same target also runs during full doc regeneration, so
-these checks guard regenerated stubs too.
+Use the corresponding changed managed project for other assemblies (for
+example, a views or HarfBuzzSharp project). Treat compiler warnings about
+malformed documentation, unresolved `cref`, or invalid `inheritdoc` as
+documentation defects and correct the source comment.
 
-## What it reports (warnings — never fail the build)
+When generated binding documentation changed, edit only the `///` trivia in
+the source-controlled generated file, then run a preservation round trip:
 
-Findings use the shared contract, logged as Cake **warnings**:
-
+```bash
+pwsh -NoLogo -NoProfile -File ./utils/generate.ps1
+dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
-[docs] <class> | <file> | <docId> | <message>
+
+Verify the intended comments remain and no generated declarations or interop
+implementation were manually changed.
+
+## 2. Confirm compiler XML
+
+After the build, locate the compiler-produced XML next to the built managed
+assembly and verify that it is well-formed:
+
+```bash
+find binding/SkiaSharp/bin -type f -name 'SkiaSharp.xml' -print
 ```
 
-- **Missing docs** — any `To be added.` placeholder left unfilled (also summarized per type as a
-  "Docs missing on …" warning).
-- `<see cref>` with a missing/wrong DocId prefix; `<xref:T:/M:/P:…>` **inside CDATA** (the prefix is only
-  for `<see cref>`).
-- Empty `<summary/>` / `<value/>` / `<returns/>` (note `<remarks/>` is allowed).
-- Accessor-verb mismatch vs the `MemberSignature` (`{ get; }` documented as "Gets or sets").
-- Repeated words ("the the") and common misspellings (dictionary, not an LLM).
+For each resulting artifact, parse it rather than relying only on file
+presence:
 
-> **Not checked here:** obsolete members in examples. Distinguishing an obsolete overload from a modern one
-> (e.g. `SKCanvas.DrawText` with vs without `SKFont`) needs signature awareness a name match can't do, so
-> that is a reviewer judgement — see [`obsolete-api-map.md`](obsolete-api-map.md) and `reviewing.md` Check B.
+```powershell
+Get-ChildItem binding/SkiaSharp/bin -Recurse -Filter SkiaSharp.xml |
+    ForEach-Object { [xml](Get-Content $_.FullName -Raw) | Out-Null; $_.FullName }
+```
 
-These are advisory: a fresh regen full of placeholders is just noisy, not broken.
+The compiler XML is generated output and must not be manually corrected.
 
-## What FAILS the build (errors)
+## 3. Verify the package XML contract
 
-Two things stop a doc from parsing or rendering on the published Learn site, so both fail the target:
+The package assembly test exercises the packaging assertion that every
+reference assembly has matching compiler XML beside both its reference and
+implementation assemblies:
 
-- **Unparseable XML** — `docs-format-docs` loads every file with `XDocument.Load`; a file that is not
-  well-formed throws immediately (with its name) and aborts the run before anything else is checked.
-- `broken-cdata` — a `csharp`/`xref` CDATA block was destroyed (e.g. `<` escaped to `&lt;xref:`), which
-  silently corrupts the rendered remarks. Logged as a `[docs] broken-cdata` **error**.
+```bash
+pwsh -NoLogo -NoProfile -File ./scripts/infra/package/tests/AssembleArcadeAssets.Tests.ps1
+```
 
-Fix any parse failure and every `[docs] broken-cdata` error before landing — the build will not pass
-otherwise. This is the guarantee that a direct XML edit cannot ship site-breaking markup.
+For a package-producing change, also inspect the produced representative
+`.nupkg` archive. For every `ref/<tfm>/<Assembly>.dll`, require:
 
-> There is no separate `docs-lint`/`docs-validate` target and no git-baseline "only `<Docs>` changed"
-> structural check anymore. The checks run in the same pass that formats each file, on the tree it already
-> loaded. Signatures are owned by mdoc regeneration and are visible in the PR diff; the broken-XML failures
-> above are what keep the site safe.
+```text
+ref/<tfm>/<Assembly>.xml
+lib/<tfm>/<Assembly>.dll
+lib/<tfm>/<Assembly>.xml
+```
+
+The XML copies intentionally originate from the same compiler output. The
+`ref/<tfm>` XML is the consumer-visible API documentation contract; the
+`lib/<tfm>` copy is required alongside its implementation assembly but does
+not turn implementation-only APIs into public surface.
+
+## Completion evidence
+
+Record the changed projects built, the compiler XML paths found, the package
+test result, and (when packaging applies) the archive paths inspected. Do not
+run retired parent documentation targets: this repository has no mdoc/XML
+source-editing validation workflow.

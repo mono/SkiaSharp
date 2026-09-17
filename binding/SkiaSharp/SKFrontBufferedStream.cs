@@ -1,12 +1,16 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.IO;
 
 namespace SkiaSharp
 {
+	/// <summary>A read-only stream that buffers the specified first chunk of bytes.</summary>
+	/// <remarks>This is useful for decoding images using streams that are not seekable, since <see cref="T:SkiaSharp.SKCodec" /> needs to read the first few bytes to determine the codec to use.</remarks>
 	public class SKFrontBufferedStream : Stream
 	{
+		/// <summary>The default number of bytes to buffer (4096 bytes).</summary>
+		/// <remarks />
 		public const int DefaultBufferSize = 4096;
 
 		private readonly long totalBufferSize;
@@ -18,21 +22,37 @@ namespace SkiaSharp
 		private long bufferedSoFar;
 		private byte[] internalBuffer;
 
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+		/// <param name="stream">The stream to buffer.</param>
+		/// <remarks />
 		public SKFrontBufferedStream(Stream stream)
 			: this(stream, DefaultBufferSize, false)
 		{
 		}
 
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+		/// <param name="stream">The stream to buffer.</param>
+		/// <param name="bufferSize">The number of bytes to buffer.</param>
+		/// <remarks />
 		public SKFrontBufferedStream(Stream stream, long bufferSize)
 			: this(stream, bufferSize, false)
 		{
 		}
 
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+		/// <param name="stream">The stream to buffer.</param>
+		/// <param name="disposeUnderlyingStream"><see langword="true" /> to dispose the underlying stream when this stream is disposed; otherwise, <see langword="false" />.</param>
+		/// <remarks />
 		public SKFrontBufferedStream(Stream stream, bool disposeUnderlyingStream)
 			: this(stream, DefaultBufferSize, disposeUnderlyingStream)
 		{
 		}
 
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+		/// <param name="stream">The stream to buffer.</param>
+		/// <param name="bufferSize">The number of bytes to buffer.</param>
+		/// <param name="disposeUnderlyingStream"><see langword="true" /> to dispose the underlying stream when this stream is disposed; otherwise, <see langword="false" />.</param>
+		/// <remarks />
 		public SKFrontBufferedStream(Stream stream, long bufferSize, bool disposeUnderlyingStream)
 		{
 			underlyingStream = stream;
@@ -41,25 +61,48 @@ namespace SkiaSharp
 			disposeStream = disposeUnderlyingStream;
 		}
 
+		/// <summary>Gets a value indicating whether the current stream supports reading.</summary>
+		/// <value><see langword="true" /> if the stream supports reading; otherwise, <see langword="false" />.</value>
+		/// <remarks />
 		public override bool CanRead => true;
 
+		/// <summary>Gets a value indicating whether the current stream supports seeking.</summary>
+		/// <value><see langword="true" /> if the stream supports seeking; otherwise, <see langword="false" />.</value>
+		/// <remarks />
 		public override bool CanSeek => true; // we can seek if we are in the buffer
 
+		/// <summary>Gets a value indicating whether the current stream supports writing.</summary>
+		/// <value><see langword="true" /> if the stream supports writing; otherwise, <see langword="false" />.</value>
+		/// <remarks />
 		public override bool CanWrite => false; // we don't write
 
+		/// <summary>Gets the stream length in bytes.</summary>
+		/// <value>The length of the stream in bytes.</value>
+		/// <remarks />
 		public override long Length => totalLength;
 
+		/// <summary>Gets or sets the position within the current stream.</summary>
+		/// <value>The current position within the stream.</value>
+		/// <remarks />
 		public override long Position
 		{
 			get { return currentOffset; }
 			set { Seek(value, SeekOrigin.Begin); }
 		}
 
+		/// <summary>Clears all buffers for this stream and causes any buffered data to be written to the underlying device.</summary>
+		/// <remarks />
 		public override void Flush()
 		{
 			// we don't write
 		}
 
+		/// <summary>Copies bytes from the current buffered stream to an array.</summary>
+		/// <param name="buffer">The buffer to which bytes are to be copied.</param>
+		/// <param name="offset">The byte offset in the buffer at which to begin reading bytes.</param>
+		/// <param name="count">The number of bytes to be read.</param>
+		/// <returns>Returns the total number of bytes read into the buffer array.</returns>
+		/// <remarks />
 		public override int Read(byte[] buffer, int offset, int count)
 		{
 			var start = currentOffset;
@@ -103,6 +146,11 @@ namespace SkiaSharp
 			return (int)(currentOffset - start);
 		}
 
+		/// <summary>Sets the position within the current buffered stream.</summary>
+		/// <param name="offset">The byte offset relative to the specified origin.</param>
+		/// <param name="origin">The reference point from which to obtain the new position.</param>
+		/// <returns>Returns the new position within the current buffered stream.</returns>
+		/// <remarks />
 		public override long Seek(long offset, SeekOrigin origin)
 		{
 			// we are outside the buffer, so throw
@@ -142,11 +190,19 @@ namespace SkiaSharp
 			return Position;
 		}
 
+		/// <summary>Sets the length of the buffered stream.</summary>
+		/// <param name="value">An integer indicating the desired length of the current buffered stream in bytes.</param>
+		/// <remarks />
 		public override void SetLength(long value)
 		{
 			// we don't write
 		}
 
+		/// <summary>Copies bytes to the buffered stream and advances the current position within the buffered stream by the number of bytes written.</summary>
+		/// <param name="buffer">The byte array from which to copy count bytes to the current buffered stream.</param>
+		/// <param name="offset">The offset in the buffer at which to begin copying bytes to the current buffered stream.</param>
+		/// <param name="count">The number of bytes to be written to the current buffered stream.</param>
+		/// <remarks />
 		public override void Write(byte[] buffer, int offset, int count)
 		{
 			// we don't write
@@ -200,6 +256,9 @@ namespace SkiaSharp
 			return (int)bytesReadDirectly;
 		}
 
+		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKFrontBufferedStream" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.SKFrontBufferedStream" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);

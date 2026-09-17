@@ -84,7 +84,8 @@ An update is complete only when:
 - Components not sourced from Skia DEPS, including ANGLE and its dependencies, are updated in
   separate dependency PRs rather than bundled into a Skia upstream sync.
 - Never use `externals-download` after a submodule/native/C API change.
-- Never hand-edit `*.generated.cs`; regenerate it.
+- Never manually edit generated declarations or interop code. Direct edits to
+  source-controlled `///` comment trivia are allowed when regeneration preserves them.
 - Keep public managed ABI additive.
 - A focused project test is diagnostic only; it never satisfies the final gate.
 - GPU bring-up failures are test failures. The validation environment must provide every backend

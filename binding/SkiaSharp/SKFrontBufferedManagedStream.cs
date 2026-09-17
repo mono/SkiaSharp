@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Runtime.InteropServices;
@@ -6,6 +6,8 @@ using System.IO;
 
 namespace SkiaSharp
 {
+	/// <summary>A read-only stream that buffers the specified first chunk of bytes.</summary>
+	/// <remarks>This is useful for decoding images using streams that are not seekable, since <see cref="T:SkiaSharp.SKCodec" /> needs to read the first few bytes to determine the codec to use.</remarks>
 	public class SKFrontBufferedManagedStream : SKAbstractManagedStream
 	{
 		private SKStream stream;
@@ -18,21 +20,39 @@ namespace SkiaSharp
 		private int bufferedSoFar;
 		private int offset;
 
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+		/// <param name="managedStream">The stream to buffer.</param>
+		/// <param name="bufferSize">The number of bytes to buffer.</param>
+		/// <remarks />
 		public SKFrontBufferedManagedStream (Stream managedStream, int bufferSize)
 			: this (managedStream, bufferSize, false)
 		{
 		}
 
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+		/// <param name="managedStream">The stream to buffer.</param>
+		/// <param name="bufferSize">The number of bytes to buffer.</param>
+		/// <param name="disposeUnderlyingStream"><see langword="true" /> to dispose the underlying stream when this stream is disposed; otherwise, <see langword="false" />.</param>
+		/// <remarks />
 		public SKFrontBufferedManagedStream (Stream managedStream, int bufferSize, bool disposeUnderlyingStream)
 			: this (new SKManagedStream (managedStream, disposeUnderlyingStream), bufferSize, true)
 		{
 		}
 
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+		/// <param name="nativeStream">The stream to buffer.</param>
+		/// <param name="bufferSize">The number of bytes to buffer.</param>
+		/// <remarks />
 		public SKFrontBufferedManagedStream (SKStream nativeStream, int bufferSize)
 			: this (nativeStream, bufferSize, false)
 		{
 		}
 
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+		/// <param name="nativeStream">The stream to buffer.</param>
+		/// <param name="bufferSize">The number of bytes to buffer.</param>
+		/// <param name="disposeUnderlyingStream"><see langword="true" /> to dispose the underlying stream when this stream is disposed; otherwise, <see langword="false" />.</param>
+		/// <remarks />
 		public SKFrontBufferedManagedStream (SKStream nativeStream, int bufferSize, bool disposeUnderlyingStream)
 		{
 			var length = nativeStream.HasLength ? nativeStream.Length : 0;
@@ -48,9 +68,14 @@ namespace SkiaSharp
 			frontBuffer = new byte[bufferSize];
 		}
 
+		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKFrontBufferedManagedStream" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.SKFrontBufferedManagedStream" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKNativeObject" /> types to destroy any managed objects.</summary>
+		/// <remarks />
 		protected override void DisposeManaged ()
 		{
 			if (disposeStream && stream != null) {
@@ -61,6 +86,11 @@ namespace SkiaSharp
 			base.DisposeManaged ();
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to copy the specified number of bytes into the specified buffer.</summary>
+		/// <param name="buffer">The buffer to read into.</param>
+		/// <param name="size">The number of bytes to read.</param>
+		/// <returns>Returns the number of bytes actually read.</returns>
+		/// <remarks />
 		protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)
 		{
 			var start = offset;
@@ -123,6 +153,11 @@ namespace SkiaSharp
 			return (IntPtr)(offset - start);
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to copy the specified number of bytes into the specified buffer.</summary>
+		/// <param name="buffer">The buffer to read into.</param>
+		/// <param name="size">The number of bytes to read.</param>
+		/// <returns>Returns the number of bytes actually peeked/copied.</returns>
+		/// <remarks>The stream's cursor must be returned to the position before this method was called.</remarks>
 		protected internal override IntPtr OnPeek (IntPtr buffer, IntPtr size)
 		{
 			if (offset >= bufferLength)
@@ -143,6 +178,9 @@ namespace SkiaSharp
 			return (IntPtr)bytesRead;
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to indicate whether all the bytes in the stream have been read.</summary>
+		/// <returns>Returns a value indicating whether all the bytes in the stream have been read.</returns>
+		/// <remarks />
 		protected internal override bool OnIsAtEnd ()
 		{
 			if (offset < bufferedSoFar)
@@ -155,6 +193,9 @@ namespace SkiaSharp
 			return stream.IsAtEnd;
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to rewind the current stream.</summary>
+		/// <returns>Returns <see langword="true" /> if the stream is known to be at the beginning after this call returns.</returns>
+		/// <remarks />
 		protected internal override bool OnRewind ()
 		{
 			// only allow a rewind if we have not exceeded the buffer.
@@ -167,23 +208,46 @@ namespace SkiaSharp
 			return false;
 		}
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to indicate whether this stream can report its total length.</summary>
+		/// <returns>Returns a value indicating whether this stream can report its total length.</returns>
+		/// <remarks />
 		protected internal override bool OnHasLength () => hasLength;
 
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to return the total length of the stream.</summary>
+		/// <returns>Returns the total length of the stream.</returns>
+		/// <remarks />
 		protected internal override IntPtr OnGetLength () => (IntPtr)streamLength;
 
 		// seeking is not supported
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to indicate whether this stream can report its current position.</summary>
+		/// <returns>Returns a value indicating whether this stream can report its current position.</returns>
+		/// <remarks />
 		protected internal override bool OnHasPosition () => false;
 
 		// seeking is not supported
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to get the current position in the stream.</summary>
+		/// <returns>Returns the current position in the stream.</returns>
+		/// <remarks />
 		protected internal override IntPtr OnGetPosition () => (IntPtr)0;
 
 		// seeking is not supported
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to seek to an absolute position.</summary>
+		/// <param name="position">The absolute position.</param>
+		/// <returns>Returns <see langword="true" /> if seeking is supported and the seek was successful, otherwise <see langword="false" />.</returns>
+		/// <remarks>If an attempt is made to move to a position outside the stream, the position must be set to the closest point within the stream (beginning or end).</remarks>
 		protected internal override bool OnSeek (IntPtr position) => false;
 
 		// seeking is not supported
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to seek to a relative offset.</summary>
+		/// <param name="offset">The relative offset.</param>
+		/// <returns>Returns <see langword="true" /> if seeking is supported and the seek was successful, otherwise <see langword="false" />.</returns>
+		/// <remarks>If an attempt is made to move to a position outside the stream, the position must be set to the closest point within the stream (beginning or end).</remarks>
 		protected internal override bool OnMove (int offset) => false;
 
 		// duplicating or forking is not supported
+		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to copy the current stream.</summary>
+		/// <returns>Returns a pointer to the new <see cref="T:SkiaSharp.SKStreamAsset" /> instance.</returns>
+		/// <remarks />
 		protected internal override IntPtr OnCreateNew () => IntPtr.Zero;
 	}
 }

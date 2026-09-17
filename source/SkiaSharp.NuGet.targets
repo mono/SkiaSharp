@@ -117,43 +117,48 @@ SkiaSharp is an open-source project from Microsoft, released under the [MIT lice
 
   <!--
     ===================================================================================================================
-    IncludeMDocTfmSpecificPackageFiles
-
-    Include the XML docs in the package.
-    ===================================================================================================================
-  -->
-  <Target Name="IncludeMDocTfmSpecificPackageFiles">
-    <ItemGroup>
-      <TfmSpecificPackageFile Include="$(MDocOutputPath)" PackagePath="lib\$(NuGetShortFolderName)\$(MDocOutputName)"
-                              Exclude="@(DocumentationProjectOutputGroupOutput)" Condition="Exists('$(MDocOutputPath)')" />
-    </ItemGroup>
-  </Target>
-
-  <!--
-    ===================================================================================================================
     IncludeReferenceAssemblyTfmSpecificPackageFiles
 
     Include the reference assembly in the package.
     ===================================================================================================================
   -->
 	<Target Name="IncludeReferenceAssemblyTfmSpecificPackageFiles">
-		<PropertyGroup>
-			<MDocReferenceOutputPath>$(MDocIntermediateOutputPath)ref\$(MDocOutputName)</MDocReferenceOutputPath>
-		</PropertyGroup>
-		<MakeDir Condition="Exists('$(TargetRefPath)') and Exists('$(MDocOutputPath)')"
-		         Directories="$(MDocIntermediateOutputPath)ref" />
-		<Copy Condition="Exists('$(TargetRefPath)') and Exists('$(MDocOutputPath)')"
-		      SourceFiles="$(MDocOutputPath)"
-		      DestinationFiles="$(MDocReferenceOutputPath)"
-		      ContinueOnError="false"
-		      Retries="0" />
 		<ItemGroup>
 			<TfmSpecificPackageFile Include="$(TargetRefPath)" PackagePath="ref\$(NuGetShortFolderName)\$(TargetFileName)"
                               Condition="Exists('$(TargetRefPath)')" />
-			<TfmSpecificPackageFile Include="$(MDocReferenceOutputPath)" PackagePath="ref\$(NuGetShortFolderName)\$(MDocOutputName)"
-                              Exclude="@(DocumentationProjectOutputGroupOutput)" Condition="Exists('$(MDocReferenceOutputPath)')" />
 		</ItemGroup>
 	</Target>
+
+  <!--
+    ===================================================================================================================
+    IncludeCompilerDocumentationTfmSpecificPackageFiles
+
+    Include the compiler-produced XML documentation beside each implementation
+    and reference assembly. This is independent of external API-reference
+    generation, so it also works for cross-platform no-build packing.
+    ===================================================================================================================
+  -->
+  <Target Name="IncludeCompilerDocumentationTfmSpecificPackageFiles">
+    <PropertyGroup>
+      <_CompilerDocumentationFile>$([System.IO.Path]::GetFullPath('$(DocumentationFile)'))</_CompilerDocumentationFile>
+      <_CompilerReferenceDocumentationFile>$(IntermediateOutputPath)compiler-docs\ref\$(TargetName).xml</_CompilerReferenceDocumentationFile>
+    </PropertyGroup>
+    <MakeDir Condition="Exists('$(TargetRefPath)') and Exists('$(_CompilerDocumentationFile)')"
+             Directories="$(IntermediateOutputPath)compiler-docs\ref" />
+    <Copy Condition="Exists('$(TargetRefPath)') and Exists('$(_CompilerDocumentationFile)')"
+          SourceFiles="$(_CompilerDocumentationFile)"
+          DestinationFiles="$(_CompilerReferenceDocumentationFile)"
+          ContinueOnError="false"
+          Retries="0" />
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(_CompilerDocumentationFile)" PackagePath="lib\$(NuGetShortFolderName)\$(TargetName).xml"
+                              Exclude="@(DocumentationProjectOutputGroupOutput)"
+                              Condition="Exists('$(_CompilerDocumentationFile)')" />
+      <TfmSpecificPackageFile Include="$(_CompilerReferenceDocumentationFile)" PackagePath="ref\$(NuGetShortFolderName)\$(TargetName).xml"
+                              Exclude="@(DocumentationProjectOutputGroupOutput)"
+                              Condition="Exists('$(_CompilerReferenceDocumentationFile)')" />
+    </ItemGroup>
+  </Target>
   
   <!--
     ===================================================================================================================
@@ -165,9 +170,8 @@ SkiaSharp is an open-source project from Microsoft, released under the [MIT lice
   <PropertyGroup>
     <_IncludeAdditionalTfmSpecificPackageFilesDependsOn>
       _IncludeAdditionalTfmSpecificPackageFilesPrepare;
-      MDocGenerateDocs;
-      IncludeMDocTfmSpecificPackageFiles;
       IncludeReferenceAssemblyTfmSpecificPackageFiles;
+      IncludeCompilerDocumentationTfmSpecificPackageFiles;
       IncludeAdditionalTfmSpecificPackageFiles;
     </_IncludeAdditionalTfmSpecificPackageFilesDependsOn>
   </PropertyGroup>

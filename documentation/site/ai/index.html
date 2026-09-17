@@ -51,8 +51,8 @@
           </p>
           <div class="stat-row">
             <div class="stat">
-              <span class="stat-num">7</span>
-              <span class="stat-label">agentic workflows across two repositories</span>
+              <span class="stat-num">24</span>
+              <span class="stat-label">reusable skills in this repository</span>
             </div>
             <div class="stat">
               <span class="stat-num">23</span>
@@ -158,8 +158,8 @@
         <h2 class="section-title">The loop</h2>
         <p class="section-lead">
           The Skia update lifecycle runs in two phases. First the upstream sync lands in the
-          library. Then, once a release is on main, two independent flows publish in parallel:
-          one writes the website release notes, the other writes the API reference. Automation
+          library. Then the website release notes are prepared in this repository while API
+          reference publication proceeds independently in mono/SkiaSharp-API-docs. Automation
           does the mechanical work, the AI agent does the parts that need judgement, and a
           maintainer reviews before anything ships.
         </p>
@@ -200,14 +200,14 @@
           </div>
         </div>
 
-        <!-- Vertical connector: phase 1 forks into two parallel flows -->
+        <!-- Vertical connector: phase 1 continues into independent documentation flows -->
         <div class="flow-connect" aria-hidden="true">
           <span class="flow-connect-arrow">&darr;</span>
-          <span class="flow-connect-label">a release on main starts two flows in parallel</span>
+          <span class="flow-connect-label">a release on main updates independent documentation flows</span>
         </div>
 
-        <!-- Phase 2: two parallel publish flows -->
-        <p class="loop-band-label">Phase 2 &middot; Publish, in parallel</p>
+        <!-- Phase 2: independent documentation flows -->
+        <p class="loop-band-label">Phase 2 &middot; Documentation</p>
         <div class="parallel">
 
           <div class="flow-row">
@@ -234,23 +234,23 @@
           </div>
 
           <div class="flow-row">
-            <p class="track-name">API docs <a class="track-target" href="https://learn.microsoft.com/dotnet/api/skiasharp" target="_blank" rel="noopener">&rarr; Microsoft Learn</a></p>
+            <p class="track-name">API reference publication <a class="track-target" href="https://learn.microsoft.com/dotnet/api/skiasharp" target="_blank" rel="noopener">&rarr; Microsoft Learn</a></p>
             <div class="loop">
               <div class="loop-node" data-actor="auto">
-                <h3>Regenerate stubs</h3>
-                <p>Rebuild the XML reference stubs from the latest published packages.</p>
+                <h3>External ownership</h3>
+                <p>mono/SkiaSharp-API-docs independently owns generated API-reference output, validation, and publication.</p>
                 <span class="loop-actor">Automation</span>
               </div>
               <div class="loop-arrow" aria-hidden="true">&rarr;</div>
-              <div class="loop-node" data-actor="agent">
-                <h3>Fill &amp; review</h3>
-                <p>Fill the missing entries and review the existing reference docs.</p>
-                <span class="loop-actor">AI agent</span>
+              <div class="loop-node" data-actor="human">
+                <h3>Review</h3>
+                <p>Maintainers review API reference changes in the external documentation repository.</p>
+                <span class="loop-actor">Human review</span>
               </div>
               <div class="loop-arrow" aria-hidden="true">&rarr;</div>
               <div class="loop-node" data-actor="auto">
-                <h3>Validate &amp; publish</h3>
-                <p>The Microsoft Learn build gates the PR; it auto-merges, then a maintainer takes it live.</p>
+                <h3>Publish</h3>
+                <p>The independent pipeline publishes the reviewed API reference to Microsoft Learn.</p>
                 <span class="loop-actor">Automation</span>
               </div>
             </div>
@@ -267,7 +267,7 @@
         <p class="section-kicker">Where we use AI</p>
         <h2 class="section-title">The agentic workflows</h2>
         <p class="section-lead">
-          Seven workflows run an AI agent. Each one is wired so the agent can only emit a small set
+          Six workflows run an AI agent. Each one is wired so the agent can only emit a small set
           of constrained outputs, listed as "allowed outputs" below. Everything else is read-only.
         </p>
 
@@ -342,31 +342,6 @@
             </dl>
             <p class="wf-foot">
               <a href="https://github.com/mono/SkiaSharp/blob/main/.github/workflows/update-release-notes.md" target="_blank" rel="noopener">View workflow source &rarr;</a>
-            </p>
-          </article>
-
-          <!-- API docs writer -->
-          <article class="wf-card">
-            <div class="wf-head">
-              <h3>Auto API Docs Writer</h3>
-              <span class="badge badge-agentic">Agentic</span>
-              <span class="badge badge-model">claude-opus-4.7</span>
-            </div>
-            <p class="wf-desc">
-              A deterministic job regenerates the XML doc stubs from the latest CI NuGets. The
-              agent then runs a two-pass pipeline: it fills the "To be added." placeholders, then
-              runs three correctness review passes over a scope of existing docs, editing the mdoc
-              XML directly, and opens a pull request.
-            </p>
-            <dl class="wf-meta">
-              <dt>When</dt><dd>08:00 UTC daily, plus manual dispatch</dd>
-              <dt>Engine</dt><dd>GitHub Copilot</dd>
-              <dt>Allowed outputs</dt><dd>open a pull request</dd>
-              <dt>Skill</dt><dd><code>api-docs</code></dd>
-              <dt>Repo</dt><dd>mono/SkiaSharp-API-docs</dd>
-            </dl>
-            <p class="wf-foot">
-              <a href="https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/auto-api-docs-writer.md" target="_blank" rel="noopener">View workflow source &rarr;</a>
             </p>
           </article>
 
@@ -463,10 +438,10 @@
               <span class="badge badge-auto">Automation</span>
             </div>
             <p class="wf-desc">
-              Before any agent runs, scripts do the mechanical work: a Cake task computes the API
-              diff across NuGets, mdoc regenerates the XML doc stubs, and generators produce the
-              raw release-note data. The agent starts from a clean, factual baseline rather than
-              gathering it by hand.
+              Before the release-notes agent runs, scripts do the mechanical work: a Cake task
+              computes the API diff across NuGets and generators produce the raw release-note
+              data. The agent starts from a clean, factual baseline rather than gathering it by
+              hand.
             </p>
             <p class="wf-foot">
               <a href="https://github.com/mono/SkiaSharp/tree/main/scripts/infra/docs" target="_blank" rel="noopener">View the docs scripts &rarr;</a>
@@ -491,24 +466,6 @@
 
           <article class="wf-card">
             <div class="wf-head">
-              <h3>Auto-merge docs PR</h3>
-              <span class="badge badge-auto">Paused</span>
-            </div>
-            <p class="wf-desc">
-              This optional workflow is currently paused. When enabled, it watches the docs writer's
-              pull request branch and waits for the
-              <code>OpenPublishing.Build</code> and <code>PoliCheck Scan</code> checks to pass with
-              no new warnings. When they do, it squash-merges the PR. The AI proposes the
-              documentation, deterministic gates verify it before it lands on <code>main</code>,
-              and the separate Go Live gate controls publication.
-            </p>
-            <p class="wf-foot">
-              <a href="https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/automerge-docs.yml" target="_blank" rel="noopener">View workflow source &rarr;</a>
-            </p>
-          </article>
-
-          <article class="wf-card">
-            <div class="wf-head">
               <h3>Go Live</h3>
               <span class="badge badge-auto">Automation</span>
             </div>
@@ -525,9 +482,9 @@
 
         <p class="loop-note">
           More plain automation keeps the project moving: the website deploy and staging cleanup,
-          the samples build, the docs submodule sync, PR backport and rebase commands, and a build
-          artifacts comment for fork PRs. None of these use AI; they are the connective tissue the
-          agents plug into.
+          the samples build, API reference publication in its independent repository, PR backport
+          and rebase commands, and a build artifacts comment for fork PRs. None of these use AI;
+          they are the connective tissue the agents plug into.
         </p>
       </div>
     </section>
@@ -563,6 +520,7 @@
               <li><span class="skill-name">release-testing</span><br>Physically smoke-test exact BAR artifacts before team publication.</li>
               <li><span class="skill-name">release-publish</span><br>Guide Release - Finish after the team publishes NuGet packages.</li>
               <li><span class="skill-name">release-milestones</span><br>Guide repository-owned assignment and milestone scripts.</li>
+              <li><span class="skill-name">merge-skia-update</span><br>Guide maintainers through landing paired Skia and SkiaSharp update pull requests.</li>
               <li><span class="skill-name">release-notes <span class="skill-auto">Automated</span></span><br>Generate the website release notes and API diffs from published NuGets and git history.</li>
             </ul>
           </div>
@@ -571,7 +529,7 @@
             <h3>API &amp; docs</h3>
             <ul class="skill-list">
               <li><span class="skill-name">api-add-review</span><br>Wrap new Skia functionality as C# APIs, or review an API PR for design and safety.</li>
-              <li><span class="skill-name">api-docs <span class="skill-auto">Automated</span></span><br>Write and review the XML API documentation following .NET guidelines.</li>
+              <li><span class="skill-name">api-docs</span><br>Write and review API documentation following .NET guidelines.</li>
               <li><span class="skill-name">pr-commit-message</span><br>Write high-signal merge and squash commit messages that preserve the why.</li>
             </ul>
           </div>
@@ -607,7 +565,6 @@
             <ul class="skill-list">
               <li><span class="skill-name">sample-scout</span><br>Scout Skia GM test files for demos worth porting to the gallery.</li>
               <li><span class="skill-name">validate-samples</span><br>Build and validate the sample projects against CI packages.</li>
-              <li><span class="skill-name">ci-status</span><br>Collect the build health across pipelines and render a daily dashboard.</li>
             </ul>
           </div>
 
@@ -658,15 +615,15 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
             </div>
             <h3>Reviewable outputs</h3>
-            <p>Code and documentation edits arrive as ordinary pull requests. Library changes require maintainer review; API docs pass deterministic gates and still need a deliberate go-live step.</p>
+            <p>Code and documentation edits arrive as ordinary pull requests. Library changes require maintainer review, and API reference publishing remains independently controlled by its documentation repository.</p>
           </div>
 
           <div class="guard">
             <div class="guard-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
             </div>
-            <h3>Extra checks for docs</h3>
-            <p>The docs writer runs three correctness review passes over its own output, and the resulting PR only auto-merges after the Microsoft Learn build passes.</p>
+            <h3>Independent API reference publishing</h3>
+            <p>mono/SkiaSharp-API-docs owns generated API-reference output, validation, and publishing independently of this repository.</p>
           </div>
         </div>
 

@@ -4,7 +4,9 @@ description: >
   Check the CI build health and automation status of SkiaSharp across main and
   recent release branches. Collects the last N builds from the AzDO pipeline chain
   (Public plus the combined Build and connected Tests) and all GitHub Actions workflows from
-  mono/SkiaSharp and mono/SkiaSharp-API-docs, providing a daily dashboard view
+  mono/SkiaSharp plus the established API-docs publication workflow in
+  mono/SkiaSharp-API-docs,
+  providing a daily dashboard view
   with AI-powered analysis of failures, regressions, and flakes.
 
   Use when user asks to:
@@ -39,7 +41,8 @@ including the current dnceng Build and Tests pipelines.
 
 The collector script requires:
 - **`az` CLI** — authenticated with access to `dnceng-public/public` and `dnceng/internal`
-- **`gh` CLI** — authenticated with read access to `mono/SkiaSharp` and `mono/SkiaSharp-API-docs`
+- **`gh` CLI** — authenticated with read access to `mono/SkiaSharp` and
+  `mono/SkiaSharp-API-docs`
 - **Git remotes** — fetched recently so `git branch -r` returns up-to-date release branches
 
 ### Public CI (dnceng-public/public org — triggers on push/PR to main and release/*)
@@ -60,7 +63,7 @@ Tests consumes the folder-qualified pipeline resource
 managed compilation, real signing, BAR registration/validation, and Arcade's
 standard Darc/Maestro stages.
 
-### GitHub Actions (mono/SkiaSharp and mono/SkiaSharp-API-docs)
+### GitHub Actions (SkiaSharp and stable API-docs publication)
 
 | Workflow | Repository | Trigger | Why Track |
 |----------|------------|---------|-----------|
@@ -70,7 +73,6 @@ standard Darc/Maestro stages.
 | Pages - PR Staging - Sweep Stale | mono/SkiaSharp | Daily (06:00 UTC) | Stale staging deploys accumulate |
 | Sync - Samples | mono/SkiaSharp | Push/PR to `samples/` | Sample projects broken if failing |
 | Tests - Binding Generation Determinism | mono/SkiaSharp | Push/PR | Generated bindings drift undetected |
-| Sync - Docs Submodule | mono/SkiaSharp | Daily (10:00 UTC) | API docs get out of sync |
 | Sync - Skia Submodule | mono/SkiaSharp | Daily (10:30 UTC) | Skia submodule pin goes stale |
 | Sync - Release Notes & API Diffs | mono/SkiaSharp | Push to main + daily | Release notes stop auto-updating |
 | Sync - Skia Upstream | mono/SkiaSharp | Every 6h | Upstream tracking breaks |
@@ -91,14 +93,16 @@ standard Darc/Maestro stages.
 | PR - Rebase | mono/SkiaSharp | PR comment | PR rebase automation broken |
 | PR - Artifacts Comment | mono/SkiaSharp | Workflow run events | Build links not posted to PRs |
 | Merge Message | mono/SkiaSharp | PR comment events | Merge commit messages not drafted |
-| Auto API Docs Writer | mono/SkiaSharp-API-docs | Scheduled/dispatch | XML docs stop being written |
-| Automerge Docs | mono/SkiaSharp-API-docs | PR events | Doc PRs won't auto-merge |
-| Go Live | mono/SkiaSharp-API-docs | Workflow dispatch | Docs don't publish to live |
+| Go Live | mono/SkiaSharp-API-docs | Workflow dispatch | API reference docs do not publish to Microsoft Learn |
 
 > Schedules above are deliberately imprecise for gh-aw generated `*.lock.yml` workflows
 > ("Every 6h", "Daily"). The compiler re-jitters their cron on every upgrade, so a literal
 > `HH:MM UTC` here would silently go stale. `scripts/tests/test_workflow_registry.py`
 > enforces this: any time it *does* find documented must match the workflow file.
+
+> External API documentation regeneration is intentionally not tracked. Its workflow in
+> `mono/SkiaSharp-API-docs` is maintained independently and its name is currently in flux;
+> add it to the registry only after a stable workflow name is established.
 
 ---
 
@@ -244,9 +248,9 @@ For each tracked GitHub Actions workflow:
 - Whether failures are related to AzDO failures (same commit?) or independent
 - Categorize by severity:
   - **High**: Pages - Deploy, Sync - Samples, Sync - Release Notes & API Diffs, Sync - Skia Upstream,
-    Release - Prepare, Release - Finish, Release - Tooling Tests, Auto API Docs Writer
+    Release - Prepare, Release - Finish, Release - Tooling Tests
     (broken = user-facing impact or release process blocked)
-  - **Medium**: Sync - Docs Submodule, Sync - Skia Submodule, Fixer - Memory Leak, Fixer - Performance,
+  - **Medium**: Go Live, Sync - Skia Submodule, Fixer - Memory Leak, Fixer - Performance,
     Sync - Issue Triage, Sync - Issue Template Versions, Tests - Binding Generation Determinism,
     Automation - Tooling Tests, Release - Milestones, Update GitHub Release summaries,
     PR - Backport, Pages - Go Live! (broken = automation degraded, manual workaround exists)
@@ -369,14 +373,14 @@ After rendering, present a brief summary in chat and point to the files:
   release/4.147.0-preview.3: Public CI red (CS0016 errors); internal chain unaffected.
 
 🐙 GitHub Actions:
-  🟠 High:    Pages - Deploy ✅ | Sync - Samples ✅ | Auto API Docs Writer ❌
+  🟠 High:    Pages - Deploy ✅ | Sync - Samples ✅ | Sync - Skia Upstream ✅
   🟡 Medium:  PR - Backport ✅ | Pages - Go Live! ✅ | Sync - Issue Triage ✅
   ⚪ Low:     All passing
 
 Top actions:
 1. [release/3.119.x] Fix Guardian TSA upload — blocks Tests → build 14177772
 2. [release/4.147.0-preview.3] Investigate CS0016 errors → build 157985
-3. [GitHub Actions] Auto API Docs Writer failing → run 26651087356
+3. [GitHub Actions] Investigate a failing tracked workflow using its latest run link
 
 📁 Reports:
   JSON: output/ai/ci-status-2026-05-29.json

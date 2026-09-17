@@ -85,7 +85,8 @@ Read [references/csharp-review.md](references/csharp-review.md) for detailed gui
 The orchestrator already produced the `companionPr` section with file lists and diffs in
 `raw-results.json`. This phase adds human-oriented review context:
 
-1. Ignore all `*.generated.cs` files (already filtered by the orchestrator)
+1. Ignore generator-owned declaration and interop changes in `*.generated.cs`,
+   but review direct `///` documentation-comment changes reported by the orchestrator
 2. For each companion PR file, review the diff for: null handling, disposal patterns, ABI compatibility
 3. Check test coverage for new/changed APIs
 4. Add `relatedFiles` cross-links to interop files where applicable

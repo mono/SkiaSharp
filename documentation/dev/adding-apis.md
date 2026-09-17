@@ -483,7 +483,7 @@ Public GPU structs get member renames:
 |---------|--------|----------|
 | Edited C API but didn't commit in submodule | Changes disappear on next submodule update | Always commit inside `externals/skia/` first |
 | Forgot `git add externals/skia` in parent | Parent repo doesn't reference your C API changes | Stage submodule after committing inside it |
-| Manually edited `*.generated.cs` | Binding mismatch, overwrites on next generation | Always run `pwsh ./utils/generate.ps1` |
+| Manually edited generated declarations or interop code | Binding mismatch, overwrites on next generation | Run `pwsh ./utils/generate.ps1`; direct `///` comment edits are allowed only when regeneration preserves them |
 | Only built, didn't test | Functionality may not work despite compiling | Always run tests — passing tests required |
 | Used `externals-download` after C API change | Downloaded natives don't have your new functions | Use `externals-{platform}` to build |
 | No `static_assert` for DEF_MAP struct | ABI mismatch goes undetected | Add to `sk_structs.cpp` |

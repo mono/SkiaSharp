@@ -40,6 +40,5 @@ class PreviewBannerRenderTests(unittest.TestCase):
         )
         self.assertNotIn("SkiaSharp/1.49.0-preview)", line)
 
-
 if __name__ == "__main__":
     unittest.main()
