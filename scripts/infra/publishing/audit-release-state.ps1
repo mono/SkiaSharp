@@ -342,7 +342,8 @@ function Get-IncomingReleasePullRequest(
     [object[]] $PullRequests,
     [pscustomobject] $Topology = $null,
     [string] $SkiaSyncBranchSha = '',
-    [string] $ParentSkiaSha = ''
+    [string] $ParentSkiaSha = '',
+    [string] $ParentSyncSkiaSha = ''
 ) {
     if (!$Maintenance) {
         return $null
@@ -404,6 +405,10 @@ function Get-IncomingReleasePullRequest(
         $issues.Add("$headBranch does not exist on origin.")
     } elseif ([string] $pullRequest.headRefOid -ne $SyncBranchSha) {
         $issues.Add("PR head $($pullRequest.headRefOid) does not match $headBranch at $SyncBranchSha.")
+    } elseif ($SkiaSyncBranchSha -and $ParentSyncSkiaSha -ne $SkiaSyncBranchSha) {
+        $issues.Add(
+            "Parent sync branch points to mono/skia $ParentSyncSkiaSha, " +
+            "expected $SkiaSyncBranchSha.")
     }
     if ([string] $pullRequest.baseRefName -ne $Maintenance.Branch) {
         $issues.Add("PR targets $($pullRequest.baseRefName), expected $($Maintenance.Branch).")
@@ -551,7 +556,6 @@ function Get-ReleaseAuditState(
             $sourceMatches = $package.Branch -eq $branch.Name -and $package.Commit -eq $branch.Sha
             $releaseConsistent = $githubRelease -and
                 $githubRelease.tagName -eq $tag -and
-                !$githubRelease.isDraft -and
                 ([bool] $githubRelease.isPrerelease) -eq ([bool] $release.IsPrerelease)
             $needsFinish = !$tagSha -or $tagSha -ne $package.Commit -or !$releaseConsistent
             $state = if ($needsFinish) {
@@ -602,7 +606,6 @@ function Get-ReleaseAuditState(
             $tagSha = $TagShas[$release.Tag]
             $githubRelease = $GitHubReleases[$release.Tag]
             $releaseConsistent = $githubRelease -and $tagSha -eq $package.Commit -and
-                !$githubRelease.isDraft -and
                 ([bool] $githubRelease.isPrerelease) -eq ([bool] $release.IsPrerelease)
             $needsFinish = !$tagSha -or !$releaseConsistent
             $rows.Add([pscustomobject] @{
@@ -1036,6 +1039,17 @@ try {
         $syncBranch = $syncTopology.SyncBranch
         if ($syncBranch) {
             $syncSha = Get-RemoteBranchSha -Root $root -Remote origin -Branch $syncBranch
+            $parentSyncSkiaSha = if ($syncSha) {
+                $resolvedSyncSha = Get-ResolvedGitCommit `
+                    -Root $root `
+                    -Reference $syncBranch
+                Get-GitTreeEntrySha `
+                    -Root $root `
+                    -Commit $resolvedSyncSha `
+                    -Path 'externals/skia'
+            } else {
+                ''
+            }
             $syncPullRequests = Get-GitHubOpenPullRequests `
                 -Repository $ReleaseRepository `
                 -Head $syncBranch `
@@ -1046,7 +1060,8 @@ try {
                 -PullRequests $syncPullRequests `
                 -Topology $syncTopology `
                 -SkiaSyncBranchSha $upstreamSync.SyncBranchSha `
-                -ParentSkiaSha $upstreamSync.ParentSkiaSha
+                -ParentSkiaSha $upstreamSync.ParentSkiaSha `
+                -ParentSyncSkiaSha $parentSyncSkiaSha
         }
     }
     $branches = @(Get-ReleaseBranches -Root $root -Line $Version)

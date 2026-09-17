@@ -101,7 +101,7 @@ function Get-GitHubRelease([string] $Repository, [string] $Tag) {
     $result = Invoke-GitHub -Arguments @(
         'release', 'view', $Tag,
         '--repo', $Repository,
-        '--json', 'tagName,name,isDraft,isPrerelease,targetCommitish,body,url'
+        '--json', 'tagName,name,isPrerelease,targetCommitish,body,url'
     ) -AllowFailure
     if ($result.ExitCode -eq 0) {
         return $result.Output | ConvertFrom-Json
@@ -126,7 +126,6 @@ function Get-GitHubReleaseMap([string] $Repository) {
         $releases[[string] $release.tag_name] = [pscustomobject] @{
             tagName = [string] $release.tag_name
             targetCommitish = [string] $release.target_commitish
-            isDraft = [bool] $release.draft
             isPrerelease = [bool] $release.prerelease
             name = [string] $release.name
             url = [string] $release.html_url

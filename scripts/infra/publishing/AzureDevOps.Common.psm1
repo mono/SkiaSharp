@@ -59,6 +59,8 @@ function ConvertTo-ReleasePackageBuildState(
     $result = ([string] $build.result).ToLowerInvariant()
     $state = if ($status -ne 'completed') {
         'running'
+    } elseif ($result -eq 'canceled') {
+        'canceled'
     } elseif ($result -ne 'succeeded') {
         'failed'
     } elseif ($barIds.Count -ne 1) {
@@ -68,6 +70,7 @@ function ConvertTo-ReleasePackageBuildState(
     }
     $message = switch ($state) {
         'running' { "skiasharp-package build $($build.id) is $status." }
+        'canceled' { "skiasharp-package build $($build.id) was canceled." }
         'failed' { "skiasharp-package build $($build.id) completed with result $result." }
         'incomplete' {
             if ($barIds.Count) {

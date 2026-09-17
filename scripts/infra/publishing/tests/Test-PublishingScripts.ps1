@@ -264,6 +264,21 @@ $failedBuild = ConvertTo-ReleasePackageBuildState `
     -Builds @($greenBuildFixture, $failedBuildFixture)
 Assert-Equal 101 $failedBuild.BuildId 'The newest exact-tip build was not selected.'
 Assert-Equal 'failed' $failedBuild.State 'A newer failed build was hidden by an older green build.'
+$canceledBuild = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch `
+    -Commit $buildCommit `
+    -Builds @([pscustomobject] @{
+        id = 105
+        buildNumber = '4.152.1+canceled'
+        sourceVersion = $buildCommit
+        status = 'completed'
+        result = 'canceled'
+        queueTime = '2026-09-17T00:35:00Z'
+        finishTime = '2026-09-17T00:36:00Z'
+        tags = @()
+    })
+Assert-Equal 'canceled' $canceledBuild.State `
+    'A canceled exact-tip build was folded into the generic failed state.'
 $runningBuild = ConvertTo-ReleasePackageBuildState `
     -Branch $buildBranch `
     -Commit $buildCommit `
@@ -1081,7 +1096,6 @@ function New-AuditRelease([string] $Tag, [string] $Commit, [bool] $Prerelease = 
     return [pscustomobject] @{
         tagName = $Tag
         targetCommitish = $Commit
-        isDraft = $false
         isPrerelease = $Prerelease
     }
 }
@@ -1306,10 +1320,26 @@ $openSyncPullRequest = Get-IncomingReleasePullRequest `
     -SyncBranchSha $sha1 `
     -PullRequests @(
         New-AuditPullRequest 5062 'skia-sync/release-4.152.x' $sha1 $maintenance.Branch $maintenance.Sha
-    )
+    ) `
+    -Topology $servicingSyncTopology `
+    -SkiaSyncBranchSha $skiaSyncSha `
+    -ParentSyncSkiaSha $skiaSyncSha
 Assert-Equal 'open' $openSyncPullRequest.State 'A ready incoming maintenance PR was not detected.'
 Assert-Equal $true $openSyncPullRequest.BlocksRelease `
     'A ready incoming maintenance PR did not block a new release cut.'
+$staleParentSyncPullRequest = Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha $sha1 `
+    -PullRequests @(
+        New-AuditPullRequest 5062 'skia-sync/release-4.152.x' $sha1 $maintenance.Branch $maintenance.Sha
+    ) `
+    -Topology $servicingSyncTopology `
+    -SkiaSyncBranchSha $skiaSyncSha `
+    -ParentSyncSkiaSha $parentSkiaSha
+Assert-Equal 'inconsistent' $staleParentSyncPullRequest.State `
+    'A parent sync PR with a stale mono/skia gitlink was reported as ready.'
+Assert-True ($staleParentSyncPullRequest.Message -match 'expected') `
+    'A stale parent sync PR did not explain the expected native commit.'
 $mainSyncPullRequest = Get-IncomingReleasePullRequest `
     -Maintenance $mainMaintenance `
     -SyncBranchSha $sha1 `
