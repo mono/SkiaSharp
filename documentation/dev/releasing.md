@@ -87,10 +87,13 @@ release preparation for that line can begin.
 Invoke the `release-audit` skill rather than the script directly when auditing
 several lines or deciding what to do next. The skill expands a range such as
 `4.150-4.155` or discovers a prefix such as `4.15*`, runs the line audits in
-parallel, and adds exact-tip health from the internal `skiasharp-package`
-pipeline. A release branch is publication-ready only when its matching build
-succeeded and recorded a BAR ID; a new cut is ready only when the maintenance
-tip has the same evidence and upstream Skia is current.
+parallel, and aggregates their findings. Each script invocation already checks
+exact-tip health from the internal `skiasharp-package` pipeline and reports the
+build ID and BAR ID. A release branch is publication-ready only when its
+matching build succeeded and recorded one BAR ID; a new cut is ready only when
+the maintenance tip has the same evidence and upstream Skia is current. If the
+internal pipeline cannot be reached, the script preserves the other evidence,
+reports the unavailable build check, and exits `2` rather than guessing.
 
 The report recommends only the next owner action: protected BAR-to-NuGet
 publication, `finish-release.ps1 -Mode DryRun`, or

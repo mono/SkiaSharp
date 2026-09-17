@@ -6,6 +6,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 $publishingRoot = Split-Path $PSScriptRoot
 $gitCommonPath = Join-Path $publishingRoot 'Git.Common.psm1'
 $gitHubCommonPath = Join-Path $publishingRoot 'GitHub.Common.psm1'
+$azureDevOpsCommonPath = Join-Path $publishingRoot 'AzureDevOps.Common.psm1'
 $commonPath = Join-Path $publishingRoot 'Publishing.Common.psm1'
 $preparePath = Join-Path $publishingRoot 'prepare-release.ps1'
 $finishPath = Join-Path $publishingRoot 'finish-release.ps1'
@@ -19,6 +20,7 @@ $milestonesWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-m
 
 Import-Module $gitCommonPath -Force
 Import-Module $gitHubCommonPath -Force
+Import-Module $azureDevOpsCommonPath -Force
 Import-Module $commonPath -Force
 $script:TestsRun = 0
 
@@ -226,6 +228,97 @@ $pages = @(
     @([pscustomobject] @{ number = 3 })
 )
 Assert-Equal @(1, 2, 3) @((Expand-GitHubPages $pages).number) 'GitHub pages were not flattened.'
+
+$buildBranch = 'release/4.152.1'
+$buildCommit = 'a' * 40
+$greenBuildFixture = [pscustomobject] @{
+    id = 100
+    buildNumber = '4.152.1+test'
+    sourceVersion = $buildCommit
+    status = 'completed'
+    result = 'succeeded'
+    queueTime = '2026-09-17T00:00:00Z'
+    finishTime = '2026-09-17T00:10:00Z'
+    tags = @('BAR ID - 331115')
+}
+$greenBuild = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch `
+    -Commit $buildCommit `
+    -Builds @($greenBuildFixture)
+Assert-Equal 'green' $greenBuild.State 'A successful exact-tip package build was not green.'
+Assert-Equal 331115 $greenBuild.BarId 'The package build BAR ID was not extracted.'
+Assert-Equal $true $greenBuild.Ready 'A successful exact-tip BAR was not release-ready.'
+$failedBuildFixture = [pscustomobject] @{
+    id = 101
+    buildNumber = '4.152.1+retry'
+    sourceVersion = $buildCommit
+    status = 'completed'
+    result = 'failed'
+    queueTime = '2026-09-17T00:20:00Z'
+    finishTime = '2026-09-17T00:30:00Z'
+    tags = @()
+}
+$failedBuild = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch `
+    -Commit $buildCommit `
+    -Builds @($greenBuildFixture, $failedBuildFixture)
+Assert-Equal 101 $failedBuild.BuildId 'The newest exact-tip build was not selected.'
+Assert-Equal 'failed' $failedBuild.State 'A newer failed build was hidden by an older green build.'
+$runningBuild = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch `
+    -Commit $buildCommit `
+    -Builds @([pscustomobject] @{
+        id = 102
+        buildNumber = '4.152.1+running'
+        sourceVersion = $buildCommit
+        status = 'inProgress'
+        result = ''
+        queueTime = '2026-09-17T00:40:00Z'
+        finishTime = $null
+        tags = @()
+    })
+Assert-Equal 'running' $runningBuild.State 'An active exact-tip build was not reported as running.'
+$missingBarBuild = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch `
+    -Commit $buildCommit `
+    -Builds @([pscustomobject] @{
+        id = 103
+        buildNumber = '4.152.1+missing-bar'
+        sourceVersion = $buildCommit
+        status = 'completed'
+        result = 'succeeded'
+        queueTime = '2026-09-17T00:50:00Z'
+        finishTime = '2026-09-17T01:00:00Z'
+        tags = @()
+    })
+Assert-Equal 'incomplete' $missingBarBuild.State 'A successful build without a BAR ID was marked green.'
+$notBuilt = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch `
+    -Commit $buildCommit `
+    -Builds @([pscustomobject] @{
+        id = 104
+        sourceVersion = ('b' * 40)
+        status = 'completed'
+        result = 'succeeded'
+        tags = @('BAR ID - 999999')
+    })
+Assert-Equal 'not built' $notBuilt.State 'A build from another commit was accepted for the branch tip.'
+$script:FakeAzCalls = 0
+function global:az {
+    $script:FakeAzCalls++
+    $global:LASTEXITCODE = 1
+    'The internal pipeline could not be reached.'
+}
+try {
+    $unavailableBuild = Get-ReleasePackageBuild -Branch $buildBranch -Commit $buildCommit
+} finally {
+    Remove-Item Function:\az
+}
+Assert-Equal 1 $script:FakeAzCalls 'The package build lookup did not invoke Azure DevOps.'
+Assert-Equal $false $unavailableBuild.Available `
+    'An unavailable internal pipeline was treated as a completed build check.'
+Assert-Equal 'unavailable' $unavailableBuild.State `
+    'An unavailable internal pipeline did not preserve its distinct state.'
 
 $script:PullListArguments = @()
 function global:gh {
@@ -993,6 +1086,33 @@ function New-AuditRelease([string] $Tag, [string] $Commit, [bool] $Prerelease = 
     }
 }
 
+function New-AuditPackageBuild(
+    [string] $Branch,
+    [string] $Commit,
+    [string] $State,
+    [bool] $Ready,
+    [int] $BuildId = 200,
+    [int] $BarId = 331115,
+    [bool] $Available = $true
+) {
+    return [pscustomobject] @{
+        Available = $Available
+        Branch = $Branch
+        Commit = $Commit
+        State = $State
+        Ready = $Ready
+        BuildId = if ($BuildId) { $BuildId } else { $null }
+        BuildNumber = 'test'
+        Status = if ($State -eq 'running') { 'inProgress' } else { 'completed' }
+        Result = if ($State -eq 'green') { 'succeeded' } elseif ($State -eq 'failed') { 'failed' } else { '' }
+        QueueTime = $null
+        FinishTime = $null
+        BarId = if ($BarId) { $BarId } else { $null }
+        Url = if ($BuildId) { "https://dev.azure.com/dnceng/internal/_build/results?buildId=$BuildId" } else { '' }
+        Message = if ($Available) { "Build state is $State." } else { 'Azure DevOps unavailable.' }
+    }
+}
+
 function New-AuditPullRequest(
     [int] $Number,
     [string] $Head,
@@ -1313,6 +1433,36 @@ $currentUpstreamAllowsRelease = Get-ReleaseAuditState `
     -Delta $realChanges -UpstreamSync $upstreamCurrent
 Assert-True (@($currentUpstreamAllowsRelease.Actions.Kind) -contains 'start') `
     'An up-to-date upstream branch incorrectly blocked a release cut.'
+$greenMaintenanceBuild = New-AuditPackageBuild `
+    -Branch $maintenance.Branch `
+    -Commit $maintenance.Sha `
+    -State green `
+    -Ready $true
+$greenMaintenanceBuilds = @{}
+$greenMaintenanceBuilds[$maintenance.Branch] = $greenMaintenanceBuild
+$greenMaintenanceAllowsRelease = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -UpstreamSync $upstreamCurrent `
+    -PackageBuilds $greenMaintenanceBuilds
+Assert-True (@($greenMaintenanceAllowsRelease.Actions.Kind) -contains 'start') `
+    'A green exact-tip maintenance build did not allow the release cut.'
+$failedMaintenanceBuild = New-AuditPackageBuild `
+    -Branch $maintenance.Branch `
+    -Commit $maintenance.Sha `
+    -State failed `
+    -Ready $false
+$failedMaintenanceBuilds = @{}
+$failedMaintenanceBuilds[$maintenance.Branch] = $failedMaintenanceBuild
+$failedMaintenanceBlocksRelease = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -UpstreamSync $upstreamCurrent `
+    -PackageBuilds $failedMaintenanceBuilds
+Assert-True (@($failedMaintenanceBlocksRelease.Actions.Kind) -contains 'fix-build') `
+    'A failed maintenance build did not produce a build repair action.'
+Assert-True (@($failedMaintenanceBlocksRelease.Actions.Kind) -notcontains 'start') `
+    'A failed maintenance build incorrectly allowed a release cut.'
 $incompleteNativeSyncBlocksRelease = Get-ReleaseAuditState `
     -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
     -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
@@ -1347,6 +1497,43 @@ Assert-Equal 'superseded' ($latestUnpublished.Releases | Where-Object Branch -eq
 Assert-True (@($latestUnpublished.Actions.Kind) -contains 'publish') 'The latest unpublished branch was not publishable.'
 Assert-True (@($latestUnpublished.Actions.Kind) -contains 'queued') 'Maintenance changes were not queued behind an unpublished branch.'
 Assert-True (@($latestUnpublished.Actions.Kind) -notcontains 'start') 'An unpublished latest branch incorrectly started another release.'
+$failedReleaseBuild = New-AuditPackageBuild `
+    -Branch $latestRc.Name `
+    -Commit $latestRc.Sha `
+    -State failed `
+    -Ready $false `
+    -BuildId 201 `
+    -BarId 0
+$failedReleaseBuilds = @{}
+$failedReleaseBuilds[$latestRc.Name] = $failedReleaseBuild
+$failedReleaseBuildState = Get-ReleaseAuditState `
+    -Line '4.153' -Maintenance ([pscustomobject] @{ Branch = 'main'; Sha = $sha1; Version = '4.153.0' }) `
+    -Branches @($oldPreview, $latestRc) -Packages @() -TagShas @{} -GitHubReleases @{} `
+    -Delta (New-AuditDelta '1 queued release commit' 1) `
+    -PackageBuilds $failedReleaseBuilds
+Assert-True (@($failedReleaseBuildState.Actions.Kind) -contains 'fix-build') `
+    'A failed release-branch build did not block publication.'
+Assert-True (@($failedReleaseBuildState.Actions.Kind) -notcontains 'publish') `
+    'A failed release-branch build incorrectly allowed publication.'
+$greenReleaseBuild = New-AuditPackageBuild `
+    -Branch $latestRc.Name `
+    -Commit $latestRc.Sha `
+    -State green `
+    -Ready $true `
+    -BuildId 202 `
+    -BarId 330714
+$greenReleaseBuilds = @{}
+$greenReleaseBuilds[$latestRc.Name] = $greenReleaseBuild
+$greenReleaseBuildState = Get-ReleaseAuditState `
+    -Line '4.153' -Maintenance ([pscustomobject] @{ Branch = 'main'; Sha = $sha1; Version = '4.153.0' }) `
+    -Branches @($oldPreview, $latestRc) -Packages @() -TagShas @{} -GitHubReleases @{} `
+    -Delta (New-AuditDelta '1 queued release commit' 1) `
+    -PackageBuilds $greenReleaseBuilds
+Assert-True (@($greenReleaseBuildState.Actions.Kind) -contains 'publish') `
+    'A green release-branch build did not allow publication.'
+Assert-True ((@($greenReleaseBuildState.Actions.Message) -join "`n") -match
+    'build #202 succeeded with BAR 330714') `
+    'The publication action omitted exact build and BAR evidence.'
 
 $state = Get-ReleaseAuditState `
     -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
@@ -1423,7 +1610,8 @@ Assert-True ($latestUnpublishedReport -notmatch 'publish release branch; Publish
     'The human-readable report duplicated equivalent state and action text.'
 Assert-True ($plainLatestUnpublishedReport -match '(?m)^Release line:\s+4\.153$') `
     'The report summary fields were not aligned.'
-Assert-True ($plainLatestUnpublishedReport -match '(?m)^Identity\s+Branch SHA\s+NuGet\s+Tag\s+GitHub Release\s+State / action$') `
+Assert-True ($plainLatestUnpublishedReport -match
+    '(?m)^Identity\s+Branch SHA\s+NuGet\s+Build / BAR\s+Tag\s+GitHub Release\s+State / action$') `
     'The report did not render an aligned PowerShell table.'
 Assert-True ($plainLatestUnpublishedReport -notmatch '\| Identity \|') `
     'The report still rendered the old Markdown table.'
