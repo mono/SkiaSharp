@@ -84,6 +84,14 @@ an existing `skia-sync/m155` pull request or available `chrome/m155` work
 instead of returning an empty line. A pending milestone PR must complete before
 release preparation for that line can begin.
 
+Invoke the `release-audit` skill rather than the script directly when auditing
+several lines or deciding what to do next. The skill expands a range such as
+`4.150-4.155` or discovers a prefix such as `4.15*`, runs the line audits in
+parallel, and adds exact-tip health from the internal `skiasharp-package`
+pipeline. A release branch is publication-ready only when its matching build
+succeeded and recorded a BAR ID; a new cut is ready only when the maintenance
+tip has the same evidence and upstream Skia is current.
+
 The report recommends only the next owner action: protected BAR-to-NuGet
 publication, `finish-release.ps1 -Mode DryRun`, or
 `prepare-release.ps1 -Mode DryRun`. It intentionally does not inspect BAR
