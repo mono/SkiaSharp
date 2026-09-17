@@ -312,8 +312,10 @@ namespace SkiaSharp
 
 			using var canvas = new SKCanvas (temp);
 
+			using var shader = ToShader ();
+
 			using var paint = new SKPaint {
-				Shader = ToShader (),
+				Shader = shader,
 				BlendMode = SKBlendMode.Src
 			};
 
