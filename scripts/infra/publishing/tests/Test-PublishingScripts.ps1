@@ -15,6 +15,7 @@ $milestonesPath = Join-Path $publishingRoot 'update-release-milestones.ps1'
 $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '../../../..')
 $prepareWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-prepare.yml'
 $finishWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-finish.yml'
+$milestonesWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-milestones.yml'
 
 Import-Module $gitCommonPath -Force
 Import-Module $gitHubCommonPath -Force
@@ -118,6 +119,38 @@ foreach ($workflowPath in @($prepareWorkflowPath, $finishWorkflowPath)) {
     Assert-True ($workflow.Contains("MODE: `${{ inputs.push && 'Push' || 'DryRun' }}")) `
         "$workflowName does not map its push checkbox to DryRun or Push."
 }
+$finishWorkflow = Get-Content $finishWorkflowPath -Raw
+$milestonesWorkflow = Get-Content $milestonesWorkflowPath -Raw
+Assert-True ($finishWorkflow -match '(?ms)outputs:\s+release_version:.*release_numeric:.*release_tag:.*source_commit:') `
+    'Finish does not expose its resolved-release output contract.'
+Assert-True ($finishWorkflow -match '(?ms)milestones:\s+needs: finish\s+uses: \./\.github/workflows/release-milestones\.yml') `
+    'Finish does not require the shared milestone workflow after publication planning.'
+Assert-True ($finishWorkflow -match '(?ms)milestones:.*version: \$\{\{ needs\.finish\.outputs\.release_numeric \}\}.*tag: \$\{\{ needs\.finish\.outputs\.release_tag \}\}.*source_commit: \$\{\{ needs\.finish\.outputs\.source_commit \}\}.*reconcile: true.*update: true.*push: \$\{\{ inputs\.push \}\}') `
+    'Finish does not pass the complete resolved shipment to milestone maintenance.'
+Assert-True ($finishWorkflow -match '(?ms)milestones:.*permissions:.*contents: read.*issues: write.*pull-requests: write') `
+    'Finish does not grant the called milestone workflow its required permissions.'
+Assert-True ($finishWorkflow -match '(?ms)^concurrency:\s+group: release-state\s+cancel-in-progress: false') `
+    'Finish does not serialize publication through milestone completion.'
+Assert-True ($finishWorkflow -notmatch 'group: release-\$\{\{ inputs\.version \}\}') `
+    'Finish still permits different release inputs to publish outside the global release-state lock.'
+Assert-True ($milestonesWorkflow -match '(?ms)workflow_call:.*inputs:.*version:.*tag:.*source_commit:.*reconcile:.*update:.*push:') `
+    'Milestone maintenance cannot be called with the resolved shipment contract.'
+Assert-True ($milestonesWorkflow -match '(?ms)workflow_dispatch:.*inputs:.*version:.*reconcile:.*update:.*push:') `
+    'Standalone milestone dispatch no longer preserves its independent operation toggles.'
+Assert-True ($milestonesWorkflow -match
+    '(?ms)^concurrency:\s+group: \$\{\{ inputs\.source_commit.*release-milestones-called-\{0\}.*release-state.*\}\}\s+cancel-in-progress: false') `
+    'Milestone maintenance does not share standalone serialization without deadlocking a Finish caller.'
+$milestonesDispatchInputs = [regex]::Match(
+    $milestonesWorkflow,
+    '(?ms)  workflow_dispatch:\s*(?<block>.*?)\npermissions:').Groups['block'].Value
+Assert-True ($milestonesDispatchInputs -notmatch
+    '(?m)^\s{6}(?:tag|source_commit):') `
+    'Standalone milestone dispatch unexpectedly exposes Finish-only virtual shipment inputs.'
+Assert-True ($milestonesWorkflow -match '(?ms)Reconcile release assignments.*Update release milestones') `
+    'Milestone reconciliation no longer runs before date/rollover maintenance.'
+$milestoneScripts = (Get-Content $reconcilePath -Raw) + (Get-Content $milestonesPath -Raw)
+Assert-True ($milestoneScripts -match '(?ms)PlannedTag.*PlannedCommit.*Get-ReleaseShipmentContract.*-RequireTag:\$Push') `
+    'Milestone maintenance does not validate planned shipment parity before mutation.'
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
 $gitCommonScript = Get-Content $gitCommonPath -Raw
 $commonScript = Get-Content $commonPath -Raw
@@ -305,6 +338,7 @@ try {
     & git -C $gitRoot commit --quiet -m 'Add tree entry'
     & git -C $gitRoot branch release/test
     & git init --quiet --bare $bareRoot
+    & git -C $gitRoot remote add origin $bareRoot
     $localSha = (git -C $gitRoot rev-parse release/test).Trim()
     Assert-Equal $localSha (Get-LocalBranchSha -Root $gitRoot -Branch release/test) `
         'A local branch SHA was not resolved.'
@@ -365,6 +399,38 @@ try {
     # ones worth pinning. Everything here runs against a local bare remote: no network.
     $tagSha = (git -C $gitRoot rev-parse release/test).Trim()
 
+    $virtualShipment = Get-ReleaseShipmentContract `
+        -Root $gitRoot `
+        -Version '4.153.0' `
+        -Tag 'v4.153.0-preview.1.26426.14' `
+        -SourceCommit $tagSha
+    Assert-True $virtualShipment.IsVirtual 'A missing dry-run tag was not represented as a virtual shipment.'
+    Assert-Equal @('v4.153.0-preview.1.26426.14') `
+        (Add-PlannedReleaseShipmentTag -Tags @() -Shipment $virtualShipment) `
+        'A virtual shipment was not included in dry-run milestone planning.'
+    Assert-Throws {
+        Get-ReleaseShipmentContract `
+            -Root $gitRoot `
+            -Version '4.153.0' `
+            -Tag 'v4.153.0-preview.1.26426.14' `
+            -SourceCommit $tagSha `
+            -RequireTag
+    } 'must exist' 'Push-mode milestone maintenance accepted a missing exact tag.'
+    Assert-Throws {
+        Get-ReleaseShipmentContract `
+            -Root $gitRoot `
+            -Version '4.153.0' `
+            -Tag 'v4.154.0-preview.1.26426.14' `
+            -SourceCommit $tagSha
+    } 'does not match numeric' 'A planned tag for another numeric release was accepted.'
+    Assert-Throws {
+        Get-ReleaseShipmentContract `
+            -Root $gitRoot `
+            -Version '4.153.0' `
+            -Tag 'v4.153.0-preview.1.26426.14' `
+            -SourceCommit ''
+    } 'supplied together' 'An unpaired planned tag was accepted.'
+
     $dryTag = @(Push-ReleaseTag `
         -Root $gitRoot `
         -Remote $bareRoot `
@@ -383,6 +449,22 @@ try {
     Assert-Equal $tagSha (Get-RemoteTagSha -Root $gitRoot -Remote $bareRoot -Tag v9.9.9) `
         'A release tag was not created at its source commit.'
 
+    Push-ReleaseTag `
+        -Root $gitRoot `
+        -Remote origin `
+        -Tag $virtualShipment.Tag `
+        -SourceCommit $tagSha `
+        -Push
+    $verifiedShipment = Get-ReleaseShipmentContract `
+        -Root $gitRoot `
+        -Version $virtualShipment.Version `
+        -Tag $virtualShipment.Tag `
+        -SourceCommit $tagSha `
+        -RequireTag
+    Assert-True (!$verifiedShipment.IsVirtual) 'A verified push tag was still treated as virtual.'
+    Assert-Equal @($virtualShipment.Tag) (Add-PlannedReleaseShipmentTag -Tags @($virtualShipment.Tag) -Shipment $verifiedShipment) `
+        'A verified exact tag was duplicated during milestone planning.'
+
     # Re-running Finish must be safe: the tag already points at the same commit.
     $repeatTag = @(Push-ReleaseTag `
         -Root $gitRoot `
@@ -396,6 +478,15 @@ try {
     # A tag that already points somewhere else must NEVER be moved.
     & git -C $gitRoot commit --quiet --allow-empty -m 'Second'
     $otherSha = (git -C $gitRoot rev-parse HEAD).Trim()
+    & git -C $gitRoot push --quiet origin HEAD:refs/heads/other
+    Assert-Throws {
+        Get-ReleaseShipmentContract `
+            -Root $gitRoot `
+            -Version $virtualShipment.Version `
+            -Tag $virtualShipment.Tag `
+            -SourceCommit $otherSha `
+            -RequireTag
+    } 'expected' 'Push-mode milestone maintenance accepted a tag at the wrong source commit.'
     Assert-Throws { Push-ReleaseTag `
         -Root $gitRoot `
         -Remote $bareRoot `
@@ -473,6 +564,88 @@ Assert-True ($publishPlan -match 'Create and publish') 'Finish did not plan rele
 Assert-True ($existingPlan -match 'is published') 'Finish did not preserve published-release idempotency.'
 Assert-True ($followUpPlan -match 'release-note generation') 'Finish did not plan release-note follow-up.'
 Remove-Item Function:\gh
+
+$finishOutput = Join-Path $PSScriptRoot ".finish-output-$([guid]::NewGuid().ToString('N'))"
+try {
+    $env:GITHUB_OUTPUT = $finishOutput
+    foreach ($publicVersion in @(
+        '4.152.0-preview.1.26426.14',
+        '4.152.0-rc.1.26427.1',
+        '4.152.0',
+        '4.152.1',
+        '4.152.0.1'
+    )) {
+        $resolvedRelease = Get-ReleaseIdentity $publicVersion
+        Set-ReleaseFinishOutput -Release $resolvedRelease -PublicVersion $publicVersion -SourceCommit ('a' * 40)
+        $finishOutputs = Get-Content -LiteralPath $finishOutput | Select-Object -Last 4
+        Assert-Equal @(
+            "release_version=$publicVersion",
+            "release_numeric=$($resolvedRelease.Numeric)",
+            "release_tag=$($resolvedRelease.Tag)",
+            ('source_commit=' + ('a' * 40))
+        ) @($finishOutputs) "Finish did not write the resolved-release output contract for $publicVersion."
+    }
+} finally {
+    Remove-Item Env:\GITHUB_OUTPUT -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $finishOutput -Force -ErrorAction SilentlyContinue
+}
+
+$packageCommit = 'a' * 40
+$packageBranchCommit = 'b' * 40
+$script:PackageAncestryExitCode = 0
+function Get-ResolvedGitCommit([string] $Root, [string] $Reference, [string] $Remote = 'origin') {
+    if ($Reference -match '^[0-9a-f]{40}$') {
+        return $Reference
+    }
+    return $packageBranchCommit
+}
+function Invoke-Git(
+    [string] $Root,
+    [string[]] $Arguments,
+    [switch] $AllowFailure,
+    [switch] $WriteOutput
+) {
+    return [pscustomobject] @{
+        ExitCode = $script:PackageAncestryExitCode
+        Output = ''
+    }
+}
+try {
+    $stableRelease = Get-ReleaseIdentity '4.152.1'
+    $verifiedPackageSource = Assert-ReleasePackageSource `
+        -Root . `
+        -Release $stableRelease `
+        -PackageSource ([pscustomobject] @{
+            Branch = 'refs/heads/release/4.152.1'
+            Commit = $packageCommit
+        })
+    Assert-Equal 'release/4.152.1' $verifiedPackageSource.Branch `
+        'Finish did not normalize the package source branch.'
+    Assert-Throws {
+        Assert-ReleasePackageSource `
+            -Root . `
+            -Release $stableRelease `
+            -PackageSource ([pscustomobject] @{
+                Branch = 'release/4.153.0'
+                Commit = $packageCommit
+            })
+    } 'expected release/4\.152\.1' `
+        'Finish accepted package metadata from another release branch.'
+    $script:PackageAncestryExitCode = 1
+    Assert-Throws {
+        Assert-ReleasePackageSource `
+            -Root . `
+            -Release $stableRelease `
+            -PackageSource ([pscustomobject] @{
+                Branch = 'release/4.152.1'
+                Commit = $packageCommit
+            })
+    } 'not reachable' `
+        'Finish accepted a package commit outside the expected release branch.'
+} finally {
+    Remove-Item Function:\Get-ResolvedGitCommit
+    Remove-Item Function:\Invoke-Git
+}
 
 $script:FakeGhCommands = [System.Collections.Generic.List[string]]::new()
 function global:gh {

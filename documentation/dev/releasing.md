@@ -195,7 +195,8 @@ multiple builds match, use the exact version, such as
 `4.153.0-preview.1.26453.1`.
 
 Review the plan's source branch, source commit, tag, release title, support
-update, and follow-up workflows. After the push run, verify:
+update, follow-up workflows, and planned milestone mutations. After the push
+run, verify:
 
 - the immutable exact-version tag was created or verified at the package's
   source commit;
@@ -203,26 +204,29 @@ update, and follow-up workflows. After the push run, verify:
   generated changelog starts at the preceding exact shipment shown in the plan;
 - the support state was already correct or the release-support PR was opened
   or updated; and
-- release-note generation was dispatched.
+- release-note generation was dispatched; and
+- milestone reconciliation plus date/rollover maintenance completed after
+  verifying the immutable tag points to the public package's source commit.
 
 Stable releases also dispatch the issue-template version update.
 
-## 6. Reconcile and advance milestones
+## 6. Repair milestones when needed
 
-After Release - Finish has created or verified the shipped tag, open
+Release - Finish already reconciles and advances milestones for every completed
+preview, RC, stable, patch, and hotfix. To inspect or repair milestone state
+separately, open
 [Release - Milestones](https://github.com/mono/SkiaSharp/actions/workflows/release-milestones.yml),
 select **Run workflow**, and choose `main` as the workflow branch.
 
 | Input | Value |
 | --- | --- |
-| `version` | Numeric release core, such as `4.153.0` or `4.153.0.1` |
-| `reconcile` | Checked |
-| `update` | Checked |
+| `version` | Numeric release core when reconciling, such as `4.153.0` or `4.153.0.1` |
+| `reconcile` | Select only when repairing shipped PR/issue assignments |
+| `update` | Select only when repairing dates, rollover, or closures |
 | `push` | Use the two-dispatch pattern above |
 
-Run this after previews and RCs as well as stable releases. Warnings about
-missing tags, milestones, or release boundaries block safe mutation and must
-be resolved rather than ignored.
+Warnings about missing tags, milestones, or release boundaries block safe
+mutation and must be resolved rather than ignored.
 
 The maintained cadence follows Chromium's overlapping two-week trains. This
 M153/M154 example shows each offset from its Chromium branch point; the

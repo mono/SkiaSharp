@@ -333,6 +333,59 @@ function Push-ReleaseTag(
     Write-ReleaseStatus applied "Created $Tag at $SourceCommit."
 }
 
+# Validates the exact package shipment that Finish hands to milestone maintenance.
+function Get-ReleaseShipmentContract(
+    [string] $Root,
+    [string] $Version,
+    [string] $Tag,
+    [string] $SourceCommit,
+    [switch] $RequireTag
+) {
+    if (!$Tag -and !$SourceCommit) {
+        return $null
+    }
+    if (!$Tag -or !$SourceCommit) {
+        throw 'Planned release tag and source commit must be supplied together.'
+    }
+    if ($Version -notmatch '^\d+\.\d+\.\d+(?:\.\d+)?$') {
+        throw "Release version $Version must be numeric."
+    }
+    $tagMatch = [regex]::Match(
+        $Tag,
+        '^v(?<numeric>\d+\.\d+\.\d+(?:\.\d+)?)(?:-(?:preview|rc)\.[1-9]\d*\.\d+(?:\.\d+)?)?$')
+    if (!$tagMatch.Success -or $tagMatch.Groups['numeric'].Value -ne $Version) {
+        throw "Planned release tag $Tag does not match numeric release $Version."
+    }
+    if ($SourceCommit -notmatch '^[0-9a-f]{40}$') {
+        throw "Planned source commit $SourceCommit is not a 40-character SHA."
+    }
+    $resolvedCommit = Get-ResolvedGitCommit -Root $Root -Reference $SourceCommit
+    if ($resolvedCommit -ne $SourceCommit) {
+        throw "Planned source commit $SourceCommit did not resolve exactly."
+    }
+    $actualTagCommit = Get-RemoteTagSha -Root $Root -Remote origin -Tag $Tag
+    if ($actualTagCommit -and $actualTagCommit -ne $SourceCommit) {
+        throw "Release tag $Tag points to $actualTagCommit, expected $SourceCommit."
+    }
+    if ($RequireTag -and !$actualTagCommit) {
+        throw "Release tag $Tag must exist at $SourceCommit before milestone mutations."
+    }
+    return [pscustomobject] @{
+        Version = $Version
+        Tag = $Tag
+        SourceCommit = $SourceCommit
+        IsVirtual = !$actualTagCommit
+    }
+}
+
+# Adds a dry-run's verified package shipment without claiming its tag already exists.
+function Add-PlannedReleaseShipmentTag([string[]] $Tags, [object] $Shipment) {
+    if (!$Shipment -or !$Shipment.IsVirtual) {
+        return @($Tags | Sort-Object -Unique)
+    }
+    return @($Tags + $Shipment.Tag | Sort-Object -Unique)
+}
+
 # Tests whether one commit contains the desired file contents.
 function Test-GitFileContents(
     [string] $Root,
@@ -542,6 +595,8 @@ Export-ModuleMember -Function @(
     'Get-NuGetPackageSource',
     'Invoke-GitHubMutation',
     'Push-ReleaseTag',
+    'Get-ReleaseShipmentContract',
+    'Add-PlannedReleaseShipmentTag',
     'Test-GitFileContents',
     'Test-AutomationFileBranch',
     'Publish-AutomationFilePullRequest'

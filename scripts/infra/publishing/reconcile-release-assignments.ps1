@@ -10,6 +10,12 @@
 .PARAMETER Repository
     The GitHub repository whose release assignments are maintained.
 
+.PARAMETER PlannedTag
+    An exact release tag paired with PlannedCommit for a Finish-driven shipment.
+
+.PARAMETER PlannedCommit
+    The exact package source commit paired with PlannedTag.
+
 .PARAMETER Push
     Performs GitHub milestone assignments. Without this switch, the script is
     read-only and reports exact skipped mutations.
@@ -23,6 +29,10 @@ param(
 
     [ValidatePattern('^[^/]+/[^/]+$')]
     [string] $Repository = 'mono/SkiaSharp',
+
+    [string] $PlannedTag = '',
+
+    [string] $PlannedCommit = '',
 
     [switch] $Push
 )
@@ -117,7 +127,7 @@ query($owner: String!, $name: String!, $number: Int!, $endCursor: String) {
 }
 
 # Parses every exact shipped tag into its release identity.
-function Get-ShippedReleases([string[]] $Tags) {
+function Get-ShippedReleases([string[]] $Tags, [object] $PlannedShipment) {
     $result = foreach ($tag in $Tags) {
         $match = [regex]::Match(
             $tag,
@@ -133,12 +143,27 @@ function Get-ShippedReleases([string[]] $Tags) {
             [pscustomobject] @{
                 Title = $release.Title
                 Tag = $tag
+                SourceCommit = if (
+                    $PlannedShipment -and $PlannedShipment.IsVirtual -and $PlannedShipment.Tag -eq $tag
+                ) {
+                    $PlannedShipment.SourceCommit
+                } else {
+                    $null
+                }
                 NumericKey = $release.NumericKey
                 SortKey = $release.SortKey
             }
         }
     }
     return @($result | Sort-Object SortKey, Tag)
+}
+
+# Returns the immutable ref for a real tag or a dry-run's virtual shipment.
+function Get-ReleaseReference([object] $Release) {
+    if ($Release.SourceCommit) {
+        return $Release.SourceCommit
+    }
+    return "refs/tags/$($Release.Tag)"
 }
 
 # Combines immutable shipped identities and extant release branches for one numeric line.
@@ -195,7 +220,7 @@ function Get-PreviousShippedBoundary(
 ) {
     $end = (Invoke-Git -Root $Root -Arguments @(
         'rev-parse',
-        "refs/tags/$($CurrentRelease.Tag)`^{commit}"
+        "$(Get-ReleaseReference $CurrentRelease)`^{commit}"
     )).Output
     $candidates = foreach ($release in $Releases) {
         if ($release.SortKey -ge $CurrentRelease.SortKey) {
@@ -203,8 +228,8 @@ function Get-PreviousShippedBoundary(
         }
         $start = (Invoke-Git -Root $Root -Arguments @(
             'merge-base',
-            "refs/tags/$($release.Tag)",
-            "refs/tags/$($CurrentRelease.Tag)"
+            (Get-ReleaseReference $release),
+            (Get-ReleaseReference $CurrentRelease)
         )).Output
         if (!$start) {
             continue
@@ -257,12 +282,12 @@ function Get-ReleasePullRequests(
     $arguments = @(
         'log',
         '--format=%s',
-        "refs/tags/$($CurrentRelease.Tag)"
+        (Get-ReleaseReference $CurrentRelease)
     )
     $earlier = @($Releases | Where-Object SortKey -lt $CurrentRelease.SortKey)
     if ($earlier.Count -gt 0) {
         $arguments += '--not'
-        $arguments += @($earlier | ForEach-Object { "refs/tags/$($_.Tag)" })
+        $arguments += @($earlier | ForEach-Object { Get-ReleaseReference $_ })
     }
     $output = (Invoke-Git -Root $Root -Arguments $arguments).Output
     $numbers = foreach ($subject in @($output -split "`r?`n")) {
@@ -576,8 +601,15 @@ Write-ReleaseStatus start "Release assignment reconciliation for $Version ($mode
 # 1.1 Refresh release refs and identify shipped milestones in release order.
 $null = Invoke-Git -Root $root -Arguments @('fetch', 'origin', '--prune', '--tags')
 $tags = Get-RemoteReleaseTags -Root $root
+$plannedShipment = Get-ReleaseShipmentContract `
+    -Root $root `
+    -Version $Version `
+    -Tag $PlannedTag `
+    -SourceCommit $PlannedCommit `
+    -RequireTag:$Push
+$tags = Add-PlannedReleaseShipmentTag -Tags $tags -Shipment $plannedShipment
 $warnings = [System.Collections.Generic.List[string]]::new()
-$shippedReleases = @(Get-ShippedReleases -Tags $tags)
+$shippedReleases = @(Get-ShippedReleases -Tags $tags -PlannedShipment $plannedShipment)
 $pullRequestOwners = Get-ReleasePullRequestOwners -Root $root -Releases $shippedReleases
 $branches = @(Get-ReleaseMilestones `
     -Root $root `

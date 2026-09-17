@@ -282,6 +282,11 @@ This makes NuGet.org the handoff proof: the tag is derived from what was
 actually published, not from the release branch's current head or a remembered
 build.
 
+Finish requires the nuspec branch to match the release identity and the package
+source commit to be reachable from that exact remote release branch. A package
+that names another line, or a commit outside the expected branch, is rejected
+before Finish exports workflow outputs or creates immutable state.
+
 ### Tag and GitHub Release
 
 In `Push` mode, Finish:
@@ -297,6 +302,22 @@ In `Push` mode, Finish:
 
 Prerelease tags include the appended build revision. Stable tags use only the
 numeric version.
+
+Finish then requires the shared `Release - Milestones` workflow to reconcile
+the exact numeric release before updating dates, rollover, and closures. Its
+resolved-release job output pairs the exact public version, numeric release,
+tag, and package source commit. In a dry run, the called workflow uses that
+pair as a virtual shipment so its read-only plan includes the mutations a push
+would make without claiming that the tag exists. In a push run, it verifies the
+real tag points to the same source commit before any milestone mutation.
+Failure in this required downstream workflow fails the Finish run.
+
+Finish holds the global `release-state` concurrency group from package
+publication through milestone completion. Standalone milestone repair runs use
+the same group. The nested reusable milestone call uses a run-specific child
+group so it cannot deadlock its Finish caller, while two Finish or repair runs
+cannot observe and close each other's newly published tags before assignment
+reconciliation completes.
 
 ### Support and documentation follow-ups
 
@@ -323,8 +344,10 @@ implementation.
 
 ## Milestone maintenance
 
-`.github/workflows/release-milestones.yml` wraps two read-only-by-default
-scripts.
+`.github/workflows/release-milestones.yml` is a reusable workflow that Finish
+calls after every successful shipment, and remains a standalone
+read-only-by-default repair workflow with independent operation toggles. It
+wraps two scripts.
 
 `reconcile-release-assignments.ps1`:
 
@@ -415,7 +438,10 @@ Prepare initializes it at the pinned commit.
   -Mode Push
 ```
 
-### Milestones
+### Milestone repairs
+
+Finish performs normal milestone maintenance. Run these commands only to inspect
+or repair milestone state independently:
 
 ```powershell
 # Read-only
