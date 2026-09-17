@@ -21,3 +21,14 @@ not a release-readiness signal. The report shows only the next merge,
 preparation, publication, or finish action. It deliberately does not replace
 detailed Prepare/Finish dry runs, BAR validation, release notes, or milestone
 workflows.
+
+Before recommending a new release cut, the audit checks the matching
+`chrome/mMILESTONE` head using the same precedence as the Skia sync detector:
+the existing mono/skia sync branch when present, otherwise the line's
+mono/skia base branch. New upstream commits produce a sync-workflow action and
+block the release-cut recommendation until they are incorporated.
+
+The audit also recognizes the immediately following milestone while `main`
+still identifies the prior line. A request such as `-Version 4.155` can
+therefore report `skia-sync/m155` and its open pull request before 4.155 becomes
+the active main line.

@@ -71,6 +71,19 @@ not the milestone sync used to decide release readiness. A non-draft incoming
 milestone PR is shown as work to merge before cutting the next release; a draft
 PR is visible but does not block the release recommendation.
 
+The audit also mirrors the Skia sync detector's upstream work check. It compares
+the exact `chrome/mMILESTONE` head with the existing mono/skia sync branch when
+one exists, otherwise with `release/A.B.x` in mono/skia or `skiasharp` for the
+current line. New upstream commits are reported with their count and suppress a
+new release-cut recommendation until the milestone sync workflow is run and its
+PRs are merged. Existing publication and Finish work remains actionable.
+
+The immediately following line is also recognized before it becomes active on
+`main`. For example, while `main` is still 4.154/m154, auditing `4.155` reports
+an existing `skia-sync/m155` pull request or available `chrome/m155` work
+instead of returning an empty line. A pending milestone PR must complete before
+release preparation for that line can begin.
+
 The report recommends only the next owner action: protected BAR-to-NuGet
 publication, `finish-release.ps1 -Mode DryRun`, or
 `prepare-release.ps1 -Mode DryRun`. It intentionally does not inspect BAR

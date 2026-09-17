@@ -152,6 +152,14 @@ function Get-GitHubOpenPullRequests(
     return @($result | Where-Object { $null -ne $_ })
 }
 
+# Compares two refs in one GitHub repository.
+function Get-GitHubComparison([string] $Repository, [string] $Base, [string] $Head) {
+    return Invoke-GitHubJsonWithRetry -Arguments @(
+        'api',
+        "repos/$Repository/compare/$Base...$Head"
+    )
+}
+
 # Creates one pull request.
 function New-GitHubPullRequest(
     [string] $Repository,
@@ -187,6 +195,7 @@ Export-ModuleMember -Function @(
     'Get-GitHubRelease',
     'Get-GitHubReleaseMap',
     'Get-GitHubOpenPullRequests',
+    'Get-GitHubComparison',
     'New-GitHubPullRequest',
     'Enable-GitHubGitAuthentication'
 )

@@ -227,6 +227,24 @@ Assert-Equal @(5062) @($openPullRequests.number) `
 Assert-True (($script:PullListArguments -join ' ') -match '--head skia-sync/release-4\.153\.x' -and
     ($script:PullListArguments -join ' ') -match '--base release/4\.153\.x') `
     'The maintenance pull request query was not scoped to the expected head/base pair.'
+$script:ComparisonArguments = @()
+function global:gh {
+    $script:ComparisonArguments = @($args)
+    $global:LASTEXITCODE = 0
+    '{"behind_by":3,"ahead_by":12,"status":"diverged"}'
+}
+try {
+    $comparison = Get-GitHubComparison `
+        -Repository 'mono/skia' `
+        -Base 'upstream-sha' `
+        -Head 'release/4.153.x'
+} finally {
+    Remove-Item Function:\gh
+}
+Assert-Equal 3 $comparison.behind_by 'The GitHub comparison did not retain behind_by.'
+Assert-True (($script:ComparisonArguments -join ' ') -match
+    'repos/mono/skia/compare/upstream-sha\.\.\.release/4\.153\.x') `
+    'The upstream comparison did not use upstream as the base and mono/skia as the head.'
 $script:PullListArguments = @()
 function global:gh {
     $script:PullListArguments = @($args)
@@ -282,11 +300,20 @@ try {
     'dirty' | Set-Content (Join-Path $gitRoot 'dirty.txt')
     Assert-Throws { Assert-GitWorktreeClean $gitRoot } 'must be clean' 'A dirty worktree was accepted.'
     Remove-Item (Join-Path $gitRoot 'dirty.txt')
+    'tree entry' | Set-Content (Join-Path $gitRoot 'tree-entry.txt')
+    & git -C $gitRoot add tree-entry.txt
+    & git -C $gitRoot commit --quiet -m 'Add tree entry'
     & git -C $gitRoot branch release/test
     & git init --quiet --bare $bareRoot
     $localSha = (git -C $gitRoot rev-parse release/test).Trim()
     Assert-Equal $localSha (Get-LocalBranchSha -Root $gitRoot -Branch release/test) `
         'A local branch SHA was not resolved.'
+    $treeEntrySha = (git -C $gitRoot rev-parse 'release/test:tree-entry.txt').Trim()
+    Assert-Equal $treeEntrySha (Get-GitTreeEntrySha `
+        -Root $gitRoot `
+        -Commit $localSha `
+        -Path 'tree-entry.txt') `
+        'A commit tree entry SHA was not resolved.'
     Push-ReleaseBranch `
         -Root $gitRoot `
         -Remote $bareRoot `
@@ -297,6 +324,14 @@ try {
         -Push
     Assert-Equal $localSha (Get-RemoteBranchSha -Root $gitRoot -Remote $bareRoot -Branch release/test) `
         'A local test branch was not pushed.'
+    $branchShas = Get-RemoteBranchShas `
+        -Root $gitRoot `
+        -Remote $bareRoot `
+        -Branches @('release/test', 'release/missing')
+    Assert-Equal $localSha $branchShas['release/test'] `
+        'The multi-branch remote lookup did not return the advertised branch.'
+    Assert-Equal $false $branchShas.ContainsKey('release/missing') `
+        'The multi-branch remote lookup invented a missing branch.'
     $null = New-Item -ItemType Directory -Path $readerRoot
     & git -C $readerRoot init --quiet
     $branchMap = Get-RemoteBranchMap `
@@ -758,6 +793,9 @@ Assert-True ($auditScript.Contains('Format-Table -AutoSize -Wrap') -and
     $auditScript.Contains('$PSStyle.Bold') -and
     $auditScript.Contains('Get-GitHubOpenPullRequests')) `
     'The release-line audit must use PowerShell table formatting and host-aware emphasis.'
+Assert-True ($auditScript -match
+    'Write-Error "Release-state audit unavailable:.*-ErrorAction Continue') `
+    'The release-line audit failure path must preserve unavailable exit code 2.'
 $auditFunctions = Get-ScriptFunctionText $auditPath
 Invoke-Expression $auditFunctions
 
@@ -874,6 +912,102 @@ Assert-Equal 'skia-sync/release-4.152.x' (Get-ExpectedSyncBranch $maintenance) `
     'The servicing-line sync branch name was not derived.'
 Assert-Equal 'skia-sync/m154' (Get-ExpectedSyncBranch $mainMaintenance) `
     'The current-line milestone sync branch name was not derived.'
+$servicingSyncTopology = Get-SkiaSyncTopology -Maintenance $maintenance
+Assert-Equal 'chrome/m152' $servicingSyncTopology.UpstreamRef `
+    'The servicing line did not derive its Chrome milestone branch.'
+Assert-Equal 'release/4.152.x' $servicingSyncTopology.SkiaBaseBranch `
+    'The servicing line did not use the matching mono/skia release branch.'
+$mainSyncTopology = Get-SkiaSyncTopology -Maintenance $mainMaintenance
+Assert-Equal 'chrome/m154' $mainSyncTopology.UpstreamRef `
+    'The current line did not derive its Chrome milestone branch.'
+Assert-Equal 'skiasharp' $mainSyncTopology.SkiaBaseBranch `
+    'The current line did not use the mono/skia integration branch.'
+$pendingMilestone = Get-PendingMainMilestone `
+    -Line '4.155' `
+    -MainSha $mainMaintenance.Sha `
+    -MainReleaseInfo ([pscustomobject] @{
+        Version = $mainMaintenance.Version
+        SkiaMilestone = $mainMaintenance.SkiaMilestone
+    })
+Assert-Equal 155 $pendingMilestone.Milestone `
+    'The next Skia milestone was not recognized as a pending main line.'
+Assert-Equal $null (Get-PendingMainMilestone `
+    -Line '4.156' `
+    -MainSha $mainMaintenance.Sha `
+    -MainReleaseInfo ([pscustomobject] @{
+        Version = $mainMaintenance.Version
+        SkiaMilestone = $mainMaintenance.SkiaMilestone
+    })) `
+    'A line beyond the next Skia milestone was treated as pending.'
+Assert-Equal $null (Get-PendingMainMilestone `
+    -Line '4.155' `
+    -MainSha $mainMaintenance.Sha `
+    -MainReleaseInfo ([pscustomobject] @{
+        Version = '4.153.0'
+        SkiaMilestone = 154
+    })) `
+    'A mismatched main release line and Skia milestone produced a pending line.'
+$pendingSyncTopology = Get-SkiaSyncTopology `
+    -Maintenance $mainMaintenance `
+    -TargetMilestone $pendingMilestone.Milestone
+Assert-Equal 'chrome/m155' $pendingSyncTopology.UpstreamRef `
+    'The pending line did not derive its future Chrome milestone branch.'
+Assert-Equal 'skia-sync/m155' $pendingSyncTopology.SyncBranch `
+    'The pending line did not derive its future milestone sync branch.'
+
+$upstreamSha = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+$skiaBaseSha = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+$skiaSyncSha = 'cccccccccccccccccccccccccccccccccccccccc'
+$parentSkiaSha = 'dddddddddddddddddddddddddddddddddddddddd'
+$script:AuditSkiaBranches = @{}
+$script:AuditSkiaBranches[$maintenance.Branch] = $skiaBaseSha
+$script:AuditBehindBy = 1
+$script:AuditCompareHead = ''
+function Get-RemoteBranchSha(
+    [string] $Root,
+    [string] $Remote,
+    [string] $Branch
+) {
+    return $upstreamSha
+}
+function Get-RemoteBranchShas(
+    [string] $Root,
+    [string] $Remote,
+    [string[]] $Branches
+) {
+    return $script:AuditSkiaBranches
+}
+function Get-GitHubComparison([string] $Repository, [string] $Base, [string] $Head) {
+    $script:AuditCompareHead = $Head
+    return [pscustomobject] @{ behind_by = $script:AuditBehindBy }
+}
+function Get-GitTreeEntrySha([string] $Root, [string] $Commit, [string] $Path) {
+    return $parentSkiaSha
+}
+try {
+    $upstreamChanges = Get-SkiaUpstreamStatus -Root . -Maintenance $maintenance
+    Assert-Equal 1 $upstreamChanges.BehindBy `
+        'New Chrome milestone commits were not reported.'
+    Assert-Equal $maintenance.Branch $script:AuditCompareHead `
+        'The upstream check did not fall back to the mono/skia base branch.'
+    Assert-Equal $true $upstreamChanges.BlocksRelease `
+        'New upstream commits did not block a release cut.'
+
+    $script:AuditSkiaBranches = @{}
+    $script:AuditSkiaBranches[$maintenance.Branch] = $skiaBaseSha
+    $script:AuditSkiaBranches[$servicingSyncTopology.SyncBranch] = $skiaSyncSha
+    $script:AuditBehindBy = 0
+    $upstreamCurrent = Get-SkiaUpstreamStatus -Root . -Maintenance $maintenance
+    Assert-Equal $servicingSyncTopology.SyncBranch $script:AuditCompareHead `
+        'The existing mono/skia sync branch was not preferred for comparison.'
+    Assert-Equal 'current' $upstreamCurrent.State `
+        'An up-to-date sync branch was reported as having upstream work.'
+} finally {
+    Remove-Item Function:\Get-RemoteBranchSha
+    Remove-Item Function:\Get-RemoteBranchShas
+    Remove-Item Function:\Get-GitHubComparison
+    Remove-Item Function:\Get-GitTreeEntrySha
+}
 $openSyncPullRequest = Get-IncomingReleasePullRequest `
     -Maintenance $maintenance `
     -SyncBranchSha $sha1 `
@@ -902,6 +1036,48 @@ $draftSyncPullRequest = Get-IncomingReleasePullRequest `
 Assert-Equal 'draft' $draftSyncPullRequest.State 'A draft incoming sync PR was not identified.'
 Assert-Equal $false $draftSyncPullRequest.BlocksRelease `
     'A draft incoming sync PR incorrectly blocked a release cut.'
+$pendingSyncPullRequest = Get-IncomingReleasePullRequest `
+    -Maintenance $mainMaintenance `
+    -SyncBranchSha $sha1 `
+    -PullRequests @(
+        New-AuditPullRequest 5081 'skia-sync/m155' $sha1 'main' $sha0 $true
+    ) `
+    -Topology $pendingSyncTopology
+Assert-Equal 'draft' $pendingSyncPullRequest.State `
+    'The pending milestone pull request was not identified.'
+$pendingUpstreamCurrent = [pscustomobject] @{
+    Milestone = 155
+    UpstreamRef = 'chrome/m155'
+    UpstreamSha = $upstreamSha
+    ParentBaseBranch = 'main'
+    ParentSkiaSha = $parentSkiaSha
+    SkiaBaseBranch = 'skiasharp'
+    SkiaBaseSha = $skiaBaseSha
+    SyncBranch = 'skia-sync/m155'
+    SyncBranchSha = $skiaSyncSha
+    CompareRef = 'skia-sync/m155'
+    CompareSha = $skiaSyncSha
+    BehindBy = 0
+    HasChanges = $false
+    State = 'current'
+    BlocksRelease = $false
+    Message = ''
+}
+$pendingState = Get-ReleaseAuditState `
+    -Line '4.155' `
+    -Maintenance $null `
+    -Branches @() `
+    -Packages @() `
+    -TagShas @{} `
+    -GitHubReleases @{} `
+    -Delta (New-AuditDelta 'none') `
+    -IncomingPullRequest $pendingSyncPullRequest `
+    -UpstreamSync $pendingUpstreamCurrent `
+    -PendingMilestone $pendingMilestone
+Assert-True (@($pendingState.Actions.Kind) -contains 'review-sync') `
+    'A draft next-milestone PR did not produce a completion action.'
+Assert-True (@($pendingState.Actions.Kind) -notcontains 'start') `
+    'The pending milestone incorrectly started a release before main advanced.'
 $orphanedSyncBranch = Get-IncomingReleasePullRequest `
     -Maintenance $maintenance `
     -SyncBranchSha $sha1 `
@@ -913,6 +1089,25 @@ Assert-Equal $null (Get-IncomingReleasePullRequest `
     -SyncBranchSha '' `
     -PullRequests $null) `
     'An absent sync branch and empty pull request query produced a phantom incoming PR.'
+$incompleteNativeSync = Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha '' `
+    -PullRequests $null `
+    -Topology $servicingSyncTopology `
+    -SkiaSyncBranchSha $skiaSyncSha `
+    -ParentSkiaSha $parentSkiaSha
+Assert-Equal 'inconsistent' $incompleteNativeSync.State `
+    'A mono/skia-only sync was not reported as incomplete.'
+Assert-Equal $true $incompleteNativeSync.BlocksRelease `
+    'A mono/skia-only sync did not block a release cut.'
+Assert-Equal $null (Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha '' `
+    -PullRequests $null `
+    -Topology $servicingSyncTopology `
+    -SkiaSyncBranchSha $skiaSyncSha `
+    -ParentSkiaSha $skiaSyncSha) `
+    'A sync already integrated by the parent base was reported as incomplete.'
 
 $bumpOnly = New-AuditDelta 'version bump only'
 $state = Get-ReleaseAuditState `
@@ -928,6 +1123,31 @@ $state = Get-ReleaseAuditState `
     -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } -Delta $realChanges
 Assert-True (@($state.Actions.Kind) -contains 'start') 'Real maintenance changes did not recommend the next release.'
 Assert-True ((@($state.Actions.Command) -join "`n") -match '4\.152\.1-stable') 'The stable/patch next identity was not derived.'
+$blockedByUpstream = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -UpstreamSync $upstreamChanges
+Assert-True (@($blockedByUpstream.Actions.Kind) -contains 'sync-skia') `
+    'New upstream Skia commits did not produce a sync action.'
+Assert-True (@($blockedByUpstream.Actions.Kind) -notcontains 'start') `
+    'A release was recommended before newer upstream Skia commits were synchronized.'
+Assert-True ((@($blockedByUpstream.Actions.Command) -join "`n") -match
+    'auto-skia-sync\.lock\.yml.*target=152') `
+    'The upstream action did not target the resolved milestone.'
+$currentUpstreamAllowsRelease = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -UpstreamSync $upstreamCurrent
+Assert-True (@($currentUpstreamAllowsRelease.Actions.Kind) -contains 'start') `
+    'An up-to-date upstream branch incorrectly blocked a release cut.'
+$incompleteNativeSyncBlocksRelease = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -UpstreamSync $upstreamCurrent -IncomingPullRequest $incompleteNativeSync
+Assert-True (@($incompleteNativeSyncBlocksRelease.Actions.Kind) -contains 'investigate-sync') `
+    'A mono/skia-only sync did not produce an investigation action.'
+Assert-True (@($incompleteNativeSyncBlocksRelease.Actions.Kind) -notcontains 'start') `
+    'A release was recommended while a mono/skia-only sync was incomplete.'
 $blockedBySync = Get-ReleaseAuditState `
     -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
     -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
@@ -1040,6 +1260,22 @@ $incomingPullRequestReport = [regex]::Replace(
     '')
 Assert-True ($incomingPullRequestReport -match '(?m)^Incoming sync PR:\s+#5062 ') `
     'The incoming maintenance PR was not shown in the report summary.'
+$upstreamReport = [regex]::Replace(
+    (@(Write-ReleaseAuditReport $blockedByUpstream) -join "`n"),
+    "$([char] 0x1b)\[[0-9;]*m",
+    '')
+Assert-True ($upstreamReport -match
+    '(?m)^Upstream Skia:\s+chrome/m152@a{12} -> mono/skia:release/4\.152\.x \(1 newer commit\)') `
+    'The report did not show the newer upstream Skia commit.'
+$pendingReport = [regex]::Replace(
+    (@(Write-ReleaseAuditReport $pendingState) -join "`n"),
+    "$([char] 0x1b)\[[0-9;]*m",
+    '')
+Assert-True ($pendingReport -match
+    '(?m)^Pending milestone:\s+4\.155 via m155 -> main \(current 4\.154\.0/m154\)') `
+    'The report did not explain the pending next milestone.'
+Assert-True ($pendingReport -match '(?m)^Incoming sync PR:\s+#5081 ') `
+    'The report did not show the pending next-milestone PR.'
 Assert-Equal 'main' $mainMaintenance.Branch 'A matching current main was not usable as maintenance.'
 Assert-Equal '4.154.0-preview.1' (Get-NextReleaseIdentity '4.154' $null '4.154.0') `
     'A first release identity was not preview.1.'
