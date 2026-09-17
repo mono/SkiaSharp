@@ -10,11 +10,11 @@ from pathlib import Path
 
 
 PROJECTS = (
-    ("libSkiaSharp.json", "externals/skia", "SkiaSharp"),
-    ("libSkiaSharp.Skottie.json", "externals/skia", "SkiaSharp.Skottie"),
-    ("libSkiaSharp.SceneGraph.json", "externals/skia", "SkiaSharp.SceneGraph"),
-    ("libSkiaSharp.Resources.json", "externals/skia", "SkiaSharp.Resources"),
-    ("libHarfBuzzSharp.json", "externals/skia/third_party/externals/harfbuzz", "HarfBuzzSharp"),
+    ("libSkiaSharp.json", "externals/skia", "SkiaSharp", "SkiaApi.generated.cs"),
+    ("libSkiaSharp.Skottie.json", "externals/skia", "SkiaSharp.Skottie", "SkottieApi.generated.cs"),
+    ("libSkiaSharp.SceneGraph.json", "externals/skia", "SkiaSharp.SceneGraph", "SceneGraphApi.generated.cs"),
+    ("libSkiaSharp.Resources.json", "externals/skia", "SkiaSharp.Resources", "ResourcesApi.generated.cs"),
+    ("libHarfBuzzSharp.json", "externals/skia/third_party/externals/harfbuzz", "HarfBuzzSharp", "HarfBuzzApi.generated.cs"),
 )
 
 
@@ -38,6 +38,8 @@ def compare_trees(expected: Path, actual: Path) -> list[str]:
 
 
 def run_check(repo_root: Path, output_dir: Path) -> dict:
+    repo_root = Path(repo_root)
+    output_dir = Path(output_dir)
     generated_root = output_dir / "generated"
     if generated_root.exists():
         shutil.rmtree(generated_root)
@@ -54,13 +56,26 @@ def run_check(repo_root: Path, output_dir: Path) -> dict:
 
         try:
             run("dotnet", "build", str(generator))
-            for config, source_root, project in PROJECTS:
+            for config, source_root, project, legacy_file in PROJECTS:
+                project_root = repo_root / "binding" / project
+                expected_directory = project_root / "Generated"
+                # Seed the isolated output because the generator carries XML docs
+                # forward from its existing output before replacing generated code.
+                if expected_directory.is_dir():
+                    generated_output = generated_root / project
+                    shutil.copytree(expected_directory, generated_output)
+                else:
+                    expected_file = project_root / legacy_file
+                    generated_output = generated_root / project / legacy_file
+                    generated_output.parent.mkdir(parents=True, exist_ok=True)
+                    if expected_file.is_file():
+                        shutil.copy2(expected_file, generated_output)
                 run(
                     "dotnet", "run", "--no-build", "--no-launch-profile",
                     f"--project={generator}", "--", "generate",
                     "--config", str(repo_root / "binding" / config),
                     "--root", str(repo_root / source_root),
-                    "--output", str(generated_root / project),
+                    "--output", str(generated_output),
                 )
         except Exception as error:
             return {
@@ -69,11 +84,24 @@ def run_check(repo_root: Path, output_dir: Path) -> dict:
             }
 
     checked, mismatches = [], []
-    for _, _, project in PROJECTS:
-        expected = repo_root / "binding" / project / "Generated"
+    for _, _, project, legacy_file in PROJECTS:
+        project_root = repo_root / "binding" / project
+        expected = project_root / "Generated"
         actual = generated_root / project
-        checked.append(str(expected.relative_to(repo_root)))
-        differences = compare_trees(expected, actual)
+        if expected.is_dir():
+            checked.append(str(expected.relative_to(repo_root)))
+            differences = compare_trees(expected, actual)
+        else:
+            expected = project_root / legacy_file
+            actual = actual / legacy_file
+            checked.append(str(expected.relative_to(repo_root)))
+            differences = (
+                []
+                if expected.is_file()
+                and actual.is_file()
+                and filecmp.cmp(expected, actual, shallow=False)
+                else [f"modified: {legacy_file}"]
+            )
         if differences:
             mismatches.append({"file": str(expected.relative_to(repo_root)), "diffSummary": "\n".join(differences[:100])})
 
