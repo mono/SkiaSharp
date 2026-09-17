@@ -235,7 +235,7 @@ pre-agent-steps:
         echo "VK_DRIVER_FILES=$LAVAPIPE_ICD"
       } >> "$GITHUB_ENV"
       fc-cache -f
-      dotnet workload install android --skip-sign-check
+      ./eng/common/dotnet.sh workload install android --skip-sign-check
     env:
       DEBIAN_FRONTEND: noninteractive
   - name: Verify Mesa lavapipe

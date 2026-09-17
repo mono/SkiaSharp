@@ -37,8 +37,19 @@ package version. The `Push` run reads that package's source commit, creates the
 immutable exact NuGet version tag at that commit, publishes a GitHub-generated
 Release whose generated notes start at the immediately preceding exact shipment
 in global release topology, opens or updates the released line's support-tier
-PR, and dispatches release-note generation. Run **Release - Milestones**
-separately when milestone reconciliation is needed.
+PR, dispatches release-note generation, then requires milestone reconciliation
+and date/rollover maintenance to complete. The dry-run exposes that same
+milestone plan using an explicit virtual shipment (the planned tag and package
+source commit); the push run verifies the real tag still points to that commit
+before any milestone mutation.
+
+Before planning or publishing, Finish requires the package's nuspec branch to
+match the inferred release branch and its source commit to be reachable from
+that branch. A package from another line is a blocking provenance error, not a
+warning.
 
 Always present the dry-run and obtain confirmation before `-Mode Push`. Never move
 or delete a tag, replace a published release, or substitute a newer package.
+
+Use **Release - Milestones** separately only for diagnostics or repairs, where
+its independent reconciliation and update toggles remain available.

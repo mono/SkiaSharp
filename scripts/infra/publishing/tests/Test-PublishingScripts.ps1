@@ -6,6 +6,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 $publishingRoot = Split-Path $PSScriptRoot
 $gitCommonPath = Join-Path $publishingRoot 'Git.Common.psm1'
 $gitHubCommonPath = Join-Path $publishingRoot 'GitHub.Common.psm1'
+$azureDevOpsCommonPath = Join-Path $publishingRoot 'AzureDevOps.Common.psm1'
 $commonPath = Join-Path $publishingRoot 'Publishing.Common.psm1'
 $preparePath = Join-Path $publishingRoot 'prepare-release.ps1'
 $finishPath = Join-Path $publishingRoot 'finish-release.ps1'
@@ -15,9 +16,11 @@ $milestonesPath = Join-Path $publishingRoot 'update-release-milestones.ps1'
 $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '../../../..')
 $prepareWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-prepare.yml'
 $finishWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-finish.yml'
+$milestonesWorkflowPath = Join-Path $repositoryRoot '.github/workflows/release-milestones.yml'
 
 Import-Module $gitCommonPath -Force
 Import-Module $gitHubCommonPath -Force
+Import-Module $azureDevOpsCommonPath -Force
 Import-Module $commonPath -Force
 $script:TestsRun = 0
 
@@ -118,8 +121,43 @@ foreach ($workflowPath in @($prepareWorkflowPath, $finishWorkflowPath)) {
     Assert-True ($workflow.Contains("MODE: `${{ inputs.push && 'Push' || 'DryRun' }}")) `
         "$workflowName does not map its push checkbox to DryRun or Push."
 }
+$finishWorkflow = Get-Content $finishWorkflowPath -Raw
+$milestonesWorkflow = Get-Content $milestonesWorkflowPath -Raw
+Assert-True ($finishWorkflow -match '(?ms)outputs:\s+release_version:.*release_numeric:.*release_tag:.*source_commit:') `
+    'Finish does not expose its resolved-release output contract.'
+Assert-True ($finishWorkflow -match '(?ms)milestones:\s+needs: finish\s+uses: \./\.github/workflows/release-milestones\.yml') `
+    'Finish does not require the shared milestone workflow after publication planning.'
+Assert-True ($finishWorkflow -match '(?ms)milestones:.*version: \$\{\{ needs\.finish\.outputs\.release_numeric \}\}.*tag: \$\{\{ needs\.finish\.outputs\.release_tag \}\}.*source_commit: \$\{\{ needs\.finish\.outputs\.source_commit \}\}.*reconcile: true.*update: true.*push: \$\{\{ inputs\.push \}\}') `
+    'Finish does not pass the complete resolved shipment to milestone maintenance.'
+Assert-True ($finishWorkflow -match '(?ms)milestones:.*permissions:.*contents: read.*issues: write.*pull-requests: write') `
+    'Finish does not grant the called milestone workflow its required permissions.'
+Assert-True ($finishWorkflow -match '(?ms)^concurrency:\s+group: release-state\s+cancel-in-progress: false') `
+    'Finish does not serialize publication through milestone completion.'
+Assert-True ($finishWorkflow -notmatch 'group: release-\$\{\{ inputs\.version \}\}') `
+    'Finish still permits different release inputs to publish outside the global release-state lock.'
+Assert-True ($milestonesWorkflow -match '(?ms)workflow_call:.*inputs:.*version:.*tag:.*source_commit:.*reconcile:.*update:.*push:') `
+    'Milestone maintenance cannot be called with the resolved shipment contract.'
+Assert-True ($milestonesWorkflow -match '(?ms)workflow_dispatch:.*inputs:.*version:.*reconcile:.*update:.*push:') `
+    'Standalone milestone dispatch no longer preserves its independent operation toggles.'
+Assert-True ($milestonesWorkflow -match
+    '(?ms)^concurrency:\s+group: \$\{\{ inputs\.source_commit.*release-milestones-called-\{0\}.*release-state.*\}\}\s+cancel-in-progress: false') `
+    'Milestone maintenance does not share standalone serialization without deadlocking a Finish caller.'
+$milestonesDispatchInputs = [regex]::Match(
+    $milestonesWorkflow,
+    '(?ms)  workflow_dispatch:\s*(?<block>.*?)\npermissions:').Groups['block'].Value
+Assert-True ($milestonesDispatchInputs -notmatch
+    '(?m)^\s{6}(?:tag|source_commit):') `
+    'Standalone milestone dispatch unexpectedly exposes Finish-only virtual shipment inputs.'
+Assert-True ($milestonesWorkflow -match '(?ms)Reconcile release assignments.*Update release milestones') `
+    'Milestone reconciliation no longer runs before date/rollover maintenance.'
+$milestoneScripts = (Get-Content $reconcilePath -Raw) + (Get-Content $milestonesPath -Raw)
+Assert-True ($milestoneScripts -match '(?ms)PlannedTag.*PlannedCommit.*Get-ReleaseShipmentContract.*-RequireTag:\$Push') `
+    'Milestone maintenance does not validate planned shipment parity before mutation.'
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
+$gitCommonScript = Get-Content $gitCommonPath -Raw
 $commonScript = Get-Content $commonPath -Raw
+Assert-True ($gitCommonScript -notmatch 'FETCH_HEAD') `
+    'Shared branch resolution must not use process-global FETCH_HEAD.'
 Assert-True ($commonScript -match '--force-with-lease') `
     'The shared automation branch helper must use force-with-lease.'
 Assert-True ($commonScript -notmatch '(?m)git push[^\r\n]*--force(?:\s|$)') `
@@ -191,6 +229,179 @@ $pages = @(
 )
 Assert-Equal @(1, 2, 3) @((Expand-GitHubPages $pages).number) 'GitHub pages were not flattened.'
 
+$buildBranch = 'release/4.152.1'
+$buildCommit = 'a' * 40
+$greenBuildFixture = [pscustomobject] @{
+    id = 100
+    buildNumber = '4.152.1+test'
+    sourceVersion = $buildCommit
+    status = 'completed'
+    result = 'succeeded'
+    queueTime = '2026-09-17T00:00:00Z'
+    finishTime = '2026-09-17T00:10:00Z'
+    tags = @('BAR ID - 331115')
+}
+$greenBuild = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch `
+    -Commit $buildCommit `
+    -Builds @($greenBuildFixture)
+Assert-Equal 'green' $greenBuild.State 'A successful exact-tip package build was not green.'
+Assert-Equal 331115 $greenBuild.BarId 'The package build BAR ID was not extracted.'
+Assert-Equal $true $greenBuild.Ready 'A successful exact-tip BAR was not release-ready.'
+$failedBuildFixture = [pscustomobject] @{
+    id = 101
+    buildNumber = '4.152.1+retry'
+    sourceVersion = $buildCommit
+    status = 'completed'
+    result = 'failed'
+    queueTime = '2026-09-17T00:20:00Z'
+    finishTime = '2026-09-17T00:30:00Z'
+    tags = @()
+}
+$failedBuild = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch `
+    -Commit $buildCommit `
+    -Builds @($greenBuildFixture, $failedBuildFixture)
+Assert-Equal 101 $failedBuild.BuildId 'The newest exact-tip build was not selected.'
+Assert-Equal 'failed' $failedBuild.State 'A newer failed build was hidden by an older green build.'
+$canceledBuild = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch `
+    -Commit $buildCommit `
+    -Builds @([pscustomobject] @{
+        id = 105
+        buildNumber = '4.152.1+canceled'
+        sourceVersion = $buildCommit
+        status = 'completed'
+        result = 'canceled'
+        queueTime = '2026-09-17T00:35:00Z'
+        finishTime = '2026-09-17T00:36:00Z'
+        tags = @()
+    })
+Assert-Equal 'canceled' $canceledBuild.State `
+    'A canceled exact-tip build was folded into the generic failed state.'
+$runningBuild = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch `
+    -Commit $buildCommit `
+    -Builds @([pscustomobject] @{
+        id = 102
+        buildNumber = '4.152.1+running'
+        sourceVersion = $buildCommit
+        status = 'inProgress'
+        result = ''
+        queueTime = '2026-09-17T00:40:00Z'
+        finishTime = $null
+        tags = @()
+    })
+Assert-Equal 'running' $runningBuild.State 'An active exact-tip build was not reported as running.'
+$missingBarBuild = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch `
+    -Commit $buildCommit `
+    -Builds @([pscustomobject] @{
+        id = 103
+        buildNumber = '4.152.1+missing-bar'
+        sourceVersion = $buildCommit
+        status = 'completed'
+        result = 'succeeded'
+        queueTime = '2026-09-17T00:50:00Z'
+        finishTime = '2026-09-17T01:00:00Z'
+        tags = @()
+    })
+Assert-Equal 'incomplete' $missingBarBuild.State 'A successful build without a BAR ID was marked green.'
+$notBuilt = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch `
+    -Commit $buildCommit `
+    -Builds @([pscustomobject] @{
+        id = 104
+        sourceVersion = ('b' * 40)
+        status = 'completed'
+        result = 'succeeded'
+        tags = @('BAR ID - 999999')
+    })
+Assert-Equal 'not built' $notBuilt.State 'A build from another commit was accepted for the branch tip.'
+$script:FakeAzCalls = 0
+function global:az {
+    $script:FakeAzCalls++
+    $global:LASTEXITCODE = 1
+    'The internal pipeline could not be reached.'
+}
+try {
+    $unavailableBuild = Get-ReleasePackageBuild -Branch $buildBranch -Commit $buildCommit
+} finally {
+    Remove-Item Function:\az
+}
+Assert-Equal 1 $script:FakeAzCalls 'The package build lookup did not invoke Azure DevOps.'
+Assert-Equal $false $unavailableBuild.Available `
+    'An unavailable internal pipeline was treated as a completed build check.'
+Assert-Equal 'unavailable' $unavailableBuild.State `
+    'An unavailable internal pipeline did not preserve its distinct state.'
+
+$script:PullListArguments = @()
+function global:gh {
+    $script:PullListArguments = @($args)
+    $global:LASTEXITCODE = 0
+    @'
+[
+  {
+    "number": 5062,
+    "title": "[skia-sync] Merge upstream chrome/m153 bug fixes",
+    "headRefName": "skia-sync/release-4.153.x",
+    "headRefOid": "2222222222222222222222222222222222222222",
+    "baseRefName": "release/4.153.x",
+    "baseRefOid": "1111111111111111111111111111111111111111",
+    "isDraft": false,
+    "mergeStateStatus": "BLOCKED",
+    "url": "https://github.com/mono/SkiaSharp/pull/5062"
+  }
+]
+'@
+}
+try {
+    $openPullRequests = @(Get-GitHubOpenPullRequests `
+        -Repository 'mono/SkiaSharp' `
+        -Head 'skia-sync/release-4.153.x' `
+        -Base 'release/4.153.x')
+} finally {
+    Remove-Item Function:\gh
+}
+Assert-Equal @(5062) @($openPullRequests.number) `
+    'The exact open maintenance pull request was not returned.'
+Assert-True (($script:PullListArguments -join ' ') -match '--head skia-sync/release-4\.153\.x' -and
+    ($script:PullListArguments -join ' ') -match '--base release/4\.153\.x') `
+    'The maintenance pull request query was not scoped to the expected head/base pair.'
+$script:ComparisonArguments = @()
+function global:gh {
+    $script:ComparisonArguments = @($args)
+    $global:LASTEXITCODE = 0
+    '{"behind_by":3,"ahead_by":12,"status":"diverged"}'
+}
+try {
+    $comparison = Get-GitHubComparison `
+        -Repository 'mono/skia' `
+        -Base 'upstream-sha' `
+        -Head 'release/4.153.x'
+} finally {
+    Remove-Item Function:\gh
+}
+Assert-Equal 3 $comparison.behind_by 'The GitHub comparison did not retain behind_by.'
+Assert-True (($script:ComparisonArguments -join ' ') -match
+    'repos/mono/skia/compare/upstream-sha\.\.\.release/4\.153\.x') `
+    'The upstream comparison did not use upstream as the base and mono/skia as the head.'
+$script:PullListArguments = @()
+function global:gh {
+    $script:PullListArguments = @($args)
+    $global:LASTEXITCODE = 0
+    '[]'
+}
+try {
+    Assert-Equal 0 @(Get-GitHubOpenPullRequests `
+        -Repository 'mono/SkiaSharp' `
+        -Head 'skia-sync/release-4.152.x' `
+        -Base 'release/4.152.x').Count `
+        'An empty pull request query produced a phantom result.'
+} finally {
+    Remove-Item Function:\gh
+}
+
 $script:FakeGhCalls = 0
 function global:gh {
     $script:FakeGhCalls++
@@ -219,6 +430,7 @@ libSkiaSharp     milestone   152
 
 $gitRoot = Join-Path $PSScriptRoot ".common-git-$([guid]::NewGuid().ToString('N'))"
 $bareRoot = "$gitRoot.git"
+$readerRoot = "$gitRoot-reader"
 try {
     $null = New-Item -ItemType Directory -Path $gitRoot
     & git -C $gitRoot init --quiet
@@ -229,11 +441,21 @@ try {
     'dirty' | Set-Content (Join-Path $gitRoot 'dirty.txt')
     Assert-Throws { Assert-GitWorktreeClean $gitRoot } 'must be clean' 'A dirty worktree was accepted.'
     Remove-Item (Join-Path $gitRoot 'dirty.txt')
+    'tree entry' | Set-Content (Join-Path $gitRoot 'tree-entry.txt')
+    & git -C $gitRoot add tree-entry.txt
+    & git -C $gitRoot commit --quiet -m 'Add tree entry'
     & git -C $gitRoot branch release/test
     & git init --quiet --bare $bareRoot
+    & git -C $gitRoot remote add origin $bareRoot
     $localSha = (git -C $gitRoot rev-parse release/test).Trim()
     Assert-Equal $localSha (Get-LocalBranchSha -Root $gitRoot -Branch release/test) `
         'A local branch SHA was not resolved.'
+    $treeEntrySha = (git -C $gitRoot rev-parse 'release/test:tree-entry.txt').Trim()
+    Assert-Equal $treeEntrySha (Get-GitTreeEntrySha `
+        -Root $gitRoot `
+        -Commit $localSha `
+        -Path 'tree-entry.txt') `
+        'A commit tree entry SHA was not resolved.'
     Push-ReleaseBranch `
         -Root $gitRoot `
         -Remote $bareRoot `
@@ -244,6 +466,30 @@ try {
         -Push
     Assert-Equal $localSha (Get-RemoteBranchSha -Root $gitRoot -Remote $bareRoot -Branch release/test) `
         'A local test branch was not pushed.'
+    $branchShas = Get-RemoteBranchShas `
+        -Root $gitRoot `
+        -Remote $bareRoot `
+        -Branches @('release/test', 'release/missing')
+    Assert-Equal $localSha $branchShas['release/test'] `
+        'The multi-branch remote lookup did not return the advertised branch.'
+    Assert-Equal $false $branchShas.ContainsKey('release/missing') `
+        'The multi-branch remote lookup invented a missing branch.'
+    $null = New-Item -ItemType Directory -Path $readerRoot
+    & git -C $readerRoot init --quiet
+    $branchMap = Get-RemoteBranchMap `
+        -Root $readerRoot `
+        -Remote $bareRoot `
+        -Pattern 'refs/heads/release/*'
+    Assert-Equal $localSha $branchMap['release/test'] `
+        'The remote branch map did not return the advertised branch tip.'
+    & git -C $readerRoot cat-file -e "$localSha`^{commit}"
+    Assert-Equal 0 $LASTEXITCODE `
+        'The remote branch map did not fetch the advertised parent commit.'
+    Assert-Equal $localSha (Get-ResolvedGitCommit `
+        -Root $readerRoot `
+        -Reference 'release/test' `
+        -Remote $bareRoot) `
+        'A remote branch did not resolve through its immutable advertised commit.'
     $dryBranch = @(Push-ReleaseBranch `
         -Root $gitRoot `
         -Remote $bareRoot `
@@ -260,6 +506,38 @@ try {
     # (dry-run refusal, create-and-verify, idempotent re-run, conflict rejection) are the
     # ones worth pinning. Everything here runs against a local bare remote: no network.
     $tagSha = (git -C $gitRoot rev-parse release/test).Trim()
+
+    $virtualShipment = Get-ReleaseShipmentContract `
+        -Root $gitRoot `
+        -Version '4.153.0' `
+        -Tag 'v4.153.0-preview.1.26426.14' `
+        -SourceCommit $tagSha
+    Assert-True $virtualShipment.IsVirtual 'A missing dry-run tag was not represented as a virtual shipment.'
+    Assert-Equal @('v4.153.0-preview.1.26426.14') `
+        (Add-PlannedReleaseShipmentTag -Tags @() -Shipment $virtualShipment) `
+        'A virtual shipment was not included in dry-run milestone planning.'
+    Assert-Throws {
+        Get-ReleaseShipmentContract `
+            -Root $gitRoot `
+            -Version '4.153.0' `
+            -Tag 'v4.153.0-preview.1.26426.14' `
+            -SourceCommit $tagSha `
+            -RequireTag
+    } 'must exist' 'Push-mode milestone maintenance accepted a missing exact tag.'
+    Assert-Throws {
+        Get-ReleaseShipmentContract `
+            -Root $gitRoot `
+            -Version '4.153.0' `
+            -Tag 'v4.154.0-preview.1.26426.14' `
+            -SourceCommit $tagSha
+    } 'does not match numeric' 'A planned tag for another numeric release was accepted.'
+    Assert-Throws {
+        Get-ReleaseShipmentContract `
+            -Root $gitRoot `
+            -Version '4.153.0' `
+            -Tag 'v4.153.0-preview.1.26426.14' `
+            -SourceCommit ''
+    } 'supplied together' 'An unpaired planned tag was accepted.'
 
     $dryTag = @(Push-ReleaseTag `
         -Root $gitRoot `
@@ -279,6 +557,22 @@ try {
     Assert-Equal $tagSha (Get-RemoteTagSha -Root $gitRoot -Remote $bareRoot -Tag v9.9.9) `
         'A release tag was not created at its source commit.'
 
+    Push-ReleaseTag `
+        -Root $gitRoot `
+        -Remote origin `
+        -Tag $virtualShipment.Tag `
+        -SourceCommit $tagSha `
+        -Push
+    $verifiedShipment = Get-ReleaseShipmentContract `
+        -Root $gitRoot `
+        -Version $virtualShipment.Version `
+        -Tag $virtualShipment.Tag `
+        -SourceCommit $tagSha `
+        -RequireTag
+    Assert-True (!$verifiedShipment.IsVirtual) 'A verified push tag was still treated as virtual.'
+    Assert-Equal @($virtualShipment.Tag) (Add-PlannedReleaseShipmentTag -Tags @($virtualShipment.Tag) -Shipment $verifiedShipment) `
+        'A verified exact tag was duplicated during milestone planning.'
+
     # Re-running Finish must be safe: the tag already points at the same commit.
     $repeatTag = @(Push-ReleaseTag `
         -Root $gitRoot `
@@ -292,6 +586,15 @@ try {
     # A tag that already points somewhere else must NEVER be moved.
     & git -C $gitRoot commit --quiet --allow-empty -m 'Second'
     $otherSha = (git -C $gitRoot rev-parse HEAD).Trim()
+    & git -C $gitRoot push --quiet origin HEAD:refs/heads/other
+    Assert-Throws {
+        Get-ReleaseShipmentContract `
+            -Root $gitRoot `
+            -Version $virtualShipment.Version `
+            -Tag $virtualShipment.Tag `
+            -SourceCommit $otherSha `
+            -RequireTag
+    } 'expected' 'Push-mode milestone maintenance accepted a tag at the wrong source commit.'
     Assert-Throws { Push-ReleaseTag `
         -Root $gitRoot `
         -Remote $bareRoot `
@@ -307,7 +610,7 @@ try {
         -Tag v9.9.9 `
         -SourceCommit $otherSha } 'expected' 'A dry run ignored a conflicting release tag.'
 } finally {
-    Remove-Item $gitRoot, $bareRoot -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item $gitRoot, $bareRoot, $readerRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 # Loads and exercises Prepare's pure version transformation functions.
@@ -369,6 +672,88 @@ Assert-True ($publishPlan -match 'Create and publish') 'Finish did not plan rele
 Assert-True ($existingPlan -match 'is published') 'Finish did not preserve published-release idempotency.'
 Assert-True ($followUpPlan -match 'release-note generation') 'Finish did not plan release-note follow-up.'
 Remove-Item Function:\gh
+
+$finishOutput = Join-Path $PSScriptRoot ".finish-output-$([guid]::NewGuid().ToString('N'))"
+try {
+    $env:GITHUB_OUTPUT = $finishOutput
+    foreach ($publicVersion in @(
+        '4.152.0-preview.1.26426.14',
+        '4.152.0-rc.1.26427.1',
+        '4.152.0',
+        '4.152.1',
+        '4.152.0.1'
+    )) {
+        $resolvedRelease = Get-ReleaseIdentity $publicVersion
+        Set-ReleaseFinishOutput -Release $resolvedRelease -PublicVersion $publicVersion -SourceCommit ('a' * 40)
+        $finishOutputs = Get-Content -LiteralPath $finishOutput | Select-Object -Last 4
+        Assert-Equal @(
+            "release_version=$publicVersion",
+            "release_numeric=$($resolvedRelease.Numeric)",
+            "release_tag=$($resolvedRelease.Tag)",
+            ('source_commit=' + ('a' * 40))
+        ) @($finishOutputs) "Finish did not write the resolved-release output contract for $publicVersion."
+    }
+} finally {
+    Remove-Item Env:\GITHUB_OUTPUT -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $finishOutput -Force -ErrorAction SilentlyContinue
+}
+
+$packageCommit = 'a' * 40
+$packageBranchCommit = 'b' * 40
+$script:PackageAncestryExitCode = 0
+function Get-ResolvedGitCommit([string] $Root, [string] $Reference, [string] $Remote = 'origin') {
+    if ($Reference -match '^[0-9a-f]{40}$') {
+        return $Reference
+    }
+    return $packageBranchCommit
+}
+function Invoke-Git(
+    [string] $Root,
+    [string[]] $Arguments,
+    [switch] $AllowFailure,
+    [switch] $WriteOutput
+) {
+    return [pscustomobject] @{
+        ExitCode = $script:PackageAncestryExitCode
+        Output = ''
+    }
+}
+try {
+    $stableRelease = Get-ReleaseIdentity '4.152.1'
+    $verifiedPackageSource = Assert-ReleasePackageSource `
+        -Root . `
+        -Release $stableRelease `
+        -PackageSource ([pscustomobject] @{
+            Branch = 'refs/heads/release/4.152.1'
+            Commit = $packageCommit
+        })
+    Assert-Equal 'release/4.152.1' $verifiedPackageSource.Branch `
+        'Finish did not normalize the package source branch.'
+    Assert-Throws {
+        Assert-ReleasePackageSource `
+            -Root . `
+            -Release $stableRelease `
+            -PackageSource ([pscustomobject] @{
+                Branch = 'release/4.153.0'
+                Commit = $packageCommit
+            })
+    } 'expected release/4\.152\.1' `
+        'Finish accepted package metadata from another release branch.'
+    $script:PackageAncestryExitCode = 1
+    Assert-Throws {
+        Assert-ReleasePackageSource `
+            -Root . `
+            -Release $stableRelease `
+            -PackageSource ([pscustomobject] @{
+                Branch = 'release/4.152.1'
+                Commit = $packageCommit
+            })
+    } 'not reachable' `
+        'Finish accepted a package commit outside the expected release branch.'
+} finally {
+    Remove-Item Function:\Get-ResolvedGitCommit
+    Remove-Item Function:\Invoke-Git
+}
 
 $script:FakeGhCommands = [System.Collections.Generic.List[string]]::new()
 function global:gh {
@@ -671,5 +1056,625 @@ try {
 } finally {
     Remove-Item $automationRoot, $automationBare -Recurse -Force -ErrorAction SilentlyContinue
 }
+
+# Exercises the focused release-line audit without contacting GitHub or NuGet.
+$auditPath = Join-Path $publishingRoot 'audit-release-state.ps1'
+$auditCommand = Get-Command $auditPath
+$auditParameters = @($auditCommand.Parameters.Keys | Where-Object {
+    $_ -notin @('Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'InformationAction',
+        'ProgressAction', 'ErrorVariable', 'WarningVariable', 'InformationVariable',
+        'OutVariable', 'OutBuffer', 'PipelineVariable')
+})
+Assert-Equal @('Json', 'Version') @($auditParameters | Sort-Object) `
+    'The release-line audit must expose only Version and Json.'
+Assert-Equal 'System.String' $auditCommand.Parameters['Version'].ParameterType.FullName `
+    'The release-line audit Version parameter must be a string.'
+$auditScript = Get-Content $auditPath -Raw
+Assert-True ($auditScript.Contains('Format-Table -AutoSize -Wrap') -and
+    $auditScript.Contains('$PSStyle.Bold') -and
+    $auditScript.Contains('Get-GitHubOpenPullRequests')) `
+    'The release-line audit must use PowerShell table formatting and host-aware emphasis.'
+Assert-True ($auditScript -match
+    'Write-Error "Release-state audit unavailable:.*-ErrorAction Continue') `
+    'The release-line audit failure path must preserve unavailable exit code 2.'
+$auditFunctions = Get-ScriptFunctionText $auditPath
+Invoke-Expression $auditFunctions
+
+function New-AuditBranch([string] $Identity, [string] $Sha) {
+    return [pscustomobject] @{
+        Name = "release/$Identity"
+        Sha = $Sha
+        Identity = ConvertTo-ReleaseMilestone $Identity
+    }
+}
+
+function New-AuditPackage([string] $Version, [string] $Branch, [string] $Commit) {
+    return [pscustomobject] @{ Version = $Version; Branch = $Branch; Commit = $Commit }
+}
+
+function New-AuditRelease([string] $Tag, [string] $Commit, [bool] $Prerelease = $false) {
+    return [pscustomobject] @{
+        tagName = $Tag
+        targetCommitish = $Commit
+        isPrerelease = $Prerelease
+    }
+}
+
+function New-AuditPackageBuild(
+    [string] $Branch,
+    [string] $Commit,
+    [string] $State,
+    [bool] $Ready,
+    [int] $BuildId = 200,
+    [int] $BarId = 331115,
+    [bool] $Available = $true
+) {
+    return [pscustomobject] @{
+        Available = $Available
+        Branch = $Branch
+        Commit = $Commit
+        State = $State
+        Ready = $Ready
+        BuildId = if ($BuildId) { $BuildId } else { $null }
+        BuildNumber = 'test'
+        Status = if ($State -eq 'running') { 'inProgress' } else { 'completed' }
+        Result = if ($State -eq 'green') { 'succeeded' } elseif ($State -eq 'failed') { 'failed' } else { '' }
+        QueueTime = $null
+        FinishTime = $null
+        BarId = if ($BarId) { $BarId } else { $null }
+        Url = if ($BuildId) { "https://dev.azure.com/dnceng/internal/_build/results?buildId=$BuildId" } else { '' }
+        Message = if ($Available) { "Build state is $State." } else { 'Azure DevOps unavailable.' }
+    }
+}
+
+function New-AuditPullRequest(
+    [int] $Number,
+    [string] $Head,
+    [string] $HeadSha,
+    [string] $Base,
+    [string] $BaseSha,
+    [bool] $Draft = $false
+) {
+    return [pscustomobject] @{
+        number = $Number
+        title = 'Sync more Skia changes'
+        headRefName = $Head
+        headRefOid = $HeadSha
+        baseRefName = $Base
+        baseRefOid = $BaseSha
+        isDraft = $Draft
+        mergeStateStatus = if ($Draft) { 'BEHIND' } else { 'BLOCKED' }
+        url = "https://github.com/mono/SkiaSharp/pull/$Number"
+    }
+}
+
+function New-AuditDelta([string] $Text, [int] $Queued = 0) {
+    return [pscustomobject] @{
+        Text = $Text
+        Queued = if ($Queued) {
+            @(1..$Queued | ForEach-Object { [pscustomobject] @{ Sha = "$_"; Subject = 'Change' } })
+        } else {
+            @()
+        }
+    }
+}
+
+$sha0 = '0' * 40
+$sha1 = '1' * 40
+$sha2 = '2' * 40
+$script:AuditDeltaSubjects = @(
+    [pscustomobject] @{ Sha = $sha0; Subject = 'Bump to the next version (4.152.1)' }
+)
+function global:Invoke-Git {
+    param([string] $Root, [string[]] $Arguments)
+    if ($Arguments[0] -eq 'log') {
+        $lines = $script:AuditDeltaSubjects | ForEach-Object {
+            "$($_.Sha)$([char] 0x1f)$($_.Subject)"
+        }
+        return [pscustomobject] @{ Output = $lines -join "`n" }
+    }
+    if ($Arguments[0] -eq 'diff-tree') {
+        return [pscustomobject] @{
+            Output = "scripts/VERSIONS.txt`nscripts/azure-templates-variables.yml"
+        }
+    }
+    throw "Unexpected audit test git invocation: $($Arguments -join ' ')"
+}
+try {
+    $delta = Get-MaintenanceDelta -Root . -MaintenanceSha $sha2 -ReleaseSha $sha0
+    Assert-Equal 'version bump only' $delta.Text 'The automatic version bump was not ignored.'
+    $script:AuditDeltaSubjects += [pscustomobject] @{ Sha = $sha1; Subject = 'Fix release branch' }
+    $delta = Get-MaintenanceDelta -Root . -MaintenanceSha $sha2 -ReleaseSha $sha0
+    Assert-Equal '1 queued release commit' $delta.Text 'A real maintenance commit was not retained.'
+} finally {
+    Remove-Item Function:\Invoke-Git
+}
+function Get-GitFileText([string] $Root, [string] $Commit, [string] $Path) {
+    return "SkiaSharp nuget 4.154.0`nlibSkiaSharp milestone 154`n"
+}
+try {
+    $releaseInfo = Get-SkiaSharpReleaseInfoAtCommit -Root . -Commit $sha2
+    Assert-Equal '4.154.0' $releaseInfo.Version 'The SkiaSharp version was not read from VERSIONS.txt.'
+    Assert-Equal 154 $releaseInfo.SkiaMilestone 'The Skia milestone was not read from VERSIONS.txt.'
+} finally {
+    Remove-Item Function:\Get-GitFileText
+}
+$maintenance = [pscustomobject] @{
+    Branch = 'release/4.152.x'
+    Sha = $sha2
+    Version = '4.152.1'
+    SkiaMilestone = 152
+}
+$mainMaintenance = [pscustomobject] @{
+    Branch = 'main'
+    Sha = $sha2
+    Version = '4.154.0'
+    SkiaMilestone = 154
+}
+$stable = New-AuditBranch '4.152.0' $sha0
+$stablePackage = New-AuditPackage '4.152.0' $stable.Name $sha0
+$stableTag = 'v4.152.0'
+$stableRelease = New-AuditRelease $stableTag $sha0
+Assert-Equal 'skia-sync/release-4.152.x' (Get-ExpectedSyncBranch $maintenance) `
+    'The servicing-line sync branch name was not derived.'
+Assert-Equal 'skia-sync/m154' (Get-ExpectedSyncBranch $mainMaintenance) `
+    'The current-line milestone sync branch name was not derived.'
+$servicingSyncTopology = Get-SkiaSyncTopology -Maintenance $maintenance
+Assert-Equal 'chrome/m152' $servicingSyncTopology.UpstreamRef `
+    'The servicing line did not derive its Chrome milestone branch.'
+Assert-Equal 'release/4.152.x' $servicingSyncTopology.SkiaBaseBranch `
+    'The servicing line did not use the matching mono/skia release branch.'
+$mainSyncTopology = Get-SkiaSyncTopology -Maintenance $mainMaintenance
+Assert-Equal 'chrome/m154' $mainSyncTopology.UpstreamRef `
+    'The current line did not derive its Chrome milestone branch.'
+Assert-Equal 'skiasharp' $mainSyncTopology.SkiaBaseBranch `
+    'The current line did not use the mono/skia integration branch.'
+$pendingMilestone = Get-PendingMainMilestone `
+    -Line '4.155' `
+    -MainSha $mainMaintenance.Sha `
+    -MainReleaseInfo ([pscustomobject] @{
+        Version = $mainMaintenance.Version
+        SkiaMilestone = $mainMaintenance.SkiaMilestone
+    })
+Assert-Equal 155 $pendingMilestone.Milestone `
+    'The next Skia milestone was not recognized as a pending main line.'
+Assert-Equal $null (Get-PendingMainMilestone `
+    -Line '4.156' `
+    -MainSha $mainMaintenance.Sha `
+    -MainReleaseInfo ([pscustomobject] @{
+        Version = $mainMaintenance.Version
+        SkiaMilestone = $mainMaintenance.SkiaMilestone
+    })) `
+    'A line beyond the next Skia milestone was treated as pending.'
+Assert-Equal $null (Get-PendingMainMilestone `
+    -Line '4.155' `
+    -MainSha $mainMaintenance.Sha `
+    -MainReleaseInfo ([pscustomobject] @{
+        Version = '4.153.0'
+        SkiaMilestone = 154
+    })) `
+    'A mismatched main release line and Skia milestone produced a pending line.'
+$pendingSyncTopology = Get-SkiaSyncTopology `
+    -Maintenance $mainMaintenance `
+    -TargetMilestone $pendingMilestone.Milestone
+Assert-Equal 'chrome/m155' $pendingSyncTopology.UpstreamRef `
+    'The pending line did not derive its future Chrome milestone branch.'
+Assert-Equal 'skia-sync/m155' $pendingSyncTopology.SyncBranch `
+    'The pending line did not derive its future milestone sync branch.'
+
+$upstreamSha = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+$skiaBaseSha = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+$skiaSyncSha = 'cccccccccccccccccccccccccccccccccccccccc'
+$parentSkiaSha = 'dddddddddddddddddddddddddddddddddddddddd'
+$script:AuditSkiaBranches = @{}
+$script:AuditSkiaBranches[$maintenance.Branch] = $skiaBaseSha
+$script:AuditBehindBy = 1
+$script:AuditCompareHead = ''
+function Get-RemoteBranchSha(
+    [string] $Root,
+    [string] $Remote,
+    [string] $Branch
+) {
+    return $upstreamSha
+}
+function Get-RemoteBranchShas(
+    [string] $Root,
+    [string] $Remote,
+    [string[]] $Branches
+) {
+    return $script:AuditSkiaBranches
+}
+function Get-GitHubComparison([string] $Repository, [string] $Base, [string] $Head) {
+    $script:AuditCompareHead = $Head
+    return [pscustomobject] @{ behind_by = $script:AuditBehindBy }
+}
+function Get-GitTreeEntrySha([string] $Root, [string] $Commit, [string] $Path) {
+    return $parentSkiaSha
+}
+try {
+    $upstreamChanges = Get-SkiaUpstreamStatus -Root . -Maintenance $maintenance
+    Assert-Equal 1 $upstreamChanges.BehindBy `
+        'New Chrome milestone commits were not reported.'
+    Assert-Equal $maintenance.Branch $script:AuditCompareHead `
+        'The upstream check did not fall back to the mono/skia base branch.'
+    Assert-Equal $true $upstreamChanges.BlocksRelease `
+        'New upstream commits did not block a release cut.'
+
+    $script:AuditSkiaBranches = @{}
+    $script:AuditSkiaBranches[$maintenance.Branch] = $skiaBaseSha
+    $script:AuditSkiaBranches[$servicingSyncTopology.SyncBranch] = $skiaSyncSha
+    $script:AuditBehindBy = 0
+    $upstreamCurrent = Get-SkiaUpstreamStatus -Root . -Maintenance $maintenance
+    Assert-Equal $servicingSyncTopology.SyncBranch $script:AuditCompareHead `
+        'The existing mono/skia sync branch was not preferred for comparison.'
+    Assert-Equal 'current' $upstreamCurrent.State `
+        'An up-to-date sync branch was reported as having upstream work.'
+} finally {
+    Remove-Item Function:\Get-RemoteBranchSha
+    Remove-Item Function:\Get-RemoteBranchShas
+    Remove-Item Function:\Get-GitHubComparison
+    Remove-Item Function:\Get-GitTreeEntrySha
+}
+$openSyncPullRequest = Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha $sha1 `
+    -PullRequests @(
+        New-AuditPullRequest 5062 'skia-sync/release-4.152.x' $sha1 $maintenance.Branch $maintenance.Sha
+    ) `
+    -Topology $servicingSyncTopology `
+    -SkiaSyncBranchSha $skiaSyncSha `
+    -ParentSyncSkiaSha $skiaSyncSha
+Assert-Equal 'open' $openSyncPullRequest.State 'A ready incoming maintenance PR was not detected.'
+Assert-Equal $true $openSyncPullRequest.BlocksRelease `
+    'A ready incoming maintenance PR did not block a new release cut.'
+$staleParentSyncPullRequest = Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha $sha1 `
+    -PullRequests @(
+        New-AuditPullRequest 5062 'skia-sync/release-4.152.x' $sha1 $maintenance.Branch $maintenance.Sha
+    ) `
+    -Topology $servicingSyncTopology `
+    -SkiaSyncBranchSha $skiaSyncSha `
+    -ParentSyncSkiaSha $parentSkiaSha
+Assert-Equal 'inconsistent' $staleParentSyncPullRequest.State `
+    'A parent sync PR with a stale mono/skia gitlink was reported as ready.'
+Assert-True ($staleParentSyncPullRequest.Message -match 'expected') `
+    'A stale parent sync PR did not explain the expected native commit.'
+$mainSyncPullRequest = Get-IncomingReleasePullRequest `
+    -Maintenance $mainMaintenance `
+    -SyncBranchSha $sha1 `
+    -PullRequests @(
+        New-AuditPullRequest 5054 'skia-sync/m154' $sha1 'main' $sha0
+    )
+Assert-Equal 'skia-sync/m154' $mainSyncPullRequest.HeadBranch `
+    'The current line inspected the upstream-tip sync branch instead of the milestone branch.'
+Assert-Equal $true $mainSyncPullRequest.BlocksRelease `
+    'A ready current-line milestone PR did not block a new release cut.'
+$draftSyncPullRequest = Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha $sha1 `
+    -PullRequests @(
+        New-AuditPullRequest 5063 'skia-sync/release-4.152.x' $sha1 $maintenance.Branch $sha0 $true
+    )
+Assert-Equal 'draft' $draftSyncPullRequest.State 'A draft incoming sync PR was not identified.'
+Assert-Equal $false $draftSyncPullRequest.BlocksRelease `
+    'A draft incoming sync PR incorrectly blocked a release cut.'
+$pendingSyncPullRequest = Get-IncomingReleasePullRequest `
+    -Maintenance $mainMaintenance `
+    -SyncBranchSha $sha1 `
+    -PullRequests @(
+        New-AuditPullRequest 5081 'skia-sync/m155' $sha1 'main' $sha0 $true
+    ) `
+    -Topology $pendingSyncTopology
+Assert-Equal 'draft' $pendingSyncPullRequest.State `
+    'The pending milestone pull request was not identified.'
+$pendingUpstreamCurrent = [pscustomobject] @{
+    Milestone = 155
+    UpstreamRef = 'chrome/m155'
+    UpstreamSha = $upstreamSha
+    ParentBaseBranch = 'main'
+    ParentSkiaSha = $parentSkiaSha
+    SkiaBaseBranch = 'skiasharp'
+    SkiaBaseSha = $skiaBaseSha
+    SyncBranch = 'skia-sync/m155'
+    SyncBranchSha = $skiaSyncSha
+    CompareRef = 'skia-sync/m155'
+    CompareSha = $skiaSyncSha
+    BehindBy = 0
+    HasChanges = $false
+    State = 'current'
+    BlocksRelease = $false
+    Message = ''
+}
+$pendingState = Get-ReleaseAuditState `
+    -Line '4.155' `
+    -Maintenance $null `
+    -Branches @() `
+    -Packages @() `
+    -TagShas @{} `
+    -GitHubReleases @{} `
+    -Delta (New-AuditDelta 'none') `
+    -IncomingPullRequest $pendingSyncPullRequest `
+    -UpstreamSync $pendingUpstreamCurrent `
+    -PendingMilestone $pendingMilestone
+Assert-True (@($pendingState.Actions.Kind) -contains 'review-sync') `
+    'A draft next-milestone PR did not produce a completion action.'
+Assert-True (@($pendingState.Actions.Kind) -notcontains 'start') `
+    'The pending milestone incorrectly started a release before main advanced.'
+$orphanedSyncBranch = Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha $sha1 `
+    -PullRequests @()
+Assert-Equal 'inconsistent' $orphanedSyncBranch.State `
+    'A sync branch without an open pull request was not reported.'
+Assert-Equal $null (Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha '' `
+    -PullRequests $null) `
+    'An absent sync branch and empty pull request query produced a phantom incoming PR.'
+$incompleteNativeSync = Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha '' `
+    -PullRequests $null `
+    -Topology $servicingSyncTopology `
+    -SkiaSyncBranchSha $skiaSyncSha `
+    -ParentSkiaSha $parentSkiaSha
+Assert-Equal 'inconsistent' $incompleteNativeSync.State `
+    'A mono/skia-only sync was not reported as incomplete.'
+Assert-Equal $true $incompleteNativeSync.BlocksRelease `
+    'A mono/skia-only sync did not block a release cut.'
+Assert-Equal $null (Get-IncomingReleasePullRequest `
+    -Maintenance $maintenance `
+    -SyncBranchSha '' `
+    -PullRequests $null `
+    -Topology $servicingSyncTopology `
+    -SkiaSyncBranchSha $skiaSyncSha `
+    -ParentSkiaSha $skiaSyncSha) `
+    'A sync already integrated by the parent base was reported as incomplete.'
+
+$bumpOnly = New-AuditDelta 'version bump only'
+$state = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } -Delta $bumpOnly
+Assert-Equal 0 $state.Actions.Count 'A maintenance-only version bump unexpectedly started a release.'
+Assert-Equal 'version bump only' $state.MaintenanceDelta.Text 'The bump-only maintenance state was lost.'
+Assert-Equal $sha0 $state.Releases[0].SourceCommit 'NuGet source provenance was omitted from the audit state.'
+
+$realChanges = New-AuditDelta '2 queued release commits' 2
+$state = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } -Delta $realChanges
+Assert-True (@($state.Actions.Kind) -contains 'start') 'Real maintenance changes did not recommend the next release.'
+Assert-True ((@($state.Actions.Command) -join "`n") -match '4\.152\.1-stable') 'The stable/patch next identity was not derived.'
+$blockedByUpstream = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -UpstreamSync $upstreamChanges
+Assert-True (@($blockedByUpstream.Actions.Kind) -contains 'sync-skia') `
+    'New upstream Skia commits did not produce a sync action.'
+Assert-True (@($blockedByUpstream.Actions.Kind) -notcontains 'start') `
+    'A release was recommended before newer upstream Skia commits were synchronized.'
+Assert-True ((@($blockedByUpstream.Actions.Command) -join "`n") -match
+    'auto-skia-sync\.lock\.yml.*target=152') `
+    'The upstream action did not target the resolved milestone.'
+$currentUpstreamAllowsRelease = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -UpstreamSync $upstreamCurrent
+Assert-True (@($currentUpstreamAllowsRelease.Actions.Kind) -contains 'start') `
+    'An up-to-date upstream branch incorrectly blocked a release cut.'
+$greenMaintenanceBuild = New-AuditPackageBuild `
+    -Branch $maintenance.Branch `
+    -Commit $maintenance.Sha `
+    -State green `
+    -Ready $true
+$greenMaintenanceBuilds = @{}
+$greenMaintenanceBuilds[$maintenance.Branch] = $greenMaintenanceBuild
+$greenMaintenanceAllowsRelease = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -UpstreamSync $upstreamCurrent `
+    -PackageBuilds $greenMaintenanceBuilds
+Assert-True (@($greenMaintenanceAllowsRelease.Actions.Kind) -contains 'start') `
+    'A green exact-tip maintenance build did not allow the release cut.'
+$failedMaintenanceBuild = New-AuditPackageBuild `
+    -Branch $maintenance.Branch `
+    -Commit $maintenance.Sha `
+    -State failed `
+    -Ready $false
+$failedMaintenanceBuilds = @{}
+$failedMaintenanceBuilds[$maintenance.Branch] = $failedMaintenanceBuild
+$failedMaintenanceBlocksRelease = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -UpstreamSync $upstreamCurrent `
+    -PackageBuilds $failedMaintenanceBuilds
+Assert-True (@($failedMaintenanceBlocksRelease.Actions.Kind) -contains 'fix-build') `
+    'A failed maintenance build did not produce a build repair action.'
+Assert-True (@($failedMaintenanceBlocksRelease.Actions.Kind) -notcontains 'start') `
+    'A failed maintenance build incorrectly allowed a release cut.'
+$incompleteNativeSyncBlocksRelease = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -UpstreamSync $upstreamCurrent -IncomingPullRequest $incompleteNativeSync
+Assert-True (@($incompleteNativeSyncBlocksRelease.Actions.Kind) -contains 'investigate-sync') `
+    'A mono/skia-only sync did not produce an investigation action.'
+Assert-True (@($incompleteNativeSyncBlocksRelease.Actions.Kind) -notcontains 'start') `
+    'A release was recommended while a mono/skia-only sync was incomplete.'
+$blockedBySync = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -IncomingPullRequest $openSyncPullRequest
+Assert-True (@($blockedBySync.Actions.Kind) -contains 'merge-sync') `
+    'An incoming maintenance PR did not produce a merge action.'
+Assert-True (@($blockedBySync.Actions.Kind) -notcontains 'start') `
+    'A new release was recommended before the incoming maintenance PR was merged.'
+$draftDoesNotBlock = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
+    -Delta $realChanges -IncomingPullRequest $draftSyncPullRequest
+Assert-True (@($draftDoesNotBlock.Actions.Kind) -contains 'start') `
+    'A draft incoming sync PR incorrectly suppressed a release cut.'
+
+$oldPreview = New-AuditBranch '4.153.0-preview.1' $sha0
+$latestRc = New-AuditBranch '4.153.0-rc.1' $sha1
+$latestUnpublished = Get-ReleaseAuditState `
+    -Line '4.153' -Maintenance ([pscustomobject] @{ Branch = 'main'; Sha = $sha1; Version = '4.153.0' }) `
+    -Branches @($oldPreview, $latestRc) -Packages @() -TagShas @{} -GitHubReleases @{} `
+    -Delta (New-AuditDelta '1 queued release commit' 1)
+Assert-Equal 'superseded' ($latestUnpublished.Releases | Where-Object Branch -eq $oldPreview.Name).State `
+    'An older unpublished branch was not superseded.'
+Assert-True (@($latestUnpublished.Actions.Kind) -contains 'publish') 'The latest unpublished branch was not publishable.'
+Assert-True (@($latestUnpublished.Actions.Kind) -contains 'queued') 'Maintenance changes were not queued behind an unpublished branch.'
+Assert-True (@($latestUnpublished.Actions.Kind) -notcontains 'start') 'An unpublished latest branch incorrectly started another release.'
+$failedReleaseBuild = New-AuditPackageBuild `
+    -Branch $latestRc.Name `
+    -Commit $latestRc.Sha `
+    -State failed `
+    -Ready $false `
+    -BuildId 201 `
+    -BarId 0
+$failedReleaseBuilds = @{}
+$failedReleaseBuilds[$latestRc.Name] = $failedReleaseBuild
+$failedReleaseBuildState = Get-ReleaseAuditState `
+    -Line '4.153' -Maintenance ([pscustomobject] @{ Branch = 'main'; Sha = $sha1; Version = '4.153.0' }) `
+    -Branches @($oldPreview, $latestRc) -Packages @() -TagShas @{} -GitHubReleases @{} `
+    -Delta (New-AuditDelta '1 queued release commit' 1) `
+    -PackageBuilds $failedReleaseBuilds
+Assert-True (@($failedReleaseBuildState.Actions.Kind) -contains 'fix-build') `
+    'A failed release-branch build did not block publication.'
+Assert-True (@($failedReleaseBuildState.Actions.Kind) -notcontains 'publish') `
+    'A failed release-branch build incorrectly allowed publication.'
+$greenReleaseBuild = New-AuditPackageBuild `
+    -Branch $latestRc.Name `
+    -Commit $latestRc.Sha `
+    -State green `
+    -Ready $true `
+    -BuildId 202 `
+    -BarId 330714
+$greenReleaseBuilds = @{}
+$greenReleaseBuilds[$latestRc.Name] = $greenReleaseBuild
+$greenReleaseBuildState = Get-ReleaseAuditState `
+    -Line '4.153' -Maintenance ([pscustomobject] @{ Branch = 'main'; Sha = $sha1; Version = '4.153.0' }) `
+    -Branches @($oldPreview, $latestRc) -Packages @() -TagShas @{} -GitHubReleases @{} `
+    -Delta (New-AuditDelta '1 queued release commit' 1) `
+    -PackageBuilds $greenReleaseBuilds
+Assert-True (@($greenReleaseBuildState.Actions.Kind) -contains 'publish') `
+    'A green release-branch build did not allow publication.'
+Assert-True ((@($greenReleaseBuildState.Actions.Message) -join "`n") -match
+    'build #202 succeeded with BAR 330714') `
+    'The publication action omitted exact build and BAR evidence.'
+
+$state = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{} -GitHubReleases @{ $stableTag = $stableRelease } -Delta (New-AuditDelta 'none')
+Assert-True (@($state.Actions.Kind) -contains 'finish') 'A public package without a tag did not require Finish.'
+$state = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha1 } -GitHubReleases @{ $stableTag = $stableRelease } -Delta (New-AuditDelta 'none')
+Assert-True (@($state.Actions.Kind) -contains 'finish') 'A mismatched tag did not require Finish.'
+$state = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{} -Delta (New-AuditDelta 'none')
+Assert-True (@($state.Actions.Kind) -contains 'finish') 'A missing GitHub Release did not require Finish.'
+$stalePackage = New-AuditPackage '4.152.0' $stable.Name $sha1
+$state = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stalePackage) `
+    -TagShas @{ $stableTag = $sha1 } -GitHubReleases @{ $stableTag = (New-AuditRelease $stableTag $sha1) } `
+    -Delta (New-AuditDelta 'none')
+Assert-True (@($state.Actions.Kind) -contains 'investigate') `
+    'A public package from another commit did not require provenance investigation.'
+Assert-True (@($state.Actions.Kind) -notcontains 'publish') `
+    'A public package from another commit incorrectly suggested republishing an immutable version.'
+
+$preview = New-AuditBranch '4.153.0-preview.1' $sha0
+$previewPackages = @(
+    New-AuditPackage '4.153.0-preview.1.1' $preview.Name $sha0
+    New-AuditPackage '4.153.0-preview.1.2' $preview.Name $sha0
+)
+$state = Get-ReleaseAuditState `
+    -Line '4.153' -Maintenance $null -Branches @($preview) -Packages $previewPackages `
+    -TagShas @{ 'v4.153.0-preview.1.1' = $sha0; 'v4.153.0-preview.1.2' = $sha0 } `
+    -GitHubReleases @{
+        'v4.153.0-preview.1.1' = New-AuditRelease 'v4.153.0-preview.1.1' $sha0 $true
+        'v4.153.0-preview.1.2' = New-AuditRelease 'v4.153.0-preview.1.2' $sha0 $true
+    } -Delta (New-AuditDelta 'none')
+Assert-Equal 2 @($state.Releases | Where-Object NuGet -match 'preview').Count `
+    'Exact public prerelease shipments were collapsed.'
+
+$mainPreview = New-AuditBranch '4.154.0-preview.1' $sha0
+$mainPreviewPackage = New-AuditPackage '4.154.0-preview.1.1' $mainPreview.Name $sha0
+$mainPreviewTag = 'v4.154.0-preview.1.1'
+$state = Get-ReleaseAuditState `
+    -Line '4.154' -Maintenance $mainMaintenance -Branches @($mainPreview) -Packages @($mainPreviewPackage) `
+    -TagShas @{ $mainPreviewTag = $sha0 } `
+    -GitHubReleases @{ $mainPreviewTag = (New-AuditRelease $mainPreviewTag $sha0 $true) } `
+    -Delta (New-AuditDelta '1 queued release commit' 1)
+Assert-True ((@($state.Actions.Command) -join "`n") -match '-Base main') `
+    'Matching main was not used when no servicing branch exists.'
+$inactive = Get-ReleaseAuditState `
+    -Line '4.150' -Maintenance $null -Branches @() -Packages @() -TagShas @{} -GitHubReleases @{} `
+    -Delta (New-AuditDelta 'none')
+Assert-Equal 0 $inactive.Actions.Count 'An inactive old release line should not invent work.'
+$firstRelease = Get-ReleaseAuditState `
+    -Line '4.155' `
+    -Maintenance ([pscustomobject] @{
+        Branch = 'main'
+        Sha = $sha1
+        Version = '4.155.0'
+        SkiaMilestone = 155
+    }) `
+    -Branches @() `
+    -Packages @() `
+    -TagShas @{} `
+    -GitHubReleases @{} `
+    -Delta (New-AuditDelta 'none')
+Assert-True ((@($firstRelease.Actions.Command) -join "`n") -match '4\.155\.0-preview\.1') `
+    'A maintained line with no release branch did not recommend its first preview.'
+$latestUnpublishedReport = @(Write-ReleaseAuditReport $latestUnpublished) -join "`n"
+$plainLatestUnpublishedReport = [regex]::Replace(
+    $latestUnpublishedReport,
+    "$([char] 0x1b)\[[0-9;]*m",
+    '')
+Assert-True ($latestUnpublishedReport -notmatch 'publish release branch; Publish release branch') `
+    'The human-readable report duplicated equivalent state and action text.'
+Assert-True ($plainLatestUnpublishedReport -match '(?m)^Release line:\s+4\.153$') `
+    'The report summary fields were not aligned.'
+Assert-True ($plainLatestUnpublishedReport -match
+    '(?m)^Identity\s+Branch SHA\s+NuGet\s+Build / BAR\s+Tag\s+GitHub Release\s+State / action$') `
+    'The report did not render an aligned PowerShell table.'
+Assert-True ($plainLatestUnpublishedReport -notmatch '\| Identity \|') `
+    'The report still rendered the old Markdown table.'
+$incomingPullRequestReport = [regex]::Replace(
+    (@(Write-ReleaseAuditReport $blockedBySync) -join "`n"),
+    "$([char] 0x1b)\[[0-9;]*m",
+    '')
+Assert-True ($incomingPullRequestReport -match '(?m)^Incoming sync PR:\s+#5062 ') `
+    'The incoming maintenance PR was not shown in the report summary.'
+$upstreamReport = [regex]::Replace(
+    (@(Write-ReleaseAuditReport $blockedByUpstream) -join "`n"),
+    "$([char] 0x1b)\[[0-9;]*m",
+    '')
+Assert-True ($upstreamReport -match
+    '(?m)^Upstream Skia:\s+chrome/m152@a{12} -> mono/skia:release/4\.152\.x \(1 newer commit\)') `
+    'The report did not show the newer upstream Skia commit.'
+$pendingReport = [regex]::Replace(
+    (@(Write-ReleaseAuditReport $pendingState) -join "`n"),
+    "$([char] 0x1b)\[[0-9;]*m",
+    '')
+Assert-True ($pendingReport -match
+    '(?m)^Pending milestone:\s+4\.155 via m155 -> main \(current 4\.154\.0/m154\)') `
+    'The report did not explain the pending next milestone.'
+Assert-True ($pendingReport -match '(?m)^Incoming sync PR:\s+#5081 ') `
+    'The report did not show the pending next-milestone PR.'
+Assert-Equal 'main' $mainMaintenance.Branch 'A matching current main was not usable as maintenance.'
+Assert-Equal '4.154.0-preview.1' (Get-NextReleaseIdentity '4.154' $null '4.154.0') `
+    'A first release identity was not preview.1.'
+Assert-Equal '4.154.0-preview.2' (Get-NextReleaseIdentity '4.154' (New-AuditBranch '4.154.0-preview.1' $sha0) '4.154.0') `
+    'Preview.1 did not advance to preview.2.'
+Assert-Equal '4.154.0-rc.1' (Get-NextReleaseIdentity '4.154' (New-AuditBranch '4.154.0-preview.2' $sha0) '4.154.0') `
+    'Later previews did not advance to RC.1.'
+Assert-Equal '4.154.0-stable' (Get-NextReleaseIdentity '4.154' (New-AuditBranch '4.154.0-rc.1' $sha0) '4.154.0') `
+    'RC did not advance to stable.'
 
 Write-Output "All $script:TestsRun publishing script tests passed."

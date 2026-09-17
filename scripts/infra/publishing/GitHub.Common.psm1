@@ -7,18 +7,16 @@ function Invoke-GitHub(
     [switch] $AllowFailure,
     [switch] $WriteOutput
 ) {
-    $errorPath = [System.IO.Path]::GetTempFileName()
     $nativePreference = $PSNativeCommandUseErrorActionPreference
     $PSNativeCommandUseErrorActionPreference = $false
     try {
         $LASTEXITCODE = 0
-        $output = @(& gh @Arguments 2> $errorPath)
+        $output = @(& gh @Arguments 2>&1)
         $exitCode = $LASTEXITCODE
-        $errorText = [string] (Get-Content $errorPath -Raw)
     } finally {
         $PSNativeCommandUseErrorActionPreference = $nativePreference
-        Remove-Item $errorPath -Force -ErrorAction SilentlyContinue
     }
+    $errorText = if ($exitCode -eq 0) { '' } else { $output -join "`n" }
     if ($WriteOutput -and $output) {
         $output | Out-Host
     }
@@ -115,6 +113,52 @@ function Get-GitHubRelease([string] $Repository, [string] $Tag) {
     throw "Unable to read GitHub Release $Tag`: $detail"
 }
 
+# Reads all GitHub Releases once, keyed by exact tag name.
+function Get-GitHubReleaseMap([string] $Repository) {
+    $pages = Invoke-GitHubJsonWithRetry -Arguments @(
+        'api',
+        '--paginate',
+        '--slurp',
+        "repos/$Repository/releases?per_page=100"
+    )
+    $releases = @{}
+    foreach ($release in Expand-GitHubPages $pages) {
+        $releases[[string] $release.tag_name] = [pscustomobject] @{
+            tagName = [string] $release.tag_name
+            targetCommitish = [string] $release.target_commitish
+            isPrerelease = [bool] $release.prerelease
+            name = [string] $release.name
+            url = [string] $release.html_url
+        }
+    }
+    return $releases
+}
+
+# Reads open pull requests for one exact head/base branch pair.
+function Get-GitHubOpenPullRequests(
+    [string] $Repository,
+    [string] $Head,
+    [string] $Base
+) {
+    $result = Invoke-GitHubJsonWithRetry -Arguments @(
+            'pr', 'list',
+            '--repo', $Repository,
+            '--state', 'open',
+            '--head', $Head,
+            '--base', $Base,
+            '--json', 'number,title,headRefName,headRefOid,baseRefName,baseRefOid,isDraft,mergeStateStatus,url'
+        )
+    return @($result | Where-Object { $null -ne $_ })
+}
+
+# Compares two refs in one GitHub repository.
+function Get-GitHubComparison([string] $Repository, [string] $Base, [string] $Head) {
+    return Invoke-GitHubJsonWithRetry -Arguments @(
+        'api',
+        "repos/$Repository/compare/$Base...$Head"
+    )
+}
+
 # Creates one pull request.
 function New-GitHubPullRequest(
     [string] $Repository,
@@ -148,6 +192,9 @@ Export-ModuleMember -Function @(
     'Get-GitHubMilestoneMap',
     'Get-GitHubIssue',
     'Get-GitHubRelease',
+    'Get-GitHubReleaseMap',
+    'Get-GitHubOpenPullRequests',
+    'Get-GitHubComparison',
     'New-GitHubPullRequest',
     'Enable-GitHubGitAuthentication'
 )

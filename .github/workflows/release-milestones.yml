@@ -1,6 +1,29 @@
 name: Release - Milestones
 
 on:
+  workflow_call:
+    inputs:
+      version:
+        description: Released numeric version used for reconciliation.
+        required: true
+        type: string
+      tag:
+        description: Exact release tag planned or verified by Release - Finish.
+        required: true
+        type: string
+      source_commit:
+        description: Exact package source commit planned or verified by Release - Finish.
+        required: true
+        type: string
+      reconcile:
+        required: true
+        type: boolean
+      update:
+        required: true
+        type: boolean
+      push:
+        required: true
+        type: boolean
   workflow_dispatch:
     inputs:
       version:
@@ -29,23 +52,33 @@ permissions:
   issues: write
   pull-requests: write
 
+concurrency:
+  group: ${{ inputs.source_commit && format('release-milestones-called-{0}', github.run_id) || 'release-state' }}
+  cancel-in-progress: false
+
 jobs:
   maintain:
     runs-on: ubuntu-latest
-    concurrency:
-      group: release-milestones
-      cancel-in-progress: false
     steps:
       - name: Validate request
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          PUSH: ${{ inputs.push }}
           RECONCILE: ${{ inputs.reconcile }}
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          TAG: ${{ inputs.tag }}
           UPDATE: ${{ inputs.update }}
           VERSION: ${{ inputs.version }}
         run: |
           test "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH"
           test "$RECONCILE" = "true" || test "$UPDATE" = "true"
           test "$RECONCILE" != "true" || test -n "$VERSION"
+          if [ -n "$TAG" ]; then
+            test -n "$TAG"
+            test -n "$SOURCE_COMMIT"
+          fi
+          test -z "$TAG" -o -n "$SOURCE_COMMIT"
+          test -z "$SOURCE_COMMIT" -o -n "$TAG"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -55,10 +88,16 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+          PLANNED_COMMIT: ${{ inputs.source_commit }}
+          PLANNED_TAG: ${{ inputs.tag }}
           PUSH: ${{ inputs.push }}
           VERSION: ${{ inputs.version }}
         run: |
           $arguments = @{ Version = $env:VERSION }
+          if ($env:PLANNED_TAG) {
+            $arguments.PlannedTag = $env:PLANNED_TAG
+            $arguments.PlannedCommit = $env:PLANNED_COMMIT
+          }
           if ($env:PUSH -eq 'true') {
             $arguments.Push = $true
           }
@@ -70,9 +109,15 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+          PLANNED_COMMIT: ${{ inputs.source_commit }}
+          PLANNED_TAG: ${{ inputs.tag }}
           PUSH: ${{ inputs.push }}
         run: |
           $arguments = @{}
+          if ($env:PLANNED_TAG) {
+            $arguments.PlannedTag = $env:PLANNED_TAG
+            $arguments.PlannedCommit = $env:PLANNED_COMMIT
+          }
           if ($env:PUSH -eq 'true') {
             $arguments.Push = $true
           }

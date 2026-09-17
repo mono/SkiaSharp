@@ -10,6 +10,12 @@
 .PARAMETER Repository
     The GitHub repository whose milestones are maintained.
 
+.PARAMETER PlannedTag
+    An exact release tag paired with PlannedCommit for a Finish-driven shipment.
+
+.PARAMETER PlannedCommit
+    The exact package source commit paired with PlannedTag.
+
 .PARAMETER Push
     Performs GitHub milestone mutations. Without this switch, the script is
     read-only and reports exact skipped mutations.
@@ -22,6 +28,10 @@ param(
 
     [ValidatePattern('^[^/]+/[^/]+$')]
     [string] $Repository = 'mono/SkiaSharp',
+
+    [string] $PlannedTag = '',
+
+    [string] $PlannedCommit = '',
 
     [switch] $Push
 )
@@ -374,6 +384,19 @@ for ($milestone = $currentVersion.Milestone; $milestone -lt $currentVersion.Mile
 }
 $scheduleOperations = @(Get-ScheduleOperations -Desired $desired.ToArray() -Existing $existing)
 $tags = Get-RemoteReleaseTags -Root $root
+$plannedVersion = ''
+if ($PlannedTag) {
+    $plannedVersion = ([regex]::Match(
+        $PlannedTag,
+        '^v(?<numeric>\d+\.\d+\.\d+(?:\.\d+)?)')).Groups['numeric'].Value
+}
+$plannedShipment = Get-ReleaseShipmentContract `
+    -Root $root `
+    -Version $plannedVersion `
+    -Tag $PlannedTag `
+    -SourceCommit $PlannedCommit `
+    -RequireTag:$Push
+$tags = Add-PlannedReleaseShipmentTag -Tags $tags -Shipment $plannedShipment
 $known = @{}
 foreach ($title in @($existing.Keys) + @($desired | ForEach-Object { $_.Title })) {
     $parsed = ConvertTo-ReleaseMilestone $title

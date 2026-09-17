@@ -95,6 +95,7 @@ function ConvertTo-ReleaseMilestone([string] $Value) {
     }
     return [pscustomobject] @{
         Title = $title
+        Numeric = $numericText
         NumericKey = '{0:D10}.{1:D10}.{2:D10}.{3:D10}' -f $parts[0], $parts[1], $parts[2], $hotfix
         Channel = $channel
         SortKey = '{0:D10}.{1:D10}.{2:D10}.{3:D10}.{4:D2}.{5:D10}' -f
@@ -245,16 +246,25 @@ function Get-ReleaseIdentity([string] $PublicVersion) {
     throw "Version must be stable X.Y.Z[.F] or an exact public X.Y.Z[.F]-(preview|rc).N.BUILD version."
 }
 
+# Lists all public versions of one package from NuGet's immutable catalogue.
+function Get-NuGetPackageVersions([string] $PackageId) {
+    $lowerId = $PackageId.ToLowerInvariant()
+    $uri = "https://api.nuget.org/v3-flatcontainer/$lowerId/index.json"
+    $response = Invoke-RestMethod -Uri $uri
+    if ($null -eq $response.versions) {
+        throw "NuGet catalogue for $PackageId does not contain a versions array."
+    }
+    return @($response.versions | ForEach-Object { [string] $_ })
+}
+
 # Resolves a prerelease identity to its one exact public NuGet package version.
 function Resolve-NuGetPackageVersion([string] $PackageId, [string] $Version) {
     if ($Version -notmatch '^\d+\.\d+\.\d+(?:\.\d+)?-(?:preview|rc)\.[1-9]\d*$') {
         return $Version
     }
 
-    $lowerId = $PackageId.ToLowerInvariant()
-    $uri = "https://api.nuget.org/v3-flatcontainer/$lowerId/index.json"
     $versionsFound = @(
-        (Invoke-RestMethod -Uri $uri).versions |
+        (Get-NuGetPackageVersions -PackageId $PackageId) |
             Where-Object { $_ -match "^$([regex]::Escape($Version))\.\d+(?:\.\d+)?$" }
     )
     if ($versionsFound.Count -ne 1) {
@@ -321,6 +331,59 @@ function Push-ReleaseTag(
         throw "$Tag creation could not be verified."
     }
     Write-ReleaseStatus applied "Created $Tag at $SourceCommit."
+}
+
+# Validates the exact package shipment that Finish hands to milestone maintenance.
+function Get-ReleaseShipmentContract(
+    [string] $Root,
+    [string] $Version,
+    [string] $Tag,
+    [string] $SourceCommit,
+    [switch] $RequireTag
+) {
+    if (!$Tag -and !$SourceCommit) {
+        return $null
+    }
+    if (!$Tag -or !$SourceCommit) {
+        throw 'Planned release tag and source commit must be supplied together.'
+    }
+    if ($Version -notmatch '^\d+\.\d+\.\d+(?:\.\d+)?$') {
+        throw "Release version $Version must be numeric."
+    }
+    $tagMatch = [regex]::Match(
+        $Tag,
+        '^v(?<numeric>\d+\.\d+\.\d+(?:\.\d+)?)(?:-(?:preview|rc)\.[1-9]\d*\.\d+(?:\.\d+)?)?$')
+    if (!$tagMatch.Success -or $tagMatch.Groups['numeric'].Value -ne $Version) {
+        throw "Planned release tag $Tag does not match numeric release $Version."
+    }
+    if ($SourceCommit -notmatch '^[0-9a-f]{40}$') {
+        throw "Planned source commit $SourceCommit is not a 40-character SHA."
+    }
+    $resolvedCommit = Get-ResolvedGitCommit -Root $Root -Reference $SourceCommit
+    if ($resolvedCommit -ne $SourceCommit) {
+        throw "Planned source commit $SourceCommit did not resolve exactly."
+    }
+    $actualTagCommit = Get-RemoteTagSha -Root $Root -Remote origin -Tag $Tag
+    if ($actualTagCommit -and $actualTagCommit -ne $SourceCommit) {
+        throw "Release tag $Tag points to $actualTagCommit, expected $SourceCommit."
+    }
+    if ($RequireTag -and !$actualTagCommit) {
+        throw "Release tag $Tag must exist at $SourceCommit before milestone mutations."
+    }
+    return [pscustomobject] @{
+        Version = $Version
+        Tag = $Tag
+        SourceCommit = $SourceCommit
+        IsVirtual = !$actualTagCommit
+    }
+}
+
+# Adds a dry-run's verified package shipment without claiming its tag already exists.
+function Add-PlannedReleaseShipmentTag([string[]] $Tags, [object] $Shipment) {
+    if (!$Shipment -or !$Shipment.IsVirtual) {
+        return @($Tags | Sort-Object -Unique)
+    }
+    return @($Tags + $Shipment.Tag | Sort-Object -Unique)
 }
 
 # Tests whether one commit contains the desired file contents.
@@ -527,10 +590,13 @@ Export-ModuleMember -Function @(
     'Get-PreviousShippedTag',
     'Set-GitHubItemMilestone',
     'Get-ReleaseIdentity',
+    'Get-NuGetPackageVersions',
     'Resolve-NuGetPackageVersion',
     'Get-NuGetPackageSource',
     'Invoke-GitHubMutation',
     'Push-ReleaseTag',
+    'Get-ReleaseShipmentContract',
+    'Add-PlannedReleaseShipmentTag',
     'Test-GitFileContents',
     'Test-AutomationFileBranch',
     'Publish-AutomationFilePullRequest'

@@ -10,9 +10,15 @@ description: >
 
 # Release Milestones
 
-Use **Release - Milestones** with both operations selected and `push` disabled
-for a read-only run. After reviewing that output, dispatch again with `push`
-enabled, or run the two repository-owned scripts separately:
+**Release - Finish** automatically runs both milestone operations after every
+successful preview, RC, stable, patch, or hotfix Finish. Its dry-run includes
+the milestone plan, and its push run verifies the exact immutable shipment tag
+before any milestone write.
+
+Use **Release - Milestones** separately for diagnostics or repairs, with the
+needed independent operations selected and `push` disabled for a read-only run.
+After reviewing that output, dispatch again with `push` enabled, or run the two
+repository-owned scripts separately:
 
 ```powershell
 # Reconcile shipped assignments (read-only)
