@@ -1,0 +1,184 @@
+name: Review - Skia Sync
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      skiasharp_pr:
+        description: SkiaSharp [skia-sync] parent pull request number.
+        required: true
+        type: string
+      staged:
+        description: Validate and archive evidence without posting a review comment.
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+jobs:
+  resolve:
+    if: >
+      github.repository == 'mono/SkiaSharp' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.issue.pull_request != null &&
+        github.event.comment.body == '/skia-sync-review' &&
+        (github.event.comment.author_association == 'OWNER' ||
+         github.event.comment.author_association == 'MEMBER' ||
+         github.event.comment.author_association == 'COLLABORATOR')))
+    runs-on: ubuntu-latest
+    outputs:
+      parent_pr: ${{ steps.resolve.outputs.parent_pr }}
+      parent_head: ${{ steps.resolve.outputs.parent_head }}
+      head_branch: ${{ steps.resolve.outputs.head_branch }}
+      milestone: ${{ steps.resolve.outputs.milestone }}
+      parent_base: ${{ steps.resolve.outputs.parent_base }}
+      parent_base_sha: ${{ steps.resolve.outputs.parent_base_sha }}
+      native_pr: ${{ steps.resolve.outputs.native_pr }}
+      native_head: ${{ steps.resolve.outputs.native_head }}
+      native_base: ${{ steps.resolve.outputs.native_base }}
+      native_base_sha: ${{ steps.resolve.outputs.native_base_sha }}
+      pair_artifact: ${{ steps.resolve.outputs.pair_artifact }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+      - id: resolve
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          COMMENT_PR: ${{ github.event.issue.number }}
+          INPUT_PR: ${{ inputs.skiasharp_pr }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          parent="$COMMENT_PR"
+          if [ "$EVENT_NAME" = workflow_dispatch ]; then
+            parent="$INPUT_PR"
+          fi
+          [[ "$parent" =~ ^[1-9][0-9]*$ ]] || { echo "::error::A SkiaSharp PR number is required."; exit 1; }
+          contract="$RUNNER_TEMP/pair.json"
+          python3 .github/scripts/resolve-skia-sync-pair.py --skiasharp-pr "$parent" > "$contract"
+          {
+            echo "parent_pr=$(jq -r '.parent.number' "$contract")"
+            echo "parent_head=$(jq -r '.parent.head_sha' "$contract")"
+            echo "head_branch=$(jq -r '.head_branch' "$contract")"
+            echo "milestone=$(jq -r '.milestone' "$contract")"
+            echo "parent_base=$(jq -r '.parent.base_branch' "$contract")"
+            echo "parent_base_sha=$(jq -r '.parent.base_sha' "$contract")"
+            echo "native_pr=$(jq -r '.native.number' "$contract")"
+            echo "native_head=$(jq -r '.native.head_sha' "$contract")"
+            echo "native_base=$(jq -r '.native.base_branch' "$contract")"
+            echo "native_base_sha=$(jq -r '.native.base_sha' "$contract")"
+            echo "pair_artifact=skia-sync-review-pair-$GITHUB_RUN_ID"
+          } >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: skia-sync-review-pair-${{ github.run_id }}
+          path: ${{ runner.temp }}/pair.json
+          if-no-files-found: error
+
+  mechanical-review:
+    needs: resolve
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      raw_artifact: ${{ steps.review.outputs.raw_artifact }}
+    steps:
+      - name: Check out trusted public source without credentials
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin https://github.com/mono/SkiaSharp.git
+          git fetch --depth=1 origin "$GITHUB_SHA"
+          git checkout --detach FETCH_HEAD
+          git submodule update --init --recursive
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ${{ needs.resolve.outputs.pair_artifact }}
+          path: ${{ runner.temp }}/pair
+      - id: review
+        env:
+          PAIR_JSON: ${{ runner.temp }}/pair/pair.json
+          RAW_DIR: ${{ runner.temp }}/mechanical-review
+        run: |
+          set -euo pipefail
+          test -s "$PAIR_JSON"
+          mkdir -p "$RAW_DIR"
+          export_root="$RUNNER_TEMP/isolated-generated"
+          mkdir -p "$export_root"
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/trusted:ro" \
+            -v "$PAIR_JSON:/control/pair.json:ro" \
+            -v "$export_root:/export" \
+            mcr.microsoft.com/dotnet/sdk:10.0.401@sha256:2fa828c68761b1b8c23d7662dc134421b9d3b59fe1425fdbc80804e390cdb24d \
+            bash -ceu '
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update -qq
+              apt-get install -y -qq ca-certificates git python3
+              parent_head=$(python3 -c "import json; print(json.load(open(\"/control/pair.json\"))[\"parent\"][\"head_sha\"])")
+              native_head=$(python3 -c "import json; print(json.load(open(\"/control/pair.json\"))[\"native\"][\"head_sha\"])")
+              git clone --quiet --no-checkout https://github.com/mono/SkiaSharp.git /work
+              git -C /work fetch --quiet --depth=1 origin "$parent_head"
+              git -C /work checkout --quiet --detach "$parent_head"
+              git -C /work submodule update --init externals/skia
+              git -C /work/externals/skia fetch --quiet --depth=1 origin "$native_head"
+              git -C /work/externals/skia checkout --quiet --detach "$native_head"
+              python3 /work/externals/skia/tools/git-sync-deps
+              set +e
+              python3 /trusted/.agents/skills/review-skia-update/scripts/check_generated_files.py \
+                --repo-root /work --output-dir /export > /export/generator-check.log
+              generator_status=$?
+              set -e
+              [ "$generator_status" -eq 0 ] || [ "$generator_status" -eq 1 ]
+              chmod -R a+rX /export
+            '
+          if find "$export_root" -type l -print -quit | grep -q .; then
+            echo "::error::Isolated generated export contains symlinks."
+            exit 1
+          fi
+          test -d "$export_root/generated"
+          env -u GITHUB_ENV -u GITHUB_OUTPUT -u GITHUB_PATH -u GITHUB_STEP_SUMMARY \
+            -u GITHUB_TOKEN -u GH_TOKEN \
+            python3 .agents/skills/review-skia-update/scripts/run_review.py \
+              --pair-json "$PAIR_JSON" --prepared-generated-root "$export_root/generated" \
+              --output-dir "$RAW_DIR"
+          cp "$export_root/generator-output.log" "$RAW_DIR/generator-output.log"
+          cp "$export_root/generator-check.log" "$RAW_DIR/isolated-generator-check.log"
+          cp "$PAIR_JSON" "$RAW_DIR/pair.json"
+          echo "raw_artifact=skia-sync-review-raw-$GITHUB_RUN_ID" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: skia-sync-review-raw-${{ github.run_id }}
+          path: ${{ runner.temp }}/mechanical-review
+          if-no-files-found: error
+
+  review:
+    needs: [resolve, mechanical-review]
+    uses: ./.github/workflows/skia-sync-review.lock.yml
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      actions: read
+    with:
+      parent_pr: ${{ fromJSON(needs.resolve.outputs.parent_pr) }}
+      parent_head: ${{ needs.resolve.outputs.parent_head }}
+      head_branch: ${{ needs.resolve.outputs.head_branch }}
+      milestone: ${{ fromJSON(needs.resolve.outputs.milestone) }}
+      parent_base: ${{ needs.resolve.outputs.parent_base }}
+      parent_base_sha: ${{ needs.resolve.outputs.parent_base_sha }}
+      native_pr: ${{ fromJSON(needs.resolve.outputs.native_pr) }}
+      native_head: ${{ needs.resolve.outputs.native_head }}
+      native_base: ${{ needs.resolve.outputs.native_base }}
+      native_base_sha: ${{ needs.resolve.outputs.native_base_sha }}
+      raw_artifact: ${{ needs.mechanical-review.outputs.raw_artifact }}
+      # A dispatch from any non-main workflow revision is evidence-only even if
+      # its caller requests publication; issue comments always execute main.
+      staged: ${{ github.event_name == 'workflow_dispatch' && (inputs.staged || github.ref != 'refs/heads/main') }}
