@@ -9,6 +9,10 @@ on:
         description: SkiaSharp [skia-sync] parent pull request number.
         required: true
         type: string
+      skia_pr:
+        description: mono/skia reciprocal [skia-sync] pull request number.
+        required: true
+        type: string
       staged:
         description: Validate and archive evidence without posting a review comment.
         required: false
@@ -26,7 +30,7 @@ jobs:
       github.repository == 'mono/SkiaSharp' &&
       (github.event_name == 'workflow_dispatch' ||
        (github.event.issue.pull_request != null &&
-        github.event.comment.body == '/skia-sync-review' &&
+        startsWith(github.event.comment.body, '/skia-sync-review') &&
         (github.event.comment.author_association == 'OWNER' ||
          github.event.comment.author_association == 'MEMBER' ||
          github.event.comment.author_association == 'COLLABORATOR')))
@@ -44,27 +48,25 @@ jobs:
       native_base_sha: ${{ steps.resolve.outputs.native_base_sha }}
       pair_artifact: ${{ steps.resolve.outputs.pair_artifact }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-          submodules: recursive
-          persist-credentials: false
       - id: resolve
         env:
           EVENT_NAME: ${{ github.event_name }}
-          COMMENT_PR: ${{ github.event.issue.number }}
-          INPUT_PR: ${{ inputs.skiasharp_pr }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          INPUT_SKIASHARP_PR: ${{ inputs.skiasharp_pr }}
+          INPUT_SKIA_PR: ${{ inputs.skia_pr }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          parent="$COMMENT_PR"
+          resolver="$RUNNER_TEMP/resolve-skia-sync-pair.py"
+          gh api -H "Accept: application/vnd.github.raw" \
+            "repos/$GITHUB_REPOSITORY/contents/.github/scripts/resolve-skia-sync-pair.py?ref=$GITHUB_SHA" \
+            > "$resolver"
+          args=(--comment "$COMMENT_BODY")
           if [ "$EVENT_NAME" = workflow_dispatch ]; then
-            parent="$INPUT_PR"
+            args=(--skiasharp-pr "$INPUT_SKIASHARP_PR" --skia-pr "$INPUT_SKIA_PR")
           fi
-          [[ "$parent" =~ ^[1-9][0-9]*$ ]] || { echo "::error::A SkiaSharp PR number is required."; exit 1; }
           contract="$RUNNER_TEMP/pair.json"
-          python3 .github/scripts/resolve-skia-sync-pair.py --skiasharp-pr "$parent" > "$contract"
+          python3 "$resolver" "${args[@]}" > "$contract"
           {
             echo "parent_pr=$(jq -r '.parent.number' "$contract")"
             echo "parent_head=$(jq -r '.parent.head_sha' "$contract")"
