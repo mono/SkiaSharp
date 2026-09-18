@@ -41,9 +41,11 @@ repository-owned scripts separately:
 Assignment reconciliation maps merged pull requests and linked issues to the
 release where they shipped. Milestone updates maintain upcoming
 Chromium-derived dates, move remaining open work to the next unshipped
-milestone, and close shipped milestones.
+milestone, and close shipped milestones. When an exact shipped-release
+milestone is missing, reconciliation plans or creates it before assigning work.
 
 Always run and present the selected read-only operation(s) before requesting
-confirmation for `-Push`. Warnings block remote reconciliation or closure.
-These scripts never create release branches, tags, packages, or GitHub
-Releases.
+confirmation for `-Push`. Missing shipped milestones are repaired
+automatically; missing tags, release boundaries, and ambiguous ownership still
+block remote reconciliation or closure. These scripts never create release
+branches, tags, packages, or GitHub Releases.
