@@ -82,7 +82,9 @@ jobs:
           done
 
       - name: Run review-skia-update tooling tests
-        run: python3 .agents/skills/review-skia-update/scripts/check_companion_test.py
+        run: |
+          python3 .agents/skills/review-skia-update/scripts/run_review_test.py
+          python3 .agents/skills/review-skia-update/scripts/check_companion_test.py
 
       - name: Run workflow safety tests
         run: python3 -m unittest discover -s .github/scripts/tests -p "test_*.py" -v
