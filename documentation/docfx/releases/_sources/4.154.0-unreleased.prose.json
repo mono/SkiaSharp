@@ -1,27 +1,18 @@
 {
-  "theme": "Documentation delivery improvements",
-  "highlights_headline": "SkiaSharp 4.154.0 improves consumer API documentation delivery and keeps the bundled renderer current with Chrome m154.",
-  "highlights_body": "Package XML documentation now travels with managed assemblies, while generated bindings and HarfBuzzSharp metadata remain aligned with the bundled native sources.",
-  "breaking": [
-    {
-      "title": "HarfBuzz combining-class enum name corrected",
-      "body": "UnicodeCombiningClass.CCC133 has been renamed to CCC132 to match HarfBuzz. Replace the old member name in source code.",
-      "prs": [5057]
-    },
-    {
-      "title": "GlyphFlags.Defined removed",
-      "body": "The aggregate GlyphFlags.Defined mask is no longer exposed. Combine the concrete flags your code needs instead.",
-      "prs": [5057]
-    }
-  ],
+  "theme": "Package documentation modernization",
+  "highlights_headline": "The next SkiaSharp release delivers compiler-generated XML documentation alongside managed packages.",
+  "highlights_body": "API documentation is now authored with C# XML comments, while the bundled renderer incorporates the latest m154 upstream fixes.",
+  "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Chrome m154 fixes merged",
-          "detail": "The pending release incorporates the latest upstream m154 renderer fixes.",
-          "prs": [5054]
+          "lead": "m154 upstream fixes merged",
+          "detail": "The bundled Skia engine incorporates the latest Chrome m154 upstream corrections.",
+          "prs": [
+            5054
+          ]
         }
       ]
     },
@@ -29,14 +20,19 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "API documentation ships with packages",
-          "detail": "Managed package assemblies now include compiler-generated XML documentation sidecars for IDE consumers.",
-          "prs": [5064, 5066, 5078, 5080]
+          "lead": "Managed packages include XML documentation",
+          "detail": "Compiler-generated XML documentation is packaged with managed assemblies so IDE help and API documentation stay aligned with the shipped surface.",
+          "prs": [
+            5064,
+            5066,
+            5078,
+            5080,
+            5091
+          ]
         }
       ]
     }
   ],
   "contributor_summaries": {},
-  "preview_summaries": {},
-  "harfbuzz_summary": null
+  "preview_summaries": {}
 }
