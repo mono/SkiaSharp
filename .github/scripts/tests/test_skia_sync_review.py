@@ -51,7 +51,11 @@ def review_pair(*, parent_base="main", branch="skia-sync/m147"):
         5125,
         base=parent_base,
         branch=branch,
-        body="https://github.com/mono/skia/pull/401",
+        body=(
+            "**Required skia PR**\n\n"
+            "https://github.com/mono/skia/pull/401\n\n"
+            "**Areas affected**"
+        ),
     )
     native = pr(
         "mono/skia",
@@ -72,34 +76,50 @@ class SkiaSyncPairResolverTests(unittest.TestCase):
         self.assertEqual("a" * 40, contract["parent"]["head_sha"])
         self.assertEqual("b" * 40, contract["native"]["base_sha"])
 
-    def test_parses_the_exact_explicit_command(self):
-        self.assertEqual((5114, 367), RESOLVER.parse_comment_ids("/skia-sync-review 5114 367"))
+    def test_accepts_only_the_argument_free_command(self):
+        self.assertIsNone(RESOLVER.validate_comment("/skia-sync-review"))
 
-    def test_rejects_missing_or_invalid_command_arguments(self):
+    def test_rejects_extra_command_arguments(self):
         for command in (
-            "/skia-sync-review",
             "/skia-sync-review 5114",
-            "/skia-sync-review abc 367",
-            "/skia-sync-review 5114 abc",
-            "/skia-sync-review 0 367",
-            "/skia-sync-review -1 367",
             "/skia-sync-review 5114 367 extra",
+            "/skia-sync-review ",
+            "/skia-sync-review\t5114",
         ):
             with self.subTest(command=command):
                 with self.assertRaises(RESOLVER.PairValidationError):
-                    RESOLVER.parse_comment_ids(command)
+                    RESOLVER.validate_comment(command)
 
-    def test_reversed_explicit_pair_is_rejected(self):
+    def test_reversed_pair_is_rejected(self):
         parent, native = review_pair()
         with self.assertRaises(RESOLVER.PairValidationError):
             RESOLVER.resolve_pair(native, parent)
 
-    def test_resolver_fetches_only_the_explicit_ids(self):
+    def test_resolver_fetches_parent_then_required_section_native_id(self):
         source = (ROOT / ".github/scripts/resolve-skia-sync-pair.py").read_text(encoding="utf-8")
         main = source.split("\ndef main() -> int:", 1)[1]
         self.assertIn("parent = _get_pr(SKIASHARP_REPOSITORY, skiasharp_pr)", main)
-        self.assertIn("native = _get_pr(SKIA_REPOSITORY, skia_pr)", main)
-        self.assertNotIn("native = _get_pr(SKIA_REPOSITORY, _link(", main)
+        self.assertIn("native = _get_pr(SKIA_REPOSITORY, _required_skia_link(", main)
+        self.assertNotIn("--skia-pr", main)
+        self.assertNotIn("pr list", source)
+
+    def test_rejects_missing_ambiguous_or_malformed_required_native_link(self):
+        parent, native = review_pair()
+        for body in (
+            "**Required skia PR**\n\nNone.\n\n**Areas affected**",
+            "**Required skia PR**\n\nhttps://github.com/mono/skia/pull/401\nhttps://github.com/mono/skia/pull/402\n\n**Areas affected**",
+            "**Required skia PR**\n\nhttps://github.com/mono/skia/pull/401/files\n\n**Areas affected**",
+        ):
+            with self.subTest(body=body):
+                parent["body"] = body
+                with self.assertRaises(RESOLVER.PairValidationError):
+                    RESOLVER.resolve_pair(parent, native)
+
+    def test_rejects_reciprocal_native_link_mismatch(self):
+        parent, native = review_pair()
+        native["body"] = "https://github.com/mono/SkiaSharp/pull/5116"
+        with self.assertRaises(RESOLVER.PairValidationError):
+            RESOLVER.resolve_pair(parent, native)
 
     def test_release_base_uses_the_same_native_base(self):
         contract = RESOLVER.resolve_pair(*review_pair(parent_base="release/3.119.x"))
@@ -110,12 +130,7 @@ class SkiaSyncPairResolverTests(unittest.TestCase):
         contract = RESOLVER.resolve_pair(parent, native)
         self.assertEqual(147, contract["milestone"])
 
-    def test_rejects_ambiguous_links_unshared_branch_main_tip_and_wrong_base(self):
-        parent, native = review_pair()
-        parent["body"] += "\nhttps://github.com/mono/skia/pull/402"
-        with self.assertRaises(RESOLVER.PairValidationError):
-            RESOLVER.resolve_pair(parent, native)
-
+    def test_rejects_unshared_branch_main_tip_and_wrong_base(self):
         parent, native = review_pair(branch="skia-sync/main")
         with self.assertRaises(RESOLVER.PairValidationError):
             RESOLVER.resolve_pair(parent, native)
@@ -248,26 +263,36 @@ class SkiaSyncReviewWorkflowTests(unittest.TestCase):
     def test_command_dispatch_and_frozen_pair_contract(self):
         self.assertIn("workflow_dispatch", self.entry_yaml["on"])
         self.assertIn("issue_comment", self.entry_yaml["on"])
-        self.assertIn("startsWith(github.event.comment.body, '/skia-sync-review')", self.entry)
+        self.assertIn("github.event.comment.body == '/skia-sync-review'", self.entry)
+        self.assertIn("github.event.issue.pull_request != null", self.entry)
         for association in ("OWNER", "MEMBER", "COLLABORATOR"):
             self.assertIn(f"github.event.comment.author_association == '{association}'", self.entry)
         self.assertIn("skiasharp_pr:", self.entry)
-        self.assertIn("skia_pr:", self.entry)
         dispatch_inputs = self.entry_yaml["on"]["workflow_dispatch"]["inputs"]
         self.assertEqual("true", dispatch_inputs["skiasharp_pr"]["required"])
-        self.assertEqual("true", dispatch_inputs["skia_pr"]["required"])
+        self.assertNotIn("skia_pr", dispatch_inputs)
         self.assertIn("staged:", self.entry)
         self.assertIn("default: true", self.entry)
         self.assertIn("github.ref != 'refs/heads/main'", self.entry)
         self.assertIn("resolve-skia-sync-pair.py", self.entry)
         resolve = self.entry.split("  resolve:", 1)[1].split("\n  mechanical-review:", 1)[0]
         self.assertNotIn("actions/checkout", resolve)
-        self.assertIn('args=(--comment "$COMMENT_BODY")', resolve)
-        self.assertIn('args=(--skiasharp-pr "$INPUT_SKIASHARP_PR" --skia-pr "$INPUT_SKIA_PR")', resolve)
+        self.assertIn('args=(--skiasharp-pr "$COMMENT_PR" --comment "$COMMENT_BODY")', resolve)
+        self.assertIn('args=(--skiasharp-pr "$INPUT_SKIASHARP_PR")', resolve)
+        self.assertNotIn("INPUT_SKIA_PR", resolve)
         self.assertIn('gh api -H "Accept: application/vnd.github.raw"', resolve)
         self.assertIn("skia-sync-review-pair-${{ github.run_id }}", self.entry)
         for value in ("head_branch", "milestone", "parent_base", "parent_base_sha", "native_base", "native_base_sha"):
             self.assertIn(f"{value}:", self.entry)
+
+    def test_expensive_jobs_cannot_run_without_resolve(self):
+        jobs = self.entry_yaml["jobs"]
+        self.assertEqual("resolve", jobs["mechanical-review"]["needs"])
+        self.assertIn("resolve", jobs["review"]["needs"])
+
+    def test_non_pull_request_comments_are_not_eligible(self):
+        resolve_condition = self.entry_yaml["jobs"]["resolve"]["if"]
+        self.assertIn("github.event.issue.pull_request != null", resolve_condition)
 
     def test_mechanical_stage_is_tokenless_and_exports_only_prepared_evidence(self):
         mechanical = self.entry.split("  mechanical-review:", 1)[1].split("\n  review:", 1)[0]
