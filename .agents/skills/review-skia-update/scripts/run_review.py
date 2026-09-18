@@ -12,6 +12,7 @@ import re
 import subprocess
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 # Import sibling check modules
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -136,15 +137,15 @@ def main():
         description="Run all mechanical checks for a Skia update review."
     )
     parser.add_argument(
-        "--skia-pr", type=int, required=True,
+        "--skia-pr", type=int,
         help="The mono/skia PR number to review.",
     )
     parser.add_argument(
-        "--skiasharp-pr", type=int, required=True,
+        "--skiasharp-pr", type=int,
         help="The SkiaSharp companion PR number.",
     )
     parser.add_argument(
-        "--milestone", type=int, required=True,
+        "--milestone", type=int,
         help="The target Chrome milestone number (e.g. 147). "
              "AI extracts this from the PR title/body; the orchestrator validates consistency.",
     )
@@ -152,11 +153,41 @@ def main():
         "--output-dir", default="",
         help="Override output directory. Default: /tmp/skiasharp/skia-review/{timestamp}",
     )
+    parser.add_argument(
+        "--pair-json", default="",
+        help="Trusted resolver contract. Avoids GitHub CLI PR metadata reads.",
+    )
+    parser.add_argument("--prepared-generated-root", default="")
     args = parser.parse_args()
 
-    skia_pr_number = args.skia_pr
-    skiasharp_pr_number = args.skiasharp_pr
-    caller_milestone = f"chrome/m{args.milestone}"
+    if args.pair_json:
+        with open(args.pair_json, encoding="utf-8") as stream:
+            pair = json.load(stream)
+        native = pair["native"]
+        parent = pair["parent"]
+        skia_pr_number = native["number"]
+        skiasharp_pr_number = parent["number"]
+        caller_milestone = f"chrome/m{pair['milestone']}"
+        pr = {
+            "title": native["title"], "headRefName": native["head_branch"],
+            "headRefOid": native["head_sha"], "baseRefName": native["base_branch"],
+            "baseRefOid": native["base_sha"], "state": native["state"],
+            "author": {"login": native["author"]},
+        }
+        companion_pr = {
+            "title": parent["title"], "headRefName": parent["head_branch"],
+            "headRefOid": parent["head_sha"], "baseRefName": parent["base_branch"],
+            "baseRefOid": parent["base_sha"], "state": parent["state"],
+            "author": {"login": parent["author"]},
+        }
+    else:
+        if args.skia_pr is None or args.skiasharp_pr is None or args.milestone is None:
+            parser.error("--skia-pr, --skiasharp-pr, and --milestone are required without --pair-json")
+        skia_pr_number = args.skia_pr
+        skiasharp_pr_number = args.skiasharp_pr
+        caller_milestone = f"chrome/m{args.milestone}"
+        pr = None
+        companion_pr = None
     output_dir = args.output_dir
 
     result = subprocess.run(
@@ -217,40 +248,42 @@ def main():
     # =========================================================================
     eprint("═══ Step 1 — Parse & Setup ═══")
 
-    # 1a. Fetch skia PR metadata
-    eprint(f"▸ Fetching mono/skia PR #{skia_pr_number}...")
-    pr_result = subprocess.run(
+    # 1a. Fetch skia PR metadata unless the trusted resolver already froze it.
+    eprint(f"▸ Loading mono/skia PR #{skia_pr_number}...")
+    if pr is None:
+        pr_result = subprocess.run(
         [
             "gh", "pr", "view", str(skia_pr_number),
             "--repo", "mono/skia",
             "--json", "title,headRefName,headRefOid,baseRefName,baseRefOid,state,author",
         ],
         capture_output=True, text=True,
-    )
-    if pr_result.returncode != 0:
-        raise RuntimeError(f"Failed to fetch skia PR #{skia_pr_number}: {pr_result.stderr.strip()}")
-    pr = json.loads(pr_result.stdout)
+        )
+        if pr_result.returncode != 0:
+            raise RuntimeError(f"Failed to fetch skia PR #{skia_pr_number}: {pr_result.stderr.strip()}")
+        pr = json.loads(pr_result.stdout)
 
     eprint(f"   Title: {pr['title']}")
     eprint(f"   Head:  {pr['headRefOid']} ({pr['headRefName']})")
     eprint(f"   Base:  {pr['baseRefOid']} ({pr['baseRefName']})")
 
     # 1b. Fetch companion SkiaSharp PR metadata
-    eprint(f"▸ Fetching companion SkiaSharp PR #{skiasharp_pr_number}...")
-    companion_pr_result = subprocess.run(
+    eprint(f"▸ Loading companion SkiaSharp PR #{skiasharp_pr_number}...")
+    if companion_pr is None:
+        companion_pr_result = subprocess.run(
         [
             "gh", "pr", "view", str(skiasharp_pr_number),
             "--repo", "mono/SkiaSharp",
             "--json", "title,headRefName,headRefOid,baseRefName,baseRefOid,state,author",
         ],
         capture_output=True, text=True,
-    )
-    if companion_pr_result.returncode != 0:
-        raise RuntimeError(
+        )
+        if companion_pr_result.returncode != 0:
+            raise RuntimeError(
             f"Failed to fetch SkiaSharp PR #{skiasharp_pr_number}: "
             f"{companion_pr_result.stderr.strip()}"
-        )
-    companion_pr = json.loads(companion_pr_result.stdout)
+            )
+        companion_pr = json.loads(companion_pr_result.stdout)
 
     eprint(f"   Title: {companion_pr['title']}")
     eprint(f"   Head:  {companion_pr['headRefOid']} ({companion_pr['headRefName']})")
@@ -449,27 +482,31 @@ def main():
     # version check, already covered by Phase 1 validation. (The emsdk
     # activation step is a no-op for this fork: the in-tree emsdk is not fetched
     # by DEPS, so bin/activate-emsdk returns early.)
-    eprint("▸ Syncing third-party dependencies (skia tools/git-sync-deps)...")
-    sync_result = subprocess.run(
-        [sys.executable, os.path.join("tools", "git-sync-deps")],
-        cwd=skia_root,
-        capture_output=True,
-        text=True,
-    )
-    for line in sync_result.stdout.strip().split("\n"):
-        if line and ("@" in line or "Skipping" in line or "error" in line.lower()):
-            eprint(f"   {line.strip()}")
-    if sync_result.returncode != 0:
-        eprint(f"   ❌ tools/git-sync-deps failed (exit {sync_result.returncode})")
-        for line in sync_result.stderr.strip().split("\n"):
-            if line:
-                eprint(f"   {line.strip()}")
-        raise RuntimeError(
-            f"Failed to sync third-party dependencies (git-sync-deps exit {sync_result.returncode}). "
-            f"Check that the skia submodule milestone matches VERSIONS.txt."
+    if args.prepared_generated_root:
+        eprint("▸ Using isolated prepared generated tree; dependency sync is disabled.")
+    else:
+        eprint("▸ Syncing third-party dependencies (skia tools/git-sync-deps)...")
+    if not args.prepared_generated_root:
+        sync_result = subprocess.run(
+            [sys.executable, os.path.join("tools", "git-sync-deps")],
+            cwd=skia_root,
+            capture_output=True,
+            text=True,
         )
+        for line in sync_result.stdout.strip().split("\n"):
+            if line and ("@" in line or "Skipping" in line or "error" in line.lower()):
+                eprint(f"   {line.strip()}")
+        if sync_result.returncode != 0:
+            eprint(f"   ❌ tools/git-sync-deps failed (exit {sync_result.returncode})")
+            for line in sync_result.stderr.strip().split("\n"):
+                if line:
+                    eprint(f"   {line.strip()}")
+            raise RuntimeError(
+                f"Failed to sync third-party dependencies (git-sync-deps exit {sync_result.returncode}). "
+                f"Check that the skia submodule milestone matches VERSIONS.txt."
+            )
     harfbuzz_path = os.path.join(skia_root, "third_party", "externals", "harfbuzz")
-    if not os.path.isdir(harfbuzz_path):
+    if not args.prepared_generated_root and not os.path.isdir(harfbuzz_path):
         raise RuntimeError(
             f"third_party/externals/harfbuzz not found after sync. "
             f"Expected at: {harfbuzz_path}"
@@ -499,6 +536,7 @@ def main():
         gen_result = check_generated_files.run_check(
             repo_root=repo_root,
             output_dir=output_dir,
+            prepared_generated_root=Path(args.prepared_generated_root) if args.prepared_generated_root else None,
         )
     except Exception as exc:
         eprint(f"   ❌ Generated files check failed: {exc}")

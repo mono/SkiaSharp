@@ -101,13 +101,21 @@ try {
     New-Item -ItemType Directory -Path $workRoot | Out-Null
     $gitExecPath = Join-Path $workRoot 'git-exec'
     New-Item -ItemType Directory -Path $gitExecPath | Out-Null
+    $gitExecProbe = @(& git --exec-path 2>$null | Select-Object -First 1)
     $gitExecSource = @(
-        (& git --exec-path).Trim(),
+        $gitExecProbe,
         '/usr/lib/git-core',
         '/usr/libexec/git-core',
         '/Library/Developer/CommandLineTools/usr/libexec/git-core',
         '/Applications/Xcode.app/Contents/Developer/usr/libexec/git-core'
-    ) | Where-Object { Test-Path (Join-Path $_ 'git-submodule') } | Select-Object -First 1
+    ) | Where-Object {
+        $candidate = [string] $_
+        if ([string]::IsNullOrWhiteSpace($candidate)) {
+            $false
+        } else {
+            Test-Path ([System.IO.Path]::Combine($candidate, 'git-submodule'))
+        }
+    } | Select-Object -First 1
     if (-not $gitExecSource) {
         throw 'Could not locate a Git exec path containing git-submodule.'
     }

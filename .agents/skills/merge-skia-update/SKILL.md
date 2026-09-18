@@ -15,6 +15,20 @@ compatibility: Requires git, gh, and PowerShell 7.4+ with access to mono/skia an
 Help with the mechanical work around two manual merges. Do not repeat the
 review and do not merge either PR.
 
+## Repository command and manual fallback
+
+After a maintainer has reviewed the immutable-head evidence and explicitly approves
+the pair, comment `/skia-sync-merge` on the `mono/SkiaSharp` parent PR. The
+`Merge - Skia Sync` coordinator runs the release-branch dry run, preserves a prior
+release line where required, performs the native merge, invokes the direct repin,
+then squash-merges and verifies the parent. It resumes after a completed native
+merge, repin, or parent merge. Workflow dispatch defaults to plan-only and can apply
+only from `main`.
+
+Use the remaining manual procedure as the fallback for exceptional repository policy,
+resolver, or Actions failures. It must retain the same exact-SHA, tree-equivalence,
+and release-branch gates; never bypass them by manually changing a gitlink.
+
 ## 1. Resolve and confirm
 
 Resolve the PR pair before asking for any landing confirmation.

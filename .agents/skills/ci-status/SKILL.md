@@ -74,6 +74,8 @@ standard Darc/Maestro stages.
 | Sync - Samples | mono/SkiaSharp | Push/PR to `samples/` | Sample projects broken if failing |
 | Tests - Binding Generation Determinism | mono/SkiaSharp | Push/PR | Generated bindings drift undetected |
 | Repin SkiaSharp Sync PR | mono/SkiaSharp | Manual / reusable workflow call | Safely repins an existing Skia sync PR after its native merge |
+| Review - Skia Sync | mono/SkiaSharp | PR comment / manual dispatch | Produces immutable-head review evidence for a paired Skia milestone sync |
+| Merge - Skia Sync | mono/SkiaSharp | Maintainer PR comment / manual dispatch | Resumably merges an approved pair and verifies the landing |
 | Sync - Release Notes & API Diffs | mono/SkiaSharp | Push to main + daily | Release notes stop auto-updating |
 | Sync - Skia Upstream | mono/SkiaSharp | Every 6h | Upstream tracking breaks |
 | Fixer - Memory Leak | mono/SkiaSharp | Every 12h | Leak-hunting automation stops |

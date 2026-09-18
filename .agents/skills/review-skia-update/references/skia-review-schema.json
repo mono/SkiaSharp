@@ -317,6 +317,11 @@
       "additionalProperties": false,
       "properties": {
         "prNumber": { "type": "integer", "minimum": 1 },
+        "headSha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "Exact SkiaSharp companion PR head reviewed with the native PR."
+        },
         "status": {
           "$ref": "#/$defs/reviewStatus"
         },
