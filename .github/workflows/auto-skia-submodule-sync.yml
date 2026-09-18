@@ -1,175 +1,313 @@
-name: Sync - Skia Submodule
+name: Repin SkiaSharp Sync PR
 
 on:
-  schedule:
-    - cron: "30 10 * * *"  # Daily at 10:30 AM UTC
+  workflow_call:
+    inputs:
+      target_branch:
+        description: "Existing same-repository [skia-sync] SkiaSharp PR head branch"
+        required: true
+        type: string
+      skia_branch:
+        description: "Merged mono/skia branch to repin from"
+        required: true
+        type: string
+      reviewed_skia_sha:
+        description: "Immutable reviewed mono/skia PR head SHA merged by skia_branch"
+        required: true
+        type: string
+      expected_target_sha:
+        description: "Immutable current SHA of target_branch"
+        required: true
+        type: string
+      expected_skia_sha:
+        description: "Immutable current SHA of skia_branch"
+        required: true
+        type: string
+      push:
+        description: "Commit and directly push the verified repin"
+        required: false
+        default: false
+        type: boolean
+    secrets:
+      SKIASHARP_AUTOBUMP_TOKEN:
+        required: false
+    outputs:
+      target_sha:
+        description: "Final target branch SHA; unchanged during a dry run"
+        value: ${{ jobs.repin.outputs.target_sha }}
+      skia_sha:
+        description: "Verified mono/skia SHA"
+        value: ${{ jobs.repin.outputs.skia_sha }}
+      pr_number:
+        description: "Validated target PR number"
+        value: ${{ jobs.repin.outputs.pr_number }}
+      pushed:
+        description: "Whether this invocation requested a direct push"
+        value: ${{ jobs.repin.outputs.pushed }}
   workflow_dispatch:
     inputs:
       target_branch:
-        description: "SkiaSharp branch to sync and target with the pull request"
-        required: false
-        default: main
+        description: "Existing same-repository [skia-sync] SkiaSharp PR head branch"
+        required: true
         type: string
       skia_branch:
-        description: "mono/skia branch to sync from"
-        required: false
-        default: skiasharp
+        description: "Merged mono/skia branch to repin from"
+        required: true
         type: string
+      reviewed_skia_sha:
+        description: "Immutable reviewed mono/skia PR head SHA merged by skia_branch"
+        required: true
+        type: string
+      expected_target_sha:
+        description: "Immutable current SHA of target_branch"
+        required: true
+        type: string
+      expected_skia_sha:
+        description: "Immutable current SHA of skia_branch"
+        required: true
+        type: string
+      push:
+        description: "Commit and directly push the verified repin"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+  pull-requests: read
 
 concurrency:
-  group: auto-skia-submodule-sync-${{ github.event.inputs.target_branch || 'main' }}
-  cancel-in-progress: true
+  group: direct-skia-repin-${{ inputs.target_branch }}
+  cancel-in-progress: false
 
 jobs:
-  sync:
+  repin:
     runs-on: ubuntu-latest
+    outputs:
+      target_sha: ${{ steps.result.outputs.target_sha }}
+      skia_sha: ${{ steps.result.outputs.skia_sha }}
+      pr_number: ${{ steps.pr.outputs.pr_number }}
+      pushed: ${{ steps.result.outputs.pushed }}
     env:
-      TARGET_BRANCH: ${{ github.event.inputs.target_branch || 'main' }}
-      SKIA_BRANCH: ${{ github.event.inputs.skia_branch || 'skiasharp' }}
+      TARGET_BRANCH: ${{ inputs.target_branch }}
+      SKIA_BRANCH: ${{ inputs.skia_branch }}
+      REVIEWED_SKIA_SHA: ${{ inputs.reviewed_skia_sha }}
+      EXPECTED_TARGET_SHA: ${{ inputs.expected_target_sha }}
+      EXPECTED_SKIA_SHA: ${{ inputs.expected_skia_sha }}
+      PUSH: ${{ inputs.push }}
+      EXPECTED_NATIVE_URL: https://github.com/mono/skia.git
 
     steps:
-      - name: Checkout SkiaSharp
-        uses: actions/checkout@v4
+      - name: Require main workflow source for mutation
+        if: inputs.push
+        env:
+          WORKFLOW_REF: ${{ job.workflow_ref }}
+        run: |
+          set -euo pipefail
+          [ "$GITHUB_REPOSITORY" = "mono/SkiaSharp" ] &&
+          [ "$WORKFLOW_REF" = "mono/SkiaSharp/.github/workflows/auto-skia-submodule-sync.yml@refs/heads/main" ] ||
+            { echo "push=true requires this workflow to run from mono/SkiaSharp main."; exit 1; }
+
+      - name: Check out trusted repin tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: trusted-tooling
+          fetch-depth: 1
+          submodules: false
+          token: ${{ github.token }}
+          persist-credentials: false
+
+      - name: Check out the existing sync branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.target_branch }}
+          path: target
           fetch-depth: 0
           submodules: false
-          ref: ${{ env.TARGET_BRANCH }}
+          token: ${{ github.token }}
+          persist-credentials: false
 
-      - name: Validate branches
+      - name: Resolve and validate immutable refs
         run: |
+          set -euo pipefail
           git check-ref-format --branch "$TARGET_BRANCH"
-          if ! git show-ref --verify --quiet "refs/remotes/origin/$TARGET_BRANCH"; then
-            echo "Target branch does not exist on origin: $TARGET_BRANCH"
-            exit 1
-          fi
-
           git check-ref-format --branch "$SKIA_BRANCH"
-          SKIA_URL=$(git config -f .gitmodules --get submodule.externals/skia.url)
-          if ! git ls-remote --exit-code --heads "$SKIA_URL" "refs/heads/$SKIA_BRANCH" >/dev/null; then
-            echo "Skia branch does not exist on origin: $SKIA_BRANCH"
-            exit 1
-          fi
+          [[ "$TARGET_BRANCH" == skia-sync/* && "$TARGET_BRANCH" != "skia-sync/" ]] ||
+            { echo "Target branch must be in the skia-sync/ namespace."; exit 1; }
+          [[ "$TARGET_BRANCH" != main && "$TARGET_BRANCH" != release/* ]] ||
+            { echo "Protected branches cannot be repin targets."; exit 1; }
+          for sha in "$REVIEWED_SKIA_SHA" "$EXPECTED_TARGET_SHA" "$EXPECTED_SKIA_SHA"; do
+            [[ "$sha" =~ ^[0-9a-f]{40}$ ]] ||
+              { echo "All expected SHA inputs must be lowercase, full 40-character Git SHAs."; exit 1; }
+          done
+          [ "$(git -C target config -f .gitmodules --get submodule.externals/skia.url)" = "$EXPECTED_NATIVE_URL" ] ||
+            { echo "externals/skia must use $EXPECTED_NATIVE_URL."; exit 1; }
 
-      - name: Update Skia submodule and cgmanifest
-        id: update
-        run: |
-          git submodule update --init --depth 1 -- externals/skia
-          git -C externals/skia fetch --no-tags --depth 1 origin \
-            "+refs/heads/$SKIA_BRANCH:refs/remotes/origin/$SKIA_BRANCH"
-          git -C externals/skia checkout --detach "refs/remotes/origin/$SKIA_BRANCH"
+          git -C target fetch --no-tags origin \
+            "+refs/heads/$TARGET_BRANCH:refs/remotes/origin/$TARGET_BRANCH"
+          TARGET_SHA=$(git -C target rev-parse "refs/remotes/origin/$TARGET_BRANCH^{commit}")
+          [ "$TARGET_SHA" = "$EXPECTED_TARGET_SHA" ] ||
+            { echo "Target branch is $TARGET_SHA; expected $EXPECTED_TARGET_SHA."; exit 1; }
 
-          SKIA_SHA=$(git -C externals/skia rev-parse HEAD)
-          SKIA_URL=$(git config -f .gitmodules --get submodule.externals/skia.url)
-          EXPECTED_SKIA_SHA=$(git ls-remote --exit-code --heads "$SKIA_URL" "refs/heads/$SKIA_BRANCH" | awk '{print $1}')
-          if [ "$SKIA_SHA" != "$EXPECTED_SKIA_SHA" ]; then
-            echo "Checked out $SKIA_SHA, but mono/skia branch $SKIA_BRANCH points to $EXPECTED_SKIA_SHA"
-            exit 1
-          fi
+          SKIA_SHA=$(git ls-remote --exit-code --heads "$EXPECTED_NATIVE_URL" \
+            "refs/heads/$SKIA_BRANCH" | awk 'NR == 1 { print $1 }')
+          [ "$SKIA_SHA" = "$EXPECTED_SKIA_SHA" ] ||
+            { echo "mono/skia branch is $SKIA_SHA; expected $EXPECTED_SKIA_SHA."; exit 1; }
 
-          MANIFEST_MATCHES=$(jq '[.registrations[] | select(
-            .component.type == "git"
-            and .component.git.repositoryUrl == "https://github.com/mono/skia.git"
-          )] | length' cgmanifest.json)
-
-          if [ "$MANIFEST_MATCHES" -ne 1 ]; then
-            echo "Expected exactly one mono/skia git registration in cgmanifest.json, found $MANIFEST_MATCHES"
-            exit 1
-          fi
-
-          TMP=$(mktemp)
-          jq --arg sha "$SKIA_SHA" '
-            (.registrations[]
-              | select(
-                .component.type == "git"
-                and .component.git.repositoryUrl == "https://github.com/mono/skia.git"
-              )
-              | .component.git.commitHash) = $sha
-          ' cgmanifest.json > "$TMP"
-          mv "$TMP" cgmanifest.json
-
-          echo "skia_sha=$SKIA_SHA" >> "$GITHUB_OUTPUT"
-          echo "latest_msg=$(git -C externals/skia log -1 --format=%s)" >> "$GITHUB_OUTPUT"
-
-      - name: Check for changes
-        id: check
-        run: |
-          if git diff --quiet -- externals/skia; then
-            echo "submodule_changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "Skia submodule has changed"
-            echo "submodule_changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-          if git diff --quiet -- cgmanifest.json; then
-            echo "manifest_changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "cgmanifest.json has changed"
-            echo "manifest_changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-          if git diff --quiet -- externals/skia cgmanifest.json; then
-            echo "Skia submodule and cgmanifest.json are up to date"
-            echo "needs_update=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "needs_update=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Create or update PR
-        if: steps.check.outputs.needs_update == 'true'
+      - name: Reject protected or ruleset-controlled target
         env:
           GH_TOKEN: ${{ github.token }}
-          LATEST_MSG: ${{ steps.update.outputs.latest_msg }}
-          SKIA_SHA: ${{ steps.update.outputs.skia_sha }}
         run: |
-          BRANCH="automation/update-skia-submodule-$TARGET_BRANCH"
-          git check-ref-format --branch "$BRANCH"
+          set -euo pipefail
+          encoded_branch=$(jq -nr --arg branch "$TARGET_BRANCH" '$branch | @uri')
+          branch=$(gh api --method GET "repos/$GITHUB_REPOSITORY/branches/$encoded_branch")
+          [ "$(jq -r '.protected' <<<"$branch")" = false ] ||
+            { echo "Target branch is protected."; exit 1; }
+          rules=$(gh api --method GET "repos/$GITHUB_REPOSITORY/rules/branches/$encoded_branch")
+          [ "$(jq 'if type == "array" then length else -1 end' <<<"$rules")" -eq 0 ] ||
+            { echo "Target branch is controlled by a ruleset."; exit 1; }
 
+      - name: Validate the existing sync PR target
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          raw_matches=$(gh api --paginate --method GET "repos/$GITHUB_REPOSITORY/pulls" \
+            -f state=open \
+            -f head="${GITHUB_REPOSITORY_OWNER}:${TARGET_BRANCH}" \
+            -f per_page=100 |
+            jq -s '[.[][] | select(
+              .head.repo.full_name == env.GITHUB_REPOSITORY
+              and .head.ref == env.TARGET_BRANCH
+            )]')
+          [ "$(jq 'length' <<<"$raw_matches")" -eq 1 ] ||
+            { echo "Target must have exactly one open same-repository pull request."; exit 1; }
+          matches=$(jq '[.[] | select(
+              .head.sha == env.EXPECTED_TARGET_SHA
+              and .base.repo.full_name == env.GITHUB_REPOSITORY
+              and (.base.ref == "main" or (.base.ref | test("^release/[0-9]+\\.[0-9]+\\.x$")))
+              and (.title | startswith("[skia-sync]"))
+            )]' <<<"$raw_matches")
+          [ "$(jq 'length' <<<"$matches")" -eq 1 ] ||
+            { echo "Target must be exactly one open same-repository [skia-sync] pull request with an approved base."; exit 1; }
+          echo "pr_number=$(jq -r '.[0].number' <<<"$matches")" >> "$GITHUB_OUTPUT"
+
+      - name: Prove the repin is safe
+        run: |
+          set -euo pipefail
+          cd target
+          git checkout "$TARGET_BRANCH"
+          pwsh -NoLogo -NoProfile -File \
+            ../trusted-tooling/.agents/skills/merge-skia-update/scripts/Update-SkiaSharpSkiaCommit.ps1 \
+            -SkiaSharpBranch "$TARGET_BRANCH" \
+            -SkiaBranch "$SKIA_BRANCH" \
+            -ReviewedSkiaSha "$REVIEWED_SKIA_SHA" \
+            -ExpectedTargetSha "$EXPECTED_TARGET_SHA" \
+            -ExpectedSkiaSha "$EXPECTED_SKIA_SHA"
+
+      - name: Apply the verified repin locally
+        if: inputs.push
+        run: |
+          set -euo pipefail
+          cd target
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          pwsh -NoLogo -NoProfile -File \
+            ../trusted-tooling/.agents/skills/merge-skia-update/scripts/Update-SkiaSharpSkiaCommit.ps1 \
+            -SkiaSharpBranch "$TARGET_BRANCH" \
+            -SkiaBranch "$SKIA_BRANCH" \
+            -ReviewedSkiaSha "$REVIEWED_SKIA_SHA" \
+            -ExpectedTargetSha "$EXPECTED_TARGET_SHA" \
+            -ExpectedSkiaSha "$EXPECTED_SKIA_SHA" \
+            -Apply
 
-          # Always start fresh from the target branch to avoid stale commit accumulation.
-          git checkout -B "$BRANCH" "origin/$TARGET_BRANCH"
+      - name: Revalidate target, protection, and PR identity
+        if: inputs.push
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git -C target fetch --no-tags origin \
+            "+refs/heads/$TARGET_BRANCH:refs/remotes/origin/$TARGET_BRANCH"
+          [ "$(git -C target rev-parse "refs/remotes/origin/$TARGET_BRANCH^{commit}")" = "$EXPECTED_TARGET_SHA" ] ||
+            { echo "Target branch changed after local apply."; exit 1; }
+          [ "$(git ls-remote --exit-code --heads "$EXPECTED_NATIVE_URL" "refs/heads/$SKIA_BRANCH" | awk 'NR == 1 { print $1 }')" = "$EXPECTED_SKIA_SHA" ] ||
+            { echo "mono/skia branch changed after local apply."; exit 1; }
 
-          git add externals/skia cgmanifest.json
-          if git diff --cached --quiet; then
-            echo "No changes after staging"
-            exit 0
-          fi
+          encoded_branch=$(jq -nr --arg branch "$TARGET_BRANCH" '$branch | @uri')
+          branch=$(gh api --method GET "repos/$GITHUB_REPOSITORY/branches/$encoded_branch")
+          [ "$(jq -r '.protected' <<<"$branch")" = false ] ||
+            { echo "Target branch is protected."; exit 1; }
+          rules=$(gh api --method GET "repos/$GITHUB_REPOSITORY/rules/branches/$encoded_branch")
+          [ "$(jq 'if type == "array" then length else -1 end' <<<"$rules")" -eq 0 ] ||
+            { echo "Target branch is controlled by a ruleset."; exit 1; }
 
-          git commit -m "Sync Skia submodule and cgmanifest
+          raw_matches=$(gh api --paginate --method GET "repos/$GITHUB_REPOSITORY/pulls" \
+            -f state=open \
+            -f head="${GITHUB_REPOSITORY_OWNER}:${TARGET_BRANCH}" \
+            -f per_page=100 |
+            jq -s '[.[][] | select(
+              .head.repo.full_name == env.GITHUB_REPOSITORY
+              and .head.ref == env.TARGET_BRANCH
+            )]')
+          [ "$(jq 'length' <<<"$raw_matches")" -eq 1 ] ||
+            { echo "Target no longer has exactly one open same-repository pull request."; exit 1; }
+          [ "$(jq -r '.[0].number' <<<"$raw_matches")" = "${{ steps.pr.outputs.pr_number }}" ] ||
+            { echo "Target PR identity changed after local apply."; exit 1; }
+          pr=$(gh api --method GET "repos/$GITHUB_REPOSITORY/pulls/${{ steps.pr.outputs.pr_number }}")
+          [ "$(jq -r '.state' <<<"$pr")" = open ] &&
+          [ "$(jq -r '.head.repo.full_name' <<<"$pr")" = "$GITHUB_REPOSITORY" ] &&
+          [ "$(jq -r '.head.ref' <<<"$pr")" = "$TARGET_BRANCH" ] &&
+          [ "$(jq -r '.head.sha' <<<"$pr")" = "$EXPECTED_TARGET_SHA" ] &&
+          [ "$(jq -r '.base.repo.full_name' <<<"$pr")" = "$GITHUB_REPOSITORY" ] &&
+          { [ "$(jq -r '.base.ref' <<<"$pr")" = main ] ||
+            [[ "$(jq -r '.base.ref' <<<"$pr")" =~ ^release/[0-9]+\.[0-9]+\.x$ ]]; } &&
+          [[ "$(jq -r '.title' <<<"$pr")" == \[skia-sync\]* ]] ||
+            { echo "Target PR changed after the dry-run proof; refusing the direct push."; exit 1; }
 
-          Latest: $LATEST_MSG
-          Commit: $SKIA_SHA"
+      - name: Push the local repin
+        if: inputs.push
+        env:
+          SKIASHARP_AUTOBUMP_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+        run: |
+          set -euo pipefail
+          [ -n "${SKIASHARP_AUTOBUMP_TOKEN:-}" ] ||
+            { echo "push=true requires the SKIASHARP_AUTOBUMP_TOKEN secret."; exit 1; }
+          auth=$(printf 'x-access-token:%s' "$SKIASHARP_AUTOBUMP_TOKEN" | base64 -w 0)
+          GIT_CONFIG_COUNT=1 \
+          GIT_CONFIG_KEY_0=http.https://github.com/.extraheader \
+          GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $auth" \
+            git -C target push \
+              "--force-with-lease=refs/heads/$TARGET_BRANCH:$EXPECTED_TARGET_SHA" \
+              origin "HEAD:refs/heads/$TARGET_BRANCH"
+          unset auth
+          unset SKIASHARP_AUTOBUMP_TOKEN
 
-          REMOTE_BRANCH_SHA=$(git ls-remote --heads origin "refs/heads/$BRANCH" | awk '{print $1}')
-          if [ -n "$REMOTE_BRANCH_SHA" ]; then
-            git push --force-with-lease="refs/heads/$BRANCH:$REMOTE_BRANCH_SHA" \
-              origin "$BRANCH"
+      - name: Verify final refs and export results
+        id: result
+        run: |
+          set -euo pipefail
+          git -C target fetch --no-tags origin \
+            "+refs/heads/$TARGET_BRANCH:refs/remotes/origin/$TARGET_BRANCH"
+          FINAL_TARGET_SHA=$(git -C target rev-parse "refs/remotes/origin/$TARGET_BRANCH^{commit}")
+          FINAL_SKIA_SHA=$(git ls-remote --exit-code --heads "$EXPECTED_NATIVE_URL" \
+            "refs/heads/$SKIA_BRANCH" | awk 'NR == 1 { print $1 }')
+          [ "$FINAL_SKIA_SHA" = "$EXPECTED_SKIA_SHA" ] ||
+            { echo "mono/skia branch changed during the repin."; exit 1; }
+
+          if [ "$PUSH" = true ]; then
+            [ "$FINAL_TARGET_SHA" = "$(git -C target rev-parse 'HEAD^{commit}')" ] ||
+              { echo "Direct push did not reach the expected target branch head."; exit 1; }
           else
-            git push origin "$BRANCH"
+            [ "$FINAL_TARGET_SHA" = "$EXPECTED_TARGET_SHA" ] ||
+              { echo "Target branch changed during the dry run."; exit 1; }
           fi
 
-          TITLE="Sync Skia submodule and cgmanifest into $TARGET_BRANCH"
-          BODY="Automated update of the \`externals/skia/\` submodule to track \`mono/skia\`'s \`$SKIA_BRANCH\` branch.
-
-          This pull request targets the \`$TARGET_BRANCH\` branch in \`${{ github.repository }}\`.
-
-          The \`mono/skia\` git registration in \`cgmanifest.json\` is derived from the checked-out submodule SHA. The workflow opens a PR when either the submodule pointer or manifest hash changes, so it also repairs manifest drift.
-
-          Created by [auto-skia-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-skia-submodule-sync.yml)."
-
-          existing=$(gh pr list --head "$BRANCH" --base "$TARGET_BRANCH" --state open --json number --jq '.[0].number')
-          if [ -n "$existing" ]; then
-            gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$existing" \
-              -f title="$TITLE" \
-              -f body="$BODY" >/dev/null
-            echo "PR #$existing already exists, force-pushed update"
-          else
-            gh pr create --base "$TARGET_BRANCH" --head "$BRANCH" \
-              --title "$TITLE" \
-              --body "$BODY"
-          fi
+          {
+            echo "target_sha=$FINAL_TARGET_SHA"
+            echo "skia_sha=$FINAL_SKIA_SHA"
+            echo "pushed=$PUSH"
+          } >> "$GITHUB_OUTPUT"

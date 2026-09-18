@@ -160,13 +160,30 @@ The Skia entry in cgmanifest.json includes custom fields for version tracking:
 | `upstream_merge_commit` | SHA of the upstream `chrome/mNNN` branch tip that was merged into the fork |
 
 The [`auto-skia-submodule-sync`](../../.github/workflows/auto-skia-submodule-sync.yml)
-workflow runs daily to advance `externals/skia` to the `mono/skia` `skiasharp`
-branch and derive the Component Governance git registration's `commitHash` from
-the checked-out submodule. It opens a PR when either value changes, which also
-repairs manifest drift. The milestone fields above remain owned by the full Skia
-upstream update workflow. Scheduled runs sync `mono/skia`'s `skiasharp` branch
-into SkiaSharp's `main`; manual runs can set `skia_branch` and `target_branch`
-independently.
+workflow is a focused manual/reusable repin step for an existing Skia sync PR.
+It takes the existing `skia-sync/` PR head branch, the merged `mono/skia`
+branch, the separately recorded reviewed native PR SHA, and immutable full SHA
+values for both refs. Its default is a dry run: it proves the merged native SHA
+is a two-parent merge whose second parent is the reviewed SHA with an identical tree, then
+exports the planned unchanged target SHA and verified native SHA. The trusted
+repin script is checked out at the workflow revision, while the PR branch has
+only read credentials. A caller must explicitly set `push=true` to commit only
+`externals/skia` and
+`cgmanifest.json` and directly push the existing PR head branch.
+
+Push mode rejects protected, release, fork, closed, ambiguous, or non-
+`[skia-sync]` PR targets, including a head SHA mismatch or a base other than
+`main` or `release/A.B.x`. It repeats PR validation immediately before pushing,
+uses the automation token only for the final lease-guarded direct `git push`,
+and performs the preceding local commit with the trusted script and no write
+token.
+Mutation is accepted only when the workflow source is this file on
+`mono/SkiaSharp` `main`; dry runs may validate a feature revision. It rechecks
+both immutable refs afterward and never creates an automation branch or
+dependent pull request. The push has an exact `expected_target_sha` lease as a
+compare-and-swap guard; it rejects any changed target rather than overwriting
+it. The milestone fields above remain owned by the full Skia upstream update
+workflow.
 
 ### When to Update
 

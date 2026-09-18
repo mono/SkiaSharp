@@ -73,7 +73,7 @@ standard Darc/Maestro stages.
 | Pages - PR Staging - Sweep Stale | mono/SkiaSharp | Daily (06:00 UTC) | Stale staging deploys accumulate |
 | Sync - Samples | mono/SkiaSharp | Push/PR to `samples/` | Sample projects broken if failing |
 | Tests - Binding Generation Determinism | mono/SkiaSharp | Push/PR | Generated bindings drift undetected |
-| Sync - Skia Submodule | mono/SkiaSharp | Daily (10:30 UTC) | Skia submodule pin goes stale |
+| Repin SkiaSharp Sync PR | mono/SkiaSharp | Manual / reusable workflow call | Safely repins an existing Skia sync PR after its native merge |
 | Sync - Release Notes & API Diffs | mono/SkiaSharp | Push to main + daily | Release notes stop auto-updating |
 | Sync - Skia Upstream | mono/SkiaSharp | Every 6h | Upstream tracking breaks |
 | Fixer - Memory Leak | mono/SkiaSharp | Every 12h | Leak-hunting automation stops |
@@ -250,7 +250,7 @@ For each tracked GitHub Actions workflow:
   - **High**: Pages - Deploy, Sync - Samples, Sync - Release Notes & API Diffs, Sync - Skia Upstream,
     Release - Prepare, Release - Finish, Release - Tooling Tests
     (broken = user-facing impact or release process blocked)
-  - **Medium**: Go Live, Sync - Skia Submodule, Fixer - Memory Leak, Fixer - Performance,
+  - **Medium**: Go Live, Repin SkiaSharp Sync PR, Fixer - Memory Leak, Fixer - Performance,
     Sync - Issue Triage, Sync - Issue Template Versions, Tests - Binding Generation Determinism,
     Automation - Tooling Tests, Release - Milestones, Update GitHub Release summaries,
     PR - Backport, Pages - Go Live! (broken = automation degraded, manual workaround exists)
