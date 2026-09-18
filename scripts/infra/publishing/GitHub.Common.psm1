@@ -104,7 +104,14 @@ function Get-GitHubRelease([string] $Repository, [string] $Tag) {
         '--json', 'tagName,name,isPrerelease,targetCommitish,body,url'
     ) -AllowFailure
     if ($result.ExitCode -eq 0) {
-        return $result.Output | ConvertFrom-Json
+        try {
+            return $result.Output | ConvertFrom-Json
+        } catch {
+            if ($result.Output -match '(?i)^\s*release not found\s*$') {
+                return $null
+            }
+            throw "Unable to parse GitHub Release $Tag`: $($result.Output)"
+        }
     }
     $detail = "$($result.Output)`n$($result.Error)".Trim()
     if ($detail -match 'release not found|HTTP 404') {

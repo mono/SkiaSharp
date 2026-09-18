@@ -335,6 +335,24 @@ Assert-Equal $false $unavailableBuild.Available `
 Assert-Equal 'unavailable' $unavailableBuild.State `
     'An unavailable internal pipeline did not preserve its distinct state.'
 
+$script:ReleaseViewArguments = @()
+function global:gh {
+    $script:ReleaseViewArguments = @($args)
+    $global:LASTEXITCODE = 0
+    'release not found'
+}
+try {
+    Assert-Equal $null (Get-GitHubRelease `
+        -Repository 'mono/SkiaSharp' `
+        -Tag 'v4.153.0-rc.1.26456.2') `
+        'A successful non-JSON missing-release response was not treated as absent.'
+} finally {
+    Remove-Item Function:\gh
+}
+Assert-True (($script:ReleaseViewArguments -join ' ') -match
+    'release view v4\.153\.0-rc\.1\.26456\.2') `
+    'The missing-release regression did not exercise gh release view.'
+
 $script:PullListArguments = @()
 function global:gh {
     $script:PullListArguments = @($args)
