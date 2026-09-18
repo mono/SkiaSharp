@@ -71,6 +71,7 @@ Task("libSkiaSharp")
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, xcodeArch, properties: new Dictionary<string, string> {
             { $"{VARIANT.ToUpper()}_DEPLOYMENT_TARGET_VERSION", GetDeploymentTarget(arch) },
             { $"SKIA_PLATFORM", platform },
+            { "SUPPORTS_MACCATALYST", VARIANT == "maccatalyst" ? "YES" : "NO" },
         });
 
         SafeCopy(
@@ -114,6 +115,7 @@ Task("libHarfBuzzSharp")
 
         RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, xcodeArch, properties: new Dictionary<string, string> {
             { $"{VARIANT.ToUpper()}_DEPLOYMENT_TARGET_VERSION", GetDeploymentTarget(arch) },
+            { "SUPPORTS_MACCATALYST", VARIANT == "maccatalyst" ? "YES" : "NO" },
         });
 
         SafeCopy(
