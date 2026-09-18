@@ -133,6 +133,12 @@ def main():
         sha = data.get("meta", {}).get("shas", {}).get(sha_field, "")
         if sha and not re.fullmatch(r"[0-9a-f]{40}", sha):
             errors.append(f"meta.shas.{sha_field} is not a valid 40-char hex SHA: {sha}")
+    companion_head = data.get("companionPr", {}).get("headSha", "")
+    if companion_head and not re.fullmatch(r"[0-9a-f]{40}", companion_head):
+        errors.append(
+            "companionPr.headSha is not a valid 40-char hex SHA: "
+            f"{companion_head}"
+        )
 
     # No absolute paths
     json_text = json.dumps(data)

@@ -16,6 +16,7 @@ on:
   pull_request:
     paths:
       - ".agents/skills/ci-status/**"
+      - ".agents/skills/merge-skia-update/**"
       - ".agents/skills/review-skia-update/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
@@ -27,6 +28,7 @@ on:
     branches: [main]
     paths:
       - ".agents/skills/ci-status/**"
+      - ".agents/skills/merge-skia-update/**"
       - ".agents/skills/review-skia-update/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
@@ -83,6 +85,9 @@ jobs:
 
       - name: Run review-skia-update tooling tests
         run: python3 .agents/skills/review-skia-update/scripts/check_companion_test.py
+
+      - name: Run merge-skia-update tooling tests
+        run: pwsh -NoLogo -NoProfile -File .agents/skills/merge-skia-update/scripts/tests/Update-SkiaSharpSkiaCommit.test.ps1
 
       - name: Run workflow safety tests
         run: python3 -m unittest discover -s .github/scripts/tests -p "test_*.py" -v
