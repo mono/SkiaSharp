@@ -229,8 +229,8 @@ jobs:
       repository: mono/skia
       pull_request: ${{ fromJSON(needs.prepare.outputs.native_pr) }}
       expected_head_sha: ${{ needs.prepare.outputs.native_head }}
-    secrets:
-      SKIASHARP_AUTOBUMP_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+      artifact_name: skia-native-merge-message-${{ github.run_id }}
+      post_comment: false
 
   native-state:
     needs: [prepare, native-message]
@@ -241,11 +241,12 @@ jobs:
     outputs:
       native_merge_sha: ${{ steps.merge.outputs.native_merge_sha }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Download native merge message
+        if: needs.prepare.outputs.native_merged != 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          ref: ${{ github.sha }}
-          fetch-depth: 1
-          persist-credentials: false
+          name: skia-native-merge-message-${{ github.run_id }}
+          path: ${{ runner.temp }}/native-merge-message
       - id: merge
         env:
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
@@ -253,7 +254,6 @@ jobs:
           HEAD: ${{ needs.prepare.outputs.native_head }}
           BASE: ${{ needs.prepare.outputs.native_base }}
           ALREADY_MERGED: ${{ needs.prepare.outputs.native_merged }}
-          COMMENT_ID: ${{ needs.native-message.outputs.comment_id }}
         run: |
           set -euo pipefail
           pr=$(gh api "repos/mono/skia/pulls/$PR")
@@ -261,7 +261,6 @@ jobs:
             [ "$(jq -r '.merged_at != null' <<<"$pr")" = true ] || { echo "::error::Native PR is no longer merged."; exit 1; }
             sha=$(jq -r '.merge_commit_sha' <<<"$pr")
           else
-            [[ "$COMMENT_ID" =~ ^[1-9][0-9]*$ ]] || { echo "::error::Native merge message was not published."; exit 1; }
             [ "$(jq -r '.state' <<<"$pr")" = open ] && [ "$(jq -r '.head.sha' <<<"$pr")" = "$HEAD" ] && [ "$(jq -r '.base.ref' <<<"$pr")" = "$BASE" ] ||
               { echo "::error::Native PR identity/head/base changed."; exit 1; }
             set +e
@@ -272,8 +271,20 @@ jobs:
               { cat "$RUNNER_TEMP/native-checks.err"; echo "::error::Native checks no longer pass."; exit 1; }
             [ "$check_status" -eq 0 ] ||
               { cat "$RUNNER_TEMP/native-checks.err"; echo "::error::Native checks were unavailable."; exit 1; }
-            gh api "repos/mono/skia/issues/comments/$COMMENT_ID" --jq .body > "$RUNNER_TEMP/native-message.md"
-            python3 .github/scripts/parse-merge-message.py --input "$RUNNER_TEMP/native-message.md" --output "$RUNNER_TEMP/native-message.json"
+            message="$RUNNER_TEMP/native-merge-message/merge-message.json"
+            jq -e \
+              --arg repository mono/skia \
+              --argjson pr "$PR" \
+              --arg head "$HEAD" '
+                keys == ["body","head_sha","missing_context","pull_request","repository","schema_version","subject"] and
+                .schema_version == 1 and
+                .repository == $repository and
+                .pull_request == $pr and
+                .head_sha == $head and
+                (.subject | type == "string" and length > 0 and length <= 200) and
+                (.body | type == "string") and
+                .missing_context == []' "$message" >/dev/null ||
+                  { echo "::error::Native merge-message artifact is invalid."; exit 1; }
             if [ "$(jq -r '.draft' <<<"$pr")" = true ]; then
               gh pr ready "$PR" --repo mono/skia
             fi
@@ -281,8 +292,8 @@ jobs:
             [ "$(jq -r '.state' <<<"$pr")" = open ] && [ "$(jq -r '.draft' <<<"$pr")" = false ] &&
             [ "$(jq -r '.head.sha' <<<"$pr")" = "$HEAD" ] && [ "$(jq -r '.base.ref' <<<"$pr")" = "$BASE" ] ||
               { echo "::error::Native PR changed while marking ready."; exit 1; }
-            jq -n --arg sha "$HEAD" --argjson message "$(cat "$RUNNER_TEMP/native-message.json")" \
-              '{sha:$sha, merge_method:"merge", commit_title:$message.subject, commit_message:$message.body}' > "$RUNNER_TEMP/native-merge.json"
+            jq -n --arg sha "$HEAD" --slurpfile message "$message" \
+              '{sha:$sha, merge_method:"merge", commit_title:$message[0].subject, commit_message:$message[0].body}' > "$RUNNER_TEMP/native-merge.json"
             pr=$(gh api "repos/mono/skia/pulls/$PR")
             [ "$(jq -r '.state' <<<"$pr")" = open ] && [ "$(jq -r '.head.sha' <<<"$pr")" = "$HEAD" ] &&
             [ "$(jq -r '.base.ref' <<<"$pr")" = "$BASE" ] ||
@@ -320,8 +331,8 @@ jobs:
       repository: mono/SkiaSharp
       pull_request: ${{ fromJSON(needs.prepare.outputs.parent_pr) }}
       expected_head_sha: ${{ needs.repin.outputs.target_sha }}
-    secrets:
-      SKIASHARP_AUTOBUMP_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+      artifact_name: skia-parent-merge-message-${{ github.run_id }}
+      post_comment: false
 
   merge-parent:
     needs: [prepare, native-state, repin, parent-message]
@@ -333,11 +344,11 @@ jobs:
     outputs:
       parent_merge_sha: ${{ steps.merge.outputs.parent_merge_sha }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Download parent merge message
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          ref: ${{ github.sha }}
-          fetch-depth: 1
-          persist-credentials: false
+          name: skia-parent-merge-message-${{ github.run_id }}
+          path: ${{ runner.temp }}/parent-merge-message
       - id: merge
         env:
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
@@ -345,12 +356,22 @@ jobs:
           HEAD: ${{ needs.repin.outputs.target_sha }}
           BASE: ${{ needs.prepare.outputs.parent_base }}
           NATIVE_MERGE: ${{ needs.native-state.outputs.native_merge_sha }}
-          COMMENT_ID: ${{ needs.parent-message.outputs.comment_id }}
         run: |
           set -euo pipefail
-          [[ "$COMMENT_ID" =~ ^[1-9][0-9]*$ ]] || { echo "::error::Parent merge message was not published."; exit 1; }
-          gh api "repos/mono/SkiaSharp/issues/comments/$COMMENT_ID" --jq .body > "$RUNNER_TEMP/parent-message.md"
-          python3 .github/scripts/parse-merge-message.py --input "$RUNNER_TEMP/parent-message.md" --output "$RUNNER_TEMP/parent-message.json"
+          message="$RUNNER_TEMP/parent-merge-message/merge-message.json"
+          jq -e \
+            --arg repository mono/SkiaSharp \
+            --argjson pr "$PR" \
+            --arg head "$HEAD" '
+              keys == ["body","head_sha","missing_context","pull_request","repository","schema_version","subject"] and
+              .schema_version == 1 and
+              .repository == $repository and
+              .pull_request == $pr and
+              .head_sha == $head and
+              (.subject | type == "string" and length > 0 and length <= 200) and
+              (.body | type == "string") and
+              .missing_context == []' "$message" >/dev/null ||
+                { echo "::error::Parent merge-message artifact is invalid."; exit 1; }
           pr=$(gh api "repos/mono/SkiaSharp/pulls/$PR")
           [ "$(jq -r '.state' <<<"$pr")" = open ] && [ "$(jq -r '.head.sha' <<<"$pr")" = "$HEAD" ] && [ "$(jq -r '.base.ref' <<<"$pr")" = "$BASE" ] ||
             { echo "::error::Parent PR identity/head/base changed."; exit 1; }
@@ -368,8 +389,8 @@ jobs:
           [ "$(jq -r '.state' <<<"$pr")" = open ] && [ "$(jq -r '.draft' <<<"$pr")" = false ] &&
           [ "$(jq -r '.head.sha' <<<"$pr")" = "$HEAD" ] && [ "$(jq -r '.base.ref' <<<"$pr")" = "$BASE" ] ||
             { echo "::error::Parent PR changed while marking ready."; exit 1; }
-          jq -n --arg sha "$HEAD" --argjson message "$(cat "$RUNNER_TEMP/parent-message.json")" \
-            '{sha:$sha, merge_method:"squash", commit_title:$message.subject, commit_message:$message.body}' > "$RUNNER_TEMP/parent-merge.json"
+          jq -n --arg sha "$HEAD" --slurpfile message "$message" \
+            '{sha:$sha, merge_method:"squash", commit_title:$message[0].subject, commit_message:$message[0].body}' > "$RUNNER_TEMP/parent-merge.json"
           pr=$(gh api "repos/mono/SkiaSharp/pulls/$PR")
           [ "$(jq -r '.state' <<<"$pr")" = open ] && [ "$(jq -r '.head.sha' <<<"$pr")" = "$HEAD" ] &&
           [ "$(jq -r '.base.ref' <<<"$pr")" = "$BASE" ] ||
@@ -396,8 +417,8 @@ jobs:
           NATIVE_PR: ${{ needs.prepare.outputs.native_pr }}
           REVIEWED_NATIVE_HEAD: ${{ needs.prepare.outputs.native_head }}
           PARENT_BASE: ${{ needs.prepare.outputs.parent_base }}
-          NATIVE_MESSAGE_URL: ${{ needs.native-message.outputs.comment_url }}
-          PARENT_MESSAGE_URL: ${{ needs.parent-message.outputs.comment_url }}
+          NATIVE_MESSAGE_RESULT: ${{ needs.native-message.result }}
+          PARENT_MESSAGE_RESULT: ${{ needs.parent-message.result }}
         run: |
           set -euo pipefail
           native=$(gh api "repos/mono/skia/pulls/$NATIVE_PR")
@@ -426,8 +447,17 @@ jobs:
             sleep 20
           done
           [ -n "$ci_url" ] || { echo "::error::Base-branch CI did not start within two minutes."; exit 1; }
-          native_message="${NATIVE_MESSAGE_URL:-Not generated in this resumed run.}"
-          parent_message="${PARENT_MESSAGE_URL:-Not generated in this resumed run.}"
-          body=$(printf 'Skia sync merged and verified.\n\n* mono/skia merge: `%s`\n* mono/SkiaSharp merge: `%s`\n* Native merge message: %s\n* Parent merge message: %s\n* Base-branch CI: %s' "$native_merge" "$parent_merge" "$native_message" "$parent_message" "$ci_url")
+          artifacts_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID#artifacts"
+          if [ "$NATIVE_MESSAGE_RESULT" = success ]; then
+            native_message="[skia-native-merge-message-$GITHUB_RUN_ID]($artifacts_url)"
+          else
+            native_message="Not generated in this resumed run."
+          fi
+          if [ "$PARENT_MESSAGE_RESULT" = success ]; then
+            parent_message="[skia-parent-merge-message-$GITHUB_RUN_ID]($artifacts_url)"
+          else
+            parent_message="Not generated in this resumed run."
+          fi
+          body=$(printf 'Skia sync merged and verified.\n\n* mono/skia merge: `%s`\n* mono/SkiaSharp merge: `%s`\n* Native merge message artifact: %s\n* Parent merge message artifact: %s\n* Base-branch CI: %s' "$native_merge" "$parent_merge" "$native_message" "$parent_message" "$ci_url")
           jq -n --arg body "$body" '{body:$body}' > "$RUNNER_TEMP/final-comment.json"
           gh api --method POST "repos/mono/SkiaSharp/issues/$PARENT_PR/comments" --input "$RUNNER_TEMP/final-comment.json" >/dev/null

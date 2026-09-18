@@ -22,7 +22,6 @@ def load(name: str, filename: str):
 
 
 PAIR = load("resolve_skia_sync_pair", "resolve-skia-sync-pair.py")
-MESSAGE = load("parse_merge_message", "parse-merge-message.py")
 STATE = load("skia_sync_review_state", "skia-sync-review-state.py")
 
 
@@ -112,25 +111,6 @@ class PairResolverTests(unittest.TestCase):
         native["base"]["ref"] = "main"
         with self.assertRaises(PAIR.PairValidationError):
             PAIR.resolve_pair(parent, native, "merge")
-
-
-class MergeMessageParserTests(unittest.TestCase):
-    def test_extracts_subject_and_body(self):
-        self.assertEqual(
-            {"subject": "Update Skia (#367)", "body": "\nContext: https://example.test"},
-            MESSAGE.parse_merge_message("```text\nUpdate Skia (#367)\n\nContext: https://example.test\n```\n"),
-        )
-
-    def test_rejects_ambiguous_and_missing_context(self):
-        for value in (
-            "```text\none\n```\n```text\ntwo\n```",
-            "```json\n{}\n```\n```text\none\n```",
-            "Missing context: email\n```text\none\n```",
-            "```text\n\nbody\n```",
-        ):
-            with self.subTest(value=value):
-                with self.assertRaises(MESSAGE.MessageValidationError):
-                    MESSAGE.parse_merge_message(value)
 
 
 class ReviewEvidenceStateTests(unittest.TestCase):

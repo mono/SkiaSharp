@@ -27,6 +27,7 @@ class SkiaSyncWorkflowTests(unittest.TestCase):
         cls.review_lock = (WORKFLOWS / "skia-sync-review.lock.yml").read_text(encoding="utf-8")
         cls.merge_message = (WORKFLOWS / "merge-message.md").read_text(encoding="utf-8")
         cls.merge_message_lock = (WORKFLOWS / "merge-message.lock.yml").read_text(encoding="utf-8")
+        cls.merge_message_command = (WORKFLOWS / "merge-message-command.yml").read_text(encoding="utf-8")
         cls.merge = (WORKFLOWS / "skia-sync-merge.yml").read_text(encoding="utf-8")
         cls.merge_yaml = load_yaml(WORKFLOWS / "skia-sync-merge.yml")
         cls.persist = (WORKFLOWS / "persist-aw-data.yml").read_text(encoding="utf-8")
@@ -99,29 +100,38 @@ class SkiaSyncWorkflowTests(unittest.TestCase):
 
     def test_merge_message_uses_exact_input_target_and_output_contract(self):
         for required in (
-            "name: merge-message",
+            "name: Merge Message Agent",
             "workflow_call:",
             "expected_head_sha:",
-            "SKIASHARP_AUTOBUMP_TOKEN:",
-            "append-only-comments: true",
+            "artifact_name:",
+            "post_comment:",
             "jobs:",
             "resolve:",
-            "target: ${{ needs.resolve.outputs.pull_request }}",
-            "target-repo: ${{ needs.resolve.outputs.repository }}",
-            "needs: [resolve]",
-            "GH_TOKEN:",
-            "Revalidate deterministic comment target",
-            "Target changed before add-comment.",
+            "publish-merge-message:",
+            "merge-message.json",
+            "Upload structured merge message",
+            "Post direct merge-message comment",
+            "if: steps.validate.outputs.post_comment == 'true'",
+            "Call `publish_merge_message` exactly once",
         ):
             self.assertIn(required, self.merge_message)
-        self.assertNotIn('target: "*"', self.merge_message)
+        self.assertNotIn("add-comment:", self.merge_message)
+        self.assertNotIn("SKIASHARP_AUTOBUMP_TOKEN", self.merge_message)
+        self.assertNotIn("github.event_name == 'workflow_call'", self.merge_message)
+        self.assertIn("name: Merge Message", self.merge_message_command)
+        self.assertIn("github.event.comment.body == '/merge-message'", self.merge_message_command)
+        for association in ("OWNER", "MEMBER", "COLLABORATOR"):
+            self.assertIn(
+                f"github.event.comment.author_association == '{association}'",
+                self.merge_message_command,
+            )
+        self.assertIn("uses: ./.github/workflows/merge-message.lock.yml", self.merge_message_command)
+        self.assertIn("post_comment: true", self.merge_message_command)
         self.assertIn("workflow_call:", self.merge_message_lock)
-        self.assertIn("comment_id:", self.merge_message_lock)
-        self.assertIn("comment_url:", self.merge_message_lock)
-        self.assertIn(r'"target\":\"${{ needs.resolve.outputs.pull_request }}\"', self.merge_message_lock)
-        self.assertIn(r'"target-repo\":\"${{ needs.resolve.outputs.repository }}\"', self.merge_message_lock)
-        self.assertNotIn("env.GITHUB_TOKEN", self.merge_message_lock)
-        self.assertIn("TARGET_REPOSITORY: ${{ needs.resolve.outputs.repository }}", self.merge_message_lock)
+        self.assertIn("publish_merge_message", self.merge_message_lock)
+        self.assertIn("Upload structured merge message", self.merge_message_lock)
+        self.assertNotIn("SKIASHARP_AUTOBUMP_TOKEN", self.merge_message_lock)
+        self.assertNotIn("add_comment", self.merge_message_lock)
 
     def test_merge_state_machine_blocks_failed_or_stale_predecessors(self):
         for required in (
@@ -133,8 +143,8 @@ class SkiaSyncWorkflowTests(unittest.TestCase):
             'all(.[]; .bucket == "pass" or .bucket == "skipping")',
             "Prepare-SkiaReleaseBranches.ps1",
             "gh pr ready",
-            'commit_title:$message.subject',
-            'commit_message:$message.body',
+            'commit_title:$message[0].subject',
+            'commit_message:$message[0].body',
             'merge_method:"merge"',
             'merge_method:"squash"',
             "uses: ./.github/workflows/auto-skia-submodule-sync.yml",
@@ -152,9 +162,18 @@ class SkiaSyncWorkflowTests(unittest.TestCase):
             "review-provenance.json",
             "actions/artifacts/$review_artifact/zip",
             "Review artifact contents do not match the marker.",
+            "artifact_name: skia-native-merge-message-${{ github.run_id }}",
+            "artifact_name: skia-parent-merge-message-${{ github.run_id }}",
+            "Download native merge message",
+            "Download parent merge message",
+            "Native merge-message artifact is invalid.",
+            "Parent merge-message artifact is invalid.",
         ):
             self.assertIn(required, self.merge)
         self.assertEqual(2, self.merge.count("uses: ./.github/workflows/merge-message.lock.yml"))
+        self.assertNotIn("parse-merge-message.py", self.merge)
+        self.assertNotIn("COMMENT_ID", self.merge)
+        self.assertNotIn("comment_url", self.merge)
         self.assertNotIn("parent_repinned", self.merge)
         self.assertNotIn("draft=false", self.merge)
         self.assertNotIn("component.other.commitHash", self.merge)

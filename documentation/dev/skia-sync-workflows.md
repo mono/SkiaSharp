@@ -18,6 +18,12 @@ existing parent, and squash-merges it. It deliberately does not wait for post-re
 CI because the repin proves the merged native tree is identical to the reviewed tree;
 base-branch CI is started and verified after landing.
 
+The coordinator invokes the existing merge-message agent twice with immutable heads.
+Reusable invocations publish validated `merge-message.json` artifacts that the merge
+jobs consume directly; they do not add intermediate PR comments. A maintainer can still
+comment `/merge-message` directly on a PR to create both the artifact and a new
+human-readable comment.
+
 Manual dispatch is plan-only by default. Applying is restricted to the trusted
 `mono/SkiaSharp` `main` workflow revision. Failed or partial runs are resumable, but
 every mutation rechecks the exact PR identity, base, and current head first. The
