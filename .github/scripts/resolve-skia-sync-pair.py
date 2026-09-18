@@ -19,10 +19,38 @@ MILESTONE_BRANCH_RE = re.compile(r"^skia-sync/m([1-9][0-9]*)$")
 SKIA_SYNC_BRANCH_RE = re.compile(r"^skia-sync/[A-Za-z0-9._-]+$")
 MILESTONE_TEXT_RE = re.compile(r"\bchrome/m([1-9][0-9]*)\b", re.IGNORECASE)
 RELEASE_BRANCH_RE = re.compile(r"^release/[0-9]+\.[0-9]+\.x$")
+POSITIVE_DECIMAL_RE = re.compile(r"^[1-9][0-9]*$")
+COMMENT_RE = re.compile(
+    r"^/skia-sync-review ([1-9][0-9]*) ([1-9][0-9]*)$"
+)
 
 
 class PairValidationError(ValueError):
     """The two PRs do not form a safe Skia sync review pair."""
+
+
+def positive_pr_number(value: object, description: str) -> int:
+    """Parse one positive decimal PR number without accepting shell-like forms."""
+
+    if not isinstance(value, str) or not POSITIVE_DECIMAL_RE.fullmatch(value):
+        raise PairValidationError(f"{description} must be a positive decimal integer.")
+    return int(value)
+
+
+def parse_comment_ids(comment: object) -> tuple[int, int]:
+    """Parse exactly `/skia-sync-review <skiasharp-pr> <skia-pr>`."""
+
+    if not isinstance(comment, str):
+        raise PairValidationError("Review command must be text.")
+    match = COMMENT_RE.fullmatch(comment)
+    if not match:
+        raise PairValidationError(
+            "Expected exactly: /skia-sync-review <skiasharp-pr-number> <skia-pr-number>."
+        )
+    return (
+        positive_pr_number(match.group(1), "SkiaSharp PR number"),
+        positive_pr_number(match.group(2), "Skia PR number"),
+    )
 
 
 def _field(pr: dict[str, Any], path: str) -> Any:
@@ -197,16 +225,28 @@ def write_outputs(contract: dict[str, Any], output_path: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--skiasharp-pr", type=int, required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument(
+        "--comment",
+        help="Exact slash command: /skia-sync-review <skiasharp-pr> <skia-pr>.",
+    )
+    source.add_argument("--skiasharp-pr", type=lambda value: positive_pr_number(value, "SkiaSharp PR number"))
+    parser.add_argument("--skia-pr", type=lambda value: positive_pr_number(value, "Skia PR number"))
     parser.add_argument("--fixture", type=Path, help="Offline JSON with parent and native PR payloads.")
     args = parser.parse_args()
     try:
+        if args.comment is not None:
+            skiasharp_pr, skia_pr = parse_comment_ids(args.comment)
+        else:
+            if args.skia_pr is None:
+                raise PairValidationError("--skia-pr is required with --skiasharp-pr.")
+            skiasharp_pr, skia_pr = args.skiasharp_pr, args.skia_pr
         if args.fixture:
             fixture = json.loads(args.fixture.read_text(encoding="utf-8"))
             parent, native = fixture["parent"], fixture["native"]
         else:
-            parent = _get_pr(SKIASHARP_REPOSITORY, args.skiasharp_pr)
-            native = _get_pr(SKIA_REPOSITORY, _link(_field(parent, "body"), SKIA_REPOSITORY))
+            parent = _get_pr(SKIASHARP_REPOSITORY, skiasharp_pr)
+            native = _get_pr(SKIA_REPOSITORY, skia_pr)
         contract = resolve_pair(parent, native)
         print(json.dumps(contract, sort_keys=True))
         if output := os.environ.get("GITHUB_OUTPUT"):
