@@ -231,6 +231,48 @@ The publishing tests cover preview, RC, stable promotion, idempotency, multiple 
         -Mode $Mode
 }
 
+# Exposes Finish's exact NuGet shipment to the required milestone-maintenance job.
+function Set-ReleaseFinishOutput([pscustomobject] $Release, [string] $PublicVersion, [string] $SourceCommit) {
+    if (!$env:GITHUB_OUTPUT) {
+        return
+    }
+    @(
+        "release_version=$PublicVersion"
+        "release_numeric=$($Release.Numeric)"
+        "release_tag=$($Release.Tag)"
+        "source_commit=$SourceCommit"
+    ) | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding utf8
+}
+
+# Requires the public package to identify the expected release branch and one
+# commit reachable from that branch before Finish creates any immutable state.
+function Assert-ReleasePackageSource(
+    [string] $Root,
+    [pscustomobject] $Release,
+    [pscustomobject] $PackageSource
+) {
+    $packageBranch = ([string] $PackageSource.Branch) -replace '^refs/heads/'
+    if (![string]::Equals($packageBranch, $Release.Branch, [StringComparison]::Ordinal)) {
+        throw "$($Release.Tag) names source branch $packageBranch, expected $($Release.Branch)."
+    }
+    $branchCommit = Get-ResolvedGitCommit -Root $Root -Reference $packageBranch
+    $sourceCommit = Get-ResolvedGitCommit -Root $Root -Reference $PackageSource.Commit
+    $ancestry = Invoke-Git `
+        -Root $Root `
+        -Arguments @('merge-base', '--is-ancestor', $sourceCommit, $branchCommit) `
+        -AllowFailure
+    if ($ancestry.ExitCode -eq 1) {
+        throw "Package source commit $sourceCommit is not reachable from $packageBranch at $branchCommit."
+    }
+    if ($ancestry.ExitCode -ne 0) {
+        throw "Unable to verify package source ancestry: $($ancestry.Output)"
+    }
+    return [pscustomobject] @{
+        Branch = $packageBranch
+        Commit = $sourceCommit
+    }
+}
+
 # 1. Resolve the exact public release.
 # 1.1 Resolve an abbreviated prerelease identity to one public NuGet version.
 $requestedVersion = $Version
@@ -244,10 +286,12 @@ if ($Version -ne $requestedVersion) {
 $release = Get-ReleaseIdentity -PublicVersion $Version
 # 1.3 Read the source commit directly from the public SkiaSharp nuspec.
 $packageSource = Get-NuGetPackageSource -PackageId 'SkiaSharp' -PackageVersion $Version
+$packageSource = Assert-ReleasePackageSource `
+    -Root $root `
+    -Release $release `
+    -PackageSource $packageSource
 Write-ReleaseStatus ready "SkiaSharp $Version was built from $($packageSource.Commit) on $($packageSource.Branch)."
-if ($packageSource.Branch -ne $release.Branch) {
-    Write-ReleaseStatus warning "The package names $($packageSource.Branch), while the version implies $($release.Branch)."
-}
+Set-ReleaseFinishOutput -Release $release -PublicVersion $Version -SourceCommit $packageSource.Commit
 
 # 2. Inspect and converge immutable GitHub state.
 # 2.1 Freeze the current release state before applying any action.

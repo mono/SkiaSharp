@@ -41,6 +41,11 @@ high-cost failures before drafting:
 - Inspect human discussion on the current PR and every related or superseded PR whose work or
   feedback is carried forward. Adopted feedback needs source-backed attribution or a required
   `Missing context:` line when the contributor's email cannot be verified.
+- Establish the old side of every change from the PR base, not from an earlier commit in the
+  same PR. Before using `move`, `replace`, `remove`, `extract`, `migrate`, or `centralize`,
+  verify that the departing component or behavior existed at the base. When both the source
+  and destination were introduced on the branch, describe the final net addition instead;
+  the intra-PR refactor is development chronology unless it explains a lasting constraint.
 
 ## Workflow
 
@@ -259,6 +264,10 @@ Check the final draft by claim type:
 - **Before/after behavior:** verify both sides in the artifacts that actually changed. If
   code already behaved that way and only guidance or validation changed, attribute the
   change to the guidance or validation.
+- **Baseline-relative change verbs:** scan for `move`, `replace`, `remove`, `extract`,
+  `migrate`, and `centralize`. Verify the named old component in the PR base. If it existed
+  only in an earlier branch commit, rewrite the claim around the final base-to-head diff
+  rather than presenting local commit history as repository history.
 - **Quantifiers and bounds:** scan for `all`, `every`, `only`, `no`, `always`, `never`,
   `exactly`, counts, minimums, maximums, and inequality symbols. Record the search universe
   and check the complete relevant set, including generated or aggregate surfaces, for an

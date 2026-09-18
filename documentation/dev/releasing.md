@@ -50,6 +50,62 @@ Prepare, Finish, and Milestones use the same two-dispatch pattern: first run
 with `push` unchecked to review a read-only plan, then run again with identical
 inputs and `push` checked.
 
+## Audit a release line
+
+Use the focused, read-only summary for one major/minor line:
+
+```powershell
+pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.152
+```
+
+The command accepts exactly `A.B`, with optional `-Json`. It selects
+`release/A.B.x` as maintenance when present; otherwise it uses `main` only when
+its checked-in SkiaSharp version belongs to that line. It lists real specific
+release branches and every exact public SkiaSharp package version, including
+multiple prerelease builds. It checks each public shipment's NuGet provenance,
+exact tag, and GitHub Release. It also checks the expected incoming Skia sync
+branch and open pull request (`skia-sync/release-A.B.x` for a servicing line or
+`skia-sync/mMILESTONE` for the current line on `main`). The separate
+`skia-sync/main` branch follows the bleeding-edge Google Skia `main` tip and is
+not the milestone sync used to decide release readiness. A non-draft incoming
+milestone PR is shown as work to merge before cutting the next release; a draft
+PR is visible but does not block the release recommendation.
+
+The audit also mirrors the Skia sync detector's upstream work check. It compares
+the exact `chrome/mMILESTONE` head with the existing mono/skia sync branch when
+one exists, otherwise with `release/A.B.x` in mono/skia or `skiasharp` for the
+current line. New upstream commits are reported with their count and suppress a
+new release-cut recommendation until the milestone sync workflow is run and its
+PRs are merged. Existing publication and Finish work remains actionable.
+
+The immediately following line is also recognized before it becomes active on
+`main`. For example, while `main` is still 4.154/m154, auditing `4.155` reports
+an existing `skia-sync/m155` pull request or available `chrome/m155` work
+instead of returning an empty line. A pending milestone PR must complete before
+release preparation for that line can begin.
+
+Invoke the `release-audit` skill rather than the script directly when auditing
+several lines or deciding what to do next. The skill expands a range such as
+`4.150-4.155` or discovers a prefix such as `4.15*`, runs the line audits in
+parallel, and aggregates their findings. Each script invocation already checks
+exact-tip health from the internal `skiasharp-package` pipeline and reports the
+build ID and BAR ID. A release branch is publication-ready only when its
+matching build succeeded and recorded one BAR ID; a new cut is ready only when
+the maintenance tip has the same evidence and upstream Skia is current. If the
+internal pipeline cannot be reached, the script preserves the other evidence,
+reports the unavailable build check, and exits `2` rather than guessing.
+
+The report recommends only the next owner action: protected BAR-to-NuGet
+publication, `finish-release.ps1 -Mode DryRun`, or
+`prepare-release.ps1 -Mode DryRun`. It intentionally does not inspect BAR
+details, release notes, support metadata, milestone assignments, or milestone
+maintenance; those remain owned by their detailed workflows. Exit `0` means no
+action is needed, `1` means release work remains, and `2` means a required
+remote service or tool was unavailable.
+
+Interactive output uses PowerShell's aligned table formatting and host-aware
+emphasis. Redirected output is plain text, and `-Json` remains undecorated.
+
 ## 1. Prepare the release branches
 
 Open
@@ -142,7 +198,8 @@ multiple builds match, use the exact version, such as
 `4.153.0-preview.1.26453.1`.
 
 Review the plan's source branch, source commit, tag, release title, support
-update, and follow-up workflows. After the push run, verify:
+update, follow-up workflows, and planned milestone mutations. After the push
+run, verify:
 
 - the immutable exact-version tag was created or verified at the package's
   source commit;
@@ -150,26 +207,29 @@ update, and follow-up workflows. After the push run, verify:
   generated changelog starts at the preceding exact shipment shown in the plan;
 - the support state was already correct or the release-support PR was opened
   or updated; and
-- release-note generation was dispatched.
+- release-note generation was dispatched; and
+- milestone reconciliation plus date/rollover maintenance completed after
+  verifying the immutable tag points to the public package's source commit.
 
 Stable releases also dispatch the issue-template version update.
 
-## 6. Reconcile and advance milestones
+## 6. Repair milestones when needed
 
-After Release - Finish has created or verified the shipped tag, open
+Release - Finish already reconciles and advances milestones for every completed
+preview, RC, stable, patch, and hotfix. To inspect or repair milestone state
+separately, open
 [Release - Milestones](https://github.com/mono/SkiaSharp/actions/workflows/release-milestones.yml),
 select **Run workflow**, and choose `main` as the workflow branch.
 
 | Input | Value |
 | --- | --- |
-| `version` | Numeric release core, such as `4.153.0` or `4.153.0.1` |
-| `reconcile` | Checked |
-| `update` | Checked |
+| `version` | Numeric release core when reconciling, such as `4.153.0` or `4.153.0.1` |
+| `reconcile` | Select only when repairing shipped PR/issue assignments |
+| `update` | Select only when repairing dates, rollover, or closures |
 | `push` | Use the two-dispatch pattern above |
 
-Run this after previews and RCs as well as stable releases. Warnings about
-missing tags, milestones, or release boundaries block safe mutation and must
-be resolved rather than ignored.
+Warnings about missing tags, milestones, or release boundaries block safe
+mutation and must be resolved rather than ignored.
 
 The maintained cadence follows Chromium's overlapping two-week trains. This
 M153/M154 example shows each offset from its Chromium branch point; the

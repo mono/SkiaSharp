@@ -146,6 +146,20 @@
         "No trailer uses an address absent from the supplied evidence \u2014 in particular no constructed GitHub noreply address, and no automated-tool trailer that the evidence does not record",
         "The message invents no verification evidence, test runs, or issue references that the notes do not support"
       ]
+    },
+    {
+      "id": 15,
+      "name": "intra-pr-refactor-is-not-base-history",
+      "prompt": "Write the squash commit message for PR #5342 in acme/toolbox. Offline; use only this complete evidence dump.\n\nThe PR base contains neither `.agents/skills/release-audit/SKILL.md` nor `scripts/ReleaseBuild.Common.psm1`.\n\nBranch commits, oldest first:\n  111aaaa  Add release audit skill with inline Azure pipeline query instructions\n  222bbbb  Add release audit script\n  333cccc  Move Azure query and build classification from skill prose into ReleaseBuild.Common.psm1\n  444dddd  Shorten release audit skill\n\nThe final base-to-head diff adds both files:\n- `scripts/ReleaseBuild.Common.psm1` implements exact-commit build selection and BAR parsing.\n- `.agents/skills/release-audit/SKILL.md` tells the agent to run the script, aggregate ranges, and investigate exceptional failures.\n\nNo repository code or documentation at the PR base performed either responsibility. The final implementation intentionally keeps deterministic pipeline behavior in PowerShell and leaves range interpretation and failure investigation to the skill.",
+      "expected_output": "Describe the final additions relative to the PR base. Do not claim that pipeline logic was moved, extracted, or migrated from an existing skill because that source existed only in an earlier commit within the PR.",
+      "files": [],
+      "expectations": [
+        "The message says that the PR adds repository-owned PowerShell build/BAR classification and a coordinating release-audit skill",
+        "The message does not say the implementation moves, extracts, migrates, replaces, or removes pipeline logic from skill prose",
+        "The rationale preserves the final responsibility split: deterministic pipeline behavior belongs in PowerShell while range interpretation and exceptional investigation belong in the skill",
+        "The message does not narrate commit 111aaaa or 333cccc as repository before/after history",
+        "No pre-existing release-audit capability is implied at the PR base"
+      ]
     }
   ]
 }

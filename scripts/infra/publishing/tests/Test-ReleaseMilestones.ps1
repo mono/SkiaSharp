@@ -104,6 +104,22 @@ $greatestTag = Get-ShippedTag '4.152.0-preview.1' @(
 Assert-Equal 'v4.152.0-preview.1.26426.14' $greatestTag 'The greatest dnceng build tuple was not selected.'
 Assert-Equal 'v4.152.0' (Get-ShippedTag '4.152.0' @('v4.152.0')) 'A stable exact tag was not detected.'
 
+$plannedShipment = [pscustomobject] @{
+    Version = '4.152.0'
+    Tag = 'v4.152.0-preview.2.26426.14'
+    SourceCommit = 'a' * 40
+    IsVirtual = $true
+}
+$plannedTags = Add-PlannedReleaseShipmentTag -Tags @('v4.152.0-preview.1.26426.13') -Shipment $plannedShipment
+Assert-Equal @(
+    'v4.152.0-preview.1.26426.13',
+    'v4.152.0-preview.2.26426.14'
+) $plannedTags 'A dry run did not add its explicitly virtual package shipment.'
+$virtualRelease = Get-ShippedReleases -Tags $plannedTags -PlannedShipment $plannedShipment |
+    Where-Object Tag -eq $plannedShipment.Tag
+Assert-Equal $plannedShipment.SourceCommit (Get-ReleaseReference $virtualRelease) `
+    'A virtual release shipment did not use its planned package source commit.'
+
 $topologyTags = @(
     'v4.152.0-preview.1.1',
     'v4.153.0-preview.1.1',
@@ -180,6 +196,30 @@ try {
         -Releases $shippedTopology `
         -CurrentRelease $m154Preview) `
         'The m154 range included work from its parallel m153 release branch.'
+
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Virtual m154 RC fix (#4990)'
+    $virtualCommit = (& git -C $boundaryRoot rev-parse HEAD).Trim()
+    $virtualShipment = [pscustomobject] @{
+        Version = '4.154.0'
+        Tag = 'v4.154.0-rc.1.26455.1'
+        SourceCommit = $virtualCommit
+        IsVirtual = $true
+    }
+    $virtualTopology = @(Get-ShippedReleases `
+        -Tags (Add-PlannedReleaseShipmentTag -Tags $topologyTags -Shipment $virtualShipment) `
+        -PlannedShipment $virtualShipment)
+    $virtualRc = $virtualTopology | Where-Object Tag -eq $virtualShipment.Tag
+    Assert-Equal @('4.154.0-preview.1', '4.154.0-rc.1') @(
+        (Get-ReleaseMilestones `
+            -Root $boundaryRoot `
+            -Version $virtualShipment.Version `
+            -ShippedReleases $virtualTopology).Title
+    ) 'A virtual shipment did not make its release identity available for dry-run reconciliation.'
+    Assert-Equal @(4990) @(Get-ReleasePullRequests `
+        -Root $boundaryRoot `
+        -Releases $virtualTopology `
+        -CurrentRelease $virtualRc) `
+        'Dry-run reconciliation did not calculate the virtual shipment range from its planned commit.'
 
     $m153Rc = $shippedTopology | Where-Object Title -eq '4.153.0-rc.1'
     $m153RcBoundary = Get-PreviousShippedBoundary `
