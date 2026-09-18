@@ -228,8 +228,10 @@ select **Run workflow**, and choose `main` as the workflow branch.
 | `update` | Select only when repairing dates, rollover, or closures |
 | `push` | Use the two-dispatch pattern above |
 
-Warnings about missing tags, milestones, or release boundaries block safe
-mutation and must be resolved rather than ignored.
+Missing exact shipped-release milestones are planned or created automatically
+before assignments. Warnings about missing tags, release boundaries, or
+ambiguous ownership still block safe mutation and must be resolved rather than
+ignored.
 
 The maintained cadence follows Chromium's overlapping two-week trains. This
 M153/M154 example shows each offset from its Chromium branch point; the

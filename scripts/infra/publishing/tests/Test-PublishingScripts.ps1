@@ -153,9 +153,33 @@ Assert-True ($milestonesWorkflow -match '(?ms)Reconcile release assignments.*Upd
 $milestoneScripts = (Get-Content $reconcilePath -Raw) + (Get-Content $milestonesPath -Raw)
 Assert-True ($milestoneScripts -match '(?ms)PlannedTag.*PlannedCommit.*Get-ReleaseShipmentContract.*-RequireTag:\$Push') `
     'Milestone maintenance does not validate planned shipment parity before mutation.'
+$commonScript = Get-Content $commonPath -Raw
+$milestonesScript = Get-Content $milestonesPath -Raw
+$reconcileScript = Get-Content $reconcilePath -Raw
+Assert-True ($commonScript -match '(?ms)function New-GitHubMilestone.*repos/\$Repository/milestones.*POST') `
+    'Shared publishing helpers cannot create a GitHub milestone.'
+Assert-True ($commonScript -match "(?ms)Export-ModuleMember.*'New-GitHubMilestone'") `
+    'The shared GitHub milestone creation helper is not exported.'
+Assert-True ($milestonesScript -match '(?ms)Sync-GitHubMilestone.*New-GitHubMilestone') `
+    'Scheduled milestone creation bypasses the shared helper.'
+$reconcileFunctions = $reconcileScript.Substring(
+    0,
+    $reconcileScript.IndexOf('# 1. Reconcile shipped commits, pull requests, and linked issues.'))
+Assert-True ($reconcileFunctions -match
+    '(?ms)function Ensure-GitHubReleaseMilestone.*New-GitHubMilestone') `
+    'Release reconciliation bypasses the shared GitHub milestone helper.'
+$reconcileMain = $reconcileScript.Substring(
+    $reconcileScript.IndexOf('# 1. Reconcile shipped commits, pull requests, and linked issues.'))
+Assert-True ($reconcileMain -match
+    '(?ms)if \(!\$milestones\.ContainsKey\(\$targetTitle\)\).*?' +
+    'Ensure-GitHubReleaseMilestone.*?-Title \$targetTitle.*?-Push:\$Push') `
+    'The reconciliation main flow does not repair a missing target milestone.'
+Assert-True (
+    $reconcileMain.IndexOf('Ensure-GitHubReleaseMilestone') -lt
+    $reconcileMain.IndexOf('Get-PreviousShippedBoundary')) `
+    'The reconciliation main flow does not create milestones before assignment planning.'
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
 $gitCommonScript = Get-Content $gitCommonPath -Raw
-$commonScript = Get-Content $commonPath -Raw
 Assert-True ($gitCommonScript -notmatch 'FETCH_HEAD') `
     'Shared branch resolution must not use process-global FETCH_HEAD.'
 Assert-True ($commonScript -match '--force-with-lease') `

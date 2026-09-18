@@ -48,6 +48,10 @@ match the inferred release branch and its source commit to be reachable from
 that branch. A package from another line is a blocking provenance error, not a
 warning.
 
+Milestone reconciliation plans or creates a missing exact shipped-release
+milestone before assigning pull requests and linked issues, so a valid Finish
+does not require manual milestone setup.
+
 Always present the dry-run and obtain confirmation before `-Mode Push`. Never move
 or delete a tag, replace a published release, or substitute a newer package.
 
