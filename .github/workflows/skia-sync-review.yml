@@ -9,10 +9,6 @@ on:
         description: SkiaSharp [skia-sync] parent pull request number.
         required: true
         type: string
-      skia_pr:
-        description: mono/skia reciprocal [skia-sync] pull request number.
-        required: true
-        type: string
       staged:
         description: Validate and archive evidence without posting a review comment.
         required: false
@@ -30,7 +26,7 @@ jobs:
       github.repository == 'mono/SkiaSharp' &&
       (github.event_name == 'workflow_dispatch' ||
        (github.event.issue.pull_request != null &&
-        startsWith(github.event.comment.body, '/skia-sync-review') &&
+        github.event.comment.body == '/skia-sync-review' &&
         (github.event.comment.author_association == 'OWNER' ||
          github.event.comment.author_association == 'MEMBER' ||
          github.event.comment.author_association == 'COLLABORATOR')))
@@ -52,8 +48,8 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_PR: ${{ github.event.issue.number }}
           INPUT_SKIASHARP_PR: ${{ inputs.skiasharp_pr }}
-          INPUT_SKIA_PR: ${{ inputs.skia_pr }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
@@ -61,9 +57,9 @@ jobs:
           gh api -H "Accept: application/vnd.github.raw" \
             "repos/$GITHUB_REPOSITORY/contents/.github/scripts/resolve-skia-sync-pair.py?ref=$GITHUB_SHA" \
             > "$resolver"
-          args=(--comment "$COMMENT_BODY")
+          args=(--skiasharp-pr "$COMMENT_PR" --comment "$COMMENT_BODY")
           if [ "$EVENT_NAME" = workflow_dispatch ]; then
-            args=(--skiasharp-pr "$INPUT_SKIASHARP_PR" --skia-pr "$INPUT_SKIA_PR")
+            args=(--skiasharp-pr "$INPUT_SKIASHARP_PR")
           fi
           contract="$RUNNER_TEMP/pair.json"
           python3 "$resolver" "${args[@]}" > "$contract"

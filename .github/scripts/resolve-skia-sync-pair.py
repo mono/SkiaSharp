@@ -20,8 +20,10 @@ SKIA_SYNC_BRANCH_RE = re.compile(r"^skia-sync/[A-Za-z0-9._-]+$")
 MILESTONE_TEXT_RE = re.compile(r"\bchrome/m([1-9][0-9]*)\b", re.IGNORECASE)
 RELEASE_BRANCH_RE = re.compile(r"^release/[0-9]+\.[0-9]+\.x$")
 POSITIVE_DECIMAL_RE = re.compile(r"^[1-9][0-9]*$")
-COMMENT_RE = re.compile(
-    r"^/skia-sync-review ([1-9][0-9]*) ([1-9][0-9]*)$"
+COMMENT_RE = re.compile(r"^/skia-sync-review$")
+REQUIRED_SKIA_SECTION_RE = re.compile(
+    r"(?ims)^(?:\*\*required skia pr\*\*|##[ \t]+required skia pr)[ \t]*$"
+    r"(?P<section>.*?)(?=^(?:\*\*[^*\n]+\*\*|##[ \t]+)|\Z)"
 )
 
 
@@ -37,20 +39,13 @@ def positive_pr_number(value: object, description: str) -> int:
     return int(value)
 
 
-def parse_comment_ids(comment: object) -> tuple[int, int]:
-    """Parse exactly `/skia-sync-review <skiasharp-pr> <skia-pr>`."""
+def validate_comment(comment: object) -> None:
+    """Accept only the argument-free `/skia-sync-review` comment."""
 
     if not isinstance(comment, str):
         raise PairValidationError("Review command must be text.")
-    match = COMMENT_RE.fullmatch(comment)
-    if not match:
-        raise PairValidationError(
-            "Expected exactly: /skia-sync-review <skiasharp-pr-number> <skia-pr-number>."
-        )
-    return (
-        positive_pr_number(match.group(1), "SkiaSharp PR number"),
-        positive_pr_number(match.group(2), "Skia PR number"),
-    )
+    if not COMMENT_RE.fullmatch(comment):
+        raise PairValidationError("Expected exactly: /skia-sync-review.")
 
 
 def _field(pr: dict[str, Any], path: str) -> Any:
@@ -90,6 +85,17 @@ def _link(body: object, repository: str) -> int:
             f"Expected exactly one HTTPS pull-request link to {repository}; found {len(matches)}."
         )
     return matches[0]
+
+
+def _required_skia_link(body: object) -> int:
+    """Read the one canonical native PR URL from the required-skia section."""
+
+    if not isinstance(body, str):
+        raise PairValidationError("PR body must be text.")
+    matches = list(REQUIRED_SKIA_SECTION_RE.finditer(body))
+    if len(matches) != 1:
+        raise PairValidationError("Expected exactly one Required skia PR section.")
+    return _link(matches[0].group("section"), SKIA_REPOSITORY)
 
 
 def _contract(pr: dict[str, Any]) -> dict[str, Any]:
@@ -149,7 +155,7 @@ def resolve_pair(parent: dict[str, Any], native: dict[str, Any]) -> dict[str, An
 
     parent_contract = _contract(parent)
     native_contract = _contract(native)
-    if _link(_field(parent, "body"), SKIA_REPOSITORY) != native_contract["number"]:
+    if _required_skia_link(_field(parent, "body")) != native_contract["number"]:
         raise PairValidationError("Parent PR does not link to this native PR.")
     if _link(_field(native, "body"), SKIASHARP_REPOSITORY) != parent_contract["number"]:
         raise PairValidationError("Native PR does not link back to this parent PR.")
@@ -225,28 +231,27 @@ def write_outputs(contract: dict[str, Any], output_path: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    source = parser.add_mutually_exclusive_group(required=True)
-    source.add_argument(
-        "--comment",
-        help="Exact slash command: /skia-sync-review <skiasharp-pr> <skia-pr>.",
+    parser.add_argument(
+        "--skiasharp-pr",
+        required=True,
+        type=lambda value: positive_pr_number(value, "SkiaSharp PR number"),
     )
-    source.add_argument("--skiasharp-pr", type=lambda value: positive_pr_number(value, "SkiaSharp PR number"))
-    parser.add_argument("--skia-pr", type=lambda value: positive_pr_number(value, "Skia PR number"))
+    parser.add_argument(
+        "--comment",
+        help="Validate the exact argument-free /skia-sync-review command.",
+    )
     parser.add_argument("--fixture", type=Path, help="Offline JSON with parent and native PR payloads.")
     args = parser.parse_args()
     try:
         if args.comment is not None:
-            skiasharp_pr, skia_pr = parse_comment_ids(args.comment)
-        else:
-            if args.skia_pr is None:
-                raise PairValidationError("--skia-pr is required with --skiasharp-pr.")
-            skiasharp_pr, skia_pr = args.skiasharp_pr, args.skia_pr
+            validate_comment(args.comment)
+        skiasharp_pr = args.skiasharp_pr
         if args.fixture:
             fixture = json.loads(args.fixture.read_text(encoding="utf-8"))
             parent, native = fixture["parent"], fixture["native"]
         else:
             parent = _get_pr(SKIASHARP_REPOSITORY, skiasharp_pr)
-            native = _get_pr(SKIA_REPOSITORY, skia_pr)
+            native = _get_pr(SKIA_REPOSITORY, _required_skia_link(_field(parent, "body")))
         contract = resolve_pair(parent, native)
         print(json.dumps(contract, sort_keys=True))
         if output := os.environ.get("GITHUB_OUTPUT"):
