@@ -91,6 +91,14 @@ try {
     }
     New-TestPackage 'SkiaSharp.NativeAssets.WinUI' $winUiFiles
 
+    $uwpFiles = [Collections.Generic.List[string]]::new()
+    foreach ($runtime in @('win-x64', 'win-arm64')) {
+        foreach ($name in @('libEGL', 'libGLESv2', 'SkiaSharp.Views.UWP.Native')) {
+            Add-NativePair $uwpFiles $runtime $name
+        }
+    }
+    New-TestPackage 'SkiaSharp.NativeAssets.UWP' $uwpFiles
+
     $msvcX86 = Join-Path $scanRoot 'native_msvc/native/windows/x86'
     $msvcX64 = Join-Path $scanRoot 'native_msvc/native/windows/x64'
     New-Item $msvcX86, $msvcX64 -ItemType Directory -Force | Out-Null
@@ -110,8 +118,8 @@ try {
     $generatedSurrogates = Join-Path $scanRoot 'surrogates/APIScanSurrogates.xml'
     [xml] $configuration = Get-Content $generatedSurrogates -Raw
     $mappings = @($configuration.APIScanSurrogates.Mappings.Mapping)
-    if ($mappings.Count -ne 8) {
-        throw "Expected eight API Scan mappings, found $($mappings.Count)."
+    if ($mappings.Count -ne 11) {
+        throw "Expected eleven API Scan mappings, found $($mappings.Count)."
     }
     foreach ($mapping in @($configuration.SelectNodes('/APIScanSurrogates/Mappings/Mapping'))) {
         $previous = $mapping.PreviousSibling
@@ -132,6 +140,10 @@ try {
     $copiedSurrogates = @(Get-ChildItem (Join-Path $scanRoot 'surrogate-binaries') -File)
     if ($copiedSurrogates.Count -ne 6) {
         throw "Expected six copied WinUI surrogate files, found $($copiedSurrogates.Count)."
+    }
+    $copiedUwpSurrogates = @(Get-ChildItem (Join-Path $scanRoot 'surrogate-binaries/uwp') -File)
+    if ($copiedUwpSurrogates.Count -ne 6) {
+        throw "Expected six copied UWP surrogate files, found $($copiedUwpSurrogates.Count)."
     }
 
     $emptyScanRoot = Join-Path $testRoot 'empty'

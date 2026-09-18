@@ -2,7 +2,7 @@ using System;
 using SkiaSharp.Views.GlesInterop;
 using Windows.Foundation;
 
-#if WINDOWS
+#if WINUI
 namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP
@@ -10,7 +10,7 @@ namespace SkiaSharp.Views.UWP
 {
 	/// <summary>A XAML control that uses hardware-accelerated rendering via ANGLE to draw using SkiaSharp.</summary>
 	/// <remarks>This control uses an OpenGL ES context via ANGLE to provide GPU-accelerated SkiaSharp drawing. It inherits from <see cref="T:SkiaSharp.Views.Windows.AngleSwapChainPanel" /> and provides SkiaSharp-specific rendering functionality.</remarks>
-	public class SKSwapChainPanel : AngleSwapChainPanel
+	public partial class SKSwapChainPanel : AngleSwapChainPanel
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
@@ -56,7 +56,7 @@ namespace SkiaSharp.Views.UWP
 		/// <summary>Called when a frame should be rendered.</summary>
 		/// <param name="rect">The rectangle defining the render area dimensions.</param>
 		/// <remarks>This method creates the SkiaSharp context and surface, then invokes <see cref="M:SkiaSharp.Views.Windows.SKSwapChainPanel.OnPaintSurface(SkiaSharp.Views.Windows.SKPaintGLSurfaceEventArgs)" /> to perform the actual drawing.</remarks>
-		protected override void OnRenderFrame(Rect rect)
+		protected override unsafe void OnRenderFrame(Rect rect)
 		{
 			// clear everything
 			Gles.glClear(Gles.GL_COLOR_BUFFER_BIT | Gles.GL_DEPTH_BUFFER_BIT | Gles.GL_STENCIL_BUFFER_BIT);
@@ -64,7 +64,14 @@ namespace SkiaSharp.Views.UWP
 			// create the SkiaSharp context
 			if (context == null)
 			{
+#if WINDOWS_UWP
+				// TODO: on uwp SkiaApi.gr_glinterface_create_native_interface ()) throws
+				// Indirect call guard check detected invalid control transfer
+				// if app was idle in the background 
+				glInterface = GRGlInterface.CreateAngle();
+#else
 				glInterface = GRGlInterface.Create();
+#endif
 				context = GRContext.CreateGl(glInterface);
 			}
 
@@ -78,9 +85,10 @@ namespace SkiaSharp.Views.UWP
 				lastSize = newSize;
 
 				// read the info from the buffer
-				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
-				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
-				Gles.glGetIntegerv(Gles.GL_SAMPLES, out var samples);
+				int framebuffer, stencil, samples;
+				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, &framebuffer);
+				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, &stencil);
+				Gles.glGetIntegerv(Gles.GL_SAMPLES, &samples);
 				var maxSamples = context.GetMaxSurfaceSampleCount(colorType);
 				if (samples > maxSamples)
 					samples = maxSamples;
@@ -111,7 +119,7 @@ namespace SkiaSharp.Views.UWP
 			}
 
 			// update the control
-			canvas.Flush();
+			canvas?.Flush();
 			context.Flush();
 		}
 
