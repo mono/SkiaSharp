@@ -2,7 +2,7 @@
 
 [![NuGet](https://img.shields.io/nuget/v/SkiaSharp?style=flat-square&label=NuGet)](https://www.nuget.org/packages/SkiaSharp)
 [![NuGet downloads](https://img.shields.io/nuget/dt/SkiaSharp?style=flat-square&label=Downloads)](https://www.nuget.org/packages/SkiaSharp)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/mono/SkiaSharp/blob/main/LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)]({{RepositoryUrl}}/blob/main/LICENSE.md)
 
 **SkiaSharp** is a cross-platform 2D graphics API for .NET powered by Google's [Skia](https://skia.org/) graphics engine. Draw vector graphics, render text, process images, apply shaders and filters, and produce consistent output across mobile, desktop, server, and WebAssembly applications.
 
@@ -53,7 +53,7 @@ using var output = File.Create("hello-skiasharp.png");
 data.SaveTo(output);
 ```
 
-> **Linux:** add [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux) to the application project for fontconfig integration, or [SkiaSharp.NativeAssets.Linux.NoDependencies](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies) for minimal containers and explicit font loading. See the [package deployment guide](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md) for details.
+> **Linux:** add [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux) to the application project for fontconfig integration, or [SkiaSharp.NativeAssets.Linux.NoDependencies](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies) for minimal containers and explicit font loading. See the [package deployment guide]({{RepositoryUrl}}/blob/main/documentation/dev/packages.md) for details.
 
 ## Choose the right integration
 
@@ -69,15 +69,15 @@ data.SaveTo(output);
 
 ## Learn and explore
 
-- [SkiaSharp documentation](https://mono.github.io/SkiaSharp/docs/) - conceptual guides and tutorials
+- [SkiaSharp documentation]({{DocumentationUrl}}/docs/) - conceptual guides and tutorials
 - [API reference on Microsoft Learn](https://learn.microsoft.com/dotnet/api/skiasharp)
-- [Live SkiaSharp Gallery](https://mono.github.io/SkiaSharp/gallery/) - interactive samples running in Blazor WebAssembly
-- [SkiaFiddle](https://mono.github.io/SkiaSharp/fiddle/) - experiment with SkiaSharp in your browser
-- [Samples](https://github.com/mono/SkiaSharp/tree/main/samples) - buildable console, mobile, desktop, web, and UI examples
-- [Release notes](https://mono.github.io/SkiaSharp/docs/releases/) - new features and API changes
+- [Live SkiaSharp Gallery]({{DocumentationUrl}}/gallery/) - interactive samples running in Blazor WebAssembly
+- [SkiaFiddle]({{DocumentationUrl}}/fiddle/) - experiment with SkiaSharp in your browser
+- [Samples]({{RepositoryUrl}}/tree/main/samples) - buildable console, mobile, desktop, web, and UI examples
+- [Release notes]({{DocumentationUrl}}/docs/releases/) - new features and API changes
 
 ## Feedback and contributing
 
-SkiaSharp is built in the open. Use [GitHub Discussions](https://github.com/mono/SkiaSharp/discussions) for questions, file bugs and feature requests in the [issue tracker](https://github.com/mono/SkiaSharp/issues), and read the [contributing guide](https://github.com/mono/SkiaSharp/blob/main/CONTRIBUTING.md) to help improve the project.
+SkiaSharp is built in the open. Use [GitHub Discussions]({{RepositoryUrl}}/discussions) for questions, file bugs and feature requests in the [issue tracker]({{RepositoryUrl}}/issues), and read the [contributing guide]({{RepositoryUrl}}/blob/main/CONTRIBUTING.md) to help improve the project.
 
-SkiaSharp is released under the [MIT license](https://github.com/mono/SkiaSharp/blob/main/LICENSE.md).
+SkiaSharp is released under the [MIT license]({{RepositoryUrl}}/blob/main/LICENSE.md).
