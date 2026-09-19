@@ -1,18 +1,16 @@
 {
-  "theme": "Package documentation modernization",
-  "highlights_headline": "The next SkiaSharp release delivers compiler-generated XML documentation alongside managed packages.",
-  "highlights_body": "API documentation is now authored with C# XML comments, while the bundled renderer incorporates the latest m154 upstream fixes.",
+  "theme": "API documentation delivery",
+  "highlights_headline": "SkiaSharp 4.154.0 delivers compiler XML documentation alongside packages and refreshes the bundled m154 renderer.",
+  "highlights_body": "The release also keeps HarfBuzzSharp bindings synchronized with the bundled native source and improves generated interop maintenance.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "m154 upstream fixes merged",
-          "detail": "The bundled Skia engine incorporates the latest Chrome m154 upstream corrections.",
-          "prs": [
-            5054
-          ]
+          "lead": "m154 upstream fixes",
+          "detail": "Updates the bundled Skia m154 renderer with the latest upstream corrections, including buffer-upload fixes.",
+          "prs": [5054, 5114]
         }
       ]
     },
@@ -20,19 +18,30 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Managed packages include XML documentation",
-          "detail": "Compiler-generated XML documentation is packaged with managed assemblies so IDE help and API documentation stay aligned with the shipped surface.",
-          "prs": [
-            5064,
-            5066,
-            5078,
-            5080,
-            5091
-          ]
+          "lead": "Package XML documentation",
+          "detail": "Packages now include compiler-generated XML documentation so IDE tooltips and API references can use the managed API comments directly.",
+          "prs": [5064, 5066, 5078, 5080, 5091]
+        },
+        {
+          "lead": "Generated binding maintenance",
+          "detail": "Generated P/Invoke declarations are organized by type, making the native interop surface easier to maintain while preserving the managed API.",
+          "prs": [5056]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "HarfBuzz bindings follow bundled native source",
+          "detail": "HarfBuzzSharp binding generation now follows the same pinned HarfBuzz source used to build the bundled native library, keeping supported declarations synchronized.",
+          "prs": [5057, 5111]
         }
       ]
     }
   ],
-  "contributor_summaries": {},
+  "contributor_summaries": {
+    "azchohfi": "Scoped the native HarfBuzzSharp conversion-warning suppression to satisfy package analysis"
+  },
   "preview_summaries": {}
 }
