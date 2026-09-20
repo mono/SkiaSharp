@@ -1,0 +1,296 @@
+# Issue Triage Report — #5115
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-09-20T04:26:16Z |
+| Type | type/bug (0.98 (98%)) |
+| Area | area/Build (0.97 (97%)) |
+| Suggested action | ready-to-fix (0.95 (95%)) |
+
+**Issue Summary:** The Sync - Skia Upstream workflow failed on main because its staged create_pull_request completion signal rejected a base branch override that was not permitted by the workflow safe-output policy.
+
+**Analysis:** The failure is a workflow-policy mismatch: auto-skia-sync accepts and propagates a manual base_branch override, but its staged create-pull-request safe output does not allow any base-branch override. Adding a constrained allowed-base-branches policy that covers the workflow's resolved main and supported release targets should allow the completion signal while preserving branch restrictions.
+
+**Recommendations:** **ready-to-fix** — The failure message identifies the missing policy and the workflow source confirms the override path and absent allowed-base-branches configuration.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/Build |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Perf | — |
+| Partner | — |
+| Current labels | agentic-workflows |
+
+## Evidence
+
+### Reproduction
+
+1. Run the Sync - Skia Upstream workflow with its manual base-branch override.
+2. Allow the agent to invoke the staged create_pull_request completion signal.
+3. Observe that the safe output rejects the override because the policy has no allowed base branches.
+
+**Environment:** mono/SkiaSharp main, Sync - Skia Upstream workflow run 35288713217.
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/5107 — Related open Sync - Skia Upstream failure issue; it is already classified as an area/Build reliability bug.
+- https://github.com/mono/SkiaSharp/issues/5100 — Earlier related open Sync - Skia Upstream failure issue; it is already classified as an area/Build reliability bug.
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | low |
+| Regression claimed | — |
+| Error type | other |
+| Error message | create_pull_request: Base branch override is not allowed. Configure safe-outputs.create-pull-request.allowed-base-branches to allow per-run base overrides. |
+| Repro quality | complete |
+| Target frameworks | — |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | — |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The checked-in workflow still declares create-pull-request without allowed-base-branches, and the generated lock configuration likewise omits that policy. |
+
+## Analysis
+
+### Technical Summary
+
+The failure is a workflow-policy mismatch: auto-skia-sync accepts and propagates a manual base_branch override, but its staged create-pull-request safe output does not allow any base-branch override. Adding a constrained allowed-base-branches policy that covers the workflow's resolved main and supported release targets should allow the completion signal while preserving branch restrictions.
+
+### Rationale
+
+This is a reproducible automation defect rather than a product or platform issue. The workflow error names the absent policy, and the source confirms both the override path and the missing safe-output allowance. The impact is limited to workflow delivery/completion signaling, so severity is low, but it blocks affected upstream-sync runs and is ready for a targeted configuration fix.
+
+### Key Signals
+
+- "create_pull_request: Base branch override is not allowed. Configure safe-outputs.create-pull-request.allowed-base-branches to allow per-run base overrides." — **issue body and both issue comments** (The safe-output policy explicitly rejected the requested completion signal.)
+- "Optional mono/SkiaSharp base branch override for manual workflow validation." — **.github/workflows/auto-skia-sync.md** (The workflow intentionally supports a base-branch override, so its completion policy must account for it.)
+- "create-pull-request ... allowed-base-branches: [main]" — **.github/workflows/update-release-notes.md** (A repository workflow demonstrates the required safe-output policy shape.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `.github/workflows/auto-skia-sync.md` | 18-23, 106-112 | direct | The workflow exposes a base_branch dispatch input and declares staged create-pull-request without allowed-base-branches. |
+| `.github/scripts/skia-sync-detect.sh` | 187-204 | direct | The detector validates and adopts the supplied base-branch override, then derives the head branch from it. |
+| `.github/workflows/auto-triage.lock.yml` | 705-764 | context | The generated safe-output schema supports project updates and is the workflow mechanism used to record this triage after validation. |
+
+**Error fingerprint:** `auto-skia-sync-create-pull-request-base-branch-override-not-allowed`
+
+### Workarounds
+
+- Run the upstream sync without the optional base_branch override when the normal main/release-line resolution is acceptable.
+- Until the policy is fixed, perform a manual validation against main rather than a custom base branch.
+
+### Next Questions
+
+- Which release branch patterns must be included alongside main so legitimate supported-line syncs retain their intended targets?
+- Should the workflow avoid emitting create_pull_request when a manual validation run is intentionally using an unsupported branch?
+
+### Resolution Proposals
+
+**Hypothesis:** The auto-skia-sync source was updated to permit manual base-branch selection without adding the corresponding safe-output allowed-base-branches policy, so generated configuration rejects the staged completion signal.
+
+1. **Constrain the completion-signal base branches** — fix, confidence 0.95 (95%), cost/xs, validated=untested
+   - Add an allowed-base-branches policy to auto-skia-sync's create-pull-request safe output covering main and the intended release-line targets, then regenerate and validate the generated lock workflow.
+2. **Use normal branch resolution temporarily** — workaround, confidence 0.93 (93%), cost/xs, validated=untested
+   - Avoid the optional manual base_branch override for sync runs until its completion-signal policy is configured.
+
+**Recommended proposal:** Constrain the completion-signal base branches
+
+**Why:** It addresses the explicitly reported safe-output rejection while retaining the workflow's documented manual-validation capability.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.95 (95%) |
+| Reason | The failure message identifies the missing policy and the workflow source confirms the override path and absent allowed-base-branches configuration. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.99 (99%) | Apply the build, bug, and reliability classifications. | labels=type/bug, area/Build, tenet/reliability |
+| link-related | low | 0.80 (80%) | Link the closest prior Sync - Skia Upstream failure issue for shared workflow context. | linkedIssue=#5107 |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 5115,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-09-20T04:26:16Z",
+    "currentLabels": [
+      "agentic-workflows"
+    ]
+  },
+  "summary": "The Sync - Skia Upstream workflow failed on main because its staged create_pull_request completion signal rejected a base branch override that was not permitted by the workflow safe-output policy.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.97
+    },
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "errorType": "other",
+      "errorMessage": "create_pull_request: Base branch override is not allowed. Configure safe-outputs.create-pull-request.allowed-base-branches to allow per-run base overrides.",
+      "reproQuality": "complete"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Run the Sync - Skia Upstream workflow with its manual base-branch override.",
+        "Allow the agent to invoke the staged create_pull_request completion signal.",
+        "Observe that the safe output rejects the override because the policy has no allowed base branches."
+      ],
+      "environmentDetails": "mono/SkiaSharp main, Sync - Skia Upstream workflow run 35288713217.",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/5107",
+          "description": "Related open Sync - Skia Upstream failure issue; it is already classified as an area/Build reliability bug."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/5100",
+          "description": "Earlier related open Sync - Skia Upstream failure issue; it is already classified as an area/Build reliability bug."
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "currentRelevance": "likely",
+      "relevanceReason": "The checked-in workflow still declares create-pull-request without allowed-base-branches, and the generated lock configuration likewise omits that policy."
+    }
+  },
+  "analysis": {
+    "summary": "The failure is a workflow-policy mismatch: auto-skia-sync accepts and propagates a manual base_branch override, but its staged create-pull-request safe output does not allow any base-branch override. Adding a constrained allowed-base-branches policy that covers the workflow's resolved main and supported release targets should allow the completion signal while preserving branch restrictions.",
+    "rationale": "This is a reproducible automation defect rather than a product or platform issue. The workflow error names the absent policy, and the source confirms both the override path and the missing safe-output allowance. The impact is limited to workflow delivery/completion signaling, so severity is low, but it blocks affected upstream-sync runs and is ready for a targeted configuration fix.",
+    "keySignals": [
+      {
+        "text": "create_pull_request: Base branch override is not allowed. Configure safe-outputs.create-pull-request.allowed-base-branches to allow per-run base overrides.",
+        "source": "issue body and both issue comments",
+        "interpretation": "The safe-output policy explicitly rejected the requested completion signal."
+      },
+      {
+        "text": "Optional mono/SkiaSharp base branch override for manual workflow validation.",
+        "source": ".github/workflows/auto-skia-sync.md",
+        "interpretation": "The workflow intentionally supports a base-branch override, so its completion policy must account for it."
+      },
+      {
+        "text": "create-pull-request ... allowed-base-branches: [main]",
+        "source": ".github/workflows/update-release-notes.md",
+        "interpretation": "A repository workflow demonstrates the required safe-output policy shape."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": ".github/workflows/auto-skia-sync.md",
+        "lines": "18-23, 106-112",
+        "finding": "The workflow exposes a base_branch dispatch input and declares staged create-pull-request without allowed-base-branches.",
+        "relevance": "direct"
+      },
+      {
+        "file": ".github/scripts/skia-sync-detect.sh",
+        "lines": "187-204",
+        "finding": "The detector validates and adopts the supplied base-branch override, then derives the head branch from it.",
+        "relevance": "direct"
+      },
+      {
+        "file": ".github/workflows/auto-triage.lock.yml",
+        "lines": "705-764",
+        "finding": "The generated safe-output schema supports project updates and is the workflow mechanism used to record this triage after validation.",
+        "relevance": "context"
+      }
+    ],
+    "errorFingerprint": "auto-skia-sync-create-pull-request-base-branch-override-not-allowed",
+    "workarounds": [
+      "Run the upstream sync without the optional base_branch override when the normal main/release-line resolution is acceptable.",
+      "Until the policy is fixed, perform a manual validation against main rather than a custom base branch."
+    ],
+    "nextQuestions": [
+      "Which release branch patterns must be included alongside main so legitimate supported-line syncs retain their intended targets?",
+      "Should the workflow avoid emitting create_pull_request when a manual validation run is intentionally using an unsupported branch?"
+    ],
+    "resolution": {
+      "hypothesis": "The auto-skia-sync source was updated to permit manual base-branch selection without adding the corresponding safe-output allowed-base-branches policy, so generated configuration rejects the staged completion signal.",
+      "proposals": [
+        {
+          "title": "Constrain the completion-signal base branches",
+          "description": "Add an allowed-base-branches policy to auto-skia-sync's create-pull-request safe output covering main and the intended release-line targets, then regenerate and validate the generated lock workflow.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.95,
+          "effort": "cost/xs"
+        },
+        {
+          "title": "Use normal branch resolution temporarily",
+          "description": "Avoid the optional manual base_branch override for sync runs until its completion-signal policy is configured.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.93,
+          "effort": "cost/xs"
+        }
+      ],
+      "recommendedProposal": "Constrain the completion-signal base branches",
+      "recommendedReason": "It addresses the explicitly reported safe-output rejection while retaining the workflow's documented manual-validation capability."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.95,
+      "reason": "The failure message identifies the missing policy and the workflow source confirms the override path and absent allowed-base-branches configuration.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply the build, bug, and reliability classifications.",
+        "risk": "low",
+        "confidence": 0.99,
+        "labels": [
+          "type/bug",
+          "area/Build",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link the closest prior Sync - Skia Upstream failure issue for shared workflow context.",
+        "risk": "low",
+        "confidence": 0.8,
+        "linkedIssue": 5107
+      }
+    ]
+  }
+}
+```
+
+</details>
