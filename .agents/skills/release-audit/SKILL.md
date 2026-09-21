@@ -24,6 +24,7 @@ The command is read-only and reports:
 - exact public NuGet provenance, tags, and GitHub Releases;
 - exact-tip internal `skiasharp-package` build status and BAR ID;
 - newer `chrome/mN` work and active sync PRs;
+- pre-transition main-line sync PRs left open after a servicing branch is cut;
 - pending next-milestone transitions; and
 - dependency-ordered Finish, build, publication, sync, and Prepare actions.
 
