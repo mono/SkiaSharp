@@ -52,6 +52,38 @@ function Get-GitHubPullRequest([string] $Repository, [int] $Number) {
     return Invoke-GitHubJsonWithRetry -Arguments @('api', "repos/$Repository/pulls/$Number")
 }
 
+# Creates a missing shipped-release milestone, or projects it into a dry run.
+function Ensure-GitHubReleaseMilestone(
+    [string] $Repository,
+    [string] $Title,
+    [hashtable] $Milestones,
+    [int] $VirtualNumber = -1,
+    [switch] $Push
+) {
+    if ($Milestones.ContainsKey($Title)) {
+        return $Milestones[$Title]
+    }
+
+    $created = New-GitHubMilestone `
+        -Repository $Repository `
+        -Title $Title `
+        -Description "SkiaSharp $Title release." `
+        -Push:$Push
+    if (!$Push) {
+        $projected = [pscustomobject] @{
+            number = $VirtualNumber
+            title = $Title
+            state = 'open'
+            is_virtual = $true
+        }
+        $Milestones[$Title] = $projected
+        return $projected
+    }
+
+    $Milestones[$Title] = $created
+    return $created
+}
+
 # Reads issues that GitHub records as closed by one pull request.
 function Get-GitHubClosingIssues([string] $Repository, [int] $PullRequest) {
     $owner, $name = $Repository.Split('/', 2)
@@ -428,6 +460,7 @@ function Get-ReleaseAssignmentPlan(
         }
     }
 
+    $target = $Milestones[$TargetMilestone]
     return [pscustomobject] @{
         Status = 'assign'
         Warning = $null
@@ -442,7 +475,9 @@ function Get-ReleaseAssignmentPlan(
                 $null
             }
             ToMilestone = $TargetMilestone
-            ToMilestoneNumber = [int] $Milestones[$TargetMilestone].number
+            ToMilestoneNumber = [int] $target.number
+            ToMilestoneIsVirtual = [bool] (
+                $target.PSObject.Properties['is_virtual'] -and $target.is_virtual)
         }
     }
 }
@@ -538,6 +573,16 @@ function Set-PlannedReleaseAssignment(
     }
 
     $description = "Assign $($Item.Kind) #$($Item.Number) to $($Item.ToMilestone)"
+    if (
+        !$Push -and
+        $Item.PSObject.Properties['ToMilestoneIsVirtual'] -and
+        $Item.ToMilestoneIsVirtual
+    ) {
+        Write-ReleaseStatus skipped (
+            "Skipping assignment until release milestone $($Item.ToMilestone) is created " +
+            "(requires -Push; $description).")
+        return
+    }
     Set-GitHubItemMilestone `
         -Repository $Repository `
         -Number $Item.Number `
@@ -624,6 +669,7 @@ $operations = [System.Collections.Generic.List[object]]::new()
 $seenPullRequests = [System.Collections.Generic.HashSet[int]]::new()
 $seenIssues = [System.Collections.Generic.HashSet[int]]::new()
 $correct = 0
+$nextVirtualMilestoneNumber = -1
 foreach ($targetTitle in $targetTitles) {
     $currentTag = Get-ShippedTag -Title $targetTitle -Tags $tags
     if (!$currentTag) {
@@ -636,8 +682,13 @@ foreach ($targetTitle in $targetTitles) {
         continue
     }
     if (!$milestones.ContainsKey($targetTitle)) {
-        $warnings.Add("Milestone $targetTitle does not exist.")
-        continue
+        $null = Ensure-GitHubReleaseMilestone `
+            -Repository $Repository `
+            -Title $targetTitle `
+            -Milestones $milestones `
+            -VirtualNumber $nextVirtualMilestoneNumber `
+            -Push:$Push
+        $nextVirtualMilestoneNumber--
     }
     $boundary = Get-PreviousShippedBoundary `
         -Root $root `
