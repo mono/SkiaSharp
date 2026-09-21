@@ -1,15 +1,17 @@
 {
   "theme": "Skia m154 preview",
-  "highlights_headline": "SkiaSharp 4.154.0 previews the Skia m154 engine update.",
-  "highlights_body": "Review the documented HarfBuzzSharp enum compatibility changes before upgrading code that uses combining-class or aggregate glyph flag members.",
+  "highlights_headline": "SkiaSharp 4.154.0 previews the Skia m154 renderer and refreshed package XML documentation.",
+  "highlights_body": "HarfBuzzSharp bindings now follow the bundled native source, with one renamed enum member and one removed aggregate flag.",
   "breaking": [
     {
       "title": "UnicodeCombiningClass.CCC133 was renamed",
-      "body": "The misspelled CCC133 member is now CCC132, retaining the numeric value 132. Update source references to use CCC132."
+      "body": "The misspelled CCC133 member is now CCC132, matching upstream HarfBuzz; its numeric value remains 132. Update source code that refers to CCC133.",
+      "prs": [5057]
     },
     {
       "title": "GlyphFlags.Defined was removed",
-      "body": "The aggregate Defined mask is no longer exposed because it is not an independent option. Combine the concrete glyph flags required by your application instead."
+      "body": "The aggregate flag mask is no longer exposed because it is not an independent option. Combine the concrete GlyphFlags values your application requires instead.",
+      "prs": [5057]
     }
   ],
   "categories": [
@@ -18,23 +20,33 @@
       "bullets": [
         {
           "lead": "Skia updated to milestone m154",
-          "detail": "Aligns the bundled renderer with Chrome milestone 154 for preview consumers.",
-          "prs": [
-            4945
-          ]
+          "detail": "Updates the bundled renderer to Chrome milestone 154 and includes subsequent upstream browser and buffer-upload fixes.",
+          "prs": [4945, 5054, 5114]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Package XML documentation is available",
+          "detail": "NuGet packages now carry compiler-generated XML documentation sidecars, with API documentation sourced from C# comments.",
+          "prs": [5053, 5064, 5066, 5078, 5080]
         }
       ]
     }
   ],
-  "contributor_summaries": {},
-  "preview_summaries": {
-    "v4.154.0-preview.1.26454.9": "Preview 1 opens the 4.154 line with the Skia m154 engine update and its documented compatibility changes."
+  "contributor_summaries": {
+    "azchohfi": "Improved the Windows build configuration for the bundled HarfBuzzSharp native library"
   },
-  "harfbuzz_summary": null,
+  "preview_summaries": {
+    "v4.154.0-preview.1.26454.9": "Preview 1 opened the 4.154 line with the Skia m154 engine update."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp bindings are now generated from the HarfBuzz source pinned by Skia, keeping supported managed declarations synchronized with version 14.2.1.",
   "release_summaries": {
     "v4.154.0-preview.1.26454.9": {
       "headline": "SkiaSharp 4.154.0 Preview 1 introduces the Skia m154 engine update.",
-      "body": "The preview also includes documented compatibility changes for Unicode combining-class and aggregate glyph flag members."
+      "body": "It also begins shipping compiler-generated XML documentation with the NuGet packages."
     }
   }
 }
