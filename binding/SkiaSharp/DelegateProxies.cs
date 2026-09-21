@@ -65,6 +65,13 @@ namespace SkiaSharp
 	/// <remarks />
 	public delegate void SKGraphiteReleaseDelegate ();
 
+	/// <summary>Represents the method that is called when Skia fails to compile a shader for the Graphite backend.</summary>
+	/// <param name="shader">The SkSL or backend shader source that failed to compile.</param>
+	/// <param name="errors">The compiler diagnostics describing the failure.</param>
+	/// <param name="shaderWasCached">Whether the shader came from the pipeline cache rather than being compiled fresh.</param>
+	/// <remarks>Invoked on whichever thread Skia compiles the shader on.</remarks>
+	public delegate void SKGraphiteShaderErrorHandlerDelegate (string shader, string errors, bool shaderWasCached);
+
 	/// <summary>Represents a callback method that receives the path and transformation matrix for each glyph when enumerating glyph paths.</summary>
 	/// <param name="path">The path of the glyph, or <see langword="null" /> if the glyph has no path.</param>
 	/// <param name="matrix">The transformation matrix to position the glyph.</param>
@@ -157,6 +164,26 @@ namespace SkiaSharp
 				del.Invoke ();
 			} finally {
 				gch.Free ();
+			}
+		}
+
+		private static partial void SKGraphiteShaderErrorHandlerProxyImplementation (void* userData, void* shader, void* errors, bool shaderWasCached)
+		{
+			// userData is a GCHandle pinned by SKGraphiteContext for the Context's lifetime and
+			// freed in DisposeNative — this callback can fire many times, so we must NOT free here.
+			// Never throw across FFI: any managed exception inside the user's handler is swallowed
+			// so a bad diagnostic hook can't crash Skia's shader-compile path.
+			//
+			// The C ABI's `const char*` args are non-null in the current Skia path, but the type
+			// is nullable in principle; normalize to empty string so user handlers can always
+			// assume a non-null value without adding their own guards.
+			try {
+				var del = Get<SKGraphiteShaderErrorHandlerDelegate> ((IntPtr)userData, out _);
+				del.Invoke (
+					Marshal.PtrToStringAnsi ((IntPtr)shader) ?? string.Empty,
+					Marshal.PtrToStringAnsi ((IntPtr)errors) ?? string.Empty,
+					shaderWasCached);
+			} catch {
 			}
 		}
 
