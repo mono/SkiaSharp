@@ -48,6 +48,27 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void RotationScaleRunUsesExplicitBounds()
+		{
+			var font = new SKFont();
+			var glyphs = font.GetGlyphs("AB");
+			var bounds = SKRect.Create(10, 20, 30, 40);
+
+			using var builder = new SKTextBlobBuilder();
+
+			var run = builder.AllocateRotationScaleRun(font, glyphs.Length, bounds);
+			glyphs.CopyTo(run.Glyphs);
+			new[]
+			{
+				SKRotationScaleMatrix.CreateTranslation(1000, 1000),
+				SKRotationScaleMatrix.CreateTranslation(2000, 2000),
+			}.CopyTo(run.Positions);
+
+			using var blob = builder.Build();
+			Assert.Equal(bounds, blob.Bounds);
+		}
+
+		[Fact]
 		public void TextRunsAllocateTextSpan()
 		{
 			var font = new SKFont();
