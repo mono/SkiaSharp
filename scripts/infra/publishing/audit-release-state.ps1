@@ -198,6 +198,115 @@ function Get-SkiaSyncTopology(
     }
 }
 
+# Finds a main-line sync pair that remained open after its milestone moved to a servicing branch.
+function Get-LegacyTransitionSyncSelection([pscustomobject] $Maintenance) {
+    if (
+        !$Maintenance -or
+        $Maintenance.Branch -notmatch '^release/\d+\.\d+\.x$' -or
+        [int] $Maintenance.SkiaMilestone -lt 1
+    ) {
+        return $null
+    }
+
+    $milestone = [int] $Maintenance.SkiaMilestone
+    $headBranch = "skia-sync/m$milestone"
+    $parentPullRequests = @(
+        Get-GitHubOpenPullRequests `
+            -Repository $ReleaseRepository `
+            -Head $headBranch `
+            -Base $Maintenance.Branch
+        Get-GitHubOpenPullRequests `
+            -Repository $ReleaseRepository `
+            -Head $headBranch `
+            -Base main
+    )
+    $nativePullRequests = @(
+        Get-GitHubOpenPullRequests `
+            -Repository 'mono/skia' `
+            -Head $headBranch `
+            -Base $Maintenance.Branch
+        Get-GitHubOpenPullRequests `
+            -Repository 'mono/skia' `
+            -Head $headBranch `
+            -Base skiasharp
+    )
+    if (!$parentPullRequests.Count -and !$nativePullRequests.Count) {
+        return $null
+    }
+
+    return [pscustomobject] @{
+        Topology = [pscustomobject] @{
+            Milestone = $milestone
+            UpstreamRef = "chrome/m$milestone"
+            ParentBaseBranch = $Maintenance.Branch
+            SkiaBaseBranch = $Maintenance.Branch
+            SyncBranch = $headBranch
+        }
+        ParentPullRequests = $parentPullRequests
+        NativePullRequests = $nativePullRequests
+    }
+}
+
+function Get-LegacyTransitionIncomingPullRequest(
+    [pscustomobject] $Maintenance,
+    [pscustomobject] $Selection,
+    [string] $SyncBranchSha,
+    [string] $SkiaSyncBranchSha,
+    [string] $ParentSkiaSha,
+    [string] $ParentSyncSkiaSha
+) {
+    if (!$Selection) {
+        return $null
+    }
+    $incoming = Get-IncomingReleasePullRequest `
+        -Maintenance $Maintenance `
+        -SyncBranchSha $SyncBranchSha `
+        -PullRequests $Selection.ParentPullRequests `
+        -Topology $Selection.Topology `
+        -SkiaSyncBranchSha $SkiaSyncBranchSha `
+        -ParentSkiaSha $ParentSkiaSha `
+        -ParentSyncSkiaSha $ParentSyncSkiaSha
+    if (!$incoming) {
+        return $null
+    }
+
+    $wrongParentBases = @(
+        $Selection.ParentPullRequests |
+            Where-Object { [string] $_.baseRefName -ne $Maintenance.Branch } |
+            ForEach-Object { "SkiaSharp PR #$($_.number) targets $($_.baseRefName)" }
+    )
+    $wrongNativeBases = @(
+        $Selection.NativePullRequests |
+            Where-Object { [string] $_.baseRefName -ne $Maintenance.Branch } |
+            ForEach-Object { "mono/skia PR #$($_.number) targets $($_.baseRefName)" }
+    )
+    $wrongBases = @($wrongParentBases) + @($wrongNativeBases)
+    if ($wrongBases.Count) {
+        $existingDetail = [string] $incoming.Message
+        $incoming.State = 'inconsistent'
+        $incoming.BlocksRelease = $true
+        $incoming.Message = (
+            "Pre-transition m$($Maintenance.SkiaMilestone) sync remains open after the line moved " +
+            "to $($Maintenance.Branch): $($wrongBases -join '; '). Retarget the reciprocal PR pair " +
+            "to $($Maintenance.Branch), or close it if the changes are already integrated." +
+            $(if ($existingDetail) { " $existingDetail" } else { '' }))
+    }
+    return $incoming
+}
+
+function Select-IncomingReleasePullRequest(
+    [pscustomobject] $Expected,
+    [pscustomobject] $Legacy
+) {
+    if ($Legacy -and $Legacy.State -eq 'inconsistent' -and $Legacy.BlocksRelease) {
+        return $Legacy
+    }
+    if ($Expected) {
+        return $Expected
+    }
+    return $Legacy
+}
+
 function Get-PendingMainMilestone(
     [string] $Line,
     [string] $MainSha,
@@ -1064,6 +1173,42 @@ try {
                 -ParentSyncSkiaSha $parentSyncSkiaSha
         }
     }
+    $legacyIncomingPullRequest = $null
+    if ($maintenance) {
+        $legacySelection = Get-LegacyTransitionSyncSelection -Maintenance $maintenance
+        if ($legacySelection) {
+            $legacySyncBranch = $legacySelection.Topology.SyncBranch
+            $legacySyncSha = Get-RemoteBranchSha `
+                -Root $root `
+                -Remote origin `
+                -Branch $legacySyncBranch
+            $legacyParentSyncSkiaSha = if ($legacySyncSha) {
+                $resolvedLegacySyncSha = Get-ResolvedGitCommit `
+                    -Root $root `
+                    -Reference $legacySyncBranch
+                Get-GitTreeEntrySha `
+                    -Root $root `
+                    -Commit $resolvedLegacySyncSha `
+                    -Path 'externals/skia'
+            } else {
+                ''
+            }
+            $legacySkiaBranches = Get-RemoteBranchShas `
+                -Root $root `
+                -Remote 'https://github.com/mono/skia.git' `
+                -Branches @($legacySyncBranch)
+            $legacyIncomingPullRequest = Get-LegacyTransitionIncomingPullRequest `
+                -Maintenance $maintenance `
+                -Selection $legacySelection `
+                -SyncBranchSha $legacySyncSha `
+                -SkiaSyncBranchSha $legacySkiaBranches[$legacySyncBranch] `
+                -ParentSkiaSha $upstreamSync.ParentSkiaSha `
+                -ParentSyncSkiaSha $legacyParentSyncSkiaSha
+        }
+    }
+    $incomingPullRequest = Select-IncomingReleasePullRequest `
+        -Expected $incomingPullRequest `
+        -Legacy $legacyIncomingPullRequest
     $branches = @(Get-ReleaseBranches -Root $root -Line $Version)
     $linePackages = foreach ($publicVersion in Get-NuGetPackageVersions -PackageId 'SkiaSharp') {
         if ($publicVersion -match "^$([regex]::Escape($Version))\.\d+(?:\.\d+)?(?:-(?:preview|rc)\.[1-9]\d*\.\d+(?:\.\d+)?)?$") {

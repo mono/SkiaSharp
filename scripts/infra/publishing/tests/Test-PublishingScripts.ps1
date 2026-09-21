@@ -153,9 +153,33 @@ Assert-True ($milestonesWorkflow -match '(?ms)Reconcile release assignments.*Upd
 $milestoneScripts = (Get-Content $reconcilePath -Raw) + (Get-Content $milestonesPath -Raw)
 Assert-True ($milestoneScripts -match '(?ms)PlannedTag.*PlannedCommit.*Get-ReleaseShipmentContract.*-RequireTag:\$Push') `
     'Milestone maintenance does not validate planned shipment parity before mutation.'
+$commonScript = Get-Content $commonPath -Raw
+$milestonesScript = Get-Content $milestonesPath -Raw
+$reconcileScript = Get-Content $reconcilePath -Raw
+Assert-True ($commonScript -match '(?ms)function New-GitHubMilestone.*repos/\$Repository/milestones.*POST') `
+    'Shared publishing helpers cannot create a GitHub milestone.'
+Assert-True ($commonScript -match "(?ms)Export-ModuleMember.*'New-GitHubMilestone'") `
+    'The shared GitHub milestone creation helper is not exported.'
+Assert-True ($milestonesScript -match '(?ms)Sync-GitHubMilestone.*New-GitHubMilestone') `
+    'Scheduled milestone creation bypasses the shared helper.'
+$reconcileFunctions = $reconcileScript.Substring(
+    0,
+    $reconcileScript.IndexOf('# 1. Reconcile shipped commits, pull requests, and linked issues.'))
+Assert-True ($reconcileFunctions -match
+    '(?ms)function Ensure-GitHubReleaseMilestone.*New-GitHubMilestone') `
+    'Release reconciliation bypasses the shared GitHub milestone helper.'
+$reconcileMain = $reconcileScript.Substring(
+    $reconcileScript.IndexOf('# 1. Reconcile shipped commits, pull requests, and linked issues.'))
+Assert-True ($reconcileMain -match
+    '(?ms)if \(!\$milestones\.ContainsKey\(\$targetTitle\)\).*?' +
+    'Ensure-GitHubReleaseMilestone.*?-Title \$targetTitle.*?-Push:\$Push') `
+    'The reconciliation main flow does not repair a missing target milestone.'
+Assert-True (
+    $reconcileMain.IndexOf('Ensure-GitHubReleaseMilestone') -lt
+    $reconcileMain.IndexOf('Get-PreviousShippedBoundary')) `
+    'The reconciliation main flow does not create milestones before assignment planning.'
 $bugTemplateScript = Get-Content $bugTemplatePath -Raw
 $gitCommonScript = Get-Content $gitCommonPath -Raw
-$commonScript = Get-Content $commonPath -Raw
 Assert-True ($gitCommonScript -notmatch 'FETCH_HEAD') `
     'Shared branch resolution must not use process-global FETCH_HEAD.'
 Assert-True ($commonScript -match '--force-with-lease') `
@@ -1095,6 +1119,10 @@ Assert-True ($auditScript.Contains('Format-Table -AutoSize -Wrap') -and
 Assert-True ($auditScript -match
     'Write-Error "Release-state audit unavailable:.*-ErrorAction Continue') `
     'The release-line audit failure path must preserve unavailable exit code 2.'
+Assert-True ($auditScript -match
+    '(?ms)if \(\$maintenance\).*?Get-LegacyTransitionSyncSelection.*?' +
+    'Get-LegacyTransitionIncomingPullRequest.*?Select-IncomingReleasePullRequest') `
+    'The release-line audit does not inspect pre-transition sync PRs after a servicing branch is cut.'
 $auditFunctions = Get-ScriptFunctionText $auditPath
 Invoke-Expression $auditFunctions
 
@@ -1237,6 +1265,82 @@ Assert-Equal 'skia-sync/release-4.152.x' (Get-ExpectedSyncBranch $maintenance) `
     'The servicing-line sync branch name was not derived.'
 Assert-Equal 'skia-sync/m154' (Get-ExpectedSyncBranch $mainMaintenance) `
     'The current-line milestone sync branch name was not derived.'
+$transitionMaintenance = [pscustomobject] @{
+    Branch = 'release/4.154.x'
+    Sha = $sha2
+    Version = '4.154.0'
+    SkiaMilestone = 154
+}
+$script:LegacySyncQueries = [Collections.Generic.List[string]]::new()
+function Get-GitHubOpenPullRequests(
+    [string] $Repository,
+    [string] $Head,
+    [string] $Base
+) {
+    $script:LegacySyncQueries.Add("$Repository|$Head|$Base")
+    if ($Repository -eq 'mono/SkiaSharp' -and $Head -eq 'skia-sync/m154' -and $Base -eq 'main') {
+        return @(
+            New-AuditPullRequest 5141 $Head $sha1 main $sha0 $true
+        )
+    }
+    if ($Repository -eq 'mono/skia' -and $Head -eq 'skia-sync/m154' -and $Base -eq 'skiasharp') {
+        return @(
+            New-AuditPullRequest 371 $Head $sha2 skiasharp $sha0 $true
+        )
+    }
+    return @()
+}
+try {
+    $legacySelection = Get-LegacyTransitionSyncSelection -Maintenance $transitionMaintenance
+} finally {
+    Remove-Item Function:\Get-GitHubOpenPullRequests
+}
+Assert-Equal 'skia-sync/m154' $legacySelection.Topology.SyncBranch `
+    'The pre-transition main-line sync branch was not discovered.'
+Assert-Equal @(5141) @($legacySelection.ParentPullRequests.number) `
+    'The pre-transition SkiaSharp PR was not discovered.'
+Assert-Equal @(371) @($legacySelection.NativePullRequests.number) `
+    'The pre-transition mono/skia PR was not discovered.'
+Assert-True (
+    $script:LegacySyncQueries -contains 'mono/SkiaSharp|skia-sync/m154|main' -and
+    $script:LegacySyncQueries -contains 'mono/skia|skia-sync/m154|skiasharp'
+) 'The pre-transition audit did not query both old main-line PR bases.'
+$legacyIncoming = Get-LegacyTransitionIncomingPullRequest `
+    -Maintenance $transitionMaintenance `
+    -Selection $legacySelection `
+    -SyncBranchSha $sha1 `
+    -SkiaSyncBranchSha $sha2 `
+    -ParentSkiaSha $sha0 `
+    -ParentSyncSkiaSha $sha2
+Assert-Equal 'inconsistent' $legacyIncoming.State `
+    'A pre-transition sync pair targeting main-line bases was not reported as inconsistent.'
+Assert-Equal $true $legacyIncoming.BlocksRelease `
+    'A pre-transition sync pair did not block a servicing release cut.'
+Assert-True (
+    $legacyIncoming.Message -match 'SkiaSharp PR #5141 targets main' -and
+    $legacyIncoming.Message -match 'mono/skia PR #371 targets skiasharp' -and
+    $legacyIncoming.Message -match 'Retarget.*release/4\.154\.x'
+) 'The pre-transition sync warning did not explain the required retarget or close action.'
+$expectedDraft = [pscustomobject] @{
+    Number = 6000
+    State = 'draft'
+    BlocksRelease = $false
+}
+$selectedIncoming = Select-IncomingReleasePullRequest `
+    -Expected $expectedDraft `
+    -Legacy $legacyIncoming
+Assert-Equal 5141 $selectedIncoming.Number `
+    'A normal draft servicing PR suppressed an inconsistent pre-transition sync pair.'
+$retargetedLegacy = [pscustomobject] @{
+    Number = 5141
+    State = 'draft'
+    BlocksRelease = $false
+}
+$selectedIncoming = Select-IncomingReleasePullRequest `
+    -Expected $expectedDraft `
+    -Legacy $retargetedLegacy
+Assert-Equal 6000 $selectedIncoming.Number `
+    'A fully retargeted legacy branch unexpectedly replaced the normal servicing PR.'
 $servicingSyncTopology = Get-SkiaSyncTopology -Maintenance $maintenance
 Assert-Equal 'chrome/m152' $servicingSyncTopology.UpstreamRef `
     'The servicing line did not derive its Chrome milestone branch.'
