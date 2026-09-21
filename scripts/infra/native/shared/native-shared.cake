@@ -10,10 +10,6 @@ if (!string.IsNullOrEmpty(PYTHON_EXE) && FileExists(PYTHON_EXE)) {
 
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
 DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia/third_party/externals/harfbuzz"));
-DirectoryPath DNG_SDK_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia/third_party/externals/dng_sdk"));
-// DEPS provides Android's Adobe DNG SDK 1.7.1 build 2502 source and adaptations.
-// Apply the official Adobe build 2502-to-2724 delta after each dependency sync.
-FilePath DNG_SDK_PATCH = MakeAbsolute(ROOT_PATH.CombineWithFilePath("scripts/infra/native/shared/patches/dng-sdk-1.7.1-2724.patch"));
 
 var EXE_EXTENSION = IsRunningOnWindows() ? ".exe" : "";
 var GN_EXE = Argument("gn", EnvironmentVariable("GN_EXE") ?? SKIA_PATH.CombineWithFilePath($"bin/gn{EXE_EXTENSION}").FullPath);
@@ -42,83 +38,12 @@ Task("git-sync-deps")
     if (actualIncrement != expectedIncrement)
         throw new Exception($"The libSkiaSharp C API version did not match the expected '{expectedIncrement}', instead was '{actualIncrement}'.");
 
-    RemoveDngSdkPatch();
     RunPython(SKIA_PATH, SKIA_PATH.CombineWithFilePath("tools/git-sync-deps"));
-    ApplyDngSdkPatch();
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-string GetDngSdkBuildVersion()
-{
-    var versionFile = DNG_SDK_PATH.CombineWithFilePath("source/dng_flags.h");
-    if (!FileExists(versionFile))
-        return "";
-
-    var contents = System.IO.File.ReadAllText(versionFile.FullPath);
-    var match = System.Text.RegularExpressions.Regex.Match(
-        contents,
-        @"^#define kDNGSDK_BuildVersion (\d+)\s*$",
-        System.Text.RegularExpressions.RegexOptions.Multiline);
-
-    return match.Success ? match.Groups[1].Value : "";
-}
-
-void RemoveDngSdkPatch()
-{
-    if (GetDngSdkBuildVersion() != "2724")
-        return;
-
-    var checkSettings = new ProcessSettings {
-        WorkingDirectory = DNG_SDK_PATH,
-        Arguments = new ProcessArgumentBuilder()
-            .Append("apply")
-            .Append("--reverse")
-            .Append("--check")
-            .AppendQuoted(DNG_SDK_PATCH.FullPath),
-    };
-
-    if (StartProcess("git", checkSettings) != 0)
-        throw new Exception("The Adobe DNG SDK patch has local changes and cannot be safely removed.");
-
-    RunProcess("git", new ProcessSettings {
-        WorkingDirectory = DNG_SDK_PATH,
-        Arguments = new ProcessArgumentBuilder()
-            .Append("apply")
-            .Append("--reverse")
-            .AppendQuoted(DNG_SDK_PATCH.FullPath),
-    });
-
-    RunProcess("git", $"-C \"{DNG_SDK_PATH.FullPath}\" status --porcelain", out var status);
-    if (status.Any())
-        throw new Exception("The Adobe DNG SDK checkout contains unrelated local changes.");
-
-    Information("Removed Adobe DNG SDK patch before dependency sync.");
-}
-
-void ApplyDngSdkPatch()
-{
-    var buildVersion = GetDngSdkBuildVersion();
-
-    if (buildVersion == "2724") {
-        Information("Adobe DNG SDK 1.7.1 build 2724 patch is already applied.");
-        return;
-    }
-
-    if (buildVersion != "2502")
-        throw new Exception($"Expected Adobe DNG SDK build 2502 before patching, but found '{buildVersion}'.");
-
-    RunProcess("git", new ProcessSettings {
-        WorkingDirectory = DNG_SDK_PATH,
-        Arguments = new ProcessArgumentBuilder()
-            .Append("apply")
-            .AppendQuoted(DNG_SDK_PATCH.FullPath),
-    });
-
-    Information("Applied Adobe DNG SDK 1.7.1 build 2724 patch.");
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DEPENDENCY VERIFICATION
