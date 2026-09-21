@@ -450,6 +450,25 @@ namespace SkiaSharp
 			(sk_canvas_draw_link_destination_annotation_delegate ??= GetSymbol<Delegates.sk_canvas_draw_link_destination_annotation> ("sk_canvas_draw_link_destination_annotation")).Invoke (t, rect, value);
 		#endif
 
+		// void sk_canvas_draw_mesh(sk_canvas_t* ccanvas, const sk_mesh_t* mesh, sk_blender_t* blender, const sk_paint_t* paint)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_mesh (sk_canvas_t ccanvas, sk_mesh_t mesh, sk_blender_t blender, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_canvas_draw_mesh (sk_canvas_t ccanvas, sk_mesh_t mesh, sk_blender_t blender, sk_paint_t paint);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_canvas_draw_mesh (sk_canvas_t ccanvas, sk_mesh_t mesh, sk_blender_t blender, sk_paint_t paint);
+		}
+		private static Delegates.sk_canvas_draw_mesh sk_canvas_draw_mesh_delegate;
+		internal static void sk_canvas_draw_mesh (sk_canvas_t ccanvas, sk_mesh_t mesh, sk_blender_t blender, sk_paint_t paint) =>
+			(sk_canvas_draw_mesh_delegate ??= GetSymbol<Delegates.sk_canvas_draw_mesh> ("sk_canvas_draw_mesh")).Invoke (ccanvas, mesh, blender, paint);
+		#endif
+
 		// void sk_canvas_draw_named_destination_annotation(sk_canvas_t* t, const sk_point_t* point, sk_data_t* value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
