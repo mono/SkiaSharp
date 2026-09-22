@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 using EGLDisplay = System.IntPtr;
 using EGLContext = System.IntPtr;
@@ -11,7 +12,7 @@ using glbool = System.Int32;
 
 namespace SkiaSharp.Views.GlesInterop
 {
-	internal static class Egl
+	internal static unsafe class Egl
 	{
 		private const string libEGL = "libEGL.dll";
 
@@ -83,20 +84,20 @@ namespace SkiaSharp.Views.GlesInterop
 		public const string EGLRenderSurfaceSizeProperty = "EGLRenderSurfaceSizeProperty";
 		public const string EGLRenderResolutionScaleProperty = "EGLRenderResolutionScaleProperty";
 
+		[DllImport(libEGL, EntryPoint = "eglGetProcAddress")]
+		private static extern IntPtr eglGetProcAddressNative(byte* procname);
 		[DllImport(libEGL)]
-		private static extern IntPtr eglGetProcAddress([MarshalAs(UnmanagedType.LPStr)] string procname);
+		public static extern EGLDisplay eglGetPlatformDisplayEXT(uint platform, EGLNativeDisplayType native_display, int* attrib_list);
 		[DllImport(libEGL)]
-		public static extern EGLDisplay eglGetPlatformDisplayEXT(uint platform, EGLNativeDisplayType native_display, int[] attrib_list);
+		public static extern glbool eglInitialize(EGLDisplay dpy, int* major, int* minor);
 		[DllImport(libEGL)]
-		public static extern glbool eglInitialize(EGLDisplay dpy, out int major, out int minor);
+		public static extern glbool eglChooseConfig(EGLDisplay dpy, int* attrib_list, EGLConfig* configs, int config_size, int* num_config);
 		[DllImport(libEGL)]
-		public static extern glbool eglChooseConfig(EGLDisplay dpy, int[] attrib_list, [In, Out] EGLConfig[] configs, int config_size, out int num_config);
+		public static extern EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context, int* attrib_list);
 		[DllImport(libEGL)]
-		public static extern EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context, int[] attrib_list);
+		public static extern EGLSurface eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win, int* attrib_list);
 		[DllImport(libEGL)]
-		public static extern EGLSurface eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win, int[] attrib_list);
-		[DllImport(libEGL)]
-		public static extern glbool eglQuerySurface(EGLDisplay dpy, EGLSurface surface, int attribute, out int value);
+		public static extern glbool eglQuerySurface(EGLDisplay dpy, EGLSurface surface, int attribute, int* value);
 		[DllImport(libEGL)]
 		public static extern glbool eglDestroySurface(EGLDisplay dpy, EGLSurface surface);
 		[DllImport(libEGL)]
@@ -112,8 +113,19 @@ namespace SkiaSharp.Views.GlesInterop
 		[DllImport(libEGL)]
 		public static extern glbool eglBindAPI(uint api);
 		[DllImport(libEGL)]
-		public static extern EGLSurface eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig config, int[] attrib_list);
+		public static extern EGLSurface eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig config, int* attrib_list);
 		[DllImport(libEGL)]
 		public static extern glbool eglSurfaceAttrib(EGLDisplay dpy, EGLSurface surface, int attribute, int value);
+
+		public static IntPtr eglGetProcAddress(string procname)
+		{
+			// Marshal ASCII explicitly so this remains usable when runtime marshalling is disabled.
+			int count = Encoding.ASCII.GetByteCount(procname);
+			Span<byte> buffer = count < 256 ? stackalloc byte[count + 1] : new byte[count + 1];
+			Encoding.ASCII.GetBytes(procname, buffer);
+			buffer[count] = 0;
+			fixed (byte* p = buffer)
+				return eglGetProcAddressNative(p);
+		}
 	}
 }

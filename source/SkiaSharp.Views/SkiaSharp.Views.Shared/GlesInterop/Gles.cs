@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Views.GlesInterop
 {
-	internal static class Gles
+	internal static unsafe class Gles
 	{
 #if __MACOS__
 		private const string libGLESv2 = "/System/Library/Frameworks/OpenGL.framework/OpenGL";
@@ -74,7 +74,7 @@ namespace SkiaSharp.Views.GlesInterop
 		public const int GL_DEPTH24_STENCIL8_OES = 0x88F0;
 
 		[DllImport(libGLESv2)]
-		public static extern void glGetIntegerv(uint pname, out int data);
+		public static extern void glGetIntegerv(uint pname, int* data);
 		[DllImport(libGLESv2)]
 		public static extern System.IntPtr glGetString(uint value);
 		[DllImport(libGLESv2)]
@@ -86,27 +86,19 @@ namespace SkiaSharp.Views.GlesInterop
 
 #if !__DESKTOP__
 		[DllImport(libGLESv2)]
-		public static extern void glGenRenderbuffers(int n, [In, Out] uint[] buffers);
+		public static extern void glGenRenderbuffers(int n, uint* buffers);
 		[DllImport(libGLESv2)]
-		public static extern void glGenRenderbuffers(int n, ref uint buffer);
+		public static extern void glGenFramebuffers(int n, uint* buffers);
 		[DllImport(libGLESv2)]
-		public static extern void glGenFramebuffers(int n, [In, Out] uint[] buffers);
-		[DllImport(libGLESv2)]
-		public static extern void glGenFramebuffers(int n, ref uint buffer);
-		[DllImport(libGLESv2)]
-		public static extern void glGetRenderbufferParameteriv(uint target, int pname, out int param);
+		public static extern void glGetRenderbufferParameteriv(uint target, int pname, int* param);
 		[DllImport(libGLESv2)]
 		public static extern void glBindRenderbuffer(uint target, uint buffer);
 		[DllImport(libGLESv2)]
 		public static extern void glBindFramebuffer(uint target, uint framebuffer);
 		[DllImport(libGLESv2)]
-		public static extern void glDeleteFramebuffers(int n, [In, Out] uint[] framebuffers);
+		public static extern void glDeleteFramebuffers(int n, uint* framebuffers);
 		[DllImport(libGLESv2)]
-		public static extern void glDeleteFramebuffers(int n, ref uint framebuffer);
-		[DllImport(libGLESv2)]
-		public static extern void glDeleteRenderbuffers(int n, [In, Out] uint[] renderbuffers);
-		[DllImport(libGLESv2)]
-		public static extern void glDeleteRenderbuffers(int n, ref uint renderbuffer);
+		public static extern void glDeleteRenderbuffers(int n, uint* renderbuffers);
 		[DllImport(libGLESv2)]
 		public static extern void glFramebufferRenderbuffer(uint target, uint attachment, uint renderbuffertarget, uint renderbuffer);
 #endif
