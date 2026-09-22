@@ -6,71 +6,14 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/shared/msbuild.cake"
 #load "../../scripts/infra/native/windows/windows-shared.cake"
-
-GIT_SYNC_DEPS_OS = "win";
+#load "../../scripts/infra/native/windows/angle-shared.cake"
 
 Task("prepare-ANGLE")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
-    var submodules = new[] {
-        "build",
-        "testing",
-        "third_party/zlib",
-        "third_party/jsoncpp",
-        "third_party/vulkan-deps",
-        "third_party/astc-encoder/src",
-        "tools/clang",
-    };
-
-    RunProcess("git", new ProcessSettings {
-        Arguments = $"-c core.longpaths=true submodule update --init --recursive --depth 1 --single-branch -- {string.Join(" ", submodules)}",
-        WorkingDirectory = ANGLE_PATH.FullPath,
-    });
-
-    // patch the output filenames
-    {
-        var toolchain = ANGLE_PATH.CombineWithFilePath("build/toolchain/win/toolchain.gni");
-        var contents = System.IO.File.ReadAllText(toolchain.FullPath);
-        var newContents = contents
-            .Replace("\"${dllname}.lib\"", "\"{{output_dir}}/{{target_output_name}}.lib\"")
-            .Replace("\"${dllname}.pdb\"", "\"{{output_dir}}/{{target_output_name}}.pdb\"");
-        if (contents != newContents)
-            System.IO.File.WriteAllText(toolchain.FullPath, newContents);
-    }
-
-    // set build args
-    if (!FileExists(ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni"))) {
-        var lines = new[] {
-            "checkout_angle_internal = false",
-            "checkout_angle_mesa = false",
-            "checkout_angle_restricted_traces = false",
-            "generate_location_tags = false"
-        };
-        System.IO.File.WriteAllLines(ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni").FullPath, lines);
-    }
-
-    // set version numbers
-    if (!FileExists(ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE"))) {
-        var lastchange = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE");
-        RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
-    }
-
-    // download rc.exe
-    var rc_exe = "build/toolchain/win/rc/win/rc.exe";
-    var rcPath = ANGLE_PATH.CombineWithFilePath(rc_exe);
-    if (!FileExists(rcPath)) {
-        var shaPath = ANGLE_PATH.CombineWithFilePath($"{rc_exe}.sha1");
-        var sha = System.IO.File.ReadAllText(shaPath.FullPath);
-        var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
-        DownloadFile(url, rcPath);
-    }
-
-    // download llvm
-    if (!FileExists(ANGLE_PATH.CombineWithFilePath("third_party/llvm-build/Release+Asserts/cr_build_revision"))) {
-        RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("tools/clang/scripts/update.py"));
-    }
+    PrepareAngle(ANGLE_PATH);
 
     // generate Windows App SDK files
     if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h"))) {
@@ -111,40 +54,17 @@ Task("ANGLE")
     {
         if (Skip(arch)) return;
 
-        var suffix = wasdk ? "_wasdk" : "";
-        var spectreLibPath = GetSpectreLibPath(arch);
-
-        try
-        {
-            System.Environment.SetEnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN", "0");
-
-            RunGn(ANGLE_PATH, $"out/winui{suffix}/{arch}",
-                $"target_cpu='{arch}' " +
-                $"is_component_build=false " +
-                $"is_debug=false " +
-                $"is_clang=false " +
-                $"angle_is_winappsdk={wasdk} ".ToLower() +
-                $"winappsdk_dir='{WINAPPSDK_PATH}' " +
-                $"enable_precompiled_headers=false " +
-                $"angle_enable_null=false " +
-                $"angle_enable_wgpu=false " +
-                $"angle_enable_gl_desktop_backend=false " +
-                $"angle_enable_vulkan=false " +
-                $"extra_cflags=[ '/guard:cf', '/GS' ] " +
-                $"extra_ldflags=[ '/guard:cf', '/LIBPATH:{spectreLibPath}' ]");
-
-            RunNinja(ANGLE_PATH, $"out/winui{suffix}/{arch}", target);
-        }
-        finally
-        {
-            System.Environment.SetEnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN", "");
-        }
-
-        var outDir = OUTPUT_PATH.Combine(arch);
-        EnsureDirectoryExists(outDir);
-        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.dll"), outDir);
-        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.pdb"), outDir);
-        CheckWindowsDependencies($"{outDir}/{target}.dll", excluded: VERIFY_EXCLUDED);
+        BuildAngle(
+            anglePath: ANGLE_PATH,
+            outputPath: OUTPUT_PATH,
+            outName: wasdk ? "winui_wasdk" : "winui",
+            arch: arch,
+            target: target,
+            gnArgs: AngleGnArgs(arch, new[] {
+                $"angle_is_winappsdk={(wasdk ? "true" : "false")}",
+                $"winappsdk_dir='{WINAPPSDK_PATH}'",
+            }),
+            verifyDependencies: true);
     }
 });
 
