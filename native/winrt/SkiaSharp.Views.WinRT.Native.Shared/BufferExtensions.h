@@ -1,10 +1,11 @@
 #pragma once
 
 #include "BufferExtensions.g.h"
+#include "NativeNamespace.h"
 
 using namespace winrt::Windows::Storage::Streams;
 
-namespace winrt::SkiaSharp::Views::WinUI::Native::implementation
+namespace SKIA_SHARP_VIEWS_NATIVE_NAMESPACE::implementation
 {
     struct BufferExtensions
     {
@@ -14,7 +15,7 @@ namespace winrt::SkiaSharp::Views::WinUI::Native::implementation
     };
 }
 
-namespace winrt::SkiaSharp::Views::WinUI::Native::factory_implementation
+namespace SKIA_SHARP_VIEWS_NATIVE_NAMESPACE::factory_implementation
 {
     struct BufferExtensions : BufferExtensionsT<BufferExtensions, implementation::BufferExtensions>
     {

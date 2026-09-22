@@ -8,6 +8,10 @@ C++/WinRT packages to generate implementation headers from interface
 (IDL) files.  The generated Windows Runtime component binary and WinMD
 files should then be bundled with the app consuming them.
 
+The runtime class implementation is shared with the UWP build under
+native\winrt\SkiaSharp.Views.WinRT.Native.Shared. This project retains
+the WinUI-specific IDL namespace and desktop-compatible build configuration.
+
 Steps:
 1. Create an interface (IDL) file to define your Windows Runtime class,
     its default interface, and any other interfaces it implements.

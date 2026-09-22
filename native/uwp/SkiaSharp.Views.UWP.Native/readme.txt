@@ -7,6 +7,10 @@ classes directly with standard C++, using the C++/WinRT package to
 generate implementation headers from interface (IDL) files. It targets
 UWP (Windows.UI.Xaml) and does not use the Windows App SDK.
 
+The runtime class implementation is shared with the WinUI build under
+native\winrt\SkiaSharp.Views.WinRT.Native.Shared. This project retains
+the UWP-specific IDL namespace and AppContainer build configuration.
+
 Steps:
 1. Create an interface (IDL) file to define your Windows Runtime class,
     its default interface, and any other interfaces it implements.

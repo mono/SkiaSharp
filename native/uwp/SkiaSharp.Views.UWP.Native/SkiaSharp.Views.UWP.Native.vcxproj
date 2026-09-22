@@ -69,6 +69,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
+    <WinRTNativeSharedDir>$(MSBuildThisFileDirectory)..\..\winrt\SkiaSharp.Views.WinRT.Native.Shared\</WinRTNativeSharedDir>
     <OutDir>$(ProjectDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -79,7 +80,8 @@
       <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
       <WarningLevel>Level4</WarningLevel>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
-      <PreprocessorDefinitions>_WINRT_DLL;WINAPI_FAMILY=WINAPI_FAMILY_APP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINRT_DLL;WINAPI_FAMILY=WINAPI_FAMILY_APP;SKIA_SHARP_VIEWS_UWP_NATIVE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(WinRTNativeSharedDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>$(WindowsSDK_WindowsMetadata);$(AdditionalUsingDirectories)</AdditionalUsingDirectories>
     </ClCompile>
     <Link>
@@ -105,10 +107,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="BufferExtensions.h">
+    <ClInclude Include="$(WinRTNativeSharedDir)BufferExtensions.h">
+      <Link>BufferExtensions.h</Link>
       <DependentUpon>BufferExtensions.cpp</DependentUpon>
     </ClInclude>
-    <ClInclude Include="PropertySetExtensions.h">
+    <ClInclude Include="$(WinRTNativeSharedDir)NativeNamespace.h">
+      <Link>NativeNamespace.h</Link>
+    </ClInclude>
+    <ClInclude Include="$(WinRTNativeSharedDir)PropertySetExtensions.h">
+      <Link>PropertySetExtensions.h</Link>
       <DependentUpon>PropertySetExtensions.cpp</DependentUpon>
     </ClInclude>
   </ItemGroup>
@@ -116,8 +123,12 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="BufferExtensions.cpp" />
-    <ClCompile Include="PropertySetExtensions.cpp" />
+    <ClCompile Include="$(WinRTNativeSharedDir)BufferExtensions.cpp">
+      <Link>BufferExtensions.cpp</Link>
+    </ClCompile>
+    <ClCompile Include="$(WinRTNativeSharedDir)PropertySetExtensions.cpp">
+      <Link>PropertySetExtensions.cpp</Link>
+    </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
