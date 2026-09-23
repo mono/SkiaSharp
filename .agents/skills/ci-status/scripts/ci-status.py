@@ -71,7 +71,9 @@ GITHUB_WORKFLOWS = [
     {"repo": "mono/SkiaSharp", "workflow": "build-site-go-live.yml", "name": "Pages - Go Live!", "scope": "global", "trigger": "dispatch"},
     {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup.yml", "name": "Pages - PR Staging - Cleanup", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup-stale.yml", "name": "Pages - PR Staging - Sweep Stale", "scope": "global", "trigger": "schedule"},
-    {"repo": "mono/SkiaSharp", "workflow": "auto-skia-submodule-sync.yml", "name": "Sync - Skia Submodule", "scope": "global", "trigger": "schedule"},
+    {"repo": "mono/SkiaSharp", "workflow": "auto-skia-submodule-sync.yml", "name": "Repin SkiaSharp Sync PR", "scope": "global", "trigger": "dispatch"},
+    {"repo": "mono/SkiaSharp", "workflow": "skia-sync-review.yml", "name": "Review - Skia Sync", "scope": "global", "trigger": "event"},
+    {"repo": "mono/SkiaSharp", "workflow": "skia-sync-merge.yml", "name": "Merge - Skia Sync", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-skia-sync.lock.yml", "name": "Sync - Skia Upstream", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "memory-leak-fixer.lock.yml", "name": "Fixer - Memory Leak", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "performance-fixer.lock.yml", "name": "Fixer - Performance", "scope": "global", "trigger": "schedule"},
@@ -93,7 +95,7 @@ GITHUB_WORKFLOWS = [
     {"repo": "mono/SkiaSharp", "workflow": "backport.yml", "name": "PR - Backport", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "rebase.yml", "name": "PR - Rebase", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "pr-artifacts-comment.yml", "name": "PR - Artifacts Comment", "scope": "global", "trigger": "event"},
-    {"repo": "mono/SkiaSharp", "workflow": "merge-message.lock.yml", "name": "Merge Message", "scope": "global", "trigger": "event"},
+    {"repo": "mono/SkiaSharp", "workflow": "merge-message-command.yml", "name": "Merge Message", "scope": "global", "trigger": "event"},
     # API-docs publishes independently. Regeneration workflow names are intentionally
     # not tracked until they are stable; Go Live is the established publish workflow.
     {"repo": "mono/SkiaSharp-API-docs", "workflow": "go-live.yml", "name": "Go Live", "scope": "global", "trigger": "dispatch"},
