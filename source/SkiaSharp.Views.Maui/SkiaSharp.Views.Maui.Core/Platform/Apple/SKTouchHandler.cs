@@ -74,6 +74,8 @@ namespace SkiaSharp.Views.Maui.Platform
 			}
 			else
 			{
+				touchGestureRecognizer.CancelTrackedTouches();
+
 				foreach (var recognizer in gestureRecognizers)
 				{
 					if (recognizer.View == view)
@@ -223,9 +225,10 @@ namespace SkiaSharp.Views.Maui.Platform
 			return args.Handled;
 		}
 
-		private sealed class TouchGestureRecognizer : UIGestureRecognizer
+		internal class TouchGestureRecognizer : UIGestureRecognizer
 		{
 			private readonly Func<SKTouchAction, UITouch, bool, bool> fireEvent;
+			private readonly HashSet<UITouch> trackedTouches = new();
 
 			public TouchGestureRecognizer(Func<SKTouchAction, UITouch, bool, bool> fireEvent)
 			{
@@ -238,8 +241,12 @@ namespace SkiaSharp.Views.Maui.Platform
 
 				foreach (UITouch touch in touches.Cast<UITouch>())
 				{
+					trackedTouches.Add(touch);
 					if (!fireEvent(SKTouchAction.Pressed, touch, true))
+					{
+						trackedTouches.Remove(touch);
 						IgnoreTouch(touch, evt);
+					}
 				}
 			}
 
@@ -248,7 +255,10 @@ namespace SkiaSharp.Views.Maui.Platform
 				base.TouchesMoved(touches, evt);
 
 				foreach (UITouch touch in touches.Cast<UITouch>())
-					fireEvent(SKTouchAction.Moved, touch, true);
+				{
+					if (trackedTouches.Contains(touch))
+						fireEvent(SKTouchAction.Moved, touch, true);
+				}
 			}
 
 			public override void TouchesEnded(NSSet touches, UIEvent evt)
@@ -256,7 +266,12 @@ namespace SkiaSharp.Views.Maui.Platform
 				base.TouchesEnded(touches, evt);
 
 				foreach (UITouch touch in touches.Cast<UITouch>())
-					fireEvent(SKTouchAction.Released, touch, false);
+				{
+					if (trackedTouches.Remove(touch))
+						fireEvent(SKTouchAction.Released, touch, false);
+				}
+
+				CompleteIfFinished();
 			}
 
 			public override void TouchesCancelled(NSSet touches, UIEvent evt)
@@ -264,8 +279,42 @@ namespace SkiaSharp.Views.Maui.Platform
 				base.TouchesCancelled(touches, evt);
 
 				foreach (UITouch touch in touches.Cast<UITouch>())
+				{
+					if (trackedTouches.Remove(touch))
+						fireEvent(SKTouchAction.Cancelled, touch, false);
+				}
+
+				CompleteIfFinished();
+			}
+
+			public override void Reset()
+			{
+				var touches = trackedTouches.ToArray();
+				trackedTouches.Clear();
+
+				base.Reset();
+
+				foreach (var touch in touches)
 					fireEvent(SKTouchAction.Cancelled, touch, false);
 			}
+
+			internal void CancelTrackedTouches()
+			{
+				var touches = trackedTouches.ToArray();
+				trackedTouches.Clear();
+
+				foreach (var touch in touches)
+					fireEvent(SKTouchAction.Cancelled, touch, false);
+			}
+
+			private void CompleteIfFinished()
+			{
+				if (trackedTouches.Count == 0 && View != null)
+					RequestState(UIGestureRecognizerState.Failed);
+			}
+
+			protected virtual void RequestState(UIGestureRecognizerState state) =>
+				State = state;
 		}
 	}
 }

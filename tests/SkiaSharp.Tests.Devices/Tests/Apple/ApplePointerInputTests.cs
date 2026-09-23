@@ -1,8 +1,11 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Foundation;
+using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using SkiaSharp.Views.Maui.Controls;
 using SkiaSharp.Views.Maui.Controls.Tests;
@@ -14,6 +17,140 @@ namespace SkiaSharp.Views.Maui.Tests;
 
 public class AppleWheelDeltaTests
 {
+	[Fact]
+	public Task ContactRecognizerRequestsCompletionAfterFinalTouch() =>
+		MainThread.InvokeOnMainThreadAsync(() =>
+		{
+			var actions = new List<SKTouchAction>();
+			using var recognizer = new TestTouchGestureRecognizer((action, _, _) =>
+			{
+				actions.Add(action);
+				return true;
+			});
+			using var view = new UIView();
+			view.AddGestureRecognizer(recognizer);
+			using var touch = new UITouch();
+			using var touches = new NSSet(touch);
+			using var evt = new UIEvent();
+
+			recognizer.TouchesBegan(touches, evt);
+			Assert.Equal(UIGestureRecognizerState.Possible, recognizer.State);
+
+			recognizer.TouchesEnded(touches, evt);
+
+			Assert.Equal(new[] { SKTouchAction.Pressed, SKTouchAction.Released }, actions);
+			Assert.Equal(new[] { UIGestureRecognizerState.Failed }, recognizer.RequestedStates);
+			Assert.Equal(UIGestureRecognizerState.Possible, recognizer.State);
+		});
+
+	[Fact]
+	public Task ContactRecognizerCancelsTrackedTouchesWhenReset() =>
+		MainThread.InvokeOnMainThreadAsync(() =>
+		{
+			var actions = new List<SKTouchAction>();
+			using var recognizer = new SKTouchHandler.TouchGestureRecognizer((action, _, _) =>
+			{
+				actions.Add(action);
+				return true;
+			});
+			using var view = new UIView();
+			view.AddGestureRecognizer(recognizer);
+			using var touch = new UITouch();
+			using var touches = new NSSet(touch);
+			using var evt = new UIEvent();
+
+			recognizer.TouchesBegan(touches, evt);
+			recognizer.Reset();
+
+			Assert.Equal(new[] { SKTouchAction.Pressed, SKTouchAction.Cancelled }, actions);
+		});
+
+	[Fact]
+	public Task ContactRecognizerCancelsTrackedTouchesWhenDisabled() =>
+		MainThread.InvokeOnMainThreadAsync(() =>
+		{
+			var actions = new List<SKTouchAction>();
+			using var recognizer = new SKTouchHandler.TouchGestureRecognizer((action, _, _) =>
+			{
+				actions.Add(action);
+				return true;
+			});
+			using var touch = new UITouch();
+			using var touches = new NSSet(touch);
+			using var evt = new UIEvent();
+
+			recognizer.TouchesBegan(touches, evt);
+			recognizer.CancelTrackedTouches();
+
+			Assert.Equal(new[] { SKTouchAction.Pressed, SKTouchAction.Cancelled }, actions);
+		});
+
+	[Fact]
+	public Task ContactRecognizerAllowsLaterHandledTouch() =>
+		MainThread.InvokeOnMainThreadAsync(() =>
+		{
+			var pressedCount = 0;
+			var actions = new List<SKTouchAction>();
+			using var recognizer = new TestTouchGestureRecognizer((action, _, _) =>
+			{
+				actions.Add(action);
+				return action != SKTouchAction.Pressed || ++pressedCount > 1;
+			});
+			using var view = new UIView();
+			view.AddGestureRecognizer(recognizer);
+			using var firstTouch = new UITouch();
+			using var secondTouch = new UITouch();
+			using var firstTouches = new NSSet(firstTouch);
+			using var secondTouches = new NSSet(secondTouch);
+			using var evt = new UIEvent();
+
+			recognizer.TouchesBegan(firstTouches, evt);
+			recognizer.TouchesBegan(secondTouches, evt);
+			recognizer.TouchesEnded(secondTouches, evt);
+
+			Assert.Equal(
+				new[] { SKTouchAction.Pressed, SKTouchAction.Pressed, SKTouchAction.Released },
+				actions);
+			Assert.Equal(new[] { UIGestureRecognizerState.Failed }, recognizer.RequestedStates);
+		});
+
+	[Fact]
+	public Task ContactRecognizerRemovesTouchBeforeReleasedCallback() =>
+		MainThread.InvokeOnMainThreadAsync(() =>
+		{
+			var actions = new List<SKTouchAction>();
+			SKTouchHandler.TouchGestureRecognizer? recognizer = null;
+			using (recognizer = new SKTouchHandler.TouchGestureRecognizer((action, _, _) =>
+			{
+				actions.Add(action);
+				if (action == SKTouchAction.Released)
+					recognizer.Reset();
+				return true;
+			}))
+			using (var touch = new UITouch())
+			using (var touches = new NSSet(touch))
+			using (var evt = new UIEvent())
+			{
+				recognizer.TouchesBegan(touches, evt);
+				recognizer.TouchesEnded(touches, evt);
+			}
+
+			Assert.Equal(new[] { SKTouchAction.Pressed, SKTouchAction.Released }, actions);
+		});
+
+	private sealed class TestTouchGestureRecognizer : SKTouchHandler.TouchGestureRecognizer
+	{
+		public TestTouchGestureRecognizer(Func<SKTouchAction, UITouch, bool, bool> fireEvent)
+			: base(fireEvent)
+		{
+		}
+
+		public List<UIGestureRecognizerState> RequestedStates { get; } = new();
+
+		protected override void RequestState(UIGestureRecognizerState state) =>
+			RequestedStates.Add(state);
+	}
+
 	[Theory]
 	[InlineData(-40, 120)]
 	[InlineData(40, -120)]
@@ -135,8 +272,7 @@ public class ApplePointerInputTests : SKUITests
 		var platformView = Assert.IsAssignableFrom<UIView>(view.Handler!.PlatformView);
 		var recognizers = platformView.GestureRecognizers ?? Array.Empty<UIGestureRecognizer>();
 
-		var touch = Assert.Single(recognizers.Where(recognizer =>
-			recognizer.GetType().DeclaringType == typeof(SKTouchHandler)));
+		var touch = Assert.Single(recognizers.OfType<SKTouchHandler.TouchGestureRecognizer>());
 		var hover = Assert.Single(recognizers.OfType<UIHoverGestureRecognizer>());
 		Assert.False(hover.CancelsTouchesInView);
 
@@ -159,6 +295,12 @@ public class ApplePointerInputTests : SKUITests
 		Assert.DoesNotContain(touch, platformView.GestureRecognizers ?? Array.Empty<UIGestureRecognizer>());
 		Assert.DoesNotContain(hover, platformView.GestureRecognizers ?? Array.Empty<UIGestureRecognizer>());
 		Assert.DoesNotContain(scroll, platformView.GestureRecognizers ?? Array.Empty<UIGestureRecognizer>());
+
+		SetTouchEvents(view, true);
+
+		Assert.Contains(touch, platformView.GestureRecognizers ?? Array.Empty<UIGestureRecognizer>());
+		Assert.Contains(hover, platformView.GestureRecognizers ?? Array.Empty<UIGestureRecognizer>());
+		Assert.Contains(scroll, platformView.GestureRecognizers ?? Array.Empty<UIGestureRecognizer>());
 
 		await CurrentPage.Navigation.PopAsync();
 	}
