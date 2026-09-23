@@ -53,9 +53,10 @@ SkiaSharp does not support DNG decoding or RAW image previews on any platform.
 The shared native build configuration sets `skia_use_dng_sdk=false` and
 `skia_use_piex=false`, excluding the RAW codec and its dependencies from native
 builds. `SKEncodedImageFormat.Dng = 10` remains for API compatibility, not codec
-support. The pinned Skia `DEPS` still downloads dng_sdk and piex, so their
-`cgmanifest.json` registrations remain for source tracking; they are not
-compiled or linked as SkiaSharp codec dependencies.
+support. The dng_sdk and piex entries are commented out in Skia's `DEPS`, so
+dependency synchronization no longer downloads them. Their `cgmanifest.json`
+registrations are removed because these dependencies are neither fetched nor
+compiled into SkiaSharp.
 
 ---
 
@@ -94,8 +95,6 @@ Enables Microsoft Component Governance CVE detection.
 | expat | `libexpat` | github.com/libexpat/libexpat |
 | brotli | `brotli` | github.com/google/brotli |
 | wuffs | `wuffs` | github.com/google/wuffs-mirror-release-c |
-| dng_sdk | `dng_sdk` | android.googlesource.com/.../dng_sdk |
-| piex | `piex` | android.googlesource.com/.../piex |
 
 ### Skia DEPS Identity Signals
 
