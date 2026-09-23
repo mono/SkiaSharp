@@ -44,6 +44,62 @@ public class AppleWheelDeltaTests
 		});
 
 	[Fact]
+	public Task ContactRecognizerWaitsForLastHandledTouch() =>
+		MainThread.InvokeOnMainThreadAsync(() =>
+		{
+			var actions = new List<SKTouchAction>();
+			using var recognizer = new TestTouchGestureRecognizer((action, _, _) =>
+			{
+				actions.Add(action);
+				return true;
+			});
+			using var view = new UIView();
+			view.AddGestureRecognizer(recognizer);
+			using var first = new UITouch();
+			using var second = new UITouch();
+			using var firstTouches = new NSSet(first);
+			using var secondTouches = new NSSet(second);
+			using var evt = new UIEvent();
+
+			recognizer.TouchesBegan(firstTouches, evt);
+			recognizer.TouchesBegan(secondTouches, evt);
+			recognizer.TouchesEnded(firstTouches, evt);
+			Assert.Empty(recognizer.RequestedStates);
+
+			recognizer.TouchesCancelled(secondTouches, evt);
+			Assert.Equal(new[] { UIGestureRecognizerState.Failed }, recognizer.RequestedStates);
+			Assert.Equal(
+				new[] { SKTouchAction.Pressed, SKTouchAction.Pressed, SKTouchAction.Released, SKTouchAction.Cancelled },
+				actions);
+		});
+
+	[Fact]
+	public Task DetachingHandlerCancelsContactsAndRemovesRecognizers() =>
+		MainThread.InvokeOnMainThreadAsync(() =>
+		{
+			var actions = new List<SKTouchAction>();
+			using var view = new UIView();
+			var handler = new SKTouchHandler(args =>
+			{
+				actions.Add(args.ActionType);
+				args.Handled = true;
+			}, (x, y) => new SKPoint((float)x, (float)y));
+			handler.SetEnabled(view, true);
+			var recognizers = view.GestureRecognizers ?? Array.Empty<UIGestureRecognizer>();
+			var touch = Assert.Single(recognizers.OfType<SKTouchHandler.TouchGestureRecognizer>());
+			using var contact = new UITouch();
+			using var touches = new NSSet(contact);
+			using var evt = new UIEvent();
+
+			touch.TouchesBegan(touches, evt);
+			handler.Detach(view);
+
+			Assert.Equal(new[] { SKTouchAction.Pressed, SKTouchAction.Cancelled }, actions);
+			Assert.All(recognizers, recognizer =>
+				Assert.DoesNotContain(recognizer, view.GestureRecognizers ?? Array.Empty<UIGestureRecognizer>()));
+		});
+
+	[Fact]
 	public Task ContactRecognizerCancelsTrackedTouchesWhenReset() =>
 		MainThread.InvokeOnMainThreadAsync(() =>
 		{
@@ -124,7 +180,7 @@ public class AppleWheelDeltaTests
 			{
 				actions.Add(action);
 				if (action == SKTouchAction.Released)
-					recognizer.Reset();
+					recognizer!.Reset();
 				return true;
 			}))
 			using (var touch = new UITouch())

@@ -105,6 +105,8 @@ public partial class DrawingPage : ContentPage
 				}
 				else
 				{
+					if (!activeTouches.ContainsKey(e.Id))
+						break;
 					activeTouches[e.Id] = e.Location;
 					if (activeTouches.Count == 2)
 					{
