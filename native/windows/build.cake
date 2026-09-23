@@ -56,11 +56,9 @@ Task("libSkiaSharp")
             $"target_os='win'" +
             $"target_cpu='{skiaArch}' " +
             $"skia_enable_fontmgr_win_gdi=false " +
-            $"skia_use_dng_sdk=true " +
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_partition_alloc=false " +
-            $"skia_use_piex=true " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_freetype2=false " +
             $"skia_use_system_libjpeg_turbo=false " +

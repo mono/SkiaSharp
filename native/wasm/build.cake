@@ -165,14 +165,12 @@ Task("libSkiaSharp")
         $"skia_enable_ganesh={(SUPPORT_GPU ? "true" : "false")} " +
         (SUPPORT_GPU ? "skia_gl_standard='webgl'" : "") +
         $"skia_enable_pdf=true " +
-        $"skia_use_dng_sdk=false " +
         $"skia_use_webgl=true " +
         $"skia_use_fontconfig=false " +
         $"skia_use_freetype=true " +
         $"skia_use_harfbuzz=false " +
         $"skia_use_icu=false " +
         $"skia_use_partition_alloc=false " +
-        $"skia_use_piex=false " +
         $"skia_use_expat=true " +
         $"skia_use_libwebp_encode=true " +
         $"skia_use_system_expat=false " +

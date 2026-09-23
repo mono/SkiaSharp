@@ -35,7 +35,6 @@ Task("libSkiaSharp")
             $"skia_use_metal=true " +
             $"skia_enable_graphite=true " +
             $"skia_use_partition_alloc=false " +
-            $"skia_use_piex=true " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_libjpeg_turbo=false " +
             $"skia_use_system_libpng=false " +

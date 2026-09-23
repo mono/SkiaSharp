@@ -5,6 +5,7 @@ Single source of truth for native dependencies: what's used, what's not, and how
 ## Contents
 
 - [Active Dependencies](#active-dependencies) — What SkiaSharp actually compiles
+- [Disabled DNG/RAW Codec](#disabled-dngraw-codec) — Unsupported image decoding
 - [cgmanifest.json](#cgmanifestjson) — CVE detection setup
 - [Known False Positives](#known-false-positives) — CVEs that don't affect SkiaSharp
 
@@ -12,7 +13,7 @@ Single source of truth for native dependencies: what's used, what's not, and how
 
 ## Active Dependencies
 
-SkiaSharp uses only a subset of Skia's dependencies. Unused dependencies are commented out in `externals/skia/DEPS` to reduce attack surface.
+SkiaSharp uses only a subset of Skia's dependencies. Some unused dependencies are commented out in `externals/skia/DEPS` to reduce attack surface; others remain downloaded but are disabled at build time.
 
 ### Security-Relevant (process untrusted input)
 
@@ -28,7 +29,6 @@ SkiaSharp uses only a subset of Skia's dependencies. Unused dependencies are com
 | **expat** | XML parsing | libexpat | All |
 | **brotli** | WOFF2 fonts | brotli | All |
 | **wuffs** | GIF codec | wuffs | All |
-| **dng_sdk** | RAW images | dng_sdk | Windows |
 
 ### GPU/Graphics
 
@@ -43,8 +43,19 @@ SkiaSharp uses only a subset of Skia's dependencies. Unused dependencies are com
 
 | Dependency | Purpose | Platforms |
 |------------|---------|-----------|
-| **piex** | RAW preview | All except Windows, WASM |
 | **buildtools** | Compiler toolchain | All |
+
+---
+
+## Disabled DNG/RAW Codec
+
+SkiaSharp does not support DNG decoding or RAW image previews on any platform.
+The shared native build configuration sets `skia_use_dng_sdk=false` and
+`skia_use_piex=false`, excluding the RAW codec and its dependencies from native
+builds. `SKEncodedImageFormat.Dng = 10` remains for API compatibility, not codec
+support. The pinned Skia `DEPS` still downloads dng_sdk and piex, so their
+`cgmanifest.json` registrations remain for source tracking; they are not
+compiled or linked as SkiaSharp codec dependencies.
 
 ---
 
@@ -84,6 +95,7 @@ Enables Microsoft Component Governance CVE detection.
 | brotli | `brotli` | github.com/google/brotli |
 | wuffs | `wuffs` | github.com/google/wuffs-mirror-release-c |
 | dng_sdk | `dng_sdk` | android.googlesource.com/.../dng_sdk |
+| piex | `piex` | android.googlesource.com/.../piex |
 
 ### Skia DEPS Identity Signals
 

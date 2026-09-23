@@ -126,7 +126,7 @@ public Boolean Encode (SKWStream dst, SKEncodedImageFormat format, Int32 quality
 
 - `Astc` &mdash; Adaptive Scalable Texture Compression
 - `Bmp` &mdash; Windows Bitmap
-- `Dng` &mdash; Adobe Digital Negative
+- `Dng` &mdash; Adobe Digital Negative (retained for API compatibility; DNG encoding and decoding are not supported)
 - `Gif` &mdash; Graphics Interchange Format
 - `Ico` &mdash; Windows icon images
 - `Jpeg` &mdash; Joint Photographic Experts Group
@@ -136,7 +136,7 @@ public Boolean Encode (SKWStream dst, SKEncodedImageFormat format, Int32 quality
 - `Wbmp` &mdash; Wireless Application Protocol Bitmap Format (1 bit per pixel)
 - `Webp` &mdash; Google WebP format
 
-As you'll see shortly, only three of these file formats (`Jpeg`, `Png`, and `Webp`) are actually supported by SkiaSharp.
+As you'll see shortly, only three of these file formats (`Jpeg`, `Png`, and `Webp`) are supported for encoding by SkiaSharp.
 
 To save an `SKBitmap` object named `bitmap` to a user-selected location, you need a member of the `SKEncodedImageFormat` enumeration named `imageFormat` and (for lossy formats) an integer `quality` variable. You can use the following code to encode the bitmap and let the user choose where to save it:
 

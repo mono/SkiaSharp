@@ -209,7 +209,9 @@ void GenerateGnBuild(DirectoryPath outDir, string skiaArgs)
         skiaArgs += $" win_vc='{win_vc}' ";
     }
 
-    skiaArgs += 
+    // RAW/DNG decoding is unsupported in all SkiaSharp native builds.
+    skiaArgs +=
+        $" skia_use_dng_sdk=false skia_use_piex=false " +
         $" skia_enable_tools=false " +
         $" is_official_build={CONFIGURATION.ToLower() == "release"} ".ToLower();
 
