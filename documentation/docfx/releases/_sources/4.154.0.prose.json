@@ -1,15 +1,21 @@
 {
-  "theme": "Skia m154 preview",
-  "highlights_headline": "SkiaSharp 4.154.0 previews the Skia m154 engine update.",
-  "highlights_body": "Review the documented HarfBuzzSharp enum compatibility changes before upgrading code that uses combining-class or aggregate glyph flag members.",
+  "theme": "Skia m154 and documentation",
+  "highlights_headline": "SkiaSharp 4.154.0 previews Skia m154 and ships XML API documentation with its NuGet packages.",
+  "highlights_body": "The release aligns the bundled renderer with Chrome milestone 154, updates HarfBuzzSharp generation to its bundled native source, and makes package documentation available to consumers.",
   "breaking": [
     {
-      "title": "UnicodeCombiningClass.CCC133 was renamed",
-      "body": "The misspelled CCC133 member is now CCC132, retaining the numeric value 132. Update source references to use CCC132."
+      "title": "HarfBuzzSharp corrects the CCC132 enum name",
+      "body": "`UnicodeCombiningClass.CCC133` has been renamed to `CCC132` to match upstream HarfBuzz while retaining numeric value 132. Update source references to the corrected member name.",
+      "prs": [
+        5057
+      ]
     },
     {
-      "title": "GlyphFlags.Defined was removed",
-      "body": "The aggregate Defined mask is no longer exposed because it is not an independent option. Combine the concrete glyph flags required by your application instead."
+      "title": "HarfBuzzSharp no longer exposes aggregate Defined flags",
+      "body": "`GlyphFlags.Defined` is removed, and aggregate `Defined` members are not exposed for buffer flags. Combine the concrete flags your application needs when constructing a mask.",
+      "prs": [
+        5057
+      ]
     }
   ],
   "categories": [
@@ -18,23 +24,51 @@
       "bullets": [
         {
           "lead": "Skia updated to milestone m154",
-          "detail": "Aligns the bundled renderer with Chrome milestone 154 for preview consumers.",
+          "detail": "Aligns the bundled renderer with Chrome milestone 154 and incorporates its upstream bug fixes.",
           "prs": [
-            4945
+            4945,
+            5054,
+            5114
+          ]
+        },
+        {
+          "lead": "HarfBuzzSharp generation follows the bundled native source",
+          "detail": "Bindings are generated from the HarfBuzz revision pinned by Skia, keeping ordinary managed declarations synchronized with the native library while excluding unsupported callback-heavy APIs.",
+          "prs": [
+            5056,
+            5057
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "XML API documentation ships with packages",
+          "detail": "NuGet packages now include compiler-generated XML documentation, making API comments available to IDE tooling alongside the managed assemblies.",
+          "prs": [
+            5064,
+            5066,
+            5078,
+            5080,
+            5091
           ]
         }
       ]
     }
   ],
-  "contributor_summaries": {},
-  "preview_summaries": {
-    "v4.154.0-preview.1.26454.9": "Preview 1 opens the 4.154 line with the Skia m154 engine update and its documented compatibility changes."
+  "contributor_summaries": {
+    "azchohfi": "Improved the HarfBuzzSharp native build configuration by scoping compiler warning suppressions"
   },
-  "harfbuzz_summary": null,
+  "preview_summaries": {
+    "v4.154.0-preview.1.26454.9": "Preview 1 opened the 4.154 line with the Skia m154 engine update."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 14.2.1 generates its bindings from the same DEPS-pinned source as the bundled native library, synchronizing supported declarations with that release.",
   "release_summaries": {
     "v4.154.0-preview.1.26454.9": {
-      "headline": "SkiaSharp 4.154.0 Preview 1 introduces the Skia m154 engine update.",
-      "body": "The preview also includes documented compatibility changes for Unicode combining-class and aggregate glyph flag members."
+      "headline": "SkiaSharp 4.154.0 Preview 1 begins the 4.154 line on Skia m154.",
+      "body": "It brings the latest upstream renderer into the preview line without changing the managed API surface."
     }
   }
 }
