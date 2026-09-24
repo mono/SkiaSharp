@@ -40,7 +40,7 @@
                         ctx.putImageData(imageData, 0, 0);
                     }
                     else {
-                        var buffer = new Uint8ClampedArray(Module.HEAPU8.buffer, byteLength);
+                        var buffer = new Uint8ClampedArray(Module.HEAPU8.buffer, pData, byteLength);
                         var imageData = new ImageData(buffer, width, height);
                         ctx.putImageData(imageData, 0, 0);
                     }
@@ -201,6 +201,8 @@
                     if (!currentGLctx)
                         throw `Failed to get current WebGL context`;
 
+                    SKSwapChainPanel.installLargeHeapUploadFallback(currentGLctx);
+
                     // read values
                     this.canvas = canvas;
                     return {
@@ -239,6 +241,46 @@
                     }
 
                     return ctx;
+                }
+
+                static installLargeHeapUploadFallback(gl) {
+                    if (!gl || gl.__skiaSharpLargeHeapUploadFallback)
+                        return;
+
+                    const maxSignedInt = 0x7fffffff;
+                    const uploadMethods = [
+                        'texImage2D',
+                        'texSubImage2D',
+                        'compressedTexImage2D',
+                        'compressedTexSubImage2D',
+                    ];
+
+                    const copyLargeHeapView = (value) => {
+                        if (!ArrayBuffer.isView(value) || !value.buffer || value.buffer.byteLength <= maxSignedInt || value.byteLength > maxSignedInt)
+                            return value;
+
+                        if (typeof value.slice === 'function')
+                            return value.slice();
+
+                        const buffer = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength);
+                        return new value.constructor(buffer);
+                    };
+
+                    for (const method of uploadMethods) {
+                        const original = gl[method];
+                        if (typeof original !== 'function')
+                            continue;
+
+                        gl[method] = function (...args) {
+                            for (let i = 0; i < args.length; i++) {
+                                args[i] = copyLargeHeapView(args[i]);
+                            }
+
+                            return original.apply(this, args);
+                        };
+                    }
+
+                    gl.__skiaSharpLargeHeapUploadFallback = true;
                 }
             }
 
