@@ -54,9 +54,9 @@ See SKILL.md for the authoritative output limits table.
 
 22. **Fabricating output or evidence.** NEVER use echo/print statements to simulate command output, claim "reproduced" from static code analysis without executing the code, or report environment details (OS version, SDK version) without actually running the diagnostic commands. If you cannot run it, report `needs-platform`.
 
-23. **Modifying product source during repro.** Reproduction ONLY creates new test projects in `/tmp/skiasharp/repro/{timestamp}/`. NEVER edit `binding/`, `externals/`, `samples/`, `source/`, `tests/`, `utils/`, or any other product source — that is the `issue-fix` skill's job. Revert immediately if done accidentally.
+23. **Modifying product source during repro.** Reproduction ONLY creates new test projects in `/tmp/repro-{number}/`. NEVER edit `binding/`, `externals/`, `samples/`, `source/`, `tests/`, `utils/`, or any other product source — that is the `issue-fix` skill's job. Revert immediately if done accidentally.
 
-24. **Skipping validation.** NEVER skip the validation script (`validate-repro.ps1` / `validate-repro.py`). NEVER assume the JSON is valid without running it. NEVER persist to the data cache without seeing ✅ from the validator. Mentally reviewing the JSON is not a substitute for the script.
+24. **Skipping validation.** NEVER skip the validation script (`validate-repro.py`). NEVER assume the JSON is valid without running it. NEVER persist without seeing ✅ from the validator. Mentally reviewing the JSON is not a substitute for the script.
 
 25. **Using `reproduced`/`not-reproduced` for non-bug issues.** For enhancements, feature requests, and documentation issues, use `confirmed`/`not-confirmed` instead. `reproduced` means "reported misbehavior was observed" — it doesn't make sense for "the feature is missing."
 
