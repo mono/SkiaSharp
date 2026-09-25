@@ -5,6 +5,8 @@ GIT_SYNC_DEPS_OS = "win";
 
 void PrepareAngle(DirectoryPath anglePath)
 {
+    RestoreAngleToolchainOutputNames(anglePath);
+
     var submodules = new[] {
         "build",
         "testing",
@@ -12,6 +14,10 @@ void PrepareAngle(DirectoryPath anglePath)
         "third_party/jsoncpp",
         "third_party/vulkan-deps",
         "third_party/astc-encoder/src",
+        "third_party/depot_tools",
+        "third_party/spirv-headers/src",
+        "third_party/spirv-tools/src",
+        "third_party/vulkan-headers/src",
         "tools/clang",
     };
 
@@ -20,6 +26,9 @@ void PrepareAngle(DirectoryPath anglePath)
         WorkingDirectory = anglePath.FullPath,
     });
 
+    DownloadAngleGn(anglePath);
+    GN_EXE = anglePath.CombineWithFilePath("out/tools/gn/gn.exe").FullPath;
+
     PatchAngleToolchainOutputNames(anglePath);
     WriteAngleGclientArgs(anglePath);
     WriteAngleLastChange(anglePath);
@@ -27,13 +36,79 @@ void PrepareAngle(DirectoryPath anglePath)
     DownloadAngleClang(anglePath);
 }
 
+void DownloadAngleGn(DirectoryPath anglePath)
+{
+    var deps = anglePath.CombineWithFilePath("DEPS");
+    var gnVersion = GetRegexValue(
+        @"'buildtools/win':\s*\{[\s\S]*?'package':\s*'gn/gn/windows-amd64'[\s\S]*?'version':\s*'([^']+)'",
+        deps);
+    if (string.IsNullOrEmpty(gnVersion))
+        throw new Exception($"Could not find the Windows GN version in {deps}.");
+
+    var gnPath = anglePath.CombineWithFilePath("out/tools/gn/gn.exe");
+    if (FileExists(gnPath)) {
+        RunProcess(gnPath, "--version", out var versionOutput);
+        var installedRevision = string.Join("", versionOutput)
+            .Split('(', ')')
+            .FirstOrDefault(value => value.Length >= 7 && value.All(Uri.IsHexDigit));
+        var requiredRevision = gnVersion.Replace("git_revision:", "");
+        if (!string.IsNullOrEmpty(installedRevision) && requiredRevision.StartsWith(installedRevision))
+            return;
+    }
+
+    var cipd = anglePath.CombineWithFilePath("third_party/depot_tools/cipd.bat");
+    var gnDirectory = gnPath.GetDirectory();
+    EnsureDirectoryExists(gnDirectory);
+
+    var command =
+        $"call \"{cipd.FullPath}\" install gn/gn/windows-amd64 {gnVersion} -root \"{gnDirectory.FullPath}\"";
+    RunProcess("cmd.exe", new ProcessSettings {
+        Arguments = new ProcessArgumentBuilder()
+            .Append("/d")
+            .Append("/s")
+            .Append("/c")
+            .AppendQuoted(command),
+        WorkingDirectory = anglePath.FullPath,
+    });
+}
+
+void RestoreAngleToolchainOutputNames(DirectoryPath anglePath)
+{
+    var toolchain = anglePath.CombineWithFilePath("build/toolchain/win/toolchain.gni");
+    if (!FileExists(toolchain))
+        return;
+
+    var buildPath = anglePath.Combine("build");
+    var result = StartProcess("git", new ProcessSettings {
+        Arguments = "show HEAD:toolchain/win/toolchain.gni",
+        WorkingDirectory = buildPath.FullPath,
+        RedirectStandardOutput = true,
+    }, out var originalLines);
+    if (result != 0)
+        throw new Exception($"Failed to inspect {toolchain}.");
+    var restoreLib = originalLines.Any(line => line.Trim() == "\"${dllname}.lib\",");
+    var restorePdb = originalLines.Any(line => line.Trim() == "\"${dllname}.pdb\",");
+    if (!restoreLib && !restorePdb)
+        return;
+
+    var contents = System.IO.File.ReadAllText(toolchain.FullPath);
+    var newContents = contents;
+    if (restoreLib)
+        newContents = newContents.Replace("        \"{{output_dir}}/{{target_output_name}}.lib\",", "        \"${dllname}.lib\",");
+    if (restorePdb)
+        newContents = newContents.Replace("        \"{{output_dir}}/{{target_output_name}}.pdb\",", "        \"${dllname}.pdb\",");
+
+    if (contents != newContents)
+        System.IO.File.WriteAllText(toolchain.FullPath, newContents);
+}
+
 void PatchAngleToolchainOutputNames(DirectoryPath anglePath)
 {
     var toolchain = anglePath.CombineWithFilePath("build/toolchain/win/toolchain.gni");
     var contents = System.IO.File.ReadAllText(toolchain.FullPath);
     var newContents = contents
-        .Replace("\"${dllname}.lib\"", "\"{{output_dir}}/{{target_output_name}}.lib\"")
-        .Replace("\"${dllname}.pdb\"", "\"{{output_dir}}/{{target_output_name}}.pdb\"");
+        .Replace("        \"${dllname}.lib\",", "        \"{{output_dir}}/{{target_output_name}}.lib\",")
+        .Replace("        \"${dllname}.pdb\",", "        \"{{output_dir}}/{{target_output_name}}.pdb\",");
 
     if (contents != newContents)
         System.IO.File.WriteAllText(toolchain.FullPath, newContents);
@@ -57,9 +132,6 @@ void WriteAngleGclientArgs(DirectoryPath anglePath)
 void WriteAngleLastChange(DirectoryPath anglePath)
 {
     var lastchange = anglePath.CombineWithFilePath("build/util/LASTCHANGE");
-    if (FileExists(lastchange))
-        return;
-
     RunPython(anglePath, anglePath.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
 }
 
@@ -68,31 +140,28 @@ void DownloadAngleRc(DirectoryPath anglePath)
     const string rcExe = "build/toolchain/win/rc/win/rc.exe";
 
     var rcPath = anglePath.CombineWithFilePath(rcExe);
-    if (FileExists(rcPath))
-        return;
-
     var shaPath = anglePath.CombineWithFilePath($"{rcExe}.sha1");
-    var sha = System.IO.File.ReadAllText(shaPath.FullPath);
+    var sha = System.IO.File.ReadAllText(shaPath.FullPath).Trim();
+    if (FileExists(rcPath)) {
+        using (var stream = System.IO.File.OpenRead(rcPath.FullPath))
+        using (var algorithm = System.Security.Cryptography.SHA1.Create()) {
+            var actualSha = string.Concat(algorithm.ComputeHash(stream).Select(value => value.ToString("x2")));
+            if (string.Equals(actualSha, sha, StringComparison.OrdinalIgnoreCase))
+                return;
+        }
+    }
+
     var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
     DownloadFile(url, rcPath);
 }
 
 void DownloadAngleClang(DirectoryPath anglePath)
 {
-    if (FileExists(anglePath.CombineWithFilePath("third_party/llvm-build/Release+Asserts/cr_build_revision")))
-        return;
-
     RunPython(anglePath, anglePath.CombineWithFilePath("tools/clang/scripts/update.py"));
 }
 
-string AngleGnArgs(string arch, string[] flavorArgs = null, string[] extraCFlags = null)
+string AngleGnArgs(string arch, string[] flavorArgs = null)
 {
-    var cflags = new List<string> { "'/guard:cf'", "'/GS'" };
-    if (extraCFlags != null) {
-        foreach (var flag in extraCFlags)
-            cflags.Add($"'{flag}'");
-    }
-
     var args = new List<string> { $"target_cpu='{arch}'" };
 
     if (flavorArgs != null)
@@ -101,13 +170,16 @@ string AngleGnArgs(string arch, string[] flavorArgs = null, string[] extraCFlags
     args.Add("is_component_build=false");
     args.Add("is_debug=false");
     args.Add("is_clang=false");
+    args.Add("use_custom_libcxx=false");
+    args.Add("use_custom_libcxx_for_host=false");
+    args.Add("enable_rust=false");
+    args.Add("enable_rust_cxx=false");
+    args.Add("use_siso=false");
     args.Add("enable_precompiled_headers=false");
     args.Add("angle_enable_null=false");
     args.Add("angle_enable_wgpu=false");
     args.Add("angle_enable_gl_desktop_backend=false");
     args.Add("angle_enable_vulkan=false");
-    args.Add($"extra_cflags=[ {string.Join(", ", cflags)} ]");
-    args.Add($"extra_ldflags=[ '/guard:cf', '/LIBPATH:{GetSpectreLibPath(arch)}' ]");
 
     return string.Join(" ", args);
 }
@@ -135,11 +207,21 @@ void BuildAngle(
         System.Environment.SetEnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN", "");
     }
 
-    var destDir = outputPath.Combine(arch);
-    EnsureDirectoryExists(destDir);
-    CopyFileToDirectory(anglePath.CombineWithFilePath($"{outDir}/{target}.dll"), destDir);
-    CopyFileToDirectory(anglePath.CombineWithFilePath($"{outDir}/{target}.pdb"), destDir);
+    var builtDll = anglePath.CombineWithFilePath($"{outDir}/{target}.dll");
+    var verificationDll = builtDll;
+
+    if (outputPath != null) {
+        var destDir = outputPath.Combine(arch);
+        var builtPdb = anglePath.CombineWithFilePath($"{outDir}/{target}.pdb");
+        if (!FileExists(builtPdb))
+            builtPdb = anglePath.CombineWithFilePath($"{outDir}/{target}.dll.pdb");
+
+        EnsureDirectoryExists(destDir);
+        CopyFileToDirectory(builtDll, destDir);
+        CopyFile(builtPdb, destDir.CombineWithFilePath($"{target}.pdb"));
+        verificationDll = destDir.CombineWithFilePath($"{target}.dll");
+    }
 
     if (verifyDependencies)
-        CheckWindowsDependencies($"{destDir}/{target}.dll", excluded: VERIFY_EXCLUDED);
+        CheckWindowsDependencies(verificationDll, excluded: VERIFY_EXCLUDED);
 }

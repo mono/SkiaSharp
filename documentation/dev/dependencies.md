@@ -38,6 +38,7 @@ SkiaSharp uses only a subset of Skia's dependencies. Some unused dependencies ar
 | **d3d12allocator** | Direct3D memory | Windows |
 | **spirv-cross** | Shader translation | Vulkan/Metal |
 | **vulkan-headers** | Vulkan API | Vulkan builds |
+| **ANGLE** | EGL/GLES translation for WinUI and UWP build validation | Windows |
 
 ### Supporting
 
@@ -95,6 +96,7 @@ Enables Microsoft Component Governance CVE detection.
 | expat | `libexpat` | github.com/libexpat/libexpat |
 | brotli | `brotli` | github.com/google/brotli |
 | wuffs | `wuffs` | github.com/google/wuffs-mirror-release-c |
+| angle2 | `angle` | github.com/google/angle |
 
 ### Skia DEPS Identity Signals
 

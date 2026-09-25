@@ -19,7 +19,9 @@ foreach (var cake in GetFiles("native/*/build.cake"))
         .WithCriteria(!SKIP_BUILD)
         .Does(() => RunCake(localCake, "Default"));
 
-    externalsTask.IsDependentOn(task);
+    // Validation-only externals have explicit CI jobs and must not flow into package builds.
+    if (native != "uwp-angle")
+        externalsTask.IsDependentOn(task);
 }
 
 Task("externals-osx")
