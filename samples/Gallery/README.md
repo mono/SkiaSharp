@@ -46,7 +46,7 @@ Then open http://localhost:5002.
 | Blur Image Filter | Image & Filters | Gaussian blur with independent sigma controls |
 | GIF Player | Image Decoding | Animated GIF playback with speed control |
 | Gradient | Shaders & Effects | Linear, radial, sweep, and conical gradients |
-| Image Decoder | Image Decoding | PNG, WebP, DNG decoding with metadata inspection |
+| Image Decoder | Image Decoding | PNG, WebP, GIF decoding with metadata inspection |
 | Lottie Player | General | Skottie animation playback |
 | Nine-Patch Scaler | General | Interactive 9-patch bitmap resizing |
 | Noise Generator | Shaders & Effects | Procedural Perlin noise textures |
