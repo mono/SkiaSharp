@@ -15,6 +15,7 @@ Queries Azure DevOps for:
   Public CI:  mono-SkiaSharp — dnceng-public/public, def 345
   Internal:   skiasharp-package (1642) -> skiasharp-tests (1630)
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -72,6 +73,7 @@ GITHUB_WORKFLOWS = [
     {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup.yml", "name": "Pages - PR Staging - Cleanup", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup-stale.yml", "name": "Pages - PR Staging - Sweep Stale", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-skia-submodule-sync.yml", "name": "Sync - Skia Submodule", "scope": "global", "trigger": "schedule"},
+    {"repo": "mono/SkiaSharp", "workflow": "skia-sync-review.yml", "name": "Review - Skia Sync", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-skia-sync.lock.yml", "name": "Sync - Skia Upstream", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "memory-leak-fixer.lock.yml", "name": "Fixer - Memory Leak", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "performance-fixer.lock.yml", "name": "Fixer - Performance", "scope": "global", "trigger": "schedule"},
