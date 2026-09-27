@@ -1,11 +1,11 @@
 {
-  "theme": "Skia m153 update",
-  "highlights_headline": "SkiaSharp 4.153.0 updates the bundled renderer to Skia m153.",
-  "highlights_body": "Linux applications that rely on fontconfig fallback may select a different face after upgrading; use an explicit or bundled typeface when selection must be deterministic.",
+  "theme": "Chrome m153 update",
+  "highlights_headline": "SkiaSharp 4.153.0 updates the bundled renderer to Chrome m153 with current upstream correctness fixes.",
+  "highlights_body": "Linux applications that rely on implicit font fallback should review the changed fallback behavior before upgrading.",
   "breaking": [
     {
-      "title": "Linux font fallback may choose a different face",
-      "body": "Skia now tries FcFontMatch before the previous FcFontSort fallback path, which can change text metrics or glyph selection. Specify the family and style explicitly, or use a bundled typeface, when deterministic fallback is required."
+      "title": "Linux font fallback may select a different face",
+      "body": "Skia now tries FcFontMatch before the previous FcFontSort path, which can change fallback glyphs or text metrics. Use an explicit family and style, or bundle a typeface, when deterministic selection matters."
     }
   ],
   "categories": [
@@ -13,29 +13,26 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia updated to milestone m153",
-          "detail": "Aligns the bundled renderer with Chrome milestone 153 and incorporates its upstream bug fixes.",
-          "prs": [
-            4826,
-            4927
-          ]
+          "lead": "Skia updated to Chrome m153",
+          "detail": "Updates the bundled renderer to Chrome m153 and incorporates current upstream bug, correctness, and buffer upload fixes.",
+          "prs": [4826, 4927, 5062, 5116]
         }
       ]
     }
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.153.0-preview.1.26454.6": "Preview 1 opened the 4.153 line with the Skia m153 engine update.",
-    "v4.153.0-rc.1.26456.2": "Release Candidate 1 finalized the 4.153 preview line."
+    "v4.153.0-preview.1.26454.6": "Preview 1 opened the 4.153 line with the Chrome m153 rendering engine and its upstream fixes.",
+    "v4.153.0-rc.1.26456.2": "Release Candidate 1 prepared the 4.153 line for release."
   },
-  "harfbuzz_summary": null,
+  "harfbuzz_summary": "Improves HarfBuzzSharp native build diagnostics without changing its managed binding surface.",
   "release_summaries": {
     "v4.153.0-preview.1.26454.6": {
-      "headline": "SkiaSharp 4.153.0 Preview 1 introduces the Skia m153 engine update.",
-      "body": "Linux font fallback can select a different face; applications requiring deterministic selection should specify or bundle a typeface."
+      "headline": "SkiaSharp 4.153.0 Preview 1 introduces the Chrome m153 rendering engine.",
+      "body": "It incorporates current upstream rendering fixes and updates Linux font fallback behavior."
     },
     "v4.153.0-rc.1.26456.2": {
-      "headline": "SkiaSharp 4.153.0 Release Candidate 1 finalizes the m153 preview line.",
+      "headline": "SkiaSharp 4.153.0 Release Candidate 1 prepares the Chrome m153 release line.",
       "body": null
     }
   }
