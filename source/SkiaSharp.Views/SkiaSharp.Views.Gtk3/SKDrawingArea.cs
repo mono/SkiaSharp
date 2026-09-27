@@ -55,7 +55,12 @@ namespace SkiaSharp.Views.Gtk
 		/// <summary>Default handler for the Gtk.Widget.Drawn event.</summary>
 		/// <param name="cr">The <see cref="T:Cairo.Context" /> to be used to paint the widget.</param>
 		/// <returns>Returns <see langword="true" /> to stop other handlers from being invoked for the event, or <see langword="false" /> to continue the event propagation.</returns>
-		/// <remarks>Override this method in a subclass to provide a default handler for the Gtk.Widget.Drawn event. The <see cref="T:Cairo.Context" /> will be disposed after this method returns, so you should not keep a reference to it outside of the scope of this method.</remarks>
+		/// <remarks><format type="text/markdown"><![CDATA[
+		/// Override this method in a subclass to provide a default handler for the
+		/// Gtk.Widget.Drawn event. The <xref:Cairo.Context> will be disposed after this
+		/// method returns, so you should not keep a reference to it outside of the scope
+		/// of this method.
+		/// ]]></format></remarks>
 		protected override bool OnDrawn(Context cr)
 		{
 			// get the pixbuf

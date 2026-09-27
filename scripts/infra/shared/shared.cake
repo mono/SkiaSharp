@@ -129,7 +129,7 @@ var SUPPORTED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.WPF",                           new Version (2, 80, 0) },
     { "SkiaSharp.Views.Uno.WinUI",                     new Version (2, 80, 0) },
     { "SkiaSharp.Views.WinUI",                         new Version (2, 80, 0) },
-    { "SkiaSharp.Views.UWP",                           new Version (4, 154, 0) },
+    { "SkiaSharp.Views.UWP",                           new Version (4, 155, 0) },
     { "SkiaSharp.Views.Maui.Core",                     new Version (2, 88, 0) },
     { "SkiaSharp.Views.Maui.Controls",                 new Version (2, 88, 0) },
     { "SkiaSharp.Views.Blazor",                        new Version (2, 80, 0) },

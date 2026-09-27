@@ -84,11 +84,8 @@ namespace SkiaSharp.Views.GlesInterop
 		public const string EGLRenderSurfaceSizeProperty = "EGLRenderSurfaceSizeProperty";
 		public const string EGLRenderResolutionScaleProperty = "EGLRenderResolutionScaleProperty";
 
-		// ---- Native imports (blittable only; no arrays / strings / bool) ----
-
 		[DllImport(libEGL, EntryPoint = "eglGetProcAddress")]
 		private static extern IntPtr eglGetProcAddressNative(byte* procname);
-
 		[DllImport(libEGL)]
 		public static extern EGLDisplay eglGetPlatformDisplayEXT(uint platform, EGLNativeDisplayType native_display, int* attrib_list);
 		[DllImport(libEGL)]
@@ -120,11 +117,9 @@ namespace SkiaSharp.Views.GlesInterop
 		[DllImport(libEGL)]
 		public static extern glbool eglSurfaceAttrib(EGLDisplay dpy, EGLSurface surface, int attribute, int value);
 
-		// ---- Managed-friendly wrappers ----
-
 		public static IntPtr eglGetProcAddress(string procname)
 		{
-			// ASCII, null-terminated; manual marshalling because runtime marshalling is disabled (AOT)
+			// Marshal ASCII explicitly so this remains usable when runtime marshalling is disabled.
 			int count = Encoding.ASCII.GetByteCount(procname);
 			Span<byte> buffer = count < 256 ? stackalloc byte[count + 1] : new byte[count + 1];
 			Encoding.ASCII.GetBytes(procname, buffer);

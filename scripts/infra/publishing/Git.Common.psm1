@@ -80,6 +80,77 @@ function Get-RemoteBranchSha([string] $Root, [string] $Remote, [string] $Branch)
     return Get-RemoteRefSha -Root $Root -Remote $Remote -Ref "refs/heads/$Branch"
 }
 
+# Resolves several remote branch SHAs in one request.
+function Get-RemoteBranchShas([string] $Root, [string] $Remote, [string[]] $Branches) {
+    $refs = @($Branches | Where-Object { $_ } | Sort-Object -Unique | ForEach-Object {
+        "refs/heads/$_"
+    })
+    if (!$refs.Count) {
+        return @{}
+    }
+    $output = (Invoke-Git `
+        -Root $Root `
+        -Arguments (@('ls-remote', '--heads', $Remote) + $refs)).Output
+    $result = @{}
+    foreach ($line in @($output -split "`r?`n")) {
+        if ($line -match '^(?<sha>[0-9a-f]{40})\s+refs/heads/(?<branch>.+)$') {
+            $result[$Matches.branch] = $Matches.sha
+        }
+    }
+    return $result
+}
+
+# Lists remote branch names matching one refs/heads prefix or wildcard in a single request.
+function Get-RemoteBranches([string] $Root, [string] $Remote, [string] $Pattern = 'refs/heads/*') {
+    $output = (Invoke-Git -Root $Root -Arguments @('ls-remote', '--heads', $Remote, $Pattern)).Output
+    $branches = foreach ($line in @($output -split "`r?`n")) {
+        if ($line -match '^[^\s]+\s+refs/heads/(?<branch>.+)$') {
+            $Matches.branch
+        }
+    }
+    return @($branches | Sort-Object -Unique)
+}
+
+# Reads matching remote branches and fetches their parent-repository tip commits.
+function Get-RemoteBranchMap([string] $Root, [string] $Remote, [string] $Pattern = 'refs/heads/*') {
+    $output = (Invoke-Git -Root $Root -Arguments @('ls-remote', '--heads', $Remote, $Pattern)).Output
+    $branches = @{}
+    foreach ($line in @($output -split "`r?`n")) {
+        if ($line -match '^(?<sha>[0-9a-f]{40})\s+refs/heads/(?<branch>.+)$') {
+            $branches[$Matches.branch] = $Matches.sha
+        }
+    }
+    $commits = @($branches.Values | Sort-Object -Unique)
+    if ($commits.Count) {
+        $null = Invoke-Git `
+            -Root $Root `
+            -Arguments (@(
+                'fetch',
+                '--quiet',
+                '--no-recurse-submodules',
+                '--no-tags',
+                $Remote
+            ) + $commits)
+    }
+    return $branches
+}
+
+# Reads matching remote tags and their peeled commits in one request.
+function Get-RemoteTagMap([string] $Root, [string] $Remote, [string] $Pattern = 'refs/tags/*') {
+    $output = (Invoke-Git -Root $Root -Arguments @('ls-remote', '--tags', $Remote, $Pattern)).Output
+    $tags = @{}
+    foreach ($line in @($output -split "`r?`n")) {
+        if ($line -match '^(?<sha>[0-9a-f]{40})\s+refs/tags/(?<tag>.+)\^\{\}$') {
+            $tags[$Matches.tag] = $Matches.sha
+        } elseif ($line -match '^(?<sha>[0-9a-f]{40})\s+refs/tags/(?<tag>.+)$') {
+            if (!$tags.ContainsKey($Matches.tag)) {
+                $tags[$Matches.tag] = $Matches.sha
+            }
+        }
+    }
+    return $tags
+}
+
 # Resolves one remote tag SHA.
 function Get-RemoteTagSha([string] $Root, [string] $Remote, [string] $Tag) {
     return Get-RemoteRefSha -Root $Root -Remote $Remote -Ref "refs/tags/$Tag"
@@ -97,14 +168,21 @@ function Get-LocalBranchSha([string] $Root, [string] $Branch) {
 # Resolves a remote branch or SHA to one immutable commit.
 function Get-ResolvedGitCommit([string] $Root, [string] $Reference, [string] $Remote = 'origin') {
     if ($Reference -match '^[0-9a-fA-F]{40}$') {
-        $null = Invoke-Git -Root $Root -Arguments @('fetch', '--quiet', $Remote, $Reference)
-        $resolvedRef = $Reference
+        $commit = $Reference
+        $null = Invoke-Git `
+            -Root $Root `
+            -Arguments @('fetch', '--quiet', '--no-recurse-submodules', '--no-tags', $Remote, $commit)
     } else {
         $branch = $Reference -replace '^(refs/heads/|origin/)'
-        $null = Invoke-Git -Root $Root -Arguments @('fetch', '--quiet', $Remote, "refs/heads/$branch")
-        $resolvedRef = 'FETCH_HEAD'
+        $commit = Get-RemoteBranchSha -Root $Root -Remote $Remote -Branch $branch
+        if (!$commit) {
+            throw "$Remote branch $branch does not exist."
+        }
+        $null = Invoke-Git `
+            -Root $Root `
+            -Arguments @('fetch', '--quiet', '--no-recurse-submodules', '--no-tags', $Remote, $commit)
     }
-    return (Invoke-Git -Root $Root -Arguments @('rev-parse', '--verify', "$resolvedRef`^{commit}")).Output
+    return (Invoke-Git -Root $Root -Arguments @('rev-parse', '--verify', "$commit`^{commit}")).Output
 }
 
 # Reads one text file from a commit using consistent newline normalization.
@@ -124,7 +202,11 @@ Export-ModuleMember -Function @(
     'Assert-GitWorktreeClean',
     'Get-RemoteRefSha',
     'Get-RemoteBranchSha',
+    'Get-RemoteBranchShas',
+    'Get-RemoteBranches',
+    'Get-RemoteBranchMap',
     'Get-RemoteTagSha',
+    'Get-RemoteTagMap',
     'Get-LocalBranchSha',
     'Get-ResolvedGitCommit',
     'Get-GitFileText',

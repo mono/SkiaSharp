@@ -342,6 +342,28 @@ namespace HarfBuzzSharp
 			(hb_set_intersect_delegate ??= GetSymbol<Delegates.hb_set_intersect> ("hb_set_intersect")).Invoke (set, other);
 		#endif
 
+		// extern hb_bool_t hb_set_intersects(const hb_set_t* set, const hb_set_t* other)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool hb_set_intersects (hb_set_t set, hb_set_t other);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool hb_set_intersects (hb_set_t set, hb_set_t other);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool hb_set_intersects (hb_set_t set, hb_set_t other);
+		}
+		private static Delegates.hb_set_intersects hb_set_intersects_delegate;
+		internal static bool hb_set_intersects (hb_set_t set, hb_set_t other) =>
+			(hb_set_intersects_delegate ??= GetSymbol<Delegates.hb_set_intersects> ("hb_set_intersects")).Invoke (set, other);
+		#endif
+
 		// extern void hb_set_invert(hb_set_t* set)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT

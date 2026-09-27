@@ -104,6 +104,22 @@ $greatestTag = Get-ShippedTag '4.152.0-preview.1' @(
 Assert-Equal 'v4.152.0-preview.1.26426.14' $greatestTag 'The greatest dnceng build tuple was not selected.'
 Assert-Equal 'v4.152.0' (Get-ShippedTag '4.152.0' @('v4.152.0')) 'A stable exact tag was not detected.'
 
+$plannedShipment = [pscustomobject] @{
+    Version = '4.152.0'
+    Tag = 'v4.152.0-preview.2.26426.14'
+    SourceCommit = 'a' * 40
+    IsVirtual = $true
+}
+$plannedTags = Add-PlannedReleaseShipmentTag -Tags @('v4.152.0-preview.1.26426.13') -Shipment $plannedShipment
+Assert-Equal @(
+    'v4.152.0-preview.1.26426.13',
+    'v4.152.0-preview.2.26426.14'
+) $plannedTags 'A dry run did not add its explicitly virtual package shipment.'
+$virtualRelease = Get-ShippedReleases -Tags $plannedTags -PlannedShipment $plannedShipment |
+    Where-Object Tag -eq $plannedShipment.Tag
+Assert-Equal $plannedShipment.SourceCommit (Get-ReleaseReference $virtualRelease) `
+    'A virtual release shipment did not use its planned package source commit.'
+
 $topologyTags = @(
     'v4.152.0-preview.1.1',
     'v4.153.0-preview.1.1',
@@ -180,6 +196,30 @@ try {
         -Releases $shippedTopology `
         -CurrentRelease $m154Preview) `
         'The m154 range included work from its parallel m153 release branch.'
+
+    & git -C $boundaryRoot commit --quiet --allow-empty -m 'Virtual m154 RC fix (#4990)'
+    $virtualCommit = (& git -C $boundaryRoot rev-parse HEAD).Trim()
+    $virtualShipment = [pscustomobject] @{
+        Version = '4.154.0'
+        Tag = 'v4.154.0-rc.1.26455.1'
+        SourceCommit = $virtualCommit
+        IsVirtual = $true
+    }
+    $virtualTopology = @(Get-ShippedReleases `
+        -Tags (Add-PlannedReleaseShipmentTag -Tags $topologyTags -Shipment $virtualShipment) `
+        -PlannedShipment $virtualShipment)
+    $virtualRc = $virtualTopology | Where-Object Tag -eq $virtualShipment.Tag
+    Assert-Equal @('4.154.0-preview.1', '4.154.0-rc.1') @(
+        (Get-ReleaseMilestones `
+            -Root $boundaryRoot `
+            -Version $virtualShipment.Version `
+            -ShippedReleases $virtualTopology).Title
+    ) 'A virtual shipment did not make its release identity available for dry-run reconciliation.'
+    Assert-Equal @(4990) @(Get-ReleasePullRequests `
+        -Root $boundaryRoot `
+        -Releases $virtualTopology `
+        -CurrentRelease $virtualRc) `
+        'Dry-run reconciliation did not calculate the virtual shipment range from its planned commit.'
 
     $m153Rc = $shippedTopology | Where-Object Title -eq '4.153.0-rc.1'
     $m153RcBoundary = Get-PreviousShippedBoundary `
@@ -409,6 +449,7 @@ $script:FakeLiveReleaseTags = @()
 $script:FakeLiveReleaseTagReads = 0
 $script:FakeTargetOwnsRelease = $true
 $script:FakeOwnershipKind = ''
+$script:FakeCreatedMilestone = $false
 function Get-CurrentRemoteReleaseTags([string] $Root) {
     $script:FakeLiveReleaseTagReads++
     if (
@@ -437,6 +478,24 @@ function Test-LiveReleaseAssignmentOwnership(
 function global:gh {
     $command = $args -join ' '
     $script:FakeGhCalls.Add($command)
+    if ($script:FakeGhScenario -eq 'create-milestone') {
+        if ($command -match 'repos/mono/SkiaSharp/milestones .*POST .*title=4\.152\.1') {
+            $script:FakeCreatedMilestone = $true
+            return '{"number":98,"title":"4.152.1","state":"open"}'
+        } elseif ($command -match 'milestones\?state=all') {
+            if ($script:FakeCreatedMilestone) {
+                return '[[{"number":98,"title":"4.152.1","state":"open"}]]'
+            }
+            return '[[]]'
+        }
+    }
+    if ($script:FakeGhScenario -eq 'create-milestone-race') {
+        if ($command -match 'repos/mono/SkiaSharp/milestones .*POST .*title=4\.152\.1') {
+            throw 'gh failed (1): Validation Failed (HTTP 422)'
+        } elseif ($command -match 'milestones\?state=all') {
+            return '[[{"number":98,"title":"4.152.1","state":"open"}]]'
+        }
+    }
     if ($script:FakeGhScenario -eq 'apply') {
         if ($command -match 'issues/99 .*PATCH') {
             $script:FakeItemMilestone = '4.152.0-preview.2'
@@ -587,6 +646,84 @@ function global:gh {
 
 $map = Get-GitHubMilestoneMap -Repository 'mono/SkiaSharp'
 Assert-Equal 70 $map['4.152.0-preview.1'].number 'The fake-gh milestone response was not parsed.'
+$dryRunMilestones = @{}
+$callsBeforeMilestonePlan = $script:FakeGhCalls.Count
+$dryRunMilestoneOutput = @(
+    Ensure-GitHubReleaseMilestone `
+        -Repository 'mono/SkiaSharp' `
+        -Title '4.152.1' `
+        -Milestones $dryRunMilestones `
+        -VirtualNumber -42 6>&1
+) -join "`n"
+Assert-Equal $callsBeforeMilestonePlan $script:FakeGhCalls.Count `
+    'A dry-run missing-milestone plan invoked gh.'
+Assert-Equal ([int] -42) $dryRunMilestones['4.152.1'].number `
+    'A dry-run missing milestone did not receive its projected number.'
+Assert-True ($dryRunMilestoneOutput -match 'Skipping: gh api .*milestones .*POST.*requires -Push') `
+    'A dry-run did not report the missing release milestone creation.'
+$dryRunAssignment = Get-ReleaseAssignmentPlan `
+    -Kind 'pull-request' `
+    -Number 123 `
+    -ViaPullRequest $null `
+    -CurrentMilestone '' `
+    -TargetMilestone '4.152.1' `
+    -Milestones $dryRunMilestones `
+    -Tags @('v4.152.1')
+$callsBeforeProjectedAssignment = $script:FakeGhCalls.Count
+$dryRunAssignmentOutput = @(
+    Set-PlannedReleaseAssignment `
+        -Root 'fake-root' `
+        -Repository 'mono/SkiaSharp' `
+        -Item $dryRunAssignment.Operation `
+        -Milestones $dryRunMilestones `
+        -PlanningTags @('v4.152.1') 6>&1
+) -join "`n"
+Assert-Equal $callsBeforeProjectedAssignment $script:FakeGhCalls.Count `
+    'A projected dry-run assignment invoked gh.'
+Assert-True ($dryRunAssignmentOutput -match
+    'Skipping assignment until release milestone 4\.152\.1 is created') `
+    'A projected assignment did not explain its missing-milestone dependency.'
+Assert-True ($dryRunAssignmentOutput -notmatch 'milestone=-42') `
+    'A projected assignment emitted an invalid numeric milestone mutation.'
+
+$script:FakeGhScenario = 'create-milestone'
+$script:FakeCreatedMilestone = $false
+$pushMilestoneMap = @{}
+$pushMilestoneOutput = @(
+    Ensure-GitHubReleaseMilestone `
+        -Repository 'mono/SkiaSharp' `
+        -Title '4.152.1' `
+        -Milestones $pushMilestoneMap `
+        -Push 6>&1
+) -join "`n"
+Assert-True $script:FakeCreatedMilestone 'A push did not create the missing release milestone.'
+Assert-Equal 98 $pushMilestoneMap['4.152.1'].number `
+    'A pushed missing milestone was not refreshed into the planning map.'
+Assert-True ($pushMilestoneOutput -match 'Create milestone 4\.152\.1 verified') `
+    'A pushed missing milestone was not verified.'
+$callsBeforeExistingMilestone = $script:FakeGhCalls.Count
+$null = Ensure-GitHubReleaseMilestone `
+    -Repository 'mono/SkiaSharp' `
+    -Title '4.152.1' `
+    -Milestones $pushMilestoneMap `
+    -Push
+Assert-Equal $callsBeforeExistingMilestone $script:FakeGhCalls.Count `
+    'An existing release milestone triggered another GitHub request.'
+$script:FakeGhScenario = 'create-milestone-race'
+$racedMilestoneMap = @{}
+$racedMilestoneOutput = @(
+    Ensure-GitHubReleaseMilestone `
+        -Repository 'mono/SkiaSharp' `
+        -Title '4.152.1' `
+        -Milestones $racedMilestoneMap `
+        -Push 6>&1
+) -join "`n"
+Assert-Equal 98 $racedMilestoneMap['4.152.1'].number `
+    'A concurrently created milestone was not refreshed into the planning map.'
+Assert-True ($racedMilestoneOutput -match 'created concurrently and verified') `
+    'A concurrent milestone creation was not reported as verified.'
+$script:FakeGhScenario = 'read'
+
 $openItems = Get-OpenMilestoneItems -Repository 'mono/SkiaSharp' -MilestoneNumber 70
 Assert-Equal @('issue', 'pull-request') @($openItems.Kind) 'Issues and pull requests were not distinguished.'
 Assert-Equal @(12, 13, 34, 56) @(Get-LinkedIssues -Repository 'mono/SkiaSharp' -PullRequest 77) `

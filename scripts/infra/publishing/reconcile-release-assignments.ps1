@@ -10,6 +10,12 @@
 .PARAMETER Repository
     The GitHub repository whose release assignments are maintained.
 
+.PARAMETER PlannedTag
+    An exact release tag paired with PlannedCommit for a Finish-driven shipment.
+
+.PARAMETER PlannedCommit
+    The exact package source commit paired with PlannedTag.
+
 .PARAMETER Push
     Performs GitHub milestone assignments. Without this switch, the script is
     read-only and reports exact skipped mutations.
@@ -23,6 +29,10 @@ param(
 
     [ValidatePattern('^[^/]+/[^/]+$')]
     [string] $Repository = 'mono/SkiaSharp',
+
+    [string] $PlannedTag = '',
+
+    [string] $PlannedCommit = '',
 
     [switch] $Push
 )
@@ -40,6 +50,38 @@ $root = Get-GitRepositoryRoot
 # Reads one pull request.
 function Get-GitHubPullRequest([string] $Repository, [int] $Number) {
     return Invoke-GitHubJsonWithRetry -Arguments @('api', "repos/$Repository/pulls/$Number")
+}
+
+# Creates a missing shipped-release milestone, or projects it into a dry run.
+function Ensure-GitHubReleaseMilestone(
+    [string] $Repository,
+    [string] $Title,
+    [hashtable] $Milestones,
+    [int] $VirtualNumber = -1,
+    [switch] $Push
+) {
+    if ($Milestones.ContainsKey($Title)) {
+        return $Milestones[$Title]
+    }
+
+    $created = New-GitHubMilestone `
+        -Repository $Repository `
+        -Title $Title `
+        -Description "SkiaSharp $Title release." `
+        -Push:$Push
+    if (!$Push) {
+        $projected = [pscustomobject] @{
+            number = $VirtualNumber
+            title = $Title
+            state = 'open'
+            is_virtual = $true
+        }
+        $Milestones[$Title] = $projected
+        return $projected
+    }
+
+    $Milestones[$Title] = $created
+    return $created
 }
 
 # Reads issues that GitHub records as closed by one pull request.
@@ -117,7 +159,7 @@ query($owner: String!, $name: String!, $number: Int!, $endCursor: String) {
 }
 
 # Parses every exact shipped tag into its release identity.
-function Get-ShippedReleases([string[]] $Tags) {
+function Get-ShippedReleases([string[]] $Tags, [object] $PlannedShipment) {
     $result = foreach ($tag in $Tags) {
         $match = [regex]::Match(
             $tag,
@@ -133,12 +175,27 @@ function Get-ShippedReleases([string[]] $Tags) {
             [pscustomobject] @{
                 Title = $release.Title
                 Tag = $tag
+                SourceCommit = if (
+                    $PlannedShipment -and $PlannedShipment.IsVirtual -and $PlannedShipment.Tag -eq $tag
+                ) {
+                    $PlannedShipment.SourceCommit
+                } else {
+                    $null
+                }
                 NumericKey = $release.NumericKey
                 SortKey = $release.SortKey
             }
         }
     }
     return @($result | Sort-Object SortKey, Tag)
+}
+
+# Returns the immutable ref for a real tag or a dry-run's virtual shipment.
+function Get-ReleaseReference([object] $Release) {
+    if ($Release.SourceCommit) {
+        return $Release.SourceCommit
+    }
+    return "refs/tags/$($Release.Tag)"
 }
 
 # Combines immutable shipped identities and extant release branches for one numeric line.
@@ -195,7 +252,7 @@ function Get-PreviousShippedBoundary(
 ) {
     $end = (Invoke-Git -Root $Root -Arguments @(
         'rev-parse',
-        "refs/tags/$($CurrentRelease.Tag)`^{commit}"
+        "$(Get-ReleaseReference $CurrentRelease)`^{commit}"
     )).Output
     $candidates = foreach ($release in $Releases) {
         if ($release.SortKey -ge $CurrentRelease.SortKey) {
@@ -203,8 +260,8 @@ function Get-PreviousShippedBoundary(
         }
         $start = (Invoke-Git -Root $Root -Arguments @(
             'merge-base',
-            "refs/tags/$($release.Tag)",
-            "refs/tags/$($CurrentRelease.Tag)"
+            (Get-ReleaseReference $release),
+            (Get-ReleaseReference $CurrentRelease)
         )).Output
         if (!$start) {
             continue
@@ -257,12 +314,12 @@ function Get-ReleasePullRequests(
     $arguments = @(
         'log',
         '--format=%s',
-        "refs/tags/$($CurrentRelease.Tag)"
+        (Get-ReleaseReference $CurrentRelease)
     )
     $earlier = @($Releases | Where-Object SortKey -lt $CurrentRelease.SortKey)
     if ($earlier.Count -gt 0) {
         $arguments += '--not'
-        $arguments += @($earlier | ForEach-Object { "refs/tags/$($_.Tag)" })
+        $arguments += @($earlier | ForEach-Object { Get-ReleaseReference $_ })
     }
     $output = (Invoke-Git -Root $Root -Arguments $arguments).Output
     $numbers = foreach ($subject in @($output -split "`r?`n")) {
@@ -403,6 +460,7 @@ function Get-ReleaseAssignmentPlan(
         }
     }
 
+    $target = $Milestones[$TargetMilestone]
     return [pscustomobject] @{
         Status = 'assign'
         Warning = $null
@@ -417,7 +475,9 @@ function Get-ReleaseAssignmentPlan(
                 $null
             }
             ToMilestone = $TargetMilestone
-            ToMilestoneNumber = [int] $Milestones[$TargetMilestone].number
+            ToMilestoneNumber = [int] $target.number
+            ToMilestoneIsVirtual = [bool] (
+                $target.PSObject.Properties['is_virtual'] -and $target.is_virtual)
         }
     }
 }
@@ -513,6 +573,16 @@ function Set-PlannedReleaseAssignment(
     }
 
     $description = "Assign $($Item.Kind) #$($Item.Number) to $($Item.ToMilestone)"
+    if (
+        !$Push -and
+        $Item.PSObject.Properties['ToMilestoneIsVirtual'] -and
+        $Item.ToMilestoneIsVirtual
+    ) {
+        Write-ReleaseStatus skipped (
+            "Skipping assignment until release milestone $($Item.ToMilestone) is created " +
+            "(requires -Push; $description).")
+        return
+    }
     Set-GitHubItemMilestone `
         -Repository $Repository `
         -Number $Item.Number `
@@ -576,8 +646,15 @@ Write-ReleaseStatus start "Release assignment reconciliation for $Version ($mode
 # 1.1 Refresh release refs and identify shipped milestones in release order.
 $null = Invoke-Git -Root $root -Arguments @('fetch', 'origin', '--prune', '--tags')
 $tags = Get-RemoteReleaseTags -Root $root
+$plannedShipment = Get-ReleaseShipmentContract `
+    -Root $root `
+    -Version $Version `
+    -Tag $PlannedTag `
+    -SourceCommit $PlannedCommit `
+    -RequireTag:$Push
+$tags = Add-PlannedReleaseShipmentTag -Tags $tags -Shipment $plannedShipment
 $warnings = [System.Collections.Generic.List[string]]::new()
-$shippedReleases = @(Get-ShippedReleases -Tags $tags)
+$shippedReleases = @(Get-ShippedReleases -Tags $tags -PlannedShipment $plannedShipment)
 $pullRequestOwners = Get-ReleasePullRequestOwners -Root $root -Releases $shippedReleases
 $branches = @(Get-ReleaseMilestones `
     -Root $root `
@@ -592,6 +669,7 @@ $operations = [System.Collections.Generic.List[object]]::new()
 $seenPullRequests = [System.Collections.Generic.HashSet[int]]::new()
 $seenIssues = [System.Collections.Generic.HashSet[int]]::new()
 $correct = 0
+$nextVirtualMilestoneNumber = -1
 foreach ($targetTitle in $targetTitles) {
     $currentTag = Get-ShippedTag -Title $targetTitle -Tags $tags
     if (!$currentTag) {
@@ -604,8 +682,13 @@ foreach ($targetTitle in $targetTitles) {
         continue
     }
     if (!$milestones.ContainsKey($targetTitle)) {
-        $warnings.Add("Milestone $targetTitle does not exist.")
-        continue
+        $null = Ensure-GitHubReleaseMilestone `
+            -Repository $Repository `
+            -Title $targetTitle `
+            -Milestones $milestones `
+            -VirtualNumber $nextVirtualMilestoneNumber `
+            -Push:$Push
+        $nextVirtualMilestoneNumber--
     }
     $boundary = Get-PreviousShippedBoundary `
         -Root $root `

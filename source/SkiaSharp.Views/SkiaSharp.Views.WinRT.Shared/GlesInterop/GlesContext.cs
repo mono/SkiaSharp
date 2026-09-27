@@ -107,12 +107,10 @@ namespace SkiaSharp.Views.GlesInterop
 			}
 
 			IntPtr nativeWindow = surfaceCreationProperties.As<IInspectable>().ThisPtr;
-
 			fixed (int* attribs = surfaceAttributes)
 			{
 				surface = Egl.eglCreateWindowSurface(eglDisplay, eglConfig, nativeWindow, attribs);
 			}
-
 			if (surface == Egl.EGL_NO_SURFACE)
 			{
 				int error = Egl.eglGetError();
@@ -226,6 +224,7 @@ namespace SkiaSharp.Views.GlesInterop
 			{
 				throw new Exception("Failed to get EGL display");
 			}
+
 			int major, minor;
 			if (Egl.eglInitialize(eglDisplay, &major, &minor) == Egl.EGL_FALSE)
 			{

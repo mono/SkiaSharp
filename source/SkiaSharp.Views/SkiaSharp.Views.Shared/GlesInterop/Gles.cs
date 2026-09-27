@@ -63,6 +63,7 @@ namespace SkiaSharp.Views.GlesInterop
 		public const int GL_RENDERBUFFER_BLUE_SIZE = 0x8D52;
 		public const int GL_RENDERBUFFER_ALPHA_SIZE = 0x8D53;
 		public const int GL_RENDERBUFFER_DEPTH_SIZE = 0x8D54;
+		public const int GL_RENDERBUFFER_STENCIL_SIZE = 0x8D55;
 		public const int GL_COLOR_ATTACHMENT0 = 0x8CE0;
 		public const int GL_DEPTH_ATTACHMENT = 0x8D00;
 		public const int GL_STENCIL_ATTACHMENT = 0x8D20;
@@ -84,8 +85,6 @@ namespace SkiaSharp.Views.GlesInterop
 		public static extern void glClear(uint mask);
 
 #if !__DESKTOP__
-		// Array-taking exports use pointers (blittable) for AOT / disabled runtime marshalling.
-		// Callers pass either a `fixed` array pointer or the address of a single uint (&value).
 		[DllImport(libGLESv2)]
 		public static extern void glGenRenderbuffers(int n, uint* buffers);
 		[DllImport(libGLESv2)]

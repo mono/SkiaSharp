@@ -197,7 +197,7 @@ def test_args(test_class: str, *, skia: str, harfbuzz: str, package_source: str,
         f"-p:HarfBuzzSharpVersion={harfbuzz}",
         f"-p:PackageSource={package_source}",
         "-p:BaseFramework=net10.0",
-        "-p:SdkVersion=10.0.400",
+        "-p:SdkVersion=10.0.401",
         "-p:SdkAllowPrerelease=false",
     ]
     for name, value in (properties or {}).items():
