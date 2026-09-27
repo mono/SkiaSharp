@@ -1,0 +1,281 @@
+# Issue Triage Report — #5093
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-09-27T04:28:00Z |
+| Type | type/bug (0.96 (96%)) |
+| Area | area/Build (0.95 (95%)) |
+| Suggested action | ready-to-fix (0.86 (86%)) |
+
+**Issue Summary:** The Sync - Issue Triage workflow failed after triaging an issue because its safe-output environment rejected the required SkiaSharp Backlog project-item field update, despite the workflow declaring that operation.
+
+**Analysis:** The workflow source configures the update-project safe output for the SkiaSharp Backlog and instructs the agent to update an existing issue item with several custom fields. The generated failure says that the safe-output runtime exposed only create_fields and create_view operations, and the same unsupported-update report appears in issue #5067. This indicates a safe-output runtime/schema capability mismatch or an incompatible update-project invocation, rather than a failure in issue classification or SkiaSharp runtime code.
+
+**Recommendations:** **ready-to-fix** — The failed operation, its required inputs, and the configured workflow surface are identified; implementation should align the gh-aw project-item update capability with the workflow contract.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/Build |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/reliability |
+| Perf | — |
+| Partner | — |
+| Current labels | agentic-workflows |
+
+## Evidence
+
+### Reproduction
+
+1. Run the Sync - Issue Triage workflow against an untriaged issue.
+2. Complete triage and attempt to declare the configured update-project safe output for the SkiaSharp Backlog item.
+3. Observe the safe-output runtime reject the existing-item field update as unsupported.
+
+**Environment:** Sync - Issue Triage workflow on the main branch; failing run 35055531663.
+
+**Related issues:** #5067, #5041
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/5067 — Earlier Sync - Issue Triage failure reporting that project-item field updates were rejected by the runner.
+- https://github.com/mono/SkiaSharp/issues/5041 — Earlier workflow failure showing the same automation has encountered runner-policy limitations.
+- https://github.com/mono/SkiaSharp/pull/4824 — Pull request linked by the generated failure report as workflow context; it is not evidence of the project-update defect.
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | other |
+| Error message | The available update_project capability accepts only create_fields and create_view operations; it rejects updating an existing SkiaSharp Backlog issue item. |
+| Repro quality | complete |
+| Target frameworks | — |
+
+## Analysis
+
+### Technical Summary
+
+The workflow source configures the update-project safe output for the SkiaSharp Backlog and instructs the agent to update an existing issue item with several custom fields. The generated failure says that the safe-output runtime exposed only create_fields and create_view operations, and the same unsupported-update report appears in issue #5067. This indicates a safe-output runtime/schema capability mismatch or an incompatible update-project invocation, rather than a failure in issue classification or SkiaSharp runtime code.
+
+### Rationale
+
+This is a reproducible workflow automation failure with a concrete rejected operation, so it is a bug. The affected code is CI/workflow configuration and project automation rather than a managed or native graphics component. It degrades backlog triage but does not prevent normal product builds or execution, supporting medium severity and the reliability tenet.
+
+### Key Signals
+
+- "The available update_project capability accepts only create_fields and create_view operations; it rejects the required update of an existing SkiaSharp Backlog issue item's custom field values." — **issue body** (The failure boundary is specifically the project-item update declaration.)
+- "The required SkiaSharp Backlog field update could not be declared: this runner accepts only create_fields/create_view operations." — **issue #5067** (The same capability mismatch recurred in an earlier run.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `.github/workflows/auto-triage.md` | — | direct | The workflow's safe-outputs configuration declares update-project for mono's project 1, and its triage instructions require updating an existing issue item's Severity, Suggested Action, Confidence, Repro Quality, Error Type, Triage Summary, and Suggested Repro Platform fields. |
+| `.github/workflows/auto-triage.lock.yml` | — | direct | The generated workflow lock config includes update_project with a dedicated project write token and SkiaSharp Backlog project URL, confirming the intended safe-output capability is wired into the workflow runtime configuration. |
+| `documentation/dev/maintaining.md` | — | context | Repository maintenance documentation states that Sync - Issue Triage applies labels and updates the backlog project board, confirming that the rejected operation is an expected workflow responsibility. |
+
+### Workarounds
+
+- Apply the triage classification labels and use a safe-output environment that supports updating existing GitHub Project items to populate the validated fields from the generated triage JSON.
+
+### Next Questions
+
+- Which update-project operation and field payload shape does the gh-aw version pinned by the workflow accept for existing issue items?
+- Does regenerating the workflow lock file with a gh-aw version that exposes project-item updates resolve the mismatch?
+
+### Resolution Proposals
+
+**Hypothesis:** The workflow's update-project instruction and the safe-output runtime schema are out of sync: the workflow needs existing-item field updates, while the runner used by the failed run exposes only project structure creation operations.
+
+1. **Align the project-update contract with the runner** — fix, confidence 0.86 (86%), cost/s, validated=untested
+   - Update or regenerate the workflow and its lock file so the pinned gh-aw runtime exposes an existing project-item update operation, then declare the existing issue item's custom fields using that supported payload shape.
+2. **Preserve triage output until project updates are available** — workaround, confidence 0.90 (90%), cost/xs, validated=untested
+   - Keep emitting validated triage artifacts and labels, then apply the board fields from the artifact in a safe-output environment with existing-item update support.
+
+**Recommended proposal:** Align the project-update contract with the runner
+
+**Why:** It addresses the capability mismatch that has recurred across multiple workflow runs and restores the workflow's documented backlog-update responsibility.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.86 (86%) |
+| Reason | The failed operation, its required inputs, and the configured workflow surface are identified; implementation should align the gh-aw project-item update capability with the workflow contract. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.96 (96%) | Apply automation bug classification and mark the issue as triaged. | labels=type/bug, area/Build, tenet/reliability, triage/triaged |
+| link-related | low | 0.93 (93%) | Link the earlier matching Sync - Issue Triage project-update failure. | linkedIssue=#5067 |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 5093,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-09-27T04:28:00Z",
+    "currentLabels": [
+      "agentic-workflows"
+    ]
+  },
+  "summary": "The Sync - Issue Triage workflow failed after triaging an issue because its safe-output environment rejected the required SkiaSharp Backlog project-item field update, despite the workflow declaring that operation.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.96
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.95
+    },
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "other",
+      "errorMessage": "The available update_project capability accepts only create_fields and create_view operations; it rejects updating an existing SkiaSharp Backlog issue item.",
+      "reproQuality": "complete"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Run the Sync - Issue Triage workflow against an untriaged issue.",
+        "Complete triage and attempt to declare the configured update-project safe output for the SkiaSharp Backlog item.",
+        "Observe the safe-output runtime reject the existing-item field update as unsupported."
+      ],
+      "environmentDetails": "Sync - Issue Triage workflow on the main branch; failing run 35055531663.",
+      "relatedIssues": [
+        5067,
+        5041
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/5067",
+          "description": "Earlier Sync - Issue Triage failure reporting that project-item field updates were rejected by the runner."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/5041",
+          "description": "Earlier workflow failure showing the same automation has encountered runner-policy limitations."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/4824",
+          "description": "Pull request linked by the generated failure report as workflow context; it is not evidence of the project-update defect."
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The workflow source configures the update-project safe output for the SkiaSharp Backlog and instructs the agent to update an existing issue item with several custom fields. The generated failure says that the safe-output runtime exposed only create_fields and create_view operations, and the same unsupported-update report appears in issue #5067. This indicates a safe-output runtime/schema capability mismatch or an incompatible update-project invocation, rather than a failure in issue classification or SkiaSharp runtime code.",
+    "rationale": "This is a reproducible workflow automation failure with a concrete rejected operation, so it is a bug. The affected code is CI/workflow configuration and project automation rather than a managed or native graphics component. It degrades backlog triage but does not prevent normal product builds or execution, supporting medium severity and the reliability tenet.",
+    "keySignals": [
+      {
+        "text": "The available update_project capability accepts only create_fields and create_view operations; it rejects the required update of an existing SkiaSharp Backlog issue item's custom field values.",
+        "source": "issue body",
+        "interpretation": "The failure boundary is specifically the project-item update declaration."
+      },
+      {
+        "text": "The required SkiaSharp Backlog field update could not be declared: this runner accepts only create_fields/create_view operations.",
+        "source": "issue #5067",
+        "interpretation": "The same capability mismatch recurred in an earlier run."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": ".github/workflows/auto-triage.md",
+        "finding": "The workflow's safe-outputs configuration declares update-project for mono's project 1, and its triage instructions require updating an existing issue item's Severity, Suggested Action, Confidence, Repro Quality, Error Type, Triage Summary, and Suggested Repro Platform fields.",
+        "relevance": "direct"
+      },
+      {
+        "file": ".github/workflows/auto-triage.lock.yml",
+        "finding": "The generated workflow lock config includes update_project with a dedicated project write token and SkiaSharp Backlog project URL, confirming the intended safe-output capability is wired into the workflow runtime configuration.",
+        "relevance": "direct"
+      },
+      {
+        "file": "documentation/dev/maintaining.md",
+        "finding": "Repository maintenance documentation states that Sync - Issue Triage applies labels and updates the backlog project board, confirming that the rejected operation is an expected workflow responsibility.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "Apply the triage classification labels and use a safe-output environment that supports updating existing GitHub Project items to populate the validated fields from the generated triage JSON."
+    ],
+    "nextQuestions": [
+      "Which update-project operation and field payload shape does the gh-aw version pinned by the workflow accept for existing issue items?",
+      "Does regenerating the workflow lock file with a gh-aw version that exposes project-item updates resolve the mismatch?"
+    ],
+    "resolution": {
+      "hypothesis": "The workflow's update-project instruction and the safe-output runtime schema are out of sync: the workflow needs existing-item field updates, while the runner used by the failed run exposes only project structure creation operations.",
+      "proposals": [
+        {
+          "title": "Align the project-update contract with the runner",
+          "description": "Update or regenerate the workflow and its lock file so the pinned gh-aw runtime exposes an existing project-item update operation, then declare the existing issue item's custom fields using that supported payload shape.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.86,
+          "effort": "cost/s"
+        },
+        {
+          "title": "Preserve triage output until project updates are available",
+          "description": "Keep emitting validated triage artifacts and labels, then apply the board fields from the artifact in a safe-output environment with existing-item update support.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "cost/xs"
+        }
+      ],
+      "recommendedProposal": "Align the project-update contract with the runner",
+      "recommendedReason": "It addresses the capability mismatch that has recurred across multiple workflow runs and restores the workflow's documented backlog-update responsibility."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.86,
+      "reason": "The failed operation, its required inputs, and the configured workflow surface are identified; implementation should align the gh-aw project-item update capability with the workflow contract.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply automation bug classification and mark the issue as triaged.",
+        "risk": "low",
+        "confidence": 0.96,
+        "labels": [
+          "type/bug",
+          "area/Build",
+          "tenet/reliability",
+          "triage/triaged"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link the earlier matching Sync - Issue Triage project-update failure.",
+        "risk": "low",
+        "confidence": 0.93,
+        "linkedIssue": 5067
+      }
+    ]
+  }
+}
+```
+
+</details>
