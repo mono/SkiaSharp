@@ -18,29 +18,25 @@ after Prepare, Build/Tests, or the other operation.
 
 ## Push the packages
 
-Before queuing, run `audit-release-state.ps1 -Version A.B -Json` and select
-the requested immutable `release/<identity>` branch. Require its exact-tip
-`skiasharp-package` build (1642) to have succeeded with one BAR ID. Require
-`skiasharp-tests` (1630) to have succeeded for the same branch, commit and
-build number, with `triggerInfo.pipelineId` pointing to that package build.
-Use `az pipelines runs list/show` to check those test details; do not accept
-an unrelated manual test run. Any optional `release-testing` approval must
-match the same BAR. Never substitute the maintenance tip or mono/skia SHA
-for the SkiaSharp release commit.
+Before triggering:
 
-Check the exact public version and existing MAUI release runs (1445) before
-dispatch: use `az pipelines runs list/show` and compare their
-`templateParameters.commitHash` with the selected SkiaSharp commit. If a
-matching run already exists, monitor it instead of creating another; if the
-packages are already public, verify provenance and proceed to Finish. Stop
-on ambiguous or mismatched evidence.
+1. Run `audit-release-state.ps1 -Version A.B -Json`. Select the requested
+   immutable `release/<identity>` branch and require its exact-tip
+   `skiasharp-package` build (1642) to have succeeded with one BAR ID. Use
+   the **SkiaSharp** release commit, never the maintenance tip or mono/skia SHA.
+2. Use `az pipelines runs list/show` to require `skiasharp-tests` (1630)
+   succeeded for the same branch, commit and build number, with
+   `triggerInfo.pipelineId` matching that package build. Any optional
+   `release-testing` approval must match the BAR.
+3. Check the exact public version and existing MAUI runs (1445), comparing
+   `templateParameters.commitHash` with that commit. Monitor an existing run
+   rather than queueing a duplicate; if already public, verify provenance and
+   proceed to Finish. Stop on ambiguous or mismatched evidence.
 
-For testing this unmerged skill, pin the MAUI pipeline to the verified feature
-ref and SHA below. **Before merging this skill**, merge dotnet/maui#38967,
-remove this temporary pin, and use the exact current SHA of the internal
-MAUI `main` ref instead. Never treat the feature ref as the normal release path.
-
-Queue `dotnet-maui-release` from chat only when explicitly requested:
+Queue `dotnet-maui-release` only on explicit request. **Temporary test pin:**
+the feature ref and SHA below are for this unmerged skill. Before merging this
+skill, merge dotnet/maui#38967 and replace the pin with the exact current SHA
+of internal MAUI `main`. Never use the feature ref as the normal release path.
 
 ```bash
 az pipelines run \
@@ -56,18 +52,20 @@ az pipelines run \
 ```
 
 `--commit-id` pins the **MAUI pipeline code**; `commitHash` identifies the
-**SkiaSharp BAR commit**, not the mono/skia SHA. Read back the created run's
-source ref/SHA and template parameters; stop on any mismatch without blindly
-retrying. The real run prepares packages and pauses at `ManualValidation`, so
-no separate dry run is required. Compare its `NuGetReleaseAudit` BAR,
-repository, commit, and selected/staged package identities with the release
-record before asking a human to approve the protected NuGet push. The human
-must also confirm ownership and quota. Do not approve merely because
-preparation succeeded.
+**SkiaSharp BAR commit**. The real run prepares packages and pauses at
+`ManualValidation`, so no separate dry run is required.
 
-After approval, monitor the same run and independently verify **every**
-staged shipping ID/version on NuGet.org. On failure or partial publication,
-preserve the evidence and stop; never automatically requeue or run Finish.
+After triggering:
+
+1. Read back the run ID, source ref/SHA and template parameters. Stop on a
+   mismatch without blindly retrying.
+2. Compare `NuGetReleaseAudit` BAR, repository, commit and selected/staged
+   package identities with the release record. Show the audit to the human
+   approver, who must confirm ownership and quota before resuming
+   `ManualValidation`. Do not approve merely because preparation succeeded.
+3. After approval, monitor the same run and independently verify **every**
+   staged shipping ID/version on NuGet.org. On failure or partial publication,
+   preserve the evidence; never automatically requeue or run Finish.
 
 ## Finish after the packages are public
 
