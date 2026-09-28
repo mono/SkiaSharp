@@ -44,7 +44,6 @@ Task("libSkiaSharp")
            $"skia_enable_ganesh=true " +
            $"skia_use_harfbuzz=false " +
            $"skia_use_icu=false " +
-           $"skia_use_piex=true " +
            $"skia_use_system_expat=false " +
            $"skia_use_system_freetype2=true " +
            $"skia_use_system_libjpeg_turbo=false " +
