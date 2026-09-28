@@ -94,7 +94,11 @@ parallel, and aggregates their findings. Each script invocation already checks
 exact-tip health from the internal `skiasharp-package` pipeline and reports the
 build ID and BAR ID. A release branch is publication-ready only when its
 matching build succeeded and recorded one BAR ID; a new cut is ready only when
-the maintenance tip has the same evidence and upstream Skia is current. If the
+the maintenance tip has the same evidence and upstream Skia is current. Among
+builds on the branch's current commit, the audit selects the newest succeeded
+build with one BAR even if a later rerun failed or was canceled, and reports
+those newer attempts. A partially succeeded build with a BAR requires review;
+it is not automatically publication-ready. If the
 internal pipeline cannot be reached, the script preserves the other evidence,
 reports the unavailable build check, and exits `2` rather than guessing.
 

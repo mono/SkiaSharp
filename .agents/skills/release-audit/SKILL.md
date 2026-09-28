@@ -59,7 +59,10 @@ pwsh ./scripts/infra/publishing/audit-release-state.ps1 `
 
 Do not manually repeat branch ordering, build selection, BAR parsing, upstream
 comparison, or action gating in the skill. Those deterministic rules belong to
-the PowerShell command and its shared modules.
+the PowerShell command and its shared modules. It prefers the newest succeeded
+BAR build on the exact branch commit; newer canceled or failed reruns are
+reported without displacing that build. A partially succeeded build with a
+BAR is reported for review, not marked ready.
 
 Lead with:
 
@@ -71,8 +74,9 @@ Then group exact actions under:
 1. **Finish now** — public packages with incomplete tags or Releases.
 2. **Resume publication** — prepared branches whose exact-tip build is green
    and has one BAR ID.
-3. **Build blocked or running** — missing, active, failed, canceled, or BAR-less
-   exact-tip builds.
+3. **Build blocked, running, or needing review** — missing, active, failed,
+   canceled, BAR-less, or partially succeeded exact-tip builds without a
+   succeeded BAR build.
 4. **Merge or synchronize before branching** — upstream work and sync PRs.
 5. **Start next releases** — only Prepare actions emitted by the script.
 6. **Unavailable or inconsistent checks** — every exit `2`, provenance
@@ -88,7 +92,8 @@ The command should provide enough information for normal release decisions.
 Use AI investigation only when it reports:
 
 - an unavailable internal pipeline or external service;
-- a failed or canceled exact-tip build;
+- a failed or canceled exact-tip build without an earlier succeeded BAR build;
+- a partially succeeded BAR build offered for review;
 - several/missing BAR IDs;
 - mismatched branch, commit, tag, or public package provenance;
 - an incomplete cross-repository sync;
