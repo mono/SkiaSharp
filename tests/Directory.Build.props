@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <!-- Reuse Skia's committed DNG test fixtures without copying their binary blobs into this repository. -->
-  <ItemGroup Condition="'$(MSBuildProjectName)' == 'SkiaSharp.Tests.Console' or '$(MSBuildProjectName)' == 'SkiaSharp.Tests.Devices' or '$(MSBuildProjectName)' == 'SkiaSharp.Tests.Wasm'">
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'SkiaSharp.Tests.Console' or '$(MSBuildProjectName)' == 'SkiaSharp.Tests.Devices'">
     <DngTestImage Include="$(MSBuildThisFileDirectory)..\externals\skia\resources\images\sample_1mp.dng;$(MSBuildThisFileDirectory)..\externals\skia\resources\images\sample_1mp_rotated.dng;$(MSBuildThisFileDirectory)..\externals\skia\resources\images\dng_with_preview.dng" />
   </ItemGroup>
 
@@ -15,7 +15,7 @@
     <Content Include="@(DngTestImage)" Link="Content\images\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(MSBuildProjectName)' == 'SkiaSharp.Tests.Devices' or '$(MSBuildProjectName)' == 'SkiaSharp.Tests.Wasm'">
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'SkiaSharp.Tests.Devices'">
     <EmbeddedResource Include="@(DngTestImage)" Link="Content\images\%(Filename)%(Extension)" />
   </ItemGroup>
 
