@@ -11,13 +11,13 @@ public class ImageDecoderSample : CanvasSampleBase
 	private bool _showInfo;
 	private bool _subset;
 
-	private static readonly string[] ImageSources = { "Baboon", "Color Wheel", "HDR PNG (CICP)", "DNG", "WebP", "GIF" };
+	private static readonly string[] ImageSources = { "Baboon", "Color Wheel", "HDR PNG (CICP)", "WebP", "GIF" };
 
 	public override string Title => "Image Decoder";
 
 	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
 
-	public override string Description => "Decode images in various formats (PNG, WebP, DNG) with metadata inspection and subset decoding.";
+	public override string Description => "Decode images in various formats (PNG, WebP, GIF) with metadata inspection and subset decoding.";
 
 	public override IReadOnlyList<string> ApiTags =>
 	[
@@ -56,9 +56,8 @@ public class ImageDecoderSample : CanvasSampleBase
 	{
 		1 => SampleMedia.Images.ColorWheel,
 		2 => SampleMedia.Images.CicpPq,
-		3 => SampleMedia.Images.AdobeDng,
-		4 => SampleMedia.Images.BabyTux,
-		5 => SampleMedia.Images.AnimatedHeartGif,
+		3 => SampleMedia.Images.BabyTux,
+		4 => SampleMedia.Images.AnimatedHeartGif,
 		_ => SampleMedia.Images.Baboon,
 	};
 
