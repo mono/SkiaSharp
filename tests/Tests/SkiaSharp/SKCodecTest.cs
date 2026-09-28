@@ -17,6 +17,15 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void DngIsNotDecoded()
 		{
+			SkipOnPlatform(DngDecoderEnabled, "The native build enables DNG and PIEX decoding");
+
+			if (!IsBrowser)
+			{
+				using var rawCodec = SKCodec.Create(Path.Combine(PathToImages, "sample_1mp.dng"), out var rawResult);
+				Assert.Null(rawCodec);
+				Assert.Equal(SKCodecResult.Unimplemented, rawResult);
+			}
+
 			var path = Path.Combine(PathToImages, "adobe-dng.dng");
 
 			using var fileCodec = SKCodec.Create(path, out var fileResult);
