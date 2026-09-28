@@ -33,16 +33,21 @@ dispatch: use `az pipelines runs list/show` and compare their
 `templateParameters.commitHash` with the selected SkiaSharp commit. If a
 matching run already exists, monitor it instead of creating another; if the
 packages are already public, verify provenance and proceed to Finish. Stop
-on ambiguous or mismatched evidence. Verify the SkiaSharp support is merged
-in the **internal MAUI `main`** YAML and pin that ref's SHA; an unmerged
-feature branch is not the normal release path.
+on ambiguous or mismatched evidence.
+
+For testing this unmerged skill, pin the MAUI pipeline to the verified feature
+ref and SHA below. **Before merging this skill**, merge dotnet/maui#38967,
+remove this temporary pin, and use the exact current SHA of the internal
+MAUI `main` ref instead. Never treat the feature ref as the normal release path.
 
 Queue `dotnet-maui-release` from chat only when explicitly requested:
 
 ```bash
 az pipelines run \
   --organization https://dev.azure.com/dnceng --project internal \
-  --id 1445 --branch refs/heads/main --commit-id <exact-internal-MAUI-main-SHA> \
+  --id 1445 \
+  --branch refs/heads/mattleibow-skiasharp-release-support \
+  --commit-id d095037c93e035606d728b28ebd0d82dd94997b0 \
   --parameters ghOwner=mono ghRepo=SkiaSharp \
     commitHash=<exact-SkiaSharp-release-commit> \
     pushWorkloadSet=false pushNugetOrg=true pushPackages=true \
