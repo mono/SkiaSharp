@@ -30,8 +30,9 @@ Before triggering:
    that commit (`templateParameters.commitHash`). Monitor an existing run
    instead of queueing another; if fully public, verify provenance and use
    the Finish path only on a separate request. Stop on mismatched evidence.
-3. Require pipeline 1445's default branch to be `refs/heads/main` and the
-   internal MAUI mirror to contain the merged SkiaSharp release support.
+3. Require the `dotnet-maui-release` pipeline (1445) to default to
+   `refs/heads/main` and the internal MAUI mirror to contain the merged
+   SkiaSharp release support.
    Wait if the mirror is behind; never use the old feature branch.
 
 Queue `dotnet-maui-release` on its verified default MAUI `main` tip only on
