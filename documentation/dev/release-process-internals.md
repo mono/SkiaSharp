@@ -261,9 +261,10 @@ Default-channel promotion and final public publication are separate actions.
 The package pipeline registers and promotes the BAR through Arcade/Maestro.
 On a maintainer's explicit request, `release-publish` checks the matching
 Build/Tests/BAR and queues `dotnet-maui-release` (dnceng/internal definition
-1445) on merged MAUI `main`. It pins the MAUI pipeline code with `--commit-id`
-and passes the **SkiaSharp** BAR/source SHA as the `commitHash` template
-parameter; those are different commits. The MAUI job resolves that commit
+1445) at the current tip of merged MAUI `main`. It records and verifies the
+resolved MAUI pipeline-code SHA after dispatch and passes the **SkiaSharp**
+BAR/source SHA as the `commitHash` template parameter; those are different
+commits. The MAUI job resolves the SkiaSharp commit
 against BAR, stages the shipping assets, and emits `NuGetReleaseAudit`.
 It requires `ManualValidation` before its protected `1ES.PublishNuget` job
 and NuGet.org service connection can run.

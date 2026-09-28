@@ -33,17 +33,16 @@ Before triggering:
    rather than queueing a duplicate; if already public, verify provenance and
    proceed to Finish. Stop on ambiguous or mismatched evidence.
 
-Queue `dotnet-maui-release` only on explicit request. **Temporary test pin:**
-the feature ref and SHA below are for this unmerged skill. Before merging this
-skill, merge dotnet/maui#38967 and replace the pin with the exact current SHA
-of internal MAUI `main`. Never use the feature ref as the normal release path.
+Queue `dotnet-maui-release` only on explicit request. **Temporary test ref:**
+the feature branch below is for this unmerged skill. Before merging this
+skill, merge dotnet/maui#38967 and replace the branch with
+`refs/heads/main`. Never use the feature ref as the normal release path.
 
 ```bash
 az pipelines run \
   --organization https://dev.azure.com/dnceng --project internal \
   --id 1445 \
   --branch refs/heads/mattleibow-skiasharp-release-support \
-  --commit-id d095037c93e035606d728b28ebd0d82dd94997b0 \
   --parameters ghOwner=mono ghRepo=SkiaSharp \
     commitHash=<exact-SkiaSharp-release-commit> \
     pushWorkloadSet=false pushNugetOrg=true pushPackages=true \
@@ -51,14 +50,15 @@ az pipelines run \
   --output json
 ```
 
-`--commit-id` pins the **MAUI pipeline code**; `commitHash` identifies the
-**SkiaSharp BAR commit**. The real run prepares packages and pauses at
-`ManualValidation`, so no separate dry run is required.
+`--branch` uses the **current MAUI branch tip**; `commitHash` remains the
+**exact SkiaSharp BAR commit**. The real run prepares packages and pauses
+at `ManualValidation`, so no separate dry run is required.
 
 After triggering:
 
-1. Read back the run ID, source ref/SHA and template parameters. Stop on a
-   mismatch without blindly retrying.
+1. Read back the run ID, resolved MAUI source ref/SHA and template parameters.
+   Record the actual pipeline-code SHA and verify it contains the SkiaSharp
+   release support; stop on a mismatch without blindly retrying.
 2. Compare `NuGetReleaseAudit` BAR, repository, commit and selected/staged
    package identities with the release record. Show the audit to the human
    approver, who must confirm ownership and quota before resuming

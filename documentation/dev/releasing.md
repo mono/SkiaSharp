@@ -177,7 +177,7 @@ When you say **"push the packages"** in chat, the `release-publish` skill
 checks the release branch's exact-tip Build, the matching resource-triggered
 Tests run, BAR, and any existing publication run. It then queues the
 [`dotnet-maui-release` internal pipeline](https://dev.azure.com/dnceng/internal/_build?definitionId=1445)
-on the **merged and mirrored MAUI `main`**, pinned to its exact commit. This
+on the **merged and mirrored MAUI `main`**, using that branch's current tip. This
 requires the SkiaSharp support in `eng/pipelines/ci-official-release.yml` to
 be merged and available on that internal ref (tracked by
 [dotnet/maui#38967](https://github.com/dotnet/maui/pull/38967)). Do not queue
@@ -192,7 +192,7 @@ submodule SHA):
 ```bash
 az pipelines run \
   --organization https://dev.azure.com/dnceng --project internal \
-  --id 1445 --branch refs/heads/main --commit-id <exact-internal-MAUI-main-SHA> \
+  --id 1445 --branch refs/heads/main \
   --parameters ghOwner=mono ghRepo=SkiaSharp \
     commitHash=<exact-SkiaSharp-release-commit> \
     pushWorkloadSet=false pushNugetOrg=true pushPackages=true \
@@ -200,7 +200,8 @@ az pipelines run \
   --output json
 ```
 
-The agent reads back the queued run's ref and parameters, then compares the
+The agent reads back the queued run's resolved MAUI source SHA and parameters,
+verifies that SHA contains the SkiaSharp release support, then compares the
 `NuGetReleaseAudit` artifact with the release record: BAR ID, repository,
 commit, selected and staged shipping package identities. The pipeline does
 not need a separate preparation-only run: the real run prepares its packages
