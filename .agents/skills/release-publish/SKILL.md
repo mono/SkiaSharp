@@ -20,23 +20,19 @@ after Prepare, Build/Tests, or the other operation.
 
 Before triggering:
 
-1. Run `audit-release-state.ps1 -Version A.B -Json`. Select the requested
-   immutable `release/<identity>` branch and require its exact-tip
-   `skiasharp-package` build (1642) to have succeeded with one BAR ID. Use
-   the **SkiaSharp** release commit, never the maintenance tip or mono/skia SHA.
-2. Use `az pipelines runs list/show` to require `skiasharp-tests` (1630)
-   succeeded for the same branch, commit and build number, with
-   `triggerInfo.pipelineId` matching that package build. Any optional
-   `release-testing` approval must match the BAR.
-3. Check the exact public version and existing MAUI runs (1445), comparing
-   `templateParameters.commitHash` with that commit. Monitor an existing run
-   rather than queueing a duplicate; if already public, verify provenance and
-   proceed to Finish. Stop on ambiguous or mismatched evidence.
-4. Verify pipeline 1445 defaults to `refs/heads/main` and the internal
-   mirror's MAUI `main` has the merged SkiaSharp support in
-   `eng/pipelines/ci-official-release.yml`. If either check fails, stop; if
-   the mirror is behind GitHub, wait for it to catch up. Do not fall back to
-   the old feature branch.
+1. Run `audit-release-state.ps1 -Version A.B -Json` for the requested
+   `release/<identity>`. Require its exact-tip package build (1642) to have
+   succeeded with one BAR, and the resource-triggered tests (1630) to have
+   succeeded for the same branch, commit and build number with a matching
+   `triggerInfo.pipelineId`. Any `release-testing` approval must match the BAR.
+   Use that **SkiaSharp** commit, not the maintenance tip or mono/skia SHA.
+2. Check the complete public package set and existing MAUI runs (1445) for
+   that commit (`templateParameters.commitHash`). Monitor an existing run
+   instead of queueing another; if fully public, verify provenance and use
+   the Finish path only on a separate request. Stop on mismatched evidence.
+3. Require pipeline 1445's default branch to be `refs/heads/main` and the
+   internal MAUI mirror to contain the merged SkiaSharp release support.
+   Wait if the mirror is behind; never use the old feature branch.
 
 Queue `dotnet-maui-release` on its verified default MAUI `main` tip only on
 explicit request:
@@ -58,17 +54,16 @@ packages and pauses at `ManualValidation`, so no separate dry run is required.
 
 After triggering:
 
-1. Read back the run ID, resolved MAUI source ref/SHA and template parameters.
-   Require the ref to be `refs/heads/main`, record the actual pipeline-code
-   SHA and verify it contains the SkiaSharp release support; stop on a
-   mismatch without blindly retrying.
-2. Compare `NuGetReleaseAudit` BAR, repository, commit and selected/staged
-   package identities with the release record. Show the audit to the human
-   approver, who must confirm ownership and quota before resuming
-   `ManualValidation`. Do not approve merely because preparation succeeded.
-3. After approval, monitor the same run and independently verify **every**
-   staged shipping ID/version on NuGet.org. On failure or partial publication,
-   preserve the evidence; never automatically requeue or run Finish.
+1. Read back the run's MAUI ref/SHA and parameters. Require `refs/heads/main`,
+   the requested SkiaSharp commit and flags, and a MAUI SHA containing release
+   support; stop on a mismatch without retrying.
+2. Match `NuGetReleaseAudit` BAR, repository, commit and selected/staged package
+   identities to the release record. Present it for human `ManualValidation`;
+   the approver confirms package ownership and quota. Preparation alone is
+   not approval.
+3. Monitor that run after approval and independently verify **every** staged
+   shipping ID/version on NuGet.org. On failure or partial publication,
+   preserve evidence; do not automatically requeue or run Finish.
 
 ## Finish after the packages are public
 
