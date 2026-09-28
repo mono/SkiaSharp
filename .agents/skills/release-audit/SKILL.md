@@ -106,10 +106,12 @@ The audit and this skill remain read-only until the user asks to act:
   before `push=true`.
 - **Test a BAR:** invoke `release-testing` with the exact package version and
   BAR ID.
-- **Publish packages:** the protected team BAR-to-NuGet process remains outside
-  this skill.
-- **Finish:** invoke `release-publish`; show the dry run and obtain confirmation
-  before `push=true`.
+- **Publish packages:** when explicitly requested, invoke `release-publish` to
+  queue the protected MAUI pipeline from chat. The pipeline's human approval
+  remains mandatory; an audit never queues it automatically. The audit does not
+  track already-queued MAUI publication runs, so check for one before dispatch.
+- **Finish:** invoke `release-publish` after exact packages are public; show the
+  Finish workflow's read-only plan and obtain confirmation before `push=true`.
 - **Sync Skia:** follow `update-skia` and obtain confirmation before dispatch.
 
 After any mutation completes, rerun the affected line. Never advance to the
