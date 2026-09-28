@@ -6,4 +6,17 @@
     <ValidateXcodeVersion>false</ValidateXcodeVersion>
   </PropertyGroup>
 
+  <!-- Use Skia's existing BSD-licensed test resources without adding another copy to the repository. -->
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'SkiaSharp.Tests.Console' or '$(MSBuildProjectName)' == 'SkiaSharp.Tests.Devices' or '$(MSBuildProjectName)' == 'SkiaSharp.Tests.Wasm'">
+    <DngTestImage Include="$(MSBuildThisFileDirectory)..\externals\skia\resources\images\sample_1mp.dng;$(MSBuildThisFileDirectory)..\externals\skia\resources\images\sample_1mp_rotated.dng;$(MSBuildThisFileDirectory)..\externals\skia\resources\images\dng_with_preview.dng" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'SkiaSharp.Tests.Console'">
+    <Content Include="@(DngTestImage)" Link="Content\images\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'SkiaSharp.Tests.Devices' or '$(MSBuildProjectName)' == 'SkiaSharp.Tests.Wasm'">
+    <EmbeddedResource Include="@(DngTestImage)" Link="Content\images\%(Filename)%(Extension)" />
+  </ItemGroup>
+
 </Project>
