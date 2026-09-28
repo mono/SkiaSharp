@@ -1,0 +1,46 @@
+{
+  "theme": "Upcoming API adjustments",
+  "highlights_headline": "The upcoming 4.155 line updates HarfBuzz and refines image decoding and GLES interop support.",
+  "highlights_body": "RAW and DNG decoding are disabled, while GLES interop moves to pointer-based signatures. Review affected integrations before adopting a prerelease.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "GLES interop uses pointer-based signatures",
+          "detail": "GLES consumers should update native interop code to use the new pointer-based signatures.",
+          "prs": [
+            5155
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "RAW and DNG decoding disabled",
+          "detail": "Applications that rely on bundled RAW or DNG decoding should provide an alternative image-decoding path.",
+          "prs": [
+            5162
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "HarfBuzz updated to 14.4.0",
+          "detail": "The bundled text-shaping engine advances to HarfBuzz 14.4.0.",
+          "prs": [
+            5135
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}
