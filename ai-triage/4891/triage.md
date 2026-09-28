@@ -1,0 +1,365 @@
+# Issue Triage Report — #4891
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-09-28T04:31:49Z |
+| Type | type/bug (0.99 (99%)) |
+| Area | area/SkiaSharp.Views.Maui (0.98 (98%)) |
+| Suggested action | needs-investigation (0.90 (90%)) |
+
+**Issue Summary:** On net10.0-ios with SkiaSharp 4.151.1 and 4.152.0 preview builds, a MAUI SKGLView crashes during page creation on virtualized iPhones where OpenGL ES is unavailable because EAGLContext initialization returns nil.
+
+**Analysis:** The iOS MAUI SKGLViewHandler is explicitly backed by SKGLView, whose initialization creates an OpenGLES2 EAGLContext. The corresponding Mac Catalyst handler instead uses SKMetalView, and SKMetalView is compiled for iOS, so the reported failure path is consistent with the current source. Porting the iOS handler requires adapting the Metal view's paint, touch, and render-loop behavior rather than simply substituting the non-MAUI SKMetalView in a MAUI visual tree.
+
+**Recommendations:** **needs-investigation** — The crash path and likely direction are confirmed from source, but the iOS Metal handler must be validated for MAUI event, lifecycle, and render-loop parity before implementation.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views.Maui |
+| Platforms | os/iOS |
+| Backends | backend/OpenGL, backend/Metal |
+| Tenets | tenet/reliability |
+| Perf | — |
+| Partner | partner/maui |
+| Current labels | type/bug |
+
+## Evidence
+
+### Reproduction
+
+1. Create a .NET MAUI iOS application containing SKGLView.
+2. Run it on an iOS environment where OpenGL ES is unavailable, such as the reporter's virtualized iPhone used during App Store review.
+3. Realize the page and observe the unhandled EAGLContext initialization exception.
+
+**Environment:** iOS 26.5 (23F77) on a virtualized iPhone; .NET 10.0.11; net10.0-ios; SkiaSharp 4.151.1 and 4.152.0-rc.1.26426.14 were inspected.
+
+**Related issues:** #1576, #1683, #1969, #2049
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1576 — Open related request for a non-hardware-accelerated SKGLView fallback.
+- https://github.com/mono/SkiaSharp/issues/1683 — Open related iOS SKGLView versus SKCanvasView issue.
+- https://github.com/mono/SkiaSharp/issues/1969 — Open related report of incomplete drawing with SKGLView on iOS.
+- https://github.com/mono/SkiaSharp/issues/2049 — Open related iOS SKGLView behavior report in Blazor.
+
+**Code snippets:**
+
+```csharp
+#if __IOS__
+public class MyRenderView : SKMetalView
+#elif __ANDROID__
+public class MyRenderView : SKGLView
+#endif
+```
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | False |
+| Error type | crash |
+| Error message | Could not initialize an instance of the type 'OpenGLES.EAGLContext': the native 'initWithAPI:' method returned nil. |
+| Repro quality | complete |
+| Target frameworks | net10.0-ios, net9.0-ios |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 4.151.1, 4.152.0-preview.1, 4.152.0-rc.1.26426.14 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | The checked-in iOS MAUI handler still constructs SKGLView, and SKGLView still creates an OpenGLES2 EAGLContext. |
+
+## Analysis
+
+### Technical Summary
+
+The iOS MAUI SKGLViewHandler is explicitly backed by SKGLView, whose initialization creates an OpenGLES2 EAGLContext. The corresponding Mac Catalyst handler instead uses SKMetalView, and SKMetalView is compiled for iOS, so the reported failure path is consistent with the current source. Porting the iOS handler requires adapting the Metal view's paint, touch, and render-loop behavior rather than simply substituting the non-MAUI SKMetalView in a MAUI visual tree.
+
+### Rationale
+
+This is a high-severity platform-specific crash in the MAUI views layer, not an external configuration problem: the source directly selects the deprecated OpenGL ES view on iOS and the reporter provides a concrete environment, error, and reproducer. The existing Mac Catalyst Metal implementation establishes a likely implementation direction, but iOS event and render-loop parity still needs verification before a code fix is selected.
+
+### Key Signals
+
+- "new EAGLContext(...) returns nil and the marshalled exception is unhandled" — **issue body** (The app terminates while the GPU view is constructed rather than during application drawing.)
+- "SKGLViewHandler on iOS contains GLKView while Mac Catalyst contains SKMetalView / MTKView" — **issue body** (The two Apple MAUI targets use materially different backends.)
+- "SKMetalView is from SkiaSharp.Views.iOS and does not implement IView" — **issue comment** (Directly placing the native iOS view in a MAUI grid is not a valid drop-in workaround.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.iOS.cs` | 15-29 | direct | The iOS handler derives from ViewHandler<ISKGLView, SKGLView> and CreatePlatformView constructs MauiSKGLView, selecting the OpenGL-backed native view for every iOS MAUI SKGLView. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs` | 64-75 | direct | SKGLView is a GLKView and Initialize assigns Context = new EAGLContext(EAGLRenderingAPI.OpenGLES2), matching the reported failing native initialization path. |
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.MacCatalyst.cs` | 8-22 | related | The Mac Catalyst specialization derives from ViewHandler<ISKGLView, SKMetalView> and creates MauiSKMetalView, proving that the shared MAUI abstraction already has a Metal-backed implementation on another Apple target. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/SKMetalView.cs` | 1-18, 90-124 | related | SKMetalView is included for __IOS__ and initializes a Metal device and backend context, confirming that an iOS Metal view is available in the Apple views assembly. |
+| `source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKCanvasView/SKCanvasViewHandler.Apple.cs` | 7-15 | context | The Apple SKCanvasView handler constructs a MAUI-compatible SKCanvasView and provides a supported non-GPU rendering path for iOS. |
+
+**Error fingerprint:** `EAGLContext-initWithAPI-nil-iOS-MAUI-SKGLView`
+
+### Workarounds
+
+- Use the MAUI SKCanvasView on affected iOS release paths when CPU rendering is acceptable; its Apple handler creates a MAUI-compatible SKCanvasView and does not initialize EAGLContext.
+- Do not place SkiaSharp.Views.iOS.SKMetalView directly into a MAUI layout: the issue comment correctly identifies that it is not an IView.
+
+### Next Questions
+
+- Can the Mac Catalyst SKMetalView handler be compiled for iOS with equivalent touch and render-loop behavior?
+- Does the Metal-backed handler work on both physical devices and the App Store virtualized review environment?
+- What compatibility or performance differences would MAUI SKGLView consumers observe when its iOS backend changes from OpenGL ES to Metal?
+
+### Resolution Proposals
+
+**Hypothesis:** The iOS MAUI handler unconditionally constructs the deprecated OpenGL ES implementation, so platforms that do not expose EAGLContext cannot create SKGLView even though a Metal-backed Apple view is available.
+
+1. **Port the iOS MAUI handler to SKMetalView** — fix, confidence 0.82 (82%), cost/m, validated=untested
+   - Adapt the Mac Catalyst Metal handler for iOS and verify its paint, touch, invalidation, and render-loop semantics on physical and virtualized iPhones before replacing the current iOS OpenGL handler.
+2. **Use MAUI SKCanvasView on affected iOS paths** — workaround, confidence 0.88 (88%), cost/s, validated=untested
+   - Use the existing CPU-backed MAUI canvas view as a release workaround when GPU acceleration is not essential. This avoids the OpenGL ES initialization path but changes rendering performance characteristics.
+
+**Recommended proposal:** Port the iOS MAUI handler to SKMetalView
+
+**Why:** It addresses the confirmed backend-selection defect and follows the existing Mac Catalyst architecture; the CPU view is a practical mitigation but not a GPU-equivalent solution.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.90 (90%) |
+| Reason | The crash path and likely direction are confirmed from source, but the iOS Metal handler must be validated for MAUI event, lifecycle, and render-loop parity before implementation. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.98 (98%) | Apply the bug, MAUI views, iOS, OpenGL, Metal, reliability, and MAUI partner labels. | labels=type/bug, area/SkiaSharp.Views.Maui, os/iOS, backend/OpenGL, backend/Metal, tenet/reliability, partner/maui |
+| link-related | low | 0.82 (82%) | Cross-reference the existing non-hardware-accelerated SKGLView fallback request. | linkedIssue=#1576 |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4891,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-09-28T04:31:49Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "On net10.0-ios with SkiaSharp 4.151.1 and 4.152.0 preview builds, a MAUI SKGLView crashes during page creation on virtualized iPhones where OpenGL ES is unavailable because EAGLContext initialization returns nil.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.99
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Maui",
+      "confidence": 0.98
+    },
+    "platforms": [
+      "os/iOS"
+    ],
+    "backends": [
+      "backend/OpenGL",
+      "backend/Metal"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "Could not initialize an instance of the type 'OpenGLES.EAGLContext': the native 'initWithAPI:' method returned nil.",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net10.0-ios",
+        "net9.0-ios"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET MAUI iOS application containing SKGLView.",
+        "Run it on an iOS environment where OpenGL ES is unavailable, such as the reporter's virtualized iPhone used during App Store review.",
+        "Realize the page and observe the unhandled EAGLContext initialization exception."
+      ],
+      "codeSnippets": [
+        "#if __IOS__\npublic class MyRenderView : SKMetalView\n#elif __ANDROID__\npublic class MyRenderView : SKGLView\n#endif"
+      ],
+      "environmentDetails": "iOS 26.5 (23F77) on a virtualized iPhone; .NET 10.0.11; net10.0-ios; SkiaSharp 4.151.1 and 4.152.0-rc.1.26426.14 were inspected.",
+      "relatedIssues": [
+        1576,
+        1683,
+        1969,
+        2049
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1576",
+          "description": "Open related request for a non-hardware-accelerated SKGLView fallback."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1683",
+          "description": "Open related iOS SKGLView versus SKCanvasView issue."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1969",
+          "description": "Open related report of incomplete drawing with SKGLView on iOS."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2049",
+          "description": "Open related iOS SKGLView behavior report in Blazor."
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "4.151.1",
+        "4.152.0-preview.1",
+        "4.152.0-rc.1.26426.14"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The checked-in iOS MAUI handler still constructs SKGLView, and SKGLView still creates an OpenGLES2 EAGLContext."
+    }
+  },
+  "analysis": {
+    "summary": "The iOS MAUI SKGLViewHandler is explicitly backed by SKGLView, whose initialization creates an OpenGLES2 EAGLContext. The corresponding Mac Catalyst handler instead uses SKMetalView, and SKMetalView is compiled for iOS, so the reported failure path is consistent with the current source. Porting the iOS handler requires adapting the Metal view's paint, touch, and render-loop behavior rather than simply substituting the non-MAUI SKMetalView in a MAUI visual tree.",
+    "rationale": "This is a high-severity platform-specific crash in the MAUI views layer, not an external configuration problem: the source directly selects the deprecated OpenGL ES view on iOS and the reporter provides a concrete environment, error, and reproducer. The existing Mac Catalyst Metal implementation establishes a likely implementation direction, but iOS event and render-loop parity still needs verification before a code fix is selected.",
+    "keySignals": [
+      {
+        "text": "new EAGLContext(...) returns nil and the marshalled exception is unhandled",
+        "source": "issue body",
+        "interpretation": "The app terminates while the GPU view is constructed rather than during application drawing."
+      },
+      {
+        "text": "SKGLViewHandler on iOS contains GLKView while Mac Catalyst contains SKMetalView / MTKView",
+        "source": "issue body",
+        "interpretation": "The two Apple MAUI targets use materially different backends."
+      },
+      {
+        "text": "SKMetalView is from SkiaSharp.Views.iOS and does not implement IView",
+        "source": "issue comment",
+        "interpretation": "Directly placing the native iOS view in a MAUI grid is not a valid drop-in workaround."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.iOS.cs",
+        "lines": "15-29",
+        "finding": "The iOS handler derives from ViewHandler<ISKGLView, SKGLView> and CreatePlatformView constructs MauiSKGLView, selecting the OpenGL-backed native view for every iOS MAUI SKGLView.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs",
+        "lines": "64-75",
+        "finding": "SKGLView is a GLKView and Initialize assigns Context = new EAGLContext(EAGLRenderingAPI.OpenGLES2), matching the reported failing native initialization path.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.MacCatalyst.cs",
+        "lines": "8-22",
+        "finding": "The Mac Catalyst specialization derives from ViewHandler<ISKGLView, SKMetalView> and creates MauiSKMetalView, proving that the shared MAUI abstraction already has a Metal-backed implementation on another Apple target.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/SKMetalView.cs",
+        "lines": "1-18, 90-124",
+        "finding": "SKMetalView is included for __IOS__ and initializes a Metal device and backend context, confirming that an iOS Metal view is available in the Apple views assembly.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKCanvasView/SKCanvasViewHandler.Apple.cs",
+        "lines": "7-15",
+        "finding": "The Apple SKCanvasView handler constructs a MAUI-compatible SKCanvasView and provides a supported non-GPU rendering path for iOS.",
+        "relevance": "context"
+      }
+    ],
+    "errorFingerprint": "EAGLContext-initWithAPI-nil-iOS-MAUI-SKGLView",
+    "workarounds": [
+      "Use the MAUI SKCanvasView on affected iOS release paths when CPU rendering is acceptable; its Apple handler creates a MAUI-compatible SKCanvasView and does not initialize EAGLContext.",
+      "Do not place SkiaSharp.Views.iOS.SKMetalView directly into a MAUI layout: the issue comment correctly identifies that it is not an IView."
+    ],
+    "nextQuestions": [
+      "Can the Mac Catalyst SKMetalView handler be compiled for iOS with equivalent touch and render-loop behavior?",
+      "Does the Metal-backed handler work on both physical devices and the App Store virtualized review environment?",
+      "What compatibility or performance differences would MAUI SKGLView consumers observe when its iOS backend changes from OpenGL ES to Metal?"
+    ],
+    "resolution": {
+      "hypothesis": "The iOS MAUI handler unconditionally constructs the deprecated OpenGL ES implementation, so platforms that do not expose EAGLContext cannot create SKGLView even though a Metal-backed Apple view is available.",
+      "proposals": [
+        {
+          "title": "Port the iOS MAUI handler to SKMetalView",
+          "description": "Adapt the Mac Catalyst Metal handler for iOS and verify its paint, touch, invalidation, and render-loop semantics on physical and virtualized iPhones before replacing the current iOS OpenGL handler.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.82,
+          "effort": "cost/m"
+        },
+        {
+          "title": "Use MAUI SKCanvasView on affected iOS paths",
+          "description": "Use the existing CPU-backed MAUI canvas view as a release workaround when GPU acceleration is not essential. This avoids the OpenGL ES initialization path but changes rendering performance characteristics.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.88,
+          "effort": "cost/s"
+        }
+      ],
+      "recommendedProposal": "Port the iOS MAUI handler to SKMetalView",
+      "recommendedReason": "It addresses the confirmed backend-selection defect and follows the existing Mac Catalyst architecture; the CPU view is a practical mitigation but not a GPU-equivalent solution."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "The crash path and likely direction are confirmed from source, but the iOS Metal handler must be validated for MAUI event, lifecycle, and render-loop parity before implementation.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply the bug, MAUI views, iOS, OpenGL, Metal, reliability, and MAUI partner labels.",
+        "risk": "low",
+        "confidence": 0.98,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Maui",
+          "os/iOS",
+          "backend/OpenGL",
+          "backend/Metal",
+          "tenet/reliability",
+          "partner/maui"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference the existing non-hardware-accelerated SKGLView fallback request.",
+        "risk": "low",
+        "confidence": 0.82,
+        "linkedIssue": 1576
+      }
+    ]
+  }
+}
+```
+
+</details>
