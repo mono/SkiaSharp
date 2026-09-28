@@ -24,9 +24,16 @@ namespace SkiaSharp.Tests
 			using (var codec = SKCodec.Create(path))
 				AssertDecodedPixels(codec, format, upperLeft, nearUpperLeft, upperMiddle, center, lowerRight);
 
-			using var stream = new NonSeekableReadOnlyStream(File.OpenRead(path));
-			using var bufferedCodec = SKCodec.Create(stream);
-			AssertDecodedPixels(bufferedCodec, format, upperLeft, nearUpperLeft, upperMiddle, center, lowerRight);
+			using var data = SKData.Create(path);
+			using (var dataCodec = SKCodec.Create(data))
+				AssertDecodedPixels(dataCodec, format, upperLeft, nearUpperLeft, upperMiddle, center, lowerRight);
+
+			if (format == SKEncodedImageFormat.Dng)
+			{
+				using var stream = new NonSeekableReadOnlyStream(File.OpenRead(path));
+				using var bufferedCodec = SKCodec.Create(stream);
+				AssertDecodedPixels(bufferedCodec, format, upperLeft, nearUpperLeft, upperMiddle, center, lowerRight);
+			}
 		}
 
 		private static void AssertDecodedPixels(
