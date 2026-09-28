@@ -5,6 +5,13 @@ namespace SkiaSharp.Tests
 {
 	public abstract class BaseTest
 	{
+		protected const bool DngDecoderEnabled =
+#if SKIASHARP_DNG_DECODER_ENABLED
+			true;
+#else
+			false;
+#endif
+
 		protected static bool IsLinux = TestConfig.Current.IsLinux;
 		protected static bool IsMac = TestConfig.Current.IsMac;
 		protected static bool IsUnix = TestConfig.Current.IsUnix;

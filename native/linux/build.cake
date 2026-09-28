@@ -61,13 +61,11 @@ Task("libSkiaSharp")
         var soname = GetVersion("libSkiaSharp", "soname");
         var map = MakeAbsolute((FilePath)"libSkiaSharp/libSkiaSharp.map");
 
-        // This is terrible! But, Alpine (musl) does not define this
-        // so we are forced to for dng_sdk. If this ever becomes a problem
-        // for other libraries, we will need to find a better solution.
+        // Alpine (musl) does not define __WORDSIZE, which the DNG SDK needs.
         var wordSize = ReduceArch(arch).EndsWith("64") ? "64" : "32";
         var wordSizeDefine = VARIANT.ToLower().StartsWith("alpine")
             ? $", '-D__WORDSIZE={wordSize}'"
-            : $"";
+            : "";
 
         // Architecture-specific Spectre mitigation flags
         // -mretpoline requires Clang; -mharden-sls=all works with both GCC and Clang
@@ -96,7 +94,7 @@ Task("libSkiaSharp")
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_partition_alloc=false " +
-            $"skia_use_piex=true " +
+            $"skia_use_dng_sdk=true skia_use_piex=true " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_freetype2=false " +
             $"skia_use_system_libjpeg_turbo=false " +

@@ -209,7 +209,7 @@ void GenerateGnBuild(DirectoryPath outDir, string skiaArgs)
         skiaArgs += $" win_vc='{win_vc}' ";
     }
 
-    skiaArgs += 
+    skiaArgs +=
         $" skia_enable_tools=false " +
         $" is_official_build={CONFIGURATION.ToLower() == "release"} ".ToLower();
 

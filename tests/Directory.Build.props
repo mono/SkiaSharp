@@ -4,6 +4,9 @@
 
   <PropertyGroup>
     <ValidateXcodeVersion>false</ValidateXcodeVersion>
+    <!-- Keep this paired with the native skia_use_dng_sdk/skia_use_piex build flags. -->
+    <SkiaSharpDngDecoderEnabled Condition="'$(SkiaSharpDngDecoderEnabled)' == ''">true</SkiaSharpDngDecoderEnabled>
+    <DefineConstants Condition="'$(SkiaSharpDngDecoderEnabled)' == 'true'">$(DefineConstants);SKIASHARP_DNG_DECODER_ENABLED</DefineConstants>
   </PropertyGroup>
 
   <!-- Reuse Skia's committed DNG test fixtures without copying their binary blobs into this repository. -->

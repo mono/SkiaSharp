@@ -12,7 +12,7 @@ Single source of truth for native dependencies: what's used, what's not, and how
 
 ## Active Dependencies
 
-SkiaSharp uses only a subset of Skia's dependencies. Unused dependencies are commented out in `externals/skia/DEPS` to reduce attack surface.
+SkiaSharp uses only a subset of Skia's dependencies. Some unused dependencies are commented out in `externals/skia/DEPS` to reduce attack surface; others remain downloaded but are disabled at build time.
 
 ### Security-Relevant (process untrusted input)
 
@@ -28,7 +28,7 @@ SkiaSharp uses only a subset of Skia's dependencies. Unused dependencies are com
 | **expat** | XML parsing | libexpat | All |
 | **brotli** | WOFF2 fonts | brotli | All |
 | **wuffs** | GIF codec | wuffs | All |
-| **dng_sdk** | RAW images | dng_sdk | Windows |
+| **dng_sdk** | RAW images | dng_sdk | All except WASM |
 
 ### GPU/Graphics
 
@@ -43,7 +43,7 @@ SkiaSharp uses only a subset of Skia's dependencies. Unused dependencies are com
 
 | Dependency | Purpose | Platforms |
 |------------|---------|-----------|
-| **piex** | RAW preview | All except Windows, WASM |
+| **piex** | RAW preview | All except WASM |
 | **buildtools** | Compiler toolchain | All |
 
 ---
@@ -83,7 +83,7 @@ Enables Microsoft Component Governance CVE detection.
 | expat | `libexpat` | github.com/libexpat/libexpat |
 | brotli | `brotli` | github.com/google/brotli |
 | wuffs | `wuffs` | github.com/google/wuffs-mirror-release-c |
-| dng_sdk | `dng_sdk` | android.googlesource.com/.../dng_sdk |
+| dng_sdk | `dng_sdk` | Adobe DNG SDK 1.7.1 build 2724 (adapted from Android source) |
 
 ### Skia DEPS Identity Signals
 

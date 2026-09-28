@@ -18,6 +18,7 @@ namespace SkiaSharp.Tests
 			string filename, ushort orientation, SKEncodedImageFormat format,
 			uint upperLeft, uint nearUpperLeft, uint upperMiddle, uint center, uint lowerRight)
 		{
+			SkipOnPlatform(!DngDecoderEnabled, "The native build disables DNG and PIEX decoding");
 			SkipOnPlatform(IsBrowser, "Skia builds without the DNG SDK on WASM");
 
 			var path = Path.Combine(PathToImages, filename);
