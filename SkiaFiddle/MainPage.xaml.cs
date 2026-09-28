@@ -4,7 +4,6 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
 using SkiaFiddle.Fiddle;
 using SkiaSharp;
 using Uno.Foundation;
@@ -15,7 +14,6 @@ public sealed partial class MainPage : Page
 {
     private IFiddleCompiler _compiler = new RoslynFiddleCompiler();
     private bool _samplesInitialized;
-    private bool _selectorsInitialized;
 
     public MainPage()
     {
@@ -25,7 +23,6 @@ public sealed partial class MainPage : Page
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        InitSelectors();
         InitSamples();
         StatusText.Text = $"engine: {_compiler.Name}";
         OutputCanvas.FpsUpdated += (_, fps) => DispatcherQueue.TryEnqueue(() =>
@@ -34,40 +31,6 @@ public sealed partial class MainPage : Page
         });
         // SamplesCombo.SelectedIndex (set in InitSamples) fires OnSampleChanged,
         // which seeds both editors and runs.
-    }
-
-    private void InitSelectors()
-    {
-        if (_selectorsInitialized)
-            return;
-        _selectorsInitialized = true;
-
-        foreach (var font in FiddleAssets.Fonts)
-            FontCombo.Items.Add(new ComboBoxItem { Content = font.Name });
-        FontCombo.SelectedIndex = FiddleAssets.SelectedFontIndex;
-
-        ImageStrip.SelectedIndex = FiddleAssets.SelectedImageIndex;
-        ImageStrip.SelectionChanged += OnImageStripChanged;
-    }
-
-    private void OnFontChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (FontCombo.SelectedIndex < 0)
-            return;
-        FiddleAssets.SelectedFontIndex = FontCombo.SelectedIndex;
-        OutputCanvas.RequestRedraw();
-    }
-
-    private void OnImageStripChanged(object? sender, int index)
-    {
-        FiddleAssets.SelectedImageIndex = index;
-        OutputCanvas.RequestRedraw();
-    }
-
-    private void OnImageStripPressed(object sender, PointerRoutedEventArgs e)
-    {
-        var x = e.GetCurrentPoint(ImageStripHost).Position.X;
-        ImageStrip.SelectFromPointer(x, ImageStripHost.ActualWidth);
     }
 
     public void SetCompiler(IFiddleCompiler compiler)
@@ -96,31 +59,12 @@ public sealed partial class MainPage : Page
     {
         if (SamplesCombo.SelectedItem is ComboBoxItem item && item.Tag is FiddleSample sample)
         {
-            DispatcherQueue.TryEnqueue(() =>
+            DispatcherQueue.TryEnqueue(() => 
             {
-                ApplySampleAssets(sample);
                 SetupEditor.Text = sample.Setup;
                 DrawEditor.Text = sample.Draw;
                 _ = RunAsync();
             });
-        }
-    }
-
-    // Presets the font/image selectors when a sample declares which asset its
-    // `typeface`/`image` variables expect (e.g. the variable-font demo wants Inter).
-    private void ApplySampleAssets(FiddleSample sample)
-    {
-        if (sample.Font is { } fontName)
-        {
-            var index = FiddleAssets.IndexOfFont(fontName);
-            if (index >= 0)
-                FontCombo.SelectedIndex = index; // OnFontChanged updates FiddleAssets
-        }
-
-        if (sample.Image is { } imageIndex)
-        {
-            FiddleAssets.SelectedImageIndex = imageIndex;
-            ImageStrip.SelectedIndex = imageIndex;
         }
     }
 
