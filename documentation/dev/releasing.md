@@ -181,10 +181,11 @@ on the **merged and mirrored MAUI `main`**, using that branch's current tip. Thi
 requires the SkiaSharp support in `eng/pipelines/ci-official-release.yml` to
 be available on that internal ref (introduced by
 [dotnet/maui#38967](https://github.com/dotnet/maui/pull/38967)). If the
-internal mirror is behind GitHub, wait for it to catch up. Do not queue
-a normal release from an unmerged feature branch. An already-started run must
-be resumed and monitored, not duplicated; the read-only SkiaSharp audit does
-not track MAUI publication runs.
+internal mirror is behind GitHub, wait for it to catch up. Confirm that
+pipeline 1445's configured default branch is `refs/heads/main`; stop if it
+is not. Do not queue a normal release from an unmerged feature branch.
+An already-started run must be resumed and monitored, not duplicated; the
+read-only SkiaSharp audit does not track MAUI publication runs.
 
 The chat dispatch uses these template parameters (the example commit must be
 replaced by the exact **SkiaSharp release branch** commit, not the mono/skia
@@ -193,7 +194,7 @@ submodule SHA):
 ```bash
 az pipelines run \
   --organization https://dev.azure.com/dnceng --project internal \
-  --id 1445 --branch refs/heads/main \
+  --id 1445 \
   --parameters ghOwner=mono ghRepo=SkiaSharp \
     commitHash=<exact-SkiaSharp-release-commit> \
     pushWorkloadSet=false pushNugetOrg=true pushPackages=true \
@@ -201,7 +202,9 @@ az pipelines run \
   --output json
 ```
 
-The agent reads back the queued run's resolved MAUI source SHA and parameters,
+The pipeline's default branch selects the MAUI main tip; `commitHash` selects
+the separate SkiaSharp BAR commit. The agent reads back the queued run's
+resolved MAUI source ref/SHA and parameters, requires `refs/heads/main`,
 verifies that SHA contains the SkiaSharp release support, then compares the
 `NuGetReleaseAudit` artifact with the release record: BAR ID, repository,
 commit, selected and staged shipping package identities. The pipeline does

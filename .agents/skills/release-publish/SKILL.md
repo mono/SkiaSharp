@@ -32,18 +32,19 @@ Before triggering:
    `templateParameters.commitHash` with that commit. Monitor an existing run
    rather than queueing a duplicate; if already public, verify provenance and
    proceed to Finish. Stop on ambiguous or mismatched evidence.
-4. Verify the internal mirror's MAUI `main` has the merged SkiaSharp support
-   in `eng/pipelines/ci-official-release.yml`. If the mirror is behind GitHub,
-   wait for it to catch up; do not fall back to the old feature branch.
+4. Verify pipeline 1445 defaults to `refs/heads/main` and the internal
+   mirror's MAUI `main` has the merged SkiaSharp support in
+   `eng/pipelines/ci-official-release.yml`. If either check fails, stop; if
+   the mirror is behind GitHub, wait for it to catch up. Do not fall back to
+   the old feature branch.
 
-Queue `dotnet-maui-release` on the current internal MAUI `main` tip only on
+Queue `dotnet-maui-release` on its verified default MAUI `main` tip only on
 explicit request:
 
 ```bash
 az pipelines run \
   --organization https://dev.azure.com/dnceng --project internal \
   --id 1445 \
-  --branch refs/heads/main \
   --parameters ghOwner=mono ghRepo=SkiaSharp \
     commitHash=<exact-SkiaSharp-release-commit> \
     pushWorkloadSet=false pushNugetOrg=true pushPackages=true \
@@ -51,15 +52,16 @@ az pipelines run \
   --output json
 ```
 
-`--branch` uses the **current MAUI branch tip**; `commitHash` remains the
-**exact SkiaSharp BAR commit**. The real run prepares packages and pauses
-at `ManualValidation`, so no separate dry run is required.
+The pipeline's default branch selects the **current MAUI main tip**;
+`commitHash` remains the **exact SkiaSharp BAR commit**. The real run prepares
+packages and pauses at `ManualValidation`, so no separate dry run is required.
 
 After triggering:
 
 1. Read back the run ID, resolved MAUI source ref/SHA and template parameters.
-   Record the actual pipeline-code SHA and verify it contains the SkiaSharp
-   release support; stop on a mismatch without blindly retrying.
+   Require the ref to be `refs/heads/main`, record the actual pipeline-code
+   SHA and verify it contains the SkiaSharp release support; stop on a
+   mismatch without blindly retrying.
 2. Compare `NuGetReleaseAudit` BAR, repository, commit and selected/staged
    package identities with the release record. Show the audit to the human
    approver, who must confirm ownership and quota before resuming
