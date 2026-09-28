@@ -95,7 +95,7 @@ the public package's branch and commit, publishes the exact tag and GitHub
 Release, and coordinates support, release notes, and milestones. Rerun the
 read-only audit afterward. Never move a tag or replace a public package.
 
-## Local fallback
+### Local Finish fallback
 
 Only when the GitHub workflow is unavailable or local execution is explicitly
 requested, use the repository-owned Finish script:
