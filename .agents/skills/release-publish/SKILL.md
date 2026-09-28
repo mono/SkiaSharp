@@ -32,17 +32,18 @@ Before triggering:
    `templateParameters.commitHash` with that commit. Monitor an existing run
    rather than queueing a duplicate; if already public, verify provenance and
    proceed to Finish. Stop on ambiguous or mismatched evidence.
+4. Verify the internal mirror's MAUI `main` has the merged SkiaSharp support
+   in `eng/pipelines/ci-official-release.yml`. If the mirror is behind GitHub,
+   wait for it to catch up; do not fall back to the old feature branch.
 
-Queue `dotnet-maui-release` only on explicit request. **Temporary test ref:**
-the feature branch below is for this unmerged skill. Before merging this
-skill, merge dotnet/maui#38967 and replace the branch with
-`refs/heads/main`. Never use the feature ref as the normal release path.
+Queue `dotnet-maui-release` on the current internal MAUI `main` tip only on
+explicit request:
 
 ```bash
 az pipelines run \
   --organization https://dev.azure.com/dnceng --project internal \
   --id 1445 \
-  --branch refs/heads/mattleibow-skiasharp-release-support \
+  --branch refs/heads/main \
   --parameters ghOwner=mono ghRepo=SkiaSharp \
     commitHash=<exact-SkiaSharp-release-commit> \
     pushWorkloadSet=false pushNugetOrg=true pushPackages=true \

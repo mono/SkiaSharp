@@ -179,8 +179,9 @@ Tests run, BAR, and any existing publication run. It then queues the
 [`dotnet-maui-release` internal pipeline](https://dev.azure.com/dnceng/internal/_build?definitionId=1445)
 on the **merged and mirrored MAUI `main`**, using that branch's current tip. This
 requires the SkiaSharp support in `eng/pipelines/ci-official-release.yml` to
-be merged and available on that internal ref (tracked by
-[dotnet/maui#38967](https://github.com/dotnet/maui/pull/38967)). Do not queue
+be available on that internal ref (introduced by
+[dotnet/maui#38967](https://github.com/dotnet/maui/pull/38967)). If the
+internal mirror is behind GitHub, wait for it to catch up. Do not queue
 a normal release from an unmerged feature branch. An already-started run must
 be resumed and monitored, not duplicated; the read-only SkiaSharp audit does
 not track MAUI publication runs.
