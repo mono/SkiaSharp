@@ -21,22 +21,24 @@ after Prepare, Build/Tests, or the other operation.
 Before triggering:
 
 1. Run `audit-release-state.ps1 -Version A.B -Json` for the requested
-   `release/<identity>`. Require its exact-tip package build (1642) to have
-   succeeded with one BAR, and the resource-triggered tests (1630) to have
-   succeeded for the same branch, commit and build number with a matching
-   `triggerInfo.pipelineId`. Any `release-testing` approval must match the BAR.
-   Use that **SkiaSharp** commit, not the maintenance tip or mono/skia SHA.
-2. Check the complete public package set and existing MAUI runs (1445) for
-   that commit (`templateParameters.commitHash`). Monitor an existing run
-   instead of queueing another; if fully public, verify provenance and use
-   the Finish path only on a separate request. Stop on mismatched evidence.
+   `release/<identity>`. Require its exact-tip `skiasharp-package (1642)` build
+   to have succeeded with one BAR, and the resource-triggered
+   `skiasharp-tests (1630)` run to have succeeded for the same branch, commit
+   and build number with a matching `triggerInfo.pipelineId`. Any
+   `release-testing` approval must match the BAR. Use that **SkiaSharp**
+   commit, not the maintenance tip or mono/skia SHA.
+2. Check the complete public package set and existing
+   `dotnet-maui-release (1445)` runs for that commit
+   (`templateParameters.commitHash`). Monitor an existing run instead of
+   queueing another; if fully public, verify provenance and use the Finish
+   path only on a separate request. Stop on mismatched evidence.
 3. Require the `dotnet-maui-release (1445)` pipeline to default to
    `refs/heads/main` and the internal MAUI mirror to contain the merged
    SkiaSharp release support.
    Wait if the mirror is behind; never use the old feature branch.
 
-Queue `dotnet-maui-release` on its verified default MAUI `main` tip only on
-explicit request:
+Queue `dotnet-maui-release (1445)` on its verified default MAUI `main` tip
+only on explicit request:
 
 ```bash
 az pipelines run \
