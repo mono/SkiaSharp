@@ -193,12 +193,16 @@ submodule SHA):
 
 ```bash
 az pipelines run \
-  --organization https://dev.azure.com/dnceng --project internal \
-  --id 1445 \
-  --parameters ghOwner=mono ghRepo=SkiaSharp \
+  --organization https://dev.azure.com/dnceng --project internal --id 1445 \
+  --parameters \
+    ghOwner=mono \
+    ghRepo=SkiaSharp \
     commitHash=<exact-SkiaSharp-release-commit> \
-    pushWorkloadSet=false pushNugetOrg=true pushPackages=true \
-    nugetIncludeFilters=skip nugetExcludeFilters=skip \
+    pushWorkloadSet=false \
+    pushNugetOrg=true \
+    pushPackages=true \
+    nugetIncludeFilters=skip \
+    nugetExcludeFilters=skip \
   --output json
 ```
 
