@@ -1,0 +1,37 @@
+{
+  "theme": "Upcoming compatibility changes",
+  "highlights_headline": "The next 4.155 release updates image decoding, GLES interop, and the bundled HarfBuzz engine.",
+  "highlights_body": "RAW and DNG decoding will no longer be available, while GLES interop moves to pointer-based signatures.",
+  "breaking": [
+    {
+      "title": "RAW and DNG image decoding is disabled",
+      "body": "Applications that decode RAW or DNG images through SkiaSharp must use an alternative decoder before upgrading.",
+      "prs": [5162]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "GLES interop uses pointer-based signatures",
+          "detail": "OpenGL ES interop callers should update native interop code to use the new pointer-based signatures.",
+          "prs": [5155]
+        }
+      ]
+    },
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "HarfBuzz updated to 14.4.0",
+          "detail": "Refreshes the bundled text-shaping engine for the next release line.",
+          "prs": [5135]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {},
+  "harfbuzz_summary": null
+}
