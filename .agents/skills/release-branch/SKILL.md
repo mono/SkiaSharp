@@ -15,6 +15,7 @@ obtain confirmation before dispatching the same inputs with `push=true`:
 ```bash
 gh workflow run release-prepare.yml --repo mono/SkiaSharp --ref main \
   -f base=main -f release=4.153.0-preview.1 -f push=false
+
 # After reviewing the plan and receiving confirmation:
 gh workflow run release-prepare.yml --repo mono/SkiaSharp --ref main \
   -f base=main -f release=4.153.0-preview.1 -f push=true
