@@ -2,12 +2,12 @@
 description: "Daily upstream Skia milestone sync - merges new commits, resolves conflicts, builds, tests, and creates PRs."
 
 # -- Engine ------------------------------------------------------------
-# Pin GPT-5.6 Sol for the primary update work so scheduled runs never fall back
+# Pin GPT-6 Sol for the primary update work so scheduled runs never fall back
 # to a lower default model.
 engine:
   id: copilot
   max-continuations: 3
-model: gpt-5.6-sol
+model: gpt-6-sol
 
 # -- Triggers ----------------------------------------------------------
 # One fuzzy schedule every 6h. Scheduled runs pass no target, so the detector ROTATES:
