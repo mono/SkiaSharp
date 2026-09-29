@@ -298,6 +298,13 @@ jobs:
           dotnet tool restore
           dotnet cake --target=externals-download
 
+      - name: Fetch pinned Skia dependencies (Linux source build)
+        if: runner.os == 'Linux' && env.NATIVE_BUILD == 'true'
+        # git-sync-deps shallow-clones each remote's default branch before fetching its
+        # DEPS pin. Some mirrors advertise a default HEAD whose object is unavailable;
+        # fetch the exact pins instead, then let git-sync-deps verify them in Docker.
+        run: python3 scripts/infra/perf/benchmarks/checkout_skia_deps.py externals/skia
+
       - name: Build libSkiaSharp from source (Linux x64, Docker)
         if: runner.os == 'Linux' && env.NATIVE_BUILD == 'true'
         # Docker + cake, same pattern as build-site.yml's WASM build. Produces
