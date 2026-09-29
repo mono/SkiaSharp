@@ -830,6 +830,11 @@ function Get-ReleaseAuditState(
             -Kind 'review-sync' `
             -Message "Complete incoming milestone PR #$($IncomingPullRequest.Number) before $($PendingMilestone.Line) becomes the active main line: $($IncomingPullRequest.Title)." `
             -Command "gh pr view $($IncomingPullRequest.Number) --repo $ReleaseRepository --web"))
+    } elseif ($IncomingPullRequest -and $IncomingPullRequest.State -eq 'draft') {
+        $actions.Add((New-ReleaseAuditAction `
+            -Kind 'review-sync' `
+            -Message "Review draft Skia sync PR #$($IncomingPullRequest.Number) before it can be merged: $($IncomingPullRequest.Title)." `
+            -Command "gh pr view $($IncomingPullRequest.Number) --repo $ReleaseRepository --web"))
     } elseif (
         $PendingMilestone -and
         $UpstreamSync -and

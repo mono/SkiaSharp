@@ -82,6 +82,14 @@ Then group exact actions under:
 6. **Unavailable or inconsistent checks** — every exit `2`, provenance
    mismatch, ambiguous state, or unreachable service.
 
+Always name and link every `incomingPullRequest` in the line summary, including
+draft PRs with `BlocksRelease: false`. Draft means not ready to merge, not
+absent: identify the review needed and do not describe the sync branch as
+already merged merely because its upstream comparison says `current`. For
+cross-repository sync, check the corresponding open `mono/skia` PR on the same
+sync branch and link the native PR before the parent SkiaSharp PR. Distinguish
+PR review from a release-cut blocker and from a newer upstream commit.
+
 When a line has an already-cut branch plus newer maintenance/upstream work,
 state the sequence explicitly: publish the existing branch, land the sync,
 then rerun before cutting the following release.

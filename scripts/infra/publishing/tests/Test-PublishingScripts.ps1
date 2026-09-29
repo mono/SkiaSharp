@@ -1728,6 +1728,12 @@ $draftDoesNotBlock = Get-ReleaseAuditState `
     -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
     -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
     -Delta $realChanges -IncomingPullRequest $draftSyncPullRequest
+Assert-True (@($draftDoesNotBlock.Actions.Kind) -contains 'review-sync') `
+    'A draft incoming sync PR was omitted from the next actions.'
+Assert-True (
+    @($draftDoesNotBlock.Actions | Where-Object Kind -eq 'review-sync')[0].Message -match
+        "draft Skia sync PR #$($draftSyncPullRequest.Number)"
+) 'A draft incoming sync PR did not identify the PR to review.'
 Assert-True (@($draftDoesNotBlock.Actions.Kind) -contains 'start') `
     'A draft incoming sync PR incorrectly suppressed a release cut.'
 
