@@ -154,6 +154,33 @@ stages:
           additionalDotNetSdks:
             - $(DOTNET_VERSION_WINUI)
           additionalArgs: --buildarch=arm64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Validate Native ANGLE UWP|x86 (Win)
+        parameters:
+          name: native_uwp_angle_x86_windows
+          displayName: ANGLE UWP validation x86
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp-angle
+          enableCaching: false
+          shouldPublish: false
+          additionalArgs: --buildarch=x86
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Validate Native ANGLE UWP|x64 (Win)
+        parameters:
+          name: native_uwp_angle_x64_windows
+          displayName: ANGLE UWP validation x64
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp-angle
+          enableCaching: false
+          shouldPublish: false
+          additionalArgs: --buildarch=x64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Validate Native ANGLE UWP|arm64 (Win)
+        parameters:
+          name: native_uwp_angle_arm64_windows
+          displayName: ANGLE UWP validation arm64
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp-angle
+          enableCaching: false
+          shouldPublish: false
+          additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native NanoServer|x64 (Win)
         parameters:
           name: native_win32_x64_nanoserver_windows

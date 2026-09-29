@@ -55,7 +55,14 @@ class UpdateVersionsTests(unittest.TestCase):
                 f'"https://example.test/{TRACKED_SKIA_DEPENDENCIES[dependency_name]}@'
                 f'{"old-vma-sha" if dependency_name == "vulkanmemoryallocator" else dependency_name + "-sha"}",\n'
                 for dependency_name in TRACKED_SKIA_DEPENDENCIES
+                if dependency_name != "angle2"
             )
+            + "}\n"
+            + "deps_os = {\n"
+            + '  "win": {\n'
+            + '    "third_party/externals/angle2": '
+            + '"https://example.test/angle@angle2-sha",\n'
+            + "  },\n"
             + "}\n",
             encoding="utf-8",
         )
@@ -171,6 +178,20 @@ class UpdateVersionsTests(unittest.TestCase):
             registration
             for registration in manifest["registrations"]
             if registration.get("component", {}).get("other", {}).get("name") == name
+        )
+
+    def test_parses_os_specific_dependencies(self) -> None:
+        deps = parse_deps(
+            (self.root / "externals" / "skia" / "DEPS").read_text(encoding="utf-8")
+        )
+
+        self.assertEqual(
+            {
+                "path": "third_party/externals/angle2",
+                "url": "https://example.test/angle",
+                "revision": "angle2-sha",
+            },
+            deps["angle2"],
         )
 
     def test_updates_all_version_surfaces(self) -> None:

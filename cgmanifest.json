@@ -216,12 +216,12 @@
       }
     },
     {
-      "comment": "ANGLE (Windows-only, WinUI). Cloned separately from Skia — version from scripts/VERSIONS.txt",
+      "comment": "ANGLE (Windows-only). Checked out through Skia deps_os[\"win\"] for WinUI builds and UWP build validation.",
       "component": {
         "type": "git",
         "git": {
           "repositoryUrl": "https://github.com/google/angle.git",
-          "commitHash": "ea1cea778c4a2312ef1b963b29a62fe595dd4df8"
+          "commitHash": "4cb3bebdc3b96723bb501328afe50f4f5cbc1de3"
         }
       }
     },
@@ -230,9 +230,15 @@
         "type": "other",
         "other": {
           "name": "angle",
-          "version": "chromium/6275",
+          "version": "chromium/8074",
           "downloadUrl": "https://github.com/google/angle"
         }
+      },
+      "skia_dependency": {
+        "name": "angle2",
+        "revision": "4cb3bebdc3b96723bb501328afe50f4f5cbc1de3",
+        "version_reviewed_identity": "https://github.com/google/angle.git@4cb3bebdc3b96723bb501328afe50f4f5cbc1de3",
+        "version_source": "upstream branch chromium/8074 tip at 4cb3bebdc3b96723bb501328afe50f4f5cbc1de3"
       }
     },
     {
@@ -252,19 +258,41 @@
         "type": "other",
         "other": {
           "name": "astc-encoder",
-          "version": "573c475389bf",
+          "version": "2319d9c4d4af",
           "downloadUrl": "https://github.com/ARM-software/astc-encoder"
         }
       }
     },
     {
-      "comment": "ANGLE-only: meta-repo pinning vulkan-headers, spirv-tools, spirv-cross, etc. (Skia pulls these individually via DEPS)",
+      "comment": "ANGLE-only: meta-repo pinning vulkan-headers, spirv-tools, spirv-cross, etc. ANGLE also checks out its pinned Vulkan headers directly for GN builds.",
       "component": {
         "type": "other",
         "other": {
           "name": "angle-vulkan-deps",
-          "version": "3834da2004ec",
+          "version": "dbabb135ea05",
           "downloadUrl": "https://chromium.googlesource.com/vulkan-deps"
+        }
+      }
+    },
+    {
+      "comment": "ANGLE-only: SPIR-V headers used by ANGLE's shader toolchain",
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "SPIRV-Headers",
+          "version": "2b7475f6d664",
+          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Headers"
+        }
+      }
+    },
+    {
+      "comment": "ANGLE-only: SPIR-V tools used by ANGLE's shader toolchain",
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "SPIRV-Tools",
+          "version": "bfd26b275278",
+          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Tools"
         }
       }
     },
@@ -274,7 +302,7 @@
         "type": "git",
         "git": {
           "repositoryUrl": "https://github.com/mono/skia.git",
-          "commitHash": "cd9ab17d2dc927ec647b897d5e3e3b997dc9a05a"
+          "commitHash": "b1fdcf8ec18d16005af23cb66d49d4e262f55c4f"
         }
       }
     },

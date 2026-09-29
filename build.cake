@@ -19,7 +19,9 @@ foreach (var cake in GetFiles("native/*/build.cake"))
         .WithCriteria(!SKIP_BUILD)
         .Does(() => RunCake(localCake, "Default"));
 
-    externalsTask.IsDependentOn(task);
+    // Validation-only externals have explicit CI jobs and must not flow into package builds.
+    if (native != "uwp-angle")
+        externalsTask.IsDependentOn(task);
 }
 
 Task("externals-osx")
@@ -171,7 +173,7 @@ Task ("clean-externals")
 {
     CleanDirectories("externals/skia/out");
     CleanDirectories("externals/skia/xcodebuild");
-    CleanDirectories("externals/angle");
+    CleanDirectories("externals/skia/third_party/externals/angle2/out");
     CleanDirectories("output/native");
     CleanDirectories("native/*/*/bin");
     CleanDirectories("native/*/*/obj");

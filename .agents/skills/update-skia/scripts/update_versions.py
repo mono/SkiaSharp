@@ -39,6 +39,7 @@ TRACKED_SKIA_DEPENDENCIES = {
     "d3d12allocator": "D3D12MemoryAllocator",
     "vulkan-headers": "vulkan-headers",
     "piex": "piex",
+    "angle2": "angle",
 }
 
 
@@ -128,6 +129,10 @@ def parse_deps(content: str) -> dict[str, dict[str, str]]:
     tree = ast.parse(content)
     variables = _extract_deps_dict(tree, "vars", {})
     raw_deps = _extract_deps_dict(tree, "deps", variables)
+    raw_deps_os = _extract_deps_dict(tree, "deps_os", variables)
+    for os_deps in raw_deps_os.values():
+        if isinstance(os_deps, dict):
+            raw_deps.update(os_deps)
     result = {}
     for path, value in raw_deps.items():
         if isinstance(value, str):
