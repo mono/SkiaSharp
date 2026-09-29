@@ -3,7 +3,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
 var llvmHomeArg = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? "C:/Program Files/LLVM");
 DirectoryPath LLVM_HOME = string.IsNullOrEmpty(llvmHomeArg) || llvmHomeArg.ToLower() == "msvc" ? "" : llvmHomeArg;
-string VC_TOOLSET_VERSION = Argument("vcToolsetVersion", "14.2");
+string VC_TOOLSET_VERSION = Argument("vcToolsetVersion", "");
 // empty lets gn detect an installed SDK
 string WINDOWS_SDK_VERSION = Argument("windowsSdkVersion", "");
 
@@ -36,6 +36,7 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
+    var toolsetVersion = GetV143ToolsetVersion(VC_TOOLSET_VERSION);
     Build("Win32", "x86", "x86");
     Build("x64", "x64", "x64");
     Build("ARM64", "arm64", "ARM64");
@@ -45,11 +46,11 @@ Task("libSkiaSharp")
         if (Skip(arch)) return;
 
         var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
-        var win_vcvars_version = string.IsNullOrEmpty(VC_TOOLSET_VERSION) ? "" : $"win_vcvars_version='{VC_TOOLSET_VERSION}' ";
+        var win_vcvars_version = $"win_vcvars_version='{toolsetVersion}' ";
         var win_sdk_version = string.IsNullOrEmpty(WINDOWS_SDK_VERSION) ? "" : $"win_sdk_version='{WINDOWS_SDK_VERSION}' ";
         var vcVarsArchitecture = skiaArch == "x64" ? "amd64" : $"amd64_{skiaArch}";
         var d = CONFIGURATION.ToLower() == "release" ? "" : "d";
-        var spectreLibPath = GetSpectreLibPath(arch);
+        var spectreLibPath = GetSpectreLibPath(arch, toolsetVersion);
         var nativeOutDir = $"{VARIANT}/{arch}";
 
         GenerateGnBuild(nativeOutDir,
@@ -85,13 +86,13 @@ Task("libSkiaSharp")
             "SkiaSharp",
             vcVarsArchitecture,
             WINDOWS_SDK_VERSION,
-            VC_TOOLSET_VERSION);
+            toolsetVersion);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.dll"), outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.pdb"), outDir);
-        CheckWindowsDependencies($"{outDir}/libSkiaSharp.dll", excluded: VERIFY_EXCLUDED, delayLoaded: VERIFY_DELAY_LOADED);
+        CheckWindowsDependencies($"{outDir}/libSkiaSharp.dll", excluded: VERIFY_EXCLUDED, delayLoaded: VERIFY_DELAY_LOADED, vcToolsVersion: toolsetVersion);
     }
 });
 
@@ -99,6 +100,7 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
+    var toolsetVersion = GetV143ToolsetVersion(VC_TOOLSET_VERSION);
     Build("Win32", "x86");
     Build("x64", "x64");
     Build("ARM64", "arm64");
@@ -107,13 +109,14 @@ Task("libHarfBuzzSharp")
     {
         if (Skip(arch)) return;
 
-        RunMSBuild("libHarfBuzzSharp/libHarfBuzzSharp.slnx", platformTarget: arch);
+        RunMSBuild("libHarfBuzzSharp/libHarfBuzzSharp.slnx", platformTarget: arch,
+            properties: new Dictionary<string, string> { { "VCToolsVersion", toolsetVersion } });
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory($"libHarfBuzzSharp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.dll", outDir);
         CopyFileToDirectory($"libHarfBuzzSharp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.pdb", outDir);
-        CheckWindowsDependencies($"{outDir}/libHarfBuzzSharp.dll", excluded: VERIFY_EXCLUDED);
+        CheckWindowsDependencies($"{outDir}/libHarfBuzzSharp.dll", excluded: VERIFY_EXCLUDED, vcToolsVersion: toolsetVersion);
     }
 });
 

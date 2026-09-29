@@ -49,7 +49,7 @@ Task("git-sync-deps")
 // DEPENDENCY VERIFICATION
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CheckWindowsDependencies(FilePath dll, string[] excluded = null, string[] included = null, string[] delayLoaded = null)
+void CheckWindowsDependencies(FilePath dll, string[] excluded = null, string[] included = null, string[] delayLoaded = null, string vcToolsVersion = null)
 {
     excluded = excluded ?? new string[0];
     included = included ?? new string[0];
@@ -62,7 +62,9 @@ void CheckWindowsDependencies(FilePath dll, string[] excluded = null, string[] i
     if (delayLoaded.Length > 0)
         Information($"Making sure that these are delay-loaded (not hard deps): {string.Join(", ", delayLoaded)}");
 
-    var dumpbins = GetFiles($"{VS_INSTALL}/VC/Tools/MSVC/*/bin/Host*/*/dumpbin.exe");
+    var dumpbins = string.IsNullOrEmpty(vcToolsVersion)
+        ? GetFiles($"{VS_INSTALL}/VC/Tools/MSVC/*/bin/Host*/*/dumpbin.exe")
+        : GetFiles($"{VS_INSTALL}/VC/Tools/MSVC/{vcToolsVersion}/bin/Hostx64/x64/dumpbin.exe");
     if (dumpbins.Count == 0) {
         throw new Exception("Could not find dumpbin.exe, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
     }

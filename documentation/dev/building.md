@@ -54,7 +54,7 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 
 **Windows Dependencies:**
 - Windows 10/11
-- [Visual Studio 2022+](https://visualstudio.microsoft.com/vs/)
+- [Visual Studio 2022](https://visualstudio.microsoft.com/vs/)
    - .NET desktop development
    - .NET Multi-platform App UI development (MAUI)
    - Universal Windows Platform development
@@ -104,10 +104,10 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
  - [Managed-Only build dependencies](#dependencies)
  - [Python 3](https://www.python.org/downloads/)
     - Make sure the path to `python` is in the `PATH` environment variable
- - [Visual Studio 2022+](https://visualstudio.microsoft.com/vs/)
+ - [Visual Studio 2022](https://visualstudio.microsoft.com/vs/)
     - Desktop development with C++
        - Windows 10/11 SDK (latest)
-       - MSVC v143+ C++ build tools
+       - MSVC v143 C++ build tools and matching Spectre-mitigated libraries for x86, x64, and ARM64
     - Individual components
        - C++ compilers and libraries for ARM64
        - Android NDK (via Visual Studio Installer or [manually](https://developer.android.com/ndk/downloads))
@@ -157,6 +157,14 @@ dotnet cake --target=externals-windows --arch=x64
 # Linux (requires Docker)
 dotnet cake --target=externals-linux --arch=x64
 ```
+
+Windows native builds use the default installed VS 2022 v143 MSVC toolset from
+`VS_INSTALL` for GN, `vcvarsall`, Spectre libraries, and the HarfBuzz MSBuild
+project. To use a different installed v143 toolset, pass
+`--vcToolsetVersion=14.44.35207` (or a prefix such as `14.4`). The selected
+toolset must include the target architecture's tools and Spectre libraries.
+This changes the compiler, not the minimum supported Windows version; verify
+the built DLL imports and load them on Windows 10 1809 before shipping.
 
 > **Tip:** Native builds can take 10-30 minutes depending on your machine. Only build for platforms you need to test.
 
