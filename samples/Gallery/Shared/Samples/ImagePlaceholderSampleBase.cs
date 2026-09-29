@@ -24,6 +24,7 @@ public abstract class ImagePlaceholderSampleBase : CanvasSampleBase
 	protected virtual bool SupportsAlpha => false;
 	protected virtual IReadOnlyList<SampleControl> CodecControls => [];
 	protected virtual bool UpdateCodecControl(string id, object value) => false;
+	protected virtual bool UpdatePreviewControl(string id, object value) => false;
 
 	public override string Category => SampleManager.BitmapDecoding;
 	public override DateOnly? DateAdded => new DateOnly(2026, 9, 29);
@@ -76,7 +77,9 @@ public abstract class ImagePlaceholderSampleBase : CanvasSampleBase
 				backdrop = (int)value;
 				break;
 			default:
-				if (UpdateCodecControl(id, value))
+				if (UpdatePreviewControl(id, value))
+					DecodePreview();
+				else if (UpdateCodecControl(id, value))
 					GenerateHash();
 				break;
 		}

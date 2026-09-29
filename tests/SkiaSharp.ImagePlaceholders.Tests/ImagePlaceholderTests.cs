@@ -33,6 +33,26 @@ public class ImagePlaceholderTests
         Assert.Throws<ArgumentOutOfRangeException>(() => BlurHashCodec.Decode("00TI:j", 4, 0));
     }
 
+    [Fact]
+    public void BlurHashPunchChangesOnlyTheDecodedColorVariation()
+    {
+        var source = new byte[] { 80, 80, 80, 255, 160, 160, 160, 255 };
+        var hash = BlurHashCodec.Encode(source, 2, 1, 8, 2, 1);
+        var original = BlurHashCodec.Decode(hash, 2, 1);
+        Assert.Equal(original, BlurHashCodec.Decode(hash, 2, 1, 1f));
+
+        var flat = BlurHashCodec.Decode(hash, 2, 1, 0f);
+        Assert.Equal(flat.AsSpan(0, 4).ToArray(), flat.AsSpan(4, 4).ToArray());
+        var stronger = BlurHashCodec.Decode(hash, 2, 1, 2f);
+        Assert.True(Math.Abs(stronger[0] - stronger[4]) > Math.Abs(original[0] - original[4]));
+        using var bitmap = BlurHashCodec.DecodeBitmap(hash, 2, 1, 2f);
+        Assert.Equal(stronger[0], bitmap.GetPixel(0, 0).Red);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => BlurHashCodec.Decode(hash, 2, 1, -1f));
+        Assert.Throws<ArgumentOutOfRangeException>(() => BlurHashCodec.Decode(hash, 2, 1, float.NaN));
+        Assert.Throws<ArgumentOutOfRangeException>(() => BlurHashCodec.Decode(hash, 2, 1, float.PositiveInfinity));
+    }
+
     [Theory]
     [InlineData(1, 9)]
     [InlineData(9, 1)]

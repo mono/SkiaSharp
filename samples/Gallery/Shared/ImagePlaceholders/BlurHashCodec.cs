@@ -1,3 +1,26 @@
+// BlurHash format and reference implementation by Wolt Enterprises:
+// https://github.com/woltapp/blurhash
+// MIT License
+// Copyright (c) 2018 Wolt Enterprises
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 using System;
 using SkiaSharp;
 
@@ -99,10 +122,18 @@ public static class BlurHashCodec
     /// <param name="width">Exact output width, from 1 pixel within the 1 MP preview limit.</param>
     /// <param name="height">Exact output height, from 1 pixel within the 1 MP preview limit.</param>
     /// <returns>A bitmap to dispose after use.</returns>
-    public static SKBitmap DecodeBitmap(string hash, int width, int height)
+    public static SKBitmap DecodeBitmap(string hash, int width, int height) => DecodeBitmap(hash, width, height, 1f);
+
+    /// <summary>Decodes a BlurHash to a caller-owned RGBA8 bitmap with adjustable color variation.</summary>
+    /// <param name="hash">A standard base83 BlurHash.</param>
+    /// <param name="width">Exact output width, from 1 pixel within the 1 MP preview limit.</param>
+    /// <param name="height">Exact output height, from 1 pixel within the 1 MP preview limit.</param>
+    /// <param name="punch">Nonnegative, finite multiplier for AC color components; 1 preserves the original preview, 0 shows its average color.</param>
+    /// <returns>A bitmap to dispose after use.</returns>
+    public static SKBitmap DecodeBitmap(string hash, int width, int height, float punch)
     {
         PixelBuffers.ValidateDimensions(width, height, 1_000_000);
-        return PixelBuffers.ToBitmap(Decode(hash, width, height), width, height);
+        return PixelBuffers.ToBitmap(Decode(hash, width, height, punch), width, height);
     }
 
     /// <summary>Decodes a BlurHash to tightly packed, opaque RGBA8 bytes.</summary>
@@ -110,9 +141,19 @@ public static class BlurHashCodec
     /// <param name="width">Exact output width in pixels.</param>
     /// <param name="height">Exact output height in pixels.</param>
     /// <returns>Row-major RGBA8 bytes, with alpha equal to 255.</returns>
-    public static byte[] Decode(string hash, int width, int height)
+    public static byte[] Decode(string hash, int width, int height) => Decode(hash, width, height, 1f);
+
+    /// <summary>Decodes a BlurHash to tightly packed, opaque RGBA8 bytes with adjustable color variation.</summary>
+    /// <param name="hash">A standard base83 BlurHash.</param>
+    /// <param name="width">Exact output width in pixels.</param>
+    /// <param name="height">Exact output height in pixels.</param>
+    /// <param name="punch">Nonnegative, finite multiplier for AC color components; 1 preserves the original preview, 0 shows its average color.</param>
+    /// <returns>Row-major RGBA8 bytes, with alpha equal to 255.</returns>
+    public static byte[] Decode(string hash, int width, int height, float punch)
     {
         PixelBuffers.ValidateDimensions(width, height, 16_000_000);
+        if (!float.IsFinite(punch) || punch < 0)
+            throw new ArgumentOutOfRangeException(nameof(punch), "Punch must be finite and nonnegative.");
         ArgumentNullException.ThrowIfNull(hash);
         if (hash.Length < 6)
             throw new FormatException("BlurHash is too short.");
@@ -134,8 +175,8 @@ public static class BlurHashCodec
             var ac = Read(hash, 4 + 2 * i, 2);
             if (ac >= MaximumAcValue)
                 throw new FormatException("Invalid BlurHash AC value.");
-            factors[i] = (Unquantize(ac / (AcLevels * AcLevels), maximum),
-                Unquantize(ac / AcLevels % AcLevels, maximum), Unquantize(ac % AcLevels, maximum));
+            factors[i] = (Unquantize(ac / (AcLevels * AcLevels), maximum) * punch,
+                Unquantize(ac / AcLevels % AcLevels, maximum) * punch, Unquantize(ac % AcLevels, maximum) * punch);
         }
         var pixels = new byte[checked(width * height * 4)];
         var cosX = Cosines(width, nx);
