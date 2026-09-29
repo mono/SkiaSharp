@@ -26,7 +26,6 @@ Task("libSkiaSharp")
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_partition_alloc=false " +
-            $"skia_use_piex=true " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_freetype2=false " +
             $"skia_use_system_libjpeg_turbo=false " +
