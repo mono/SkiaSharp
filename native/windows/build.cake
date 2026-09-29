@@ -46,7 +46,8 @@ Task("libSkiaSharp")
         if (Skip(arch)) return;
 
         var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
-        var win_vcvars_version = $"win_vcvars_version='{toolsetVersion}' ";
+        var win_toolchain_version = $"win_toolchain_version='{toolsetVersion}' ";
+        var win_vcvars_version = $"win_vcvars_version='{toolsetVersion.Substring(0, 4)}' ";
         var win_sdk_version = string.IsNullOrEmpty(WINDOWS_SDK_VERSION) ? "" : $"win_sdk_version='{WINDOWS_SDK_VERSION}' ";
         var vcVarsArchitecture = skiaArch == "x64" ? "amd64" : $"amd64_{skiaArch}";
         var d = CONFIGURATION.ToLower() == "release" ? "" : "d";
@@ -74,6 +75,7 @@ Task("libSkiaSharp")
             $"skia_enable_fontmgr_win={USE_FONTMGR_WIN} ".ToLower () +
             $"skia_enable_graphite=true " +
             clang +
+            win_toolchain_version +
             win_vcvars_version +
             win_sdk_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
