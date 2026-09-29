@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using SkiaSharp;
 using SkiaSharpSample.Controls;
@@ -9,6 +8,17 @@ namespace SkiaSharpSample.Samples;
 public class GifPlayerSample : CanvasSampleBase
 {
 	public override bool IsAnimated => true;
+
+	protected override TimeSpan AnimationInterval
+	{
+		get
+		{
+			var duration = frames is { Length: > 0 } ? frames[currentFrame].Duration : 100;
+			if (duration <= 0)
+				duration = 100;
+			return TimeSpan.FromMilliseconds(Math.Max(10, duration / speed));
+		}
+	}
 
 	private int currentFrame;
 	private bool playing = true;
@@ -68,28 +78,12 @@ public class GifPlayerSample : CanvasSampleBase
 		await base.OnInit();
 	}
 
-	protected override async Task OnUpdate(CancellationToken token)
+	protected override bool OnUpdate(TimeSpan elapsed)
 	{
-		if (frames == null || frames.Length == 0)
-		{
-			await Task.Delay(100, token);
-			return;
-		}
-
-		var duration = frames[currentFrame].Duration;
-		if (duration <= 0)
-			duration = 100;
-
-		// Apply speed multiplier
-		var adjustedDuration = (int)Math.Max(10, duration / speed);
-		await Task.Delay(adjustedDuration, token);
-
-		if (playing)
-		{
-			currentFrame++;
-			if (currentFrame >= frames.Length)
-				currentFrame = 0;
-		}
+		if (!playing || frames is not { Length: > 0 })
+			return false;
+		currentFrame = (currentFrame + 1) % frames.Length;
+		return true;
 	}
 
 	protected override void OnDestroy()

@@ -1,6 +1,6 @@
 # SkiaSharp Gallery
 
-An interactive sample gallery showcasing SkiaSharp's 2D graphics capabilities, built with **Blazor WebAssembly**.
+An interactive sample gallery showcasing SkiaSharp's 2D graphics capabilities, with **Blazor WebAssembly** and **Uno Platform** hosts sharing the same samples.
 
 ![Home Page](screenshots/home.png)
 
@@ -15,7 +15,7 @@ Then open http://localhost:5002.
 
 ## Features
 
-- **21 interactive demos** covering gradients, transforms, shaders, text, paths, image filters, and more
+- Interactive demos covering gradients, transforms, shaders, text, paths, image filters, and more
 - **Live controls** — sliders, pickers, toggles, and composable effect groups
 - **CPU & GPU rendering** toggle (WebGL or software rasterizer)
 - **Dark mode** with full theme support
@@ -23,6 +23,9 @@ Then open http://localhost:5002.
 - **PDF generation** with embedded viewer
 - **SkSL shader playground** with 5 animated presets
 - **3D transforms** using native `SKMatrix44` 4×4 pipeline
+- **BlurHash and ThumbHash playgrounds** — choose a bundled image, tune the hash, copy it, and compare the preview and image beside a looping fade in both hosts
+
+The image-placeholder implementation lives in [`Shared/ImagePlaceholders/`](Shared/ImagePlaceholders/), with copy-out instructions and ownership/format notes in that folder's README. BlurHash uses standard base83 strings and produces opaque previews; ThumbHash bytes are presented as Base64 and can represent transparency. The transition holds each image for 2 seconds and fades for 1 second in each direction.
 
 ## Screenshots
 
@@ -34,9 +37,17 @@ Then open http://localhost:5002.
 |---|---|
 | ![Shader Playground](screenshots/shader-playground.png) | ![PDF Composer](screenshots/pdf-composer.png) |
 
+| BlurHash Playground | ThumbHash Playground |
+|---|---|
+| ![BlurHash preview, original image, and transition](screenshots/blurhash-playground.png) | ![ThumbHash transparency against a checkerboard](screenshots/thumbhash-playground.png) |
+
+| BlurHash Playground (Uno) | ThumbHash Playground (Uno) |
+|---|---|
+| ![Uno BlurHash preview and transition](screenshots/blurhash-playground-uno.png) | ![Uno ThumbHash transparency against a checkerboard](screenshots/thumbhash-playground-uno.png) |
+
 ## Samples
 
-### Canvas (19)
+### Canvas (21)
 
 | Sample | Category | Description |
 |--------|----------|-------------|
@@ -44,6 +55,7 @@ Then open http://localhost:5002.
 | 3D Transforms | General | Per-axis rotation, perspective projection, 4×4 matrix overlay |
 | Blend Modes | Shaders & Effects | All SkiaSharp blend modes with adjustable opacity |
 | Blur Image Filter | Image & Filters | Gaussian blur with independent sigma controls |
+| BlurHash Playground | Image Decoding | Generate and compare RGB BlurHash previews |
 | GIF Player | Image Decoding | Animated GIF playback with speed control |
 | Gradient | Shaders & Effects | Linear, radial, sweep, and conical gradients |
 | Image Decoder | Image Decoding | PNG, WebP, GIF decoding with metadata inspection |
@@ -56,6 +68,7 @@ Then open http://localhost:5002.
 | Shader Playground | Shaders & Effects | Live SkSL runtime effect editor with 5 presets |
 | Text Lab | Text & Typography | Font selection, alignment, size, and metric visualization |
 | Text on Path | Text & Typography | Text along circle, wave, and heart paths |
+| ThumbHash Playground | Image Decoding | Generate and compare alpha-aware ThumbHash previews |
 | Vector Art | Paths & Geometry | Complex Bézier artwork with color themes |
 | Vertex Mesh | General | Triangle meshes with wireframe overlay |
 | World Text | Text & Typography | Multi-script rendering with HarfBuzz shaping |

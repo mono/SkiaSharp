@@ -1,5 +1,4 @@
-using System.Diagnostics;
-using System.Threading;
+using System;
 using System.Threading.Tasks;
 using SkiaSharp;
 using SkiaSharp.Skottie;
@@ -11,8 +10,10 @@ public class LottiePlayerSample : CanvasSampleBase
 {
 	public override bool IsAnimated => true;
 
+	protected override TimeSpan AnimationInterval => TimeSpan.FromMilliseconds(25);
+
 	private Animation? _animation;
-	private readonly Stopwatch _watch = new Stopwatch();
+	private TimeSpan _position;
 	private bool _playing = true;
 	private float _speed = 1f;
 
@@ -42,10 +43,6 @@ public class LottiePlayerSample : CanvasSampleBase
 		{
 			case "playing":
 				_playing = (bool)value;
-				if (_playing && !_watch.IsRunning)
-					_watch.Start();
-				else if (!_playing)
-					_watch.Stop();
 				break;
 			case "speed":
 				_speed = (float)value;
@@ -59,27 +56,21 @@ public class LottiePlayerSample : CanvasSampleBase
 		if (_animation == null) return;
 
 		_animation.Seek(0, null);
-
-		_watch.Start();
+		_position = TimeSpan.Zero;
 
 		await base.OnInit();
 	}
 
-	protected override async Task OnUpdate(CancellationToken token)
+	protected override bool OnUpdate(TimeSpan elapsed)
 	{
-		if (_animation == null)
-			return;
-
-		await Task.Delay(25, token);
-
-		if (_playing)
-		{
-			var elapsed = TimeSpan.FromTicks((long)(_watch.Elapsed.Ticks * _speed));
-			_animation.SeekFrameTime(elapsed);
-
-			if (elapsed > _animation.Duration)
-				_watch.Restart();
-		}
+		if (!_playing || _animation == null)
+			return false;
+		var duration = _animation.Duration;
+		if (duration <= TimeSpan.Zero)
+			return false;
+		_position = TimeSpan.FromTicks((_position.Ticks + (long)(elapsed.Ticks * _speed)) % duration.Ticks);
+		_animation.SeekFrameTime(_position);
+		return true;
 	}
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)

@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using SkiaSharp;
 using SkiaSharpSample.Controls;
@@ -184,10 +183,12 @@ half4 main(float2 fragCoord) {
 		effect = null;
 	}
 
-	protected override async Task OnUpdate(CancellationToken token)
+	protected override bool OnUpdate(TimeSpan elapsed)
 	{
-		await Task.Delay(16, token);
-		time += 0.016f * speed;
+		if (speed <= 0 || effect == null)
+			return false;
+		time += (float)elapsed.TotalSeconds * speed;
+		return true;
 	}
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
