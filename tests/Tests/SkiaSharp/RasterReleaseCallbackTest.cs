@@ -29,6 +29,13 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public async Task FailedBitmapInstallationCallsReleaseOnce()
+		{
+			var reference = FailBitmapInstallation();
+			await AssertEx.EventuallyGC(reference);
+		}
+
+		[Fact]
 		public void SuccessfulRasterCreationsCallReleaseOnce()
 		{
 			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -144,6 +151,36 @@ namespace SkiaSharp.Tests
 					Assert.Equal(0, state.Calls);
 				}
 				return references;
+			}
+			finally
+			{
+				Marshal.FreeCoTaskMem(pixels);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static WeakReference FailBitmapInstallation()
+		{
+			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888, SKAlphaType.Premul);
+			var pixels = Marshal.AllocCoTaskMem(info.BytesSize);
+			try
+			{
+				var state = new ReleaseState();
+				var reference = new WeakReference(state);
+				using (var bitmap = new SKBitmap())
+				{
+					var installed = bitmap.InstallPixels(info, pixels, 1, (addr, context) =>
+					{
+						var releaseState = (ReleaseState)context;
+						releaseState.Address = addr;
+						releaseState.Calls++;
+					}, state);
+					Assert.False(installed);
+					Assert.Equal(1, state.Calls);
+				}
+				Assert.Equal(1, state.Calls);
+				Assert.Equal(pixels, state.Address);
+				return reference;
 			}
 			finally
 			{

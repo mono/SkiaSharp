@@ -214,6 +214,8 @@ namespace SkiaSharp
 			var proxy = del != null ? DelegateProxies.SKSurfaceRasterReleaseProxy : null;
 			var surface = GetObject (SkiaApi.sk_surface_new_raster_direct (&cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx, props?.Handle ?? IntPtr.Zero));
 			GC.KeepAlive (props);
+			// WrapPixels (src/image/SkSurface_Raster.cpp) rejects invalid raster
+			// inputs before adopting the callback.
 			if (surface == null && gch.IsAllocated)
 				gch.Free ();
 			return surface;

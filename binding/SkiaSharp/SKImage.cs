@@ -265,6 +265,8 @@ namespace SkiaSharp
 			var proxy = del is not null ? DelegateProxies.SKImageRasterReleaseProxy : null;
 			var image = GetObject (SkiaApi.sk_image_new_raster (pixmap.Handle, proxy, (void*)ctx));
 			GC.KeepAlive (pixmap);
+			// RasterFromPixmap (src/image/SkImage_RasterFactories.cpp) rejects
+			// invalid pixmaps before adopting the callback.
 			if (image == null && gch.IsAllocated)
 				gch.Free ();
 			return image;
@@ -601,6 +603,9 @@ namespace SkiaSharp
 			var del = releaseProc != null && releaseContext != null
 				? new SKImageTextureReleaseDelegate ((_) => releaseProc (releaseContext))
 				: releaseProc;
+			// BorrowTextureFrom creates a RefCntedCallback before validating the texture
+			// (src/gpu/ganesh/image/SkImage_GaneshFactories.cpp); it releases the handle
+			// even on failure, so freeing it again for a null image would double-free.
 			DelegateProxies.Create (del, out _, out var ctx);
 			var proxy = del is not null ? DelegateProxies.SKImageTextureReleaseProxy : null;
 			var image = GetObject (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType.ToNative (), alpha, cs, proxy, (void*)ctx));
