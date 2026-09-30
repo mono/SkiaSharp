@@ -1,15 +1,22 @@
 {
-  "theme": "Skia m154 preview",
-  "highlights_headline": "SkiaSharp 4.154.0 previews the Skia m154 engine update.",
-  "highlights_body": "Review the documented HarfBuzzSharp enum compatibility changes before upgrading code that uses combining-class or aggregate glyph flag members.",
+  "theme": "Skia m154 release candidate",
+  "highlights_headline": "SkiaSharp 4.154.0 previews Skia m154 and moves API documentation into compiler XML.",
+  "highlights_body": "HarfBuzzSharp bindings now follow the bundled native source; review the renamed combining-class member and removed aggregate glyph flag before upgrading.",
   "breaking": [
     {
-      "title": "UnicodeCombiningClass.CCC133 was renamed",
-      "body": "The misspelled CCC133 member is now CCC132, retaining the numeric value 132. Update source references to use CCC132."
+      "title": "UnicodeCombiningClass.CCC133 renamed to CCC132",
+      "body": "The HarfBuzz upstream spelling correction retains numeric value 132 but removes the compatibility alias. Replace references to CCC133 with CCC132.",
+      "prs": [5057]
     },
     {
-      "title": "GlyphFlags.Defined was removed",
-      "body": "The aggregate Defined mask is no longer exposed because it is not an independent option. Combine the concrete glyph flags required by your application instead."
+      "title": "GlyphFlags.Defined removed",
+      "body": "The aggregate Defined mask is no longer exposed because it is not an independent option. Combine the concrete glyph flags required by your application instead.",
+      "prs": [5057]
+    },
+    {
+      "title": "RAW and DNG decoding disabled",
+      "body": "The bundled codec no longer decodes RAW or DNG images. Decode these formats with a dedicated library and provide a supported raster image to SkiaSharp instead.",
+      "prs": [5190]
     }
   ],
   "categories": [
@@ -18,23 +25,58 @@
       "bullets": [
         {
           "lead": "Skia updated to milestone m154",
-          "detail": "Aligns the bundled renderer with Chrome milestone 154 for preview consumers.",
-          "prs": [
-            4945
-          ]
+          "detail": "The bundled renderer moves to Chrome milestone 154 and incorporates current buffer-upload and upstream bug-fix syncs.",
+          "prs": [4945, 5054, 5114]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Compiler XML API documentation",
+          "detail": "Package consumers receive compiler-generated XML documentation sidecars, with public API documentation authored alongside the C# declarations.",
+          "prs": [5053, 5064, 5066, 5078, 5080]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Bindings generated from bundled HarfBuzz",
+          "detail": "HarfBuzzSharp generation now uses the HarfBuzz revision pinned by Skia, keeping supported managed declarations synchronized with the bundled native library.",
+          "prs": [5056, 5057]
+        },
+        {
+          "lead": "View documentation supports Markdown remarks",
+          "detail": "API documentation remarks can now retain Markdown formatting in generated consumer documentation.",
+          "prs": [5091]
         }
       ]
     }
   ],
-  "contributor_summaries": {},
-  "preview_summaries": {
-    "v4.154.0-preview.1.26454.9": "Preview 1 opens the 4.154 line with the Skia m154 engine update and its documented compatibility changes."
+  "contributor_summaries": {
+    "azchohfi": "HarfBuzzSharp native build hardening"
   },
-  "harfbuzz_summary": null,
+  "preview_summaries": {
+    "v4.154.0-preview.1.26454.9": "Preview 1 opened the m154 release line.",
+    "v4.154.0-preview.2.26471.11": "Preview 2 added the m154 engine update, compiler XML documentation, and bundled-source HarfBuzzSharp generation.",
+    "v4.154.0-rc.1.26479.14": "Release Candidate 1 disables RAW and DNG image decoding and prepares the line for stable publication."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp bindings now generate from the DEPS-pinned native source. The update corrects the CCC132 member name and removes the aggregate GlyphFlags.Defined mask.",
   "release_summaries": {
     "v4.154.0-preview.1.26454.9": {
-      "headline": "SkiaSharp 4.154.0 Preview 1 introduces the Skia m154 engine update.",
-      "body": "The preview also includes documented compatibility changes for Unicode combining-class and aggregate glyph flag members."
+      "headline": "SkiaSharp 4.154.0 Preview 1 opens the next release line.",
+      "body": null
+    },
+    "v4.154.0-preview.2.26471.11": {
+      "headline": "SkiaSharp 4.154.0 Preview 2 adds the Skia m154 engine update and compiler XML documentation.",
+      "body": "HarfBuzzSharp bindings now follow the bundled native source."
+    },
+    "v4.154.0-rc.1.26479.14": {
+      "headline": "SkiaSharp 4.154.0 Release Candidate 1 prepares the m154 release for publication.",
+      "body": "RAW and DNG decoding are disabled in this candidate."
     }
   }
 }
