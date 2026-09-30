@@ -94,6 +94,8 @@ public static partial class ThumbHashCodec
     private static byte[] EncodeCore(ReadOnlySpan<byte> rgba, int width, int height, int stride,
         double[] l, double[] p, double[] q, double[] a, double[] basisX, double[] basisY)
     {
+        // Weight the mean by alpha so fully transparent RGB cannot tint the
+        // visible colors used to fill gaps in the low-frequency preview.
         var count = width * height;
         double averageR = 0, averageG = 0, averageB = 0, averageA = 0;
         for (var y = 0; y < height; y++)
@@ -114,12 +116,15 @@ public static partial class ThumbHashCodec
             averageG /= averageA;
             averageB /= averageA;
         }
-        // Blend transparent RGB toward the image's visible mean before the LPQ
-        // transform; encode alpha separately when any pixel is not fully opaque.
+
+        // Alpha-bearing hashes reserve coefficients for opacity, leaving fewer
+        // luminance terms; size the two axes in proportion to the source.
         var hasAlpha = averageA < count;
         var limit = hasAlpha ? AlphaLuminanceComponents : OpaqueLuminanceComponents;
         var lx = Math.Max(1, Round(limit * width / (double)Math.Max(width, height)));
         var ly = Math.Max(1, Round(limit * height / (double)Math.Max(width, height)));
+
+        // Cache the spatial cosine basis once for all color and alpha channels.
         for (var cx = 0; cx < OpaqueLuminanceComponents; cx++)
         {
             for (var x = 0; x < width; x++)
@@ -134,6 +139,10 @@ public static partial class ThumbHashCodec
                 basisY[cy * height + y] = Math.Cos(Math.PI / height * cy * (y + 0.5));
             }
         }
+
+        // Blend transparent RGB toward the visible mean, then decompose it
+        // into luminance (L), yellow-blue (P), and red-green (Q). Keep opacity
+        // (A) as its own transform channel.
         for (var y = 0; y < height; y++)
         {
             for (var x = 0; x < width; x++)
@@ -157,12 +166,14 @@ public static partial class ThumbHashCodec
         Span<double> pAc = stackalloc double[Count(ChromaComponents, ChromaComponents) - 1];
         Span<double> qAc = stackalloc double[Count(ChromaComponents, ChromaComponents) - 1];
         Span<double> aAc = hasAlpha ? stackalloc double[Count(AlphaComponents, AlphaComponents) - 1] : Span<double>.Empty;
+
         var luminance = EncodeChannel(l, width, height, Math.Max(ChromaComponents, lx), Math.Max(ChromaComponents, ly), basisX, basisY, lAc);
         var yellowBlue = EncodeChannel(p, width, height, ChromaComponents, ChromaComponents, basisX, basisY, pAc);
         var redGreen = EncodeChannel(q, width, height, ChromaComponents, ChromaComponents, basisX, basisY, qAc);
         var alphaChannel = hasAlpha
             ? EncodeChannel(a, width, height, AlphaComponents, AlphaComponents, basisX, basisY, aAc)
             : default;
+
         var landscape = width > height;
         // ThumbHash packs little-endian header fields as:
         // [L DC:6, P DC:6, Q DC:6, L scale:5, alpha flag:1],
@@ -177,6 +188,7 @@ public static partial class ThumbHashCodec
             (Round(MaximumSixBitValue * yellowBlue.Scale) << PScaleShift) |
             (Round(MaximumSixBitValue * redGreen.Scale) << QScaleShift) |
             (landscape ? 1 << LandscapeBit : 0);
+
         var nibbles = lAc.Length + pAc.Length + qAc.Length + aAc.Length;
         var start = hasAlpha ? AlphaHeaderBytes : OpaqueHeaderBytes;
         var result = new byte[start + (nibbles + 1) / NibblesPerByte];
@@ -188,6 +200,8 @@ public static partial class ThumbHashCodec
         if (hasAlpha)
             result[5] = (byte)(Round(MaximumNibbleValue * alphaChannel.Dc) |
                 Round(MaximumNibbleValue * alphaChannel.Scale) << BitsPerNibble);
+
+        // Append four-bit AC coefficients in L, P, Q, A order after the header.
         var nibble = 0;
         WriteAc(lAc, result, start, ref nibble);
         WriteAc(pAc, result, start, ref nibble);
@@ -233,6 +247,7 @@ public static partial class ThumbHashCodec
                 }
             }
         }
+
         if (scale > 0)
         {
             for (var i = 0; i < ac.Length; i++)

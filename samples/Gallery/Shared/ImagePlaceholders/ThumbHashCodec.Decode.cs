@@ -103,6 +103,9 @@ public static partial class ThumbHashCodec
         var decodedWidth = size.Width;
         var decodedHeight = size.Height;
         PixelBuffers.ValidateDestination(destination, decodedWidth, decodedHeight, stride, PixelBuffers.MaximumSourcePixels);
+
+        // Unpack the low-frequency channel averages and AC scales from the
+        // little-endian header; alpha coefficients exist only when flagged.
         var header24 = hash[0] | hash[1] << BitsPerByte | hash[2] << (2 * BitsPerByte);
         var header16 = hash[3] | hash[4] << BitsPerByte;
         var hasAlpha = (header24 & (1 << HasAlphaBit)) != 0;
@@ -119,18 +122,24 @@ public static partial class ThumbHashCodec
         var pScale = ((header16 >> PScaleShift) & MaximumSixBitValue) / (double)MaximumSixBitValue;
         var qScale = ((header16 >> QScaleShift) & MaximumSixBitValue) / (double)MaximumSixBitValue;
         var aScale = hasAlpha ? (hash[5] >> BitsPerNibble) / (double)MaximumNibbleValue : 0;
+
         var nibble = 0;
-        // GetDecodedSize validated the header, bounding these stack buffers to 27 luminance and 14 alpha ACs.
+        // GetDecodedSize already checked the payload length. Its component
+        // limits bound these stack buffers to 27 luminance and 14 alpha ACs.
         Span<double> l = stackalloc double[Count(lx, ly) - 1];
         Span<double> p = stackalloc double[Count(ChromaComponents, ChromaComponents) - 1];
         Span<double> q = stackalloc double[Count(ChromaComponents, ChromaComponents) - 1];
         Span<double> a = hasAlpha ? stackalloc double[Count(AlphaComponents, AlphaComponents) - 1] : Span<double>.Empty;
+
+        // Read the four-bit AC coefficients in L, P, Q, A channel order.
         ReadChannel(hash, start, l, lScale, ref nibble);
         ReadChannel(hash, start, p, pScale * ChromaDecodeScale, ref nibble);
         ReadChannel(hash, start, q, qScale * ChromaDecodeScale, ref nibble);
         if (hasAlpha)
             ReadChannel(hash, start, a, aScale, ref nibble);
 
+        // Cache the cosine basis for ordinary preview sizes. Larger outputs
+        // compute it on demand instead of renting unbounded scratch space.
         var countX = Math.Max(lx, hasAlpha ? AlphaComponents : ChromaComponents);
         var countY = Math.Max(ly, hasAlpha ? AlphaComponents : ChromaComponents);
         var cosX = (long)decodedWidth * countX <= MaximumCachedCosines
@@ -153,6 +162,9 @@ public static partial class ThumbHashCodec
                     cosY[cy * decodedHeight + y] = Math.Cos(Math.PI * cy * (y + 0.5) / decodedHeight);
                 }
             }
+
+            // Invert the triangular cosine transform, then convert LPQ back
+            // to RGB while keeping the separately reconstructed alpha.
             for (var y = 0; y < decodedHeight; y++)
             {
                 for (var x = 0; x < decodedWidth; x++)
@@ -164,6 +176,7 @@ public static partial class ThumbHashCodec
                     var blue = luminance - 2.0 / 3 * yellowBlue;
                     var red = (3 * luminance - blue + redGreen) / 2;
                     var green = red - redGreen;
+
                     var i = y * stride + PixelBuffers.RgbaBytesPerPixel * x;
                     destination[i] = ToByte(red);
                     destination[i + 1] = ToByte(green);
@@ -189,6 +202,9 @@ public static partial class ThumbHashCodec
         PixelBuffers.ValidateDimensions(maxWidth, maxHeight, PixelBuffers.MaximumSourcePixels);
         if (hash.Length < OpaqueHeaderBytes)
             throw new FormatException("ThumbHash is too short.");
+
+        // The short-axis count is stored in the header; together with the
+        // alpha flag it fixes the expected number of packed coefficients.
         var header24 = hash[0] | hash[1] << BitsPerByte | hash[2] << (2 * BitsPerByte);
         var header16 = hash[3] | hash[4] << BitsPerByte;
         var hasAlpha = (header24 & (1 << HasAlphaBit)) != 0;
@@ -204,6 +220,8 @@ public static partial class ThumbHashCodec
         if (hash.Length != start + (nibbleCount + 1) / NibblesPerByte ||
             (nibbleCount % NibblesPerByte == 1 && (hash[^1] & (MaximumNibbleValue << BitsPerNibble)) != 0))
             throw new FormatException("Invalid ThumbHash byte length or padding.");
+
+        // Decode the approximate aspect ratio and fit it within both limits.
         var ratio = landscape
             ? (hasAlpha ? AlphaLuminanceComponents : OpaqueLuminanceComponents) / (double)shortAxis
             : shortAxis / (double)(hasAlpha ? AlphaLuminanceComponents : OpaqueLuminanceComponents);

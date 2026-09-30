@@ -80,8 +80,8 @@ public static partial class BlurHashCodec
         var cosY = Cosines(height, componentsY);
         try
         {
-            // The DC term is the average linear color; each AC term uses twice the
-            // cosine-basis average. Precompute the spatial basis for both axes.
+            // Project linear RGB onto the 2D cosine basis. DC is the image
+            // average; the remaining (AC) factors use twice the basis average.
             for (var cy = 0; cy < componentsY; cy++)
             {
                 for (var cx = 0; cx < componentsX; cx++)
@@ -105,6 +105,7 @@ public static partial class BlurHashCodec
                 }
             }
 
+            // The largest AC magnitude determines the shared quantization scale.
             Span<char> result = stackalloc char[EncodedLengthWithoutFirstFactor + AcDigits * factors.Length];
             Write((componentsX - 1) + MaximumComponents * (componentsY - 1), result, 0, 1);
             double maximum = 0;
@@ -112,12 +113,14 @@ public static partial class BlurHashCodec
             {
                 maximum = Math.Max(maximum, Math.Max(Math.Abs(factors[i].R), Math.Max(Math.Abs(factors[i].G), Math.Abs(factors[i].B))));
             }
+
             // The base83 header stores component counts, the maximum AC magnitude,
             // 24-bit sRGB DC color, then two digits for each signed AC triplet.
             var quantized = factors.Length == 1 ? 0 : Math.Clamp((int)Math.Floor(maximum * AcScale - 0.5), 0, Base83Radix - 1);
             Write(quantized, result, 1, 1);
             var dc = factors[0];
             Write((ToSrgb(dc.R) << 16) | (ToSrgb(dc.G) << 8) | ToSrgb(dc.B), result, 2, DcDigits);
+
             var maxValue = (quantized + 1) / (double)AcScale;
             for (var i = 1; i < factors.Length; i++)
             {
@@ -126,6 +129,7 @@ public static partial class BlurHashCodec
                     Quantize(ac.G, maxValue) * AcLevels + Quantize(ac.B, maxValue), result,
                     AcStart + (i - 1) * AcDigits, AcDigits);
             }
+
             return new string(result);
         }
         finally

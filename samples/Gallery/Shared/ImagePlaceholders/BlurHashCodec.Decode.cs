@@ -102,6 +102,9 @@ public static partial class BlurHashCodec
         PixelBuffers.ValidateDestination(destination, width, height, stride, PixelBuffers.MaximumSourcePixels);
         if (!float.IsFinite(punch) || punch < 0)
             throw new ArgumentOutOfRangeException(nameof(punch), "Punch must be finite and nonnegative.");
+
+        // The first base83 digit encodes both component counts; the payload
+        // length must match the corresponding number of cosine factors.
         if (hash.Length < AcStart)
             throw new FormatException("BlurHash is too short.");
         var size = Read(hash, 0, 1);
@@ -111,6 +114,9 @@ public static partial class BlurHashCodec
             throw new FormatException("Invalid BlurHash component header.");
         if (hash.Length != EncodedLengthWithoutFirstFactor + AcDigits * nx * ny)
             throw new FormatException("BlurHash has an incorrect number of components.");
+
+        // DC is stored as sRGB; AC coefficients are signed, quantized linear
+        // colors scaled by the shared maximum and the caller's punch.
         var maximum = (Read(hash, 1, 1) + 1) / (double)AcScale;
         var dc = Read(hash, 2, DcDigits);
         if (dc > MaximumDcValue)
@@ -125,10 +131,13 @@ public static partial class BlurHashCodec
             factors[i] = (Unquantize(ac / (AcLevels * AcLevels), maximum) * punch,
                 Unquantize(ac / AcLevels % AcLevels, maximum) * punch, Unquantize(ac % AcLevels, maximum) * punch);
         }
+
         var cosX = Cosines(width, nx);
         var cosY = Cosines(height, ny);
         try
         {
+            // Reconstruct linear RGB from the factors at each pixel, then
+            // convert to opaque sRGB bytes in the caller's row layout.
             for (var y = 0; y < height; y++)
             {
                 for (var x = 0; x < width; x++)
@@ -147,6 +156,7 @@ public static partial class BlurHashCodec
                             b += basis * factor.B;
                         }
                     }
+
                     var index = y * stride + x * PixelBuffers.RgbaBytesPerPixel;
                     destination[index] = (byte)ToSrgb(r);
                     destination[index + 1] = (byte)ToSrgb(g);
