@@ -79,13 +79,11 @@ namespace HarfBuzzSharp
 		/// <remarks />
 		public override string ToString ()
 		{
+			byte* buffer = stackalloc byte[MaxFeatureStringSize];
 			fixed (Feature* f = &this) {
-				var buffer = Marshal.AllocHGlobal (MaxFeatureStringSize);
-				HarfBuzzApi.hb_feature_to_string (f, (void*)buffer, MaxFeatureStringSize);
-				var str = Marshal.PtrToStringAnsi (buffer);
-				Marshal.FreeHGlobal (buffer);
-				return str;
+				HarfBuzzApi.hb_feature_to_string (f, buffer, MaxFeatureStringSize);
 			}
+			return Marshal.PtrToStringAnsi ((IntPtr)buffer);
 		}
 
 		/// <summary>Tries to parse the feature string.</summary>
