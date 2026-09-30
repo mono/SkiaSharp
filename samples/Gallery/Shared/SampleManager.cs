@@ -81,6 +81,7 @@ public static class SampleManager
 		["Hero Image"]            = ("bi-image",               "\uf39b"),
 		["Image Decoder"]         = ("bi-file-image",          "\uf39b"),
 		["BlurHash Playground"]    = ("bi-image",               "\uf39b"),
+		["ThumbHash Playground"]   = ("bi-image",               "\uf39b"),
 		["Lottie Player"]         = ("bi-play-circle",         "\uf4f3"),
 		["Nine-Patch Scaler"]     = ("bi-grid-3x3",            "\uf3fa"),
 		["Path Builder"]          = ("bi-pentagon",            "\uf4ce"),
