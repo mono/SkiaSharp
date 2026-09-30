@@ -52,8 +52,7 @@ Task("libSkiaSharp")
            $"ncli='{TIZEN_STUDIO_HOME}' " +
            $"ncli_version='10.0' " +
            $"ncli_gcc_version='14.2.0' " +
-           $"ncli_gcc_version_short='14.2' " +
-           $"ncli_use_gcc=true");
+           $"ncli_gcc_version_short='14.2'");
 
         SetProjectProfile("libSkiaSharp", profile);
 
