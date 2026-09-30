@@ -1,6 +1,6 @@
 # SkiaSharp Gallery
 
-An interactive sample gallery showcasing SkiaSharp's 2D graphics capabilities, built with **Blazor WebAssembly**.
+An interactive sample gallery showcasing SkiaSharp's 2D graphics capabilities, with **Blazor WebAssembly** and **Uno Platform** hosts sharing the same samples.
 
 ![Home Page](screenshots/home.png)
 
@@ -15,7 +15,7 @@ Then open http://localhost:5002.
 
 ## Features
 
-- **21 interactive demos** covering gradients, transforms, shaders, text, paths, image filters, and more
+- **22 interactive demos** covering gradients, transforms, shaders, text, paths, image filters, and more
 - **Live controls** — sliders, pickers, toggles, and composable effect groups
 - **CPU & GPU rendering** toggle (WebGL or software rasterizer)
 - **Dark mode** with full theme support
@@ -23,6 +23,9 @@ Then open http://localhost:5002.
 - **PDF generation** with embedded viewer
 - **SkSL shader playground** with 5 animated presets
 - **3D transforms** using native `SKMatrix44` 4×4 pipeline
+- **BlurHash playground** — choose a bundled image, tune and copy its base83 hash, and compare the preview and image beside a looping fade in both hosts
+
+The copyable BlurHash implementation lives in [`Shared/ImagePlaceholders/`](Shared/ImagePlaceholders/); its README describes ownership, the wire format, and direct pixel input. The Gallery-only transition holds each image for 2 seconds and fades for 1 second in each direction.
 
 ## Screenshots
 
@@ -36,7 +39,7 @@ Then open http://localhost:5002.
 
 ## Samples
 
-### Canvas (19)
+### Canvas (20)
 
 | Sample | Category | Description |
 |--------|----------|-------------|
@@ -44,6 +47,7 @@ Then open http://localhost:5002.
 | 3D Transforms | General | Per-axis rotation, perspective projection, 4×4 matrix overlay |
 | Blend Modes | Shaders & Effects | All SkiaSharp blend modes with adjustable opacity |
 | Blur Image Filter | Image & Filters | Gaussian blur with independent sigma controls |
+| BlurHash Playground | Image Decoding | Generate and compare RGB BlurHash previews |
 | GIF Player | Image Decoding | Animated GIF playback with speed control |
 | Gradient | Shaders & Effects | Linear, radial, sweep, and conical gradients |
 | Image Decoder | Image Decoding | PNG, WebP, GIF decoding with metadata inspection |

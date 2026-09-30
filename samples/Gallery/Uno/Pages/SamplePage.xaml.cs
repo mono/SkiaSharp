@@ -39,6 +39,7 @@ public sealed partial class SamplePage : Page
         ControlPanel.SetControls(sample.Controls);
 
         currentSample = sample;
+        sample.ControlsChanged += OnSampleControlsChanged;
         if (sample is CanvasSampleBase canvasSample)
         {
             currentCanvasSample = canvasSample;
@@ -46,6 +47,8 @@ public sealed partial class SamplePage : Page
         }
 
         await sample.InitAsync();
+        if (!ReferenceEquals(currentSample, sample))
+            return;
 
         if (sample is DocumentSampleBase docSample)
         {
@@ -73,8 +76,24 @@ public sealed partial class SamplePage : Page
             currentCanvasSample.RefreshRequested -= OnSampleRefreshRequested;
             currentCanvasSample = null;
         }
-        currentSample?.Destroy();
+        if (currentSample is not null)
+        {
+            currentSample.ControlsChanged -= OnSampleControlsChanged;
+            currentSample.Destroy();
+        }
         currentSample = null;
+    }
+
+    private void OnSampleControlsChanged(object? sender, System.EventArgs e)
+    {
+        if (this.DispatcherQueue is { } dq)
+            dq.TryEnqueue(() =>
+            {
+                if (currentSample is { } active && ReferenceEquals(sender, active))
+                    ControlPanel.UpdateControls(active.Controls);
+            });
+        else if (currentSample is { } active && ReferenceEquals(sender, active))
+            ControlPanel.UpdateControls(active.Controls);
     }
 
     private void OnSampleRefreshRequested(object? sender, System.EventArgs e)
