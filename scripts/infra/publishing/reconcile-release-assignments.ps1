@@ -414,8 +414,9 @@ function Get-LinkedIssues([string] $Repository, [int] $PullRequest) {
         $null = $numbers.Add($number)
     }
     $pull = Get-GitHubPullRequest -Repository $Repository -Number $PullRequest
+    $visibleBody = [regex]::Replace([string] $pull.body, '(?s)<!--.*?(?:-->|$)', '')
     $pattern = '(?i)(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s*:?\s+#(?<number>\d+)'
-    foreach ($match in [regex]::Matches([string] $pull.body, $pattern)) {
+    foreach ($match in [regex]::Matches($visibleBody, $pattern)) {
         $null = $numbers.Add([int] $match.Groups['number'].Value)
     }
     return @($numbers | Sort-Object)
