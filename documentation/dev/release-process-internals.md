@@ -22,7 +22,9 @@ GitHub Actions: Release - Prepare
        +-> dnceng skiasharp-tests
              -> consumes the exact skiasharp-package pipeline resource
 
-BAR feed -> optional release-testing -> protected internal publication -> NuGet.org
+BAR feed -> optional release-testing -> chat-requested MAUI release pipeline
+  -> package/audit preparation -> human ManualValidation
+  -> protected NuGet.org publication and verification
 
 NuGet.org -> GitHub Actions: Release - Finish
   -> exact tag and GitHub Release
@@ -35,8 +37,10 @@ Git tag -> GitHub Actions: Release - Milestones
 ```
 
 The repository automates every boundary that can be derived from source,
-package, or GitHub state. The final promotion from the approved Maestro BAR to
-NuGet.org remains a protected team-owned operation.
+package, or GitHub state. Chat can queue the official MAUI release pipeline
+for a selected SkiaSharp BAR, but only an authorized human can approve its
+protected NuGet.org publication. The separate Finish workflow requires
+another confirmation after the exact package set is public.
 
 ## Sources of truth
 
@@ -255,14 +259,24 @@ here because platform targets change more often than the release architecture.
 
 Default-channel promotion and final public publication are separate actions.
 The package pipeline registers and promotes the BAR through Arcade/Maestro.
-After any optional release-testing is complete, a protected internal operation
-publishes the selected BAR's shipping assets to NuGet.org.
+On a maintainer's explicit request, `release-publish` checks the matching
+Build/Tests/BAR and queues `dotnet-maui-release` (dnceng/internal definition
+1445) at the current tip of merged MAUI `main`. It records and verifies the
+resolved MAUI pipeline-code SHA after dispatch and passes the **SkiaSharp**
+BAR/source SHA as the `commitHash` template parameter; those are different
+commits. The MAUI job resolves the SkiaSharp commit
+against BAR, stages the shipping assets, and emits `NuGetReleaseAudit`.
+It requires `ManualValidation` before its protected `1ES.PublishNuget` job
+and NuGet.org service connection can run.
 
-The repository currently does not define the Maestro UI location, button,
-fields, permissions, or approval sequence for that final action. The operator
-guide carries an explicit placeholder until the team-owned procedure is
-settled. Automation after this boundary treats the public package as the
-authority and cannot run early.
+This is an on-demand chat dispatch, **not** a pipeline-completion trigger
+from `skiasharp-tests`. The pipeline owns production credentials and the
+human approval gate; the chat dispatcher only needs permission to read and
+queue builds. Verify the audit, package ownership and quota before approval.
+Afterward, independently check every exact shipping package on NuGet.org
+before planning Finish. A failure or partial publish does not authorize an
+automatic retry or a Finish run. The operator inputs and commands are in
+[Release Guide](releasing.md#4-publish-the-bar-to-nugetorg).
 
 ## Release finalization
 
@@ -355,7 +369,8 @@ wraps two scripts.
 - discovers all matching preview, RC, stable, and hotfix branches;
 - uses exact shipped tags as immutable range boundaries;
 - extracts merged PR numbers from first-parent history;
-- includes issues linked by GitHub closing references or closing keywords; and
+- includes issues linked by GitHub closing references or closing keywords outside
+  PR-body HTML comments; and
 - assigns shipped PRs and issues to the milestone where they first shipped.
 
 Unshipped intermediate branches roll forward to the next shipped boundary.

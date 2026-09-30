@@ -56,7 +56,7 @@ namespace SkiaSharp.Views.UWP
 		/// <summary>Called when a frame should be rendered.</summary>
 		/// <param name="rect">The rectangle defining the render area dimensions.</param>
 		/// <remarks>This method creates the SkiaSharp context and surface, then invokes <see cref="M:SkiaSharp.Views.Windows.SKSwapChainPanel.OnPaintSurface(SkiaSharp.Views.Windows.SKPaintGLSurfaceEventArgs)" /> to perform the actual drawing.</remarks>
-		protected override void OnRenderFrame(Rect rect)
+		protected override unsafe void OnRenderFrame(Rect rect)
 		{
 			// clear everything
 			Gles.glClear(Gles.GL_COLOR_BUFFER_BIT | Gles.GL_DEPTH_BUFFER_BIT | Gles.GL_STENCIL_BUFFER_BIT);
@@ -78,9 +78,10 @@ namespace SkiaSharp.Views.UWP
 				lastSize = newSize;
 
 				// read the info from the buffer
-				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
-				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
-				Gles.glGetIntegerv(Gles.GL_SAMPLES, out var samples);
+				int framebuffer, stencil, samples;
+				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, &framebuffer);
+				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, &stencil);
+				Gles.glGetIntegerv(Gles.GL_SAMPLES, &samples);
 				var maxSamples = context.GetMaxSurfaceSampleCount(colorType);
 				if (samples > maxSamples)
 					samples = maxSamples;

@@ -301,6 +301,66 @@ function Invoke-GitHubMutation([string[]] $Arguments, [string] $Description, [sw
     return Invoke-GitHubJsonWithRetry -Arguments $Arguments
 }
 
+# Creates one GitHub milestone and verifies the resulting repository state.
+function New-GitHubMilestone(
+    [string] $Repository,
+    [string] $Title,
+    [string] $Description = '',
+    [string] $DueOn = '',
+    [switch] $Push
+) {
+    $arguments = @(
+        'api',
+        "repos/$Repository/milestones",
+        '-X',
+        'POST',
+        '-f',
+        "title=$Title"
+    )
+    if ($DueOn) {
+        $arguments += @('-f', "due_on=$DueOn")
+    }
+    if ($Description) {
+        $arguments += @('-f', "description=$Description")
+    }
+
+    $action = "Create milestone $Title"
+    $created = $null
+    $creationFailure = $null
+    try {
+        $created = Invoke-GitHubMutation `
+            -Arguments $arguments `
+            -Description $action `
+            -Push:$Push
+    } catch {
+        if (!$Push -or $_.Exception.Message -notmatch 'HTTP 422') {
+            throw
+        }
+        $creationFailure = $_
+    }
+    if (!$Push) {
+        return $null
+    }
+
+    $current = Get-GitHubMilestoneMap -Repository $Repository
+    if (!$current.ContainsKey($Title)) {
+        if ($creationFailure) {
+            throw $creationFailure
+        }
+        throw "Milestone $Title creation could not be verified."
+    }
+    $actual = $current[$Title]
+    if ($created -and [int] $actual.number -ne [int] $created.number) {
+        throw "Milestone $Title changed during creation."
+    }
+    if ($creationFailure) {
+        Write-ReleaseStatus ready "Milestone $Title was created concurrently and verified."
+    } else {
+        Write-ReleaseStatus applied "$action verified."
+    }
+    return $actual
+}
+
 # Creates one immutable release tag, or reports the skipped command.
 function Push-ReleaseTag(
     [string] $Root,
@@ -594,6 +654,7 @@ Export-ModuleMember -Function @(
     'Resolve-NuGetPackageVersion',
     'Get-NuGetPackageSource',
     'Invoke-GitHubMutation',
+    'New-GitHubMilestone',
     'Push-ReleaseTag',
     'Get-ReleaseShipmentContract',
     'Add-PlannedReleaseShipmentTag',

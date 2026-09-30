@@ -40,16 +40,16 @@ parameters:
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: macos-15
+        name: AcesShared
+        demands: ImageOverride -equals ACES_VM_SharedPool_Sequoia
         os: macos
   - name: buildAgentMacNative
     displayName: 'The macOS build agent configuration for building the native assets:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: macos-15
+        name: AcesShared
+        demands: ImageOverride -equals ACES_VM_SharedPool_Sequoia
         os: macos
   - name: buildAgentLinux
     displayName: 'The Linux build agent configuration:'

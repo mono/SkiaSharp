@@ -396,8 +396,11 @@ Custom slash commands are available for specialized workflows. Use these for com
 
 Repository release branches are normally created with the **Release - Prepare**
 GitHub workflow, which runs `scripts/infra/publishing/prepare-release.ps1`. The
-release skills remain available for publication, milestone maintenance, and
-pre-publication BAR/CI package approval testing. See
+`release-publish` skill queues the protected MAUI package pipeline on an
+explicit "push the packages" request, then uses the **Release - Finish**
+workflow after public-package verification and separate confirmation. Local
+scripts are fallback tools. Other release skills cover milestone maintenance
+and optional pre-publication BAR/CI package testing. See
 [`documentation/dev/releasing.md`](documentation/dev/releasing.md).
 
 ### When to Use Commands
@@ -415,7 +418,7 @@ pre-publication BAR/CI package approval testing. See
 | Write XML docs | `/api-docs` | "document", "fill in missing docs" |
 | Security check | `/security-audit` | "audit CVEs", "security overview" (read-only) |
 | Prepare release branches | `/release-branch` | "release now", "start release X" |
-| Finalize release | `/release-publish` | "finish release", "tag release" |
+| Publish packages or finish release | `/release-publish` | "push the packages", "publish BAR", "finish release", "tag release" |
 | Maintain release milestones | `/release-milestones` | "reconcile milestones", "advance milestone schedule" |
 | Approve release CI/BAR packages | `/release-testing` | "approve release packages", "validate BAR packages" |
 | Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |

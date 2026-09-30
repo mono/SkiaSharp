@@ -268,14 +268,19 @@ function Get-MilestoneClosureOperations(
 # Creates or updates one milestone and verifies all managed fields.
 function Sync-GitHubMilestone([string] $Repository, [object] $Operation) {
     if ($Operation.Action -eq 'create') {
-        $arguments = @(
-            'api', "repos/$Repository/milestones",
-            '-X', 'POST',
-            '-f', "title=$($Operation.Title)",
-            '-f', "due_on=$($Operation.DueOn)",
-            '-f', "description=$($Operation.Description)"
-        )
-        $description = "Create milestone $($Operation.Title)"
+        $actual = New-GitHubMilestone `
+            -Repository $Repository `
+            -Title $Operation.Title `
+            -DueOn $Operation.DueOn `
+            -Description $Operation.Description `
+            -Push:$Push
+        if ($writeRemote -and (
+            (ConvertTo-IsoDate -Value $actual.due_on) -ne $Operation.DueOn.Substring(0, 10) -or
+            [string] $actual.description -ne $Operation.Description
+        )) {
+            throw "Milestone $($Operation.Title) synchronization could not be verified."
+        }
+        return
     } elseif ($Operation.Action -eq 'update') {
         $arguments = @(
             'api', "repos/$Repository/milestones/$($Operation.Number)",
