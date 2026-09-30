@@ -6,23 +6,24 @@ Copy **all `.cs` files in this directory** into a project referencing SkiaSharp;
 using SkiaSharpSample.ImagePlaceholders;
 
 using var bitmap = SKBitmap.Decode("picture.png");
-string blurHash = BlurHashCodec.Encode(bitmap, componentsX: 4, componentsY: 3);
+string blurHash = BlurHashCodec.Encode(bitmap); // 4 horizontal x 3 vertical components
 using var blurPreview = BlurHashCodec.DecodeBitmap(blurHash, width: 64, height: 64);
+using var vividPreview = BlurHashCodec.DecodeBitmap(blurHash, width: 64, height: 64, punch: 1.5f);
 canvas.DrawBitmap(blurPreview, rectangle);
 
 byte[] thumbHash = ThumbHashCodec.Encode(bitmap);
 string storedHash = Convert.ToBase64String(thumbHash);
-using var thumbPreview = ThumbHashCodec.DecodeBitmap(Convert.FromBase64String(storedHash));
+using var thumbPreview = ThumbHashCodec.DecodeBitmap(Convert.FromBase64String(storedHash), maxWidth: 64, maxHeight: 64);
 canvas.DrawBitmap(thumbPreview, rectangle);
 
 // For repeated previews, write directly into a caller-owned RGBA8888 pixmap:
 using var pixels = new SKBitmap(new SKImageInfo(64, 64, SKColorType.Rgba8888, SKAlphaType.Unpremul));
 using var destination = pixels.PeekPixels();
-BlurHashCodec.DecodeInto(blurHash, destination, punch: 1f);
+BlurHashCodec.DecodeInto(blurHash, destination);
 pixels.NotifyPixelsChanged();
 ```
 
-`BlurHashCodec` produces standard base83 RGB BlurHash, with 1–9 X/Y components (default 4×3). Decode-time `punch` scales its color-variation terms: 1 is unchanged, 0 is a flat average, and higher values increase contrast without changing the hash. The Gallery offers a 0–2 slider. Transparent source pixels are **composited over white** because BlurHash has no alpha channel. `ThumbHashCodec` produces standard **binary bytes**; the Gallery uses Base64 only for text display/storage. ThumbHash retains approximate transparency and aspect ratio; its decode width/height are *maximum bounds*, not exact dimensions. A hash is only a placeholder: it does not contain the original image or a URL.
+`BlurHashCodec` produces standard base83 RGB BlurHash, with 1–9 X/Y components. Encoding defaults to 4×3 (`DefaultComponentsX` and `DefaultComponentsY`). Decode-time `punch` defaults to 1 (`DefaultPunch`) and scales its color-variation terms: 1 is unchanged, 0 is a flat average, and higher values increase contrast without changing the hash. The Gallery offers a 0–2 slider. **Every bitmap/image/array decode requires explicit width and height**; there is no implicit 64×64 preview size. Transparent source pixels are **composited over white** because BlurHash has no alpha channel. `ThumbHashCodec` produces standard **binary bytes**; the Gallery uses Base64 only for text display/storage. ThumbHash retains approximate transparency and aspect ratio; its required decode width/height are *maximum bounds*, not exact dimensions. A hash is only a placeholder: it does not contain the original image or a URL.
 
 Each codec can encode from a caller-owned `SKBitmap`, `SKImage`, or `SKPixmap`, and decode to a caller-owned bitmap or image, a provided RGBA8 span, or a provided pixmap. The Skia adapters normalize supported color types, premultiplication, row stride, and color space to unpremultiplied sRGB RGBA8, resampling to at most 100×100 without stretching aspect ratio. `SKPixmap` **does not own its pixels**: keep its backing image or bitmap alive for the entire call, and keep that backing storage alive while using any pixmap returned by `PeekPixels()`. Decode into a caller-provided pixmap rather than returning a pixmap with ambiguous lifetime. For ThumbHash, obtain actual output dimensions with `GetDecodedSize(hash, maxWidth, maxHeight)` before allocating a destination; its maximum bounds are not necessarily the decoded dimensions. The byte-span encoders require positive dimensions, RGBA8 row-major unpremultiplied pixels, and an explicit stride; the input span must end exactly at the last pixel (row padding on earlier rows is allowed). Decode-into spans may be larger and preserve existing padding. ThumbHash input pixels may be at most 100×100; source Skia images and low-level BlurHash inputs are limited to 16 MP. Bitmap and pixmap decoded previews are limited to 1 MP. Invalid dimensions and payloads throw instead of allocating unbounded memory. The codecs do not retain any input or output image or buffer; caller-owned arrays must not be returned to a pool while in use.
 

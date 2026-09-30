@@ -20,6 +20,36 @@ public class ImagePlaceholderTests
     }
 
     [Fact]
+    public void BlurHashDefaultsAreOptionalAndDecodeDimensionsAreExplicit()
+    {
+        Assert.Equal(4, BlurHashCodec.DefaultComponentsX);
+        Assert.Equal(3, BlurHashCodec.DefaultComponentsY);
+        Assert.Equal(1f, BlurHashCodec.DefaultPunch);
+        var pixels = new byte[] { 255, 0, 0, 255 };
+        var hash = BlurHashCodec.Encode(pixels, 1, 1, 4);
+        Assert.Equal(BlurHashCodec.Encode(pixels, 1, 1, 4,
+            BlurHashCodec.DefaultComponentsX, BlurHashCodec.DefaultComponentsY), hash);
+        Assert.Equal(BlurHashCodec.Decode(hash, 2, 3, BlurHashCodec.DefaultPunch),
+            BlurHashCodec.Decode(hash, 2, 3));
+        using var source = new SKBitmap(1, 1);
+        source.Erase(SKColors.Red);
+        Assert.Equal(BlurHashCodec.Encode(source, 4, 3), BlurHashCodec.Encode(source));
+        using var preview = BlurHashCodec.DecodeBitmap(hash, 2, 3);
+        Assert.Equal((2, 3), (preview.Width, preview.Height));
+        var encode = typeof(BlurHashCodec).GetMethod(nameof(BlurHashCodec.Encode),
+            [typeof(SKBitmap), typeof(int), typeof(int)])!;
+        Assert.Equal(BlurHashCodec.DefaultComponentsX, encode.GetParameters()[1].DefaultValue);
+        Assert.Equal(BlurHashCodec.DefaultComponentsY, encode.GetParameters()[2].DefaultValue);
+        var decode = typeof(BlurHashCodec).GetMethod(nameof(BlurHashCodec.DecodeBitmap),
+            [typeof(string), typeof(int), typeof(int), typeof(float)])!;
+        Assert.Equal(BlurHashCodec.DefaultPunch, decode.GetParameters()[3].DefaultValue);
+        Assert.DoesNotContain(typeof(BlurHashCodec).GetMethods(),
+            method => method.Name == nameof(BlurHashCodec.DecodeBitmap) && method.GetParameters().Length == 1);
+        Assert.DoesNotContain(typeof(ThumbHashCodec).GetMethods(),
+            method => method.Name == nameof(ThumbHashCodec.DecodeBitmap) && method.GetParameters().Length == 1);
+    }
+
+    [Fact]
     public void BlurHashDecodesPublishedExampleAndValidatesEveryField()
     {
         var rgba = BlurHashCodec.Decode("LlMF%n00%#MwS|WCWEM{R*bbWBbH", 10, 10);
@@ -104,11 +134,11 @@ public class ImagePlaceholderTests
         var redBlue = new byte[] { 255, 0, 0, 255, 0, 0, 255, 255 };
         Assert.Equal(landscape, Convert.ToBase64String(ThumbHashCodec.Encode(redBlue, 2, 1, 8)));
         Assert.Equal(portrait, Convert.ToBase64String(ThumbHashCodec.Encode(redBlue, 1, 2, 4)));
-        using var horizontal = ThumbHashCodec.DecodeBitmap(Convert.FromBase64String(landscape));
-        using var vertical = ThumbHashCodec.DecodeBitmap(Convert.FromBase64String(portrait));
+        using var horizontal = ThumbHashCodec.DecodeBitmap(Convert.FromBase64String(landscape), 64, 64);
+        using var vertical = ThumbHashCodec.DecodeBitmap(Convert.FromBase64String(portrait), 64, 64);
         Assert.True(horizontal.Width > horizontal.Height);
         Assert.True(vertical.Height > vertical.Width);
-        using var clear = ThumbHashCodec.DecodeBitmap(Convert.FromBase64String(transparent));
+        using var clear = ThumbHashCodec.DecodeBitmap(Convert.FromBase64String(transparent), 64, 64);
         Assert.Equal((byte)0, clear.GetPixel(16, 16).Alpha);
         var rgba = ThumbHashCodec.Decode(Convert.FromBase64String(black), 32, 32, out var w, out var h);
         Assert.Equal((32, 32), (w, h));
@@ -138,7 +168,7 @@ public class ImagePlaceholderTests
         Assert.InRange((int)pixels[middle + 1], green - 8, green + 8);
         Assert.InRange((int)pixels[middle + 2], Math.Max(0, blue - 8), blue + 8);
         Assert.InRange((int)pixels[middle + 3], alpha - 8, alpha);
-        using var preview = ThumbHashCodec.DecodeBitmap(bytes);
+        using var preview = ThumbHashCodec.DecodeBitmap(bytes, 64, 64);
         Assert.Equal((previewWidth, 64), (preview.Width, preview.Height));
         Assert.InRange(Math.Abs(pixels[middle + 3] - preview.GetPixel(preview.Width / 2, preview.Height / 2).Alpha), 0, 8);
         if (hex.StartsWith("A119", StringComparison.Ordinal))
@@ -156,7 +186,7 @@ public class ImagePlaceholderTests
         const string black = "AAgCBwAAAAAAAAAAAAAAAAAAAAAAAAAA";
         Assert.Throws<FormatException>(() => Convert.FromBase64String("!!"));
         Assert.Throws<FormatException>(() => Convert.FromBase64String("A"));
-        Assert.Throws<FormatException>(() => ThumbHashCodec.DecodeBitmap(new byte[5]));
+        Assert.Throws<FormatException>(() => ThumbHashCodec.DecodeBitmap(new byte[5], 64, 64));
         var bytes = Convert.FromBase64String(black);
         Assert.Throws<FormatException>(() => ThumbHashCodec.Decode(bytes.AsSpan(0, bytes.Length - 1), 64, 64, out _, out _));
         bytes[3] = 0;
@@ -185,7 +215,7 @@ public class ImagePlaceholderTests
         Assert.Equal(255, a[0]);
         var (transparent, _, _) = PixelBuffers.FromBitmap(bgra, 100, false);
         Assert.Equal(0, transparent[23]);
-        using var decoded = BlurHashCodec.DecodeBitmap("00TI:j");
+        using var decoded = BlurHashCodec.DecodeBitmap("00TI:j", 64, 64);
         Assert.Equal(SKAlphaType.Unpremul, decoded.AlphaType);
     }
 
@@ -201,12 +231,12 @@ public class ImagePlaceholderTests
         Assert.InRange(decoded.Width, 1, 24);
         Assert.InRange(decoded.Height, 1, 64);
         Assert.True(decoded.GetPixel(decoded.Width / 2, decoded.Height / 2).Alpha < 255);
-        using var blur = BlurHashCodec.DecodeBitmap(BlurHashCodec.Encode(source, 1, 1));
+        using var blur = BlurHashCodec.DecodeBitmap(BlurHashCodec.Encode(source, 1, 1), 64, 64);
         Assert.Equal((byte)255, blur.GetPixel(32, 32).Alpha);
         Assert.InRange((int)blur.GetPixel(32, 32).Red, 240, 255);
         using var extreme = new SKBitmap(1, 100);
         extreme.Erase(SKColors.Blue);
-        using var extremePreview = ThumbHashCodec.DecodeBitmap(ThumbHashCodec.Encode(extreme));
+        using var extremePreview = ThumbHashCodec.DecodeBitmap(ThumbHashCodec.Encode(extreme), 64, 64);
         Assert.InRange(extremePreview.Width, 1, 13);
         Assert.Equal(64, extremePreview.Height);
     }

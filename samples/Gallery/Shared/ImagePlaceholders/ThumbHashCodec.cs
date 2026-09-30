@@ -31,7 +31,18 @@ namespace SkiaSharpSample.ImagePlaceholders;
 /// Base64 is a UI/storage choice, not part of the ThumbHash binary wire format.</remarks>
 public static class ThumbHashCodec
 {
-    private const int MaximumInputDimension = 100;
+    private const int MaximumInputDimension = PixelBuffers.MaximumThumbnailDimension;
+    private const int OpaqueHeaderBytes = 5;
+    private const int AlphaHeaderBytes = 6;
+    private const int BitsPerByte = 8;
+    private const int BitsPerNibble = 4;
+    private const int NibblesPerByte = 2;
+    private const int PScaleShift = 3;
+    private const int QScaleShift = 9;
+    private const int PColorShift = 6;
+    private const int QColorShift = 12;
+    private const int LScaleShift = 18;
+    private const int ShortAxisMask = 7;
     private const int OpaqueLuminanceComponents = 7;
     private const int AlphaLuminanceComponents = 5;
     private const int ChromaComponents = 3;
@@ -42,6 +53,8 @@ public static class ThumbHashCodec
     private const int HasAlphaBit = 23;
     private const int LandscapeBit = 15;
     private const double ChromaDecodeScale = 1.25;
+    private const double ChromaColorCenter = 31.5;
+    private const double AcDecodeCenter = 7.5;
     private const int MaximumCachedCosines = 65_536;
 
     /// <summary>Creates a binary ThumbHash from a bitmap scaled to at most 100 pixels on its longest side.</summary>
@@ -77,7 +90,7 @@ public static class ThumbHashCodec
     {
         if (width > MaximumInputDimension || height > MaximumInputDimension)
             throw new ArgumentOutOfRangeException(nameof(width), "ThumbHash inputs must fit in 100 by 100 pixels.");
-        PixelBuffers.Validate(rgba, width, height, stride, 10_000);
+        PixelBuffers.Validate(rgba, width, height, stride, MaximumInputDimension * MaximumInputDimension);
 
         var count = width * height;
         var pool = ArrayPool<double>.Shared;
@@ -117,11 +130,11 @@ public static class ThumbHashCodec
         for (var y = 0; y < height; y++)
             for (var x = 0; x < width; x++)
             {
-                var i = y * stride + 4 * x;
-                var alpha = rgba[i + 3] / 255.0;
-                averageR += alpha * rgba[i] / 255.0;
-                averageG += alpha * rgba[i + 1] / 255.0;
-                averageB += alpha * rgba[i + 2] / 255.0;
+                var i = y * stride + PixelBuffers.RgbaBytesPerPixel * x;
+                var alpha = rgba[i + 3] / (double)byte.MaxValue;
+                averageR += alpha * rgba[i] / (double)byte.MaxValue;
+                averageG += alpha * rgba[i + 1] / (double)byte.MaxValue;
+                averageB += alpha * rgba[i + 2] / (double)byte.MaxValue;
                 averageA += alpha;
             }
         if (averageA > 0)
@@ -145,12 +158,12 @@ public static class ThumbHashCodec
         for (var y = 0; y < height; y++)
             for (var x = 0; x < width; x++)
             {
-                var i = y * stride + 4 * x;
+                var i = y * stride + PixelBuffers.RgbaBytesPerPixel * x;
                 var index = y * width + x;
-                var alpha = rgba[i + 3] / 255.0;
-                var r = averageR * (1 - alpha) + alpha * rgba[i] / 255.0;
-                var g = averageG * (1 - alpha) + alpha * rgba[i + 1] / 255.0;
-                var b = averageB * (1 - alpha) + alpha * rgba[i + 2] / 255.0;
+                var alpha = rgba[i + 3] / (double)byte.MaxValue;
+                var r = averageR * (1 - alpha) + alpha * rgba[i] / (double)byte.MaxValue;
+                var g = averageG * (1 - alpha) + alpha * rgba[i + 1] / (double)byte.MaxValue;
+                var b = averageB * (1 - alpha) + alpha * rgba[i + 2] / (double)byte.MaxValue;
                 l[index] = (r + g + b) / 3;
                 p[index] = (r + g) / 2 - b;
                 q[index] = r - g;
@@ -175,24 +188,25 @@ public static class ThumbHashCodec
         // [short axis:3, P scale:6, Q scale:6, landscape flag:1].
         // A transparent hash adds [alpha DC:4, alpha scale:4]; ACs follow as nibbles.
         var header24 = Round(MaximumSixBitValue * luminance.Dc) |
-            (Round(31.5 + 31.5 * yellowBlue.Dc) << 6) |
-            (Round(31.5 + 31.5 * redGreen.Dc) << 12) |
-            (Round(MaximumFiveBitValue * luminance.Scale) << 18) |
+            (Round(ChromaColorCenter + ChromaColorCenter * yellowBlue.Dc) << PColorShift) |
+            (Round(ChromaColorCenter + ChromaColorCenter * redGreen.Dc) << QColorShift) |
+            (Round(MaximumFiveBitValue * luminance.Scale) << LScaleShift) |
             (hasAlpha ? 1 << HasAlphaBit : 0);
         var header16 = (landscape ? ly : lx) |
-            (Round(MaximumSixBitValue * yellowBlue.Scale) << 3) |
-            (Round(MaximumSixBitValue * redGreen.Scale) << 9) |
+            (Round(MaximumSixBitValue * yellowBlue.Scale) << PScaleShift) |
+            (Round(MaximumSixBitValue * redGreen.Scale) << QScaleShift) |
             (landscape ? 1 << LandscapeBit : 0);
         var nibbles = lAc.Length + pAc.Length + qAc.Length + aAc.Length;
-        var start = hasAlpha ? 6 : 5;
-        var result = new byte[start + (nibbles + 1) / 2];
+        var start = hasAlpha ? AlphaHeaderBytes : OpaqueHeaderBytes;
+        var result = new byte[start + (nibbles + 1) / NibblesPerByte];
         result[0] = (byte)header24;
-        result[1] = (byte)(header24 >> 8);
-        result[2] = (byte)(header24 >> 16);
+        result[1] = (byte)(header24 >> BitsPerByte);
+        result[2] = (byte)(header24 >> (2 * BitsPerByte));
         result[3] = (byte)header16;
-        result[4] = (byte)(header16 >> 8);
+        result[4] = (byte)(header16 >> BitsPerByte);
         if (hasAlpha)
-            result[5] = (byte)(Round(MaximumNibbleValue * alphaChannel.Dc) | Round(MaximumNibbleValue * alphaChannel.Scale) << 4);
+            result[5] = (byte)(Round(MaximumNibbleValue * alphaChannel.Dc) |
+                Round(MaximumNibbleValue * alphaChannel.Scale) << BitsPerNibble);
         var nibble = 0;
         WriteAc(lAc, result, start, ref nibble);
         WriteAc(pAc, result, start, ref nibble);
@@ -204,13 +218,9 @@ public static class ThumbHashCodec
     private static void WriteAc(ReadOnlySpan<double> channel, byte[] result, int start, ref int nibble)
     {
         foreach (var coefficient in channel)
-            result[start + nibble / 2] |= (byte)(Round(MaximumNibbleValue * coefficient) << (4 * (nibble++ % 2)));
+            result[start + nibble / NibblesPerByte] |= (byte)(Round(MaximumNibbleValue * coefficient) <<
+                (BitsPerNibble * (nibble++ % NibblesPerByte)));
     }
-
-    /// <summary>Decodes binary ThumbHash to a caller-owned RGBA8 bitmap within 64 by 64 pixels.</summary>
-    /// <param name="hash">Binary ThumbHash bytes (decode Base64 first if stored as text).</param>
-    /// <returns>A bitmap to dispose after use.</returns>
-    public static SKBitmap DecodeBitmap(ReadOnlySpan<byte> hash) => DecodeBitmap(hash, 64, 64);
 
     /// <summary>Decodes binary ThumbHash to a caller-owned RGBA8 bitmap, preserving its encoded aspect ratio.</summary>
     /// <param name="hash">Binary ThumbHash bytes (decode Base64 first if stored as text).</param>
@@ -219,7 +229,7 @@ public static class ThumbHashCodec
     /// <returns>A bitmap to dispose after use.</returns>
     public static SKBitmap DecodeBitmap(ReadOnlySpan<byte> hash, int maxWidth, int maxHeight)
     {
-        PixelBuffers.ValidateDimensions(maxWidth, maxHeight, 1_000_000);
+        PixelBuffers.ValidateDimensions(maxWidth, maxHeight, PixelBuffers.MaximumPreviewPixels);
         var (width, height) = GetDecodedSize(hash, maxWidth, maxHeight);
         var bitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Unpremul));
         try
@@ -247,9 +257,9 @@ public static class ThumbHashCodec
     /// <remarks>The caller retains ownership of the pixmap and its backing pixels.</remarks>
     public static void DecodeInto(ReadOnlySpan<byte> hash, SKPixmap destination, int maxWidth, int maxHeight)
     {
-        PixelBuffers.ValidateDimensions(maxWidth, maxHeight, 1_000_000);
+        PixelBuffers.ValidateDimensions(maxWidth, maxHeight, PixelBuffers.MaximumPreviewPixels);
         var (width, height) = GetDecodedSize(hash, maxWidth, maxHeight);
-        var pixels = PixelBuffers.Destination(destination, width, height, 1_000_000);
+        var pixels = PixelBuffers.Destination(destination, width, height, PixelBuffers.MaximumPreviewPixels);
         DecodeInto(hash, pixels, maxWidth, maxHeight, destination.RowBytes, out _, out _);
     }
 
@@ -262,10 +272,10 @@ public static class ThumbHashCodec
     /// <returns>Row-major RGBA8 bytes; the encoded aspect ratio selects the output dimensions.</returns>
     public static byte[] Decode(ReadOnlySpan<byte> hash, int maxWidth, int maxHeight, out int width, out int height)
     {
-        PixelBuffers.ValidateDimensions(maxWidth, maxHeight, 16_000_000);
+        PixelBuffers.ValidateDimensions(maxWidth, maxHeight, PixelBuffers.MaximumSourcePixels);
         var (decodedWidth, decodedHeight) = GetDecodedSize(hash, maxWidth, maxHeight);
-        var result = new byte[checked(decodedWidth * decodedHeight * 4)];
-        DecodeInto(hash, result, maxWidth, maxHeight, decodedWidth * 4, out _, out _);
+        var result = new byte[checked(decodedWidth * decodedHeight * PixelBuffers.RgbaBytesPerPixel)];
+        DecodeInto(hash, result, maxWidth, maxHeight, decodedWidth * PixelBuffers.RgbaBytesPerPixel, out _, out _);
         width = decodedWidth;
         height = decodedHeight;
         return result;
@@ -289,25 +299,25 @@ public static class ThumbHashCodec
     public static void DecodeInto(ReadOnlySpan<byte> hash, Span<byte> destination, int maxWidth, int maxHeight,
         int stride, out int width, out int height)
     {
-        PixelBuffers.ValidateDimensions(maxWidth, maxHeight, 16_000_000);
+        PixelBuffers.ValidateDimensions(maxWidth, maxHeight, PixelBuffers.MaximumSourcePixels);
         var (decodedWidth, decodedHeight) = GetDecodedSize(hash, maxWidth, maxHeight);
-        PixelBuffers.ValidateDestination(destination, decodedWidth, decodedHeight, stride, 16_000_000);
-        var header24 = hash[0] | hash[1] << 8 | hash[2] << 16;
-        var header16 = hash[3] | hash[4] << 8;
+        PixelBuffers.ValidateDestination(destination, decodedWidth, decodedHeight, stride, PixelBuffers.MaximumSourcePixels);
+        var header24 = hash[0] | hash[1] << BitsPerByte | hash[2] << (2 * BitsPerByte);
+        var header16 = hash[3] | hash[4] << BitsPerByte;
         var hasAlpha = (header24 & (1 << HasAlphaBit)) != 0;
         var landscape = (header16 & (1 << LandscapeBit)) != 0;
-        var shortAxis = header16 & 7;
+        var shortAxis = header16 & ShortAxisMask;
         var lx = Math.Max(ChromaComponents, landscape ? hasAlpha ? AlphaLuminanceComponents : OpaqueLuminanceComponents : shortAxis);
         var ly = Math.Max(ChromaComponents, landscape ? shortAxis : hasAlpha ? AlphaLuminanceComponents : OpaqueLuminanceComponents);
-        var start = hasAlpha ? 6 : 5;
+        var start = hasAlpha ? AlphaHeaderBytes : OpaqueHeaderBytes;
         var lDc = (header24 & MaximumSixBitValue) / (double)MaximumSixBitValue;
-        var pDc = ((header24 >> 6) & 63) / 31.5 - 1;
-        var qDc = ((header24 >> 12) & 63) / 31.5 - 1;
+        var pDc = ((header24 >> PColorShift) & MaximumSixBitValue) / ChromaColorCenter - 1;
+        var qDc = ((header24 >> QColorShift) & MaximumSixBitValue) / ChromaColorCenter - 1;
         var aDc = hasAlpha ? (hash[5] & MaximumNibbleValue) / (double)MaximumNibbleValue : 1;
-        var lScale = ((header24 >> 18) & MaximumFiveBitValue) / (double)MaximumFiveBitValue;
-        var pScale = ((header16 >> 3) & MaximumSixBitValue) / (double)MaximumSixBitValue;
-        var qScale = ((header16 >> 9) & MaximumSixBitValue) / (double)MaximumSixBitValue;
-        var aScale = hasAlpha ? (hash[5] >> 4) / (double)MaximumNibbleValue : 0;
+        var lScale = ((header24 >> LScaleShift) & MaximumFiveBitValue) / (double)MaximumFiveBitValue;
+        var pScale = ((header16 >> PScaleShift) & MaximumSixBitValue) / (double)MaximumSixBitValue;
+        var qScale = ((header16 >> QScaleShift) & MaximumSixBitValue) / (double)MaximumSixBitValue;
+        var aScale = hasAlpha ? (hash[5] >> BitsPerNibble) / (double)MaximumNibbleValue : 0;
         var nibble = 0;
         var l = ReadChannel(hash, start, lx, ly, lScale, ref nibble);
         var p = ReadChannel(hash, start, ChromaComponents, ChromaComponents, pScale * ChromaDecodeScale, ref nibble);
@@ -338,7 +348,7 @@ public static class ThumbHashCodec
                     var blue = luminance - 2.0 / 3 * yellowBlue;
                     var red = (3 * luminance - blue + redGreen) / 2;
                     var green = red - redGreen;
-                    var i = y * stride + 4 * x;
+                    var i = y * stride + PixelBuffers.RgbaBytesPerPixel * x;
                     destination[i] = ToByte(red);
                     destination[i + 1] = ToByte(green);
                     destination[i + 2] = ToByte(blue);
@@ -359,22 +369,23 @@ public static class ThumbHashCodec
     /// <summary>Reads the encoded aspect ratio and returns decoded dimensions within the supplied bounds, without allocating a pixel buffer.</summary>
     public static (int Width, int Height) GetDecodedSize(ReadOnlySpan<byte> hash, int maxWidth, int maxHeight)
     {
-        PixelBuffers.ValidateDimensions(maxWidth, maxHeight, 16_000_000);
-        if (hash.Length < 5)
+        PixelBuffers.ValidateDimensions(maxWidth, maxHeight, PixelBuffers.MaximumSourcePixels);
+        if (hash.Length < OpaqueHeaderBytes)
             throw new FormatException("ThumbHash is too short.");
-        var header24 = hash[0] | hash[1] << 8 | hash[2] << 16;
-        var header16 = hash[3] | hash[4] << 8;
+        var header24 = hash[0] | hash[1] << BitsPerByte | hash[2] << (2 * BitsPerByte);
+        var header16 = hash[3] | hash[4] << BitsPerByte;
         var hasAlpha = (header24 & (1 << HasAlphaBit)) != 0;
         var landscape = (header16 & (1 << LandscapeBit)) != 0;
-        var shortAxis = header16 & 7;
+        var shortAxis = header16 & ShortAxisMask;
         if (shortAxis < 1 || shortAxis > (hasAlpha ? AlphaLuminanceComponents : OpaqueLuminanceComponents))
             throw new FormatException("Invalid ThumbHash aspect header.");
         var lx = Math.Max(ChromaComponents, landscape ? hasAlpha ? AlphaLuminanceComponents : OpaqueLuminanceComponents : shortAxis);
         var ly = Math.Max(ChromaComponents, landscape ? shortAxis : hasAlpha ? AlphaLuminanceComponents : OpaqueLuminanceComponents);
         var nibbleCount = Count(lx, ly) - 1 + 2 * (Count(ChromaComponents, ChromaComponents) - 1) +
             (hasAlpha ? Count(AlphaComponents, AlphaComponents) - 1 : 0);
-        var start = hasAlpha ? 6 : 5;
-        if (hash.Length != start + (nibbleCount + 1) / 2 || (nibbleCount % 2 == 1 && (hash[^1] & 0xf0) != 0))
+        var start = hasAlpha ? AlphaHeaderBytes : OpaqueHeaderBytes;
+        if (hash.Length != start + (nibbleCount + 1) / NibblesPerByte ||
+            (nibbleCount % NibblesPerByte == 1 && (hash[^1] & (MaximumNibbleValue << BitsPerNibble)) != 0))
             throw new FormatException("Invalid ThumbHash byte length or padding.");
         var ratio = landscape
             ? (hasAlpha ? AlphaLuminanceComponents : OpaqueLuminanceComponents) / (double)shortAxis
@@ -427,7 +438,8 @@ public static class ThumbHashCodec
         var ac = new double[Count(nx, ny) - 1];
         for (var i = 0; i < ac.Length; i++)
         {
-            ac[i] = (((bytes[start + nibble / 2] >> (4 * (nibble % 2))) & 15) / 7.5 - 1) * scale;
+            ac[i] = (((bytes[start + nibble / NibblesPerByte] >>
+                (BitsPerNibble * (nibble % NibblesPerByte))) & MaximumNibbleValue) / AcDecodeCenter - 1) * scale;
             nibble++;
         }
         return ac;
@@ -446,5 +458,5 @@ public static class ThumbHashCodec
     }
 
     private static int Round(double x) => (int)Math.Floor(x + 0.5);
-    private static byte ToByte(double x) => (byte)Math.Clamp((int)(Math.Clamp(x, 0, 1) * 255), 0, 255);
+    private static byte ToByte(double x) => (byte)Math.Clamp((int)(Math.Clamp(x, 0, 1) * byte.MaxValue), 0, byte.MaxValue);
 }

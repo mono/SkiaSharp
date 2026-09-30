@@ -10,13 +10,15 @@ namespace SkiaSharpSample.Samples;
 
 public abstract class ImagePlaceholderSampleBase : CanvasSampleBase
 {
+	private const int DefaultPreviewDimension = 64;
+
 	private readonly Stopwatch clock = new();
 	private PlaceholderImageView? view;
 	private SKBitmap? bitmap;
 	private string hash = string.Empty;
 	private int imageIndex;
-	private int previewWidth = 64;
-	private int previewHeight = 64;
+	private int previewWidth = DefaultPreviewDimension;
+	private int previewHeight = DefaultPreviewDimension;
 	private int backdrop;
 
 	protected abstract string EncodeHash(SKBitmap source);
