@@ -319,10 +319,16 @@ public static class ThumbHashCodec
         var qScale = ((header16 >> QScaleShift) & MaximumSixBitValue) / (double)MaximumSixBitValue;
         var aScale = hasAlpha ? (hash[5] >> BitsPerNibble) / (double)MaximumNibbleValue : 0;
         var nibble = 0;
-        var l = ReadChannel(hash, start, lx, ly, lScale, ref nibble);
-        var p = ReadChannel(hash, start, ChromaComponents, ChromaComponents, pScale * ChromaDecodeScale, ref nibble);
-        var q = ReadChannel(hash, start, ChromaComponents, ChromaComponents, qScale * ChromaDecodeScale, ref nibble);
-        var a = hasAlpha ? ReadChannel(hash, start, AlphaComponents, AlphaComponents, aScale, ref nibble) : Array.Empty<double>();
+        // GetDecodedSize validated the header, bounding these stack buffers to 27 luminance and 14 alpha ACs.
+        Span<double> l = stackalloc double[Count(lx, ly) - 1];
+        Span<double> p = stackalloc double[Count(ChromaComponents, ChromaComponents) - 1];
+        Span<double> q = stackalloc double[Count(ChromaComponents, ChromaComponents) - 1];
+        Span<double> a = hasAlpha ? stackalloc double[Count(AlphaComponents, AlphaComponents) - 1] : Span<double>.Empty;
+        ReadChannel(hash, start, l, lScale, ref nibble);
+        ReadChannel(hash, start, p, pScale * ChromaDecodeScale, ref nibble);
+        ReadChannel(hash, start, q, qScale * ChromaDecodeScale, ref nibble);
+        if (hasAlpha)
+            ReadChannel(hash, start, a, aScale, ref nibble);
 
         var countX = Math.Max(lx, hasAlpha ? AlphaComponents : ChromaComponents);
         var countY = Math.Max(ly, hasAlpha ? AlphaComponents : ChromaComponents);
@@ -433,19 +439,17 @@ public static class ThumbHashCodec
         return count;
     }
 
-    private static double[] ReadChannel(ReadOnlySpan<byte> bytes, int start, int nx, int ny, double scale, ref int nibble)
+    private static void ReadChannel(ReadOnlySpan<byte> bytes, int start, Span<double> ac, double scale, ref int nibble)
     {
-        var ac = new double[Count(nx, ny) - 1];
         for (var i = 0; i < ac.Length; i++)
         {
             ac[i] = (((bytes[start + nibble / NibblesPerByte] >>
                 (BitsPerNibble * (nibble % NibblesPerByte))) & MaximumNibbleValue) / AcDecodeCenter - 1) * scale;
             nibble++;
         }
-        return ac;
     }
 
-    private static double Sum(double[] ac, int nx, int ny, int x, int y, int width, int height, double[] cosX, double[] cosY)
+    private static double Sum(ReadOnlySpan<double> ac, int nx, int ny, int x, int y, int width, int height, double[] cosX, double[] cosY)
     {
         double sum = 0;
         var index = 0;
