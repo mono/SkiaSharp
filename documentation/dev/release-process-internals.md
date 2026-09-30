@@ -369,7 +369,8 @@ wraps two scripts.
 - discovers all matching preview, RC, stable, and hotfix branches;
 - uses exact shipped tags as immutable range boundaries;
 - extracts merged PR numbers from first-parent history;
-- includes issues linked by GitHub closing references or closing keywords; and
+- includes issues linked by GitHub closing references or closing keywords outside
+  PR-body HTML comments; and
 - assigns shipped PRs and issues to the milestone where they first shipped.
 
 Unshipped intermediate branches roll forward to the next shipped boundary.

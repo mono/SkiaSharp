@@ -638,7 +638,9 @@ function global:gh {
 ]
 '@
     } elseif ($command -match 'pulls/77') {
-        '{"body":"Fixes #34 and resolved: #56"}'
+        '{"body":"Fixes #34 and resolved: #56\n<!-- \"Fixes #123\" / \"Closes #123\" template example -->\n<!--\nResolves #789\n-->"}'
+    } elseif ($command -match 'pulls/78') {
+        '{"body":"Fixes #64\n<!-- Closes #456"}'
     } else {
         throw "Unexpected fake gh command: $command"
     }
@@ -727,7 +729,9 @@ $script:FakeGhScenario = 'read'
 $openItems = Get-OpenMilestoneItems -Repository 'mono/SkiaSharp' -MilestoneNumber 70
 Assert-Equal @('issue', 'pull-request') @($openItems.Kind) 'Issues and pull requests were not distinguished.'
 Assert-Equal @(12, 13, 34, 56) @(Get-LinkedIssues -Repository 'mono/SkiaSharp' -PullRequest 77) `
-    'GitHub references and closing keywords were not combined.'
+    'GitHub references and visible closing keywords were not combined without HTML comment examples.'
+Assert-Equal @(12, 13, 64) @(Get-LinkedIssues -Repository 'mono/SkiaSharp' -PullRequest 78) `
+    'An unterminated HTML comment was treated as a closing reference.'
 $linkedIssueOwner = Get-LinkedIssueOwner `
     -Repository 'mono/SkiaSharp' `
     -Issue 12 `
