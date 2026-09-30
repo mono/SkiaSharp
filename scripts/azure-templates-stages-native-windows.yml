@@ -154,6 +154,93 @@ stages:
           additionalDotNetSdks:
             - $(DOTNET_VERSION_WINUI)
           additionalArgs: --buildarch=arm64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native UWP|x86 (Win)
+        parameters:
+          name: native_uwp_x86_windows
+          displayName: UWP x86
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp
+          cacheJob: native/uwp
+          enableCaching: ${{ parameters.enableCaching }}
+          additionalDotNetSdks:
+            - $(DOTNET_VERSION_WINUI)
+          additionalArgs: --buildarch=x86
+          preBuildSteps:
+            - task: UseDotNet@2
+              displayName: Install .NET $(DOTNET_VERSION_WINUI) for VS MSBuild
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+              inputs:
+                packageType: sdk
+                version: $(DOTNET_VERSION_WINUI)
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native UWP|x64 (Win)
+        parameters:
+          name: native_uwp_x64_windows
+          displayName: UWP x64
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp
+          cacheJob: native/uwp
+          enableCaching: ${{ parameters.enableCaching }}
+          additionalDotNetSdks:
+            - $(DOTNET_VERSION_WINUI)
+          additionalArgs: --buildarch=x64
+          preBuildSteps:
+            - task: UseDotNet@2
+              displayName: Install .NET $(DOTNET_VERSION_WINUI) for VS MSBuild
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+              inputs:
+                packageType: sdk
+                version: $(DOTNET_VERSION_WINUI)
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native UWP|arm64 (Win)
+        parameters:
+          name: native_uwp_arm64_windows
+          displayName: UWP arm64
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp
+          cacheJob: native/uwp
+          enableCaching: ${{ parameters.enableCaching }}
+          additionalDotNetSdks:
+            - $(DOTNET_VERSION_WINUI)
+          additionalArgs: --buildarch=arm64
+          preBuildSteps:
+            - task: UseDotNet@2
+              displayName: Install .NET $(DOTNET_VERSION_WINUI) for VS MSBuild
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+              inputs:
+                packageType: sdk
+                version: $(DOTNET_VERSION_WINUI)
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE UWP|x86 (Win)
+        parameters:
+          name: native_uwp_angle_x86_windows
+          displayName: ANGLE UWP x86
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp-angle
+          cacheJob: native/uwp_angle
+          enableCaching: ${{ parameters.enableCaching }}
+          additionalDotNetSdks:
+            - $(DOTNET_VERSION_WINUI)
+          additionalArgs: --buildarch=x86
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE UWP|x64 (Win)
+        parameters:
+          name: native_uwp_angle_x64_windows
+          displayName: ANGLE UWP x64
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp-angle
+          cacheJob: native/uwp_angle
+          enableCaching: ${{ parameters.enableCaching }}
+          additionalDotNetSdks:
+            - $(DOTNET_VERSION_WINUI)
+          additionalArgs: --buildarch=x64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE UWP|arm64 (Win)
+        parameters:
+          name: native_uwp_angle_arm64_windows
+          displayName: ANGLE UWP arm64
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp-angle
+          cacheJob: native/uwp_angle
+          enableCaching: ${{ parameters.enableCaching }}
+          additionalDotNetSdks:
+            - $(DOTNET_VERSION_WINUI)
+          additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native NanoServer|x64 (Win)
         parameters:
           name: native_win32_x64_nanoserver_windows

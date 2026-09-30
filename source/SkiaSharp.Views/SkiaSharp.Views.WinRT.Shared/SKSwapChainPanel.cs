@@ -2,7 +2,7 @@ using System;
 using SkiaSharp.Views.GlesInterop;
 using Windows.Foundation;
 
-#if WINDOWS
+#if WINUI
 namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP
@@ -10,7 +10,7 @@ namespace SkiaSharp.Views.UWP
 {
 	/// <summary>A XAML control that uses hardware-accelerated rendering via ANGLE to draw using SkiaSharp.</summary>
 	/// <remarks>This control uses an OpenGL ES context via ANGLE to provide GPU-accelerated SkiaSharp drawing. It inherits from <see cref="T:SkiaSharp.Views.Windows.AngleSwapChainPanel" /> and provides SkiaSharp-specific rendering functionality.</remarks>
-	public class SKSwapChainPanel : AngleSwapChainPanel
+	public partial class SKSwapChainPanel : AngleSwapChainPanel
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
@@ -64,7 +64,14 @@ namespace SkiaSharp.Views.UWP
 			// create the SkiaSharp context
 			if (context == null)
 			{
+#if WINDOWS_UWP
+				// TODO: on uwp SkiaApi.gr_glinterface_create_native_interface ()) throws
+				// Indirect call guard check detected invalid control transfer
+				// if app was idle in the background 
+				glInterface = GRGlInterface.CreateAngle();
+#else
 				glInterface = GRGlInterface.Create();
+#endif
 				context = GRContext.CreateGl(glInterface);
 			}
 
@@ -112,7 +119,7 @@ namespace SkiaSharp.Views.UWP
 			}
 
 			// update the control
-			canvas.Flush();
+			canvas?.Flush();
 			context.Flush();
 		}
 

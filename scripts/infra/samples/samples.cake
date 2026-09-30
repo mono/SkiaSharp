@@ -128,10 +128,19 @@ Task ("samples-run")
     foreach (var sln in samplesToBuild) {
         if (!FileExists (sln))
             continue;
+
         var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
+
+        // UWP is not supported by the dotnet CLI, so it has to go through MSBuild
+        // https://github.com/microsoft/microsoft-ui-xaml/discussions/9983#discussioncomment-13376111
+        var isUwp = platform == "uwp";
+
         Information ($"Building sample {sln} ({platform})...");
         try {
-            RunDotNetBuild (sln);
+            if (isUwp)
+                RunMSBuild (sln);
+            else
+                RunDotNetBuild (sln);
         } catch (Exception ex) {
             Error ($"FAILED: {sln}");
             failedSamples.Add ((sln.FullPath, ex.Message));

@@ -3,13 +3,15 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using System.Collections.Generic;
 
-#if WINDOWS
+#if WINUI
 using Microsoft.UI.Xaml.Controls;
+using SkiaSharp.Views.WinUI.Native;
 #else
 using Windows.UI.Xaml.Controls;
+using SkiaSharp.Views.UWP.Native;
 #endif
 
-#if WINDOWS
+#if WINUI
 using SkiaSharp.Views.Windows;
 #else
 using SkiaSharp.Views.UWP;
@@ -19,8 +21,8 @@ using EGLDisplay = System.IntPtr;
 using EGLContext = System.IntPtr;
 using EGLConfig = System.IntPtr;
 using EGLSurface = System.IntPtr;
-using SkiaSharp.Views.WinUI.Native;
 using WinRT;
+
 
 namespace SkiaSharp.Views.GlesInterop
 {
@@ -173,10 +175,10 @@ namespace SkiaSharp.Views.GlesInterop
 
 				// EGL_ANGLE_DISPLAY_ALLOW_RENDER_TO_BACK_BUFFER is an optimization that can have large performance benefits on mobile devices.
 				// Its syntax is subject to change, though. Please update your Visual Studio templates if you experience compilation issues with it.
-				Egl.EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE, Egl.EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE, 
+				Egl.EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE, Egl.EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE,
 
-				// EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE is an option that enables ANGLE to automatically call 
-				// the IDXGIDevice3::Trim method on behalf of the application when it gets suspended. 
+				// EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE is an option that enables ANGLE to automatically call
+				// the IDXGIDevice3::Trim method on behalf of the application when it gets suspended.
 				// Calling IDXGIDevice3::Trim when an application is suspended is a Windows Store application certification requirement.
 				Egl.EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE, Egl.EGL_TRUE,
 				Egl.EGL_NONE,
@@ -206,12 +208,12 @@ namespace SkiaSharp.Views.GlesInterop
 			};
 
 			//
-			// To initialize the display, we make three sets of calls to eglGetPlatformDisplayEXT and eglInitialize, with varying 
+			// To initialize the display, we make three sets of calls to eglGetPlatformDisplayEXT and eglInitialize, with varying
 			// parameters passed to eglGetPlatformDisplayEXT:
 			// 1) The first calls uses "defaultDisplayAttributes" as a parameter. This corresponds to D3D11 Feature Level 10_0+.
-			// 2) If eglInitialize fails for step 1 (e.g. because 10_0+ isn't supported by the default GPU), then we try again 
+			// 2) If eglInitialize fails for step 1 (e.g. because 10_0+ isn't supported by the default GPU), then we try again
 			//    using "fl9_3DisplayAttributes". This corresponds to D3D11 Feature Level 9_3.
-			// 3) If eglInitialize fails for step 2 (e.g. because 9_3+ isn't supported by the default GPU), then we try again 
+			// 3) If eglInitialize fails for step 2 (e.g. because 9_3+ isn't supported by the default GPU), then we try again
 			//    using "warpDisplayAttributes".  This corresponds to D3D11 Feature Level 11_0 on WARP, a D3D11 software rasterizer.
 			//
 

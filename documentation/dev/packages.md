@@ -48,6 +48,7 @@ Platform-specific UI controls for rendering SkiaSharp content. These provide rea
 | **SkiaSharp.Views.WindowsForms** | Windows Forms controls: `SKControl`, `SKGLControl`. net462+ and net6.0-windows+. Depends on OpenTK. |
 | **SkiaSharp.Views.WPF** | WPF control: `SKElement`. net462+ and net6.0-windows+. Depends on OpenTK. |
 | **SkiaSharp.Views.WinUI** | WinUI 3 controls: `SKXamlCanvas`, `SKSwapChainPanel`. net6.0-windows+. Depends on Microsoft.WindowsAppSDK. Auto-includes SkiaSharp.NativeAssets.WinUI. |
+| **SkiaSharp.Views.UWP** | Modern UWP (.NET) controls: `SKXamlCanvas`, `SKSwapChainPanel`. net10.0-windows10.0.26100.0, min Windows 10 1809. Auto-includes SkiaSharp.NativeAssets.UWP. |
 | **SkiaSharp.Views.Gtk3** | GTK# 3 control: `SKDrawingArea`. netstandard2.0+. For Linux desktop apps. Depends on GtkSharp. |
 | **SkiaSharp.Views.Blazor** | Blazor WebAssembly controls: `SKCanvasView`, `SKGLView`. net6.0+ (WASM native assets require net8.0+). Auto-includes SkiaSharp.NativeAssets.WebAssembly. |
 | **SkiaSharp.Views.Maui.Core** | .NET MAUI shared view infrastructure. net8.0+. Depends on Microsoft.Maui.Core. |
@@ -88,6 +89,7 @@ Both follow the same platform matrix and architectures. HarfBuzzSharp does **not
 | **SkiaSharp.NativeAssets.Linux.NoDependencies** | Linux (same architectures as above, glibc + musl). **SkiaSharp only. Must add manually.** No fontconfig, no third-party deps — only requires libc/libm/libpthread/libdl. **Designed for minimal containers.** Fonts must be loaded explicitly. |
 | **SkiaSharp.NativeAssets.NanoServer** | Windows Nano Server containers (x64 only). **SkiaSharp only. Must add manually.** |
 | **SkiaSharp.NativeAssets.WinUI** | ANGLE rendering surface for WinUI 3 apps (x64, x86, arm64). **SkiaSharp only.** Contains `SkiaSharp.Views.WinUI.Native.dll`, `libEGL.dll`, and `libGLESv2.dll` for hardware-accelerated OpenGL ES — this is **not** a Skia binary. Auto-included by SkiaSharp.Views.WinUI. |
+| **SkiaSharp.NativeAssets.UWP** | ANGLE rendering surface for modern UWP (.NET) apps (x64, x86, arm64). **SkiaSharp only.** Contains `SkiaSharp.Views.UWP.Native.dll`, `libEGL.dll`, and `libGLESv2.dll`, built for UWP. Uses the Win32 `libSkiaSharp`. Auto-included by SkiaSharp.Views.UWP. |
 | **SkiaSharp.NativeAssets.Android**<br/>**HarfBuzzSharp.NativeAssets.Android** | Android (x86, x64, arm, arm64). Auto-included. |
 | **SkiaSharp.NativeAssets.iOS**<br/>**HarfBuzzSharp.NativeAssets.iOS** | iOS framework bundle (arm64 device + simulator). Auto-included. |
 | **SkiaSharp.NativeAssets.MacCatalyst**<br/>**HarfBuzzSharp.NativeAssets.MacCatalyst** | Mac Catalyst universal framework bundle. Auto-included. |
@@ -120,6 +122,7 @@ The core `SkiaSharp` and `HarfBuzzSharp` packages automatically include NativeAs
 - `SkiaSharp.NativeAssets.WebAssembly` / `HarfBuzzSharp.NativeAssets.WebAssembly` — for Blazor/Uno WASM. `SkiaSharp.NativeAssets.WebAssembly` is auto-included by `SkiaSharp.Views.Blazor` and `SkiaSharp.Views.Uno.WinUI`; `HarfBuzzSharp.NativeAssets.WebAssembly` must always be added manually.
 - `SkiaSharp.NativeAssets.NanoServer` — for Windows Nano Server (SkiaSharp only)
 - `SkiaSharp.NativeAssets.WinUI` — for WinUI 3 apps (SkiaSharp only; auto-included by `SkiaSharp.Views.WinUI`)
+- `SkiaSharp.NativeAssets.UWP` — for modern UWP (.NET) apps (SkiaSharp only; auto-included by `SkiaSharp.Views.UWP`)
 
 ### Linux Package Selection Guide
 
@@ -211,7 +214,6 @@ These packages are no longer actively maintained. Use the listed replacement.
 
 | Package | Replacement |
 |---------|-------------|
-| SkiaSharp.NativeAssets.UWP | SkiaSharp.NativeAssets.WinUI |
 | SkiaSharp.NativeAssets.watchOS | *(none — watchOS not supported)* |
 | HarfBuzzSharp.NativeAssets.UWP | HarfBuzzSharp.NativeAssets.Win32 |
 | HarfBuzzSharp.NativeAssets.watchOS | *(none)* |
