@@ -1,18 +1,13 @@
 # Tizen native build toolchain image.
 #
-# Builds libSkiaSharp.so / libHarfBuzzSharp.so for Tizen 8.0 (x86_64 + aarch64)
+# Builds libSkiaSharp.so / libHarfBuzzSharp.so for Tizen 10.0 (x86_64 + aarch64)
 # inside a container, instead of on the build agent. Mirrors the WASM image
 # (scripts/infra/native/wasm/docker/Dockerfile), including its Debian 12 base.
 #
-# Tizen Studio ships its own clang-10 / gcc-9.2 toolchain + the tizen-8.0
-# rootstraps, so beyond a handful of host dependencies the base only needs: the
+# Tizen Studio ships GCC 14.2 and the Tizen 10 rootstraps. The base needs:
 # .NET SDK (Cake scripts), python3 + ninja + git (the Skia gn/ninja build), and
-# a JRE (the Tizen installer / CLI). We pre-install the Tizen host dependencies
-# explicitly (rather than letting the Tizen package-manager apt-install them on
-# demand), which keeps us on a current, security-supported Debian base while the
-# Tizen toolchain and rootstraps stay pinned to the exact versions used before
-# (see install-tizen.sh). The installer is built for "ubuntu-64" but is
-# glibc-based and runs on Debian.
+# a JRE (the Tizen installer / CLI). Host dependencies are installed
+# explicitly, while the native SDK package set is pinned in install-tizen.sh.
 
 FROM mcr.microsoft.com/mirror/docker/library/debian:12
 
@@ -22,9 +17,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Base utilities + JRE + the Skia/Tizen build host dependencies.
 #
-# libtinfo5: Tizen Studio's bundled llvm-10 clang links the legacy ncurses 5
-# library (libtinfo.so.5). Debian 12 ships a supported compat package for it,
-# so the cross compiler runs without pulling anything from archived repos.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
@@ -41,7 +33,6 @@ RUN apt-get update \
         gettext \
         ninja-build \
         python3 \
-        libtinfo5 \
         openjdk-17-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
@@ -85,7 +76,7 @@ RUN useradd --create-home --shell /bin/bash tizen \
 # Skia's gn/ninja build compiles a set of host tools (e.g. the SkSL compiler)
 # using the host toolchain, which defaults to `cc` / `c++`. Tizen Studio only
 # ships the cross toolchains, so install a host C/C++ compiler for the host
-# tools (the target objects are still built with the Tizen llvm via `ncli`).
+# tools (the target objects are still built with Tizen GCC via `ncli`).
 RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc g++ \
     && rm -rf /var/lib/apt/lists/* \

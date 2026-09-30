@@ -26,15 +26,11 @@ Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .Does(() =>
 {
-    // Tizen 32-bit (armel / i586 on the mobile-6.0 rootstrap) was dropped
-    // — the rootstrap ships gcc-9.2 / glibc 2.30 era headers that don't
-    // play with current Skia, and the only deployment targets that ever
-    // shipped 32-bit Tizen are years past EOL. Only tizen-8.0 64-bit
-    // x86_64 + aarch64 are supported.
-    Build("x86_64","x64",   "x86_64",  "tizen-8.0-emulator64.core",    "tizen-8.0",  "8.0");
-    Build("aarch64","arm64","aarch64",  "tizen-8.0-device64.core",      "tizen-8.0",  "8.0");
+    // Only the Tizen 10 64-bit rootstraps are supported by this native build.
+    Build("x86_64","x64",   "x86_64",  "tizen-10.0-emulator64.core", "tizen-10.0");
+    Build("aarch64","arm64","aarch64",  "tizen-10.0-device64.core", "tizen-10.0");
 
-    void Build(string outputDir, string skiaArch, string tizenArch, string rootstrap, string profile, string ncliVersion)
+    void Build(string outputDir, string skiaArch, string tizenArch, string rootstrap, string profile)
     {
         if (Skip(skiaArch)) return;
 
@@ -54,7 +50,10 @@ Task("libSkiaSharp")
            $"skia_enable_skottie=true " +
            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DXML_DEV_URANDOM' ] " +
            $"ncli='{TIZEN_STUDIO_HOME}' " +
-           $"ncli_version='{ncliVersion}'");
+           $"ncli_version='10.0' " +
+           $"ncli_gcc_version='14.2.0' " +
+           $"ncli_gcc_version_short='14.2' " +
+           $"ncli_use_gcc=true");
 
         SetProjectProfile("libSkiaSharp", profile);
 
@@ -63,7 +62,7 @@ Task("libSkiaSharp")
             DeleteDirectory(buildDir, new DeleteDirectorySettings { Recursive = true, Force = true });
 
         RunProcess(tizen, new ProcessSettings {
-           Arguments = $"build-native -a {tizenArch} -c llvm -C {CONFIGURATION} -r {rootstrap}",
+           Arguments = $"build-native -a {tizenArch} -c gcc -C {CONFIGURATION} -r {rootstrap}",
            WorkingDirectory = MakeAbsolute((DirectoryPath)"libSkiaSharp").FullPath,
         });
 
@@ -76,10 +75,8 @@ Task("libSkiaSharp")
 Task("libHarfBuzzSharp")
     .Does(() =>
 {
-    // See the libSkiaSharp task above — Tizen 32-bit is no longer
-    // supported.
-    Build("x86_64","x64",  "x86_64",  "tizen-8.0-emulator64.core",  "tizen-8.0");
-    Build("aarch64","arm64","aarch64", "tizen-8.0-device64.core",     "tizen-8.0");
+    Build("x86_64","x64",  "x86_64",  "tizen-10.0-emulator64.core", "tizen-10.0");
+    Build("aarch64","arm64","aarch64", "tizen-10.0-device64.core", "tizen-10.0");
 
     void Build(string outputDir, string skiaArch, string tizenArch, string rootstrap, string profile)
     {
@@ -92,7 +89,7 @@ Task("libHarfBuzzSharp")
             DeleteDirectory(buildDir, new DeleteDirectorySettings { Recursive = true, Force = true });
 
         RunProcess(tizen, new ProcessSettings {
-            Arguments = $"build-native -a {tizenArch} -c llvm -C {CONFIGURATION} -r {rootstrap}",
+            Arguments = $"build-native -a {tizenArch} -c gcc -C {CONFIGURATION} -r {rootstrap}",
             WorkingDirectory = MakeAbsolute((DirectoryPath)"libHarfBuzzSharp").FullPath,
         });
 
