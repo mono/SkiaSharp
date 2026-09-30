@@ -18,7 +18,8 @@ public static class SampleMedia
 
 	public static class Images
 	{
-		public static readonly string[] DemoImageNames = ["Baboon", "Color Wheel", "HDR PNG (CICP)", "WebP", "GIF"];
+		public static readonly string[] DemoImageNames =
+			["Baboon (PNG)", "Color Wheel (PNG)", "HDR Patch (PNG/CICP)", "Baby Tux (WebP)", "Animated Heart (GIF)"];
 
 		public static Stream DemoImage(int index) => index switch
 		{

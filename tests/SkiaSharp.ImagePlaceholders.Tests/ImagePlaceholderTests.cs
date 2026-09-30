@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using SkiaSharp;
 using SkiaSharpSample.ImagePlaceholders;
 using SkiaSharpSample.Samples;
@@ -78,6 +79,12 @@ public class ImagePlaceholderTests
         Assert.Equal(ThumbHashCodec.Encode(packed, 1, 2, 4),
             ThumbHashCodec.Encode(padded, 1, 2, 8));
         Assert.Throws<ArgumentException>(() => ThumbHashCodec.Encode(packed, 1, 2, 3));
+        Assert.Throws<ArgumentNullException>(() => ThumbHashCodec.Encode((byte[])null!, 1, 1, 4));
+        Assert.Throws<ArgumentNullException>(() => BlurHashCodec.Encode((byte[])null!, 1, 1, 4, 1, 1));
+        Assert.Throws<ArgumentNullException>(() => BlurHashCodec.Encode((SKImage)null!));
+        Assert.Throws<ArgumentNullException>(() => ThumbHashCodec.Encode((SKPixmap)null!));
+        Assert.Throws<ArgumentNullException>(() => ThumbHashCodec.Decode((byte[])null!, 4, 4, out _, out _));
+        Assert.Throws<ArgumentNullException>(() => BlurHashCodec.Decode((string)null!, 4, 4));
         Assert.Throws<ArgumentException>(() => ThumbHashCodec.Encode(packed, 1, 2, 8));
         Assert.Throws<ArgumentOutOfRangeException>(() => ThumbHashCodec.Encode(packed, 101, 1, 404));
         Assert.Throws<ArgumentOutOfRangeException>(() => BlurHashCodec.Encode(packed, 1, 2, 4, 0, 3));
@@ -202,6 +209,109 @@ public class ImagePlaceholderTests
         using var extremePreview = ThumbHashCodec.DecodeBitmap(ThumbHashCodec.Encode(extreme));
         Assert.InRange(extremePreview.Width, 1, 13);
         Assert.Equal(64, extremePreview.Height);
+    }
+
+    [Fact]
+    public void AllSkiaSourceTypesProduceTheSameHashesWithoutTakingOwnership()
+    {
+        using var bitmap = new SKBitmap(new SKImageInfo(3, 2, SKColorType.Bgra8888, SKAlphaType.Premul), 32);
+        bitmap.Erase(SKColors.Transparent);
+        bitmap.SetPixel(0, 0, SKColors.Red);
+        bitmap.SetPixel(1, 0, new SKColor(25, 70, 180, 125));
+        using var image = SKImage.FromBitmap(bitmap);
+        using var pixmap = bitmap.PeekPixels();
+        Assert.Equal(BlurHashCodec.Encode(bitmap), BlurHashCodec.Encode(image));
+        Assert.Equal(BlurHashCodec.Encode(bitmap, 2, 3), BlurHashCodec.Encode(pixmap, 2, 3));
+        Assert.Equal(ThumbHashCodec.Encode(bitmap), ThumbHashCodec.Encode(image));
+        Assert.Equal(ThumbHashCodec.Encode(bitmap), ThumbHashCodec.Encode(pixmap));
+        Assert.NotEqual(IntPtr.Zero, bitmap.Handle);
+        Assert.NotEqual(IntPtr.Zero, image.Handle);
+        Assert.NotEqual(IntPtr.Zero, pixmap.Handle);
+    }
+
+    [Fact]
+    public void BlurHashWritesCallerOwnedPaddedSpansAndPixmap()
+    {
+        const string hash = "LEHV6nWB2yk8pyo0adR*.7kCMdnj";
+        var packed = BlurHashCodec.Decode(hash, 3, 2, 1.5f);
+        Assert.Equal(BlurHashCodec.Decode(hash, 3, 2), BlurHashCodec.Decode(hash.AsSpan(), 3, 2));
+        var padded = Enumerable.Repeat((byte)17, 32).ToArray();
+        BlurHashCodec.DecodeInto(hash.AsSpan(), padded, 3, 2, 20, 1.5f);
+        Assert.Equal(packed.AsSpan(0, 12).ToArray(), padded.AsSpan(0, 12).ToArray());
+        Assert.Equal(packed.AsSpan(12, 12).ToArray(), padded.AsSpan(20, 12).ToArray());
+        Assert.All(padded.AsSpan(12, 8).ToArray(), value => Assert.Equal((byte)17, value));
+        using var bitmap = new SKBitmap(new SKImageInfo(3, 2, SKColorType.Rgba8888, SKAlphaType.Unpremul), 20);
+        using var pixmap = bitmap.PeekPixels();
+        BlurHashCodec.DecodeInto(hash, pixmap, 1.5f);
+        Assert.Equal(packed.AsSpan(12, 12).ToArray(), pixmap.GetPixelSpan().Slice(20, 12).ToArray());
+        using var decoded = BlurHashCodec.DecodeBitmap(hash, 3, 2, 1.5f);
+        using var image = BlurHashCodec.DecodeImage(hash, 3, 2, 1.5f);
+        using var imagePixels = SKBitmap.FromImage(image);
+        Assert.Equal(decoded.GetPixel(1, 1), bitmap.GetPixel(1, 1));
+        Assert.Equal(decoded.GetPixel(1, 1), imagePixels.GetPixel(1, 1));
+        Assert.Equal(3, image.Width);
+        Assert.Throws<ArgumentException>(() => BlurHashCodec.DecodeInto(hash, new byte[24], 3, 2, 20, 1f));
+        Assert.Throws<FormatException>(() => BlurHashCodec.DecodeInto("!", pixmap, 1f));
+        using var wrong = new SKBitmap(new SKImageInfo(3, 2, SKColorType.Bgra8888, SKAlphaType.Premul));
+        using var wrongPixmap = wrong.PeekPixels();
+        Assert.Throws<ArgumentException>(() => BlurHashCodec.DecodeInto(hash, wrongPixmap, 1f));
+    }
+
+    [Fact]
+    public void ThumbHashWritesCallerOwnedPaddedSpansAndPixmap()
+    {
+        var hash = Convert.FromBase64String("FfYqDMF4CIeIiIeAeIePiNuICA==");
+        var packed = ThumbHashCodec.Decode(hash, 4, 4, out var width, out var height);
+        Assert.Equal((width, height), ThumbHashCodec.GetDecodedSize(hash, 4, 4));
+        var stride = width * 4 + 8;
+        var padded = Enumerable.Repeat((byte)17, (height - 1) * stride + width * 4).ToArray();
+        ThumbHashCodec.DecodeInto(hash, padded, 4, 4, stride, out var actualWidth, out var actualHeight);
+        Assert.Equal((width, height), (actualWidth, actualHeight));
+        for (var y = 0; y < height; y++)
+            Assert.Equal(packed.AsSpan(y * width * 4, width * 4).ToArray(),
+                padded.AsSpan(y * stride, width * 4).ToArray());
+        Assert.All(padded.AsSpan(width * 4, 8).ToArray(), value => Assert.Equal((byte)17, value));
+        using var bitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Unpremul), stride);
+        using var pixmap = bitmap.PeekPixels();
+        ThumbHashCodec.DecodeInto(hash, pixmap, 4, 4);
+        using var decoded = ThumbHashCodec.DecodeBitmap(hash, 4, 4);
+        using var image = ThumbHashCodec.DecodeImage(hash, 4, 4);
+        using var imagePixels = SKBitmap.FromImage(image);
+        Assert.Equal(decoded.GetPixel(1, 1), bitmap.GetPixel(1, 1));
+        Assert.Equal(decoded.GetPixel(1, 1), imagePixels.GetPixel(1, 1));
+        Assert.Equal(width, image.Width);
+        Assert.Throws<ArgumentException>(() => ThumbHashCodec.DecodeInto(hash, pixmap, 3, 3));
+        Assert.Throws<FormatException>(() => ThumbHashCodec.DecodeInto(new byte[5], padded, 4, 4, stride, out _, out _));
+        Assert.Throws<FormatException>(() => ThumbHashCodec.GetDecodedSize(new byte[5], 4, 4));
+        Assert.Throws<ArgumentException>(() => ThumbHashCodec.DecodeInto(hash, new byte[4], 4, 4, stride, out _, out _));
+    }
+
+    [Fact]
+    public void PooledScratchDoesNotCrossContaminateConcurrentCalls()
+    {
+        var pixels = new byte[] { 10, 30, 50, 255, 230, 120, 80, 128 };
+        var blurHash = BlurHashCodec.Encode(pixels, 2, 1, 8, 4, 3);
+        var thumbHash = ThumbHashCodec.Encode(pixels, 2, 1, 8);
+        var blurPreview = BlurHashCodec.Decode(blurHash, 7, 5);
+        var thumbPreview = ThumbHashCodec.Decode(thumbHash, 7, 5, out _, out _);
+        Assert.Equal(thumbPreview, ThumbHashCodec.Decode(thumbHash, 7, 5, out _, out _));
+        Parallel.For(0, 16, iteration =>
+        {
+            Assert.Equal(blurHash, BlurHashCodec.Encode(pixels, 2, 1, 8, 4, 3));
+            Assert.Equal(thumbHash, ThumbHashCodec.Encode(pixels, 2, 1, 8));
+            Assert.Equal(blurPreview, BlurHashCodec.Decode(blurHash, 7, 5));
+            Assert.Equal(thumbPreview, ThumbHashCodec.Decode(thumbHash, 7, 5, out _, out _));
+        });
+        int aliasedDimension;
+        Assert.Equal(thumbPreview, ThumbHashCodec.Decode(thumbHash, 7, 5, out aliasedDimension, out aliasedDimension));
+    }
+
+    [Fact]
+    public void ExtremelyWideLowLevelPreviewsDoNotRequireProportionalCosineCaches()
+    {
+        var pixels = BlurHashCodec.Decode("00TI:j", 70_000, 1);
+        Assert.Equal(70_000 * 4, pixels.Length);
+        Assert.Equal("00TI:j", BlurHashCodec.Encode(pixels, 70_000, 1, 70_000 * 4, 1, 1));
     }
 
     [Fact]

@@ -22,6 +22,7 @@
 // SOFTWARE.
 
 using System;
+using System.Buffers;
 using SkiaSharp;
 
 namespace SkiaSharpSample.ImagePlaceholders;
@@ -37,6 +38,7 @@ public static class BlurHashCodec
     private const int AcLevels = 19;
     private const int MaximumAcValue = AcLevels * AcLevels * AcLevels;
     private const int AcScale = Base83Radix * 2;
+    private const int MaximumCachedCosines = 65_536;
     private static readonly double[] LinearRgb = CreateLinearRgbTable();
 
     /// <summary>Creates a BlurHash with 4 horizontal and 3 vertical components.</summary>
@@ -52,8 +54,30 @@ public static class BlurHashCodec
     public static string Encode(SKBitmap source, int componentsX, int componentsY)
     {
         ValidateComponents(componentsX, componentsY);
-        var (rgba, width, height) = PixelBuffers.FromBitmap(source, 100, compositeWhite: true);
-        return Encode(rgba, width, height, width * 4, componentsX, componentsY);
+        using var normalized = PixelBuffers.Normalize(source, 100, compositeWhite: true);
+        return Encode(PixelBuffers.Pixels(normalized), normalized.Width, normalized.Height, normalized.RowBytes, componentsX, componentsY);
+    }
+
+    /// <summary>Encodes a caller-owned image, scaling it to at most 100 pixels on its longest side.</summary>
+    public static string Encode(SKImage source) => Encode(source, 4, 3);
+
+    /// <summary>Encodes a caller-owned image with 1 to 9 components on each axis.</summary>
+    public static string Encode(SKImage source, int componentsX, int componentsY)
+    {
+        ValidateComponents(componentsX, componentsY);
+        using var normalized = PixelBuffers.Normalize(source, 100, compositeWhite: true);
+        return Encode(PixelBuffers.Pixels(normalized), normalized.Width, normalized.Height, normalized.RowBytes, componentsX, componentsY);
+    }
+
+    /// <summary>Encodes a caller-owned pixmap, scaling it to at most 100 pixels on its longest side.</summary>
+    public static string Encode(SKPixmap source) => Encode(source, 4, 3);
+
+    /// <summary>Encodes a caller-owned pixmap with 1 to 9 components on each axis.</summary>
+    public static string Encode(SKPixmap source, int componentsX, int componentsY)
+    {
+        ValidateComponents(componentsX, componentsY);
+        using var normalized = PixelBuffers.Normalize(source, 100, compositeWhite: true);
+        return Encode(PixelBuffers.Pixels(normalized), normalized.Width, normalized.Height, normalized.RowBytes, componentsX, componentsY);
     }
 
     /// <summary>Encodes unpremultiplied row-major RGBA8 bytes as RGB BlurHash.</summary>
@@ -69,47 +93,64 @@ public static class BlurHashCodec
         PixelBuffers.Validate(rgba, width, height, stride, 16_000_000);
         ValidateComponents(componentsX, componentsY);
 
-        var factors = new (double R, double G, double B)[componentsX * componentsY];
+        Span<(double R, double G, double B)> factors = stackalloc (double, double, double)[componentsX * componentsY];
         var cosX = Cosines(width, componentsX);
         var cosY = Cosines(height, componentsY);
-        // The DC term is the average linear color; each AC term uses twice the
-        // cosine-basis average. Precompute the spatial basis for both axes.
-        for (var cy = 0; cy < componentsY; cy++)
-        for (var cx = 0; cx < componentsX; cx++)
+        try
         {
-            double r = 0, g = 0, b = 0;
-            for (var y = 0; y < height; y++)
-            for (var x = 0; x < width; x++)
-            {
-                var i = y * stride + x * 4;
-                var basis = cosX[cx * width + x] * cosY[cy * height + y];
-                r += basis * ToLinear(rgba[i]);
-                g += basis * ToLinear(rgba[i + 1]);
-                b += basis * ToLinear(rgba[i + 2]);
-            }
-            var scale = (cx == 0 && cy == 0 ? 1.0 : 2.0) / (width * height);
-            factors[cy * componentsX + cx] = (r * scale, g * scale, b * scale);
-        }
+            // The DC term is the average linear color; each AC term uses twice the
+            // cosine-basis average. Precompute the spatial basis for both axes.
+            for (var cy = 0; cy < componentsY; cy++)
+                for (var cx = 0; cx < componentsX; cx++)
+                {
+                    double r = 0, g = 0, b = 0;
+                    for (var y = 0; y < height; y++)
+                        for (var x = 0; x < width; x++)
+                        {
+                            var i = y * stride + x * 4;
+                            var basis = cosX.Length != 0 && cosY.Length != 0
+                                ? cosX[cx * width + x] * cosY[cy * height + y]
+                                : Cosine(cosX, cx, x, width) * Cosine(cosY, cy, y, height);
+                            r += basis * ToLinear(rgba[i]);
+                            g += basis * ToLinear(rgba[i + 1]);
+                            b += basis * ToLinear(rgba[i + 2]);
+                        }
+                    var scale = (cx == 0 && cy == 0 ? 1.0 : 2.0) / (width * height);
+                    factors[cy * componentsX + cx] = (r * scale, g * scale, b * scale);
+                }
 
-        var result = new char[4 + 2 * factors.Length];
-        Write((componentsX - 1) + MaximumComponents * (componentsY - 1), result, 0, 1);
-        double maximum = 0;
-        for (var i = 1; i < factors.Length; i++)
-            maximum = Math.Max(maximum, Math.Max(Math.Abs(factors[i].R), Math.Max(Math.Abs(factors[i].G), Math.Abs(factors[i].B))));
-        // The base83 header stores component counts, the maximum AC magnitude,
-        // 24-bit sRGB DC color, then two digits for each signed AC triplet.
-        var quantized = factors.Length == 1 ? 0 : Math.Clamp((int)Math.Floor(maximum * AcScale - 0.5), 0, Base83Radix - 1);
-        Write(quantized, result, 1, 1);
-        var dc = factors[0];
-        Write((ToSrgb(dc.R) << 16) | (ToSrgb(dc.G) << 8) | ToSrgb(dc.B), result, 2, 4);
-        var maxValue = (quantized + 1) / (double)AcScale;
-        for (var i = 1; i < factors.Length; i++)
-        {
-            var ac = factors[i];
-            Write(Quantize(ac.R, maxValue) * AcLevels * AcLevels +
-                Quantize(ac.G, maxValue) * AcLevels + Quantize(ac.B, maxValue), result, 4 + i * 2, 2);
+            Span<char> result = stackalloc char[4 + 2 * factors.Length];
+            Write((componentsX - 1) + MaximumComponents * (componentsY - 1), result, 0, 1);
+            double maximum = 0;
+            for (var i = 1; i < factors.Length; i++)
+                maximum = Math.Max(maximum, Math.Max(Math.Abs(factors[i].R), Math.Max(Math.Abs(factors[i].G), Math.Abs(factors[i].B))));
+            // The base83 header stores component counts, the maximum AC magnitude,
+            // 24-bit sRGB DC color, then two digits for each signed AC triplet.
+            var quantized = factors.Length == 1 ? 0 : Math.Clamp((int)Math.Floor(maximum * AcScale - 0.5), 0, Base83Radix - 1);
+            Write(quantized, result, 1, 1);
+            var dc = factors[0];
+            Write((ToSrgb(dc.R) << 16) | (ToSrgb(dc.G) << 8) | ToSrgb(dc.B), result, 2, 4);
+            var maxValue = (quantized + 1) / (double)AcScale;
+            for (var i = 1; i < factors.Length; i++)
+            {
+                var ac = factors[i];
+                Write(Quantize(ac.R, maxValue) * AcLevels * AcLevels +
+                    Quantize(ac.G, maxValue) * AcLevels + Quantize(ac.B, maxValue), result, 4 + i * 2, 2);
+            }
+            return new string(result);
         }
-        return new string(result);
+        finally
+        {
+            ReturnCosines(cosX);
+            ReturnCosines(cosY);
+        }
+    }
+
+    /// <summary>Encodes caller-owned RGBA8 array pixels; the array is never retained.</summary>
+    public static string Encode(byte[] rgba, int width, int height, int stride, int componentsX, int componentsY)
+    {
+        ArgumentNullException.ThrowIfNull(rgba);
+        return Encode(rgba.AsSpan(), width, height, stride, componentsX, componentsY);
     }
 
     /// <summary>Decodes a BlurHash to a caller-owned 64 by 64 RGBA8 bitmap.</summary>
@@ -133,7 +174,44 @@ public static class BlurHashCodec
     public static SKBitmap DecodeBitmap(string hash, int width, int height, float punch)
     {
         PixelBuffers.ValidateDimensions(width, height, 1_000_000);
-        return PixelBuffers.ToBitmap(Decode(hash, width, height, punch), width, height);
+        var bitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Unpremul));
+        try
+        {
+            using var pixmap = bitmap.PeekPixels() ?? throw new InvalidOperationException("Unable to allocate the decoded bitmap.");
+            DecodeInto(hash, pixmap, punch);
+            bitmap.NotifyPixelsChanged();
+            return bitmap;
+        }
+        catch
+        {
+            bitmap.Dispose();
+            throw;
+        }
+    }
+
+    /// <summary>Decodes to a caller-owned image; dispose the returned image after use.</summary>
+    public static SKImage DecodeImage(string hash, int width, int height) => DecodeImage(hash, width, height, 1f);
+
+    /// <summary>Decodes to a caller-owned image with the specified AC punch.</summary>
+    public static SKImage DecodeImage(string hash, int width, int height, float punch)
+    {
+        using var bitmap = DecodeBitmap(hash, width, height, punch);
+        return SKImage.FromBitmap(bitmap) ?? throw new InvalidOperationException("Unable to create the decoded image.");
+    }
+
+    /// <summary>Writes into caller-owned, unpremultiplied RGBA8888 pixmap pixels; the pixmap does not own its backing memory.</summary>
+    public static void DecodeInto(string hash, SKPixmap destination, float punch)
+    {
+        ArgumentNullException.ThrowIfNull(hash);
+        DecodeInto(hash.AsSpan(), destination, punch);
+    }
+
+    /// <summary>Writes into caller-owned, unpremultiplied RGBA8888 pixmap pixels.</summary>
+    public static void DecodeInto(ReadOnlySpan<char> hash, SKPixmap destination, float punch)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        var pixels = PixelBuffers.Destination(destination, destination.Width, destination.Height, 1_000_000);
+        DecodeInto(hash, pixels, destination.Width, destination.Height, destination.RowBytes, punch);
     }
 
     /// <summary>Decodes a BlurHash to tightly packed, opaque RGBA8 bytes.</summary>
@@ -143,6 +221,9 @@ public static class BlurHashCodec
     /// <returns>Row-major RGBA8 bytes, with alpha equal to 255.</returns>
     public static byte[] Decode(string hash, int width, int height) => Decode(hash, width, height, 1f);
 
+    /// <summary>Decodes base83 characters to a caller-owned, tightly packed RGBA8 array.</summary>
+    public static byte[] Decode(ReadOnlySpan<char> hash, int width, int height) => Decode(hash, width, height, 1f);
+
     /// <summary>Decodes a BlurHash to tightly packed, opaque RGBA8 bytes with adjustable color variation.</summary>
     /// <param name="hash">A standard base83 BlurHash.</param>
     /// <param name="width">Exact output width in pixels.</param>
@@ -151,10 +232,25 @@ public static class BlurHashCodec
     /// <returns>Row-major RGBA8 bytes, with alpha equal to 255.</returns>
     public static byte[] Decode(string hash, int width, int height, float punch)
     {
+        ArgumentNullException.ThrowIfNull(hash);
+        return Decode(hash.AsSpan(), width, height, punch);
+    }
+
+    /// <summary>Decodes base83 characters into a caller-owned, tightly packed RGBA8 array.</summary>
+    public static byte[] Decode(ReadOnlySpan<char> hash, int width, int height, float punch)
+    {
         PixelBuffers.ValidateDimensions(width, height, 16_000_000);
+        var pixels = new byte[checked(width * height * 4)];
+        DecodeInto(hash, pixels, width, height, width * 4, punch);
+        return pixels;
+    }
+
+    /// <summary>Writes decoded pixels into caller-owned RGBA8 memory. Earlier rows may have padding.</summary>
+    public static void DecodeInto(ReadOnlySpan<char> hash, Span<byte> destination, int width, int height, int stride, float punch)
+    {
+        PixelBuffers.ValidateDestination(destination, width, height, stride, 16_000_000);
         if (!float.IsFinite(punch) || punch < 0)
             throw new ArgumentOutOfRangeException(nameof(punch), "Punch must be finite and nonnegative.");
-        ArgumentNullException.ThrowIfNull(hash);
         if (hash.Length < 6)
             throw new FormatException("BlurHash is too short.");
         var size = Read(hash, 0, 1);
@@ -168,7 +264,7 @@ public static class BlurHashCodec
         var dc = Read(hash, 2, 4);
         if (dc > 0xffffff)
             throw new FormatException("Invalid BlurHash DC value.");
-        var factors = new (double R, double G, double B)[nx * ny];
+        Span<(double R, double G, double B)> factors = stackalloc (double, double, double)[nx * ny];
         factors[0] = (ToLinear((byte)(dc >> 16)), ToLinear((byte)(dc >> 8)), ToLinear((byte)dc));
         for (var i = 1; i < factors.Length; i++)
         {
@@ -178,29 +274,37 @@ public static class BlurHashCodec
             factors[i] = (Unquantize(ac / (AcLevels * AcLevels), maximum) * punch,
                 Unquantize(ac / AcLevels % AcLevels, maximum) * punch, Unquantize(ac % AcLevels, maximum) * punch);
         }
-        var pixels = new byte[checked(width * height * 4)];
         var cosX = Cosines(width, nx);
         var cosY = Cosines(height, ny);
-        for (var y = 0; y < height; y++)
-        for (var x = 0; x < width; x++)
+        try
         {
-            double r = 0, g = 0, b = 0;
-            for (var cy = 0; cy < ny; cy++)
-            for (var cx = 0; cx < nx; cx++)
-            {
-                var factor = factors[cy * nx + cx];
-                var basis = cosX[cx * width + x] * cosY[cy * height + y];
-                r += basis * factor.R;
-                g += basis * factor.G;
-                b += basis * factor.B;
-            }
-            var index = (y * width + x) * 4;
-            pixels[index] = (byte)ToSrgb(r);
-            pixels[index + 1] = (byte)ToSrgb(g);
-            pixels[index + 2] = (byte)ToSrgb(b);
-            pixels[index + 3] = 255;
+            for (var y = 0; y < height; y++)
+                for (var x = 0; x < width; x++)
+                {
+                    double r = 0, g = 0, b = 0;
+                    for (var cy = 0; cy < ny; cy++)
+                        for (var cx = 0; cx < nx; cx++)
+                        {
+                            var factor = factors[cy * nx + cx];
+                            var basis = cosX.Length != 0 && cosY.Length != 0
+                                ? cosX[cx * width + x] * cosY[cy * height + y]
+                                : Cosine(cosX, cx, x, width) * Cosine(cosY, cy, y, height);
+                            r += basis * factor.R;
+                            g += basis * factor.G;
+                            b += basis * factor.B;
+                        }
+                    var index = y * stride + x * 4;
+                    destination[index] = (byte)ToSrgb(r);
+                    destination[index + 1] = (byte)ToSrgb(g);
+                    destination[index + 2] = (byte)ToSrgb(b);
+                    destination[index + 3] = 255;
+                }
         }
-        return pixels;
+        finally
+        {
+            ReturnCosines(cosX);
+            ReturnCosines(cosY);
+        }
     }
 
     private static void ValidateComponents(int componentsX, int componentsY)
@@ -211,11 +315,22 @@ public static class BlurHashCodec
 
     private static double[] Cosines(int length, int count)
     {
-        var values = new double[length * count];
+        if ((long)length * count > MaximumCachedCosines)
+            return Array.Empty<double>();
+        var values = ArrayPool<double>.Shared.Rent(length * count);
         for (var c = 0; c < count; c++)
-        for (var p = 0; p < length; p++)
-            values[c * length + p] = Math.Cos(Math.PI * c * p / length);
+            for (var p = 0; p < length; p++)
+                values[c * length + p] = Math.Cos(Math.PI * c * p / length);
         return values;
+    }
+
+    private static double Cosine(double[] cache, int component, int pixel, int length) =>
+        cache.Length == 0 ? Math.Cos(Math.PI * component * pixel / length) : cache[component * length + pixel];
+
+    private static void ReturnCosines(double[] cache)
+    {
+        if (cache.Length != 0)
+            ArrayPool<double>.Shared.Return(cache);
     }
 
     private static int Quantize(double value, double max) =>
@@ -247,7 +362,7 @@ public static class BlurHashCodec
         return Math.Clamp((int)Math.Floor(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.Pow(v, 1 / 2.4) - 0.055) + 0.5), 0, 255);
     }
 
-    private static void Write(int value, char[] output, int offset, int count)
+    private static void Write(int value, Span<char> output, int offset, int count)
     {
         for (var i = count - 1; i >= 0; i--)
         {
@@ -256,7 +371,7 @@ public static class BlurHashCodec
         }
     }
 
-    private static int Read(string hash, int offset, int count)
+    private static int Read(ReadOnlySpan<char> hash, int offset, int count)
     {
         var value = 0;
         for (var i = 0; i < count; i++)

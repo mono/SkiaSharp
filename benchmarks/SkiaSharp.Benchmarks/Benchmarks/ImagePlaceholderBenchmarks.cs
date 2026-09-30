@@ -43,6 +43,10 @@ public class BlurHashKernelDecodeBenchmark
 	public int Side { get; set; }
 
 	private const string Hash = "LEHV6nWB2yk8pyo0adR*.7kCMdnj";
+	private byte[] destination = null!;
+
+	[GlobalSetup]
+	public void Setup() => destination = new byte[Side * Side * 4];
 
 	[Benchmark(Baseline = true)]
 	public byte RgbaKernel() => BlurHashCodec.Decode(Hash, Side, Side)[0];
@@ -52,6 +56,13 @@ public class BlurHashKernelDecodeBenchmark
 	{
 		using var bitmap = BlurHashCodec.DecodeBitmap(Hash, Side, Side);
 		return bitmap.GetPixel(0, 0).Red;
+	}
+
+	[Benchmark]
+	public byte IntoCallerBuffer()
+	{
+		BlurHashCodec.DecodeInto(Hash.AsSpan(), destination, Side, Side, Side * 4, 1f);
+		return destination[0];
 	}
 }
 
@@ -114,12 +125,20 @@ public class BlurHashDecodeBenchmark
 	public class ThumbHashDecodeBenchmark
 	{
 		private static readonly byte[] Hash = Convert.FromHexString("934A062D069256C374055867DA8AB6679490510719");
+		private readonly byte[] destination = new byte[32 * 32 * 4];
 
 		[Benchmark(Baseline = true)]
 		public byte Reference() => new ThumbHashes.ThumbHash(Hash).ToImage().rgba[0];
 
 		[Benchmark]
 		public byte Gallery() => ThumbHashCodec.Decode(Hash, 32, 32, out _, out _)[0];
+
+		[Benchmark]
+		public byte IntoCallerBuffer()
+		{
+			ThumbHashCodec.DecodeInto(Hash, destination, 32, 32, 32 * 4, out _, out _);
+			return destination[0];
+		}
 	}
 
 	[MemoryDiagnoser]
