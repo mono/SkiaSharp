@@ -14,6 +14,7 @@ public class BlurHashEncodeBenchmark
 	public int Side { get; set; }
 
 	private SKBitmap bitmap = null!;
+	private SKBitmap normalized = null!;
 
 	[GlobalSetup]
 	public void Setup()
@@ -24,16 +25,32 @@ public class BlurHashEncodeBenchmark
 			for (var x = 0; x < Side; x++)
 				bitmap.SetPixel(x, y, new SKColor((byte)(x * 255 / Side), (byte)(y * 255 / Side), (byte)((x + y) * 127 / Side)));
 		}
+		normalized = PixelBuffers.Normalize(bitmap, PixelBuffers.MaximumThumbnailDimension, compositeWhite: true);
 	}
 
 	[GlobalCleanup]
-	public void Cleanup() => bitmap.Dispose();
+	public void Cleanup()
+	{
+		normalized.Dispose();
+		bitmap.Dispose();
+	}
 
 	[Benchmark(Baseline = true)]
 	public string ExtendedSource() => SKBlurHash.Serialize(bitmap, 4, 3);
 
 	[Benchmark]
 	public string Gallery() => BlurHashCodec.Encode(bitmap);
+
+	[Benchmark]
+	public string GalleryNormalizedRgba() =>
+		BlurHashCodec.Encode(PixelBuffers.Pixels(normalized), normalized.Width, normalized.Height, normalized.RowBytes);
+
+	[Benchmark]
+	public string GalleryWithManagedCopy()
+	{
+		var (pixels, width, height) = PixelBuffers.FromBitmap(bitmap, PixelBuffers.MaximumThumbnailDimension, compositeWhite: true);
+		return BlurHashCodec.Encode(pixels, width, height, width * PixelBuffers.RgbaBytesPerPixel);
+	}
 }
 
 [MemoryDiagnoser]

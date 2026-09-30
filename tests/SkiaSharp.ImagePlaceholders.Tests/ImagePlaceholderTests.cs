@@ -252,6 +252,12 @@ public class ImagePlaceholderTests
         using var pixmap = bitmap.PeekPixels();
         Assert.Equal(BlurHashCodec.Encode(bitmap), BlurHashCodec.Encode(image));
         Assert.Equal(BlurHashCodec.Encode(bitmap, 2, 3), BlurHashCodec.Encode(pixmap, 2, 3));
+        using var normalized = PixelBuffers.Normalize(bitmap, PixelBuffers.MaximumThumbnailDimension, compositeWhite: true);
+        Assert.Equal(BlurHashCodec.Encode(bitmap),
+            BlurHashCodec.Encode(PixelBuffers.Pixels(normalized), normalized.Width, normalized.Height, normalized.RowBytes));
+        var (pixels, width, height) = PixelBuffers.FromBitmap(bitmap, PixelBuffers.MaximumThumbnailDimension, compositeWhite: true);
+        Assert.Equal(BlurHashCodec.Encode(bitmap),
+            BlurHashCodec.Encode(pixels, width, height, width * PixelBuffers.RgbaBytesPerPixel));
         Assert.Equal(ThumbHashCodec.Encode(bitmap), ThumbHashCodec.Encode(image));
         Assert.Equal(ThumbHashCodec.Encode(bitmap), ThumbHashCodec.Encode(pixmap));
         Assert.NotEqual(IntPtr.Zero, bitmap.Handle);
