@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Collections.Generic;
 
 namespace SkiaSharp
 {
@@ -8,6 +9,8 @@ namespace SkiaSharp
 	/// <remarks />
 	public class SKNWayCanvas : SKNoDrawCanvas
 	{
+		private readonly Dictionary<IntPtr, int> canvasRegistrations = new Dictionary<IntPtr, int> ();
+
 		internal SKNWayCanvas (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -32,8 +35,23 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (canvas));
 
 			SkiaApi.sk_nway_canvas_add_canvas (Handle, canvas.Handle);
+			ReferenceCanvas (canvas);
 			GC.KeepAlive (canvas);
 			GC.KeepAlive (this);
+		}
+
+		internal void ReferenceCanvas (SKCanvas canvas)
+		{
+			var handle = canvas.Handle;
+			if (handle == IntPtr.Zero)
+				return;
+
+			if (canvasRegistrations.TryGetValue (handle, out var count))
+				canvasRegistrations[handle] = count + 1;
+			else {
+				canvasRegistrations.Add (handle, 1);
+				Referenced (this, canvas);
+			}
 		}
 
 		/// <summary>Removes a canvas from the list of canvases receiving drawing commands.</summary>
@@ -45,6 +63,15 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (canvas));
 
 			SkiaApi.sk_nway_canvas_remove_canvas (Handle, canvas.Handle);
+			var handle = canvas.Handle;
+			if (canvasRegistrations.TryGetValue (handle, out var count)) {
+				if (count == 1) {
+					canvasRegistrations.Remove (handle);
+					Unreferenced (this, canvas);
+				} else {
+					canvasRegistrations[handle] = count - 1;
+				}
+			}
 			GC.KeepAlive (canvas);
 			GC.KeepAlive (this);
 		}
@@ -54,6 +81,8 @@ namespace SkiaSharp
 		public void RemoveAll ()
 		{
 			SkiaApi.sk_nway_canvas_remove_all (Handle);
+			canvasRegistrations.Clear ();
+			UnreferencedAll (this);
 			GC.KeepAlive (this);
 		}
 	}
