@@ -558,9 +558,20 @@ function Format-ReleasePackageBuild([pscustomobject] $Build) {
         return 'not built'
     }
     if ($Build.State -eq 'green') {
-        return "#$($Build.BuildId) green / BAR $($Build.BarId)"
+        $summary = "#$($Build.BuildId) green / BAR $($Build.BarId)"
+    } else {
+        $summary = "#$($Build.BuildId) $($Build.State)"
+        if ($Build.BarId) {
+            $summary += " / BAR $($Build.BarId)"
+        }
     }
-    return "#$($Build.BuildId) $($Build.State)"
+    if ($Build.NewerBuilds) {
+        $newer = @($Build.NewerBuilds | ForEach-Object {
+            "#$($_.BuildId) $($_.State)"
+        }) -join ', '
+        $summary += " (newer $newer)"
+    }
+    return $summary
 }
 
 function New-ReleasePackageBuildAction(
@@ -582,6 +593,11 @@ function New-ReleasePackageBuildAction(
         return New-ReleaseAuditAction `
             -Kind 'build' `
             -Message "Build $Purpose with skiasharp-package; no exact-tip build exists for $($Build.Branch)@$($Build.Commit)."
+    }
+    if ($Build.State -eq 'partial' -and $Build.BarId) {
+        return New-ReleaseAuditAction `
+            -Kind 'review-build' `
+            -Message "Review the partially succeeded skiasharp-package build for ${Purpose}: $($Build.Message) $($Build.Url)"
     }
     $message = "Fix or rerun skiasharp-package for ${Purpose}: $($Build.Message) $($Build.Url)"
     return New-ReleaseAuditAction `
@@ -637,6 +653,8 @@ function Get-ReleaseAuditState(
                 'Publish release branch'
             } elseif ($branchBuild -and $branchBuild.State -eq 'running') {
                 'Wait for package build'
+            } elseif ($branchBuild -and $branchBuild.State -eq 'partial' -and $branchBuild.BarId) {
+                'Review package build'
             } else {
                 'Fix package build'
             }
@@ -765,7 +783,7 @@ function Get-ReleaseAuditState(
     if ($latest -and !$latestShipments.Count) {
         if (!$buildChecksEnabled -or ($latestBuild -and $latestBuild.Ready)) {
             $buildEvidence = if ($latestBuild) {
-                " Exact-tip build #$($latestBuild.BuildId) succeeded with BAR $($latestBuild.BarId)."
+                " Exact-tip build #$($latestBuild.BuildId) succeeded with BAR $($latestBuild.BarId).$(if ($latestBuild.Message) { " $($latestBuild.Message)" })"
             } else {
                 ''
             }
@@ -811,6 +829,11 @@ function Get-ReleaseAuditState(
         $actions.Add((New-ReleaseAuditAction `
             -Kind 'review-sync' `
             -Message "Complete incoming milestone PR #$($IncomingPullRequest.Number) before $($PendingMilestone.Line) becomes the active main line: $($IncomingPullRequest.Title)." `
+            -Command "gh pr view $($IncomingPullRequest.Number) --repo $ReleaseRepository --web"))
+    } elseif ($IncomingPullRequest -and $IncomingPullRequest.State -eq 'draft') {
+        $actions.Add((New-ReleaseAuditAction `
+            -Kind 'review-sync' `
+            -Message "Review draft Skia sync PR #$($IncomingPullRequest.Number) before it can be merged: $($IncomingPullRequest.Title)." `
             -Command "gh pr view $($IncomingPullRequest.Number) --repo $ReleaseRepository --web"))
     } elseif (
         $PendingMilestone -and

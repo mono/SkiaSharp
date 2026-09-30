@@ -21,7 +21,7 @@ function Invoke-AzureDevOpsCli([string[]] $Arguments) {
     return ($output -join "`n").Trim()
 }
 
-# Classifies the latest internal package build for one exact branch tip.
+# Selects the newest usable internal package build for one exact branch tip.
 function ConvertTo-ReleasePackageBuildState(
     [string] $Branch,
     [string] $Commit,
@@ -44,33 +44,73 @@ function ConvertTo-ReleasePackageBuildState(
             QueueTime = $null
             FinishTime = $null
             BarId = $null
+            NewerBuilds = @()
             Url = ''
             Message = "No exact-tip skiasharp-package build was found for $Branch@$Commit."
         }
     }
 
-    $build = $exactBuilds[0]
-    $barIds = @($build.tags | ForEach-Object {
-        if ([string] $_ -match '^BAR ID - (?<id>\d+)$') {
-            [int] $Matches.id
+    $checks = @($exactBuilds | ForEach-Object {
+        $build = $_
+        $barIds = @($build.tags | ForEach-Object {
+            if ([string] $_ -match '^BAR ID - (?<id>\d+)$') {
+                [int] $Matches.id
+            }
+        } | Sort-Object -Unique)
+        $status = ([string] $build.status).ToLowerInvariant()
+        $result = ([string] $build.result).ToLowerInvariant()
+        $state = if ($status -ne 'completed') {
+            'running'
+        } elseif ($result -eq 'canceled') {
+            'canceled'
+        } elseif ($result -eq 'partiallysucceeded') {
+            'partial'
+        } elseif ($result -ne 'succeeded') {
+            'failed'
+        } elseif ($barIds.Count -ne 1) {
+            'incomplete'
+        } else {
+            'green'
         }
-    } | Sort-Object -Unique)
-    $status = ([string] $build.status).ToLowerInvariant()
-    $result = ([string] $build.result).ToLowerInvariant()
-    $state = if ($status -ne 'completed') {
-        'running'
-    } elseif ($result -eq 'canceled') {
-        'canceled'
-    } elseif ($result -ne 'succeeded') {
-        'failed'
-    } elseif ($barIds.Count -ne 1) {
-        'incomplete'
-    } else {
-        'green'
+        [pscustomobject] @{
+            Build = $build
+            BarIds = $barIds
+            State = $state
+            Status = $status
+            Result = $result
+        }
+    })
+    $selected = $checks | Where-Object { $_.State -eq 'green' } | Select-Object -First 1
+    if (!$selected) {
+        $selected = $checks | Where-Object {
+            $_.State -eq 'partial' -and $_.BarIds.Count -eq 1
+        } | Select-Object -First 1
     }
+    if (!$selected) {
+        $selected = $checks[0]
+    }
+    $build = $selected.Build
+    $barIds = $selected.BarIds
+    $status = $selected.Status
+    $result = $selected.Result
+    $state = $selected.State
+    $newerBuilds = @($checks | Where-Object {
+        [long] $_.Build.id -gt [long] $build.id
+    } | ForEach-Object {
+        [pscustomobject] @{ BuildId = [int] $_.Build.id; State = $_.State }
+    })
     $message = switch ($state) {
         'running' { "skiasharp-package build $($build.id) is $status." }
         'canceled' { "skiasharp-package build $($build.id) was canceled." }
+        'partial' {
+            if ($barIds.Count -eq 1) {
+                "skiasharp-package build $($build.id) partially succeeded with BAR $($barIds[0]); review its issues before publication."
+            } elseif ($barIds.Count) {
+                "skiasharp-package build $($build.id) partially succeeded with multiple BAR IDs: $($barIds -join ', '); investigate before publication."
+            } else {
+                "skiasharp-package build $($build.id) partially succeeded without a BAR ID; fix or rerun before publication."
+            }
+        }
         'failed' { "skiasharp-package build $($build.id) completed with result $result." }
         'incomplete' {
             if ($barIds.Count) {
@@ -80,6 +120,12 @@ function ConvertTo-ReleasePackageBuildState(
             }
         }
         default { '' }
+    }
+    if ($newerBuilds.Count) {
+        $newerSummary = @($newerBuilds | ForEach-Object {
+            "#$($_.BuildId) $($_.State)"
+        }) -join ', '
+        $message = "$message Newer exact-tip attempt(s): $newerSummary.".Trim()
     }
     return [pscustomobject] @{
         Available = $true
@@ -94,29 +140,53 @@ function ConvertTo-ReleasePackageBuildState(
         QueueTime = $build.queueTime
         FinishTime = $build.finishTime
         BarId = if ($barIds.Count -eq 1) { $barIds[0] } else { $null }
+        NewerBuilds = $newerBuilds
         Url = "https://dev.azure.com/dnceng/internal/_build/results?buildId=$($build.id)"
         Message = $message
     }
 }
 
-# Reads the internal skiasharp-package build for one exact branch tip.
+# Reads all internal skiasharp-package builds for one release branch.
 function Get-ReleasePackageBuild([string] $Branch, [string] $Commit) {
     try {
-        $json = Invoke-AzureDevOpsCli -Arguments @(
-            'pipelines', 'build', 'list',
-            '--organization', 'https://dev.azure.com/dnceng',
-            '--project', 'internal',
-            '--definition-ids', '1642',
-            '--branch', "refs/heads/$Branch",
-            '--top', '20',
-            '--only-show-errors',
-            '--output', 'json'
-        )
-        $builds = if ($json) { @($json | ConvertFrom-Json) } else { @() }
+        $builds = [collections.generic.list[object]]::new()
+        $token = ''
+        $seenTokens = [collections.generic.hashset[string]]::new()
+        do {
+            $query = @(
+                'definitions=1642',
+                "branchName=refs/heads/$Branch",
+                'queryOrder=queueTimeDescending',
+                '$top=100'
+            )
+            if ($token) {
+                $query += "continuationToken=$token"
+            }
+            $arguments = @(
+                'devops', 'invoke',
+                '--organization', 'https://dev.azure.com/dnceng',
+                '--area', 'build',
+                '--resource', 'builds',
+                '--route-parameters', 'project=internal',
+                '--query-parameters'
+            ) + $query + @('--api-version', '7.1', '--output', 'json')
+            $json = Invoke-AzureDevOpsCli -Arguments $arguments
+            $page = $json | ConvertFrom-Json
+            if (!$page -or $null -eq $page.value) {
+                throw 'The internal package build list returned an invalid response.'
+            }
+            foreach ($build in $page.value) {
+                $builds.Add($build)
+            }
+            $token = [string] $page.continuation_token
+            if ($token -and !$seenTokens.Add($token)) {
+                throw 'The internal package build list repeated a continuation token.'
+            }
+        } while ($token)
         return ConvertTo-ReleasePackageBuildState `
             -Branch $Branch `
             -Commit $Commit `
-            -Builds $builds
+            -Builds $builds.ToArray()
     } catch {
         return [pscustomobject] @{
             Available = $false
@@ -131,6 +201,7 @@ function Get-ReleasePackageBuild([string] $Branch, [string] $Commit) {
             QueueTime = $null
             FinishTime = $null
             BarId = $null
+            NewerBuilds = @()
             Url = ''
             Message = $_.Exception.Message
         }

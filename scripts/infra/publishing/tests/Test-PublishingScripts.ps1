@@ -286,23 +286,75 @@ $failedBuild = ConvertTo-ReleasePackageBuildState `
     -Branch $buildBranch `
     -Commit $buildCommit `
     -Builds @($greenBuildFixture, $failedBuildFixture)
-Assert-Equal 101 $failedBuild.BuildId 'The newest exact-tip build was not selected.'
-Assert-Equal 'failed' $failedBuild.State 'A newer failed build was hidden by an older green build.'
+Assert-Equal 100 $failedBuild.BuildId 'A newer failed rerun displaced an exact-tip green build.'
+Assert-Equal 'green' $failedBuild.State 'A newer failed rerun hid an older green build.'
+Assert-Equal @(101) @($failedBuild.NewerBuilds.BuildId) 'The failed rerun was not reported.'
+$canceledBuildFixture = [pscustomobject] @{
+    id = 105
+    buildNumber = '4.152.1+canceled'
+    sourceVersion = $buildCommit
+    status = 'completed'
+    result = 'canceled'
+    queueTime = '2026-09-17T00:35:00Z'
+    finishTime = '2026-09-17T00:36:00Z'
+    tags = @()
+}
 $canceledBuild = ConvertTo-ReleasePackageBuildState `
     -Branch $buildBranch `
     -Commit $buildCommit `
-    -Builds @([pscustomobject] @{
-        id = 105
-        buildNumber = '4.152.1+canceled'
-        sourceVersion = $buildCommit
-        status = 'completed'
-        result = 'canceled'
-        queueTime = '2026-09-17T00:35:00Z'
-        finishTime = '2026-09-17T00:36:00Z'
-        tags = @()
-    })
+    -Builds @($canceledBuildFixture)
 Assert-Equal 'canceled' $canceledBuild.State `
     'A canceled exact-tip build was folded into the generic failed state.'
+$rerunBuild = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch -Commit $buildCommit `
+    -Builds @($greenBuildFixture, $canceledBuildFixture)
+Assert-Equal 100 $rerunBuild.BuildId 'A canceled rerun displaced a usable BAR.'
+Assert-Equal $true $rerunBuild.Ready 'A canceled rerun blocked a prior green BAR.'
+Assert-Equal @(105) @($rerunBuild.NewerBuilds.BuildId) 'The canceled rerun was not reported.'
+$newerGreenBuild = [pscustomobject] @{
+    id = 106
+    buildNumber = '4.152.1+green-rerun'
+    sourceVersion = $buildCommit
+    status = 'completed'
+    result = 'succeeded'
+    tags = @('BAR ID - 331116')
+}
+$latestGreen = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch -Commit $buildCommit `
+    -Builds @($greenBuildFixture, $newerGreenBuild)
+Assert-Equal 106 $latestGreen.BuildId 'The most recent usable BAR was not preferred.'
+Assert-Equal 331116 $latestGreen.BarId 'The newer usable BAR was not selected.'
+$partialBuildFixture = [pscustomobject] @{
+    id = 104
+    buildNumber = '4.152.1+partial'
+    sourceVersion = $buildCommit
+    status = 'completed'
+    result = 'partiallySucceeded'
+    tags = @('BAR ID - 331117')
+}
+$partialBuild = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch -Commit $buildCommit `
+    -Builds @($partialBuildFixture, $canceledBuildFixture)
+Assert-Equal 'partial' $partialBuild.State 'A partial BAR was hidden by a canceled rerun.'
+Assert-Equal 104 $partialBuild.BuildId 'The partially succeeded BAR was not reported.'
+Assert-Equal 331117 $partialBuild.BarId 'The partial BAR provenance was lost.'
+Assert-Equal $false $partialBuild.Ready 'A partial BAR was marked publish-ready.'
+$partialWithoutBar = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch -Commit $buildCommit `
+    -Builds @([pscustomobject] @{
+        id = 107
+        sourceVersion = $buildCommit
+        status = 'completed'
+        result = 'partiallySucceeded'
+        tags = @()
+    })
+Assert-Equal $false $partialWithoutBar.Ready 'A partial build without a BAR was marked ready.'
+Assert-True ($partialWithoutBar.Message -match 'without a BAR ID') `
+    'The partial build did not report its missing BAR.'
+$greenOverPartial = ConvertTo-ReleasePackageBuildState `
+    -Branch $buildBranch -Commit $buildCommit `
+    -Builds @($greenBuildFixture, $partialBuildFixture, $canceledBuildFixture)
+Assert-Equal 100 $greenOverPartial.BuildId 'A partial BAR displaced a green BAR.'
 $runningBuild = ConvertTo-ReleasePackageBuildState `
     -Branch $buildBranch `
     -Commit $buildCommit `
@@ -358,6 +410,34 @@ Assert-Equal $false $unavailableBuild.Available `
     'An unavailable internal pipeline was treated as a completed build check.'
 Assert-Equal 'unavailable' $unavailableBuild.State `
     'An unavailable internal pipeline did not preserve its distinct state.'
+$script:BuildPageRequests = @()
+function global:az {
+    $script:BuildPageRequests += ,@($args)
+    $global:LASTEXITCODE = 0
+    if (@($args | Where-Object { $_ -eq 'continuationToken=second-page' }).Count) {
+        $page = @{
+            value = @($greenBuildFixture)
+            continuation_token = $null
+        }
+    } else {
+        $page = @{
+            value = @($canceledBuildFixture)
+            continuation_token = 'second-page'
+        }
+    }
+    ConvertTo-Json $page -Depth 10 -Compress
+}
+try {
+    $pagedBuild = Get-ReleasePackageBuild -Branch $buildBranch -Commit $buildCommit
+} finally {
+    Remove-Item Function:\az
+}
+Assert-Equal 2 $script:BuildPageRequests.Count 'The build lookup did not follow the next page.'
+Assert-True $pagedBuild.Available "The paged lookup failed: $($pagedBuild.Message)"
+Assert-Equal 100 $pagedBuild.BuildId 'The paged lookup missed the older usable BAR.'
+Assert-Equal 331115 $pagedBuild.BarId 'The paged lookup lost the BAR ID.'
+Assert-Equal @(105) @($pagedBuild.NewerBuilds.BuildId) `
+    'The paged lookup omitted the newer canceled rerun.'
 
 $script:ReleaseViewArguments = @()
 function global:gh {
@@ -1125,6 +1205,18 @@ Assert-True ($auditScript -match
     'The release-line audit does not inspect pre-transition sync PRs after a servicing branch is cut.'
 $auditFunctions = Get-ScriptFunctionText $auditPath
 Invoke-Expression $auditFunctions
+Assert-True ((Format-ReleasePackageBuild $rerunBuild) -match
+    '#100 green / BAR 331115.*newer #105 canceled') `
+    'The human-readable audit hid the newer canceled rerun.'
+Assert-True ((Format-ReleasePackageBuild $partialBuild) -match
+    '#104 partial / BAR 331117.*newer #105 canceled') `
+    'The human-readable audit hid the partial BAR or canceled rerun.'
+Assert-Equal 'review-build' (New-ReleasePackageBuildAction -Build $partialBuild `
+    -Purpose $buildBranch).Kind `
+    'A partial BAR did not require review before publication.'
+Assert-Equal 'fix-build' (New-ReleasePackageBuildAction -Build $partialWithoutBar `
+    -Purpose $buildBranch).Kind `
+    'A partial build without a BAR was offered for review instead of a fix.'
 
 function New-AuditBranch([string] $Identity, [string] $Sha) {
     return [pscustomobject] @{
@@ -1168,6 +1260,7 @@ function New-AuditPackageBuild(
         QueueTime = $null
         FinishTime = $null
         BarId = if ($BarId) { $BarId } else { $null }
+        NewerBuilds = @()
         Url = if ($BuildId) { "https://dev.azure.com/dnceng/internal/_build/results?buildId=$BuildId" } else { '' }
         Message = if ($Available) { "Build state is $State." } else { 'Azure DevOps unavailable.' }
     }
@@ -1635,6 +1728,12 @@ $draftDoesNotBlock = Get-ReleaseAuditState `
     -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
     -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } `
     -Delta $realChanges -IncomingPullRequest $draftSyncPullRequest
+Assert-True (@($draftDoesNotBlock.Actions.Kind) -contains 'review-sync') `
+    'A draft incoming sync PR was omitted from the next actions.'
+Assert-True (
+    @($draftDoesNotBlock.Actions | Where-Object Kind -eq 'review-sync')[0].Message -match
+        "draft Skia sync PR #$($draftSyncPullRequest.Number)"
+) 'A draft incoming sync PR did not identify the PR to review.'
 Assert-True (@($draftDoesNotBlock.Actions.Kind) -contains 'start') `
     'A draft incoming sync PR incorrectly suppressed a release cut.'
 
@@ -1667,6 +1766,23 @@ Assert-True (@($failedReleaseBuildState.Actions.Kind) -contains 'fix-build') `
     'A failed release-branch build did not block publication.'
 Assert-True (@($failedReleaseBuildState.Actions.Kind) -notcontains 'publish') `
     'A failed release-branch build incorrectly allowed publication.'
+$partialReleaseBuild = New-AuditPackageBuild `
+    -Branch $latestRc.Name -Commit $latestRc.Sha -State partial -Ready $false `
+    -BuildId 201 -BarId 330713
+$partialReleaseBuilds = @{}
+$partialReleaseBuilds[$latestRc.Name] = $partialReleaseBuild
+$partialReleaseBuildState = Get-ReleaseAuditState `
+    -Line '4.153' -Maintenance ([pscustomobject] @{ Branch = 'main'; Sha = $sha1; Version = '4.153.0' }) `
+    -Branches @($oldPreview, $latestRc) -Packages @() -TagShas @{} -GitHubReleases @{} `
+    -Delta (New-AuditDelta '1 queued release commit' 1) `
+    -PackageBuilds $partialReleaseBuilds
+Assert-True (@($partialReleaseBuildState.Actions.Kind) -contains 'review-build') `
+    'A partial release-branch BAR was not flagged for review.'
+Assert-True (@($partialReleaseBuildState.Actions.Kind) -notcontains 'publish') `
+    'A partial release-branch BAR incorrectly allowed publication.'
+Assert-Equal 'Review package build' ($partialReleaseBuildState.Releases |
+    Where-Object Branch -eq $latestRc.Name).Action `
+    'The partial build was displayed as a fix instead of a review.'
 $greenReleaseBuild = New-AuditPackageBuild `
     -Branch $latestRc.Name `
     -Commit $latestRc.Sha `
@@ -1674,6 +1790,8 @@ $greenReleaseBuild = New-AuditPackageBuild `
     -Ready $true `
     -BuildId 202 `
     -BarId 330714
+$greenReleaseBuild.NewerBuilds = @([pscustomobject] @{ BuildId = 203; State = 'canceled' })
+$greenReleaseBuild.Message = 'Newer exact-tip attempt(s): #203 canceled.'
 $greenReleaseBuilds = @{}
 $greenReleaseBuilds[$latestRc.Name] = $greenReleaseBuild
 $greenReleaseBuildState = Get-ReleaseAuditState `
@@ -1686,6 +1804,9 @@ Assert-True (@($greenReleaseBuildState.Actions.Kind) -contains 'publish') `
 Assert-True ((@($greenReleaseBuildState.Actions.Message) -join "`n") -match
     'build #202 succeeded with BAR 330714') `
     'The publication action omitted exact build and BAR evidence.'
+Assert-True ((@($greenReleaseBuildState.Actions.Message) -join "`n") -match
+    'Newer exact-tip attempt.*#203 canceled') `
+    'The publication action omitted the newer canceled rerun.'
 
 $state = Get-ReleaseAuditState `
     -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
