@@ -37,14 +37,6 @@ The image-placeholder implementation lives in [`Shared/ImagePlaceholders/`](Shar
 |---|---|
 | ![Shader Playground](screenshots/shader-playground.png) | ![PDF Composer](screenshots/pdf-composer.png) |
 
-| BlurHash Playground | ThumbHash Playground |
-|---|---|
-| ![BlurHash preview, original image, and transition](screenshots/blurhash-playground.png) | ![ThumbHash transparency against a checkerboard](screenshots/thumbhash-playground.png) |
-
-| BlurHash Playground (Uno) | ThumbHash Playground (Uno) |
-|---|---|
-| ![Uno BlurHash preview and transition](screenshots/blurhash-playground-uno.png) | ![Uno ThumbHash transparency against a checkerboard](screenshots/thumbhash-playground-uno.png) |
-
 ## Samples
 
 ### Canvas (21)

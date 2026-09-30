@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using SkiaSharp;
 
@@ -31,8 +33,10 @@ internal static class PixelBuffers
         var pixels = new byte[checked(normalized.Width * normalized.Height * RgbaBytesPerPixel)];
         var native = Pixels(normalized);
         for (var y = 0; y < normalized.Height; y++)
+        {
             native.Slice(y * normalized.RowBytes, normalized.Width * RgbaBytesPerPixel)
                 .CopyTo(pixels.AsSpan(y * normalized.Width * RgbaBytesPerPixel));
+        }
         return (pixels, normalized.Width, normalized.Height);
     }
 
@@ -85,6 +89,32 @@ internal static class PixelBuffers
             normalized.Dispose();
             throw;
         }
+    }
+
+    public static SKPixmap? PeekEncodingPixels(SKImage source, bool compositeWhite)
+    {
+        if (source.Width > MaximumThumbnailDimension || source.Height > MaximumThumbnailDimension)
+            return null;
+        var pixmap = source.PeekPixels();
+        if (pixmap is null)
+            return null;
+        if (pixmap.ColorType == SKColorType.Rgba8888 &&
+            pixmap.AlphaType == (compositeWhite ? SKAlphaType.Opaque : SKAlphaType.Unpremul) &&
+            pixmap.ColorSpace?.IsSrgb == true &&
+            pixmap.GetPixels() != IntPtr.Zero &&
+            pixmap.RowBytes >= (long)pixmap.Width * RgbaBytesPerPixel)
+            return pixmap;
+        pixmap.Dispose();
+        return null;
+    }
+
+    public static ReadOnlySpan<byte> Pixels(SKPixmap pixmap)
+    {
+        var length = checked((pixmap.Height - 1) * pixmap.RowBytes + pixmap.Width * RgbaBytesPerPixel);
+        var pixels = pixmap.GetPixelSpan();
+        if (pixels.Length < length)
+            throw new InvalidOperationException("Unable to read the source pixmap.");
+        return pixels[..length];
     }
 
     public static ReadOnlySpan<byte> Pixels(SKBitmap bitmap)

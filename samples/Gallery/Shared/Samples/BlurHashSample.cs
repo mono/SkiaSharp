@@ -6,9 +6,12 @@ namespace SkiaSharpSample.Samples;
 
 public sealed class BlurHashSample : ImagePlaceholderSampleBase
 {
-	private int componentsX = BlurHashCodec.DefaultComponentsX;
-	private int componentsY = BlurHashCodec.DefaultComponentsY;
-	private float punch = BlurHashCodec.DefaultPunch;
+	private const int InitialComponentsX = 4;
+	private const int InitialComponentsY = 3;
+	private const float InitialPunch = 1f;
+	private int componentsX = InitialComponentsX;
+	private int componentsY = InitialComponentsY;
+	private float punch = InitialPunch;
 
 	public override string Title => "BlurHash Playground";
 	public override string Description => "Compare a BlurHash preview with its image and adjust the component count.";
