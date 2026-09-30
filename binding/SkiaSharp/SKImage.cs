@@ -261,10 +261,12 @@ namespace SkiaSharp
 			var del = releaseProc != null && releaseContext != null
 				? new SKImageRasterReleaseDelegate ((addr, _) => releaseProc (addr, releaseContext))
 				: releaseProc;
-			DelegateProxies.Create (del, out _, out var ctx);
+			DelegateProxies.Create (del, out var gch, out var ctx);
 			var proxy = del is not null ? DelegateProxies.SKImageRasterReleaseProxy : null;
 			var image = GetObject (SkiaApi.sk_image_new_raster (pixmap.Handle, proxy, (void*)ctx));
 			GC.KeepAlive (pixmap);
+			if (image == null && gch.IsAllocated)
+				gch.Free ();
 			return image;
 		}
 
