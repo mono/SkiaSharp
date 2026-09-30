@@ -85,5 +85,13 @@ namespace SkiaSharp
 			UnreferencedAll (this);
 			GC.KeepAlive (this);
 		}
+
+		/// <summary>Releases the managed resources used by the <see cref="T:SkiaSharp.SKNWayCanvas" />.</summary>
+		/// <remarks />
+		protected override void DisposeManaged ()
+		{
+			canvasRegistrations.Clear ();
+			base.DisposeManaged ();
+		}
 	}
 }
