@@ -5,7 +5,9 @@ Param(
   # Tizen version in "BAND/VERSION" format, e.g., "10.0.100/10.0.123"
   [string] $Tizen = '',
   # Override the default workloads (comma-separated, e.g. "android,maui-android")
-  [string] $Workloads = ''
+  [string] $Workloads = '',
+  # Override sources for official workloads; otherwise use the repository NuGet configuration.
+  [string[]] $Sources = @()
 )
 
 $ErrorActionPreference = 'Stop'
@@ -54,7 +56,7 @@ if ($TizenBand -and $TizenVersion) {
 
 # Build workload list
 if ($Workloads) {
-  $WorkloadList = $Workloads -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+  $WorkloadList = @($Workloads -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 } else {
   $WorkloadList = @('android', 'macos', 'wasm-tools')
   if ($IsLinux) {
@@ -65,8 +67,12 @@ if ($Workloads) {
 }
 
 # Install official workloads pinned to the workload set version
+$sourceArguments = @()
+foreach ($source in $Sources) {
+  $sourceArguments += @('--source', $source)
+}
 Write-Host "Installing workloads: $($WorkloadList -join ', ') (workload set $WorkloadSetVersion)..."
-& dotnet workload install @WorkloadList --skip-sign-check --version $WorkloadSetVersion
+& dotnet workload install @WorkloadList --skip-sign-check --version $WorkloadSetVersion @sourceArguments
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Install Tizen separately — it's a third-party workload not part of the

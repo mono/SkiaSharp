@@ -16,11 +16,17 @@ Task ("Default")
         { "PackageDirectory", OUTPUT_NUGETS_PATH.FullPath },
         { "MSBuildTestArtifactsDirectory", results.FullPath },
     };
+    var consumerSdkVersion = Argument("consumerSdkVersion", "");
+    if (!string.IsNullOrEmpty(consumerSdkVersion))
+        properties["ConsumerSdkVersion"] = consumerSdkVersion;
 
     if (!SKIP_BUILD)
         RunDotNetBuild(project, properties: properties);
 
-    RunDotNetTest(project, results);
+    var filter = Argument("wasm", false)
+        ? "--filter-trait"
+        : "--filter-not-trait";
+    RunDotNetTest(project, results, runnerArguments: new[] { filter, "Category=Wasm" });
 });
 
 RunTarget(TARGET);

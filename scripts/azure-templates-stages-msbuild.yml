@@ -58,3 +58,76 @@ stages:
               - name: testlogs_msbuild_${{ platform }}
                 always: true
                 path: output/logs
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+        parameters:
+          name: tests_msbuild_wasm_linux
+          displayName: Linux WASM package consumer (.NET 10)
+          buildAgent: ${{ parameters.buildAgentLinux }}
+          target: tests-msbuild
+          additionalArgs: --wasm=true
+          retryCount: 0
+          shouldPublish: false
+          checkoutSubmodules: false
+          installDotNetWorkloads: true
+          dotnetWorkloads: wasm-tools
+          installAndroidSdk: false
+          installAndroidNdk: false
+          installXcode: false
+          installNode: false
+          installLlvm: false
+          installEmsdk: false
+          installNinja: false
+          requiredArtifacts:
+            - name: nuget
+              dir: nugets
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish .NET 10 WASM package test results
+              condition: always()
+              inputs:
+                testResultsFormat: VSTest
+                testResultsFiles: 'output/logs/testlogs/msbuild/**/*.trx'
+                testRunTitle: 'Linux .NET 10 WASM package tests'
+                failTaskOnFailedTests: true
+                failTaskOnMissingResultsFile: true
+          publishArtifacts:
+            - name: testlogs_msbuild_wasm_linux
+              always: true
+              path: output/logs
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+        parameters:
+          name: tests_msbuild_wasm_preview_linux
+          displayName: Linux WASM package consumer (.NET 11 preview)
+          buildAgent: ${{ parameters.buildAgentLinux }}
+          target: tests-msbuild
+          additionalArgs: --wasm=true
+          retryCount: 0
+          shouldPublish: false
+          checkoutSubmodules: false
+          installDotNetWorkloads: false
+          installPreviewSdk: true
+          previewWorkloads: wasm-tools
+          installAndroidSdk: false
+          installAndroidNdk: false
+          installXcode: false
+          installNode: false
+          installLlvm: false
+          installEmsdk: false
+          installNinja: false
+          requiredArtifacts:
+            - name: nuget
+              dir: nugets
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish .NET 11 WASM package test results
+              condition: always()
+              inputs:
+                testResultsFormat: VSTest
+                testResultsFiles: 'output/logs/testlogs/msbuild/**/*.trx'
+                testRunTitle: 'Linux .NET 11 WASM package tests'
+                failTaskOnFailedTests: true
+                failTaskOnMissingResultsFile: true
+          publishArtifacts:
+            - name: testlogs_msbuild_wasm_preview_linux
+              always: true
+              path: output/logs

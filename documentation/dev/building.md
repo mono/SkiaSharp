@@ -170,18 +170,20 @@ dotnet cake --target=externals-linux --arch=x64
 ## MSBuild Package-Consumer Tests
 
 `tests/SkiaSharp.Tests.MSBuild` tests real packed SkiaSharp and HarfBuzzSharp
-packages using isolated .NET console consumers. It does not build the bindings,
-load native libraries into the test runner, or use the repository's native-copy
-targets. Only the SDK pinned by `global.json` is required; no mobile workloads,
-submodules, GPU, browser, native source build, or native runtime dependencies are
-needed. These tests inspect build/publish output without executing native code.
+packages using isolated .NET consumers. It does not build the bindings, load
+native libraries into the test runner, or use the repository's native-copy
+targets. The default desktop tests only require the SDK pinned by `global.json`:
+no workloads, submodules, GPU, browser, native source build, or native runtime
+dependencies. They inspect build/publish output without executing native code.
 
 Download the `nuget` artifact from one exact completed SkiaSharp CI build and
 place its packages in `output/nugets`. Record the build URL/commit when reporting
 results. Do not combine different builds or substitute published packages for
 missing artifacts. Both families require their core, `NativeAssets.Win32`,
-`NativeAssets.macOS`, and `NativeAssets.Linux` packages; package versions are read
-from their nuspec metadata, not inferred from the checkout.
+`NativeAssets.macOS`, and `NativeAssets.Linux` packages for the desktop tests.
+The WASM test additionally requires both `NativeAssets.WebAssembly` packages.
+Package versions are read from their nuspec metadata, not inferred from the
+checkout.
 
 Run the CI entry point from the repository root:
 
@@ -189,12 +191,42 @@ Run the CI entry point from the repository root:
 dotnet cake --target=tests-msbuild
 ```
 
+To run the WASM native-link regression instead, install `wasm-tools` under the
+consumer SDK and use:
+
+```sh
+dotnet cake --target=tests-msbuild --wasm=true
+# Use a specific installed SDK (including preview SDKs):
+dotnet cake --target=tests-msbuild --wasm=true --consumerSdkVersion=11.0.100-rc.1.26425.128
+```
+
+The runner remains net10.0, while `ConsumerSdkVersion` pins the generated
+consumer's `global.json` and selects its target framework (SDK 10 -> net10.0,
+SDK 11 -> net11.0). An SDK preview is permitted only when that exact SDK was
+selected. A direct filtered invocation is also available:
+
+```sh
+dotnet test tests/SkiaSharp.Tests.MSBuild/SkiaSharp.Tests.MSBuild.csproj \
+  -p:PackageDirectory=/absolute/path/to/nugets \
+  -p:ConsumerSdkVersion=11.0.100-rc.1.26425.128 \
+  -- --filter-trait Category=Wasm --report-trx --results-directory /absolute/path/to/test-results
+```
+
+For an SDK installed outside the runner's dotnet root, also pass
+`-p:ConsumerDotNetHost=/absolute/path/to/dotnet`. CI uses the published RC1 SDK
+and workload set `11.0.100-rc.1.26458.5`. The consumer's Microsoft dependencies
+must be available on `dotnet-public`; unpublished daily SDKs can require
+additional feeds and are not supported by this fixture's restore configuration.
+Preview workload provisioning explicitly uses NuGet.org and `dotnet-public`
+because the published RC1 workload-set package is not in the repository's
+default feeds. This does not change the consumer's package source mapping.
+
 Or run the test project directly against a local artifact directory:
 
 ```sh
 dotnet test tests/SkiaSharp.Tests.MSBuild/SkiaSharp.Tests.MSBuild.csproj \
   -p:PackageDirectory=/absolute/path/to/nugets \
-  -- --report-trx --results-directory /absolute/path/to/test-results
+  -- --filter-not-trait Category=Wasm --report-trx --results-directory /absolute/path/to/test-results
 ```
 
 `NativeAssetOutputTests.cs` contains the package references, scenarios, and
@@ -224,14 +256,26 @@ rather than accepting only a successful MSBuild exit code.
 Linux assets are explicitly referenced; this suite does not change package
 dependencies or filtering behavior. No fake packages or mock CLI are used.
 
+`WasmNativeAssetTests.cs` builds a minimal Mono WebAssembly app in Debug with
+both families' real packages and the SDK's default WASM flags. It checks the
+resolved build properties (native build, exception handling, SIMD, no threads),
+compares selected archive paths and hashes against the input packages, verifies
+that the emcc link response names both families, and checks the linked WASM
+header. This is native-link build coverage, not a trimmed publish/AOT or
+browser-execution test. The SDK and packages, rather than the test, choose the
+flags and archive variants. It does not claim CoreCLR WASM support.
+
 TRX results, generated projects, command logs, binlogs, restore/dependency
 metadata, and failed-consumer outputs are published from `output/logs/` in CI.
-Successful build outputs are removed after assertions. The consumer diagnostics
-default to `output/logs/testlogs/msbuild`; override
+Successful desktop build outputs are removed after assertions; WASM build
+outputs and emcc response files are retained even on success. The consumer
+diagnostics default to `output/logs/testlogs/msbuild`; override
 `-p:MSBuildTestArtifactsDirectory=/absolute/path/to/diagnostics` for a direct run.
 Private restore caches are not included in diagnostic artifacts.
 
-The **MSBuild package tests** CI stage runs on Windows, macOS, and Linux. In
+The **MSBuild package tests** CI stage runs workload-free desktop tests on
+Windows, macOS, and Linux and separate Linux WASM package jobs for the stable
+.NET 10 and preview .NET 11 SDKs, each with only the `wasm-tools` workload. In
 combined CI it depends on `package`; in downstream Tests it depends on `prepare`
 and downloads the exact SkiaSharp pipeline-resource run's artifact. It runs
 alongside Samples without changing the prerequisites of existing source/unit/

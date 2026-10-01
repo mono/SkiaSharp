@@ -11,6 +11,8 @@ public sealed class DotNet : IDisposable
     private readonly string host = Setting("DotNetHost");
 
     public string PackageDirectory { get; } = Path.GetFullPath(Setting("PackageDirectory"));
+    public string SdkVersion { get; } = Setting("SdkVersion");
+    public string PackagesCacheDirectory => Path.Combine(cache, "packages");
 
     public DotNet()
     {
@@ -20,7 +22,7 @@ public sealed class DotNet : IDisposable
         File.WriteAllText(Path.Combine(root, "Directory.Build.targets"), "<Project />");
         File.WriteAllText(Path.Combine(root, "global.json"), JsonSerializer.Serialize(new
         {
-            sdk = new { version = Setting("SdkVersion"), rollForward = "disable" }
+            sdk = new { version = SdkVersion, allowPrerelease = SdkVersion.Contains('-'), rollForward = "disable" }
         }));
         new XDocument(new XElement("configuration",
             new XElement("packageSources",
@@ -38,20 +40,24 @@ public sealed class DotNet : IDisposable
             .Save(Path.Combine(root, "NuGet.Config"));
     }
 
-    public string NewProject(string name, string xml)
+    public string NewProject(string name, string xml, string? program = null, string? mainJs = null)
     {
         var directory = Path.Combine(root, name);
         Directory.CreateDirectory(directory);
         File.WriteAllText(Path.Combine(directory, "Consumer.csproj"), xml);
-        File.WriteAllText(Path.Combine(directory, "Program.cs"), "System.Console.WriteLine(\"Package consumer\");");
+        File.WriteAllText(Path.Combine(directory, "Program.cs"), program ?? "System.Console.WriteLine(\"Package consumer\");");
+        if (mainJs is not null)
+            File.WriteAllText(Path.Combine(directory, "main.js"), mainJs);
         return directory;
     }
 
-    public Task Build(string directory) => Run(directory, "build");
+    public Task Build(string directory, string configuration = "Release", int timeoutMinutes = 5) =>
+        Run(directory, "build", configuration: configuration, timeoutMinutes: timeoutMinutes);
 
     public Task Publish(string directory, string? rid = null) => Run(directory, "publish", rid);
 
-    private async Task Run(string directory, string command, string? rid = null)
+    private async Task Run(string directory, string command, string? rid = null,
+        string configuration = "Release", int timeoutMinutes = 5)
     {
         var start = new ProcessStartInfo(host)
         {
@@ -60,7 +66,7 @@ public sealed class DotNet : IDisposable
             RedirectStandardError = true,
             UseShellExecute = false
         };
-        foreach (var argument in new[] { command, "Consumer.csproj", "-c", "Release", "-o", "output",
+        foreach (var argument in new[] { command, "Consumer.csproj", "-c", configuration, "-o", "output",
             "--nologo", "-v:minimal", "-bl:build.binlog", $"-p:RestoreConfigFile={Path.Combine(root, "NuGet.Config")}" })
             start.ArgumentList.Add(argument);
         if (rid is not null)
@@ -74,7 +80,7 @@ public sealed class DotNet : IDisposable
             k.StartsWith("NUGET_", StringComparison.OrdinalIgnoreCase) ||
             k.Equals("NuGetPackageRoot", StringComparison.OrdinalIgnoreCase)).ToArray())
             start.Environment.Remove(key);
-        start.Environment["NUGET_PACKAGES"] = Path.Combine(cache, "packages");
+        start.Environment["NUGET_PACKAGES"] = PackagesCacheDirectory;
         start.Environment["NUGET_HTTP_CACHE_PATH"] = Path.Combine(cache, "http");
         start.Environment["NUGET_SCRATCH"] = Path.Combine(cache, "scratch");
         start.Environment["DOTNET_CLI_HOME"] = Path.Combine(cache, "home");
@@ -85,7 +91,7 @@ public sealed class DotNet : IDisposable
         using var process = Process.Start(start) ?? throw new InvalidOperationException("Could not start dotnet");
         var stdout = process.StandardOutput.ReadToEndAsync();
         var stderr = process.StandardError.ReadToEndAsync();
-        using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+        using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(timeoutMinutes));
         try
         {
             await process.WaitForExitAsync(timeout.Token);

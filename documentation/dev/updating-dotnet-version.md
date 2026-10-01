@@ -152,6 +152,13 @@ The public manifest package ID is `Microsoft.NET.Workload.Emscripten.Current.Man
 | RC1 | `11.100.0-rc.1.26458.5`, `11.100.0-rc.1.26460.1` | `11.0.100-rc.1.26425.128` | 6.0.2 |
 | RC2 installed daily set | `11.0.100-rc.2.26478.2` | `11.0.100-rc.2.26475.136` | 6.0.2 |
 
+The public **NuGet package version** differs from the **CLI workload-set
+version**. For RC1, `dotnet workload install wasm-tools --version 11.0.100-rc.1.26458.5` resolves package version
+`11.100.0-rc.1.26458.5`. Use the former in
+`DOTNET_WORKLOAD_VERSION_PREVIEW`; passing the package version to `--version`
+is rejected by the SDK. The RC2 row records the installed CLI version, not a
+published NuGet package version.
+
 The installed RC2 set above comes from `sdk-manifests/11.0.100-rc.2/workloadsets/11.0.100-rc.2.26478.2/microsoft.net.workloads.workloadset.json`. It is a daily build, not a NuGet.org-published RC2 release. Its `Current` manifest selects 6.0.2 for net11; its separate `net6`, `net7`, `net8`, `net9`, and `net10` manifests still select 2.0.23, 3.1.12, 3.1.34, 3.1.56, and 3.1.56 respectively. One installed workload set can therefore contain several toolchains; inspect the manifest for the application's target.
 
 #### Upstream version-file changes
