@@ -13,6 +13,7 @@ This guide covers building SkiaSharp on Windows and macOS.
     * [Building](#building)
  * [Native Building](#native-building)
     * [Dependencies](#dependencies-1)
+ * [MSBuild Package-Consumer Tests](#msbuild-package-consumer-tests)
  * [Documentation Outputs](#documentation-outputs)
 
 ## Prerequisites
@@ -165,6 +166,77 @@ dotnet cake --target=externals-linux --arch=x64
 ```
 
 > **Tip:** Native builds can take 10-30 minutes depending on your machine. Only build for platforms you need to test.
+
+## MSBuild Package-Consumer Tests
+
+`tests/SkiaSharp.Tests.MSBuild` tests real packed SkiaSharp and HarfBuzzSharp
+packages using isolated .NET console consumers. It does not build the bindings,
+load native libraries into the test runner, or use the repository's native-copy
+targets. Only the SDK pinned by `global.json` is required; no mobile workloads,
+submodules, GPU, browser, native source build, or native runtime dependencies are
+needed. These tests inspect build/publish output without executing native code.
+
+Download the `nuget` artifact from one exact completed SkiaSharp CI build and
+place its packages in `output/nugets`. Record the build URL/commit when reporting
+results. Do not combine different builds or substitute published packages for
+missing artifacts. Both families require their core, `NativeAssets.Win32`,
+`NativeAssets.macOS`, and `NativeAssets.Linux` packages; package versions are read
+from their nuspec metadata, not inferred from the checkout.
+
+Run the CI entry point from the repository root:
+
+```sh
+dotnet cake --target=tests-msbuild
+```
+
+Or run the test project directly against a local artifact directory:
+
+```sh
+dotnet test tests/SkiaSharp.Tests.MSBuild/SkiaSharp.Tests.MSBuild.csproj \
+  -p:PackageDirectory=/absolute/path/to/nugets \
+  -- --report-trx --results-directory /absolute/path/to/test-results
+```
+
+`NativeAssetOutputTests.cs` contains the package references, scenarios, and
+assertions. `Utils/DotNet.cs` handles isolated project creation and CLI execution.
+The tests share one private restore cache; every case has independent project,
+intermediate, and output directories. Source mapping restricts SkiaSharp and
+HarfBuzzSharp packages to the supplied artifacts, so missing packages cannot
+fall back to public versions. User NuGet caches and input packages are not modified.
+
+For each family, build and publish first verify the default package includes
+Win32/macOS native assets and **no Linux native assets**. With an explicit
+`NativeAssets.Linux` reference, the nine-case matrix below verifies that Linux
+assets are included and that RID selection behaves as expected.
+
+For each family, the suite tests `build`, `publish`, and `publish -r linux-x64`
+against three project configurations:
+
+| Project configuration | Build/publish without a CLI RID | Publish with `-r linux-x64` |
+| --- | --- | --- |
+| No RID | All native variants under `runtimes/` | Linux x64 native assets beside the app |
+| `RuntimeIdentifier=linux-arm64` | Linux arm64 native assets beside the app | Linux x64 overrides the project RID |
+| `RuntimeIdentifiers=linux-x64;linux-arm64` | All native variants under `runtimes/` | Linux x64 native assets beside the app |
+
+Plural `RuntimeIdentifiers` are restore targets, **not an output allow-list**.
+The tests compare native paths and hashes with the actual input packages,
+rather than accepting only a successful MSBuild exit code.
+Linux assets are explicitly referenced; this suite does not change package
+dependencies or filtering behavior. No fake packages or mock CLI are used.
+
+TRX results, generated projects, command logs, binlogs, restore/dependency
+metadata, and failed-consumer outputs are published from `output/logs/` in CI.
+Successful build outputs are removed after assertions. The consumer diagnostics
+default to `output/logs/testlogs/msbuild`; override
+`-p:MSBuildTestArtifactsDirectory=/absolute/path/to/diagnostics` for a direct run.
+Private restore caches are not included in diagnostic artifacts.
+
+The **MSBuild package tests** CI stage runs on Windows, macOS, and Linux. In
+combined CI it depends on `package`; in downstream Tests it depends on `prepare`
+and downloads the exact SkiaSharp pipeline-resource run's artifact. It runs
+alongside Samples without changing the prerequisites of existing source/unit/
+device tests. Its failures are reported independently and still fail the pipeline.
+The existing release/platform Integration suite remains a separate entry point.
 
 ## Documentation Outputs
 
