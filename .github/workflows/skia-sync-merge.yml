@@ -1,0 +1,463 @@
+name: Merge - Skia Sync
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      skiasharp_pr:
+        description: Existing mono/SkiaSharp [skia-sync] PR number.
+        required: true
+        type: string
+      apply:
+        description: Apply the approved merge sequence; false is a read-only plan.
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+  statuses: read
+  actions: read
+  issues: read
+
+concurrency:
+  group: skia-sync-merge-${{ github.event.issue.number || inputs.skiasharp_pr }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: >
+      github.repository == 'mono/SkiaSharp' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.issue.pull_request != null &&
+        github.event.comment.body == '/skia-sync-merge' &&
+        (github.event.comment.author_association == 'OWNER' ||
+         github.event.comment.author_association == 'MEMBER' ||
+         github.event.comment.author_association == 'COLLABORATOR')))
+    runs-on: ubuntu-latest
+    outputs:
+      apply: ${{ steps.resolve.outputs.apply }}
+      parent_pr: ${{ steps.resolve.outputs.parent_pr }}
+      parent_head: ${{ steps.resolve.outputs.parent_head }}
+      parent_base: ${{ steps.resolve.outputs.parent_base }}
+      parent_merged: ${{ steps.resolve.outputs.parent_merged }}
+      native_pr: ${{ steps.resolve.outputs.native_pr }}
+      native_head: ${{ steps.resolve.outputs.native_head }}
+      native_base: ${{ steps.resolve.outputs.native_base }}
+      native_merged: ${{ steps.resolve.outputs.native_merged }}
+      native_merge_sha: ${{ steps.resolve.outputs.native_merge_sha }}
+      head_branch: ${{ steps.resolve.outputs.head_branch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          submodules: false
+          persist-credentials: false
+      - name: Require trusted main source for apply
+        if: github.event_name != 'workflow_dispatch' || inputs.apply
+        env:
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+        run: |
+          set -euo pipefail
+          [ "$WORKFLOW_REF" = "mono/SkiaSharp/.github/workflows/skia-sync-merge.yml@refs/heads/main" ] ||
+            { echo "::error::apply=true requires the workflow source on mono/SkiaSharp main."; exit 1; }
+      - name: Authorize applying maintainer
+        if: github.event_name != 'workflow_dispatch' || inputs.apply
+        env:
+          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          permission=$(gh api "repos/mono/SkiaSharp/collaborators/$ACTOR/permission" --jq .permission)
+          case "$permission" in write|maintain|admin) ;; *) echo "::error::Command actor lacks write permission."; exit 1;; esac
+      - id: resolve
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          COMMENT_PR: ${{ github.event.issue.number }}
+          INPUT_PR: ${{ inputs.skiasharp_pr }}
+          INPUT_APPLY: ${{ inputs.apply }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          parent="$COMMENT_PR"
+          apply=true
+          if [ "$EVENT_NAME" = workflow_dispatch ]; then
+            parent="$INPUT_PR"
+            apply="$INPUT_APPLY"
+          fi
+          [[ "$parent" =~ ^[1-9][0-9]*$ ]] || { echo "::error::A SkiaSharp PR number is required."; exit 1; }
+          contract="$RUNNER_TEMP/pair.json"
+          python3 .github/scripts/resolve-skia-sync-pair.py --skiasharp-pr "$parent" --mode merge > "$contract"
+          native=$(jq -r '.native.number' "$contract")
+          native_head=$(jq -r '.native.head_sha' "$contract")
+          native_merged=$(jq -r '.native.merged' "$contract")
+          native_merge=$(jq -r '.native.merge_sha // ""' "$contract")
+          parent_head=$(jq -r '.parent.head_sha' "$contract")
+          gh api --paginate --slurp "repos/mono/SkiaSharp/issues/$parent/comments" > "$RUNNER_TEMP/review-comments.json"
+          python3 .github/scripts/skia-sync-review-state.py \
+            --comments "$RUNNER_TEMP/review-comments.json" \
+            --native-pr "$native" --native-head "$native_head" \
+            --parent-pr "$parent" --parent-head "$parent_head" > "$RUNNER_TEMP/review-marker.json"
+          marker=$(jq -r '.parent_head' "$RUNNER_TEMP/review-marker.json")
+          review_run=$(jq -r '.run' "$RUNNER_TEMP/review-marker.json")
+          review_artifact=$(jq -r '.artifact' "$RUNNER_TEMP/review-marker.json")
+          gh api "repos/mono/SkiaSharp/actions/runs/$review_run" > "$RUNNER_TEMP/review-run.json"
+          gh api "repos/mono/SkiaSharp/actions/runs/$review_run/artifacts?per_page=100" > "$RUNNER_TEMP/review-artifacts.json"
+          jq -n \
+            --arg artifact_id "$review_artifact" \
+            --slurpfile run "$RUNNER_TEMP/review-run.json" \
+            --slurpfile artifacts "$RUNNER_TEMP/review-artifacts.json" \
+            '{run:$run[0], artifacts:$artifacts[0], artifact_id:$artifact_id}' \
+            > "$RUNNER_TEMP/review-provenance.json"
+          python3 .github/scripts/skia-sync-review-state.py \
+            --provenance-json "$RUNNER_TEMP/review-provenance.json" >/dev/null
+          mkdir -p "$RUNNER_TEMP/review-evidence"
+          gh api "repos/mono/SkiaSharp/actions/artifacts/$review_artifact/zip" \
+            > "$RUNNER_TEMP/review-evidence.zip"
+          unzip -q "$RUNNER_TEMP/review-evidence.zip" -d "$RUNNER_TEMP/review-evidence"
+          evidence_report="$RUNNER_TEMP/review-evidence/agent/ai-review/$native/$native_head/$marker/$native.json"
+          test -s "$evidence_report" ||
+            { echo "::error::Review artifact does not contain the exact marker report."; exit 1; }
+          jq -e \
+            --argjson native "$native" \
+            --argjson parent "$parent" \
+            --arg native_head "$native_head" \
+            --arg parent_head "$marker" '
+              .meta.skiaPrNumber == $native and
+              .meta.skiasharpPrNumber == $parent and
+              .meta.shas.prHead == $native_head and
+              .companionPr.prNumber == $parent and
+              .companionPr.headSha == $parent_head' \
+            "$evidence_report" >/dev/null ||
+              { echo "::error::Review artifact contents do not match the marker."; exit 1; }
+          if [ "$marker" != "$parent_head" ]; then
+            [ "$native_merged" = true ] || { echo "::error::Review evidence parent head is stale."; exit 1; }
+            current=$(gh api "repos/mono/SkiaSharp/git/commits/$parent_head")
+            changed=$(gh api "repos/mono/SkiaSharp/compare/$marker...$parent_head" --jq '[.files[].filename]')
+            gitlink=$(gh api "repos/mono/SkiaSharp/git/trees/$parent_head?recursive=1" --jq '.tree[] | select(.path == "externals/skia") | .sha')
+            manifest=$(gh api "repos/mono/SkiaSharp/contents/cgmanifest.json?ref=$parent_head" --jq .content | tr -d '\n' | base64 --decode)
+            components=$(jq -c '[.registrations[] | select(.component.git.repositoryUrl == "https://github.com/mono/skia.git") | .component.git]' <<<"$manifest")
+            [ "$(jq 'length' <<<"$components")" -eq 1 ] ||
+              { echo "::error::Repin must contain exactly one mono/skia registration."; exit 1; }
+            component=$(jq -c '.[0]' <<<"$components")
+            jq -n \
+              --arg parent_head "$parent_head" --arg marker_parent_head "$marker" \
+              --argjson parents "$(jq '[.parents[].sha]' <<<"$current")" \
+              --argjson changed_paths "$changed" --arg gitlink "$gitlink" \
+              --arg component_repository_url "$(jq -r '.repositoryUrl // ""' <<<"$component")" \
+              --arg component_commit_hash "$(jq -r '.commitHash // ""' <<<"$component")" \
+              --arg native_merge_sha "$native_merge" \
+              '{parent_head:$parent_head, marker_parent_head:$marker_parent_head, parents:$parents, changed_paths:$changed_paths, gitlink:$gitlink, component_repository_url:$component_repository_url, component_commit_hash:$component_commit_hash, native_merge_sha:$native_merge_sha}' \
+              > "$RUNNER_TEMP/repin-evidence.json"
+            python3 .github/scripts/skia-sync-review-state.py --repin-json "$RUNNER_TEMP/repin-evidence.json" >/dev/null
+          fi
+          check_sha() {
+            local repo="$1" sha="$2"
+            gh api --paginate --slurp "repos/$repo/commits/$sha/check-runs?per_page=100" > "$RUNNER_TEMP/check-runs-$sha.json"
+            gh api "repos/$repo/commits/$sha/status" > "$RUNNER_TEMP/status-$sha.json"
+            jq -ne --slurpfile pages "$RUNNER_TEMP/check-runs-$sha.json" --slurpfile status "$RUNNER_TEMP/status-$sha.json" '
+              ([ $pages[0][] | .check_runs[] ] + $status[0].statuses) as $results |
+              ($results | length > 0) and
+              (all($results[];
+                if has("conclusion") then
+                  .status == "completed" and (.conclusion == "success" or .conclusion == "neutral" or .conclusion == "skipped")
+                else .state == "success" end))' >/dev/null ||
+                { echo "::error::Exact commit checks are unavailable, pending, or failing for $repo@$sha."; exit 1; }
+          }
+          check_sha mono/skia "$native_head"
+          check_sha mono/SkiaSharp "$marker"
+          check_pr() {
+            local repo="$1" number="$2"
+            local json status
+            set +e
+            json=$(gh pr checks "$number" --repo "$repo" --json bucket,name,link 2>"$RUNNER_TEMP/checks-$number.err")
+            status=$?
+            set -e
+            jq -e 'type == "array" and length > 0 and all(.[]; .bucket == "pass" or .bucket == "skipping")' <<<"$json" >/dev/null ||
+              { cat "$RUNNER_TEMP/checks-$number.err"; echo "::error::Checks unavailable, pending, or failing for $repo#$number."; exit 1; }
+            [ "$status" -eq 0 ] || { echo "::error::gh pr checks returned nonzero for $repo#$number."; exit 1; }
+          }
+          if [ "$native_merged" = false ]; then
+            check_pr mono/SkiaSharp "$parent"
+            check_pr mono/skia "$native"
+          fi
+          if [ "$parent_merged" = false ]; then
+            pwsh -NoLogo -NoProfile -File .agents/skills/merge-skia-update/scripts/Prepare-SkiaReleaseBranches.ps1 \
+              -SkiaSharpBaseBranch "$(jq -r '.parent.base_branch' "$contract")" \
+              -SkiaSharpHeadBranch "$(jq -r '.head_branch' "$contract")" \
+              -SkiaBaseBranch "$(jq -r '.native.base_branch' "$contract")"
+          fi
+          if [ "$apply" = false ]; then
+            {
+              echo "## Skia sync merge plan"
+              echo
+              echo "| Item | Frozen value |"
+              echo "| --- | --- |"
+              echo "| Parent | #$parent @ \`$parent_head\` |"
+              echo "| Native | #$native @ \`$native_head\` |"
+              echo "| Review evidence | trusted marker with parent \`$marker\` |"
+              echo "| Checks | all current checks passed or were skipped |"
+              echo "| Release branches | $(if [ "$parent_merged" = true ]; then echo 'already merged; skipped'; else echo 'dry run completed'; fi) |"
+              echo
+              echo "Plan mode performs no merge-message, repin, or merge mutation."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          jq -r --arg apply "$apply" '"apply=\($apply)\nparent_pr=\(.parent.number)\nparent_head=\(.parent.head_sha)\nparent_base=\(.parent.base_branch)\nparent_merged=\(.parent.merged)\nnative_pr=\(.native.number)\nnative_head=\(.native.head_sha)\nnative_base=\(.native.base_branch)\nnative_merged=\(.native.merged)\nnative_merge_sha=\(.native.merge_sha // "")\nhead_branch=\(.head_branch)"' \
+            "$contract" >> "$GITHUB_OUTPUT"
+
+      - name: Preserve release branches
+        if: steps.resolve.outputs.apply == 'true' && steps.resolve.outputs.parent_merged != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          PARENT_BASE: ${{ steps.resolve.outputs.parent_base }}
+          HEAD_BRANCH: ${{ steps.resolve.outputs.head_branch }}
+          NATIVE_BASE: ${{ steps.resolve.outputs.native_base }}
+        run: |
+          set -euo pipefail
+          pwsh -NoLogo -NoProfile -File .agents/skills/merge-skia-update/scripts/Prepare-SkiaReleaseBranches.ps1 \
+            -SkiaSharpBaseBranch "$PARENT_BASE" -SkiaSharpHeadBranch "$HEAD_BRANCH" -SkiaBaseBranch "$NATIVE_BASE" -Push
+
+  native-message:
+    needs: prepare
+    if: needs.prepare.outputs.apply == 'true' && needs.prepare.outputs.native_merged != 'true'
+    uses: ./.github/workflows/merge-message.lock.yml
+    with:
+      repository: mono/skia
+      pull_request: ${{ fromJSON(needs.prepare.outputs.native_pr) }}
+      expected_head_sha: ${{ needs.prepare.outputs.native_head }}
+      artifact_name: skia-native-merge-message-${{ github.run_id }}
+      post_comment: false
+
+  native-state:
+    needs: [prepare, native-message]
+    if: >
+      always() && needs.prepare.result == 'success' && needs.prepare.outputs.apply == 'true' &&
+      (needs.native-message.result == 'success' || needs.native-message.result == 'skipped')
+    runs-on: ubuntu-latest
+    outputs:
+      native_merge_sha: ${{ steps.merge.outputs.native_merge_sha }}
+    steps:
+      - name: Download native merge message
+        if: needs.prepare.outputs.native_merged != 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: skia-native-merge-message-${{ github.run_id }}
+          path: ${{ runner.temp }}/native-merge-message
+      - id: merge
+        env:
+          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          PR: ${{ needs.prepare.outputs.native_pr }}
+          HEAD: ${{ needs.prepare.outputs.native_head }}
+          BASE: ${{ needs.prepare.outputs.native_base }}
+          ALREADY_MERGED: ${{ needs.prepare.outputs.native_merged }}
+        run: |
+          set -euo pipefail
+          pr=$(gh api "repos/mono/skia/pulls/$PR")
+          if [ "$ALREADY_MERGED" = true ]; then
+            [ "$(jq -r '.merged_at != null' <<<"$pr")" = true ] || { echo "::error::Native PR is no longer merged."; exit 1; }
+            sha=$(jq -r '.merge_commit_sha' <<<"$pr")
+          else
+            [ "$(jq -r '.state' <<<"$pr")" = open ] && [ "$(jq -r '.head.sha' <<<"$pr")" = "$HEAD" ] && [ "$(jq -r '.base.ref' <<<"$pr")" = "$BASE" ] ||
+              { echo "::error::Native PR identity/head/base changed."; exit 1; }
+            set +e
+            check=$(gh pr checks "$PR" --repo mono/skia --json bucket,name,link 2>"$RUNNER_TEMP/native-checks.err")
+            check_status=$?
+            set -e
+            jq -e 'length > 0 and all(.[]; .bucket == "pass" or .bucket == "skipping")' <<<"$check" >/dev/null ||
+              { cat "$RUNNER_TEMP/native-checks.err"; echo "::error::Native checks no longer pass."; exit 1; }
+            [ "$check_status" -eq 0 ] ||
+              { cat "$RUNNER_TEMP/native-checks.err"; echo "::error::Native checks were unavailable."; exit 1; }
+            message="$RUNNER_TEMP/native-merge-message/merge-message.json"
+            jq -e \
+              --arg repository mono/skia \
+              --argjson pr "$PR" \
+              --arg head "$HEAD" '
+                keys == ["body","head_sha","missing_context","pull_request","repository","schema_version","subject"] and
+                .schema_version == 1 and
+                .repository == $repository and
+                .pull_request == $pr and
+                .head_sha == $head and
+                (.subject | type == "string" and length > 0 and length <= 200) and
+                (.body | type == "string") and
+                .missing_context == []' "$message" >/dev/null ||
+                  { echo "::error::Native merge-message artifact is invalid."; exit 1; }
+            if [ "$(jq -r '.draft' <<<"$pr")" = true ]; then
+              gh pr ready "$PR" --repo mono/skia
+            fi
+            pr=$(gh api "repos/mono/skia/pulls/$PR")
+            [ "$(jq -r '.state' <<<"$pr")" = open ] && [ "$(jq -r '.draft' <<<"$pr")" = false ] &&
+            [ "$(jq -r '.head.sha' <<<"$pr")" = "$HEAD" ] && [ "$(jq -r '.base.ref' <<<"$pr")" = "$BASE" ] ||
+              { echo "::error::Native PR changed while marking ready."; exit 1; }
+            jq -n --arg sha "$HEAD" --slurpfile message "$message" \
+              '{sha:$sha, merge_method:"merge", commit_title:$message[0].subject, commit_message:$message[0].body}' > "$RUNNER_TEMP/native-merge.json"
+            pr=$(gh api "repos/mono/skia/pulls/$PR")
+            [ "$(jq -r '.state' <<<"$pr")" = open ] && [ "$(jq -r '.head.sha' <<<"$pr")" = "$HEAD" ] &&
+            [ "$(jq -r '.base.ref' <<<"$pr")" = "$BASE" ] ||
+              { echo "::error::Native PR changed before merge."; exit 1; }
+            result=$(gh api --method PUT "repos/mono/skia/pulls/$PR/merge" --input "$RUNNER_TEMP/native-merge.json")
+            [ "$(jq -r '.merged' <<<"$result")" = true ] || { echo "::error::Native merge API did not merge."; exit 1; }
+            sha=$(jq -r '.sha' <<<"$result")
+          fi
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Native merge SHA is invalid."; exit 1; }
+          echo "native_merge_sha=$sha" >> "$GITHUB_OUTPUT"
+
+  repin:
+    needs: [prepare, native-state]
+    if: >
+      always() && needs.prepare.result == 'success' && needs.native-state.result == 'success' &&
+      needs.prepare.outputs.apply == 'true' && needs.prepare.outputs.parent_merged != 'true'
+    uses: ./.github/workflows/auto-skia-submodule-sync.yml
+    with:
+      target_branch: ${{ needs.prepare.outputs.head_branch }}
+      skia_branch: ${{ needs.prepare.outputs.native_base }}
+      reviewed_skia_sha: ${{ needs.prepare.outputs.native_head }}
+      expected_target_sha: ${{ needs.prepare.outputs.parent_head }}
+      expected_skia_sha: ${{ needs.native-state.outputs.native_merge_sha }}
+      push: true
+    secrets:
+      SKIASHARP_AUTOBUMP_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+
+  parent-message:
+    needs: [prepare, repin]
+    if: >
+      always() && needs.prepare.result == 'success' && needs.repin.result == 'success' &&
+      needs.prepare.outputs.apply == 'true' && needs.prepare.outputs.parent_merged != 'true'
+    uses: ./.github/workflows/merge-message.lock.yml
+    with:
+      repository: mono/SkiaSharp
+      pull_request: ${{ fromJSON(needs.prepare.outputs.parent_pr) }}
+      expected_head_sha: ${{ needs.repin.outputs.target_sha }}
+      artifact_name: skia-parent-merge-message-${{ github.run_id }}
+      post_comment: false
+
+  merge-parent:
+    needs: [prepare, native-state, repin, parent-message]
+    if: >
+      always() && needs.prepare.result == 'success' && needs.native-state.result == 'success' &&
+      needs.repin.result == 'success' && needs.parent-message.result == 'success' &&
+      needs.prepare.outputs.apply == 'true' && needs.prepare.outputs.parent_merged != 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      parent_merge_sha: ${{ steps.merge.outputs.parent_merge_sha }}
+    steps:
+      - name: Download parent merge message
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: skia-parent-merge-message-${{ github.run_id }}
+          path: ${{ runner.temp }}/parent-merge-message
+      - id: merge
+        env:
+          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          PR: ${{ needs.prepare.outputs.parent_pr }}
+          HEAD: ${{ needs.repin.outputs.target_sha }}
+          BASE: ${{ needs.prepare.outputs.parent_base }}
+          NATIVE_MERGE: ${{ needs.native-state.outputs.native_merge_sha }}
+        run: |
+          set -euo pipefail
+          message="$RUNNER_TEMP/parent-merge-message/merge-message.json"
+          jq -e \
+            --arg repository mono/SkiaSharp \
+            --argjson pr "$PR" \
+            --arg head "$HEAD" '
+              keys == ["body","head_sha","missing_context","pull_request","repository","schema_version","subject"] and
+              .schema_version == 1 and
+              .repository == $repository and
+              .pull_request == $pr and
+              .head_sha == $head and
+              (.subject | type == "string" and length > 0 and length <= 200) and
+              (.body | type == "string") and
+              .missing_context == []' "$message" >/dev/null ||
+                { echo "::error::Parent merge-message artifact is invalid."; exit 1; }
+          pr=$(gh api "repos/mono/SkiaSharp/pulls/$PR")
+          [ "$(jq -r '.state' <<<"$pr")" = open ] && [ "$(jq -r '.head.sha' <<<"$pr")" = "$HEAD" ] && [ "$(jq -r '.base.ref' <<<"$pr")" = "$BASE" ] ||
+            { echo "::error::Parent PR identity/head/base changed."; exit 1; }
+          gitlink=$(gh api "repos/mono/SkiaSharp/git/trees/$HEAD?recursive=1" --jq '.tree[] | select(.path == "externals/skia") | .sha')
+          manifest=$(gh api "repos/mono/SkiaSharp/contents/cgmanifest.json?ref=$HEAD" --jq .content | tr -d '\n' | base64 --decode)
+          registrations=$(jq -c '[.registrations[] | select(.component.git.repositoryUrl == "https://github.com/mono/skia.git") | .component.git]' <<<"$manifest")
+          [ "$gitlink" = "$NATIVE_MERGE" ] &&
+          [ "$(jq 'length' <<<"$registrations")" -eq 1 ] &&
+          [ "$(jq -r '.[0].commitHash' <<<"$registrations")" = "$NATIVE_MERGE" ] ||
+            { echo "::error::Repinned parent does not reference the native merge."; exit 1; }
+          if [ "$(jq -r '.draft' <<<"$pr")" = true ]; then
+            gh pr ready "$PR" --repo mono/SkiaSharp
+          fi
+          pr=$(gh api "repos/mono/SkiaSharp/pulls/$PR")
+          [ "$(jq -r '.state' <<<"$pr")" = open ] && [ "$(jq -r '.draft' <<<"$pr")" = false ] &&
+          [ "$(jq -r '.head.sha' <<<"$pr")" = "$HEAD" ] && [ "$(jq -r '.base.ref' <<<"$pr")" = "$BASE" ] ||
+            { echo "::error::Parent PR changed while marking ready."; exit 1; }
+          jq -n --arg sha "$HEAD" --slurpfile message "$message" \
+            '{sha:$sha, merge_method:"squash", commit_title:$message[0].subject, commit_message:$message[0].body}' > "$RUNNER_TEMP/parent-merge.json"
+          pr=$(gh api "repos/mono/SkiaSharp/pulls/$PR")
+          [ "$(jq -r '.state' <<<"$pr")" = open ] && [ "$(jq -r '.head.sha' <<<"$pr")" = "$HEAD" ] &&
+          [ "$(jq -r '.base.ref' <<<"$pr")" = "$BASE" ] ||
+            { echo "::error::Parent PR changed before merge."; exit 1; }
+          result=$(gh api --method PUT "repos/mono/SkiaSharp/pulls/$PR/merge" --input "$RUNNER_TEMP/parent-merge.json")
+          [ "$(jq -r '.merged' <<<"$result")" = true ] || { echo "::error::Parent merge API did not merge."; exit 1; }
+          echo "parent_merge_sha=$(jq -r '.sha' <<<"$result")" >> "$GITHUB_OUTPUT"
+
+  verify:
+    needs: [prepare, native-message, native-state, repin, parent-message, merge-parent]
+    if: >
+      always() && needs.prepare.result == 'success' && needs.native-state.result == 'success' &&
+      (needs.repin.result == 'success' || needs.repin.result == 'skipped') &&
+      (needs.native-message.result == 'success' || needs.native-message.result == 'skipped') &&
+      (needs.parent-message.result == 'success' || needs.parent-message.result == 'skipped') &&
+      (needs.merge-parent.result == 'success' || needs.merge-parent.result == 'skipped') &&
+      needs.prepare.outputs.apply == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify landings and post final status
+        env:
+          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+          PARENT_PR: ${{ needs.prepare.outputs.parent_pr }}
+          NATIVE_PR: ${{ needs.prepare.outputs.native_pr }}
+          REVIEWED_NATIVE_HEAD: ${{ needs.prepare.outputs.native_head }}
+          PARENT_BASE: ${{ needs.prepare.outputs.parent_base }}
+          NATIVE_MESSAGE_RESULT: ${{ needs.native-message.result }}
+          PARENT_MESSAGE_RESULT: ${{ needs.parent-message.result }}
+        run: |
+          set -euo pipefail
+          native=$(gh api "repos/mono/skia/pulls/$NATIVE_PR")
+          parent=$(gh api "repos/mono/SkiaSharp/pulls/$PARENT_PR")
+          [ "$(jq -r '.merged_at != null' <<<"$native")" = true ] && [ "$(jq -r '.merged_at != null' <<<"$parent")" = true ] ||
+            { echo "::error::Both PRs must be merged."; exit 1; }
+          native_merge=$(jq -r '.merge_commit_sha' <<<"$native")
+          parent_merge=$(jq -r '.merge_commit_sha' <<<"$parent")
+          native_commit=$(gh api "repos/mono/skia/git/commits/$native_merge")
+          reviewed_commit=$(gh api "repos/mono/skia/git/commits/$REVIEWED_NATIVE_HEAD")
+          [ "$(jq '.parents | length' <<<"$native_commit")" = 2 ] &&
+          [ "$(jq -r '.parents[1].sha' <<<"$native_commit")" = "$REVIEWED_NATIVE_HEAD" ] &&
+          [ "$(jq -r '.tree.sha' <<<"$native_commit")" = "$(jq -r '.tree.sha' <<<"$reviewed_commit")" ] ||
+            { echo "::error::Native merge does not preserve the reviewed tree."; exit 1; }
+          gitlink=$(gh api "repos/mono/SkiaSharp/git/trees/$parent_merge?recursive=1" --jq '.tree[] | select(.path == "externals/skia") | .sha')
+          manifest=$(gh api "repos/mono/SkiaSharp/contents/cgmanifest.json?ref=$parent_merge" --jq .content | tr -d '\n' | base64 --decode)
+          registrations=$(jq -c '[.registrations[] | select(.component.git.repositoryUrl == "https://github.com/mono/skia.git") | .component.git]' <<<"$manifest")
+          [ "$gitlink" = "$native_merge" ] &&
+          [ "$(jq 'length' <<<"$registrations")" -eq 1 ] &&
+          [ "$(jq -r '.[0].commitHash' <<<"$registrations")" = "$native_merge" ] ||
+            { echo "::error::Parent landing does not reference native merge."; exit 1; }
+          ci_url=
+          for _ in 1 2 3 4 5 6; do
+            ci_url=$(gh run list --repo mono/SkiaSharp --branch "$PARENT_BASE" --limit 30 --json headSha,url --jq ".[] | select(.headSha == \"$parent_merge\") | .url" | head -n 1)
+            [ -n "$ci_url" ] && break
+            sleep 20
+          done
+          [ -n "$ci_url" ] || { echo "::error::Base-branch CI did not start within two minutes."; exit 1; }
+          artifacts_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID#artifacts"
+          if [ "$NATIVE_MESSAGE_RESULT" = success ]; then
+            native_message="[skia-native-merge-message-$GITHUB_RUN_ID]($artifacts_url)"
+          else
+            native_message="Not generated in this resumed run."
+          fi
+          if [ "$PARENT_MESSAGE_RESULT" = success ]; then
+            parent_message="[skia-parent-merge-message-$GITHUB_RUN_ID]($artifacts_url)"
+          else
+            parent_message="Not generated in this resumed run."
+          fi
+          body=$(printf 'Skia sync merged and verified.\n\n* mono/skia merge: `%s`\n* mono/SkiaSharp merge: `%s`\n* Native merge message artifact: %s\n* Parent merge message artifact: %s\n* Base-branch CI: %s' "$native_merge" "$parent_merge" "$native_message" "$parent_message" "$ci_url")
+          jq -n --arg body "$body" '{body:$body}' > "$RUNNER_TEMP/final-comment.json"
+          gh api --method POST "repos/mono/SkiaSharp/issues/$PARENT_PR/comments" --input "$RUNNER_TEMP/final-comment.json" >/dev/null

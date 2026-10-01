@@ -29,6 +29,15 @@ Phase 1: Run orchestrator  →  Phase 2: Write summaries & build report
 Phase 3: Review C# PR      →  Phase 4: Validate & persist
 ```
 
+## Repository command
+
+For a paired `mono/SkiaSharp` `[skia-sync]` milestone PR, maintainers can comment
+`/skia-sync-review` on the parent PR. `Review - Skia Sync` resolves the reciprocal
+pair and freezes both exact heads before running this skill's orchestrator once. Its
+append-only comment is review evidence, not approval. Use workflow dispatch with
+`staged=true` for a safe preview. Run this skill manually when investigating a pair
+outside that command path or when the command reports a deterministic resolver gate.
+
 ---
 
 ## Phase 1 — Run the Orchestrator

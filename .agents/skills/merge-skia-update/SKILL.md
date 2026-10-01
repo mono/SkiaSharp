@@ -15,6 +15,20 @@ compatibility: Requires git, gh, and PowerShell 7.4+ with access to mono/skia an
 Help with the mechanical work around two manual merges. Do not repeat the
 review and do not merge either PR.
 
+## Repository command and manual fallback
+
+After a maintainer has reviewed the immutable-head evidence and explicitly approves
+the pair, comment `/skia-sync-merge` on the `mono/SkiaSharp` parent PR. The
+`Merge - Skia Sync` coordinator runs the release-branch dry run, preserves a prior
+release line where required, performs the native merge, invokes the direct repin,
+then squash-merges and verifies the parent. It resumes after a completed native
+merge, repin, or parent merge. Workflow dispatch defaults to plan-only and can apply
+only from `main`.
+
+Use the remaining manual procedure as the fallback for exceptional repository policy,
+resolver, or Actions failures. It must retain the same exact-SHA, tree-equivalence,
+and release-branch gates; never bypass them by manually changing a gitlink.
+
 ## 1. Resolve and confirm
 
 Resolve the PR pair before asking for any landing confirmation.
@@ -101,40 +115,64 @@ If the current checkout is suitable, use it directly:
 ```powershell
 pwsh .agents/skills/merge-skia-update/scripts/Update-SkiaSharpSkiaCommit.ps1 `
   -SkiaSharpBranch <parent-head> `
-  -SkiaBranch <native-base>
+  -SkiaBranch <native-base> `
+  -ReviewedSkiaSha <reviewed-native-pr-sha> `
+  -ExpectedTargetSha <parent-head-sha> `
+  -ExpectedSkiaSha <merged-native-sha>
 ```
 
 The default is a dry run. The script:
 
 1. reads the reviewed mono/skia commit from the parent PR gitlink;
 2. resolves the new tip of the supplied mono/skia base branch;
-3. requires that tip to be a two-parent merge containing the reviewed commit;
+3. requires that tip to be a two-parent merge with the reviewed commit as its
+   second parent;
 4. requires the merged tree to equal the reviewed tree.
 
-Show the output. If it is correct, rerun with `-Push`. The script updates only
-`externals/skia` and the mono/skia `commitHash` in `cgmanifest.json`, commits the
-change, and pushes the existing SkiaSharp PR branch without force.
+Show the output. If it is correct, rerun with `-Apply` to create the verified
+two-file local commit without pushing, or with `-Push` to commit and ordinarily
+push the existing SkiaSharp PR branch. `-Apply` and `-Push` cannot be combined.
+Both modes update only `externals/skia` and the mono/skia `commitHash` in
+`cgmanifest.json`.
 
 If the current checkout is unsuitable, ask whether the maintainer wants to
 check out the parent PR branch or avoid a local checkout. For the no-checkout
-option, first verify the same two-parent ancestry and tree-equality conditions,
-record the exact verified mono/skia merge SHA, then trigger the existing
-workflow:
+option, resolve and record the full remote SHA of the parent head and the exact
+reviewed mono/skia PR SHA as well as its exact merge SHA. First trigger the
+existing workflow with its default `push=false` dry run:
 
 ```shell
 gh workflow run auto-skia-submodule-sync.yml --repo mono/SkiaSharp \
   -f target_branch=<parent-head> \
-  -f skia_branch=<native-base>
+  -f skia_branch=<native-base> \
+  -f reviewed_skia_sha=<reviewed-native-pr-sha> \
+  -f expected_target_sha=<parent-head-sha> \
+  -f expected_skia_sha=<merged-native-sha>
 ```
 
-The workflow opens or updates a small dependent PR targeting the existing
-SkiaSharp PR branch. Before showing that PR to the maintainer, confirm it
-changes only `externals/skia` and `cgmanifest.json` and that both files point to
-the exact verified merge SHA. Recheck that SHA's ancestry and tree equality
-against the reviewed native commit. Stop if the workflow captured any SHA
-other than the recorded verified one. Wait for the maintainer to merge the
-dependent PR manually, then verify the parent PR still points to that exact
-SHA. Do not generate the parent merge message until the dependent PR is merged.
+The dry run checks out the target with read-only credentials and runs the
+trusted workflow-revision repin script. It verifies that the supplied target
+remains at `expected_target_sha`, `expected_skia_sha` is a two-parent merge
+containing `reviewed_skia_sha` with the identical tree, and returns the
+unchanged target SHA and verified native SHA as workflow outputs.
+
+After reviewing that result, repeat the identical invocation with `-f push=true`.
+Push mode permits only one open, same-repository SkiaSharp PR whose title begins
+`[skia-sync]`, whose head SHA is `expected_target_sha`, and whose base is
+`main` or `release/A.B.x`. It validates this again immediately before the
+privileged step. Only that step receives `SKIASHARP_AUTOBUMP_TOKEN`; it directly
+pushes the preceding no-credential `-Apply` commit to the existing parent PR
+branch and never creates an automation branch or dependent PR. For mutation,
+the workflow itself must be running from
+`mono/SkiaSharp/.github/workflows/auto-skia-submodule-sync.yml@refs/heads/main`;
+dry runs may use a feature-ref workflow revision. Confirm the workflow's final
+target and native SHA outputs before preparing the parent merge message.
+Reusable callers must explicitly pass that optional secret when requesting
+`push=true`; dry runs do not require it.
+
+The final direct push uses a lease tied to the recorded
+`expected_target_sha`. This is a compare-and-swap guard: it fails if the target
+branch changed and never permits an unreviewed divergent history overwrite.
 
 ## 5. Prepare the mono/SkiaSharp merge
 
@@ -179,7 +217,6 @@ Stop when:
 - the merged and reviewed native trees differ;
 - local repin was selected but the current checkout is not clean, on the parent
   PR branch, and at its remote tip;
-- the workflow repin changes unexpected files, captures a different native SHA,
-  or its dependent PR is not merged;
+- the workflow repin changes unexpected files or captures a different native SHA;
 - the repin would change anything except `externals/skia` and
   `cgmanifest.json`.
