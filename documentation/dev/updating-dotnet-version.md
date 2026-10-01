@@ -99,9 +99,7 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 >    - `binding/IncludeNativeAssets.SkiaSharp.targets`
 >    - `binding/IncludeNativeAssets.HarfBuzzSharp.targets`
 >
-> Convention for the conditions: the **newest** entry stays open-ended (`VersionGreaterThanOrEquals(TFV, 'A')`) so a future SDK compatible with the same archives needs no code change (e.g. .NET 9 and .NET 10 both select 3.1.56). Only when a new SDK requires different archives do you close the previous entry with an upper bound (`… and VersionLessThan(TFV, 'B')`) and add a new open-ended entry for the new version — the way `net9.0`–`net10.x` was capped at `< 11.0` once .NET 11 selected 6.0.2. Both WebAssembly package projects and their `.props` files list supported archive versions explicitly, so add the new version there too; do not let stale archive directories in `output/native/wasm` enter the packages through a catch-all glob.
-
-Run `pwsh -NoLogo -NoProfile -File scripts/infra/tests/wasm-native-assets.ps1` to check both package and source selectors across net8-net12 and all threading/SIMD variants, Uno inclusion, package paths, and stale-version exclusion. These evaluation checks use isolated fixture files, not compiled archives; they do not replace source builds and browser execution with the new toolchain.
+> Convention for the conditions: the **newest** entry stays open-ended (`VersionGreaterThanOrEquals(TFV, 'A')`) so a future SDK compatible with the same archives needs no code change (e.g. .NET 9 and .NET 10 both select 3.1.56). Only when a new SDK requires different archives do you close the previous entry with an upper bound (`… and VersionLessThan(TFV, 'B')`) and add a new open-ended entry for the new version — the way `net9.0`–`net10.x` was capped at `< 11.0` once .NET 11 selected 6.0.2. Packaging and Uno inclusion retain version wildcards; clean CI builds supply only the versions produced by the current build matrix.
 
 #### Finding .NET's Emscripten version
 

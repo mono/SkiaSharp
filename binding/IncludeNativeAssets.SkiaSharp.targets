@@ -80,9 +80,7 @@
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' == 'True'">$(_SkiaSharpNativeBinaryType),simd</_SkiaSharpNativeBinaryType>
   </PropertyGroup>
   <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\3.1.34\$(_SkiaSharpNativeBinaryType)\*.a" Visible="false" />
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\3.1.56\$(_SkiaSharpNativeBinaryType)\*.a" Visible="false" />
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\6.0.2\$(_SkiaSharpNativeBinaryType)\*.a" Visible="false" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\*\$(_SkiaSharpNativeBinaryType)\*.a" Visible="false" />
     <WasmShellExtraEmccFlags Include="-s USE_WEBGL2=1"/>
     <WasmShellExtraEmccFlags Condition="'$(WasmShellEnableThreads)'=='True'" Include="-s OFFSCREEN_FRAMEBUFFER=1" />
   </ItemGroup>
