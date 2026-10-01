@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using AppKit;
 using CoreGraphics;
 using Foundation;
@@ -35,8 +36,10 @@ sealed class SmokeHost : MacOSMauiApplication
 
 sealed class SmokeApp : Application
 {
-	private readonly SKCanvasView cpu = new() { WidthRequest = 150, HeightRequest = 150 };
-	private readonly SKGLView gpu = new() { WidthRequest = 150, HeightRequest = 150 };
+	private readonly SKCanvasView cpu = new() { WidthRequest = 150, HeightRequest = 150, EnableTouchEvents = true };
+	private readonly SKGLView gpu = new() { WidthRequest = 150, HeightRequest = 150, EnableTouchEvents = true };
+	private readonly List<SKTouchEventArgs> cpuTouches = new();
+	private readonly List<SKTouchEventArgs> gpuTouches = new();
 	private readonly VerticalStackLayout layout = new();
 	private readonly MauiImage bitmapImage = new() { WidthRequest = 20, HeightRequest = 20 };
 	private readonly MauiImage skImage = new() { WidthRequest = 20, HeightRequest = 20 };
@@ -58,6 +61,7 @@ sealed class SmokeApp : Application
 	private bool requestedResize;
 	private bool requestedNativeLayout;
 	private bool renderLoopStarted;
+	private bool touchesVerified;
 	private DateTime requestedResizeAt;
 	private DateTime requestedNativeLayoutAt;
 	private int gpuFramesAtLoopStart;
@@ -97,6 +101,8 @@ sealed class SmokeApp : Application
 				resizedGpuFrames++;
 			sawRawInfo |= e.RawInfo.Width >= e.Info.Width && e.RawInfo.Height >= e.Info.Height;
 		};
+		cpu.Touch += (_, e) => { e.Handled = true; cpuTouches.Add(e); };
+		gpu.Touch += (_, e) => { e.Handled = true; gpuTouches.Add(e); };
 
 		layout.Add(cpu);
 		layout.Add(gpu);
@@ -120,6 +126,7 @@ sealed class SmokeApp : Application
 	{
 		if (!requestedResize && cpuFrames > 0 && gpuFrames > 0)
 		{
+			touchesVerified = VerifyTouch(cpu, cpuTouches) && VerifyTouch(gpu, gpuTouches);
 			requestedResize = true;
 			requestedResizeAt = DateTime.UtcNow;
 			cpu.WidthRequest = 220;
@@ -160,7 +167,7 @@ sealed class SmokeApp : Application
 			skImageButton.Handler?.PlatformView is NSButton { Image: not null };
 
 		if (resizedCpuFrames > 0 && resizedGpuFrames > 0 && sawMetal &&
-			sawRawInfo && imagesConverted)
+			sawRawInfo && imagesConverted && touchesVerified)
 		{
 			if (!renderLoopStarted)
 			{
@@ -171,15 +178,94 @@ sealed class SmokeApp : Application
 			else if (gpuFrames - gpuFramesAtLoopStart >= 3)
 			{
 				gpu.HasRenderLoop = false;
-				Console.WriteLine($"PASS AppKit CPU={cpuFrames} Metal={gpuFrames} resized CPU={resizedCpuFrames} Metal={resizedGpuFrames}; Metal render loop and all image sources, glyph and image button converted");
+				Console.WriteLine($"PASS AppKit CPU={cpuFrames} Metal={gpuFrames} resized CPU={resizedCpuFrames} Metal={resizedGpuFrames}; mouse, Metal render loop and all image sources converted");
 				Finish(0);
 			}
 		}
 		else if (DateTime.UtcNow - started > TimeSpan.FromSeconds(20))
 		{
-			Console.Error.WriteLine($"FAIL AppKit CPU={cpuFrames} Metal={gpuFrames} resize CPU={resizedCpuFrames} Metal={resizedGpuFrames} context={sawMetal} rawInfo={sawRawInfo} images={imagesConverted}");
+			Console.Error.WriteLine($"FAIL AppKit CPU={cpuFrames} Metal={gpuFrames} resize CPU={resizedCpuFrames} Metal={resizedGpuFrames} context={sawMetal} rawInfo={sawRawInfo} images={imagesConverted} touch={touchesVerified}");
 			Finish(1);
 		}
+	}
+
+	private static bool VerifyTouch(Microsoft.Maui.Controls.View control, List<SKTouchEventArgs> touches)
+	{
+		var nativeView = (NSView)control.Handler!.PlatformView!;
+		using var graphics = NSGraphicsContext.FromWindow(nativeView.Window!);
+		var point = new CGPoint(12, 18);
+		var windowPoint = nativeView.ConvertPointToView(point, null);
+		var scale = (float)nativeView.Window!.BackingScaleFactor;
+
+		NSEvent MouseEvent(NSEventType type) =>
+			NSEvent.MouseEvent(type, windowPoint, (NSEventModifierMask)0,
+				0, nativeView.Window.WindowNumber, graphics, 0, 1, 1);
+
+		using (var down = MouseEvent(NSEventType.LeftMouseDown))
+			nativeView.MouseDown(down);
+		using (var drag = MouseEvent(NSEventType.LeftMouseDragged))
+			nativeView.MouseDragged(drag);
+		using (var up = MouseEvent(NSEventType.LeftMouseUp))
+			nativeView.MouseUp(up);
+		using (var move = MouseEvent(NSEventType.MouseMoved))
+			nativeView.MouseMoved(move);
+
+		var expectedY = nativeView.IsFlipped ? (float)point.Y : (float)(nativeView.Bounds.Height - point.Y);
+		var valid = touches.Count == 4 &&
+			touches[0].ActionType == SKTouchAction.Pressed && touches[0].InContact &&
+			touches[0].MouseButton == SKMouseButton.Left &&
+			touches[1].ActionType == SKTouchAction.Moved && touches[1].InContact &&
+			touches[2].ActionType == SKTouchAction.Released && !touches[2].InContact &&
+			touches[3].ActionType == SKTouchAction.Moved && !touches[3].InContact &&
+			touches[3].MouseButton == SKMouseButton.Unknown &&
+			Math.Abs(touches[0].Location.X - point.X * scale) < 1 &&
+			Math.Abs(touches[0].Location.Y - expectedY * scale) < 1;
+
+		using (var down = MouseEvent(NSEventType.LeftMouseDown))
+			nativeView.MouseDown(down);
+		switch (control)
+		{
+			case SKCanvasView canvas:
+				canvas.EnableTouchEvents = false;
+				break;
+			case SKGLView metal:
+				metal.EnableTouchEvents = false;
+				break;
+		}
+		valid &= touches.Count == 6 &&
+			touches[4].ActionType == SKTouchAction.Pressed &&
+			touches[5].ActionType == SKTouchAction.Cancelled &&
+			!touches[5].InContact;
+		switch (control)
+		{
+			case SKCanvasView canvas:
+				canvas.EnableTouchEvents = true;
+				break;
+			case SKGLView metal:
+				metal.EnableTouchEvents = true;
+				break;
+		}
+		using (var up = MouseEvent(NSEventType.LeftMouseUp))
+			nativeView.MouseUp(up);
+		valid &= touches.Count == 6;
+		using (var down = MouseEvent(NSEventType.LeftMouseDown))
+			nativeView.MouseDown(down);
+		using (var repeatedDown = MouseEvent(NSEventType.LeftMouseDown))
+			nativeView.MouseDown(repeatedDown);
+		using (var up = MouseEvent(NSEventType.LeftMouseUp))
+			nativeView.MouseUp(up);
+		using (var move = MouseEvent(NSEventType.MouseMoved))
+			nativeView.MouseMoved(move);
+		valid &= touches.Count == 11 &&
+			touches[7].ActionType == SKTouchAction.Cancelled &&
+			!touches[7].InContact &&
+			touches[8].ActionType == SKTouchAction.Pressed &&
+			touches[8].InContact &&
+			touches[9].ActionType == SKTouchAction.Released &&
+			!touches[9].InContact &&
+			touches[10].MouseButton == SKMouseButton.Unknown;
+		Console.WriteLine($"Mouse {control.GetType().Name} received={touches.Count} expected position={point.X * scale},{expectedY * scale} actual={touches[0].Location} valid={valid}");
+		return valid;
 	}
 
 	private void Finish(int exitCode)

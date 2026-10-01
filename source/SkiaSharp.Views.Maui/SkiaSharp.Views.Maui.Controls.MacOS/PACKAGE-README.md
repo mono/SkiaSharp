@@ -53,6 +53,11 @@ conversion is synchronous (`IsLoading` is false afterward). The backend's
 asynchronous URI/stream image loading is not cancellable by this adapter: a
 pending ordinary image load may overwrite a newer SkiaSharp source.
 
+Gallery popup chrome needs native runtime verification after Gallery is ready:
+although the backend maps `ZIndex`, native container hit testing and click
+recognizers may affect scrim/panel dismissal. Live OS theme changes and
+overlay appearance have not been exercised with these handlers.
+
 The package declares itself trimmable. A trimmed macOS smoke-app publish and
 runtime test succeeded; NativeAOT deployment and trimming of a production
 application using the MAUI Labs AppKit backend have not been validated.
