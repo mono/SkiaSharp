@@ -47,7 +47,7 @@ else
                         {
                             <SKGLView @ref="glView"
                                       OnPaintSurface="OnPaintGL"
-                                      EnableRenderLoop="@(sample is CanvasSampleBase cs && cs.IsAnimated)"
+                                      EnableRenderLoop="false"
                                       IgnorePixelScaling="true"
                                       style="width:100%;height:100%;display:block;" />
                         }
@@ -85,7 +85,7 @@ else
                                     @(isPinned ? "◀" : "▶")
                                 </button>
                             </div>
-                            <ControlPanel Controls="@sample.Controls"
+                            <ControlPanel @key="sample" Controls="@sample.Controls"
                                           OnChanged="@OnControlChanged" />
                             @if (sample.HasDownload)
                             {
@@ -158,6 +158,7 @@ else
                 {
                     if (sample is CanvasSampleBase canvasSample)
                         canvasSample.RefreshRequested += OnRefreshRequested;
+                    sample.ControlsChanged += OnControlsChanged;
                     await sample.InitAsync();
                     GenerateDocumentIfNeeded();
                 }
@@ -181,6 +182,9 @@ else
         canvasView?.Invalidate();
         glView?.Invalidate();
     }
+
+    private void OnControlsChanged(object? sender, EventArgs e) =>
+        _ = InvokeAsync(StateHasChanged);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -246,6 +250,7 @@ else
     {
         if (sample is not null)
         {
+            sample.ControlsChanged -= OnControlsChanged;
             if (sample is CanvasSampleBase canvasSample)
                 canvasSample.RefreshRequested -= OnRefreshRequested;
             sample.Destroy();
