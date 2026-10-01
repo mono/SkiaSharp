@@ -11,8 +11,6 @@ public class ImageDecoderSample : CanvasSampleBase
 	private bool _showInfo;
 	private bool _subset;
 
-	private static readonly string[] ImageSources = { "Baboon", "Color Wheel", "HDR PNG (CICP)", "WebP", "GIF" };
-
 	public override string Title => "Image Decoder";
 
 	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
@@ -31,7 +29,7 @@ public class ImageDecoderSample : CanvasSampleBase
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
-		new PickerControl("image", "Image Source", ImageSources, _imageIndex),
+		new PickerControl("image", "Image Source", SampleMedia.Images.DemoImageNames, _imageIndex),
 		new ToggleControl("subset", "Decode Subset", _subset),
 		new ToggleControl("showInfo", "Show Metadata", _showInfo),
 	];
@@ -52,14 +50,7 @@ public class ImageDecoderSample : CanvasSampleBase
 		}
 	}
 
-	private Stream GetImageStream() => _imageIndex switch
-	{
-		1 => SampleMedia.Images.ColorWheel,
-		2 => SampleMedia.Images.CicpPq,
-		3 => SampleMedia.Images.BabyTux,
-		4 => SampleMedia.Images.AnimatedHeartGif,
-		_ => SampleMedia.Images.Baboon,
-	};
+	private Stream GetImageStream() => SampleMedia.Images.DemoImage(_imageIndex);
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 	{

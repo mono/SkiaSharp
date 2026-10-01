@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.UI.Xaml.Controls;
+using Windows.ApplicationModel.DataTransfer;
 
 namespace SkiaSharpSample.Controls;
 
 public sealed partial class ControlPanelView : UserControl
 {
+    private readonly Dictionary<string, (TextBox Box, Button Button)> copyOutputs = new();
+
     public event EventHandler<(string Id, object Value)>? ControlChanged;
 
     public ControlPanelView()
@@ -16,9 +19,23 @@ public sealed partial class ControlPanelView : UserControl
     public void SetControls(IReadOnlyList<SampleControl> controls)
     {
         RootPanel.Children.Clear();
+        copyOutputs.Clear();
         foreach (var c in controls)
         {
             RootPanel.Children.Add(Build(c, string.Empty));
+        }
+    }
+
+    public void UpdateControls(IReadOnlyList<SampleControl> controls)
+    {
+        foreach (var control in controls)
+        {
+            if (control is CopyTextControl copy &&
+                copyOutputs.TryGetValue(copy.Id, out var output))
+            {
+                output.Box.Text = copy.Value;
+                output.Button.IsEnabled = !string.IsNullOrEmpty(copy.Value);
+            }
         }
     }
 
@@ -36,9 +53,55 @@ public sealed partial class ControlPanelView : UserControl
                 return BuildPicker(p, fullId);
             case GroupControl g:
                 return BuildGroup(g, fullId);
+            case CopyTextControl c:
+                return BuildCopyText(c, fullId);
             default:
                 return new TextBlock { Text = $"(unsupported control: {control.GetType().Name})" };
         }
+    }
+
+    private StackPanel BuildCopyText(CopyTextControl control, string id)
+    {
+        var panel = new StackPanel { Spacing = 2 };
+        panel.Children.Add(new TextBlock { Text = control.Label, FontSize = 12 });
+        var row = new Grid { ColumnSpacing = 4 };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var box = new TextBox { Text = control.Value, IsReadOnly = true };
+        var button = new Button { Content = "Copy", IsEnabled = !string.IsNullOrEmpty(control.Value) };
+        var result = new TextBlock { FontSize = 11, TextWrapping = TextWrapping.Wrap };
+        button.Click += (_, _) =>
+        {
+            try
+            {
+                var data = new DataPackage();
+                data.SetText(box.Text);
+                Clipboard.SetContent(data);
+                result.Text = string.Empty;
+            }
+            catch (NotSupportedException ex)
+            {
+                result.Text = $"Could not copy: {ex.Message}";
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                result.Text = $"Could not copy: {ex.Message}";
+            }
+        };
+        copyOutputs[id] = (box, button);
+        row.Children.Add(box);
+        Grid.SetColumn(button, 1);
+        row.Children.Add(button);
+        panel.Children.Add(row);
+        panel.Children.Add(result);
+        AddDescription(panel, control.Description);
+        return panel;
+    }
+
+    private static void AddDescription(StackPanel panel, string? description)
+    {
+        if (!string.IsNullOrWhiteSpace(description))
+            panel.Children.Add(new TextBlock { Text = description, FontSize = 10, Opacity = 0.5, TextWrapping = TextWrapping.Wrap });
     }
 
     private StackPanel BuildSlider(SliderControl s, string id)
