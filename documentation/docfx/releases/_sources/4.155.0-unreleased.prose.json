@@ -1,22 +1,55 @@
 {
-  "theme": "Linux font discovery restored",
-  "highlights_headline": "SkiaSharp restores system-font discovery for Linux NoDependencies deployments.",
-  "highlights_body": null,
+  "theme": "Platform support refinements",
+  "highlights_headline": "SkiaSharp 4.155.0 improves Linux font discovery and updates platform build support for the m155 release line.",
+  "highlights_body": "Linux applications using the NoDependencies packages can again discover system fonts, while Tizen and Windows native builds move to their current supported toolchains.",
   "breaking": [],
   "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia m155 integration cleaned up",
+          "detail": "Incorporates the m155 core-fork cleanup into the current release line.",
+          "prs": [
+            5208
+          ]
+        }
+      ]
+    },
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Linux NoDependencies fonts discovered",
-          "detail": "Linux applications using the NoDependencies package can again discover installed system fonts through the font manager.",
-          "prs": [5086]
+          "lead": "Linux system-font discovery restored",
+          "detail": "NoDependencies applications on Linux can again locate installed system fonts.",
+          "prs": [
+            5086
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Tizen native builds updated",
+          "detail": "Tizen 10 native builds and packages now use the GCC 14.2 toolchain.",
+          "prs": [
+            5235
+          ]
+        },
+        {
+          "lead": "Windows native build tooling aligned",
+          "detail": "Windows native builds now align on the v143 toolset and verify Spectre-mitigated build provenance.",
+          "prs": [
+            5238
+          ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Restored Linux NoDependencies system-font discovery"
+    "ramezgerges": "Restored Linux system-font discovery for NoDependencies packages"
   },
   "preview_summaries": {}
 }
