@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net$(Version)</TargetFramework>
+    <TargetFrameworkVersion>$(Version)</TargetFrameworkVersion>
+    <_PackageDirectory>$(FixtureRoot)\binding\$(Library).NativeAssets.WebAssembly</_PackageDirectory>
+  </PropertyGroup>
+  <Import Project="$(_PackageDirectory)\buildTransitive\$(Library).props" Condition="'$(AssetSurface)' == 'Package'" />
+  <Import Project="$(_PackageDirectory)\buildTransitive\$(Library).targets" Condition="'$(AssetSurface)' == 'Package'" />
+  <Import Project="$(FixtureRoot)\binding\IncludeNativeAssets.$(Library).targets" Condition="'$(AssetSurface)' == 'Source'" />
+</Project>
