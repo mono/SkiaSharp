@@ -6,6 +6,8 @@ on `Microsoft.Maui.Platforms.Windows.WPF` **0.1.0-preview.12.26421.1**, whose
 published package requires MAUI **10.0.41** or newer. Version `0.1.0` is not
 published on NuGet. Keep these preview dependencies in WPF-only applications;
 do not add them to stable SkiaSharp MAUI projects.
+Direct `dotnet pack` produces a `-wpf-preview` prerelease by default; an
+explicit `VersionSuffix` supplied by the release build takes precedence.
 
 In a WPF MAUI application using `UseWPF` and `UseMaui`, register the WPF
 backend before these SkiaSharp handlers:
