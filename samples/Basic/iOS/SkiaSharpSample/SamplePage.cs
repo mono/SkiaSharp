@@ -9,4 +9,5 @@ public enum SamplePage
 	GpuGL = 1,
 	GpuMetal = 2,
 	Drawing = 3,
+	Graphite = 4,
 }
