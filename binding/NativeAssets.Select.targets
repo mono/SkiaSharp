@@ -1,0 +1,281 @@
+<Project>
+  <PropertyGroup>
+    <_SkiaSharpNativeSelectionInputs>$(IntermediateOutputPath)SkiaSharp.NativeAssets.selection.inputs</_SkiaSharpNativeSelectionInputs>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(_SkiaSharpNativeSelectionInputs)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <UsingTask TaskName="SkiaSharpPreferLinuxNoDependencies"
+             TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <NativeAssets ParameterType="Microsoft.Build.Framework.ITaskItem[]" />
+      <RuntimeTargets ParameterType="Microsoft.Build.Framework.ITaskItem[]" />
+      <RegularNativeAssets ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
+      <RegularRuntimeTargets ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.Collections.Generic" />
+      <Using Namespace="System.Linq" />
+      <Using Namespace="Microsoft.Build.Framework" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        const string regular = "SkiaSharp.NativeAssets.Linux";
+        const string noDeps = "SkiaSharp.NativeAssets.Linux.NoDependencies";
+        string PathInPackage(ITaskItem item)
+        {
+            var path = item.GetMetadata("PathInPackage");
+            return (string.IsNullOrEmpty(path)
+                ? item.GetMetadata("DestinationSubDirectory") + item.GetMetadata("Filename") + item.GetMetadata("Extension")
+                : path).Replace('\\', '/');
+        }
+        var variants = (NativeAssets ?? Array.Empty<ITaskItem>()).Concat(RuntimeTargets ?? Array.Empty<ITaskItem>());
+        var preferred = new HashSet<string>(variants
+            .Where(a => string.Equals(a.GetMetadata("NuGetPackageId"), noDeps, StringComparison.OrdinalIgnoreCase))
+            .Select(PathInPackage), StringComparer.OrdinalIgnoreCase);
+        ITaskItem[] Replaced(ITaskItem[] assets) => assets
+            .Where(a => string.Equals(a.GetMetadata("NuGetPackageId"), regular, StringComparison.OrdinalIgnoreCase)
+                && preferred.Contains(PathInPackage(a))).ToArray();
+        RegularNativeAssets = Replaced(NativeAssets ?? Array.Empty<ITaskItem>());
+        RegularRuntimeTargets = Replaced(RuntimeTargets ?? Array.Empty<ITaskItem>());
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="_SkiaSharpPreferNoDependencies"
+          BeforeTargets="ResolveLockFileCopyLocalFiles;_HandlePackageFileConflicts"
+          DependsOnTargets="ResolvePackageAssets;ResolveTargetingPackAssets">
+    <ItemGroup>
+      <_SkiaSharpNoDependenciesAssets Include="@(NativeCopyLocalItems->WithMetadataValue('NuGetPackageId', 'SkiaSharp.NativeAssets.Linux.NoDependencies'))" />
+      <_SkiaSharpNoDependenciesAssets Include="@(RuntimeTargetsCopyLocalItems->WithMetadataValue('NuGetPackageId', 'SkiaSharp.NativeAssets.Linux.NoDependencies'))" />
+    </ItemGroup>
+    <PropertyGroup Condition="'@(_SkiaSharpNoDependenciesAssets)' != ''">
+      <PackageConflictPreferredPackages>SkiaSharp.NativeAssets.Linux.NoDependencies;$(PackageConflictPreferredPackages)</PackageConflictPreferredPackages>
+    </PropertyGroup>
+    <SkiaSharpPreferLinuxNoDependencies NativeAssets="@(NativeCopyLocalItems)"
+                                        RuntimeTargets="@(RuntimeTargetsCopyLocalItems)"
+                                        Condition="'@(_SkiaSharpNoDependenciesAssets)' != ''">
+      <Output TaskParameter="RegularNativeAssets" ItemName="_SkiaSharpReplacedRegularNativeAssets" />
+      <Output TaskParameter="RegularRuntimeTargets" ItemName="_SkiaSharpReplacedRegularRuntimeTargets" />
+    </SkiaSharpPreferLinuxNoDependencies>
+    <ItemGroup>
+      <NativeCopyLocalItems Remove="@(_SkiaSharpReplacedRegularNativeAssets)" />
+      <RuntimeTargetsCopyLocalItems Remove="@(_SkiaSharpReplacedRegularRuntimeTargets)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_SkiaSharpRecordNativeFilterInputs"
+          BeforeTargets="ResolveLockFileCopyLocalFiles;_HandlePackageFileConflicts"
+          DependsOnTargets="ResolvePackageAssets">
+    <WriteLinesToFile File="$(_SkiaSharpNativeSelectionInputs)"
+                      Lines="SkiaSharp=$(SkiaSharpFilterRuntimeIdentifiers)%3BHarfBuzzSharp=$(HarfBuzzSharpFilterRuntimeIdentifiers)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_SkiaSharpNativeSelectionInputs)" />
+    </ItemGroup>
+  </Target>
+
+  <UsingTask TaskName="SkiaSharpSelectNativePackageAssets"
+             TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <NativeAssets ParameterType="Microsoft.Build.Framework.ITaskItem[]" />
+      <RuntimeTargets ParameterType="Microsoft.Build.Framework.ITaskItem[]" />
+      <SkiaFilter ParameterType="System.String" />
+      <HarfBuzzFilter ParameterType="System.String" />
+      <RuntimeGraphPath ParameterType="System.String" />
+      <SdkDirectory ParameterType="System.String" />
+      <RejectedNativeAssets ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
+      <RejectedRuntimeTargets ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.Collections.Generic" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Using Namespace="Microsoft.Build.Framework" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        var nativePath = new Regex(@"^runtimes/([^/]+)/native(?:/|$)", RegexOptions.IgnoreCase);
+        string Rid(ITaskItem item)
+        {
+            var path = item.GetMetadata("PathInPackage");
+            if (string.IsNullOrEmpty(path))
+                path = item.GetMetadata("DestinationSubDirectory");
+            if (string.IsNullOrEmpty(path))
+                path = item.ItemSpec;
+            var match = nativePath.Match(path.Replace('\\', '/'));
+            return match.Success ? match.Groups[1].Value : "";
+        }
+        string Package(ITaskItem item) => item.GetMetadata("NuGetPackageId");
+        string FileName(ITaskItem item) => item.GetMetadata("Filename") + item.GetMetadata("Extension");
+
+        const string regular = "SkiaSharp.NativeAssets.Linux";
+        const string noDeps = "SkiaSharp.NativeAssets.Linux.NoDependencies";
+        string PackageGroup(ITaskItem asset) =>
+            string.Equals(Package(asset), noDeps, StringComparison.OrdinalIgnoreCase) ? regular : Package(asset);
+
+        var graph = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(SkiaFilter) || !string.IsNullOrWhiteSpace(HarfBuzzFilter))
+        {
+            if (!File.Exists(RuntimeGraphPath))
+            {
+                Log.LogError("Cannot filter native assets without the SDK RID graph: {0}", RuntimeGraphPath);
+                return false;
+            }
+            try
+            {
+                var readerPath = Path.Combine(SdkDirectory, "Newtonsoft.Json.dll");
+                if (!File.Exists(readerPath))
+                {
+                    Log.LogError("The SDK JSON reader is missing: {0}", readerPath);
+                    return false;
+                }
+                var jsonAssembly = System.Reflection.Assembly.LoadFrom(readerPath);
+                var objectType = jsonAssembly.GetType("Newtonsoft.Json.Linq.JObject");
+                var parse = objectType?.GetMethod("Parse", new[] { typeof(string) });
+                var indexer = objectType?.GetProperty("Item", new[] { typeof(string) });
+                var properties = objectType?.GetMethod("Properties", Type.EmptyTypes);
+                if (parse == null || indexer == null || properties == null)
+                {
+                    Log.LogError("The SDK JSON reader is unavailable in {0}", SdkDirectory);
+                    return false;
+                }
+                object GetProperty(object node, string name) =>
+                    indexer.GetValue(node, new object[] { name });
+                string Kind(object node) =>
+                    node.GetType().GetProperty("Type").GetValue(node).ToString();
+
+                var document = parse.Invoke(null, new object[] { File.ReadAllText(RuntimeGraphPath) });
+                var runtimes = GetProperty(document, "runtimes");
+                if (runtimes == null || Kind(runtimes) != "Object")
+                {
+                    Log.LogError("Invalid SDK RID graph (missing runtimes): {0}", RuntimeGraphPath);
+                    return false;
+                }
+                foreach (var entry in (System.Collections.IEnumerable)properties.Invoke(runtimes, null))
+                {
+                    var rid = entry.GetType().GetProperty("Name").GetValue(entry).ToString();
+                    var value = entry.GetType().GetProperty("Value").GetValue(entry);
+                    if (Kind(value) != "Object")
+                    {
+                        Log.LogError("Invalid entry for RID {0} in {1}", rid, RuntimeGraphPath);
+                        return false;
+                    }
+                    var imports = new List<string>();
+                    var imported = GetProperty(value, "#import");
+                    if (imported != null)
+                    {
+                        if (Kind(imported) != "Array")
+                        {
+                            Log.LogError("Invalid imports for RID {0} in {1}", rid, RuntimeGraphPath);
+                            return false;
+                        }
+                        foreach (var candidate in (System.Collections.IEnumerable)imported)
+                        {
+                            if (Kind(candidate) != "String")
+                            {
+                                Log.LogError("Invalid import for RID {0} in {1}", rid, RuntimeGraphPath);
+                                return false;
+                            }
+                            imports.Add(candidate.ToString());
+                        }
+                    }
+                    graph.Add(rid, imports);
+                }
+            }
+            catch (System.Reflection.TargetInvocationException error) when (error.InnerException != null)
+            {
+                Log.LogError("Cannot read SDK RID graph {0}: {1}", RuntimeGraphPath, error.InnerException.Message);
+                return false;
+            }
+            catch (Exception error) when (error is IOException || error is ArgumentException ||
+                error is InvalidOperationException || error is TypeLoadException || error is MissingMemberException)
+            {
+                Log.LogError("Cannot load the SDK JSON reader or read RID graph {0}: {1}", RuntimeGraphPath, error.Message);
+                return false;
+            }
+            foreach (var requested in (SkiaFilter + ";" + HarfBuzzFilter)
+                .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (!graph.ContainsKey(requested.Trim()))
+                {
+                    Log.LogError("Unknown RID '{0}' in native asset filter (SDK graph: {1})",
+                        requested.Trim(), RuntimeGraphPath);
+                    return false;
+                }
+            }
+        }
+        IEnumerable<string> Expand(string rid)
+        {
+            var pending = new Stack<string>();
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            pending.Push(rid);
+            while (pending.Count != 0)
+            {
+                var current = pending.Pop();
+                if (!visited.Add(current))
+                    continue;
+                yield return current;
+                if (graph.TryGetValue(current, out var imports))
+                    for (var i = imports.Count - 1; i >= 0; --i)
+                        pending.Push(imports[i]);
+            }
+        }
+        string Filter(ITaskItem item)
+        {
+            var package = Package(item);
+            if (package.StartsWith("SkiaSharp.NativeAssets.", StringComparison.OrdinalIgnoreCase))
+                return SkiaFilter;
+            if (package.StartsWith("HarfBuzzSharp.NativeAssets.", StringComparison.OrdinalIgnoreCase))
+                return HarfBuzzFilter;
+            return "";
+        }
+        ITaskItem[] Rejected(ITaskItem[] source)
+        {
+            var selected = new HashSet<ITaskItem>();
+            foreach (var group in source.Where(a => !string.IsNullOrWhiteSpace(Filter(a)) && Rid(a) != "")
+                .GroupBy(a => PackageGroup(a) + "/" + FileName(a), StringComparer.OrdinalIgnoreCase))
+            {
+                var assetsByRid = group.GroupBy(Rid, StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(g => g.Key, g => g.ToArray(), StringComparer.OrdinalIgnoreCase);
+                foreach (var requested in Filter(group.First()).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    foreach (var rid in Expand(requested.Trim()))
+                    {
+                        if (!assetsByRid.TryGetValue(rid, out var assets))
+                            continue;
+                        foreach (var asset in assets)
+                            selected.Add(asset);
+                        break;
+                    }
+                }
+            }
+            return source.Where(a => !string.IsNullOrWhiteSpace(Filter(a)) && Rid(a) != "" && !selected.Contains(a))
+                .ToArray();
+        }
+        RejectedNativeAssets = Rejected(NativeAssets ?? Array.Empty<ITaskItem>());
+        RejectedRuntimeTargets = Rejected(RuntimeTargets ?? Array.Empty<ITaskItem>());
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="_SkiaSharpFilterNativePackageAssets"
+          BeforeTargets="ResolveLockFileCopyLocalFiles;_HandlePackageFileConflicts"
+          DependsOnTargets="_SkiaSharpPreferNoDependencies;_SkiaSharpRecordNativeFilterInputs"
+          Condition="'$(RuntimeIdentifier)' == '' and ('$(SkiaSharpFilterRuntimeIdentifiers)' != '' or '$(HarfBuzzSharpFilterRuntimeIdentifiers)' != '')">
+    <SkiaSharpSelectNativePackageAssets NativeAssets="@(NativeCopyLocalItems)"
+                                        RuntimeTargets="@(RuntimeTargetsCopyLocalItems)"
+                                        SkiaFilter="$(SkiaSharpFilterRuntimeIdentifiers)"
+                                        HarfBuzzFilter="$(HarfBuzzSharpFilterRuntimeIdentifiers)"
+                                        SdkDirectory="$(MSBuildToolsPath)"
+                                        RuntimeGraphPath="$(RuntimeIdentifierGraphPath)">
+      <Output TaskParameter="RejectedNativeAssets" ItemName="_SkiaSharpRejectedNativeAssets" />
+      <Output TaskParameter="RejectedRuntimeTargets" ItemName="_SkiaSharpRejectedRuntimeTargets" />
+    </SkiaSharpSelectNativePackageAssets>
+    <ItemGroup>
+      <NativeCopyLocalItems Remove="@(_SkiaSharpRejectedNativeAssets)" />
+      <RuntimeTargetsCopyLocalItems Remove="@(_SkiaSharpRejectedRuntimeTargets)" />
+    </ItemGroup>
+  </Target>
+</Project>

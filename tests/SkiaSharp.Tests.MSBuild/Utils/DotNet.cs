@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests.MSBuild.Utils;
 public sealed class DotNet : IDisposable
 {
     private readonly string root;
-    private readonly string cache = Path.Combine(Path.GetTempPath(), $"skiasharp-msbuild-{Guid.NewGuid():N}");
+    private readonly string cache;
     private readonly string host = Setting("DotNetHost");
 
     public string PackageDirectory { get; } = Path.GetFullPath(Setting("PackageDirectory"));
@@ -15,6 +15,7 @@ public sealed class DotNet : IDisposable
     public DotNet()
     {
         root = Path.Combine(Path.GetFullPath(Setting("ArtifactsDirectory")), Guid.NewGuid().ToString("N"));
+        cache = Path.Combine(root, ".cache");
         Directory.CreateDirectory(root);
         File.WriteAllText(Path.Combine(root, "Directory.Build.props"), "<Project />");
         File.WriteAllText(Path.Combine(root, "Directory.Build.targets"), "<Project />");
@@ -38,20 +39,23 @@ public sealed class DotNet : IDisposable
             .Save(Path.Combine(root, "NuGet.Config"));
     }
 
-    public string NewProject(string name, string xml)
+    public string NewProject(string name, string xml, bool legacy = false)
     {
         var directory = Path.Combine(root, name);
         Directory.CreateDirectory(directory);
         File.WriteAllText(Path.Combine(directory, "Consumer.csproj"), xml);
-        File.WriteAllText(Path.Combine(directory, "Program.cs"), "System.Console.WriteLine(\"Package consumer\");");
+        File.WriteAllText(Path.Combine(directory, "Program.cs"),
+            legacy ? "class Program { static void Main() { } }" : "System.Console.WriteLine(\"Package consumer\");");
         return directory;
     }
 
-    public Task Build(string directory) => Run(directory, "build");
+    public Task Build(string directory, string? rid = null, string? filterProperty = null) =>
+        Run(directory, "build", rid, filterProperty);
 
-    public Task Publish(string directory, string? rid = null) => Run(directory, "publish", rid);
+    public Task Publish(string directory, string? rid = null, string? filterProperty = null) =>
+        Run(directory, "publish", rid, filterProperty);
 
-    private async Task Run(string directory, string command, string? rid = null)
+    private async Task Run(string directory, string command, string? rid = null, string? filterProperty = null)
     {
         var start = new ProcessStartInfo(host)
         {
@@ -68,6 +72,8 @@ public sealed class DotNet : IDisposable
             start.ArgumentList.Add("-r");
             start.ArgumentList.Add(rid);
         }
+        if (filterProperty is not null)
+            start.ArgumentList.Add($"-p:SkiaSharpFilterRuntimeIdentifiers={filterProperty}");
         foreach (var key in start.Environment.Keys.Where(k =>
             k.StartsWith("MSBUILD", StringComparison.OrdinalIgnoreCase) ||
             k.StartsWith("Restore", StringComparison.OrdinalIgnoreCase) ||

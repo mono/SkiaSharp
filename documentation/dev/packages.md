@@ -24,7 +24,7 @@ Reference for all NuGet packages produced by SkiaSharp — purpose, contents, an
 
 ## Core Managed Packages
 
-These contain the managed C# assemblies. The `SkiaSharp` and `HarfBuzzSharp` core packages automatically include the appropriate NativeAssets for most platforms (see [Auto-Included NativeAssets](#auto-included-nativeassets)). For Linux, WebAssembly, NanoServer, and WinUI you must add the NativeAssets package manually.
+These contain the managed C# assemblies. The `SkiaSharp` and `HarfBuzzSharp` core packages automatically include the appropriate NativeAssets for most platforms (see [Auto-Included NativeAssets](#auto-included-nativeassets)). WebAssembly and NanoServer require separate NativeAssets packages; WinUI assets are included by `SkiaSharp.Views.WinUI`.
 
 | Package | Description |
 |---------|-------------|
@@ -76,7 +76,7 @@ Each platform has a pair of NativeAssets packages containing pre-built native bi
 
 Both follow the same platform matrix and architectures. HarfBuzzSharp does **not** have Linux.NoDependencies, NanoServer, or WinUI variants.
 
-> **Important:** Library projects should depend on `SkiaSharp` only. NativeAssets packages belong in the **application** (executable) project so the correct binary is deployed. See [Deployment & Containers](#deployment--containers).
+> **Important:** Library projects should depend on `SkiaSharp` only. Its default native packages come transitively; reference an alternative such as `SkiaSharp.NativeAssets.Linux.NoDependencies` in the **application** (executable) project. See [Deployment & Containers](#deployment--containers).
 
 ### Platform Packages
 
@@ -84,8 +84,8 @@ Both follow the same platform matrix and architectures. HarfBuzzSharp does **not
 |---------|-------------|
 | **SkiaSharp.NativeAssets.Win32**<br/>**HarfBuzzSharp.NativeAssets.Win32** | Windows (x64, x86, arm64). Auto-included. |
 | **SkiaSharp.NativeAssets.macOS**<br/>**HarfBuzzSharp.NativeAssets.macOS** | macOS universal binary (Intel + Apple Silicon). Auto-included. |
-| **SkiaSharp.NativeAssets.Linux**<br/>**HarfBuzzSharp.NativeAssets.Linux** | Linux (x64, x86, arm, arm64, riscv64, loongarch64). Both glibc and musl (Alpine) variants. **Must add manually.** Requires fontconfig (`libfontconfig.so.1`) for system font enumeration. |
-| **SkiaSharp.NativeAssets.Linux.NoDependencies** | Linux (same architectures as above, glibc + musl). **SkiaSharp only. Must add manually.** No fontconfig, no third-party deps — only requires libc/libm/libpthread/libdl. **Designed for minimal containers.** Fonts must be loaded explicitly. |
+| **SkiaSharp.NativeAssets.Linux**<br/>**HarfBuzzSharp.NativeAssets.Linux** | Linux (x64, x86, arm, arm64, riscv64, loongarch64). Both glibc and musl (Alpine) variants. **Auto-included for non-platform TFMs.** Requires fontconfig (`libfontconfig.so.1`) for system font enumeration. |
+| **SkiaSharp.NativeAssets.Linux.NoDependencies** | Linux (same architectures as above, glibc + musl). **SkiaSharp only. Add to the application when needed.** No fontconfig, no third-party deps — only requires libc/libm/libpthread/libdl. **Designed for minimal containers.** Fonts must be loaded explicitly. When present, its Linux binaries take precedence over the regular Linux package's binaries. |
 | **SkiaSharp.NativeAssets.NanoServer** | Windows Nano Server containers (x64 only). **SkiaSharp only. Must add manually.** |
 | **SkiaSharp.NativeAssets.WinUI** | ANGLE rendering surface for WinUI 3 apps (x64, x86, arm64). **SkiaSharp only.** Contains `SkiaSharp.Views.WinUI.Native.dll`, `libEGL.dll`, and `libGLESv2.dll` for hardware-accelerated OpenGL ES — this is **not** a Skia binary. Auto-included by SkiaSharp.Views.WinUI. |
 | **SkiaSharp.NativeAssets.Android**<br/>**HarfBuzzSharp.NativeAssets.Android** | Android (x86, x64, arm, arm64). Auto-included. |
@@ -107,6 +107,7 @@ The core `SkiaSharp` and `HarfBuzzSharp` packages automatically include NativeAs
 |----------|------------------------------|
 | SkiaSharp.NativeAssets.Win32<br/>HarfBuzzSharp.NativeAssets.Win32 | Windows TFM (`net8.0-windows`) or non-platform TFM (`net6.0`, `net8.0`, `netstandard2.0`, `netstandard2.1`, `net462`) |
 | SkiaSharp.NativeAssets.macOS<br/>HarfBuzzSharp.NativeAssets.macOS | macOS TFM (`net8.0-macos`) or non-platform TFM (`net6.0`, `net8.0`, `netstandard2.0`, `netstandard2.1`, `net462`) |
+| SkiaSharp.NativeAssets.Linux<br/>HarfBuzzSharp.NativeAssets.Linux | Non-platform TFM (`net6.0`, `net8.0`, `netstandard2.0`, `netstandard2.1`, `net462`) |
 | SkiaSharp.NativeAssets.Android<br/>HarfBuzzSharp.NativeAssets.Android | Android TFM (`net8.0-android`) |
 | SkiaSharp.NativeAssets.iOS<br/>HarfBuzzSharp.NativeAssets.iOS | iOS TFM (`net8.0-ios`) |
 | SkiaSharp.NativeAssets.MacCatalyst<br/>HarfBuzzSharp.NativeAssets.MacCatalyst | Mac Catalyst TFM (`net8.0-maccatalyst`) |
@@ -115,8 +116,7 @@ The core `SkiaSharp` and `HarfBuzzSharp` packages automatically include NativeAs
 
 **Must be added manually** (not auto-included):
 
-- `SkiaSharp.NativeAssets.Linux` / `HarfBuzzSharp.NativeAssets.Linux` — for Linux server/desktop
-- `SkiaSharp.NativeAssets.Linux.NoDependencies` — for minimal Linux containers (SkiaSharp only)
+- `SkiaSharp.NativeAssets.Linux.NoDependencies` — select instead of the default regular Linux binaries for minimal Linux containers (SkiaSharp only)
 - `SkiaSharp.NativeAssets.WebAssembly` / `HarfBuzzSharp.NativeAssets.WebAssembly` — for Blazor/Uno WASM. `SkiaSharp.NativeAssets.WebAssembly` is auto-included by `SkiaSharp.Views.Blazor` and `SkiaSharp.Views.Uno.WinUI`; `HarfBuzzSharp.NativeAssets.WebAssembly` must always be added manually.
 - `SkiaSharp.NativeAssets.NanoServer` — for Windows Nano Server (SkiaSharp only)
 - `SkiaSharp.NativeAssets.WinUI` — for WinUI 3 apps (SkiaSharp only; auto-included by `SkiaSharp.Views.WinUI`)
@@ -130,6 +130,21 @@ The core `SkiaSharp` and `HarfBuzzSharp` packages automatically include NativeAs
 | Alpine Docker containers | `SkiaSharp.NativeAssets.Linux.NoDependencies` | Includes `linux-musl-*` variants, no deps |
 | Minimal/distroless containers | `SkiaSharp.NativeAssets.Linux.NoDependencies` | Zero third-party deps |
 | App needs system font enumeration | `SkiaSharp.NativeAssets.Linux` | Fontconfig required for `SKFontManager` system fonts |
+
+### Native RID output filtering
+
+For a RID-less .NET application (netcoreapp3.1 or later) that needs only some native variants in **build and publish output**, set a semicolon-separated list in the application project:
+
+```xml
+<PropertyGroup>
+  <SkiaSharpFilterRuntimeIdentifiers>linux-x64;osx-arm64</SkiaSharpFilterRuntimeIdentifiers>
+  <HarfBuzzSharpFilterRuntimeIdentifiers>linux-x64;osx-arm64</HarfBuzzSharpFilterRuntimeIdentifiers>
+</PropertyGroup>
+```
+
+Each setting controls only its own library's native assets. Leave it unset or blank to retain all native variants. Neither property is inferred from `RuntimeIdentifiers`: that SDK restore setting can coexist with a different native output filter. A singular `RuntimeIdentifier`, including `dotnet publish -r linux-x64`, takes precedence and keeps the SDK-selected native binary even if it is not in the filter list. The macOS universal binary is retained for `osx-arm64` and `osx-x64`.
+
+Filtering affects copied build/publish **output**, not the transitive restore graph or package downloads. Adding Linux by default increases the packages restored by non-platform consumers even if output filtering is enabled. `SkiaSharp.NativeAssets.Linux.NoDependencies` preference is automatic when that package participates, whether or not filtering is enabled.
 
 ---
 
@@ -187,13 +202,13 @@ signing, testing, and publication mechanics.
 
 ### Application vs Library References
 
-NativeAssets packages must be referenced in the **application project** (the one that produces the executable), not in library projects. The .NET runtime resolves native binaries from the application's output directory using runtime identifiers (RIDs).
+The default NativeAssets packages come from the core package. Add an optional native package such as `SkiaSharp.NativeAssets.Linux.NoDependencies` in the **application project** (the one that produces the executable), not in a library project. The .NET runtime resolves native binaries from the application's output directory using runtime identifiers (RIDs).
 
 If a NativeAssets package is only referenced in a transitive library, the native binary may not be copied to the final output — causing `DllNotFoundException` at runtime.
 
 ### Container Deployment
 
-For containers, use `SkiaSharp.NativeAssets.Linux.NoDependencies` unless you specifically need fontconfig for system font enumeration. This package has zero third-party dependencies and works in minimal base images (`mcr.microsoft.com/dotnet/aspnet`, Alpine, distroless).
+For containers, add `SkiaSharp.NativeAssets.Linux.NoDependencies` to the executable project unless you specifically need fontconfig for system font enumeration. It takes precedence over the regular Linux native binaries included by default, has zero third-party dependencies, and works in minimal base images (`mcr.microsoft.com/dotnet/aspnet`, Alpine, distroless). Publishing with `-r` already selects the correct native variant; the separate output filter is not required.
 
 ### Publishing Modes
 
@@ -231,7 +246,7 @@ On Linux, `DllNotFoundException` errors from `dlopen()` have two distinct failur
 
 | Error pattern | What happened | Fix |
 |---------------|---------------|-----|
-| `libSkiaSharp.so: cannot open shared object file: No such file or directory` | The `.so` file was **not found** at any search path | Add `SkiaSharp.NativeAssets.Linux` (or `.NoDependencies`) as a `PackageReference` in the **executable** project, not a library |
+| `libSkiaSharp.so: cannot open shared object file: No such file or directory` | The `.so` file was **not found** at any search path | Check that native assets are not excluded from restore or filtered out of RID-less output; for minimal images, reference `.Linux.NoDependencies` in the executable project |
 | `libfontconfig.so.1: cannot open shared object file` (or another dependency OF libSkiaSharp) | A `.so` **was found** and loaded, but it has a dependency that isn't installed | Either install the missing library (e.g. fontconfig) or switch to `NoDependencies` (see below) |
 
 ### Wrong Binary Deployed
@@ -239,7 +254,7 @@ On Linux, `DllNotFoundException` errors from `dlopen()` have two distinct failur
 `SkiaSharp.NativeAssets.Linux.NoDependencies` ships a `.so` with **zero** external dependencies — only libc/libm/libpthread/libdl. If you reference `NoDependencies` but see errors about missing fontconfig, uuid, or other libraries:
 
 1. The binary being loaded is **not** from `NoDependencies` — it's from `NativeAssets.Linux` (or another source)
-2. Check for a transitive `SkiaSharp.NativeAssets.Linux` reference conflicting with `NoDependencies`
+2. Check that the `NoDependencies` package participates in restore and its native assets have not been excluded
 3. Check that `NoDependencies` is in the **executable** project (not a library project)
 4. Check your container build tool (e.g. .NET Aspire, Docker SDK) — it may deploy the wrong RID variant
 
@@ -260,7 +275,7 @@ System.DllNotFoundException: Unable to load shared library 'libSkiaSharp'
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| `DllNotFoundException: libSkiaSharp` | Native binary not in output | Add `NativeAssets.Linux.NoDependencies` (or `.Linux`) as a direct `PackageReference` in the application project |
+| `DllNotFoundException: libSkiaSharp` | Native binary not in output | Check restore, native output filtering, and the application's RID; add `.Linux.NoDependencies` directly if the regular Linux package's dependencies are unavailable |
 | `libfontconfig.so.1: cannot open` | Using `NativeAssets.Linux` in a minimal container | Switch to `NoDependencies`, or install fontconfig in your Dockerfile |
 | Wrong binary for container arch | RID mismatch (glibc vs musl) | Alpine needs `linux-musl-*` RIDs — `NoDependencies` includes both glibc and musl variants |
 | Trimming removes native deps | .NET trimmer strips unused assemblies | Add the NativeAssets package as a direct `PackageReference` |

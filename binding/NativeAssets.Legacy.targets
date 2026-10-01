@@ -1,0 +1,41 @@
+<Project>
+  <UsingTask TaskName="SkiaSharpPreferLegacyNoDependencies"
+             TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <NativeAssets ParameterType="Microsoft.Build.Framework.ITaskItem[]" />
+      <RegularNativeAssets ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.Collections.Generic" />
+      <Using Namespace="System.Linq" />
+      <Using Namespace="Microsoft.Build.Framework" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        var noDeps = (NativeAssets ?? Array.Empty<ITaskItem>())
+            .Where(a => string.Equals(a.GetMetadata("DefiningProjectName"),
+                "SkiaSharp.NativeAssets.Linux.NoDependencies", StringComparison.OrdinalIgnoreCase)).ToArray();
+        var preferred = new HashSet<string>(noDeps.Select(a => a.GetMetadata("Link")),
+            StringComparer.OrdinalIgnoreCase);
+        var preferredFiles = new HashSet<string>(noDeps.Select(a => a.GetMetadata("FullPath")),
+            StringComparer.OrdinalIgnoreCase);
+        RegularNativeAssets = (NativeAssets ?? Array.Empty<ITaskItem>())
+            .Where(a => string.Equals(a.GetMetadata("DefiningProjectName"),
+                "SkiaSharp.NativeAssets.Linux", StringComparison.OrdinalIgnoreCase)
+                && preferred.Contains(a.GetMetadata("Link"))
+                && !preferredFiles.Contains(a.GetMetadata("FullPath"))).ToArray();
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="_SkiaSharpPreferLegacyNoDependencies"
+          BeforeTargets="AssignTargetPaths"
+          Condition="'@(Content)' != ''">
+    <SkiaSharpPreferLegacyNoDependencies NativeAssets="@(Content)">
+      <Output TaskParameter="RegularNativeAssets" ItemName="_SkiaSharpReplacedLegacyContent" />
+    </SkiaSharpPreferLegacyNoDependencies>
+    <ItemGroup>
+      <Content Remove="@(_SkiaSharpReplacedLegacyContent)" />
+    </ItemGroup>
+  </Target>
+</Project>
