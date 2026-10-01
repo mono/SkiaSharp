@@ -24,7 +24,7 @@ Reference for all NuGet packages produced by SkiaSharp — purpose, contents, an
 
 ## Core Managed Packages
 
-These contain the managed C# assemblies. The `SkiaSharp` and `HarfBuzzSharp` core packages automatically include the appropriate NativeAssets for most platforms (see [Auto-Included NativeAssets](#auto-included-nativeassets)). WebAssembly and NanoServer require separate NativeAssets packages; WinUI assets are included by `SkiaSharp.Views.WinUI`.
+These contain the managed C# assemblies. The `SkiaSharp` and `HarfBuzzSharp` core packages automatically include the appropriate NativeAssets for most platforms (see [Auto-Included NativeAssets](#auto-included-nativeassets)). NanoServer requires a separate NativeAssets package; WinUI assets are included by `SkiaSharp.Views.WinUI`.
 
 | Package | Description |
 |---------|-------------|
@@ -93,7 +93,7 @@ Both follow the same platform matrix and architectures. HarfBuzzSharp does **not
 | **SkiaSharp.NativeAssets.MacCatalyst**<br/>**HarfBuzzSharp.NativeAssets.MacCatalyst** | Mac Catalyst universal framework bundle. Auto-included. |
 | **SkiaSharp.NativeAssets.tvOS**<br/>**HarfBuzzSharp.NativeAssets.tvOS** | Apple tvOS framework bundle (arm64, device only). Auto-included. |
 | **SkiaSharp.NativeAssets.Tizen**<br/>**HarfBuzzSharp.NativeAssets.Tizen** | Samsung Tizen (armel, x86). Auto-included. |
-| **SkiaSharp.NativeAssets.WebAssembly**<br/>**HarfBuzzSharp.NativeAssets.WebAssembly** | Emscripten static library (`.a`). **Static linking, not P/Invoke** — linked into `dotnet.wasm` at build time via MSBuild `NativeFileReference`. Includes Emscripten 3.1.34 (net8.0), 3.1.56 (net9.0/net10.0), and 5.0.6 (net11.0+) with threading (st/mt) and SIMD variants. **Requires net8.0+.** Must add manually (or use SkiaSharp.Views.Blazor / SkiaSharp.Views.Uno.WinUI). |
+| **SkiaSharp.NativeAssets.WebAssembly**<br/>**HarfBuzzSharp.NativeAssets.WebAssembly** | Emscripten static library (`.a`). **Static linking, not P/Invoke** — linked into `dotnet.wasm` at build time via MSBuild `NativeFileReference`. Includes Emscripten 3.1.34 (net8.0), 3.1.56 (net9.0/net10.0), and 5.0.6 (net11.0+) with threading (st/mt) and SIMD variants. **Requires net8.0+ for WASM builds.** Auto-included for non-platform TFMs; the static libraries are linked only in WASM apps. |
 
 > **⚠️ WASM is NOT dynamic loading.** Unlike all other platforms, WebAssembly uses static linking at compile time. The `.a` files are passed to the Emscripten linker which embeds them into the final `dotnet.wasm` binary. `DllImport("libSkiaSharp")` still works — the .NET WASM runtime resolves it to statically linked symbols.
 
@@ -108,6 +108,7 @@ The core `SkiaSharp` and `HarfBuzzSharp` packages automatically include NativeAs
 | SkiaSharp.NativeAssets.Win32<br/>HarfBuzzSharp.NativeAssets.Win32 | Windows TFM (`net8.0-windows`) or non-platform TFM (`net6.0`, `net8.0`, `netstandard2.0`, `netstandard2.1`, `net462`) |
 | SkiaSharp.NativeAssets.macOS<br/>HarfBuzzSharp.NativeAssets.macOS | macOS TFM (`net8.0-macos`) or non-platform TFM (`net6.0`, `net8.0`, `netstandard2.0`, `netstandard2.1`, `net462`) |
 | SkiaSharp.NativeAssets.Linux<br/>HarfBuzzSharp.NativeAssets.Linux | Non-platform TFM (`net6.0`, `net8.0`, `netstandard2.0`, `netstandard2.1`, `net462`) |
+| SkiaSharp.NativeAssets.WebAssembly<br/>HarfBuzzSharp.NativeAssets.WebAssembly | Non-platform TFM (`net6.0`, `net8.0`, `netstandard2.0`, `netstandard2.1`, `net462`); link inputs used only by WASM apps targeting net8.0+ |
 | SkiaSharp.NativeAssets.Android<br/>HarfBuzzSharp.NativeAssets.Android | Android TFM (`net8.0-android`) |
 | SkiaSharp.NativeAssets.iOS<br/>HarfBuzzSharp.NativeAssets.iOS | iOS TFM (`net8.0-ios`) |
 | SkiaSharp.NativeAssets.MacCatalyst<br/>HarfBuzzSharp.NativeAssets.MacCatalyst | Mac Catalyst TFM (`net8.0-maccatalyst`) |
@@ -117,7 +118,6 @@ The core `SkiaSharp` and `HarfBuzzSharp` packages automatically include NativeAs
 **Must be added manually** (not auto-included):
 
 - `SkiaSharp.NativeAssets.Linux.NoDependencies` — select instead of the default regular Linux binaries for minimal Linux containers (SkiaSharp only)
-- `SkiaSharp.NativeAssets.WebAssembly` / `HarfBuzzSharp.NativeAssets.WebAssembly` — for Blazor/Uno WASM. `SkiaSharp.NativeAssets.WebAssembly` is auto-included by `SkiaSharp.Views.Blazor` and `SkiaSharp.Views.Uno.WinUI`; `HarfBuzzSharp.NativeAssets.WebAssembly` must always be added manually.
 - `SkiaSharp.NativeAssets.NanoServer` — for Windows Nano Server (SkiaSharp only)
 - `SkiaSharp.NativeAssets.WinUI` — for WinUI 3 apps (SkiaSharp only; auto-included by `SkiaSharp.Views.WinUI`)
 
@@ -142,9 +142,9 @@ For a RID-less .NET application (netcoreapp3.1 or later) that needs only some na
 </PropertyGroup>
 ```
 
-Each setting controls only its own library's native assets. Leave it unset or blank to retain all native variants. Neither property is inferred from `RuntimeIdentifiers`: that SDK restore setting can coexist with a different native output filter. A singular `RuntimeIdentifier`, including `dotnet publish -r linux-x64`, takes precedence and keeps the SDK-selected native binary even if it is not in the filter list. The macOS universal binary is retained for `osx-arm64` and `osx-x64`.
+Each setting controls only its own library's copied RID-specific native assets, not the WebAssembly static libraries (which are linked rather than copied). Leave it unset or blank to retain all native variants. Neither property is inferred from `RuntimeIdentifiers`: that SDK restore setting can coexist with a different native output filter. A singular `RuntimeIdentifier`, including `dotnet publish -r linux-x64`, takes precedence and keeps the SDK-selected native binary even if it is not in the filter list. The macOS universal binary is retained for `osx-arm64` and `osx-x64`.
 
-Filtering affects copied build/publish **output**, not the transitive restore graph or package downloads. Adding Linux by default increases the packages restored by non-platform consumers even if output filtering is enabled. `SkiaSharp.NativeAssets.Linux.NoDependencies` preference is automatic when that package participates, whether or not filtering is enabled.
+Filtering affects copied build/publish **output**, not the transitive restore graph or package downloads. Adding Linux and WebAssembly by default increases the packages restored by non-platform consumers even if output filtering is enabled. `SkiaSharp.NativeAssets.Linux.NoDependencies` preference is automatic when that package participates, whether or not filtering is enabled.
 
 ---
 

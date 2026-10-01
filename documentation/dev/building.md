@@ -180,7 +180,7 @@ Download the `nuget` artifact from one exact completed SkiaSharp CI build and
 place its packages in `output/nugets`. Record the build URL/commit when reporting
 results. Do not combine different builds or substitute published packages for
 missing artifacts. Both families require their core, `NativeAssets.Win32`,
-`NativeAssets.macOS`, and `NativeAssets.Linux` packages; NoDependencies cases also
+`NativeAssets.macOS`, `NativeAssets.Linux`, and `NativeAssets.WebAssembly` packages; NoDependencies cases also
 require `SkiaSharp.NativeAssets.Linux.NoDependencies`. Package versions are read
 from their nuspec metadata, not inferred from the checkout.
 
@@ -206,7 +206,9 @@ HarfBuzzSharp packages to the supplied artifacts, so missing packages cannot
 fall back to public versions. User NuGet caches and input packages are not modified.
 
 For each family, build and publish first verify that the core package includes
-Win32, macOS, **and Linux** native assets by default. The nine-case matrix below
+Win32, macOS, Linux, **and WebAssembly** dependencies by default. WebAssembly
+archives are link inputs, so they are not copied to ordinary .NET outputs and
+are unaffected by RID filtering. The nine-case matrix below
 also verifies SDK RID selection without an output filter.
 
 For each family, the suite tests `build`, `publish`, and `publish -r linux-x64`

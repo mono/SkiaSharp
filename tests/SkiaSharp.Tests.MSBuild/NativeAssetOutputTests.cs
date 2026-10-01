@@ -51,7 +51,26 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         var project = dotnet.NewProject($"{family}-default-{command}", ProjectXml(family, core.Version));
         await BuildOrPublish(project, command);
         AssertNativeOutput(project, family, expected);
+        Assert.Empty(Directory.EnumerateFiles(Path.Combine(project, "output"), "*.a", SearchOption.AllDirectories));
         dotnet.CleanBuildOutput(project);
+    }
+
+    [Theory]
+    [InlineData("SkiaSharp")]
+    [InlineData("HarfBuzzSharp")]
+    public void WebAssemblyPackageIsDefaultOnlyForNonPlatformFrameworks(string family)
+    {
+        var core = ReadPackage(family);
+        using var zip = ZipFile.OpenRead(Path.Combine(dotnet.PackageDirectory, $"{family}.{core.Version}.nupkg"));
+        using var nuspec = zip.Entries.Single(e => e.FullName.EndsWith(".nuspec", StringComparison.Ordinal)).Open();
+        var dependencies = XDocument.Load(nuspec).Descendants().Where(e => e.Name.LocalName == "group")
+            .ToDictionary(group => group.Attribute("targetFramework")!.Value,
+                group => group.Elements().Select(dependency => dependency.Attribute("id")!.Value).ToHashSet());
+
+        foreach (var framework in new[] { "net10.0", ".NETFramework4.6.2", ".NETStandard2.0" })
+            Assert.Contains(family + ".NativeAssets.WebAssembly", dependencies[framework]);
+        var android = dependencies.Single(group => group.Key.StartsWith("net10.0-android", StringComparison.Ordinal));
+        Assert.DoesNotContain(family + ".NativeAssets.WebAssembly", android.Value);
     }
 
     [Theory]
@@ -93,15 +112,17 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     }
 
     [Theory]
-    [InlineData("SkiaSharp", "build")]
-    [InlineData("HarfBuzzSharp", "publish")]
-    public async Task BlankNativeFilterKeepsAllAssetsWithPluralRuntimeIdentifiers(string family, string command)
+    [InlineData("SkiaSharp", "build", "")]
+    [InlineData("SkiaSharp", "build", "   ")]
+    [InlineData("HarfBuzzSharp", "publish", "")]
+    [InlineData("HarfBuzzSharp", "publish", "   ")]
+    public async Task BlankNativeFilterKeepsAllAssetsWithPluralRuntimeIdentifiers(string family, string command, string filter)
     {
         var core = ReadPackage(family);
         var expected = Platforms.SelectMany(platform => ReadPackage(family + ".NativeAssets." + platform).NativeFiles)
             .ToDictionary(p => p.Key, p => p.Value);
-        var project = dotnet.NewProject($"{family}-blank-filter-{command}",
-            ProjectXml(family, core.Version, "multiple", filter: ""));
+        var project = dotnet.NewProject($"{family}-blank-filter-{command}-{(filter.Length == 0 ? "empty" : "whitespace")}",
+            ProjectXml(family, core.Version, "multiple", filter: filter));
         await BuildOrPublish(project, command);
         AssertNativeOutput(project, family, expected);
         dotnet.CleanBuildOutput(project);
