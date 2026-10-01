@@ -39,7 +39,9 @@ native-layout invalidation gap, not a renderer resize failure.
 Disconnecting the Metal handler pauses rendering and clears the managed
 control's context reference. The underlying Metal context remains owned by the
 native NSView until that NSView is disposed; do not treat handler disconnect
-alone as native GPU resource disposal.
+alone as native GPU resource disposal. Removing and re-adding a child in the
+backend's `VerticalStackLayout` did not itself disconnect its handler; both
+canvases resumed painting and receiving mouse input afterward.
 
 The backend's current `ImageHandler` does not resolve custom image source
 services. `UseSkiaSharpMacOS()` opts into once-per-process `PropertyMapper`

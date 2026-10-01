@@ -61,10 +61,13 @@ sealed class SmokeApp : Application
 	private bool requestedResize;
 	private bool requestedNativeLayout;
 	private bool renderLoopStarted;
+	private bool reattached;
 	private bool touchesVerified;
 	private DateTime requestedResizeAt;
 	private DateTime requestedNativeLayoutAt;
 	private int gpuFramesAtLoopStart;
+	private int cpuFramesAtReattach;
+	private int gpuFramesAtReattach;
 	private DateTime started;
 	private NSTimer? timer;
 
@@ -177,14 +180,47 @@ sealed class SmokeApp : Application
 			}
 			else if (gpuFrames - gpuFramesAtLoopStart >= 3)
 			{
-				gpu.HasRenderLoop = false;
-				Console.WriteLine($"PASS AppKit CPU={cpuFrames} Metal={gpuFrames} resized CPU={resizedCpuFrames} Metal={resizedGpuFrames}; mouse, Metal render loop and all image sources converted");
-				Finish(0);
+				if (!reattached)
+				{
+					reattached = true;
+					gpu.HasRenderLoop = false;
+					layout.Remove(cpu);
+					layout.Remove(gpu);
+					Console.WriteLine($"Removed from layout: CPU handler={cpu.Handler is not null} Metal handler={gpu.Handler is not null} Metal context={gpu.GRContext is not null}");
+					cpuFramesAtReattach = cpuFrames;
+					gpuFramesAtReattach = gpuFrames;
+					layout.Add(cpu);
+					layout.Add(gpu);
+					var nativeLayout = (NSView)layout.Handler!.PlatformView!;
+					nativeLayout.NeedsLayout = true;
+					nativeLayout.LayoutSubtreeIfNeeded();
+					cpu.InvalidateSurface();
+					gpu.InvalidateSurface();
+				}
+				else if (cpuFrames > cpuFramesAtReattach && gpuFrames > gpuFramesAtReattach)
+				{
+					cpuTouches.Clear();
+					gpuTouches.Clear();
+					var touchesReattached = VerifyTouch(cpu, cpuTouches) && VerifyTouch(gpu, gpuTouches);
+					var hadMetalContext = gpu.GRContext is not null;
+					cpu.Handler!.DisconnectHandler();
+					gpu.Handler!.DisconnectHandler();
+					if (touchesReattached && hadMetalContext && gpu.GRContext is null)
+					{
+						Console.WriteLine($"PASS AppKit CPU={cpuFrames} Metal={gpuFrames} resized CPU={resizedCpuFrames} Metal={resizedGpuFrames}; mouse, reattach, disconnect, Metal loop and all image sources converted");
+						Finish(0);
+					}
+					else
+					{
+						Console.Error.WriteLine($"FAIL AppKit reattach/disconnect: mouse={touchesReattached} previousMetalContext={hadMetalContext} cleared={gpu.GRContext is null}");
+						Finish(1);
+					}
+				}
 			}
 		}
-		else if (DateTime.UtcNow - started > TimeSpan.FromSeconds(20))
+		if (DateTime.UtcNow - started > TimeSpan.FromSeconds(20))
 		{
-			Console.Error.WriteLine($"FAIL AppKit CPU={cpuFrames} Metal={gpuFrames} resize CPU={resizedCpuFrames} Metal={resizedGpuFrames} context={sawMetal} rawInfo={sawRawInfo} images={imagesConverted} touch={touchesVerified}");
+			Console.Error.WriteLine($"FAIL AppKit CPU={cpuFrames} Metal={gpuFrames} resize CPU={resizedCpuFrames} Metal={resizedGpuFrames} context={sawMetal} rawInfo={sawRawInfo} images={imagesConverted} touch={touchesVerified} reattach={reattached} reattachedFrames={cpuFrames - cpuFramesAtReattach},{gpuFrames - gpuFramesAtReattach}");
 			Finish(1);
 		}
 	}
@@ -195,7 +231,13 @@ sealed class SmokeApp : Application
 		using var graphics = NSGraphicsContext.FromWindow(nativeView.Window!);
 		var point = new CGPoint(12, 18);
 		var windowPoint = nativeView.ConvertPointToView(point, null);
-		var scale = (float)nativeView.Window!.BackingScaleFactor;
+		var ignoreScaling = control switch
+		{
+			SKCanvasView canvas => canvas.IgnorePixelScaling,
+			SKGLView metal => metal.IgnorePixelScaling,
+			_ => false,
+		};
+		var scale = ignoreScaling ? 1 : (float)nativeView.Window!.BackingScaleFactor;
 
 		NSEvent MouseEvent(NSEventType type) =>
 			NSEvent.MouseEvent(type, windowPoint, (NSEventModifierMask)0,
