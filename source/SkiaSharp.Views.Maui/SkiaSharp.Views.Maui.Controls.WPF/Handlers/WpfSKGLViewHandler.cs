@@ -61,8 +61,8 @@ public sealed class WpfSKGLViewHandler : WPFViewHandler<ISKGLView, WpfSKGLViewHa
 		platformView.Unloaded -= OnUnloaded;
 		NotifyContextLost();
 		lastCanvasSize = default;
-		base.DisconnectHandler(platformView);
 		platformView.Dispose();
+		base.DisconnectHandler(platformView);
 	}
 
 	/// <summary>Updates pixel scaling and requests a redraw.</summary>
