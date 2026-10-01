@@ -104,18 +104,24 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
  - [Managed-Only build dependencies](#dependencies)
  - [Python 3](https://www.python.org/downloads/)
     - Make sure the path to `python` is in the `PATH` environment variable
- - [Visual Studio 2022+](https://visualstudio.microsoft.com/vs/)
+ - [Visual Studio 2022 or 2026](https://visualstudio.microsoft.com/vs/)
     - Desktop development with C++
        - Windows 10/11 SDK (latest)
-       - MSVC v143+ C++ build tools
+       - MSVC v143 C++ build tools and matching Spectre-mitigated libraries for the architectures you build
     - Individual components
        - C++ compilers and libraries for ARM64
+       - For WinUI native builds, C++ (v143) Universal Windows Platform tools from VS 2022
+          - In VS 2022 Build Tools, select **WinUI application development build tools** and its optional C++ tools
        - Android NDK (via Visual Studio Installer or [manually](https://developer.android.com/ndk/downloads))
           - Make sure the path to the root is in the `ANDROID_NDK_ROOT` or `ANDROID_NDK_HOME` environment variables
  - [OpenJDK 17+](https://adoptium.net/)
  - Clang/LLVM
     - Run `.\scripts\install-llvm.ps1`
     - Set `LLVM_HOME` to the path of the install
+
+If you have multiple Visual Studio installations, use `--vsinstall` or set
+`VS_INSTALL` to select one with the v143 tools and matching Spectre libraries.
+Use `--windowsSdkVersion` if you need a specific installed Windows SDK.
 
 **macOS Dependencies:**
  - [Managed-Only build dependencies](#dependencies)

@@ -1,5 +1,12 @@
 <Project>
 
+  <!-- Keep generated filenames within VS 2022 MSBuild's path-length limits. -->
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..', '..', '..', 'artifacts', 'obj', 'winui-projection'))\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..', '..', '..', 'artifacts', 'bin', 'winui-projection'))\</BaseOutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj\**;bin\**</DefaultItemExcludes>
+  </PropertyGroup>
+
   <Import Project="$(MSBuildThisFileDirectory)..\..\..\..\source\SkiaSharp.Build.props" />
 
 </Project>

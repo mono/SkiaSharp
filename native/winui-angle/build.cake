@@ -41,12 +41,12 @@ Task("sync-ANGLE")
     // patch the output filenames
     {
         var toolchain = ANGLE_PATH.CombineWithFilePath("build/toolchain/win/toolchain.gni");
-        var contents = System.IO.File.ReadAllText(toolchain.FullPath);
+        var contents = FileReadText(toolchain);
         var newContents = contents
             .Replace("\"${dllname}.lib\"", "\"{{output_dir}}/{{target_output_name}}.lib\"")
             .Replace("\"${dllname}.pdb\"", "\"{{output_dir}}/{{target_output_name}}.pdb\"");
         if (contents != newContents)
-            System.IO.File.WriteAllText(toolchain.FullPath, newContents);
+            FileWriteText(toolchain, newContents);
     }
 
     // set build args
@@ -57,7 +57,22 @@ Task("sync-ANGLE")
             "checkout_angle_restricted_traces = false",
             "generate_location_tags = false"
         };
-        System.IO.File.WriteAllLines(ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni").FullPath, lines);
+        FileWriteLines(ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni"), lines);
+    }
+
+    // Apply a real GN config so Ninja also tracks security-option changes.
+    {
+        CopyDirectory(ROOT_PATH.Combine("native/winui-angle/gn"), ANGLE_PATH.Combine("build/config/skiasharp"));
+
+        var buildConfig = ANGLE_PATH.CombineWithFilePath("build/config/BUILDCONFIG.gn");
+        var contents = FileReadText(buildConfig);
+        const string config = "  \"//build/config/skiasharp:skiasharp\",";
+        if (!contents.Contains(config)) {
+            const string anchor = "default_compiler_configs = [";
+            if (!contents.Contains(anchor))
+                throw new Exception($"Cannot apply the SkiaSharp config to ANGLE targets at {buildConfig}.");
+            FileWriteText(buildConfig, contents.Replace(anchor, $"{anchor}\n{config}"));
+        }
     }
 
     // set version numbers
@@ -71,7 +86,7 @@ Task("sync-ANGLE")
     var rcPath = ANGLE_PATH.CombineWithFilePath(rc_exe);
     if (!FileExists(rcPath)) {
         var shaPath = ANGLE_PATH.CombineWithFilePath($"{rc_exe}.sha1");
-        var sha = System.IO.File.ReadAllText(shaPath.FullPath);
+        var sha = FileReadText(shaPath);
         var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
         DownloadFile(url, rcPath);
     }
@@ -95,7 +110,7 @@ Task("sync-ANGLE")
             DownloadFile(nugetUrl, nupkgPath);
             Unzip(nupkgPath, WINAPPSDK_PATH);
             DeleteFile(nupkgPath);
-            System.IO.File.WriteAllText(stamp.FullPath, "");
+            FileWriteText(stamp, "");
         }
 
         // Run the header generation script under vcvarsall.bat so midlrt can find cl.exe
@@ -123,6 +138,7 @@ Task("ANGLE")
 
         var suffix = wasdk ? "_wasdk" : "";
         var spectreLibPath = GetSpectreLibPath(arch);
+        var previousDepotToolsWinToolchain = EnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN");
 
         try
         {
@@ -140,14 +156,18 @@ Task("ANGLE")
                 $"angle_enable_wgpu=false " +
                 $"angle_enable_gl_desktop_backend=false " +
                 $"angle_enable_vulkan=false " +
-                $"extra_cflags=[ '/guard:cf', '/GS' ] " +
-                $"extra_ldflags=[ '/guard:cf', '/LIBPATH:{spectreLibPath}' ]");
+                $"spectre_lib_root='{System.IO.Path.GetDirectoryName(spectreLibPath)}'",
+                new Dictionary<string, string> {
+                    { "GYP_MSVS_OVERRIDE_PATH", VS_INSTALL },
+                    { "vs2022_install", VS_INSTALL },
+                    { "VCToolsVersion", TOOLSET_VERSION.Value },
+                });
 
             RunNinja(ANGLE_PATH, $"out/winui{suffix}/{arch}", target);
         }
         finally
         {
-            System.Environment.SetEnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN", "");
+            System.Environment.SetEnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN", previousDepotToolsWinToolchain);
         }
 
         var outDir = OUTPUT_PATH.Combine(arch);
