@@ -38,6 +38,12 @@ image when its source becomes null; an already-started stream image load can
 also complete after a newer Skia source and replace it. This WPF package does
 not replace the backend's private image-loading pipeline; verify transitions
 from Skia to ordinary sources and back on Windows.
+The backend does not reliably render ordinary `FontImageSource` in `Image` or
+`ImageButton`; these Skia-only mappings do not address that gap. Use a `Label`
+or `Button` with a registered font for glyphs instead. Numeric `ZIndex` is
+also not dependable for a Gallery popup scrim or popover: append the overlay
+last in its container. OS theme behavior and overlay appearance/stacking
+still require Windows runtime validation.
 
 The software handler forwards WPF `SKElement`'s borrowed `SKSurface` during
 its paint callback; do not retain or dispose that surface. The GL handler
