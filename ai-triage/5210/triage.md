@@ -1,0 +1,344 @@
+# Issue Triage Report — #5210
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-10-01T04:30:33Z |
+| Type | type/bug (0.96 (96%)) |
+| Area | area/libSkiaSharp.native (0.94 (94%)) |
+| Suggested action | needs-investigation (0.90 (90%)) |
+
+**Issue Summary:** On Linux x64 with SkiaSharp 3.119.4 and fontconfig, the reporter says WOFF or WOFF2 files in user font directories cause native system-font initialization to spin at 100% CPU before the application can display a UI.
+
+**Analysis:** The report is a native Linux fontconfig enumeration hang, not a managed Avalonia lifecycle issue. SKFontManager.Default immediately asks libSkiaSharp to create the default native manager, and its public family-enumeration path is native; the supplied native stack therefore plausibly reaches Skia's fontconfig manager before managed UI work. The checked-out repository lacks the externals/skia submodule, so the exact GetFamilyNames loop and the proposed pattern-validation fix require source-based reproduction against the matching native revision.
+
+**Recommendations:** **needs-investigation** — The reporter provides a credible native stack, trigger conditions, and effective configuration mitigation, but a minimal fixture and source-level confirmation are required to distinguish a Skia enumeration defect from a fontconfig cache or container-specific interaction.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/Linux |
+| Backends | — |
+| Tenets | tenet/reliability, tenet/performance |
+| Perf | perf/startup |
+| Partner | — |
+
+## Evidence
+
+### Reproduction
+
+1. On Linux x64, install or place WOFF or WOFF2 font containers in a user font directory scanned by fontconfig.
+2. Run an application using SkiaSharp 3.119.4 and the fontconfig-enabled Linux native asset.
+3. Resolve SKFontManager.Default or start Avalonia through Avalonia.Skia.
+4. Observe a startup hang with one CPU core saturated before the UI is shown.
+
+**Environment:** SkiaSharp 3.119.4, Avalonia 12.1.2, .NET 10 desktop application, Linux x64 with GNOME and system fontconfig.
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/1181 — Open Linux system-font discovery issue; its comments confirm system-font failures can be isolated from explicit file loading.
+- https://github.com/mono/SkiaSharp/issues/799 — Prior open font-manager hang report, with a different invalid-character trigger.
+- https://github.com/mono/SkiaSharp/pull/5086 — Merged native-font-manager fix for the distinct Linux NoDependencies empty-manager regression; it does not establish a fix for the reported fontconfig loop.
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | False |
+| Error type | performance |
+| Error message | Native initialization hangs in FcPatternGetString while SkFontMgr_fontconfig::GetFamilyNames is enumerating font families. |
+| Repro quality | partial |
+| Target frameworks | net10.0 |
+
+**Stack trace:**
+
+```text
+#0 strcmp in libc
+#1 FcObjectTypeLookup in libfontconfig
+#2 FcPatternGetString in libfontconfig
+#3 SkFontMgr_fontconfig::GetFamilyNames in libSkiaSharp
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.119.4, 12.1.2 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | unknown |
+| Relevance reason | The report targets 3.119.4, while the checked-out managed source does not contain the native fontconfig implementation and no related issue or PR found by title establishes whether the loop is fixed in later fontconfig-enabled binaries. |
+
+## Analysis
+
+### Technical Summary
+
+The report is a native Linux fontconfig enumeration hang, not a managed Avalonia lifecycle issue. SKFontManager.Default immediately asks libSkiaSharp to create the default native manager, and its public family-enumeration path is native; the supplied native stack therefore plausibly reaches Skia's fontconfig manager before managed UI work. The checked-out repository lacks the externals/skia submodule, so the exact GetFamilyNames loop and the proposed pattern-validation fix require source-based reproduction against the matching native revision.
+
+### Rationale
+
+A deterministic startup hang that makes a desktop application unusable is a high-severity Linux reliability bug and also a startup-performance failure. The evidence ties it to the fontconfig-enabled native library and provides configuration-based mitigations, but it does not include a minimal project, affected font files, or a native revision comparison proving a specific root cause; investigation and reproduction should precede a fix.
+
+### Key Signals
+
+- "The process hangs before a single line of UI runs and pins one CPU core at 100%." — **issue body** (The failure blocks application startup rather than merely omitting a font.)
+- "The native stack terminates at SkFontMgr_fontconfig::GetFamilyNames through FcPatternGetString." — **issue body** (The reported failure is in native font-family enumeration.)
+- "fc-list and fc-cache do not hang, while excluding WOFF and WOFF2 files or using a fresh private cache unblocks the application." — **issue body** (The report strongly narrows the trigger to Skia's interaction with fontconfig patterns or cached font data.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKFontManager.cs` | 29-33 | direct | SKFontManager.Default lazily calls sk_fontmgr_create_default and wraps the native result; the managed wrapper does not enumerate or filter system-font files. |
+| `binding/SkiaSharp/SKFontManager.cs` | 42-57 | direct | FontFamilyCount and FontFamilies delegate counts and family-name retrieval to native sk_fontmgr functions, placing family enumeration below the managed API layer. |
+| `tests/Tests/SkiaSharp/SKFontManagerTest.cs` | 26-35 | related | The existing family-count test expects the default manager to return a positive count and enumerate families, confirming this is a supported native system-font-manager path. |
+
+**Error fingerprint:** `linux-fontconfig-SkFontMgr_fontconfig-GetFamilyNames-FcPatternGetString-startup-spin`
+
+### Workarounds
+
+- Use a fontconfig configuration that excludes WOFF and WOFF2 containers and uses a fresh private fontconfig cache before the native font manager initializes.
+- Limit the fontconfig configuration to trusted font directories; the reporter found that excluding user WOFF and WOFF2 directories avoids the hang.
+- Where system-font enumeration is not required, explicitly load application fonts rather than depending on the system font manager.
+
+### Next Questions
+
+- Can the reporter provide a minimal project and the smallest WOFF or WOFF2 fixture that causes the loop?
+- Does the failure reproduce with the latest fontconfig-enabled SkiaSharp native asset, and which Skia revision is embedded in the failing package?
+- Does clearing the shared fontconfig cache alone prevent the loop, and does the same cache reproduce it after the triggering font files are removed?
+- Can a native debugger confirm whether the GetFamilyNames iterator advances after FcPatternGetString returns for the offending pattern?
+
+### Resolution Proposals
+
+**Hypothesis:** Skia's fontconfig manager repeatedly processes a malformed or unsupported family-pattern result associated with WOFF or WOFF2 data or its cache entry, so its family enumeration fails to advance.
+
+1. **Reproduce and harden the native fontconfig enumeration** — investigation, confidence 0.80 (80%), cost/m, validated=untested
+   - Create a native regression reproduction using the reporter's smallest font fixture and cache state, then inspect the matching SkFontMgr_fontconfig::GetFamilyNames implementation for a non-advancing loop. Ensure invalid or missing family values are skipped while enumeration always advances.
+2. **Use a constrained fontconfig configuration as an interim mitigation** — workaround, confidence 0.86 (86%), cost/s, validated=untested
+   - Configure fontconfig before any SkiaSharp access to scan only trusted directories, reject WOFF and WOFF2 containers, and isolate its cache. Preserve an externally supplied fontconfig configuration rather than overwriting it.
+3. **Avoid system font discovery for application-owned fonts** — alternative, confidence 0.70 (70%), cost/s, validated=untested
+   - Ship and explicitly load the fonts required by the application when a constrained font environment is acceptable; this avoids the failing system font-family enumeration path.
+
+**Recommended proposal:** Reproduce and harden the native fontconfig enumeration
+
+**Why:** The reported infinite loop prevents application startup and the native stack names the likely upstream implementation, but the precise faulty pattern behavior must be confirmed before choosing a filter or a loop guard.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.90 (90%) |
+| Reason | The reporter provides a credible native stack, trigger conditions, and effective configuration mitigation, but a minimal fixture and source-level confirmation are required to distinguish a Skia enumeration defect from a fontconfig cache or container-specific interaction. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.98 (98%) | Apply the native Linux bug, reliability, and startup-performance classification labels. | labels=type/bug, area/libSkiaSharp.native, os/Linux, tenet/reliability, tenet/performance, perf/startup |
+| link-related | low | 0.77 (77%) | Link the related Linux system-font discovery issue for shared native font-manager investigation context. | linkedIssue=#1181 |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 5210,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-10-01T04:30:33Z",
+    "currentLabels": []
+  },
+  "summary": "On Linux x64 with SkiaSharp 3.119.4 and fontconfig, the reporter says WOFF or WOFF2 files in user font directories cause native system-font initialization to spin at 100% CPU before the application can display a UI.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.96
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.94
+    },
+    "platforms": [
+      "os/Linux"
+    ],
+    "tenets": [
+      "tenet/reliability",
+      "tenet/performance"
+    ],
+    "perf": [
+      "perf/startup"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "performance",
+      "errorMessage": "Native initialization hangs in FcPatternGetString while SkFontMgr_fontconfig::GetFamilyNames is enumerating font families.",
+      "stackTrace": "#0 strcmp in libc\n#1 FcObjectTypeLookup in libfontconfig\n#2 FcPatternGetString in libfontconfig\n#3 SkFontMgr_fontconfig::GetFamilyNames in libSkiaSharp",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net10.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "On Linux x64, install or place WOFF or WOFF2 font containers in a user font directory scanned by fontconfig.",
+        "Run an application using SkiaSharp 3.119.4 and the fontconfig-enabled Linux native asset.",
+        "Resolve SKFontManager.Default or start Avalonia through Avalonia.Skia.",
+        "Observe a startup hang with one CPU core saturated before the UI is shown."
+      ],
+      "environmentDetails": "SkiaSharp 3.119.4, Avalonia 12.1.2, .NET 10 desktop application, Linux x64 with GNOME and system fontconfig.",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/1181",
+          "description": "Open Linux system-font discovery issue; its comments confirm system-font failures can be isolated from explicit file loading."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/799",
+          "description": "Prior open font-manager hang report, with a different invalid-character trigger."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/5086",
+          "description": "Merged native-font-manager fix for the distinct Linux NoDependencies empty-manager regression; it does not establish a fix for the reported fontconfig loop."
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.119.4",
+        "12.1.2"
+      ],
+      "currentRelevance": "unknown",
+      "relevanceReason": "The report targets 3.119.4, while the checked-out managed source does not contain the native fontconfig implementation and no related issue or PR found by title establishes whether the loop is fixed in later fontconfig-enabled binaries."
+    }
+  },
+  "analysis": {
+    "summary": "The report is a native Linux fontconfig enumeration hang, not a managed Avalonia lifecycle issue. SKFontManager.Default immediately asks libSkiaSharp to create the default native manager, and its public family-enumeration path is native; the supplied native stack therefore plausibly reaches Skia's fontconfig manager before managed UI work. The checked-out repository lacks the externals/skia submodule, so the exact GetFamilyNames loop and the proposed pattern-validation fix require source-based reproduction against the matching native revision.",
+    "rationale": "A deterministic startup hang that makes a desktop application unusable is a high-severity Linux reliability bug and also a startup-performance failure. The evidence ties it to the fontconfig-enabled native library and provides configuration-based mitigations, but it does not include a minimal project, affected font files, or a native revision comparison proving a specific root cause; investigation and reproduction should precede a fix.",
+    "keySignals": [
+      {
+        "text": "The process hangs before a single line of UI runs and pins one CPU core at 100%.",
+        "source": "issue body",
+        "interpretation": "The failure blocks application startup rather than merely omitting a font."
+      },
+      {
+        "text": "The native stack terminates at SkFontMgr_fontconfig::GetFamilyNames through FcPatternGetString.",
+        "source": "issue body",
+        "interpretation": "The reported failure is in native font-family enumeration."
+      },
+      {
+        "text": "fc-list and fc-cache do not hang, while excluding WOFF and WOFF2 files or using a fresh private cache unblocks the application.",
+        "source": "issue body",
+        "interpretation": "The report strongly narrows the trigger to Skia's interaction with fontconfig patterns or cached font data."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKFontManager.cs",
+        "lines": "29-33",
+        "finding": "SKFontManager.Default lazily calls sk_fontmgr_create_default and wraps the native result; the managed wrapper does not enumerate or filter system-font files.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFontManager.cs",
+        "lines": "42-57",
+        "finding": "FontFamilyCount and FontFamilies delegate counts and family-name retrieval to native sk_fontmgr functions, placing family enumeration below the managed API layer.",
+        "relevance": "direct"
+      },
+      {
+        "file": "tests/Tests/SkiaSharp/SKFontManagerTest.cs",
+        "lines": "26-35",
+        "finding": "The existing family-count test expects the default manager to return a positive count and enumerate families, confirming this is a supported native system-font-manager path.",
+        "relevance": "related"
+      }
+    ],
+    "errorFingerprint": "linux-fontconfig-SkFontMgr_fontconfig-GetFamilyNames-FcPatternGetString-startup-spin",
+    "workarounds": [
+      "Use a fontconfig configuration that excludes WOFF and WOFF2 containers and uses a fresh private fontconfig cache before the native font manager initializes.",
+      "Limit the fontconfig configuration to trusted font directories; the reporter found that excluding user WOFF and WOFF2 directories avoids the hang.",
+      "Where system-font enumeration is not required, explicitly load application fonts rather than depending on the system font manager."
+    ],
+    "nextQuestions": [
+      "Can the reporter provide a minimal project and the smallest WOFF or WOFF2 fixture that causes the loop?",
+      "Does the failure reproduce with the latest fontconfig-enabled SkiaSharp native asset, and which Skia revision is embedded in the failing package?",
+      "Does clearing the shared fontconfig cache alone prevent the loop, and does the same cache reproduce it after the triggering font files are removed?",
+      "Can a native debugger confirm whether the GetFamilyNames iterator advances after FcPatternGetString returns for the offending pattern?"
+    ],
+    "resolution": {
+      "hypothesis": "Skia's fontconfig manager repeatedly processes a malformed or unsupported family-pattern result associated with WOFF or WOFF2 data or its cache entry, so its family enumeration fails to advance.",
+      "proposals": [
+        {
+          "title": "Reproduce and harden the native fontconfig enumeration",
+          "description": "Create a native regression reproduction using the reporter's smallest font fixture and cache state, then inspect the matching SkFontMgr_fontconfig::GetFamilyNames implementation for a non-advancing loop. Ensure invalid or missing family values are skipped while enumeration always advances.",
+          "category": "investigation",
+          "validated": "untested",
+          "confidence": 0.8,
+          "effort": "cost/m"
+        },
+        {
+          "title": "Use a constrained fontconfig configuration as an interim mitigation",
+          "description": "Configure fontconfig before any SkiaSharp access to scan only trusted directories, reject WOFF and WOFF2 containers, and isolate its cache. Preserve an externally supplied fontconfig configuration rather than overwriting it.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.86,
+          "effort": "cost/s"
+        },
+        {
+          "title": "Avoid system font discovery for application-owned fonts",
+          "description": "Ship and explicitly load the fonts required by the application when a constrained font environment is acceptable; this avoids the failing system font-family enumeration path.",
+          "category": "alternative",
+          "validated": "untested",
+          "confidence": 0.7,
+          "effort": "cost/s"
+        }
+      ],
+      "recommendedProposal": "Reproduce and harden the native fontconfig enumeration",
+      "recommendedReason": "The reported infinite loop prevents application startup and the native stack names the likely upstream implementation, but the precise faulty pattern behavior must be confirmed before choosing a filter or a loop guard."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "The reporter provides a credible native stack, trigger conditions, and effective configuration mitigation, but a minimal fixture and source-level confirmation are required to distinguish a Skia enumeration defect from a fontconfig cache or container-specific interaction.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply the native Linux bug, reliability, and startup-performance classification labels.",
+        "risk": "low",
+        "confidence": 0.98,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/Linux",
+          "tenet/reliability",
+          "tenet/performance",
+          "perf/startup"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link the related Linux system-font discovery issue for shared native font-manager investigation context.",
+        "risk": "low",
+        "confidence": 0.77,
+        "linkedIssue": 1181
+      }
+    ]
+  }
+}
+```
+
+</details>
