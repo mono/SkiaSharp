@@ -91,15 +91,27 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 - [ ] `scripts/azure-templates-stages-native-wasm.yml` — Add new .NET emscripten entry
 - [ ] `scripts/azure-templates-jobs-bootstrapper.yml` — Review workload install step
 
-> **WASM emsdk mapping (do this whenever the new SDK bundles a new Emscripten version).** The .NET WASM SDK links apps with a specific Emscripten toolchain, and a static library built with one Emscripten version cannot be linked by a different one (the wasm object format is incompatible → link failure). Check the new SDK's bundled version (e.g. `dotnet workload list` / the `Microsoft.NET.Runtime.Emscripten.*` pack). Known mapping so far: **.NET 8 → 3.1.34, .NET 9/10 → 3.1.56, .NET 11 → 5.0.6**. When it changes for the new SDK, you must:
+> **WASM emsdk mapping (review whenever the SDK bundles a new Emscripten version).** The .NET WASM SDK links apps with its bundled Emscripten toolchain. Older static libraries can be incompatible with it (for example, removed `saveSetjmp` / `testSetjmp` helpers cause native-link failures). Check the bundled version using [Finding .NET's Emscripten version](#finding-nets-emscripten-version) below, then verify compatibility rather than assuming every version difference requires new archives. The current **SkiaSharp/HarfBuzzSharp archive selection** is **.NET 8 → 3.1.34, .NET 9/10 → 3.1.56, .NET 11+ → 5.0.6**; these are archive build versions, not necessarily the SDK's bundled version. When a new SDK requires a different archive set, you must:
 > 1. Add a build matrix block (all 4 `st`/`mt`/`simd`/`simd+mt` variants) for the new Emscripten version in `scripts/azure-templates-stages-native-wasm.yml`, and register its `native_wasm_<version>_*` artifacts in both merger lists in `scripts/azure-templates-stages-native-merge.yml`, so the packages ship a static library for it.
-> 2. Add a `NativeFileReference` entry for the new TFM in **all four** WASM targets files, keeping each `netX.0` on the Emscripten version its SDK actually uses:
+> 2. Add a `NativeFileReference` entry for the new TFM in **all four** WASM targets files, keeping each `netX.0` on a compatible archive set:
 >    - `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets`
 >    - `binding/HarfBuzzSharp.NativeAssets.WebAssembly/buildTransitive/HarfBuzzSharp.targets`
 >    - `binding/IncludeNativeAssets.SkiaSharp.targets`
 >    - `binding/IncludeNativeAssets.HarfBuzzSharp.targets`
 >
-> Convention for the conditions: the **newest** entry stays open-ended (`VersionGreaterThanOrEquals(TFV, 'A')`) so a future SDK that keeps the same Emscripten version keeps working with no code change (e.g. .NET 9 and .NET 10 both use 3.1.56). Only when a new SDK actually *diverges* do you close the previous entry with an upper bound (`… and VersionLessThan(TFV, 'B')`) and add a new open-ended entry for the new version — the way `net9.0`–`net10.x` was capped at `< 11.0` once .NET 11 moved to 5.0.6. The packaging globs (`**`/`*` over the version folder) pick up new version directories automatically — no nuspec/csproj change needed.
+> Convention for the conditions: the **newest** entry stays open-ended (`VersionGreaterThanOrEquals(TFV, 'A')`) so a future SDK compatible with the same archives needs no code change (e.g. .NET 9 and .NET 10 both select 3.1.56). Only when a new SDK requires different archives do you close the previous entry with an upper bound (`… and VersionLessThan(TFV, 'B')`) and add a new open-ended entry for the new version — the way `net9.0`–`net10.x` was capped at `< 11.0` once .NET 11 selected 5.0.6. The packaging globs (`**`/`*` over the version folder) pick up new version directories automatically — no nuspec/csproj change needed.
+
+#### Finding .NET's Emscripten version
+
+The upstream toolchain pin is **`EmsdkVersion` in `dotnet/runtime/eng/Versions.props`**:
+
+- [Current development branch](https://github.com/dotnet/runtime/blob/main/eng/Versions.props) — search the file for `EmsdkVersion`.
+- [.NET 11 release branch](https://github.com/dotnet/runtime/blob/release/11.0/eng/Versions.props) — replace `release/11.0` with the release branch being investigated, or use the exact runtime tag/commit for a reproducible lookup.
+- For an installed SDK/workload, inspect `<dotnet-root>/sdk-manifests/<sdk-feature-band>/microsoft.net.workload.emscripten.current/<manifest-version>/WorkloadManifest.json`. The pack IDs include the toolchain version, for example `Microsoft.NET.Runtime.Emscripten.6.0.2.Sdk.win-x64`. Installed packs appear under `<dotnet-root>/packs/`; check the manifest selected by the workload, not merely every installed pack, since several toolchains can coexist.
+
+Do not confuse `EmsdkVersion` with `MicrosoftNETRuntimeEmscriptenVersion`: the latter is the .NET workload package version, not the Emscripten compiler version. `dotnet workload list` identifies installed workloads but does not directly report the compiler version.
+
+As checked on **2026-10-01**, [.NET 12 development at this commit](https://github.com/dotnet/runtime/blob/2c79aa97ff29df5e321b484460322283b1332fa4/eng/Versions.props) and the .NET 11 release branch both pin **6.0.2**. The installed .NET 11 RC2 workload also uses 6.0.2; SkiaSharp/HarfBuzzSharp **5.0.6** archives were verified with a .NET 11 Mono native relink. This does not establish .NET 12 runtime compatibility, and preview pins can change.
 
 ### 10. Docker Images
 
