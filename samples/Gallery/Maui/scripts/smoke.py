@@ -64,7 +64,6 @@ class DevFlow:
             try:
                 return self.call(
                     "query", "--automationId", automation_id,
-                    "--fields", "id,type,text,isVisible,isEnabled,bounds,windowBounds",
                 )
             except RuntimeError as error:
                 if "The UI kept changing while DevFlow was reading it" not in str(error) or attempt == 4:
@@ -76,14 +75,16 @@ class DevFlow:
         last = []
         while time.monotonic() < deadline:
             last = self.query(automation_id)
-            for item in last:
+            # Navigation retains prior pages; prefer the instance in the native window.
+            for item in sorted(last, key=lambda entry: "windowBounds" not in entry):
                 if predicate(item):
                     return item
             time.sleep(0.1)
         raise AssertionError(f"Timed out waiting for {automation_id}: {last}")
 
     def value(self, automation_id, name):
-        return self.call("property", automation_id, name)["value"]
+        target = self.wait(automation_id)
+        return self.call("property", target["id"], name)["value"]
 
     def visible(self, automation_id):
         return any(item.get("isVisible") for item in self.query(automation_id))
@@ -97,11 +98,12 @@ class DevFlow:
         raise AssertionError(f"{automation_id} did not disappear")
 
     def set(self, automation_id, name, value):
-        self.call("set-property", automation_id, name, str(value).lower() if isinstance(value, bool) else value)
+        target = self.wait(automation_id)
+        self.call("set-property", target["id"], name, str(value).lower() if isinstance(value, bool) else value)
 
     def tap(self, automation_id):
-        self.wait(automation_id, lambda item: item.get("isVisible") and item.get("isEnabled"))
-        self.call("tap", automation_id)
+        target = self.wait(automation_id, lambda item: item.get("isVisible") and item.get("isEnabled"))
+        self.call("tap", target["id"])
 
     def screenshot(self, path):
         self.call("screenshot", "--output", path, "--overwrite")
@@ -161,12 +163,24 @@ def run_checks(flow, output, all_samples, share, report):
 
     if flow.query("sample-back"):
         back()
+    if flow.visible("gallery-popup-scrim"):
+        flow.tap("gallery-popup-scrim")
+        flow.wait_gone("gallery-popup")
     clear_filters()
     count = flow.wait("gallery-result-count")["text"]
     shown, total = map(int, re.findall(r"\d+", count))
     assert shown == total and total > 0, count
     checked(f"Catalog contains {total} samples")
     flow.screenshot(output / "home.png")
+    flow.tap("gallery-info-trigger")
+    flow.wait("gallery-info-menu")
+    for field in ("skiasharp-version", "harfbuzz-version", "build-timestamp", "build-footer"):
+        assert flow.wait(f"gallery-info-{field}")["text"]
+    flow.screenshot(output / "gallery-info.png")
+    flow.tap("gallery-info-close")
+    flow.wait_gone("gallery-popup")
+    assert not flow.query("gallery-footer")
+    checked("Header Info popup contains build metadata without a permanent footer")
 
     flow.call("fill", search_id(), "__no_such_gallery_sample__")
     flow.wait("gallery-empty")
@@ -178,11 +192,13 @@ def run_checks(flow, output, all_samples, share, report):
     assert 0 < category_count < total
     flow.tap("category-all")
     select_tag("SKCanvas")
+    first_tag_count = int(flow.wait("gallery-result-count")["text"].split()[0])
     select_tag("SKPaint")
-    any_count = int(flow.wait("gallery-result-count")["text"].split()[0])
-    flow.tap("gallery-tag-mode")
     all_count = int(flow.wait("gallery-result-count")["text"].split()[0])
-    assert 0 <= all_count <= any_count <= total
+    assert 0 <= all_count <= first_tag_count <= total
+    assert not flow.query("gallery-tag-mode")
+    assert not flow.query("gallery-type-more")
+    assert not flow.query("gallery-method-more")
     close_filters()
     flow.tap("gallery-sort-trigger")
     flow.wait("gallery-sort-menu")
@@ -190,16 +206,16 @@ def run_checks(flow, output, all_samples, share, report):
     flow.wait_gone("gallery-popup")
     assert flow.value("gallery-sort-trigger", "Text") == "A to Z"
     clear_filters()
-    checked("Search, empty state, compact categories/tags, ANY/ALL, sort popover, and reset")
+    checked("Search, compact categories/tags, ALL-tag intersection, sort popover, and reset")
 
     flow.tap("gallery-header-theme")
     flow.tap("gallery-theme-light")
     flow.wait_gone("gallery-popup")
-    before = flow.value("gallery-footer", "TextColor")
+    before = flow.value("gallery-result-count", "TextColor")
     flow.tap("gallery-header-theme")
     flow.tap("gallery-theme-dark")
     flow.wait_gone("gallery-popup")
-    assert flow.value("gallery-footer", "TextColor") != before
+    assert flow.value("gallery-result-count", "TextColor") != before
     flow.screenshot(output / "home-theme.png")
     flow.tap("gallery-header-theme")
     flow.tap("gallery-theme-system")
@@ -249,6 +265,32 @@ def run_checks(flow, output, all_samples, share, report):
 
     assert open_sample("Gradient")
     backend("cpu")
+    if status["device"]["idiom"] == "Desktop":
+        original_width = flow.wait("sample-canvas-cpu")["bounds"]["width"]
+        flow.tap("sample-controls-toggle")
+        expanded_canvas = flow.wait(
+            "sample-canvas-cpu",
+            lambda item: item.get("bounds", {}).get("width", 0) >= original_width + 250,
+        )
+        assert not flow.visible("sample-controls")
+        flow.screenshot(output / "controls-collapsed-wide.png")
+        flow.call("resize", 440, 820)
+        toggle = flow.wait("sample-controls-toggle")
+        canvas = flow.wait("sample-canvas-cpu")
+        assert toggle["bounds"]["width"] >= canvas["bounds"]["width"] - 32
+        flow.tap("sample-controls-toggle")
+        flow.wait("sample-controls")
+        flow.tap("sample-controls-toggle")
+        flow.call("resize", 1200, 850)
+        flow.wait("sample-canvas-cpu", lambda item: item.get("bounds", {}).get("width", 0) >= expanded_canvas["bounds"]["width"] - 2)
+        flow.tap("sample-controls-toggle")
+        flow.wait("sample-controls")
+        flow.wait("sample-canvas-cpu", lambda item: item.get("bounds", {}).get("width", 0) < expanded_canvas["bounds"]["width"] - 200)
+        checked("Controls collapse reclaims the wide column and survives stacked layout changes")
+    flow.tap("gallery-info-trigger")
+    flow.wait("gallery-info-menu")
+    flow.tap("gallery-info-close")
+    flow.wait_gone("gallery-popup")
     flow.set("control-angle", "Value", 91.4)
     assert float(flow.value("control-angle", "Value")) == 91
     flow.set("control-gradienttype", "SelectedIndex", 2)

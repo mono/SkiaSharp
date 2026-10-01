@@ -21,7 +21,8 @@ internal sealed class GalleryHeader : ContentView
         {
             ColumnDefinitions = new ColumnDefinitionCollection
             {
-                new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto), new(GridLength.Auto)
+                new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto),
+                new(GridLength.Auto), new(GridLength.Auto)
             },
             ColumnSpacing = 8, Padding = new Thickness(12, 8)
         };
@@ -34,14 +35,15 @@ internal sealed class GalleryHeader : ContentView
         }
         else
         {
-            root.Add(new Image
+            root.Add(new Label
             {
-                Source = new FontImageSource { Glyph = "\uf3fa", FontFamily = "BootstrapIcons", Color = Colors.White, Size = 23 },
-                WidthRequest = 38, InputTransparent = true
+                Text = "\uf3fa", FontFamily = "BootstrapIcons", TextColor = Colors.White, FontSize = 23,
+                WidthRequest = 38, VerticalTextAlignment = TextAlignment.Center,
+                HorizontalTextAlignment = TextAlignment.Center, InputTransparent = true
             });
         }
         var titles = new VerticalStackLayout { Spacing = 0, VerticalOptions = LayoutOptions.Center };
-        brand = new Label { Text = "SkiaSharp Gallery", FontSize = 17, FontAttributes = FontAttributes.Bold, TextColor = Colors.White };
+        brand = new Label { Text = "SkiaSharp Gallery", FontSize = 17, FontAttributes = FontAttributes.Bold, TextColor = Colors.White, MaxLines = 1, LineBreakMode = LineBreakMode.TailTruncation };
         subheading = new Label { Text = "Native canvas and API atlas", FontSize = 10, TextColor = Color.FromArgb("#C8D7FF") };
         titles.Children.Add(brand);
         titles.Children.Add(subheading);
@@ -59,11 +61,17 @@ internal sealed class GalleryHeader : ContentView
         GalleryPopup.SetCloseOnAction(theme, true);
         GalleryPopup.SetContentFactory(theme, () => new ThemeMenuView(settings));
         root.Add(theme, 3);
+        var info = GalleryUi.IconButton("\uf431", "gallery-info-trigger", "About this gallery", (_, _) => { });
+        GalleryPopup.SetCloseOnAction(info, true);
+        GalleryPopup.SetContentFactory(info, () => new InfoMenuView(settings));
+        root.Add(info, 4);
         Content = root;
         SizeChanged += (_, _) =>
         {
             var narrow = Width > 0 && Width < 450;
             brand.Text = narrow ? "SkiaSharp" : "SkiaSharp Gallery";
+            brand.FontSize = narrow ? 15 : 17;
+            root.ColumnSpacing = narrow ? 4 : 8;
             subheading.IsVisible = !narrow;
         };
         Loaded += (_, _) =>

@@ -15,11 +15,8 @@ internal sealed class FilterRailView : ContentView, IDisposable
     private readonly FlexLayout methodPills = new() { Wrap = FlexWrap.Wrap, AlignItems = FlexAlignItems.Start };
     private readonly Button typeHeading;
     private readonly Button methodHeading;
-    private readonly Button mode;
     private bool typesOpen = true;
     private bool methodsOpen;
-    private bool allTypes;
-    private bool allMethods;
     private bool disposed;
 
     public FilterRailView(GalleryFilters filters, bool popup, Action? close = null)
@@ -30,7 +27,8 @@ internal sealed class FilterRailView : ContentView, IDisposable
         HeightRequest = popup ? 520 : -1;
         var layout = new Grid
         {
-            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) }
+            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) },
+            Padding = popup ? new Thickness(4, 2, 4, 4) : new Thickness(18, 10, 12, 12)
         };
         var header = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
         resultCount = GalleryUi.Text("Filters", 16, true);
@@ -43,7 +41,7 @@ internal sealed class FilterRailView : ContentView, IDisposable
         }
         layout.Add(header);
 
-        var body = new VerticalStackLayout { Spacing = 12, Padding = new Thickness(0, 10, 4, 10) };
+        var body = new VerticalStackLayout { Spacing = 9, Padding = new Thickness(0, 10, 0, 10) };
         search = new Entry { Placeholder = "Search samples and APIs", Text = filters.SearchText, AutomationId = popup ? "gallery-filter-popup-search" : "gallery-filter-search", FontSize = 13 };
         GalleryUi.Background(search, "CardBackground");
         GalleryUi.TextColor(search, Entry.TextColorProperty, "PrimaryText");
@@ -54,13 +52,7 @@ internal sealed class FilterRailView : ContentView, IDisposable
         body.Children.Add(Heading("CATEGORIES"));
         body.Children.Add(categoryRows);
 
-        var tagHeading = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
-        tagHeading.Add(Heading("API TAGS"));
-        mode = GalleryUi.Pill("ANY", "gallery-tag-mode", (_, _) => filters.SetTagMode(!filters.MatchAll));
-        mode.MinimumHeightRequest = 34;
-        SemanticProperties.SetDescription(mode, "Match selected tags using any or all");
-        tagHeading.Add(mode, 1);
-        body.Children.Add(tagHeading);
+        body.Children.Add(Heading("API TAGS"));
         apiSearch = new Entry { Placeholder = "Find an API type or method", AutomationId = popup ? "gallery-filter-popup-api-search" : "gallery-filter-api-search", FontSize = 12 };
         GalleryUi.Background(apiSearch, "CardBackground");
         GalleryUi.TextColor(apiSearch, Entry.TextColorProperty, "PrimaryText");
@@ -144,8 +136,6 @@ internal sealed class FilterRailView : ContentView, IDisposable
         if (disposed) return;
         if (search.Text != filters.SearchText) search.Text = filters.SearchText;
         resultCount.Text = $"Filters  ·  {filters.Results.Length} results";
-        mode.Text = filters.MatchAll ? "ALL" : "ANY";
-        GalleryUi.SelectPill(mode, filters.MatchAll);
         RefreshCategories();
         RefreshTags();
     }
@@ -153,41 +143,74 @@ internal sealed class FilterRailView : ContentView, IDisposable
     private void RefreshCategories()
     {
         categoryRows.Children.Clear();
-        var clear = new Button
-        {
-            Text = $"All categories  ·  {filters.AllSamples.Length}",
-            AutomationId = "category-all",
-            Style = (Style)Application.Current!.Resources["GalleryRow"]
-        };
-        GalleryUi.SelectRow(clear, filters.Categories.Count == 0);
-        clear.Clicked += (_, _) => filters.ClearCategories();
-        categoryRows.Children.Add(clear);
+        categoryRows.Children.Add(CategoryRow(
+            "All categories", "\uf3fa", filters.AllSamples.Length,
+            "category-all", filters.SelectedCategory is null,
+            () => filters.SelectCategory(null)));
         foreach (var category in SampleManager.GetCategories())
         {
             var count = SampleManager.GetSampleCount(category.Name, filters.AllSamples);
             if (count == 0) continue;
-            var row = new Grid
-            {
-                ColumnDefinitions = new ColumnDefinitionCollection { new(new GridLength(20)), new(GridLength.Star) }
-            };
-            var icon = GalleryUi.Text(category.UnicodeIcon, 15);
-            icon.FontFamily = "BootstrapIcons";
-            icon.VerticalOptions = LayoutOptions.Center;
-            icon.InputTransparent = true;
-            GalleryUi.CategoryColor(icon, category.Name);
-            row.Add(icon);
-            var button = new Button
-            {
-                Text = $"{category.Name}  ·  {count}",
-                AutomationId = GalleryUi.StableId("category-", category.Name),
-                Style = (Style)Application.Current!.Resources["GalleryRow"]
-            };
-            GalleryUi.SelectRow(button, filters.Categories.Contains(category.Name));
-            SemanticProperties.SetDescription(button, $"{category.Name}, {count} samples; {(filters.Categories.Contains(category.Name) ? "selected" : "not selected")}");
-            button.Clicked += (_, _) => filters.ToggleCategory(category.Name);
-            row.Add(button, 1);
-            categoryRows.Children.Add(row);
+            categoryRows.Children.Add(CategoryRow(
+                category.Name, category.UnicodeIcon, count,
+                GalleryUi.StableId("category-", category.Name),
+                filters.SelectedCategory == category.Name,
+                () => filters.SelectCategory(category.Name)));
         }
+    }
+
+    private static Grid CategoryRow(string name, string glyph, int count, string id, bool selected, Action select)
+    {
+        var content = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitionCollection
+            {
+                new(new GridLength(22)), new(GridLength.Star), new(GridLength.Auto)
+            },
+            ColumnSpacing = 6
+        };
+        var icon = GalleryUi.Text(glyph, 15);
+        icon.FontFamily = "BootstrapIcons";
+        icon.VerticalOptions = LayoutOptions.Center;
+        if (id == "category-all") GalleryUi.TextColor(icon, Label.TextColorProperty, "AccentText");
+        else GalleryUi.CategoryColor(icon, name);
+        content.Add(icon);
+        var title = GalleryUi.Text(name, 13, selected);
+        title.LineBreakMode = LineBreakMode.TailTruncation;
+        title.VerticalOptions = LayoutOptions.Center;
+        content.Add(title, 1);
+        var tally = GalleryUi.Text(count.ToString(), 11, color: "SecondaryText");
+        tally.VerticalOptions = LayoutOptions.Center;
+        tally.HorizontalOptions = LayoutOptions.End;
+        content.Add(tally, 2);
+
+        var visual = GalleryUi.Card(content, 8);
+        visual.Padding = new Thickness(9, 5);
+        visual.MinimumHeightRequest = 37;
+        GalleryUi.Background(visual, selected ? "SubtleBackground" : "CardBackground");
+        visual.StrokeThickness = selected ? 1 : 0;
+        if (selected) visual.Stroke = new SolidColorBrush(GalleryUi.Accent);
+        visual.AutomationId = GalleryUi.StableId("category-row-", name);
+        var tap = new TapGestureRecognizer();
+        tap.Tapped += (_, _) => select();
+        visual.GestureRecognizers.Add(tap);
+
+        var hit = new Button
+        {
+            Text = name, TextColor = Colors.Transparent, BackgroundColor = Colors.Transparent,
+            BorderWidth = 0, Padding = 0, MinimumHeightRequest = 37,
+            AutomationId = id
+        };
+        SemanticProperties.SetDescription(hit, $"{name}, {count} samples; {(selected ? "selected" : "not selected")}");
+        hit.Clicked += (_, _) => select();
+        var pointer = new PointerGestureRecognizer();
+        pointer.PointerEntered += (_, _) => GalleryUi.Background(visual, "SubtleBackground");
+        pointer.PointerExited += (_, _) => GalleryUi.Background(visual, selected ? "SubtleBackground" : "CardBackground");
+        hit.GestureRecognizers.Add(pointer);
+        var row = new Grid();
+        row.Add(visual);
+        row.Add(hit);
+        return row;
     }
 
     private void RefreshTags()
@@ -199,11 +222,11 @@ internal sealed class FilterRailView : ContentView, IDisposable
         SemanticProperties.SetDescription(methodHeading, $"API methods, {(methodsOpen ? "expanded" : "collapsed")}");
         typePills.IsVisible = typesOpen;
         methodPills.IsVisible = methodsOpen;
-        FillTags(typePills, TagKind.Type, query, allTypes, () => { allTypes = true; RefreshTags(); });
-        FillTags(methodPills, TagKind.Method, query, allMethods, () => { allMethods = true; RefreshTags(); });
+        FillTags(typePills, TagKind.Type, query);
+        FillTags(methodPills, TagKind.Method, query);
     }
 
-    private void FillTags(FlexLayout host, TagKind kind, string query, bool showAll, Action expand)
+    private void FillTags(FlexLayout host, TagKind kind, string query)
     {
         host.Children.Clear();
         if (!host.IsVisible) return;
@@ -215,24 +238,16 @@ internal sealed class FilterRailView : ContentView, IDisposable
             .ThenByDescending(t => t.Count)
             .ThenBy(t => t.Tag)
             .ToArray();
-        var limit = showAll || query.Length > 0 ? candidates.Length : kind == TagKind.Type ? 18 : 12;
-        foreach (var (tag, count, _) in candidates.Take(limit))
+        foreach (var (tag, count, _) in candidates)
         {
             var label = KnownApis.GetDisplayName(tag);
             var live = filters.LiveTagCounts.GetValueOrDefault(tag);
             var pill = GalleryUi.Pill($"{label}  {live}", GalleryUi.StableId("tag-", tag), (_, _) => filters.ToggleTag(tag));
             pill.FontSize = 11;
-            pill.MinimumHeightRequest = 38;
-            pill.Margin = new Thickness(0, 0, 5, 5);
+            pill.Margin = new Thickness(0, 0, 3, 3);
             GalleryUi.SelectPill(pill, filters.Tags.Contains(tag), kind);
             SemanticProperties.SetDescription(pill, $"{tag}; {live} current results, {count} total; {(filters.Tags.Contains(tag) ? "selected" : "not selected")}");
             host.Children.Add(pill);
-        }
-        if (limit < candidates.Length)
-        {
-            var more = GalleryUi.Pill($"Show all {candidates.Length}…", $"gallery-{kind.ToString().ToLowerInvariant()}-more", (_, _) => expand());
-            more.Margin = new Thickness(0, 0, 5, 5);
-            host.Children.Add(more);
         }
     }
 

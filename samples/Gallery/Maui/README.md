@@ -3,20 +3,25 @@
 This host shares the **entire** gallery catalog and sample implementations with
 the Uno and Blazor hosts. At 920 DIP and wider, a persistent filter rail sits
 beside the virtualized sample grid; narrower windows use a search bar and
-funnel-triggered filter popover. The filter panel supports multiple categories,
-API type/method tags (ANY or ALL), live result counts, and a separate compact
+funnel-triggered filter popover. The filter panel selects one category at a time
+(or All), intersects all selected API type/method tags, shows live result counts,
+and offers a separate compact
 sort menu with four orders. Both menus dismiss on the backdrop or system Back;
 sort closes on selection, while filters stay open for multi-selection. Active
 filters remain visible as removable pills. A shared navy header carries the
 CPU/GPU choice across gallery and detail pages; the choice affects canvases,
-not generated documents. Its compact appearance menu defaults to **System**
+not generated documents. The header's Info glyph opens a themed panel with
+SkiaSharp, HarfBuzzSharp, and build details instead of occupying a permanent
+footer. Its compact appearance menu defaults to **System**
 and also offers explicit Light/Dark, with a route back to System. Colors follow
 OS changes through MAUI theme bindings when System is selected. On mobile the
 navy page background extends behind the status bar, while content observes
 safe areas and status icons remain light. Unsupported samples remain visible
 but cannot be opened.
 The detail view draws with the native SkiaSharp MAUI CPU or GPU view, exposes
-sample-provided controls, and opens/shares generated PDF, XPS (Windows), and
+sample-provided controls (a wide-screen collapse reclaims the entire canvas
+column, while narrow screens keep the toggle below the canvas), and opens/shares
+generated PDF, XPS (Windows), and
 other downloadable files through platform file APIs. The document preview
 explains that native Open/Share actions are available; it is not an embedded PDF
 viewer. Temporary exported files are stored in the app's cache.
@@ -60,8 +65,8 @@ python3 samples/Gallery/Maui/scripts/smoke.py --port PORT \
   --all-samples --output output/maui-gallery-smoke
 ```
 
-It exercises search, empty results, category/API filtering, ANY/ALL, sort and
-theme popovers, desktop narrow/wide transitions, native CPU/GPU rendering,
+It exercises search, empty results, single-category/API intersection filtering,
+sort, appearance and Info popovers, desktop narrow/wide transitions, native CPU/GPU rendering,
 live controls, nested groups, animation navigation, and PDF generation. A
 nonzero exit is a failure, not a skipped capability. `--share` requests the
 native PDF share sheet last and leaves it open for inspection.

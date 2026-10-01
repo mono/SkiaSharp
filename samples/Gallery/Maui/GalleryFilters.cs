@@ -13,14 +13,13 @@ internal sealed class GalleryFilters
 
     public SampleBase[] AllSamples { get; }
     public IReadOnlyList<(string Tag, int Count, TagKind Kind)> AllTags { get; }
-    public HashSet<string> Categories { get; } = new(StringComparer.Ordinal);
+    public string? SelectedCategory { get; private set; }
     public HashSet<string> Tags { get; } = new(StringComparer.Ordinal);
     public string SearchText { get; private set; } = "";
-    public bool MatchAll { get; private set; }
     public SampleSortOrder SortOrder { get; private set; }
     public SampleBase[] Results { get; private set; } = [];
     public Dictionary<string, int> LiveTagCounts { get; private set; } = [];
-    public int ActiveCount => Categories.Count + Tags.Count + (SearchText.Length > 0 ? 1 : 0);
+    public int ActiveCount => (SelectedCategory is null ? 0 : 1) + Tags.Count + (SearchText.Length > 0 ? 1 : 0);
 
     public void SetSearch(string? value)
     {
@@ -30,29 +29,16 @@ internal sealed class GalleryFilters
         Refresh();
     }
 
-    public void ToggleCategory(string name)
+    public void SelectCategory(string? name)
     {
-        if (!Categories.Add(name)) Categories.Remove(name);
-        Refresh();
-    }
-
-    public void ClearCategories()
-    {
-        if (Categories.Count == 0) return;
-        Categories.Clear();
+        if (SelectedCategory == name) return;
+        SelectedCategory = name;
         Refresh();
     }
 
     public void ToggleTag(string tag)
     {
         if (!Tags.Add(tag)) Tags.Remove(tag);
-        Refresh();
-    }
-
-    public void SetTagMode(bool all)
-    {
-        if (MatchAll == all) return;
-        MatchAll = all;
         Refresh();
     }
 
@@ -66,16 +52,16 @@ internal sealed class GalleryFilters
     public void Clear()
     {
         SearchText = "";
-        Categories.Clear();
+        SelectedCategory = null;
         Tags.Clear();
-        MatchAll = false;
         SortOrder = SampleSortOrder.NewestFirst;
         Refresh();
     }
 
     private void Refresh()
     {
-        Results = SampleManager.SearchSamples(AllSamples, SearchText, Categories, Tags, MatchAll, SortOrder).ToArray();
+        ISet<string>? categories = SelectedCategory is { } name ? new HashSet<string>(StringComparer.Ordinal) { name } : null;
+        Results = SampleManager.SearchSamples(AllSamples, SearchText, categories, Tags, tagModeAll: true, sort: SortOrder).ToArray();
         LiveTagCounts = SampleManager.GetLiveTagCounts(Results);
         Changed?.Invoke(this, EventArgs.Empty);
     }

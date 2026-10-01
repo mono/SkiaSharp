@@ -16,7 +16,7 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        var windowSettings = new GalleryWindowSettings();
+        var windowSettings = new GalleryWindowSettings(service);
         var navigation = new NavigationPage(new GalleryPage(service, windowSettings))
         {
             BarBackgroundColor = Color.FromArgb("#1A237E"),

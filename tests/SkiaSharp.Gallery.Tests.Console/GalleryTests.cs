@@ -77,21 +77,34 @@ public class GalleryTests
         var samples = new SampleService().GetAllSamples().ToArray();
         var filters = new GalleryFilters(samples);
         filters.SetSearch("shader");
-        filters.ToggleCategory(SampleManager.Shaders);
+        filters.SelectCategory(SampleManager.Shaders);
         filters.ToggleTag("SKCanvas");
-        filters.SetTagMode(true);
         filters.SetSort(SampleSortOrder.Alphabetical);
         Assert.Equal(3, filters.ActiveCount);
 
         filters.Clear();
 
         Assert.Equal("", filters.SearchText);
-        Assert.Empty(filters.Categories);
+        Assert.Null(filters.SelectedCategory);
         Assert.Empty(filters.Tags);
-        Assert.False(filters.MatchAll);
         Assert.Equal(SampleSortOrder.NewestFirst, filters.SortOrder);
         Assert.Equal(0, filters.ActiveCount);
         Assert.Equal(samples.Length, filters.Results.Length);
+    }
+
+    [Fact]
+    public void GalleryTagSelectionMatchesBlazorAllTagSemantics()
+    {
+        var samples = new SampleService().GetAllSamples().ToArray();
+        var filters = new GalleryFilters(samples);
+        filters.ToggleTag("SKRuntimeEffect");
+        filters.ToggleTag("SKDocument");
+
+        Assert.Contains(samples, sample => sample.ApiTags.Contains("SKRuntimeEffect"));
+        Assert.Contains(samples, sample => sample.ApiTags.Contains("SKDocument"));
+        Assert.Equal(
+            samples.Where(sample => filters.Tags.All(sample.ApiTags.Contains)).OrderBy(sample => sample.Title),
+            filters.Results.OrderBy(sample => sample.Title));
     }
 
     [Fact]
@@ -99,15 +112,31 @@ public class GalleryTests
     {
         var filters = new GalleryFilters(new SampleService().GetAllSamples().ToArray());
         var original = filters.Results;
-        filters.ToggleCategory(SampleManager.Text);
+        filters.SelectCategory(SampleManager.Text);
 
         Assert.NotSame(original, filters.Results);
         Assert.All(filters.Results, sample => Assert.Equal(SampleManager.Text, sample.Category));
         var expected = SampleManager.GetTagCounts(filters.Results);
         Assert.Equal(expected.OrderBy(pair => pair.Key), filters.LiveTagCounts.OrderBy(pair => pair.Key));
-        filters.ToggleCategory(SampleManager.Text);
-        Assert.Empty(filters.Categories);
+        filters.SelectCategory(null);
+        Assert.Null(filters.SelectedCategory);
         Assert.Equal(filters.AllSamples.Length, filters.Results.Length);
+    }
+
+    [Fact]
+    public void GalleryUsesOneCategoryLikeBlazor()
+    {
+        var filters = new GalleryFilters(new SampleService().GetAllSamples().ToArray());
+        filters.SelectCategory(SampleManager.Text);
+        filters.SelectCategory(SampleManager.Shaders);
+
+        Assert.Equal(SampleManager.Shaders, filters.SelectedCategory);
+        Assert.Equal(1, filters.ActiveCount);
+        Assert.NotEmpty(filters.Results);
+        Assert.All(filters.Results, sample => Assert.Equal(SampleManager.Shaders, sample.Category));
+        var current = filters.Results;
+        filters.SelectCategory(SampleManager.Shaders);
+        Assert.Same(current, filters.Results);
     }
 
     [Fact]

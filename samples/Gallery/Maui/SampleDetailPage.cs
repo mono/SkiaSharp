@@ -37,6 +37,8 @@ public sealed class SampleDetailPage : ContentPage
     private bool useGpu;
     private bool controlsExpanded = true;
     private bool userToggledControls;
+    private bool hasControlPanel;
+    private bool toggleOverCanvas;
     private bool syncingControls;
     private Label? downloadInfo;
     private int generation;
@@ -470,8 +472,11 @@ public sealed class SampleDetailPage : ContentPage
         if (Width <= 0 || Height <= 0) return;
         var wide = Width >= 850;
         if (!userToggledControls) controlsExpanded = wide || Height >= 520;
+        PlaceControlsToggle(wide);
+        toggleControls.IsVisible = hasControlPanel;
         surfaceCard.MinimumHeightRequest = Height < 520 ? 110 : 200;
-        var hasPanel = controlPanel.IsVisible;
+        var hasPanel = hasControlPanel && (!wide || controlsExpanded);
+        controlPanel.IsVisible = hasPanel;
         body.RowDefinitions.Clear();
         body.ColumnDefinitions.Clear();
         if (wide)
@@ -494,6 +499,30 @@ public sealed class SampleDetailPage : ContentPage
         }
         controlScroller.IsVisible = controlsExpanded;
         toggleControls.Text = controlsExpanded ? "Controls ▾" : "Controls ▸";
+    }
+
+    private void PlaceControlsToggle(bool wide)
+    {
+        if (toggleOverCanvas == wide) return;
+        toggleOverCanvas = wide;
+        if (wide)
+        {
+            controlPanel.Children.Remove(toggleControls);
+            toggleControls.HorizontalOptions = LayoutOptions.End;
+            toggleControls.VerticalOptions = LayoutOptions.Start;
+            toggleControls.Margin = new Thickness(8);
+            toggleControls.ZIndex = 10;
+            surfaceHost.Children.Add(toggleControls);
+        }
+        else
+        {
+            surfaceHost.Children.Remove(toggleControls);
+            toggleControls.Margin = new Thickness(0);
+            toggleControls.HorizontalOptions = LayoutOptions.Fill;
+            toggleControls.VerticalOptions = LayoutOptions.Fill;
+            toggleControls.ZIndex = 0;
+            controlPanel.Add(toggleControls, 0, 0);
+        }
     }
 
     private void RefreshControls()
@@ -545,9 +574,9 @@ public sealed class SampleDetailPage : ContentPage
             RefreshControls();
             return;
         }
-        var wasVisible = controlPanel.IsVisible;
+        var hadPanel = hasControlPanel;
         UpdateOutputInfo(controls.Count);
-        if (wasVisible != controlPanel.IsVisible) UpdateLayout();
+        if (hadPanel != hasControlPanel) UpdateLayout();
     }
 
     private void UpdateOutputInfo(int controlCount)
@@ -559,7 +588,7 @@ public sealed class SampleDetailPage : ContentPage
                 ? $"Output: {sample.DownloadFileName}" : "";
             label.IsVisible = canDownload && sample is not DocumentSampleBase;
         }
-        controlPanel.IsVisible = controlCount > 0 || canDownload;
+        hasControlPanel = controlCount > 0 || canDownload;
     }
 
     private View RenderControl(SampleControl control, string prefix)

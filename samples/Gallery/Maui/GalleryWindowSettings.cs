@@ -1,10 +1,15 @@
 using Microsoft.Maui.Controls;
+using SkiaSharpSample.Services;
 
 namespace SkiaSharpSample;
 
 internal sealed class GalleryWindowSettings
 {
     private bool useGpu;
+
+    public GalleryWindowSettings(SampleService? catalog = null) => Catalog = catalog;
+
+    public SampleService? Catalog { get; }
 
     public event EventHandler? BackendChanged;
 

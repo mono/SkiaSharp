@@ -30,7 +30,7 @@ public sealed class GalleryPage : ContentPage
     private readonly SemaphoreSlim navigationGate = new(1, 1);
 
     public GalleryPage(SampleService service)
-        : this(service, new GalleryWindowSettings())
+        : this(service, new GalleryWindowSettings(service))
     {
     }
 
@@ -133,27 +133,18 @@ public sealed class GalleryPage : ContentPage
             IsVisible = false
         };
         GalleryUi.Background(activeStrip, "PageBackground");
-        var footer = GalleryUi.Text($"SkiaSharp {service.SkiaSharpVersion}  ·  HarfBuzzSharp {service.HarfBuzzSharpVersion}" +
-            (service.BuildTimestamp is { } timestamp ? $"  ·  built {timestamp:yyyy-MM-dd}" : "") +
-            (service.BuildFooter is { Length: > 0 } build ? $"  ·  {build}" : ""), 11, color: "SecondaryText");
-        footer.AutomationId = "gallery-footer";
-        var footerBar = new Grid { Padding = new Thickness(14, 4, 14, 8) };
-        GalleryUi.Background(footerBar, "PageBackground");
-        footerBar.Add(footer);
         root = new Grid
         {
             SafeAreaEdges = new Microsoft.Maui.SafeAreaEdges(Microsoft.Maui.SafeAreaRegions.Container),
             RowDefinitions = new RowDefinitionCollection
             {
-                new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Auto),
-                new(GridLength.Star), new(GridLength.Auto)
+                new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Star)
             }
         };
         root.Add(hero);
         root.Add(info, 0, 1);
         root.Add(activeStrip, 0, 2);
         root.Add(main, 0, 3);
-        root.Add(footerBar, 0, 4);
         Content = root;
         SizeChanged += (_, _) => AdaptLayout();
         filters.Changed += (_, _) => RefreshResults();
@@ -350,10 +341,10 @@ public sealed class GalleryPage : ContentPage
         activeChips.Children.Clear();
         if (filters.SearchText.Length > 0)
             activeChips.Children.Add(ActiveChip($"Search: {filters.SearchText}", "gallery-active-search", () => filters.SetSearch("")));
-        foreach (var category in filters.Categories.Order(StringComparer.Ordinal))
+        if (filters.SelectedCategory is { } category)
         {
-            var item = category;
-            activeChips.Children.Add(ActiveChip(item, GalleryUi.StableId("gallery-active-category-", item), () => filters.ToggleCategory(item)));
+            activeChips.Children.Add(ActiveChip(category,
+                GalleryUi.StableId("gallery-active-category-", category), () => filters.SelectCategory(null)));
         }
         foreach (var tag in filters.Tags.Order(StringComparer.Ordinal))
         {
