@@ -15,7 +15,7 @@ public readonly record struct SampleCategory(
 
 /// <summary>
 /// Central registry for sample metadata — categories, icons, filtering, sorting, and "new" detection.
-/// Shared across Blazor and Uno hosts.
+/// Shared across Blazor, Uno, and .NET MAUI hosts.
 /// </summary>
 public static class SampleManager
 {
