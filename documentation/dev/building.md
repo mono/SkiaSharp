@@ -54,7 +54,7 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 
 **Windows Dependencies:**
 - Windows 10/11
-- [Visual Studio 2022+](https://visualstudio.microsoft.com/vs/)
+- [Visual Studio 2022 or 2026](https://visualstudio.microsoft.com/vs/)
    - .NET desktop development
    - .NET Multi-platform App UI development (MAUI)
    - Universal Windows Platform development
@@ -104,12 +104,15 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
  - [Managed-Only build dependencies](#dependencies)
  - [Python 3](https://www.python.org/downloads/)
     - Make sure the path to `python` is in the `PATH` environment variable
- - [Visual Studio 2022+](https://visualstudio.microsoft.com/vs/)
+ - [Visual Studio 2022 or 2026](https://visualstudio.microsoft.com/vs/)
     - Desktop development with C++
        - Windows 10/11 SDK (latest)
-       - MSVC v143+ C++ build tools
+       - MSVC v143 C++ build tools and matching Spectre-mitigated libraries for x86, x64, and ARM64
     - Individual components
        - C++ compilers and libraries for ARM64
+       - C++ (v143) Universal Windows Platform tools from VS 2022 for the WinUI native component
+          - In VS 2022 Build Tools, select **WinUI application development build tools**
+            and its optional C++ tools (`Microsoft.VisualStudio.ComponentGroup.UWP.VC.BuildTools`)
        - Android NDK (via Visual Studio Installer or [manually](https://developer.android.com/ndk/downloads))
           - Make sure the path to the root is in the `ANDROID_NDK_ROOT` or `ANDROID_NDK_HOME` environment variables
  - [OpenJDK 17+](https://adoptium.net/)
@@ -127,6 +130,25 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
  - Clang 14+
  - Make
  - OpenJDK 17+
+
+Set `--vsinstall` or `VS_INSTALL` to an installation with v143 and matching
+Spectre libraries. Cake uses its default v143 toolset, or its v143-specific
+default when the IDE defaults to another toolset. MSBuild projects use
+`SpectreMitigation=Spectre`; Skia selects Spectre libraries through `/LIBPATH`.
+ANGLE copies the repository-owned `native/winui-angle/gn` directory into its
+build configs and attaches the `skiasharp` config from `gn/BUILD.gn` to
+its default compiler configs (including third-party targets), explicitly enabling compiler `/guard:cf` and `/GS`
+and linker `/guard:cf` and the Spectre `/LIBPATH`. This replaces unsupported
+`extra_cflags`/`extra_ldflags` arguments without patching Python toolchain files.
+No GN `/Qspectre` is added.
+
+WinUI uses an installed SDK by default (`--windowsSdkVersion` overrides it).
+Its projection uses short paths under `artifacts/bin` and `artifacts/obj` for
+VS 2022 MSBuild compatibility; only the final DLL/PDB are staged into
+`output/native/winui/any`. Dependency checks require an `objr_spectre` or
+`objd_spectre` CRT build marker in the PDB by default; only the managed WinUI
+projection opts out. This is a heuristic, not proof that every linked library
+is mitigated.
 
 ### Building Native Libraries
 
