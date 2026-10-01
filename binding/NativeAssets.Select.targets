@@ -55,9 +55,9 @@
                                   Condition="$([System.String]::Copy('%(NativeCopyLocalItems.NuGetPackageId)').StartsWith('HarfBuzzSharp.NativeAssets.', System.StringComparison.OrdinalIgnoreCase)) and '%(NativeCopyLocalItems.RuntimeIdentifier)' != ''" />
       <_SkiaSharpAvailableRids Include="@(_SkiaSharpFilterAssets->'%(RuntimeIdentifier)')" />
       <_HarfBuzzSharpAvailableRids Include="@(_HarfBuzzSharpFilterAssets->'%(RuntimeIdentifier)')" />
-      <_SkiaSharpRequestedRids Include="$(SkiaSharpFilterRuntimeIdentifiers)"
+      <_SkiaSharpRequestedRids Include="$([MSBuild]::Unescape('$(SkiaSharpFilterRuntimeIdentifiers)'))"
                                Condition="!$([System.String]::IsNullOrWhiteSpace('$(SkiaSharpFilterRuntimeIdentifiers)'))" />
-      <_HarfBuzzSharpRequestedRids Include="$(HarfBuzzSharpFilterRuntimeIdentifiers)"
+      <_HarfBuzzSharpRequestedRids Include="$([MSBuild]::Unescape('$(HarfBuzzSharpFilterRuntimeIdentifiers)'))"
                                    Condition="!$([System.String]::IsNullOrWhiteSpace('$(HarfBuzzSharpFilterRuntimeIdentifiers)'))" />
     </ItemGroup>
     <PickBestRid RuntimeGraphPath="$(RuntimeIdentifierGraphPath)"

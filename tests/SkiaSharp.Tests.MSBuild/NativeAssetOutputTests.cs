@@ -303,19 +303,36 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         var core = ReadPackage("SkiaSharp");
         var project = dotnet.NewProject($"SkiaSharp-incremental-{command}",
             ProjectXml("SkiaSharp", core.Version));
-        await BuildOrPublish(project, command, filterProperty: "linux-x64");
+        await BuildOrPublish(project, command, properties: new Dictionary<string, string>
+        {
+            ["SkiaSharpFilterRuntimeIdentifiers"] = "linux-x64"
+        });
         var linux = ReadPackage("SkiaSharp.NativeAssets.Linux").NativeFiles
             .Where(p => p.Key.StartsWith("runtimes/linux-x64/native/", StringComparison.Ordinal))
             .ToDictionary(p => p.Key, p => p.Value);
         AssertNativeOutput(project, "SkiaSharp", linux);
         AssertDependencyNativeAssets(project, "SkiaSharp.NativeAssets.", linux.Keys);
 
-        await BuildOrPublish(project, command, filterProperty: "osx-x64");
+        await BuildOrPublish(project, command, properties: new Dictionary<string, string>
+        {
+            ["SkiaSharpFilterRuntimeIdentifiers"] = "osx-x64"
+        });
         var osx = ReadPackage("SkiaSharp.NativeAssets.macOS").NativeFiles;
         AssertNativeOutput(project, "SkiaSharp", osx);
         AssertDependencyNativeAssets(project, "SkiaSharp.NativeAssets.", osx.Keys);
 
-        await BuildOrPublish(project, command, filterProperty: "");
+        await BuildOrPublish(project, command, properties: new Dictionary<string, string>
+        {
+            ["SkiaSharpFilterRuntimeIdentifiers"] = "linux-x64;osx-x64"
+        });
+        var linuxAndOsx = linux.Concat(osx).ToDictionary(p => p.Key, p => p.Value);
+        AssertNativeOutput(project, "SkiaSharp", linuxAndOsx);
+        AssertDependencyNativeAssets(project, "SkiaSharp.NativeAssets.", linuxAndOsx.Keys);
+
+        await BuildOrPublish(project, command, properties: new Dictionary<string, string>
+        {
+            ["SkiaSharpFilterRuntimeIdentifiers"] = ""
+        });
         var all = Platforms.SelectMany(platform => ReadPackage("SkiaSharp.NativeAssets." + platform).NativeFiles)
             .ToDictionary(p => p.Key, p => p.Value);
         AssertNativeOutput(project, "SkiaSharp", all);
@@ -330,8 +347,7 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     {
         var core = ReadPackage(family);
         var linux = ReadPackage(family + ".NativeAssets.Linux").NativeFiles;
-        var project = dotnet.NewProject($"{family}-legacy-default", ProjectXml(family, core.Version, targetFramework: "net462"),
-            legacy: true);
+        var project = dotnet.NewProject($"{family}-legacy-default", ProjectXml(family, core.Version, targetFramework: "net462"));
         await dotnet.Build(project);
         AssertLegacyNativeOutput(project, family, linux, "linux-x64", "x64");
         AssertLegacyNativeOutput(project, family, linux, "linux-musl-x64", "musl-x64");
@@ -344,7 +360,7 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         var core = ReadPackage("SkiaSharp");
         var nodeps = ReadPackage("SkiaSharp.NativeAssets.Linux.NoDependencies").NativeFiles;
         var project = dotnet.NewProject("SkiaSharp-legacy-nodeps",
-            ProjectXml("SkiaSharp", core.Version, includeNoDeps: true, targetFramework: "net462"), legacy: true);
+            ProjectXml("SkiaSharp", core.Version, includeNoDeps: true, targetFramework: "net462"));
         await dotnet.Build(project);
         AssertLegacyNativeOutput(project, "SkiaSharp", nodeps, "linux-x64", "x64");
         AssertLegacyNativeOutput(project, "SkiaSharp", nodeps, "linux-musl-x64", "musl-x64");
@@ -362,8 +378,9 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         Assert.Equal(hash, Convert.ToHexString(SHA256.HashData(stream)));
     }
 
-    private Task BuildOrPublish(string project, string command, string? rid = null, string? filterProperty = null) =>
-        command == "build" ? dotnet.Build(project, rid, filterProperty) : dotnet.Publish(project, rid, filterProperty);
+    private Task BuildOrPublish(string project, string command, string? rid = null,
+        IReadOnlyDictionary<string, string>? properties = null) =>
+        command == "build" ? dotnet.Build(project, rid, properties) : dotnet.Publish(project, rid, properties);
 
     private static string ProjectXml(string family, string version, string setting = "none",
         bool includeLinux = false, bool includeNoDeps = false, string? filter = null,
@@ -425,8 +442,9 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     private (string Version, Dictionary<string, string> NativeFiles) ReadPackage(string id)
     {
         var matches = new List<(string Version, Dictionary<string, string> NativeFiles)>();
-        foreach (var file in Directory.EnumerateFiles(dotnet.PackageDirectory, id + ".*.nupkg", SearchOption.AllDirectories)
-            .Where(file => !file.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase)))
+        var packageFiles = Directory.EnumerateFiles(dotnet.PackageDirectory, id + ".*.nupkg", SearchOption.AllDirectories)
+            .Where(file => !file.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase));
+        foreach (var file in packageFiles)
         {
             using var zip = ZipFile.OpenRead(file);
             using var nuspec = zip.Entries.Single(e => e.FullName.EndsWith(".nuspec", StringComparison.Ordinal)).Open();
@@ -435,11 +453,12 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
                 continue;
             var version = metadata.Elements().Single(e => e.Name.LocalName == "version").Value;
             var native = new Dictionary<string, string>();
-            foreach (var entry in zip.Entries.Where(e => e.FullName.StartsWith("runtimes/", StringComparison.Ordinal) &&
+            var nativeEntries = zip.Entries.Where(e => e.FullName.StartsWith("runtimes/", StringComparison.Ordinal) &&
                 e.FullName.Contains("/native/", StringComparison.Ordinal) &&
                 (e.FullName.EndsWith(".dll", StringComparison.Ordinal) ||
                  e.FullName.EndsWith(".so", StringComparison.Ordinal) ||
-                 e.FullName.EndsWith(".dylib", StringComparison.Ordinal))))
+                 e.FullName.EndsWith(".dylib", StringComparison.Ordinal)));
+            foreach (var entry in nativeEntries)
             {
                 using var stream = entry.Open();
                 native.Add(entry.FullName, Convert.ToHexString(SHA256.HashData(stream)));
