@@ -7,7 +7,23 @@ namespace SkiaSharp.Views.Gtk4.Tests
 {
 	public class SKDrawingAreaTest
 	{
-		private static void InitGtk()
+		[Theory]
+		[InlineData(1, false, 120, 80)]
+		[InlineData(2, false, 120, 80)]
+		[InlineData(2, true, 60, 40)]
+		[InlineData(3, true, 40, 26)]
+		public void DisplayInfoPreservesPhysicalRawSize(int scale, bool ignorePixelScaling, int width, int height)
+		{
+			var raw = new SKImageInfo(120, 80, SKColorType.Rgba8888, SKAlphaType.Premul);
+
+			var info = SKDrawingArea.GetDisplayInfo(raw, 120 / scale, 80 / scale, ignorePixelScaling);
+
+			Assert.Equal(new SKSizeI(width, height), info.Size);
+			Assert.Equal(new SKSizeI(120, 80), raw.Size);
+			Assert.Equal(raw.ColorType, info.ColorType);
+		}
+
+		internal static void InitGtk()
 		{
 			// gtk_init()/gtk_init_check() call native exit() when no display can be opened, which
 			// cannot be caught as a managed exception and aborts the whole test host. Skip up-front on
@@ -47,6 +63,32 @@ namespace SkiaSharp.Views.Gtk4.Tests
 
 			using var area = new SKDrawingArea();
 			Assert.Equal(SKSize.Empty, area.CanvasSize);
+			Assert.False(area.UseDevicePixelScaling);
+			Assert.False(area.IgnorePixelScaling);
+		}
+
+		[Fact]
+		public void PhysicalPixelBackingIsOptIn()
+		{
+			InitGtk();
+
+			using var area = new SKDrawingArea();
+			area.UseDevicePixelScaling = true;
+			Assert.True(area.UseDevicePixelScaling);
+			area.UseDevicePixelScaling = false;
+			Assert.False(area.UseDevicePixelScaling);
+		}
+
+		[Fact]
+		public void LogicalPaintCoordinatesCanBeSelected()
+		{
+			InitGtk();
+
+			using var area = new SKDrawingArea { UseDevicePixelScaling = true };
+			area.IgnorePixelScaling = true;
+			Assert.True(area.IgnorePixelScaling);
+			area.IgnorePixelScaling = false;
+			Assert.False(area.IgnorePixelScaling);
 		}
 
 		[Fact]

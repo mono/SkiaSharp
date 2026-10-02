@@ -12,6 +12,9 @@ namespace SkiaSharp.Views.Gtk
 	{
 		private Cairo.ImageSurface? pix;
 		private SKSurface? surface;
+		private bool useDevicePixelScaling;
+		private bool ignorePixelScaling;
+		private SKSizeI canvasSize;
 
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Gtk.SKDrawingArea" /> class.</summary>
 		/// <remarks />
@@ -23,8 +26,36 @@ namespace SkiaSharp.Views.Gtk
 
 		/// <summary>Gets the current canvas size.</summary>
 		/// <value>The current canvas size in pixels.</value>
-		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
-		public SKSize CanvasSize => pix == null ? SKSize.Empty : new SKSize(pix.Width, pix.Height);
+		/// <remarks>The canvas size uses backing-surface pixels unless <see cref="IgnorePixelScaling" /> is enabled. With the default logical-pixel backing, both sizes are the same.</remarks>
+		public SKSize CanvasSize => canvasSize;
+
+		/// <summary>Gets or sets whether the backing surface uses GTK's device scale factor instead of logical pixels.</summary>
+		/// <remarks>The default is <see langword="false" /> to preserve the existing GTK drawing behavior.</remarks>
+		public bool UseDevicePixelScaling
+		{
+			get => useDevicePixelScaling;
+			set
+			{
+				if (useDevicePixelScaling == value)
+					return;
+				useDevicePixelScaling = value;
+				QueueDraw();
+			}
+		}
+
+		/// <summary>Gets or sets whether paint coordinates use logical pixels instead of backing-surface pixels.</summary>
+		/// <remarks>With <see cref="UseDevicePixelScaling" /> enabled, paint events expose logical <c>Info</c> and physical <c>RawInfo</c>; the canvas is scaled to match logical coordinates. With the default logical-pixel backing, this setting has no visible effect.</remarks>
+		public bool IgnorePixelScaling
+		{
+			get => ignorePixelScaling;
+			set
+			{
+				if (ignorePixelScaling == value)
+					return;
+				ignorePixelScaling = value;
+				QueueDraw();
+			}
+		}
 
 		/// <summary>Occurs when the canvas needs to be redrawn.</summary>
 		/// <remarks><format type="text/markdown"><![CDATA[
@@ -60,22 +91,26 @@ namespace SkiaSharp.Views.Gtk
 				return;
 
 			// get the drawing objects
-			var imgInfo = CreateDrawingObjects(width, height);
+			var scale = UseDevicePixelScaling ? GetScaleFactor() : 1;
+			var imgInfo = CreateDrawingObjects(checked(width * scale), checked(height * scale));
 
 			if (imgInfo.Width == 0 || imgInfo.Height == 0 || surface == null || pix == null)
 				return;
 
 			// start drawing
+			var displayInfo = GetDisplayInfo(imgInfo, width, height, ignorePixelScaling);
+			canvasSize = displayInfo.Size;
 			using (new SKAutoCanvasRestore(surface.Canvas, true))
 			{
-				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, imgInfo));
+				if (ignorePixelScaling)
+					surface.Canvas.Scale(scale);
+				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, displayInfo, imgInfo));
 			}
 
 			surface.Canvas.Flush();
 
-			// Flush any existing Cairo snapshots before marking dirty
+			// Flush any existing Cairo snapshots before modifying the backing pixels.
 			pix.Flush();
-			pix.MarkDirty();
 
 			// swap R and B
 			if (imgInfo.ColorType == SKColorType.Rgba8888)
@@ -85,10 +120,14 @@ namespace SkiaSharp.Views.Gtk
 					SKSwizzle.SwapRedBlue(pixmap.GetPixels(), imgInfo.Width * imgInfo.Height);
 				}
 			}
+			pix.MarkDirty();
 
 			// write the surface to the cairo context
+			cr.Save();
+			cr.Scale(1.0 / scale, 1.0 / scale);
 			cr.SetSourceSurface(pix, 0, 0);
 			cr.Paint();
+			cr.Restore();
 		}
 
 		/// <summary>Implement this to draw on the canvas.</summary>
@@ -132,6 +171,9 @@ namespace SkiaSharp.Views.Gtk
 			PaintSurface?.Invoke(this, e);
 		}
 
+		internal static SKImageInfo GetDisplayInfo(SKImageInfo rawInfo, int width, int height, bool ignorePixelScaling) =>
+			ignorePixelScaling ? rawInfo.WithSize(new SKSizeI(width, height)) : rawInfo;
+
 		/// <summary>Releases the resources used by the current instance of the <see cref="T:SkiaSharp.Views.Gtk.SKDrawingArea" /> class.</summary>
 		/// <remarks></remarks>
 		public override void Dispose()
@@ -156,7 +198,8 @@ namespace SkiaSharp.Views.Gtk
 					var dataPtr = Cairo.Internal.ImageSurface.GetData(pix.Handle);
 
 					// (re)create the SkiaSharp drawing objects using the Cairo stride
-					surface = SKSurface.Create(imgInfo, dataPtr, pix.Stride);
+					surface = SKSurface.Create(imgInfo, dataPtr, pix.Stride)
+						?? throw new InvalidOperationException("Unable to create the GTK4 drawing surface.");
 				}
 			}
 
@@ -165,12 +208,12 @@ namespace SkiaSharp.Views.Gtk
 
 		private void FreeDrawingObjects()
 		{
-			pix?.Dispose();
-			pix = null;
-
-			// SkiaSharp objects should only exist if the surface is set as well
 			surface?.Dispose();
 			surface = null;
+
+			pix?.Dispose();
+			pix = null;
+			canvasSize = default;
 		}
 	}
 }

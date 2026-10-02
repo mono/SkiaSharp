@@ -4,7 +4,7 @@ Demonstrates SkiaSharp running in a GTK 4 desktop app with tab-based navigation,
 
 ## Sample Pages
 
-This sample shows how to integrate SkiaSharp views into a GTK 4 app. The UI structure is defined in a `.ui` file (editable in GNOME Builder or Cambalache), with `SKDrawingArea` widgets injected into the layout containers. GTK 4 does not provide a GPU-accelerated SkiaSharp view, so both pages use CPU rendering.
+This sample shows how to integrate SkiaSharp views into a GTK 4 app. The UI structure is defined in `.ui` files (editable in GNOME Builder or Cambalache), with `SKDrawingArea` and `SKGLView` widgets injected into the layout containers.
 
 ### CPU
 
@@ -17,6 +17,17 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
 - **`SKTypeface`** — Custom font loaded via `SKTypeface.FromStream`.
+
+### GPU
+
+An animated, interactive SkSL metaball shader rendered on a real OpenGL-backed SkiaSharp surface.
+
+**Features:**
+
+- **`SKGLView`** — Hardware-accelerated canvas backed by `Gtk.GLArea` and desktop OpenGL; no CPU fallback.
+- **`SKRuntimeEffect`** — Shader compiled once and updated with time, resolution, and mouse-position uniforms each frame.
+- **Render loop** — GTK frame-clock-driven animation with an FPS overlay, paused whenever the tab is hidden.
+- **Pointer input** — Press and drag to add a bright blob to the scene.
 
 ### Drawing
 
@@ -32,11 +43,14 @@ A freehand drawing canvas with a color palette, brush size label, and clear butt
 
 ## Requirements
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) or later
 - GTK 4 development libraries:
   - **macOS:** `brew install gtk4`
   - **Ubuntu/Debian:** `sudo apt-get install libgtk-4-dev`
   - **Fedora:** `sudo dnf install gtk4-devel`
+- A Linux desktop OpenGL display for the GPU page (`SKGLView` does not support OpenGL ES). The GPU tab is available only on Linux; the CPU and Drawing pages still work on other GTK 4 hosts.
+
+GTK 4 can use Vulkan to composite its own scene graph, but it does not expose a Vulkan drawing widget analogous to `Gtk.GLArea`. The GPU page uses desktop OpenGL; a future Vulkan-backed SkiaSharp view would need application-owned Vulkan resources and a GTK-compatible texture import/synchronization path.
 
 ## Running the Sample
 
@@ -52,10 +66,10 @@ To start on a different page, change `DefaultPage` in `MainWindow.cs`:
 public static SamplePage DefaultPage { get; set; } = SamplePage.Drawing;
 ```
 
-Available pages: `Cpu` (default), `Drawing`
+Available pages: `Cpu` (default), `Gpu`, `Drawing`
 
 ## Screenshots
 
-| CPU | Drawing |
-|---|---|
-| <img src="screenshots/cpu.png" width="400" alt="CPU"> | <img src="screenshots/drawing.png" width="400" alt="Drawing"> |
+| CPU | GPU | Drawing |
+|---|---|---|
+| <img src="screenshots/cpu.png" width="350" alt="CPU"> | Not yet captured on Linux | <img src="screenshots/drawing.png" width="350" alt="Drawing"> |
