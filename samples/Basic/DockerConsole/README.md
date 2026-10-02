@@ -10,7 +10,7 @@ Includes Dockerfiles for both Linux and Windows (Nano Server) containers.
 - **`SKShader`** — Radial gradient background created with `SKShader.CreateRadialGradient`.
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered text rendered with measured alignment. Text is customizable via command-line argument.
-- **Linux container** — Uses `SkiaSharp.NativeAssets.Linux.NoDependencies` (no system packages required).
+- **Linux container** — Uses `SkiaSharp.NativeAssets.Linux.NoDependencies` (no system packages required); this direct application reference takes precedence over the regular Linux assets included by SkiaSharp.
 - **Windows container** — Uses `SkiaSharp.NativeAssets.NanoServer` on Nano Server LTSC 2025.
 
 ## Requirements

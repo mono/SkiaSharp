@@ -10,7 +10,7 @@ Includes Dockerfiles for both Linux and Windows (Nano Server) containers.
 - **`SKSurface`** — Creates a CPU-rendered surface for each request.
 - **`SKShader`** — Radial gradient background with semi-transparent circles.
 - **`SKCanvas.DrawText`** — Dynamic text from the URL path.
-- **Linux container** — Uses `SkiaSharp.NativeAssets.Linux.NoDependencies` (no system packages required).
+- **Linux container** — Uses `SkiaSharp.NativeAssets.Linux.NoDependencies` (no system packages required); this direct application reference takes precedence over the regular Linux assets included by SkiaSharp.
 - **Windows container** — Uses `SkiaSharp.NativeAssets.NanoServer` on Nano Server LTSC 2025.
 
 ## Requirements
