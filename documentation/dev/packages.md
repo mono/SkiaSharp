@@ -144,7 +144,7 @@ For a RID-less .NET application (netcoreapp3.1 or later) that needs only some na
 
 Each setting controls only its own library's copied RID-specific native assets, not the WebAssembly static libraries (which are linked rather than copied). Leave it unset or blank to retain all native variants. Neither property is inferred from `RuntimeIdentifiers`: that SDK restore setting can coexist with a different native output filter. A singular `RuntimeIdentifier`, including `dotnet publish -r linux-x64`, takes precedence and keeps the SDK-selected native binary even if it is not in the filter list. The macOS universal binary is retained for `osx-arm64` and `osx-x64`.
 
-Filtering affects copied build/publish **output**, not the transitive restore graph or package downloads. Adding Linux and WebAssembly by default increases the packages restored by non-platform consumers even if output filtering is enabled. `SkiaSharp.NativeAssets.Linux.NoDependencies` preference is automatic when that package participates, whether or not filtering is enabled.
+Filtering affects copied build/publish **output**, not the transitive restore graph or package downloads. Adding Linux and WebAssembly by default increases the packages restored by non-platform consumers even if output filtering is enabled. Each core package ships only its own RID filter. Separately, `SkiaSharp.NativeAssets.Linux.NoDependencies` ships its own preference targets: when its build targets and native payload participate, they remove the regular Linux package's native output, regardless of either filter, while leaving other platforms and HarfBuzzSharp untouched. SkiaSharp's filter can still select which NoDependencies RIDs to copy.
 
 ---
 

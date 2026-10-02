@@ -73,6 +73,42 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         Assert.DoesNotContain(family + ".NativeAssets.WebAssembly", android.Value);
     }
 
+    [Fact]
+    public void NativeSelectionTargetsBelongToTheirOwnPackages()
+    {
+        var skiaVersion = ReadPackage("SkiaSharp").Version;
+        var harfBuzzVersion = ReadPackage("HarfBuzzSharp").Version;
+        using var skia = ZipFile.OpenRead(Path.Combine(dotnet.PackageDirectory, $"SkiaSharp.{skiaVersion}.nupkg"));
+        using var harfBuzz = ZipFile.OpenRead(Path.Combine(dotnet.PackageDirectory, $"HarfBuzzSharp.{harfBuzzVersion}.nupkg"));
+        using var noDeps = ZipFile.OpenRead(Path.Combine(dotnet.PackageDirectory,
+            $"SkiaSharp.NativeAssets.Linux.NoDependencies.{skiaVersion}.nupkg"));
+
+        var skiaFilter = ReadTargets(skia, "buildTransitive/netcoreapp3.1/SkiaSharp.targets");
+        var harfBuzzFilter = ReadTargets(harfBuzz, "buildTransitive/netcoreapp3.1/HarfBuzzSharp.targets");
+        var noDepsPreference = ReadTargets(noDeps,
+            "buildTransitive/netcoreapp3.1/SkiaSharp.NativeAssets.Linux.NoDependencies.targets");
+        var noDepsLegacy = ReadTargets(noDeps,
+            "buildTransitive/net462/SkiaSharp.NativeAssets.Linux.NoDependencies.targets");
+
+        Assert.Contains("SkiaSharpFilterRuntimeIdentifiers", skiaFilter);
+        Assert.DoesNotContain("HarfBuzzSharpFilterRuntimeIdentifiers", skiaFilter);
+        Assert.DoesNotContain("_SkiaSharpPreferNoDependencies", skiaFilter);
+        Assert.Null(skia.GetEntry("buildTransitive/net462/SkiaSharp.targets"));
+        Assert.Contains("HarfBuzzSharpFilterRuntimeIdentifiers", harfBuzzFilter);
+        Assert.DoesNotContain("SkiaSharpFilterRuntimeIdentifiers", harfBuzzFilter);
+        Assert.Contains("_SkiaSharpPreferNoDependencies", noDepsPreference);
+        Assert.DoesNotContain("FilterRuntimeIdentifiers", noDepsPreference);
+        Assert.Contains("_SkiaSharpPreferLegacyNoDependencies", noDepsLegacy);
+        Assert.NotNull(noDeps.GetEntry("build/net462/SkiaSharp.NativeAssets.Linux.NoDependencies.targets"));
+
+        static string ReadTargets(ZipArchive package, string path)
+        {
+            using var stream = (package.GetEntry(path) ?? throw new FileNotFoundException(path)).Open();
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+    }
+
     [Theory]
     [MemberData(nameof(RidCases))]
     public async Task DefaultLinuxPackageHonorsRuntimeIdentifiers(string family, string setting, string command, string? commandRid)
@@ -197,20 +233,42 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     }
 
     [Theory]
+    [InlineData("build")]
+    [InlineData("publish")]
+    public async Task EachFamilyCanFilterDifferentRids(string command)
+    {
+        var skiaVersion = ReadPackage("SkiaSharp").Version;
+        var harfBuzzVersion = ReadPackage("HarfBuzzSharp").Version;
+        var project = dotnet.NewProject($"both-filters-{command}", ProjectXml("SkiaSharp", skiaVersion,
+            filter: "linux-x64", otherFamily: "HarfBuzzSharp", otherVersion: harfBuzzVersion));
+        var xml = XDocument.Load(Path.Combine(project, "Consumer.csproj"));
+        xml.Root!.Element("PropertyGroup")!.Add(new XElement("HarfBuzzSharpFilterRuntimeIdentifiers", "osx-x64"));
+        xml.Save(Path.Combine(project, "Consumer.csproj"));
+
+        await BuildOrPublish(project, command);
+        var skiaExpected = ReadPackage("SkiaSharp.NativeAssets.Linux").NativeFiles
+            .Where(p => p.Key.StartsWith("runtimes/linux-x64/native/", StringComparison.Ordinal))
+            .ToDictionary(p => p.Key, p => p.Value);
+        var harfBuzzExpected = ReadPackage("HarfBuzzSharp.NativeAssets.macOS").NativeFiles;
+        AssertNativeOutput(project, "SkiaSharp", skiaExpected);
+        AssertNativeOutput(project, "HarfBuzzSharp", harfBuzzExpected);
+        AssertDependencyNativeAssets(project, "SkiaSharp.NativeAssets.", skiaExpected.Keys);
+        AssertDependencyNativeAssets(project, "HarfBuzzSharp.NativeAssets.", harfBuzzExpected.Keys);
+        dotnet.CleanBuildOutput(project);
+    }
+
+    [Theory]
     [InlineData("build", false)]
     [InlineData("publish", false)]
     [InlineData("publish", true)]
     public async Task NoDependenciesWinsForSameRidEvenWithDefaultLinux(string command, bool transitive)
     {
         var core = ReadPackage("SkiaSharp");
-        var regular = ReadPackage("SkiaSharp.NativeAssets.Linux").NativeFiles;
         var noDeps = ReadPackage("SkiaSharp.NativeAssets.Linux.NoDependencies").NativeFiles;
-        Assert.Contains(noDeps.Keys.Intersect(regular.Keys), p => p.StartsWith("runtimes/linux-x64/", StringComparison.Ordinal));
-        var selected = regular.Concat(noDeps).GroupBy(p => p.Key)
-            .ToDictionary(group => group.Key, group => group.Last().Value);
+        Assert.Contains(noDeps.Keys, p => p.StartsWith("runtimes/linux-x64/", StringComparison.Ordinal));
         var all = ReadPackage("SkiaSharp.NativeAssets.Win32").NativeFiles
             .Concat(ReadPackage("SkiaSharp.NativeAssets.macOS").NativeFiles)
-            .Concat(selected).ToDictionary(p => p.Key, p => p.Value);
+            .Concat(noDeps).ToDictionary(p => p.Key, p => p.Value);
 
         var project = dotnet.NewProject($"SkiaSharp-nodeps-{command}-{transitive}",
             ProjectXml("SkiaSharp", core.Version, includeNoDeps: !transitive));
@@ -228,10 +286,8 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         }
         await BuildOrPublish(project, command);
         AssertNativeOutput(project, "SkiaSharp", all);
-        AssertDependencyNativeAssets(project, "SkiaSharp.NativeAssets.Linux.NoDependencies",
-            noDeps.Keys.Where(selected.ContainsKey));
-        AssertDependencyNativeAssets(project, "SkiaSharp.NativeAssets.Linux",
-            regular.Keys.Except(noDeps.Keys));
+        AssertDependencyNativeAssets(project, "SkiaSharp.NativeAssets.Linux.NoDependencies", noDeps.Keys);
+        AssertDependencyNativeAssets(project, "SkiaSharp.NativeAssets.Linux", []);
         dotnet.CleanBuildOutput(project);
     }
 
@@ -296,47 +352,50 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     }
 
     [Theory]
-    [InlineData("build")]
-    [InlineData("publish")]
-    public async Task ChangingFilterOnExistingProjectUpdatesNativeSelection(string command)
+    [InlineData("SkiaSharp", "build")]
+    [InlineData("SkiaSharp", "publish")]
+    [InlineData("HarfBuzzSharp", "build")]
+    [InlineData("HarfBuzzSharp", "publish")]
+    public async Task ChangingFilterOnExistingProjectUpdatesNativeSelection(string family, string command)
     {
-        var core = ReadPackage("SkiaSharp");
-        var project = dotnet.NewProject($"SkiaSharp-incremental-{command}",
-            ProjectXml("SkiaSharp", core.Version));
+        var core = ReadPackage(family);
+        var filterName = family + "FilterRuntimeIdentifiers";
+        var project = dotnet.NewProject($"{family}-incremental-{command}",
+            ProjectXml(family, core.Version));
         await BuildOrPublish(project, command, properties: new Dictionary<string, string>
         {
-            ["SkiaSharpFilterRuntimeIdentifiers"] = "linux-x64"
+            [filterName] = "linux-x64"
         });
-        var linux = ReadPackage("SkiaSharp.NativeAssets.Linux").NativeFiles
+        var linux = ReadPackage(family + ".NativeAssets.Linux").NativeFiles
             .Where(p => p.Key.StartsWith("runtimes/linux-x64/native/", StringComparison.Ordinal))
             .ToDictionary(p => p.Key, p => p.Value);
-        AssertNativeOutput(project, "SkiaSharp", linux);
-        AssertDependencyNativeAssets(project, "SkiaSharp.NativeAssets.", linux.Keys);
+        AssertNativeOutput(project, family, linux);
+        AssertDependencyNativeAssets(project, family + ".NativeAssets.", linux.Keys);
 
         await BuildOrPublish(project, command, properties: new Dictionary<string, string>
         {
-            ["SkiaSharpFilterRuntimeIdentifiers"] = "osx-x64"
+            [filterName] = "osx-x64"
         });
-        var osx = ReadPackage("SkiaSharp.NativeAssets.macOS").NativeFiles;
-        AssertNativeOutput(project, "SkiaSharp", osx);
-        AssertDependencyNativeAssets(project, "SkiaSharp.NativeAssets.", osx.Keys);
+        var osx = ReadPackage(family + ".NativeAssets.macOS").NativeFiles;
+        AssertNativeOutput(project, family, osx);
+        AssertDependencyNativeAssets(project, family + ".NativeAssets.", osx.Keys);
 
         await BuildOrPublish(project, command, properties: new Dictionary<string, string>
         {
-            ["SkiaSharpFilterRuntimeIdentifiers"] = "linux-x64;osx-x64"
+            [filterName] = "linux-x64;osx-x64"
         });
         var linuxAndOsx = linux.Concat(osx).ToDictionary(p => p.Key, p => p.Value);
-        AssertNativeOutput(project, "SkiaSharp", linuxAndOsx);
-        AssertDependencyNativeAssets(project, "SkiaSharp.NativeAssets.", linuxAndOsx.Keys);
+        AssertNativeOutput(project, family, linuxAndOsx);
+        AssertDependencyNativeAssets(project, family + ".NativeAssets.", linuxAndOsx.Keys);
 
         await BuildOrPublish(project, command, properties: new Dictionary<string, string>
         {
-            ["SkiaSharpFilterRuntimeIdentifiers"] = ""
+            [filterName] = ""
         });
-        var all = Platforms.SelectMany(platform => ReadPackage("SkiaSharp.NativeAssets." + platform).NativeFiles)
+        var all = Platforms.SelectMany(platform => ReadPackage(family + ".NativeAssets." + platform).NativeFiles)
             .ToDictionary(p => p.Key, p => p.Value);
-        AssertNativeOutput(project, "SkiaSharp", all);
-        AssertDependencyNativeAssets(project, "SkiaSharp.NativeAssets.", all.Keys);
+        AssertNativeOutput(project, family, all);
+        AssertDependencyNativeAssets(project, family + ".NativeAssets.", all.Keys);
         dotnet.CleanBuildOutput(project);
     }
 
