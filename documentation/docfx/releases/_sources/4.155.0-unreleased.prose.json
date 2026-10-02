@@ -1,16 +1,42 @@
 {
-  "theme": "Linux font discovery restored",
-  "highlights_headline": "SkiaSharp restores system-font discovery for Linux NoDependencies deployments.",
-  "highlights_body": null,
+  "theme": "Platform and engine updates",
+  "highlights_headline": "SkiaSharp 4.155.0 updates the bundled Skia engine and restores system-font discovery for Linux NoDependencies packages.",
+  "highlights_body": "It also adds Tizen 10 native build and packaging support, keeping the platform assets aligned with current tooling.",
   "breaking": [],
   "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia core fork updated for m155",
+          "detail": "Integrates the current m155 Skia fork cleanup so applications use the latest bundled rendering engine changes in the 4.155 line.",
+          "prs": [
+            5208
+          ]
+        }
+      ]
+    },
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Linux NoDependencies fonts discovered",
-          "detail": "Linux applications using the NoDependencies package can again discover installed system fonts through the font manager.",
-          "prs": [5086]
+          "lead": "Linux NoDependencies font discovery restored",
+          "detail": "Restores discovery of system fonts when using the Linux NoDependencies packages, so text rendering can again resolve installed fonts without bundled native dependencies.",
+          "prs": [
+            5086
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Tizen 10 native packages updated",
+          "detail": "Builds and packages the Tizen native assets with the Tizen 10 GCC 14.2 toolchain, keeping Tizen support current.",
+          "prs": [
+            5235
+          ]
         }
       ]
     }
@@ -18,5 +44,6 @@
   "contributor_summaries": {
     "ramezgerges": "Restored Linux NoDependencies system-font discovery"
   },
-  "preview_summaries": {}
+  "preview_summaries": {},
+  "harfbuzz_summary": null
 }
