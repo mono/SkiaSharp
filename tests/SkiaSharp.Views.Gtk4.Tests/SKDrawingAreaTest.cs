@@ -63,20 +63,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 
 			using var area = new SKDrawingArea();
 			Assert.Equal(SKSize.Empty, area.CanvasSize);
-			Assert.False(area.UseDevicePixelScaling);
 			Assert.False(area.IgnorePixelScaling);
-		}
-
-		[Fact]
-		public void PhysicalPixelBackingIsOptIn()
-		{
-			InitGtk();
-
-			using var area = new SKDrawingArea();
-			area.UseDevicePixelScaling = true;
-			Assert.True(area.UseDevicePixelScaling);
-			area.UseDevicePixelScaling = false;
-			Assert.False(area.UseDevicePixelScaling);
 		}
 
 		[Fact]
@@ -84,7 +71,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 		{
 			InitGtk();
 
-			using var area = new SKDrawingArea { UseDevicePixelScaling = true };
+			using var area = new SKDrawingArea();
 			area.IgnorePixelScaling = true;
 			Assert.True(area.IgnorePixelScaling);
 			area.IgnorePixelScaling = false;

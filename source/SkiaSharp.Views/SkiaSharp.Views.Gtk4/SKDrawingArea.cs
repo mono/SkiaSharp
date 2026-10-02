@@ -12,7 +12,6 @@ namespace SkiaSharp.Views.Gtk
 	{
 		private Cairo.ImageSurface? pix;
 		private SKSurface? surface;
-		private bool useDevicePixelScaling;
 		private bool ignorePixelScaling;
 		private SKSizeI canvasSize;
 
@@ -26,25 +25,11 @@ namespace SkiaSharp.Views.Gtk
 
 		/// <summary>Gets the current canvas size.</summary>
 		/// <value>The current canvas size in pixels.</value>
-		/// <remarks>The canvas size uses backing-surface pixels unless <see cref="IgnorePixelScaling" /> is enabled. With the default logical-pixel backing, both sizes are the same.</remarks>
+		/// <remarks>The canvas size uses backing-surface pixels unless <see cref="IgnorePixelScaling" /> is enabled.</remarks>
 		public SKSize CanvasSize => canvasSize;
 
-		/// <summary>Gets or sets whether the backing surface uses GTK's device scale factor instead of logical pixels.</summary>
-		/// <remarks>The default is <see langword="false" /> to preserve the existing GTK drawing behavior.</remarks>
-		public bool UseDevicePixelScaling
-		{
-			get => useDevicePixelScaling;
-			set
-			{
-				if (useDevicePixelScaling == value)
-					return;
-				useDevicePixelScaling = value;
-				QueueDraw();
-			}
-		}
-
 		/// <summary>Gets or sets whether paint coordinates use logical pixels instead of backing-surface pixels.</summary>
-		/// <remarks>With <see cref="UseDevicePixelScaling" /> enabled, paint events expose logical <c>Info</c> and physical <c>RawInfo</c>; the canvas is scaled to match logical coordinates. With the default logical-pixel backing, this setting has no visible effect.</remarks>
+		/// <remarks>By default, paint coordinates use physical pixels. When enabled, paint events expose logical <c>Info</c> and physical <c>RawInfo</c>; the canvas is scaled to match logical coordinates.</remarks>
 		public bool IgnorePixelScaling
 		{
 			get => ignorePixelScaling;
@@ -91,7 +76,7 @@ namespace SkiaSharp.Views.Gtk
 				return;
 
 			// get the drawing objects
-			var scale = UseDevicePixelScaling ? GetScaleFactor() : 1;
+			var scale = GetScaleFactor();
 			var imgInfo = CreateDrawingObjects(checked(width * scale), checked(height * scale));
 
 			if (imgInfo.Width == 0 || imgInfo.Height == 0 || surface == null || pix == null)

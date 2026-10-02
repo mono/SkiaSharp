@@ -13,6 +13,7 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 **Features:**
 
 - **`SKDrawingArea`** — Software-rendered canvas backed by a `Gtk.DrawingArea`, the standard GTK 4 drawing surface.
+- **Pixel scaling** — By default, paint coordinates and `CanvasSize` use physical display pixels; set `IgnorePixelScaling` to draw in GTK logical pixels instead. `RawInfo` always describes the backing surface.
 - **`SKShader`** — Radial gradient background created with `SKShader.CreateRadialGradient`.
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
