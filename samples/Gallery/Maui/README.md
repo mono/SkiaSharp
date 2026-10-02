@@ -94,7 +94,10 @@ Android Debug APK manually rather than using SDK deployment, build with
 `-p:EmbedAssembliesIntoApk=true`; otherwise Fast Deployment places managed
 assemblies beside the APK and installing that APK alone is insufficient.
 
-This app pins MAUI Controls 10.0.41 without changing the library versions.
+This app pins MAUI Controls 10.0.51 without changing the library versions.
+This patch includes the Apple layer finalizer correction from
+[dotnet/maui#33818](https://github.com/dotnet/maui/pull/33818); earlier versions
+can crash while collecting borders and shapes after navigation.
 The DevFlow agent and Mac Catalyst network-server entitlement are **Debug
 only**. Release builds preserve the reflection-discovered Shared sample
 catalog via `TrimmerRoots.xml`; no sample list is maintained by this host.
