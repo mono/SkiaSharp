@@ -79,4 +79,4 @@ Available pages: `Cpu` (default), `Gpu`, `Drawing`
 
 | CPU | GPU | Drawing |
 |---|---|---|
-| <img src="screenshots/cpu.png" width="350" alt="CPU"> | Not yet captured | <img src="screenshots/drawing.png" width="350" alt="Drawing"> |
+| <img src="screenshots/cpu.png" width="350" alt="CPU"> | <img src="screenshots/gpu.png" width="350" alt="GPU shader rendered on macOS OpenGL"> | <img src="screenshots/drawing.png" width="350" alt="Drawing"> |
