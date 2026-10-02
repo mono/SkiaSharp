@@ -23,7 +23,7 @@ Phase 3 (Analyze) → resolution + comment
          │ Yes
          ▼
   ┌──────────────────────────────────────┐
-  │  3 parallel explore agents (Haiku)   │
+  │  3 validators (GPT-5.6 Luna)         │
   │                                      │
   │  Agent 1: API Correctness            │
   │  Agent 2: Behavioral Correctness     │
@@ -37,7 +37,7 @@ Phase 3 (Analyze) → resolution + comment
   Phase 5 (Schema Validate) continues
 ```
 
-Uses `explore` agents (read-only, Haiku, has grep/glob/view). All 3 are independent — launch in parallel.
+Uses `explore` agents (read-only, GPT-5.6 Luna, with grep/glob/view). All 3 are independent — launch in parallel.
 
 ## The 3 Validation Agents
 
@@ -107,7 +107,7 @@ After Phase 3 generates the triage JSON:
 
 1. Extract code blocks from proposals + `comment`
 2. No code → skip to Phase 5
-3. Code found → launch 3 parallel `task(agent_type="explore")` calls
+3. Code found → launch 3 parallel `task(agent_type="explore", model="gpt-5.6-luna")` calls
 4. Collect 3 JSON results → synthesize → apply fixes → continue to Phase 5
 
 ## Decision Matrix

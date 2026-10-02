@@ -16,9 +16,9 @@ ways ([measuring.md](../measuring.md)), isolate, and keep a simple reference.
 
 ## Where to look
 
-Blittable value types in `binding/SkiaSharp/`: `SKMatrix.cs`, `SKColorF.cs`, `SKPMColor.cs`,
-`SKRect.cs`, `SKPoint.cs`, `SKSize.cs`. Ask of each hit: is the native side just a handful of float
-ops with **no native state**?
+Blittable value types in `binding/SkiaSharp/`, including `SKMatrix.cs`, `MathTypes.cs`,
+`SKColorF.cs`, and `SKPMColor.cs`. Ask of each native-call hit: is the native side just a handful
+of float ops with **no native state**?
 
 ```bash
 rg -n "SkiaApi\.sk_(matrix|color|color4f|rect|point|size)" binding/SkiaSharp --glob '!*.generated.cs'
@@ -28,7 +28,8 @@ rg -n "Map(Point|Rect|Vector|Radius)|Invert|Concat|PreConcat|PostConcat|operator
 Candidates seen in this tree: `SKMatrix.MapPoint/MapVector/MapRadius/MapRect/Concat/TryInvert` (the
 #4241 port — **check its state first**, likely already covered), the `SKColor`⇄`SKColorF` channel
 conversion, single-value `SKPMColor` premultiply. **Already managed (skip):** `SKMatrix44` (backed
-by `System.Numerics.Matrix4x4`), most of `MathTypes.cs`, the *array* `SKPMColor` premultiply.
+by `System.Numerics.Matrix4x4`) and the *array* `SKPMColor` premultiply. Most `MathTypes.cs`
+members are already managed; inspect one only when the native-call search identifies it.
 
 ## Slow → Fast
 

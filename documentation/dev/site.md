@@ -60,8 +60,12 @@ This starts a local server (typically at `http://localhost:8080`) and watches fo
 The gallery requires SkiaSharp NuGet packages from CI. Building locally:
 
 ```bash
-# 1. Download CI packages
-dotnet cake --target=docs-download-output
+# 1. Obtain CI packages from a supported source
+# For a PR build:
+pwsh scripts/get-skiasharp-pr.ps1 <PR_NUMBER> -SuccessfulOnly -Force
+# Copy its .nupkg files from ~/.skiasharp/hives/pr-<PR_NUMBER>/packages/ to output/nugets/.
+#
+# For an exact public build, download and extract its canonical `nuget` artifact.
 
 # 2. Detect the version
 #    Look at output/nugets/ for the SkiaSharp package version
@@ -84,23 +88,15 @@ dotnet publish "output/samples-preview/Gallery/Blazor/SkiaSharpSample.Blazor.csp
 
 ## Previewing the Deployed Site
 
-After CI deploys to a branch, use the preview scripts to serve locally with the correct `/SkiaSharp/` path prefix (matching GitHub Pages):
+After CI deploys a same-repository pull request, the staging site is available
+at:
 
-```powershell
-# Preview staging (PRs deploy here)
-pwsh scripts/serve-site.ps1
-
-# Preview production
-pwsh scripts/serve-site.ps1 docs-live
+```
+https://mono.github.io/SkiaSharp/staging/<PR_NUMBER>/
 ```
 
-```bash
-# Same thing on macOS/Linux
-./scripts/serve-site.sh              # docs-staging
-./scripts/serve-site.sh docs-live    # production
-```
-
-Opens at `http://localhost:8080/SkiaSharp/`. The script clones the branch into a temp directory and serves it via `python3 -m http.server`.
+The workflow posts the exact staging URL to the pull request. Production is
+published from `main` at <https://mono.github.io/SkiaSharp/>.
 
 ## CI Workflow
 
@@ -177,13 +173,8 @@ documentation/
     index.html
     style.css
     404.html
-  dev/                      # Internal dev docs (not published)
+  dev/                      # Internal developer docs (not published)
     site.md                 # This file
-scripts/
-  serve-site.sh             # Preview server (bash)
-  serve-site.ps1            # Preview server (PowerShell)
 .github/workflows/
   build-site.yml            # Unified build + deploy workflow
 ```
-
-

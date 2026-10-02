@@ -1,177 +1,128 @@
 #!/usr/bin/env python3
-"""Verify that generated P/Invoke files match independent regeneration.
-
-Assumes the working tree is already checked out to the correct state
-(SkiaSharp companion PR + skia submodule at PR head — done by the orchestrator).
-Runs the local Python binding helper, then uses git diff to
-check if the regenerated files match what's checked in. Any diff = FAIL.
-The generator owns deterministic ordering across hosts. The helper restores
-HarfBuzzSharp because HarfBuzz updates are separate.
-"""
+"""Verify checked-in generated binding trees without changing the worktree."""
 import argparse
-import os
+import filecmp
+import json
+import shutil
 import subprocess
 import sys
-
-GENERATED_FILES = [
-    "binding/SkiaSharp/SkiaApi.generated.cs",
-    "binding/SkiaSharp.Skottie/SkottieApi.generated.cs",
-    "binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs",
-    "binding/SkiaSharp.Resources/ResourcesApi.generated.cs",
-]
-
-HARFBUZZ_GENERATED_FILE = "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs"
+from pathlib import Path
 
 
-def eprint(*args, **kwargs):
-    """Print to stderr (status messages)."""
-    print(*args, file=sys.stderr, **kwargs)
+PROJECTS = (
+    ("libSkiaSharp.json", "externals/skia", "SkiaSharp", "SkiaApi.generated.cs"),
+    ("libSkiaSharp.Skottie.json", "externals/skia", "SkiaSharp.Skottie", "SkottieApi.generated.cs"),
+    ("libSkiaSharp.SceneGraph.json", "externals/skia", "SkiaSharp.SceneGraph", "SceneGraphApi.generated.cs"),
+    ("libSkiaSharp.Resources.json", "externals/skia", "SkiaSharp.Resources", "ResourcesApi.generated.cs"),
+    ("libHarfBuzzSharp.json", "externals/skia/third_party/externals/harfbuzz", "HarfBuzzSharp", "HarfBuzzApi.generated.cs"),
+)
 
 
-def run_check(repo_root: str, output_dir: str) -> dict:
-    """Run generated file verification. Returns result dict."""
-    os.makedirs(output_dir, exist_ok=True)
-    generator_log = os.path.join(output_dir, "generator-output.log")
-
-    # --- Step 1: Run the generator and capture raw output as proof of execution ---
-    helper = os.path.join(
-        repo_root,
-        ".agents",
-        "skills",
-        "review-skia-update",
-        "scripts",
-        "regenerate_bindings.py",
-    )
-    eprint(
-        "🔄 Running review-skia-update/scripts/regenerate_bindings.py "
-        f"(capturing output to {generator_log})..."
-    )
-    try:
-        proc = subprocess.Popen(
-            [sys.executable, helper],
-            cwd=repo_root,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+def compare_trees(expected: Path, actual: Path) -> list[str]:
+    comparison = filecmp.dircmp(expected, actual)
+    differences = [
+        *(f"deleted: {path}" for path in comparison.left_only),
+        *(f"added: {path}" for path in comparison.right_only),
+        *(
+            f"modified: {path}"
+            for path in comparison.common_files
+            if not filecmp.cmp(expected / path, actual / path, shallow=False)
+        ),
+    ]
+    for directory in comparison.common_dirs:
+        differences.extend(
+            f"{directory}/{difference}"
+            for difference in compare_trees(expected / directory, actual / directory)
         )
+    return differences
+
+
+def run_check(repo_root: Path, output_dir: Path) -> dict:
+    repo_root = Path(repo_root)
+    output_dir = Path(output_dir)
+    generated_root = output_dir / "generated"
+    if generated_root.exists():
+        shutil.rmtree(generated_root)
+    generated_root.mkdir(parents=True)
+    generator = repo_root / "utils" / "SkiaSharpGenerator" / "SkiaSharpGenerator.csproj"
+    log_path = output_dir / "generator-output.log"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    with log_path.open("w") as log:
+        def run(*args: str) -> None:
+            process = subprocess.run(args, cwd=repo_root, stdout=log, stderr=subprocess.STDOUT, text=True)
+            if process.returncode:
+                raise RuntimeError(f"Generator command failed: {' '.join(args)}")
+
         try:
-            with open(generator_log, "w") as log_file:
-                for line in proc.stdout:
-                    decoded = line.decode("utf-8", errors="replace")
-                    sys.stderr.write(decoded)
-                    log_file.write(decoded)
-            proc.wait(timeout=600)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            proc.wait()
-            eprint("❌ Generator timed out after 600 seconds")
+            run("dotnet", "build", str(generator))
+            for config, source_root, project, legacy_file in PROJECTS:
+                project_root = repo_root / "binding" / project
+                expected_directory = project_root / "Generated"
+                # Seed the isolated output because the generator carries XML docs
+                # forward from its existing output before replacing generated code.
+                if expected_directory.is_dir():
+                    generated_output = generated_root / project
+                    shutil.copytree(expected_directory, generated_output)
+                else:
+                    expected_file = project_root / legacy_file
+                    generated_output = generated_root / project / legacy_file
+                    generated_output.parent.mkdir(parents=True, exist_ok=True)
+                    if expected_file.is_file():
+                        shutil.copy2(expected_file, generated_output)
+                run(
+                    "dotnet", "run", "--no-build", "--no-launch-profile",
+                    f"--project={generator}", "--", "generate",
+                    "--config", str(repo_root / "binding" / config),
+                    "--root", str(repo_root / source_root),
+                    "--output", str(generated_output),
+                )
+        except Exception as error:
             return {
-                "status": "FAIL",
-                "checked": [],
-                "mismatches": [],
-                "generatorError": "Generator timed out after 600 seconds",
-                "generatorLog": generator_log,
+                "status": "FAIL", "checked": [], "mismatches": [],
+                "generatorError": str(error), "generatorLog": str(log_path),
             }
-        except Exception:
-            proc.kill()
-            proc.wait()
-            raise
-        if proc.returncode != 0:
-            eprint(f"❌ Generator exited with code {proc.returncode}")
-            eprint(f"   See {generator_log} for full output")
-            return {
-                "status": "FAIL",
-                "checked": [],
-                "mismatches": [],
-                "generatorError": f"Generator exited with code {proc.returncode}",
-                "generatorLog": generator_log,
-            }
-    except Exception as e:
-        eprint(f"❌ Generator threw exception: {e}")
-        with open(generator_log, "a") as log_file:
-            log_file.write(f"\nException: {e}\n")
-        return {
-            "status": "FAIL",
-            "checked": [],
-            "mismatches": [],
-            "generatorError": f"Generator threw exception: {e}",
-            "generatorLog": generator_log,
-        }
 
-    # --- Step 2: Revert HarfBuzz to HEAD (not part of Skia updates) ---
-    eprint(f"🔄 Reverting {HARFBUZZ_GENERATED_FILE} to HEAD (harfbuzz excluded from Skia updates)")
-    revert_result = subprocess.run(
-        ["git", "checkout", "HEAD", "--", HARFBUZZ_GENERATED_FILE],
-        cwd=repo_root,
-        capture_output=True,
-        text=True,
-    )
-    if revert_result.returncode != 0:
-        eprint(f"❌ Failed to revert {HARFBUZZ_GENERATED_FILE}: {revert_result.stderr.strip()}")
-        return {
-            "status": "FAIL",
-            "checked": [],
-            "mismatches": [],
-            "generatorError": f"Failed to revert HarfBuzz generated file: {revert_result.stderr.strip()}",
-            "generatorLog": generator_log,
-        }
-
-    # --- Step 3: git diff each generated file — any diff = FAIL ---
-    checked = []
-    mismatches = []
-
-    for file in GENERATED_FILES:
-        checked.append(file)
-        result = subprocess.run(
-            ["git", "diff", "--no-ext-diff", "--", file],
-            cwd=repo_root,
-            capture_output=True,
-            text=True,
-        )
-        diff_str = result.stdout.strip()
-        if diff_str:
-            summary = diff_str[:2000] if len(diff_str) > 2000 else diff_str
-            mismatches.append({"file": file, "diffSummary": summary})
-
-    # Revert generated files to HEAD so the check is non-destructive
-    for file in GENERATED_FILES:
-        revert = subprocess.run(
-            ["git", "checkout", "HEAD", "--", file],
-            cwd=repo_root,
-            capture_output=True,
-            text=True,
-        )
-        if revert.returncode != 0:
-            eprint(f"⚠️ Failed to revert {file}: {revert.stderr.strip()}")
-
-    status = "PASS" if len(mismatches) == 0 else "FAIL"
-
-    eprint()
-    if status == "PASS":
-        eprint(f"✅ Generated files: PASS — all {len(checked)} files match after regeneration")
-    else:
-        eprint(f"❌ Generated files: FAIL — {len(mismatches)} file(s) differ after regeneration")
-        for m in mismatches:
-            eprint(f"   {m['file']}")
+    checked, mismatches = [], []
+    for _, _, project, legacy_file in PROJECTS:
+        project_root = repo_root / "binding" / project
+        expected = project_root / "Generated"
+        actual = generated_root / project
+        if expected.is_dir():
+            checked.append(str(expected.relative_to(repo_root)))
+            differences = compare_trees(expected, actual)
+        else:
+            expected = project_root / legacy_file
+            actual = actual / legacy_file
+            checked.append(str(expected.relative_to(repo_root)))
+            differences = (
+                []
+                if expected.is_file()
+                and actual.is_file()
+                and filecmp.cmp(expected, actual, shallow=False)
+                else [f"modified: {legacy_file}"]
+            )
+        if differences:
+            mismatches.append({"file": str(expected.relative_to(repo_root)), "diffSummary": "\n".join(differences[:100])})
 
     return {
-        "status": status,
+        "status": "PASS" if not mismatches else "FAIL",
         "checked": checked,
         "mismatches": mismatches,
-        "generatorLog": generator_log,
+        "generatorLog": str(log_path),
     }
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Verify generated P/Invoke files match regeneration.")
-    parser.add_argument("--repo-root", required=True, help="Path to the SkiaSharp repo root.")
-    parser.add_argument("--output-dir", default="/tmp/skiasharp/skia-review", help="Directory for results.")
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Verify generated P/Invoke binding trees.")
+    parser.add_argument("--repo-root", required=True, type=Path, help="Path to the SkiaSharp repo root.")
+    parser.add_argument("--output-dir", type=Path, default=Path("output/skia-review"), help="Directory for results.")
     args = parser.parse_args()
-
-    import json
-    result = run_check(args.repo_root, args.output_dir)
+    result = run_check(args.repo_root.resolve(), args.output_dir.resolve())
     json.dump(result, sys.stdout, indent=2)
     print()
+    return 0 if result["status"] == "PASS" else 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

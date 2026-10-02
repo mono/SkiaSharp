@@ -79,6 +79,10 @@ ADOPTION_LINE_COUNT = 5
 
 USER_AGENT = "SkiaSharp-ai-dashboard"
 
+# This workflow no longer exists. Keep historical dashboard snapshots from
+# reintroducing it when the generator refreshes their otherwise curated cost data.
+RETIRED_COST_WORKFLOW_NAMES = {"API docs writer"}
+
 
 def log(*args):
     """Progress goes to STDERR so STDOUT can stay clean (matches sibling script)."""
@@ -420,7 +424,18 @@ def build_cost(existing):
     snapshot and shown with an "as of" date. Refresh them by re-running the
     workflows and reading ``gh run view <id> --log | grep -E 'Effective tokens|Turns'``.
     """
-    return existing.get("cost", {})
+    cost = existing.get("cost", {})
+    if not isinstance(cost, dict):
+        return {}
+    workflows = cost.get("workflows")
+    if not isinstance(workflows, list):
+        return cost
+    refreshed = dict(cost)
+    refreshed["workflows"] = [
+        workflow for workflow in workflows
+        if workflow.get("name") not in RETIRED_COST_WORKFLOW_NAMES
+    ]
+    return refreshed
 
 
 # ── Main ─────────────────────────────────────────────────────────────────────

@@ -21,7 +21,7 @@ Always do these regardless of type:
 - Stack traces → map to SkiaSharp source (`binding/SkiaSharp/`, `externals/skia/src/c/`)
 - [documentation/dev/packages.md](../../../../documentation/dev/packages.md) → deployment/loading issues (DllNotFoundException, container, publishing)
 - [references/skia-patterns.md](skia-patterns.md) → known platform quirks, common traps, diagnostic heuristics
-- `.docs/docs/docs/` → if bug involves API misuse vs actual defect
+- `documentation/docfx/guides/` and `samples/` → if bug involves API misuse vs actual defect
 - Similar closed issues → check if there's an existing fix or documented workaround
 
 **Workaround search:** Follow [workaround-search.md](workaround-search.md) → "Search Patterns by Issue Type" → match the bug subcategory (crash, wrong output, or deployment). For crashes, prioritize checking `skia-patterns.md` common traps. For deployment issues, read `documentation/dev/packages.md` first — it almost always has the answer.
@@ -38,8 +38,8 @@ Always do these regardless of type:
 **Focus:** Find the answer. The goal is a complete, ready-to-post response.
 
 **Where to search:**
-- `docs/SkiaSharpAPI/*.xml` → API reference for the types/methods involved
-- `.docs/docs/docs/` → tutorials, guides, samples that answer the question
+- C# `///` comments, package compiler XML, or Microsoft Learn → API reference for the types/methods involved
+- `documentation/docfx/guides/` and `samples/` → tutorials and examples that answer the question
 - [documentation/dev/packages.md](../../../../documentation/dev/packages.md) → if about packages, deployment, or platform selection
 - `mslearn`/`microsoft_docs_search` → if about non-SkiaSharp tech (MAUI, Blazor, WPF, ASP.NET)
 - Existing closed issues → often the same question was answered before
@@ -77,8 +77,8 @@ Always do these regardless of type:
 **Focus:** Draft the missing documentation or find what exists.
 
 **Where to search:**
-- `docs/SkiaSharpAPI/*.xml` → current API docs (may have "To be added" placeholders)
-- `.docs/docs/docs/` → existing tutorials and guides
+- C# `///` comments and package compiler XML → current API documentation
+- `documentation/docfx/guides/` → existing tutorials and guides
 - `documentation/dev/` → project-level docs
 - Source code → if docs are missing, read the implementation to draft accurate docs
 

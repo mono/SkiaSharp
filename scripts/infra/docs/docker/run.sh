@@ -1,33 +1,32 @@
 #!/usr/bin/env bash
 #
-# run.sh — run any SkiaSharp documentation-generation step inside the docs Docker image
+# run.sh — run parent release-notes/API-diff generation inside the docs Docker image
 # (scripts/infra/docs/docker/Dockerfile) for LOCAL testing. The image mirrors the
-# dependency surface CI installs natively and runs the very same per-path scripts, so a
-# local run reproduces what CI produces. (CI itself does NOT use Docker — its Linux
-# runners install dotnet/mono/python directly and call the same scripts.) The repo is
+# dependency surface CI installs natively and runs the very same scripts, so a local
+# run reproduces what CI produces. (CI itself does NOT use Docker — its Linux runners
+# install dotnet/python directly and call the same scripts.) The repo is
 # bind-mounted at /work, so externals/package_cache and output/ persist between runs
 # (a "warm" cache). Set COLD=1 to force a fresh, empty package cache for a
 # from-scratch download.
 #
 # The container runs as the host user so every file it writes (regenerated
-# API diffs, docs XML, output/) is owned by you, not root.
+# API diffs and output/) is owned by you, not root.
 #
 # GitHub auth: GITHUB_TOKEN and GH_TOKEN are forwarded from the host environment.
 # The release-notes generator REQUIRES gh for PR author resolution — it must never
 # silently degrade — so this script errors out for the release-notes paths (notes / all)
 # when no token is present. Set ALLOW_NO_TOKEN=1 to bypass that pre-flight check and let
-# those paths run token-less anyway (the api-diffs / api-docs paths never need a token).
+# those paths run token-less anyway.
 #
 # Usage:
 #   run.sh build                       Build (or rebuild) the docker image.
 #   run.sh shell                       Open an interactive shell in the image.
 #
-#   The three documentation-generation paths, each a single canonical script under
+#   The two release-note paths, each a single canonical script under
 #   scripts/infra/docs/ that local runs, CI, and this wrapper all share:
 #   run.sh api-diffs [args...]         Path 1: API diffs (cake docs-api-diff).
 #   run.sh notes [args...]             Path 2: release notes (needs a token).
-#   run.sh api-docs [args...]          Path 3: mdoc XML docs (generate-api-docs.sh).
-#   run.sh all                         All three paths, in order (needs a token).
+#   run.sh all                         Both paths, in order (needs a token).
 #
 #   run.sh cake <target> [args...]     Escape hatch: run an arbitrary cake target.
 #   run.sh exec <command...>           Run an arbitrary command in the container.
@@ -35,8 +34,7 @@
 # Environment:
 #   COLD=1            Mount a fresh empty package cache (cold run).
 #   IMAGE=<name>      Override the image tag (default: skiasharp-docs).
-#   ALLOW_NO_TOKEN=1  Bypass the token pre-flight check for the notes / all paths
-#                     (the api-diffs / api-docs paths never require a token).
+#   ALLOW_NO_TOKEN=1  Bypass the token pre-flight check for the notes / all paths.
 #
 set -euo pipefail
 
@@ -138,12 +136,6 @@ case "$cmd" in
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" \
             bash -lc 'dotnet tool restore && dotnet cake --target=docs-api-diff --nugetDiffPrerelease=true "$@"' _ "$@"
         ;;
-    api-docs)
-        ensure_image
-        docker_run_args
-        exec docker run "${RUN_ARGS[@]}" "$IMAGE" \
-            scripts/infra/docs/generate-api-docs.sh "$@"
-        ;;
     notes)
         [ "${ALLOW_NO_TOKEN:-0}" = "1" ] || require_token_for_notes
         ensure_image
@@ -155,16 +147,14 @@ case "$cmd" in
             .agents/skills/release-notes/scripts/prepare.sh "$@"
         ;;
     all)
-        # Full local run: the release-notes Prepare phase (prepare.sh — API diffs then
-        # the notes engine) plus Path 3 (api-docs, independent) in one container, so
-        # later paths reuse the packages the first downloaded. Because it runs the notes
-        # path, 'all' requires a token (override with ALLOW_NO_TOKEN=1).
+        # Full local run: the release-notes Prepare phase (prepare.sh): API diffs then
+        # the notes engine. Because it runs the notes path, 'all' requires a token
+        # (override with ALLOW_NO_TOKEN=1).
         [ "${ALLOW_NO_TOKEN:-0}" = "1" ] || require_token_for_notes
         ensure_image
         docker_run_args
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" bash -euo pipefail -c '
             .agents/skills/release-notes/scripts/prepare.sh
-            scripts/infra/docs/generate-api-docs.sh
         '
         ;;
     exec)
@@ -177,6 +167,6 @@ case "$cmd" in
         sed -n '2,39p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
         ;;
     *)
-        die "unknown command '$cmd' (try: build | shell | api-diffs | notes | api-docs | all | cake | exec | help)"
+        die "unknown command '$cmd' (try: build | shell | api-diffs | notes | all | cake | exec | help)"
         ;;
 esac

@@ -23,6 +23,7 @@ class UpdateVersionsTests(unittest.TestCase):
         self.root = Path(self.temporary_directory.name)
         (self.root / "scripts").mkdir()
         (self.root / "externals" / "skia" / "include" / "c").mkdir(parents=True)
+        (self.root / "externals" / "skia" / "include" / "core").mkdir()
 
         (self.root / "scripts" / "VERSIONS.txt").write_text(
             "skia release m151\n"
@@ -31,7 +32,10 @@ class UpdateVersionsTests(unittest.TestCase):
             "libSkiaSharp soname 151.0.0\n"
             "SkiaSharp assembly 4.151.3.0\n"
             "SkiaSharp file 4.151.3.0\n"
-            "SkiaSharp nuget 4.151.3\n",
+            "SkiaSharp nuget 4.151.3\n"
+            "HarfBuzzSharp file 14.2.1.100\n"
+            "HarfBuzzSharp nuget 14.2.1.100\n"
+            "HarfBuzzSharp.NativeAssets.Linux nuget 14.2.1.100\n",
             encoding="utf-8",
         )
         (self.root / "scripts" / "azure-templates-variables.yml").write_text(
@@ -39,6 +43,10 @@ class UpdateVersionsTests(unittest.TestCase):
         )
         (self.root / "externals" / "skia" / "include" / "c" / "sk_types.h").write_text(
             "#define SK_C_INCREMENT 7\n", encoding="utf-8"
+        )
+        (self.root / "externals" / "skia" / "include" / "core" / "SkMilestone.h").write_text(
+            "#ifndef SK_MILESTONE\n#define SK_MILESTONE 152\n#endif\n",
+            encoding="utf-8",
         )
         (self.root / "externals" / "skia" / "DEPS").write_text(
             "deps = {\n"
@@ -137,7 +145,11 @@ class UpdateVersionsTests(unittest.TestCase):
             cwd=self.root,
             check=True,
         )
-        subprocess.run(["git", "add", "cgmanifest.json"], cwd=self.root, check=True)
+        subprocess.run(
+            ["git", "add", "cgmanifest.json", "scripts/VERSIONS.txt"],
+            cwd=self.root,
+            check=True,
+        )
         subprocess.run(
             ["git", "commit", "--quiet", "-m", "parent fixture"],
             cwd=self.root,
@@ -169,6 +181,8 @@ class UpdateVersionsTests(unittest.TestCase):
         self.assertIn("milestone 152", versions)
         self.assertIn("increment 0", versions)
         self.assertIn("4.152.0", versions)
+        self.assertEqual(3, versions.count("14.2.1.200"))
+        self.assertNotIn("14.2.1.100", versions)
         self.assertIn(
             "SKIASHARP_VERSION: 4.152.0",
             (self.root / "scripts" / "azure-templates-variables.yml").read_text(
@@ -193,11 +207,66 @@ class UpdateVersionsTests(unittest.TestCase):
         self.assertEqual("chrome/m152", skia["component"]["other"]["version"])
         self.assertEqual("chrome/m152", skia["upstream_ref"])
 
+    def test_advances_harfbuzz_to_start_of_target_milestone_bucket(self) -> None:
+        versions_path = self.root / "scripts" / "VERSIONS.txt"
+        versions_path.write_text(
+            versions_path.read_text(encoding="utf-8").replace(
+                "14.2.1.100", "14.2.1.142"
+            ),
+            encoding="utf-8",
+        )
+
+        update_versions(self.root, 151, 152, "chrome/m152")
+
+        versions = versions_path.read_text(encoding="utf-8")
+        self.assertEqual(3, versions.count("14.2.1.200"))
+        self.assertNotIn("14.2.1.142", versions)
+
+    def test_milestone_update_is_idempotent_for_harfbuzz_bucket(self) -> None:
+        update_versions(self.root, 151, 152, "chrome/m152")
+        versions_path = self.root / "scripts" / "VERSIONS.txt"
+        first = versions_path.read_bytes()
+
+        update_versions(self.root, 151, 152, "chrome/m152")
+
+        self.assertEqual(first, versions_path.read_bytes())
+
+    def test_repairs_harfbuzz_bucket_after_partial_milestone_update(self) -> None:
+        versions_path = self.root / "scripts" / "VERSIONS.txt"
+        versions = versions_path.read_text(encoding="utf-8")
+        versions = versions.replace("release m151", "release m152")
+        versions = versions.replace("milestone 151", "milestone 152")
+        versions = versions.replace("151.0.0", "152.0.0")
+        versions = versions.replace("4.151.3.0", "4.152.0.0")
+        versions = versions.replace("4.151.3", "4.152.0")
+        versions_path.write_text(versions, encoding="utf-8")
+
+        update_versions(
+            self.root,
+            151,
+            152,
+            "chrome/m152",
+            parent_base_sha=self.parent_base_sha,
+            skia_base_sha=self.skia_base_sha,
+        )
+
+        updated = versions_path.read_text(encoding="utf-8")
+        self.assertEqual(3, updated.count("14.2.1.200"))
+        self.assertNotIn("14.2.1.100", updated)
+
     def test_same_milestone_updates_only_manifest_hashes(self) -> None:
         versions_path = self.root / "scripts" / "VERSIONS.txt"
         pipeline_path = self.root / "scripts" / "azure-templates-variables.yml"
         sk_types_path = (
             self.root / "externals" / "skia" / "include" / "c" / "sk_types.h"
+        )
+        sk_milestone_path = (
+            self.root
+            / "externals"
+            / "skia"
+            / "include"
+            / "core"
+            / "SkMilestone.h"
         )
         versions_path.write_text(
             versions_path.read_text(encoding="utf-8").replace(
@@ -209,12 +278,16 @@ class UpdateVersionsTests(unittest.TestCase):
             "SKIASHARP_VERSION: 4.151.3\n", encoding="utf-8"
         )
         sk_types_path.write_text("#define SK_C_INCREMENT 3\n", encoding="utf-8")
+        sk_milestone_path.write_text(
+            "#ifndef SK_MILESTONE\n#define SK_MILESTONE 151\n#endif\n",
+            encoding="utf-8",
+        )
         skia_root = self.root / "externals" / "skia"
         subprocess.run(["git", "branch", "upstream/main"], cwd=skia_root, check=True)
 
         before = {
             path: path.read_bytes()
-            for path in (versions_path, pipeline_path, sk_types_path)
+            for path in (versions_path, pipeline_path, sk_types_path, sk_milestone_path)
         }
         update_versions(self.root, 151, 151, "main")
 
@@ -225,11 +298,39 @@ class UpdateVersionsTests(unittest.TestCase):
         self.assertEqual("main", cgmanifest["registrations"][1]["upstream_ref"])
         self.assertNotEqual("old", cgmanifest["registrations"][1]["upstream_merge_commit"])
 
+    def test_rejects_upstream_main_milestone_drift_before_writes(self) -> None:
+        skia_root = self.root / "externals" / "skia"
+        subprocess.run(["git", "branch", "upstream/main"], cwd=skia_root, check=True)
+        paths = (
+            self.root / "scripts" / "VERSIONS.txt",
+            self.root / "scripts" / "azure-templates-variables.yml",
+            self.root / "cgmanifest.json",
+            skia_root / "include" / "c" / "sk_types.h",
+        )
+        before = {path: path.read_bytes() for path in paths}
+
+        with self.assertRaisesRegex(
+            RuntimeError,
+            r"defines SK_MILESTONE 152, expected 151 for main",
+        ):
+            update_versions(self.root, 151, 151, "main")
+
+        for path, content in before.items():
+            self.assertEqual(content, path.read_bytes())
+
     def test_release_line_preserves_servicing_version_surfaces(self) -> None:
         versions_path = self.root / "scripts" / "VERSIONS.txt"
         pipeline_path = self.root / "scripts" / "azure-templates-variables.yml"
         sk_types_path = (
             self.root / "externals" / "skia" / "include" / "c" / "sk_types.h"
+        )
+        sk_milestone_path = (
+            self.root
+            / "externals"
+            / "skia"
+            / "include"
+            / "core"
+            / "SkMilestone.h"
         )
         versions_path.write_text(
             "skia release m150\n"
@@ -245,6 +346,10 @@ class UpdateVersionsTests(unittest.TestCase):
             "SKIASHARP_VERSION: 4.150.2\n", encoding="utf-8"
         )
         sk_types_path.write_text("#define SK_C_INCREMENT 7\n", encoding="utf-8")
+        sk_milestone_path.write_text(
+            "#ifndef SK_MILESTONE\n#define SK_MILESTONE 150\n#endif\n",
+            encoding="utf-8",
+        )
 
         manifest_path = self.root / "cgmanifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -274,7 +379,7 @@ class UpdateVersionsTests(unittest.TestCase):
         expected_skia["upstream_merge_commit"] = upstream_hash
         before = {
             path: path.read_bytes()
-            for path in (versions_path, pipeline_path, sk_types_path)
+            for path in (versions_path, pipeline_path, sk_types_path, sk_milestone_path)
         }
 
         update_versions(self.root, 150, 150, "chrome/m150")

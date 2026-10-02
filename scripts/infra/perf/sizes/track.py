@@ -9,8 +9,8 @@ This script builds/updates a JSON "history" document that records:
 
 Two kinds of data points ("columns") are collected:
 
-  * ``nightly`` -- the latest ``-nightly.*`` build from the official SkiaSharp
-    Early Access Preview feed (https://aka.ms/skiasharp-eap/index.json). Every
+  * ``nightly`` -- the latest ``-nightly.*`` build from the shared
+    dotnet-libraries feed. Every
     package is measured at its family's headline nightly version (SkiaSharp and
     HarfBuzzSharp version independently), keyed by the observation date. The
     newest ``--max-nightly`` days are kept.

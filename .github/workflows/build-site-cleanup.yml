@@ -3,7 +3,7 @@ name: "Pages - PR Staging - Cleanup"
 on:
   pull_request:
     branches: [ main ]
-    types: [ closed ]
+    types: [ closed, unlabeled ]
 
 # Default to no permissions — each job declares only what it needs.
 permissions: {}
@@ -15,7 +15,9 @@ concurrency:
 
 jobs:
   cleanup:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.event.action == 'closed' || github.event.label.name == 'automation/staging')
     runs-on: ubuntu-latest
     permissions:
       contents: write   # push to docs-live

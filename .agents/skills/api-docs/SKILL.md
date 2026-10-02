@@ -1,75 +1,83 @@
 ---
 name: api-docs
 description: >
-  Write AND review XML API documentation for SkiaSharp (ECMA/mdoc XML in the docs submodule). Two modes:
-  (1) ADD docs for new APIs with "To be added." placeholders; (2) REVIEW existing docs by scope for
-  accuracy, freshness, examples, and hygiene.
-  Triggers: "document class", "add XML docs", "write XML documentation", "fill in missing docs",
-  "remove To be added placeholders", "review documentation", "check docs for errors", "fix doc issues",
-  "audit the docs", "review the font docs", "are the examples correct", "update out-of-date docs",
-  any request to add, validate, correct, or expand SkiaSharp API documentation.
+  Add and review C# XML documentation comments for SkiaSharp public APIs. Use
+  for documenting a class or member, filling missing API docs, reviewing public
+  API documentation, or correcting inaccurate API examples.
 metadata:
   layer: router
 ---
 
 # API Documentation
 
-Add and review SkiaSharp API documentation. This file is a **router**: it picks a procedure and points to
-the reference and tooling files that do the work. The detailed instructions live in `references/` so they
-load only when needed.
+Write and review the public API prose that `mono/SkiaSharp` owns. C# `///`
+comments on public declarations are authoritative. Managed builds generate
+compiler XML from those comments and package it beside the managed assemblies.
 
-## Key facts
+This repository has no API-reference ECMA/mdoc source, mdoc engine, `docs`
+submodule, XML-editing workflow, or placeholder-writing workflow.
+`mono/SkiaSharp-API-docs` independently consumes package/compiler XML and
+`_DocsMedia`, produces ECMA/mdoc, preserves deferred Uno output, validates,
+and publishes Learn. Do not edit that repository or generated output here.
 
-- `docs/` is the **`mono/SkiaSharp-API-docs`** submodule — one ECMA/mdoc **`.xml` per type**, generated
-  from NuGet assemblies via `mdoc`. CDATA `<remarks>` may hold `csharp` code fences. Run
-  `git submodule update --init docs` if it is empty.
-- Each `<Type>.xml` maps 1:1 to `binding/SkiaSharp/<Type>.cs` (or `binding/HarfBuzzSharp/`) → always read
-  source before documenting.
-- **Edit the XML directly.** Safety comes from `docs-format-docs`, which formats every file and fails the
-  build on broken XML/CDATA ([`references/validation.md`](references/validation.md)).
-- **Never edit generated files:** `index.xml`, `ns-*.xml`, `_filter.xml`, `FrameworksIndex/`.
+## Scope and procedure
 
-## How to work
+1. Resolve the consumer-visible public types and members in scope. Read their
+   declarations and implementations in `binding/` or `source/` before writing
+   any prose. Implementation-assembly XML does not make an API public.
+2. Add or correct accurate `///` comments immediately above public
+   declarations. Work from the source declaration, never from compiler XML.
+3. Generated bindings are source-controlled. Edit only their `///` comment
+   trivia directly, then run `pwsh -NoLogo -NoProfile -File
+   ./utils/generate.ps1` and verify it preserves the intended comments. Never
+   manually change generated declarations, interop code, or implementation.
+4. Follow [`references/adding.md`](references/adding.md) for source-first
+   authoring or [`references/reviewing.md`](references/reviewing.md) for a
+   source-first review. Apply the detailed syntax and prose rules in
+   [`references/patterns.md`](references/patterns.md).
+5. Refresh documentation-convention knowledge from the first-party sources
+   listed in [`references/patterns.md`](references/patterns.md) before a
+   broad authoring or review pass. Reconcile a changed official convention
+   with existing source forms and external rendering before applying it; do
+   not mechanically rewrite source comments merely to match a style rule.
+6. Verify SkiaSharp and HarfBuzzSharp facts in
+   [`references/skia-patterns.md`](references/skia-patterns.md), and ensure
+   examples avoid error-obsolete APIs with
+   [`references/obsolete-api-map.md`](references/obsolete-api-map.md).
+7. Classify findings with [`references/checklist.md`](references/checklist.md)
+   and perform the build, compiler-XML, and package checks in
+   [`references/validation.md`](references/validation.md).
 
-One agent does the whole pass. Read the relevant reference, resolve scope into an explicit file list, then
-work in batches of ~25–40 files so each pass stays auditable and resumable.
+## API-documentation contract
 
-| If the task is… | Read |
+- The compiler XML generated from public `///` comments is packaged beside the
+  corresponding managed assemblies in both `lib/<tfm>` and `ref/<tfm>`.
+- The XML beside the reference assembly is the consumer-visible documentation
+  contract. The copy beside `lib` is intentional but implementation-only XML
+  entries do not expand the public API surface.
+- `_DocsMedia` is versioned source in this repository and a nonshipping
+  transport artifact. The external API-docs repository retrieves matching
+  package and media inputs and owns downstream ECMA/mdoc generation,
+  validation, and publication.
+
+## References
+
+| Need | Read |
 |---|---|
-| Documenting **new** APIs / filling `To be added.` placeholders | [`references/adding.md`](references/adding.md) |
-| **Reviewing/correcting/expanding** existing docs (one type, a theme, what changed, or all) | [`references/reviewing.md`](references/reviewing.md) |
+| Adding or updating source comments | [`references/adding.md`](references/adding.md) |
+| Reviewing documentation and examples | [`references/reviewing.md`](references/reviewing.md) |
+| C# XML-comment syntax and conventions | [`references/patterns.md`](references/patterns.md) |
+| Severity bar and reporting | [`references/checklist.md`](references/checklist.md) |
+| Build, compiler-XML, and package validation | [`references/validation.md`](references/validation.md) |
+| SkiaSharp/HarfBuzzSharp factual sources | [`references/skia-patterns.md`](references/skia-patterns.md) |
+| Error-obsolete API replacements | [`references/obsolete-api-map.md`](references/obsolete-api-map.md) |
 
-The user asks in plain language ("review the font docs", "fill in what's missing"). The docs live at
-`docs/SkiaSharpAPI/<Namespace>/<Type>.xml`; list them directly, and use
-`git -C docs diff --name-only origin/main...HEAD` for "what changed". Each `<Type>.xml` maps to its source
-at `binding/<Namespace>/<Type>.cs`, and **you** pick the files a request covers — for a theme, scan the
-list and select the matching types yourself; the chosen procedure file covers the rest.
+## Boundaries
 
-All findings use one machine-parseable contract: `SEVERITY | class | file | docId | message`.
-
-## References (canonical facts)
-
-- [`references/patterns.md`](references/patterns.md) — .NET XML doc syntax, verb conventions, formatting.
-- [`references/skia-patterns.md`](references/skia-patterns.md) — domain facts (color layouts, struct
-  defaults, standard-based enums, caller-owned vs parent-owned).
-- [`references/checklist.md`](references/checklist.md) — CRITICAL/IMPORTANT/MINOR severity taxonomy.
-- [`references/obsolete-api-map.md`](references/obsolete-api-map.md) — obsolete members and their modern
-  replacements; the writer and example reviewer read it (not the linter — obsolete use is a model
-  judgement, see the reference for why).
-
-> **DRY rule:** the procedures describe *what to do*; the reference tables hold the *facts*. Procedures
-> point to references — they must not restate the tables. Keep reference chains one level deep.
-
-## Tooling & validation
-
-- Format + checks (one Cake target in `scripts/infra/docs/docs.cake`): `docs-format-docs` formats every
-  type file and runs the deterministic content checks — warnings for missing/quality issues, build-failing
-  errors for broken XML/CDATA. See [`references/validation.md`](references/validation.md).
-- Snippet build (C#-only, download is fine): `dotnet cake --target=externals-download` then
-  `dotnet build binding/SkiaSharp/SkiaSharp.csproj`.
-
-## Landing changes
-
-The `docs` submodule protects `main` — commit on a `dev/...` branch and open a PR (per-wave). Skill asset
-changes land in the parent `mono/SkiaSharp` repo; the `auto-api-docs-writer` agentic workflow that runs
-this skill on CI lives in `mono/SkiaSharp-API-docs`.
+- Do not manually edit compiler-generated XML or ECMA/mdoc files. In generated
+  bindings, edit only source-controlled `///` comment trivia and verify a
+  generator round trip preserves it.
+- Do not remove valid public source comments to defer documentation elsewhere.
+  Missing or inaccurate public documentation blocks API review.
+- Do not claim defaults, validation, ownership, threading, native layout, or
+  standards behavior without verifying the relevant source.

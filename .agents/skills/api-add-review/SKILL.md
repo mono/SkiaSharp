@@ -45,13 +45,13 @@ Both modes share the same design rules and quality bar.
 | Shortcut | Consequence |
 |----------|-------------|
 | Commit directly to `main` or `skiasharp` | Policy violation |
-| Edit `*.generated.cs` manually | Overwritten on regenerate |
+| Edit generated declarations or interop code manually | Overwritten on regenerate; edit only source-controlled `///` trivia and verify preservation |
 | Skip native build after C API change | `EntryPointNotFoundException` |
 | Skip tests | Unacceptable |
 | Skip tests because they fail | Unacceptable — fix the issue |
 | Use default parameters in public APIs | ABI breaking change |
 | Invent type names not in upstream Skia | Confusing, wrong naming |
-| Add XML doc comments | Inserted by separate process |
+| Omit accurate `///` comments on public APIs | Consumers receive incomplete compiler XML |
 | Fabricate test fonts | Use real fonts from known sources |
 
 ## References
@@ -60,7 +60,7 @@ All three references work together:
 
 | File | Purpose | When to read |
 |------|---------|-------------|
-| [references/api-design-rules.md](references/api-design-rules.md) | Naming, properties vs methods, Span patterns, type wrapping, test and sample requirements | Always — before writing or reviewing any API |
+| [references/api-design-rules.md](references/api-design-rules.md) | Naming, documentation, properties vs methods, Span patterns, type wrapping, test and sample requirements | Always — before writing or reviewing any API |
 | [references/add-workflow.md](references/add-workflow.md) | Step-by-step add workflow with C API patterns, struct conversion, JSON config, gallery samples | Add mode |
 | [references/review-workflow.md](references/review-workflow.md) | Structured review checklist, test coverage analysis, sample review, auto-fix mode | Review mode, and as final phase of add mode |
 | [references/troubleshooting.md](references/troubleshooting.md) | Common errors and fixes | When something goes wrong |

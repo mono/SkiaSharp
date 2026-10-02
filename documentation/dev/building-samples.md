@@ -2,12 +2,14 @@
 
 This guide explains how to build SkiaSharp samples using CI-produced NuGet packages. The samples use **package references** (not project references) when built through the `samples` cake target, so they need downloadable NuGet packages to compile.
 
-## CI Artifacts Feed
+## Transport Feed
 
-All CI builds publish wrapper packages to the **SkiaSharp-CI** Azure DevOps feed:
+Official builds register wrapper packages as non-shipping assets in the same BAR
+as the product packages. The Maestro `SkiaSharp` channel routes them to the
+shared **dotnet-libraries-transport** Azure DevOps feed:
 
 ```
-https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json
+https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json
 ```
 
 These wrapper packages bundle the real NuGet packages inside their `tools/` directory:
@@ -15,8 +17,7 @@ These wrapper packages bundle the real NuGet packages inside their `tools/` dire
 | Wrapper package | Contains |
 |-----------------|----------|
 | `_nativeassets` | Native binaries (per-platform frameworks/dylibs) |
-| `_nugets` | Stable NuGet packages (e.g. `SkiaSharp.3.119.4.nupkg`) |
-| `_nugetspreview` | Preview NuGet packages (e.g. `SkiaSharp.3.119.4-preview.0.76.nupkg`) |
+| `_nugets` | The build's single NuGet package family: exact stable or prerelease |
 
 The wrapper packages use `0.0.0-{source}.{build}` versioning to identify their CI source. The actual NuGet packages inside have their real, user-facing version numbers.
 
@@ -24,19 +25,22 @@ The wrapper packages use `0.0.0-{source}.{build}` versioning to identify their C
 
 Building samples requires two separate sets of arguments because the CI feed version and the NuGet package version are different things:
 
-### Step 1: Download — select which CI build to fetch
+### Step 1: Acquire packages
 
-The `docs-download-output` target resolves the CI wrapper package version using these args (checked in priority order):
+For a pull request build, use the supported repository helper and copy its
+packages into the sample workflow directory:
 
-| Argument | Resolves to | Use case |
-|----------|------------|----------|
-| `--previewLabel=pr.3553` | `0.0.0-pr.3553.*` | PR build |
-| `--gitSha=abc123` | `0.0.0-commit.abc123.*` | Specific commit |
-| `--gitBranch=release/3.119.4` | `0.0.0-branch.release.3.119.4.*` | Release branch |
-| `--gitBranch=main` | `0.0.0-branch.main.*` | Main branch (nightly) |
-| *(no args)* | `0.0.0-branch.main.*` | Default: latest from main |
+```powershell
+pwsh scripts/get-skiasharp-pr.ps1 3553 -SuccessfulOnly -Force
+New-Item output/nugets -ItemType Directory -Force | Out-Null
+Copy-Item ~/.skiasharp/hives/pr-3553/packages/*.nupkg output/nugets/
+```
 
-The `.*` wildcard selects the **latest** matching build from the feed.
+For an exact public build, download its canonical `nuget` pipeline artifact
+and extract non-symbol packages to `output/nugets/`. For a promoted branch
+build, retrieve and extract the matching branch-versioned `_NuGets` transport
+package from the public `dotnet-libraries-transport` feed. Do not use a
+retired parent documentation-download Cake target.
 
 ### Step 2: Build samples — use the real NuGet version
 
@@ -45,48 +49,38 @@ After downloading, the extracted nupkgs in `output/nugets/` have real version nu
 ```powershell
 # Detect from downloaded packages
 ls output/nugets/SkiaSharp.[0-9]*-*.nupkg
-# → SkiaSharp.3.119.4-preview.0.76.nupkg
-# So: --previewLabel=preview.0 --buildNumber=76
+# → SkiaSharp.4.152.0-preview.0.26418.3.nupkg
+# So: --previewLabel=preview.0 --buildNumber=26418.3
 ```
 
 ## NuGet Package Version Construction
 
-The cake build constructs the NuGet preview suffix in `build.cake` (lines 56-72):
+The Cake build constructs the NuGet suffix in `scripts/infra/shared/shared.cake`:
 
 ```csharp
-var PREVIEW_LABEL = Argument("previewLabel", EnvironmentVariable("PREVIEW_LABEL") ?? "preview");
-var FEATURE_NAME = EnvironmentVariable("FEATURE_NAME") ?? "";
-var BUILD_NUMBER = Argument("buildNumber", EnvironmentVariable("BUILD_NUMBER") ?? "0");
+var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview").ToLowerInvariant ();
+var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER") ?? "0");
+var DOTNET_FINAL_VERSION_KIND = Argument (
+    "dotNetFinalVersionKind",
+    EnvironmentVariable ("DOTNET_FINAL_VERSION_KIND") ?? "").ToLowerInvariant ();
 
-var PREVIEW_NUGET_SUFFIX = "";
-if (!string.IsNullOrEmpty(FEATURE_NAME))
-    PREVIEW_NUGET_SUFFIX = $"featurepreview-{FEATURE_NAME}";
-else
-    PREVIEW_NUGET_SUFFIX = $"{PREVIEW_LABEL}";
-if (!string.IsNullOrEmpty(BUILD_NUMBER))
+var PREVIEW_NUGET_SUFFIX = DOTNET_FINAL_VERSION_KIND == "release" ? "" : PREVIEW_LABEL;
+if (DOTNET_FINAL_VERSION_KIND != "release" && !string.IsNullOrEmpty (BUILD_NUMBER))
     PREVIEW_NUGET_SUFFIX += $".{BUILD_NUMBER}";
 ```
 
-The final NuGet version is `{base_version}-{PREVIEW_NUGET_SUFFIX}`:
+The normal NuGet version is `{base_version}-{PREVIEW_NUGET_SUFFIX}`. In CI,
+source-controlled `PREVIEW_LABEL=stable` derives
+`DOTNET_FINAL_VERSION_KIND=release`; direct Cake invocations select the same
+exact `{base_version}` with `--dotNetFinalVersionKind=release`.
 
 - **base_version**: From `scripts/VERSIONS.txt` (e.g. `3.119.4`)
 - **PREVIEW_LABEL**: The preview label (e.g. `preview.0` — first preview, `preview.1` — second, etc.)
-- **BUILD_NUMBER**: The CI build counter
+- **BUILD_NUMBER**: Arcade's package build identity (`short-date.revision`)
 
-**Example:** `3.119.4-preview.0.76` → `previewLabel=preview.0`, `buildNumber=76`
+**Example:** `4.152.0-preview.0.26418.3` → `previewLabel=preview.0`, `buildNumber=26418.3`
 
 ## Cake Arguments
-
-### For downloading (`docs-download-output`)
-
-These arguments control **which CI build** to fetch from the feed:
-
-| Argument | Environment variable | Default | Purpose |
-|----------|---------------------|---------|---------|
-| `--previewLabel` | `PREVIEW_LABEL` | `preview` | When starts with `pr.`, fetches PR build |
-| `--gitSha` | `GIT_SHA` | `""` | Fetch by commit SHA |
-| `--gitBranch` | `GIT_BRANCH_NAME` | `""` | Fetch by branch name |
-| `--previewFeed` | — | SkiaSharp-CI URL | Override the NuGet feed |
 
 ### For building samples (`samples`)
 
@@ -96,15 +90,17 @@ These arguments control the **NuGet version suffix** used when rewriting package
 |----------|---------------------|---------|---------|
 | `--previewLabel` | `PREVIEW_LABEL` | `preview` | Preview suffix label |
 | `--buildNumber` | `BUILD_NUMBER` | `0` | Build number for suffix |
+| `--dotNetFinalVersionKind` | `DOTNET_FINAL_VERSION_KIND` | `""` | Set to `release` for an exact stable version |
 | `--sample` | — | `""` | Filter to build a specific sample |
 
-> **Note:** `--previewLabel` serves double duty: it selects the CI artifact during download AND forms the NuGet suffix during sample generation. For nightly builds from main, you typically run download with default args, then set `--previewLabel` and `--buildNumber` to match the extracted packages.
+> **Note:** `--previewLabel` and `--buildNumber` only control the package version
+> used while sample generation rewrites package references. Acquire packages
+> first, then derive both values from the downloaded package filenames.
 
 ## Cake Targets
 
 | Target | What it does | Output directory |
 |--------|-------------|-----------------|
-| `docs-download-output` | Downloads stable + preview NuGet packages from CI feed | `output/nugets/` |
 | `samples-generate` | Copies samples to `output/`, converts ProjectRef → PackageRef | `output/samples/`, `output/samples-preview/` |
 | `samples-prepare` | Clears cached SkiaSharp/HarfBuzz packages, copies nupkgs for Docker | — |
 | `samples-run` | Builds all generated samples from `output/` | — |
@@ -125,7 +121,7 @@ Example prompts:
 The skill follows the workflow described in the reference sections above: clear cache → download
 CI packages → detect preview version → build with `dotnet cake --target=samples`.
 
-See [`.claude/skills/validate-samples/SKILL.md`](../../.claude/skills/validate-samples/SKILL.md)
+See [`.agents/skills/validate-samples/SKILL.md`](../../.agents/skills/validate-samples/SKILL.md)
 for the full step-by-step workflow if you need to run it manually.
 
 ## How `samples-generate` Works
@@ -136,6 +132,10 @@ The `CreateSamplesDirectory()` function in `scripts/infra/samples/samples.cake`:
 2. **Existing `<PackageReference>`** → version updated from `VERSIONS.txt`
 3. For SkiaSharp/HarfBuzzSharp packages, the preview suffix is appended
 4. Two output trees: `output/samples/` (stable) and `output/samples-preview/` (preview)
+
+`samples-run` selects the stable tree only for an exact release identity. Any
+non-empty `PREVIEW_NUGET_SUFFIX` selects the preview tree so its references
+match the single package family emitted by that build.
 
 ## Troubleshooting
 
@@ -158,4 +158,4 @@ Some platforms are disabled by default:
 May need a newer `Microsoft.WindowsAppSDK` version.
 
 ### NuGet feed authentication
-The SkiaSharp-CI feed is public — no authentication required.
+The dotnet-libraries-transport feed is public — no authentication required.

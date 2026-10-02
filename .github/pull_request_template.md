@@ -27,7 +27,7 @@ Touching the C API or the externals/skia submodule? Replace "None." above with:
 Requires https://github.com/mono/skia/pull/<number>
 
 Native changes also require committing inside externals/skia (then `git add externals/skia`
-here) and re-running `pwsh ./utils/generate.ps1` to regenerate + commit SkiaApi.generated.cs.
+here) and re-running `pwsh ./utils/generate.ps1` to regenerate + commit Generated/.
 -->
 
 **Areas affected**
@@ -100,5 +100,5 @@ this in to show the difference:
 
 - [ ] Tests added or updated (if omitted, explain why above)
 - [ ] `Changes` above lists all public API and behavioral changes (or "None.")
-- [ ] New/changed public API? Filed a docs issue in [mono/SkiaSharp-API-docs](https://github.com/mono/SkiaSharp-API-docs/issues) so reference docs can be written later
+- [ ] New/changed public API? Added or updated accurate source `///` documentation and regenerated bindings when applicable
 - [ ] Native change? Companion `mono/skia` PR linked above and bindings regenerated

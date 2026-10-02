@@ -1,121 +1,62 @@
 ---
 name: release-branch
 description: >
-  Create SkiaSharp release branches and start release CI. Use when the user says
-  "release X", "start release X", "create release branch for X", "release now",
-  or asks for the next preview on main or a maintenance line. This is the first
-  release step: resolve an exact version, audit immutable branch inputs, obtain
-  approval, and reconcile both SkiaSharp and mono/skia release branches.
+  Prepare SkiaSharp release branches with the repository-owned PowerShell
+  script. Use when a maintainer asks to start, prepare, preview, RC, or cut a
+  stable release branch.
 ---
 
 # Release Branch
 
-This skill is **Step 1 of 5**:
-
-**release-branch** → [release-status](../release-status/SKILL.md) →
-[release-testing](../release-testing/SKILL.md) →
-[release-publish](../release-publish/SKILL.md) →
-[release-milestones](../release-milestones/SKILL.md)
-
-## Contract
-
-- Use scripts for detection, validation, reconciliation, and writes.
-- Treat remote release refs and the CI run triggered by the SkiaSharp push as
-  irreversible. Never force-update or move an existing ref.
-- Keep the current checkout unchanged and never commit directly to protected
-  `main`/`skiasharp` branches.
-- Audit the exact version first; execute only after the user approves every
-  pending operation.
-- Preserve the audited base SHA and Skia gitlink SHA during execution.
-- The script may create matching `release/{version}` refs in both repositories.
-- A regular stable release may create a protected-branch bump PR. Automation
-  opens it; a maintainer reviews and merges it.
-- This skill never merges PRs or publishes packages/releases.
-
-## Release model
-
-| Exact version | Base |
-|---------------|------|
-| `X.Y.Z-preview.N` / `-rc.N` | `main` before line creation, otherwise `release/X.Y.x` |
-| `X.Y.Z` | `release/X.Y.x` |
-| `X.Y.Z.F-preview.N` / `-rc.N` | Tag `vX.Y.Z` |
-| `X.Y.Z.F` | Latest matching hotfix preview/RC branch |
-
-Preview/RC iterations begin at 1. Every SkiaSharp release branch has an
-identically named mono/skia branch at the exact pinned gitlink. Stable public
-versions are bare `X.Y.Z`; CI test packages remain `X.Y.Z-stable.{build}` until
-publication.
-
-## Script contract
-
-| Script | Responsibility |
-|--------|----------------|
-| `scripts/detect-release-version.py` | Read-only next-preview calculation from `main` or `release/X.Y.x`. |
-| `scripts/create-release-branches.py` | Exact-version dry-run, validation, reconciliation, push, and stable bump PR. |
-
-Operation statuses:
-
-| Status | Response |
-|--------|----------|
-| `done` | Validated; no write needed. |
-| `pending` | Include in approval and execution. |
-| `awaiting-user` | Automation is complete; report the maintainer action. |
-
-## Workflow
-
-### 1. Resolve the exact version
-
-Use a supplied exact version directly. When the user requests the next release,
-choose `main` or an exact `release/X.Y.x` integration branch, asking only when
-that line is ambiguous:
+Use the **Release - Prepare** GitHub workflow for normal releases. In chat,
+dispatch it on `main` with `push=false` first, inspect the read-only plan, and
+obtain confirmation before dispatching the same inputs with `push=true`:
 
 ```bash
-python3 .agents/skills/release-branch/scripts/detect-release-version.py \
-  {integration-branch}
+gh workflow run release-prepare.yml --repo mono/SkiaSharp --ref main \
+  -f base=main -f release=4.153.0-preview.1 -f push=false
+
+# After reviewing the plan and receiving confirmation:
+gh workflow run release-prepare.yml --repo mono/SkiaSharp --ref main \
+  -f base=main -f release=4.153.0-preview.1 -f push=true
 ```
 
-Pin the returned `releaseVersion`.
+Replace the example base and identity with the requested values. Locate and
+inspect each dispatched run; never infer success from a successful dispatch.
+Verify both release branches exist at the planned commits before proceeding.
+The branch push starts the internal `skiasharp-package` and `skiasharp-tests`
+chain. Package publication is a separate, explicitly requested
+`release-publish` action; Prepare must not queue it.
 
-### 2. Audit
+The Prepare workflow accepts:
 
-```bash
-python3 .agents/skills/release-branch/scripts/create-release-branches.py \
-  {exact-version} \
-  --dry-run
+- `base`: a SkiaSharp branch or commit SHA;
+- `release`: `X.Y.Z[-preview.N|-rc.N|-stable]`, or the corresponding
+  four-part hotfix form `X.Y.Z.F[-preview.N|-rc.N|-stable]`.
+
+## Local fallback
+
+Use the local script only when the workflow is unavailable or the user
+explicitly requests local execution. It does not replace workflow verification:
+
+```powershell
+# Read-only
+./scripts/infra/publishing/prepare-release.ps1 -Base main -Release 4.153.0-preview.1 -Mode DryRun
+
+# Create and validate local branches and commits
+./scripts/infra/publishing/prepare-release.ps1 -Base main -Release 4.153.0-preview.1 -Mode Apply
+
+# Create locally, push mono/skia then mono/SkiaSharp, and create a stable bump PR
+./scripts/infra/publishing/prepare-release.ps1 -Base main -Release 4.153.0-preview.1 -Mode Push
 ```
 
-Render:
+Before `-Mode Push`, show the resolved base SHA and every planned ref to the user and
+obtain confirmation. Never force-update a release branch. Existing matching
+state is reused; conflicting state blocks the run.
 
-```markdown
-## Release branch audit
-
-**Release:** `{version}` ({type})
-**Base:** `{baseRef}` at `{baseSha}`
-**Skia:** `{skiaSha}`
-**Branches:** `mono/SkiaSharp:{releaseBranch}`,
-`mono/skia:{releaseBranch}`
-
-| Operation | Status | Detail |
-|-----------|--------|--------|
-| `{operations[].id}` | `{operations[].status}` | `{operations[].detail}` |
-```
-
-Include every warning and call out that a pending SkiaSharp push starts CI.
-
-### 3. Approve and execute
-
-If no operation is pending, report any maintainer action and continue to the
-handoff. Otherwise obtain approval and run the emitted `executionCommand`, which
-pins `baseSha` and `skiaSha`.
-
-If execution fails, rerun the dry-run to reconcile partial state before retrying
-the emitted command.
-
-### 4. Hand off
-
-Run the returned `statusCommand` with
-[release-status](../release-status/SKILL.md). For stable releases, also report
-the bump PR URL and its maintainer-owned merge state.
-
-See [releasing.md](../../../documentation/dev/releasing.md) for the complete
-release process.
+Stable input deliberately uses the explicit `-stable` sentinel to prevent an
+accidental stable cut, but creates the bare `release/X.Y.Z` branch. A three-part
+stable release also prepares the next SkiaSharp patch and HarfBuzzSharp
+revision on `bump-version-X.Y.Z`. Its PR targets a manually created
+`release/X.Y.x` servicing line when one exists, otherwise `main`; release
+preparation never creates the `.x` line.

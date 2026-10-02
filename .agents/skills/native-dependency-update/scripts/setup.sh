@@ -106,11 +106,11 @@ else
     ERRORS=$((ERRORS + 1))
 fi
 
-echo -n "  depot_tools:  "
-if [ -f externals/depot_tools/ninja.py ]; then
-    echo "OK"
+echo -n "  ninja:        "
+if command -v ninja >/dev/null 2>&1; then
+    ninja --version
 else
-    echo "MISSING — submodule init may have failed"
+    echo "NOT FOUND — ensure Ninja is installed and available on PATH"
     ERRORS=$((ERRORS + 1))
 fi
 

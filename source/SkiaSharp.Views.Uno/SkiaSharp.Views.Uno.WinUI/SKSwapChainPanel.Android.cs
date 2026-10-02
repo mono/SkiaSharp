@@ -1,4 +1,4 @@
-﻿using Android.Opengl;
+using Android.Opengl;
 #if WINUI
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -17,6 +17,8 @@ namespace SkiaSharp.Views.UWP
 	{
 		private SKGLTextureView glTextureView;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKSwapChainPanel" /> class.</summary>
+		/// <remarks />
 		public SKSwapChainPanel()
 		{
 			Initialize();

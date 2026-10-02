@@ -40,6 +40,3 @@ Modified properties:
 ```diff
  protected bool IgnorePublicDispose { get; ---set;--- }
 ```
-
-
-

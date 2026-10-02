@@ -44,6 +44,3 @@ Added method:
 ```csharp
 protected override void DisposeManaged ();
 ```
-
-
-

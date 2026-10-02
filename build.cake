@@ -107,6 +107,10 @@ Task ("tests-container")
     .Description ("Run the console test suite against prebuilt natives (used by the containerized test legs).")
     .Does (() => RunCake ("./scripts/infra/tests/tests-container.cake", "Default"));
 
+Task ("tests-msbuild")
+    .Description ("Test MSBuild consumers of the already-packed NuGets.")
+    .Does (() => RunCake ("./scripts/infra/tests/tests-msbuild.cake", "Default"));
+
 Task ("tests-android")
     .Description ("Run all Android tests.")
     .IsDependentOn ("externals")
@@ -134,7 +138,8 @@ Task ("tests-wasm")
 Task ("nuget")
     .Description ("Pack all NuGets.")
     .IsDependentOn ("nuget-normal")
-    .IsDependentOn ("nuget-special");
+    .IsDependentOn ("nuget-special")
+    .IsDependentOn ("nuget-assemble-arcade-assets");
 
 Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
@@ -143,31 +148,17 @@ Task ("nuget-normal")
 
 Task ("nuget-special")
     .Description ("Pack all special NuGets.")
+    .IsDependentOn ("nuget-normal")
     .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-special"));
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// DOCS - creating the xml, markdown and other documentation
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Task ("update-docs")
-    .Description ("Regenerate all docs.")
-    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "update-docs"));
-
-Task ("docs-download-output")
-    .Description ("Download CI build output for docs.")
-    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-download-output"));
+Task ("nuget-assemble-arcade-assets")
+    .Description ("Prepare the public Arcade Shipping, NonShipping, and PDB artifacts.")
+    .IsDependentOn ("nuget-special")
+    .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-assemble-arcade-assets"));
 
 Task ("docs-api-diff")
     .Description ("Generate the committed API diffs (incremental; --force/--minVersion/--maxVersion).")
     .Does (() => RunCake ("./scripts/infra/docs/api-diff.cake", "docs-api-diff"));
-
-Task ("docs-update-frameworks")
-    .Description ("Update doc frameworks.")
-    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-update-frameworks"));
-
-Task ("docs-format-docs")
-    .Description ("Format doc XML files and run the deterministic content checks (warns on quality/missing docs, fails on broken XML).")
-    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-format-docs"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CLEAN - remove all the build artefacts

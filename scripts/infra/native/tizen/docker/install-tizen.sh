@@ -33,16 +33,10 @@ INSTALLER_SHA256="65d2a569cbf0351dca4b94254f2c642d49195ac4964e08a76b4eaabc9ce4be
 # / startup.sh (and therefore what native/tizen/build.cake reads).
 DESTINATION="${HOME}/tizen-studio"
 
-# Use the CLI ("-CLI") native app development packages, not the IDE ones. The
-# old agent install (install-tizen.ps1) used the IDE variants
-# (MOBILE-6.0-NativeAppDevelopment, TIZEN-8.0-NativeAppDevelopment). The "-CLI"
-# variants install the identical build toolchain (NativeToolchain-Gcc-9.2, the
-# tizen-8.0 rootstraps, llvm-10 and the `tizen build-native` CLI) but skip the
-# GUI-only NativeIDE / Certificate-Manager components. NativeIDE has a
-# post-install step that hangs indefinitely in a headless container (no
-# display), so the IDE packages must not be used here. The build toolchain —
-# and therefore the built libraries — is the same as the old agent install.
-PACKAGES="MOBILE-6.0-NativeAppDevelopment-CLI,TIZEN-8.0-NativeAppDevelopment-CLI"
+# The official SDK catalog selects GCC 14.2 for the Tizen 10 CLI group.
+# Specify the compiler package explicitly and assert both cross compilers
+# below; installing an older toolchain must not silently satisfy this build.
+PACKAGES="TIZEN-10.0-NativeAppDevelopment-CLI,NativeToolchain-Gcc-14.2"
 
 TEMP_DIR="$(mktemp -d)"
 INSTALLER="${TEMP_DIR}/tizen-install.bin"
@@ -89,7 +83,7 @@ if ! bash "${INSTALLER}" --accept-license --no-java-check "${DESTINATION}"; then
     exit 1
 fi
 
-# Add the native app development packages (rootstraps + llvm toolchain).
+# Add the Tizen 10 native rootstraps and GCC 14.2 cross toolchains.
 echo "Installing additional packages: '${PACKAGES}'..."
 PACKAGE_MANAGER="${DESTINATION}/package-manager/package-manager-cli.bin"
 if ! bash "${PACKAGE_MANAGER}" install --no-java-check --accept-license "${PACKAGES}"; then
@@ -110,30 +104,21 @@ fi
 # Assert the exact rootstraps the build consumes (native/tizen/build.cake) are
 # present, so a partial install fails here at image build time rather than
 # confusingly later at `tizen build-native`.
-for rootstrap in tizen-8.0-emulator64.core tizen-8.0-device64.core; do
+for rootstrap in tizen-10.0-emulator64.core tizen-10.0-device64.core; do
     if ! ls -d "${DESTINATION}"/platforms/*/*/rootstraps/"${rootstrap}" >/dev/null 2>&1; then
         echo "ERROR: required rootstrap '${rootstrap}' not found — package install incomplete." >&2
         exit 1
     fi
 done
 
-# Assert the *exact* toolchain versions the build relies on, so that switching
-# package sets (e.g. IDE -> CLI) or a future server-side package revision can
-# never silently swap the compiler and change the produced libraries. The build
-# compiles with clang (`tizen build-native -c llvm`) against the gcc 9.2
-# libstdc++/sysroot, so both must be exactly these versions.
-if [ ! -d "${DESTINATION}/tools/llvm-10" ]; then
-    echo "ERROR: expected Tizen 'llvm-10' toolchain not found under '${DESTINATION}/tools' — wrong/changed toolchain." >&2
-    echo "Installed tools:" >&2
-    ls -1 "${DESTINATION}/tools" >&2 || true
-    exit 1
-fi
-if ! ls -d "${DESTINATION}"/tools/*-gcc-9.2 >/dev/null 2>&1; then
-    echo "ERROR: expected gcc-9.2 cross toolchain not found under '${DESTINATION}/tools' — wrong/changed toolchain." >&2
-    echo "Installed tools:" >&2
-    ls -1 "${DESTINATION}/tools" >&2 || true
-    exit 1
-fi
+# Fail at image build time if the exact cross compiler layout changes.
+for arch in aarch64 x86_64; do
+    gcc="${DESTINATION}/tools/${arch}-linux-gnu-gcc-14.2/bin/${arch}-linux-gnu-g++"
+    if [ ! -x "${gcc}" ]; then
+        echo "ERROR: required Tizen 10 GCC 14.2 compiler '${gcc}' not found." >&2
+        exit 1
+    fi
+done
 
 echo "Tizen Studio installed successfully at '${DESTINATION}'."
 "${TIZEN_CLI}" version || true
