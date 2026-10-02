@@ -25,14 +25,14 @@ public class MainWindow : ApplicationWindow
 		var cpuPage = new CpuPage();
 		contentStack.AddTitled(cpuPage, "cpu", "CPU Canvas");
 
-		if (OperatingSystem.IsLinux())
+		if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
 		{
 			var gpuPage = new GpuPage();
 			contentStack.AddTitled(gpuPage, "gpu", "GPU Canvas");
 		}
 		else if (DefaultPage == SamplePage.Gpu)
 		{
-			throw new PlatformNotSupportedException("The GTK4 GPU page requires Linux desktop OpenGL.");
+			throw new PlatformNotSupportedException("The GTK4 GPU page requires Linux or macOS desktop OpenGL.");
 		}
 
 		var drawingPage = new DrawingPage();

@@ -83,7 +83,9 @@ namespace SkiaSharp.Views.Gtk
 				return;
 
 			// start drawing
-			var displayInfo = GetDisplayInfo(imgInfo, width, height, ignorePixelScaling);
+			var displayInfo = ignorePixelScaling
+				? imgInfo.WithSize(new SKSizeI(width, height))
+				: imgInfo;
 			canvasSize = displayInfo.Size;
 			using (new SKAutoCanvasRestore(surface.Canvas, true))
 			{
@@ -155,9 +157,6 @@ namespace SkiaSharp.Views.Gtk
 			// invoke the event
 			PaintSurface?.Invoke(this, e);
 		}
-
-		internal static SKImageInfo GetDisplayInfo(SKImageInfo rawInfo, int width, int height, bool ignorePixelScaling) =>
-			ignorePixelScaling ? rawInfo.WithSize(new SKSizeI(width, height)) : rawInfo;
 
 		/// <summary>Releases the resources used by the current instance of the <see cref="T:SkiaSharp.Views.Gtk.SKDrawingArea" /> class.</summary>
 		/// <remarks></remarks>

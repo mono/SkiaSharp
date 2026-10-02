@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using SkiaSharp.Views.Gtk;
 using Xunit;
@@ -16,7 +17,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 		public void InitialStateDoesNotRequireGlContext()
 		{
 			if (!OperatingSystem.IsLinux())
-				Assert.Skip("GTK4 GPU rendering requires a Linux OpenGL display.");
+				Assert.Skip("GTK4 widget tests require a Linux GTK display; macOS GUI must run on the application main thread.");
 
 			SKDrawingAreaTest.InitGtk();
 
@@ -32,6 +33,24 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			view.ReleaseGlResources();
 			view.ReleaseGlResources();
 			Assert.Null(view.GRContext);
+		}
+
+		[Fact]
+		[SupportedOSPlatform("macos")]
+		public void MacOpenGlFrameworkExportsFramebufferQuery()
+		{
+			if (!OperatingSystem.IsMacOS())
+				Assert.Skip("The macOS OpenGL framework is only present on macOS.");
+
+			var library = NativeLibrary.Load("/System/Library/Frameworks/OpenGL.framework/OpenGL");
+			try
+			{
+				Assert.NotEqual(IntPtr.Zero, NativeLibrary.GetExport(library, "glGetIntegerv"));
+			}
+			finally
+			{
+				NativeLibrary.Free(library);
+			}
 		}
 	}
 }

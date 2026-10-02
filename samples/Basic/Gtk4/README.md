@@ -49,7 +49,7 @@ A freehand drawing canvas with a color palette, brush size label, and clear butt
   - **macOS:** `brew install gtk4`
   - **Ubuntu/Debian:** `sudo apt-get install libgtk-4-dev`
   - **Fedora:** `sudo dnf install gtk4-devel`
-- A Linux desktop OpenGL display for the GPU page (`SKGLView` does not support OpenGL ES). The GPU tab is available only on Linux; the CPU and Drawing pages still work on other GTK 4 hosts.
+- A Linux or macOS desktop OpenGL display for the GPU page (`SKGLView` does not support OpenGL ES). The CPU and Drawing pages still work on other GTK 4 hosts.
 
 GTK 4 can use Vulkan to composite its own scene graph, but it does not expose a Vulkan drawing widget analogous to `Gtk.GLArea`. The GPU page uses desktop OpenGL; a future Vulkan-backed SkiaSharp view would need application-owned Vulkan resources and a GTK-compatible texture import/synchronization path.
 
@@ -59,6 +59,12 @@ Build and run (Linux):
 
 ```bash
 dotnet run --project SkiaSharpSample/SkiaSharpSample.csproj
+```
+
+On macOS, include Homebrew's native library directory so GirCore can load GTK and Graphene:
+
+```bash
+DYLD_LIBRARY_PATH="$(brew --prefix)/lib" dotnet run --project SkiaSharpSample/SkiaSharpSample.csproj
 ```
 
 To start on a different page, change `DefaultPage` in `MainWindow.cs`:
@@ -73,4 +79,4 @@ Available pages: `Cpu` (default), `Gpu`, `Drawing`
 
 | CPU | GPU | Drawing |
 |---|---|---|
-| <img src="screenshots/cpu.png" width="350" alt="CPU"> | Not yet captured on Linux | <img src="screenshots/drawing.png" width="350" alt="Drawing"> |
+| <img src="screenshots/cpu.png" width="350" alt="CPU"> | Not yet captured | <img src="screenshots/drawing.png" width="350" alt="Drawing"> |

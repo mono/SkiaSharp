@@ -9,6 +9,7 @@ using SkiaSharp.Views.Gtk;
 namespace SkiaSharpSample;
 
 [SupportedOSPlatform("linux")]
+[SupportedOSPlatform("macos")]
 public class GpuPage : Box
 {
 	private const string SkslSource = @"
@@ -83,6 +84,7 @@ half4 main(float2 fragCoord) {
 	private bool touchActive;
 	private int frameCount;
 	private double lastSampleTime;
+	private uint fpsCallback;
 
 	public GpuPage()
 		: base(new GObject.ConstructArgument[] { })
@@ -121,12 +123,28 @@ half4 main(float2 fragCoord) {
 		lastSampleTime = stopwatch.Elapsed.TotalSeconds;
 		frameCount = 0;
 		fpsLabel.SetLabel("FPS: --");
+		fpsCallback = AddTickCallback((widget, clock) =>
+		{
+			var now = stopwatch.Elapsed.TotalSeconds;
+			if (now - lastSampleTime >= 0.5)
+			{
+				fpsLabel.SetLabel($"FPS: {frameCount / (now - lastSampleTime):F0}");
+				frameCount = 0;
+				lastSampleTime = now;
+			}
+			return true;
+		});
 		skiaView.EnableRenderLoop = true;
 	}
 
 	private void OnUnmapped(Widget sender, EventArgs args)
 	{
 		skiaView.EnableRenderLoop = false;
+		if (fpsCallback != 0)
+		{
+			RemoveTickCallback(fpsCallback);
+			fpsCallback = 0;
+		}
 		stopwatch.Stop();
 		touchActive = false;
 	}
@@ -149,13 +167,6 @@ half4 main(float2 fragCoord) {
 		shaderPaint.Shader = null;
 
 		frameCount++;
-		var now = stopwatch.Elapsed.TotalSeconds;
-		if (now - lastSampleTime >= 0.5)
-		{
-			fpsLabel.SetLabel($"FPS: {frameCount / (now - lastSampleTime):F0}");
-			frameCount = 0;
-			lastSampleTime = now;
-		}
 	}
 
 	private void OnPressed(GestureClick sender, GestureClick.PressedSignalArgs args)
@@ -193,6 +204,11 @@ half4 main(float2 fragCoord) {
 	public override void Dispose()
 	{
 		skiaView.EnableRenderLoop = false;
+		if (fpsCallback != 0)
+		{
+			RemoveTickCallback(fpsCallback);
+			fpsCallback = 0;
+		}
 		OnMap -= OnMapped;
 		OnUnmap -= OnUnmapped;
 		skiaView.PaintSurface -= OnPaintSurface;
