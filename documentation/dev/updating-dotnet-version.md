@@ -215,7 +215,7 @@ Keep each distro/OS suffix unchanged when updating either kind of image. For exa
 
 - [ ] `nuget.config` — Remove old preview feeds, keep dotnet-public + dotnet-eng + test-device-runners
 
-> **Note:** `nuget.org` is a disallowed source in the SkiaSharp CI pipeline. If you encounter missing package restore errors during development, you can temporarily add nuget.org to work through issues, but it **must be removed before merging**. Request mirroring for any missing packages.
+> **Note:** `nuget.org` is not an approved package source. Use only the existing approved sources in `nuget.config`, including for local validation and workload installation. Missing packages are a provisioning blocker; request mirroring to an approved feed rather than adding or overriding sources.
 
 ## Pre-Merge Checklist
 

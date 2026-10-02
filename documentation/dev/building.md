@@ -217,9 +217,11 @@ For an SDK installed outside the runner's dotnet root, also pass
 and workload set `11.0.100-rc.1.26458.5`. The consumer's Microsoft dependencies
 must be available on `dotnet-public`; unpublished daily SDKs can require
 additional feeds and are not supported by this fixture's restore configuration.
-Preview workload provisioning explicitly uses NuGet.org and `dotnet-public`
-because the published RC1 workload-set package is not in the repository's
-default feeds. This does not change the consumer's package source mapping.
+Workload provisioning uses the existing approved sources in `nuget.config`
+without overrides. Missing workload packages must be mirrored to an approved
+feed; do not add NuGet.org as a workaround. RC1 provisioning is blocked until
+`Microsoft.NET.Workloads.11.0.100-rc.1` version `11.100.0-rc.1.26458.5` is
+available through those sources.
 
 Or run the test project directly against a local artifact directory:
 

@@ -297,13 +297,7 @@ jobs:
             # Reuse the shared workload install script, pinned to the exact preview workload set.
             # WASM tests still restore the platform TFMs (e.g. -android) of referenced projects, so
             # those workloads must be installed too — same as the non-preview test jobs.
-            # Published preview workload sets are not necessarily mirrored in the repository feeds.
-            - pwsh: |
-                .\scripts\infra\managed\install-dotnet-workloads.ps1 `
-                  -Workloads "${{ parameters.previewWorkloads }}" `
-                  -WorkloadSetVersion "$(DOTNET_WORKLOAD_VERSION_PREVIEW)" `
-                  -Tizen "" `
-                  -Sources "https://api.nuget.org/v3/index.json","https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"
+            - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Workloads "${{ parameters.previewWorkloads }}" -WorkloadSetVersion "$(DOTNET_WORKLOAD_VERSION_PREVIEW)" -Tizen ""
               displayName: Install the preview .NET workloads (${{ parameters.previewWorkloads }})
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
