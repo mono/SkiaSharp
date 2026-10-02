@@ -18,6 +18,7 @@ internal sealed class GalleryFilters
     public string SearchText { get; private set; } = "";
     public SampleSortOrder SortOrder { get; private set; }
     public SampleBase[] Results { get; private set; } = [];
+    public Dictionary<string, int> LiveCategoryCounts { get; private set; } = [];
     public Dictionary<string, int> LiveTagCounts { get; private set; } = [];
     public int ActiveCount => (SelectedCategory is null ? 0 : 1) + Tags.Count + (SearchText.Length > 0 ? 1 : 0);
 
@@ -62,6 +63,7 @@ internal sealed class GalleryFilters
     {
         ISet<string>? categories = SelectedCategory is { } name ? new HashSet<string>(StringComparer.Ordinal) { name } : null;
         Results = SampleManager.SearchSamples(AllSamples, SearchText, categories, Tags, tagModeAll: true, sort: SortOrder).ToArray();
+        LiveCategoryCounts = SampleManager.GetCategoryCounts(Results);
         LiveTagCounts = SampleManager.GetLiveTagCounts(Results);
         Changed?.Invoke(this, EventArgs.Empty);
     }

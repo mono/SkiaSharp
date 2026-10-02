@@ -53,7 +53,9 @@ Blazor and Uno without requiring MAUI workloads.
 - **Live controls** — sliders, pickers, toggles, and composable effect groups
 - **CPU & GPU rendering** in Blazor and MAUI (native GPU backends in MAUI)
 - **Dark mode** with full theme support
-- **Category filtering** and search
+- **Alphabetical category/API facets and search** — Blazor and MAUI hide choices
+  with no current matches while retaining active filters for removal; Uno offers
+  alphabetical, live-counted category choices and an explicit reset escape
 - **PDF generation** with an embedded browser viewer or native open/share actions
 - **SkSL shader playground** with 5 animated presets and live parameters
 - **3D transforms** using native `SKMatrix44` 4×4 pipeline

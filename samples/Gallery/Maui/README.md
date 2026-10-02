@@ -3,12 +3,17 @@
 This host shares the **entire** gallery catalog and sample implementations with
 the Uno and Blazor hosts. At 920 DIP and wider, a persistent filter rail sits
 beside the virtualized sample grid; narrower windows use a search bar and
-funnel-triggered filter popover. The filter panel selects one category at a time
-(or All), intersects all selected API type/method tags, shows live result counts,
-and offers a separate compact
-sort menu with four orders. Both menus dismiss on the backdrop or system Back;
+funnel-triggered filter popover. One shared search field filters samples, categories,
+and API facets across the rail, compact bar, and popup. Search uses a themed
+border with a native borderless field on Mac Catalyst. Categories and API facets
+are alphabetical; only currently matching choices appear. The filter panel
+selects one category at a time (or All), intersects all selected API type/method
+tags, shows live result counts, and offers a separate compact sort menu with
+four orders. Both menus dismiss on the backdrop or system Back;
 sort closes on selection, while filters stay open for multi-selection. Active
-filters remain visible as removable pills. A shared navy header carries the
+filters remain visible as removable pills even if no samples match. API tags
+use rounded monospace pills in the rail, active filters, and sample details.
+A shared navy header carries the
 CPU/GPU choice across gallery and detail pages; the choice affects canvases,
 not generated documents. The header's Info glyph opens a themed panel with
 SkiaSharp, HarfBuzzSharp, and build details instead of occupying a permanent
@@ -25,6 +30,12 @@ generated PDF, XPS (Windows), and
 other downloadable files through platform file APIs. The document preview
 explains that native Open/Share actions are available; it is not an embedded PDF
 viewer. Temporary exported files are stored in the app's cache.
+
+Page layouts, popovers, cards, search fields, and recursive sample controls are
+XAML views with typed compiled bindings. Code-behind coordinates filtering,
+navigation, native canvas lifetimes, and the per-window renderer choice; the
+collection view is replaced at column breakpoints rather than mutating a live
+Apple collection layout.
 
 ## Build and run on Mac Catalyst
 

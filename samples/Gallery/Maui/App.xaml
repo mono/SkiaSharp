@@ -27,6 +27,12 @@
             <Color x:Key="BrandNavy">#1A237E</Color>
             <Color x:Key="BrandAccent">#3F70DC</Color>
             <Color x:Key="BrandPale">#D9E5FC</Color>
+            <OnPlatform x:Key="ApiMonoFont" x:TypeArguments="x:String">
+                <On Platform="MacCatalyst" Value="Menlo" />
+                <On Platform="iOS" Value="Menlo" />
+                <On Platform="Android" Value="monospace" />
+                <On Platform="WinUI" Value="Consolas" />
+            </OnPlatform>
             <Style x:Key="PrimaryLabel" TargetType="Label">
                 <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}" />
             </Style>
@@ -55,6 +61,20 @@
                 <Setter Property="HorizontalOptions" Value="Fill" />
                 <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}" />
                 <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}" />
+            </Style>
+            <Style x:Key="GalleryCardSurface" TargetType="Border">
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}" />
+                <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource CardBorderLight}, Dark={StaticResource CardBorderDark}}" />
+            </Style>
+            <Style x:Key="GalleryAction" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource BrandNavy}" />
+                <Setter Property="TextColor" Value="White" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="Padding" Value="12,8" />
+                <Setter Property="MinimumHeightRequest" Value="44" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>

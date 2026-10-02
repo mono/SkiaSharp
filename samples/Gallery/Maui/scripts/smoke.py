@@ -87,7 +87,12 @@ class DevFlow:
         return self.call("property", target["id"], name)["value"]
 
     def visible(self, automation_id):
-        return any(item.get("isVisible") for item in self.query(automation_id))
+        return any(
+            item.get("isVisible")
+            and item.get("bounds", {}).get("width", 0) > 0
+            and item.get("bounds", {}).get("height", 0) > 0
+            for item in self.query(automation_id)
+        )
 
     def wait_gone(self, automation_id, timeout=15):
         deadline = time.monotonic() + timeout
@@ -155,13 +160,11 @@ def run_checks(flow, output, all_samples, share, report):
             flow.wait_gone("gallery-popup")
 
     def select_tag(tag):
-        api_search = "gallery-filter-popup-api-search" if flow.visible("gallery-filter-popup") else "gallery-filter-api-search"
-        flow.call("fill", api_search, tag)
         tag_id = stable_id("tag-", tag)
         flow.call("scroll", "--element", tag_id)
         flow.tap(tag_id)
 
-    if flow.query("sample-back"):
+    if flow.visible("sample-back"):
         back()
     if flow.visible("gallery-popup-scrim"):
         flow.tap("gallery-popup-scrim")
@@ -181,6 +184,32 @@ def run_checks(flow, output, all_samples, share, report):
     flow.wait_gone("gallery-popup")
     assert not flow.query("gallery-footer")
     checked("Header Info popup contains build metadata without a permanent footer")
+
+    assert not flow.query("gallery-filter-api-search")
+    assert not flow.query("gallery-filter-popup-api-search")
+    if status["device"]["platform"] == "MacCatalyst":
+        assert flow.wait(search_id())["type"] == "GallerySearchEntry"
+        assert float(flow.value(search_id(), "Parent.Parent.StrokeThickness")) == 1
+    flow.call("fill", search_id(), "Lottie Player")
+    assert flow.wait("gallery-result-count")["text"].startswith("1 of ")
+    open_filters()
+    assert flow.value("category-general-count", "Text") == "1"
+    assert not flow.query("category-documents")
+    assert not flow.query("category-text---typography")
+    assert not flow.query("tag-skshader")
+    if status["device"]["platform"] == "MacCatalyst":
+        assert flow.value("tag-animation", "FontFamily") == "Menlo"
+    select_tag("Animation")
+    close_filters()
+    flow.call("fill", search_id(), "__no_such_gallery_sample__")
+    flow.wait("gallery-empty")
+    assert flow.visible("gallery-active-tag-animation")
+    open_filters()
+    assert not flow.query("category-general")
+    assert not flow.query("tag-animation")
+    close_filters()
+    clear_filters()
+    checked("One global search updates facet counts, hides empty options, and preserves removable filters")
 
     flow.call("fill", search_id(), "__no_such_gallery_sample__")
     flow.wait("gallery-empty")
@@ -265,6 +294,8 @@ def run_checks(flow, output, all_samples, share, report):
 
     assert open_sample("Gradient")
     backend("cpu")
+    if status["device"]["platform"] == "MacCatalyst":
+        assert flow.value("sample-tag-skcanvas", "Content.FontFamily") == "Menlo"
     if status["device"]["idiom"] == "Desktop":
         original_width = flow.wait("sample-canvas-cpu")["bounds"]["width"]
         flow.tap("sample-controls-toggle")
@@ -314,6 +345,15 @@ def run_checks(flow, output, all_samples, share, report):
     assert abs(float(flow.value("control-contrast-amount", "Value")) - 0.55) < 0.0001
     flow.screenshot(output / "photo-lab.png")
     checked("Nested effect groups retain stepped child values")
+    back()
+
+    assert open_sample("Nine-Patch Scaler")
+    backend("cpu")
+    assert float(flow.value("control-width", "Value")) == 400
+    assert float(flow.value("control-height", "Value")) == 300
+    flow.set("control-width", "Value", 413)
+    assert float(flow.value("control-width", "Value")) == 410
+    checked("XAML slider range initialization preserves sample defaults and live stepping")
     back()
 
     assert open_sample("Color Fonts")

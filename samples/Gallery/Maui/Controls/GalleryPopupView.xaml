@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:SkiaSharpSample.Controls"
              x:Class="SkiaSharpSample.Controls.GalleryPopupView">
     <ContentView.ControlTemplate>
         <ControlTemplate>
@@ -15,7 +16,7 @@
                     </BoxView.GestureRecognizers>
                 </BoxView>
                 <Border x:Name="PART_Panel"
-                        AbsoluteLayout.LayoutBounds="{TemplateBinding PopupBounds}"
+                        AbsoluteLayout.LayoutBounds="{Binding PopupBounds, Source={RelativeSource TemplatedParent}, x:DataType=local:GalleryPopupView}"
                         Stroke="{AppThemeBinding Light={StaticResource CardBorderLight}, Dark={StaticResource CardBorderDark}}"
                         BackgroundColor="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}"
                         StrokeShape="RoundRectangle 16"

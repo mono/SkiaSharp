@@ -58,6 +58,10 @@ python3 -m http.server 5050 --directory output/gallery-uno-publish/wwwroot
 
 Then open `http://localhost:5050/`. The gallery loads with all samples from
 the shared catalog and renders through Uno's Skia renderer.
+Its category chips show only categories with matches for the current query,
+in alphabetical order. A single selected category narrows results; **All
+categories** clears that choice. When no results match, **Reset filters**
+explicitly clears both the category and search instead of broadening silently.
 
 ### Desktop (Skia on X11 / Win32 / macOS)
 

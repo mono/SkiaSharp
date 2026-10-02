@@ -7,28 +7,15 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample;
 
-public sealed class SampleDetailPage : ContentPage
+public sealed partial class SampleDetailPage : ContentPage
 {
     private readonly SampleBase sample;
     private readonly Func<Task> navigateBack;
     private readonly GalleryWindowSettings windowSettings;
-    private readonly Grid root;
     private bool navigatingBack;
     private readonly object sampleGate = new();
-    private readonly Grid surfaceHost = new();
-    private readonly Border surfaceCard;
-    private readonly VerticalStackLayout controlItems = new() { Spacing = 14, Padding = 14 };
-    private readonly Grid body = new();
-    private readonly Grid controlPanel = new();
-    private readonly ScrollView controlScroller;
-    private readonly Label state;
-    private readonly Label status;
-    private readonly Dictionary<string, (Type Type, Action<SampleControl> Apply)> controlUpdaters = new(StringComparer.Ordinal);
-    private readonly Button retry;
-    private readonly Button open;
-    private readonly Button share;
-    private readonly ScrollView actionScroller;
-    private readonly Button toggleControls;
+    private readonly Dictionary<string, ControlItem> controlUpdaters = new(StringComparer.Ordinal);
+    private IReadOnlyList<ControlItem> controlItemsData = [];
     private SKCanvasView? cpuView;
     private SKGLView? gpuView;
     private Task? initTask;
@@ -39,8 +26,8 @@ public sealed class SampleDetailPage : ContentPage
     private bool userToggledControls;
     private bool hasControlPanel;
     private bool toggleOverCanvas;
-    private bool syncingControls;
-    private Label? downloadInfo;
+    private bool showOutputInfo;
+    private string outputText = "";
     private int generation;
     private int lastWidth = -1;
     private int lastHeight = -1;
@@ -56,92 +43,37 @@ public sealed class SampleDetailPage : ContentPage
         this.navigateBack = navigateBack;
         this.windowSettings = windowSettings;
         useGpu = windowSettings.UseGpu;
+        SampleTags = SampleManager.OrderTags(sample.ApiTags).Select(tag => new SampleTagItem(tag)).ToArray();
+        InitializeComponent();
+        BindingContext = this;
         Title = sample.Title;
         NavigationPage.SetHasNavigationBar(this, false);
-        BackgroundColor = GalleryUi.Navy;
         SafeAreaEdges = new Microsoft.Maui.SafeAreaEdges(Microsoft.Maui.SafeAreaRegions.None);
-
-        var heading = new VerticalStackLayout { Spacing = 5, Padding = new Thickness(16, 12, 16, 8) };
-        GalleryUi.Background(heading, "PageBackground");
-        var title = GalleryUi.Text(sample.Title, 24, true);
-        title.AutomationId = "sample-title";
-        heading.Children.Add(title);
-        heading.Children.Add(GalleryUi.Text(sample.Description, 13, color: "SecondaryText"));
-        var tags = new HorizontalStackLayout { Spacing = 8 };
-        foreach (var tag in sample.ApiTags)
-        {
-            var chip = GalleryUi.Text($"  {tag}  ", 11);
-            GalleryUi.Background(chip, KnownApis.Classify(tag) == TagKind.Type ? "TypeBackground" : "MethodBackground");
-            GalleryUi.TextColor(chip, Label.TextColorProperty, "AccentText");
-            tags.Children.Add(chip);
-        }
-        heading.Children.Add(new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = tags, HeightRequest = 27 });
-
-        var actions = new HorizontalStackLayout { Spacing = 8, Padding = new Thickness(16, 4) };
-        open = GalleryUi.Action("Open file", "sample-open", async (_, _) => await ExportAsync(openFile: true));
-        share = GalleryUi.Action("Share / Save", "sample-share", async (_, _) => await ExportAsync(openFile: false));
-        actions.Children.Add(open);
-        actions.Children.Add(share);
-        retry = GalleryUi.Action("Retry", "sample-retry", (_, _) =>
-        {
-            Stop();
-            _ = StartAsync();
-        });
-        retry.IsVisible = false;
-        actions.Children.Add(retry);
-        actionScroller = new ScrollView { Content = actions, Orientation = ScrollOrientation.Horizontal, HeightRequest = 55 };
-        GalleryUi.Background(actionScroller, "PageBackground");
-
-        state = GalleryUi.Text("Loading sample…", 14);
-        state.AutomationId = "sample-state";
-        state.HorizontalTextAlignment = TextAlignment.Center;
-        state.VerticalTextAlignment = TextAlignment.Center;
-        status = GalleryUi.Text("Initializing…", 11, color: "SecondaryText");
-        status.AutomationId = "sample-render-status";
-        var statusBar = new Grid { Padding = new Thickness(16, 0, 16, 4) };
-        GalleryUi.Background(statusBar, "PageBackground");
-        statusBar.Add(status);
-        surfaceHost.Children.Add(state);
-        surfaceCard = GalleryUi.Card(surfaceHost);
-        surfaceCard.Margin = new Thickness(12, 4, 12, 6);
-        surfaceCard.MinimumHeightRequest = 200;
-        body.Children.Add(surfaceCard);
-
-        controlPanel.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        controlPanel.RowDefinitions.Add(new RowDefinition(GridLength.Star));
-        controlPanel.Margin = new Thickness(12, 4, 12, 6);
-        toggleControls = GalleryUi.Action("Controls ▾", "sample-controls-toggle", (_, _) =>
-        {
-            userToggledControls = true;
-            controlsExpanded = !controlsExpanded;
-            UpdateLayout();
-        });
-        controlPanel.Add(toggleControls);
-        controlScroller = new ScrollView { Content = controlItems, AutomationId = "sample-controls" };
-        controlPanel.Add(controlScroller, 0, 1);
-        controlPanel.IsVisible = false;
-        controlPanel.IsEnabled = false;
-        controlItems.Children.Add(GalleryUi.Text("Loading controls…", color: "SecondaryText"));
-        body.Add(controlPanel);
-        GalleryUi.Background(body, "PageBackground");
-
-        root = new Grid
-        {
-            RowDefinitions = new RowDefinitionCollection
-            {
-                new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Auto),
-                new(GridLength.Star), new(GridLength.Auto)
-            },
-            SafeAreaEdges = new Microsoft.Maui.SafeAreaEdges(Microsoft.Maui.SafeAreaRegions.Container)
-        };
-        root.Add(new GalleryHeader(windowSettings, GoBackAsync));
-        root.Add(heading, 0, 1);
-        root.Add(actionScroller, 0, 2);
-        root.Add(body, 0, 3);
-        root.Add(statusBar, 0, 4);
-        Content = root;
+        headerHost.Content = new GalleryHeader(windowSettings, GoBackAsync);
         SizeChanged += (_, _) => UpdateLayout();
         UpdateButtons();
+        UpdateLayout();
+    }
+
+    public string SampleTitle => sample.Title;
+    public string SampleDescription => sample.Description;
+    public IReadOnlyList<SampleTagItem> SampleTags { get; }
+    public IReadOnlyList<ControlItem> ControlItems => controlItemsData;
+    public bool NoControls => controlItemsData.Count == 0;
+    public bool ShowOutputInfo => showOutputInfo;
+    public string OutputText => outputText;
+
+    private async void OpenClicked(object? sender, EventArgs e) => await ExportAsync(openFile: true);
+    private async void ShareClicked(object? sender, EventArgs e) => await ExportAsync(openFile: false);
+    private void RetryClicked(object? sender, EventArgs e)
+    {
+        Stop();
+        _ = StartAsync();
+    }
+    private void ToggleControlsClicked(object? sender, EventArgs e)
+    {
+        userToggledControls = true;
+        controlsExpanded = !controlsExpanded;
         UpdateLayout();
     }
 
@@ -528,17 +460,23 @@ public sealed class SampleDetailPage : ContentPage
     private void RefreshControls()
     {
         controlUpdaters.Clear();
-        controlItems.Children.Clear();
         var controls = sample.Controls;
-        if (controls.Count == 0)
-            controlItems.Children.Add(GalleryUi.Text("No adjustable controls for this sample.", color: "SecondaryText"));
-        else
-            foreach (var control in controls)
-                controlItems.Children.Add(RenderControl(control, ""));
-        downloadInfo = GalleryUi.Text("", 12, color: "SecondaryText");
-        controlItems.Children.Add(downloadInfo);
+        controlItemsData = controls.Select(control => MakeControl(control, "")).ToArray();
+        OnPropertyChanged(nameof(ControlItems));
+        OnPropertyChanged(nameof(NoControls));
         UpdateOutputInfo(controls.Count);
         UpdateLayout();
+    }
+
+    private ControlItem MakeControl(SampleControl control, string prefix)
+    {
+        var id = prefix.Length == 0 ? control.Id : $"{prefix}.{control.Id}";
+        var item = new ControlItem(id, control, ChangeControl);
+        controlUpdaters.Add(id, item);
+        if (control is GroupControl group)
+            foreach (var child in group.Children)
+                item.Children.Add(MakeControl(child, id));
+        return item;
     }
 
     private void SyncControls()
@@ -549,26 +487,18 @@ public sealed class SampleDetailPage : ContentPage
         void Sync(SampleControl control, string prefix)
         {
             var id = prefix.Length == 0 ? control.Id : $"{prefix}.{control.Id}";
-            if (!controlUpdaters.TryGetValue(id, out var updater) || updater.Type != control.GetType())
+            if (!controlUpdaters.TryGetValue(id, out var updater) || updater.Kind != control.GetType())
             {
                 rebuild = true;
                 return;
             }
-            updater.Apply(control);
+            updater.Update(control);
             count++;
             if (control is GroupControl group)
                 foreach (var child in group.Children) Sync(child, id);
         }
 
-        syncingControls = true;
-        try
-        {
-            foreach (var control in controls) Sync(control, "");
-        }
-        finally
-        {
-            syncingControls = false;
-        }
+        foreach (var control in controls) Sync(control, "");
         if (rebuild || count != controlUpdaters.Count)
         {
             RefreshControls();
@@ -582,148 +512,15 @@ public sealed class SampleDetailPage : ContentPage
     private void UpdateOutputInfo(int controlCount)
     {
         var canDownload = sample.HasDownload;
-        if (downloadInfo is { } label)
+        var nextVisible = canDownload && sample is not DocumentSampleBase;
+        var nextText = nextVisible ? $"Output: {sample.DownloadFileName}" : "";
+        if (showOutputInfo != nextVisible)
         {
-            label.Text = canDownload && sample is not DocumentSampleBase
-                ? $"Output: {sample.DownloadFileName}" : "";
-            label.IsVisible = canDownload && sample is not DocumentSampleBase;
+            showOutputInfo = nextVisible;
+            OnPropertyChanged(nameof(ShowOutputInfo));
         }
+        if (outputText != nextText) { outputText = nextText; OnPropertyChanged(nameof(OutputText)); }
         hasControlPanel = controlCount > 0 || canDownload;
-    }
-
-    private View RenderControl(SampleControl control, string prefix)
-    {
-        var id = prefix.Length == 0 ? control.Id : $"{prefix}.{control.Id}";
-        var content = new VerticalStackLayout { Spacing = 5 };
-        if (control is GroupControl group)
-        {
-            var heading = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
-            heading.Add(GalleryUi.Text(group.Label, 14, true));
-            var enabled = new Switch { IsToggled = group.Enabled, AutomationId = GalleryUi.StableId("control-", id) };
-            SemanticProperties.SetDescription(enabled, $"{group.Label}: {(group.Enabled ? "enabled" : "disabled")}. {group.Description}");
-            heading.Add(enabled, 1);
-            content.Children.Add(heading);
-            var children = new VerticalStackLayout { Spacing = 12, Padding = new Thickness(12, 5, 0, 0), IsVisible = group.Enabled };
-            foreach (var child in group.Children) children.Children.Add(RenderControl(child, id));
-            content.Children.Add(children);
-            controlUpdaters[id] = (typeof(GroupControl), updated =>
-            {
-                var value = ((GroupControl)updated).Enabled;
-                if (enabled.IsToggled != value) enabled.IsToggled = value;
-                children.IsVisible = value;
-            });
-            enabled.Toggled += (_, e) =>
-            {
-                if (syncingControls) return;
-                children.IsVisible = e.Value;
-                ChangeControl(id, e.Value);
-            };
-        }
-        else if (control is SliderControl slider)
-        {
-            var label = GalleryUi.Text($"{slider.Label}: {slider.Value:G4}", 14, true);
-            content.Children.Add(label);
-            var fixedId = GalleryUi.StableId("control-", id);
-            label.AutomationId = $"{fixedId}-value";
-            var current = slider;
-            var valid = float.IsFinite(slider.Min) && float.IsFinite(slider.Max) && slider.Max > slider.Min;
-            var range = new Slider
-            {
-                Minimum = valid ? slider.Min : 0,
-                Maximum = valid ? slider.Max : 1,
-                Value = valid ? Math.Clamp(slider.Value, slider.Min, slider.Max) : 0,
-                IsVisible = valid,
-                IsEnabled = valid,
-                AutomationId = fixedId
-            };
-            label.Text = valid ? $"{slider.Label}: {slider.Value:G4}" : $"{slider.Label}: {slider.Value:G4} (fixed)";
-            SemanticProperties.SetDescription(label, valid
-                ? $"{slider.Label}: {slider.Value:G4}. {slider.Description}"
-                : $"{slider.Label}: {slider.Value:G4}. Fixed value. {slider.Description}");
-            SemanticProperties.SetDescription(range, $"{slider.Label}: {slider.Value:G4}. {slider.Description}");
-            controlUpdaters[id] = (typeof(SliderControl), updated =>
-            {
-                current = (SliderControl)updated;
-                var adjustable = float.IsFinite(current.Min) && float.IsFinite(current.Max) && current.Max > current.Min;
-                range.IsVisible = adjustable;
-                range.IsEnabled = adjustable;
-                if (adjustable)
-                {
-                    // Widen before moving the lower bound to avoid MAUI's range coercion.
-                    if (range.Maximum < current.Max) range.Maximum = current.Max;
-                    if (range.Minimum != current.Min) range.Minimum = current.Min;
-                    if (range.Maximum != current.Max) range.Maximum = current.Max;
-                    var value = Math.Clamp(current.Value, current.Min, current.Max);
-                    if (range.Value != value) range.Value = value;
-                }
-                label.Text = adjustable ? $"{current.Label}: {current.Value:G4}" : $"{current.Label}: {current.Value:G4} (fixed)";
-                SemanticProperties.SetDescription(label, adjustable
-                    ? $"{current.Label}: {current.Value:G4}. {current.Description}"
-                    : $"{current.Label}: {current.Value:G4}. Fixed value. {current.Description}");
-                SemanticProperties.SetDescription(range, $"{current.Label}: {current.Value:G4}. {current.Description}");
-            });
-            range.ValueChanged += (_, e) =>
-            {
-                if (syncingControls || !active || !sample.IsInitialized || !range.IsEnabled) return;
-                var value = Snap(current, e.NewValue);
-                if (value == current.Value) return;
-                // The newly evaluated model is pushed back into this same view;
-                // never rebuild the panel during a drag or an automation Value update.
-                ChangeControl(id, value);
-            };
-            content.Children.Add(range);
-        }
-        else if (control is PickerControl picker)
-        {
-            content.Children.Add(GalleryUi.Text(picker.Label, 14, true));
-            var select = new Picker { AutomationId = GalleryUi.StableId("control-", id) };
-            GalleryUi.StylePicker(select);
-            SemanticProperties.SetDescription(select, $"{picker.Label}. {picker.Description}");
-            foreach (var option in picker.Options) select.Items.Add(option);
-            select.SelectedIndex = Math.Clamp(picker.SelectedIndex, -1, select.Items.Count - 1);
-            controlUpdaters[id] = (typeof(PickerControl), updated =>
-            {
-                var value = (PickerControl)updated;
-                var optionsChanged = select.Items.Count != value.Options.Length;
-                for (var i = 0; !optionsChanged && i < value.Options.Length; i++)
-                    optionsChanged = select.Items[i] != value.Options[i];
-                if (optionsChanged)
-                {
-                    select.Items.Clear();
-                    foreach (var option in value.Options) select.Items.Add(option);
-                }
-                var index = Math.Clamp(value.SelectedIndex, -1, select.Items.Count - 1);
-                if (select.SelectedIndex != index) select.SelectedIndex = index;
-            });
-            select.SelectedIndexChanged += (_, _) =>
-            {
-                if (!syncingControls && select.SelectedIndex >= 0) ChangeControl(id, select.SelectedIndex);
-            };
-            content.Children.Add(select);
-        }
-        else if (control is ToggleControl toggle)
-        {
-            var row = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
-            row.Add(GalleryUi.Text(toggle.Label, 14, true));
-            var check = new Switch { IsToggled = toggle.Value, AutomationId = GalleryUi.StableId("control-", id) };
-            SemanticProperties.SetDescription(check, $"{toggle.Label}. {toggle.Description}");
-            row.Add(check, 1);
-            controlUpdaters[id] = (typeof(ToggleControl), updated =>
-            {
-                var value = ((ToggleControl)updated).Value;
-                if (check.IsToggled != value) check.IsToggled = value;
-            });
-            check.Toggled += (_, e) =>
-            {
-                if (!syncingControls) ChangeControl(id, e.Value);
-            };
-            content.Children.Add(row);
-        }
-        if (!string.IsNullOrWhiteSpace(control.Description))
-            content.Children.Add(GalleryUi.Text(control.Description, 12, color: "SecondaryText"));
-        var card = GalleryUi.Card(content, 10);
-        card.Padding = 10;
-        return card;
     }
 
     internal static float Snap(SliderControl slider, double value)

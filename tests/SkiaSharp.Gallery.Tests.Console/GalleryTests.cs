@@ -54,6 +54,84 @@ public class GalleryTests
     }
 
     [Fact]
+    public void SharedCategoriesAreAlphabetical()
+    {
+        var names = SampleManager.GetCategories().Select(category => category.Name).ToArray();
+
+        Assert.Equal(names.OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(name => name, StringComparer.Ordinal), names);
+    }
+
+    [Fact]
+    public void SharedApiTagsAreAlphabeticalByTheirDisplayedName()
+    {
+        var samples = new SampleService().GetAllSamples().ToArray();
+        var tags = SampleManager.GetAllTags(samples);
+        var expected = tags
+            .OrderBy(tag => KnownApis.GetDisplayName(tag.Tag), StringComparer.OrdinalIgnoreCase)
+            .ThenBy(tag => tag.Tag, StringComparer.Ordinal);
+
+        Assert.Equal(expected, tags);
+        Assert.Equal(tags, SampleManager.GetAllTags(samples.Reverse()));
+        Assert.All(tags, tag => Assert.Equal(
+            samples.Count(sample => sample.ApiTags.Contains(tag.Tag)), tag.Count));
+    }
+
+    [Fact]
+    public void TagDisplayNameTiesUseFullApiIdentity()
+    {
+        var sample = new MetadataSample("Tags", "General",
+            "ZType", "Second.Draw", "First.Draw", "Second.Alpha", "aType", "First.alpha");
+
+        var tags = SampleManager.GetAllTags([sample]).Select(tag => tag.Tag);
+
+        Assert.Equal(["First.alpha", "Second.Alpha", "aType", "First.Draw", "Second.Draw", "ZType"], tags);
+    }
+
+    [Fact]
+    public void CategoryCountsUseOnlyTheCurrentMatches()
+    {
+        var samples = new SampleService().GetAllSamples().ToArray();
+        var matches = SampleManager.SearchSamples(samples, "Lottie Player").ToArray();
+
+        var counts = SampleManager.GetCategoryCounts(matches);
+
+        Assert.Single(matches);
+        Assert.Single(counts);
+        Assert.Equal(1, counts[SampleManager.General]);
+        Assert.False(counts.ContainsKey(SampleManager.Documents));
+        Assert.Empty(SampleManager.GetCategoryCounts([]));
+    }
+
+    [Fact]
+    public void CategoryAndTagCountsUpdateAtomicallyWithTheSearch()
+    {
+        var filters = new GalleryFilters(new SampleService().GetAllSamples().ToArray());
+        filters.Changed += (_, _) =>
+        {
+            Assert.Equal(filters.Results.Length, filters.LiveCategoryCounts.Values.Sum());
+            Assert.All(filters.LiveCategoryCounts, count => Assert.True(count.Value > 0));
+            Assert.Equal(SampleManager.GetCategoryCounts(filters.Results).OrderBy(pair => pair.Key),
+                filters.LiveCategoryCounts.OrderBy(pair => pair.Key));
+            Assert.Equal(SampleManager.GetTagCounts(filters.Results).OrderBy(pair => pair.Key),
+                filters.LiveTagCounts.OrderBy(pair => pair.Key));
+        };
+
+        filters.SetSearch("Lottie Player");
+        Assert.Single(filters.LiveCategoryCounts);
+        Assert.Equal(1, filters.LiveCategoryCounts[SampleManager.General]);
+        filters.ToggleTag("Animation");
+        filters.SetSearch("__no_match__");
+        Assert.Empty(filters.LiveCategoryCounts);
+        Assert.Empty(filters.LiveTagCounts);
+        Assert.Contains("Animation", filters.Tags);
+        filters.SetSearch("");
+        Assert.Single(filters.Results);
+        filters.Clear();
+        Assert.Equal(filters.AllSamples.Length, filters.LiveCategoryCounts.Values.Sum());
+    }
+
+    [Fact]
     public void RepeatedSearchDoesNotReenterFilterNotifications()
     {
         var filters = new GalleryFilters(new SampleService().GetAllSamples().ToArray());
@@ -323,6 +401,13 @@ public class GalleryTests
             }
         }
 
+    }
+
+    private sealed class MetadataSample(string title, string category, params string[] tags) : SampleBase
+    {
+        public override string Title => title;
+        public override string Category => category;
+        public override IReadOnlyList<string> ApiTags => tags;
     }
 
     private sealed class FailingSample(bool failDuringInitialization) : CanvasSampleBase
