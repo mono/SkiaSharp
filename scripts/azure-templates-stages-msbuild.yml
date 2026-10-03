@@ -37,6 +37,9 @@ stages:
             shouldPublish: false
             checkoutSubmodules: false
             installDotNetWorkloads: true
+            installPreviewSdk: true
+            previewWorkloads: wasm-tools
+            additionalArgs: --consumerSdkVersion=$(DOTNET_VERSION)
             installAndroidSdk: true
             installAndroidNdk: false
             installXcode: true
@@ -55,32 +58,8 @@ stages:
                   jdkArchitectureOption: x64
                   jdkSourceOption: PreInstalled
             postBuildSteps:
-              # Install RC1 only after the stable, unfiltered desktop + WASM + MAUI run.
-              # The repository SDK stays pinned to .NET 10 for Cake and the test runner.
-              - task: UseDotNet@2
-                displayName: Install public .NET 11 RC1 consumer SDK
-                inputs:
-                  packageType: sdk
-                  version: '11.0.100-rc.1.26425.128'
               - pwsh: |
-                  $ErrorActionPreference = 'Stop'
-                  $installer = Join-Path $PWD 'scripts/infra/managed/install-dotnet-workloads.ps1'
-                  $directory = Join-Path $PWD 'output/msbuild-rc1-sdk'
-                  New-Item -ItemType Directory -Force $directory | Out-Null
-                  @{ sdk = @{ version = '11.0.100-rc.1.26425.128'; allowPrerelease = $true; rollForward = 'disable' } } |
-                    ConvertTo-Json | Set-Content (Join-Path $directory 'global.json')
-                  Push-Location $directory
-                  try {
-                    dotnet --version
-                    if ($LASTEXITCODE -ne 0) { throw 'RC1 SDK selection failed.' }
-                    & $installer -Workloads 'wasm-tools' -WorkloadSetVersion '11.0.100-rc.1.26458.5' -Tizen ''
-                    if ($LASTEXITCODE -ne 0) { throw 'RC1 wasm-tools installation failed.' }
-                  } finally {
-                    Pop-Location
-                  }
-                displayName: Install RC1 wasm-tools without switching the stable runner SDK
-              - pwsh: |
-                  dotnet cake --target=tests-msbuild --wasm=true --consumerSdkVersion=11.0.100-rc.1.26425.128 --verbosity=$(VERBOSITY) --configuration=$(CONFIGURATION)
+                  dotnet cake --target=tests-msbuild --wasm=true --consumerSdkVersion=$(DOTNET_VERSION_PREVIEW) --verbosity=$(VERBOSITY) --configuration=$(CONFIGURATION)
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
                 displayName: Run net11 WASM-only native package regression with the net10 runner
               - task: PublishTestResults@2

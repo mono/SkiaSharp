@@ -205,7 +205,15 @@ dotnet cake --target=tests-msbuild
 Install `wasm-tools,maui-android` on all hosts; add `maui-windows` on Windows
 or `maui-ios,maui-maccatalyst` on macOS. CI installs these using the repository
 workload installer and the stable workload set (currently `10.0.202`).
-Provision the Android SDK/API 36 and JDK 21 as well. Unsupported host TFMs are
+The bootstrapper's existing `installPreviewSdk` / `previewWorkloads` options
+also provision the preview SDK and `wasm-tools` up front using the shared
+preview version variables. Although this pins the job's `global.json` to the
+preview SDK, the first test pass explicitly selects `DOTNET_VERSION` for
+its consumers; the second WASM-only pass selects `DOTNET_VERSION_PREVIEW`.
+The test executable still targets net10.0.
+Provision the Android SDK/API 36 and JDK 21 as well. The shared JDK installer
+currently selects JDK 17, so these jobs select the hosted JDK 21 before building
+.NET 10 Android applications. Unsupported host TFMs are
 explicitly omitted from MAUI theory data, not skipped during execution:
 
 | Host | Stable net10 consumer coverage | Stable test count |
