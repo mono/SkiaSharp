@@ -17,61 +17,61 @@ stages:
       dependsOn: package
     jobs:
       - ${{ each platform in split('windows,macos,linux', ',') }}:
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
-          parameters:
-            name: tests_msbuild_${{ platform }}
-            ${{ if eq(platform, 'windows') }}:
-              displayName: Windows
-              buildAgent: ${{ parameters.buildAgentWindows }}
-              dotnetWorkloads: wasm-tools,maui-android,maui-windows
-            ${{ if eq(platform, 'macos') }}:
-              displayName: macOS
-              buildAgent: ${{ parameters.buildAgentMac }}
-              dotnetWorkloads: wasm-tools,maui-android,maui-ios,maui-maccatalyst
-            ${{ if eq(platform, 'linux') }}:
-              displayName: Linux
-              buildAgent: ${{ parameters.buildAgentLinux }}
-              dotnetWorkloads: wasm-tools,maui-android
-            target: tests-msbuild
-            retryCount: 0
-            shouldPublish: false
-            checkoutSubmodules: false
-            installDotNetWorkloads: true
-            installPreviewSdk: true
-            previewWorkloads: wasm-tools
-            additionalArgs: --consumerSdkVersion=$(DOTNET_VERSION)
-            installAndroidSdk: true
-            installAndroidNdk: false
-            installXcode: true
-            installNode: false
-            installLlvm: false
-            installEmsdk: false
-            installNinja: false
-            requiredArtifacts:
-              - name: nuget
-                dir: nugets
-            preBuildSteps:
-              - task: JavaToolInstaller@0
-                displayName: Select JDK 21 for .NET 10 Android consumers
-                inputs:
-                  versionSpec: '21'
-                  jdkArchitectureOption: x64
-                  jdkSourceOption: PreInstalled
-            postBuildSteps:
-              - pwsh: |
-                  dotnet cake --target=tests-msbuild --wasm=true --consumerSdkVersion=$(DOTNET_VERSION_PREVIEW) --verbosity=$(VERBOSITY) --configuration=$(CONFIGURATION)
-                  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-                displayName: Run net11 WASM-only native package regression with the net10 runner
-              - task: PublishTestResults@2
-                displayName: Publish MSBuild package test results
-                condition: always()
-                inputs:
-                  testResultsFormat: VSTest
-                  testResultsFiles: 'output/logs/testlogs/msbuild/**/*.trx'
-                  testRunTitle: '${{ platform }} MSBuild package tests'
-                  failTaskOnFailedTests: true
-                  failTaskOnMissingResultsFile: true
-            publishArtifacts:
-              - name: testlogs_msbuild_${{ platform }}
-                always: true
-                path: output/logs
+        - ${{ each sdk in split('stable,preview', ',') }}:
+          - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+            parameters:
+              name: tests_msbuild_${{ platform }}_${{ sdk }}
+              ${{ if eq(platform, 'windows') }}:
+                displayName: Windows (${{ sdk }})
+                buildAgent: ${{ parameters.buildAgentWindows }}
+              ${{ if eq(platform, 'macos') }}:
+                displayName: macOS (${{ sdk }})
+                buildAgent: ${{ parameters.buildAgentMac }}
+              ${{ if eq(platform, 'linux') }}:
+                displayName: Linux (${{ sdk }})
+                buildAgent: ${{ parameters.buildAgentLinux }}
+              ${{ if eq(sdk, 'stable') }}:
+                installDotNetWorkloads: true
+                installAndroidSdk: true
+                installXcode: true
+                jdkVersion: '21.0.10'
+                jdkFolderVersion: '21.0.10+7'
+                ${{ if eq(platform, 'windows') }}:
+                  dotnetWorkloads: wasm-tools,maui-android,maui-windows
+                ${{ if eq(platform, 'macos') }}:
+                  dotnetWorkloads: wasm-tools,maui-android,maui-ios,maui-maccatalyst
+                ${{ if eq(platform, 'linux') }}:
+                  dotnetWorkloads: wasm-tools,maui-android
+              ${{ else }}:
+                installDotNetWorkloads: false
+                installAndroidSdk: false
+                installXcode: false
+                installPreviewSdk: true
+                previewWorkloads: wasm-tools
+                additionalArgs: --wasm=true
+              target: tests-msbuild
+              retryCount: 0
+              shouldPublish: false
+              checkoutSubmodules: false
+              installAndroidNdk: false
+              installNode: false
+              installLlvm: false
+              installEmsdk: false
+              installNinja: false
+              requiredArtifacts:
+                - name: nuget
+                  dir: nugets
+              postBuildSteps:
+                - task: PublishTestResults@2
+                  displayName: Publish MSBuild package test results
+                  condition: always()
+                  inputs:
+                    testResultsFormat: VSTest
+                    testResultsFiles: 'output/logs/testlogs/msbuild/**/*.trx'
+                    testRunTitle: '${{ platform }} (${{ sdk }}) MSBuild package tests'
+                    failTaskOnFailedTests: true
+                    failTaskOnMissingResultsFile: true
+              publishArtifacts:
+                - name: testlogs_msbuild_${{ platform }}_${{ sdk }}
+                  always: true
+                  path: output/logs

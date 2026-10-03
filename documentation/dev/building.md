@@ -205,15 +205,15 @@ dotnet cake --target=tests-msbuild
 Install `wasm-tools,maui-android` on all hosts; add `maui-windows` on Windows
 or `maui-ios,maui-maccatalyst` on macOS. CI installs these using the repository
 workload installer and the stable workload set (currently `10.0.202`).
-The bootstrapper's existing `installPreviewSdk` / `previewWorkloads` options
-also provision the preview SDK and `wasm-tools` up front using the shared
-preview version variables. Although this pins the job's `global.json` to the
-preview SDK, the first test pass explicitly selects `DOTNET_VERSION` for
-its consumers; the second WASM-only pass selects `DOTNET_VERSION_PREVIEW`.
-The test executable still targets net10.0.
-Provision the Android SDK/API 36 and JDK 21 as well. The shared JDK installer
-currently selects JDK 17, so these jobs select the hosted JDK 21 before building
-.NET 10 Android applications. Unsupported host TFMs are
+Stable and preview are separate bootstrapper jobs on each host. Stable jobs
+use the repository SDK pin; preview jobs use the existing `installPreviewSdk`
+and `previewWorkloads` options to select the preview SDK and install `wasm-tools`.
+The SDK building the test project also selects the generated consumers' SDK;
+no separate consumer SDK version is required. The test executable targets net10.0.
+Provision the Android SDK/API 36 and JDK 21 for stable jobs as well. The shared
+bootstrapper forwards `jdkVersion` / `jdkFolderVersion` to its existing JDK
+installer, which reuses the requested major version's hosted JDK when available.
+Other jobs retain the existing JDK 17 defaults. Unsupported host TFMs are
 explicitly omitted from MAUI theory data, not skipped during execution:
 
 | Host | Stable net10 consumer coverage | Stable test count |
@@ -222,24 +222,21 @@ explicitly omitted from MAUI theory data, not skipped during execution:
 | macOS | Desktop, Mono WASM, Android APK, iOS simulator app, Mac Catalyst app | 26 |
 | Linux | Desktop, Mono WASM, Android APK | 24 |
 
-To run only the WASM native-link regression (for example, a second SDK pass),
+To run only the WASM native-link regression (as in the preview jobs),
 install `wasm-tools` under the selected consumer SDK and use:
 
 ```sh
 dotnet cake --target=tests-msbuild --wasm=true
-# Use a specific installed SDK (including preview SDKs):
-dotnet cake --target=tests-msbuild --wasm=true --consumerSdkVersion=11.0.100-rc.1.26425.128
 ```
 
-The runner remains net10.0, while `ConsumerSdkVersion` pins the generated
-consumer's `global.json` and selects its target framework (SDK 10 -> net10.0,
-SDK 11 -> net11.0). An SDK preview is permitted only when that exact SDK was
+The runner remains net10.0, while the SDK selected by the checkout's `global.json`
+pins each generated consumer's SDK and selects its target framework
+(SDK 10 -> net10.0, SDK 11 -> net11.0). A preview is permitted only when that exact SDK was
 selected. A direct filtered invocation is also available:
 
 ```sh
 dotnet test tests/SkiaSharp.Tests.MSBuild/SkiaSharp.Tests.MSBuild.csproj \
   -p:PackageDirectory=/absolute/path/to/nugets \
-  -p:ConsumerSdkVersion=11.0.100-rc.1.26425.128 \
   -- --filter-trait Category=Wasm --report-trx --results-directory /absolute/path/to/test-results
 ```
 
@@ -359,14 +356,15 @@ diagnostics default to `output/logs/testlogs/msbuild`; override
 `-p:MSBuildTestArtifactsDirectory=/absolute/path/to/diagnostics` for a direct run.
 Private restore caches are not included in diagnostic artifacts.
 
-The **MSBuild package tests** CI stage has exactly three jobs: Windows, macOS,
-and Linux. Each runs the normal unfiltered .NET 10 desktop + WASM + MAUI suite,
-then installs public SDK `11.0.100-rc.1.26425.128` and workload set
-`11.0.100-rc.1.26458.5` with `wasm-tools`, and runs the same test project with
-`--wasm=true --consumerSdkVersion=11.0.100-rc.1.26425.128`. This second pass has
-one net11 WASM consumer test; the test runner and Cake remain net10. The RC1
-workload install uses a separate `global.json` directory after the stable run,
-so it never changes the repository SDK pin or switches SDKs before that run. In
+The **MSBuild package tests** CI stage has a three-host by two-SDK matrix:
+Windows, macOS, and Linux, each with stable and preview jobs. Every job uses
+`target: tests-msbuild` and the bootstrapper's normal SDK/workload provisioning.
+Stable jobs run the unfiltered .NET 10 desktop + WASM + MAUI suite. Preview jobs
+use `installPreviewSdk: true`, `previewWorkloads: wasm-tools`, and
+`additionalArgs: --wasm=true` to run one net11 WASM native-link case under public
+SDK `11.0.100-rc.1.26425.128` and workload set `11.0.100-rc.1.26458.5`.
+There are no custom SDK/workload install steps, JDK selection tasks, or extra
+Cake invocations. Both test executables target net10.0. In
 combined CI it depends on `package`; in downstream Tests it depends on `prepare`
 and downloads the exact SkiaSharp pipeline-resource run's artifact. It runs
 alongside Samples without changing the prerequisites of existing source/unit/
