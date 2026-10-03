@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -8,6 +10,12 @@ namespace SkiaSharp.Tests
 	public class SKDataTest : SKTest
 	{
 		private readonly static byte[] OddData = new byte[] { 1, 3, 5, 7, 9 };
+
+		private sealed class ReleaseState
+		{
+			public int Calls;
+			public IntPtr Address;
+		}
 
 		[Fact]
 		public void EmptyDataIsNotDisposed()
@@ -168,6 +176,55 @@ namespace SkiaSharp.Tests
 			}
 
 			Assert.True(released, "The SKDataReleaseDelegate was not called.");
+		}
+
+		[Theory]
+		[InlineData(0)]
+		[InlineData(10)]
+		public async Task DataWithReleaseDelegateAlwaysTransfersHandleToNative(int length)
+		{
+			var reference = CreateAndDisposeDataWithReleaseDelegate(length);
+			await AssertEx.EventuallyGC(reference);
+		}
+
+		[Fact]
+		public void EmptyDataWithNullReleaseDelegateIsCreated()
+		{
+			using var data = SKData.Create(IntPtr.Zero, 0, null, new object());
+
+			Assert.NotNull(data);
+			Assert.Equal(0, data.Size);
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static WeakReference CreateAndDisposeDataWithReleaseDelegate(int length)
+		{
+			var memory = length == 0 ? IntPtr.Zero : Marshal.AllocCoTaskMem(length);
+			try
+			{
+				var state = new ReleaseState();
+				var reference = new WeakReference(state);
+				using var data = SKData.Create(memory, length, (address, context) =>
+				{
+					var releaseState = (ReleaseState)context;
+					releaseState.Address = address;
+					releaseState.Calls++;
+				}, state);
+
+				Assert.NotNull(data);
+				Assert.Equal(length, data.Size);
+				Assert.Equal(0, state.Calls);
+				data.Dispose();
+				data.Dispose();
+				Assert.Equal(1, state.Calls);
+				Assert.Equal(memory, state.Address);
+				return reference;
+			}
+			finally
+			{
+				if (memory != IntPtr.Zero)
+					Marshal.FreeCoTaskMem(memory);
+			}
 		}
 
 		[Fact]
