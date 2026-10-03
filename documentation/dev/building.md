@@ -219,9 +219,10 @@ must be available on `dotnet-public`; unpublished daily SDKs can require
 additional feeds and are not supported by this fixture's restore configuration.
 Workload provisioning uses the existing approved sources in `nuget.config`
 without overrides. Missing workload packages must be mirrored to an approved
-feed; do not add NuGet.org as a workaround. RC1 provisioning is blocked until
-`Microsoft.NET.Workloads.11.0.100-rc.1` version `11.100.0-rc.1.26458.5` is
-available through those sources.
+feed; do not add NuGet.org as a workaround. On 2026-10-03, RC1 workload
+provisioning through the approved feeds and the default Mono WASM package
+regression both passed locally on Windows after the missing workload-set,
+manifest, and Emscripten packages were mirrored.
 
 Or run the test project directly against a local artifact directory:
 
