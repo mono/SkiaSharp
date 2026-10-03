@@ -203,8 +203,11 @@ dotnet cake --target=tests-msbuild
 ```
 
 Install `wasm-tools,maui-android` on all hosts; add `maui-windows` on Windows
-or `maui-ios,maui-maccatalyst` on macOS. CI installs these using the repository
-workload installer and the stable workload set (currently `10.0.202`).
+or `maui-ios,maui-maccatalyst` on macOS. CI uses the shared workload installer's
+default list and stable workload set (currently `10.0.202`), without a
+`dotnetWorkloads` override. Linux defaults include Android, WASM, and
+`maui-android`, but not unsupported Apple workloads. Other hosts retain the
+shared defaults including the aggregate `maui` workload.
 Stable and preview are separate bootstrapper jobs on each host. Stable jobs
 use the repository SDK pin; preview jobs use the existing `installPreviewSdk`
 and `previewWorkloads` options to select the preview SDK and install `wasm-tools`.
@@ -357,7 +360,10 @@ diagnostics default to `output/logs/testlogs/msbuild`; override
 Private restore caches are not included in diagnostic artifacts.
 
 The **MSBuild package tests** CI stage has a three-host by two-SDK matrix:
-Windows, macOS, and Linux, each with stable and preview jobs. Every job uses
+Windows, macOS, and Linux, each with stable and preview jobs. Local `matrix`
+and `builds` object parameters define the hosts and SDK settings, following
+the Linux matrix template pattern; the job body has no host/SDK conditionals.
+Every job uses
 `target: tests-msbuild` and the bootstrapper's normal SDK/workload provisioning.
 Stable jobs run the unfiltered .NET 10 desktop + WASM + MAUI suite. Preview jobs
 use `installPreviewSdk: true`, `previewWorkloads: wasm-tools`, and

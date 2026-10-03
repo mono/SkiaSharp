@@ -56,11 +56,11 @@ if ($TizenBand -and $TizenVersion) {
 if ($Workloads) {
   $WorkloadList = @($Workloads -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 } else {
-  $WorkloadList = @('android', 'macos', 'wasm-tools')
+  $WorkloadList = @('android', 'wasm-tools')
   if ($IsLinux) {
     $WorkloadList += @('maui-android')
   } else {
-    $WorkloadList += @('ios', 'tvos', 'maccatalyst', 'maui')
+    $WorkloadList += @('macos', 'ios', 'tvos', 'maccatalyst', 'maui')
   }
 }
 

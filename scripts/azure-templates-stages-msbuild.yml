@@ -7,6 +7,33 @@ parameters:
     type: object
   - name: buildAgentLinux
     type: object
+  - name: matrix
+    type: object
+    default:
+      - name: windows
+        displayName: Windows
+        buildAgent: buildAgentWindows
+      - name: macos
+        displayName: macOS
+        buildAgent: buildAgentMac
+      - name: linux
+        displayName: Linux
+        buildAgent: buildAgentLinux
+  - name: builds
+    type: object
+    default:
+      - name: stable
+        parameters:
+          jdkVersion: '21.0.10'
+          jdkFolderVersion: '21.0.10+7'
+      - name: preview
+        parameters:
+          installDotNetWorkloads: false
+          installAndroidSdk: false
+          installXcode: false
+          installPreviewSdk: true
+          previewWorkloads: wasm-tools
+          additionalArgs: --wasm=true
 
 stages:
   - stage: msbuild_tests
@@ -16,39 +43,14 @@ stages:
     ${{ else }}:
       dependsOn: package
     jobs:
-      - ${{ each platform in split('windows,macos,linux', ',') }}:
-        - ${{ each sdk in split('stable,preview', ',') }}:
+      - ${{ each platform in parameters.matrix }}:
+        - ${{ each build in parameters.builds }}:
           - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
             parameters:
-              name: tests_msbuild_${{ platform }}_${{ sdk }}
-              ${{ if eq(platform, 'windows') }}:
-                displayName: Windows (${{ sdk }})
-                buildAgent: ${{ parameters.buildAgentWindows }}
-              ${{ if eq(platform, 'macos') }}:
-                displayName: macOS (${{ sdk }})
-                buildAgent: ${{ parameters.buildAgentMac }}
-              ${{ if eq(platform, 'linux') }}:
-                displayName: Linux (${{ sdk }})
-                buildAgent: ${{ parameters.buildAgentLinux }}
-              ${{ if eq(sdk, 'stable') }}:
-                installDotNetWorkloads: true
-                installAndroidSdk: true
-                installXcode: true
-                jdkVersion: '21.0.10'
-                jdkFolderVersion: '21.0.10+7'
-                ${{ if eq(platform, 'windows') }}:
-                  dotnetWorkloads: wasm-tools,maui-android,maui-windows
-                ${{ if eq(platform, 'macos') }}:
-                  dotnetWorkloads: wasm-tools,maui-android,maui-ios,maui-maccatalyst
-                ${{ if eq(platform, 'linux') }}:
-                  dotnetWorkloads: wasm-tools,maui-android
-              ${{ else }}:
-                installDotNetWorkloads: false
-                installAndroidSdk: false
-                installXcode: false
-                installPreviewSdk: true
-                previewWorkloads: wasm-tools
-                additionalArgs: --wasm=true
+              name: tests_msbuild_${{ platform.name }}_${{ build.name }}
+              displayName: ${{ platform.displayName }} (${{ build.name }})
+              buildAgent: ${{ parameters[platform.buildAgent] }}
+              ${{ insert }}: ${{ build.parameters }}
               target: tests-msbuild
               retryCount: 0
               shouldPublish: false
@@ -68,10 +70,10 @@ stages:
                   inputs:
                     testResultsFormat: VSTest
                     testResultsFiles: 'output/logs/testlogs/msbuild/**/*.trx'
-                    testRunTitle: '${{ platform }} (${{ sdk }}) MSBuild package tests'
+                    testRunTitle: '${{ platform.displayName }} (${{ build.name }}) MSBuild package tests'
                     failTaskOnFailedTests: true
                     failTaskOnMissingResultsFile: true
               publishArtifacts:
-                - name: testlogs_msbuild_${{ platform }}_${{ sdk }}
+                - name: testlogs_msbuild_${{ platform.name }}_${{ build.name }}
                   always: true
                   path: output/logs
