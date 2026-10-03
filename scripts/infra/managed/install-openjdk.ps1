@@ -6,9 +6,11 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
-if ("$env:JAVA_HOME_17_X64" -and (Test-Path (Join-Path "$env:JAVA_HOME_17_X64" "bin"))) {
-    Write-Host "Java is already installed to '$env:JAVA_HOME_17_X64'..."
-    $java_home = $env:JAVA_HOME_17_X64
+$majorVersion = $Version.Split('.')[0]
+$installedJavaHome = [Environment]::GetEnvironmentVariable("JAVA_HOME_${majorVersion}_X64")
+if ($installedJavaHome -and (Test-Path (Join-Path $installedJavaHome "bin"))) {
+    Write-Host "Java is already installed to '$installedJavaHome'..."
+    $java_home = $installedJavaHome
 } else {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
 

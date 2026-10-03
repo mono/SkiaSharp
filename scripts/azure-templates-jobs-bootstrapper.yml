@@ -24,6 +24,8 @@ parameters:
   dockerArgs: ''                                # any additional arguments to pass to docker build
   installAndroidNdk: true                       # whether or not to install the Android NDK
   installAndroidSdk: true                       # whether or not to install the Android SDK
+  jdkVersion: '17.0.8.1'                         # JDK version used by the Android installer
+  jdkFolderVersion: '17.0.8.1+1'                  # extracted JDK directory version
   installWindowsSdk: false                      # whether or not to install the Windows SDK
   installDotNet: true                           # whether or not to install the dotnet SDK
   additionalDotNetSdks: []                      # additional SDKs to install side-by-side
@@ -245,7 +247,7 @@ jobs:
         # install the bits needed for Android
         - ${{ if eq(parameters.installAndroidSdk, 'true') }}:
           # install the correct version of the JDK
-          - pwsh: .\scripts\infra\managed\install-openjdk.ps1
+          - pwsh: .\scripts\infra\managed\install-openjdk.ps1 -Version "${{ parameters.jdkVersion }}" -FolderVersion "${{ parameters.jdkFolderVersion }}"
             displayName: Install OpenJDK
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
