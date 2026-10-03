@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Verify checked-in generated binding trees without changing the worktree."""
+from __future__ import annotations
+
 import argparse
 import filecmp
 import json
@@ -37,13 +39,29 @@ def compare_trees(expected: Path, actual: Path) -> list[str]:
     return differences
 
 
-def run_check(repo_root: Path, output_dir: Path) -> dict:
+def run_check(
+    repo_root: Path,
+    output_dir: Path,
+    prepared_generated_root: Path | None = None,
+) -> dict:
     repo_root = Path(repo_root)
     output_dir = Path(output_dir)
     generated_root = output_dir / "generated"
     if generated_root.exists():
         shutil.rmtree(generated_root)
-    generated_root.mkdir(parents=True)
+    if prepared_generated_root:
+        if not prepared_generated_root.is_dir():
+            raise RuntimeError(
+                f"Prepared generated root does not exist: {prepared_generated_root}"
+            )
+        for path in prepared_generated_root.rglob("*"):
+            if path.is_symlink():
+                raise RuntimeError(
+                    f"Prepared generated root contains a symlink: {path}"
+                )
+        shutil.copytree(prepared_generated_root, generated_root)
+    else:
+        generated_root.mkdir(parents=True)
     generator = repo_root / "utils" / "SkiaSharpGenerator" / "SkiaSharpGenerator.csproj"
     log_path = output_dir / "generator-output.log"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -55,28 +73,27 @@ def run_check(repo_root: Path, output_dir: Path) -> dict:
                 raise RuntimeError(f"Generator command failed: {' '.join(args)}")
 
         try:
-            run("dotnet", "build", str(generator))
-            for config, source_root, project, legacy_file in PROJECTS:
-                project_root = repo_root / "binding" / project
-                expected_directory = project_root / "Generated"
-                # Seed the isolated output because the generator carries XML docs
-                # forward from its existing output before replacing generated code.
-                if expected_directory.is_dir():
-                    generated_output = generated_root / project
-                    shutil.copytree(expected_directory, generated_output)
-                else:
-                    expected_file = project_root / legacy_file
-                    generated_output = generated_root / project / legacy_file
-                    generated_output.parent.mkdir(parents=True, exist_ok=True)
-                    if expected_file.is_file():
-                        shutil.copy2(expected_file, generated_output)
-                run(
-                    "dotnet", "run", "--no-build", "--no-launch-profile",
-                    f"--project={generator}", "--", "generate",
-                    "--config", str(repo_root / "binding" / config),
-                    "--root", str(repo_root / source_root),
-                    "--output", str(generated_output),
-                )
+            if not prepared_generated_root:
+                run("dotnet", "build", str(generator))
+                for config, source_root, project, legacy_file in PROJECTS:
+                    project_root = repo_root / "binding" / project
+                    expected_directory = project_root / "Generated"
+                    if expected_directory.is_dir():
+                        generated_output = generated_root / project
+                        shutil.copytree(expected_directory, generated_output)
+                    else:
+                        expected_file = project_root / legacy_file
+                        generated_output = generated_root / project / legacy_file
+                        generated_output.parent.mkdir(parents=True, exist_ok=True)
+                        if expected_file.is_file():
+                            shutil.copy2(expected_file, generated_output)
+                    run(
+                        "dotnet", "run", "--no-build", "--no-launch-profile",
+                        f"--project={generator}", "--", "generate",
+                        "--config", str(repo_root / "binding" / config),
+                        "--root", str(repo_root / source_root),
+                        "--output", str(generated_output),
+                    )
         except Exception as error:
             return {
                 "status": "FAIL", "checked": [], "mismatches": [],
