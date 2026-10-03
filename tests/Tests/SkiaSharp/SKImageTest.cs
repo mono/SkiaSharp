@@ -254,6 +254,51 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void FromPixelCopyManagedBuffersMatchDataBackedImages()
+		{
+			var cases = new[] {
+				(new SKImageInfo(3, 2, SKColorType.Bgra8888, SKAlphaType.Premul), 12, 24),
+				(new SKImageInfo(3, 2, SKColorType.Rgba8888, SKAlphaType.Unpremul), 20, 40),
+				(new SKImageInfo(3, 2, SKColorType.Gray8, SKAlphaType.Opaque), 3, 6),
+				(new SKImageInfo(3, 2, SKColorType.Bgra8888, SKAlphaType.Premul), 12, 23),
+				(new SKImageInfo(3, 2, SKColorType.Bgra8888, SKAlphaType.Premul), 11, 24),
+				(SKImageInfo.Empty, 0, 0),
+			};
+
+			foreach (var (info, rowBytes, length) in cases)
+			{
+				var pixels = new byte[length];
+				for (var i = 0; i < pixels.Length; i++)
+					pixels[i] = (byte)(i * 17 + 3);
+
+				using var data = SKData.CreateCopy(pixels);
+				using var expected = SKImage.FromPixels(info, data, rowBytes);
+				using var actualArray = SKImage.FromPixelCopy(info, pixels, rowBytes);
+				using var actualSpan = SKImage.FromPixelCopy(info, pixels.AsSpan(), rowBytes);
+				pixels.AsSpan().Fill(0);
+
+				Assert.Equal(expected is null, actualArray is null);
+				Assert.Equal(expected is null, actualSpan is null);
+
+				if (expected is not null)
+				{
+					using var expectedPixels = expected.PeekPixels();
+					using var arrayPixels = actualArray.PeekPixels();
+					using var spanPixels = actualSpan.PeekPixels();
+					Assert.True(expectedPixels.GetPixelSpan().SequenceEqual(arrayPixels.GetPixelSpan()));
+					Assert.True(expectedPixels.GetPixelSpan().SequenceEqual(spanPixels.GetPixelSpan()));
+				}
+			}
+		}
+
+		[Fact]
+		public void FromPixelCopyByteArrayPreservesNullValidation()
+		{
+			var info = new SKImageInfo(1, 1);
+			Assert.Throws<ArgumentNullException>(() => SKImage.FromPixelCopy(info, (byte[])null));
+		}
+
+		[Fact]
 		public void TestFromPixelCopyStream()
 		{
 			using (var bmp = CreateTestBitmap())
