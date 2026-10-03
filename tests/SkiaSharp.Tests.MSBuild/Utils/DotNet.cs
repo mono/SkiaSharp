@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests.MSBuild.Utils;
 public sealed class DotNet : IDisposable
 {
     private readonly string root;
-    private readonly string cache = Path.Combine(Path.GetTempPath(), $"skiasharp-msbuild-{Guid.NewGuid():N}");
+    private readonly string cache;
     private readonly string host = Setting("DotNetHost");
 
     public string PackageDirectory { get; } = Path.GetFullPath(Setting("PackageDirectory"));
@@ -17,6 +17,7 @@ public sealed class DotNet : IDisposable
     public DotNet()
     {
         root = Path.Combine(Path.GetFullPath(Setting("ArtifactsDirectory")), Guid.NewGuid().ToString("N"));
+        cache = Path.Combine(root, ".cache");
         Directory.CreateDirectory(root);
         File.WriteAllText(Path.Combine(root, "Directory.Build.props"), "<Project />");
         File.WriteAllText(Path.Combine(root, "Directory.Build.targets"), "<Project />");
@@ -51,6 +52,21 @@ public sealed class DotNet : IDisposable
         return directory;
     }
 
+    public async Task<string> NewMauiProject(string name, string xml, string app, string mauiProgram)
+    {
+        var directory = Path.Combine(root, name);
+        Directory.CreateDirectory(directory);
+        await Execute(directory, host, ["new", "maui", "--name", "Consumer", "--output", ".", "--framework", "net10.0",
+            "--no-restore"], "template", 1);
+        foreach (var file in new[] { "App.xaml", "App.xaml.cs", "AppShell.xaml", "AppShell.xaml.cs",
+            "MainPage.xaml", "MainPage.xaml.cs" })
+            File.Delete(Path.Combine(directory, file));
+        File.WriteAllText(Path.Combine(directory, "Consumer.csproj"), xml);
+        File.WriteAllText(Path.Combine(directory, "App.cs"), app);
+        File.WriteAllText(Path.Combine(directory, "MauiProgram.cs"), mauiProgram);
+        return directory;
+    }
+
     public Task Build(string directory, string configuration = "Release", int timeoutMinutes = 5) =>
         Run(directory, "build", configuration: configuration, timeoutMinutes: timeoutMinutes);
 
@@ -59,21 +75,32 @@ public sealed class DotNet : IDisposable
     private async Task Run(string directory, string command, string? rid = null,
         string configuration = "Release", int timeoutMinutes = 5)
     {
-        var start = new ProcessStartInfo(host)
+        var arguments = new List<string> { command, "Consumer.csproj", "-c", configuration, "-o", "output",
+            "--nologo", "--disable-build-servers", "-v:minimal", "-bl:build.binlog",
+            $"-p:RestoreConfigFile={Path.Combine(root, "NuGet.Config")}" };
+        if (rid is not null)
+        {
+            arguments.Add("-r");
+            arguments.Add(rid);
+        }
+        await Execute(directory, host, arguments, command, timeoutMinutes);
+    }
+
+    public Task InspectAppleBinary(string directory, string binary) =>
+        Execute(directory, "/usr/bin/otool", ["-L", binary], Path.GetFileName(binary) + "-link", 1);
+
+    private async Task Execute(string directory, string executable, IEnumerable<string> arguments, string logName,
+        int timeoutMinutes)
+    {
+        var start = new ProcessStartInfo(executable)
         {
             WorkingDirectory = directory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false
         };
-        foreach (var argument in new[] { command, "Consumer.csproj", "-c", configuration, "-o", "output",
-            "--nologo", "-v:minimal", "-bl:build.binlog", $"-p:RestoreConfigFile={Path.Combine(root, "NuGet.Config")}" })
+        foreach (var argument in arguments)
             start.ArgumentList.Add(argument);
-        if (rid is not null)
-        {
-            start.ArgumentList.Add("-r");
-            start.ArgumentList.Add(rid);
-        }
         foreach (var key in start.Environment.Keys.Where(k =>
             k.StartsWith("MSBUILD", StringComparison.OrdinalIgnoreCase) ||
             k.StartsWith("Restore", StringComparison.OrdinalIgnoreCase) ||
@@ -85,8 +112,10 @@ public sealed class DotNet : IDisposable
         start.Environment["NUGET_SCRATCH"] = Path.Combine(cache, "scratch");
         start.Environment["DOTNET_CLI_HOME"] = Path.Combine(cache, "home");
         start.Environment["DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE"] = "true";
-        File.WriteAllText(Path.Combine(directory, "command.txt"),
-            host + " " + string.Join(" ", start.ArgumentList.Select(a => $"\"{a}\"")));
+        start.Environment["MSBUILDDISABLENODEREUSE"] = "1";
+        var prefix = logName == "build" || logName == "publish" ? "" : logName + "-";
+        File.WriteAllText(Path.Combine(directory, prefix + "command.txt"),
+            executable + " " + string.Join(" ", start.ArgumentList.Select(a => $"\"{a}\"")));
 
         using var process = Process.Start(start) ?? throw new InvalidOperationException("Could not start dotnet");
         var stdout = process.StandardOutput.ReadToEndAsync();
@@ -101,15 +130,15 @@ public sealed class DotNet : IDisposable
             if (!process.HasExited)
                 process.Kill(entireProcessTree: true);
             await process.WaitForExitAsync();
-            throw new TimeoutException($"dotnet {command} timed out; see {directory}");
+            throw new TimeoutException($"{executable} {logName} timed out; see {directory}");
         }
         finally
         {
-            File.WriteAllText(Path.Combine(directory, "stdout.txt"), await stdout);
-            File.WriteAllText(Path.Combine(directory, "stderr.txt"), await stderr);
+            File.WriteAllText(Path.Combine(directory, prefix + "stdout.txt"), await stdout);
+            File.WriteAllText(Path.Combine(directory, prefix + "stderr.txt"), await stderr);
         }
         if (process.ExitCode != 0)
-            throw new InvalidOperationException($"dotnet {command} failed ({process.ExitCode}); see {directory}\n{await stdout}\n{await stderr}");
+            throw new InvalidOperationException($"{executable} {logName} failed ({process.ExitCode}); see {directory}\n{await stdout}\n{await stderr}");
     }
 
     public void CleanBuildOutput(string directory)

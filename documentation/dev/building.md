@@ -172,9 +172,12 @@ dotnet cake --target=externals-linux --arch=x64
 `tests/SkiaSharp.Tests.MSBuild` tests real packed SkiaSharp and HarfBuzzSharp
 packages using isolated .NET consumers. It does not build the bindings, load
 native libraries into the test runner, or use the repository's native-copy
-targets. The default desktop tests only require the SDK pinned by `global.json`:
-no workloads, submodules, GPU, browser, native source build, or native runtime
-dependencies. They inspect build/publish output without executing native code.
+targets. The normal, unfiltered suite builds desktop, WASM, and real MAUI
+applications. It needs the SDK pinned by `global.json`, `wasm-tools`, the
+host-supported MAUI workloads, JDK 21, and the Android SDK. macOS also needs
+the pinned Xcode (currently 26.3), and Windows needs the WinUI XAML build
+toolchain. No submodules, GPU, browser, emulator, device, UI execution, or native
+source build is required. These tests inspect build outputs without running apps.
 
 Download the `nuget` artifact from one exact completed SkiaSharp CI build and
 place its packages in `output/nugets`. Record the build URL/commit when reporting
@@ -182,6 +185,14 @@ results. Do not combine different builds or substitute published packages for
 missing artifacts. Both families require their core, `NativeAssets.Win32`,
 `NativeAssets.macOS`, and `NativeAssets.Linux` packages for the desktop tests.
 The WASM test additionally requires both `NativeAssets.WebAssembly` packages.
+MAUI requires `SkiaSharp.HarfBuzz`, `SkiaSharp.Views.Maui.Controls`,
+`SkiaSharp.Views.Maui.Core`, and `SkiaSharp.Views`, plus both families'
+`NativeAssets.Android` packages on every host. Windows additionally requires
+`SkiaSharp.Views.WinUI` and `SkiaSharp.NativeAssets.WinUI`; macOS additionally
+requires both families' `NativeAssets.iOS` and `NativeAssets.MacCatalyst`.
+All transitive SkiaSharp/HarfBuzzSharp dependencies must also be present in that
+same artifact set. Missing packages, workloads, or platform tools fail tests;
+they never trigger skips or public-package fallback.
 Package versions are read from their nuspec metadata, not inferred from the
 checkout.
 
@@ -191,8 +202,20 @@ Run the CI entry point from the repository root:
 dotnet cake --target=tests-msbuild
 ```
 
-To run the WASM native-link regression instead, install `wasm-tools` under the
-consumer SDK and use:
+Install `wasm-tools,maui-android` on all hosts; add `maui-windows` on Windows
+or `maui-ios,maui-maccatalyst` on macOS. CI installs these using the repository
+workload installer and the stable workload set (currently `10.0.202`).
+Provision the Android SDK/API 36 and JDK 21 as well. Unsupported host TFMs are
+explicitly omitted from MAUI theory data, not skipped during execution:
+
+| Host | Stable net10 consumer coverage | Stable test count |
+| --- | --- | --- |
+| Windows | Desktop, Mono WASM, Android APK, unpackaged WinUI executable | 25 |
+| macOS | Desktop, Mono WASM, Android APK, iOS simulator app, Mac Catalyst app | 26 |
+| Linux | Desktop, Mono WASM, Android APK | 24 |
+
+To run only the WASM native-link regression (for example, a second SDK pass),
+install `wasm-tools` under the selected consumer SDK and use:
 
 ```sh
 dotnet cake --target=tests-msbuild --wasm=true
@@ -218,26 +241,52 @@ and workload set `11.0.100-rc.1.26458.5`. The consumer's Microsoft dependencies
 must be available on `dotnet-public`; unpublished daily SDKs can require
 additional feeds and are not supported by this fixture's restore configuration.
 Workload provisioning uses the existing approved sources in `nuget.config`
-without overrides. Missing workload packages must be mirrored to an approved
+without overrides. MAUI restores also accept the SDK-injected local
+`library-packs` directory; no additional network feed is allowed.
+Missing workload packages must be mirrored to an approved
 feed; do not add NuGet.org as a workaround. On 2026-10-03, RC1 workload
 provisioning through the approved feeds and the default Mono WASM package
 regression both passed locally on Windows after the missing workload-set,
 manifest, and Emscripten packages were mirrored.
+
+**macOS RC1 provisioning blocker (2026-10-03):** the
+`Microsoft.NET.Runtime.Emscripten.6.0.2.{Python,Sdk,Node,Cache}.osx-{x64,arm64}`
+packages at version `11.0.0-rc.1.26425.128` are absent from both `dotnet-public`
+and `dotnet-eng`. Mirror the four packages for the CI host's SDK architecture
+to an approved feed before provisioning its RC1 `wasm-tools` workload.
+The Tests pipeline's default `macos-15` host is Intel/x64 and requires these
+four exact package IDs, all at `11.0.0-rc.1.26425.128`:
+
+- `Microsoft.NET.Runtime.Emscripten.6.0.2.Python.osx-x64`
+- `Microsoft.NET.Runtime.Emscripten.6.0.2.Sdk.osx-x64`
+- `Microsoft.NET.Runtime.Emscripten.6.0.2.Node.osx-x64`
+- `Microsoft.NET.Runtime.Emscripten.6.0.2.Cache.osx-x64`
+
+Windows/Linux equivalents have been mirrored. macOS net11 coverage remains
+required and must fail provisioning until these packages are available; do
+not remove coverage, add source overrides, or fall back to a different toolchain.
 
 Or run the test project directly against a local artifact directory:
 
 ```sh
 dotnet test tests/SkiaSharp.Tests.MSBuild/SkiaSharp.Tests.MSBuild.csproj \
   -p:PackageDirectory=/absolute/path/to/nugets \
-  -- --filter-not-trait Category=Wasm --report-trx --results-directory /absolute/path/to/test-results
+  -- --report-trx --results-directory /absolute/path/to/test-results
 ```
 
-`NativeAssetOutputTests.cs` contains the package references, scenarios, and
-assertions. `Utils/DotNet.cs` handles isolated project creation and CLI execution.
-The tests share one private restore cache; every case has independent project,
+`NativeAssetOutputTests.cs`, `WasmNativeAssetTests.cs`, and
+`MauiNativeAssetTests.cs` contain the package references, scenarios, and
+assertions. `Utils/DotNet.cs` handles isolated project creation and CLI execution;
+`Utils/ArtifactPackage.cs` reads real package identities and hashes. Each fixture
+has a private restore cache; every case has independent project,
 intermediate, and output directories. Source mapping restricts SkiaSharp and
 HarfBuzzSharp packages to the supplied artifacts, so missing packages cannot
 fall back to public versions. User NuGet caches and input packages are not modified.
+
+On Windows, Android's resource compiler and WinUI's XAML compiler can fail with
+deeply nested consumer paths. For a long checkout path, pass
+`-p:MSBuildTestArtifactsDirectory=<short-absolute-path>` to the direct test command.
+The directory contains generated applications and retained build diagnostics.
 
 For each family, build and publish first verify the default package includes
 Win32/macOS native assets and **no Linux native assets**. With an explicit
@@ -268,17 +317,48 @@ header. This is native-link build coverage, not a trimmed publish/AOT or
 browser-execution test. The SDK and packages, rather than the test, choose the
 flags and archive variants. It does not claim CoreCLR WASM support.
 
+`MauiNativeAssetTests.cs` generates an installed `dotnet new maui --no-restore`
+application, preserves the platform entrypoints/manifests/resources, and
+rewrites its project and shared source inside the isolated consumer directory.
+The app registers the real `SKCanvasView` handler with `.UseSkiaSharp()` and
+compiles drawing/shaping code against `SkiaSharp.HarfBuzz` and `HarfBuzzSharp`.
+It builds one host-architecture RID per supported platform (`android-x64` or
+`android-arm64`, `win-x64` or `win-arm64`, and matching iOS simulator/Mac Catalyst
+RIDs). Platform native packages are selected through the real package graph,
+not repository imports or explicit replacement assets.
+
+MAUI assertions verify the exact RID restore target, all restored SkiaSharp/
+HarfBuzzSharp identities and package hashes, and their local-artifact origin.
+They also verify both families and the real MAUI integration assemblies were
+compiler references. Android APKs must contain a manifest, DEX, and exactly one
+native library per family for the selected ABI, with input-package hashes
+(native stripping is disabled to preserve byte identity). Windows must produce
+a PE app executable and the selected Win32 and WinUI native libraries, matching
+package hashes. Apple builds must produce a native `.app` executable and both
+families' Mach-O framework binaries, with `otool -L` evidence; selected cached
+framework inputs match their package hashes. Final Apple binaries may be
+thinned/signed by the platform build, so final hashes are not compared.
+Debug application builds avoid release signing/AOT requirements, without
+turning the application into a class library or bypassing native packaging.
+The Windows consumer uses the packaged C++/WinRT projection; the separate
+VS17/SDK `10.0.111` native-projection build guidance does not change its SDK.
+
 TRX results, generated projects, command logs, binlogs, restore/dependency
 metadata, and failed-consumer outputs are published from `output/logs/` in CI.
-Successful desktop build outputs are removed after assertions; WASM build
-outputs and emcc response files are retained even on success. The consumer
+Successful desktop build outputs are removed after assertions; WASM and MAUI
+outputs, emcc response files, and Apple link inspections are retained even on success. The consumer
 diagnostics default to `output/logs/testlogs/msbuild`; override
 `-p:MSBuildTestArtifactsDirectory=/absolute/path/to/diagnostics` for a direct run.
 Private restore caches are not included in diagnostic artifacts.
 
-The **MSBuild package tests** CI stage runs workload-free desktop tests on
-Windows, macOS, and Linux and separate Linux WASM package jobs for the stable
-.NET 10 and preview .NET 11 SDKs, each with only the `wasm-tools` workload. In
+The **MSBuild package tests** CI stage has exactly three jobs: Windows, macOS,
+and Linux. Each runs the normal unfiltered .NET 10 desktop + WASM + MAUI suite,
+then installs public SDK `11.0.100-rc.1.26425.128` and workload set
+`11.0.100-rc.1.26458.5` with `wasm-tools`, and runs the same test project with
+`--wasm=true --consumerSdkVersion=11.0.100-rc.1.26425.128`. This second pass has
+one net11 WASM consumer test; the test runner and Cake remain net10. The RC1
+workload install uses a separate `global.json` directory after the stable run,
+so it never changes the repository SDK pin or switches SDKs before that run. In
 combined CI it depends on `package`; in downstream Tests it depends on `prepare`
 and downloads the exact SkiaSharp pipeline-resource run's artifact. It runs
 alongside Samples without changing the prerequisites of existing source/unit/

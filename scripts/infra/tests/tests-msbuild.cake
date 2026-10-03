@@ -23,10 +23,9 @@ Task ("Default")
     if (!SKIP_BUILD)
         RunDotNetBuild(project, properties: properties);
 
-    var filter = Argument("wasm", false)
-        ? "--filter-trait"
-        : "--filter-not-trait";
-    RunDotNetTest(project, results, runnerArguments: new[] { filter, "Category=Wasm" });
+    RunDotNetTest(project, results, runnerArguments: Argument("wasm", false)
+        ? new[] { "--filter-trait", "Category=Wasm" }
+        : null);
 });
 
 RunTarget(TARGET);

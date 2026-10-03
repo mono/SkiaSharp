@@ -1,4 +1,3 @@
-using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Xml.Linq;
 using SkiaSharp.Tests.MSBuild.Utils;
@@ -18,7 +17,7 @@ public class WasmNativeAssetTests(DotNet dotnet) : IClassFixture<DotNet>
         Assert.True(sdkMajor is 10 or 11, $"Unsupported WASM consumer SDK: {dotnet.SdkVersion}");
         var toolchain = sdkMajor >= 11 ? "6.0.2" : "3.1.56";
         var packages = Families.SelectMany(family => new[] { family, family + ".NativeAssets.WebAssembly" })
-            .ToDictionary(id => id, ReadPackage);
+            .ToDictionary(id => id, id => ArtifactPackage.Read(dotnet.PackageDirectory, id));
         foreach (var family in Families)
             Assert.Equal(packages[family].Version, packages[family + ".NativeAssets.WebAssembly"].Version);
 
@@ -90,33 +89,8 @@ public class WasmNativeAssetTests(DotNet dotnet) : IClassFixture<DotNet>
         }
     }
 
-    private (string Version, Dictionary<string, string> Archives) ReadPackage(string id)
-    {
-        var matches = new List<(string Version, Dictionary<string, string> Archives)>();
-        foreach (var file in Directory.EnumerateFiles(dotnet.PackageDirectory, id + ".*.nupkg", SearchOption.AllDirectories)
-            .Where(file => !file.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase)))
-        {
-            using var zip = ZipFile.OpenRead(file);
-            using var nuspec = zip.Entries.Single(entry => entry.FullName.EndsWith(".nuspec", StringComparison.Ordinal)).Open();
-            var metadata = XDocument.Load(nuspec).Root!.Elements().Single(element => element.Name.LocalName == "metadata");
-            if (metadata.Elements().Single(element => element.Name.LocalName == "id").Value != id)
-                continue;
-            var version = metadata.Elements().Single(element => element.Name.LocalName == "version").Value;
-            var archives = new Dictionary<string, string>();
-            foreach (var entry in zip.Entries.Where(entry => entry.FullName.StartsWith("buildTransitive/", StringComparison.Ordinal)
-                && entry.FullName.EndsWith(".a", StringComparison.Ordinal)))
-            {
-                using var stream = entry.Open();
-                archives.Add(entry.FullName, Convert.ToHexString(SHA256.HashData(stream)));
-            }
-            matches.Add((version, archives));
-        }
-        Assert.True(matches.Count == 1, $"Expected one real {id} package in {dotnet.PackageDirectory}, found {matches.Count}");
-        return matches[0];
-    }
-
     private static string ProjectXml(int sdkMajor,
-        Dictionary<string, (string Version, Dictionary<string, string> Archives)> packages)
+        Dictionary<string, ArtifactPackage> packages)
     {
         var evidence = "wasm-native-assets.txt";
         var snapshot = new XElement("Target",
