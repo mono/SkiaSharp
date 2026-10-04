@@ -183,10 +183,10 @@ packages by building isolated desktop, WASM, and host-supported MAUI application
 These tests inspect outputs without running the apps or loading native
 libraries into the runner.
 
-Install the [prerequisites](#prerequisites), including `wasm-tools`, MAUI workloads and
-Android tools; Apple builds need Xcode, and Windows builds need the WinUI
-toolchain. Download the complete `nuget` artifact from one SkiaSharp CI build
-into `output/nugets`, then run from the repository root:
+Install the [prerequisites](#prerequisites), including `wasm-tools`, MAUI
+workloads and Android tools; Apple builds need Xcode, and Windows builds need
+the WinUI toolchain. Download the complete `nuget` artifact from one SkiaSharp
+CI build into `output/nugets`, then run from the repository root:
 
 ```sh
 dotnet cake --target=tests-msbuild
@@ -217,6 +217,19 @@ use short paths for `-p:MSBuildTestArtifactsDirectory=<absolute-path>` and
 See the [MSBuild test stage](../../scripts/azure-templates-stages-msbuild.yml)
 for CI configuration and the [test sources](../../tests/SkiaSharp.Tests.MSBuild)
 for coverage.
+
+**WASM native-link regression:**
+
+For a WASM-only diagnostic, install `wasm-tools` and supply both families'
+core and `NativeAssets.WebAssembly` packages. The test links a Mono WebAssembly
+app with the SDK's default flags; it does not run the app in a browser.
+
+```sh
+dotnet cake --target=tests-msbuild --wasm=true
+```
+
+Run the unfiltered suite for final validation. Emscripten toolchain changes
+require a native source build, not `externals-download`.
 
 ## Documentation Outputs
 
