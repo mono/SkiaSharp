@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -26,5 +27,27 @@ namespace SkiaSharp.Tests
 			var pm = new SKPathMeasure();
 			Assert.NotNull(pm);
 		}
+
+		[Fact]
+		public void PathRemainsAliveForMeasureLifetime()
+		{
+			using var measure = CreatePathMeasure(out var path);
+
+			CollectGarbage();
+
+			Assert.True(path.IsAlive);
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static SKPathMeasure CreatePathMeasure(out WeakReference pathReference)
+		{
+			var path = new SKPath();
+			path.LineTo(100, 100);
+
+			var measure = new SKPathMeasure(path);
+			pathReference = new WeakReference(path);
+			return measure;
+		}
+
 	}
 }

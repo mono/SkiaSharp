@@ -8,6 +8,8 @@ namespace SkiaSharp
 	/// <remarks />
 	public unsafe class SKPathMeasure : SKObject, ISKSkipObjectRegistration
 	{
+		private SKPath path;
+
 		internal SKPathMeasure (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -27,7 +29,7 @@ namespace SkiaSharp
 		/// <param name="path">The path to use, or <see langword="null" />.</param>
 		/// <param name="forceClosed"><see langword="true" /> to treat the path as closed; otherwise, <see langword="false" />.</param>
 		/// <param name="resScale">Controls the precision of the measure. Values greater 1 increase the precision (and possibly slow down the computation).</param>
-		/// <remarks>The path must remain valid for the lifetime of the measure object, or until <see cref="M:SkiaSharp.SKPathMeasure.SetPath(SkiaSharp.SKPath,System.Boolean)" /> is called with a different path (or <see langword="null" />), since the measure object keeps a reference to the path object (does not copy its data).</remarks>
+		/// <remarks>The measure keeps the path alive for its lifetime, or until <see cref="M:SkiaSharp.SKPathMeasure.SetPath(SkiaSharp.SKPath,System.Boolean)" /> is called with a different path (or <see langword="null" />), since it does not copy the path data.</remarks>
 		public SKPathMeasure (SKPath path, bool forceClosed = false, float resScale = 1)
 			: this (IntPtr.Zero, true)
 		{
@@ -40,6 +42,8 @@ namespace SkiaSharp
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKPathMeasure instance.");
 			}
+
+			this.path = path;
 		}
 
 		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKPathMeasure" /> and optionally releases the managed resources.</summary>
@@ -81,19 +85,28 @@ namespace SkiaSharp
 
 		/// <summary>Reset the path measure with the specified path.</summary>
 		/// <param name="path">The path to use, or <see langword="null" />.</param>
-		/// <remarks>The path must remain valid for the lifetime of the measure object, or until <see cref="M:SkiaSharp.SKPathMeasure.SetPath(SkiaSharp.SKPath,System.Boolean)" /> is called with a different path (or <see langword="null" />), since the measure object keeps a reference to the path object (does not copy its data).</remarks>
+		/// <remarks>The measure keeps the path alive for its lifetime, or until it is reset with a different path (or <see langword="null" />), since it does not copy the path data.</remarks>
 		public void SetPath (SKPath path) =>
 			SetPath (path, false);
 
 		/// <summary>Reset the path measure with the specified path.</summary>
 		/// <param name="path">The path to use, or <see langword="null" />.</param>
 		/// <param name="forceClosed"><see langword="true" /> to treat the path as closed; otherwise, <see langword="false" />.</param>
-		/// <remarks>The path must remain valid for the lifetime of the measure object, or until <see cref="M:SkiaSharp.SKPathMeasure.SetPath(SkiaSharp.SKPath,System.Boolean)" /> is called with a different path (or <see langword="null" />), since the measure object keeps a reference to the path object (does not copy its data).</remarks>
+		/// <remarks>The measure keeps the path alive for its lifetime, or until it is reset with a different path (or <see langword="null" />), since it does not copy the path data.</remarks>
 		public void SetPath (SKPath path, bool forceClosed)
 		{
 			SkiaApi.sk_pathmeasure_set_path (Handle, path == null ? IntPtr.Zero : path.Handle, forceClosed);
 			GC.KeepAlive (path);
+			this.path = path;
 			GC.KeepAlive (this);
+		}
+
+		/// <summary>Releases managed resources used by this <see cref="T:SkiaSharp.SKPathMeasure" />.</summary>
+		/// <remarks />
+		protected override void DisposeManaged ()
+		{
+			path = null;
+			base.DisposeManaged ();
 		}
 
 		// GetPositionAndTangent
