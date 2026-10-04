@@ -92,15 +92,119 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 - [ ] `scripts/azure-templates-stages-native-wasm.yml` — Add new .NET emscripten entry
 - [ ] `scripts/azure-templates-jobs-bootstrapper.yml` — Review workload install step
 
-> **WASM emsdk mapping (do this whenever the new SDK bundles a new Emscripten version).** The .NET WASM SDK links apps with a specific Emscripten toolchain, and a static library built with one Emscripten version cannot be linked by a different one (the wasm object format is incompatible → link failure). Check the new SDK's bundled version (e.g. `dotnet workload list` / the `Microsoft.NET.Runtime.Emscripten.*` pack). Known mapping so far: **.NET 8 → 3.1.34, .NET 9/10 → 3.1.56, .NET 11 → 5.0.6**. When it changes for the new SDK, you must:
+> **WASM emsdk mapping (review whenever the SDK bundles a new Emscripten version).** Align both SkiaSharp and HarfBuzzSharp archive builds with the runtime workload's Emscripten toolchain and exception-handling mode. Older static libraries can be incompatible (for example, removed `saveSetjmp` / `testSetjmp` helpers cause native-link failures). Check the bundled version using [Finding .NET's Emscripten version](#finding-nets-emscripten-version) below. The current **SkiaSharp/HarfBuzzSharp archive selection** is **.NET 8 → 3.1.34, .NET 9/10 → 3.1.56, .NET 11+ → 6.0.2**. .NET 11 previews are not supported; .NET 11 RC1/RC2 use 6.0.2. A historical passing 5.0.6-on-6.0.2 smoke test is not a substitute for native-link and browser-runtime validation of the new archives. When updating the archive set, you must:
 > 1. Add a build matrix block (all 4 `st`/`mt`/`simd`/`simd+mt` variants) for the new Emscripten version in `scripts/azure-templates-stages-native-wasm.yml`, and register its `native_wasm_<version>_*` artifacts in both merger lists in `scripts/azure-templates-stages-native-merge.yml`, so the packages ship a static library for it.
-> 2. Add a `NativeFileReference` entry for the new TFM in **all four** WASM targets files, keeping each `netX.0` on the Emscripten version its SDK actually uses:
+> 2. Add a `NativeFileReference` entry for the new TFM in **all four** WASM targets files, keeping each `netX.0` on a compatible archive set:
 >    - `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets`
 >    - `binding/HarfBuzzSharp.NativeAssets.WebAssembly/buildTransitive/HarfBuzzSharp.targets`
 >    - `binding/IncludeNativeAssets.SkiaSharp.targets`
 >    - `binding/IncludeNativeAssets.HarfBuzzSharp.targets`
 >
-> Convention for the conditions: the **newest** entry stays open-ended (`VersionGreaterThanOrEquals(TFV, 'A')`) so a future SDK that keeps the same Emscripten version keeps working with no code change (e.g. .NET 9 and .NET 10 both use 3.1.56). Only when a new SDK actually *diverges* do you close the previous entry with an upper bound (`… and VersionLessThan(TFV, 'B')`) and add a new open-ended entry for the new version — the way `net9.0`–`net10.x` was capped at `< 11.0` once .NET 11 moved to 5.0.6. The packaging globs (`**`/`*` over the version folder) pick up new version directories automatically — no nuspec/csproj change needed.
+> Convention for the conditions: the **newest** entry stays open-ended (`VersionGreaterThanOrEquals(TFV, 'A')`) so a future SDK compatible with the same archives needs no code change (e.g. .NET 9 and .NET 10 both select 3.1.56). Only when a new SDK requires different archives do you close the previous entry with an upper bound (`… and VersionLessThan(TFV, 'B')`) and add a new open-ended entry for the new version — the way `net9.0`–`net10.x` was capped at `< 11.0` once .NET 11 selected 6.0.2. Packaging and Uno inclusion retain version wildcards; clean CI builds supply only the versions produced by the current build matrix.
+
+#### Finding .NET's Emscripten version
+
+The upstream toolchain pin is **`EmsdkVersion` in `dotnet/runtime/eng/Versions.props`**:
+
+- [Current development branch](https://github.com/dotnet/runtime/blob/main/eng/Versions.props) — search the file for `EmsdkVersion`.
+- [.NET 11 release branch](https://github.com/dotnet/runtime/blob/release/11.0/eng/Versions.props) — replace `release/11.0` with the release branch being investigated, or use the exact runtime tag/commit for a reproducible lookup.
+- For an installed SDK/workload, inspect `<dotnet-root>/sdk-manifests/<sdk-feature-band>/microsoft.net.workload.emscripten.current/<manifest-version>/WorkloadManifest.json`. The pack IDs include the toolchain version, for example `Microsoft.NET.Runtime.Emscripten.6.0.2.Sdk.win-x64`. Installed packs appear under `<dotnet-root>/packs/`; check the manifest selected by the workload, not merely every installed pack, since several toolchains can coexist.
+
+Do not confuse `EmsdkVersion` with `MicrosoftNETRuntimeEmscriptenVersion`: the latter is the .NET workload package version, not the Emscripten compiler version. `dotnet workload list` identifies installed workloads but does not directly report the compiler version.
+
+The historical investigation on **2026-10-01** found that [.NET 12 development at this commit](https://github.com/dotnet/runtime/blob/2c79aa97ff29df5e321b484460322283b1332fa4/eng/Versions.props) and the .NET 11 release branch both pin **6.0.2**. It rebuilt both libraries with Emscripten 6.0.2 (`st,simd`) and verified fresh .NET 11 RC2 Mono browser apps using source targets and local native-assets packages: Skia pixel output, managed stream callbacks, and HarfBuzz shaping passed in Chrome. That is historical evidence, not execution by the MSBuild regression test; other variants and .NET 12 runtime execution were not verified.
+
+For the Windows RC1 regression on **2026-10-04**, the installed SDK was
+`11.0.100-rc.1.26425.128`, while the actual selected compiler pack was
+`Microsoft.NET.Runtime.Emscripten.6.0.2.Sdk.win-x64/11.0.0-rc.1.26425.128`.
+The pack version is **not** the SDK version. The compiler inside that nominal
+6.0.2 pack reports `emcc 6.0.3` (commit
+`6ea9c28c38cdd40c1032fa04400c9d16230ee180`); record the downstream compiler
+revision separately from the manifest's toolchain identity.
+An unchanged real-package consumer
+selected SkiaSharp 3.1.56 and HarfBuzzSharp 5.0.6 archives and failed in emcc
+with undefined `saveSetjmp` / `testSetjmp`; selecting genuine 6.0.2 archives
+for both families made the same default Mono native-link test pass.
+
+#### Published workload/toolchain history
+
+The **2026-10-01 historical audit** inspected 156 published Emscripten manifest
+package versions, 70 RC2 daily manifest versions, and an installed RC2 manifest.
+The table describes each workload's current target, not every legacy target
+installed beside it. These are research records, not permission to add restore
+or installation feeds beyond the repository's approved sources.
+
+| .NET target / release stage | Emscripten | Manifest version(s) |
+|---|---|---|
+| .NET 6, published `Manifest-6.0.100` packages | 2.0.23 | `6.0.0-preview.7.21377.2` through `6.0.36` (33 packages) |
+| .NET 7, published `net7.Manifest-7.0.100` packages | 3.1.12 | `7.0.0-rc.1.22424.1` through `7.0.20` (22 packages) |
+| .NET 8 Preview 1-2 | 3.1.12 | `8.0.0-preview.1.23101.1`, `8.0.0-preview.2.23127.1` |
+| .NET 8 Preview 3 | 3.1.30 | `8.0.0-preview.3.23172.2` |
+| .NET 8 Preview 4-7, RC1-2 | 3.1.34 | `8.0.0-preview.4.23258.2` through `8.0.0-rc.2.23473.3` |
+| .NET 8 GA / servicing | 3.1.34 | `8.0.0` through `8.0.31` (31 packages) |
+| .NET 9 Preview 1-6 | 3.1.34 | `9.0.0-preview.1.24072.2` through `9.0.0-preview.6.24327.1` |
+| .NET 9 Preview 7, RC1-2 | 3.1.56 | `9.0.0-preview.7.24373.5` through `9.0.0-rc.2.24468.8` |
+| .NET 9 GA / servicing | 3.1.56 | `9.0.0` through `9.0.20` (21 packages) |
+| .NET 10 Preview 1-7, RC1-2 | 3.1.56 | `10.0.0-preview.1.25077.1` through `10.0.100-rc.2.25502.107` |
+| .NET 10 GA / servicing | 3.1.56 | `10.0.100` through `10.0.112` (13 packages) |
+| .NET 11 Preview 1-5 | 3.1.56 | Exact versions below |
+| .NET 11 Preview 6 | 5.0.6 | `11.0.100-preview.6.26359.118` |
+| .NET 11 Preview 7, RC1 | 6.0.2 | `11.0.100-preview.7.26381.103`, `11.0.100-rc.1.26425.128` |
+| .NET 11 RC2 daily builds | 6.0.2 | All 70 available RC2 manifests; installed `11.0.100-rc.2.26475.136` also checked |
+| .NET 12 development | 6.0.2 | Source pin only; no .NET 12 workload execution verified |
+
+The public manifest package ID is `Microsoft.NET.Workload.Emscripten.Current.Manifest-<SDK feature band>`, including the preview suffix when present (for example, [the Preview 6 package](https://www.nuget.org/packages/Microsoft.NET.Workload.Emscripten.Current.Manifest-11.0.100-preview.6/11.0.100-preview.6.26359.118)). Its `data/WorkloadManifest.json` contains the `packs` / `alias-to` entries naming the compiler, such as `Microsoft.NET.Runtime.Emscripten.5.0.6.Sdk.win-x64`. Older .NET 6/7 packages use the names shown in the table instead of `Current`.
+
+**Workload-set version is a separate number.** Inspect `Microsoft.NET.Workloads.<SDK feature band>` and its workload-set JSON to find the Emscripten manifest version, then inspect that manifest to find the compiler version. A .NET runtime version or SDK version alone does not identify every pack in an independently pinned workload set.
+
+| .NET 11 stage | Workload-set package version | Emscripten manifest version | Emscripten |
+|---|---|---|---|
+| Preview 1 | `11.100.0-preview.1.26109.8` | `11.0.100-preview.1.26104.118` | 3.1.56 |
+| Preview 2 | `11.100.0-preview.2.26160.1` | `11.0.100-preview.2.26159.112` | 3.1.56 |
+| Preview 3 | `11.100.0-preview.3.26214.1` | `11.0.100-preview.3.26207.106` | 3.1.56 |
+| Preview 4 | `11.100.0-preview.4.26261.2` | `11.0.100-preview.4.26230.115` | 3.1.56 |
+| Preview 5 | `11.100.0-preview.5.26309.3` | `11.0.100-preview.5.26302.115` | 3.1.56 |
+| Preview 6 | `11.100.0-preview.6.26364.2` | `11.0.100-preview.6.26359.118` | 5.0.6 |
+| Preview 7 | `11.100.0-preview.7.26410.2` | `11.0.100-preview.7.26381.103` | 6.0.2 |
+| RC1 | `11.100.0-rc.1.26458.5`, `11.100.0-rc.1.26460.1` | `11.0.100-rc.1.26425.128` | 6.0.2 |
+| RC2 installed daily set | `11.0.100-rc.2.26478.2` | `11.0.100-rc.2.26475.136` | 6.0.2 |
+
+The public **NuGet package version** differs from the **CLI workload-set
+version**. For RC1, `dotnet workload install wasm-tools --version 11.0.100-rc.1.26458.5` resolves package version
+`11.100.0-rc.1.26458.5`. Use the former in
+`DOTNET_WORKLOAD_VERSION_PREVIEW`; passing the package version to `--version`
+is rejected by the SDK. The RC2 row records the installed CLI version, not a
+published NuGet package version.
+
+The installed RC2 set above comes from `sdk-manifests/11.0.100-rc.2/workloadsets/11.0.100-rc.2.26478.2/microsoft.net.workloads.workloadset.json`. It is a daily build, not a published RC2 release. Its `Current` manifest selects 6.0.2 for net11; its separate `net6`, `net7`, `net8`, `net9`, and `net10` manifests still select 2.0.23, 3.1.12, 3.1.34, 3.1.56, and 3.1.56 respectively. One installed workload set can therefore contain several toolchains; inspect the manifest for the application's target.
+
+#### Upstream version-file changes
+
+This is the historical audit of `src/mono/wasm/emscripten-version.txt` and its successor `src/mono/browser/emscripten-version.txt`, through the .NET 12 source snapshot above. Development commits do not necessarily correspond to a published preview; use the manifest tables for shipped workloads.
+
+| Date (UTC) | Change | Upstream evidence |
+|---|---|---|
+| 2021-03-17 | Version file introduced at 2.0.12 | [dotnet/runtime#45545](https://github.com/dotnet/runtime/pull/45545) |
+| 2021-06-02 | 2.0.12 to 2.0.21 | [dotnet/runtime#52870](https://github.com/dotnet/runtime/pull/52870) |
+| 2021-06-24 | 2.0.21 to 2.0.23 | [dotnet/runtime#53603](https://github.com/dotnet/runtime/pull/53603) |
+| 2022-02-03 | 2.0.23 to 2.0.34 | [dotnet/runtime#62499](https://github.com/dotnet/runtime/pull/62499) |
+| 2022-02-18 | Reverted 2.0.34 to 2.0.23 | [dotnet/runtime#65517](https://github.com/dotnet/runtime/pull/65517) |
+| 2022-03-22 | 2.0.23 to 3.1.1 | [dotnet/runtime#63894](https://github.com/dotnet/runtime/pull/63894) |
+| 2022-03-28 | 3.1.1 to 3.1.7 | [dotnet/runtime#67006](https://github.com/dotnet/runtime/pull/67006) |
+| 2022-07-09 | 3.1.7 to 3.1.12 | [dotnet/runtime#70693](https://github.com/dotnet/runtime/pull/70693) |
+| 2023-03-11 | 3.1.12 to 3.1.30 | [dotnet/runtime#81215](https://github.com/dotnet/runtime/pull/81215) |
+| 2023-04-17 | 3.1.30 to 3.1.34 | [dotnet/runtime#83998](https://github.com/dotnet/runtime/pull/83998) |
+| 2024-07-15 | 3.1.34 to 3.1.56 | [dotnet/runtime#100334](https://github.com/dotnet/runtime/pull/100334) |
+| 2026-06-25 | 3.1.56 to 5.0.6 | [dotnet/runtime#129299](https://github.com/dotnet/runtime/pull/129299) |
+| 2026-07-15 | 5.0.6 to 6.0.2 | [dotnet/runtime#130631](https://github.com/dotnet/runtime/pull/130631) |
+
+The file moved from `wasm` to `browser` in [dotnet/runtime#95940](https://github.com/dotnet/runtime/pull/95940) on 2023-12-19 without a version change. `EmsdkVersion` was added to `eng/Versions.props` at 3.1.34 in [dotnet/runtime#100266](https://github.com/dotnet/runtime/pull/100266) on 2024-05-09; tracing only that property misses earlier history.
+
+#### Why the 5.0.6 archives can pass the RC2 smoke test
+
+SkiaSharp added 5.0.6 builds in [#4459](https://github.com/mono/SkiaSharp/pull/4459), then explicitly compiled **both SkiaSharp and HarfBuzzSharp** with `WASM_LEGACY_EXCEPTIONS=0` in [#4487](https://github.com/mono/SkiaSharp/pull/4487). This selects the newer `try_table` / `throw_ref` exception instructions rather than relying on the compiler's defaults, avoiding mixed legacy/new exception instructions in the final module.
+
+That was deliberate code-generation compatibility work, not proof that different Emscripten versions are generally interchangeable. The product now builds/selects **6.0.2 archives for both libraries** for net11.0+, with the required exception mode, threading, and SIMD variants; native-link and browser-runtime validation must use those newly compiled archives. TFM `net11.0` alone cannot distinguish Preview 6's 5.0.6 workload from Preview 7/RC1/RC2's 6.0.2 workload. Earlier .NET 11 previews are not supported by this archive selection. The historical 5.0.6-on-6.0.2 smoke result does not validate the new archives.
 
 ### 10. Docker Images
 

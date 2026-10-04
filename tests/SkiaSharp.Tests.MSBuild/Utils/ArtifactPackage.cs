@@ -16,6 +16,10 @@ public sealed record ArtifactPackage(string Id, string Version, string ContentHa
          entry.Key.EndsWith(".dylib", StringComparison.Ordinal)))
         .ToDictionary();
 
+    public Dictionary<string, string> Archives => Files.Where(entry =>
+        entry.Key.StartsWith("buildTransitive/", StringComparison.Ordinal) &&
+        entry.Key.EndsWith(".a", StringComparison.Ordinal)).ToDictionary();
+
     public static ArtifactPackage Read(string directory, string id)
     {
         var matches = new List<ArtifactPackage>();

@@ -52,12 +52,14 @@ public sealed class DotNet : IDisposable
             .Save(Path.Combine(root, "NuGet.Config"));
     }
 
-    public string NewProject(string name, string xml)
+    public string NewProject(string name, string xml, string? program = null, string? mainJs = null)
     {
         var directory = Path.Combine(root, name);
         Directory.CreateDirectory(directory);
         File.WriteAllText(Path.Combine(directory, "Consumer.csproj"), xml);
-        File.WriteAllText(Path.Combine(directory, "Program.cs"), "System.Console.WriteLine(\"Package consumer\");");
+        File.WriteAllText(Path.Combine(directory, "Program.cs"), program ?? "System.Console.WriteLine(\"Package consumer\");");
+        if (mainJs is not null)
+            File.WriteAllText(Path.Combine(directory, "main.js"), mainJs);
         return directory;
     }
 

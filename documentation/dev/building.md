@@ -201,8 +201,9 @@ dotnet cake --target=externals-linux --arch=x64
 `tests/SkiaSharp.Tests.MSBuild` tests real packed SkiaSharp and HarfBuzzSharp
 packages using isolated .NET consumers. It does not build the bindings, load
 native libraries into the test runner, or use the repository's native-copy
-targets. The normal, unfiltered suite builds desktop and real MAUI applications.
-It needs the SDK pinned by `global.json`, the host-supported MAUI workloads,
+targets. The normal, unfiltered suite builds desktop, WASM, and real MAUI
+applications. It needs the SDK pinned by `global.json`, `wasm-tools`, the
+host-supported MAUI workloads,
 JDK 21, and the Android SDK. macOS also needs the pinned Xcode 26.6, and Windows
 needs the WinUI XAML build toolchain. No submodules, GPU, browser, emulator,
 device, UI execution, or native source build is required. These tests inspect
@@ -213,6 +214,7 @@ place its packages in `output/nugets`. Record the build URL/commit when reportin
 results. Do not combine different builds or substitute published packages for
 missing artifacts. Both families require their core, `NativeAssets.Win32`,
 `NativeAssets.macOS`, and `NativeAssets.Linux` packages for the desktop tests.
+The WASM test additionally requires both `NativeAssets.WebAssembly` packages.
 MAUI requires `SkiaSharp.HarfBuzz`, `SkiaSharp.Views.Maui.Controls`,
 `SkiaSharp.Views.Maui.Core`, and `SkiaSharp.Views`, plus both families'
 `NativeAssets.Android` packages on every host. Windows additionally requires
@@ -232,8 +234,8 @@ dotnet cake --target=tests-msbuild
 CI uses the shared workload installer's default host-supported list and pinned
 workload set, without a `dotnetWorkloads` or `previewWorkloads` override. Stable
 and preview are separate bootstrapper jobs on each host; preview jobs use the
-existing `installPreviewSdk` option. Both SDKs run the same unfiltered desktop
-and MAUI suite, including Android on every host. The SDK building the harness
+existing `installPreviewSdk` option. Both SDKs run the same unfiltered desktop,
+WASM, and MAUI suite, including Android on every host. The SDK building the harness
 selects the generated consumers' SDK: the existing `NETCoreSdkVersion` runtime
 setting derives all consumer TFMs and the MAUI template's `--framework`.
 Only SDK 10 and SDK 11 are supported; no separate consumer SDK version override
@@ -246,9 +248,9 @@ host TFMs are omitted from MAUI theory data, not skipped during execution:
 
 | Host | Stable net10 / preview net11 consumer coverage | Test count per SDK |
 | --- | --- | --- |
-| Windows | Desktop, Android APK, unpackaged WinUI executable | 24 |
-| macOS | Desktop, Android APK, iOS simulator app, Mac Catalyst app | 25 |
-| Linux | Desktop, Android APK | 23 |
+| Windows | Desktop, WASM native link, Android APK, unpackaged WinUI executable | 25 |
+| macOS | Desktop, WASM native link, Android APK, iOS simulator app, Mac Catalyst app | 26 |
+| Linux | Desktop, WASM native link, Android APK | 24 |
 
 Or run the test project directly against a local artifact directory:
 
@@ -271,8 +273,8 @@ Workload provisioning uses only `dotnet-public` and `dotnet-eng` from the
 repository `nuget.config`. Missing packs are provisioning blockers: request
 mirroring, not a NuGet.org fallback or source override.
 
-`NativeAssetOutputTests.cs` and `MauiNativeAssetTests.cs` contain the package
-references, scenarios, and assertions. `Utils/DotNet.cs` handles isolated
+`NativeAssetOutputTests.cs`, `WasmNativeAssetTests.cs`, and `MauiNativeAssetTests.cs`
+contain the package references, scenarios, and assertions. `Utils/DotNet.cs` handles isolated
 project creation and CLI execution; `Utils/ArtifactPackage.cs` reads real
 package identities and hashes. Each fixture has a private restore cache;
 every case has independent project, intermediate, and output directories.
@@ -309,6 +311,38 @@ rather than accepting only a successful MSBuild exit code.
 Linux assets are explicitly referenced; this suite does not change package
 dependencies or filtering behavior. No fake packages or mock CLI are used.
 
+**WASM native-link regression:**
+
+`WasmNativeAssetTests.cs` builds a minimal Mono WebAssembly app in Debug with
+both families' real packages and the SDK's default WASM flags. The SDK-derived
+consumer TFM selects 3.1.56 archives for net10.0 and 6.0.2 archives for net11.0.
+The test builds **before** checking expected archives, so incompatible native
+inputs fail in the actual linker, not in a pre-build presence assertion. It
+checks native build, exception handling, SIMD, and no threads; verifies the
+restored packages' hashes and artifact origin; compares selected archive paths
+and SHA256 hashes; checks both families in `emcc-link.rsp` and the linked WASM
+header. The SDK and package targets choose flags and archive variants.
+This is native-link build coverage, not trimmed publish/AOT, browser execution,
+or a claim of CoreCLR WASM support.
+
+For a focused local diagnostic (never the final suite gate):
+
+```sh
+dotnet cake --target=tests-msbuild --wasm=true
+```
+
+Or use the owning test project:
+
+```sh
+dotnet test tests/SkiaSharp.Tests.MSBuild/SkiaSharp.Tests.MSBuild.csproj \
+  -p:PackageDirectory=/absolute/path/to/nugets \
+  -- --filter-trait Category=Wasm --report-trx --results-directory /absolute/path/to/test-results
+```
+
+The existing six CI jobs remain unfiltered; missing WASM archives or workloads
+are failures, not skips. Rebuild native inputs from source when changing the
+Emscripten toolchain; do not use `externals-download` for this update.
+
 `MauiNativeAssetTests.cs` generates an installed `dotnet new maui --no-restore`
 application with the SDK-derived `--framework net10.0` or `net11.0`, preserves
 the platform entrypoints/manifests/resources, and rewrites only the project and
@@ -337,7 +371,7 @@ coverage, not execution of the app's native libraries.
 
 TRX results, generated projects, command logs, binlogs, restore/dependency
 metadata, and failed-consumer outputs are published from `output/logs/` in CI.
-Successful desktop build outputs are removed after assertions; MAUI outputs
+Successful desktop build outputs are removed after assertions; WASM and MAUI outputs
 and Apple link inspections are retained even on success. The consumer diagnostics
 default to `output/logs/testlogs/msbuild`; override
 `-p:MSBuildTestArtifactsDirectory=/absolute/path/to/diagnostics` for a direct run.
@@ -347,7 +381,7 @@ The **MSBuild package tests** CI stage has a three-host by two-SDK matrix:
 Windows, macOS, and Linux, each with stable and preview jobs. The host loop uses
 the existing agent objects and their `pool.os` values. Every job uses
 `target: tests-msbuild` and the bootstrapper's normal SDK/workload provisioning.
-Stable jobs run the unfiltered net10 desktop and MAUI suite; preview jobs use
+Stable jobs run the unfiltered net10 desktop, WASM, and MAUI suite; preview jobs use
 `installPreviewSdk: true` and default host-supported preview workloads for the
 identical unfiltered net11 consumers. There are no category filters, new skips,
 custom SDK/workload install steps, JDK selection tasks, or extra Cake invocations.
