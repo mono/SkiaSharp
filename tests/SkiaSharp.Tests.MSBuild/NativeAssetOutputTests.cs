@@ -1,4 +1,3 @@
-using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Xml.Linq;
 using SkiaSharp.Tests.MSBuild.Utils;
@@ -79,7 +78,7 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     private static string ProjectXml(string family, string version, string setting = "none", bool includeLinux = false)
     {
         var properties = new XElement("PropertyGroup",
-            new XElement("TargetFramework", "net10.0"),
+            new XElement("TargetFramework", DotNet.ConsumerTargetFramework),
             new XElement("OutputType", "Exe"),
             new XElement("SelfContained", "false"),
             new XElement("UseAppHost", "true"));
@@ -95,33 +94,7 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         return new XElement("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk"), properties, packages).ToString();
     }
 
-    private (string Version, Dictionary<string, string> NativeFiles) ReadPackage(string id)
-    {
-        var matches = new List<(string Version, Dictionary<string, string> NativeFiles)>();
-        foreach (var file in Directory.EnumerateFiles(dotnet.PackageDirectory, id + ".*.nupkg", SearchOption.AllDirectories)
-            .Where(file => !file.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase)))
-        {
-            using var zip = ZipFile.OpenRead(file);
-            using var nuspec = zip.Entries.Single(e => e.FullName.EndsWith(".nuspec", StringComparison.Ordinal)).Open();
-            var metadata = XDocument.Load(nuspec).Root!.Elements().Single(e => e.Name.LocalName == "metadata");
-            if (metadata.Elements().Single(e => e.Name.LocalName == "id").Value != id)
-                continue;
-            var version = metadata.Elements().Single(e => e.Name.LocalName == "version").Value;
-            var native = new Dictionary<string, string>();
-            foreach (var entry in zip.Entries.Where(e => e.FullName.StartsWith("runtimes/", StringComparison.Ordinal) &&
-                e.FullName.Contains("/native/", StringComparison.Ordinal) &&
-                (e.FullName.EndsWith(".dll", StringComparison.Ordinal) ||
-                 e.FullName.EndsWith(".so", StringComparison.Ordinal) ||
-                 e.FullName.EndsWith(".dylib", StringComparison.Ordinal))))
-            {
-                using var stream = entry.Open();
-                native.Add(entry.FullName, Convert.ToHexString(SHA256.HashData(stream)));
-            }
-            matches.Add((version, native));
-        }
-        Assert.True(matches.Count == 1, $"Expected one real {id} package in {dotnet.PackageDirectory}, found {matches.Count}");
-        return matches[0];
-    }
+    private ArtifactPackage ReadPackage(string id) => ArtifactPackage.Read(dotnet.PackageDirectory, id);
 
     private static void AssertNativeOutput(string project, string family, Dictionary<string, string> expected)
     {
