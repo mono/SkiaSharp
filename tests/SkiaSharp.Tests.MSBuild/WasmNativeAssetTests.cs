@@ -13,8 +13,7 @@ public class WasmNativeAssetTests(DotNet dotnet) : IClassFixture<DotNet>
     [Trait("Category", "Wasm")]
     public async Task DefaultMonoBuildLinksBothRealPackageFamilies()
     {
-        var sdkMajor = int.Parse(dotnet.SdkVersion.Split('.')[0]);
-        Assert.True(sdkMajor is 10 or 11, $"Unsupported WASM consumer SDK: {dotnet.SdkVersion}");
+        var sdkMajor = DotNet.ConsumerSdkMajor;
         var toolchain = sdkMajor >= 11 ? "6.0.2" : "3.1.56";
         var packages = Families.SelectMany(family => new[] { family, family + ".NativeAssets.WebAssembly" })
             .ToDictionary(id => id, id => ArtifactPackage.Read(dotnet.PackageDirectory, id));
@@ -35,7 +34,7 @@ public class WasmNativeAssetTests(DotNet dotnet) : IClassFixture<DotNet>
             return archives;
         }).ToDictionary(entry => entry.Key, entry => entry.Value, StringComparer.OrdinalIgnoreCase);
 
-        var project = dotnet.NewProject($"wasm-net{sdkMajor}-mono", ProjectXml(sdkMajor, packages),
+        var project = dotnet.NewProject($"wasm-net{sdkMajor}-mono", ProjectXml(packages),
             """
             using SkiaSharp;
 
@@ -89,8 +88,7 @@ public class WasmNativeAssetTests(DotNet dotnet) : IClassFixture<DotNet>
         }
     }
 
-    private static string ProjectXml(int sdkMajor,
-        Dictionary<string, ArtifactPackage> packages)
+    private static string ProjectXml(Dictionary<string, ArtifactPackage> packages)
     {
         var evidence = "wasm-native-assets.txt";
         var snapshot = new XElement("Target",
@@ -109,7 +107,7 @@ public class WasmNativeAssetTests(DotNet dotnet) : IClassFixture<DotNet>
         return new XElement("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk.WebAssembly"),
             new XElement("PropertyGroup",
                 new XElement("OutputType", "Exe"),
-                new XElement("TargetFramework", $"net{sdkMajor}.0"),
+                new XElement("TargetFramework", DotNet.ConsumerTargetFramework),
                 new XElement("UseMonoRuntime", "true"),
                 new XElement("WasmMainJSPath", "main.js"),
                 new XElement("ImplicitUsings", "enable")),

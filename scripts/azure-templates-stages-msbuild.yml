@@ -7,33 +7,15 @@ parameters:
     type: object
   - name: buildAgentLinux
     type: object
-  - name: matrix
-    type: object
-    default:
-      - name: windows
-        displayName: Windows
-        buildAgent: buildAgentWindows
-      - name: macos
-        displayName: macOS
-        buildAgent: buildAgentMac
-      - name: linux
-        displayName: Linux
-        buildAgent: buildAgentLinux
   - name: builds
     type: object
     default:
       - name: stable
-        parameters:
-          jdkVersion: '21.0.10'
-          jdkFolderVersion: '21.0.10+7'
+        parameters: {}
       - name: preview
         parameters:
           installDotNetWorkloads: false
-          installAndroidSdk: false
-          installXcode: false
           installPreviewSdk: true
-          previewWorkloads: wasm-tools
-          additionalArgs: --wasm=true
 
 stages:
   - stage: msbuild_tests
@@ -43,37 +25,38 @@ stages:
     ${{ else }}:
       dependsOn: package
     jobs:
-      - ${{ each platform in parameters.matrix }}:
-        - ${{ each build in parameters.builds }}:
-          - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
-            parameters:
-              name: tests_msbuild_${{ platform.name }}_${{ build.name }}
-              displayName: ${{ platform.displayName }} (${{ build.name }})
-              buildAgent: ${{ parameters[platform.buildAgent] }}
-              ${{ insert }}: ${{ build.parameters }}
-              target: tests-msbuild
-              retryCount: 0
-              shouldPublish: false
-              checkoutSubmodules: false
-              installAndroidNdk: false
-              installNode: false
-              installLlvm: false
-              installEmsdk: false
-              installNinja: false
-              requiredArtifacts:
-                - name: nuget
-                  dir: nugets
-              postBuildSteps:
-                - task: PublishTestResults@2
-                  displayName: Publish MSBuild package test results
-                  condition: always()
-                  inputs:
-                    testResultsFormat: VSTest
-                    testResultsFiles: 'output/logs/testlogs/msbuild/**/*.trx'
-                    testRunTitle: '${{ platform.displayName }} (${{ build.name }}) MSBuild package tests'
-                    failTaskOnFailedTests: true
-                    failTaskOnMissingResultsFile: true
-              publishArtifacts:
-                - name: testlogs_msbuild_${{ platform.name }}_${{ build.name }}
-                  always: true
-                  path: output/logs
+      - ${{ each agent in parameters }}:
+        - ${{ if startsWith(agent.key, 'buildAgent') }}:
+          - ${{ each build in parameters.builds }}:
+            - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+              parameters:
+                name: tests_msbuild_${{ agent.value.pool.os }}_${{ build.name }}
+                displayName: ${{ agent.value.pool.os }} (${{ build.name }})
+                buildAgent: ${{ agent.value }}
+                ${{ insert }}: ${{ build.parameters }}
+                target: tests-msbuild
+                retryCount: 0
+                shouldPublish: false
+                checkoutSubmodules: false
+                installAndroidNdk: false
+                installNode: false
+                installLlvm: false
+                installEmsdk: false
+                installNinja: false
+                requiredArtifacts:
+                  - name: nuget
+                    dir: nugets
+                postBuildSteps:
+                  - task: PublishTestResults@2
+                    displayName: Publish MSBuild package test results
+                    condition: always()
+                    inputs:
+                      testResultsFormat: VSTest
+                      testResultsFiles: 'output/logs/testlogs/msbuild/**/*.trx'
+                      testRunTitle: '${{ agent.value.pool.os }} (${{ build.name }}) MSBuild package tests'
+                      failTaskOnFailedTests: true
+                      failTaskOnMissingResultsFile: true
+                publishArtifacts:
+                  - name: testlogs_msbuild_${{ agent.value.pool.os }}_${{ build.name }}
+                    always: true
+                    path: output/logs

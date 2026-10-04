@@ -115,7 +115,7 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
           - In VS 2022 Build Tools, select **WinUI application development build tools** and its optional C++ tools
        - Android NDK (via Visual Studio Installer or [manually](https://developer.android.com/ndk/downloads))
           - Make sure the path to the root is in the `ANDROID_NDK_ROOT` or `ANDROID_NDK_HOME` environment variables
- - [OpenJDK 17+](https://adoptium.net/)
+ - [OpenJDK 21](https://adoptium.net/)
  - Clang/LLVM
     - Run `.\scripts\install-llvm.ps1`
     - Set `LLVM_HOME` to the path of the install
@@ -133,7 +133,7 @@ Use `--windowsSdkVersion` if you need a specific installed Windows SDK.
  - Python 3
  - Clang 14+
  - Make
- - OpenJDK 17+
+ - OpenJDK 21
 
 ### Building Native Libraries
 
@@ -175,7 +175,7 @@ native libraries into the test runner, or use the repository's native-copy
 targets. The normal, unfiltered suite builds desktop, WASM, and real MAUI
 applications. It needs the SDK pinned by `global.json`, `wasm-tools`, the
 host-supported MAUI workloads, JDK 21, and the Android SDK. macOS also needs
-the pinned Xcode (currently 26.3), and Windows needs the WinUI XAML build
+the pinned Xcode (26.6 for stable and preview), and Windows needs the WinUI XAML build
 toolchain. No submodules, GPU, browser, emulator, device, UI execution, or native
 source build is required. These tests inspect build outputs without running apps.
 
@@ -204,38 +204,45 @@ dotnet cake --target=tests-msbuild
 
 Install `wasm-tools,maui-android` on all hosts; add `maui-windows` on Windows
 or `maui-ios,maui-maccatalyst` on macOS. CI uses the shared workload installer's
-default list and stable workload set (currently `10.0.202`), without a
+default list and stable workload set (currently `10.0.401`), without a
 `dotnetWorkloads` override. Linux defaults include Android, WASM, and
 `maui-android`, but not unsupported Apple workloads. Other hosts retain the
 shared defaults including the aggregate `maui` workload.
 Stable and preview are separate bootstrapper jobs on each host. Stable jobs
 use the repository SDK pin; preview jobs use the existing `installPreviewSdk`
-and `previewWorkloads` options to select the preview SDK and install `wasm-tools`.
+option to select the preview SDK and install the shared installer's default
+host-supported workload list, not a WASM-only override. Both SDKs run the same
+unfiltered desktop + WASM + MAUI suite, including Android on every host.
 The SDK building the test project also selects the generated consumers' SDK;
-no separate consumer SDK version is required. The test executable targets net10.0.
-Provision the Android SDK/API 36 and JDK 21 for stable jobs as well. The shared
-bootstrapper forwards `jdkVersion` / `jdkFolderVersion` to its existing JDK
-installer, which reuses the requested major version's hosted JDK when available.
-Other jobs retain the existing JDK 17 defaults. Unsupported host TFMs are
+`NETCoreSdkVersion` is recorded in the test runtime configuration and a shared
+helper derives all consumer TFMs and the MAUI template's `--framework` from it.
+Only SDK 10 and SDK 11 are supported; no separate consumer SDK version is
+required. The test executable itself still targets net10.0.
+Provision Android API 36 for stable and API 37 for preview, with JDK 21 for both SDKs. JDK 21 is the
+repository installer's global default, without job-specific JDK version
+parameters or an older-JDK fallback. Unsupported host TFMs are
 explicitly omitted from MAUI theory data, not skipped during execution:
 
-| Host | Stable net10 consumer coverage | Stable test count |
+| Host | Stable net10 / preview net11 consumer coverage | Test count per SDK |
 | --- | --- | --- |
 | Windows | Desktop, Mono WASM, Android APK, unpackaged WinUI executable | 25 |
 | macOS | Desktop, Mono WASM, Android APK, iOS simulator app, Mac Catalyst app | 26 |
 | Linux | Desktop, Mono WASM, Android APK | 24 |
 
-To run only the WASM native-link regression (as in the preview jobs),
+To run only the WASM native-link regression as an optional diagnostic,
 install `wasm-tools` under the selected consumer SDK and use:
 
 ```sh
 dotnet cake --target=tests-msbuild --wasm=true
 ```
 
-The runner remains net10.0, while the SDK selected by the checkout's `global.json`
-pins each generated consumer's SDK and selects its target framework
-(SDK 10 -> net10.0, SDK 11 -> net11.0). A preview is permitted only when that exact SDK was
-selected. A direct filtered invocation is also available:
+The runner remains net10.0, while its recorded build SDK pins each generated
+consumer's SDK and selects its target framework (SDK 10 -> net10.0,
+SDK 11 -> net11.0). This applies to desktop build/publish, WASM, and every
+host-supported MAUI app: preview Android consumers target net11.0-android,
+with matching net11 Windows/iOS/Mac Catalyst consumers on supported hosts.
+A preview is permitted only when that exact SDK was selected by the checkout's
+`global.json` when building the harness. A direct filtered invocation is also available:
 
 ```sh
 dotnet test tests/SkiaSharp.Tests.MSBuild/SkiaSharp.Tests.MSBuild.csproj \
@@ -326,7 +333,8 @@ browser-execution test. The SDK and packages, rather than the test, choose the
 flags and archive variants. It does not claim CoreCLR WASM support.
 
 `MauiNativeAssetTests.cs` generates an installed `dotnet new maui --no-restore`
-application, preserves the platform entrypoints/manifests/resources, and
+application with `--framework net10.0` or `--framework net11.0` according to the
+recorded SDK, preserves the platform entrypoints/manifests/resources, and
 rewrites its project and shared source inside the isolated consumer directory.
 The app registers the real `SKCanvasView` handler with `.UseSkiaSharp()` and
 compiles drawing/shaping code against `SkiaSharp.HarfBuzz` and `HarfBuzzSharp`.
@@ -360,15 +368,25 @@ diagnostics default to `output/logs/testlogs/msbuild`; override
 Private restore caches are not included in diagnostic artifacts.
 
 The **MSBuild package tests** CI stage has a three-host by two-SDK matrix:
-Windows, macOS, and Linux, each with stable and preview jobs. Local `matrix`
-and `builds` object parameters define the hosts and SDK settings, following
-the Linux matrix template pattern; the job body has no host/SDK conditionals.
+Windows, macOS, and Linux, each with stable and preview jobs. CI
+uses macOS 26 for managed jobs in the Complete, Package, and Tests pipelines;
+native Mac builds keep their macOS 15 agents and Xcode 26.3.
+Public managed Mac jobs use `AcesShared` with
+`ImageOverride -equals ACES_VM_SharedPool_Tahoe`. Both managed SDK passes
+select Xcode 26.6, as required by the .NET 10 workload set `10.0.401` and
+the .NET 11 RC1 workload set. Xcode 27 support is a separate workload update,
+not part of these pins.
+The host loop uses the existing agent objects and their `pool.os` values, without a redundant
+host-name mapping; SDK settings select stable or preview provisioning.
 Every job uses
 `target: tests-msbuild` and the bootstrapper's normal SDK/workload provisioning.
 Stable jobs run the unfiltered .NET 10 desktop + WASM + MAUI suite. Preview jobs
-use `installPreviewSdk: true`, `previewWorkloads: wasm-tools`, and
-`additionalArgs: --wasm=true` to run one net11 WASM native-link case under public
-SDK `11.0.100-rc.1.26425.128` and workload set `11.0.100-rc.1.26458.5`.
+use `installPreviewSdk: true` and the default host-supported preview workloads
+to run the identical unfiltered suite with net11 desktop, WASM, and MAUI
+consumers under public SDK `11.0.100-rc.1.26425.128` and workload set
+`11.0.100-rc.1.26458.5`. Android application builds run on all three hosts in
+both SDK passes; Windows, iOS simulator, and Mac Catalyst coverage follows the
+same host policy in both. No preview category filter or new skip is used.
 There are no custom SDK/workload install steps, JDK selection tasks, or extra
 Cake invocations. Both test executables target net10.0. In
 combined CI it depends on `package`; in downstream Tests it depends on `prepare`
@@ -376,6 +394,16 @@ and downloads the exact SkiaSharp pipeline-resource run's artifact. It runs
 alongside Samples without changing the prerequisites of existing source/unit/
 device tests. Its failures are reported independently and still fail the pipeline.
 The existing release/platform Integration suite remains a separate entry point.
+
+Preview provisioning can still be blocked by approved-feed mirror gaps.
+The full Windows default workload installation currently fails on
+`Microsoft.iOS.Windows.Sdk.net10.0_27.0` and
+`Microsoft.MacCatalyst.Sdk.net10.0_27.0`, both at
+`27.0.10539-xcode27.0`. These are dependencies of the selected preview manifests,
+not the Xcode version selected for net11 application builds. A local diagnostic
+installation restricted to Android, MAUI Android/Windows, and WASM succeeded
+through the approved feeds; CI retains the default workload list and fails
+explicitly until its required packages are mirrored.
 
 ## Documentation Outputs
 

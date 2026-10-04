@@ -19,19 +19,20 @@ public class MauiNativeAssetTests(DotNet dotnet) : IClassFixture<DotNet>
         get
         {
             var data = new TheoryData<string, string, string>();
+            var framework = DotNet.ConsumerTargetFramework;
             var arch = RuntimeInformation.ProcessArchitecture switch
             {
                 Architecture.X64 => "x64",
                 Architecture.Arm64 => "arm64",
                 var unsupported => throw new NotSupportedException($"Unsupported MAUI consumer host: {unsupported}")
             };
-            data.Add("net10.0-android", $"android-{arch}", "Android");
+            data.Add(framework + "-android", $"android-{arch}", "Android");
             if (OperatingSystem.IsWindows())
-                data.Add("net10.0-windows10.0.19041.0", $"win-{arch}", "Win32");
+                data.Add(framework + "-windows10.0.19041.0", $"win-{arch}", "Win32");
             if (OperatingSystem.IsMacOS())
             {
-                data.Add("net10.0-ios", $"iossimulator-{arch}", "iOS");
-                data.Add("net10.0-maccatalyst", $"maccatalyst-{arch}", "MacCatalyst");
+                data.Add(framework + "-ios", $"iossimulator-{arch}", "iOS");
+                data.Add(framework + "-maccatalyst", $"maccatalyst-{arch}", "MacCatalyst");
             }
             return data;
         }
@@ -42,7 +43,6 @@ public class MauiNativeAssetTests(DotNet dotnet) : IClassFixture<DotNet>
     [Trait("Category", "Maui")]
     public async Task ApplicationBuildIncludesBothRealNativeFamilies(string framework, string rid, string platform)
     {
-        Assert.StartsWith("10.", dotnet.SdkVersion, StringComparison.Ordinal);
         var packages = References.ToDictionary(id => id, id => ArtifactPackage.Read(dotnet.PackageDirectory, id));
         var natives = Families.Select(family => ArtifactPackage.Read(dotnet.PackageDirectory,
             family + ".NativeAssets." + platform)).ToArray();

@@ -78,7 +78,7 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     private static string ProjectXml(string family, string version, string setting = "none", bool includeLinux = false)
     {
         var properties = new XElement("PropertyGroup",
-            new XElement("TargetFramework", "net10.0"),
+            new XElement("TargetFramework", DotNet.ConsumerTargetFramework),
             new XElement("OutputType", "Exe"),
             new XElement("SelfContained", "false"),
             new XElement("UseAppHost", "true"));

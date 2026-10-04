@@ -13,6 +13,17 @@ public sealed class DotNet : IDisposable
     public string PackageDirectory { get; } = Path.GetFullPath(Setting("PackageDirectory"));
     public string SdkVersion { get; } = Setting("SdkVersion");
     public string PackagesCacheDirectory => Path.Combine(cache, "packages");
+    public static string ConsumerTargetFramework => $"net{ConsumerSdkMajor}.0";
+    public static int ConsumerSdkMajor
+    {
+        get
+        {
+            var version = Setting("SdkVersion");
+            if (!int.TryParse(version.Split('.')[0], out var major) || major is not (10 or 11))
+                throw new NotSupportedException($"Unsupported package consumer SDK: {version}");
+            return major;
+        }
+    }
 
     public DotNet()
     {
@@ -56,7 +67,7 @@ public sealed class DotNet : IDisposable
     {
         var directory = Path.Combine(root, name);
         Directory.CreateDirectory(directory);
-        await Execute(directory, host, ["new", "maui", "--name", "Consumer", "--output", ".", "--framework", "net10.0",
+        await Execute(directory, host, ["new", "maui", "--name", "Consumer", "--output", ".", "--framework", ConsumerTargetFramework,
             "--no-restore"], "template", 1);
         foreach (var file in new[] { "App.xaml", "App.xaml.cs", "AppShell.xaml", "AppShell.xaml.cs",
             "MainPage.xaml", "MainPage.xaml.cs" })

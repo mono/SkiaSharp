@@ -1,6 +1,6 @@
 Param(
-    [string] $Version = '17.0.8.1',
-    [string] $FolderVersion = '17.0.8.1+1',
+    [string] $Version = '21.0.10',
+    [string] $FolderVersion = '21.0.10+7',
     [string] $InstallDestination = $null
 )
 
