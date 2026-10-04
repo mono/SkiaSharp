@@ -358,16 +358,19 @@ alongside Samples without changing the prerequisites of existing source/unit/
 device tests. Its failures are reported independently and still fail the pipeline.
 The existing release/platform Integration suite remains a separate entry point.
 
-Preview CI verification remains blocked by approved-feed mirror gaps in the
-full default workload list. Windows requires
-`Microsoft.iOS.Windows.Sdk.net10.0_27.0` and
-`Microsoft.MacCatalyst.Sdk.net10.0_27.0` at `27.0.10539-xcode27.0`. macOS also
-requires the Emscripten 6.0.2 `Python/Sdk/Node/Cache.osx-{x64,arm64}` packs at
-`11.0.0-rc.1.26425.128` for its SDK architecture. Those dependencies do not
-change the pinned net11 Xcode selection. Targeted local Android/MAUI Windows
-installations can diagnose consumer builds but do not validate CI's required
-default workload installation. Keep CI coverage intact until the missing
-packages are mirrored to an approved feed.
+Stable and preview CI verification depend on the full default workload list,
+not just the Android/MAUI Windows subset used for local diagnostics. On
+2026-10-04, approved-feed probes still returned 404 for the three Apple 27 SDK
+packs `Microsoft.iOS.Windows.Sdk.net10.0_27.0`,
+`Microsoft.iOS.Sdk.net10.0_27.0`, and
+`Microsoft.MacCatalyst.Sdk.net10.0_27.0` at `27.0.10539-xcode27.0`; mirroring
+was requested. These affect stable as well as preview provisioning. The four
+Emscripten 6.0.2 `Python/Sdk/Node/Cache.osx-x64` packs at
+`11.0.0-rc.1.26425.128` are now available on `dotnet-public`, so their earlier
+mirror gap is resolved. Package availability alone does not establish that
+default workload provisioning or consumer builds passed. Keep CI coverage
+intact and verify the actual installation/build results after mirroring,
+without adding feed overrides or changing the pinned Xcode selection.
 
 ## Documentation Outputs
 
