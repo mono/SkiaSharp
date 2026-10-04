@@ -71,6 +71,12 @@ try {
         }
     }
 
+    $pipelineVariables = Get-Content (Join-Path $repoRoot 'scripts\azure-templates-variables.yml')
+    $platformPin = @($pipelineVariables | Where-Object { $_ -match '^\s+ANDROID_PLATFORM_VERSIONS:' })
+    Assert-Equal $platformPin.Count 1 'Android platform pin count'
+    Assert-Equal $platformPin[0].Trim() 'ANDROID_PLATFORM_VERSIONS: 21,35,36,37.0' 'Published Android platform package suffixes'
+    Write-Host 'PASS: Android platform package pins'
+
     $defaults = @{
         'default-windows' = @('android', 'wasm-tools', 'macos', 'ios', 'tvos', 'maccatalyst', 'maui')
         'default-macos' = @('android', 'wasm-tools', 'macos', 'ios', 'tvos', 'maccatalyst', 'maui')
