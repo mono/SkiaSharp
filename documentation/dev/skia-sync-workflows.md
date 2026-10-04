@@ -1,29 +1,27 @@
-# Skia sync review workflow
+# Skia sync review
 
-A Skia sync is a reciprocal pair: a `[skia-sync]` `mono/SkiaSharp` parent pull
-request and a `mono/skia` pull request on the same `skia-sync/*` branch. Both PR
-bodies must contain one exact reciprocal HTTPS pull-request link. The resolver
-requires an open same-repository pair, one `chrome/mNNN` milestone, and maps a
-parent `main` base to native `skiasharp` (or the same `release/A.B.x` base).
-`skia-sync/main` is deliberately rejected.
+Comment exactly `/skia-sync-review` on a `mono/SkiaSharp` pull request to run
+an advisory review. Its **Required skia PR** section must include one canonical
+`https://github.com/mono/skia/pull/N` link. gh-aw restricts comment activation
+to repository write/maintain/admin roles. Alternatively, manually dispatch
+**Review - Skia Sync** with the parent `skiasharp_pr` number; the optional
+`staged` input defaults to true (preview only), and non-main dispatches stay
+staged. gh-aw cannot declare this input `required: true` alongside a slash
+command, so the pre-agent step checks it at runtime.
 
-Comment exactly `/skia-sync-review` on the parent PR to create a new, append-only,
-exact-head review-evidence comment. The parent PR must contain exactly one
-canonical `https://github.com/mono/skia/pull/N` link in its **Required skia PR**
-section; the resolver fetches that native PR only after it validates the comment
-and parent ID. The command runs the generator and
-`git-sync-deps` in a tokenless Docker namespace, then a trusted host produces
-the raw evidence. Terra writes the schema-v1 review report without a write
-token or a comment target. The publisher requires successful threat detection,
-derives every status, count, and risk from that raw evidence, scans the
-canonical report for credential-like values, rechecks the complete live frozen
-pair, uploads a distinct `skia-review-evidence` artifact, and only then posts
-the marker, check-status table, risk, and immutable artifact link.
+The single workflow uses the existing
+[review-skia-update skill](../../.agents/skills/review-skia-update/SKILL.md).
+It runs the skill's mechanical checks once, inside a tokenless SDK container,
+using public clones at the recorded PR heads. gh-aw installs the trusted skill
+and its scripts; the agent job needs no repository checkout. Neither the
+dependency sync nor generator runs on the credentialed host. The agent then
+reviews the raw diffs, validates the schema-v1 report, and persists JSON and
+HTML in the normal agent artifact's
+`ai-review/` folder. The safe-output comment names both exact reviewed heads
+and links the Actions run/artifact. Re-reviews hide older comments.
 
-Manual dispatch requires only the parent `skiasharp_pr` input and defaults to
-`staged: true`; it validates and archives the report without posting a comment. Successful
-reviews persist under the immutable
-`ai-review/<native-pr>/<native-head>/<parent-head>/run-<run>-<attempt>/<report-digest>/`
-path on `aw-data`; persistence rejects an existing file rather than overwriting
-it. Review evidence is informative, not approval, and this workflow does not
-repin, merge, create pull requests, or invoke release workflows.
+Reports are advisory, not approvals or machine-enforced landing evidence. This
+workflow cannot merge, approve, repin, or create a pull request. A failed or
+incomplete mechanical check stops before the agent reports findings; a genuine
+binding mismatch is instead reported for human review. Successful main runs
+can be copied to `aw-data` by the existing `persist-aw-data` workflow.

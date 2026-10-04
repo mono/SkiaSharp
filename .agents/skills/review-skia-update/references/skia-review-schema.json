@@ -192,13 +192,13 @@
         },
         "upstreamBranch": {
           "type": "string",
-          "pattern": "^chrome/m[0-9]+$",
-          "description": "New upstream branch (e.g., 'chrome/m122')."
+          "pattern": "^(chrome/m[0-9]+|main)$",
+          "description": "New upstream branch (e.g., 'chrome/m122' or 'main')."
         },
         "oldUpstreamBranch": {
           "type": "string",
-          "pattern": "^chrome/m[0-9]+$",
-          "description": "Old upstream branch the fork was based on (e.g., 'chrome/m119')."
+          "pattern": "^(chrome/m[0-9]+|main)$",
+          "description": "Old upstream branch the fork was based on (e.g., 'chrome/m119' or 'main')."
         },
         "analyzedAt": {
           "type": "string",
@@ -309,7 +309,7 @@
     "riskAssessment": {
       "type": "string",
       "enum": ["LOW", "MEDIUM", "HIGH"],
-      "description": "HIGH=generated mismatch or upstream REVIEW_REQUIRED. MEDIUM=deps or interop REVIEW_REQUIRED. LOW=all PASS."
+      "description": "HIGH=generated mismatch or upstream REVIEW_REQUIRED. MEDIUM=deps, interop, or companion REVIEW_REQUIRED. LOW=all five PASS."
     },
     "companionPr": {
       "type": "object",
@@ -321,6 +321,11 @@
           "type": "string",
           "pattern": "^[0-9a-f]{40}$",
           "description": "Exact SkiaSharp companion PR head reviewed with the native PR."
+        },
+        "baseSha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "Exact SkiaSharp companion PR base used for the review."
         },
         "status": {
           "$ref": "#/$defs/reviewStatus"
