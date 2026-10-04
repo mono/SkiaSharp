@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Triage Report - #5254</title>
+</head>
+<body>
+  <main>
+    <h1>Issue Triage Report - #5254</h1>
+    <dl>
+      <dt>Repository</dt><dd>mono/SkiaSharp</dd>
+      <dt>Type</dt><dd>type/bug (0.99)</dd>
+      <dt>Area</dt><dd>area/Build (0.99)</dd>
+      <dt>Suggested action</dt><dd>ready-to-fix (0.98)</dd>
+    </dl>
+    <h2>Summary</h2>
+    <p>The Sync - Skia Upstream workflow failed because its staged create-pull-request output targeted a release branch that was not allowed as a base-branch override.</p>
+    <h2>Analysis</h2>
+    <p>The workflow resolves either a manually supplied base branch or a release branch and passes it to its staged pull-request completion signal. The safe-output declaration has no allowed-base-branches configuration, so the policy rejects that valid resolved target.</p>
+    <h2>Evidence</h2>
+    <p>Workflow run 37048491850 reproduces the rejection: <code>create_pull_request: Base branch override is not allowed</code>. Draft PR <a href="https://github.com/mono/SkiaSharp/pull/5259">#5259</a> contains the proposed allowlist change and regression coverage.</p>
+    <h2>Investigation</h2>
+    <ul>
+      <li><code>.github/workflows/auto-skia-sync.md</code> accepts target_branch and declares staged create-pull-request without an allowlist.</li>
+      <li><code>.github/scripts/skia-sync-detect.sh</code> resolves and emits base_branch for the later stages.</li>
+      <li><code>.github/workflows/auto-skia-sync.lock.yml</code> contains no allowed-base-branches safe-output setting.</li>
+    </ul>
+    <h2>Recommendation</h2>
+    <p>Merge the safe-output base-branch allowlist from PR #5259, then regenerate and verify the compiled workflow configuration.</p>
+  </main>
+</body>
+</html>
