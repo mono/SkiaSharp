@@ -4,19 +4,23 @@
 Lists the complete NuGet mirror inventory for a CLI workload-set version.
 .DESCRIPTION
 Accepts CLI versions such as 10.0.401 or 11.0.100-rc.1.26458.5, not NuGet
-package versions. Reads only workload-set and manifest packages from the
-enabled dotnet-public/dotnet-eng sources in the repository NuGet.config.
+package versions. Reads workload-set and manifest packages from NuGet.org.
 Includes those metadata packages and all packs, resolving aliases for every
-host RID. Does not download packs, check a mirror, or install workloads.
+host RID. By default, does not download packs, check a mirror, or install workloads.
 Writes only deduplicated "- ID/Version" lines to the success stream, after
 the entire inventory has been read successfully.
+With -MissingOnly, checks package version indexes on the dotnet-public mirror
+configured in repository NuGet.config and prints only versions absent there.
 .EXAMPLE
 .\scripts\infra\managed\list-workload-packs.ps1 -WorkloadSetVersion 10.0.401
+.EXAMPLE
+.\scripts\infra\managed\list-workload-packs.ps1 -WorkloadSetVersion 10.0.401 -MissingOnly
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [string] $WorkloadSetVersion
+    [string] $WorkloadSetVersion,
+    [switch] $MissingOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -46,30 +50,23 @@ function Add-Package([string] $Id, [string] $Version) {
     $null = $packages.Add("$Id/$Version")
 }
 
+function Get-PackageBaseAddress([string] $IndexUrl) {
+    $index = Invoke-RestMethod -Uri $IndexUrl
+    $addresses = @($index.resources | Where-Object { $_.'@type' -eq 'PackageBaseAddress/3.0.0' })
+    if ($addresses.Count -ne 1) {
+        throw "Expected one NuGet PackageBaseAddress at '$IndexUrl'."
+    }
+    return $addresses[0].'@id'
+}
+
 function Read-PackageJson([string] $Id, [string] $Version, [string] $EntryName) {
     Add-Package $Id $Version
     $lowerId = $Id.ToLowerInvariant()
     $lowerVersion = $Version.ToLowerInvariant()
     $path = Join-Path $scratch "$lowerId.$lowerVersion.nupkg"
-    $found = $false
-    foreach ($baseAddress in $baseAddresses) {
-        $url = "$($baseAddress.TrimEnd('/'))/$lowerId/$lowerVersion/$lowerId.$lowerVersion.nupkg"
-        Write-Verbose "Reading $Id/$Version from $baseAddress"
-        try {
-            Invoke-WebRequest -Uri $url -OutFile $path
-            $found = $true
-            break
-        } catch {
-            if ($_.Exception.PSObject.Properties['Response'] -and
-                $_.Exception.Response -and [int]$_.Exception.Response.StatusCode -eq 404) {
-                continue
-            }
-            throw
-        }
-    }
-    if (-not $found) {
-        throw "Missing metadata package '$Id/$Version' in the configured approved sources."
-    }
+    $url = "$($sourceBaseAddress.TrimEnd('/'))/$lowerId/$lowerVersion/$lowerId.$lowerVersion.nupkg"
+    Write-Verbose "Reading $Id/$Version from NuGet.org"
+    Invoke-WebRequest -Uri $url -OutFile $path
     $zip = [IO.Compression.ZipFile]::OpenRead($path)
     try {
         $entry = $zip.GetEntry($EntryName)
@@ -92,23 +89,18 @@ function Read-PackageJson([string] $Id, [string] $Version, [string] $EntryName) 
 }
 
 try {
-    [xml]$config = Get-Content -LiteralPath (Join-Path $repoRoot 'NuGet.config') -Raw
-    $baseAddresses = @(
-        foreach ($source in $config.SelectNodes('/configuration/packageSources/add')) {
-            if ($source.key -notin @('dotnet-public', 'dotnet-eng')) { continue }
-            $disabled = $config.SelectNodes('/configuration/disabledPackageSources/add') |
-                Where-Object { $_.key -eq $source.key -and $_.value -eq 'true' }
-            if ($disabled) { continue }
-            $index = Invoke-RestMethod -Uri $source.value
-            $addresses = @($index.resources | Where-Object { $_.'@type' -eq 'PackageBaseAddress/3.0.0' })
-            if ($addresses.Count -ne 1) {
-                throw "Expected one NuGet PackageBaseAddress in '$($source.key)'."
-            }
-            $addresses[0].'@id'
+    $sourceBaseAddress = Get-PackageBaseAddress 'https://api.nuget.org/v3/index.json'
+    $mirrorBaseAddress = $null
+    if ($MissingOnly) {
+        [xml]$config = Get-Content -LiteralPath (Join-Path $repoRoot 'NuGet.config') -Raw
+        $sources = @($config.SelectNodes('/configuration/packageSources/add') |
+            Where-Object { $_.key -eq 'dotnet-public' })
+        $disabled = $config.SelectNodes('/configuration/disabledPackageSources/add') |
+            Where-Object { $_.key -eq 'dotnet-public' -and $_.value -eq 'true' }
+        if ($sources.Count -ne 1 -or $disabled) {
+            throw 'Expected one enabled dotnet-public mirror source in repository NuGet.config.'
         }
-    )
-    if ($baseAddresses.Count -eq 0) {
-        throw 'No enabled dotnet-public/dotnet-eng sources in repository NuGet.config.'
+        $mirrorBaseAddress = Get-PackageBaseAddress $sources[0].value
     }
     $null = New-Item -ItemType Directory -Path $scratch
     $set = Read-PackageJson $setId $setVersion 'data/microsoft.net.workloads.workloadset.json'
@@ -157,5 +149,44 @@ try {
 }
 
 $inventory = @($packages)
+if ($MissingOnly) {
+    if (-not $mirrorBaseAddress) {
+        throw 'No enabled dotnet-public mirror source in repository NuGet.config.'
+    }
+    $checkJob = $inventory | Group-Object { $_.Split('/')[0] } | ForEach-Object -Parallel {
+        $ErrorActionPreference = 'Stop'
+        $remaining = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        foreach ($package in $_.Group) {
+            $null = $remaining.Add($package.Split('/')[1])
+        }
+        $baseAddress = $using:mirrorBaseAddress
+        $url = "$($baseAddress.TrimEnd('/'))/$($_.Name.ToLowerInvariant())/index.json"
+        $response = Invoke-WebRequest -Uri $url -SkipHttpErrorCheck -TimeoutSec 30
+        if ($response.StatusCode -ne 404) {
+            if ($response.StatusCode -ne 200) {
+                throw "Package index request failed: HTTP $($response.StatusCode) at '$url'."
+            }
+            $index = ConvertFrom-Json -InputObject $response.Content
+            if (-not $index.PSObject.Properties['versions'] -or $index.versions -isnot [array]) {
+                throw "Invalid package version index at '$url'."
+            }
+            foreach ($version in $index.versions) {
+                if ($version -isnot [string]) {
+                    throw "Invalid package version in index at '$url'."
+                }
+                $null = $remaining.Remove($version)
+            }
+        }
+        foreach ($package in $_.Group) {
+            if ($remaining.Contains($package.Split('/')[1])) { $package }
+        }
+    } -ThrottleLimit 12 -AsJob
+    try {
+        $inventory = @(Receive-Job -Job $checkJob -Wait -ErrorAction Stop)
+    } finally {
+        Stop-Job -Job $checkJob
+        Remove-Job -Job $checkJob -Force
+    }
+}
 [Array]::Sort($inventory, [StringComparer]::OrdinalIgnoreCase)
 $inventory | ForEach-Object { "- $_" }
