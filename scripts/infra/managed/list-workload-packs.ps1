@@ -10,7 +10,7 @@ host RID. By default, does not download packs, check a mirror, or install worklo
 Writes only deduplicated "- ID/Version" lines to the success stream, after
 the entire inventory has been read successfully.
 With -MissingOnly, checks package version indexes on the dotnet-public mirror
-configured in repository NuGet.config and prints only versions absent there.
+and prints only versions absent there. Runs independently of repository files.
 .EXAMPLE
 .\scripts\infra\managed\list-workload-packs.ps1 -WorkloadSetVersion 10.0.401
 .EXAMPLE
@@ -36,9 +36,9 @@ if ($Matches['suffix']) {
 }
 $setId = "Microsoft.NET.Workloads.$band"
 $setVersion = "$($Matches.major).$($Matches.patch).0$($Matches['suffix'])"
-$repoRoot = $PSScriptRoot
-1..3 | ForEach-Object { $repoRoot = Split-Path -Parent $repoRoot }
-$scratch = Join-Path $repoRoot 'output' -AdditionalChildPath 'tmp', "workload-packs-$([guid]::NewGuid())"
+Set-Variable -Name SourceFeed -Value 'https://api.nuget.org/v3/index.json' -Option Constant
+Set-Variable -Name MirrorFeed -Value 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json' -Option Constant
+$scratch = Join-Path ([IO.Path]::GetTempPath()) "workload-packs-$([guid]::NewGuid())"
 $packages = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 $packageIdPattern = '^[A-Za-z0-9_][A-Za-z0-9_.-]*$'
 $packageVersionPattern = '^\d+\.\d+\.\d+(?:\.\d+)?(?:-[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*)?$'
@@ -89,18 +89,10 @@ function Read-PackageJson([string] $Id, [string] $Version, [string] $EntryName) 
 }
 
 try {
-    $sourceBaseAddress = Get-PackageBaseAddress 'https://api.nuget.org/v3/index.json'
+    $sourceBaseAddress = Get-PackageBaseAddress $SourceFeed
     $mirrorBaseAddress = $null
     if ($MissingOnly) {
-        [xml]$config = Get-Content -LiteralPath (Join-Path $repoRoot 'NuGet.config') -Raw
-        $sources = @($config.SelectNodes('/configuration/packageSources/add') |
-            Where-Object { $_.key -eq 'dotnet-public' })
-        $disabled = $config.SelectNodes('/configuration/disabledPackageSources/add') |
-            Where-Object { $_.key -eq 'dotnet-public' -and $_.value -eq 'true' }
-        if ($sources.Count -ne 1 -or $disabled) {
-            throw 'Expected one enabled dotnet-public mirror source in repository NuGet.config.'
-        }
-        $mirrorBaseAddress = Get-PackageBaseAddress $sources[0].value
+        $mirrorBaseAddress = Get-PackageBaseAddress $MirrorFeed
     }
     $null = New-Item -ItemType Directory -Path $scratch
     $set = Read-PackageJson $setId $setVersion 'data/microsoft.net.workloads.workloadset.json'
@@ -151,7 +143,7 @@ try {
 $inventory = @($packages)
 if ($MissingOnly) {
     if (-not $mirrorBaseAddress) {
-        throw 'No enabled dotnet-public mirror source in repository NuGet.config.'
+        throw 'Missing dotnet-public mirror package base address.'
     }
     $checkJob = $inventory | Group-Object { $_.Split('/')[0] } | ForEach-Object -Parallel {
         $ErrorActionPreference = 'Stop'
