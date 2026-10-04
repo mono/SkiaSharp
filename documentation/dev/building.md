@@ -47,7 +47,8 @@ The .NET 10 release's `xcode26.5` tag does not describe its required Xcode.
 Public managed Complete and Tests jobs use `AcesShared` with
 `ImageOverride -equals ACES_VM_SharedPool_Tahoe`; internal managed Package jobs
 use `macos-26`. Native jobs retain Sequoia / `macos-15` and Xcode 26.3.
-Android provisioning installs platform APIs `21,35,36,37`.
+Android provisioning installs platform APIs `21,35,36,37.0`. Android 37 uses
+the SDK package ID `platforms;android-37.0`; `platforms;android-37` is not published.
 
 Workload installation uses only the approved `dotnet-public` and `dotnet-eng`
 sources in `nuget.config`. Missing packs are provisioning blockers: request
