@@ -34,7 +34,6 @@ parameters:
   installNode: true                             # whether or not to install Node.js
   checkoutSubmodules: true                      # whether or not to recursively initialize all submodules
   installPreviewSdk: false                      # whether to install the preview .NET SDK ($(DOTNET_VERSION_PREVIEW)) and pin global.json to it
-  previewWorkloads: ''                           # override default preview workloads (comma-separated, e.g. 'wasm-tools,android')
   installXcode: true                            # whether or not to install Xcode
   publishArtifacts: []                          # the additional artifacts to publish
   tools: []                                     # any additional .net global tools
@@ -293,7 +292,7 @@ jobs:
               dotnet --version
             displayName: Pin global.json to the preview .NET SDK
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Workloads "${{ parameters.previewWorkloads }}" -WorkloadSetVersion "$(DOTNET_WORKLOAD_VERSION_PREVIEW)" -Tizen ""
+          - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Workloads "${{ parameters.dotnetWorkloads }}" -WorkloadSetVersion "$(DOTNET_WORKLOAD_VERSION_PREVIEW)" -Tizen ""
             displayName: Install the preview .NET workloads
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
