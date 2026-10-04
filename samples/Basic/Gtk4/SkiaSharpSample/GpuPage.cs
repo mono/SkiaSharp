@@ -95,7 +95,14 @@ half4 main(float2 fragCoord) {
 		var builder = MainWindow.LoadBuilder("GpuPage.ui");
 		var overlay = (Overlay)builder.GetObject("gpuOverlay");
 		var container = (Box)builder.GetObject("gpuContainer");
+		var fpsPill = (Box)builder.GetObject("fpsPill");
 		fpsLabel = (Label)builder.GetObject("fpsLabel");
+		var fpsStyle = new CssProvider();
+		fpsStyle.LoadFromData(
+			"box { background-color: rgba(0, 0, 0, 0.667); border: 1px solid rgba(255, 255, 255, 0.267); " +
+			"border-radius: 12px; padding: 6px 12px; font-size: 14px; }",
+			-1);
+		fpsPill.GetStyleContext().AddProvider(fpsStyle, 600);
 
 		skiaView = new SKGLView { Hexpand = true, Vexpand = true };
 		skiaView.PaintSurface += OnPaintSurface;

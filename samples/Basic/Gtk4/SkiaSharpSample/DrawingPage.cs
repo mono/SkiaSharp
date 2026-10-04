@@ -24,6 +24,10 @@ public class DrawingPage : Box
 	{
 		get
 		{
+			var themeOverride = Environment.GetEnvironmentVariable("GTK_THEME");
+			if (!string.IsNullOrEmpty(themeOverride))
+				return themeOverride.Contains("dark", StringComparison.OrdinalIgnoreCase);
+
 			var settings = Gtk.Settings.GetDefault();
 			if (settings == null)
 				return false;
@@ -79,9 +83,10 @@ public class DrawingPage : Box
 		foreach (var (name, light, dark) in ColorOptions)
 		{
 			var btn = Button.New();
+			var color = IsDarkMode ? dark : light;
 			var provider = new CssProvider();
 			provider.LoadFromData(
-				$"button {{ background: rgb({light.Red},{light.Green},{light.Blue}); min-width: 28px; min-height: 28px; padding: 0; border-radius: 14px; border: 2px solid rgba(0,0,0,0.2); }}",
+				$"button {{ background: rgb({color.Red},{color.Green},{color.Blue}); min-width: 28px; min-height: 28px; padding: 0; border-radius: 14px; border: 2px solid rgba(0,0,0,0.2); }}",
 				-1);
 			btn.GetStyleContext().AddProvider(provider, 600);
 			var capturedLight = light;

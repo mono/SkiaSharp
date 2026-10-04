@@ -27,7 +27,7 @@ An animated, interactive SkSL metaball shader rendered on a real OpenGL-backed S
 
 - **`SKGLView`** — Hardware-accelerated canvas backed by `Gtk.GLArea` and desktop OpenGL; no CPU fallback.
 - **`SKRuntimeEffect`** — Shader compiled once and updated with time, resolution, and mouse-position uniforms each frame.
-- **Render loop** — GTK frame-clock-driven animation with an FPS overlay, paused whenever the tab is hidden.
+- **Render loop** — GTK frame-clock-driven animation with an FPS pill made from a native `Gtk.Box` and `Gtk.Label`, paused whenever the tab is hidden.
 - **Pointer input** — Press and drag to add a bright blob to the scene.
 
 ### Drawing
@@ -37,6 +37,7 @@ A freehand drawing canvas with a color palette, brush size label, and clear butt
 **Features:**
 
 - **`SKDrawingArea`** — Software-rendered canvas invalidated on demand after each stroke or clear.
+- **Theme-aware canvas** — White in GTK's light theme and charcoal in its dark theme, matching the Basic MAUI and desktop drawing samples.
 - **`SKPath`** — Freehand strokes captured as paths with `MoveTo` and `LineTo` from GTK gesture events.
 - **`GestureDrag`** — GTK 4 drag gesture for tracking press, move, and release.
 - **`EventControllerScroll`** — Scroll wheel to adjust brush size.
@@ -66,6 +67,8 @@ On macOS, include Homebrew's native library directory so GirCore can load GTK an
 ```bash
 DYLD_LIBRARY_PATH="$(brew --prefix)/lib" dotnet run --project SkiaSharpSample/SkiaSharpSample.csproj
 ```
+
+Drawing follows GTK's light/dark theme like the other Basic samples. To preview its dark appearance without changing your system theme, set `GTK_THEME=Adwaita:dark` for the run.
 
 To start on a different page, change `DefaultPage` in `MainWindow.cs`:
 
