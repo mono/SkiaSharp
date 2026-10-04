@@ -5,7 +5,7 @@ Lists the complete NuGet mirror inventory for a CLI workload-set version.
 .DESCRIPTION
 Accepts CLI versions such as 10.0.401 or 11.0.100-rc.1.26458.5, not NuGet
 package versions. Reads only workload-set and manifest packages from the
-enabled dotnet-public/dotnet-eng sources in the repository NuGet.config.
+enabled dotnet-public source in the repository NuGet.config.
 Includes those metadata packages and all packs, resolving aliases for every
 host RID. By default, does not download packs, check a mirror, or install workloads.
 Writes only deduplicated "- ID/Version" lines to the success stream, after
@@ -73,7 +73,7 @@ function Read-PackageJson([string] $Id, [string] $Version, [string] $EntryName) 
         }
     }
     if (-not $found) {
-        throw "Missing metadata package '$Id/$Version' in the configured approved sources."
+        throw "Missing metadata package '$Id/$Version' in dotnet-public."
     }
     $zip = [IO.Compression.ZipFile]::OpenRead($path)
     try {
@@ -101,7 +101,7 @@ try {
     $mirrorBaseAddress = $null
     $baseAddresses = @(
         foreach ($source in $config.SelectNodes('/configuration/packageSources/add')) {
-            if ($source.key -notin @('dotnet-public', 'dotnet-eng')) { continue }
+            if ($source.key -ne 'dotnet-public') { continue }
             $disabled = $config.SelectNodes('/configuration/disabledPackageSources/add') |
                 Where-Object { $_.key -eq $source.key -and $_.value -eq 'true' }
             if ($disabled) { continue }
@@ -117,7 +117,7 @@ try {
         }
     )
     if ($baseAddresses.Count -eq 0) {
-        throw 'No enabled dotnet-public/dotnet-eng sources in repository NuGet.config.'
+        throw 'No enabled dotnet-public source in repository NuGet.config.'
     }
     $null = New-Item -ItemType Directory -Path $scratch
     $set = Read-PackageJson $setId $setVersion 'data/microsoft.net.workloads.workloadset.json'
