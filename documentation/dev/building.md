@@ -21,44 +21,22 @@ This guide covers building SkiaSharp on Windows and macOS.
 Before building SkiaSharp, ensure you have:
 
 - **.NET SDK pinned by the repository** - See `global.json` for the required version
-- **Pinned workloads** - Use the shared installer from the repository root:
+- **Pinned workloads** - Use `DOTNET_WORKLOAD_VERSION` from the
+  [build tool versions](../../scripts/azure-templates-variables.yml) in place of
+  `VERSION`, then run the shared installer from the repository root:
   ```bash
-  pwsh ./scripts/infra/managed/install-dotnet-workloads.ps1 -WorkloadSetVersion 10.0.401
+  pwsh ./scripts/infra/managed/install-dotnet-workloads.ps1 -WorkloadSetVersion VERSION
   ```
-- **OpenJDK 21** and the Android SDK - Required for Android targets. The shared
-  JDK installer defaults to Microsoft OpenJDK `21.0.10+7` and reuses an existing
-  `JAVA_HOME_21_X64` installation.
+- **OpenJDK 21** and the Android SDK - Required for Android targets. Use
+  [`install-openjdk.ps1`](../../scripts/infra/managed/install-openjdk.ps1)
+  to install the required JDK or reuse `JAVA_HOME_21_X64`.
 - **Cake .NET Tool** - For running build scripts:
   ```bash
   dotnet tool install -g cake.tool
   ```
 
-CI provisions SDK `10.0.401` with workload set `10.0.401`. Opt-in preview jobs
-select SDK `11.0.100-rc.1.26425.128` and workload set
-`11.0.100-rc.1.26458.5`. An empty `previewWorkloads` uses the shared installer's
-host-supported defaults; an explicit comma-separated list overrides them.
-Linux installs `android`, `wasm-tools`, and `maui-android`; Windows and macOS
-also install `macos`, `ios`, `tvos`, `maccatalyst`, and aggregate `maui`.
-
-Both pinned Apple workload sets require **Xcode 26.6 and macOS 26.2+ (Tahoe)**:
-see the [.NET 10 release](https://github.com/dotnet/macios/releases/tag/dotnet-10.0.1xx-xcode26.5-10318)
-and [.NET 11 RC1 release](https://github.com/dotnet/macios/releases/tag/dotnet-11.0.1xx-rc1-12193).
-The .NET 10 release's `xcode26.5` tag does not describe its required Xcode.
-Public managed Complete and Tests jobs use `AcesShared` with
-`ImageOverride -equals ACES_VM_SharedPool_Tahoe`; internal managed Package jobs
-use `macos-26`. Native jobs retain Sequoia / `macos-15` and Xcode 26.3.
-Android provisioning installs platform APIs `21,35,36,37.0`. Android 37 uses
-the SDK package ID `platforms;android-37.0`; `platforms;android-37` is not published.
-
-Workload installation uses only the approved `dotnet-public` and `dotnet-eng`
-sources in `nuget.config`. Missing packs are provisioning blockers: request
-mirroring rather than adding sources or overriding the installer's feeds.
-
-Validate the shared installers without changing installed tools or workloads:
-
-```powershell
-pwsh ./scripts/infra/managed/tests/Provisioning.Tests.ps1
-```
+Use the approved sources in [`nuget.config`](../../nuget.config) for workload
+installation. Request mirroring for missing packages rather than adding sources.
 
 ## Preparation
 
@@ -92,8 +70,9 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 - Windows 10 SDK (latest)
 
 **macOS Dependencies:**
-- macOS 26.2+ (Tahoe) for the pinned Apple workloads
-- [Xcode 26.6](https://developer.apple.com/xcode/)
+- A macOS version supported by the required Xcode
+- [Xcode](https://developer.apple.com/xcode/) matching `XCODE_VERSION` in the
+  [build tool versions](../../scripts/azure-templates-variables.yml)
 - Command Line Tools: `xcode-select --install`
 
 ### Preparation
