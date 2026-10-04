@@ -7,16 +7,21 @@ Accepts CLI versions such as 10.0.401 or 11.0.100-rc.1.26458.5, not NuGet
 package versions. Reads only workload-set and manifest packages from the
 enabled dotnet-public/dotnet-eng sources in the repository NuGet.config.
 Includes those metadata packages and all packs, resolving aliases for every
-host RID. Does not download packs, check a mirror, or install workloads.
+host RID. By default, does not download packs, check a mirror, or install workloads.
 Writes only deduplicated "- ID/Version" lines to the success stream, after
 the entire inventory has been read successfully.
+With -MissingOnly, checks package version indexes on dotnet-public (the mirror
+feed) and prints only versions absent there. Does not download packs.
 .EXAMPLE
 .\scripts\infra\managed\list-workload-packs.ps1 -WorkloadSetVersion 10.0.401
+.EXAMPLE
+.\scripts\infra\managed\list-workload-packs.ps1 -WorkloadSetVersion 10.0.401 -MissingOnly
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [string] $WorkloadSetVersion
+    [string] $WorkloadSetVersion,
+    [switch] $MissingOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -93,6 +98,7 @@ function Read-PackageJson([string] $Id, [string] $Version, [string] $EntryName) 
 
 try {
     [xml]$config = Get-Content -LiteralPath (Join-Path $repoRoot 'NuGet.config') -Raw
+    $mirrorBaseAddress = $null
     $baseAddresses = @(
         foreach ($source in $config.SelectNodes('/configuration/packageSources/add')) {
             if ($source.key -notin @('dotnet-public', 'dotnet-eng')) { continue }
@@ -103,6 +109,9 @@ try {
             $addresses = @($index.resources | Where-Object { $_.'@type' -eq 'PackageBaseAddress/3.0.0' })
             if ($addresses.Count -ne 1) {
                 throw "Expected one NuGet PackageBaseAddress in '$($source.key)'."
+            }
+            if ($source.key -eq 'dotnet-public') {
+                $mirrorBaseAddress = $addresses[0].'@id'
             }
             $addresses[0].'@id'
         }
@@ -157,5 +166,44 @@ try {
 }
 
 $inventory = @($packages)
+if ($MissingOnly) {
+    if (-not $mirrorBaseAddress) {
+        throw 'No enabled dotnet-public mirror source in repository NuGet.config.'
+    }
+    $checkJob = $inventory | Group-Object { $_.Split('/')[0] } | ForEach-Object -Parallel {
+        $ErrorActionPreference = 'Stop'
+        $remaining = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        foreach ($package in $_.Group) {
+            $null = $remaining.Add($package.Split('/')[1])
+        }
+        $baseAddress = $using:mirrorBaseAddress
+        $url = "$($baseAddress.TrimEnd('/'))/$($_.Name.ToLowerInvariant())/index.json"
+        $response = Invoke-WebRequest -Uri $url -SkipHttpErrorCheck -TimeoutSec 30
+        if ($response.StatusCode -ne 404) {
+            if ($response.StatusCode -ne 200) {
+                throw "Package index request failed: HTTP $($response.StatusCode) at '$url'."
+            }
+            $index = ConvertFrom-Json -InputObject $response.Content
+            if (-not $index.PSObject.Properties['versions'] -or $index.versions -isnot [array]) {
+                throw "Invalid package version index at '$url'."
+            }
+            foreach ($version in $index.versions) {
+                if ($version -isnot [string]) {
+                    throw "Invalid package version in index at '$url'."
+                }
+                $null = $remaining.Remove($version)
+            }
+        }
+        foreach ($package in $_.Group) {
+            if ($remaining.Contains($package.Split('/')[1])) { $package }
+        }
+    } -ThrottleLimit 12 -AsJob
+    try {
+        $inventory = @(Receive-Job -Job $checkJob -Wait -ErrorAction Stop)
+    } finally {
+        Stop-Job -Job $checkJob
+        Remove-Job -Job $checkJob -Force
+    }
+}
 [Array]::Sort($inventory, [StringComparer]::OrdinalIgnoreCase)
 $inventory | ForEach-Object { "- $_" }
