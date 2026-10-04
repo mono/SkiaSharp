@@ -22,9 +22,9 @@ This checklist documents every file that needs updating when bumping the .NET SD
 - [ ] **`global.json` `tools.dotnet`** — Keep this equal to `sdk.version` and verify the selected SDK satisfies Arcade's CLI requirements for `dotnet package download`.
 - [ ] **`native/winui/global.json` and `DOTNET_VERSION_WINUI`** — Keep these on the latest SDK feature band supported by the Visual Studio MSBuild used for the C++/WinRT projection. Verify the current SDK/MSBuild compatibility matrix and install this SDK side-by-side in the WinUI native jobs instead of forcing the repository SDK onto them.
 - [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_VERSION` to the SDK patch and pin `DOTNET_WORKLOAD_VERSION` to a compatible workload set. The workload set may intentionally lag the SDK by whole feature bands when a newer set requires an unavailable Apple toolchain.
-- [ ] **Managed Apple pool, `XCODE_VERSION`, and `XCODE_VERSION_PREVIEW`** — Use an agent image containing the exact Xcode required by each workload set. Stable `10.0.401` and preview `11.0.100-rc.1.26458.5` both require Xcode 26.6 on Tahoe, even though the stable Apple release tag contains `xcode26.5`. Keep native Apple builds on their separately pinned Xcode 26.3 and Sequoia agents.
+- [ ] **Managed Apple pool, `XCODE_VERSION`, and `XCODE_VERSION_PREVIEW`** — Use an agent image containing the Xcode required by each workload set. Check upstream release requirements rather than inferring them from pack names. Keep native Apple builds on their separately pinned Xcode.
 - [ ] **`scripts/infra/managed/install-dotnet-workloads.ps1`** — Review the workload installation flow and Tizen manifest source (Samsung may update it independently).
-- [ ] **`scripts/infra/managed/install-openjdk.ps1` and `ANDROID_PLATFORM_VERSIONS`** — Match the Android workload's prerequisites. The current installer defaults to JDK `21.0.10+7`, reuses `JAVA_HOME_<major>_X64`, and CI installs platforms `21,35,36,37.0`. Use the exact SDK package suffix: Android 37 is published as `platforms;android-37.0`, not `platforms;android-37`.
+- [ ] **`scripts/infra/managed/install-openjdk.ps1` and `ANDROID_PLATFORM_VERSIONS`** — Match the Android workload's JDK and platform requirements. Use exact published SDK package suffixes, including minor versions when required.
 
 > **Note:** Do NOT set `workloadVersion` in `global.json`. Native builds skip SDK install but still read global.json, causing failures if the pinned workload version isn't pre-installed.
 
@@ -190,13 +190,9 @@ Since platform workloads only support 2 versions at a time, testing a preview me
 3. Build and test on the branch
 4. Merge when the new .NET version goes GA
 
-For opt-in CI jobs, `installPreviewSdk: true` installs `DOTNET_VERSION_PREVIEW`
-side-by-side and selects it in the job's `global.json`, without changing the
-repository's stable pin. The bootstrapper then installs
-`DOTNET_WORKLOAD_VERSION_PREVIEW` using the shared workload installer.
-An empty `previewWorkloads` installs its host-supported defaults; an explicit
-comma-separated list overrides them. Linux defaults exclude unsupported Apple
-workloads. This provisioning option does not shift the repository's TFM chain.
+For side-by-side CI validation without shifting the repository's TFM chain,
+use the opt-in preview SDK support in the
+[bootstrapper](../../scripts/azure-templates-jobs-bootstrapper.yml).
 
 ## How to Verify TPVs
 
