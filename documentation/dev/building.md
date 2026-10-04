@@ -54,6 +54,18 @@ Workload installation uses only the approved `dotnet-public` and `dotnet-eng`
 sources in `nuget.config`. Missing packs are provisioning blockers: request
 mirroring rather than adding sources or overriding the installer's feeds.
 
+**Provisioning status checked on 2026-10-04:** the pinned stable `10.0.401`
+and preview workload installation paths require Apple SDK packs that are missing
+from both approved feeds: `Microsoft.iOS.Sdk.net10.0_27.0`,
+`Microsoft.iOS.Windows.Sdk.net10.0_27.0`, and
+`Microsoft.MacCatalyst.Sdk.net10.0_27.0`, all at `27.0.10539-xcode27.0`.
+The stable iOS/MacCatalyst manifests `26.5.10318` themselves reference these
+27.0 SDK packs; the gap is not preview-only or stale agent state.
+The .NET 11 RC1 macOS Emscripten 6.0.2 `Python`, `Sdk`, `Node`, and `Cache`
+packs are available on `dotnet-public` at runtime version
+`11.0.0-rc.1.26425.128` and are not current mirroring blockers. Do not probe
+those packs using the different SDK version `11.0.100-rc.1.26425.128`.
+
 Validate the shared installers without changing installed tools or workloads:
 
 ```powershell
