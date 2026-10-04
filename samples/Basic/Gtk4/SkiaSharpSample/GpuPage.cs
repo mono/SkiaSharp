@@ -122,13 +122,13 @@ half4 main(float2 fragCoord) {
 		stopwatch.Start();
 		lastSampleTime = stopwatch.Elapsed.TotalSeconds;
 		frameCount = 0;
-		fpsLabel.SetLabel("FPS: --");
+		fpsLabel.SetMarkup("<span foreground='white'>FPS: --</span>");
 		fpsCallback = AddTickCallback((widget, clock) =>
 		{
 			var now = stopwatch.Elapsed.TotalSeconds;
 			if (now - lastSampleTime >= 0.5)
 			{
-				fpsLabel.SetLabel($"FPS: {frameCount / (now - lastSampleTime):F0}");
+				fpsLabel.SetMarkup($"<span foreground='white'>FPS: {frameCount / (now - lastSampleTime):F0}</span>");
 				frameCount = 0;
 				lastSampleTime = now;
 			}
