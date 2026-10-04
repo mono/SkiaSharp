@@ -179,58 +179,21 @@ dotnet cake --target=externals-linux --arch=x64
 ## MSBuild Package-Consumer Tests
 
 `tests/SkiaSharp.Tests.MSBuild` tests real packed SkiaSharp and HarfBuzzSharp
-packages using isolated .NET consumers. It does not build the bindings, load
-native libraries into the test runner, or use the repository's native-copy
-targets. The normal, unfiltered suite builds desktop and real MAUI applications.
-It needs the SDK pinned by `global.json`, the host-supported MAUI workloads,
-JDK 21, and the Android SDK. macOS also needs the pinned Xcode 26.6, and Windows
-needs the WinUI XAML build toolchain. No submodules, GPU, browser, emulator,
-device, UI execution, or native source build is required. These tests inspect
-build outputs without running apps.
+packages by building isolated desktop and host-supported MAUI applications.
+These tests inspect outputs without running the apps or loading native
+libraries into the runner.
 
-Download the `nuget` artifact from one exact completed SkiaSharp CI build and
-place its packages in `output/nugets`. Record the build URL/commit when reporting
-results. Do not combine different builds or substitute published packages for
-missing artifacts. Both families require their core, `NativeAssets.Win32`,
-`NativeAssets.macOS`, and `NativeAssets.Linux` packages for the desktop tests.
-MAUI requires `SkiaSharp.HarfBuzz`, `SkiaSharp.Views.Maui.Controls`,
-`SkiaSharp.Views.Maui.Core`, and `SkiaSharp.Views`, plus both families'
-`NativeAssets.Android` packages on every host. Windows additionally requires
-`SkiaSharp.Views.WinUI` and `SkiaSharp.NativeAssets.WinUI`; macOS additionally
-requires both families' `NativeAssets.iOS` and `NativeAssets.MacCatalyst`.
-All transitive SkiaSharp/HarfBuzzSharp dependencies must also be present in that
-same artifact set. Missing packages, workloads, or platform tools fail tests;
-they never trigger skips or public-package fallback. Package versions are read
-from their nuspec metadata, not inferred from the checkout.
-
-Run the CI entry point from the repository root:
+Install the [prerequisites](#prerequisites), including MAUI workloads and
+Android tools; Apple builds need Xcode, and Windows builds need the WinUI
+toolchain. Download the complete `nuget` artifact from one SkiaSharp CI build
+into `output/nugets`, then run from the repository root:
 
 ```sh
 dotnet cake --target=tests-msbuild
 ```
 
-CI uses the shared workload installer's default host-supported list and pinned
-workload set, without a `dotnetWorkloads` or `previewWorkloads` override. Stable
-and preview are separate bootstrapper jobs on each host; preview jobs use the
-existing `installPreviewSdk` option. Both SDKs run the same unfiltered desktop
-and MAUI suite, including Android on every host. The SDK building the harness
-selects the generated consumers' SDK: the existing `NETCoreSdkVersion` runtime
-setting derives all consumer TFMs and the MAUI template's `--framework`.
-Only SDK 10 and SDK 11 are supported; no separate consumer SDK version override
-is required. The test executable itself still targets net10.0.
-
-Android consumers target API 36 with SDK 10 and API 37 with SDK 11. Their minimum
-OS versions are respectively 21 and 24, matching the selected Android workload.
-Both SDKs use JDK 21 through the normal bootstrapper provisioning. Unsupported
-host TFMs are omitted from MAUI theory data, not skipped during execution:
-
-| Host | Stable net10 / preview net11 consumer coverage | Test count per SDK |
-| --- | --- | --- |
-| Windows | Desktop, Android APK, unpackaged WinUI executable | 24 |
-| macOS | Desktop, Android APK, iOS simulator app, Mac Catalyst app | 25 |
-| Linux | Desktop, Android APK | 23 |
-
-Or run the test project directly against a local artifact directory:
+To use another artifact directory or inspect test results, run the project
+directly:
 
 ```sh
 dotnet test tests/SkiaSharp.Tests.MSBuild/SkiaSharp.Tests.MSBuild.csproj \
@@ -238,118 +201,22 @@ dotnet test tests/SkiaSharp.Tests.MSBuild/SkiaSharp.Tests.MSBuild.csproj \
   -- --report-trx --results-directory /absolute/path/to/test-results
 ```
 
-For a preview diagnostic, select the exact preview SDK in `global.json` in the
-working directory used to build the harness. If it is installed outside the
-runner's dotnet root, also pass `-p:ConsumerDotNetHost=/absolute/path/to/dotnet`.
-Run the built net10.0 test assembly with a net10-capable host; the generated
-consumers still use the SDK and host recorded at harness build time. Do not
-build the same harness configuration concurrently with different SDK settings.
+Use packages from the same build, including transitive dependencies; do not
+substitute public packages for missing artifacts. Restores use private caches
+and restrict SkiaSharp/HarfBuzzSharp to the supplied artifacts.
 
-Consumer Microsoft dependencies must be available on `dotnet-public`; the
-SDK-injected local `library-packs` directory is also allowed for MAUI restores.
-Workload provisioning uses only `dotnet-public` and `dotnet-eng` from the
-repository `nuget.config`. Missing packs are provisioning blockers: request
-mirroring, not a NuGet.org fallback or source override.
+The SDK selected when building the harness also selects the consumer SDK and
+target frameworks. For an SDK outside the runner's dotnet installation, pass
+`-p:ConsumerDotNetHost=/absolute/path/to/dotnet` and execute the built test
+assembly with a host supporting its target framework.
 
-`NativeAssetOutputTests.cs` and `MauiNativeAssetTests.cs` contain the package
-references, scenarios, and assertions. `Utils/DotNet.cs` handles isolated
-project creation and CLI execution; `Utils/ArtifactPackage.cs` reads real
-package identities and hashes. Each fixture has a private restore cache;
-every case has independent project, intermediate, and output directories.
-Source mapping restricts SkiaSharp and
-HarfBuzzSharp packages to the supplied artifacts, so missing packages cannot
-fall back to public versions. User NuGet caches and input packages are not modified.
+Diagnostics are retained under `output/logs/testlogs/msbuild`. On Windows,
+use short paths for `-p:MSBuildTestArtifactsDirectory=<absolute-path>` and
+`TEMP`/`TMP` if platform tools hit path-length limits.
 
-WinUI's XAML compiler still imposes `MAX_PATH` on referenced assemblies, even
-with OS long paths enabled. Private caches use compact directories under the
-host temp directory, rather than nesting package paths below the diagnostic
-root. Fixture run IDs are compact too. On Windows with a long checkout path,
-use `-p:MSBuildTestArtifactsDirectory=<short-absolute-path>` for generated
-applications and diagnostics; `TEMP`/`TMP` can select a short private-cache
-parent for a local diagnostic. Each fixture removes only its own cache on
-disposal. Do not share caches with user restores or bypass package assertions.
-
-For each family, build and publish first verify the default package includes
-Win32/macOS native assets and **no Linux native assets**. With an explicit
-`NativeAssets.Linux` reference, the nine-case matrix below verifies that Linux
-assets are included and that RID selection behaves as expected.
-
-For each family, the suite tests `build`, `publish`, and `publish -r linux-x64`
-against three project configurations:
-
-| Project configuration | Build/publish without a CLI RID | Publish with `-r linux-x64` |
-| --- | --- | --- |
-| No RID | All native variants under `runtimes/` | Linux x64 native assets beside the app |
-| `RuntimeIdentifier=linux-arm64` | Linux arm64 native assets beside the app | Linux x64 overrides the project RID |
-| `RuntimeIdentifiers=linux-x64;linux-arm64` | All native variants under `runtimes/` | Linux x64 native assets beside the app |
-
-Plural `RuntimeIdentifiers` are restore targets, **not an output allow-list**.
-The tests compare native paths and hashes with the actual input packages,
-rather than accepting only a successful MSBuild exit code.
-Linux assets are explicitly referenced; this suite does not change package
-dependencies or filtering behavior. No fake packages or mock CLI are used.
-
-`MauiNativeAssetTests.cs` generates an installed `dotnet new maui --no-restore`
-application with the SDK-derived `--framework net10.0` or `net11.0`, preserves
-the platform entrypoints/manifests/resources, and rewrites only the project and
-shared source inside the isolated consumer directory. The app registers the
-real `SKCanvasView` handler with `.UseSkiaSharp()` and compiles drawing/shaping
-code against `SkiaSharp.HarfBuzz` and `HarfBuzzSharp`. It builds one
-host-architecture RID per supported platform (`android-x64` or `android-arm64`,
-`win-x64` or `win-arm64`, and matching iOS simulator/Mac Catalyst RIDs).
-Platform native packages are selected through the real package graph, not
-repository imports or explicit replacement assets.
-
-MAUI assertions verify the exact RID restore target, all restored SkiaSharp/
-HarfBuzzSharp identities and SHA512 package hashes, and their local-artifact
-origin. They also verify both families and the real MAUI integration assemblies
-were compiler references. Android APKs must contain a manifest, DEX, and exactly
-one native library per family for the selected ABI, matching input-package
-SHA256 hashes (native stripping is disabled to preserve byte identity).
-Windows must produce a PE app executable and the selected Win32 and WinUI
-native libraries with matching package hashes. Apple builds must produce a
-native `.app` executable and both families' Mach-O framework binaries with
-`otool -L` evidence; selected cached framework inputs match package hashes.
-Final Apple binaries may be thinned/signed, so final hashes are not compared.
-Debug builds avoid release signing/AOT requirements without turning the app
-into a class library or bypassing native packaging. This is package/build
-coverage, not execution of the app's native libraries.
-
-TRX results, generated projects, command logs, binlogs, restore/dependency
-metadata, and failed-consumer outputs are published from `output/logs/` in CI.
-Successful desktop build outputs are removed after assertions; MAUI outputs
-and Apple link inspections are retained even on success. The consumer diagnostics
-default to `output/logs/testlogs/msbuild`; override
-`-p:MSBuildTestArtifactsDirectory=/absolute/path/to/diagnostics` for a direct run.
-Private restore caches are not included in diagnostic artifacts.
-
-The **MSBuild package tests** CI stage has a three-host by two-SDK matrix:
-Windows, macOS, and Linux, each with stable and preview jobs. The host loop uses
-the existing agent objects and their `pool.os` values. Every job uses
-`target: tests-msbuild` and the bootstrapper's normal SDK/workload provisioning.
-Stable jobs run the unfiltered net10 desktop and MAUI suite; preview jobs use
-`installPreviewSdk: true` and default host-supported preview workloads for the
-identical unfiltered net11 consumers. There are no category filters, new skips,
-custom SDK/workload install steps, JDK selection tasks, or extra Cake invocations.
-In combined CI it depends on `package`; in downstream Tests it depends on `prepare`
-and downloads the exact SkiaSharp pipeline-resource run's artifact. It runs
-alongside Samples without changing the prerequisites of existing source/unit/
-device tests. Its failures are reported independently and still fail the pipeline.
-The existing release/platform Integration suite remains a separate entry point.
-
-Stable and preview CI verification depend on the full default workload list,
-not just the Android/MAUI Windows subset used for local diagnostics. On
-2026-10-04, approved-feed probes still returned 404 for the three Apple 27 SDK
-packs `Microsoft.iOS.Windows.Sdk.net10.0_27.0`,
-`Microsoft.iOS.Sdk.net10.0_27.0`, and
-`Microsoft.MacCatalyst.Sdk.net10.0_27.0` at `27.0.10539-xcode27.0`; mirroring
-was requested. These affect stable as well as preview provisioning. The four
-Emscripten 6.0.2 `Python/Sdk/Node/Cache.osx-x64` packs at
-`11.0.0-rc.1.26425.128` are now available on `dotnet-public`, so their earlier
-mirror gap is resolved. Package availability alone does not establish that
-default workload provisioning or consumer builds passed. Keep CI coverage
-intact and verify the actual installation/build results after mirroring,
-without adding feed overrides or changing the pinned Xcode selection.
+See the [MSBuild test stage](../../scripts/azure-templates-stages-msbuild.yml)
+for CI configuration and the [test sources](../../tests/SkiaSharp.Tests.MSBuild)
+for coverage.
 
 ## Documentation Outputs
 
