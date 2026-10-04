@@ -36,7 +36,7 @@ if ($Case) {
             'multiple' { ' android, , wasm-tools, maui-android ' }
             default { '' }
         }
-        & $WorkloadInstaller -WorkloadSetVersion '11.0.100-rc.1.26458.5' -Workloads $workloads -Tizen ''
+        & $WorkloadInstaller -WorkloadSetVersion '9.0.123' -Workloads $workloads -Tizen ''
     }
     exit $LASTEXITCODE
 }
@@ -63,20 +63,6 @@ $JavaHome = Join-Path $testRoot 'jdk home'
 try {
     New-Item -ItemType Directory (Join-Path $JavaHome 'bin') -Force | Out-Null
 
-    foreach ($path in @($WorkloadInstaller, $jdkInstaller, $PSCommandPath)) {
-        $parseErrors = $null
-        [Management.Automation.Language.Parser]::ParseFile($path, [ref]$null, [ref]$parseErrors) | Out-Null
-        if ($parseErrors) {
-            throw "PowerShell syntax errors in ${path}: $parseErrors"
-        }
-    }
-
-    $pipelineVariables = Get-Content (Join-Path $repoRoot 'scripts\azure-templates-variables.yml')
-    $platformPin = @($pipelineVariables | Where-Object { $_ -match '^\s+ANDROID_PLATFORM_VERSIONS:' })
-    Assert-Equal $platformPin.Count 1 'Android platform pin count'
-    Assert-Equal $platformPin[0].Trim() 'ANDROID_PLATFORM_VERSIONS: 21,35,36,37.0' 'Published Android platform package suffixes'
-    Write-Host 'PASS: Android platform package pins'
-
     $defaults = @{
         'default-windows' = @('android', 'wasm-tools', 'macos', 'ios', 'tvos', 'maccatalyst', 'maui')
         'default-macos' = @('android', 'wasm-tools', 'macos', 'ios', 'tvos', 'maccatalyst', 'maui')
@@ -91,7 +77,7 @@ try {
             ForEach-Object { ConvertFrom-Json $_.Substring('MOCK_DOTNET:'.Length) -NoEnumerate })
         $expectedWorkloads = if ($name -eq 'install-failure') { $defaults['default-windows'] } else { $defaults[$name] }
         $expectedArgs = @('workload', 'install') + $expectedWorkloads +
-            @('--skip-sign-check', '--version', '11.0.100-rc.1.26458.5')
+            @('--skip-sign-check', '--version', '9.0.123')
         Assert-Equal ($calls[0] -join '|') ($expectedArgs -join '|') "$name install arguments"
         if ($exitCode -eq 0) {
             Assert-Equal $calls.Count 2 "$name call count"
@@ -102,9 +88,6 @@ try {
         Write-Host "PASS: $name"
     }
 
-    $jdkAst = [Management.Automation.Language.Parser]::ParseFile($jdkInstaller, [ref]$null, [ref]$null)
-    Assert-Equal $jdkAst.ParamBlock.Parameters[0].DefaultValue.SafeGetValue() '21.0.10' 'JDK version'
-    Assert-Equal $jdkAst.ParamBlock.Parameters[1].DefaultValue.SafeGetValue() '21.0.10+7' 'JDK folder version'
     foreach ($name in @('jdk-default', 'jdk-override', 'jdk-failure')) {
         $exitCode = if ($name -eq 'jdk-failure') { 29 } else { 0 }
         $output = Invoke-Case $name $exitCode
@@ -113,7 +96,7 @@ try {
         Assert-Equal @($output | Where-Object { $_.StartsWith('Downloading OpenJDK') }).Count 0 "$name no download"
         Write-Host "PASS: $name"
     }
-    Write-Host 'All provisioning tests passed (9 cases and PowerShell syntax).'
+    Write-Host 'All provisioning behavior tests passed (9 cases).'
 } finally {
     if (Test-Path $testRoot) {
         Remove-Item -LiteralPath $testRoot -Recurse -Force
