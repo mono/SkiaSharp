@@ -135,12 +135,14 @@ def recorded_commit_belongs_to_upstream(cwd: str, commit: str, upstream_ref: str
 
 def required_skia_pr(body: str) -> int:
     """Read the single canonical native PR link in the parent's Required skia PR section."""
-    section = re.search(
+    body = re.sub(r"<!--.*?-->", "", body, flags=re.DOTALL)
+    sections = list(re.finditer(
         r"(?im)^\s*(?:#{1,6}\s*|\*\*)Required skia PR(?:\*\*)?\s*$",
         body,
-    )
-    if not section:
-        raise ValueError("Parent PR has no Required skia PR section")
+    ))
+    if len(sections) != 1:
+        raise ValueError("Parent PR must have exactly one Required skia PR section")
+    section = sections[0]
     rest = body[section.end():]
     rest = re.split(r"(?m)^\s*(?:#{1,6}\s+|\*\*[^*\n]+\*\*\s*$)", rest, maxsplit=1)[0]
     links = re.findall(r"https?://github\.com/mono/skia/pull/[^\s<>)]*", rest)

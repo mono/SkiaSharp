@@ -20,9 +20,16 @@ class RunReviewTests(unittest.TestCase):
     def test_parent_link_requires_one_canonical_url(self) -> None:
         body = "**Required skia PR**\n\n[Native](https://github.com/mono/skia/pull/402)\n\n**Areas Affected**"
         self.assertEqual(402, required_skia_pr(body))
+        template_body = body.replace(
+            "\n\n**Areas Affected**",
+            "\n\n<!--\nRequires https://github.com/mono/skia/pull/<number>\n"
+            "Example: https://github.com/mono/skia/pull/999\n-->\n\n**Areas Affected**",
+        )
+        self.assertEqual(402, required_skia_pr(template_body))
         for bad in ("No link", "**Required skia PR**\nNone.",
                     body.replace("/402)", "/402/files)"),
-                    body.replace("/402)", "/402) and https://github.com/mono/skia/pull/403")):
+                    body.replace("/402)", "/402) and https://github.com/mono/skia/pull/403"),
+                    body + "\n**Required skia PR**\nhttps://github.com/mono/skia/pull/403"):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 required_skia_pr(bad)
 
