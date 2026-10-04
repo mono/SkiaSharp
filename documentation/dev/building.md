@@ -21,14 +21,43 @@ This guide covers building SkiaSharp on Windows and macOS.
 Before building SkiaSharp, ensure you have:
 
 - **.NET SDK pinned by the repository** - See `global.json` for the required version
-- **MAUI workload** - Required for mobile platform targets:
+- **Pinned workloads** - Use the shared installer from the repository root:
   ```bash
-  dotnet workload install maui
+  pwsh ./scripts/infra/managed/install-dotnet-workloads.ps1 -WorkloadSetVersion 10.0.401
   ```
+- **OpenJDK 21** and the Android SDK - Required for Android targets. The shared
+  JDK installer defaults to Microsoft OpenJDK `21.0.10+7` and reuses an existing
+  `JAVA_HOME_21_X64` installation.
 - **Cake .NET Tool** - For running build scripts:
   ```bash
   dotnet tool install -g cake.tool
   ```
+
+CI provisions SDK `10.0.401` with workload set `10.0.401`. Opt-in preview jobs
+select SDK `11.0.100-rc.1.26425.128` and workload set
+`11.0.100-rc.1.26458.5`. An empty `previewWorkloads` uses the shared installer's
+host-supported defaults; an explicit comma-separated list overrides them.
+Linux installs `android`, `wasm-tools`, and `maui-android`; Windows and macOS
+also install `macos`, `ios`, `tvos`, `maccatalyst`, and aggregate `maui`.
+
+Both pinned Apple workload sets require **Xcode 26.6 and macOS 26.2+ (Tahoe)**:
+see the [.NET 10 release](https://github.com/dotnet/macios/releases/tag/dotnet-10.0.1xx-xcode26.5-10318)
+and [.NET 11 RC1 release](https://github.com/dotnet/macios/releases/tag/dotnet-11.0.1xx-rc1-12193).
+The .NET 10 release's `xcode26.5` tag does not describe its required Xcode.
+Public managed Complete and Tests jobs use `AcesShared` with
+`ImageOverride -equals ACES_VM_SharedPool_Tahoe`; internal managed Package jobs
+use `macos-26`. Native jobs retain Sequoia / `macos-15` and Xcode 26.3.
+Android provisioning installs platform APIs `21,35,36,37`.
+
+Workload installation uses only the approved `dotnet-public` and `dotnet-eng`
+sources in `nuget.config`. Missing packs are provisioning blockers: request
+mirroring rather than adding sources or overriding the installer's feeds.
+
+Validate the shared installers without changing installed tools or workloads:
+
+```powershell
+pwsh ./scripts/infra/managed/tests/Provisioning.Tests.ps1
+```
 
 ## Preparation
 
@@ -50,7 +79,7 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 
 **All Platforms:**
 - **.NET SDK pinned by the repository** - See `global.json` for the required version
-- **MAUI workload** - `dotnet workload install maui`
+- **Pinned workloads** - Use the shared installer described in [Prerequisites](#prerequisites)
 - **Cake .NET Tool** - `dotnet tool install -g cake.tool`
 
 **Windows Dependencies:**
@@ -62,8 +91,8 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 - Windows 10 SDK (latest)
 
 **macOS Dependencies:**
-- macOS 12+ (Monterey or later)
-- [Xcode](https://developer.apple.com/xcode/) (latest stable)
+- macOS 26.2+ (Tahoe) for the pinned Apple workloads
+- [Xcode 26.6](https://developer.apple.com/xcode/)
 - Command Line Tools: `xcode-select --install`
 
 ### Preparation
@@ -115,7 +144,7 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
           - In VS 2022 Build Tools, select **WinUI application development build tools** and its optional C++ tools
        - Android NDK (via Visual Studio Installer or [manually](https://developer.android.com/ndk/downloads))
           - Make sure the path to the root is in the `ANDROID_NDK_ROOT` or `ANDROID_NDK_HOME` environment variables
- - [OpenJDK 17+](https://adoptium.net/)
+ - [OpenJDK 21](https://learn.microsoft.com/java/openjdk/download)
  - Clang/LLVM
     - Run `.\scripts\install-llvm.ps1`
     - Set `LLVM_HOME` to the path of the install
@@ -133,7 +162,7 @@ Use `--windowsSdkVersion` if you need a specific installed Windows SDK.
  - Python 3
  - Clang 14+
  - Make
- - OpenJDK 17+
+ - OpenJDK 21
 
 ### Building Native Libraries
 
