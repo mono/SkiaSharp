@@ -35,7 +35,7 @@ Task("SkiaSharp.Views.WinUI.Native")
             properties: new Dictionary<string, string> {
                 { "CsWinRTWindowsMetadata", string.IsNullOrEmpty(WINDOWS_SDK_VERSION) ? "sdk" : WINDOWS_SDK_VERSION },
                 { "VCToolsVersion", TOOLSET_VERSION.Value },
-                { "WindowsTargetPlatformVersion", string.IsNullOrEmpty(WINDOWS_SDK_VERSION) ? "10.0" : WINDOWS_SDK_VERSION }
+                { "WindowsTargetPlatformVersion", WINDOWS_SDK_VERSION }
             });
 
         var outDir = OUTPUT_PATH.Combine(arch);
