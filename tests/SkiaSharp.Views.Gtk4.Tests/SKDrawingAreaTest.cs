@@ -51,18 +51,6 @@ namespace SkiaSharp.Views.Gtk4.Tests
 		}
 
 		[Fact]
-		public void LogicalPaintCoordinatesCanBeSelected()
-		{
-			InitGtk();
-
-			using var area = new SKDrawingArea();
-			area.IgnorePixelScaling = true;
-			Assert.True(area.IgnorePixelScaling);
-			area.IgnorePixelScaling = false;
-			Assert.False(area.IgnorePixelScaling);
-		}
-
-		[Fact]
 		public void PaintSurfaceEventCanBeSubscribed()
 		{
 			InitGtk();

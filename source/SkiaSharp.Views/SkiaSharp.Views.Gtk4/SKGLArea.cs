@@ -9,10 +9,6 @@ namespace SkiaSharp.Views.Gtk
 	/// <summary>A GTK4 OpenGL drawing area that can be drawn on using SkiaSharp GPU commands.</summary>
 	public class SKGLArea : global::Gtk.GLArea
 	{
-		private const uint FramebufferBinding = 0x8CA6;
-		private const uint Samples = 0x80A9;
-		private const uint Rgba8 = 0x8058;
-
 		private GRContext? context;
 		private GRBackendRenderTarget? renderTarget;
 		private SKSurface? surface;
@@ -147,11 +143,11 @@ namespace SkiaSharp.Views.Gtk
 
 			// GTK changes GL state and framebuffer attachments between paint events.
 			context.ResetContext();
-			var framebuffer = GtkGl.GetInteger(FramebufferBinding);
+			var framebuffer = GtkGl.GetInteger(GtkGl.GL_FRAMEBUFFER_BINDING);
 			var stencil = GtkGl.GetStencilBits();
-			var samples = GtkGl.GetInteger(Samples);
+			var samples = GtkGl.GetInteger(GtkGl.GL_SAMPLES);
 			samples = Math.Min(samples, context.GetMaxSurfaceSampleCount(SKColorType.Rgba8888));
-			var info = new GRGlFramebufferInfo((uint)framebuffer, Rgba8);
+			var info = new GRGlFramebufferInfo((uint)framebuffer, GtkGl.GL_RGBA8);
 			if (renderTarget is null || renderTarget.Width != size.Width || renderTarget.Height != size.Height ||
 				renderTarget.GetGlFramebufferInfo().FramebufferObjectId != info.FramebufferObjectId ||
 				lastSamples != samples || lastStencil != stencil)
