@@ -311,10 +311,9 @@ jobs:
           - bash: |
               set -euo pipefail
               sudo xcodebuild -runFirstLaunch
-              tvosVersion="$(xcrun --sdk appletvsimulator --show-sdk-version)"
-              xcodebuild -downloadPlatform tvOS -buildVersion "$tvosVersion"
+              xcodebuild -downloadPlatform tvOS
               xcrun simctl list runtimes
-            displayName: Install the matching tvOS simulator runtime
+            displayName: Install the tvOS simulator runtime
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if startsWith(parameters.name, 'native_') }}:
