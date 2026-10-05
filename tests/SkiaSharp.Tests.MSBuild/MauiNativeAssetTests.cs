@@ -223,7 +223,9 @@ public class MauiNativeAssetTests(DotNet dotnet) : IClassFixture<DotNet>
                 new XElement("TargetPlatformMinVersion", "10.0.17763.0"),
                 new XElement("WindowsPackageType", "None"));
         else
-            properties.Add(new XElement("SupportedOSPlatformVersion", "15.0"),
+            properties.Add(new XElement("SupportedOSPlatformVersion",
+                    framework.Contains("-maccatalyst", StringComparison.Ordinal) && DotNet.ConsumerSdkMajor == 11
+                        ? "17.0" : "15.0"),
                 new XElement("EnableCodeSigning", "false"),
                 new XElement("CodesignRequireProvisioningProfile", "false"));
         var snapshot = new XElement("Target", new XAttribute("Name", "RecordMauiPackageAssets"),
