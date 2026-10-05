@@ -2,7 +2,7 @@
 
 Native **AppKit** handlers for `SKCanvasView` (CPU/CoreGraphics) and `SKGLView`
 (GPU/Metal) in the `Microsoft.Maui.Platforms.MacOS` backend. This is **not**
-Mac Catalyst. Requires .NET 10, macOS 14+, MAUI **10.0.41**, and
+Mac Catalyst. Requires .NET 10, macOS 14+, MAUI **10.0.51 or newer**, and
 `Microsoft.Maui.Platforms.MacOS` **0.1.0-preview.12.26421.1**.
 
 This package depends on the stable `SkiaSharp.Views.Maui.Controls` and
@@ -18,6 +18,10 @@ var builder = MauiApp.CreateBuilder()
     .UseMauiAppMacOS<App>()
     .UseSkiaSharpMacOS();
 ```
+
+The shared XAML Gallery has a separate native AppKit host project at
+`samples/Gallery/Maui/AppKit/SkiaSharpSample.MacOS.csproj`; other Gallery
+targets continue to use their existing stable MAUI handlers.
 
 For XAML, use the stable
 `xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"`.
@@ -55,10 +59,12 @@ conversion is synchronous (`IsLoading` is false afterward). The backend's
 asynchronous URI/stream image loading is not cancellable by this adapter: a
 pending ordinary image load may overwrite a newer SkiaSharp source.
 
-Gallery popup chrome needs native runtime verification after Gallery is ready:
-although the backend maps `ZIndex`, native container hit testing and click
-recognizers may affect scrim/panel dismissal. Live OS theme changes and
-overlay appearance have not been exercised with these handlers.
+The separate AppKit Gallery host has exercised its filter/sort popovers,
+overlay backdrop dismissal, narrow/wide layout, theme menu, and CPU/Metal
+sample rendering. The pinned preview backend lacks layout child-command
+dispatch, so that host registers a local layout handler for dynamic facets,
+chips, and controls; this workaround is not part of the SkiaSharp package.
+Live changes to the macOS system appearance have not been exercised.
 
 The package declares itself trimmable. A trimmed macOS smoke-app publish and
 runtime test succeeded; NativeAOT deployment and trimming of a production
