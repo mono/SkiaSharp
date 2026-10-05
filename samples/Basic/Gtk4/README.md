@@ -1,6 +1,6 @@
 # SkiaSharp GTK 4 Sample
 
-Demonstrates SkiaSharp running in a GTK 4 desktop app with tab-based navigation, UI Builder layout support, and system light/dark appearance.
+Demonstrates SkiaSharp running in a GTK 4 desktop app with tab-based navigation and UI Builder layout support.
 
 ## Sample Pages
 
@@ -37,11 +37,11 @@ A freehand drawing canvas with a color palette, brush size label, and clear butt
 **Features:**
 
 - **`SKDrawingArea`** — Software-rendered canvas invalidated on demand after each stroke or clear.
-- **Theme-aware canvas** — White in the system's light appearance and charcoal in dark appearance, matching the Basic MAUI and desktop drawing samples. The swatches and selected-color ring update when the appearance changes.
+- **Drawing canvas** — A fixed white background and standard color palette; light/dark mode support is deferred.
 - **`SKPath`** — Freehand strokes captured as paths with `MoveTo` and `LineTo` from GTK gesture events.
 - **`GestureDrag`** — GTK 4 drag gesture for tracking press, move, and release.
 - **`EventControllerScroll`** — Scroll wheel to adjust brush size.
-- **Color palette** — Six selectable colors with dark/light mode variants.
+- **Color palette** — Six selectable colors with a blue ring around the selected swatch.
 - **Native toolbox** — GTK buttons, scale, labels and boxes, with the same palette, dimensions and narrow-window arrangement as the MAUI sample. No custom UI controls.
 
 ## Requirements
@@ -53,7 +53,7 @@ A freehand drawing canvas with a color palette, brush size label, and clear butt
   - **Fedora:** `sudo dnf install gtk4-devel`
   - **Windows:** Install a GTK4 runtime using [MSYS2 or gvsbuild](https://www.gtk.org/docs/installations/windows/) and put its `bin` directory on `PATH`. For MSYS2 UCRT64, install `mingw-w64-ucrt-x86_64-gtk4` and use `C:\msys64\ucrt64\bin`.
 - A Linux, macOS or Windows GTK display and a working GL driver for the GPU page. Windows can use EGL/ANGLE when the GTK runtime provides it.
-- GTK's libepoxy dispatcher must be present alongside GTK (`libepoxy.so.0`, `libepoxy.0.dylib`, or `libepoxy-0.dll`/`epoxy-0.dll`). It is included with the GTK installations above.
+- GTK's libepoxy dispatcher must be present alongside GTK (`libepoxy.so.0`, `libepoxy.0.dylib`, or `libepoxy-0.dll`/`epoxy-0.dll`). It is a separate required dependency installed automatically by the GTK packages above, not bundled in the managed NuGet packages. Manually bundled GTK runtimes must include it.
 
 `Gtk.GLArea` does not expose its framebuffer binding, stencil bit count or sample count as properties; GTK's own render example queries the framebuffer using `glGetIntegerv`. `SKGLView` queries the stencil attachment size directly, since the legacy `GL_STENCIL_BITS` integer query is not valid in desktop core profiles. It resolves these queries and Skia's GL entry points through libepoxy, the same current-context dispatcher GTK uses. This avoids loading an unrelated GL implementation when GTK selects EGL/ANGLE instead of WGL or GLX.
 
@@ -73,7 +73,7 @@ On macOS, include Homebrew's native library directory so GirCore can load GTK an
 DYLD_LIBRARY_PATH="$(brew --prefix)/lib" dotnet run --project SkiaSharpSample/SkiaSharpSample.csproj
 ```
 
-The sample has no application-specific theme override. On macOS it reads AppKit's effective appearance; on Windows it reads the OS application light/dark preference and keeps GTK's theme synchronized with it. On Linux it follows GTK's desktop theme settings. This sample-side bridge is necessary because GTK 4.20 does not report the macOS system appearance through `Gtk.Settings`; it does not add any theme API to the SkiaSharp views.
+The sample does not detect, synchronize or override light/dark appearance. Native controls use GTK's default styling; the Drawing canvas and palette are fixed. Theme-aware sample rendering can be added separately later.
 
 GTK's native sidebar, widget styling and input controllers remain platform-specific. Input positions are always GTK logical coordinates, independently of `IgnorePixelScaling`; the Drawing page converts them to the physical canvas coordinates, like the other desktop samples. It retains the desktop samples' mouse brush preview. The toolbox wraps at 600 pixels of available page width rather than including the navigation sidebar.
 
@@ -89,4 +89,4 @@ Available pages: `Cpu` (default), `Gpu`, `Drawing`
 
 | CPU | GPU | Drawing |
 |---|---|---|
-| <img src="screenshots/cpu.png" width="350" alt="CPU"> | <img src="screenshots/gpu.png" width="350" alt="GTK4 GPU shader and native FPS pill on macOS OpenGL"> | <img src="screenshots/drawing.png" width="350" alt="Drawing in macOS system light appearance"> |
+| <img src="screenshots/cpu.png" width="350" alt="CPU"> | <img src="screenshots/gpu.png" width="350" alt="GTK4 GPU shader and native FPS pill on macOS OpenGL"> | <img src="screenshots/drawing.png" width="350" alt="Drawing with a fixed white canvas and native toolbox"> |

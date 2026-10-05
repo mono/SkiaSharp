@@ -10,31 +10,26 @@ namespace SkiaSharpSample;
 
 public class DrawingPage : Box
 {
-	private static readonly (string Name, SKColor Light, SKColor Dark)[] ColorOptions = new[]
+	private static readonly (string Name, SKColor Color)[] ColorOptions = new[]
 	{
-		("Black", SKColors.Black, SKColors.White),
-		("Red", new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
-		("Blue", new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
-		("Green", new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
-		("Orange", new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
-		("Purple", new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
+		("Black", SKColors.Black),
+		("Red", new SKColor(0xE5, 0x39, 0x35)),
+		("Blue", new SKColor(0x1E, 0x88, 0xE5)),
+		("Green", new SKColor(0x43, 0xA0, 0x47)),
+		("Orange", new SKColor(0xFB, 0x8C, 0x00)),
+		("Purple", new SKColor(0x8E, 0x24, 0xAA)),
 	};
-
-	private static bool IsDarkMode => SystemTheme.IsDarkMode;
-
-	private static SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
 
 	private SKDrawingArea drawingSkiaView;
 	private Scale brushScale;
 	private Label brushSizeLabel;
 	private Box drawingToolbox;
 	private readonly List<(Button Button, CssProvider Style)> swatches = new();
-	private readonly Settings settings;
 	private int selectedColorIndex;
 	private uint layoutCallback;
 	private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
 	private SKPathBuilder? currentBuilder;
-	private SKColor currentColor;
+	private SKColor currentColor = SKColors.Black;
 	private float brushSize = 4f;
 	private SKPoint cursorPosition;
 	private bool isCursorOver;
@@ -45,8 +40,6 @@ public class DrawingPage : Box
 	{
 		Hexpand = true;
 		Vexpand = true;
-
-		currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
 
 		var builder = MainWindow.LoadBuilder("DrawingPage.ui");
 		var overlay = (Overlay)builder.GetObject("drawingOverlay");
@@ -60,12 +53,6 @@ public class DrawingPage : Box
 
 		SetupGestures();
 		SetupToolbox(builder);
-		settings = Settings.GetDefault();
-		if (settings != null)
-		{
-			Settings.GtkApplicationPreferDarkThemePropertyDefinition.Notify(settings, OnThemeChanged);
-			Settings.GtkThemeNamePropertyDefinition.Notify(settings, OnThemeChanged);
-		}
 		OnMap += OnMapped;
 		OnUnmap += OnUnmapped;
 
@@ -150,12 +137,10 @@ public class DrawingPage : Box
 
 	private void UpdatePalette()
 	{
-		var dark = IsDarkMode;
-		var selected = ColorOptions[selectedColorIndex];
-		currentColor = dark ? selected.Dark : selected.Light;
+		currentColor = ColorOptions[selectedColorIndex].Color;
 		for (var i = 0; i < swatches.Count; i++)
 		{
-			var color = dark ? ColorOptions[i].Dark : ColorOptions[i].Light;
+			var color = ColorOptions[i].Color;
 			var border = i == selectedColorIndex ? "dodgerblue" : "transparent";
 			swatches[i].Style.LoadFromData(
 				$"button {{ background: rgb({color.Red},{color.Green},{color.Blue}); min-width: 30px; min-height: 30px; padding: 0; border-radius: 18px; border: 3px solid {border}; }}",
@@ -163,8 +148,6 @@ public class DrawingPage : Box
 		}
 		drawingSkiaView.QueueDraw();
 	}
-
-	private void OnThemeChanged(GObject.Object sender, GObject.Object.NotifySignalArgs args) => UpdatePalette();
 
 	private void OnMapped(Widget sender, EventArgs args)
 	{
@@ -234,7 +217,7 @@ public class DrawingPage : Box
 	private void OnDrawingPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
-		canvas.Clear(CanvasBackground);
+		canvas.Clear(SKColors.White);
 
 		using var paint = new SKPaint
 		{
@@ -321,11 +304,6 @@ public class DrawingPage : Box
 		OnUnmapped(this, EventArgs.Empty);
 		OnMap -= OnMapped;
 		OnUnmap -= OnUnmapped;
-		if (settings != null)
-		{
-			Settings.GtkApplicationPreferDarkThemePropertyDefinition.Unnotify(settings, OnThemeChanged);
-			Settings.GtkThemeNamePropertyDefinition.Unnotify(settings, OnThemeChanged);
-		}
 		drawingSkiaView.PaintSurface -= OnDrawingPaintSurface;
 		foreach (var (path, _, _) in strokes)
 			path.Dispose();
