@@ -3,8 +3,11 @@
 `SkiaSharp.Views.Maui.Controls.WPF` targets `net10.0-windows` for the **WPF**
 backend in `dotnet/maui-labs`, not the standard MAUI WinUI backend. It depends
 on `Microsoft.Maui.Platforms.Windows.WPF` **0.1.0-preview.12.26421.1**, whose
-published package requires MAUI **10.0.41** or newer. Version `0.1.0` is not
-published on NuGet. Keep these preview dependencies in WPF-only applications;
+published package initially required MAUI **10.0.41**. This WPF package now
+requires MAUI **10.0.51** or newer to match the merged Gallery app's
+dependency floor; the stable MAUI packages retain their existing references.
+Version `0.1.0` is not published on NuGet. Keep these preview dependencies in
+WPF-only applications;
 do not add them to stable SkiaSharp MAUI projects.
 Direct `dotnet pack` produces a `-wpf-preview` prerelease by default; an
 explicit `VersionSuffix` supplied by the release build takes precedence.
@@ -67,9 +70,8 @@ mouse, pen and multitouch capture/cancellation; and MAUI image-source service
 behavior, including Skia sources, null clearing and non-Skia fallback. A
 macOS cross-build cannot validate WPF rendering or input.
 
-The parent Gallery's WPF app must upgrade its MAUI dependencies from 10.0.20
-to at least 10.0.41 to satisfy this backend package; that change belongs to
-the Gallery owner. This package does not change Gallery or stable MAUI assets.
+The WPF Gallery host uses MAUI 10.0.51 without changing stable SkiaSharp MAUI
+library dependencies or the shared Gallery app.
 
 For a macOS cross-build of the project and its WPF project references, pass
 `-p:EnableWindowsTargeting=true -p:WindowsDesktopTargetFrameworks=net10.0-windows`
