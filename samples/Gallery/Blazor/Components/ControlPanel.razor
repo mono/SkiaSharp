@@ -1,5 +1,4 @@
 @using SkiaSharpSample.Controls
-
 @if (Controls is { Count: > 0 })
 {
     <div class="control-panel p-3 border rounded bg-light">
@@ -11,10 +10,13 @@
 }
 
 @code {
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+
     [Parameter] public IReadOnlyList<SampleControl>? Controls { get; set; }
     [Parameter] public EventCallback<(string id, object value)> OnChanged { get; set; }
 
     private readonly Dictionary<string, object> values = new();
+    private string? copyError;
 
     private RenderFragment RenderControl(SampleControl control, string prefix) => __builder =>
     {
@@ -81,6 +83,19 @@
                         }
                     </select>
                 }
+                else if (control is CopyTextControl copy)
+                {
+                    <label class="form-label mb-0 small" for="@fullId">@copy.Label</label>
+                    <div class="input-group input-group-sm">
+                        <input id="@fullId" class="form-control" value="@copy.Value" readonly />
+                        <button type="button" class="btn btn-outline-secondary" disabled="@string.IsNullOrEmpty(copy.Value)"
+                                @onclick="() => CopyAsync(copy.Value)">Copy</button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(copyError))
+                    {
+                        <small class="text-danger" role="alert">@copyError</small>
+                    }
+                }
                 @if (!string.IsNullOrEmpty(control.Description))
                 {
                     <small class="text-muted d-block">@control.Description</small>
@@ -132,8 +147,22 @@
         }
     }
 
+    private async Task CopyAsync(string text)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            copyError = null;
+        }
+        catch (JSException ex)
+        {
+            copyError = $"Could not copy: {ex.Message}";
+        }
+    }
+
     public void Reset()
     {
         values.Clear();
     }
+
 }

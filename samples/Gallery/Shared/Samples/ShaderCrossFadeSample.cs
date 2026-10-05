@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using SkiaSharp;
 using SkiaSharpSample.Controls;
@@ -126,15 +125,14 @@ half4 main(float2 fragCoord) {
 		effect = null;
 	}
 
-	protected override async Task OnUpdate(CancellationToken token)
+	protected override bool OnUpdate(TimeSpan elapsed)
 	{
-		await Task.Delay(16, token);
-		if (animating)
-		{
-			time += 0.016f * speed;
-			// Ping-pong threshold between 0 and 1
-			threshold = (MathF.Sin(time) + 1f) / 2f;
-		}
+		if (!animating || effect == null)
+			return false;
+		time += (float)elapsed.TotalSeconds * speed;
+		// Ping-pong threshold between 0 and 1
+		threshold = (MathF.Sin(time) + 1f) / 2f;
+		return true;
 	}
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
