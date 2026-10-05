@@ -86,7 +86,7 @@ public class MauiNativeAssetTests(DotNet dotnet)
                             "UseMaui=$(UseMaui);IsExecutable=$(_IsExecutable)")),
                     new XElement("WriteLinesToFile", new XAttribute("File", "maui-package-assets.txt"),
                         new XAttribute("Lines", "@(ReferencePath->'%(FullPath)')"))));
-        });
+        }, useFrameworkSdk: true);
         var startup = Path.Combine(project, "MauiProgram.cs");
         var original = File.ReadAllText(startup);
         Assert.Contains(".UseMauiApp<App>()", original, StringComparison.Ordinal);

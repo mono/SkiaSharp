@@ -9,6 +9,7 @@ public sealed class DotNet : IDisposable
     private readonly string root;
     private readonly string cache = Directory.CreateTempSubdirectory("skms-").FullName;
     private readonly string host = Setting("DotNetHost");
+    private readonly string stableHost = Setting("StableDotNetHost");
 
     public string PackageDirectory { get; } = Path.GetFullPath(Setting("PackageDirectory"));
     public string PackagesCacheDirectory => Path.Combine(cache, "p");
@@ -42,13 +43,18 @@ public sealed class DotNet : IDisposable
     }
 
     public async Task<string> NewTemplateProject(string name, string template, string framework,
-        Action<XElement> configure)
+        Action<XElement> configure, bool useFrameworkSdk = false)
     {
         var directory = Path.Combine(root, name);
         Directory.CreateDirectory(directory);
+        var stable = framework.StartsWith("net10.", StringComparison.Ordinal);
+        var templateSdk = Setting(stable ? "StableSdkVersion" : "SdkVersion");
+        WriteSdkSelection(directory, templateSdk);
         await Execute(directory, ["new", template, "--name", "Consumer", "--output", ".",
             "--framework", framework.Split('-')[0], "--no-restore"],
-            Path.Combine(directory, "template"));
+            Path.Combine(directory, "template"), stable ? stableHost : host);
+        if (!useFrameworkSdk)
+            WriteSdkSelection(directory, Setting("SdkVersion"));
         var projectPath = Path.Combine(directory, "Consumer.csproj");
         var document = XDocument.Load(projectPath);
         var project = document.Root!;
@@ -59,8 +65,15 @@ public sealed class DotNet : IDisposable
         configure(project);
         document.Save(projectPath);
         File.WriteAllText(Path.Combine(directory, "template", "framework.txt"), framework);
+        File.WriteAllText(Path.Combine(directory, "template", "sdk.txt"), templateSdk);
         return directory;
     }
+
+    private static void WriteSdkSelection(string directory, string version) =>
+        File.WriteAllText(Path.Combine(directory, "global.json"), JsonSerializer.Serialize(new
+        {
+            sdk = new { version, allowPrerelease = true, rollForward = "disable" }
+        }));
 
     public Task Build(string directory, string? framework = null, string? outputDirectory = "output",
         string configuration = "Release") =>
@@ -92,7 +105,10 @@ public sealed class DotNet : IDisposable
             arguments.Add("-r");
             arguments.Add(rid);
         }
-        return Execute(directory, arguments, diagnostics);
+        using var selection = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "global.json")));
+        var selectedHost = selection.RootElement.GetProperty("sdk").GetProperty("version").GetString() == Setting("StableSdkVersion")
+            ? stableHost : host;
+        return Execute(directory, arguments, diagnostics, selectedHost);
     }
 
     public Task InspectAppleBinary(string directory, string binary) =>

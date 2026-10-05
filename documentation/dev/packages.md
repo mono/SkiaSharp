@@ -192,6 +192,10 @@ signing, testing, and publication mechanics.
 with `dotnet new console`, `dotnet new maui`, or `dotnet new blazorwasm`, then
 update the generated project to reference exact artifact versions and explicit
 .NET 10 or .NET 11 target frameworks. Build and publish are separate tests.
+Template generation uses the matching stable or preview SDK so the generated
+framework-specific dependencies remain correct. Console builds retain preview
+SDK coverage, including multi-target apps; workload apps use each framework's
+pinned SDK and default workload set.
 
 The shared inventory reads each package once; a dedicated input test checks
 package identity and native contents. Every consumer still checks its own

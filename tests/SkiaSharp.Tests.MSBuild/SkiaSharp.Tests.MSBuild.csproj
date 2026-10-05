@@ -13,6 +13,9 @@
     <ConsumerDotNetHost Condition="'$(ConsumerDotNetHost)' == ''">$(DOTNET_HOST_PATH)</ConsumerDotNetHost>
     <ConsumerDotNetHost Condition="'$(ConsumerDotNetHost)' == ''">$(DotNetHostPath)</ConsumerDotNetHost>
     <ConsumerSdkVersion Condition="'$(ConsumerSdkVersion)' == ''">$(NETCoreSdkVersion)</ConsumerSdkVersion>
+    <StableConsumerSdkVersion Condition="'$(StableConsumerSdkVersion)' == ''">$(DOTNET_VERSION)</StableConsumerSdkVersion>
+    <StableConsumerSdkVersion Condition="'$(StableConsumerSdkVersion)' == '' and $(NETCoreSdkVersion.StartsWith('10.'))">$(NETCoreSdkVersion)</StableConsumerSdkVersion>
+    <StableConsumerDotNetHost Condition="'$(StableConsumerDotNetHost)' == ''">$(ConsumerDotNetHost)</StableConsumerDotNetHost>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="xunit.v3" Version="3.2.2" />
@@ -22,5 +25,7 @@
     <RuntimeHostConfigurationOption Include="MSBuildTest.ArtifactsDirectory" Value="$(MSBuildTestArtifactsDirectory)" />
     <RuntimeHostConfigurationOption Include="MSBuildTest.SdkVersion" Value="$(ConsumerSdkVersion)" />
     <RuntimeHostConfigurationOption Include="MSBuildTest.DotNetHost" Value="$(ConsumerDotNetHost)" />
+    <RuntimeHostConfigurationOption Include="MSBuildTest.StableSdkVersion" Value="$(StableConsumerSdkVersion)" />
+    <RuntimeHostConfigurationOption Include="MSBuildTest.StableDotNetHost" Value="$(StableConsumerDotNetHost)" />
   </ItemGroup>
 </Project>

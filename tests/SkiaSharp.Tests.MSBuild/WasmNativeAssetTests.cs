@@ -51,7 +51,7 @@ public class WasmNativeAssetTests(DotNet dotnet)
             .ToDictionary(id => id, dotnet.Packages.Get);
         var variant = (threads ? "mt" : "st") + (simd ? ",simd" : "");
         var project = await dotnet.NewTemplateProject($"wasm-{framework}-{name}-{variant}", "blazorwasm", framework,
-            xml => ConfigureProject(xml, threads, simd, packages));
+            xml => ConfigureProject(xml, threads, simd, packages), useFrameworkSdk: true);
         File.WriteAllText(Path.Combine(project, "Pages", "Home.razor"),
             """
             @page "/"
