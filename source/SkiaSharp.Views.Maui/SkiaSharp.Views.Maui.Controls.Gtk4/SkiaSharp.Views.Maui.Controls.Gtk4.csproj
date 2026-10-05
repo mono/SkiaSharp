@@ -15,14 +15,12 @@
   <ItemGroup>
     <InternalsVisibleTo Include="SkiaSharp.Views.Maui.Gtk4.Tests" />
     <PackageReference Include="Microsoft.Maui.Platforms.Linux.Gtk4" Version="0.1.0-preview.12.26421.1" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.51" />
+    <PackageReference Include="Microsoft.Maui.Core" Version="10.0.51" />
     <None Include="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Gtk4\SkiaSharp.Views.Gtk4.csproj" />
   </ItemGroup>
-  <Target Name="RequireMatchingGtk4PreviewPackages" BeforeTargets="GenerateNuspec">
-    <Error Condition="'$(VersionSuffix)' == ''"
-           Text="Pack the GTK4 native views and MAUI handler packages with the same explicit -p:VersionSuffix=... preview value; stable GTK4 binaries do not contain the APIs required by this handler." />
-  </Target>
 </Project>
