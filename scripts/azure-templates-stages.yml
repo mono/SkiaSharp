@@ -1,4 +1,7 @@
 parameters:
+  - name: iosCausalDiagnostics
+    type: boolean
+    default: false
   - name: buildPipelineType
     type: string
   - name: buildAgentHost
@@ -93,6 +96,7 @@ stages:
     - template: /scripts/azure-templates-stages-test.yml@self
       parameters:
         buildPipelineType: ${{ parameters.buildPipelineType }}
+        iosCausalDiagnostics: ${{ parameters.iosCausalDiagnostics }}
         buildAgentHost: ${{ parameters.buildAgentHost }}
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
         buildAgentMac: ${{ parameters.buildAgentMac }}

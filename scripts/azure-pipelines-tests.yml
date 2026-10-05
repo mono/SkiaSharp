@@ -3,6 +3,10 @@ trigger: none
 pr: none
 
 parameters:
+  - name: iosCausalDiagnostics
+    displayName: 'Run one diagnostic-only x64 iOS NSZombie experiment'
+    type: boolean
+    default: false
   - name: buildAgentHost
     displayName: 'The generic host build agent configuration:'
     type: object
@@ -62,6 +66,7 @@ extends:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
           buildPipelineType: 'test'
+          iosCausalDiagnostics: ${{ parameters.iosCausalDiagnostics }}
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}

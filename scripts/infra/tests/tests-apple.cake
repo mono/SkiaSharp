@@ -9,11 +9,16 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var IOS_SIMULATOR_NAME = Argument("iosSimulator", EnvironmentVariable("IOS_SIMULATOR_NAME") ?? "iPhone 16");
+var IOS_CAUSAL_DIAGNOSTICS = EnvironmentVariable("SKIASHARP_IOS_CAUSAL_DIAGNOSTICS") == "true";
 
 Task ("tests-ios")
     .Description ("Run all iOS tests.")
     .Does (() =>
 {
+    if (IOS_CAUSAL_DIAGNOSTICS &&
+        (!IsRunningOnMacOs() || RuntimeInformation.OSArchitecture != System.Runtime.InteropServices.Architecture.X64))
+        throw new Exception("The diagnostic-only iOS experiment requires the existing x64 macOS host.");
+
     // Create a unique simulator for this test run (matches DeviceRunners CI pattern)
     var simulatorName = $"SkiaSharp-Tests-{DateTime.UtcNow:yyyyMMdd-HHmmss}";
     Information("Creating iOS simulator: {0} (device type: {1})...", simulatorName, IOS_SIMULATOR_NAME);
@@ -40,27 +45,95 @@ Task ("tests-ios")
         };
 
         var diagnosticStart = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var diagnosticScript = ROOT_PATH.CombineWithFilePath("scripts/infra/tests/collect-ios-diagnostics.py");
+        DirectoryPath causalOutput = ROOT_OUTPUT_PATH.Combine($"logs/ios-causal/{DATE_TIME_STR}");
+        IProcess causalStream = null;
         try
         {
+            if (IOS_CAUSAL_DIAGNOSTICS)
+            {
+                Warning("Diagnostic-only NSZombie/GC experiment; this execution is not normal CI green evidence.");
+                causalStream = StartAndReturnProcess("python3", new ProcessSettings {
+                    Arguments = new ProcessArgumentBuilder()
+                        .AppendQuoted(diagnosticScript.FullPath)
+                        .Append("--stream")
+                        .Append("--expected-runtime").Append("com.apple.CoreSimulator.SimRuntime.iOS-26-5")
+                        .Append("--device").AppendQuoted(udid)
+                        .Append("--start").Append(diagnosticStart.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                        .Append("--output").AppendQuoted(causalOutput.FullPath),
+                });
+                if (causalStream == null)
+                    throw new Exception("Unable to start the scoped iOS diagnostic stream.");
+                var ready = causalOutput.CombineWithFilePath("diagnostics/stream-ready.json");
+                for (var wait = 0; wait < 100 && !FileExists(ready); wait++)
+                {
+                    if (causalStream.WaitForExit(100))
+                        throw new Exception("The scoped iOS diagnostic stream exited before readiness.");
+                }
+                if (!FileExists(ready))
+                    throw new Exception("The scoped iOS diagnostic stream did not become ready.");
+            }
             RunDeviceRunnersTest(csproj, results, configuration: "Debug", framework: "net10.0-ios", noBuild: SKIP_BUILD, properties: properties);
         }
         catch
         {
-            try
+            if (!IOS_CAUSAL_DIAGNOSTICS)
             {
-                RunProcess("python3", new ProcessSettings {
-                    Arguments = new ProcessArgumentBuilder()
-                        .AppendQuoted(ROOT_PATH.CombineWithFilePath("scripts/infra/tests/collect-ios-diagnostics.py").FullPath)
-                        .Append("--device").AppendQuoted(udid)
-                        .Append("--start").Append(diagnosticStart.ToString(System.Globalization.CultureInfo.InvariantCulture))
-                        .Append("--output").AppendQuoted(results.FullPath),
-                });
-            }
-            catch (Exception ex)
-            {
-                Warning("iOS diagnostic capture failed; preserving the original test failure: {0}", ex.Message);
+                try
+                {
+                    RunProcess("python3", new ProcessSettings {
+                        Arguments = new ProcessArgumentBuilder()
+                            .AppendQuoted(diagnosticScript.FullPath)
+                            .Append("--device").AppendQuoted(udid)
+                            .Append("--start").Append(diagnosticStart.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                            .Append("--output").AppendQuoted(results.FullPath),
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Warning("iOS diagnostic capture failed; preserving the original test failure: {0}", ex.Message);
+                }
             }
             throw;
+        }
+        finally
+        {
+            if (IOS_CAUSAL_DIAGNOSTICS)
+            {
+                try
+                {
+                    if (causalStream != null)
+                    {
+                        try
+                        {
+                            var stop = causalOutput.CombineWithFilePath("diagnostics/stream-stop");
+                            System.IO.File.WriteAllText(stop.FullPath, "");
+                            if (!causalStream.WaitForExit(30000))
+                                Warning("Scoped diagnostic stream did not stop within its cleanup deadline.");
+                            else if (causalStream.GetExitCode() != 0)
+                                Warning("Scoped diagnostic stream failed; see its retained metadata and stderr.");
+                            CopyDirectory(causalOutput.Combine("diagnostics"), results.Combine("diagnostics"));
+                        }
+                        finally
+                        {
+                            causalStream.Dispose();
+                        }
+                    }
+                    RunProcess("python3", new ProcessSettings {
+                        Arguments = new ProcessArgumentBuilder()
+                            .AppendQuoted(diagnosticScript.FullPath)
+                            .Append("--causal")
+                            .Append("--project").AppendQuoted(csproj.FullPath)
+                            .Append("--device").AppendQuoted(udid)
+                            .Append("--start").Append(diagnosticStart.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                            .Append("--output").AppendQuoted(results.FullPath),
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Warning("Causal diagnostic capture failed; test outcome is unchanged: {0}", ex.Message);
+                }
+            }
         }
     }
     finally

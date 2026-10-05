@@ -1,4 +1,7 @@
 parameters:
+  - name: iosCausalDiagnostics
+    type: boolean
+    default: false
   - name: buildPipelineType
     type: string
   - name: buildAgentHost
@@ -325,6 +328,8 @@ stages:
             displayName: iOS
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-ios
+            ${{ if eq(parameters.iosCausalDiagnostics, true) }}:
+              retryCount: 0
             additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
@@ -338,6 +343,11 @@ stages:
             # Graphite's gradient pipeline (#4555). #4591 tracks the wider picture.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
+              ${{ if eq(parameters.iosCausalDiagnostics, true) }}:
+                SKIASHARP_IOS_CAUSAL_DIAGNOSTICS: 'true'
+                SIMCTL_CHILD_NSZombieEnabled: 'YES'
+                SIMCTL_CHILD_MONO_LOG_LEVEL: debug
+                SIMCTL_CHILD_MONO_LOG_MASK: gc
             postBuildSteps:
               - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
                 displayName: Extract visual-regression images for triage
