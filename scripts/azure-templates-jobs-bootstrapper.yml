@@ -34,7 +34,6 @@ parameters:
   installNode: true                             # whether or not to install Node.js
   checkoutSubmodules: true                      # whether or not to recursively initialize all submodules
   installPreviewSdk: false                      # whether to install the preview .NET SDK ($(DOTNET_VERSION_PREVIEW)) and pin global.json to it
-  previewSdkRollForward: latestFeature          # SDK selection policy for the opt-in preview job
   previewWorkloads: ''                           # workloads to install under the preview .NET SDK (comma-separated, e.g. 'wasm-tools,android')
   installXcode: true                            # whether or not to install Xcode
   publishArtifacts: []                          # the additional artifacts to publish
@@ -288,7 +287,7 @@ jobs:
               packageType: sdk
               version: $(DOTNET_VERSION_PREVIEW)
           - pwsh: |
-              $globalJson = @{ sdk = @{ version = "$(DOTNET_VERSION_PREVIEW)"; allowPrerelease = $true; rollForward = "${{ parameters.previewSdkRollForward }}" } } | ConvertTo-Json
+              $globalJson = @{ sdk = @{ version = "$(DOTNET_VERSION_PREVIEW)"; allowPrerelease = $true; rollForward = "latestFeature" } } | ConvertTo-Json
               Set-Content -Path global.json -Value $globalJson
               Get-Content global.json
               dotnet --version
