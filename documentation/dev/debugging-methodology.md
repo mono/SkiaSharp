@@ -69,6 +69,12 @@ Different compilers define different macros:
 
 **Don't assume** - verify with a minimal test or documentation if uncertain.
 
+### iOS Simulator Runtime Labels
+
+The iOS job keeps Apple CLI's runtime selection and records the created
+simulator's runtime version, build and UDID. Test-result titles and testlogs
+artifact names use that observed version, or `unselected` before it is resolved.
+
 ## Common Pitfalls
 
 ### Pitfall 1: `#if defined(X)` vs `#if X`
