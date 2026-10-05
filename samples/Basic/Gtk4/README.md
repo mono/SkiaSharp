@@ -1,6 +1,6 @@
 # SkiaSharp GTK 4 Sample
 
-Demonstrates SkiaSharp running in a GTK 4 desktop app with tab-based navigation, UI Builder layout support, and dark theme detection.
+Demonstrates SkiaSharp running in a GTK 4 desktop app with tab-based navigation, UI Builder layout support, and system light/dark appearance.
 
 ## Sample Pages
 
@@ -25,7 +25,7 @@ An animated, interactive SkSL metaball shader rendered on a real OpenGL-backed S
 
 **Features:**
 
-- **`SKGLView`** — Hardware-accelerated canvas backed by `Gtk.GLArea` and desktop OpenGL; no CPU fallback.
+- **`SKGLView`** — Hardware-accelerated canvas backed by `Gtk.GLArea`; no CPU canvas fallback. Uses desktop OpenGL on Linux/macOS and desktop OpenGL or GTK's EGL/ANGLE OpenGL ES context on Windows.
 - **`SKRuntimeEffect`** — Shader compiled once and updated with time, resolution, and mouse-position uniforms each frame.
 - **Render loop** — GTK frame-clock-driven animation with an FPS pill made from a native `Gtk.Box` and `Gtk.Label`, paused whenever the tab is hidden.
 - **Pointer input** — Press and drag to add a bright blob to the scene.
@@ -37,11 +37,12 @@ A freehand drawing canvas with a color palette, brush size label, and clear butt
 **Features:**
 
 - **`SKDrawingArea`** — Software-rendered canvas invalidated on demand after each stroke or clear.
-- **Theme-aware canvas** — White in GTK's light theme and charcoal in its dark theme, matching the Basic MAUI and desktop drawing samples.
+- **Theme-aware canvas** — White in the system's light appearance and charcoal in dark appearance, matching the Basic MAUI and desktop drawing samples. The swatches and selected-color ring update when the appearance changes.
 - **`SKPath`** — Freehand strokes captured as paths with `MoveTo` and `LineTo` from GTK gesture events.
 - **`GestureDrag`** — GTK 4 drag gesture for tracking press, move, and release.
 - **`EventControllerScroll`** — Scroll wheel to adjust brush size.
 - **Color palette** — Six selectable colors with dark/light mode variants.
+- **Native toolbox** — GTK buttons, scale, labels and boxes, with the same palette, dimensions and narrow-window arrangement as the MAUI sample. No custom UI controls.
 
 ## Requirements
 
@@ -50,9 +51,13 @@ A freehand drawing canvas with a color palette, brush size label, and clear butt
   - **macOS:** `brew install gtk4`
   - **Ubuntu/Debian:** `sudo apt-get install libgtk-4-dev`
   - **Fedora:** `sudo dnf install gtk4-devel`
-- A Linux or macOS desktop OpenGL display for the GPU page (`SKGLView` does not support OpenGL ES). The CPU and Drawing pages still work on other GTK 4 hosts.
+  - **Windows:** Install a GTK4 runtime using [MSYS2 or gvsbuild](https://www.gtk.org/docs/installations/windows/) and put its `bin` directory on `PATH`. For MSYS2 UCRT64, install `mingw-w64-ucrt-x86_64-gtk4` and use `C:\msys64\ucrt64\bin`.
+- A Linux, macOS or Windows GTK display and a working GL driver for the GPU page. Windows can use EGL/ANGLE when the GTK runtime provides it.
+- GTK's libepoxy dispatcher must be present alongside GTK (`libepoxy.so.0`, `libepoxy.0.dylib`, or `libepoxy-0.dll`/`epoxy-0.dll`). It is included with the GTK installations above.
 
-GTK 4 can use Vulkan to composite its own scene graph, but it does not expose a Vulkan drawing widget analogous to `Gtk.GLArea`. The GPU page uses desktop OpenGL; a future Vulkan-backed SkiaSharp view would need application-owned Vulkan resources and a GTK-compatible texture import/synchronization path.
+`Gtk.GLArea` does not expose its framebuffer binding, stencil bit count or sample count as properties; GTK's own render example queries the framebuffer using `glGetIntegerv`. `SKGLView` queries the stencil attachment size directly, since the legacy `GL_STENCIL_BITS` integer query is not valid in desktop core profiles. It resolves these queries and Skia's GL entry points through libepoxy, the same current-context dispatcher GTK uses. This avoids loading an unrelated GL implementation when GTK selects EGL/ANGLE instead of WGL or GLX.
+
+GTK 4 can use Vulkan to composite its own scene graph, but it does not expose a Vulkan drawing widget analogous to `Gtk.GLArea`. The GPU page uses OpenGL/OpenGL ES; a future Vulkan-backed SkiaSharp view would need application-owned Vulkan resources and a GTK-compatible texture import/synchronization path.
 
 ## Running the Sample
 
@@ -68,7 +73,9 @@ On macOS, include Homebrew's native library directory so GirCore can load GTK an
 DYLD_LIBRARY_PATH="$(brew --prefix)/lib" dotnet run --project SkiaSharpSample/SkiaSharpSample.csproj
 ```
 
-Drawing follows GTK's light/dark theme like the other Basic samples. To preview its dark appearance without changing your system theme, set `GTK_THEME=Adwaita:dark` for the run.
+The sample has no application-specific theme override. On macOS it reads AppKit's effective appearance; on Windows it reads the OS application light/dark preference and keeps GTK's theme synchronized with it. On Linux it follows GTK's desktop theme settings. This sample-side bridge is necessary because GTK 4.20 does not report the macOS system appearance through `Gtk.Settings`; it does not add any theme API to the SkiaSharp views.
+
+GTK's native sidebar, widget styling and input controllers remain platform-specific. Input positions are always GTK logical coordinates, independently of `IgnorePixelScaling`; the Drawing page converts them to the physical canvas coordinates, like the other desktop samples. It retains the desktop samples' mouse brush preview. The toolbox wraps at 600 pixels of available page width rather than including the navigation sidebar.
 
 To start on a different page, change `DefaultPage` in `MainWindow.cs`:
 
@@ -82,4 +89,4 @@ Available pages: `Cpu` (default), `Gpu`, `Drawing`
 
 | CPU | GPU | Drawing |
 |---|---|---|
-| <img src="screenshots/cpu.png" width="350" alt="CPU"> | <img src="screenshots/gpu.png" width="350" alt="GPU shader rendered on macOS OpenGL"> | <img src="screenshots/drawing.png" width="350" alt="Drawing"> |
+| <img src="screenshots/cpu.png" width="350" alt="CPU"> | <img src="screenshots/gpu.png" width="350" alt="GTK4 GPU shader and native FPS pill on macOS OpenGL"> | <img src="screenshots/drawing.png" width="350" alt="Drawing in macOS system light appearance"> |

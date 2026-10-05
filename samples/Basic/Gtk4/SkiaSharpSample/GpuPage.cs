@@ -10,6 +10,7 @@ namespace SkiaSharpSample;
 
 [SupportedOSPlatform("linux")]
 [SupportedOSPlatform("macos")]
+[SupportedOSPlatform("windows")]
 public class GpuPage : Box
 {
 	private const string SkslSource = @"

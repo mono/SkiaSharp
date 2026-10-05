@@ -1,5 +1,5 @@
 using System;
-using System.Runtime.InteropServices;
+using System.ComponentModel;
 using System.Runtime.Versioning;
 using SkiaSharp.Views.Desktop;
 
@@ -10,11 +10,10 @@ namespace SkiaSharp.Views.Gtk
 	/// <summary>A GTK4 OpenGL view that can be drawn on using SkiaSharp GPU commands.</summary>
 	[SupportedOSPlatform("linux")]
 	[SupportedOSPlatform("macos")]
+	[SupportedOSPlatform("windows")]
 	public class SKGLView : global::Gtk.GLArea
 	{
-		private const string MacOpenGl = "/System/Library/Frameworks/OpenGL.framework/OpenGL";
 		private const uint FramebufferBinding = 0x8CA6;
-		private const uint StencilBits = 0x0D57;
 		private const uint Samples = 0x80A9;
 		private const uint Rgba8 = 0x8058;
 
@@ -28,14 +27,16 @@ namespace SkiaSharp.Views.Gtk
 		private uint tickCallback;
 		private bool enableRenderLoop;
 		private bool ignorePixelScaling;
+		private bool disposed;
 
-		/// <summary>Creates a GTK4 OpenGL view using desktop OpenGL (not OpenGL ES).</summary>
+		/// <summary>Creates a GTK4 OpenGL view.</summary>
+		/// <remarks>Uses desktop OpenGL on Linux and macOS. On Windows, GTK may also select OpenGL ES through EGL/ANGLE. No software canvas fallback is provided.</remarks>
 		public SKGLView() : base(new GObject.ConstructArgument[] { })
 		{
-			if (!OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS())
-				throw new PlatformNotSupportedException("GTK4 SKGLView requires Linux or macOS desktop OpenGL.");
+			if (!OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS() && !OperatingSystem.IsWindows())
+				throw new PlatformNotSupportedException("GTK4 SKGLView requires Linux, macOS or Windows.");
 
-			SetAllowedApis(Gdk.GLAPI.Gl);
+			SetAllowedApis(OperatingSystem.IsWindows() ? Gdk.GLAPI.Gl | Gdk.GLAPI.Gles : Gdk.GLAPI.Gl);
 			SetAutoRender(false);
 			SetHasStencilBuffer(true);
 			OnRender += Render;
@@ -46,7 +47,7 @@ namespace SkiaSharp.Views.Gtk
 		/// <summary>Gets the physical or logical canvas size, according to <see cref="IgnorePixelScaling" />.</summary>
 		public SKSize CanvasSize => lastCanvasSize;
 
-		/// <summary>Gets the SkiaSharp GPU context while the GL view is realized.</summary>
+		/// <summary>Gets the SkiaSharp GPU context, or <see langword="null" /> before the first paint and after the view is unrealized.</summary>
 		public GRContext? GRContext => context;
 
 		/// <summary>Gets or sets whether to render continuously while the view is realized.</summary>
@@ -62,7 +63,8 @@ namespace SkiaSharp.Views.Gtk
 			}
 		}
 
-		/// <summary>Gets or sets whether paint and touch coordinates are expressed in logical pixels.</summary>
+		/// <summary>Gets or sets whether paint coordinates are expressed in logical pixels.</summary>
+		/// <remarks>By default, paint coordinates use physical pixels. GTK input events use logical pixels independently of this property. <c>RawInfo</c> always describes the physical backing surface.</remarks>
 		public bool IgnorePixelScaling
 		{
 			get => ignorePixelScaling;
@@ -76,19 +78,28 @@ namespace SkiaSharp.Views.Gtk
 		}
 
 		/// <summary>Occurs when the GPU surface needs to be painted.</summary>
+		/// <remarks>Draw by handling this event or overriding <see cref="OnPaintSurface" />.</remarks>
+		[Category("Appearance")]
 		public event EventHandler<SKPaintGLSurfaceEventArgs>? PaintSurface;
 
-		/// <summary>Releases the GPU resources without disposing the GTK widget. A later render recreates them.</summary>
-		public void ReleaseGlResources() => ReleaseContext();
+		/// <summary>Raises the <see cref="PaintSurface" /> event.</summary>
+		/// <param name="e">The drawing surface and its physical and logical dimensions.</param>
+		/// <remarks>Overrides must call the base method to raise the event.</remarks>
+		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e) =>
+			PaintSurface?.Invoke(this, e);
 
 		/// <summary>Releases this view's SkiaSharp GPU resources.</summary>
 		public override void Dispose()
 		{
+			if (disposed)
+				return;
+
 			EnableRenderLoop = false;
 			OnRender -= Render;
 			OnRealize -= Realize;
 			OnUnrealize -= Unrealize;
 			ReleaseContext();
+			disposed = true;
 			base.Dispose();
 		}
 
@@ -125,9 +136,6 @@ namespace SkiaSharp.Views.Gtk
 
 		private bool Render(global::Gtk.GLArea area, global::Gtk.GLArea.RenderSignalArgs args)
 		{
-			if (GetApi() != Gdk.GLAPI.Gl)
-				throw new NotSupportedException("GTK4 SKGLView requires desktop OpenGL; OpenGL ES is not supported.");
-
 			var nativeContext = GetContext()?.Handle.DangerousGetHandle() ?? nint.Zero;
 			if (nativeContext == nint.Zero)
 				throw new InvalidOperationException("GTK4 could not create an OpenGL context.");
@@ -135,7 +143,7 @@ namespace SkiaSharp.Views.Gtk
 			if (context is null || lastNativeContext != nativeContext)
 			{
 				ReleaseContext(abandon: true);
-				using var glInterface = GRGlInterface.Create()
+				using var glInterface = GRGlInterface.Create(GtkGl.GetProcedureAddress)
 					?? throw new InvalidOperationException("SkiaSharp could not resolve GTK4 OpenGL entry points.");
 				context = GRContext.CreateGl(glInterface)
 					?? throw new InvalidOperationException("SkiaSharp could not initialize the GTK4 OpenGL context.");
@@ -147,9 +155,11 @@ namespace SkiaSharp.Views.Gtk
 			if (size.Width <= 0 || size.Height <= 0)
 				return true;
 
-			var framebuffer = GetGlInteger(FramebufferBinding);
-			var stencil = GetGlInteger(StencilBits);
-			var samples = GetGlInteger(Samples);
+			// GTK changes GL state and framebuffer attachments between paint events.
+			context.ResetContext();
+			var framebuffer = GtkGl.GetInteger(FramebufferBinding);
+			var stencil = GtkGl.GetStencilBits();
+			var samples = GtkGl.GetInteger(Samples);
 			samples = Math.Min(samples, context.GetMaxSurfaceSampleCount(SKColorType.Rgba8888));
 			var info = new GRGlFramebufferInfo((uint)framebuffer, Rgba8);
 			if (renderTarget is null || renderTarget.Width != size.Width || renderTarget.Height != size.Height ||
@@ -183,7 +193,7 @@ namespace SkiaSharp.Views.Gtk
 				surface.Canvas.Clear(SKColors.Transparent);
 				if (ignorePixelScaling)
 					surface.Canvas.Scale(scale);
-				PaintSurface?.Invoke(this, new SKPaintGLSurfaceEventArgs(surface, renderTarget!,
+				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget!,
 					GRSurfaceOrigin.BottomLeft, displayInfo, rawInfo));
 			}
 			surface.Canvas.Flush();
@@ -198,7 +208,11 @@ namespace SkiaSharp.Views.Gtk
 			if (abandon || !GetRealized())
 				context.AbandonContext();
 			else
+			{
 				MakeCurrent();
+				if (GetError() != null)
+					context.AbandonContext();
+			}
 
 			ReleaseSurface();
 			context.Dispose();
@@ -216,21 +230,5 @@ namespace SkiaSharp.Views.Gtk
 			lastSamples = 0;
 			lastStencil = 0;
 		}
-
-		private static int GetGlInteger(uint name)
-		{
-			int value;
-			if (OperatingSystem.IsMacOS())
-				MacGlGetIntegerv(name, out value);
-			else
-				LinuxGlGetIntegerv(name, out value);
-			return value;
-		}
-
-		[DllImport(MacOpenGl, EntryPoint = "glGetIntegerv")]
-		private static extern void MacGlGetIntegerv(uint name, out int value);
-
-		[DllImport("libGL.so.1", EntryPoint = "glGetIntegerv")]
-		private static extern void LinuxGlGetIntegerv(uint name, out int value);
 	}
 }

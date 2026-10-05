@@ -1,5 +1,6 @@
 using System;
-using System.Runtime.InteropServices;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.Versioning;
 using SkiaSharp.Views.Gtk;
 using Xunit;
@@ -11,6 +12,35 @@ namespace SkiaSharp.Views.Gtk4.Tests
 		[Fact]
 		public void IsNativeGtkGlArea() =>
 			Assert.True(typeof(global::Gtk.GLArea).IsAssignableFrom(typeof(SKGLView)));
+
+		[Fact]
+		public void ApiMatchesNativePaintPattern()
+		{
+			var type = typeof(SKGLView);
+			var paint = type.GetMethod("OnPaintSurface", BindingFlags.Instance | BindingFlags.NonPublic);
+			Assert.NotNull(paint);
+			Assert.True(paint.IsFamily);
+			Assert.True(paint.IsVirtual);
+			Assert.Equal(typeof(void), paint.ReturnType);
+			Assert.Equal(typeof(Desktop.SKPaintGLSurfaceEventArgs), Assert.Single(paint.GetParameters()).ParameterType);
+			Assert.Null(type.GetEvent("ContextChanged"));
+			Assert.Null(type.GetMethod("ReleaseGlResources"));
+			Assert.Equal(new[] { "CanvasSize", "EnableRenderLoop", "GRContext", "IgnorePixelScaling" },
+				type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+					.Select(property => property.Name).OrderBy(name => name));
+			Assert.Equal(new[] { "linux", "macos", "windows" },
+				type.GetCustomAttributes<SupportedOSPlatformAttribute>().Select(attribute => attribute.PlatformName).OrderBy(name => name));
+		}
+
+		[Fact]
+		public void EpoxyExportsGlDispatchPointers()
+		{
+			Assert.NotEqual(nint.Zero, GtkGl.GetProcedureAddress("glGetIntegerv"));
+			Assert.NotEqual(nint.Zero, GtkGl.GetProcedureAddress("glGetString"));
+			Assert.NotEqual(nint.Zero, GtkGl.GetProcedureAddress("glBindFramebuffer"));
+			Assert.NotEqual(nint.Zero, GtkGl.GetProcedureAddress("glGetFramebufferAttachmentParameteriv"));
+			Assert.Equal(nint.Zero, GtkGl.GetProcedureAddress("glMissingSkiaSharpTestFunction"));
+		}
 
 		[Fact]
 		[SupportedOSPlatform("linux")]
@@ -30,27 +60,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			view.EnableRenderLoop = true;
 			Assert.True(view.EnableRenderLoop);
 			view.EnableRenderLoop = false;
-			view.ReleaseGlResources();
-			view.ReleaseGlResources();
 			Assert.Null(view.GRContext);
-		}
-
-		[Fact]
-		[SupportedOSPlatform("macos")]
-		public void MacOpenGlFrameworkExportsFramebufferQuery()
-		{
-			if (!OperatingSystem.IsMacOS())
-				Assert.Skip("The macOS OpenGL framework is only present on macOS.");
-
-			var library = NativeLibrary.Load("/System/Library/Frameworks/OpenGL.framework/OpenGL");
-			try
-			{
-				Assert.NotEqual(IntPtr.Zero, NativeLibrary.GetExport(library, "glGetIntegerv"));
-			}
-			finally
-			{
-				NativeLibrary.Free(library);
-			}
 		}
 	}
 }
