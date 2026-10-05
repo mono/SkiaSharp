@@ -11,19 +11,36 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
 {
     private static readonly string[] Families = ["SkiaSharp", "HarfBuzzSharp"];
     private static readonly string[] Platforms = ["Win32", "macOS", "Linux"];
+    private static readonly string[] TargetFrameworks = ["net10.0", "net11.0"];
 
-    public static TheoryData<string, string, string, string?> RidCases
+    public static TheoryData<string, string, string> DefaultCases
     {
         get
         {
-            var data = new TheoryData<string, string, string, string?>();
+            var data = new TheoryData<string, string, string>();
+            foreach (var family in Families)
+                foreach (var command in new[] { "build", "publish" })
+                    foreach (var targetFramework in TargetFrameworks)
+                        data.Add(family, command, targetFramework);
+            return data;
+        }
+    }
+
+    public static TheoryData<string, string, string, string?, string> RidCases
+    {
+        get
+        {
+            var data = new TheoryData<string, string, string, string?, string>();
             foreach (var family in Families)
             {
                 foreach (var setting in new[] { "none", "single", "multiple" })
                 {
-                    data.Add(family, setting, "build", null);
-                    data.Add(family, setting, "publish", null);
-                    data.Add(family, setting, "publish", "linux-x64");
+                    foreach (var targetFramework in TargetFrameworks)
+                    {
+                        data.Add(family, setting, "build", null, targetFramework);
+                        data.Add(family, setting, "publish", null, targetFramework);
+                        data.Add(family, setting, "publish", "linux-x64", targetFramework);
+                    }
                 }
             }
             return data;
@@ -31,11 +48,8 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     }
 
     [Theory]
-    [InlineData("SkiaSharp", "build")]
-    [InlineData("SkiaSharp", "publish")]
-    [InlineData("HarfBuzzSharp", "build")]
-    [InlineData("HarfBuzzSharp", "publish")]
-    public async Task DefaultPackageIncludesWindowsAndMacButNotLinux(string family, string command)
+    [MemberData(nameof(DefaultCases))]
+    public async Task DefaultPackageIncludesWindowsAndMacButNotLinux(string family, string command, string targetFramework)
     {
         var core = ReadPackage(family);
         var expected = ReadPackage(family + ".NativeAssets.Win32").NativeFiles
@@ -45,15 +59,17 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         Assert.Contains(expected.Keys, path => path.StartsWith("runtimes/osx", StringComparison.Ordinal));
         Assert.DoesNotContain(expected.Keys, path => path.StartsWith("runtimes/linux", StringComparison.Ordinal));
 
-        var project = dotnet.NewProject($"{family}-default-{command}", ProjectXml(family, core.Version));
+        var project = dotnet.NewProject($"{family}-default-{command}-{targetFramework}",
+            ProjectXml(family, core.Version, targetFramework));
         await BuildOrPublish(project, command);
-        AssertNativeOutput(project, family, expected);
+        AssertNativeOutput(project, family, expected, targetFramework);
         dotnet.CleanBuildOutput(project);
     }
 
     [Theory]
     [MemberData(nameof(RidCases))]
-    public async Task ExplicitLinuxPackageHonorsRuntimeIdentifiers(string family, string setting, string command, string? commandRid)
+    public async Task ExplicitLinuxPackageHonorsRuntimeIdentifiers(string family, string setting, string command,
+        string? commandRid, string targetFramework)
     {
         var core = ReadPackage(family);
         var natives = Platforms.Select(platform => ReadPackage(family + ".NativeAssets." + platform)).ToArray();
@@ -67,20 +83,54 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
             .ToDictionary(p => p.Key[$"runtimes/{selectedRid}/native/".Length..], p => p.Value);
         Assert.NotEmpty(expected);
 
-        var project = dotnet.NewProject($"{family}-{setting}-{command}-{commandRid ?? "default"}",
-            ProjectXml(family, core.Version, setting, includeLinux: true));
+        var project = dotnet.NewProject($"{family}-{setting}-{command}-{commandRid ?? "default"}-{targetFramework}",
+            ProjectXml(family, core.Version, targetFramework, setting, includeLinux: true));
         await BuildOrPublish(project, command, commandRid);
-        AssertNativeOutput(project, family, expected);
+        AssertNativeOutput(project, family, expected, targetFramework);
         dotnet.CleanBuildOutput(project);
+    }
+
+    [Theory]
+    [InlineData("SkiaSharp", "build")]
+    [InlineData("SkiaSharp", "publish")]
+    [InlineData("HarfBuzzSharp", "build")]
+    [InlineData("HarfBuzzSharp", "publish")]
+    public async Task MultiTargetConsolePreservesEachFrameworkOutput(string family, string command)
+    {
+        var core = ReadPackage(family);
+        var natives = Platforms.Select(platform => ReadPackage(family + ".NativeAssets." + platform)).ToArray();
+        Assert.All(natives, package => Assert.Equal(core.Version, package.Version));
+        var expected = natives.SelectMany(package => package.NativeFiles).ToDictionary(p => p.Key, p => p.Value);
+        var project = dotnet.NewProject($"{family}-multi-target-{string.Join("-", TargetFrameworks)}-{command}",
+            ProjectXml(family, core.Version, string.Join(";", TargetFrameworks), includeLinux: true, multiTarget: true));
+        var outputs = TargetFrameworks.Select(framework => (Framework: framework,
+            OutputDirectory: command == "build" ? Path.Combine("bin", "Release", framework) : Path.Combine("output", framework)))
+            .ToArray();
+
+        if (command == "build")
+            await dotnet.Build(project, outputDirectory: null);
+        else
+        {
+            foreach (var (framework, outputDirectory) in outputs)
+            {
+                await dotnet.Publish(project, framework: framework, outputDirectory: outputDirectory,
+                    diagnosticLabel: $"publish-{framework}");
+                AssertNativeOutput(project, family, expected, framework, outputDirectory, TargetFrameworks);
+            }
+        }
+        foreach (var (framework, outputDirectory) in outputs)
+            AssertNativeOutput(project, family, expected, framework, outputDirectory, TargetFrameworks);
+        dotnet.CleanBuildOutput(project, outputs);
     }
 
     private Task BuildOrPublish(string project, string command, string? rid = null) =>
         command == "build" ? dotnet.Build(project) : dotnet.Publish(project, rid);
 
-    private string ProjectXml(string family, string version, string setting = "none", bool includeLinux = false)
+    private static string ProjectXml(string family, string version, string targetFramework, string setting = "none",
+        bool includeLinux = false, bool multiTarget = false)
     {
         var properties = new XElement("PropertyGroup",
-            new XElement("TargetFramework", dotnet.TargetFramework),
+            new XElement(multiTarget ? "TargetFrameworks" : "TargetFramework", targetFramework),
             new XElement("OutputType", "Exe"),
             new XElement("SelfContained", "false"),
             new XElement("UseAppHost", "true"));
@@ -124,14 +174,15 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         return matches[0];
     }
 
-    private void AssertNativeOutput(string project, string family, Dictionary<string, string> expected)
+    private static void AssertNativeOutput(string project, string family, Dictionary<string, string> expected,
+        string targetFramework, string? outputDirectory = null, string[]? restoredFrameworks = null)
     {
-        var output = Path.Combine(project, "output");
+        var output = Path.Combine(project, outputDirectory ?? "output");
         using var assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(project, "obj", "project.assets.json")));
-        Assert.Equal([dotnet.TargetFramework], assets.RootElement.GetProperty("project").GetProperty("frameworks")
-            .EnumerateObject().Select(p => p.Name).ToArray());
+        Assert.Equal((restoredFrameworks ?? [targetFramework]).Order(),
+            assets.RootElement.GetProperty("project").GetProperty("frameworks").EnumerateObject().Select(p => p.Name).Order());
         using var runtimeConfig = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "Consumer.runtimeconfig.json")));
-        Assert.Equal(dotnet.TargetFramework, runtimeConfig.RootElement.GetProperty("runtimeOptions").GetProperty("tfm").GetString());
+        Assert.Equal(targetFramework, runtimeConfig.RootElement.GetProperty("runtimeOptions").GetProperty("tfm").GetString());
         Assert.True(File.Exists(Path.Combine(output, family + ".dll")), $"Missing managed {family} assembly");
         var actual = Directory.EnumerateFiles(output, $"lib{family}.*", SearchOption.AllDirectories)
             .Where(file => file.EndsWith(".dll", StringComparison.Ordinal) ||

@@ -34,7 +34,6 @@ parameters:
   installNode: true                             # whether or not to install Node.js
   checkoutSubmodules: true                      # whether or not to recursively initialize all submodules
   installPreviewSdk: false                      # whether to install the preview .NET SDK ($(DOTNET_VERSION_PREVIEW)) and pin global.json to it
-  previewSdkVersion: $(DOTNET_VERSION_PREVIEW)   # opt-in job-specific SDK pin; does not change preview workloads
   previewSdkRollForward: latestFeature          # SDK selection policy for the opt-in preview job
   previewWorkloads: ''                           # workloads to install under the preview .NET SDK (comma-separated, e.g. 'wasm-tools,android')
   installXcode: true                            # whether or not to install Xcode
@@ -282,14 +281,14 @@ jobs:
         # install and select the preview .NET SDK (opt-in; for jobs that run against a preview runtime)
         - ${{ if eq(parameters.installPreviewSdk, 'true') }}:
           - task: UseDotNet@2
-            displayName: Install .NET ${{ parameters.previewSdkVersion }} (preview)
+            displayName: Install .NET $(DOTNET_VERSION_PREVIEW) (preview)
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             inputs:
               packageType: sdk
-              version: ${{ parameters.previewSdkVersion }}
+              version: $(DOTNET_VERSION_PREVIEW)
           - pwsh: |
-              $globalJson = @{ sdk = @{ version = "${{ parameters.previewSdkVersion }}"; allowPrerelease = $true; rollForward = "${{ parameters.previewSdkRollForward }}" } } | ConvertTo-Json
+              $globalJson = @{ sdk = @{ version = "$(DOTNET_VERSION_PREVIEW)"; allowPrerelease = $true; rollForward = "${{ parameters.previewSdkRollForward }}" } } | ConvertTo-Json
               Set-Content -Path global.json -Value $globalJson
               Get-Content global.json
               dotnet --version
