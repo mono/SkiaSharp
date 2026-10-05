@@ -71,6 +71,10 @@ Different compilers define different macros:
 
 ### iOS Simulator Test Diagnostics
 
+The iOS job keeps Apple CLI's runtime selection and records the created
+simulator's runtime version, build and UDID. Test-result titles and testlogs
+artifact names use that observed version, or `unselected` before it is resolved.
+
 An incomplete DeviceRunners TCP stream is not an OS crash diagnosis: a missing
 `end` event can report an app crash without a process exit reason. On iOS test
 failure, `tests-apple.cake` captures diagnostics before deleting the simulator.

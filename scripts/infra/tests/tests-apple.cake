@@ -20,6 +20,28 @@ void WaitForIosDiagnosticStreamReady(FilePath ready)
         throw new Exception("The scoped iOS diagnostic stream did not become ready within 10 seconds.");
 }
 
+void RecordIosSimulatorRuntime(string udid, string devicesJson, string runtimesJson)
+{
+    using var devices = System.Text.Json.JsonDocument.Parse(devicesJson);
+    var runtimeIdentifier = devices.RootElement.GetProperty("devices").EnumerateObject()
+        .Single(runtime => runtime.Value.EnumerateArray().Any(device =>
+            string.Equals(device.GetProperty("udid").GetString(), udid, StringComparison.OrdinalIgnoreCase)))
+        .Name;
+    if (!runtimeIdentifier.StartsWith("com.apple.CoreSimulator.SimRuntime.iOS-", StringComparison.Ordinal))
+        throw new Exception($"The selected test simulator is not an iOS runtime: {runtimeIdentifier}");
+
+    using var runtimes = System.Text.Json.JsonDocument.Parse(runtimesJson);
+    var selectedRuntime = runtimes.RootElement.GetProperty("runtimes").EnumerateArray()
+        .Single(runtime => runtime.GetProperty("identifier").GetString() == runtimeIdentifier);
+    var version = selectedRuntime.GetProperty("version").GetString();
+    if (!Version.TryParse(version, out _))
+        throw new Exception($"The selected iOS simulator runtime has an invalid version: {version}");
+
+    Information("Selected iOS simulator runtime: {0} ({1}), identifier: {2}, UDID: {3}",
+        version, selectedRuntime.GetProperty("buildversion").GetString(), runtimeIdentifier, udid);
+    System.Console.WriteLine($"##vso[task.setvariable variable=IOS_TEST_RUNTIME_VERSION]{version}");
+}
+
 Task ("tests-ios")
     .Description ("Run all iOS tests.")
     .Does (() =>
@@ -40,6 +62,9 @@ Task ("tests-ios")
         var createJson = string.Join("", createStdout);
         var udid = System.Text.Json.JsonDocument.Parse(createJson).RootElement.GetProperty("udid").GetString();
         Information("  Created simulator with UDID: {0}", udid);
+        RunProcess("xcrun", "simctl list devices --json", out var devicesStdout);
+        RunProcess("xcrun", "simctl list runtimes --json", out var runtimesStdout);
+        RecordIosSimulatorRuntime(udid, string.Join("", devicesStdout), string.Join("", runtimesStdout));
 
         // Boot by UDID
         DotNetTool($"apple simulator boot \"{udid}\" --wait");
