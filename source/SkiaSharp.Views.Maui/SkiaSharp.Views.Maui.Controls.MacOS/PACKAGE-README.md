@@ -58,6 +58,8 @@ ownership of the original SkiaSharp image, bitmap, pixmap, or picture. This
 conversion is synchronous (`IsLoading` is false afterward). The backend's
 asynchronous URI/stream image loading is not cancellable by this adapter: a
 pending ordinary image load may overwrite a newer SkiaSharp source.
+Clearing an `ImageButton.Source` after a SkiaSharp source also clears the native
+button image; other non-null sources remain handled by the backend.
 
 The separate AppKit Gallery host has exercised its filter/sort popovers,
 overlay backdrop dismissal, narrow/wide layout, theme menu, and CPU/Metal
