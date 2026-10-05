@@ -64,7 +64,6 @@ The full Chrome release calendar is published at [Chromium's release schedule](h
 ## Supported versions
 
 - **Version 4.155.x** — Preview
-  - [Version 4.155.0 (Unreleased)](4.155.0-unreleased.md)
   - [Version 4.155.0](4.155.0.md)
 - **Version 4.154.x** — Preview
   - [Version 4.154.0](4.154.0.md)
