@@ -51,6 +51,26 @@ class AutoSkiaSyncWorkflowTests(unittest.TestCase):
                 )
                 self.assertNotIn("github.event.inputs.base_branch", workflow)
 
+    def test_create_pull_request_allows_resolved_sync_base_branch(self):
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        compiled_workflow = COMPILED_WORKFLOW.read_text(encoding="utf-8")
+
+        self.assertIn(
+            'allowed-base-branches: "${{ github.event.inputs.target_branch || '
+            "'main,release/*' }}\"",
+            workflow,
+        )
+        self.assertEqual(
+            2,
+            compiled_workflow.count("allowed_base_branches"),
+        )
+        self.assertEqual(
+            2,
+            compiled_workflow.count(
+                "${{ github.event.inputs.target_branch || 'main,release/*' }}"
+            ),
+        )
+
     def test_android_workload_uses_repository_sdk_bootstrap(self):
         workflow = WORKFLOW.read_text(encoding="utf-8")
 
