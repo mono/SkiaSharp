@@ -138,6 +138,11 @@ If you have multiple Visual Studio installations, use `--vsinstall` or set
 `VS_INSTALL` to select one with the v143 tools and matching Spectre libraries.
 Use `--windowsSdkVersion` if you need a specific installed Windows SDK.
 
+The Windows source benchmark provisions matching x64 Spectre libraries in the
+selected Visual Studio installation with
+`scripts\infra\native\windows\install-spectre.ps1`. It uses the same v143 toolset
+selection as the native build rather than the newer Visual Studio default.
+
 **macOS Dependencies:**
  - [Managed-Only build dependencies](#dependencies)
  - Xcode Command Line Tools
