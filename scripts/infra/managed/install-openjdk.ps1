@@ -1,12 +1,13 @@
 Param(
-    [string] $Version = '21.0.10',
-    [string] $FolderVersion = '21.0.10+7',
+    [ValidatePattern('^\d+(\.\d+)*\+\d+$')]
+    [string] $Version = '21.0.10+7',
     [string] $InstallDestination = $null
 )
 
 $ErrorActionPreference = 'Stop'
 
-$majorVersion = ([version] $Version).Major
+$downloadVersion = $Version.Split('+')[0]
+$majorVersion = [int] $downloadVersion.Split('.')[0]
 $installedJavaHome = [Environment]::GetEnvironmentVariable("JAVA_HOME_${majorVersion}_X64")
 if ($installedJavaHome) {
     Write-Host "Using the existing JDK at '$installedJavaHome'..."
@@ -18,13 +19,13 @@ if ($installedJavaHome) {
 
     if ($IsMacOS) {
         $ext = "tar.gz"
-        $url = "https://aka.ms/download-jdk/microsoft-jdk-$Version-macOS-x64.tar.gz"
+        $url = "https://aka.ms/download-jdk/microsoft-jdk-$downloadVersion-macOS-x64.tar.gz"
     } elseif ($IsLinux) {
         $ext = "tar.gz"
-        $url = "https://aka.ms/download-jdk/microsoft-jdk-$Version-linux-x64.tar.gz"
+        $url = "https://aka.ms/download-jdk/microsoft-jdk-$downloadVersion-linux-x64.tar.gz"
     } else {
         $ext = "zip"
-        $url = "https://aka.ms/download-jdk/microsoft-jdk-$Version-windows-x64.zip"
+        $url = "https://aka.ms/download-jdk/microsoft-jdk-$downloadVersion-windows-x64.zip"
     }
 
     $jdk = Join-Path "$HOME_DIR" "openjdk"
@@ -55,9 +56,9 @@ if ($installedJavaHome) {
 
     # set the JAVA_HOME
     if ($IsMacOS) {
-        $java_home = Join-Path "$jdk" "jdk-$FolderVersion/Contents/Home"
+        $java_home = Join-Path "$jdk" "jdk-$Version/Contents/Home"
     } else {
-        $java_home = Join-Path "$jdk" "jdk-$FolderVersion"
+        $java_home = Join-Path "$jdk" "jdk-$Version"
     }
 }
 
