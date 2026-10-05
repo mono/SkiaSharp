@@ -121,9 +121,7 @@ namespace SkiaSharpGenerator
 		internal static StreamWriter CreateOutputWriter(string outputPath)
 		{
 			Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-			var writer = new StreamWriter(File.Create(outputPath));
-			writer.NewLine = "\n";
-			return writer;
+			return new StreamWriter(File.Create(outputPath));
 		}
 	}
 }
