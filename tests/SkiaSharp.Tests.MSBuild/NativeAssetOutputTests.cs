@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Xml.Linq;
 using SkiaSharp.Tests.MSBuild.Utils;
 using Xunit;
@@ -76,10 +77,10 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     private Task BuildOrPublish(string project, string command, string? rid = null) =>
         command == "build" ? dotnet.Build(project) : dotnet.Publish(project, rid);
 
-    private static string ProjectXml(string family, string version, string setting = "none", bool includeLinux = false)
+    private string ProjectXml(string family, string version, string setting = "none", bool includeLinux = false)
     {
         var properties = new XElement("PropertyGroup",
-            new XElement("TargetFramework", "net10.0"),
+            new XElement("TargetFramework", dotnet.TargetFramework),
             new XElement("OutputType", "Exe"),
             new XElement("SelfContained", "false"),
             new XElement("UseAppHost", "true"));
@@ -123,9 +124,14 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         return matches[0];
     }
 
-    private static void AssertNativeOutput(string project, string family, Dictionary<string, string> expected)
+    private void AssertNativeOutput(string project, string family, Dictionary<string, string> expected)
     {
         var output = Path.Combine(project, "output");
+        using var assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(project, "obj", "project.assets.json")));
+        Assert.Equal([dotnet.TargetFramework], assets.RootElement.GetProperty("project").GetProperty("frameworks")
+            .EnumerateObject().Select(p => p.Name).ToArray());
+        using var runtimeConfig = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "Consumer.runtimeconfig.json")));
+        Assert.Equal(dotnet.TargetFramework, runtimeConfig.RootElement.GetProperty("runtimeOptions").GetProperty("tfm").GetString());
         Assert.True(File.Exists(Path.Combine(output, family + ".dll")), $"Missing managed {family} assembly");
         var actual = Directory.EnumerateFiles(output, $"lib{family}.*", SearchOption.AllDirectories)
             .Where(file => file.EndsWith(".dll", StringComparison.Ordinal) ||

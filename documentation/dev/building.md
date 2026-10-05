@@ -231,8 +231,17 @@ default to `output/logs/testlogs/msbuild`; override
 `-p:MSBuildTestArtifactsDirectory=/absolute/path/to/diagnostics` for a direct run.
 Private restore caches are not included in diagnostic artifacts.
 
-The **MSBuild package tests** CI stage runs on Windows, macOS, and Linux. In
-combined CI it depends on `package`; in downstream Tests it depends on `prepare`
+The **MSBuild package tests** CI stage runs stable SDK and .NET 11
+(`11.0.100-rc.1.26425.128`) lanes on Windows, macOS, and Linux, without workloads.
+The runner stays on `net10.0` (the stable runtime is installed side-by-side);
+generated consumers target the selected SDK's major version (`net10.0` or
+`net11.0`). Each case checks the restored framework and consumer runtime
+configuration as well as native paths and hashes. Preview SDK selection is
+scoped to these jobs and does not advance the browser SDK or workload pins.
+For a local .NET 11 run, select that SDK in `global.json` before running the same
+command; the exact selected SDK and dotnet host are captured in the runner's
+runtime configuration, and every consumer pins that SDK with roll-forward disabled.
+In combined CI it depends on `package`; in downstream Tests it depends on `prepare`
 and downloads the exact SkiaSharp pipeline-resource run's artifact. It runs
 alongside Samples without changing the prerequisites of existing source/unit/
 device tests. Its failures are reported independently and still fail the pipeline.

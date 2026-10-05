@@ -12,6 +12,8 @@ public sealed class DotNet : IDisposable
 
     public string PackageDirectory { get; } = Path.GetFullPath(Setting("PackageDirectory"));
 
+    public string TargetFramework { get; } = $"net{Version.Parse(Setting("SdkVersion").Split('-')[0]).Major}.0";
+
     public DotNet()
     {
         root = Path.Combine(Path.GetFullPath(Setting("ArtifactsDirectory")), Guid.NewGuid().ToString("N"));
@@ -110,6 +112,7 @@ public sealed class DotNet : IDisposable
     {
         File.Copy(Path.Combine(directory, "obj", "project.assets.json"), Path.Combine(directory, "project.assets.json"));
         File.Copy(Path.Combine(directory, "output", "Consumer.deps.json"), Path.Combine(directory, "Consumer.deps.json"));
+        File.Copy(Path.Combine(directory, "output", "Consumer.runtimeconfig.json"), Path.Combine(directory, "Consumer.runtimeconfig.json"));
         foreach (var name in new[] { "bin", "obj", "output" })
         {
             var path = Path.Combine(directory, name);
