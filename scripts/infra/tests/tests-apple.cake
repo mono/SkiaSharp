@@ -39,7 +39,29 @@ Task ("tests-ios")
             { "DeviceRunnersDevice", udid },
         };
 
-        RunDeviceRunnersTest(csproj, results, configuration: "Debug", framework: "net10.0-ios", noBuild: SKIP_BUILD, properties: properties);
+        var diagnosticStart = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        try
+        {
+            RunDeviceRunnersTest(csproj, results, configuration: "Debug", framework: "net10.0-ios", noBuild: SKIP_BUILD, properties: properties);
+        }
+        catch
+        {
+            try
+            {
+                RunProcess("python3", new ProcessSettings {
+                    Arguments = new ProcessArgumentBuilder()
+                        .AppendQuoted(ROOT_PATH.CombineWithFilePath("scripts/infra/tests/collect-ios-diagnostics.py").FullPath)
+                        .Append("--device").AppendQuoted(udid)
+                        .Append("--start").Append(diagnosticStart.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                        .Append("--output").AppendQuoted(results.FullPath),
+                });
+            }
+            catch (Exception ex)
+            {
+                Warning("iOS diagnostic capture failed; preserving the original test failure: {0}", ex.Message);
+            }
+            throw;
+        }
     }
     finally
     {

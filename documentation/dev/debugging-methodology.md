@@ -69,6 +69,23 @@ Different compilers define different macros:
 
 **Don't assume** - verify with a minimal test or documentation if uncertain.
 
+### iOS Simulator Test Diagnostics
+
+An incomplete DeviceRunners TCP stream is not an OS crash diagnosis: a missing
+`end` event can report an app crash without a process exit reason. On iOS test
+failure, `tests-apple.cake` captures diagnostics before deleting the simulator.
+The usual testlogs artifact includes a `diagnostics` directory with app-specific
+simulator/host unified logs, matching `.ips`/`.crash` reports, observed app PIDs,
+and capture errors in `capture.json`. Logs are scoped to the app, simulator and
+run window; crash reports must match the simulator or an observed app PID.
+Commands have a 25-second deadline and 8 MiB output limits; at most eight
+5 MiB reports are retained. Capture failure does not replace the test failure.
+
+DeviceRunners owns app launch, so this collector cannot attach to app stdout or
+stderr or supply a missing exit status. Use captured OS termination events or
+crash frames to distinguish a runner disconnect from a managed/native crash;
+do not infer the fault from the last completed test or change GPU policy.
+
 ## Common Pitfalls
 
 ### Pitfall 1: `#if defined(X)` vs `#if X`
