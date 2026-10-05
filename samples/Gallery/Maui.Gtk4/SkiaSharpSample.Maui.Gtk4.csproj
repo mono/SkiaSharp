@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>SkiaSharpSample</RootNamespace>
+    <AssemblyName>SkiaSharpSample.Maui.Gtk4</AssemblyName>
+    <ApplicationId>com.skiasharp.gallery.maui.gtk4</ApplicationId>
+    <ApplicationTitle>SkiaSharp Gallery</ApplicationTitle>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <MauiVersion>10.0.51</MauiVersion>
+    <MauiStrictXamlCompilation>true</MauiStrictXamlCompilation>
+    <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://api.nuget.org/v3/index.json</RestoreAdditionalProjectSources>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Maui/**/*.cs"
+             Exclude="../Maui/MauiProgram.cs;../Maui/Platforms/**/*.cs;../Maui/obj/**/*.cs;../Maui/bin/**/*.cs"
+             Link="Gallery/%(RecursiveDir)%(Filename)%(Extension)" />
+    <MauiXaml Include="../Maui/**/*.xaml"
+              Exclude="../Maui/Platforms/**/*.xaml;../Maui/obj/**/*.xaml;../Maui/bin/**/*.xaml"
+              Link="Gallery/%(RecursiveDir)%(Filename)%(Extension)" />
+    <MauiFont Include="../Maui/Resources/bootstrap-icons.ttf" Alias="BootstrapIcons" />
+    <MauiIcon Include="../Maui/Resources/appicon.png" />
+    <TrimmerRootDescriptor Include="../Maui/TrimmerRoots.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Shared/SkiaSharpSample.Shared.csproj" />
+    <ProjectReference Include="../../../source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls.Gtk4/SkiaSharp.Views.Maui.Controls.Gtk4.csproj" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.Maui.Platforms.Linux.Gtk4" Version="0.1.0-preview.12.26421.1" />
+    <PackageReference Include="Microsoft.Maui.Platforms.Linux.Gtk4.Essentials" Version="0.1.0-preview.12.26421.1" />
+  </ItemGroup>
+  <Import Project="../../../binding/IncludeNativeAssets.SkiaSharp.targets" />
+  <Import Project="../../../binding/IncludeNativeAssets.HarfBuzzSharp.targets" />
+</Project>
