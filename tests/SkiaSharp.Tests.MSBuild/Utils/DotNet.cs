@@ -47,12 +47,18 @@ public sealed class DotNet : IDisposable
         return directory;
     }
 
-    public Task Build(string directory) => Run(directory, "build");
+    public Task Build(string directory, string? framework = null, string? outputDirectory = "output") =>
+        Run(directory, "build", framework: framework, outputDirectory: outputDirectory);
 
-    public Task Publish(string directory, string? rid = null) => Run(directory, "publish", rid);
+    public Task Publish(string directory, string? rid = null, string? framework = null,
+        string? outputDirectory = "output", string? diagnosticLabel = null) =>
+        Run(directory, "publish", rid, framework, outputDirectory, diagnosticLabel);
 
-    private async Task Run(string directory, string command, string? rid = null)
+    private async Task Run(string directory, string command, string? rid = null, string? framework = null,
+        string? outputDirectory = "output", string? diagnosticLabel = null)
     {
+        var diagnostics = diagnosticLabel is null ? directory : Path.Combine(directory, diagnosticLabel);
+        Directory.CreateDirectory(diagnostics);
         var start = new ProcessStartInfo(host)
         {
             WorkingDirectory = directory,
@@ -60,9 +66,20 @@ public sealed class DotNet : IDisposable
             RedirectStandardError = true,
             UseShellExecute = false
         };
-        foreach (var argument in new[] { command, "Consumer.csproj", "-c", "Release", "-o", "output",
-            "--nologo", "-v:minimal", "-bl:build.binlog", $"-p:RestoreConfigFile={Path.Combine(root, "NuGet.Config")}" })
+        foreach (var argument in new[] { command, "Consumer.csproj", "-c", "Release",
+            "--nologo", "-v:minimal", $"-bl:{Path.Combine(diagnostics, "build.binlog")}",
+            $"-p:RestoreConfigFile={Path.Combine(root, "NuGet.Config")}" })
             start.ArgumentList.Add(argument);
+        if (outputDirectory is not null)
+        {
+            start.ArgumentList.Add("-o");
+            start.ArgumentList.Add(outputDirectory);
+        }
+        if (framework is not null)
+        {
+            start.ArgumentList.Add("--framework");
+            start.ArgumentList.Add(framework);
+        }
         if (rid is not null)
         {
             start.ArgumentList.Add("-r");
@@ -79,7 +96,7 @@ public sealed class DotNet : IDisposable
         start.Environment["NUGET_SCRATCH"] = Path.Combine(cache, "scratch");
         start.Environment["DOTNET_CLI_HOME"] = Path.Combine(cache, "home");
         start.Environment["DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE"] = "true";
-        File.WriteAllText(Path.Combine(directory, "command.txt"),
+        File.WriteAllText(Path.Combine(diagnostics, "command.txt"),
             host + " " + string.Join(" ", start.ArgumentList.Select(a => $"\"{a}\"")));
 
         using var process = Process.Start(start) ?? throw new InvalidOperationException("Could not start dotnet");
@@ -95,21 +112,31 @@ public sealed class DotNet : IDisposable
             if (!process.HasExited)
                 process.Kill(entireProcessTree: true);
             await process.WaitForExitAsync();
-            throw new TimeoutException($"dotnet {command} timed out; see {directory}");
+            throw new TimeoutException($"dotnet {command} timed out; see {diagnostics}");
         }
         finally
         {
-            File.WriteAllText(Path.Combine(directory, "stdout.txt"), await stdout);
-            File.WriteAllText(Path.Combine(directory, "stderr.txt"), await stderr);
+            File.WriteAllText(Path.Combine(diagnostics, "stdout.txt"), await stdout);
+            File.WriteAllText(Path.Combine(diagnostics, "stderr.txt"), await stderr);
         }
         if (process.ExitCode != 0)
-            throw new InvalidOperationException($"dotnet {command} failed ({process.ExitCode}); see {directory}\n{await stdout}\n{await stderr}");
+            throw new InvalidOperationException($"dotnet {command} failed ({process.ExitCode}); see {diagnostics}\n{await stdout}\n{await stderr}");
     }
 
-    public void CleanBuildOutput(string directory)
+    public void CleanBuildOutput(string directory, params (string Framework, string OutputDirectory)[] outputs)
     {
         File.Copy(Path.Combine(directory, "obj", "project.assets.json"), Path.Combine(directory, "project.assets.json"));
-        File.Copy(Path.Combine(directory, "output", "Consumer.deps.json"), Path.Combine(directory, "Consumer.deps.json"));
+        if (outputs.Length == 0)
+            outputs = [("", "output")];
+        foreach (var (framework, outputDirectory) in outputs)
+        {
+            var diagnostics = Path.Combine(directory, framework);
+            Directory.CreateDirectory(diagnostics);
+            if (framework.Length > 0)
+                File.Copy(Path.Combine(directory, "project.assets.json"), Path.Combine(diagnostics, "project.assets.json"));
+            foreach (var name in new[] { "Consumer.deps.json", "Consumer.runtimeconfig.json" })
+                File.Copy(Path.Combine(directory, outputDirectory, name), Path.Combine(diagnostics, name));
+        }
         foreach (var name in new[] { "bin", "obj", "output" })
         {
             var path = Path.Combine(directory, name);

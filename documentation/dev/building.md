@@ -172,7 +172,8 @@ dotnet cake --target=externals-linux --arch=x64
 `tests/SkiaSharp.Tests.MSBuild` tests real packed SkiaSharp and HarfBuzzSharp
 packages using isolated .NET console consumers. It does not build the bindings,
 load native libraries into the test runner, or use the repository's native-copy
-targets. Only the SDK pinned by `global.json` is required; no mobile workloads,
+targets. Install the stable and preview SDKs selected by `DOTNET_VERSION` and
+`DOTNET_VERSION_PREVIEW` in `scripts/azure-templates-variables.yml`; no mobile workloads,
 submodules, GPU, browser, native source build, or native runtime dependencies are
 needed. These tests inspect build/publish output without executing native code.
 
@@ -183,6 +184,8 @@ missing artifacts. Both families require their core, `NativeAssets.Win32`,
 `NativeAssets.macOS`, and `NativeAssets.Linux` packages; package versions are read
 from their nuspec metadata, not inferred from the checkout.
 
+For local runs, select the configured preview SDK in `global.json` before running
+either entry point below; keep the .NET 10 runtime installed for the test runner.
 Run the CI entry point from the repository root:
 
 ```sh
@@ -204,13 +207,15 @@ intermediate, and output directories. Source mapping restricts SkiaSharp and
 HarfBuzzSharp packages to the supplied artifacts, so missing packages cannot
 fall back to public versions. User NuGet caches and input packages are not modified.
 
-For each family, build and publish first verify the default package includes
-Win32/macOS native assets and **no Linux native assets**. With an explicit
+Single-target theory inputs explicitly cover `net10.0` and `net11.0`, independently
+of the selected SDK: eight default-package rows and 36 RID rows (44 total).
+For each family and framework, build and publish first verify the default package
+includes Win32/macOS native assets and **no Linux native assets**. With an explicit
 `NativeAssets.Linux` reference, the nine-case matrix below verifies that Linux
 assets are included and that RID selection behaves as expected.
 
-For each family, the suite tests `build`, `publish`, and `publish -r linux-x64`
-against three project configurations:
+For each family and framework, the suite tests `build`, `publish`, and
+`publish -r linux-x64` against three project configurations:
 
 | Project configuration | Build/publish without a CLI RID | Publish with `-r linux-x64` |
 | --- | --- | --- |
@@ -224,6 +229,16 @@ rather than accepting only a successful MSBuild exit code.
 Linux assets are explicitly referenced; this suite does not change package
 dependencies or filtering behavior. No fake packages or mock CLI are used.
 
+Four additional theory cases cover each family with `build` and `publish` of a
+real console project declaring `TargetFrameworks=net10.0;net11.0`, for **48 tests**
+in total. The outer build omits `--framework` and `-o`, validating both normal
+per-framework output trees. Publish selects each framework separately with
+`--framework` and distinct output directories, then rechecks both trees to catch
+cross-framework overwrites. These cases validate eight framework outputs,
+including restored frameworks, runtime TFM, native paths, and package hashes.
+Both publish invocations retain separate command, stdout/stderr, and binlog
+diagnostics; cleanup preserves restore/dependency/runtime metadata per framework.
+
 TRX results, generated projects, command logs, binlogs, restore/dependency
 metadata, and failed-consumer outputs are published from `output/logs/` in CI.
 Successful build outputs are removed after assertions. The consumer diagnostics
@@ -231,8 +246,17 @@ default to `output/logs/testlogs/msbuild`; override
 `-p:MSBuildTestArtifactsDirectory=/absolute/path/to/diagnostics` for a direct run.
 Private restore caches are not included in diagnostic artifacts.
 
-The **MSBuild package tests** CI stage runs on Windows, macOS, and Linux. In
-combined CI it depends on `package`; in downstream Tests it depends on `prepare`
+The **MSBuild package tests** CI stage runs three jobs on Windows, macOS, and
+Linux, each installing `DOTNET_VERSION` and `DOTNET_VERSION_PREVIEW`
+side-by-side, without workloads.
+The runner stays on `net10.0` using the stable runtime; all consumers use the
+selected .NET 11 SDK but target `net10.0` and `net11.0` independently through
+explicit theory inputs or a multi-target project. Each case checks the restored
+framework and consumer runtime configuration as well as native paths and hashes.
+SDK provisioning uses the shared preview version; these desktop jobs do not install workloads.
+The exact selected SDK and dotnet host are captured in the runner's
+runtime configuration, and every consumer pins that SDK with roll-forward disabled.
+In combined CI it depends on `package`; in downstream Tests it depends on `prepare`
 and downloads the exact SkiaSharp pipeline-resource run's artifact. It runs
 alongside Samples without changing the prerequisites of existing source/unit/
 device tests. Its failures are reported independently and still fail the pipeline.
