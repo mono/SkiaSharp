@@ -1,16 +1,49 @@
 {
-  "theme": "Linux font discovery restored",
-  "highlights_headline": "SkiaSharp restores system-font discovery for Linux NoDependencies deployments.",
-  "highlights_body": null,
+  "theme": "m155 platform readiness",
+  "highlights_headline": "SkiaSharp 4.155.0 readies the m155 line with broader platform support and restored Linux font discovery.",
+  "highlights_body": "The release updates the core fork, adds Tizen 10 build and packaging support, and restores system-font discovery for Linux NoDependencies deployments.",
   "breaking": [],
   "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Core fork cleanup integrated",
+          "detail": "Brings the m155 Skia fork cleanup into the current line, keeping the bundled rendering engine aligned for the next release.",
+          "prs": [
+            5208
+          ]
+        }
+      ]
+    },
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Linux NoDependencies fonts discovered",
-          "detail": "Linux applications using the NoDependencies package can again discover installed system fonts through the font manager.",
-          "prs": [5086]
+          "lead": "Linux system-font discovery restored",
+          "detail": "Linux NoDependencies deployments can again discover system fonts without requiring bundled native dependencies.",
+          "prs": [
+            5086
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Tizen 10 builds and packages supported",
+          "detail": "Adds GCC 14.2 build and packaging coverage for Tizen 10, making native SkiaSharp assets available for the current Tizen platform.",
+          "prs": [
+            5235
+          ]
+        },
+        {
+          "lead": "Windows native build toolchain aligned",
+          "detail": "Aligns Windows native builds with the v143 toolset and verifies the provenance of the bundled Spectre mitigations.",
+          "prs": [
+            5238
+          ]
         }
       ]
     }
