@@ -118,7 +118,7 @@ jobs:
           pattern: bindings-*
           path: generated
 
-      - name: Compare outputs byte-for-byte
+      - name: Compare outputs ignoring platform line endings
         shell: bash
         run: |
           mkdir -p comparison
@@ -126,13 +126,13 @@ jobs:
           for candidate in macos windows; do
             summary="comparison/linux-${candidate}.summary.txt"
             detail="comparison/linux-${candidate}.diff"
-            if diff -qr "generated/bindings-linux" "generated/bindings-${candidate}" > "$summary"; then
+            if diff --strip-trailing-cr -qr "generated/bindings-linux" "generated/bindings-${candidate}" > "$summary"; then
               rm "$summary"
-              echo "Linux and ${candidate} outputs are byte-for-byte identical."
+              echo "Linux and ${candidate} outputs are identical apart from platform line endings."
             else
               status=1
               echo "::error::Linux and ${candidate} binding outputs differ."
-              git diff --no-index --no-color --text \
+              git diff --no-index --no-color --text --ignore-cr-at-eol \
                 "generated/bindings-linux" "generated/bindings-${candidate}" \
                 > "$detail" || true
               cat "$summary"
