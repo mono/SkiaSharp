@@ -1,20 +1,22 @@
 ---
 name: release-testing
 description: >
-  Validate an exact SkiaSharp BAR package set on the current host. Use after the
-  release Build and Tests pipelines finish, before approving their packages for
-  team publication.
+  Run the legacy optional local BAR package diagnostic matrix against a complete
+  canonical package artifact directory. This is not a release approval gate.
 ---
 
-# Release Package Approval Testing
+# Optional Local Release Package Diagnostics
 
 ```text
-dnceng Build/Tests + BAR -> release-testing -> team publication
+dnceng Build/Tests + BAR + matching complete output/nugets -> optional diagnostics
 ```
 
-This skill is the human approval gate for one completed BAR build. It resolves
-that build's per-build Darc feed, verifies the package family, runs the approved
-host/device matrix, and reports the release decision. It never publishes
+This legacy skill is no longer a release approval gate. It resolves a selected
+BAR's per-build Darc feed, verifies the package family and the separately
+provided complete canonical package artifacts, and runs an optional local
+diagnostic matrix. A BAR feed URL alone cannot populate `PackageDirectory`.
+The local UI tests require explicit opt-in and are disabled in CI; their skips
+are not passing evidence. This skill never publishes
 packages, changes BAR state, creates tags/releases, or merges code.
 
 ## Boundaries
@@ -24,18 +26,19 @@ packages, changes BAR state, creates tags/releases, or merges code.
   validates BAR/package identity, not pipeline status.
 - Start from the exact SkiaSharp package version selected for release. When
   Maestro finds more than one producing BAR, require its exact `--bar-id`.
-- Reject a BAR that is already released; this workflow is a pre-publication
-  approval gate.
+- The legacy planner rejects an already released BAR; use this diagnostic
+  matrix only with the unreleased candidates it supports.
 - Verify `SkiaSharp`, `SkiaSharp.HarfBuzz`, and the bridge's concrete
   `HarfBuzzSharp` dependency from the resolved BAR feed.
 - Require the three packages to agree on source branch/commit, then require
   SkiaSharp's package metadata to match the selected BAR.
-- Pin the package versions and resolved feed in every runner command. Never
-  substitute another build, feed, package version, or target runtime. Runners
+- Pin the package versions and matching canonical artifact directory in every
+  runner command. Never substitute another build, package set, package version,
+  or target runtime. Runners
   may choose a compatible profile/device only within the exact approved target.
 - Obtain approval for the exact host matrix before setup or execution.
-- Run every approved item once. A failure blocks release approval but does not
-  stop collection of unrelated results.
+- Run every selected item once. A failure remains diagnostic evidence but does
+  not stop collection of unrelated results.
 - Platform runners validate their prerequisites; mobile runners own temporary
   device lifecycle. Run mobile items sequentially and never delete user-owned
   devices.
@@ -45,9 +48,7 @@ packages, changes BAR state, creates tags/releases, or merges code.
 - Product assertions and rendering differences remain failures. Do not change
   expectations, skips, targets, or package pins to manufacture a pass.
 - Preserve every initial failure, repair, retry, and artifact review.
-- Release approval requires combined reports covering every required matrix ID.
-  Host-inapplicable and customized omissions remain blocking unless the release
-  owner explicitly records an override.
+- Report coverage and omissions honestly; these diagnostics do not approve release publication.
 
 ## Test matrix
 
@@ -73,7 +74,7 @@ plan must state every host-inapplicable or intentionally omitted item.
 | Script | Responsibility |
 |--------|----------------|
 | `scripts/plan-release-tests.py` | Resolve the BAR/feed, verify packages, and emit the host matrix. |
-| `scripts/prepare-test-run.ps1` | Restore pinned local tools and clear prior integration output once. |
+| `scripts/prepare-test-run.ps1` | Restore pinned local tools and clear prior platform screenshots once. |
 | `scripts/run-host-tests.py` | Run smoke, console, Docker/Linux, Blazor, Mac Catalyst, and Windows items. |
 | `scripts/run-android-tests.py` | Own Android/Appium setup, temporary or reused emulator, test, and cleanup. |
 | `scripts/run-ios-tests.py` | Own iOS/Appium setup, fresh simulator, test, and cleanup. |
@@ -89,7 +90,8 @@ commands. Use [setup.md](references/setup.md) for prerequisites,
 ### 1. Resolve and verify the BAR package family
 
 ```bash
-python3 .agents/skills/release-testing/scripts/plan-release-tests.py 4.150.3
+python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
+  4.150.3 --package-directory output/nugets
 ```
 
 The planner uses `darc get-asset` to find the producing BAR. If the version is
@@ -97,7 +99,7 @@ ambiguous, rerun with the exact ID reported by the planner:
 
 ```bash
 python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
-  4.150.3 --bar-id 329644
+  4.150.3 --bar-id 329644 --package-directory output/nugets
 ```
 
 Maestro queries default to the last 30 days. For an older release candidate,
@@ -111,7 +113,10 @@ The planner:
 3. downloads the three anchor packages from that feed;
 4. verifies package IDs, versions, source metadata, and bridge dependency;
 5. requires package metadata to match the selected BAR; and
-6. emits host-specific commands with the exact versions and feed pinned.
+6. requires a separately supplied complete canonical `output/nugets` from
+   that exact build, checks local anchor metadata against the BAR, and emits
+   host-specific commands with the exact versions and artifact path pinned.
+   The planner does not download the complete package artifact set.
 
 Render the plan:
 
@@ -125,6 +130,7 @@ Render the plan:
 HarfBuzzSharp `{release.ciPackages.HarfBuzzSharp}`
 **Darc location:** `{packageSources.barLocation}`
 **GUID feed:** `{packageSources.guidFeed}`
+**Canonical artifact directory:** `{packageDirectory}`
 **Host:** `{host.os}` / `{host.architecture}`
 
 | ID | Test | Target | Estimate |
@@ -152,7 +158,7 @@ pwsh -NoLogo -NoProfile -File `
 ```
 
 Keep preparation after approval: it changes local tool state and clears prior
-integration artifacts, while planning remains read-only.
+platform screenshots, while planning remains read-only.
 
 ### 4. Run every approved item
 
@@ -177,7 +183,7 @@ be overwritten. Preserve initial and retry outcomes.
 
 ### 6. Report and decide
 
-Review screenshots under `output/logs/testlogs/integration/`. Report:
+Review screenshots under `output/logs/testlogs/samples/platform/`. Report:
 
 - immutable BAR/build ID, build link, source branch/commit, and package feed;
 - exact SkiaSharp and HarfBuzzSharp versions;
@@ -185,8 +191,6 @@ Review screenshots under `output/logs/testlogs/integration/`. Report:
 - missing or intentionally omitted host coverage; and
 - screenshot paths and review status.
 
-Combine host reports before deciding. Approve the exact BAR package family for
-team publication only when all required results and artifact checks pass, or
-when the release owner explicitly records an omission override. Otherwise state
-that release approval is blocked. This skill reports the decision but never
-performs the publication.
+Combine host reports to identify any remaining diagnostic failures. Do not
+interpret these optional local checks (or manual-platform CI skips) as release
+approval or as a substitute for the normal build and test pipeline.

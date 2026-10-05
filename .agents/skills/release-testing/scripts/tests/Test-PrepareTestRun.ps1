@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $prepare = Join-Path $PSScriptRoot '../prepare-test-run.ps1'
-$root = Join-Path ([IO.Path]::GetTempPath()) "release-testing-$([guid]::NewGuid().ToString('N'))"
-$integration = Join-Path $root 'output/logs/testlogs/integration'
+$root = Join-Path (& git -C $PSScriptRoot rev-parse --show-toplevel) "output/release-testing-script-tests/$([guid]::NewGuid().ToString('N'))"
+$platform = Join-Path $root 'output/logs/testlogs/samples/platform'
 $sibling = Join-Path $root 'output/logs/testlogs/keep.txt'
 
 function Assert-True([bool] $Condition, [string] $Message) {
@@ -9,9 +9,9 @@ function Assert-True([bool] $Condition, [string] $Message) {
 }
 
 try {
-    New-Item -ItemType Directory -Force (Join-Path $integration 'nested') > $null
-    Set-Content (Join-Path $integration 'old.txt') 'old'
-    Set-Content (Join-Path $integration 'nested/old.txt') 'old'
+    New-Item -ItemType Directory -Force (Join-Path $platform 'nested') > $null
+    Set-Content (Join-Path $platform 'old.txt') 'old'
+    Set-Content (Join-Path $platform 'nested/old.txt') 'old'
     Set-Content $sibling 'keep'
     $global:ReleaseTestDotnetCalled = $false
     function global:dotnet {
@@ -21,8 +21,8 @@ try {
 
     $result = (& $prepare -RepositoryRoot $root | Out-String) | ConvertFrom-Json
     Assert-True $global:ReleaseTestDotnetCalled 'dotnet tool restore was not invoked.'
-    Assert-True ($result.outputDirectory -eq $integration) 'The output directory was not reported.'
-    Assert-True (-not (Test-Path (Join-Path $integration 'old.txt'))) 'Old integration output was not removed.'
+    Assert-True ($result.outputDirectory -eq $platform) 'The output directory was not reported.'
+    Assert-True (-not (Test-Path (Join-Path $platform 'old.txt'))) 'Old platform screenshots were not removed.'
     Assert-True (Test-Path $sibling) 'The sibling output file was removed.'
 }
 finally {

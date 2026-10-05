@@ -101,7 +101,7 @@ def run_android_test(root: Path, args, *, device_id: str, device_name: str, expe
     if actual_api != expected_api:
         raise common.ReleaseTestError(f"Android device {device_id} is API {actual_api}; expected API {expected_api}")
     print(f"Using Android device {device_id} ({device_name}), API {actual_api}", flush=True)
-    common.run_test(root, "MauiAndroidTests", args, properties={"AndroidDevice": device_name, "AndroidDeviceId": device_id, "AndroidApiLevel": expected_api})
+    common.run_test(root, "android", args, properties={"AndroidDevice": device_name, "AndroidDeviceId": device_id, "AndroidApiLevel": expected_api})
 
 
 def execute(root: Path, args) -> None:

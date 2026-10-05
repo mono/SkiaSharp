@@ -22,6 +22,7 @@ Includes Dockerfiles for both Linux and Windows (Nano Server) containers.
 | Endpoint | Description |
 |----------|-------------|
 | `GET /` | Usage info |
+| `GET /health` | Readiness check |
 | `GET /api/images` | Renders default "SkiaSharp" image |
 | `GET /api/images/{text}` | Renders image with custom text |
 
@@ -43,12 +44,21 @@ docker build --tag skiasharpsample/webapi --file windows.Dockerfile .
 docker run --rm -p 8080:8080 skiasharpsample/webapi
 ```
 
-### Using the script
+### Build and run checks
 
-```powershell
-# Auto-detects platform, builds, runs, fetches image, and stops
-./run.ps1
+`sample.http` contains the readiness and image requests and can be opened in an
+HTTP-file editor. The sample tests run its plain GET requests against an isolated
+container on an allocated localhost port and save the PNG response.
 
-# Or specify explicitly
-./run.ps1 -Platform linux
+From the repository root:
+
+```sh
+dotnet cake --target=samples --sample=DockerWebApi \
+  --previewLabel=preview.0 --buildNumber=<package-build-number> \
+  --sampleTestCategories=DockerBuild,SampleRun
 ```
+
+For a build-only check, select `DockerBuild`. The supported test convention is
+plain `GET http://localhost:8080/...` requests separated by `###`, without scripts,
+headers or variables. See [Building Samples](../../../documentation/dev/building-samples.md)
+for package setup.

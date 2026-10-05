@@ -27,6 +27,8 @@ parameters:
   installWindowsSdk: false                      # whether or not to install the Windows SDK
   installDotNet: true                           # whether or not to install the dotnet SDK
   additionalDotNetSdks: []                      # additional SDKs to install side-by-side
+  additionalDotNetWorkloads: []                 # workload sets for additional SDKs, without changing root global.json
+  timeoutInMinutes: 180
   installDotNetWorkloads: true                  # whether or not to install the .NET workloads
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
@@ -47,7 +49,7 @@ parameters:
 jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
-    timeoutInMinutes: 180
+    timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
     pool: ${{ parameters.buildAgent.pool }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
@@ -277,6 +279,11 @@ jobs:
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             retryCountOnTaskFailure: 3
             displayName: Install the .NET workloads
+          - ${{ each profile in parameters.additionalDotNetWorkloads }}:
+            - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -SdkVersion "${{ profile.sdkVersion }}" -WorkloadSetVersion "${{ profile.workloadVersion }}" -Tizen "$env:DOTNET_WORKLOAD_TIZEN"
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+              retryCountOnTaskFailure: 3
+              displayName: Install workloads for SDK ${{ profile.sdkVersion }}
         # install and select the preview .NET SDK (opt-in; for jobs that run against a preview runtime)
         - ${{ if eq(parameters.installPreviewSdk, 'true') }}:
           - task: UseDotNet@2

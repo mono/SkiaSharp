@@ -8,8 +8,8 @@ if (-not $RepositoryRoot) {
 }
 
 $root = [IO.Path]::GetFullPath($RepositoryRoot)
-$output = Join-Path $root 'output/logs/testlogs/integration'
-$expectedParent = [IO.Path]::GetFullPath((Join-Path $root 'output/logs/testlogs'))
+$output = Join-Path $root 'output/logs/testlogs/samples/platform'
+$expectedParent = [IO.Path]::GetFullPath((Join-Path $root 'output/logs/testlogs/samples'))
 if ([IO.Path]::GetDirectoryName($output) -ne $expectedParent) { throw "Unexpected output path: $output" }
 
 Push-Location $root

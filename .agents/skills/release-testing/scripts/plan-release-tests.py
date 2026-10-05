@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan the SkiaSharp BAR-package release-approval test matrix."""
+"""Plan the optional local BAR-package diagnostic matrix."""
 
 from __future__ import annotations
 import argparse
@@ -8,6 +8,8 @@ import platform
 import re
 import shlex
 import sys
+import xml.etree.ElementTree as ET
+import zipfile
 import release_test_common as common
 import release_test_darc as darc
 import release_test_nuget as nuget
@@ -61,7 +63,28 @@ def receipt_report(version: str, *, bar_id: int | None = None, max_age: int = 30
     }
 
 
-def runner_command(runner_script: str, runner_args: list[str], *, skia_version: str, harfbuzz_version: str, package_source: str) -> str:
+def verify_local_artifacts(directory, receipt: dict) -> None:
+    common.require_package_directory(str(directory), receipt["skiaSharpVersion"], receipt["harfBuzzSharpVersion"])
+    for package_id, version in (("SkiaSharp", receipt["skiaSharpVersion"]),
+                                ("SkiaSharp.HarfBuzz", receipt["skiaSharpVersion"]),
+                                ("HarfBuzzSharp", receipt["harfBuzzSharpVersion"])):
+        path = directory / f"{package_id}.{version}.nupkg"
+        try:
+            with zipfile.ZipFile(path) as archive:
+                nuspecs = [name for name in archive.namelist() if name.lower().endswith(".nuspec")]
+                if len(nuspecs) != 1:
+                    raise PlanError(f"{path} must contain exactly one nuspec")
+                metadata = ET.fromstring(archive.read(nuspecs[0])).find("{*}metadata")
+        except (OSError, zipfile.BadZipFile, ET.ParseError) as error:
+            raise PlanError(f"Could not inspect package artifact {path}: {error}") from error
+        repository = metadata.find("{*}repository") if metadata is not None else None
+        if (metadata is None or metadata.findtext("{*}id") != package_id or metadata.findtext("{*}version") != version
+                or repository is None or repository.get("branch", "").removeprefix("refs/heads/") != receipt["sourceBranch"]
+                or repository.get("commit") != receipt["sourceCommit"]):
+            raise PlanError(f"package artifact {path} does not match the selected BAR source/identity")
+
+
+def runner_command(runner_script: str, runner_args: list[str], *, skia_version: str, harfbuzz_version: str, package_directory: str) -> str:
     return format_command(
         [
             sys.executable,
@@ -71,13 +94,13 @@ def runner_command(runner_script: str, runner_args: list[str], *, skia_version: 
             skia_version,
             "--harfbuzzsharp",
             harfbuzz_version,
-            "--package-source",
-            package_source,
+            "--package-directory",
+            package_directory,
         ]
     )
 
 
-def build_matrix(skia_version: str, harfbuzz_version: str, package_source: str, host_os: str) -> tuple[list[dict], list[str]]:
+def build_matrix(skia_version: str, harfbuzz_version: str, package_directory: str, host_os: str) -> tuple[list[dict], list[str]]:
     matrix: list[dict] = []
     missing: list[str] = []
 
@@ -89,7 +112,7 @@ def build_matrix(skia_version: str, harfbuzz_version: str, package_source: str, 
                 "target": target,
                 "estimatedMinutes": minutes,
                 "command": runner_command(
-                    runner_script, runner_args, skia_version=skia_version, harfbuzz_version=harfbuzz_version, package_source=package_source
+                    runner_script, runner_args, skia_version=skia_version, harfbuzz_version=harfbuzz_version, package_directory=package_directory
                 ),
             }
         )
@@ -146,13 +169,16 @@ def main() -> int:
     parser.add_argument("package_version")
     parser.add_argument("--bar-id", type=int)
     parser.add_argument("--max-age", type=int, default=30)
+    parser.add_argument("--package-directory", required=True, help="Full canonical package artifact directory for this exact BAR build")
     args = parser.parse_args()
 
     try:
         receipt = receipt_report(args.package_version, bar_id=args.bar_id, max_age=args.max_age)
+        packages = common.require_package_directory(args.package_directory, receipt["skiaSharpVersion"], receipt["harfBuzzSharpVersion"])
+        verify_local_artifacts(packages, receipt)
 
         host_os = "macOS" if sys.platform == "darwin" else "Windows" if sys.platform == "win32" else "Linux"
-        matrix, missing = build_matrix(receipt["skiaSharpVersion"], receipt["harfBuzzSharpVersion"], receipt["resolvedPackageSource"], host_os)
+        matrix, missing = build_matrix(receipt["skiaSharpVersion"], receipt["harfBuzzSharpVersion"], str(packages), host_os)
         print(
             json.dumps(
                 {
@@ -161,6 +187,7 @@ def main() -> int:
                     "matrix": matrix,
                     "missingCoverage": missing,
                     "packageSources": package_sources(receipt),
+                    "packageDirectory": str(packages),
                 },
                 indent=2,
             )

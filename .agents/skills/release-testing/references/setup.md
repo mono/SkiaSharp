@@ -12,7 +12,7 @@ pwsh -NoLogo -NoProfile -File `
   .agents/skills/release-testing/scripts/prepare-test-run.ps1
 ```
 
-It runs `dotnet tool restore` and clears only the prior integration screenshot
+It runs `dotnet tool restore` and clears only the prior sample platform screenshot
 directory. Keeping this after planning prevents read-only BAR discovery from
 changing local tools or deleting evidence before the matrix is approved.
 
@@ -52,9 +52,11 @@ but they modify the local tool installation. Ask before running either script.
 The runner requires the `maui` workload for mobile/desktop MAUI tests and
 `wasm-tools` for Blazor. It reports a missing workload without installing it.
 
-Every test command pins `BaseFramework=net10.0`, `SdkVersion=10.0.401`, and
-`SdkAllowPrerelease=false`. Override all three together only when the approved
-release test intentionally targets another SDK band.
+The sample harness uses the repository `global.json` SDK and
+`ConsumerTargetFramework=net10.0` by default. Only when intentionally testing
+another SDK, pass `-p:SampleSdkVersion=<exact-version>` and, if needed,
+`-p:SampleWorkloadVersion=<exact-version>` to a direct test invocation. The
+legacy runner does not install an SDK or workloads.
 
 ## Appium and Windows automation
 
@@ -149,7 +151,7 @@ the runner validates its API and never deletes it.
 
 The Python runner does not invoke `sdkmanager`, `avdmanager`, `emulator`, or
 `adb` directly. Device discovery and property validation use `dotnet android`;
-Appium and the integration harness may invoke SDK tools such as `adb`.
+Appium and the sample harness may invoke SDK tools such as `adb`.
 UiAutomator2's official requirements mandate `ANDROID_HOME` and `JAVA_HOME`;
 the runner resolves both on every Android invocation with:
 
@@ -210,11 +212,14 @@ The BAR asset location is a per-build feed such as:
 `https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-SkiaSharp-{commit}/nuget/v3/index.json`
 
 The planner reads that service index to resolve its GUID-backed
-`PackageBaseAddress`, then downloads and verifies the package family there. It
-derives the GUID-based V3 index and passes that source to every runner command.
-The integration harness uses that exact feed for SkiaSharp packages and
-dotnet-public for dependencies, including generated console, Docker, Blazor,
-and MAUI projects.
+`PackageBaseAddress`, then downloads and verifies the anchor package family
+there. Separately, `--package-directory output/nugets` must point at the full
+canonical artifact directory from that *same build*, including native assets;
+the planner checks local anchor package source metadata. A BAR feed-only
+checkout cannot run the consolidated sample harness. The harness restores
+SkiaSharp and HarfBuzzSharp packages from this directory and other dependencies
+from dotnet-public/dotnet-eng. No automatic artifact download or feed-only
+fallback is provided.
 
 The same package version can exist in more than one per-build feed. BAR identity
 and feed URL are therefore part of the immutable test identity; never replace
@@ -223,6 +228,6 @@ them with a global feed or a different build.
 ## CI coverage
 
 **Release - Tooling Tests** runs the Python unit suite, PowerShell preparation
-test, and syntax checks when release-testing or integration files change. It
-does not query live Maestro or execute platform tests; release approval always
-requires the runbook against the selected BAR.
+test, and syntax checks when release-testing or consolidated sample-host files
+change. It does not query live Maestro or execute platform tests; this optional
+diagnostic matrix is not a release-approval gate.

@@ -29,7 +29,7 @@ silent. Use an attached asynchronous Bash job only as a fallback.
 
 ## Test Phases and Timing
 
-### Quick Tests (SmokeTests, ConsoleTests)
+### Quick Tests (PlatformTests.SmokeTests, SampleRunTests.ConsoleRendersPng)
 
 | Phase | Duration | Output Indicator |
 |-------|----------|------------------|
@@ -49,7 +49,7 @@ silent. Use an attached asynchronous Bash job only as a fallback.
 Blazor is not a quick test. Continue five-second status updates during native
 WASM compilation and browser startup.
 
-### LinuxConsoleTests (Docker)
+### DockerSampleTests.DockerSampleRuns
 
 | Phase | Duration | Output Indicator |
 |-------|----------|------------------|

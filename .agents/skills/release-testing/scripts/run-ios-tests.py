@@ -106,7 +106,7 @@ def run_ios(root: Path, args, version: str) -> None:
         simulator_id = udid
         print(f"Selected {simulator_name} ({runtime}) [{simulator_id}]", flush=True)
         common.run_streaming(["dotnet", "tool", "run", "apple", "--", "simulator", "boot", simulator_id, "--wait", "--timeout", "180"], cwd=root)
-        common.run_test(root, "MauiiOSTests", args, properties={"iOSDevice": simulator_name, "iOSVersion": version})
+        common.run_test(root, "ios", args, properties={"iOSDevice": simulator_name, "iOSVersion": version})
     finally:
         common.run_streaming(["dotnet", "tool", "run", "apple", "--", "simulator", "delete", simulator_id, "--force"], cwd=root, check=False)
 

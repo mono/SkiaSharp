@@ -39,13 +39,17 @@ docker build --tag skiasharpsample/console --file windows.Dockerfile .
 docker run --rm skiasharpsample/console
 ```
 
-### Using the script
+### Build and run checks
 
-```powershell
-# Auto-detects platform
-./run.ps1
+The sample test runner stages CI packages and selects the Dockerfile for the host.
+Image builds and execution are separate test results; execution saves `output.png`
+under `output/logs/testlogs/samples/`. From the repository root:
 
-# Or specify explicitly
-./run.ps1 -Platform linux
-./run.ps1 -Platform windows
+```sh
+dotnet cake --target=samples --sample=DockerConsole \
+  --previewLabel=preview.0 --buildNumber=<package-build-number> \
+  --sampleTestCategories=DockerBuild,SampleRun
 ```
+
+For a build-only check, select `DockerBuild`. See
+[Building Samples](../../../documentation/dev/building-samples.md) for package setup.

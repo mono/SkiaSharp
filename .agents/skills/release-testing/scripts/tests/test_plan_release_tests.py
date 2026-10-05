@@ -16,9 +16,9 @@ sys.path.insert(0, str(SCRIPTS))
 SCRIPT_PATH = SCRIPTS / "plan-release-tests.py"
 SKILL_PATH = SCRIPTS.parent / "SKILL.md"
 ROOT = SCRIPTS.parents[3]
-INTEGRATION_PROJECT = ROOT / "tests/SkiaSharp.Tests.Integration/SkiaSharp.Tests.Integration.csproj"
-PLATFORM_TEST_BASE = ROOT / "tests/SkiaSharp.Tests.Integration/Tests/PlatformTestBase.cs"
-LINUX_TESTS = ROOT / "tests/SkiaSharp.Tests.Integration/Tests/LinuxConsoleTests.cs"
+SAMPLE_PROJECT = ROOT / "tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj"
+PLATFORM_TEST_BASE = ROOT / "tests/SkiaSharp.Tests.Samples/PlatformTests/PlatformTestBase.cs"
+DOCKER_TESTS = ROOT / "tests/SkiaSharp.Tests.Samples/DockerSampleTests.cs"
 SPEC = importlib.util.spec_from_file_location("plan_release_tests", SCRIPT_PATH)
 planner = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = planner
@@ -55,6 +55,7 @@ BAR_FLAT_CONTAINER = (
 BAR_GUID_FEED = (
     "https://pkgs.dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-" "f6e6d082ae6d/_packaging/8bf0dc6d-5564-4f8e-8ff2-" "8167b63c6306/nuget/v3/index.json"
 )
+ARTIFACT_DIRECTORY = str(ROOT / "output/nugets")
 BAR_SOURCE = {
     "barBuildId": BAR_ID,
     "buildNumber": "4.150.3+20260828.7",
@@ -171,25 +172,25 @@ class ReleaseTestPlanTests(unittest.TestCase):
         self.assertEqual(request.full_url, f"{BAR_FLAT_CONTAINER}skiasharp.harfbuzz/4.150.3/" "skiasharp.harfbuzz.4.150.3.nupkg")
 
     def test_full_macos_matrix(self):
-        matrix, missing = planner.build_matrix(SKIA_VERSION, HARFBUZZ_VERSION, BAR_GUID_FEED, "macOS")
+        matrix, missing = planner.build_matrix(SKIA_VERSION, HARFBUZZ_VERSION, ARTIFACT_DIRECTORY, "macOS")
         self.assertEqual(
             [item["id"] for item in matrix], ["smoke", "console", "linux", "blazor", "android-26", "android-37.1", "maccatalyst", "ios-18.6", "ios-26.5"]
         )
         self.assertEqual(missing, ["MAUI Windows requires a Windows host"])
 
     def test_linux_matrix_reports_apple_and_windows_gaps(self):
-        matrix, missing = planner.build_matrix(SKIA_VERSION, HARFBUZZ_VERSION, BAR_GUID_FEED, "Linux")
+        matrix, missing = planner.build_matrix(SKIA_VERSION, HARFBUZZ_VERSION, ARTIFACT_DIRECTORY, "Linux")
         self.assertEqual([item["id"] for item in matrix], ["smoke", "console", "linux", "blazor", "android-26", "android-37.1"])
         self.assertEqual(missing, ["iOS and Mac Catalyst require a macOS host", "MAUI Windows requires a Windows host"])
 
     def test_matrix_commands_use_platform_runners(self):
-        matrix, _ = planner.build_matrix(SKIA_VERSION, HARFBUZZ_VERSION, BAR_GUID_FEED, "macOS")
+        matrix, _ = planner.build_matrix(SKIA_VERSION, HARFBUZZ_VERSION, ARTIFACT_DIRECTORY, "macOS")
         for item in matrix:
             command = item["command"]
             self.assertRegex(command, r"run-(?:host|android|ios)-tests\.py")
             self.assertIn(f"--skiasharp {SKIA_VERSION}", command)
             self.assertIn(f"--harfbuzzsharp {HARFBUZZ_VERSION}", command)
-            self.assertIn(f"--package-source {BAR_GUID_FEED}", command)
+            self.assertIn(f"--package-directory {ARTIFACT_DIRECTORY}", command)
         android = next(item for item in matrix if item["id"] == "android-26")
         self.assertIn("run-android-tests.py 26", android["command"])
         android_max = next(item for item in matrix if item["id"] == "android-37.1")
@@ -202,15 +203,34 @@ class ReleaseTestPlanTests(unittest.TestCase):
     def test_plan_reports_bar_and_guid_feeds(self):
         self.assertEqual(planner.package_sources(CI_RECEIPT), {"barLocation": BAR_FEED, "guidFeed": BAR_GUID_FEED})
 
-    def test_integration_harness_uses_resolved_bar_feed(self):
-        project = INTEGRATION_PROJECT.read_text(encoding="utf-8")
+    def test_sample_harness_uses_canonical_package_directory(self):
+        project = SAMPLE_PROJECT.read_text(encoding="utf-8")
         platform = PLATFORM_TEST_BASE.read_text(encoding="utf-8")
-        linux = LINUX_TESTS.read_text(encoding="utf-8")
+        docker = DOCKER_TESTS.read_text(encoding="utf-8")
 
-        self.assertIn('RuntimeHostConfigurationOption Include="PackageSource"', project)
+        self.assertIn('RuntimeHostConfigurationOption Include="SampleTest.PackageDirectory"', project)
         self.assertIn("<RestoreSources", project)
-        self.assertIn('key="SkiaSharp BAR"', platform)
-        self.assertIn("WriteNuGetConfig(projectDir)", linux)
+        self.assertIn('DotNet.Setting("PackageDirectory")', platform)
+        self.assertIn('docker.Image(folder, dockerfile, output)', docker)
+
+    def test_planner_rejects_artifacts_from_another_build(self):
+        import tempfile
+        with tempfile.TemporaryDirectory(dir=ROOT / "output") as folder:
+            directory = Path(folder)
+            version = SKIA_VERSION
+            for package_id, package_version in (("SkiaSharp", version), ("SkiaSharp.HarfBuzz", version), ("HarfBuzzSharp", HARFBUZZ_VERSION)):
+                with zipfile.ZipFile(directory / f"{package_id}.{package_version}.nupkg", "w") as archive:
+                    archive.writestr(f"{package_id}.nuspec", f'<package><metadata><id>{package_id}</id><version>{package_version}</version><repository branch="{RELEASE_BRANCH}" commit="{"a" * 40}" /></metadata></package>')
+            for package_id in planner.common.SKIA_SATELLITES:
+                (directory / f"{package_id}.{version}.nupkg").touch()
+            for package_id in planner.common.HARFBUZZ_SATELLITES:
+                (directory / f"{package_id}.{HARFBUZZ_VERSION}.nupkg").touch()
+            with self.assertRaisesRegex(planner.PlanError, "does not match the selected BAR"):
+                planner.verify_local_artifacts(directory, CI_RECEIPT)
+            for package_id, package_version in (("SkiaSharp", version), ("SkiaSharp.HarfBuzz", version), ("HarfBuzzSharp", HARFBUZZ_VERSION)):
+                with zipfile.ZipFile(directory / f"{package_id}.{package_version}.nupkg", "w") as archive:
+                    archive.writestr(f"{package_id}.nuspec", f'<package><metadata><id>{package_id}</id><version>{package_version}</version><repository branch="{RELEASE_BRANCH}" commit="{BAR_COMMIT}" /></metadata></package>')
+            planner.verify_local_artifacts(directory, CI_RECEIPT)
 
     def test_skill_matrix_matches_planner_constants(self):
         skill = SKILL_PATH.read_text(encoding="ascii")
@@ -229,7 +249,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
             self.assertIn(f"`{item_id}`", skill)
 
     def test_every_planned_command_round_trips_through_runner_parser(self):
-        matrix, _ = planner.build_matrix(SKIA_VERSION, HARFBUZZ_VERSION, BAR_GUID_FEED, "macOS")
+        matrix, _ = planner.build_matrix(SKIA_VERSION, HARFBUZZ_VERSION, ARTIFACT_DIRECTORY, "macOS")
         for item in matrix:
             argv = shlex.split(item["command"])
             script_index = next(index for index, value in enumerate(argv) if Path(value).name in RUNNERS)
@@ -243,7 +263,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
             self.assertEqual(parsed_id, item["id"])
             self.assertEqual(parsed.skia, SKIA_VERSION)
             self.assertEqual(parsed.harfbuzz, HARFBUZZ_VERSION)
-            self.assertEqual(parsed.package_source, BAR_GUID_FEED)
+            self.assertEqual(parsed.package_directory, ARTIFACT_DIRECTORY)
 
     @mock.patch.object(planner.nuget, "read_package")
     def test_receipt_report_uses_ci_anchor_packages(self, read_package):

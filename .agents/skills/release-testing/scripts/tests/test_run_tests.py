@@ -33,11 +33,42 @@ BAR_FEED = "https://pkgs.dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-" "f6e6d08
 
 
 class ReleaseTestRunnerTests(unittest.TestCase):
-    def test_exact_test_filter_does_not_overlap_linux_console(self):
-        args = common.test_args("ConsoleTests", skia="4.152.0-preview.1.1", harfbuzz="14.2.1-preview.1.1", package_source=BAR_FEED)
+    def test_exact_test_filter_does_not_overlap_docker_sample(self):
+        args = common.test_args("console", skia="4.152.0-preview.1.1", harfbuzz="14.2.1-preview.1.1", package_directory=str(Path.cwd() / "output/nugets"))
         filter_value = args[args.index("--filter-class") + 1]
-        self.assertEqual(filter_value, "SkiaSharp.Tests.Integration.ConsoleTests")
-        self.assertIn(f"-p:PackageSource={BAR_FEED}", args)
+        self.assertEqual(filter_value, "SkiaSharp.Tests.Samples.SampleRunTests")
+        self.assertEqual(args[args.index("--filter-method") + 1], "*ConsoleRendersPng*")
+        self.assertIn(f"-p:PackageDirectory={Path.cwd() / 'output/nugets'}", args)
+        docker = common.test_args("linux", skia="s", harfbuzz="h", package_directory="output/nugets")
+        self.assertEqual(docker[docker.index("--filter-class") + 1], "SkiaSharp.Tests.Samples.DockerSampleTests")
+        self.assertEqual(docker[docker.index("--filter-method") + 1], "*DockerSampleRuns*")
+
+    def test_manual_item_opt_in_only_locally(self):
+        with (
+            mock.patch.object(common, "require_package_directory", return_value=Path.cwd()),
+            mock.patch.dict(common.os.environ, {"CI": "true"}, clear=True),
+            self.assertRaisesRegex(common.ReleaseTestError, "disabled in CI"),
+        ):
+            common.run_test(Path.cwd(), "blazor", SimpleNamespace(skia="s", harfbuzz="h", package_directory="output/nugets"))
+        with (
+            mock.patch.object(common, "require_package_directory", return_value=Path.cwd()),
+            mock.patch.dict(common.os.environ, {}, clear=True),
+            mock.patch.object(common, "run_streaming") as runner,
+        ):
+            common.run_test(Path.cwd(), "blazor", SimpleNamespace(skia="s", harfbuzz="h", package_directory="output/nugets"))
+            self.assertEqual(runner.call_args.kwargs["env"]["SKIASHARP_RUN_MANUAL_PLATFORM_TESTS"], "1")
+            common.run_test(Path.cwd(), "smoke", SimpleNamespace(skia="s", harfbuzz="h", package_directory="output/nugets"))
+            self.assertIsNone(runner.call_args.kwargs["env"])
+
+    def test_runners_reject_feed_only_and_partial_artifacts(self):
+        with self.assertRaisesRegex(common.ReleaseTestError, "artifact directory is missing"):
+            common.require_package_directory(BAR_FEED, "4.150.3", "14.2.1.3")
+        with tempfile.TemporaryDirectory(dir=Path.cwd() / "output") as folder:
+            directory = Path(folder)
+            for package in ("SkiaSharp.4.150.3.nupkg", "SkiaSharp.HarfBuzz.4.150.3.nupkg", "HarfBuzzSharp.14.2.1.3.nupkg"):
+                (directory / package).touch()
+            with self.assertRaisesRegex(common.ReleaseTestError, "prerequisite is missing"):
+                common.require_package_directory(folder, "4.150.3", "14.2.1.3")
 
     def test_android_image_selection_requires_exact_version(self):
         packages = [
@@ -112,10 +143,10 @@ class ReleaseTestRunnerTests(unittest.TestCase):
 
     def test_split_parsers_accept_their_platform_options(self):
         android_args = android.create_parser().parse_args(
-            ["37.1", "--skiasharp", "s", "--harfbuzzsharp", "h", "--package-source", BAR_FEED, "--device", "pixel_9", "--device-id", "emulator-5554"]
+            ["37.1", "--skiasharp", "s", "--harfbuzzsharp", "h", "--package-directory", "output/nugets", "--device", "pixel_9", "--device-id", "emulator-5554"]
         )
-        ios_args = ios.create_parser().parse_args(["26.5", "--skiasharp", "s", "--harfbuzzsharp", "h", "--package-source", BAR_FEED])
-        host_args = host.create_parser().parse_args(["linux", "--skiasharp", "s", "--harfbuzzsharp", "h", "--package-source", BAR_FEED])
+        ios_args = ios.create_parser().parse_args(["26.5", "--skiasharp", "s", "--harfbuzzsharp", "h", "--package-directory", "output/nugets"])
+        host_args = host.create_parser().parse_args(["linux", "--skiasharp", "s", "--harfbuzzsharp", "h", "--package-directory", "output/nugets"])
         self.assertEqual(android_args.version, "37.1")
         self.assertEqual(android_args.device, "pixel_9")
         self.assertEqual(android_args.device_id, "emulator-5554")
@@ -141,7 +172,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         self.assertEqual(common.APPIUM_COMMAND, ["npm", "exec", "--no", "--", "appium"])
 
     def test_android_environment_is_refreshed_each_run(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory(dir=Path.cwd() / "output") as directory:
             sdk = Path(directory) / "android"
             jdk = Path(directory) / "java"
             old_sdk = Path(directory) / "old-android"
@@ -190,10 +221,11 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         self.assertIn("command finished after 6s (exit 0): slow-tool", output.getvalue())
 
     def test_item_reports_start_and_pass(self):
-        args = SimpleNamespace(command="smoke", skia="s", harfbuzz="h", package_source=BAR_FEED)
+        args = SimpleNamespace(command="smoke", skia="s", harfbuzz="h", package_directory="output/nugets")
         output = io.StringIO()
         with (
             mock.patch.object(common, "repository_root", return_value=Path.cwd()),
+            mock.patch.object(common, "require_package_directory", return_value=Path.cwd()),
             mock.patch.object(common.time, "monotonic", side_effect=[0, 7]),
             contextlib.redirect_stdout(output),
         ):

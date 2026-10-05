@@ -5,10 +5,29 @@ Param(
   # Tizen version in "BAND/VERSION" format, e.g., "10.0.100/10.0.123"
   [string] $Tizen = '',
   # Override the default workloads (comma-separated, e.g. "android,maui-android")
-  [string] $Workloads = ''
+  [string] $Workloads = '',
+  # Select an additional SDK without changing the repository global.json.
+  [string] $SdkVersion = ''
 )
 
 $ErrorActionPreference = 'Stop'
+
+$sdkDirectory = $null
+if ($SdkVersion) {
+  $sdkDirectory = Join-Path ([IO.Path]::GetTempPath()) "skiasharp-workloads-$([guid]::NewGuid())"
+  New-Item -ItemType Directory -Path $sdkDirectory | Out-Null
+  @{ sdk = @{ version = $SdkVersion; rollForward = 'disable'; allowPrerelease = $true } } |
+    ConvertTo-Json | Set-Content -LiteralPath (Join-Path $sdkDirectory 'global.json')
+  Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../../../nuget.config') -Destination $sdkDirectory
+  Push-Location $sdkDirectory
+}
+try {
+if ($SdkVersion) {
+  $actualSdk = & dotnet --version
+  if ($LASTEXITCODE -ne 0 -or $actualSdk.Trim() -ne $SdkVersion) {
+    throw "Expected SDK $SdkVersion, selected $actualSdk"
+  }
+}
 
 # Parse Tizen parameter (format: BAND/VERSION)
 if ($Tizen -and $Tizen -ne '<latest>') {
@@ -50,6 +69,14 @@ if ($TizenBand -and $TizenVersion) {
   New-Item -ItemType Directory -Force $manifestDir | Out-Null
   Expand-Archive -Path './output/tmp/tizen-manifest.nupkg' -DestinationPath './output/tmp/tizen-manifest' -Force
   Copy-Item -Force './output/tmp/tizen-manifest/data/*' $manifestDir/
+  if ($SdkVersion) {
+    $sdkParts = ($SdkVersion -split '-')[0] -split '\.'
+    $featureBand = "$($sdkParts[0]).$($sdkParts[1]).$([math]::Floor([int]$sdkParts[2] / 100) * 100)"
+    if ($SdkVersion -match '-((?:preview|rc)\.\d+)') { $featureBand += "-$($Matches[1])" }
+    $selectedManifestDir = Join-Path $dotnetRoot "sdk-manifests/$featureBand/samsung.net.sdk.tizen"
+    New-Item -ItemType Directory -Force $selectedManifestDir | Out-Null
+    Copy-Item -Force './output/tmp/tizen-manifest/data/*' $selectedManifestDir/
+  }
 }
 
 # Build workload list
@@ -57,6 +84,7 @@ if ($Workloads) {
   $WorkloadList = $Workloads -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 } else {
   $WorkloadList = @('android', 'macos', 'wasm-tools')
+  if ($SdkVersion -like '11.*') { $WorkloadList += 'wasm-tools-net10' }
   if ($IsLinux) {
     $WorkloadList += @('maui-android')
   } else {
@@ -79,3 +107,10 @@ if ($TizenBand) {
 
 Write-Host "Installed workloads:"
 & dotnet workload list
+if ($LASTEXITCODE -ne 0) { throw "Could not list installed workloads" }
+} finally {
+  if ($sdkDirectory) {
+    Pop-Location
+    Remove-Item -LiteralPath $sdkDirectory -Recurse -Force
+  }
+}

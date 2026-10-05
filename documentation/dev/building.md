@@ -13,7 +13,7 @@ This guide covers building SkiaSharp on Windows and macOS.
     * [Building](#building)
  * [Native Building](#native-building)
     * [Dependencies](#dependencies-1)
- * [MSBuild Package-Consumer Tests](#msbuild-package-consumer-tests)
+ * [Sample and Package-Consumer Tests](#sample-and-package-consumer-tests)
  * [Documentation Outputs](#documentation-outputs)
 
 ## Prerequisites
@@ -167,15 +167,23 @@ dotnet cake --target=externals-linux --arch=x64
 
 > **Tip:** Native builds can take 10-30 minutes depending on your machine. Only build for platforms you need to test.
 
-## MSBuild Package-Consumer Tests
+## Sample and Package-Consumer Tests
 
-`tests/SkiaSharp.Tests.MSBuild` tests real packed SkiaSharp and HarfBuzzSharp
-packages using isolated .NET console consumers. It does not build the bindings,
-load native libraries into the test runner, or use the repository's native-copy
-targets. Install the stable and preview SDKs selected by `DOTNET_VERSION` and
+`tests/SkiaSharp.Tests.Samples` builds generated, package-referenced samples
+with one SDK per invocation; YAML runs the .NET 10 and .NET 11 profiles separately,
+retaining the samples' declared targets. Gallery is build-only. The same project preserves the 48 native
+package-output tests using isolated .NET console consumers. The runner also references
+the same artifact-matched SkiaSharp/HarfBuzzSharp packages for native smoke checks
+and image decoding; it does not build the bindings or use their native-copy targets.
+Install the stable and preview SDKs selected by `DOTNET_VERSION` and
 `DOTNET_VERSION_PREVIEW` in `scripts/azure-templates-variables.yml`; no mobile workloads,
 submodules, GPU, browser, native source build, or native runtime dependencies are
-needed. These tests inspect build/publish output without executing native code.
+needed for the package-output subset. These tests inspect build/publish output without executing native code.
+The sample subset additionally requires the host's mobile/WASM/Tizen workloads
+for the selected SDK. Docker remains optional and runs each existing net10 console
+and Web API check once per invocation, using the unchanged Dockerfiles.
+Their rendered PNGs are decoded and retained; full page screenshot/golden checks
+are not enabled on CI yet. See [building-samples.md](building-samples.md).
 
 Download the `nuget` artifact from one exact completed SkiaSharp CI build and
 place its packages in `output/nugets`. Record the build URL/commit when reporting
@@ -184,20 +192,26 @@ missing artifacts. Both families require their core, `NativeAssets.Win32`,
 `NativeAssets.macOS`, and `NativeAssets.Linux` packages; package versions are read
 from their nuspec metadata, not inferred from the checkout.
 
-For local runs, select the configured preview SDK in `global.json` before running
-either entry point below; keep the .NET 10 runtime installed for the test runner.
-Run the CI entry point from the repository root:
+Keep the repository's stable `global.json` unchanged. The runner uses net10;
+each consumer inherits the full repository configuration unless an exact SDK
+override is supplied. An override pins the SDK with roll-forward disabled and
+can also pin `sdk.workloadVersion`. Run the combined entry point from the repository root, passing
+the package suffix described in [building-samples.md](building-samples.md):
 
 ```sh
-dotnet cake --target=tests-msbuild
+dotnet cake --target=samples --previewLabel=preview.0 --buildNumber=<package-build-number>
 ```
 
-Or run the test project directly against a local artifact directory:
+Or run just the package-output subset against a local artifact directory,
+without generating samples or installing sample workloads:
 
 ```sh
-dotnet test tests/SkiaSharp.Tests.MSBuild/SkiaSharp.Tests.MSBuild.csproj \
+dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
   -p:PackageDirectory=/absolute/path/to/nugets \
-  -- --report-trx --results-directory /absolute/path/to/test-results
+  -p:SampleSdkVersion=<DOTNET_VERSION_PREVIEW> \
+  -p:ConsumerTargetFramework=net11.0 \
+  -- --filter-trait "Category=PackageOutput" "Category=PackageMultiTarget" \
+  --report-trx --results-directory /absolute/path/to/test-results
 ```
 
 `NativeAssetOutputTests.cs` contains the package references, scenarios, and
@@ -207,8 +221,10 @@ intermediate, and output directories. Source mapping restricts SkiaSharp and
 HarfBuzzSharp packages to the supplied artifacts, so missing packages cannot
 fall back to public versions. User NuGet caches and input packages are not modified.
 
-Single-target theory inputs explicitly cover `net10.0` and `net11.0`, independently
-of the selected SDK: eight default-package rows and 36 RID rows (44 total).
+Single-target theory inputs cover the explicit `ConsumerTargetFramework` and its
+previous major TFM: net9/net10 for a net10 profile, net10/net11 for a net11 profile.
+The consumer TFM defaults to net10 and is independent of the runner TFM or SDK version.
+There are eight default-package rows and 36 RID rows (44 total) in `Category=PackageOutput`.
 For each family and framework, build and publish first verify the default package
 includes Win32/macOS native assets and **no Linux native assets**. With an explicit
 `NativeAssets.Linux` reference, the nine-case matrix below verifies that Linux
@@ -230,37 +246,46 @@ Linux assets are explicitly referenced; this suite does not change package
 dependencies or filtering behavior. No fake packages or mock CLI are used.
 
 Four additional theory cases cover each family with `build` and `publish` of a
-real console project declaring `TargetFrameworks=net10.0;net11.0`, for **48 tests**
-in total. The outer build omits `--framework` and `-o`, validating both normal
+real console project declaring both previous/current TFMs, for **48 tests**
+in total. These four cases have `Category=PackageMultiTarget`, independently
+selectable from the single-target cases. The outer build omits `--framework` and `-o`, validating both normal
 per-framework output trees. Publish selects each framework separately with
 `--framework` and distinct output directories, then rechecks both trees to catch
 cross-framework overwrites. These cases validate eight framework outputs,
 including restored frameworks, runtime TFM, native paths, and package hashes.
-Both publish invocations retain separate command, stdout/stderr, and binlog
-diagnostics; cleanup preserves restore/dependency/runtime metadata per framework.
+Both publish invocations emit their command output through the test runner and
+retain separate MSBuild binlogs.
 
-TRX results, generated projects, command logs, binlogs, restore/dependency
-metadata, and failed-consumer outputs are published from `output/logs/` in CI.
-Successful build outputs are removed after assertions. The consumer diagnostics
-default to `output/logs/testlogs/msbuild`; override
-`-p:MSBuildTestArtifactsDirectory=/absolute/path/to/diagnostics` for a direct run.
-Private restore caches are not included in diagnostic artifacts.
+CI publishes TRX results and binlogs from `output/logs/`. Build commands and
+stdout/stderr are included in normal test output. The package-output helper
+retains its existing consumer and restore metadata, without a separate sample
+plan or failure-snapshot framework. Binlogs default to
+`output/logs/testlogs/samples`; override
+`-p:SampleTestArtifactsDirectory=/absolute/path/to/binlogs` for a direct run.
+Build products and private restore caches are cleaned after the test run.
 
-The **MSBuild package tests** CI stage runs three jobs on Windows, macOS, and
-Linux, each installing `DOTNET_VERSION` and `DOTNET_VERSION_PREVIEW`
-side-by-side, without workloads.
-The runner stays on `net10.0` using the stable runtime; all consumers use the
-selected .NET 11 SDK but target `net10.0` and `net11.0` independently through
-explicit theory inputs or a multi-target project. Each case checks the restored
+The existing **Samples** CI stage runs six jobs: Windows, macOS and Linux for
+each of the net10/net11 consumer profiles. Each invocation receives one exact
+SDK/workload pin and consumer TFM from YAML, installing the selected SDK alongside
+the runner SDK where needed. It publishes TRX even after failures and does
+not retry the whole test run. There is no separate MSBuild stage or runner.
+The runner stays on `net10.0` using the repository SDK/runtime; synthetic consumers
+use the selected SDK and previous/current consumer TFMs through explicit theory
+inputs or a multi-target project. Samples retain their declared TFMs and Docker
+retains its net10 images in both profiles. Each case checks the restored
 framework and consumer runtime configuration as well as native paths and hashes.
-SDK provisioning uses the shared preview version; these desktop jobs do not install workloads.
-The exact selected SDK and dotnet host are captured in the runner's
-runtime configuration, and every consumer pins that SDK with roll-forward disabled.
+SDK provisioning uses the shared version pins; additional workload installation
+uses a temporary SDK-specific `global.json`, not the repository root.
+SDK overrides, the consumer TFM and dotnet host are captured in the runner's
+runtime configuration. Explicit SDK overrides are verified exactly; default
+selection follows the repository's complete `global.json` and its roll-forward policy.
 In combined CI it depends on `package`; in downstream Tests it depends on `prepare`
 and downloads the exact SkiaSharp pipeline-resource run's artifact. It runs
-alongside Samples without changing the prerequisites of existing source/unit/
-device tests. Its failures are reported independently and still fail the pipeline.
-The existing release/platform Integration suite remains a separate entry point.
+inside Samples without changing the prerequisites of existing source/unit/
+device tests. Each scenario has its own test result and failures still fail the pipeline.
+The former Integration project's local browser/device/desktop checks and goldens
+are in the same project, under `ManualPlatform`. They require explicit local
+opt-in and are skipped on CI; there is no separate Integration project.
 
 ## Documentation Outputs
 

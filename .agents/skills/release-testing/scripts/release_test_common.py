@@ -4,6 +4,7 @@
 from __future__ import annotations
 import argparse
 import json
+import os
 from pathlib import Path
 import re
 import shlex
@@ -17,7 +18,36 @@ ANDROID_MIN_VERSION = "26"
 ANDROID_MAX_VERSION = "37.1"
 IOS_MIN_VERSION = "18.6"
 IOS_MAX_VERSION = "26.5"
-TEST_PROJECT = "tests/SkiaSharp.Tests.Integration/SkiaSharp.Tests.Integration.csproj"
+TEST_PROJECT = "tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj"
+SKIA_SATELLITES = (
+    "SkiaSharp.NativeAssets.Android",
+    "SkiaSharp.NativeAssets.iOS",
+    "SkiaSharp.NativeAssets.MacCatalyst",
+    "SkiaSharp.NativeAssets.Win32",
+    "SkiaSharp.NativeAssets.Linux.NoDependencies",
+    "SkiaSharp.NativeAssets.WebAssembly",
+    "SkiaSharp.Views.Blazor",
+    "SkiaSharp.Views.Maui.Controls",
+)
+HARFBUZZ_SATELLITES = (
+    "HarfBuzzSharp.NativeAssets.Android",
+    "HarfBuzzSharp.NativeAssets.iOS",
+    "HarfBuzzSharp.NativeAssets.MacCatalyst",
+    "HarfBuzzSharp.NativeAssets.Win32",
+    "HarfBuzzSharp.NativeAssets.Linux",
+    "HarfBuzzSharp.NativeAssets.WebAssembly",
+)
+TEST_SELECTORS = {
+    "smoke": ("SkiaSharp.Tests.Samples.PlatformTests.SmokeTests", None),
+    "console": ("SkiaSharp.Tests.Samples.SampleRunTests", "*ConsoleRendersPng*"),
+    "linux": ("SkiaSharp.Tests.Samples.DockerSampleTests", "*DockerSampleRuns*"),
+    "blazor": ("SkiaSharp.Tests.Samples.PlatformTests.BlazorTests", None),
+    "maccatalyst": ("SkiaSharp.Tests.Samples.PlatformTests.MauiMacCatalystTests", None),
+    "windows": ("SkiaSharp.Tests.Samples.PlatformTests.MauiWindowsTests", None),
+    "android": ("SkiaSharp.Tests.Samples.PlatformTests.MauiAndroidTests", None),
+    "ios": ("SkiaSharp.Tests.Samples.PlatformTests.MauiiOSTests", None),
+}
+MANUAL_TESTS = {"blazor", "maccatalyst", "windows", "android", "ios"}
 APPIUM_COMMAND = ["npm", "exec", "--no", "--", "appium"]
 MINIMUM_APPIUM_VERSION = "3.6.0"
 MINIMUM_APPIUM_DRIVERS = {"mac2": "4.1.1", "uiautomator2": "8.2.2", "xcuitest": "12.1.2"}
@@ -84,13 +114,13 @@ def resolve_command(args: list[str]) -> list[str]:
     return resolved
 
 
-def run_streaming(args: list[str], *, cwd: Path, capture: bool = False, check: bool = True) -> subprocess.CompletedProcess[str]:
+def run_streaming(args: list[str], *, cwd: Path, capture: bool = False, check: bool = True, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
     args = resolve_command(args)
     command = display(args)
     started = time.monotonic()
     print(f"[release-test] command started: {command}", flush=True)
     try:
-        process = subprocess.Popen(args, cwd=cwd, text=True, stdout=subprocess.PIPE if capture else None, stderr=subprocess.PIPE if capture else None)
+        process = subprocess.Popen(args, cwd=cwd, env=env, text=True, stdout=subprocess.PIPE if capture else None, stderr=subprocess.PIPE if capture else None)
     except FileNotFoundError as error:
         raise ReleaseTestError(f"{args[0]} was not found on PATH") from error
     while True:
@@ -185,38 +215,62 @@ def require_appium_driver(root: Path, driver: str) -> None:
 def add_package_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--skiasharp", dest="skia", required=True)
     parser.add_argument("--harfbuzzsharp", dest="harfbuzz", required=True)
-    parser.add_argument("--package-source", required=True)
+    parser.add_argument("--package-directory", required=True, help="Full canonical package output for the selected build (not a BAR feed URL)")
 
 
-def test_args(test_class: str, *, skia: str, harfbuzz: str, package_source: str, properties: dict[str, str] | None = None) -> list[str]:
+def require_package_directory(package_directory: str, skia: str, harfbuzz: str) -> Path:
+    directory = Path(package_directory).resolve()
+    if not directory.is_dir():
+        raise ReleaseTestError(f"package artifact directory is missing: {directory}; supply the full canonical output/nugets for this build")
+    for package_id, version in (
+        *((name, skia) for name in ("SkiaSharp", "SkiaSharp.HarfBuzz", *SKIA_SATELLITES)),
+        *((name, harfbuzz) for name in ("HarfBuzzSharp", *HARFBUZZ_SATELLITES)),
+    ):
+        package = directory / f"{package_id}.{version}.nupkg"
+        if not package.is_file():
+            raise ReleaseTestError(f"full package artifact prerequisite is missing: {package}")
+    return directory
+
+
+def test_args(item: str, *, skia: str, harfbuzz: str, package_directory: str, properties: dict[str, str] | None = None) -> list[str]:
+    test_class, method = TEST_SELECTORS[item]
     args = [
         "dotnet",
         "test",
         TEST_PROJECT,
         f"-p:SkiaSharpVersion={skia}",
         f"-p:HarfBuzzSharpVersion={harfbuzz}",
-        f"-p:PackageSource={package_source}",
-        "-p:BaseFramework=net10.0",
-        "-p:SdkVersion=10.0.401",
-        "-p:SdkAllowPrerelease=false",
+        f"-p:PackageDirectory={package_directory}",
+        "-p:TargetFramework=net10.0",
+        "-p:TargetFrameworks=net10.0",
     ]
     for name, value in (properties or {}).items():
         args.append(f"-p:{name}={value}")
-    args.extend(["--", "--filter-class", f"SkiaSharp.Tests.Integration.{test_class}"])
+    args.extend(["--", "--filter-class", test_class])
+    if method:
+        args.extend(["--filter-method", method])
     return args
 
 
-def run_test(root: Path, test_class: str, args, *, properties: dict[str, str] | None = None) -> None:
-    run_streaming(test_args(test_class, skia=args.skia, harfbuzz=args.harfbuzz, package_source=args.package_source, properties=properties), cwd=root)
+def run_test(root: Path, item: str, args, *, properties: dict[str, str] | None = None) -> None:
+    directory = require_package_directory(args.package_directory, args.skia, args.harfbuzz)
+    env = None
+    if item in MANUAL_TESTS:
+        if any(os.environ.get(name, "").lower() not in {"", "0", "false"} for name in ("TF_BUILD", "GITHUB_ACTIONS", "CI")):
+            raise ReleaseTestError("manual platform/browser tests are disabled in CI; no release approval can be inferred from a skipped test")
+        env = {**os.environ, "SKIASHARP_RUN_MANUAL_PLATFORM_TESTS": "1"}
+    run_streaming(test_args(item, skia=args.skia, harfbuzz=args.harfbuzz, package_directory=str(directory), properties=properties), cwd=root, env=env)
 
 
 def execute_item(args, action) -> int:
     started = time.monotonic()
     print(
-        f"[release-test] item started: {args.command}; SkiaSharp={args.skia}; " f"HarfBuzzSharp={args.harfbuzz}; PackageSource={args.package_source}",
+        f"[release-test] item started: {args.command}; SkiaSharp={args.skia}; "
+        f"HarfBuzzSharp={args.harfbuzz}; PackageDirectory={args.package_directory}",
         flush=True,
     )
     try:
+        require_package_directory(args.package_directory, args.skia, args.harfbuzz)
         action(repository_root(), args)
     except ReleaseTestError as error:
         elapsed = display_duration(time.monotonic() - started)

@@ -41,8 +41,8 @@ rerun with `--bar-id`.
 **`SkiaSharp ... was not found in Maestro`** — confirm the exact version. If
 the build is older than 30 days, increase `--max-age`; do not change versions.
 
-**`BAR build ... is already released`** — this is not a pre-publication
-approval candidate. Do not route around the rejection.
+**`BAR build ... is already released`** — the legacy planner only handles
+unreleased candidates. Do not route around the rejection.
 
 **`BAR build ... has no NuGet feed locations`** — the build has not published a
 testable Darc feed. Inspect the BAR/build rather than choosing another feed.
@@ -59,10 +59,10 @@ Wait for indexing or repair that build; do not substitute another BAR.
 
 **`contains ... nuspecs`**, **`has no nuspec metadata`**, or
 **`has inconsistent source metadata`** — the package cannot establish one exact
-identity. Do not approve the BAR.
+identity. Do not run the matrix against it.
 
 **`CI package source metadata does not match`** — the selected BAR package
-family is not coherent under the current policy. Do not approve it.
+family is not coherent under the current policy. Do not run the matrix against it.
 
 **`BAR build and package source metadata do not match`** — the feed does not
 belong to the Darc-selected build. Do not execute the matrix.
@@ -86,9 +86,9 @@ feed.
 | Local `android` / `apple` tool is unavailable | Pinned manifest has not been restored | Run `pwsh -NoLogo -NoProfile -File .agents/skills/release-testing/scripts/prepare-test-run.ps1`; it performs `dotnet tool restore` |
 | `the maui workload is not installed` | Missing workload | Record affected MAUI items, continue unrelated coverage, then ask whether to install `maui` or explicitly amend the matrix |
 | `the wasm-tools workload is not installed` | Missing workload | Record Blazor as failed, continue unrelated coverage, then ask whether to install `wasm-tools` or explicitly amend the matrix |
-| `SkiaSharpVersion must be the exact package version` | Missing version param | Add both exact SkiaSharp and HarfBuzzSharp versions emitted by the planner |
-| `HarfBuzzSharpVersion must be the exact package version` | Missing version param | Use the distinct HarfBuzzSharp version emitted by the planner |
-| Generated platform package cannot be restored | A satellite package such as `SkiaSharp.Views.Blazor`, `SkiaSharp.Views.Maui.Controls`, or `SkiaSharp.NativeAssets.Linux.NoDependencies` is unavailable at the exact version | Confirm the satellite package exists on the selected BAR feed and retry the same build; dependencies continue to resolve from dotnet-public |
+| `full package artifact prerequisite is missing` | The BAR feed URL is not a complete local artifact directory | Supply `--package-directory` with the full canonical `output/nugets` from the exact selected build, including native assets; never substitute a partial download |
+| `does not match the selected BAR source/identity` | Local packages came from a different build | Replace the artifact directory with the selected BAR's canonical package set |
+| Generated platform package cannot be restored | A satellite package such as `SkiaSharp.Views.Blazor`, `SkiaSharp.Views.Maui.Controls`, or `SkiaSharp.NativeAssets.Linux.NoDependencies` is missing | Confirm it exists in the selected canonical artifact directory; dependencies continue to resolve from dotnet-public/dotnet-eng |
 
 ## Appium Errors
 
@@ -177,7 +177,7 @@ Or use Console.app → select simulator device.
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `Executable doesn't exist` | The pinned Playwright browser is not installed | After the integration project builds and with approval to install software, run `pwsh tests/SkiaSharp.Tests.Integration/bin/Debug/net10.0/playwright.ps1 install chromium` |
+| `Executable doesn't exist` | The pinned Playwright browser is not installed | After the sample host builds and with approval to install software, run `pwsh tests/SkiaSharp.Tests.Samples/bin/Debug/net10.0/playwright.ps1 install chromium` |
 | `Target page, context or browser has been closed` | Server crashed | Check app build output |
 | `Timeout waiting for selector` | App didn't render | Check Blazor app console for errors |
 | `Blazor server failed to start` | Env vars from parent | Fixed in test code (ClearDotNetEnvironmentVariables) |

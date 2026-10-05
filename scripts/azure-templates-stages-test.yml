@@ -14,6 +14,19 @@ parameters:
   - name: enableCaching
     type: boolean
     default: false
+  - name: sampleProfiles
+    type: object
+    default:
+      - name: net10
+        sdkVersion: $(DOTNET_VERSION)
+        workloadVersion: $(DOTNET_WORKLOAD_VERSION)
+        consumerTargetFramework: net10.0
+        testCategories: 'SampleBuild,PackageOutput,PackageMultiTarget,DockerBuild,SampleRun,RuntimeSmoke,Infrastructure'
+      - name: net11
+        sdkVersion: $(DOTNET_VERSION_PREVIEW)
+        workloadVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
+        consumerTargetFramework: net11.0
+        testCategories: 'SampleBuild,PackageOutput,PackageMultiTarget,DockerBuild,SampleRun,RuntimeSmoke,Infrastructure'
 
 stages:
 
@@ -662,39 +675,55 @@ stages:
       ${{ else }}:
         dependsOn: package
       jobs:
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Windows)
-          parameters:
-            name: samples_windows
-            displayName: Windows
-            buildAgent: ${{ parameters.buildAgentWindows}}
-            target: samples
-            requiredArtifacts:
-              - name: nuget
-                dir: nugets
-            postBuildSteps:
-              - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
-                displayName: Delete the nugets folder
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (macOS)
-          parameters:
-            name: samples_macos
-            displayName: macOS
-            buildAgent: ${{ parameters.buildAgentMac }}
-            target: samples
-            installNinja: true
-            shouldPublish: false
-            requiredArtifacts:
-              - name: nuget
-                dir: nugets
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
-          parameters:
-            name: samples_linux
-            displayName: Linux
-            buildAgent: ${{ parameters.buildAgentLinux }}
-            packages: $(MANAGED_LINUX_PACKAGES)
-            target: samples
-            shouldPublish: false
-            requiredArtifacts:
-              - name: nuget
-                dir: nugets
-            installEmsdk: true
-            initScript: source ~/emsdk/emsdk_env.sh
+        - ${{ each platform in split('windows,macos,linux', ',') }}:
+          - ${{ each profile in parameters.sampleProfiles }}:
+            - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+              parameters:
+                name: samples_${{ platform }}_${{ profile.name }}
+                ${{ if eq(platform, 'windows') }}:
+                  displayName: Windows (${{ profile.name }})
+                  buildAgent: ${{ parameters.buildAgentWindows }}
+                ${{ if eq(platform, 'macos') }}:
+                  displayName: macOS (${{ profile.name }})
+                  buildAgent: ${{ parameters.buildAgentMac }}
+                  installNinja: true
+                  variables:
+                    XCODE_VERSION: '26.5'
+                ${{ if eq(platform, 'linux') }}:
+                  displayName: Linux (${{ profile.name }})
+                  buildAgent: ${{ parameters.buildAgentLinux }}
+                  packages: $(MANAGED_LINUX_PACKAGES)
+                  installEmsdk: true
+                  initScript: source ~/emsdk/emsdk_env.sh
+                target: samples
+                additionalArgs: >-
+                  --sampleSdkVersion="${{ profile.sdkVersion }}"
+                  --sampleWorkloadVersion="${{ profile.workloadVersion }}"
+                  --consumerTargetFramework="${{ profile.consumerTargetFramework }}"
+                  --sampleTestCategories="${{ profile.testCategories }}"
+                retryCount: 0
+                timeoutInMinutes: 180
+                shouldPublish: ${{ and(eq(platform, 'windows'), eq(profile.name, 'net10')) }}
+                ${{ if ne(profile.sdkVersion, '$(DOTNET_VERSION)') }}:
+                  additionalDotNetSdks:
+                    - ${{ profile.sdkVersion }}
+                  additionalDotNetWorkloads:
+                    - sdkVersion: ${{ profile.sdkVersion }}
+                      workloadVersion: ${{ profile.workloadVersion }}
+                requiredArtifacts:
+                  - name: nuget
+                    dir: nugets
+                postBuildSteps:
+                  - task: PublishTestResults@2
+                    displayName: Publish sample and package-output test results
+                    condition: always()
+                    inputs:
+                      testResultsFormat: VSTest
+                      testResultsFiles: 'output/logs/testlogs/samples/**/*.trx'
+                      testRunTitle: '${{ platform }} Samples (${{ profile.name }})'
+                      failTaskOnFailedTests: true
+                      failTaskOnMissingResultsFile: true
+                publishArtifacts:
+                  - name: testlogs_samples_${{ platform }}_${{ profile.name }}
+                    always: true
+                    path: output/logs

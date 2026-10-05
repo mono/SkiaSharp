@@ -26,17 +26,22 @@ target, so they need downloadable NuGet packages.
 
 ## Workflow
 
-### Step 1: Clear cached packages
+### Step 1: Verify prerequisites
 
-```powershell
-rm -r -fo externals/package_cache/skiasharp*, externals/package_cache/harfbuzzsharp*
-```
+Install the stable and preview SDKs pinned in `scripts/azure-templates-variables.yml`.
+Keep root `global.json` unchanged. The `SkiaSharp.Tests.Samples` runner targets
+net10 and uses the repository SDK. Each invocation tests one selected consumer SDK;
+YAML owns the six OS/SDK runs. Samples keep their declared TFMs. An invocation
+without an SDK override inherits the full repository `global.json`.
+Never clear user/global NuGet caches.
 
-If you suspect deeper caching issues, also clear the global NuGet cache:
-
-```powershell
-dotnet nuget locals all --clear
-```
+Full sample coverage requires the host workloads for both SDK feature bands,
+including SDK 11's backward-targeting packs and `wasm-tools-net10`.
+Gallery is build-only. Docker is classified by Dockerfiles and has separate
+`DockerBuild` and `SampleRun` theories, included in both profiles. The host console
+also runs and saves its PNG. Existing Docker images are independent of the host SDK.
+The former Integration platform probes/goldens are in this project; `ManualPlatform`
+is local opt-in only and skips on CI.
 
 ### Step 2: Download CI packages
 
@@ -78,10 +83,20 @@ Full suffix:   preview.0.76
 
 Parse `Preview label` and `Build number` from the output for the next step.
 
-### Step 4: Build samples
+### Step 4: Test samples
 
 ```powershell
 dotnet cake --target=samples --previewLabel=<PREVIEW_LABEL> --buildNumber=<BUILD_NUMBER>
+```
+
+That uses repository SDK defaults and a net10 synthetic consumer profile
+(net9/net10 coverage). To test another explicit SDK/profile:
+
+```powershell
+dotnet cake --target=samples --previewLabel=<PREVIEW_LABEL> --buildNumber=<BUILD_NUMBER> `
+  --sampleSdkVersion=<DOTNET_VERSION_PREVIEW> `
+  --sampleWorkloadVersion=<DOTNET_WORKLOAD_VERSION_PREVIEW> `
+  --consumerTargetFramework=net11.0
 ```
 
 To build a single sample, add `--sample=<name>`:
@@ -90,13 +105,35 @@ To build a single sample, add `--sample=<name>`:
 dotnet cake --target=samples --previewLabel=<PREVIEW_LABEL> --buildNumber=<BUILD_NUMBER> --sample=Blazor
 ```
 
+C# theories enumerate eligible sample solutions and own builds and Docker staging.
+One invocation uses one SDK; YAML owns SDK iteration.
+Selection is the theory data, not a separate JSON plan.
+Cake keeps package-reference generation/ZIPs and uses shared `RunDotNetTest`.
+TRX and binlogs appear under `output/logs/testlogs/samples/`; commands and build
+output appear in normal test output.
+The same project includes 44 single-target `PackageOutput` cases and four
+`PackageMultiTarget` cases using the current/previous consumer TFMs; no separate
+MSBuild lane or preparation/run target exists. Select groups with
+`--sampleTestCategories=SampleBuild,PackageOutput,PackageMultiTarget,DockerBuild,SampleRun,RuntimeSmoke,Infrastructure`.
+These are the default host categories. All sample solutions are `.slnx`; no
+legacy solution/filter parsers or Docker PowerShell runners are used.
+
+For package-output-only diagnostics without workloads or sample generation:
+
+```powershell
+dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj `
+  -p:PackageDirectory=/absolute/path/to/nugets `
+  -p:SampleSdkVersion=<DOTNET_VERSION_PREVIEW> `
+  -p:ConsumerTargetFramework=net11.0 `
+  -- --filter-trait "Category=PackageOutput" "Category=PackageMultiTarget" --report-trx
+```
+
 ## Troubleshooting
 
-### Stale packages after repeated runs
-```powershell
-rm -r -fo externals/package_cache/skiasharp*, externals/package_cache/harfbuzzsharp*
-dotnet nuget locals all --clear
-```
+### Incorrect package versions
+Check the exact artifact identity and generated PackageReference versions.
+Each run has fresh private caches and artifact-only SkiaSharp/HarfBuzzSharp
+source mapping; do not change global caches or permit public fallback.
 
 ### Platform-specific samples not building
 Some platforms are disabled by default:
@@ -111,8 +148,10 @@ Some platforms are disabled by default:
 May need a newer `Microsoft.WindowsAppSDK` version.
 
 ### "The local source 'packages' doesn't exist" (Docker samples)
-Docker samples are built via `run.ps1` inside Docker, not `dotnet build`.
-The `samples-prepare` target copies nupkgs there automatically.
+The Samples test runner stages input nupkgs per Docker case and invokes Docker
+directly from C#. `sample.http` contains the Web API's plain GET requests;
+the first checks readiness and image responses are decoded/saved.
+Samples without that file use the console `output.png` convention.
 
 ## Further Reading
 

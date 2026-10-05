@@ -4,12 +4,18 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 #load "../shared/shared.cake"
 #load "../shared/msbuild.cake"
+#load "../tests/test-shared.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // SAMPLES TASKS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var SAMPLE_FILTER = Argument ("sample", "");
+var SAMPLE_SDK_VERSION = Argument ("sampleSdkVersion", "");
+var SAMPLE_WORKLOAD_VERSION = Argument ("sampleWorkloadVersion", "");
+var CONSUMER_TARGET_FRAMEWORK = Argument ("consumerTargetFramework", "net10.0");
+var SAMPLE_TEST_CATEGORIES = Argument ("sampleTestCategories",
+    "SampleBuild,PackageOutput,PackageMultiTarget,DockerBuild,SampleRun,RuntimeSmoke,Infrastructure");
 
 Task ("samples-generate")
     .Description ("Generate and zip the samples directory structure.")
@@ -26,187 +32,28 @@ Task ("samples-generate")
     Zip ($"{ROOT_PATH}/output/samples-preview/", $"{ROOT_PATH}/output/samples-preview.zip");
 });
 
-Task ("samples-prepare")
+Task ("samples")
     .IsDependentOn ("samples-generate")
-    .Description ("Prepare the generated samples for building (copy NuGet packages, etc.).")
+    .Description ("Test generated samples and packed NuGets.")
     .Does (() =>
 {
-    // clear cached SkiaSharp/HarfBuzzSharp packages so fresh ones are restored
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-});
-
-Task ("samples-run")
-    .Description ("Build and run the generated samples from the output directory.")
-    .Does(() =>
-{
-    // Each build now emits one package family. Build the generated tree whose
-    // references match that family instead of assuming stable packages coexist.
     var actualSamples = string.IsNullOrEmpty (PREVIEW_NUGET_SUFFIX)
         ? "samples"
         : "samples-preview";
-
-    // discover all samples: solutions for dotnet build, run.ps1 for Docker
-    var solutions =
-        GetFiles ($"{ROOT_PATH}/output/" + actualSamples + "/**/*.sln").Union (
-        GetFiles ($"{ROOT_PATH}/output/" + actualSamples + "/**/*.slnf")).Union (
-        GetFiles ($"{ROOT_PATH}/output/" + actualSamples + "/**/*.slnx"))
-        .OrderBy (x => x.FullPath)
-        .ToArray ();
-    var dockerRuns = GetFiles ($"{ROOT_PATH}/output/" + actualSamples + "/**/run.ps1")
-        .OrderBy (x => x.FullPath)
-        .ToArray ();
-
-    // apply --sample filter if specified
-    if (!string.IsNullOrEmpty (SAMPLE_FILTER)) {
-        solutions = solutions.Where (s => s.FullPath.Contains (SAMPLE_FILTER)).ToArray ();
-        dockerRuns = dockerRuns.Where (r => r.FullPath.Contains (SAMPLE_FILTER)).ToArray ();
-        Information ($"Filtered to {solutions.Length} solution(s) and {dockerRuns.Length} Docker sample(s) matching '{SAMPLE_FILTER}'");
-    }
-
-    // classify each solution: build, skip (has platform variant), or skip (wrong platform)
-    var samplesToBuild = new List<FilePath> ();
-    var samplesToSkip = new List<(FilePath sln, string reason)> ();
-
-    foreach (var sln in solutions) {
-        var name = sln.GetFilenameWithoutExtension ();
-        var slnPlatform = (name.GetExtension () ?? "").ToLower ();
-
-        // check if this sample has a Docker run.ps1 (Docker samples are built via run.ps1, not dotnet build)
-        if (dockerRuns.Any (r => r.GetDirectory ().FullPath == sln.GetDirectory ().FullPath)) {
-            samplesToSkip.Add ((sln, "Docker (built via run.ps1)"));
-            continue;
-        }
-
-        if (string.IsNullOrEmpty (slnPlatform)) {
-            // main solution — check for platform-specific variants
-            var variants =
-                GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln").Union (
-                GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnf")).Union (
-                GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnx"));
-            if (variants.Any ()) {
-                samplesToSkip.Add ((sln, "has platform-specific variant"));
-            } else {
-                samplesToBuild.Add (sln);
-            }
-        } else if (slnPlatform == $".{CURRENT_PLATFORM.ToLower ()}") {
-            samplesToBuild.Add (sln);
-        } else {
-            samplesToSkip.Add ((sln, $"wrong platform (need {slnPlatform})"));
-        }
-    }
-
-    // check if Docker is available
-    var dockerAvailable = false;
-    try {
-        RunProcess ("docker", new ProcessSettings {
-            Arguments = "info",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            Silent = true,
-        });
-        dockerAvailable = true;
-    } catch {
-        Warning ("Docker is not available. Docker samples will be skipped.");
-    }
-
-    // log the plan
-    Information ("Sample plan:");
-    foreach (var sln in samplesToBuild) {
-        Information ($"    BUILD       {sln}");
-    }
-    foreach (var (sln, reason) in samplesToSkip) {
-        Information ($"    SKIP        {sln} ({reason})");
-    }
-    foreach (var run in dockerRuns) {
-        Information ($"    {(dockerAvailable ? "DOCKER" : "SKIP  ")}      {run}{(dockerAvailable ? "" : " (Docker not available)")}");
-    }
-
-    // build dotnet samples
-    var failedSamples = new List<(string name, string error)> ();
-
-    foreach (var sln in samplesToBuild) {
-        if (!FileExists (sln))
-            continue;
-        var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
-        Information ($"Building sample {sln} ({platform})...");
-        try {
-            RunDotNetBuild (sln);
-        } catch (Exception ex) {
-            Error ($"FAILED: {sln}");
-            failedSamples.Add ((sln.FullPath, ex.Message));
-        }
-        CleanDir (sln.GetDirectory ().FullPath);
-    }
-
-    // build and run Docker samples
-    // To conserve disk space, nupkg files are copied per-sample and cleaned up
-    // after each build instead of bulk-copying all packages upfront.
-    if (!dockerAvailable) {
-        Information ("Skipping Docker samples (Docker not available).");
-    }
-    foreach (var run in dockerRuns) {
-        if (!dockerAvailable)
-            continue;
-
-        var sampleDir = run.GetDirectory ();
-
-        // stage nupkg files for this Docker sample
-        var packagesDir = sampleDir.Combine ("packages");
-        EnsureDirectoryExists (packagesDir);
-        CopyFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg", packagesDir);
-
-        Information ($"Running Docker sample: {run}");
-        try {
-            RunProcess ("pwsh", new ProcessSettings {
-                Arguments = run.FullPath,
-                WorkingDirectory = sampleDir,
-            });
-        } catch (Exception ex) {
-            Error ($"FAILED: {run}");
-            failedSamples.Add ((run.FullPath, ex.Message));
-        }
-
-        // clean up to reclaim disk space before the next sample
-        CleanDir (packagesDir);
-        DeleteDir (packagesDir);
-
-        // prune all unused Docker images and layers to reclaim disk space
-        try {
-            RunProcess ("docker", new ProcessSettings {
-                Arguments = "system prune --all --force",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                Silent = true,
-            });
-        } catch {
-            // non-fatal: best-effort cleanup
-        }
-    }
-
-    // report results
-    if (failedSamples.Count > 0) {
-        Information ("");
-        Error ($"{failedSamples.Count} sample(s) failed:");
-        foreach (var (name, error) in failedSamples) {
-            Error ($"    ✗ {name}");
-        }
-        throw new Exception ($"{failedSamples.Count} sample(s) failed to build.");
-    } else {
-        Information ("All samples built successfully.");
-    }
-
-    CleanDir ($"{ROOT_PATH}/output/samples/");
-    DeleteDir ($"{ROOT_PATH}/output/samples/");
-    CleanDir ($"{ROOT_PATH}/output/samples-preview/");
-    DeleteDir ($"{ROOT_PATH}/output/samples-preview/");
+    var results = ROOT_PATH.Combine($"output/logs/testlogs/samples/{DATE_TIME_STR}");
+    var properties = new Dictionary<string, string> {
+        { "PackageDirectory", OUTPUT_NUGETS_PATH.FullPath },
+        { "SamplesDirectory", ROOT_PATH.Combine("output/" + actualSamples).FullPath },
+        { "SampleTestArtifactsDirectory", results.FullPath },
+        { "SampleSdkVersion", SAMPLE_SDK_VERSION },
+        { "SampleWorkloadVersion", SAMPLE_WORKLOAD_VERSION },
+        { "ConsumerTargetFramework", CONSUMER_TARGET_FRAMEWORK },
+        { "SampleFilter", SAMPLE_FILTER },
+    };
+    var categories = SAMPLE_TEST_CATEGORIES.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+    RunDotNetTest(ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj"),
+        results, properties: properties, noBuild: SKIP_BUILD, hangTimeout: "40m", categories: categories);
 });
-
-Task ("samples")
-    .Description ("Generate, prepare, and run all samples.")
-    .IsDependentOn ("samples-generate")
-    .IsDependentOn ("samples-prepare")
-    .IsDependentOn ("samples-run");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPER FUNCTIONS
@@ -216,9 +63,6 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
 {
     samplesDirPath = MakeAbsolute(samplesDirPath);
     outputDirPath = MakeAbsolute(outputDirPath);
-
-    var solutionProjectRegex = new Regex(@",\s*""(.*?\.\w{2}proj)"", ""(\{.*?\})""");
-    var solutionFilterProjectRegex = new Regex(@"\s*""(.+)\.csproj"",?");
 
     CleanDir (outputDirPath);
 
@@ -240,73 +84,7 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
         var dest = outputDirPath.CombineWithFilePath(rel);
         var ext = file.GetExtension() ?? "";
 
-        if (ext.Equals(".sln", StringComparison.OrdinalIgnoreCase)) {
-            var lines = FileReadLines(file.FullPath).ToList();
-            var guids = new List<string>();
-
-            // remove projects that aren't samples
-            for(var i = 0; i < lines.Count; i++) {
-                var line = lines [i];
-                var m = solutionProjectRegex.Match(line);
-                if (!m.Success)
-                    continue;
-
-                // get the path of the project relative to the samples directory
-                var relProjectPath = (FilePath) m.Groups [1].Value;
-                var absProjectPath = GetFullPath(file, relProjectPath);
-                var relSamplesPath = samplesDirPath.GetRelativePath(absProjectPath);
-                if (!relSamplesPath.FullPath.StartsWith(".."))
-                    continue;
-
-                Debug($"Removing the project '{relProjectPath}' for solution '{rel}'.");
-
-                // skip the next line as it is the "EndProject" line
-                guids.Add(m.Groups [2].Value.ToLower());
-                lines.RemoveAt(i--);
-                lines.RemoveAt(i--);
-            }
-
-            // remove all the other references to this guid
-            if (guids.Count > 0) {
-                for(var i = 0; i < lines.Count; i++) {
-                    var line = lines [i];
-                    foreach (var guid in guids) {
-                        if (line.ToLower().Contains(guid)) {
-                            lines.RemoveAt(i--);
-                        }
-                    }
-                }
-            }
-
-            // save the solution
-            EnsureDirectoryExists(dest.GetDirectory());
-            FileWriteLines(dest, lines.ToArray());
-        } else if (ext.Equals(".slnf", StringComparison.OrdinalIgnoreCase)) {
-            var lines = FileReadLines(file.FullPath).ToList();
-
-            // remove projects that aren't samples
-            for(var i = 0; i < lines.Count; i++) {
-                var line = lines [i];
-                var m = solutionFilterProjectRegex.Match(line);
-                if (!m.Success)
-                    continue;
-
-                // get the path of the project relative to the samples directory
-                var relProjectPath = (FilePath) m.Groups [1].Value.Replace("\\\\", "\\");
-                var absProjectPath = GetFullPath(file, relProjectPath);
-                var relSamplesPath = samplesDirPath.GetRelativePath(absProjectPath);
-                if (!relSamplesPath.FullPath.StartsWith(".."))
-                    continue;
-
-                Debug($"Removing the project '{relProjectPath}' for solution '{rel}'.");
-
-                lines.RemoveAt(i--);
-            }
-
-            // save the solution
-            EnsureDirectoryExists(dest.GetDirectory());
-            FileWriteLines(dest, lines.ToArray());
-        } else if (ext.Equals(".slnx", StringComparison.OrdinalIgnoreCase)) {
+        if (ext.Equals(".slnx", StringComparison.OrdinalIgnoreCase)) {
             var xdoc = XDocument.Load(file.FullPath);
 
             // remove projects that aren't in the samples directory

@@ -64,9 +64,9 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 ### 5. Test Projects
 
 - [ ] `tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj` — Uses `$(MauiTargetFrameworksAppCurrent)`
-- [ ] `tests/SkiaSharp.Tests.Integration/SkiaSharp.Tests.Integration.csproj` — Hardcoded TFM
-- [ ] `tests/SkiaSharp.Tests.Integration/Tests/LinuxConsoleTests.cs` — Hardcoded TFM in string template
-- [ ] `tests/SkiaSharp.Tests.Integration/Tests/Maui*Tests.cs` — Hardcoded TFMs in `TargetFramework` property
+- [ ] `tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj` — Host TFM and `ConsumerTargetFramework` default; confirm the generated previous/current consumer TFMs
+- [ ] `tests/SkiaSharp.Tests.Samples/PlatformTests/Maui*Tests.cs` — Platform TFMs derive from `ConsumerTargetFramework`
+- [ ] `samples/Basic/DockerConsole/*Dockerfile` and `samples/Basic/DockerWebApi/*Dockerfile` — Floating SDK major for isolated Docker sample builds
 
 ### 6. Cake Build Scripts
 
@@ -116,10 +116,10 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 - [ ] Keep isolated consumer/sample contexts on the floating .NET major tag so they exercise the latest servicing release:
   - `samples/Basic/DockerConsole/{linux,windows}.Dockerfile`
   - `samples/Basic/DockerWebApi/{linux,windows}.Dockerfile`
-  - The generated Dockerfile string in `tests/SkiaSharp.Tests.Integration/Tests/LinuxConsoleTests.cs`
+  - Docker sample images in `samples/Basic/DockerConsole/` and `samples/Basic/DockerWebApi/`
 - [ ] Verify every complete MCR tag exists with `docker manifest inspect mcr.microsoft.com/dotnet/sdk:<tag>`. Verify SDKs installed by `dotnet-install.sh` have published artifacts for every host architecture used by the image.
 
-Images that run `dotnet` against the checked-out repository must provide an SDK compatible with the root `global.json`; this includes the local docs image, CI container-test images, and `tests/Dockerfile.linux`. The sample Dockerfiles and generated Linux integration-test project build isolated contexts without the repository `global.json`, so their floating current-major SDK tags intentionally validate the latest servicing release for `TFMCurrent`.
+Images that run `dotnet` against the checked-out repository must provide an SDK compatible with the root `global.json`; this includes the local docs image, CI container-test images, and `tests/Dockerfile.linux`. The Docker sample images build isolated contexts without the repository `global.json`, so their floating current-major SDK tags intentionally validate the latest servicing release for `TFMCurrent`.
 
 Keep each distro/OS suffix unchanged when updating either kind of image. For example, an SDK bump should preserve suffixes such as `-noble`, `-alpine3.23`, `-azurelinux3.0`, and `-nanoserver-ltsc2022`. Runtime and ASP.NET base images are separate from the build SDK pin; do not change them as part of an SDK-only alignment unless the runtime itself is also being updated.
 
