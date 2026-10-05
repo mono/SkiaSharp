@@ -74,9 +74,9 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 - [Xcode](https://developer.apple.com/xcode/) matching `XCODE_VERSION` in the
   [build tool versions](../../scripts/azure-templates-variables.yml)
 - Command Line Tools: `xcode-select --install`
-- For tvOS storyboard compilation, install the matching simulator runtime:
+- For tvOS storyboard compilation, install a simulator runtime supported by the selected Xcode:
   ```bash
-  xcodebuild -downloadPlatform tvOS -buildVersion "$(xcrun --sdk appletvsimulator --show-sdk-version)"
+  xcodebuild -downloadPlatform tvOS
   ```
   See [additional Xcode components](https://developer.apple.com/documentation/xcode/downloading-and-installing-additional-xcode-components).
 
