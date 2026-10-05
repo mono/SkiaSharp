@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using SkiaSharp;
 using SkiaSharpSample.Controls;
@@ -53,6 +52,8 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 
 	public override bool IsAnimated => _codec != null && _codec.FrameCount > 1;
 
+	protected override TimeSpan AnimationInterval => TimeSpan.FromMilliseconds(Math.Max(16, _frameDurationMs));
+
 	public override byte[]? DownloadBytes => _encodedData?.ToArray();
 	public override string DownloadFileName => "SkiaSharp-Animation.webp";
 	public override string DownloadMimeType => "image/webp";
@@ -86,11 +87,12 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 		return base.OnInit();
 	}
 
-	protected override async Task OnUpdate(CancellationToken token)
+	protected override bool OnUpdate(TimeSpan elapsed)
 	{
-		await Task.Delay(Math.Max(16, _frameDurationMs), token);
-		if (_codec != null && _codec.FrameCount > 0)
-			_currentFrame = (_currentFrame + 1) % _codec.FrameCount;
+		if (_codec is not { FrameCount: > 1 })
+			return false;
+		_currentFrame = (_currentFrame + 1) % _codec.FrameCount;
+		return true;
 	}
 
 	private void RebuildAnimation()
