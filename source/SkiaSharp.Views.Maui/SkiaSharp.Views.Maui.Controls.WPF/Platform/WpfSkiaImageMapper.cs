@@ -4,6 +4,7 @@ using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Handlers.WPF;
 using SkiaSharp.Views.WPF;
+using WpfButton = System.Windows.Controls.Button;
 using WpfImage = System.Windows.Controls.Image;
 using WpfStretch = System.Windows.Media.Stretch;
 
@@ -29,6 +30,9 @@ internal static class WpfSkiaImageMapper
 
 			imageMapper[nameof(IImage.Source)] = (handler, image) =>
 			{
+				if (TryClearNullSource(image.Source, handler.PlatformView))
+					return;
+
 				if (TryCreateBitmap(image.Source, out var bitmap))
 					handler.PlatformView.Source = bitmap;
 				else
@@ -37,6 +41,9 @@ internal static class WpfSkiaImageMapper
 
 			ImageButtonHandler.Mapper[nameof(ImageButton.Source)] = (handler, button) =>
 			{
+				if (TryClearNullSource(button.Source, handler.PlatformView))
+					return;
+
 				if (TryCreateBitmap(button.Source, out var bitmap))
 				{
 					handler.PlatformView.Content = bitmap is null
@@ -60,6 +67,24 @@ internal static class WpfSkiaImageMapper
 
 			registered = true;
 		}
+	}
+
+	internal static bool TryClearNullSource(IImageSource? source, WpfImage view)
+	{
+		if (source is not null)
+			return false;
+
+		view.Source = null;
+		return true;
+	}
+
+	internal static bool TryClearNullSource(IImageSource? source, WpfButton view)
+	{
+		if (source is not null)
+			return false;
+
+		view.Content = null;
+		return true;
 	}
 
 	internal static bool TryCreateBitmap(IImageSource? source, out WriteableBitmap? bitmap)

@@ -36,11 +36,12 @@ Skia content clears the image. Other sources still use the backend's
 original mapping. The Skia image data must remain valid until conversion;
 the returned WPF bitmap owns its copied pixels. No native Skia objects are
 disposed by the mapper.
-The preview backend's ordinary `Image` mapping does not clear a previous
-image when its source becomes null; an already-started stream image load can
-also complete after a newer Skia source and replace it. This WPF package does
-not replace the backend's private image-loading pipeline; verify transitions
-from Skia to ordinary sources and back on Windows.
+Unlike the preview backend's ordinary image mapping, this WPF adapter clears
+native `Image` and `ImageButton` content when `Source` becomes null. An
+already-started stream image load can still complete after a newer Skia
+source and replace it. This package does not replace the backend's private
+image-loading pipeline; verify transitions from Skia to ordinary sources
+and back on Windows.
 The backend does not reliably render ordinary `FontImageSource` in `Image` or
 `ImageButton`; these Skia-only mappings do not address that gap. Use a `Label`
 or `Button` with a registered font for glyphs instead. Numeric `ZIndex` is

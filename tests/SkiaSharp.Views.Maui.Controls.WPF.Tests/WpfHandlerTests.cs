@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.ExceptionServices;
 using System.Threading;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Maui.Controls;
 using SkiaSharp.Views.Maui;
@@ -69,6 +70,28 @@ public class WpfHandlerTests
 		Assert.Null(bitmap);
 		Assert.True(WpfSkiaImageMapper.TryCreateBitmap(new SKImageImageSource(), out bitmap));
 		Assert.Null(bitmap);
+	}
+
+	[Fact]
+	public void NullSourceClearsPreviouslyDisplayedImageAndButton()
+	{
+		RunOnWpfThread(() =>
+		{
+			var previous = new DrawingImage();
+			var image = new System.Windows.Controls.Image { Source = previous };
+			var button = new System.Windows.Controls.Button { Content = new System.Windows.Controls.Image { Source = previous } };
+			var ordinarySource = new FileImageSource { File = "test.png" };
+
+			Assert.False(WpfSkiaImageMapper.TryClearNullSource(ordinarySource, image));
+			Assert.Same(previous, image.Source);
+			Assert.False(WpfSkiaImageMapper.TryClearNullSource(ordinarySource, button));
+			Assert.NotNull(button.Content);
+
+			Assert.True(WpfSkiaImageMapper.TryClearNullSource(null, image));
+			Assert.Null(image.Source);
+			Assert.True(WpfSkiaImageMapper.TryClearNullSource(null, button));
+			Assert.Null(button.Content);
+		});
 	}
 
 	[Fact]
