@@ -10,6 +10,7 @@ namespace SkiaSharp.Tests.MSBuild;
 
 public class MauiNativeAssetTests(DotNet dotnet) : IClassFixture<DotNet>
 {
+    private const string ApplicationTitle = "Package Consumer";
     private static readonly string[] Families = ["SkiaSharp", "HarfBuzzSharp"];
     private static readonly string[] References =
         ["SkiaSharp", "HarfBuzzSharp", "SkiaSharp.HarfBuzz", "SkiaSharp.Views.Maui.Controls"];
@@ -156,7 +157,9 @@ public class MauiNativeAssetTests(DotNet dotnet) : IClassFixture<DotNet>
 
     private async Task AssertAppleApplication(string project, string platform, ArtifactPackage[] natives)
     {
-        var app = Assert.Single(Directory.GetDirectories(Path.Combine(project, "output"), "Consumer.app",
+        // Mac Catalyst names the bundle after ApplicationTitle, not the managed assembly.
+        var appName = platform == "iOS" ? "Consumer" : ApplicationTitle;
+        var app = Assert.Single(Directory.GetDirectories(Path.Combine(project, "output"), appName + ".app",
             SearchOption.AllDirectories));
         var executable = platform == "iOS" ? Path.Combine(app, "Consumer") : Path.Combine(app, "Contents", "MacOS", "Consumer");
         AssertMachO(executable);
@@ -206,7 +209,7 @@ public class MauiNativeAssetTests(DotNet dotnet) : IClassFixture<DotNet>
             new XElement("SingleProject", "true"),
             new XElement("ImplicitUsings", "enable"),
             new XElement("Nullable", "enable"),
-            new XElement("ApplicationTitle", "Package Consumer"),
+            new XElement("ApplicationTitle", ApplicationTitle),
             new XElement("ApplicationId", "com.skiasharp.packageconsumer"),
             new XElement("ApplicationDisplayVersion", "1.0"),
             new XElement("ApplicationVersion", "1"));
