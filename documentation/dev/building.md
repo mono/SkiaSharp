@@ -21,14 +21,22 @@ This guide covers building SkiaSharp on Windows and macOS.
 Before building SkiaSharp, ensure you have:
 
 - **.NET SDK pinned by the repository** - See `global.json` for the required version
-- **MAUI workload** - Required for mobile platform targets:
+- **Pinned workloads** - Use `DOTNET_WORKLOAD_VERSION` from the
+  [build tool versions](../../scripts/azure-templates-variables.yml) in place of
+  `VERSION`, then run the shared installer from the repository root:
   ```bash
-  dotnet workload install maui
+  pwsh ./scripts/infra/managed/install-dotnet-workloads.ps1 -WorkloadSetVersion VERSION
   ```
+- **OpenJDK 21** and the Android SDK - Required for Android targets. Use
+  [`install-openjdk.ps1`](../../scripts/infra/managed/install-openjdk.ps1)
+  to install the required JDK or reuse `JAVA_HOME_21_X64`.
 - **Cake .NET Tool** - For running build scripts:
   ```bash
   dotnet tool install -g cake.tool
   ```
+
+Use the approved sources in [`nuget.config`](../../nuget.config) for workload
+installation. Request mirroring for missing packages rather than adding sources.
 
 ## Preparation
 
@@ -50,7 +58,7 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 
 **All Platforms:**
 - **.NET SDK pinned by the repository** - See `global.json` for the required version
-- **MAUI workload** - `dotnet workload install maui`
+- **Pinned workloads** - Use the shared installer described in [Prerequisites](#prerequisites)
 - **Cake .NET Tool** - `dotnet tool install -g cake.tool`
 
 **Windows Dependencies:**
@@ -62,9 +70,15 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 - Windows 10 SDK (latest)
 
 **macOS Dependencies:**
-- macOS 12+ (Monterey or later)
-- [Xcode](https://developer.apple.com/xcode/) (latest stable)
+- A macOS version supported by the required Xcode
+- [Xcode](https://developer.apple.com/xcode/) matching `XCODE_VERSION` in the
+  [build tool versions](../../scripts/azure-templates-variables.yml)
 - Command Line Tools: `xcode-select --install`
+- For tvOS storyboard compilation, install a simulator runtime supported by the selected Xcode:
+  ```bash
+  xcodebuild -downloadPlatform tvOS
+  ```
+  See [additional Xcode components](https://developer.apple.com/documentation/xcode/downloading-and-installing-additional-xcode-components).
 
 ### Preparation
 
@@ -115,7 +129,7 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
           - In VS 2022 Build Tools, select **WinUI application development build tools** and its optional C++ tools
        - Android NDK (via Visual Studio Installer or [manually](https://developer.android.com/ndk/downloads))
           - Make sure the path to the root is in the `ANDROID_NDK_ROOT` or `ANDROID_NDK_HOME` environment variables
- - [OpenJDK 17+](https://adoptium.net/)
+ - [OpenJDK 21](https://learn.microsoft.com/java/openjdk/download)
  - Clang/LLVM
     - Run `.\scripts\install-llvm.ps1`
     - Set `LLVM_HOME` to the path of the install
@@ -123,6 +137,11 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
 If you have multiple Visual Studio installations, use `--vsinstall` or set
 `VS_INSTALL` to select one with the v143 tools and matching Spectre libraries.
 Use `--windowsSdkVersion` if you need a specific installed Windows SDK.
+
+The Windows source benchmark provisions matching x64 Spectre libraries in the
+selected Visual Studio installation with
+`scripts\infra\native\windows\install-spectre.ps1`. It uses the same v143 toolset
+selection as the native build rather than the newer Visual Studio default.
 
 **macOS Dependencies:**
  - [Managed-Only build dependencies](#dependencies)
@@ -133,7 +152,7 @@ Use `--windowsSdkVersion` if you need a specific installed Windows SDK.
  - Python 3
  - Clang 14+
  - Make
- - OpenJDK 17+
+ - OpenJDK 21
 
 ### Building Native Libraries
 
@@ -170,26 +189,21 @@ dotnet cake --target=externals-linux --arch=x64
 ## MSBuild Package-Consumer Tests
 
 `tests/SkiaSharp.Tests.MSBuild` tests real packed SkiaSharp and HarfBuzzSharp
-packages using isolated .NET console consumers. It does not build the bindings,
-load native libraries into the test runner, or use the repository's native-copy
-targets. Only the SDK pinned by `global.json` is required; no mobile workloads,
-submodules, GPU, browser, native source build, or native runtime dependencies are
-needed. These tests inspect build/publish output without executing native code.
+packages by building isolated desktop, WASM, and host-supported MAUI applications.
+These tests inspect outputs without running the apps or loading native
+libraries into the runner.
 
-Download the `nuget` artifact from one exact completed SkiaSharp CI build and
-place its packages in `output/nugets`. Record the build URL/commit when reporting
-results. Do not combine different builds or substitute published packages for
-missing artifacts. Both families require their core, `NativeAssets.Win32`,
-`NativeAssets.macOS`, and `NativeAssets.Linux` packages; package versions are read
-from their nuspec metadata, not inferred from the checkout.
-
-Run the CI entry point from the repository root:
+Install the [prerequisites](#prerequisites), including `wasm-tools`, MAUI
+workloads and Android tools; Apple builds need Xcode, and Windows builds need
+the WinUI toolchain. Download the complete `nuget` artifact from one SkiaSharp
+CI build into `output/nugets`, then run from the repository root:
 
 ```sh
 dotnet cake --target=tests-msbuild
 ```
 
-Or run the test project directly against a local artifact directory:
+To use another artifact directory or inspect test results, run the project
+directly:
 
 ```sh
 dotnet test tests/SkiaSharp.Tests.MSBuild/SkiaSharp.Tests.MSBuild.csproj \
@@ -197,46 +211,35 @@ dotnet test tests/SkiaSharp.Tests.MSBuild/SkiaSharp.Tests.MSBuild.csproj \
   -- --report-trx --results-directory /absolute/path/to/test-results
 ```
 
-`NativeAssetOutputTests.cs` contains the package references, scenarios, and
-assertions. `Utils/DotNet.cs` handles isolated project creation and CLI execution.
-The tests share one private restore cache; every case has independent project,
-intermediate, and output directories. Source mapping restricts SkiaSharp and
-HarfBuzzSharp packages to the supplied artifacts, so missing packages cannot
-fall back to public versions. User NuGet caches and input packages are not modified.
+Use packages from the same build, including transitive dependencies; do not
+substitute public packages for missing artifacts. Restores use private caches
+and restrict SkiaSharp/HarfBuzzSharp to the supplied artifacts.
 
-For each family, build and publish first verify the default package includes
-Win32/macOS native assets and **no Linux native assets**. With an explicit
-`NativeAssets.Linux` reference, the nine-case matrix below verifies that Linux
-assets are included and that RID selection behaves as expected.
+The SDK selected when building the harness also selects the consumer SDK and
+target frameworks. For an SDK outside the runner's dotnet installation, pass
+`-p:ConsumerDotNetHost=/absolute/path/to/dotnet` and execute the built test
+assembly with a host supporting its target framework.
 
-For each family, the suite tests `build`, `publish`, and `publish -r linux-x64`
-against three project configurations:
+Diagnostics are retained under `output/logs/testlogs/msbuild`. On Windows,
+use short paths for `-p:MSBuildTestArtifactsDirectory=<absolute-path>` and
+`TEMP`/`TMP` if platform tools hit path-length limits.
 
-| Project configuration | Build/publish without a CLI RID | Publish with `-r linux-x64` |
-| --- | --- | --- |
-| No RID | All native variants under `runtimes/` | Linux x64 native assets beside the app |
-| `RuntimeIdentifier=linux-arm64` | Linux arm64 native assets beside the app | Linux x64 overrides the project RID |
-| `RuntimeIdentifiers=linux-x64;linux-arm64` | All native variants under `runtimes/` | Linux x64 native assets beside the app |
+See the [MSBuild test stage](../../scripts/azure-templates-stages-msbuild.yml)
+for CI configuration and the [test sources](../../tests/SkiaSharp.Tests.MSBuild)
+for coverage.
 
-Plural `RuntimeIdentifiers` are restore targets, **not an output allow-list**.
-The tests compare native paths and hashes with the actual input packages,
-rather than accepting only a successful MSBuild exit code.
-Linux assets are explicitly referenced; this suite does not change package
-dependencies or filtering behavior. No fake packages or mock CLI are used.
+**WASM native-link regression:**
 
-TRX results, generated projects, command logs, binlogs, restore/dependency
-metadata, and failed-consumer outputs are published from `output/logs/` in CI.
-Successful build outputs are removed after assertions. The consumer diagnostics
-default to `output/logs/testlogs/msbuild`; override
-`-p:MSBuildTestArtifactsDirectory=/absolute/path/to/diagnostics` for a direct run.
-Private restore caches are not included in diagnostic artifacts.
+For a WASM-only diagnostic, install `wasm-tools` and supply both families'
+core and `NativeAssets.WebAssembly` packages. The test links a Mono WebAssembly
+app with the SDK's default flags; it does not run the app in a browser.
 
-The **MSBuild package tests** CI stage runs on Windows, macOS, and Linux. In
-combined CI it depends on `package`; in downstream Tests it depends on `prepare`
-and downloads the exact SkiaSharp pipeline-resource run's artifact. It runs
-alongside Samples without changing the prerequisites of existing source/unit/
-device tests. Its failures are reported independently and still fail the pipeline.
-The existing release/platform Integration suite remains a separate entry point.
+```sh
+dotnet cake --target=tests-msbuild --wasm=true
+```
+
+Run the unfiltered suite for final validation. Emscripten toolchain changes
+require a native source build, not `externals-download`.
 
 ## Documentation Outputs
 

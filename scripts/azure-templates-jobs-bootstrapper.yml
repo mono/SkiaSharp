@@ -34,7 +34,6 @@ parameters:
   installNode: true                             # whether or not to install Node.js
   checkoutSubmodules: true                      # whether or not to recursively initialize all submodules
   installPreviewSdk: false                      # whether to install the preview .NET SDK ($(DOTNET_VERSION_PREVIEW)) and pin global.json to it
-  previewWorkloads: ''                           # workloads to install under the preview .NET SDK (comma-separated, e.g. 'wasm-tools,android')
   installXcode: true                            # whether or not to install Xcode
   publishArtifacts: []                          # the additional artifacts to publish
   tools: []                                     # any additional .net global tools
@@ -293,20 +292,29 @@ jobs:
               dotnet --version
             displayName: Pin global.json to the preview .NET SDK
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          - ${{ if ne(parameters.previewWorkloads, '') }}:
-            # Reuse the shared workload install script, pinned to the exact preview workload set.
-            # WASM tests still restore the platform TFMs (e.g. -android) of referenced projects, so
-            # those workloads must be installed too — same as the non-preview test jobs.
-            - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Workloads "${{ parameters.previewWorkloads }}" -WorkloadSetVersion "$(DOTNET_WORKLOAD_VERSION_PREVIEW)" -Tizen ""
-              displayName: Install the preview .NET workloads (${{ parameters.previewWorkloads }})
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Workloads "${{ parameters.dotnetWorkloads }}" -WorkloadSetVersion "$(DOTNET_WORKLOAD_VERSION_PREVIEW)" -Tizen ""
+            displayName: Install the preview .NET workloads
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install the mac tools
       - ${{ if and(eq(parameters.installXcode, 'true'), ne(parameters.buildAgent.parameters.installXcode, 'false'), eq(parameters.buildAgent.pool.os, 'macos'), ne(parameters.skipInstall, 'true')) }}:
-        - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+        - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.installPreviewSdk, 'true')) }}:
           - bash: sudo ./scripts/infra/native/apple/select-xcode.sh $(XCODE_VERSION)
             displayName: Switch to the latest Xcode
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        - ${{ if and(not(startsWith(parameters.name, 'native_')), eq(parameters.installPreviewSdk, 'true')) }}:
+          - bash: sudo ./scripts/infra/native/apple/select-xcode.sh $(XCODE_VERSION_PREVIEW)
+            displayName: Switch to the preview workload Xcode
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        - ${{ if and(not(startsWith(parameters.name, 'native_')), eq(parameters.target, 'samples')) }}:
+          - bash: |
+              set -euo pipefail
+              sudo xcodebuild -runFirstLaunch
+              xcodebuild -downloadPlatform tvOS
+              xcrun simctl list runtimes
+            displayName: Install the tvOS simulator runtime
+            retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if startsWith(parameters.name, 'native_') }}:
           - bash: sudo ./scripts/infra/native/apple/select-xcode.sh $(XCODE_VERSION_NATIVE)

@@ -22,8 +22,9 @@ This checklist documents every file that needs updating when bumping the .NET SD
 - [ ] **`global.json` `tools.dotnet`** — Keep this equal to `sdk.version` and verify the selected SDK satisfies Arcade's CLI requirements for `dotnet package download`.
 - [ ] **`native/winui/global.json` and `DOTNET_VERSION_WINUI`** — Keep these on the latest SDK feature band supported by the Visual Studio MSBuild used for the C++/WinRT projection. Verify the current SDK/MSBuild compatibility matrix and install this SDK side-by-side in the WinUI native jobs instead of forcing the repository SDK onto them.
 - [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_VERSION` to the SDK patch and pin `DOTNET_WORKLOAD_VERSION` to a compatible workload set. The workload set may intentionally lag the SDK by whole feature bands when a newer set requires an unavailable Apple toolchain.
-- [ ] **Managed Apple pool and `XCODE_VERSION`** — Use an agent image containing the exact Xcode recommended by the workload set. Document any intentional cross-feature-band workload pin beside `DOTNET_WORKLOAD_VERSION`, including the unavailable toolchain that requires it. Keep native Apple builds on their separately pinned Xcode.
+- [ ] **Managed Apple pool, `XCODE_VERSION`, and `XCODE_VERSION_PREVIEW`** — Use an agent image containing the Xcode required by each workload set. Check upstream release requirements rather than inferring them from pack names. Keep native Apple builds on their separately pinned Xcode.
 - [ ] **`scripts/infra/managed/install-dotnet-workloads.ps1`** — Review the workload installation flow and Tizen manifest source (Samsung may update it independently).
+- [ ] **`scripts/infra/managed/install-openjdk.ps1` and `ANDROID_PLATFORM_VERSIONS`** — Match the Android workload's JDK and platform requirements. Use exact published SDK package suffixes, including minor versions when required.
 
 > **Note:** Do NOT set `workloadVersion` in `global.json`. Native builds skip SDK install but still read global.json, causing failures if the pinned workload version isn't pre-installed.
 
@@ -91,15 +92,29 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 - [ ] `scripts/azure-templates-stages-native-wasm.yml` — Add new .NET emscripten entry
 - [ ] `scripts/azure-templates-jobs-bootstrapper.yml` — Review workload install step
 
-> **WASM emsdk mapping (do this whenever the new SDK bundles a new Emscripten version).** The .NET WASM SDK links apps with a specific Emscripten toolchain, and a static library built with one Emscripten version cannot be linked by a different one (the wasm object format is incompatible → link failure). Check the new SDK's bundled version (e.g. `dotnet workload list` / the `Microsoft.NET.Runtime.Emscripten.*` pack). Known mapping so far: **.NET 8 → 3.1.34, .NET 9/10 → 3.1.56, .NET 11 → 5.0.6**. When it changes for the new SDK, you must:
-> 1. Add a build matrix block (all 4 `st`/`mt`/`simd`/`simd+mt` variants) for the new Emscripten version in `scripts/azure-templates-stages-native-wasm.yml`, and register its `native_wasm_<version>_*` artifacts in both merger lists in `scripts/azure-templates-stages-native-merge.yml`, so the packages ship a static library for it.
-> 2. Add a `NativeFileReference` entry for the new TFM in **all four** WASM targets files, keeping each `netX.0` on the Emscripten version its SDK actually uses:
->    - `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets`
->    - `binding/HarfBuzzSharp.NativeAssets.WebAssembly/buildTransitive/HarfBuzzSharp.targets`
->    - `binding/IncludeNativeAssets.SkiaSharp.targets`
->    - `binding/IncludeNativeAssets.HarfBuzzSharp.targets`
->
-> Convention for the conditions: the **newest** entry stays open-ended (`VersionGreaterThanOrEquals(TFV, 'A')`) so a future SDK that keeps the same Emscripten version keeps working with no code change (e.g. .NET 9 and .NET 10 both use 3.1.56). Only when a new SDK actually *diverges* do you close the previous entry with an upper bound (`… and VersionLessThan(TFV, 'B')`) and add a new open-ended entry for the new version — the way `net9.0`–`net10.x` was capped at `< 11.0` once .NET 11 moved to 5.0.6. The packaging globs (`**`/`*` over the version folder) pick up new version directories automatically — no nuspec/csproj change needed.
+#### WebAssembly compatibility
+
+Match both native libraries to the runtime workload's Emscripten toolchain
+and exception-handling mode. Check `EmsdkVersion` in the relevant
+[dotnet/runtime release](https://github.com/dotnet/runtime/blob/main/eng/Versions.props)
+and the selected SDK's `microsoft.net.workload.emscripten.current`
+`WorkloadManifest.json`. Workload-set, manifest, and compiler versions are
+different identifiers; inspect the manifest for the application's TFM.
+
+When a new SDK requires different archives, update the
+[native matrix](../../scripts/azure-templates-stages-native-wasm.yml) and both
+[merger lists](../../scripts/azure-templates-stages-native-merge.yml), then the
+source and package selectors for both families:
+
+- [SkiaSharp source](../../binding/IncludeNativeAssets.SkiaSharp.targets)
+- [HarfBuzzSharp source](../../binding/IncludeNativeAssets.HarfBuzzSharp.targets)
+- [SkiaSharp package](../../binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets)
+- [HarfBuzzSharp package](../../binding/HarfBuzzSharp.NativeAssets.WebAssembly/buildTransitive/HarfBuzzSharp.targets)
+
+Preserve older TFM mappings and threading/SIMD variants. Keep the newest
+compatible mapping open-ended, and retain wildcard packaging and Uno inclusion.
+Rebuild natives from source, then run the
+[package-consumer tests](building.md#msbuild-package-consumer-tests).
 
 ### 10. Docker Images
 
@@ -125,9 +140,9 @@ Keep each distro/OS suffix unchanged when updating either kind of image. For exa
 
 ### 11. NuGet & Feeds
 
-- [ ] `nuget.config` — Remove old preview feeds, keep dotnet-public + dotnet-eng + test-device-runners
+- [ ] `nuget.config` — Keep only the approved dotnet-public + dotnet-eng sources; do not add install-time source overrides
 
-> **Note:** `nuget.org` is a disallowed source in the SkiaSharp CI pipeline. If you encounter missing package restore errors during development, you can temporarily add nuget.org to work through issues, but it **must be removed before merging**. Request mirroring for any missing packages.
+> **Note:** `nuget.org` is not an approved package source. Use only the existing approved sources in `nuget.config`, including for local validation and workload installation. Missing packages are a provisioning blocker; request mirroring to an approved feed rather than adding or overriding sources.
 
 ## Pre-Merge Checklist
 
@@ -189,7 +204,9 @@ Since platform workloads only support 2 versions at a time, testing a preview me
 3. Build and test on the branch
 4. Merge when the new .NET version goes GA
 
-There is no side-by-side preview mechanism — the `DOTNET_VERSION` in the pipeline IS the SDK version, preview or not.
+For side-by-side CI validation without shifting the repository's TFM chain,
+use the opt-in preview SDK support in the
+[bootstrapper](../../scripts/azure-templates-jobs-bootstrapper.yml).
 
 ## How to Verify TPVs
 
@@ -207,7 +224,7 @@ dotnet new console -f net10.0-ios
 
 ## Workload Pinning
 
-Workloads are pinned via the `DOTNET_WORKLOAD_VERSION` pipeline variable, which is passed to `install-dotnet-workloads.ps1` as `-WorkloadVersion`. This uses the .NET SDK workload sets feature (`dotnet workload install --version <version>`) for reproducible builds. 
+Workloads are pinned via the `DOTNET_WORKLOAD_VERSION` pipeline variable, which is passed to `install-dotnet-workloads.ps1` as `-WorkloadSetVersion`. Preview jobs use `DOTNET_WORKLOAD_VERSION_PREVIEW`. This uses the .NET SDK workload sets feature (`dotnet workload install --version <version>`) for reproducible builds.
 
 **Why not use `workloadVersion` in `global.json`?** Native builds (which skip SDK/workload install) still read `global.json`. If the pinned workload version isn't pre-installed on the agent, the build fails immediately. By passing the version through the pipeline variable, we control when workload pinning applies.
 

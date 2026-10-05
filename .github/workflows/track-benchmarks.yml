@@ -329,6 +329,7 @@ jobs:
           dotnet tool restore
           ./scripts/infra/native/shared/install-ninja.ps1
           ./scripts/infra/native/windows/select-vs.ps1
+          ./scripts/infra/native/windows/install-spectre.ps1 -InstallationPath $env:VS_INSTALL -Architecture x64
           ./scripts/infra/native/windows/install-7zip.ps1
           ./scripts/infra/native/windows/install-llvm.ps1
           dotnet cake native/windows/build.cake --target=libSkiaSharp --configuration=Release --arch=x64

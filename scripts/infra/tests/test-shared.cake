@@ -122,7 +122,8 @@ void RunDotNetTest(
     FilePath testProject,
     DirectoryPath output,
     string configuration = null,
-    Dictionary<string, string> properties = null)
+    Dictionary<string, string> properties = null,
+    IEnumerable<string> runnerArguments = null)
 {
     output = MakeAbsolute(output);
     var dir = testProject.GetDirectory();
@@ -159,6 +160,9 @@ void RunDotNetTest(
                 .Append("--hangdump")
                 .Append("--hangdump-timeout").Append("15m")
                 .Append("--hangdump-type").Append("Mini");
+            if (runnerArguments != null)
+                foreach (var argument in runnerArguments)
+                    args = args.AppendQuoted(argument);
             return args;
         },
     };
