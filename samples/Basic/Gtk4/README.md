@@ -4,7 +4,7 @@ Demonstrates SkiaSharp running in a GTK 4 desktop app with tab-based navigation 
 
 ## Sample Pages
 
-This sample shows how to integrate SkiaSharp views into a GTK 4 app. The UI structure is defined in `.ui` files (editable in GNOME Builder or Cambalache), with `SKDrawingArea` and `SKGLView` widgets injected into the layout containers.
+This sample shows how to integrate SkiaSharp views into a GTK 4 app. The UI structure is defined in `.ui` files (editable in GNOME Builder or Cambalache), with `SKDrawingArea` and `SKGLArea` widgets injected into the layout containers.
 
 ### CPU
 
@@ -25,7 +25,7 @@ An animated, interactive SkSL metaball shader rendered on a real OpenGL-backed S
 
 **Features:**
 
-- **`SKGLView`** — Hardware-accelerated canvas backed by `Gtk.GLArea`; no CPU canvas fallback. Uses desktop OpenGL on Linux/macOS and desktop OpenGL or GTK's EGL/ANGLE OpenGL ES context on Windows.
+- **`SKGLArea`** — Hardware-accelerated canvas backed by `Gtk.GLArea`; no CPU canvas fallback. Leaves GTK's API selection at its default, permitting desktop OpenGL or OpenGL ES according to the available backend and driver.
 - **`SKRuntimeEffect`** — Shader compiled once and updated with time, resolution, and mouse-position uniforms each frame.
 - **Render loop** — GTK frame-clock-driven animation with an FPS pill made from a native `Gtk.Box` and `Gtk.Label`, paused whenever the tab is hidden.
 - **Pointer input** — Press and drag to add a bright blob to the scene.
@@ -52,10 +52,10 @@ A freehand drawing canvas with a color palette, brush size label, and clear butt
   - **Ubuntu/Debian:** `sudo apt-get install libgtk-4-dev`
   - **Fedora:** `sudo dnf install gtk4-devel`
   - **Windows:** Install a GTK4 runtime using [MSYS2 or gvsbuild](https://www.gtk.org/docs/installations/windows/) and put its `bin` directory on `PATH`. For MSYS2 UCRT64, install `mingw-w64-ucrt-x86_64-gtk4` and use `C:\msys64\ucrt64\bin`.
-- A Linux, macOS or Windows GTK display and a working GL driver for the GPU page. Windows can use EGL/ANGLE when the GTK runtime provides it.
+- A working GTK display and GL driver for the GPU page. GTK selects an available desktop OpenGL or OpenGL ES context; Windows can use EGL/ANGLE when the GTK runtime provides it. The native macOS backend uses desktop OpenGL.
 - GTK's libepoxy dispatcher must be present alongside GTK (`libepoxy.so.0`, `libepoxy.0.dylib`, or `libepoxy-0.dll`/`epoxy-0.dll`). It is a separate required dependency installed automatically by the GTK packages above, not bundled in the managed NuGet packages. Manually bundled GTK runtimes must include it.
 
-`Gtk.GLArea` does not expose its framebuffer binding, stencil bit count or sample count as properties; GTK's own render example queries the framebuffer using `glGetIntegerv`. `SKGLView` queries the stencil attachment size directly, since the legacy `GL_STENCIL_BITS` integer query is not valid in desktop core profiles. It resolves these queries and Skia's GL entry points through libepoxy, the same current-context dispatcher GTK uses. This avoids loading an unrelated GL implementation when GTK selects EGL/ANGLE instead of WGL or GLX.
+`Gtk.GLArea` does not expose its framebuffer binding, stencil bit count or sample count as properties; GTK's own render example queries the framebuffer using `glGetIntegerv`. `SKGLArea` queries the stencil attachment size directly, since the legacy `GL_STENCIL_BITS` integer query is not valid in desktop core profiles. It resolves these queries and Skia's GL entry points through libepoxy, the same current-context dispatcher GTK uses. This avoids loading an unrelated GL implementation when GTK selects EGL/ANGLE instead of WGL or GLX.
 
 GTK 4 can use Vulkan to composite its own scene graph, but it does not expose a Vulkan drawing widget analogous to `Gtk.GLArea`. The GPU page uses OpenGL/OpenGL ES; a future Vulkan-backed SkiaSharp view would need application-owned Vulkan resources and a GTK-compatible texture import/synchronization path.
 

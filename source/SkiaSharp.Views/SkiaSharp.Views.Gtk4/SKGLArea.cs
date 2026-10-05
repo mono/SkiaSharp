@@ -1,17 +1,13 @@
 using System;
 using System.ComponentModel;
-using System.Runtime.Versioning;
 using SkiaSharp.Views.Desktop;
 
 #nullable enable
 
 namespace SkiaSharp.Views.Gtk
 {
-	/// <summary>A GTK4 OpenGL view that can be drawn on using SkiaSharp GPU commands.</summary>
-	[SupportedOSPlatform("linux")]
-	[SupportedOSPlatform("macos")]
-	[SupportedOSPlatform("windows")]
-	public class SKGLView : global::Gtk.GLArea
+	/// <summary>A GTK4 OpenGL drawing area that can be drawn on using SkiaSharp GPU commands.</summary>
+	public class SKGLArea : global::Gtk.GLArea
 	{
 		private const uint FramebufferBinding = 0x8CA6;
 		private const uint Samples = 0x80A9;
@@ -29,14 +25,10 @@ namespace SkiaSharp.Views.Gtk
 		private bool ignorePixelScaling;
 		private bool disposed;
 
-		/// <summary>Creates a GTK4 OpenGL view.</summary>
-		/// <remarks>Uses desktop OpenGL on Linux and macOS. On Windows, GTK may also select OpenGL ES through EGL/ANGLE. No software canvas fallback is provided.</remarks>
-		public SKGLView() : base(new GObject.ConstructArgument[] { })
+		/// <summary>Creates a GTK4 OpenGL drawing area.</summary>
+		/// <remarks>Lets GTK choose an available desktop OpenGL or OpenGL ES context. No software canvas fallback is provided.</remarks>
+		public SKGLArea() : base(new GObject.ConstructArgument[] { })
 		{
-			if (!OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS() && !OperatingSystem.IsWindows())
-				throw new PlatformNotSupportedException("GTK4 SKGLView requires Linux, macOS or Windows.");
-
-			SetAllowedApis(OperatingSystem.IsWindows() ? Gdk.GLAPI.Gl | Gdk.GLAPI.Gles : Gdk.GLAPI.Gl);
 			SetAutoRender(false);
 			SetHasStencilBuffer(true);
 			OnRender += Render;
@@ -106,11 +98,13 @@ namespace SkiaSharp.Views.Gtk
 		private void UpdateRenderLoop()
 		{
 			if (enableRenderLoop && GetRealized() && tickCallback == 0)
+			{
 				tickCallback = AddTickCallback((widget, clock) =>
 				{
 					QueueRender();
 					return true;
 				});
+			}
 			else if ((!enableRenderLoop || !GetRealized()) && tickCallback != 0)
 			{
 				RemoveTickCallback(tickCallback);
@@ -136,17 +130,13 @@ namespace SkiaSharp.Views.Gtk
 
 		private bool Render(global::Gtk.GLArea area, global::Gtk.GLArea.RenderSignalArgs args)
 		{
-			var nativeContext = GetContext()?.Handle.DangerousGetHandle() ?? nint.Zero;
-			if (nativeContext == nint.Zero)
-				throw new InvalidOperationException("GTK4 could not create an OpenGL context.");
+			var nativeContext = args.Context.Handle.DangerousGetHandle();
 
 			if (context is null || lastNativeContext != nativeContext)
 			{
 				ReleaseContext(abandon: true);
-				using var glInterface = GRGlInterface.Create(GtkGl.GetProcedureAddress)
-					?? throw new InvalidOperationException("SkiaSharp could not resolve GTK4 OpenGL entry points.");
-				context = GRContext.CreateGl(glInterface)
-					?? throw new InvalidOperationException("SkiaSharp could not initialize the GTK4 OpenGL context.");
+				using var glInterface = GRGlInterface.Create(GtkGl.GetProcedureAddress);
+				context = GRContext.CreateGl(glInterface);
 				lastNativeContext = nativeContext;
 			}
 
@@ -168,16 +158,7 @@ namespace SkiaSharp.Views.Gtk
 			{
 				ReleaseSurface();
 				renderTarget = new GRBackendRenderTarget(size.Width, size.Height, samples, stencil, info);
-				try
-				{
-					surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888)
-						?? throw new InvalidOperationException("SkiaSharp could not create a GTK4 GPU surface.");
-				}
-				catch
-				{
-					ReleaseSurface();
-					throw;
-				}
+				surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
 				lastSamples = samples;
 				lastStencil = stencil;
 			}
@@ -191,10 +172,11 @@ namespace SkiaSharp.Views.Gtk
 			using (new SKAutoCanvasRestore(surface!.Canvas, true))
 			{
 				surface.Canvas.Clear(SKColors.Transparent);
+
 				if (ignorePixelScaling)
 					surface.Canvas.Scale(scale);
-				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget!,
-					GRSurfaceOrigin.BottomLeft, displayInfo, rawInfo));
+
+				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget!, GRSurfaceOrigin.BottomLeft, displayInfo, rawInfo));
 			}
 			surface.Canvas.Flush();
 			return true;
@@ -206,7 +188,9 @@ namespace SkiaSharp.Views.Gtk
 				return;
 
 			if (abandon || !GetRealized())
+			{
 				context.AbandonContext();
+			}
 			else
 			{
 				MakeCurrent();

@@ -7,16 +7,24 @@ using Xunit;
 
 namespace SkiaSharp.Views.Gtk4.Tests
 {
-	public class SKGLViewTest
+	public class SKGLAreaTest
 	{
 		[Fact]
 		public void IsNativeGtkGlArea() =>
-			Assert.True(typeof(global::Gtk.GLArea).IsAssignableFrom(typeof(SKGLView)));
+			Assert.Equal(typeof(global::Gtk.GLArea), typeof(SKGLArea).BaseType);
+
+		[Fact]
+		public void NameMatchesNativeWidget()
+		{
+			var type = typeof(SKGLArea);
+			Assert.Equal("SK" + type.BaseType!.Name, type.Name);
+			Assert.Null(type.Assembly.GetType("SkiaSharp.Views.Gtk.SKGLView"));
+		}
 
 		[Fact]
 		public void ApiMatchesNativePaintPattern()
 		{
-			var type = typeof(SKGLView);
+			var type = typeof(SKGLArea);
 			var paint = type.GetMethod("OnPaintSurface", BindingFlags.Instance | BindingFlags.NonPublic);
 			Assert.NotNull(paint);
 			Assert.True(paint.IsFamily);
@@ -28,8 +36,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(new[] { "CanvasSize", "EnableRenderLoop", "GRContext", "IgnorePixelScaling" },
 				type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
 					.Select(property => property.Name).OrderBy(name => name));
-			Assert.Equal(new[] { "linux", "macos", "windows" },
-				type.GetCustomAttributes<SupportedOSPlatformAttribute>().Select(attribute => attribute.PlatformName).OrderBy(name => name));
+			Assert.Empty(type.GetCustomAttributes<SupportedOSPlatformAttribute>());
 		}
 
 		[Fact]
@@ -51,11 +58,12 @@ namespace SkiaSharp.Views.Gtk4.Tests
 
 			SKDrawingAreaTest.InitGtk();
 
-			using var view = new SKGLView();
+			using var view = new SKGLArea();
 			Assert.Equal(SKSize.Empty, view.CanvasSize);
 			Assert.Null(view.GRContext);
 			Assert.False(view.IgnorePixelScaling);
 			Assert.False(view.EnableRenderLoop);
+			Assert.Equal(global::Gdk.GLAPI.Gl | global::Gdk.GLAPI.Gles, view.GetAllowedApis());
 
 			view.EnableRenderLoop = true;
 			Assert.True(view.EnableRenderLoop);

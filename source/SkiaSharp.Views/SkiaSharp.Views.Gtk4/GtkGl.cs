@@ -36,8 +36,7 @@ internal static class GtkGl
 		const uint stencilAttachment = 0x8D20;
 		const uint objectType = 0x8CD0;
 		const uint stencilSize = 0x8217;
-		var getAttachment = Marshal.GetDelegateForFunctionPointer<GetFramebufferAttachmentDelegate>(
-			GetProcedureAddress("glGetFramebufferAttachmentParameteriv"));
+		var getAttachment = Marshal.GetDelegateForFunctionPointer<GetFramebufferAttachmentDelegate>(GetProcedureAddress("glGetFramebufferAttachmentParameteriv"));
 		getAttachment(framebuffer, stencilAttachment, objectType, out var type);
 		if (type == 0)
 			return 0;

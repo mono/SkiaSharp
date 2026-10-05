@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Runtime.Versioning;
 using Gtk;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
@@ -8,9 +7,6 @@ using SkiaSharp.Views.Gtk;
 
 namespace SkiaSharpSample;
 
-[SupportedOSPlatform("linux")]
-[SupportedOSPlatform("macos")]
-[SupportedOSPlatform("windows")]
 public class GpuPage : Box
 {
 	private const string SkslSource = @"
@@ -74,7 +70,7 @@ half4 main(float2 fragCoord) {
 		1.0f, 0.9f, 0.2f,
 	};
 
-	private readonly SKGLView skiaView;
+	private readonly SKGLArea skiaView;
 	private readonly Label fpsLabel;
 	private readonly Stopwatch stopwatch = new();
 	private readonly GestureClick click;
@@ -105,7 +101,7 @@ half4 main(float2 fragCoord) {
 			-1);
 		fpsPill.GetStyleContext().AddProvider(fpsStyle, 600);
 
-		skiaView = new SKGLView { Hexpand = true, Vexpand = true };
+		skiaView = new SKGLArea { Hexpand = true, Vexpand = true };
 		skiaView.PaintSurface += OnPaintSurface;
 		container.Append(skiaView);
 
