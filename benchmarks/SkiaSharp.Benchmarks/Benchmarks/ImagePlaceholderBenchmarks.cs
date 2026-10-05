@@ -108,3 +108,79 @@ public class BlurHashDecodeBenchmark
 		return bitmap.GetPixel(Side / 2, Side / 2);
 	}
 }
+
+[MemoryDiagnoser]
+public class ThumbHashEncodeBenchmark
+{
+	[Params(32, 64, 100)]
+	public int Side { get; set; }
+
+	private SKBitmap bitmap = null!;
+	private SKImage image = null!;
+	private byte[] rgba = null!;
+
+	[GlobalSetup]
+	public void Setup()
+	{
+		bitmap = PlaceholderBenchmarkSource.Create(Side, SKAlphaType.Unpremul);
+		image = SKImage.FromBitmap(bitmap);
+		(rgba, _, _) = PixelBuffers.FromBitmap(bitmap, PixelBuffers.MaximumThumbnailDimension, compositeWhite: false);
+	}
+
+	[GlobalCleanup]
+	public void Cleanup()
+	{
+		image.Dispose();
+		bitmap.Dispose();
+	}
+
+	[Benchmark(Baseline = true)]
+	public byte[] ArrayInput() => ThumbHashCodec.Encode(rgba, Side, Side,
+		Side * PlaceholderBenchmarkSource.BytesPerPixel);
+
+	[Benchmark]
+	public byte[] SpanInput() => ThumbHashCodec.Encode(rgba.AsSpan(), Side, Side,
+		Side * PlaceholderBenchmarkSource.BytesPerPixel);
+
+	[Benchmark]
+	public byte[] BitmapAdapter() => ThumbHashCodec.Encode(bitmap);
+
+	[Benchmark]
+	public byte[] ImageAdapter() => ThumbHashCodec.Encode(image);
+}
+
+[MemoryDiagnoser]
+public class ThumbHashDecodeBenchmark
+{
+	[Params(32, 64)]
+	public int Side { get; set; }
+
+	private static readonly byte[] Hash = Convert.FromHexString("934A062D069256C374055867DA8AB6679490510719");
+	private byte[] destination = null!;
+	private int stride;
+
+	[GlobalSetup]
+	public void Setup()
+	{
+		var size = ThumbHashCodec.GetDecodedSize(Hash, Side, Side);
+		stride = size.Width * PlaceholderBenchmarkSource.BytesPerPixel;
+		destination = new byte[stride * size.Height];
+	}
+
+	[Benchmark(Baseline = true)]
+	public byte[] AllocatedArray() => ThumbHashCodec.Decode(Hash, Side, Side, out _, out _);
+
+	[Benchmark]
+	public byte[] CallerOwnedSpan()
+	{
+		ThumbHashCodec.DecodeInto(Hash, destination.AsSpan(), Side, Side, stride, out _, out _);
+		return destination;
+	}
+
+	[Benchmark]
+	public SKColor BitmapAdapter()
+	{
+		using var bitmap = ThumbHashCodec.DecodeBitmap(Hash, Side, Side);
+		return bitmap.GetPixel(bitmap.Width / 2, bitmap.Height / 2);
+	}
+}

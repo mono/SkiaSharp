@@ -15,7 +15,7 @@ Then open http://localhost:5002.
 
 ## Features
 
-- **22 interactive demos** covering gradients, transforms, shaders, text, paths, image filters, and more
+- **23 interactive demos** covering gradients, transforms, shaders, text, paths, image filters, and more
 - **Live controls** — sliders, pickers, toggles, and composable effect groups
 - **CPU & GPU rendering** toggle (WebGL or software rasterizer)
 - **Dark mode** with full theme support
@@ -23,9 +23,9 @@ Then open http://localhost:5002.
 - **PDF generation** with embedded viewer
 - **SkSL shader playground** with 5 animated presets
 - **3D transforms** using native `SKMatrix44` 4×4 pipeline
-- **BlurHash playground** — choose a bundled image, tune and copy its base83 hash, and compare the preview and image beside a looping fade in both hosts
+- **BlurHash and ThumbHash playgrounds** — choose a bundled image, copy its hash, and compare the preview and image beside a looping fade in both hosts
 
-The copyable BlurHash implementation lives in [`Shared/ImagePlaceholders/`](Shared/ImagePlaceholders/); its README describes ownership, the wire format, and direct pixel input. The Gallery-only transition holds each image for 2 seconds and fades for 1 second in each direction.
+The copyable codecs live in [`Shared/ImagePlaceholders/`](Shared/ImagePlaceholders/); its README describes ownership, wire formats, and direct pixel input. BlurHash uses base83 RGB strings and offers component and punch controls; ThumbHash uses binary bytes displayed as Base64 and preserves approximate transparency and aspect ratio. The Gallery-only transition holds each image for 2 seconds and fades for 1 second in each direction.
 
 ## Screenshots
 
@@ -39,7 +39,7 @@ The copyable BlurHash implementation lives in [`Shared/ImagePlaceholders/`](Shar
 
 ## Samples
 
-### Canvas (20)
+### Canvas (21)
 
 | Sample | Category | Description |
 |--------|----------|-------------|
@@ -60,6 +60,7 @@ The copyable BlurHash implementation lives in [`Shared/ImagePlaceholders/`](Shar
 | Shader Playground | Shaders & Effects | Live SkSL runtime effect editor with 5 presets |
 | Text Lab | Text & Typography | Font selection, alignment, size, and metric visualization |
 | Text on Path | Text & Typography | Text along circle, wave, and heart paths |
+| ThumbHash Playground | Image Decoding | Generate and compare alpha-aware ThumbHash previews |
 | Vector Art | Paths & Geometry | Complex Bézier artwork with color themes |
 | Vertex Mesh | General | Triangle meshes with wireframe overlay |
 | World Text | Text & Typography | Multi-script rendering with HarfBuzz shaping |
