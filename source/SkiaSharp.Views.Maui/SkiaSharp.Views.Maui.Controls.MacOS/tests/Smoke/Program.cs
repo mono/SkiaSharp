@@ -61,6 +61,7 @@ sealed class SmokeApp : Application
 	private bool requestedResize;
 	private bool requestedNativeLayout;
 	private bool renderLoopStarted;
+	private bool imageButtonTransitionVerified;
 	private bool reattached;
 	private bool touchesVerified;
 	private DateTime requestedResizeAt;
@@ -172,6 +173,25 @@ sealed class SmokeApp : Application
 		if (resizedCpuFrames > 0 && resizedGpuFrames > 0 && sawMetal &&
 			sawRawInfo && imagesConverted && touchesVerified)
 		{
+			if (!imageButtonTransitionVerified)
+			{
+				skImageButton.Source = null;
+				if (skImageButton.Handler?.PlatformView is not NSButton { Image: null })
+				{
+					Console.Error.WriteLine("FAIL AppKit ImageButton retained an SK image after clearing Source");
+					Finish(1);
+					return;
+				}
+				skImageButton.Source = new FontImageSource { Glyph = "A", Size = 16 };
+				if (skImageButton.Handler?.PlatformView is not NSButton { Image: not null })
+				{
+					Console.Error.WriteLine("FAIL AppKit ImageButton could not display an ordinary font source");
+					Finish(1);
+					return;
+				}
+				skImageButton.Source = new SKImageImageSource { Image = image };
+				imageButtonTransitionVerified = true;
+			}
 			if (!renderLoopStarted)
 			{
 				renderLoopStarted = true;
@@ -207,7 +227,7 @@ sealed class SmokeApp : Application
 					gpu.Handler!.DisconnectHandler();
 					if (touchesReattached && hadMetalContext && gpu.GRContext is null)
 					{
-						Console.WriteLine($"PASS AppKit CPU={cpuFrames} Metal={gpuFrames} resized CPU={resizedCpuFrames} Metal={resizedGpuFrames}; mouse, reattach, disconnect, Metal loop and all image sources converted");
+						Console.WriteLine($"PASS AppKit CPU={cpuFrames} Metal={gpuFrames} resized CPU={resizedCpuFrames} Metal={resizedGpuFrames}; mouse, reattach, disconnect, Metal loop and image source transitions converted");
 						Finish(0);
 					}
 					else

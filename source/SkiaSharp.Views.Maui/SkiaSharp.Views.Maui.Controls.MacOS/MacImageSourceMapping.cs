@@ -30,6 +30,12 @@ namespace SkiaSharp.Views.Maui.Handlers
 			});
 			ImageButtonHandler.Mapper.AppendToMapping(nameof(IImage.Source), (handler, view) =>
 			{
+				if (view.Source is null)
+				{
+					handler.PlatformView.Image = null;
+					handler.PlatformView.InvalidateIntrinsicContentSize();
+					return;
+				}
 				if (view.Source is not ISKImageImageSource and not ISKBitmapImageSource and
 					not ISKPixmapImageSource and not ISKPictureImageSource)
 					return;
