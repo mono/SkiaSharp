@@ -307,7 +307,7 @@ jobs:
           - bash: sudo ./scripts/infra/native/apple/select-xcode.sh $(XCODE_VERSION_PREVIEW)
             displayName: Switch to the preview workload Xcode
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-        - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+        - ${{ if and(not(startsWith(parameters.name, 'native_')), eq(parameters.target, 'samples')) }}:
           - bash: |
               set -euo pipefail
               sudo xcodebuild -runFirstLaunch
