@@ -322,10 +322,10 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|iOS
           parameters:
             name: tests_ios_macos
-            displayName: iOS
+            displayName: iOS simulator
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-ios
-            additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            additionalArgs: --device=ios-simulator-64 --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
               - name: native
@@ -348,9 +348,9 @@ stages:
                 inputs:
                   testResultsFormat: VSTest
                   testResultsFiles: 'output/logs/testlogs/**/*.trx'
-                  testRunTitle: 'iOS Tests (v$(IOS_TEST_DEVICE_VERSION))'
+                  testRunTitle: 'iOS Simulator Tests (runtime $(IOS_TEST_RUNTIME_VERSION))'
             publishArtifacts:
-              - name: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
+              - name: testlogs_ios_$(IOS_TEST_RUNTIME_VERSION)
                 always: true
                 path: 'output/logs/testlogs'
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Mac Catalyst
