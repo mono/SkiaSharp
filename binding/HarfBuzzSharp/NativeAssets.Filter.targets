@@ -1,0 +1,48 @@
+<Project>
+  <PropertyGroup>
+    <_HarfBuzzSharpNativeFilterInputs>$(IntermediateOutputPath)HarfBuzzSharp.NativeAssets.filter.inputs</_HarfBuzzSharpNativeFilterInputs>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(_HarfBuzzSharpNativeFilterInputs)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <Target Name="_HarfBuzzSharpRecordNativeFilterInputs"
+          BeforeTargets="ResolveLockFileCopyLocalFiles;_HandlePackageFileConflicts"
+          DependsOnTargets="ResolvePackageAssets">
+    <WriteLinesToFile File="$(_HarfBuzzSharpNativeFilterInputs)"
+                      Lines="HarfBuzzSharp=$(HarfBuzzSharpFilterRuntimeIdentifiers)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_HarfBuzzSharpNativeFilterInputs)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_HarfBuzzSharpFilterNativePackageAssets"
+          BeforeTargets="ResolveLockFileCopyLocalFiles;_HandlePackageFileConflicts"
+          DependsOnTargets="_HarfBuzzSharpRecordNativeFilterInputs"
+          Condition="'$(RuntimeIdentifier)' == '' and !$([System.String]::IsNullOrWhiteSpace('$(HarfBuzzSharpFilterRuntimeIdentifiers)'))">
+    <ItemGroup>
+      <_HarfBuzzSharpFilterAssets Include="@(RuntimeTargetsCopyLocalItems)"
+                                  Condition="$([System.String]::Copy('%(RuntimeTargetsCopyLocalItems.NuGetPackageId)').StartsWith('HarfBuzzSharp.NativeAssets.', System.StringComparison.OrdinalIgnoreCase)) and '%(RuntimeTargetsCopyLocalItems.RuntimeIdentifier)' != ''" />
+      <_HarfBuzzSharpFilterAssets Include="@(NativeCopyLocalItems)"
+                                  Condition="$([System.String]::Copy('%(NativeCopyLocalItems.NuGetPackageId)').StartsWith('HarfBuzzSharp.NativeAssets.', System.StringComparison.OrdinalIgnoreCase)) and '%(NativeCopyLocalItems.RuntimeIdentifier)' != ''" />
+      <_HarfBuzzSharpAvailableRids Include="@(_HarfBuzzSharpFilterAssets->'%(RuntimeIdentifier)')" />
+      <_HarfBuzzSharpRequestedRids Include="$([MSBuild]::Unescape('$(HarfBuzzSharpFilterRuntimeIdentifiers)'))" />
+    </ItemGroup>
+    <PickBestRid RuntimeGraphPath="$(RuntimeIdentifierGraphPath)"
+                 TargetRid="$([System.String]::Copy('%(_HarfBuzzSharpRequestedRids.Identity)').Trim())"
+                 SupportedRids="@(_HarfBuzzSharpAvailableRids->Distinct())"
+                 Condition="'@(_HarfBuzzSharpFilterAssets)' != '' and '@(_HarfBuzzSharpRequestedRids)' != ''">
+      <Output TaskParameter="MatchingRid" ItemName="_HarfBuzzSharpSelectedRids" />
+    </PickBestRid>
+    <ItemGroup>
+      <_HarfBuzzSharpAllowedRid Include="@(_HarfBuzzSharpSelectedRids)">
+        <RuntimeIdentifier>%(Identity)</RuntimeIdentifier>
+      </_HarfBuzzSharpAllowedRid>
+      <_HarfBuzzSharpRejectedAssets Include="@(_HarfBuzzSharpFilterAssets)" />
+      <_HarfBuzzSharpRejectedAssets Remove="@(_HarfBuzzSharpAllowedRid)"
+                                    MatchOnMetadata="RuntimeIdentifier" MatchOnMetadataOptions="CaseInsensitive" />
+      <NativeCopyLocalItems Remove="@(_HarfBuzzSharpRejectedAssets)" />
+      <RuntimeTargetsCopyLocalItems Remove="@(_HarfBuzzSharpRejectedAssets)" />
+    </ItemGroup>
+  </Target>
+</Project>

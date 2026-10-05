@@ -180,7 +180,8 @@ Download the `nuget` artifact from one exact completed SkiaSharp CI build and
 place its packages in `output/nugets`. Record the build URL/commit when reporting
 results. Do not combine different builds or substitute published packages for
 missing artifacts. Both families require their core, `NativeAssets.Win32`,
-`NativeAssets.macOS`, and `NativeAssets.Linux` packages; package versions are read
+`NativeAssets.macOS`, `NativeAssets.Linux`, and `NativeAssets.WebAssembly` packages; NoDependencies cases also
+require `SkiaSharp.NativeAssets.Linux.NoDependencies`. Package versions are read
 from their nuspec metadata, not inferred from the checkout.
 
 Run the CI entry point from the repository root:
@@ -204,10 +205,11 @@ intermediate, and output directories. Source mapping restricts SkiaSharp and
 HarfBuzzSharp packages to the supplied artifacts, so missing packages cannot
 fall back to public versions. User NuGet caches and input packages are not modified.
 
-For each family, build and publish first verify the default package includes
-Win32/macOS native assets and **no Linux native assets**. With an explicit
-`NativeAssets.Linux` reference, the nine-case matrix below verifies that Linux
-assets are included and that RID selection behaves as expected.
+For each family, build and publish first verify that the core package includes
+Win32, macOS, Linux, **and WebAssembly** dependencies by default. WebAssembly
+archives are link inputs, so they are not copied to ordinary .NET outputs and
+are unaffected by RID filtering. The nine-case matrix below
+also verifies SDK RID selection without an output filter.
 
 For each family, the suite tests `build`, `publish`, and `publish -r linux-x64`
 against three project configurations:
@@ -219,10 +221,17 @@ against three project configurations:
 | `RuntimeIdentifiers=linux-x64;linux-arm64` | All native variants under `runtimes/` | Linux x64 native assets beside the app |
 
 Plural `RuntimeIdentifiers` are restore targets, **not an output allow-list**.
+Separate opt-in `SkiaSharpFilterRuntimeIdentifiers` and
+`HarfBuzzSharpFilterRuntimeIdentifiers` lists restrict only their corresponding
+RID-less native outputs during build and publish; blank preserves all assets.
+Singular `RuntimeIdentifier` (including `-r`) keeps SDK selection. The suite
+also checks NoDependencies provenance independently of output filtering.
+Legacy .NET Framework consumers verify default Linux output and NoDependencies
+preference without changing the legacy native package layout.
 The tests compare native paths and hashes with the actual input packages,
 rather than accepting only a successful MSBuild exit code.
-Linux assets are explicitly referenced; this suite does not change package
-dependencies or filtering behavior. No fake packages or mock CLI are used.
+Linux assets are restored transitively by the core packages. No fake packages
+or mock CLI are used.
 
 TRX results, generated projects, command logs, binlogs, restore/dependency
 metadata, and failed-consumer outputs are published from `output/logs/` in CI.

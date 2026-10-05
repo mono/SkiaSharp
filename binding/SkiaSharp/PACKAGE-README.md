@@ -53,7 +53,7 @@ using var output = File.Create("hello-skiasharp.png");
 data.SaveTo(output);
 ```
 
-> **Linux:** add [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux) to the application project for fontconfig integration, or [SkiaSharp.NativeAssets.Linux.NoDependencies](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies) for minimal containers and explicit font loading. See the [package deployment guide](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md) for details.
+> **Linux and WebAssembly:** non-platform targets include both native packages by default. [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux) provides fontconfig integration; add [SkiaSharp.NativeAssets.Linux.NoDependencies](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies) to the application project for minimal containers and explicit font loading. For optional RID-less build/publish filtering of copied native assets (not WebAssembly link inputs), see the [package deployment guide](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md).
 
 ## Choose the right integration
 

@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests.MSBuild.Utils;
 public sealed class DotNet : IDisposable
 {
     private readonly string root;
-    private readonly string cache = Path.Combine(Path.GetTempPath(), $"skiasharp-msbuild-{Guid.NewGuid():N}");
+    private readonly string cache;
     private readonly string host = Setting("DotNetHost");
 
     public string PackageDirectory { get; } = Path.GetFullPath(Setting("PackageDirectory"));
@@ -15,12 +15,17 @@ public sealed class DotNet : IDisposable
     public DotNet()
     {
         root = Path.Combine(Path.GetFullPath(Setting("ArtifactsDirectory")), Guid.NewGuid().ToString("N"));
+        cache = Path.Combine(root, ".cache");
         Directory.CreateDirectory(root);
         File.WriteAllText(Path.Combine(root, "Directory.Build.props"), "<Project />");
         File.WriteAllText(Path.Combine(root, "Directory.Build.targets"), "<Project />");
         File.WriteAllText(Path.Combine(root, "global.json"), JsonSerializer.Serialize(new
         {
-            sdk = new { version = Setting("SdkVersion"), rollForward = "disable" }
+            sdk = new
+            {
+                version = Setting("SdkVersion"),
+                rollForward = "disable"
+            }
         }));
         new XDocument(new XElement("configuration",
             new XElement("packageSources",
@@ -43,15 +48,25 @@ public sealed class DotNet : IDisposable
         var directory = Path.Combine(root, name);
         Directory.CreateDirectory(directory);
         File.WriteAllText(Path.Combine(directory, "Consumer.csproj"), xml);
-        File.WriteAllText(Path.Combine(directory, "Program.cs"), "System.Console.WriteLine(\"Package consumer\");");
+        File.WriteAllText(Path.Combine(directory, "Program.cs"), """
+            class Program
+            {
+                static void Main()
+                {
+                }
+            }
+            """);
         return directory;
     }
 
-    public Task Build(string directory) => Run(directory, "build");
+    public Task Build(string directory, string? rid = null, IReadOnlyDictionary<string, string>? properties = null) =>
+        Run(directory, "build", rid, properties);
 
-    public Task Publish(string directory, string? rid = null) => Run(directory, "publish", rid);
+    public Task Publish(string directory, string? rid = null, IReadOnlyDictionary<string, string>? properties = null) =>
+        Run(directory, "publish", rid, properties);
 
-    private async Task Run(string directory, string command, string? rid = null)
+    private async Task Run(string directory, string command, string? rid = null,
+        IReadOnlyDictionary<string, string>? properties = null)
     {
         var start = new ProcessStartInfo(host)
         {
@@ -60,19 +75,32 @@ public sealed class DotNet : IDisposable
             RedirectStandardError = true,
             UseShellExecute = false
         };
-        foreach (var argument in new[] { command, "Consumer.csproj", "-c", "Release", "-o", "output",
-            "--nologo", "-v:minimal", "-bl:build.binlog", $"-p:RestoreConfigFile={Path.Combine(root, "NuGet.Config")}" })
+        var arguments = new[]
+        {
+            command, "Consumer.csproj",
+            "-c", "Release",
+            "-o", "output",
+            "--nologo", "-v:minimal", "-bl:build.binlog",
+            $"-p:RestoreConfigFile={Path.Combine(root, "NuGet.Config")}"
+        };
+        foreach (var argument in arguments)
             start.ArgumentList.Add(argument);
         if (rid is not null)
         {
             start.ArgumentList.Add("-r");
             start.ArgumentList.Add(rid);
         }
-        foreach (var key in start.Environment.Keys.Where(k =>
+        if (properties is not null)
+        {
+            foreach (var (name, value) in properties)
+                start.ArgumentList.Add($"-p:{name}={value.Replace(";", "%3B")}");
+        }
+        var environmentKeys = start.Environment.Keys.Where(k =>
             k.StartsWith("MSBUILD", StringComparison.OrdinalIgnoreCase) ||
             k.StartsWith("Restore", StringComparison.OrdinalIgnoreCase) ||
             k.StartsWith("NUGET_", StringComparison.OrdinalIgnoreCase) ||
-            k.Equals("NuGetPackageRoot", StringComparison.OrdinalIgnoreCase)).ToArray())
+            k.Equals("NuGetPackageRoot", StringComparison.OrdinalIgnoreCase)).ToArray();
+        foreach (var key in environmentKeys)
             start.Environment.Remove(key);
         start.Environment["NUGET_PACKAGES"] = Path.Combine(cache, "packages");
         start.Environment["NUGET_HTTP_CACHE_PATH"] = Path.Combine(cache, "http");
