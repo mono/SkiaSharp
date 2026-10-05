@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>SkiaSharp.Views.Maui.Controls.Gtk4</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Maui.Controls.Gtk4</AssemblyName>
+    <PackageId>SkiaSharp.Views.Maui.Controls.Gtk4</PackageId>
+    <PackagingGroup>SkiaSharp.Views.Maui.Controls.Gtk4</PackagingGroup>
+    <Title>Experimental SkiaSharp MAUI GTK4 handlers</Title>
+    <PackageTags>maui;gtk4;linux;experimental</PackageTags>
+    <SignAssembly>false</SignAssembly>
+    <Nullable>Enable</Nullable>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://api.nuget.org/v3/index.json</RestoreAdditionalProjectSources>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="SkiaSharp.Views.Maui.Gtk4.Tests" />
+    <PackageReference Include="Microsoft.Maui.Platforms.Linux.Gtk4" Version="0.1.0-preview.12.26421.1" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
+    <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Gtk4\SkiaSharp.Views.Gtk4.csproj" />
+  </ItemGroup>
+  <Target Name="RequireMatchingGtk4PreviewPackages" BeforeTargets="GenerateNuspec">
+    <Error Condition="'$(VersionSuffix)' == ''"
+           Text="Pack the GTK4 native views and MAUI handler packages with the same explicit -p:VersionSuffix=... preview value; stable GTK4 binaries do not contain the APIs required by this handler." />
+  </Target>
+</Project>
