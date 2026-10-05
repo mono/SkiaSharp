@@ -23,10 +23,19 @@ public class PackageInventoryTests(DotNet dotnet)
                 Assert.Equal(core.Version, package.Version);
                 Assert.Contains(package.Files.Keys, path => path.EndsWith(".a", StringComparison.Ordinal) ||
                     path.StartsWith("runtimes/", StringComparison.Ordinal));
+                if (platform == "WebAssembly")
+                {
+                    foreach (var toolchain in family == "SkiaSharp" ? new[] { "3.1.56" } : new[] { "3.1.56", "5.0.6" })
+                        foreach (var variant in new[] { "st", "st,simd", "mt", "mt,simd" })
+                            Assert.Contains(package.Files.Keys, path => path.StartsWith(
+                                $"buildTransitive/netstandard1.0/lib{family}.a/{toolchain}/{variant}/",
+                                StringComparison.Ordinal) && path.EndsWith(".a", StringComparison.Ordinal));
+                }
                 packages.Add(package);
             }
         }
-        foreach (var id in new[] { "SkiaSharp.HarfBuzz", "SkiaSharp.Views.Maui.Controls", "SkiaSharp.Views.Maui.Core" })
+        foreach (var id in new[] { "SkiaSharp.HarfBuzz", "SkiaSharp.Views.Maui.Controls", "SkiaSharp.Views.Maui.Core",
+            "SkiaSharp.NativeAssets.WinUI" })
         {
             var package = dotnet.Packages.Get(id);
             Assert.Equal(dotnet.Packages.Get("SkiaSharp").Version, package.Version);

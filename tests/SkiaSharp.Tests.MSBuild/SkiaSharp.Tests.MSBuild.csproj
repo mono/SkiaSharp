@@ -12,6 +12,7 @@
     <MSBuildTestArtifactsDirectory Condition="'$(MSBuildTestArtifactsDirectory)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..', 'output', 'logs', 'testlogs', 'msbuild'))</MSBuildTestArtifactsDirectory>
     <ConsumerDotNetHost Condition="'$(ConsumerDotNetHost)' == ''">$(DOTNET_HOST_PATH)</ConsumerDotNetHost>
     <ConsumerDotNetHost Condition="'$(ConsumerDotNetHost)' == ''">$(DotNetHostPath)</ConsumerDotNetHost>
+    <ConsumerSdkVersion Condition="'$(ConsumerSdkVersion)' == ''">$(NETCoreSdkVersion)</ConsumerSdkVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="xunit.v3" Version="3.2.2" />
@@ -19,7 +20,7 @@
     <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
     <RuntimeHostConfigurationOption Include="MSBuildTest.PackageDirectory" Value="$(PackageDirectory)" />
     <RuntimeHostConfigurationOption Include="MSBuildTest.ArtifactsDirectory" Value="$(MSBuildTestArtifactsDirectory)" />
-    <RuntimeHostConfigurationOption Include="MSBuildTest.SdkVersion" Value="$(NETCoreSdkVersion)" />
+    <RuntimeHostConfigurationOption Include="MSBuildTest.SdkVersion" Value="$(ConsumerSdkVersion)" />
     <RuntimeHostConfigurationOption Include="MSBuildTest.DotNetHost" Value="$(ConsumerDotNetHost)" />
   </ItemGroup>
 </Project>

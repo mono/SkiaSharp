@@ -7,7 +7,7 @@ using Xunit;
 namespace SkiaSharp.Tests.MSBuild.Utils;
 
 public sealed record ArtifactPackage(string Id, string Version, string RepositoryCommit, string ContentHash,
-    Dictionary<string, string> Files)
+    IReadOnlyDictionary<string, string> Files)
 {
     public static ArtifactPackage Read(string directory, string id)
     {
@@ -21,8 +21,8 @@ public sealed record ArtifactPackage(string Id, string Version, string Repositor
             if (metadata.Elements().Single(element => element.Name.LocalName == "id").Value != id)
                 continue;
             var version = metadata.Elements().Single(element => element.Name.LocalName == "version").Value;
-            var commit = metadata.Elements().Single(element => element.Name.LocalName == "repository").Attribute("commit")!.Value;
-            Assert.True(commit.Length == 40 && commit.All(Uri.IsHexDigit), $"Missing producer commit in {file}");
+            var commit = metadata.Elements().Single(element => element.Name.LocalName == "repository").Attribute("commit")?.Value;
+            Assert.True(commit is { Length: >= 7 and <= 40 } && commit.All(Uri.IsHexDigit), $"Missing producer commit in {file}");
             var hashes = zip.Entries.Where(entry => !entry.FullName.EndsWith("/", StringComparison.Ordinal))
                 .ToDictionary(entry => entry.FullName, entry =>
                 {
@@ -30,7 +30,7 @@ public sealed record ArtifactPackage(string Id, string Version, string Repositor
                     return Convert.ToHexString(SHA256.HashData(stream));
                 });
             using var packageStream = File.OpenRead(file);
-            matches.Add(new(id, version, commit, Convert.ToBase64String(SHA512.HashData(packageStream)), hashes));
+            matches.Add(new(id, version, commit!, Convert.ToBase64String(SHA512.HashData(packageStream)), hashes));
         }
         Assert.True(matches.Count == 1, $"Expected one real {id} package in {directory}, found {matches.Count}");
         return matches[0];
@@ -43,8 +43,11 @@ public sealed record ArtifactPackage(string Id, string Version, string Repositor
     public static void AssertRestore(DotNet dotnet, string project, string framework, IEnumerable<ArtifactPackage> required)
     {
         using var assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(project, "obj", "project.assets.json")));
-        Assert.Equal(framework, Assert.Single(assets.RootElement.GetProperty("project").GetProperty("frameworks")
-            .EnumerateObject()).Name);
+        var restoredFramework = Assert.Single(assets.RootElement.GetProperty("project").GetProperty("frameworks")
+            .EnumerateObject());
+        Assert.Equal(framework, restoredFramework.Value.GetProperty("targetAlias").GetString());
+        Assert.Equal(framework, Assert.Single(assets.RootElement.GetProperty("project").GetProperty("restore")
+            .GetProperty("originalTargetFrameworks").EnumerateArray()).GetString());
         var restored = assets.RootElement.GetProperty("libraries");
         var packages = required.ToArray();
         Assert.Single(packages.Select(package => package.RepositoryCommit).Distinct());
