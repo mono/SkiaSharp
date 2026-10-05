@@ -115,14 +115,26 @@ public class WasmNativeAssetTests(DotNet dotnet)
         var output = Path.Combine(bundle, "_framework");
         Assert.NotEmpty(Directory.GetFiles(output, "blazor.webassembly*.js"));
         Assert.NotEmpty(Directory.GetFiles(output, "dotnet*.js"));
+        foreach (var family in Families)
+            Assert.Contains(Directory.GetFiles(output, family + ".*"), file =>
+                file.EndsWith(".wasm", StringComparison.Ordinal) || file.EndsWith(".dll", StringComparison.Ordinal));
         var wasm = Directory.GetFiles(output, "dotnet.native*.wasm");
         Assert.NotEmpty(wasm);
+        var linkedWasm = Directory.GetFiles(Path.Combine(project, "obj"), "dotnet.native*.wasm", SearchOption.AllDirectories);
+        Assert.NotEmpty(linkedWasm);
+        var linkedHashes = linkedWasm.Select(file =>
+        {
+            using var stream = File.OpenRead(file);
+            return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(stream));
+        }).ToArray();
         foreach (var file in wasm)
         {
             using var stream = File.OpenRead(file);
             var header = new byte[4];
             Assert.Equal(4, stream.Read(header));
             Assert.Equal(new byte[] { 0, 0x61, 0x73, 0x6d }, header);
+            stream.Position = 0;
+            Assert.Contains(Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(stream)), linkedHashes);
         }
     }
 

@@ -46,7 +46,8 @@ public sealed class DotNet : IDisposable
     {
         var directory = Path.Combine(root, name);
         Directory.CreateDirectory(directory);
-        await Execute(directory, ["new", template, "--name", "Consumer", "--output", ".", "--no-restore"],
+        await Execute(directory, ["new", template, "--name", "Consumer", "--output", ".",
+            "--framework", framework.Split('-')[0], "--no-restore"],
             Path.Combine(directory, "template"));
         var projectPath = Path.Combine(directory, "Consumer.csproj");
         var document = XDocument.Load(projectPath);
