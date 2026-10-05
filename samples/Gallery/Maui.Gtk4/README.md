@@ -17,3 +17,5 @@ This project pins MAUI Controls **10.0.51** and MAUI Labs GTK4/Essentials `0.1.0
 Before relying on this experimental backend, check wide and narrow filter/search layouts, category/API tag counts, CPU/GPU switching, Info and appearance popovers, canvas pointer coordinates, and generated-file Open/Share via GTK Essentials on a Linux GTK4 display. A successful macOS managed build does not verify Linux stacking, GPU presentation, touch, theme changes, or file integration.
 
 The rebase onto Skia milestone 156 requires matching native binaries built from the checked-out Skia submodule. Never substitute an older milestone's prebuilt native download.
+
+The GTK4 MAUI backend itself is Linux-only: its startup loads `libgtk-4.so.1`. Even with Homebrew GTK4 and working native `SKGLArea` on macOS, this Gallery head cannot be run there without upstream backend support for macOS GTK libraries. Build on macOS for compile-time checks; validate the UI and renderer on a real Linux GTK4 host.

@@ -23,4 +23,8 @@
     <ProjectReference Include="..\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Gtk4\SkiaSharp.Views.Gtk4.csproj" />
   </ItemGroup>
+  <Target Name="RequireGtk4PreviewVersion" BeforeTargets="GenerateNuspec">
+    <Error Condition="'$(VersionSuffix)' == ''"
+           Text="The experimental GTK4 MAUI package depends on a prerelease MAUI Labs backend. Pack with -p:VersionSuffix=gtk4-preview and pack its SkiaSharp project-reference family with the same suffix." />
+  </Target>
 </Project>
