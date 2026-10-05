@@ -11,6 +11,15 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 var IOS_SIMULATOR_NAME = Argument("iosSimulator", EnvironmentVariable("IOS_SIMULATOR_NAME") ?? "iPhone 16");
 var IOS_CAUSAL_DIAGNOSTICS = EnvironmentVariable("SKIASHARP_IOS_CAUSAL_DIAGNOSTICS") == "true";
 
+void WaitForIosDiagnosticStreamReady(FilePath ready)
+{
+    // Cake's timed IProcess.WaitForExit kills the process on timeout.
+    for (var wait = 0; wait < 100 && !FileExists(ready); wait++)
+        System.Threading.Thread.Sleep(100);
+    if (!FileExists(ready))
+        throw new Exception("The scoped iOS diagnostic stream did not become ready within 10 seconds.");
+}
+
 Task ("tests-ios")
     .Description ("Run all iOS tests.")
     .Does (() =>
@@ -53,7 +62,9 @@ Task ("tests-ios")
             if (IOS_CAUSAL_DIAGNOSTICS)
             {
                 Warning("Diagnostic-only NSZombie/GC experiment; this execution is not normal CI green evidence.");
+                EnsureDirectoryExists(causalOutput.Combine("diagnostics"));
                 causalStream = StartAndReturnProcess("python3", new ProcessSettings {
+                    RedirectStandardError = true,
                     Arguments = new ProcessArgumentBuilder()
                         .AppendQuoted(diagnosticScript.FullPath)
                         .Append("--stream")
@@ -65,13 +76,7 @@ Task ("tests-ios")
                 if (causalStream == null)
                     throw new Exception("Unable to start the scoped iOS diagnostic stream.");
                 var ready = causalOutput.CombineWithFilePath("diagnostics/stream-ready.json");
-                for (var wait = 0; wait < 100 && !FileExists(ready); wait++)
-                {
-                    if (causalStream.WaitForExit(100))
-                        throw new Exception("The scoped iOS diagnostic stream exited before readiness.");
-                }
-                if (!FileExists(ready))
-                    throw new Exception("The scoped iOS diagnostic stream did not become ready.");
+                WaitForIosDiagnosticStreamReady(ready);
             }
             RunDeviceRunnersTest(csproj, results, configuration: "Debug", framework: "net10.0-ios", noBuild: SKIP_BUILD, properties: properties);
         }
@@ -100,25 +105,45 @@ Task ("tests-ios")
         {
             if (IOS_CAUSAL_DIAGNOSTICS)
             {
-                try
+                if (causalStream != null)
                 {
-                    if (causalStream != null)
+                    try
                     {
-                        try
+                        var stop = causalOutput.CombineWithFilePath("diagnostics/stream-stop");
+                        System.IO.File.WriteAllText(stop.FullPath, "");
+                        if (!causalStream.WaitForExit(30000))
+                            Warning("Scoped diagnostic stream did not stop within its cleanup deadline.");
+                        else
                         {
-                            var stop = causalOutput.CombineWithFilePath("diagnostics/stream-stop");
-                            System.IO.File.WriteAllText(stop.FullPath, "");
-                            if (!causalStream.WaitForExit(30000))
-                                Warning("Scoped diagnostic stream did not stop within its cleanup deadline.");
-                            else if (causalStream.GetExitCode() != 0)
+                            causalStream.WaitForExit();
+                            System.IO.File.WriteAllLines(
+                                causalOutput.CombineWithFilePath("diagnostics/stream-launcher.stderr.txt").FullPath,
+                                causalStream.GetStandardError().Take(100).Select(line =>
+                                    line.Length > 2048 ? line.Substring(0, 2048) + " [truncated]" : line));
+                            if (causalStream.GetExitCode() != 0)
                                 Warning("Scoped diagnostic stream failed; see its retained metadata and stderr.");
-                            CopyDirectory(causalOutput.Combine("diagnostics"), results.Combine("diagnostics"));
-                        }
-                        finally
-                        {
-                            causalStream.Dispose();
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Warning("Scoped diagnostic stream cleanup failed; preserving the primary outcome: {0}", ex.Message);
+                    }
+                    finally
+                    {
+                        causalStream.Dispose();
+                    }
+                }
+                try
+                {
+                    EnsureDirectoryExists(results.Combine("diagnostics"));
+                    CopyDirectory(causalOutput.Combine("diagnostics"), results.Combine("diagnostics"));
+                }
+                catch (Exception ex)
+                {
+                    Warning("Scoped diagnostic stream artifact capture failed: {0}", ex.Message);
+                }
+                try
+                {
                     RunProcess("python3", new ProcessSettings {
                         Arguments = new ProcessArgumentBuilder()
                             .AppendQuoted(diagnosticScript.FullPath)
@@ -131,7 +156,7 @@ Task ("tests-ios")
                 }
                 catch (Exception ex)
                 {
-                    Warning("Causal diagnostic capture failed; test outcome is unchanged: {0}", ex.Message);
+                    Warning("Causal diagnostic capture failed; preserving the primary outcome: {0}", ex.Message);
                 }
             }
         }

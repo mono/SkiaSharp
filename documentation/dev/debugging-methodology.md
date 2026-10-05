@@ -91,6 +91,8 @@ one x64 NSZombie/Mono GC experiment, with no automatic task retries. It retains
 a bounded app-only live log stream and source/package/app/runtime provenance
 in the same artifact. Zombies alter object deallocation: this diagnostic run,
 including any passing leak tests, is not normal CI green evidence.
+Pre-launch failures also retain bounded launcher stderr in that artifact;
+they are not evidence that the app experiment executed.
 
 ## Common Pitfalls
 
