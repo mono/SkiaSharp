@@ -48,6 +48,27 @@ function ConvertTo-ArcadeBuildNumber {
     return "$shortDate.$($match.Groups['revision'].Value)"
 }
 
+function ConvertTo-OfficialBuildId {
+    param([Parameter(Mandatory)][string] $BuildNumber)
+
+    $match = [regex]::Match($BuildNumber, '^(?<date>\d{5}|\d{8})\.(?<revision>\d+)$')
+    if (-not $match.Success) {
+        return ''
+    }
+
+    $datePart = $match.Groups['date'].Value
+    if ($datePart.Length -eq 5) {
+        $year = 2000 + [int]$datePart.Substring(0, 2)
+        $monthAndDay = [int]$datePart.Substring(2)
+        $date = [DateTime]::new($year, [int][Math]::Floor($monthAndDay / 50), $monthAndDay % 50)
+    } else {
+        $date = [DateTime]::ParseExact(
+            $datePart, 'yyyyMMdd', [Globalization.CultureInfo]::InvariantCulture)
+    }
+
+    return "$($date.ToString('yyyyMMdd', [Globalization.CultureInfo]::InvariantCulture)).$($match.Groups['revision'].Value)"
+}
+
 $officialBuildId = "$env:ARCADE_OFFICIAL_BUILD_ID"
 if ([string]::IsNullOrWhiteSpace($officialBuildId)) {
     throw 'ARCADE_OFFICIAL_BUILD_ID is empty.'
@@ -143,15 +164,20 @@ Set-BuildVariable PREVIEW_LABEL $previewLabel
 
 Write-Host "`n# Checking for secondary build information"
 $resourceRunName = "$env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME"
-if (($env:BUILD_REASON -eq 'ResourceTrigger' -or $env:BUILD_REASON -eq 'Manual') -and
-    -not [string]::IsNullOrWhiteSpace($resourceRunName)) {
-    Write-Host "Working with $resourceRunName"
+$usesResourceIdentity = ($env:BUILD_REASON -eq 'ResourceTrigger' -or $env:BUILD_REASON -eq 'Manual') -and
+    -not [string]::IsNullOrWhiteSpace($resourceRunName)
+$identityRunName = if ($usesResourceIdentity) { $resourceRunName } else { "$env:BUILD_BUILDNUMBER" }
+$hasProductIdentity = $identityRunName.StartsWith("$env:SKIASHARP_VERSION-", [StringComparison]::Ordinal) -or
+    $identityRunName.StartsWith("$env:SKIASHARP_VERSION+", [StringComparison]::Ordinal)
+if ($usesResourceIdentity -or $hasProductIdentity) {
+    # Prepare names the run once; later jobs must not recompute its date/counter.
+    Write-Host "Working with $identityRunName"
     $versionPrefix = [regex]::Escape("$env:SKIASHARP_VERSION-")
     $releasePrefix = [regex]::Escape("$env:SKIASHARP_VERSION+")
     $releaseMatch = [regex]::Match(
-        $resourceRunName,
+        $identityRunName,
         "^$releasePrefix(?<official>\d{8}\.\d+)$")
-    $runNameWithoutMetadata = $resourceRunName.Split('+')[0]
+    $runNameWithoutMetadata = $identityRunName.Split('+')[0]
     $previewMatch = [regex]::Match(
         $runNameWithoutMetadata,
         "^$versionPrefix(?<label>.+?)\.(?<build>(?:(?:\d{5}|\d{8})\.)?\d+)$")
@@ -162,14 +188,21 @@ if (($env:BUILD_REASON -eq 'ResourceTrigger' -or $env:BUILD_REASON -eq 'Manual')
         $previewLabel = $previewMatch.Groups['label'].Value.ToLowerInvariant()
         $buildNumber = $previewMatch.Groups['build'].Value
     } else {
-        throw "Unable to parse upstream build identity '$resourceRunName'."
+        throw "Unable to parse upstream build identity '$identityRunName'."
     }
 
+    $inheritedOfficialBuildId = ConvertTo-OfficialBuildId $buildNumber
+    if (-not [string]::IsNullOrWhiteSpace($inheritedOfficialBuildId)) {
+        $officialBuildId = $inheritedOfficialBuildId
+        Set-BuildVariable ARCADE_OFFICIAL_BUILD_ID $officialBuildId
+    }
     Write-Host "Inherited preview label: $previewLabel"
     Write-Host "Inherited build number: $buildNumber"
     Set-BuildVariable PREVIEW_LABEL $previewLabel
     Set-BuildVariable BUILD_NUMBER $buildNumber
-    Set-BuildVariable BUILD_COUNTER $buildNumber
+    if ($usesResourceIdentity) {
+        Set-BuildVariable BUILD_COUNTER $buildNumber
+    }
 } else {
     Write-Host "Using this pipeline's Arcade build identity."
 }

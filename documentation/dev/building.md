@@ -21,14 +21,22 @@ This guide covers building SkiaSharp on Windows and macOS.
 Before building SkiaSharp, ensure you have:
 
 - **.NET SDK pinned by the repository** - See `global.json` for the required version
-- **MAUI workload** - Required for mobile platform targets:
+- **Pinned workloads** - Use `DOTNET_WORKLOAD_VERSION` from the
+  [build tool versions](../../scripts/azure-templates-variables.yml) in place of
+  `VERSION`, then run the shared installer from the repository root:
   ```bash
-  dotnet workload install maui
+  pwsh ./scripts/infra/managed/install-dotnet-workloads.ps1 -WorkloadSetVersion VERSION
   ```
+- **OpenJDK 21** and the Android SDK - Required for Android targets. Use
+  [`install-openjdk.ps1`](../../scripts/infra/managed/install-openjdk.ps1)
+  to install the required JDK or reuse `JAVA_HOME_21_X64`.
 - **Cake .NET Tool** - For running build scripts:
   ```bash
   dotnet tool install -g cake.tool
   ```
+
+Use the approved sources in [`nuget.config`](../../nuget.config) for workload
+installation. Request mirroring for missing packages rather than adding sources.
 
 ## Preparation
 
@@ -50,7 +58,7 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 
 **All Platforms:**
 - **.NET SDK pinned by the repository** - See `global.json` for the required version
-- **MAUI workload** - `dotnet workload install maui`
+- **Pinned workloads** - Use the shared installer described in [Prerequisites](#prerequisites)
 - **Cake .NET Tool** - `dotnet tool install -g cake.tool`
 
 **Windows Dependencies:**
@@ -62,9 +70,15 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 - Windows 10 SDK (latest)
 
 **macOS Dependencies:**
-- macOS 12+ (Monterey or later)
-- [Xcode](https://developer.apple.com/xcode/) (latest stable)
+- A macOS version supported by the required Xcode
+- [Xcode](https://developer.apple.com/xcode/) matching `XCODE_VERSION` in the
+  [build tool versions](../../scripts/azure-templates-variables.yml)
 - Command Line Tools: `xcode-select --install`
+- For tvOS storyboard compilation, install a simulator runtime supported by the selected Xcode:
+  ```bash
+  xcodebuild -downloadPlatform tvOS
+  ```
+  See [additional Xcode components](https://developer.apple.com/documentation/xcode/downloading-and-installing-additional-xcode-components).
 
 ### Preparation
 
@@ -115,7 +129,7 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
           - In VS 2022 Build Tools, select **WinUI application development build tools** and its optional C++ tools
        - Android NDK (via Visual Studio Installer or [manually](https://developer.android.com/ndk/downloads))
           - Make sure the path to the root is in the `ANDROID_NDK_ROOT` or `ANDROID_NDK_HOME` environment variables
- - [OpenJDK 17+](https://adoptium.net/)
+ - [OpenJDK 21](https://learn.microsoft.com/java/openjdk/download)
  - Clang/LLVM
     - Run `.\scripts\install-llvm.ps1`
     - Set `LLVM_HOME` to the path of the install
@@ -123,6 +137,11 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
 If you have multiple Visual Studio installations, use `--vsinstall` or set
 `VS_INSTALL` to select one with the v143 tools and matching Spectre libraries.
 Use `--windowsSdkVersion` if you need a specific installed Windows SDK.
+
+The Windows source benchmark provisions matching x64 Spectre libraries in the
+selected Visual Studio installation with
+`scripts\infra\native\windows\install-spectre.ps1`. It uses the same v143 toolset
+selection as the native build rather than the newer Visual Studio default.
 
 **macOS Dependencies:**
  - [Managed-Only build dependencies](#dependencies)
@@ -133,7 +152,7 @@ Use `--windowsSdkVersion` if you need a specific installed Windows SDK.
  - Python 3
  - Clang 14+
  - Make
- - OpenJDK 17+
+ - OpenJDK 21
 
 ### Building Native Libraries
 

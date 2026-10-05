@@ -69,6 +69,35 @@ Different compilers define different macros:
 
 **Don't assume** - verify with a minimal test or documentation if uncertain.
 
+### iOS Simulator Test Diagnostics
+
+The iOS job keeps Apple CLI's runtime selection and records the created
+simulator's runtime version, build and UDID. Test-result titles and testlogs
+artifact names use that observed version, or `unselected` before it is resolved.
+
+An incomplete DeviceRunners TCP stream is not an OS crash diagnosis: a missing
+`end` event can report an app crash without a process exit reason. On iOS test
+failure, `tests-apple.cake` captures diagnostics before deleting the simulator.
+The usual testlogs artifact includes a `diagnostics` directory with app-specific
+simulator/host unified logs, matching `.ips`/`.crash` reports, observed app PIDs,
+and capture errors in `capture.json`. Logs are scoped to the app, simulator and
+run window; crash reports must match the simulator or an observed app PID.
+Commands have a 25-second deadline and 8 MiB output limits; at most eight
+5 MiB reports are retained. Capture failure does not replace the test failure.
+
+DeviceRunners owns app launch, so this collector cannot attach to app stdout or
+stderr or supply a missing exit status. Use captured OS termination events or
+crash frames to distinguish a runner disconnect from a managed/native crash;
+do not infer the fault from the last completed test or change GPU policy.
+
+The internal Tests pipeline has an opt-in `iosCausalDiagnostics` parameter for
+one x64 NSZombie/Mono GC experiment, with no automatic task retries. It retains
+a bounded app-only live log stream and source/package/app/runtime provenance
+in the same artifact. Zombies alter object deallocation: this diagnostic run,
+including any passing leak tests, is not normal CI green evidence.
+Pre-launch failures also retain bounded launcher stderr in that artifact;
+they are not evidence that the app experiment executed.
+
 ## Common Pitfalls
 
 ### Pitfall 1: `#if defined(X)` vs `#if X`
