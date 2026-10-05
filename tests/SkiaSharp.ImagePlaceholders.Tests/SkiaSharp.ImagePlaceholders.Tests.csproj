@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(TFMCurrent)</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <SignAssembly>false</SignAssembly>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.9.1" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
+    <PackageReference Include="coverlet.msbuild" Version="10.0.0" />
+    <ProjectReference Include="../../binding/SkiaSharp/SkiaSharp.csproj" />
+    <Compile Include="../../samples/Gallery/Shared/ImagePlaceholders/BlurHashCodec*.cs" Link="ImagePlaceholders/%(Filename)%(Extension)" />
+    <Compile Include="../../samples/Gallery/Shared/ImagePlaceholders/PixelBuffers.cs" Link="ImagePlaceholders/PixelBuffers.cs" />
+    <Compile Include="../../samples/Gallery/Shared/Samples/PlaceholderImageView.cs" Link="Gallery/PlaceholderImageView.cs" />
+  </ItemGroup>
+  <Import Project="../../binding/IncludeNativeAssets.SkiaSharp.targets" />
+</Project>

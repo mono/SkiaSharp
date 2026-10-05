@@ -27,6 +27,7 @@ Task ("Default")
 
     var tfm = "net10.0";
     var testAssemblies = new List<string> {
+        "SkiaSharp.ImagePlaceholders.Tests",
         "SkiaSharp.Tests.Console",
         "SkiaSharp.Tests.SingletonInit.Console",
         "SkiaSharp.Vulkan.Tests.Console",

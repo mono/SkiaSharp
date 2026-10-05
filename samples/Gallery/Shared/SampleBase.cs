@@ -23,6 +23,11 @@ public abstract class SampleBase
 
 	public virtual IReadOnlyList<SampleControl> Controls => [];
 
+	public event EventHandler? ControlsChanged;
+
+	protected void NotifyControlsChanged() =>
+		ControlsChanged?.Invoke(this, EventArgs.Empty);
+
 	// Download support — samples that produce downloadable output override these
 	public virtual byte[]? DownloadBytes => null;
 	public virtual string DownloadFileName => "download.bin";

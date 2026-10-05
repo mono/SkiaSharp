@@ -18,6 +18,19 @@ public static class SampleMedia
 
 	public static class Images
 	{
+		public static readonly string[] DemoImageNames =
+			["Baboon (PNG)", "Color Wheel (PNG)", "HDR Patch (PNG/CICP)", "Baby Tux (WebP)", "Animated Heart (GIF)"];
+
+		public static Stream DemoImage(int index) => index switch
+		{
+			0 => Baboon,
+			1 => ColorWheel,
+			2 => CicpPq,
+			3 => BabyTux,
+			4 => AnimatedHeartGif,
+			_ => throw new System.ArgumentOutOfRangeException(nameof(index)),
+		};
+
 		public static Stream Baboon => Embedded.Load("baboon.png");
 		public static Stream CicpPq => Embedded.Load("cicp-pq.png");
 		public static Stream ColorWheel => Embedded.Load("color-wheel.png");
