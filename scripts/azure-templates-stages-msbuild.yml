@@ -29,19 +29,19 @@ stages:
             ${{ if eq(platform, 'linux') }}:
               displayName: Linux
               buildAgent: ${{ parameters.buildAgentLinux }}
+              packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-msbuild
             retryCount: 0
             shouldPublish: false
             checkoutSubmodules: false
-            installDotNetWorkloads: false
             installPreviewSdk: true
-            installAndroidSdk: false
+            installWindowsSdk: ${{ eq(platform, 'windows') }}
             installAndroidNdk: false
-            installXcode: false
+            installXcode: ${{ eq(platform, 'macos') }}
             installNode: false
             installLlvm: false
             installEmsdk: false
-            installNinja: false
+            installNinja: true
             requiredArtifacts:
               - name: nuget
                 dir: nugets
