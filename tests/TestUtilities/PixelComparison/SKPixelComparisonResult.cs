@@ -2,59 +2,50 @@
 // https://github.com/mono/SkiaSharp.Extended/tree/579c974196199962dc1cb7c22bc68fe32e9a5b64
 // Copyright (c) 2015-2016 Xamarin, Inc.
 // Copyright (c) 2017-2020 Microsoft Corporation. Licensed under the MIT license.
-using System;
 
 namespace SkiaSharp.Testing;
 
-/// <summary>Statistics of selected, threshold-filtered RGB or RGBA channel differences.</summary>
-internal sealed class SKPixelComparisonResult
+/// <summary>Immutable comparison outcome and raw and tolerance-filtered selected-channel statistics.</summary>
+/// <remarks>Contains no references to the compared inputs, options, or borrowed mask.</remarks>
+public sealed class SKPixelComparisonResult
 {
-	internal SKPixelComparisonResult(int totalPixels, int errorPixelCount, long absoluteError, long sumSquaredError, int channelCount, int maxChannelDelta)
+	internal SKPixelComparisonResult(int totalPixels, int channelCount, int errorPixelCount, int maxChannelDelta,
+		SKRectI? errorBounds, SKPixelComparisonMetrics rawMetrics, SKPixelComparisonMetrics thresholdedMetrics, bool isMatch)
 	{
 		TotalPixels = totalPixels;
-		ErrorPixelCount = errorPixelCount;
-		AbsoluteError = absoluteError;
-		SumSquaredError = sumSquaredError;
 		ChannelCount = channelCount;
+		ErrorPixelCount = errorPixelCount;
 		MaxChannelDelta = maxChannelDelta;
+		ErrorBounds = errorBounds;
+		RawMetrics = rawMetrics;
+		ThresholdedMetrics = thresholdedMetrics;
+		IsMatch = isMatch;
 	}
+
+	/// <summary>Whether all configured whole-image budgets pass, or (without budgets) no pixel is rejected.</summary>
+	public bool IsMatch { get; }
 
 	/// <summary>Number of pixels compared.</summary>
 	public int TotalPixels { get; }
 
-	/// <summary>Number of pixels with at least one rejected channel or a rejected channel sum.</summary>
-	public int ErrorPixelCount { get; }
-
-	/// <summary>Ratio of rejected pixels, from zero to one.</summary>
-	public double ErrorPixelPercentage => TotalPixels == 0 ? 0.0 : (double)ErrorPixelCount / TotalPixels;
-
-	/// <summary>Sum of selected differences after tolerance filtering.</summary>
-	public long AbsoluteError { get; }
-
-	/// <summary>Sum of squares of selected differences after tolerance filtering.</summary>
-	public long SumSquaredError { get; }
-
-	/// <summary>Three for RGB, four for RGBA.</summary>
+	/// <summary>Number of enabled channels per pixel (one to four).</summary>
 	public int ChannelCount { get; }
 
-	/// <summary>Maximum raw selected-channel difference, including tolerated differences.</summary>
+	/// <summary>Number of pixels whose difference exceeds at least one enabled channel allowance.</summary>
+	public int ErrorPixelCount { get; }
+
+	/// <summary>Rejected pixel count divided by total pixels (zero for an internal empty fixture).</summary>
+	public double ErrorPixelFraction => TotalPixels == 0 ? 0.0 : (double)ErrorPixelCount / TotalPixels;
+
+	/// <summary>Largest raw delta on any enabled channel, including tolerated differences.</summary>
 	public int MaxChannelDelta { get; }
 
-	/// <summary>Threshold-filtered absolute error divided by total pixels times channel count.</summary>
-	public double MeanAbsoluteError =>
-		TotalPixels == 0 ? 0.0 : (double)AbsoluteError / (TotalPixels * (double)ChannelCount);
+	/// <summary>Bounding rectangle of rejected pixels, or null when none are rejected.</summary>
+	public SKRectI? ErrorBounds { get; }
 
-	/// <summary>Threshold-filtered squared error divided by total pixels times channel count.</summary>
-	public double MeanSquaredError =>
-		TotalPixels == 0 ? 0.0 : (double)SumSquaredError / (TotalPixels * (double)ChannelCount);
+	/// <summary>Metrics across all enabled channel differences, before any tolerance or mask.</summary>
+	public SKPixelComparisonMetrics RawMetrics { get; }
 
-	/// <summary>Square root of mean squared error.</summary>
-	public double RootMeanSquaredError => Math.Sqrt(MeanSquaredError);
-
-	/// <summary>Root mean squared error divided by 255.</summary>
-	public double NormalizedRootMeanSquaredError => RootMeanSquaredError / 255.0;
-
-	/// <summary>Peak signal-to-noise ratio in dB, or positive infinity for zero squared error.</summary>
-	public double PeakSignalToNoiseRatio =>
-		MeanSquaredError == 0 ? double.PositiveInfinity : 10.0 * Math.Log10(255.0 * 255.0 / MeanSquaredError);
+	/// <summary>Metrics across enabled channel differences exceeding their allowances; non-exceeding differences contribute zero.</summary>
+	public SKPixelComparisonMetrics ThresholdedMetrics { get; }
 }
