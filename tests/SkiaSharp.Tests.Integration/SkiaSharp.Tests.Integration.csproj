@@ -52,7 +52,6 @@
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.9.1" />
     <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
-    <PackageReference Include="SkiaSharp.Extended" Version="3.1.0-preview.3" />
   </ItemGroup>
 
   <!-- SkiaSharp packages - version must be specified -->
@@ -92,5 +91,7 @@
          Text="PackageSource must be the BAR build's NuGet V3 feed." />
     <Message Importance="High" Text="Testing SkiaSharp $(SkiaSharpVersion) with HarfBuzzSharp $(HarfBuzzSharpVersion)" />
   </Target>
+
+  <Import Project="..\TestUtilities\PixelComparison\PixelComparison.projitems" />
 
 </Project>

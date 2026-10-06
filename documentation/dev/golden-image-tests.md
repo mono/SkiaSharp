@@ -114,6 +114,14 @@ Raster is not bit-exact because the shared `raster/` golden is captured on one
 architecture and replayed on others. Tolerance is chosen by renderer alone —
 `GoldenTolerance.For` sees only the renderer name.
 
+The [shared pixel comparer](pixel-comparison.md) lives in
+`tests/TestUtilities/PixelComparison/`, not in the shipping SkiaSharp assembly.
+The matrix explicitly selects premultiplied RGBA comparison, per-channel
+tolerance, and the threshold-overlay diff. This preserves the existing rejection
+rule and red/amber diagnostics while sharing the implementation with core and
+package-integration tests. Baseline lookup, GPU policy, and outlier budgets remain
+owned by this harness.
+
 ## Running locally
 
 ```bash
