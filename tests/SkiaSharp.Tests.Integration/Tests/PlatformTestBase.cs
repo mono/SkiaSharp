@@ -187,7 +187,11 @@ public abstract class PlatformTestBase : IDisposable
         
         try
         {
-            var options = new SKPixelComparerOptions { AlphaType = SKAlphaType.Premul };
+            var options = new SKPixelComparerOptions
+            {
+                AlphaType = SKAlphaType.Premul,
+                Tolerance = SKPixelTolerance.Absolute(0, 0, 0, null),
+            };
 
             // Compare using SKPixelComparer
             var result = SKPixelComparer.Compare(expectedImage, compareActual, options);
@@ -195,7 +199,7 @@ public abstract class PlatformTestBase : IDisposable
                 ? (1.0 - (double)result.ErrorPixelCount / result.TotalPixels) * 100 
                 : 0;
             
-            Output.WriteLine($"Comparison: {result.TotalPixels} total, {result.ErrorPixelCount} errors, {result.AbsoluteError} absolute error");
+            Output.WriteLine($"Comparison: {result.TotalPixels} total, {result.ErrorPixelCount} errors, {result.RawMetrics.AbsoluteError} absolute error");
             
             // Generate and save diff image
             using var diffImage = SKPixelComparer.GenerateDifferenceMask(expectedImage, compareActual, options);
