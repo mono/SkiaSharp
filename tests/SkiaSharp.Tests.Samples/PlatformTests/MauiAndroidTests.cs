@@ -28,8 +28,8 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
     // New: Specific device UDID (e.g., "emulator-5554") and expected API level
     private static string? DeviceUdid => 
         AppContext.GetData("AndroidDeviceId") as string is { Length: > 0 } udid ? udid : null;
-    private static string? ExpectedApiLevel => 
-        AppContext.GetData("AndroidApiLevel") as string is { Length: > 0 } api ? api : null;
+    internal static string? ExpectedApiLevel =>
+        AppContext.GetData("AndroidApiLevel")?.ToString() is { Length: > 0 } api ? api : null;
     
     protected override string PlatformName => "Android";
     protected override string TargetFramework => $"{BaseFramework}-android";

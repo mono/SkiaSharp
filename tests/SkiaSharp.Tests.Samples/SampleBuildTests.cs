@@ -22,6 +22,18 @@ public class SampleBuildTests(SampleWorkspace workspace, ITestOutputHelper outpu
             AppContext.GetData("SampleTest.Filter") as string ?? ""));
     }
 
+    [Theory]
+    [InlineData("Console", "SkiaSharp.NativeAssets.Linux.NoDependencies")]
+    [InlineData("BrowserWebAssembly", "SkiaSharp.NativeAssets.WebAssembly")]
+    public void GeneratedHostSamplesIncludeTheirRuntimeAssets(string folder, string package)
+    {
+        var file = Path.Combine(DotNet.Setting("SamplesDirectory"), "Basic", folder, "SkiaSharpSample", "SkiaSharpSample.csproj");
+        var project = XDocument.Load(file);
+        var reference = Assert.Single(project.Descendants("PackageReference"),
+            element => (string?)element.Attribute("Include") == package);
+        Assert.Equal(DotNet.Setting("SkiaSharpVersion"), (string?)reference.Attribute("Version"));
+    }
+
     [Fact]
     public void UnoImplicitPackagesUseTheArtifactVersions()
     {

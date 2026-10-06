@@ -15,7 +15,7 @@ public class AppiumFixture : IAsyncLifetime
     {
         get
         {
-            var configured = AppContext.GetData("SampleTest.AppiumPort") as string;
+            var configured = AppContext.GetData("SampleTest.AppiumPort")?.ToString();
             if (string.IsNullOrEmpty(configured))
                 return 4723;
             if (!int.TryParse(configured, out var port) || port is < 1 or > 65535)

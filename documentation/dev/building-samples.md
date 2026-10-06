@@ -152,7 +152,7 @@ for the full step-by-step workflow if you need to run it manually.
 
 The `CreateSamplesDirectory()` function in `scripts/infra/samples/samples.cake`:
 
-1. **`<ProjectReference>`** → converted to `<PackageReference>` using the project's `<PackagingGroup>` as the package ID and version from `VERSIONS.txt`
+1. **`<ProjectReference>`** → converted to `<PackageReference>` using the project's `<PackagingGroup>` and version from `VERSIONS.txt`; native-asset projects use their own package ID while sharing the family version
 2. **Existing `<PackageReference>`** → version updated from `VERSIONS.txt`
 3. For SkiaSharp/HarfBuzzSharp packages, the preview suffix is appended
 4. Two output trees: `output/samples/` (stable) and `output/samples-preview/` (preview)

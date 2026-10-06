@@ -16,6 +16,25 @@ public class ManualPlatformPolicyTests
         Assert.Equal(expected, ManualPlatformPolicy.IsEnabled(value));
 
     [Fact]
+    public void NumericRuntimeOptionsSelectTheExplicitPortAndApiLevel()
+    {
+        var port = AppContext.GetData("SampleTest.AppiumPort");
+        var api = AppContext.GetData("AndroidApiLevel");
+        try
+        {
+            AppContext.SetData("SampleTest.AppiumPort", 4823);
+            AppContext.SetData("AndroidApiLevel", 36);
+            Assert.Equal(4823, AppiumFixture.Port);
+            Assert.Equal("36", MauiAndroidTests.ExpectedApiLevel);
+        }
+        finally
+        {
+            AppContext.SetData("SampleTest.AppiumPort", port);
+            AppContext.SetData("AndroidApiLevel", api);
+        }
+    }
+
+    [Fact]
     public void EveryGuiRunnerIsManualPlatform()
     {
         foreach (var type in new[]

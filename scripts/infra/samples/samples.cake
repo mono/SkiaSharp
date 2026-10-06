@@ -157,6 +157,10 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                         .Elements().Where(e => e.Name.LocalName == "PropertyGroup")
                         .Elements().Where(e => e.Name.LocalName == "PackagingGroup")
                         .FirstOrDefault()?.Value;
+                    var projectName = System.IO.Path.GetFileNameWithoutExtension(absFilePath.FullPath);
+                    var packageId = projectName.Contains(".NativeAssets.")
+                        ? projectName
+                        : packagingGroup;
                     var version = GetVersion(packagingGroup);
                     if (!string.IsNullOrWhiteSpace(version)) {
                         Debug($"Substituting project reference {relFilePath} for project {rel}.");
@@ -166,7 +170,7 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                             version += suffix;
                         }
                         projItem.AddAfterSelf(new XElement(name, new object[] {
-                            new XAttribute("Include", packagingGroup),
+                            new XAttribute("Include", packageId),
                             new XAttribute("Version", version),
                         }));
                     } else {
