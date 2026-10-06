@@ -1,193 +1,37 @@
-# Pixel comparison for tests
+# Pixel comparison API
 
-The comparer is an **unpublished test utility**, not part of `SkiaSharp.dll` or
-a new NuGet package. Its implementation lives in
-`tests/TestUtilities/PixelComparison/` and is source-shared by the desktop test
-host, shared device/browser test library, and package-integration test project.
-Package integration still compiles against its exact selected SkiaSharp package;
-it does not reference the locally built bindings to obtain the comparer.
+`SkiaSharp.Testing` is a small, consumer-facing comparison API: two decoded images
+in, measurements and a match decision out, with difference images generated only
+when requested. It does not capture screenshots, edit images, manage baselines,
+retry tests, or depend on a test framework.
 
-This document separates the implemented API from a proposal for small future
-improvements. Neither layer needs screenshot capture, image editing, baseline
-storage, a test framework, or a comparison pipeline.
+The public declarations currently live in
+`tests/TestUtilities/PixelComparison/` and are source-shared by the desktop test
+host, shared device/browser test library, and package-integration host.
+**They are not in `SkiaSharp.dll`, and no package is published by this change.**
+There is no requirement to preserve the separately published Extended comparer's
+API shape.
 
-## Implemented API
-
-The starting point is the current
-[Extended comparer](https://github.com/mono/SkiaSharp.Extended/tree/579c974196199962dc1cb7c22bc68fe32e9a5b64/source/SkiaSharp.Extended/Comparer),
-with its RGB/RGBA options, tolerance maps, and error metrics. The port keeps
-decoded `SKImage`, `SKBitmap`, and `SKPixmap` inputs.
-
-The filename overloads are omitted: callers already own decoding and its errors.
-The bare integer-tolerance overload is also omitted. In current Extended it
-means a summed RGB threshold; in SkiaSharp's old test copy it meant a maximum
-RGBA channel delta. Passing the options explicitly removes that ambiguity.
-The mask overload likewise takes explicit options, avoiding a third-argument
-`null` that could mean either a mask or options.
-
-The following is a signature summary, not implementation code. Each comparison
-family also accepts matching bitmap or pixmap inputs:
-
-```csharp
-SKPixelComparisonResult Compare(SKImage first, SKImage second);
-SKPixelComparisonResult Compare(
-    SKImage first, SKImage second, SKPixelComparerOptions? options);
-SKPixelComparisonResult Compare(
-    SKImage first, SKImage second, int tolerance,
-    SKPixelComparerOptions? options);
-SKPixelComparisonResult Compare(
-    SKImage first, SKImage second, SKImage mask,
-    SKPixelComparerOptions? options);
-```
-
-### Given two images
-
-Inside the test projects:
+## Given two images
 
 ```csharp
 using SkiaSharp.Testing;
 
 var result = SKPixelComparer.Compare(expected, actual);
-
-Assert.Equal(0, result.ErrorPixelCount);
+Assert.True(result.IsMatch);
 ```
 
-The default compares RGB in BGRA8888 **unpremultiplied** representation, with
-zero tolerance. It deliberately keeps current Extended's defaults rather than
-changing alpha behavior during the move.
+The default is exact **RGBA**, including alpha, using unpremultiplied BGRA8888
+normalized samples. A transparent-pixel readback is validated before drawing into
+the normalized bitmap; invisible hidden RGB does not become a new difference.
 
-Normalization retains the original draw-based behavior after validating that
-the source pixels can be read. Fully transparent hidden RGB therefore does not
-become a new visible difference merely because the implementation was moved.
-
-For RGBA comparison with a per-channel allowance:
+All settings belong to one options object:
 
 ```csharp
 var options = new SKPixelComparerOptions
 {
-    CompareAlpha = true,
-    TolerancePerChannel = true,
-};
-
-var result = SKPixelComparer.Compare(expected, actual, 2, options);
-Assert.True(result.ErrorPixelPercentage <= 0.002);
-```
-
-`ErrorPixelPercentage` is the existing name, but its value is a **fraction from
-0 to 1**, not percentage points. A delta equal to tolerance is accepted.
-
-For summed tolerance, set `TolerancePerChannel = false`. For example, deltas
-`(2, 2, 2)` with tolerance `3` pass a per-channel comparison but fail a summed
-comparison. Alpha contributes to the sum only when `CompareAlpha` is enabled.
-
-### Compatibility with existing tests
-
-`AlphaType` selects the comparison representation. Its default is
-`SKAlphaType.Unpremul`; `SKAlphaType.Premul` retains the old test helper's
-premultiplied-byte comparisons. This is independent of whether alpha is among
-the channels compared.
-
-| Consumer | Explicit options and existing gate |
-| --- | --- |
-| Core bitmap assertions | Premultiplied RGB; error fraction strictly below `10^-precision` |
-| Renderer goldens | Premultiplied RGBA, per-channel tolerance 2 or 12; count no greater than `floor(totalPixels * allowedFraction)` |
-| Package integration | Premultiplied RGB; existing resize adapter and similarity at least 95% |
-
-These policies remain at their call sites. The comparer does not choose a GPU
-policy, accept a missing baseline, or resize images to make them comparable.
-
-### Tolerance maps
-
-```csharp
-var result = SKPixelComparer.Compare(expected, actual, toleranceMask, options);
-```
-
-The mask has the same dimensions as the images. In per-channel mode, its channel
-values are individual tolerance thresholds. In summed mode, their selected
-channel sum is the threshold.
-
-This is **not an excluded-pixel mask**. A white RGB mask pixel tolerates all RGB
-differences, but that pixel remains in the metric denominator. When comparing
-alpha, an opaque mask's alpha value of 255 also tolerates all alpha differences
-at that pixel. Do not confuse mask opacity with coverage.
-
-### Measurements
-
-The result exposes total/error pixel counts, the error fraction, 64-bit
-`AbsoluteError` and `SumSquaredError`, channel count, and the maximum observed
-selected-channel delta. Derived measurements are MAE, MSE, RMSE, normalized RMSE,
-and PSNR.
-
-The aggregate error metrics keep Extended's **threshold-filtered** semantics:
-per-channel mode excludes tolerated channels from the numerators; summed mode
-includes all selected-channel deltas only for a rejected pixel. The divisor is
-all image pixels times the selected channel count. `MaxChannelDelta` is raw,
-including differences that were tolerated.
-
-Using `long` avoids the old absolute-error overflow: a 3840x2160 black/white RGB
-comparison requires `6,345,216,000` absolute error. PSNR is positive infinity
-when the measured squared error is zero.
-
-### Difference images
-
-The two existing conveniences remain:
-
-```csharp
-using var mask = SKPixelComparer.GenerateDifferenceMask(expected, actual);
-using var delta = SKPixelComparer.GenerateDifferenceImage(expected, actual);
-```
-
-The first is a strict binary mask. The second is Extended's raw RGB
-channel-delta image, not a threshold heatmap. Options overloads select alpha and
-representation where applicable.
-
-For the renderer golden diagnostic:
-
-```csharp
-var options = new SKPixelComparerOptions
-{
-    AlphaType = SKAlphaType.Premul,
-    CompareAlpha = true,
-    TolerancePerChannel = true,
-};
-
-using var diff = SKPixelComparer.GenerateDifferenceImage(
-    expected, actual, SKPixelDifferenceStyle.ThresholdOverlay, 2, options);
-```
-
-The explicit styles are `BinaryMask`, `ChannelDelta`, and `ThresholdOverlay`.
-The overlay uses the comparison predicate: rejected pixels are red, tolerated
-differences are amber, and matches show dimmed actual pixels. Alpha-only
-rejections are visible in the overlay; the channel-delta convenience continues
-to show RGB deltas.
-
-Inputs are borrowed and must remain valid and unmodified for the synchronous
-call. Numeric results do not retain the images. Returned difference images are
-caller-owned. Unsupported/disposed inputs, unreadable pixels, invalid tolerance,
-and inconsistent dimensions are errors, not successful comparisons with empty
-measurements.
-
-## Proposed next API: a few small ideas
-
-**The remainder is a proposal, not an implemented or published contract.**
-The goal is still two images in, measurements out, with optional acceptance limits
-and difference output. There is no assertion framework or baseline manager.
-
-### One comparison-options shape
-
-Keep decoded-image conveniences, but move tolerance into one options object:
-
-```csharp
-var options = new SKPixelComparisonOptions
-{
-    Channels = SKPixelComparisonChannels.Rgba,
-    AlphaType = SKAlphaType.Unpremul,
-    Tolerance = 2,
-    ToleranceMode = SKPixelToleranceMode.PerChannel,
-    Limits = new SKPixelComparisonLimits
-    {
-        MaxErrorPixelFraction = 0.002,
-    },
+    Tolerance = SKPixelTolerance.Absolute(10, 20, 2, 2),
+    MaxErrorPixelFraction = 0.002,
 };
 
 var result = SKPixelComparer.Compare(expected, actual, options);
@@ -197,124 +41,247 @@ using var diff = SKPixelComparer.GenerateDifferenceImage(
     expected, actual, options, SKPixelDifferenceStyle.ThresholdOverlay);
 ```
 
-`SKImage`, `SKBitmap`, and `SKPixmap` retain equivalent entry points. Use
-overloads rather than default parameters. A plain two-image overload would
-select strict comparison; **RGBA is the recommended future default**, with old
-RGB callers migrated explicitly. That default is not changed by the current
-port.
+The same overload families accept `SKImage`, `SKBitmap`, or `SKPixmap`. There are
+no positional tolerance or mask arguments, filename overloads, optional
+parameters, channels enum, or summed-tolerance mode.
 
-### Useful result shape
+## Tolerance: how different may a sample be?
 
-```csharp
-// Proposed get-only result members:
-bool IsMatch;
-int TotalPixels;
-int ComparedPixelCount;
-int IgnoredPixelCount;
-int ErrorPixelCount;
-double ErrorPixelFraction;
-int MaxChannelDelta;
-SKRectI? ErrorBounds;
-SKPixelComparisonMetrics RawMetrics;
-SKPixelComparisonMetrics ThresholdedMetrics;
-```
-
-Both metric groups carry wide absolute/SSE numerators and clearly named
-MAE/MSE/RMSE/normalized RMSE/PSNR. Raw metrics describe the selected samples
-before tolerance; thresholded metrics retain the current Extended behavior.
-Pixel selection and exclusion precede both groups.
-
-This avoids reporting zero raw RMSE merely because tolerance hid every
-difference. The result has controlled construction and no native ownership;
-creating a difference image remains an explicit operation on the input images.
-Error bounds are simply the bounding rectangle of rejected pixels, useful for
-failure diagnostics without adding any editing API.
-
-### Explicit limits, with unambiguous units
-
-The small limits object needs only:
+`SKPixelTolerance` is an immutable value. The default value and `Exact` both
+enable all four channels with zero allowance:
 
 ```csharp
-long? MaxErrorPixels;
-double? MaxErrorPixelFraction;
-double? MaxNormalizedRootMeanSquaredError;
-SKPixelComparisonBoundary Boundary; // Inclusive or Exclusive
+var exact = SKPixelTolerance.Exact;
+var allChannels = SKPixelTolerance.Absolute(2);
+var perChannel = SKPixelTolerance.Absolute(10, 20, 2, 2);
+var rgbOnly = SKPixelTolerance.Absolute(0, 0, 0, null);
+var redOnly = SKPixelTolerance.Absolute(0, null, null, null);
+var alphaOnly = SKPixelTolerance.Absolute(null, null, null, 0);
+var percentages = SKPixelTolerance.Percent(0.5, 0.2, 1, null);
 ```
+
+**Zero means exact; `null` disables a channel.** Disabling all channels is
+invalid. Disabled channels contribute neither rejection nor raw/thresholded
+metrics nor maximum delta, so red-only RMS has a one-channel denominator.
+This encodes selection without another options flag or enum.
+
+`Absolute` accepts integer byte-channel allowances from 0 through 255.
+`Percent` accepts percentage points from 0 through 100, not fractions. It
+converts each value to a percentage of the full channel range without rounding:
+0.5% of 255 is 1.275, so a difference of 1 passes and 2 fails.
+The nullable `Red`, `Green`, `Blue`, and `Alpha` properties expose these effective
+byte-unit allowances; `ChannelCount` reports the number of enabled channels.
+
+A selected channel rejects a pixel only when its absolute difference is
+**greater than** its allowance. Equality at the boundary is tolerated. A pixel
+is rejected if any enabled channel rejects it. An absolute allowance is not
+named `Exact(10, ...)`, since a nonzero allowance is not exact equality.
+
+## Limits: how much whole-image error is acceptable?
+
+Tolerance classifies individual samples. Limits evaluate the complete
+comparison. They are related but are not interchangeable.
+
+The optional properties on `SKPixelComparerOptions` are:
+
+| Property | Units and decision |
+| --- | --- |
+| `MaxErrorPixels` | Nonnegative count; rejected count must be no greater |
+| `MaxErrorPixelFraction` | Fraction 0-1; rejected count must be no greater than `floor(totalPixels * fraction)` |
+| `MaxNormalizedRootMeanSquaredError` | Raw selected-channel normalized RMS, 0-1; measured value must be no greater |
 
 All configured limits must pass. With no limits, `IsMatch` means zero rejected
-pixels under the selected tolerance. When a metric-only limit is supplied,
-there is no hidden additional zero-error-pixel condition. RMS limits use raw
-metrics by default; an explicitly named metric-source choice can request the
-thresholded group.
+pixels under the selected tolerance. An RMS-only limit does not secretly impose
+zero rejected pixels.
 
-Fractions use 0-1; normalized RMS uses 0-1 but is **not a pixel fraction**.
-Inclusive fraction budgets use `floor(comparedPixelCount * fraction)`, matching
-the renderer harness. Exclusive boundaries support the core helper's existing
-strict comparison. Invalid/NaN/infinite limits fail validation.
+For example, a tolerance of 2 ignores small rounding changes at any pixel. A
+fraction limit of 0.002 additionally allows up to 0.2% of pixels to exceed that
+tolerance. This is different from allowing a per-channel difference of 0.2% of
+255. Increasing tolerance does not lower the raw RMS measurement.
 
-### Concrete calls for the existing consumers
+Negative, out-of-range, NaN, and infinite settings are invalid. The result's
+PSNR may legitimately be positive infinity when squared error is zero.
 
-| Use case | Proposed settings |
+## Measurements and diagnostics
+
+`SKPixelComparisonResult` provides:
+
+- `IsMatch`, `TotalPixels`, and `ChannelCount`.
+- `ErrorPixelCount` and `ErrorPixelFraction`, with an explicit 0-1 fraction.
+- Raw selected-channel `MaxChannelDelta`, including tolerated differences.
+- `ErrorBounds`, the bounding rectangle of rejected pixels, or `null` when none.
+- `RawMetrics` and `ThresholdedMetrics`.
+
+Each `SKPixelComparisonMetrics` group has wide absolute/SSE numerators and
+MAE, MSE, RMSE, normalized RMSE, and PSNR with a selected-channel denominator.
+Raw metrics include every selected normalized difference before tolerance.
+Thresholded metrics include only individual channel differences that exceed
+their thresholds, not the difference minus the allowance. Both groups divide by
+all compared pixels times enabled channels.
+
+Changing only tolerance leaves `RawMetrics` unchanged. This prevents a tolerated
+image from being reported as having zero raw RMS merely because the classifier
+ignored its differences. Result and metric objects have controlled construction
+and retain no native inputs.
+
+```csharp
+using var binary = SKPixelComparer.GenerateDifferenceMask(expected, actual, options);
+using var overlay = SKPixelComparer.GenerateDifferenceImage(expected, actual, options);
+using var delta = SKPixelComparer.GenerateDifferenceImage(
+    expected, actual, options, SKPixelDifferenceStyle.ChannelDelta);
+```
+
+The default difference image is `ThresholdOverlay`, so alpha-only rejections are
+visible. Red means rejected, amber means a selected difference within tolerance,
+and matching pixels show dimmed actual RGB. `BinaryMask` uses white/black.
+`ChannelDelta` is an opaque raw RGB diagnostic and does not claim to display
+alpha-only changes.
+
+Limits affect `IsMatch`, not which pixels are colored red. Every comparison and
+binary/overlay diagnostic uses the same classification settings.
+
+## Tolerance maps and representation
+
+```csharp
+var options = new SKPixelComparerOptions
+{
+    Tolerance = SKPixelTolerance.Absolute(2),
+    ToleranceMask = toleranceMask,
+};
+
+var result = SKPixelComparer.Compare(expected, actual, options);
+```
+
+The borrowed mask must have the same dimensions as the inputs. For each enabled
+channel it can widen, but not tighten, the global allowance:
+`max(global allowance, normalized mask channel)`. It cannot re-enable a
+`null`-disabled channel.
+
+This is not an excluded-pixel mask: tolerated pixels remain in both metric
+denominators. Mask alpha is a channel threshold, not coverage; an opaque mask's
+alpha value of 255 tolerates all alpha differences there.
+
+`AlphaType` defaults to `SKAlphaType.Unpremul` and also permits
+`SKAlphaType.Premul`. Representation and channel selection are independent:
+RGB-only can still compare premultiplied RGB bytes.
+
+Inputs and masks are borrowed and must remain alive and unmodified for each
+synchronous call. Options are snapshotted at entry. Numeric results own no native
+resources; returned difference images are caller-owned and survive disposal of
+temporary normalization buffers. Invalid/disposed/empty/unreadable inputs,
+inconsistent sizes, and invalid settings fail explicitly.
+
+## Existing consumer policies
+
+The new defaults do not silently change the owning harnesses' established gates.
+
+| Consumer | Explicit settings and gate |
 | --- | --- |
-| Exact image equality | Zero tolerance; no limits |
-| Existing Extended RGB behavior | RGB channels; explicit premultiplied or unpremultiplied representation appropriate to the consumer |
-| Core bitmap assertion | RGB, premultiplied, `MaxErrorPixelFraction = 10^-precision`, exclusive boundary |
-| Renderer golden | RGBA, premultiplied, per-channel tolerance, existing maximum error fraction |
-| Package integration | RGB, premultiplied, maximum error fraction 0.05; resizing remains outside comparison |
-| MAUI Graphics / Resizetizer | RGB, legacy representation, maximum error fraction 0.07 / 0.27 |
-| MAUI screenshot compatibility | Red channel, raw normalized RMS maximum 0.005, inclusive boundary; prove Magick Q8 conversion parity first |
-
-For example, the proposed MAUI numeric call is small:
+| Core bitmap assertion | `Absolute(0, 0, 0, null)`, premultiplied; external strict fraction comparison `< 10^-precision` |
+| Renderer goldens | RGBA `Absolute(ChannelTolerance)`, premultiplied, configured maximum error fraction with the same floor-based budget |
+| Package integration | Exact RGB, premultiplied; existing crop/resize adapter and similarity at least 95% remain |
+| MAUI Graphics / Resizetizer | Exact RGB, legacy representation; fraction limits 0.07 / 0.27 |
+| MAUI screenshot metric | Exact red only, raw normalized RMS limit 0.005; verify pinned Magick Q8 conversion parity before replacement |
 
 ```csharp
 var result = SKPixelComparer.Compare(expected, actual,
-    new SKPixelComparisonOptions
+    new SKPixelComparerOptions
     {
-        Channels = SKPixelComparisonChannels.Red,
-        Limits = new SKPixelComparisonLimits
-        {
-            MaxNormalizedRootMeanSquaredError = 0.005,
-        },
+        Tolerance = SKPixelTolerance.Absolute(0, null, null, null),
+        MaxNormalizedRootMeanSquaredError = 0.005,
     });
 ```
 
-This models the
-[actual red-only MAUI comparison](https://github.com/dotnet/maui/blob/7a5a5d610cc056e6fbd0f3dfe3930ea6de1f28bc/src/TestUtils/src/VisualTestUtils.MagickNet/MagickNetVisualComparer.cs),
-not a blanket claim of ImageMagick compatibility. MAUI's rounded error-message
-parsing should not become a comparer feature.
+This expresses the
+[actual MAUI red-channel RMS call](https://github.com/dotnet/maui/blob/7a5a5d610cc056e6fbd0f3dfe3930ea6de1f28bc/src/TestUtils/src/VisualTestUtils.MagickNet/MagickNetVisualComparer.cs).
+It is not a claim of general ImageMagick parity. Exception-message percentage
+parsing, screenshot preparation, and baseline acceptance stay outside this API.
 
-### Small additions worth considering
+## Packaging for MAUI: proposed, not published
 
-| Idea | Source / benefit | Proposed boundary |
-| --- | --- | --- |
-| Channel selection | Magick.NET / MAUI; red, RGB, RGBA and alpha-only measurements | An explicit managed flags enum, not a general image-processing API |
-| Count and fraction limits | [Playwright](https://playwright.dev/docs/test-snapshots); readable acceptance budgets | A small value/configuration object; no retries, capture or baseline logic |
-| Raw versus thresholded metrics | Prevents current filtered-metric ambiguity | Two clearly named numerical groups |
-| Excluded-pixel mask | [pixelmatch](https://github.com/mapbox/pixelmatch/blob/0cbe435beb0dbff093889c0f049a355ab3fa50a3/README.md); volatile regions | A separate one-byte-per-pixel mask; 0 compares, nonzero excludes; report coverage and reject zero compared pixels |
-| Difference bounds and on-demand output | Helps diagnose a small changed region; avoids generating images callers do not request | Rectangle and existing diff styles, not an editor |
-| Normalized span input | Goldens already have packed pixels | `ReadOnlySpan<byte>` plus explicit image info/layout; no decoding or pointer lifetime escaping the call |
+The natural distribution is **one small `SkiaSharp.Testing` class-library
+package**, not an addition to `SkiaSharp.dll` or a dependency on the Extended
+feature set. Its public namespace and types already form that facade. A
+[nonshipping class-library prototype](../../tests/SkiaSharp.Testing/SkiaSharp.Testing.csproj)
+builds the same sources against MAUI's existing SkiaSharp dependency floor.
 
-The new byte mask must not reuse tolerance-mask alpha. Its excluded pixels leave
-the fraction/metric denominator; tolerance-map pixels do not. Input spans and
-padded pixmaps must agree on channel ordering, alpha representation and error
-measurements.
+| Decision | Recommendation |
+| --- | --- |
+| Initial frameworks | `netstandard2.0` for broad .NET/legacy consumption, plus `net10.0` for the current runtime |
+| Runtime dependency | Only `SkiaSharp`, with the lowest API version actually compiled and validated; target MAUI's existing `4.150.1` floor rather than forcing a milestone upgrade |
+| Native assets | Add no new native-assets package or bundled native binary; use the consumer's existing SkiaSharp platform setup |
+| Test frameworks | No xUnit, NUnit, Microsoft.Testing.Platform, Appium, or Playwright dependency |
+| Other libraries | No HarfBuzz, Magick.NET, ImageSharp, or metadata/document conversion dependency |
+| Assembly | Signed where required by repository/legacy consumers; compiler XML next to `lib/` and `ref/` assemblies |
+| Package/version | A separate test-tool package/release decision; no release-manifest or publication changes in this PR |
 
-Current pixelmatch main has newer OKLab, ignore-mask and window-density ideas
-than its published `v7.2.0` YIQ implementation. Any future algorithm borrowing
-must pin and name the algorithm, not treat those thresholds as RGB tolerance.
+The eventual repository project can live in `source/SkiaSharp.Testing/` and use
+the normal versioning/signing/packaging conventions. Canonical implementation
+files should move there once the binary library is adopted. The current shared
+source import can bridge that transition; it should not become permanently
+duplicated code in a separate repository.
+
+A project sketch for a **later** packaging change is:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+    <AssemblyName>SkiaSharp.Testing</AssemblyName>
+    <RootNamespace>SkiaSharp.Testing</RootNamespace>
+    <PackageId>SkiaSharp.Testing</PackageId>
+    <PackagingGroup>SkiaSharp.Testing</PackagingGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsPackable>false</IsPackable>
+    <IsShipping>false</IsShipping>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="[4.150.1,5.0.0)" />
+  </ItemGroup>
+</Project>
+```
+
+The floor and upper bound are a proposal requiring package-compatibility
+validation, not an untested promise. A source-built CI binary may instead
+ProjectReference the matching local binding. The distributed NuGet dependency
+range is a separate choice; it must not pull a new native milestone into MAUI
+just to compare images.
+
+The standalone, signed class-library prototype has been compiled against
+`SkiaSharp 4.150.1` for both `netstandard2.0` and `net10.0`, with generated compiler
+XML and reference assemblies and zero documentation warnings. It uses these
+public sources without referencing a test assembly. This verifies the compile
+floor and portable facade, not every native/runtime combination or Magick
+conversion parity. `IsPackable` and `IsShipping` are both false; the prototype
+is not included in release manifests and produces no published package.
+
+Package-integration tests must continue linking the comparer source, or use a
+separate helper build mode that references their exact selected BAR package.
+They must not reference a helper binary that transitively loads the locally
+built binding and invalidates the package-provenance check.
+
+MAUI can initially replace the Graphics/Resizetizer assertion implementation with
+this package while retaining NUnit, reference naming and attachments in MAUI.
+A thin `VisualTestUtils.SkiaSharp` adapter can implement MAUI's existing
+comparer/diff/editor interfaces in that repository; it does not belong in the
+comparison package. The red RMS predicate is straightforward, but its
+color/alpha decoding parity and Mac screenshot mask/resampling require separate
+verification.
+
+Before any publication: validate the dependency floor and framework matrix,
+review the public API and XML documentation, add the project to the appropriate
+shipping/package manifests, and make an explicit version/publication decision.
+The separately published Extended package is not changed or deprecated here.
+
+## Small future additions, if needed
+
+A distinct one-byte excluded-pixel mask and normalized `ReadOnlySpan<byte>`
+input could be added when a real caller needs them. Excluded pixels would leave
+the metric denominator, unlike tolerance-map pixels. Zero comparison coverage
+must not look like a successful match.
+
 Anti-alias detection, perceptual thresholds, window-density scores, SSIM,
-correlations, EXIF comparison and PDF/SVG processing are **not** part of this
-proposal's first increment.
-
-## Adoption order
-
-The current change replaces the existing Extended dependency and local copy
-with one tested, internal source implementation. Next, channel selection,
-structured acceptance limits and raw metrics can be added independently,
-followed by a separate ignore mask or normalized span convenience if a caller
-needs them.
-
-Keep the utility unpublished until its defaults, units and externally useful
-surface are agreed. A future API review can choose whether to retain old names
-as aliases; it must not remove or change signatures in the separately published
-Extended package as a side effect of this repository change.
+correlations, EXIF comparison, and PDF/SVG processing are deliberately excluded.
+Current pixelmatch main and published `v7.2.0` use different perceptual
+algorithms; any future borrowing must name and pin its algorithm rather than
+pretend its threshold is a byte-channel tolerance.

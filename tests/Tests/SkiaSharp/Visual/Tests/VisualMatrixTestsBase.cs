@@ -118,23 +118,23 @@ namespace SkiaSharp.Tests.Visual.Tests
 			var options = new SKPixelComparerOptions
 			{
 				AlphaType = SKAlphaType.Premul,
-				CompareAlpha = true,
-				TolerancePerChannel = true,
+				Tolerance = SKPixelTolerance.Absolute(tolerance.ChannelTolerance),
+				MaxErrorPixelFraction = tolerance.MaxOutlierFraction,
 			};
 
 			using var actualImage = ToImage(actual, normalized);
 			using var goldenImage = ToImage(golden.Pixels, normalized);
 
-			var result = SKPixelComparer.Compare(goldenImage, actualImage, tolerance.ChannelTolerance, options);
+			var result = SKPixelComparer.Compare(goldenImage, actualImage, options);
 			var allowedOutliers = (long)Math.Floor(result.TotalPixels * tolerance.MaxOutlierFraction);
 
 			using var diffImage = SKPixelComparer.GenerateDifferenceImage(
-				goldenImage, actualImage, SKPixelDifferenceStyle.ThresholdOverlay, tolerance.ChannelTolerance, options);
+				goldenImage, actualImage, options, SKPixelDifferenceStyle.ThresholdOverlay);
 
 			EmitImage(GoldenImageMarker, rendererName, sceneName, info, goldenImage);
 			EmitImage(DiffImageMarker, rendererName, sceneName, info, diffImage);
 
-			if (result.ErrorPixelCount <= allowedOutliers)
+			if (result.IsMatch)
 				return;
 
 			var actualPath = TrySave(() => GoldenStore.SaveFailureArtifact(rendererName, sceneName, ".actual.png", actual, info));

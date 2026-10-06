@@ -212,13 +212,17 @@ namespace SkiaSharp.Tests
 		protected void AssertSimilar(SKBitmap expected, SKBitmap actual, int precision = PRECISION)
 		{
 			var percentage = 1 / Math.Pow(10, precision);
-			var options = new SKPixelComparerOptions { AlphaType = SKAlphaType.Premul };
+			var options = new SKPixelComparerOptions
+			{
+				AlphaType = SKAlphaType.Premul,
+				Tolerance = SKPixelTolerance.Absolute(0, 0, 0, null),
+			};
 
 			var result = SKPixelComparer.Compare(expected, actual, options);
 
 			try
 			{
-				Assert.True(result.ErrorPixelPercentage < percentage);
+				Assert.True(result.ErrorPixelFraction < percentage);
 			}
 			catch
 			{
