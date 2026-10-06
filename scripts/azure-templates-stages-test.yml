@@ -21,12 +21,21 @@ parameters:
         sdkVersion: $(DOTNET_VERSION)
         workloadVersion: $(DOTNET_WORKLOAD_VERSION)
         consumerTargetFramework: net10.0
+        xcodeVersion: $(XCODE_VERSION)
         testCategories: 'SampleBuild,PackageOutput,PackageMultiTarget,DockerBuild,SampleRun,RuntimeSmoke,Infrastructure'
       - name: net11
         sdkVersion: $(DOTNET_VERSION_PREVIEW)
         workloadVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
         consumerTargetFramework: net11.0
+        xcodeVersion: '26.6'
         testCategories: 'SampleBuild,PackageOutput,PackageMultiTarget,DockerBuild,SampleRun,RuntimeSmoke,Infrastructure'
+  - name: sampleBuildAgentMac
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: macos-26
+        os: macos
 
 stages:
 
@@ -685,8 +694,10 @@ stages:
                   buildAgent: ${{ parameters.buildAgentWindows }}
                 ${{ if eq(platform, 'macos') }}:
                   displayName: macOS (${{ profile.name }})
-                  buildAgent: ${{ parameters.buildAgentMac }}
+                  buildAgent: ${{ parameters.sampleBuildAgentMac }}
                   installNinja: true
+                  variables:
+                    XCODE_VERSION: ${{ profile.xcodeVersion }}
                 ${{ if eq(platform, 'linux') }}:
                   displayName: Linux (${{ profile.name }})
                   buildAgent: ${{ parameters.buildAgentLinux }}

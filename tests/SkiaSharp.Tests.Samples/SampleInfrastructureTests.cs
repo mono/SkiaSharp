@@ -248,7 +248,7 @@ public class SampleInfrastructureTests : IDisposable
             foreach (var directory in new[] { profile.Root, packageFixture.Root })
             {
                 Assert.StartsWith(Path.Combine(repository, "output"), directory);
-                Assert.StartsWith(Path.Combine(root, "external-artifacts"),
+                Assert.StartsWith(Path.GetFullPath(Path.Combine(root, "external-artifacts")),
                     directory == profile.Root ? profile.DiagnosticsRoot : packageFixture.DiagnosticsRoot);
                 var localGlobal = Path.Combine(directory, "global.json");
                 if (sdkVersion is null)
@@ -363,6 +363,13 @@ public class SampleInfrastructureTests : IDisposable
                 attribute.ConstructorArguments[0].Value?.ToString() == "Category" &&
                 attribute.ConstructorArguments[1].Value?.ToString() == category);
         }
+    }
+
+    [Fact]
+    public void DockerPortBindingMatchesTheHostNetwork()
+    {
+        Assert.Equal("8080", DockerSampleTests.HttpPortBinding(true));
+        Assert.Equal("127.0.0.1::8080", DockerSampleTests.HttpPortBinding(false));
     }
 
     [Fact]

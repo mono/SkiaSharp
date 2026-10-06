@@ -56,7 +56,7 @@ public class DockerSampleTests(DockerSampleFixture docker, ITestOutputHelper out
     private async Task RunHttp(string tag, string name, string requestsFile, string diagnostics)
     {
         var requests = ReadHttpRequests(requestsFile);
-        await docker.Run(["run", "-d", "--name", name, "-p", "127.0.0.1::8080", tag],
+        await docker.Run(["run", "-d", "--name", name, "-p", HttpPortBinding(OperatingSystem.IsWindows()), tag],
             diagnostics, TimeSpan.FromMinutes(2), output);
         var binding = await docker.Run(["port", name, "8080/tcp"], diagnostics, TimeSpan.FromMinutes(1), output);
         var portText = binding.Split('\n', StringSplitOptions.RemoveEmptyEntries)[0].Trim();
@@ -123,4 +123,6 @@ public class DockerSampleTests(DockerSampleFixture docker, ITestOutputHelper out
     }
 
     internal static Uri Rebase(Uri request, int port) => new UriBuilder(request) { Host = "127.0.0.1", Port = port }.Uri;
+
+    internal static string HttpPortBinding(bool windows) => windows ? "8080" : "127.0.0.1::8080";
 }

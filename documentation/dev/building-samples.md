@@ -14,7 +14,10 @@ The runner uses the same artifact-matched SkiaSharp packages to decode those ima
 Install the selected SDK from `scripts/azure-templates-variables.yml` and its
 required host workloads, alongside the runner's SDK 10. SDK 11's mobile manifests include net10 packs;
 WebAssembly also needs `wasm-tools-net10`. The SDK 11 profile still builds net10
-Apple samples using its backward-targeting packs and the repository's Xcode pin.
+Apple samples using its backward-targeting packs. The Samples macOS jobs use
+the hosted `macos-26` image; SDK 10 retains the repository Xcode pin and SDK 11
+selects Xcode 26.6, required by its newer net10 Apple packs. Native builds and
+source/unit-test agents are unchanged.
 Preview workload installation adds NuGet.org in its temporary SDK-specific
 configuration because some Emscripten tool packages are not mirrored in
 dotnet-public/dotnet-eng.
