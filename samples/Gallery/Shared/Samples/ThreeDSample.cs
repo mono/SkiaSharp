@@ -210,13 +210,13 @@ public class ThreeDSample : CanvasSampleBase
 		axisPaint.Color = new SKColor(239, 68, 68);
 		canvas.DrawLine(0, 0, axisLength, 0, axisPaint);
 		textPaint.Color = axisPaint.Color;
-		canvas.DrawText("X", axisLength + 5, 5, font, textPaint);
+		canvas.DrawText("X", axisLength + 5, 5, SKTextAlign.Left, font, textPaint);
 
 		// Y axis (green) — draw along +Y
 		axisPaint.Color = new SKColor(34, 197, 94);
 		canvas.DrawLine(0, 0, 0, axisLength, axisPaint);
 		textPaint.Color = axisPaint.Color;
-		canvas.DrawText("Y", 5, axisLength + 15, font, textPaint);
+		canvas.DrawText("Y", 5, axisLength + 15, SKTextAlign.Left, font, textPaint);
 	}
 
 	private void DrawMatrixInfo(SKCanvas canvas, SKMatrix44 rotation)
@@ -235,7 +235,7 @@ public class ThreeDSample : CanvasSampleBase
 		using var font = new SKFont(SKTypeface.Default, 11);
 		using var headerFont = new SKFont(SKTypeface.Default, 11);
 
-		canvas.DrawText("4×4 Transform Matrix:", 14, 22, headerFont, textPaint);
+		canvas.DrawText("4×4 Transform Matrix:", 14, 22, SKTextAlign.Left, headerFont, textPaint);
 
 		textPaint.Color = new SKColor(180, 180, 180);
 		var startY = 38f;
@@ -243,7 +243,7 @@ public class ThreeDSample : CanvasSampleBase
 		for (var row = 0; row < 4; row++)
 		{
 			var line = $"│ {rotation[row, 0],7:F3} {rotation[row, 1],7:F3} {rotation[row, 2],7:F3} {rotation[row, 3],7:F3} │";
-			canvas.DrawText(line, 14, startY + row * lineH, font, textPaint);
+			canvas.DrawText(line, 14, startY + row * lineH, SKTextAlign.Left, font, textPaint);
 		}
 
 		textPaint.Color = new SKColor(120, 120, 120);
@@ -251,6 +251,6 @@ public class ThreeDSample : CanvasSampleBase
 		var info = $"X:{rotateX:F1}°  Y:{rotateY:F1}°  Z:{rotateZ:F1}°  S:{scale:F1}  Z:{translateZ:F0}  {Projections[projectionIndex]}";
 		if (projectionIndex == 1)
 			info += $"  d:{perspDepth:F0}";
-		canvas.DrawText(info, 14, startY + 4 * lineH + 4, font, textPaint);
+		canvas.DrawText(info, 14, startY + 4 * lineH + 4, SKTextAlign.Left, font, textPaint);
 	}
 }

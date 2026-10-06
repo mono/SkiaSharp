@@ -119,7 +119,7 @@ elif cg:
     if not cg.get("builds"):
         errors.append(
             "cgAlerts.builds is empty — no builds were queried. "
-            "The CG script must discover and query builds from both pipelines."
+            "The CG script must discover and query combined Build runs."
         )
 
     # Detect fabricated timestamps (midnight UTC = clearly fake)

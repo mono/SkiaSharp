@@ -17,9 +17,6 @@ Task ("samples-generate")
 {
     EnsureDirectoryExists ($"{ROOT_PATH}/output/");
 
-    // create the interactive archive
-    Zip ($"{ROOT_PATH}/interactive", $"{ROOT_PATH}/output/interactive.zip");
-
     // create the samples archive
     CreateSamplesDirectory ($"{ROOT_PATH}/samples/", $"{ROOT_PATH}/output/samples/");
     Zip ($"{ROOT_PATH}/output/samples/", $"{ROOT_PATH}/output/samples.zip");
@@ -43,9 +40,11 @@ Task ("samples-run")
     .Description ("Build and run the generated samples from the output directory.")
     .Does(() =>
 {
-    var actualSamples = PREVIEW_ONLY_NUGETS.Count > 0
-        ? "samples-preview"
-        : "samples";
+    // Each build now emits one package family. Build the generated tree whose
+    // references match that family instead of assuming stable packages coexist.
+    var actualSamples = string.IsNullOrEmpty (PREVIEW_NUGET_SUFFIX)
+        ? "samples"
+        : "samples-preview";
 
     // discover all samples: solutions for dotnet build, run.ps1 for Docker
     var solutions =

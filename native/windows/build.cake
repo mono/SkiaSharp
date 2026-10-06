@@ -3,7 +3,6 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
 var llvmHomeArg = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? "C:/Program Files/LLVM");
 DirectoryPath LLVM_HOME = string.IsNullOrEmpty(llvmHomeArg) || llvmHomeArg.ToLower() == "msvc" ? "" : llvmHomeArg;
-string VC_TOOLSET_VERSION = Argument("vcToolsetVersion", "14.2");
 
 // GPU features can be disabled for NanoServer builds
 string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
@@ -13,6 +12,10 @@ string SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable (
 bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
 
 var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];
+
+string USE_FREETYPE_VAR = Argument ("useFreeType", EnvironmentVariable ("USE_FREETYPE") ?? "false");
+bool USE_FREETYPE = USE_FREETYPE_VAR == "1" || USE_FREETYPE_VAR.ToLower () == "true";
+bool USE_FONTMGR_WIN = !USE_FREETYPE;
 
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/shared/msbuild.cake"
@@ -39,19 +42,23 @@ Task("libSkiaSharp")
         if (Skip(arch)) return;
 
         var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
-        var win_vcvars_version = string.IsNullOrEmpty(VC_TOOLSET_VERSION) ? "" : $"win_vcvars_version='{VC_TOOLSET_VERSION}' ";
+        var win_toolchain_version = $"win_toolchain_version='{TOOLSET_VERSION.Value}' ";
+        var win_vcvars_version = $"win_vcvars_version='{TOOLSET_VERSION.Value.Substring(0, 4)}' ";
+        var win_sdk_version = string.IsNullOrEmpty(WINDOWS_SDK_VERSION) ? "" : $"win_sdk_version='{WINDOWS_SDK_VERSION}' ";
+        var vcVarsArchitecture = skiaArch == "x64" ? "amd64" : $"amd64_{skiaArch}";
         var d = CONFIGURATION.ToLower() == "release" ? "" : "d";
         var spectreLibPath = GetSpectreLibPath(arch);
+        var nativeOutDir = $"{VARIANT}/{arch}";
 
-        GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
+        GenerateGnBuild(nativeOutDir,
             $"target_os='win'" +
             $"target_cpu='{skiaArch}' " +
             $"skia_enable_fontmgr_win_gdi=false " +
-            $"skia_use_dng_sdk=true " +
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
-            $"skia_use_piex=true " +
+            $"skia_use_partition_alloc=false " +
             $"skia_use_system_expat=false " +
+            $"skia_use_system_freetype2=false " +
             $"skia_use_system_libjpeg_turbo=false " +
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
@@ -59,11 +66,25 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"skia_use_direct3d={SUPPORT_DIRECT3D} ".ToLower () +
+            $"skia_use_freetype={USE_FREETYPE} ".ToLower () +
+            $"skia_enable_fontmgr_custom_empty={USE_FREETYPE} ".ToLower () +
+            $"skia_enable_fontmgr_win={USE_FONTMGR_WIN} ".ToLower () +
+            $"skia_enable_graphite=true " +
             clang +
+            win_toolchain_version +
             win_vcvars_version +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
+            win_sdk_version +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}', '/DELAYLOAD:d3d12.dll', '/DELAYLOAD:dxgi.dll', '/DELAYLOAD:D3DCOMPILER_47.dll', '/DEFAULTLIB:delayimp' ] " +
             ADDITIONAL_GN_ARGS);
+
+        RunNinjaWithVcVars(
+            SKIA_PATH,
+            $"out/{nativeOutDir}",
+            "SkiaSharp",
+            vcVarsArchitecture,
+            WINDOWS_SDK_VERSION,
+            TOOLSET_VERSION.Value);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
@@ -85,7 +106,11 @@ Task("libHarfBuzzSharp")
     {
         if (Skip(arch)) return;
 
-        RunMSBuild("libHarfBuzzSharp/libHarfBuzzSharp.sln", platformTarget: arch);
+        RunMSBuild("libHarfBuzzSharp/libHarfBuzzSharp.slnx", platformTarget: arch,
+            properties: new Dictionary<string, string> {
+                { "VCToolsVersion", TOOLSET_VERSION.Value },
+                { "WindowsTargetPlatformVersion", string.IsNullOrEmpty(WINDOWS_SDK_VERSION) ? "10.0" : WINDOWS_SDK_VERSION }
+            });
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);

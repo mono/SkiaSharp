@@ -27,7 +27,7 @@ namespace HarfBuzzSharp.Tests
 
 		// US2: Set Font Variation Values
 
-		[SkippableFact]
+		[Fact]
 		public void CanSetVariations ()
 		{
 			var (face, font) = CreateVariableFontPair ();
@@ -43,7 +43,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanSetMultipleVariationsSimultaneously ()
 		{
 			var (face, font) = CreateVariableFontPair ();
@@ -65,7 +65,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanSetVarCoordsDesign ()
 		{
 			var (face, font) = CreateVariableFontPair ();
@@ -83,7 +83,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SetVariationsOnStaticFontDoesNotThrow ()
 		{
 			using var face = new Face (Blob, 0);
@@ -96,7 +96,7 @@ namespace HarfBuzzSharp.Tests
 
 		// US3: Named Instances
 
-		[SkippableFact]
+		[Fact]
 		public void CanSetVarNamedInstance ()
 		{
 			var (face, font) = CreateVariableFontPair ();
@@ -110,7 +110,7 @@ namespace HarfBuzzSharp.Tests
 
 		// US4: Normalized Coordinates
 
-		[SkippableFact]
+		[Fact]
 		public void CanSetAndGetNormalizedCoords ()
 		{
 			var (face, font) = CreateVariableFontPair ();
@@ -130,7 +130,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetVariationCoordsNormalizedMatchesProperty ()
 		{
 			var (face, font) = CreateVariableFontPair ();
@@ -153,7 +153,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetVariationCoordsNormalizedReturnsWrittenCountWhenBufferSmall ()
 		{
 			var (face, font) = CreateVariableFontPair ();
@@ -183,7 +183,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetVariationCoordsNormalizedWithUndersizedBuffer ()
 		{
 			var (face, font) = CreateMultiAxisFontPair ();
@@ -203,7 +203,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SetVariationCoordsDesignAffectsNormalizedCoords ()
 		{
 			var (face, font) = CreateVariableFontPair ();
@@ -231,7 +231,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NegativeInstanceIndexThrowsForSetVariationNamedInstance ()
 		{
 			var (face, font) = CreateVariableFontPair ();
@@ -241,7 +241,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NormalizedCoordsAreEmptyForStaticFont ()
 		{
 			using var face = new Face (Blob, 0);
@@ -250,7 +250,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Empty (coords);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanNormalizedCoordsReturnsZeroForStaticFont ()
 		{
 			using var face = new Face (Blob, 0);
@@ -260,7 +260,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (0, length);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldHaveDefaultSupportedShapers()
 		{
 			using (var face = new Face(Blob, 0))
@@ -270,7 +270,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetGlyphByUnicode()
 		{
 			using (var face = new Face(Blob, 0))
@@ -281,7 +281,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldHaveDefaultScale()
 		{
 			using (var face = new Face(Blob, 0))
@@ -292,7 +292,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetHorizontalGlyphOrigin()
 		{
 			using (var face = new Face(Blob, 0))
@@ -303,7 +303,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetVerticalGlyphOrigin()
 		{
 			using (var face = new Face(Blob, 0))
@@ -314,7 +314,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetHorizontalGlyphAdvance()
 		{
 			using (var face = new Face(Blob, 0))
@@ -324,7 +324,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetVerticalGlyphAdvance()
 		{
 			using (var face = new Face(Blob, 0))
@@ -334,7 +334,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetHorizontalGlyphAdvances()
 		{
 			using (var face = new Face(Blob, 0))
@@ -347,7 +347,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetVerticalGlyphAdvances()
 		{
 			using (var face = new Face(Blob, 0))
@@ -360,7 +360,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetGlyphName()
 		{
 			using (var face = new Face(Blob, 0))
@@ -372,7 +372,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetGlyphFromName()
 		{
 			using (var face = new Face(Blob, 0))
@@ -384,7 +384,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetGlyphFromString()
 		{
 			using (var face = new Face(Blob, 0))
@@ -395,7 +395,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldConvertGlyphToString()
 		{
 			using (var face = new Face(Blob, 0))
@@ -407,7 +407,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GlyphToStringIsCorrectWithDelegate()
 		{
 			// get an array and fill it with things
@@ -426,7 +426,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetGlyphContourPointForOrigin()
 		{
 			using (var face = new Face(Blob, 0))
@@ -436,7 +436,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetGlyphContourPoint()
 		{
 			using (var face = new Face(Blob, 0))
@@ -446,7 +446,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetGlyphAdvanceForDirection()
 		{
 			using (var face = new Face(Blob, 0))
@@ -458,7 +458,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetHorizontalGlyphKerning()
 		{
 			using (var face = new Face(Blob, 0))

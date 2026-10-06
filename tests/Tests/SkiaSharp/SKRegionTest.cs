@@ -1,10 +1,12 @@
-﻿using Xunit;
+﻿using System;
+using System.Runtime.CompilerServices;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class SKRegionTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void EmptyRegionIsEmpty()
 		{
@@ -15,7 +17,7 @@ namespace SkiaSharp.Tests
 			Assert.False(region.IsComplex);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RectRegionIsRect()
 		{
 			using var region = new SKRegion(SKRectI.Create(10, 10, 100, 100));
@@ -25,7 +27,7 @@ namespace SkiaSharp.Tests
 			Assert.False(region.IsComplex);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TwoRectRegionIsComplex()
 		{
 			using var region = new SKRegion(SKRectI.Create(10, 10, 100, 100));
@@ -36,7 +38,7 @@ namespace SkiaSharp.Tests
 			Assert.True(region.IsComplex);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void QuickContainsIsCorrect()
 		{
 			using var region = new SKRegion(SKRectI.Create(10, 10, 100, 100));
@@ -46,7 +48,7 @@ namespace SkiaSharp.Tests
 			Assert.False(region.QuickContains(SKRectI.Create(200, 20, 50, 50)));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void QuickRejectIsCorrect()
 		{
 			using var region = new SKRegion(SKRectI.Create(10, 10, 100, 100));
@@ -56,7 +58,7 @@ namespace SkiaSharp.Tests
 			Assert.True(region.QuickReject(SKRectI.Create(200, 20, 50, 50)));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetBoundaryPathReturnsNotNullPath()
 		{
 			using var region = new SKRegion(SKRectI.Create(10, 10, 100, 100));
@@ -67,7 +69,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(path);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FromPathWithoutClipDoesNotCreateEmptyRegion()
 		{
 			using var builder = new SKPathBuilder();
@@ -81,7 +83,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRectI.Truncate(path.Bounds), region.Bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SetPathWithoutClipDoesNotCreateEmptyRegion()
 		{
 			using var builder = new SKPathBuilder();
@@ -95,7 +97,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRectI.Truncate(path.Bounds), region.Bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SetPathWithEmptyClipDoesCreatesEmptyRegion()
 		{
 			using var builder = new SKPathBuilder();
@@ -110,7 +112,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRectI.Empty, region.Bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SetPathWithClipDoesCreatesCorrectRegion()
 		{
 			var clipRect = new SKRectI(25, 25, 50, 50);
@@ -129,7 +131,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRectI.Intersect(clipRect, rect), region.Bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyRegionDoesNotIntersectsWithRectI()
 		{
 			using var region = new SKRegion();
@@ -140,7 +142,7 @@ namespace SkiaSharp.Tests
 		}
 
 		// This was added for https://github.com/mono/SkiaSharp/issues/770
-		[SkippableFact]
+		[Fact]
 		public void RegionIntersectsWithRectI()
 		{
 			using var region = new SKRegion();
@@ -151,7 +153,7 @@ namespace SkiaSharp.Tests
 			Assert.True(region.Intersects(rect));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ContainsReturnsFalseIfItDoesNotContain()
 		{
 			using var region = new SKRegion(new SKRectI(30, 30, 40, 40));
@@ -160,7 +162,7 @@ namespace SkiaSharp.Tests
 			Assert.False(region.Contains(region2));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ContainsReturnsTrueIfItDoesContain()
 		{
 			using var region = new SKRegion(new SKRectI(25, 25, 50, 50));
@@ -169,7 +171,7 @@ namespace SkiaSharp.Tests
 			Assert.True(region.Contains(region2));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ContainsReturnsFalseIfItDoesNotContainPoint()
 		{
 			using var region = new SKRegion(new SKRectI(30, 30, 40, 40));
@@ -177,7 +179,7 @@ namespace SkiaSharp.Tests
 			Assert.False(region.Contains(60, 60));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ContainsReturnsTrueIfItDoesContainPoint()
 		{
 			using var region = new SKRegion(new SKRectI(25, 25, 50, 50));
@@ -185,7 +187,7 @@ namespace SkiaSharp.Tests
 			Assert.True(region.Contains(40, 40));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void QuickContainsReturnsTrueIfItDoesContain()
 		{
 			using var region = new SKRegion(new SKRectI(25, 25, 50, 50));
@@ -193,7 +195,7 @@ namespace SkiaSharp.Tests
 			Assert.True(region.QuickContains(new SKRectI(30, 30, 40, 40)));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RectIteratorHasCorrectRectsForEmpty()
 		{
 			using var region = new SKRegion();
@@ -207,7 +209,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRect.Empty, rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RectIteratorHasCorrectRects()
 		{
 			var rectA = SKRectI.Create(10, 10, 100, 100);
@@ -234,7 +236,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRect.Empty, rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ClipIteratorHasCorrectRects()
 		{
 			var rectA = SKRectI.Create(10, 10, 100, 100);
@@ -258,7 +260,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRect.Empty, rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanIteratorHasCorrectIntercepts()
 		{
 			var rectA = SKRectI.Create(10, 10, 100, 100);
@@ -280,6 +282,46 @@ namespace SkiaSharp.Tests
 			Assert.False(iterator.Next(out left, out right));
 			Assert.Equal(0, left);
 			Assert.Equal(0, right);
+		}
+
+		// Regression test for the SKRegion.SpanIterator native use-after-free.
+		//
+		// The native SkRegion::Spanerator keeps a raw pointer into the region's run data, so
+		// the managed SpanIterator must root its SKRegion for the iterator's whole lifetime -
+		// exactly like the sibling RectIterator and ClipIterator already do. If it does not,
+		// the region can be finalized while the iterator is still alive, freeing the native
+		// runs the spanerator still points at -> use-after-free.
+		[Fact]
+		public void SpanIteratorKeepsItsRegionAlive()
+		{
+			var iterator = CreateDoomedSpanIterator(out var weakRegion);
+
+			// Finalize anything unrooted. Without the fix the region has no root once the
+			// helper returns, so it is collected here even though the iterator lives on.
+			CollectGarbage();
+
+			// The live iterator must keep its source region rooted (as its siblings do).
+			Assert.True(weakRegion.IsAlive, "The SKRegion was collected while its SpanIterator was still alive.");
+
+			// The iterator must also still be usable: reading it must not touch freed memory.
+			Assert.True(iterator.Next(out var left, out var right));
+			Assert.Equal(10, left);
+			Assert.Equal(110, right);
+
+			iterator.Dispose();
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static SKRegion.SpanIterator CreateDoomedSpanIterator(out WeakReference weakRegion)
+		{
+			// A two-rect (complex) region so the native spanerator points into real run data.
+			var region = new SKRegion(SKRectI.Create(10, 10, 100, 100));
+			region.Op(SKRectI.Create(50, 50, 100, 100), SKRegionOperation.Union);
+
+			weakRegion = new WeakReference(region);
+
+			// Only the returned iterator can keep `region` alive from here on.
+			return region.CreateSpanIterator(30, 5, 200);
 		}
 	}
 }

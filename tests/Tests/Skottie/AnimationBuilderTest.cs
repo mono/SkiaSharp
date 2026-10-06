@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests
 				"lottie-base64_women-thinking.json",
 			};
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void DefaultBuilderIsTheSameAsDefaultCreate(string filename)
 		{
@@ -39,7 +39,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(directAnimation.Size, builderAnimation.Size);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void DefaultBuilderHasStats(string filename)
 		{
@@ -58,7 +58,7 @@ namespace SkiaSharp.Tests
 			Assert.True(stats.AnimatorCount > 0);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(Base64Files))]
 		public void CanLoadBase64ImagesFromData(string filename)
 		{
@@ -74,7 +74,7 @@ namespace SkiaSharp.Tests
 			Assert.True(animation.Duration > TimeSpan.Zero);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(Base64Files))]
 		public void CanLoadBase64ImagesFromFilename(string filename)
 		{
@@ -89,7 +89,7 @@ namespace SkiaSharp.Tests
 			Assert.True(animation.Duration > TimeSpan.Zero);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(Base64Files))]
 		public void CanRenderWithBase64(string filename)
 		{
@@ -110,7 +110,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(beforePixels, afterPixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void WrappedResourceManagersAreNotCollectedPrematurely()
 		{
 			var (builder, weak) = CreateBuilder();

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -40,20 +41,19 @@ namespace SkiaSharpGenerator
 		{
 			Log?.LogVerbose("  Making sure all declarations have an implementation...");
 
-			var functionGroups = compilation.Functions
-				.OrderBy(f => f.Name)
-				.GroupBy(f => f.Span.Start.File.ToLower().Replace("\\", "/"))
-				.OrderBy(g => Path.GetDirectoryName(g.Key) + "/" + Path.GetFileName(g.Key));
+			var functions = StableOrdering.ByPathThenName(
+				compilation.Functions,
+				SkiaRoot,
+				f => f.Span.Start.File,
+				f => f.Name);
+			var functionGroups = functions.GroupBy(
+				f => StableOrdering.NormalizePath(SkiaRoot, f.Span.Start.File),
+				StringComparer.Ordinal);
 
-			var allSources = new List<string>();
-			foreach (var source in config.Source)
-			{
-				var path = Path.Combine(SkiaRoot, source.Key);
-				foreach (var filter in source.Value)
-				{
-					allSources.AddRange(Directory.EnumerateFiles(path, filter));
-				}
-			}
+			var allSources = StableOrdering.EnumerateFiles(
+				SkiaRoot,
+				config.Source,
+				Directory.EnumerateFiles);
 
 			var sourcesContents = new Dictionary<string, string>();
 

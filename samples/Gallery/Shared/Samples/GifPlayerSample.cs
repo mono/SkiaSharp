@@ -70,25 +70,27 @@ public class GifPlayerSample : CanvasSampleBase
 
 	protected override async Task OnUpdate(CancellationToken token)
 	{
-		if (frames == null || frames.Length == 0)
+		int adjustedDuration;
+		lock (SyncRoot)
 		{
-			await Task.Delay(100, token);
-			return;
+			token.ThrowIfCancellationRequested();
+			var duration = frames is { Length: > 0 } ? frames[currentFrame].Duration : 100;
+			if (duration <= 0)
+				duration = 100;
+
+			adjustedDuration = (int)Math.Max(10, duration / speed);
 		}
-
-		var duration = frames[currentFrame].Duration;
-		if (duration <= 0)
-			duration = 100;
-
-		// Apply speed multiplier
-		var adjustedDuration = (int)Math.Max(10, duration / speed);
 		await Task.Delay(adjustedDuration, token);
 
-		if (playing)
+		lock (SyncRoot)
 		{
-			currentFrame++;
-			if (currentFrame >= frames.Length)
-				currentFrame = 0;
+			token.ThrowIfCancellationRequested();
+			if (playing && frames is { Length: > 0 })
+			{
+				currentFrame++;
+				if (currentFrame >= frames.Length)
+					currentFrame = 0;
+			}
 		}
 	}
 
@@ -121,13 +123,13 @@ public class GifPlayerSample : CanvasSampleBase
 			var scaledH = info.Height * scale;
 			var destRect = SKRect.Create((width - scaledW) / 2, (height - scaledH) / 2, scaledW, scaledH);
 
-			canvas.DrawBitmap(bitmap, destRect);
+			canvas.DrawBitmap(bitmap, destRect, SKSamplingOptions.Default);
 		}
 
 		// Draw frame info
 		using var textPaint = new SKPaint { IsAntialias = true, Color = SKColors.White };
 		using var font = new SKFont(SampleMedia.Fonts.Default, 14);
 		var statusText = playing ? "▶" : "⏸";
-		canvas.DrawText($"{statusText} Frame {currentFrame + 1}/{frames.Length}  Speed: {speed:F2}x", 10, height - 10, font, textPaint);
+		canvas.DrawText($"{statusText} Frame {currentFrame + 1}/{frames.Length}  Speed: {speed:F2}x", 10, height - 10, SKTextAlign.Left, font, textPaint);
 	}
 }

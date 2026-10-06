@@ -1,4 +1,4 @@
-﻿#if UNO_REFERENCE_API
+#if UNO_REFERENCE_API
 using System;
 
 #if WINUI
@@ -15,6 +15,8 @@ namespace SkiaSharp.Views.UWP
 {
 	public partial class SKXamlCanvas
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKXamlCanvas" /> class.</summary>
+		/// <remarks />
 		public SKXamlCanvas()
 		{
 			throw new NotImplementedException();

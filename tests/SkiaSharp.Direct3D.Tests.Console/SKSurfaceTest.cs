@@ -19,7 +19,7 @@ public abstract class SKSurfaceTest<TContext> : Direct3DTest<TContext>
 	where TContext : Direct3DContext, new()
 {
 	[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-	[SkippableFact]
+	[Fact]
 	public void Direct3DGpuSurfaceIsCreated()
 	{
 		using var ctx = CreateDirect3DContext();

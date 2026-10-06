@@ -209,7 +209,7 @@ Array of action objects:
 
 ## `chromeReleases` — Chrome Releases Blog Data (Optional)
 
-When the Chrome Releases blog was queried (Step 1.5), include this section for traceability.
+When the Chrome Releases blog was queried (Step 2), include this section for traceability.
 This section is optional — omit it only if the blog query was skipped or failed.
 
 ```json

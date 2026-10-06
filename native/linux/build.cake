@@ -53,17 +53,6 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    // patch the gclient_paths.py for Python 3.7
-    {
-        var gclient = DEPOT_PATH.CombineWithFilePath("gclient_paths.py");
-        var contents = System.IO.File.ReadAllText(gclient.FullPath);
-        var newContents = contents
-            .Replace("@functools.lru_cache", "@functools.lru_cache()")
-            .Replace("@functools.lru_cache()()", "@functools.lru_cache()");
-        if (contents != newContents)
-            System.IO.File.WriteAllText(gclient.FullPath, newContents);
-    }
-
     foreach (var arch in BUILD_ARCH) {
         if (Skip(arch)) return;
 
@@ -71,14 +60,6 @@ Task("libSkiaSharp")
 
         var soname = GetVersion("libSkiaSharp", "soname");
         var map = MakeAbsolute((FilePath)"libSkiaSharp/libSkiaSharp.map");
-
-        // This is terrible! But, Alpine (musl) does not define this
-        // so we are forced to for dng_sdk. If this ever becomes a problem
-        // for other libraries, we will need to find a better solution.
-        var wordSize = ReduceArch(arch).EndsWith("64") ? "64" : "32";
-        var wordSizeDefine = VARIANT.ToLower().StartsWith("alpine")
-            ? $", '-D__WORDSIZE={wordSize}'"
-            : $"";
 
         // Architecture-specific Spectre mitigation flags
         // -mretpoline requires Clang; -mharden-sls=all works with both GCC and Clang
@@ -106,7 +87,7 @@ Task("libSkiaSharp")
             $"skia_enable_ganesh={(SUPPORT_GPU ? "true" : "false")} " +
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
-            $"skia_use_piex=true " +
+            $"skia_use_partition_alloc=false " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_freetype2=false " +
             $"skia_use_system_libjpeg_turbo=false " +
@@ -115,9 +96,10 @@ Task("libSkiaSharp")
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan=true " +
+            $"skia_enable_graphite=true " +
             bionicArgs +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-stdlib=libc++'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-stdlib=libc++'{spectreFlags}{bionicDefine} ] " +
             $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxx}, '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
@@ -153,6 +135,7 @@ Task("libHarfBuzzSharp")
             $"target_os='linux' " +
             $"target_cpu='{skiaArch}' " +
             $"visibility_hidden=false " +
+            $"skia_use_partition_alloc=false " +
             $"extra_asmflags=[] " +
             $"extra_cflags=[ '-stdlib=libc++'{bionicDefineHB} ] " +
             $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxxHB}, '-Wl,--version-script={map}' ] " +

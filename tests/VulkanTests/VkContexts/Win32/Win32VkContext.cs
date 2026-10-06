@@ -7,11 +7,24 @@ namespace SkiaSharp.Tests
 {
 	public sealed class Win32VkContext : VkContext
 	{
+		// Skia requires Vulkan 1.1 and acquires the core 1.1 device procs
+		// unconditionally. vkGetDeviceProcAddr gates those on the instance's
+		// apiVersion, so an instance created without an ApplicationInfo is 1.0 and
+		// its device returns null for every one of them -- GRContext.CreateVulkan
+		// is then null no matter what MaxAPIVersion says.
+		private static readonly SharpVk.Version apiVersion = new SharpVk.Version(1, 1, 0);
+
 		private static readonly Win32Window window = new Win32Window("Win32VkContext");
 
 		public Win32VkContext()
 		{
-			Instance = Instance.Create(null, new[] { "VK_KHR_surface", "VK_KHR_win32_surface" });
+			ApiVersion = (uint)apiVersion;
+
+			InstanceExtensions = new[] { "VK_KHR_surface", "VK_KHR_win32_surface" };
+			Instance = Instance.Create(
+				null,
+				InstanceExtensions,
+				applicationInfo: new ApplicationInfo { ApiVersion = apiVersion });
 
 			PhysicalDevice = Instance.EnumeratePhysicalDevices().First();
 
@@ -24,7 +37,14 @@ namespace SkiaSharp.Tests
 				new DeviceQueueCreateInfo { QueueFamilyIndex = GraphicsFamily, QueuePriorities = new[] { 1f } },
 				new DeviceQueueCreateInfo { QueueFamilyIndex = PresentFamily, QueuePriorities = new[] { 1f } },
 			};
-			Device = PhysicalDevice.CreateDevice(queueInfos, null, null);
+
+			// Enabled on the device and handed to Skia below. The two have to agree:
+			// Skia trusts this list rather than re-querying, so claiming a feature the
+			// device never enabled would have it emit commands the driver rejects.
+			Features = PhysicalDevice.GetFeatures();
+			DeviceExtensions = Array.Empty<string>();
+
+			Device = PhysicalDevice.CreateDevice(queueInfos, null, DeviceExtensions, null, Features);
 
 			GraphicsQueue = Device.GetQueue(GraphicsFamily, 0);
 

@@ -69,6 +69,6 @@ public class BlurImageFilterSample : CanvasSampleBase
 		using var paint = new SKPaint();
 		paint.ImageFilter = filter;
 
-		canvas.DrawBitmap(cachedBitmap, SKRect.Create(width, height), paint);
+		canvas.DrawBitmap(cachedBitmap, SKRect.Create(width, height), SKSamplingOptions.Default, paint);
 	}
 }

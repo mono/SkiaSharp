@@ -5,6 +5,7 @@ Single source of truth for native dependencies: what's used, what's not, and how
 ## Contents
 
 - [Active Dependencies](#active-dependencies) — What SkiaSharp actually compiles
+- [Disabled DNG/RAW Codec](#disabled-dngraw-codec) — Unsupported image decoding
 - [cgmanifest.json](#cgmanifestjson) — CVE detection setup
 - [Known False Positives](#known-false-positives) — CVEs that don't affect SkiaSharp
 
@@ -12,7 +13,7 @@ Single source of truth for native dependencies: what's used, what's not, and how
 
 ## Active Dependencies
 
-SkiaSharp uses only a subset of Skia's dependencies. Unused dependencies are commented out in `externals/skia/DEPS` to reduce attack surface.
+SkiaSharp uses only a subset of Skia's dependencies. Some unused dependencies are commented out in `externals/skia/DEPS` to reduce attack surface; others remain downloaded but are disabled at build time.
 
 ### Security-Relevant (process untrusted input)
 
@@ -28,7 +29,6 @@ SkiaSharp uses only a subset of Skia's dependencies. Unused dependencies are com
 | **expat** | XML parsing | libexpat | All |
 | **brotli** | WOFF2 fonts | brotli | All |
 | **wuffs** | GIF codec | wuffs | All |
-| **dng_sdk** | RAW images | dng_sdk | Windows |
 
 ### GPU/Graphics
 
@@ -43,8 +43,20 @@ SkiaSharp uses only a subset of Skia's dependencies. Unused dependencies are com
 
 | Dependency | Purpose | Platforms |
 |------------|---------|-----------|
-| **piex** | RAW preview | All except Windows, WASM |
 | **buildtools** | Compiler toolchain | All |
+
+---
+
+## Disabled DNG/RAW Codec
+
+SkiaSharp does not support DNG decoding or RAW image previews on any platform.
+The shared native build configuration sets `skia_use_dng_sdk=false` and
+`skia_use_piex=false`, excluding the RAW codec and its dependencies from native
+builds. `SKEncodedImageFormat.Dng = 10` remains for API compatibility, not codec
+support. The dng_sdk and piex entries are commented out in Skia's `DEPS`, so
+dependency synchronization no longer downloads them. Their `cgmanifest.json`
+registrations are removed because these dependencies are neither fetched nor
+compiled into SkiaSharp.
 
 ---
 
@@ -83,7 +95,30 @@ Enables Microsoft Component Governance CVE detection.
 | expat | `libexpat` | github.com/libexpat/libexpat |
 | brotli | `brotli` | github.com/google/brotli |
 | wuffs | `wuffs` | github.com/google/wuffs-mirror-release-c |
-| dng_sdk | `dng_sdk` | android.googlesource.com/.../dng_sdk |
+
+### Skia DEPS Identity Signals
+
+Registrations backed by an enabled `externals/skia/DEPS` entry include a
+`skia_dependency` object:
+
+```json
+{
+  "skia_dependency": {
+    "name": "vulkanmemoryallocator",
+    "revision": "c788c52156f3ef7bc7ab769cb03c110a53ac8fcb",
+    "version_reviewed_identity": "https://chromium.googlesource.com/...@c788c521..."
+  }
+}
+```
+
+`.agents/skills/update-skia/scripts/update_versions.py` synchronizes `revision` mechanically from
+final DEPS.
+Every tracked registration records the authoritative version evidence in `version_source`. When
+the URL or revision changes, the Skia update must re-read checked-out source, update the registration
+if needed, advance `version_reviewed_identity` to the final `URL@revision`, and refresh that
+evidence. The helper blocks publication when evidence is missing or a changed tracked dependency
+has not been reviewed. It also rejects a manifest version change when the corresponding DEPS
+identity did not change.
 
 ---
 
@@ -135,6 +170,15 @@ The Skia entry in cgmanifest.json includes custom fields for version tracking:
 | `chrome_milestone` | Integer milestone number — used to filter NVD results |
 | `upstream_merge_commit` | SHA of the upstream `chrome/mNNN` branch tip that was merged into the fork |
 
+The [`auto-skia-submodule-sync`](../../.github/workflows/auto-skia-submodule-sync.yml)
+workflow runs daily to advance `externals/skia` to the `mono/skia` `skiasharp`
+branch and derive the Component Governance git registration's `commitHash` from
+the checked-out submodule. It opens a PR when either value changes, which also
+repairs manifest drift. The milestone fields above remain owned by the full Skia
+upstream update workflow. Scheduled runs sync `mono/skia`'s `skiasharp` branch
+into SkiaSharp's `main`; manual runs can set `skia_branch` and `target_branch`
+independently.
+
 ### When to Update
 
 Update these fields whenever merging new upstream Skia code:
@@ -180,5 +224,5 @@ FreeType has its own zlib copy at `freetype/src/gzip/`. When checking zlib CVEs:
 
 ## Related Skills
 
-- **[security-audit](../../.claude/skills/security-audit/SKILL.md)** — Find CVEs, verify fixes, generate reports
-- **[native-dependency-update](../../.claude/skills/native-dependency-update/SKILL.md)** — Update dependencies, create PRs
+- **[security-audit](../../.agents/skills/security-audit/SKILL.md)** — Find CVEs, verify fixes, generate reports
+- **[native-dependency-update](../../.agents/skills/native-dependency-update/SKILL.md)** — Update dependencies, create PRs

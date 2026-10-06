@@ -1,20 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SkiaSharp;
 
+/// <summary>Represents a custom blending function that combines source and destination colors.</summary>
+/// <remarks />
 public unsafe class SKBlender : SKObject, ISKReferenceCounted
 {
 	private static readonly Dictionary<SKBlendMode, SKBlender> blendModeBlenders;
 
 	static SKBlender ()
 	{
-		// TODO: This is not the best way to do this as it will create a lot of objects that
-		//       might not be needed, but it is the only way to ensure that the static
-		//       instances are created before any access is made to them.
-		//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
-
-		// Explicitly list all enum values to avoid reflection (AoT compatibility)
+		// Explicitly list all enum values to avoid reflection (AoT compatibility).
 		var modes = new SKBlendMode[] {
 			SKBlendMode.Clear,
 			SKBlendMode.Src,
@@ -48,16 +45,11 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 		};
 
 		blendModeBlenders = new Dictionary<SKBlendMode, SKBlender> (modes.Length);
-		foreach (SKBlendMode mode in modes)
-		{
-			blendModeBlenders [mode] = new SKBlenderStatic (SkiaApi.sk_blender_new_mode (mode));
+		foreach (SKBlendMode mode in modes) {
+			// Immortal Skia singletons (SkNoDestructor<SkBlendModeBlender> per mode) — never unref them.
+			// See SKColorFilter.GetDisposeProtectedObject for the full teardown-crash rationale.
+			blendModeBlenders[mode] = GetDisposeProtectedObject (SkiaApi.sk_blender_new_mode (mode), owns: false, unrefExisting: false);
 		}
-	}
-
-	internal static void EnsureStaticInstanceAreInitialized ()
-	{
-		// IMPORTANT: do not remove to ensure that the static instances
-		//            are initialized before any access is made to them
 	}
 
 	internal SKBlender(IntPtr handle, bool owns)
@@ -65,9 +57,16 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 	{
 	}
 
+	/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKBlender" /> and optionally releases the managed resources.</summary>
+	/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+	/// <remarks />
 	protected override void Dispose (bool disposing) =>
 		base.Dispose (disposing);
 
+	/// <summary>Creates a blender that applies the specified blend mode.</summary>
+	/// <param name="mode">The blend mode to use.</param>
+	/// <returns>A new blender that applies the blend mode.</returns>
+	/// <remarks />
 	public static SKBlender CreateBlendMode (SKBlendMode mode)
 	{
 		if (!blendModeBlenders.TryGetValue (mode, out var value))
@@ -75,21 +74,20 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 		return value;
 	}
 
+	/// <summary>Creates a blender that applies the arithmetic formula: k1 * src * dst + k2 * src + k3 * dst + k4.</summary>
+	/// <param name="k1">The coefficient for source * destination.</param>
+	/// <param name="k2">The coefficient for source.</param>
+	/// <param name="k3">The coefficient for destination.</param>
+	/// <param name="k4">The constant offset added to the result.</param>
+	/// <param name="enforcePMColor">If <see langword="true" />, clamps the result to valid premultiplied color values.</param>
+	/// <returns>A new blender that applies the arithmetic combination.</returns>
+	/// <remarks />
 	public static SKBlender CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor) =>
 		GetObject (SkiaApi.sk_blender_new_arithmetic (k1, k2, k3, k4, enforcePMColor));
 
 	internal static SKBlender GetObject (IntPtr handle) =>
 		GetOrAddObject (handle, (h, o) => new SKBlender (h, o));
 
-	//
-
-	private sealed class SKBlenderStatic : SKBlender
-	{
-		internal SKBlenderStatic (IntPtr x)
-			: base (x, false)
-		{
-		}
-
-		protected override void Dispose (bool disposing) { }
-	}
+	internal static SKBlender GetDisposeProtectedObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+		GetOrAddDisposeProtectedObject (handle, owns, unrefExisting, (h, o) => new SKBlender (h, o));
 }

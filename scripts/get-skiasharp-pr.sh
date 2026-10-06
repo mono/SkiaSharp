@@ -6,11 +6,10 @@
 set -euo pipefail
 
 # Constants
-readonly ORGANIZATION="xamarin"
+readonly ORGANIZATION="dnceng-public"
 readonly PROJECT="public"
-readonly PIPELINE_ID=4
-readonly PREFERRED_ARTIFACT="nuget_preview"
-readonly FALLBACK_ARTIFACT="nuget"
+readonly PIPELINE_ID=345
+readonly NUGET_ARTIFACT="nuget"
 readonly BASE_URL="https://dev.azure.com/${ORGANIZATION}/${PROJECT}/_apis"
 
 # Colors
@@ -233,13 +232,15 @@ find_build_for_pr() {
     local successful_only="$2"
     
     local source_branch="refs/pull/${pr_number}/merge"
+    local encoded_branch
+    encoded_branch=$(printf '%s' "$source_branch" | jq -sRr @uri)
     
     if [[ "$successful_only" == true ]]; then
         say_info "Finding latest successful build for PR #${pr_number}..."
-        local endpoint="build/builds?api-version=7.1&definitions=${PIPELINE_ID}&reasonFilter=pullRequest&statusFilter=completed&resultFilter=succeeded&\$top=20"
+        local endpoint="build/builds?api-version=7.1&definitions=${PIPELINE_ID}&reasonFilter=pullRequest&branchName=${encoded_branch}&queryOrder=queueTimeDescending&statusFilter=completed&resultFilter=succeeded&\$top=1"
     else
         say_info "Finding latest build for PR #${pr_number}..."
-        local endpoint="build/builds?api-version=7.1&definitions=${PIPELINE_ID}&reasonFilter=pullRequest&\$top=50"
+        local endpoint="build/builds?api-version=7.1&definitions=${PIPELINE_ID}&reasonFilter=pullRequest&branchName=${encoded_branch}&queryOrder=queueTimeDescending&\$top=1"
     fi
     
     local response
@@ -247,23 +248,16 @@ find_build_for_pr() {
         return 1
     fi
     
-    # Filter to builds for this specific PR and get the latest
     local build
-    build=$(echo "$response" | jq -r --arg branch "$source_branch" '
-        .value 
-        | map(select(.sourceBranch == $branch)) 
-        | sort_by(.queueTime) 
-        | reverse 
-        | .[0] // empty
-    ')
+    build=$(echo "$response" | jq -r '.value[0] // empty')
     
     if [[ -z "$build" || "$build" == "null" ]]; then
         if [[ "$successful_only" == true ]]; then
             say_error "No successful builds found for PR #${pr_number}"
-            say_info "Check: https://dev.azure.com/xamarin/public/_build?definitionId=${PIPELINE_ID}"
+            say_info "Check: https://dev.azure.com/dnceng-public/public/_build?definitionId=${PIPELINE_ID}"
         else
             say_error "No builds found for PR #${pr_number}"
-            say_info "Check if the PR exists at: https://dev.azure.com/xamarin/public/_build?definitionId=${PIPELINE_ID}"
+            say_info "Check if the PR exists at: https://dev.azure.com/dnceng-public/public/_build?definitionId=${PIPELINE_ID}"
         fi
         return 1
     fi
@@ -375,13 +369,13 @@ extract_packages() {
         
         if [[ -f "$dest_file" && "$force" != true ]]; then
             say_verbose "Skipping (exists): ${filename}"
-            ((skipped++))
+            ((++skipped))
         else
             cp "$nupkg" "$dest_file"
             say_verbose "Extracted: ${filename}"
-            ((count++))
+            ((++count))
         fi
-    done < <(find "$temp_dir" -name "$filter" -print0 2>/dev/null)
+    done < <(find "$temp_dir" -name "$filter" ! -iname "*.symbols.nupkg" -print0 2>/dev/null)
     
     # Cleanup
     rm -rf "$temp_dir"
@@ -444,20 +438,10 @@ main() {
         exit 0
     fi
     
-    # Find nuget artifact (prefer nuget_preview)
-    local artifact_name download_url using_preview
-    
-    download_url=$(echo "$artifacts" | jq -r --arg name "$PREFERRED_ARTIFACT" '.value[] | select(.name == $name) | .resource.downloadUrl // empty')
-    
-    if [[ -n "$download_url" ]]; then
-        artifact_name="$PREFERRED_ARTIFACT"
-        using_preview=true
-    else
-        say_verbose "nuget_preview artifact not found, trying full nuget artifact..."
-        download_url=$(echo "$artifacts" | jq -r --arg name "$FALLBACK_ARTIFACT" '.value[] | select(.name == $name) | .resource.downloadUrl // empty')
-        artifact_name="$FALLBACK_ARTIFACT"
-        using_preview=false
-    fi
+    # Every build emits one package family in the canonical nuget artifact.
+    local artifact_name="$NUGET_ARTIFACT"
+    local download_url
+    download_url=$(echo "$artifacts" | jq -r --arg name "$NUGET_ARTIFACT" '.value[] | select(.name == $name) | .resource.downloadUrl // empty')
     
     if [[ -z "$download_url" ]]; then
         say_warn "Available artifacts:"
@@ -465,10 +449,10 @@ main() {
             say_info "  - ${name}"
         done
         if [[ "$SUCCESSFUL_ONLY" != true ]]; then
-            say_error "Neither '${PREFERRED_ARTIFACT}' nor '${FALLBACK_ARTIFACT}' artifact found."
+            say_error "Artifact '${NUGET_ARTIFACT}' was not found."
             say_info "The build may still be in progress. Try --successful-only to get the last successful build."
         else
-            say_error "Neither '${PREFERRED_ARTIFACT}' nor '${FALLBACK_ARTIFACT}' artifact found."
+            say_error "Artifact '${NUGET_ARTIFACT}' was not found."
         fi
         exit 1
     fi
@@ -491,15 +475,7 @@ main() {
         exit 1
     fi
     
-    # Extract (nuget_preview already has only prerelease; for full nuget, filter to prerelease)
-    local filter
-    if [[ "$using_preview" == true ]]; then
-        filter="*.nupkg"
-    else
-        filter="*-*.nupkg"
-    fi
-    
-    if ! extract_packages "$zip_path" "$packages_path" "$filter" "$FORCE"; then
+    if ! extract_packages "$zip_path" "$packages_path" "*.nupkg" "$FORCE"; then
         rm -rf "$temp_dir"
         exit 1
     fi

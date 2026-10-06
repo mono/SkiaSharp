@@ -38,9 +38,15 @@ source/SkiaSharp.Build.Override.targets
 !documentation/docfx/releases/
 x64/
 x86/
+!eng/common/
+!eng/common/**
 bld/
 [Bb]in/
 [Oo]bj/
+
+# Arcade repository-local toolsets and package cache
+/.dotnet/
+/.packages/
 
 # Visual Studio 2015 cache/options directory
 .vs/
@@ -323,3 +329,6 @@ fastlane/screenshots
 .docs
 .playwright-mcp/
 .github/aw/logs/
+
+# Local output of the artifact size tracker (persisted via Actions cache in CI)
+artifact-sizes.json

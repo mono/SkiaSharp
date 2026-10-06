@@ -23,4 +23,4 @@ dotnet cake --target externals-download
 wait
 
 # ---- Build tests ----
-dotnet build tests/SkiaSharp.Tests.Console.sln
+dotnet build tests/SkiaSharp.Tests.Console.slnx

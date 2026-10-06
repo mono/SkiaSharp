@@ -1,0 +1,95 @@
+{
+  "theme": "Skia m151 stable release",
+  "highlights_headline": "SkiaSharp 4.151.0 delivers Skia m151 with faster managed color, text, and shaping paths.",
+  "highlights_body": "It adds .NET 11 WebAssembly native assets, restores CPU raster shader compatibility, and fixes a native image-decoding resource leak.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to milestone m151",
+          "detail": "The bundled renderer moves to Chrome milestone 151 and incorporates subsequent upstream bug-fix and stability syncs.",
+          "prs": [4294, 4312, 4382, 4443, 4489, 4568]
+        },
+        {
+          "lead": "CPU raster shader compatibility restored",
+          "detail": "Restores the legacy shader-context configuration needed to avoid a CPU raster regression.",
+          "prs": [4428]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Span-based color parsing",
+          "detail": "SKColor hex parsing adds ReadOnlySpan<char> overloads and avoids unnecessary parsing overhead.",
+          "prs": [4345]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Encoded-image subset resources released",
+          "detail": "SKImage.FromEncodedData with a subset rectangle no longer leaks its native resource.",
+          "prs": [3997]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": ".NET 11 WebAssembly assets",
+          "detail": "Adds Emscripten 5.0.6 static libraries and exception handling support for .NET 11 WebAssembly applications.",
+          "prs": [4459, 4487, 4488]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Lower-allocation managed operations",
+          "detail": "Color conversion, premultiplication, text shaping, tags, and encoded text paths avoid repeated native calls or transient allocations.",
+          "prs": [4370, 4385, 4388, 4396, 4498]
+        },
+        {
+          "lead": "Faster HarfBuzz text shaping",
+          "detail": "HarfBuzzSharp avoids allocations when adding UTF-8 strings and parsing tags.",
+          "prs": [4376, 4408]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "WebAssembly build cleanup, .NET 11 native assets, and HarfBuzzSharp performance improvements"
+  },
+  "preview_summaries": {
+    "v4.151.0-preview.1.1": "Preview 1 opened the m151 line and added the initial engine update and WebAssembly cleanup.",
+    "v4.151.0-preview.2.1": "Preview 2 focused on managed performance improvements, HarfBuzzSharp allocation reductions, and upstream m151 fixes.",
+    "v4.151.0-rc.1.1": "The release candidate added .NET 11 WebAssembly assets, restored CPU raster compatibility, and fixed encoded-image resource handling."
+  },
+  "harfbuzz_summary": "Improves HarfBuzzSharp UTF-8 buffer population and tag parsing to eliminate recurring allocations.",
+  "release_summaries": {
+    "v4.151.0-preview.1.1": {
+      "headline": "SkiaSharp 4.151.0 Preview 1 introduces the Skia m151 engine line.",
+      "body": "It begins the update with WebAssembly build cleanup."
+    },
+    "v4.151.0-preview.2.1": {
+      "headline": "SkiaSharp 4.151.0 Preview 2 improves managed rendering and shaping performance.",
+      "body": "It also incorporates current m151 engine fixes."
+    },
+    "v4.151.0-rc.1.1": {
+      "headline": "SkiaSharp 4.151.0 Release Candidate 1 adds .NET 11 WebAssembly assets and compatibility fixes.",
+      "body": "It restores CPU raster shader compatibility and fixes encoded-image resource handling."
+    },
+    "v4.151.0": {
+      "headline": "SkiaSharp 4.151.0 delivers the stable Skia m151 release.",
+      "body": null
+    }
+  }
+}

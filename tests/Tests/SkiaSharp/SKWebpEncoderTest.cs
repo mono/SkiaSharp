@@ -13,7 +13,7 @@ public class SKWebpEncoderTest : SKTest
 		return bmp;
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeAnimatedWebpReturnsData()
 	{
 		using var bmp1 = CreateColorBitmap(SKColors.Red);
@@ -33,7 +33,7 @@ public class SKWebpEncoderTest : SKTest
 		Assert.True(data.Size > 0);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeAnimatedWebpToStream()
 	{
 		using var bmp1 = CreateColorBitmap(SKColors.Red);
@@ -54,7 +54,7 @@ public class SKWebpEncoderTest : SKTest
 		Assert.True(stream.Length > 0);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeAnimatedWebpWithWStream()
 	{
 		using var bmp1 = CreateColorBitmap(SKColors.Red);
@@ -78,7 +78,7 @@ public class SKWebpEncoderTest : SKTest
 		Assert.True(data.Size > 0);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeAnimatedWebpRoundTrip()
 	{
 		using var bmp1 = CreateColorBitmap(SKColors.Red);
@@ -106,7 +106,7 @@ public class SKWebpEncoderTest : SKTest
 		Assert.Equal(250, frameInfo[1].Duration);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeAnimatedWebpWithLosslessCompression()
 	{
 		using var bmp1 = CreateColorBitmap(SKColors.Red);
@@ -131,7 +131,7 @@ public class SKWebpEncoderTest : SKTest
 		Assert.True(codec.FrameCount >= 2, $"Expected at least 2 frames, got {codec.FrameCount}");
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeAnimatedWebpWithNullWStreamThrows()
 	{
 		using var bmp = CreateColorBitmap(SKColors.Red);
@@ -143,7 +143,7 @@ public class SKWebpEncoderTest : SKTest
 			SKWebpEncoder.EncodeAnimated((SKWStream)null!, frames, SKWebpEncoderOptions.Default));
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeAnimatedWebpWithNullStreamThrows()
 	{
 		using var bmp = CreateColorBitmap(SKColors.Red);
@@ -155,14 +155,14 @@ public class SKWebpEncoderTest : SKTest
 			SKWebpEncoder.EncodeAnimated((Stream)null!, frames, SKWebpEncoderOptions.Default));
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeAnimatedWebpFrameWithNullPixmapThrows()
 	{
 		Assert.Throws<ArgumentNullException>(() =>
 			new SKWebpEncoderFrame((SKPixmap)null!, TimeSpan.FromMilliseconds(100)));
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeAnimatedWebpSingleFrame()
 	{
 		using var bmp = CreateColorBitmap(SKColors.Red);
@@ -178,7 +178,7 @@ public class SKWebpEncoderTest : SKTest
 		Assert.Equal(SKEncodedImageFormat.Webp, codec.EncodedFormat);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeAnimatedWebpFrameDurationPreserved()
 	{
 		using var bmp = CreateColorBitmap(SKColors.Red);
@@ -189,7 +189,7 @@ public class SKWebpEncoderTest : SKTest
 		Assert.Same(pix, frame.Pixmap);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeAnimatedWebpPreservesImageDimensions()
 	{
 		using var bmp1 = CreateColorBitmap(SKColors.Red);
@@ -214,7 +214,7 @@ public class SKWebpEncoderTest : SKTest
 
 	// Single-frame encoding via SKWebpEncoder
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeSingleFrameReturnsData()
 	{
 		using var bmp = CreateColorBitmap(SKColors.Green);
@@ -230,7 +230,7 @@ public class SKWebpEncoderTest : SKTest
 		Assert.Equal(SKEncodedImageFormat.Webp, codec.EncodedFormat);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeSingleFrameToStream()
 	{
 		using var bmp = CreateColorBitmap(SKColors.Blue);
@@ -243,7 +243,7 @@ public class SKWebpEncoderTest : SKTest
 		Assert.True(stream.Length > 0);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeSingleFrameWithWStream()
 	{
 		using var bmp = CreateColorBitmap(SKColors.Red);
@@ -259,14 +259,14 @@ public class SKWebpEncoderTest : SKTest
 		Assert.True(data.Size > 0);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeSingleFrameWithNullPixmapThrows()
 	{
 		Assert.Throws<ArgumentNullException>(() =>
 			SKWebpEncoder.Encode((SKPixmap)null!, SKWebpEncoderOptions.Default));
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeSingleFrameWithNullWStreamThrows()
 	{
 		using var bmp = CreateColorBitmap(SKColors.Red);
@@ -276,7 +276,7 @@ public class SKWebpEncoderTest : SKTest
 			SKWebpEncoder.Encode((SKWStream)null!, pix, SKWebpEncoderOptions.Default));
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void EncodeSingleFrameWithNullStreamThrows()
 	{
 		using var bmp = CreateColorBitmap(SKColors.Red);
@@ -288,7 +288,7 @@ public class SKWebpEncoderTest : SKTest
 
 	// SKWebpEncoderFrame constructor overloads
 
-	[SkippableFact]
+	[Fact]
 	public void FrameFromBitmapEncodes()
 	{
 		using var bmp1 = CreateColorBitmap(SKColors.Red);
@@ -309,7 +309,7 @@ public class SKWebpEncoderTest : SKTest
 		Assert.True(codec.FrameCount >= 2);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void FrameFromImageEncodes()
 	{
 		using var bmp1 = CreateColorBitmap(SKColors.Green);
@@ -332,14 +332,14 @@ public class SKWebpEncoderTest : SKTest
 		Assert.True(codec.FrameCount >= 2);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void FrameFromNullBitmapThrows()
 	{
 		Assert.Throws<ArgumentNullException>(() =>
 			new SKWebpEncoderFrame((SKBitmap)null!, TimeSpan.FromMilliseconds(100)));
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void FrameFromNullImageThrows()
 	{
 		Assert.Throws<ArgumentNullException>(() =>
@@ -348,7 +348,7 @@ public class SKWebpEncoderTest : SKTest
 
 	// Full round-trip: encode → decode → validate pixels and durations
 
-	[SkippableFact]
+	[Fact]
 	public void FullRoundTripValidatesPixelsAndDurations()
 	{
 		var size = 40;
@@ -403,7 +403,7 @@ public class SKWebpEncoderTest : SKTest
 			bmp.Dispose();
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void LossyRoundTripPreservesApproximateColors()
 	{
 		var size = 40;

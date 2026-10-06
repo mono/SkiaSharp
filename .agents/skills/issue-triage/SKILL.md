@@ -100,8 +100,8 @@ GitHub MCP issue/PR retrieval tools are equally valid if the environment exposes
 |----------------|-------------------|
 | NativeAssets, DllNotFoundException, container, WASM | [documentation/dev/packages.md](../../../documentation/dev/packages.md) |
 | Platform quirks, common traps | [references/skia-patterns.md](references/skia-patterns.md) |
-| Specific SkiaSharp types or methods | `docs/SkiaSharpAPI/*.xml` |
-| How-to about drawing, paths, bitmaps | `.docs/docs/docs/` |
+| Specific SkiaSharp types or methods | C# `///` comments and compiler XML from a matching package; use Microsoft Learn for published reference |
+| How-to about drawing, paths, bitmaps | `documentation/docfx/guides/` and `samples/` |
 | Non-SkiaSharp tech (MAUI, Blazor, WPF) | `mslearn`/`microsoft_docs_search` MCP tool |
 
 ---
@@ -134,7 +134,7 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 > 3. **Follow these critical constraints:**
 >    - `meta.schemaVersion` must be `"1.0"`
 >    - **Optional fields:** OMIT entirely if not applicable. Do NOT set to `null`.
->    - **String Arrays:** `platforms`, `backends`, `tenets` are simple string arrays (no confidence wrapper).
+>    - **String Arrays:** `platforms`, `backends`, `tenets`, `perf` are simple string arrays (no confidence wrapper). Any `perf/*` value implies `tenet/performance` — include it in `tenets`.
 >    - **Investigation:** `analysis.codeInvestigation` is MANDATORY. At least one entry for bugs, two for close-* actions.
 >    - **Rationale:** `analysis.rationale` is a single summary string (not per-field).
 >    - **Validation:** No extra properties allowed (`additionalProperties: false`).
@@ -167,7 +167,7 @@ Skip this phase for duplicates and abandoned issues (omit `analysis.resolution`)
 
 If any proposal includes a `codeSnippet` or the `add-comment` `comment` contains code: **you must validate it** with 3 parallel agents per [references/workaround-validation.md](references/workaround-validation.md). Do not suggest code that has not been checked.
 
-**Agents** (parallel `explore` type, Haiku model):
+**Agents** (parallel `explore` type, GPT-5.6 Luna model):
 1. **API correctness** — do the SK* types/methods exist with correct signatures?
 2. **Behavioral correctness** — disposal, null-checks, threading, does it solve the problem?
 3. **Platform safety** — will it work on the reporter's platform?

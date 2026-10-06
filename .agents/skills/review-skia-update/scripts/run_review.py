@@ -100,6 +100,37 @@ def extract_skia_milestone_from_cgmanifest(cgmanifest: dict):
     return None
 
 
+def extract_skia_upstream_commit_from_cgmanifest(cgmanifest: dict):
+    """Extract the exact upstream Skia commit recorded by cgmanifest.json."""
+    for reg in cgmanifest.get("registrations", []):
+        comp = reg.get("component", {}).get("other", {})
+        if comp.get("name") == "skia":
+            commit = reg.get("upstream_merge_commit", "").strip()
+            return commit or None
+    return None
+
+
+def extract_skia_upstream_ref_from_cgmanifest(cgmanifest: dict):
+    """Extract the authoritative upstream ref, with milestone fallback for old manifests."""
+    for reg in cgmanifest.get("registrations", []):
+        comp = reg.get("component", {}).get("other", {})
+        if comp.get("name") == "skia":
+            upstream_ref = reg.get("upstream_ref", "").strip()
+            return upstream_ref or extract_skia_milestone_from_cgmanifest(cgmanifest)
+    return None
+
+
+def recorded_commit_belongs_to_upstream(cwd: str, commit: str, upstream_ref: str) -> bool:
+    """Return whether a recorded commit belongs to the fetched upstream branch history."""
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", commit, upstream_ref],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run all mechanical checks for a Skia update review."
@@ -250,9 +281,21 @@ def main():
 
     old_cgmanifest = load_json_at_git_ref(repo_root, companion_base_sha, "cgmanifest.json")
     old_milestone = extract_skia_milestone_from_cgmanifest(old_cgmanifest)
+    old_upstream_ref = extract_skia_upstream_ref_from_cgmanifest(old_cgmanifest)
+    old_upstream_sha = extract_skia_upstream_commit_from_cgmanifest(old_cgmanifest)
     if not old_milestone:
         raise RuntimeError(
             f"Could not determine old upstream milestone from companion PR base "
+            f"{companion_base_sha[:12]}:cgmanifest.json"
+        )
+    if not old_upstream_sha:
+        raise RuntimeError(
+            f"Could not determine old upstream commit from companion PR base "
+            f"{companion_base_sha[:12]}:cgmanifest.json"
+        )
+    if not old_upstream_ref:
+        raise RuntimeError(
+            f"Could not determine old upstream ref from companion PR base "
             f"{companion_base_sha[:12]}:cgmanifest.json"
         )
 
@@ -276,50 +319,78 @@ def main():
     # Check cgmanifest.json from companion PR head
     companion_head_sha = companion_pr.get("headRefOid", "").strip()
     cgmanifest_milestone = None
+    new_upstream_ref = None
+    new_upstream_sha = None
     if companion_head_sha and len(companion_head_sha) >= 7:
         new_cgmanifest = load_json_at_git_ref(repo_root, companion_head_sha, "cgmanifest.json")
         cgmanifest_milestone = extract_skia_milestone_from_cgmanifest(new_cgmanifest)
+        new_upstream_ref = extract_skia_upstream_ref_from_cgmanifest(new_cgmanifest)
+        new_upstream_sha = extract_skia_upstream_commit_from_cgmanifest(new_cgmanifest)
     if cgmanifest_milestone and cgmanifest_milestone != caller_milestone:
         eprint(
             f"   ⚠ cgmanifest.json records {cgmanifest_milestone}, "
             f"but --milestone says {caller_milestone}"
         )
+    if not new_upstream_sha:
+        raise RuntimeError(
+            f"Could not determine new upstream commit from companion PR head "
+            f"{companion_head_sha[:12]}:cgmanifest.json"
+        )
+    if not new_upstream_ref:
+        raise RuntimeError(
+            f"Could not determine new upstream ref from companion PR head "
+            f"{companion_head_sha[:12]}:cgmanifest.json"
+        )
 
-    new_milestone = caller_milestone
-
-    eprint(f"   New upstream: {new_milestone}")
-    eprint(f"   Old upstream: {old_milestone}")
+    eprint(f"   New upstream: {new_upstream_ref}")
+    eprint(f"   Old upstream: {old_upstream_ref}")
 
     # 1e. Fetch git refs
     eprint("▸ Fetching git refs...")
     ensure_remote(skia_root, "upstream", "https://github.com/google/skia.git")
-    run_git(["fetch", "upstream", old_milestone, new_milestone], cwd=skia_root)
+    run_git(
+        ["fetch", "upstream", *dict.fromkeys([old_upstream_ref, new_upstream_ref])],
+        cwd=skia_root,
+    )
     # Fetch the base branch and the PR head via GitHub's PR ref. This works for
     # both same-repo and fork PRs — the branch name only exists on the fork's
     # remote, but refs/pull/{N}/head is always available on origin.
     skia_base_ref = pr.get("baseRefName", "skiasharp")
     run_git(["fetch", "origin", skia_base_ref, f"pull/{skia_pr_number}/head"], cwd=skia_root)
 
-    # Verify upstream branches exist
-    old_result = subprocess.run(
-        ["git", "rev-parse", f"upstream/{old_milestone}"],
-        cwd=skia_root, capture_output=True, text=True,
-    )
-    if old_result.returncode != 0:
-        raise RuntimeError(f"Old upstream branch upstream/{old_milestone} not found: {old_result.stderr.strip()}")
-    old_upstream_sha = old_result.stdout.strip()
-    if not old_upstream_sha or len(old_upstream_sha) < 7:
-        raise RuntimeError(f"Old upstream branch upstream/{old_milestone} resolved to invalid SHA: {old_upstream_sha!r}")
+    # Milestone branches can advance after an update. The exact commits recorded by
+    # the companion base/head are authoritative for the diff-of-diffs review.
+    for label, sha in (("old", old_upstream_sha), ("new", new_upstream_sha)):
+        present = subprocess.run(
+            ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+            cwd=skia_root,
+            capture_output=True,
+            text=True,
+        )
+        if present.returncode != 0:
+            run_git(["fetch", "--no-tags", "upstream", sha], cwd=skia_root)
+        verify = subprocess.run(
+            ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+            cwd=skia_root,
+            capture_output=True,
+            text=True,
+        )
+        if verify.returncode != 0:
+            raise RuntimeError(
+                f"Recorded {label} upstream commit {sha!r} is unavailable: "
+                f"{verify.stderr.strip()}"
+            )
 
-    new_result = subprocess.run(
-        ["git", "rev-parse", f"upstream/{new_milestone}"],
-        cwd=skia_root, capture_output=True, text=True,
-    )
-    if new_result.returncode != 0:
-        raise RuntimeError(f"New upstream branch upstream/{new_milestone} not found: {new_result.stderr.strip()}")
-    new_upstream_sha = new_result.stdout.strip()
-    if not new_upstream_sha or len(new_upstream_sha) < 7:
-        raise RuntimeError(f"New upstream branch upstream/{new_milestone} resolved to invalid SHA: {new_upstream_sha!r}")
+    for label, sha, upstream_ref in (
+        ("old", old_upstream_sha, f"upstream/{old_upstream_ref}"),
+        ("new", new_upstream_sha, f"upstream/{new_upstream_ref}"),
+    ):
+        if not recorded_commit_belongs_to_upstream(skia_root, sha, upstream_ref):
+            raise RuntimeError(
+                f"Recorded {label} upstream commit {sha} does not belong to "
+                f"{upstream_ref}. The companion cgmanifest may contain a fork head "
+                "instead of the exact upstream commit."
+            )
 
     # Use PR metadata for base SHA; fall back to resolving the ref
     base_sha = pr.get("baseRefOid", "").strip()
@@ -368,23 +439,33 @@ def main():
     # 1h. Sync third-party dependencies (harfbuzz, freetype, etc.)
     # These live under externals/skia/third_party/externals/ and are fetched
     # by Skia's DEPS mechanism, not git submodules.
-    eprint("▸ Syncing third-party dependencies (dotnet cake git-sync-deps)...")
+    #
+    # We invoke Skia's tools/git-sync-deps directly from the submodule rather
+    # than via "dotnet cake --target=git-sync-deps". The cake target is only
+    # defined in scripts/infra/native/shared/native-shared.cake, which is loaded
+    # exclusively by the per-platform native/*/build.cake files — never by the
+    # root build.cake. Running it from the repo root fails with "target not
+    # found". The cake wrapper's only other behavior is a milestone/increment
+    # version check, already covered by Phase 1 validation. (The emsdk
+    # activation step is a no-op for this fork: the in-tree emsdk is not fetched
+    # by DEPS, so bin/activate-emsdk returns early.)
+    eprint("▸ Syncing third-party dependencies (skia tools/git-sync-deps)...")
     sync_result = subprocess.run(
-        ["dotnet", "cake", "--target=git-sync-deps"],
-        cwd=repo_root,
+        [sys.executable, os.path.join("tools", "git-sync-deps")],
+        cwd=skia_root,
         capture_output=True,
         text=True,
     )
     for line in sync_result.stdout.strip().split("\n"):
-        if line and ("@" in line or "Task" in line or "Total:" in line or "error" in line.lower()):
+        if line and ("@" in line or "Skipping" in line or "error" in line.lower()):
             eprint(f"   {line.strip()}")
     if sync_result.returncode != 0:
-        eprint(f"   ❌ dotnet cake git-sync-deps failed (exit {sync_result.returncode})")
+        eprint(f"   ❌ tools/git-sync-deps failed (exit {sync_result.returncode})")
         for line in sync_result.stderr.strip().split("\n"):
             if line:
                 eprint(f"   {line.strip()}")
         raise RuntimeError(
-            f"Failed to sync third-party dependencies (dotnet cake exit {sync_result.returncode}). "
+            f"Failed to sync third-party dependencies (git-sync-deps exit {sync_result.returncode}). "
             f"Check that the skia submodule milestone matches VERSIONS.txt."
         )
     harfbuzz_path = os.path.join(skia_root, "third_party", "externals", "harfbuzz")
@@ -429,8 +510,8 @@ def main():
     try:
         source_result = check_source.run_check(
             skia_root=skia_root,
-            old_upstream_branch=f"upstream/{old_milestone}",
-            new_upstream_branch=f"upstream/{new_milestone}",
+            old_upstream_branch=old_upstream_sha,
+            new_upstream_branch=new_upstream_sha,
             base_sha=base_sha,
             pr_head=pr_head_sha,
             output_dir=output_dir,
@@ -447,7 +528,7 @@ def main():
             skia_root=skia_root,
             base_sha=base_sha,
             pr_head=pr_head_sha,
-            upstream_branch=f"upstream/{new_milestone}",
+            upstream_branch=new_upstream_sha,
             output_dir=output_dir,
         )
     except Exception as exc:
@@ -458,11 +539,10 @@ def main():
     # Step 5 — Companion PR Files
     eprint("═══ Step 5 — Companion PR ═══")
     try:
-        run_git(["fetch", "origin", "main"], cwd=repo_root)
         companion_result = check_companion.run_check(
             repo_root=repo_root,
-            base_ref="origin/main",
-            pr_ref="HEAD",
+            base_ref=companion_base_sha,
+            pr_ref=companion_head_sha,
             output_dir=output_dir,
         )
     except Exception as exc:
@@ -484,8 +564,8 @@ def main():
             "prTitle": pr["title"],
             "prState": pr["state"],
             "prAuthor": pr.get("author", {}).get("login", ""),
-            "oldUpstreamBranch": old_milestone,
-            "upstreamBranch": new_milestone,
+            "oldUpstreamBranch": old_upstream_ref,
+            "upstreamBranch": new_upstream_ref,
             "shas": {
                 "prHead": pr_head_sha,
                 "base": base_sha,

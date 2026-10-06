@@ -57,7 +57,7 @@ namespace SkiaSharp.Tests
 			InteropDelegates.Select(m => new object[] { m });
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableFact]
+		[Fact]
 		public void DelegateTypesAreValid()
 		{
 			var del = InteropDelegatesData;
@@ -71,7 +71,7 @@ namespace SkiaSharp.Tests
 
 #if !USE_LIBRARY_IMPORT
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(InteropDelegatesData))]
 		public void DelegateTypesHaveAttributes(Type delegateType)
 		{
@@ -80,7 +80,7 @@ namespace SkiaSharp.Tests
 #endif
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(InteropMembersData))]
 		public void ApiTypesAreNotInvalid(MethodInfo method, string delegateName)
 		{
@@ -104,7 +104,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(InteropMembersData))]
 		public void ApiReturnTypesArePrimitives(MethodInfo method, string delegateName)
 		{
@@ -131,7 +131,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(InteropMembersData))]
 		public void ApiTypesAreMarshalledCorrectly(MethodInfo method, string delegateName)
 		{
@@ -183,7 +183,8 @@ namespace SkiaSharp.Tests
 							paramType.FullName != typeof(SKManagedWStreamDelegates).FullName &&
 							paramType.FullName != typeof(SKManagedDrawableDelegates).FullName &&
 							paramType.FullName != typeof(SKManagedTraceMemoryDumpDelegates).FullName &&
-							paramType.FullName != typeof(GRVkBackendContextNative).FullName; // TODO: this type probably needs better checks as it is not 100% delegates
+							paramType.FullName != typeof(GRVkBackendContextNative).FullName && // TODO: this type probably needs better checks as it is not 100% delegates
+							paramType.FullName != typeof(SKGraphiteVkBackendContextNative).FullName; // same shape as GRVkBackendContextNative (managed delegate field)
 
 						// make sure our structs have a layout type
 						if (!paramType.GetTypeInfo().IsEnum && isLocalType && isSkippedType)
@@ -204,7 +205,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableTheory]
+		[Theory]
 		// too old
 		[InlineData("80.0", "0.0", "[80.0, 81.0)")]
 		// same version
@@ -248,21 +249,21 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableFact]
+		[Fact]
 		public void TestLibraryVersions()
 		{
 			Assert.True(SkiaSharpVersion.CheckNativeLibraryCompatible());
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableFact]
+		[Fact]
 		public void TestLibraryVersionsDoesNotThrow()
 		{
 			SkiaSharpVersion.CheckNativeLibraryCompatible(true);
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableFact]
+		[Fact]
 		public void TestVersionsString()
 		{
 			Assert.Equal(SkiaSharpVersion.Native.ToString(2), SkiaSharpVersion.NativeString);

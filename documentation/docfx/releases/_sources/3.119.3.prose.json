@@ -1,0 +1,40 @@
+{
+  "theme": "Preview servicing improvements",
+  "highlights_headline": "SkiaSharp 3.119.3 previews Linux ARM64 reliability fixes and refreshed bundled native dependencies.",
+  "highlights_body": "It also fixes an ahead-of-time compilation crash in applications that disable reflection.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Linux ARM64 startup fixed",
+          "detail": "The cross-compile sysroot now includes the required fontconfig runtime library, preventing a native crash on Linux ARM64.",
+          "prs": [3494]
+        },
+        {
+          "lead": "AOT applications no longer crash without reflection",
+          "detail": "Applications compiled with IlcDisableReflection enabled can load SkiaSharp safely.",
+          "prs": [3485]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Bundled native dependencies refreshed",
+          "detail": "The preview updates libpng, libwebp, brotli, and the Skia submodule.",
+          "prs": [3452, 3469, 3478, 3474]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "sshumakov": "Windows and Linux native binary hardening"
+  },
+  "preview_summaries": {
+    "v3.119.3-preview.1.1": "Preview 1 introduced the Linux ARM64, AOT, and dependency servicing updates."
+  },
+  "harfbuzz_summary": null
+}

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:SkiaSharpSample"
+             xmlns:items="clr-namespace:SkiaSharpSample.Controls"
+             x:Class="SkiaSharpSample.SampleDetailPage"
+             x:DataType="local:SampleDetailPage"
+             BackgroundColor="{StaticResource BrandNavy}">
+    <Grid x:Name="root" RowDefinitions="Auto,Auto,Auto,*,Auto" SafeAreaEdges="Container">
+        <ContentView x:Name="headerHost" />
+        <VerticalStackLayout Grid.Row="1" Spacing="5" Padding="16,12,16,8"
+              BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}">
+            <Label Text="{Binding SampleTitle}" AutomationId="sample-title"
+                   FontSize="24" FontAttributes="Bold" Style="{StaticResource PrimaryLabel}" />
+            <Label Text="{Binding SampleDescription}" FontSize="13"
+                   Style="{StaticResource SecondaryLabel}" />
+            <ScrollView Orientation="Horizontal" HeightRequest="31">
+                <HorizontalStackLayout Spacing="4" BindableLayout.ItemsSource="{Binding SampleTags}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="items:SampleTagItem">
+                            <items:SampleTagView />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </HorizontalStackLayout>
+            </ScrollView>
+        </VerticalStackLayout>
+        <ScrollView x:Name="actionScroller" Grid.Row="2"
+                    Orientation="Horizontal" HeightRequest="55"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}">
+            <HorizontalStackLayout Spacing="8" Padding="16,4">
+                <Button x:Name="open" Text="Open file" AutomationId="sample-open"
+                        Style="{StaticResource GalleryAction}" Clicked="OpenClicked" />
+                <Button x:Name="share" Text="Share / Save" AutomationId="sample-share"
+                        Style="{StaticResource GalleryAction}" Clicked="ShareClicked" />
+                <Button x:Name="retry" Text="Retry" AutomationId="sample-retry"
+                        Style="{StaticResource GalleryAction}" IsVisible="False"
+                        Clicked="RetryClicked" />
+            </HorizontalStackLayout>
+        </ScrollView>
+        <Grid x:Name="body" Grid.Row="3"
+              BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}">
+            <Border x:Name="surfaceCard" Style="{StaticResource GalleryCardSurface}"
+                    Margin="12,4,12,6" MinimumHeightRequest="200">
+                <Grid x:Name="surfaceHost">
+                    <Label x:Name="state" Text="Loading sample…" AutomationId="sample-state"
+                           FontSize="14" Style="{StaticResource PrimaryLabel}"
+                           HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                </Grid>
+            </Border>
+            <Grid x:Name="controlPanel" RowDefinitions="Auto,*"
+                  Margin="12,4,12,6" IsVisible="False" IsEnabled="False">
+                <Button x:Name="toggleControls" Text="Controls ▾"
+                        AutomationId="sample-controls-toggle"
+                        Style="{StaticResource GalleryAction}"
+                        Clicked="ToggleControlsClicked" />
+                <ScrollView x:Name="controlScroller" Grid.Row="1"
+                            AutomationId="sample-controls">
+                    <VerticalStackLayout x:Name="controlItems" Spacing="14" Padding="14">
+                        <Label Text="No adjustable controls for this sample."
+                               IsVisible="{Binding NoControls}"
+                               Style="{StaticResource SecondaryLabel}" />
+                        <VerticalStackLayout Spacing="14" BindableLayout.ItemsSource="{Binding ControlItems}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="items:ControlItem">
+                                    <items:ControlItemView />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                        <Label Text="{Binding OutputText}" IsVisible="{Binding ShowOutputInfo}"
+                               FontSize="12" Style="{StaticResource SecondaryLabel}" />
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Grid>
+        </Grid>
+        <Grid Grid.Row="4" Padding="16,0,16,4"
+              BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}">
+            <Label x:Name="status" Text="Initializing…" FontSize="11"
+                   AutomationId="sample-render-status"
+                   Style="{StaticResource SecondaryLabel}" />
+        </Grid>
+    </Grid>
+</ContentPage>

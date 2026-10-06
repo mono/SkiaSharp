@@ -14,6 +14,20 @@ stages:
     dependsOn: prepare
     jobs:
 
+      - ${{ each arch in split('x86,x64,arm,arm64', ',') }}:
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android (Linux)
+          parameters:
+            name: native_android_${{ arch }}_linux
+            displayName: Android ${{ arch }}
+            buildAgent: ${{ parameters.buildAgentLinuxNative }}
+            use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+            docker: scripts/infra/native/android/docker
+            target: externals-android
+            cacheJob: native/android
+            enableCaching: ${{ parameters.enableCaching }}
+            additionalArgs: --buildarch=${{ arch }}
+            skipInstall: true
+
       - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Linux)
         parameters:
           enableCaching: ${{ parameters.enableCaching }}
@@ -75,4 +89,3 @@ stages:
               - arch: ${{ arch }}
                 variant: bionic
                 docker: scripts/infra/native/linux/docker/bionic
-

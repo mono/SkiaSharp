@@ -79,7 +79,7 @@ var y = height * 0.35f;
 
 // Draw the sample text centered
 font.MeasureText(text, out var bounds, paint);
-canvas.DrawText(text, x - bounds.MidX, y, font, paint);
+canvas.DrawText(text, x - bounds.MidX, y, SKTextAlign.Left, font, paint);
 
 // Draw palette info below
 using var infoFont = new SKFont(SKTypeface.Default, 14);
@@ -87,7 +87,7 @@ using var infoPaint = new SKPaint { Color = new SKColor(0x88, 0x88, 0x88), IsAnt
 
 var info = $"Palette {paletteIndex + 1} of {paletteCount}";
 infoFont.MeasureText(info, out var infoBounds, infoPaint);
-canvas.DrawText(info, x - infoBounds.MidX, height * 0.45f, infoFont, infoPaint);
+canvas.DrawText(info, x - infoBounds.MidX, height * 0.45f, SKTextAlign.Left, infoFont, infoPaint);
 
 // Draw palette spectrum at the bottom
 DrawPaletteSpectrum(canvas, width, height);
@@ -119,14 +119,14 @@ continue;
 
 using var pFont = new SKFont(pTypeface, spectrumSize);
 pFont.MeasureText(spectrumText, out var b, paint);
-canvas.DrawText(spectrumText, cx - b.MidX, cy, pFont, paint);
+canvas.DrawText(spectrumText, cx - b.MidX, cy, SKTextAlign.Left, pFont, paint);
 
 var label = $"{i + 1}";
 labelFont.MeasureText(label, out var lb, labelPaint);
 using var namePaint = i == paletteIndex
 ? new SKPaint { Color = SKColors.Black, IsAntialias = true }
 : new SKPaint { Color = new SKColor(0xAA, 0xAA, 0xAA), IsAntialias = true };
-canvas.DrawText(label, cx - lb.MidX, cy + b.Height + 16, labelFont, namePaint);
+canvas.DrawText(label, cx - lb.MidX, cy + b.Height + 16, SKTextAlign.Left, labelFont, namePaint);
 }
 }
 

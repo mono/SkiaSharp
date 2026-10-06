@@ -6,7 +6,7 @@ namespace HarfBuzzSharp.Tests
 {
 	public class HBUnicodeFuncsTest : HBTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void ShouldBeImmutable()
 		{
 			using (var unicodeFuncs = UnicodeFunctions.Default)
@@ -15,7 +15,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetScript()
 		{
 			using (var unicodeFuncs = UnicodeFunctions.Default)
@@ -26,7 +26,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetCombiningClass()
 		{
 			using (var unicodeFuncs = UnicodeFunctions.Default)
@@ -37,7 +37,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldGetGeneralCategory()
 		{
 			using (var unicodeFuncs = UnicodeFunctions.Default)
@@ -48,7 +48,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyUnicodeFunctionsAreExactlyTheSameInstance()
 		{
 			var emptyUnicodeFunctions1 = UnicodeFunctions.Empty;
@@ -59,7 +59,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Same(emptyUnicodeFunctions1, emptyUnicodeFunctions2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyUnicodeFunctionsAreNotDisposed()
 		{
 			var emptyUnicodeFunctions = UnicodeFunctions.Empty;
@@ -69,7 +69,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, emptyUnicodeFunctions.Handle);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldCreateUnicodeFunctionsFromParent()
 		{
 			using (var unicodeFunctions = new UnicodeFunctions(UnicodeFunctions.Default))
@@ -78,7 +78,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetCombiningClassDelegate()
 		{
 			using (var unicodeFunctions = new UnicodeFunctions(UnicodeFunctions.Default))
@@ -89,7 +89,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetGeneralCategoryDelegate()
 		{
 			using (var unicodeFunctions = new UnicodeFunctions(UnicodeFunctions.Default))
@@ -100,7 +100,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetMirroringDelegate()
 		{
 			using (var unicodeFunctions = new UnicodeFunctions(UnicodeFunctions.Default))
@@ -111,7 +111,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetComposeDelegate()
 		{
 			using (var unicodeFunctions = new UnicodeFunctions(UnicodeFunctions.Default))
@@ -128,7 +128,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetDecomposeDelegate()
 		{
 			using (var unicodeFunctions = new UnicodeFunctions(UnicodeFunctions.Default))

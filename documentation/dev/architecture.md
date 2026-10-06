@@ -79,7 +79,7 @@ AsRect(sk_rect_t*)     → SkRect*
 | C++ API | `externals/skia/include/core/SkCanvas.h` |
 | C API header | `externals/skia/include/c/sk_canvas.h` |
 | C API impl | `externals/skia/src/c/sk_canvas.cpp` |
-| P/Invoke | `binding/SkiaSharp/SkiaApi.generated.cs` |
+| P/Invoke | `binding/SkiaSharp/Generated/` |
 | C# wrapper | `binding/SkiaSharp/SKCanvas.cs` |
 
 ## Threading Model
@@ -95,7 +95,7 @@ AsRect(sk_rect_t*)     → SkRect*
 ## Code Generation
 
 - **C API layer:** Hand-written (`externals/skia/src/c/*.cpp`)
-- **P/Invoke:** Auto-generated from C headers (`SkiaApi.generated.cs`)
+- **P/Invoke:** Auto-generated from C headers (`Generated/`)
 - **C# wrappers:** Hand-written (`binding/SkiaSharp/SK*.cs`)
 
 ```pwsh

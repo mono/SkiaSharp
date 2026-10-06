@@ -23,7 +23,7 @@ Every run produces both. Output is structured JSON and rendered GitHub-flavored 
 
 This skill always runs in a SkiaSharp checkout. It uses:
 - `externals/skia/` submodule for the C API (our fork at `mono/skia`)
-- `binding/SkiaSharp/SkiaApi.generated.cs` for the C API reflected as P/Invoke externs
+- `binding/SkiaSharp/Generated` for the C API reflected as P/Invoke externs
 - `binding/SkiaSharp/*.cs` for the C# wrappers
 - Upstream `google/skia` headers fetched via GitHub for hidden API comparison
 
@@ -51,7 +51,7 @@ If unclear, ask. But try to infer first.
 
 ```
 Phase 1: Setup (determine scan range, prepare sources)
-Phase 2: Launch dual-model agents (Opus + GPT in parallel)
+Phase 2: Launch independent GPT-5.6 Sol and Terra agents in parallel
 Phase 3: Synthesize — merge findings, dedupe, both lenses
 Phase 4: Generate outputs (JSON → validate → Markdown)
 Phase 5: Present results
@@ -93,26 +93,27 @@ github-mcp-server-get_file_contents owner=google repo=skia path=include/core/SkI
 
 **1e. Locate binding sources**
 
-The C API is reflected in `binding/SkiaSharp/SkiaApi.generated.cs` as P/Invoke extern methods.
+The C API is reflected in `binding/SkiaSharp/Generated` as P/Invoke extern methods.
 The C# wrappers are in `binding/SkiaSharp/*.cs`. Both are in the worktree.
 
 For the C API headers (our fork), check `externals/skia/include/c/` and `externals/skia/src/c/`.
-If the submodule isn't checked out, agents can grep `SkiaApi.generated.cs` for `sk_*` and `gr_*`
+If the submodule isn't checked out, agents can grep `Generated/` for `sk_*` and `gr_*`
 extern function names — this reflects the full C API surface.
 
-### Phase 2: Launch Dual-Model Agents
+### Phase 2: Launch Independent Agents
 
-Launch **two** background agents simultaneously on **different models**:
+Launch **two** background agents simultaneously: Sol for maximum depth and Terra
+for a cost-effective independent perspective.
 
 ```
-task agent_type=general-purpose mode=background model=claude-opus-4.7 name=analyst-opus:
-task agent_type=general-purpose mode=background model=gpt-5.4 name=analyst-gpt:
+task agent_type=general-purpose mode=background model=gpt-5.6-sol name=analyst-sol:
+task agent_type=general-purpose mode=background model=gpt-5.6-terra name=analyst-terra:
 ```
 
 Each agent does the complete job independently:
 1. **Release notes scan** — read Skia RELEASE_NOTES.md, extract features
 2. **Hidden API scan** — fetch upstream C++ headers from `google/skia`, compare against
-   binding/SkiaSharp/SkiaApi.generated.cs for P/Invoke externs and binding/SkiaSharp/*.cs for wrappers
+   binding/SkiaSharp/Generated for P/Invoke externs and binding/SkiaSharp/*.cs for wrappers
 3. **Binding verification** — grep the actual code to set bindingStatus
 4. **Git diff** (if diff mode) — analyze API/build/dep changes between refs
 

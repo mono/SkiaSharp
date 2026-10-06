@@ -1,0 +1,57 @@
+{
+  "theme": "Skia m150 and APIs",
+  "highlights_headline": "SkiaSharp 4.150.0 updates the bundled engine to Skia m150 and adds practical image and paint APIs.",
+  "highlights_body": "The release adds filters and diagnostics APIs, improves canvas-wrapper performance, and restores correct small-radius CPU raster blurs.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to milestone m150",
+          "detail": "The bundled renderer advances to Chrome milestone 150 with the associated upstream fixes.",
+          "prs": [4146, 4190]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "New image-filter and paint helpers",
+          "detail": "SKImageFilter adds crop and empty filters, SKColorFilter adds overdraw visualization, and SKPaint adds fast-bounds calculation for culling.",
+          "prs": [4227, 4228, 4229, 4271]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Small-radius raster blur regression fixed",
+          "detail": "CPU raster rendering restores the expected quality for small-sigma blur effects.",
+          "prs": [4269]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "SKSurface canvas wrapper cached",
+          "detail": "Repeated Canvas access on an SKSurface reuses its managed wrapper, reducing allocation and interop overhead.",
+          "prs": [4247]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Cached SKSurface canvas wrappers and fixed the CPU raster blur regression"
+  },
+  "preview_summaries": {
+    "v4.150.0-rc.1.1": "The release candidate added paint and image-filter APIs, canvas caching, and the raster blur fix.",
+    "v4.150.0-preview.2.1": "Preview 2 brought the main API, HarfBuzz, and platform updates for the 4.150 line.",
+    "v4.150.0-preview.1.1": "Preview 1 opened the 4.150 line with the Skia m150 engine update."
+  },
+  "harfbuzz_summary": "Updates HarfBuzzSharp alongside the 4.150 release line."
+}

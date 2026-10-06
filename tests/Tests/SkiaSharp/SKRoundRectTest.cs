@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKRoundRectTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanConstructEmpty()
 		{
@@ -23,7 +23,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRect.Empty, rrect.Rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanConstructRect()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -40,7 +40,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rect, rrect.Rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanConstructOval()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -58,7 +58,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rect, rrect.Rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanConstructSimple()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -75,7 +75,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rect, rrect.Rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanConstructNinePatch()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -93,7 +93,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rect, rrect.Rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanNotConstructRectWithInvalidRadii()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -107,7 +107,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentException>(() => rrect.SetRectRadii(rect, radii));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanConstructRectWithRadii()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -137,7 +137,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(radii[3], rrect.GetRadii(SKRoundRectCorner.LowerLeft));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCopy()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -155,7 +155,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rect, rrect.Rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ContainsRect()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -165,7 +165,7 @@ namespace SkiaSharp.Tests
 			Assert.True(contains);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetRadii()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -177,7 +177,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKPoint(5, 7), rrect.GetRadii(SKRoundRectCorner.LowerLeft));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CheckAllCornersCircular()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -186,7 +186,7 @@ namespace SkiaSharp.Tests
 			Assert.True(rrect.AllCornersCircular);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CheckAllCornersCircularWithTolerance()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -196,7 +196,7 @@ namespace SkiaSharp.Tests
 			Assert.True(rrect.CheckAllCornersCircular(2f));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanInflate()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -208,7 +208,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(inflated, rrect.Rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanOffset()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -221,7 +221,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(offset, rrect.Rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void WillFailToTransformWithInvalidTransformation()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
@@ -234,7 +234,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(transformed);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanTransform()
 		{
 			var radii = new[] { new SKPoint(5, 5), new SKPoint(5, 5), new SKPoint(5, 5), new SKPoint(5, 5) };

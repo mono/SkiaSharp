@@ -9,14 +9,14 @@ namespace SkiaSharpGenerator
 {
 	public class Generator : BaseTool
 	{
-		public Generator(string skiaRoot, string configFile, TextWriter outputWriter, DocumentationStore? docStore = null)
+		public Generator(string skiaRoot, string configFile, string outputDirectory, DocumentationStore? docStore = null)
 			: base(skiaRoot, configFile)
 		{
-			OutputWriter = outputWriter ?? throw new ArgumentNullException(nameof(outputWriter));
+			OutputDirectory = outputDirectory ?? throw new ArgumentNullException(nameof(outputDirectory));
 			PreviousDocumentation = docStore;
 		}
 
-		public TextWriter OutputWriter { get; }
+		public string OutputDirectory { get; }
 
 		public DocumentationStore? PreviousDocumentation { get; }
 
@@ -25,51 +25,127 @@ namespace SkiaSharpGenerator
 			Log?.Log("Starting C# API generation...");
 
 			config = await LoadConfigAsync(ConfigFile);
-
 			PreviousDocumentation?.Load();
-
 			LoadStandardMappings();
-
 			ParseSkiaHeaders();
-
 			UpdatingMappings();
-
-			WriteApi(OutputWriter);
+			LoadClassTypes();
+			WriteApi();
 
 			Log?.Log("C# API generation complete.");
 		}
 
-		private void WriteApi(TextWriter writer)
+		private void LoadClassTypes()
+		{
+			foreach (var klass in compilation.Classes)
+				skiaTypes[klass.GetDisplayName()] = klass.SizeOf != 0;
+		}
+
+		private void WriteApi()
 		{
 			Log?.LogVerbose("Writing C# API...");
 
+			WriteNativeAliases();
+
+			var delegates = StableOrdering.ByName(
+				compilation.Typedefs.Where(IsFunctionPointer).Where(t => !IsExcludedSymbol(t.GetDisplayName())).Where(t => IncludeNamespace(t.GetDisplayName())),
+				t => t.GetDisplayName());
+			foreach (var del in delegates)
+				WriteFile(GetTypeFilePath(GetManagedDelegateName(del.GetDisplayName())), writer =>
+				{
+					writer.WriteLine("#if !USE_LIBRARY_IMPORT");
+					WriteNamespace(writer, GetNamespace(del.GetDisplayName()), () => WriteDelegate(writer, del));
+					writer.WriteLine("#endif // !USE_LIBRARY_IMPORT");
+				});
+
+			var structs = StableOrdering.ByName(
+				compilation.Classes.Where(c => c.SizeOf != 0).Where(c => !IsExcludedSymbol(c.GetDisplayName())).Where(c => IncludeNamespace(c.GetDisplayName())),
+				c => c.GetDisplayName());
+			foreach (var klass in structs)
+				WriteFile(GetTypeFilePath(GetManagedTypeName(klass.GetDisplayName())), writer =>
+					WriteNamespace(writer, GetNamespace(klass.GetDisplayName()), () => WriteStruct(writer, klass)));
+
+			var enums = StableOrdering.ByName(
+				compilation.Enums.Where(e => !string.IsNullOrEmpty(e.GetDisplayName())).Where(e => !IsExcludedSymbol(e.GetDisplayName())).Where(e => IncludeNamespace(e.GetDisplayName())),
+				e => e.GetDisplayName());
+			foreach (var enm in enums)
+			{
+				Log?.LogVerbose($"  {enm.GetDisplayName()}");
+				WriteFile(GetTypeFilePath(GetManagedTypeName(enm.GetDisplayName())), writer =>
+					WriteNamespace(writer, GetNamespace(enm.GetDisplayName()), () => WriteEnum(writer, enm)));
+			}
+
+			var functions = StableOrdering.ByPathThenName(
+				compilation.Functions.Where(f => IncludeNamespace(f.Name)).Where(f => !IsExcludedSymbol(f.Name)), SkiaRoot, f => f.Span.Start.File, f => f.Name)
+				.GroupBy(f => StableOrdering.NormalizePath(SkiaRoot, f.Span.Start.File), StringComparer.Ordinal);
+			foreach (var group in functions)
+			{
+				if (excludedFiles.Contains(group.Key))
+					continue;
+				WriteFile(GetFunctionFilePath(group.Key), writer =>
+					WriteNamespace(writer, config.Namespace, () =>
+					{
+						writer.WriteLine($"	internal unsafe partial class {config.ClassName}");
+						writer.WriteLine("	{");
+						WriteFunctions(writer, group.Key);
+						writer.WriteLine("	}");
+					}));
+			}
+
+			foreach (var del in delegates)
+				WriteFile(GetTypeFilePath($"DelegateProxies.{GetManagedDelegateName(del.GetDisplayName())}"), writer =>
+					WriteNamespace(writer, GetNamespace(del.GetDisplayName()), () =>
+					{
+						writer.WriteLine("	internal static unsafe partial class DelegateProxies");
+						writer.WriteLine("	{");
+						WriteDelegateProxy(writer, del);
+						writer.WriteLine("	}");
+					}));
+		}
+
+		private string GetManagedDelegateName(string nativeName)
+		{
+			functionMappings.TryGetValue(nativeName, out var map);
+			return map?.CsType ?? CleanName(nativeName);
+		}
+
+		private string GetManagedTypeName(string nativeName)
+		{
+			typeMappings.TryGetValue(nativeName, out var map);
+			return map?.CsType ?? CleanName(nativeName);
+		}
+
+		private static string GetTypeFilePath(string managedName) =>
+			MakePortableFileName(managedName) + ".generated.cs";
+
+		private string GetFunctionFilePath(string sourcePath) =>
+			GetTypeFilePath($"{config.ClassName}.{sourcePath.Replace('/', '.')}");
+
+		private static string MakePortableFileName(string value) =>
+			string.Concat(value.Select(c => char.IsLetterOrDigit(c) || c is '_' or '-' ? c : '_'));
+
+		private static bool IsFunctionPointer(CppTypedef typedef) =>
+			typedef.ElementType is CppPointerType { ElementType: CppFunctionType };
+
+		private void WriteFile(string relativePath, Action<TextWriter> write)
+		{
+			var outputPath = Path.Combine(OutputDirectory, relativePath);
+			using var writer = GenerateCommand.CreateOutputWriter(outputPath);
 			writer.WriteLine("using System;");
-			writer.WriteLine("using System.Runtime.InteropServices;");
 			writer.WriteLine("using System.Runtime.CompilerServices;");
+			writer.WriteLine("using System.Runtime.InteropServices;");
 			writer.WriteLine();
 			WriteNamespaces(writer);
 			writer.WriteLine();
-			WriteClasses(writer);
-			writer.WriteLine();
-			writer.WriteLine($"#region Functions");
-			writer.WriteLine();
-			writer.WriteLine($"namespace {config.Namespace}");
-			writer.WriteLine($"{{");
-			writer.WriteLine($"\tinternal unsafe partial class {config.ClassName}");
-			writer.WriteLine($"\t{{");
-			WriteFunctions(writer);
-			writer.WriteLine($"\t}}");
-			writer.WriteLine($"}}");
-			writer.WriteLine();
-			writer.WriteLine($"#endregion Functions");
-			writer.WriteLine();
-			WriteDelegates(writer);
-			writer.WriteLine();
-			WriteStructs(writer);
-			writer.WriteLine();
-			WriteEnums(writer);
-			writer.WriteLine();
-			WriteDelegateProxies(writer);
+			write(writer);
+		}
+
+		private static void WriteNamespace(TextWriter writer, string name, Action write)
+		{
+			writer.WriteLine($"namespace {name}");
+			writer.WriteLine("{");
+			write();
+			writer.WriteLine("}");
 		}
 
 		private void WriteDelegates(TextWriter writer)
@@ -79,10 +155,12 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"#region Delegates");
 			writer.WriteLine($"#if !USE_LIBRARY_IMPORT");
 
-			var delegates = compilation.Typedefs
+			var delegates = StableOrdering.ByName(
+				compilation.Typedefs
 				.Where(t => t.ElementType.TypeKind == CppTypeKind.Pointer)
-				.Where(t => IncludeNamespace(t.GetDisplayName()))
-				.OrderBy(t => t.GetDisplayName())
+				.Where(t => !IsExcludedSymbol(t.GetDisplayName()))
+				.Where(t => IncludeNamespace(t.GetDisplayName())),
+				t => t.GetDisplayName())
 				.GroupBy(t => GetNamespace(t.GetDisplayName()));
 
 			foreach (var group in delegates)
@@ -139,10 +217,11 @@ namespace SkiaSharpGenerator
 
 			writer.WriteLine($"#region Structs");
 
-			var classes = compilation.Classes
+			var classes = StableOrdering.ByName(
+				compilation.Classes
 				.Where(c => c.SizeOf != 0)
-				.Where(c => IncludeNamespace(c.GetDisplayName()))
-				.OrderBy(c => c.GetDisplayName())
+				.Where(c => IncludeNamespace(c.GetDisplayName())),
+				c => c.GetDisplayName())
 				.GroupBy(c => GetNamespace(c.GetDisplayName()));
 
 			foreach (var group in classes)
@@ -166,7 +245,7 @@ namespace SkiaSharpGenerator
 		{
 			var cppClassName = klass.GetDisplayName();
 
-			if (excludedTypes.Contains(cppClassName) == true)
+			if (IsExcludedSymbol(cppClassName))
 			{
 				Log?.LogVerbose($"    Skipping struct '{cppClassName}' because it was in the exclude list.");
 				return;
@@ -340,9 +419,10 @@ namespace SkiaSharpGenerator
 
 			writer.WriteLine($"#region Enums");
 
-			var enums = compilation.Enums
-				.Where(e => IncludeNamespace(e.GetDisplayName()))
-				.OrderBy(e => e.GetDisplayName())
+			var enums = StableOrdering.ByName(
+				compilation.Enums
+				.Where(e => IncludeNamespace(e.GetDisplayName())),
+				e => e.GetDisplayName())
 				.GroupBy(e => GetNamespace(e.GetDisplayName()));
 
 			foreach (var group in enums)
@@ -373,7 +453,7 @@ namespace SkiaSharpGenerator
 			}
 
 			typeMappings.TryGetValue(cppEnumName, out var map);
-			if (map?.Generate == false)
+			if (map?.Generate == false || IsExcludedSymbol(cppEnumName))
 				return;
 
 			Log?.LogVerbose($"    {cppEnumName}");
@@ -421,8 +501,10 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"#region Namespaces");
 			writer.WriteLine();
 
-			var namspaces = config.Namespaces.Values;
-			foreach (var ns in namspaces)
+			var namespaces = StableOrdering.ByName(
+				config.Namespaces.Values,
+				ns => $"{config.Namespace}.{ns.CsName}");
+			foreach (var ns in namespaces)
 			{
 				if (string.IsNullOrEmpty(ns.CsName))
 					continue;
@@ -438,45 +520,47 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"#endregion");
 		}
 
-		private void WriteClasses(TextWriter writer)
+		private void WriteNativeAliases()
 		{
-			Log?.LogVerbose("  Writing usings...");
+			Log?.LogVerbose("  Writing native type aliases...");
 
-			writer.WriteLine($"#region Class declarations");
-			writer.WriteLine();
-
-			var classes = compilation.Classes
-				.OrderBy(c => c.GetDisplayName())
-				.ToList();
+			var classes = StableOrdering.ByName(
+				compilation.Classes,
+				c => c.GetDisplayName())
+				.Where(c => c.SizeOf == 0);
+			using var writer = GenerateCommand.CreateOutputWriter(Path.Combine(OutputDirectory, "NativeAliases.generated.cs"));
 			foreach (var klass in classes)
 			{
 				var type = klass.GetDisplayName();
-				skiaTypes.Add(type, klass.SizeOf != 0);
+				if (IsExcludedSymbol(type))
+					continue;
 
 				Log?.LogVerbose($"    {klass.GetDisplayName()}");
-
-				if (klass.SizeOf == 0)
-					writer.WriteLine($"using {klass.GetDisplayName()} = System.IntPtr;");
+				writer.WriteLine($"global using {type} = System.IntPtr;");
 			}
-
-			writer.WriteLine();
-			writer.WriteLine($"#endregion");
 		}
 
-		private void WriteFunctions(TextWriter writer)
+		private void WriteFunctions(TextWriter writer, string sourcePath)
 		{
 			Log?.LogVerbose("  Writing p/invokes...");
 
-			var functionGroups = compilation.Functions
+			var functions = StableOrdering.ByPathThenName(
+				compilation.Functions
 				.Where(f => IncludeNamespace(f.Name))
-				.OrderBy(f => f.Name)
-				.GroupBy(f => f.Span.Start.File.ToLower().Replace("\\", "/"))
-				.OrderBy(g => Path.GetDirectoryName(g.Key) + "/" + Path.GetFileName(g.Key));
+				.Where(f => !IsExcludedSymbol(f.Name)),
+				SkiaRoot,
+				f => f.Span.Start.File,
+				f => f.Name);
+			var functionGroups = functions.GroupBy(
+				f => StableOrdering.NormalizePath(SkiaRoot, f.Span.Start.File),
+				StringComparer.Ordinal);
 
 			foreach (var group in functionGroups)
 			{
-				var fullPath = Path.GetFullPath(group.Key).ToLower();
-				if (excludedFiles.Any(e => Path.GetFullPath(e).ToLower() == fullPath))
+				if (!string.Equals(group.Key, sourcePath, StringComparison.Ordinal))
+					continue;
+
+				if (excludedFiles.Contains(group.Key))
 				{
 					Log?.LogVerbose($"    Skipping file '{group.Key}' because it was in the exclude list.");
 					continue;
@@ -509,7 +593,7 @@ namespace SkiaSharpGenerator
 						t2 ??= t1;
 
 						var cppT = GetCppType(p.Type);
-						if (excludedTypes.Contains(cppT) == true)
+						if (IsExcludedSymbol(cppT))
 						{
 							Log?.LogVerbose($"    Skipping function '{function.Name}' because parameter '{cppT}' was in the exclude list.");
 							skipFunction = true;
@@ -526,6 +610,13 @@ namespace SkiaSharpGenerator
 
 					if (skipFunction)
 						continue;
+
+					var returnCppType = GetCppType(function.ReturnType);
+					if (IsExcludedSymbol(returnCppType))
+					{
+						Log?.LogVerbose($"    Skipping function '{function.Name}' because return type '{returnCppType}' was in the exclude list.");
+						continue;
+					}
 
 					var returnType = GetType(function.ReturnType);
 					var retAttr = "";
@@ -579,10 +670,12 @@ namespace SkiaSharpGenerator
 
 			writer.WriteLine($"#region DelegateProxies");
 
-			var delegates = compilation.Typedefs
+			var delegates = StableOrdering.ByName(
+				compilation.Typedefs
 				.Where(t => t.ElementType.TypeKind == CppTypeKind.Pointer)
-				.Where(t => IncludeNamespace(t.GetDisplayName()))
-				.OrderBy(t => t.GetDisplayName())
+				.Where(t => !IsExcludedSymbol(t.GetDisplayName()))
+				.Where(t => IncludeNamespace(t.GetDisplayName())),
+				t => t.GetDisplayName())
 				.GroupBy(t => GetNamespace(t.GetDisplayName()));
 
 			foreach (var group in delegates)

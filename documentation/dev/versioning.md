@@ -23,23 +23,31 @@ The version number for SkiaSharp is as follows: `major.skia.minor.patch`
 
 ## Preview Labels
 
-With regards to the pre-release versioning, it follows the typical pattern. However, there is one type that is a bit different.
+With regards to the pre-release versioning, it follows the typical pattern.
 
-> Although several preview versions are found on [nuget.org](https://nuget.org), many more are also periodically released to the preview feed:  
-> https://aka.ms/skiasharp-eap/index.json
+Official CI derives package build suffixes from Arcade's
+`OfficialBuildId` (`yyyyMMdd.revision`), for example
+`4.152.0-preview.0.26418.3` from build `20260818.3`.
 
 > **Note:** There are two Azure DevOps feeds:
-> - **Preview feed** (`SkiaSharp`): Contains regular packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) for public testing
-> - **CI feed** (`SkiaSharp-CI`): Contains internal build artifacts (`_NuGets`, `_Symbols`, `_NativeAssets`, etc.) used by the release pipeline
+> - **Signed builds** (`dotnet-libraries`): the permanent target feed for regular packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) promoted through Maestro after testing
+> - **Transport** (`dotnet-libraries-transport`): unsigned, non-shipping build-input packages (`_NuGets`, `_NativeAssets`, etc.) routed separately by the same BAR/channel promotion
 
 Typically, the pre-release labels are:
  - `-alpha` is very early and has not really been tested
  - `-preview` is mostly good and works, but a few more things need to be done (bugs, features, discussions)
  - `-rc` is almost ready to go out, but is waiting on third party feedback (not too common)
+ - `stable` is the pipeline sentinel for an exact `X.Y.Z` package; it is not included in the package version
+
+Each build emits one package family. Normal labels produce prerelease packages;
+`PREVIEW_LABEL=stable` produces exact packages from a real-signed internal
+`release/*` branch. Arcade promotion and NuGet.org publication remain separate.
 
 ### PR Packages
 
-PR builds (`-pr.xxxx.yy` versions) are **not** published to any NuGet feed. These builds are unsigned and only available as pipeline artifacts from the public Azure DevOps CI.
+PR builds (`-pr.<number>.<short-date>.<revision>` versions) are **not**
+published to any NuGet feed. These builds are unsigned and only available as
+pipeline artifacts from the public Azure DevOps CI.
 
 **Download with a single command (no repo clone needed):**
 
@@ -70,9 +78,9 @@ Packages are installed to `~/.skiasharp/hives/pr-{number}/packages/`.
 
 **Manual download via Azure DevOps UI:**
 
-1. Go to: https://dev.azure.com/xamarin/public/_build?definitionId=4
+1. Go to: https://dev.azure.com/dnceng-public/public/_build?definitionId=345&_a=summary
 2. Find the build for your PR
-3. Click "Artifacts" → download the `nuget_preview` (or `nuget`) artifact
+3. Click "Artifacts" → download the `nuget` artifact
 4. Extract and use as a local NuGet source
 
 ## Native API Versions

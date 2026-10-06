@@ -85,7 +85,7 @@ void sk_paint_set_antialias(sk_paint_t* paint, bool aa) {
 }
 ```
 
-**P/Invoke** (generated in `SkiaApi.generated.cs` after running generator):
+**P/Invoke** (generated under `Generated/` after running generator):
 ```csharp
 [DllImport(SKIA)] public static extern bool sk_paint_is_antialias(sk_paint_t t);
 [DllImport(SKIA)] public static extern void sk_paint_set_antialias(sk_paint_t t, bool aa);
@@ -147,7 +147,7 @@ Run the generator to create P/Invoke declarations from C API headers:
 pwsh ./utils/generate.ps1
 ```
 
-This generates in `SkiaApi.generated.cs`:
+This generates a header-grouped file under `Generated/`:
 ```csharp
 [DllImport("libSkiaSharp", CallingConvention = CallingConvention.Cdecl)]
 public static extern void sk_canvas_draw_circle(sk_canvas_t canvas, float cx, 
@@ -168,7 +168,7 @@ public void DrawCircle(float cx, float cy, float radius, SKPaint paint) {
 
 ```bash
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
-dotnet test tests/SkiaSharp.Tests.Console.sln
+dotnet test tests/SkiaSharp.Tests.Console.slnx
 ```
 
 ## Reference-Counted Return Example
@@ -210,7 +210,7 @@ public static SKImage FromEncodedData(SKData data) {
 
 **Phase 4: Regenerate Bindings**
 - [ ] **Regenerated P/Invoke** (`pwsh ./utils/generate.ps1`) — **MANDATORY, never skip**
-- [ ] Verified `SkiaApi.generated.cs` updated correctly
+- [ ] Verified `Generated/` updated correctly
 
 **Phase 5: C# Wrapper**
 - [ ] Added C# wrapper method
@@ -483,7 +483,7 @@ Public GPU structs get member renames:
 |---------|--------|----------|
 | Edited C API but didn't commit in submodule | Changes disappear on next submodule update | Always commit inside `externals/skia/` first |
 | Forgot `git add externals/skia` in parent | Parent repo doesn't reference your C API changes | Stage submodule after committing inside it |
-| Manually edited `*.generated.cs` | Binding mismatch, overwrites on next generation | Always run `pwsh ./utils/generate.ps1` |
+| Manually edited generated declarations or interop code | Binding mismatch, overwrites on next generation | Run `pwsh ./utils/generate.ps1`; direct `///` comment edits are allowed only when regeneration preserves them |
 | Only built, didn't test | Functionality may not work despite compiling | Always run tests — passing tests required |
 | Used `externals-download` after C API change | Downloaded natives don't have your new functions | Use `externals-{platform}` to build |
 | No `static_assert` for DEF_MAP struct | ABI mismatch goes undetected | Add to `sk_structs.cpp` |

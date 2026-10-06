@@ -20,8 +20,8 @@ namespace SkiaSharpGenerator
 		protected readonly Dictionary<string, FunctionMapping> functionMappings = new Dictionary<string, FunctionMapping>();
 		protected readonly Dictionary<string, bool> skiaTypes = new Dictionary<string, bool>();
 
-		protected readonly List<string> excludedFiles = new List<string>();
-		protected readonly List<string> excludedTypes = new List<string>();
+		protected readonly HashSet<string> excludedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		protected readonly List<string> excludedSymbols = new List<string>();
 
 		protected CppCompilation compilation = new CppCompilation();
 		protected Config config = new Config();
@@ -59,6 +59,7 @@ namespace SkiaSharpGenerator
 				{
 					var version = Directory.GetDirectories(root)
 						.OrderByDescending(d => Version.TryParse(Path.GetFileName(d), out var v) ? v : new Version(0, 0, 0))
+						.ThenBy(d => d, StringComparer.Ordinal)
 						.FirstOrDefault();
 					if (version is not null)
 					{
@@ -155,27 +156,24 @@ namespace SkiaSharpGenerator
 			}
 
 			var headers = new List<string>();
-			foreach (var header in config.Headers)
+			foreach (var header in config.Headers.OrderBy(h => h.Key, StringComparer.Ordinal))
 			{
 				var path = Path.Combine(SkiaRoot, header.Key);
 				options.IncludeFolders.Add(path);
-				foreach (var filter in header.Value)
-				{
-					headers.AddRange(Directory.EnumerateFiles(path, filter));
-				}
 			}
 
-			foreach (var filter in config.Exclude.Files)
-			{
-				excludedFiles.AddRange(Directory.EnumerateFiles(SkiaRoot, filter));
-			}
+			headers.AddRange(StableOrdering.EnumerateFiles(
+				SkiaRoot,
+				config.Headers,
+				Directory.EnumerateFiles));
 
-			foreach (var filter in config.Exclude.Types)
-			{
-				excludedTypes.Add(filter);
-				excludedTypes.Add(filter + "*");
-				excludedTypes.Add(filter + "**");
-			}
+			excludedFiles.UnionWith(StableOrdering.EnumerateFiles(
+				SkiaRoot,
+				config.Exclude.Files,
+				Directory.EnumerateFiles)
+				.Select(path => StableOrdering.NormalizePath(SkiaRoot, path)));
+
+			excludedSymbols.AddRange(config.Exclude.Symbols);
 
 			foreach (var f in excludedFiles)
 				Log?.LogVerbose("Skipping everything in: " + f);
@@ -383,7 +381,9 @@ namespace SkiaSharpGenerator
 			if (skiaTypes.TryGetValue(noPointers, out var isStruct))
 			{
 				if (!isStruct)
-					return noPointers + pointers.Substring(1);
+					return pointers.Length == 0
+						? noPointers
+						: noPointers + pointers[1..];
 				if (typeMappings.TryGetValue(noPointers, out var map))
 					return (map.CsType ?? CleanName(noPointers)) + pointers;
 			}
@@ -523,6 +523,16 @@ namespace SkiaSharpGenerator
 			}
 
 			return true;
+		}
+
+		protected bool IsExcludedSymbol(string name)
+		{
+			var pointerIndex = name.IndexOfAny(['*', '&']);
+			if (pointerIndex >= 0)
+				name = name[..pointerIndex];
+
+			return excludedSymbols.Any(pattern =>
+				Regex.IsMatch(name, $"^{Regex.Escape(pattern).Replace(@"\*", ".*")}$"));
 		}
 
 		protected string GetNamespace(string name)

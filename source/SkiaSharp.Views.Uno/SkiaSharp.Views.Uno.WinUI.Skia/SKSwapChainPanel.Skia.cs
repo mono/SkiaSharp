@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using Uno.Foundation;
 #if WINUI
@@ -15,6 +15,8 @@ namespace SkiaSharp.Views.UWP
 {
 	public partial class SKSwapChainPanel
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKSwapChainPanel" /> class.</summary>
+		/// <remarks />
 		public SKSwapChainPanel()
 		{
 			if (RaiseOnUnsupported)

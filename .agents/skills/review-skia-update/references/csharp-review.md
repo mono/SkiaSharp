@@ -8,7 +8,9 @@ with file lists, diffs, and categories (added/changed). Your job is to:
 
 ## What to Ignore
 
-- **All `*Api.generated.cs` files** — already filtered out by `check_companion.py`
+- **Generator-owned declaration and interop changes in `*.generated.cs`** —
+  unless the diff changes source-controlled `///` documentation trivia, which
+  `check_companion.py` includes for review
 - **Whitespace-only changes** — not worth reviewing
 - **Comment-only changes** — unless they document a behavioral change
 
@@ -54,7 +56,9 @@ Skia updates often change platform behavior. Check:
 Check `tests/Tests/` for:
 - New tests covering new APIs
 - Updated tests reflecting changed behavior
-- No skipped tests (except hardware-dependent: GPU, display)
+- No newly skipped tests. GPU coverage is defined by the existing host/platform
+  `GpuPolicy`; missing hardware or a failed bring-up for a required backend is a failure.
+  Flag any PR that adds or expands a skip instead of fixing the environment or backend.
 
 ## Output Format
 

@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKObjectTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void CanInstantiateAbstractClassesWithImplementation()
 		{
 			var handle = GetNextPtr();
@@ -37,7 +37,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SameHandleReturnsSameReferenceAndReleasesObject()
 		{
 			SkipOnMono();
@@ -75,7 +75,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ObjectsWithTheSameHandleButDoNotOwnTheirHandlesAreCreatedAndCollectedCorrectly()
 		{
 			SkipOnMono();
@@ -100,7 +100,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ObjectsWithTheSameHandleButDoNotOwnTheirHandlesAreCreatedAndDisposedCorrectly()
 		{
 			var handle = GetNextPtr();
@@ -131,7 +131,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ObjectsWithTheSameHandleAndOwnTheirHandlesThrowInDebugBuildsButNotRelease()
 		{
 			var handle = GetNextPtr();
@@ -150,7 +150,7 @@ namespace SkiaSharp.Tests
 #endif
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DisposeInvalidatesObject()
 		{
 			var handle = GetNextPtr();
@@ -166,7 +166,7 @@ namespace SkiaSharp.Tests
 			Assert.True(obj.DestroyedNative);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DisposeDoesNotInvalidateObjectIfItIsNotOwned()
 		{
 			var handle = GetNextPtr();
@@ -180,7 +180,7 @@ namespace SkiaSharp.Tests
 			Assert.False(obj.DestroyedNative);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ExceptionsThrownInTheConstructorFailGracefully()
 		{
 			BrokenObject broken = null;
@@ -225,6 +225,9 @@ namespace SkiaSharp.Tests
 
 			public static LifecycleObject GetObject(IntPtr handle, bool owns = true) =>
 				GetOrAddObject(handle, owns, (h, o) => new LifecycleObject(h, o));
+
+			public static LifecycleObject GetProtectedObject(IntPtr handle, bool owns = true) =>
+				GetOrAddDisposeProtectedObject(handle, owns, unrefExisting: false, (h, o) => new LifecycleObject(h, o));
 		}
 
 		private class BrokenObject : SKObject
@@ -240,7 +243,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(1)]
 		[InlineData(100)]
 		[InlineData(1000)]
@@ -250,7 +253,7 @@ namespace SkiaSharp.Tests
 			// The (100) variant still validates concurrent GC/finalizer behavior.
 			// See #3608.
 			if (IntPtr.Size == 4 && iterations >= 1000)
-				throw new SkipException("Stress test skipped on x86 due to address space limit.");
+				Assert.Skip("Stress test skipped on x86 due to address space limit.");
 
 			var imagePath = Path.Combine(PathToImages, "baboon.jpg");
 
@@ -279,7 +282,7 @@ namespace SkiaSharp.Tests
 			await Task.WhenAll(tasks);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EnsureConcurrencyResultsInCorrectDeregistration()
 		{
 			var handle = GetNextPtr();
@@ -323,7 +326,72 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
+		public void PreventPublicDisposalOnLiveWrapperDoesNotThrow()
+		{
+			// Happy path: promoting a live (non-disposed) wrapper must never trip the
+			// THROW_OBJECT_EXCEPTIONS state guard. This locks in "no false positives".
+			var handle = GetNextPtr();
+			var obj = new LifecycleObject(handle, true);
+
+			obj.PreventPublicDisposal();
+
+			Assert.True(obj.IgnorePublicDispose);
+			Assert.False(obj.IsDisposed);
+
+			// Dispose-protected wrappers no-op on public Dispose(), so tear down internally.
+			obj.DisposeInternal();
+		}
+
+		[Fact]
+		public void GetOrAddDisposeProtectedOnLiveExistingInstanceReturnsSameInstanceWithoutThrowing()
+		{
+			// Real promotion path (not the internal method in isolation): an already-registered,
+			// live wrapper is fetched again as dispose-protected. GetInstanceNoLocks finds it
+			// live and PreventPublicDisposal promotes the SAME instance under the HD lock — the
+			// state guard must not trip. This covers the production GetOrAddDisposeProtectedObject
+			// flow that the singleton accessors use.
+			var handle = GetNextPtr();
+			var original = new LifecycleObject(handle, true);
+
+			var promoted = LifecycleObject.GetProtectedObject(handle);
+
+			Assert.Same(original, promoted);
+			Assert.True(promoted.IgnorePublicDispose);
+			Assert.False(promoted.IsDisposed);
+
+			promoted.DisposeInternal();
+		}
+
+		[Fact]
+		public void PreventPublicDisposalOnDisposedWrapperThrows()
+		{
+#if THROW_OBJECT_EXCEPTIONS
+			// GetInstanceNoLocks filters disposed wrappers before they can be promoted, so
+			// under correct locking PreventPublicDisposal only ever sees a live wrapper.
+			// Observing a disposed wrapper here is the promote/dispose race symptom (the HD
+			// lock contract was violated) and must throw. This is the deterministic check
+			// that proves the guard has teeth.
+			var handle = GetNextPtr();
+			var obj = new LifecycleObject(handle, true);
+
+			// Normal public dispose (not protected → proceeds and claims disposal).
+			obj.Dispose();
+			Assert.True(obj.IsDisposed);
+
+			Assert.Throws<InvalidOperationException>(() => obj.PreventPublicDisposal());
+
+			// The symmetric "mirror" guard inside Dispose() (throwing when IgnorePublicDispose
+			// is observed set after the in-lock disposal claim) only fires under a genuine
+			// concurrent race: nothing overridable runs between the lock release and that
+			// re-check, so it cannot be forced deterministically without a test seam. It is
+			// defense-in-depth for the same footgun this test exercises from the promote side.
+#else
+			Assert.Skip("PreventPublicDisposal state guard is only active in THROW_OBJECT_EXCEPTIONS builds.");
+#endif
+		}
+
+		[Fact]
 		public void ManagedObjectsAreDisposedBeforeNative()
 		{
 			var parent1 = ParentChildWorld.GetParent("Root");

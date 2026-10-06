@@ -1,7 +1,9 @@
-﻿using Android.Graphics;
+using Android.Graphics;
 
 namespace SkiaSharp.Views.Android
 {
+	/// <summary>A container for a locked canvas for a <see cref="T:SkiaSharp.Views.Android.SKSurfaceView" />.</summary>
+	/// <remarks />
 	public class SKLockedSurface
 	{
 		private readonly Canvas canvas;
@@ -17,10 +19,19 @@ namespace SkiaSharp.Views.Android
 			ImageInfo = info;
 		}
 
+		/// <summary>Gets information about the locked surface.</summary>
+		/// <value>The information about the locked surface.</value>
+		/// <remarks />
 		public SKImageInfo ImageInfo { get; }
 
+		/// <summary>Gets the locked surface.</summary>
+		/// <value>The locked surface.</value>
+		/// <remarks />
 		public SKSurface Surface { get; }
 
+		/// <summary>Gets the canvas from the locked surface.</summary>
+		/// <value>The canvas from the locked surface.</value>
+		/// <remarks />
 		public SKCanvas Canvas => Surface.Canvas;
 
 		internal Canvas Post()

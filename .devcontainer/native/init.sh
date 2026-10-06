@@ -27,4 +27,4 @@ wait
 
 # ---- Sequential: native build → C# build ----
 dotnet cake --target externals-linux --arch=x64
-dotnet build tests/SkiaSharp.Tests.Console.sln
+dotnet build tests/SkiaSharp.Tests.Console.slnx

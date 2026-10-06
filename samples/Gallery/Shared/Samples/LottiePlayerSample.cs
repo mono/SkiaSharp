@@ -60,25 +60,29 @@ public class LottiePlayerSample : CanvasSampleBase
 
 		_animation.Seek(0, null);
 
-		_watch.Start();
+		if (_playing)
+			_watch.Restart();
+		else
+			_watch.Reset();
 
 		await base.OnInit();
 	}
 
 	protected override async Task OnUpdate(CancellationToken token)
 	{
-		if (_animation == null)
-			return;
-
 		await Task.Delay(25, token);
 
-		if (_playing)
+		lock (SyncRoot)
 		{
-			var elapsed = TimeSpan.FromTicks((long)(_watch.Elapsed.Ticks * _speed));
-			_animation.SeekFrameTime(elapsed);
+			token.ThrowIfCancellationRequested();
+			if (_playing && _animation != null)
+			{
+				var elapsed = TimeSpan.FromTicks((long)(_watch.Elapsed.Ticks * _speed));
+				_animation.SeekFrameTime(elapsed);
 
-			if (elapsed > _animation.Duration)
-				_watch.Restart();
+				if (elapsed > _animation.Duration)
+					_watch.Restart();
+			}
 		}
 	}
 
@@ -95,6 +99,7 @@ public class LottiePlayerSample : CanvasSampleBase
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
+		_watch.Stop();
 		_animation?.Dispose();
 		_animation = null;
 	}

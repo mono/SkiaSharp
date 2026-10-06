@@ -27,17 +27,34 @@
     })();
   </script>
   <style>
-    :root { --text: #1f2328; --text-2: #656d76; --bg: #fff; --accent: #2563eb; }
+    :root {
+      color-scheme: light;
+      --text: #1f2124;
+      --text-2: #676d75;
+      --bg: #f4f3ef;
+      --accent: #9c3620;
+      --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    }
     @media (prefers-color-scheme: dark) {
-      :root { --text: #e6edf3; --text-2: #8b949e; --bg: #0d1117; --accent: #58a6ff; }
+      :root {
+        color-scheme: dark;
+        --text: #e8e9ea;
+        --text-2: #a9b0b8;
+        --bg: #16191d;
+        --accent: #f09274;
+      }
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg); color: var(--text);
+      font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(circle at 15% 20%, rgb(184 68 42 / 9%), transparent 34%),
+        radial-gradient(circle at 84% 78%, rgb(62 99 87 / 8%), transparent 38%),
+        var(--bg);
+      color: var(--text);
       display: flex; align-items: center; justify-content: center;
       min-height: 100vh; margin: 0; text-align: center; padding: 24px;
     }
-    h1 { font-size: 72px; font-weight: 800; margin: 0 0 8px; opacity: 0.15; }
+    h1 { font-family: var(--font-display); font-size: 72px; font-weight: 600; margin: 0 0 8px; opacity: 0.22; }
     h2 { font-size: 20px; font-weight: 600; margin: 0 0 12px; }
     p { color: var(--text-2); margin: 0 0 24px; font-size: 15px; }
     a { color: var(--accent); text-decoration: none; font-weight: 500; }

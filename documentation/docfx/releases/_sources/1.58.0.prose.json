@@ -1,0 +1,20 @@
+{
+  "theme": "Initial 1.58 release",
+  "highlights_headline": "SkiaSharp 1.58.0 is the first release on the 1.58 line, tracking the underlying Skia bump.",
+  "highlights_body": null,
+  "breaking": [
+    {
+      "title": "GRContextOptions batch and path-mask tuning knobs removed",
+      "body": "`GRContextOptions` drops the batch-tuning surface (`ClipBatchToBounds`, `DrawBatchBounds`, `MaxBatchLookahead`, `MaxBatchLookback`) and `ForceSWPathMasks`, matching the upstream Skia rename from \"batch\" to \"op\". Callers that were tweaking these knobs should remove the assignments — the equivalent behaviour is now controlled by newer op-list settings.",
+      "prs": []
+    },
+    {
+      "title": "GRPixelConfig loses the ASTC 12x12, LATC and R11 EAC values",
+      "body": "The `Astc12x12`, `Latc` and `R11Eac` members of `GRPixelConfig` were removed upstream. Switch to a supported compressed format (for example `Etc1`) or fall back to an uncompressed configuration.",
+      "prs": []
+    }
+  ],
+  "categories": [],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

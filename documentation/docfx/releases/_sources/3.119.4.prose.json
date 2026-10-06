@@ -1,0 +1,50 @@
+{
+  "theme": "Cross-platform servicing release",
+  "highlights_headline": "SkiaSharp 3.119.4 improves platform reliability, native hardening, and supported view integrations.",
+  "highlights_body": "It rolls up the 3.119.3 preview work with Linux, Android, Tizen, and desktop fixes.",
+  "breaking": [
+    {
+      "title": "Blazor view surface changed",
+      "body": "Review the API-diff report and update Blazor view code to use the current supported members before upgrading.",
+      "prs": []
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Android GL views recover after tab switches",
+          "detail": "MAUI applications no longer leave SKGLView blank after switching TabBar tabs.",
+          "prs": [3076]
+        },
+        {
+          "lead": "Linux ARM64 runtime stability improved",
+          "detail": "Native packaging and runtime dependencies are corrected for Linux ARM64 applications.",
+          "prs": [3494]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Tizen and Linux support broadened",
+          "detail": "The release adds 64-bit Tizen native support and Linux Bionic native assets.",
+          "prs": [3620, 3217]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "4Darmygeometry": "Linux Bionic assets, Tizen support, and legacy target improvements",
+    "sshumakov": "Windows and Linux native binary hardening",
+    "ramezgerges": "Skia synchronization work",
+    "SimonvBez": "Fixed Android SKGLView rendering after tab switches"
+  },
+  "preview_summaries": {
+    "v3.119.4-preview.1.1": "Preview 1 rolled up cross-platform reliability work from the 3.119 servicing line.",
+    "v3.119.3-preview.1.1": "The prior preview introduced Linux ARM64, AOT, and dependency servicing updates."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp carries the accompanying platform and native dependency updates."
+}

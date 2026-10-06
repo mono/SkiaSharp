@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using Android.Opengl;
 using Javax.Microedition.Khronos.Opengles;
@@ -7,8 +7,16 @@ using EGLConfig = Javax.Microedition.Khronos.Egl.EGLConfig;
 
 namespace SkiaSharp.Views.Android
 {
+	/// <summary>An abstract implementation of <see cref="T:Android.Opengl.GLSurfaceView.IRenderer" /> that provides a <see cref="T:SkiaSharp.SKSurface" /> for drawing.</summary>
+	/// <remarks />
 	public abstract class SKGLSurfaceViewRenderer : Java.Lang.Object, GLSurfaceView.IRenderer
 	{
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKGLSurfaceViewRenderer" /> class.</summary>
+		/// <remarks />
+		public SKGLSurfaceViewRenderer()
+		{
+		}
+
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
 
@@ -21,14 +29,26 @@ namespace SkiaSharp.Views.Android
 		private SKSizeI lastSize;
 		private SKSizeI newSize;
 
+		/// <summary>Gets the current canvas size.</summary>
+		/// <value>The current size of the canvas.</value>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize => lastSize;
 
+		/// <summary>Gets the current GPU context.</summary>
+		/// <value>The current GPU context.</value>
+		/// <remarks />
 		public GRContext GRContext => context;
 
+		/// <summary>Called to draw the current frame on the surface.</summary>
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks />
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
 		}
 
+		/// <summary>Called to draw the current frame.</summary>
+		/// <param name="gl">The GL interface.</param>
+		/// <remarks />
 		public void OnDrawFrame(IGL10 gl)
 		{
 			GLES20.GlClear(GLES20.GlColorBufferBit | GLES20.GlDepthBufferBit | GLES20.GlStencilBufferBit);
@@ -86,6 +106,11 @@ namespace SkiaSharp.Views.Android
 			context.Flush();
 		}
 
+		/// <summary>Called when the surface changed size.</summary>
+		/// <param name="gl">The GL interface.</param>
+		/// <param name="width">The new surface width.</param>
+		/// <param name="height">The new surface height.</param>
+		/// <remarks />
 		public void OnSurfaceChanged(IGL10 gl, int width, int height)
 		{
 			GLES20.GlViewport(0, 0, width, height);
@@ -94,10 +119,17 @@ namespace SkiaSharp.Views.Android
 			newSize = new SKSizeI(width, height);
 		}
 
+		/// <summary>Called when the surface is created or recreated.</summary>
+		/// <param name="gl">The GL interface.</param>
+		/// <param name="config">The EGLConfig of the created surface.</param>
+		/// <remarks />
 		public void OnSurfaceCreated(IGL10 gl, EGLConfig config)
 		{
 		}
 
+		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.Views.Android.SKGLSurfaceViewRenderer" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.Views.Android.SKGLSurfaceViewRenderer" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose(bool disposing)
 		{
 			if (disposing)

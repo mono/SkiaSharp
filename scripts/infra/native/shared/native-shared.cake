@@ -8,12 +8,12 @@ if (!string.IsNullOrEmpty(PYTHON_EXE) && FileExists(PYTHON_EXE)) {
     System.Environment.SetEnvironmentVariable("PATH", dir.FullPath + System.IO.Path.PathSeparator + oldPath);
 }
 
-DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
 DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia/third_party/externals/harfbuzz"));
 
 var EXE_EXTENSION = IsRunningOnWindows() ? ".exe" : "";
 var GN_EXE = Argument("gn", EnvironmentVariable("GN_EXE") ?? SKIA_PATH.CombineWithFilePath($"bin/gn{EXE_EXTENSION}").FullPath);
+var NINJA_EXE = Argument("ninja", EnvironmentVariable("NINJA_EXE") ?? "ninja");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // TASKS
@@ -38,8 +38,7 @@ Task("git-sync-deps")
     if (actualIncrement != expectedIncrement)
         throw new Exception($"The libSkiaSharp C API version did not match the expected '{expectedIncrement}', instead was '{actualIncrement}'.");
 
-    RunPython(SKIA_PATH, SKIA_PATH.CombineWithFilePath("tools/git-sync-deps"),
-        envVars: new Dictionary<string, string> { ["GIT_SYNC_DEPS_SKIP_EMSDK"] = "1" });
+    RunPython(SKIA_PATH, SKIA_PATH.CombineWithFilePath("tools/git-sync-deps"));
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +49,7 @@ Task("git-sync-deps")
 // DEPENDENCY VERIFICATION
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CheckWindowsDependencies(FilePath dll, string[] excluded = null, string[] included = null, string[] delayLoaded = null)
+void CheckWindowsDependencies(FilePath dll, string[] excluded = null, string[] included = null, string[] delayLoaded = null, bool checkSpectre = true)
 {
     excluded = excluded ?? new string[0];
     included = included ?? new string[0];
@@ -116,6 +115,15 @@ void CheckWindowsDependencies(FilePath dll, string[] excluded = null, string[] i
         if (!delayed.Any(o => o.Contains(dl.Trim(), StringComparison.OrdinalIgnoreCase)))
             throw new Exception($"{dll} is missing an expected delay-loaded dependency on {dl}.");
     }
+
+    if (checkSpectre) {
+        var pdb = dll.ChangeExtension(".pdb");
+        var contents = System.IO.File.ReadAllText(pdb.FullPath, System.Text.Encoding.ASCII);
+        if (!contents.Contains("objr_spectre", StringComparison.OrdinalIgnoreCase) &&
+            !contents.Contains("objd_spectre", StringComparison.OrdinalIgnoreCase))
+            throw new Exception($"{dll} has no Spectre runtime build marker in {pdb}.");
+        Information($"Spectre runtime build marker found in {pdb}.");
+    }
 }
 
 void CheckLinuxDependencies(FilePath so, string[] excluded = null, string[] included = null, string maxGlibc = null)
@@ -180,7 +188,7 @@ void RunPython(DirectoryPath working, FilePath script, string args = "", IDictio
     });
 }
 
-void RunGn(DirectoryPath working, DirectoryPath outDir, string args = "")
+void RunGn(DirectoryPath working, DirectoryPath outDir, string args = "", IDictionary<string, string> envVars = null)
 {
     var isCore = Context.Environment.Runtime.IsCoreClr;
 
@@ -190,17 +198,19 @@ void RunGn(DirectoryPath working, DirectoryPath outDir, string args = "")
     RunProcess(GN_EXE, new ProcessSettings {
         Arguments = $"gen {outDir} --script-executable={quote}{PYTHON_EXE}{quote} --args={quote}{args.Replace("'", innerQuote)}{quote}",
         WorkingDirectory = working.FullPath,
+        EnvironmentVariables = envVars,
     });
 }
 
 void RunNinja(DirectoryPath working, DirectoryPath outDir, string target = "")
 {
-    var script = DEPOT_PATH.CombineWithFilePath("ninja.py");
-
-    RunPython(working, script, $"-C {outDir} {target}");
+    RunProcess(NINJA_EXE, new ProcessSettings {
+        Arguments = $"-C \"{outDir.FullPath}\" {target}",
+        WorkingDirectory = working.FullPath,
+    });
 }
 
-void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
+void GenerateGnBuild(DirectoryPath outDir, string skiaArgs)
 {
     // override win_vc with the command line args
     if (!string.IsNullOrEmpty(VS_INSTALL)) {
@@ -209,12 +219,19 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
         skiaArgs += $" win_vc='{win_vc}' ";
     }
 
-    skiaArgs += 
+    // RAW/DNG decoding is unsupported in all SkiaSharp native builds.
+    skiaArgs +=
+        $" skia_use_dng_sdk=false skia_use_piex=false " +
         $" skia_enable_tools=false " +
         $" is_official_build={CONFIGURATION.ToLower() == "release"} ".ToLower();
 
     // generate native skia build files
     RunGn(SKIA_PATH, $"out/{outDir}", skiaArgs);
+}
+
+void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
+{
+    GenerateGnBuild(outDir, skiaArgs);
 
     // build native skia
     RunNinja(SKIA_PATH, $"out/{outDir}", target);

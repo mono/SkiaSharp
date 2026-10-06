@@ -1,17 +1,25 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.ComponentModel;
 
 namespace SkiaSharp
 {
+	/// <summary>Possible 3D APIs that may be used by Ganesh.</summary>
+	/// <remarks />
 	public enum GRBackend
 	{
+		/// <summary>Use the Metal 3D backend. (not yet supported)</summary>
 		Metal = 0,
+		/// <summary>Use the OpenGL 3D backend.</summary>
 		OpenGL = 1,
+		/// <summary>Use the Vulkan 3D backend. (not yet supported)</summary>
 		Vulkan = 2,
+		/// <summary>Use the Dawn (WebGPU) 3D backend.</summary>
 		Dawn = 3,
+		/// <summary>Use the Direct3D 3D backend.</summary>
 		Direct3D = 4,
+		/// <summary>The backend is not supported on this platform.</summary>
 		Unsupported = 5,
 	}
 
@@ -69,6 +77,7 @@ namespace SkiaSharp
 				SKColorType.Srgba8888 => SKColorTypeNative.Srgba8888,
 				SKColorType.R8Unorm => SKColorTypeNative.R8Unorm,
 				SKColorType.R16Unorm => SKColorTypeNative.R16Unorm,
+				SKColorType.RF16 => SKColorTypeNative.R16Float,
 				SKColorType.Bgra10101010XR => SKColorTypeNative.Bgra10101010Xr,
 				SKColorType.RgbF16F16F16x => SKColorTypeNative.RgbF16f16f16x,
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType), $"Unknown color type: '{colorType}'"),
@@ -103,6 +112,7 @@ namespace SkiaSharp
 				SKColorTypeNative.Srgba8888 => SKColorType.Srgba8888,
 				SKColorTypeNative.R8Unorm => SKColorType.R8Unorm,
 				SKColorTypeNative.R16Unorm => SKColorType.R16Unorm,
+				SKColorTypeNative.R16Float => SKColorType.RF16,
 				SKColorTypeNative.Bgra10101010Xr => SKColorType.Bgra10101010XR,
 				SKColorTypeNative.RgbF16f16f16x => SKColorType.RgbF16F16F16x,
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType), $"Unknown color type: '{colorType}'"),

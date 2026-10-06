@@ -25,11 +25,18 @@ public class MainWindow : ApplicationWindow
 		var cpuPage = new CpuPage();
 		contentStack.AddTitled(cpuPage, "cpu", "CPU Canvas");
 
+		var gpuPage = new GpuPage();
+		contentStack.AddTitled(gpuPage, "gpu", "GPU Canvas");
+
 		var drawingPage = new DrawingPage();
 		contentStack.AddTitled(drawingPage, "drawing", "Drawing");
 
-		if (DefaultPage == SamplePage.Drawing)
-			contentStack.SetVisibleChildName("drawing");
+		contentStack.SetVisibleChildName(DefaultPage switch
+		{
+			SamplePage.Gpu => "gpu",
+			SamplePage.Drawing => "drawing",
+			_ => "cpu",
+		});
 	}
 
 	public static Builder LoadBuilder(string filename)

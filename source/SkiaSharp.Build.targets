@@ -3,11 +3,6 @@
   <Import Project="$(MSBuildThisFileDirectory)SkiaSharp.NuGet.targets" />
 
   <PropertyGroup>
-    <_ManagedExeLauncher Condition=" !$(IsWindows) and Exists('/Library/Frameworks/Mono.framework/Versions/Current/bin/mono') ">/Library/Frameworks/Mono.framework/Versions/Current/bin/mono</_ManagedExeLauncher>
-    <_ManagedExeLauncher Condition=" !$(IsWindows) and Exists('/usr/local/bin/mono') ">/usr/local/bin/mono</_ManagedExeLauncher>
-    <_ManagedExeLauncher Condition=" !$(IsWindows) and Exists('/usr/bin/mono') ">/usr/bin/mono</_ManagedExeLauncher>
-    <_ManagedExeLauncher Condition=" !$(IsWindows) and '$(_ManagedExeLauncher)' == '' ">mono</_ManagedExeLauncher>
-
     <_SnExePath Condition=" $(IsWindows) and '$(_SnExePath)' == '' and Exists('$(SDK40ToolsPath)sn.exe') ">$(SDK40ToolsPath)sn.exe</_SnExePath>
     <_SnExePath Condition=" $(IsWindows) and '$(_SnExePath)' == '' and Exists('$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe') ">$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe</_SnExePath>
     <_SnExePath Condition=" '$(_SnExePath)' == '' ">sn</_SnExePath>
@@ -42,10 +37,6 @@
     -->
     <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB9004</MSBuildWarningsAsMessages>
   </PropertyGroup>
-
-  <ItemGroup Condition=" $(IsWindows) and '$(Configuration)' == 'Release' ">
-    <PackageReference Include="mdoc" Version="5.8.9" PrivateAssets="All" GeneratePathProperty="true" />
-  </ItemGroup>
 
   <!-- HACK: Do not copy the native bootstrap files -->
   <Target Name="_RemoveWasdkBootstrapDll" BeforeTargets="ResolveReferences">
@@ -138,7 +129,7 @@ internal partial class VersionConstants {
     ===================================================================================================================
   -->
 	<ItemGroup Condition="'$(ProduceReferenceAssembly)' == 'true'">
-		<PackageReference Include="Mono.ApiTools.MSBuildTasks" Version="0.3.0" PrivateAssets="all" />
+		<PackageReference Include="Mono.ApiTools.MSBuildTasks" Version="0.6.0" PrivateAssets="all" />
 	</ItemGroup>
 	<Target Name="_RemoveObsoleteItemsFromReferenceAssembly"
           AfterTargets="CoreCompile"
@@ -151,6 +142,10 @@ internal partial class VersionConstants {
     _SignAssembly
 
     Sign the assembly using sn.
+
+    Set DisableStrongNameSigning=true to skip this sn.exe re-sign (and its verify) where sn.exe is
+    unavailable, e.g. the Nano Server SDK container. PublicSign still applies, so the assembly keeps
+    its public-key identity for InternalsVisibleTo.
     ===================================================================================================================
   -->
   <PropertyGroup Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true'">
@@ -163,7 +158,7 @@ internal partial class VersionConstants {
   </PropertyGroup>
   <Target Name="_SignAssembly"
           AfterTargets="$(_SignAssemblyAfterTargets)"
-          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' ">
+          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' and '$(DisableStrongNameSigning)' != 'true' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateRefAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" Condition="'$(ProduceReferenceAssembly)' == 'true'" />
   </Target>
@@ -182,7 +177,7 @@ internal partial class VersionConstants {
   </PropertyGroup>
   <Target Name="_SignAssemblyVerify"
           AfterTargets="$(_SignAssemblyVerifyAfterTargets)"
-          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' ">
+          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' and '$(DisableStrongNameSigning)' != 'true' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetPath)&quot;" StandardOutputImportance="Normal" />
     <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetRefPath)&quot;" StandardOutputImportance="Normal" Condition="'$(ProduceReferenceAssembly)' == 'true'" />
   </Target>
@@ -196,50 +191,6 @@ internal partial class VersionConstants {
   -->
   <Target Name="_CheckSkiaSharpBuildPropsImported" BeforeTargets="BeforeBuild">
     <Error Text="SkiaSharp.Build.props was not imported." Condition=" '$(SkiaSharpBuildPropsImported)' != 'true' " />
-  </Target>
-
-  <!--
-    ===================================================================================================================
-    MDocGenerateDocs
-
-    Generated the XML documentation file using mdoc.
-    This runs during the build phase.
-    ===================================================================================================================
-  -->
-  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' and $(IsWindows) and '$(Configuration)' == 'Release' ">
-    <MDocGenerateDocsAfterTargets>
-      CoreCompile
-    </MDocGenerateDocsAfterTargets>
-  </PropertyGroup>
-  <Target Name="_MDocGenerateDocsDep">
-    <PropertyGroup>
-      <MDocToolPath>$(Pkgmdoc)\tools\mdoc.exe</MDocToolPath>
-      <MDocOutputName>$(TargetName).xml</MDocOutputName>
-      <MDocOutputPath>$(TargetDir)$(MDocOutputName)</MDocOutputPath>
-      <MDocIntermediateOutputPath>$(IntermediateOutputPath)mdoc\</MDocIntermediateOutputPath>
-      <_ShouldGenerateDocs Condition=" '$(MDocDocumentationDirectory)' != '' and Exists('$(MDocDocumentationDirectory)\index.xml') ">true</_ShouldGenerateDocs>
-    </PropertyGroup>
-    <ItemGroup Condition=" '$(_ShouldGenerateDocs)' == 'true' ">
-      <_MDocInputs Include="$(MDocDocumentationDirectory)\**\*" />
-    </ItemGroup>
-  </Target>
-  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' and $(IsWindows) and '$(Configuration)' == 'Release' "
-          AfterTargets="$(MDocGenerateDocsAfterTargets)" DependsOnTargets="_MDocGenerateDocsDep"
-          Inputs="@(_MDocInputs)" Outputs="$(MDocIntermediateOutputPath)$(MDocOutputName)">
-    <MakeDir Condition=" '$(_ShouldGenerateDocs)' == 'true' "
-             Directories="$(MDocIntermediateOutputPath)" />
-    <Exec Condition=" '$(_ShouldGenerateDocs)' == 'true' "
-          WorkingDirectory="$(MDocIntermediateOutputPath)"
-          Command="$(_ManagedExeLauncher) &quot;$(MDocToolPath)&quot; export-msxdoc --quiet=true &quot;$(MDocDocumentationDirectory)&quot;" />
-    <Copy Condition=" Exists('$(MDocIntermediateOutputPath)$(MDocOutputName)') "
-          SourceFiles="$(MDocIntermediateOutputPath)$(MDocOutputName)"
-          DestinationFiles="$(MDocOutputPath)"
-          ContinueOnError="false"
-          Retries="0" />
-    <ItemGroup Condition=" '$(_ShouldGenerateDocs)' == 'true' ">
-      <FileWrites Include="$(MDocOutputPath)" />
-      <FileWrites Include="$(MDocIntermediateOutputPath)\*" />
-    </ItemGroup>
   </Target>
 
   <!-- HACK: the new IDE seems to not like Analyzers in AdditionalFiles -->

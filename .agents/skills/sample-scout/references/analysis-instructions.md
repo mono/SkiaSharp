@@ -11,12 +11,14 @@ interest level guidelines, and API availability checking methodology.
 |-------|----------|---------|
 | **high** | Visually impressive, demonstrates a useful technique, showcases a powerful API that users would want to learn. Would make a great Gallery demo. | Runtime shaders, shadow utils, path effects showcase, gradient interpolation, mesh drawing, image filter chains, text effects |
 | **medium** | Educational or useful reference but not visually exciting on its own. Could be combined with other samples. | Bitmap copy, color matrix, simple clip operations, tile modes, basic shapes |
-| **low** | Internal test, bug regression, GPU-backend-specific test, stress test, or not relevant to SkiaSharp users. | crbug_* files, skbug_* files, Graphite-only tests, GrFragmentProcessor tests, Vulkan/Dawn internals, benchmark GMs |
+| **low** | Internal test, bug regression, GPU-backend-internal test, stress test, or not relevant to SkiaSharp users. | crbug_* files, skbug_* files, GrFragmentProcessor tests, Vulkan/Dawn/Graphite backend internals, benchmark GMs |
 
 ### Quick Classification Rules
 
 - Files starting with `crbug_` or `skbug` → **low** (bug regression tests)
-- Files mentioning `Graphite`, `Dawn`, `GrFragmentProcessor`, `GrGeometryProcessor` → **low** (GPU internals)
+- Files exercising backend plumbing (`GrFragmentProcessor`, `GrGeometryProcessor`, GPU
+  backend internals) → **low** — the test is whether it exercises *internals*, not which
+  backend it names
 - Files testing a single specific visual feature with nice output → **high**
 - Files testing edge cases of an already-covered feature → **medium**
 - Files showing off compositing, effects chains, or creative techniques → **high**
@@ -59,7 +61,7 @@ A good SkiaSharp Gallery sample:
 
 Use the notes field to capture important context:
 - "GPU-only" — requires GPU backend, won't work on CPU raster
-- "Graphite-specific" — only relevant to Graphite backend (not SkiaSharp)
+- "Graphite-specific" — needs the Graphite backend; check platform coverage
 - "Bug regression test" — tests a specific fixed bug, not a feature demo
 - "Stress test" — performance/edge case test, not visual
 - "Requires test fonts" — needs specific font files

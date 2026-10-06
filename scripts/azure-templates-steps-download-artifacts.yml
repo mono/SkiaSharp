@@ -1,55 +1,32 @@
 parameters:
-  sourceBuildId: ''
   artifacts: [ ] # name, dir, currentRun
   condition: succeeded()
 
 steps:
   - ${{ if ne(length(parameters.artifacts), 0) }}:
+    # Artifacts always come from one exact, already-completed build. Connected
+    # pipelines (such as Tests) get it from the SkiaSharp pipeline resource,
+    # while combined pipelines build and consume their own artifacts.
     - pwsh: |
-        $buildId = "${{ parameters.sourceBuildId }}"
-        if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNID) {
-          $buildId = $env:RESOURCES_PIPELINE_SKIASHARP_RUNID
-          Write-Host "Using RESOURCES_PIPELINE_SKIASHARP_RUNID = '$env:RESOURCES_PIPELINE_SKIASHARP_RUNID'"
-        }
-        if (-not $buildId) {
-          $buildId = $env:BUILD_BUILDID
-          Write-Host "Using BUILD_BUILDID = '$env:BUILD_BUILDID'"
-        }
-        $versionType = 'specific'
-        if ($buildId -eq 'latest') {
-          $versionType = 'latestFromBranch'
-        }
-        $pipelineId = "$env:SYSTEM_DEFINITIONID"
-        if ($env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID) {
-          $pipelineId = $env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID
-          Write-Host "Using RESOURCES_PIPELINE_SKIASHARP_PIPELINEID = '$env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID'"
-        }
-        $branchName = "$env:BUILD_SOURCEBRANCH"
-        if ($env:SYSTEM_PULLREQUEST_TARGETBRANCH) {
-          $branchName = "refs/heads/$env:SYSTEM_PULLREQUEST_TARGETBRANCH"
-        }
+        $buildId = if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNID) { $env:RESOURCES_PIPELINE_SKIASHARP_RUNID } else { $env:BUILD_BUILDID }
+        $pipelineId = if ($env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID) { $env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID } else { $env:SYSTEM_DEFINITIONID }
         Write-Host "DOWNLOAD_BUILD_ID = '$buildId'"
         Write-Host "DOWNLOAD_PIPELINE_ID = '$pipelineId'"
-        Write-Host "DOWNLOAD_BRANCH = '$branchName'"
-        Write-Host "DOWNLOAD_VERSION_TYPE = '$versionType'"
         Write-Host "##vso[task.setvariable variable=DOWNLOAD_BUILD_ID]$buildId"
         Write-Host "##vso[task.setvariable variable=DOWNLOAD_PIPELINE_ID]$pipelineId"
-        Write-Host "##vso[task.setvariable variable=DOWNLOAD_BRANCH]$branchName"
-        Write-Host "##vso[task.setvariable variable=DOWNLOAD_VERSION_TYPE]$versionType"
-      displayName: Ensure all the variables are set for the download
+      displayName: Resolve the build that artifacts are downloaded from
       condition: ${{ parameters.condition }}
 
   - ${{ each artifact in parameters.artifacts }}:
     - task: DownloadBuildArtifacts@1
-      displayName: Download the pre-built ${{ artifact.name }} artifacts from ${{ iif(artifact.currentRun, 'the current run', 'the previous run') }}
+      displayName: Download the pre-built ${{ artifact.name }} artifacts from ${{ iif(artifact.currentRun, 'the current run', 'the source run') }}
       condition: ${{ parameters.condition }}
       retryCountOnTaskFailure: 3
       inputs:
         buildType: 'specific'
         project: '$(System.TeamProjectId)'
         pipeline: ${{ iif(artifact.currentRun, '$(System.DefinitionId)', '$(DOWNLOAD_PIPELINE_ID)') }}
-        branchName: ${{ iif(artifact.currentRun, '$(Build.SourceBranch)', '$(DOWNLOAD_BRANCH)') }}
-        buildVersionToDownload: ${{ iif(artifact.currentRun, 'specific', '$(DOWNLOAD_VERSION_TYPE)') }}
+        buildVersionToDownload: 'specific'
         buildId: ${{ iif(artifact.currentRun, '$(Build.BuildId)', '$(DOWNLOAD_BUILD_ID)') }}
         downloadType: 'single'
         allowPartiallySucceededBuilds: true

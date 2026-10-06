@@ -1,4 +1,4 @@
-﻿#if !__MACCATALYST__
+#if !__MACCATALYST__
 
 using System;
 using System.ComponentModel;
@@ -14,13 +14,15 @@ namespace SkiaSharp.Views.tvOS
 namespace SkiaSharp.Views.iOS
 #endif
 {
+	/// <summary>A CoreAnimation OpenGL layer that can be drawn on using SkiaSharp drawing commands.</summary>
+	/// <remarks />
 	[ObsoletedOSPlatform("tvos12.0", "Use 'Metal' instead.")]
 	[ObsoletedOSPlatform("ios12.0", "Use 'Metal' instead.")]
 	[SupportedOSPlatform("ios")]
 	[SupportedOSPlatform("tvos")]
 	[UnsupportedOSPlatform("macos")]
 	[UnsupportedOSPlatform("maccatalyst")]
-	public class SKGLLayer : CAEAGLLayer
+	public unsafe class SKGLLayer : CAEAGLLayer
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
@@ -38,15 +40,28 @@ namespace SkiaSharp.Views.iOS
 		private SKSizeI lastSize;
 		private bool recreateSurface = true;
 
+		/// <summary>Initializes a new instance of the <see cref="SKGLLayer" /> class.</summary>
+		/// <remarks />
 		public SKGLLayer()
 		{
 			Opaque = true;
 		}
 
+		/// <summary>Gets the current canvas size.</summary>
+		/// <value>The current canvas size.</value>
+		/// <remarks><format type="text/markdown"><![CDATA[
+		/// The canvas size may be different to the view size as a result of the current
+		/// device's pixel density.
+		/// ]]></format></remarks>
 		public SKSize CanvasSize => lastSize;
 
+		/// <summary>Gets the current GPU context.</summary>
+		/// <value>The current GPU context.</value>
+		/// <remarks />
 		public GRContext GRContext => context;
 
+		/// <summary>Redraws the layer's contents.</summary>
+		/// <remarks />
 		public virtual void Render()
 		{
 			if (glContext == null)
@@ -60,8 +75,9 @@ namespace SkiaSharp.Views.iOS
 			var newSize = lastSize;
 			if (recreateSurface)
 			{
-				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_WIDTH, out var bufferWidth);
-				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_HEIGHT, out var bufferHeight);
+				int bufferWidth = 0, bufferHeight = 0;
+				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_WIDTH, &bufferWidth);
+				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_HEIGHT, &bufferHeight);
 				newSize = new SKSizeI(bufferWidth, bufferHeight);
 			}
 
@@ -72,9 +88,10 @@ namespace SkiaSharp.Views.iOS
 				lastSize = newSize;
 
 				// read the info from the buffer
-				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
-				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
-				Gles.glGetIntegerv(Gles.GL_SAMPLES, out var samples);
+				int framebuffer = 0, stencil = 0, samples = 0;
+				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, &framebuffer);
+				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, &stencil);
+				Gles.glGetIntegerv(Gles.GL_SAMPLES, &samples);
 				var maxSamples = context.GetMaxSurfaceSampleCount(colorType);
 				if (samples > maxSamples)
 					samples = maxSamples;
@@ -113,6 +130,9 @@ namespace SkiaSharp.Views.iOS
 			EAGLContext.SetCurrentContext(null);
 		}
 
+		/// <summary>Gets or sets the layer's frame rectangle.</summary>
+		/// <value>The layer's frame rectangle.</value>
+		/// <remarks />
 		public override CGRect Frame
 		{
 			get { return base.Frame; }
@@ -127,8 +147,65 @@ namespace SkiaSharp.Views.iOS
 			}
 		}
 
+		/// <summary>Occurs when the canvas needs to be redrawn.</summary>
+		/// <remarks><format type="text/markdown"><![CDATA[
+		/// ## Remarks
+		///
+		/// There are two ways to draw on this surface: by overriding the
+		/// `OnPaintSurface` method, or by attaching a handler to the
+		/// `PaintSurface` event.
+		///
+		/// ## Examples
+		///
+		/// ```csharp
+		/// myLayer.PaintSurface += (sender, e) => {
+		///     var surface = e.Surface;
+		///     var surfaceWidth = e.BackendRenderTarget.Width;
+		///     var surfaceHeight = e.BackendRenderTarget.Height;
+		///
+		///     var canvas = surface.Canvas;
+		///
+		///     // draw on the canvas
+		///
+		///     canvas.Flush ();
+		/// };
+		/// ```
+		/// ]]></format></remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
+		/// <summary>Implement this to draw on the canvas.</summary>
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
+		/// ## Remarks
+		///
+		/// There are two ways to draw on this surface: by overriding the
+		/// `OnPaintSurface` method, or by attaching a handler to the
+		/// `PaintSurface` event.
+		///
+		/// > [!IMPORTANT]
+		/// > If this method is overridden, then the base must be called, otherwise the
+		/// > event will not be fired.
+		///
+		/// ## Examples
+		///
+		/// ```csharp
+		/// protected override void OnPaintSurface (SKPaintGLSurfaceEventArgs e)
+		/// {
+		///     // call the base method
+		///     base.OnPaintSurface (e);
+		///
+		///     var surface = e.Surface;
+		///     var surfaceWidth = e.BackendRenderTarget.Width;
+		///     var surfaceHeight = e.BackendRenderTarget.Height;
+		///
+		///     var canvas = surface.Canvas;
+		///
+		///     // draw on the canvas
+		///
+		///     canvas.Flush ();
+		/// }
+		/// ```
+		/// ]]></format></remarks>
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
@@ -141,12 +218,14 @@ namespace SkiaSharp.Views.iOS
 			EAGLContext.SetCurrentContext(glContext);
 
 			// create render buffer
-			Gles.glGenRenderbuffers(1, ref renderBuffer);
+			fixed (uint* p = &renderBuffer)
+				Gles.glGenRenderbuffers(1, p);
 			Gles.glBindRenderbuffer(Gles.GL_RENDERBUFFER, renderBuffer);
 			glContext.RenderBufferStorage(Gles.GL_RENDERBUFFER, this);
 
 			// create frame buffer
-			Gles.glGenFramebuffers(1, ref framebuffer);
+			fixed (uint* p = &framebuffer)
+				Gles.glGenFramebuffers(1, p);
 			Gles.glBindFramebuffer(Gles.GL_FRAMEBUFFER, framebuffer);
 			Gles.glFramebufferRenderbuffer(Gles.GL_FRAMEBUFFER, Gles.GL_COLOR_ATTACHMENT0, Gles.GL_RENDERBUFFER, renderBuffer);
 
@@ -162,11 +241,12 @@ namespace SkiaSharp.Views.iOS
 
 		private void ResizeGLContexts()
 		{
-			// delete old buffers
-			Gles.glDeleteRenderbuffers(1, ref renderBuffer);
-
-			// re-create render buffer
-			Gles.glGenRenderbuffers(1, ref renderBuffer);
+			// delete old buffer and re-create
+			fixed (uint* p = &renderBuffer)
+			{
+				Gles.glDeleteRenderbuffers(1, p);
+				Gles.glGenRenderbuffers(1, p);
+			}
 			Gles.glBindRenderbuffer(Gles.GL_RENDERBUFFER, renderBuffer);
 			glContext.RenderBufferStorage(Gles.GL_RENDERBUFFER, this);
 
@@ -176,6 +256,13 @@ namespace SkiaSharp.Views.iOS
 			recreateSurface = true;
 		}
 
+		/// <summary>Releases the unmanaged resources used by the <see cref="SKGLLayer" /> and optionally releases the managed resources.</summary>
+		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
+		/// Always dispose the object before you release your last reference to the
+		/// <xref:SkiaSharp.Views.iOS.SKGLLayer>. Otherwise, the resources it is using
+		/// will not be freed until the garbage collector calls the finalizer.
+		/// ]]></format></remarks>
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);

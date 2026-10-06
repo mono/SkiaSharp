@@ -1,0 +1,52 @@
+name: Sync - Issue Template Versions
+
+on:
+  schedule:
+    - cron: "0 9 * * *"  # Daily at 09:00 UTC
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Execution mode
+        required: true
+        default: DryRun
+        type: choice
+        options:
+          - DryRun
+          - Apply
+          - Push
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-update-issue-template-versions
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate request
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          test "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH"
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Update
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MODE: ${{ github.event_name == 'schedule' && 'Push' || inputs.mode }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          $arguments = @{ Mode = $env:MODE; Repository = $env:REPOSITORY }
+          ./scripts/infra/publishing/update-bug-template.ps1 @arguments *>&1 |
+            Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append

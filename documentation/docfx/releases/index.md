@@ -1,17 +1,113 @@
 # Release Notes
 
-Release notes for all SkiaSharp versions.
+Release notes for SkiaSharp. SkiaSharp ships as NuGet packages whose minor version is the Chrome/Skia milestone it builds on. Two release lines are supported at a time — a **stable** line for production and a **preview** line for the milestone currently being stabilized — mirroring [Chrome's release channels](https://developer.chrome.com/docs/web-platform/chrome-release-channels) (stable / extended-stable and beta). Everything else stays published for reference but is no longer serviced.
 
-### SkiaSharp 4.x
+## Release cadence
 
+SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor version corresponds to a Chrome/Skia milestone and progresses through four phases:
+
+| Chromium marker | SkiaSharp release | Purpose |
+|---|---|---|
+| Earliest Beta | Preview 1 | Merge upstream Skia, ship initial preview |
+| Early Stable Cut | Preview 2 | Bug fixes and API additions from preview feedback |
+| Stable Cut | RC 1 | Critical bug fixes only, no new features |
+| Stable Date | Stable | Ship to NuGet.org, tag and create GitHub Release |
+
+**Schedule for the two milestones currently in flight (m155 and m156), from the [Chromium release schedule](https://chromiumdash.appspot.com/schedule):**
+
+| Date | Chromium marker | SkiaSharp release | Package |
+|---|---|---|---|
+| Sep 16 | m155 Earliest Beta | Preview 1 | `4.155.0-preview.1` |
+| Sep 22 | m155 Early Stable Cut | Preview 2 | `4.155.0-preview.2` |
+| Sep 29 | m155 Stable Cut | RC 1 | `4.155.0-rc.1` |
+| Sep 30 | m156 Earliest Beta | Preview 1 | `4.156.0-preview.1` |
+| Oct 6 | m155 Stable Date | Stable | `4.155.0` |
+| Oct 6 | m156 Early Stable Cut | Preview 2 | `4.156.0-preview.2` |
+| Oct 13 | m156 Stable Cut | RC 1 | `4.156.0-rc.1` |
+| Oct 20 | m156 Stable Date | Stable | `4.156.0` |
+
+Two milestones are always in flight. Stable for one milestone and Preview 2 for the next intentionally share the same release date.
+
+> [!NOTE]
+> [Starting with Chrome 153](https://developer.chrome.com/blog/chrome-two-week-release) (September 2026), Chrome ships milestones every two weeks. Each milestone still takes about three weeks from branch point to Stable, so adjacent release trains overlap.
+
+### Versioning
+
+Packages follow the scheme `4.{chrome_milestone}.{patch}` — the middle number **is** the Chrome milestone number. For example, `4.156.0` ships alongside Chrome 156's stable release.
+
+- Preview: `4.156.0-preview.1`, `4.156.0-preview.2`
+- Release candidate: `4.156.0-rc.1`
+- Stable: `4.156.0`
+
+Prerelease suffixes follow [NuGet semver conventions](https://learn.microsoft.com/nuget/concepts/package-versioning#pre-release-versions).
+
+### Schedule reference
+
+The full Chrome release calendar is published at [Chromium's release schedule](https://chromiumdash.appspot.com/schedule). SkiaSharp milestones are synced automatically from this schedule — check the [GitHub milestones](https://github.com/mono/SkiaSharp/milestones) for upcoming release dates.
+
+## Support overview
+
+- **Stable** — the line we recommend for production apps. Tracks Chrome's Stable / Extended Stable channel.
+- **Preview** — prerelease NuGets for the next milestone, so you can test ahead of its stable release. Tracks Chrome's Beta channel.
+- **Out of support** — older 3.x / 4.x lines, still listed below for reference but no longer serviced.
+- **Obsolete** — SkiaSharp 1.x and 2.x, no longer maintained.
+
+| Path | Version line | Latest release |
+|------|--------------|----------------|
+| Stable | 4.153.x | [4.153.1](4.153.1.md) |
+| Stable | 4.152.x | [4.152.3](4.152.3.md) |
+| Stable | 4.151.x | [4.151.5](4.151.5.md) |
+| Stable | 4.150.x | [4.150.5](4.150.5.md) |
+| Preview | 4.155.x | [4.155.0](4.155.0.md) |
+| Preview | 4.154.x | [4.154.0](4.154.0.md) |
+
+## Supported versions
+
+- **Version 4.155.x** — Preview
+  - [Version 4.155.0](4.155.0.md)
+- **Version 4.154.x** — Preview
+  - [Version 4.154.0](4.154.0.md)
+- **Version 4.153.x** — Stable
+  - [Version 4.153.2 (Unreleased)](4.153.2-unreleased.md)
+  - [Version 4.153.1](4.153.1.md)
+  - [Version 4.153.0](4.153.0.md)
+- **Version 4.152.x** — Stable
+  - [Version 4.152.4 (Unreleased)](4.152.4-unreleased.md)
+  - [Version 4.152.3](4.152.3.md)
+  - [Version 4.152.2](4.152.2.md)
+  - [Version 4.152.1](4.152.1.md)
+  - [Version 4.152.0](4.152.0.md)
+- **Version 4.151.x** — Stable
+  - [Version 4.151.6 (Unreleased)](4.151.6-unreleased.md)
+  - [Version 4.151.5](4.151.5.md)
+  - [Version 4.151.4](4.151.4.md)
+  - [Version 4.151.3](4.151.3.md)
+  - [Version 4.151.2](4.151.2.md)
+  - [Version 4.151.1](4.151.1.md)
+  - [Version 4.151.0](4.151.0.md)
+- **Version 4.150.x** — Stable
+  - [Version 4.150.6 (Unreleased)](4.150.6-unreleased.md)
+  - [Version 4.150.5](4.150.5.md)
+  - [Version 4.150.4](4.150.4.md)
+  - [Version 4.150.3](4.150.3.md)
+  - [Version 4.150.2](4.150.2.md)
+  - [Version 4.150.1](4.150.1.md)
+  - [Version 4.150.0](4.150.0.md)
+
+## Out of support
+
+These SkiaSharp 3.x and 4.x lines are no longer supported. They remain available for reference.
+
+<details>
+<summary>Show out-of-support releases</summary>
+
+- **Version 4.148.x**
+  - [Version 4.148.1 (Unreleased)](4.148.1-unreleased.md)
+  - [Version 4.148.0](4.148.0.md)
 - **Version 4.147.x**
-  - [Version 4.147.0 (Unreleased)](4.147.0-unreleased.md)
   - [Version 4.147.0](4.147.0.md)
-
-### SkiaSharp 3.x
-
 - **Version 3.119.x**
-  - [Version 3.119.4 (Unreleased)](3.119.4-unreleased.md)
+  - [Version 3.119.5 (Unreleased)](3.119.5-unreleased.md)
   - [Version 3.119.4](3.119.4.md)
   - [Version 3.119.3](3.119.3.md)
   - [Version 3.119.2](3.119.2.md)
@@ -25,7 +121,14 @@ Release notes for all SkiaSharp versions.
 - **Version 3.0.x**
   - [Version 3.0.0](3.0.0.md)
 
-### SkiaSharp 2.x
+</details>
+
+## Obsolete versions
+
+SkiaSharp 1.x and 2.x are obsolete and no longer maintained.
+
+<details>
+<summary>Show obsolete releases</summary>
 
 - **Version 2.88.x**
   - [Version 2.88.9](2.88.9.md)
@@ -44,9 +147,6 @@ Release notes for all SkiaSharp versions.
   - [Version 2.80.2](2.80.2.md)
   - [Version 2.80.1](2.80.1.md)
   - [Version 2.80.0](2.80.0.md)
-
-### SkiaSharp 1.x
-
 - **Version 1.68.x**
   - [Version 1.68.3](1.68.3.md)
   - [Version 1.68.2.1](1.68.2.1.md)
@@ -80,6 +180,7 @@ Release notes for all SkiaSharp versions.
   - [Version 1.55.1](1.55.1.md)
   - [Version 1.55.0](1.55.0.md)
 - **Version 1.54.x**
+  - [Version 1.54.1.1](1.54.1.1.md)
   - [Version 1.54.1](1.54.1.md)
   - [Version 1.54.0](1.54.0.md)
 - **Version 1.53.x**
@@ -95,3 +196,5 @@ Release notes for all SkiaSharp versions.
   - [Version 1.49.2](1.49.2.md)
   - [Version 1.49.1](1.49.1.md)
   - [Version 1.49.0](1.49.0.md)
+
+</details>

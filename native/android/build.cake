@@ -8,7 +8,7 @@ Information("Android NDK Path: {0}", ANDROID_NDK_HOME);
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
-    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows())
+    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows() || IsRunningOnLinux())
     .Does(() =>
 {
     Build("x86", "x86");
@@ -25,7 +25,7 @@ Task("libSkiaSharp")
             $"target_os='android' " +
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
-            $"skia_use_piex=true " +
+            $"skia_use_partition_alloc=false " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_freetype2=false " +
             $"skia_use_system_libjpeg_turbo=false " +
@@ -33,9 +33,10 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_use_vulkan=true " +
+            $"skia_enable_graphite=true " +
             $"skia_enable_skottie=true " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-g', '-ggdb3' ] " +
-            $"extra_ldflags=[ '-Wl,-z,max-page-size=16384' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-g', '-ggdb3' ] " +
+            $"extra_ldflags=[ '-Wl,--build-id=sha1', '-Wl,-z,max-page-size=16384' ] " +
             $"ndk='{ANDROID_NDK_HOME}' " +
             $"ndk_api=21");
 
@@ -46,7 +47,7 @@ Task("libSkiaSharp")
 });
 
 Task("libHarfBuzzSharp")
-    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows())
+    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows() || IsRunningOnLinux())
     .Does(() =>
 {
     Build("x86");

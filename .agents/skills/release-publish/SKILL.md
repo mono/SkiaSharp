@@ -1,317 +1,111 @@
 ---
 name: release-publish
 description: >
-  Publish SkiaSharp packages and finalize the release.
-  
-  Use when user says "publish X", "finalize X", "tag X", or "finish release X".
-  
-  This is the FINAL step - after release-testing passes.
-  Publishes to NuGet.org, creates tag, GitHub release, and closes milestone.
-  
-  Triggers: "publish the release", "push to nuget", "create github release",
-  "tag the release", "close the milestone", "annotate release notes",
-  "testing passed what's next", "finalize 3.119.2", "release is ready".
+  Publish SkiaSharp release packages to NuGet.org from chat and finish public
+  releases. Use when a maintainer says "push the packages", "publish the BAR",
+  "resume publication", "finalize X", "tag X", or "finish release X". Queue the
+  protected MAUI pipeline only on explicit request; after exact packages are
+  public, use the SkiaSharp Release - Finish workflow with a separate
+  confirmation.
 ---
 
-# Release Publish Skill
+# Release Publish
 
-Publish packages to NuGet.org and finalize releases.
+Use this skill for **two separate chat requests**: "push the packages" queues
+the MAUI publication pipeline; "finish the release" dispatches the SkiaSharp
+Finish workflow after the packages are public. Neither runs automatically
+after Prepare, Build/Tests, or the other operation.
 
-⚠️ **NO UNDO:** This is **Step 4 of 4** in the release pipeline (final step). See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+## Push the packages
 
-**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) → [Step 2: release-status](../release-status/SKILL.md) → [Step 3: release-testing](../release-testing/SKILL.md) → **Step 4 (this skill)**
+Before triggering:
 
-## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
+1. Run `audit-release-state.ps1 -Version A.B -Json` for the requested
+   `release/<identity>`. Require its exact-tip `skiasharp-package (1642)` build
+   to have succeeded with one BAR, and the resource-triggered
+   `skiasharp-tests (1630)` run to have succeeded for the same branch, commit
+   and build number with a matching `triggerInfo.pipelineId`. Any
+   `release-testing` approval must match the BAR. Use that **SkiaSharp**
+   commit, not the maintenance tip or mono/skia SHA.
+2. Check the complete public package set and existing
+   `dotnet-maui-release (1445)` runs for that commit
+   (`templateParameters.commitHash`). Monitor an existing run instead of
+   queueing another; if fully public, verify provenance and use the Finish
+   path only on a separate request. Stop on mismatched evidence.
+3. Require the `dotnet-maui-release (1445)` pipeline to default to
+   `refs/heads/main` and the internal MAUI mirror to contain the merged
+   SkiaSharp release support.
+   Wait if the mirror is behind; never use the old feature branch.
 
-> **🛑 NEVER commit directly to `main` or `skiasharp` branches. This is a policy violation.**
-
-| Repository | Protected Branches | Required Action |
-|------------|-------------------|-----------------|
-| SkiaSharp (parent) | `main` | Tags/releases created from release branches, never modify main directly |
-| externals/skia (submodule) | `main`, `skiasharp` | Never modify directly |
-
-**Publishing creates tags on existing release branches — it does NOT modify protected branches.**
-
----
-
-## Workflow Overview
-
-```
-┌────────────────────────────────────────────────────────────────────┐
-│  1. Confirm Versions     → Verify packages exist on preview feed   │
-│  2. Publish to NuGet.org → Trigger Azure pipeline (manual)         │
-│  3. Verify Published     → Poll NuGet.org until indexed            │
-│  4. Tag Release          → Push git tag (ask_user first!)          │
-│  5. Create GitHub Release→ Generate notes, set prerelease flag     │
-│  6. Annotate Notes       → Add platform/contributor emojis         │
-│  7. Close Milestone      → Stable releases only                    │
-└────────────────────────────────────────────────────────────────────┘
-```
-
-**Preview vs Stable differences:**
-| Step | Preview | Stable |
-|------|---------|--------|
-| 1. NuGet version | `X.Y.Z-preview.N.{build}` | `X.Y.Z` (no build number) |
-| 2. Pipeline checkbox | "Push Preview" | "Push Stable" |
-| 4. Tag format | `vX.Y.Z-preview.N.{build}` | `vX.Y.Z` |
-| 5. GitHub Release | `--prerelease` flag | No flag, attach samples |
-| 7. Milestone | Skip | Close milestone |
-
----
-
-## Step 1: Confirm Versions
-
-### ⚠️ Semver Version Ordering
-
-When identifying which version to publish, use **semver ordering**, not alphabetical:
-- `3.119.2` (bare) is NEWER than `3.119.2-preview.3` — it's the stable/final release
-- Always verify you are publishing from the correct branch
-- If both `release/3.119.2` and `release/3.119.2-preview.3` exist, the bare version is the latest
-
-**Prerequisite:** release-testing must have passed. Versions should be known from testing.
-
-The user should provide:
-- **Preview:** SkiaSharp version with build number (e.g., `3.119.2-preview.2.3`)
-- **Stable:** SkiaSharp base version only (e.g., `3.119.2`) — no build number
-
-⚠️ **Stable versions never include a build number.** The build number only appears in the prerelease component (e.g., `3.119.2-preview.2.3`) or in the internal stable tag (e.g., `3.119.2-stable.3`). It is never appended to the base version directly.
-
-If not provided, ask for them using `ask_user`.
-
-**Quick verification** — confirm packages exist on preview feed:
-```bash
-# Preview: search for the exact NuGet version
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "{expected-version}"
-
-# Stable: search for internal stable builds (NuGet version is just the base, e.g., 3.119.2)
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "^{base}-stable\."
-```
-
-If missing, STOP and ask user to verify testing was completed.
-
----
-
-## Step 2: Publish to NuGet.org
-
-Trigger the [publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) to push packages to NuGet.org.
-
-### Verifying Source Build Before Publishing
-
-Before triggering the publish pipeline, confirm builds completed using the **release-status** skill:
+Queue `dotnet-maui-release (1445)` on its verified default MAUI `main` tip
+only on explicit request:
 
 ```bash
-python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+az pipelines run \
+  --organization https://dev.azure.com/dnceng --project internal --id 1445 \
+  --parameters \
+    ghOwner=mono \
+    ghRepo=SkiaSharp \
+    commitHash=<exact-SkiaSharp-release-commit> \
+    pushWorkloadSet=false \
+    pushNugetOrg=true \
+    pushPackages=true \
+    nugetIncludeFilters=skip \
+    nugetExcludeFilters=skip \
+  --output json
 ```
 
-The `SkiaSharp` pipeline (ID 10789) must show ✅ — this is the pipeline that produced the
-packages on the internal feed. See [release-status](../release-status/SKILL.md) for details.
+The pipeline's default branch selects the **current MAUI main tip**;
+`commitHash` remains the **exact SkiaSharp BAR commit**. The real run prepares
+packages and pauses at `ManualValidation`, so no separate dry run is required.
 
-### Pipeline Steps
+After triggering:
 
-1. Open the [NuGet.org publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298)
-2. Click **"Run pipeline"**
-3. Select **"SkiaSharp"** from the radio buttons
-4. Check **"Confirm push to NuGet.org"** checkbox
-5. **For stable releases ONLY:** Check **"Push stable packages"** checkbox
-   - ⚠️ Do NOT check this for preview releases
-6. Click **"Next: Resources"**
-7. In **"Pipeline artifacts"**, click the **SkiaSharp** artifact selector
-8. From the **branch dropdown**, select `release/{version}` (the release branch)
-9. From the **pipeline runs list**, select the correct build by checking the build number
-10. Click **"Use selected run"**
-11. Click **"Run"**
+1. Read back the run's MAUI ref/SHA and parameters. Require `refs/heads/main`,
+   the requested SkiaSharp commit and flags, and a MAUI SHA containing release
+   support; stop on a mismatch without retrying.
+2. Match `NuGetReleaseAudit` BAR, repository, commit and selected/staged package
+   identities to the release record. Present it for human `ManualValidation`;
+   the approver confirms package ownership and quota. Preparation alone is
+   not approval.
+3. Monitor that run after approval and independently verify **every** staged
+   shipping ID/version on NuGet.org. On failure or partial publication,
+   preserve evidence; do not automatically requeue or run Finish.
 
-### Verification During Pipeline Run
+## Finish after the packages are public
 
-⚠️ **Before approving the push step, verify BOTH:**
-
-1. **Run name** — The pipeline run will rename itself to the version being released. Confirm this matches your expected version.
-2. **Push type** — The publish step will indicate **"Push Preview"** or **"Push Stable"**. Verify this matches your release type:
-   - Preview release → should show "Push Preview"
-   - Stable release → should show "Push Stable"
-
-**Only approve the push step when both are correct.** Wait for pipeline completion (typically 5-10 minutes after approval).
-
-Ask user to follow these steps and wait for completion.
-
----
-
-## Step 3: Verify Packages Published
-
-**Use curl to verify** (more reliable than `dotnet package search` which has version limits):
+Once the complete exact package set is public, use **Release - Finish** on
+`main`, first with `push=false` to inspect the read-only plan. Resolve an
+abbreviated prerelease identity to one exact public version; stop if ambiguous.
+Present the source commit, exact tag, release title, support updates and
+milestone changes to the user and obtain **separate confirmation** before
+dispatching the *same* inputs with `push=true`:
 
 ```bash
-# Check if packages exist - HTTP 200 = success
-curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{version}/skiasharp.nuspec"
-curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{version}/harfbuzzsharp.nuspec"
+gh workflow run release-finish.yml --repo mono/SkiaSharp --ref main \
+  -f version=4.153.0-preview.1 -f push=false
+
+# After the plan is reviewed and separately approved:
+gh workflow run release-finish.yml --repo mono/SkiaSharp --ref main \
+  -f version=4.153.0-preview.1 -f push=true
 ```
 
-**If packages not yet indexed**, poll until available (NuGet.org can take 5-15 minutes):
+Inspect both workflow runs; do not treat dispatch as success. Finish verifies
+the public package's branch and commit, publishes the exact tag and GitHub
+Release, and coordinates support, release notes, and milestones. Rerun the
+read-only audit afterward. Never move a tag or replace a public package.
 
-```bash
-# Poll every 30 seconds, max 10 minutes
-for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-  skia=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{version}/skiasharp.nuspec")
-  hb=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{version}/harfbuzzsharp.nuspec")
-  echo "$(date +%H:%M:%S) - SkiaSharp: $skia, HarfBuzzSharp: $hb"
-  if [ "$skia" = "200" ] && [ "$hb" = "200" ]; then
-    echo "✅ Both packages available on NuGet.org!"
-    break
-  fi
-  sleep 30
-done
+### Local Finish fallback
+
+Only when the GitHub workflow is unavailable or local execution is explicitly
+requested, use the repository-owned Finish script:
+
+```powershell
+./scripts/infra/publishing/finish-release.ps1 -Version 4.153.0-preview.1 -Mode DryRun
+
+# After reviewing the plan and receiving confirmation:
+./scripts/infra/publishing/finish-release.ps1 -Version 4.153.0-preview.1 -Mode Push
 ```
 
-> **Note:** Use explicit list `1 2 3...` instead of `{1..20}` brace expansion for better compatibility with async shell execution.
-
-Or manually check: `https://www.nuget.org/packages/SkiaSharp/{version}`
-
----
-
-## Step 4: Tag Release
-
-Tag formats:
-- **Preview:** `vX.Y.Z-preview.N.{build}` (e.g., `v3.119.2-preview.2.5`)
-- **Stable:** `vX.Y.Z` (e.g., `v3.119.2`)
-
-```bash
-git fetch origin
-git checkout release/{branch-version}
-git pull
-git tag {tag}
-```
-
-**Confirm with `ask_user`** before pushing tag (cannot be undone):
-```bash
-git push origin {tag}
-```
-
----
-
-## Step 5: Create GitHub Release
-
-### Title Format
-
-| Release Type | Title Format | Example |
-|--------------|--------------|---------|
-| Preview | `Version X.Y.Z (Preview N)` | `Version 3.119.2 (Preview 2)` |
-| Stable | `Version X.Y.Z` | `Version 3.119.2` |
-| Hotfix Preview | `Version X.Y.Z.F (Preview N)` | `Version 3.119.2.1 (Preview 1)` |
-| Hotfix Stable | `Version X.Y.Z.F` | `Version 3.119.2.1` |
-
-### Finding the Previous Release Tag
-
-**Always use `--notes-start-tag` to explicitly specify the previous release.** The auto-selection may pick the wrong tag.
-
-```bash
-# List recent tags to find the previous release
-git tag -l "v3.119*" --sort=-v:refname | head -10
-```
-
-| Current Release | Previous Tag (--notes-start-tag) |
-|-----------------|----------------------------------|
-| `v3.119.2-preview.2.3` | `v3.119.2-preview.1.2` (previous preview) |
-| `v3.119.2-preview.1.1` | `v3.119.1` (last stable) |
-| `v3.119.2` (stable) | `v3.119.2-preview.N.X` (last preview of this version) |
-| `v3.119.2.1-preview.1.1` (hotfix) | `v3.119.2` (stable being hotfixed) |
-
-### Commands
-
-```bash
-# Preview (e.g., v3.119.2-preview.2.3)
-gh release create {tag} \
-  --title "Version {X.Y.Z} (Preview {N})" \
-  --generate-notes \
-  --notes-start-tag {previous-tag} \
-  --prerelease \
-  --verify-tag
-
-# Stable (e.g., v3.119.2)
-gh release create {tag} \
-  --title "Version {X.Y.Z}" \
-  --generate-notes \
-  --notes-start-tag {previous-tag} \
-  --verify-tag
-
-# Upload samples for stable releases (if available)
-gh release upload {tag} samples.zip
-```
-
-- `--title` sets the release title (use format above)
-- `--generate-notes` auto-generates release notes from PRs/commits
-- `--notes-start-tag` specifies the previous release to diff from (required)
-- `--prerelease` marks as prerelease (preview only)
-- `--verify-tag` ensures the tag exists before creating the release
-
----
-
-## Step 6: Annotate Release Notes with Emojis
-
-After creating the release, annotate each PR line with **platform** and **community** emojis.
-
-👉 **See [references/release-notes.md](references/release-notes.md)** for:
-- Complete emoji reference (platform + contributor)
-- Label-to-platform mapping
-- Title keyword detection
-- Full annotation process and examples
-
-**Quick summary:**
-1. Get release body: `gh release view {tag} --json body -q '.body' > /tmp/skiasharp/release/release-body.md`
-2. For each PR: determine platform emoji, add ❤️ for non-mattleibow contributors
-3. Build sections: Breaking Changes (if any), New Features (if any), What's Changed (all)
-4. Update release: `gh release edit {tag} --notes-file /tmp/skiasharp/release/release-body.md`
-
----
-
-## Step 7: Close Milestone (Stable only)
-
-**Skip for preview releases.**
-
-```bash
-gh api repos/:owner/:repo/milestones --jq '.[] | "\(.number): \(.title)"'
-gh api repos/:owner/:repo/milestones/{number} -X PATCH -f state=closed
-```
-
----
-
-## Error Recovery
-
-### Pipeline Fails
-
-| Failure Point | Recovery |
-|---------------|----------|
-| Pipeline won't start | Verify branch name, check Azure DevOps permissions |
-| Build fails mid-run | Check logs, fix issue on release branch, re-run pipeline |
-| Approval rejected | Re-trigger pipeline with correct settings |
-| Push step fails | Check NuGet.org status, retry pipeline |
-
-### NuGet.org Issues
-
-| Issue | Recovery |
-|-------|----------|
-| Indexing takes >15 min | Normal for large packages. Keep polling. |
-| Package shows 404 after publish | Wait up to 30 min. NuGet CDN propagation delay. |
-| Wrong version published | **Cannot unpublish.** Release new corrected version. |
-
-### Git/GitHub Issues
-
-| Issue | Recovery |
-|-------|----------|
-| Tag push rejected | Check if tag exists: `git ls-remote --tags origin \| grep {tag}` |
-| Tag already exists | **Cannot delete.** Must use different tag or release new version. |
-| GitHub release fails | Re-run `gh release create` with `--verify-tag` |
-| Release notes wrong | Edit with `gh release edit {tag} --notes-file ...` |
-
-### General Recovery
-
-If you've partially completed and need to resume:
-1. Check what's done: `gh release view {tag}` (release exists?), `git ls-remote --tags origin` (tag exists?)
-2. Skip completed steps
-3. Continue from where you left off
-
----
-
-## Resources
-
-- [releasing.md](../../../documentation/dev/releasing.md) — Version patterns, tag formats, workflow diagrams
-- [references/release-notes.md](references/release-notes.md) — Emoji annotation details
+Local Finish does **not** replace the protected MAUI package pipeline or its
+human NuGet approval. Do not use it to bypass a failed workflow.

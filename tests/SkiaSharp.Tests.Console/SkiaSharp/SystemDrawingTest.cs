@@ -27,7 +27,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SurfaceCanvasReturnTheSameInstance()
 		{
 			DrawBitmap((surface, data) =>
@@ -45,7 +45,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SecondSurfaceWasCreatedDifferent()
 		{
 			DrawBitmap((surface, data) =>

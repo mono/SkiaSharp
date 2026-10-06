@@ -19,8 +19,11 @@ This checklist documents every file that needs updating when bumping the .NET SD
 ### 1. SDK & Workloads
 
 - [ ] **`global.json`** — Update `sdk.version` to the new SDK feature band (e.g., `10.0.100`). Use `"rollForward": "latestPatch"` to accept any patch version available on CI agents.
-- [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_VERSION` and `DOTNET_WORKLOAD_VERSION` to match the new SDK version
-- [ ] **`scripts/install-dotnet-workloads.ps1`** — Review Tizen script URL (Samsung repo may update)
+- [ ] **`global.json` `tools.dotnet`** — Keep this equal to `sdk.version` and verify the selected SDK satisfies Arcade's CLI requirements for `dotnet package download`.
+- [ ] **`native/winui/global.json` and `DOTNET_VERSION_WINUI`** — Keep these on the latest SDK feature band supported by the Visual Studio MSBuild used for the C++/WinRT projection. Verify the current SDK/MSBuild compatibility matrix and install this SDK side-by-side in the WinUI native jobs instead of forcing the repository SDK onto them.
+- [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_VERSION` to the SDK patch and pin `DOTNET_WORKLOAD_VERSION` to a compatible workload set. The workload set may intentionally lag the SDK by whole feature bands when a newer set requires an unavailable Apple toolchain.
+- [ ] **Managed Apple pool and `XCODE_VERSION`** — Use an agent image containing the exact Xcode recommended by the workload set. Document any intentional cross-feature-band workload pin beside `DOTNET_WORKLOAD_VERSION`, including the unavailable toolchain that requires it. Keep native Apple builds on their separately pinned Xcode.
+- [ ] **`scripts/infra/managed/install-dotnet-workloads.ps1`** — Review the workload installation flow and Tizen manifest source (Samsung may update it independently).
 
 > **Note:** Do NOT set `workloadVersion` in `global.json`. Native builds skip SDK install but still read global.json, causing failures if the pinned workload version isn't pre-installed.
 
@@ -35,7 +38,7 @@ This checklist documents every file that needs updating when bumping the .NET SD
   - Update **SupportedOSPlatformVersion** minimums (check workload manifests for new minimums)
   - Sections to update: BasicTargetFrameworks, PlatformTargetFrameworks, Windows, MAUI, MAUI App, Uno, DefineConstants
 
-> **SupportedOSPlatformVersion:** Each .NET version may raise the minimum supported OS versions. For .NET 10: iOS/tvOS minimum is 12.2, MacCatalyst minimum is 15.0, macOS minimum is 12.0. These are enforced by the workloads and will cause build errors if too low.
+> **SupportedOSPlatformVersion:** Each .NET version may raise the minimum supported OS versions. Read the installed workload manifests and update the values in `source/SkiaSharp.Build.props`; workload validation fails when these values are too low.
 
 ### 3. NativeAssets Platform Projects (14 files)
 
@@ -69,7 +72,7 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 
 - [ ] `build.cake` — 4 hardcoded TFMs in test tasks (~lines 285, 333, 365, 397)
 - [ ] `scripts/infra/managed/utils-managed.cake` — Framework check list (add new `netX.0`)
-- [ ] `scripts/infra/docs/docs.cake` — Apple/Android ref package names include TFM+TPV (e.g., `Microsoft.iOS.Ref.net10.0_18.0`)
+- [ ] `source/SkiaSharp.NuGet.targets` — verify compiler XML remains packaged beside the matching `lib/<tfm>` and `ref/<tfm>` assemblies, including platform TFMs
 - [ ] `native/winui/build.cake` — WinUI Projection output path uses `$(WindowsTargetFrameworksPrevious)` 
 
 ### 7. Utility Projects
@@ -88,12 +91,37 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 - [ ] `scripts/azure-templates-stages-native-wasm.yml` — Add new .NET emscripten entry
 - [ ] `scripts/azure-templates-jobs-bootstrapper.yml` — Review workload install step
 
+> **WASM emsdk mapping (do this whenever the new SDK bundles a new Emscripten version).** The .NET WASM SDK links apps with a specific Emscripten toolchain, and a static library built with one Emscripten version cannot be linked by a different one (the wasm object format is incompatible → link failure). Check the new SDK's bundled version (e.g. `dotnet workload list` / the `Microsoft.NET.Runtime.Emscripten.*` pack). Known mapping so far: **.NET 8 → 3.1.34, .NET 9/10 → 3.1.56, .NET 11 → 5.0.6**. When it changes for the new SDK, you must:
+> 1. Add a build matrix block (all 4 `st`/`mt`/`simd`/`simd+mt` variants) for the new Emscripten version in `scripts/azure-templates-stages-native-wasm.yml`, and register its `native_wasm_<version>_*` artifacts in both merger lists in `scripts/azure-templates-stages-native-merge.yml`, so the packages ship a static library for it.
+> 2. Add a `NativeFileReference` entry for the new TFM in **all four** WASM targets files, keeping each `netX.0` on the Emscripten version its SDK actually uses:
+>    - `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets`
+>    - `binding/HarfBuzzSharp.NativeAssets.WebAssembly/buildTransitive/HarfBuzzSharp.targets`
+>    - `binding/IncludeNativeAssets.SkiaSharp.targets`
+>    - `binding/IncludeNativeAssets.HarfBuzzSharp.targets`
+>
+> Convention for the conditions: the **newest** entry stays open-ended (`VersionGreaterThanOrEquals(TFV, 'A')`) so a future SDK that keeps the same Emscripten version keeps working with no code change (e.g. .NET 9 and .NET 10 both use 3.1.56). Only when a new SDK actually *diverges* do you close the previous entry with an upper bound (`… and VersionLessThan(TFV, 'B')`) and add a new open-ended entry for the new version — the way `net9.0`–`net10.x` was capped at `< 11.0` once .NET 11 moved to 5.0.6. The packaging globs (`**`/`*` over the version folder) pick up new version directories automatically — no nuspec/csproj change needed.
+
 ### 10. Docker Images
 
-- [ ] All Dockerfiles in `scripts/infra/native/linux/docker/*/Dockerfile` — Update `FROM mcr.microsoft.com/dotnet/sdk:X.0` to new version
-  - debian10-amd64, debian11-amd64, debian11-arm64, debian12-amd64
-  - fedora40-amd64, ubuntu18.04-amd64, ubuntu20.04-amd64, ubuntu22.04-amd64
-  - alpine-amd64, alpine-arm64, alpine-x86
+- [ ] Pin every `mcr.microsoft.com/dotnet/sdk` build image to the exact repository SDK patch while preserving its distro/OS suffix:
+  - `scripts/infra/docs/docker/Dockerfile`
+  - `scripts/infra/tests/docker/{alpine,alpine-nodeps,azurelinux,azurelinux-nodeps,nanoserver}/Dockerfile`
+  - `tests/Dockerfile.linux`
+- [ ] Update every native `DOTNET_SDK_VERSION` argument to the exact repository SDK patch:
+  - `scripts/infra/native/android/docker/Dockerfile`
+  - `scripts/infra/native/linux/docker/{alpine,bionic,glibc,glibc-x86}/Dockerfile`
+  - `scripts/infra/native/tizen/docker/Dockerfile`
+  - `scripts/infra/native/wasm/docker/Dockerfile`
+- [ ] In the WASM Dockerfile, use `dotnet-install.sh --version ${DOTNET_SDK_VERSION}`. Do not use `--channel` with an exact SDK version.
+- [ ] Keep isolated consumer/sample contexts on the floating .NET major tag so they exercise the latest servicing release:
+  - `samples/Basic/DockerConsole/{linux,windows}.Dockerfile`
+  - `samples/Basic/DockerWebApi/{linux,windows}.Dockerfile`
+  - The generated Dockerfile string in `tests/SkiaSharp.Tests.Integration/Tests/LinuxConsoleTests.cs`
+- [ ] Verify every complete MCR tag exists with `docker manifest inspect mcr.microsoft.com/dotnet/sdk:<tag>`. Verify SDKs installed by `dotnet-install.sh` have published artifacts for every host architecture used by the image.
+
+Images that run `dotnet` against the checked-out repository must provide an SDK compatible with the root `global.json`; this includes the local docs image, CI container-test images, and `tests/Dockerfile.linux`. The sample Dockerfiles and generated Linux integration-test project build isolated contexts without the repository `global.json`, so their floating current-major SDK tags intentionally validate the latest servicing release for `TFMCurrent`.
+
+Keep each distro/OS suffix unchanged when updating either kind of image. For example, an SDK bump should preserve suffixes such as `-noble`, `-alpine3.23`, `-azurelinux3.0`, and `-nanoserver-ltsc2022`. Runtime and ASP.NET base images are separate from the build SDK pin; do not change them as part of an SDK-only alignment unless the runtime itself is also being updated.
 
 ### 11. NuGet & Feeds
 
@@ -106,7 +134,6 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 Before merging a .NET upgrade PR, verify these items:
 
 - [ ] **`nuget.config`** — Must NOT contain `nuget.org` source (disallowed in CI)
-- [ ] **`scripts/azure-pipelines-complete.yml`** — `buildExternals` parameter must be reset to `'latest'` (not a specific build ID)
 - [ ] **All CI stages pass** — Tests, samples, API diff, and package stages must be green
 - [ ] **Documentation updated** — `documentation/dev/updating-dotnet-version.md` reflects any new learnings
 
@@ -144,8 +171,7 @@ These use MSBuild properties from `SkiaSharp.Build.props`:
 ## Files That Are Safe (no changes needed)
 
 - `IsTargetFrameworkCompatible('net7.0')` conditions in binding csproj files — floor check
-- `IncludeNativeAssets.*.targets` — `VersionGreaterThanOrEquals('9.0')` covers future versions
-- `.sln` / `.slnf` files — don't encode TFMs
+- `.slnx` / `.slnf` files — don't encode TFMs
 - `samples/Gallery/` — Legacy samples, not updated
 
 ## How to Test a Preview .NET Version (e.g., .NET 11 Preview)
@@ -190,7 +216,7 @@ Workloads are pinned via the `DOTNET_WORKLOAD_VERSION` pipeline variable, which 
 ## CI Troubleshooting
 
 ### Reusing Native Artifacts
-To speed up CI iteration when debugging managed code issues, set the `buildExternals` parameter to a previous build ID that has successful native stages. This skips native compilation and downloads artifacts from the specified build instead.
+Native artifacts are reused automatically through content-based caching: `scripts/infra/caching/repo-deps.py` hashes the native inputs and `Cache@2` restores a matching build, which sets `CACHE_SKIP` and skips native compilation. Nothing needs to be set by hand, and there is no way to point a run at an arbitrary previous build ID — artifacts are only ever downloaded from the current run or from an exact connected pipeline run.
 
 ### SDK Version Mismatch
 If CI agents don't have the exact SDK version in `global.json`, use `"rollForward": "latestPatch"` to accept any patch version in the same feature band (e.g., `10.0.100` accepts `10.0.102`).

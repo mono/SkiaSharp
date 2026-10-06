@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:items="clr-namespace:SkiaSharpSample.Controls"
+             x:Class="SkiaSharpSample.Controls.InfoMenuView"
+             x:DataType="items:InfoMenuView"
+             AutomationId="gallery-info-menu" WidthRequest="274">
+    <VerticalStackLayout Spacing="9">
+        <Grid ColumnDefinitions="*,Auto">
+            <Label Text="About the gallery" FontSize="15" FontAttributes="Bold"
+                   Style="{StaticResource PrimaryLabel}" VerticalOptions="Center" />
+            <ImageButton Grid.Column="1" AutomationId="gallery-info-close"
+                         SemanticProperties.Description="Close gallery information"
+                         Clicked="CloseClicked" BackgroundColor="Transparent"
+                         MinimumWidthRequest="40" MinimumHeightRequest="40" Padding="10">
+                <ImageButton.Source>
+                    <FontImageSource Glyph="&#xf659;" FontFamily="BootstrapIcons" Size="16"
+                                     Color="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}" />
+                </ImageButton.Source>
+            </ImageButton>
+        </Grid>
+        <Label Text="SKIASHARP" FontSize="10" FontAttributes="Bold" Style="{StaticResource SecondaryLabel}" />
+        <Label Text="{Binding SkiaSharpVersion}" FontSize="12" Style="{StaticResource PrimaryLabel}"
+               AutomationId="gallery-info-skiasharp-version" />
+        <Label Text="HARFBUZZSHARP" FontSize="10" FontAttributes="Bold" Style="{StaticResource SecondaryLabel}" />
+        <Label Text="{Binding HarfBuzzSharpVersion}" FontSize="12" Style="{StaticResource PrimaryLabel}"
+               AutomationId="gallery-info-harfbuzz-version" />
+        <Label Text="BUILT" FontSize="10" FontAttributes="Bold" Style="{StaticResource SecondaryLabel}" />
+        <Label Text="{Binding BuildTimestamp}" FontSize="12" Style="{StaticResource PrimaryLabel}"
+               AutomationId="gallery-info-build-timestamp" />
+        <Label Text="BUILD" FontSize="10" FontAttributes="Bold" Style="{StaticResource SecondaryLabel}" />
+        <Label Text="{Binding BuildFooter}" FontSize="12" Style="{StaticResource PrimaryLabel}"
+               AutomationId="gallery-info-build-footer" />
+    </VerticalStackLayout>
+</ContentView>

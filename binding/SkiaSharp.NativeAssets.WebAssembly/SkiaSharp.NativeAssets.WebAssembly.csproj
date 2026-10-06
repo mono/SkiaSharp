@@ -8,5 +8,14 @@
     <PackageFile Include="..\..\output\native\wasm\**\libSkiaSharp*.a" PackagePath="buildTransitive\netstandard1.0" />
     <PackageFile Include="buildTransitive\SkiaSharp.props" PackagePath="buildTransitive\netstandard1.0\$(PackageId).props" />
     <PackageFile Include="buildTransitive\SkiaSharp.targets" PackagePath="buildTransitive\netstandard1.0\$(PackageId).targets" />
+    <!--
+      Ship Dawn's emdawnwebgpu port next to the static libs; consumers on
+      net9.0+ forward it to emcc at link time via SkiaSharp.targets. The port is
+      produced by the WASM native build (staged into
+      output/native/wasm/emdawnwebgpu_pkg by the externals-emdawnwebgpu task),
+      so it's packed straight from the native output like the libSkiaSharp*.a
+      files.
+    -->
+    <PackageFile Include="..\..\output\native\wasm\emdawnwebgpu_pkg\**\*" PackagePath="buildTransitive\netstandard1.0\emdawnwebgpu_pkg" />
   </ItemGroup>
 </Project>

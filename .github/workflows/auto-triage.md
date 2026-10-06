@@ -1,5 +1,10 @@
 ---
 description: "Triage a SkiaSharp issue: classify, label, and update the backlog project board."
+engine:
+  id: copilot
+# Triage needs reliable code and issue reasoning, but its schema and validation
+# gates make Terra the balanced choice.
+model: gpt-5.6-terra
 on:
   schedule: daily
   workflow_dispatch:
@@ -39,6 +44,8 @@ jobs:
     outputs:
       issue_number: ${{ steps.find-issue.outputs.issue_number }}
 if: needs.pre_activation.outputs.find-issue_result == 'success'
+concurrency:
+  job-discriminator: ${{ github.run_id }}
 steps:
   - name: Redirect step summary into agent-writable directory
     run: |
@@ -61,7 +68,7 @@ network:
     - python
 safe-outputs:
   add-labels:
-    max: 10
+    max: 12
     target: "*"
   update-project:
     project: "https://github.com/orgs/mono/projects/1"
@@ -69,7 +76,7 @@ safe-outputs:
     github-token: ${{ secrets.GH_AW_WRITE_PROJECT_TOKEN }}
 ---
 
-# Auto-Triage SkiaSharp Issue
+# Sync - Issue Triage
 
 Triage issue **#${{ needs.pre_activation.outputs.issue_number }}** using the issue-triage skill, then apply labels and update the SkiaSharp Backlog project board.
 
@@ -90,6 +97,7 @@ Read the triage JSON file and extract the classification labels. Apply each labe
 - Each entry in `classification.platforms[]` — platform labels (e.g. `os/Android`)
 - Each entry in `classification.backends[]` — backend labels (e.g. `backend/Metal`)
 - Each entry in `classification.tenets[]` — quality tenet labels (e.g. `tenet/compatibility`)
+- Each entry in `classification.perf[]` — performance sub-type labels (e.g. `perf/memory-leak`). Whenever `perf[]` is non-empty, ensure `tenet/performance` is also applied (it should already be present in `tenets[]`).
 - `classification.partner` — partner label if present (e.g. `partner/maui`)
 
 After applying classification labels, also add the `triage/triaged` label to mark the issue as processed.

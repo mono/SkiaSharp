@@ -1,4 +1,4 @@
-﻿using CoreVideo;
+using CoreVideo;
 #if WINUI
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -18,6 +18,8 @@ namespace SkiaSharp.Views.UWP
 		private SKGLView glView;
 		private CVDisplayLink displayLink;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKSwapChainPanel" /> class.</summary>
+		/// <remarks />
 		public SKSwapChainPanel()
 		{
 			Initialize();

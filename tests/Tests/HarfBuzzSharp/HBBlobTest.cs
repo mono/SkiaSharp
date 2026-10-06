@@ -8,7 +8,7 @@ namespace HarfBuzzSharp.Tests
 {
 	public class HBBlobTest : HBTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void ShouldCreateFromFileName()
 		{
 			using (var blob = Blob.FromFile(Path.Combine(PathToFonts, "Distortable.ttf")))
@@ -17,7 +17,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldCreateFromStream()
 		{
 			using (var blob = Blob.FromStream(File.Open(Path.Combine(PathToFonts, "Funkster.ttf"), FileMode.Open, FileAccess.Read)))
@@ -26,7 +26,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyBlobsAreExactlyTheSameInstance()
 		{
 			var emptyBlob1 = Blob.Empty;
@@ -37,7 +37,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Same(emptyBlob1, emptyBlob2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyBlobsAreNotDisposed()
 		{
 			var emptyBlob = Blob.Empty;

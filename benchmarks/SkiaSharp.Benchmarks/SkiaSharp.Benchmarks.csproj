@@ -6,7 +6,6 @@
     <RootNamespace>SkiaSharp.Benchmarks</RootNamespace>
     <AssemblyName>SkiaSharp.Benchmarks</AssemblyName>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
-    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
@@ -26,6 +25,13 @@
 
   <ItemGroup>
     <None Remove="BenchmarkDotNet.Artifacts/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Real font used by SKShaperGlyphExtractionBenchmark to shape text. Linked from the test
+         content (not duplicated into the repo) and embedded so it loads regardless of the working
+         directory BenchmarkDotNet spawns the process from. -->
+    <EmbeddedResource Include="..\..\tests\Content\fonts\content-font.ttf" Link="content-font.ttf" LogicalName="content-font.ttf" />
   </ItemGroup>
 
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />

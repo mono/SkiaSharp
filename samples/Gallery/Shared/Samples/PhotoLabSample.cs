@@ -185,7 +185,7 @@ public class PhotoLabSample : CanvasSampleBase
 				ColorFilter = colorFilter,
 				ImageFilter = lastFilter,
 			};
-			canvas.DrawBitmap(cachedBitmap, SKRect.Create(width, height), paint);
+			canvas.DrawBitmap(cachedBitmap, SKRect.Create(width, height), SKSamplingOptions.Default, paint);
 		}
 		finally
 		{
