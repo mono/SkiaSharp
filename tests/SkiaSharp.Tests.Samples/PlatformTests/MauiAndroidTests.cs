@@ -1,7 +1,7 @@
-using System.Diagnostics;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Android;
+using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.PlatformTests;
@@ -53,42 +53,26 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
     {
         var adbPath = GetAdbPath();
         if (!File.Exists(adbPath))
-        {
-            Output.WriteLine($"Warning: adb not found at {adbPath}");
-            return;
-        }
+            throw new FileNotFoundException("Android preflight requires adb", adbPath);
+        if (DeviceUdid is not { Length: > 0 })
+            throw new InvalidOperationException("Specify -p:AndroidDeviceId=<selected-device-serial>; refusing to select another connected device.");
 
         // Get connected devices
-        var devicesOutput = await RunAdbCommand(adbPath, "devices -l");
+        var devicesOutput = await RunAdbCommand(adbPath, "devices", "-l");
         var lines = devicesOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Where(l => l.Contains("device") && !l.StartsWith("List"))
+            .Where(l => l.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries) is [_, "device", ..])
             .ToList();
 
         Output.WriteLine($"Connected Android devices: {lines.Count}");
         foreach (var line in lines)
             Output.WriteLine($"  {line.Trim()}");
 
-        // Check for multiple devices without specific UDID
-        if (lines.Count > 1 && string.IsNullOrEmpty(DeviceUdid))
-        {
+        var deviceExists = lines.Any(l => l.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)[0] == DeviceUdid);
+        if (!deviceExists)
             throw new InvalidOperationException(
-                $"Multiple Android devices connected ({lines.Count}). " +
-                $"Specify -p:AndroidDeviceId=<udid> to select one.\n" +
+                $"Requested device '{DeviceUdid}' not found or not ready.\n" +
                 $"Available devices:\n{string.Join("\n", lines.Select(l => "  " + l.Trim()))}");
-        }
-
-        // If specific device requested, verify it exists
-        if (!string.IsNullOrEmpty(DeviceUdid))
-        {
-            var deviceExists = lines.Any(l => l.Contains(DeviceUdid));
-            if (!deviceExists)
-            {
-                throw new InvalidOperationException(
-                    $"Requested device '{DeviceUdid}' not found.\n" +
-                    $"Available devices:\n{string.Join("\n", lines.Select(l => "  " + l.Trim()))}");
-            }
-            Output.WriteLine($"✓ Device {DeviceUdid} is available");
-        }
+        Output.WriteLine($"✓ Device {DeviceUdid} is available");
     }
 
     /// <summary>
@@ -108,10 +92,12 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
     {
         var adbPath = GetAdbPath();
         if (!File.Exists(adbPath))
-            return null;
+            throw new FileNotFoundException("Android device validation requires adb", adbPath);
 
-        var deviceArg = !string.IsNullOrEmpty(DeviceUdid) ? $"-s {DeviceUdid}" : "";
-        var apiLevel = await RunAdbCommand(adbPath, $"{deviceArg} shell getprop ro.build.version.sdk");
+        var args = DeviceUdid is { Length: > 0 } udid
+            ? new[] { "-s", udid, "shell", "getprop", "ro.build.version.sdk" }
+            : new[] { "shell", "getprop", "ro.build.version.sdk" };
+        var apiLevel = await RunAdbCommand(adbPath, args);
         return apiLevel.Trim();
     }
 
@@ -121,21 +107,15 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
     protected override async Task ValidateDeviceAsync()
     {
         var actualApiLevel = await GetRawApiLevelAsync();
-        
-        if (!string.IsNullOrEmpty(actualApiLevel))
-        {
-            Output.WriteLine($"Device API level: {actualApiLevel}");
-            
-            if (!string.IsNullOrEmpty(ExpectedApiLevel) && actualApiLevel != ExpectedApiLevel)
-            {
-                throw new InvalidOperationException(
-                    $"API level mismatch! Expected API {ExpectedApiLevel} but device has API {actualApiLevel}. " +
-                    $"Wrong emulator selected?");
-            }
-            
-            if (!string.IsNullOrEmpty(ExpectedApiLevel))
-                Output.WriteLine($"✓ API level verified: {actualApiLevel}");
-        }
+        if (string.IsNullOrEmpty(actualApiLevel))
+            throw new InvalidOperationException("Could not determine the selected Android device's API level.");
+        Output.WriteLine($"Device API level: {actualApiLevel}");
+        if (!string.IsNullOrEmpty(ExpectedApiLevel) && actualApiLevel != ExpectedApiLevel)
+            throw new InvalidOperationException(
+                $"API level mismatch! Expected API {ExpectedApiLevel} but device has API {actualApiLevel}. " +
+                "Wrong emulator selected?");
+        if (!string.IsNullOrEmpty(ExpectedApiLevel))
+            Output.WriteLine($"✓ API level verified: {actualApiLevel}");
     }
 
     protected override void ConfigureAppiumOptions(AppiumOptions options, string appPath, string bundleId)
@@ -178,65 +158,32 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
         driver.FindElement("id", $"{bundleId}:id/SkiaCanvas");
 
     /// <summary>
-    /// Android-specific recovery: dismiss system dialogs and verify emulator is healthy.
+    /// Android-specific recovery is limited to a device explicitly selected for this run.
     /// </summary>
     protected override async Task PerformRecoveryActions()
     {
         Output.WriteLine("Performing Android recovery actions...");
         
-        try
+        if (DeviceUdid is not { Length: > 0 } udid)
         {
-            var adbPath = GetAdbPath();
-            
-            if (!File.Exists(adbPath))
-            {
-                Output.WriteLine($"adb not found at {adbPath}, skipping recovery");
-                return;
-            }
-            
-            var deviceArg = !string.IsNullOrEmpty(DeviceUdid) ? $"-s {DeviceUdid}" : "";
-            
-            // Check if emulator is connected
-            var devices = await RunAdbCommand(adbPath, "devices");
-            if (!devices.Contains("emulator") && !devices.Contains("device"))
-            {
-                Output.WriteLine("No Android device found. Emulator may need to be restarted manually.");
-                return;
-            }
-            
-            // Dismiss any system dialogs by pressing Back and Home
-            Output.WriteLine("Dismissing any system dialogs...");
-            await RunAdbCommand(adbPath, $"{deviceArg} shell input keyevent KEYCODE_BACK");
-            await Task.Delay(500);
-            await RunAdbCommand(adbPath, $"{deviceArg} shell input keyevent KEYCODE_HOME");
-            await Task.Delay(1000);
-            
-            // Clear any ANR dialogs with specific button clicks
-            await RunAdbCommand(adbPath, $"{deviceArg} shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS");
-            await Task.Delay(500);
-            
-            Output.WriteLine("Android recovery actions completed");
+            Output.WriteLine("No explicitly selected Android device; recovery skipped.");
+            return;
         }
-        catch (Exception ex)
-        {
-            Output.WriteLine($"Recovery action failed (non-fatal): {ex.Message}");
-        }
+
+        var adbPath = GetAdbPath();
+        await RunAdbCommand(adbPath, "-s", udid, "shell", "input", "keyevent", "KEYCODE_BACK");
+        await Task.Delay(500);
+        await RunAdbCommand(adbPath, "-s", udid, "shell", "input", "keyevent", "KEYCODE_HOME");
+        Output.WriteLine($"Android recovery actions completed for {udid}");
     }
 
-    private async Task<string> RunAdbCommand(string adbPath, string args)
+    private async Task<string> RunAdbCommand(string adbPath, params string[] args)
     {
-        var psi = new ProcessStartInfo
-        {
-            FileName = adbPath,
-            Arguments = args,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        
-        using var process = Process.Start(psi)!;
-        var output = await process.StandardOutput.ReadToEndAsync();
-        await process.WaitForExitAsync();
+        if (!File.Exists(adbPath))
+            throw new FileNotFoundException("Android test requires adb", adbPath);
+        var (exitCode, output, error) = await DotNet.RunProcess(adbPath, args, TestDir, TimeSpan.FromSeconds(30), Output);
+        if (exitCode != 0)
+            throw new InvalidOperationException($"adb {string.Join(" ", args)} failed ({exitCode}):\n{output}\n{error}");
         return output;
     }
 }

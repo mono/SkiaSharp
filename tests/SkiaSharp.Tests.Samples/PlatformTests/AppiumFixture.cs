@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.PlatformTests;
@@ -9,7 +11,18 @@ namespace SkiaSharp.Tests.Samples.PlatformTests;
 /// </summary>
 public class AppiumFixture : IAsyncLifetime
 {
-    public const int Port = 4723;
+    public static int Port
+    {
+        get
+        {
+            var configured = AppContext.GetData("SampleTest.AppiumPort") as string;
+            if (string.IsNullOrEmpty(configured))
+                return 4723;
+            if (!int.TryParse(configured, out var port) || port is < 1 or > 65535)
+                throw new InvalidOperationException($"Invalid AppiumPort: {configured}");
+            return port;
+        }
+    }
     private Process? _appiumProcess;
 
     public async ValueTask InitializeAsync()
@@ -18,18 +31,14 @@ public class AppiumFixture : IAsyncLifetime
             !ManualPlatformPolicy.IsEnabled(Environment.GetEnvironmentVariable("SKIASHARP_RUN_MANUAL_PLATFORM_TESTS")))
             return;
 
-        // Check if Appium is already running
-        if (await IsAppiumRunning())
-        {
-            Console.WriteLine($"[AppiumFixture] Appium already running on port {Port}");
-            return;
-        }
+        if (await IsPortOccupied())
+            throw new InvalidOperationException($"Port {Port} is already in use; refusing to reuse another user's Appium server. Set -p:AppiumPort=<free-port>.");
 
         Console.WriteLine($"[AppiumFixture] Starting Appium on port {Port}...");
         
         // npm exec honors Appium's project-local or global extension context. --no prevents
         // npm from downloading Appium when the approved installation is unavailable.
-        var (shell, shellArgs) = GetShellCommand($"npm exec --no -- appium --port {Port} --relaxed-security --log-timestamp");
+        var (shell, shellArgs) = GetShellCommand($"npm exec --no -- appium --address 127.0.0.1 --port {Port} --relaxed-security --log-timestamp");
 
         var psi = new ProcessStartInfo
         {
@@ -52,51 +61,68 @@ public class AppiumFixture : IAsyncLifetime
         _appiumProcess.BeginErrorReadLine();
 
         // Wait for Appium to be ready
-        var ready = await WaitForAppiumReady(timeoutSeconds: 30);
-        if (!ready)
-            throw new Exception("Appium server failed to start within timeout");
+        try
+        {
+            if (!await WaitForAppiumReady(timeoutSeconds: 30))
+                throw new Exception("Appium server failed to start within timeout");
+        }
+        catch
+        {
+            await DisposeAsync();
+            throw;
+        }
 
         Console.WriteLine($"[AppiumFixture] Appium ready on port {Port}");
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (_appiumProcess != null && !_appiumProcess.HasExited)
+        if (_appiumProcess != null)
         {
-            Console.WriteLine("[AppiumFixture] Stopping Appium...");
-            // Appium runs as a child of the shell wrapper, so the whole tree must be killed —
-            // killing just the shell would leave the server alive and holding the port.
-            _appiumProcess.Kill(entireProcessTree: true);
-            await _appiumProcess.WaitForExitAsync();
-            _appiumProcess.Dispose();
+            try
+            {
+                if (!_appiumProcess.HasExited)
+                {
+                    Console.WriteLine("[AppiumFixture] Stopping owned Appium...");
+                    _appiumProcess.Kill(entireProcessTree: true);
+                    await _appiumProcess.WaitForExitAsync();
+                }
+            }
+            finally
+            {
+                _appiumProcess.Dispose();
+                _appiumProcess = null;
+            }
         }
     }
 
-    private static async Task<bool> IsAppiumRunning()
+    private static async Task<bool> IsPortOccupied()
     {
+        using var client = new TcpClient();
         try
         {
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
-            var response = await client.GetAsync($"http://127.0.0.1:{Port}/status");
-            return response.IsSuccessStatusCode;
+            await client.ConnectAsync(IPAddress.Loopback, Port).WaitAsync(TimeSpan.FromSeconds(2));
+            return true;
         }
-        catch
+        catch (SocketException)
         {
             return false;
         }
     }
 
-    private static async Task<bool> WaitForAppiumReady(int timeoutSeconds)
+    private async Task<bool> WaitForAppiumReady(int timeoutSeconds)
     {
         using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
         var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
 
         while (DateTime.UtcNow < deadline)
         {
+            if (_appiumProcess is { HasExited: true })
+                throw new InvalidOperationException($"Owned Appium exited before becoming ready (exit {_appiumProcess.ExitCode})");
             try
             {
-                var response = await client.GetAsync($"http://127.0.0.1:{Port}/status");
-                if (response.IsSuccessStatusCode)
+                using var response = await client.GetAsync($"http://127.0.0.1:{Port}/status");
+                if (response.IsSuccessStatusCode && _appiumProcess is { HasExited: false })
                     return true;
             }
             catch

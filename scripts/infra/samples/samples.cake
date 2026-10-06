@@ -201,6 +201,29 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                 import.Remove();
             }
 
+            if ((string)xdoc.Root.Attribute("Sdk") is string sdk && sdk.StartsWith("Uno.Sdk/")) {
+                var ns = xdoc.Root.Name.Namespace;
+                if (!xdoc.Descendants(ns + "SkiaSharpVersion").Any())
+                    xdoc.Root.Add(new XElement(ns + "PropertyGroup",
+                        new XElement(ns + "SkiaSharpVersion", GetVersion("SkiaSharp"))));
+
+                var implicitPackages = new XElement(ns + "ItemGroup");
+                foreach (var packageId in new[] {
+                    "SkiaSharp.Views", "SkiaSharp.Skottie",
+                    "SkiaSharp.NativeAssets.Linux", "HarfBuzzSharp.NativeAssets.Linux" }) {
+                    if (xdoc.Descendants(ns + "PackageReference").Any(e => (string)e.Attribute("Include") == packageId))
+                        continue;
+                    var version = GetVersion(packageId);
+                    if (string.IsNullOrWhiteSpace(version))
+                        throw new Exception($"Missing version for Uno sample package '{packageId}'.");
+                    version += string.IsNullOrEmpty(versionSuffix) ? "" : $"-{versionSuffix}";
+                    implicitPackages.Add(new XElement(ns + "PackageReference",
+                        new XAttribute("Include", packageId), new XAttribute("Version", version)));
+                }
+                if (implicitPackages.HasElements)
+                    xdoc.Root.Add(implicitPackages);
+            }
+
             // substitute <SkiaSharpVersion> (used by Uno.Sdk to override the version of its
             // implicitly-referenced SkiaSharp package; not a <PackageReference> so not handled above)
             foreach (var ve in xdoc.Descendants().Where(e => e.Name.LocalName == "SkiaSharpVersion").ToArray()) {

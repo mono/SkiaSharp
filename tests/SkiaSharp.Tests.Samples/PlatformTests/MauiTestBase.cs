@@ -1,6 +1,7 @@
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
 using SkiaSharp;
+using System.Xml.Linq;
 using Xunit;
 using Xunit.Sdk;
 
@@ -139,7 +140,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         
         // Always run from TestDir (which has global.json) using relative path
         var relativeProjectDir = Path.GetRelativePath(TestDir, projectDir);
-        // ValidateXcodeVersion=false: the generated MAUI app is built in a temp dir outside the repo,
+        // ValidateXcodeVersion=false: the generated MAUI app is built under output/,
         // so it does NOT inherit tests/Directory.Build.props (which sets this for the harness project).
         // Skip the .NET for iOS/Mac Catalyst Xcode major.minor check so the harness keeps working when
         // the installed Xcode is newer than the version the pinned workload recommends — release-testing
@@ -178,10 +179,14 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         // BaseFramework (net10.0) so the generated TFMs always match the framework the harness
         // builds below — the installed MAUI template can otherwise default to a newer (e.g. net11.0)
         // framework even when the SDK is pinned, since its default comes from the MAUI workload.
-        await Run("dotnet", $"new maui -n {projectName} -o {relativeProjectDir} -f {BaseFramework}");
+        await Run("dotnet", $"new maui -n {projectName} -o {relativeProjectDir} -f {BaseFramework} --no-restore");
+
+        // Only the requested platform is built. Drop the template's conditional multi-target
+        // declarations before any restore so workloads for other platforms are not required.
+        NarrowTargetFramework(Path.Combine(projectDir, $"{projectName}.csproj"), TargetFramework);
 
         // Add SkiaSharp package (run from TestDir)
-        await Run("dotnet", $"add {relativeProjectDir} package SkiaSharp.Views.Maui.Controls --version {SkiaVersion}");
+        await Run("dotnet", $"add {relativeProjectDir} package SkiaSharp.Views.Maui.Controls --version {SkiaVersion} --no-restore");
         
         // Update MauiProgram.cs
         var programPath = Path.Combine(projectDir, "MauiProgram.cs");
@@ -230,6 +235,20 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
             """);
         
         return projectDir;
+    }
+
+    internal static void NarrowTargetFramework(string projectPath, string targetFramework)
+    {
+        var project = XDocument.Load(projectPath, LoadOptions.PreserveWhitespace);
+        var frameworks = project.Descendants()
+            .Where(element => element.Name.LocalName is "TargetFramework" or "TargetFrameworks")
+            .ToList();
+        if (frameworks.Count == 0)
+            throw new InvalidOperationException($"MAUI template has no target framework declaration: {projectPath}");
+        frameworks[0].AddBeforeSelf(new XElement(frameworks[0].Name.Namespace + "TargetFramework", targetFramework));
+        foreach (var framework in frameworks)
+            framework.Remove();
+        project.Save(projectPath);
     }
 
     /// <summary>

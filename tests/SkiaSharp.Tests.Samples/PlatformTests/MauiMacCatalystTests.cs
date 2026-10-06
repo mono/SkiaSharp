@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Mac;
 using SkiaSharp;
@@ -44,35 +43,4 @@ public class MauiMacCatalystTests(ITestOutputHelper output) : MauiTestBase(outpu
     // Mac Catalyst: Most Macs are 2x Retina. Screenshot is full monitor but coordinates are app-relative.
     protected override double GetScreenScaleFactor(SKSizeI screenshotSize, SKSizeI windowSize) => 2.0;
 
-    /// <summary>
-    /// Mac Catalyst recovery: kill only test-related stale processes.
-    /// NOTE: We intentionally avoid destructive actions like:
-    /// - tccutil reset (would affect ALL apps' permissions)
-    /// - killing all xcodebuild (could kill unrelated builds)
-    /// </summary>
-    protected override async Task PerformRecoveryActions()
-    {
-        Output.WriteLine("Performing Mac Catalyst recovery actions...");
-        
-        try
-        {
-            // Find and terminate only WebDriverAgentRunner processes (test-specific)
-            // This is safe because these are only created by Appium for testing
-            var processes = Process.GetProcessesByName("WebDriverAgentRunner");
-            foreach (var p in processes)
-            {
-                Output.WriteLine($"Terminating stale WebDriverAgentRunner process (PID: {p.Id})");
-                try { p.Kill(); } catch { }
-            }
-            
-            // Give time for cleanup
-            await Task.Delay(2000);
-            
-            Output.WriteLine("Mac Catalyst recovery actions completed");
-        }
-        catch (Exception ex)
-        {
-            Output.WriteLine($"Recovery action failed (non-fatal): {ex.Message}");
-        }
-    }
 }

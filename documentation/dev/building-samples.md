@@ -13,8 +13,11 @@ The runner uses the same artifact-matched SkiaSharp packages to decode those ima
 
 Install the selected SDK from `scripts/azure-templates-variables.yml` and its
 required host workloads, alongside the runner's SDK 10. SDK 11's mobile manifests include net10 packs;
-WebAssembly also needs `wasm-tools-net10`. The SDK 11 Apple workloads require
-Xcode 26.5, so only the Samples macOS job overrides the repository's Xcode pin.
+WebAssembly also needs `wasm-tools-net10`. The SDK 11 profile still builds net10
+Apple samples using its backward-targeting packs and the repository's Xcode pin.
+Preview workload installation adds NuGet.org in its temporary SDK-specific
+configuration because some Emscripten tool packages are not mirrored in
+dotnet-public/dotnet-eng.
 Missing required workloads are failures, not reasons to retarget or omit samples.
 
 ## Transport Feed
@@ -160,6 +163,9 @@ match the single package family emitted by that build.
 All sample solutions use `.slnx`, including the `Windows`, `Mac` and `Linux`
 variants. Generation removes binding/source projects outside `samples/`
 and keeps the sample projects and their solution configuration.
+Uno projects also pin the SkiaSharp/HarfBuzzSharp packages otherwise added
+implicitly or transitively by Uno.Sdk, so prerelease artifact builds do not
+silently mix in older public stable packages.
 
 ## Direct Test Invocation
 

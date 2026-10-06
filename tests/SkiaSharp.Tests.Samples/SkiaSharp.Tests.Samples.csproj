@@ -52,6 +52,14 @@
     <RuntimeHostConfigurationOption Include="SampleTest.SkiaSharpVersion" Value="$(SkiaSharpVersion)" />
     <RuntimeHostConfigurationOption Include="SampleTest.HarfBuzzSharpVersion" Value="$(HarfBuzzSharpVersion)" />
     <RuntimeHostConfigurationOption Include="SampleTest.RestorePackagesPath" Value="$(RestorePackagesPath)" />
+    <RuntimeHostConfigurationOption Include="SampleTest.AppiumPort" Value="$(AppiumPort)" Condition="'$(AppiumPort)' != ''" />
+    <RuntimeHostConfigurationOption Include="AndroidDevice" Value="$(AndroidDevice)" />
+    <RuntimeHostConfigurationOption Include="AndroidVersion" Value="$(AndroidVersion)" />
+    <RuntimeHostConfigurationOption Include="AndroidDeviceId" Value="$(AndroidDeviceId)" />
+    <RuntimeHostConfigurationOption Include="AndroidApiLevel" Value="$(AndroidApiLevel)" />
+    <RuntimeHostConfigurationOption Include="iOSDevice" Value="$(iOSDevice)" />
+    <RuntimeHostConfigurationOption Include="iOSVersion" Value="$(iOSVersion)" />
+    <RuntimeHostConfigurationOption Include="iOSDeviceId" Value="$(iOSDeviceId)" />
   </ItemGroup>
   <Target Name="ValidateSamplePlatformPackages" BeforeTargets="Restore;Build">
     <Error Condition="'$(_SkiaCoreCount)' != '1' or '$(_HarfBuzzCoreCount)' != '1'"

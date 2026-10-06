@@ -19,6 +19,15 @@ if ($SdkVersion) {
   @{ sdk = @{ version = $SdkVersion; rollForward = 'disable'; allowPrerelease = $true } } |
     ConvertTo-Json | Set-Content -LiteralPath (Join-Path $sdkDirectory 'global.json')
   Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../../../nuget.config') -Destination $sdkDirectory
+  $nugetConfigPath = Join-Path $sdkDirectory 'nuget.config'
+  [xml] $nugetConfig = Get-Content -LiteralPath $nugetConfigPath -Raw
+  if (-not ($nugetConfig.configuration.packageSources.add | Where-Object { $_.key -eq 'nuget.org' })) {
+    $source = $nugetConfig.CreateElement('add')
+    $source.SetAttribute('key', 'nuget.org')
+    $source.SetAttribute('value', 'https://api.nuget.org/v3/index.json')
+    $nugetConfig.configuration.packageSources.AppendChild($source) | Out-Null
+    $nugetConfig.Save($nugetConfigPath)
+  }
   Push-Location $sdkDirectory
 }
 try {

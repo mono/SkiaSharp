@@ -112,7 +112,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             mock.patch.object(ios, "apple_simulators", return_value=simulators),
             mock.patch.object(ios.common, "run_json", return_value={"udid": "SIM-123"}) as create,
             mock.patch.object(ios.common, "run_streaming") as command,
-            mock.patch.object(ios.common, "run_test", side_effect=common.ReleaseTestError("test failed")),
+            mock.patch.object(ios.common, "run_test", side_effect=common.ReleaseTestError("test failed")) as run_test,
             self.assertRaisesRegex(common.ReleaseTestError, "test failed"),
         ):
             ios.run_ios(Path.cwd(), args, "18.6")
@@ -123,6 +123,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         commands = [call.args[0] for call in command.call_args_list]
         self.assertTrue(any(values[5:8] == ["simulator", "boot", "SIM-123"] for values in commands))
         self.assertTrue(any(values[5:8] == ["simulator", "delete", "SIM-123"] for values in commands))
+        self.assertEqual(run_test.call_args.kwargs["properties"]["iOSDeviceId"], "SIM-123")
 
     def test_ios_missing_udid_deletes_simulator_by_name(self):
         simulators = [{"isAvailable": True, "runtime": {"name": "iOS 18.6", "version": "18.6"}, "deviceType": {"name": "iPhone 16", "productFamily": "iPhone"}}]
