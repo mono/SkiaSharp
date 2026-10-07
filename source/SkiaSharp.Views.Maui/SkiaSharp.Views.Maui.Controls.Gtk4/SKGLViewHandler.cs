@@ -1,20 +1,23 @@
 using System;
-using System.Runtime.Versioning;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Maui;
 using Microsoft.Maui.Platforms.Linux.Gtk4.Handlers;
 using SkiaSharp.Views.Gtk;
+using SkiaSharp.Views.Maui.Platform.Gtk4;
 
-namespace SkiaSharp.Views.Maui.Controls.Gtk4;
+namespace SkiaSharp.Views.Maui.Handlers.Gtk4;
 
 /// <summary>GTK4 OpenGL handler for the MAUI SkiaSharp GPU view.</summary>
-[SupportedOSPlatform("linux")]
-public sealed class SKGLViewHandler : GtkViewHandler<ISKGLView, SKGLArea>
+[UnconditionalSuppressMessage("Interoperability", "CA1416",
+	Justification = "GTK4/GirCore supports the host's native GTK runtime on Windows and macOS.")]
+public class SKGLViewHandler : GtkViewHandler<ISKGLView, SKGLArea>
 {
 	private SKSizeI lastCanvasSize;
-	private GRContext? lastContext;
+	private GRContext? lastGRContext;
 	private SKTouchHandler? touchHandler;
 
-	private static readonly PropertyMapper<ISKGLView, SKGLViewHandler> Mapper =
+	/// <summary>Maps GPU view properties; extend or replace this mapper to customize the handler.</summary>
+	public static PropertyMapper<ISKGLView, SKGLViewHandler> SKGLViewMapper =
 		new(GtkViewHandler<ISKGLView, SKGLArea>.ViewMapper)
 		{
 			[nameof(ISKGLView.EnableTouchEvents)] = MapEnableTouchEvents,
@@ -22,14 +25,19 @@ public sealed class SKGLViewHandler : GtkViewHandler<ISKGLView, SKGLArea>
 			[nameof(ISKGLView.HasRenderLoop)] = MapHasRenderLoop,
 		};
 
-	private static readonly CommandMapper<ISKGLView, SKGLViewHandler> Commands =
+	/// <summary>Maps GPU view commands, including surface invalidation.</summary>
+	public static CommandMapper<ISKGLView, SKGLViewHandler> SKGLViewCommandMapper =
 		new(GtkViewHandler<ISKGLView, SKGLArea>.ViewCommandMapper)
 		{
 			[nameof(ISKGLView.InvalidateSurface)] = OnInvalidateSurface,
 		};
 
 	/// <summary>Creates the GTK4 GPU handler.</summary>
-	public SKGLViewHandler() : base(Mapper, Commands) { }
+	public SKGLViewHandler() : this(null, null) { }
+
+	/// <summary>Creates a handler with custom mappers, using the standard mapper for each null argument.</summary>
+	public SKGLViewHandler(PropertyMapper? mapper, CommandMapper? commands)
+		: base(mapper ?? SKGLViewMapper, commands ?? SKGLViewCommandMapper) { }
 
 	/// <inheritdoc />
 	protected override SKGLArea CreatePlatformView() => new();
@@ -47,57 +55,81 @@ public sealed class SKGLViewHandler : GtkViewHandler<ISKGLView, SKGLArea>
 	protected override void DisconnectHandler(SKGLArea platformView)
 	{
 		platformView.EnableRenderLoop = false;
-		touchHandler?.Detach();
+		var previousTouchHandler = touchHandler;
 		touchHandler = null;
 		platformView.OnUnrealize -= OnUnrealize;
 		platformView.PaintSurface -= OnPaintSurface;
-		ResetGpuState();
-		base.DisconnectHandler(platformView);
+		try
+		{
+			previousTouchHandler?.Detach(platformView);
+		}
+		finally
+		{
+			try
+			{
+				ResetGpuState();
+			}
+			finally
+			{
+				base.DisconnectHandler(platformView);
+			}
+		}
 	}
 
-	private static void OnInvalidateSurface(SKGLViewHandler handler, ISKGLView view, object? args)
+	/// <summary>Queues a GPU frame when the continuous render loop is disabled.</summary>
+	public static void OnInvalidateSurface(SKGLViewHandler handler, ISKGLView view, object? args)
 	{
 		if (handler.PlatformView is { } platformView && !view.HasRenderLoop)
 			platformView.QueueRender();
 	}
 
-	private static void MapIgnorePixelScaling(SKGLViewHandler handler, ISKGLView view)
+	/// <summary>Updates the native view's coordinate scaling.</summary>
+	public static void MapIgnorePixelScaling(SKGLViewHandler handler, ISKGLView view)
 	{
 		if (handler.PlatformView is { } platformView)
 			platformView.IgnorePixelScaling = view.IgnorePixelScaling;
 	}
 
-	private static void MapHasRenderLoop(SKGLViewHandler handler, ISKGLView view)
+	/// <summary>Starts or stops continuous GPU rendering.</summary>
+	public static void MapHasRenderLoop(SKGLViewHandler handler, ISKGLView view)
 	{
 		if (handler.PlatformView is { } platformView)
 			platformView.EnableRenderLoop = view.HasRenderLoop;
 	}
 
-	private static void MapEnableTouchEvents(SKGLViewHandler handler, ISKGLView view)
+	/// <summary>Attaches or removes GTK pointer controllers.</summary>
+	public static void MapEnableTouchEvents(SKGLViewHandler handler, ISKGLView view)
 	{
 		if (handler.PlatformView is not { } platformView)
 			return;
 
 		handler.touchHandler ??= new SKTouchHandler(
-			platformView,
 			e => handler.VirtualView?.OnTouch(e),
-			() => handler.VirtualView?.IgnorePixelScaling == true ? 1 : platformView.GetScaleFactor());
-		handler.touchHandler.SetEnabled(view.EnableTouchEvents);
+			handler.OnGetScaledCoord);
+		handler.touchHandler.SetEnabled(platformView, view.EnableTouchEvents);
 	}
+
+	private SKPoint OnGetScaledCoord(double x, double y) =>
+		SKTouchHandler.GetTouchLocation(x, y, PlatformView?.GetScaleFactor() ?? 1,
+			VirtualView?.IgnorePixelScaling == true);
 
 	private void OnUnrealize(global::Gtk.Widget sender, EventArgs args) => ResetGpuState();
 
 	private void ResetGpuState()
 	{
-		if (lastContext is not null)
+		var hadContext = lastGRContext is not null;
+		var hadSize = lastCanvasSize != default;
+		lastGRContext = null;
+		lastCanvasSize = default;
+		try
 		{
-			lastContext = null;
-			VirtualView?.OnGRContextChanged(null);
+			if (hadContext)
+				VirtualView?.OnGRContextChanged(null);
 		}
-		if (lastCanvasSize != default)
+		finally
 		{
-			lastCanvasSize = default;
-			VirtualView?.OnCanvasSizeChanged(default);
+			if (hadSize)
+				VirtualView?.OnCanvasSizeChanged(default);
 		}
 	}
 
@@ -109,9 +141,9 @@ public sealed class SKGLViewHandler : GtkViewHandler<ISKGLView, SKGLArea>
 
 		var context = PlatformView?.GRContext
 			?? throw new InvalidOperationException("GTK4 GPU paint requires a GPU context.");
-		if (lastContext != context)
+		if (lastGRContext != context)
 		{
-			lastContext = context;
+			lastGRContext = context;
 			view.OnGRContextChanged(context);
 		}
 

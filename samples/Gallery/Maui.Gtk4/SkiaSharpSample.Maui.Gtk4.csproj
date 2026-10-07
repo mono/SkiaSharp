@@ -14,6 +14,7 @@
     <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://api.nuget.org/v3/index.json</RestoreAdditionalProjectSources>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../Shared/Maui.Gtk4/Gtk4Runtime.cs" Link="Gtk4Runtime.cs" />
     <Compile Include="../Maui/**/*.cs"
              Exclude="../Maui/MauiProgram.cs;../Maui/Platforms/**/*.cs;../Maui/obj/**/*.cs;../Maui/bin/**/*.cs"
              Link="Gallery/%(RecursiveDir)%(Filename)%(Extension)" />
@@ -30,6 +31,11 @@
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <PackageReference Include="Microsoft.Maui.Platforms.Linux.Gtk4" Version="0.1.0-preview.12.26421.1" />
     <PackageReference Include="Microsoft.Maui.Platforms.Linux.Gtk4.Essentials" Version="0.1.0-preview.12.26421.1" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <AssemblyMetadata Include="Microsoft.Maui.DevFlowProject" Value="$(MSBuildProjectFullPath)" />
+    <AssemblyMetadata Include="Microsoft.Maui.DevFlowTfm" Value="$(TargetFramework)" />
+    <PackageReference Include="Microsoft.Maui.DevFlow.Agent.Gtk" Version="0.1.0-preview.12.26421.1" />
   </ItemGroup>
   <Import Project="../../../binding/IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="../../../binding/IncludeNativeAssets.HarfBuzzSharp.targets" />

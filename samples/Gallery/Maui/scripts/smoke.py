@@ -128,9 +128,9 @@ def stable_id(prefix, title):
     return prefix + "".join(c if c.isascii() and c.isalnum() else "-" for c in title.lower())
 
 
-def run_checks(flow, output, all_samples, share, report):
+def run_checks(flow, output, all_samples, share, report, app_id):
     status = flow.call("status")
-    assert status["app"]["packageId"] == "com.skiasharp.gallery.maui", "Refusing to drive a different app"
+    assert status["app"]["packageId"] == app_id, "Refusing to drive a different app"
     report["app"] = status
 
     def checked(message):
@@ -421,13 +421,15 @@ def main():
     parser.add_argument("--output", type=Path, default=Path("output/maui-gallery-smoke"))
     parser.add_argument("--all-samples", action="store_true", help="Render every supported catalog sample on CPU and GPU")
     parser.add_argument("--share", action="store_true", help="Request PDF sharing last; leaves the native share sheet open")
+    parser.add_argument("--app-id", default="com.skiasharp.gallery.maui",
+                        help="Expected package ID; set explicitly for an experimental Gallery head")
     args = parser.parse_args()
     args.output = args.output.resolve()
     args.output.mkdir(parents=True, exist_ok=True)
     report = {"passed": False, "checks": [], "unsupported": []}
     flow = DevFlow(args.port, args.output, args.device)
     try:
-        run_checks(flow, args.output, args.all_samples, args.share, report)
+        run_checks(flow, args.output, args.all_samples, args.share, report, args.app_id)
         report["passed"] = True
     except (AssertionError, RuntimeError, TimeoutError, ValueError, OSError) as error:
         report["error"] = str(error)

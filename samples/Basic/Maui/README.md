@@ -43,7 +43,7 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 
 ## Requirements
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) or later
 - MAUI workload: `dotnet workload install maui`
 
 ## Running the Sample
@@ -51,9 +51,9 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 Build and run for a specific platform:
 
 ```bash
-dotnet build -f net8.0-maccatalyst
-dotnet build -f net8.0-android
-dotnet build -f net8.0-ios
+dotnet build -f net10.0-maccatalyst
+dotnet build -f net10.0-android
+dotnet build -f net10.0-ios
 ```
 
 To start on a different page, change `DefaultPage` in `App.xaml.cs`:
@@ -63,6 +63,11 @@ public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
 ```
 
 Available pages: `Cpu` (default), `Gpu`, `Drawing`
+
+The experimental [`SkiaSharpSample.Gtk4`](SkiaSharpSample.Gtk4) head uses the
+same pages and solution on Linux, macOS, and Windows. It requires a
+GirCore-compatible GTK 4.12+ runtime with libepoxy and fontconfig/Pango, plus
+matching SkiaSharp native binaries.
 
 ## Screenshots
 

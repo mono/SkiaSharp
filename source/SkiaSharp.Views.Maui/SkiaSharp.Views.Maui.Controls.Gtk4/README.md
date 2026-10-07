@@ -1,15 +1,24 @@
 # Experimental SkiaSharp MAUI GTK4 handlers
 
-This package targets `net10.0` on Linux with [MAUI Labs Linux.Gtk4](https://github.com/dotnet/maui-labs/tree/main/platforms/Linux.Gtk4). Install `SkiaSharp.Views.Maui.Controls.Gtk4` and `SkiaSharp.NativeAssets.Linux`, and use `UseMauiAppLinuxGtk4<App>().UseSkiaSharpGtk4()` at startup (import `Microsoft.Maui.Platforms.Linux.Gtk4.Hosting` and `SkiaSharp.Views.Maui.Controls.Hosting`). Use `SKCanvasView` and `SKGLView` from `SkiaSharp.Views.Maui.Controls` unchanged.
+MAUI 10 / GirCore GTK4 integration for the existing `SKCanvasView` and `SKGLView`
+controls. The canvas uses a raster surface; the GPU view uses GTK's OpenGL context.
 
-The GTK4 package pins `Microsoft.Maui.Platforms.Linux.Gtk4` to `0.1.0-preview.12.26421.1` and requires MAUI Controls/Core **10.0.51 or newer** with GirCore 0.7.0. The stable SkiaSharp MAUI packages remain on their existing 10.0.31 baseline. Applications must align their MAUI packages with the experimental backend; this package must not be referenced by a stable cross-platform MAUI project.
+Register the handlers after the GTK4 app host:
 
-The native `SKGLArea` and scaling APIs are in `SkiaSharp.Views.Gtk4` starting with the merged 4.156.0 source. Earlier stable GTK4 packages do not contain them. The **experimental MAUI package must have a preview version** because it depends on a prerelease MAUI Labs backend; an unsuffixed pack is rejected. For local preview packages, pack the native GTK4 views and MAUI handlers (and their SkiaSharp project-reference dependencies) with the **same** `-p:VersionSuffix=gtk4-preview`, and check that the MAUI package requires the matching native preview. Once the native 4.156.0 package is published, a GTK MAUI preview may also consume it without a native preview, provided its dependency requires 4.156.0 or newer. This experimental project remains absent from the official platform `.slnf` pack filters; registering it in the source solution does not publish it with stable releases.
+```csharp
+using Microsoft.Maui.Platforms.Linux.Gtk4.Hosting;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
-The CPU canvas uses the native `SkiaSharp.Views.Gtk.SKDrawingArea` with device-resolution backing pixels by default. As on Android, Apple, and Windows, the MAUI handler maps `IgnorePixelScaling` to the native view, which sets paint coordinates and `CanvasSize`; `RawInfo` always describes the actual backing buffer. The reusable native `SkiaSharp.Views.Gtk.SKGLArea` owns a real GTK `GLArea` and Skia GPU context; the MAUI handler adapts its events and properties without substituting CPU rendering. This MAUI Labs backend targets Linux and requires a working GTK4 OpenGL display with `libepoxy.so.0`. The native GTK4 view also supports macOS and Windows independently of this MAUI package. Touch input handles a single GTK pointer, including press, move, release, cancel and scroll-wheel events; multiple concurrent touch contacts are not yet supported. Handler disconnect stops the render loop, removes subscriptions, and clears the virtual view's GPU state; the GTK-owned native view releases its GPU resources when unrealized or disposed.
+builder.UseMauiAppLinuxGtk4<App>().UseSkiaSharpGtk4();
+```
 
-MAUI Labs' GTK4 layout handler currently does not apply numeric `ZIndex`. Gallery filter scrims and anchored sort popovers must be appended after their siblings to appear above them. Their stacking and hit testing, as well as OS-theme bindings, still require verification on a Linux GTK4 display.
+Use MAUI Controls/Core 10.0.51 with a GirCore-compatible GTK4 runtime,
+libepoxy, and matching SkiaSharp native assets for the host OS/architecture.
+`SKGLView` needs an OpenGL display. The
+[Basic head](https://github.com/mono/SkiaSharp/tree/main/samples/Basic/Maui/SkiaSharpSample.Gtk4)
+and [Gallery head](https://github.com/mono/SkiaSharp/tree/main/samples/Gallery/Maui.Gtk4)
+show host setup; see [upstream prerequisites](https://github.com/dotnet/maui-labs/tree/main/platforms/Linux.Gtk4).
 
-Build the package with `dotnet build source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls.Gtk4/SkiaSharp.Views.Maui.Controls.Gtk4.csproj -f net10.0`. A Linux GTK4 host with an OpenGL display is required to validate MAUI frame presentation, context recovery, and pointer interaction at runtime; building the MAUI handler on macOS does not validate these behaviors.
-
-Trimming and NativeAOT deployment are not validated for the experimental MAUI Labs GTK4/GirCore backend; do not enable them based solely on a successful managed build. `UseSkiaSharpGtk4()` first registers the stable SkiaSharp image-source services via `UseSkiaSharp()` and then overrides its canvas handlers; MAUI Labs' GTK4 `Image` and `ImageButton` handlers hard-code an internal loader that ignores those services, and their constructors use fixed mappers with private loading/cancellation state. SkiaSharp-specific `SKImageSource` variants therefore cannot safely be added by a package-local handler that delegates ordinary sources to the stock GTK4 handlers; upstream extensibility is needed. The package does not replace the backend's image handlers, so ordinary file, URI, stream and font sources are unaffected.
+This preview registers only the two drawing views, not SkiaSharp image sources.
+Input tracks one pointer, not concurrent touch contacts. Trimming and NativeAOT
+have not been validated.

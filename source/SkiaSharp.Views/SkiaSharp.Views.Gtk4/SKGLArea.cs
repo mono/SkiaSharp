@@ -126,7 +126,8 @@ namespace SkiaSharp.Views.Gtk
 
 		private bool Render(global::Gtk.GLArea area, global::Gtk.GLArea.RenderSignalArgs args)
 		{
-			var nativeContext = args.Context.Handle.DangerousGetHandle();
+			// Platform-specific GL contexts may have no registered GirCore wrapper.
+			var nativeContext = global::Gtk.Internal.GLArea.GetContext(Handle.DangerousGetHandle());
 
 			if (context is null || lastNativeContext != nativeContext)
 			{

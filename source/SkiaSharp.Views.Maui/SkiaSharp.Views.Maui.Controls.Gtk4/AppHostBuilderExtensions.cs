@@ -1,17 +1,16 @@
-using System.Runtime.Versioning;
 using Microsoft.Maui.Hosting;
+using SkiaSharp.Views.Maui.Handlers.Gtk4;
 
 namespace SkiaSharp.Views.Maui.Controls.Hosting;
 
-/// <summary>Registers the experimental Linux GTK4 SkiaSharp handlers.</summary>
+/// <summary>Registers the experimental GTK4 SkiaSharp handlers.</summary>
 public static class Gtk4AppHostBuilderExtensions
 {
-	/// <summary>Registers SkiaSharp image services and replaces its canvas and GPU handlers with GTK4 handlers.</summary>
-	[SupportedOSPlatform("linux")]
+	/// <summary>Registers the GTK4 canvas and GPU view handlers.</summary>
 	public static MauiAppBuilder UseSkiaSharpGtk4(this MauiAppBuilder builder) =>
-		builder.UseSkiaSharp().ConfigureMauiHandlers(handlers =>
+		builder.ConfigureMauiHandlers(handlers =>
 		{
-			handlers.AddHandler<SKCanvasView, Gtk4.SKCanvasViewHandler>();
-			handlers.AddHandler<SKGLView, Gtk4.SKGLViewHandler>();
+			handlers.AddHandler<SKCanvasView, SKCanvasViewHandler>();
+			handlers.AddHandler<SKGLView, SKGLViewHandler>();
 		});
 }
