@@ -789,7 +789,7 @@ function Get-ReleaseAuditState(
             }
             $actions.Add((New-ReleaseAuditAction `
                 -Kind 'publish' `
-                -Message "Publish packages from $($latest.Name) through the protected BAR-to-NuGet process.$buildEvidence Optionally validate its exact BAR with release-testing first."))
+                -Message "Publish packages from $($latest.Name) through the protected BAR-to-NuGet process.$buildEvidence Verify the matching producing Build/Tests runs and BAR before publication."))
         } else {
             $actions.Add((New-ReleasePackageBuildAction `
                 -Build $latestBuild `
