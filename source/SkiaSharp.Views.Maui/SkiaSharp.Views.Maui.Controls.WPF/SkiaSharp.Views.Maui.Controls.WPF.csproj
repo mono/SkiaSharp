@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseMaui>true</UseMaui>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Nullable>enable</Nullable>
+    <AssemblyName>SkiaSharp.Views.Maui.Controls.WPF</AssemblyName>
+    <RootNamespace>SkiaSharp.Views.Maui.Controls.WPF</RootNamespace>
+    <PackageId>SkiaSharp.Views.Maui.Controls.WPF</PackageId>
+    <PackagingGroup>SkiaSharp.Views.Maui.Controls.WPF</PackagingGroup>
+    <VersionSuffix Condition="'$(VersionSuffix)' == ''">wpf-preview</VersionSuffix>
+    <PackageTags>maui;wpf</PackageTags>
+    <PackageDescription>Experimental SkiaSharp MAUI handlers for the WPF backend.</PackageDescription>
+    <PackageNotes>Experimental WPF backend for dotnet/maui-labs; requires MAUI 10.0.51.</PackageNotes>
+    <SignAssembly>false</SignAssembly>
+    <RestoreAdditionalProjectSources>https://api.nuget.org/v3/index.json</RestoreAdditionalProjectSources>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.51" />
+    <PackageReference Include="Microsoft.Maui.Platforms.Windows.WPF" Version="0.1.0-preview.12.26421.1" />
+    <ProjectReference Include="..\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj"
+                      SetTargetFramework="TargetFramework=net10.0"
+                      AdditionalProperties="TargetFramework=net10.0" />
+    <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WPF\SkiaSharp.Views.WPF.csproj"
+                      SetTargetFramework="TargetFramework=net10.0-windows" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>SkiaSharp.Views.Maui.Controls.WPF.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>

@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(FullFrameworkTargetFrameworks);$(WindowsDesktopTargetFrameworks)</TargetFrameworks>
+    <!-- The MAUI WPF backend needs the neutral Windows target to avoid WinUI MAUI assets. -->
+    <TargetFrameworks Condition="('$(IsWindows)' == 'true' or '$(EnableWindowsTargeting)' == 'true') and !$([System.String]::Copy(';$(TargetFrameworks);').Contains(';$(TFMCurrent)-windows;'))">$(TargetFrameworks);$(TFMCurrent)-windows</TargetFrameworks>
     <UseWPF>true</UseWPF>
     <RootNamespace>SkiaSharp.Views.WPF</RootNamespace>
     <AssemblyName>SkiaSharp.Views.WPF</AssemblyName>

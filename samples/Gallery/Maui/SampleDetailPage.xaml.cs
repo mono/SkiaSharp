@@ -342,6 +342,8 @@ public sealed partial class SampleDetailPage : ContentPage
             var backend = !gpuFrame ? "CPU · raster" :
 #if MACCATALYST
                 "GPU · Metal";
+#elif WPF
+                "GPU · OpenGL";
 #elif WINDOWS
                 "GPU · ANGLE / DirectX";
 #else
