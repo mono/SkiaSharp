@@ -48,9 +48,7 @@ Task ("samples-run")
 
     // discover all samples: solutions for dotnet build, run.ps1 for Docker
     var solutions =
-        GetFiles ($"{ROOT_PATH}/output/" + actualSamples + "/**/*.sln").Union (
-        GetFiles ($"{ROOT_PATH}/output/" + actualSamples + "/**/*.slnf")).Union (
-        GetFiles ($"{ROOT_PATH}/output/" + actualSamples + "/**/*.slnx"))
+        GetFiles ($"{ROOT_PATH}/output/" + actualSamples + "/**/*.slnx")
         .OrderBy (x => x.FullPath)
         .ToArray ();
     var dockerRuns = GetFiles ($"{ROOT_PATH}/output/" + actualSamples + "/**/run.ps1")
@@ -80,10 +78,7 @@ Task ("samples-run")
 
         if (string.IsNullOrEmpty (slnPlatform)) {
             // main solution — check for platform-specific variants
-            var variants =
-                GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln").Union (
-                GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnf")).Union (
-                GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnx"));
+            var variants = GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnx");
             if (variants.Any ()) {
                 samplesToSkip.Add ((sln, "has platform-specific variant"));
             } else {
@@ -217,9 +212,6 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
     samplesDirPath = MakeAbsolute(samplesDirPath);
     outputDirPath = MakeAbsolute(outputDirPath);
 
-    var solutionProjectRegex = new Regex(@",\s*""(.*?\.\w{2}proj)"", ""(\{.*?\})""");
-    var solutionFilterProjectRegex = new Regex(@"\s*""(.+)\.csproj"",?");
-
     CleanDir (outputDirPath);
 
     var ignoreBinObj = new GlobberSettings {
@@ -240,73 +232,7 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
         var dest = outputDirPath.CombineWithFilePath(rel);
         var ext = file.GetExtension() ?? "";
 
-        if (ext.Equals(".sln", StringComparison.OrdinalIgnoreCase)) {
-            var lines = FileReadLines(file.FullPath).ToList();
-            var guids = new List<string>();
-
-            // remove projects that aren't samples
-            for(var i = 0; i < lines.Count; i++) {
-                var line = lines [i];
-                var m = solutionProjectRegex.Match(line);
-                if (!m.Success)
-                    continue;
-
-                // get the path of the project relative to the samples directory
-                var relProjectPath = (FilePath) m.Groups [1].Value;
-                var absProjectPath = GetFullPath(file, relProjectPath);
-                var relSamplesPath = samplesDirPath.GetRelativePath(absProjectPath);
-                if (!relSamplesPath.FullPath.StartsWith(".."))
-                    continue;
-
-                Debug($"Removing the project '{relProjectPath}' for solution '{rel}'.");
-
-                // skip the next line as it is the "EndProject" line
-                guids.Add(m.Groups [2].Value.ToLower());
-                lines.RemoveAt(i--);
-                lines.RemoveAt(i--);
-            }
-
-            // remove all the other references to this guid
-            if (guids.Count > 0) {
-                for(var i = 0; i < lines.Count; i++) {
-                    var line = lines [i];
-                    foreach (var guid in guids) {
-                        if (line.ToLower().Contains(guid)) {
-                            lines.RemoveAt(i--);
-                        }
-                    }
-                }
-            }
-
-            // save the solution
-            EnsureDirectoryExists(dest.GetDirectory());
-            FileWriteLines(dest, lines.ToArray());
-        } else if (ext.Equals(".slnf", StringComparison.OrdinalIgnoreCase)) {
-            var lines = FileReadLines(file.FullPath).ToList();
-
-            // remove projects that aren't samples
-            for(var i = 0; i < lines.Count; i++) {
-                var line = lines [i];
-                var m = solutionFilterProjectRegex.Match(line);
-                if (!m.Success)
-                    continue;
-
-                // get the path of the project relative to the samples directory
-                var relProjectPath = (FilePath) m.Groups [1].Value.Replace("\\\\", "\\");
-                var absProjectPath = GetFullPath(file, relProjectPath);
-                var relSamplesPath = samplesDirPath.GetRelativePath(absProjectPath);
-                if (!relSamplesPath.FullPath.StartsWith(".."))
-                    continue;
-
-                Debug($"Removing the project '{relProjectPath}' for solution '{rel}'.");
-
-                lines.RemoveAt(i--);
-            }
-
-            // save the solution
-            EnsureDirectoryExists(dest.GetDirectory());
-            FileWriteLines(dest, lines.ToArray());
-        } else if (ext.Equals(".slnx", StringComparison.OrdinalIgnoreCase)) {
+        if (ext.Equals(".slnx", StringComparison.OrdinalIgnoreCase)) {
             var xdoc = XDocument.Load(file.FullPath);
 
             // remove projects that aren't in the samples directory

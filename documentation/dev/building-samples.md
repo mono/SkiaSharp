@@ -128,6 +128,10 @@ for the full step-by-step workflow if you need to run it manually.
 
 The `CreateSamplesDirectory()` function in `scripts/infra/samples/samples.cake`:
 
+Sample solutions are `.slnx` files. Generation keeps the sample projects in each
+solution and removes references to projects outside `samples/`; host-specific
+variants are selected by their `.Mac`, `.Windows`, or `.Linux` suffix.
+
 1. **`<ProjectReference>`** → converted to `<PackageReference>` using the project's `<PackagingGroup>` as the package ID and version from `VERSIONS.txt`
 2. **Existing `<PackageReference>`** → version updated from `VERSIONS.txt`
 3. For SkiaSharp/HarfBuzzSharp packages, the preview suffix is appended
