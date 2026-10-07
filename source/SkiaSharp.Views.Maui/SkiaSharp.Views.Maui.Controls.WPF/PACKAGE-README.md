@@ -23,6 +23,7 @@ This registers only `SKCanvasView` and `SKGLView`,
 using software-backed `SKElement` and real OpenGL-backed `SKGLElement`.
 Paint and touch events retain their existing semantics, including pixel scaling,
 physical `RawInfo`, render-loop lifecycle, and pointer capture cancellation.
+Continuous rendering follows WPF compositor timing, not a fixed-rate timer.
 Paint surfaces are borrowed; do not retain or dispose them.
 Use `UseSkiaSharpWPF()` instead of calling `UseSkiaSharp()` separately.
 SkiaSharp image sources are not supported by this experimental backend yet.

@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -13,6 +12,9 @@ namespace SkiaSharp.Views.Maui.Controls.WPF.Tests;
 
 internal static class WPFTestThread
 {
+	// GLWpfControl shares a current OpenGL context, so every test uses the same STA thread.
+	private static readonly Lazy<Dispatcher> dispatcher = new(CreateDispatcher);
+
 	internal static MauiApp CreateApp() => MauiApp.CreateBuilder()
 		.UseMauiAppWPF<WPFTestApplication>()
 		.UseSkiaSharpWPF()
@@ -26,32 +28,25 @@ internal static class WPFTestThread
 
 	internal static void RunAsync(Func<Task> action)
 	{
-		ExceptionDispatchInfo? failure = null;
+		dispatcher.Value.InvokeAsync(action).Task.Unwrap().GetAwaiter().GetResult();
+	}
+
+	private static Dispatcher CreateDispatcher()
+	{
+		var ready = new TaskCompletionSource<Dispatcher>(TaskCreationOptions.RunContinuationsAsynchronously);
 		var thread = new Thread(() =>
 		{
-			var dispatcher = Dispatcher.CurrentDispatcher;
-			SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(dispatcher));
-			dispatcher.BeginInvoke(new Action(async () =>
-			{
-				try
-				{
-					await action();
-				}
-				catch (Exception exception)
-				{
-					failure = ExceptionDispatchInfo.Capture(exception);
-				}
-				finally
-				{
-					dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
-				}
-			}));
+			var current = Dispatcher.CurrentDispatcher;
+			SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(current));
+			ready.SetResult(current);
 			Dispatcher.Run();
-		});
+		})
+		{
+			IsBackground = true,
+		};
 		thread.SetApartmentState(ApartmentState.STA);
 		thread.Start();
-		thread.Join();
-		failure?.Throw();
+		return ready.Task.GetAwaiter().GetResult();
 	}
 }
 

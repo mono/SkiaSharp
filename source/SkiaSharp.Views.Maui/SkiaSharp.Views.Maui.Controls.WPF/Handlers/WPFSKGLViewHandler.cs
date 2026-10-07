@@ -1,7 +1,6 @@
 using System;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Threading;
 using Microsoft.Maui;
 using Microsoft.Maui.Handlers;
 using SkiaSharp.Views.Maui.Controls.WPF.Platform;
@@ -16,7 +15,6 @@ public sealed class WPFSKGLViewHandler : WPFViewHandler<ISKGLView, WPFSKGLViewHa
 	private SKSizeI lastCanvasSize;
 	private GRContext? lastContext;
 	private WPFTouchHandler? touchHandler;
-	private DispatcherTimer? renderTimer;
 
 	/// <summary>Maps GPU canvas properties to the native WPF view.</summary>
 	public static PropertyMapper<ISKGLView, WPFSKGLViewHandler> SKGLViewMapper =
@@ -63,7 +61,7 @@ public sealed class WPFSKGLViewHandler : WPFViewHandler<ISKGLView, WPFSKGLViewHa
 	/// <inheritdoc />
 	protected override void DisconnectHandler(MauiSKGLElement platformView)
 	{
-		StopRenderLoop();
+		platformView.RenderContinuously = false;
 		touchHandler?.Detach();
 		touchHandler = null;
 		platformView.PaintSurface -= OnPaintSurface;
@@ -113,39 +111,15 @@ public sealed class WPFSKGLViewHandler : WPFViewHandler<ISKGLView, WPFSKGLViewHa
 
 	private void OnUnloaded(object sender, RoutedEventArgs e)
 	{
-		StopRenderLoop();
+		if (sender is MauiSKGLElement platformView)
+			platformView.RenderContinuously = false;
 		NotifyContextLost();
 	}
 
 	private void UpdateRenderLoop()
 	{
-		if (PlatformView?.IsLoaded != true || VirtualView?.HasRenderLoop != true)
-		{
-			StopRenderLoop();
-			return;
-		}
-
-		if (renderTimer is not null)
-			return;
-
-		renderTimer = new DispatcherTimer(DispatcherPriority.Render, PlatformView.Dispatcher)
-		{
-			Interval = TimeSpan.FromMilliseconds(16),
-		};
-		renderTimer.Tick += OnRenderTick;
-		renderTimer.Start();
-	}
-
-	private void OnRenderTick(object? sender, EventArgs e) => PlatformView?.InvalidateVisual();
-
-	private void StopRenderLoop()
-	{
-		if (renderTimer is null)
-			return;
-
-		renderTimer.Stop();
-		renderTimer.Tick -= OnRenderTick;
-		renderTimer = null;
+		if (((IElementHandler)this).PlatformView is MauiSKGLElement platformView)
+			platformView.RenderContinuously = platformView.IsLoaded && VirtualView?.HasRenderLoop == true;
 	}
 
 	private void NotifyContextLost()
