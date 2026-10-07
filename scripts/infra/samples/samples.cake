@@ -379,20 +379,27 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                         .Elements().Where(e => e.Name.LocalName == "PropertyGroup")
                         .Elements().Where(e => e.Name.LocalName == "PackagingGroup")
                         .FirstOrDefault()?.Value;
+                    var packageId = xReference.Root
+                        .Elements().Where(e => e.Name.LocalName == "PropertyGroup")
+                        .Elements().Where(e => e.Name.LocalName == "PackageId")
+                        .FirstOrDefault()?.Value;
+                    var projectId = System.IO.Path.GetFileNameWithoutExtension(absFilePath.FullPath);
+                    if (string.IsNullOrWhiteSpace(packageId))
+                        packageId = !string.IsNullOrWhiteSpace(GetVersion(projectId)) ? projectId : packagingGroup;
                     var version = GetVersion(packagingGroup);
                     if (!string.IsNullOrWhiteSpace(version)) {
                         Debug($"Substituting project reference {relFilePath} for project {rel}.");
                         var name = projItem.Name.Namespace + "PackageReference";
                         // only add the suffix for our nugets
-                        if (packagingGroup.StartsWith("SkiaSharp") || packagingGroup.StartsWith("HarfBuzzSharp")) {
+                        if (packageId.StartsWith("SkiaSharp") || packageId.StartsWith("HarfBuzzSharp")) {
                             version += suffix;
                         }
                         projItem.AddAfterSelf(new XElement(name, new object[] {
-                            new XAttribute("Include", packagingGroup),
+                            new XAttribute("Include", packageId),
                             new XAttribute("Version", version),
                         }));
                     } else {
-                        Warning($"Unable to find version information for project '{packagingGroup}'.");
+                        Warning($"Unable to find version information for project '{relFilePath}' (package family '{packagingGroup}').");
                     }
                 } else {
                     Debug($"Removing the file '{relFilePath}' for project '{rel}'.");
@@ -423,8 +430,8 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                 import.Remove();
             }
 
-            // substitute <SkiaSharpVersion> (used by Uno.Sdk to override the version of its
-            // implicitly-referenced SkiaSharp package; not a <PackageReference> so not handled above)
+            // substitute <SkiaSharpVersion> (used by Uno.Sdk to override its implicit
+            // SkiaSharp packages; this property is not a <PackageReference>)
             foreach (var ve in xdoc.Descendants().Where(e => e.Name.LocalName == "SkiaSharpVersion").ToArray()) {
                 var skiaVersion = GetVersion("SkiaSharp");
                 if (!string.IsNullOrWhiteSpace(skiaVersion)) {

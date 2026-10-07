@@ -38,9 +38,18 @@ Copy-Item ~/.skiasharp/hives/pr-3553/packages/*.nupkg output/nugets/
 
 For an exact public build, download its canonical `nuget` pipeline artifact
 and extract non-symbol packages to `output/nugets/`. For a promoted branch
-build, retrieve and extract the matching branch-versioned `_NuGets` transport
-package from the public `dotnet-libraries-transport` feed. Do not use a
-retired parent documentation-download Cake target.
+build, download the matching branch-versioned `_nugets` transport wrapper with:
+
+```powershell
+dotnet cake --target=nuget-download --gitBranch=main
+```
+
+Use `--gitBranch=<branch>` (or `--previewLabel=pr.<number>` only when that
+wrapper has actually been promoted) to select another transport source. This
+target clears **only** `output/nugets/` and keeps `output/native/` and other
+build results. PR build packages normally live in pipeline artifacts instead:
+use `get-skiasharp-pr.ps1` as above, not `externals-download`, which removes
+the entire `output/` directory.
 
 ### Step 2: Build samples — use the real NuGet version
 
@@ -102,6 +111,7 @@ These arguments control the **NuGet version suffix** used when rewriting package
 | Target | What it does | Output directory |
 |--------|-------------|-----------------|
 | `samples-generate` | Copies samples to `output/`, converts ProjectRef → PackageRef | `output/samples/`, `output/samples-preview/` |
+| `nuget-download` | Downloads promoted `_nugets` from the transport feed, replacing only `output/nugets/` | `output/nugets/` |
 | `samples-prepare` | Clears cached SkiaSharp/HarfBuzz packages, copies nupkgs for Docker | — |
 | `samples-run` | Builds all generated samples from `output/` | — |
 | `samples` | Runs generate → prepare → run in sequence | — |
@@ -116,10 +126,33 @@ listed above when diagnosing generation or build failures.
 
 The `CreateSamplesDirectory()` function in `scripts/infra/samples/samples.cake`:
 
-1. **`<ProjectReference>`** → converted to `<PackageReference>` using the project's `<PackagingGroup>` as the package ID and version from `VERSIONS.txt`
+1. **`<ProjectReference>`** → converted to `<PackageReference>` using the project's package ID (explicit `<PackageId>` or a versioned project ID, otherwise `<PackagingGroup>`). The version comes from the project's package family (`<PackagingGroup>`) in `VERSIONS.txt`. This keeps native asset package identities distinct even when they share a family.
 2. **Existing `<PackageReference>`** → version updated from `VERSIONS.txt`
-3. For SkiaSharp/HarfBuzzSharp packages, the preview suffix is appended
-4. Two output trees: `output/samples/` (stable) and `output/samples-preview/` (preview)
+3. **`<SkiaSharpVersion>`** → updated to the SkiaSharp family version for Uno's implicit dependencies
+4. For SkiaSharp/HarfBuzzSharp packages, the preview suffix is appended
+5. Two output trees: `output/samples/` (stable) and `output/samples-preview/` (preview)
+
+The three Uno apps keep source-only project references in
+`samples/_UnoPlatformSamples.targets` and list their generated-mode package
+dependencies directly in their project files. The import never removes
+sibling project references (including Gallery's Shared project); the
+generator does not rewrite project references inside imported targets.
+
+To provision workloads for an additional installed SDK without repinning the
+repository's `global.json`, run:
+
+```powershell
+pwsh scripts/infra/managed/install-dotnet-workloads.ps1 -SdkVersion <exact-sdk-version> -WorkloadSetVersion <set-version>
+```
+
+The bootstrapper also accepts
+`additionalDotNetWorkloads` entries with `sdkVersion`, `workloadVersion`, and
+optional `workloads` and `tizen` fields, alongside `additionalDotNetSdks`.
+An SDK 11 profile using the script's default workload list installs both
+`wasm-tools` and `wasm-tools-net10` for the net10 browser samples; optional
+Tizen manifests and NuGet preview sources are handled in a temporary SDK
+selection directory. Local workload installation may require administrator
+privileges; CI should provision these when local installation is unavailable.
 
 `samples-run` selects the stable tree only for an exact release identity. Any
 non-empty `PREVIEW_NUGET_SUFFIX` selects the preview tree so its references

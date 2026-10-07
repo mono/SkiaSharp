@@ -33,12 +33,16 @@
     <BuildFooter></BuildFooter>
   </PropertyGroup>
 
-  <!-- The Shared ProjectReference below must come after this import:
-       _UnoPlatformSamples.targets does <ProjectReference Remove="@(ProjectReference)" />. -->
+  <!-- The source import adds SkiaSharp project references without changing sibling references. -->
   <Import Project="..\..\_UnoPlatformSamples.targets" />
 
   <ItemGroup>
     <ProjectReference Include="..\Shared\SkiaSharpSample.Shared.csproj" />
+    <PackageReference Include="SkiaSharp.Views" Version="3.119.2" Condition="!Exists('..\..\_UnoPlatformSamples.targets') and ($(TargetFramework.Contains('-android')) or $(TargetFramework.Contains('-ios')))" />
+    <PackageReference Include="SkiaSharp.Skottie" Version="3.119.2" Condition="!Exists('..\..\_UnoPlatformSamples.targets')" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2" Condition="!Exists('..\..\_UnoPlatformSamples.targets')" />
+    <PackageReference Include="HarfBuzzSharp" Version="8.3.1.1" Condition="!Exists('..\..\_UnoPlatformSamples.targets')" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.3.1.1" Condition="!Exists('..\..\_UnoPlatformSamples.targets')" />
   </ItemGroup>
 
   <PropertyGroup>
