@@ -150,22 +150,6 @@ dependencies directly in their project files. The import never removes
 sibling project references (including Gallery's Shared project); the
 generator does not rewrite project references inside imported targets.
 
-To provision workloads for an additional installed SDK without repinning the
-repository's `global.json`, run:
-
-```powershell
-pwsh scripts/infra/managed/install-dotnet-workloads.ps1 -SdkVersion <exact-sdk-version> -WorkloadSetVersion <set-version>
-```
-
-The bootstrapper also accepts
-`additionalDotNetWorkloads` entries with `sdkVersion`, `workloadVersion`, and
-optional `workloads` and `tizen` fields, alongside `additionalDotNetSdks`.
-An SDK 11 profile using the script's default workload list installs both
-`wasm-tools` and `wasm-tools-net10` for the net10 browser samples; optional
-Tizen manifests and NuGet preview sources are handled in a temporary SDK
-selection directory. Local workload installation may require administrator
-privileges; CI should provision these when local installation is unavailable.
-
 `samples-run` selects the stable tree only for an exact release identity. Any
 non-empty `PREVIEW_NUGET_SUFFIX` selects the preview tree so its references
 match the single package family emitted by that build.
