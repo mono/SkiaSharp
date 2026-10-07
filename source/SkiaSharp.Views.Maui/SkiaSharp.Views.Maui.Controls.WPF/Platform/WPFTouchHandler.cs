@@ -7,7 +7,7 @@ using System.Windows.Media;
 
 namespace SkiaSharp.Views.Maui.Controls.WPF.Platform;
 
-internal sealed class WpfTouchHandler
+internal sealed class WPFTouchHandler
 {
 	private const long MouseId = -1;
 	private readonly FrameworkElement view;
@@ -21,7 +21,7 @@ internal sealed class WpfTouchHandler
 	private bool mousePressed;
 	private bool enabled;
 
-	public WpfTouchHandler(FrameworkElement view, Func<bool> ignorePixelScaling, Action<SKTouchEventArgs> onTouch)
+	public WPFTouchHandler(FrameworkElement view, Func<bool> ignorePixelScaling, Action<SKTouchEventArgs> onTouch)
 	{
 		this.view = view;
 		this.ignorePixelScaling = ignorePixelScaling;
@@ -69,10 +69,13 @@ internal sealed class WpfTouchHandler
 
 	public void Detach() => SetEnabled(false);
 
+	internal static SKPoint GetTouchLocation(double x, double y, double scaleX, double scaleY, bool ignorePixelScaling) =>
+		new((float)(x * (ignorePixelScaling ? 1 : scaleX)), (float)(y * (ignorePixelScaling ? 1 : scaleY)));
+
 	private SKPoint GetLocation(Point point)
 	{
 		var transform = PresentationSource.FromVisual(view)?.CompositionTarget.TransformToDevice ?? Matrix.Identity;
-		return WpfCanvasMetrics.GetTouchLocation(point.X, point.Y, transform.M11, transform.M22, ignorePixelScaling());
+		return GetTouchLocation(point.X, point.Y, transform.M11, transform.M22, ignorePixelScaling());
 	}
 
 	private void OnTouchDown(object? sender, TouchEventArgs e)

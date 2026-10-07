@@ -6,20 +6,20 @@ using Microsoft.Maui;
 using Microsoft.Maui.Handlers;
 using SkiaSharp.Views.Maui.Controls.WPF.Platform;
 using SkiaSharp.Views.WPF;
-using WpfPaintGLSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs;
+using WPFPaintGLSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs;
 
 namespace SkiaSharp.Views.Maui.Controls.WPF.Handlers;
 
 /// <summary>Renders a MAUI GPU canvas using WPF's OpenGL-backed <see cref="SKGLElement"/>.</summary>
-public sealed class WpfSKGLViewHandler : WPFViewHandler<ISKGLView, WpfSKGLViewHandler.MauiSKGLElement>
+public sealed class WPFSKGLViewHandler : WPFViewHandler<ISKGLView, WPFSKGLViewHandler.MauiSKGLElement>
 {
 	private SKSizeI lastCanvasSize;
 	private GRContext? lastContext;
-	private WpfTouchHandler? touchHandler;
+	private WPFTouchHandler? touchHandler;
 	private DispatcherTimer? renderTimer;
 
 	/// <summary>Maps GPU canvas properties to the native WPF view.</summary>
-	public static readonly PropertyMapper<ISKGLView, WpfSKGLViewHandler> Mapper =
+	public static PropertyMapper<ISKGLView, WPFSKGLViewHandler> SKGLViewMapper =
 		new(ViewMapper)
 		{
 			[nameof(ISKGLView.IgnorePixelScaling)] = MapIgnorePixelScaling,
@@ -28,14 +28,24 @@ public sealed class WpfSKGLViewHandler : WPFViewHandler<ISKGLView, WpfSKGLViewHa
 		};
 
 	/// <summary>Maps GPU canvas commands to WPF rendering.</summary>
-	public static readonly CommandMapper<ISKGLView, WpfSKGLViewHandler> CommandMapper =
+	public static CommandMapper<ISKGLView, WPFSKGLViewHandler> SKGLViewCommandMapper =
 		new(ViewCommandMapper)
 		{
 			[nameof(ISKGLView.InvalidateSurface)] = MapInvalidateSurface,
 		};
 
 	/// <summary>Creates a WPF GPU canvas handler.</summary>
-	public WpfSKGLViewHandler() : base(Mapper, CommandMapper) { }
+	public WPFSKGLViewHandler() : base(SKGLViewMapper, SKGLViewCommandMapper) { }
+
+	/// <summary>Creates a WPF GPU canvas handler with custom property mappings.</summary>
+	/// <param name="mapper">The property mapper, or <see langword="null"/> to use the default mappings.</param>
+	public WPFSKGLViewHandler(PropertyMapper? mapper) : this(mapper, null) { }
+
+	/// <summary>Creates a WPF GPU canvas handler with custom property and command mappings.</summary>
+	/// <param name="mapper">The property mapper, or <see langword="null"/> to use the default mappings.</param>
+	/// <param name="commandMapper">The command mapper, or <see langword="null"/> to use the default commands.</param>
+	public WPFSKGLViewHandler(PropertyMapper? mapper, CommandMapper? commandMapper)
+		: base(mapper ?? SKGLViewMapper, commandMapper ?? SKGLViewCommandMapper) { }
 
 	/// <inheritdoc />
 	protected override MauiSKGLElement CreatePlatformView() => new();
@@ -66,25 +76,34 @@ public sealed class WpfSKGLViewHandler : WPFViewHandler<ISKGLView, WpfSKGLViewHa
 	}
 
 	/// <summary>Updates pixel scaling and requests a redraw.</summary>
-	public static void MapIgnorePixelScaling(WpfSKGLViewHandler handler, ISKGLView view)
+	/// <param name="handler">The WPF GPU canvas handler.</param>
+	/// <param name="view">The canvas whose scaling mode changed.</param>
+	public static void MapIgnorePixelScaling(WPFSKGLViewHandler handler, ISKGLView view)
 	{
 		handler.PlatformView.IgnorePixelScaling = view.IgnorePixelScaling;
 		handler.PlatformView.InvalidateVisual();
 	}
 
 	/// <summary>Enables or disables native WPF pointer events.</summary>
-	public static void MapEnableTouchEvents(WpfSKGLViewHandler handler, ISKGLView view)
+	/// <param name="handler">The WPF GPU canvas handler.</param>
+	/// <param name="view">The canvas whose touch setting changed.</param>
+	public static void MapEnableTouchEvents(WPFSKGLViewHandler handler, ISKGLView view)
 	{
-		handler.touchHandler ??= new WpfTouchHandler(handler.PlatformView, () => handler.VirtualView?.IgnorePixelScaling ?? false, e => handler.VirtualView?.OnTouch(e));
+		handler.touchHandler ??= new WPFTouchHandler(handler.PlatformView, () => handler.VirtualView?.IgnorePixelScaling ?? false, e => handler.VirtualView?.OnTouch(e));
 		handler.touchHandler.SetEnabled(view.EnableTouchEvents);
 	}
 
 	/// <summary>Starts or stops continuous rendering while the view is loaded.</summary>
-	public static void MapHasRenderLoop(WpfSKGLViewHandler handler, ISKGLView view) =>
+	/// <param name="handler">The WPF GPU canvas handler.</param>
+	/// <param name="view">The canvas whose render-loop setting changed.</param>
+	public static void MapHasRenderLoop(WPFSKGLViewHandler handler, ISKGLView view) =>
 		handler.UpdateRenderLoop();
 
 	/// <summary>Requests a frame when the continuous render loop is disabled.</summary>
-	public static void MapInvalidateSurface(WpfSKGLViewHandler handler, ISKGLView view, object? args)
+	/// <param name="handler">The WPF GPU canvas handler.</param>
+	/// <param name="view">The canvas requesting a frame.</param>
+	/// <param name="args">The command arguments, which are not used.</param>
+	public static void MapInvalidateSurface(WPFSKGLViewHandler handler, ISKGLView view, object? args)
 	{
 		if (!view.HasRenderLoop)
 			handler.PlatformView.InvalidateVisual();
@@ -138,7 +157,7 @@ public sealed class WpfSKGLViewHandler : WPFViewHandler<ISKGLView, WpfSKGLViewHa
 		VirtualView?.OnGRContextChanged(null);
 	}
 
-	private void OnPaintSurface(object? sender, WpfPaintGLSurfaceEventArgs e)
+	private void OnPaintSurface(object? sender, WPFPaintGLSurfaceEventArgs e)
 	{
 		var view = VirtualView;
 		if (view is null || sender is not SKGLElement element)
@@ -168,7 +187,7 @@ public sealed class WpfSKGLViewHandler : WPFViewHandler<ISKGLView, WpfSKGLViewHa
 		public bool IgnorePixelScaling { get; set; }
 
 		/// <inheritdoc />
-		protected override void OnPaintSurface(WpfPaintGLSurfaceEventArgs e)
+		protected override void OnPaintSurface(WPFPaintGLSurfaceEventArgs e)
 		{
 			if (!IgnorePixelScaling)
 			{
@@ -179,8 +198,8 @@ public sealed class WpfSKGLViewHandler : WPFViewHandler<ISKGLView, WpfSKGLViewHa
 			var source = PresentationSource.FromVisual(this);
 			var transform = source?.CompositionTarget.TransformToDevice ?? Matrix.Identity;
 			e.Surface.Canvas.Scale((float)transform.M11, (float)transform.M22);
-			var logicalSize = WpfCanvasMetrics.GetLogicalSize(ActualWidth, ActualHeight);
-			base.OnPaintSurface(new WpfPaintGLSurfaceEventArgs(e.Surface, e.BackendRenderTarget, e.Origin, e.Info.WithSize(logicalSize), e.Info));
+			var logicalSize = new SKSizeI((int)ActualWidth, (int)ActualHeight);
+			base.OnPaintSurface(new WPFPaintGLSurfaceEventArgs(e.Surface, e.BackendRenderTarget, e.Origin, e.Info.WithSize(logicalSize), e.Info));
 		}
 	}
 }

@@ -3,7 +3,7 @@ using Microsoft.Maui.Platforms.Windows.WPF;
 
 namespace SkiaSharpSample;
 
-public sealed class WpfApp : MauiWPFApplication
+public sealed class WPFApp : MauiWPFApplication
 {
     protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
 }
@@ -11,5 +11,5 @@ public sealed class WpfApp : MauiWPFApplication
 public static class Program
 {
     [STAThread]
-    public static void Main() => new WpfApp().Run();
+    public static void Main() => new WPFApp().Run();
 }

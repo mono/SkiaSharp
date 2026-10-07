@@ -8,6 +8,7 @@
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <RestoreAdditionalProjectSources>https://api.nuget.org/v3/index.json</RestoreAdditionalProjectSources>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.WindowsDesktop.App.WPF" />
@@ -15,4 +16,5 @@
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <ProjectReference Include="..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls.WPF\SkiaSharp.Views.Maui.Controls.WPF.csproj" />
   </ItemGroup>
+  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
 </Project>
