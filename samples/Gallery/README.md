@@ -9,6 +9,7 @@ same drawing code and sample catalog in [`Shared`](Shared).
 | Blazor | Browser (WebAssembly) | See below |
 | Uno Platform | Browser, desktop, Android, iOS, Windows | [Uno README](Uno/README.md) |
 | .NET MAUI | Android, iOS, Mac Catalyst, Windows | [MAUI README](Maui/README.md) |
+| .NET MAUI GTK4 (experimental) | Linux, macOS, Windows | [GTK4](#gtk4) |
 
 ![Home Page](screenshots/home.png)
 
@@ -46,6 +47,15 @@ The [MAUI README](Maui/README.md) covers the other platforms, native document
 export, and Debug-only MAUI DevFlow inspection. The main, Mac, and Windows
 gallery solutions include this host; the Linux solution continues to use
 Blazor and Uno without requiring MAUI workloads.
+
+### GTK4
+
+[`Maui.Gtk4`](Maui.Gtk4) reuses the MAUI Gallery pages with GTK4 CPU/OpenGL
+handlers. It needs .NET 10, GTK 4.12 or newer with libepoxy and fontconfig/Pango
+on the native library search path, and matching SkiaSharp native binaries.
+The separate `SkiaSharpSample.Gtk4.slnx` keeps the experimental dependencies
+out of the regular Gallery builds. Debug builds support the same DevFlow
+checks as the [MAUI host](Maui/README.md#maui-devflow).
 
 ## Features
 
