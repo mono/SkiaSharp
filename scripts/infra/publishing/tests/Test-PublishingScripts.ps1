@@ -1804,6 +1804,12 @@ Assert-True (@($greenReleaseBuildState.Actions.Kind) -contains 'publish') `
 Assert-True ((@($greenReleaseBuildState.Actions.Message) -join "`n") -match
     'build #202 succeeded with BAR 330714') `
     'The publication action omitted exact build and BAR evidence.'
+Assert-True ((@($greenReleaseBuildState.Actions | Where-Object Kind -eq 'publish').Message -join "`n") -match
+    'Verify the matching producing Build/Tests runs and BAR before publication') `
+    'The publication action did not require producing CI evidence.'
+Assert-True ((@($greenReleaseBuildState.Actions | Where-Object Kind -eq 'publish').Message -join "`n") -notmatch
+    'release-testing') `
+    'The publication action still recommends retired local release testing.'
 Assert-True ((@($greenReleaseBuildState.Actions.Message) -join "`n") -match
     'Newer exact-tip attempt.*#203 canceled') `
     'The publication action omitted the newer canceled rerun.'

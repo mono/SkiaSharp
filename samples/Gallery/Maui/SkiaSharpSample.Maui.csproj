@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('OSX'))">net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net10.0-android;net10.0-windows10.0.19041.0</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <UseMaui>true</UseMaui>
+    <MauiVersion>10.0.51</MauiVersion>
+    <MauiStrictXamlCompilation>true</MauiStrictXamlCompilation>
+    <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
+    <SingleProject>true</SingleProject>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>SkiaSharpSample</RootNamespace>
+    <ApplicationTitle>SkiaSharp Gallery</ApplicationTitle>
+    <ApplicationId>com.skiasharp.gallery.maui</ApplicationId>
+    <ApplicationIdGuid>521F861E-55D4-4C43-9A23-34FA46E16142</ApplicationIdGuid>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">23.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
+    <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug' And '$(TargetFramework)' == 'net10.0-maccatalyst'">
+    <CodesignEntitlements>Platforms/MacCatalyst/Entitlements.Debug.plist</CodesignEntitlements>
+  </PropertyGroup>
+  <ItemGroup>
+    <MauiIcon Include="Resources/appicon.png" IsAppIcon="true" Color="#1A237E" />
+    <MauiSplashScreen Include="Resources/skiasharplogo.png" BaseSize="256" Color="#1A237E" />
+    <MauiFont Include="Resources/bootstrap-icons.ttf" Alias="BootstrapIcons" />
+    <ProjectReference Include="../Shared/SkiaSharpSample.Shared.csproj" />
+    <ProjectReference Include="../../../source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/SkiaSharp.Views.Maui.Controls.csproj" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+    <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <PackageReference Include="Microsoft.Maui.DevFlow.Agent" Version="0.1.0-preview.12.26421.1" />
+  </ItemGroup>
+  <Import Project="../../../binding/IncludeNativeAssets.SkiaSharp.targets" />
+  <Import Project="../../../binding/IncludeNativeAssets.HarfBuzzSharp.targets" />
+  <Import Project="../../../binding/IncludeNativeAssets.SkiaSharp.WinUI.targets" Condition="$(TargetFramework.Contains('-windows'))" />
+</Project>

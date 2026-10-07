@@ -22,7 +22,7 @@ GitHub Actions: Release - Prepare
        +-> dnceng skiasharp-tests
              -> consumes the exact skiasharp-package pipeline resource
 
-BAR feed -> optional release-testing -> chat-requested MAUI release pipeline
+Exact producing Build/Tests runs + BAR -> chat-requested MAUI release pipeline
   -> package/audit preparation -> human ManualValidation
   -> protected NuGet.org publication and verification
 
@@ -234,26 +234,13 @@ transport rules.
 
 ## Release package approval
 
-The `release-testing` skill is an optional pre-publication approval gate for
-one BAR. Its planner:
-
-1. uses Darc to find the BAR that produced the requested SkiaSharp version;
-2. requires an explicit BAR ID when the version is ambiguous;
-3. resolves the BAR asset's GUID-backed per-build V3 and flat-container feed;
-4. downloads `SkiaSharp`, `SkiaSharp.HarfBuzz`, and the bridge's concrete
-   `HarfBuzzSharp` dependency;
-5. verifies package IDs, versions, source branch and commit, bridge dependency,
-   and BAR identity; and
-6. emits host-specific runner commands with the versions and feed pinned.
-
-Every runner uses the same immutable package set. NuGet.org is not a planner or
-test source for this gate. The skill records the required host/device matrix,
-repairs and retries, artifact review, and the final human approval. It never
-changes BAR state or publishes packages.
-
-The detailed matrix and runner ownership live in
-`.agents/skills/release-testing/SKILL.md`; they are intentionally not duplicated
-here because platform targets change more often than the release architecture.
+Publication uses the exact producing `skiasharp-package` run and its BAR, plus
+the matching resource-triggered `skiasharp-tests` run. The branch, commit, build
+number, and upstream pipeline resource must agree; a local report cannot
+substitute for that CI evidence. Ordinary Cake and `dotnet test` runs remain
+useful diagnostics, and local visual goldens remain available, but neither
+creates an independent release-approval gate. The protected MAUI publication
+pipeline still requires human `ManualValidation` of its staged package audit.
 
 ## Protected publication boundary
 
@@ -495,7 +482,7 @@ dispatches default to `DryRun`.
 | Stage composition | `scripts/azure-templates-stages.yml` |
 | Package assembly | `scripts/azure-templates-stages-package.yml`, `eng/Publishing.props` |
 | Signing and BAR | `scripts/azure-templates-stages-signing.yml`, `eng/Signing.props` |
-| Release approval | `.agents/skills/release-testing/` |
+| Release validation | `scripts/azure-pipelines-package.yml`, `scripts/azure-pipelines-tests.yml`, `.agents/skills/release-publish/` |
 | Public finalization | `.github/workflows/release-finish.yml`, `scripts/infra/publishing/finish-release.ps1` |
 | Milestones | `.github/workflows/release-milestones.yml`, `scripts/infra/publishing/reconcile-release-assignments.ps1`, `update-release-milestones.ps1` |
 | Release notes | `.github/workflows/update-release-notes.md`, generated `update-release-notes.lock.yml`, `.agents/skills/release-notes/` |

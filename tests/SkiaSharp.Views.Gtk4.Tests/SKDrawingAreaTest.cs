@@ -7,7 +7,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 {
 	public class SKDrawingAreaTest
 	{
-		private static void InitGtk()
+		internal static void InitGtk()
 		{
 			// gtk_init()/gtk_init_check() call native exit() when no display can be opened, which
 			// cannot be caught as a managed exception and aborts the whole test host. Skip up-front on
@@ -47,6 +47,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 
 			using var area = new SKDrawingArea();
 			Assert.Equal(SKSize.Empty, area.CanvasSize);
+			Assert.False(area.IgnorePixelScaling);
 		}
 
 		[Fact]

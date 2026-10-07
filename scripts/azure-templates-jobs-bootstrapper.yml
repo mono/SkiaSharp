@@ -247,8 +247,8 @@ jobs:
         # install the bits needed for Android
         - ${{ if eq(parameters.installAndroidSdk, 'true') }}:
           # install the correct version of the JDK
-          - pwsh: .\scripts\infra\managed\install-openjdk.ps1
-            displayName: Install OpenJDK
+          - pwsh: .\scripts\infra\managed\install-openjdk.ps1 -Version "$(OPENJDK_VERSION)"
+            displayName: Install OpenJDK $(OPENJDK_VERSION)
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install the correct version of the Android SDK

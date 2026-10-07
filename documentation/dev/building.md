@@ -29,6 +29,8 @@ Before building SkiaSharp, ensure you have:
   ```bash
   dotnet tool install -g cake.tool
   ```
+- **Microsoft OpenJDK 21** - Required for .NET for Android builds. Set `JAVA_HOME`
+  to the JDK home and place its `bin` directory first on `PATH`.
 
 ## Preparation
 
