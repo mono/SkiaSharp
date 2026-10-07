@@ -138,6 +138,11 @@ Use `--windowsSdkVersion` if you need a specific installed Windows SDK.
  - Make
  - OpenJDK 17+
 
+Linux cross-image fontconfig downloads retry transient transfer failures up to
+three times, with a 30-second connection timeout and a 300-second limit per
+attempt. Downloads must succeed before the existing pinned SHA-256 checks run;
+exhausted retries fail the image build rather than continuing with a missing file.
+
 ### Building Native Libraries
 
 Build native libraries for specific platforms using Cake targets:
