@@ -9,7 +9,7 @@
     <PackageTags>maui;gtk4;cross-platform;experimental</PackageTags>
     <SignAssembly>false</SignAssembly>
     <Nullable>Enable</Nullable>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeSource>$(MSBuildProjectDirectory)\README.md</PackageReadmeSource>
     <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://api.nuget.org/v3/index.json</RestoreAdditionalProjectSources>
   </PropertyGroup>
   <ItemGroup>
@@ -17,7 +17,6 @@
     <PackageReference Include="Microsoft.Maui.Platforms.Linux.Gtk4" Version="0.1.0-preview.12.26421.1" />
     <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.51" />
     <PackageReference Include="Microsoft.Maui.Core" Version="10.0.51" />
-    <None Include="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />

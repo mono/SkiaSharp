@@ -26,7 +26,7 @@ A real-time animated shader running at full frame rate on the GPU, with touch in
 
 - **`SKGLView`** — Hardware-accelerated canvas that maps per-platform: `SKGLTextureView` on Android, `SKGLView` on iOS, `SKMetalView` on Mac Catalyst, `SKSwapChainPanel` on Windows.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **`EnableRenderLoop`** — Continuous animation driven by the platform's render loop.
+- **`HasRenderLoop`** — Continuous animation driven by the platform's render loop.
 - **Touch interaction** — Touch position is passed as a shader uniform via MAUI's `Touch` event.
 
 ### Drawing

@@ -86,6 +86,10 @@ class DevFlow:
         target = self.wait(automation_id)
         return self.call("property", target["id"], name)["value"]
 
+    def number(self, automation_id, name):
+        # DevFlow formats numeric property values using the app's culture.
+        return float(str(self.value(automation_id, name)).replace(",", "."))
+
     def visible(self, automation_id):
         return any(
             item.get("isVisible")
@@ -143,7 +147,10 @@ def run_checks(flow, output, all_samples, share, report, app_id):
         flow.wait("gallery-result-count")
 
     def search_id():
-        return "gallery-search" if flow.visible("gallery-search") else "gallery-filter-search"
+        compact = flow.visible("gallery-search") and (
+            flow.value("gallery-search", "Parent.Parent.Parent.IsVisible") == "True"
+        )
+        return "gallery-search" if compact else "gallery-filter-search"
 
     def clear_filters():
         if flow.visible("gallery-clear"):
@@ -189,7 +196,7 @@ def run_checks(flow, output, all_samples, share, report, app_id):
     assert not flow.query("gallery-filter-popup-api-search")
     if status["device"]["platform"] == "MacCatalyst":
         assert flow.wait(search_id())["type"] == "GallerySearchEntry"
-        assert float(flow.value(search_id(), "Parent.Parent.StrokeThickness")) == 1
+        assert flow.number(search_id(), "Parent.Parent.StrokeThickness") == 1
     flow.call("fill", search_id(), "Lottie Player")
     assert flow.wait("gallery-result-count")["text"].startswith("1 of ")
     open_filters()
@@ -323,7 +330,7 @@ def run_checks(flow, output, all_samples, share, report, app_id):
     flow.tap("gallery-info-close")
     flow.wait_gone("gallery-popup")
     flow.set("control-angle", "Value", 91.4)
-    assert float(flow.value("control-angle", "Value")) == 91
+    assert flow.number("control-angle", "Value") == 91
     flow.set("control-gradienttype", "SelectedIndex", 2)
     assert int(flow.value("control-gradienttype", "SelectedIndex")) == 2
     flow.screenshot(output / "gradient-cpu.png")
@@ -339,25 +346,25 @@ def run_checks(flow, output, all_samples, share, report, app_id):
     backend("gpu")
     flow.set("control-contrast", "IsToggled", True)
     flow.set("control-contrast-amount", "Value", 0.53)
-    assert abs(float(flow.value("control-contrast-amount", "Value")) - 0.55) < 0.0001
+    assert abs(flow.number("control-contrast-amount", "Value") - 0.55) < 0.0001
     flow.set("control-contrast", "IsToggled", False)
     flow.set("control-contrast", "IsToggled", True)
-    assert abs(float(flow.value("control-contrast-amount", "Value")) - 0.55) < 0.0001
+    assert abs(flow.number("control-contrast-amount", "Value") - 0.55) < 0.0001
     flow.screenshot(output / "photo-lab.png")
     checked("Nested effect groups retain stepped child values")
     back()
 
     assert open_sample("Nine-Patch Scaler")
     backend("cpu")
-    assert float(flow.value("control-width", "Value")) == 400
-    assert float(flow.value("control-height", "Value")) == 300
+    assert flow.number("control-width", "Value") == 400
+    assert flow.number("control-height", "Value") == 300
     flow.set("control-width", "Value", 413)
-    assert float(flow.value("control-width", "Value")) == 410
+    assert flow.number("control-width", "Value") == 410
     checked("XAML slider range initialization preserves sample defaults and live stepping")
     back()
 
     assert open_sample("Color Fonts")
-    assert float(flow.value("control-palette", "Maximum")) > 0
+    assert flow.number("control-palette", "Maximum") > 0
     flow.set("control-palette", "Value", 2)
     backend("gpu")
     checked("Controls use font metadata loaded during initialization")
