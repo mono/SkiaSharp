@@ -22,7 +22,27 @@
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Tizen\SkiaSharp.NativeAssets.Tizen.csproj" Condition="$(TargetFramework.Contains('-tizen'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.tvOS\SkiaSharp.NativeAssets.tvOS.csproj" Condition="$(TargetFramework.Contains('-tvos'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Win32\SkiaSharp.NativeAssets.Win32.csproj" Condition="$(TargetFramework.Contains('-windows')) or !$(TargetFramework.Contains('-'))" />
+    <!--
+      Fix the historical UX gap where Linux devs referencing only SkiaSharp got
+      no native at runtime and had to remember SkiaSharp.NativeAssets.Linux by
+      hand (see mono/SkiaSharp#2520). Now default on plain net10.0 alongside
+      .macOS + .Win32. Callers who want .Linux.NoDependencies (fontconfig-less)
+      or .NanoServer keep referencing those explicitly.
+    -->
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.Linux\SkiaSharp.NativeAssets.Linux.csproj" Condition="!$(TargetFramework.Contains('-'))" />
   </ItemGroup>
+  <!--
+    Ship the buildTransitive targets that patch the plural-<RuntimeIdentifiers>
+    build-time bloat and surface a clear error for Blazor/WASM projects that
+    forgot SkiaSharp.NativeAssets.WebAssembly. Named $(PackageId).targets so
+    NuGet auto-imports. IncludeAdditionalTfmSpecificPackageFiles is the NuGet
+    pack hook — this ItemGroup gets picked up per TFM in the packed .nupkg.
+  -->
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="buildTransitive\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+    </ItemGroup>
+  </Target>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
