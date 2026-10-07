@@ -11,11 +11,10 @@ implementation of the automation, see
 | --- | --- | --- |
 | 1 | Run **Release - Prepare** | Creates the paired `mono/skia` and `mono/SkiaSharp` release branches |
 | 2 | Wait for `skiasharp-package`, then `skiasharp-tests` | Produces the signed BAR and validates the exact Build pipeline resource |
-| 3 | Optionally run `release-testing` | Adds host/device validation for the selected BAR |
-| 4 | On request, queue the MAUI official release pipeline; approve after inspecting its audit | Publishes the selected BAR's shipping packages to NuGet.org |
-| 5 | After all packages are public, review **Release - Finish** and confirm | Creates the tag and GitHub Release, then starts follow-up automation |
-| 6 | Run **Release - Milestones** | Reconciles shipped work and advances release milestones |
-| 7 | Merge the follow-up PRs | Lands any version bump, support update, and release notes |
+| 3 | On request, queue the MAUI official release pipeline; approve after inspecting its audit | Publishes the selected BAR's shipping packages to NuGet.org |
+| 4 | After all packages are public, review **Release - Finish** and confirm | Creates the tag and GitHub Release, then starts follow-up automation |
+| 5 | Run **Release - Milestones** | Reconciles shipped work and advances release milestones |
+| 6 | Merge the follow-up PRs | Lands any version bump, support update, and release notes |
 
 ## Safety
 
@@ -159,23 +158,12 @@ The public CI pipeline may also run for the branch. Its unsigned artifacts are
 not the release BAR.
 
 Do not continue if the Build and Tests runs disagree on branch, commit, build
-number, or upstream pipeline resource.
+number, or upstream pipeline resource. The exact producing Build and Tests
+runs and BAR are the release-validation evidence; no separate local approval
+report is required. Ordinary local Cake and `dotnet test` diagnostics remain
+available when investigating a failed run, but do not replace its CI evidence.
 
-## 3. Optional: approve the exact BAR package set
-
-This extra package validation is optional. To run it, use the repository's
-`release-testing` skill on each desired host with this copy-pasteable prompt:
-
-```text
-Use the release-testing skill to validate SkiaSharp {exact CI package version}
-from BAR {BAR ID}. Run the full available matrix on this host and produce the
-release approval report.
-```
-
-Add the resulting approval report, or the decision to skip this step, to the
-release record below.
-
-## 4. Publish the BAR to NuGet.org
+## 3. Publish the BAR to NuGet.org
 
 When you say **"push the packages"** in chat, the `release-publish` skill
 checks the release branch's exact-tip Build, the matching resource-triggered
@@ -230,7 +218,7 @@ the run and package evidence and do not automatically queue a second run.
 Only after the full package set is public should Finish be planned, and
 Finish still needs a separate confirmation.
 
-## 5. Finish the public release
+## 4. Finish the public release
 
 Use the `release-publish` skill in chat to dispatch
 [Release - Finish](https://github.com/mono/SkiaSharp/actions/workflows/release-finish.yml)
@@ -264,7 +252,7 @@ because packages appeared. After the push run, verify:
 
 Stable releases also dispatch the issue-template version update.
 
-## 6. Repair milestones when needed
+## 5. Repair milestones when needed
 
 Release - Finish already reconciles and advances milestones for every completed
 preview, RC, stable, patch, and hotfix. To inspect or repair milestone state
@@ -300,7 +288,7 @@ Chromium marker appears before the corresponding SkiaSharp release:
 | Sep 15 | | | 15 | Stable Cut → RC 1 |
 | Sep 22 | | | 22 | Stable Date → Stable |
 
-## 7. Complete the follow-up pull requests
+## 6. Complete the follow-up pull requests
 
 Review and merge the automation PRs through the normal repository process:
 
@@ -321,7 +309,6 @@ Keep these values together for the whole release:
 | `skiasharp-tests` run | Build ID and URL |
 | BAR | BAR ID |
 | Packages | Exact SkiaSharp and HarfBuzzSharp versions |
-| Optional test approval | Combined report or recorded skip decision |
 | Public release | NuGet version, tag, and GitHub Release URL |
 
 ## Related documentation
