@@ -28,13 +28,16 @@
     <PropertyGroup>
       <!-- We use project references for SkiaSharp, not the NuGet packages that Uno SDK adds implicitly -->
       <UnoDisableLottieSkiaVersionCheck>true</UnoDisableLottieSkiaVersionCheck>
+      <SkiaSharpVersion Condition="!Exists('..\..\..\..\samples\_UnoPlatformSamples.targets')">3.119.2</SkiaSharpVersion>
     </PropertyGroup>
   
     <ItemGroup>
-      <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
-      <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
-      <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
-      <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI\SkiaSharp.Views.Uno.WinUI.csproj" />
+      <!-- The source import owns project references; generated samples use these packages. -->
+      <PackageReference Include="SkiaSharp.Views" Version="3.119.2" Condition="!Exists('..\..\..\..\samples\_UnoPlatformSamples.targets') and ($(TargetFramework.Contains('-android')) or $(TargetFramework.Contains('-ios')))" />
+      <PackageReference Include="SkiaSharp.Skottie" Version="3.119.2" Condition="!Exists('..\..\..\..\samples\_UnoPlatformSamples.targets')" />
+      <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2" Condition="!Exists('..\..\..\..\samples\_UnoPlatformSamples.targets')" />
+      <PackageReference Include="HarfBuzzSharp" Version="8.3.1.1" Condition="!Exists('..\..\..\..\samples\_UnoPlatformSamples.targets')" />
+      <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.3.1.1" Condition="!Exists('..\..\..\..\samples\_UnoPlatformSamples.targets')" />
     </ItemGroup>
   
     <ItemGroup>

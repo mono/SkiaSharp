@@ -17,6 +17,12 @@ Console.WriteLine($"Platform: {System.Runtime.InteropServices.RuntimeInformation
 Console.WriteLine($"Architecture: {System.Runtime.InteropServices.RuntimeInformation.OSArchitecture}");
 Console.WriteLine($"Runtime: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}");
 Console.WriteLine("Platform Color Type: " + SKImageInfo.PlatformColorType);
+using (var buffer = new HarfBuzzSharp.Buffer())
+{
+	buffer.AddUtf8("Hello SkiaSharp!");
+	buffer.GuessSegmentProperties();
+	Console.WriteLine($"HarfBuzzSharp OK: {buffer.Length} buffer items, {buffer.Script} script");
+}
 
 // Create the image
 var info = new SKImageInfo(800, 600);

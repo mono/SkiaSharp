@@ -39,6 +39,10 @@ Task ("externals-download")
     .Description ("Download pre-built native binaries from CI.")
     .Does (() => RunCake ("./scripts/infra/managed/externals-download.cake", "Default"));
 
+Task ("nuget-download")
+    .Description ("Download CI NuGet packages without removing other build output.")
+    .Does (() => RunCake ("./scripts/infra/managed/nuget-download.cake", "Default"));
+
 Task ("externals-interop")
     .Description ("Re-generate the interop files.")
     .Does (() => RunCake ("./scripts/infra/managed/interop.cake", "Default"));
