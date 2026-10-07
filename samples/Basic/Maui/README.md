@@ -41,6 +41,15 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **Color palette** — Six selectable colors with dark/light mode variants.
 - **Brush size** — Adjustable stroke width via a MAUI `Slider` control.
 
+### Image Sources
+
+Displays `SKBitmapImageSource`, `SKImageImageSource`, `SKPixmapImageSource`, and
+`SKPictureImageSource` in ordinary MAUI `Image` controls, plus a bitmap-backed
+`ImageButton`. **Replace**, **Clear**, and **Reload** demonstrate source changes;
+**Stream to Skia** checks that a delayed ordinary stream cannot overwrite a newer
+Skia source. The page owns its native objects, clears all control sources before
+disposing them on navigation away, and recreates them when reopened.
+
 ## Requirements
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
@@ -62,7 +71,7 @@ To start on a different page, change `DefaultPage` in `App.xaml.cs`:
 public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
 ```
 
-Available pages: `Cpu` (default), `Gpu`, `Drawing`
+Available pages: `Cpu` (default), `Gpu`, `Drawing`, `ImageSources`
 
 ## Screenshots
 
