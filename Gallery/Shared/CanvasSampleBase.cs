@@ -13,6 +13,8 @@ public abstract class CanvasSampleBase : SampleBase
 
 	public event EventHandler? RefreshRequested;
 
+	public event EventHandler<Exception>? AnimationFailed;
+
 	protected void Refresh()
 	{
 		RefreshRequested?.Invoke(this, EventArgs.Empty);
@@ -20,9 +22,10 @@ public abstract class CanvasSampleBase : SampleBase
 
 	public void DrawSample(SKCanvas canvas, int width, int height)
 	{
-		if (IsInitialized)
+		lock (SyncRoot)
 		{
-			OnDrawSample(canvas, width, height);
+			if (IsInitialized)
+				OnDrawSample(canvas, width, height);
 		}
 	}
 
@@ -39,21 +42,36 @@ public abstract class CanvasSampleBase : SampleBase
 				: TaskScheduler.Default;
 
 			cts = new CancellationTokenSource();
+			var token = cts.Token;
 			_ = Task.Run(async () =>
 			{
 				try
 				{
-					while (!cts.IsCancellationRequested)
+					while (!token.IsCancellationRequested)
 					{
-						await OnUpdate(cts.Token);
-						new Task(Refresh).Start(scheduler);
+						await OnUpdate(token);
+						token.ThrowIfCancellationRequested();
+						await Task.Factory.StartNew(Refresh, token, TaskCreationOptions.DenyChildAttach, scheduler);
 					}
 				}
-				catch (OperationCanceledException)
+				catch (OperationCanceledException) when (token.IsCancellationRequested)
 				{
 					// Expected when CTS is cancelled during shutdown
 				}
-			}, cts.Token);
+				catch (Exception ex)
+				{
+					System.Diagnostics.Debug.WriteLine($"Animation failed for {Title}: {ex}");
+					if (token.IsCancellationRequested)
+						return;
+					await Task.Factory.StartNew(
+						() =>
+						{
+							if (!token.IsCancellationRequested)
+								AnimationFailed?.Invoke(this, ex);
+						},
+						CancellationToken.None, TaskCreationOptions.DenyChildAttach, scheduler);
+				}
+			}, token);
 		}
 
 		return Task.CompletedTask;
@@ -68,7 +86,8 @@ public abstract class CanvasSampleBase : SampleBase
 
 	public override void UpdateControl(string id, object value)
 	{
-		OnControlChanged(id, value);
+		lock (SyncRoot)
+			OnControlChanged(id, value);
 		Refresh();
 	}
 }
