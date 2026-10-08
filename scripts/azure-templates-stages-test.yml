@@ -35,6 +35,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Managed (Windows)
           parameters:
             name: managed_windows
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Managed (Windows)
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: libs
@@ -49,6 +55,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Managed (macOS)
           parameters:
             name: managed_macos
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Managed (macOS)
             buildAgent: ${{ parameters.buildAgentMac }}
             target: libs
@@ -63,6 +75,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Managed (Linux)
           parameters:
             name: managed_linux
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Managed (Linux)
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES)
@@ -86,6 +104,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (.NET Framework)
           parameters:
             name: tests_netfx_windows_x64
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Windows (.NET Framework, x64)
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: tests-netfx
@@ -119,6 +143,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (.NET Framework, x86)
           parameters:
             name: tests_netfx_windows_x86
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Windows (.NET Framework, x86)
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: tests-netfx
@@ -157,6 +187,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (.NET Core)
           parameters:
             name: tests_netcore_windows
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Windows (.NET Core)
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: tests-netcore
@@ -192,6 +228,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|macOS
           parameters:
             name: tests_netcore_macos
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: macOS
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-netcore
@@ -226,6 +268,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux
           parameters:
             name: tests_netcore_linux
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Linux
             buildAgent: ${{ parameters.buildAgentLinux }}
             # Software Vulkan (Mesa lavapipe) plus a virtual X server give the
@@ -286,7 +334,10 @@ stages:
             additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             installXcode: false
-            dotnetWorkloads: android,maui-android
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                workloads: [android, maui-android]
             requiredArtifacts:
               - name: native
             preBuildSteps:
@@ -322,6 +373,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|iOS
           parameters:
             name: tests_ios_macos
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: iOS
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-ios
@@ -356,6 +413,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Mac Catalyst
           parameters:
             name: tests_maccatalyst_macos
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Mac Catalyst
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-maccatalyst
@@ -389,6 +452,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|WASM
           parameters:
             name: tests_wasm_linux
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: WASM
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
@@ -428,8 +497,8 @@ stages:
           parameters:
             # Runs the SkiaSharp.Tests.Wasm suite as the preview .NET (tests only — the rest of CI
             # stays on net10) so WASM regressions on the newer runtime, such as an exception-handling
-            # mismatch in the native lib, fail CI. installPreviewSdk provisions the preview SDK +
-            # wasm-tools workload (which bundles the matching emscripten) and pins global.json to it.
+            # mismatch in the native lib, fail CI. Provisioning and whole-job SDK selection
+            # are separate; only this job selects the preview SDK for its source build.
             name: tests_wasm_preview_linux
             displayName: WASM (.NET Preview)
             buildAgent: ${{ parameters.buildAgentLinux }}
@@ -441,8 +510,12 @@ stages:
               SKIASHARP_TEST_SKIP_GPU: graphite-dawn
             installAndroidSdk: false
             shouldPublish: false
-            installPreviewSdk: true
-            previewWorkloads: wasm-tools,android
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+              - sdkVersion: $(DOTNET_VERSION_PREVIEW)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
+                workloads: [wasm-tools, android]
+            jobSdkVersion: $(DOTNET_VERSION_PREVIEW)
             requiredArtifacts:
               - name: native
             preBuildSteps:
@@ -465,6 +538,7 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Azure Linux)
           parameters:
             name: tests_container_linux
+            dotnetSdks: []
             # No GPU stack in these images, by design: they exist to prove SkiaSharp
             # works without those dependencies, so OpenGL genuinely cannot come up.
             # Declared here rather than inferred from the DllNotFoundException the
@@ -497,6 +571,7 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Azure Linux, No Dependencies)
           parameters:
             name: tests_container_linux_nodeps
+            dotnetSdks: []
             # No GPU stack in these images, by design: they exist to prove SkiaSharp
             # works without those dependencies, so OpenGL genuinely cannot come up.
             # Declared here rather than inferred from the DllNotFoundException the
@@ -529,6 +604,7 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Alpine)
           parameters:
             name: tests_container_alpine_linux
+            dotnetSdks: []
             # No GPU stack in these images, by design: they exist to prove SkiaSharp
             # works without those dependencies, so OpenGL genuinely cannot come up.
             # Declared here rather than inferred from the DllNotFoundException the
@@ -561,6 +637,7 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Alpine, No Dependencies)
           parameters:
             name: tests_container_alpine_nodeps
+            dotnetSdks: []
             # No GPU stack in these images, by design: they exist to prove SkiaSharp
             # works without those dependencies, so OpenGL genuinely cannot come up.
             # Declared here rather than inferred from the DllNotFoundException the
@@ -593,6 +670,7 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (Nano Server)
           parameters:
             name: tests_container_nanoserver_windows
+            dotnetSdks: []
             # No GPU stack in these images, by design: they exist to prove SkiaSharp
             # works without those dependencies, so OpenGL genuinely cannot come up.
             # Declared here rather than inferred from the DllNotFoundException the
@@ -665,6 +743,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Windows)
           parameters:
             name: samples_windows
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Windows
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: samples
@@ -677,6 +761,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (macOS)
           parameters:
             name: samples_macos
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: macOS
             buildAgent: ${{ parameters.buildAgentMac }}
             target: samples
@@ -688,6 +778,12 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
           parameters:
             name: samples_linux
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Linux
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES)
