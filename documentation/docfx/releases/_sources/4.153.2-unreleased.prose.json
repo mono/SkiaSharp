@@ -1,9 +1,20 @@
 {
-  "theme": "Release line maintenance",
-  "highlights_headline": "SkiaSharp 4.153.2 begins the next servicing cycle.",
+  "theme": "Ganesh cache correction",
+  "highlights_headline": "SkiaSharp 4.153.2 fixes stale Ganesh cache entries following failed GPU flushes.",
   "highlights_body": null,
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Ganesh cache state is refreshed after failed flushes",
+          "detail": "Incorporates the upstream m153 fix so a failed GPU flush cannot leave stale cache entries behind.",
+          "prs": [5265]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }

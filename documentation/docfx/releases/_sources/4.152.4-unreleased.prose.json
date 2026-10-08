@@ -1,9 +1,20 @@
 {
-  "theme": "Release line maintenance",
-  "highlights_headline": "SkiaSharp 4.152.4 begins the next servicing cycle.",
+  "theme": "Failed flush cache fix",
+  "highlights_headline": "SkiaSharp 4.152.4 includes an upstream fix for stale GPU cache entries after failed flushes.",
   "highlights_body": null,
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Failed flushes no longer retain stale cache entries",
+          "detail": "Incorporates the Chrome m152 Skia fix so Ganesh cache state is correctly refreshed after a flush fails.",
+          "prs": [5287]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }
