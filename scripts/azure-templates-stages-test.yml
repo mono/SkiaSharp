@@ -14,6 +14,39 @@ parameters:
   - name: enableCaching
     type: boolean
     default: false
+  - name: sampleProfiles
+    type: object
+    default:
+      - name: net10
+        sdk:
+          sdkVersion: $(DOTNET_VERSION)
+          workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+          tizen:
+            manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+            manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+        consumerTargetFramework: net10.0
+        testExcludeCategories: 'Device,Desktop,Golden'
+      - name: net11
+        sdk:
+          sdkVersion: $(DOTNET_VERSION_PREVIEW)
+          workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
+          tizen:
+            manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+            manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+        workloads:
+          linux: [android, macos, wasm-tools, wasm-tools-net10, maui-android]
+          windows: [android, macos, wasm-tools, wasm-tools-net10, ios, tvos, maccatalyst, maui]
+          macos: [android, macos, wasm-tools, wasm-tools-net10, ios, tvos, maccatalyst, maui]
+        consumerTargetFramework: net11.0
+        xcodeVersion: '26.6'
+        testExcludeCategories: 'Device,Desktop,Golden'
+  - name: sampleBuildAgentMac
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: macos-26
+        os: macos
 
 stages:
 
@@ -740,57 +773,63 @@ stages:
       ${{ else }}:
         dependsOn: package
       jobs:
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Windows)
-          parameters:
-            name: samples_windows
-            dotnetSdks:
-              - sdkVersion: $(DOTNET_VERSION)
-                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizen:
-                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-            displayName: Windows
-            buildAgent: ${{ parameters.buildAgentWindows}}
-            target: samples
-            requiredArtifacts:
-              - name: nuget
-                dir: nugets
-            postBuildSteps:
-              - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
-                displayName: Delete the nugets folder
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (macOS)
-          parameters:
-            name: samples_macos
-            dotnetSdks:
-              - sdkVersion: $(DOTNET_VERSION)
-                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizen:
-                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-            displayName: macOS
-            buildAgent: ${{ parameters.buildAgentMac }}
-            target: samples
-            installNinja: true
-            shouldPublish: false
-            requiredArtifacts:
-              - name: nuget
-                dir: nugets
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
-          parameters:
-            name: samples_linux
-            dotnetSdks:
-              - sdkVersion: $(DOTNET_VERSION)
-                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizen:
-                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-            displayName: Linux
-            buildAgent: ${{ parameters.buildAgentLinux }}
-            packages: $(MANAGED_LINUX_PACKAGES)
-            target: samples
-            shouldPublish: false
-            requiredArtifacts:
-              - name: nuget
-                dir: nugets
-            installEmsdk: true
-            initScript: source ~/emsdk/emsdk_env.sh
+        - ${{ each platform in split('windows,macos,linux', ',') }}:
+          - ${{ each profile in parameters.sampleProfiles }}:
+            - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+              parameters:
+                name: samples_${{ platform }}_${{ profile.name }}
+                ${{ if eq(platform, 'windows') }}:
+                  displayName: Windows (${{ profile.name }})
+                  buildAgent: ${{ parameters.buildAgentWindows }}
+                ${{ if eq(platform, 'macos') }}:
+                  displayName: macOS (${{ profile.name }})
+                  buildAgent: ${{ parameters.sampleBuildAgentMac }}
+                  installNinja: true
+                  ${{ if ne(coalesce(profile.xcodeVersion, 'inherit'), 'inherit') }}:
+                    variables:
+                      XCODE_VERSION: ${{ profile.xcodeVersion }}
+                ${{ if eq(platform, 'linux') }}:
+                  displayName: Linux (${{ profile.name }})
+                  buildAgent: ${{ parameters.buildAgentLinux }}
+                  packages: $(MANAGED_LINUX_PACKAGES)
+                  installEmsdk: true
+                  initScript: source ~/emsdk/emsdk_env.sh
+                target: samples
+                additionalArgs: >-
+                  --sampleSdkVersion="${{ profile.sdk.sdkVersion }}"
+                  --sampleWorkloadVersion="${{ profile.sdk.workloadSetVersion }}"
+                  --consumerTargetFramework="${{ profile.consumerTargetFramework }}"
+                  --sampleTestExcludeCategories="${{ profile.testExcludeCategories }}"
+                retryCount: 0
+                timeoutInMinutes: 180
+                shouldPublish: ${{ and(eq(platform, 'windows'), eq(profile.name, 'net10')) }}
+                dotnetSdks:
+                  - ${{ if ne(profile.sdk.sdkVersion, '$(DOTNET_VERSION)') }}:
+                    - sdkVersion: $(DOTNET_VERSION)
+                  - ${{ insert }}: ${{ profile.sdk }}
+                    ${{ if ne(profile.workloads, '') }}:
+                      workloads: ${{ profile.workloads[platform] }}
+                requiredArtifacts:
+                  - name: nuget
+                    dir: nugets
+                preBuildSteps:
+                  - pwsh: |
+                      dotnet build tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj -c $(CONFIGURATION) "-p:PackageDirectory=$PWD/output/nugets"
+                      if ($LASTEXITCODE) { throw "Sample test runner build failed: $LASTEXITCODE" }
+                      & "tests/SkiaSharp.Tests.Samples/bin/$(CONFIGURATION)/net10.0/playwright.ps1" install --with-deps chromium
+                      if ($LASTEXITCODE) { throw "Playwright Chromium installation failed: $LASTEXITCODE" }
+                    displayName: Prepare headless browser runtime checks
+                postBuildSteps:
+                  - task: PublishTestResults@2
+                    displayName: Publish sample and package-output test results
+                    condition: always()
+                    inputs:
+                      testResultsFormat: VSTest
+                      testResultsFiles: 'output/logs/testlogs/samples/**/*.trx'
+                      testRunTitle: '${{ platform }} Samples (${{ profile.name }})'
+                      failTaskOnFailedTests: true
+                      failTaskOnMissingResultsFile: true
+                publishArtifacts:
+                  - name: testlogs_samples_${{ platform }}_${{ profile.name }}
+                    always: true
+                    path: output/logs

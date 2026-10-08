@@ -107,10 +107,6 @@ Task ("tests-container")
     .Description ("Run the console test suite against prebuilt natives (used by the containerized test legs).")
     .Does (() => RunCake ("./scripts/infra/tests/tests-container.cake", "Default"));
 
-Task ("tests-msbuild")
-    .Description ("Test MSBuild consumers of the already-packed NuGets.")
-    .Does (() => RunCake ("./scripts/infra/tests/tests-msbuild.cake", "Default"));
-
 Task ("tests-android")
     .Description ("Run all Android tests.")
     .IsDependentOn ("externals")
@@ -155,6 +151,10 @@ Task ("nuget-assemble-arcade-assets")
     .Description ("Prepare the public Arcade Shipping, NonShipping, and PDB artifacts.")
     .IsDependentOn ("nuget-special")
     .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-assemble-arcade-assets"));
+
+Task ("nuget-download")
+    .Description ("Download the latest promoted package artifacts for a branch.")
+    .Does (() => RunCake ("./scripts/infra/managed/nuget-download.cake", "Default"));
 
 Task ("docs-api-diff")
     .Description ("Generate the committed API diffs (incremental; --force/--minVersion/--maxVersion).")
@@ -219,20 +219,12 @@ Task ("clean-managed")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("samples")
-    .Description ("Generate, prepare, and run all sample projects.")
+    .Description ("Test generated sample projects and packed NuGets.")
     .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "Default"));
 
 Task ("samples-generate")
     .Description ("Generate sample project files.")
     .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-generate"));
-
-Task ("samples-prepare")
-    .Description ("Prepare samples for building (copy NuGet packages, etc.).")
-    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-prepare"));
-
-Task ("samples-run")
-    .Description ("Build and run the generated samples.")
-    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-run"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DEFAULT - target for common development

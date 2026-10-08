@@ -90,10 +90,10 @@ void RunDeviceRunnersTest(
 // Runs a Microsoft.Testing.Platform test executable directly (used for .NET Framework, where
 // the v3 test project builds a runnable exe). MTP report + hang-dump args are passed natively.
 //
-// Hang protection (the MTP equivalent of #4142's VSTest `--blame-hang-timeout 15m`): MTP only
-// detects a per-test hang via the HangDump extension, and that extension always writes a dump
+// Hang protection (the MTP equivalent of #4142's VSTest `--blame-hang-timeout 15m`): MTP
+// detects missing test activity via the HangDump extension, and that extension always writes a dump
 // (`--hangdump-type` accepts only Mini/Heap/Triage/Full — there is no "none"). #4142 used a dump
-// type of none, but MTP cannot do per-test hang detection without a dump, so the smallest (Mini)
+// type of none, but MTP's activity monitor always generates a dump, so the smallest (Mini)
 // is used. The global `--timeout` option aborts without a dump but is a whole-session timeout, not
 // per-test, so it is unsuitable (a healthy-but-slow suite would fail). The Mini dump only
 // materialises if a test actually hangs and lands in the published results directory.
@@ -122,7 +122,10 @@ void RunDotNetTest(
     FilePath testProject,
     DirectoryPath output,
     string configuration = null,
-    Dictionary<string, string> properties = null)
+    Dictionary<string, string> properties = null,
+    bool noBuild = true,
+    string hangTimeout = "15m",
+    IEnumerable<string> excludedCategories = null)
 {
     output = MakeAbsolute(output);
     var dir = testProject.GetDirectory();
@@ -133,7 +136,7 @@ void RunDotNetTest(
 
     var settings = new DotNetTestSettings {
         Configuration = configuration ?? CONFIGURATION,
-        NoBuild = true,
+        NoBuild = noBuild,
         WorkingDirectory = dir,
         Verbosity = DotNetVerbosity.Normal,
         ArgumentCustomization = args => {
@@ -147,7 +150,7 @@ void RunDotNetTest(
             foreach (var prop in properties) {
                 if (!string.IsNullOrEmpty(prop.Value)) {
                     args = args
-                        .Append($"/p:{prop.Key}={prop.Value}");
+                        .AppendQuoted($"/p:{prop.Key}={prop.Value}");
                 }
             }
             // Everything after "--" is forwarded to the Microsoft.Testing.Platform runner.
@@ -155,10 +158,18 @@ void RunDotNetTest(
                 .Append("--")
                 .Append("--results-directory").AppendQuoted(output.FullPath)
                 .Append("--report-trx")
-                .Append("--report-trx-filename").Append("TestResults.trx")
-                .Append("--hangdump")
-                .Append("--hangdump-timeout").Append("15m")
-                .Append("--hangdump-type").Append("Mini");
+                .Append("--report-trx-filename").Append("TestResults.trx");
+            if (!string.IsNullOrEmpty(hangTimeout)) {
+                args = args
+                    .Append("--hangdump")
+                    .Append("--hangdump-timeout").Append(hangTimeout)
+                    .Append("--hangdump-type").Append("Mini");
+            }
+            if (excludedCategories != null && excludedCategories.Any()) {
+                args = args.Append("--filter-not-trait");
+                foreach (var category in excludedCategories)
+                    args = args.AppendQuoted($"Category={category}");
+            }
             return args;
         },
     };

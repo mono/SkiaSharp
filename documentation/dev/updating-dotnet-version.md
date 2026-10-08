@@ -65,9 +65,9 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 ### 5. Test Projects
 
 - [ ] `tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj` — Uses `$(MauiTargetFrameworksAppCurrent)`
-- [ ] `tests/SkiaSharp.Tests.Integration/SkiaSharp.Tests.Integration.csproj` — Hardcoded TFM
-- [ ] `tests/SkiaSharp.Tests.Integration/Tests/LinuxConsoleTests.cs` — Hardcoded TFM in string template
-- [ ] `tests/SkiaSharp.Tests.Integration/Tests/Maui*Tests.cs` — Hardcoded TFMs in `TargetFramework` property
+- [ ] `tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj` — Host TFM and `ConsumerTargetFramework` default; confirm the generated previous/current consumer TFMs
+- [ ] `tests/SkiaSharp.Tests.Samples/Maui*Tests.cs` and `Utils/TestDevices.cs` — Review probe TFMs and exact device/runtime theory cases independently of SDK selection
+- [ ] `samples/Basic/DockerConsole/*Dockerfile` and `samples/Basic/DockerWebApi/*Dockerfile` — Floating SDK major for isolated Docker sample builds
 
 ### 6. Cake Build Scripts
 
@@ -89,10 +89,11 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 ### 9. Pipeline YAML
 
 - [ ] `scripts/azure-templates-variables.yml` — DOTNET_VERSION, DOTNET_WORKLOAD_VERSION, XCODE_VERSION, EMSCRIPTEN_VERSION, test device versions
+- [ ] `scripts/azure-templates-stages-test.yml` sample profiles — Select SDK/workload pins and consumer TFMs independently of the repository's test-runner SDK; omit `xcodeVersion` to inherit global `XCODE_VERSION` (never assign `$(XCODE_VERSION)` back to that variable). Keep Docker build/run coverage in every profile.
 - [ ] `scripts/azure-templates-stages-native-wasm.yml` — Add new .NET emscripten entry
 - [ ] `scripts/azure-templates-jobs-bootstrapper.yml` — Review workload install step
 
-> **WASM emsdk mapping (do this whenever the new SDK bundles a new Emscripten version).** The .NET WASM SDK links apps with a specific Emscripten toolchain, and a static library built with one Emscripten version cannot be linked by a different one (the wasm object format is incompatible → link failure). Check the new SDK's bundled version (e.g. `dotnet workload list` / the `Microsoft.NET.Runtime.Emscripten.*` pack). Known mapping so far: **.NET 8 → 3.1.34, .NET 9/10 → 3.1.56, .NET 11 → 5.0.6**. When it changes for the new SDK, you must:
+> **WASM emsdk mapping (do this whenever the new SDK bundles a new Emscripten version).** The .NET WASM SDK links apps with a specific Emscripten toolchain, and static libraries must match that toolchain. Check the new SDK's bundled version (e.g. `dotnet workload list` / the `Microsoft.NET.Runtime.Emscripten.*` pack). Known mapping so far: **.NET 8 → 3.1.34, .NET 9/10 → 3.1.56, .NET 11 → 6.0.2**. The preview CI pins are SDK **11.0.100-rc.1.26425.128** and workload set **11.0.100-rc.1.26460.1**; approved mirrors lacked Preview 6's Emscripten 5.0.6 host packs. The obsolete 5.0.6 preview build variants are replaced by 6.0.2. When the toolchain changes for the new SDK, you must:
 > 1. Add a build matrix block (all 4 `st`/`mt`/`simd`/`simd+mt` variants) for the new Emscripten version in `scripts/azure-templates-stages-native-wasm.yml`, and register its `native_wasm_<version>_*` artifacts in both merger lists in `scripts/azure-templates-stages-native-merge.yml`, so the packages ship a static library for it.
 > 2. Add a `NativeFileReference` entry for the new TFM in **all four** WASM targets files, keeping each `netX.0` on the Emscripten version its SDK actually uses:
 >    - `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets`
@@ -100,7 +101,9 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 >    - `binding/IncludeNativeAssets.SkiaSharp.targets`
 >    - `binding/IncludeNativeAssets.HarfBuzzSharp.targets`
 >
-> Convention for the conditions: the **newest** entry stays open-ended (`VersionGreaterThanOrEquals(TFV, 'A')`) so a future SDK that keeps the same Emscripten version keeps working with no code change (e.g. .NET 9 and .NET 10 both use 3.1.56). Only when a new SDK actually *diverges* do you close the previous entry with an upper bound (`… and VersionLessThan(TFV, 'B')`) and add a new open-ended entry for the new version — the way `net9.0`–`net10.x` was capped at `< 11.0` once .NET 11 moved to 5.0.6. The packaging globs (`**`/`*` over the version folder) pick up new version directories automatically — no nuspec/csproj change needed.
+> Convention for the conditions: the **newest** entry stays open-ended (`VersionGreaterThanOrEquals(TFV, 'A')`) so a future SDK that keeps the same Emscripten version keeps working with no code change (e.g. .NET 9 and .NET 10 both use 3.1.56). Only when a new SDK actually *diverges* do you close the previous entry with an upper bound (`… and VersionLessThan(TFV, 'B')`) and add a new open-ended entry for the new version — `net9.0`–`net10.x` is capped at `< 11.0`, and `net11.0+` selects 6.0.2. The packaging globs (`**`/`*` over the version folder) pick up new version directories automatically — no nuspec/csproj change needed.
+
+The `tests/SkiaSharp.Tests.Samples` infrastructure cases evaluate all four source/package targets for net8.0 through net12.0 with threading and SIMD on/off (80 evaluations). Their dummy archives verify item selection only, not native linking or execution. Validate new toolchains with source-built archives in producing CI, packaging, and the .NET preview WASM test job; do not substitute older downloaded natives.
 
 ### 10. Docker Images
 
@@ -117,10 +120,10 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 - [ ] Keep isolated consumer/sample contexts on the floating .NET major tag so they exercise the latest servicing release:
   - `samples/Basic/DockerConsole/{linux,windows}.Dockerfile`
   - `samples/Basic/DockerWebApi/{linux,windows}.Dockerfile`
-  - The generated Dockerfile string in `tests/SkiaSharp.Tests.Integration/Tests/LinuxConsoleTests.cs`
+  - Docker sample images in `samples/Basic/DockerConsole/` and `samples/Basic/DockerWebApi/`
 - [ ] Verify every complete MCR tag exists with `docker manifest inspect mcr.microsoft.com/dotnet/sdk:<tag>`. Verify SDKs installed by `dotnet-install.sh` have published artifacts for every host architecture used by the image.
 
-Images that run `dotnet` against the checked-out repository must provide an SDK compatible with the root `global.json`; this includes the local docs image, CI container-test images, and `tests/Dockerfile.linux`. The sample Dockerfiles and generated Linux integration-test project build isolated contexts without the repository `global.json`, so their floating current-major SDK tags intentionally validate the latest servicing release for `TFMCurrent`.
+Images that run `dotnet` against the checked-out repository must provide an SDK compatible with the root `global.json`; this includes the local docs image, CI container-test images, and `tests/Dockerfile.linux`. The Docker sample images build isolated contexts without the repository `global.json`, so their floating current-major SDK tags intentionally validate the latest servicing release for `TFMCurrent`.
 
 Keep each distro/OS suffix unchanged when updating either kind of image. For example, an SDK bump should preserve suffixes such as `-noble`, `-alpine3.23`, `-azurelinux3.0`, and `-nanoserver-ltsc2022`. Runtime and ASP.NET base images are separate from the build SDK pin; do not change them as part of an SDK-only alignment unless the runtime itself is also being updated.
 
@@ -190,9 +193,10 @@ Since platform workloads only support 2 versions at a time, testing a preview me
 3. Build and test on the branch
 4. Merge when the new .NET version goes GA
 
-To validate a preview without upgrading the repository, provision it side-by-side
-using the descriptors below. The existing preview WASM and MSBuild package-test
-jobs explicitly select their preview SDK; other jobs keep repository `global.json`.
+For runtime/consumer validation without upgrading the repository, use the
+side-by-side provisioning descriptors below. A consumer SDK override does not
+change source/sample project TFMs; the preview WASM source job explicitly opts
+into its existing `UsePreviewTFM` window.
 
 ## Declarative CI SDK and Workload Provisioning
 
@@ -212,7 +216,7 @@ dotnetSdks:
 Omitting `workloadSetVersion` installs only the SDK. When a set is present,
 `workloads` optionally overrides the centralized host list with explicit IDs.
 An empty `dotnetSdks` list performs no host .NET provisioning; container images
-own their SDK installations.
+own their SDK installations. No install-preview/additional-SDK booleans exist.
 
 `scripts/azure-templates-steps-dotnet.yml` expands these descriptors into standard
 `UseDotNet@2` tasks and helper calls. The helper uses a temporary exact-SDK
@@ -222,14 +226,21 @@ Samsung manifests are registered under the first PATH `dotnet` application's
 resolved installation root.
 
 Installation order does not select the build SDK. Ordinary jobs keep repository
-`global.json`; `jobSdkVersion` explicitly selects a whole-job SDK by updating only
-the `sdk` object, preserving tool and Arcade configuration.
+`global.json`; the preview WASM job sets `jobSdkVersion` explicitly. That job-local
+selection updates only the `sdk` object, preserving tool and Arcade configuration.
+Sample-test jobs retain the repository runner SDK and pass their optional exact
+consumer SDK override separately; without an override, local/IDE tests copy the
+repository's SDK selection into their child working directory.
 
 Tizen is opt-in because Samsung's manifest is not part of Microsoft's workload
 set. Its publication band/version are explicit and distinct from the consuming
-SDK feature band. The helper registers the pinned manifest, installs the
-Microsoft IDs once with the exact workload set, then installs Tizen separately
-without manifest updates.
+SDK feature band. The same workload script removes `tizen` from the normal IDs,
+registers its pinned manifest, installs the Microsoft IDs once, then installs
+Tizen separately without manifest updates. There is no separate Tizen executor.
+
+Existing full host workload lists are preserved for the initial refactor.
+Workload reductions must be verified against restore/build graphs, not inferred
+from a job's name. SDK 11 sample profiles explicitly request `wasm-tools-net10`.
 
 ## How to Verify TPVs
 

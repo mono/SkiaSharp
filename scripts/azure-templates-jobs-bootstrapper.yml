@@ -28,6 +28,7 @@ parameters:
   dotnetSdks:
     - sdkVersion: $(DOTNET_VERSION)              # SDK-only unless workloads are requested explicitly
   jobSdkVersion: ''                             # explicit whole-job SDK selection; empty keeps repository global.json
+  timeoutInMinutes: 180
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
@@ -44,7 +45,7 @@ parameters:
 jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
-    timeoutInMinutes: 180
+    timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
     pool: ${{ parameters.buildAgent.pool }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}

@@ -140,6 +140,10 @@ Single source of truth for all commands:
 > **Note:** For publication, verify the exact producing Build/Tests runs and
 > BAR before the protected human approval in the MAUI release pipeline; see
 > [`documentation/dev/releasing.md`](documentation/dev/releasing.md).
+>
+> **Note:** Sample/package-consumer validation runs in build CI. For local
+> diagnostics, use `tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj`. See
+> [building-samples.md](documentation/dev/building-samples.md).
 
 **Recovery Commands:**
 

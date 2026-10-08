@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <SignAssembly>false</SignAssembly>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <PackageDirectory Condition="'$(PackageDirectory)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..', 'output', 'nugets'))</PackageDirectory>
+    <SamplesDirectory Condition="'$(SamplesDirectory)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..', 'output', 'samples-preview'))</SamplesDirectory>
+    <SampleTestArtifactsDirectory Condition="'$(SampleTestArtifactsDirectory)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..', 'output', 'logs', 'testlogs', 'samples'))</SampleTestArtifactsDirectory>
+    <ConsumerTargetFramework Condition="'$(ConsumerTargetFramework)' == ''">net10.0</ConsumerTargetFramework>
+    <ConsumerDotNetHost Condition="'$(ConsumerDotNetHost)' == ''">$(DOTNET_HOST_PATH)</ConsumerDotNetHost>
+    <ConsumerDotNetHost Condition="'$(ConsumerDotNetHost)' == ''">$(DotNetHostPath)</ConsumerDotNetHost>
+    <ConsumerDotNetHost Condition="'$(ConsumerDotNetHost)' == ''">dotnet</ConsumerDotNetHost>
+    <_SkiaPackages Condition="Exists('$(PackageDirectory)')">$([System.String]::Join(';', $([System.IO.Directory]::GetFiles('$(PackageDirectory)', 'SkiaSharp.*.nupkg'))))</_SkiaPackages>
+    <_HarfBuzzPackages Condition="Exists('$(PackageDirectory)')">$([System.String]::Join(';', $([System.IO.Directory]::GetFiles('$(PackageDirectory)', 'HarfBuzzSharp.*.nupkg'))))</_HarfBuzzPackages>
+    <_CorePackagePattern>(?:^|;)[^;]*[/\\]{0}\.([0-9][^;]*)(?&lt;!\.symbols)\.nupkg(?=;|$)</_CorePackagePattern>
+    <_SkiaCoreCount>$([System.Text.RegularExpressions.Regex]::Matches('$(_SkiaPackages)', '$([System.String]::Format('$(_CorePackagePattern)', 'SkiaSharp'))').Count)</_SkiaCoreCount>
+    <_HarfBuzzCoreCount>$([System.Text.RegularExpressions.Regex]::Matches('$(_HarfBuzzPackages)', '$([System.String]::Format('$(_CorePackagePattern)', 'HarfBuzzSharp'))').Count)</_HarfBuzzCoreCount>
+    <_SkiaArtifactVersion Condition="'$(_SkiaCoreCount)' == '1'">$([System.Text.RegularExpressions.Regex]::Replace('$(_SkiaPackages)', '^.*[/\\]SkiaSharp\.([0-9][^;]*)(?&lt;!\.symbols)\.nupkg(?:;.*)?$', '$1'))</_SkiaArtifactVersion>
+    <_HarfBuzzArtifactVersion Condition="'$(_HarfBuzzCoreCount)' == '1'">$([System.Text.RegularExpressions.Regex]::Replace('$(_HarfBuzzPackages)', '^.*[/\\]HarfBuzzSharp\.([0-9][^;]*)(?&lt;!\.symbols)\.nupkg(?:;.*)?$', '$1'))</_HarfBuzzArtifactVersion>
+    <SkiaSharpVersion Condition="'$(SkiaSharpVersion)' == ''">$(_SkiaArtifactVersion)</SkiaSharpVersion>
+    <HarfBuzzSharpVersion Condition="'$(HarfBuzzSharpVersion)' == ''">$(_HarfBuzzArtifactVersion)</HarfBuzzSharpVersion>
+    <RestoreSources>$(PackageDirectory);https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json;https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json;https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json</RestoreSources>
+    <RestorePackagesPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..', 'output', 'samples-test-workspaces', 'restore-packages'))</RestorePackagesPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.9.1" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
+    <PackageReference Include="Appium.WebDriver" Version="5.1.0" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.55.0" />
+    <PackageReference Include="SkiaSharp.Extended" Version="3.1.0-preview.3" />
+    <PackageReference Include="SkiaSharp" Version="$(SkiaSharpVersion)" />
+    <PackageReference Include="HarfBuzzSharp" Version="$(HarfBuzzSharpVersion)" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="$(SkiaSharpVersion)" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="$(HarfBuzzSharpVersion)" />
+    <EmbeddedResource Include="Assets/*.png" />
+    <RuntimeHostConfigurationOption Include="SampleTest.PackageDirectory" Value="$(PackageDirectory)" />
+    <RuntimeHostConfigurationOption Include="SampleTest.RepositoryDirectory" Value="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..'))" />
+    <RuntimeHostConfigurationOption Include="SampleTest.SamplesDirectory" Value="$(SamplesDirectory)" />
+    <RuntimeHostConfigurationOption Include="SampleTest.ArtifactsDirectory" Value="$(SampleTestArtifactsDirectory)" />
+    <RuntimeHostConfigurationOption Include="SampleTest.SdkVersion" Value="$(SampleSdkVersion)" />
+    <RuntimeHostConfigurationOption Include="SampleTest.WorkloadVersion" Value="$(SampleWorkloadVersion)" />
+    <RuntimeHostConfigurationOption Include="SampleTest.DotNetHost" Value="$(ConsumerDotNetHost)" />
+    <RuntimeHostConfigurationOption Include="SampleTest.Configuration" Value="$(Configuration)" />
+    <RuntimeHostConfigurationOption Include="SampleTest.ConsumerTargetFramework" Value="$(ConsumerTargetFramework)" />
+    <RuntimeHostConfigurationOption Include="SampleTest.Filter" Value="$(SampleFilter)" />
+    <RuntimeHostConfigurationOption Include="SampleTest.SkiaSharpVersion" Value="$(SkiaSharpVersion)" />
+    <RuntimeHostConfigurationOption Include="SampleTest.HarfBuzzSharpVersion" Value="$(HarfBuzzSharpVersion)" />
+    <RuntimeHostConfigurationOption Include="SampleTest.RestorePackagesPath" Value="$(RestorePackagesPath)" />
+  </ItemGroup>
+  <Target Name="ValidateSamplePlatformPackages" BeforeTargets="Restore;Build">
+    <Error Condition="'$(_SkiaCoreCount)' != '1' or '$(_HarfBuzzCoreCount)' != '1'"
+      Text="PackageDirectory must contain exactly one non-symbol SkiaSharp and HarfBuzzSharp core package from the same artifact set: $(PackageDirectory)." />
+    <Error Condition="'$(SkiaSharpVersion)' == '' or '$(HarfBuzzSharpVersion)' == ''"
+      Text="SkiaSharpVersion and HarfBuzzSharpVersion could not be resolved from PackageDirectory." />
+    <Error Condition="'$(SkiaSharpVersion)' != '$(_SkiaArtifactVersion)' or '$(HarfBuzzSharpVersion)' != '$(_HarfBuzzArtifactVersion)'"
+      Text="Explicit SkiaSharpVersion/HarfBuzzSharpVersion must match the exact core packages in PackageDirectory." />
+  </Target>
+</Project>

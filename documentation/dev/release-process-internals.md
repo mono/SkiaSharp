@@ -232,7 +232,7 @@ NuGet.org publication button or approval policy.
 See [Packages](packages.md) for the full package topology, symbol handling, and
 transport rules.
 
-## Release package approval
+## Package-consumer validation
 
 Publication uses the exact producing `skiasharp-package` run and its BAR, plus
 the matching resource-triggered `skiasharp-tests` run. The branch, commit, build
@@ -241,6 +241,20 @@ substitute for that CI evidence. Ordinary Cake and `dotnet test` runs remain
 useful diagnostics, and local visual goldens remain available, but neither
 creates an independent release-approval gate. The protected MAUI publication
 pipeline still requires human `ManualValidation` of its staged package audit.
+
+The Samples CI stage invokes `tests/SkiaSharp.Tests.Samples` against the producing
+build's canonical package artifacts. The same project is the local entry point
+for consumer build/publish assertions, sample builds, runtime checks and golden
+comparisons; [Building Samples](building-samples.md) documents artifact acquisition
+and invocation. There is no separate release-testing step or approval report.
+
+Uploading packages and registering the BAR do not exercise a consuming
+application's framework/RID selection or native-file placement. Those assertions
+remain in the test project. Local golden comparisons are skipped on CI; the
+remaining checks run in each configured consumer SDK profile.
+
+Any additional local evidence must identify the exact producing build and
+package set. Local tests never change BAR state or authorize publication.
 
 ## Protected publication boundary
 
@@ -483,6 +497,7 @@ dispatches default to `DryRun`.
 | Package assembly | `scripts/azure-templates-stages-package.yml`, `eng/Publishing.props` |
 | Signing and BAR | `scripts/azure-templates-stages-signing.yml`, `eng/Signing.props` |
 | Release validation | `scripts/azure-pipelines-package.yml`, `scripts/azure-pipelines-tests.yml`, `.agents/skills/release-publish/` |
+| Package-consumer validation | `tests/SkiaSharp.Tests.Samples/`, Samples CI stage |
 | Public finalization | `.github/workflows/release-finish.yml`, `scripts/infra/publishing/finish-release.ps1` |
 | Milestones | `.github/workflows/release-milestones.yml`, `scripts/infra/publishing/reconcile-release-assignments.ps1`, `update-release-milestones.ps1` |
 | Release notes | `.github/workflows/update-release-notes.md`, generated `update-release-notes.lock.yml`, `.agents/skills/release-notes/` |
