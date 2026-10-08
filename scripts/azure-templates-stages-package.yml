@@ -11,6 +11,12 @@ stages:
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package NuGets
         parameters:
           name: package_windows
+          dotnetSdks:
+            - sdkVersion: $(DOTNET_VERSION)
+              workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+              tizen:
+                manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
           displayName: Package NuGets
           buildAgent: ${{ parameters.buildAgentWindows}}
           target: nuget

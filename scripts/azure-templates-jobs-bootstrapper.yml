@@ -25,20 +25,17 @@ parameters:
   installAndroidNdk: true                       # whether or not to install the Android NDK
   installAndroidSdk: true                       # whether or not to install the Android SDK
   installWindowsSdk: false                      # whether or not to install the Windows SDK
-  installDotNet: true                           # whether or not to install the dotnet SDK
-  additionalDotNetSdks: []                      # additional SDKs to install side-by-side
-  installDotNetWorkloads: true                  # whether or not to install the .NET workloads
+  dotnetSdks:
+    - sdkVersion: $(DOTNET_VERSION)              # SDK-only unless workloads are requested explicitly
+  jobSdkVersion: ''                             # explicit whole-job SDK selection; empty keeps repository global.json
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
   installNode: true                             # whether or not to install Node.js
   checkoutSubmodules: true                      # whether or not to recursively initialize all submodules
-  installPreviewSdk: false                      # whether to install the preview .NET SDK ($(DOTNET_VERSION_PREVIEW)) and pin global.json to it
-  previewWorkloads: ''                           # workloads to install under the preview .NET SDK (comma-separated, e.g. 'wasm-tools,android')
   installXcode: true                            # whether or not to install Xcode
   publishArtifacts: []                          # the additional artifacts to publish
   tools: []                                     # any additional .net global tools
-  dotnetWorkloads: ''                           # override the default workloads to install (comma-separated, e.g. 'android,maui-android')
   skipInstall: false                            # whether or not to install any tools
   skipSteps: false                              # whether or not to run any steps
   use1ESPipelineTemplates: false                # whether or not we are building using the internal 1ES Pipeline Templates
@@ -202,30 +199,20 @@ jobs:
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install the bits needed for .NET
-      - ${{ if and(eq(parameters.installDotNet, 'true'), ne(parameters.skipInstall, 'true'), or(not(startsWith(parameters.name, 'native_')), eq(parameters.docker, ''))) }}:
-        - task: UseDotNet@2
-          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          inputs:
-            packageType: 'sdk'
-            version: $(DOTNET_VERSION)
-          retryCountOnTaskFailure: 3
-          displayName: Install .NET $(DOTNET_VERSION)
-        - ${{ each sdkVersion in parameters.additionalDotNetSdks }}:
-          - task: UseDotNet@2
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            inputs:
-              packageType: 'sdk'
-              version: ${{ sdkVersion }}
-            retryCountOnTaskFailure: 3
-            displayName: Install additional .NET ${{ sdkVersion }}
-        - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
+      - ${{ if ne(parameters.skipInstall, 'true') }}:
+        - template: /scripts/azure-templates-steps-dotnet.yml@self
+          parameters:
+            sdks: ${{ parameters.dotnetSdks }}
+            platform: ${{ parameters.buildAgent.pool.os }}
+            jobSdkVersion: ${{ parameters.jobSdkVersion }}
+        - ${{ if and(ne(length(parameters.dotnetSdks), 0), eq(parameters.buildAgent.pool.os, 'linux')) }}:
           - pwsh: .\scripts\infra\native\shared\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Fix the Microsoft.WinFX.* file
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-        # display dotnet info
-        - pwsh: dotnet --info
-          displayName: Display all the .NET information
-          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        - ${{ if ne(length(parameters.dotnetSdks), 0) }}:
+          - pwsh: dotnet --info
+            displayName: Display all the .NET information
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install extra bits for the managed builds
       - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true')) }}:
@@ -271,36 +258,6 @@ jobs:
             displayName: Install Android APIs
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-        # install workloads
-        - ${{ if and(eq(parameters.installDotNet, 'true'), eq(parameters.installDotNetWorkloads, 'true')) }}:
-          - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -Workloads "${{ parameters.dotnetWorkloads }}" -WorkloadSetVersion "$env:DOTNET_WORKLOAD_VERSION"
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            retryCountOnTaskFailure: 3
-            displayName: Install the .NET workloads
-        # install and select the preview .NET SDK (opt-in; for jobs that run against a preview runtime)
-        - ${{ if eq(parameters.installPreviewSdk, 'true') }}:
-          - task: UseDotNet@2
-            displayName: Install .NET $(DOTNET_VERSION_PREVIEW) (preview)
-            retryCountOnTaskFailure: 3
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            inputs:
-              packageType: sdk
-              version: $(DOTNET_VERSION_PREVIEW)
-          - pwsh: |
-              $globalJson = @{ sdk = @{ version = "$(DOTNET_VERSION_PREVIEW)"; allowPrerelease = $true; rollForward = "latestFeature" } } | ConvertTo-Json
-              Set-Content -Path global.json -Value $globalJson
-              Get-Content global.json
-              dotnet --version
-            displayName: Pin global.json to the preview .NET SDK
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          - ${{ if ne(parameters.previewWorkloads, '') }}:
-            # Reuse the shared workload install script, pinned to the exact preview workload set.
-            # WASM tests still restore the platform TFMs (e.g. -android) of referenced projects, so
-            # those workloads must be installed too — same as the non-preview test jobs.
-            - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Workloads "${{ parameters.previewWorkloads }}" -WorkloadSetVersion "$(DOTNET_WORKLOAD_VERSION_PREVIEW)" -Tizen ""
-              displayName: Install the preview .NET workloads (${{ parameters.previewWorkloads }})
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install the mac tools
       - ${{ if and(eq(parameters.installXcode, 'true'), ne(parameters.buildAgent.parameters.installXcode, 'false'), eq(parameters.buildAgent.pool.os, 'macos'), ne(parameters.skipInstall, 'true')) }}:
