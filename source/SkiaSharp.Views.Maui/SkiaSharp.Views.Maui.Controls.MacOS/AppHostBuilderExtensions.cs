@@ -10,7 +10,6 @@ namespace SkiaSharp.Views.Maui.Controls.Hosting
 		/// <summary>Registers the stable SkiaSharp controls with native AppKit CPU and Metal handlers.</summary>
 		public static MauiAppBuilder UseSkiaSharpMacOS(this MauiAppBuilder builder)
 		{
-			MacImageSourceMapping.Register();
 			return AppHostBuilderExtensions.UseSkiaSharp(builder).ConfigureMauiHandlers(handlers =>
 			{
 				handlers.AddHandler<SKCanvasView, AppKitSKCanvasViewHandler>();
