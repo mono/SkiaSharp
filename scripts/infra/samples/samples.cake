@@ -50,8 +50,9 @@ Task ("samples")
         { "SampleFilter", SAMPLE_FILTER },
     };
     var excludedCategories = SAMPLE_TEST_EXCLUDE_CATEGORIES.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+    // Consumer commands own their timeouts; MTP's activity monitor misdetects these process trees.
     RunDotNetTest(ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj"),
-        results, properties: properties, noBuild: SKIP_BUILD, hangTimeout: "40m", excludedCategories: excludedCategories);
+        results, properties: properties, noBuild: SKIP_BUILD, hangTimeout: null, excludedCategories: excludedCategories);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

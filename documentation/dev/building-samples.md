@@ -233,6 +233,11 @@ Test results identify each solution; the CI run title identifies its SDK profile
 Build output appears in the test output and MSBuild binlogs are written under
 `output/logs/testlogs/samples`. No separate sample plan is generated.
 Missing generated inputs or a filter with no eligible matches fail explicitly.
+Consumer CLI commands have explicit timeouts and terminate their owned process
+trees on timeout. Sample runs do not enable MTP's HangDump activity monitor:
+version 1.9.1 falsely timed out a progressing macOS consumer run and then crashed
+while enumerating dump files after all tests passed. Ordinary core test runners
+retain their existing HangDump settings; CI also retains its sample-job time limit.
 
 Docker samples are identified by `Dockerfile`, `linux.Dockerfile` or
 `windows.Dockerfile`, not folder names or scripts. They are excluded from the
