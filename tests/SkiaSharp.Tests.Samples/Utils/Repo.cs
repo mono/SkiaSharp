@@ -20,7 +20,7 @@ internal static class Repo
         const string packageId = "SkiaSharp";
         var file = Assert.Single(
             Directory.EnumerateFiles(PackagesDir, packageId + ".*.nupkg"),
-            path => char.IsDigit(Path.GetFileName(path)[packageId.Length + 1]) && 
+            path => char.IsDigit(Path.GetFileName(path)[packageId.Length + 1]) &&
                 !path.EndsWith(".symbols.nupkg", StringComparison.Ordinal));
         return Path.GetFileName(file)[(packageId.Length + 1)..^6];
     }
