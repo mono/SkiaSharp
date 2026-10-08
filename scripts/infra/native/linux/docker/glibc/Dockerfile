@@ -132,7 +132,8 @@ RUN . /etc/skia-env \
          expected_sha=$(echo $pkg_info | cut -d' ' -f2) ; \
          url="${FC_REPO}/pool/main/f/fontconfig/${pkg}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb" ; \
          echo "Downloading $url" ; \
-         curl -fSL -o "${pkg}.deb" "$url" ; \
+         curl -fSL --retry 3 --retry-all-errors --connect-timeout 30 --max-time 300 \
+           -o "${pkg}.deb" "$url" || exit 1 ; \
          actual_sha=$(sha256sum "${pkg}.deb" | cut -d' ' -f1) ; \
          if [ "$actual_sha" != "$expected_sha" ]; then \
            echo "FATAL: SHA-256 mismatch for ${pkg}.deb" ; \
