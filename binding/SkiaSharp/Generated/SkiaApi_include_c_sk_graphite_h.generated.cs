@@ -349,18 +349,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_graphite_context_options_init_defaults (SKGraphiteContextOptions* @out);
+		internal static partial void sk_graphite_context_options_init_defaults (SKGraphiteContextOptionsNative* @out);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_graphite_context_options_init_defaults (SKGraphiteContextOptions* @out);
+		internal static extern void sk_graphite_context_options_init_defaults (SKGraphiteContextOptionsNative* @out);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_graphite_context_options_init_defaults (SKGraphiteContextOptions* @out);
+			internal delegate void sk_graphite_context_options_init_defaults (SKGraphiteContextOptionsNative* @out);
 		}
 		private static Delegates.sk_graphite_context_options_init_defaults sk_graphite_context_options_init_defaults_delegate;
-		internal static void sk_graphite_context_options_init_defaults (SKGraphiteContextOptions* @out) =>
+		internal static void sk_graphite_context_options_init_defaults (SKGraphiteContextOptionsNative* @out) =>
 			(sk_graphite_context_options_init_defaults_delegate ??= GetSymbol<Delegates.sk_graphite_context_options_init_defaults> ("sk_graphite_context_options_init_defaults")).Invoke (@out);
 		#endif
 
@@ -653,6 +653,44 @@ namespace SkiaSharp
 		private static Delegates.sk_graphite_recording_delete sk_graphite_recording_delete_delegate;
 		internal static void sk_graphite_recording_delete (sk_graphite_recording_t recording) =>
 			(sk_graphite_recording_delete_delegate ??= GetSymbol<Delegates.sk_graphite_recording_delete> ("sk_graphite_recording_delete")).Invoke (recording);
+		#endif
+
+		// void sk_graphite_shader_error_handler_delete(sk_graphite_shader_error_handler_t* handler)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_graphite_shader_error_handler_delete (sk_graphite_shader_error_handler_t handler);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_graphite_shader_error_handler_delete (sk_graphite_shader_error_handler_t handler);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_graphite_shader_error_handler_delete (sk_graphite_shader_error_handler_t handler);
+		}
+		private static Delegates.sk_graphite_shader_error_handler_delete sk_graphite_shader_error_handler_delete_delegate;
+		internal static void sk_graphite_shader_error_handler_delete (sk_graphite_shader_error_handler_t handler) =>
+			(sk_graphite_shader_error_handler_delete_delegate ??= GetSymbol<Delegates.sk_graphite_shader_error_handler_delete> ("sk_graphite_shader_error_handler_delete")).Invoke (handler);
+		#endif
+
+		// sk_graphite_shader_error_handler_t* sk_graphite_shader_error_handler_new(sk_graphite_shader_error_handler_proc proc, void* userData)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_graphite_shader_error_handler_t sk_graphite_shader_error_handler_new (void* proc, void* userData);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_graphite_shader_error_handler_t sk_graphite_shader_error_handler_new (SKGraphiteShaderErrorHandlerProxyDelegate proc, void* userData);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_graphite_shader_error_handler_t sk_graphite_shader_error_handler_new (SKGraphiteShaderErrorHandlerProxyDelegate proc, void* userData);
+		}
+		private static Delegates.sk_graphite_shader_error_handler_new sk_graphite_shader_error_handler_new_delegate;
+		internal static sk_graphite_shader_error_handler_t sk_graphite_shader_error_handler_new (SKGraphiteShaderErrorHandlerProxyDelegate proc, void* userData) =>
+			(sk_graphite_shader_error_handler_new_delegate ??= GetSymbol<Delegates.sk_graphite_shader_error_handler_new> ("sk_graphite_shader_error_handler_new")).Invoke (proc, userData);
 		#endif
 
 		// sk_surface_t* sk_graphite_surface_make_render_target(sk_graphite_recorder_t* recorder, const sk_imageinfo_t* info, bool mipmapped, const sk_surfaceprops_t* props)

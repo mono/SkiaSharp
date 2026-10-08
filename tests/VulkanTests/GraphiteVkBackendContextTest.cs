@@ -53,5 +53,10 @@ namespace SkiaSharp.Vulkan.Tests
 
 			Assert.NotNull(graphiteContext);
 		}
+
+		// Shader-error handler end-to-end wiring is now covered by
+		// GraphiteBackendTestBase.ShaderErrorHandlerWiringSurvivesFullRoundTrip, which runs
+		// across every backend that supports per-harness options (Metal + Vulkan). This file
+		// keeps the pure "handles round-trip through GRVkBackendContext" checks below.
 	}
 }
