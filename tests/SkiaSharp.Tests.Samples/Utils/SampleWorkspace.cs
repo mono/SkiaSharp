@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -38,26 +37,6 @@ public sealed class SampleWorkspace : IDisposable
             Dispose();
             throw;
         }
-    }
-
-    internal void ConfigureProcess(ProcessStartInfo start)
-    {
-        // Keep the host PATH, but replace inherited build settings with private caches.
-        foreach (var key in start.Environment.Keys.Where(k =>
-            k.StartsWith("DOTNET_", StringComparison.OrdinalIgnoreCase) ||
-            k.StartsWith("MSBUILD", StringComparison.OrdinalIgnoreCase) ||
-            k.StartsWith("Restore", StringComparison.OrdinalIgnoreCase) ||
-            k.StartsWith("NUGET_", StringComparison.OrdinalIgnoreCase) ||
-            k.Equals("NuGetPackageRoot", StringComparison.OrdinalIgnoreCase)).ToArray())
-            start.Environment.Remove(key);
-        var cache = Path.Combine(Root, "cache");
-        start.Environment["NUGET_PACKAGES"] = Path.Combine(cache, "packages");
-        start.Environment["NUGET_HTTP_CACHE_PATH"] = Path.Combine(cache, "http");
-        start.Environment["NUGET_SCRATCH"] = Path.Combine(cache, "scratch");
-        start.Environment["DOTNET_CLI_HOME"] = Path.Combine(cache, "home");
-        start.Environment["DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE"] = "true";
-        start.Environment["MSBUILDDISABLENODEREUSE"] = "1";
-        start.Environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
     }
 
     internal static void CopySample(string source, string folder, string destination)

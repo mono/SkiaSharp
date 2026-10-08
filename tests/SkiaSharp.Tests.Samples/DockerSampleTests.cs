@@ -27,16 +27,18 @@ public class DockerSampleTests : IClassFixture<DockerSampleFixture>, IAsyncLifet
         docker.OwnContainer(containerName);
     }
 
-    public ValueTask InitializeAsync() => ValueTask.CompletedTask;
+    public ValueTask InitializeAsync() =>
+        ValueTask.CompletedTask;
 
     // xUnit disposes each test instance, including when its test fails.
-    public async ValueTask DisposeAsync() => await docker.RemoveContainer(containerName);
+    public async ValueTask DisposeAsync() =>
+        await docker.RemoveContainer(containerName);
 
     internal static (string OutputPath, string PortBinding) HostSettings(string platform) => Hosts[platform];
 
     public static IEnumerable<object[]> Cases() =>
         SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
-            .Where(sample => sample.Kind == SampleKind.Docker)
+            .Where(sample => sample.Kind == SampleLookup.EntryKind.Docker)
             .Select(sample => new object[] { sample.Folder, sample.FileName });
 
     public static IEnumerable<object[]> ConsoleCases()
@@ -51,9 +53,9 @@ public class DockerSampleTests : IClassFixture<DockerSampleFixture>, IAsyncLifet
         yield return [sample.Folder, sample.FileName, HostSettings(SampleLookup.HostPlatform).PortBinding];
     }
 
-    private static SampleEntry DockerSample(string name) =>
+    private static SampleLookup.Entry DockerSample(string name) =>
         Assert.Single(SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform),
-            sample => sample.Kind == SampleKind.Docker && sample.Folder == Path.Combine("Basic", name));
+            sample => sample.Kind == SampleLookup.EntryKind.Docker && sample.Folder == Path.Combine("Basic", name));
 
     [Theory]
     [Trait("Category", "DockerBuild")]
@@ -84,12 +86,11 @@ public class DockerSampleTests : IClassFixture<DockerSampleFixture>, IAsyncLifet
 
     private async Task RunConsole(string tag, string outputPath)
     {
-        await docker.Run(["run", "--name", containerName, tag, "SkiaSharp", "--output", outputPath],
-            TimeSpan.FromMinutes(3));
+        await docker.Run(["run", "--name", containerName, tag, "SkiaSharp", "--output", outputPath], TimeSpan.FromMinutes(3));
         var image = Path.Combine(diagnostics, "output.png");
         await docker.Run(["cp", $"{containerName}:{outputPath}", image]);
         SampleImage.Validate(File.ReadAllBytes(image));
-        SampleArtifacts.AttachFile(image, "image/png");
+        TestContext.Current.AddFileAttachment(image, "image/png");
     }
 
     private async Task RunHttp(string tag, string requestsFile, string portBinding)
@@ -136,7 +137,7 @@ public class DockerSampleTests : IClassFixture<DockerSampleFixture>, IAsyncLifet
         SampleImage.Validate(bytes);
         var image = Path.Combine(diagnostics, "output.png");
         await File.WriteAllBytesAsync(image, bytes);
-        SampleArtifacts.AttachFile(image, "image/png");
+        TestContext.Current.AddFileAttachment(image, "image/png");
     }
 
     internal static IReadOnlyList<Uri> ReadHttpRequests(string file)

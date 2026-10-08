@@ -146,11 +146,16 @@ The test helpers keep these responsibilities separate: `Repo` exposes named
 repository paths and privately reads the core package identity to select the
 generated sample tree; `ProcessRunner` runs both dotnet and Docker.
 `SampleWorkspace` owns the sample copy, private caches, import/SDK fences, and
-cleanup; `DotNet` supplies the sample build command and NuGet restore configuration.
+cleanup. `SampleTestBase.BuildSample` orchestrates preparation, SDK selection,
+and the build. `DotNet` supplies reusable `Build` and `GetVersion` commands,
+process environment configuration, and NuGet restore configuration. `Build`
+always requests a binlog in its supplied diagnostics directory and retains
+the text log and available binlog on failure.
 Infrastructure tests pass temporary paths directly rather than overriding
 process-wide settings.
 Helpers use xUnit v3's current test context for output and attachments, without
-passing output helpers through tests or fixtures. Process output outside an
+passing output helpers through tests or fixtures. File attachments use the
+`TestContext.Current.AddFileAttachment` extension. Process output outside an
 individual test, such as shared-fixture cleanup, uses diagnostic messages.
 
 Sample builds invoke `dotnet` from the test process's inherited `PATH`.

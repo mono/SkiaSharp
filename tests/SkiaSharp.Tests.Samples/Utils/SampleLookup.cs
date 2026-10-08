@@ -1,17 +1,17 @@
 namespace SkiaSharp.Tests.Samples.Utils;
 
-// Distinguishes ordinary builds, shared Gallery builds, and Docker checks.
-public enum SampleKind { Sample, Gallery, Docker }
-
-// Identifies a generated solution or Dockerfile relative to the samples root.
-public sealed record SampleEntry(string Folder, string FileName, SampleKind Kind)
-{
-    public string RelativePath => Path.Combine(Folder, FileName);
-}
-
 // Finds generated samples that can be built on the current host.
 public static class SampleLookup
 {
+    // Distinguishes ordinary builds, shared Gallery builds, and Docker checks.
+    public enum EntryKind { Sample, Gallery, Docker }
+
+    // Identifies a generated solution or Dockerfile relative to the samples root.
+    public sealed record Entry(string Folder, string FileName, EntryKind Kind)
+    {
+        public string RelativePath => Path.Combine(Folder, FileName);
+    }
+
     private static readonly string[] PlatformSuffixes = [".Windows", ".Mac", ".Linux"];
 
     public static string HostPlatform =>
@@ -21,7 +21,7 @@ public static class SampleLookup
                 ? "Mac"
                 : "Linux";
 
-    public static IReadOnlyList<SampleEntry> Discover(string root, string platform, string filter = "")
+    public static IReadOnlyList<Entry> Discover(string root, string platform, string filter = "")
     {
         if (!Directory.Exists(root))
             throw new DirectoryNotFoundException($"Generated samples are missing: {root}. Run samples-generate first.");
@@ -38,7 +38,8 @@ public static class SampleLookup
             .Where(path => Path.GetFileName(path) is "Dockerfile" or "linux.Dockerfile" or "windows.Dockerfile")
             .ToArray();
         var dockerFolders = dockerfiles.Select(Path.GetDirectoryName).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var entries = new List<SampleEntry>();
+
+        var entries = new List<Entry>();
 
         foreach (var path in solutions)
         {
@@ -60,20 +61,24 @@ public static class SampleLookup
 
             var folder = Path.GetDirectoryName(relative)!;
             var kind = folder == "Gallery" || folder.StartsWith("Gallery" + Path.DirectorySeparatorChar, StringComparison.Ordinal)
-                ? SampleKind.Gallery : SampleKind.Sample;
+                ? EntryKind.Gallery : EntryKind.Sample;
             entries.Add(new(folder, Path.GetFileName(path), kind));
         }
 
-        var hostDockerfile = platform == "Windows" ? "windows.Dockerfile" : "linux.Dockerfile";
+        var hostDockerfile = platform == "Windows"
+            ? "windows.Dockerfile"
+            : "linux.Dockerfile";
         foreach (var group in dockerfiles.GroupBy(Path.GetDirectoryName))
         {
-            var path = group.FirstOrDefault(file => Path.GetFileName(file) == hostDockerfile) ??
+            var path =
+                group.FirstOrDefault(file => Path.GetFileName(file) == hostDockerfile) ??
                 group.FirstOrDefault(file => Path.GetFileName(file) == "Dockerfile");
             if (path is null)
                 continue;
+
             var relative = Path.GetRelativePath(root, path);
             if (relative.Contains(filter, StringComparison.Ordinal))
-                entries.Add(new(Path.GetDirectoryName(relative)!, Path.GetFileName(path), SampleKind.Docker));
+                entries.Add(new(Path.GetDirectoryName(relative)!, Path.GetFileName(path), EntryKind.Docker));
         }
 
         if (entries.Count == 0)

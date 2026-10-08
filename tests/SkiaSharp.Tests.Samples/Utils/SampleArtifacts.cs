@@ -7,14 +7,14 @@ internal static class SampleArtifacts
 {
     internal const long AttachmentLimit = 8 * 1024 * 1024;
 
-    public static void AttachFile(string file, string mediaType)
+    public static void AddFileAttachment(this ITestContext context, string file, string mediaType)
     {
-        TestContext.Current.TestOutputHelper?.WriteLine($"Artifact: {file}");
+        context.TestOutputHelper?.WriteLine($"Artifact: {file}");
         if (new FileInfo(file).Length > AttachmentLimit)
         {
-            TestContext.Current.TestOutputHelper?.WriteLine("Retained as a pipeline artifact rather than embedding more than 8 MiB in the test result.");
+            context.TestOutputHelper?.WriteLine("Retained as a pipeline artifact rather than embedding more than 8 MiB in the test result.");
             return;
         }
-        TestContext.Current.AddAttachment(Path.GetFileName(file), File.ReadAllBytes(file), mediaType);
+        context.AddAttachment(Path.GetFileName(file), File.ReadAllBytes(file), mediaType);
     }
 }

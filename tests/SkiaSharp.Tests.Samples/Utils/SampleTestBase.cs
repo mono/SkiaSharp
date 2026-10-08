@@ -1,13 +1,14 @@
 namespace SkiaSharp.Tests.Samples.Utils;
 
-// Gives each test case one lazily prepared sample workspace.
+// Prepares and builds each sample in one owned workspace.
 public abstract class SampleTestBase : IDisposable
 {
     private SampleWorkspace? workspace;
     private string? preparedFolder;
     private readonly string samplesDir;
 
-    protected SampleTestBase() : this(Repo.SamplesDir)
+    protected SampleTestBase()
+        : this(Repo.SamplesDir)
     {
     }
 
@@ -26,5 +27,19 @@ public abstract class SampleTestBase : IDisposable
         return workspace;
     }
 
-    public void Dispose() => workspace?.Dispose();
+    protected async Task BuildSample(string folder, string solution, string configuration)
+    {
+        var prepared = PrepareSample(folder);
+        var project = Path.Combine(prepared.Root, "samples", folder, solution);
+        if (!File.Exists(project))
+            throw new FileNotFoundException("Selected sample solution is missing", project);
+
+        var diagnostics = Path.Combine(prepared.DiagnosticsRoot, "builds", folder,
+            Path.GetFileNameWithoutExtension(solution), configuration);
+        await DotNet.GetVersion(prepared);
+        await DotNet.Build(prepared, project, diagnostics, configuration);
+    }
+
+    public void Dispose() =>
+        workspace?.Dispose();
 }

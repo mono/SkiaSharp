@@ -43,9 +43,9 @@ public class SampleInfrastructureTests : IDisposable
         FileIn("Basic/Console/obj/Nested.slnx");
         var entries = SampleLookup.Discover(root, platform);
         Assert.Equal(3, entries.Count);
-        Assert.Contains(new SampleEntry("Gallery", solution, SampleKind.Gallery), entries);
-        Assert.Contains(new SampleEntry(Path.Combine("Basic", "Console"), "Console.slnx", SampleKind.Sample), entries);
-        Assert.Contains(new SampleEntry(Path.Combine("Basic", "Docker"), dockerfile, SampleKind.Docker), entries);
+        Assert.Contains(new SampleLookup.Entry("Gallery", solution, SampleLookup.EntryKind.Gallery), entries);
+        Assert.Contains(new SampleLookup.Entry(Path.Combine("Basic", "Console"), "Console.slnx", SampleLookup.EntryKind.Sample), entries);
+        Assert.Contains(new SampleLookup.Entry(Path.Combine("Basic", "Docker"), dockerfile, SampleLookup.EntryKind.Docker), entries);
     }
 
     [Fact]
@@ -142,15 +142,15 @@ public class SampleInfrastructureTests : IDisposable
             Assert.Empty(XDocument.Load(Path.Combine(working, file)).Root!.Elements());
         var start = new ProcessStartInfo();
         start.Environment["MSBUILD_EXAMPLE"] = "pollution";
-        workspace.ConfigureProcess(start);
+        var path = start.Environment["PATH"];
+        DotNet.ConfigureProcess(start, workspace);
         Assert.False(start.Environment.ContainsKey("MSBUILD_EXAMPLE"));
+        Assert.Equal(path, start.Environment["PATH"]);
         foreach (var key in new[] { "NUGET_PACKAGES", "NUGET_HTTP_CACHE_PATH", "NUGET_SCRATCH", "DOTNET_CLI_HOME" })
             Assert.StartsWith(working + Path.DirectorySeparatorChar, start.Environment[key]);
-        var selected = await ProcessRunner.Run("dotnet", ["--version"], working, TimeSpan.FromMinutes(1),
-            workspace.ConfigureProcess);
-        Assert.Equal(0, selected.ExitCode);
-        Assert.NotEqual("1.2.345", selected.Output.Trim());
-        Assert.Matches(@"^\d+\.\d+\.\d+", selected.Output.Trim());
+        var selected = await DotNet.GetVersion(workspace);
+        Assert.NotEqual("1.2.345", selected);
+        Assert.Matches(@"^\d+\.\d+\.\d+", selected);
         Directory.CreateDirectory(workspace.DiagnosticsRoot);
         workspace.Dispose();
         Assert.False(Directory.Exists(working));
@@ -206,10 +206,10 @@ public class SampleInfrastructureTests : IDisposable
     {
         FileIn("small.txt", "Sample diagnostic attachment.");
         Assert.NotNull(TestContext.Current.TestOutputHelper);
-        SampleArtifacts.AttachFile(Path.Combine(root, "small.txt"), "text/plain");
+        TestContext.Current.AddFileAttachment(Path.Combine(root, "small.txt"), "text/plain");
         using (var file = File.Create(Path.Combine(root, "large.binlog")))
             file.SetLength(SampleArtifacts.AttachmentLimit + 1);
-        SampleArtifacts.AttachFile(Path.Combine(root, "large.binlog"), "application/octet-stream");
+        TestContext.Current.AddFileAttachment(Path.Combine(root, "large.binlog"), "application/octet-stream");
         Assert.True(File.Exists(Path.Combine(root, "large.binlog")));
     }
 
@@ -243,6 +243,48 @@ public class SampleInfrastructureTests : IDisposable
     private sealed class LifetimeTest(string samplesDir) : SampleTestBase(samplesDir)
     {
         internal string Prepare() => PrepareSample(Path.Combine("Basic", "Console")).Root;
+        internal string Diagnostics => PrepareSample(Path.Combine("Basic", "Console")).DiagnosticsRoot;
+        internal Task Build() => BuildSample(Path.Combine("Basic", "Console"), "App.csproj", "Release");
+    }
+
+    [Fact]
+    public async Task SampleTestBaseBuildsWithRetainedDiagnostics()
+    {
+        FileIn("inputs/Basic/Console/App.csproj", """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+            </Project>
+            """);
+        using var test = new LifetimeTest(Path.Combine(root, "inputs"));
+        await test.Build();
+        var working = test.Prepare();
+        var diagnostics = Path.Combine(test.Diagnostics, "builds", "Basic", "Console", "App", "Release");
+        test.Dispose();
+        Assert.False(Directory.Exists(working));
+        Assert.Contains("Build succeeded.", File.ReadAllText(Path.Combine(diagnostics, "build.log")));
+        Assert.True(new FileInfo(Path.Combine(diagnostics, "build.binlog")).Length > 0);
+    }
+
+    [Fact]
+    public async Task DotNetFailedBuildKeepsLogsInTheProvidedDirectory()
+    {
+        FileIn("inputs/App/App.csproj", """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+              <Target Name="FailBuild" BeforeTargets="CoreCompile">
+                <Error Text="Expected sample build failure" />
+              </Target>
+            </Project>
+            """);
+        using var workspace = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Repo.PackagesDir,
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+        var diagnostics = Path.Combine(root, "provided-build-logs");
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            DotNet.Build(workspace, Path.Combine(workspace.Root, "samples", "App", "App.csproj"), diagnostics));
+        Assert.Contains(diagnostics, error.Message);
+        Assert.Contains("Expected sample build failure", File.ReadAllText(Path.Combine(diagnostics, "build.log")));
+        Assert.True(new FileInfo(Path.Combine(diagnostics, "build.binlog")).Length > 0);
     }
 
     [Fact]

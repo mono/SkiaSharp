@@ -9,7 +9,7 @@ public class SampleBuildTests : SampleTestBase
 {
     public static IEnumerable<object[]> Cases() =>
         SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
-            .Where(sample => sample.Kind != SampleKind.Docker)
+            .Where(sample => sample.Kind != SampleLookup.EntryKind.Docker)
             .Select(sample => new object[] { sample.Folder, sample.FileName, "Release" });
 
     [Fact]
@@ -18,10 +18,6 @@ public class SampleBuildTests : SampleTestBase
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public async Task GeneratedSampleBuilds(string folder, string solution, string configuration)
-    {
-        var workspace = PrepareSample(folder);
-        var diagnostics = Path.Combine(workspace.DiagnosticsRoot, "builds", folder, Path.GetFileNameWithoutExtension(solution), configuration);
-        await DotNet.BuildSample(workspace, Path.Combine(workspace.Root, "samples", folder, solution), diagnostics, configuration);
-    }
+    public Task GeneratedSampleBuilds(string folder, string solution, string configuration) =>
+        BuildSample(folder, solution, configuration);
 }

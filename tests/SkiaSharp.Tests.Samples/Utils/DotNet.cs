@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Xml.Linq;
+using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
@@ -23,40 +25,72 @@ public static class DotNet
                     new XElement("package", new XAttribute("pattern", "*"))))))
         .Save(path);
 
-    public static async Task BuildSample(SampleWorkspace workspace, string solution, string diagnostics, string configuration = "Release")
+    public static async Task<string> GetVersion(SampleWorkspace workspace)
     {
-        if (!File.Exists(solution))
-            throw new FileNotFoundException("Selected sample solution is missing", solution);
-
-        Directory.CreateDirectory(diagnostics);
-        var directory = Path.GetDirectoryName(solution)!;
-        var selected = await ProcessRunner.Run("dotnet", ["--version"], directory, TimeSpan.FromMinutes(1), workspace.ConfigureProcess);
-        if (selected.ExitCode != 0)
-            throw new InvalidOperationException($"The dotnet host on PATH could not select an SDK: {selected.Output}\n{selected.Error}");
-
-        string[] arguments =
-        [
-            "build",
-            solution,
-            "-c", configuration,
-            "--nologo",
-            "-v:minimal",
-            $"-bl:{Path.Combine(diagnostics, "build.binlog")}",
-            $"-p:RestoreConfigFile={Path.Combine(workspace.Root, "NuGet.Config")}",
-            "-p:RestoreNoCache=true",
-            "-p:UseSharedCompilation=false"
-        ];
-        var result = await ProcessRunner.Run("dotnet", arguments, directory, TimeSpan.FromMinutes(30), workspace.ConfigureProcess);
-
-        var log = Path.Combine(diagnostics, "build.log");
-        await File.WriteAllTextAsync(log, result.Output + result.Error);
-        SampleArtifacts.AttachFile(log, "text/plain");
-
-        var binlog = Path.Combine(diagnostics, "build.binlog");
-        if (File.Exists(binlog))
-            SampleArtifacts.AttachFile(binlog, "application/octet-stream");
-
+        var result = await ProcessRunner.Run("dotnet", ["--version"], workspace.Root, TimeSpan.FromMinutes(1), start => ConfigureProcess(start, workspace));
         if (result.ExitCode != 0)
-            throw new InvalidOperationException($"Sample {solution} failed ({result.ExitCode}); see {diagnostics}\n{result.Output}\n{result.Error}");
+            throw new InvalidOperationException($"The dotnet host on PATH could not select an SDK: {result.Output}\n{result.Error}");
+        return result.Output.Trim();
+    }
+
+    public static async Task Build(SampleWorkspace workspace, string project, string diagnostics, string configuration = "Release")
+    {
+        project = Path.GetFullPath(project);
+        diagnostics = Path.GetFullPath(diagnostics);
+        Directory.CreateDirectory(diagnostics);
+        var log = Path.Combine(diagnostics, "build.log");
+        var binlog = Path.Combine(diagnostics, "build.binlog");
+
+        await File.WriteAllTextAsync(log, "");
+        try
+        {
+            string[] arguments =
+            [
+                "build",
+                project,
+                "-c", configuration,
+                "--nologo",
+                "-v:minimal",
+                $"-bl:{binlog}",
+                $"-p:RestoreConfigFile={Path.Combine(workspace.Root, "NuGet.Config")}",
+                "-p:RestoreNoCache=true",
+                "-p:UseSharedCompilation=false"
+            ];
+            var result = await ProcessRunner.Run("dotnet", arguments, Path.GetDirectoryName(project)!, TimeSpan.FromMinutes(30), start => ConfigureProcess(start, workspace));
+            await File.WriteAllTextAsync(log, result.Output + result.Error);
+            if (result.ExitCode != 0)
+                throw new InvalidOperationException($"dotnet build {project} failed ({result.ExitCode}); see {diagnostics}");
+        }
+        catch (Exception error)
+        {
+            await File.AppendAllTextAsync(log, Environment.NewLine + error);
+            throw;
+        }
+        finally
+        {
+            TestContext.Current.AddFileAttachment(log, "text/plain");
+            if (File.Exists(binlog))
+                TestContext.Current.AddFileAttachment(binlog, "application/octet-stream");
+        }
+    }
+
+    internal static void ConfigureProcess(ProcessStartInfo start, SampleWorkspace workspace)
+    {
+        // Keep the host PATH, but replace inherited build settings with private caches.
+        foreach (var key in start.Environment.Keys.Where(k =>
+            k.StartsWith("DOTNET_", StringComparison.OrdinalIgnoreCase) ||
+            k.StartsWith("MSBUILD", StringComparison.OrdinalIgnoreCase) ||
+            k.StartsWith("Restore", StringComparison.OrdinalIgnoreCase) ||
+            k.StartsWith("NUGET_", StringComparison.OrdinalIgnoreCase) ||
+            k.Equals("NuGetPackageRoot", StringComparison.OrdinalIgnoreCase)).ToArray())
+            start.Environment.Remove(key);
+        var cache = Path.Combine(workspace.Root, "cache");
+        start.Environment["NUGET_PACKAGES"] = Path.Combine(cache, "packages");
+        start.Environment["NUGET_HTTP_CACHE_PATH"] = Path.Combine(cache, "http");
+        start.Environment["NUGET_SCRATCH"] = Path.Combine(cache, "scratch");
+        start.Environment["DOTNET_CLI_HOME"] = Path.Combine(cache, "home");
+        start.Environment["DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE"] = "true";
+        start.Environment["MSBUILDDISABLENODEREUSE"] = "1";
+        start.Environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
     }
 }
