@@ -7,7 +7,7 @@ Mac Catalyst. Requires .NET 10, macOS 14+, MAUI **10.0.51 or newer**, and
 
 This package depends on the stable `SkiaSharp.Views.Maui.Controls` and
 `SkiaSharp.Views.Maui.Core` assemblies. It reuses their controls, interfaces,
-event arguments, and image sources without duplicating type identities.
+and event arguments without duplicating type identities.
 Register its AppKit handlers after the backend:
 
 ```csharp
@@ -47,19 +47,9 @@ alone as native GPU resource disposal. Removing and re-adding a child in the
 backend's `VerticalStackLayout` did not itself disconnect its handler; both
 canvases resumed painting and receiving mouse input afterward.
 
-The backend's current `ImageHandler` does not resolve custom image source
-services. `UseSkiaSharpMacOS()` opts into once-per-process `PropertyMapper`
-extensions on the backend's static `ImageHandler` and `ImageButtonHandler`
-mappers: only SkiaSharp-backed
-`SKImageImageSource`, `SKBitmapImageSource`, `SKPixmapImageSource`, and
-`SKPictureImageSource` are converted to `NSImage`; all standard MAUI sources
-remain backend-owned. Conversion creates an encoded copy; it does not transfer
-ownership of the original SkiaSharp image, bitmap, pixmap, or picture. This
-conversion is synchronous (`IsLoading` is false afterward). The backend's
-asynchronous URI/stream image loading is not cancellable by this adapter: a
-pending ordinary image load may overwrite a newer SkiaSharp source.
-Clearing an `ImageButton.Source` after a SkiaSharp source also clears the native
-button image; other non-null sources remain handled by the backend.
+The experimental handlers currently do not add AppKit image-source services
+for the stable SkiaSharp-backed MAUI image sources; ordinary MAUI image sources
+remain handled by the backend.
 
 The separate AppKit Gallery host has exercised its filter/sort popovers,
 overlay backdrop dismissal, narrow/wide layout, theme menu, and CPU/Metal

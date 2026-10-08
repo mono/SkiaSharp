@@ -12,7 +12,6 @@ using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 using SkiaSharp;
-using MauiImage = Microsoft.Maui.Controls.Image;
 using MauiWindow = Microsoft.Maui.Controls.Window;
 
 public static class MainClass
@@ -41,16 +40,6 @@ sealed class SmokeApp : Application
 	private readonly List<SKTouchEventArgs> cpuTouches = new();
 	private readonly List<SKTouchEventArgs> gpuTouches = new();
 	private readonly VerticalStackLayout layout = new();
-	private readonly MauiImage bitmapImage = new() { WidthRequest = 20, HeightRequest = 20 };
-	private readonly MauiImage skImage = new() { WidthRequest = 20, HeightRequest = 20 };
-	private readonly MauiImage pixmapImage = new() { WidthRequest = 20, HeightRequest = 20 };
-	private readonly MauiImage pictureImage = new() { WidthRequest = 20, HeightRequest = 20 };
-	private readonly MauiImage fontImage = new() { WidthRequest = 20, HeightRequest = 20 };
-	private readonly ImageButton skImageButton = new() { WidthRequest = 20, HeightRequest = 20 };
-	private readonly SKBitmap bitmap = new(2, 2);
-	private SKImage? image;
-	private SKPixmap? pixmap;
-	private SKPicture? picture;
 	private int cpuFrames;
 	private int gpuFrames;
 	private int resizedCpuFrames;
@@ -61,7 +50,6 @@ sealed class SmokeApp : Application
 	private bool requestedResize;
 	private bool requestedNativeLayout;
 	private bool renderLoopStarted;
-	private bool imageButtonTransitionVerified;
 	private bool reattached;
 	private bool touchesVerified;
 	private DateTime requestedResizeAt;
@@ -74,20 +62,6 @@ sealed class SmokeApp : Application
 
 	protected override MauiWindow CreateWindow(IActivationState? activationState)
 	{
-		bitmap.Erase(SKColors.CornflowerBlue);
-		image = SKImage.FromBitmap(bitmap);
-		pixmap = bitmap.PeekPixels();
-		using (var recorder = new SKPictureRecorder())
-		{
-			recorder.BeginRecording(SKRect.Create(2, 2)).Clear(SKColors.CornflowerBlue);
-			picture = recorder.EndRecording();
-		}
-		bitmapImage.Source = new SKBitmapImageSource { Bitmap = bitmap };
-		skImage.Source = new SKImageImageSource { Image = image };
-		pixmapImage.Source = new SKPixmapImageSource { Pixmap = pixmap };
-		pictureImage.Source = new SKPictureImageSource { Picture = picture, Dimensions = new SKSizeI(2, 2) };
-		skImageButton.Source = new SKImageImageSource { Image = image };
-		fontImage.Source = new FontImageSource { Glyph = "A", Size = 16 };
 		cpu.PaintSurface += (_, e) =>
 		{
 			e.Surface.Canvas.Clear(SKColors.SteelBlue);
@@ -110,12 +84,6 @@ sealed class SmokeApp : Application
 
 		layout.Add(cpu);
 		layout.Add(gpu);
-		layout.Add(bitmapImage);
-		layout.Add(skImage);
-		layout.Add(pixmapImage);
-		layout.Add(pictureImage);
-		layout.Add(fontImage);
-		layout.Add(skImageButton);
 		var page = new ContentPage { Content = layout };
 		var window = new MauiWindow(page);
 		window.Created += (_, _) =>
@@ -162,36 +130,9 @@ sealed class SmokeApp : Application
 			gpu.InvalidateSurface();
 		}
 
-		var imagesConverted =
-			bitmapImage.Handler?.PlatformView is NSImageView { Image: not null } &&
-			skImage.Handler?.PlatformView is NSImageView { Image: not null } &&
-			pixmapImage.Handler?.PlatformView is NSImageView { Image: not null } &&
-			pictureImage.Handler?.PlatformView is NSImageView { Image: not null } &&
-			fontImage.Handler?.PlatformView is NSImageView { Image: not null } &&
-			skImageButton.Handler?.PlatformView is NSButton { Image: not null };
-
 		if (resizedCpuFrames > 0 && resizedGpuFrames > 0 && sawMetal &&
-			sawRawInfo && imagesConverted && touchesVerified)
+			sawRawInfo && touchesVerified)
 		{
-			if (!imageButtonTransitionVerified)
-			{
-				skImageButton.Source = null;
-				if (skImageButton.Handler?.PlatformView is not NSButton { Image: null })
-				{
-					Console.Error.WriteLine("FAIL AppKit ImageButton retained an SK image after clearing Source");
-					Finish(1);
-					return;
-				}
-				skImageButton.Source = new FontImageSource { Glyph = "A", Size = 16 };
-				if (skImageButton.Handler?.PlatformView is not NSButton { Image: not null })
-				{
-					Console.Error.WriteLine("FAIL AppKit ImageButton could not display an ordinary font source");
-					Finish(1);
-					return;
-				}
-				skImageButton.Source = new SKImageImageSource { Image = image };
-				imageButtonTransitionVerified = true;
-			}
 			if (!renderLoopStarted)
 			{
 				renderLoopStarted = true;
@@ -227,7 +168,7 @@ sealed class SmokeApp : Application
 					gpu.Handler!.DisconnectHandler();
 					if (touchesReattached && hadMetalContext && gpu.GRContext is null)
 					{
-						Console.WriteLine($"PASS AppKit CPU={cpuFrames} Metal={gpuFrames} resized CPU={resizedCpuFrames} Metal={resizedGpuFrames}; mouse, reattach, disconnect, Metal loop and image source transitions converted");
+						Console.WriteLine($"PASS AppKit CPU={cpuFrames} Metal={gpuFrames} resized CPU={resizedCpuFrames} Metal={resizedGpuFrames}; mouse, reattach, disconnect and Metal loop");
 						Finish(0);
 					}
 					else
@@ -240,7 +181,7 @@ sealed class SmokeApp : Application
 		}
 		if (DateTime.UtcNow - started > TimeSpan.FromSeconds(20))
 		{
-			Console.Error.WriteLine($"FAIL AppKit CPU={cpuFrames} Metal={gpuFrames} resize CPU={resizedCpuFrames} Metal={resizedGpuFrames} context={sawMetal} rawInfo={sawRawInfo} images={imagesConverted} touch={touchesVerified} reattach={reattached} reattachedFrames={cpuFrames - cpuFramesAtReattach},{gpuFrames - gpuFramesAtReattach}");
+			Console.Error.WriteLine($"FAIL AppKit CPU={cpuFrames} Metal={gpuFrames} resize CPU={resizedCpuFrames} Metal={resizedGpuFrames} context={sawMetal} rawInfo={sawRawInfo} touch={touchesVerified} reattach={reattached} reattachedFrames={cpuFrames - cpuFramesAtReattach},{gpuFrames - gpuFramesAtReattach}");
 			Finish(1);
 		}
 	}
@@ -334,10 +275,6 @@ sealed class SmokeApp : Application
 	{
 		timer?.Invalidate();
 		timer?.Dispose();
-		pixmap?.Dispose();
-		picture?.Dispose();
-		image?.Dispose();
-		bitmap.Dispose();
 		Environment.Exit(exitCode);
 	}
 }
