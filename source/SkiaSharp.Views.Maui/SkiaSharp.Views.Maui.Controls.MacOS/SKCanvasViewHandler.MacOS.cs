@@ -1,4 +1,5 @@
 using System;
+using AppKit;
 using Microsoft.Maui;
 using Microsoft.Maui.Handlers;
 using Microsoft.Maui.Platforms.MacOS.Handlers;
@@ -33,7 +34,7 @@ namespace SkiaSharp.Views.Maui.Handlers
 		public AppKitSKCanvasViewHandler() : base(Mapper, CommandMapper) { }
 
 		/// <inheritdoc />
-		protected override NativeCanvasView CreatePlatformView() => new MacCanvasView(touchHandler);
+		protected override NativeCanvasView CreatePlatformView() => new MauiSKCanvasView(touchHandler);
 
 		/// <inheritdoc />
 		protected override void ConnectHandler(NativeCanvasView platformView)
@@ -77,6 +78,91 @@ namespace SkiaSharp.Views.Maui.Handlers
 			}
 
 			view.OnPaintSurface(new SKPaintSurfaceEventArgs(e.Surface, e.Info, e.RawInfo));
+		}
+
+		private sealed class MauiSKCanvasView : NativeCanvasView
+		{
+			private readonly MacTouchHandler touch;
+
+			public MauiSKCanvasView(MacTouchHandler touch) => this.touch = touch;
+
+			public override void MouseDown(NSEvent e)
+			{
+				if (!touch.Handle(e, SKTouchAction.Pressed, SKMouseButton.Left))
+					base.MouseDown(e);
+			}
+
+			public override void MouseDragged(NSEvent e)
+			{
+				if (!touch.Handle(e, SKTouchAction.Moved, SKMouseButton.Left))
+					base.MouseDragged(e);
+			}
+
+			public override void MouseUp(NSEvent e)
+			{
+				if (!touch.Handle(e, SKTouchAction.Released, SKMouseButton.Left))
+					base.MouseUp(e);
+			}
+
+			public override void RightMouseDown(NSEvent e)
+			{
+				if (!touch.Handle(e, SKTouchAction.Pressed, SKMouseButton.Right))
+					base.RightMouseDown(e);
+			}
+
+			public override void RightMouseDragged(NSEvent e)
+			{
+				if (!touch.Handle(e, SKTouchAction.Moved, SKMouseButton.Right))
+					base.RightMouseDragged(e);
+			}
+
+			public override void RightMouseUp(NSEvent e)
+			{
+				if (!touch.Handle(e, SKTouchAction.Released, SKMouseButton.Right))
+					base.RightMouseUp(e);
+			}
+
+			public override void OtherMouseDown(NSEvent e)
+			{
+				if (!touch.Handle(e, SKTouchAction.Pressed, SKMouseButton.Middle))
+					base.OtherMouseDown(e);
+			}
+
+			public override void OtherMouseDragged(NSEvent e)
+			{
+				if (!touch.Handle(e, SKTouchAction.Moved, SKMouseButton.Middle))
+					base.OtherMouseDragged(e);
+			}
+
+			public override void OtherMouseUp(NSEvent e)
+			{
+				if (!touch.Handle(e, SKTouchAction.Released, SKMouseButton.Middle))
+					base.OtherMouseUp(e);
+			}
+
+			public override void MouseMoved(NSEvent e)
+			{
+				if (!touch.Handle(e, SKTouchAction.Moved))
+					base.MouseMoved(e);
+			}
+
+			public override void MouseEntered(NSEvent e)
+			{
+				if (!touch.Handle(e, SKTouchAction.Entered))
+					base.MouseEntered(e);
+			}
+
+			public override void MouseExited(NSEvent e)
+			{
+				if (!touch.Handle(e, SKTouchAction.Exited))
+					base.MouseExited(e);
+			}
+
+			public override void ScrollWheel(NSEvent e)
+			{
+				if (!touch.Handle(e, SKTouchAction.WheelChanged))
+					base.ScrollWheel(e);
+			}
 		}
 	}
 }
