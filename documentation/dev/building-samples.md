@@ -179,6 +179,12 @@ names remain eligible. Gallery is build-only, including its shared sibling
 projects. WASM and Blazor samples receive eligible build coverage, not browser
 navigation or reference-scene comparison.
 
+`BasicSampleTests` covers ordinary samples; `GallerySampleTests` separately
+covers Gallery using the same workspace/build pipeline. Both belong to the
+`SampleBuild` category, with Gallery also tagged `GalleryBuild`.
+Separate infrastructure tests validate the actual Docker, ordinary-sample,
+and host Gallery case sets without requiring Docker or building the samples.
+
 Each build copies only its sample directory and required ancestor build/NuGet
 configuration into a unique owned workspace under `output/samples-test-workspaces/`.
 The Gallery workspace includes its sibling projects. Consumer import fences,

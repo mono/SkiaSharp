@@ -35,15 +35,10 @@ public class DockerSampleTests : IClassFixture<DockerSampleFixture>, IAsyncLifet
     public async ValueTask DisposeAsync() =>
         await docker.RemoveContainer(containerName);
 
-    public static IEnumerable<object[]> Cases()
-    {
-        var samples = SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
+    public static IEnumerable<object[]> Cases() =>
+        SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
             .Where(sample => sample.Kind == SampleLookup.EntryKind.Docker)
-            .ToArray();
-        foreach (var name in new[] { "DockerConsole", "DockerWebApi" })
-            Assert.Single(samples, sample => sample.Folder == Path.Combine("Basic", name));
-        return samples.Select(sample => new object[] { sample.Folder, sample.FileName });
-    }
+            .Select(sample => new object[] { sample.Folder, sample.FileName });
 
     [Theory]
     [Trait("Category", "DockerBuild")]
@@ -60,9 +55,10 @@ public class DockerSampleTests : IClassFixture<DockerSampleFixture>, IAsyncLifet
     {
         var tag = await docker.Image(folder, dockerfile);
         var settings = Hosts[SampleLookup.HostPlatform];
-        var isHttp = folder == Path.Combine("Basic", "DockerWebApi");
+        var requests = Path.Combine(Repo.SamplesDir, folder, "sample.http");
+        var isHttp = File.Exists(requests);
         if (isHttp)
-            await RunHttp(tag, Path.Combine(Repo.SamplesDir, folder, "sample.http"), settings.PortBinding);
+            await RunHttp(tag, requests, settings.PortBinding);
         else
             await RunConsole(tag, settings.OutputPath);
     }
@@ -80,12 +76,10 @@ public class DockerSampleTests : IClassFixture<DockerSampleFixture>, IAsyncLifet
     {
         var requests = ReadHttpRequests(requestsFile);
         Assert.Equal(2, requests.Count);
-        await docker.Run(["run", "-d", "--name", containerName, "-p", portBinding, tag],
-            TimeSpan.FromMinutes(2));
+        await docker.Run(["run", "-d", "--name", containerName, "-p", portBinding, tag], TimeSpan.FromMinutes(2));
         var binding = await docker.Run(["port", containerName, "8080/tcp"]);
         var portText = binding.Split('\n', StringSplitOptions.RemoveEmptyEntries)[0].Trim();
-        Assert.True(int.TryParse(portText[(portText.LastIndexOf(':') + 1)..], out var port) && port > 0,
-            $"Docker did not publish an HTTP port: {binding}");
+        Assert.True(int.TryParse(portText[(portText.LastIndexOf(':') + 1)..], out var port) && port > 0, $"Docker did not publish an HTTP port: {binding}");
         using var client = new HttpClient(new HttpClientHandler { UseProxy = false }) { Timeout = TimeSpan.FromSeconds(4) };
         var health = Rebase(requests[0], port);
         var ready = false;
@@ -130,6 +124,7 @@ public class DockerSampleTests : IClassFixture<DockerSampleFixture>, IAsyncLifet
         {
             if (line is "" or "###")
                 continue;
+
             if (!line.StartsWith("GET ", StringComparison.Ordinal) ||
                 !Uri.TryCreate(line[4..], UriKind.Absolute, out var uri) ||
                 uri.Scheme != Uri.UriSchemeHttp || uri.Host != "localhost" || uri.Port != 8080 ||
