@@ -122,7 +122,9 @@ void RunDotNetTest(
     FilePath testProject,
     DirectoryPath output,
     string configuration = null,
-    Dictionary<string, string> properties = null)
+    Dictionary<string, string> properties = null,
+    bool noBuild = true,
+    string hangTimeout = "15m")
 {
     output = MakeAbsolute(output);
     var dir = testProject.GetDirectory();
@@ -133,7 +135,7 @@ void RunDotNetTest(
 
     var settings = new DotNetTestSettings {
         Configuration = configuration ?? CONFIGURATION,
-        NoBuild = true,
+        NoBuild = noBuild,
         WorkingDirectory = dir,
         Verbosity = DotNetVerbosity.Normal,
         ArgumentCustomization = args => {
@@ -147,7 +149,7 @@ void RunDotNetTest(
             foreach (var prop in properties) {
                 if (!string.IsNullOrEmpty(prop.Value)) {
                     args = args
-                        .Append($"/p:{prop.Key}={prop.Value}");
+                        .AppendQuoted($"/p:{prop.Key}={prop.Value}");
                 }
             }
             // Everything after "--" is forwarded to the Microsoft.Testing.Platform runner.
@@ -155,10 +157,13 @@ void RunDotNetTest(
                 .Append("--")
                 .Append("--results-directory").AppendQuoted(output.FullPath)
                 .Append("--report-trx")
-                .Append("--report-trx-filename").Append("TestResults.trx")
-                .Append("--hangdump")
-                .Append("--hangdump-timeout").Append("15m")
-                .Append("--hangdump-type").Append("Mini");
+                .Append("--report-trx-filename").Append("TestResults.trx");
+            if (!string.IsNullOrEmpty(hangTimeout)) {
+                args = args
+                    .Append("--hangdump")
+                    .Append("--hangdump-timeout").Append(hangTimeout)
+                    .Append("--hangdump-type").Append("Mini");
+            }
             return args;
         },
     };

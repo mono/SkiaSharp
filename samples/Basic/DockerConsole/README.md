@@ -19,6 +19,11 @@ Includes Dockerfiles for both Linux and Windows (Nano Server) containers.
 
 ## Running the Sample
 
+The repository sample tests build this generated sample with exact artifact
+packages, check the container exit code, and decode its output PNG.
+See [Building and Validating Samples](../../../documentation/dev/building-samples.md)
+for package acquisition and the direct `dotnet test` entry point.
+
 ### Linux
 
 ```bash

@@ -1,0 +1,283 @@
+using System.Diagnostics;
+using System.Text.Json;
+using System.Xml.Linq;
+using SkiaSharp.Tests.Samples.Utils;
+using Xunit;
+
+namespace SkiaSharp.Tests.Samples;
+
+// Exercises discovery, isolation, cleanup, and diagnostics without building real samples.
+[Trait("Category", "Infrastructure")]
+public class SampleInfrastructureTests : IDisposable
+{
+    private readonly string root = Path.Combine(Repo.ArtifactsDir, $"infrastructure-{Guid.NewGuid():N}");
+
+    private void FileIn(string relative, string text = "<Project />")
+    {
+        var path = Path.Combine(root, relative);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, text);
+    }
+
+    [Fact]
+    public void RepositoryPathsFollowTheOutputLayout()
+    {
+        Assert.Equal(Path.Combine(Repo.RootDir, "output", "nugets"), Repo.PackagesDir);
+        Assert.Equal(Path.Combine(Repo.RootDir, "output", "logs", "testlogs", "samples"), Repo.ArtifactsDir);
+        Assert.Equal(Path.Combine(Repo.RootDir, "output", "samples-test-workspaces"), Repo.WorkspacesDir);
+    }
+
+    [Theory]
+    [InlineData("Windows", "Gallery.Windows.slnx", "windows.Dockerfile")]
+    [InlineData("Mac", "Gallery.Mac.slnx", "linux.Dockerfile")]
+    [InlineData("Linux", "Gallery.Linux.slnx", "linux.Dockerfile")]
+    public void SelectsHostSolutionsAndDockerfiles(string platform, string solution, string dockerfile)
+    {
+        FileIn("Gallery/Gallery.slnx");
+        foreach (var host in new[] { "Windows", "Mac", "Linux" })
+            FileIn($"Gallery/Gallery.{host}.slnx");
+        FileIn("Basic/Console/Console.slnx");
+        FileIn("Basic/Docker/App.slnx");
+        FileIn("Basic/Docker/linux.Dockerfile");
+        FileIn("Basic/Docker/windows.Dockerfile");
+        FileIn("Basic/Console/obj/Nested.slnx");
+        var entries = SampleLookup.Discover(root, platform);
+        Assert.Equal(3, entries.Count);
+        Assert.Contains(new SampleEntry("Gallery", solution, SampleKind.Gallery), entries);
+        Assert.Contains(new SampleEntry(Path.Combine("Basic", "Console"), "Console.slnx", SampleKind.Sample), entries);
+        Assert.Contains(new SampleEntry(Path.Combine("Basic", "Docker"), dockerfile, SampleKind.Docker), entries);
+    }
+
+    [Fact]
+    public void FiltersAndMissingInputsFailExplicitly()
+    {
+        FileIn("Console/Console.slnx");
+        FileIn("Console/Console.Core.slnx");
+        Assert.Equal(2, SampleLookup.Discover(root, "Mac", "Console").Count);
+        Assert.Throws<InvalidOperationException>(() => SampleLookup.Discover(root, "Mac", "Missing"));
+        Assert.Throws<DirectoryNotFoundException>(() => SampleLookup.Discover(Path.Combine(root, "Missing"), "Mac"));
+    }
+
+    [Fact]
+    public void ScopedCopyKeepsAncestorsAndGallerySiblings()
+    {
+        FileIn("inputs/Directory.Build.props");
+        FileIn("inputs/NuGet.Config");
+        FileIn("inputs/Basic/Directory.Build.targets");
+        FileIn("inputs/Basic/Console/App.csproj");
+        FileIn("inputs/Basic/Console/obj/assets.json");
+        FileIn("inputs/Basic/Web/App.csproj");
+        FileIn("inputs/Gallery/App/App.csproj");
+        FileIn("inputs/Gallery/Shared/Shared.csproj");
+        var source = Path.Combine(root, "inputs");
+        var copy = Path.Combine(root, "console-copy");
+        SampleWorkspace.CopySample(source, Path.Combine("Basic", "Console"), copy);
+        Assert.True(File.Exists(Path.Combine(copy, "Basic", "Console", "App.csproj")));
+        Assert.True(File.Exists(Path.Combine(copy, "Directory.Build.props")));
+        Assert.True(File.Exists(Path.Combine(copy, "NuGet.Config")));
+        Assert.True(File.Exists(Path.Combine(copy, "Basic", "Directory.Build.targets")));
+        Assert.False(Directory.Exists(Path.Combine(copy, "Basic", "Console", "obj")));
+        Assert.False(Directory.Exists(Path.Combine(copy, "Basic", "Web")));
+        Assert.False(Directory.Exists(Path.Combine(copy, "Gallery")));
+        copy = Path.Combine(root, "gallery-copy");
+        SampleWorkspace.CopySample(source, "Gallery", copy);
+        Assert.True(File.Exists(Path.Combine(copy, "Gallery", "Shared", "Shared.csproj")));
+        Assert.False(Directory.Exists(Path.Combine(copy, "Basic")));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("../outside")]
+    public void RejectsEscapingFolders(string folder) =>
+        Assert.Throws<ArgumentException>(() => SampleWorkspace.CopySample(root, folder, Path.Combine(root, "copy")));
+
+    [Fact]
+    public void RejectsSampleLocalSdkPins()
+    {
+        FileIn("inputs/Basic/App/global.json", "{}");
+        Assert.Throws<InvalidOperationException>(() =>
+            SampleWorkspace.CopySample(Path.Combine(root, "inputs"), "Basic", Path.Combine(root, "copy")));
+    }
+
+    [Fact]
+    public void FailedPreparationCleansOnlyItsOwnedWorkspace()
+    {
+        FileIn("inputs/App/global.json", "{}");
+        FileIn("packages/input.nupkg", "");
+        FileIn("workspaces/other-test/keep.txt", "Keep this workspace.");
+        Assert.Throws<InvalidOperationException>(() => new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Path.Combine(root, "packages"),
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics")));
+        Assert.Equal(Path.Combine(root, "workspaces", "other-test"),
+            Assert.Single(Directory.EnumerateDirectories(Path.Combine(root, "workspaces"))));
+        Assert.True(File.Exists(Path.Combine(root, "workspaces", "other-test", "keep.txt")));
+        Assert.True(File.Exists(Path.Combine(root, "inputs", "App", "global.json")));
+    }
+
+    [Fact]
+    public async Task ConsumerUsesTheHostSdkWithoutRepositoryPins()
+    {
+        FileIn("repository/global.json", """
+            {"sdk":{"version":"1.2.345","paths":[".dotnet","$host$"],"workloadVersion":"1.2.345"},
+             "tools":{"dotnet":"1.2.345"},"msbuild-sdks":{"Example.Sdk":"2.3.456"}}
+            """);
+        FileIn("repository/output/nugets/input.nupkg");
+        FileIn("repository/output/samples/Basic/Console/App.slnx");
+        var repository = Path.Combine(root, "repository");
+        using var workspace = new SampleWorkspace(
+            Path.Combine("Basic", "Console"),
+            Path.Combine(repository, "output", "samples"),
+            Path.Combine(repository, "output", "nugets"),
+            Path.Combine(repository, "output", "samples-test-workspaces"),
+            Path.Combine(root, "diagnostics"));
+        var working = workspace.Root;
+        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(working, "global.json")));
+        Assert.Single(json.RootElement.EnumerateObject());
+        var sdk = json.RootElement.GetProperty("sdk");
+        Assert.False(sdk.TryGetProperty("version", out _));
+        Assert.False(sdk.TryGetProperty("workloadVersion", out _));
+        Assert.Equal("$host$", sdk.GetProperty("paths")[0].GetString());
+        Assert.True(sdk.GetProperty("allowPrerelease").GetBoolean());
+        foreach (var file in new[] { "Directory.Build.props", "Directory.Build.targets" })
+            Assert.Empty(XDocument.Load(Path.Combine(working, file)).Root!.Elements());
+        var start = new ProcessStartInfo();
+        start.Environment["MSBUILD_EXAMPLE"] = "pollution";
+        workspace.ConfigureProcess(start);
+        Assert.False(start.Environment.ContainsKey("MSBUILD_EXAMPLE"));
+        foreach (var key in new[] { "NUGET_PACKAGES", "NUGET_HTTP_CACHE_PATH", "NUGET_SCRATCH", "DOTNET_CLI_HOME" })
+            Assert.StartsWith(working + Path.DirectorySeparatorChar, start.Environment[key]);
+        var selected = await ProcessRunner.Run("dotnet", ["--version"], working, TimeSpan.FromMinutes(1),
+            workspace.ConfigureProcess);
+        Assert.Equal(0, selected.ExitCode);
+        Assert.NotEqual("1.2.345", selected.Output.Trim());
+        Assert.Matches(@"^\d+\.\d+\.\d+", selected.Output.Trim());
+        Directory.CreateDirectory(workspace.DiagnosticsRoot);
+        workspace.Dispose();
+        Assert.False(Directory.Exists(working));
+        Assert.True(Directory.Exists(workspace.DiagnosticsRoot));
+    }
+
+    [Fact]
+    public void ArtifactPackagesCannotFallBackToPublicFeeds()
+    {
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "NuGet.Config");
+        DotNet.WriteNuGetConfig(file, "packages");
+        var mappings = XDocument.Load(file).Root!.Element("packageSourceMapping")!;
+        var artifact = Assert.Single(mappings.Elements("packageSource"), element => (string?)element.Attribute("key") == "artifacts");
+        Assert.Equal(new[] { "SkiaSharp*", "HarfBuzzSharp*" },
+            artifact.Elements("package").Select(element => (string?)element.Attribute("pattern")));
+    }
+
+    [Fact]
+    public void HttpFixtureRebasesOnlyThePortAndLoopbackHost()
+    {
+        FileIn("sample.http", "GET http://localhost:8080/health\n###\nGET http://localhost:8080/api/images/SkiaSharp?x=1\n");
+        var requests = DockerSampleTests.ReadHttpRequests(Path.Combine(root, "sample.http"));
+        Assert.Equal(2, requests.Count);
+        Assert.Equal("http://127.0.0.1:49152/api/images/SkiaSharp?x=1", DockerSampleTests.Rebase(requests[1], 49152).AbsoluteUri);
+    }
+
+    [Theory]
+    [InlineData("Windows", @"C:\app\output.png", "8080")]
+    [InlineData("Mac", "/app/output.png", "127.0.0.1::8080")]
+    [InlineData("Linux", "/app/output.png", "127.0.0.1::8080")]
+    public void DockerCasesUseExpectedHostSettings(string platform, string outputPath, string portBinding)
+    {
+        var settings = DockerSampleTests.HostSettings(platform);
+        Assert.Equal(outputPath, settings.OutputPath);
+        Assert.Equal(portBinding, settings.PortBinding);
+    }
+
+    [Theory]
+    [InlineData("POST http://localhost:8080/health")]
+    [InlineData("GET https://localhost:8080/health")]
+    [InlineData("GET http://example.com:8080/health")]
+    [InlineData("GET http://localhost:8080/health\nAccept: image/png")]
+    [InlineData("")]
+    public void UnsupportedHttpSyntaxFails(string content)
+    {
+        FileIn("sample.http", content);
+        Assert.Throws<InvalidOperationException>(() => DockerSampleTests.ReadHttpRequests(Path.Combine(root, "sample.http")));
+    }
+
+    [Fact]
+    public void SmallAttachmentsArePublishedAndLargeFilesRemainOnDisk()
+    {
+        FileIn("small.txt", "Sample diagnostic attachment.");
+        Assert.NotNull(TestContext.Current.TestOutputHelper);
+        SampleArtifacts.AttachFile(Path.Combine(root, "small.txt"), "text/plain");
+        using (var file = File.Create(Path.Combine(root, "large.binlog")))
+            file.SetLength(SampleArtifacts.AttachmentLimit + 1);
+        SampleArtifacts.AttachFile(Path.Combine(root, "large.binlog"), "application/octet-stream");
+        Assert.True(File.Exists(Path.Combine(root, "large.binlog")));
+    }
+
+    [Fact]
+    public void PngMustDecodeAndHaveTheExpectedSize()
+    {
+        using var bitmap = new SKBitmap(800, 600);
+        bitmap.Erase(SKColors.Red);
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        SampleImage.Validate(data.ToArray());
+        Assert.ThrowsAny<Exception>(() => SampleImage.Validate(data.ToArray().AsSpan(0, 12)));
+        Assert.ThrowsAny<Exception>(() => SampleImage.Validate(data.ToArray(), 400, 300));
+    }
+
+    [Fact]
+    public void SampleTestBaseOwnsOnlyItsPreparedWorkspace()
+    {
+        FileIn("inputs/Basic/Console/App.slnx");
+        string working;
+        using (var test = new LifetimeTest(Path.Combine(root, "inputs")))
+        {
+            working = test.Prepare();
+            Assert.Equal(working, test.Prepare());
+            Assert.True(File.Exists(Path.Combine(working, "samples", "Basic", "Console", "App.slnx")));
+        }
+        Assert.False(Directory.Exists(working));
+        Assert.True(Directory.Exists(Path.Combine(root, "inputs")));
+    }
+
+    private sealed class LifetimeTest(string samplesDir) : SampleTestBase(samplesDir)
+    {
+        internal string Prepare() => PrepareSample(Path.Combine("Basic", "Console")).Root;
+    }
+
+    [Fact]
+    public async Task CleanupWaitsForOwnedWindowsFileHandles()
+    {
+        FileIn("inputs/App/App.csproj");
+        using var workspace = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Repo.PackagesDir,
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+        using var file = new FileStream(Path.Combine(workspace.Root, "owned.dll"), FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None);
+        var release = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(250, TestContext.Current.CancellationToken);
+            }
+            finally
+            {
+                file.Dispose();
+            }
+        }, TestContext.Current.CancellationToken);
+        try
+        {
+            workspace.Dispose();
+            Assert.False(Directory.Exists(workspace.Root));
+        }
+        finally
+        {
+            await release;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (Directory.Exists(root))
+            SampleWorkspace.DeleteDirectory(root);
+    }
+}

@@ -27,6 +27,11 @@ Includes Dockerfiles for both Linux and Windows (Nano Server) containers.
 
 ## Running the Sample
 
+The repository sample tests build this generated sample with exact artifact
+packages and exercise the GET requests in `sample.http`, including PNG decoding.
+See [Building and Validating Samples](../../../documentation/dev/building-samples.md)
+for package acquisition and the direct `dotnet test` entry point.
+
 ### Linux
 
 ```bash

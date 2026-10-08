@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <SignAssembly>false</SignAssembly>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.9.1" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="SampleTest.RepositoryDirectory" Value="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..'))" />
+  </ItemGroup>
+
+  <Target Name="ValidateSamplePlatformPackages" BeforeTargets="CollectPackageReferences;Restore;Build">
+    <PropertyGroup>
+      <_SamplePackageDirectory Condition="'$(_SamplePackageDirectory)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..', 'output', 'nugets'))</_SamplePackageDirectory>
+      <_SkiaPackages Condition="Exists('$(_SamplePackageDirectory)')">$([System.String]::Join(';', $([System.IO.Directory]::GetFiles('$(_SamplePackageDirectory)', 'SkiaSharp.*.nupkg'))))</_SkiaPackages>
+      <_HarfBuzzPackages Condition="Exists('$(_SamplePackageDirectory)')">$([System.String]::Join(';', $([System.IO.Directory]::GetFiles('$(_SamplePackageDirectory)', 'HarfBuzzSharp.*.nupkg'))))</_HarfBuzzPackages>
+      <_CorePackagePattern>(?:^|;)[^;]*[/\\]{0}\.([0-9][^;]*)(?&lt;!\.symbols)\.nupkg(?=;|$)</_CorePackagePattern>
+      <_SkiaCoreCount>$([System.Text.RegularExpressions.Regex]::Matches('$(_SkiaPackages)', '$([System.String]::Format('$(_CorePackagePattern)', 'SkiaSharp'))').Count)</_SkiaCoreCount>
+      <_HarfBuzzCoreCount>$([System.Text.RegularExpressions.Regex]::Matches('$(_HarfBuzzPackages)', '$([System.String]::Format('$(_CorePackagePattern)', 'HarfBuzzSharp'))').Count)</_HarfBuzzCoreCount>
+      <_SkiaArtifactVersion Condition="'$(_SkiaCoreCount)' == '1'">$([System.Text.RegularExpressions.Regex]::Replace('$(_SkiaPackages)', '^.*[/\\]SkiaSharp\.([0-9][^;]*)(?&lt;!\.symbols)\.nupkg(?:;.*)?$', '$1'))</_SkiaArtifactVersion>
+      <_HarfBuzzArtifactVersion Condition="'$(_HarfBuzzCoreCount)' == '1'">$([System.Text.RegularExpressions.Regex]::Replace('$(_HarfBuzzPackages)', '^.*[/\\]HarfBuzzSharp\.([0-9][^;]*)(?&lt;!\.symbols)\.nupkg(?:;.*)?$', '$1'))</_HarfBuzzArtifactVersion>
+      <_SkiaBuildSuffix>$([System.Text.RegularExpressions.Regex]::Replace('$(_SkiaArtifactVersion)', '^[^-]+', ''))</_SkiaBuildSuffix>
+      <_HarfBuzzBuildSuffix>$([System.Text.RegularExpressions.Regex]::Replace('$(_HarfBuzzArtifactVersion)', '^[^-]+', ''))</_HarfBuzzBuildSuffix>
+    </PropertyGroup>
+    <Error Condition="'$(_SkiaCoreCount)' != '1' or '$(_HarfBuzzCoreCount)' != '1'"
+      Text="output/nugets must contain exactly one non-symbol SkiaSharp and HarfBuzzSharp core package from the same artifact set: $(_SamplePackageDirectory)." />
+    <Error Condition="'$(_SkiaBuildSuffix)' != '$(_HarfBuzzBuildSuffix)'"
+      Text="SkiaSharp and HarfBuzzSharp core packages must share the exact producing build suffix." />
+  </Target>
+
+  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+
+</Project>

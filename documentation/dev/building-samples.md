@@ -91,7 +91,6 @@ These arguments control the **NuGet version suffix** used when rewriting package
 | `--previewLabel` | `PREVIEW_LABEL` | `preview` | Preview suffix label |
 | `--buildNumber` | `BUILD_NUMBER` | `0` | Build number for suffix |
 | `--dotNetFinalVersionKind` | `DOTNET_FINAL_VERSION_KIND` | `""` | Set to `release` for an exact stable version |
-| `--sample` | — | `""` | Filter to build a specific sample |
 
 > **Note:** `--previewLabel` and `--buildNumber` only control the package version
 > used while sample generation rewrites package references. Acquire packages
@@ -102,15 +101,111 @@ These arguments control the **NuGet version suffix** used when rewriting package
 | Target | What it does | Output directory |
 |--------|-------------|-----------------|
 | `samples-generate` | Copies samples to `output/`, converts ProjectRef → PackageRef | `output/samples/`, `output/samples-preview/` |
-| `samples-prepare` | Clears cached SkiaSharp/HarfBuzz packages, copies nupkgs for Docker | — |
-| `samples-run` | Builds all generated samples from `output/` | — |
-| `samples` | Runs generate → prepare → run in sequence | — |
+| `samples` | Generates samples, then invokes the ordinary sample test project | `output/logs/testlogs/samples/` |
 
 ## Building Samples
 
 After acquiring packages as described above, run `dotnet cake --target=samples`
-to generate and build the sample projects. Use the individual Cake targets
-listed above when diagnosing generation or build failures.
+to generate and test the sample projects. The separate `samples-prepare` and
+`samples-run` stages are no longer needed; each test owns its preparation and cleanup.
+
+After package acquisition and generation, the same suite runs directly from
+`dotnet test` or an IDE without recursively invoking Cake:
+
+```sh
+dotnet cake --target=samples-generate --previewLabel=pr.5291 --buildNumber=26505.69
+dotnet test tests/SkiaSharp.Tests.Samples.slnx -- --report-trx
+```
+
+The suffix in this example is an artifact identity, not a recommended package
+version. Use the exact producing build's packages and suffix. `output/nugets`
+must contain exactly one non-symbol core package for each of SkiaSharp and
+HarfBuzzSharp, plus the native/view packages needed by the selected samples.
+The acquired core package identity selects the generated stable or preview
+tree automatically. For stable packages use `--dotNetFinalVersionKind=release`.
+Generation writes exact package references; the tests never rewrite them.
+
+The runner uses the normal SkiaSharp project reference and native asset import;
+it has no SkiaSharp/HarfBuzzSharp package version overrides. CI declares both
+`native` and `nuget` prerequisites and uses the existing required-artifact
+download step to populate `output/`, exactly like the other repository tests.
+Local runs need the normal repository native bootstrap before package acquisition
+and sample generation. For C#-only work, `dotnet cake --target=externals-download`
+provides it; run this before staging packages because that target resets `output/`.
+For native changes, build the natives from source instead. Generation only
+generates samples; it neither acquires nor extracts natives.
+
+Use ordinary IDE or `dotnet test` filters to select discoverable theory rows;
+there is no separate Cake/MSBuild sample filter. Missing generated inputs or
+empty eligible sample discovery fail. The runner remains `net10.0`; it does
+not retarget sample projects. No SDK, workload, executable, or path properties
+are required: IDE test runs use the same generated inputs and conventional
+repository paths as CLI and CI runs.
+
+The test helpers keep these responsibilities separate: `Repo` exposes named
+repository paths and privately reads the core package identity to select the
+generated sample tree; `ProcessRunner` runs both dotnet and Docker.
+`SampleWorkspace` owns the sample copy, private caches, import/SDK fences, and
+cleanup; `DotNet` supplies the sample build command and NuGet restore configuration.
+Infrastructure tests pass temporary paths directly rather than overriding
+process-wide settings.
+Helpers use xUnit v3's current test context for output and attachments, without
+passing output helpers through tests or fixtures. Process output outside an
+individual test, such as shared-fixture cleanup, uses diagnostic messages.
+
+Sample builds invoke `dotnet` from the test process's inherited `PATH`.
+A consumer-local `global.json` searches only that host installation without
+copying the repository SDK/workload pins or Arcade mappings. The host controls
+the installed SDKs and workloads; no installation or workload selection occurs
+inside the suite. An installation containing multiple SDKs uses normal .NET SDK
+selection, including prereleases. CI can select an isolated installation on
+`PATH` for a specific SDK. IDEs must be launched with the intended environment.
+The runner itself remains a normal repository `net10.0` project, built using
+the repository `global.json`, and needs a compatible runtime to execute.
+Consumer builds default to Release in the test data, independently of the
+runner's Debug/Release configuration. Configuration is a theory argument:
+additional Debug cases can be added and selected without new MSBuild settings.
+
+### Coverage and isolation
+
+Theory rows build actual generated `.slnx` solutions. Host `.Windows`, `.Mac`,
+and `.Linux` variants replace the common solution; ordinary dotted solution
+names remain eligible. Gallery is build-only, including its shared sibling
+projects. WASM and Blazor samples receive eligible build coverage, not browser
+navigation or reference-scene comparison.
+
+Each build copies only its sample directory and required ancestor build/NuGet
+configuration into a unique owned workspace under `output/samples-test-workspaces/`.
+The Gallery workspace includes its sibling projects. Consumer import fences,
+an unpinned host-only `global.json`, and private NuGet/CLI caches prevent repository build
+targets, Arcade SDK selection, and user caches from leaking into sample builds.
+Sample-local SDK pins are rejected. Source projects and installed workloads
+are not modified.
+
+The two Docker samples retain their original .NET 10 Dockerfiles. Tests build
+private image tags, run the console and check its exit code and decoded
+800 x 600 PNG, and run the web API using GET requests from `sample.http`,
+checking HTTP success and the decoded PNG. Docker must be installed, responsive,
+and in the host's expected container mode (Windows on Windows, Linux otherwise).
+Unavailable Docker fails rather than silently omitting coverage.
+
+Consumer commands have bounded timeouts. Workspaces, staged Docker contexts,
+and only owned containers/images are removed; no user-cache clearing or global
+Docker prune is performed. Binlogs, build logs, test results, and PNGs remain
+outside disposable workspaces in `output/logs/testlogs/samples/`.
+PNG, log and binlog files up to 8 MiB are attached to their individual test
+results. Larger files remain in the published pipeline diagnostics artifact
+with a path in the test output; they are not copied into memory as attachments.
+Attachment presentation in IDEs depends on their MTP/VSTest integration.
+Infrastructure tests can be run separately with `-- --filter-trait Category=Infrastructure`;
+this does not substitute for actual sample and Docker coverage.
+
+The existing `SkiaSharp.Tests.Integration` and `SkiaSharp.Tests.MSBuild` projects
+and their entry points remain separate and unchanged. This suite does not
+migrate package-output matrices, generated view/device probes, or golden tests.
+Related generated dependency prerequisites are tracked in #5297. This suite
+includes only the declaration fixes required for its actual generated sample
+builds; missing packages cannot be hidden by feeds, TFM overrides, or omitted rows.
 
 ## How `samples-generate` Works
 
@@ -125,17 +220,18 @@ variants are selected by their `.Mac`, `.Windows`, or `.Linux` suffix.
 3. For SkiaSharp/HarfBuzzSharp packages, the preview suffix is appended
 4. Two output trees: `output/samples/` (stable) and `output/samples-preview/` (preview)
 
-`samples-run` selects the stable tree only for an exact release identity. Any
+`samples` selects the stable tree only for an exact release identity. Any
 non-empty `PREVIEW_NUGET_SUFFIX` selects the preview tree so its references
 match the single package family emitted by that build.
 
 ## Troubleshooting
 
-### Stale cached packages
-```powershell
-rm -r -fo externals/package_cache/skiasharp*, externals/package_cache/harfbuzzsharp*
-dotnet nuget locals all --clear
-```
+### Package restore failures
+
+Check the retained binlog and compare generated references with the exact
+package cohort. SkiaSharp/HarfBuzzSharp consumer references are mapped only
+to the artifact directory; they cannot fall back to public feeds. Each test
+already has fresh private caches, so clearing shared or user caches is unnecessary.
 
 ### tvOS/macOS/Tizen not building
 Some platforms are disabled by default:
