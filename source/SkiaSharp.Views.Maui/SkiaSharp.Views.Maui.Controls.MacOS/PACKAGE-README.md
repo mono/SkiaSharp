@@ -58,6 +58,7 @@ dispatch, so that host registers a local layout handler for dynamic facets,
 chips, and controls; this workaround is not part of the SkiaSharp package.
 Live changes to the macOS system appearance have not been exercised.
 
-The package declares itself trimmable. A trimmed macOS smoke-app publish and
-runtime test succeeded; NativeAOT deployment and trimming of a production
-application using the MAUI Labs AppKit backend have not been validated.
+The package declares itself trimmable. A trimmed macOS test host was previously
+published and exercised with prebuilt native assets; a build from current native
+source, NativeAOT deployment, and trimming of a production application using
+the MAUI Labs AppKit backend have not been validated.
