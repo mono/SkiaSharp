@@ -227,6 +227,9 @@ does not copy unrelated samples. `SampleTestBase` owns preparation and disposal.
 Empty `Directory.Build.props` and `Directory.Build.targets` at the
 workspace root stop repository build imports from reaching the consumers.
 Build/publish commands run in that copied tree; sample TFMs are not rewritten.
+Windows cleanup briefly retries logged sharing/access-denied errors while
+terminated child processes release their DLL handles; a persistent failure
+still fails the test. Other cleanup errors are not retried.
 SkiaSharp/HarfBuzzSharp source mapping permits only the supplied artifacts.
 One shared lookup classifies generated samples as `Sample`, `Gallery` or `Docker`
 and filters platform variants for the current host. The build theory selects

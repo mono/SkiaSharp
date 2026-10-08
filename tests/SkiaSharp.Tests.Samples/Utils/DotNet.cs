@@ -299,14 +299,35 @@ public sealed class DotNet : IDisposable
         {
             var path = Path.Combine(directory, name);
             if (Directory.Exists(path))
-                Directory.Delete(path, recursive: true);
+                DeleteDirectory(path);
         }
     }
 
     public void Dispose()
     {
         if (Directory.Exists(Root))
-            Directory.Delete(Root, recursive: true);
+            DeleteDirectory(Root);
+    }
+
+    private static void DeleteDirectory(string path)
+    {
+        const int attempts = 20;
+        for (var attempt = 0; ; attempt++)
+        {
+            try
+            {
+                Directory.Delete(path, recursive: true);
+                return;
+            }
+            catch (Exception error) when (OperatingSystem.IsWindows() && attempt + 1 < attempts &&
+                (error is IOException or UnauthorizedAccessException) && (error.HResult & 0xffff) is 5 or 32 or 33)
+            {
+                // Waiting for the parent after Kill(true) does not wait for descendant DLL handles.
+                TestContext.Current.TestOutputHelper?.WriteLine(
+                    $"Retrying owned directory cleanup ({attempt + 2}/{attempts}): {path}\n{error.Message}");
+                Thread.Sleep(250);
+            }
+        }
     }
 
     public static string Setting(string name) =>

@@ -604,6 +604,36 @@ public class SampleInfrastructureTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task WorkspaceCleanupWaitsForOwnedFilesToClose()
+    {
+        using var profile = DotNet.ForSamples();
+        var directory = Path.Combine(profile.Root, "tools");
+        Directory.CreateDirectory(directory);
+        using var file = new FileStream(Path.Combine(directory, "BrowserDebugProxy.dll"),
+            FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None);
+        var release = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(250, TestContext.Current.CancellationToken);
+            }
+            finally
+            {
+                file.Dispose();
+            }
+        }, TestContext.Current.CancellationToken);
+        try
+        {
+            profile.Dispose();
+            Assert.False(Directory.Exists(profile.Root));
+        }
+        finally
+        {
+            await release;
+        }
+    }
+
     private sealed class WorkspaceLifetimeTest(ITestOutputHelper output) : SampleTestBase(output)
     {
         protected override string SampleFolder => Path.Combine("Basic", "Console");
