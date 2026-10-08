@@ -206,8 +206,9 @@ needed for the package-output subset. These tests inspect build/publish output w
 The sample subset additionally requires the host's mobile/WASM/Tizen workloads
 for the selected SDK. Docker remains optional and runs each existing net10 console
 and Web API check once per invocation, using the unchanged Dockerfiles.
-Their rendered PNGs are decoded and retained; full page screenshot/golden checks
-are not enabled on CI yet. See [building-samples.md](building-samples.md).
+Their rendered PNGs are decoded and retained. Headless browser runtime checks
+also run on CI; reference-image goldens remain local checks.
+See [building-samples.md](building-samples.md).
 
 Download the `nuget` artifact from one exact completed SkiaSharp CI build and
 place its packages in `output/nugets`. Record the build URL/commit when reporting
@@ -217,7 +218,7 @@ missing artifacts. Both families require their core, `NativeAssets.Win32`,
 from their nuspec metadata, not inferred from the checkout.
 
 Keep the repository's stable `global.json` unchanged. The runner uses net10;
-each consumer inherits the full repository configuration unless an exact SDK
+each consumer inherits the repository's SDK section unless an exact SDK
 override is supplied. An override pins the SDK with roll-forward disabled and
 can also pin `sdk.workloadVersion`. Run the combined entry point from the repository root, passing
 the package suffix described in [building-samples.md](building-samples.md):
@@ -240,8 +241,11 @@ dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
 
 `NativeAssetOutputTests.cs` contains the package references, scenarios, and
 assertions. `Utils/DotNet.cs` handles isolated project creation and CLI execution.
-The tests share one private restore cache; every case has independent project,
-intermediate, and output directories. Source mapping restricts SkiaSharp and
+The normal Cake entry point runs every category and uncategorized test by default.
+CI opts out of GUI/local golden checks in both profiles; both Docker methods
+run in each SDK profile.
+The runner has a private restore cache; every consumer case has independent
+project, cache, intermediate, and output directories. Source mapping restricts SkiaSharp and
 HarfBuzzSharp packages to the supplied artifacts, so missing packages cannot
 fall back to public versions. User NuGet caches and input packages are not modified.
 
@@ -302,14 +306,22 @@ SDK provisioning uses the shared version pins; additional workload installation
 uses a temporary SDK-specific `global.json`, not the repository root.
 SDK overrides, the consumer TFM and dotnet host are captured in the runner's
 runtime configuration. Explicit SDK overrides are verified exactly; default
-selection follows the repository's complete `global.json` and its roll-forward policy.
+selection copies the repository's SDK configuration and roll-forward policy into
+the consumer workspace. Its empty `Directory.Build.props`/`Directory.Build.targets`
+stop repository imports; repository tool and MSBuild SDK settings are not copied.
 In combined CI it depends on `package`; in downstream Tests it depends on `prepare`
 and downloads the exact SkiaSharp pipeline-resource run's artifact. It runs
 inside Samples without changing the prerequisites of existing source/unit/
 device tests. Each scenario has its own test result and failures still fail the pipeline.
 The former Integration project's local browser/device/desktop checks and goldens
-are in the same project, under `ManualPlatform`. They require explicit local
-opt-in and are skipped on CI; there is no separate Integration project.
+are in the same project. `Browser` starts the actual Web/WASM/Blazor samples and
+generated Blazor probe servers and drives them with Playwright locally and on CI.
+`Device`, `Desktop` and `Golden` run locally without an opt-in and are explicitly
+excluded on CI. Device/runtime cases are declared in theories, not MSBuild
+properties; a missing exact prerequisite fails rather than selecting a fallback.
+The runner is a normal repository test project, openable through
+`tests/SkiaSharp.Tests.Samples.slnx`; only the child consumer workspaces have
+SDK/MSBuild isolation. There is no separate Integration project.
 
 ## Documentation Outputs
 

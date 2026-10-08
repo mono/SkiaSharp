@@ -34,21 +34,16 @@ public sealed class DotNet : IDisposable
         if (!File.Exists(repoGlobal))
             throw new FileNotFoundException("Repository global.json is missing", repoGlobal);
 
-        SdkVersion = sdkVersion;
-        var id = $"{label}-{Guid.NewGuid():N}";
-        Root = Path.Combine(repository, "output", "samples-test-workspaces", id);
-        DiagnosticsRoot = Path.Combine(Path.GetFullPath(Setting("ArtifactsDirectory")), id);
-        Directory.CreateDirectory(Root);
         if (!Directory.Exists(PackageDirectory) || !Directory.EnumerateFiles(PackageDirectory, "*.nupkg", SearchOption.AllDirectories).Any())
             throw new InvalidOperationException($"Input NuGet packages are missing: {PackageDirectory}");
-        File.WriteAllText(Path.Combine(Root, "Directory.Build.props"), "<Project />");
-        File.WriteAllText(Path.Combine(Root, "Directory.Build.targets"), "<Project />");
+
+        var config = JsonNode.Parse(File.ReadAllText(repoGlobal)) as JsonObject
+            ?? throw new InvalidOperationException($"Invalid repository global.json: {repoGlobal}");
+        var sdk = config["sdk"] as JsonObject
+            ?? throw new InvalidOperationException($"Missing sdk object in {repoGlobal}");
+        sdk = (JsonObject)sdk.DeepClone();
         if (sdkVersion is not null)
         {
-            var config = JsonNode.Parse(File.ReadAllText(repoGlobal)) as JsonObject
-                ?? throw new InvalidOperationException($"Invalid repository global.json: {repoGlobal}");
-            var sdk = config["sdk"] as JsonObject
-                ?? throw new InvalidOperationException($"Missing sdk object in {repoGlobal}");
             sdk["version"] = sdkVersion;
             sdk["rollForward"] = "disable";
             sdk["allowPrerelease"] = true;
@@ -56,16 +51,32 @@ public sealed class DotNet : IDisposable
                 sdk["workloadVersion"] = workloadVersion;
             else
                 sdk.Remove("workloadVersion");
-            if (sdk["paths"] is JsonArray paths)
-                for (var i = 0; i < paths.Count; i++)
-                {
-                    var path = paths[i]?.GetValue<string>();
-                    if (path is not null && path != "$host$" && !Path.IsPathFullyQualified(path))
-                        paths[i] = Path.GetFullPath(Path.Combine(repository, path));
-                }
-            File.WriteAllText(Path.Combine(Root, "global.json"), config.ToJsonString());
         }
-        WriteNuGetConfig(Path.Combine(Root, "NuGet.Config"), PackageDirectory);
+        if (sdk["paths"] is JsonArray paths)
+            for (var i = 0; i < paths.Count; i++)
+            {
+                var path = paths[i]?.GetValue<string>();
+                if (path is not null && path != "$host$" && !Path.IsPathFullyQualified(path))
+                    paths[i] = Path.GetFullPath(Path.Combine(repository, path));
+            }
+
+        SdkVersion = sdkVersion;
+        var id = $"{label}-{Guid.NewGuid():N}";
+        Root = Path.Combine(repository, "output", "samples-test-workspaces", id);
+        DiagnosticsRoot = Path.Combine(Path.GetFullPath(Setting("ArtifactsDirectory")), id);
+        Directory.CreateDirectory(Root);
+        try
+        {
+            File.WriteAllText(Path.Combine(Root, "Directory.Build.props"), "<Project />");
+            File.WriteAllText(Path.Combine(Root, "Directory.Build.targets"), "<Project />");
+            File.WriteAllText(Path.Combine(Root, "global.json"), new JsonObject { ["sdk"] = sdk }.ToJsonString());
+            WriteNuGetConfig(Path.Combine(Root, "NuGet.Config"), PackageDirectory);
+        }
+        catch
+        {
+            Dispose();
+            throw;
+        }
     }
 
     public static (string Previous, string Current) ConsumerFrameworks()
@@ -197,6 +208,20 @@ public sealed class DotNet : IDisposable
             throw new InvalidOperationException($"Console sample failed ({exitCode}):\n{stdout}\n{stderr}");
     }
 
+    internal Task<LocalWebServer> StartWebServer(string project, ITestOutputHelper output, string? configuration = null) =>
+        LocalWebServer.Start(host, project, configuration ?? Setting("Configuration"), output, Configure);
+
+    internal async Task<string> RunCommand(IEnumerable<string> arguments, string directory, TimeSpan timeout,
+        ITestOutputHelper output)
+    {
+        await VerifySdk(directory);
+        var args = arguments.ToArray();
+        var (exitCode, stdout, stderr) = await RunProcess(host, args, directory, timeout, output, Configure);
+        if (exitCode != 0)
+            throw new InvalidOperationException($"dotnet {string.Join(" ", args)} failed ({exitCode}):\n{stdout}\n{stderr}");
+        return stdout + stderr;
+    }
+
     internal static async Task<(int ExitCode, string Output, string Error)> RunProcess(string executable,
         IEnumerable<string> arguments, string directory, TimeSpan timeout, ITestOutputHelper? output = null,
         Action<ProcessStartInfo>? configure = null)
@@ -238,6 +263,7 @@ public sealed class DotNet : IDisposable
     private void Configure(ProcessStartInfo start)
     {
         foreach (var key in start.Environment.Keys.Where(k =>
+            k.StartsWith("DOTNET_", StringComparison.OrdinalIgnoreCase) ||
             k.StartsWith("MSBUILD", StringComparison.OrdinalIgnoreCase) ||
             k.StartsWith("Restore", StringComparison.OrdinalIgnoreCase) ||
             k.StartsWith("NUGET_", StringComparison.OrdinalIgnoreCase) ||
@@ -254,15 +280,18 @@ public sealed class DotNet : IDisposable
 
     public void CleanBuildOutput(string directory, params (string Framework, string OutputDirectory)[] outputs)
     {
-        File.Copy(Path.Combine(directory, "obj", "project.assets.json"), Path.Combine(directory, "project.assets.json"));
+        var projectDiagnostics = Path.Combine(DiagnosticsRoot, Path.GetFileName(directory));
+        Directory.CreateDirectory(projectDiagnostics);
+        var assets = Path.Combine(projectDiagnostics, "project.assets.json");
+        File.Copy(Path.Combine(directory, "obj", "project.assets.json"), assets);
         if (outputs.Length == 0)
             outputs = [("", "output")];
         foreach (var (framework, outputDirectory) in outputs)
         {
-            var diagnostics = Path.Combine(directory, framework);
+            var diagnostics = Path.Combine(projectDiagnostics, framework);
             Directory.CreateDirectory(diagnostics);
             if (framework.Length > 0)
-                File.Copy(Path.Combine(directory, "project.assets.json"), Path.Combine(diagnostics, "project.assets.json"));
+                File.Copy(assets, Path.Combine(diagnostics, "project.assets.json"));
             foreach (var name in new[] { "Consumer.deps.json", "Consumer.runtimeconfig.json" })
                 File.Copy(Path.Combine(directory, outputDirectory, name), Path.Combine(diagnostics, name));
         }
@@ -276,8 +305,8 @@ public sealed class DotNet : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(Cache))
-            Directory.Delete(Cache, recursive: true);
+        if (Directory.Exists(Root))
+            Directory.Delete(Root, recursive: true);
     }
 
     public static string Setting(string name) =>

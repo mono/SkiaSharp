@@ -5,14 +5,14 @@ using System.Xml.Linq;
 using Xunit;
 using Xunit.Sdk;
 
-namespace SkiaSharp.Tests.Samples.PlatformTests;
+namespace SkiaSharp.Tests.Samples.Utils;
 
 /// <summary>
 /// Base class for MAUI platform tests with shared Appium and project creation logic.
 /// Uses the shared AppiumFixture via the "Appium" collection.
 /// </summary>
 [Collection("Appium")]
-public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(output)
+public abstract class MauiTestBase(AppiumFixture appium, ITestOutputHelper output) : GeneratedAppTestBase(output)
 {
     protected int AppiumPort => AppiumFixture.Port;
     
@@ -114,17 +114,10 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
 		return Math.Max(scaleX, scaleY);
 	}
 
-    // Tests - same for all platforms
-    [Fact]
-    public Task SKCanvasView() => RunMauiTest("SKCanvasView", "SKPaintSurfaceEventArgs");
-
-    [Fact]
-    public Task SKGLView() => RunMauiTest("SKGLView", "SKPaintGLSurfaceEventArgs");
-
     /// <summary>
     /// Run the standard MAUI test for the specified canvas view type.
     /// </summary>
-    private async Task RunMauiTest(string canvasView, string eventArgsType)
+    protected async Task RunMauiTest(string canvasView, string eventArgsType)
     {
         var skipReason = CanRunOnCurrentMachine();
         if (skipReason != null)
@@ -134,6 +127,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         
         // Perform preflight checks (device availability, API level validation, etc.)
         await PerformPreflightChecks();
+        await appium.Start();
         
         var projectName = $"Maui{PlatformName.Replace(" ", "")}{canvasView}";
         var projectDir = await CreateMauiProject(projectName, canvasView, eventArgsType);
@@ -143,9 +137,10 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         // ValidateXcodeVersion=false: the generated MAUI app is built under output/,
         // so it does NOT inherit tests/Directory.Build.props (which sets this for the harness project).
         // Skip the .NET for iOS/Mac Catalyst Xcode major.minor check so the harness keeps working when
-        // the installed Xcode is newer than the version the pinned workload recommends — these
-        // tests validate SkiaSharp rendering, not toolchain matching. Ignored (harmless) on Android.
-        await Run("dotnet", $"build {relativeProjectDir} -c {BuildConfiguration} -f {TargetFramework} -p:ValidateXcodeVersion=false", timeoutSeconds: 600);
+        // the installed Xcode is newer than the version the pinned workload recommends.
+        // These probes validate rendering, not toolchain matching. Ignored on Android.
+        await RunDotNet(["build", relativeProjectDir, "-c", BuildConfiguration, "-f", TargetFramework,
+            "-p:ValidateXcodeVersion=false"], timeoutSeconds: 600);
         
         var appPath = FindAppArtifact(projectDir, projectName);
         Assert.NotNull(appPath);
@@ -179,14 +174,15 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         // BaseFramework (net10.0) so the generated TFMs always match the framework the harness
         // builds below — the installed MAUI template can otherwise default to a newer (e.g. net11.0)
         // framework even when the SDK is pinned, since its default comes from the MAUI workload.
-        await Run("dotnet", $"new maui -n {projectName} -o {relativeProjectDir} -f {BaseFramework} --no-restore");
+        await RunDotNet(["new", "maui", "-n", projectName, "-o", relativeProjectDir, "-f", BaseFramework, "--no-restore"]);
 
         // Only the requested platform is built. Drop the template's conditional multi-target
         // declarations before any restore so workloads for other platforms are not required.
         NarrowTargetFramework(Path.Combine(projectDir, $"{projectName}.csproj"), TargetFramework);
 
         // Add SkiaSharp package (run from TestDir)
-        await Run("dotnet", $"add {relativeProjectDir} package SkiaSharp.Views.Maui.Controls --version {SkiaVersion} --no-restore");
+        await RunDotNet(["add", relativeProjectDir, "package", "SkiaSharp.Views.Maui.Controls",
+            "--version", SkiaVersion, "--no-restore"]);
         
         // Update MauiProgram.cs
         var programPath = Path.Combine(projectDir, "MauiProgram.cs");

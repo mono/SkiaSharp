@@ -1,15 +1,22 @@
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Windows;
+using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
-namespace SkiaSharp.Tests.Samples.PlatformTests;
+namespace SkiaSharp.Tests.Samples;
 
 /// <summary>
 /// Tests that verify SkiaSharp packages work in MAUI Windows applications.
 /// </summary>
-[Trait("Category", "ManualPlatform")]
-public class MauiWindowsTests(ITestOutputHelper output) : MauiTestBase(output)
+[Trait("Category", "Desktop")]
+[Trait("Category", "Golden")]
+public class MauiWindowsTests(AppiumFixture appium, ITestOutputHelper output) : MauiTestBase(appium, output)
 {
+    [Theory]
+    [InlineData("SKCanvasView", "SKPaintSurfaceEventArgs")]
+    [InlineData("SKGLView", "SKPaintGLSurfaceEventArgs")]
+    public Task MatchesGolden(string view, string eventArgs) => RunMauiTest(view, eventArgs);
+
     protected override string PlatformName => "Windows";
     protected override string TargetFramework => $"{BaseFramework}-windows10.0.19041.0";
 

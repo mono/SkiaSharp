@@ -2,7 +2,7 @@ using System.Xml.Linq;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
-namespace SkiaSharp.Tests.Samples.PlatformTests;
+namespace SkiaSharp.Tests.Samples;
 
 [Trait("Category", "Infrastructure")]
 public class MauiScaffoldTests

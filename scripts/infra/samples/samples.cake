@@ -14,8 +14,7 @@ var SAMPLE_FILTER = Argument ("sample", "");
 var SAMPLE_SDK_VERSION = Argument ("sampleSdkVersion", "");
 var SAMPLE_WORKLOAD_VERSION = Argument ("sampleWorkloadVersion", "");
 var CONSUMER_TARGET_FRAMEWORK = Argument ("consumerTargetFramework", "net10.0");
-var SAMPLE_TEST_CATEGORIES = Argument ("sampleTestCategories",
-    "SampleBuild,PackageOutput,PackageMultiTarget,DockerBuild,SampleRun,RuntimeSmoke,Infrastructure");
+var SAMPLE_TEST_EXCLUDE_CATEGORIES = Argument ("sampleTestExcludeCategories", "");
 
 Task ("samples-generate")
     .Description ("Generate and zip the samples directory structure.")
@@ -50,9 +49,9 @@ Task ("samples")
         { "ConsumerTargetFramework", CONSUMER_TARGET_FRAMEWORK },
         { "SampleFilter", SAMPLE_FILTER },
     };
-    var categories = SAMPLE_TEST_CATEGORIES.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+    var excludedCategories = SAMPLE_TEST_EXCLUDE_CATEGORIES.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries);
     RunDotNetTest(ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj"),
-        results, properties: properties, noBuild: SKIP_BUILD, hangTimeout: "40m", categories: categories);
+        results, properties: properties, noBuild: SKIP_BUILD, hangTimeout: "40m", excludedCategories: excludedCategories);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,29 +202,6 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
 
                 // not inside the samples directory, so needs to be removed
                 import.Remove();
-            }
-
-            if ((string)xdoc.Root.Attribute("Sdk") is string sdk && sdk.StartsWith("Uno.Sdk/")) {
-                var ns = xdoc.Root.Name.Namespace;
-                if (!xdoc.Descendants(ns + "SkiaSharpVersion").Any())
-                    xdoc.Root.Add(new XElement(ns + "PropertyGroup",
-                        new XElement(ns + "SkiaSharpVersion", GetVersion("SkiaSharp"))));
-
-                var implicitPackages = new XElement(ns + "ItemGroup");
-                foreach (var packageId in new[] {
-                    "SkiaSharp.Views", "SkiaSharp.Skottie",
-                    "SkiaSharp.NativeAssets.Linux", "HarfBuzzSharp.NativeAssets.Linux" }) {
-                    if (xdoc.Descendants(ns + "PackageReference").Any(e => (string)e.Attribute("Include") == packageId))
-                        continue;
-                    var version = GetVersion(packageId);
-                    if (string.IsNullOrWhiteSpace(version))
-                        throw new Exception($"Missing version for Uno sample package '{packageId}'.");
-                    version += string.IsNullOrEmpty(versionSuffix) ? "" : $"-{versionSuffix}";
-                    implicitPackages.Add(new XElement(ns + "PackageReference",
-                        new XAttribute("Include", packageId), new XAttribute("Version", version)));
-                }
-                if (implicitPackages.HasElements)
-                    xdoc.Root.Add(implicitPackages);
             }
 
             // substitute <SkiaSharpVersion> (used by Uno.Sdk to override the version of its

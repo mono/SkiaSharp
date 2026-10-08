@@ -1,6 +1,6 @@
 using SkiaSharp;
 
-namespace SkiaSharp.Tests.Samples.PlatformTests;
+namespace SkiaSharp.Tests.Samples.Utils;
 
 /// <summary>
 /// Standard test image used across all integration tests.

@@ -1,6 +1,6 @@
 namespace SkiaSharp.Tests.Samples.Utils;
 
-public sealed class SampleWorkspace : IDisposable
+public sealed class SampleWorkspace(string folder) : IDisposable
 {
     private DotNet? profile;
 
@@ -11,7 +11,7 @@ public sealed class SampleWorkspace : IDisposable
         var created = DotNet.ForSamples();
         try
         {
-            CopyTree(DotNet.Setting("SamplesDirectory"), Path.Combine(created.Root, "samples"));
+            CopySample(DotNet.Setting("SamplesDirectory"), folder, Path.Combine(created.Root, "samples"));
         }
         catch
         {
@@ -20,6 +20,39 @@ public sealed class SampleWorkspace : IDisposable
         }
         profile = created;
         return created;
+    }
+
+    internal static void CopySample(string source, string folder, string destination)
+    {
+        if (string.IsNullOrWhiteSpace(folder) || Path.IsPathRooted(folder))
+            throw new ArgumentException("A sample folder must be a nonempty relative path.", nameof(folder));
+        source = Path.GetFullPath(source);
+        var selected = Path.GetFullPath(Path.Combine(source, folder));
+        var relative = Path.GetRelativePath(source, selected);
+        if (relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+            throw new ArgumentException("The sample folder must stay within the generated inputs.", nameof(folder));
+
+        CopyTree(selected, Path.Combine(destination, relative));
+        for (var parent = Directory.GetParent(selected); parent is not null; parent = parent.Parent)
+        {
+            var parentRelative = Path.GetRelativePath(source, parent.FullName);
+            if (parentRelative == ".." || parentRelative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+                break;
+            var target = Path.Combine(destination, parentRelative);
+            foreach (var file in Directory.EnumerateFiles(parent.FullName))
+            {
+                var name = Path.GetFileName(file);
+                if (name.Equals("global.json", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException($"Sample-local global.json would override the SDK pin: {file}");
+                if (name is not ("Directory.Build.props" or "Directory.Build.targets" or "Directory.Packages.props") &&
+                    !name.Equals("nuget.config", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                Directory.CreateDirectory(target);
+                File.Copy(file, Path.Combine(target, name));
+            }
+            if (parentRelative == ".")
+                break;
+        }
     }
 
     public static void CopyTree(string source, string destination)
@@ -40,22 +73,8 @@ public sealed class SampleWorkspace : IDisposable
         }
     }
 
-    public static void CleanProducts(string samples)
-    {
-        foreach (var directory in Directory.EnumerateDirectories(samples, "*", SearchOption.AllDirectories)
-            .Where(path => Path.GetFileName(path) is "bin" or "obj" or "AppPackages" or ".vs")
-            .OrderByDescending(path => path.Length).ToArray())
-            if (Directory.Exists(directory))
-                Directory.Delete(directory, recursive: true);
-    }
-
     public void Dispose()
     {
-        if (profile is null)
-            return;
-        var samples = Path.Combine(profile.Root, "samples");
-        if (Directory.Exists(samples))
-            Directory.Delete(samples, recursive: true);
-        profile.Dispose();
+        profile?.Dispose();
     }
 }

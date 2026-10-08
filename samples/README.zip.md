@@ -12,8 +12,6 @@ There are 2 main types of sample apps in this folder:
     Each app contains several sample drawing to demonstrate different features
     of SkiaSharp.
 
-The "AppStoreCertificates" folder just contains the keystores and certificates to build the samples. This is more fore CI so it can build Release apps, so feel free to use your own.
-
 ## Basic Samples
 
 There are several simple samples, each of which demonstrate the simplest way to use SkiaSharp on a particular platform.

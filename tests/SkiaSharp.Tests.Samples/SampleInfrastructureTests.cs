@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Xml.Linq;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -141,9 +142,9 @@ public class SampleInfrastructureTests : IDisposable
         {
             AppContext.SetData(samplesKey, root);
             AppContext.SetData(filterKey, "Console");
-            Assert.Single(SampleRunTests.Cases());
+            Assert.Single(ConsoleSampleTests.Cases());
             AppContext.SetData(filterKey, "Container");
-            Assert.Empty(SampleRunTests.Cases());
+            Assert.Empty(ConsoleSampleTests.Cases());
             Assert.Single(DockerSampleTests.Cases());
         }
         finally
@@ -206,7 +207,12 @@ public class SampleInfrastructureTests : IDisposable
     {
         FileIn("packages/consumer.nupkg");
         FileIn("inputs/Console.slnx");
+        FileIn("inputs/Console/Consumer.csproj");
+        File.WriteAllText(Path.Combine(root, "inputs", "Console", "Consumer.csproj"),
+            "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
         var repository = Path.Combine(root, "checkout");
+        if (OperatingSystem.IsWindows())
+            repository = repository.Replace('\\', '/');
         Directory.CreateDirectory(repository);
         var repoGlobal = Path.Combine(repository, "global.json");
         var original = """
@@ -238,7 +244,7 @@ public class SampleInfrastructureTests : IDisposable
             AppContext.SetData(artifactsKey, Path.Combine(root, "external-artifacts"));
             AppContext.SetData(samplesKey, Path.Combine(root, "inputs"));
             AppContext.SetData(repositoryKey, repository);
-            using var workspace = new SampleWorkspace();
+            using var workspace = new SampleWorkspace("Console");
             var profile = workspace.Profile();
             using var packageFixture = new DotNet();
             Assert.Single(typeof(DotNet).GetConstructors());
@@ -247,34 +253,35 @@ public class SampleInfrastructureTests : IDisposable
             Assert.Equal(sdkVersion, profile.SdkVersion);
             foreach (var directory in new[] { profile.Root, packageFixture.Root })
             {
-                Assert.StartsWith(Path.Combine(repository, "output"), directory);
+                Assert.StartsWith(Path.GetFullPath(Path.Combine(repository, "output", "samples-test-workspaces")), directory);
+                foreach (var file in new[] { "Directory.Build.props", "Directory.Build.targets" })
+                    Assert.Empty(XDocument.Load(Path.Combine(directory, file)).Root!.Elements());
                 Assert.StartsWith(Path.GetFullPath(Path.Combine(root, "external-artifacts")),
                     directory == profile.Root ? profile.DiagnosticsRoot : packageFixture.DiagnosticsRoot);
                 var localGlobal = Path.Combine(directory, "global.json");
-                if (sdkVersion is null)
-                {
-                    Assert.False(File.Exists(localGlobal));
-                    Assert.True(File.Exists(Path.Combine(repository, "global.json")));
-                    using var inherited = JsonDocument.Parse(File.ReadAllText(repoGlobal));
-                    Assert.Equal("1.2.345", inherited.RootElement.GetProperty("sdk").GetProperty("workloadVersion").GetString());
-                    continue;
-                }
                 using var json = JsonDocument.Parse(File.ReadAllText(localGlobal));
                 var sdk = json.RootElement.GetProperty("sdk");
-                Assert.Equal(sdkVersion, sdk.GetProperty("version").GetString());
-                Assert.Equal("disable", sdk.GetProperty("rollForward").GetString());
-                Assert.True(sdk.GetProperty("allowPrerelease").GetBoolean());
-                Assert.Equal(Path.Combine(repository, ".dotnet"), sdk.GetProperty("paths")[0].GetString());
+                Assert.Equal(sdkVersion ?? "1.2.345", sdk.GetProperty("version").GetString());
+                if (sdkVersion is not null)
+                {
+                    Assert.Equal("disable", sdk.GetProperty("rollForward").GetString());
+                    Assert.True(sdk.GetProperty("allowPrerelease").GetBoolean());
+                }
+                Assert.Equal(Path.GetFullPath(Path.Combine(repository, ".dotnet")), sdk.GetProperty("paths")[0].GetString());
                 Assert.Equal("$host$", sdk.GetProperty("paths")[1].GetString());
                 Assert.Equal("Use the repo SDK", sdk.GetProperty("errorMessage").GetString());
-                Assert.Equal("1.2.345", json.RootElement.GetProperty("tools").GetProperty("dotnet").GetString());
-                Assert.Equal("2.3.456", json.RootElement.GetProperty("msbuild-sdks").GetProperty("Example.Sdk").GetString());
-                if (workloadVersion is null)
+                Assert.False(json.RootElement.TryGetProperty("tools", out _));
+                Assert.False(json.RootElement.TryGetProperty("msbuild-sdks", out _));
+                if (sdkVersion is null)
+                    Assert.Equal("1.2.345", sdk.GetProperty("workloadVersion").GetString());
+                else if (workloadVersion is null)
                     Assert.False(sdk.TryGetProperty("workloadVersion", out _));
                 else
                     Assert.Equal(workloadVersion, sdk.GetProperty("workloadVersion").GetString());
                 Assert.False(json.RootElement.TryGetProperty("workload", out _));
             }
+            var copiedProject = XDocument.Load(Path.Combine(profile.Root, "samples", "Console", "Consumer.csproj"));
+            Assert.Equal("net10.0", Assert.Single(copiedProject.Descendants("TargetFramework")).Value);
             Assert.Equal(original, File.ReadAllText(repoGlobal));
         }
         finally
@@ -307,6 +314,46 @@ public class SampleInfrastructureTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task ConsumerBuildKeepsItsFrameworkAndDoesNotImportRepositoryTargets()
+    {
+        var key = "SampleTest.RepositoryDirectory";
+        var previous = AppContext.GetData(key);
+        var repository = Path.Combine(root, "isolated-checkout");
+        Directory.CreateDirectory(repository);
+        File.Copy(Path.Combine(DotNet.Setting("RepositoryDirectory"), "global.json"),
+            Path.Combine(repository, "global.json"));
+        File.WriteAllText(Path.Combine(repository, "Directory.Build.props"),
+            "<Project><PropertyGroup><RepositorySettingsLeaked>true</RepositorySettingsLeaked></PropertyGroup></Project>");
+        File.WriteAllText(Path.Combine(repository, "Directory.Build.targets"),
+            "<Project><Target Name=\"RejectRepositoryImports\" BeforeTargets=\"Build\"><Error Text=\"Repository targets reached the consumer.\" /></Target></Project>");
+        try
+        {
+            AppContext.SetData(key, repository);
+            using var profile = new DotNet();
+            var project = profile.NewProject("isolated-net10", """
+                <Project Sdk="Microsoft.NET.Sdk">
+                  <PropertyGroup>
+                    <TargetFramework>net10.0</TargetFramework>
+                    <OutputType>Exe</OutputType>
+                  </PropertyGroup>
+                  <Target Name="RejectRepositoryProperties" BeforeTargets="Build">
+                    <Error Condition="'$(RepositorySettingsLeaked)' != ''" Text="Repository properties reached the consumer." />
+                  </Target>
+                </Project>
+                """);
+            await profile.Build(project);
+            using var runtime = JsonDocument.Parse(File.ReadAllText(
+                Path.Combine(project, "output", "Consumer.runtimeconfig.json")));
+            Assert.Equal("net10.0", runtime.RootElement.GetProperty("runtimeOptions").GetProperty("tfm").GetString());
+            profile.CleanBuildOutput(project);
+        }
+        finally
+        {
+            AppContext.SetData(key, previous);
+        }
+    }
+
     [Theory]
     [InlineData("net10.0", "net9.0")]
     [InlineData("net11.0", "net10.0")]
@@ -320,6 +367,25 @@ public class SampleInfrastructureTests : IDisposable
             Assert.Equal((previousFramework, current), DotNet.ConsumerFrameworks());
             Assert.Equal(8, NativeAssetOutputTests.DefaultCases.Count);
             Assert.Equal(36, NativeAssetOutputTests.RidCases.Count);
+        }
+        finally
+        {
+            AppContext.SetData(key, original);
+        }
+    }
+
+    [Theory]
+    [InlineData("net10.0")]
+    [InlineData("net11.0")]
+    public void PlatformProbeFrameworkIsIndependentOfThePackageMatrix(string framework)
+    {
+        var key = "SampleTest.ConsumerTargetFramework";
+        var original = AppContext.GetData(key);
+        try
+        {
+            AppContext.SetData(key, framework);
+            Assert.Equal("net10.0", GeneratedAppTestBase.BaseFramework);
+            Assert.Equal(framework, DotNet.ConsumerFrameworks().Current);
         }
         finally
         {
@@ -376,7 +442,10 @@ public class SampleInfrastructureTests : IDisposable
     public void DockerBuildAndRunCategoriesAreIndependent()
     {
         var type = typeof(DockerSampleTests);
-        Assert.DoesNotContain(type.CustomAttributes, attribute => attribute.AttributeType == typeof(TraitAttribute));
+        Assert.Contains(type.CustomAttributes, attribute =>
+            attribute.AttributeType == typeof(TraitAttribute) &&
+            attribute.ConstructorArguments[0].Value?.ToString() == "Category" &&
+            attribute.ConstructorArguments[1].Value?.ToString() == "Docker");
         foreach (var (method, category) in new[]
         {
             ("DockerImageBuilds", "DockerBuild"),
@@ -387,7 +456,7 @@ public class SampleInfrastructureTests : IDisposable
                 attribute.AttributeType == typeof(TraitAttribute) &&
                 attribute.ConstructorArguments[1].Value?.ToString() == category);
         }
-        Assert.Contains(typeof(SampleRunTests).CustomAttributes, attribute =>
+        Assert.Contains(typeof(ConsoleSampleTests).CustomAttributes, attribute =>
             attribute.AttributeType == typeof(TraitAttribute) &&
             attribute.ConstructorArguments[1].Value?.ToString() == "SampleRun");
     }
@@ -402,10 +471,89 @@ public class SampleInfrastructureTests : IDisposable
         SampleWorkspace.CopyTree(Path.Combine(root, "inputs"), copy);
         Assert.True(File.Exists(Path.Combine(copy, "Sibling", "Sibling.csproj")));
         Assert.False(Directory.Exists(Path.Combine(copy, "App", "obj")));
-        FileIn("copy/App/bin/App.dll");
-        SampleWorkspace.CleanProducts(copy);
-        Assert.False(Directory.Exists(Path.Combine(copy, "App", "bin")));
         Assert.True(File.Exists(Path.Combine(copy, "App", "App.slnx")));
+    }
+
+    [Fact]
+    public void SampleWorkspaceCopiesOnlyItsSampleAndAncestorConfiguration()
+    {
+        FileIn("inputs/Directory.Build.props");
+        FileIn("inputs/NuGet.Config");
+        FileIn("inputs/Basic/Directory.Build.targets");
+        FileIn("inputs/Basic/Console/Console.slnx");
+        FileIn("inputs/Basic/Console/App/App.csproj");
+        FileIn("inputs/Basic/Console/App/obj/project.assets.json");
+        FileIn("inputs/Basic/Web/Web.slnx");
+        FileIn("inputs/Gallery/Gallery.slnx");
+
+        var destination = Path.Combine(root, "scoped-copy");
+        SampleWorkspace.CopySample(Path.Combine(root, "inputs"), Path.Combine("Basic", "Console"), destination);
+
+        Assert.True(File.Exists(Path.Combine(destination, "Basic", "Console", "Console.slnx")));
+        Assert.True(File.Exists(Path.Combine(destination, "Basic", "Console", "App", "App.csproj")));
+        Assert.True(File.Exists(Path.Combine(destination, "Directory.Build.props")));
+        Assert.True(File.Exists(Path.Combine(destination, "NuGet.Config")));
+        Assert.True(File.Exists(Path.Combine(destination, "Basic", "Directory.Build.targets")));
+        Assert.False(Directory.Exists(Path.Combine(destination, "Basic", "Console", "App", "obj")));
+        Assert.False(Directory.Exists(Path.Combine(destination, "Basic", "Web")));
+        Assert.False(Directory.Exists(Path.Combine(destination, "Gallery")));
+    }
+
+    [Fact]
+    public void GalleryWorkspacePreservesItsSharedProjectsWithoutCopyingBasicSamples()
+    {
+        FileIn("inputs/Gallery/Gallery.slnx");
+        FileIn("inputs/Gallery/Blazor/App.csproj");
+        FileIn("inputs/Gallery/Shared/Shared.csproj");
+        FileIn("inputs/Basic/Console/Console.slnx");
+        var destination = Path.Combine(root, "gallery-copy");
+
+        SampleWorkspace.CopySample(Path.Combine(root, "inputs"), "Gallery", destination);
+
+        Assert.True(File.Exists(Path.Combine(destination, "Gallery", "Blazor", "App.csproj")));
+        Assert.True(File.Exists(Path.Combine(destination, "Gallery", "Shared", "Shared.csproj")));
+        Assert.False(Directory.Exists(Path.Combine(destination, "Basic")));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("../outside")]
+    public void SampleWorkspaceRejectsInvalidFolders(string folder)
+    {
+        Assert.Throws<ArgumentException>(() =>
+            SampleWorkspace.CopySample(root, folder, Path.Combine(root, "invalid-copy")));
+    }
+
+    [Fact]
+    public void SampleTestBaseDisposesItsOwnedWorkingDirectory()
+    {
+        var source = Path.Combine(root, "lifecycle-inputs");
+        FileIn("lifecycle-inputs/Basic/Console/Console.slnx");
+        var key = "SampleTest.SamplesDirectory";
+        var previous = AppContext.GetData(key);
+        string working;
+        try
+        {
+            AppContext.SetData(key, source);
+            using (var test = new WorkspaceLifetimeTest(Assert.IsAssignableFrom<ITestOutputHelper>(TestContext.Current.TestOutputHelper)))
+            {
+                working = test.Prepare();
+                Assert.True(Directory.Exists(working));
+                Assert.True(File.Exists(Path.Combine(working, "samples", "Basic", "Console", "Console.slnx")));
+            }
+            Assert.False(Directory.Exists(working));
+            Assert.True(Directory.Exists(source));
+        }
+        finally
+        {
+            AppContext.SetData(key, previous);
+        }
+    }
+
+    private sealed class WorkspaceLifetimeTest(ITestOutputHelper output) : SampleTestBase(output)
+    {
+        protected override string SampleFolder => Path.Combine("Basic", "Console");
+        internal string Prepare() => PrepareSample().Root;
     }
 
     public void Dispose()

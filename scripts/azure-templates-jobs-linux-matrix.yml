@@ -26,6 +26,7 @@ jobs:
           buildAgent: ${{ parameters.buildAgent }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           docker: ${{ item.docker }}
+          dotnetSdks: []
           dockerArgs: --build-arg BUILD_ARCH=${{ item.arch }} ${{ item.dockerArgs }}
           target: ${{ coalesce(item.target, 'externals-linux') }}
           cacheJob: native/linux_cross

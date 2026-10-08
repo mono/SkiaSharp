@@ -1,16 +1,23 @@
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Mac;
 using SkiaSharp;
+using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
-namespace SkiaSharp.Tests.Samples.PlatformTests;
+namespace SkiaSharp.Tests.Samples;
 
 /// <summary>
 /// Tests that verify SkiaSharp packages work in MAUI Mac Catalyst applications.
 /// </summary>
-[Trait("Category", "ManualPlatform")]
-public class MauiMacCatalystTests(ITestOutputHelper output) : MauiTestBase(output)
+[Trait("Category", "Desktop")]
+[Trait("Category", "Golden")]
+public class MauiMacCatalystTests(AppiumFixture appium, ITestOutputHelper output) : MauiTestBase(appium, output)
 {
+    [Theory]
+    [InlineData("SKCanvasView", "SKPaintSurfaceEventArgs")]
+    [InlineData("SKGLView", "SKPaintGLSurfaceEventArgs")]
+    public Task MatchesGolden(string view, string eventArgs) => RunMauiTest(view, eventArgs);
+
     protected override string PlatformName => "MacCatalyst";
     protected override string TargetFramework => $"{BaseFramework}-maccatalyst";
     

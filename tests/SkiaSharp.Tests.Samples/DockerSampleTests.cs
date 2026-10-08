@@ -3,6 +3,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
 
+[Trait("Category", "Docker")]
 public class DockerSampleTests(DockerSampleFixture docker, ITestOutputHelper output) : IClassFixture<DockerSampleFixture>
 {
     public static IEnumerable<object[]> Cases() =>

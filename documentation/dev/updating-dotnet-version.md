@@ -23,7 +23,8 @@ This checklist documents every file that needs updating when bumping the .NET SD
 - [ ] **`native/winui/global.json` and `DOTNET_VERSION_WINUI`** — Keep these on the latest SDK feature band supported by the Visual Studio MSBuild used for the C++/WinRT projection. Verify the current SDK/MSBuild compatibility matrix and install this SDK side-by-side in the WinUI native jobs instead of forcing the repository SDK onto them.
 - [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_VERSION` to the SDK patch and pin `DOTNET_WORKLOAD_VERSION` to a compatible workload set. The workload set may intentionally lag the SDK by whole feature bands when a newer set requires an unavailable Apple toolchain.
 - [ ] **Managed Apple pool and `XCODE_VERSION`** — Use an agent image containing the exact Xcode recommended by the workload set. Document any intentional cross-feature-band workload pin beside `DOTNET_WORKLOAD_VERSION`, including the unavailable toolchain that requires it. Keep native Apple builds on their separately pinned Xcode.
-- [ ] **`scripts/infra/managed/install-dotnet-workloads.ps1`** — Review the workload installation flow and Tizen manifest source (Samsung may update it independently).
+- [ ] **`scripts/azure-templates-steps-dotnet.yml`** — Review host workload defaults and explicit job descriptors.
+- [ ] **`scripts/infra/managed/install-dotnet-workloads.ps1`** — Review the single workload install call and Samsung's special manifest handling.
 
 > **Note:** Do NOT set `workloadVersion` in `global.json`. Native builds skip SDK install but still read global.json, causing failures if the pinned workload version isn't pre-installed.
 
@@ -65,7 +66,7 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 
 - [ ] `tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj` — Uses `$(MauiTargetFrameworksAppCurrent)`
 - [ ] `tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj` — Host TFM and `ConsumerTargetFramework` default; confirm the generated previous/current consumer TFMs
-- [ ] `tests/SkiaSharp.Tests.Samples/PlatformTests/Maui*Tests.cs` — Platform TFMs derive from `ConsumerTargetFramework`
+- [ ] `tests/SkiaSharp.Tests.Samples/Maui*Tests.cs` and `Utils/TestDevices.cs` — Review probe TFMs and exact device/runtime theory cases independently of SDK selection
 - [ ] `samples/Basic/DockerConsole/*Dockerfile` and `samples/Basic/DockerWebApi/*Dockerfile` — Floating SDK major for isolated Docker sample builds
 
 ### 6. Cake Build Scripts
@@ -88,6 +89,7 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 ### 9. Pipeline YAML
 
 - [ ] `scripts/azure-templates-variables.yml` — DOTNET_VERSION, DOTNET_WORKLOAD_VERSION, XCODE_VERSION, EMSCRIPTEN_VERSION, test device versions
+- [ ] `scripts/azure-templates-stages-test.yml` sample profiles — Select SDK/workload pins and consumer TFMs independently of the repository's test-runner SDK; omit `xcodeVersion` to inherit global `XCODE_VERSION` (never assign `$(XCODE_VERSION)` back to that variable). Keep Docker build/run coverage in every profile.
 - [ ] `scripts/azure-templates-stages-native-wasm.yml` — Add new .NET emscripten entry
 - [ ] `scripts/azure-templates-jobs-bootstrapper.yml` — Review workload install step
 
@@ -189,7 +191,52 @@ Since platform workloads only support 2 versions at a time, testing a preview me
 3. Build and test on the branch
 4. Merge when the new .NET version goes GA
 
-There is no side-by-side preview mechanism — the `DOTNET_VERSION` in the pipeline IS the SDK version, preview or not.
+For runtime/consumer validation without upgrading the repository, use the
+side-by-side provisioning descriptors below. A consumer SDK override does not
+change source/sample project TFMs; the preview WASM source job explicitly opts
+into its existing `UsePreviewTFM` window.
+
+## Declarative CI SDK and Workload Provisioning
+
+The bootstrapper has one `dotnetSdks` list. Its default is the repository SDK
+only; managed jobs request a workload set explicitly:
+
+```yaml
+dotnetSdks:
+  - sdkVersion: $(DOTNET_VERSION)
+    workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+    tizen:
+      manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+      manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+  - sdkVersion: $(DOTNET_VERSION_WINUI) # SDK-only
+```
+
+Omitting `workloadSetVersion` installs only the SDK. When a set is present,
+`workloads` optionally overrides the centralized host list with explicit IDs.
+An empty `dotnetSdks` list performs no host .NET provisioning; container images
+own their SDK installations. No install-preview/additional-SDK booleans exist.
+
+`azure-templates-steps-dotnet.yml` expands the descriptors into standard
+`UseDotNet@2` tasks and ordinary helper calls. Microsoft workloads run under the
+exact selected SDK with `dotnet workload install --version`; the helper does not
+rewrite repository `global.json` or add public package sources.
+
+Installation order does not select the build SDK. Ordinary jobs keep repository
+`global.json`; the preview WASM job sets `jobSdkVersion` explicitly. That job-local
+selection updates only the `sdk` object, preserving tool and Arcade configuration.
+Sample-test jobs retain the repository runner SDK and pass their optional exact
+consumer SDK override separately; without an override, local/IDE tests copy the
+repository's SDK selection into their child working directory.
+
+Tizen is opt-in because Samsung's manifest is not part of Microsoft's workload
+set. Its publication band/version are explicit and distinct from the consuming
+SDK feature band. The same workload script removes `tizen` from the normal IDs,
+registers its pinned manifest, installs the Microsoft IDs once, then installs
+Tizen separately without manifest updates. There is no separate Tizen executor.
+
+Existing full host workload lists are preserved for the initial refactor.
+Workload reductions must be verified against restore/build graphs, not inferred
+from a job's name. SDK 11 sample profiles explicitly request `wasm-tools-net10`.
 
 ## How to Verify TPVs
 
@@ -207,11 +254,16 @@ dotnet new console -f net10.0-ios
 
 ## Workload Pinning
 
-Workloads are pinned via the `DOTNET_WORKLOAD_VERSION` pipeline variable, which is passed to `install-dotnet-workloads.ps1` as `-WorkloadVersion`. This uses the .NET SDK workload sets feature (`dotnet workload install --version <version>`) for reproducible builds. 
+Workload pins are declared by each SDK descriptor's `workloadSetVersion`, using
+the existing `DOTNET_WORKLOAD_VERSION` or preview variable as appropriate.
+The helper receives `-SdkVersion`, `-WorkloadSetVersion` and explicit workload IDs.
+It uses workload sets (`dotnet workload install --version <version>`) for
+reproducible builds.
 
 **Why not use `workloadVersion` in `global.json`?** Native builds (which skip SDK/workload install) still read `global.json`. If the pinned workload version isn't pre-installed on the agent, the build fails immediately. By passing the version through the pipeline variable, we control when workload pinning applies.
 
-**Exception:** Tizen is not an official workload — it uses Samsung's custom install scripts from `Samsung/Tizen.NET` repository.
+**Exception:** The `tizen` ID uses Samsung's explicitly versioned manifest in the
+same helper; it does not infer a version from Microsoft's set.
 
 ## CI Troubleshooting
 

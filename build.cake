@@ -152,6 +152,10 @@ Task ("nuget-assemble-arcade-assets")
     .IsDependentOn ("nuget-special")
     .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-assemble-arcade-assets"));
 
+Task ("nuget-download")
+    .Description ("Download the latest promoted package artifacts for a branch.")
+    .Does (() => RunCake ("./scripts/infra/managed/nuget-download.cake", "Default"));
+
 Task ("docs-api-diff")
     .Description ("Generate the committed API diffs (incremental; --force/--minVersion/--maxVersion).")
     .Does (() => RunCake ("./scripts/infra/docs/api-diff.cake", "docs-api-diff"));

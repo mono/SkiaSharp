@@ -16,6 +16,7 @@ stages:
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen|x64 (Linux, Docker)
         parameters:
           name: native_tizen_x64_linux
+          dotnetSdks: []
           displayName: Tizen x64
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
@@ -27,6 +28,7 @@ stages:
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen|arm64 (Linux, Docker)
         parameters:
           name: native_tizen_arm64_linux
+          dotnetSdks: []
           displayName: Tizen arm64
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}

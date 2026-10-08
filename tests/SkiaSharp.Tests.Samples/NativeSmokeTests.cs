@@ -2,14 +2,14 @@ using SkiaSharp;
 using Xunit;
 using HBuffer = HarfBuzzSharp.Buffer;
 
-namespace SkiaSharp.Tests.Samples.PlatformTests;
+namespace SkiaSharp.Tests.Samples;
 
 /// <summary>
 /// Smoke tests to verify native libraries load correctly.
 /// These are quick sanity checks - the real tests are the platform app builds.
 /// </summary>
 [Trait("Category", "RuntimeSmoke")]
-public class SmokeTests(ITestOutputHelper output)
+public class NativeSmokeTests(ITestOutputHelper output)
 {
     [Fact]
     public void SkiaSharpNativeLoads()

@@ -125,7 +125,7 @@ void RunDotNetTest(
     Dictionary<string, string> properties = null,
     bool noBuild = true,
     string hangTimeout = "15m",
-    IEnumerable<string> categories = null)
+    IEnumerable<string> excludedCategories = null)
 {
     output = MakeAbsolute(output);
     var dir = testProject.GetDirectory();
@@ -162,9 +162,9 @@ void RunDotNetTest(
                 .Append("--hangdump")
                 .Append("--hangdump-timeout").Append(hangTimeout)
                 .Append("--hangdump-type").Append("Mini");
-            if (categories != null && categories.Any()) {
-                args = args.Append("--filter-trait");
-                foreach (var category in categories)
+            if (excludedCategories != null && excludedCategories.Any()) {
+                args = args.Append("--filter-not-trait");
+                foreach (var category in excludedCategories)
                     args = args.AppendQuoted($"Category={category}");
             }
             return args;

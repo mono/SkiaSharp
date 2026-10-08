@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using Xunit;
 
-namespace SkiaSharp.Tests.Samples.PlatformTests;
+namespace SkiaSharp.Tests.Samples.Utils;
 
 /// <summary>
 /// Shared Appium server fixture for all MAUI tests.
@@ -11,28 +11,20 @@ namespace SkiaSharp.Tests.Samples.PlatformTests;
 /// </summary>
 public class AppiumFixture : IAsyncLifetime
 {
-    public static int Port
-    {
-        get
-        {
-            var configured = AppContext.GetData("SampleTest.AppiumPort")?.ToString();
-            if (string.IsNullOrEmpty(configured))
-                return 4723;
-            if (!int.TryParse(configured, out var port) || port is < 1 or > 65535)
-                throw new InvalidOperationException($"Invalid AppiumPort: {configured}");
-            return port;
-        }
-    }
+    public const int Port = TestDevices.AppiumPort;
     private Process? _appiumProcess;
 
-    public async ValueTask InitializeAsync()
+    public ValueTask InitializeAsync() => ValueTask.CompletedTask;
+
+    internal async Task Start()
     {
-        if (ManualPlatformPolicy.IsCI ||
-            !ManualPlatformPolicy.IsEnabled(Environment.GetEnvironmentVariable("SKIASHARP_RUN_MANUAL_PLATFORM_TESTS")))
+        if (_appiumProcess is { HasExited: false })
             return;
+        if (_appiumProcess is { HasExited: true })
+            throw new InvalidOperationException($"Owned Appium exited ({_appiumProcess.ExitCode}).");
 
         if (await IsPortOccupied())
-            throw new InvalidOperationException($"Port {Port} is already in use; refusing to reuse another user's Appium server. Set -p:AppiumPort=<free-port>.");
+            throw new InvalidOperationException($"Required Appium port {Port} is already in use; refusing to reuse another user's server.");
 
         Console.WriteLine($"[AppiumFixture] Starting Appium on port {Port}...");
         
@@ -125,10 +117,8 @@ public class AppiumFixture : IAsyncLifetime
                 if (response.IsSuccessStatusCode && _appiumProcess is { HasExited: false })
                     return true;
             }
-            catch
-            {
-                // Not ready yet
-            }
+            catch (HttpRequestException error) { Console.WriteLine($"[Appium readiness] {error.Message}"); }
+            catch (TaskCanceledException error) { Console.WriteLine($"[Appium readiness] {error.Message}"); }
             await Task.Delay(1000);
         }
         return false;

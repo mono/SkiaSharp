@@ -4,11 +4,13 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal static class SampleImage
 {
-    public static void Validate(ReadOnlySpan<byte> png)
+    public static void Validate(ReadOnlySpan<byte> png) => Validate(png, 800, 600);
+
+    public static void Validate(ReadOnlySpan<byte> png, int width, int height)
     {
         using var bitmap = SKBitmap.Decode(png);
         Assert.NotNull(bitmap);
-        Assert.Equal(800, bitmap.Width);
-        Assert.Equal(600, bitmap.Height);
+        Assert.Equal(width, bitmap.Width);
+        Assert.Equal(height, bitmap.Height);
     }
 }
