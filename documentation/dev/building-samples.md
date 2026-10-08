@@ -15,7 +15,9 @@ their rendered PNGs.
 The runner uses the same artifact-matched SkiaSharp packages to decode those images.
 
 Install the selected SDK from `scripts/azure-templates-variables.yml` and its
-required host workloads, alongside the runner's SDK 10. SDK 11's mobile manifests include net10 packs;
+required host workloads, alongside the runner's SDK 10. The SDK 11 profile pins
+RC1 and its workload set; it uses the existing approved feeds, not a preview-feed
+fallback. SDK 11's mobile manifests include net10 packs;
 WebAssembly also needs `wasm-tools-net10`. The SDK 11 profile still builds net10
 Apple samples using its backward-targeting packs. The Samples macOS jobs use
 the hosted `macos-26` image; SDK 10 retains the repository Xcode pin and SDK 11
