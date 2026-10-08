@@ -121,14 +121,7 @@ jobs:
           global-json-file: global.json
 
       - name: Install wasm-tools workload
-        shell: pwsh
-        run: |
-          $sdk = (Get-Content global.json -Raw | ConvertFrom-Json).sdk.version
-          $pin = Select-String -Path scripts/azure-templates-variables.yml `
-            -Pattern "^\s+DOTNET_WORKLOAD_VERSION:\s+'([^']+)'$"
-          if ($pin.Matches.Count -ne 1) { throw 'Expected one repository workload-set pin.' }
-          ./scripts/infra/managed/install-dotnet-workloads.ps1 `
-            -SdkVersion $sdk -WorkloadSetVersion $pin.Matches[0].Groups[1].Value -Workloads wasm-tools
+        run: dotnet workload install wasm-tools
 
       - name: Restore .NET tools
         run: dotnet tool restore
