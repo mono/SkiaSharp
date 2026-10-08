@@ -184,7 +184,7 @@ public class SampleInfrastructureTests : IDisposable
     [InlineData("Linux", "/app/output.png", "127.0.0.1::8080")]
     public void DockerCasesUseExpectedHostSettings(string platform, string outputPath, string portBinding)
     {
-        var settings = DockerSampleTests.HostSettings(platform);
+        var settings = DockerSampleTests.Hosts[platform];
         Assert.Equal(outputPath, settings.OutputPath);
         Assert.Equal(portBinding, settings.PortBinding);
     }

@@ -11,7 +11,8 @@ public class DockerSampleTests : IClassFixture<DockerSampleFixture>, IAsyncLifet
     private readonly string containerName;
     private readonly string diagnostics;
 
-    private static readonly Dictionary<string, (string OutputPath, string PortBinding)> Hosts = new()
+    internal static readonly IReadOnlyDictionary<string, (string OutputPath, string PortBinding)> Hosts =
+        new Dictionary<string, (string OutputPath, string PortBinding)>
     {
         ["Windows"] = (@"C:\app\output.png", "8080"),
         ["Mac"] = ("/app/output.png", "127.0.0.1::8080"),
@@ -34,28 +35,15 @@ public class DockerSampleTests : IClassFixture<DockerSampleFixture>, IAsyncLifet
     public async ValueTask DisposeAsync() =>
         await docker.RemoveContainer(containerName);
 
-    internal static (string OutputPath, string PortBinding) HostSettings(string platform) => Hosts[platform];
-
-    public static IEnumerable<object[]> Cases() =>
-        SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
+    public static IEnumerable<object[]> Cases()
+    {
+        var samples = SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
             .Where(sample => sample.Kind == SampleLookup.EntryKind.Docker)
-            .Select(sample => new object[] { sample.Folder, sample.FileName });
-
-    public static IEnumerable<object[]> ConsoleCases()
-    {
-        var sample = DockerSample("DockerConsole");
-        yield return [sample.Folder, sample.FileName, HostSettings(SampleLookup.HostPlatform).OutputPath];
+            .ToArray();
+        foreach (var name in new[] { "DockerConsole", "DockerWebApi" })
+            Assert.Single(samples, sample => sample.Folder == Path.Combine("Basic", name));
+        return samples.Select(sample => new object[] { sample.Folder, sample.FileName });
     }
-
-    public static IEnumerable<object[]> HttpCases()
-    {
-        var sample = DockerSample("DockerWebApi");
-        yield return [sample.Folder, sample.FileName, HostSettings(SampleLookup.HostPlatform).PortBinding];
-    }
-
-    private static SampleLookup.Entry DockerSample(string name) =>
-        Assert.Single(SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform),
-            sample => sample.Kind == SampleLookup.EntryKind.Docker && sample.Folder == Path.Combine("Basic", name));
 
     [Theory]
     [Trait("Category", "DockerBuild")]
@@ -67,21 +55,16 @@ public class DockerSampleTests : IClassFixture<DockerSampleFixture>, IAsyncLifet
 
     [Theory]
     [Trait("Category", "SampleRun")]
-    [MemberData(nameof(ConsoleCases))]
-    public async Task DockerConsoleSampleRuns(string folder, string dockerfile, string outputPath)
+    [MemberData(nameof(Cases))]
+    public async Task DockerSampleRuns(string folder, string dockerfile)
     {
         var tag = await docker.Image(folder, dockerfile);
-        await RunConsole(tag, outputPath);
-    }
-
-    [Theory]
-    [Trait("Category", "SampleRun")]
-    [MemberData(nameof(HttpCases))]
-    public async Task DockerHttpSampleRuns(string folder, string dockerfile, string portBinding)
-    {
-        var tag = await docker.Image(folder, dockerfile);
-        var requests = Path.Combine(Repo.SamplesDir, folder, "sample.http");
-        await RunHttp(tag, requests, portBinding);
+        var settings = Hosts[SampleLookup.HostPlatform];
+        var isHttp = folder == Path.Combine("Basic", "DockerWebApi");
+        if (isHttp)
+            await RunHttp(tag, Path.Combine(Repo.SamplesDir, folder, "sample.http"), settings.PortBinding);
+        else
+            await RunConsole(tag, settings.OutputPath);
     }
 
     private async Task RunConsole(string tag, string outputPath)
