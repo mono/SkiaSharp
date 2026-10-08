@@ -27,7 +27,7 @@ public static class DotNet
 
     public static async Task<string> GetVersion(SampleWorkspace workspace)
     {
-        var result = await ProcessRunner.Run("dotnet", ["--version"], workspace.Root, TimeSpan.FromMinutes(1), start => ConfigureProcess(start, workspace));
+        var result = await Run(workspace, ["--version"]);
         if (result.ExitCode != 0)
             throw new InvalidOperationException($"The dotnet host on PATH could not select an SDK: {result.Output}\n{result.Error}");
         return result.Output.Trim();
@@ -56,7 +56,7 @@ public static class DotNet
                 "-p:RestoreNoCache=true",
                 "-p:UseSharedCompilation=false"
             ];
-            var result = await ProcessRunner.Run("dotnet", arguments, Path.GetDirectoryName(project)!, TimeSpan.FromMinutes(30), start => ConfigureProcess(start, workspace));
+            var result = await Run(workspace, arguments, TimeSpan.FromMinutes(30), Path.GetDirectoryName(project));
             await File.WriteAllTextAsync(log, result.Output + result.Error);
             if (result.ExitCode != 0)
                 throw new InvalidOperationException($"dotnet build {project} failed ({result.ExitCode}); see {diagnostics}");
@@ -73,6 +73,14 @@ public static class DotNet
                 TestContext.Current.AddFileAttachment(binlog, "application/octet-stream");
         }
     }
+
+    internal static Task<(int ExitCode, string Output, string Error)> Run(
+        SampleWorkspace workspace,
+        IEnumerable<string> arguments,
+        TimeSpan? timeout = null,
+        string? workingDir = null) =>
+        ProcessRunner.Run("dotnet", arguments, workingDir ?? workspace.Root,
+            timeout ?? TimeSpan.FromMinutes(1), start => ConfigureProcess(start, workspace));
 
     internal static void ConfigureProcess(ProcessStartInfo start, SampleWorkspace workspace)
     {
