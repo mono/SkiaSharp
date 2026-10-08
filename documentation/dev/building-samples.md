@@ -24,6 +24,8 @@ source/unit-test agents are unchanged.
 Workload installation uses an exact SDK context and the repository's approved
 NuGet configuration. Missing mirrored packages fail explicitly; provisioning
 does not add NuGet.org or select a different SDK/workload set.
+Samsung manifests are registered beside the resolved, PATH-selected `dotnet`
+executable, not an inherited `DOTNET_ROOT` that may refer to another installation.
 Missing required workloads are failures, not reasons to retarget or omit samples.
 
 ## Transport Feed

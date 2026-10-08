@@ -34,12 +34,10 @@ try {
             [IO.Compression.ZipFile]::ExtractToDirectory("$context/tizen.nupkg", "$context/tizen")
             $data = "$context/tizen/data"
             if (-not (Test-Path "$data/WorkloadManifest.json")) { throw "Missing Samsung workload manifest in $package." }
-            $root = $env:DOTNET_ROOT
-            if (-not $root) {
-                $exe = [IO.FileInfo]::new((Get-Command dotnet -CommandType Application).Source)
-                $resolved = $exe.ResolveLinkTarget($true)
-                $root = if ($resolved) { $resolved.Directory.FullName } else { $exe.Directory.FullName }
-            }
+            $exe = [IO.FileInfo]::new((Get-Command dotnet -CommandType Application | Select-Object -First 1).Source)
+            $resolved = $exe.ResolveLinkTarget($true)
+            $root = if ($resolved) { $resolved.Directory.FullName } else { $exe.Directory.FullName }
+            Write-Host "Installing Samsung manifest for SDK $SdkVersion under $root."
             $parts = ($SdkVersion -split '-')[0] -split '\.'
             $sdkBand = "$($parts[0]).$($parts[1]).$([math]::Floor([int]$parts[2] / 100) * 100)"
             if ($SdkVersion -match '-((?:preview|rc)\.\d+)') { $sdkBand += "-$($Matches[1])" }
