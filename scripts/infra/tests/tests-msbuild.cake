@@ -20,7 +20,9 @@ Task ("Default")
     if (!SKIP_BUILD)
         RunDotNetBuild(project, properties: properties);
 
-    RunDotNetTest(project, results);
+    // Native browser linking is covered on Linux; MAUI uses each host's supported target matrix.
+    RunDotNetTest(project, results, runnerArguments: IsRunningOnLinux()
+        ? null : new[] { "--filter-not-trait", "Category=Wasm" });
 });
 
 RunTarget(TARGET);

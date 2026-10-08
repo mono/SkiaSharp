@@ -185,6 +185,37 @@ signing, testing, and publication mechanics.
 
 ## Deployment & Containers
 
+### Package-consumer build tests
+
+`dotnet cake --target=tests-msbuild` tests the producer's real packages in
+`output/nugets`, not packages substituted from a public feed. Consumers start
+with `dotnet new console`, `dotnet new maui`, or `dotnet new blazorwasm`, then
+update the generated project to reference exact artifact versions and explicit
+.NET 10 or .NET 11 target frameworks. Build and publish are separate tests.
+Template generation uses the matching stable or preview SDK so the generated
+framework-specific dependencies remain correct. Console builds retain preview
+SDK coverage, including multi-target apps; workload apps use each framework's
+pinned SDK and default workload set.
+
+The shared inventory reads each package once; a dedicated input test checks
+package identity and native contents. Every consumer still checks its own
+restore and native output. Diagnostics include template/build/publish commands,
+binlogs, stdout/stderr, restore assets, and package provenance.
+
+The MSBuild CI jobs use the default, platform-supported workloads and the
+repository's pinned SDK/workload sets. Linux covers both package families in
+Blazor Mono WASM, including all four thread/SIMD combinations. Build must
+produce a native-linked browser framework; publish starts with a clean app and
+must produce a deployable `publish/wwwroot` with linked WASM. Archive selection
+and hashes are checked before transformation; linked WASM is not compared
+byte-for-byte with input archives.
+
+MAUI covers Android on all hosts, Windows on Windows, and iOS simulator plus
+Mac Catalyst on macOS. Debug build/publish avoids production signing and checks
+real APK, executable, or app-bundle native contents. These checks prove packaging
+and native linking, not browser/device execution; the existing runtime test
+lanes remain responsible for execution.
+
 ### Application vs Library References
 
 NativeAssets packages must be referenced in the **application project** (the one that produces the executable), not in library projects. The .NET runtime resolves native binaries from the application's output directory using runtime identifiers (RIDs).

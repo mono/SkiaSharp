@@ -293,12 +293,12 @@ jobs:
               dotnet --version
             displayName: Pin global.json to the preview .NET SDK
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          - ${{ if ne(parameters.previewWorkloads, '') }}:
+          - ${{ if or(eq(parameters.installDotNetWorkloads, 'true'), ne(parameters.previewWorkloads, '')) }}:
             # Reuse the shared workload install script, pinned to the exact preview workload set.
             # WASM tests still restore the platform TFMs (e.g. -android) of referenced projects, so
             # those workloads must be installed too — same as the non-preview test jobs.
             - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Workloads "${{ parameters.previewWorkloads }}" -WorkloadSetVersion "$(DOTNET_WORKLOAD_VERSION_PREVIEW)" -Tizen ""
-              displayName: Install the preview .NET workloads (${{ parameters.previewWorkloads }})
+              displayName: Install the preview .NET workloads
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
