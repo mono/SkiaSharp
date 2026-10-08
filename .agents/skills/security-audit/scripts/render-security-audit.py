@@ -40,7 +40,7 @@ def main():
         sys.exit(1)
 
     # Validate required fields
-    for key in ("meta", "summary", "findings", "nextSteps", "versionVerification"):
+    for key in ("meta", "summary", "findings", "tsaWorkItems", "nextSteps", "versionVerification"):
         if key not in data:
             print(f"❌ Missing required key: {key}")
             sys.exit(1)
@@ -56,9 +56,8 @@ def main():
 
     # Serialize JSON for injection
     json_str = json.dumps(data, ensure_ascii=False)
-    json_str = json_str.replace("</script>", "<\\/script>")
-    json_str = json_str.replace("</Script>", "<\\/Script>")
-    json_str = json_str.replace("</SCRIPT>", "<\\/SCRIPT>")
+    # Prevent any untrusted work-item field from terminating the inline data script.
+    json_str = json_str.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
 
     data_script = f"<script>const DATA = {json_str};</script>"
 
@@ -85,9 +84,11 @@ def main():
 
     size_kb = os.path.getsize(output_path) / 1024
     summary = data.get("summary", {})
+    tsa_summary = data.get("tsaWorkItems", {}).get("summary", {})
     print(f"✅ {output_path.name} ({size_kb:.0f} KB)")
     print(f"   m{milestone} • {date} • {summary.get('totalCves', '?')} CVEs • Highest: {summary.get('highestSeverity', '?')}")
     print(f"   🔴 {summary.get('needsAttention', 0)} attention · 🆕 {summary.get('undiscovered', 0)} undiscovered · ⚪ {summary.get('falsePositive', 0)} FP · ✅ {summary.get('clean', 0)} clean")
+    print(f"   TSA: {tsa_summary.get('active', 0)} active · {tsa_summary.get('historical', 0)} historical")
     print(f"   Output: {output_path}")
 
 
