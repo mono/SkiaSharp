@@ -111,6 +111,9 @@ stages:
             dotnetSdks:
               - sdkVersion: $(DOTNET_VERSION)
                 workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Managed (Linux)
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES)
@@ -301,6 +304,9 @@ stages:
             dotnetSdks:
               - sdkVersion: $(DOTNET_VERSION)
                 workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Linux
             buildAgent: ${{ parameters.buildAgentLinux }}
             # Software Vulkan (Mesa lavapipe) plus a virtual X server give the
@@ -482,7 +488,9 @@ stages:
             dotnetSdks:
               - sdkVersion: $(DOTNET_VERSION)
                 workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                workloads: [wasm-tools, android]
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: WASM
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build

@@ -24,7 +24,7 @@ This checklist documents every file that needs updating when bumping the .NET SD
 - [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_VERSION` to the SDK patch and pin `DOTNET_WORKLOAD_VERSION` to a compatible workload set. The workload set may intentionally lag the SDK by whole feature bands when a newer set requires an unavailable Apple toolchain.
 - [ ] **Managed Apple pool and `XCODE_VERSION`** — Use an agent image containing the exact Xcode recommended by the workload set. Document any intentional cross-feature-band workload pin beside `DOTNET_WORKLOAD_VERSION`, including the unavailable toolchain that requires it. Keep native Apple builds on their separately pinned Xcode.
 - [ ] **`scripts/azure-templates-steps-dotnet.yml`** — Review host workload defaults and explicit job descriptors.
-- [ ] **`scripts/infra/managed/install-dotnet-workloads.ps1`** — Review the single workload install call and Samsung's special manifest handling.
+- [ ] **`scripts/infra/managed/install-dotnet-workloads.ps1`** — Review the exact-SDK workload install and Samsung's pinned manifest handling.
 
 > **Note:** Do NOT set `workloadVersion` in `global.json`. Native builds skip SDK install but still read global.json, causing failures if the pinned workload version isn't pre-installed.
 
@@ -218,10 +218,12 @@ Omitting `workloadSetVersion` installs only the SDK. When a set is present,
 An empty `dotnetSdks` list performs no host .NET provisioning; container images
 own their SDK installations. No install-preview/additional-SDK booleans exist.
 
-`azure-templates-steps-dotnet.yml` expands the descriptors into standard
-`UseDotNet@2` tasks and ordinary helper calls. Microsoft workloads run under the
-exact selected SDK with `dotnet workload install --version`; the helper does not
-rewrite repository `global.json` or add public package sources.
+`scripts/azure-templates-steps-dotnet.yml` expands these descriptors into standard
+`UseDotNet@2` tasks and helper calls. The helper uses a temporary exact-SDK
+`global.json` context and the repository's approved `nuget.config` feeds. It
+does not modify repository `global.json` or select an SDK through `DOTNET_ROOT`.
+Samsung manifests are registered under the first PATH `dotnet` application's
+resolved installation root.
 
 Installation order does not select the build SDK. Ordinary jobs keep repository
 `global.json`; the preview WASM job sets `jobSdkVersion` explicitly. That job-local
@@ -257,7 +259,7 @@ dotnet new console -f net10.0-ios
 ## Workload Pinning
 
 Workload pins are declared by each SDK descriptor's `workloadSetVersion`, using
-the existing `DOTNET_WORKLOAD_VERSION` or preview variable as appropriate.
+`DOTNET_WORKLOAD_VERSION` or `DOTNET_WORKLOAD_VERSION_PREVIEW` as appropriate.
 The helper receives `-SdkVersion`, `-WorkloadSetVersion` and explicit workload IDs.
 It uses workload sets (`dotnet workload install --version <version>`) for
 reproducible builds.
