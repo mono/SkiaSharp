@@ -1,16 +1,14 @@
 # Building and Validating Samples
 
-The Samples suite builds generated applications against produced NuGet packages
-and runs the Console/Web samples on the host and in Docker.
+The Samples suite builds generated applications against produced NuGet packages,
+runs Console/Web APIs on the host and in Docker, and checks actual browser UIs.
 
 ## Run the suite
 
-Install the repository SDK and the workloads required by your host's samples.
-Docker build/run tests run on any host with usable Docker, including macOS.
-Put `docker` on `PATH` and start a daemon using Windows containers on Windows
-or Linux containers on macOS/Linux. CI does not provision Docker on macOS.
-Unavailable Docker produces visible skips; wrong container mode and sample
-failures fail the tests.
+Install the repository SDK and your host's required workloads. For Docker tests,
+put `docker` on `PATH` and start a daemon using Windows containers on Windows
+or Linux containers on macOS/Linux. Unavailable Docker skips those tests;
+wrong container mode and sample failures fail.
 
 **Bootstrap before staging packages:** bootstrap resets `output/`.
 For managed-only work:
@@ -23,9 +21,8 @@ For native or Skia changes, build natives from source instead; see
 [AGENTS.md](../../AGENTS.md). Do not download prebuilt natives after native changes.
 
 Stage one producing build's non-symbol packages in `output/nugets/`, including
-SkiaSharp, HarfBuzzSharp, and the required native/view packages. Its base versions
-must match `scripts/VERSIONS.txt`. Download the public `nuget` build artifact,
-or use the PR helper:
+the required native/view packages. Base versions must match `scripts/VERSIONS.txt`.
+Download its `nuget` artifact or use the PR helper:
 
 ```powershell
 $pr = 1234 # Producing PR number.
@@ -41,10 +38,8 @@ Pass the producing package suffix explicitly. For example, packages ending in
 dotnet cake --target=samples --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-This generates the samples and runs the suite. Do not mix producing builds:
-generation uses the supplied arguments, not package-filename version detection.
-Cake streams active-test progress and test output to the console while retaining
-TRX results and diagnostic artifacts.
+This generates the samples and runs the suite. Keep all packages from the same
+producing build and pass its suffix explicitly.
 
 To run one group, add `--runGroup=Build`, `--runGroup=Host`, or
 `--runGroup=Docker`. Omit `--runGroup` to run the full suite.
@@ -52,8 +47,7 @@ Group names are case-sensitive.
 
 ## IDE and direct test runs
 
-After staging packages, generate once before opening the test project in an IDE
-or running it directly:
+After staging packages, generate once before IDE or direct test runs:
 
 ```sh
 dotnet cake --target=samples-generate --previewLabel=pr.1234 --buildNumber=26509.10
@@ -61,20 +55,30 @@ dotnet test tests/SkiaSharp.Tests.Samples.slnx \
   -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
 ```
 
-The solution includes the runner's source dependencies; the properties above
-limit their build to the runner's .NET 10 target.
+Keep both framework properties to limit the runner's source dependencies to
+.NET 10. Sample builds use the SDK on `PATH` and their own declared TFMs.
 
-Direct tests use the generated inputs without invoking Cake or downloading
-packages. The runner uses the repository SDK; sample builds use `dotnet` from
-the inherited `PATH`, without changing project TFMs. Set the intended SDK and
-platform environment before launching the terminal or IDE.
+## Browser runs
+
+For local browser tests, build the runner and install its matching Chromium:
+
+```sh
+dotnet build tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj
+pwsh tests/SkiaSharp.Tests.Samples/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
+  -- --filter-trait Category=Browser --report-trx
+```
+
+Use the Release script path for a Release build. CI installs Chromium before
+tests automatically; local tests do not. Linux `--with-deps` may require `sudo`.
+See [Playwright browser installation](https://playwright.dev/dotnet/docs/browsers).
+Filtered runs do not replace the full suite.
 
 ## Coverage and diagnostics
 
-The suite builds host-eligible Basic and Gallery solutions. Gallery, WASM, and
-Blazor are build-only; Console/Web runtime tests check exit codes, HTTP responses,
-and PNGs on the host and in Docker. Generated-project tests check exact package
-versions and Uno's SkiaSharp override. Integration/MSBuild suites remain separate.
+Basic/Gallery samples have build coverage; Console/Web APIs and Web/WASM/Blazor
+UIs have runtime checks. Gallery is build-only; device execution is separate.
+Browser errors and unavailable GPU rendering fail.
 
 | Group | Tests | CI hosts |
 | --- | --- | --- |
@@ -87,20 +91,12 @@ Each test requires exactly one typed attribute, such as
 `[RunGroup(SampleRunGroup.Build)]`. Apply it to a class only when every test uses
 the same group; otherwise annotate individual methods.
 
-Use IDE filters or select one test:
+Find output, binlogs, results and images under `output/logs/testlogs/samples/`
+or CI's `sample_logs_*` artifacts. For restore failures, check the generated
+versions against staged packages. Do not clear shared caches.
 
-```sh
-dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
-  -- --filter-method '*BasicSampleTests.WebSampleReturnsImage'
-```
-
-Find stdout/stderr, binlogs, results, and images under
-`output/logs/testlogs/samples/`, or in CI's `sample_logs_*` artifact. For restore
-failures, compare generated versions with the staged packages and inspect the
-binlog. Tests use private workspaces/caches; do not clear shared caches.
-
-PNG references are platform-specific under `tests/SkiaSharp.Tests.Samples/Expected/`.
-Dimensions must match; at most **0.075%** of pixels may differ, with zero channel
-tolerance. Failures retain the actual image; mismatches also retain a diff.
-Review replacement references on the affected platform; tests never accept them
-automatically.
+Review platform references under `tests/SkiaSharp.Tests.Samples/Expected/`.
+Dimensions must match; the default limit is **0.075% differing pixels** with
+zero channel tolerance. Animated GPU pages use a loose **6% mean RGBA error**
+smoke check that can miss uniform dark output. Mismatches retain actual/diff
+images; references are never accepted automatically.
