@@ -118,7 +118,12 @@ bounded timeouts and cleanup removes only owned processes, workspaces, images,
 and containers, never user caches or unrelated Docker resources.
 
 PNG references live in `tests/SkiaSharp.Tests.Samples/Expected/`, qualified by
-host/container platform. Comparisons use decoded pixels with zero tolerance.
+host/container platform. Comparisons allow at most **0.075%** of decoded pixels
+to differ, with zero per-channel tolerance: any RGBA channel change counts as a
+differing pixel. Fractional pixel budgets round down (360 pixels at 800x600;
+196 at 512x512). This small image-wide budget accommodates host text
+antialiasing differences without allowing color shifts across the whole image.
+Image dimensions must still match exactly.
 Missing references retain the actual image and fail; mismatches also retain a
 diff. Capture and review references on their actual platform: tests never
 generate or accept them automatically.
