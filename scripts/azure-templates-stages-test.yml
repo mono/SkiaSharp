@@ -813,6 +813,10 @@ stages:
                 - name: native
                 - name: nuget
                   dir: nugets
+              preBuildSteps:
+                - bash: bash scripts/infra/samples/docker-macos.sh
+                  displayName: Start owned Docker daemon for sample tests
+                  timeoutInMinutes: 20
               postBuildSteps:
                 - task: PublishTestResults@2
                   condition: always()
@@ -825,6 +829,9 @@ stages:
                   inputs:
                     targetPath: output/logs
                     artifact: sample_logs_macos_${{ sdk }}
+                - bash: bash scripts/infra/samples/docker-macos.sh cleanup
+                  displayName: Remove owned sample Docker VM
+                  condition: always()
           - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
             parameters:
               name: samples_linux_${{ sdk }}
