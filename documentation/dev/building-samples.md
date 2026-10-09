@@ -180,8 +180,9 @@ additional Debug cases can be added and selected without new MSBuild settings.
 Theory rows build actual generated `.slnx` solutions. Host `.Windows`, `.Mac`,
 and `.Linux` variants replace the common solution; ordinary dotted solution
 names remain eligible. Gallery is build-only, including its shared sibling
-projects. WASM and Blazor samples receive eligible build coverage, not browser
-navigation or reference-scene comparison.
+projects. Browser runtime tests additionally navigate the actual Web,
+BrowserWebAssembly, and BlazorWebAssembly samples; build discovery remains
+independent of those runtime facts.
 
 `BasicSampleTests` covers ordinary samples; `GallerySampleTests` separately
 covers Gallery using the same workspace/build pipeline. Both belong to the
@@ -232,7 +233,8 @@ Both host and Docker tests run their assertions inside
 `DockerRunningApp` share a `RunningApp` base with `GetResponse()` and
 `WaitForResponse()`; the returned response belongs to the test. Both provide
 `WaitForExit()` for the application's exit code/stdout/stderr and `GetAddress()`
-for its owned loopback endpoint. The host detects the address from server output;
+for its owned loopback endpoint. The host detects the address from server output
+(`Now listening on:` for ASP.NET and `App url:` for the WebAssembly app host);
 Docker uses the container's published port.
 Docker HTTP uses the fixed container port 8080, matching the ASP.NET runtime
 image and both web Dockerfiles; the runner exposes no container-port setting.
@@ -245,8 +247,79 @@ and removes only its named container, never the Docker daemon or unrelated
 containers; `docker wait`'s CLI exit code is not mistaken for the app's exit code.
 There is no separate host build path or HTTP-run helper. Docker runs the
 sample image's declared entrypoint; there is no entrypoint override.
-The four real runtime tests cover application execution rather than adding
+The host and Docker runtime tests cover application execution rather than adding
 synthetic apps and a separate runner-lifecycle test suite.
+
+### Browser runtime prerequisites and coverage
+
+The sample test runner references `Microsoft.Playwright` 1.55.0 for headless
+Chromium automation. It still references the repository SkiaSharp project,
+not product packages. Only the generated sample applications consume the
+exact acquired package cohort.
+
+The BrowserWASM sample explicitly references the native WebAssembly project;
+`samples-generate` converts that declaration to the matching artifact
+`SkiaSharp.NativeAssets.WebAssembly` package. Its generated-input assertion
+checks both the acquired native package identity and managed/native version
+agreement. A managed-only sample can compile but fails when Skia initializes
+in the browser; the runner must not supply that missing dependency for it.
+
+After native bootstrap, package acquisition, and `samples-generate`, build
+the runner and explicitly install its matching Chromium revision:
+
+```sh
+dotnet build tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj
+pwsh tests/SkiaSharp.Tests.Samples/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
+  -- --filter-trait Category=Browser --report-trx
+```
+
+Use the corresponding `bin/Release/net10.0` script when building the runner
+in Release. Browser installation is a prerequisite, never a test-discovery
+or fixture download. On Linux, `--with-deps` installs Chromium's OS dependencies
+and may require elevated privileges. The existing Windows, macOS, and Linux
+sample CI jobs perform this explicit installation after acquiring their native
+and NuGet artifacts; SDK/workload provisioning and sample TFMs remain unchanged.
+Missing browser binaries, browser startup failures, and unavailable GPU
+rendering are failures, not inferred skips.
+
+Four named `BrowserSampleTests` facts belong to `SampleRun` and `Browser`.
+They build real generated samples in Release and use the same `DotNet.Run`
+callback, dynamic loopback address, HTTP readiness, private consumer caches,
+and owned process cleanup as the host tests. Each test owns its browser/context
+and captures browser errors and diagnostic screenshots. No generic runtime
+case registry or synthetic application is involved.
+
+The Web fact verifies all three `.card` images have decoded 512 x 512 output
+and retains each image for strict pixel comparison. BrowserWASM verifies
+`#output` contains a decoded 800 x 600 base64 PNG. Blazor's home page verifies
+and compares its actual CPU canvas, with a fixed browser viewport and device
+scale so layout cannot depend on the machine's display. Image/canvas pixels,
+not browser chrome, are the reviewed reference surface.
+
+Stable browser references live under
+`tests/SkiaSharp.Tests.Samples/Expected/Browser/<host-platform>/`.
+The Web page's `SkiaSharp` text image is identical to the host HTTP fact's
+image and reuses `Expected/Host/<host-platform>/web.png` rather than duplicating
+that reviewed reference. The two other Web images and WASM/Blazor CPU outputs
+need their own reviewed captures.
+They use the foundation `SampleImage` comparer with zero per-channel tolerance.
+Fresh captures must be reviewed before committing references; missing goldens
+remain real failures with retained actual PNGs. A local run or an older suite's
+CI capture does not establish reviewed baselines for this browser slice.
+
+The GPU fact navigates `/gpu`, requires real nonuniform rendered pixels, and
+retains a canvas screenshot. This sample uses animated `iTime`/FPS shader
+state, so an arbitrary frame is diagnostic evidence, not a strict golden.
+The test does not replace the shader, freeze its clock, or change GPU skip
+policy. A deterministic animation mode requires a separate design decision.
+
+The unfiltered sample entry point remains
+`dotnet test tests/SkiaSharp.Tests.Samples.slnx -- --report-trx` or the
+`samples` Cake target. Focused browser runs do not validate the inherited
+host, Docker, or build cases. A feature-branch-targeted stacked PR may not
+trigger the pipeline's existing main/release target filters; do not change
+those filters or queue a workaround merely to obtain browser captures.
 
 PNG comparisons reuse the shared pixel comparer with zero per-channel tolerance,
 including alpha, rather than comparing encoded bytes. References are qualified

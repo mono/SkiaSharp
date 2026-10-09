@@ -61,12 +61,21 @@ internal sealed class DotNetRunningApp : RunningApp
         while (await process.StandardOutput.ReadLineAsync() is { } line)
         {
             output.AppendLine(line);
-            const string prefix = "Now listening on: ";
-            var text = line.Trim();
-            if (text.StartsWith(prefix, StringComparison.Ordinal) &&
-                Uri.TryCreate(text[prefix.Length..], UriKind.Absolute, out var uri) &&
-                uri.Scheme == Uri.UriSchemeHttp && uri.Host == "127.0.0.1" && uri.Port > 0)
+            if (ParseAddress(line) is { } uri)
                 address.TrySetResult(uri);
         }
+    }
+
+    internal static Uri? ParseAddress(string line)
+    {
+        var text = line.Trim();
+        var prefix = text.StartsWith("Now listening on: ", StringComparison.Ordinal)
+            ? "Now listening on: "
+            : "App url: ";
+        return text.StartsWith(prefix, StringComparison.Ordinal) &&
+            Uri.TryCreate(text[prefix.Length..], UriKind.Absolute, out var uri) &&
+            uri.Scheme == Uri.UriSchemeHttp && uri.Host == "127.0.0.1" && uri.Port > 0
+            ? uri
+            : null;
     }
 }
