@@ -36,6 +36,10 @@
       <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
       <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
       <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI\SkiaSharp.Views.Uno.WinUI.csproj" />
+      <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
+      <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
+      <ProjectReference Include="..\..\..\..\binding\SkiaSharp.NativeAssets.Linux\SkiaSharp.NativeAssets.Linux.csproj" />
+      <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.NativeAssets.Linux\HarfBuzzSharp.NativeAssets.Linux.csproj" />
     </ItemGroup>
   
     <ItemGroup>
@@ -43,13 +47,6 @@
     </ItemGroup>
   
     <Import Project="..\..\..\..\samples\_UnoPlatformSamples.targets" />
-    <!-- Generated samples remove the source-only import; these references become artifact-versioned packages. -->
-    <ItemGroup Condition="!Exists('..\..\..\..\samples\_UnoPlatformSamples.targets')">
-      <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
-      <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
-      <ProjectReference Include="..\..\..\..\binding\SkiaSharp.NativeAssets.Linux\SkiaSharp.NativeAssets.Linux.csproj" />
-      <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.NativeAssets.Linux\HarfBuzzSharp.NativeAssets.Linux.csproj" />
-    </ItemGroup>
     <Import Project="..\..\..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
     <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
     <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.WinUI.targets" Condition="$(TargetFramework.Contains('-windows'))" />

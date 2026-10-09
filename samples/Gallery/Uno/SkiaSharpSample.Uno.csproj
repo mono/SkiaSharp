@@ -33,19 +33,19 @@
     <BuildFooter></BuildFooter>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\source\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.NativeAssets.Linux\SkiaSharp.NativeAssets.Linux.csproj" />
+    <ProjectReference Include="..\..\..\binding\HarfBuzzSharp.NativeAssets.Linux\HarfBuzzSharp.NativeAssets.Linux.csproj" />
+  </ItemGroup>
+
   <!-- The Shared ProjectReference below must come after this import:
        _UnoPlatformSamples.targets does <ProjectReference Remove="@(ProjectReference)" />. -->
   <Import Project="..\..\_UnoPlatformSamples.targets" />
 
   <ItemGroup>
     <ProjectReference Include="..\Shared\SkiaSharpSample.Shared.csproj" />
-  </ItemGroup>
-  <!-- Generated samples remove the source-only import; these references become artifact-versioned packages. -->
-  <ItemGroup Condition="!Exists('..\..\_UnoPlatformSamples.targets')">
-    <ProjectReference Include="..\..\..\source\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.NativeAssets.Linux\SkiaSharp.NativeAssets.Linux.csproj" />
-    <ProjectReference Include="..\..\..\binding\HarfBuzzSharp.NativeAssets.Linux\HarfBuzzSharp.NativeAssets.Linux.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
