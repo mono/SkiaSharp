@@ -6,10 +6,6 @@ namespace SkiaSharp.Tests.Samples;
 [Trait("Category", "Docker")]
 public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<DockerSampleFixture>
 {
-    private const string DockerSkipReason = "Docker samples are validated on Linux and Windows, not macOS.";
-
-    public static bool IsMacOS => OperatingSystem.IsMacOS();
-
     private static string ContainerPlatform =>
         OperatingSystem.IsWindows() ? "Windows" : "Linux";
 
@@ -26,13 +22,13 @@ public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<Docke
         await docker.Run(tag, arguments, test);
     }
 
-    [Theory(Skip = DockerSkipReason, SkipType = typeof(DockerSampleTests), SkipWhen = nameof(IsMacOS))]
+    [Theory]
     [Trait("Category", "DockerBuild")]
     [MemberData(nameof(Cases))]
     public async Task DockerImageBuilds(string folder, string dockerfile) =>
         await docker.Image(folder, dockerfile);
 
-    [Fact(Skip = DockerSkipReason, SkipType = typeof(DockerSampleTests), SkipWhen = nameof(IsMacOS))]
+    [Fact]
     [Trait("Category", "SampleRun")]
     public Task ConsoleSampleRuns() =>
         RunSample("DockerConsole", ["SkiaSharp", "--output", "output.png"], async app =>
@@ -51,7 +47,7 @@ public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<Docke
             SampleImage.ValidateFile(image, 800, 600, $"Docker/{ContainerPlatform}/console.png");
         });
 
-    [Fact(Skip = DockerSkipReason, SkipType = typeof(DockerSampleTests), SkipWhen = nameof(IsMacOS))]
+    [Fact]
     [Trait("Category", "SampleRun")]
     public Task WebApiSampleReturnsImage() =>
         RunSample("DockerWebApi", [], async app =>

@@ -28,16 +28,16 @@ public class SampleDiscoveryTests
     [InlineData(nameof(DockerSampleTests.DockerImageBuilds))]
     [InlineData(nameof(DockerSampleTests.ConsoleSampleRuns))]
     [InlineData(nameof(DockerSampleTests.WebApiSampleReturnsImage))]
-    public void DockerTestsDeclareMacOSExclusion(string method)
+    public void DockerTestsUseAvailabilityRatherThanPlatformExclusions(string method)
     {
         var test = typeof(DockerSampleTests).GetMethod(method);
         Assert.NotNull(test);
         var attribute = Assert.IsAssignableFrom<FactAttribute>(
             Assert.Single(test.GetCustomAttributes(typeof(FactAttribute), inherit: true)));
-        Assert.Equal(typeof(DockerSampleTests), attribute.SkipType);
-        Assert.Equal(nameof(DockerSampleTests.IsMacOS), attribute.SkipWhen);
-        Assert.Equal("Docker samples are validated on Linux and Windows, not macOS.", attribute.Skip);
-        Assert.Equal(OperatingSystem.IsMacOS(), DockerSampleTests.IsMacOS);
+        Assert.Null(attribute.SkipType);
+        Assert.Null(attribute.SkipWhen);
+        Assert.Null(attribute.SkipUnless);
+        Assert.Null(attribute.Skip);
     }
 
     [Fact]

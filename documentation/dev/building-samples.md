@@ -6,10 +6,11 @@ and runs the Console/Web samples on the host and in Docker.
 ## Run the suite
 
 Install the repository SDK and the workloads required by your host's samples.
-Docker build/run tests run on Linux and Windows; macOS explicitly skips them
-and still validates native sample builds and host runtimes. Put `docker` on
-`PATH` and start a daemon using the host's container OS. Unavailable Docker
-produces visible skips; wrong container mode and sample failures fail the tests.
+Docker build/run tests run on any host with usable Docker, including macOS.
+Put `docker` on `PATH` and start a daemon using Windows containers on Windows
+or Linux containers on macOS/Linux. CI does not provision Docker on macOS.
+Unavailable Docker produces visible skips; wrong container mode and sample
+failures fail the tests.
 
 **Bootstrap before staging packages:** bootstrap resets `output/`.
 For managed-only work:
