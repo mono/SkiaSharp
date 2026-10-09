@@ -52,7 +52,6 @@ void RunDeviceRunnersTest(
     properties = properties == null
         ? new Dictionary<string, string>()
         : new Dictionary<string, string>(properties);
-    properties.TryAdd("TestingPlatformCaptureOutput", "false");
     AddGpuOptOut(properties);
 
     var msb = new DotNetMSBuildSettings();
@@ -133,6 +132,7 @@ void RunDotNetTest(
     properties = properties == null
         ? new Dictionary<string, string>()
         : new Dictionary<string, string>(properties);
+    properties.TryAdd("TestingPlatformCaptureOutput", "false");
 
     var settings = new DotNetTestSettings {
         Configuration = configuration ?? CONFIGURATION,
