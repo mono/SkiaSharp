@@ -95,16 +95,17 @@ nested virtualization or changing the default Docker context, then deletes it.
 
 Build theories cover eligible Basic and Gallery solutions; Gallery remains
 build-only. Named runtime facts check host and Docker Console exit codes,
-output and PNGs. Docker Web API checks use HTTP health and image responses,
-without a browser; browser facts cover host Web, WASM and Blazor UIs. Device
-execution is not part of this suite. Docker retains the samples' original
-.NET 10 images; its SDK is independent of the host SDK.
+output and PNGs. Basic Web and Docker Web API retain their HTTP/image tests
+without a browser; Basic Web also has a separate page screenshot test.
+Browser facts cover host Web, WASM and Blazor UIs. Device execution is not part
+of this suite. Docker retains the samples' original .NET 10 images; its SDK is
+independent of the host SDK.
 
 Use ordinary IDE filters or select a test directly:
 
 ```sh
 dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
-  -- --filter-method '*BasicSampleTests.WebSampleRuns'
+  -- --filter-method '*BasicSampleTests.WebSample*'
 ```
 
 `-- --filter-trait Category=Infrastructure` selects helper tests only; it does

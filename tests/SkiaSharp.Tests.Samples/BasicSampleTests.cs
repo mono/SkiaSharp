@@ -46,8 +46,29 @@ public class BasicSampleTests : SampleTestBase
     [Fact]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
+    public Task WebSampleReturnsImage() =>
+        RunSample("Web", ["--urls", "http://127.0.0.1:0"], async (app, _) =>
+        {
+            using var home = await app.WaitForResponse("/");
+            Assert.Equal(System.Net.HttpStatusCode.OK, home.StatusCode);
+            Assert.Equal("text/html", home.Content.Headers.ContentType?.MediaType);
+
+            using var response = await app.GetResponse("/api/images");
+            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
+
+            await SampleImage.SaveAndValidate(
+                await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken),
+                Path.Combine(app.Diagnostics, "output.png"),
+                512, 512,
+                $"Host/{SampleLookup.HostPlatform}/web.png");
+        });
+
+    [Fact]
+    [Trait("Category", "SampleRun")]
+    [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
-    public Task WebSampleRuns() =>
+    public Task WebSamplePageRenders() =>
         RunSample("Web", ["--urls", "http://127.0.0.1:0"], (app, _) =>
             BrowserSampleApp.Capture(app, "/", ".card img", $"Host/{SampleLookup.HostPlatform}/web-page.png"));
 
