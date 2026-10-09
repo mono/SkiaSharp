@@ -115,14 +115,49 @@ public sealed class SampleWorkspace : IDisposable
     }
 
     internal static void DeleteDirectory(string path)
+        => DeleteDirectory(path, directory => Directory.Delete(directory, recursive: true));
+
+    internal static void DeleteDirectory(string path, Action<string> delete)
     {
         const int attempts = 20;
         for (var attempt = 0; ; attempt++)
         {
             try
             {
-                Directory.Delete(path, recursive: true);
+                delete(path);
                 return;
+            }
+            catch (IOException error) when (
+                OperatingSystem.IsMacOS() &&
+                attempt == 0 &&
+                error.HResult == 66) // ENOTEMPTY on macOS.
+            {
+                // macOS metadata can appear after recursive deletion enumerates a directory.
+                var directories = new Stack<DirectoryInfo>();
+                var metadata = new List<string>();
+                directories.Push(new DirectoryInfo(path));
+                while (directories.TryPop(out var directory))
+                {
+                    foreach (var entry in directory.EnumerateFileSystemInfos())
+                    {
+                        if ((entry.Attributes & FileAttributes.ReparsePoint) != 0)
+                            throw;
+                        if (entry is DirectoryInfo child)
+                            directories.Push(child);
+                        else if (entry.Name == ".DS_Store")
+                            metadata.Add(entry.FullName);
+                        else
+                            throw;
+                    }
+                }
+                if (metadata.Count == 0)
+                    throw;
+
+                TestContext.Current.TestOutputHelper?.WriteLine(
+                    $"Removing macOS metadata before one owned directory cleanup retry: {path}\n" +
+                    $"HResult=0x{error.HResult:X8}: {error.Message}\n{string.Join(Environment.NewLine, metadata)}");
+                foreach (var file in metadata)
+                    File.Delete(file);
             }
             catch (Exception error) when (
                 OperatingSystem.IsWindows() &&

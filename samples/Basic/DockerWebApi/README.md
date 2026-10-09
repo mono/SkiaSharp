@@ -35,11 +35,7 @@ It may be used, embedded, and redistributed with applications under that license
 
 ## Running the Sample
 
-The repository sample tests build this generated sample with exact artifact
-packages and exercise the health and image endpoints from an explicit test
-method, including PNG decoding and pixel comparison.
-See [Building and Validating Samples](../../../documentation/dev/building-samples.md)
-for package acquisition and the direct `dotnet test` entry point.
+Run these commands from this sample's folder.
 
 ### Linux
 

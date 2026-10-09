@@ -38,21 +38,22 @@ Promoted builds also publish a `_NuGets` wrapper to the public
 [transport feed](https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json);
 use the real package versions inside it, not the wrapper's version.
 
-Generation uses the exact staged SkiaSharp/HarfBuzzSharp package versions,
-independently of the job's date or build counter:
+Generation uses the base versions in `scripts/VERSIONS.txt` and the explicit
+producing build's `previewLabel`/`buildNumber`. Supply the identity matching
+the acquired packages; generation does not detect versions from package files.
+For example, packages ending in `-pr.5308.26508.28` require:
 
 ```sh
-dotnet cake --target=samples
+dotnet cake --target=samples --previewLabel=pr.5308 --buildNumber=26508.28
 ```
 
-Do not mix packages from different builds. Without staged packages,
-`samples-generate` retains its publication behavior using source versions and
-the requested `--previewLabel`/`--buildNumber`.
+Do not mix packages from different builds. CI must carry the producing build's
+canonical identity into every consuming job, including jobs starting after midnight.
 
 To use an IDE or invoke the suite directly, generate first:
 
 ```sh
-dotnet cake --target=samples-generate
+dotnet cake --target=samples-generate --previewLabel=pr.5308 --buildNumber=26508.28
 dotnet test tests/SkiaSharp.Tests.Samples.slnx -- --report-trx
 ```
 
@@ -88,8 +89,13 @@ environment too.
 Current CI has one Samples job per Windows/macOS/Linux host using the .NET 10
 SDK. It does **not** yet run separate .NET 10 and .NET 11 lanes. CI supplies the
 matching `native` and `nuget` artifacts before generation.
-The macOS job provisions an owned Colima/QEMU Docker daemon without requiring
-nested virtualization or changing the default Docker context, then deletes it.
+Every host discovers the Docker tests. The macOS CI initialization checks common
+Docker installation paths and adds an installed CLI to `PATH` when needed;
+tests simply invoke `docker` from `PATH`. A bounded `docker info` probe checks
+availability. For now, unavailable Docker reports visible skips
+with the probe diagnostic, rather than filtering tests out of the run.
+No custom macOS daemon is installed. A reachable daemon must use the expected
+container OS, and build/runtime/cleanup failures remain failures.
 
 ## Coverage and diagnostics
 
@@ -109,8 +115,8 @@ dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
 ```
 
 `-- --filter-trait Category=Infrastructure` selects helper tests only; it does
-not validate actual samples. Missing inputs, empty discovery, and unavailable
-Docker fail rather than silently removing coverage.
+not validate actual samples. Missing inputs and empty discovery fail;
+unavailable Docker is reported as skipped, never silently removed.
 
 Logs, binlogs, test results, and images remain under
 `output/logs/testlogs/samples/basic-<sample>-<guid>/`, outside disposable
@@ -118,6 +124,12 @@ workspaces. Tests retain separate stdout/stderr and attach diagnostic files;
 CI always publishes the platform's `sample_logs_*` artifact. Commands have
 bounded timeouts and cleanup removes only owned processes, workspaces, images,
 and containers, never user caches or unrelated Docker resources.
+
+Workspace deletion retains bounded Windows sharing/access-denied recovery.
+On macOS, `ENOTEMPTY` permits one logged, immediate retry only when the entire
+remaining owned tree contains directories and `.DS_Store` files, with no other
+files or symbolic links. Only that metadata is removed before the retry.
+Unrelated errors, other residue, and a second cleanup failure still fail the test.
 
 PNG references live in `tests/SkiaSharp.Tests.Samples/Expected/`, qualified by
 host/container platform. Headless comparisons allow at most **0.075%** of decoded pixels
@@ -198,6 +210,7 @@ cohort and inspect the retained binlog. Each consumer already has fresh caches;
 clearing shared caches is unnecessary. The existing Integration and MSBuild
 test suites remain separate.
 
-Generation regressions can be checked independently with
-`pwsh scripts/infra/samples/tests/SampleGeneration.Tests.ps1`; its fixture outputs
-are private and the ordinary Samples test suite never invokes Cake.
+`ArtifactContractTests` validates the actual generated project folders alongside
+sample builds: every declared SkiaSharp/HarfBuzzSharp dependency must exist at
+its exact version in the acquired cohort, and every Uno project must override
+its SDK's SkiaSharp version unconditionally. These tests never invoke Cake.

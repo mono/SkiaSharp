@@ -8,6 +8,40 @@ namespace SkiaSharp.Tests.Samples;
 [Trait("Category", "Infrastructure")]
 public class ArtifactContractTests
 {
+    public static IEnumerable<object[]> GeneratedProjects() =>
+        Directory.EnumerateFiles(Repo.SamplesDir, "*.csproj", SearchOption.AllDirectories)
+            .Order(StringComparer.Ordinal)
+            .Select(path => new object[] { Path.GetRelativePath(Repo.SamplesDir, path) });
+
+    [Theory]
+    [MemberData(nameof(GeneratedProjects))]
+    public void EveryGeneratedProjectUsesTheRequestedProductPackages(string relative)
+    {
+        var project = XDocument.Load(Path.Combine(Repo.SamplesDir, relative));
+        foreach (var reference in project.Descendants("PackageReference"))
+        {
+            var package = (string?)reference.Attribute("Include");
+            if (package is null || (!package.StartsWith("SkiaSharp", StringComparison.Ordinal) &&
+                !package.StartsWith("HarfBuzzSharp", StringComparison.Ordinal)))
+                continue;
+
+            var version = (string?)reference.Attribute("Version");
+            Assert.False(string.IsNullOrWhiteSpace(version), $"Missing version for {package} in {relative}.");
+            Assert.True(File.Exists(Path.Combine(Repo.PackagesDir, $"{package}.{version}.nupkg")),
+                $"Generated {relative} requests {package} {version}, which is absent from the supplied package cohort.");
+        }
+
+        if (((string?)project.Root!.Attribute("Sdk"))?.StartsWith("Uno.Sdk/", StringComparison.Ordinal) == true)
+        {
+            var version = Assert.Single(project.Descendants("SkiaSharpVersion"));
+            Assert.Null(version.Attribute("Condition"));
+            Assert.True(File.Exists(Path.Combine(Repo.PackagesDir, $"SkiaSharp.{version.Value}.nupkg")),
+                $"Generated Uno project {relative} must override the SDK's SkiaSharp version with the supplied product version.");
+            Assert.DoesNotContain(project.Descendants().Attributes("Condition"),
+                condition => condition.Value.Contains("_UnoPlatformSamples.targets", StringComparison.Ordinal));
+        }
+    }
+
     public static TheoryData<string[]> MatchingPackages => new()
     {
         new[] { "SkiaSharp.1.2.3-pr.1.nupkg", "SkiaSharp.1.2.3-pr.1.symbols.nupkg", "HarfBuzzSharp.4.5.6-pr.1.nupkg" }

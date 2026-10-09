@@ -1,54 +1,42 @@
 # SkiaSharp Gallery — Uno Platform
 
-Uno Platform host for the shared SkiaSharp gallery catalog
-(`samples/Gallery/Shared/`), alongside the existing Blazor gallery at
-`samples/Gallery/Blazor/`.
-
-**Hosted gallery (WebAssembly)**: https://mono.github.io/SkiaSharp/gallery-uno/ *(live after this feature merges)*
+Uno Platform host for the shared SkiaSharp gallery catalog.
 
 ## Target matrix
 
 This is a full Uno single-project sample. The project file declares:
 
-| TFM | Platform | Build on | CI auto-deploy |
-|---|---|---|---|
-| `net10.0-browserwasm` | Browser (WebAssembly) | any OS | **yes** — `build-site.yml` |
-| `net10.0-desktop` | Skia Desktop (Win/macOS/Linux/X11) | any OS | no |
-| `net10.0-windows10.0.26100` | WinUI 3 (WinAppSDK) | Windows only | no |
-| `net10.0-android` | Android | Windows / macOS | no |
-| `net10.0-ios` | iOS | Windows / macOS | no |
-
-The CI workflow publishes only the WebAssembly head
-(`dotnet publish -f net10.0-browserwasm`) because that is what the docs site
-deploys. The remaining heads are there for local exploration.
+| TFM | Platform | Build on |
+|---|---|---|
+| `net10.0-browserwasm` | Browser (WebAssembly) | any OS |
+| `net10.0-desktop` | Skia Desktop (Win/macOS/Linux/X11) | any OS |
+| `net10.0-windows10.0.26100` | WinUI 3 (WinAppSDK) | Windows only |
+| `net10.0-android` | Android | Windows / macOS |
+| `net10.0-ios` | iOS | Windows / macOS |
 
 ## Prerequisites
 
-From the repo root:
+Install the .NET 10 SDK. From this sample's folder:
 
 ```bash
-# 1. Download the pre-built native SkiaSharp binaries (one-time)
-dotnet cake --target=externals-download
-
-# 2. Install the .NET WASM workload (only needed for the browserwasm target)
+# Install the WASM workload for the browser target.
 dotnet workload install wasm-tools
 
-# 3. (Optional) Install the workloads for the native heads you want to build
+# Optionally install the workloads for the native heads you want to build
 #    on your machine, e.g.:
 #      dotnet workload install android
 #      dotnet workload install ios
 #      dotnet workload install maui
 ```
 
-If you're modifying native SkiaSharp C code, use `dotnet cake --target=externals-linux --arch=wasm`
-instead of `externals-download`. See the top-level `AGENTS.md` for details.
+SkiaSharp and its native assets are restored from NuGet packages.
 
 ## Build and run
 
-### WebAssembly (what CI ships)
+### WebAssembly
 
 ```bash
-dotnet publish samples/Gallery/Uno/SkiaSharpSample.Uno.csproj \
+dotnet publish SkiaSharpSample.Uno.csproj \
   -c Release \
   -f net10.0-browserwasm \
   -o output/gallery-uno-publish
@@ -66,7 +54,7 @@ explicitly clears both the category and search instead of broadening silently.
 ### Desktop (Skia on X11 / Win32 / macOS)
 
 ```bash
-dotnet run --project samples/Gallery/Uno/SkiaSharpSample.Uno.csproj -f net10.0-desktop
+dotnet run --project SkiaSharpSample.Uno.csproj -f net10.0-desktop
 ```
 
 ### Windows (WinUI 3)
@@ -74,7 +62,7 @@ dotnet run --project samples/Gallery/Uno/SkiaSharpSample.Uno.csproj -f net10.0-d
 On Windows only, from Visual Studio or CLI:
 
 ```bash
-dotnet run --project samples/Gallery/Uno/SkiaSharpSample.Uno.csproj -f net10.0-windows10.0.26100
+dotnet run --project SkiaSharpSample.Uno.csproj -f net10.0-windows10.0.26100
 ```
 
 ### Android / iOS
@@ -86,15 +74,14 @@ the full native-head setup.
 ## Headless smoke test
 
 ```bash
-bash samples/Gallery/Uno/scripts/smoke.sh output/gallery-uno-publish/wwwroot
+bash scripts/smoke.sh output/gallery-uno-publish/wwwroot
 ```
 
 First run installs Playwright and its Chromium binary into
-`samples/Gallery/Uno/scripts/node_modules` and `~/.cache/ms-playwright`
-(subsequent runs reuse). Total cost: ~60s on `ubuntu-latest`. Exit code `0`
+`scripts/node_modules` and Playwright's browser cache
+(subsequent runs reuse). Exit code `0`
 means boot completed (Uno loader dismissed, `#uno-canvas` sized > 0×0) and
-no unignored console errors were captured. See
-`specs/001-uno-wasm-sample/contracts/smoke-test.md` for the full contract.
+no unignored console errors were captured.
 
 Optional: `--screenshot /path/to/debug.png` saves a rendered page screenshot
 for manual inspection.
@@ -102,7 +89,7 @@ for manual inspection.
 ## Structure
 
 ```
-samples/Gallery/Uno/
+Uno/
 ├── SkiaSharpSample.Uno.csproj    # Uno.Sdk/6.6.0-dev.208, all platforms, UnoFeatures=SkiaRenderer
 ├── nuget.config                  # scoped nuget.org source for Uno.WinUI.Runtime.Skia.WebAssembly.Browser
 ├── App.xaml(.cs)                 # application entry; SampleService singleton
@@ -136,11 +123,8 @@ samples/Gallery/Uno/
     └── package.json              # pins playwright
 ```
 
-The csproj imports `samples/_UnoPlatformSamples.targets` *before* declaring
-its `ProjectReference` to `samples/Gallery/Shared/SkiaSharpSample.Shared.csproj`.
-The targets file strips the ambient NuGet `SkiaSharp*` / `HarfBuzzSharp*`
-package assets and re-points them at the in-tree projects per-TFM, so the
-host builds with the local SkiaSharp instead of a pinned NuGet version.
+The project pins `SkiaSharpVersion` so Uno uses the same SkiaSharp version as
+the sample's package references, rather than the version bundled with Uno.
 
 ### UI parity with the Blazor gallery
 
@@ -151,7 +135,7 @@ accent bar + tinted background per category + title + description + category
 badge + type badge). Sample detail: back link + sample header + SkiaSharp
 canvas + collapsible controls sidebar + canvas debug footer. The drawing
 code itself (`SampleBase.DrawSample(SKCanvas, …)`) is reused verbatim from
-`samples/Gallery/Shared/`, so the two hosts always paint the same pixels.
+the shared catalog, so the two hosts use the same drawing implementation.
 
 Iconography matches the Blazor host: the same Bootstrap-Icons 1.11.3 glyph
 set is bundled as a TTF at `Assets/Fonts/bootstrap-icons.ttf` and referenced
@@ -175,9 +159,7 @@ desktop heads). Required ingredients:
   (`.UseWebAssembly()` on the builder), not the older
   `Microsoft.UI.Xaml.Application.Start(...)` pattern. SkiaRenderer depends
   on the new hosting API.
-- **`samples/Gallery/Uno/nuget.config`** adds nuget.org as a scoped source,
-  because `Uno.WinUI.Runtime.Skia.WebAssembly.Browser` is on nuget.org but
-  not mirrored into the repo-wide `dotnet-public` feed.
+- **`nuget.config`** adds nuget.org for Uno and its WebAssembly dependencies.
 
 ### Linker
 
