@@ -53,7 +53,7 @@ jobs:
           foreach ($instance in $instances) {
             $export = Join-Path $evidence "before-$($instance.instanceId).vsconfig"
             $process = Start-Process $installer -ArgumentList @(
-              'export', '--installPath', "`"$($instance.installationPath)`"", '--config', "`"$export`""
+              'export', '--installPath', "`"$($instance.installationPath)`"", '--config', "`"$export`"", '--quiet'
             ) -Wait -PassThru
             if ($process.ExitCode -ne 0 -or !(Test-Path $export)) {
               throw "Visual Studio configuration export failed for $($instance.installationPath) (exit code $($process.ExitCode))."
@@ -94,7 +94,7 @@ jobs:
           $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\setup.exe"
           $export = Join-Path $evidence 'installed.vsconfig'
           $process = Start-Process $installer -ArgumentList @(
-            'export', '--installPath', "`"$env:VS_INSTALL`"", '--config', "`"$export`""
+            'export', '--installPath', "`"$env:VS_INSTALL`"", '--config', "`"$export`"", '--quiet'
           ) -Wait -PassThru
           if ($process.ExitCode -ne 0 -or !(Test-Path $export)) {
             throw "Visual Studio configuration export failed (exit code $($process.ExitCode))."
