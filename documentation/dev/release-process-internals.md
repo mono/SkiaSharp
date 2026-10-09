@@ -82,11 +82,16 @@ and GitHub Releases all use the bare numeric version.
 
 Official prerelease packages append the build revision derived from Arcade's
 `yyyyMMdd.revision` `OfficialBuildId`. Stable packages use the bare numeric
-version. `scripts/infra/native/shared/set-build-variables.ps1` normalizes the
+version. `scripts/infra/shared/set-build-variables.ps1` normalizes the
 source branch and commit, computes the package build number, and sets
 `DOTNET_FINAL_VERSION_KIND=release` only when `PREVIEW_LABEL` is exactly
 `stable`. It rejects an exact stable build unless it is an internal
 `release/*` build or a downstream pipeline inheriting that upstream identity.
+
+Prepare establishes the canonical product run name. Later jobs reuse its package
+build number and original Arcade `OfficialBuildId`, even across midnight, without
+overwriting the same-run special-package counter. For downstream resource builds,
+the upstream pipeline run name takes precedence and also supplies that counter.
 
 ## Release preparation
 
@@ -477,7 +482,7 @@ dispatches default to `DryRun`.
 | Branch preparation | `.github/workflows/release-prepare.yml`, `scripts/infra/publishing/prepare-release.ps1` |
 | Shared release contracts | `scripts/infra/publishing/Publishing.Common.psm1` |
 | Git and GitHub safety helpers | `scripts/infra/publishing/Git.Common.psm1`, `GitHub.Common.psm1` |
-| Build identity | `scripts/infra/native/shared/set-build-variables.ps1` |
+| Build identity | `scripts/infra/shared/set-build-variables.ps1` |
 | Internal Build and Tests | `scripts/azure-pipelines-package.yml`, `scripts/azure-pipelines-tests.yml` |
 | Stage composition | `scripts/azure-templates-stages.yml` |
 | Package assembly | `scripts/azure-templates-stages-package.yml`, `eng/Publishing.props` |

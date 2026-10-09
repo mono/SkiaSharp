@@ -100,7 +100,7 @@ jobs:
         - checkout: self
           submodules: false
           fetchDepth: 1
-        - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
+        - pwsh: ./scripts/infra/shared/set-build-variables.ps1
           displayName: Configure build variables
         - pwsh: |
             python3 scripts/infra/caching/repo-deps.py cache-key `
@@ -130,7 +130,7 @@ jobs:
         - ${{ else }}:
           - checkout: self
             submodules: false
-        - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
+        - pwsh: ./scripts/infra/shared/set-build-variables.ps1
           displayName: Configure build variables
 
       # Native source builds only use Skia. Merge-only jobs use no submodules.
