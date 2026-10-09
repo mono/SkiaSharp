@@ -753,9 +753,21 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: samples
             requiredArtifacts:
+              - name: native
               - name: nuget
                 dir: nugets
             postBuildSteps:
+              - task: PublishTestResults@2
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: output/logs/testlogs/samples/**/*.trx
+                  testRunTitle: Samples (Windows)
+              - task: PublishPipelineArtifact@1
+                condition: always()
+                inputs:
+                  targetPath: output/logs
+                  artifact: sample_logs_windows
               - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the nugets folder
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (macOS)
@@ -773,8 +785,21 @@ stages:
             installNinja: true
             shouldPublish: false
             requiredArtifacts:
+              - name: native
               - name: nuget
                 dir: nugets
+            postBuildSteps:
+              - task: PublishTestResults@2
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: output/logs/testlogs/samples/**/*.trx
+                  testRunTitle: Samples (macOS)
+              - task: PublishPipelineArtifact@1
+                condition: always()
+                inputs:
+                  targetPath: output/logs
+                  artifact: sample_logs_macos
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
           parameters:
             name: samples_linux
@@ -790,7 +815,20 @@ stages:
             target: samples
             shouldPublish: false
             requiredArtifacts:
+              - name: native
               - name: nuget
                 dir: nugets
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
+            postBuildSteps:
+              - task: PublishTestResults@2
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: output/logs/testlogs/samples/**/*.trx
+                  testRunTitle: Samples (Linux)
+              - task: PublishPipelineArtifact@1
+                condition: always()
+                inputs:
+                  targetPath: output/logs
+                  artifact: sample_logs_linux
