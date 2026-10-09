@@ -5,10 +5,14 @@ on:
   pull_request:
     paths:
       - .github/workflows/validate-windows-components.yml
-      - scripts/infra/native/windows/benchmarks.vsconfig
+      - source/.vsconfig
+      - source/SkiaSharpSource.slnx
+      - source/SkiaSharp.Build.props
       - scripts/infra/native/windows/install-components.ps1
       - scripts/infra/native/windows/windows-shared.cake
-      - native/windows/build.cake
+      - native/windows/**
+      - native/winui/**
+      - native/winui-angle/**
 
 permissions:
   contents: read
@@ -16,12 +20,16 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
-    timeout-minutes: 180
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86, x64, arm64]
     defaults:
       run:
         shell: pwsh
     env:
-      VS_INSTALL: C:\SkiaSharpBuildTools
+      VS_INSTALL: C:\SkiaSharpVisualStudio
       WINDOWS_SDK_VERSION: 10.0.26100.0
       GIT_SYNC_DEPS_SKIP_EMSDK: '1'
     steps:
@@ -91,7 +99,7 @@ jobs:
           if ($process.ExitCode -ne 0 -or !(Test-Path $export)) {
             throw "Visual Studio configuration export failed (exit code $($process.ExitCode))."
           }
-          Copy-Item scripts/infra/native/windows/benchmarks.vsconfig (Join-Path $evidence 'requested.vsconfig')
+          Copy-Item source/.vsconfig (Join-Path $evidence 'requested.vsconfig')
           Get-Content "$env:VS_INSTALL\VC\Auxiliary\Build\Microsoft.VCToolsVersion*.txt" |
             Set-Content (Join-Path $evidence 'toolset-versions.txt')
           Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\Lib" |
@@ -107,17 +115,50 @@ jobs:
           ./scripts/infra/native/windows/install-7zip.ps1
           ./scripts/infra/native/windows/install-llvm.ps1
 
-      - name: Build the Windows x64 native used by source benchmarks
+      - name: Build native SkiaSharp and HarfBuzzSharp
+        env:
+          BUILD_ARCH: ${{ matrix.arch }}
         run: |
-          dotnet cake native/windows/build.cake --target=libSkiaSharp --configuration=Release --arch=x64 `
+          dotnet cake native/windows/build.cake --target=Default --configuration=Release --arch="$env:BUILD_ARCH" `
             --vsinstall="$env:VS_INSTALL" --windowsSdkVersion="$env:WINDOWS_SDK_VERSION" 2>&1 |
             Tee-Object (Join-Path $env:RUNNER_TEMP 'windows-components/native-build.log')
           if ($LASTEXITCODE -ne 0) { throw "Native build exited with code $LASTEXITCODE." }
 
-      - name: Build managed bindings and source benchmarks
+      - name: Build native WinUI and its managed projection
+        env:
+          BUILD_ARCH: ${{ matrix.arch }}
         run: |
-          dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -p:AllTargetFrameworks=net10.0 -p:BuildingInsideVisualStudio=true
-          if ($LASTEXITCODE -ne 0) { throw "Managed build exited with code $LASTEXITCODE." }
+          dotnet cake native/winui/build.cake --configuration=Release --arch="$env:BUILD_ARCH" `
+            --vsinstall="$env:VS_INSTALL" --windowsSdkVersion=10.0.22621.0 2>&1 |
+            Tee-Object (Join-Path $env:RUNNER_TEMP 'windows-components/winui-build.log')
+          if ($LASTEXITCODE -ne 0) { throw "WinUI build exited with code $LASTEXITCODE." }
+
+      - name: Build ANGLE and Windows App SDK headers
+        env:
+          BUILD_ARCH: ${{ matrix.arch }}
+        run: |
+          dotnet cake native/winui-angle/build.cake --configuration=Release --arch="$env:BUILD_ARCH" `
+            --vsinstall="$env:VS_INSTALL" --windowsSdkVersion="$env:WINDOWS_SDK_VERSION" 2>&1 |
+            Tee-Object (Join-Path $env:RUNNER_TEMP 'windows-components/angle-build.log')
+          if ($LASTEXITCODE -ne 0) { throw "ANGLE build exited with code $LASTEXITCODE." }
+
+      - name: Build managed Windows integrations and source benchmarks
+        if: matrix.arch == 'x64'
+        run: |
+          $projects = @(
+            'source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj',
+            'source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SkiaSharp.Views.WindowsForms.csproj',
+            'source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SkiaSharp.Views.WinUI.csproj',
+            'source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/SkiaSharp.Views.Maui.Controls.csproj'
+          )
+          foreach ($project in $projects) {
+            dotnet build $project -c Release -p:TargetFrameworks=net10.0-windows10.0.19041.0 -p:BuildingInsideVisualStudio=true
+            if ($LASTEXITCODE -ne 0) { throw "$project build exited with code $LASTEXITCODE." }
+          }
+          foreach ($framework in @('net462', 'net48', 'net10.0')) {
+            dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -p:TargetFrameworks="$framework" -p:BuildingInsideVisualStudio=true
+            if ($LASTEXITCODE -ne 0) { throw "$framework binding build exited with code $LASTEXITCODE." }
+          }
           dotnet build benchmarks/SkiaSharp.Benchmarks.Tracking.Source -c Release
           if ($LASTEXITCODE -ne 0) { throw "Benchmark build exited with code $LASTEXITCODE." }
 
@@ -125,7 +166,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: windows-components
+          name: windows-components-${{ matrix.arch }}
           path: |
             ${{ runner.temp }}/windows-components/
             ${{ runner.temp }}/dd_*.log
