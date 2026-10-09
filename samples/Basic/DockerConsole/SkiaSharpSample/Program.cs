@@ -17,8 +17,6 @@ Console.WriteLine($"Platform: {System.Runtime.InteropServices.RuntimeInformation
 Console.WriteLine($"Architecture: {System.Runtime.InteropServices.RuntimeInformation.OSArchitecture}");
 Console.WriteLine($"Runtime: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}");
 Console.WriteLine("Platform Color Type: " + SKImageInfo.PlatformColorType);
-Console.WriteLine("Font families: " + SKFontManager.Default.FontFamilyCount);
-Console.WriteLine($"Default typeface: \"{SKTypeface.Default.FamilyName}\" ({SKTypeface.Default.GlyphCount} glyphs)");
 
 // Create the image
 var info = new SKImageInfo(800, 600);
@@ -54,11 +52,7 @@ foreach (var (x, y, r, color) in circles)
 }
 
 // Centered text
-using var fontStream = typeof(Program).Assembly.GetManifestResourceStream("SkiaSharpSample.NotoSans-Regular.ttf")
-	?? throw new InvalidOperationException("The bundled Noto Sans font is missing.");
-using var typeface = SKTypeface.FromStream(fontStream)
-	?? throw new InvalidOperationException("The bundled Noto Sans font could not be loaded.");
-Console.WriteLine($"Bundled typeface: \"{typeface.FamilyName}\" ({typeface.GlyphCount} glyphs)");
+using var typeface = SKTypeface.FromFile(Path.Combine(AppContext.BaseDirectory, "NotoSans-Regular.ttf"));
 using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
 using var font = new SKFont(typeface, width * 0.10f);
 canvas.DrawText(text, center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
