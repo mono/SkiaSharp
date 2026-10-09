@@ -186,11 +186,6 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
 
                 Debug($"Removing import '{project}' for project '{rel}'.");
 
-                foreach (var group in xdoc.Root.Elements()
-                    .Where(e => (string)e.Attribute("Condition") == $"!Exists('{project}')")) {
-                    group.Attribute("Condition").Remove();
-                }
-
                 // not inside the samples directory, so needs to be removed
                 import.Remove();
             }
