@@ -30,19 +30,17 @@ jobs:
       run:
         shell: pwsh
     env:
+      BUILD_TOOLS: 'true'
       VS_INSTALL: C:\SkiaSharpVisualStudio
       WINDOWS_SDK_VERSION: 10.0.26100.0
       GIT_SYNC_DEPS_SKIP_EMSDK: '1'
-    steps:
+    steps: &windows-build-steps
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
 
-      - name: Export and remove preinstalled Visual Studio
+      - name: Export existing Visual Studio and prepare selected instance
         run: |
-          if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted') {
-            throw 'Visual Studio removal is permitted only on a disposable GitHub-hosted runner.'
-          }
           $evidence = Join-Path $env:RUNNER_TEMP 'windows-components'
           New-Item $evidence -ItemType Directory -Force | Out-Null
           $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
@@ -60,20 +58,27 @@ jobs:
               throw "Visual Studio configuration export failed for $($instance.installationPath) (exit code $($process.ExitCode))."
             }
           }
-          foreach ($instance in $instances) {
-            Write-Host "Uninstalling $($instance.installationPath)"
-            $process = Start-Process $installer -ArgumentList @(
-              'uninstall', '--installPath', "`"$($instance.installationPath)`"", '--quiet', '--norestart'
-            ) -Wait -PassThru
-            if ($process.ExitCode -ne 0) {
-              throw "Visual Studio uninstall exited with code $($process.ExitCode)."
+          if ($env:BUILD_TOOLS -eq 'true') {
+            if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted') {
+              throw 'Visual Studio removal is permitted only on a disposable GitHub-hosted runner.'
             }
+            foreach ($instance in $instances) {
+              Write-Host "Uninstalling $($instance.installationPath)"
+              $process = Start-Process $installer -ArgumentList @(
+                'uninstall', '--installPath', "`"$($instance.installationPath)`"", '--quiet', '--norestart'
+              ) -Wait -PassThru
+              if ($process.ExitCode -ne 0) { throw "Visual Studio uninstall exited with code $($process.ExitCode)." }
+            }
+            $remaining = @(& $vswhere -all -prerelease -products '*' -property installationPath)
+            if ($LASTEXITCODE -ne 0 -or $remaining.Count -ne 0) {
+              throw "Visual Studio removal was incomplete: $remaining"
+            }
+            'No Visual Studio instances remain.' | Set-Content (Join-Path $evidence 'clean-vs.txt')
+          } else {
+            $installation = & $vswhere -latest -version '[17.0,18.0)' -property installationPath
+            if ($LASTEXITCODE -ne 0 -or !$installation) { throw 'The OS does not provide full VS 2022.' }
+            "VS_INSTALL=$installation" >> $env:GITHUB_ENV
           }
-          $remaining = @(& $vswhere -all -prerelease -products '*' -property installationPath)
-          if ($LASTEXITCODE -ne 0 -or $remaining.Count -ne 0) {
-            throw "Visual Studio removal was incomplete: $remaining"
-          }
-          'No Visual Studio instances remain.' | Set-Content (Join-Path $evidence 'clean-vs.txt')
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -83,8 +88,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install configured Visual Studio 2022 Build Tools components
-        run: ./scripts/infra/native/windows/install-components.ps1 -BuildTools -InstallationPath $env:VS_INSTALL
+      - name: Apply configured Visual Studio 2022 components
+        run: |
+          ./scripts/infra/native/windows/install-components.ps1 `
+            -BuildTools:($env:BUILD_TOOLS -eq 'true') -InstallationPath $env:VS_INSTALL
 
       - name: Record installed components and toolchain
         run: |
@@ -101,19 +108,19 @@ jobs:
           if ($process.ExitCode -ne 0 -or !(Test-Path $export)) {
             throw "Visual Studio configuration export failed (exit code $($process.ExitCode))."
           }
-          Copy-Item source/.vsconfig (Join-Path $evidence 'ide.vsconfig')
-          Copy-Item scripts/infra/native/windows/build-tools.vsconfig (Join-Path $evidence 'requested.vsconfig')
+          $config = if ($env:BUILD_TOOLS -eq 'true') { 'scripts/infra/native/windows/build-tools.vsconfig' } else { 'source/.vsconfig' }
+          Copy-Item $config (Join-Path $evidence 'requested.vsconfig')
           Get-Content "$env:VS_INSTALL\VC\Auxiliary\Build\Microsoft.VCToolsVersion*.txt" |
             Set-Content (Join-Path $evidence 'toolset-versions.txt')
           Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\Lib" |
             Select-Object Name | Out-File (Join-Path $evidence 'sdk-versions.txt')
-          $sdkComponents = (Get-Content scripts/infra/native/windows/build-tools.vsconfig -Raw | ConvertFrom-Json).components |
+          $sdkComponents = (Get-Content $config -Raw | ConvertFrom-Json).components |
             Where-Object { $_ -match '^Microsoft\.VisualStudio\.Component\.Windows(?:10|11)SDK\.\d+$' }
           $declaredSdks = @($sdkComponents | ForEach-Object { "10.0.$(($_ -split '\.')[-1]).0" })
           foreach ($directory in @('bin', 'Lib', 'Include')) {
             $latestSdk = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\$directory" -Directory -Filter '10.0.*' |
               Sort-Object { [Version]$_.Name } -Descending | Select-Object -First 1
-            if (!$latestSdk -or $declaredSdks -notcontains $latestSdk.Name) {
+            if ($env:BUILD_TOOLS -eq 'true' -and (!$latestSdk -or $declaredSdks -notcontains $latestSdk.Name)) {
               throw "ANGLE's automatic SDK selection in $directory is outside the manifest: $($latestSdk.Name). The runner is not isolated enough to validate the declared SDK requirements."
             }
           }
@@ -195,9 +202,26 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: windows-components-${{ matrix.arch }}
+          name: windows-components-${{ env.BUILD_TOOLS == 'true' && 'build-tools' || 'ide' }}-${{ matrix.arch }}
           path: |
             ${{ runner.temp }}/windows-components/
             ${{ runner.temp }}/dd_*.log
             ${{ runner.temp }}/dd_*.txt
           retention-days: 14
+
+  full-vs:
+    needs: build
+    runs-on: windows-2022
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86, x64, arm64]
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      BUILD_TOOLS: 'false'
+      WINDOWS_SDK_VERSION: 10.0.26100.0
+      GIT_SYNC_DEPS_SKIP_EMSDK: '1'
+    steps: *windows-build-steps
