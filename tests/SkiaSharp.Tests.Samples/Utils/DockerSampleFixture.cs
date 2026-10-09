@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -9,6 +10,7 @@ public sealed class DockerSampleFixture : IAsyncLifetime
     private readonly HashSet<string> ownedTags = new();
     private readonly HashSet<string> containers = new();
     private bool probed;
+    private string? unavailableReason;
 
     public ValueTask InitializeAsync() => ValueTask.CompletedTask;
 
@@ -101,13 +103,29 @@ public sealed class DockerSampleFixture : IAsyncLifetime
 
     private async Task Probe()
     {
-        if (probed)
-            return;
+        if (!probed)
+        {
+            try
+            {
+                var result = await RunProcess(["info", "--format", "{{.OSType}}"], TimeSpan.FromSeconds(30));
+                if (result.ExitCode != 0)
+                    unavailableReason = $"Docker is unavailable: docker info exited {result.ExitCode}.\n{result.Output}\n{result.Error}";
+                else
+                    Assert.Equal(OperatingSystem.IsWindows() ? "windows" : "linux", result.Output.Trim());
+            }
+            catch (Win32Exception error) when (error.NativeErrorCode is 2 or 3)
+            {
+                unavailableReason = $"Docker CLI is unavailable: {error.Message}. PATH={Environment.GetEnvironmentVariable("PATH")}";
+            }
+            catch (TimeoutException error)
+            {
+                unavailableReason = $"Docker info did not respond within 30 seconds: {error.Message}";
+            }
+            probed = true;
+        }
 
-        var osType = await Run(["info", "--format", "{{.OSType}}"]);
-        Assert.Equal(OperatingSystem.IsWindows() ? "windows" : "linux", osType);
-
-        probed = true;
+        if (unavailableReason is not null)
+            Assert.Skip(unavailableReason);
     }
 
     public async ValueTask DisposeAsync()

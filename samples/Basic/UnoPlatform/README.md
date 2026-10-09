@@ -2,8 +2,6 @@
 
 Demonstrates SkiaSharp views in an Uno Platform app using the **native rendering** path. This sample uses `SKXamlCanvas` for CPU-rendered content and `SKSwapChainPanel` for hardware-accelerated GPU rendering via the platform's native graphics backend.
 
-> **See also:** The [UnoPlatformSkia](../UnoPlatformSkia/) sample demonstrates the **Skia rendering** path using `SKCanvasElement` for GPU rendering, which is the primary rendering path in Uno 6.x.
-
 ## Rendering Approach
 
 | Control | Rendering | Use Case |
