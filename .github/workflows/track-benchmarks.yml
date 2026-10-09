@@ -320,7 +320,7 @@ jobs:
       - name: Build libSkiaSharp from source (Windows x64)
         if: runner.os == 'Windows' && env.NATIVE_BUILD == 'true'
         shell: pwsh
-        # Visual Studio (preinstalled) + LLVM + Ninja, mirroring the AzDO Windows
+        # Visual Studio 2022 Build Tools + LLVM + Ninja, mirroring the AzDO Windows
         # native job. Produces output/native/windows/x64/libSkiaSharp.dll.
         # We invoke the native cake with target=libSkiaSharp (not externals-windows,
         # which also builds libHarfBuzzSharp via a vcxproj pinned to an older Windows
@@ -328,11 +328,11 @@ jobs:
         run: |
           dotnet tool restore
           ./scripts/infra/native/shared/install-ninja.ps1
-          ./scripts/infra/native/windows/select-vs.ps1
+          $env:VS_INSTALL = Join-Path $env:ProgramFiles 'Microsoft Visual Studio\2022\BuildTools'
           ./scripts/infra/native/windows/install-components.ps1 -InstallationPath $env:VS_INSTALL
           ./scripts/infra/native/windows/install-7zip.ps1
           ./scripts/infra/native/windows/install-llvm.ps1
-          dotnet cake native/windows/build.cake --target=libSkiaSharp --configuration=Release --arch=x64
+          dotnet cake native/windows/build.cake --target=libSkiaSharp --configuration=Release --arch=x64 --vsinstall="$env:VS_INSTALL"
 
       - name: Build SkiaSharp (managed, net10 only)
         # AllTargetFrameworks=net10.0 drops SkiaSharp's platform TFMs (android/ios/...).
