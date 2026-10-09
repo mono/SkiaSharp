@@ -3,6 +3,13 @@ using SkiaSharp;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHealthChecks();
 var app = builder.Build();
+app.Logger.LogInformation("Font families: {FontFamilyCount}", SKFontManager.Default.FontFamilyCount);
+app.Logger.LogInformation("Default typeface: \"{FamilyName}\" ({GlyphCount} glyphs)", SKTypeface.Default.FamilyName, SKTypeface.Default.GlyphCount);
+using var fontStream = typeof(Program).Assembly.GetManifestResourceStream("SkiaSharpSample.NotoSans-Regular.ttf")
+	?? throw new InvalidOperationException("The bundled Noto Sans font is missing.");
+using var typeface = SKTypeface.FromStream(fontStream)
+	?? throw new InvalidOperationException("The bundled Noto Sans font could not be loaded.");
+app.Logger.LogInformation("Bundled typeface: \"{FamilyName}\" ({GlyphCount} glyphs)", typeface.FamilyName, typeface.GlyphCount);
 
 app.MapHealthChecks("/health");
 
@@ -15,6 +22,7 @@ app.MapGet("/", () => Results.Text(
 app.MapGet("/api/images/{text?}", (string? text) =>
 {
 	text ??= "SkiaSharp";
+	app.Logger.LogInformation("Rendering {Text}", text);
 
 	var info = new SKImageInfo(800, 600);
 	using var surface = SKSurface.Create(info);
@@ -50,7 +58,7 @@ app.MapGet("/api/images/{text?}", (string? text) =>
 
 	// Centered text
 	using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-	using var font = new SKFont { Size = width * 0.10f };
+	using var font = new SKFont(typeface, width * 0.10f);
 	canvas.DrawText(text, center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
 
 	// Encode to PNG

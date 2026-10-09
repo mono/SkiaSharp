@@ -249,6 +249,11 @@ There is no separate host build path or HTTP-run helper. Docker runs the
 sample image's declared entrypoint; there is no entrypoint override.
 The host and Docker runtime tests cover application execution rather than adding
 synthetic apps and a separate runner-lifecycle test suite.
+Both Docker samples embed Noto Sans and load it explicitly, so minimal Linux
+and Nano Server images do not need installed fonts. The samples log font-family
+counts and default/bundled typeface glyph counts; the Web sample also logs the
+resolved text. A reported family count of one can be an empty fallback with
+zero glyphs, not a usable system font.
 
 ### Browser runtime prerequisites and coverage
 

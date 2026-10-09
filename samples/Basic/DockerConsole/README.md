@@ -10,6 +10,7 @@ Includes Dockerfiles for both Linux and Windows (Nano Server) containers.
 - **`SKShader`** — Radial gradient background created with `SKShader.CreateRadialGradient`.
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered text rendered with measured alignment. Text is customizable via command-line argument.
+- **Bundled Noto Sans** — Loads an embedded font so text renders without installed system fonts. Its SIL Open Font License is included in `SkiaSharpSample/Assets/OFL.txt`.
 - **Linux container** — Uses `SkiaSharp.NativeAssets.Linux.NoDependencies` (no system packages required).
 - **Windows container** — Uses `SkiaSharp.NativeAssets.NanoServer` on Nano Server LTSC 2025.
 
