@@ -41,10 +41,8 @@ Pass the producing package suffix explicitly. For example, packages ending in
 dotnet cake --target=samples --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-This generates the samples and runs the suite. Do not mix producing builds:
-generation uses the supplied arguments, not package-filename version detection.
-Cake streams active-test progress and test output to the console while retaining
-TRX results and diagnostic artifacts.
+This generates the samples and runs the suite with live test output. Use the
+suffix of the staged packages; do not mix producing builds.
 
 ## IDE and direct test runs
 
@@ -57,41 +55,32 @@ dotnet test tests/SkiaSharp.Tests.Samples.slnx \
   -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
 ```
 
-The solution includes the runner's source dependencies; the properties above
-limit their build to the runner's .NET 10 target.
+Direct tests do not generate samples or download packages. Keep the `net10.0`
+properties above to avoid building the runner's dependencies for every platform.
 
-Direct tests use generated inputs without invoking Cake or downloading packages.
-The repository runner remains `net10.0`; owned consumer builds use `dotnet`
-from `PATH` and private workspaces/caches. Select an exact installed consumer
-SDK independently of the runner (PowerShell on any host):
+To build samples with a specific SDK, choose a version from `dotnet --list-sdks`
+and set `SAMPLE_TEST_SDK_VERSION` before starting the tests or IDE. For example,
+in PowerShell:
 
 ```powershell
-$env:SAMPLE_TEST_SDK_VERSION = '10.0.401'
-dotnet test tests/SkiaSharp.Tests.Samples.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
-$env:SAMPLE_TEST_SDK_VERSION = '11.0.100-rc.1.26425.128'
-dotnet test tests/SkiaSharp.Tests.Samples.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
+$env:SAMPLE_TEST_SDK_VERSION = '10.0.401' # Must be installed.
+dotnet test tests/SkiaSharp.Tests.Samples.slnx `
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
 Remove-Item Env:SAMPLE_TEST_SDK_VERSION
 ```
 
-The pin disables roll-forward; a missing SDK fails. Without the variable, normal
-host SDK selection applies. IDEs must inherit the intended environment.
+This selects the exact sample-build SDK, not the runner SDK or sample TFM.
+Without it, normal host SDK selection applies. A missing selected SDK fails.
 
-CI runs six parallel Windows/macOS/Linux SDK10/SDK11 jobs. Both lanes retain
-SDK10/runtime10 for the runner and baseline samples; SDK11 lanes additionally
-install the pinned preview SDK/workloads. Baseline TFMs stay unchanged. SDK11
-also retargets only an owned Console copy to `net11.0` and repeats run/PNG checks.
-Logs record actual consumer SDK and runtime TFM, distinguishing SDK11-built
-net10 apps from actual net11 apps. Source samples/shared generated inputs stay
-unchanged. All lanes run Docker cases when usable Docker is on `PATH`, with
-availability skips otherwise; neither macOS lane provisions Docker. Containers
-retain the samples' original .NET 10 images, independently of the host SDK.
+CI tests SDK10 and SDK11 on Windows, macOS, and Linux. Baseline TFMs remain
+unchanged; SDK11 also runs an owned Console copy targeting `net11.0`.
+Docker images still use .NET 10 regardless of the host SDK.
 
 ## Coverage and diagnostics
 
 The suite builds host-eligible Basic and Gallery solutions. Gallery, WASM, and
 Blazor are build-only; Console/Web runtime tests check exit codes, HTTP responses,
-and PNGs on the host and in Docker. Generated-project tests check exact package
-versions and Uno's SkiaSharp override. Integration/MSBuild suites remain separate.
+and PNGs on the host and in Docker. Generated-project tests check package versions.
 
 Use IDE filters or select one test:
 
