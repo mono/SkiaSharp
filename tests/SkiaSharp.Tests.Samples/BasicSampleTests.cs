@@ -73,7 +73,12 @@ public class BasicSampleTests : SampleTestBase
     [Trait("Category", "Browser")]
     public Task WebSamplePageRenders() =>
         RunSample("Web", ["--urls", "http://127.0.0.1:0"], (app, _) =>
-            BrowserSampleApp.Capture(app, "/", ".card img", $"Host/{SampleLookup.HostPlatform}/web-page.png"));
+            BrowserRunningApp.Run(app, async browser =>
+            {
+                await browser.Navigate("/");
+                await browser.WaitForElement(".card img");
+                await browser.Screenshot($"Host/{SampleLookup.HostPlatform}/web-page.png");
+            }));
 
     [Fact]
     [Trait("Category", "SampleRun")]
@@ -81,7 +86,7 @@ public class BasicSampleTests : SampleTestBase
     [Trait("Category", "Browser")]
     public Task BrowserWebAssemblySampleRuns() =>
         RunSample("BrowserWebAssembly", ["--urls", "http://127.0.0.1:0"], (app, _) =>
-            BrowserSampleApp.Capture(app, "/", "#output", $"Host/{SampleLookup.HostPlatform}/browser-wasm-page.png"));
+            BrowserRunningApp.Capture(app, "/", "#output", $"Host/{SampleLookup.HostPlatform}/browser-wasm-page.png"));
 
     [Fact]
     [Trait("Category", "SampleRun")]
@@ -89,7 +94,7 @@ public class BasicSampleTests : SampleTestBase
     [Trait("Category", "Browser")]
     public Task BlazorWebAssemblyCpuSampleRuns() =>
         RunSample("BlazorWebAssembly", ["--urls", "http://127.0.0.1:0"], (app, _) =>
-            BrowserSampleApp.Capture(app, "/", ".canvas-container canvas", $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png"));
+            BrowserRunningApp.Capture(app, "/", ".canvas-container canvas", $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png"));
 
     [Fact]
     [Trait("Category", "SampleRun")]
@@ -97,6 +102,6 @@ public class BasicSampleTests : SampleTestBase
     [Trait("Category", "Browser")]
     public Task BlazorWebAssemblyGpuSampleRuns() =>
         RunSample("BlazorWebAssembly", ["--urls", "http://127.0.0.1:0"], (app, _) =>
-            BrowserSampleApp.Capture(app, "/gpu", ".canvas-container canvas", $"Host/{SampleLookup.HostPlatform}/blazor-gpu-page.png",
+            BrowserRunningApp.Capture(app, "/gpu", ".canvas-container canvas", $"Host/{SampleLookup.HostPlatform}/blazor-gpu-page.png",
                 maxAverageColorErrorFraction: 0.06));
 }

@@ -4,34 +4,62 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-internal static class BrowserSampleApp
+internal sealed class BrowserRunningApp(
+    IPage page, Uri address, string diagnostics, ConcurrentQueue<string> errors, Action<string> record)
 {
-    internal static Task Capture(RunningApp app, string path, string selector, string golden) =>
-        Capture(app, path, selector, golden, null);
+    private int screenshots;
 
-    internal static async Task Capture(RunningApp app, string path, string selector, string golden,
-        double? maxAverageColorErrorFraction)
+    internal IPage Page { get; } = page;
+
+    internal async Task Navigate(string path)
     {
-        var actual = Path.Combine(app.Diagnostics, "page.actual.png");
+        var request = RunningApp.RequestUri(address, path);
+        record($"Navigating to {request}");
+        var response = await Page.GotoAsync(request.AbsoluteUri,
+            new() { WaitUntil = WaitUntilState.Load }).WaitAsync(TestContext.Current.CancellationToken);
+        Assert.NotNull(response);
+        Assert.Equal(200, response.Status);
+    }
+
+    internal Task WaitForElement(string selector) =>
+        Page.Locator(selector).First.WaitForAsync(new() { State = WaitForSelectorState.Visible })
+            .WaitAsync(TestContext.Current.CancellationToken);
+
+    internal async Task<string> Screenshot(string? golden = null, double? maxAverageColorErrorFraction = null)
+    {
+        var name = ++screenshots == 1 ? "page" : $"page-{screenshots}";
+        var actual = Path.Combine(diagnostics, $"{name}.actual.png");
+        await Page.ScreenshotAsync(new() { Path = actual, FullPage = true })
+            .WaitAsync(TestContext.Current.CancellationToken);
         try
         {
-            await Run(app, path, async (page, _) =>
-            {
-                var cancellation = TestContext.Current.CancellationToken;
-                await page.Locator(selector).First.WaitForAsync(new() { State = WaitForSelectorState.Visible }).WaitAsync(cancellation);
-                await page.ScreenshotAsync(new() { Path = actual, FullPage = true }).WaitAsync(cancellation);
-            });
+            AssertNoErrors();
         }
         catch
         {
-            if (File.Exists(actual))
-                TestContext.Current.AddFileAttachment(actual, "image/png");
+            TestContext.Current.AddFileAttachment(actual, "image/png");
             throw;
         }
-        SampleImage.ValidateFile(actual, golden, maxAverageColorErrorFraction);
+        if (golden is null)
+            TestContext.Current.AddFileAttachment(actual, "image/png");
+        else
+            SampleImage.ValidateFile(actual, golden, maxAverageColorErrorFraction);
+        return actual;
     }
 
-    internal static async Task Run(RunningApp app, string path, Func<IPage, string, Task> test)
+    private void AssertNoErrors() =>
+        Assert.True(errors.IsEmpty, $"Browser errors:\n{string.Join("\n", errors)}");
+
+    internal static Task Capture(RunningApp app, string path, string selector, string golden,
+        double? maxAverageColorErrorFraction = null) =>
+        Run(app, async browser =>
+        {
+            await browser.Navigate(path);
+            await browser.WaitForElement(selector);
+            await browser.Screenshot(golden, maxAverageColorErrorFraction);
+        });
+
+    internal static async Task Run(RunningApp app, Func<BrowserRunningApp, Task> test)
     {
         var cancellation = TestContext.Current.CancellationToken;
         var diagnostics = app.Diagnostics;
@@ -51,7 +79,7 @@ internal static class BrowserSampleApp
         {
             using var ready = await app.WaitForResponse("/");
             Assert.Equal(System.Net.HttpStatusCode.OK, ready.StatusCode);
-            var address = RunningApp.RequestUri(await app.GetAddress(), path);
+            var address = await app.GetAddress();
             cancellation.ThrowIfCancellationRequested();
             using var playwright = await Playwright.CreateAsync();
             await using var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true });
@@ -66,16 +94,12 @@ internal static class BrowserSampleApp
             page.SetDefaultNavigationTimeout(60000);
             page.PageError += (_, error) => Record($"[page error] {error}", error: true);
             page.Console += (_, message) => Record($"[console {message.Type}] {message.Text}", message.Type == "error");
+            var running = new BrowserRunningApp(page, address, diagnostics, errors, message => Record(message));
             var failed = false;
             try
             {
-                Record($"Navigating to {address}");
-                var response = await page.GotoAsync(address.AbsoluteUri,
-                    new() { WaitUntil = WaitUntilState.Load }).WaitAsync(cancellation);
-                Assert.NotNull(response);
-                Assert.Equal(200, response.Status);
-                await test(page, diagnostics);
-                Assert.True(errors.IsEmpty, $"Browser errors:\n{string.Join("\n", errors)}");
+                await test(running);
+                running.AssertNoErrors();
             }
             catch
             {
