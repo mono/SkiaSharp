@@ -6,10 +6,11 @@ and runs the Console/Web samples on the host and in Docker.
 ## Run the suite
 
 Install the repository SDK and the workloads required by your host's samples.
-Docker build/run tests run on Linux and Windows; macOS explicitly skips them
-and still validates native sample builds and host runtimes. Put `docker` on
-`PATH` and start a daemon using the host's container OS. Unavailable Docker
-produces visible skips; wrong container mode and sample failures fail the tests.
+Docker build/run tests run on any host with usable Docker, including macOS.
+Put `docker` on `PATH` and start a daemon using Windows containers on Windows
+or Linux containers on macOS/Linux. CI does not provision Docker on macOS.
+Unavailable Docker produces visible skips; wrong container mode and sample
+failures fail the tests.
 
 **Bootstrap before staging packages:** bootstrap resets `output/`.
 For managed-only work:
@@ -75,8 +76,9 @@ install the pinned preview SDK/workloads. Baseline TFMs stay unchanged. SDK11
 also retargets only an owned Console copy to `net11.0` and repeats run/PNG checks.
 Logs record actual consumer SDK and runtime TFM, distinguishing SDK11-built
 net10 apps from actual net11 apps. Source samples/shared generated inputs stay
-unchanged. Docker cases are declared skipped in both macOS lanes; Windows/Linux
-retain container validation using the samples' original .NET 10 images.
+unchanged. All lanes run Docker cases when usable Docker is on `PATH`, with
+availability skips otherwise; neither macOS lane provisions Docker. Containers
+retain the samples' original .NET 10 images, independently of the host SDK.
 
 ## Coverage and diagnostics
 
