@@ -132,6 +132,13 @@ void RunDotNetTest(
     properties = properties == null
         ? new Dictionary<string, string>()
         : new Dictionary<string, string>(properties);
+    properties.TryAdd("TestingPlatformCaptureOutput", "false");
+    properties.TryAdd("Platform", "AnyCPU");
+    if (COVERAGE) {
+        properties.TryAdd("CollectCoverage", "true");
+        properties.TryAdd("CoverletOutputFormat", "cobertura");
+        properties.TryAdd("CoverletOutput", output.Combine("Coverage").FullPath + "/");
+    }
 
     var settings = new DotNetTestSettings {
         Configuration = configuration ?? CONFIGURATION,
@@ -139,13 +146,6 @@ void RunDotNetTest(
         WorkingDirectory = dir,
         Verbosity = DotNetVerbosity.Normal,
         ArgumentCustomization = args => {
-            args = args
-                .Append("/p:Platform=\"AnyCPU\"");
-            if (COVERAGE)
-                args = args
-                    .Append("/p:CollectCoverage=true")
-                    .Append("/p:CoverletOutputFormat=cobertura")
-                    .Append($"/p:CoverletOutput={output.Combine("Coverage").FullPath}/");
             foreach (var prop in properties) {
                 if (!string.IsNullOrEmpty(prop.Value)) {
                     args = args
@@ -155,6 +155,8 @@ void RunDotNetTest(
             // Everything after "--" is forwarded to the Microsoft.Testing.Platform runner.
             args = args
                 .Append("--")
+                .Append("--show-live-output").Append("on")
+                .Append("--no-ansi")
                 .Append("--results-directory").AppendQuoted(output.FullPath)
                 .Append("--report-trx")
                 .Append("--report-trx-filename").Append("TestResults.trx");
