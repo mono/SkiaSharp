@@ -43,6 +43,8 @@ dotnet cake --target=samples --previewLabel=pr.1234 --buildNumber=26509.10
 
 This generates the samples and runs the suite. Do not mix producing builds:
 generation uses the supplied arguments, not package-filename version detection.
+Cake streams active-test progress and test output to the console while retaining
+TRX results and diagnostic artifacts.
 
 ## IDE and direct test runs
 

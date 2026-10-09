@@ -52,6 +52,7 @@ void RunDeviceRunnersTest(
     properties = properties == null
         ? new Dictionary<string, string>()
         : new Dictionary<string, string>(properties);
+    properties.TryAdd("TestingPlatformCaptureOutput", "false");
     AddGpuOptOut(properties);
 
     var msb = new DotNetMSBuildSettings();
@@ -155,6 +156,8 @@ void RunDotNetTest(
             // Everything after "--" is forwarded to the Microsoft.Testing.Platform runner.
             args = args
                 .Append("--")
+                .Append("--show-live-output").Append("on")
+                .Append("--no-ansi")
                 .Append("--results-directory").AppendQuoted(output.FullPath)
                 .Append("--report-trx")
                 .Append("--report-trx-filename").Append("TestResults.trx");
