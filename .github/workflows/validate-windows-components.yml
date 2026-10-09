@@ -187,8 +187,7 @@ jobs:
             'source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/SkiaSharp.Views.Maui.Controls.csproj'
           )
           foreach ($project in $projects) {
-            dotnet build $project -c Release -p:TargetFrameworks=net10.0-windows10.0.19041.0 `
-              -p:BuildingInsideVisualStudio=true -p:BuildProjectReferences=true -p:ShouldUnsetParentConfigurationAndPlatform=false
+            dotnet build $project -c Release -p:TargetFrameworks=net10.0-windows10.0.19041.0
             if ($LASTEXITCODE -ne 0) { throw "$project build exited with code $LASTEXITCODE." }
           }
           foreach ($framework in @('net462', 'net48', 'net10.0')) {
