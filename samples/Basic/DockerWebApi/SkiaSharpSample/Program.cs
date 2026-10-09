@@ -3,13 +3,7 @@ using SkiaSharp;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHealthChecks();
 var app = builder.Build();
-app.Logger.LogInformation("Font families: {FontFamilyCount}", SKFontManager.Default.FontFamilyCount);
-app.Logger.LogInformation("Default typeface: \"{FamilyName}\" ({GlyphCount} glyphs)", SKTypeface.Default.FamilyName, SKTypeface.Default.GlyphCount);
-using var fontStream = typeof(Program).Assembly.GetManifestResourceStream("SkiaSharpSample.NotoSans-Regular.ttf")
-	?? throw new InvalidOperationException("The bundled Noto Sans font is missing.");
-using var typeface = SKTypeface.FromStream(fontStream)
-	?? throw new InvalidOperationException("The bundled Noto Sans font could not be loaded.");
-app.Logger.LogInformation("Bundled typeface: \"{FamilyName}\" ({GlyphCount} glyphs)", typeface.FamilyName, typeface.GlyphCount);
+using var typeface = SKTypeface.FromFile(Path.Combine(AppContext.BaseDirectory, "NotoSans-Regular.ttf"));
 
 app.MapHealthChecks("/health");
 

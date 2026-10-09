@@ -10,9 +10,16 @@ Includes Dockerfiles for both Linux and Windows (Nano Server) containers.
 - **`SKShader`** — Radial gradient background created with `SKShader.CreateRadialGradient`.
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered text rendered with measured alignment. Text is customizable via command-line argument.
-- **Bundled Noto Sans** — Loads an embedded font so text renders without installed system fonts. Its SIL Open Font License is included in `SkiaSharpSample/Assets/OFL.txt`.
+- **Bundled Noto Sans** — Copies the font to the output directory and loads it with `SKTypeface.FromFile`, so text renders without installed system fonts.
+
 - **Linux container** — Uses `SkiaSharp.NativeAssets.Linux.NoDependencies` (no system packages required).
 - **Windows container** — Uses `SkiaSharp.NativeAssets.NanoServer` on Nano Server LTSC 2025.
+
+## Font license
+
+Noto Sans is Copyright 2022 The Noto Project Authors and licensed under the
+[SIL Open Font License 1.1](https://github.com/notofonts/latin-greek-cyrillic/blob/main/OFL.txt).
+It may be used, embedded, and redistributed with applications under that license.
 
 ## Requirements
 
