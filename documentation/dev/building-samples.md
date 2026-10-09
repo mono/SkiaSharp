@@ -51,8 +51,12 @@ or running it directly:
 
 ```sh
 dotnet cake --target=samples-generate --previewLabel=pr.1234 --buildNumber=26509.10
-dotnet test tests/SkiaSharp.Tests.Samples.slnx -- --report-trx
+dotnet test tests/SkiaSharp.Tests.Samples.slnx \
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
 ```
+
+The solution includes the runner's source dependencies; the properties above
+limit their build to the runner's .NET 10 target.
 
 Direct tests use the generated inputs without invoking Cake or downloading
 packages. The runner uses the repository SDK; sample builds use `dotnet` from
