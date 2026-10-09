@@ -31,9 +31,6 @@ internal abstract class SampleCanvasView : UserControl
         if (SKCanvasElement.IsSupportedOnCurrentPlatform())
             return new CanvasElementView(onRender);
 #endif
-        // SKSwapChainPanel is only GPU-backed on browser/Android in SkiaSharp.Views.Uno.WinUI.
-        if (OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid())
-            return new SwapChainView(onRender);
         return new XamlCanvasView(onRender);
     }
 }
@@ -54,24 +51,6 @@ internal sealed class XamlCanvasView : SampleCanvasView
     }
 
     public override void InvalidateRender() => canvas.Invalidate();
-}
-
-internal sealed class SwapChainView : SampleCanvasView
-{
-    private readonly SKSwapChainPanel panel;
-
-    public SwapChainView(RenderCallback onRender) : base(onRender)
-    {
-        panel = new SKSwapChainPanel();
-        panel.PaintSurface += (_, e) =>
-        {
-            e.Surface.Canvas.Clear(SKColors.White);
-            OnRender(e.Surface.Canvas, e.Info, e.RawInfo);
-        };
-        Content = panel;
-    }
-
-    public override void InvalidateRender() => panel.Invalidate();
 }
 
 #if HAS_UNO

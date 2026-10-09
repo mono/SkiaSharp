@@ -176,13 +176,11 @@
     <MauiTargetFrameworksAppPrevious Condition="$(IsWindows)">$(MauiTargetFrameworksAppPrevious);$(TFMPrevious)-windows$(TPVWindowsPrevious)</MauiTargetFrameworksAppPrevious>
   </PropertyGroup>
 
-  <!-- Uno Platform -->
+  <!-- Uno Platform (Uno Platform 7 needs .NET 10 or later) -->
   <PropertyGroup>
-    <UnoTargetFrameworksReference>$(TFMCurrent)</UnoTargetFrameworksReference>
-    <UnoTargetFrameworksReference Condition="'$(TFMPrevious)' != ''">$(UnoTargetFrameworksReference);$(TFMPrevious)</UnoTargetFrameworksReference>
-    <UnoTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent);$(TFMCurrent)-macos$(TPVmacOSCurrent)</UnoTargetFrameworksCurrent>
-    <UnoTargetFrameworksPrevious Condition="!$(IsLinux) and '$(TFMPrevious)' != ''">$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious);$(TFMPrevious)-macos$(TPVmacOSPrevious)</UnoTargetFrameworksPrevious>
-    <UnoTargetFrameworks>$(UnoTargetFrameworksReference);$(UnoTargetFrameworksCurrent);$(UnoTargetFrameworksPrevious);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
+    <UnoTargetFrameworks>$(TFMCurrent)</UnoTargetFrameworks>
+    <UnoTargetFrameworks Condition="'$(TFMPrevious)' != '' and $([MSBuild]::IsTargetFrameworkCompatible('$(TFMPrevious)', 'net10.0'))">$(UnoTargetFrameworks);$(TFMPrevious)</UnoTargetFrameworks>
+    <UnoTargetFrameworks>$(UnoTargetFrameworks);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
