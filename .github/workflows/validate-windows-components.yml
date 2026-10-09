@@ -104,6 +104,16 @@ jobs:
             Set-Content (Join-Path $evidence 'toolset-versions.txt')
           Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\Lib" |
             Select-Object Name | Out-File (Join-Path $evidence 'sdk-versions.txt')
+          $sdkComponents = (Get-Content source/.vsconfig -Raw | ConvertFrom-Json).components |
+            Where-Object { $_ -match '^Microsoft\.VisualStudio\.Component\.Windows(?:10|11)SDK\.\d+$' }
+          $declaredSdks = @($sdkComponents | ForEach-Object { "10.0.$(($_ -split '\.')[-1]).0" })
+          foreach ($directory in @('bin', 'Lib', 'Include')) {
+            $latestSdk = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\$directory" -Directory -Filter '10.0.*' |
+              Sort-Object { [Version]$_.Name } -Descending | Select-Object -First 1
+            if (!$latestSdk -or $declaredSdks -notcontains $latestSdk.Name) {
+              throw "ANGLE's automatic SDK selection in $directory is outside the manifest: $($latestSdk.Name). The runner is not isolated enough to validate the declared SDK requirements."
+            }
+          }
 
       - name: Prepare native source and standalone tools
         run: |
