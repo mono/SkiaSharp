@@ -133,6 +133,12 @@ void RunDotNetTest(
         ? new Dictionary<string, string>()
         : new Dictionary<string, string>(properties);
     properties.TryAdd("TestingPlatformCaptureOutput", "false");
+    properties.TryAdd("Platform", "AnyCPU");
+    if (COVERAGE) {
+        properties.TryAdd("CollectCoverage", "true");
+        properties.TryAdd("CoverletOutputFormat", "cobertura");
+        properties.TryAdd("CoverletOutput", output.Combine("Coverage").FullPath + "/");
+    }
 
     var settings = new DotNetTestSettings {
         Configuration = configuration ?? CONFIGURATION,
@@ -140,13 +146,6 @@ void RunDotNetTest(
         WorkingDirectory = dir,
         Verbosity = DotNetVerbosity.Normal,
         ArgumentCustomization = args => {
-            args = args
-                .Append("/p:Platform=\"AnyCPU\"");
-            if (COVERAGE)
-                args = args
-                    .Append("/p:CollectCoverage=true")
-                    .Append("/p:CoverletOutputFormat=cobertura")
-                    .Append($"/p:CoverletOutput={output.Combine("Coverage").FullPath}/");
             foreach (var prop in properties) {
                 if (!string.IsNullOrEmpty(prop.Value)) {
                     args = args
