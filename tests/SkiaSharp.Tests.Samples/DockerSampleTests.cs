@@ -14,27 +14,24 @@ public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<Docke
             .Where(sample => sample.Kind.HasFlag(SampleLookup.EntryKind.Docker))
             .Select(sample => new object[] { sample.Folder, sample.FileName });
 
+    private async Task RunSample(string name, IEnumerable<string> arguments, Func<DockerRunningApp, Task> test)
+    {
+        var folder = Path.Combine("Basic", name);
+        var sample = Cases().Single(sample => (string)sample[0] == folder);
+        var tag = await docker.Image(folder, (string)sample[1]);
+        await docker.Run(tag, arguments, test);
+    }
+
     [Theory]
     [Trait("Category", "DockerBuild")]
     [MemberData(nameof(Cases))]
     public async Task DockerImageBuilds(string folder, string dockerfile) =>
         await docker.Image(folder, dockerfile);
 
-    private Task<string> Image(string name)
-    {
-        var entry = SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
-            .Single(sample => sample.Folder == Path.Combine("Basic", name) && sample.Kind.HasFlag(SampleLookup.EntryKind.Docker));
-
-        return docker.Image(entry.Folder, entry.FileName);
-    }
-
     [Fact]
     [Trait("Category", "SampleRun")]
-    public async Task ConsoleSampleRuns()
-    {
-        var tag = await Image("DockerConsole");
-
-        await docker.Run(tag, ["SkiaSharp", "--output", "output.png"], async app =>
+    public Task ConsoleSampleRuns() =>
+        RunSample("DockerConsole", ["SkiaSharp", "--output", "output.png"], async app =>
         {
             var result = await app.WaitForExit();
             Assert.Equal(0, result.ExitCode);
@@ -49,14 +46,11 @@ public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<Docke
 
             SampleImage.ValidateFile(image, 800, 600, $"Docker/{ContainerPlatform}/console.png");
         });
-    }
 
     [Fact]
     [Trait("Category", "SampleRun")]
-    public async Task WebApiSampleReturnsImage()
-    {
-        var tag = await Image("DockerWebApi");
-        await docker.Run(tag, [], async app =>
+    public Task WebApiSampleReturnsImage() =>
+        RunSample("DockerWebApi", [], async app =>
         {
             using var health = await app.WaitForResponse("/health");
             Assert.Equal(System.Net.HttpStatusCode.OK, health.StatusCode);
@@ -73,5 +67,4 @@ public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<Docke
                 800, 600,
                 $"Docker/{ContainerPlatform}/web.png");
         });
-    }
 }
