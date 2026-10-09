@@ -3,7 +3,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
 
-// Builds the ordinary generated samples without running their UIs.
+// Builds and runs the ordinary generated samples.
 public class BasicSampleTests : SampleTestBase
 {
     public static IEnumerable<object[]> Cases() =>
@@ -46,21 +46,33 @@ public class BasicSampleTests : SampleTestBase
     [Fact]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
-    public Task WebSampleReturnsImage() =>
-        RunSample("Web", ["--urls", "http://127.0.0.1:0"], async (app, _) =>
-        {
-            using var home = await app.WaitForResponse("/");
-            Assert.Equal(System.Net.HttpStatusCode.OK, home.StatusCode);
-            Assert.Equal("text/html", home.Content.Headers.ContentType?.MediaType);
+    [Trait("Category", "Browser")]
+    public Task WebSampleRuns() =>
+        RunSample("Web", ["--urls", "http://127.0.0.1:0"], (app, _) =>
+            BrowserSampleApp.Capture(app, "/", ".card img", $"Host/{SampleLookup.HostPlatform}/web-page.png"));
 
-            using var response = await app.GetResponse("/api/images");
-            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-            Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
+    [Fact]
+    [Trait("Category", "SampleRun")]
+    [Trait("Category", "Host")]
+    [Trait("Category", "Browser")]
+    public Task BrowserWebAssemblySampleRuns() =>
+        RunSample("BrowserWebAssembly", ["--urls", "http://127.0.0.1:0"], (app, _) =>
+            BrowserSampleApp.Capture(app, "/", "#output", $"Host/{SampleLookup.HostPlatform}/browser-wasm-page.png"));
 
-            await SampleImage.SaveAndValidate(
-                await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken),
-                Path.Combine(app.Diagnostics, "output.png"),
-                512, 512,
-                $"Host/{SampleLookup.HostPlatform}/web.png");
-        });
+    [Fact]
+    [Trait("Category", "SampleRun")]
+    [Trait("Category", "Host")]
+    [Trait("Category", "Browser")]
+    public Task BlazorWebAssemblyCpuSampleRuns() =>
+        RunSample("BlazorWebAssembly", ["--urls", "http://127.0.0.1:0"], (app, _) =>
+            BrowserSampleApp.Capture(app, "/", ".canvas-container canvas", $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png"));
+
+    [Fact]
+    [Trait("Category", "SampleRun")]
+    [Trait("Category", "Host")]
+    [Trait("Category", "Browser")]
+    public Task BlazorWebAssemblyGpuSampleRuns() =>
+        RunSample("BlazorWebAssembly", ["--urls", "http://127.0.0.1:0"], (app, _) =>
+            BrowserSampleApp.Capture(app, "/gpu", ".canvas-container canvas", $"Host/{SampleLookup.HostPlatform}/blazor-gpu-page.png",
+                maxAverageColorErrorFraction: 0.06));
 }

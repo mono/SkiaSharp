@@ -94,17 +94,16 @@ nested virtualization or changing the default Docker context, then deletes it.
 ## Coverage and diagnostics
 
 Build theories cover eligible Basic and Gallery solutions; Gallery remains
-build-only. Separate browser facts execute Web, WASM, and Blazor; device
-execution is not part of this suite. Other runtime
-tests run host Console/Web and Docker Console/Web, checking exit codes, output,
-HTTP responses, and rendered PNGs. Docker retains the samples' original .NET 10
-images; its SDK is independent of the host SDK.
+build-only. Named runtime facts check host and Docker Console exit codes,
+output and PNGs, and browser facts check host Web, WASM, Blazor and Docker Web
+pages. Device execution is not part of this suite. Docker retains the samples'
+original .NET 10 images; its SDK is independent of the host SDK.
 
 Use ordinary IDE filters or select a test directly:
 
 ```sh
 dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
-  -- --filter-method '*BasicSampleTests.WebSampleReturnsImage'
+  -- --filter-method '*BasicSampleTests.WebSampleRuns'
 ```
 
 `-- --filter-trait Category=Infrastructure` selects helper tests only; it does
@@ -119,7 +118,7 @@ bounded timeouts and cleanup removes only owned processes, workspaces, images,
 and containers, never user caches or unrelated Docker resources.
 
 PNG references live in `tests/SkiaSharp.Tests.Samples/Expected/`, qualified by
-host/container platform. Comparisons allow at most **0.075%** of decoded pixels
+host/container platform. Headless comparisons allow at most **0.075%** of decoded pixels
 to differ, with zero per-channel tolerance: any RGBA channel change counts as a
 differing pixel. Fractional pixel budgets round down (360 pixels at 800x600;
 196 at 512x512). This small image-wide budget accommodates host text
@@ -153,19 +152,46 @@ explicitly too; tests never download browsers. On Linux, `--with-deps` may
 require elevated privileges. Missing browsers, browser errors and unavailable
 GPU rendering fail rather than silently skipping coverage.
 
-Four named facts check the actual Web page's three 512 x 512 images,
-BrowserWASM's 800 x 600 PNG, and Blazor's CPU and GPU canvases. A fixed
-1280 x 900 viewport and scale 1 give the canvases 1040 x 836 pixels.
+Named facts in the existing Basic and Docker test classes check browser console
+errors and compare full-page screenshots using `SampleImage`. They cover Web,
+BrowserWASM, Blazor CPU/GPU and DockerWebApi. Docker's home page is a plain-text
+endpoint list, so its browser opens the actual `/api/images` response instead.
+Captures use a fixed 1280 x 900 viewport and device scale 1.
 The BrowserWASM app must include the matching artifact's
 `SkiaSharp.NativeAssets.WebAssembly` package; the source-built runner cannot
 supply the sample's dependencies.
 
-Browser references live under `Expected/Browser/<host-platform>/`; the Web
-`SkiaSharp` image reuses `Expected/Host/<host-platform>/web.png`. Review fresh
-captures for the remaining stable outputs. The animated GPU canvas retains a
-diagnostic screenshot, not an arbitrary-frame golden. Browser filtering does
-not replace the unfiltered sample suite; stacked PR branch filters may prevent
-producing CI captures until the target branch is eligible.
+Page references use the existing `Expected/Host/<host-platform>/` and
+`Expected/Docker/<container-platform>/` directories. Docker page filenames also
+include the browser's host platform. Page screenshots are distinct from the
+existing headless PNG references and need their own capture/review.
+
+The five initial page references were reviewed locally on macOS 27.0.1
+(26A434), using Playwright 1.55.0 and the exact package cohort from producing
+[build 1628893](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1628893):
+SkiaSharp `4.156.0-pr.5291.26508.18` and HarfBuzzSharp
+`14.4.0.100-pr.5291.26508.18`. The Docker page uses the sample's Linux
+container with a Mac browser. These are local-first references, not producing
+browser CI proof. Later matching CI captures need review before any reference
+update; tests never replace references automatically.
+
+Only the animated GPU page allows **6% average RGBA color error**: the sum of
+absolute channel differences divided by `pixel count * 4 * 255`. No channel
+differences are discarded. This is not the percentage of changed pixels and
+does not change the shared 0.075% differing-pixel policy for other pages and
+headless samples. Dimensions must still match.
+
+Against the committed local GPU reference, 24 actual frames across two page
+loads measured 0.869-5.641% average color error. White and pure-black canvas
+controls measured 50.273% and 6.331%, so 6% accepts the observed animation and
+rejects those controls; exactly 5% rejected healthy frames. Uniform dark output
+measured 4.067% and can still pass. This is deliberately a crash/white-output
+smoke check, not exact shader regression coverage. CI-to-local calibration and
+stronger animated comparison remain follow-up work; animation, clock and FPS
+are unchanged.
+
+Browser filtering does not replace the unfiltered sample suite; stacked PR
+branch filters may prevent producing CI captures until the target is eligible.
 
 For restore failures, compare the generated references with the staged package
 cohort and inspect the retained binlog. Each consumer already has fresh caches;

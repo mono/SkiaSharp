@@ -49,22 +49,9 @@ public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<Docke
 
     [Fact]
     [Trait("Category", "SampleRun")]
-    public Task WebApiSampleReturnsImage() =>
-        RunSample("DockerWebApi", [], async app =>
-        {
-            using var health = await app.WaitForResponse("/health");
-            Assert.Equal(System.Net.HttpStatusCode.OK, health.StatusCode);
-            Assert.Equal("text/plain", health.Content.Headers.ContentType?.MediaType);
-            Assert.Equal("Healthy", await health.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
-
-            using var response = await app.GetResponse("/api/images");
-            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-            Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
-
-            await SampleImage.SaveAndValidate(
-                await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken),
-                Path.Combine(app.Diagnostics, "output.png"),
-                800, 600,
-                $"Docker/{ContainerPlatform}/web.png");
-        });
+    [Trait("Category", "Browser")]
+    public Task WebApiSampleRuns() =>
+        RunSample("DockerWebApi", [], app =>
+            BrowserSampleApp.Capture(app, "/api/images", "img",
+                $"Docker/{ContainerPlatform}/web-page.{SampleLookup.HostPlatform}.png"));
 }

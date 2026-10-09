@@ -174,6 +174,23 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Theory]
+    [InlineData("Now listening on: http://127.0.0.1:54321", "http://127.0.0.1:54321/")]
+    [InlineData("  Now listening on: http://127.0.0.1:54321  ", "http://127.0.0.1:54321/")]
+    [InlineData("App url: http://127.0.0.1:60542/?arg=--urls&arg=http%3a%2f%2f127.0.0.1%3a0",
+        "http://127.0.0.1:60542/?arg=--urls&arg=http%3a%2f%2f127.0.0.1%3a0")]
+    public void DotNetRecognizesOwnedHttpAddress(string output, string expected) =>
+        Assert.Equal(new Uri(expected), DotNetRunningApp.ParseAddress(output));
+
+    [Theory]
+    [InlineData("App url: https://127.0.0.1:60545/")]
+    [InlineData("App url: http://example.com:54321/")]
+    [InlineData("App url: http://127.0.0.1:0/")]
+    [InlineData("App url: not-an-address")]
+    [InlineData("Debug at url: http://127.0.0.1:60542/_framework/debug")]
+    public void DotNetRejectsOtherAddresses(string output) =>
+        Assert.Null(DotNetRunningApp.ParseAddress(output));
+
+    [Theory]
     [InlineData("https://localhost/health")]
     [InlineData("//example.com/health")]
     [InlineData("/\\example.com/health")]
@@ -268,6 +285,109 @@ public class SampleInfrastructureTests : IDisposable
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         File.WriteAllBytes(path, data.ToArray());
         return path;
+    }
+
+    [Fact]
+    public void GoldenComparisonSupportsPageSizesAndRetainsPixelDifferences()
+    {
+        Directory.CreateDirectory(root);
+        var actual = Path.Combine(root, "page.actual.png");
+        var expected = Path.Combine(root, "page.expected.png");
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        using (var image = SKImage.FromBitmap(bitmap))
+        using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+            File.WriteAllBytes(actual, data.ToArray());
+        File.Copy(actual, expected);
+        SampleImage.ValidateFile(actual, expected);
+
+        bitmap.Erase(SKColors.Blue);
+        using (var image = SKImage.FromBitmap(bitmap))
+        using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+            File.WriteAllBytes(actual, data.ToArray());
+        var error = Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected));
+        Assert.Contains("192/192", error.Message);
+        Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+    }
+
+    [Fact]
+    public void MissingReviewedGoldenFailsWithoutCreatingAReference()
+    {
+        Directory.CreateDirectory(root);
+        var actual = Path.Combine(root, "missing-reference.actual.png");
+        var expected = Path.Combine(root, "missing-reference.png");
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        File.WriteAllBytes(actual, data.ToArray());
+        var error = Assert.ThrowsAny<Exception>(() => SampleImage.ValidateFile(actual, expected));
+        Assert.Contains("Missing reviewed sample golden", error.Message);
+        Assert.True(File.Exists(actual));
+        Assert.False(File.Exists(expected));
+    }
+
+    [Fact]
+    public void AverageColorErrorAllowsExactlyFivePercentButRejectsOneChannelStepOver()
+    {
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "average.expected.png");
+        bitmap.Erase(new SKColor(238, 17, 17));
+        var actual = SavePng(bitmap, "average.actual.png");
+        SampleImage.CompareGolden(actual, expected, 0.05);
+        Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+
+        bitmap.SetPixel(0, 0, new SKColor(238, 18, 17));
+        SavePng(bitmap, "average.actual.png");
+        var error = Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected, 0.05));
+        Assert.Contains("average RGBA color error", error.Message);
+        Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+    }
+
+    [Fact]
+    public void AverageColorErrorDoesNotChangeTheHeadlessPixelBudgetOrExplicitExactComparison()
+    {
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "channel.expected.png");
+        bitmap.Erase(new SKColor(247, 8, 8));
+        var actual = SavePng(bitmap, "channel.actual.png");
+        SampleImage.CompareGolden(actual, expected, 0.05);
+        var error = Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected));
+        Assert.Contains("192/192", error.Message);
+        Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected, 0));
+    }
+
+    [Fact]
+    public void AverageColorErrorIncludesAlphaInItsFivePercentBoundary()
+    {
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Black);
+        var expected = SavePng(bitmap, "alpha.expected.png");
+        bitmap.Erase(new SKColor(0, 0, 0, 204));
+        var actual = SavePng(bitmap, "alpha.actual.png");
+        SampleImage.CompareGolden(actual, expected, 0.05);
+
+        bitmap.SetPixel(0, 0, new SKColor(0, 0, 0, 203));
+        SavePng(bitmap, "alpha.actual.png");
+        Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected, 0.05));
+    }
+
+    [Fact]
+    public void AverageColorErrorAllowsExactlyTheGpuSixPercentBudget()
+    {
+        using var bitmap = new SKBitmap(5, 1);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "gpu-budget.expected.png");
+        bitmap.Erase(new SKColor(234, 20, 20));
+        bitmap.SetPixel(0, 0, new SKColor(233, 20, 20));
+        var actual = SavePng(bitmap, "gpu-budget.actual.png");
+        SampleImage.CompareGolden(actual, expected, 0.06);
+
+        bitmap.SetPixel(1, 0, new SKColor(233, 20, 20));
+        SavePng(bitmap, "gpu-budget.actual.png");
+        Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected, 0.06));
     }
 
     [Fact]

@@ -21,6 +21,7 @@ public class ArtifactContractTests
     };
 
     [Theory]
+    [InlineData("Basic/BrowserWebAssembly/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.NativeAssets.WebAssembly")]
     [InlineData("Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.NativeAssets.Linux.NoDependencies")]
     [InlineData("Basic/Web/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.NativeAssets.Linux.NoDependencies")]
     [InlineData("Basic/UnoPlatform/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.Views")]
