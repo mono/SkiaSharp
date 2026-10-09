@@ -22,10 +22,18 @@ internal static class SampleImage
     internal static void ValidateFile(string actual, int width, int height, string golden)
     {
         Validate(File.ReadAllBytes(actual), width, height);
+        ValidateFile(actual, golden);
+    }
 
+    internal static void ValidateFile(string actual, string golden) =>
+        ValidateFile(actual, golden, null);
+
+    internal static void ValidateFile(string actual, string golden, double? maxAverageColorErrorFraction)
+    {
         TestContext.Current.AddFileAttachment(actual, "image/png");
 
-        CompareGolden(actual, Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", golden));
+        CompareGolden(actual, Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", golden),
+            maxAverageColorErrorFraction);
     }
 
     internal static async Task SaveAndValidate(byte[] png, string actual, int width, int height, string golden)
@@ -37,8 +45,13 @@ internal static class SampleImage
         ValidateFile(actual, width, height, golden);
     }
 
-    internal static void CompareGolden(string actual, string expected)
+    internal static void CompareGolden(string actual, string expected) =>
+        CompareGolden(actual, expected, null);
+
+    internal static void CompareGolden(string actual, string expected, double? maxAverageColorErrorFraction)
     {
+        if (maxAverageColorErrorFraction is { } maximum)
+            Assert.InRange(maximum, 0, 1);
         Assert.True(File.Exists(expected), $"Missing reviewed sample golden: {expected}. Actual image retained at {actual}.");
 
         using var actualImage = SKImage.FromEncodedData(actual);
@@ -49,7 +62,19 @@ internal static class SampleImage
         Assert.Equal(expectedImage.Height, actualImage.Height);
 
         var result = SkiaSharp.Extended.SKPixelComparer.Compare(expectedImage, actualImage, 0);
-        if (result.ErrorPixelCount <= result.TotalPixels * MaximumErrorPixelFraction)
+        var averageColorErrorFraction = result.AbsoluteError / (result.TotalPixels * 4.0 * 255);
+        var comparison = maxAverageColorErrorFraction is { } limit
+            ? $"average RGBA color error {averageColorErrorFraction:P3}, exceeding {limit:P3}"
+            : $"differing pixels {(decimal)result.ErrorPixelCount / result.TotalPixels:P3}, exceeding {MaximumErrorPixelFraction:P3}";
+        TestContext.Current.TestOutputHelper?.WriteLine(
+            $"Image comparison: {result.ErrorPixelCount}/{result.TotalPixels} pixels differ; " +
+            $"average RGBA color error {averageColorErrorFraction:P3}; " +
+            (maxAverageColorErrorFraction is { } allowed
+                ? $"allowed average color error {allowed:P3}."
+                : $"allowed differing pixels {MaximumErrorPixelFraction:P3}."));
+        if (maxAverageColorErrorFraction is { } averageLimit
+            ? averageColorErrorFraction <= averageLimit
+            : result.ErrorPixelCount <= result.TotalPixels * MaximumErrorPixelFraction)
             return;
 
         using var diff = SkiaSharp.Extended.SKPixelComparer.GenerateDifferenceImage(expectedImage, actualImage, 0);
@@ -60,8 +85,7 @@ internal static class SampleImage
         TestContext.Current.AddFileAttachment(expected, "image/png");
         TestContext.Current.AddFileAttachment(diffPath, "image/png");
 
-        Assert.Fail($"Sample pixels differ from {expected}: {result.ErrorPixelCount}/{result.TotalPixels} pixels " +
-            $"({(decimal)result.ErrorPixelCount / result.TotalPixels:P3}), exceeding {MaximumErrorPixelFraction:P3}; " +
-            $"actual {actual}; diff {diffPath}.");
+        Assert.Fail($"Sample pixels differ from {expected}: {result.ErrorPixelCount}/{result.TotalPixels} pixels; " +
+            $"{comparison}; actual {actual}; diff {diffPath}.");
     }
 }

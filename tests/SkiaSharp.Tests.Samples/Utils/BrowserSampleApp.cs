@@ -6,10 +6,35 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal static class BrowserSampleApp
 {
+    internal static Task Capture(RunningApp app, string path, string selector, string golden) =>
+        Capture(app, path, selector, golden, null);
+
+    internal static async Task Capture(RunningApp app, string path, string selector, string golden,
+        double? maxAverageColorErrorFraction)
+    {
+        var actual = Path.Combine(app.Diagnostics, "page.actual.png");
+        try
+        {
+            await Run(app, path, async (page, _) =>
+            {
+                var cancellation = TestContext.Current.CancellationToken;
+                await page.Locator(selector).First.WaitForAsync(new() { State = WaitForSelectorState.Visible }).WaitAsync(cancellation);
+                await page.ScreenshotAsync(new() { Path = actual, FullPage = true }).WaitAsync(cancellation);
+            });
+        }
+        catch
+        {
+            if (File.Exists(actual))
+                TestContext.Current.AddFileAttachment(actual, "image/png");
+            throw;
+        }
+        SampleImage.ValidateFile(actual, golden, maxAverageColorErrorFraction);
+    }
+
     internal static async Task Run(RunningApp app, string path, Func<IPage, string, Task> test)
     {
         var cancellation = TestContext.Current.CancellationToken;
-        var diagnostics = Path.Combine(app.Diagnostics, "browser");
+        var diagnostics = app.Diagnostics;
         Directory.CreateDirectory(diagnostics);
         var log = new ConcurrentQueue<string>();
         var errors = new ConcurrentQueue<string>();
@@ -46,10 +71,11 @@ internal static class BrowserSampleApp
             {
                 Record($"Navigating to {address}");
                 var response = await page.GotoAsync(address.AbsoluteUri,
-                    new() { WaitUntil = WaitUntilState.DOMContentLoaded }).WaitAsync(cancellation);
+                    new() { WaitUntil = WaitUntilState.Load }).WaitAsync(cancellation);
                 Assert.NotNull(response);
                 Assert.Equal(200, response.Status);
                 await test(page, diagnostics);
+                Assert.True(errors.IsEmpty, $"Browser errors:\n{string.Join("\n", errors)}");
             }
             catch
             {
@@ -58,19 +84,19 @@ internal static class BrowserSampleApp
             }
             finally
             {
-                try
+                if (failed && !File.Exists(Path.Combine(diagnostics, "page.actual.png")))
                 {
-                    var screenshot = Path.Combine(diagnostics, "page.png");
-                    await page.ScreenshotAsync(new() { Path = screenshot, Timeout = 10000 });
-                    TestContext.Current.AddFileAttachment(screenshot, "image/png");
+                    try
+                    {
+                        var screenshot = Path.Combine(diagnostics, "page.failure.png");
+                        await page.ScreenshotAsync(new() { Path = screenshot, FullPage = true, Timeout = 10000 });
+                        TestContext.Current.AddFileAttachment(screenshot, "image/png");
+                    }
+                    catch (Exception error)
+                    {
+                        Record($"[diagnostics] Page screenshot failed: {error.Message}");
+                    }
                 }
-                catch (Exception error)
-                {
-                    Record($"[diagnostics] Page screenshot failed: {error.Message}");
-                }
-
-                if (!failed)
-                    Assert.True(errors.IsEmpty, $"Browser errors:\n{string.Join("\n", errors)}");
             }
         }
         catch (Exception error)
