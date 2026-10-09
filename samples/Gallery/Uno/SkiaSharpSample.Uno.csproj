@@ -1,4 +1,4 @@
-<Project Sdk="Uno.Sdk/6.6.0-dev.208">
+<Project Sdk="Uno.Sdk/7.0.0-dev.79">
 
   <PropertyGroup>
     <!-- CI ships only -browserwasm; the other heads are for local exploration. -->
@@ -57,8 +57,9 @@
   <!-- SkiaSharp.Views.WinUI is needed for SKXamlCanvas/SKSwapChainPanel on Windows.
        In-tree, this comes via _UnoPlatformSamples.targets (as a ProjectReference).
        In generated samples, that import is stripped, so this PackageReference ensures
-       the generated build can resolve the types. samples-generate bumps the version. -->
-  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+       the generated build can resolve the types. samples-generate bumps the version.
+       Skipped in-tree, where that import already declares the package: the Uno.Sdk fails on a duplicate. -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and '$(SkiaSharpInTreeSamples)' != 'true'">
     <PackageReference Include="SkiaSharp.Views.WinUI" Version="3.119.2" />
   </ItemGroup>
 
