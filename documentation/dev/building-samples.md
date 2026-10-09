@@ -123,6 +123,12 @@ CI always publishes the platform's `sample_logs_*` artifact. Commands have
 bounded timeouts and cleanup removes only owned processes, workspaces, images,
 and containers, never user caches or unrelated Docker resources.
 
+Workspace deletion retains bounded Windows sharing/access-denied recovery.
+On macOS, `ENOTEMPTY` permits one logged, immediate retry only when the entire
+remaining owned tree contains directories and `.DS_Store` files, with no other
+files or symbolic links. Only that metadata is removed before the retry.
+Unrelated errors, other residue, and a second cleanup failure still fail the test.
+
 PNG references live in `tests/SkiaSharp.Tests.Samples/Expected/`, qualified by
 host/container platform. Comparisons allow at most **0.075%** of decoded pixels
 to differ, with zero per-channel tolerance: any RGBA channel change counts as a
