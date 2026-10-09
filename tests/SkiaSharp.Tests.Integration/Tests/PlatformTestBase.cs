@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using SkiaSharp;
+using SkiaSharp.Testing;
 using Xunit;
 
 namespace SkiaSharp.Tests.Integration;
@@ -186,16 +187,22 @@ public abstract class PlatformTestBase : IDisposable
         
         try
         {
+            var options = new SKPixelComparerOptions
+            {
+                AlphaType = SKAlphaType.Premul,
+                Tolerance = SKPixelTolerance.Absolute(0, 0, 0, null),
+            };
+
             // Compare using SKPixelComparer
-            var result = SkiaSharp.Extended.SKPixelComparer.Compare(expectedImage, compareActual);
+            var result = SKPixelComparer.Compare(expectedImage, compareActual, options);
             var similarity = result.TotalPixels > 0 
                 ? (1.0 - (double)result.ErrorPixelCount / result.TotalPixels) * 100 
                 : 0;
             
-            Output.WriteLine($"Comparison: {result.TotalPixels} total, {result.ErrorPixelCount} errors, {result.AbsoluteError} absolute error");
+            Output.WriteLine($"Comparison: {result.TotalPixels} total, {result.ErrorPixelCount} errors, {result.RawMetrics.AbsoluteError} absolute error");
             
             // Generate and save diff image
-            using var diffImage = SkiaSharp.Extended.SKPixelComparer.GenerateDifferenceMask(expectedImage, compareActual);
+            using var diffImage = SKPixelComparer.GenerateDifferenceMask(expectedImage, compareActual, options);
             using var diffData = diffImage.Encode(SKEncodedImageFormat.Png, 100);
             var diffPath = Path.Combine(ScreenshotDir, $"{diffName}-diff.png");
             await File.WriteAllBytesAsync(diffPath, diffData.ToArray());
