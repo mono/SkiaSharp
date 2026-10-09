@@ -783,20 +783,6 @@ stages:
             buildAgent: ${{ parameters.buildAgentMac }}
             target: samples
             installNinja: true
-            initScript: |
-              if ! command -v docker >/dev/null 2>&1; then
-                for dockerBin in /usr/local/bin /opt/homebrew/bin /Applications/Docker.app/Contents/Resources/bin; do
-                  if [ -x "$dockerBin/docker" ]; then
-                    export PATH="$dockerBin:$PATH"
-                    break
-                  fi
-                done
-              fi
-              if ! command -v docker >/dev/null 2>&1; then
-                HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew install docker || exit $?
-              fi
-              command -v docker || exit $?
-              docker --version || exit $?
             shouldPublish: false
             requiredArtifacts:
               - name: native
