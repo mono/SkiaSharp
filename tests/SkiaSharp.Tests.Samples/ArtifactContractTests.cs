@@ -21,6 +21,8 @@ public class ArtifactContractTests
     };
 
     [Theory]
+    [InlineData("Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.NativeAssets.Linux.NoDependencies")]
+    [InlineData("Basic/Web/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.NativeAssets.Linux.NoDependencies")]
     [InlineData("Basic/UnoPlatform/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.Views")]
     [InlineData("Basic/UnoPlatform/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.Skottie")]
     [InlineData("Basic/UnoPlatform/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.NativeAssets.Linux")]
@@ -29,7 +31,7 @@ public class ArtifactContractTests
     [InlineData("Gallery/Uno/SkiaSharpSample.Uno.csproj", "SkiaSharp.Skottie")]
     [InlineData("Gallery/Uno/SkiaSharpSample.Uno.csproj", "SkiaSharp.NativeAssets.Linux")]
     [InlineData("Gallery/Uno/SkiaSharpSample.Uno.csproj", "HarfBuzzSharp.NativeAssets.Linux")]
-    public void GeneratedUnoDependenciesUseTheArtifactCohort(string relative, string package)
+    public void GeneratedDependenciesUseTheArtifactCohort(string relative, string package)
     {
         var project = XDocument.Load(Path.Combine(Repo.SamplesDir, relative));
         var reference = Assert.Single(

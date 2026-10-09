@@ -796,6 +796,9 @@ stages:
               - name: nuget
                 dir: nugets
             preBuildSteps:
+              - bash: bash scripts/infra/samples/docker-macos.sh
+                displayName: Start owned Docker daemon for sample tests
+                timeoutInMinutes: 20
               - pwsh: |
                   dotnet build tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj -c $(CONFIGURATION)
                   if ($LASTEXITCODE) { throw "Sample test runner build failed: $LASTEXITCODE" }
@@ -814,6 +817,9 @@ stages:
                 inputs:
                   targetPath: output/logs
                   artifact: sample_logs_macos
+              - bash: bash scripts/infra/samples/docker-macos.sh cleanup
+                displayName: Remove owned sample Docker VM
+                condition: always()
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
           parameters:
             name: samples_linux
