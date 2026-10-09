@@ -10,6 +10,7 @@ Includes Dockerfiles for both Linux and Windows (Nano Server) containers.
 - **`SKSurface`** — Creates a CPU-rendered surface for each request.
 - **`SKShader`** — Radial gradient background with semi-transparent circles.
 - **`SKCanvas.DrawText`** — Dynamic text from the URL path.
+- **Bundled Noto Sans** — Loads an embedded font so text renders without installed system fonts. Its SIL Open Font License is included in `SkiaSharpSample/Assets/OFL.txt`.
 - **Linux container** — Uses `SkiaSharp.NativeAssets.Linux.NoDependencies` (no system packages required).
 - **Windows container** — Uses `SkiaSharp.NativeAssets.NanoServer` on Nano Server LTSC 2025.
 

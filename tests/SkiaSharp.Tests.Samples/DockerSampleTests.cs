@@ -39,6 +39,7 @@ public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<Docke
             var result = await app.WaitForExit();
             Assert.Equal(0, result.ExitCode);
             Assert.Contains("Rendering \"SkiaSharp\" to output.png", result.Output);
+            Assert.Contains("Bundled typeface: \"Noto Sans\"", result.Output);
             Assert.Contains("Saved ", result.Output);
 
             var image = Path.Combine(app.Diagnostics, "output.png");
