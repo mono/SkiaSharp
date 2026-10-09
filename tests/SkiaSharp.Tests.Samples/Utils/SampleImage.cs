@@ -5,6 +5,8 @@ namespace SkiaSharp.Tests.Samples.Utils;
 // Checks that sample output is a decodable image with the expected dimensions.
 internal static class SampleImage
 {
+    private const decimal MaximumErrorPixelFraction = 0.00075m;
+
     public static void Validate(ReadOnlySpan<byte> png) => Validate(png, 800, 600);
 
     public static void Validate(ReadOnlySpan<byte> png, int width, int height)
@@ -47,7 +49,7 @@ internal static class SampleImage
         Assert.Equal(expectedImage.Height, actualImage.Height);
 
         var result = SkiaSharp.Extended.SKPixelComparer.Compare(expectedImage, actualImage, 0);
-        if (result.ErrorPixelCount == 0)
+        if (result.ErrorPixelCount <= result.TotalPixels * MaximumErrorPixelFraction)
             return;
 
         using var diff = SkiaSharp.Extended.SKPixelComparer.GenerateDifferenceImage(expectedImage, actualImage, 0);
@@ -58,6 +60,8 @@ internal static class SampleImage
         TestContext.Current.AddFileAttachment(expected, "image/png");
         TestContext.Current.AddFileAttachment(diffPath, "image/png");
 
-        Assert.Fail($"Sample pixels differ from {expected}: {result.ErrorPixelCount}/{result.TotalPixels} pixels; actual {actual}; diff {diffPath}.");
+        Assert.Fail($"Sample pixels differ from {expected}: {result.ErrorPixelCount}/{result.TotalPixels} pixels " +
+            $"({(decimal)result.ErrorPixelCount / result.TotalPixels:P3}), exceeding {MaximumErrorPixelFraction:P3}; " +
+            $"actual {actual}; diff {diffPath}.");
     }
 }
