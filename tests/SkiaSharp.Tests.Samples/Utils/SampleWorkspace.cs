@@ -19,7 +19,7 @@ public sealed class SampleWorkspace : IDisposable
         if (!Directory.Exists(packagesDir) || !Directory.EnumerateFiles(packagesDir, "*.nupkg", SearchOption.AllDirectories).Any())
             throw new InvalidOperationException($"Input NuGet packages are missing: {packagesDir}");
 
-        var id = $"samples-{Guid.NewGuid():N}";
+        var id = CreateIdentity(folder);
         Root = Path.Combine(Path.GetFullPath(workspacesDir), id);
         DiagnosticsRoot = Path.Combine(Path.GetFullPath(artifactsDir), id);
 
@@ -38,6 +38,13 @@ public sealed class SampleWorkspace : IDisposable
             Dispose();
             throw;
         }
+    }
+
+    internal static string CreateIdentity(string folder)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(folder);
+        var name = new string(folder.Select(c => char.IsAsciiLetterOrDigit(c) ? char.ToLowerInvariant(c) : '-').ToArray());
+        return $"{name}-{Guid.NewGuid():N}";
     }
 
     internal static void CopySample(string source, string folder, string destination)

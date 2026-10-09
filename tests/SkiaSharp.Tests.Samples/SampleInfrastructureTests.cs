@@ -126,6 +126,8 @@ public class SampleInfrastructureTests : IDisposable
             Path.Combine(repository, "output", "samples-test-workspaces"),
             Path.Combine(root, "diagnostics"));
         var working = workspace.Root;
+        Assert.StartsWith("basic-console-", Path.GetFileName(working));
+        Assert.Equal(Path.GetFileName(working), Path.GetFileName(workspace.DiagnosticsRoot));
         using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(working, "global.json")));
         Assert.Single(json.RootElement.EnumerateObject());
         var sdk = json.RootElement.GetProperty("sdk");

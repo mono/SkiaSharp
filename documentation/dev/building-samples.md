@@ -191,6 +191,9 @@ and host Gallery case sets without requiring Docker or building the samples.
 
 Each build copies only its sample directory and required ancestor build/NuGet
 configuration into a unique owned workspace under `output/samples-test-workspaces/`.
+Workspace and diagnostic directory names include the sample folder, for example
+`basic-android-<guid>`. Docker contexts and containers use the
+same naming convention; the GUID keeps concurrent runs isolated.
 The Gallery workspace includes its sibling projects. Consumer import fences,
 an unpinned host-only `global.json`, and private NuGet/CLI caches prevent repository build
 targets, Arcade SDK selection, and user caches from leaking into sample builds.

@@ -19,7 +19,7 @@ public sealed class DockerSampleFixture : IAsyncLifetime
 
         await Probe();
 
-        var identity = $"skiasharp-sample-test-{Guid.NewGuid():N}";
+        var identity = SampleWorkspace.CreateIdentity(folder);
         var tag = $"skiasharp-sample-test:{identity}";
         var context = Path.Combine(Repo.ArtifactsDir, identity, "context");
 
@@ -71,7 +71,8 @@ public sealed class DockerSampleFixture : IAsyncLifetime
 
     internal async Task Run(string tag, IEnumerable<string> arguments, Func<DockerRunningApp, Task> test)
     {
-        var name = $"skiasharp-sample-test-{Guid.NewGuid():N}";
+        var folder = images.Single(image => image.Value == tag).Key;
+        var name = SampleWorkspace.CreateIdentity(folder);
         var diagnostics = Path.Combine(Repo.ArtifactsDir, name);
         OwnContainer(name);
         try
