@@ -95,9 +95,10 @@ nested virtualization or changing the default Docker context, then deletes it.
 
 Build theories cover eligible Basic and Gallery solutions; Gallery remains
 build-only. Named runtime facts check host and Docker Console exit codes,
-output and PNGs, and browser facts check host Web, WASM, Blazor and Docker Web
-pages. Device execution is not part of this suite. Docker retains the samples'
-original .NET 10 images; its SDK is independent of the host SDK.
+output and PNGs. Docker Web API checks use HTTP health and image responses,
+without a browser; browser facts cover host Web, WASM and Blazor UIs. Device
+execution is not part of this suite. Docker retains the samples' original
+.NET 10 images; its SDK is independent of the host SDK.
 
 Use ordinary IDE filters or select a test directly:
 
@@ -152,26 +153,24 @@ explicitly too; tests never download browsers. On Linux, `--with-deps` may
 require elevated privileges. Missing browsers, browser errors and unavailable
 GPU rendering fail rather than silently skipping coverage.
 
-Named facts in the existing Basic and Docker test classes check browser console
-errors and compare full-page screenshots using `SampleImage`. They cover Web,
-BrowserWASM, Blazor CPU/GPU and DockerWebApi. Docker's home page is a plain-text
-endpoint list, so its browser opens the actual `/api/images` response instead.
+Named facts in the existing Basic test class check browser console errors and
+compare full-page screenshots using `SampleImage`. They cover Web,
+BrowserWASM and Blazor CPU/GPU. DockerWebApi has no web UI and retains its
+HTTP/PNG test rather than capturing Chromium's built-in image viewer.
 Captures use a fixed 1280 x 900 viewport and device scale 1.
 The BrowserWASM app must include the matching artifact's
 `SkiaSharp.NativeAssets.WebAssembly` package; the source-built runner cannot
 supply the sample's dependencies.
 
-Page references use the existing `Expected/Host/<host-platform>/` and
-`Expected/Docker/<container-platform>/` directories. Docker page filenames also
-include the browser's host platform. Page screenshots are distinct from the
-existing headless PNG references and need their own capture/review.
+Page references use the existing `Expected/Host/<host-platform>/` directory.
+Page screenshots are distinct from the existing headless PNG references and
+need their own capture/review.
 
-The five initial page references were reviewed locally on macOS 27.0.1
+The four initial page references were reviewed locally on macOS 27.0.1
 (26A434), using Playwright 1.55.0 and the exact package cohort from producing
 [build 1628893](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1628893):
 SkiaSharp `4.156.0-pr.5291.26508.18` and HarfBuzzSharp
-`14.4.0.100-pr.5291.26508.18`. The Docker page uses the sample's Linux
-container with a Mac browser. These are local-first references, not producing
+`14.4.0.100-pr.5291.26508.18`. These are local-first references, not producing
 browser CI proof. Later matching CI captures need review before any reference
 update; tests never replace references automatically.
 
