@@ -147,10 +147,14 @@ repository paths and privately reads the core package identity to select the
 generated sample tree; `ProcessRunner` runs both dotnet and Docker.
 `SampleWorkspace` owns the sample copy, private caches, import/SDK fences, and
 cleanup. `SampleTestBase.BuildSample` orchestrates preparation, SDK selection,
-and the build. `DotNet` supplies reusable `Build` and `GetVersion` commands,
+and the build, returning the prepared workspace for optional execution.
+`DotNet` supplies reusable `Build`, `GetVersion`, and callback-based `Run` commands,
 process environment configuration, and NuGet restore configuration. `Build`
 always requests a binlog in its supplied diagnostics directory and retains
-the text log and available binlog on failure.
+separate `build.stdout.log` and `build.stderr.log` files and the available binlog
+on failure. Exceptions are retained separately in `build.failure.log`, never
+appended to process output. Host and Docker runtime logs likewise use
+`run.stdout.log` and `run.stderr.log`.
 Infrastructure tests pass temporary paths directly rather than overriding
 process-wide settings.
 Helpers use xUnit v3's current test context for output and attachments, without
@@ -194,11 +198,62 @@ Sample-local SDK pins are rejected. Source projects and installed workloads
 are not modified.
 
 The two Docker samples retain their original .NET 10 Dockerfiles. Tests build
-private image tags, run the console and check its exit code and decoded
-800 x 600 PNG, and run the web API using GET requests from `sample.http`,
-checking HTTP success and the decoded PNG. Docker must be installed, responsive,
+private image tags, run the console and check its exit code, stable stdout,
+and decoded 800 x 600 PNG, and request the web API's health and image endpoints.
+Docker must be installed, responsive,
 and in the host's expected container mode (Windows on Windows, Linux otherwise).
 Unavailable Docker fails rather than silently omitting coverage.
+
+Runtime coverage uses explicit named tests, not a run-case catalog or request
+files in the samples. `BasicSampleTests.ConsoleSampleRuns` executes the host
+console; `BasicSampleTests.WebSampleReturnsImage` checks the host Web application's
+HTML page and 512 x 512 image endpoint. `DockerSampleTests.ConsoleSampleRuns`
+and `DockerSampleTests.WebApiSampleReturnsImage` check the container applications.
+Each method owns its arguments and expected exit code, text, HTTP status,
+content type, and image output, and can be selected individually:
+
+```sh
+dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
+  -- --filter-method '*BasicSampleTests.WebSampleReturnsImage'
+```
+
+Build discovery remains independent of runtime tests. `SampleLookup.EntryKind`
+combines `Basic`/`Gallery` with `Docker`, `Host`, `Device`, and `Http` capabilities;
+classification does not automatically launch an application. Shared helpers
+handle isolated builds, owned server lifetime, bounded loopback HTTP requests,
+and PNG assertions. HTTP responses remain available to the test for explicit
+assertions and reading their content or stream.
+Both host and Docker tests run their assertions inside
+`await DotNet.Run(..., async app => { ... })` or
+`await docker.Run(..., async app => { ... })`. `DotNetRunningApp` and
+`DockerRunningApp` share a `RunningApp` base with `GetResponse()` and
+`WaitForResponse()`; the returned response belongs to the test. Both provide
+`WaitForExit()` for the application's exit code/stdout/stderr and `GetAddress()`
+for its owned loopback endpoint. The host detects the address from server output;
+Docker uses the container's published port.
+Docker HTTP uses the fixed container port 8080, matching the ASP.NET runtime
+image and both web Dockerfiles; the runner exposes no container-port setting.
+The published host port remains dynamically assigned to avoid parallel-test
+collisions. Each test supplies its app's output-file path; there is no
+app-specific filename or host-settings table in the shared runner.
+The shared callback scope retains separate output logs on success, failure,
+or cancellation. The host stops only its process tree. Docker gracefully stops
+and removes only its named container, never the Docker daemon or unrelated
+containers; `docker wait`'s CLI exit code is not mistaken for the app's exit code.
+There is no separate host build path or HTTP-run helper. Docker runs the
+sample image's declared entrypoint; there is no entrypoint override.
+The four real runtime tests cover application execution rather than adding
+synthetic apps and a separate runner-lifecycle test suite.
+
+PNG comparisons reuse the shared pixel comparer with zero per-channel tolerance,
+including alpha, rather than comparing encoded bytes. References are qualified
+by host or container platform under `tests/SkiaSharp.Tests.Samples/Expected/`.
+Missing references fail and retain the actual image; changed pixels retain
+actual, reference, and difference diagnostics. Tests never generate or accept
+goldens automatically. Baselines must be captured and reviewed on their actual
+target platform, since default fonts and native rendering can differ. Raw logs
+remain diagnostics, not goldens: paths, SDK/runtime details, and byte counts
+are intentionally excluded from stable text expectations.
 
 Consumer commands have bounded timeouts. Workspaces, staged Docker contexts,
 and only owned containers/images are removed; no user-cache clearing or global
@@ -213,7 +268,7 @@ this does not substitute for actual sample and Docker coverage.
 
 The existing `SkiaSharp.Tests.Integration` and `SkiaSharp.Tests.MSBuild` projects
 and their entry points remain separate and unchanged. This suite does not
-migrate package-output matrices, generated view/device probes, or golden tests.
+migrate package-output matrices, generated view/device probes, or existing golden tests.
 Related generated dependency prerequisites are tracked in #5297. This suite
 includes only the declaration fixes required for its actual generated sample
 builds; missing packages cannot be hidden by feeds, TFM overrides, or omitted rows.

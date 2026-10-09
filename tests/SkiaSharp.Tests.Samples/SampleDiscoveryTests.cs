@@ -8,7 +8,7 @@ namespace SkiaSharp.Tests.Samples;
 public class SampleDiscoveryTests
 {
     private static readonly string[] CommonSamples =
-        ["BlazorWebAssembly", "BrowserWebAssembly", "Console", "Gtk3", "Gtk4", "Tizen", "Web"];
+        ["BlazorWebAssembly", "BrowserWebAssembly", "Console", "DockerConsole", "DockerWebApi", "Gtk3", "Gtk4", "Tizen", "Web"];
 
     private static readonly Dictionary<string, string[]> HostSamples = new()
     {
@@ -32,15 +32,28 @@ public class SampleDiscoveryTests
         Assert.Equal(
             new[] { Path.Combine("Basic", "DockerConsole"), Path.Combine("Basic", "DockerWebApi") },
             cases.Select(row => Assert.IsType<string>(row[0])).Order(StringComparer.Ordinal));
-        Assert.Equal(new[] { false, true },
-            cases.OrderBy(row => Assert.IsType<string>(row[0]), StringComparer.Ordinal)
-                .Select(row => File.Exists(Path.Combine(Repo.SamplesDir, Assert.IsType<string>(row[0]), "sample.http"))));
         Assert.All(cases, row =>
         {
             Assert.Equal(Dockerfiles[SampleLookup.HostPlatform], Assert.IsType<string>(row[1]));
             Assert.True(File.Exists(Path.Combine(Repo.SamplesDir,
                 Assert.IsType<string>(row[0]), Assert.IsType<string>(row[1]))));
         });
+    }
+
+    [Fact]
+    public void SampleKindsDescribeHostDockerHttpAndDeviceCapabilities()
+    {
+        var entries = SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform);
+        Assert.Equal(SampleLookup.EntryKind.Basic | SampleLookup.EntryKind.Host,
+            Assert.Single(entries, entry => entry.Folder == Path.Combine("Basic", "Console")).Kind);
+        Assert.Equal(SampleLookup.EntryKind.Basic | SampleLookup.EntryKind.Host | SampleLookup.EntryKind.Http,
+            Assert.Single(entries, entry => entry.Folder == Path.Combine("Basic", "Web")).Kind);
+        Assert.Equal(SampleLookup.EntryKind.Basic | SampleLookup.EntryKind.Docker | SampleLookup.EntryKind.Http,
+            Assert.Single(entries, entry => entry.Folder == Path.Combine("Basic", "DockerWebApi") &&
+                entry.Kind.HasFlag(SampleLookup.EntryKind.Docker)).Kind);
+        Assert.All(entries.Where(entry => entry.Folder == Path.Combine("Basic", "Android") ||
+            entry.Folder == Path.Combine("Basic", "iOS")), entry =>
+                Assert.True(entry.Kind.HasFlag(SampleLookup.EntryKind.Device)));
     }
 
     [Fact]

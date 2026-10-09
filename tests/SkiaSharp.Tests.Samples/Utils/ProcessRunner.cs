@@ -13,22 +13,7 @@ internal static class ProcessRunner
         TimeSpan timeout,
         Action<ProcessStartInfo>? configure = null)
     {
-        var start = new ProcessStartInfo(executable)
-        {
-            WorkingDirectory = directory,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        foreach (var argument in arguments)
-        {
-            start.ArgumentList.Add(argument);
-        }
-        configure?.Invoke(start);
-
-        WriteOutput($"{executable} {string.Join(" ", start.ArgumentList.Select(arg => $"\"{arg}\""))}");
-
-        using var process = Process.Start(start) ?? throw new InvalidOperationException($"Could not start {executable}");
+        using var process = Start(executable, arguments, directory, configure);
         var stdout = process.StandardOutput.ReadToEndAsync();
         var stderr = process.StandardError.ReadToEndAsync();
         using var cancellation = new CancellationTokenSource(timeout);
@@ -51,6 +36,27 @@ internal static class ProcessRunner
             WriteOutput(errors);
 
         return (process.ExitCode, text, errors);
+    }
+
+    internal static Process Start(string executable, IEnumerable<string> arguments, string directory,
+        Action<ProcessStartInfo>? configure = null)
+    {
+        var start = new ProcessStartInfo(executable)
+        {
+            WorkingDirectory = directory,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        foreach (var argument in arguments)
+        {
+            start.ArgumentList.Add(argument);
+        }
+        configure?.Invoke(start);
+
+        WriteOutput($"{executable} {string.Join(" ", start.ArgumentList.Select(arg => $"\"{arg}\""))}");
+
+        return Process.Start(start) ?? throw new InvalidOperationException($"Could not start {executable}");
     }
 
     private static void WriteOutput(string message)

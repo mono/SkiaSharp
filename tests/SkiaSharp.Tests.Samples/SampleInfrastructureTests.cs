@@ -19,14 +19,6 @@ public class SampleInfrastructureTests : IDisposable
         File.WriteAllText(path, text);
     }
 
-    [Fact]
-    public void RepositoryPathsFollowTheOutputLayout()
-    {
-        Assert.Equal(Path.Combine(Repo.RootDir, "output", "nugets"), Repo.PackagesDir);
-        Assert.Equal(Path.Combine(Repo.RootDir, "output", "logs", "testlogs", "samples"), Repo.ArtifactsDir);
-        Assert.Equal(Path.Combine(Repo.RootDir, "output", "samples-test-workspaces"), Repo.WorkspacesDir);
-    }
-
     [Theory]
     [InlineData("Windows", "Gallery.Windows.slnx", "windows.Dockerfile")]
     [InlineData("Mac", "Gallery.Mac.slnx", "linux.Dockerfile")]
@@ -42,10 +34,13 @@ public class SampleInfrastructureTests : IDisposable
         FileIn("Basic/Docker/windows.Dockerfile");
         FileIn("Basic/Console/obj/Nested.slnx");
         var entries = SampleLookup.Discover(root, platform);
-        Assert.Equal(3, entries.Count);
+        Assert.Equal(4, entries.Count);
         Assert.Contains(new SampleLookup.Entry("Gallery", solution, SampleLookup.EntryKind.Gallery), entries);
-        Assert.Contains(new SampleLookup.Entry(Path.Combine("Basic", "Console"), "Console.slnx", SampleLookup.EntryKind.Sample), entries);
-        Assert.Contains(new SampleLookup.Entry(Path.Combine("Basic", "Docker"), dockerfile, SampleLookup.EntryKind.Docker), entries);
+        Assert.Contains(new SampleLookup.Entry(Path.Combine("Basic", "Console"), "Console.slnx",
+            SampleLookup.EntryKind.Basic | SampleLookup.EntryKind.Host), entries);
+        Assert.Contains(new SampleLookup.Entry(Path.Combine("Basic", "Docker"), "App.slnx", SampleLookup.EntryKind.Basic), entries);
+        Assert.Contains(new SampleLookup.Entry(Path.Combine("Basic", "Docker"), dockerfile,
+            SampleLookup.EntryKind.Basic | SampleLookup.EntryKind.Docker), entries);
     }
 
     [Fact]
@@ -170,35 +165,21 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public void HttpFixtureRebasesOnlyThePortAndLoopbackHost()
+    public void HttpRequestsUseTheOwnedOriginAndPreserveQueries()
     {
-        FileIn("sample.http", "GET http://localhost:8080/health\n###\nGET http://localhost:8080/api/images/SkiaSharp?x=1\n");
-        var requests = DockerSampleTests.ReadHttpRequests(Path.Combine(root, "sample.http"));
-        Assert.Equal(2, requests.Count);
-        Assert.Equal("http://127.0.0.1:49152/api/images/SkiaSharp?x=1", DockerSampleTests.Rebase(requests[1], 49152).AbsoluteUri);
+        Assert.Equal("http://127.0.0.1:49152/api/images/SkiaSharp?x=1",
+            RunningApp.RequestUri(new Uri("http://127.0.0.1:49152"), "/api/images/SkiaSharp?x=1").AbsoluteUri);
     }
 
     [Theory]
-    [InlineData("Windows", @"C:\app\output.png", "8080")]
-    [InlineData("Mac", "/app/output.png", "127.0.0.1::8080")]
-    [InlineData("Linux", "/app/output.png", "127.0.0.1::8080")]
-    public void DockerCasesUseExpectedHostSettings(string platform, string outputPath, string portBinding)
-    {
-        var settings = DockerSampleTests.Hosts[platform];
-        Assert.Equal(outputPath, settings.OutputPath);
-        Assert.Equal(portBinding, settings.PortBinding);
-    }
-
-    [Theory]
-    [InlineData("POST http://localhost:8080/health")]
-    [InlineData("GET https://localhost:8080/health")]
-    [InlineData("GET http://example.com:8080/health")]
-    [InlineData("GET http://localhost:8080/health\nAccept: image/png")]
+    [InlineData("https://localhost/health")]
+    [InlineData("//example.com/health")]
+    [InlineData("/\\example.com/health")]
+    [InlineData("/health#fragment")]
     [InlineData("")]
-    public void UnsupportedHttpSyntaxFails(string content)
+    public void HttpRequestsCannotEscapeTheOwnedOrigin(string path)
     {
-        FileIn("sample.http", content);
-        Assert.Throws<InvalidOperationException>(() => DockerSampleTests.ReadHttpRequests(Path.Combine(root, "sample.http")));
+        Assert.Throws<ArgumentException>(() => RunningApp.RequestUri(new Uri("http://127.0.0.1:49152"), path));
     }
 
     [Fact]
@@ -261,7 +242,8 @@ public class SampleInfrastructureTests : IDisposable
         var diagnostics = Path.Combine(test.Diagnostics, "builds", "Basic", "Console", "App", "Release");
         test.Dispose();
         Assert.False(Directory.Exists(working));
-        Assert.Contains("Build succeeded.", File.ReadAllText(Path.Combine(diagnostics, "build.log")));
+        Assert.Contains("Build succeeded.", File.ReadAllText(Path.Combine(diagnostics, "build.stdout.log")));
+        Assert.DoesNotContain("Build succeeded.", File.ReadAllText(Path.Combine(diagnostics, "build.stderr.log")));
         Assert.True(new FileInfo(Path.Combine(diagnostics, "build.binlog")).Length > 0);
     }
 
@@ -283,7 +265,10 @@ public class SampleInfrastructureTests : IDisposable
         var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             DotNet.Build(workspace, Path.Combine(workspace.Root, "samples", "App", "App.csproj"), diagnostics));
         Assert.Contains(diagnostics, error.Message);
-        Assert.Contains("Expected sample build failure", File.ReadAllText(Path.Combine(diagnostics, "build.log")));
+        Assert.Contains("Expected sample build failure", File.ReadAllText(Path.Combine(diagnostics, "build.stdout.log")));
+        Assert.DoesNotContain("Expected sample build failure", File.ReadAllText(Path.Combine(diagnostics, "build.stderr.log")));
+        Assert.DoesNotContain(error.ToString(), File.ReadAllText(Path.Combine(diagnostics, "build.stdout.log")));
+        Assert.Contains(error.Message, File.ReadAllText(Path.Combine(diagnostics, "build.failure.log")));
         Assert.True(new FileInfo(Path.Combine(diagnostics, "build.binlog")).Length > 0);
     }
 

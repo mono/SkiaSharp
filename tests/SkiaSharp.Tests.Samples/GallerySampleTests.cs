@@ -10,7 +10,7 @@ public class GallerySampleTests : SampleTestBase
 {
     public static IEnumerable<object[]> Cases() =>
         SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
-            .Where(sample => sample.Kind == SampleLookup.EntryKind.Gallery)
+            .Where(sample => sample.Kind.HasFlag(SampleLookup.EntryKind.Gallery))
             .Select(sample => new object[] { sample.Folder, sample.FileName, "Release" });
 
     [Theory]

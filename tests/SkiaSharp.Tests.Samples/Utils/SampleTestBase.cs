@@ -27,17 +27,20 @@ public abstract class SampleTestBase : IDisposable
         return workspace;
     }
 
-    protected async Task BuildSample(string folder, string solution, string configuration)
+    protected async Task<SampleWorkspace> BuildSample(string folder, string solution, string configuration)
     {
         var prepared = PrepareSample(folder);
+
         var project = Path.Combine(prepared.Root, "samples", folder, solution);
         if (!File.Exists(project))
             throw new FileNotFoundException("Selected sample solution is missing", project);
 
-        var diagnostics = Path.Combine(prepared.DiagnosticsRoot, "builds", folder,
-            Path.GetFileNameWithoutExtension(solution), configuration);
+        var diagnostics = Path.Combine(prepared.DiagnosticsRoot, "builds", folder, Path.GetFileNameWithoutExtension(solution), configuration);
+
         await DotNet.GetVersion(prepared);
+
         await DotNet.Build(prepared, project, diagnostics, configuration);
+        return prepared;
     }
 
     public void Dispose() =>

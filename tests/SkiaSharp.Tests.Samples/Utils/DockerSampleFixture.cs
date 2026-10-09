@@ -64,14 +64,39 @@ public sealed class DockerSampleFixture : IAsyncLifetime
 
     public async Task<string> Run(IEnumerable<string> args, TimeSpan? timeout = null, string? workingDir = null)
     {
-        var (exitCode, stdout, stderr) = await ProcessRunner.Run(
+        var (exitCode, stdout, stderr) = await RunProcess(args, timeout, workingDir);
+        Assert.True(exitCode == 0, $"docker {string.Join(" ", args)} failed ({exitCode}):\n{stdout}\n{stderr}");
+        return stdout.Trim();
+    }
+
+    internal async Task Run(string tag, IEnumerable<string> arguments, Func<DockerRunningApp, Task> test)
+    {
+        var name = $"skiasharp-sample-test-{Guid.NewGuid():N}";
+        var diagnostics = Path.Combine(Repo.ArtifactsDir, name);
+        OwnContainer(name);
+        try
+        {
+            var portBinding = OperatingSystem.IsWindows() ? "8080" : "127.0.0.1::8080";
+
+            await Run(["run", "-d", "--name", name, "-p", portBinding, tag, .. arguments], TimeSpan.FromMinutes(2));
+
+            var app = new DockerRunningApp(this, name, diagnostics);
+
+            await app.Run(() => test(app));
+        }
+        finally
+        {
+            await RemoveContainer(name);
+        }
+    }
+
+    internal static Task<(int ExitCode, string Output, string Error)> RunProcess(
+        IEnumerable<string> args, TimeSpan? timeout = null, string? workingDir = null) =>
+        ProcessRunner.Run(
             "docker",
             args,
             workingDir ?? Directory.GetCurrentDirectory(),
             timeout ?? TimeSpan.FromMinutes(1));
-        Assert.True(exitCode == 0, $"docker {string.Join(" ", args)} failed ({exitCode}):\n{stdout}\n{stderr}");
-        return stdout.Trim();
-    }
 
     private async Task Probe()
     {

@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="SampleTest.RepositoryDirectory" Value="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..'))" />
+    <Compile Include="..\Tests\Utils\SKPixelComparer.cs" Link="Utils\SKPixelComparer.cs" />
   </ItemGroup>
 
   <Target Name="ValidateSamplePlatformPackages" BeforeTargets="CollectPackageReferences;Restore;Build">

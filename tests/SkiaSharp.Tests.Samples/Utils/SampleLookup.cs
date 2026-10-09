@@ -3,8 +3,17 @@ namespace SkiaSharp.Tests.Samples.Utils;
 // Finds generated samples that can be built on the current host.
 public static class SampleLookup
 {
-    // Distinguishes ordinary builds, shared Gallery builds, and Docker checks.
-    public enum EntryKind { Sample, Gallery, Docker }
+    [Flags]
+    public enum EntryKind
+    {
+        None = 0,
+        Basic = 1,
+        Gallery = 2,
+        Docker = 4,
+        Host = 8,
+        Device = 16,
+        Http = 32
+    }
 
     // Identifies a generated solution or Dockerfile relative to the samples root.
     public sealed record Entry(string Folder, string FileName, EntryKind Kind)
@@ -13,6 +22,15 @@ public static class SampleLookup
     }
 
     private static readonly string[] PlatformSuffixes = [".Windows", ".Mac", ".Linux"];
+
+    private static readonly Dictionary<string, EntryKind> Targets = new()
+    {
+        [Path.Combine("Basic", "Console")] = EntryKind.Host,
+        [Path.Combine("Basic", "Web")] = EntryKind.Host | EntryKind.Http,
+        [Path.Combine("Basic", "DockerWebApi")] = EntryKind.Http,
+        [Path.Combine("Basic", "Android")] = EntryKind.Device,
+        [Path.Combine("Basic", "iOS")] = EntryKind.Device
+    };
 
     public static string HostPlatform =>
         OperatingSystem.IsWindows()
@@ -37,14 +55,12 @@ public static class SampleLookup
         var dockerfiles = Directory.EnumerateFiles(root, "*Dockerfile", options)
             .Where(path => Path.GetFileName(path) is "Dockerfile" or "linux.Dockerfile" or "windows.Dockerfile")
             .ToArray();
-        var dockerFolders = dockerfiles.Select(Path.GetDirectoryName).ToHashSet(StringComparer.OrdinalIgnoreCase);
-
         var entries = new List<Entry>();
 
         foreach (var path in solutions)
         {
             var relative = Path.GetRelativePath(root, path);
-            if (!relative.Contains(filter, StringComparison.Ordinal) || dockerFolders.Contains(Path.GetDirectoryName(path)))
+            if (!relative.Contains(filter, StringComparison.Ordinal))
                 continue;
 
             var name = Path.GetFileNameWithoutExtension(path);
@@ -60,9 +76,7 @@ public static class SampleLookup
                 continue;
 
             var folder = Path.GetDirectoryName(relative)!;
-            var kind = folder == "Gallery" || folder.StartsWith("Gallery" + Path.DirectorySeparatorChar, StringComparison.Ordinal)
-                ? EntryKind.Gallery : EntryKind.Sample;
-            entries.Add(new(folder, Path.GetFileName(path), kind));
+            entries.Add(new(folder, Path.GetFileName(path), GetKind(folder, false)));
         }
 
         var hostDockerfile = platform == "Windows"
@@ -78,7 +92,10 @@ public static class SampleLookup
 
             var relative = Path.GetRelativePath(root, path);
             if (relative.Contains(filter, StringComparison.Ordinal))
-                entries.Add(new(Path.GetDirectoryName(relative)!, Path.GetFileName(path), EntryKind.Docker));
+            {
+                var folder = Path.GetDirectoryName(relative)!;
+                entries.Add(new(folder, Path.GetFileName(path), GetKind(folder, true)));
+            }
         }
 
         if (entries.Count == 0)
@@ -86,4 +103,15 @@ public static class SampleLookup
 
         return entries.OrderBy(entry => entry.RelativePath, StringComparer.Ordinal).ToArray();
     }
+
+    private static EntryKind GetKind(string folder, bool docker)
+    {
+        var kind = folder == "Gallery" || folder.StartsWith("Gallery" + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+            ? EntryKind.Gallery : EntryKind.Basic;
+        kind |= docker ? EntryKind.Docker : Targets.GetValueOrDefault(folder);
+        if (docker)
+            kind |= Targets.GetValueOrDefault(folder) & EntryKind.Http;
+        return kind;
+    }
+
 }

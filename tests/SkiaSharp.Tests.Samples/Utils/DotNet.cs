@@ -38,10 +38,12 @@ public static class DotNet
         project = Path.GetFullPath(project);
         diagnostics = Path.GetFullPath(diagnostics);
         Directory.CreateDirectory(diagnostics);
-        var log = Path.Combine(diagnostics, "build.log");
+        var stdoutLog = Path.Combine(diagnostics, "build.stdout.log");
+        var stderrLog = Path.Combine(diagnostics, "build.stderr.log");
         var binlog = Path.Combine(diagnostics, "build.binlog");
 
-        await File.WriteAllTextAsync(log, "");
+        await File.WriteAllTextAsync(stdoutLog, "");
+        await File.WriteAllTextAsync(stderrLog, "");
         try
         {
             string[] arguments =
@@ -57,18 +59,22 @@ public static class DotNet
                 "-p:UseSharedCompilation=false"
             ];
             var result = await Run(workspace, arguments, TimeSpan.FromMinutes(30), Path.GetDirectoryName(project));
-            await File.WriteAllTextAsync(log, result.Output + result.Error);
+            await File.WriteAllTextAsync(stdoutLog, result.Output);
+            await File.WriteAllTextAsync(stderrLog, result.Error);
             if (result.ExitCode != 0)
                 throw new InvalidOperationException($"dotnet build {project} failed ({result.ExitCode}); see {diagnostics}");
         }
         catch (Exception error)
         {
-            await File.AppendAllTextAsync(log, Environment.NewLine + error);
+            var failureLog = Path.Combine(diagnostics, "build.failure.log");
+            await File.WriteAllTextAsync(failureLog, error.ToString());
+            TestContext.Current.AddFileAttachment(failureLog, "text/plain");
             throw;
         }
         finally
         {
-            TestContext.Current.AddFileAttachment(log, "text/plain");
+            TestContext.Current.AddFileAttachment(stdoutLog, "text/plain");
+            TestContext.Current.AddFileAttachment(stderrLog, "text/plain");
             if (File.Exists(binlog))
                 TestContext.Current.AddFileAttachment(binlog, "application/octet-stream");
         }
@@ -79,8 +85,38 @@ public static class DotNet
         IEnumerable<string> arguments,
         TimeSpan? timeout = null,
         string? workingDir = null) =>
-        ProcessRunner.Run("dotnet", arguments, workingDir ?? workspace.Root,
-            timeout ?? TimeSpan.FromMinutes(1), start => ConfigureProcess(start, workspace));
+        ProcessRunner.Run(
+            "dotnet",
+            arguments,
+            workingDir ?? workspace.Root,
+            timeout ?? TimeSpan.FromMinutes(1),
+            start => ConfigureProcess(start, workspace));
+
+    internal static async Task Run(
+        SampleWorkspace workspace,
+        string project,
+        string configuration,
+        IEnumerable<string> arguments,
+        Func<DotNetRunningApp, Task> test)
+    {
+        var diagnostics = Path.Combine(workspace.DiagnosticsRoot, "run");
+        Directory.CreateDirectory(diagnostics);
+
+        using var process = ProcessRunner.Start("dotnet",
+            ["run", "--project", project, "-c", configuration, "--no-build", "--no-launch-profile", "--", .. arguments],
+            Path.GetDirectoryName(project)!,
+            start =>
+            {
+                ConfigureProcess(start, workspace);
+                start.Environment.Remove("ASPNETCORE_HTTPS_PORT");
+                start.Environment.Remove("ASPNETCORE_HTTPS_PORTS");
+                start.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
+                start.Environment["Logging__LogLevel__Microsoft.Hosting.Lifetime"] = "Information";
+            });
+
+        var app = new DotNetRunningApp(process, diagnostics);
+        await app.Run(() => test(app));
+    }
 
     internal static void ConfigureProcess(ProcessStartInfo start, SampleWorkspace workspace)
     {
@@ -101,4 +137,5 @@ public static class DotNet
         start.Environment["MSBUILDDISABLENODEREUSE"] = "1";
         start.Environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
     }
+
 }

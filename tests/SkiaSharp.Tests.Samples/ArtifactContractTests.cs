@@ -32,9 +32,11 @@ public class ArtifactContractTests
     public void GeneratedUnoDependenciesUseTheArtifactCohort(string relative, string package)
     {
         var project = XDocument.Load(Path.Combine(Repo.SamplesDir, relative));
-        var reference = Assert.Single(project.Descendants("PackageReference"),
+        var reference = Assert.Single(
+            project.Descendants("PackageReference"),
             element => (string?)element.Attribute("Include") == package);
-        var artifact = Assert.Single(Directory.EnumerateFiles(Repo.PackagesDir, package + ".*.nupkg"),
+        var artifact = Assert.Single(
+            Directory.EnumerateFiles(Repo.PackagesDir, package + ".*.nupkg"),
             path => char.IsDigit(Path.GetFileName(path)[package.Length + 1]) &&
                 !path.EndsWith(".symbols.nupkg", StringComparison.Ordinal));
         Assert.Equal(Path.GetFileName(artifact), $"{package}.{(string?)reference.Attribute("Version")}.nupkg");
@@ -46,7 +48,8 @@ public class ArtifactContractTests
     public void GeneratedUnoVersionPropertyUsesTheArtifactCohort(string relative)
     {
         var project = XDocument.Load(Path.Combine(Repo.SamplesDir, relative));
-        var reference = Assert.Single(project.Descendants("PackageReference"),
+        var reference = Assert.Single(
+            project.Descendants("PackageReference"),
             element => (string?)element.Attribute("Include") == "SkiaSharp.Views");
         Assert.Equal((string?)reference.Attribute("Version"),
             Assert.Single(project.Descendants("SkiaSharpVersion")).Value);
@@ -77,14 +80,14 @@ public class ArtifactContractTests
         {
             foreach (var package in packageNames)
                 File.WriteAllText(Path.Combine(root, package), "");
+
             var repository = Repo.RootDir;
             var arguments = new List<string>
             {
                 "msbuild", Path.Combine(repository, "tests", "SkiaSharp.Tests.Samples", "SkiaSharp.Tests.Samples.csproj"),
                 "-nologo", "-v:minimal", "-t:ValidateSamplePlatformPackages", $"-p:_SamplePackageDirectory={root}"
             };
-            return await ProcessRunner.Run("dotnet", arguments, repository,
-                TimeSpan.FromMinutes(1));
+            return await ProcessRunner.Run("dotnet", arguments, repository, TimeSpan.FromMinutes(1));
         }
         finally
         {
