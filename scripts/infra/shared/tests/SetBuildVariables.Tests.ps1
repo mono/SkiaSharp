@@ -1,8 +1,8 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../../../..'))
-$scriptPath = Join-Path $repoRoot 'scripts/infra/native/shared/set-build-variables.ps1'
+$repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../../..'))
+$scriptPath = Join-Path $repoRoot 'scripts/infra/shared/set-build-variables.ps1'
 $pwsh = (Get-Command pwsh).Source
 
 $identityVariables = @(
