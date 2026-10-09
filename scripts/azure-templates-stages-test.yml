@@ -808,20 +808,6 @@ stages:
               buildAgent: ${{ parameters.buildAgentMac }}
               target: samples
               installNinja: true
-              initScript: |
-                if ! command -v docker >/dev/null 2>&1; then
-                  for dockerBin in /usr/local/bin /opt/homebrew/bin /Applications/Docker.app/Contents/Resources/bin; do
-                    if [ -x "$dockerBin/docker" ]; then
-                      export PATH="$dockerBin:$PATH"
-                      break
-                    fi
-                  done
-                fi
-                if command -v docker; then
-                  docker --version
-                else
-                  echo "##vso[task.logissue type=warning]Docker CLI is unavailable; Docker sample tests will report skips."
-                fi
               shouldPublish: false
               requiredArtifacts:
                 - name: native

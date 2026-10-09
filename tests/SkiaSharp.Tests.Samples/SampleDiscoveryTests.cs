@@ -24,6 +24,22 @@ public class SampleDiscoveryTests
         ["Linux"] = "linux.Dockerfile"
     };
 
+    [Theory]
+    [InlineData(nameof(DockerSampleTests.DockerImageBuilds))]
+    [InlineData(nameof(DockerSampleTests.ConsoleSampleRuns))]
+    [InlineData(nameof(DockerSampleTests.WebApiSampleReturnsImage))]
+    public void DockerTestsDeclareMacOSExclusion(string method)
+    {
+        var test = typeof(DockerSampleTests).GetMethod(method);
+        Assert.NotNull(test);
+        var attribute = Assert.IsAssignableFrom<FactAttribute>(
+            Assert.Single(test.GetCustomAttributes(typeof(FactAttribute), inherit: true)));
+        Assert.Equal(typeof(DockerSampleTests), attribute.SkipType);
+        Assert.Equal(nameof(DockerSampleTests.IsMacOS), attribute.SkipWhen);
+        Assert.Equal("Docker samples are validated on Linux and Windows, not macOS.", attribute.Skip);
+        Assert.Equal(OperatingSystem.IsMacOS(), DockerSampleTests.IsMacOS);
+    }
+
     [Fact]
     public void DockerCasesCoverBothSamples()
     {
