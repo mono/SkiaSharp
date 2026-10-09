@@ -39,19 +39,15 @@ Apple collection layout.
 
 ## Build and run on Mac Catalyst
 
-Use the repository's .NET SDK and the MAUI workload. For a repository checkout,
-download the current native binaries once before a managed/sample-only build:
+Install the .NET 10 SDK and the MAUI workload. From this sample's folder:
 
 ```sh
-dotnet cake --target=externals-download
-dotnet build samples/Gallery/Maui/SkiaSharpSample.Maui.csproj \
+dotnet workload restore SkiaSharpSample.Maui.csproj
+dotnet build SkiaSharpSample.Maui.csproj \
   -f net10.0-maccatalyst -t:Run
 ```
 
-Do not download pre-built binaries after changing native code, the Skia
-submodule, or native version inputs; build the matching natives from source
-instead. Published sample archives use NuGet packages and do not need the
-repository bootstrap.
+SkiaSharp and its native assets are restored from NuGet packages.
 
 ## MAUI DevFlow
 
@@ -72,7 +68,7 @@ The repeatable smoke check uses one DevFlow batch session, verifies the app
 identity, and writes a JSON report, command transcript, and screenshots:
 
 ```sh
-python3 samples/Gallery/Maui/scripts/smoke.py --port PORT \
+python3 scripts/smoke.py --port PORT \
   --all-samples --output output/maui-gallery-smoke
 ```
 
@@ -81,9 +77,6 @@ sort, appearance and Info popovers, desktop narrow/wide transitions, native CPU/
 live controls, nested groups, animation navigation, and PDF generation. A
 nonzero exit is a failure, not a skipped capability. `--share` requests the
 native PDF share sheet last and leaves it open for inspection.
-
-The shared catalog and filter model also have regression tests in the
-repository's console test solution; see the [gallery test instructions](../README.md#testing).
 
 ## Targets and packaging
 

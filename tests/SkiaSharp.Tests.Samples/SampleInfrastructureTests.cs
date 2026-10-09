@@ -400,6 +400,86 @@ public class SampleInfrastructureTests : IDisposable
         Assert.True(new FileInfo(Path.Combine(diagnostics, "build.binlog")).Length > 0);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CleanupRecoversOnlyMacMetadataCreatedDuringDeletion(bool unrelatedFile)
+    {
+        FileIn("owned/obj/initial.bin", "Build output.");
+        if (unrelatedFile)
+            FileIn("owned/obj/late.bin", "Unrelated residue.");
+        FileIn("other-workspace/.DS_Store", "Keep this metadata.");
+        FileIn("diagnostics/build.log", "Keep these diagnostics.");
+        var owned = Path.Combine(root, "owned");
+        var obj = Path.Combine(owned, "obj");
+        var calls = 0;
+        void Delete(string path)
+        {
+            calls++;
+            if (calls == 1)
+            {
+                File.Delete(Path.Combine(obj, "initial.bin"));
+                File.WriteAllText(Path.Combine(path, ".DS_Store"), "Late parent metadata.");
+                File.WriteAllText(Path.Combine(obj, ".DS_Store"), "Late metadata.");
+                Directory.Delete(obj);
+            }
+            Directory.Delete(path, recursive: true);
+        }
+
+        if (OperatingSystem.IsMacOS() && !unrelatedFile)
+        {
+            SampleWorkspace.DeleteDirectory(owned, Delete);
+            Assert.Equal(2, calls);
+            Assert.False(Directory.Exists(owned));
+        }
+        else
+        {
+            Assert.Throws<IOException>(() => SampleWorkspace.DeleteDirectory(owned, Delete));
+            Assert.Equal(1, calls);
+            Assert.True(Directory.Exists(owned));
+        }
+        Assert.True(File.Exists(Path.Combine(root, "other-workspace", ".DS_Store")));
+        Assert.True(File.Exists(Path.Combine(root, "diagnostics", "build.log")));
+    }
+
+    [Fact]
+    public void CleanupDoesNotRetryUnrelatedErrorsWithMetadataPresent()
+    {
+        FileIn("owned/obj/.DS_Store", "Metadata.");
+        var owned = Path.Combine(root, "owned");
+        var expected = new IOException("Expected unrelated I/O failure.", 1234);
+        var calls = 0;
+        var actual = Assert.Throws<IOException>(() => SampleWorkspace.DeleteDirectory(owned, _ =>
+        {
+            calls++;
+            throw expected;
+        }));
+        Assert.Same(expected, actual);
+        Assert.Equal(1, calls);
+        Assert.True(File.Exists(Path.Combine(owned, "obj", ".DS_Store")));
+    }
+
+    [Theory]
+    [InlineData("late.bin", 1)]
+    [InlineData(".DS_Store", 2)]
+    public void CleanupDoesNotHidePersistentOrNonMetadataWriters(string name, int macCalls)
+    {
+        FileIn($"owned/obj/{name}", "Late file.");
+        var owned = Path.Combine(root, "owned");
+        var obj = Path.Combine(owned, "obj");
+        var calls = 0;
+        void Delete(string path)
+        {
+            calls++;
+            File.WriteAllText(Path.Combine(obj, name), "Late file.");
+            Directory.Delete(obj);
+        }
+
+        Assert.Throws<IOException>(() => SampleWorkspace.DeleteDirectory(owned, Delete));
+        Assert.Equal(OperatingSystem.IsMacOS() ? macCalls : 1, calls);
+        Assert.True(File.Exists(Path.Combine(obj, name)));
+    }
+
     [Fact]
     public async Task CleanupWaitsForOwnedWindowsFileHandles()
     {

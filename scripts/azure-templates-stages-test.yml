@@ -808,15 +808,25 @@ stages:
               buildAgent: ${{ parameters.buildAgentMac }}
               target: samples
               installNinja: true
+              initScript: |
+                if ! command -v docker >/dev/null 2>&1; then
+                  for dockerBin in /usr/local/bin /opt/homebrew/bin /Applications/Docker.app/Contents/Resources/bin; do
+                    if [ -x "$dockerBin/docker" ]; then
+                      export PATH="$dockerBin:$PATH"
+                      break
+                    fi
+                  done
+                fi
+                if command -v docker; then
+                  docker --version
+                else
+                  echo "##vso[task.logissue type=warning]Docker CLI is unavailable; Docker sample tests will report skips."
+                fi
               shouldPublish: false
               requiredArtifacts:
                 - name: native
                 - name: nuget
                   dir: nugets
-              preBuildSteps:
-                - bash: bash scripts/infra/samples/docker-macos.sh
-                  displayName: Start owned Docker daemon for sample tests
-                  timeoutInMinutes: 20
               postBuildSteps:
                 - task: PublishTestResults@2
                   condition: always()
@@ -829,9 +839,6 @@ stages:
                   inputs:
                     targetPath: output/logs
                     artifact: sample_logs_macos_${{ sdk }}
-                - bash: bash scripts/infra/samples/docker-macos.sh cleanup
-                  displayName: Remove owned sample Docker VM
-                  condition: always()
           - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
             parameters:
               name: samples_linux_${{ sdk }}

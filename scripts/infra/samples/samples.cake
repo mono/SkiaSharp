@@ -14,18 +14,14 @@ Task ("samples-generate")
     .Description ("Generate and zip the samples directory structure.")
     .Does (() =>
 {
-    var artifactVersions = GetSampleArtifactVersions();
-    var stableVersions = artifactVersions.Values.Any(version => version.Contains("-"))
-        ? new Dictionary<string, string>()
-        : artifactVersions;
     EnsureDirectoryExists (ROOT_OUTPUT_PATH);
 
     // create the samples archive
-    CreateSamplesDirectory ($"{ROOT_PATH}/samples/", ROOT_OUTPUT_PATH.Combine("samples"), "", stableVersions);
+    CreateSamplesDirectory ($"{ROOT_PATH}/samples/", ROOT_OUTPUT_PATH.Combine("samples"), "");
     Zip (ROOT_OUTPUT_PATH.Combine("samples"), ROOT_OUTPUT_PATH.CombineWithFilePath("samples.zip"));
 
     // create the preview samples archive
-    CreateSamplesDirectory ($"{ROOT_PATH}/samples/", ROOT_OUTPUT_PATH.Combine("samples-preview"), PREVIEW_NUGET_SUFFIX, artifactVersions);
+    CreateSamplesDirectory ($"{ROOT_PATH}/samples/", ROOT_OUTPUT_PATH.Combine("samples-preview"), PREVIEW_NUGET_SUFFIX);
     Zip (ROOT_OUTPUT_PATH.Combine("samples-preview"), ROOT_OUTPUT_PATH.CombineWithFilePath("samples-preview.zip"));
 });
 
@@ -44,34 +40,7 @@ Task ("samples")
 // HELPER FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Dictionary<string, string> GetSampleArtifactVersions()
-{
-    var packages = GetFiles($"{OUTPUT_NUGETS_PATH}/*.nupkg")
-        .Select(path => path.GetFilename().ToString())
-        .Where(name => !name.EndsWith(".symbols.nupkg", StringComparison.Ordinal))
-        .ToArray();
-    var versions = new Dictionary<string, string>();
-    if (packages.Length == 0)
-        return versions;
-
-    foreach (var package in new[] { "SkiaSharp", "HarfBuzzSharp" }) {
-        var matches = packages
-            .Select(name => Regex.Match(name, $@"^{Regex.Escape(package)}\.([0-9].*)\.nupkg$"))
-            .Where(match => match.Success)
-            .ToArray();
-        if (matches.Length != 1)
-            throw new Exception($"Sample generation requires exactly one non-symbol {package} core package in {OUTPUT_NUGETS_PATH}.");
-        versions.Add(package, matches[0].Groups[1].Value);
-    }
-
-    var suffixes = versions.Values.Select(version => Regex.Replace(version, "^[^-]+", "")).Distinct().ToArray();
-    if (suffixes.Length != 1)
-        throw new Exception("Sample generation requires SkiaSharp and HarfBuzzSharp packages from the same producing build.");
-
-    return versions;
-}
-
-string GetSamplePackageVersion(string package, string versionSuffix, Dictionary<string, string> artifactVersions)
+string GetSamplePackageVersion(string package, string versionSuffix)
 {
     var version = GetVersion(package);
     if (string.IsNullOrWhiteSpace(version))
@@ -82,14 +51,10 @@ string GetSamplePackageVersion(string package, string versionSuffix, Dictionary<
         : null;
     if (family == null)
         return version;
-    if (artifactVersions.TryGetValue(family, out var artifactVersion))
-        return artifactVersion;
-
     return version + (string.IsNullOrEmpty(versionSuffix) ? "" : $"-{versionSuffix}");
 }
 
-void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDirPath,
-    string versionSuffix, Dictionary<string, string> artifactVersions)
+void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDirPath, string versionSuffix)
 {
     samplesDirPath = MakeAbsolute(samplesDirPath);
     outputDirPath = MakeAbsolute(outputDirPath);
@@ -155,7 +120,7 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                 // update the <PackageReference> versions
                 if (projItem.Name.LocalName == "PackageReference") {
                     var packageId = projItem.Attribute("Include").Value;
-                    var version = GetSamplePackageVersion(packageId, versionSuffix, artifactVersions);
+                    var version = GetSamplePackageVersion(packageId, versionSuffix);
                     if (!string.IsNullOrWhiteSpace(version)) {
                         Debug($"Substituting package version {packageId} for {version}.");
                         projItem.Attribute("Version").Value = version;
@@ -185,7 +150,7 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                     var packageId = projectName.Contains(".NativeAssets.")
                         ? projectName
                         : packagingGroup;
-                    var version = GetSamplePackageVersion(packagingGroup, versionSuffix, artifactVersions);
+                    var version = GetSamplePackageVersion(packagingGroup, versionSuffix);
                     if (!string.IsNullOrWhiteSpace(version)) {
                         Debug($"Substituting project reference {relFilePath} for project {rel}.");
                         var name = projItem.Name.Namespace + "PackageReference";
@@ -221,6 +186,11 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
 
                 Debug($"Removing import '{project}' for project '{rel}'.");
 
+                foreach (var group in xdoc.Root.Elements()
+                    .Where(e => (string)e.Attribute("Condition") == $"!Exists('{project}')")) {
+                    group.Attribute("Condition").Remove();
+                }
+
                 // not inside the samples directory, so needs to be removed
                 import.Remove();
             }
@@ -228,7 +198,7 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
             // substitute <SkiaSharpVersion> (used by Uno.Sdk to override the version of its
             // implicitly-referenced SkiaSharp package; not a <PackageReference> so not handled above)
             foreach (var ve in xdoc.Descendants().Where(e => e.Name.LocalName == "SkiaSharpVersion").ToArray()) {
-                var skiaVersion = GetSamplePackageVersion("SkiaSharp", versionSuffix, artifactVersions);
+                var skiaVersion = GetSamplePackageVersion("SkiaSharp", versionSuffix);
                 if (!string.IsNullOrWhiteSpace(skiaVersion)) {
                     Debug($"Substituting SkiaSharpVersion for {skiaVersion}.");
                     ve.Value = skiaVersion;
