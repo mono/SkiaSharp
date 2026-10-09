@@ -1,9 +1,22 @@
 {
-  "theme": "Release line maintenance",
-  "highlights_headline": "SkiaSharp 4.153.2 begins the next servicing cycle.",
+  "theme": "failed-flush cache fix",
+  "highlights_headline": "SkiaSharp 4.153.2 fixes stale Ganesh cache entries after failed GPU flushes.",
   "highlights_body": null,
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Failed GPU flushes no longer leave stale cache entries",
+          "detail": "Updates the bundled Skia renderer to discard stale Ganesh cache state after a flush failure, improving recovery for GPU-backed rendering.",
+          "prs": [
+            5265
+          ]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }
