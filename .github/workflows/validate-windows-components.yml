@@ -1,0 +1,133 @@
+name: Validate - Windows Components
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/validate-windows-components.yml
+      - scripts/infra/native/windows/benchmarks.vsconfig
+      - scripts/infra/native/windows/install-components.ps1
+      - scripts/infra/native/windows/windows-shared.cake
+      - native/windows/build.cake
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 180
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      VS_INSTALL: C:\SkiaSharpBuildTools
+      WINDOWS_SDK_VERSION: 10.0.26100.0
+      GIT_SYNC_DEPS_SKIP_EMSDK: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Export and remove preinstalled Visual Studio
+        run: |
+          if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted') {
+            throw 'Visual Studio removal is permitted only on a disposable GitHub-hosted runner.'
+          }
+          $evidence = Join-Path $env:RUNNER_TEMP 'windows-components'
+          New-Item $evidence -ItemType Directory -Force | Out-Null
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\setup.exe"
+          $instances = & $vswhere -all -prerelease -products '*' -format json
+          if ($LASTEXITCODE -ne 0) { throw "vswhere exited with code $LASTEXITCODE." }
+          $instances | Set-Content (Join-Path $evidence 'before.json')
+          $instances = @($instances | ConvertFrom-Json)
+          foreach ($instance in $instances) {
+            $export = Join-Path $evidence "before-$($instance.instanceId).vsconfig"
+            $process = Start-Process $installer -ArgumentList @(
+              'export', '--installPath', "`"$($instance.installationPath)`"", '--config', "`"$export`""
+            ) -Wait -PassThru
+            if ($process.ExitCode -ne 0 -or !(Test-Path $export)) {
+              throw "Visual Studio configuration export failed for $($instance.installationPath) (exit code $($process.ExitCode))."
+            }
+          }
+          foreach ($instance in $instances) {
+            Write-Host "Uninstalling $($instance.installationPath)"
+            $process = Start-Process $installer -ArgumentList @(
+              'uninstall', '--installPath', "`"$($instance.installationPath)`"", '--quiet', '--norestart'
+            ) -Wait -PassThru
+            if ($process.ExitCode -ne 0) {
+              throw "Visual Studio uninstall exited with code $($process.ExitCode)."
+            }
+          }
+          $remaining = @(& $vswhere -all -prerelease -products '*' -property installationPath)
+          if ($LASTEXITCODE -ne 0 -or $remaining.Count -ne 0) {
+            throw "Visual Studio removal was incomplete: $remaining"
+          }
+          'No Visual Studio instances remain.' | Set-Content (Join-Path $evidence 'clean-vs.txt')
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install only the configured Visual Studio components
+        run: ./scripts/infra/native/windows/install-components.ps1 -InstallationPath $env:VS_INSTALL
+
+      - name: Record installed components and toolchain
+        run: |
+          $evidence = Join-Path $env:RUNNER_TEMP 'windows-components'
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          & $vswhere -all -prerelease -products '*' -format json |
+            Set-Content (Join-Path $evidence 'after.json')
+          if ($LASTEXITCODE -ne 0) { throw "vswhere exited with code $LASTEXITCODE." }
+          $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\setup.exe"
+          $export = Join-Path $evidence 'installed.vsconfig'
+          $process = Start-Process $installer -ArgumentList @(
+            'export', '--installPath', "`"$env:VS_INSTALL`"", '--config', "`"$export`""
+          ) -Wait -PassThru
+          if ($process.ExitCode -ne 0 -or !(Test-Path $export)) {
+            throw "Visual Studio configuration export failed (exit code $($process.ExitCode))."
+          }
+          Copy-Item scripts/infra/native/windows/benchmarks.vsconfig (Join-Path $evidence 'requested.vsconfig')
+          Get-Content "$env:VS_INSTALL\VC\Auxiliary\Build\Microsoft.VCToolsVersion*.txt" |
+            Set-Content (Join-Path $evidence 'toolset-versions.txt')
+          Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\Lib" |
+            Select-Object Name | Out-File (Join-Path $evidence 'sdk-versions.txt')
+
+      - name: Prepare native source and standalone tools
+        run: |
+          git submodule update --init --recursive externals/skia
+          if ($LASTEXITCODE -ne 0) { throw "Submodule initialization exited with code $LASTEXITCODE." }
+          dotnet tool restore
+          if ($LASTEXITCODE -ne 0) { throw "Tool restore exited with code $LASTEXITCODE." }
+          ./scripts/infra/native/shared/install-ninja.ps1
+          ./scripts/infra/native/windows/install-7zip.ps1
+          ./scripts/infra/native/windows/install-llvm.ps1
+
+      - name: Build the Windows x64 native used by source benchmarks
+        run: |
+          dotnet cake native/windows/build.cake --target=libSkiaSharp --configuration=Release --arch=x64 `
+            --vsinstall="$env:VS_INSTALL" --windowsSdkVersion="$env:WINDOWS_SDK_VERSION" 2>&1 |
+            Tee-Object (Join-Path $env:RUNNER_TEMP 'windows-components/native-build.log')
+          if ($LASTEXITCODE -ne 0) { throw "Native build exited with code $LASTEXITCODE." }
+
+      - name: Build managed bindings and source benchmarks
+        run: |
+          dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -p:AllTargetFrameworks=net10.0 -p:BuildingInsideVisualStudio=true
+          if ($LASTEXITCODE -ne 0) { throw "Managed build exited with code $LASTEXITCODE." }
+          dotnet build benchmarks/SkiaSharp.Benchmarks.Tracking.Source -c Release
+          if ($LASTEXITCODE -ne 0) { throw "Benchmark build exited with code $LASTEXITCODE." }
+
+      - name: Upload provisioning and build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-components
+          path: |
+            ${{ runner.temp }}/windows-components/
+            ${{ runner.temp }}/dd_*.log
+            ${{ runner.temp }}/dd_*.txt
+          retention-days: 14
