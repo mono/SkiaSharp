@@ -12,6 +12,13 @@ public class BasicSampleTests : SampleTestBase
             .Where(sample => sample.Kind.HasFlag(SampleLookup.EntryKind.Basic) && !sample.Kind.HasFlag(SampleLookup.EntryKind.Docker))
             .Select(sample => new object[] { sample.Folder, sample.FileName, "Release" });
 
+    public static IEnumerable<object[]> ConsoleCases()
+    {
+        yield return new object[] { "net10.0" };
+        if (SampleWorkspace.ConsumerSdkVersion?.StartsWith("11.", StringComparison.Ordinal) == true)
+            yield return new object[] { "net11.0" };
+    }
+
     private async Task RunSample(string name, IEnumerable<string> arguments, Func<DotNetRunningApp, string, Task> test)
     {
         var folder = Path.Combine("Basic", name);
@@ -27,13 +34,6 @@ public class BasicSampleTests : SampleTestBase
     [MemberData(nameof(Cases))]
     public Task GeneratedSampleBuilds(string folder, string solution, string configuration) =>
         BuildSample(folder, solution, configuration);
-
-    public static IEnumerable<object[]> ConsoleCases()
-    {
-        yield return new object[] { "net10.0" };
-        if (SampleWorkspace.ConsumerSdkVersion?.StartsWith("11.", StringComparison.Ordinal) == true)
-            yield return new object[] { "net11.0" };
-    }
 
     [Theory]
     [Trait("Category", "SampleRun")]
