@@ -327,10 +327,9 @@ jobs:
         # SDK that isn't on the runner). We only need libSkiaSharp here.
         run: |
           dotnet tool restore
-          ./scripts/infra/native/windows/tests/InstallSpectre.Tests.ps1
           ./scripts/infra/native/shared/install-ninja.ps1
           ./scripts/infra/native/windows/select-vs.ps1
-          ./scripts/infra/native/windows/install-spectre.ps1 -InstallationPath $env:VS_INSTALL -Architecture x64
+          ./scripts/infra/native/windows/install-components.ps1 -InstallationPath $env:VS_INSTALL
           ./scripts/infra/native/windows/install-7zip.ps1
           ./scripts/infra/native/windows/install-llvm.ps1
           dotnet cake native/windows/build.cake --target=libSkiaSharp --configuration=Release --arch=x64
