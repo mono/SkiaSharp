@@ -38,21 +38,21 @@ Promoted builds also publish a `_NuGets` wrapper to the public
 [transport feed](https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json);
 use the real package versions inside it, not the wrapper's version.
 
-Pass the package suffix to Cake. For example, packages named
-`SkiaSharp.4.156.0-pr.5291.26505.69.nupkg` require:
+Generation uses the exact staged SkiaSharp/HarfBuzzSharp package versions,
+independently of the job's date or build counter:
 
 ```sh
-dotnet cake --target=samples --previewLabel=pr.5291 --buildNumber=26505.69
+dotnet cake --target=samples
 ```
 
-That is an example artifact identity, not a recommended package version.
-For exact stable packages, use `--dotNetFinalVersionKind=release` instead.
-Do not mix packages from different builds.
+Do not mix packages from different builds. Without staged packages,
+`samples-generate` retains its publication behavior using source versions and
+the requested `--previewLabel`/`--buildNumber`.
 
 To use an IDE or invoke the suite directly, generate first:
 
 ```sh
-dotnet cake --target=samples-generate --previewLabel=pr.5291 --buildNumber=26505.69
+dotnet cake --target=samples-generate
 dotnet test tests/SkiaSharp.Tests.Samples.slnx -- --report-trx
 ```
 
@@ -88,6 +88,8 @@ environment too.
 Current CI has one Samples job per Windows/macOS/Linux host using the .NET 10
 SDK. It does **not** yet run separate .NET 10 and .NET 11 lanes. CI supplies the
 matching `native` and `nuget` artifacts before generation.
+The macOS job provisions an owned Colima/QEMU Docker daemon without requiring
+nested virtualization or changing the default Docker context, then deletes it.
 
 ## Coverage and diagnostics
 
@@ -121,7 +123,15 @@ Missing references retain the actual image and fail; mismatches also retain a
 diff. Capture and review references on their actual platform: tests never
 generate or accept them automatically.
 
+Host/Linux references were reviewed from `sample_logs_linux` in producing
+[build 1629334](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1629334)
+at source `d1ef43a8`; all four attempts produced identical Console/Web PNGs.
+
 For restore failures, compare the generated references with the staged package
 cohort and inspect the retained binlog. Each consumer already has fresh caches;
 clearing shared caches is unnecessary. The existing Integration and MSBuild
 test suites remain separate.
+
+Generation regressions can be checked independently with
+`pwsh scripts/infra/samples/tests/SampleGeneration.Tests.ps1`; its fixture outputs
+are private and the ordinary Samples test suite never invokes Cake.

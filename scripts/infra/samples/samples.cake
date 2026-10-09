@@ -14,15 +14,19 @@ Task ("samples-generate")
     .Description ("Generate and zip the samples directory structure.")
     .Does (() =>
 {
-    EnsureDirectoryExists ($"{ROOT_PATH}/output/");
+    var artifactVersions = GetSampleArtifactVersions();
+    var stableVersions = artifactVersions.Values.Any(version => version.Contains("-"))
+        ? new Dictionary<string, string>()
+        : artifactVersions;
+    EnsureDirectoryExists (ROOT_OUTPUT_PATH);
 
     // create the samples archive
-    CreateSamplesDirectory ($"{ROOT_PATH}/samples/", $"{ROOT_PATH}/output/samples/");
-    Zip ($"{ROOT_PATH}/output/samples/", $"{ROOT_PATH}/output/samples.zip");
+    CreateSamplesDirectory ($"{ROOT_PATH}/samples/", ROOT_OUTPUT_PATH.Combine("samples"), "", stableVersions);
+    Zip (ROOT_OUTPUT_PATH.Combine("samples"), ROOT_OUTPUT_PATH.CombineWithFilePath("samples.zip"));
 
     // create the preview samples archive
-    CreateSamplesDirectory ($"{ROOT_PATH}/samples/", $"{ROOT_PATH}/output/samples-preview/", PREVIEW_NUGET_SUFFIX);
-    Zip ($"{ROOT_PATH}/output/samples-preview/", $"{ROOT_PATH}/output/samples-preview.zip");
+    CreateSamplesDirectory ($"{ROOT_PATH}/samples/", ROOT_OUTPUT_PATH.Combine("samples-preview"), PREVIEW_NUGET_SUFFIX, artifactVersions);
+    Zip (ROOT_OUTPUT_PATH.Combine("samples-preview"), ROOT_OUTPUT_PATH.CombineWithFilePath("samples-preview.zip"));
 });
 
 Task ("samples")
@@ -40,7 +44,52 @@ Task ("samples")
 // HELPER FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDirPath, string versionSuffix = "")
+Dictionary<string, string> GetSampleArtifactVersions()
+{
+    var packages = GetFiles($"{OUTPUT_NUGETS_PATH}/*.nupkg")
+        .Select(path => path.GetFilename().ToString())
+        .Where(name => !name.EndsWith(".symbols.nupkg", StringComparison.Ordinal))
+        .ToArray();
+    var versions = new Dictionary<string, string>();
+    if (packages.Length == 0)
+        return versions;
+
+    foreach (var package in new[] { "SkiaSharp", "HarfBuzzSharp" }) {
+        var matches = packages
+            .Select(name => Regex.Match(name, $@"^{Regex.Escape(package)}\.([0-9].*)\.nupkg$"))
+            .Where(match => match.Success)
+            .ToArray();
+        if (matches.Length != 1)
+            throw new Exception($"Sample generation requires exactly one non-symbol {package} core package in {OUTPUT_NUGETS_PATH}.");
+        versions.Add(package, matches[0].Groups[1].Value);
+    }
+
+    var suffixes = versions.Values.Select(version => Regex.Replace(version, "^[^-]+", "")).Distinct().ToArray();
+    if (suffixes.Length != 1)
+        throw new Exception("Sample generation requires SkiaSharp and HarfBuzzSharp packages from the same producing build.");
+
+    return versions;
+}
+
+string GetSamplePackageVersion(string package, string versionSuffix, Dictionary<string, string> artifactVersions)
+{
+    var version = GetVersion(package);
+    if (string.IsNullOrWhiteSpace(version))
+        return version;
+
+    var family = package.StartsWith("SkiaSharp") ? "SkiaSharp"
+        : package.StartsWith("HarfBuzzSharp") ? "HarfBuzzSharp"
+        : null;
+    if (family == null)
+        return version;
+    if (artifactVersions.TryGetValue(family, out var artifactVersion))
+        return artifactVersion;
+
+    return version + (string.IsNullOrEmpty(versionSuffix) ? "" : $"-{versionSuffix}");
+}
+
+void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDirPath,
+    string versionSuffix, Dictionary<string, string> artifactVersions)
 {
     samplesDirPath = MakeAbsolute(samplesDirPath);
     outputDirPath = MakeAbsolute(outputDirPath);
@@ -103,17 +152,11 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                 .Elements().Where(e => !string.IsNullOrWhiteSpace(e.Attribute("Include")?.Value))
                 .ToArray();
             foreach (var projItem in projItems) {
-                var suffix = string.IsNullOrEmpty(versionSuffix) ? "" : $"-{versionSuffix}";
-
                 // update the <PackageReference> versions
                 if (projItem.Name.LocalName == "PackageReference") {
                     var packageId = projItem.Attribute("Include").Value;
-                    var version = GetVersion(packageId);
+                    var version = GetSamplePackageVersion(packageId, versionSuffix, artifactVersions);
                     if (!string.IsNullOrWhiteSpace(version)) {
-                        // only add the suffix for our nugets
-                        if (packageId.StartsWith("SkiaSharp") || packageId.StartsWith("HarfBuzzSharp")) {
-                            version += suffix;
-                        }
                         Debug($"Substituting package version {packageId} for {version}.");
                         projItem.Attribute("Version").Value = version;
                     } else if (packageId.StartsWith("SkiaSharp") || packageId.StartsWith("HarfBuzzSharp")) {
@@ -142,14 +185,10 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                     var packageId = projectName.Contains(".NativeAssets.")
                         ? projectName
                         : packagingGroup;
-                    var version = GetVersion(packagingGroup);
+                    var version = GetSamplePackageVersion(packagingGroup, versionSuffix, artifactVersions);
                     if (!string.IsNullOrWhiteSpace(version)) {
                         Debug($"Substituting project reference {relFilePath} for project {rel}.");
                         var name = projItem.Name.Namespace + "PackageReference";
-                        // only add the suffix for our nugets
-                        if (packagingGroup.StartsWith("SkiaSharp") || packagingGroup.StartsWith("HarfBuzzSharp")) {
-                            version += suffix;
-                        }
                         projItem.AddAfterSelf(new XElement(name, new object[] {
                             new XAttribute("Include", packageId),
                             new XAttribute("Version", version),
@@ -189,9 +228,8 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
             // substitute <SkiaSharpVersion> (used by Uno.Sdk to override the version of its
             // implicitly-referenced SkiaSharp package; not a <PackageReference> so not handled above)
             foreach (var ve in xdoc.Descendants().Where(e => e.Name.LocalName == "SkiaSharpVersion").ToArray()) {
-                var skiaVersion = GetVersion("SkiaSharp");
+                var skiaVersion = GetSamplePackageVersion("SkiaSharp", versionSuffix, artifactVersions);
                 if (!string.IsNullOrWhiteSpace(skiaVersion)) {
-                    skiaVersion += string.IsNullOrEmpty(versionSuffix) ? "" : $"-{versionSuffix}";
                     Debug($"Substituting SkiaSharpVersion for {skiaVersion}.");
                     ve.Value = skiaVersion;
                 }
