@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
     timeout-minutes: 240
     strategy:
       fail-fast: false
@@ -84,7 +84,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install configured Visual Studio 2022 Build Tools components
-        run: ./scripts/infra/native/windows/install-components.ps1 -InstallationPath $env:VS_INSTALL
+        run: ./scripts/infra/native/windows/install-components.ps1 -BuildTools -InstallationPath $env:VS_INSTALL
 
       - name: Record installed components and toolchain
         run: |
