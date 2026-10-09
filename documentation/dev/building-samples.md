@@ -97,7 +97,7 @@ automatically.
 ## Browser runs
 
 After bootstrap, package acquisition and generation, explicitly install the
-Chromium revision matching the runner's Playwright 1.55.0 dependency:
+Chromium revision matching the runner's Playwright dependency:
 
 ```sh
 dotnet build tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj
@@ -107,45 +107,22 @@ dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
 ```
 
 Use the Release script path for a Release runner build. CI installs Chromium
-explicitly too; tests never download browsers. On Linux, `--with-deps` may
-require elevated privileges. Missing browsers, browser errors and unavailable
-GPU rendering fail rather than silently skipping coverage.
+explicitly too; tests never download browsers. The build supplies the installer
+for the exact Playwright version. System Chrome/Edge installed through
+Homebrew or winget need an explicit browser channel and are not the Chromium
+used by these tests. See [Playwright browser installation](https://playwright.dev/dotnet/docs/browsers).
+On Linux, `--with-deps` may require elevated privileges.
 
-Named facts in the existing Basic test class check browser console errors and
-compare full-page screenshots using `SampleImage`. They cover Web,
-BrowserWASM and Blazor CPU/GPU. DockerWebApi has no web UI and retains its
-HTTP/PNG test rather than capturing Chromium's built-in image viewer.
-Captures use a fixed 1280 x 900 viewport and device scale 1.
-The BrowserWASM app must include the matching artifact's
-`SkiaSharp.NativeAssets.WebAssembly` package; the source-built runner cannot
-supply the sample's dependencies.
+`BrowserRunningApp.Capture` handles a single page check. For interactions, use
+`BrowserRunningApp.Run` with `Navigate`, `WaitForElement` and `Screenshot`;
+its `Page` exposes Playwright locators, clicks and pointer input.
+The callback owns no browser resources: the helper closes them and retains
+browser errors and diagnostics.
 
-Page references use the existing `Expected/Host/<host-platform>/` directory.
-Page screenshots are distinct from the existing headless PNG references and
-need their own capture/review.
-
-The four initial page references were reviewed locally on macOS 27.0.1
-(26A434), using Playwright 1.55.0 and the exact package cohort from producing
-[build 1628893](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1628893):
-SkiaSharp `4.156.0-pr.5291.26508.18` and HarfBuzzSharp
-`14.4.0.100-pr.5291.26508.18`. These are local-first references, not producing
-browser CI proof. Later matching CI captures need review before any reference
-update; tests never replace references automatically.
-
-Only the animated GPU page allows **6% average RGBA color error**: the sum of
-absolute channel differences divided by `pixel count * 4 * 255`. No channel
-differences are discarded. This is not the percentage of changed pixels and
-does not change the shared 0.075% differing-pixel policy for other pages and
-headless samples. Dimensions must still match.
-
-Against the committed local GPU reference, 24 actual frames across two page
-loads measured 0.869-5.641% average color error. White and pure-black canvas
-controls measured 50.273% and 6.331%, so 6% accepts the observed animation and
-rejects those controls; exactly 5% rejected healthy frames. Uniform dark output
-measured 4.067% and can still pass. This is deliberately a crash/white-output
-smoke check, not exact shader regression coverage. CI-to-local calibration and
-stronger animated comparison remain follow-up work; animation, clock and FPS
-are unchanged.
-
-Browser filtering does not replace the unfiltered sample suite; stacked PR
-branch filters may prevent producing CI captures until the target is eligible.
+Screenshots use a 1280 x 900 viewport, scale 1 and light theme. Review page
+references under `Expected/Host/<host-platform>/` separately from API PNGs.
+The animated GPU page alone permits **6% average RGBA color error**, rather
+than the default differing-pixel limit. This loose smoke check can miss
+uniform dark output; it is not an exact shader regression test.
+Missing browsers, browser errors and unavailable GPU rendering fail.
+Browser-only filtering does not replace the unfiltered sample suite.
