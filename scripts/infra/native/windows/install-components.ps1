@@ -5,15 +5,15 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
-$config = Join-Path $PSScriptRoot 'benchmarks.vsconfig'
+$config = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../../../source/.vsconfig'))
 $components = (Get-Content $config -Raw | ConvertFrom-Json).components
 $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\setup.exe"
 $arguments = @('--installPath', "`"$InstallationPath`"", '--config', "`"$config`"", '--quiet', '--norestart')
 if (Test-Path $InstallationPath) {
     $arguments = @('modify') + $arguments
 } else {
-    $installer = Join-Path $env:TEMP 'vs_buildtools.exe'
-    Invoke-WebRequest 'https://aka.ms/vs/18/stable/vs_buildtools.exe' -OutFile $installer
+    $installer = Join-Path $env:TEMP 'vs_community.exe'
+    Invoke-WebRequest 'https://aka.ms/vs/18/stable/vs_community.exe' -OutFile $installer
     $arguments += '--wait'
 }
 Write-Host "Installing components from $config into $InstallationPath"
