@@ -88,6 +88,11 @@ source branch and commit, computes the package build number, and sets
 `stable`. It rejects an exact stable build unless it is an internal
 `release/*` build or a downstream pipeline inheriting that upstream identity.
 
+Prepare establishes the canonical product run name. Later jobs reuse its package
+build number and original Arcade `OfficialBuildId`, even across midnight, without
+overwriting the same-run special-package counter. For downstream resource builds,
+the upstream pipeline run name takes precedence and also supplies that counter.
+
 ## Release preparation
 
 ### Workflow boundary

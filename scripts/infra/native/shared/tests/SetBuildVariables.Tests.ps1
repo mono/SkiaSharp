@@ -9,6 +9,7 @@ $identityVariables = @(
     'ARCADE_OFFICIAL_BUILD_ID'
     'BUILD_COUNTER'
     'BUILD_NUMBER'
+    'BUILD_BUILDNUMBER'
     'BUILD_REASON'
     'BUILD_REPOSITORY_PROVIDER'
     'BUILD_REPOSITORY_URI'
@@ -40,7 +41,9 @@ function Invoke-BuildIdentityCase {
         [Parameter(Mandatory)]
         [hashtable] $Environment,
 
-        [switch] $ExpectFailure
+        [switch] $ExpectFailure,
+
+        [switch] $NoUpdateBuildNumber
     )
 
     $startInfo = [Diagnostics.ProcessStartInfo]::new()
@@ -49,7 +52,9 @@ function Invoke-BuildIdentityCase {
     $startInfo.ArgumentList.Add('-NoProfile')
     $startInfo.ArgumentList.Add('-File')
     $startInfo.ArgumentList.Add($scriptPath)
-    $startInfo.ArgumentList.Add('-UpdateBuildNumber')
+    if (-not $NoUpdateBuildNumber) {
+        $startInfo.ArgumentList.Add('-UpdateBuildNumber')
+    }
     $startInfo.UseShellExecute = $false
     $startInfo.RedirectStandardOutput = $true
     $startInfo.RedirectStandardError = $true
@@ -62,6 +67,7 @@ function Invoke-BuildIdentityCase {
         ARCADE_OFFICIAL_BUILD_ID = '20260818.3'
         BUILD_COUNTER = '41'
         BUILD_NUMBER = ''
+        BUILD_BUILDNUMBER = ''
         BUILD_REPOSITORY_PROVIDER = 'GitHub'
         BUILD_REPOSITORY_URI = 'https://github.com/mono/SkiaSharp.git'
         BUILD_SOURCEBRANCH = 'refs/heads/main'
@@ -202,7 +208,141 @@ $resource = Invoke-BuildIdentityCase 'Tests inherit Package identity' @{
     RESOURCES_PIPELINE_SKIASHARP_RUNNAME = '4.152.0-preview.0.22+main'
 }
 Assert-Equal (Get-VariableValue $resource 'BUILD_NUMBER') '22' 'Resource build number'
+Assert-Equal (Get-VariableValue $resource 'BUILD_COUNTER') '22' 'Legacy resource counter'
+if ($resource -match '##vso\[task\.setvariable variable=ARCADE_OFFICIAL_BUILD_ID\]') {
+    throw "Undated resource identity must not invent an official build ID.`n$resource"
+}
 Assert-BuildLabel $resource '4.152.0-preview.0.22+main'
+
+$midnight = Invoke-BuildIdentityCase 'PR consumer after midnight' @{
+    ARCADE_OFFICIAL_BUILD_ID = '20261005.1'
+    BUILD_BUILDNUMBER = '4.152.0-pr.5266.26504.37'
+    BUILD_REASON = 'PullRequest'
+    BUILD_SOURCEBRANCH = 'refs/pull/5266/merge'
+    SYSTEM_PULLREQUEST_PULLREQUESTNUMBER = '5266'
+}
+Assert-Equal (Get-VariableValue $midnight 'BUILD_NUMBER') '26504.37' 'Original PR build number'
+Assert-Equal (Get-VariableValue $midnight 'ARCADE_OFFICIAL_BUILD_ID') '20261004.37' 'Original official build ID'
+Assert-Equal ([regex]::Match($midnight, '(?m)^Special-package counter: (.+)$').Groups[1].Value.Trim()) `
+    '41' 'Same-run special-package counter'
+Assert-BuildLabel $midnight '4.152.0-pr.5266.26504.37'
+
+$producer = Invoke-BuildIdentityCase 'Prepare producer identity' @{
+    SKIASHARP_VERSION = '4.156.0'
+    ARCADE_OFFICIAL_BUILD_ID = '20261008.29'
+    BUILD_REASON = 'IndividualCI'
+    BUILD_SOURCEBRANCH = 'refs/heads/mattleibow-samples-sdk-matrix'
+    BUILD_SOURCEBRANCHNAME = 'mattleibow-samples-sdk-matrix'
+}
+$producerRunName = [regex]::Match($producer, '(?m)^Build label: (.+)$').Groups[1].Value.Trim()
+Assert-Equal $producerRunName '4.156.0-preview.0.26508.29+mattleibow-samples-sdk-matrix' 'Prepare run name'
+$consumer = Invoke-BuildIdentityCase 'MacSamples retains producer identity after midnight' @{
+    SKIASHARP_VERSION = '4.156.0'
+    ARCADE_OFFICIAL_BUILD_ID = '20261009.2'
+    BUILD_BUILDNUMBER = $producerRunName
+    BUILD_COUNTER = '42'
+    BUILD_REASON = 'IndividualCI'
+    BUILD_SOURCEBRANCH = 'refs/heads/mattleibow-samples-sdk-matrix'
+    BUILD_SOURCEBRANCHNAME = 'mattleibow-samples-sdk-matrix'
+}
+Assert-Equal (Get-VariableValue $consumer 'PREVIEW_LABEL') 'preview.0' 'Producer preview label'
+Assert-Equal (Get-VariableValue $consumer 'BUILD_NUMBER') '26508.29' 'Producer build number'
+Assert-Equal (Get-VariableValue $consumer 'ARCADE_OFFICIAL_BUILD_ID') '20261008.29' 'Producer official build ID'
+Assert-Equal ([regex]::Match($consumer, '(?m)^Special-package counter: (.+)$').Groups[1].Value.Trim()) `
+    '42' 'Later-job special-package counter'
+if ($consumer -match '##vso\[task\.setvariable variable=BUILD_COUNTER\]') {
+    throw "Same-run identity must not overwrite the special-package counter.`n$consumer"
+}
+Assert-BuildLabel $consumer $producerRunName
+
+$laterJob = Invoke-BuildIdentityCase 'Later job without run-name update' @{
+    SKIASHARP_VERSION = '4.156.0'
+    ARCADE_OFFICIAL_BUILD_ID = '20261009.2'
+    BUILD_BUILDNUMBER = $producerRunName
+    BUILD_REASON = 'IndividualCI'
+} -NoUpdateBuildNumber
+Assert-Equal (Get-VariableValue $laterJob 'BUILD_NUMBER') '26508.29' 'Later-job producer build number'
+Assert-Equal (Get-VariableValue $laterJob 'ARCADE_OFFICIAL_BUILD_ID') '20261008.29' 'Later-job producer official build ID'
+if ($laterJob -match '##vso\[build\.updatebuildnumber\]') {
+    throw "Later job must not update the run name.`n$laterJob"
+}
+
+$upstream = Invoke-BuildIdentityCase 'Resource identity takes precedence after midnight' @{
+    ARCADE_OFFICIAL_BUILD_ID = '20261005.1'
+    BUILD_BUILDNUMBER = '4.152.0-preview.0.26505.1+main'
+    BUILD_REASON = 'ResourceTrigger'
+    RESOURCES_PIPELINE_SKIASHARP_RUNNAME = '4.152.0-preview.0.26504.37+main'
+}
+Assert-Equal (Get-VariableValue $upstream 'BUILD_NUMBER') '26504.37' 'Upstream build number'
+Assert-Equal (Get-VariableValue $upstream 'ARCADE_OFFICIAL_BUILD_ID') '20261004.37' 'Upstream official build ID'
+Assert-Equal (Get-VariableValue $upstream 'BUILD_COUNTER') '26504.37' 'Upstream special-package counter'
+Assert-BuildLabel $upstream '4.152.0-preview.0.26504.37+main'
+
+$releaseMidnight = Invoke-BuildIdentityCase 'Release consumer after midnight' @{
+    ARCADE_OFFICIAL_BUILD_ID = '20261005.1'
+    BUILD_BUILDNUMBER = '4.152.0+20261004.37'
+    BUILD_REASON = 'IndividualCI'
+    BUILD_SOURCEBRANCH = 'refs/heads/release/4.152.0'
+    BUILD_SOURCEBRANCHNAME = '4.152.0'
+    PREVIEW_LABEL = 'stable'
+}
+Assert-Equal (Get-VariableValue $releaseMidnight 'DOTNET_FINAL_VERSION_KIND') 'release' 'Release consumer kind'
+Assert-Equal (Get-VariableValue $releaseMidnight 'ARCADE_OFFICIAL_BUILD_ID') '20261004.37' 'Release producer official build ID'
+Assert-BuildLabel $releaseMidnight '4.152.0+20261004.37'
+
+$yearBoundary = Invoke-BuildIdentityCase 'Consumer after year boundary' @{
+    ARCADE_OFFICIAL_BUILD_ID = '20270101.1'
+    BUILD_BUILDNUMBER = '4.152.0-preview.0.26631.9+main'
+    BUILD_REASON = 'IndividualCI'
+}
+Assert-Equal (Get-VariableValue $yearBoundary 'BUILD_NUMBER') '26631.9' 'Year-boundary build number'
+Assert-Equal (Get-VariableValue $yearBoundary 'ARCADE_OFFICIAL_BUILD_ID') '20261231.9' 'Year-boundary official build ID'
+Assert-BuildLabel $yearBoundary '4.152.0-preview.0.26631.9+main'
+
+$manualResource = Invoke-BuildIdentityCase 'Manual tests inherit dated Package identity' @{
+    ARCADE_OFFICIAL_BUILD_ID = '20261005.1'
+    BUILD_BUILDNUMBER = '20261005.1'
+    BUILD_REASON = 'Manual'
+    RESOURCES_PIPELINE_SKIASHARP_RUNNAME = '4.152.0-preview.0.26504.37+main'
+}
+Assert-Equal (Get-VariableValue $manualResource 'BUILD_NUMBER') '26504.37' 'Manual upstream build number'
+Assert-Equal (Get-VariableValue $manualResource 'ARCADE_OFFICIAL_BUILD_ID') '20261004.37' 'Manual upstream official build ID'
+Assert-BuildLabel $manualResource '4.152.0-preview.0.26504.37+main'
+
+$datedResource = Invoke-BuildIdentityCase 'Resource with full-date preview identity' @{
+    BUILD_REASON = 'ResourceTrigger'
+    RESOURCES_PIPELINE_SKIASHARP_RUNNAME = '4.152.0-preview.0.20261004.37+main'
+}
+Assert-Equal (Get-VariableValue $datedResource 'BUILD_NUMBER') '20261004.37' 'Full-date upstream build number'
+Assert-Equal (Get-VariableValue $datedResource 'ARCADE_OFFICIAL_BUILD_ID') '20261004.37' 'Full-date upstream official build ID'
+Assert-BuildLabel $datedResource '4.152.0-preview.0.20261004.37+main'
+
+$stableResource = Invoke-BuildIdentityCase 'Resource with stable identity' @{
+    BUILD_REASON = 'ResourceTrigger'
+    RESOURCES_PIPELINE_SKIASHARP_RUNNAME = '4.152.0+20261004.37'
+    SYSTEM_TEAMPROJECT = 'public'
+}
+Assert-Equal (Get-VariableValue $stableResource 'PREVIEW_LABEL') 'stable' 'Stable upstream label'
+Assert-Equal (Get-VariableValue $stableResource 'BUILD_NUMBER') '26504.37' 'Stable upstream build number'
+Assert-Equal (Get-VariableValue $stableResource 'ARCADE_OFFICIAL_BUILD_ID') '20261004.37' 'Stable upstream official build ID'
+Assert-Equal (Get-VariableValue $stableResource 'BUILD_COUNTER') '26504.37' 'Stable upstream counter'
+Assert-Equal (Get-VariableValue $stableResource 'DOTNET_FINAL_VERSION_KIND') 'release' 'Stable upstream kind'
+Assert-BuildLabel $stableResource '4.152.0+20261004.37'
+
+$initialRun = Invoke-BuildIdentityCase 'Initial non-product run name' @{
+    BUILD_REASON = 'IndividualCI'
+    BUILD_BUILDNUMBER = '20260818.3'
+}
+Assert-Equal (Get-VariableValue $initialRun 'BUILD_NUMBER') '26418.3' 'Initial computed build number'
+Assert-BuildLabel $initialRun '4.152.0-preview.0.26418.3+main'
+
+$malformedCanonical = Invoke-BuildIdentityCase 'Malformed canonical identity' @{
+    BUILD_REASON = 'IndividualCI'
+    BUILD_BUILDNUMBER = '4.152.0-preview..8'
+} -ExpectFailure
+if ($malformedCanonical -notmatch 'Unable to parse upstream build identity') {
+    throw "Malformed canonical identity failed for the wrong reason.`n$malformedCanonical"
+}
 
 $automaticRelease = Invoke-BuildIdentityCase 'Automatic exact release' @{
     BUILD_REASON = 'IndividualCI'
