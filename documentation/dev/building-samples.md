@@ -9,6 +9,8 @@ Install the repository SDK and the workloads required by your host's samples.
 For Docker tests, put `docker` on `PATH` and start a daemon using Windows
 containers on Windows or Linux containers on macOS/Linux. Unavailable Docker
 produces visible skips; wrong container mode and sample failures fail the tests.
+macOS CI installs a missing Docker CLI with Homebrew, but does not install or
+start a daemon.
 
 **Bootstrap before staging packages:** bootstrap resets `output/`.
 For managed-only work:
