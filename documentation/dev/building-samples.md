@@ -78,16 +78,34 @@ imports. Consumer builds use `dotnet` from the inherited `PATH`, a host-only
 build targets and SDK pins. SkiaSharp/HarfBuzzSharp packages resolve only from
 the staged artifact directory.
 
-A consumer installation can contain multiple SDKs; normal SDK selection chooses
-among them, including previews. To test a specific SDK, select its host
-installation explicitly. A newer SDK does not itself retarget the sample or
-replace the runtime needed to run it. The suite installs no SDKs/workloads and
-does not modify source samples or user caches. IDEs must inherit the intended
-environment too.
+A consumer installation can contain multiple SDKs. Set
+`SAMPLE_TEST_SDK_VERSION` to select an exact installed consumer SDK without
+changing the runner's SDK or TFM (PowerShell on any host):
 
-Current CI has one Samples job per Windows/macOS/Linux host using the .NET 10
-SDK. It does **not** yet run separate .NET 10 and .NET 11 lanes. CI supplies the
-matching `native` and `nuget` artifacts before generation.
+```powershell
+$env:SAMPLE_TEST_SDK_VERSION = '10.0.401'
+dotnet test tests/SkiaSharp.Tests.Samples.slnx -- --report-trx
+$env:SAMPLE_TEST_SDK_VERSION = '11.0.100-rc.1.26425.128'
+dotnet test tests/SkiaSharp.Tests.Samples.slnx -- --report-trx
+Remove-Item Env:SAMPLE_TEST_SDK_VERSION
+```
+
+The pin disables SDK roll-forward; an unavailable SDK fails. Without this
+variable, ordinary host SDK selection applies, including previews. IDEs must
+inherit the intended environment too. The suite installs no SDKs/workloads and
+does not modify source samples or user caches.
+
+CI runs six parallel jobs: SDK10 and SDK11 on Windows, macOS, and Linux. Both
+legs build the same baseline samples with their declared TFMs unchanged. Both
+install SDK10 and its workloads/runtime; SDK11 legs additionally install the
+pinned preview SDK/workloads. The net10 runner remains independent. Consumer
+SDK versions and Console runtime TFMs are recorded in test output.
+
+SDK11 legs also retarget an owned copy of the real Console project to `net11.0`
+and repeat its run/PNG checks. The baseline Console still targets `net10.0` and
+requires runtime10 even when built by SDK11; the extra case requires runtime11.
+No source sample or shared generated input is retargeted. CI supplies matching
+`native` and `nuget` artifacts before generation.
 
 ## Coverage and diagnostics
 

@@ -124,7 +124,7 @@ public class SampleInfrastructureTests : IDisposable
             Path.Combine(repository, "output", "samples"),
             Path.Combine(repository, "output", "nugets"),
             Path.Combine(repository, "output", "samples-test-workspaces"),
-            Path.Combine(root, "diagnostics"));
+            Path.Combine(root, "diagnostics"), sdkVersion: null);
         var working = workspace.Root;
         Assert.StartsWith("basic-console-", Path.GetFileName(working));
         Assert.Equal(Path.GetFileName(working), Path.GetFileName(workspace.DiagnosticsRoot));
@@ -152,6 +152,70 @@ public class SampleInfrastructureTests : IDisposable
         workspace.Dispose();
         Assert.False(Directory.Exists(working));
         Assert.True(Directory.Exists(workspace.DiagnosticsRoot));
+    }
+
+    [Fact]
+    public async Task ConsumerSdkPinCannotRollForwardOrFallBack()
+    {
+        FileIn("inputs/App/App.csproj");
+        FileIn("packages/input.nupkg");
+        using var workspace = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Path.Combine(root, "packages"),
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"), "1.2.345");
+        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(workspace.Root, "global.json")));
+        var sdk = json.RootElement.GetProperty("sdk");
+        Assert.Equal("1.2.345", sdk.GetProperty("version").GetString());
+        Assert.Equal("disable", sdk.GetProperty("rollForward").GetString());
+        Assert.True(sdk.GetProperty("allowPrerelease").GetBoolean());
+        Assert.Equal("$host$", sdk.GetProperty("paths")[0].GetString());
+        Assert.False(sdk.TryGetProperty("workloadVersion", out _));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => DotNet.GetVersion(workspace));
+    }
+
+    [Fact]
+    public void RetargetingChangesOnlyTheOwnedConsumerProject()
+    {
+        const string project = """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+            </Project>
+            """;
+        FileIn("inputs/App/App.csproj", project);
+        FileIn("packages/input.nupkg");
+        using var baseline = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Path.Combine(root, "packages"),
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+        using var preview = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Path.Combine(root, "packages"),
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+        preview.RetargetProject(Path.Combine("App", "App.csproj"), "net10.0", "net11.0");
+        Assert.Equal(project, File.ReadAllText(Path.Combine(root, "inputs", "App", "App.csproj")));
+        Assert.Equal(project, File.ReadAllText(Path.Combine(baseline.Root, "samples", "App", "App.csproj")));
+        Assert.Equal("net11.0", XDocument.Load(Path.Combine(preview.Root, "samples", "App", "App.csproj"))
+            .Descendants("TargetFramework").Single().Value);
+        Assert.Throws<InvalidOperationException>(() => preview.RetargetProject(
+            Path.Combine("App", "App.csproj"), "net10.0", "net11.0"));
+        Assert.Throws<ArgumentException>(() => preview.RetargetProject(
+            "../outside.csproj", "net10.0", "net11.0"));
+        Assert.Throws<ArgumentException>(() => preview.RetargetProject(
+            Path.Combine(root, "inputs", "App", "App.csproj"), "net10.0", "net11.0"));
+    }
+
+    [Theory]
+    [InlineData("<TargetFrameworks>net10.0;net9.0</TargetFrameworks>")]
+    [InlineData("<TargetFramework Condition=\"'$(Host)' == 'true'\">net10.0</TargetFramework>")]
+    [InlineData("<TargetFramework>net9.0</TargetFramework>")]
+    public void RetargetingRejectsUnexpectedFrameworkDeclarations(string framework)
+    {
+        var project = $"<Project><PropertyGroup>{framework}</PropertyGroup></Project>";
+        FileIn("inputs/App/App.csproj", project);
+        FileIn("packages/input.nupkg");
+        using var workspace = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Path.Combine(root, "packages"),
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+        Assert.Throws<InvalidOperationException>(() => workspace.RetargetProject(
+            Path.Combine("App", "App.csproj"), "net10.0", "net11.0"));
+        Assert.Equal(project, File.ReadAllText(Path.Combine(workspace.Root, "samples", "App", "App.csproj")));
     }
 
     [Fact]

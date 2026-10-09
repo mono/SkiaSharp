@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Xml.Linq;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -7,6 +9,10 @@ public sealed class SampleWorkspace : IDisposable
 {
     public string Root { get; }
     public string DiagnosticsRoot { get; }
+    public string? SdkVersion { get; }
+
+    internal static string? ConsumerSdkVersion =>
+        Environment.GetEnvironmentVariable("SAMPLE_TEST_SDK_VERSION") is { Length: > 0 } version ? version : null;
 
     public SampleWorkspace(string folder)
         : this(folder, Repo.SamplesDir, Repo.PackagesDir, Repo.WorkspacesDir, Repo.ArtifactsDir)
@@ -14,7 +20,13 @@ public sealed class SampleWorkspace : IDisposable
     }
 
     internal SampleWorkspace(string folder, string samplesDir, string packagesDir, string workspacesDir, string artifactsDir)
+        : this(folder, samplesDir, packagesDir, workspacesDir, artifactsDir, ConsumerSdkVersion)
     {
+    }
+
+    internal SampleWorkspace(string folder, string samplesDir, string packagesDir, string workspacesDir, string artifactsDir, string? sdkVersion)
+    {
+        SdkVersion = sdkVersion;
         packagesDir = Path.GetFullPath(packagesDir);
         if (!Directory.Exists(packagesDir) || !Directory.EnumerateFiles(packagesDir, "*.nupkg", SearchOption.AllDirectories).Any())
             throw new InvalidOperationException($"Input NuGet packages are missing: {packagesDir}");
@@ -26,10 +38,16 @@ public sealed class SampleWorkspace : IDisposable
         Directory.CreateDirectory(Root);
         try
         {
-            // Block repository imports and SDK pins; let dotnet on PATH select the SDK.
+            // Block repository imports; the consumer pin is independent of the runner SDK.
             File.WriteAllText(Path.Combine(Root, "Directory.Build.props"), "<Project />");
             File.WriteAllText(Path.Combine(Root, "Directory.Build.targets"), "<Project />");
-            File.WriteAllText(Path.Combine(Root, "global.json"), """{"sdk":{"paths":["$host$"],"allowPrerelease":true}}""");
+            var sdk = new Dictionary<string, object> { ["paths"] = new[] { "$host$" }, ["allowPrerelease"] = true };
+            if (SdkVersion is not null)
+            {
+                sdk["version"] = SdkVersion;
+                sdk["rollForward"] = "disable";
+            }
+            File.WriteAllText(Path.Combine(Root, "global.json"), JsonSerializer.Serialize(new { sdk }));
             DotNet.WriteNuGetConfig(Path.Combine(Root, "NuGet.Config"), packagesDir);
             CopySample(samplesDir, folder, Path.Combine(Root, "samples"));
         }
@@ -38,6 +56,24 @@ public sealed class SampleWorkspace : IDisposable
             Dispose();
             throw;
         }
+    }
+
+    internal void RetargetProject(string relativeProject, string expectedFramework, string targetFramework)
+    {
+        var project = Path.GetFullPath(Path.Combine(Root, "samples", relativeProject));
+        var relative = Path.GetRelativePath(Path.Combine(Root, "samples"), project);
+        if (Path.IsPathRooted(relativeProject) || relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+            throw new ArgumentException("The project must stay within the owned sample copy.", nameof(relativeProject));
+
+        var document = XDocument.Load(project);
+        var frameworks = document.Descendants().Where(e => e.Name.LocalName is "TargetFramework" or "TargetFrameworks").ToArray();
+        if (frameworks.Length != 1 || frameworks[0].Name.LocalName != "TargetFramework" ||
+            frameworks[0].Value != expectedFramework || frameworks[0].Attribute("Condition") is not null ||
+            frameworks[0].Parent?.Attribute("Condition") is not null)
+            throw new InvalidOperationException($"Expected one unconditional {expectedFramework} TargetFramework in {project}.");
+
+        frameworks[0].Value = targetFramework;
+        document.Save(project);
     }
 
     internal static string CreateIdentity(string folder)

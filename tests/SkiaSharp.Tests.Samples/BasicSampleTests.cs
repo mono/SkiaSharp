@@ -1,3 +1,4 @@
+using System.Text.Json;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -27,12 +28,35 @@ public class BasicSampleTests : SampleTestBase
     public Task GeneratedSampleBuilds(string folder, string solution, string configuration) =>
         BuildSample(folder, solution, configuration);
 
-    [Fact]
+    public static IEnumerable<object[]> ConsoleCases()
+    {
+        yield return new object[] { "net10.0" };
+        if (SampleWorkspace.ConsumerSdkVersion?.StartsWith("11.", StringComparison.Ordinal) == true)
+            yield return new object[] { "net11.0" };
+    }
+
+    [Theory]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
-    public Task ConsoleSampleRuns() =>
-        RunSample("Console", ["SkiaSharp", "--output", "output.png"], async (app, project) =>
+    [MemberData(nameof(ConsoleCases))]
+    public async Task ConsoleSampleRuns(string targetFramework)
+    {
+        var folder = Path.Combine("Basic", "Console");
+        var relativeProject = Path.Combine(folder, "SkiaSharpSample", "SkiaSharpSample.csproj");
+        if (targetFramework == "net11.0")
+            PrepareSample(folder).RetargetProject(relativeProject, "net10.0", targetFramework);
+
+        await RunSample("Console", ["SkiaSharp", "--output", "output.png"], async (app, project) =>
         {
+            using var runtimeConfig = JsonDocument.Parse(File.ReadAllText(Path.Combine(
+                Path.GetDirectoryName(project)!, "bin", "Release", targetFramework, "SkiaSharpSample.runtimeconfig.json")));
+            var runtime = runtimeConfig.RootElement.GetProperty("runtimeOptions");
+            Assert.Equal(targetFramework, runtime.GetProperty("tfm").GetString());
+            Assert.Equal("Microsoft.NETCore.App", runtime.GetProperty("framework").GetProperty("name").GetString());
+            Assert.StartsWith(targetFramework == "net11.0" ? "11.0." : "10.0.",
+                runtime.GetProperty("framework").GetProperty("version").GetString());
+            TestContext.Current.TestOutputHelper?.WriteLine($"Consumer TFM: {targetFramework}; runtime configuration: {runtime}");
+
             var result = await app.WaitForExit();
             Assert.Equal(0, result.ExitCode);
             Assert.Contains("Rendering \"SkiaSharp\" to output.png", result.Output);
@@ -42,6 +66,7 @@ public class BasicSampleTests : SampleTestBase
             File.Copy(Path.Combine(Path.GetDirectoryName(project)!, "output.png"), image);
             SampleImage.ValidateFile(image, 800, 600, $"Host/{SampleLookup.HostPlatform}/console.png");
         });
+    }
 
     [Fact]
     [Trait("Category", "SampleRun")]

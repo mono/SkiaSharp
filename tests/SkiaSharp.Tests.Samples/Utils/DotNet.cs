@@ -30,7 +30,11 @@ public static class DotNet
         var result = await Run(workspace, ["--version"]);
         if (result.ExitCode != 0)
             throw new InvalidOperationException($"The dotnet host on PATH could not select an SDK: {result.Output}\n{result.Error}");
-        return result.Output.Trim();
+        var selected = result.Output.Trim();
+        TestContext.Current.TestOutputHelper?.WriteLine($"Consumer SDK: {selected}; runner runtime: {Environment.Version}");
+        if (workspace.SdkVersion is not null && selected != workspace.SdkVersion)
+            throw new InvalidOperationException($"Expected consumer SDK {workspace.SdkVersion}, selected {selected}.");
+        return selected;
     }
 
     public static async Task Build(SampleWorkspace workspace, string project, string diagnostics, string configuration = "Release")
