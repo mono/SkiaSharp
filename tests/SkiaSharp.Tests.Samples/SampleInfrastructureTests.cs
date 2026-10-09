@@ -208,6 +208,68 @@ public class SampleInfrastructureTests : IDisposable
         Assert.ThrowsAny<Exception>(() => SampleImage.Validate(data.ToArray(), 400, 300));
     }
 
+    [Theory]
+    [InlineData(80, 50, 0, true)]
+    [InlineData(80, 50, 3, true)]
+    [InlineData(80, 50, 4, false)]
+    [InlineData(80, 51, 3, true)]
+    [InlineData(80, 51, 4, false)]
+    [InlineData(800, 600, 259, true)]
+    [InlineData(800, 600, 360, true)]
+    [InlineData(800, 600, 361, false)]
+    [InlineData(512, 512, 177, true)]
+    [InlineData(512, 512, 196, true)]
+    [InlineData(512, 512, 197, false)]
+    public void GoldenComparisonAllowsAtMostPointZeroSevenFivePercentOfPixels(
+        int width, int height, int changedPixels, bool accepted)
+    {
+        using var bitmap = new SKBitmap(width, height);
+        bitmap.Erase(SKColors.Black);
+        var expected = SavePng(bitmap, "expected.png");
+        for (var i = 0; i < changedPixels; i++)
+            bitmap.SetPixel(i % width, i / width, SKColors.White);
+        var actual = SavePng(bitmap, "actual.png");
+
+        if (accepted)
+        {
+            SampleImage.CompareGolden(actual, expected);
+            Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+        }
+        else
+        {
+            var error = Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.CompareGolden(actual, expected));
+            Assert.Contains($"{changedPixels}/{width * height} pixels", error.Message);
+            Assert.Contains("exceeding", error.Message);
+            Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+        }
+    }
+
+    [Theory]
+    [InlineData(1, 0, 0, 255)]
+    [InlineData(0, 0, 0, 254)]
+    public void GoldenComparisonCountsEvenSingleChannelAndAlphaChanges(byte red, byte green, byte blue, byte alpha)
+    {
+        using var bitmap = new SKBitmap(80, 50);
+        bitmap.Erase(SKColors.Black);
+        var expected = SavePng(bitmap, "expected.png");
+        bitmap.Erase(new SKColor(red, green, blue, alpha));
+        var actual = SavePng(bitmap, "actual.png");
+
+        var error = Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.CompareGolden(actual, expected));
+        Assert.Contains("4000/4000 pixels", error.Message);
+        Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+    }
+
+    private string SavePng(SKBitmap bitmap, string name)
+    {
+        Directory.CreateDirectory(root);
+        var path = Path.Combine(root, name);
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        File.WriteAllBytes(path, data.ToArray());
+        return path;
+    }
+
     [Fact]
     public void SampleTestBaseOwnsOnlyItsPreparedWorkspace()
     {
