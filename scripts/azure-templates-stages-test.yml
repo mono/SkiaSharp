@@ -792,11 +792,11 @@ stages:
                   fi
                 done
               fi
-              if command -v docker; then
-                docker --version
-              else
-                echo "##vso[task.logissue type=warning]Docker CLI is unavailable; Docker sample tests will report skips."
+              if ! command -v docker >/dev/null 2>&1; then
+                HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew install docker || exit $?
               fi
+              command -v docker || exit $?
+              docker --version || exit $?
             shouldPublish: false
             requiredArtifacts:
               - name: native

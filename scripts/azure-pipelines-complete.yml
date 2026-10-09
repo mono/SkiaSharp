@@ -103,7 +103,7 @@ extends:
         dependsOn: []
         jobs:
           - job: docker_environment
-            displayName: Inspect existing Docker on the macOS sample image
+            displayName: Inspect Docker availability on the macOS sample image
             pool: ${{ parameters.buildAgentMac.pool }}
             timeoutInMinutes: 5
             steps:
@@ -126,10 +126,10 @@ extends:
                       fi
                     done
                   fi
-                  if ! command -v docker; then
-                    echo "##vso[task.logissue type=warning]Docker CLI is unavailable on this image."
-                    exit 0
+                  if ! command -v docker >/dev/null 2>&1; then
+                    HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew install docker
                   fi
+                  command -v docker
                   python3 - <<'PY'
                   import subprocess
 
@@ -150,4 +150,4 @@ extends:
                       if result.returncode != 0:
                           print("##vso[task.logissue type=warning]Docker probe failed; see its output above.", flush=True)
                   PY
-                displayName: Probe Docker without installing or starting a daemon
+                displayName: Install Docker CLI and probe the existing daemon
