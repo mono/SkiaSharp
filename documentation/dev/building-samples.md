@@ -126,6 +126,9 @@ generate or accept them automatically.
 Host/Linux references were reviewed from `sample_logs_linux` in producing
 [build 1629334](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1629334)
 at source `d1ef43a8`; all four attempts produced identical Console/Web PNGs.
+Host/Windows and Docker/Windows references were reviewed from
+`sample_logs_windows` in [build 1629446](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1629446)
+at source `9a1e2422`; all four attempts produced identical captures for each case.
 
 For restore failures, compare the generated references with the staged package
 cohort and inspect the retained binlog. Each consumer already has fresh caches;
