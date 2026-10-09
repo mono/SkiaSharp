@@ -51,8 +51,12 @@ or running it directly:
 
 ```sh
 dotnet cake --target=samples-generate --previewLabel=pr.1234 --buildNumber=26509.10
-dotnet test tests/SkiaSharp.Tests.Samples.slnx -- --report-trx
+dotnet test tests/SkiaSharp.Tests.Samples.slnx \
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
 ```
+
+The solution includes the runner's source dependencies; the properties above
+limit their build to the runner's .NET 10 target.
 
 Direct tests use generated inputs without invoking Cake or downloading packages.
 The repository runner remains `net10.0`; owned consumer builds use `dotnet`
@@ -61,9 +65,9 @@ SDK independently of the runner (PowerShell on any host):
 
 ```powershell
 $env:SAMPLE_TEST_SDK_VERSION = '10.0.401'
-dotnet test tests/SkiaSharp.Tests.Samples.slnx -- --report-trx
+dotnet test tests/SkiaSharp.Tests.Samples.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
 $env:SAMPLE_TEST_SDK_VERSION = '11.0.100-rc.1.26425.128'
-dotnet test tests/SkiaSharp.Tests.Samples.slnx -- --report-trx
+dotnet test tests/SkiaSharp.Tests.Samples.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
 Remove-Item Env:SAMPLE_TEST_SDK_VERSION
 ```
 
