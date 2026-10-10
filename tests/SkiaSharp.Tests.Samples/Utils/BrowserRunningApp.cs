@@ -15,22 +15,23 @@ internal sealed class BrowserRunningApp(
     {
         var request = RunningApp.RequestUri(address, path);
         record($"Navigating to {request}");
-        var response = await Page.GotoAsync(request.AbsoluteUri,
-            new() { WaitUntil = WaitUntilState.Load }).WaitAsync(TestContext.Current.CancellationToken);
+        var response = await Page.GotoAsync(request.AbsoluteUri, new() { WaitUntil = WaitUntilState.Load })
+            .WaitAsync(TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.Equal(200, response.Status);
     }
 
     internal Task WaitForElement(string selector) =>
-        Page.Locator(selector).First.WaitForAsync(new() { State = WaitForSelectorState.Visible })
+        Page.Locator(selector).First
+            .WaitForAsync(new() { State = WaitForSelectorState.Visible })
             .WaitAsync(TestContext.Current.CancellationToken);
 
-    internal async Task<string> Screenshot(string? golden = null, double? maxAverageColorErrorFraction = null)
+    internal async Task<string> Screenshot()
     {
         var name = ++screenshots == 1 ? "page" : $"page-{screenshots}";
         var actual = Path.Combine(diagnostics, $"{name}.actual.png");
-        await Page.ScreenshotAsync(new() { Path = actual, FullPage = true })
-            .WaitAsync(TestContext.Current.CancellationToken);
+        await Page.ScreenshotAsync(new() { Path = actual, FullPage = true }).WaitAsync(TestContext.Current.CancellationToken);
+
         try
         {
             AssertNoErrors();
@@ -40,24 +41,11 @@ internal sealed class BrowserRunningApp(
             TestContext.Current.AddFileAttachment(actual, "image/png");
             throw;
         }
-        if (golden is null)
-            TestContext.Current.AddFileAttachment(actual, "image/png");
-        else
-            SampleImage.ValidateFile(actual, golden, maxAverageColorErrorFraction);
         return actual;
     }
 
     private void AssertNoErrors() =>
         Assert.True(errors.IsEmpty, $"Browser errors:\n{string.Join("\n", errors)}");
-
-    internal static Task Capture(RunningApp app, string path, string selector, string golden,
-        double? maxAverageColorErrorFraction = null) =>
-        Run(app, async browser =>
-        {
-            await browser.Navigate(path);
-            await browser.WaitForElement(selector);
-            await browser.Screenshot(golden, maxAverageColorErrorFraction);
-        });
 
     internal static async Task Run(RunningApp app, Func<BrowserRunningApp, Task> test)
     {
