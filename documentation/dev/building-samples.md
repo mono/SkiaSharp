@@ -120,7 +120,8 @@ Browser facts use `RunBrowserSample` with `Navigate`, `WaitForElement` and `Scre
 to compare it with a golden. `Page` exposes Playwright locators, clicks and
 pointer input.
 The callback owns no browser resources: the helper closes them and retains
-browser errors and diagnostics.
+diagnostics. Browser events log to test output; each helper operation and the
+completed callback assert that no console/page errors were collected.
 
 Screenshots use a 1280 x 900 viewport, scale 1 and light theme. Review page
 references under `Expected/Host/<host-platform>/` separately from API PNGs.

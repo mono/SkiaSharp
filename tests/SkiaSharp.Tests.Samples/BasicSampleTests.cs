@@ -119,4 +119,44 @@ public class BasicSampleTests : SampleTestBase
             SampleImage.ValidateFile(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-gpu-page.png",
                 maxAverageColorErrorFraction: 0.06);
         });
+
+    [Theory]
+    [Trait("Category", "Browser")]
+    [InlineData("navigate")]
+    [InlineData("wait")]
+    [InlineData("screenshot")]
+    [InlineData("callback")]
+    public async Task BrowserOperationsReportAllConsoleErrors(string operation)
+    {
+        var error = await Assert.ThrowsAsync<Xunit.Sdk.TrueException>(() =>
+            RunBrowserSample("Web", ["--urls", "http://127.0.0.1:0"], async app =>
+            {
+                await app.Navigate("/");
+                await app.Page.EvaluateAsync("console.error('first browser sentinel'); console.error('second browser sentinel')");
+                switch (operation)
+                {
+                    case "navigate": await app.Navigate("/"); break;
+                    case "wait": await app.WaitForElement("body"); break;
+                    case "screenshot": await app.Screenshot(); break;
+                }
+            }));
+        Assert.Contains("first browser sentinel", error.Message);
+        Assert.Contains("second browser sentinel", error.Message);
+    }
+
+    [Fact]
+    [Trait("Category", "Browser")]
+    public async Task BrowserCallbackReportsPageErrors()
+    {
+        var error = await Assert.ThrowsAsync<Xunit.Sdk.TrueException>(() =>
+            RunBrowserSample("Web", ["--urls", "http://127.0.0.1:0"], async app =>
+            {
+                await app.Navigate("/");
+                var received = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                app.Page.PageError += (_, _) => received.TrySetResult();
+                await app.Page.EvaluateAsync("setTimeout(() => { throw new Error('page failure sentinel'); }, 0)");
+                await received.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            }));
+        Assert.Contains("page failure sentinel", error.Message);
+    }
 }
