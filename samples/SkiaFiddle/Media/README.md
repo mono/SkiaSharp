@@ -14,8 +14,7 @@ The six canonical Skia fiddle source images, taken verbatim from the Skia
 buildbot repository:
 <https://skia.googlesource.com/buildbot/+/refs/heads/main/fiddlek/source/>
 
-`3.png` is the classic mandrill/baboon and `5.png` is the color wheel — the same
-images already shipped in `samples/Gallery/Shared/Media/`. They are licensed
+`3.png` is the classic mandrill/baboon and `5.png` is the color wheel. They are licensed
 under the Skia project's BSD-3-Clause license (`exports_files` in the buildbot
 repo) and are freely redistributable.
 
@@ -28,7 +27,6 @@ repo) and are freely redistributable.
 | `DejaVuSerif.ttf`  | DejaVu Serif    | Bitstream Vera / Arev (free)     | Plain serif        |
 | `DejaVuSans.ttf`   | DejaVu Sans     | Bitstream Vera / Arev (free)     | Plain sans         |
 
-`InterVariable.ttf` and `Nabla.ttf` are copied from `samples/Gallery/Shared/Media/`.
 The DejaVu fonts are the metric-friendly, freely redistributable serif/sans pair
 from the [DejaVu fonts project](https://dejavu-fonts.github.io/) (the Bitstream
 Vera license permits use, modification, and redistribution, including as part of
