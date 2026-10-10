@@ -807,7 +807,16 @@ stages:
                 ${{ else }}:
                   SAMPLE_TEST_SDK_VERSION: $(DOTNET_VERSION_PREVIEW)
               displayName: macOS (${{ sdk }} SDK)
-              buildAgent: ${{ parameters.buildAgentMac }}
+              ${{ if eq(sdk, 'net10') }}:
+                buildAgent: ${{ parameters.buildAgentMac }}
+              ${{ else }}:
+                buildAgent:
+                  pool:
+                    name: Azure Pipelines
+                    vmImage: macos-26
+                    os: macos
+                variables:
+                  XCODE_VERSION: '26.6'
               target: samples
               installNinja: true
               shouldPublish: false
