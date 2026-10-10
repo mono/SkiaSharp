@@ -44,6 +44,10 @@ Dependency restoration still needs the network: NuGet, Skia's `git-sync-deps`,
 and ANGLE's existing revision-pinned Chromium LLVM/resource compiler downloads
 are not Visual Studio Installer components. The ANGLE build retains those
 upstream tools, rather than silently substituting unrelated compiler revisions.
+Chromium 6275 predates VS 2026: the build adapts its toolchain scripts to pass
+the selected v143 version to `vcvarsall` and locate the installed ARM64 v143
+redistributable, instead of selecting the latest v145 redistributable by mistake.
+Missing components or unexpected upstream script contents fail explicitly.
 
 `Validate - Windows Components` validates VS 2026 on `windows-2025-vs2026` for
 x86, x64 and ARM64, alongside the existing VS 2022 checks. It exports before/after
