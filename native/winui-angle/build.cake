@@ -38,6 +38,12 @@ Task("sync-ANGLE")
         });
     }
 
+    var msbuild = ((DirectoryPath)VS_INSTALL).CombineWithFilePath("MSBuild/Current/Bin/MSBuild.exe");
+    if (System.Diagnostics.FileVersionInfo.GetVersionInfo(msbuild.FullPath).FileMajorPart >= 18) {
+        RunPython(ROOT_PATH, ROOT_PATH.CombineWithFilePath("native/winui-angle/configure_vs2026.py"),
+            $"\"{ANGLE_PATH}\" \"{VS_INSTALL}\" \"{TOOLSET_VERSION.Value}\"");
+    }
+
     // patch the output filenames
     {
         var toolchain = ANGLE_PATH.CombineWithFilePath("build/toolchain/win/toolchain.gni");

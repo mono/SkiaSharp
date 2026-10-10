@@ -10,6 +10,7 @@ on:
       - source/SkiaSharp.Build.props
       - scripts/infra/native/windows/install-components.ps1
       - scripts/infra/native/windows/build-tools.vsconfig
+      - scripts/infra/native/windows/vs2026.vsconfig
       - scripts/infra/native/windows/windows-shared.cake
       - native/windows/**
       - native/winui/**
@@ -31,6 +32,7 @@ jobs:
         shell: pwsh
     env:
       BUILD_TOOLS: 'true'
+      VS_VERSION: '2022'
       VS_INSTALL: C:\SkiaSharpVisualStudio
       WINDOWS_SDK_VERSION: 10.0.26100.0
       GIT_SYNC_DEPS_SKIP_EMSDK: '1'
@@ -75,23 +77,53 @@ jobs:
             }
             'No Visual Studio instances remain.' | Set-Content (Join-Path $evidence 'clean-vs.txt')
           } else {
-            $installation = & $vswhere -latest -version '[17.0,18.0)' -property installationPath
-            if ($LASTEXITCODE -ne 0 -or !$installation) { throw 'The OS does not provide full VS 2022.' }
+            $versionRange = if ($env:VS_VERSION -eq '2026') { '[18.0,19.0)' } else { '[17.0,18.0)' }
+            $installation = & $vswhere -latest -version $versionRange -property installationPath
+            if ($LASTEXITCODE -ne 0 -or !$installation) { throw "The OS does not provide full VS $env:VS_VERSION." }
             "VS_INSTALL=$installation" >> $env:GITHUB_ENV
           }
 
       - uses: actions/setup-dotnet@v4
+        if: env.VS_VERSION == '2022'
         with:
           global-json-file: global.json
           dotnet-version: '10.0.111'
       - uses: actions/setup-python@v5
+        if: env.VS_VERSION == '2022'
         with:
           python-version: '3.12'
 
-      - name: Apply configured Visual Studio 2022 components
+      - name: Apply configured Visual Studio components
         run: |
           ./scripts/infra/native/windows/install-components.ps1 `
-            -BuildTools:($env:BUILD_TOOLS -eq 'true') -InstallationPath $env:VS_INSTALL
+            -BuildTools:($env:BUILD_TOOLS -eq 'true') -InstallationPath $env:VS_INSTALL `
+            -VisualStudioVersion $env:VS_VERSION
+
+      - name: Select VS 2026 tools and inventory preinstalled prerequisites
+        if: env.VS_VERSION == '2026'
+        run: |
+          $evidence = Join-Path $env:RUNNER_TEMP 'windows-components'
+          $llvm = Join-Path $env:VS_INSTALL 'VC\Tools\Llvm\x64'
+          $ninja = Join-Path $env:VS_INSTALL 'Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe'
+          $cmake = Join-Path $env:VS_INSTALL 'Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe'
+          foreach ($tool in @("$llvm\bin\clang.exe", $ninja, $cmake)) {
+            if (!(Test-Path $tool)) { throw "Missing Visual Studio tool: $tool" }
+            & $tool --version | Tee-Object -Append (Join-Path $evidence 'vs-tools.txt')
+            if ($LASTEXITCODE -ne 0) { throw "$tool exited with code $LASTEXITCODE." }
+            $tool | Add-Content (Join-Path $evidence 'vs-tools.txt')
+          }
+          "LLVM_HOME=$llvm" >> $env:GITHUB_ENV
+          "NINJA_EXE=$ninja" >> $env:GITHUB_ENV
+          Split-Path $cmake >> $env:GITHUB_PATH
+          $python = (Get-Command python -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
+          & $python --version | Tee-Object (Join-Path $evidence 'prerequisites.txt')
+          if ($LASTEXITCODE -ne 0) { throw "Python exited with code $LASTEXITCODE." }
+          "PYTHON_EXE=$python" >> $env:GITHUB_ENV
+          $python | Add-Content (Join-Path $evidence 'prerequisites.txt')
+          dotnet --info | Add-Content (Join-Path $evidence 'prerequisites.txt')
+          if ($LASTEXITCODE -ne 0) { throw 'The repository-pinned SDK is not installed. Install it through Visual Studio Installer when available.' }
+          dotnet workload list | Add-Content (Join-Path $evidence 'prerequisites.txt')
+          if ($LASTEXITCODE -ne 0) { throw "Workload inventory exited with code $LASTEXITCODE." }
 
       - name: Record installed components and toolchain
         run: |
@@ -108,7 +140,11 @@ jobs:
           if ($process.ExitCode -ne 0 -or !(Test-Path $export)) {
             throw "Visual Studio configuration export failed (exit code $($process.ExitCode))."
           }
-          $config = if ($env:BUILD_TOOLS -eq 'true') { 'scripts/infra/native/windows/build-tools.vsconfig' } else { 'source/.vsconfig' }
+          $config = if ($env:BUILD_TOOLS -eq 'true') {
+            'scripts/infra/native/windows/build-tools.vsconfig'
+          } elseif ($env:VS_VERSION -eq '2026') {
+            'scripts/infra/native/windows/vs2026.vsconfig'
+          } else { 'source/.vsconfig' }
           Copy-Item $config (Join-Path $evidence 'requested.vsconfig')
           Get-Content "$env:VS_INSTALL\VC\Auxiliary\Build\Microsoft.VCToolsVersion*.txt" |
             Set-Content (Join-Path $evidence 'toolset-versions.txt')
@@ -125,15 +161,19 @@ jobs:
             }
           }
 
-      - name: Prepare native source and standalone tools
+      - name: Prepare native source and build tools
         run: |
+          python native/winui-angle/configure_vs2026_test.py
+          if ($LASTEXITCODE -ne 0) { throw "ANGLE toolchain tests exited with code $LASTEXITCODE." }
           git submodule update --init --recursive externals/skia
           if ($LASTEXITCODE -ne 0) { throw "Submodule initialization exited with code $LASTEXITCODE." }
           dotnet tool restore
           if ($LASTEXITCODE -ne 0) { throw "Tool restore exited with code $LASTEXITCODE." }
-          ./scripts/infra/native/shared/install-ninja.ps1
-          ./scripts/infra/native/windows/install-7zip.ps1
-          ./scripts/infra/native/windows/install-llvm.ps1
+          if ($env:VS_VERSION -eq '2022') {
+            ./scripts/infra/native/shared/install-ninja.ps1
+            ./scripts/infra/native/windows/install-7zip.ps1
+            ./scripts/infra/native/windows/install-llvm.ps1
+          }
 
       - name: Build native SkiaSharp and HarfBuzzSharp
         env:
@@ -150,20 +190,24 @@ jobs:
         run: |
           $original = Get-Content global.json -Raw
           try {
-            $configuration = $original | ConvertFrom-Json -AsHashtable
-            $configuration.sdk.version = '10.0.111'
-            $configuration.sdk.rollForward = 'disable'
-            $configuration | ConvertTo-Json -Depth 20 | Set-Content global.json
+            $expectedSdk = ($original | ConvertFrom-Json).sdk.version
+            if ($env:VS_VERSION -eq '2022') {
+              $expectedSdk = '10.0.111'
+              $configuration = $original | ConvertFrom-Json -AsHashtable
+              $configuration.sdk.version = $expectedSdk
+              $configuration.sdk.rollForward = 'disable'
+              $configuration | ConvertTo-Json -Depth 20 | Set-Content global.json
+            }
             $selected = dotnet --version
-            if ($LASTEXITCODE -ne 0 -or $selected.Trim() -ne '10.0.111') {
-              throw "Expected WinUI SDK 10.0.111, got '$selected'."
+            if ($LASTEXITCODE -ne 0 -or $selected.Trim() -ne $expectedSdk) {
+              throw "Expected WinUI SDK $expectedSdk, got '$selected'."
             }
             dotnet cake native/winui/build.cake --configuration=Release --arch="$env:BUILD_ARCH" `
               --vsinstall="$env:VS_INSTALL" --windowsSdkVersion=10.0.22621.0 2>&1 |
               Tee-Object (Join-Path $env:RUNNER_TEMP 'windows-components/winui-build.log')
             if ($LASTEXITCODE -ne 0) { throw "WinUI build exited with code $LASTEXITCODE." }
           } finally {
-            Set-Content global.json $original
+            if ($env:VS_VERSION -eq '2022') { Set-Content global.json $original }
           }
 
       - name: Build ANGLE and Windows App SDK headers
@@ -178,8 +222,10 @@ jobs:
       - name: Build managed Windows integrations and source benchmarks
         if: matrix.arch == 'x64'
         run: |
-          ./scripts/infra/managed/install-dotnet-workloads.ps1 `
-            -SdkVersion '10.0.401' -WorkloadSetVersion '10.0.202' -Workloads 'maui-windows'
+          if ($env:VS_VERSION -eq '2022') {
+            ./scripts/infra/managed/install-dotnet-workloads.ps1 `
+              -SdkVersion '10.0.401' -WorkloadSetVersion '10.0.202' -Workloads 'maui-windows'
+          }
           $projects = @(
             'source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj',
             'source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SkiaSharp.Views.WindowsForms.csproj',
@@ -201,7 +247,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: windows-components-${{ env.BUILD_TOOLS == 'true' && 'build-tools' || 'ide' }}-${{ matrix.arch }}
+          name: windows-components-vs${{ env.VS_VERSION }}-${{ env.BUILD_TOOLS == 'true' && 'build-tools' || 'ide' }}-${{ matrix.arch }}
           path: |
             ${{ runner.temp }}/windows-components/
             ${{ runner.temp }}/dd_*.log
@@ -221,6 +267,24 @@ jobs:
         shell: pwsh
     env:
       BUILD_TOOLS: 'false'
+      VS_VERSION: '2022'
+      WINDOWS_SDK_VERSION: 10.0.26100.0
+      GIT_SYNC_DEPS_SKIP_EMSDK: '1'
+    steps: *windows-build-steps
+
+  full-vs2026:
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86, x64, arm64]
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      BUILD_TOOLS: 'false'
+      VS_VERSION: '2026'
       WINDOWS_SDK_VERSION: 10.0.26100.0
       GIT_SYNC_DEPS_SKIP_EMSDK: '1'
     steps: *windows-build-steps
