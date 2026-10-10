@@ -1,153 +1,101 @@
 # Building and Validating Samples
 
-This guide explains how to build SkiaSharp samples using CI-produced NuGet packages. The samples use **package references** (not project references) when built through the `samples` cake target, so they need downloadable NuGet packages to compile.
+The Samples suite builds generated applications against produced NuGet packages
+and runs the Console/Web samples on the host and in Docker.
 
-## Transport Feed
+## Run the suite
 
-Official builds register wrapper packages as non-shipping assets in the same BAR
-as the product packages. The Maestro `SkiaSharp` channel routes them to the
-shared **dotnet-libraries-transport** Azure DevOps feed:
+Install the repository SDK and the workloads required by your host's samples.
+Docker build/run tests run on any host with usable Docker, including macOS.
+Put `docker` on `PATH` and start a daemon using Windows containers on Windows
+or Linux containers on macOS/Linux. CI does not provision Docker on macOS.
+Unavailable Docker produces visible skips; wrong container mode and sample
+failures fail the tests.
 
+**Bootstrap before staging packages:** bootstrap resets `output/`.
+For managed-only work:
+
+```sh
+dotnet cake --target=externals-download
 ```
-https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json
-```
 
-These wrapper packages bundle the real NuGet packages inside their `tools/` directory:
+For native or Skia changes, build natives from source instead; see
+[AGENTS.md](../../AGENTS.md). Do not download prebuilt natives after native changes.
 
-| Wrapper package | Contains |
-|-----------------|----------|
-| `_nativeassets` | Native binaries (per-platform frameworks/dylibs) |
-| `_nugets` | The build's single NuGet package family: exact stable or prerelease |
-
-The wrapper packages use `0.0.0-{source}.{build}` versioning to identify their CI source. The actual NuGet packages inside have their real, user-facing version numbers.
-
-## Two-Step Process
-
-Building samples requires two separate sets of arguments because the CI feed version and the NuGet package version are different things:
-
-### Step 1: Acquire packages
-
-For a pull request build, use the supported repository helper and copy its
-packages into the sample workflow directory:
+Stage one producing build's non-symbol packages in `output/nugets/`, including
+SkiaSharp, HarfBuzzSharp, and the required native/view packages. Its base versions
+must match `scripts/VERSIONS.txt`. Download the public `nuget` build artifact,
+or use the PR helper:
 
 ```powershell
-pwsh scripts/get-skiasharp-pr.ps1 3553 -SuccessfulOnly -Force
+$pr = 1234 # Producing PR number.
+pwsh scripts/get-skiasharp-pr.ps1 $pr -SuccessfulOnly -Force
 New-Item output/nugets -ItemType Directory -Force | Out-Null
-Copy-Item ~/.skiasharp/hives/pr-3553/packages/*.nupkg output/nugets/
+Copy-Item "$HOME/.skiasharp/hives/pr-$pr/packages/*.nupkg" output/nugets/
 ```
 
-For an exact public build, download its canonical `nuget` pipeline artifact
-and extract non-symbol packages to `output/nugets/`. For a promoted branch
-build, retrieve and extract the matching branch-versioned `_NuGets` transport
-package from the public `dotnet-libraries-transport` feed. Do not use a
-retired parent documentation-download Cake target.
+Pass the producing package suffix explicitly. For example, packages ending in
+`-pr.1234.26509.10` require:
 
-### Step 2: Build samples — use the real NuGet version
+```sh
+dotnet cake --target=samples --previewLabel=pr.1234 --buildNumber=26509.10
+```
 
-After downloading, the extracted nupkgs in `output/nugets/` have real version numbers. The `samples` target needs `--previewLabel` and `--buildNumber` matching these real versions:
+This generates the samples and runs the suite with live test output. Use the
+suffix of the staged packages; do not mix producing builds.
+
+## IDE and direct test runs
+
+After staging packages, generate once before opening the test project in an IDE
+or running it directly:
+
+```sh
+dotnet cake --target=samples-generate --previewLabel=pr.1234 --buildNumber=26509.10
+dotnet test tests/SkiaSharp.Tests.Samples.slnx \
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
+```
+
+Direct tests do not generate samples or download packages. Keep the `net10.0`
+properties above to avoid building the runner's dependencies for every platform.
+
+To build samples with a specific SDK, choose a version from `dotnet --list-sdks`
+and set `SAMPLE_TEST_SDK_VERSION` before starting the tests or IDE. For example,
+in PowerShell:
 
 ```powershell
-# Detect from downloaded packages
-ls output/nugets/SkiaSharp.[0-9]*-*.nupkg
-# → SkiaSharp.4.152.0-preview.0.26418.3.nupkg
-# So: --previewLabel=preview.0 --buildNumber=26418.3
+$env:SAMPLE_TEST_SDK_VERSION = '10.0.401' # Must be installed.
+dotnet test tests/SkiaSharp.Tests.Samples.slnx `
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
+Remove-Item Env:SAMPLE_TEST_SDK_VERSION
 ```
 
-## NuGet Package Version Construction
+This selects the exact sample-build SDK, not the runner SDK or sample TFM.
+Without it, normal host SDK selection applies. A missing selected SDK fails.
 
-The Cake build constructs the NuGet suffix in `scripts/infra/shared/shared.cake`:
+CI tests SDK10 and SDK11 on Windows, macOS, and Linux. Baseline TFMs remain
+unchanged; SDK11 also runs an owned Console copy targeting `net11.0`.
+Docker images still use .NET 10 regardless of the host SDK.
 
-```csharp
-var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview").ToLowerInvariant ();
-var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER") ?? "0");
-var DOTNET_FINAL_VERSION_KIND = Argument (
-    "dotNetFinalVersionKind",
-    EnvironmentVariable ("DOTNET_FINAL_VERSION_KIND") ?? "").ToLowerInvariant ();
+## Coverage and diagnostics
 
-var PREVIEW_NUGET_SUFFIX = DOTNET_FINAL_VERSION_KIND == "release" ? "" : PREVIEW_LABEL;
-if (DOTNET_FINAL_VERSION_KIND != "release" && !string.IsNullOrEmpty (BUILD_NUMBER))
-    PREVIEW_NUGET_SUFFIX += $".{BUILD_NUMBER}";
+The suite builds host-eligible Basic and Gallery solutions. Gallery, WASM, and
+Blazor are build-only; Console/Web runtime tests check exit codes, HTTP responses,
+and PNGs on the host and in Docker. Generated-project tests check package versions.
+
+Use IDE filters or select one test:
+
+```sh
+dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
+  -- --filter-method '*BasicSampleTests.WebSampleReturnsImage'
 ```
 
-The normal NuGet version is `{base_version}-{PREVIEW_NUGET_SUFFIX}`. In CI,
-source-controlled `PREVIEW_LABEL=stable` derives
-`DOTNET_FINAL_VERSION_KIND=release`; direct Cake invocations select the same
-exact `{base_version}` with `--dotNetFinalVersionKind=release`.
+Find stdout/stderr, binlogs, results, and images under
+`output/logs/testlogs/samples/`, or in CI's `sample_logs_*` artifact. For restore
+failures, compare generated versions with the staged packages and inspect the
+binlog. Tests use private workspaces/caches; do not clear shared caches.
 
-- **base_version**: From `scripts/VERSIONS.txt` (e.g. `3.119.4`)
-- **PREVIEW_LABEL**: The preview label (e.g. `preview.0` — first preview, `preview.1` — second, etc.)
-- **BUILD_NUMBER**: Arcade's package build identity (`short-date.revision`)
-
-**Example:** `4.152.0-preview.0.26418.3` → `previewLabel=preview.0`, `buildNumber=26418.3`
-
-## Cake Arguments
-
-### For building samples (`samples`)
-
-These arguments control the **NuGet version suffix** used when rewriting package references:
-
-| Argument | Environment variable | Default | Purpose |
-|----------|---------------------|---------|---------|
-| `--previewLabel` | `PREVIEW_LABEL` | `preview` | Preview suffix label |
-| `--buildNumber` | `BUILD_NUMBER` | `0` | Build number for suffix |
-| `--dotNetFinalVersionKind` | `DOTNET_FINAL_VERSION_KIND` | `""` | Set to `release` for an exact stable version |
-| `--sample` | — | `""` | Filter to build a specific sample |
-
-> **Note:** `--previewLabel` and `--buildNumber` only control the package version
-> used while sample generation rewrites package references. Acquire packages
-> first, then derive both values from the downloaded package filenames.
-
-## Cake Targets
-
-| Target | What it does | Output directory |
-|--------|-------------|-----------------|
-| `samples-generate` | Copies samples to `output/`, converts ProjectRef → PackageRef | `output/samples/`, `output/samples-preview/` |
-| `samples-prepare` | Clears cached SkiaSharp/HarfBuzz packages, copies nupkgs for Docker | — |
-| `samples-run` | Builds all generated samples from `output/` | — |
-| `samples` | Runs generate → prepare → run in sequence | — |
-
-## Building Samples
-
-After acquiring packages as described above, run `dotnet cake --target=samples`
-to generate and build the sample projects. Use the individual Cake targets
-listed above when diagnosing generation or build failures.
-
-## How `samples-generate` Works
-
-The `CreateSamplesDirectory()` function in `scripts/infra/samples/samples.cake`:
-
-Sample solutions are `.slnx` files. Generation keeps the sample projects in each
-solution and removes references to projects outside `samples/`; host-specific
-variants are selected by their `.Mac`, `.Windows`, or `.Linux` suffix.
-
-1. **`<ProjectReference>`** → converted to `<PackageReference>` using the project's `<PackagingGroup>` as the package ID and version from `VERSIONS.txt`
-2. **Existing `<PackageReference>`** → version updated from `VERSIONS.txt`
-3. For SkiaSharp/HarfBuzzSharp packages, the preview suffix is appended
-4. Two output trees: `output/samples/` (stable) and `output/samples-preview/` (preview)
-
-`samples-run` selects the stable tree only for an exact release identity. Any
-non-empty `PREVIEW_NUGET_SUFFIX` selects the preview tree so its references
-match the single package family emitted by that build.
-
-## Troubleshooting
-
-### Stale cached packages
-```powershell
-rm -r -fo externals/package_cache/skiasharp*, externals/package_cache/harfbuzzsharp*
-dotnet nuget locals all --clear
-```
-
-### tvOS/macOS/Tizen not building
-Some platforms are disabled by default:
-```powershell
-# Pass these MSBuild properties to enable optional platforms
--p:IsNetTVOSSupported=true
--p:IsNetTizenSupported=true
--p:IsNetMacOSSupported=true
-```
-
-### WinUI XAML compiler failures on .NET 10
-May need a newer `Microsoft.WindowsAppSDK` version.
-
-### NuGet feed authentication
-The dotnet-libraries-transport feed is public — no authentication required.
+PNG references are platform-specific under `tests/SkiaSharp.Tests.Samples/Expected/`.
+Dimensions must match; at most **0.075%** of pixels may differ, with zero channel
+tolerance. Failures retain the actual image; mismatches also retain a diff.
+Review replacement references on the affected platform; tests never accept them
+automatically.

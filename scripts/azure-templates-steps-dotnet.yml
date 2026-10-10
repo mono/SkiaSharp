@@ -26,6 +26,18 @@ steps:
       displayName: Install .NET ${{ sdk.sdkVersion }}
       retryCountOnTaskFailure: 3
       condition: ${{ parameters.condition }}
+    - ${{ if eq(parameters.platform, 'macos') }}:
+      - bash: |
+          set -euo pipefail
+          host="$(command -v dotnet)"
+          replacement="$(mktemp "${host}.XXXXXX")"
+          trap 'rm -f "$replacement"' EXIT
+          # Avoid macOS retaining the previous signature after UseDotNet overwrites an executed host.
+          cp -p "$host" "$replacement"
+          cmp "$host" "$replacement"
+          mv -f "$replacement" "$host"
+        displayName: Refresh installed .NET host inode
+        condition: ${{ parameters.condition }}
     - ${{ if ne(sdk.workloadSetVersion, '') }}:
       - pwsh: |
           $ids = $env:SETUP_WORKLOADS

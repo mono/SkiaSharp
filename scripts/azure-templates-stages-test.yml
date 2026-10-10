@@ -740,57 +740,143 @@ stages:
       ${{ else }}:
         dependsOn: package
       jobs:
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Windows)
-          parameters:
-            name: samples_windows
-            dotnetSdks:
-              - sdkVersion: $(DOTNET_VERSION)
-                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizen:
-                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-            displayName: Windows
-            buildAgent: ${{ parameters.buildAgentWindows}}
-            target: samples
-            requiredArtifacts:
-              - name: nuget
-                dir: nugets
-            postBuildSteps:
-              - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
-                displayName: Delete the nugets folder
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (macOS)
-          parameters:
-            name: samples_macos
-            dotnetSdks:
-              - sdkVersion: $(DOTNET_VERSION)
-                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizen:
-                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-            displayName: macOS
-            buildAgent: ${{ parameters.buildAgentMac }}
-            target: samples
-            installNinja: true
-            shouldPublish: false
-            requiredArtifacts:
-              - name: nuget
-                dir: nugets
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
-          parameters:
-            name: samples_linux
-            dotnetSdks:
-              - sdkVersion: $(DOTNET_VERSION)
-                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizen:
-                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-            displayName: Linux
-            buildAgent: ${{ parameters.buildAgentLinux }}
-            packages: $(MANAGED_LINUX_PACKAGES)
-            target: samples
-            shouldPublish: false
-            requiredArtifacts:
-              - name: nuget
-                dir: nugets
-            installEmsdk: true
-            initScript: source ~/emsdk/emsdk_env.sh
+        # Both SDK legs retain SDK10 for the net10 runner/runtime. Only consumer selection changes.
+        # Docker facts still use their original SDK10/runtime10 images in both legs.
+        - ${{ each sdk in split('net10,net11', ',') }}:
+          - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Windows)
+            parameters:
+              name: samples_windows_${{ sdk }}
+              dotnetSdks:
+                - sdkVersion: $(DOTNET_VERSION)
+                  workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                  tizen:
+                    manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                    manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+                - ${{ if eq(sdk, 'net11') }}:
+                  - sdkVersion: $(DOTNET_VERSION_PREVIEW)
+                    workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
+                    workloads: [android, macos, wasm-tools, wasm-tools-net10, ios, tvos, maccatalyst, maui]
+                    tizen:
+                      manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                      manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+              env:
+                ${{ if eq(sdk, 'net10') }}:
+                  SAMPLE_TEST_SDK_VERSION: $(DOTNET_VERSION)
+                ${{ else }}:
+                  SAMPLE_TEST_SDK_VERSION: $(DOTNET_VERSION_PREVIEW)
+              displayName: Windows (${{ sdk }} SDK)
+              buildAgent: ${{ parameters.buildAgentWindows}}
+              target: samples
+              requiredArtifacts:
+                - name: native
+                - name: nuget
+                  dir: nugets
+              postBuildSteps:
+                - task: PublishTestResults@2
+                  condition: always()
+                  inputs:
+                    testResultsFormat: VSTest
+                    testResultsFiles: output/logs/testlogs/samples/**/*.trx
+                    testRunTitle: Samples (Windows, ${{ sdk }} SDK)
+                - task: PublishPipelineArtifact@1
+                  condition: always()
+                  inputs:
+                    targetPath: output/logs
+                    artifact: sample_logs_windows_${{ sdk }}
+                - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
+                  displayName: Delete the nugets folder
+          - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (macOS)
+            parameters:
+              name: samples_macos_${{ sdk }}
+              dotnetSdks:
+                - sdkVersion: $(DOTNET_VERSION)
+                  workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                  tizen:
+                    manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                    manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+                - ${{ if eq(sdk, 'net11') }}:
+                  - sdkVersion: $(DOTNET_VERSION_PREVIEW)
+                    workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
+                    workloads: [android, macos, wasm-tools, wasm-tools-net10, ios, tvos, maccatalyst, maui]
+                    tizen:
+                      manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                      manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+              env:
+                ${{ if eq(sdk, 'net10') }}:
+                  SAMPLE_TEST_SDK_VERSION: $(DOTNET_VERSION)
+                ${{ else }}:
+                  SAMPLE_TEST_SDK_VERSION: $(DOTNET_VERSION_PREVIEW)
+              displayName: macOS (${{ sdk }} SDK)
+              ${{ if eq(sdk, 'net10') }}:
+                buildAgent: ${{ parameters.buildAgentMac }}
+              ${{ else }}:
+                buildAgent:
+                  pool:
+                    name: Azure Pipelines
+                    vmImage: macos-26
+                    os: macos
+                variables:
+                  XCODE_VERSION: '26.6'
+              target: samples
+              installNinja: true
+              shouldPublish: false
+              requiredArtifacts:
+                - name: native
+                - name: nuget
+                  dir: nugets
+              postBuildSteps:
+                - task: PublishTestResults@2
+                  condition: always()
+                  inputs:
+                    testResultsFormat: VSTest
+                    testResultsFiles: output/logs/testlogs/samples/**/*.trx
+                    testRunTitle: Samples (macOS, ${{ sdk }} SDK)
+                - task: PublishPipelineArtifact@1
+                  condition: always()
+                  inputs:
+                    targetPath: output/logs
+                    artifact: sample_logs_macos_${{ sdk }}
+          - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
+            parameters:
+              name: samples_linux_${{ sdk }}
+              dotnetSdks:
+                - sdkVersion: $(DOTNET_VERSION)
+                  workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                  tizen:
+                    manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                    manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+                - ${{ if eq(sdk, 'net11') }}:
+                  - sdkVersion: $(DOTNET_VERSION_PREVIEW)
+                    workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
+                    workloads: [android, macos, wasm-tools, wasm-tools-net10, maui-android]
+                    tizen:
+                      manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                      manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+              env:
+                ${{ if eq(sdk, 'net10') }}:
+                  SAMPLE_TEST_SDK_VERSION: $(DOTNET_VERSION)
+                ${{ else }}:
+                  SAMPLE_TEST_SDK_VERSION: $(DOTNET_VERSION_PREVIEW)
+              displayName: Linux (${{ sdk }} SDK)
+              buildAgent: ${{ parameters.buildAgentLinux }}
+              packages: $(MANAGED_LINUX_PACKAGES)
+              target: samples
+              shouldPublish: false
+              requiredArtifacts:
+                - name: native
+                - name: nuget
+                  dir: nugets
+              installEmsdk: true
+              initScript: source ~/emsdk/emsdk_env.sh
+              postBuildSteps:
+                - task: PublishTestResults@2
+                  condition: always()
+                  inputs:
+                    testResultsFormat: VSTest
+                    testResultsFiles: output/logs/testlogs/samples/**/*.trx
+                    testRunTitle: Samples (Linux, ${{ sdk }} SDK)
+                - task: PublishPipelineArtifact@1
+                  condition: always()
+                  inputs:
+                    targetPath: output/logs
+                    artifact: sample_logs_linux_${{ sdk }}

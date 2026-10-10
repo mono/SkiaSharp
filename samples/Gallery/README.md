@@ -14,20 +14,13 @@ same drawing code and sample catalog in [`Shared`](Shared).
 
 ## Running
 
-For in-tree builds, prepare the native binaries from the repository root first:
-
-```bash
-dotnet cake --target=externals-download
-```
-
-This download is only for managed/sample-only work. If you changed native code
-or the Skia submodule, build the corresponding natives from source instead;
-see [`AGENTS.md`](../../AGENTS.md).
+Install the .NET 10 SDK and the workloads required by your chosen host.
+Run the commands below from this gallery folder.
 
 ### Blazor
 
 ```bash
-cd samples/Gallery/Blazor
+cd Blazor
 dotnet run
 ```
 
@@ -38,7 +31,7 @@ Then open http://localhost:5002.
 With the .NET MAUI workload installed, run the desktop app on macOS:
 
 ```bash
-dotnet build samples/Gallery/Maui/SkiaSharpSample.Maui.csproj \
+dotnet build Maui/SkiaSharpSample.Maui.csproj \
   -f net10.0-maccatalyst -t:Run
 ```
 
@@ -60,21 +53,7 @@ Blazor and Uno without requiring MAUI workloads.
 - **SkSL shader playground** with 5 animated presets and live parameters
 - **3D transforms** using native `SKMatrix44` 4×4 pipeline
 
-## Testing
-
-The console test solution includes `SkiaSharp.Gallery.Tests.Console`. It checks
-catalog discovery, search/filter combinations, control metadata, and two
-initialize/render/destroy cycles for every sample supported on the current host,
-including generated documents.
-
-```bash
-dotnet test tests/SkiaSharp.Tests.Console.slnx \
-  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
-```
-
-These raster tests complement, rather than replace, running each host's UI.
-The MAUI host also includes Debug-only DevFlow support for checking navigation,
-live controls, themes, and native GPU rendering.
+## Sample lifecycle
 
 Animated samples must keep delays outside `SyncRoot`, then check their captured
 cancellation token and update native state under that gate. Drawing, control
