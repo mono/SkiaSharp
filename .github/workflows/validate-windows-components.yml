@@ -115,7 +115,7 @@ jobs:
           "LLVM_HOME=$llvm" >> $env:GITHUB_ENV
           "NINJA_EXE=$ninja" >> $env:GITHUB_ENV
           Split-Path $cmake >> $env:GITHUB_PATH
-          $python = (Get-Command python -CommandType Application -ErrorAction Stop).Source
+          $python = (Get-Command python -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
           & $python --version | Tee-Object (Join-Path $evidence 'prerequisites.txt')
           if ($LASTEXITCODE -ne 0) { throw "Python exited with code $LASTEXITCODE." }
           "PYTHON_EXE=$python" >> $env:GITHUB_ENV
