@@ -163,6 +163,8 @@ jobs:
 
       - name: Prepare native source and build tools
         run: |
+          python native/winui-angle/configure_vs2026_test.py
+          if ($LASTEXITCODE -ne 0) { throw "ANGLE toolchain tests exited with code $LASTEXITCODE." }
           git submodule update --init --recursive externals/skia
           if ($LASTEXITCODE -ne 0) { throw "Submodule initialization exited with code $LASTEXITCODE." }
           dotnet tool restore
