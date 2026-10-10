@@ -756,13 +756,6 @@ stages:
               - name: native
               - name: nuget
                 dir: nugets
-            preBuildSteps:
-              - pwsh: |
-                  dotnet build tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj -c $(CONFIGURATION)
-                  if ($LASTEXITCODE) { throw "Sample test runner build failed: $LASTEXITCODE" }
-                  & "tests/SkiaSharp.Tests.Samples/bin/$(CONFIGURATION)/net10.0/playwright.ps1" install --with-deps chromium
-                  if ($LASTEXITCODE) { throw "Playwright Chromium installation failed: $LASTEXITCODE" }
-                displayName: Install Chromium for browser sample tests
             postBuildSteps:
               - task: PublishTestResults@2
                 condition: always()
@@ -795,13 +788,6 @@ stages:
               - name: native
               - name: nuget
                 dir: nugets
-            preBuildSteps:
-              - pwsh: |
-                  dotnet build tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj -c $(CONFIGURATION)
-                  if ($LASTEXITCODE) { throw "Sample test runner build failed: $LASTEXITCODE" }
-                  & "tests/SkiaSharp.Tests.Samples/bin/$(CONFIGURATION)/net10.0/playwright.ps1" install --with-deps chromium
-                  if ($LASTEXITCODE) { throw "Playwright Chromium installation failed: $LASTEXITCODE" }
-                displayName: Install Chromium for browser sample tests
             postBuildSteps:
               - task: PublishTestResults@2
                 condition: always()
@@ -834,13 +820,6 @@ stages:
                 dir: nugets
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
-            preBuildSteps:
-              - pwsh: |
-                  dotnet build tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj -c $(CONFIGURATION)
-                  if ($LASTEXITCODE) { throw "Sample test runner build failed: $LASTEXITCODE" }
-                  & "tests/SkiaSharp.Tests.Samples/bin/$(CONFIGURATION)/net10.0/playwright.ps1" install --with-deps chromium
-                  if ($LASTEXITCODE) { throw "Playwright Chromium installation failed: $LASTEXITCODE" }
-                displayName: Install Chromium for browser sample tests
             postBuildSteps:
               - task: PublishTestResults@2
                 condition: always()
