@@ -167,10 +167,17 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public void HttpRequestsUseTheOwnedOriginAndPreserveQueries()
+    public async Task HttpRequestsUseTheOwnedOriginAndPreserveQueries()
     {
-        Assert.Equal("http://127.0.0.1:49152/api/images/SkiaSharp?x=1",
-            RunningApp.RequestUri(new Uri("http://127.0.0.1:49152"), "/api/images/SkiaSharp?x=1").AbsoluteUri);
+        var app = new AddressRunningApp(Path.Combine(root, "http"));
+        await app.Run(async () =>
+        {
+            Assert.Equal("http://127.0.0.1:49152/api/images/SkiaSharp?x=1",
+                (await app.RequestUri("/api/images/SkiaSharp?x=1")).AbsoluteUri);
+            Assert.Equal("http://127.0.0.1:49152/health",
+                (await app.RequestUri("/health")).AbsoluteUri);
+            Assert.Equal(1, app.AddressRequests);
+        });
     }
 
     [Theory]
@@ -196,9 +203,10 @@ public class SampleInfrastructureTests : IDisposable
     [InlineData("/\\example.com/health")]
     [InlineData("/health#fragment")]
     [InlineData("")]
-    public void HttpRequestsCannotEscapeTheOwnedOrigin(string path)
+    public async Task HttpRequestsCannotEscapeTheOwnedOrigin(string path)
     {
-        Assert.Throws<ArgumentException>(() => RunningApp.RequestUri(new Uri("http://127.0.0.1:49152"), path));
+        var app = new AddressRunningApp(Path.Combine(root, "http"));
+        await app.Run(() => Assert.ThrowsAsync<ArgumentException>(() => app.RequestUri(path)));
     }
 
     [Fact]
@@ -564,6 +572,25 @@ public class SampleInfrastructureTests : IDisposable
         {
             await release;
         }
+    }
+
+    private sealed class AddressRunningApp(string diagnostics) : RunningApp(diagnostics)
+    {
+        internal int AddressRequests { get; private set; }
+
+        internal override Task<Uri> GetAddress()
+        {
+            AddressRequests++;
+            return Task.FromResult(new Uri("http://127.0.0.1:49152"));
+        }
+
+        internal override Task<(int ExitCode, string Output, string Error)> WaitForExit() =>
+            Task.FromResult((0, "", ""));
+
+        protected override Task Stop() => Task.CompletedTask;
+
+        protected override Task<(string Output, string Error)> ReadOutput() =>
+            Task.FromResult(("", ""));
     }
 
     public void Dispose()

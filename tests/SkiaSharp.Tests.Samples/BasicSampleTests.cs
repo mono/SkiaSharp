@@ -131,6 +131,7 @@ public class BasicSampleTests : SampleTestBase
         var error = await Assert.ThrowsAsync<Xunit.Sdk.TrueException>(() =>
             RunBrowserSample("Web", ["--urls", "http://127.0.0.1:0"], async app =>
             {
+                Assert.IsType<DotNetRunningApp>(app.HostApp);
                 await app.Navigate("/");
                 await app.Page.EvaluateAsync("console.error('first browser sentinel'); console.error('second browser sentinel')");
                 switch (operation)

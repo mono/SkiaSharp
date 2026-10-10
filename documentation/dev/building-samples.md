@@ -118,7 +118,8 @@ On Linux, `--with-deps` may require elevated privileges.
 Browser facts use `RunBrowserSample` with `Navigate`, `WaitForElement` and `Screenshot`.
 `Screenshot` returns a file path; call `SampleImage.ValidateFile` explicitly
 to compare it with a golden. `Page` exposes Playwright locators, clicks and
-pointer input.
+pointer input. `HostApp` exposes the underlying running sample's HTTP, process
+and diagnostic helpers without transferring ownership.
 The callback owns no browser resources: the helper closes them and retains
 diagnostics. Browser events log to test output; each helper operation and the
 completed callback assert that no console/page errors were collected.

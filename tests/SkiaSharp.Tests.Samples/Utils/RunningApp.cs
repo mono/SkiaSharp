@@ -27,14 +27,12 @@ internal abstract class RunningApp(string diagnostics)
 
     internal async Task<HttpResponseMessage> GetResponse(string path)
     {
-        address ??= await GetAddress();
-        return await client.GetAsync(RequestUri(address, path), TestContext.Current.CancellationToken);
+        return await client.GetAsync(await RequestUri(path), TestContext.Current.CancellationToken);
     }
 
     internal async Task<HttpResponseMessage> WaitForResponse(string path)
     {
-        address ??= await GetAddress();
-        var request = RequestUri(address, path);
+        var request = await RequestUri(path);
         var lastError = "No response";
         for (var attempt = 0; attempt < 30; attempt++)
         {
@@ -92,8 +90,9 @@ internal abstract class RunningApp(string diagnostics)
         }
     }
 
-    internal static Uri RequestUri(Uri address, string path)
+    internal async Task<Uri> RequestUri(string path)
     {
+        address ??= await GetAddress();
         if (!path.StartsWith('/') || path.StartsWith("//", StringComparison.Ordinal) ||
             path.Contains('\\') || path.Any(char.IsControl) ||
             !Uri.TryCreate(address, path, out var request) ||
