@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Maui.Hosting;
 using SkiaSharp.Views.Maui.Controls;
-using SkiaSharp.Views.Maui.Controls.WPF.Handlers;
+using SkiaSharp.Views.Maui.Handlers;
 
 namespace SkiaSharp.Views.Maui.Controls.Hosting;
 

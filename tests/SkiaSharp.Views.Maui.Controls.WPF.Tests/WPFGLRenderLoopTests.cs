@@ -7,7 +7,8 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui.Hosting;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
-using SkiaSharp.Views.Maui.Controls.WPF.Handlers;
+using SkiaSharp.Views.Maui.Handlers;
+using SkiaSharp.Views.WPF;
 using Xunit;
 using WPFWindow = System.Windows.Window;
 
@@ -104,7 +105,7 @@ public class WPFGLRenderLoopTests
 		private bool connected = true;
 
 		public SKGLView View { get; }
-		public WPFSKGLViewHandler.MauiSKGLElement NativeView { get; }
+		public SKGLElement NativeView { get; }
 		public WPFWindow Window { get; }
 
 		public GLTestHost(bool hasRenderLoop, bool ignorePixelScaling = false)
@@ -120,7 +121,7 @@ public class WPFGLRenderLoopTests
 			Assert.Same(mauiWindow, View.Window);
 			handler.SetMauiContext(new MauiContext(app.Services));
 			handler.SetVirtualView(View);
-			NativeView = handler.PlatformView;
+			NativeView = Assert.IsType<WPFSKGLViewHandler.MauiSKGLElement>(handler.PlatformView);
 			NativeView.Width = 96;
 			NativeView.Height = 64;
 			Window = new WPFWindow

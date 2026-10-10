@@ -1,10 +1,10 @@
 using Microsoft.Maui;
 using Microsoft.Maui.Handlers;
-using SkiaSharp.Views.Maui.Controls.WPF.Platform;
+using SkiaSharp.Views.Maui.Platform;
 using SkiaSharp.Views.WPF;
 using WPFPaintSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs;
 
-namespace SkiaSharp.Views.Maui.Controls.WPF.Handlers;
+namespace SkiaSharp.Views.Maui.Handlers;
 
 /// <summary>Renders a MAUI canvas using WPF's software-backed <see cref="SKElement"/>.</summary>
 public sealed class WPFSKCanvasViewHandler : WPFViewHandler<ISKCanvasView, SKElement>
@@ -71,7 +71,10 @@ public sealed class WPFSKCanvasViewHandler : WPFViewHandler<ISKCanvasView, SKEle
 	/// <param name="view">The canvas whose touch setting changed.</param>
 	public static void MapEnableTouchEvents(WPFSKCanvasViewHandler handler, ISKCanvasView view)
 	{
-		handler.touchHandler ??= new WPFTouchHandler(handler.PlatformView, () => handler.VirtualView?.IgnorePixelScaling ?? false, e => handler.VirtualView?.OnTouch(e));
+		handler.touchHandler ??= new WPFTouchHandler(
+			handler.PlatformView,
+			() => handler.VirtualView?.IgnorePixelScaling ?? false,
+			e => handler.VirtualView?.OnTouch(e));
 		handler.touchHandler.SetEnabled(view.EnableTouchEvents);
 	}
 

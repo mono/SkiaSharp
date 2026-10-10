@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace SkiaSharp.Views.Maui.Controls.WPF.Platform;
+namespace SkiaSharp.Views.Maui.Platform;
 
 internal sealed class WPFTouchHandler
 {

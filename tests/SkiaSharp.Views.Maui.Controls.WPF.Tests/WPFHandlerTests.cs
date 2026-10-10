@@ -6,8 +6,8 @@ using Microsoft.Maui.Hosting;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
 using SkiaSharp.Views.Maui.Controls.Hosting;
-using SkiaSharp.Views.Maui.Controls.WPF.Handlers;
-using SkiaSharp.Views.Maui.Controls.WPF.Platform;
+using SkiaSharp.Views.Maui.Handlers;
+using SkiaSharp.Views.Maui.Platform;
 using Xunit;
 using SkiaAppHostBuilderExtensions = SkiaSharp.Views.Maui.Controls.Hosting.AppHostBuilderExtensions;
 
@@ -20,6 +20,14 @@ public class WPFHandlerTests
 	public void WPFRegistrationSharesStableHostingNamespace()
 	{
 		Assert.Equal(typeof(SkiaAppHostBuilderExtensions).Namespace, typeof(WPFAppHostBuilderExtensions).Namespace);
+	}
+
+	[Fact]
+	public void WPFHandlersShareStableMauiNamespaces()
+	{
+		Assert.Equal(typeof(SKCanvasViewHandler).Namespace, typeof(WPFSKCanvasViewHandler).Namespace);
+		Assert.Equal(typeof(SKGLViewHandler).Namespace, typeof(WPFSKGLViewHandler).Namespace);
+		Assert.Equal("SkiaSharp.Views.Maui.Platform", typeof(WPFTouchHandler).Namespace);
 	}
 
 	[Theory]

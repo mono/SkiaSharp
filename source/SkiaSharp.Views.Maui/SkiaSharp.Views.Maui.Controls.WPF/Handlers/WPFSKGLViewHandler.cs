@@ -3,14 +3,14 @@ using System.Windows;
 using System.Windows.Media;
 using Microsoft.Maui;
 using Microsoft.Maui.Handlers;
-using SkiaSharp.Views.Maui.Controls.WPF.Platform;
+using SkiaSharp.Views.Maui.Platform;
 using SkiaSharp.Views.WPF;
 using WPFPaintGLSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs;
 
-namespace SkiaSharp.Views.Maui.Controls.WPF.Handlers;
+namespace SkiaSharp.Views.Maui.Handlers;
 
 /// <summary>Renders a MAUI GPU canvas using WPF's OpenGL-backed <see cref="SKGLElement"/>.</summary>
-public sealed class WPFSKGLViewHandler : WPFViewHandler<ISKGLView, WPFSKGLViewHandler.MauiSKGLElement>
+public sealed class WPFSKGLViewHandler : WPFViewHandler<ISKGLView, SKGLElement>
 {
 	private SKSizeI lastCanvasSize;
 	private GRContext? lastContext;
@@ -46,10 +46,10 @@ public sealed class WPFSKGLViewHandler : WPFViewHandler<ISKGLView, WPFSKGLViewHa
 		: base(mapper ?? SKGLViewMapper, commandMapper ?? SKGLViewCommandMapper) { }
 
 	/// <inheritdoc />
-	protected override MauiSKGLElement CreatePlatformView() => new();
+	protected override SKGLElement CreatePlatformView() => new MauiSKGLElement();
 
 	/// <inheritdoc />
-	protected override void ConnectHandler(MauiSKGLElement platformView)
+	protected override void ConnectHandler(SKGLElement platformView)
 	{
 		platformView.PaintSurface += OnPaintSurface;
 		platformView.Loaded += OnLoaded;
@@ -59,7 +59,7 @@ public sealed class WPFSKGLViewHandler : WPFViewHandler<ISKGLView, WPFSKGLViewHa
 	}
 
 	/// <inheritdoc />
-	protected override void DisconnectHandler(MauiSKGLElement platformView)
+	protected override void DisconnectHandler(SKGLElement platformView)
 	{
 		platformView.RenderContinuously = false;
 		touchHandler?.Detach();
@@ -78,8 +78,11 @@ public sealed class WPFSKGLViewHandler : WPFViewHandler<ISKGLView, WPFSKGLViewHa
 	/// <param name="view">The canvas whose scaling mode changed.</param>
 	public static void MapIgnorePixelScaling(WPFSKGLViewHandler handler, ISKGLView view)
 	{
-		handler.PlatformView.IgnorePixelScaling = view.IgnorePixelScaling;
-		handler.PlatformView.InvalidateVisual();
+		if (((IElementHandler)handler).PlatformView is not MauiSKGLElement platformView)
+			return;
+
+		platformView.IgnorePixelScaling = view.IgnorePixelScaling;
+		platformView.InvalidateVisual();
 	}
 
 	/// <summary>Enables or disables native WPF pointer events.</summary>
@@ -87,7 +90,10 @@ public sealed class WPFSKGLViewHandler : WPFViewHandler<ISKGLView, WPFSKGLViewHa
 	/// <param name="view">The canvas whose touch setting changed.</param>
 	public static void MapEnableTouchEvents(WPFSKGLViewHandler handler, ISKGLView view)
 	{
-		handler.touchHandler ??= new WPFTouchHandler(handler.PlatformView, () => handler.VirtualView?.IgnorePixelScaling ?? false, e => handler.VirtualView?.OnTouch(e));
+		handler.touchHandler ??= new WPFTouchHandler(
+			handler.PlatformView,
+			() => handler.VirtualView?.IgnorePixelScaling ?? false,
+			e => handler.VirtualView?.OnTouch(e));
 		handler.touchHandler.SetEnabled(view.EnableTouchEvents);
 	}
 
@@ -111,14 +117,14 @@ public sealed class WPFSKGLViewHandler : WPFViewHandler<ISKGLView, WPFSKGLViewHa
 
 	private void OnUnloaded(object sender, RoutedEventArgs e)
 	{
-		if (sender is MauiSKGLElement platformView)
+		if (sender is SKGLElement platformView)
 			platformView.RenderContinuously = false;
 		NotifyContextLost();
 	}
 
 	private void UpdateRenderLoop()
 	{
-		if (((IElementHandler)this).PlatformView is MauiSKGLElement platformView)
+		if (((IElementHandler)this).PlatformView is SKGLElement platformView)
 			platformView.RenderContinuously = platformView.IsLoaded && VirtualView?.HasRenderLoop == true;
 	}
 
