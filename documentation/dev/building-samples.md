@@ -115,9 +115,10 @@ Homebrew or winget need an explicit browser channel and are not the Chromium
 used by these tests. See [Playwright browser installation](https://playwright.dev/dotnet/docs/browsers).
 On Linux, `--with-deps` may require elevated privileges.
 
-`BrowserRunningApp.Capture` handles a single page check. For interactions, use
-`BrowserRunningApp.Run` with `Navigate`, `WaitForElement` and `Screenshot`;
-its `Page` exposes Playwright locators, clicks and pointer input.
+Browser facts use `RunBrowserSample` with `Navigate`, `WaitForElement` and `Screenshot`.
+`Screenshot` returns a file path; call `SampleImage.ValidateFile` explicitly
+to compare it with a golden. `Page` exposes Playwright locators, clicks and
+pointer input.
 The callback owns no browser resources: the helper closes them and retains
 browser errors and diagnostics.
 

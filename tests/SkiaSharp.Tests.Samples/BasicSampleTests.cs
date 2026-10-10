@@ -21,6 +21,9 @@ public class BasicSampleTests : SampleTestBase
         await DotNet.Run(workspace, project, configuration, arguments, app => test(app, project));
     }
 
+    private Task RunBrowserSample(string name, IEnumerable<string> arguments, Func<BrowserRunningApp, Task> test) =>
+        RunSample(name, arguments, (app, _) => BrowserRunningApp.Run(app, test));
+
     [Theory]
     [Trait("Category", "SampleBuild")]
     [MemberData(nameof(Cases))]
@@ -69,36 +72,51 @@ public class BasicSampleTests : SampleTestBase
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
     public Task WebSamplePageRenders() =>
-        RunSample("Web", ["--urls", "http://127.0.0.1:0"], (app, _) =>
-            BrowserRunningApp.Run(app, async browser =>
-            {
-                await browser.Navigate("/");
-                await browser.WaitForElement(".card img");
-                await browser.Screenshot($"Host/{SampleLookup.HostPlatform}/web-page.png");
-            }));
+        RunBrowserSample("Web", ["--urls", "http://127.0.0.1:0"], async app =>
+        {
+            await app.Navigate("/");
+            await app.WaitForElement(".card img");
+            var screenshot = await app.Screenshot();
+            SampleImage.ValidateFile(screenshot, $"Host/{SampleLookup.HostPlatform}/web-page.png");
+        });
 
     [Fact]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
     public Task BrowserWebAssemblySampleRuns() =>
-        RunSample("BrowserWebAssembly", ["--urls", "http://127.0.0.1:0"], (app, _) =>
-            BrowserRunningApp.Capture(app, "/", "#output", $"Host/{SampleLookup.HostPlatform}/browser-wasm-page.png"));
+        RunBrowserSample("BrowserWebAssembly", ["--urls", "http://127.0.0.1:0"], async app =>
+        {
+            await app.Navigate("/");
+            await app.WaitForElement("#output");
+            var screenshot = await app.Screenshot();
+            SampleImage.ValidateFile(screenshot, $"Host/{SampleLookup.HostPlatform}/browser-wasm-page.png");
+        });
 
     [Fact]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
     public Task BlazorWebAssemblyCpuSampleRuns() =>
-        RunSample("BlazorWebAssembly", ["--urls", "http://127.0.0.1:0"], (app, _) =>
-            BrowserRunningApp.Capture(app, "/", ".canvas-container canvas", $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png"));
+        RunBrowserSample("BlazorWebAssembly", ["--urls", "http://127.0.0.1:0"], async app =>
+        {
+            await app.Navigate("/");
+            await app.WaitForElement(".canvas-container canvas");
+            var screenshot = await app.Screenshot();
+            SampleImage.ValidateFile(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png");
+        });
 
     [Fact]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
     public Task BlazorWebAssemblyGpuSampleRuns() =>
-        RunSample("BlazorWebAssembly", ["--urls", "http://127.0.0.1:0"], (app, _) =>
-            BrowserRunningApp.Capture(app, "/gpu", ".canvas-container canvas", $"Host/{SampleLookup.HostPlatform}/blazor-gpu-page.png",
-                maxAverageColorErrorFraction: 0.06));
+        RunBrowserSample("BlazorWebAssembly", ["--urls", "http://127.0.0.1:0"], async app =>
+        {
+            await app.Navigate("/gpu");
+            await app.WaitForElement(".canvas-container canvas");
+            var screenshot = await app.Screenshot();
+            SampleImage.ValidateFile(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-gpu-page.png",
+                maxAverageColorErrorFraction: 0.06);
+        });
 }
