@@ -4,16 +4,17 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-internal sealed class BrowserRunningApp(
-    IPage page, Uri address, string diagnostics, ConcurrentQueue<string> errors)
+internal sealed class BrowserRunningApp(RunningApp hostApp, IPage page, ConcurrentQueue<string> errors)
 {
     private int screenshots;
+
+    internal RunningApp HostApp { get; } = hostApp;
 
     internal IPage Page { get; } = page;
 
     internal async Task Navigate(string path)
     {
-        var request = RunningApp.RequestUri(address, path);
+        var request = await HostApp.RequestUri(path);
         TestContext.Current.TestOutputHelper?.WriteLine($"Navigating to {request}");
 
         var response = await Page.GotoAsync(request.AbsoluteUri, new() { WaitUntil = WaitUntilState.Load })
@@ -36,7 +37,7 @@ internal sealed class BrowserRunningApp(
     internal async Task<string> Screenshot()
     {
         var name = ++screenshots == 1 ? "page" : $"page-{screenshots}";
-        var actual = Path.Combine(diagnostics, $"{name}.actual.png");
+        var actual = Path.Combine(HostApp.Diagnostics, $"{name}.actual.png");
 
         await Page.ScreenshotAsync(new() { Path = actual, FullPage = true })
             .WaitAsync(TestContext.Current.CancellationToken);
@@ -64,7 +65,6 @@ internal sealed class BrowserRunningApp(
             // Wait for the owned sample server before starting Chromium.
             using var ready = await app.WaitForResponse("/");
             Assert.Equal(System.Net.HttpStatusCode.OK, ready.StatusCode);
-            var address = await app.GetAddress();
             cancellation.ThrowIfCancellationRequested();
 
             // Keep the browser context consistent with the reviewed screenshots.
@@ -94,7 +94,7 @@ internal sealed class BrowserRunningApp(
             };
 
             // Run the test and check errors from any direct Page interactions.
-            var running = new BrowserRunningApp(page, address, diagnostics, errors);
+            var running = new BrowserRunningApp(app, page, errors);
             var failed = false;
             try
             {
