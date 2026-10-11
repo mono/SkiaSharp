@@ -10,7 +10,7 @@ using Xunit;
 
 namespace SkiaSharp.Views.Maui.Controls.Tests;
 
-public class GpuViewTests : SKUITests
+public partial class GpuViewTests : SKUITests
 {
 	[UIFact]
 	public void GaneshDefaultsAndTouchForwarding() => VerifyDefaults(new SKGaneshView());
