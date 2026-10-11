@@ -104,8 +104,8 @@ namespace SkiaSharp
 					nameof (info), info.Size, "Dimensions exceed the recorder's maximum texture size.");
 			if (info.ColorType == SKColorType.Unknown)
 				throw new ArgumentException ("Color type must be specified.", nameof (info));
-			if (info.AlphaType == SKAlphaType.Unknown)
-				throw new ArgumentException ("Alpha type must be specified.", nameof (info));
+			if (info.AlphaType != SKAlphaType.Premul && info.AlphaType != SKAlphaType.Opaque)
+				throw new ArgumentException ("Alpha type must be premultiplied or opaque.", nameof (info));
 			if (!textureInfo.IsValid)
 				throw new ArgumentException ("Texture information must be valid.", nameof (textureInfo));
 			if (textureInfo.Backend != Backend)
