@@ -57,7 +57,9 @@ references its packaged `.pdb` filename. Import libraries retain upstream names.
 Windows App SDK header generation includes the local transitive IDL imports
 of UI/Graphics APIs, including Microsoft.Foundation; MIDL processing an imported
 IDL does not itself generate that import's header. Required generation fails
-rather than creating stubs.
+rather than creating stubs. WINMD conversion writes ABI IDLs into a separate
+directory before replacing package IDLs; pre-existing source MIDL 3 files are
+not valid conversion stamps or inputs for the ABI-header generation step.
 
 GN is not a Visual Studio Installer component or a documented preinstalled tool
 on the hosted VS 2026 image. Official latest Windows binaries are available from
