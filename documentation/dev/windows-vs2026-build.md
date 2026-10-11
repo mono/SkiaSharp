@@ -49,9 +49,19 @@ requires its own LLVM even when MSVC compiles the library. Those upstream tools
 are retained rather than substituted with unrelated compiler revisions.
 `scripts/VERSIONS.txt` pins both `chromium/8099` and its exact source revision.
 Its upstream toolchain supports VS 2026/v145 and SDK 28000 without compatibility
-patches. Only the SkiaSharp hardening config is injected; upstream output names
-are preserved and the PDB is renamed when copied to the package output.
+patches. The SkiaSharp hardening config and DLL PDB naming adjustment are applied
+before generating Ninja files. The latter changes the linker's `/PDB` argument
+and GN's declared outputs together: renaming after linking would leave the DLL's
+embedded debug reference pointing to `.dll.pdb`. The build checks that each DLL
+references its packaged `.pdb` filename. Import libraries retain upstream names.
 Required Windows App SDK header generation fails rather than creating stubs.
+
+GN is not a Visual Studio Installer component or a documented preinstalled tool
+on the hosted VS 2026 image. Official latest Windows binaries are available from
+Google's build infrastructure, but GN has no universal stable release or promised
+backward compatibility. The default follows the revision in ANGLE's `DEPS`, as
+recommended by GN's own distribution guidance, rather than an untracked system
+binary. This is a reproducibility choice, not a different ANGLE-specific GN fork.
 
 `Validate - Windows Components` validates VS 2026 on `windows-2025-vs2026` for
 x86, x64 and ARM64, for both Build Tools and the full IDE. It exports before/after

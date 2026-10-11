@@ -63,6 +63,22 @@ Task("sync-ANGLE")
         GN_EXE = gnDirectory.CombineWithFilePath("gn.exe").FullPath;
     }
 
+    // Set the linker PDB path, not just the copied filename: the DLL embeds it.
+    {
+        var toolchain = ANGLE_PATH.CombineWithFilePath("build/toolchain/win/toolchain.gni");
+        var contents = FileReadText(toolchain);
+        const string original = "pdbname = \"${dllname}.pdb\"";
+        const string replacement = "pdbname = \"{{output_dir}}/{{target_output_name}}.pdb\"";
+        var originalCount = System.Text.RegularExpressions.Regex.Matches(contents,
+            System.Text.RegularExpressions.Regex.Escape(original)).Count;
+        var replacementCount = System.Text.RegularExpressions.Regex.Matches(contents,
+            System.Text.RegularExpressions.Regex.Escape(replacement)).Count;
+        if (originalCount + replacementCount != 2)
+            throw new Exception($"Unexpected ANGLE DLL PDB definitions at {toolchain}.");
+        if (originalCount > 0)
+            FileWriteText(toolchain, contents.Replace(original, replacement));
+    }
+
     // set build args
     if (!FileExists(ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni"))) {
         var lines = new[] {
@@ -197,9 +213,16 @@ Task("ANGLE")
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.dll"), outDir);
-        CopyFile(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.dll.pdb"),
-            outDir.CombineWithFilePath($"{target}.pdb"));
+        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.pdb"), outDir);
         CheckWindowsDependencies($"{outDir}/{target}.dll", excluded: VERIFY_EXCLUDED);
+        var dumpbin = ((DirectoryPath)VS_INSTALL).CombineWithFilePath(
+            $"VC/Tools/MSVC/{TOOLSET_VERSION.Value}/bin/Hostx64/x64/dumpbin.exe");
+        RunProcess(dumpbin, $"/headers \"{outDir}/{target}.dll\"", out var headers);
+        var pdbReference = System.Text.RegularExpressions.Regex.Match(string.Join("\n", headers),
+            @"Format:\s*RSDS,.*,\s*([^\r\n]+\.pdb)");
+        if (!pdbReference.Success || System.IO.Path.GetFileName(pdbReference.Groups[1].Value.Trim()) != $"{target}.pdb")
+            throw new Exception($"ANGLE {target}.dll does not reference its packaged {target}.pdb.");
+        Information($"Verified embedded PDB reference: {pdbReference.Groups[1].Value.Trim()}");
     }
 });
 

@@ -81,6 +81,14 @@ class WindowsToolchainTests(unittest.TestCase):
             for obsolete in ("10.0.111", "configure_vs2026", "install-llvm", "install-ninja", "--filter"):
                 self.assertNotIn(obsolete, scripts)
 
+    def test_angle_symbol_filename_is_set_at_link_time_and_verified(self):
+        build = (ROOT / "native/winui-angle/build.cake").read_text()
+        self.assertIn('pdbname = \\"{{output_dir}}/{{target_output_name}}.pdb\\"', build)
+        self.assertIn("originalCount + replacementCount != 2", build)
+        self.assertIn('/headers \\"{outDir}/{target}.dll\\"', build)
+        self.assertIn('@"Format:\\s*RSDS,', build)
+        self.assertNotIn('out/winui{suffix}/{arch}/{target}.dll.pdb', build)
+
     def test_producing_pipelines_no_longer_request_old_tools(self):
         bootstrapper = (ROOT / "scripts/azure-templates-jobs-bootstrapper.yml").read_text()
         self.assertIn("install-components.ps1", bootstrapper)
