@@ -30,6 +30,8 @@ public class MauiiOSTests(ITestOutputHelper output) : MauiTestBase(output)
     
     protected override string PlatformName => "iOS";
     protected override string TargetFramework => "net10.0-ios";
+    protected override string PlatformBuildArguments =>
+        "-p:RuntimeIdentifier=iossimulator-arm64 -p:EnableCodeSigning=true -p:CodesignKey=-";
 
     protected override string? CanRunOnCurrentMachine() =>
         OperatingSystem.IsMacOS() ? null : "iOS requires macOS (hardware requirement)";

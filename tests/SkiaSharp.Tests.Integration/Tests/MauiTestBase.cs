@@ -22,6 +22,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     
     // Build configuration - set to "Debug" for faster iteration when debugging tests
     protected const string BuildConfiguration = "Release";
+    protected virtual string PlatformBuildArguments => "";
     
     // Fixed canvas size matching TestImage dimensions
     protected const int CanvasWidth = 400;
@@ -162,7 +163,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
             if (id.StartsWith("SkiaSharp", StringComparison.Ordinal)) package.SetAttributeValue("Version", SkiaVersion);
             if (id.StartsWith("HarfBuzzSharp", StringComparison.Ordinal)) package.SetAttributeValue("Version", HarfBuzzVersion);
         }
-        var bundleId = $"org.skiasharp.integration.native.{platform}.{engine}".ToLowerInvariant();
+        var bundleId = $"org.skiasharp.integration.gpu.{platform}.{engine}".ToLowerInvariant();
         document.Root!.Elements("PropertyGroup").First().Add(new System.Xml.Linq.XElement("ApplicationId", bundleId));
         document.Save(csproj);
         var plist = Path.Combine(projectDir, "Info.plist");
@@ -188,7 +189,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
             var text = await File.ReadAllTextAsync(path);
             await File.WriteAllTextAsync(path, text.Replace("= SamplePage.Cpu;", $"= SamplePage.{page};", StringComparison.Ordinal));
         }
-        await Run("dotnet", $"build \"{projectDir}\" -c {BuildConfiguration} -f {TargetFramework} -p:ValidateXcodeVersion=false", timeoutSeconds: 600);
+        await Run("dotnet", $"build \"{projectDir}\" -c {BuildConfiguration} -f {TargetFramework} -p:ValidateXcodeVersion=false {PlatformBuildArguments}", timeoutSeconds: 600);
         var app = FindAppArtifact(projectDir, "SkiaSharpSample");
         Assert.NotNull(app);
         var options = new AppiumOptions();
@@ -242,7 +243,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         // Skip the .NET for iOS/Mac Catalyst Xcode major.minor check so the harness keeps working when
         // the installed Xcode is newer than the version the pinned workload recommends — these
         // tests validate SkiaSharp rendering, not toolchain matching. Ignored (harmless) on Android.
-        await Run("dotnet", $"build {relativeProjectDir} -c {BuildConfiguration} -f {TargetFramework} -p:ValidateXcodeVersion=false", timeoutSeconds: 600);
+        await Run("dotnet", $"build {relativeProjectDir} -c {BuildConfiguration} -f {TargetFramework} -p:ValidateXcodeVersion=false {PlatformBuildArguments}", timeoutSeconds: 600);
         
         var appPath = FindAppArtifact(projectDir, projectName);
         Assert.NotNull(appPath);
