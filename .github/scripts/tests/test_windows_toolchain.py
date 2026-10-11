@@ -47,6 +47,7 @@ class WindowsToolchainTests(unittest.TestCase):
         tree = ET.parse(ROOT / projects[1])
         self.assertEqual("10.0.17763.0",
                          tree.find(".//msbuild:WindowsTargetPlatformMinVersion", namespace).text)
+        self.assertEqual("stdcpp20", tree.find(".//msbuild:LanguageStandard", namespace).text)
         self.assertFalse((ROOT / "native/winui/global.json").exists())
 
     def test_angle_pin_matches_component_manifest(self):
