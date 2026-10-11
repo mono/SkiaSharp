@@ -3,6 +3,7 @@ DirectoryPath ANGLE_PATH = ROOT_PATH.Combine("externals/angle");
 DirectoryPath WINAPPSDK_PATH = ROOT_PATH.Combine("externals/winappsdk");
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"));
 string ANGLE_VERSION = GetVersion("ANGLE", "release");
+string ANGLE_REVISION = GetVersion("ANGLE", "revision");
 
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/shared/msbuild.cake"
@@ -16,6 +17,14 @@ Task("sync-ANGLE")
     if (!DirectoryExists(ANGLE_PATH)) {
         RunProcess("git", $"clone https://github.com/google/angle.git --branch {ANGLE_VERSION} --depth 1 --single-branch --shallow-submodules {ANGLE_PATH}");
     }
+    RunProcess("git", new ProcessSettings {
+        Arguments = $"fetch --depth 1 origin {ANGLE_REVISION}",
+        WorkingDirectory = ANGLE_PATH.FullPath,
+    });
+    RunProcess("git", new ProcessSettings {
+        Arguments = $"checkout --detach {ANGLE_REVISION}",
+        WorkingDirectory = ANGLE_PATH.FullPath,
+    });
 
     // sync submodules
     var submodules = new[] {
@@ -25,34 +34,33 @@ Task("sync-ANGLE")
         "third_party/jsoncpp",
         "third_party/vulkan-deps",
         "third_party/astc-encoder/src",
+        "third_party/depot_tools",
+        "third_party/spirv-headers/src",
+        "third_party/spirv-tools/src",
+        "third_party/vulkan-headers/src",
         "tools/clang",
     };
-    foreach (var submodule in submodules) {
-        var sub = ANGLE_PATH.Combine(submodule);
-        if (FileExists(sub.CombineWithFilePath("BUILD.gn")) || FileExists(sub.CombineWithFilePath(".gitignore")))
-            continue;
+    RunProcess("git", new ProcessSettings {
+        Arguments = $"-c core.longpaths=true submodule update --init --recursive --depth 1 --single-branch -- {string.Join(" ", submodules)}",
+        WorkingDirectory = ANGLE_PATH.FullPath,
+    });
 
-        RunProcess("git", new ProcessSettings {
-            Arguments = $"submodule update --init --recursive --depth 1 --single-branch {submodule}",
+    // Use ANGLE's own GN revision, rather than Skia's independently pinned GN.
+    {
+        var gnVersion = GetRegexValue(
+            @"'buildtools/win':\s*\{[\s\S]*?'package':\s*'gn/gn/windows-amd64'[\s\S]*?'version':\s*'([^']+)'",
+            ANGLE_PATH.CombineWithFilePath("DEPS"));
+        if (string.IsNullOrEmpty(gnVersion))
+            throw new Exception("Could not resolve ANGLE's Windows GN revision.");
+        var gnDirectory = ANGLE_PATH.Combine("out/tools/gn");
+        EnsureDirectoryExists(gnDirectory);
+        var cipd = ANGLE_PATH.CombineWithFilePath("third_party/depot_tools/cipd.bat");
+        RunProcess("cmd.exe", new ProcessSettings {
+            Arguments = new ProcessArgumentBuilder().Append("/d").Append("/s").Append("/c")
+                .AppendQuoted($"call \"{cipd}\" install gn/gn/windows-amd64 {gnVersion} -root \"{gnDirectory}\""),
             WorkingDirectory = ANGLE_PATH.FullPath,
         });
-    }
-
-    var msbuild = ((DirectoryPath)VS_INSTALL).CombineWithFilePath("MSBuild/Current/Bin/MSBuild.exe");
-    if (System.Diagnostics.FileVersionInfo.GetVersionInfo(msbuild.FullPath).FileMajorPart >= 18) {
-        RunPython(ROOT_PATH, ROOT_PATH.CombineWithFilePath("native/winui-angle/configure_vs2026.py"),
-            $"\"{ANGLE_PATH}\" \"{VS_INSTALL}\" \"{TOOLSET_VERSION.Value}\"");
-    }
-
-    // patch the output filenames
-    {
-        var toolchain = ANGLE_PATH.CombineWithFilePath("build/toolchain/win/toolchain.gni");
-        var contents = FileReadText(toolchain);
-        var newContents = contents
-            .Replace("\"${dllname}.lib\"", "\"{{output_dir}}/{{target_output_name}}.lib\"")
-            .Replace("\"${dllname}.pdb\"", "\"{{output_dir}}/{{target_output_name}}.pdb\"");
-        if (contents != newContents)
-            FileWriteText(toolchain, newContents);
+        GN_EXE = gnDirectory.CombineWithFilePath("gn.exe").FullPath;
     }
 
     // set build args
@@ -82,7 +90,7 @@ Task("sync-ANGLE")
     }
 
     // set version numbers
-    if (!FileExists(ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE"))) {
+    {
         var lastchange = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE");
         RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
     }
@@ -90,17 +98,21 @@ Task("sync-ANGLE")
     // download rc.exe
     var rc_exe = "build/toolchain/win/rc/win/rc.exe";
     var rcPath = ANGLE_PATH.CombineWithFilePath(rc_exe);
-    if (!FileExists(rcPath)) {
-        var shaPath = ANGLE_PATH.CombineWithFilePath($"{rc_exe}.sha1");
-        var sha = FileReadText(shaPath);
+    {
+        var sha = FileReadText(ANGLE_PATH.CombineWithFilePath($"{rc_exe}.sha1")).Trim();
+        string actualSha = "";
+        if (FileExists(rcPath)) {
+            using var stream = System.IO.File.OpenRead(rcPath.FullPath);
+            using var algorithm = System.Security.Cryptography.SHA1.Create();
+            actualSha = string.Concat(algorithm.ComputeHash(stream).Select(value => value.ToString("x2")));
+        }
         var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
-        DownloadFile(url, rcPath);
+        if (actualSha != sha)
+            DownloadFile(url, rcPath);
     }
 
     // download llvm
-    if (!FileExists(ANGLE_PATH.CombineWithFilePath("third_party/llvm-build/Release+Asserts/cr_build_revision"))) {
-        RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("tools/clang/scripts/update.py"));
-    }
+    RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("tools/clang/scripts/update.py"));
 
     // generate Windows App SDK files
     if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h"))) {
@@ -155,6 +167,12 @@ Task("ANGLE")
                 $"is_component_build=false " +
                 $"is_debug=false " +
                 $"is_clang=false " +
+                $"use_custom_libcxx=false " +
+                $"use_custom_libcxx_for_host=false " +
+                $"enable_rust=false " +
+                $"enable_rust_cxx=false " +
+                $"use_siso=false " +
+                $"angle_build_tests=false " +
                 $"angle_is_winappsdk={wasdk} ".ToLower() +
                 $"winappsdk_dir='{WINAPPSDK_PATH}' " +
                 $"enable_precompiled_headers=false " +
@@ -165,7 +183,7 @@ Task("ANGLE")
                 $"spectre_lib_root='{System.IO.Path.GetDirectoryName(spectreLibPath)}'",
                 new Dictionary<string, string> {
                     { "GYP_MSVS_OVERRIDE_PATH", VS_INSTALL },
-                    { "vs2022_install", VS_INSTALL },
+                    { "vs2026_install", VS_INSTALL },
                     { "VCToolsVersion", TOOLSET_VERSION.Value },
                 });
 
@@ -179,7 +197,8 @@ Task("ANGLE")
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.dll"), outDir);
-        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.pdb"), outDir);
+        CopyFile(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.dll.pdb"),
+            outDir.CombineWithFilePath($"{target}.pdb"));
         CheckWindowsDependencies($"{outDir}/{target}.dll", excluded: VERIFY_EXCLUDED);
     }
 });
