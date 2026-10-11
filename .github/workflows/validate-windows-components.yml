@@ -213,6 +213,8 @@ jobs:
           python native/winui-angle/smoke_test.py output/native/winui/x64 2>&1 |
             Tee-Object (Join-Path $env:RUNNER_TEMP 'windows-components/angle-rendering.log')
           if ($LASTEXITCODE -ne 0) { throw "ANGLE rendering exited with code $LASTEXITCODE." }
+          & ./scripts/infra/native/windows/install-mesa-gl.ps1
+          & ./scripts/infra/native/windows/install-vulkan-icd.ps1
           dotnet test tests/SkiaSharp.Tests.Console.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx 2>&1 |
             Tee-Object (Join-Path $env:RUNNER_TEMP 'windows-components/console-tests.log')
           if ($LASTEXITCODE -ne 0) { throw "Console tests exited with code $LASTEXITCODE." }

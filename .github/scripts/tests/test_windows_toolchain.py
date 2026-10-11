@@ -77,6 +77,8 @@ class WindowsToolchainTests(unittest.TestCase):
             self.assertEqual("10.0.28000.0", job["env"]["WINDOWS_SDK_VERSION"])
             scripts = "\n".join(step.get("run", "") for step in job["steps"])
             self.assertIn("native/winui-angle/smoke_test.py", scripts)
+            self.assertIn("install-mesa-gl.ps1", scripts)
+            self.assertIn("install-vulkan-icd.ps1", scripts)
             self.assertIn("dotnet test tests/SkiaSharp.Tests.Console.slnx", scripts)
             for obsolete in ("10.0.111", "configure_vs2026", "install-llvm", "install-ninja", "--filter"):
                 self.assertNotIn(obsolete, scripts)
