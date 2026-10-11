@@ -75,6 +75,11 @@ WinUI/projection and ANGLE, and builds the managed Windows integrations and
 source benchmark on x64. The x64 jobs also exercise ANGLE with D3D11 WARP and
 run the unfiltered .NET 10 console solution. Missing required GPU capabilities
 are failures, not implicit skips.
+The console suite uses WGL and Vulkan independently of ANGLE's D3D11 WARP
+smoke test. Its x64 validation reuses the Windows test pipeline's pinned Mesa
+OpenGL and SwiftShader Vulkan provisioning. These software drivers are not
+available through Visual Studio Installer; downloads are hash-verified by the
+existing repository helpers.
 
 The public native Azure image is `windows.vs2026.amd64.open` and the internal
 image is `windows.vs2026.amd64`. Hosted Windows tests and source benchmarks use
