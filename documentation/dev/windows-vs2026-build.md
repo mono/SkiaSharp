@@ -18,6 +18,8 @@ libraries, LLVM, CMake/Ninja, and Windows SDKs 22621, 26100 and 28000. Native
 HarfBuzz and ANGLE use SDK 28000; the existing WinUI projection uses 22621.
 Installed SDK versions do not change the application's minimum Windows version.
 There is no VS 2022/v143 compiler fallback or .NET SDK downgrade.
+The native WinUI project uses C++20 standard coroutines; the deprecated C++17
+`/await` mode is not enabled.
 
 Select the Installer-provided LLVM and Ninja instead of installing standalone
 copies:
