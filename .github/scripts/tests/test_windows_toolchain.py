@@ -89,6 +89,14 @@ class WindowsToolchainTests(unittest.TestCase):
         self.assertIn('@"Format:\\s*RSDS,', build)
         self.assertNotIn('out/winui{suffix}/{arch}/{target}.dll.pdb', build)
 
+    def test_angle_headers_include_transitive_idl_dependencies(self):
+        script = (ROOT / "native/winui-angle/generate_winappsdk_headers.ps1").read_text()
+        self.assertIn("$pendingIdls.Enqueue($dependency)", script)
+        self.assertIn("if (!$requiredIdls.Add($idl)) { continue }", script)
+        self.assertIn("foreach ($idl in ($requiredIdls | Sort-Object))", script)
+        self.assertIn("'Microsoft.Foundation.h'", script)
+        self.assertNotIn("stub", script.lower())
+
     def test_producing_pipelines_no_longer_request_old_tools(self):
         bootstrapper = (ROOT / "scripts/azure-templates-jobs-bootstrapper.yml").read_text()
         self.assertIn("install-components.ps1", bootstrapper)

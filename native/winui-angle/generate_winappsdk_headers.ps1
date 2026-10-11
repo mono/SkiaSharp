@@ -72,12 +72,29 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "winmdidl failed for $($winmd.Name)" }
     }
 
-    # ANGLE consumes the UI headers, not the unrelated Windows App SDK APIs.
+    # Include local transitive imports: MIDL reads imported IDLs but does not
+    # generate their headers when processing the importing file.
     $idlFiles = Get-ChildItem $includePath -Filter '*.idl' |
         Where-Object { $_.Name -like 'Microsoft.UI*.idl' -or $_.Name -like 'Microsoft.Graphics*.idl' } |
         Select-Object -ExpandProperty Name
+    $requiredIdls = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $pendingIdls = [System.Collections.Generic.Queue[string]]::new()
+    foreach ($idl in $idlFiles) { $pendingIdls.Enqueue($idl) }
+    while ($pendingIdls.Count -gt 0) {
+        $idl = $pendingIdls.Dequeue()
+        if (!$requiredIdls.Add($idl)) { continue }
+        $contents = Get-Content (Join-Path $includePath $idl) -Raw
+        foreach ($import in [regex]::Matches($contents, '(?is)\bimport\s+([^;]+);')) {
+            foreach ($name in [regex]::Matches($import.Groups[1].Value, '"([^"]+\.idl)"')) {
+                $dependency = $name.Groups[1].Value
+                if (Test-Path (Join-Path $includePath $dependency)) {
+                    $pendingIdls.Enqueue($dependency)
+                }
+            }
+        }
+    }
 
-    foreach ($idl in $idlFiles) {
+    foreach ($idl in ($requiredIdls | Sort-Object)) {
         $noExt = [System.IO.Path]::GetFileNameWithoutExtension($idl)
         $headerFile = Join-Path $includePath "$noExt.h"
         if (Test-Path $headerFile) { continue }
@@ -88,7 +105,7 @@ try {
             throw "midlrt failed for required ANGLE header $idl (exit code $LASTEXITCODE)."
         }
     }
-    foreach ($header in @('Microsoft.UI.Dispatching.h', 'Microsoft.UI.Xaml.h')) {
+    foreach ($header in @('Microsoft.Foundation.h', 'Microsoft.UI.Dispatching.h', 'Microsoft.UI.Xaml.h')) {
         if (!(Test-Path (Join-Path $includePath $header))) { throw "Missing required ANGLE header: $header" }
     }
 } finally {
