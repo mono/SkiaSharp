@@ -59,18 +59,19 @@ try {
         (Join-Path $libPath 'uap10.0')
     )
     $winmdFiles = Get-ChildItem $libPath -Filter '*.winmd' -Recurse
+    $abiIdlPath = Join-Path $includePath 'winmdidl'
+    New-Item -ItemType Directory -Path $abiIdlPath -Force | Out-Null
 
     foreach ($winmd in $winmdFiles) {
-        # Use the first IDL that would be produced as a stamp file
-        $stampName = [System.IO.Path]::GetFileNameWithoutExtension($winmd.Name) + '.idl'
-        $stampFile = Join-Path $includePath $stampName
-        if (Test-Path $stampFile) { continue }
-
         Write-Host "  winmdidl: $($winmd.FullName)"
         $metadataArgs = $metadataDirs | ForEach-Object { "/metadata_dir:$_" }
-        & $winmdidl $winmd.FullName @metadataArgs "/outdir:$includePath" /nologo
+        & $winmdidl $winmd.FullName @metadataArgs "/outdir:$abiIdlPath" /nologo
         if ($LASTEXITCODE -ne 0) { throw "winmdidl failed for $($winmd.Name)" }
     }
+    # Package source MIDL 3 files are not ABI IDLs and cannot serve as stamps.
+    $abiIdls = @(Get-ChildItem $abiIdlPath -Filter '*.idl')
+    if (!$abiIdls.Count) { throw "winmdidl produced no ABI IDLs under $abiIdlPath" }
+    $abiIdls | Copy-Item -Destination $includePath -Force
 
     # Include local transitive imports: MIDL reads imported IDLs but does not
     # generate their headers when processing the importing file.

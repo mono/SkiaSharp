@@ -96,6 +96,9 @@ class WindowsToolchainTests(unittest.TestCase):
         self.assertIn("foreach ($idl in ($requiredIdls | Sort-Object))", script)
         self.assertIn("'Microsoft.Foundation.h'", script)
         self.assertNotIn("stub", script.lower())
+        self.assertIn('"/outdir:$abiIdlPath"', script)
+        self.assertIn("$abiIdls | Copy-Item -Destination $includePath -Force", script)
+        self.assertNotIn("$stampFile", script)
 
     def test_producing_pipelines_no_longer_request_old_tools(self):
         bootstrapper = (ROOT / "scripts/azure-templates-jobs-bootstrapper.yml").read_text()
