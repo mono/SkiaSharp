@@ -128,6 +128,13 @@ stages:
         - template: /scripts/azure-templates-jobs-tests.yml@self
           parameters:
             name: tests_netcore_windows
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                workloads: [maui-windows]
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Windows (.NET Core)
             buildAgent: ${{ parameters.buildAgentWindows }}
             publishCoverage: true
@@ -136,6 +143,21 @@ stages:
                 displayName: Provision software OpenGL (Mesa) for the GL tests
               - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
                 displayName: Provision software Vulkan (SwiftShader) for visual tests
+            postBuildSteps:
+              - pwsh: |
+                  $project = 'tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj'
+                  $framework = (& dotnet msbuild $project -nologo -getProperty:WindowsTargetFrameworksCurrent).Trim()
+                  if ($LASTEXITCODE -ne 0 -or $framework -notmatch '^net\d+\.\d+-windows[\d.]+$') {
+                    throw "Could not resolve the current Windows test framework: $framework"
+                  }
+                  dotnet test $project -p:TargetFramework=$framework -p:TargetFrameworks=$framework `
+                    --filter 'FullyQualifiedName~GpuViewTests|FullyQualifiedName~GaneshViewHandlerDoesNotLeak' `
+                    --logger trx --results-directory output/logs/testlogs/gpu-views-windows
+                  if ($LASTEXITCODE -ne 0) {
+                    throw "Windows GPU view tests failed with exit code $LASTEXITCODE."
+                  }
+                displayName: Test Ganesh view presentation and Windows Graphite contract
+                condition: succeededOrFailed()
         - template: /scripts/azure-templates-jobs-tests.yml@self
           parameters:
             name: tests_netcore_macos
