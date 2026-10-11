@@ -9,7 +9,7 @@ using SkiaSharp.Views.Android;
 
 namespace SkiaSharpSample;
 
-public class GpuSurfaceFragment : Fragment
+public class GraphiteFragment : Fragment
 {
 	private const string SkslSource = @"
 uniform float iTime;
@@ -73,7 +73,7 @@ half4 main(float2 fragCoord) {
 
 	private readonly FpsCounter fpsCounter = new();
 
-	private SKGLSurfaceView skiaView;
+	private SKGraphiteView skiaView;
 	private TextView fpsLabel;
 	private Lazy<SKRuntimeShaderBuilder> shaderBuilder;
 	private SKPoint touchPos;
@@ -81,23 +81,26 @@ half4 main(float2 fragCoord) {
 
 	public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
-		var view = inflater.Inflate(Resource.Layout.fragment_gpu_surface, container, false);
-		skiaView = view.FindViewById<SKGLSurfaceView>(Resource.Id.skiaView);
+		var view = inflater.Inflate(Resource.Layout.fragment_gpu_texture, container, false);
+		skiaView = view.FindViewById<SKGraphiteView>(Resource.Id.skiaView);
 		fpsLabel = view.FindViewById<TextView>(Resource.Id.fpsLabel);
+		fpsLabel.Click += OnRetry;
 		skiaView.PaintSurface += OnPaintSurface;
+		skiaView.ContentDescription = "SkiaCanvas";
 		skiaView.Touch += OnTouch;
-		skiaView.RenderMode = Android.Opengl.Rendermode.Continuously;
+		skiaView.HasRenderLoop = true;
+		skiaView.RenderFailed += OnRenderFailed;
 
 		shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(SkslSource));
 		fpsCounter.Start();
 		return view;
 	}
 
-	private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
+	private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
-		var width = e.BackendRenderTarget.Width;
-		var height = e.BackendRenderTarget.Height;
+		var width = e.Info.Width;
+		var height = e.Info.Height;
 
 		var builder = shaderBuilder.Value;
 
@@ -139,11 +142,20 @@ half4 main(float2 fragCoord) {
 		{
 			skiaView.PaintSurface -= OnPaintSurface;
 			skiaView.Touch -= OnTouch;
+			skiaView.RenderFailed -= OnRenderFailed;
+			skiaView.Disconnect();
 			skiaView = null;
 		}
 		if (shaderBuilder?.IsValueCreated == true)
 			shaderBuilder.Value.Dispose();
 		shaderBuilder = null;
+		fpsLabel.Click -= OnRetry;
 		base.OnDestroyView();
 	}
+
+	private void OnRenderFailed(object sender, SKGpuRenderFailedEventArgs e) =>
+		Activity?.RunOnUiThread(() => fpsLabel.Text = $"Graphite failed: {e.Exception.Message} · tap to retry");
+	private void OnRetry(object sender, EventArgs e) => skiaView?.InvalidateSurface();
+	public override void OnPause() { skiaView?.OnPause(); base.OnPause(); }
+	public override void OnResume() { base.OnResume(); skiaView?.OnResume(); }
 }

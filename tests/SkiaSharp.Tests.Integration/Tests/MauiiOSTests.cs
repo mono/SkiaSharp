@@ -11,6 +11,13 @@ namespace SkiaSharp.Tests.Integration;
 /// </summary>
 public class MauiiOSTests(ITestOutputHelper output) : MauiTestBase(output)
 {
+    [Fact]
+    public Task SKGraphiteView() => RunGraphiteViewTest();
+    [Fact]
+    public Task NativeGaneshView() => RunNativeGpuSampleTest("iOS", "Ganesh");
+    [Fact]
+    public Task NativeGraphiteView() => RunNativeGpuSampleTest("iOS", "Graphite");
+
     // Default device configuration (can be overridden via -p:iOSDevice and -p:iOSVersion)
     private const string DefaultDevice = "iPhone 16 Pro";
     private const string DefaultVersion = "18.5";

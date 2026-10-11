@@ -9,7 +9,7 @@ using SkiaSharp.Views.Android;
 
 namespace SkiaSharpSample;
 
-public class GpuTextureFragment : Fragment
+public class GaneshFragment : Fragment
 {
 	private const string SkslSource = @"
 uniform float iTime;
@@ -73,7 +73,7 @@ half4 main(float2 fragCoord) {
 
 	private readonly FpsCounter fpsCounter = new();
 
-	private SKGLTextureView skiaView;
+	private SKGaneshView skiaView;
 	private TextView fpsLabel;
 	private Lazy<SKRuntimeShaderBuilder> shaderBuilder;
 	private SKPoint touchPos;
@@ -81,22 +81,24 @@ half4 main(float2 fragCoord) {
 
 	public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
-		var view = inflater.Inflate(Resource.Layout.fragment_gpu_texture, container, false);
-		skiaView = view.FindViewById<SKGLTextureView>(Resource.Id.skiaView);
+		var view = inflater.Inflate(Resource.Layout.fragment_gpu_surface, container, false);
+		skiaView = view.FindViewById<SKGaneshView>(Resource.Id.skiaView);
 		fpsLabel = view.FindViewById<TextView>(Resource.Id.fpsLabel);
 		skiaView.PaintSurface += OnPaintSurface;
+		skiaView.ContentDescription = "SkiaCanvas";
 		skiaView.Touch += OnTouch;
+		skiaView.HasRenderLoop = true;
 
 		shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(SkslSource));
 		fpsCounter.Start();
 		return view;
 	}
 
-	private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
+	private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
-		var width = e.BackendRenderTarget.Width;
-		var height = e.BackendRenderTarget.Height;
+		var width = e.Info.Width;
+		var height = e.Info.Height;
 
 		var builder = shaderBuilder.Value;
 
@@ -138,6 +140,7 @@ half4 main(float2 fragCoord) {
 		{
 			skiaView.PaintSurface -= OnPaintSurface;
 			skiaView.Touch -= OnTouch;
+			skiaView.Disconnect();
 			skiaView = null;
 		}
 		if (shaderBuilder?.IsValueCreated == true)
@@ -145,4 +148,7 @@ half4 main(float2 fragCoord) {
 		shaderBuilder = null;
 		base.OnDestroyView();
 	}
+
+	public override void OnPause() { skiaView?.OnPause(); base.OnPause(); }
+	public override void OnResume() { base.OnResume(); skiaView?.OnResume(); }
 }
