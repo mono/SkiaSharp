@@ -1,0 +1,295 @@
+# Issue Triage Report — #4250
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-10-11T04:30:43Z |
+| Type | type/enhancement (0.98 (98%)) |
+| Area | area/SkiaSharp (0.98 (98%)) |
+| Suggested action | needs-investigation (0.90 (90%)) |
+
+**Issue Summary:** The issue requests additive System.Numerics conversion bridges for SKMatrix and SKColorF, with SKSize-to-Vector2 as an optional convenience, so callers can use BCL math helpers without manually copying components.
+
+**Analysis:** The requested public surface is absent, but the existing API establishes matching bidirectional System.Numerics conversions for SKPoint, SKPoint3, and SKMatrix44. SKMatrix exposes all nine affine and perspective fields, so conversion to Matrix3x2 necessarily loses perspective and requires an explicit, documented conversion; conversion in the other direction is affine and can preserve the requested values. SKColorF exposes ordered Red, Green, Blue, and Alpha components suitable for an explicit semantic bridge to Vector4.
+
+**Recommendations:** **needs-investigation** — The enhancement is well specified and source investigation confirms the gap and relevant precedents, but public API review must decide the exact conversion surface and semantics.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/performance |
+| Perf | — |
+| Partner | — |
+| Current labels | type/enhancement |
+
+## Evidence
+
+### Reproduction
+
+**Related issues:** #2779
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/2779 — Related SKMatrix managed-math enhancement that motivated the bridge request.
+- https://github.com/mono/SkiaSharp/pull/4241 — Open implementation of #2779; its follow-up section identifies this issue as the tracking item for the additive Numerics bridges.
+- https://github.com/mono/SkiaSharp/issues/4369 — Closed related performance work that confirms SKColorF is maintained in managed C# and is in the same core API area.
+- https://github.com/mono/SkiaSharp/pull/4370 — Merged implementation associated with #4369.
+
+## Analysis
+
+### Technical Summary
+
+The requested public surface is absent, but the existing API establishes matching bidirectional System.Numerics conversions for SKPoint, SKPoint3, and SKMatrix44. SKMatrix exposes all nine affine and perspective fields, so conversion to Matrix3x2 necessarily loses perspective and requires an explicit, documented conversion; conversion in the other direction is affine and can preserve the requested values. SKColorF exposes ordered Red, Green, Blue, and Alpha components suitable for an explicit semantic bridge to Vector4.
+
+### Rationale
+
+This is an additive, ABI-safe enhancement rather than a defect: the report asks for convenience conversions and explicitly avoids changing existing signatures. The request belongs to core SkiaSharp because the involved types are core structs. It has a performance motivation through use of BCL vector and matrix helpers, but it does not demonstrate a current performance failure, so no perf subtype is assigned. The open related PR documents this issue as a follow-up and confirms that the requested bridges still need API review.
+
+### Key Signals
+
+- "All proposals here are purely additive → ABI-safe (no existing signature changes)." — **issue body** (The request is an enhancement to the public core API, not a compatibility-breaking change.)
+- "SKMatrix is 3×3 (affine + perspective); BCL Matrix3x2 is 2×3 (affine only)." — **issue body** (The SKMatrix-to-Matrix3x2 operator must be explicit and document its loss of perspective.)
+- "System.Numerics bridges (additive API) — tracked in #4250." — **pull request #4241** (The related managed-SKMatrix work intentionally leaves this API surface as a separate, open follow-up.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKMatrix.cs` | 12-26, 56-89 | direct | SKMatrix is documented as a 3x3 transformation matrix with perspective and stores ScaleX, SkewX, TransX, SkewY, ScaleY, TransY, Persp0, Persp1, and Persp2 in row-major order. |
+| `binding/SkiaSharp/Generated/SKMatrix.generated.cs` | 12-102 | direct | The public generated surface exposes the nine SKMatrix components, including the three perspective values; no Matrix3x2 conversion operator is present. |
+| `binding/SkiaSharp/Generated/SKColorF.generated.cs` | 12-44 | direct | SKColorF is a sequential four-float struct with public Red, Green, Blue, and Alpha accessors in that order; no Vector4 conversion operator is present. |
+| `binding/SkiaSharp/MathTypes.cs` | 1-300 | related | The core math types already import System.Numerics and provide implicit SKPoint-to-Vector2, SKPoint3-to-Vector3, and reverse conversions where semantics are lossless. |
+| `binding/SkiaSharp/SKMatrix44.cs` | 1-104 | related | SKMatrix44 imports System.Numerics and uses Matrix4x4 for its managed operations, establishing repository precedent for core matrix bridges. |
+| `tests/Tests/SkiaSharp/SKMatrixTests.cs` | 1-219 | context | The existing core test suite covers matrix construction and mapping behavior and is the appropriate location for affine conversion, field-mapping, and perspective-loss tests. |
+| `tests/Tests/SkiaSharp/SKColorFTest.cs` | 1-180 | context | The existing core color test suite verifies SKColorF component behavior and conversion semantics and is the appropriate location for Vector4 round-trip tests. |
+
+### Workarounds
+
+- Callers can construct Matrix3x2 from the six affine SKMatrix properties and construct SKMatrix from Matrix3x2 values, explicitly choosing how to handle perspective.
+- Callers can construct Vector4 from SKColorF.Red, Green, Blue, and Alpha, and construct SKColorF from Vector4.X, Y, Z, and W.
+
+### Next Questions
+
+- Should SKSize-to-Vector2 be included in this API review, or deferred because size and vector have distinct semantics?
+- Should the Matrix3x2 bridge use conversion operators as proposed, or named conversion methods to make perspective loss more discoverable?
+- Which target-framework API baseline and XML documentation wording should API review require for the new operators?
+
+### Resolution Proposals
+
+**Hypothesis:** The gap is limited to public managed wrappers and tests; it needs no native C API change because each requested conversion is direct field mapping.
+
+1. **API-review and add focused Numerics bridges** — fix, confidence 0.90 (90%), cost/s, validated=untested
+   - After API review, add an explicit SKMatrix-to-Matrix3x2 conversion that drops perspective, an implicit Matrix3x2-to-SKMatrix conversion, and explicit SKColorF and Vector4 conversions. Document the lossiness and semantic choices, and add field-mapping and round-trip tests.
+2. **Use manual component mapping until the API is available** — workaround, confidence 0.98 (98%), cost/xs, validated=untested
+   - Consumers can manually map the six affine matrix components and four color components today, while preserving or rejecting SKMatrix perspective according to their application needs.
+
+**Recommended proposal:** API-review and add focused Numerics bridges
+
+**Why:** It follows established core conversion precedent, is additive, avoids native dependencies, and can make the one lossy conversion explicit and documented.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.90 (90%) |
+| Reason | The enhancement is well specified and source investigation confirms the gap and relevant precedents, but public API review must decide the exact conversion surface and semantics. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.98 (98%) | Apply the core enhancement and performance-motivation labels. | labels=type/enhancement, area/SkiaSharp, tenet/performance |
+| link-related | low | 0.96 (96%) | Link the related managed-SKMatrix enhancement issue. | linkedIssue=#2779 |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4250,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-10-11T04:30:43Z",
+    "currentLabels": [
+      "type/enhancement"
+    ]
+  },
+  "summary": "The issue requests additive System.Numerics conversion bridges for SKMatrix and SKColorF, with SKSize-to-Vector2 as an optional convenience, so callers can use BCL math helpers without manually copying components.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.98
+    },
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [
+        2779
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2779",
+          "description": "Related SKMatrix managed-math enhancement that motivated the bridge request."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/4241",
+          "description": "Open implementation of #2779; its follow-up section identifies this issue as the tracking item for the additive Numerics bridges."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/4369",
+          "description": "Closed related performance work that confirms SKColorF is maintained in managed C# and is in the same core API area."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/4370",
+          "description": "Merged implementation associated with #4369."
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The requested public surface is absent, but the existing API establishes matching bidirectional System.Numerics conversions for SKPoint, SKPoint3, and SKMatrix44. SKMatrix exposes all nine affine and perspective fields, so conversion to Matrix3x2 necessarily loses perspective and requires an explicit, documented conversion; conversion in the other direction is affine and can preserve the requested values. SKColorF exposes ordered Red, Green, Blue, and Alpha components suitable for an explicit semantic bridge to Vector4.",
+    "rationale": "This is an additive, ABI-safe enhancement rather than a defect: the report asks for convenience conversions and explicitly avoids changing existing signatures. The request belongs to core SkiaSharp because the involved types are core structs. It has a performance motivation through use of BCL vector and matrix helpers, but it does not demonstrate a current performance failure, so no perf subtype is assigned. The open related PR documents this issue as a follow-up and confirms that the requested bridges still need API review.",
+    "keySignals": [
+      {
+        "text": "All proposals here are purely additive → ABI-safe (no existing signature changes).",
+        "source": "issue body",
+        "interpretation": "The request is an enhancement to the public core API, not a compatibility-breaking change."
+      },
+      {
+        "text": "SKMatrix is 3×3 (affine + perspective); BCL Matrix3x2 is 2×3 (affine only).",
+        "source": "issue body",
+        "interpretation": "The SKMatrix-to-Matrix3x2 operator must be explicit and document its loss of perspective."
+      },
+      {
+        "text": "System.Numerics bridges (additive API) — tracked in #4250.",
+        "source": "pull request #4241",
+        "interpretation": "The related managed-SKMatrix work intentionally leaves this API surface as a separate, open follow-up."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKMatrix.cs",
+        "lines": "12-26, 56-89",
+        "finding": "SKMatrix is documented as a 3x3 transformation matrix with perspective and stores ScaleX, SkewX, TransX, SkewY, ScaleY, TransY, Persp0, Persp1, and Persp2 in row-major order.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/Generated/SKMatrix.generated.cs",
+        "lines": "12-102",
+        "finding": "The public generated surface exposes the nine SKMatrix components, including the three perspective values; no Matrix3x2 conversion operator is present.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/Generated/SKColorF.generated.cs",
+        "lines": "12-44",
+        "finding": "SKColorF is a sequential four-float struct with public Red, Green, Blue, and Alpha accessors in that order; no Vector4 conversion operator is present.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/MathTypes.cs",
+        "lines": "1-300",
+        "finding": "The core math types already import System.Numerics and provide implicit SKPoint-to-Vector2, SKPoint3-to-Vector3, and reverse conversions where semantics are lossless.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKMatrix44.cs",
+        "lines": "1-104",
+        "finding": "SKMatrix44 imports System.Numerics and uses Matrix4x4 for its managed operations, establishing repository precedent for core matrix bridges.",
+        "relevance": "related"
+      },
+      {
+        "file": "tests/Tests/SkiaSharp/SKMatrixTests.cs",
+        "lines": "1-219",
+        "finding": "The existing core test suite covers matrix construction and mapping behavior and is the appropriate location for affine conversion, field-mapping, and perspective-loss tests.",
+        "relevance": "context"
+      },
+      {
+        "file": "tests/Tests/SkiaSharp/SKColorFTest.cs",
+        "lines": "1-180",
+        "finding": "The existing core color test suite verifies SKColorF component behavior and conversion semantics and is the appropriate location for Vector4 round-trip tests.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "Callers can construct Matrix3x2 from the six affine SKMatrix properties and construct SKMatrix from Matrix3x2 values, explicitly choosing how to handle perspective.",
+      "Callers can construct Vector4 from SKColorF.Red, Green, Blue, and Alpha, and construct SKColorF from Vector4.X, Y, Z, and W."
+    ],
+    "nextQuestions": [
+      "Should SKSize-to-Vector2 be included in this API review, or deferred because size and vector have distinct semantics?",
+      "Should the Matrix3x2 bridge use conversion operators as proposed, or named conversion methods to make perspective loss more discoverable?",
+      "Which target-framework API baseline and XML documentation wording should API review require for the new operators?"
+    ],
+    "resolution": {
+      "hypothesis": "The gap is limited to public managed wrappers and tests; it needs no native C API change because each requested conversion is direct field mapping.",
+      "proposals": [
+        {
+          "title": "API-review and add focused Numerics bridges",
+          "description": "After API review, add an explicit SKMatrix-to-Matrix3x2 conversion that drops perspective, an implicit Matrix3x2-to-SKMatrix conversion, and explicit SKColorF and Vector4 conversions. Document the lossiness and semantic choices, and add field-mapping and round-trip tests.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "cost/s"
+        },
+        {
+          "title": "Use manual component mapping until the API is available",
+          "description": "Consumers can manually map the six affine matrix components and four color components today, while preserving or rejecting SKMatrix perspective according to their application needs.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.98,
+          "effort": "cost/xs"
+        }
+      ],
+      "recommendedProposal": "API-review and add focused Numerics bridges",
+      "recommendedReason": "It follows established core conversion precedent, is additive, avoids native dependencies, and can make the one lossy conversion explicit and documented."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "The enhancement is well specified and source investigation confirms the gap and relevant precedents, but public API review must decide the exact conversion surface and semantics.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply the core enhancement and performance-motivation labels.",
+        "risk": "low",
+        "confidence": 0.98,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link the related managed-SKMatrix enhancement issue.",
+        "risk": "low",
+        "confidence": 0.96,
+        "linkedIssue": 2779
+      }
+    ]
+  }
+}
+```
+
+</details>
