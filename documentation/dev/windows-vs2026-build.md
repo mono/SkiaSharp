@@ -54,7 +54,10 @@ before generating Ninja files. The latter changes the linker's `/PDB` argument
 and GN's declared outputs together: renaming after linking would leave the DLL's
 embedded debug reference pointing to `.dll.pdb`. The build checks that each DLL
 references its packaged `.pdb` filename. Import libraries retain upstream names.
-Required Windows App SDK header generation fails rather than creating stubs.
+Windows App SDK header generation includes the local transitive IDL imports
+of UI/Graphics APIs, including Microsoft.Foundation; MIDL processing an imported
+IDL does not itself generate that import's header. Required generation fails
+rather than creating stubs.
 
 GN is not a Visual Studio Installer component or a documented preinstalled tool
 on the hosted VS 2026 image. Official latest Windows binaries are available from
