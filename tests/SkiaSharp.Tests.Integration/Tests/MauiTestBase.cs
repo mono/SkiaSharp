@@ -196,7 +196,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         using var driver = CreateDriver(options);
         await ValidateDeviceAsync();
         await Task.Delay(5000);
-        var element = FindCanvasElement(driver, bundleId);
+        var element = driver.FindElement("accessibility id", "SkiaCanvas");
         var screenshot = driver.GetScreenshot().AsByteArray;
         using var bitmap = SKBitmap.Decode(screenshot);
         Assert.NotNull(bitmap);
