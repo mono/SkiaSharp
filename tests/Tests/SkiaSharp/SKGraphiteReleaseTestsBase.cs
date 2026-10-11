@@ -216,6 +216,16 @@ namespace SkiaSharp.Tests
 				surface.Canvas.Clear(SKColors.Blue);
 				using var recording = harness.Recorder.Snap();
 				Assert.NotNull(recording);
+				Assert.Throws<ArgumentException>(() => harness.Context.InsertRecording(
+					recording, new SKGraphiteInsertRecordingOptions
+					{
+						WaitSemaphores = new SKGraphiteBackendSemaphore[] { null },
+					}));
+				Assert.Throws<ArgumentException>(() => harness.Context.InsertRecording(
+					recording, new SKGraphiteInsertRecordingOptions
+					{
+						SignalSemaphores = new SKGraphiteBackendSemaphore[] { null },
+					}));
 				using var rasterTarget = SKSurface.Create(info);
 				Assert.NotNull(rasterTarget);
 				var completed = 0;
