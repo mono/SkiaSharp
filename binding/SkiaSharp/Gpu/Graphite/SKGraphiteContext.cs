@@ -376,9 +376,19 @@ namespace SkiaSharp
 			for (var i = 0; i < signalHandles.Length; i++)
 				signalHandles[i] = options.SignalSemaphores[i].Handle;
 
+			var contextHandle = Handle;
+			var recordingHandle = recording.Handle;
+			var targetSurfaceHandle = options.TargetSurface?.Handle ?? IntPtr.Zero;
+			var targetStateHandle = options.TargetTextureState?.Handle ?? IntPtr.Zero;
 			var targetClip = options.TargetClip;
-			DelegateProxies.Create (options.Finished, out _, out var finishedContext);
-			var finishedProxy = options.Finished is not null
+			var callbackInvoked = false;
+			var callback = options.Finished;
+			SKGraphiteFinishedDelegate completion = callback is null ? null : success => {
+				callbackInvoked = true;
+				callback (success);
+			};
+			DelegateProxies.Create (completion, out var finishedHandle, out var finishedContext);
+			var finishedProxy = completion is not null
 				? DelegateProxies.SKGraphiteFinishedProxy
 				: null;
 
@@ -387,13 +397,13 @@ namespace SkiaSharp
 				fixed (IntPtr* waits = waitHandles)
 				fixed (IntPtr* signals = signalHandles) {
 					status = SkiaApi.sk_graphite_context_insert_recording_full (
-						Handle,
-						recording.Handle,
-						options.TargetSurface?.Handle ?? IntPtr.Zero,
+						contextHandle,
+						recordingHandle,
+						targetSurfaceHandle,
 						options.TargetTranslation.X,
 						options.TargetTranslation.Y,
 						&targetClip,
-						options.TargetTextureState?.Handle ?? IntPtr.Zero,
+						targetStateHandle,
 						(void**)waits,
 						waitHandles.Length,
 						(void**)signals,
@@ -401,6 +411,10 @@ namespace SkiaSharp
 						finishedProxy,
 						(void*)finishedContext);
 				}
+			} catch when (!callbackInvoked) {
+				if (finishedHandle.IsAllocated)
+					finishedHandle.Free ();
+				throw;
 			} finally {
 				GC.KeepAlive (this);
 				GC.KeepAlive (recording);
