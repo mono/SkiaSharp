@@ -5,7 +5,7 @@ namespace SkiaSharpSample;
 
 internal sealed class GalleryWindowSettings
 {
-    private bool useGpu;
+    private GalleryRenderer renderer;
 
     public GalleryWindowSettings(SampleService? catalog = null) => Catalog = catalog;
 
@@ -13,12 +13,30 @@ internal sealed class GalleryWindowSettings
 
     public event EventHandler? BackendChanged;
 
-    public bool UseGpu => useGpu;
+    public GalleryRenderer Renderer => renderer;
+    public bool UseGpu => renderer != GalleryRenderer.Cpu;
+    public static bool GraphiteAvailable =>
+#if ANDROID
+        OperatingSystem.IsAndroidVersionAtLeast(24);
+#elif IOS
+        OperatingSystem.IsIOSVersionAtLeast(13);
+#elif MACCATALYST
+        true;
+#else
+        false;
+#endif
 
     public void SetGpu(bool enabled)
     {
-        if (useGpu == enabled) return;
-        useGpu = enabled;
+        SetRenderer(enabled ? GalleryRenderer.Ganesh : GalleryRenderer.Cpu);
+    }
+
+    public void SetRenderer(GalleryRenderer value)
+    {
+        if (value == GalleryRenderer.Graphite && !GraphiteAvailable)
+            throw new PlatformNotSupportedException("Graphite presentation is deferred on Windows.");
+        if (renderer == value) return;
+        renderer = value;
         BackendChanged?.Invoke(this, EventArgs.Empty);
     }
 

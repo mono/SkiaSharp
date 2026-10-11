@@ -11,6 +11,13 @@ namespace SkiaSharp.Tests.Integration;
 /// </summary>
 public class MauiMacCatalystTests(ITestOutputHelper output) : MauiTestBase(output)
 {
+    [Fact]
+    public Task SKGraphiteView() => RunGraphiteViewTest();
+    [Fact]
+    public Task NativeGaneshView() => RunNativeGpuSampleTest("MacCatalyst", "Ganesh");
+    [Fact]
+    public Task NativeGraphiteView() => RunNativeGpuSampleTest("MacCatalyst", "Graphite");
+
     protected override string PlatformName => "MacCatalyst";
     protected override string TargetFramework => "net10.0-maccatalyst";
     

@@ -2,6 +2,7 @@ using System;
 using Microsoft.Maui.Controls;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
+using SkiaSharp.Views.Maui.Controls;
 
 namespace SkiaSharpSample;
 
@@ -74,10 +75,34 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 
 	SKPoint touchPos;
 	bool touchActive;
+	SKGpuView gpuView;
 
-	public GpuPage()
+	public GpuPage() : this(false) { }
+
+	public GpuPage(bool graphite)
 	{
 		InitializeComponent();
+		gpuView = skiaView;
+		if (graphite)
+		{
+			var replacement = new SKGraphiteView { EnableTouchEvents = true };
+			replacement.PaintSurface += OnPaintSurface;
+			replacement.Touch += OnTouch;
+			var host = (Grid)skiaView.Parent;
+			host.Children.Remove(skiaView);
+			host.Children.Insert(0, replacement);
+			gpuView = replacement;
+			Title = "Graphite";
+		}
+		gpuView.ContextDestroying += (_, _) => shaderPaint.Shader = null;
+		gpuView.RenderFailed += (_, e) => Dispatcher.Dispatch(() =>
+		{
+			gpuView.HasRenderLoop = false;
+			fpsLabel.Text = $"{Title} failed: {e.Exception.Message} · tap to retry";
+		});
+		var retry = new TapGestureRecognizer();
+		retry.Tapped += (_, _) => { gpuView.InvalidateSurface(); gpuView.HasRenderLoop = true; };
+		fpsLabel.GestureRecognizers.Add(retry);
 	}
 
 	protected override void OnAppearing()
@@ -107,23 +132,23 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 	void StartAnimation()
 	{
 		// Force-restart: toggle off then on to re-arm the native render loop
-		// after Shell navigation detaches/reattaches the native GL view
-		skiaView.HasRenderLoop = false;
+		// after Shell navigation detaches/reattaches the native engine container
+		gpuView.HasRenderLoop = false;
 		fpsCounter.Start();
 		fpsLabel.Text = "FPS: --";
 		Dispatcher.Dispatch(() =>
 		{
-			skiaView.HasRenderLoop = true;
+			gpuView.HasRenderLoop = true;
 		});
 	}
 
 	void StopAnimation()
 	{
-		skiaView.HasRenderLoop = false;
+		gpuView.HasRenderLoop = false;
 		fpsCounter.Stop();
 	}
 
-	private void OnTouch(object sender, SKTouchEventArgs e)
+	private void OnTouch(object? sender, SKTouchEventArgs e)
 	{
 		switch (e.ActionType)
 		{
@@ -142,7 +167,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		e.Handled = true;
 	}
 
-	private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
+	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
 		var info = e.Info;
@@ -160,12 +185,15 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		using var shader = builder.Build();
 		shaderPaint.Shader = shader;
 		canvas.DrawRect(0, 0, width, height, shaderPaint);
+		shaderPaint.Shader = null;
 
 		if (fpsCounter.Tick() is double fps)
 		{
+			var backend = e is SKPaintGaneshSurfaceEventArgs ganesh ? ganesh.Context.Backend.ToString() :
+				e is SKPaintGraphiteSurfaceEventArgs graphite ? graphite.Context.Backend.ToString() : "unknown";
 			Dispatcher.Dispatch(() =>
 			{
-				fpsLabel.Text = $"FPS: {fps:F0}";
+				fpsLabel.Text = $"{Title} · {backend} · FPS: {fps:F0}";
 			});
 		}
 	}

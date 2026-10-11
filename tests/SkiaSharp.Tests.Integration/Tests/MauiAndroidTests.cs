@@ -14,6 +14,13 @@ namespace SkiaSharp.Tests.Integration;
 /// </summary>
 public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
 {
+    [Fact]
+    public Task SKGraphiteView() => RunGraphiteViewTest();
+    [Fact]
+    public Task NativeGaneshView() => RunNativeGpuSampleTest("Android", "Ganesh");
+    [Fact]
+    public Task NativeGraphiteView() => RunNativeGpuSampleTest("Android", "Graphite");
+
     // Default device configuration (can be overridden via -p:AndroidDevice and -p:AndroidVersion)
     private const string DefaultDevice = "Android Emulator";
     private const string DefaultVersion = "";  // Empty = use whatever is running

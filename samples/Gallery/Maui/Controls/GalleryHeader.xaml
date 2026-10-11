@@ -40,7 +40,7 @@
                     </DataTrigger>
                 </Button.Triggers>
             </Button>
-            <Button Text="GPU" AutomationId="gallery-header-gpu"
+            <Button Text="Ganesh" AutomationId="gallery-header-gpu"
                     SemanticProperties.Description="{Binding GpuDescription}"
                     CornerRadius="9" FontSize="11" FontAttributes="Bold"
                     Padding="6,3" MinimumHeightRequest="40" MinimumWidthRequest="45"
@@ -51,6 +51,20 @@
                         <Setter Property="BackgroundColor" Value="White" />
                         <Setter Property="TextColor" Value="{StaticResource BrandNavy}" />
                         <Setter Property="BorderColor" Value="White" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            <Button Text="Graphite" AutomationId="gallery-header-graphite"
+                    IsEnabled="{Binding GraphiteAvailable}"
+                    SemanticProperties.Description="{Binding GraphiteDescription}"
+                    CornerRadius="9" FontSize="11" FontAttributes="Bold"
+                    Padding="6,3" MinimumHeightRequest="40"
+                    BorderWidth="1" BorderColor="#6979BD" TextColor="White"
+                    BackgroundColor="#34438E" Clicked="GraphiteClicked">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding GraphiteSelected}" Value="True">
+                        <Setter Property="BackgroundColor" Value="White" />
+                        <Setter Property="TextColor" Value="{StaticResource BrandNavy}" />
                     </DataTrigger>
                 </Button.Triggers>
             </Button>

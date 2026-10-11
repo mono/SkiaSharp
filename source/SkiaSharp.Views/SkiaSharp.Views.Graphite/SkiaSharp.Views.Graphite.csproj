@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GraphiteTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</GraphiteTargetFrameworksCurrent>
+    <GraphiteTargetFrameworksCurrent Condition="$(IsLinux)">$(TFMCurrent)-android$(TPVAndroidCurrent)</GraphiteTargetFrameworksCurrent>
+    <GraphiteTargetFrameworksPrevious Condition="'$(TFMPrevious)' != '' and !$(IsLinux)">$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious)</GraphiteTargetFrameworksPrevious>
+    <GraphiteTargetFrameworksPrevious Condition="'$(TFMPrevious)' != '' and $(IsLinux)">$(TFMPrevious)-android$(TPVAndroidPrevious)</GraphiteTargetFrameworksPrevious>
+    <TargetFrameworks>$(GraphiteTargetFrameworksCurrent);$(GraphiteTargetFrameworksPrevious)</TargetFrameworks>
+    <PackagingGroup>SkiaSharp.Views.Graphite</PackagingGroup>
+    <PackageId>SkiaSharp.Views.Graphite</PackageId>
+    <Title>SkiaSharp Graphite views for Android, iOS and Mac Catalyst</Title>
+    <PackageDescription>Engine-neutral native Graphite drawing containers for Android, iOS and Mac Catalyst.</PackageDescription>
+    <AssemblyName>SkiaSharp.Views.Graphite</AssemblyName>
+    <RootNamespace>SkiaSharp.Views</RootNamespace>
+    <SignAssembly>false</SignAssembly>
+    <Nullable>enable</Nullable>
+    <AndroidGenerateResourceDesigner>false</AndroidGenerateResourceDesigner>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\SkiaSharp.Views\SkiaSharp.Views.csproj" />
+    <Compile Remove="Platform\**" />
+    <None Include="Platform\**" />
+    <Compile Include="Platform\Shared\**\*.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">
+    <Compile Include="Platform\Apple\**\*.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <Compile Include="Platform\Android\**\*.cs" />
+    <PackageReference Include="Silk.NET.Vulkan" Version="2.23.0" />
+  </ItemGroup>
+</Project>
