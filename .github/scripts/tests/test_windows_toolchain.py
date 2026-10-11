@@ -27,6 +27,9 @@ class WindowsToolchainTests(unittest.TestCase):
                 self.assertTrue(required.issubset(components))
                 self.assertFalse(any("14.44" in component or "19041" in component
                                      or "v143" in component for component in components))
+                self.assertNotIn("Microsoft.VisualStudio.Workload.XamarinBuildTools", components)
+        build_tools = json.loads((ROOT / "scripts/infra/native/windows/build-tools.vsconfig").read_text())
+        self.assertIn("Microsoft.VisualStudio.Workload.NetCrossPlatBuildTools", build_tools["components"])
 
     def test_native_projects_use_v145_without_raising_winui_minimum_os(self):
         projects = (
