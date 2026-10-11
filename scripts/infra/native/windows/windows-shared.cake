@@ -8,8 +8,8 @@ string GetToolsetVersion()
     var build = ((DirectoryPath)VS_INSTALL).Combine("VC/Auxiliary/Build");
     var version = FileReadText(build.CombineWithFilePath("Microsoft.VCToolsVersion.default.txt")).Trim();
     var parsed = Version.Parse(version);
-    if (parsed.Major != 14 || parsed.Minor < 30 || parsed.Minor >= 50)
-        version = FileReadText(build.CombineWithFilePath("Microsoft.VCToolsVersion.v143.default.txt")).Trim();
+    if (parsed.Major != 14 || parsed.Minor < 50)
+        throw new Exception($"Visual Studio 2026 MSVC v145 or newer is required, found {version}.");
     return version;
 }
 
