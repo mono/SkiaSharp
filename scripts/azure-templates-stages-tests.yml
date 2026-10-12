@@ -11,6 +11,9 @@ parameters:
     type: object
   - name: buildAgentAndroidTests
     type: object
+  - name: captureWindowsGpuNativeDumps
+    type: boolean
+    default: false
   - name: androidDevices
     type: object
     default:
@@ -95,8 +98,11 @@ stages:
                 displayName: Provision software Vulkan (SwiftShader) for visual tests
             postBuildSteps:
               - pwsh: |
+                  $captureNativeDumps = '${{ parameters.captureWindowsGpuNativeDumps }}' -eq 'true' `
+                    -or $env:SKIASHARP_WINDOWS_GPU_NATIVE_DUMP -eq '1'
+                  Write-Host "Windows GPU native capture enabled: $captureNativeDumps"
                   & scripts/infra/tests/run-windows-gpu-views.ps1 `
-                    -CaptureNativeDumps:($env:SKIASHARP_WINDOWS_GPU_NATIVE_DUMP -eq '1')
+                    -CaptureNativeDumps:$captureNativeDumps
                 displayName: Test Ganesh view presentation and Windows Graphite contract
                 condition: succeededOrFailed()
 

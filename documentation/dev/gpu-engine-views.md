@@ -168,8 +168,10 @@ events or existing reports for that test executable without changing system
 crash-reporting policy.
 
 For a bounded native-crash investigation, run
-`pwsh scripts/infra/tests/run-windows-gpu-views.ps1 -CaptureNativeDumps`, or set
-`SKIASHARP_WINDOWS_GPU_NATIVE_DUMP=1` on the Windows CI leg. The opt-in uses
+`pwsh scripts/infra/tests/run-windows-gpu-views.ps1 -CaptureNativeDumps`, or queue
+the complete/tests pipeline with `captureWindowsGpuNativeDumps=true`.
+`SKIASHARP_WINDOWS_GPU_NATIVE_DUMP=1` also enables capture when explicitly
+exported in the Windows task environment. The opt-in uses
 Microsoft-signed ProcDump and Windows SDK debugger tools, provisioning them
 locally to the task when needed and accepting ProcDump's per-user license.
 It attaches only to the verified test-host PID and analyzes dumps on the worker.
