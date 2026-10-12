@@ -73,6 +73,31 @@ try {
     'Private dump deletion and primary exception preservation checks passed.'
     $repository = $testRepository
 
+    $bindingAst = [Management.Automation.Language.Parser]::ParseFile(
+        "$testRepository/scripts/infra/tests/run-windows-gpu-views.ps1", [ref] $null, [ref] $parseErrors)
+    if ($parseErrors) { throw ($parseErrors | Out-String) }
+    $launch = $bindingAst.FindAll({
+        param($node)
+        $node -is [Management.Automation.Language.CommandAst] -and $node.GetCommandName() -eq 'Start-Job'
+    }, $true)[0].Extent.Text.Replace('$PSScriptRoot', "$testRepository/scripts/infra/tests")
+    $tools = [pscustomobject]@{ ProcDump = 'missing-fixture-procdump.exe'; Debugger = 'missing-fixture-cdb.exe' }
+    $runResults = $root
+    $applicationRoot = $testRepository
+    $privateDumps = $privateRoot
+    $since = Get-Date
+    $bindingJob = & ([scriptblock]::Create($launch))
+    try {
+        if (-not (Wait-Job $bindingJob -Timeout 20)) { throw 'Monitor binding fixture did not reach its platform/tool guard.' }
+        $bindingError = $null
+        try { Receive-Job $bindingJob -ErrorAction Stop | Out-Null } catch { $bindingError = $_ }
+        if (-not $bindingError -or $bindingError.Exception.Message -match 'positional parameter|parameter set|mandatory parameters') {
+            throw "Actual runner monitor launch failed parameter binding: $bindingError"
+        }
+        $expected = if ($IsWindows) { 'Cannot find path|does not exist' } else { 'requires a Windows worker' }
+        if ($bindingError.Exception.Message -notmatch $expected) { throw "Monitor did not reach its expected platform/tool guard: $bindingError" }
+    } finally { Remove-Job $bindingJob -Force }
+    'Actual runner monitor launch preserves named arguments/script root and reaches platform/tool validation.'
+
     $executable = (Get-Process -Id $PID).MainModule.FileName
     foreach ($role in 'cancel', 'collector') {
         $writerDirectory = Join-Path $privateRoot "surviving-$role"
