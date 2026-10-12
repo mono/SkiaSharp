@@ -6,12 +6,26 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
 
-public sealed class MauiInfrastructureTests
+public sealed class AppiumInfrastructureTests
 {
+    [Fact]
+    public void DeviceProfilesKeepExplicitLegacyAndCurrentPorts()
+    {
+        Assert.Equal(5558, AndroidDevice.PixelApi24.Validate());
+        Assert.Equal(5556, AndroidDevice.PixelApi37.Validate());
+        Assert.Equal(24, AndroidDevice.PixelApi24.Api);
+        Assert.Equal(37, AndroidDevice.PixelApi37.Api);
+        IosDevice.Iphone16ProIos18_6.Validate();
+        IosDevice.Iphone16Pro.Validate();
+        Assert.Throws<ArgumentException>(() => (AndroidDevice.PixelApi24 with { Serial = "emulator-5557" }).Validate());
+        Assert.Throws<ArgumentException>(() => (AndroidDevice.PixelApi24 with { Name = "Pixel_*" }).Validate());
+        Assert.Throws<ArgumentException>(() => (IosDevice.Iphone16Pro with { Version = "latest" }).Validate());
+    }
+
     [Fact]
     public void InteractionMustChangeTheSceneNotJustAnOverlay()
     {
-        var root = Path.Combine(Path.GetTempPath(), $"maui-scene-{Guid.NewGuid():N}");
+        var root = Path.Combine(Path.GetTempPath(), $"appium-scene-{Guid.NewGuid():N}");
         Directory.CreateDirectory(root);
         try
         {
@@ -22,11 +36,11 @@ public sealed class MauiInfrastructureTests
             Save(before);
             bitmap.SetPixel(15, 15, SKColors.Red);
             Save(after);
-            var error = Assert.ThrowsAny<Exception>(() => MauiUi.AssertSceneChanged(before, after));
+            var error = Assert.ThrowsAny<Exception>(() => AppiumRunningApp.AssertSceneChanged(before, after));
             Assert.Contains("rendered scene did not change", error.Message);
             bitmap.SetPixel(4, 4, SKColors.Blue);
             Save(after);
-            MauiUi.AssertSceneChanged(before, after);
+            AppiumRunningApp.AssertSceneChanged(before, after);
 
             void Save(string path)
             {
@@ -52,12 +66,12 @@ public sealed class MauiInfrastructureTests
                "runtime":{"name":"iOS 26.2","version":"26.2"}}
             ]
             """;
-        Assert.Equal(("selected", "Shutdown"), MauiDevice.RequireIosSimulator(json, "iPhone 16 Pro", "26.2"));
-        Assert.Throws<InvalidOperationException>(() => MauiDevice.RequireIosSimulator(json, "iPhone 16 Pro", "26.3"));
-        Assert.Throws<InvalidOperationException>(() => MauiDevice.RequireIosSimulator(json, "iPhone 16", "26.2"));
-        Assert.Throws<InvalidOperationException>(() => MauiDevice.RequireIosSimulator(
+        Assert.Equal(("selected", "Shutdown"), IosRunningApp.RequireSimulator(json, "iPhone 16 Pro", "26.2"));
+        Assert.Throws<InvalidOperationException>(() => IosRunningApp.RequireSimulator(json, "iPhone 16 Pro", "26.3"));
+        Assert.Throws<InvalidOperationException>(() => IosRunningApp.RequireSimulator(json, "iPhone 16", "26.2"));
+        Assert.Throws<InvalidOperationException>(() => IosRunningApp.RequireSimulator(
             json.Replace("iPhone 17 Pro", "iPhone 16 Pro"), "iPhone 16 Pro", "26.2"));
-        Assert.Throws<InvalidOperationException>(() => MauiDevice.RequireIosSimulator(
+        Assert.Throws<InvalidOperationException>(() => IosRunningApp.RequireSimulator(
             json.Replace("\"isAvailable\":true", "\"isAvailable\":false"), "iPhone 16 Pro", "26.2"));
     }
 
@@ -67,12 +81,12 @@ public sealed class MauiInfrastructureTests
     public void CanvasCropUsesMeasuredScreenshotScale(int width, int height, int pixelsX, int pixelsY,
         int left, int top, int right, int bottom) =>
         Assert.Equal(new SKRectI(left, top, right, bottom),
-            MauiUi.ScreenshotBounds(new Point(10, 20), new Size(100, 200),
+            AppiumRunningApp.ScreenshotBounds(new Point(10, 20), new Size(100, 200),
                 new Size(width, height), new Size(pixelsX, pixelsY)));
 
     [Fact]
     public void CanvasCropRejectsOffscreenElements() =>
-        Assert.Throws<InvalidOperationException>(() => MauiUi.ScreenshotBounds(
+        Assert.Throws<InvalidOperationException>(() => AppiumRunningApp.ScreenshotBounds(
             new Point(-1, 0), new Size(100, 100), new Size(400, 800), new Size(1200, 2400)));
 
     [Fact]

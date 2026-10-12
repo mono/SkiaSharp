@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -7,48 +8,87 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-[CollectionDefinition("Maui devices", DisableParallelization = true)]
-public sealed class MauiDeviceCollection : ICollectionFixture<AppiumFixture>;
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class AppiumCollection : ICollectionFixture<AppiumFixture>
+{
+    public const string Name = "Appium";
+}
 
 public sealed class AppiumFixture
 {
     internal const int Port = 4727;
     internal const int AndroidPort = 8217;
     internal const int IosPort = 8117;
+    internal const int MacPort = 10117;
+    internal const int WindowsPort = 4737;
+    private static readonly SemaphoreSlim focus = new(1, 1);
 
-    internal async Task Run(SampleWorkspace workspace, bool ios, Func<Uri, Task> test)
+    internal async Task Run(AppiumRunningApp app, Func<AppiumRunningApp, Task> scenario)
     {
-        RequireFreePort(Port);
-        RequireFreePort(ios ? IosPort : AndroidPort);
-        var diagnostics = Path.Combine(workspace.DiagnosticsRoot, "appium");
-        Directory.CreateDirectory(diagnostics);
-        string[] arguments = ["--address", "127.0.0.1", "--port", Port.ToString(), "--log-timestamp"];
-        using var server = ProcessRunner.Start(
-            OperatingSystem.IsWindows() ? "cmd.exe" : "appium",
-            OperatingSystem.IsWindows() ? ["/d", "/c", "appium", .. arguments] : arguments,
-            workspace.Root);
-        var listening = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var stdout = DrainOutput();
-        var stderr = server.StandardError.ReadToEndAsync();
+        ArgumentNullException.ThrowIfNull(app);
+        ArgumentNullException.ThrowIfNull(scenario);
+        await focus.WaitAsync(TestContext.Current.CancellationToken);
         try
         {
-            var address = new Uri($"http://127.0.0.1:{Port}");
-            await WaitUntilReady(server, address, listening.Task);
-            await test(address);
+            await RunOwned(app, scenario);
         }
         finally
         {
-            try
+            focus.Release();
+        }
+    }
+
+    private static async Task RunOwned(AppiumRunningApp app, Func<AppiumRunningApp, Task> scenario)
+    {
+        Process? server = null;
+        Task<string>? stdout = null;
+        Task<string>? stderr = null;
+        var stopped = false;
+        var diagnostics = app.Diagnostics;
+        string[] arguments = ["--address", "127.0.0.1", "--port", Port.ToString(), "--log-timestamp"];
+        var listening = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var address = new Uri($"http://127.0.0.1:{Port}");
+        await app.Run(address, scenario, StartServer, StopServer);
+
+        async Task StopServer()
+        {
+            if (stopped || server is null)
+                return;
+            stopped = true;
+            List<Exception> failures = [];
+            await AppiumRunningApp.Attempt(failures, async () =>
             {
                 if (!server.HasExited)
                     server.Kill(entireProcessTree: true);
-                await server.WaitForExitAsync();
-            }
-            finally
+                await server.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(30));
+            });
+            await AppiumRunningApp.Attempt(failures, async () =>
+                await SaveLog("server.stdout.log", await stdout!.WaitAsync(TimeSpan.FromSeconds(30))));
+            await AppiumRunningApp.Attempt(failures, async () =>
+                await SaveLog("server.stderr.log", await stderr!.WaitAsync(TimeSpan.FromSeconds(30))));
+            server.Dispose();
+            AppiumRunningApp.ThrowFailures(failures);
+        }
+
+        async Task StartServer()
+        {
+            RequireFreePort(Port);
+            Directory.CreateDirectory(diagnostics);
+            try
             {
-                await SaveLog("server.stdout.log", await stdout);
-                await SaveLog("server.stderr.log", await stderr);
+                server = ProcessRunner.Start(
+                    OperatingSystem.IsWindows() ? "cmd.exe" : "appium",
+                    OperatingSystem.IsWindows() ? ["/d", "/c", "appium", .. arguments] : arguments,
+                    app.Workspace.Root);
             }
+            catch (Win32Exception error)
+            {
+                throw new InvalidOperationException(
+                    "Install Appium and the selected platform driver explicitly before selecting UI tests. Nothing is installed by discovery or fixtures.", error);
+            }
+            stdout = DrainOutput();
+            stderr = server.StandardError.ReadToEndAsync();
+            await WaitUntilReady(server, address, listening.Task);
         }
 
         async Task SaveLog(string name, string text)
@@ -61,7 +101,7 @@ public sealed class AppiumFixture
         async Task<string> DrainOutput()
         {
             var text = new StringBuilder();
-            while (await server.StandardOutput.ReadLineAsync().ConfigureAwait(false) is { } line)
+            while (await server!.StandardOutput.ReadLineAsync().ConfigureAwait(false) is { } line)
             {
                 text.AppendLine(line);
                 if (line.Contains($"Appium REST http interface listener started on http://127.0.0.1:{Port}", StringComparison.Ordinal))
@@ -91,7 +131,10 @@ public sealed class AppiumFixture
 
     private static async Task WaitUntilReady(Process server, Uri address, Task listening)
     {
-        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+        using var client = new HttpClient(new HttpClientHandler { UseProxy = false })
+        {
+            Timeout = TimeSpan.FromSeconds(2)
+        };
         var deadline = DateTime.UtcNow.AddSeconds(30);
         while (DateTime.UtcNow < deadline)
         {

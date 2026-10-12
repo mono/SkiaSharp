@@ -67,12 +67,12 @@ public abstract class SampleTestBase : IDisposable
 
         await DotNet.GetVersion(prepared);
 
-        if (framework is null)
-            await DotNet.Build(prepared, project, diagnostics, configuration);
-        else if (properties is not null)
-            await DotNet.Build(prepared, project, diagnostics, configuration, framework, properties);
-        else
-            await DotNet.Build(prepared, project, diagnostics, configuration, framework);
+        await DotNet.Build(prepared, project, diagnostics, new DotNetBuildOptions
+        {
+            Configuration = configuration,
+            Framework = framework,
+            Properties = properties ?? new Dictionary<string, string>()
+        });
         return prepared;
     }
 

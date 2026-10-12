@@ -105,12 +105,21 @@ tolerance. Failures retain the actual image; mismatches also retain a diff.
 Review replacement references on the affected platform; tests never accept them
 automatically.
 
-## MAUI mobile runtime tests
+## Appium application runtime tests
 
-`MauiSampleTests` builds **generated Basic/Maui and Gallery/Maui**, using the
-declared `net10.0-android` or `net10.0-ios` framework and the staged package
-cohort. The ordinary source-backed runner does not consume those product
-packages. Integration and MSBuild suites remain unchanged.
+`AppiumSampleTests` builds actual generated Basic MAUI applications on Android,
+iOS, MacCatalyst and Windows, plus native Basic Android, iOS, MacCatalyst,
+macOS and WinUI applications. Gallery MAUI covers all four MAUI platforms.
+Every application retains its declared framework and consumes the exact
+staged package cohort. The ordinary source-backed runner does not consume
+those product packages. Integration, MSBuild and existing core/device suites
+remain unchanged.
+
+`AppiumFixture` owns the server; `AppiumRunningApp` owns the driver, shared
+interactions, native element screenshots, diagnostics and cleanup. Android,
+iOS, Mac and Windows running apps supply their platform-specific lifecycle.
+Mac2 serves both AppKit and MacCatalyst. No HTTP-server abstraction, synthetic
+application, guessed desktop scale or sample-family runtime hierarchy is used.
 
 Install Appium and its UiAutomator2/XCUITest drivers explicitly before running
 tests; discovery never downloads a server, driver, workload, or system image.
@@ -119,7 +128,8 @@ Device discovery, boot readiness, installation, launch, and removal reuse `dotne
 android` and `dotnet apple`, as the existing device suite does. Android startup
 uses `--wait --wait-exit` so the fixture retains its owned process tree;
 no forced AVD creation/deletion or latest/first-device selection is inherited.
-Only the narrow Android AVD identity, page-size, activity and runtime-log queries
+`Android.cs` and `Apple.cs` provide typed tool commands through `DotNet.cs`.
+The narrow Android AVD identity, page-size, activity and runtime-log queries
 use explicitly selected `adb` commands.
 Put `appium` on PATH. Set `ANDROID_HOME` or `ANDROID_SDK_ROOT` for Android.
 On macOS, set `DEVELOPER_DIR` for both build and Appium to the Xcode required by
@@ -127,10 +137,14 @@ the installed Apple workload (for example,
 `/Applications/Xcode-26.6.0.app/Contents/Developer`). Tests never change
 the global Xcode selection.
 
-The explicit device cases are **Pixel_API_37**, Android 17/API 37,
-`emulator-5556`, and **iPhone 16 Pro**, iOS 26.2. API 37 is the selected runtime,
-not a retargeting of the sample's declared compile framework. Create the exact
-AVD/runtime/simulator before testing. For the reviewed Android profile:
+The explicit Android profiles are **Pixel_API_24**, Android 7.0/API 24,
+`emulator-5558`, 4 KB pages, and **Pixel_API_37**, Android 17/API 37,
+`emulator-5556`, 16 KB pages. iOS uses **iPhone 16 Pro** on **18.6** and **26.2**.
+These runtime profiles do not retarget the application's compile API.
+The assigned Android samples declare minima of API 21 (Basic) or 23 (Gallery);
+the assigned iOS samples declare minima of 12.2 (Basic) or 15 (Gallery).
+Profile declarations are not evidence of successful driver/runtime execution.
+Create the exact AVD/runtime/simulator before selecting its cases. For API 37:
 
 ```sh
 dotnet android avd create --name Pixel_API_37 \
@@ -140,21 +154,29 @@ dotnet android avd create --name Pixel_API_37 \
 
 Tests start only the selected stopped device, then stop their owned process or
 restore the simulator to shutdown. A running selected device requires an
-explicit `SKIASHARP_MAUI_USE_BOOTED_DEVICE=1` dedication; it is not stopped after
+explicit `SKIASHARP_APPIUM_USE_BOOTED_DEVICE=1` dedication; it is not stopped after
 testing. Other devices, including `emulator-5554`, are not touched. An already
 installed sample app is a conflict, not permission to overwrite user data.
 Ports 4727 and 8217 (Android) or 8117 (iOS) must be free: tests never reuse or kill
 foreign Appium/driver servers. Only the newly installed sample app is removed.
+Desktop Mac2 uses port 10117 and requires an unlocked GUI session, Xcode
+automation/XcodeHelper Accessibility permissions, and
+`SKIASHARP_APPIUM_MAC_WDA_ROOT` pointing to the installed driver's
+WebDriverAgentMac source. Windows uses port 4737 and requires an interactive
+desktop, Developer Mode and `SKIASHARP_APPIUM_WINAPPDRIVER` pointing to the
+explicitly installed executable. Packaged WinUI output is registered from its
+actual generated manifest/package, not silently treated as an unpackaged EXE.
+Existing installations, state and running app/driver conflicts fail explicitly.
 
 After bootstrap, package staging, and exact-suffix generation:
 
 ```sh
 dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
   -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 \
-  -- --filter-class '*MauiInfrastructureTests' --report-trx
+  -- --filter-class '*AppiumInfrastructureTests' --report-trx
 dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
   -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 \
-  -- --filter-class '*MauiSampleTests' --report-trx
+  -- --filter-class '*AppiumSampleTests' --report-trx
 ```
 
 Device tests serialize foreground interactions. Appium's automatic app launch
@@ -167,9 +189,30 @@ flyout navigation, an actual touch stroke/clear, and animated GPU rendering
 (smoke only, never a frozen-frame golden). Gallery searches and filters for
 Gradient, changes its angle control, returns to the gallery, and renders the
 stable Gradient through both CPU and GPU. Static canvas references live in
-`Expected/Maui/<platform>/<exact-device>/<version>/`; their comparison retains
+`Expected/Appium/<family>/<platform>/<exact-profile>/`; their comparison retains
 the default 0.075% differing-pixel budget and zero channel tolerance.
 Missing references fail with retained captures; they are never auto-approved.
 Appium logs, device preflight output, screenshots, UI hierarchy, and build
 binlogs are retained as current-test attachments under the shared diagnostics
 directory.
+
+Local `samples` and IDE discovery remain unfiltered. CI uses the standard
+`Category=Device` and method/row `Platform`/`AndroidApi` traits to route every
+assigned case after the producing native+NuGet artifacts are available.
+Host jobs exclude only device rows; additive Appium legs use the existing
+Windows, Mac and Android agents/bootstrapper. API 24 uses UiAutomator2 5.0.7;
+API 37 uses 8.5.0 because UiAutomator2 6+ requires API 26. Installation is an
+explicit CI prerequisite, never test discovery. Missing runtime, driver,
+interactive-session or AX support fails the selected leg rather than skipping.
+CI provisioning does not change TCC databases, configure autologon, or alter
+the user's local workstation. CI success and new screenshot references still
+require actual reviewed execution.
+
+Explicit builds use a workspace-only `Directory.Build.targets` import guarded
+by the normalized exact selected root project. It checks declared framework
+membership before targets run and narrows only that root's restore graph.
+Referenced libraries retain their declared frameworks; no global
+`TargetFrameworks` override is passed. Existing sample targets are preserved.
+Typed `DotNetBuildOptions`, `DotNetRunOptions` and `DotNetCommandOptions` retain
+configuration, private-cache, diagnostics and callback defaults. Published
+legacy signatures remain compatibility entry points until their callers migrate.
