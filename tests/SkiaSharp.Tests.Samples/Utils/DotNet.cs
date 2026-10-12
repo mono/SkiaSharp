@@ -37,6 +37,16 @@ public static class DotNet
         return selected;
     }
 
+    public static Task Build(SampleWorkspace workspace, string project, string diagnostics, DotNetBuildOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentException.ThrowIfNullOrWhiteSpace(options.Configuration);
+        if (options.Framework is not null)
+            ArgumentException.ThrowIfNullOrWhiteSpace(options.Framework);
+        ArgumentNullException.ThrowIfNull(options.Properties);
+        return BuildImplementation(workspace, project, diagnostics, options.Configuration, options.Framework, options.Properties);
+    }
+
     public static Task Build(SampleWorkspace workspace, string project, string diagnostics, string configuration = "Release") =>
         BuildImplementation(workspace, project, diagnostics, configuration, null);
 
@@ -134,6 +144,54 @@ public static class DotNet
             workingDir ?? workspace.Root,
             timeout ?? TimeSpan.FromMinutes(1),
             start => ConfigureProcess(start, workspace));
+
+    internal static Task<(int ExitCode, string Output, string Error)> Execute(
+        SampleWorkspace workspace, IEnumerable<string> arguments, DotNetCommandOptions? options = null)
+    {
+        options ??= new DotNetCommandOptions();
+        return ProcessRunner.Run("dotnet", arguments, options.WorkingDirectory ?? workspace.Root, options.Timeout,
+            start => ConfigureProcess(start, workspace));
+    }
+
+    internal static Process Start(SampleWorkspace workspace, IEnumerable<string> arguments,
+        DotNetCommandOptions? options = null, Action<ProcessStartInfo>? configure = null)
+    {
+        options ??= new DotNetCommandOptions();
+        return ProcessRunner.Start("dotnet", arguments, options.WorkingDirectory ?? workspace.Root,
+            start =>
+            {
+                ConfigureProcess(start, workspace);
+                configure?.Invoke(start);
+            });
+    }
+
+    internal static Task<(int ExitCode, string Output, string Error)> ExecuteTool(
+        string tool, IEnumerable<string> arguments, DotNetCommandOptions? options = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tool);
+        options ??= new DotNetCommandOptions();
+        if (options.WorkingDirectory is not null && Path.GetFullPath(options.WorkingDirectory) != Repo.RootDir)
+            throw new ArgumentException("Repository tools must resolve the pinned manifest from the repository root.", nameof(options));
+        return ProcessRunner.Run("dotnet", ["tool", "run", tool, "--", .. arguments], Repo.RootDir, options.Timeout);
+    }
+
+    internal static Process StartTool(string tool, IEnumerable<string> arguments)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tool);
+        // Preserve the explicitly restored tool resolver/cache instead of replacing its CLI home.
+        return ProcessRunner.Start("dotnet", ["tool", "run", tool, "--", .. arguments], Repo.RootDir);
+    }
+
+    internal static Task Run(SampleWorkspace workspace, string project, Func<DotNetRunningApp, Task> test,
+        DotNetRunOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentException.ThrowIfNullOrWhiteSpace(options.Configuration);
+        if (options.Framework is not null)
+            ArgumentException.ThrowIfNullOrWhiteSpace(options.Framework);
+        ArgumentNullException.ThrowIfNull(options.Arguments);
+        return RunImplementation(workspace, project, options.Configuration, options.Framework, options.Arguments, test);
+    }
 
     internal static Task Run(
         SampleWorkspace workspace,

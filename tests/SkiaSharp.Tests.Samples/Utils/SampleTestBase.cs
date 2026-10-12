@@ -27,6 +27,12 @@ public abstract class SampleTestBase : IDisposable
         return workspace;
     }
 
+    protected Task<SampleWorkspace> BuildSample(string folder, string project, DotNetBuildOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        return BuildSampleImplementation(folder, project, options.Configuration, options.Framework, options.Properties);
+    }
+
     protected Task<SampleWorkspace> BuildSample(string folder, string solution, string configuration) =>
         BuildSampleImplementation(folder, solution, configuration, null);
 
