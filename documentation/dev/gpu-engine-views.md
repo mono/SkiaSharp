@@ -151,6 +151,9 @@ self-contained, so running it does not require loosening the agent's Developer
 Mode or package-installation policy. Self-contained deployment is configured
 only in the executable test project, not as a global property inherited by
 referenced view libraries, which would duplicate Windows App SDK runtime files.
+The source-based host imports the same WinUI native-assets helper as the samples
+and copies its hidden native content into the unpackaged executable layout;
+ANGLE and the WinUI bridge must come from the producing native build.
 
 The console CI target uses the unfiltered `SkiaSharp.Tests.Console.slnx` gate
 with both `TargetFramework` and `TargetFrameworks` set to the current desktop
