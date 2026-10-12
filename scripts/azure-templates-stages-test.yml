@@ -408,3 +408,41 @@ stages:
               sdk: ${{ sdk }}
               platform: linux
               buildAgent: ${{ parameters.buildAgentLinux }}
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_android24
+            platform: Android
+            androidApi: '24'
+            buildAgent: ${{ parameters.buildAgentAndroidTests }}
+            workloads: [android, maui-android]
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_android37
+            platform: Android
+            androidApi: '37'
+            buildAgent: ${{ parameters.buildAgentAndroidTests }}
+            workloads: [android, maui-android]
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_ios
+            platform: iOS
+            buildAgent: ${{ parameters.buildAgentMac }}
+            workloads: [ios, maui-ios]
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_maccatalyst
+            platform: MacCatalyst
+            buildAgent: ${{ parameters.buildAgentMac }}
+            workloads: [maccatalyst, maui-maccatalyst]
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_macos
+            platform: macOS
+            buildAgent: ${{ parameters.buildAgentMac }}
+            workloads: [macos]
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_windows
+            platform: Windows
+            buildAgent: ${{ parameters.buildAgentWindows }}
+            workloads: [maui-windows]

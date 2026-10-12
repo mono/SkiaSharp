@@ -1,0 +1,59 @@
+parameters:
+  name: ''
+  platform: ''
+  buildAgent: {}
+  workloads: []
+  androidApi: ''
+
+jobs:
+  - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: Appium (${{ parameters.platform }})
+      buildAgent: ${{ parameters.buildAgent }}
+      target: samples
+      additionalArgs: --sampleTestPlatform=${{ parameters.platform }} --sampleAndroidApi=${{ parameters.androidApi }} --skipExternals="all"
+      retryCount: 0
+      shouldPublish: false
+      installXcode: ${{ ne(parameters.platform, 'Android') }}
+      installAndroidSdk: ${{ eq(parameters.platform, 'Android') }}
+      dotnetSdks:
+        - sdkVersion: $(DOTNET_VERSION)
+          workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+          workloads: ${{ parameters.workloads }}
+      requiredArtifacts:
+        - name: native
+        - name: nuget
+          dir: nugets
+      preBuildSteps:
+        - pwsh: dotnet tool restore
+          displayName: Restore pinned device tools before explicit provisioning
+        - ${{ if eq(parameters.platform, 'Android') }}:
+          - bash: |
+              set -e
+              echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+              sudo udevadm control --reload-rules
+              sudo udevadm trigger --name-match=kvm
+              mkdir -p "$HOME/.android/avd"
+              echo "##vso[task.setvariable variable=ANDROID_AVD_HOME]$HOME/.android/avd"
+              echo "##vso[task.setvariable variable=ANDROID_EMULATOR_HOME]$HOME/.android"
+            displayName: Reuse Android device-test KVM and AVD provisioning
+          - pwsh: ./scripts/infra/managed/install-android-package.ps1 -Package emulator
+            displayName: Install the Android emulator
+        - pwsh: ./scripts/infra/tests/install-appium.ps1 -Platform '${{ parameters.platform }}' -AndroidApi '${{ parameters.androidApi }}'
+          displayName: Provision explicit Appium and driver prerequisites
+        - ${{ if or(eq(parameters.platform, 'Android'), eq(parameters.platform, 'iOS')) }}:
+          - pwsh: ./scripts/infra/tests/prepare-appium-devices.ps1 -Platform '${{ parameters.platform }}' -AndroidApi '${{ parameters.androidApi }}'
+            displayName: Prepare exact old/current sample devices
+      postBuildSteps:
+        - task: PublishTestResults@2
+          condition: always()
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: output/logs/testlogs/samples/**/*.trx
+            testRunTitle: Appium samples (${{ parameters.platform }})
+        - task: PublishPipelineArtifact@1
+          condition: always()
+          inputs:
+            targetPath: output/logs
+            artifact: ${{ parameters.name }}_logs
