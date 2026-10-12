@@ -122,7 +122,9 @@ void RunDotNetTest(
     FilePath testProject,
     DirectoryPath output,
     string configuration = null,
-    Dictionary<string, string> properties = null)
+    Dictionary<string, string> properties = null,
+    bool noBuild = true,
+    string hangTimeout = "15m")
 {
     output = MakeAbsolute(output);
     var dir = testProject.GetDirectory();
@@ -130,35 +132,40 @@ void RunDotNetTest(
     properties = properties == null
         ? new Dictionary<string, string>()
         : new Dictionary<string, string>(properties);
+    properties.TryAdd("TestingPlatformCaptureOutput", "false");
+    properties.TryAdd("Platform", "AnyCPU");
+    if (COVERAGE) {
+        properties.TryAdd("CollectCoverage", "true");
+        properties.TryAdd("CoverletOutputFormat", "cobertura");
+        properties.TryAdd("CoverletOutput", output.Combine("Coverage").FullPath + "/");
+    }
 
     var settings = new DotNetTestSettings {
         Configuration = configuration ?? CONFIGURATION,
-        NoBuild = true,
+        NoBuild = noBuild,
         WorkingDirectory = dir,
         Verbosity = DotNetVerbosity.Normal,
         ArgumentCustomization = args => {
-            args = args
-                .Append("/p:Platform=\"AnyCPU\"");
-            if (COVERAGE)
-                args = args
-                    .Append("/p:CollectCoverage=true")
-                    .Append("/p:CoverletOutputFormat=cobertura")
-                    .Append($"/p:CoverletOutput={output.Combine("Coverage").FullPath}/");
             foreach (var prop in properties) {
                 if (!string.IsNullOrEmpty(prop.Value)) {
                     args = args
-                        .Append($"/p:{prop.Key}={prop.Value}");
+                        .AppendQuoted($"/p:{prop.Key}={prop.Value}");
                 }
             }
             // Everything after "--" is forwarded to the Microsoft.Testing.Platform runner.
             args = args
                 .Append("--")
+                .Append("--show-live-output").Append("on")
+                .Append("--no-ansi")
                 .Append("--results-directory").AppendQuoted(output.FullPath)
                 .Append("--report-trx")
-                .Append("--report-trx-filename").Append("TestResults.trx")
-                .Append("--hangdump")
-                .Append("--hangdump-timeout").Append("15m")
-                .Append("--hangdump-type").Append("Mini");
+                .Append("--report-trx-filename").Append("TestResults.trx");
+            if (!string.IsNullOrEmpty(hangTimeout)) {
+                args = args
+                    .Append("--hangdump")
+                    .Append("--hangdump-timeout").Append(hangTimeout)
+                    .Append("--hangdump-type").Append("Mini");
+            }
             return args;
         },
     };
