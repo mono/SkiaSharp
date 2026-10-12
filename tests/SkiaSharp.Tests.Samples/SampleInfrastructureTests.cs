@@ -414,8 +414,8 @@ public class SampleInfrastructureTests : IDisposable
                 <OutputType>Exe</OutputType>
               </PropertyGroup>
               <Target Name="VerifySelectedFramework" BeforeTargets="CoreCompile">
-                <Error Condition="'$(TargetFramework)' != 'net10.0-windows' or '$(TargetFrameworks)' != 'net10.0;net10.0-windows'"
-                       Text="Build must select net10.0-windows without overriding the declared framework list." />
+                <Error Condition="'$(TargetFramework)' != 'net10.0-windows' or '$(TargetFrameworks)' != 'net10.0-windows'"
+                       Text="Build must select only the declared root framework net10.0-windows." />
                 <Error Condition="'$(ContractSentinel)' != 'forwarded-by-buildsample'"
                        Text="BuildSample must forward the test-owned property dictionary." />
                 <Message Importance="high" Text="Selected $(TargetFramework) from $(TargetFrameworks)" />
@@ -462,7 +462,7 @@ public class SampleInfrastructureTests : IDisposable
         var working = test.Prepare();
         var diagnostics = Path.Combine(test.Diagnostics, "builds", "Basic", "Console", "App", "Release", "net10.0-windows");
         var output = File.ReadAllText(Path.Combine(diagnostics, "build.stdout.log"));
-        Assert.Contains("Selected net10.0-windows from net10.0;net10.0-windows", output);
+        Assert.Contains("Selected net10.0-windows from net10.0-windows", output);
         Assert.Contains("Contract sentinel: forwarded-by-buildsample", output);
         Assert.Equal(new KeyValuePair<string, string>("ContractSentinel", "forwarded-by-buildsample"), Assert.Single(properties));
         Assert.True(new FileInfo(Path.Combine(diagnostics, "build.binlog")).Length > 0);
@@ -529,7 +529,9 @@ public class SampleInfrastructureTests : IDisposable
         Assert.Equal(defaults, arguments.Take(defaults.Length));
         Assert.Equal(new[]
         {
-            "--framework", "net10.0-ios", "-p:RuntimeIdentifier=iossimulator-arm64"
+            "--framework", "net10.0-ios",
+            $"-p:SampleRootProject={Path.GetFullPath(project)}", "-p:SampleRootFramework=net10.0-ios",
+            "-p:RuntimeIdentifier=iossimulator-arm64"
         }, arguments.Skip(defaults.Length));
         Assert.Equal(Path.GetFullPath(project), arguments[1]);
         Assert.Single(arguments, argument => argument.StartsWith("-bl:", StringComparison.Ordinal));
@@ -537,12 +539,36 @@ public class SampleInfrastructureTests : IDisposable
         Assert.DoesNotContain(arguments, argument => argument.StartsWith("-p:TargetFramework", StringComparison.Ordinal));
         Assert.Equal(new KeyValuePair<string, string>("RuntimeIdentifier", "iossimulator-arm64"), Assert.Single(properties));
         Assert.Equal(arguments, DotNet.BuildArguments(workspace, project, diagnostics, "Release", "net10.0-ios", properties));
-        foreach (var name in new[] { "TargetFramework", "TargetFrameworks", "configuration", "RestoreConfigFile", "UseSharedCompilation" })
+        foreach (var name in new[] { "TargetFramework", "TargetFrameworks", "configuration", "RestoreConfigFile", "UseSharedCompilation", "SampleRootProject", "SampleRootFramework" })
         {
             var conflicting = new Dictionary<string, string> { [name] = "override" };
             Assert.Throws<ArgumentException>(() =>
                 DotNet.BuildArguments(workspace, project, diagnostics, "Release", "net10.0-ios", conflicting));
         }
+    }
+
+    [Fact]
+    public void RootFrameworkSelectionPreservesTargetsAndGuardsOnlyTheSelectedRoot()
+    {
+        FileIn("inputs/App/App.csproj");
+        FileIn("inputs/Directory.Build.targets", "<Project><Target Name=\"ExistingSampleTarget\" /></Project>");
+        using var workspace = new SampleWorkspace("App", Path.Combine(root, "inputs"), Repo.PackagesDir,
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+        var project = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
+        var diagnostics = Path.Combine(workspace.DiagnosticsRoot, "build");
+        var path = RootFrameworkSelection.Write(workspace, project, "net10.0", diagnostics);
+        var selection = System.Xml.Linq.XDocument.Load(path);
+        Assert.Equal("ValidateRootSampleFrameworkSelection", (string?)selection.Root!.Attribute("InitialTargets"));
+        var selected = Assert.Single(selection.Descendants("TargetFrameworks"));
+        Assert.Contains("MSBuildProjectFullPath", (string?)selected.Parent!.Attribute("Condition"));
+        Assert.Equal("$(SampleRootFramework)", selected.Value);
+        Assert.Contains("RootDeclaredFrameworks", Assert.Single(selection.Descendants("Error")).Attribute("Condition")!.Value);
+        var original = System.Xml.Linq.XDocument.Load(Path.Combine(workspace.Root, "samples", "Directory.Build.targets"));
+        Assert.Equal("ExistingSampleTarget", Assert.Single(original.Descendants("Target")).Attribute("Name")!.Value);
+        Assert.Single(original.Descendants("Import"));
+        RootFrameworkSelection.Write(workspace, project, "net8.0", diagnostics);
+        Assert.Single(System.Xml.Linq.XDocument.Load(Path.Combine(workspace.Root, "samples", "Directory.Build.targets")).Descendants("Import"));
+        Assert.Throws<ArgumentException>(() => RootFrameworkSelection.Write(workspace, project, "net10.0;net8.0", diagnostics));
     }
 
     [Fact]

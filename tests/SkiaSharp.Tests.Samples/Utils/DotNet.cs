@@ -116,7 +116,11 @@ public static class DotNet
             "-p:UseSharedCompilation=false"
         };
         if (framework is not null)
-            arguments.AddRange(["--framework", framework]);
+        {
+            RootFrameworkSelection.Write(workspace, project, framework, diagnostics);
+            arguments.AddRange(["--framework", framework,
+                $"-p:SampleRootProject={Path.GetFullPath(project)}", $"-p:SampleRootFramework={framework}"]);
+        }
         if (properties is not null)
         {
             foreach (var (name, value) in properties)
