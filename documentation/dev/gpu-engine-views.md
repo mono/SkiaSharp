@@ -48,6 +48,11 @@ both use logical pixels. Each callback's canvas state is restored automatically.
 `InvalidateSurface()` requests one frame. Zero-sized frames and temporarily
 unavailable Apple drawables are not rendering failures.
 
+On Android, property changes and rendering run on different threads. An
+already-started paint can still report the previous scale after the UI changes
+`IgnorePixelScaling`. Use that callback's `Info` and `RawInfo`; wait for matching
+frame metadata when observing a requested coordinate-size transition.
+
 ## Context, recorder and callback lifetime
 
 `GRContext` and `GraphiteContext` are typed **borrowed** properties. They are
@@ -161,6 +166,21 @@ The gate executes all eight cases in five independent host runs; every run must
 complete and pass. It retains opt-in host exception/exit diagnostics and recent
 events or existing reports for that test executable without changing system
 crash-reporting policy.
+
+For a bounded native-crash investigation, run
+`pwsh scripts/infra/tests/run-windows-gpu-views.ps1 -CaptureNativeDumps`, or set
+`SKIASHARP_WINDOWS_GPU_NATIVE_DUMP=1` on the Windows CI leg. The opt-in uses
+Microsoft-signed ProcDump and Windows SDK debugger tools, provisioning them
+locally to the task when needed and accepting ProcDump's per-user license.
+It attaches only to the verified test-host PID and analyzes dumps on the worker.
+Raw dumps, licensed tools and symbol caches stay under ignored
+`tools/windows-gpu-private/`, outside the whole-output failed-job artifact as
+well as the test-log and coverage artifacts. Verified collector/helper exit and
+host detachment precede analysis and raw-dump deletion, including recovery paths.
+Only tool-validation metadata, fault metadata, module names and native stacks
+are published. Each invocation isolates its control files and keeps previous
+diagnostics. The ordinary five-host gate requires no debugger tooling or global
+crash-reporting changes.
 
 The console CI target uses the unfiltered `SkiaSharp.Tests.Console.slnx` gate
 with both `TargetFramework` and `TargetFrameworks` set to the current desktop
