@@ -129,12 +129,13 @@ void RunDotNetTest(
 {
     output = MakeAbsolute(output);
     var dir = testProject.GetDirectory();
+    var isSolution = testProject.GetExtension() == ".slnx" || testProject.GetExtension() == ".sln";
 
     properties = properties == null
         ? new Dictionary<string, string>()
         : new Dictionary<string, string>(properties);
     properties.TryAdd("TestingPlatformCaptureOutput", "false");
-    properties.TryAdd("Platform", "AnyCPU");
+    properties.TryAdd("Platform", isSolution ? "Any CPU" : "AnyCPU");
 
     var settings = new DotNetTestSettings {
         Configuration = configuration ?? CONFIGURATION,
@@ -159,7 +160,7 @@ void RunDotNetTest(
                 args = args
                     .Append("--coverage")
                     .Append("--coverage-output-format").Append("cobertura");
-            if (testProject.GetExtension() != ".slnx" && testProject.GetExtension() != ".sln")
+            if (!isSolution)
                 args = args.Append("--report-trx-filename").Append("TestResults.trx");
             if (!string.IsNullOrEmpty(hangTimeout)) {
                 args = args
