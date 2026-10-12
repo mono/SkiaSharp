@@ -90,6 +90,9 @@ recorders, native window resources are still released, but the device/context
 is retired on its owner thread only after those recorders are disposed.
 Recreation is refused while a previous generation is retiring. There is no
 process-lifetime renderer pool or faulted-renderer list.
+On Android, if destruction callbacks release all registered dependencies,
+disconnect completes native context disposal before returning. Retained
+dependencies still defer final disposal to the GPU owner thread.
 
 The bounded image cache is disposed while its recorder is alive. Graphite
 completion work is polled even while an on-demand view is idle. Asynchronous

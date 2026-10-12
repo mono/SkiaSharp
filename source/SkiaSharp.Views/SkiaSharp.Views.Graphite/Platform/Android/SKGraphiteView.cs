@@ -236,10 +236,17 @@ namespace SkiaSharp.Views.Android
 					owner.canvasWidth = owner.canvasHeight = 0;
 					try { owner.ContextDestroyed?.Invoke (owner, EventArgs.Empty); }
 					catch (Exception ex) { owner.Fail (ex, generation); }
-					presentationReleased.Set ();
+					// Finish immediately when destruction callbacks released all dependents.
+					// Stop must not return while that context is still being disposed.
+					var closed = false;
+					try { closed = Renderer?.TryFinishClose () ?? true; }
+					finally { presentationReleased.Set (); }
 					// At most one retired session per view. Registered producer recorders
 					// retain the device, and final destruction stays on this owner thread.
-					while (Renderer?.TryFinishClose () == false) wake.WaitOne (16);
+					while (!closed) {
+						wake.WaitOne (16);
+						closed = Renderer!.TryFinishClose ();
+					}
 					Renderer = null;
 					lock (wakeLock) wake.Dispose ();
 				}
