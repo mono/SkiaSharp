@@ -147,3 +147,8 @@ on-demand and continuous rendering, context recreation and handler collection,
 plus the explicitly unsupported Graphite contract. Its framework is resolved
 from `WindowsTargetFrameworksCurrent`; a missing UI host or presentation failure
 fails the leg rather than becoming a GPU skip.
+
+The console CI target uses the unfiltered `SkiaSharp.Tests.Console.slnx` gate
+with both `TargetFramework` and `TargetFrameworks` set to the current desktop
+test framework. This prevents platform workload restoration during desktop-only
+validation. Solution TRX files and coverage outputs remain separate per host.
