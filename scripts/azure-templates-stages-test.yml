@@ -152,12 +152,36 @@ stages:
                   if ($LASTEXITCODE -ne 0 -or $framework -notmatch '^net\d+\.\d+-windows[\d.]+$') {
                     throw "Could not resolve the current Windows test framework: $framework"
                   }
-                  dotnet test $project -p:TargetFramework=$framework -p:TargetFrameworks=$framework `
-                    -p:WindowsPackageType=None -p:Platform=x64 -p:RuntimeIdentifier=win-x64 `
-                    --filter 'FullyQualifiedName~GpuViewTests|FullyQualifiedName~GaneshViewHandlerDoesNotLeak' `
-                    --logger trx --results-directory output/logs/testlogs/gpu-views-windows
-                  if ($LASTEXITCODE -ne 0) {
-                    throw "Windows GPU view tests failed with exit code $LASTEXITCODE."
+                  $results = [IO.Path]::GetFullPath('output/logs/testlogs/gpu-views-windows')
+                  $previousDiagnostics = $env:SKIASHARP_WINDOWS_GPU_DIAGNOSTICS
+                  try {
+                    foreach ($iteration in 1..5) {
+                      $runResults = Join-Path $results "run-$iteration"
+                      $since = Get-Date
+                      $env:SKIASHARP_WINDOWS_GPU_DIAGNOSTICS = Join-Path $runResults 'diagnostics'
+                      try {
+                        dotnet test $project -p:TargetFramework=$framework -p:TargetFrameworks=$framework `
+                          -p:WindowsPackageType=None -p:Platform=x64 -p:RuntimeIdentifier=win-x64 `
+                          --filter 'FullyQualifiedName~GpuViewTests|FullyQualifiedName~GaneshViewHandlerDoesNotLeak' `
+                          --logger trx --results-directory $runResults
+                        if ($LASTEXITCODE -ne 0) {
+                          throw "Windows GPU view run $iteration failed with exit code $LASTEXITCODE."
+                        }
+                        [xml] $report = Get-Content -LiteralPath (Join-Path $runResults 'test-results.trx') -Raw
+                        $counters = $report.TestRun.ResultSummary.Counters
+                        if ($counters.total -ne 8 -or $counters.passed -ne 8 -or $counters.failed -ne 0) {
+                          throw "Windows GPU view run $iteration did not complete all eight cases."
+                        }
+                      } finally {
+                        try {
+                          & scripts/infra/tests/collect-windows-gpu-crash.ps1 -Since $since -ResultsDirectory $runResults
+                        } catch {
+                          Write-Warning "Windows GPU host diagnostic capture failed: $_"
+                        }
+                      }
+                    }
+                  } finally {
+                    $env:SKIASHARP_WINDOWS_GPU_DIAGNOSTICS = $previousDiagnostics
                   }
                 displayName: Test Ganesh view presentation and Windows Graphite contract
                 condition: succeededOrFailed()
