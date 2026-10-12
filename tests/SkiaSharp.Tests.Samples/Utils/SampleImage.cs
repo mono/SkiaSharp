@@ -57,7 +57,7 @@ internal static class SampleImage
         var diffPath = Path.ChangeExtension(actual, ".diff.png");
         File.WriteAllBytes(diffPath, data.ToArray());
 
-        TestContext.Current.AddFileAttachment(expected, "image/png");
+        TestContext.Current.AddFileAttachment(expected, "image/png", $"expected-{Path.GetFileName(expected)}");
         TestContext.Current.AddFileAttachment(diffPath, "image/png");
 
         Assert.Fail($"Sample pixels differ from {expected}: {result.ErrorPixelCount}/{result.TotalPixels} pixels " +
