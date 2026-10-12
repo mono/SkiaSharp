@@ -153,7 +153,7 @@ stages:
                     throw "Could not resolve the current Windows test framework: $framework"
                   }
                   dotnet test $project -p:TargetFramework=$framework -p:TargetFrameworks=$framework `
-                    -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true `
+                    -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true -p:Platform=x64 -p:RuntimeIdentifier=win-x64 `
                     --filter 'FullyQualifiedName~GpuViewTests|FullyQualifiedName~GaneshViewHandlerDoesNotLeak' `
                     --logger trx --results-directory output/logs/testlogs/gpu-views-windows
                   if ($LASTEXITCODE -ne 0) {
