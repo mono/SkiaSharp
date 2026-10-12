@@ -115,11 +115,11 @@ packages. Integration and MSBuild suites remain unchanged.
 Install Appium and its UiAutomator2/XCUITest drivers explicitly before running
 tests; discovery never downloads a server, driver, workload, or system image.
 Restore the repository's pinned local tools with `dotnet tool restore`.
-Device discovery, boot readiness, installation, and removal reuse `dotnet
+Device discovery, boot readiness, installation, launch, and removal reuse `dotnet
 android` and `dotnet apple`, as the existing device suite does. Android startup
 uses `--wait --wait-exit` so the fixture retains its owned process tree;
 no forced AVD creation/deletion or latest/first-device selection is inherited.
-Only the narrow Android AVD identity, page-size, activity and PID-log queries
+Only the narrow Android AVD identity, page-size, activity and runtime-log queries
 use explicitly selected `adb` commands.
 Put `appium` on PATH. Set `ANDROID_HOME` or `ANDROID_SDK_ROOT` for Android.
 On macOS, set `DEVELOPER_DIR` for both build and Appium to the Xcode required by
@@ -133,8 +133,8 @@ not a retargeting of the sample's declared compile framework. Create the exact
 AVD/runtime/simulator before testing. For the reviewed Android profile:
 
 ```sh
-avdmanager create avd --name Pixel_API_37 \
-  --package 'system-images;android-37.1;google_apis_ps16k;arm64-v8a' \
+dotnet android avd create --name Pixel_API_37 \
+  --sdk 'system-images;android-37.1;google_apis_ps16k;arm64-v8a' \
   --device pixel_9
 ```
 
@@ -157,7 +157,12 @@ dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
   -- --filter-class '*MauiSampleTests' --report-trx
 ```
 
-Device tests serialize foreground interactions. Basic checks CPU rendering,
+Device tests serialize foreground interactions. Appium's automatic app launch
+is disabled: the repository device tools launch the acquired-package app, and
+the tests require its actual UI. On iOS, Appium's idle wait is limited to one
+second so the real animated GPU page remains interactive; explicit element and
+static-frame waits still gate assertions. No rendering loop is disabled.
+Basic checks CPU rendering,
 flyout navigation, an actual touch stroke/clear, and animated GPU rendering
 (smoke only, never a frozen-frame golden). Gallery searches and filters for
 Gradient, changes its angle control, returns to the gallery, and renders the

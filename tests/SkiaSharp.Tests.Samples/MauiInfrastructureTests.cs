@@ -9,6 +9,39 @@ namespace SkiaSharp.Tests.Samples;
 public sealed class MauiInfrastructureTests
 {
     [Fact]
+    public void InteractionMustChangeTheSceneNotJustAnOverlay()
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"maui-scene-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(root);
+        try
+        {
+            var before = Path.Combine(root, "before.png");
+            var after = Path.Combine(root, "after.png");
+            using var bitmap = new SKBitmap(16, 16);
+            bitmap.Erase(SKColors.White);
+            Save(before);
+            bitmap.SetPixel(15, 15, SKColors.Red);
+            Save(after);
+            var error = Assert.ThrowsAny<Exception>(() => MauiUi.AssertSceneChanged(before, after));
+            Assert.Contains("rendered scene did not change", error.Message);
+            bitmap.SetPixel(4, 4, SKColors.Blue);
+            Save(after);
+            MauiUi.AssertSceneChanged(before, after);
+
+            void Save(string path)
+            {
+                using var image = SKImage.FromBitmap(bitmap);
+                using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+                File.WriteAllBytes(path, data.ToArray());
+            }
+        }
+        finally
+        {
+            SampleWorkspace.DeleteDirectory(root);
+        }
+    }
+
+    [Fact]
     public void IosSelectionRequiresExactUniqueAvailableDevice()
     {
         const string json = """

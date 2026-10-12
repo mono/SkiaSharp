@@ -1,6 +1,8 @@
 using System.Drawing;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
+using OpenQA.Selenium.Appium.Android;
+using OpenQA.Selenium.Appium.Android.Enums;
 using OpenQA.Selenium.Interactions;
 using Xunit;
 
@@ -21,10 +23,20 @@ internal sealed class MauiUi(AppiumDriver driver, bool ios, string appId, Sample
 
     internal void Click(string id) => Find(id).Click();
 
+    internal void SubmitSearch()
+    {
+        if (driver is AndroidDriver android)
+            android.PressKeyCode(AndroidKeyCode.Enter);
+        else
+            Wait(() => driver.FindElement(MobileBy.IosNSPredicate(
+                "type == 'XCUIElementTypeButton' AND name == 'Return'")), "keyboard return").Click();
+    }
+
     internal void NavigateBasic(string title)
     {
-        var size = driver.Manage().Window.Size;
-        Drag(new Point(2, size.Height / 2), new Point(size.Width * 3 / 4, size.Height / 2));
+        Wait(() => driver.FindElement(ios
+            ? MobileBy.IosNSPredicate("type == 'XCUIElementTypeButton' AND label == 'Menu'")
+            : MobileBy.AccessibilityId("Open navigation drawer")), "Basic navigation menu").Click();
         Wait(() =>
         {
             var element = driver.FindElement(ios
@@ -131,6 +143,22 @@ internal sealed class MauiUi(AppiumDriver driver, bool ios, string appId, Sample
             }
         Assert.True(colors.Count > 32 && colorful > count * 0.05,
             $"Expected a rendered colored scene, not a blank canvas: {colors.Count} colors, {colorful}/{count} colored pixels; {path}.");
+    }
+
+    internal static void AssertSceneChanged(string before, string after)
+    {
+        using var original = SKBitmap.Decode(before);
+        using var changed = SKBitmap.Decode(after);
+        Assert.NotNull(original);
+        Assert.NotNull(changed);
+        Assert.Equal(original.Width, changed.Width);
+        Assert.Equal(original.Height, changed.Height);
+        // Inspect the scene, not the floating buttons or control-value labels.
+        for (var y = original.Height / 4; y < original.Height / 2; y++)
+            for (var x = original.Width / 4; x < original.Width * 3 / 4; x++)
+                if (original.GetPixel(x, y) != changed.GetPixel(x, y))
+                    return;
+        Assert.Fail($"The rendered scene did not change: {before}; {after}.");
     }
 
     internal void SaveDiagnostics()

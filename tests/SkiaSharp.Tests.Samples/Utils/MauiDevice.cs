@@ -117,6 +117,12 @@ internal sealed class MauiDevice : IAsyncDisposable
         (await Adb("shell", "cmd", "package", "resolve-activity", "--brief", applicationId!))
             .Split('\n', StringSplitOptions.RemoveEmptyEntries).Last().Trim().Split('/').Last();
 
+    internal Task Launch(string? activity) => ios
+        ? Tool("apple", ["simulator", "app", "launch", Id, applicationId!], TimeSpan.FromMinutes(2))
+        : Tool("android", ["device", "launch", "--id", $"^{Id}$", "--pkg", applicationId!,
+            "--activity", activity ?? throw new InvalidOperationException("Android launcher activity is missing.")],
+            TimeSpan.FromMinutes(2));
+
     internal void OwnWda() => ownsWda = ios;
 
     internal async Task CaptureLogs()
@@ -126,8 +132,7 @@ internal sealed class MauiDevice : IAsyncDisposable
                 "--predicate", "processImagePath CONTAINS 'SkiaSharpSample'"]);
         else if (ownsApp)
         {
-            var pid = (await Adb("shell", "pidof", applicationId!)).Trim();
-            await Adb("logcat", "-d", "-t", "500", $"--pid={pid}");
+            await Adb("logcat", "-d", "-t", "5000", "-s", "AndroidRuntime", "DOTNET", "mono-stdout", "mono-stderr");
         }
     }
 

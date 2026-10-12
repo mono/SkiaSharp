@@ -25,8 +25,7 @@ public sealed class MauiSampleTests(AppiumFixture appium) : SampleTestBase
                 var empty = ui.CaptureStable("basic-canvas-drawing", "drawing-empty");
                 ui.Drag(ui.Find("basic-canvas-drawing"), 0.25, 0.3, 0.7, 0.5);
                 var drawn = ui.CaptureStable("basic-canvas-drawing", "drawing-stroke");
-                Assert.False(File.ReadAllBytes(empty).SequenceEqual(File.ReadAllBytes(drawn)),
-                    "Drawing a stroke must change the actual canvas.");
+                MauiUi.AssertSceneChanged(empty, drawn);
                 ui.Click("basic-drawing-clear");
                 var cleared = ui.CaptureStable("basic-canvas-drawing", "drawing-cleared");
                 SampleImage.CompareGolden(cleared, empty);
@@ -50,6 +49,7 @@ public sealed class MauiSampleTests(AppiumFixture appium) : SampleTestBase
                 ui.Click("gallery-header-cpu");
                 var search = ui.Find("gallery-search");
                 search.SendKeys("Gradient");
+                ui.SubmitSearch();
                 ui.WaitText("gallery-result-count", text => !text.StartsWith("0 ", StringComparison.Ordinal));
                 ui.Click("gallery-filter-trigger");
                 ui.Click("category-shaders---effects");
@@ -65,8 +65,7 @@ public sealed class MauiSampleTests(AppiumFixture appium) : SampleTestBase
                 ui.Drag(ui.Find("control-angle"), 0.2, 0.5, 0.7, 0.5);
                 ui.WaitText("control-angle-value", text => text != before);
                 var adjusted = ui.CaptureStable("sample-canvas-cpu", "gallery-gradient-adjusted");
-                Assert.False(File.ReadAllBytes(cpu).SequenceEqual(File.ReadAllBytes(adjusted)),
-                    "Changing the Gradient control must change its actual rendering.");
+                MauiUi.AssertSceneChanged(cpu, adjusted);
                 ui.Click("sample-back");
                 ui.Find("gallery-search");
                 ui.Click("gallery-header-gpu");
@@ -114,6 +113,7 @@ public sealed class MauiSampleTests(AppiumFixture appium) : SampleTestBase
             };
             options.AddAdditionalAppiumOption("udid", device.Id);
             options.AddAdditionalAppiumOption("noReset", true);
+            options.AddAdditionalAppiumOption("autoLaunch", false);
             options.AddAdditionalAppiumOption("newCommandTimeout", 120);
             if (ios)
             {
@@ -121,26 +121,27 @@ public sealed class MauiSampleTests(AppiumFixture appium) : SampleTestBase
                 options.AddAdditionalAppiumOption("wdaLocalPort", AppiumFixture.IosPort);
                 options.AddAdditionalAppiumOption("showXcodeLog", true);
                 options.AddAdditionalAppiumOption("showIOSLog", true);
-                options.AddAdditionalAppiumOption("forceAppLaunch", true);
                 options.AddAdditionalAppiumOption("derivedDataPath", Path.Combine(workspace.Root, "wda"));
                 options.AddAdditionalAppiumOption("updatedWDABundleId", MauiDevice.WdaBundleId);
+                options.AddAdditionalAppiumOption("waitForIdleTimeout", 1);
                 device.OwnWda();
             }
             else
             {
                 options.AddAdditionalAppiumOption("appPackage", appId);
                 options.AddAdditionalAppiumOption("appActivity", activity);
-                options.AddAdditionalAppiumOption("appWaitActivity", "*");
                 options.AddAdditionalAppiumOption("systemPort", AppiumFixture.AndroidPort);
-                options.AddAdditionalAppiumOption("forceAppLaunch", true);
             }
-            using AppiumDriver driver = ios
-                ? new IOSDriver(address, options, TimeSpan.FromMinutes(3))
-                : new AndroidDriver(address, options, TimeSpan.FromMinutes(3));
-            var ui = new MauiUi(driver, ios, appId, workspace);
+            AppiumDriver? driver = null;
+            MauiUi? ui = null;
             Exception? failure = null;
             try
             {
+                driver = ios
+                    ? new IOSDriver(address, options, TimeSpan.FromMinutes(3))
+                    : new AndroidDriver(address, options, TimeSpan.FromMinutes(3));
+                await device.Launch(activity);
+                ui = new MauiUi(driver, ios, appId, workspace);
                 scenario(ui);
             }
             catch (Exception error)
@@ -155,12 +156,16 @@ public sealed class MauiSampleTests(AppiumFixture appium) : SampleTestBase
             {
                 try
                 {
-                    ui.SaveDiagnostics();
+                    ui?.SaveDiagnostics();
                     await device.CaptureLogs();
                 }
                 catch (Exception error) when (failure is not null)
                 {
                     throw new AggregateException("MAUI scenario and diagnostics both failed.", failure, error);
+                }
+                finally
+                {
+                    driver?.Dispose();
                 }
             }
         });
