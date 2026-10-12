@@ -47,8 +47,12 @@ try {
         $captureFailure = $null
         try {
             if ($CaptureNativeDumps) {
-                $monitor = Start-Job -FilePath "$PSScriptRoot/monitor-windows-gpu-dump.ps1" `
-                    -ArgumentList $tools.ProcDump, $tools.Debugger, $runResults, $applicationRoot, $privateDumps, $since
+                $monitor = Start-Job -ScriptBlock {
+                    param($Script, $ProcDump, $Debugger, $Results, $Application, $Dumps, $Started)
+                    & $Script -ProcDumpPath $ProcDump -DebuggerPath $Debugger -ResultsDirectory $Results `
+                        -ExpectedApplicationRoot $Application -DumpDirectory $Dumps -Since $Started
+                } -ArgumentList "$PSScriptRoot/monitor-windows-gpu-dump.ps1", `
+                    $tools.ProcDump, $tools.Debugger, $runResults, $applicationRoot, $privateDumps, $since
             }
             dotnet test $project -p:TargetFramework=$framework -p:TargetFrameworks=$framework `
                 -p:WindowsPackageType=None -p:Platform=x64 -p:RuntimeIdentifier=win-x64 `
