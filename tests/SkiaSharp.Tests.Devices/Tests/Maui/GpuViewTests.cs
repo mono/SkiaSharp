@@ -141,35 +141,60 @@ public partial class GpuViewTests : SKUITests
 		var view = new SKGaneshView();
 		var frames = 0;
 		var frame = new TaskCompletionSource<SKImageInfo>(TaskCreationOptions.RunContinuationsAsynchronously);
-		view.RenderFailed += (_, e) => frame.TrySetException(e.Exception);
+		TaskCompletionSource<SKImageInfo>? logicalFrame = null;
+		var logicalWidth = 0;
+		var logicalHeight = 0;
+		Exception? renderingFailure = null;
+		view.RenderFailed += (_, e) =>
+		{
+			Interlocked.CompareExchange(ref renderingFailure, e.Exception, null);
+			frame.TrySetException(e.Exception);
+			Volatile.Read(ref logicalFrame)?.TrySetException(e.Exception);
+		};
 		view.PaintSurface += (_, e) =>
 		{
 			e.Surface.Canvas.Clear(SKColors.Blue);
 			Interlocked.Increment(ref frames);
 			frame.TrySetResult(e.Info);
+			// A pre-scaling Android frame may still finish after the UI changes the property.
+			if (Volatile.Read(ref logicalFrame) is { } pending &&
+				e.Info.Width >= logicalWidth - 1 && e.Info.Width <= logicalWidth + 1 &&
+				e.Info.Height >= logicalHeight - 1 && e.Info.Height <= logicalHeight + 1)
+				pending.TrySetResult(e.Info);
 		};
-		CurrentPage.Content = view;
-		await view.WaitForLoaded();
-		await view.WaitForLayout();
-		await frame.Task.WaitAsync(TimeSpan.FromSeconds(10));
-		await Task.Delay(150);
-		var idleFrames = Volatile.Read(ref frames);
-		await Task.Delay(150);
-		Assert.Equal(idleFrames, Volatile.Read(ref frames));
-		view.InvalidateSurface();
-		await AssertEx.Eventually(() => Volatile.Read(ref frames) > idleFrames, timeout: 5000);
-		view.IgnorePixelScaling = true;
-		frame = new(TaskCreationOptions.RunContinuationsAsynchronously);
-		view.InvalidateSurface();
-		var logical = await frame.Task.WaitAsync(TimeSpan.FromSeconds(10));
-		Assert.InRange(logical.Width, (int)view.Width - 1, (int)view.Width + 1);
-		Assert.InRange(logical.Height, (int)view.Height - 1, (int)view.Height + 1);
-		var beforeLoop = Volatile.Read(ref frames);
-		view.HasRenderLoop = true;
-		await AssertEx.Eventually(() => Volatile.Read(ref frames) >= beforeLoop + 3, timeout: 5000);
-		view.HasRenderLoop = false;
-		CurrentPage.Content = null;
-		view.Handler?.DisconnectHandler();
+		try
+		{
+			CurrentPage.Content = view;
+			await view.WaitForLoaded();
+			await view.WaitForLayout();
+			await frame.Task.WaitAsync(TimeSpan.FromSeconds(10));
+			await Task.Delay(150);
+			var idleFrames = Volatile.Read(ref frames);
+			await Task.Delay(150);
+			Assert.Equal(idleFrames, Volatile.Read(ref frames));
+			view.InvalidateSurface();
+			await AssertEx.Eventually(() => Volatile.Read(ref frames) > idleFrames, timeout: 5000);
+			logicalWidth = (int)view.Width;
+			logicalHeight = (int)view.Height;
+			var logicalCompletion = new TaskCompletionSource<SKImageInfo>(TaskCreationOptions.RunContinuationsAsynchronously);
+			Volatile.Write(ref logicalFrame, logicalCompletion);
+			view.IgnorePixelScaling = true;
+			view.InvalidateSurface();
+			var logical = await logicalCompletion.Task.WaitAsync(TimeSpan.FromSeconds(10));
+			Assert.InRange(logical.Width, logicalWidth - 1, logicalWidth + 1);
+			Assert.InRange(logical.Height, logicalHeight - 1, logicalHeight + 1);
+			var beforeLoop = Volatile.Read(ref frames);
+			view.HasRenderLoop = true;
+			await AssertEx.Eventually(() => Volatile.Read(ref frames) >= beforeLoop + 3, timeout: 5000);
+			Assert.Null(Volatile.Read(ref renderingFailure));
+		}
+		finally
+		{
+			view.HasRenderLoop = false;
+			CurrentPage.Content = null;
+			view.Handler?.DisconnectHandler();
+		}
+		Assert.Null(Volatile.Read(ref renderingFailure));
 	}
 
 #if IOS || MACCATALYST || ANDROID
