@@ -27,7 +27,27 @@ public abstract class SampleTestBase : IDisposable
         return workspace;
     }
 
-    protected async Task<SampleWorkspace> BuildSample(string folder, string solution, string configuration)
+    protected Task<SampleWorkspace> BuildSample(string folder, string solution, string configuration) =>
+        BuildSampleImplementation(folder, solution, configuration, null);
+
+    protected Task<SampleWorkspace> BuildSample(string folder, string solution, string configuration, string framework)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(framework);
+        return BuildSampleImplementation(folder, solution, configuration, framework);
+    }
+
+    protected Task<SampleWorkspace> BuildSample(
+        string folder, string solution, string configuration, string framework,
+        IReadOnlyDictionary<string, string> properties)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(framework);
+        ArgumentNullException.ThrowIfNull(properties);
+        return BuildSampleImplementation(folder, solution, configuration, framework, properties);
+    }
+
+    private async Task<SampleWorkspace> BuildSampleImplementation(
+        string folder, string solution, string configuration, string? framework,
+        IReadOnlyDictionary<string, string>? properties = null)
     {
         var prepared = PrepareSample(folder);
 
@@ -36,10 +56,17 @@ public abstract class SampleTestBase : IDisposable
             throw new FileNotFoundException("Selected sample solution is missing", project);
 
         var diagnostics = Path.Combine(prepared.DiagnosticsRoot, "builds", folder, Path.GetFileNameWithoutExtension(solution), configuration);
+        if (framework is not null)
+            diagnostics = Path.Combine(diagnostics, framework);
 
         await DotNet.GetVersion(prepared);
 
-        await DotNet.Build(prepared, project, diagnostics, configuration);
+        if (framework is null)
+            await DotNet.Build(prepared, project, diagnostics, configuration);
+        else if (properties is not null)
+            await DotNet.Build(prepared, project, diagnostics, configuration, framework, properties);
+        else
+            await DotNet.Build(prepared, project, diagnostics, configuration, framework);
         return prepared;
     }
 
