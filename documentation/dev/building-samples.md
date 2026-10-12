@@ -77,7 +77,11 @@ Filtered runs do not replace the full suite.
 ## Coverage and diagnostics
 
 Basic/Gallery samples have build coverage; Console/Web APIs and Web/WASM/Blazor
-UIs have runtime checks. Gallery is build-only; device execution is separate.
+UIs have runtime checks, including Blazor Drawing pointer strokes, color/brush
+selection and clear. Basic Uno runs its declared `net10.0-browserwasm` project
+target, checking CPU rendering and Drawing navigation, pointer strokes and
+clear rather than launching a desktop or host solution variant.
+Gallery is build-only; device execution is separate.
 Browser errors and unavailable GPU rendering fail.
 
 | Group | Tests | CI hosts |
