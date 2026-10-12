@@ -11,6 +11,10 @@ parameters:
     displayName: 'Enable build caching (skip native builds on cache hit):'
     type: boolean
     default: true
+  - name: captureWindowsGpuNativeDumps
+    displayName: 'Capture private native dumps for Windows GPU diagnostics:'
+    type: boolean
+    default: false
   - name: buildAgentHost
     displayName: 'The generic host build agent configuration:'
     type: object
@@ -97,3 +101,4 @@ extends:
           buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
           buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
           enableCaching: ${{ parameters.enableCaching }}
+          captureWindowsGpuNativeDumps: ${{ parameters.captureWindowsGpuNativeDumps }}
