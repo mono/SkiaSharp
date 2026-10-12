@@ -418,7 +418,11 @@ public class SampleInfrastructureTests : IDisposable
     {
         internal string Prepare() => PrepareSample(Path.Combine("Basic", "Console")).Root;
         internal string Diagnostics => PrepareSample(Path.Combine("Basic", "Console")).DiagnosticsRoot;
+        internal SampleWorkspace Workspace => PrepareSample(Path.Combine("Basic", "Console"));
         internal Task Build() => BuildSample(Path.Combine("Basic", "Console"), "App.csproj", "Release");
+        internal Task Build(string framework) => BuildSample(Path.Combine("Basic", "Console"), "App.csproj", "Release", framework);
+        internal Task Build(string framework, IReadOnlyDictionary<string, string> properties) =>
+            BuildSample(Path.Combine("Basic", "Console"), "App.csproj", "Release", framework, properties);
     }
 
     [Fact]
@@ -438,6 +442,148 @@ public class SampleInfrastructureTests : IDisposable
         Assert.Contains("Build succeeded.", File.ReadAllText(Path.Combine(diagnostics, "build.stdout.log")));
         Assert.DoesNotContain("Build succeeded.", File.ReadAllText(Path.Combine(diagnostics, "build.stderr.log")));
         Assert.True(new FileInfo(Path.Combine(diagnostics, "build.binlog")).Length > 0);
+    }
+
+    [Fact]
+    public async Task ExplicitFrameworkBuildKeepsDeclaredSharedReferencesAndFrameworkDiagnostics()
+    {
+        FileIn("inputs/Basic/Console/App.csproj", """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
+                <EnableWindowsTargeting>true</EnableWindowsTargeting>
+                <OutputType>Exe</OutputType>
+              </PropertyGroup>
+              <Target Name="VerifySelectedFramework" BeforeTargets="CoreCompile">
+                <Error Condition="'$(TargetFramework)' != 'net10.0-windows' or '$(TargetFrameworks)' != 'net10.0;net10.0-windows'"
+                       Text="Build must select net10.0-windows without overriding the declared framework list." />
+                <Error Condition="'$(ContractSentinel)' != 'forwarded-by-buildsample'"
+                       Text="BuildSample must forward the test-owned property dictionary." />
+                <Message Importance="high" Text="Selected $(TargetFramework) from $(TargetFrameworks)" />
+                <Message Importance="high" Text="Contract sentinel: $(ContractSentinel)" />
+              </Target>
+              <ItemGroup>
+                <ProjectReference Include="Library/Library.csproj" />
+                <ProjectReference Include="Shared/Shared.csproj" />
+                <Compile Remove="Library/**/*.cs" />
+                <Compile Remove="Shared/**/*.cs" />
+              </ItemGroup>
+            </Project>
+            """);
+        FileIn("inputs/Basic/Console/Library/Library.csproj", """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFramework>netstandard2.1</TargetFramework></PropertyGroup>
+              <Target Name="VerifyLibraryFramework" BeforeTargets="CoreCompile">
+                <Error Condition="'$(TargetFramework)' != 'netstandard2.1'"
+                       Text="The library's declared framework must not be retargeted." />
+              </Target>
+            </Project>
+            """);
+        FileIn("inputs/Basic/Console/Shared/Shared.csproj", """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+                <Nullable>enable</Nullable>
+                <ImplicitUsings>enable</ImplicitUsings>
+                <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+              </PropertyGroup>
+              <Target Name="VerifySharedFramework" BeforeTargets="CoreCompile">
+                <Error Condition="'$(TargetFramework)' != 'net10.0' or '$(TargetFrameworks)' != ''"
+                       Text="The ordinary shared project's declared framework must not be retargeted." />
+              </Target>
+            </Project>
+            """);
+        FileIn("inputs/Basic/Console/Program.cs", """
+            System.Console.WriteLine(System.AppContext.TargetFrameworkName);
+            System.Console.WriteLine(string.Join("|", args));
+            """);
+        using var test = new LifetimeTest(Path.Combine(root, "inputs"));
+        var properties = new Dictionary<string, string> { ["ContractSentinel"] = "forwarded-by-buildsample" };
+        await test.Build("net10.0-windows", properties);
+        var working = test.Prepare();
+        var diagnostics = Path.Combine(test.Diagnostics, "builds", "Basic", "Console", "App", "Release", "net10.0-windows");
+        var output = File.ReadAllText(Path.Combine(diagnostics, "build.stdout.log"));
+        Assert.Contains("Selected net10.0-windows from net10.0;net10.0-windows", output);
+        Assert.Contains("Contract sentinel: forwarded-by-buildsample", output);
+        Assert.Equal(new KeyValuePair<string, string>("ContractSentinel", "forwarded-by-buildsample"), Assert.Single(properties));
+        Assert.True(new FileInfo(Path.Combine(diagnostics, "build.binlog")).Length > 0);
+        Assert.False(Directory.Exists(Path.Combine(working, "samples", "Basic", "Console", "bin", "Release", "net10.0")));
+        Assert.True(File.Exists(Path.Combine(working, "samples", "Basic", "Console", "Library", "bin", "Release", "netstandard2.1", "Library.dll")));
+        Assert.True(File.Exists(Path.Combine(working, "samples", "Basic", "Console", "Shared", "bin", "Release", "net10.0", "Shared.dll")));
+
+        var workspace = test.Workspace;
+        var project = Path.Combine(working, "samples", "Basic", "Console", "App.csproj");
+        var called = false;
+        await DotNet.Run(workspace, project, "Release", "net10.0-windows", ["argument with spaces", "--sentinel"], async app =>
+        {
+            called = true;
+            var result = await app.WaitForExit();
+            Assert.Equal(0, result.ExitCode);
+            Assert.Contains(".NETCoreApp,Version=v10.0", result.Output);
+            Assert.Contains("argument with spaces|--sentinel", result.Output);
+        });
+        Assert.True(called);
+        Assert.Contains("argument with spaces|--sentinel",
+            File.ReadAllText(Path.Combine(workspace.DiagnosticsRoot, "run", "run.stdout.log")));
+        test.Dispose();
+        Assert.False(Directory.Exists(working));
+        Assert.True(Directory.Exists(diagnostics));
+    }
+
+    [Fact]
+    public async Task DefaultBuildAndCallbackRunKeepTheirOriginalContract()
+    {
+        FileIn("inputs/App/App.csproj", """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType></PropertyGroup>
+            </Project>
+            """);
+        FileIn("inputs/App/Program.cs", """System.Console.WriteLine(string.Join("|", args));""");
+        using var workspace = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Repo.PackagesDir,
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+        var project = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
+        await DotNet.Build(workspace, project, Path.Combine(workspace.DiagnosticsRoot, "build"));
+        var called = false;
+        await DotNet.Run(workspace, project, "Release", ["old argument", "--sentinel"], async app =>
+        {
+            called = true;
+            var result = await app.WaitForExit();
+            Assert.Equal(0, result.ExitCode);
+            Assert.Contains("old argument|--sentinel", result.Output);
+        });
+        Assert.True(called);
+    }
+
+    [Fact]
+    public void ExplicitBuildPropertiesKeepDefaultFlagsAndDoNotMutateTheCaller()
+    {
+        FileIn("inputs/App/App.csproj");
+        using var workspace = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Repo.PackagesDir,
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+        var project = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
+        var diagnostics = Path.Combine(workspace.DiagnosticsRoot, "build");
+        var properties = new Dictionary<string, string> { ["RuntimeIdentifier"] = "iossimulator-arm64" };
+        var defaults = DotNet.BuildArguments(workspace, project, diagnostics, "Release", null);
+        var arguments = DotNet.BuildArguments(workspace, project, diagnostics, "Release", "net10.0-ios", properties);
+        Assert.Equal(defaults, arguments.Take(defaults.Length));
+        Assert.Equal(new[]
+        {
+            "--framework", "net10.0-ios", "-p:RuntimeIdentifier=iossimulator-arm64"
+        }, arguments.Skip(defaults.Length));
+        Assert.Equal(Path.GetFullPath(project), arguments[1]);
+        Assert.Single(arguments, argument => argument.StartsWith("-bl:", StringComparison.Ordinal));
+        Assert.Single(arguments, argument => argument.StartsWith("-p:RestoreConfigFile=", StringComparison.Ordinal));
+        Assert.DoesNotContain(arguments, argument => argument.StartsWith("-p:TargetFramework", StringComparison.Ordinal));
+        Assert.Equal(new KeyValuePair<string, string>("RuntimeIdentifier", "iossimulator-arm64"), Assert.Single(properties));
+        Assert.Equal(arguments, DotNet.BuildArguments(workspace, project, diagnostics, "Release", "net10.0-ios", properties));
+        foreach (var name in new[] { "TargetFramework", "TargetFrameworks", "configuration", "RestoreConfigFile", "UseSharedCompilation" })
+        {
+            var conflicting = new Dictionary<string, string> { [name] = "override" };
+            Assert.Throws<ArgumentException>(() =>
+                DotNet.BuildArguments(workspace, project, diagnostics, "Release", "net10.0-ios", conflicting));
+        }
     }
 
     [Fact]
