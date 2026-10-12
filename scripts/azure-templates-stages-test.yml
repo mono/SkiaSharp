@@ -146,7 +146,9 @@ stages:
             postBuildSteps:
               - pwsh: |
                   $project = 'tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj'
-                  $framework = (& dotnet msbuild $project -nologo -getProperty:WindowsTargetFrameworksCurrent).Trim()
+                  $framework = (& dotnet msbuild binding/SkiaSharp/SkiaSharp.csproj -nologo `
+                    -p:TargetFramework=netstandard2.0 -p:TargetFrameworks=netstandard2.0 `
+                    -getProperty:WindowsTargetFrameworksCurrent).Trim()
                   if ($LASTEXITCODE -ne 0 -or $framework -notmatch '^net\d+\.\d+-windows[\d.]+$') {
                     throw "Could not resolve the current Windows test framework: $framework"
                   }

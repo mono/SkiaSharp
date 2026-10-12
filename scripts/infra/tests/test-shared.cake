@@ -135,11 +135,6 @@ void RunDotNetTest(
         : new Dictionary<string, string>(properties);
     properties.TryAdd("TestingPlatformCaptureOutput", "false");
     properties.TryAdd("Platform", "AnyCPU");
-    if (COVERAGE) {
-        properties.TryAdd("CollectCoverage", "true");
-        properties.TryAdd("CoverletOutputFormat", "cobertura");
-        properties.TryAdd("CoverletOutput", output.Combine("Coverage").FullPath + "/");
-    }
 
     var settings = new DotNetTestSettings {
         Configuration = configuration ?? CONFIGURATION,
@@ -158,9 +153,14 @@ void RunDotNetTest(
                 .Append("--")
                 .Append("--show-live-output").Append("on")
                 .Append("--no-ansi")
-                .Append("--results-directory").AppendQuoted(output.FullPath)
-                .Append("--report-trx")
-                .Append("--report-trx-filename").Append("TestResults.trx");
+                .Append("--results-directory").AppendQuoted(COVERAGE ? output.Combine("Coverage").FullPath : output.FullPath)
+                .Append("--report-trx");
+            if (COVERAGE)
+                args = args
+                    .Append("--coverage")
+                    .Append("--coverage-output-format").Append("cobertura");
+            if (testProject.GetExtension() != ".slnx" && testProject.GetExtension() != ".sln")
+                args = args.Append("--report-trx-filename").Append("TestResults.trx");
             if (!string.IsNullOrEmpty(hangTimeout)) {
                 args = args
                     .Append("--hangdump")
@@ -192,6 +192,16 @@ void RunCodeCoverage(string testResultsGlob, DirectoryPath output)
         throw;
     }
     var xml = $"{output}/Cobertura.xml";
-    var root = FindRegexMatchGroupsInFile(xml, @"<source>(.*)<\/source>", 0)[1].Value;
-    ReplaceTextInFiles(xml, root, "");
+    var document = XDocument.Load(xml);
+    var root = ROOT_PATH.FullPath.Replace('\\', '/').TrimEnd('/') + "/";
+    foreach (var filename in document.Descendants("class").Attributes("filename")) {
+        var path = filename.Value.Replace('\\', '/');
+        if (path.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+            filename.Value = path.Substring(root.Length);
+    }
+    foreach (var source in document.Descendants("source")) {
+        if (source.Value.Replace('\\', '/').TrimEnd('/').Equals(root.TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
+            source.Value = ".";
+    }
+    document.Save(xml);
 }
