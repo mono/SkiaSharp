@@ -223,6 +223,29 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
+    public void GoldenMismatchKeepsActualAndExpectedAttachmentsDistinct()
+    {
+        var actual = Path.Combine(root, "actual", "canvas.png");
+        var expected = Path.Combine(root, "expected", "canvas.png");
+        Save(actual, SKColors.Red);
+        Save(expected, SKColors.Blue);
+        TestContext.Current.AddFileAttachment(actual, "image/png");
+        var error = Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected));
+        Assert.Contains("Sample pixels differ", error.Message);
+        Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+
+        static void Save(string path, SKColor color)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            using var bitmap = new SKBitmap(4, 4);
+            bitmap.Erase(color);
+            using var image = SKImage.FromBitmap(bitmap);
+            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+            File.WriteAllBytes(path, data.ToArray());
+        }
+    }
+
+    [Fact]
     public void PngMustDecodeAndHaveTheExpectedSize()
     {
         using var bitmap = new SKBitmap(800, 600);
