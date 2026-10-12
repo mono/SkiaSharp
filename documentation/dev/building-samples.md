@@ -104,3 +104,67 @@ Dimensions must match; at most **0.075%** of pixels may differ, with zero channe
 tolerance. Failures retain the actual image; mismatches also retain a diff.
 Review replacement references on the affected platform; tests never accept them
 automatically.
+
+## MAUI mobile runtime tests
+
+`MauiSampleTests` builds **generated Basic/Maui and Gallery/Maui**, using the
+declared `net10.0-android` or `net10.0-ios` framework and the staged package
+cohort. The ordinary source-backed runner does not consume those product
+packages. Integration and MSBuild suites remain unchanged.
+
+Install Appium and its UiAutomator2/XCUITest drivers explicitly before running
+tests; discovery never downloads a server, driver, workload, or system image.
+Restore the repository's pinned local tools with `dotnet tool restore`.
+Device discovery, boot readiness, installation, and removal reuse `dotnet
+android` and `dotnet apple`, as the existing device suite does. Android startup
+uses `--wait --wait-exit` so the fixture retains its owned process tree;
+no forced AVD creation/deletion or latest/first-device selection is inherited.
+Only the narrow Android AVD identity, page-size, activity and PID-log queries
+use explicitly selected `adb` commands.
+Put `appium` on PATH. Set `ANDROID_HOME` or `ANDROID_SDK_ROOT` for Android.
+On macOS, set `DEVELOPER_DIR` for both build and Appium to the Xcode required by
+the installed Apple workload (for example,
+`/Applications/Xcode-26.6.0.app/Contents/Developer`). Tests never change
+the global Xcode selection.
+
+The explicit device cases are **Pixel_API_37**, Android 17/API 37,
+`emulator-5556`, and **iPhone 16 Pro**, iOS 26.2. API 37 is the selected runtime,
+not a retargeting of the sample's declared compile framework. Create the exact
+AVD/runtime/simulator before testing. For the reviewed Android profile:
+
+```sh
+avdmanager create avd --name Pixel_API_37 \
+  --package 'system-images;android-37.1;google_apis_ps16k;arm64-v8a' \
+  --device pixel_9
+```
+
+Tests start only the selected stopped device, then stop their owned process or
+restore the simulator to shutdown. A running selected device requires an
+explicit `SKIASHARP_MAUI_USE_BOOTED_DEVICE=1` dedication; it is not stopped after
+testing. Other devices, including `emulator-5554`, are not touched. An already
+installed sample app is a conflict, not permission to overwrite user data.
+Ports 4727 and 8217 (Android) or 8117 (iOS) must be free: tests never reuse or kill
+foreign Appium/driver servers. Only the newly installed sample app is removed.
+
+After bootstrap, package staging, and exact-suffix generation:
+
+```sh
+dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 \
+  -- --filter-class '*MauiInfrastructureTests' --report-trx
+dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 \
+  -- --filter-class '*MauiSampleTests' --report-trx
+```
+
+Device tests serialize foreground interactions. Basic checks CPU rendering,
+flyout navigation, an actual touch stroke/clear, and animated GPU rendering
+(smoke only, never a frozen-frame golden). Gallery searches and filters for
+Gradient, changes its angle control, returns to the gallery, and renders the
+stable Gradient through both CPU and GPU. Static canvas references live in
+`Expected/Maui/<platform>/<exact-device>/<version>/`; their comparison retains
+the default 0.075% differing-pixel budget and zero channel tolerance.
+Missing references fail with retained captures; they are never auto-approved.
+Appium logs, device preflight output, screenshots, UI hierarchy, and build
+binlogs are retained as current-test attachments under the shared diagnostics
+directory.

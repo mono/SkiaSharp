@@ -1,0 +1,61 @@
+using System.Drawing;
+using System.Net;
+using System.Net.Sockets;
+using SkiaSharp.Tests.Samples.Utils;
+using Xunit;
+
+namespace SkiaSharp.Tests.Samples;
+
+public sealed class MauiInfrastructureTests
+{
+    [Fact]
+    public void IosSelectionRequiresExactUniqueAvailableDevice()
+    {
+        const string json = """
+            [
+              {"name":"iPhone 16 Pro","isAvailable":true,"udid":"selected","state":"Shutdown",
+               "runtime":{"name":"iOS 26.2","version":"26.2"}},
+              {"name":"iPhone 17 Pro","isAvailable":true,"udid":"foreign","state":"Booted",
+               "runtime":{"name":"iOS 26.2","version":"26.2"}}
+            ]
+            """;
+        Assert.Equal(("selected", "Shutdown"), MauiDevice.RequireIosSimulator(json, "iPhone 16 Pro", "26.2"));
+        Assert.Throws<InvalidOperationException>(() => MauiDevice.RequireIosSimulator(json, "iPhone 16 Pro", "26.3"));
+        Assert.Throws<InvalidOperationException>(() => MauiDevice.RequireIosSimulator(json, "iPhone 16", "26.2"));
+        Assert.Throws<InvalidOperationException>(() => MauiDevice.RequireIosSimulator(
+            json.Replace("iPhone 17 Pro", "iPhone 16 Pro"), "iPhone 16 Pro", "26.2"));
+        Assert.Throws<InvalidOperationException>(() => MauiDevice.RequireIosSimulator(
+            json.Replace("\"isAvailable\":true", "\"isAvailable\":false"), "iPhone 16 Pro", "26.2"));
+    }
+
+    [Theory]
+    [InlineData(400, 800, 400, 800, 10, 20, 110, 220)]
+    [InlineData(400, 800, 1200, 2400, 30, 60, 330, 660)]
+    public void CanvasCropUsesMeasuredScreenshotScale(int width, int height, int pixelsX, int pixelsY,
+        int left, int top, int right, int bottom) =>
+        Assert.Equal(new SKRectI(left, top, right, bottom),
+            MauiUi.ScreenshotBounds(new Point(10, 20), new Size(100, 200),
+                new Size(width, height), new Size(pixelsX, pixelsY)));
+
+    [Fact]
+    public void CanvasCropRejectsOffscreenElements() =>
+        Assert.Throws<InvalidOperationException>(() => MauiUi.ScreenshotBounds(
+            new Point(-1, 0), new Size(100, 100), new Size(400, 800), new Size(1200, 2400)));
+
+    [Fact]
+    public void AppiumDoesNotReuseAnOccupiedPort()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        try
+        {
+            var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            Assert.Throws<InvalidOperationException>(() => AppiumFixture.RequireFreePort(port));
+            Assert.True(listener.Server.IsBound);
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+}
