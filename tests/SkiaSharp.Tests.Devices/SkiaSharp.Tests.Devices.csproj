@@ -29,6 +29,10 @@
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-tizen'))">10.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$(TargetFramework.Contains('-windows')) and '$(WindowsPackageType)' == 'None'">
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="xunit.v3.extensibility.core" Version="3.2.2" />
     <PackageReference Include="xunit.v3.assert" Version="3.2.2" />

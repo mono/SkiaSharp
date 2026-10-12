@@ -148,7 +148,9 @@ plus the explicitly unsupported Graphite contract. Its framework is resolved
 from `WindowsTargetFrameworksCurrent`; a missing UI host or presentation failure
 fails the leg rather than becoming a GPU skip. The CI host is unpackaged and
 self-contained, so running it does not require loosening the agent's Developer
-Mode or package-installation policy.
+Mode or package-installation policy. Self-contained deployment is configured
+only in the executable test project, not as a global property inherited by
+referenced view libraries, which would duplicate Windows App SDK runtime files.
 
 The console CI target uses the unfiltered `SkiaSharp.Tests.Console.slnx` gate
 with both `TargetFramework` and `TargetFrameworks` set to the current desktop
