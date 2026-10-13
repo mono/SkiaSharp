@@ -43,30 +43,41 @@ internal sealed class AndroidRunningApp(
         Require((await AdbForwards()).All(parts => parts[1] != $"tcp:{AppiumFixture.AndroidPort}"),
             $"An existing adb forward uses port {AppiumFixture.AndroidPort}; refusing to replace a foreign mapping.");
 
+        device = device with { Name = $"{device.Name}-test-{Guid.NewGuid():N}" };
         using var avds = JsonDocument.Parse(await CaptureCommand(android.ListAvds()));
-        Require(avds.RootElement.EnumerateArray().Count(avd => avd.GetProperty("name").GetString() == device.Name) == 1,
-            $"Create exactly one explicitly selected {device.Name} AVD beforehand; no AVD is created or erased by tests.");
+        Require(!avds.RootElement.EnumerateArray().Any(avd => avd.GetProperty("name").GetString() == device.Name),
+            $"Owned AVD name already exists: {device.Name}; refusing to replace it.");
         using var devices = JsonDocument.Parse(await CaptureCommand(android.ListDevices()));
-        var booted = devices.RootElement.EnumerateArray()
-            .Any(item => item.GetProperty("serial").GetString() == device.Serial);
-        if (booted)
+        Require(!devices.RootElement.EnumerateArray().Any(item => item.GetProperty("serial").GetString() == device.Serial),
+            $"Required test serial {device.Serial} is occupied; tests never reuse or stop an existing device.");
+        AppiumFixture.RequireFreePort(port);
+        AppiumFixture.RequireFreePort(port + 1);
+        Own(async () =>
         {
-            Require(Environment.GetEnvironmentVariable("SKIASHARP_APPIUM_USE_BOOTED_DEVICE") == "1",
-                $"Dedicate the already-booted {device.Serial} using SKIASHARP_APPIUM_USE_BOOTED_DEVICE=1. It will not be stopped.");
-        }
-        else
-        {
-            AppiumFixture.RequireFreePort(port);
-            AppiumFixture.RequireFreePort(port + 1);
-            var emulator = android.StartAvd(device);
-            var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            var stdout = ReadBootOutput(emulator, ready);
-            var stderr = emulator.StandardError.ReadToEndAsync();
-            Own(() => StopProcess(emulator, stdout, stderr, "emulator"));
-            await Task.WhenAny(ready.Task, emulator.WaitForExitAsync()).WaitAsync(TimeSpan.FromMinutes(6));
-            Require(ready.Task.IsCompletedSuccessfully && !emulator.HasExited,
-                $"Owned {device.Name} emulator did not report boot completion; inspect emulator logs.");
-        }
+            using var current = JsonDocument.Parse(await CaptureCommand(Tools.ListAvds()));
+            if (current.RootElement.EnumerateArray().Any(avd => avd.GetProperty("name").GetString() == device.Name))
+            {
+                using var connected = JsonDocument.Parse(await CaptureCommand(Tools.ListDevices()));
+                Require(!connected.RootElement.EnumerateArray().Any(item => item.GetProperty("serial").GetString() == device.Serial),
+                    $"Serial {device.Serial} is still occupied; refusing to delete AVD data before the owned emulator stops.");
+                await CaptureCommand(Tools.DeleteAvd(device));
+            }
+            using var remaining = JsonDocument.Parse(await CaptureCommand(Tools.ListAvds()));
+            Require(!remaining.RootElement.EnumerateArray().Any(avd => avd.GetProperty("name").GetString() == device.Name),
+                $"Owned AVD was not deleted: {device.Name}");
+        });
+        await CaptureCommand(android.CreateAvd(device));
+        using var created = JsonDocument.Parse(await CaptureCommand(android.ListAvds()));
+        Require(created.RootElement.EnumerateArray().Count(avd => avd.GetProperty("name").GetString() == device.Name) == 1,
+            $"Tool did not create the owned AVD: {device.Name}");
+        var emulator = android.StartAvd(device);
+        var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var stdout = ReadBootOutput(emulator, ready);
+        var stderr = emulator.StandardError.ReadToEndAsync();
+        Own(() => StopProcess(emulator, stdout, stderr, "emulator"));
+        await Task.WhenAny(ready.Task, emulator.WaitForExitAsync()).WaitAsync(TimeSpan.FromMinutes(6));
+        Require(ready.Task.IsCompletedSuccessfully && !emulator.HasExited,
+            $"Owned {device.Name} emulator did not report boot completion; inspect emulator logs.");
 
         Require((await CaptureCommand(android.AvdName(device))).Split('\n')[0].Trim() == device.Name,
             $"Serial {device.Serial} is not the explicitly selected {device.Name}; refusing foreign device reuse.");

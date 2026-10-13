@@ -9,6 +9,26 @@ namespace SkiaSharp.Tests.Samples;
 public sealed class AppiumInfrastructureTests
 {
     [Fact]
+    public async Task MissingInstalledAndroidImageFailsBeforeDeviceCreation()
+    {
+        var sdk = Path.Combine(Path.GetTempPath(), $"appium-sdk-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(sdk, "platform-tools"));
+            File.WriteAllText(Path.Combine(sdk, "platform-tools",
+                OperatingSystem.IsWindows() ? "adb.exe" : "adb"), "");
+            var android = new Android(sdk);
+            var error = await Assert.ThrowsAsync<DirectoryNotFoundException>(() => android.CreateAvd(AndroidDevice.PixelApi24));
+            Assert.Contains("Tests never download images", error.Message);
+        }
+        finally
+        {
+            if (Directory.Exists(sdk))
+                SampleWorkspace.DeleteDirectory(sdk);
+        }
+    }
+
+    [Fact]
     public void DeviceProfilesKeepExplicitLegacyAndCurrentPorts()
     {
         Assert.Equal(5558, AndroidDevice.PixelApi24.Validate());

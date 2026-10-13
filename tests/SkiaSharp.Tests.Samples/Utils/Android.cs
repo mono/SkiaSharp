@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -24,6 +25,34 @@ internal sealed class Android
 
     internal Task<ToolCommandResult> ListAvds() => ExecuteSdk(["avd", "list", "--format", "json"]);
     internal Task<ToolCommandResult> ListDevices() => ExecuteSdk(["device", "list", "--format", "json"]);
+
+    internal Task<ToolCommandResult> CreateAvd(AndroidDevice device)
+    {
+        device.Validate();
+        var architecture = RuntimeInformation.ProcessArchitecture switch
+        {
+            Architecture.Arm64 => "arm64-v8a",
+            Architecture.X64 => "x86_64",
+            _ => throw new InvalidOperationException("The declared emulator profiles require an arm64 or x64 host.")
+        };
+        var image = device.Api switch
+        {
+            24 => $"system-images;android-24;google_apis;{architecture}",
+            37 => $"system-images;android-37.1;google_apis_ps16k;{architecture}",
+            _ => throw new ArgumentOutOfRangeException(nameof(device), "Declare an installed image for the selected profile.")
+        };
+        var imageDirectory = Path.Combine(SdkDirectory, image.Replace(';', Path.DirectorySeparatorChar));
+        if (!File.Exists(Path.Combine(imageDirectory, "package.xml")) ||
+            !File.Exists(Path.Combine(imageDirectory, "system.img")))
+            throw new DirectoryNotFoundException($"Required emulator image is not installed: {imageDirectory}. Tests never download images.");
+        return ExecuteSdk(["avd", "create", "--name", device.Name, "--sdk", image, "--device", "pixel_9"]);
+    }
+
+    internal Task<ToolCommandResult> DeleteAvd(AndroidDevice device)
+    {
+        device.Validate();
+        return ExecuteSdk(["avd", "delete", "--name", device.Name]);
+    }
 
     internal Task<ToolCommandResult> ListPackages(AndroidDevice device) =>
         ExecuteSdk(["device", "packages", "--id", DeviceSelector(device), "--format", "json"]);

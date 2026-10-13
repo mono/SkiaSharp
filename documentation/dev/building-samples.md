@@ -125,20 +125,16 @@ change the global Xcode selection.
 The explicit Android profiles are **Pixel_API_24**, Android 7.0/API 24,
 `emulator-5558`, 4 KB pages, and **Pixel_API_37**, Android 17/API 37,
 `emulator-5556`, 16 KB pages. iOS uses **iPhone 16 Pro** on **18.6** and **26.2**.
-Create the exact AVD/runtime/simulator before selecting its cases. For API 37
-on an ARM64 host:
+Install the required images/runtimes before running tests: Android uses
+`system-images;android-24;google_apis;<host-ABI>` and
+`system-images;android-37.1;google_apis_ps16k;<host-ABI>`; Apple uses the named
+iOS runtime and iPhone 16 Pro device type. Missing prerequisites fail; neither
+the tests nor the Appium CI preparation path installs or downloads them.
 
-```sh
-dotnet android avd create --name Pixel_API_37 \
-  --sdk 'system-images;android-37.1;google_apis_ps16k;arm64-v8a' \
-  --device pixel_9
-```
-
-Tests serialize foreground interactions, start only selected stopped devices
-and restore their original state. To dedicate an already running device, set
-`SKIASHARP_APPIUM_USE_BOOTED_DEVICE=1`; it remains running afterward. Existing
-sample installations or driver sessions are conflicts; tests do not overwrite
-their data or stop unrelated processes.
+Tests create uniquely named devices from the installed image/runtime, boot
+them, run the app and delete the owned device afterward, including on failure.
+Existing devices and their data remain untouched. The profile's emulator
+ports must be free. Foreground interactions are serialized.
 
 Appium port 4727 and the selected driver port must be free: Android 8217,
 iOS 8117, Mac2 10117, Windows 4737. Mac2 requires an unlocked GUI session,
@@ -167,8 +163,9 @@ selected cases.
 
 Local `samples` and IDE discovery remain unfiltered. CI runs Appium platform
 legs after acquiring native and NuGet artifacts; host legs exclude
-`Category=Device`. Cake forwards `sampleTestTrait` / `sampleExcludeTrait` to
-xUnit without interpreting devices.
+`Category=Device`. Agents must already have compatible Appium drivers, tools
+and images/runtimes; CI preparation only checks prerequisites. Cake forwards
+`sampleTestTrait` / `sampleExcludeTrait` to xUnit without interpreting devices.
 
 Static references use the comparison policy above and live under
 `Expected/Appium/<family>/<platform>/<exact-profile>/`. Review captures before

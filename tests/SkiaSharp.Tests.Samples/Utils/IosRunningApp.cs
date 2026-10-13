@@ -33,29 +33,35 @@ internal sealed class IosRunningApp(
             $"The exact built simulator bundle does not declare {ApplicationId}; refusing installation.");
         executableName = (await CaptureCommand(Apple.BundleExecutable(Artifact))).Trim();
         AppiumFixture.RequireFreePort(AppiumFixture.IosPort);
+        device = device with { Name = $"{device.Name}-test-{Guid.NewGuid():N}" };
+        using (var existing = JsonDocument.Parse(await ListDevices()))
+            Require(existing.RootElement.GetArrayLength() == 0,
+                $"Owned simulator name already exists: {device.Name}; refusing reuse.");
+        Own(async () =>
+        {
+            using var current = JsonDocument.Parse(await ListDevices());
+            var matches = current.RootElement.EnumerateArray()
+                .Where(item => item.GetProperty("name").GetString() == device.Name).ToArray();
+            Require(matches.Length <= 1, $"Owned simulator name is ambiguous: {device.Name}");
+            if (matches.Length == 1)
+            {
+                var ownedId = matches[0].GetProperty("udid").GetString()
+                    ?? throw new InvalidOperationException("Created simulator UDID is missing.");
+                Require(udid is null || ownedId == udid, "Owned simulator identity changed; refusing deletion.");
+                List<Exception> failures = [];
+                if (matches[0].GetProperty("state").GetString() != "Shutdown")
+                    await Attempt(failures, async () => await CaptureCommand(Apple.ShutdownSimulator(ownedId)));
+                await Attempt(failures, async () => await CaptureCommand(Apple.DeleteSimulator(ownedId)));
+                ThrowFailures(failures);
+            }
+            using var remaining = JsonDocument.Parse(await ListDevices());
+            Require(remaining.RootElement.GetArrayLength() == 0, $"Owned simulator was not deleted: {device.Name}");
+        });
+        await CaptureCommand(Apple.CreateSimulator(device));
         var selected = RequireSimulator(await ListDevices(), device.Name, device.Version);
         udid = selected.Id;
-        Require(selected.State is "Shutdown" or "Booted",
-            $"Selected simulator {udid} is {selected.State}; stabilize its state before running tests.");
-        if (selected.State == "Shutdown")
-        {
-            Own(async () =>
-            {
-                var current = RequireSimulator(await ListDevices(), device.Name, device.Version);
-                Require(current.Id == udid, "Selected simulator identity changed; refusing to shut down a different device.");
-                if (current.State != "Shutdown")
-                    await CaptureCommand(Apple.ShutdownSimulator(udid));
-                Require(RequireSimulator(await ListDevices(), device.Name, device.Version) == (udid, "Shutdown"),
-                    $"Owned simulator {udid} did not return to its original Shutdown state.");
-            });
-            await CaptureCommand(Apple.BootSimulator(udid));
-        }
-        else
-        {
-            Require(Environment.GetEnvironmentVariable("SKIASHARP_APPIUM_USE_BOOTED_DEVICE") == "1",
-                $"Dedicate already-booted simulator {udid} with SKIASHARP_APPIUM_USE_BOOTED_DEVICE=1. Its original Booted state will be retained.");
-            // Never call boot on an already Booted simulator. Querying its app service checks readiness.
-        }
+        Require(selected.State == "Shutdown", $"New simulator {udid} must start Shutdown, not {selected.State}.");
+        await CaptureCommand(Apple.BootSimulator(udid));
         Require(RequireSimulator(await ListDevices(), device.Name, device.Version) == (udid, "Booted"),
             $"Selected simulator {udid} did not become Booted.");
         var installed = await Apps();

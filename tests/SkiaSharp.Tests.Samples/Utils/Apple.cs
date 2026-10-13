@@ -5,6 +5,26 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal static class Apple
 {
+    internal static async Task<ToolCommandResult> CreateSimulator(IosDevice device)
+    {
+        device.Validate();
+        var result = await ProcessRunner.Run("xcrun", ["simctl", "list", "runtimes", "--json"],
+            Repo.RootDir, TimeSpan.FromSeconds(30));
+        if (result.ExitCode != 0)
+            throw new InvalidOperationException($"Could not inspect installed simulator runtimes: {result.Output}\n{result.Error}");
+        using var runtimes = JsonDocument.Parse(result.Output);
+        if (!runtimes.RootElement.GetProperty("runtimes").EnumerateArray().Any(runtime =>
+            runtime.GetProperty("name").GetString() == $"iOS {device.Version}" &&
+            runtime.GetProperty("version").GetString() == device.Version &&
+            runtime.GetProperty("isAvailable").GetBoolean()))
+            throw new InvalidOperationException($"Required iOS {device.Version} runtime is not installed. Tests never download runtimes.");
+        return await Execute(["simulator", "create", device.Name, "--device-type", "iPhone 16 Pro",
+            "--runtime", $"iOS {device.Version}", "--format", "json"]);
+    }
+
+    internal static Task<ToolCommandResult> DeleteSimulator(string udid) =>
+        Execute(["simulator", "delete", SimulatorId(udid), "--force"]);
+
     internal static Task<ToolCommandResult> ListSimulators(IosDevice device)
     {
         device.Validate();
