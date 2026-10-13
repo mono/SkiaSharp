@@ -12,11 +12,13 @@ internal sealed class DotNetRunningApp : RunningApp
     private readonly Task stdout;
     private readonly Task<string> stderr;
     private readonly Task exit;
+    private readonly TimeSpan? timeout;
 
-    internal DotNetRunningApp(Process process, string diagnostics)
+    internal DotNetRunningApp(Process process, string diagnostics, TimeSpan? timeout = null)
         : base(diagnostics)
     {
         this.process = process;
+        this.timeout = timeout;
         stdout = CaptureOutput();
         stderr = process.StandardError.ReadToEndAsync();
         exit = process.WaitForExitAsync();
@@ -24,7 +26,7 @@ internal sealed class DotNetRunningApp : RunningApp
 
     internal override async Task<(int ExitCode, string Output, string Error)> WaitForExit()
     {
-        await exit.WaitAsync(TimeSpan.FromMinutes(3), TestContext.Current.CancellationToken);
+        await exit.WaitAsync(timeout ?? TimeSpan.FromMinutes(3), TestContext.Current.CancellationToken);
 
         var result = await ReadOutput();
         return (process.ExitCode, result.Output, result.Error);
@@ -39,7 +41,7 @@ internal sealed class DotNetRunningApp : RunningApp
 
     internal override async Task<Uri> GetAddress()
     {
-        var completed = await Task.WhenAny(address.Task, exit).WaitAsync(TimeSpan.FromMinutes(2), TestContext.Current.CancellationToken);
+        var completed = await Task.WhenAny(address.Task, exit).WaitAsync(timeout ?? TimeSpan.FromMinutes(2), TestContext.Current.CancellationToken);
         if (completed == address.Task)
             return await address.Task;
 
@@ -61,12 +63,21 @@ internal sealed class DotNetRunningApp : RunningApp
         while (await process.StandardOutput.ReadLineAsync() is { } line)
         {
             output.AppendLine(line);
-            const string prefix = "Now listening on: ";
-            var text = line.Trim();
-            if (text.StartsWith(prefix, StringComparison.Ordinal) &&
-                Uri.TryCreate(text[prefix.Length..], UriKind.Absolute, out var uri) &&
-                uri.Scheme == Uri.UriSchemeHttp && uri.Host == "127.0.0.1" && uri.Port > 0)
+            if (ParseAddress(line) is { } uri)
                 address.TrySetResult(uri);
         }
+    }
+
+    internal static Uri? ParseAddress(string line)
+    {
+        var text = line.Trim();
+        var prefix = text.StartsWith("Now listening on: ", StringComparison.Ordinal)
+            ? "Now listening on: "
+            : "App url: ";
+        return text.StartsWith(prefix, StringComparison.Ordinal) &&
+            Uri.TryCreate(text[prefix.Length..], UriKind.Absolute, out var uri) &&
+            uri.Scheme == Uri.UriSchemeHttp && uri.Host == "127.0.0.1" && uri.Port > 0
+            ? uri
+            : null;
     }
 }

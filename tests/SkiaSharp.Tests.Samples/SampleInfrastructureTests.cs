@@ -45,6 +45,45 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
+    public void DockerContextContainsSelectedSampleAndLocalPackagesOnly()
+    {
+        FileIn("inputs/Basic/DockerConsole/linux.Dockerfile", "FROM scratch");
+        FileIn("inputs/Basic/DockerConsole/App.csproj");
+        FileIn("inputs/Basic/DockerConsole/bin/App.dll");
+        FileIn("inputs/Basic/DockerConsole/obj/assets.json");
+        FileIn("inputs/Basic/Web/App.csproj");
+        FileIn("packages/nested/SkiaSharp.1.2.3.nupkg", "package sentinel");
+        FileIn("packages/not-a-package.txt");
+        var context = Path.Combine(root, "context");
+
+        DockerSampleTestBase.PrepareContext(Path.Combine(root, "inputs", "Basic", "DockerConsole"),
+            Path.Combine(root, "packages"), context);
+
+        Assert.True(File.Exists(Path.Combine(context, "linux.Dockerfile")));
+        Assert.True(File.Exists(Path.Combine(context, "App.csproj")));
+        Assert.False(Directory.Exists(Path.Combine(context, "bin")));
+        Assert.False(Directory.Exists(Path.Combine(context, "obj")));
+        Assert.False(Directory.Exists(Path.Combine(context, "Basic")));
+        Assert.Equal("package sentinel", File.ReadAllText(Path.Combine(context, "packages", "SkiaSharp.1.2.3.nupkg")));
+        Assert.Single(Directory.EnumerateFiles(Path.Combine(context, "packages")));
+        var config = XDocument.Load(Path.Combine(context, "nuget.config"));
+        var artifacts = Assert.Single(config.Descendants("packageSources").Elements("add"),
+            source => (string?)source.Attribute("key") == "artifacts");
+        Assert.Equal("packages", (string?)artifacts.Attribute("value"));
+        Assert.False(File.Exists(Path.Combine(context, "global.json")));
+    }
+
+    [Fact]
+    public void DockerContextRejectsAnEmptyPackageCohort()
+    {
+        FileIn("inputs/App.csproj");
+        Directory.CreateDirectory(Path.Combine(root, "packages"));
+        Assert.Throws<Xunit.Sdk.NotEmptyException>(() =>
+            DockerSampleTestBase.PrepareContext(Path.Combine(root, "inputs"),
+                Path.Combine(root, "packages"), Path.Combine(root, "context")));
+    }
+
+    [Fact]
     public void FiltersAndMissingInputsFailExplicitly()
     {
         FileIn("Console/Console.slnx");
@@ -168,11 +207,35 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public void HttpRequestsUseTheOwnedOriginAndPreserveQueries()
+    public async Task HttpRequestsUseTheOwnedOriginAndPreserveQueries()
     {
-        Assert.Equal("http://127.0.0.1:49152/api/images/SkiaSharp?x=1",
-            RunningApp.RequestUri(new Uri("http://127.0.0.1:49152"), "/api/images/SkiaSharp?x=1").AbsoluteUri);
+        var app = new AddressRunningApp(Path.Combine(root, "http"));
+        await app.Run(async () =>
+        {
+            Assert.Equal("http://127.0.0.1:49152/api/images/SkiaSharp?x=1",
+                (await app.RequestUri("/api/images/SkiaSharp?x=1")).AbsoluteUri);
+            Assert.Equal("http://127.0.0.1:49152/health",
+                (await app.RequestUri("/health")).AbsoluteUri);
+            Assert.Equal(1, app.AddressRequests);
+        });
     }
+
+    [Theory]
+    [InlineData("Now listening on: http://127.0.0.1:54321", "http://127.0.0.1:54321/")]
+    [InlineData("  Now listening on: http://127.0.0.1:54321  ", "http://127.0.0.1:54321/")]
+    [InlineData("App url: http://127.0.0.1:60542/?arg=--urls&arg=http%3a%2f%2f127.0.0.1%3a0",
+        "http://127.0.0.1:60542/?arg=--urls&arg=http%3a%2f%2f127.0.0.1%3a0")]
+    public void DotNetRecognizesOwnedHttpAddress(string output, string expected) =>
+        Assert.Equal(new Uri(expected), DotNetRunningApp.ParseAddress(output));
+
+    [Theory]
+    [InlineData("App url: https://127.0.0.1:60545/")]
+    [InlineData("App url: http://example.com:54321/")]
+    [InlineData("App url: http://127.0.0.1:0/")]
+    [InlineData("App url: not-an-address")]
+    [InlineData("Debug at url: http://127.0.0.1:60542/_framework/debug")]
+    public void DotNetRejectsOtherAddresses(string output) =>
+        Assert.Null(DotNetRunningApp.ParseAddress(output));
 
     [Theory]
     [InlineData("https://localhost/health")]
@@ -180,9 +243,10 @@ public class SampleInfrastructureTests : IDisposable
     [InlineData("/\\example.com/health")]
     [InlineData("/health#fragment")]
     [InlineData("")]
-    public void HttpRequestsCannotEscapeTheOwnedOrigin(string path)
+    public async Task HttpRequestsCannotEscapeTheOwnedOrigin(string path)
     {
-        Assert.Throws<ArgumentException>(() => RunningApp.RequestUri(new Uri("http://127.0.0.1:49152"), path));
+        var app = new AddressRunningApp(Path.Combine(root, "http"));
+        await app.Run(() => Assert.ThrowsAsync<ArgumentException>(() => app.RequestUri(path)));
     }
 
     [Fact]
@@ -198,15 +262,65 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public void PngMustDecodeAndHaveTheExpectedSize()
+    public void RepeatedAttachmentsPreserveEachDiagnosticSnapshot()
+    {
+        FileIn("snapshot.txt", "First diagnostic.");
+        var path = Path.Combine(root, "snapshot.txt");
+        TestContext.Current.AddFileAttachment(path, "text/plain");
+        File.WriteAllText(path, "Second diagnostic.");
+        TestContext.Current.AddFileAttachment(path, "text/plain");
+        TestContext.Current.AddFileAttachment(path, "text/plain", "snapshot.txt");
+        Assert.Contains("snapshot.txt", TestContext.Current.Attachments!.Keys);
+        Assert.Contains("snapshot.txt-2", TestContext.Current.Attachments.Keys);
+        Assert.Contains("snapshot.txt-3", TestContext.Current.Attachments.Keys);
+    }
+
+    [Fact]
+    public void GoldenMismatchKeepsActualAndExpectedAttachmentsDistinct()
+    {
+        var actual = Path.Combine(root, "actual", "canvas.png");
+        var expected = Path.Combine(root, "expected", "canvas.png");
+        Save(actual, SKColors.Red);
+        Save(expected, SKColors.Blue);
+        TestContext.Current.AddFileAttachment(actual, "image/png");
+        var error = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
+        Assert.Contains("Sample pixels differ", error.Message);
+        Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+        Assert.Contains("canvas.png-2", TestContext.Current.Attachments!.Keys);
+        Assert.Contains("expected-canvas.png", TestContext.Current.Attachments.Keys);
+
+        static void Save(string path, SKColor color)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            using var bitmap = new SKBitmap(4, 4);
+            bitmap.Erase(color);
+            using var image = SKImage.FromBitmap(bitmap);
+            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+            File.WriteAllBytes(path, data.ToArray());
+        }
+    }
+
+    [Fact]
+    public async Task ImageMustDecodeAndHaveTheExpectedSize()
     {
         using var bitmap = new SKBitmap(800, 600);
         bitmap.Erase(SKColors.Red);
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-        SampleImage.Validate(data.ToArray());
-        Assert.ThrowsAny<Exception>(() => SampleImage.Validate(data.ToArray().AsSpan(0, 12)));
-        Assert.ThrowsAny<Exception>(() => SampleImage.Validate(data.ToArray(), 400, 300));
+        var expected = SavePng(bitmap, "decode.expected.png");
+        var options = new SampleImageOptions { ExpectedSize = new(800, 600) };
+        await SampleImage.Validate(data.ToArray(), Path.Combine(root, "decode.actual.png"), expected, options);
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            SampleImage.Validate(data.ToArray().AsSpan(0, 12).ToArray(),
+                Path.Combine(root, "invalid.actual.png"), expected, options));
+        var invalidSignature = Path.Combine(root, "invalid-signature.actual.png");
+        var error = await Assert.ThrowsAnyAsync<Exception>(() =>
+            SampleImage.Validate(new byte[] { 1, 2, 3 }, invalidSignature, expected, options));
+        Assert.Contains("Expected a PNG image", error.Message);
+        Assert.Equal(new byte[] { 1, 2, 3 }, File.ReadAllBytes(invalidSignature));
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            SampleImage.Validate(data.ToArray(), Path.Combine(root, "wrong-size.actual.png"), expected,
+                options with { ExpectedSize = new(400, 300) }));
     }
 
     [Theory]
@@ -233,12 +347,12 @@ public class SampleInfrastructureTests : IDisposable
 
         if (accepted)
         {
-            SampleImage.CompareGolden(actual, expected);
+            SampleImage.Validate(actual, expected);
             Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
         }
         else
         {
-            var error = Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.CompareGolden(actual, expected));
+            var error = Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.Validate(actual, expected));
             Assert.Contains($"{changedPixels}/{width * height} pixels", error.Message);
             Assert.Contains("exceeding", error.Message);
             Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
@@ -256,7 +370,7 @@ public class SampleInfrastructureTests : IDisposable
         bitmap.Erase(new SKColor(red, green, blue, alpha));
         var actual = SavePng(bitmap, "actual.png");
 
-        var error = Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.CompareGolden(actual, expected));
+        var error = Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.Validate(actual, expected));
         Assert.Contains("4000/4000 pixels", error.Message);
         Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
     }
@@ -272,7 +386,185 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public void SampleTestBaseOwnsOnlyItsPreparedWorkspace()
+    public async Task ImageOptionsApplyToSavedFilesAndDirectComparisonsWithoutMutation()
+    {
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "options.expected.png");
+        var actual = Path.Combine(root, "options.actual.png");
+        var options = new SampleImageOptions { ExpectedSize = new(16, 12) };
+
+        await SampleImage.Validate(File.ReadAllBytes(expected), actual, expected, options);
+        SampleImage.Validate(actual, expected, options);
+        Assert.Contains("options.actual.png-2", TestContext.Current.Attachments!.Keys);
+        Assert.Equal(new SKSizeI(16, 12), options.ExpectedSize);
+        Assert.Equal(0.00075m, options.MaxErrorPixelFraction);
+        Assert.Null(options.MaxAverageColorErrorFraction);
+
+        var wrongSize = options with { ExpectedSize = new(15, 12) };
+        Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected, wrongSize));
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            SampleImage.Validate(File.ReadAllBytes(expected),
+                Path.Combine(root, "wrong-size.actual.png"), expected, wrongSize));
+        Assert.Equal(new SKSizeI(16, 12), options.ExpectedSize);
+    }
+
+    [Theory]
+    [InlineData(-0.01)]
+    [InlineData(1.01)]
+    [InlineData(double.NaN)]
+    public void ImageOptionsRejectInvalidAverageColorErrorLimits(double limit)
+    {
+        using var bitmap = new SKBitmap(4, 4);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "invalid-options.expected.png");
+        var actual = SavePng(bitmap, "invalid-options.actual.png");
+        Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected,
+            new() { MaxAverageColorErrorFraction = limit }));
+    }
+
+    [Theory]
+    [InlineData(0, true)]
+    [InlineData(1, true)]
+    [InlineData(2, false)]
+    public void ImageOptionsApplyAnExplicitPixelBudget(int changedPixels, bool accepted)
+    {
+        using var bitmap = new SKBitmap(10, 10);
+        bitmap.Erase(SKColors.Black);
+        var expected = SavePng(bitmap, "pixel-options.expected.png");
+        for (var i = 0; i < changedPixels; i++)
+            bitmap.SetPixel(i, 0, SKColors.White);
+        var actual = SavePng(bitmap, "pixel-options.actual.png");
+        var options = new SampleImageOptions { MaxErrorPixelFraction = 0.01m };
+        if (accepted)
+            SampleImage.Validate(actual, expected, options);
+        else
+            Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.Validate(actual, expected, options));
+        Assert.Equal(0.00075m, new SampleImageOptions().MaxErrorPixelFraction);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(2)]
+    public void ImageOptionsRejectInvalidPixelBudgets(int limit)
+    {
+        using var bitmap = new SKBitmap(4, 4);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "invalid-pixel-options.expected.png");
+        var actual = SavePng(bitmap, "invalid-pixel-options.actual.png");
+        Assert.ThrowsAny<Exception>(() =>
+            SampleImage.Validate(actual, expected, new() { MaxErrorPixelFraction = limit }));
+    }
+
+    [Fact]
+    public void GoldenComparisonSupportsPageSizesAndRetainsPixelDifferences()
+    {
+        Directory.CreateDirectory(root);
+        var actual = Path.Combine(root, "page.actual.png");
+        var expected = Path.Combine(root, "page.expected.png");
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        using (var image = SKImage.FromBitmap(bitmap))
+        using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+            File.WriteAllBytes(actual, data.ToArray());
+        File.Copy(actual, expected);
+        SampleImage.Validate(actual, expected);
+
+        bitmap.Erase(SKColors.Blue);
+        using (var image = SKImage.FromBitmap(bitmap))
+        using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+            File.WriteAllBytes(actual, data.ToArray());
+        var error = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
+        Assert.Contains("192/192", error.Message);
+        Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+    }
+
+    [Fact]
+    public void MissingReviewedGoldenFailsWithoutCreatingAReference()
+    {
+        Directory.CreateDirectory(root);
+        var actual = Path.Combine(root, "missing-reference.actual.png");
+        var expected = Path.Combine(root, "missing-reference.png");
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        File.WriteAllBytes(actual, data.ToArray());
+        var error = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
+        Assert.Contains("Missing reviewed sample golden", error.Message);
+        Assert.True(File.Exists(actual));
+        Assert.False(File.Exists(expected));
+    }
+
+    [Fact]
+    public void AverageColorErrorAllowsExactlyFivePercentButRejectsOneChannelStepOver()
+    {
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "average.expected.png");
+        bitmap.Erase(new SKColor(238, 17, 17));
+        var actual = SavePng(bitmap, "average.actual.png");
+        SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 });
+        Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+
+        bitmap.SetPixel(0, 0, new SKColor(238, 18, 17));
+        SavePng(bitmap, "average.actual.png");
+        var error = Assert.ThrowsAny<Exception>(() =>
+            SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 }));
+        Assert.Contains("average RGBA color error", error.Message);
+        Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+    }
+
+    [Fact]
+    public void AverageColorErrorDoesNotChangeTheHeadlessPixelBudgetOrExplicitExactComparison()
+    {
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "channel.expected.png");
+        bitmap.Erase(new SKColor(247, 8, 8));
+        var actual = SavePng(bitmap, "channel.actual.png");
+        SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 });
+        var error = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
+        Assert.Contains("192/192", error.Message);
+        Assert.ThrowsAny<Exception>(() =>
+            SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0 }));
+    }
+
+    [Fact]
+    public void AverageColorErrorIncludesAlphaInItsFivePercentBoundary()
+    {
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Black);
+        var expected = SavePng(bitmap, "alpha.expected.png");
+        bitmap.Erase(new SKColor(0, 0, 0, 204));
+        var actual = SavePng(bitmap, "alpha.actual.png");
+        SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 });
+
+        bitmap.SetPixel(0, 0, new SKColor(0, 0, 0, 203));
+        SavePng(bitmap, "alpha.actual.png");
+        Assert.ThrowsAny<Exception>(() =>
+            SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 }));
+    }
+
+    [Fact]
+    public void AverageColorErrorAllowsExactlyTheGpuSixPercentBudget()
+    {
+        using var bitmap = new SKBitmap(5, 1);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "gpu-budget.expected.png");
+        bitmap.Erase(new SKColor(234, 20, 20));
+        bitmap.SetPixel(0, 0, new SKColor(233, 20, 20));
+        var actual = SavePng(bitmap, "gpu-budget.actual.png");
+        SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.06 });
+
+        bitmap.SetPixel(1, 0, new SKColor(233, 20, 20));
+        SavePng(bitmap, "gpu-budget.actual.png");
+        Assert.ThrowsAny<Exception>(() =>
+            SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.06 }));
+    }
+
+    [Fact]
+    public void DotNetSampleTestBaseOwnsOnlyItsPreparedWorkspace()
     {
         FileIn("inputs/Basic/Console/App.slnx");
         string working;
@@ -286,15 +578,17 @@ public class SampleInfrastructureTests : IDisposable
         Assert.True(Directory.Exists(Path.Combine(root, "inputs")));
     }
 
-    private sealed class LifetimeTest(string samplesDir) : SampleTestBase(samplesDir)
+    private sealed class LifetimeTest(string samplesDir) : DotNetSampleTestBase(samplesDir)
     {
         internal string Prepare() => PrepareSample(Path.Combine("Basic", "Console")).Root;
         internal string Diagnostics => PrepareSample(Path.Combine("Basic", "Console")).DiagnosticsRoot;
-        internal Task Build() => BuildSample(Path.Combine("Basic", "Console"), "App.csproj", "Release");
+        internal SampleWorkspace Workspace => PrepareSample(Path.Combine("Basic", "Console"));
+        internal Task Build(DotNetOptions? options = null) =>
+            BuildSample(Path.Combine("Basic", "Console"), "App.csproj", options);
     }
 
     [Fact]
-    public async Task SampleTestBaseBuildsWithRetainedDiagnostics()
+    public async Task DotNetSampleTestBaseBuildsWithRetainedDiagnostics()
     {
         FileIn("inputs/Basic/Console/App.csproj", """
             <Project Sdk="Microsoft.NET.Sdk">
@@ -310,6 +604,238 @@ public class SampleInfrastructureTests : IDisposable
         Assert.Contains("Build succeeded.", File.ReadAllText(Path.Combine(diagnostics, "build.stdout.log")));
         Assert.DoesNotContain("Build succeeded.", File.ReadAllText(Path.Combine(diagnostics, "build.stderr.log")));
         Assert.True(new FileInfo(Path.Combine(diagnostics, "build.binlog")).Length > 0);
+    }
+
+    [Fact]
+    public async Task ExplicitFrameworkBuildKeepsDeclaredSharedReferencesAndFrameworkDiagnostics()
+    {
+        FileIn("inputs/Basic/Console/App.csproj", """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
+                <EnableWindowsTargeting>true</EnableWindowsTargeting>
+                <OutputType>Exe</OutputType>
+              </PropertyGroup>
+              <Target Name="VerifySelectedFramework" BeforeTargets="CoreCompile">
+                <Error Condition="'$(TargetFramework)' != 'net10.0-windows' or '$(TargetFrameworks)' != 'net10.0;net10.0-windows'"
+                       Text="Build must select net10.0-windows without overriding the declared framework list." />
+                <Error Condition="'$(ContractSentinel)' != 'forwarded-by-buildsample'"
+                       Text="BuildSample must forward the test-owned property dictionary." />
+                <Message Importance="high" Text="Selected $(TargetFramework) from $(TargetFrameworks)" />
+                <Message Importance="high" Text="Contract sentinel: $(ContractSentinel)" />
+                <Message Importance="high" Text="Build working directory: $(MSBuildStartupDirectory)" />
+              </Target>
+              <ItemGroup>
+                <ProjectReference Include="Library/Library.csproj" />
+                <ProjectReference Include="Shared/Shared.csproj" />
+                <Compile Remove="Library/**/*.cs" />
+                <Compile Remove="Shared/**/*.cs" />
+              </ItemGroup>
+            </Project>
+            """);
+        FileIn("inputs/Basic/Console/Library/Library.csproj", """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFramework>netstandard2.1</TargetFramework></PropertyGroup>
+              <Target Name="VerifyLibraryFramework" BeforeTargets="CoreCompile">
+                <Error Condition="'$(TargetFramework)' != 'netstandard2.1'"
+                       Text="The library's declared framework must not be retargeted." />
+              </Target>
+            </Project>
+            """);
+        FileIn("inputs/Basic/Console/Shared/Shared.csproj", """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+                <Nullable>enable</Nullable>
+                <ImplicitUsings>enable</ImplicitUsings>
+                <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+              </PropertyGroup>
+              <Target Name="VerifySharedFramework" BeforeTargets="CoreCompile">
+                <Error Condition="'$(TargetFramework)' != 'net10.0' or '$(TargetFrameworks)' != ''"
+                       Text="The ordinary shared project's declared framework must not be retargeted." />
+              </Target>
+            </Project>
+            """);
+        FileIn("inputs/Basic/Console/Program.cs", """
+            System.Console.WriteLine(System.AppContext.TargetFrameworkName);
+            System.Console.WriteLine(string.Join("|", args));
+            System.Console.WriteLine("Run working directory: " + System.Environment.CurrentDirectory);
+            if (System.Array.IndexOf(args, "--wait") >= 0)
+                System.Threading.Thread.Sleep(60000);
+            """);
+        using var test = new LifetimeTest(Path.Combine(root, "inputs"));
+        var properties = new Dictionary<string, string> { ["ContractSentinel"] = "forwarded-by-buildsample" };
+        var workingDirectory = Path.Combine(test.Workspace.Root, "custom working directory");
+        Directory.CreateDirectory(workingDirectory);
+        var options = new DotNetOptions
+        {
+            Framework = "net10.0-windows", Properties = properties,
+            Timeout = TimeSpan.FromMinutes(1), WorkingDirectory = Path.Combine(workingDirectory, ".")
+        };
+        await test.Build(options);
+        var working = test.Prepare();
+        var diagnostics = Path.Combine(test.Diagnostics, "builds", "Basic", "Console", "App", "Release", "net10.0-windows");
+        var output = File.ReadAllText(Path.Combine(diagnostics, "build.stdout.log"));
+        Assert.Contains("Selected net10.0-windows from net10.0;net10.0-windows", output);
+        Assert.Contains("Contract sentinel: forwarded-by-buildsample", output);
+        Assert.Contains($"Build working directory: {workingDirectory}", output);
+        Assert.Equal(new KeyValuePair<string, string>("ContractSentinel", "forwarded-by-buildsample"), Assert.Single(properties));
+        Assert.True(new FileInfo(Path.Combine(diagnostics, "build.binlog")).Length > 0);
+        Assert.False(Directory.Exists(Path.Combine(working, "samples", "Basic", "Console", "bin", "Release", "net10.0")));
+        Assert.True(File.Exists(Path.Combine(working, "samples", "Basic", "Console", "Library", "bin", "Release", "netstandard2.1", "Library.dll")));
+        Assert.True(File.Exists(Path.Combine(working, "samples", "Basic", "Console", "Shared", "bin", "Release", "net10.0", "Shared.dll")));
+
+        var workspace = test.Workspace;
+        var project = Path.Combine(working, "samples", "Basic", "Console", "App.csproj");
+        var called = false;
+        await DotNet.Run(workspace, project, ["argument with spaces", "--sentinel"], async app =>
+        {
+            called = true;
+            var result = await app.WaitForExit();
+            Assert.Equal(0, result.ExitCode);
+            Assert.Contains(".NETCoreApp,Version=v10.0", result.Output);
+            Assert.Contains("argument with spaces|--sentinel", result.Output);
+            Assert.Contains($"Run working directory: {workingDirectory}", result.Output);
+        }, options);
+        Assert.True(called);
+        Assert.Contains("argument with spaces|--sentinel",
+            File.ReadAllText(Path.Combine(workspace.DiagnosticsRoot, "run", "run.stdout.log")));
+        foreach (var waitForAddress in new[] { false, true })
+        {
+            await Assert.ThrowsAsync<TimeoutException>(() =>
+                DotNet.Run(workspace, project, ["--wait"], async app =>
+                {
+                    if (waitForAddress)
+                        await app.GetAddress();
+                    else
+                        await app.WaitForExit();
+                }, options with { Timeout = TimeSpan.FromMilliseconds(100) }));
+            Assert.True(File.Exists(Path.Combine(workspace.DiagnosticsRoot, "run", "run.stderr.log")));
+        }
+        test.Dispose();
+        Assert.False(Directory.Exists(working));
+        Assert.True(Directory.Exists(diagnostics));
+    }
+
+    [Fact]
+    public async Task DefaultBuildAndCallbackRunKeepTheirOriginalContract()
+    {
+        FileIn("inputs/App/App.csproj", """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType></PropertyGroup>
+            </Project>
+            """);
+        FileIn("inputs/App/Program.cs", """System.Console.WriteLine(string.Join("|", args));""");
+        using var workspace = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Repo.PackagesDir,
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+        var project = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
+        await DotNet.Build(workspace, project, Path.Combine(workspace.DiagnosticsRoot, "build"));
+        var called = false;
+        await DotNet.Run(workspace, project, ["old argument", "--sentinel"], async app =>
+        {
+            called = true;
+            var result = await app.WaitForExit();
+            Assert.Equal(0, result.ExitCode);
+            Assert.Contains("old argument|--sentinel", result.Output);
+        });
+        Assert.True(called);
+    }
+
+    [Fact]
+    public void ExplicitBuildPropertiesKeepDefaultFlagsAndDoNotMutateTheCaller()
+    {
+        FileIn("inputs/App/App.csproj");
+        using var workspace = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Repo.PackagesDir,
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+        var project = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
+        var diagnostics = Path.Combine(workspace.DiagnosticsRoot, "build");
+        var properties = new Dictionary<string, string> { ["RuntimeIdentifier"] = "iossimulator-arm64" };
+        var options = new DotNetOptions { Framework = "net10.0-ios", Properties = properties };
+        var defaults = DotNet.BuildArguments(workspace, project, diagnostics);
+        var arguments = DotNet.BuildArguments(workspace, project, diagnostics, options);
+        Assert.Equal(defaults, arguments.Take(defaults.Length));
+        Assert.Equal(new[]
+        {
+            "--framework", "net10.0-ios", "-p:RuntimeIdentifier=iossimulator-arm64"
+        }, arguments.Skip(defaults.Length));
+        Assert.Equal(Path.GetFullPath(project), arguments[1]);
+        Assert.Single(arguments, argument => argument.StartsWith("-bl:", StringComparison.Ordinal));
+        Assert.Single(arguments, argument => argument.StartsWith("-p:RestoreConfigFile=", StringComparison.Ordinal));
+        Assert.DoesNotContain(arguments, argument => argument.StartsWith("-p:TargetFramework", StringComparison.Ordinal));
+        Assert.Equal(new KeyValuePair<string, string>("RuntimeIdentifier", "iossimulator-arm64"), Assert.Single(properties));
+        Assert.Equal(arguments, DotNet.BuildArguments(workspace, project, diagnostics, options));
+        var run = DotNet.RunArguments(project, ["argument with spaces", "--sentinel"], options);
+        Assert.Equal(new[]
+        {
+            "run", "--project", Path.GetFullPath(project), "-c", "Release", "--no-build", "--no-launch-profile",
+            "--framework", "net10.0-ios", "-p:RuntimeIdentifier=iossimulator-arm64", "--", "argument with spaces", "--sentinel"
+        }, run);
+        foreach (var name in new[] { "TargetFramework", "TargetFrameworks", "configuration", "RestoreConfigFile", "RestoreNoCache", "UseSharedCompilation", " " })
+        {
+            var conflicting = new Dictionary<string, string> { [name] = "override" };
+            Assert.Throws<ArgumentException>(() =>
+                DotNet.BuildArguments(workspace, project, diagnostics, options with { Properties = conflicting }));
+            Assert.Throws<ArgumentException>(() =>
+                DotNet.RunArguments(project, [], options with { Properties = conflicting }));
+        }
+    }
+
+    [Fact]
+    public void DotNetOptionsDefaultsAndCopiesKeepArgumentsIndependent()
+    {
+        var defaults = new DotNetOptions();
+        Assert.Equal("Release", defaults.Configuration);
+        Assert.Null(defaults.Framework);
+        Assert.Empty(defaults.Properties);
+        Assert.Null(defaults.Timeout);
+        Assert.Null(defaults.WorkingDirectory);
+        Assert.Throws<NotSupportedException>(() =>
+            ((IDictionary<string, string>)defaults.Properties).Add("Sentinel", "value"));
+        var options = defaults with { Configuration = "Debug", Framework = "net10.0", WorkingDirectory = "." };
+        Assert.Equal("Release", defaults.Configuration);
+        Assert.Null(defaults.Framework);
+        Assert.Null(defaults.WorkingDirectory);
+        Assert.Equal(Path.GetFullPath("."), options.GetWorkingDirectory(root));
+        Assert.Equal(Path.GetFullPath(root), defaults.GetWorkingDirectory(root));
+        var project = Path.Combine(root, "project with spaces.csproj");
+        Assert.Equal(new[]
+        {
+            "run", "--project", project, "-c", "Release", "--no-build", "--no-launch-profile", "--", "argument with spaces"
+        }, DotNet.RunArguments(project, ["argument with spaces"]));
+        var run = DotNet.RunArguments(project, [], options);
+        Assert.Equal("Debug", run[4]);
+        Assert.Equal(new[] { "--framework", "net10.0", "--" }, run.Skip(7));
+    }
+
+    [Fact]
+    public async Task InvalidDotNetOptionsFailBeforeStartingProcesses()
+    {
+        FileIn("inputs/App/App.csproj");
+        using var workspace = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Repo.PackagesDir,
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+        var project = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
+        var diagnostics = Path.Combine(workspace.DiagnosticsRoot, "invalid-build");
+        var invalid = new DotNetOptions[]
+        {
+            new() { Configuration = "" }, new() { Configuration = " " }, new() { Configuration = null! },
+            new() { Framework = "" }, new() { Framework = " " },
+            new() { WorkingDirectory = "" }, new() { WorkingDirectory = " " },
+            new() { Properties = null! }, new() { Timeout = TimeSpan.Zero },
+            new() { Timeout = Timeout.InfiniteTimeSpan }, new() { Timeout = TimeSpan.MaxValue }
+        };
+        foreach (var options in invalid)
+        {
+            Assert.ThrowsAny<ArgumentException>(() => DotNet.BuildArguments(workspace, project, diagnostics, options));
+            Assert.ThrowsAny<ArgumentException>(() => DotNet.RunArguments(project, [], options));
+            await Assert.ThrowsAnyAsync<ArgumentException>(() => DotNet.Build(workspace, project, diagnostics, options));
+            await Assert.ThrowsAnyAsync<ArgumentException>(() => DotNet.Run(workspace, project, [], _ => Task.CompletedTask, options));
+            await Assert.ThrowsAnyAsync<ArgumentException>(() => DotNet.Execute(workspace, ["--version"], options));
+        }
+        Assert.False(Directory.Exists(diagnostics));
+        Assert.False(Directory.Exists(Path.Combine(workspace.DiagnosticsRoot, "run")));
     }
 
     [Fact]
@@ -445,6 +971,25 @@ public class SampleInfrastructureTests : IDisposable
         {
             await release;
         }
+    }
+
+    private sealed class AddressRunningApp(string diagnostics) : RunningApp(diagnostics)
+    {
+        internal int AddressRequests { get; private set; }
+
+        internal override Task<Uri> GetAddress()
+        {
+            AddressRequests++;
+            return Task.FromResult(new Uri("http://127.0.0.1:49152"));
+        }
+
+        internal override Task<(int ExitCode, string Output, string Error)> WaitForExit() =>
+            Task.FromResult((0, "", ""));
+
+        protected override Task Stop() => Task.CompletedTask;
+
+        protected override Task<(string Output, string Error)> ReadOutput() =>
+            Task.FromResult(("", ""));
     }
 
     public void Dispose()

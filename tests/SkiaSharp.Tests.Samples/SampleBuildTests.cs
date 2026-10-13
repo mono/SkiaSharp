@@ -3,19 +3,17 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
 
-// Builds the host Gallery solution and its shared projects without running the UI.
 [Trait("Category", "SampleBuild")]
-[Trait("Category", "GalleryBuild")]
-public class GallerySampleTests : SampleTestBase
+public class SampleBuildTests : DotNetSampleTestBase
 {
     public static IEnumerable<object[]> Cases() =>
         SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
-            .Where(sample => sample.Kind.HasFlag(SampleLookup.EntryKind.Gallery))
+            .Where(sample => !sample.Kind.HasFlag(SampleLookup.EntryKind.Docker))
             .Select(sample => new object[] { sample.Folder, sample.FileName, "Release" });
 
     [Theory]
     [RunGroup(SampleRunGroup.Build)]
     [MemberData(nameof(Cases))]
-    public Task GeneratedGalleryBuilds(string folder, string solution, string configuration) =>
-        BuildSample(folder, solution, configuration);
+    public Task GeneratedSampleBuilds(string folder, string solution, string configuration) =>
+        BuildSample(folder, solution, new() { Configuration = configuration });
 }
