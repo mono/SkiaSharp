@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4249,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-10-13T04:33:43Z",
+    "currentLabels": ["type/enhancement"]
+  },
+  "summary": "This follow-up tracks removing the remaining native P/Invoke used by perspective SKMatrix.MapRect after the broader managed SKMatrix port, while preserving Skia's exact clipping behavior.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.99 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.99 },
+    "tenets": ["tenet/performance"],
+    "perf": ["perf/interop"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [2779],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/4241",
+          "description": "Open parent PR that ports other SKMatrix math to managed code and intentionally retains native perspective MapRect."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/2779",
+          "description": "Original SKMatrix native-interop performance initiative."
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "Perspective MapRect remains a native call because preserving Skia behavior requires clipping transformed rectangle edges at the homogeneous w=0 plane; mapping four corners alone is not equivalent. The checked-out implementation still invokes sk_matrix_map_rect, while the open parent PR documents that it retains this path after moving other matrix operations to managed code. This is a valid performance enhancement, but the required managed clipping machinery is disproportionate to eliminating a rare P/Invoke.",
+    "rationale": "The issue explicitly requests an optimization rather than reporting incorrect behavior, and identifies a large, fidelity-sensitive implementation scope. The remaining operation is in the core SKMatrix wrapper and is neither platform nor rendering-backend specific. It belongs under performance/interop because the intended benefit is removing a managed-to-native transition.",
+    "keySignals": [
+      {
+        "text": "A faithful, bit-exact port would need path-clipping infrastructure to handle corners that cross the homogeneous w=0 plane.",
+        "source": "issue body",
+        "interpretation": "A four-corner managed bounds calculation would change behavior, so this is not a small arithmetic-only port."
+      },
+      {
+        "text": "Low priority / high effort. Keeping this one call native is the pragmatic choice.",
+        "source": "issue body",
+        "interpretation": "The reporter's stated disposition supports keeping the enhancement open without immediate implementation."
+      },
+      {
+        "text": "Perspective MapRect still delegates to native because Skia uses a non-trivial path-clipping routine there.",
+        "source": "PR #4241",
+        "interpretation": "The associated open PR independently records the scope boundary and intentional deferral."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKMatrix.cs",
+        "lines": "412-419",
+        "finding": "MapRect creates a destination SKRect and invokes SkiaApi.sk_matrix_map_rect through a fixed pointer before returning it.",
+        "relevance": "direct"
+      },
+      {
+        "file": "tests/Tests/SkiaSharp/SKMatrixTests.cs",
+        "lines": "119-127",
+        "finding": "The existing MapRect test covers a translation matrix and does not exercise perspective clipping behavior.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Continue using SKMatrix.MapRect; the retained native call preserves Skia's established perspective clipping semantics and public API behavior."
+    ],
+    "nextQuestions": [
+      "Is a managed SkPath or edge-clipping implementation planned for another feature that could share the required perspective-clipping machinery?",
+      "What benchmark gain remains for realistic perspective MapRect workloads after accounting for the rarity of perspective matrices?"
+    ],
+    "resolution": {
+      "hypothesis": "The remaining interop is intentionally retained to avoid an incomplete managed implementation that would mishandle rectangles crossing the homogeneous camera plane.",
+      "proposals": [
+        {
+          "title": "Defer the standalone port",
+          "description": "Retain the native perspective MapRect path until a shared managed path-clipping implementation is justified by broader work; any future port should prove bit-exact results for fully in-front, fully behind, and w=0-straddling rectangles before removing the call.",
+          "category": "alternative",
+          "validated": "untested",
+          "confidence": 0.96,
+          "effort": "cost/xl"
+        }
+      ],
+      "recommendedProposal": "Defer the standalone port",
+      "recommendedReason": "It preserves correctness and avoids duplicating a substantial clipping engine solely to remove a rare P/Invoke."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.96,
+      "reason": "This is a valid, explicitly scoped performance enhancement with no correctness defect, but its expected benefit does not currently justify the large fidelity-sensitive implementation effort."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement, core SkiaSharp, performance, and interop labels.",
+        "risk": "low",
+        "confidence": 0.99,
+        "labels": ["type/enhancement", "area/SkiaSharp", "tenet/performance", "perf/interop"]
+      },
+      {
+        "type": "link-related",
+        "description": "Link the original SKMatrix interop initiative.",
+        "risk": "low",
+        "confidence": 0.99,
+        "linkedIssue": 2779
+      }
+    ]
+  }
+}
