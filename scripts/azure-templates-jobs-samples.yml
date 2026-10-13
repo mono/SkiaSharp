@@ -25,12 +25,15 @@ jobs:
           target: samples
           additionalArgs: --runGroup=${{ group }} --sampleRunId=${{ parameters.platform }}_${{ lower(group) }}
           retryCount: 0
-          ${{ if ne(parameters.platform, 'windows') }}:
-            shouldPublish: false
+          shouldPublish: false
           requiredArtifacts:
             - name: native
             - name: nuget
               dir: nugets
+          publishArtifacts:
+            - name: sample_logs_${{ parameters.platform }}_${{ lower(group) }}
+              always: true
+              path: output/logs
           postBuildSteps:
             - task: PublishTestResults@2
               condition: always()
@@ -38,11 +41,3 @@ jobs:
                 testResultsFormat: VSTest
                 testResultsFiles: output/logs/testlogs/samples/${{ parameters.platform }}_${{ lower(group) }}/**/*.trx
                 testRunTitle: Samples (${{ parameters.platform }}, ${{ group }})
-            - task: PublishPipelineArtifact@1
-              condition: always()
-              inputs:
-                targetPath: output/logs
-                artifact: sample_logs_${{ parameters.platform }}_${{ lower(group) }}
-            - ${{ if eq(parameters.platform, 'windows') }}:
-              - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
-                displayName: Delete the nugets folder

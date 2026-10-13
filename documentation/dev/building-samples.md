@@ -15,6 +15,10 @@ failures fail the tests.
 CI runs eight execution-target jobs: Build, Host, and Docker on Windows/Linux,
 and Build and Host on macOS. All use the existing repository SDK and host
 toolchain. Docker retains its existing image SDK pins.
+Like the other test jobs, Samples jobs disable successful whole-output
+publication, publish TRX results explicitly, and declare logs through the shared
+`publishArtifacts` mechanism with `always: true` for success/failure retention.
+The shared failed-run whole-output diagnostic artifact remains enabled.
 
 **Bootstrap before staging packages:** bootstrap resets `output/`.
 For managed-only work:
