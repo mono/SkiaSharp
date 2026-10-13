@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests.Samples;
 [Trait("Category", "Docker")]
 [RunGroup(SampleRunGroup.Docker)]
 [Collection(nameof(DockerSampleCollection))]
-public class DockerSampleBuildTests(DockerSampleFixture docker)
+public class DockerSampleBuildTests(DockerSampleFixture docker) : DockerSampleTestBase(docker)
 {
     public static IEnumerable<object[]> Cases() =>
         SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
@@ -17,5 +17,5 @@ public class DockerSampleBuildTests(DockerSampleFixture docker)
     [Trait("Category", "DockerBuild")]
     [MemberData(nameof(Cases))]
     public async Task DockerImageBuilds(string folder, string dockerfile) =>
-        await docker.Image(folder, dockerfile);
+        await BuildSample(folder, dockerfile);
 }

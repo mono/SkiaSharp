@@ -5,7 +5,7 @@ using static SkiaSharp.Tests.Samples.Utils.SampleImage;
 
 namespace SkiaSharp.Tests.Samples;
 
-public class BrowserSampleRunTests : SampleTestBase
+public class BrowserSampleRunTests : DotNetSampleTestBase
 {
     [Fact]
     [RunGroup(SampleRunGroup.Host)]

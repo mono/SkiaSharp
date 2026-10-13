@@ -109,6 +109,10 @@ Name execution classes by purpose: `SampleBuildTests`, `BasicSampleRunTests`,
 `BrowserSampleRunTests`, and `UnoBrowserSampleRunTests`. `DockerSampleBuildTests`
 and `DockerSampleRunTests` share one collection fixture and both use the Docker
 group. Infrastructure, discovery, and artifact-contract checks stay separate.
+`DotNetSampleTestBase` prepares isolated .NET workspaces; `DockerSampleTestBase`
+prepares flat Docker build contexts. The Docker fixture owns cached images,
+container execution, and Docker resource cleanup. Both bases live beside the
+test classes; CLI wrappers and fixtures live in `Utils`.
 Each test requires exactly one typed attribute, such as
 `[RunGroup(SampleRunGroup.Build)]`. Apply it to a class only when every test uses
 the same group; otherwise annotate individual methods.

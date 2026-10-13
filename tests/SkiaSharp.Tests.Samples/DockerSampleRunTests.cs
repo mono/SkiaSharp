@@ -6,24 +6,15 @@ namespace SkiaSharp.Tests.Samples;
 [Trait("Category", "Docker")]
 [RunGroup(SampleRunGroup.Docker)]
 [Collection(nameof(DockerSampleCollection))]
-public class DockerSampleRunTests(DockerSampleFixture docker)
+public class DockerSampleRunTests(DockerSampleFixture docker) : DockerSampleTestBase(docker)
 {
     private static string ContainerPlatform =>
         OperatingSystem.IsWindows() ? "Windows" : "Linux";
 
-    private async Task RunSample(string name, IEnumerable<string> arguments, Func<DockerRunningApp, Task> test)
-    {
-        var folder = Path.Combine("Basic", name);
-        var sample = SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
-            .Single(sample => sample.Folder == folder && sample.Kind.HasFlag(SampleLookup.EntryKind.Docker));
-        var tag = await docker.Image(folder, sample.FileName);
-        await docker.Run(tag, arguments, test);
-    }
-
     [Fact]
     [Trait("Category", "SampleRun")]
     public Task ConsoleSampleRuns() =>
-        RunSample("DockerConsole", ["SkiaSharp", "--output", "output.png"], async app =>
+        RunSample("Basic/DockerConsole", ["SkiaSharp", "--output", "output.png"], async app =>
         {
             var result = await app.WaitForExit();
             Assert.Equal(0, result.ExitCode);
@@ -43,7 +34,7 @@ public class DockerSampleRunTests(DockerSampleFixture docker)
     [Fact]
     [Trait("Category", "SampleRun")]
     public Task WebApiSampleReturnsImage() =>
-        RunSample("DockerWebApi", [], async app =>
+        RunSample("Basic/DockerWebApi", [], async app =>
         {
             using var health = await app.WaitForResponse("/health");
             Assert.Equal(System.Net.HttpStatusCode.OK, health.StatusCode);

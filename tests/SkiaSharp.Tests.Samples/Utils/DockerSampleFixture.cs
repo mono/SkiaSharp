@@ -14,7 +14,7 @@ public sealed class DockerSampleFixture : IAsyncLifetime
 
     public ValueTask InitializeAsync() => ValueTask.CompletedTask;
 
-    public async Task<string> Image(string folder, string dockerfile)
+    internal async Task<string> Image(string folder, Func<string, Task> build)
     {
         if (images.TryGetValue(folder, out var existing))
             return existing;
@@ -23,33 +23,10 @@ public sealed class DockerSampleFixture : IAsyncLifetime
 
         var identity = SampleWorkspace.CreateIdentity(folder);
         var tag = $"skiasharp-sample-test:{identity}";
-        var context = Path.Combine(Repo.ArtifactsDir, identity, "context");
-
-        try
-        {
-            SampleWorkspace.CopyTree(Path.Combine(Repo.SamplesDir, folder), context);
-
-            var packages = Path.Combine(context, "packages");
-            Directory.CreateDirectory(packages);
-            foreach (var package in Directory.EnumerateFiles(Repo.PackagesDir, "*.nupkg", SearchOption.AllDirectories))
-            {
-                File.Copy(package, Path.Combine(packages, Path.GetFileName(package)));
-            }
-            Assert.NotEmpty(Directory.EnumerateFiles(packages, "*.nupkg"));
-
-            DotNet.WriteNuGetConfig(Path.Combine(context, "nuget.config"), "packages");
-
-            ownedTags.Add(tag);
-            await Run(["build", "--tag", tag, "--file", dockerfile, "."], TimeSpan.FromMinutes(30), context);
-            images.Add(folder, tag);
-
-            return tag;
-        }
-        finally
-        {
-            if (Directory.Exists(context))
-                SampleWorkspace.DeleteDirectory(context);
-        }
+        ownedTags.Add(tag);
+        await build(tag);
+        images.Add(folder, tag);
+        return tag;
     }
 
     public void OwnContainer(string name) =>

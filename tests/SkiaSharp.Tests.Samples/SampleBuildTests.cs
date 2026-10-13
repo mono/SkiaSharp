@@ -4,7 +4,7 @@ using Xunit;
 namespace SkiaSharp.Tests.Samples;
 
 [Trait("Category", "SampleBuild")]
-public class SampleBuildTests : SampleTestBase
+public class SampleBuildTests : DotNetSampleTestBase
 {
     public static IEnumerable<object[]> Cases() =>
         SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)

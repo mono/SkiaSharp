@@ -45,6 +45,45 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
+    public void DockerContextContainsSelectedSampleAndLocalPackagesOnly()
+    {
+        FileIn("inputs/Basic/DockerConsole/linux.Dockerfile", "FROM scratch");
+        FileIn("inputs/Basic/DockerConsole/App.csproj");
+        FileIn("inputs/Basic/DockerConsole/bin/App.dll");
+        FileIn("inputs/Basic/DockerConsole/obj/assets.json");
+        FileIn("inputs/Basic/Web/App.csproj");
+        FileIn("packages/nested/SkiaSharp.1.2.3.nupkg", "package sentinel");
+        FileIn("packages/not-a-package.txt");
+        var context = Path.Combine(root, "context");
+
+        DockerSampleTestBase.PrepareContext(Path.Combine(root, "inputs", "Basic", "DockerConsole"),
+            Path.Combine(root, "packages"), context);
+
+        Assert.True(File.Exists(Path.Combine(context, "linux.Dockerfile")));
+        Assert.True(File.Exists(Path.Combine(context, "App.csproj")));
+        Assert.False(Directory.Exists(Path.Combine(context, "bin")));
+        Assert.False(Directory.Exists(Path.Combine(context, "obj")));
+        Assert.False(Directory.Exists(Path.Combine(context, "Basic")));
+        Assert.Equal("package sentinel", File.ReadAllText(Path.Combine(context, "packages", "SkiaSharp.1.2.3.nupkg")));
+        Assert.Single(Directory.EnumerateFiles(Path.Combine(context, "packages")));
+        var config = XDocument.Load(Path.Combine(context, "nuget.config"));
+        var artifacts = Assert.Single(config.Descendants("packageSources").Elements("add"),
+            source => (string?)source.Attribute("key") == "artifacts");
+        Assert.Equal("packages", (string?)artifacts.Attribute("value"));
+        Assert.False(File.Exists(Path.Combine(context, "global.json")));
+    }
+
+    [Fact]
+    public void DockerContextRejectsAnEmptyPackageCohort()
+    {
+        FileIn("inputs/App.csproj");
+        Directory.CreateDirectory(Path.Combine(root, "packages"));
+        Assert.Throws<Xunit.Sdk.NotEmptyException>(() =>
+            DockerSampleTestBase.PrepareContext(Path.Combine(root, "inputs"),
+                Path.Combine(root, "packages"), Path.Combine(root, "context")));
+    }
+
+    [Fact]
     public void FiltersAndMissingInputsFailExplicitly()
     {
         FileIn("Console/Console.slnx");
@@ -525,7 +564,7 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public void SampleTestBaseOwnsOnlyItsPreparedWorkspace()
+    public void DotNetSampleTestBaseOwnsOnlyItsPreparedWorkspace()
     {
         FileIn("inputs/Basic/Console/App.slnx");
         string working;
@@ -539,7 +578,7 @@ public class SampleInfrastructureTests : IDisposable
         Assert.True(Directory.Exists(Path.Combine(root, "inputs")));
     }
 
-    private sealed class LifetimeTest(string samplesDir) : SampleTestBase(samplesDir)
+    private sealed class LifetimeTest(string samplesDir) : DotNetSampleTestBase(samplesDir)
     {
         internal string Prepare() => PrepareSample(Path.Combine("Basic", "Console")).Root;
         internal string Diagnostics => PrepareSample(Path.Combine("Basic", "Console")).DiagnosticsRoot;
@@ -549,7 +588,7 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public async Task SampleTestBaseBuildsWithRetainedDiagnostics()
+    public async Task DotNetSampleTestBaseBuildsWithRetainedDiagnostics()
     {
         FileIn("inputs/Basic/Console/App.csproj", """
             <Project Sdk="Microsoft.NET.Sdk">

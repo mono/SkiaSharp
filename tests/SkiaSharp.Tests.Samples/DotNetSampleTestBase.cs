@@ -3,18 +3,18 @@ using SkiaSharp.Tests.Samples.Utils;
 namespace SkiaSharp.Tests.Samples;
 
 // Prepares and builds each sample in one owned workspace.
-public abstract class SampleTestBase : IDisposable
+public abstract class DotNetSampleTestBase : IDisposable
 {
     private SampleWorkspace? workspace;
     private string? preparedFolder;
     private readonly string samplesDir;
 
-    protected SampleTestBase()
+    protected DotNetSampleTestBase()
         : this(Repo.SamplesDir)
     {
     }
 
-    protected SampleTestBase(string samplesDir)
+    protected DotNetSampleTestBase(string samplesDir)
     {
         this.samplesDir = samplesDir;
     }
