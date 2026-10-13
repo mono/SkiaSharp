@@ -76,7 +76,9 @@ public class SampleDiscoveryTests
     [Fact]
     public void SampleCasesCoverEligibleBasicSamples()
     {
-        var cases = BasicSampleTests.Cases().ToArray();
+        var cases = SampleBuildTests.Cases()
+            .Where(row => ((string)row[0]).StartsWith("Basic" + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+            .ToArray();
         Assert.All(cases, row => Assert.Equal(3, row.Length));
         var expected = CommonSamples.Concat(HostSamples[SampleLookup.HostPlatform])
             .Select(name => Path.Combine("Basic", name)).Order(StringComparer.Ordinal);
@@ -93,7 +95,7 @@ public class SampleDiscoveryTests
     [Fact]
     public void GalleryCasesSelectTheHostSolution()
     {
-        var row = Assert.Single(GallerySampleTests.Cases());
+        var row = Assert.Single(SampleBuildTests.Cases(), row => (string)row[0] == "Gallery");
         Assert.Equal(3, row.Length);
         Assert.Equal("Gallery", Assert.IsType<string>(row[0]));
         Assert.Equal($"SkiaSharpSample.{SampleLookup.HostPlatform}.slnx", Assert.IsType<string>(row[1]));

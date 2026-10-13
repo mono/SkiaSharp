@@ -4,10 +4,10 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
 
-public class BrowserSampleTests : BasicSampleTestBase
+public class BrowserSampleTests : SampleTestBase
 {
     private Task RunBrowserSample(string name, IEnumerable<string> arguments, Func<BrowserRunningApp, Task> test) =>
-        RunSample(name, arguments, (app, _) => BrowserRunningApp.Run(app, test));
+        RunSample(Path.Combine("Basic", name), arguments, (app, _) => BrowserRunningApp.Run(app, test));
 
     [Fact]
     [RunGroup(SampleRunGroup.Host)]
