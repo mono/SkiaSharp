@@ -15,6 +15,9 @@ dotnet build samples/Gallery/Maui/AppKit/SkiaSharpSample.MacOS.csproj \
   -f net10.0-macos -p:IsNetMacOSSupported=true
 ```
 
+Build from the source checkout; generated-sample package tests do not include
+the experimental AppKit handler package.
+
 Run the resulting `.app/Contents/MacOS/SkiaSharpSample.MacOS` executable.
 Never use `externals-download` after a native or milestone update. The shared
 Gallery's filter and sort popovers, system/light/dark theme choices, sample
