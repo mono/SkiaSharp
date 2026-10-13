@@ -4,6 +4,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
 
+[RunGroup(SampleRunGroup.Build)]
 public sealed class RootFrameworkGraphTests
 {
     [Fact]
@@ -64,11 +65,11 @@ public sealed class RootFrameworkGraphTests
             }
 
             Task<(int ExitCode, string Output, string Error)> Evaluate(string selectedRoot, string framework, string output) =>
-                DotNet.Run(workspace,
+                DotNet.Execute(workspace,
                     ["msbuild", project, "-t:GenerateRestoreGraphFile", "-nologo", "-v:quiet",
                         $"-p:SampleRootProject={selectedRoot}", $"-p:SampleRootFramework={framework}",
                         $"-p:RestoreGraphOutputPath={output}", $"-p:RestoreConfigFile={config}"],
-                    TimeSpan.FromMinutes(2));
+                    new DotNetCommandOptions { Timeout = TimeSpan.FromMinutes(2) });
         }
         finally
         {

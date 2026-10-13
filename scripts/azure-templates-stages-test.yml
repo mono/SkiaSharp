@@ -412,6 +412,7 @@ stages:
           parameters:
             name: samples_appium_android24
             platform: Android
+            runGroup: Android
             androidApi: '24'
             buildAgent: ${{ parameters.buildAgentAndroidTests }}
             workloads: [android, maui-android]
@@ -419,6 +420,7 @@ stages:
           parameters:
             name: samples_appium_android37
             platform: Android
+            runGroup: Android
             androidApi: '37'
             buildAgent: ${{ parameters.buildAgentAndroidTests }}
             workloads: [android, maui-android]
@@ -426,23 +428,27 @@ stages:
           parameters:
             name: samples_appium_ios
             platform: iOS
+            runGroup: Ios
             buildAgent: ${{ parameters.buildAgentMac }}
             workloads: [ios, maui-ios]
         - template: /scripts/azure-templates-jobs-sample-appium.yml@self
           parameters:
             name: samples_appium_maccatalyst
             platform: MacCatalyst
+            runGroup: Mac
             buildAgent: ${{ parameters.buildAgentMac }}
             workloads: [maccatalyst, maui-maccatalyst]
         - template: /scripts/azure-templates-jobs-sample-appium.yml@self
           parameters:
             name: samples_appium_macos
             platform: macOS
+            runGroup: Mac
             buildAgent: ${{ parameters.buildAgentMac }}
             workloads: [macos]
         - template: /scripts/azure-templates-jobs-sample-appium.yml@self
           parameters:
             name: samples_appium_windows
             platform: Windows
+            runGroup: Windows
             buildAgent: ${{ parameters.buildAgentWindows }}
             workloads: [maui-windows]

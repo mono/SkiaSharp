@@ -4,6 +4,7 @@ parameters:
   buildAgent: {}
   workloads: []
   androidApi: ''
+  runGroup: ''
 
 jobs:
   - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
@@ -13,9 +14,9 @@ jobs:
       buildAgent: ${{ parameters.buildAgent }}
       target: samples
       ${{ if eq(parameters.platform, 'Android') }}:
-        additionalArgs: --sampleTestTrait=AndroidApi=${{ parameters.androidApi }} --skipExternals="all"
+        additionalArgs: --runGroup=${{ parameters.runGroup }} --sampleRunId=${{ parameters.name }} --sampleTestTrait=AndroidApi=${{ parameters.androidApi }} --skipExternals="all"
       ${{ else }}:
-        additionalArgs: --sampleTestTrait=Platform=${{ parameters.platform }} --skipExternals="all"
+        additionalArgs: --runGroup=${{ parameters.runGroup }} --sampleRunId=${{ parameters.name }} --sampleTestTrait=Platform=${{ parameters.platform }} --skipExternals="all"
       retryCount: 0
       shouldPublish: false
       installXcode: ${{ ne(parameters.platform, 'Android') }}
@@ -28,6 +29,10 @@ jobs:
         - name: native
         - name: nuget
           dir: nugets
+      publishArtifacts:
+        - name: ${{ parameters.name }}_logs
+          always: true
+          path: output/logs
       preBuildSteps:
         - ${{ if eq(parameters.platform, 'Android') }}:
           - bash: |
@@ -46,10 +51,5 @@ jobs:
           condition: always()
           inputs:
             testResultsFormat: VSTest
-            testResultsFiles: output/logs/testlogs/samples/**/*.trx
+            testResultsFiles: output/logs/testlogs/samples/${{ parameters.name }}/**/*.trx
             testRunTitle: Appium samples (${{ parameters.platform }})
-        - task: PublishPipelineArtifact@1
-          condition: always()
-          inputs:
-            targetPath: output/logs
-            artifact: ${{ parameters.name }}_logs

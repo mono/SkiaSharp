@@ -47,7 +47,8 @@ Cake streams active-test progress and test output to the console while retaining
 TRX results and diagnostic artifacts.
 
 To run one group, add `--runGroup=Build`, `--runGroup=Host`, or
-`--runGroup=Docker`. Omit `--runGroup` to run the full suite.
+`--runGroup=Docker`. Appium groups are `Android`, `Ios`, `Mac` and `Windows`.
+Omit `--runGroup` to run the full suite.
 Group names are case-sensitive.
 
 ## IDE and direct test runs
@@ -81,6 +82,10 @@ versions and Uno's SkiaSharp override. Integration/MSBuild suites remain separat
 | Build | Generated sample compilation and infrastructure checks | Windows, macOS, Linux |
 | Host | Console and Web sample execution | Windows, macOS, Linux |
 | Docker | Container image builds and sample execution | Windows, Linux |
+| Android | MAUI and native Android app execution | Android agent |
+| Ios | MAUI and native iOS simulator execution | macOS |
+| Mac | MAUI/native MacCatalyst and native AppKit execution | macOS |
+| Windows | MAUI and native WinUI app execution | Windows |
 
 When adding tests, choose a `RunGroup` by execution target, not sample family.
 Each test requires exactly one typed attribute, such as
@@ -162,10 +167,16 @@ Select only platforms supported by your host. Missing prerequisites fail
 selected cases.
 
 Local `samples` and IDE discovery remain unfiltered. CI runs Appium platform
-legs after acquiring native and NuGet artifacts; host legs exclude
-`Category=Device`. Agents must already have compatible Appium drivers, tools
+legs after acquiring native and NuGet artifacts; existing `Build`, `Host` and
+`Docker` jobs retain their execution groups. Agents must already have compatible Appium drivers, tools
 and images/runtimes; CI preparation only checks prerequisites. Cake forwards
-`sampleTestTrait` / `sampleExcludeTrait` to xUnit without interpreting devices.
+`sampleTestTrait` to xUnit without interpreting devices. When combined with
+`runGroup`, it uses a query intersection, for example:
+
+```sh
+dotnet cake --target=samples --runGroup=Android --sampleTestTrait=AndroidApi=24 \
+  --previewLabel=pr.1234 --buildNumber=26509.10
+```
 
 Static references use the comparison policy above and live under
 `Expected/Appium/<family>/<platform>/<exact-profile>/`. Review captures before

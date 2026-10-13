@@ -27,7 +27,7 @@ public static class DotNet
 
     public static async Task<string> GetVersion(SampleWorkspace workspace)
     {
-        var result = await Run(workspace, ["--version"]);
+        var result = await Execute(workspace, ["--version"]);
         if (result.ExitCode != 0)
             throw new InvalidOperationException($"The dotnet host on PATH could not select an SDK: {result.Output}\n{result.Error}");
         var selected = result.Output.Trim();
@@ -47,24 +47,6 @@ public static class DotNet
         return BuildImplementation(workspace, project, diagnostics, options.Configuration, options.Framework, options.Properties);
     }
 
-    public static Task Build(SampleWorkspace workspace, string project, string diagnostics, string configuration = "Release") =>
-        BuildImplementation(workspace, project, diagnostics, configuration, null);
-
-    public static Task Build(SampleWorkspace workspace, string project, string diagnostics, string configuration, string framework)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(framework);
-        return BuildImplementation(workspace, project, diagnostics, configuration, framework);
-    }
-
-    public static Task Build(
-        SampleWorkspace workspace, string project, string diagnostics, string configuration, string framework,
-        IReadOnlyDictionary<string, string> properties)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(framework);
-        ArgumentNullException.ThrowIfNull(properties);
-        return BuildImplementation(workspace, project, diagnostics, configuration, framework, properties);
-    }
-
     private static async Task BuildImplementation(
         SampleWorkspace workspace, string project, string diagnostics, string configuration, string? framework,
         IReadOnlyDictionary<string, string>? properties = null)
@@ -81,7 +63,11 @@ public static class DotNet
         try
         {
             var arguments = BuildArguments(workspace, project, diagnostics, configuration, framework, properties);
-            var result = await Run(workspace, arguments, TimeSpan.FromMinutes(30), Path.GetDirectoryName(project));
+            var result = await Execute(workspace, arguments, new DotNetCommandOptions
+            {
+                Timeout = TimeSpan.FromMinutes(30),
+                WorkingDirectory = Path.GetDirectoryName(project)
+            });
             await File.WriteAllTextAsync(stdoutLog, result.Output);
             await File.WriteAllTextAsync(stderrLog, result.Error);
             if (result.ExitCode != 0)
@@ -137,18 +123,6 @@ public static class DotNet
         return arguments.ToArray();
     }
 
-    internal static Task<(int ExitCode, string Output, string Error)> Run(
-        SampleWorkspace workspace,
-        IEnumerable<string> arguments,
-        TimeSpan? timeout = null,
-        string? workingDir = null) =>
-        ProcessRunner.Run(
-            "dotnet",
-            arguments,
-            workingDir ?? workspace.Root,
-            timeout ?? TimeSpan.FromMinutes(1),
-            start => ConfigureProcess(start, workspace));
-
     internal static Task<(int ExitCode, string Output, string Error)> Execute(
         SampleWorkspace workspace, IEnumerable<string> arguments, DotNetCommandOptions? options = null)
     {
@@ -195,26 +169,6 @@ public static class DotNet
             ArgumentException.ThrowIfNullOrWhiteSpace(options.Framework);
         ArgumentNullException.ThrowIfNull(options.Arguments);
         return RunImplementation(workspace, project, options.Configuration, options.Framework, options.Arguments, test);
-    }
-
-    internal static Task Run(
-        SampleWorkspace workspace,
-        string project,
-        string configuration,
-        IEnumerable<string> arguments,
-        Func<DotNetRunningApp, Task> test) =>
-        RunImplementation(workspace, project, configuration, null, arguments, test);
-
-    internal static Task Run(
-        SampleWorkspace workspace,
-        string project,
-        string configuration,
-        string framework,
-        IEnumerable<string> arguments,
-        Func<DotNetRunningApp, Task> test)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(framework);
-        return RunImplementation(workspace, project, configuration, framework, arguments, test);
     }
 
     private static async Task RunImplementation(

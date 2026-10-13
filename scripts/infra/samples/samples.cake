@@ -39,10 +39,23 @@ Task ("samples")
     .Does (() =>
 {
     var results = ROOT_PATH.Combine($"output/logs/testlogs/samples/{(string.IsNullOrEmpty(RUN_ID) ? DATE_TIME_STR : RUN_ID + "/" + DATE_TIME_STR)}");
+    var includeTrait = Argument("sampleTestTrait", "");
+    var selection = string.IsNullOrEmpty(RUN_GROUP)
+        ? new string[0]
+        : new[] { "--filter-trait", $"RunGroup={RUN_GROUP}" };
+    if (!string.IsNullOrEmpty(includeTrait)) {
+        var traitParts = includeTrait.Split('=');
+        if (traitParts.Length != 2 || traitParts.Any(string.IsNullOrWhiteSpace) ||
+            includeTrait.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '=' && c != '_' && c != '-' && c != '.'))
+            throw new ArgumentException("sampleTestTrait must be a single literal name=value xUnit trait.");
+        selection = string.IsNullOrEmpty(RUN_GROUP)
+            ? new[] { "--filter-trait", includeTrait }
+            : new[] { "--filter-query", $"/[(RunGroup={RUN_GROUP})&({includeTrait})]" };
+    }
     // Consumer commands own their timeouts; MTP's activity monitor misdetects these process trees.
     RunDotNetTest(ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj"),
         results, noBuild: SKIP_BUILD, hangTimeout: null,
-        runnerArguments: string.IsNullOrEmpty(RUN_GROUP) ? null : new[] { "--filter-trait", $"RunGroup={RUN_GROUP}" });
+        runnerArguments: selection);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -13,6 +13,7 @@ namespace SkiaSharp.Tests.Samples;
 public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
 {
     [Theory]
+    [RunGroup(SampleRunGroup.Android)]
     [Trait("Platform", "Android")]
     [MemberData(nameof(BasicAndroidCases))]
     public async Task BasicAndroidRendersAndDraws(string folder, string applicationId, bool maui, int api)
@@ -55,6 +56,7 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
     }
 
     [Theory]
+    [RunGroup(SampleRunGroup.Ios)]
     [Trait("Platform", "iOS")]
     [InlineData("Basic/Maui", "com.companyname.SkiaSharpSample", true, "18.6")]
     [InlineData("Basic/Maui", "com.companyname.SkiaSharpSample", true, "26.2")]
@@ -83,6 +85,7 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
     }
 
     [Theory]
+    [RunGroup(SampleRunGroup.Mac)]
     [Trait("Platform", "MacCatalyst")]
     [InlineData("Basic/Maui", "com.companyname.SkiaSharpSample", true)]
     [InlineData("Basic/MacCatalyst", "com.companyname.SkiaSharpSample", false)]
@@ -108,6 +111,7 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
     }
 
     [Fact]
+    [RunGroup(SampleRunGroup.Mac)]
     [Trait("Platform", "macOS")]
     public async Task BasicMacOsRendersAndDraws()
     {
@@ -125,6 +129,7 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
     }
 
     [Theory]
+    [RunGroup(SampleRunGroup.Windows)]
     [Trait("Platform", "Windows")]
     [InlineData("Basic/Maui", true)]
     [InlineData("Basic/WinUI", false)]
@@ -152,6 +157,7 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
     }
 
     [Theory]
+    [RunGroup(SampleRunGroup.Android)]
     [Trait("Platform", "Android")]
     [MemberData(nameof(AndroidApiCases))]
     public async Task GalleryAndroidFiltersAndAdjustsGradient(int api)
@@ -171,6 +177,7 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
     }
 
     [Theory]
+    [RunGroup(SampleRunGroup.Ios)]
     [Trait("Platform", "iOS")]
     [InlineData("18.6")]
     [InlineData("26.2")]
@@ -183,6 +190,7 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
     }
 
     [Fact]
+    [RunGroup(SampleRunGroup.Mac)]
     [Trait("Platform", "MacCatalyst")]
     public async Task GalleryMacCatalystFiltersAndAdjustsGradient()
     {
@@ -192,6 +200,7 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
     }
 
     [Fact]
+    [RunGroup(SampleRunGroup.Windows)]
     [Trait("Platform", "Windows")]
     public async Task GalleryWindowsFiltersAndAdjustsGradient()
     {

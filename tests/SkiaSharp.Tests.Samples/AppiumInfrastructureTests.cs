@@ -6,6 +6,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
 
+[RunGroup(SampleRunGroup.Build)]
 public sealed class AppiumInfrastructureTests
 {
     [Fact]

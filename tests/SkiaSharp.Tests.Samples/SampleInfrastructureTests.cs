@@ -378,10 +378,8 @@ public class SampleInfrastructureTests : IDisposable
         internal string Prepare() => PrepareSample(Path.Combine("Basic", "Console")).Root;
         internal string Diagnostics => PrepareSample(Path.Combine("Basic", "Console")).DiagnosticsRoot;
         internal SampleWorkspace Workspace => PrepareSample(Path.Combine("Basic", "Console"));
-        internal Task Build() => BuildSample(Path.Combine("Basic", "Console"), "App.csproj", "Release");
-        internal Task Build(string framework) => BuildSample(Path.Combine("Basic", "Console"), "App.csproj", "Release", framework);
-        internal Task Build(string framework, IReadOnlyDictionary<string, string> properties) =>
-            BuildSample(Path.Combine("Basic", "Console"), "App.csproj", "Release", framework, properties);
+        internal Task Build(DotNetBuildOptions options) =>
+            BuildSample(Path.Combine("Basic", "Console"), "App.csproj", options);
     }
 
     [Fact]
@@ -393,7 +391,7 @@ public class SampleInfrastructureTests : IDisposable
             </Project>
             """);
         using var test = new LifetimeTest(Path.Combine(root, "inputs"));
-        await test.Build();
+        await test.Build(new DotNetBuildOptions());
         var working = test.Prepare();
         var diagnostics = Path.Combine(test.Diagnostics, "builds", "Basic", "Console", "App", "Release");
         test.Dispose();
@@ -458,7 +456,7 @@ public class SampleInfrastructureTests : IDisposable
             """);
         using var test = new LifetimeTest(Path.Combine(root, "inputs"));
         var properties = new Dictionary<string, string> { ["ContractSentinel"] = "forwarded-by-buildsample" };
-        await test.Build("net10.0-windows", properties);
+        await test.Build(new DotNetBuildOptions { Framework = "net10.0-windows", Properties = properties });
         var working = test.Prepare();
         var diagnostics = Path.Combine(test.Diagnostics, "builds", "Basic", "Console", "App", "Release", "net10.0-windows");
         var output = File.ReadAllText(Path.Combine(diagnostics, "build.stdout.log"));
@@ -473,14 +471,14 @@ public class SampleInfrastructureTests : IDisposable
         var workspace = test.Workspace;
         var project = Path.Combine(working, "samples", "Basic", "Console", "App.csproj");
         var called = false;
-        await DotNet.Run(workspace, project, "Release", "net10.0-windows", ["argument with spaces", "--sentinel"], async app =>
+        await DotNet.Run(workspace, project, async app =>
         {
             called = true;
             var result = await app.WaitForExit();
             Assert.Equal(0, result.ExitCode);
             Assert.Contains(".NETCoreApp,Version=v10.0", result.Output);
             Assert.Contains("argument with spaces|--sentinel", result.Output);
-        });
+        }, new DotNetRunOptions { Framework = "net10.0-windows", Arguments = ["argument with spaces", "--sentinel"] });
         Assert.True(called);
         Assert.Contains("argument with spaces|--sentinel",
             File.ReadAllText(Path.Combine(workspace.DiagnosticsRoot, "run", "run.stdout.log")));
@@ -502,15 +500,15 @@ public class SampleInfrastructureTests : IDisposable
             "App", Path.Combine(root, "inputs"), Repo.PackagesDir,
             Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
         var project = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
-        await DotNet.Build(workspace, project, Path.Combine(workspace.DiagnosticsRoot, "build"));
+        await DotNet.Build(workspace, project, Path.Combine(workspace.DiagnosticsRoot, "build"), new DotNetBuildOptions());
         var called = false;
-        await DotNet.Run(workspace, project, "Release", ["old argument", "--sentinel"], async app =>
+        await DotNet.Run(workspace, project, async app =>
         {
             called = true;
             var result = await app.WaitForExit();
             Assert.Equal(0, result.ExitCode);
             Assert.Contains("old argument|--sentinel", result.Output);
-        });
+        }, new DotNetRunOptions { Arguments = ["old argument", "--sentinel"] });
         Assert.True(called);
     }
 
@@ -587,7 +585,7 @@ public class SampleInfrastructureTests : IDisposable
             Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
         var diagnostics = Path.Combine(root, "provided-build-logs");
         var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            DotNet.Build(workspace, Path.Combine(workspace.Root, "samples", "App", "App.csproj"), diagnostics));
+            DotNet.Build(workspace, Path.Combine(workspace.Root, "samples", "App", "App.csproj"), diagnostics, new DotNetBuildOptions()));
         Assert.Contains(diagnostics, error.Message);
         Assert.Contains("Expected sample build failure", File.ReadAllText(Path.Combine(diagnostics, "build.stdout.log")));
         Assert.DoesNotContain("Expected sample build failure", File.ReadAllText(Path.Combine(diagnostics, "build.stderr.log")));
