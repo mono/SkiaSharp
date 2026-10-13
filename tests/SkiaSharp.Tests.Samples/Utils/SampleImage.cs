@@ -25,40 +25,26 @@ internal sealed record SampleImageOptions
     internal double? MaxAverageColorErrorFraction { get; init; }
 }
 
-// Checks that sample output is a decodable image with the expected dimensions.
+// Checks sample output against a reviewed reference and retains comparison diagnostics.
 internal static class SampleImage
 {
-    public static void Validate(ReadOnlySpan<byte> png, int width = 800, int height = 600)
-    {
-        Assert.True(png.StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }), "Expected a PNG file.");
-
-        using var bitmap = SKBitmap.Decode(png);
-        Assert.NotNull(bitmap);
-        Assert.Equal(width, bitmap.Width);
-        Assert.Equal(height, bitmap.Height);
-    }
-
-    internal static void ValidateFile(string actual, string golden, SampleImageOptions? options = null)
-    {
-        if (options?.ExpectedSize is { } size)
-            Validate(File.ReadAllBytes(actual), size.Width, size.Height);
-        TestContext.Current.AddFileAttachment(actual, "image/png");
-
-        CompareGolden(actual, Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", golden),
-            options);
-    }
-
-    internal static async Task SaveAndValidate(byte[] png, string actual, string golden, SampleImageOptions? options = null)
+    /// <summary>Saves the actual image bytes, then validates the saved image against the expected reference.</summary>
+    internal static async Task Validate(byte[] bytes, string actual, string expected, SampleImageOptions? options = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(actual)!);
 
-        await File.WriteAllBytesAsync(actual, png);
+        await File.WriteAllBytesAsync(actual, bytes);
 
-        ValidateFile(actual, golden, options);
+        Validate(actual, expected, options);
     }
 
-    internal static void CompareGolden(string actual, string expected, SampleImageOptions? options = null)
+    /// <summary>Validates image dimensions and pixels against an absolute or golden-directory-relative reference path.</summary>
+    internal static void Validate(string actual, string expected, SampleImageOptions? options = null)
     {
+        expected = Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", expected);
+
+        AttachImage(actual);
+
         options ??= new();
         var maxErrorPixelFraction = options.MaxErrorPixelFraction;
         var maxAverageColorErrorFraction = options.MaxAverageColorErrorFraction;
@@ -100,10 +86,19 @@ internal static class SampleImage
         var diffPath = Path.ChangeExtension(actual, ".diff.png");
         File.WriteAllBytes(diffPath, data.ToArray());
 
-        TestContext.Current.AddFileAttachment(expected, "image/png", $"expected-{Path.GetFileName(expected)}");
-        TestContext.Current.AddFileAttachment(diffPath, "image/png");
+        AttachImage(expected, $"expected-{Path.GetFileName(expected)}");
+        AttachImage(diffPath);
 
         Assert.Fail($"Sample pixels differ from {expected}: {result.ErrorPixelCount}/{result.TotalPixels} pixels; " +
             $"{comparison}; actual {actual}; diff {diffPath}.");
+    }
+
+    private static void AttachImage(string file, string? name = null)
+    {
+        name ??= Path.GetFileName(file);
+        var attachmentName = name;
+        for (var suffix = 2; TestContext.Current.Attachments?.ContainsKey(attachmentName) == true; suffix++)
+            attachmentName = $"{name}-{suffix}";
+        TestContext.Current.AddFileAttachment(file, "image/png", attachmentName);
     }
 }

@@ -46,7 +46,7 @@ public class BasicSampleTests : SampleTestBase
 
             var image = Path.Combine(app.Diagnostics, "output.png");
             File.Copy(Path.Combine(Path.GetDirectoryName(project)!, "output.png"), image);
-            SampleImage.ValidateFile(image, $"Host/{SampleLookup.HostPlatform}/console.png",
+            SampleImage.Validate(image, $"Host/{SampleLookup.HostPlatform}/console.png",
                 new() { ExpectedSize = new(800, 600) });
         });
 
@@ -64,9 +64,10 @@ public class BasicSampleTests : SampleTestBase
             using var response = await app.GetResponse("/api/images");
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
+            var png = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
+            Assert.True(png.AsSpan().StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }), "Expected a PNG response.");
 
-            await SampleImage.SaveAndValidate(
-                await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken),
+            await SampleImage.Validate(png,
                 Path.Combine(app.Diagnostics, "output.png"),
                 $"Host/{SampleLookup.HostPlatform}/web.png", new() { ExpectedSize = new(512, 512) });
         });
@@ -81,7 +82,7 @@ public class BasicSampleTests : SampleTestBase
             await app.Navigate("/");
             await app.WaitForElement(".card img");
             var screenshot = await app.Screenshot();
-            SampleImage.ValidateFile(screenshot, $"Host/{SampleLookup.HostPlatform}/web-page.png");
+            SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/web-page.png");
         });
 
     [Fact]
@@ -94,7 +95,7 @@ public class BasicSampleTests : SampleTestBase
             await app.Navigate("/");
             await app.WaitForElement("#output");
             var screenshot = await app.Screenshot();
-            SampleImage.ValidateFile(screenshot, $"Host/{SampleLookup.HostPlatform}/browser-wasm-page.png");
+            SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/browser-wasm-page.png");
         });
 
     [Fact]
@@ -107,7 +108,7 @@ public class BasicSampleTests : SampleTestBase
             await app.Navigate("/");
             await app.WaitForElement(".canvas-container canvas");
             var screenshot = await app.Screenshot();
-            SampleImage.ValidateFile(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png");
+            SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png");
         });
 
     [Fact]
@@ -120,7 +121,7 @@ public class BasicSampleTests : SampleTestBase
             await app.Navigate("/gpu");
             await app.WaitForElement(".canvas-container canvas");
             var screenshot = await app.Screenshot();
-            SampleImage.ValidateFile(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-gpu-page.png",
+            SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-gpu-page.png",
                 new() { MaxAverageColorErrorFraction = 0.06 });
         });
 
@@ -187,8 +188,8 @@ public class BasicSampleTests : SampleTestBase
             Assert.Equal(0, CountPixels(cleared, region, c =>
                 c == new SKColor(229, 57, 53) || c == new SKColor(30, 136, 229)));
 
-            SampleImage.ValidateFile(drawn, $"Host/{SampleLookup.HostPlatform}/blazor-drawing-page.png");
-            SampleImage.ValidateFile(cleared, $"Host/{SampleLookup.HostPlatform}/blazor-drawing-cleared-page.png");
+            SampleImage.Validate(drawn, $"Host/{SampleLookup.HostPlatform}/blazor-drawing-page.png");
+            SampleImage.Validate(cleared, $"Host/{SampleLookup.HostPlatform}/blazor-drawing-cleared-page.png");
         });
 
     private async Task RunUnoBrowserSample(Func<BrowserRunningApp, Task> test)
@@ -212,7 +213,7 @@ public class BasicSampleTests : SampleTestBase
             await app.Navigate("/");
             await app.WaitForElement("#uno-canvas");
             var screenshot = await WaitForUnoCpu(app);
-            SampleImage.ValidateFile(screenshot, $"Host/{SampleLookup.HostPlatform}/uno-cpu-page.png");
+            SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/uno-cpu-page.png");
         });
 
     [Fact]
@@ -259,10 +260,10 @@ public class BasicSampleTests : SampleTestBase
             await app.Page.Mouse.ClickAsync(50, 24);
             await app.Page.Mouse.MoveAsync(0, 0);
             var returned = await WaitForUnoCpu(app);
-            SampleImage.CompareGolden(returned, cpu);
-            SampleImage.ValidateFile(drawn, $"Host/{SampleLookup.HostPlatform}/uno-drawing-page.png");
-            SampleImage.ValidateFile(cleared, $"Host/{SampleLookup.HostPlatform}/uno-drawing-cleared-page.png");
-            SampleImage.ValidateFile(returned, $"Host/{SampleLookup.HostPlatform}/uno-cpu-page.png");
+            SampleImage.Validate(returned, cpu);
+            SampleImage.Validate(drawn, $"Host/{SampleLookup.HostPlatform}/uno-drawing-page.png");
+            SampleImage.Validate(cleared, $"Host/{SampleLookup.HostPlatform}/uno-drawing-cleared-page.png");
+            SampleImage.Validate(returned, $"Host/{SampleLookup.HostPlatform}/uno-cpu-page.png");
         });
 
     private static async Task<string> WaitForUnoCpu(BrowserRunningApp app)

@@ -45,7 +45,7 @@ public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<Docke
             var output = OperatingSystem.IsWindows() ? @"C:\app\output.png" : "/app/output.png";
             await app.DownloadFile(output, image);
 
-            SampleImage.ValidateFile(image, $"Docker/{ContainerPlatform}/console.png",
+            SampleImage.Validate(image, $"Docker/{ContainerPlatform}/console.png",
                 new() { ExpectedSize = new(800, 600) });
         });
 
@@ -62,9 +62,10 @@ public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<Docke
             using var response = await app.GetResponse("/api/images");
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
+            var png = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
+            Assert.True(png.AsSpan().StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }), "Expected a PNG response.");
 
-            await SampleImage.SaveAndValidate(
-                await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken),
+            await SampleImage.Validate(png,
                 Path.Combine(app.Diagnostics, "output.png"),
                 $"Docker/{ContainerPlatform}/web.png", new() { ExpectedSize = new(800, 600) });
         });

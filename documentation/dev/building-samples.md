@@ -105,8 +105,10 @@ zero channel tolerance. Animated GPU pages use a loose **6% mean RGBA error**
 smoke check that can miss uniform dark output. Mismatches retain actual/diff
 images; references are never accepted automatically.
 
-Image helpers take `actual`, `expected` (or a relative golden path), and an
-optional `SampleImageOptions` record. Set `ExpectedSize = new(800, 600)` for
+`SampleImage.Validate` takes `actual`, `expected` (or a relative golden path),
+and an optional `SampleImageOptions` record. Its byte-array overload also takes
+the actual output path, saves the bytes, then calls the file overload.
+Set `ExpectedSize = new(800, 600)` for
 fixed-size PNGs; only animated GPU checks set `MaxAverageColorErrorFraction`.
 The options own the default `MaxErrorPixelFraction` of `0.00075m`.
 Omitting options retains the strict pixel comparison and golden dimensions.
