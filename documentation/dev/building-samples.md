@@ -144,6 +144,9 @@ Windows. Tests do not install tools, workloads or device images.
 Set `ANDROID_HOME` or `ANDROID_SDK_ROOT` for Android. On macOS, set
 `DEVELOPER_DIR` to the Xcode required by your installed workload; tests do not
 change the global Xcode selection.
+Android also requires the installed `cmdline-tools/latest/bin/avdmanager`.
+Debug APKs embed their managed assemblies because Appium installs them without
+the separate `dotnet` fast-deployment step.
 
 Local runs select Android **17**, using model `pixel_9`. iOS defaults to **iPhone 16 Pro**
 on **26.2**. Install `system-images;android-37.1;google_apis_ps16k;<host-ABI>`

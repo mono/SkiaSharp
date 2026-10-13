@@ -69,7 +69,12 @@ public sealed class AndroidSampleTests(AppiumFixture appium) : AppiumSampleTestB
 		{
 			Configuration = "Debug",
 			Framework = framework,
-			Properties = new Dictionary<string, string> { ["AndroidPackageFormats"] = "apk" }
+			Properties = new Dictionary<string, string>
+			{
+				["AndroidPackageFormats"] = "apk",
+				// Appium installs the APK without dotnet's separate fast-deployment step.
+				["EmbedAssembliesIntoApk"] = "true"
+			}
 		});
 
 		var artifact = Assert.Single(Directory.EnumerateFiles(

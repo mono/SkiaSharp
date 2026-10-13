@@ -34,7 +34,24 @@ internal sealed class Android
 			throw new DirectoryNotFoundException(
 				$"Required emulator image is not installed: {imageDirectory}. Tests never download images.");
 
-		return ExecuteSdk(["avd", "create", "--name", name, "--sdk", image, "--device", model]);
+		// The installed SDK manager understands minor API targets; the tool wrapper writes android-0.
+		var manager = Path.Combine(
+			SdkDirectory, "cmdline-tools", "latest", "bin",
+			OperatingSystem.IsWindows() ? "avdmanager.bat" : "avdmanager");
+		return RunAvdManager(
+			manager, ["create", "avd", "--name", name, "--package", image, "--device", model]);
+	}
+
+	private static async Task<ToolCommandResult> RunAvdManager(string manager, string[] arguments)
+	{
+		var executable = OperatingSystem.IsWindows() ? "cmd.exe" : manager;
+		string[] command = OperatingSystem.IsWindows() ? ["/d", "/c", manager, .. arguments] : arguments;
+		var result = await ProcessRunner.Run(
+			executable, command, Repo.RootDir, TimeSpan.FromSeconds(30));
+
+		return new(
+			$"{manager} {string.Join(" ", arguments)}",
+			result.ExitCode, result.Output, result.Error);
 	}
 
 	internal Task<ToolCommandResult> DeleteAvd(string name)
