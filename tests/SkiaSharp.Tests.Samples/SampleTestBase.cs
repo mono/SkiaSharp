@@ -1,4 +1,6 @@
-namespace SkiaSharp.Tests.Samples.Utils;
+using SkiaSharp.Tests.Samples.Utils;
+
+namespace SkiaSharp.Tests.Samples;
 
 // Prepares and builds each sample in one owned workspace.
 public abstract class SampleTestBase : IDisposable

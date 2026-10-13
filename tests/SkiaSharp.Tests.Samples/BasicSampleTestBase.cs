@@ -1,4 +1,6 @@
-namespace SkiaSharp.Tests.Samples.Utils;
+using SkiaSharp.Tests.Samples.Utils;
+
+namespace SkiaSharp.Tests.Samples;
 
 public abstract class BasicSampleTestBase : SampleTestBase
 {
