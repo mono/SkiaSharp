@@ -164,6 +164,9 @@ referenced view libraries, which would duplicate Windows App SDK runtime files.
 The source-based host imports the same WinUI native-assets helper as the samples
 and copies its hidden native content into the unpackaged executable layout;
 ANGLE and the WinUI bridge must come from the producing native build.
+The Windows presenter creates its GL interface explicitly through ANGLE after
+making the EGL context current. It does not probe the unrelated desktop WGL
+loader while creating or recreating a view.
 The gate executes all eight cases in five independent host runs; every run must
 complete and pass. It retains opt-in host exception/exit diagnostics and recent
 events or existing reports for that test executable without changing system
