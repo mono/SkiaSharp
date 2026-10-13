@@ -34,9 +34,9 @@ public sealed class DockerSampleFixture : IAsyncLifetime
 
     public async Task RemoveContainer(string name)
     {
-        var listed = await Docker.Run(["ps", "--all", "--quiet", "--filter", $"name=^/{name}$"]);
+        var listed = await Docker.Ps(name);
         if (listed.Length > 0)
-            await Docker.Run(["container", "rm", "--force", name]);
+            await Docker.RemoveContainer(name);
 
         containers.Remove(name);
     }
@@ -51,7 +51,7 @@ public sealed class DockerSampleFixture : IAsyncLifetime
         {
             var portBinding = OperatingSystem.IsWindows() ? "8080" : "127.0.0.1::8080";
 
-            await Docker.Run(["run", "-d", "--name", name, "-p", portBinding, tag, .. arguments], TimeSpan.FromMinutes(2));
+            await Docker.Run(tag, name, portBinding, arguments);
 
             var app = new DockerRunningApp(name, diagnostics);
 
@@ -69,7 +69,7 @@ public sealed class DockerSampleFixture : IAsyncLifetime
         {
             try
             {
-                var result = await Docker.Execute(["info", "--format", "{{.OSType}}"], TimeSpan.FromSeconds(30));
+                var result = await Docker.Info();
                 if (result.ExitCode != 0)
                     unavailableReason = $"Docker is unavailable: docker info exited {result.ExitCode}.\n{result.Output}\n{result.Error}";
                 else
@@ -109,9 +109,9 @@ public sealed class DockerSampleFixture : IAsyncLifetime
         {
             try
             {
-                var listed = await Docker.Run(["image", "ls", "--quiet", "--filter", $"reference={tag}"]);
+                var listed = await Docker.Images(tag);
                 if (listed.Length > 0)
-                    await Docker.Run(["image", "rm", "--force", tag]);
+                    await Docker.RemoveImage(tag);
             }
             catch (Exception error)
             {
