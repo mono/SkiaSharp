@@ -205,7 +205,8 @@ Download the `nuget` artifact from one exact completed SkiaSharp CI build and
 place its packages in `output/nugets`. Record the build URL/commit when reporting
 results. Do not combine different builds or substitute published packages for
 missing artifacts. Both families require their core, `NativeAssets.Win32`,
-`NativeAssets.macOS`, and `NativeAssets.Linux` packages; package versions are read
+`NativeAssets.macOS`, `NativeAssets.Linux`, and `NativeAssets.WebAssembly` packages; NoDependencies cases also
+require `SkiaSharp.NativeAssets.Linux.NoDependencies`. Package versions are read
 from their nuspec metadata, not inferred from the checkout.
 
 For local runs, select the configured preview SDK in `global.json` before running
@@ -232,11 +233,12 @@ HarfBuzzSharp packages to the supplied artifacts, so missing packages cannot
 fall back to public versions. User NuGet caches and input packages are not modified.
 
 Single-target theory inputs explicitly cover `net10.0` and `net11.0`, independently
-of the selected SDK: eight default-package rows and 36 RID rows (44 total).
+of the selected SDK: eight default-package rows and 36 RID rows.
 For each family and framework, build and publish first verify the default package
-includes Win32/macOS native assets and **no Linux native assets**. With an explicit
-`NativeAssets.Linux` reference, the nine-case matrix below verifies that Linux
-assets are included and that RID selection behaves as expected.
+includes Win32, macOS, and Linux native assets. The core package also includes
+WebAssembly archives as link inputs; they are not copied to ordinary .NET
+outputs or affected by RID filtering. The nine-case matrix below verifies SDK
+RID selection without an output filter.
 
 For each family and framework, the suite tests `build`, `publish`, and
 `publish -r linux-x64` against three project configurations:
@@ -248,14 +250,21 @@ For each family and framework, the suite tests `build`, `publish`, and
 | `RuntimeIdentifiers=linux-x64;linux-arm64` | All native variants under `runtimes/` | Linux x64 native assets beside the app |
 
 Plural `RuntimeIdentifiers` are restore targets, **not an output allow-list**.
+Separate opt-in `SkiaSharpFilterRuntimeIdentifiers` and
+`HarfBuzzSharpFilterRuntimeIdentifiers` lists restrict only their corresponding
+RID-less native outputs during build and publish; blank preserves all assets.
+Singular `RuntimeIdentifier` (including `-r`) keeps SDK selection. The suite
+also checks NoDependencies provenance independently of output filtering.
+Legacy .NET Framework consumers verify default Linux output and NoDependencies
+preference without changing the legacy native package layout.
 The tests compare native paths and hashes with the actual input packages,
 rather than accepting only a successful MSBuild exit code.
-Linux assets are explicitly referenced; this suite does not change package
-dependencies or filtering behavior. No fake packages or mock CLI are used.
+Linux assets are restored transitively by the core packages. No fake packages
+or mock CLI are used.
 
 Four additional theory cases cover each family with `build` and `publish` of a
-real console project declaring `TargetFrameworks=net10.0;net11.0`, for **48 tests**
-in total. The outer build omits `--framework` and `-o`, validating both normal
+real console project declaring `TargetFrameworks=net10.0;net11.0`. The outer
+build omits `--framework` and `-o`, validating both normal
 per-framework output trees. Publish selects each framework separately with
 `--framework` and distinct output directories, then rechecks both trees to catch
 cross-framework overwrites. These cases validate eight framework outputs,
