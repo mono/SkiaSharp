@@ -17,5 +17,5 @@ public class GallerySampleTests : SampleTestBase
     [RunGroup(SampleRunGroup.Build)]
     [MemberData(nameof(Cases))]
     public Task GeneratedGalleryBuilds(string folder, string solution, string configuration) =>
-        BuildSample(folder, solution, configuration);
+        BuildSample(folder, solution, new() { Configuration = configuration });
 }

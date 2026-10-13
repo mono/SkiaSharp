@@ -544,10 +544,8 @@ public class SampleInfrastructureTests : IDisposable
         internal string Prepare() => PrepareSample(Path.Combine("Basic", "Console")).Root;
         internal string Diagnostics => PrepareSample(Path.Combine("Basic", "Console")).DiagnosticsRoot;
         internal SampleWorkspace Workspace => PrepareSample(Path.Combine("Basic", "Console"));
-        internal Task Build() => BuildSample(Path.Combine("Basic", "Console"), "App.csproj", "Release");
-        internal Task Build(string framework) => BuildSample(Path.Combine("Basic", "Console"), "App.csproj", "Release", framework);
-        internal Task Build(string framework, IReadOnlyDictionary<string, string> properties) =>
-            BuildSample(Path.Combine("Basic", "Console"), "App.csproj", "Release", framework, properties);
+        internal Task Build(DotNetOptions? options = null) =>
+            BuildSample(Path.Combine("Basic", "Console"), "App.csproj", options);
     }
 
     [Fact]
@@ -586,6 +584,7 @@ public class SampleInfrastructureTests : IDisposable
                        Text="BuildSample must forward the test-owned property dictionary." />
                 <Message Importance="high" Text="Selected $(TargetFramework) from $(TargetFrameworks)" />
                 <Message Importance="high" Text="Contract sentinel: $(ContractSentinel)" />
+                <Message Importance="high" Text="Build working directory: $(MSBuildStartupDirectory)" />
               </Target>
               <ItemGroup>
                 <ProjectReference Include="Library/Library.csproj" />
@@ -621,15 +620,26 @@ public class SampleInfrastructureTests : IDisposable
         FileIn("inputs/Basic/Console/Program.cs", """
             System.Console.WriteLine(System.AppContext.TargetFrameworkName);
             System.Console.WriteLine(string.Join("|", args));
+            System.Console.WriteLine("Run working directory: " + System.Environment.CurrentDirectory);
+            if (System.Array.IndexOf(args, "--wait") >= 0)
+                System.Threading.Thread.Sleep(60000);
             """);
         using var test = new LifetimeTest(Path.Combine(root, "inputs"));
         var properties = new Dictionary<string, string> { ["ContractSentinel"] = "forwarded-by-buildsample" };
-        await test.Build("net10.0-windows", properties);
+        var workingDirectory = Path.Combine(test.Workspace.Root, "custom working directory");
+        Directory.CreateDirectory(workingDirectory);
+        var options = new DotNetOptions
+        {
+            Framework = "net10.0-windows", Properties = properties,
+            Timeout = TimeSpan.FromMinutes(1), WorkingDirectory = Path.Combine(workingDirectory, ".")
+        };
+        await test.Build(options);
         var working = test.Prepare();
         var diagnostics = Path.Combine(test.Diagnostics, "builds", "Basic", "Console", "App", "Release", "net10.0-windows");
         var output = File.ReadAllText(Path.Combine(diagnostics, "build.stdout.log"));
         Assert.Contains("Selected net10.0-windows from net10.0;net10.0-windows", output);
         Assert.Contains("Contract sentinel: forwarded-by-buildsample", output);
+        Assert.Contains($"Build working directory: {workingDirectory}", output);
         Assert.Equal(new KeyValuePair<string, string>("ContractSentinel", "forwarded-by-buildsample"), Assert.Single(properties));
         Assert.True(new FileInfo(Path.Combine(diagnostics, "build.binlog")).Length > 0);
         Assert.False(Directory.Exists(Path.Combine(working, "samples", "Basic", "Console", "bin", "Release", "net10.0")));
@@ -639,17 +649,30 @@ public class SampleInfrastructureTests : IDisposable
         var workspace = test.Workspace;
         var project = Path.Combine(working, "samples", "Basic", "Console", "App.csproj");
         var called = false;
-        await DotNet.Run(workspace, project, "Release", "net10.0-windows", ["argument with spaces", "--sentinel"], async app =>
+        await DotNet.Run(workspace, project, ["argument with spaces", "--sentinel"], async app =>
         {
             called = true;
             var result = await app.WaitForExit();
             Assert.Equal(0, result.ExitCode);
             Assert.Contains(".NETCoreApp,Version=v10.0", result.Output);
             Assert.Contains("argument with spaces|--sentinel", result.Output);
-        });
+            Assert.Contains($"Run working directory: {workingDirectory}", result.Output);
+        }, options);
         Assert.True(called);
         Assert.Contains("argument with spaces|--sentinel",
             File.ReadAllText(Path.Combine(workspace.DiagnosticsRoot, "run", "run.stdout.log")));
+        foreach (var waitForAddress in new[] { false, true })
+        {
+            await Assert.ThrowsAsync<TimeoutException>(() =>
+                DotNet.Run(workspace, project, ["--wait"], async app =>
+                {
+                    if (waitForAddress)
+                        await app.GetAddress();
+                    else
+                        await app.WaitForExit();
+                }, options with { Timeout = TimeSpan.FromMilliseconds(100) }));
+            Assert.True(File.Exists(Path.Combine(workspace.DiagnosticsRoot, "run", "run.stderr.log")));
+        }
         test.Dispose();
         Assert.False(Directory.Exists(working));
         Assert.True(Directory.Exists(diagnostics));
@@ -670,7 +693,7 @@ public class SampleInfrastructureTests : IDisposable
         var project = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
         await DotNet.Build(workspace, project, Path.Combine(workspace.DiagnosticsRoot, "build"));
         var called = false;
-        await DotNet.Run(workspace, project, "Release", ["old argument", "--sentinel"], async app =>
+        await DotNet.Run(workspace, project, ["old argument", "--sentinel"], async app =>
         {
             called = true;
             var result = await app.WaitForExit();
@@ -690,8 +713,9 @@ public class SampleInfrastructureTests : IDisposable
         var project = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
         var diagnostics = Path.Combine(workspace.DiagnosticsRoot, "build");
         var properties = new Dictionary<string, string> { ["RuntimeIdentifier"] = "iossimulator-arm64" };
-        var defaults = DotNet.BuildArguments(workspace, project, diagnostics, "Release", null);
-        var arguments = DotNet.BuildArguments(workspace, project, diagnostics, "Release", "net10.0-ios", properties);
+        var options = new DotNetOptions { Framework = "net10.0-ios", Properties = properties };
+        var defaults = DotNet.BuildArguments(workspace, project, diagnostics);
+        var arguments = DotNet.BuildArguments(workspace, project, diagnostics, options);
         Assert.Equal(defaults, arguments.Take(defaults.Length));
         Assert.Equal(new[]
         {
@@ -702,13 +726,77 @@ public class SampleInfrastructureTests : IDisposable
         Assert.Single(arguments, argument => argument.StartsWith("-p:RestoreConfigFile=", StringComparison.Ordinal));
         Assert.DoesNotContain(arguments, argument => argument.StartsWith("-p:TargetFramework", StringComparison.Ordinal));
         Assert.Equal(new KeyValuePair<string, string>("RuntimeIdentifier", "iossimulator-arm64"), Assert.Single(properties));
-        Assert.Equal(arguments, DotNet.BuildArguments(workspace, project, diagnostics, "Release", "net10.0-ios", properties));
-        foreach (var name in new[] { "TargetFramework", "TargetFrameworks", "configuration", "RestoreConfigFile", "UseSharedCompilation" })
+        Assert.Equal(arguments, DotNet.BuildArguments(workspace, project, diagnostics, options));
+        var run = DotNet.RunArguments(project, ["argument with spaces", "--sentinel"], options);
+        Assert.Equal(new[]
+        {
+            "run", "--project", Path.GetFullPath(project), "-c", "Release", "--no-build", "--no-launch-profile",
+            "--framework", "net10.0-ios", "-p:RuntimeIdentifier=iossimulator-arm64", "--", "argument with spaces", "--sentinel"
+        }, run);
+        foreach (var name in new[] { "TargetFramework", "TargetFrameworks", "configuration", "RestoreConfigFile", "RestoreNoCache", "UseSharedCompilation", " " })
         {
             var conflicting = new Dictionary<string, string> { [name] = "override" };
             Assert.Throws<ArgumentException>(() =>
-                DotNet.BuildArguments(workspace, project, diagnostics, "Release", "net10.0-ios", conflicting));
+                DotNet.BuildArguments(workspace, project, diagnostics, options with { Properties = conflicting }));
+            Assert.Throws<ArgumentException>(() =>
+                DotNet.RunArguments(project, [], options with { Properties = conflicting }));
         }
+    }
+
+    [Fact]
+    public void DotNetOptionsDefaultsAndCopiesKeepArgumentsIndependent()
+    {
+        var defaults = new DotNetOptions();
+        Assert.Equal("Release", defaults.Configuration);
+        Assert.Null(defaults.Framework);
+        Assert.Empty(defaults.Properties);
+        Assert.Null(defaults.Timeout);
+        Assert.Null(defaults.WorkingDirectory);
+        Assert.Throws<NotSupportedException>(() =>
+            ((IDictionary<string, string>)defaults.Properties).Add("Sentinel", "value"));
+        var options = defaults with { Configuration = "Debug", Framework = "net10.0", WorkingDirectory = "." };
+        Assert.Equal("Release", defaults.Configuration);
+        Assert.Null(defaults.Framework);
+        Assert.Null(defaults.WorkingDirectory);
+        Assert.Equal(Path.GetFullPath("."), options.GetWorkingDirectory(root));
+        Assert.Equal(Path.GetFullPath(root), defaults.GetWorkingDirectory(root));
+        var project = Path.Combine(root, "project with spaces.csproj");
+        Assert.Equal(new[]
+        {
+            "run", "--project", project, "-c", "Release", "--no-build", "--no-launch-profile", "--", "argument with spaces"
+        }, DotNet.RunArguments(project, ["argument with spaces"]));
+        var run = DotNet.RunArguments(project, [], options);
+        Assert.Equal("Debug", run[4]);
+        Assert.Equal(new[] { "--framework", "net10.0", "--" }, run.Skip(7));
+    }
+
+    [Fact]
+    public async Task InvalidDotNetOptionsFailBeforeStartingProcesses()
+    {
+        FileIn("inputs/App/App.csproj");
+        using var workspace = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Repo.PackagesDir,
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+        var project = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
+        var diagnostics = Path.Combine(workspace.DiagnosticsRoot, "invalid-build");
+        var invalid = new DotNetOptions[]
+        {
+            new() { Configuration = "" }, new() { Configuration = " " }, new() { Configuration = null! },
+            new() { Framework = "" }, new() { Framework = " " },
+            new() { WorkingDirectory = "" }, new() { WorkingDirectory = " " },
+            new() { Properties = null! }, new() { Timeout = TimeSpan.Zero },
+            new() { Timeout = Timeout.InfiniteTimeSpan }, new() { Timeout = TimeSpan.MaxValue }
+        };
+        foreach (var options in invalid)
+        {
+            Assert.ThrowsAny<ArgumentException>(() => DotNet.BuildArguments(workspace, project, diagnostics, options));
+            Assert.ThrowsAny<ArgumentException>(() => DotNet.RunArguments(project, [], options));
+            await Assert.ThrowsAnyAsync<ArgumentException>(() => DotNet.Build(workspace, project, diagnostics, options));
+            await Assert.ThrowsAnyAsync<ArgumentException>(() => DotNet.Run(workspace, project, [], _ => Task.CompletedTask, options));
+            await Assert.ThrowsAnyAsync<ArgumentException>(() => DotNet.Execute(workspace, ["--version"], options));
+        }
+        Assert.False(Directory.Exists(diagnostics));
+        Assert.False(Directory.Exists(Path.Combine(workspace.DiagnosticsRoot, "run")));
     }
 
     [Fact]

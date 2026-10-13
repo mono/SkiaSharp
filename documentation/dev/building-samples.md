@@ -58,6 +58,19 @@ dotnet test tests/SkiaSharp.Tests.Samples.slnx \
 Keep both framework properties to limit the runner's source dependencies to
 .NET 10. Sample builds use the SDK on `PATH` and their own declared TFMs.
 
+Sample helpers accept one optional `DotNetOptions` record. For example,
+`BuildSample(folder, project, new() { Framework = "net10.0-browserwasm" })`
+selects a framework with `--framework` without replacing declared framework lists.
+Reuse the same options with `DotNet.Build` and the callback-based `DotNet.Run`;
+additional `Properties` are passed to both before run's `--` separator.
+Configuration defaults to Release. `WorkingDirectory` defaults to the project
+directory (workspace root for raw `DotNet.Execute` commands).
+`Timeout` defaults to 30 minutes for builds and one minute for raw commands.
+For sample runs it overrides only address/exit waits (normally two/three minutes),
+not callback duration or browser-operation waits; cleanup/output reads stay bounded
+to one minute. Configuration, framework and helper-owned restore properties cannot
+be overridden through `Properties`.
+
 ## Browser runs
 
 For local browser tests, build the runner and install its matching Chromium:

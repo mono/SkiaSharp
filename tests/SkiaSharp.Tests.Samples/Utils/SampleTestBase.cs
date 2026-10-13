@@ -27,46 +27,23 @@ public abstract class SampleTestBase : IDisposable
         return workspace;
     }
 
-    protected Task<SampleWorkspace> BuildSample(string folder, string solution, string configuration) =>
-        BuildSampleImplementation(folder, solution, configuration, null);
-
-    protected Task<SampleWorkspace> BuildSample(string folder, string solution, string configuration, string framework)
+    protected async Task<SampleWorkspace> BuildSample(string folder, string solution, DotNetOptions? options = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(framework);
-        return BuildSampleImplementation(folder, solution, configuration, framework);
-    }
-
-    protected Task<SampleWorkspace> BuildSample(
-        string folder, string solution, string configuration, string framework,
-        IReadOnlyDictionary<string, string> properties)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(framework);
-        ArgumentNullException.ThrowIfNull(properties);
-        return BuildSampleImplementation(folder, solution, configuration, framework, properties);
-    }
-
-    private async Task<SampleWorkspace> BuildSampleImplementation(
-        string folder, string solution, string configuration, string? framework,
-        IReadOnlyDictionary<string, string>? properties = null)
-    {
+        options ??= new();
+        options.Validate();
         var prepared = PrepareSample(folder);
 
         var project = Path.Combine(prepared.Root, "samples", folder, solution);
         if (!File.Exists(project))
             throw new FileNotFoundException("Selected sample solution is missing", project);
 
-        var diagnostics = Path.Combine(prepared.DiagnosticsRoot, "builds", folder, Path.GetFileNameWithoutExtension(solution), configuration);
-        if (framework is not null)
-            diagnostics = Path.Combine(diagnostics, framework);
+        var diagnostics = Path.Combine(prepared.DiagnosticsRoot, "builds", folder, Path.GetFileNameWithoutExtension(solution), options.Configuration);
+        if (options.Framework is not null)
+            diagnostics = Path.Combine(diagnostics, options.Framework);
 
         await DotNet.GetVersion(prepared);
 
-        if (framework is null)
-            await DotNet.Build(prepared, project, diagnostics, configuration);
-        else if (properties is not null)
-            await DotNet.Build(prepared, project, diagnostics, configuration, framework, properties);
-        else
-            await DotNet.Build(prepared, project, diagnostics, configuration, framework);
+        await DotNet.Build(prepared, project, diagnostics, options);
         return prepared;
     }
 

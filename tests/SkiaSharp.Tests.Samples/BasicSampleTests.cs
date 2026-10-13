@@ -17,9 +17,10 @@ public class BasicSampleTests : SampleTestBase
         var folder = Path.Combine("Basic", name);
         var sample = Cases().Single(sample => (string)sample[0] == folder);
         var configuration = (string)sample[2];
-        var workspace = await BuildSample(folder, (string)sample[1], configuration);
+        var options = new DotNetOptions { Configuration = configuration };
+        var workspace = await BuildSample(folder, (string)sample[1], options);
         var project = Path.Combine(workspace.Root, "samples", folder, "SkiaSharpSample", "SkiaSharpSample.csproj");
-        await DotNet.Run(workspace, project, configuration, arguments, app => test(app, project));
+        await DotNet.Run(workspace, project, arguments, app => test(app, project), options);
     }
 
     private Task RunBrowserSample(string name, IEnumerable<string> arguments, Func<BrowserRunningApp, Task> test) =>
@@ -30,7 +31,7 @@ public class BasicSampleTests : SampleTestBase
     [Trait("Category", "SampleBuild")]
     [MemberData(nameof(Cases))]
     public Task GeneratedSampleBuilds(string folder, string solution, string configuration) =>
-        BuildSample(folder, solution, configuration);
+        BuildSample(folder, solution, new() { Configuration = configuration });
 
     [Fact]
     [RunGroup(SampleRunGroup.Host)]
@@ -200,10 +201,11 @@ public class BasicSampleTests : SampleTestBase
         const string framework = "net10.0-browserwasm";
         var folder = Path.Combine("Basic", "UnoPlatform");
         var projectRelative = Path.Combine("SkiaSharpSample", "SkiaSharpSample.csproj");
-        var workspace = await BuildSample(folder, projectRelative, "Release", framework);
+        var options = new DotNetOptions { Framework = framework };
+        var workspace = await BuildSample(folder, projectRelative, options);
         var project = Path.Combine(workspace.Root, "samples", folder, projectRelative);
-        await DotNet.Run(workspace, project, "Release", framework, ["--urls", "http://127.0.0.1:0"],
-            app => BrowserRunningApp.Run(app, test));
+        await DotNet.Run(workspace, project, ["--urls", "http://127.0.0.1:0"],
+            app => BrowserRunningApp.Run(app, test), options);
     }
 
     [Fact]
