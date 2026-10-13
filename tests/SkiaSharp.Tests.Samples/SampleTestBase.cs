@@ -51,6 +51,7 @@ public abstract class SampleTestBase : IDisposable
 
     private protected async Task RunSample(string folder, IEnumerable<string> arguments, Func<DotNetRunningApp, string, Task> test)
     {
+        folder = folder.Replace('\\', '/').Replace('/', Path.DirectorySeparatorChar);
         var sample = SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
             .Single(sample => sample.Folder == folder && !sample.Kind.HasFlag(SampleLookup.EntryKind.Docker));
         var options = new DotNetOptions();
@@ -58,6 +59,9 @@ public abstract class SampleTestBase : IDisposable
         var project = Path.Combine(workspace.Root, "samples", folder, "SkiaSharpSample", "SkiaSharpSample.csproj");
         await DotNet.Run(workspace, project, arguments, app => test(app, project), options);
     }
+
+    private protected Task RunBrowserSample(string folder, IEnumerable<string> arguments, Func<BrowserRunningApp, Task> test) =>
+        RunSample(folder, arguments, (app, _) => BrowserRunningApp.Run(app, test));
 
     public void Dispose() =>
         workspace?.Dispose();

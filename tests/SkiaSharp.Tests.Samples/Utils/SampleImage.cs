@@ -5,6 +5,23 @@ namespace SkiaSharp.Tests.Samples.Utils;
 // Checks sample output against a reviewed reference and retains comparison diagnostics.
 internal static class SampleImage
 {
+    internal static int CountPixels(string screenshot, SKRectI region, Func<SKColor, bool> matches)
+    {
+        using var bitmap = SKBitmap.Decode(screenshot);
+        Assert.NotNull(bitmap);
+        Assert.InRange(region.Left, 0, bitmap.Width - 1);
+        Assert.InRange(region.Top, 0, bitmap.Height - 1);
+        Assert.InRange(region.Right, region.Left + 1, bitmap.Width);
+        Assert.InRange(region.Bottom, region.Top + 1, bitmap.Height);
+        var count = 0;
+        for (var y = region.Top; y < region.Bottom; y++)
+            for (var x = region.Left; x < region.Right; x++)
+                if (matches(bitmap.GetPixel(x, y)))
+                    count++;
+        TestContext.Current.TestOutputHelper?.WriteLine($"Measured {count} matching pixels in {region} from {screenshot}.");
+        return count;
+    }
+
     /// <summary>Saves the actual PNG bytes, checks their signature, then validates the saved image against the expected reference.</summary>
     internal static async Task Validate(byte[] bytes, string actual, string expected, SampleImageOptions? options = null)
     {

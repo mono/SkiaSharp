@@ -10,7 +10,7 @@ public class BasicSampleTests : SampleTestBase
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     public Task ConsoleSampleRuns() =>
-        RunSample(Path.Combine("Basic", "Console"), ["SkiaSharp", "--output", "output.png"], async (app, project) =>
+        RunSample("Basic/Console", ["SkiaSharp", "--output", "output.png"], async (app, project) =>
         {
             var result = await app.WaitForExit();
             Assert.Equal(0, result.ExitCode);
@@ -28,7 +28,7 @@ public class BasicSampleTests : SampleTestBase
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     public Task WebSampleReturnsImage() =>
-        RunSample(Path.Combine("Basic", "Web"), ["--urls", "http://127.0.0.1:0"], async (app, _) =>
+        RunSample("Basic/Web", ["--urls", "http://127.0.0.1:0"], async (app, _) =>
         {
             using var home = await app.WaitForResponse("/");
             Assert.Equal(System.Net.HttpStatusCode.OK, home.StatusCode);
