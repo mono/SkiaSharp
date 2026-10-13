@@ -117,19 +117,6 @@ public static class DotNet
             start => ConfigureProcess(start, workspace));
     }
 
-    internal static Process Start(SampleWorkspace workspace, IEnumerable<string> arguments,
-        DotNetOptions? options = null, Action<ProcessStartInfo>? configure = null)
-    {
-        options ??= new();
-        options.Validate();
-        return ProcessRunner.Start("dotnet", arguments, options.GetWorkingDirectory(workspace.Root),
-            start =>
-            {
-                ConfigureProcess(start, workspace);
-                configure?.Invoke(start);
-            });
-    }
-
     internal static Task<(int ExitCode, string Output, string Error)> ExecuteTool(
         string tool, IEnumerable<string> arguments, DotNetOptions? options = null)
     {
@@ -140,17 +127,6 @@ public static class DotNet
             throw new ArgumentException("Repository tools must resolve the pinned manifest from the repository root.", nameof(options));
         return ProcessRunner.Run("dotnet", ["tool", "run", tool, "--", .. arguments], Repo.RootDir,
             options.Timeout ?? TimeSpan.FromMinutes(1));
-    }
-
-    internal static Process StartTool(string tool, IEnumerable<string> arguments, DotNetOptions? options = null)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(tool);
-        options ??= new();
-        options.Validate();
-        if (options.GetWorkingDirectory(Repo.RootDir) != Repo.RootDir)
-            throw new ArgumentException("Repository tools must resolve the pinned manifest from the repository root.", nameof(options));
-        // Preserve the explicitly restored tool resolver/cache instead of replacing its CLI home.
-        return ProcessRunner.Start("dotnet", ["tool", "run", tool, "--", .. arguments], Repo.RootDir);
     }
 
     internal static async Task Run(

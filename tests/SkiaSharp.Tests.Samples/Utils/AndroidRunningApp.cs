@@ -1,7 +1,5 @@
-using System.Diagnostics;
-using System.Text;
+using System.Globalization;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium.Android;
 using OpenQA.Selenium.Appium.Android.Enums;
@@ -13,9 +11,6 @@ internal sealed class AndroidRunningApp(
     SampleWorkspace workspace, string artifact, string applicationId, AndroidDevice device)
     : AppiumRunningApp(workspace, artifact, applicationId)
 {
-    private Android? android;
-    private bool booted;
-
     internal override PointerKind PointerKind => PointerKind.Touch;
     internal override By Locator(string id) => By.Id($"{ApplicationId}:id/{id}");
     internal override void SubmitSearch() => ((AndroidDriver)Driver).PressKeyCode(AndroidKeyCode.Enter);
@@ -23,107 +18,69 @@ internal sealed class AndroidRunningApp(
     protected override async Task Start(Uri address)
     {
         Require(Path.GetExtension(Artifact).Equals(".apk", StringComparison.OrdinalIgnoreCase),
-            "Android requires the exact built APK, not a generated replacement or an AAB.");
-        Require(Regex.IsMatch(ApplicationId, @"^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$"),
-            $"Invalid Android application ID: {ApplicationId}");
-        ArgumentNullException.ThrowIfNull(device);
+            "Provide the actual built APK, not an AAB or synthetic app.");
         var port = device.Validate();
         var sdk = Environment.GetEnvironmentVariable("ANDROID_HOME")
             ?? Environment.GetEnvironmentVariable("ANDROID_SDK_ROOT")
-            ?? throw new InvalidOperationException("Set ANDROID_HOME or ANDROID_SDK_ROOT to the explicitly installed Android SDK.");
-        android = new Android(sdk);
+            ?? throw new InvalidOperationException("Set ANDROID_HOME or ANDROID_SDK_ROOT to the preinstalled SDK.");
+        var android = new Android(sdk);
         AppiumFixture.RequireFreePort(AppiumFixture.AndroidPort);
-        Require((await AdbForwards()).All(parts => parts[1] != $"tcp:{AppiumFixture.AndroidPort}"),
-            $"An existing adb forward uses port {AppiumFixture.AndroidPort}; refusing to replace a foreign mapping.");
-
-        device = device with { Name = $"{device.Name}-test-{Guid.NewGuid():N}" };
-        using var avds = JsonDocument.Parse(await CaptureCommand(android.ListAvds()));
-        Require(!avds.RootElement.EnumerateArray().Any(avd => avd.GetProperty("name").GetString() == device.Name),
-            $"Owned AVD name already exists: {device.Name}; refusing to replace it.");
-        using var devices = JsonDocument.Parse(await CaptureCommand(android.ListDevices()));
-        Require(!devices.RootElement.EnumerateArray().Any(item => item.GetProperty("serial").GetString() == device.Serial),
-            $"Required test serial {device.Serial} is occupied; tests never reuse or stop an existing device.");
         AppiumFixture.RequireFreePort(port);
         AppiumFixture.RequireFreePort(port + 1);
+        using (var connected = JsonDocument.Parse(await CaptureCommand(android.ListDevices())))
+            Require(!HasSerial(connected), $"Serial {device.Serial} is occupied; existing devices are never reused.");
+        device = device with { Name = $"{device.Name}-test-{Guid.NewGuid():N}" };
+        using (var avds = JsonDocument.Parse(await CaptureCommand(android.ListAvds())))
+            Require(!HasAvd(avds), $"Owned AVD name already exists: {device.Name}");
         Own(async () =>
         {
-            using var current = JsonDocument.Parse(await CaptureCommand(Tools.ListAvds()));
-            if (current.RootElement.EnumerateArray().Any(avd => avd.GetProperty("name").GetString() == device.Name))
+            using var current = JsonDocument.Parse(await CaptureCommand(android.ListAvds()));
+            if (HasAvd(current))
             {
-                using var connected = JsonDocument.Parse(await CaptureCommand(Tools.ListDevices()));
-                Require(!connected.RootElement.EnumerateArray().Any(item => item.GetProperty("serial").GetString() == device.Serial),
-                    $"Serial {device.Serial} is still occupied; refusing to delete AVD data before the owned emulator stops.");
-                await CaptureCommand(Tools.DeleteAvd(device));
+                using var connected = JsonDocument.Parse(await CaptureCommand(android.ListDevices()));
+                if (HasSerial(connected))
+                    Require((await CaptureCommand(android.AvdName(device))).Split('\n')[0].Trim() == device.Name,
+                        "The serial now belongs to another AVD; refusing cleanup.");
+                await CaptureCommand(android.DeleteAvd(device));
             }
-            using var remaining = JsonDocument.Parse(await CaptureCommand(Tools.ListAvds()));
-            Require(!remaining.RootElement.EnumerateArray().Any(avd => avd.GetProperty("name").GetString() == device.Name),
-                $"Owned AVD was not deleted: {device.Name}");
+            using var remaining = JsonDocument.Parse(await CaptureCommand(android.ListAvds()));
+            Require(!HasAvd(remaining), $"Owned AVD was not deleted: {device.Name}");
+            using var devices = JsonDocument.Parse(await CaptureCommand(android.ListDevices()));
+            Require(!HasSerial(devices), $"Owned emulator did not stop: {device.Serial}");
         });
         await CaptureCommand(android.CreateAvd(device));
-        using var created = JsonDocument.Parse(await CaptureCommand(android.ListAvds()));
-        Require(created.RootElement.EnumerateArray().Count(avd => avd.GetProperty("name").GetString() == device.Name) == 1,
-            $"Tool did not create the owned AVD: {device.Name}");
-        var emulator = android.StartAvd(device);
-        var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var stdout = ReadBootOutput(emulator, ready);
-        var stderr = emulator.StandardError.ReadToEndAsync();
-        Own(() => StopProcess(emulator, stdout, stderr, "emulator"));
-        await Task.WhenAny(ready.Task, emulator.WaitForExitAsync()).WaitAsync(TimeSpan.FromMinutes(6));
-        Require(ready.Task.IsCompletedSuccessfully && !emulator.HasExited,
-            $"Owned {device.Name} emulator did not report boot completion; inspect emulator logs.");
-
-        Require((await CaptureCommand(android.AvdName(device))).Split('\n')[0].Trim() == device.Name,
-            $"Serial {device.Serial} is not the explicitly selected {device.Name}; refusing foreign device reuse.");
-        await Property("sys.boot_completed", "1");
-        booted = true;
-        await Property("ro.build.version.release", device.Version);
-        await Property("ro.build.version.sdk", device.Api.ToString());
-        Require((await CaptureCommand(android.PageSize(device))).Trim() == device.PageSize.ToString(),
-            $"Selected {device.Serial} must use {device.PageSize}-byte pages.");
+        using (var created = JsonDocument.Parse(await CaptureCommand(android.ListAvds())))
+            Require(HasAvd(created), $"The tool did not create {device.Name}");
         var options = Options("Android", "UiAutomator2");
         options.App = Artifact;
         options.DeviceName = device.Name;
         options.PlatformVersion = device.Version;
         options.AddAdditionalAppiumOption("udid", device.Serial);
+        options.AddAdditionalAppiumOption("avd", device.Name);
+        options.AddAdditionalAppiumOption("avdArgs", new[]
+        {
+            "-port", port.ToString(CultureInfo.InvariantCulture), "-no-snapshot", "-no-boot-anim"
+        });
         options.AddAdditionalAppiumOption("appPackage", ApplicationId);
         options.AddAdditionalAppiumOption("systemPort", AppiumFixture.AndroidPort);
-        options.AddAdditionalAppiumOption("noReset", false);
+        options.AddAdditionalAppiumOption("suppressKillServer", true);
         options.AddAdditionalAppiumOption("fullReset", true);
         SetDriver(new AndroidDriver(address, options, TimeSpan.FromMinutes(3)));
+        Require((await CaptureCommand(android.Property(device, "ro.build.version.release"))).Trim() == device.Version,
+            "The selected Android release does not match the profile.");
+        Require((await CaptureCommand(android.Property(device, "ro.build.version.sdk"))).Trim() == device.Api.ToString(CultureInfo.InvariantCulture),
+            "The selected Android API does not match the profile.");
+        Require((await CaptureCommand(android.PageSize(device))).Trim() == device.PageSize.ToString(CultureInfo.InvariantCulture),
+            "The selected Android page size does not match the profile.");
         Wait(() => Driver.PageSource.Contains($"package=\"{ApplicationId}\"", StringComparison.Ordinal)
             ? "foreground app" : null, $"{ApplicationId} foreground UI");
+
+        bool HasSerial(JsonDocument devices) => devices.RootElement.EnumerateArray()
+            .Any(item => item.GetProperty("serial").GetString() == device.Serial);
+        bool HasAvd(JsonDocument avds) => avds.RootElement.EnumerateArray()
+            .Any(item => item.GetProperty("name").GetString() == device.Name);
     }
 
-    protected override async Task CapturePlatformDiagnostics()
-    {
-        if (booted)
-            await CaptureCommand(Tools.RuntimeLogs(device));
-    }
-
-    private async Task Property(string name, string value) =>
-        Require((await CaptureCommand(Tools.Property(device, name))).Trim() == value,
-            $"Selected {device.Serial} must have {name}={value}.");
-
-    private Android Tools => android ?? throw new InvalidOperationException("Android preflight has not completed.");
-
-    private async Task<string[][]> AdbForwards()
-    {
-        var rows = (await CaptureCommand(Tools.ListForwards())).Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Select(line => line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
-            .ToArray();
-        Require(rows.All(parts => parts.Length == 3), "adb returned an unrecognized forward list; refusing uncertain mapping ownership.");
-        return rows;
-    }
-
-    private static async Task<string> ReadBootOutput(Process process, TaskCompletionSource ready)
-    {
-        var text = new StringBuilder();
-        while (await process.StandardOutput.ReadLineAsync().ConfigureAwait(false) is { } line)
-        {
-            text.AppendLine(line);
-            if (line.Contains("Boot wait completed in", StringComparison.Ordinal))
-                ready.TrySetResult();
-        }
-        return text.ToString();
-    }
+    protected override Task CapturePlatformDiagnostics() =>
+        SaveText("device.log", string.Join(Environment.NewLine, Driver.Manage().Logs.GetLog("logcat")));
 }

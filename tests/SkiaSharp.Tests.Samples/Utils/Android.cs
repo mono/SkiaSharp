@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Globalization;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -47,23 +45,12 @@ internal sealed class Android
     internal Task<ToolCommandResult> DeleteAvd(AndroidDevice device)
     {
         device.Validate();
-        return ExecuteSdk(["avd", "delete", "--name", device.Name]);
-    }
-
-    internal Process StartAvd(AndroidDevice device)
-    {
-        var port = device.Validate();
-        return DotNet.StartTool("android",
-            ["avd", "start", "--name", device.Name, "--port", port.ToString(CultureInfo.InvariantCulture),
-                "--home", SdkDirectory, "--wait", "--wait-exit", "--timeout", "300", "--no-snapshot", "--no-boot-anim"]);
+        return ExecuteSdk(["avd", "delete", "--name", device.Name, "--force"]);
     }
 
     internal Task<ToolCommandResult> AvdName(AndroidDevice device) => Adb(device, ["emu", "avd", "name"]);
     internal Task<ToolCommandResult> Property(AndroidDevice device, string name) => Adb(device, ["shell", "getprop", name]);
     internal Task<ToolCommandResult> PageSize(AndroidDevice device) => Adb(device, ["shell", "getconf", "PAGE_SIZE"]);
-    internal Task<ToolCommandResult> RuntimeLogs(AndroidDevice device) =>
-        Adb(device, ["logcat", "-d", "-t", "5000", "-s", "AndroidRuntime", "DOTNET", "mono-stdout", "mono-stderr"]);
-    internal Task<ToolCommandResult> ListForwards() => RunAdb(["forward", "--list"]);
     private Task<ToolCommandResult> Adb(AndroidDevice device, string[] arguments)
     {
         device.Validate();

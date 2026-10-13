@@ -150,13 +150,15 @@ Install the required images/runtimes before running tests: Android uses
 iOS runtime and iPhone 16 Pro device type. Missing prerequisites fail; neither
 the tests nor the Appium CI preparation path installs or downloads them.
 
-Tests create uniquely named devices from the installed image/runtime, boot
-them, run the app and delete the owned device afterward, including on failure.
-Existing devices and their data remain untouched. The profile's emulator
-ports must be free. Foreground interactions are serialized.
-Appium installs and launches the built Android/iOS app through its `app`
-capability and owns reset/session cleanup. Dotnet tools manage only device
-creation, boot and deletion, plus prerequisite checks and diagnostics.
+Appium receives the device profile and built app. XCUITest's
+`enforceFreshSimulatorCreation` creates, boots and deletes a fresh iOS simulator;
+UiAutomator2's `avd` capability boots the uniquely named Android AVD.
+The small Android helper creates/deletes that AVD from the preinstalled image,
+because UiAutomator2 does not provide AVD creation/deletion. Cleanup verifies
+the emulator stopped and its AVD disappeared, even when the tool reports success.
+Existing devices and data remain untouched; emulator ports must be free.
+Appium owns app installation, launch, logs and session cleanup. Foreground
+interactions are serialized.
 
 Appium port 4727 and the selected driver port must be free: Android 8217,
 iOS 8117, Mac2 10117, Windows 4737. Mac2 requires an unlocked GUI session,

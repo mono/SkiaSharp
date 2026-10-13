@@ -195,8 +195,8 @@ internal abstract class AppiumRunningApp
                 TestContext.Current.AddFileAttachment(path, "image/png");
                 return Task.CompletedTask;
             });
+            await Attempt(failures, CapturePlatformDiagnostics);
         }
-        await Attempt(failures, CapturePlatformDiagnostics);
         ThrowFailures(failures);
     }
 
@@ -230,7 +230,7 @@ internal abstract class AppiumRunningApp
                 return Task.CompletedTask;
             });
             // Failed session constructors can leave driver children alive. Stop our server tree
-            // before removing WDA/installations or restoring the device's original state.
+            // before deleting resources created by this test.
             await Attempt(failures, stopServer);
             foreach (var release in cleanup.AsEnumerable().Reverse())
                 await Attempt(failures, release);
@@ -303,22 +303,6 @@ internal abstract class AppiumRunningApp
             throw new AggregateException("Appium lifecycle failed; all diagnostics and owned cleanup were attempted.", failures);
     }
 
-    internal static SKRectI ScreenshotBounds(Point location, Size element, Size viewport, Size screenshot)
-    {
-        if (viewport.Width <= 0 || viewport.Height <= 0 || element.Width <= 0 || element.Height <= 0 ||
-            screenshot.Width <= 0 || screenshot.Height <= 0)
-            throw new InvalidOperationException("Screenshot and element coordinate dimensions must be positive.");
-        var scaleX = screenshot.Width / (double)viewport.Width;
-        var scaleY = screenshot.Height / (double)viewport.Height;
-        var bounds = new SKRectI(
-            (int)Math.Round(location.X * scaleX), (int)Math.Round(location.Y * scaleY),
-            (int)Math.Round((location.X + element.Width) * scaleX),
-            (int)Math.Round((location.Y + element.Height) * scaleY));
-        if (bounds.Left < 0 || bounds.Top < 0 || bounds.Right > screenshot.Width || bounds.Bottom > screenshot.Height)
-            throw new InvalidOperationException($"Canvas is outside the screenshot: {bounds}, screenshot {screenshot}.");
-        return bounds;
-    }
-
     internal static void AssertRendered(string path)
     {
         using var bitmap = SKBitmap.Decode(path);
@@ -355,18 +339,4 @@ internal abstract class AppiumRunningApp
         Assert.Fail($"The rendered scene did not change: {before}; {after}.");
     }
 
-    protected async Task StopProcess(Process process, Task<string> stdout, Task<string> stderr, string name)
-    {
-        List<Exception> failures = [];
-        await Attempt(failures, async () =>
-        {
-            if (!process.HasExited)
-                process.Kill(entireProcessTree: true);
-            await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(30));
-        });
-        await Attempt(failures, async () => await SaveText(name + ".stdout.log", await stdout.WaitAsync(TimeSpan.FromSeconds(30))));
-        await Attempt(failures, async () => await SaveText(name + ".stderr.log", await stderr.WaitAsync(TimeSpan.FromSeconds(30))));
-        process.Dispose();
-        ThrowFailures(failures);
-    }
 }
