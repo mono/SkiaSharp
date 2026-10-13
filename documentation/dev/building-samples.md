@@ -182,11 +182,14 @@ different preinstalled runtime locally:
 
 ```sh
 export SAMPLE_TEST_ANDROID_VERSION=8.0
+export SAMPLE_TEST_ANDROID_MODEL=pixel_9
 export SAMPLE_TEST_ANDROID_IMAGE_PREFIX='system-images;android-26;google_apis'
 export SAMPLE_TEST_IOS_VERSION=18.6
 export SAMPLE_TEST_IOS_MODEL='iPhone 16 Pro'
 ```
 
+Android defaults to `pixel_9` when the model variable is unset. Model IDs come
+from `dotnet android avd devices`.
 The Android ABI follows the host architecture; the image and iOS runtime/model
 must already be installed. Unset these variables to return to local defaults.
 

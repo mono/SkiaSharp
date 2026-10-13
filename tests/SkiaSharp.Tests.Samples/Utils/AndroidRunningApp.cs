@@ -13,14 +13,15 @@ internal sealed class AndroidRunningApp(
 	string? imagePrefix = null)
 	: AppiumRunningApp(workspace, artifact, applicationId)
 {
-	private const string Model = "pixel_9";
+	private readonly string model =
+		Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_MODEL") ?? "pixel_9";
 	private readonly string version = version
 		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_VERSION") ?? "17";
 	private readonly string imagePrefix = imagePrefix
 		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_IMAGE_PREFIX")
 		?? "system-images;android-37.1;google_apis_ps16k";
 
-	internal string DeviceProfile => $"{Model}/{version}";
+	internal string DeviceProfile => $"{model}/{version}";
 
 	internal override PointerKind PointerKind => PointerKind.Touch;
 
@@ -45,7 +46,7 @@ internal sealed class AndroidRunningApp(
 		{
 			await CaptureCommand(android.DeleteAvd(name));
 		});
-		await CaptureCommand(android.CreateAvd(name, imagePrefix, Model));
+		await CaptureCommand(android.CreateAvd(name, imagePrefix, model));
 
 		var options = Options("Android", "UiAutomator2");
 		options.App = Artifact;

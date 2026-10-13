@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -24,7 +23,6 @@ public sealed class AppiumFixture
 		var stopped = false;
 		var diagnostics = app.Diagnostics;
 		var port = GetFreePort();
-		string[] arguments = ["--address", "127.0.0.1", "--port", port.ToString(), "--log-timestamp"];
 		var listening = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 		var address = new Uri($"http://127.0.0.1:{port}");
 		await app.Run(address, scenario, StartServer, StopServer);
@@ -52,18 +50,7 @@ public sealed class AppiumFixture
 		async Task StartServer()
 		{
 			Directory.CreateDirectory(diagnostics);
-			try
-			{
-				server = ProcessRunner.Start(
-					OperatingSystem.IsWindows() ? "cmd.exe" : "appium",
-					OperatingSystem.IsWindows() ? ["/d", "/c", "appium", .. arguments] : arguments,
-					app.Workspace.Root, app.ConfigureServer);
-			}
-			catch (Win32Exception error)
-			{
-				throw new InvalidOperationException(
-					"Install Appium and the selected platform driver explicitly before selecting UI tests. Nothing is installed by discovery or fixtures.", error);
-			}
+			server = Appium.StartServer(port, app.Workspace.Root, app.ConfigureServer);
 			stdout = DrainOutput();
 			stderr = server.StandardError.ReadToEndAsync();
 			await WaitUntilReady(server, address, listening.Task);

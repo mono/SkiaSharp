@@ -19,6 +19,7 @@ jobs:
         SAMPLE_TEST_SDK_VERSION: ${{ parameters.sdk.version }}
         ${{ if eq(parameters.platform, 'Android') }}:
           SAMPLE_TEST_ANDROID_VERSION: ${{ parameters.device.version }}
+          SAMPLE_TEST_ANDROID_MODEL: ${{ parameters.device.model }}
           SAMPLE_TEST_ANDROID_IMAGE_PREFIX: ${{ parameters.device.imagePrefix }}
         ${{ if eq(parameters.platform, 'iOS') }}:
           SAMPLE_TEST_IOS_VERSION: ${{ parameters.device.version }}
