@@ -20,9 +20,8 @@ namespace SkiaSharp.Tests
 	/// disposed). Bring-up is asynchronous; the single-threaded WASM host needs no
 	/// GPU gate, and blocking on the async setup would deadlock the JS event loop,
 	/// so <see cref="GraphiteBackendTestBase.RunGuardedAsync"/> simply awaits.
-	/// Because the Context is process-shared, per-test <see cref="SKGraphiteContextOptions"/>
-	/// cannot be honored — <see cref="SupportsPerHarnessOptions"/> is false and the
-	/// shader-error-handler scenario skips on this backend.
+	/// All harnesses use identical <see cref="SKGraphiteContextOptions"/>, including
+	/// a shared shader-error handler. Later requests must match the installed options.
 	/// </para>
 	/// </summary>
 	[Collection(GpuRenderingCollection.Name)]
@@ -32,17 +31,13 @@ namespace SkiaSharp.Tests
 		private static SKGraphiteRecorder s_recorder;
 		private static JSObject s_device;
 		private static bool s_ready;
+		private static SKGraphiteContextOptions s_options;
 
 		protected override SKColorType ColorType => SKColorType.Rgba8888;
 
 		protected override bool CanSubmitSync => false;
 
 		protected override string Backend => GpuBackends.GraphiteDawn;
-
-		// The Dawn Context is process-shared (non-yielding constraint); a per-harness
-		// SKGraphiteContextOptions.ShaderErrorHandler would be silently dropped on any
-		// call after the first.
-		protected override bool SupportsPerHarnessOptions => false;
 
 		protected override async Task<GraphiteBackendHarness> CreateHarnessAsync(SKGraphiteContextOptions options)
 		{
@@ -74,13 +69,15 @@ namespace SkiaSharp.Tests
 					WgpuDevice = (IntPtr)deviceId,
 					WgpuQueue = (IntPtr)queueId,
 				};
-				s_context = SKGraphiteContext.CreateDawn(backendContext)
+				s_context = SKGraphiteContext.CreateDawn(backendContext, options)
 					?? throw new InvalidOperationException("SKGraphiteContext.CreateDawn returned null.");
 				s_recorder = s_context.CreateRecorder()
 					?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
+				s_options = options;
 				s_ready = true;
 			}
 
+			Assert.Equal(s_options, options);
 			return new DawnHarness(s_context, s_recorder, s_device);
 		}
 

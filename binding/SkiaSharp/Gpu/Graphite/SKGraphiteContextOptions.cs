@@ -33,14 +33,9 @@ namespace SkiaSharp
 
 		private long gpuBudgetInBytes;
 
-		// Negative values (default: -1 via SKGraphiteContextOptions()) tell Skia to use its
-		// built-in GPU resource cache size. A non-negative value caps the cache at that size.
-		// The parameterless constructor seeds -1; a `default(SKGraphiteContextOptions)` will
-		// still zero this out — that is treated as "use Skia default" at marshalling time so
-		// zero-init callers do not silently disable the resource cache.
 		/// <summary>Gets or sets the maximum size of the GPU resource cache.</summary>
 		/// <value>The budget in bytes, or a negative value to use the Skia default.</value>
-		/// <remarks />
+		/// <remarks>A value of zero disables the budgeted resource cache, including when these options are initialized with <see langword="default" />.</remarks>
 		public long GpuBudgetInBytes {
 			readonly get => gpuBudgetInBytes;
 			set => gpuBudgetInBytes = value;
@@ -64,10 +59,6 @@ namespace SkiaSharp
 		/// <remarks>The handler is installed for the lifetime of the context created from these options.</remarks>
 		public SKGraphiteShaderErrorHandlerDelegate ShaderErrorHandler { get; set; }
 
-		// The parameterless constructor exists to seed GpuBudgetInBytes = -1 so
-		// `new SKGraphiteContextOptions()` uses Skia's default resource-cache budget.
-		// `default(SKGraphiteContextOptions)` skips this and lands with 0, which is
-		// normalized to -1 at ToNative time.
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKGraphiteContextOptions" /> structure with Skia default values.</summary>
 		/// <remarks>Seeds <see cref="P:SkiaSharp.SKGraphiteContextOptions.GpuBudgetInBytes" /> so the context uses the Skia default resource budget rather than a zero-byte cache.</remarks>
 		public SKGraphiteContextOptions ()
@@ -91,9 +82,7 @@ namespace SkiaSharp
 			var native = new SKGraphiteContextOptionsNative {
 				fDisableDriverCorrectnessWorkarounds = DisableDriverCorrectnessWorkarounds ? (byte)1 : (byte)0,
 				fInternalMultisampleCount            = InternalMultisampleCount,
-				// Zero-init callers land here without touching the constructor. Normalize to
-				// -1 so `default(SKGraphiteContextOptions)` does not disable Skia's cache.
-				fGpuBudgetInBytes                    = gpuBudgetInBytes == 0 ? -1 : gpuBudgetInBytes,
+				fGpuBudgetInBytes                    = gpuBudgetInBytes,
 				fRequireOrderedRecordings            = RequireOrderedRecordings ? (byte)1 : (byte)0,
 				fSetBackendLabels                    = SetBackendLabels ? (byte)1 : (byte)0,
 			};

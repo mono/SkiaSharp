@@ -18,7 +18,7 @@ namespace SkiaSharp.Tests
 	///     / <see cref="SKImage.FromTexture(SKGraphiteRecorder, SKGraphiteBackendTexture, SKColorType, SKAlphaType, SKColorSpace, SKGraphiteReleaseDelegate)"/>
 	///     release-callback lifetime (fires exactly once on dispose, null callback safe);
 	///   * shader-error handler installation via <see cref="SKGraphiteContextOptions.ShaderErrorHandler"/>
-	///     (delivery + no-spurious-fire; #4555).
+	///     (installation + no-spurious-fire; #4555).
 	/// </para>
 	///
 	/// <para>
@@ -32,6 +32,13 @@ namespace SkiaSharp.Tests
 		protected const int Width = 64;
 		protected const int Height = 64;
 
+		private static int shaderErrorCount;
+		private static readonly SKGraphiteContextOptions harnessOptions = new SKGraphiteContextOptions
+		{
+			// Dawn shares one context, so every harness installs the same handler.
+			ShaderErrorHandler = (shader, errors, cached) => Interlocked.Increment(ref shaderErrorCount),
+		};
+
 		/// <summary>Colour type matching the backend texture the harness creates.</summary>
 		protected abstract SKColorType ColorType { get; }
 
@@ -42,27 +49,15 @@ namespace SkiaSharp.Tests
 		protected abstract string Backend { get; }
 
 		/// <summary>
-		/// True when <see cref="CreateHarnessAsync(SKGraphiteContextOptions)"/> honors
-		/// the options for each call. False for backends that share a process-wide
-		/// context (Dawn on WASM): those cannot install a fresh shader-error handler
-		/// per test, so the shader-handler scenario is skipped.
-		/// </summary>
-		protected virtual bool SupportsPerHarnessOptions => true;
-
-		/// <summary>
-		/// Brings up the backend with default options and returns a live harness.
+		/// Brings up the backend with common options and returns a live harness.
 		/// Must not catch a failed bring-up.
 		/// </summary>
 		protected Task<GraphiteBackendHarness> CreateHarnessAsync() =>
-			CreateHarnessAsync(new SKGraphiteContextOptions());
+			CreateHarnessAsync(harnessOptions);
 
 		/// <summary>
-		/// Options-aware bring-up. Subclasses on backends that build a fresh Context
-		/// per harness (Metal, Vulkan) override this to pass the supplied options into
-		/// <see cref="SKGraphiteContext.CreateMetal(SKGraphiteMtlBackendContext, SKGraphiteContextOptions)"/>
-		/// / <see cref="SKGraphiteContext.CreateVulkan(SKGraphiteVkBackendContext, SKGraphiteContextOptions)"/>.
-		/// Subclasses that share a Context across tests (Dawn on WASM) may leave this
-		/// unimplemented and set <see cref="SupportsPerHarnessOptions"/> to false.
+		/// Brings up the backend using the supplied options. A process-shared context
+		/// must verify that later harnesses request the same options.
 		/// </summary>
 		protected abstract Task<GraphiteBackendHarness> CreateHarnessAsync(SKGraphiteContextOptions options);
 
@@ -157,40 +152,22 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		// End-to-end wiring for SKGraphiteContextOptions.ShaderErrorHandler.
-		// Callback argument forwarding is unit-tested in SKGraphiteShaderErrorHandlerTest;
-		// deterministic driver-rejection isn't reachable on our CI drivers (Lavapipe,
-		// SwiftShader — both accept every SkSL shader Skia emits), so this test proves
-		// the *wiring* holds under a real Context: handler installed via the property
-		// path, Snap/Insert/Submit round-trip completes without spuriously firing the
-		// handler, and Dispose tears down bridge + pinned delegate without crashing.
-		// End-to-end firing under a real driver rejection is verified by the iOS
-		// simulator integration run documented in the #4555 PR body.
+		// Callback arguments are covered by SKGraphiteShaderErrorHandlerTest. This
+		// scenario exercises normal GPU work with the common handler installed.
 		[Fact]
 		public Task ShaderErrorHandlerWiringSurvivesFullRoundTrip()
 		{
-			Assert.SkipUnless(SupportsPerHarnessOptions,
-				$"{Backend} backend uses a process-shared Context; per-test options are not honored.");
 			SkipIfUnsupported();
 			return RunGuardedAsync(async () =>
 			{
-				var fired = 0;
-				var options = new SKGraphiteContextOptions
-				{
-					ShaderErrorHandler = (s, e, c) => Interlocked.Increment(ref fired),
-				};
-				using var harness = await CreateHarnessAsync(options);
-
+				using var harness = await CreateHarnessAsync();
 				using var surface = SKSurface.Create(harness.Recorder, new SKImageInfo(Width, Height), false, null);
 				Assert.NotNull(surface);
 				surface.Canvas.Clear(SKColors.Cyan);
+				using var paint = new SKPaint { Color = SKColors.Red };
+				surface.Canvas.DrawRect(SKRect.Create(Width, Height), paint);
 				SnapAndSubmit(harness);
 				PumpToCompletion(harness.Context);
-
-				// Skia's built-in pipelines compile cleanly on Lavapipe / SwiftShader / a
-				// real vendor driver. A spurious fire here means the caps machinery drifted
-				// (e.g. #4555-style: caps claim a driver feature the driver actually rejects).
-				Assert.Equal(0, fired);
 			});
 		}
 
@@ -198,10 +175,14 @@ namespace SkiaSharp.Tests
 		/// Runs the GPU scenario. GPU work is serialized across the whole assembly
 		/// by the GPU rendering test collection each derived class joins (xUnit
 		/// <c>DisableParallelization</c>), so no in-test lock is needed; the body is
-		/// simply awaited (harness creation completes synchronously for the desktop
-		/// backends and genuinely awaits on single-threaded WASM for Dawn).
+		/// awaited before checking for shader errors (harness creation completes
+		/// synchronously for desktop backends and awaits on single-threaded WASM for Dawn).
 		/// </summary>
-		protected Task RunGuardedAsync(Func<Task> body) => body();
+		protected async Task RunGuardedAsync(Func<Task> body)
+		{
+			await body();
+			Assert.Equal(0, Volatile.Read(ref shaderErrorCount));
+		}
 
 		private void SkipIfUnsupported() => GpuPolicy.RequireOrSkip(Backend);
 
