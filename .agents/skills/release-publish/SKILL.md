@@ -24,9 +24,10 @@ Before triggering:
    `release/<identity>`. Require its exact-tip `skiasharp-package (1642)` build
    to have succeeded with one BAR, and the resource-triggered
    `skiasharp-tests (1630)` run to have succeeded for the same branch, commit
-   and build number with a matching `triggerInfo.pipelineId`. Any
-   `release-testing` approval must match the BAR. Use that **SkiaSharp**
-   commit, not the maintenance tip or mono/skia SHA.
+   and build number with a matching `triggerInfo.pipelineId`. The producing
+   Build/Tests runs and BAR are the release-validation evidence; do not require
+   a separate local approval report. Use that **SkiaSharp** commit, not the
+   maintenance tip or mono/skia SHA.
 2. Check the complete public package set and existing
    `dotnet-maui-release (1445)` runs for that commit
    (`templateParameters.commitHash`). Monitor an existing run instead of
