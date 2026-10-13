@@ -25,7 +25,7 @@ Otherwise it returns and the caller brings the backend up **without a catch**.
 | OpenGL tests | `SKTest.CreateGlContext` |
 | Vulkan tests | `VKTest` |
 | Direct3D tests | `Direct3DTest` |
-| Graphite release tests | `SKGraphiteReleaseTestsBase` |
+| Graphite backend tests | `GraphiteBackendTestBase` |
 
 ## Required platforms
 
