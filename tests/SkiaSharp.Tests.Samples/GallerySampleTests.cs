@@ -14,6 +14,7 @@ public class GallerySampleTests : SampleTestBase
             .Select(sample => new object[] { sample.Folder, sample.FileName, "Release" });
 
     [Theory]
+    [RunGroup(SampleRunGroup.Build)]
     [MemberData(nameof(Cases))]
     public Task GeneratedGalleryBuilds(string folder, string solution, string configuration) =>
         BuildSample(folder, solution, configuration);

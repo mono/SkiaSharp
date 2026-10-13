@@ -1,0 +1,48 @@
+parameters:
+  platform: ''
+  buildAgent: {}
+
+jobs:
+  - ${{ each group in split('Build,Host,Docker', ',') }}:
+    - ${{ if or(ne(parameters.platform, 'macos'), ne(group, 'Docker')) }}:
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+        parameters:
+          name: samples_${{ parameters.platform }}_${{ lower(group) }}
+          displayName: ${{ parameters.platform }} (${{ group }})
+          buildAgent: ${{ parameters.buildAgent }}
+          dotnetSdks:
+            - sdkVersion: $(DOTNET_VERSION)
+              workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+              tizen:
+                manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+          ${{ if eq(parameters.platform, 'macos') }}:
+            installNinja: true
+          ${{ if eq(parameters.platform, 'linux') }}:
+            packages: $(MANAGED_LINUX_PACKAGES)
+            installEmsdk: true
+            initScript: source ~/emsdk/emsdk_env.sh
+          target: samples
+          additionalArgs: --runGroup=${{ group }} --sampleRunId=${{ parameters.platform }}_${{ lower(group) }}
+          retryCount: 0
+          ${{ if ne(parameters.platform, 'windows') }}:
+            shouldPublish: false
+          requiredArtifacts:
+            - name: native
+            - name: nuget
+              dir: nugets
+          postBuildSteps:
+            - task: PublishTestResults@2
+              condition: always()
+              inputs:
+                testResultsFormat: VSTest
+                testResultsFiles: output/logs/testlogs/samples/${{ parameters.platform }}_${{ lower(group) }}/**/*.trx
+                testRunTitle: Samples (${{ parameters.platform }}, ${{ group }})
+            - task: PublishPipelineArtifact@1
+              condition: always()
+              inputs:
+                targetPath: output/logs
+                artifact: sample_logs_${{ parameters.platform }}_${{ lower(group) }}
+            - ${{ if eq(parameters.platform, 'windows') }}:
+              - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
+                displayName: Delete the nugets folder

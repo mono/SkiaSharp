@@ -12,6 +12,10 @@ or Linux containers on macOS/Linux. CI does not provision Docker on macOS.
 Unavailable Docker produces visible skips; wrong container mode and sample
 failures fail the tests.
 
+CI runs eight execution-target jobs: Build, Host, and Docker on Windows/Linux,
+and Build and Host on macOS. All use the existing repository SDK and host
+toolchain. Docker retains its existing image SDK pins.
+
 **Bootstrap before staging packages:** bootstrap resets `output/`.
 For managed-only work:
 
@@ -46,6 +50,11 @@ generation uses the supplied arguments, not package-filename version detection.
 Cake streams active-test progress and test output to the console while retaining
 TRX results and diagnostic artifacts.
 
+To select one execution partition, add `--runGroup=Build`, `--runGroup=Host`,
+or `--runGroup=Docker`. Omit it for the full local suite as before. Unknown
+groups fail explicitly. Build and unfiltered runs also execute the bounded
+compiler/trait regression host.
+
 ## IDE and direct test runs
 
 After staging packages, generate once before opening the test project in an IDE
@@ -71,6 +80,14 @@ The suite builds host-eligible Basic and Gallery solutions. Gallery, WASM, and
 Blazor are build-only; Console/Web runtime tests check exit codes, HTTP responses,
 and PNGs on the host and in Docker. Generated-project tests check exact package
 versions and Uno's SkiaSharp override. Integration/MSBuild suites remain separate.
+
+Annotate tests with typed `RunGroup` attributes by execution target, not sample
+family: compile-only and infrastructure tests use Build, Console/HTTP execution
+uses Host, and containers use Docker. Android/Ios/Mac/Windows are reserved for
+future native execution tests; they have no CI jobs. Use class groups only for
+homogeneous classes; mixed classes need method groups. The Samples-only compiler
+analyzer requires exactly one valid effective group and rejects raw `RunGroup`
+traits. It does not reconcile discovery or CI routing.
 
 Use IDE filters or select one test:
 

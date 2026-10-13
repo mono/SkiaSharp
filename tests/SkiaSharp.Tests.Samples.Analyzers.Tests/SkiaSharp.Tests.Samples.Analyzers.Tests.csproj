@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <SignAssembly>false</SignAssembly>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.9.1" />
+    <ProjectReference Include="../SkiaSharp.Tests.Samples.Analyzers/SkiaSharp.Tests.Samples.Analyzers.csproj"
+      GlobalPropertiesToRemove="TargetFramework;TargetFrameworks" />
+    <Compile Include="../SkiaSharp.Tests.Samples/Utils/SampleRunGroup.cs" Link="SampleRunGroup.cs" />
+    <Compile Include="../SkiaSharp.Tests.Samples/Utils/RunGroupAttribute.cs" Link="RunGroupAttribute.cs" />
+  </ItemGroup>
+</Project>

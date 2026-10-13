@@ -6,6 +6,7 @@ namespace SkiaSharp.Tests.Samples;
 
 // Checks package-cohort consistency and generated dependency versions.
 [Trait("Category", "Infrastructure")]
+[RunGroup(SampleRunGroup.Build)]
 public class ArtifactContractTests
 {
     public static IEnumerable<object[]> GeneratedProjects() =>
