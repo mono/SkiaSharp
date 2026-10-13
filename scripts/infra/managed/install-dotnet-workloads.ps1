@@ -23,9 +23,13 @@ try {
         ConvertTo-Json | Set-Content -LiteralPath (Join-Path $context 'global.json')
     Push-Location $context
     try {
-        $actual = & dotnet --version
-        if ($LASTEXITCODE -ne 0 -or $actual.Trim() -ne $SdkVersion) {
-            throw "Expected SDK $SdkVersion, got '$actual'."
+        $dotnet = (Get-Command dotnet -CommandType Application | Select-Object -First 1).Source
+        Write-Host "Verifying SDK $SdkVersion using $dotnet in $context."
+        $actual = & $dotnet --version 2>&1
+        $exitCode = $LASTEXITCODE
+        $actual = ($actual | ForEach-Object { "$_" }) -join [Environment]::NewLine
+        if ($exitCode -ne 0 -or $actual.Trim() -ne $SdkVersion) {
+            throw "Expected SDK $SdkVersion using $dotnet, exit code $exitCode, output '$actual'."
         }
         if ($tizen) {
             $package = "samsung.net.sdk.tizen.manifest-$TizenManifestBand"

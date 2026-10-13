@@ -14,6 +14,15 @@ parameters:
   - name: enableCaching
     type: boolean
     default: false
+  - name: sampleSdks
+    type: object
+    default:
+      - name: net10
+        version: $(DOTNET_VERSION)
+        workloadVersion: $(DOTNET_WORKLOAD_VERSION)
+      - name: net11
+        version: $(DOTNET_VERSION_PREVIEW)
+        workloadVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
 
 stages:
 
@@ -374,15 +383,28 @@ stages:
       ${{ else }}:
         dependsOn: package
       jobs:
-        - template: /scripts/azure-templates-jobs-samples.yml@self
-          parameters:
-            platform: windows
-            buildAgent: ${{ parameters.buildAgentWindows}}
-        - template: /scripts/azure-templates-jobs-samples.yml@self
-          parameters:
-            platform: macos
-            buildAgent: ${{ parameters.buildAgentMac }}
-        - template: /scripts/azure-templates-jobs-samples.yml@self
-          parameters:
-            platform: linux
-            buildAgent: ${{ parameters.buildAgentLinux }}
+        # SDK10 remains installed for the net10 runner; only consumer selection changes.
+        # Docker groups retain their SDK10/runtime10 images under both host SDKs.
+        - ${{ each sdk in parameters.sampleSdks }}:
+          - template: /scripts/azure-templates-jobs-samples.yml@self
+            parameters:
+              sdk: ${{ sdk }}
+              platform: windows
+              buildAgent: ${{ parameters.buildAgentWindows}}
+          - template: /scripts/azure-templates-jobs-samples.yml@self
+            parameters:
+              sdk: ${{ sdk }}
+              platform: macos
+              ${{ if eq(sdk.name, 'net10') }}:
+                buildAgent: ${{ parameters.buildAgentMac }}
+              ${{ else }}:
+                buildAgent:
+                  pool:
+                    name: Azure Pipelines
+                    vmImage: macos-26
+                    os: macos
+          - template: /scripts/azure-templates-jobs-samples.yml@self
+            parameters:
+              sdk: ${{ sdk }}
+              platform: linux
+              buildAgent: ${{ parameters.buildAgentLinux }}
