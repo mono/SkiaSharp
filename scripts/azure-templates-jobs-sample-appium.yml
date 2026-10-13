@@ -12,7 +12,10 @@ jobs:
       displayName: Appium (${{ parameters.platform }})
       buildAgent: ${{ parameters.buildAgent }}
       target: samples
-      additionalArgs: --sampleTestPlatform=${{ parameters.platform }} --sampleAndroidApi=${{ parameters.androidApi }} --skipExternals="all"
+      ${{ if eq(parameters.platform, 'Android') }}:
+        additionalArgs: --sampleTestTrait=AndroidApi=${{ parameters.androidApi }} --skipExternals="all"
+      ${{ else }}:
+        additionalArgs: --sampleTestTrait=Platform=${{ parameters.platform }} --skipExternals="all"
       retryCount: 0
       shouldPublish: false
       installXcode: ${{ ne(parameters.platform, 'Android') }}

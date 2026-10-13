@@ -199,6 +199,11 @@ directory.
 Local `samples` and IDE discovery remain unfiltered. CI uses the standard
 `Category=Device` and method/row `Platform`/`AndroidApi` traits to route every
 assigned case after the producing native+NuGet artifacts are available.
+Cake only forwards generic `sampleTestTrait` / `sampleExcludeTrait` values to
+xUnit; it does not choose devices or interpret Android API levels. Android
+profiles are xUnit theory data, selected with `--filter-trait AndroidApi=24`
+or `--filter-trait AndroidApi=37`. CI's Android API parameter selects explicit
+driver/image prerequisites and supplies that ordinary row filter.
 Host jobs exclude only device rows; additive Appium legs use the existing
 Windows, Mac and Android agents/bootstrapper. API 24 uses UiAutomator2 5.0.7;
 API 37 uses 8.5.0 because UiAutomator2 6+ requires API 26. Installation is an
