@@ -1,14 +1,18 @@
 parameters:
   platform: ''
   buildAgent: {}
+  sdk:
+    name: net10
+    version: $(DOTNET_VERSION)
+    workloadVersion: $(DOTNET_WORKLOAD_VERSION)
 
 jobs:
   - ${{ each group in split('Build,Host,Docker', ',') }}:
     - ${{ if or(ne(parameters.platform, 'macos'), ne(group, 'Docker')) }}:
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
         parameters:
-          name: samples_${{ parameters.platform }}_${{ lower(group) }}
-          displayName: ${{ parameters.platform }} (${{ group }})
+          name: samples_${{ parameters.platform }}_${{ parameters.sdk.name }}_${{ lower(group) }}
+          displayName: ${{ parameters.platform }} (${{ parameters.sdk.name }}, ${{ group }})
           buildAgent: ${{ parameters.buildAgent }}
           dotnetSdks:
             - sdkVersion: $(DOTNET_VERSION)
@@ -16,6 +20,21 @@ jobs:
               tizen:
                 manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
                 manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+            - ${{ if eq(parameters.sdk.name, 'net11') }}:
+              - sdkVersion: ${{ parameters.sdk.version }}
+                workloadSetVersion: ${{ parameters.sdk.workloadVersion }}
+                ${{ if eq(parameters.platform, 'linux') }}:
+                  workloads: [android, macos, wasm-tools, wasm-tools-net10, maui-android]
+                ${{ else }}:
+                  workloads: [android, macos, wasm-tools, wasm-tools-net10, ios, tvos, maccatalyst, maui]
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+          env:
+            SAMPLE_TEST_SDK_VERSION: ${{ parameters.sdk.version }}
+          ${{ if and(eq(parameters.platform, 'macos'), eq(parameters.sdk.name, 'net11')) }}:
+            variables:
+              XCODE_VERSION: '26.6'
           ${{ if eq(parameters.platform, 'macos') }}:
             installNinja: true
           ${{ if eq(parameters.platform, 'linux') }}:
@@ -23,7 +42,7 @@ jobs:
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
           target: samples
-          additionalArgs: --runGroup=${{ group }} --sampleRunId=${{ parameters.platform }}_${{ lower(group) }}
+          additionalArgs: --runGroup=${{ group }} --sampleRunId=${{ parameters.sdk.name }}_${{ parameters.platform }}_${{ lower(group) }}
           retryCount: 0
           shouldPublish: false
           requiredArtifacts:
@@ -31,7 +50,7 @@ jobs:
             - name: nuget
               dir: nugets
           publishArtifacts:
-            - name: sample_logs_${{ parameters.platform }}_${{ lower(group) }}
+            - name: sample_logs_${{ parameters.platform }}_${{ parameters.sdk.name }}_${{ lower(group) }}
               always: true
               path: output/logs
           postBuildSteps:
@@ -39,5 +58,5 @@ jobs:
               condition: always()
               inputs:
                 testResultsFormat: VSTest
-                testResultsFiles: output/logs/testlogs/samples/${{ parameters.platform }}_${{ lower(group) }}/**/*.trx
-                testRunTitle: Samples (${{ parameters.platform }}, ${{ group }})
+                testResultsFiles: output/logs/testlogs/samples/${{ parameters.sdk.name }}_${{ parameters.platform }}_${{ lower(group) }}/**/*.trx
+                testRunTitle: Samples (${{ parameters.platform }}, ${{ parameters.sdk.name }}, ${{ group }})
