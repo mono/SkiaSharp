@@ -5,7 +5,6 @@ parameters:
   image: ''
   nativePlatform: ''
   resultLabel: ''
-  testRunTitle: ''
   logArtifact: ''
 
 jobs:
@@ -38,7 +37,7 @@ jobs:
           inputs:
             testResultsFormat: VSTest
             testResultsFiles: 'output/logs/testlogs/**/*.trx'
-            testRunTitle: ${{ parameters.testRunTitle }}
+            testRunTitle: ${{ parameters.displayName }} Tests
       publishArtifacts:
         - name: ${{ parameters.logArtifact }}
           always: true

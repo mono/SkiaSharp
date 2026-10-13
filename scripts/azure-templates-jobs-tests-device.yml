@@ -19,7 +19,6 @@ parameters:
         manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
         manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
   resultLabel: ''
-  testRunTitle: ''
   logArtifact: ''
   extractVisualImages: true
 
@@ -54,7 +53,7 @@ jobs:
           inputs:
             testResultsFormat: VSTest
             testResultsFiles: 'output/logs/testlogs/**/*.trx'
-            testRunTitle: ${{ parameters.testRunTitle }}
+            testRunTitle: ${{ parameters.displayName }} Tests
       publishArtifacts:
         - name: ${{ parameters.logArtifact }}
           always: true

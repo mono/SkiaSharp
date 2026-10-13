@@ -110,7 +110,6 @@ stages:
               target: tests-netfx
               additionalArgs: --arch=${{ arch }} --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
               resultLabel: .NET Framework ${{ arch }}
-              testRunTitle: Windows .NET Framework ${{ arch }} Tests
               # SwiftShader's LLVM JIT cannot resolve __chkstk in a 32-bit process, so
               # the software Vulkan ICD crashes the host outright ("exit code is '7'")
               # instead of failing a test. x64 runs the identical suite green, which is
@@ -131,8 +130,7 @@ stages:
             name: tests_netcore_windows
             displayName: Windows (.NET Core)
             buildAgent: ${{ parameters.buildAgentWindows }}
-            testRunTitle: Windows .NET Core Tests
-            coverageArtifact: coverage_netcore_windows
+            publishCoverage: true
             preBuildSteps:
               - pwsh: .\scripts\infra\native\windows\install-mesa-gl.ps1
                 displayName: Provision software OpenGL (Mesa) for the GL tests
@@ -143,8 +141,7 @@ stages:
             name: tests_netcore_macos
             displayName: macOS
             buildAgent: ${{ parameters.buildAgentMac }}
-            testRunTitle: macOS .NET Core Tests
-            coverageArtifact: coverage_netcore_macos
+            publishCoverage: true
             # This pool is x64 and virtualizes Metal. Merely calling
             # MTLCreateSystemDefaultDevice + newCommandQueue on that driver leaves
             # state that never signals, so the test host hangs on shutdown until the
@@ -156,8 +153,7 @@ stages:
             name: tests_netcore_linux
             displayName: Linux
             buildAgent: ${{ parameters.buildAgentLinux }}
-            testRunTitle: Linux .NET Core Tests
-            coverageArtifact: coverage_netcore_linux
+            publishCoverage: true
             # Software Vulkan (Mesa lavapipe) plus a virtual X server give the
             # headless agent deterministic GPU output. ganesh-gl, ganesh-vulkan and
             # graphite-vulkan are required here, so missing provisioning fails.
@@ -197,7 +193,6 @@ stages:
               - sdkVersion: $(DOTNET_VERSION)
                 workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
                 workloads: [android, maui-android]
-            testRunTitle: Android Tests (API $(ANDROID_TEST_DEVICE_VERSION))
             logArtifact: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
             preBuildSteps:
               - script: |
@@ -222,7 +217,6 @@ stages:
             target: tests-ios
             additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             installAndroidSdk: true
-            testRunTitle: iOS Tests (v$(IOS_TEST_DEVICE_VERSION))
             logArtifact: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
             # The iOS *simulator* on the x64 macOS pool exposes a virtualized Metal
             # device: creating a command queue on it leaves dispatch-queue state that
@@ -240,7 +234,6 @@ stages:
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-maccatalyst
             additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
-            testRunTitle: Mac Catalyst Tests
             logArtifact: testlogs_maccatalyst
             # A Mac Catalyst app sees iOS-style Metal GPU families, never Mac2, so
             # the device reports none of the families Ganesh or Graphite require and
@@ -259,7 +252,6 @@ stages:
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
-            testRunTitle: Linux WASM Tests
             logArtifact: testlogs_wasm
             # navigator.gpu.requestAdapter() returns null in the headless browser the
             # DeviceRunners CLI launches, so Dawn has no adapter to bind to. Its
@@ -289,7 +281,6 @@ stages:
                 workloads: [wasm-tools, android]
             jobSdkVersion: $(DOTNET_VERSION_PREVIEW)
             resultLabel: WASM preview
-            testRunTitle: Linux WASM Preview Tests
             logArtifact: testlogs_wasm_preview
             extractVisualImages: false
             # See the WASM leg above: the headless browser exposes no WebGPU adapter (#4591).
@@ -306,7 +297,6 @@ stages:
             image: azurelinux
             nativePlatform: linux
             resultLabel: Azure Linux
-            testRunTitle: Linux (Azure Linux) Tests
             logArtifact: testlogs_container_linux
         - template: /scripts/azure-templates-jobs-tests-container.yml@self
           parameters:
@@ -316,7 +306,6 @@ stages:
             image: azurelinux-nodeps
             nativePlatform: linuxnodeps
             resultLabel: Azure Linux NoDeps
-            testRunTitle: Linux (Azure Linux, No Dependencies) Tests
             logArtifact: testlogs_container_linux_nodeps
         - template: /scripts/azure-templates-jobs-tests-container.yml@self
           parameters:
@@ -326,7 +315,6 @@ stages:
             image: alpine
             nativePlatform: alpine
             resultLabel: Alpine
-            testRunTitle: Linux (Alpine) Tests
             logArtifact: testlogs_container_alpine
         - template: /scripts/azure-templates-jobs-tests-container.yml@self
           parameters:
@@ -336,7 +324,6 @@ stages:
             image: alpine-nodeps
             nativePlatform: alpinenodeps
             resultLabel: Alpine NoDeps
-            testRunTitle: Linux (Alpine, No Dependencies) Tests
             logArtifact: testlogs_container_alpine_nodeps
         - template: /scripts/azure-templates-jobs-tests-container.yml@self
           parameters:
@@ -346,7 +333,6 @@ stages:
             image: nanoserver
             nativePlatform: nanoserver
             resultLabel: Nano Server
-            testRunTitle: Nano Server Container Tests
             logArtifact: testlogs_container_nanoserver
 
         - job: coverage_reports                      # Coverage Reports

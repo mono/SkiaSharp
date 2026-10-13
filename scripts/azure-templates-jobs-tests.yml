@@ -8,8 +8,7 @@ parameters:
   env: {}
   preBuildSteps: []
   resultLabel: .NET Core
-  testRunTitle: ''
-  coverageArtifact: ''
+  publishCoverage: false
 
 jobs:
   - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
@@ -42,11 +41,11 @@ jobs:
           inputs:
             testResultsFormat: VSTest
             testResultsFiles: 'output/logs/testlogs/**/*.trx'
-            testRunTitle: ${{ parameters.testRunTitle }}
+            testRunTitle: ${{ parameters.displayName }} Tests
       publishArtifacts:
         - name: ${{ replace(parameters.name, 'tests_', 'testlogs_') }}
           always: true
           path: 'output/logs/testlogs'
-        - ${{ if ne(parameters.coverageArtifact, '') }}:
-          - name: ${{ parameters.coverageArtifact }}
+        - ${{ if eq(parameters.publishCoverage, true) }}:
+          - name: ${{ replace(parameters.name, 'tests_', 'coverage_') }}
             path: 'output/coverage'
