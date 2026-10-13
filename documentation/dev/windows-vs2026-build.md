@@ -16,7 +16,11 @@ fresh VS 2026 Build Tools instance, also supply a new `-InstallationPath`.
 Both profiles request the latest x86/x64/ARM64 compiler and matching Spectre
 libraries, LLVM, CMake/Ninja, and Windows SDKs 22621, 26100 and 28000. Native
 HarfBuzz and ANGLE use SDK 28000; the existing WinUI projection uses 22621.
-Installed SDK versions do not change the application's minimum Windows version.
+An installed SDK version does not itself set the minimum runtime OS. MSVC v145
+supports Windows 10 / Server 2016 and later, not Windows 7, 8 or 8.1.
+The WinUI project's declared minimum remains Windows 10 build 17763; API usage
+and dependency requirements can impose a higher minimum. Hosted validation does
+not verify deployment on that oldest declared Windows build.
 There is no VS 2022/v143 compiler fallback or .NET SDK downgrade.
 The native WinUI project uses C++20 standard coroutines; the deprecated C++17
 `/await` mode is not enabled.
