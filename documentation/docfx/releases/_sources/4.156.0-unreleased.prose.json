@@ -1,48 +1,37 @@
 {
-  "theme": "M156 platform updates",
-  "highlights_headline": "SkiaSharp 4.156.0 updates to Skia M156 and broadens native rendering support across desktop platforms.",
-  "highlights_body": "This line adds GTK4 GPU rendering, restores Linux system-font discovery for NoDependencies deployments, and aligns upcoming .NET and native toolchain assets.",
+  "theme": "Allocation and lifetime improvements",
+  "highlights_headline": "SkiaSharp 4.156.0 reduces allocations in pixel and text-processing paths while fixing front-buffered stream retention.",
+  "highlights_body": "Managed pixel copies and HarfBuzz text operations avoid temporary allocations without changing their results. Disposed front-buffered streams now release borrowed source streams.",
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Skia updated to milestone M156",
-          "detail": "Moves the bundled renderer to Skia M156 and incorporates the current core-fork cleanup.",
-          "prs": [5247, 5208]
-        }
-      ]
-    },
-    {
-      "heading": "Bug Fixes",
-      "bullets": [
-        {
-          "lead": "Linux system-font discovery restored",
-          "detail": "NoDependencies deployments can again locate fonts installed on Linux systems.",
-          "prs": [5086]
-        }
-      ]
-    },
-    {
-      "heading": "Platform",
-      "bullets": [
-        {
-          "lead": "GTK4 gains native GPU rendering",
-          "detail": "Adds GPU-backed rendering and pixel scaling for the GTK4 integration.",
-          "prs": [5249]
+          "lead": "Managed pixel copies allocate less",
+          "detail": "Valid managed pixel buffers now copy directly into raster images instead of first creating an intermediate SKData instance, while invalid-input behavior remains unchanged.",
+          "prs": [
+            5052
+          ]
         },
         {
-          "lead": "Native platform assets refreshed",
-          "detail": "Aligns Windows toolchains, Tizen packaging, .NET 11 preview assets, and the WinUI Windows SDK configuration.",
-          "prs": [5306, 5238, 5235, 5273]
+          "lead": "HarfBuzz text operations avoid temporary buffers",
+          "detail": "UTF-32 buffer input and feature-string formatting now reuse or stack-allocate their encoding buffers while preserving existing HarfBuzz results.",
+          "prs": [
+            5060,
+            5230
+          ]
+        },
+        {
+          "lead": "Disposed front-buffered streams release borrowed streams",
+          "detail": "SKFrontBufferedManagedStream no longer retains an underlying stream after disposal when it does not own that stream.",
+          "prs": [
+            5327
+          ]
         }
       ]
     }
   ],
-  "contributor_summaries": {
-    "ramezgerges": "Restored Linux system-font discovery for NoDependencies deployments"
-  },
-  "preview_summaries": {},
-  "harfbuzz_summary": "Refreshes HarfBuzzSharp build assets alongside the updated Windows and Tizen native toolchains."
+  "contributor_summaries": {},
+  "preview_summaries": {}
 }
