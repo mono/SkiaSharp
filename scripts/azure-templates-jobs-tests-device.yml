@@ -1,0 +1,221 @@
+parameters:
+  - name: target
+    type: string
+    values: [android, ios, maccatalyst, wasm, wasm-preview]
+  - name: buildAgent
+    type: object
+
+jobs:
+  - ${{ if eq(parameters.target, 'android') }}:
+    - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Android
+      parameters:
+        name: tests_android_linux
+        displayName: Android
+        buildAgent: ${{ parameters.buildAgent }}
+        target: tests-android
+        additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+        shouldPublish: false
+        installXcode: false
+        dotnetSdks:
+          - sdkVersion: $(DOTNET_VERSION)
+            workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+            workloads: [android, maui-android]
+        requiredArtifacts:
+          - name: native
+        preBuildSteps:
+          - script: |
+              echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+              sudo udevadm control --reload-rules
+              sudo udevadm trigger --name-match=kvm
+            displayName: Enable KVM for Android emulator
+          - script: |
+              mkdir -p "$HOME/.android/avd"
+              echo "##vso[task.setvariable variable=ANDROID_AVD_HOME]$HOME/.android/avd"
+              echo "##vso[task.setvariable variable=ANDROID_EMULATOR_HOME]$HOME/.android"
+            displayName: Set Android AVD home (fix XDG path mismatch)
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "emulator"
+            displayName: Install the Android emulator
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
+            displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
+        postBuildSteps:
+          - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+            displayName: Extract visual-regression images for triage
+            condition: always()
+          - task: PublishTestResults@2
+            displayName: Publish the Android test results
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: 'output/logs/testlogs/**/*.trx'
+              testRunTitle: 'Android Tests (API $(ANDROID_TEST_DEVICE_VERSION))'
+        publishArtifacts:
+          - name: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
+            always: true
+            path: 'output/logs/testlogs'
+  - ${{ if eq(parameters.target, 'ios') }}:
+    - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|iOS
+      parameters:
+        name: tests_ios_macos
+        dotnetSdks:
+          - sdkVersion: $(DOTNET_VERSION)
+            workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+            tizen:
+              manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+              manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+        displayName: iOS
+        buildAgent: ${{ parameters.buildAgent }}
+        target: tests-ios
+        additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+        shouldPublish: false
+        requiredArtifacts:
+          - name: native
+        # The iOS *simulator* on the x64 macOS pool exposes a virtualized Metal
+        # device: creating a command queue on it leaves dispatch-queue state that
+        # never signals, hanging the test host's shutdown for hours. Declared here
+        # rather than sniffed at runtime — this describes the pool we run on today,
+        # so if the pool moves to Apple Silicon this line is what has to change.
+        # Same shutdown hang as #4598; the simulator additionally cannot compile
+        # Graphite's gradient pipeline (#4555). #4591 tracks the wider picture.
+        env:
+          SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
+        postBuildSteps:
+          - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+            displayName: Extract visual-regression images for triage
+            condition: always()
+          - task: PublishTestResults@2
+            displayName: Publish the iOS test results
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: 'output/logs/testlogs/**/*.trx'
+              testRunTitle: 'iOS Tests (v$(IOS_TEST_DEVICE_VERSION))'
+        publishArtifacts:
+          - name: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
+            always: true
+            path: 'output/logs/testlogs'
+  - ${{ if eq(parameters.target, 'maccatalyst') }}:
+    - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Mac Catalyst
+      parameters:
+        name: tests_maccatalyst_macos
+        dotnetSdks:
+          - sdkVersion: $(DOTNET_VERSION)
+            workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+            tizen:
+              manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+              manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+        displayName: Mac Catalyst
+        buildAgent: ${{ parameters.buildAgent }}
+        target: tests-maccatalyst
+        additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+        # A Mac Catalyst app sees iOS-style Metal GPU families, never Mac2, so
+        # the device reports none of the families Ganesh or Graphite require and
+        # bring-up fails outright (#4599). macOS on this same pool is opted out
+        # too, for a different reason — its virtualized Metal hangs the host on
+        # shutdown (#4598). #4591 tracks the wider picture.
+        env:
+          SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
+        installAndroidSdk: false
+        shouldPublish: false
+        requiredArtifacts:
+          - name: native
+        postBuildSteps:
+          - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+            displayName: Extract visual-regression images for triage
+            condition: always()
+          - task: PublishTestResults@2
+            displayName: Publish the Mac Catalyst test results
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: 'output/logs/testlogs/**/*.trx'
+              testRunTitle: 'Mac Catalyst Tests'
+        publishArtifacts:
+          - name: testlogs_maccatalyst
+            always: true
+            path: 'output/logs/testlogs'
+  - ${{ if eq(parameters.target, 'wasm') }}:
+    - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|WASM
+      parameters:
+        name: tests_wasm_linux
+        dotnetSdks:
+          - sdkVersion: $(DOTNET_VERSION)
+            workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+            tizen:
+              manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+              manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+        displayName: WASM
+        buildAgent: ${{ parameters.buildAgent }}
+        packages: $(MANAGED_LINUX_PACKAGES) ninja-build
+        target: tests-wasm
+        additionalArgs: --skipExternals="all" --coverage=false
+        # navigator.gpu.requestAdapter() returns null in the headless browser the
+        # DeviceRunners CLI launches, so Dawn has no adapter to bind to. Its
+        # `wasm test` command takes no browser arguments, so the WebGPU flags
+        # cannot be passed through without an upstream change to that package. See #4591.
+        env:
+          SKIASHARP_TEST_SKIP_GPU: graphite-dawn
+        installAndroidSdk: false
+        shouldPublish: false
+        requiredArtifacts:
+          - name: native
+        installEmsdk: true
+        initScript: source ~/emsdk/emsdk_env.sh
+        preBuildSteps:
+          - bash: bash ./scripts/infra/managed/install-chrome.sh
+            displayName: Install Chrome for WASM tests
+        postBuildSteps:
+          - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+            displayName: Extract visual-regression images for triage
+            condition: always()
+          - task: PublishTestResults@2
+            displayName: Publish the WASM test results
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: 'output/logs/testlogs/**/*.trx'
+              testRunTitle: 'Linux WASM Tests'
+        publishArtifacts:
+          - name: testlogs_wasm
+            always: true
+            path: 'output/logs/testlogs'
+  - ${{ if eq(parameters.target, 'wasm-preview') }}:
+    - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests [WASM Preview] (Linux)
+      parameters:
+        # Runs the SkiaSharp.Tests.Wasm suite as the preview .NET (tests only — the rest of CI
+        # stays on net10) so WASM regressions on the newer runtime, such as an exception-handling
+        # mismatch in the native lib, fail CI. Provisioning and whole-job SDK selection
+        # are separate; only this job selects the preview SDK for its source build.
+        name: tests_wasm_preview_linux
+        displayName: WASM (.NET Preview)
+        buildAgent: ${{ parameters.buildAgent }}
+        packages: $(MANAGED_LINUX_PACKAGES) ninja-build
+        target: tests-wasm
+        additionalArgs: --skipExternals="all" --coverage=false --previewtfm=true
+        # See the WASM leg above: the headless browser exposes no WebGPU adapter (#4591).
+        env:
+          SKIASHARP_TEST_SKIP_GPU: graphite-dawn
+        installAndroidSdk: false
+        shouldPublish: false
+        dotnetSdks:
+          - sdkVersion: $(DOTNET_VERSION)
+          - sdkVersion: $(DOTNET_VERSION_PREVIEW)
+            workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
+            workloads: [wasm-tools, android]
+        jobSdkVersion: $(DOTNET_VERSION_PREVIEW)
+        requiredArtifacts:
+          - name: native
+        preBuildSteps:
+          - bash: bash ./scripts/infra/managed/install-chrome.sh
+            displayName: Install Chrome for WASM tests
+        postBuildSteps:
+          - task: PublishTestResults@2
+            displayName: Publish the WASM preview test results
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: 'output/logs/testlogs/**/*.trx'
+              testRunTitle: 'Linux WASM Preview Tests'
+        publishArtifacts:
+          - name: testlogs_wasm_preview
+            always: true
+            path: 'output/logs/testlogs'

@@ -1,0 +1,176 @@
+parameters:
+  - name: platform
+    type: string
+    values: [linux, windows]
+  - name: buildAgent
+    type: object
+
+jobs:
+  # Containerized test legs — see documentation/dev/containerized-testing.md
+  - ${{ if eq(parameters.platform, 'linux') }}:
+    - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Azure Linux)
+      parameters:
+        name: tests_container_linux
+        dotnetSdks: []
+        # No GPU stack in these images, by design: they exist to prove SkiaSharp
+        # works without those dependencies, so OpenGL genuinely cannot come up.
+        # Declared here rather than inferred from the DllNotFoundException the
+        # test would otherwise throw; the desktop Linux and Windows legs carry
+        # the ganesh-gl coverage. Tracked by #4591.
+        env:
+          SKIASHARP_TEST_SKIP_GPU: ganesh-gl
+        displayName: Linux (Azure Linux)
+        buildAgent: ${{ parameters.buildAgent }}
+        docker: scripts/infra/tests/docker/azurelinux
+        target: tests-container
+        additionalArgs: --nativePlatform=linux
+        installAndroidSdk: false
+        installXcode: false
+        shouldPublish: false
+        requiredArtifacts:
+          - name: native
+        postBuildSteps:
+          - task: PublishTestResults@2
+            displayName: Publish the Azure Linux container test results
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: 'output/logs/testlogs/**/*.trx'
+              testRunTitle: 'Linux (Azure Linux) Tests'
+        publishArtifacts:
+          - name: testlogs_container_linux
+            always: true
+            path: 'output/logs/testlogs'
+    - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Azure Linux, No Dependencies)
+      parameters:
+        name: tests_container_linux_nodeps
+        dotnetSdks: []
+        # No GPU stack in these images, by design: they exist to prove SkiaSharp
+        # works without those dependencies, so OpenGL genuinely cannot come up.
+        # Declared here rather than inferred from the DllNotFoundException the
+        # test would otherwise throw; the desktop Linux and Windows legs carry
+        # the ganesh-gl coverage. Tracked by #4591.
+        env:
+          SKIASHARP_TEST_SKIP_GPU: ganesh-gl
+        displayName: Linux (Azure Linux, No Dependencies)
+        buildAgent: ${{ parameters.buildAgent }}
+        docker: scripts/infra/tests/docker/azurelinux-nodeps
+        target: tests-container
+        additionalArgs: --nativePlatform=linuxnodeps
+        installAndroidSdk: false
+        installXcode: false
+        shouldPublish: false
+        requiredArtifacts:
+          - name: native
+        postBuildSteps:
+          - task: PublishTestResults@2
+            displayName: Publish the Azure Linux NoDeps container test results
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: 'output/logs/testlogs/**/*.trx'
+              testRunTitle: 'Linux (Azure Linux, No Dependencies) Tests'
+        publishArtifacts:
+          - name: testlogs_container_linux_nodeps
+            always: true
+            path: 'output/logs/testlogs'
+    - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Alpine)
+      parameters:
+        name: tests_container_alpine_linux
+        dotnetSdks: []
+        # No GPU stack in these images, by design: they exist to prove SkiaSharp
+        # works without those dependencies, so OpenGL genuinely cannot come up.
+        # Declared here rather than inferred from the DllNotFoundException the
+        # test would otherwise throw; the desktop Linux and Windows legs carry
+        # the ganesh-gl coverage. Tracked by #4591.
+        env:
+          SKIASHARP_TEST_SKIP_GPU: ganesh-gl
+        displayName: Linux (Alpine)
+        buildAgent: ${{ parameters.buildAgent }}
+        docker: scripts/infra/tests/docker/alpine
+        target: tests-container
+        additionalArgs: --nativePlatform=alpine
+        installAndroidSdk: false
+        installXcode: false
+        shouldPublish: false
+        requiredArtifacts:
+          - name: native
+        postBuildSteps:
+          - task: PublishTestResults@2
+            displayName: Publish the Alpine container test results
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: 'output/logs/testlogs/**/*.trx'
+              testRunTitle: 'Linux (Alpine) Tests'
+        publishArtifacts:
+          - name: testlogs_container_alpine
+            always: true
+            path: 'output/logs/testlogs'
+    - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Alpine, No Dependencies)
+      parameters:
+        name: tests_container_alpine_nodeps
+        dotnetSdks: []
+        # No GPU stack in these images, by design: they exist to prove SkiaSharp
+        # works without those dependencies, so OpenGL genuinely cannot come up.
+        # Declared here rather than inferred from the DllNotFoundException the
+        # test would otherwise throw; the desktop Linux and Windows legs carry
+        # the ganesh-gl coverage. Tracked by #4591.
+        env:
+          SKIASHARP_TEST_SKIP_GPU: ganesh-gl
+        displayName: Linux (Alpine, No Dependencies)
+        buildAgent: ${{ parameters.buildAgent }}
+        docker: scripts/infra/tests/docker/alpine-nodeps
+        target: tests-container
+        additionalArgs: --nativePlatform=alpinenodeps
+        installAndroidSdk: false
+        installXcode: false
+        shouldPublish: false
+        requiredArtifacts:
+          - name: native
+        postBuildSteps:
+          - task: PublishTestResults@2
+            displayName: Publish the Alpine NoDeps container test results
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: 'output/logs/testlogs/**/*.trx'
+              testRunTitle: 'Linux (Alpine, No Dependencies) Tests'
+        publishArtifacts:
+          - name: testlogs_container_alpine_nodeps
+            always: true
+            path: 'output/logs/testlogs'
+  - ${{ if eq(parameters.platform, 'windows') }}:
+    - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (Nano Server)
+      parameters:
+        name: tests_container_nanoserver_windows
+        dotnetSdks: []
+        # No GPU stack in these images, by design: they exist to prove SkiaSharp
+        # works without those dependencies, so OpenGL genuinely cannot come up.
+        # Declared here rather than inferred from the DllNotFoundException the
+        # test would otherwise throw; the desktop Linux and Windows legs carry
+        # the ganesh-gl coverage. Tracked by #4591.
+        env:
+          SKIASHARP_TEST_SKIP_GPU: ganesh-gl
+        displayName: Windows (Nano Server)
+        buildAgent: ${{ parameters.buildAgent }}
+        docker: scripts/infra/tests/docker/nanoserver
+        target: tests-container
+        additionalArgs: --nativePlatform=nanoserver
+        installAndroidSdk: false
+        installXcode: false
+        shouldPublish: false
+        requiredArtifacts:
+          - name: native
+        postBuildSteps:
+          - task: PublishTestResults@2
+            displayName: Publish the Nano Server container test results
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: 'output/logs/testlogs/**/*.trx'
+              testRunTitle: 'Nano Server Container Tests'
+        publishArtifacts:
+          - name: testlogs_container_nanoserver
+            always: true
+            path: 'output/logs/testlogs'
