@@ -133,19 +133,19 @@ Gallery covers search, filtering, Gradient controls and CPU/GPU rendering.
 
 After the package setup above, restore local tools with `dotnet tool restore`.
 Install Appium and the selected driver explicitly; put `appium` on PATH.
-Use UiAutomator2 5.0.7 for API 24 and 8.5.0 for API 37 (driver 6+ requires API
-26), XCUITest for iOS, Mac2 for MacCatalyst/macOS, or Windows for WinUI/MAUI
+Use UiAutomator2 for API 26 and 37 (driver 6+ requires API 26), XCUITest for iOS,
+Mac2 for MacCatalyst/macOS, or Windows for WinUI/MAUI
 Windows. Tests do not install tools, workloads or device images.
 
 Set `ANDROID_HOME` or `ANDROID_SDK_ROOT` for Android. On macOS, set
 `DEVELOPER_DIR` to the Xcode required by your installed workload; tests do not
 change the global Xcode selection.
 
-The explicit Android profiles are **Pixel_API_24**, Android 7.0/API 24,
+The explicit Android profiles are **Pixel_API_26**, Android 8.0/API 26,
 `emulator-5558`, 4 KB pages, and **Pixel_API_37**, Android 17/API 37,
-`emulator-5556`, 16 KB pages. iOS uses **iPhone 16 Pro** on **18.6** and **26.2**.
+`emulator-5560`, 16 KB pages. iOS uses **iPhone 16 Pro** on **18.6** and **26.2**.
 Install the required images/runtimes before running tests: Android uses
-`system-images;android-24;google_apis;<host-ABI>` and
+`system-images;android-26;google_apis;<host-ABI>` and
 `system-images;android-37.1;google_apis_ps16k;<host-ABI>`; Apple uses the named
 iOS runtime and iPhone 16 Pro device type. Missing prerequisites fail; neither
 the tests nor the Appium CI preparation path installs or downloads them.
@@ -183,7 +183,7 @@ dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
   -- --filter-trait AndroidApi=37 --report-trx
 ```
 
-Select Android rows with `AndroidApi=24` or `AndroidApi=37`; select other
+Select Android rows with `AndroidApi=26` or `AndroidApi=37`; select other
 platforms with `Platform=iOS`, `Platform=MacCatalyst`, `Platform=macOS` or
 `Platform=Windows`. Multiple xUnit include-traits are ORed, not intersected.
 Select only platforms supported by your host. Missing prerequisites fail
@@ -197,7 +197,7 @@ and images/runtimes; CI preparation only checks prerequisites. Cake forwards
 `runGroup`, it uses a query intersection, for example:
 
 ```sh
-dotnet cake --target=samples --runGroup=Android --sampleTestTrait=AndroidApi=24 \
+dotnet cake --target=samples --runGroup=Android --sampleTestTrait=AndroidApi=26 \
   --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 

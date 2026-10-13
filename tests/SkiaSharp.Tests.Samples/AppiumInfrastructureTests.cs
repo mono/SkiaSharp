@@ -18,7 +18,7 @@ public sealed class AppiumInfrastructureTests
             File.WriteAllText(Path.Combine(sdk, "platform-tools",
                 OperatingSystem.IsWindows() ? "adb.exe" : "adb"), "");
             var android = new Android(sdk);
-            var error = await Assert.ThrowsAsync<DirectoryNotFoundException>(() => android.CreateAvd(AndroidDevice.PixelApi24));
+            var error = await Assert.ThrowsAsync<DirectoryNotFoundException>(() => android.CreateAvd(AndroidDevice.PixelApi26));
             Assert.Contains("Tests never download images", error.Message);
         }
         finally
@@ -31,14 +31,14 @@ public sealed class AppiumInfrastructureTests
     [Fact]
     public void DeviceProfilesKeepExplicitLegacyAndCurrentPorts()
     {
-        Assert.Equal(5558, AndroidDevice.PixelApi24.Validate());
-        Assert.Equal(5556, AndroidDevice.PixelApi37.Validate());
-        Assert.Equal(24, AndroidDevice.PixelApi24.Api);
+        Assert.Equal(5558, AndroidDevice.PixelApi26.Validate());
+        Assert.Equal(5560, AndroidDevice.PixelApi37.Validate());
+        Assert.Equal(26, AndroidDevice.PixelApi26.Api);
         Assert.Equal(37, AndroidDevice.PixelApi37.Api);
         IosDevice.Iphone16ProIos18_6.Validate();
         IosDevice.Iphone16Pro.Validate();
-        Assert.Throws<ArgumentException>(() => (AndroidDevice.PixelApi24 with { Serial = "emulator-5557" }).Validate());
-        Assert.Throws<ArgumentException>(() => (AndroidDevice.PixelApi24 with { Name = "Pixel_*" }).Validate());
+        Assert.Throws<ArgumentException>(() => (AndroidDevice.PixelApi26 with { Serial = "emulator-5557" }).Validate());
+        Assert.Throws<ArgumentException>(() => (AndroidDevice.PixelApi26 with { Name = "Pixel_*" }).Validate());
         Assert.Throws<ArgumentException>(() => (IosDevice.Iphone16Pro with { Version = "latest" }).Validate());
     }
 

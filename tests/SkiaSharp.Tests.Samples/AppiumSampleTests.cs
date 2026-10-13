@@ -280,14 +280,14 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
 
     private static AndroidDevice AndroidProfile(int api) => api switch
     {
-        24 => AndroidDevice.PixelApi24,
+        26 => AndroidDevice.PixelApi26,
         37 => AndroidDevice.PixelApi37,
         _ => throw new ArgumentOutOfRangeException(nameof(api), "Declare an assigned Android profile.")
     };
 
     public static IEnumerable<TheoryDataRow<string, string, bool, int>> BasicAndroidCases()
     {
-        foreach (var api in new[] { 24, 37 })
+        foreach (var api in new[] { 26, 37 })
         {
             yield return new("Basic/Maui", "com.companyname.SkiaSharpSample", true, api)
             {
@@ -302,7 +302,7 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
 
     public static IEnumerable<TheoryDataRow<int>> AndroidApiCases() =>
     [
-        new(24) { Traits = new() { ["AndroidApi"] = ["24"] } },
+        new(26) { Traits = new() { ["AndroidApi"] = ["26"] } },
         new(37) { Traits = new() { ["AndroidApi"] = ["37"] } }
     ];
 

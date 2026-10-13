@@ -5,11 +5,11 @@ using OpenQA.Selenium.Interactions;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-internal sealed class IosRunningApp(
-    SampleWorkspace workspace, string artifact, string applicationId, IosDevice device)
+internal sealed class IosRunningApp(SampleWorkspace workspace, string artifact, string applicationId, IosDevice device)
     : AppiumRunningApp(workspace, artifact, applicationId)
 {
     internal override PointerKind PointerKind => PointerKind.Touch;
+
     internal override void SubmitSearch() =>
         Find(MobileBy.IosNSPredicate("type == 'XCUIElementTypeButton' AND name == 'Return'")).Click();
 
@@ -33,6 +33,8 @@ internal sealed class IosRunningApp(
         options.AddAdditionalAppiumOption("wdaRemotePort", AppiumFixture.IosPort);
         options.AddAdditionalAppiumOption("derivedDataPath", Path.Combine(Workspace.Root, "wda-ios"));
         options.AddAdditionalAppiumOption("showXcodeLog", true);
+        // Animated GPU pages never become continuously idle; retain bounded XCTest idling checks.
+        options.AddAdditionalAppiumOption("waitForIdleTimeout", 1);
         SetDriver(new IOSDriver(address, options, TimeSpan.FromMinutes(6)));
         Wait(() => Driver.FindElement(By.XPath("//XCUIElementTypeApplication"))
             is { Displayed: true } element ? element : null, $"{ApplicationId} foreground UI");

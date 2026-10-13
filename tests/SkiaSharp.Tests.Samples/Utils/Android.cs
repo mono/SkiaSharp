@@ -2,6 +2,32 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
+// Explicit sample-compatibility candidates, not claims about installed runtimes or driver readiness.
+internal sealed record AndroidDevice(string Name, string Version, int Api, string Serial, int PageSize)
+{
+    internal static AndroidDevice PixelApi26 { get; } =
+        new("Pixel_API_26", "8.0", 26, "emulator-5558", 4096);
+
+    internal static AndroidDevice PixelApi37 { get; } =
+        new("Pixel_API_37", "17", 37, "emulator-5560", 16384);
+
+    internal int Validate()
+    {
+        if (string.IsNullOrWhiteSpace(Name) || !Regex.IsMatch(Name, @"^[A-Za-z0-9_.-]+$"))
+            throw new ArgumentException("Declare the exact AVD name, not a path or wildcard.", nameof(Name));
+        if (string.IsNullOrWhiteSpace(Version) || !Regex.IsMatch(Version, @"^[1-9][0-9]*(\.[0-9]+)*$") || Api <= 0)
+            throw new ArgumentException("Declare the exact Android release and a positive API level.", nameof(Version));
+        if (PageSize is < 4096 or > 65536 || (PageSize & (PageSize - 1)) != 0)
+            throw new ArgumentOutOfRangeException(nameof(PageSize), "Declare the expected power-of-two page size in bytes.");
+        var selected = Regex.Match(Serial ?? "", @"^emulator-([0-9]+)$");
+        var port = 0;
+        if (!selected.Success || !int.TryParse(selected.Groups[1].Value, out port) ||
+            port is < 5554 or > 5682 || port % 2 != 0 || Serial != $"emulator-{port}")
+            throw new ArgumentException("Declare an exact emulator serial with an even console port from 5554 through 5682.", nameof(Serial));
+        return port;
+    }
+}
+
 // The caller selects the installed SDK; repository tool resolution remains owned by DotNet.
 internal sealed class Android
 {
@@ -17,12 +43,16 @@ internal sealed class Android
             throw new FileNotFoundException("Install Android platform-tools before selecting Android tests.", adb);
     }
 
-    internal Task<ToolCommandResult> ListAvds() => ExecuteSdk(["avd", "list", "--format", "json"]);
-    internal Task<ToolCommandResult> ListDevices() => ExecuteSdk(["device", "list", "--format", "json"]);
+    internal Task<ToolCommandResult> ListAvds() =>
+        ExecuteSdk(["avd", "list", "--format", "json"]);
+
+    internal Task<ToolCommandResult> ListDevices() =>
+        ExecuteSdk(["device", "list", "--format", "json"]);
 
     internal Task<ToolCommandResult> CreateAvd(AndroidDevice device)
     {
         device.Validate();
+
         var architecture = RuntimeInformation.ProcessArchitecture switch
         {
             Architecture.Arm64 => "arm64-v8a",
@@ -31,7 +61,7 @@ internal sealed class Android
         };
         var image = device.Api switch
         {
-            24 => $"system-images;android-24;google_apis;{architecture}",
+            26 => $"system-images;android-26;google_apis;{architecture}",
             37 => $"system-images;android-37.1;google_apis_ps16k;{architecture}",
             _ => throw new ArgumentOutOfRangeException(nameof(device), "Declare an installed image for the selected profile.")
         };
@@ -39,6 +69,7 @@ internal sealed class Android
         if (!File.Exists(Path.Combine(imageDirectory, "package.xml")) ||
             !File.Exists(Path.Combine(imageDirectory, "system.img")))
             throw new DirectoryNotFoundException($"Required emulator image is not installed: {imageDirectory}. Tests never download images.");
+
         return ExecuteSdk(["avd", "create", "--name", device.Name, "--sdk", image, "--device", "pixel_9"]);
     }
 
@@ -48,9 +79,12 @@ internal sealed class Android
         return ExecuteSdk(["avd", "delete", "--name", device.Name, "--force"]);
     }
 
-    internal Task<ToolCommandResult> AvdName(AndroidDevice device) => Adb(device, ["emu", "avd", "name"]);
-    internal Task<ToolCommandResult> Property(AndroidDevice device, string name) => Adb(device, ["shell", "getprop", name]);
-    internal Task<ToolCommandResult> PageSize(AndroidDevice device) => Adb(device, ["shell", "getconf", "PAGE_SIZE"]);
+    internal Task<ToolCommandResult> AvdName(AndroidDevice device) =>
+        Adb(device, ["emu", "avd", "name"]);
+
+    internal Task<ToolCommandResult> PageSize(AndroidDevice device) =>
+        Adb(device, ["shell", "getconf", "PAGE_SIZE"]);
+
     private Task<ToolCommandResult> Adb(AndroidDevice device, string[] arguments)
     {
         device.Validate();

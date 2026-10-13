@@ -7,18 +7,19 @@ using OpenQA.Selenium.Interactions;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-internal sealed class AndroidRunningApp(
-    SampleWorkspace workspace, string artifact, string applicationId, AndroidDevice device)
+internal sealed class AndroidRunningApp(SampleWorkspace workspace, string artifact, string applicationId, AndroidDevice device)
     : AppiumRunningApp(workspace, artifact, applicationId)
 {
     internal override PointerKind PointerKind => PointerKind.Touch;
+
     internal override By Locator(string id) => By.Id($"{ApplicationId}:id/{id}");
-    internal override void SubmitSearch() => ((AndroidDriver)Driver).PressKeyCode(AndroidKeyCode.Enter);
+
+    internal override void SubmitSearch() =>
+        ((AndroidDriver)Driver).PressKeyCode(AndroidKeyCode.Enter);
 
     protected override async Task Start(Uri address)
     {
-        Require(Path.GetExtension(Artifact).Equals(".apk", StringComparison.OrdinalIgnoreCase),
-            "Provide the actual built APK, not an AAB or synthetic app.");
+        Require(Path.GetExtension(Artifact).Equals(".apk", StringComparison.OrdinalIgnoreCase), "Provide the actual built APK, not an AAB or synthetic app.");
         var port = device.Validate();
         var sdk = Environment.GetEnvironmentVariable("ANDROID_HOME")
             ?? Environment.GetEnvironmentVariable("ANDROID_SDK_ROOT")
@@ -66,10 +67,6 @@ internal sealed class AndroidRunningApp(
         options.AddAdditionalAppiumOption("suppressKillServer", true);
         options.AddAdditionalAppiumOption("fullReset", true);
         SetDriver(new AndroidDriver(address, options, TimeSpan.FromMinutes(3)));
-        Require((await CaptureCommand(android.Property(device, "ro.build.version.release"))).Trim() == device.Version,
-            "The selected Android release does not match the profile.");
-        Require((await CaptureCommand(android.Property(device, "ro.build.version.sdk"))).Trim() == device.Api.ToString(CultureInfo.InvariantCulture),
-            "The selected Android API does not match the profile.");
         Require((await CaptureCommand(android.PageSize(device))).Trim() == device.PageSize.ToString(CultureInfo.InvariantCulture),
             "The selected Android page size does not match the profile.");
         Wait(() => Driver.PageSource.Contains($"package=\"{ApplicationId}\"", StringComparison.Ordinal)

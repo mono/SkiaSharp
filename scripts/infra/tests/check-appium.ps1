@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory)]
     [ValidateSet('Android', 'iOS', 'MacCatalyst', 'macOS', 'Windows')]
     [string] $Platform,
-    [ValidateSet('', '24', '37')]
+    [ValidateSet('', '26', '37')]
     [string] $AndroidApi = ''
 )
 
@@ -22,10 +22,7 @@ if ($null -eq $entry) {
     throw "Appium driver '$driver' is not installed. Provision the agent before selecting this job."
 }
 if ($Platform -eq 'Android') {
-    if ($AndroidApi -notin @('24', '37')) { throw 'Declare the assigned Android API profile.' }
-    if ($AndroidApi -eq '24' -and [version]$entry.Value.version -ge [version]'6.0.0') {
-        throw 'API 24 requires a preinstalled UiAutomator2 driver older than 6.0.0.'
-    }
+    if ($AndroidApi -notin @('26', '37')) { throw 'Declare the assigned Android API profile.' }
 }
 if ($Platform -in @('MacCatalyst', 'macOS')) {
     if ([string]::IsNullOrWhiteSpace($env:SKIASHARP_APPIUM_MAC_WDA_ROOT) -or
