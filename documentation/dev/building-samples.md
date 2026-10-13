@@ -105,6 +105,10 @@ Browser errors and unavailable GPU rendering fail.
 | Docker | Container image builds and sample execution | Windows, Linux |
 
 When adding tests, choose a `RunGroup` by execution target, not sample family.
+Name execution classes by purpose: `SampleBuildTests`, `BasicSampleRunTests`,
+`BrowserSampleRunTests`, and `UnoBrowserSampleRunTests`. `DockerSampleBuildTests`
+and `DockerSampleRunTests` share one collection fixture and both use the Docker
+group. Infrastructure, discovery, and artifact-contract checks stay separate.
 Each test requires exactly one typed attribute, such as
 `[RunGroup(SampleRunGroup.Build)]`. Apply it to a class only when every test uses
 the same group; otherwise annotate individual methods.

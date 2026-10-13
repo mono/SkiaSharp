@@ -5,29 +5,20 @@ namespace SkiaSharp.Tests.Samples;
 
 [Trait("Category", "Docker")]
 [RunGroup(SampleRunGroup.Docker)]
-public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<DockerSampleFixture>
+[Collection(nameof(DockerSampleCollection))]
+public class DockerSampleRunTests(DockerSampleFixture docker)
 {
     private static string ContainerPlatform =>
         OperatingSystem.IsWindows() ? "Windows" : "Linux";
 
-    public static IEnumerable<object[]> Cases() =>
-        SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
-            .Where(sample => sample.Kind.HasFlag(SampleLookup.EntryKind.Docker))
-            .Select(sample => new object[] { sample.Folder, sample.FileName });
-
     private async Task RunSample(string name, IEnumerable<string> arguments, Func<DockerRunningApp, Task> test)
     {
         var folder = Path.Combine("Basic", name);
-        var sample = Cases().Single(sample => (string)sample[0] == folder);
-        var tag = await docker.Image(folder, (string)sample[1]);
+        var sample = SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
+            .Single(sample => sample.Folder == folder && sample.Kind.HasFlag(SampleLookup.EntryKind.Docker));
+        var tag = await docker.Image(folder, sample.FileName);
         await docker.Run(tag, arguments, test);
     }
-
-    [Theory]
-    [Trait("Category", "DockerBuild")]
-    [MemberData(nameof(Cases))]
-    public async Task DockerImageBuilds(string folder, string dockerfile) =>
-        await docker.Image(folder, dockerfile);
 
     [Fact]
     [Trait("Category", "SampleRun")]

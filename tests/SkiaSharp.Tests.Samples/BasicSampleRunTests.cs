@@ -3,7 +3,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
 
-public class BasicSampleTests : SampleTestBase
+public class BasicSampleRunTests : SampleTestBase
 {
     [Fact]
     [RunGroup(SampleRunGroup.Host)]
