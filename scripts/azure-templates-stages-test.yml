@@ -14,6 +14,9 @@ parameters:
   - name: enableCaching
     type: boolean
     default: false
+  - name: captureWindowsGpuNativeDumps
+    type: boolean
+    default: false
 
 stages:
 
@@ -128,6 +131,13 @@ stages:
         - template: /scripts/azure-templates-jobs-tests.yml@self
           parameters:
             name: tests_netcore_windows
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                workloads: [maui-windows]
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Windows (.NET Core)
             buildAgent: ${{ parameters.buildAgentWindows }}
             publishCoverage: true
@@ -136,6 +146,15 @@ stages:
                 displayName: Provision software OpenGL (Mesa) for the GL tests
               - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
                 displayName: Provision software Vulkan (SwiftShader) for visual tests
+            postBuildSteps:
+              - pwsh: |
+                  $captureNativeDumps = '${{ parameters.captureWindowsGpuNativeDumps }}' -eq 'true' `
+                    -or $env:SKIASHARP_WINDOWS_GPU_NATIVE_DUMP -eq '1'
+                  Write-Host "Windows GPU native capture enabled: $captureNativeDumps"
+                  & scripts/infra/tests/run-windows-gpu-views.ps1 `
+                    -CaptureNativeDumps:$captureNativeDumps
+                displayName: Test Ganesh view presentation and Windows Graphite contract
+                condition: succeededOrFailed()
         - template: /scripts/azure-templates-jobs-tests.yml@self
           parameters:
             name: tests_netcore_macos

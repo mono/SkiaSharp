@@ -1,11 +1,14 @@
+using CoreAnimation;
 using ObjCRuntime;
 using SkiaSharp;
 using SkiaSharp.Views.iOS;
 
 namespace SkiaSharpSample;
 
-[Register("GpuMetalViewController")]
-public class GpuMetalViewController : UIViewController
+#pragma warning disable CA1422 // SKGLView uses deprecated GLKit
+
+[Register("GraphiteViewController")]
+public class GraphiteViewController : UIViewController
 {
 	private const string ShaderSource = @"
 uniform float iTime;
@@ -75,20 +78,22 @@ half4 main(float2 fragCoord) {
 	private bool touchActive;
 
 	[Outlet("skiaView")]
-	SKMetalView skiaView { get; set; } = null!;
+	SKGraphiteView skiaView { get; set; } = null!;
 
 	[Outlet("fpsLabel")]
 	UILabel fpsLabel { get; set; } = null!;
 
-	public GpuMetalViewController(NativeHandle handle) : base(handle) { }
+	public GraphiteViewController(NativeHandle handle) : base(handle) { }
 
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
 		fpsLabel.Layer.BorderColor = UIColor.White.ColorWithAlpha(0.2f).CGColor;
 		skiaView.PaintSurface += OnPaintSurface;
-		skiaView.Paused = true;
-		skiaView.EnableSetNeedsDisplay = false;
+		skiaView.AccessibilityIdentifier = "SkiaCanvas";
+		skiaView.RenderFailed += (_, e) => fpsLabel.Text = $"Graphite failed: {e.Exception.Message} · tap to retry";
+		fpsLabel.UserInteractionEnabled = true;
+		fpsLabel.AddGestureRecognizer(new UITapGestureRecognizer(() => skiaView.InvalidateSurface()));
 	}
 
 	public override void ViewDidAppear(bool animated)
@@ -96,21 +101,21 @@ half4 main(float2 fragCoord) {
 		base.ViewDidAppear(animated);
 		shaderBuilder ??= new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(ShaderSource));
 		fpsCounter.Start();
-		skiaView.Paused = false;
+		skiaView.HasRenderLoop = true;
 	}
 
 	public override void ViewWillDisappear(bool animated)
 	{
 		base.ViewWillDisappear(animated);
-		skiaView.Paused = true;
+		skiaView.HasRenderLoop = false;
 		fpsCounter.Stop();
 	}
 
-	private void OnPaintSurface(object? sender, SKPaintMetalSurfaceEventArgs e)
+	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
-		var width = e.BackendRenderTarget.Width;
-		var height = e.BackendRenderTarget.Height;
+		var width = e.Info.Width;
+		var height = e.Info.Height;
 		canvas.Clear(SKColors.Black);
 
 		if (shaderBuilder == null) return;
@@ -163,3 +168,5 @@ half4 main(float2 fragCoord) {
 		touchActive = false;
 	}
 }
+
+#pragma warning restore CA1422

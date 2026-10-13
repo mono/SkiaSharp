@@ -26,29 +26,25 @@ Task ("Default")
     var failedTests = 0;
 
     var tfm = "net10.0";
-    var testAssemblies = new List<string> {
-        "SkiaSharp.Tests.Console",
-        "SkiaSharp.Tests.SingletonInit.Console",
-        "SkiaSharp.Vulkan.Tests.Console",
-        "SkiaSharp.Direct3D.Tests.Console",
+    var testProjects = new List<FilePath> {
+        $"{ROOT_PATH}/tests/SkiaSharp.Tests.Console.slnx",
     };
     if (IsRunningOnLinux ())
-        testAssemblies.Add ("SkiaSharp.Views.Gtk4.Tests");
+        testProjects.Add ($"{ROOT_PATH}/tests/SkiaSharp.Views.Gtk4.Tests/SkiaSharp.Views.Gtk4.Tests.csproj");
 
-    foreach (var testAssembly in testAssemblies) {
-        var csproj = $"{ROOT_PATH}/tests/{testAssembly}/{testAssembly}.csproj";
+    var properties = new Dictionary<string, string> {
+        { "TargetFramework", tfm },
+        { "TargetFrameworks", tfm },
+    };
+    foreach (var testProject in testProjects) {
 
         if (!SKIP_BUILD) {
-            RunDotNetBuild (csproj, properties: new Dictionary<string, string> {
-                { "TargetFramework", tfm }
-            });
+            RunDotNetBuild (testProject, properties: properties);
         }
 
-        var results = $"{ROOT_PATH}/output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}";
+        var results = $"{ROOT_PATH}/output/logs/testlogs/{testProject.GetFilenameWithoutExtension ()}/{DATE_TIME_STR}/{tfm}";
         try {
-            RunDotNetTest (csproj, results, properties: new Dictionary<string, string> {
-                { "TargetFramework", tfm }
-            });
+            RunDotNetTest (testProject, results, properties: properties);
         } catch {
             failedTests++;
             if (THROW_ON_FIRST_TEST_FAILURE)

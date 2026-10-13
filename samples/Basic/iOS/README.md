@@ -17,24 +17,24 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
 
-### GPU (OpenGL)
+### Graphite
 
-A real-time animated shader running at full frame rate on the GPU via OpenGL ES, with touch interaction that adds a white-hot blob to the metaball field.
+An animated shader scene using Graphite's private native Metal presenter, with touch interaction that adds a white-hot blob to the metaball field.
 
 **Features:**
 
-- **`SKGLView`** — Hardware-accelerated canvas backed by GLKit's `GLKView`, using OpenGL ES for rendering.
+- **`SKGraphiteView`** — Engine-neutral UIKit container. Unsupported devices raise a visible failure instead of falling back to Ganesh.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **Render loop** — Continuous animation driven by `CADisplayLink` with an FPS counter overlay.
 - **Touch interaction** — Touch position is passed as a shader uniform via `UITouch` events.
 
-### GPU (Metal)
+### Ganesh
 
 A real-time animated shader running at full frame rate on the GPU via Apple's Metal framework, with touch interaction.
 
 **Features:**
 
-- **`SKMetalView`** — Hardware-accelerated canvas backed by Metal, Apple's modern low-level GPU API.
+- **`SKGaneshView`** — Engine-neutral UIKit container with a private Metal presenter.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **Render loop** — Continuous animation with `MTKView` pause/resume lifecycle and an FPS counter overlay.
 - **Touch interaction** — Touch position is passed as a shader uniform via `UITouch` events.
@@ -68,10 +68,10 @@ dotnet build -t:Run
 To start on a different page, change `DefaultPage` in `AppDelegate.cs`:
 
 ```csharp
-public static SamplePage DefaultPage { get; set; } = SamplePage.GpuMetal;
+public static SamplePage DefaultPage { get; set; } = SamplePage.Ganesh;
 ```
 
-Available pages: `Cpu` (default), `GpuGL`, `GpuMetal`, `Drawing`
+Available pages: `Cpu` (default), `Graphite`, `Ganesh`, `Drawing`. Backend-specific screenshots below are historical; new rendering captures require source-built natives and device validation.
 
 ## Screenshots
 

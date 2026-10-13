@@ -1,14 +1,11 @@
-using CoreAnimation;
 using ObjCRuntime;
 using SkiaSharp;
 using SkiaSharp.Views.iOS;
 
 namespace SkiaSharpSample;
 
-#pragma warning disable CA1422 // SKGLView uses deprecated GLKit
-
-[Register("GpuGLViewController")]
-public class GpuGLViewController : UIViewController
+[Register("GaneshViewController")]
+public class GaneshViewController : UIViewController
 {
 	private const string ShaderSource = @"
 uniform float iTime;
@@ -74,23 +71,25 @@ half4 main(float2 fragCoord) {
 
 	private readonly FpsCounter fpsCounter = new();
 	private Lazy<SKRuntimeShaderBuilder>? shaderBuilder;
-	private CADisplayLink? displayLink;
 	private SKPoint touchPos;
 	private bool touchActive;
 
 	[Outlet("skiaView")]
-	SKGLView skiaView { get; set; } = null!;
+	SKGaneshView skiaView { get; set; } = null!;
 
 	[Outlet("fpsLabel")]
 	UILabel fpsLabel { get; set; } = null!;
 
-	public GpuGLViewController(NativeHandle handle) : base(handle) { }
+	public GaneshViewController(NativeHandle handle) : base(handle) { }
 
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
 		fpsLabel.Layer.BorderColor = UIColor.White.ColorWithAlpha(0.2f).CGColor;
 		skiaView.PaintSurface += OnPaintSurface;
+		skiaView.AccessibilityIdentifier = "SkiaCanvas";
+		skiaView.HasRenderLoop = false;
+		skiaView.RenderFailed += (_, e) => fpsLabel.Text = $"Ganesh failed: {e.Exception.Message}";
 	}
 
 	public override void ViewDidAppear(bool animated)
@@ -98,27 +97,21 @@ half4 main(float2 fragCoord) {
 		base.ViewDidAppear(animated);
 		shaderBuilder ??= new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(ShaderSource));
 		fpsCounter.Start();
-		displayLink?.Invalidate();
-		displayLink = CADisplayLink.Create(this, new Selector("renderFrame"));
-		displayLink.AddToRunLoop(NSRunLoop.Main, NSRunLoopMode.Default);
+		skiaView.HasRenderLoop = true;
 	}
 
 	public override void ViewWillDisappear(bool animated)
 	{
 		base.ViewWillDisappear(animated);
-		displayLink?.Invalidate();
-		displayLink = null;
+		skiaView.HasRenderLoop = false;
 		fpsCounter.Stop();
 	}
 
-	[Export("renderFrame")]
-	private void RenderFrame() => skiaView?.Display();
-
-	private void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)
+	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
-		var width = e.BackendRenderTarget.Width;
-		var height = e.BackendRenderTarget.Height;
+		var width = e.Info.Width;
+		var height = e.Info.Height;
 		canvas.Clear(SKColors.Black);
 
 		if (shaderBuilder == null) return;
@@ -171,5 +164,3 @@ half4 main(float2 fragCoord) {
 		touchActive = false;
 	}
 }
-
-#pragma warning restore CA1422

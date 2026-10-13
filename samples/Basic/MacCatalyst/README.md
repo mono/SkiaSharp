@@ -17,13 +17,13 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
 
-### GPU (Metal)
+### Ganesh and Graphite
 
 A real-time animated shader running at full frame rate on the GPU via Apple's Metal framework, with touch/trackpad interaction that adds a white-hot blob to the metaball field.
 
 **Features:**
 
-- **`SKMetalView`** — Hardware-accelerated canvas backed by Metal, Apple's modern low-level GPU API.
+- **`SKGaneshView` / `SKGraphiteView`** — Engine-neutral UIKit containers using private native Metal presenters. Both pages render the same shader scene; failures are visible, without engine fallback.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **Render loop** — Continuous animation with `MTKView` pause/resume lifecycle and an FPS counter overlay.
 - **Touch interaction** — Touch/trackpad position is passed as a shader uniform via `UITouch` events.
@@ -57,10 +57,10 @@ dotnet build -t:Run
 To start on a different page, change `DefaultPage` in `AppDelegate.cs`:
 
 ```csharp
-public static SamplePage DefaultPage { get; set; } = SamplePage.GpuMetal;
+public static SamplePage DefaultPage { get; set; } = SamplePage.Ganesh;
 ```
 
-Available pages: `Cpu` (default), `GpuMetal`, `Drawing`
+Available pages: `Cpu` (default), `Ganesh`, `Drawing`, `Graphite`. Screenshots below are historical, pending source-built device validation.
 
 ## Screenshots
 

@@ -93,26 +93,26 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 
 	void StartAnimation()
 	{
-		skiaView.EnableRenderLoop = false;
+		skiaView.HasRenderLoop = false;
 		fpsCounter.Start();
 		fpsText.Text = "FPS: --";
 		DispatcherQueue.TryEnqueue(() =>
 		{
-			skiaView.EnableRenderLoop = true;
+			skiaView.HasRenderLoop = true;
 		});
 	}
 
 	void StopAnimation()
 	{
-		skiaView.EnableRenderLoop = false;
+		skiaView.HasRenderLoop = false;
 		fpsCounter.Stop();
 	}
 
-	private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
+	private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
-		var width = (float)e.BackendRenderTarget.Width;
-		var height = (float)e.BackendRenderTarget.Height;
+		var width = (float)e.Info.Width;
+		var height = (float)e.Info.Height;
 
 		var builder = shaderBuilder.Value;
 
@@ -125,6 +125,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		using var shader = builder.Build();
 		shaderPaint.Shader = shader;
 		canvas.DrawRect(0, 0, width, height, shaderPaint);
+		shaderPaint.Shader = null;
 
 		if (fpsCounter.Tick() is double fps)
 			DispatcherQueue.TryEnqueue(() => fpsText.Text = $"FPS: {fps:F0}");

@@ -10,6 +10,28 @@ namespace SkiaSharp.Views.Maui.Controls.Tests;
 public class MemoryLeakTests : SKUITests
 {
 	[UIFact]
+	public Task SKGaneshViewHandlerDoesNotLeak() =>
+		AssertHandlerDoesNotLeak(() =>
+		{
+			var view = new SKGaneshView { EnableTouchEvents = true, HasRenderLoop = true };
+			view.PaintSurface += (_, e) => e.Surface.Canvas.Clear(SKColors.Red);
+			view.Touch += (_, _) => view.InvalidateSurface();
+			return view;
+		});
+
+#if IOS || MACCATALYST || ANDROID
+	[UIFact]
+	public Task SKGraphiteViewHandlerDoesNotLeak() =>
+		AssertHandlerDoesNotLeak(() =>
+		{
+			var view = new SKGraphiteView { EnableTouchEvents = true, HasRenderLoop = true };
+			view.PaintSurface += (_, e) => e.Surface.Canvas.Clear(SKColors.Red);
+			view.Touch += (_, _) => view.InvalidateSurface();
+			return view;
+		});
+#endif
+
+	[UIFact]
 	public Task SKCanvasViewHandlerDoesNotLeak() =>
 		AssertHandlerDoesNotLeak(() =>
 		{

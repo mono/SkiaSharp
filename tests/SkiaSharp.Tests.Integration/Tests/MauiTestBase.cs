@@ -22,6 +22,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     
     // Build configuration - set to "Debug" for faster iteration when debugging tests
     protected const string BuildConfiguration = "Release";
+    protected virtual string PlatformBuildArguments => "";
     
     // Fixed canvas size matching TestImage dimensions
     protected const int CanvasWidth = 400;
@@ -121,6 +122,103 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     [Fact]
     public Task SKGLView() => RunMauiTest("SKGLView", "SKPaintGLSurfaceEventArgs");
 
+    [Fact]
+    public Task SKGaneshView() => RunMauiTest("SKGaneshView", "SKPaintGaneshSurfaceEventArgs");
+
+    // Windows Graphite has no presenter in this iteration. This is a view contract,
+    // not a runtime GPU skip: supported hosts must actually render the reference pixels.
+    protected Task RunGraphiteViewTest() => RunMauiTest("SKGraphiteView", "SKPaintGraphiteSurfaceEventArgs");
+
+    protected async Task RunNativeGpuSampleTest(string platform, string engine)
+    {
+        var skipReason = CanRunOnCurrentMachine();
+        if (skipReason != null) Assert.Skip(skipReason);
+        await PerformPreflightChecks();
+        var archivePath = AppContext.GetData("NativeSamplesArchive") as string;
+        Assert.True(File.Exists(archivePath), "Stage the producing build's samples.zip and set NativeSamplesArchive.");
+        var projectDir = Path.Combine(TestDir, $"Native{platform}{engine}");
+        Directory.CreateDirectory(projectDir);
+        using (var archive = System.IO.Compression.ZipFile.OpenRead(archivePath!))
+        {
+            var project = archive.Entries.Single(e => e.FullName.Replace('\\', '/')
+                .EndsWith($"Basic/{platform}/SkiaSharpSample/SkiaSharpSample.csproj", StringComparison.Ordinal));
+            var prefix = project.FullName[..(project.FullName.LastIndexOf('/') + 1)];
+            foreach (var entry in archive.Entries.Where(e => e.FullName.StartsWith(prefix, StringComparison.Ordinal)))
+            {
+                var relative = entry.FullName[prefix.Length..];
+                if (relative.Length == 0 || relative.EndsWith('/')) continue;
+                var destination = Path.GetFullPath(Path.Combine(projectDir, relative));
+                Assert.StartsWith(projectDir + Path.DirectorySeparatorChar, destination);
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                using var source = entry.Open();
+                using var target = File.Create(destination);
+                await source.CopyToAsync(target);
+            }
+        }
+        var csproj = Path.Combine(projectDir, "SkiaSharpSample.csproj");
+        var document = System.Xml.Linq.XDocument.Load(csproj);
+        foreach (var package in document.Descendants("PackageReference"))
+        {
+            var id = package.Attribute("Include")?.Value ?? "";
+            if (id.StartsWith("SkiaSharp", StringComparison.Ordinal)) package.SetAttributeValue("Version", SkiaVersion);
+            if (id.StartsWith("HarfBuzzSharp", StringComparison.Ordinal)) package.SetAttributeValue("Version", HarfBuzzVersion);
+        }
+        var bundleId = $"org.skiasharp.integration.gpu.{platform}.{engine}".ToLowerInvariant();
+        document.Root!.Elements("PropertyGroup").First().Add(new System.Xml.Linq.XElement("ApplicationId", bundleId));
+        document.Save(csproj);
+        var plist = Path.Combine(projectDir, "Info.plist");
+        if (File.Exists(plist))
+        {
+            var info = System.Xml.Linq.XDocument.Load(plist);
+            var key = info.Descendants("key").Single(e => e.Value == "CFBundleIdentifier");
+            key.ElementsAfterSelf().First().Value = bundleId;
+            info.Save(plist);
+        }
+        var manifest = Path.Combine(projectDir, "Properties", "AndroidManifest.xml");
+        if (File.Exists(manifest))
+        {
+            var info = System.Xml.Linq.XDocument.Load(manifest);
+            info.Root!.SetAttributeValue("package", bundleId);
+            info.Save(manifest);
+        }
+        var page = platform == "WinUI" ? "Gpu" : engine;
+        foreach (var entryPoint in new[] { "AppDelegate.cs", "MainActivity.cs", "MainWindow.xaml.cs" })
+        {
+            var path = Path.Combine(projectDir, entryPoint);
+            if (!File.Exists(path)) continue;
+            var text = await File.ReadAllTextAsync(path);
+            await File.WriteAllTextAsync(path, text.Replace("= SamplePage.Cpu;", $"= SamplePage.{page};", StringComparison.Ordinal));
+        }
+        await Run("dotnet", $"build \"{projectDir}\" -c {BuildConfiguration} -f {TargetFramework} -p:ValidateXcodeVersion=false {PlatformBuildArguments}", timeoutSeconds: 600);
+        var app = FindAppArtifact(projectDir, "SkiaSharpSample");
+        Assert.NotNull(app);
+        var options = new AppiumOptions();
+        ConfigureAppiumOptions(options, app, bundleId);
+        using var driver = CreateDriver(options);
+        await ValidateDeviceAsync();
+        await Task.Delay(5000);
+        var element = driver.FindElement("accessibility id", "SkiaCanvas");
+        var screenshot = driver.GetScreenshot().AsByteArray;
+        using var bitmap = SKBitmap.Decode(screenshot);
+        Assert.NotNull(bitmap);
+        var window = driver.Manage().Window.Size;
+        var scale = GetScreenScaleFactor(bitmap.Info.Size, new SKSizeI(window.Width, window.Height));
+        var crop = SKRectI.Intersect(SKRectI.Create(bitmap.Info.Size), SKRectI.Create(
+            (int)(element.Location.X * scale), (int)(element.Location.Y * scale),
+            (int)(element.Size.Width * scale), (int)(element.Size.Height * scale)));
+        Assert.True(crop.Width > 0 && crop.Height > 0);
+        var canvas = CropImage(screenshot, crop);
+        await SaveScreenshot(canvas, $"native-{platform}-{engine}");
+        using var rendered = SKBitmap.Decode(canvas);
+        Assert.NotNull(rendered);
+        var pixels = rendered.Pixels;
+        var chromatic = pixels.Count(c => c.Red > c.Green + 30 || c.Blue > c.Red + 30 || c.Green > c.Red + 30);
+        // The Basic GPU scene fills the canvas with colored shader blobs. Blank
+        // presenters and monochrome error labels cannot satisfy this assertion.
+        Assert.True(chromatic > pixels.Length / 20, $"{engine} did not visibly present its colored shader scene.");
+        driver.Quit();
+    }
+
     /// <summary>
     /// Run the standard MAUI test for the specified canvas view type.
     /// </summary>
@@ -145,7 +243,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         // Skip the .NET for iOS/Mac Catalyst Xcode major.minor check so the harness keeps working when
         // the installed Xcode is newer than the version the pinned workload recommends — these
         // tests validate SkiaSharp rendering, not toolchain matching. Ignored (harmless) on Android.
-        await Run("dotnet", $"build {relativeProjectDir} -c {BuildConfiguration} -f {TargetFramework} -p:ValidateXcodeVersion=false", timeoutSeconds: 600);
+        await Run("dotnet", $"build {relativeProjectDir} -c {BuildConfiguration} -f {TargetFramework} -p:ValidateXcodeVersion=false {PlatformBuildArguments}", timeoutSeconds: 600);
         
         var appPath = FindAppArtifact(projectDir, projectName);
         Assert.NotNull(appPath);

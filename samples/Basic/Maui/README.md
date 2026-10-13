@@ -4,7 +4,7 @@ Demonstrates SkiaSharp views in a .NET MAUI app with Shell navigation, cross-pla
 
 ## Sample Pages
 
-This sample shows how to integrate SkiaSharp views into a .NET MAUI app using XAML pages. The `SKCanvasView` and `SKGLView` are placed declaratively in `.xaml` files alongside standard MAUI controls, with Shell flyout navigation for page switching.
+This sample integrates `SKCanvasView` and `SKGaneshView` alongside standard MAUI controls, with Shell flyout navigation. A separate Graphite page uses the same shader scene and demonstrates caller-owned recording on iOS, Mac Catalyst and compatible Android devices. Windows Graphite presentation is explicitly deferred.
 
 ### CPU
 
@@ -18,13 +18,13 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
 - **`SKTypeface`** — Custom font loaded from an embedded resource via `SKTypeface.FromStream`.
 
-### GPU
+### Ganesh and Graphite
 
 A real-time animated shader running at full frame rate on the GPU, with touch interaction that adds a white-hot blob to the metaball field.
 
 **Features:**
 
-- **`SKGLView`** — Hardware-accelerated canvas that maps per-platform: `SKGLTextureView` on Android, `SKGLView` on iOS, `SKMetalView` on Mac Catalyst, `SKSwapChainPanel` on Windows.
+- **`SKGaneshView` / `SKGraphiteView`** — Engine-named controls with private, replaceable platform presenters. Frame metadata shares the CPU draw-handler shape. Subscribe to `RenderFailed` and context lifetime notifications; engine changes require recreating dependent GPU resources.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **`EnableRenderLoop`** — Continuous animation driven by the platform's render loop.
 - **Touch interaction** — Touch position is passed as a shader uniform via MAUI's `Touch` event.

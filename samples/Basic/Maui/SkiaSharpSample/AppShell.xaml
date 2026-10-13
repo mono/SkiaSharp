@@ -8,12 +8,21 @@
         <ShellContent ContentTemplate="{DataTemplate local:CpuPage}" />
     </FlyoutItem>
 
-    <FlyoutItem Title="GPU" Icon="gpu.png">
+    <FlyoutItem Title="Ganesh" Icon="gpu.png">
         <ShellContent ContentTemplate="{DataTemplate local:GpuPage}" />
     </FlyoutItem>
 
     <FlyoutItem Title="Drawing" Icon="drawing.png">
         <ShellContent ContentTemplate="{DataTemplate local:DrawingPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem x:Name="graphiteItem" Title="Graphite" Icon="gpu.png">
+        <FlyoutItem.IsVisible>
+            <OnPlatform x:TypeArguments="x:Boolean" Default="False">
+                <On Platform="iOS,MacCatalyst,Android" Value="True" />
+            </OnPlatform>
+        </FlyoutItem.IsVisible>
+        <ShellContent ContentTemplate="{DataTemplate local:GraphitePage}" />
     </FlyoutItem>
 
 </Shell>

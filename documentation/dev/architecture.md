@@ -2,6 +2,10 @@
 
 This document explains SkiaSharp's three-layer design and how data flows between C++, C, and C#.
 
+The engine-neutral native and MAUI view layer is described in
+[GPU engine views](gpu-engine-views.md). Its containers own private presenters;
+Ganesh and Graphite are public engine contracts, not interchangeable GPU contexts.
+
 ## Three-Layer Architecture
 
 ```
