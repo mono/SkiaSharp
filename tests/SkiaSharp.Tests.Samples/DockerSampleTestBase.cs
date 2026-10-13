@@ -14,7 +14,7 @@ public abstract class DockerSampleTestBase(DockerSampleFixture docker)
             try
             {
                 PrepareContext(Path.Combine(Repo.SamplesDir, folder), Repo.PackagesDir, context);
-                await docker.Run(["build", "--tag", tag, "--file", dockerfile, "."], TimeSpan.FromMinutes(30), context);
+                await Docker.Run(["build", "--tag", tag, "--file", dockerfile, "."], TimeSpan.FromMinutes(30), context);
             }
             finally
             {
