@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using SkiaSharp.Testing;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -103,8 +104,13 @@ internal static class SampleImage
         Assert.Equal(expectedImage.Width, actualImage.Width);
         Assert.Equal(expectedImage.Height, actualImage.Height);
 
-        var result = SkiaSharp.Extended.SKPixelComparer.Compare(expectedImage, actualImage, 0);
-        var averageColorErrorFraction = result.AbsoluteError / (result.TotalPixels * 4.0 * 255);
+        var comparisonOptions = new SKPixelComparerOptions
+        {
+            AlphaType = SKAlphaType.Premul,
+            Tolerance = SKPixelTolerance.Exact,
+        };
+        var result = SKPixelComparer.Compare(expectedImage, actualImage, comparisonOptions);
+        var averageColorErrorFraction = result.RawMetrics.MeanAbsoluteError / 255.0;
         var comparison = maxAverageColorErrorFraction is { } limit
             ? $"average RGBA color error {averageColorErrorFraction:P3}, exceeding {limit:P3}"
             : $"differing pixels {(decimal)result.ErrorPixelCount / result.TotalPixels:P3}, exceeding {maxErrorPixelFraction:P3}";
@@ -126,7 +132,8 @@ internal static class SampleImage
         if (!reportMismatch)
             return false;
 
-        using var diff = SkiaSharp.Extended.SKPixelComparer.GenerateDifferenceImage(expectedImage, actualImage, 0);
+        using var diff = SKPixelComparer.GenerateDifferenceImage(
+            expectedImage, actualImage, comparisonOptions, SKPixelDifferenceStyle.ThresholdOverlay);
         using var data = diff.Encode(SKEncodedImageFormat.Png, 100);
         var diffPath = Path.ChangeExtension(actual, ".diff.png");
         File.WriteAllBytes(diffPath, data.ToArray());
