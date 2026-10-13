@@ -1,0 +1,51 @@
+parameters:
+  name: ''
+  displayName: ''
+  buildAgent: {}
+  target: tests-netcore
+  additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+  packages: ''
+  env: {}
+  preBuildSteps: []
+  resultLabel: .NET Core
+  publishCoverage: false
+
+jobs:
+  - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: ${{ parameters.displayName }}
+      buildAgent: ${{ parameters.buildAgent }}
+      target: ${{ parameters.target }}
+      additionalArgs: ${{ parameters.additionalArgs }}
+      packages: ${{ parameters.packages }}
+      env: ${{ parameters.env }}
+      preBuildSteps: ${{ parameters.preBuildSteps }}
+      dotnetSdks:
+        - sdkVersion: $(DOTNET_VERSION)
+          workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+          tizen:
+            manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+            manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+      installAndroidSdk: false
+      shouldPublish: false
+      requiredArtifacts:
+        - name: native
+      postBuildSteps:
+        - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+          displayName: Extract visual-regression images for triage
+          condition: always()
+        - task: PublishTestResults@2
+          displayName: Publish the ${{ parameters.resultLabel }} test results
+          condition: always()
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: 'output/logs/testlogs/**/*.trx'
+            testRunTitle: ${{ parameters.displayName }} Tests
+      publishArtifacts:
+        - name: ${{ replace(parameters.name, 'tests_', 'testlogs_') }}
+          always: true
+          path: 'output/logs/testlogs'
+        - ${{ if eq(parameters.publishCoverage, true) }}:
+          - name: ${{ replace(parameters.name, 'tests_', 'coverage_') }}
+            path: 'output/coverage'
