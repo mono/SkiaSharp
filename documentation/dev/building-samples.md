@@ -52,8 +52,7 @@ TRX results and diagnostic artifacts.
 
 To select one execution partition, add `--runGroup=Build`, `--runGroup=Host`,
 or `--runGroup=Docker`. Omit it for the full local suite as before. Unknown
-groups fail explicitly. Build and unfiltered runs also execute the bounded
-compiler/trait regression host.
+groups fail explicitly.
 
 ## IDE and direct test runs
 

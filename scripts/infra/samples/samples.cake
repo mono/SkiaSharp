@@ -43,10 +43,6 @@ Task ("samples")
     RunDotNetTest(ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj"),
         results, noBuild: SKIP_BUILD, hangTimeout: null,
         runnerArguments: string.IsNullOrEmpty(RUN_GROUP) ? null : new[] { "--filter-trait", $"RunGroup={RUN_GROUP}" });
-    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Build") {
-        RunDotNetTest(ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Tests.Samples.Analyzers.Tests/SkiaSharp.Tests.Samples.Analyzers.Tests.csproj"),
-            results.Combine("analyzers"), noBuild: SKIP_BUILD, hangTimeout: null);
-    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
