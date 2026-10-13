@@ -150,7 +150,9 @@ pixels. Keep test working directories under the checkout when running locally
 (for example, a process-local `TMPDIR` pointing at an existing output directory).
 
 The Windows .NET Core CI leg also installs the MAUI Windows workload and runs
-the device host's GPU view tests. It checks real Ganesh pixels, input/scaling,
+the device host's GPU view tests. Its caller supplies the workload override and
+GPU step to the shared desktop test-job template; common result and coverage
+publication stay template-owned. It checks real Ganesh pixels, input/scaling,
 on-demand and continuous rendering, context recreation and handler collection,
 plus the explicitly unsupported Graphite contract. Its framework is resolved
 from `WindowsTargetFrameworksCurrent`; a missing UI host or presentation failure
