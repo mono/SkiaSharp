@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
 
-[Collection(AppiumCollection.Name)]
+[Collection(nameof(AppiumCollection))]
 [Trait("Category", "Device")]
 [Trait("Category", "Golden")]
 public sealed class MacSampleRunTests(AppiumFixture appium) : AppiumSampleRunTestBase

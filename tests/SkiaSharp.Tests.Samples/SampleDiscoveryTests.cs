@@ -62,7 +62,7 @@ public class SampleDiscoveryTests
         {
             var collection = Assert.Single(type.GetCustomAttributesData(),
                 attribute => attribute.AttributeType == typeof(CollectionAttribute));
-            Assert.Equal(AppiumCollection.Name, Assert.Single(collection.ConstructorArguments).Value);
+            Assert.Equal(nameof(AppiumCollection), Assert.Single(collection.ConstructorArguments).Value);
         }
         foreach (var type in new[]
         {

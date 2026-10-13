@@ -7,12 +7,6 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-[CollectionDefinition(Name)]
-public sealed class AppiumCollection : ICollectionFixture<AppiumFixture>
-{
-	public const string Name = "Appium";
-}
-
 public sealed class AppiumFixture
 {
 	internal async Task Run(AppiumRunningApp app, Func<AppiumRunningApp, Task> scenario)
