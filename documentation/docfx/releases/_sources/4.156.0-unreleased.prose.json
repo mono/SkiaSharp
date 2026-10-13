@@ -1,16 +1,32 @@
 {
-  "theme": "M156 platform updates",
-  "highlights_headline": "SkiaSharp 4.156.0 updates to Skia M156 and broadens native rendering support across desktop platforms.",
-  "highlights_body": "This line adds GTK4 GPU rendering, restores Linux system-font discovery for NoDependencies deployments, and aligns upcoming .NET and native toolchain assets.",
+  "theme": "Managed memory improvements",
+  "highlights_headline": "SkiaSharp 4.156.0 improves managed memory use across image pixels, font features, and stream decoding.",
+  "highlights_body": "Image pixel copies and HarfBuzz feature-string decoding reduce temporary allocations, while front-buffered streams no longer retain data unnecessarily.",
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Skia updated to milestone M156",
-          "detail": "Moves the bundled renderer to Skia M156 and incorporates the current core-fork cleanup.",
-          "prs": [5247, 5208]
+          "lead": "Managed pixel copies optimized",
+          "detail": "Image pixel-copy operations reduce managed overhead when moving pixel data between SkiaSharp and application buffers.",
+          "prs": [
+            5052
+          ]
+        },
+        {
+          "lead": "Font feature decoding avoids native allocations",
+          "detail": "Feature-string decoding now avoids an unnecessary native allocation while preserving its existing results.",
+          "prs": [
+            5230
+          ]
+        },
+        {
+          "lead": "HarfBuzz text encoding buffers are reused",
+          "detail": "UTF-32 encoding for HarfBuzz operations now reuses buffers to reduce temporary managed allocations.",
+          "prs": [
+            5060
+          ]
         }
       ]
     },
@@ -18,31 +34,16 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Linux system-font discovery restored",
-          "detail": "NoDependencies deployments can again locate fonts installed on Linux systems.",
-          "prs": [5086]
-        }
-      ]
-    },
-    {
-      "heading": "Platform",
-      "bullets": [
-        {
-          "lead": "GTK4 gains native GPU rendering",
-          "detail": "Adds GPU-backed rendering and pixel scaling for the GTK4 integration.",
-          "prs": [5249]
-        },
-        {
-          "lead": "Native platform assets refreshed",
-          "detail": "Aligns Windows toolchains, Tizen packaging, .NET 11 preview assets, and the WinUI Windows SDK configuration.",
-          "prs": [5306, 5238, 5235, 5273]
+          "lead": "Front-buffered streams release retained data",
+          "detail": "Front-buffered stream handling no longer keeps buffered data alive after it is no longer needed.",
+          "prs": [
+            5327
+          ]
         }
       ]
     }
   ],
-  "contributor_summaries": {
-    "ramezgerges": "Restored Linux system-font discovery for NoDependencies deployments"
-  },
+  "contributor_summaries": {},
   "preview_summaries": {},
-  "harfbuzz_summary": "Refreshes HarfBuzzSharp build assets alongside the updated Windows and Tizen native toolchains."
+  "harfbuzz_summary": null
 }
