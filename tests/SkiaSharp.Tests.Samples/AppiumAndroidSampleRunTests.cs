@@ -1,5 +1,4 @@
-﻿using System.Xml.Linq;
-using OpenQA.Selenium.Appium;
+﻿using OpenQA.Selenium.Appium;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -17,7 +16,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 	{
 		var app = await BuildAndroidApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running => Basic(running, "Maui", "Android", app.DeviceProfile,
+		await appium.Run(app, running => Basic(running, "Maui", "Android",
 		[
 			new("CPU", "basic-canvas-cpu", "basic-cpu"),
 			new("GPU", "basic-canvas-gpu", "basic-gpu-smoke", new("basic-gpu-fps", HasFps), Animated: true),
@@ -32,7 +31,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 	{
 		var app = await BuildAndroidApp("Basic/Android", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running => Basic(running, "Native", "Android", app.DeviceProfile,
+		await appium.Run(app, running => Basic(running, "Native", "Android",
 		[
 			new("nav_cpu", "skiaView", "basic-cpu"),
 			new("nav_gpu_surface", "skiaView", "basic-gpu-surface-smoke", new("fpsLabel", HasFps), Animated: true),
@@ -48,7 +47,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 	{
 		var app = await BuildAndroidApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running => MauiDrawing(running, "Android", app.DeviceProfile, NavigateMauiAndroid));
+		await appium.Run(app, running => MauiDrawing(running, "Android", NavigateMauiAndroid));
 	}
 
 	[Fact]
@@ -58,7 +57,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 	{
 		var app = await BuildAndroidApp("Gallery", "Maui/SkiaSharpSample.Maui.csproj");
 
-		await appium.Run(app, running => Gallery(running, "Android", app.DeviceProfile));
+		await appium.Run(app, running => Gallery(running, "Android"));
 	}
 
 	private async Task<AndroidRunningApp> BuildAndroidApp(string folder, string project)
@@ -79,10 +78,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 		var artifact = Assert.Single(Directory.EnumerateFiles(
 			Output(workspace, folder, project, framework), "*-Signed.apk", SearchOption.AllDirectories));
 		var selectedProject = Path.Combine(workspace.Root, "samples", folder, project);
-		var manifest = Path.Combine(Path.GetDirectoryName(selectedProject)!, "Properties", "AndroidManifest.xml");
-		var applicationId = ProjectApplicationId(selectedProject)
-			?? (string?)XDocument.Load(manifest).Root?.Attribute("package")
-			?? throw new InvalidOperationException($"Source application ID is missing: {selectedProject}");
+		var applicationId = AndroidApplicationId(selectedProject);
 
 		return new AndroidRunningApp(workspace, artifact, applicationId);
 	}

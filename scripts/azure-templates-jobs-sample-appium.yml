@@ -32,6 +32,10 @@ jobs:
       installAndroidSdk: false
       installAndroidNdk: false
       installNode: false
+      provisioningSteps:
+        - pwsh: New-Item -ItemType Directory -Path output/logs -Force | Out-Null
+          displayName: Prepare Appium diagnostic artifacts
+          condition: always()
       dotnetSdks:
         - sdkVersion: ${{ parameters.sdk.version }}
           workloadSetVersion: ${{ parameters.sdk.workloadVersion }}
@@ -45,6 +49,11 @@ jobs:
           always: true
           path: output/logs
       preBuildSteps:
+        - task: UseNode@1
+          displayName: Install Node.js 22 for Appium 3
+          inputs:
+            version: '22.x'
+            checkLatest: true
         - ${{ if eq(parameters.platform, 'Android') }}:
           - bash: |
               set -e
@@ -55,8 +64,8 @@ jobs:
               echo "##vso[task.setvariable variable=ANDROID_AVD_HOME]$HOME/.android/avd"
               echo "##vso[task.setvariable variable=ANDROID_EMULATOR_HOME]$HOME/.android"
             displayName: Reuse Android device-test KVM and AVD provisioning
-        - pwsh: ./scripts/infra/tests/check-appium.ps1 -Platform '${{ parameters.platform }}'
-          displayName: Check preinstalled Appium prerequisites (no downloads)
+        - pwsh: ./scripts/infra/tests/install-appium.ps1 -Platform '${{ parameters.platform }}'
+          displayName: Install isolated Appium and selected driver
           env:
             ${{ if or(eq(parameters.platform, 'iOS'), eq(parameters.platform, 'Mac')) }}:
               DEVELOPER_DIR: /Applications/Xcode_${{ parameters.sdk.xcodeVersion }}.app/Contents/Developer

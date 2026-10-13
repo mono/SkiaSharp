@@ -19,13 +19,12 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium) : AppiumSample
 
 		var app = await BuildIosApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running =>
-			Basic(running, "Maui", "iOS", app.DeviceProfile,
-			[
-				new("CPU", "basic-canvas-cpu", "basic-cpu"),
-				new("GPU", "basic-canvas-gpu", "basic-gpu-smoke", new("basic-gpu-fps", HasFps), Animated: true),
-				new("Drawing", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
-			], NavigateMauiIos));
+		await appium.Run(app, running => Basic(running, "Maui", "iOS",
+		[
+			new("CPU", "basic-canvas-cpu", "basic-cpu"),
+			new("GPU", "basic-canvas-gpu", "basic-gpu-smoke", new("basic-gpu-fps", HasFps), Animated: true),
+			new("Drawing", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
+		], NavigateMauiIos));
 	}
 
 	[Fact]
@@ -37,14 +36,13 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium) : AppiumSample
 
 		var app = await BuildIosApp("Basic/iOS", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running =>
-			Basic(running, "Native", "iOS", app.DeviceProfile,
-			[
-				new("CPU", "basic-canvas-cpu", "basic-cpu"),
-				new("GL", "basic-canvas-gpu-gl", "basic-gpu-gl-smoke", new("basic-gpu-gl-fps", HasFps), Animated: true),
-				new("Metal", "basic-canvas-gpu-metal", "basic-gpu-metal-smoke", new("basic-gpu-metal-fps", HasFps), Animated: true),
-				new("Draw", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
-			], NavigateNativeIos));
+		await appium.Run(app, running => Basic(running, "Native", "iOS",
+		[
+			new("CPU", "basic-canvas-cpu", "basic-cpu"),
+			new("GL", "basic-canvas-gpu-gl", "basic-gpu-gl-smoke", new("basic-gpu-gl-fps", HasFps), Animated: true),
+			new("Metal", "basic-canvas-gpu-metal", "basic-gpu-metal-smoke", new("basic-gpu-metal-fps", HasFps), Animated: true),
+			new("Draw", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
+		], NavigateNativeIos));
 	}
 
 	[Fact]
@@ -56,8 +54,7 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium) : AppiumSample
 
 		var app = await BuildIosApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running =>
-			MauiDrawing(running, "iOS", app.DeviceProfile, NavigateMauiIos));
+		await appium.Run(app, running => MauiDrawing(running, "iOS", NavigateMauiIos));
 	}
 
 	[Fact]
@@ -69,7 +66,7 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium) : AppiumSample
 
 		var app = await BuildIosApp("Gallery", "Maui/SkiaSharpSample.Maui.csproj");
 
-		await appium.Run(app, running => Gallery(running, "iOS", app.DeviceProfile));
+		await appium.Run(app, running => Gallery(running, "iOS"));
 	}
 
 	private async Task<IosRunningApp> BuildIosApp(string folder, string project)

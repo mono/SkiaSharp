@@ -4,7 +4,7 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal abstract class RunningApp(string diagnostics)
 {
-    private readonly string runId = Guid.NewGuid().ToString("N");
+    private readonly string runId = SampleWorkspace.CreateIdentity("run");
 
     private readonly HttpClient client = new(new HttpClientHandler
     {
@@ -76,8 +76,8 @@ internal abstract class RunningApp(string diagnostics)
 
                     Directory.CreateDirectory(Diagnostics);
                     // Several runs can belong to one test; retain each log and attachment.
-                    var stdoutLog = Path.Combine(Diagnostics, $"run-{runId}.stdout.log");
-                    var stderrLog = Path.Combine(Diagnostics, $"run-{runId}.stderr.log");
+                    var stdoutLog = Path.Combine(Diagnostics, $"{runId}.stdout.log");
+                    var stderrLog = Path.Combine(Diagnostics, $"{runId}.stderr.log");
                     await File.WriteAllTextAsync(stdoutLog, result.Output);
                     await File.WriteAllTextAsync(stderrLog, result.Error);
                     TestContext.Current.TestOutputHelper?.WriteLine(result.Output);

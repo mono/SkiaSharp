@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -95,11 +96,29 @@ public static class DotNet
         };
         if (options.Framework is not null)
         {
-            RootFrameworkSelection.Write(workspace, project, options.Framework, diagnostics);
-            arguments.AddRange([$"-p:SampleRootProject={Path.GetFullPath(project)}", $"-p:SampleRootFramework={options.Framework}"]);
+            ValidateDeclaredFramework(workspace, project, options.Framework);
         }
         AddOptionsArguments(arguments, options);
         return arguments.ToArray();
+    }
+
+    internal static void ValidateDeclaredFramework(SampleWorkspace workspace, string project, string framework)
+    {
+        if (!Regex.IsMatch(framework, "^[A-Za-z0-9][A-Za-z0-9.-]+$"))
+            throw new ArgumentException("Select one declared target framework.", nameof(framework));
+        project = Path.GetFullPath(project);
+        var relative = Path.GetRelativePath(workspace.Root, project);
+        if (Path.IsPathRooted(relative) || relative == ".." ||
+            relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+            throw new ArgumentException("The selected root must belong to the owned sample workspace.", nameof(project));
+        var declared = XDocument.Load(project).Descendants()
+            .Where(element => element.Name.LocalName is "TargetFramework" or "TargetFrameworks")
+            .SelectMany(element => element.Value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .Distinct(StringComparer.Ordinal).ToArray();
+        if (!declared.Contains(framework, StringComparer.Ordinal))
+            throw new ArgumentException(
+                $"Selected framework is not declared by {project}: {framework}; declared {string.Join(';', declared)}.",
+                nameof(framework));
     }
 
     internal static Task<(int ExitCode, string Output, string Error)> Execute(

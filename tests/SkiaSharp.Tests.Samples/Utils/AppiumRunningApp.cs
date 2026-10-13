@@ -29,6 +29,7 @@ internal abstract class AppiumRunningApp
 	internal string Artifact { get; }
 	internal string ApplicationId { get; }
 	internal string Diagnostics { get; }
+	internal abstract string DeviceProfile { get; }
 	internal AppiumDriver Driver => driver ?? throw new InvalidOperationException("The owned Appium session is not ready.");
 	internal abstract PointerKind PointerKind { get; }
 	internal virtual By Locator(string id) => MobileBy.AccessibilityId(id);
@@ -109,33 +110,6 @@ internal abstract class AppiumRunningApp
 	internal string Capture(string id, string name) =>
 		SaveCapture(((ITakesScreenshot)Find(id)).GetScreenshot().AsByteArray, name);
 
-	internal string CaptureStable(string id, string name)
-	{
-		var previous = ((ITakesScreenshot)Find(id)).GetScreenshot().AsByteArray;
-		var previousPixels = SampleImage.ReadPixels(previous);
-		var deadline = DateTime.UtcNow.AddSeconds(10);
-
-		do
-		{
-			TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
-			Thread.Sleep(200);
-
-			var next = ((ITakesScreenshot)Find(id)).GetScreenshot().AsByteArray;
-			var nextPixels = SampleImage.ReadPixels(next);
-
-			// Compare decoded pixels; retain the driver's original PNG without re-encoding.
-			if (previousPixels.Width == nextPixels.Width && previousPixels.Height == nextPixels.Height &&
-				previousPixels.Pixels.AsSpan().SequenceEqual(nextPixels.Pixels))
-				return SaveCapture(next, name);
-
-			previous = next;
-			previousPixels = nextPixels;
-		} while (DateTime.UtcNow < deadline);
-
-		SaveCapture(previous, name);
-		throw new TimeoutException($"Static native element {id} did not settle within 10 seconds.");
-	}
-
 	private string SaveCapture(byte[] png, string name)
 	{
 		if (string.IsNullOrWhiteSpace(name) || name != Path.GetFileName(name) || name is "." or "..")
@@ -143,7 +117,6 @@ internal abstract class AppiumRunningApp
 		var path = Path.Combine(Workspace.DiagnosticsRoot, "screenshots", name + ".png");
 		Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 		File.WriteAllBytes(path, png);
-		TestContext.Current.AddFileAttachment(path, "image/png");
 		return path;
 	}
 
@@ -228,7 +201,7 @@ internal abstract class AppiumRunningApp
 				$"Device command failed ({result.ExitCode}); inspect {Diagnostics}.\n{result.Error}");
 			return Task.CompletedTask;
 		});
-		await Attempt(failures, () => SaveText($"command-{Guid.NewGuid():N}.log",
+		await Attempt(failures, () => SaveText($"{SampleWorkspace.CreateIdentity("command")}.log",
 			$"Exit: {result.ExitCode}\n{result.Output}\n{result.Error}"));
 		ThrowFailures(failures);
 		return result.Output;

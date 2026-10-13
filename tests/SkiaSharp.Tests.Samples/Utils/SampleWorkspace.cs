@@ -1,5 +1,5 @@
+using System.Globalization;
 using System.Text.Json;
-using System.Xml.Linq;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -7,6 +7,10 @@ namespace SkiaSharp.Tests.Samples.Utils;
 // Owns the sample copy, private build environment, and disposable workspace.
 public sealed class SampleWorkspace : IDisposable
 {
+    private static readonly object identityLock = new();
+    private static long identityTicks;
+    private static long identityCounter;
+
     public string Root { get; }
     public string DiagnosticsRoot { get; }
     public string? SdkVersion { get; }
@@ -58,29 +62,18 @@ public sealed class SampleWorkspace : IDisposable
         }
     }
 
-    internal void RetargetProject(string relativeProject, string expectedFramework, string targetFramework)
-    {
-        var project = Path.GetFullPath(Path.Combine(Root, "samples", relativeProject));
-        var relative = Path.GetRelativePath(Path.Combine(Root, "samples"), project);
-        if (Path.IsPathRooted(relativeProject) || relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal))
-            throw new ArgumentException("The project must stay within the owned sample copy.", nameof(relativeProject));
-
-        var document = XDocument.Load(project);
-        var frameworks = document.Descendants().Where(e => e.Name.LocalName is "TargetFramework" or "TargetFrameworks").ToArray();
-        if (frameworks.Length != 1 || frameworks[0].Name.LocalName != "TargetFramework" ||
-            frameworks[0].Value != expectedFramework || frameworks[0].Attribute("Condition") is not null ||
-            frameworks[0].Parent?.Attribute("Condition") is not null)
-            throw new InvalidOperationException($"Expected one unconditional {expectedFramework} TargetFramework in {project}.");
-
-        frameworks[0].Value = targetFramework;
-        document.Save(project);
-    }
-
     internal static string CreateIdentity(string folder)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(folder);
         var name = new string(folder.Select(c => char.IsAsciiLetterOrDigit(c) ? char.ToLowerInvariant(c) : '-').ToArray());
-        return $"{name}-{Guid.NewGuid():N}";
+        lock (identityLock)
+        {
+            // Preserve creation order even within one clock tick or after a clock adjustment.
+            identityTicks = Math.Max(DateTime.UtcNow.Ticks, identityTicks + 1);
+            var timestamp = new DateTime(identityTicks, DateTimeKind.Utc)
+                .ToString("yyyyMMdd'T'HHmmssfffffff'Z'", CultureInfo.InvariantCulture);
+            return FormattableString.Invariant($"{timestamp}-{name}-{Environment.ProcessId:x}-{++identityCounter:x}");
+        }
     }
 
     internal static void CopySample(string source, string folder, string destination)

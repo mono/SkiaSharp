@@ -112,7 +112,7 @@ public class ArtifactContractTests
 
     private async Task<(int ExitCode, string Output, string Error)> ValidatePackages(string[] packageNames)
     {
-        var root = Path.Combine(Repo.ArtifactsDir, $"contract-{Guid.NewGuid():N}");
+        var root = Path.Combine(Repo.ArtifactsDir, SampleWorkspace.CreateIdentity("contract"));
         Directory.CreateDirectory(root);
         try
         {

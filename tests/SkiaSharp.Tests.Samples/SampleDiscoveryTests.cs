@@ -48,7 +48,7 @@ public class SampleDiscoveryTests
             attribute => attribute.AttributeType == typeof(CollectionBehaviorAttribute) &&
                 attribute.NamedArguments.Any(argument => argument.MemberName == nameof(CollectionBehaviorAttribute.DisableTestParallelization) &&
                     Equals(argument.TypedValue.Value, true)));
-        foreach (var type in new[] { typeof(BrowserSampleRunTests), typeof(UnoBrowserSampleRunTests) })
+        foreach (var type in new[] { typeof(BrowserSampleRunTests), typeof(BrowserUnoSampleRunTests) })
         {
             var collection = Assert.Single(type.GetCustomAttributesData(),
                 attribute => attribute.AttributeType == typeof(CollectionAttribute));

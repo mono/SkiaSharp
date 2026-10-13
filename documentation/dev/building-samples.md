@@ -65,11 +65,15 @@ the inherited `PATH`, without changing project TFMs. Set the intended SDK and
 platform environment before launching the terminal or IDE. Owned consumers
 default to the SDK in the repository's `global.json`; set
 `SAMPLE_TEST_SDK_VERSION` to select another exact installed SDK. This selection
-does not change the runner SDK or ordinary sample frameworks.
+uses `rollForward: disable` and does not change the runner SDK or any sample's
+declared frameworks. Console keeps its declared `net10.0` target, including when
+built with the preview SDK.
 
 Sample helpers accept one optional `DotNetOptions` record. For example,
 `BuildSample(folder, project, new() { Framework = "net10.0-android" })`
-selects a declared root framework without retargeting referenced libraries.
+validates the requested framework against the project declarations and passes
+`--framework` to `dotnet`. Project files and framework lists are not rewritten.
+Restore keeps the declared framework graph, so its workloads must be available.
 Reuse the same options with `DotNet.Build` and the callback-based `DotNet.Run`;
 additional `Properties` are passed to both before run's `--` separator.
 Configuration defaults to Release. `WorkingDirectory` defaults to the project
@@ -119,7 +123,7 @@ Browser errors and unavailable GPU rendering fail.
 
 When adding tests, choose a `RunGroup` by execution target, not sample family.
 Name execution classes by purpose: `SampleBuildTests`, `BasicSampleRunTests`,
-`BrowserSampleRunTests`, and `UnoBrowserSampleRunTests`. `DockerSampleBuildTests`
+`BrowserSampleRunTests`, and `BrowserUnoSampleRunTests`. `DockerSampleBuildTests`
 and `DockerSampleRunTests` share one collection fixture and both use the Docker
 group. Infrastructure, discovery, and artifact-contract checks stay separate.
 `DotNetSampleTestBase` prepares isolated .NET workspaces; `DockerSampleTestBase`
@@ -150,6 +154,8 @@ and an optional `SampleImageOptions` record. Its byte-array overload also takes
 the actual output path, saves the bytes, then calls the file overload.
 Set `ExpectedSize = new(800, 600)` for fixed-size PNGs.
 Omitting options retains the strict pixel comparison and golden dimensions.
+Pass a screenshot callback to retry that same comparison for up to two seconds.
+Only the final mismatch produces a diff; missing references fail immediately.
 
 ## Appium application runtime tests
 
@@ -165,6 +171,10 @@ Install Appium and the selected driver explicitly; put `appium` on PATH.
 Use UiAutomator2 for API 26 and 37 (driver 6+ requires API 26), XCUITest for iOS,
 Mac2 for MacCatalyst/macOS, or Windows for WinUI/MAUI
 Windows. Tests do not install tools, workloads or device images.
+CI runs `scripts/infra/tests/install-appium.ps1` to install Appium and the selected
+driver in job-owned directories. Windows jobs also provision WinAppDriver.
+Windows samples build with `WindowsPackageType=None` and launch their executable
+directly; tests do not register or uninstall MSIX packages.
 
 Set `ANDROID_HOME` or `ANDROID_SDK_ROOT` for Android. On macOS, set
 `DEVELOPER_DIR` to the Xcode required by your installed workload; tests do not
@@ -176,7 +186,7 @@ the separate `dotnet` fast-deployment step.
 Local runs select Android **17**, using model `pixel_9`. iOS defaults to **iPhone 16 Pro**
 on **26.2**. Install `system-images;android-37.1;google_apis_ps16k;<host-ABI>`
 and the selected iOS runtime/device type before running tests. Missing prerequisites fail; neither
-the tests nor the Appium CI preparation path installs or downloads them.
+the tests nor the Appium CI preparation path installs device images or simulator runtimes.
 
 CI device jobs supply the desired version/image or simulator model. To use a
 different preinstalled runtime locally:
@@ -216,9 +226,8 @@ explicitly installed executable.
 Mac2 launches the exact built bundle through `appPath`; no custom launch or
 LaunchServices scripts are needed. Existing app state/running apps are not reused.
 Mac2 and Windows drivers own app launch/termination and their WDA/WAD
-server lifecycle. Windows package registration remains an OS preparation step:
-WinAppDriver accepts an installed application ID but has no MSIX registration
-API. Only the newly registered package is removed afterward.
+server lifecycle. Windows launches the exact built executable through its full
+path; existing processes are not reused or terminated.
 
 After bootstrap, package staging, and exact-suffix generation:
 

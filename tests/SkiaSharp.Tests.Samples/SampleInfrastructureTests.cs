@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 using System.Xml.Linq;
 using SkiaSharp.Tests.Samples.Utils;
@@ -11,7 +12,7 @@ namespace SkiaSharp.Tests.Samples;
 [RunGroup(SampleRunGroup.Build)]
 public class SampleInfrastructureTests : IDisposable
 {
-    private readonly string root = Path.Combine(Repo.ArtifactsDir, $"infrastructure-{Guid.NewGuid():N}");
+    private readonly string root = Path.Combine(Repo.ArtifactsDir, SampleWorkspace.CreateIdentity("infrastructure"));
 
     private void FileIn(string relative, string text = "<Project />")
     {
@@ -127,6 +128,57 @@ public class SampleInfrastructureTests : IDisposable
         Assert.Throws<ArgumentException>(() => SampleWorkspace.CopySample(root, folder, Path.Combine(root, "copy")));
 
     [Fact]
+    public void IdentitiesAreUtcSortableUniqueAndPathSafeAcrossCulturesAndConcurrentCalls()
+    {
+        var culture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("ar-SA");
+            var identities = Enumerable.Range(0, 1000)
+                .Select(index => SampleWorkspace.CreateIdentity(index % 2 == 0 ? "Basic/Console" : "App"))
+                .ToArray();
+            Assert.Equal(identities, identities.Order(StringComparer.Ordinal));
+            foreach (var identity in identities)
+            {
+                Assert.Matches(@"^[0-9]{8}T[0-9]{13}Z-[a-z0-9-]+-[a-f0-9]+-[a-f0-9]+$", identity);
+                var timestamp = DateTime.ParseExact(identity[..23], "yyyyMMdd'T'HHmmssfffffff'Z'",
+                    CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+                Assert.Equal(DateTimeKind.Utc, timestamp.Kind);
+            }
+            var concurrent = new string[1000];
+            Parallel.For(0, concurrent.Length, index => concurrent[index] = SampleWorkspace.CreateIdentity("Basic/Console"));
+            Assert.Equal(identities.Length + concurrent.Length,
+                identities.Concat(concurrent).Distinct(StringComparer.Ordinal).Count());
+            Assert.Contains("-basic-console-", identities[0]);
+            Assert.Throws<ArgumentException>(() => SampleWorkspace.CreateIdentity(""));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = culture;
+        }
+    }
+
+    [Fact]
+    public async Task RunningAppsKeepSortableDistinctLogPairsInTheirOwnedDirectory()
+    {
+        var diagnostics = Path.Combine(root, "run");
+        FileIn("other-run/keep.txt", "Keep this run.");
+        await new AddressRunningApp(diagnostics).Run(() => Task.CompletedTask);
+        var first = Assert.Single(Directory.EnumerateFiles(diagnostics, "*.stdout.log"));
+        await new AddressRunningApp(diagnostics).Run(() => Task.CompletedTask);
+        var outputs = Directory.EnumerateFiles(diagnostics, "*.stdout.log").Order(StringComparer.Ordinal).ToArray();
+        Assert.Equal(2, outputs.Length);
+        Assert.Equal(first, outputs[0]);
+        Assert.Equal(4, Directory.EnumerateFiles(diagnostics).Count());
+        foreach (var output in outputs)
+        {
+            Assert.Matches(@"^[0-9]{8}T[0-9]{13}Z-run-[a-f0-9]+-[a-f0-9]+\.stdout\.log$", Path.GetFileName(output));
+            Assert.True(File.Exists(output.Replace(".stdout.log", ".stderr.log", StringComparison.Ordinal)));
+        }
+        Assert.Equal("Keep this run.", File.ReadAllText(Path.Combine(root, "other-run", "keep.txt")));
+    }
+
+    [Fact]
     public void RejectsSampleLocalSdkPins()
     {
         FileIn("inputs/Basic/App/global.json", "{}");
@@ -166,7 +218,7 @@ public class SampleInfrastructureTests : IDisposable
             Path.Combine(repository, "output", "samples-test-workspaces"),
             Path.Combine(root, "diagnostics"), sdkVersion: null);
         var working = workspace.Root;
-        Assert.StartsWith("basic-console-", Path.GetFileName(working));
+        Assert.Contains("-basic-console-", Path.GetFileName(working));
         Assert.Equal(Path.GetFileName(working), Path.GetFileName(workspace.DiagnosticsRoot));
         using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(working, "global.json")));
         Assert.Single(json.RootElement.EnumerateObject());
@@ -213,7 +265,7 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public void RetargetingChangesOnlyTheOwnedConsumerProject()
+    public void ConsumerSdkSelectionAndRootFrameworkSelectionPreserveProjectDeclarations()
     {
         const string project = """
             <Project Sdk="Microsoft.NET.Sdk">
@@ -224,38 +276,23 @@ public class SampleInfrastructureTests : IDisposable
         FileIn("packages/input.nupkg");
         using var baseline = new SampleWorkspace(
             "App", Path.Combine(root, "inputs"), Path.Combine(root, "packages"),
-            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"), "10.0.401");
         using var preview = new SampleWorkspace(
             "App", Path.Combine(root, "inputs"), Path.Combine(root, "packages"),
-            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
-        preview.RetargetProject(Path.Combine("App", "App.csproj"), "net10.0", "net11.0");
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"), "11.0.100-rc.1.26425.128");
+        foreach (var workspace in new[] { baseline, preview })
+        {
+            var ownedProject = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
+            var arguments = DotNet.BuildArguments(workspace, ownedProject, workspace.DiagnosticsRoot,
+                new DotNetOptions { Framework = "net10.0" });
+            Assert.Contains("--framework", arguments);
+            Assert.DoesNotContain(arguments, argument => argument.StartsWith("-p:TargetFramework", StringComparison.Ordinal));
+            Assert.Equal(project, File.ReadAllText(ownedProject));
+            using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(workspace.Root, "global.json")));
+            Assert.Equal(workspace.SdkVersion, json.RootElement.GetProperty("sdk").GetProperty("version").GetString());
+            Assert.Equal("disable", json.RootElement.GetProperty("sdk").GetProperty("rollForward").GetString());
+        }
         Assert.Equal(project, File.ReadAllText(Path.Combine(root, "inputs", "App", "App.csproj")));
-        Assert.Equal(project, File.ReadAllText(Path.Combine(baseline.Root, "samples", "App", "App.csproj")));
-        Assert.Equal("net11.0", XDocument.Load(Path.Combine(preview.Root, "samples", "App", "App.csproj"))
-            .Descendants("TargetFramework").Single().Value);
-        Assert.Throws<InvalidOperationException>(() => preview.RetargetProject(
-            Path.Combine("App", "App.csproj"), "net10.0", "net11.0"));
-        Assert.Throws<ArgumentException>(() => preview.RetargetProject(
-            "../outside.csproj", "net10.0", "net11.0"));
-        Assert.Throws<ArgumentException>(() => preview.RetargetProject(
-            Path.Combine(root, "inputs", "App", "App.csproj"), "net10.0", "net11.0"));
-    }
-
-    [Theory]
-    [InlineData("<TargetFrameworks>net10.0;net9.0</TargetFrameworks>")]
-    [InlineData("<TargetFramework Condition=\"'$(Host)' == 'true'\">net10.0</TargetFramework>")]
-    [InlineData("<TargetFramework>net9.0</TargetFramework>")]
-    public void RetargetingRejectsUnexpectedFrameworkDeclarations(string framework)
-    {
-        var project = $"<Project><PropertyGroup>{framework}</PropertyGroup></Project>";
-        FileIn("inputs/App/App.csproj", project);
-        FileIn("packages/input.nupkg");
-        using var workspace = new SampleWorkspace(
-            "App", Path.Combine(root, "inputs"), Path.Combine(root, "packages"),
-            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
-        Assert.Throws<InvalidOperationException>(() => workspace.RetargetProject(
-            Path.Combine("App", "App.csproj"), "net10.0", "net11.0"));
-        Assert.Equal(project, File.ReadAllText(Path.Combine(workspace.Root, "samples", "App", "App.csproj")));
     }
 
     [Fact]
@@ -681,8 +718,8 @@ public class SampleInfrastructureTests : IDisposable
                 <OutputType>Exe</OutputType>
               </PropertyGroup>
               <Target Name="VerifySelectedFramework" BeforeTargets="CoreCompile">
-                <Error Condition="'$(TargetFramework)' != 'net10.0-windows' or '$(TargetFrameworks)' != 'net10.0-windows'"
-                       Text="Build must select only the declared root framework net10.0-windows." />
+                <Error Condition="'$(TargetFramework)' != 'net10.0-windows' or '$(TargetFrameworks)' != 'net10.0;net10.0-windows'"
+                       Text="Build must select the declared root framework without rewriting its framework list." />
                 <Error Condition="'$(ContractSentinel)' != 'forwarded-by-buildsample'"
                        Text="BuildSample must forward the test-owned property dictionary." />
                 <Message Importance="high" Text="Selected $(TargetFramework) from $(TargetFrameworks)" />
@@ -740,7 +777,7 @@ public class SampleInfrastructureTests : IDisposable
         var working = test.Prepare();
         var diagnostics = Path.Combine(test.Diagnostics, "builds", "Basic", "Console", "App", "Release", "net10.0-windows");
         var output = File.ReadAllText(Path.Combine(diagnostics, "build.stdout.log"));
-        Assert.Contains("Selected net10.0-windows from net10.0-windows", output);
+        Assert.Contains("Selected net10.0-windows from net10.0;net10.0-windows", output);
         Assert.Contains("Contract sentinel: forwarded-by-buildsample", output);
         Assert.Contains($"Build working directory: {workingDirectory}", output);
         Assert.Equal(new KeyValuePair<string, string>("ContractSentinel", "forwarded-by-buildsample"), Assert.Single(properties));
@@ -811,7 +848,7 @@ public class SampleInfrastructureTests : IDisposable
     [Fact]
     public void ExplicitBuildPropertiesKeepDefaultFlagsAndDoNotMutateTheCaller()
     {
-        FileIn("inputs/App/App.csproj");
+        FileIn("inputs/App/App.csproj", "<Project><PropertyGroup><TargetFramework>net10.0-ios</TargetFramework></PropertyGroup></Project>");
         using var workspace = new SampleWorkspace(
             "App", Path.Combine(root, "inputs"), Repo.PackagesDir,
             Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
@@ -824,7 +861,6 @@ public class SampleInfrastructureTests : IDisposable
         Assert.Equal(defaults, arguments.Take(defaults.Length));
         Assert.Equal(new[]
         {
-            $"-p:SampleRootProject={Path.GetFullPath(project)}", "-p:SampleRootFramework=net10.0-ios",
             "--framework", "net10.0-ios",
             "-p:RuntimeIdentifier=iossimulator-arm64"
         }, arguments.Skip(defaults.Length));
@@ -841,7 +877,7 @@ public class SampleInfrastructureTests : IDisposable
             "--framework", "net10.0-ios", "-p:RuntimeIdentifier=iossimulator-arm64", "--", "argument with spaces", "--sentinel"
         }, run);
         foreach (var name in new[] { "TargetFramework", "TargetFrameworks", "configuration", "RestoreConfigFile",
-            "RestoreNoCache", "UseSharedCompilation", "SampleRootProject", "SampleRootFramework", " " })
+            "RestoreNoCache", "UseSharedCompilation", " " })
         {
             var conflicting = new Dictionary<string, string> { [name] = "override" };
             Assert.Throws<ArgumentException>(() =>
@@ -852,27 +888,32 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public void RootFrameworkSelectionPreservesTargetsAndGuardsOnlyTheSelectedRoot()
+    public void FrameworkSelectionValidatesDeclarationsWithoutWritingProjectsOrTargets()
     {
-        FileIn("inputs/App/App.csproj");
+        const string projectXml = "<Project><PropertyGroup><TargetFrameworks>net10.0;net8.0</TargetFrameworks></PropertyGroup></Project>";
+        FileIn("inputs/App/App.csproj", projectXml);
         FileIn("inputs/Directory.Build.targets", "<Project><Target Name=\"ExistingSampleTarget\" /></Project>");
         using var workspace = new SampleWorkspace("App", Path.Combine(root, "inputs"), Repo.PackagesDir,
             Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
         var project = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
         var diagnostics = Path.Combine(workspace.DiagnosticsRoot, "build");
-        var path = RootFrameworkSelection.Write(workspace, project, "net10.0", diagnostics);
-        var selection = System.Xml.Linq.XDocument.Load(path);
-        Assert.Equal("ValidateRootSampleFrameworkSelection", (string?)selection.Root!.Attribute("InitialTargets"));
-        var selected = Assert.Single(selection.Descendants("TargetFrameworks"));
-        Assert.Contains("MSBuildProjectFullPath", (string?)selected.Parent!.Attribute("Condition"));
-        Assert.Equal("$(SampleRootFramework)", selected.Value);
-        Assert.Contains("RootDeclaredFrameworks", Assert.Single(selection.Descendants("Error")).Attribute("Condition")!.Value);
-        var original = System.Xml.Linq.XDocument.Load(Path.Combine(workspace.Root, "samples", "Directory.Build.targets"));
+        var targets = Path.Combine(workspace.Root, "samples", "Directory.Build.targets");
+        var originalTargets = File.ReadAllText(targets);
+        DotNet.BuildArguments(workspace, project, diagnostics, new() { Framework = "net10.0" });
+        DotNet.BuildArguments(workspace, project, diagnostics, new() { Framework = "net8.0" });
+        var original = System.Xml.Linq.XDocument.Load(targets);
         Assert.Equal("ExistingSampleTarget", Assert.Single(original.Descendants("Target")).Attribute("Name")!.Value);
-        Assert.Single(original.Descendants("Import"));
-        RootFrameworkSelection.Write(workspace, project, "net8.0", diagnostics);
-        Assert.Single(System.Xml.Linq.XDocument.Load(Path.Combine(workspace.Root, "samples", "Directory.Build.targets")).Descendants("Import"));
-        Assert.Throws<ArgumentException>(() => RootFrameworkSelection.Write(workspace, project, "net10.0;net8.0", diagnostics));
+        Assert.Empty(original.Descendants("Import"));
+        Assert.Equal(originalTargets, File.ReadAllText(targets));
+        Assert.False(File.Exists(Path.Combine(diagnostics, "selected-root.targets")));
+        Assert.Equal(projectXml, File.ReadAllText(project));
+        Assert.Equal(projectXml, File.ReadAllText(Path.Combine(root, "inputs", "App", "App.csproj")));
+        Assert.Throws<ArgumentException>(() => DotNet.ValidateDeclaredFramework(workspace, project, "net11.0"));
+        Assert.Throws<ArgumentException>(() => DotNet.ValidateDeclaredFramework(workspace, project, "net10.0;net8.0"));
+        Assert.Throws<ArgumentException>(() => DotNet.ValidateDeclaredFramework(workspace,
+            Path.Combine(workspace.Root, "..", "outside.csproj"), "net10.0"));
+        Assert.Throws<ArgumentException>(() => DotNet.ValidateDeclaredFramework(workspace,
+            Path.Combine(root, "inputs", "App", "App.csproj"), "net10.0"));
     }
 
     [Fact]

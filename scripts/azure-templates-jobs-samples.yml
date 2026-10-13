@@ -20,7 +20,6 @@ jobs:
             - ${{ parameters.sdk.additionalSdks[parameters.platform] }}
           env:
             SAMPLE_TEST_SDK_VERSION: ${{ parameters.sdk.version }}
-            SAMPLE_TEST_CONSOLE_FRAMEWORKS: ${{ join(',', parameters.sdk.consoleFrameworks) }}
           ${{ if eq(parameters.platform, 'macos') }}:
             variables:
               XCODE_VERSION: ${{ parameters.sdk.xcodeVersion }}

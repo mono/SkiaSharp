@@ -1,7 +1,6 @@
 using Microsoft.Playwright;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
-using static SkiaSharp.Tests.Samples.Utils.SampleImage;
 
 namespace SkiaSharp.Tests.Samples;
 
@@ -100,37 +99,11 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Page.Mouse.UpAsync();
             await app.Page.Mouse.MoveAsync(0, 0);
 
-            await app.Page.WaitForFunctionAsync("""
-                () => {
-                    const c = document.querySelector('.canvas-container canvas');
-                    const p = c.getContext('2d').getImageData(400, 200, 1, 1).data;
-                    const q = c.getContext('2d').getImageData(400, 400, 1, 1).data;
-                    return p[0] === 229 && p[1] === 57 && p[2] === 53 &&
-                           q[0] === 30 && q[1] === 136 && q[2] === 229;
-                }
-                """);
-            var drawn = await app.Screenshot();
-            var region = new SKRectI((int)bounds.X + 150, (int)bounds.Y + 150,
-                (int)bounds.X + 650, (int)bounds.Y + 500);
-            Assert.True(CountPixels(drawn, region, c => c == new SKColor(229, 57, 53)) > 2000);
-            Assert.True(CountPixels(drawn, region, c => c == new SKColor(30, 136, 229)) > 2000);
+            await SampleImage.Validate(app.Screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-drawing-page.png");
 
             await app.Page.GetByRole(AriaRole.Button, new() { Name = "Clear", Exact = true }).ClickAsync();
             await app.Page.Mouse.MoveAsync(0, 0);
-            await app.Page.WaitForFunctionAsync("""
-                () => {
-                    const c = document.querySelector('.canvas-container canvas');
-                    const p = c.getContext('2d').getImageData(400, 200, 1, 1).data;
-                    const q = c.getContext('2d').getImageData(400, 400, 1, 1).data;
-                    return [...p, ...q].every(channel => channel === 255);
-                }
-                """);
-            var cleared = await app.Screenshot();
-            Assert.Equal(0, CountPixels(cleared, region, c =>
-                c == new SKColor(229, 57, 53) || c == new SKColor(30, 136, 229)));
-
-            SampleImage.Validate(drawn, $"Host/{SampleLookup.HostPlatform}/blazor-drawing-page.png");
-            SampleImage.Validate(cleared, $"Host/{SampleLookup.HostPlatform}/blazor-drawing-cleared-page.png");
+            await SampleImage.Validate(app.Screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-drawing-cleared-page.png");
         });
 
     [Theory]

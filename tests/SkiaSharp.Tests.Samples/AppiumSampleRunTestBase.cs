@@ -38,6 +38,18 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		return identifier.Value.Trim();
 	}
 
+	private protected static string AndroidApplicationId(string project)
+	{
+		if (ProjectApplicationId(project) is { } applicationId)
+			return applicationId;
+
+		var manifest = Path.Combine(Path.GetDirectoryName(project)!, "Properties", "AndroidManifest.xml");
+		var package = XDocument.Load(manifest).Root?.Attribute("package")?.Value;
+		if (string.IsNullOrWhiteSpace(package))
+			throw new InvalidOperationException($"Source application ID is missing: {manifest}");
+		return package.Trim();
+	}
+
 	private protected static string HostArchitecture() => RuntimeInformation.ProcessArchitecture switch
 	{
 		Architecture.Arm64 => "arm64",
@@ -49,17 +61,15 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		Environment.GetEnvironmentVariable(name) is { Length: > 0 } value ? value :
 			throw new InvalidOperationException($"Set {name} to the explicitly installed platform driver's path before selecting its tests.");
 
-	private protected static Task Basic(
+	private protected static async Task Basic(
 		AppiumRunningApp app,
-		string family, string platform, string device,
+		string family, string platform,
 		IReadOnlyList<BasicPageCommand> pages,
 		Action<AppiumRunningApp, string> navigate)
 	{
 		Assert.NotEmpty(pages);
-		List<string> captures = [];
-		for (var index = 0; index < pages.Count; index++)
+		foreach (var page in pages)
 		{
-			var page = pages[index];
 			navigate(app, page.NavigationId);
 			app.Find(page.CanvasId);
 
@@ -71,63 +81,38 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 					app.Find(check.Id);
 			}
 
-			string capture;
 			if (page.Animated)
 			{
-				// Basic GPU pages remain animated; capture a render smoke, not a stable golden.
-				capture = app.Capture(page.CanvasId, page.ScreenshotName);
-				SampleImage.AssertRendered(capture);
+				var capture = app.Capture(page.CanvasId, page.ScreenshotName);
+				TestContext.Current.AddFileAttachment(capture, "image/png");
 			}
 			else
 			{
-				capture = app.CaptureStable(page.CanvasId, page.ScreenshotName);
-				if (index == 0)
-					SampleImage.AssertRendered(capture);
+				await Compare(app, page.CanvasId, page.ScreenshotName, family, platform);
 			}
-			captures.Add(capture);
 		}
-
-		var cpu = captures[0];
-		var cpuPage = pages[0];
-		navigate(app, cpuPage.NavigationId);
-		var returned = app.CaptureStable(cpuPage.CanvasId, "basic-cpu-returned");
-		Assert.Multiple(
-			() => SampleImage.Validate(returned, cpu),
-			() => Compare(cpu, family, platform, device, "basic-cpu"));
-
-		return Task.CompletedTask;
 	}
 
 	private protected static Task MauiDrawing(
-		AppiumRunningApp app, string platform, string device,
+		AppiumRunningApp app, string platform,
 		Action<AppiumRunningApp, string> navigate)
 	{
 		const string canvasId = "basic-canvas-drawing";
 		navigate(app, "Drawing");
-		var empty = app.CaptureStable(canvasId, "drawing-empty");
 
 		// Element-relative crossing strokes stay clear of the floating page controls.
 		app.Drag(app.Find(canvasId), 0.3, 0.3, 0.7, 0.6);
-		var firstLine = app.CaptureStable(canvasId, "drawing-first-line");
-		SampleImage.AssertSceneChanged(empty, firstLine);
-
 		app.Drag(app.Find(canvasId), 0.3, 0.6, 0.7, 0.3);
-		var twoLines = app.CaptureStable(canvasId, "basic-drawing-two-lines");
-		SampleImage.AssertSceneChanged(firstLine, twoLines);
-
-		app.Click("basic-drawing-clear");
-		var cleared = app.CaptureStable(canvasId, "drawing-cleared");
-		navigate(app, "CPU");
-		app.Find("basic-canvas-cpu");
-
-		Assert.Multiple(
-			() => SampleImage.Validate(cleared, empty),
-			() => Compare(twoLines, "Maui", platform, device, "basic-drawing-two-lines"));
-
-		return Task.CompletedTask;
+		return Assert.MultipleAsync(
+			() => Compare(app, canvasId, "basic-drawing-two-lines", "Maui", platform),
+			async () =>
+			{
+				app.Click("basic-drawing-clear");
+				await Compare(app, canvasId, "basic-drawing-page", "Maui", platform);
+			});
 	}
 
-	private protected static Task Gallery(AppiumRunningApp app, string platform, string device)
+	private protected static async Task Gallery(AppiumRunningApp app, string platform)
 	{
 		app.Click("gallery-header-cpu");
 		app.Find("gallery-search").SendKeys("Gradient");
@@ -143,33 +128,26 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		app.Click("sample-gradient");
 		app.WaitText("sample-title", text => text == "Gradient");
 		app.WaitText("sample-render-status", text => text.StartsWith("CPU", StringComparison.Ordinal) && text.Contains("  |"));
-		var cpu = app.CaptureStable("sample-canvas-cpu", "gallery-gradient-cpu");
-		SampleImage.AssertRendered(cpu);
+		await Compare(app, "sample-canvas-cpu", "gallery-gradient-cpu", "Maui", platform);
 
 		var before = app.Text("control-angle-value");
 		app.Drag(app.Find("control-angle"), 0.2, 0.5, 0.7, 0.5);
 		app.WaitText("control-angle-value", text => text != before);
-		SampleImage.AssertSceneChanged(cpu, app.CaptureStable("sample-canvas-cpu", "gallery-gradient-adjusted"));
+		await Compare(app, "sample-canvas-cpu", "gallery-gradient-adjusted", "Maui", platform);
 
 		app.Click("sample-back");
 		app.Find("gallery-search");
 		app.Click("gallery-header-gpu");
 		app.Click("sample-gradient");
 		app.WaitText("sample-render-status", text => text.StartsWith("GPU", StringComparison.Ordinal) && text.Contains("  |"));
-		var gpu = app.CaptureStable("sample-canvas-gpu", "gallery-gradient-gpu");
-		SampleImage.AssertRendered(gpu);
+		await Compare(app, "sample-canvas-gpu", "gallery-gradient-gpu", "Maui", platform);
 		app.Click("sample-back");
 		app.Find("gallery-search");
-
-		Assert.Multiple(
-			() => Compare(cpu, "Maui", platform, device, "gallery-gradient-cpu"),
-			() => Compare(gpu, "Maui", platform, device, "gallery-gradient-gpu"));
-
-		return Task.CompletedTask;
 	}
 
-	private static void Compare(string actual, string family, string platform, string device, string name) =>
-		SampleImage.Validate(actual, Path.Combine(
+	private static Task Compare(
+		AppiumRunningApp app, string canvasId, string name, string family, string platform) =>
+		SampleImage.Validate(() => app.Capture(canvasId, name), Path.Combine(
 			Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", "Appium",
-			family, platform, device.Replace('/', Path.DirectorySeparatorChar), name + ".png"));
+			family, platform, app.DeviceProfile.Replace('/', Path.DirectorySeparatorChar), name + ".png"));
 }

@@ -14,6 +14,14 @@ public sealed class AppiumInfrastructureTests
 		var path = Path.Combine(Repo.RootDir, "samples", project);
 		Assert.Equal(expected, MetadataProbe.ReadProjectApplicationId(path));
 		Assert.Equal(expected, MetadataProbe.ReadAppleApplicationId(path));
+		Assert.Equal(expected, MetadataProbe.ReadAndroidApplicationId(path));
+	}
+
+	[Fact]
+	public void NativeAndroidApplicationIdComesFromSourceManifest()
+	{
+		var path = Path.Combine(Repo.RootDir, "samples", "Basic", "Android", "SkiaSharpSample", "SkiaSharpSample.csproj");
+		Assert.Equal("com.companyname.skiasharpsample", MetadataProbe.ReadAndroidApplicationId(path));
 	}
 
 	[Theory]
@@ -30,7 +38,7 @@ public sealed class AppiumInfrastructureTests
 	[Fact]
 	public void AndroidReferenceProfileUsesTheConfiguredModel()
 	{
-		var root = Path.Combine(Path.GetTempPath(), $"appium-model-{Guid.NewGuid():N}");
+		var root = Path.Combine(Path.GetTempPath(), SampleWorkspace.CreateIdentity("appium-model"));
 		try
 		{
 			var inputs = Path.Combine(root, "inputs");
@@ -52,9 +60,32 @@ public sealed class AppiumInfrastructureTests
 	}
 
 	[Fact]
+	public void WindowsAppUsesItsExecutablePathAndBuiltArchitecture()
+	{
+		var root = Path.Combine(Path.GetTempPath(), SampleWorkspace.CreateIdentity("appium-windows"));
+		try
+		{
+			var inputs = Path.Combine(root, "inputs");
+			Directory.CreateDirectory(Path.Combine(inputs, "Sample"));
+			using var workspace = new SampleWorkspace(
+				"Sample", inputs, Repo.PackagesDir,
+				Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+			var executable = Path.Combine(workspace.Root, "samples", "Sample", "bin", "Sample.exe");
+			var app = new WindowsRunningApp(workspace, executable, "WinAppDriver.exe", "x64");
+			Assert.Equal(Path.GetFullPath(executable), app.Artifact);
+			Assert.Equal(app.Artifact, app.ApplicationId);
+			Assert.Equal("x64", app.DeviceProfile);
+		}
+		finally
+		{
+			SampleWorkspace.DeleteDirectory(root);
+		}
+	}
+
+	[Fact]
 	public async Task MissingInstalledAndroidImageFailsBeforeDeviceCreation()
 	{
-		var sdk = Path.Combine(Path.GetTempPath(), $"appium-sdk-{Guid.NewGuid():N}");
+		var sdk = Path.Combine(Path.GetTempPath(), SampleWorkspace.CreateIdentity("appium-sdk"));
 		try
 		{
 			Directory.CreateDirectory(sdk);
@@ -71,31 +102,129 @@ public sealed class AppiumInfrastructureTests
 	}
 
 	[Fact]
-	public void InteractionMustChangeTheSceneNotJustAnOverlay()
+	public Task GoldenRetryStopsAtTheExpectedFrame() =>
+		WithImages(async (actual, expected) =>
+		{
+			var captures = 0;
+			await SampleImage.Validate(() =>
+			{
+				captures++;
+				if (captures == 2)
+				{
+					Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+					File.Copy(expected, actual, overwrite: true);
+				}
+				return actual;
+			}, expected, TimeSpan.FromSeconds(2));
+			Assert.Equal(2, captures);
+			Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+		});
+
+	[Fact]
+	public Task MatchingGoldenNeedsOnlyOneCapture() =>
+		WithImages(async (actual, expected) =>
+		{
+			File.Copy(expected, actual, overwrite: true);
+			var captures = 0;
+			await SampleImage.Validate(() =>
+			{
+				captures++;
+				return actual;
+			}, expected, TimeSpan.FromSeconds(2));
+			Assert.Equal(1, captures);
+		});
+
+	[Fact]
+	public Task AsyncCaptureUsesTheSameGoldenRetry() =>
+		WithImages(async (actual, expected) =>
+		{
+			var captures = 0;
+			await SampleImage.Validate(async () =>
+			{
+				await Task.Yield();
+				if (++captures == 2)
+					File.Copy(expected, actual, overwrite: true);
+				return actual;
+			}, expected);
+			Assert.Equal(2, captures);
+		});
+
+	[Fact]
+	public Task GoldenRetryReportsTheFinalMismatch() =>
+		WithImages(async (actual, expected) =>
+		{
+			var captures = 0;
+			var error = await Assert.ThrowsAsync<Xunit.Sdk.FailException>(() =>
+				SampleImage.Validate(() =>
+				{
+					captures++;
+					return actual;
+				}, expected, TimeSpan.Zero));
+			Assert.Contains("Sample pixels differ", error.Message);
+			Assert.Equal(1, captures);
+			Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+		});
+
+	[Fact]
+	public Task MissingGoldenIsNotRetriedOrAccepted() =>
+		WithImages(async (actual, expected) =>
+		{
+			File.Delete(expected);
+			var captures = 0;
+			var error = await Assert.ThrowsAnyAsync<Exception>(() =>
+				SampleImage.Validate(() =>
+				{
+					captures++;
+					return actual;
+				}, expected, TimeSpan.FromSeconds(2)));
+			Assert.Contains("Missing reviewed sample golden", error.Message);
+			Assert.Equal(1, captures);
+			Assert.True(File.Exists(actual));
+			Assert.False(File.Exists(expected));
+		});
+
+	[Fact]
+	public Task GoldenRetryWaitsForTheExpectedDimensions() =>
+		WithImages(async (actual, expected) =>
+		{
+			WriteImage(actual, SKColors.White, 8);
+			var captures = 0;
+			await SampleImage.Validate(() =>
+			{
+				captures++;
+				if (captures == 2)
+					File.Copy(expected, actual, overwrite: true);
+				return actual;
+			}, expected, TimeSpan.FromSeconds(2));
+			Assert.Equal(2, captures);
+		});
+
+	[Fact]
+	public Task CaptureFailureIsNotRetried() =>
+		WithImages(async (_, expected) =>
+		{
+			var captures = 0;
+			var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+				SampleImage.Validate((Func<string>)(() =>
+				{
+					captures++;
+					throw new InvalidOperationException("Capture failed.");
+				}), expected, TimeSpan.FromSeconds(2)));
+			Assert.Equal("Capture failed.", error.Message);
+			Assert.Equal(1, captures);
+		});
+
+	private static async Task WithImages(Func<string, string, Task> test)
 	{
-		var root = Path.Combine(Path.GetTempPath(), $"appium-scene-{Guid.NewGuid():N}");
+		var root = Path.Combine(Path.GetTempPath(), SampleWorkspace.CreateIdentity("appium-golden"));
 		Directory.CreateDirectory(root);
 		try
 		{
-			var before = Path.Combine(root, "before.png");
-			var after = Path.Combine(root, "after.png");
-			using var bitmap = new SKBitmap(16, 16);
-			bitmap.Erase(SKColors.White);
-			Save(before);
-			bitmap.SetPixel(15, 15, SKColors.Red);
-			Save(after);
-			var error = Assert.ThrowsAny<Exception>(() => SampleImage.AssertSceneChanged(before, after));
-			Assert.Contains("rendered scene did not change", error.Message);
-			bitmap.SetPixel(4, 4, SKColors.Blue);
-			Save(after);
-			SampleImage.AssertSceneChanged(before, after);
-
-			void Save(string path)
-			{
-				using var image = SKImage.FromBitmap(bitmap);
-				using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-				File.WriteAllBytes(path, data.ToArray());
-			}
+			var actual = Path.Combine(root, "actual.png");
+			var expected = Path.Combine(root, "expected.png");
+			WriteImage(actual, SKColors.Red);
+			WriteImage(expected, SKColors.White);
+			await test(actual, expected);
 		}
 		finally
 		{
@@ -103,10 +232,22 @@ public sealed class AppiumInfrastructureTests
 		}
 	}
 
+	private static void WriteImage(string path, SKColor color, int size = 16)
+	{
+		using var bitmap = new SKBitmap(size, size);
+		bitmap.Erase(color);
+		using var image = SKImage.FromBitmap(bitmap);
+		using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+		File.WriteAllBytes(path, data.ToArray());
+	}
+
 	private sealed class MetadataProbe : AppiumSampleRunTestBase
 	{
 		internal static string? ReadProjectApplicationId(string project) => ProjectApplicationId(project);
 
 		internal static string ReadAppleApplicationId(string project) => AppleApplicationId(project);
+
+		internal static string ReadAndroidApplicationId(string project) => AndroidApplicationId(project);
+
 	}
 }

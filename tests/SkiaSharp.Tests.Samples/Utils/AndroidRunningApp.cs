@@ -24,7 +24,7 @@ internal sealed class AndroidRunningApp(
 		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_IMAGE_PREFIX")
 		?? "system-images;android-37.1;google_apis_ps16k";
 
-	internal string DeviceProfile => $"{model}/{version}";
+	internal override string DeviceProfile => $"{model}/{version}";
 
 	internal override PointerKind PointerKind => PointerKind.Touch;
 
@@ -42,7 +42,7 @@ internal sealed class AndroidRunningApp(
 			?? Environment.GetEnvironmentVariable("ANDROID_SDK_ROOT")
 			?? throw new InvalidOperationException("Set ANDROID_HOME or ANDROID_SDK_ROOT to the preinstalled SDK.");
 		var android = new Android(sdk);
-		var name = $"SkiaSharpSamples_{version}_{Guid.NewGuid():N}";
+		var name = SampleWorkspace.CreateIdentity($"SkiaSharpSamples-{version}");
 
 		// This lifetime owns only its unique AVD; Appium boots it and selects its serial.
 		Own(async () =>

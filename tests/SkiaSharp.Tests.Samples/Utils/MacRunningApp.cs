@@ -8,15 +8,19 @@ using Xunit;
 namespace SkiaSharp.Tests.Samples.Utils;
 
 internal sealed class MacRunningApp(
-	SampleWorkspace workspace, string artifact, string applicationId, string webDriverAgentMacRoot)
+	SampleWorkspace workspace, string artifact, string applicationId, string webDriverAgentMacRoot, string architecture)
 	: AppiumRunningApp(workspace, artifact, applicationId)
 {
+	internal override string DeviceProfile { get; } = architecture;
+
 	internal override PointerKind PointerKind => PointerKind.Mouse;
+
 	internal override void SubmitSearch() =>
 		Driver.ExecuteScript("macos: keys", new Dictionary<string, object>
 		{
 			["keys"] = new[] { "XCUIKeyboardKeyReturn" }
 		});
+
 	internal override void Drag(Point start, Point end) =>
 		Driver.ExecuteScript("macos: clickAndDrag", new Dictionary<string, object>
 		{
@@ -59,6 +63,7 @@ internal sealed class MacRunningApp(
 		SetDriver(new MacDriver(address, options, TimeSpan.FromMinutes(3)));
 		Wait(() => Driver.FindElement(By.XPath("//XCUIElementTypeApplication"))
 			is { Displayed: true } element ? element : null, $"{ApplicationId} desktop UI");
+
 		return Task.CompletedTask;
 	}
 

@@ -15,11 +15,13 @@ internal sealed class IosRunningApp(
 	: AppiumRunningApp(workspace, artifact, applicationId)
 {
 	private readonly string version = version
-		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_IOS_VERSION") ?? "26.2";
+		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_IOS_VERSION")
+		?? "26.2";
 	private readonly string model = model
-		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_IOS_MODEL") ?? "iPhone 16 Pro";
+		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_IOS_MODEL")
+		?? "iPhone 16 Pro";
 
-	internal string DeviceProfile => $"{model.Replace(' ', '-')}/{version}";
+	internal override string DeviceProfile => $"{model.Replace(' ', '-')}/{version}";
 
 	internal override PointerKind PointerKind => PointerKind.Touch;
 

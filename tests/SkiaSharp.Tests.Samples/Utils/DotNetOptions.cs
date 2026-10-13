@@ -8,7 +8,7 @@ public sealed record DotNetOptions
     /// <summary>Gets the build or sample-run configuration, defaulting to Release.</summary>
     public string Configuration { get; init; } = "Release";
 
-    /// <summary>Gets the optional declared root framework selected with --framework, without retargeting referenced projects.</summary>
+    /// <summary>Gets the optional declared root framework to build or run, without retargeting the sample or referenced projects.</summary>
     public string? Framework { get; init; }
 
     /// <summary>Gets additional MSBuild properties; configuration, framework, and helper-owned properties cannot be overridden.</summary>
@@ -40,7 +40,7 @@ public sealed record DotNetOptions
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
             if (new[] { "Configuration", "TargetFramework", "TargetFrameworks", "RestoreConfigFile",
-                "RestoreNoCache", "UseSharedCompilation", "SampleRootProject", "SampleRootFramework" }.Contains(name, StringComparer.OrdinalIgnoreCase))
+                "RestoreNoCache", "UseSharedCompilation" }.Contains(name, StringComparer.OrdinalIgnoreCase))
                 throw new ArgumentException($"Property {name} is already owned by the sample helper.", nameof(Properties));
         }
     }

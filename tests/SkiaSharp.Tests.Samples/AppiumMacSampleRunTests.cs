@@ -16,16 +16,14 @@ public sealed class AppiumMacSampleRunTests(AppiumFixture appium) : AppiumSample
 	{
 		Assert.SkipUnless(OperatingSystem.IsMacOS(), "MacCatalyst tests require macOS.");
 
-		var app = await BuildMacApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj",
-			"net10.0-maccatalyst");
+		var app = await BuildMacApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running =>
-			Basic(running, "Maui", "MacCatalyst", HostArchitecture(),
-			[
-				new("CPU", "basic-canvas-cpu", "basic-cpu"),
-				new("GPU", "basic-canvas-gpu", "basic-gpu-smoke", new("basic-gpu-fps", HasFps), Animated: true),
-				new("Drawing", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
-			], NavigateMauiMacCatalyst));
+		await appium.Run(app, running => Basic(running, "Maui", "MacCatalyst",
+		[
+			new("CPU", "basic-canvas-cpu", "basic-cpu"),
+			new("GPU", "basic-canvas-gpu", "basic-gpu-smoke", new("basic-gpu-fps", HasFps), Animated: true),
+			new("Drawing", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
+		], NavigateMauiMacCatalyst));
 	}
 
 	[Fact]
@@ -35,16 +33,14 @@ public sealed class AppiumMacSampleRunTests(AppiumFixture appium) : AppiumSample
 	{
 		Assert.SkipUnless(OperatingSystem.IsMacOS(), "MacCatalyst tests require macOS.");
 
-		var app = await BuildMacApp("Basic/MacCatalyst", "SkiaSharpSample/SkiaSharpSample.csproj",
-			"net10.0-maccatalyst");
+		var app = await BuildMacApp("Basic/MacCatalyst", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running =>
-			Basic(running, "Native", "MacCatalyst", HostArchitecture(),
-			[
-				new("CPU", "basic-canvas-cpu", "basic-cpu"),
-				new("Metal", "basic-canvas-gpu-metal", "basic-gpu-metal-smoke", new("basic-gpu-metal-fps", HasFps), Animated: true),
-				new("Draw", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
-			], NavigateNativeMac));
+		await appium.Run(app, running => Basic(running, "Native", "MacCatalyst",
+		[
+			new("CPU", "basic-canvas-cpu", "basic-cpu"),
+			new("Metal", "basic-canvas-gpu-metal", "basic-gpu-metal-smoke", new("basic-gpu-metal-fps", HasFps), Animated: true),
+			new("Draw", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
+		], NavigateNativeMac));
 	}
 
 	[Fact]
@@ -54,11 +50,9 @@ public sealed class AppiumMacSampleRunTests(AppiumFixture appium) : AppiumSample
 	{
 		Assert.SkipUnless(OperatingSystem.IsMacOS(), "MacCatalyst tests require macOS.");
 
-		var app = await BuildMacApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj",
-			"net10.0-maccatalyst");
+		var app = await BuildMacApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running =>
-			MauiDrawing(running, "MacCatalyst", HostArchitecture(), NavigateMauiMacCatalyst));
+		await appium.Run(app, running => MauiDrawing(running, "MacCatalyst", NavigateMauiMacCatalyst));
 	}
 
 	[Fact]
@@ -68,17 +62,15 @@ public sealed class AppiumMacSampleRunTests(AppiumFixture appium) : AppiumSample
 	{
 		Assert.SkipUnless(OperatingSystem.IsMacOS(), "Native AppKit tests require macOS.");
 
-		var app = await BuildMacApp("Basic/macOS", "SkiaSharpSample/SkiaSharpSample.csproj",
-			"net10.0-macos");
+		var app = await BuildMacApp("Basic/macOS", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running =>
-			Basic(running, "Native", "macOS", HostArchitecture(),
-			[
-				new("CPU", "basic-canvas-cpu", "basic-cpu"),
-				new("GPU (GL)", "basic-canvas-gpu-gl", "basic-gpu-gl-smoke", new("basic-gpu-gl-fps", HasFps), Animated: true),
-				new("GPU (Metal)", "basic-canvas-gpu-metal", "basic-gpu-metal-smoke", new("basic-gpu-metal-fps", HasFps), Animated: true),
-				new("Drawing", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
-			], NavigateNativeMac));
+		await appium.Run(app, running => Basic(running, "Native", "macOS",
+		[
+			new("CPU", "basic-canvas-cpu", "basic-cpu"),
+			new("GPU (GL)", "basic-canvas-gpu-gl", "basic-gpu-gl-smoke", new("basic-gpu-gl-fps", HasFps), Animated: true),
+			new("GPU (Metal)", "basic-canvas-gpu-metal", "basic-gpu-metal-smoke", new("basic-gpu-metal-fps", HasFps), Animated: true),
+			new("Drawing", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
+		], NavigateNativeMac));
 	}
 
 	[Fact]
@@ -88,16 +80,17 @@ public sealed class AppiumMacSampleRunTests(AppiumFixture appium) : AppiumSample
 	{
 		Assert.SkipUnless(OperatingSystem.IsMacOS(), "MacCatalyst tests require macOS.");
 
-		var app = await BuildMacApp("Gallery", "Maui/SkiaSharpSample.Maui.csproj",
-			"net10.0-maccatalyst");
+		var app = await BuildMacApp("Gallery", "Maui/SkiaSharpSample.Maui.csproj");
 
-		await appium.Run(app, running => Gallery(running, "MacCatalyst", HostArchitecture()));
+		await appium.Run(app, running => Gallery(running, "MacCatalyst"));
 	}
 
-	private async Task<MacRunningApp> BuildMacApp(
-		string folder, string project, string framework)
+	private async Task<MacRunningApp> BuildMacApp(string folder, string project)
 	{
-		var rid = (framework == "net10.0-macos" ? "osx-" : "maccatalyst-") + HostArchitecture();
+		var macOS = folder == "Basic/macOS";
+		var framework = macOS ? "net10.0-macos" : "net10.0-maccatalyst";
+		var architecture = HostArchitecture();
+		var rid = (macOS ? "osx-" : "maccatalyst-") + architecture;
 
 		var workspace = await BuildSample(folder, project, new DotNetOptions
 		{
@@ -110,8 +103,7 @@ public sealed class AppiumMacSampleRunTests(AppiumFixture appium) : AppiumSample
 			Path.Combine(Output(workspace, folder, project, framework), rid), "*.app"));
 		var applicationId = AppleApplicationId(Path.Combine(workspace.Root, "samples", folder, project));
 
-		return new MacRunningApp(
-			workspace, artifact, applicationId, RequiredEnvironment("SKIASHARP_APPIUM_MAC_WDA_ROOT"));
+		return new MacRunningApp(workspace, artifact, applicationId, RequiredEnvironment("SKIASHARP_APPIUM_MAC_WDA_ROOT"), architecture);
 	}
 
 	private static void NavigateMauiMacCatalyst(AppiumRunningApp app, string title)
