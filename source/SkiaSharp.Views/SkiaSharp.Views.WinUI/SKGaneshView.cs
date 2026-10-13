@@ -131,7 +131,7 @@ namespace SkiaSharp.Views.Windows
 					if (width <= 0 || height <= 0) return;
 					backend.SetViewportSize (width, height);
 					if (Context is null) {
-						glInterface = GRGlInterface.Create () ?? throw new InvalidOperationException ("ANGLE interface creation failed.");
+						glInterface = GRGlInterface.CreateAngle () ?? throw new InvalidOperationException ("ANGLE interface creation failed.");
 						Context = GRContext.CreateGl (glInterface) ?? throw new InvalidOperationException ("Ganesh context creation failed.");
 						owner.ContextCreated?.Invoke (owner, EventArgs.Empty);
 					}
