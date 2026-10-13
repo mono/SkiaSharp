@@ -7,7 +7,8 @@ retry tests, or depend on a test framework.
 
 The public declarations currently live in
 `tests/TestUtilities/PixelComparison/` and are source-shared by the desktop test
-host, shared device/browser test library, and package-integration host.
+host, shared device/browser test library, package-integration host, and Samples
+test host.
 **They are not in `SkiaSharp.dll`, and no package is published by this change.**
 There is no requirement to preserve the separately published Extended comparer's
 API shape.
@@ -180,6 +181,7 @@ The new defaults do not silently change the owning harnesses' established gates.
 | Core bitmap assertion | `Absolute(0, 0, 0, null)`, premultiplied; external strict fraction comparison `< 10^-precision` |
 | Renderer goldens | RGBA `Absolute(ChannelTolerance)`, premultiplied, configured maximum error fraction with the same floor-based budget |
 | Package integration | Exact RGB, premultiplied; existing crop/resize adapter and similarity at least 95% remain |
+| Samples | Exact RGBA, premultiplied; existing decimal error-pixel fraction budget of 0.00075 remains |
 | MAUI Graphics / Resizetizer | Exact RGB, legacy representation; fraction limits 0.07 / 0.27 |
 | MAUI screenshot metric | Exact red only, raw normalized RMS limit 0.005; verify pinned Magick Q8 conversion parity before replacement |
 
