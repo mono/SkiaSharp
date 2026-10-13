@@ -42,6 +42,29 @@ public class SampleDiscoveryTests
     }
 
     [Fact]
+    public void ParallelizationIsScopedToCollectionsRatherThanDisabledForTheAssembly()
+    {
+        Assert.DoesNotContain(typeof(SampleBuildTests).Assembly.GetCustomAttributesData(),
+            attribute => attribute.AttributeType == typeof(CollectionBehaviorAttribute) &&
+                attribute.NamedArguments.Any(argument => argument.MemberName == nameof(CollectionBehaviorAttribute.DisableTestParallelization) &&
+                    Equals(argument.TypedValue.Value, true)));
+        foreach (var type in new[] { typeof(BrowserSampleRunTests), typeof(UnoBrowserSampleRunTests) })
+        {
+            var collection = Assert.Single(type.GetCustomAttributesData(),
+                attribute => attribute.AttributeType == typeof(CollectionAttribute));
+            Assert.Equal(nameof(BrowserSampleCollection), Assert.Single(collection.ConstructorArguments).Value);
+        }
+        foreach (var type in new[] { typeof(BrowserSampleCollection), typeof(DockerSampleCollection) })
+        {
+            var definition = Assert.Single(type.GetCustomAttributesData(),
+                attribute => attribute.AttributeType == typeof(CollectionDefinitionAttribute));
+            Assert.DoesNotContain(definition.NamedArguments,
+                argument => argument.MemberName == nameof(CollectionDefinitionAttribute.DisableParallelization) &&
+                    Equals(argument.TypedValue.Value, true));
+        }
+    }
+
+    [Fact]
     public void DockerBuildAndRunShareOneCollectionFixture()
     {
         foreach (var type in new[] { typeof(DockerSampleBuildTests), typeof(DockerSampleRunTests) })

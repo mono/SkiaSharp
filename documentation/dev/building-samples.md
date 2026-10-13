@@ -113,6 +113,10 @@ group. Infrastructure, discovery, and artifact-contract checks stay separate.
 prepares flat Docker build contexts. The Docker fixture owns cached images,
 container execution, and Docker resource cleanup. Both bases live beside the
 test classes; CLI wrappers (`DotNet`, `Docker`) and fixtures live in `Utils`.
+Independent test collections run in parallel. Browser classes share a collection
+to serialize browser workloads; Docker classes share another for their image
+cache and owned-resource registry. Neither collection blocks unrelated tests.
+Tests and theory rows within each class/collection remain serial.
 Each test requires exactly one typed attribute, such as
 `[RunGroup(SampleRunGroup.Build)]`. Apply it to a class only when every test uses
 the same group; otherwise annotate individual methods.

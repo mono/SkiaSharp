@@ -5,6 +5,7 @@ using static SkiaSharp.Tests.Samples.Utils.SampleImage;
 
 namespace SkiaSharp.Tests.Samples;
 
+[Collection(nameof(BrowserSampleCollection))]
 public class BrowserSampleRunTests : DotNetSampleTestBase
 {
     [Fact]
