@@ -65,9 +65,11 @@ baked into `runtimeconfig.json` from the `SkiaSharpTestSkipGpu` MSBuild property
 dotnet cake --target=tests-android --skipGpu=ganesh-vulkan
 ```
 
-In CI each opt-out is a bootstrapper `env:` value in
-`scripts/azure-templates-stages-test.yml`, declared per leg with the reason and a
-tracking issue recorded inline. That file is the live list — read it there.
+In CI desktop and device opt-outs are `env:` values passed to the shared test
+job templates from `scripts/azure-templates-stages-test.yml`, declared per leg
+with the reason and a tracking issue recorded inline. The common container
+opt-out lives in `scripts/azure-templates-jobs-tests-container.yml`. These are
+the live declarations — read them there.
 
 An opt-out is a statement about **one agent**, not about the backend. It belongs
 in the YAML precisely so it can be removed when the agent gains the capability,
