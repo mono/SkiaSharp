@@ -1,10 +1,7 @@
 parameters:
   platform: ''
   buildAgent: {}
-  sdk:
-    name: net10
-    version: $(DOTNET_VERSION)
-    workloadVersion: $(DOTNET_WORKLOAD_VERSION)
+  sdk: {}
 
 jobs:
   - ${{ each group in split('Build,Host,Docker', ',') }}:
@@ -20,21 +17,13 @@ jobs:
               tizen:
                 manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
                 manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-            - ${{ if eq(parameters.sdk.name, 'net11') }}:
-              - sdkVersion: ${{ parameters.sdk.version }}
-                workloadSetVersion: ${{ parameters.sdk.workloadVersion }}
-                ${{ if eq(parameters.platform, 'linux') }}:
-                  workloads: [android, macos, wasm-tools, wasm-tools-net10, maui-android]
-                ${{ else }}:
-                  workloads: [android, macos, wasm-tools, wasm-tools-net10, ios, tvos, maccatalyst, maui]
-                tizen:
-                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+            - ${{ parameters.sdk.additionalSdks[parameters.platform] }}
           env:
             SAMPLE_TEST_SDK_VERSION: ${{ parameters.sdk.version }}
-          ${{ if and(eq(parameters.platform, 'macos'), eq(parameters.sdk.name, 'net11')) }}:
+            SAMPLE_TEST_CONSOLE_FRAMEWORKS: ${{ join(',', parameters.sdk.consoleFrameworks) }}
+          ${{ if eq(parameters.platform, 'macos') }}:
             variables:
-              XCODE_VERSION: '26.6'
+              XCODE_VERSION: ${{ parameters.sdk.xcodeVersion }}
           ${{ if eq(parameters.platform, 'macos') }}:
             installNinja: true
           ${{ if eq(parameters.platform, 'linux') }}:

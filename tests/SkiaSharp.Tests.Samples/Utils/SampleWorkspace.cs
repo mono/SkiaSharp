@@ -11,8 +11,8 @@ public sealed class SampleWorkspace : IDisposable
     public string DiagnosticsRoot { get; }
     public string? SdkVersion { get; }
 
-    internal static string? ConsumerSdkVersion =>
-        Environment.GetEnvironmentVariable("SAMPLE_TEST_SDK_VERSION") is { Length: > 0 } version ? version : null;
+    internal static string ConsumerSdkVersion =>
+        Environment.GetEnvironmentVariable("SAMPLE_TEST_SDK_VERSION") is { Length: > 0 } version ? version : Repo.DefaultSdkVersion;
 
     public SampleWorkspace(string folder)
         : this(folder, Repo.SamplesDir, Repo.PackagesDir, Repo.WorkspacesDir, Repo.ArtifactsDir)

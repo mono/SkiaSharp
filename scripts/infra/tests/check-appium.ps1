@@ -1,9 +1,7 @@
 param(
     [Parameter(Mandatory)]
-    [ValidateSet('Android', 'iOS', 'MacCatalyst', 'macOS', 'Windows')]
-    [string] $Platform,
-    [ValidateSet('', '26', '37')]
-    [string] $AndroidApi = ''
+    [ValidateSet('Android', 'iOS', 'Mac', 'Windows')]
+    [string] $Platform
 )
 
 $ErrorActionPreference = 'Stop'
@@ -21,10 +19,12 @@ $entry = $installed.PSObject.Properties[$driver]
 if ($null -eq $entry) {
     throw "Appium driver '$driver' is not installed. Provision the agent before selecting this job."
 }
-if ($Platform -eq 'Android') {
-    if ($AndroidApi -notin @('26', '37')) { throw 'Declare the assigned Android API profile.' }
+if ($Platform -in @('iOS', 'Mac')) {
+    if ([string]::IsNullOrWhiteSpace($env:DEVELOPER_DIR) -or !(Test-Path $env:DEVELOPER_DIR -PathType Container)) {
+        throw 'Selected Xcode is not installed. Set DEVELOPER_DIR to its existing developer directory.'
+    }
 }
-if ($Platform -in @('MacCatalyst', 'macOS')) {
+if ($Platform -eq 'Mac') {
     if ([string]::IsNullOrWhiteSpace($env:SKIASHARP_APPIUM_MAC_WDA_ROOT) -or
         !(Test-Path (Join-Path $env:SKIASHARP_APPIUM_MAC_WDA_ROOT 'WebDriverAgentMac.xcodeproj'))) {
         throw 'Set SKIASHARP_APPIUM_MAC_WDA_ROOT to the preinstalled Mac2 WebDriverAgentMac source.'

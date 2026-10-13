@@ -40,16 +40,16 @@ internal sealed class AndroidRunningApp(SampleWorkspace workspace, string artifa
             {
                 using var connected = JsonDocument.Parse(await CaptureCommand(android.ListDevices()));
                 if (HasSerial(connected))
-                    Require((await CaptureCommand(android.AvdName(device))).Split('\n')[0].Trim() == device.Name,
+                    Require((await CaptureCommand(android.AvdName(device.Serial))).Split('\n')[0].Trim() == device.Name,
                         "The serial now belongs to another AVD; refusing cleanup.");
-                await CaptureCommand(android.DeleteAvd(device));
+                await CaptureCommand(android.DeleteAvd(device.Name));
             }
             using var remaining = JsonDocument.Parse(await CaptureCommand(android.ListAvds()));
             Require(!HasAvd(remaining), $"Owned AVD was not deleted: {device.Name}");
             using var devices = JsonDocument.Parse(await CaptureCommand(android.ListDevices()));
             Require(!HasSerial(devices), $"Owned emulator did not stop: {device.Serial}");
         });
-        await CaptureCommand(android.CreateAvd(device));
+        await CaptureCommand(android.CreateAvd(device.Name, device.ImagePrefix, device.Model));
         using (var created = JsonDocument.Parse(await CaptureCommand(android.ListAvds())))
             Require(HasAvd(created), $"The tool did not create {device.Name}");
         var options = Options("Android", "UiAutomator2");
@@ -67,7 +67,7 @@ internal sealed class AndroidRunningApp(SampleWorkspace workspace, string artifa
         options.AddAdditionalAppiumOption("suppressKillServer", true);
         options.AddAdditionalAppiumOption("fullReset", true);
         SetDriver(new AndroidDriver(address, options, TimeSpan.FromMinutes(3)));
-        Require((await CaptureCommand(android.PageSize(device))).Trim() == device.PageSize.ToString(CultureInfo.InvariantCulture),
+        Require((await CaptureCommand(android.PageSize(device.Serial))).Trim() == device.PageSize.ToString(CultureInfo.InvariantCulture),
             "The selected Android page size does not match the profile.");
         Wait(() => Driver.PageSource.Contains($"package=\"{ApplicationId}\"", StringComparison.Ordinal)
             ? "foreground app" : null, $"{ApplicationId} foreground UI");

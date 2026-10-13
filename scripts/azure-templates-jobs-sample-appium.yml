@@ -3,7 +3,8 @@ parameters:
   platform: ''
   buildAgent: {}
   workloads: []
-  androidApi: ''
+  sdk: {}
+  device: {}
   runGroup: ''
 
 jobs:
@@ -13,17 +14,24 @@ jobs:
       displayName: Appium (${{ parameters.platform }})
       buildAgent: ${{ parameters.buildAgent }}
       target: samples
-      ${{ if eq(parameters.platform, 'Android') }}:
-        additionalArgs: --runGroup=${{ parameters.runGroup }} --sampleRunId=${{ parameters.name }} --sampleTestTrait=AndroidApi=${{ parameters.androidApi }} --skipExternals="all"
-      ${{ else }}:
-        additionalArgs: --runGroup=${{ parameters.runGroup }} --sampleRunId=${{ parameters.name }} --sampleTestTrait=Platform=${{ parameters.platform }} --skipExternals="all"
+      additionalArgs: --runGroup=${{ parameters.runGroup }} --sampleRunId=${{ parameters.name }} --skipExternals="all"
+      env:
+        SAMPLE_TEST_SDK_VERSION: ${{ parameters.sdk.version }}
+        ${{ if eq(parameters.platform, 'Android') }}:
+          SAMPLE_TEST_ANDROID_DEVICE: ${{ convertToJson(parameters.device) }}
+        ${{ if eq(parameters.platform, 'iOS') }}:
+          SAMPLE_TEST_IOS_DEVICE: ${{ convertToJson(parameters.device) }}
+        ${{ if or(eq(parameters.platform, 'iOS'), eq(parameters.platform, 'Mac')) }}:
+          DEVELOPER_DIR: /Applications/Xcode_${{ parameters.sdk.xcodeVersion }}.app/Contents/Developer
       retryCount: 0
       shouldPublish: false
-      installXcode: ${{ ne(parameters.platform, 'Android') }}
-      installAndroidSdk: ${{ eq(parameters.platform, 'Android') }}
+      installXcode: false
+      installAndroidSdk: false
+      installAndroidNdk: false
+      installNode: false
       dotnetSdks:
-        - sdkVersion: $(DOTNET_VERSION)
-          workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+        - sdkVersion: ${{ parameters.sdk.version }}
+          workloadSetVersion: ${{ parameters.sdk.workloadVersion }}
           workloads: ${{ parameters.workloads }}
       requiredArtifacts:
         - name: native
@@ -44,8 +52,11 @@ jobs:
               echo "##vso[task.setvariable variable=ANDROID_AVD_HOME]$HOME/.android/avd"
               echo "##vso[task.setvariable variable=ANDROID_EMULATOR_HOME]$HOME/.android"
             displayName: Reuse Android device-test KVM and AVD provisioning
-        - pwsh: ./scripts/infra/tests/check-appium.ps1 -Platform '${{ parameters.platform }}' -AndroidApi '${{ parameters.androidApi }}'
+        - pwsh: ./scripts/infra/tests/check-appium.ps1 -Platform '${{ parameters.platform }}'
           displayName: Check preinstalled Appium prerequisites (no downloads)
+          env:
+            ${{ if or(eq(parameters.platform, 'iOS'), eq(parameters.platform, 'Mac')) }}:
+              DEVELOPER_DIR: /Applications/Xcode_${{ parameters.sdk.xcodeVersion }}.app/Contents/Developer
       postBuildSteps:
         - task: PublishTestResults@2
           condition: always()

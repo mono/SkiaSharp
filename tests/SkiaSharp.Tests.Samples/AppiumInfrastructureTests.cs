@@ -18,7 +18,8 @@ public sealed class AppiumInfrastructureTests
             File.WriteAllText(Path.Combine(sdk, "platform-tools",
                 OperatingSystem.IsWindows() ? "adb.exe" : "adb"), "");
             var android = new Android(sdk);
-            var error = await Assert.ThrowsAsync<DirectoryNotFoundException>(() => android.CreateAvd(AndroidDevice.PixelApi26));
+            var device = AndroidDevice.Selected;
+            var error = await Assert.ThrowsAsync<DirectoryNotFoundException>(() => android.CreateAvd(device.Name, device.ImagePrefix, device.Model));
             Assert.Contains("Tests never download images", error.Message);
         }
         finally
@@ -29,17 +30,16 @@ public sealed class AppiumInfrastructureTests
     }
 
     [Fact]
-    public void DeviceProfilesKeepExplicitLegacyAndCurrentPorts()
+    public void DeviceProfilesRequireExplicitInstalledInputs()
     {
-        Assert.Equal(5558, AndroidDevice.PixelApi26.Validate());
-        Assert.Equal(5560, AndroidDevice.PixelApi37.Validate());
-        Assert.Equal(26, AndroidDevice.PixelApi26.Api);
-        Assert.Equal(37, AndroidDevice.PixelApi37.Api);
-        IosDevice.Iphone16ProIos18_6.Validate();
-        IosDevice.Iphone16Pro.Validate();
-        Assert.Throws<ArgumentException>(() => (AndroidDevice.PixelApi26 with { Serial = "emulator-5557" }).Validate());
-        Assert.Throws<ArgumentException>(() => (AndroidDevice.PixelApi26 with { Name = "Pixel_*" }).Validate());
-        Assert.Throws<ArgumentException>(() => (IosDevice.Iphone16Pro with { Version = "latest" }).Validate());
+        var android = AndroidDevice.Selected;
+        android.Validate();
+        IosDevice.Selected.Validate();
+        Assert.Throws<ArgumentException>(() => (android with { Serial = "emulator-5557" }).Validate());
+        Assert.Throws<ArgumentException>(() => (android with { Name = "Pixel_*" }).Validate());
+        Assert.Throws<ArgumentException>(() => (android with { ImagePrefix = "latest" }).Validate());
+        Assert.Throws<ArgumentException>(() => (android with { Model = "*" }).Validate());
+        Assert.Throws<ArgumentException>(() => (IosDevice.Selected with { Version = "latest" }).Validate());
     }
 
     [Fact]

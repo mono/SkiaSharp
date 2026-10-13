@@ -199,5 +199,4 @@ public static class DotNet
         start.Environment["MSBUILDDISABLENODEREUSE"] = "1";
         start.Environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
     }
-
 }

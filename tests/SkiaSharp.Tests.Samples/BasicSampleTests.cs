@@ -31,9 +31,15 @@ public class BasicSampleTests : SampleTestBase
 
     public static IEnumerable<object[]> ConsoleCases()
     {
-        yield return new object[] { "net10.0" };
-        if (SampleWorkspace.ConsumerSdkVersion?.StartsWith("11.", StringComparison.Ordinal) == true)
-            yield return new object[] { "net11.0" };
+        var frameworks = (Environment.GetEnvironmentVariable("SAMPLE_TEST_CONSOLE_FRAMEWORKS") ?? "net10.0").Split(',');
+        if (frameworks.Length == 0 || frameworks.Distinct(StringComparer.Ordinal).Count() != frameworks.Length)
+            throw new InvalidOperationException("Declare distinct Console frameworks.");
+        foreach (var framework in frameworks)
+        {
+            if (framework is null || !System.Text.RegularExpressions.Regex.IsMatch(framework, @"^net[1-9][0-9]*\.[0-9]+$"))
+                throw new InvalidOperationException($"Invalid Console framework: {framework}");
+            yield return new object[] { framework };
+        }
     }
 
     [Theory]
@@ -45,7 +51,7 @@ public class BasicSampleTests : SampleTestBase
     {
         var folder = Path.Combine("Basic", "Console");
         var relativeProject = Path.Combine(folder, "SkiaSharpSample", "SkiaSharpSample.csproj");
-        if (targetFramework == "net11.0")
+        if (targetFramework != "net10.0")
             PrepareSample(folder).RetargetProject(relativeProject, "net10.0", targetFramework);
 
         await RunSample("Console", ["SkiaSharp", "--output", "output.png"], async (app, project) =>
@@ -55,7 +61,7 @@ public class BasicSampleTests : SampleTestBase
             var runtime = runtimeConfig.RootElement.GetProperty("runtimeOptions");
             Assert.Equal(targetFramework, runtime.GetProperty("tfm").GetString());
             Assert.Equal("Microsoft.NETCore.App", runtime.GetProperty("framework").GetProperty("name").GetString());
-            Assert.StartsWith(targetFramework == "net11.0" ? "11.0." : "10.0.",
+            Assert.StartsWith(targetFramework[3..] + ".",
                 runtime.GetProperty("framework").GetProperty("version").GetString());
             TestContext.Current.TestOutputHelper?.WriteLine($"Consumer TFM: {targetFramework}; runtime configuration: {runtime}");
 

@@ -494,7 +494,8 @@ public class SampleInfrastructureTests : IDisposable
         }, options);
         Assert.True(called);
         Assert.Contains("argument with spaces|--sentinel",
-            File.ReadAllText(Path.Combine(workspace.DiagnosticsRoot, "run", "run.stdout.log")));
+            File.ReadAllText(Assert.Single(Directory.EnumerateFiles(
+                Path.Combine(workspace.DiagnosticsRoot, "run"), "*.stdout.log"))));
         foreach (var waitForAddress in new[] { false, true })
         {
             await Assert.ThrowsAsync<TimeoutException>(() =>
@@ -505,8 +506,9 @@ public class SampleInfrastructureTests : IDisposable
                     else
                         await app.WaitForExit();
                 }, options with { Timeout = TimeSpan.FromMilliseconds(100) }));
-            Assert.True(File.Exists(Path.Combine(workspace.DiagnosticsRoot, "run", "run.stderr.log")));
         }
+        Assert.Equal(3, Directory.EnumerateFiles(
+            Path.Combine(workspace.DiagnosticsRoot, "run"), "*.stderr.log").Count());
         test.Dispose();
         Assert.False(Directory.Exists(working));
         Assert.True(Directory.Exists(diagnostics));

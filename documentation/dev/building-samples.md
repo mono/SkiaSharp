@@ -68,7 +68,10 @@ limit their build to the runner's .NET 10 target.
 Direct tests use the generated inputs without invoking Cake or downloading
 packages. The runner uses the repository SDK; sample builds use `dotnet` from
 the inherited `PATH`, without changing project TFMs. Set the intended SDK and
-platform environment before launching the terminal or IDE.
+platform environment before launching the terminal or IDE. Owned consumers
+default to the SDK in the repository's `global.json`; set
+`SAMPLE_TEST_SDK_VERSION` to select another exact installed SDK. This selection
+does not change the runner SDK or ordinary sample frameworks.
 
 Sample helpers accept one optional `DotNetOptions` record. For example,
 `BuildSample(folder, project, new() { Framework = "net10.0-android" })`
@@ -86,8 +89,8 @@ be overridden through `Properties`.
 
 ## Coverage and diagnostics
 
-The suite builds host-eligible Basic and Gallery solutions. Gallery, WASM, and
-Blazor are build-only; Console/Web runtime tests check exit codes, HTTP responses,
+The suite builds host-eligible Basic and Gallery solutions. WASM and
+Blazor are build-only here; Console/Web runtime tests check exit codes, HTTP responses,
 and PNGs on the host and in Docker. Generated-project tests check exact package
 versions and Uno's SkiaSharp override. Integration/MSBuild suites remain separate.
 
@@ -126,7 +129,8 @@ automatically.
 
 ## Appium application runtime tests
 
-`AppiumSampleTests` runs generated Basic and Gallery MAUI apps on Android,
+`AndroidSampleTests`, `IosSampleTests`, `MacSampleTests` and
+`WindowsSampleTests` run generated Basic and Gallery MAUI apps on Android,
 iOS, MacCatalyst and Windows, and native Basic Android, iOS, MacCatalyst,
 macOS and WinUI apps. Basic covers CPU rendering, drawing/clear and GPU smoke;
 Gallery covers search, filtering, Gradient controls and CPU/GPU rendering.
@@ -141,14 +145,22 @@ Set `ANDROID_HOME` or `ANDROID_SDK_ROOT` for Android. On macOS, set
 `DEVELOPER_DIR` to the Xcode required by your installed workload; tests do not
 change the global Xcode selection.
 
-The explicit Android profiles are **Pixel_API_26**, Android 8.0/API 26,
-`emulator-5558`, 4 KB pages, and **Pixel_API_37**, Android 17/API 37,
-`emulator-5560`, 16 KB pages. iOS uses **iPhone 16 Pro** on **18.6** and **26.2**.
-Install the required images/runtimes before running tests: Android uses
-`system-images;android-26;google_apis;<host-ABI>` and
-`system-images;android-37.1;google_apis_ps16k;<host-ABI>`; Apple uses the named
-iOS runtime and iPhone 16 Pro device type. Missing prerequisites fail; neither
+Local runs select one Android profile: **Pixel_API_37**, Android 17/API 37,
+`emulator-5560`, 16 KB pages, model `pixel_9`. iOS defaults to **iPhone 16 Pro**
+on **26.2**. Install `system-images;android-37.1;google_apis_ps16k;<host-ABI>`
+and the selected iOS runtime/device type before running tests. Missing prerequisites fail; neither
 the tests nor the Appium CI preparation path installs or downloads them.
+
+CI device jobs override that single profile using `SAMPLE_TEST_ANDROID_DEVICE`
+or `SAMPLE_TEST_IOS_DEVICE`, each containing a complete JSON object. For example:
+
+```sh
+export SAMPLE_TEST_ANDROID_DEVICE='{"name":"Pixel_API_26","version":"8.0","api":26,"serial":"emulator-5558","pageSize":4096,"model":"pixel_9","imagePrefix":"system-images;android-26;google_apis"}'
+export SAMPLE_TEST_IOS_DEVICE='{"name":"iPhone 16 Pro","version":"18.6"}'
+```
+
+The Android ABI follows the host architecture; the image prefix/model must
+already be installed. Unset these variables to return to local defaults.
 
 Appium receives the device profile and built app. XCUITest's
 `enforceFreshSimulatorCreation` creates, boots and deletes a fresh iOS simulator;
@@ -180,24 +192,26 @@ dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
   -- --filter-class '*AppiumInfrastructureTests' --report-trx
 dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
   -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 \
-  -- --filter-trait AndroidApi=37 --report-trx
+  -- --filter-trait RunGroup=Android --report-trx
 ```
 
-Select Android rows with `AndroidApi=26` or `AndroidApi=37`; select other
-platforms with `Platform=iOS`, `Platform=MacCatalyst`, `Platform=macOS` or
-`Platform=Windows`. Multiple xUnit include-traits are ORed, not intersected.
-Select only platforms supported by your host. Missing prerequisites fail
-selected cases.
+Select a device group with `RunGroup=Android`, `RunGroup=Ios`,
+`RunGroup=Mac` or `RunGroup=Windows`. Each platform class has separate MAUI and
+native facts; mobile facts use one selected device, not a theory matrix.
+Select only platforms supported by your host. Missing prerequisites fail selected cases.
 
-Local `samples` and IDE discovery remain unfiltered. CI runs Appium platform
+Local `samples` and IDE discovery remain unfiltered. CI runs Appium device
 legs after acquiring native and NuGet artifacts; existing `Build`, `Host` and
 `Docker` jobs retain their execution groups. Agents must already have compatible Appium drivers, tools
-and images/runtimes; CI preparation only checks prerequisites. Cake forwards
-`sampleTestTrait` to xUnit without interpreting devices. When combined with
-`runGroup`, it uses a query intersection, for example:
+and images/runtimes; CI preparation only checks prerequisites.
+The `sampleSdks` objects in `scripts/azure-templates-stages-test.yml` declare SDK
+installs, Console frameworks, Xcode, agent image and device profiles. Build,
+Host and Docker jobs use both SDK descriptors. `runDevices` selects which
+descriptor supplies the device-runtime jobs; it does not multiply devices by SDKs.
+Each Android/iOS profile gets its own job. Cake selects only the execution group:
 
 ```sh
-dotnet cake --target=samples --runGroup=Android --sampleTestTrait=AndroidApi=26 \
+dotnet cake --target=samples --runGroup=Android \
   --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 

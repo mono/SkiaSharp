@@ -1,4 +1,5 @@
 using Xunit;
+using System.Text.Json;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
@@ -14,6 +15,15 @@ internal static class Repo
     public static string ArtifactsDir => Path.Combine(RootDir, "output", "logs", "testlogs", "samples");
     public static string WorkspacesDir => Path.Combine(RootDir, "output", "samples-test-workspaces");
     public static string SamplesDir => Path.Combine(RootDir, "output", GetVersion().Contains('-') ? "samples-preview" : "samples");
+    internal static string DefaultSdkVersion
+    {
+        get
+        {
+            using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(RootDir, "global.json")));
+            return json.RootElement.GetProperty("sdk").GetProperty("version").GetString()
+                ?? throw new InvalidOperationException("Repository SDK version is missing.");
+        }
+    }
 
     private static string GetVersion()
     {
