@@ -5,7 +5,6 @@ namespace SkiaSharp.Tests.Samples.Utils;
 // The caller selects the installed SDK; repository tool resolution remains owned by DotNet.
 internal sealed class Android
 {
-	private readonly string adb;
 	internal string SdkDirectory { get; }
 
 	internal Android(string sdkDirectory)
@@ -13,17 +12,7 @@ internal sealed class Android
 		ArgumentException.ThrowIfNullOrWhiteSpace(sdkDirectory);
 		SdkDirectory = Path.GetFullPath(sdkDirectory);
 
-		adb = Path.Combine(SdkDirectory, "platform-tools", OperatingSystem.IsWindows() ? "adb.exe" : "adb");
-		if (!File.Exists(adb))
-			throw new FileNotFoundException(
-				"Install Android platform-tools before selecting Android tests.", adb);
 	}
-
-	internal Task<ToolCommandResult> ListAvds() =>
-		ExecuteSdk(["avd", "list", "--format", "json"]);
-
-	internal Task<ToolCommandResult> ListDevices() =>
-		ExecuteSdk(["device", "list", "--format", "json"]);
 
 	internal Task<ToolCommandResult> CreateAvd(string name, string imagePrefix, string model)
 	{
@@ -52,24 +41,6 @@ internal sealed class Android
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(name);
 		return ExecuteSdk(["avd", "delete", "--name", name, "--force"]);
-	}
-
-	internal Task<ToolCommandResult> AvdName(string serial) =>
-		Adb(serial, ["emu", "avd", "name"]);
-
-	internal Task<ToolCommandResult> PageSize(string serial) =>
-		Adb(serial, ["shell", "getconf", "PAGE_SIZE"]);
-
-	private Task<ToolCommandResult> Adb(string serial, string[] arguments)
-	{
-		ArgumentException.ThrowIfNullOrWhiteSpace(serial);
-		return RunAdb(["-s", serial, .. arguments]);
-	}
-
-	private async Task<ToolCommandResult> RunAdb(string[] arguments)
-	{
-		var result = await ProcessRunner.Run(adb, arguments, Repo.RootDir, TimeSpan.FromSeconds(30));
-		return new($"{adb} {string.Join(" ", arguments)}", result.ExitCode, result.Output, result.Error);
 	}
 
 	private async Task<ToolCommandResult> ExecuteSdk(string[] arguments)

@@ -18,9 +18,11 @@ jobs:
       env:
         SAMPLE_TEST_SDK_VERSION: ${{ parameters.sdk.version }}
         ${{ if eq(parameters.platform, 'Android') }}:
-          SAMPLE_TEST_ANDROID_DEVICE: ${{ convertToJson(parameters.device) }}
+          SAMPLE_TEST_ANDROID_VERSION: ${{ parameters.device.version }}
+          SAMPLE_TEST_ANDROID_IMAGE_PREFIX: ${{ parameters.device.imagePrefix }}
         ${{ if eq(parameters.platform, 'iOS') }}:
-          SAMPLE_TEST_IOS_DEVICE: ${{ convertToJson(parameters.device) }}
+          SAMPLE_TEST_IOS_VERSION: ${{ parameters.device.version }}
+          SAMPLE_TEST_IOS_MODEL: ${{ parameters.device.model }}
         ${{ if or(eq(parameters.platform, 'iOS'), eq(parameters.platform, 'Mac')) }}:
           DEVELOPER_DIR: /Applications/Xcode_${{ parameters.sdk.xcodeVersion }}.app/Contents/Developer
       retryCount: 0

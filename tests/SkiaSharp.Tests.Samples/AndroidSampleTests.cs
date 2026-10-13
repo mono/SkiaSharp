@@ -14,13 +14,12 @@ public sealed class AndroidSampleTests(AppiumFixture appium) : AppiumSampleTestB
 	[Trait("Platform", "Android")]
 	public async Task BasicMauiAndroid()
 	{
-		var device = AndroidDevice.Selected;
 		var app = await BuildAndroidApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj",
-			"com.companyname.SkiaSharpSample", device);
+			"com.companyname.SkiaSharpSample");
 
 		await appium.Run(app, running =>
 		{
-			Basic(running, "Maui", "Android", $"{device.Name}/{device.Version}",
+			Basic(running, "Maui", "Android", app.DeviceProfile,
 				"basic-canvas-cpu", "basic-canvas-drawing", "basic-drawing-clear",
 				"basic-canvas-gpu", "basic-gpu-fps",
 				() => NavigateMauiAndroid(running, "Drawing"),
@@ -36,13 +35,12 @@ public sealed class AndroidSampleTests(AppiumFixture appium) : AppiumSampleTestB
 	[Trait("Platform", "Android")]
 	public async Task BasicNativeAndroid()
 	{
-		var device = AndroidDevice.Selected;
 		var app = await BuildAndroidApp("Basic/Android", "SkiaSharpSample/SkiaSharpSample.csproj",
-			"com.companyname.skiasharpsample", device);
+			"com.companyname.skiasharpsample");
 
 		await appium.Run(app, running =>
 		{
-			Basic(running, "Native", "Android", $"{device.Name}/{device.Version}",
+			Basic(running, "Native", "Android", app.DeviceProfile,
 				"skiaView", "skiaView", "btnClear", "skiaView", "fpsLabel",
 				() => running.Click("nav_drawing"),
 				() => running.Click("nav_gpu_surface"),
@@ -57,15 +55,14 @@ public sealed class AndroidSampleTests(AppiumFixture appium) : AppiumSampleTestB
 	[Trait("Platform", "Android")]
 	public async Task GalleryMauiAndroid()
 	{
-		var device = AndroidDevice.Selected;
 		var app = await BuildAndroidApp("Gallery", "Maui/SkiaSharpSample.Maui.csproj",
-			"com.skiasharp.gallery.maui", device);
+			"com.skiasharp.gallery.maui");
 
-		await appium.Run(app, running => Gallery(running, "Android", $"{device.Name}/{device.Version}"));
+		await appium.Run(app, running => Gallery(running, "Android", app.DeviceProfile));
 	}
 
 	private async Task<AndroidRunningApp> BuildAndroidApp(
-		string folder, string project, string applicationId, AndroidDevice device)
+		string folder, string project, string applicationId)
 	{
 		const string framework = "net10.0-android";
 		var workspace = await BuildSample(folder, project, new DotNetOptions
@@ -78,7 +75,7 @@ public sealed class AndroidSampleTests(AppiumFixture appium) : AppiumSampleTestB
 		var artifact = Assert.Single(Directory.EnumerateFiles(
 			Output(workspace, folder, project, framework), "*-Signed.apk", SearchOption.AllDirectories));
 
-		return new AndroidRunningApp(workspace, artifact, applicationId, device);
+		return new AndroidRunningApp(workspace, artifact, applicationId);
 	}
 
 	private static void NavigateMauiAndroid(AppiumRunningApp app, string title)

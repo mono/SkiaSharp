@@ -43,7 +43,6 @@ internal sealed class WindowsRunningApp(
         RequireInteractiveDesktop();
         Require(File.Exists(winAppDriverPath),
             "Provide the preinstalled WinAppDriver.exe path. Tests never download or install drivers.");
-        AppiumFixture.RequireFreePort(AppiumFixture.WindowsPort);
         var extension = Path.GetExtension(Artifact).ToLowerInvariant();
         string executable;
         string app;
@@ -88,7 +87,7 @@ internal sealed class WindowsRunningApp(
             $"The target executable is already running; refusing to relaunch or terminate it: {executable}");
         var options = Options("Windows", "Windows");
         options.App = app;
-        options.AddAdditionalAppiumOption("systemPort", AppiumFixture.WindowsPort);
+        options.AddAdditionalAppiumOption("systemPort", AppiumFixture.GetFreePort());
         options.AddAdditionalAppiumOption("ms:forcequit", true);
         SetDriver(new WindowsDriver(address, options, TimeSpan.FromMinutes(2)));
         Wait(() => Driver.FindElement(By.XPath("/*")) is { Displayed: true } element ? element : null, $"{app} desktop window");

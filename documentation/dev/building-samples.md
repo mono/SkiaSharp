@@ -145,41 +145,44 @@ Set `ANDROID_HOME` or `ANDROID_SDK_ROOT` for Android. On macOS, set
 `DEVELOPER_DIR` to the Xcode required by your installed workload; tests do not
 change the global Xcode selection.
 
-Local runs select one Android profile: **Pixel_API_37**, Android 17/API 37,
-`emulator-5560`, 16 KB pages, model `pixel_9`. iOS defaults to **iPhone 16 Pro**
+Local runs select Android **17**, using model `pixel_9`. iOS defaults to **iPhone 16 Pro**
 on **26.2**. Install `system-images;android-37.1;google_apis_ps16k;<host-ABI>`
 and the selected iOS runtime/device type before running tests. Missing prerequisites fail; neither
 the tests nor the Appium CI preparation path installs or downloads them.
 
-CI device jobs override that single profile using `SAMPLE_TEST_ANDROID_DEVICE`
-or `SAMPLE_TEST_IOS_DEVICE`, each containing a complete JSON object. For example:
+CI device jobs supply the desired version/image or simulator model. To use a
+different preinstalled runtime locally:
 
 ```sh
-export SAMPLE_TEST_ANDROID_DEVICE='{"name":"Pixel_API_26","version":"8.0","api":26,"serial":"emulator-5558","pageSize":4096,"model":"pixel_9","imagePrefix":"system-images;android-26;google_apis"}'
-export SAMPLE_TEST_IOS_DEVICE='{"name":"iPhone 16 Pro","version":"18.6"}'
+export SAMPLE_TEST_ANDROID_VERSION=8.0
+export SAMPLE_TEST_ANDROID_IMAGE_PREFIX='system-images;android-26;google_apis'
+export SAMPLE_TEST_IOS_VERSION=18.6
+export SAMPLE_TEST_IOS_MODEL='iPhone 16 Pro'
 ```
 
-The Android ABI follows the host architecture; the image prefix/model must
-already be installed. Unset these variables to return to local defaults.
+The Android ABI follows the host architecture; the image and iOS runtime/model
+must already be installed. Unset these variables to return to local defaults.
 
 Appium receives the device profile and built app. XCUITest's
 `enforceFreshSimulatorCreation` creates, boots and deletes a fresh iOS simulator;
 UiAutomator2's `avd` capability boots the uniquely named Android AVD.
-The small Android helper creates/deletes that AVD from the preinstalled image,
-because UiAutomator2 does not provide AVD creation/deletion. Cleanup verifies
-the emulator stopped and its AVD disappeared, even when the tool reports success.
-Existing devices and data remain untouched; emulator ports must be free.
+The small Android helper creates/deletes a unique `SkiaSharpSamples_<version>_<id>`
+AVD from the preinstalled image, because UiAutomator2 does not provide AVD
+creation/deletion. Appium selects the emulator serial; existing devices/data
+remain untouched.
 Appium owns app installation, launch, logs and session cleanup. Foreground
 interactions are serialized.
 
-Appium port 4727 and the selected driver port must be free: Android 8217,
-iOS 8117, Mac2 10117, Windows 4737. Mac2 requires an unlocked GUI session,
+The fixture uses a free loopback port for each server and driver connection;
+UiAutomator2 selects its own available driver port. Mac2 requires an unlocked GUI session,
 Xcode automation/XcodeHelper Accessibility permissions, and
 `SKIASHARP_APPIUM_MAC_WDA_ROOT` pointing to the installed driver's
-WebDriverAgentMac source. Windows uses port 4737 and requires an interactive
+WebDriverAgentMac source. Windows requires an interactive
 desktop, Developer Mode and `SKIASHARP_APPIUM_WINAPPDRIVER` pointing to the
 explicitly installed executable.
-Mac2 and Windows drivers also own app launch/termination and their WDA/WAD
+Mac2 launches the exact built bundle through `appPath`; no custom launch or
+LaunchServices scripts are needed. Existing app state/running apps are not reused.
+Mac2 and Windows drivers own app launch/termination and their WDA/WAD
 server lifecycle. Windows package registration remains an OS preparation step:
 WinAppDriver accepts an installed application ID but has no MSIX registration
 API. Only the newly registered package is removed afterward.

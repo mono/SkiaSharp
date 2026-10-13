@@ -1,5 +1,3 @@
-using System.Net;
-using System.Net.Sockets;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -14,12 +12,10 @@ public sealed class AppiumInfrastructureTests
         var sdk = Path.Combine(Path.GetTempPath(), $"appium-sdk-{Guid.NewGuid():N}");
         try
         {
-            Directory.CreateDirectory(Path.Combine(sdk, "platform-tools"));
-            File.WriteAllText(Path.Combine(sdk, "platform-tools",
-                OperatingSystem.IsWindows() ? "adb.exe" : "adb"), "");
+            Directory.CreateDirectory(sdk);
             var android = new Android(sdk);
-            var device = AndroidDevice.Selected;
-            var error = await Assert.ThrowsAsync<DirectoryNotFoundException>(() => android.CreateAvd(device.Name, device.ImagePrefix, device.Model));
+            var error = await Assert.ThrowsAsync<DirectoryNotFoundException>(() =>
+                android.CreateAvd("SkiaSharpSamples_missing", "system-images;android-37.1;google_apis_ps16k", "pixel_9"));
             Assert.Contains("Tests never download images", error.Message);
         }
         finally
@@ -27,19 +23,6 @@ public sealed class AppiumInfrastructureTests
             if (Directory.Exists(sdk))
                 SampleWorkspace.DeleteDirectory(sdk);
         }
-    }
-
-    [Fact]
-    public void DeviceProfilesRequireExplicitInstalledInputs()
-    {
-        var android = AndroidDevice.Selected;
-        android.Validate();
-        IosDevice.Selected.Validate();
-        Assert.Throws<ArgumentException>(() => (android with { Serial = "emulator-5557" }).Validate());
-        Assert.Throws<ArgumentException>(() => (android with { Name = "Pixel_*" }).Validate());
-        Assert.Throws<ArgumentException>(() => (android with { ImagePrefix = "latest" }).Validate());
-        Assert.Throws<ArgumentException>(() => (android with { Model = "*" }).Validate());
-        Assert.Throws<ArgumentException>(() => (IosDevice.Selected with { Version = "latest" }).Validate());
     }
 
     [Fact]
@@ -75,20 +58,4 @@ public sealed class AppiumInfrastructureTests
         }
     }
 
-    [Fact]
-    public void AppiumDoesNotReuseAnOccupiedPort()
-    {
-        var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        try
-        {
-            var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-            Assert.Throws<InvalidOperationException>(() => AppiumFixture.RequireFreePort(port));
-            Assert.True(listener.Server.IsBound);
-        }
-        finally
-        {
-            listener.Stop();
-        }
-    }
 }

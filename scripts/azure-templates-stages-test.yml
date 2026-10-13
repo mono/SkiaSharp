@@ -29,25 +29,19 @@ parameters:
           linux: []
         runDevices: true
         androidDevices:
-          - name: Pixel_API_26
+          - name: android26
             version: '8.0'
-            api: 26
-            serial: emulator-5558
-            pageSize: 4096
-            model: pixel_9
             imagePrefix: system-images;android-26;google_apis
-          - name: Pixel_API_37
+          - name: android37
             version: '17'
-            api: 37
-            serial: emulator-5560
-            pageSize: 16384
-            model: pixel_9
             imagePrefix: system-images;android-37.1;google_apis_ps16k
         iosDevices:
-          - name: iPhone 16 Pro
+          - name: ios18_6
             version: '18.6'
-          - name: iPhone 16 Pro
+            model: iPhone 16 Pro
+          - name: ios26_2
             version: '26.2'
+            model: iPhone 16 Pro
       - name: net11
         version: $(DOTNET_VERSION_PREVIEW)
         workloadVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
@@ -470,7 +464,7 @@ stages:
                 parameters:
                   sdk: ${{ sdk }}
                   device: ${{ device }}
-                  name: samples_appium_${{ sdk.name }}_android${{ device.api }}
+                  name: samples_appium_${{ sdk.name }}_${{ device.name }}
                   platform: Android
                   runGroup: Android
                   buildAgent: ${{ parameters.buildAgentAndroidTests }}
@@ -480,7 +474,7 @@ stages:
                 parameters:
                   sdk: ${{ sdk }}
                   device: ${{ device }}
-                  name: samples_appium_${{ sdk.name }}_ios${{ replace(device.version, '.', '_') }}
+                  name: samples_appium_${{ sdk.name }}_${{ device.name }}
                   platform: iOS
                   runGroup: Ios
                   buildAgent: ${{ parameters.buildAgentMac }}

@@ -16,13 +16,12 @@ public sealed class IosSampleTests(AppiumFixture appium) : AppiumSampleTestBase
 	{
 		Assert.SkipUnless(OperatingSystem.IsMacOS(), "iOS simulator tests require macOS.");
 
-		var device = IosDevice.Selected;
 		var app = await BuildIosApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj",
-			"com.companyname.SkiaSharpSample", device);
+			"com.companyname.SkiaSharpSample");
 
 		await appium.Run(app, running =>
 		{
-			Basic(running, "Maui", "iOS", $"{device.Name.Replace(' ', '-')}/{device.Version}",
+			Basic(running, "Maui", "iOS", app.DeviceProfile,
 				"basic-canvas-cpu", "basic-canvas-drawing", "basic-drawing-clear",
 				"basic-canvas-gpu", "basic-gpu-fps",
 				() => NavigateMauiIos(running, "Drawing"),
@@ -40,13 +39,12 @@ public sealed class IosSampleTests(AppiumFixture appium) : AppiumSampleTestBase
 	{
 		Assert.SkipUnless(OperatingSystem.IsMacOS(), "iOS simulator tests require macOS.");
 
-		var device = IosDevice.Selected;
 		var app = await BuildIosApp("Basic/iOS", "SkiaSharpSample/SkiaSharpSample.csproj",
-			"com.companyname.skiasharpsample", device);
+			"com.companyname.skiasharpsample");
 
 		await appium.Run(app, running =>
 		{
-			Basic(running, "Native", "iOS", $"{device.Name.Replace(' ', '-')}/{device.Version}",
+			Basic(running, "Native", "iOS", app.DeviceProfile,
 				"basic-canvas-cpu", "basic-canvas-drawing", "basic-drawing-clear",
 				"basic-canvas-gpu-gl", "basic-gpu-gl-fps",
 				() => running.Click(MobileBy.IosNSPredicate(
@@ -67,16 +65,14 @@ public sealed class IosSampleTests(AppiumFixture appium) : AppiumSampleTestBase
 	{
 		Assert.SkipUnless(OperatingSystem.IsMacOS(), "iOS simulator tests require macOS.");
 
-		var device = IosDevice.Selected;
 		var app = await BuildIosApp("Gallery", "Maui/SkiaSharpSample.Maui.csproj",
-			"com.skiasharp.gallery.maui", device);
+			"com.skiasharp.gallery.maui");
 
-		await appium.Run(app, running =>
-			Gallery(running, "iOS", $"{device.Name.Replace(' ', '-')}/{device.Version}"));
+		await appium.Run(app, running => Gallery(running, "iOS", app.DeviceProfile));
 	}
 
 	private async Task<IosRunningApp> BuildIosApp(
-		string folder, string project, string applicationId, IosDevice device)
+		string folder, string project, string applicationId)
 	{
 		const string framework = "net10.0-ios";
 		var rid = "iossimulator-" + HostArchitecture();
@@ -91,7 +87,7 @@ public sealed class IosSampleTests(AppiumFixture appium) : AppiumSampleTestBase
 		var artifact = Assert.Single(Directory.EnumerateDirectories(
 			Path.Combine(Output(workspace, folder, project, framework), rid), "*.app"));
 
-		return new IosRunningApp(workspace, artifact, applicationId, device);
+		return new IosRunningApp(workspace, artifact, applicationId);
 	}
 
 	private static void NavigateMauiIos(AppiumRunningApp app, string title)
