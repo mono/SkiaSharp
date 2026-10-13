@@ -374,95 +374,15 @@ stages:
       ${{ else }}:
         dependsOn: package
       jobs:
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Windows)
+        - template: /scripts/azure-templates-jobs-samples.yml@self
           parameters:
-            name: samples_windows
-            dotnetSdks:
-              - sdkVersion: $(DOTNET_VERSION)
-                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizen:
-                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-            displayName: Windows
+            platform: windows
             buildAgent: ${{ parameters.buildAgentWindows}}
-            target: samples
-            requiredArtifacts:
-              - name: native
-              - name: nuget
-                dir: nugets
-            postBuildSteps:
-              - task: PublishTestResults@2
-                condition: always()
-                inputs:
-                  testResultsFormat: VSTest
-                  testResultsFiles: output/logs/testlogs/samples/**/*.trx
-                  testRunTitle: Samples (Windows)
-              - task: PublishPipelineArtifact@1
-                condition: always()
-                inputs:
-                  targetPath: output/logs
-                  artifact: sample_logs_windows
-              - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
-                displayName: Delete the nugets folder
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (macOS)
+        - template: /scripts/azure-templates-jobs-samples.yml@self
           parameters:
-            name: samples_macos
-            dotnetSdks:
-              - sdkVersion: $(DOTNET_VERSION)
-                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizen:
-                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-            displayName: macOS
+            platform: macos
             buildAgent: ${{ parameters.buildAgentMac }}
-            target: samples
-            installNinja: true
-            shouldPublish: false
-            requiredArtifacts:
-              - name: native
-              - name: nuget
-                dir: nugets
-            postBuildSteps:
-              - task: PublishTestResults@2
-                condition: always()
-                inputs:
-                  testResultsFormat: VSTest
-                  testResultsFiles: output/logs/testlogs/samples/**/*.trx
-                  testRunTitle: Samples (macOS)
-              - task: PublishPipelineArtifact@1
-                condition: always()
-                inputs:
-                  targetPath: output/logs
-                  artifact: sample_logs_macos
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
+        - template: /scripts/azure-templates-jobs-samples.yml@self
           parameters:
-            name: samples_linux
-            dotnetSdks:
-              - sdkVersion: $(DOTNET_VERSION)
-                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizen:
-                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-            displayName: Linux
+            platform: linux
             buildAgent: ${{ parameters.buildAgentLinux }}
-            packages: $(MANAGED_LINUX_PACKAGES)
-            target: samples
-            shouldPublish: false
-            requiredArtifacts:
-              - name: native
-              - name: nuget
-                dir: nugets
-            installEmsdk: true
-            initScript: source ~/emsdk/emsdk_env.sh
-            postBuildSteps:
-              - task: PublishTestResults@2
-                condition: always()
-                inputs:
-                  testResultsFormat: VSTest
-                  testResultsFiles: output/logs/testlogs/samples/**/*.trx
-                  testRunTitle: Samples (Linux)
-              - task: PublishPipelineArtifact@1
-                condition: always()
-                inputs:
-                  targetPath: output/logs
-                  artifact: sample_logs_linux

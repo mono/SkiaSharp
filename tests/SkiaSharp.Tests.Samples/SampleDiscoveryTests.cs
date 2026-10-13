@@ -5,6 +5,7 @@ namespace SkiaSharp.Tests.Samples;
 
 // Checks the actual generated case sets independently of builds and Docker availability.
 [Trait("Category", "Infrastructure")]
+[RunGroup(SampleRunGroup.Build)]
 public class SampleDiscoveryTests
 {
     private static readonly string[] CommonSamples =

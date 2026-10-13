@@ -22,12 +22,14 @@ public class BasicSampleTests : SampleTestBase
     }
 
     [Theory]
+    [RunGroup(SampleRunGroup.Build)]
     [Trait("Category", "SampleBuild")]
     [MemberData(nameof(Cases))]
     public Task GeneratedSampleBuilds(string folder, string solution, string configuration) =>
         BuildSample(folder, solution, configuration);
 
     [Fact]
+    [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     public Task ConsoleSampleRuns() =>
@@ -44,6 +46,7 @@ public class BasicSampleTests : SampleTestBase
         });
 
     [Fact]
+    [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     public Task WebSampleReturnsImage() =>

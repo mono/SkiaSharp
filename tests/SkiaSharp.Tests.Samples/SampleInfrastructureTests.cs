@@ -8,6 +8,7 @@ namespace SkiaSharp.Tests.Samples;
 
 // Exercises discovery, isolation, cleanup, and diagnostics without building real samples.
 [Trait("Category", "Infrastructure")]
+[RunGroup(SampleRunGroup.Build)]
 public class SampleInfrastructureTests : IDisposable
 {
     private readonly string root = Path.Combine(Repo.ArtifactsDir, $"infrastructure-{Guid.NewGuid():N}");

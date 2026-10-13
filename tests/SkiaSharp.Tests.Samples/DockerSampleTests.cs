@@ -4,6 +4,7 @@ using Xunit;
 namespace SkiaSharp.Tests.Samples;
 
 [Trait("Category", "Docker")]
+[RunGroup(SampleRunGroup.Docker)]
 public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<DockerSampleFixture>
 {
     private static string ContainerPlatform =>

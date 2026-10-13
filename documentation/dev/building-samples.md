@@ -46,6 +46,10 @@ generation uses the supplied arguments, not package-filename version detection.
 Cake streams active-test progress and test output to the console while retaining
 TRX results and diagnostic artifacts.
 
+To run one group, add `--runGroup=Build`, `--runGroup=Host`, or
+`--runGroup=Docker`. Omit `--runGroup` to run the full suite.
+Group names are case-sensitive.
+
 ## IDE and direct test runs
 
 After staging packages, generate once before opening the test project in an IDE
@@ -71,6 +75,17 @@ The suite builds host-eligible Basic and Gallery solutions. Gallery, WASM, and
 Blazor are build-only; Console/Web runtime tests check exit codes, HTTP responses,
 and PNGs on the host and in Docker. Generated-project tests check exact package
 versions and Uno's SkiaSharp override. Integration/MSBuild suites remain separate.
+
+| Group | Tests | CI hosts |
+| --- | --- | --- |
+| Build | Generated sample compilation and infrastructure checks | Windows, macOS, Linux |
+| Host | Console and Web sample execution | Windows, macOS, Linux |
+| Docker | Container image builds and sample execution | Windows, Linux |
+
+When adding tests, choose a `RunGroup` by execution target, not sample family.
+Each test requires exactly one typed attribute, such as
+`[RunGroup(SampleRunGroup.Build)]`. Apply it to a class only when every test uses
+the same group; otherwise annotate individual methods.
 
 Use IDE filters or select one test:
 
