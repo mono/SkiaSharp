@@ -1,119 +1,52 @@
 parameters:
-  - name: platform
-    type: string
-    values: [windows, macos, linux]
-  - name: buildAgent
-    type: object
+  name: ''
+  displayName: ''
+  buildAgent: {}
+  target: tests-netcore
+  additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+  packages: ''
+  env: {}
+  preBuildSteps: []
+  resultLabel: .NET Core
+  testRunTitle: ''
+  coverageArtifact: ''
 
 jobs:
-  - ${{ each runtime in split('netfx_x64,netfx_x86,netcore', ',') }}:
-    - ${{ if or(eq(runtime, 'netcore'), eq(parameters.platform, 'windows')) }}:
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
-        parameters:
-          ${{ if eq(runtime, 'netcore') }}:
-            name: tests_netcore_${{ parameters.platform }}
-            target: tests-netcore
-            additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
-            ${{ if eq(parameters.platform, 'windows') }}:
-              displayName: Windows (.NET Core)
-            ${{ if eq(parameters.platform, 'macos') }}:
-              displayName: macOS
-            ${{ if eq(parameters.platform, 'linux') }}:
-              displayName: Linux
-          ${{ else }}:
-            name: tests_netfx_windows_${{ replace(runtime, 'netfx_', '') }}
-            displayName: Windows (.NET Framework, ${{ replace(runtime, 'netfx_', '') }})
-            target: tests-netfx
-            additionalArgs: --arch=${{ replace(runtime, 'netfx_', '') }} --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
-          buildAgent: ${{ parameters.buildAgent }}
-          dotnetSdks:
-            - sdkVersion: $(DOTNET_VERSION)
-              workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-              tizen:
-                manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-          installAndroidSdk: false
-          shouldPublish: false
-          requiredArtifacts:
-            - name: native
-          ${{ if eq(runtime, 'netfx_x86') }}:
-            # SwiftShader's LLVM JIT cannot resolve __chkstk in a 32-bit process, so
-            # the software Vulkan ICD crashes the host outright ("exit code is '7'")
-            # instead of failing a test. x64 runs the identical suite green, which is
-            # why the two architectures are separate jobs. OpenGL and Direct3D stay
-            # required on both — Mesa provisions fine in either bitness.
-            env:
-              SKIASHARP_TEST_SKIP_GPU: ganesh-vulkan,graphite-vulkan,ganesh-vulkan-sharpvk
-          ${{ if eq(parameters.platform, 'macos') }}:
-            # This pool is x64 and virtualizes Metal. Merely calling
-            # MTLCreateSystemDefaultDevice + newCommandQueue on that driver leaves
-            # state that never signals, so the test host hangs on shutdown until the
-            # job times out at 180 min — no results, no TRX. See #4598.
-            env:
-              SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
-          ${{ if eq(parameters.platform, 'windows') }}:
-            preBuildSteps:
-              # Provision a software GL driver (Mesa) and a software Vulkan ICD
-              # (SwiftShader) so ganesh-gl and ganesh-vulkan render here.
-              - pwsh: .\scripts\infra\native\windows\install-mesa-gl.ps1
-                displayName: Provision software OpenGL (Mesa) for the GL tests
-              - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
-                displayName: Provision software Vulkan (SwiftShader) for visual tests
-          ${{ if eq(parameters.platform, 'linux') }}:
-            # Software Vulkan (Mesa lavapipe) plus a virtual X server give the
-            # headless agent deterministic GPU output. ganesh-gl, ganesh-vulkan and
-            # graphite-vulkan are required here, so missing provisioning fails.
-            packages: $(MANAGED_LINUX_PACKAGES) xvfb mesa-utils libgl1-mesa-dri libglx-mesa0 mesa-vulkan-drivers vulkan-tools
-            preBuildSteps:
-              - bash: |
-                  set -e
-                  nohup Xvfb :99 -screen 0 1280x1024x24 > /tmp/xvfb.log 2>&1 &
-                  sleep 3
-                  echo "Started Xvfb on :99"
-                  # Expose the software-GPU environment to the test step. Forcing
-                  # Mesa (GL) and the lavapipe ICD (Vulkan) keeps output deterministic.
-                  #
-                  # softpipe rather than llvmpipe for GL: llvmpipe's LLVM shader JIT
-                  # segfaults compiling the fragment shader Skia generates for a
-                  # runtime blender and takes the whole test host with it, which is
-                  # what made this leg lose all its results (#4590). softpipe is the
-                  # non-JIT gallium rasterizer and runs the same tests green. It
-                  # caps at GL 3.3, which is well past the 3.0 Ganesh needs. See
-                  # #4604 to move back to llvmpipe.
-                  echo "##vso[task.setvariable variable=DISPLAY]:99"
-                  echo "##vso[task.setvariable variable=LIBGL_ALWAYS_SOFTWARE]1"
-                  echo "##vso[task.setvariable variable=GALLIUM_DRIVER]softpipe"
-                  echo "##vso[task.setvariable variable=VK_ICD_FILENAMES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
-                  echo "##vso[task.setvariable variable=VK_DRIVER_FILES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
-                displayName: Start Xvfb and select software GPU (visual tests)
-          postBuildSteps:
-            - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
-              displayName: Extract visual-regression images for triage
-              condition: always()
-            - task: PublishTestResults@2
-              ${{ if eq(runtime, 'netcore') }}:
-                displayName: Publish the .NET Core test results
-              ${{ else }}:
-                displayName: Publish the .NET Framework ${{ replace(runtime, 'netfx_', '') }} test results
-              condition: always()
-              inputs:
-                testResultsFormat: VSTest
-                testResultsFiles: 'output/logs/testlogs/**/*.trx'
-                ${{ if ne(runtime, 'netcore') }}:
-                  testRunTitle: Windows .NET Framework ${{ replace(runtime, 'netfx_', '') }} Tests
-                ${{ elseif eq(parameters.platform, 'windows') }}:
-                  testRunTitle: 'Windows .NET Core Tests'
-                ${{ elseif eq(parameters.platform, 'macos') }}:
-                  testRunTitle: 'macOS .NET Core Tests'
-                ${{ else }}:
-                  testRunTitle: 'Linux .NET Core Tests'
-          publishArtifacts:
-            - ${{ if eq(runtime, 'netcore') }}:
-                name: testlogs_netcore_${{ parameters.platform }}
-              ${{ else }}:
-                name: testlogs_netfx_windows_${{ replace(runtime, 'netfx_', '') }}
-              always: true
-              path: 'output/logs/testlogs'
-            - ${{ if eq(runtime, 'netcore') }}:
-              - name: coverage_netcore_${{ parameters.platform }}
-                path: 'output/coverage'
+  - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: ${{ parameters.displayName }}
+      buildAgent: ${{ parameters.buildAgent }}
+      target: ${{ parameters.target }}
+      additionalArgs: ${{ parameters.additionalArgs }}
+      packages: ${{ parameters.packages }}
+      env: ${{ parameters.env }}
+      preBuildSteps: ${{ parameters.preBuildSteps }}
+      dotnetSdks:
+        - sdkVersion: $(DOTNET_VERSION)
+          workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+          tizen:
+            manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+            manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+      installAndroidSdk: false
+      shouldPublish: false
+      requiredArtifacts:
+        - name: native
+      postBuildSteps:
+        - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+          displayName: Extract visual-regression images for triage
+          condition: always()
+        - task: PublishTestResults@2
+          displayName: Publish the ${{ parameters.resultLabel }} test results
+          condition: always()
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: 'output/logs/testlogs/**/*.trx'
+            testRunTitle: ${{ parameters.testRunTitle }}
+      publishArtifacts:
+        - name: ${{ replace(parameters.name, 'tests_', 'testlogs_') }}
+          always: true
+          path: 'output/logs/testlogs'
+        - ${{ if ne(parameters.coverageArtifact, '') }}:
+          - name: ${{ parameters.coverageArtifact }}
+            path: 'output/coverage'

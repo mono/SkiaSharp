@@ -1,143 +1,61 @@
 parameters:
-  - name: target
-    type: string
-    values: [android, ios, maccatalyst, wasm, wasm-preview]
-  - name: buildAgent
-    type: object
+  name: ''
+  displayName: ''
+  buildAgent: {}
+  target: ''
+  additionalArgs: ''
+  packages: ''
+  env: {}
+  preBuildSteps: []
+  installAndroidSdk: false
+  installXcode: true
+  installEmsdk: false
+  initScript: ''
+  jobSdkVersion: ''
+  dotnetSdks:
+    - sdkVersion: $(DOTNET_VERSION)
+      workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+      tizen:
+        manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+        manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+  resultLabel: ''
+  testRunTitle: ''
+  logArtifact: ''
+  extractVisualImages: true
 
 jobs:
   - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
     parameters:
-      ${{ if eq(parameters.target, 'android') }}:
-        name: tests_android_linux
-        displayName: Android
-        additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
-        installXcode: false
-        preBuildSteps:
-          - script: |
-              echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-              sudo udevadm control --reload-rules
-              sudo udevadm trigger --name-match=kvm
-            displayName: Enable KVM for Android emulator
-          - script: |
-              mkdir -p "$HOME/.android/avd"
-              echo "##vso[task.setvariable variable=ANDROID_AVD_HOME]$HOME/.android/avd"
-              echo "##vso[task.setvariable variable=ANDROID_EMULATOR_HOME]$HOME/.android"
-            displayName: Set Android AVD home (fix XDG path mismatch)
-          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "emulator"
-            displayName: Install the Android emulator
-          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
-            displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
-      ${{ elseif eq(parameters.target, 'ios') }}:
-        name: tests_ios_macos
-        displayName: iOS
-        additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
-        # The iOS *simulator* on the x64 macOS pool exposes a virtualized Metal
-        # device: creating a command queue on it leaves dispatch-queue state that
-        # never signals, hanging the test host's shutdown for hours. Declared here
-        # rather than sniffed at runtime — this describes the pool we run on today,
-        # so if the pool moves to Apple Silicon this line is what has to change.
-        # Same shutdown hang as #4598; the simulator additionally cannot compile
-        # Graphite's gradient pipeline (#4555). #4591 tracks the wider picture.
-      ${{ elseif eq(parameters.target, 'maccatalyst') }}:
-        name: tests_maccatalyst_macos
-        displayName: Mac Catalyst
-        additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
-        # A Mac Catalyst app sees iOS-style Metal GPU families, never Mac2, so
-        # the device reports none of the families Ganesh or Graphite require and
-        # bring-up fails outright (#4599). macOS on this same pool is opted out
-        # too, for a different reason — its virtualized Metal hangs the host on
-        # shutdown (#4598). #4591 tracks the wider picture.
-      ${{ elseif eq(parameters.target, 'wasm') }}:
-        name: tests_wasm_linux
-        displayName: WASM
-        additionalArgs: --skipExternals="all" --coverage=false
-        installEmsdk: true
-        initScript: source ~/emsdk/emsdk_env.sh
-      ${{ else }}:
-        # Runs the SkiaSharp.Tests.Wasm suite as the preview .NET (tests only — the rest of CI
-        # stays on net10) so WASM regressions on the newer runtime, such as an exception-handling
-        # mismatch in the native lib, fail CI. Provisioning and whole-job SDK selection
-        # are separate; only this job selects the preview SDK for its source build.
-        name: tests_wasm_preview_linux
-        displayName: WASM (.NET Preview)
-        additionalArgs: --skipExternals="all" --coverage=false --previewtfm=true
-        jobSdkVersion: $(DOTNET_VERSION_PREVIEW)
+      name: ${{ parameters.name }}
+      displayName: ${{ parameters.displayName }}
       buildAgent: ${{ parameters.buildAgent }}
-      ${{ if in(parameters.target, 'wasm', 'wasm-preview') }}:
-        target: tests-wasm
-        packages: $(MANAGED_LINUX_PACKAGES) ninja-build
-        # navigator.gpu.requestAdapter() returns null in the headless browser the
-        # DeviceRunners CLI launches, so Dawn has no adapter to bind to. Its
-        # `wasm test` command takes no browser arguments, so the WebGPU flags
-        # cannot be passed through without an upstream change to that package. See #4591.
-        env:
-          SKIASHARP_TEST_SKIP_GPU: graphite-dawn
-        preBuildSteps:
-          - bash: bash ./scripts/infra/managed/install-chrome.sh
-            displayName: Install Chrome for WASM tests
-      ${{ else }}:
-        target: tests-${{ parameters.target }}
-      ${{ if in(parameters.target, 'ios', 'maccatalyst') }}:
-        env:
-          SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
-      ${{ if not(in(parameters.target, 'android', 'ios')) }}:
-        installAndroidSdk: false
-      ${{ if eq(parameters.target, 'wasm-preview') }}:
-        dotnetSdks:
-          - sdkVersion: $(DOTNET_VERSION)
-          - sdkVersion: $(DOTNET_VERSION_PREVIEW)
-            workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
-            workloads: [wasm-tools, android]
-      ${{ else }}:
-        dotnetSdks:
-          - sdkVersion: $(DOTNET_VERSION)
-            workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-            ${{ if eq(parameters.target, 'android') }}:
-              workloads: [android, maui-android]
-            ${{ else }}:
-              tizen:
-                manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+      target: ${{ parameters.target }}
+      additionalArgs: ${{ parameters.additionalArgs }}
+      packages: ${{ parameters.packages }}
+      env: ${{ parameters.env }}
+      preBuildSteps: ${{ parameters.preBuildSteps }}
+      installAndroidSdk: ${{ parameters.installAndroidSdk }}
+      installXcode: ${{ parameters.installXcode }}
+      installEmsdk: ${{ parameters.installEmsdk }}
+      initScript: ${{ parameters.initScript }}
+      jobSdkVersion: ${{ parameters.jobSdkVersion }}
+      dotnetSdks: ${{ parameters.dotnetSdks }}
       shouldPublish: false
       requiredArtifacts:
         - name: native
       postBuildSteps:
-        - ${{ if ne(parameters.target, 'wasm-preview') }}:
+        - ${{ if eq(parameters.extractVisualImages, true) }}:
           - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
             displayName: Extract visual-regression images for triage
             condition: always()
         - task: PublishTestResults@2
-          ${{ if eq(parameters.target, 'android') }}:
-            displayName: Publish the Android test results
-          ${{ elseif eq(parameters.target, 'ios') }}:
-            displayName: Publish the iOS test results
-          ${{ elseif eq(parameters.target, 'maccatalyst') }}:
-            displayName: Publish the Mac Catalyst test results
-          ${{ elseif eq(parameters.target, 'wasm') }}:
-            displayName: Publish the WASM test results
-          ${{ else }}:
-            displayName: Publish the WASM preview test results
+          displayName: Publish the ${{ coalesce(parameters.resultLabel, parameters.displayName) }} test results
           condition: always()
           inputs:
             testResultsFormat: VSTest
             testResultsFiles: 'output/logs/testlogs/**/*.trx'
-            ${{ if eq(parameters.target, 'android') }}:
-              testRunTitle: 'Android Tests (API $(ANDROID_TEST_DEVICE_VERSION))'
-            ${{ elseif eq(parameters.target, 'ios') }}:
-              testRunTitle: 'iOS Tests (v$(IOS_TEST_DEVICE_VERSION))'
-            ${{ elseif eq(parameters.target, 'maccatalyst') }}:
-              testRunTitle: 'Mac Catalyst Tests'
-            ${{ elseif eq(parameters.target, 'wasm') }}:
-              testRunTitle: 'Linux WASM Tests'
-            ${{ else }}:
-              testRunTitle: 'Linux WASM Preview Tests'
+            testRunTitle: ${{ parameters.testRunTitle }}
       publishArtifacts:
-        - ${{ if eq(parameters.target, 'android') }}:
-            name: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
-          ${{ elseif eq(parameters.target, 'ios') }}:
-            name: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
-          ${{ else }}:
-            name: testlogs_${{ replace(parameters.target, '-', '_') }}
+        - name: ${{ parameters.logArtifact }}
           always: true
           path: 'output/logs/testlogs'
