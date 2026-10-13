@@ -8,7 +8,7 @@ namespace SkiaSharp.Tests.Samples;
 [Collection(AppiumCollection.Name)]
 [Trait("Category", "Device")]
 [Trait("Category", "Golden")]
-public sealed class WindowsSampleTests(AppiumFixture appium) : AppiumSampleTestBase
+public sealed class WindowsSampleRunTests(AppiumFixture appium) : AppiumSampleRunTestBase
 {
 	[Fact]
 	[RunGroup(SampleRunGroup.Windows)]

@@ -1,16 +1,14 @@
 # Building and Validating Samples
 
-The Samples suite builds generated applications against produced NuGet packages
-and runs the Console/Web samples on the host and in Docker.
+The Samples suite builds generated applications against produced NuGet packages,
+runs Console/Web APIs on the host and in Docker, and checks actual browser UIs.
 
 ## Run the suite
 
-Install the repository SDK and the workloads required by your host's samples.
-Docker build/run tests run on any host with usable Docker, including macOS.
-Put `docker` on `PATH` and start a daemon using Windows containers on Windows
-or Linux containers on macOS/Linux. CI does not provision Docker on macOS.
-Unavailable Docker produces visible skips; wrong container mode and sample
-failures fail the tests.
+Install the repository SDK and your host's required workloads. For Docker tests,
+put `docker` on `PATH` and start a daemon using Windows containers on Windows
+or Linux containers on macOS/Linux. Unavailable Docker skips those tests;
+wrong container mode and sample failures fail.
 
 **Bootstrap before staging packages:** bootstrap resets `output/`.
 For managed-only work:
@@ -23,9 +21,8 @@ For native or Skia changes, build natives from source instead; see
 [AGENTS.md](../../AGENTS.md). Do not download prebuilt natives after native changes.
 
 Stage one producing build's non-symbol packages in `output/nugets/`, including
-SkiaSharp, HarfBuzzSharp, and the required native/view packages. Its base versions
-must match `scripts/VERSIONS.txt`. Download the public `nuget` build artifact,
-or use the PR helper:
+the required native/view packages. Base versions must match `scripts/VERSIONS.txt`.
+Download its `nuget` artifact or use the PR helper:
 
 ```powershell
 $pr = 1234 # Producing PR number.
@@ -41,10 +38,8 @@ Pass the producing package suffix explicitly. For example, packages ending in
 dotnet cake --target=samples --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-This generates the samples and runs the suite. Do not mix producing builds:
-generation uses the supplied arguments, not package-filename version detection.
-Cake streams active-test progress and test output to the console while retaining
-TRX results and diagnostic artifacts.
+This generates the samples and runs the suite. Keep all packages from the same
+producing build and pass its suffix explicitly.
 
 To run one group, add `--runGroup=Build`, `--runGroup=Host`, or
 `--runGroup=Docker`. Appium groups are `Android`, `Ios`, `Mac` and `Windows`.
@@ -53,8 +48,7 @@ Group names are case-sensitive.
 
 ## IDE and direct test runs
 
-After staging packages, generate once before opening the test project in an IDE
-or running it directly:
+After staging packages, generate once before IDE or direct test runs:
 
 ```sh
 dotnet cake --target=samples-generate --previewLabel=pr.1234 --buildNumber=26509.10
@@ -62,8 +56,8 @@ dotnet test tests/SkiaSharp.Tests.Samples.slnx \
   -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
 ```
 
-The solution includes the runner's source dependencies; the properties above
-limit their build to the runner's .NET 10 target.
+Keep both framework properties to limit the runner's source dependencies to
+.NET 10. Sample builds use their own declared TFMs.
 
 Direct tests use the generated inputs without invoking Cake or downloading
 packages. The runner uses the repository SDK; sample builds use `dotnet` from
@@ -86,18 +80,37 @@ not callback duration or browser-operation waits; cleanup/output reads stay boun
 to one minute. Configuration, framework and helper-owned restore properties cannot
 be overridden through `Properties`.
 
+## Browser runs
+
+For local browser tests, build the runner and install its matching Chromium:
+
+```sh
+dotnet build tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj
+pwsh tests/SkiaSharp.Tests.Samples/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
+  -- --filter-trait Category=Browser --report-trx
+```
+
+Use the Release script path for a Release build. CI installs Chromium before
+Host-group or unfiltered tests automatically; other groups and local tests do
+not. Linux `--with-deps` may require `sudo`.
+See [Playwright browser installation](https://playwright.dev/dotnet/docs/browsers).
+Filtered runs do not replace the full suite.
 
 ## Coverage and diagnostics
 
-The suite builds host-eligible Basic and Gallery solutions. WASM and
-Blazor are build-only here; Console/Web runtime tests check exit codes, HTTP responses,
-and PNGs on the host and in Docker. Generated-project tests check exact package
-versions and Uno's SkiaSharp override. Integration/MSBuild suites remain separate.
+Basic/Gallery samples have build coverage; Console/Web APIs and Web/WASM/Blazor
+UIs have runtime checks, including Blazor Drawing pointer strokes, color/brush
+selection and clear. Basic Uno runs its declared `net10.0-browserwasm` project
+target, checking CPU rendering and Drawing navigation, pointer strokes and
+clear rather than launching a desktop or host solution variant.
+Gallery MAUI also has Appium device-runtime coverage.
+Browser errors and unavailable GPU rendering fail.
 
 | Group | Tests | CI hosts |
 | --- | --- | --- |
 | Build | Generated sample compilation and infrastructure checks | Windows, macOS, Linux |
-| Host | Console and Web sample execution | Windows, macOS, Linux |
+| Host | Console, Web API and browser sample execution | Windows, macOS, Linux |
 | Docker | Container image builds and sample execution | Windows, Linux |
 | Android | MAUI and native Android app execution | Android agent |
 | Ios | MAUI and native iOS simulator execution | macOS |
@@ -105,32 +118,43 @@ versions and Uno's SkiaSharp override. Integration/MSBuild suites remain separat
 | Windows | MAUI and native WinUI app execution | Windows |
 
 When adding tests, choose a `RunGroup` by execution target, not sample family.
+Name execution classes by purpose: `SampleBuildTests`, `BasicSampleRunTests`,
+`BrowserSampleRunTests`, and `UnoBrowserSampleRunTests`. `DockerSampleBuildTests`
+and `DockerSampleRunTests` share one collection fixture and both use the Docker
+group. Infrastructure, discovery, and artifact-contract checks stay separate.
+`DotNetSampleTestBase` prepares isolated .NET workspaces; `DockerSampleTestBase`
+prepares flat Docker build contexts. The Docker fixture owns cached images,
+container execution, and Docker resource cleanup. Both bases live beside the
+test classes; CLI wrappers (`DotNet`, `Docker`) and fixtures live in `Utils`.
+Independent test collections run in parallel. Browser classes share a collection
+to serialize browser workloads; Docker classes share another for their image
+cache and owned-resource registry. Neither collection blocks unrelated tests.
+Appium platform classes share a third collection to serialize focus-sensitive
+device interactions. Tests and theory rows within each class/collection remain serial.
 Each test requires exactly one typed attribute, such as
 `[RunGroup(SampleRunGroup.Build)]`. Apply it to a class only when every test uses
 the same group; otherwise annotate individual methods.
 
-Use IDE filters or select one test:
+Find output, binlogs, results and images under `output/logs/testlogs/samples/`
+or CI's `sample_logs_*` artifacts. For restore failures, check the generated
+versions against staged packages. Do not clear shared caches.
 
-```sh
-dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
-  -- --filter-method '*BasicSampleTests.WebSampleReturnsImage'
-```
+Review platform references under `tests/SkiaSharp.Tests.Samples/Expected/`.
+Dimensions must match; the default limit is **0.075% differing pixels** with
+zero channel tolerance. Animated browser GPU pages use a loose **6% mean RGBA error**
+smoke check that can miss uniform dark output. Mismatches retain actual/diff
+images; references are never accepted automatically.
 
-Find stdout/stderr, binlogs, results, and images under
-`output/logs/testlogs/samples/`, or in CI's `sample_logs_*` artifact. For restore
-failures, compare generated versions with the staged packages and inspect the
-binlog. Tests use private workspaces/caches; do not clear shared caches.
-
-PNG references are platform-specific under `tests/SkiaSharp.Tests.Samples/Expected/`.
-Dimensions must match; at most **0.075%** of pixels may differ, with zero channel
-tolerance. Failures retain the actual image; mismatches also retain a diff.
-Review replacement references on the affected platform; tests never accept them
-automatically.
+`SampleImage.Validate` takes `actual`, `expected` (or a relative golden path),
+and an optional `SampleImageOptions` record. Its byte-array overload also takes
+the actual output path, saves the bytes, then calls the file overload.
+Set `ExpectedSize = new(800, 600)` for fixed-size PNGs.
+Omitting options retains the strict pixel comparison and golden dimensions.
 
 ## Appium application runtime tests
 
-`AndroidSampleTests`, `IosSampleTests`, `MacSampleTests` and
-`WindowsSampleTests` run generated Basic and Gallery MAUI apps on Android,
+`AndroidSampleRunTests`, `IosSampleRunTests`, `MacSampleRunTests` and
+`WindowsSampleRunTests` run generated Basic and Gallery MAUI apps on Android,
 iOS, MacCatalyst and Windows, and native Basic Android, iOS, MacCatalyst,
 macOS and WinUI apps. Basic covers CPU rendering, drawing/clear and GPU smoke;
 Gallery covers search, filtering, Gradient controls and CPU/GPU rendering.
@@ -221,7 +245,7 @@ dotnet cake --target=samples --runGroup=Android \
   --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-Static references use the comparison policy above and live under
+Static references use **0.075% differing pixels/zero channel tolerance** and live under
 `Expected/Appium/<family>/<platform>/<exact-profile>/`. Review captures before
 adding or replacing references; missing references fail. Appium/device logs,
 screenshots, UI hierarchy and binlogs use the shared diagnostics directory.

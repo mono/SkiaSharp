@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests.Samples;
 [Collection(AppiumCollection.Name)]
 [Trait("Category", "Device")]
 [Trait("Category", "Golden")]
-public sealed class AndroidSampleTests(AppiumFixture appium) : AppiumSampleTestBase
+public sealed class AndroidSampleRunTests(AppiumFixture appium) : AppiumSampleRunTestBase
 {
 	[Fact]
 	[RunGroup(SampleRunGroup.Android)]

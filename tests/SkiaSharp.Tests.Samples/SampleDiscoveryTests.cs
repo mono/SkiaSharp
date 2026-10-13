@@ -26,12 +26,12 @@ public class SampleDiscoveryTests
     };
 
     [Theory]
-    [InlineData(nameof(DockerSampleTests.DockerImageBuilds))]
-    [InlineData(nameof(DockerSampleTests.ConsoleSampleRuns))]
-    [InlineData(nameof(DockerSampleTests.WebApiSampleReturnsImage))]
-    public void DockerTestsUseAvailabilityRatherThanPlatformExclusions(string method)
+    [InlineData(typeof(DockerSampleBuildTests), nameof(DockerSampleBuildTests.DockerImageBuilds))]
+    [InlineData(typeof(DockerSampleRunTests), nameof(DockerSampleRunTests.ConsoleSampleRuns))]
+    [InlineData(typeof(DockerSampleRunTests), nameof(DockerSampleRunTests.WebApiSampleReturnsImage))]
+    public void DockerTestsUseAvailabilityRatherThanPlatformExclusions(Type type, string method)
     {
-        var test = typeof(DockerSampleTests).GetMethod(method);
+        var test = type.GetMethod(method);
         Assert.NotNull(test);
         var attribute = Assert.IsAssignableFrom<FactAttribute>(
             Assert.Single(test.GetCustomAttributes(typeof(FactAttribute), inherit: true)));
@@ -42,9 +42,58 @@ public class SampleDiscoveryTests
     }
 
     [Fact]
+    public void ParallelizationIsScopedToCollectionsRatherThanDisabledForTheAssembly()
+    {
+        Assert.DoesNotContain(typeof(SampleBuildTests).Assembly.GetCustomAttributesData(),
+            attribute => attribute.AttributeType == typeof(CollectionBehaviorAttribute) &&
+                attribute.NamedArguments.Any(argument => argument.MemberName == nameof(CollectionBehaviorAttribute.DisableTestParallelization) &&
+                    Equals(argument.TypedValue.Value, true)));
+        foreach (var type in new[] { typeof(BrowserSampleRunTests), typeof(UnoBrowserSampleRunTests) })
+        {
+            var collection = Assert.Single(type.GetCustomAttributesData(),
+                attribute => attribute.AttributeType == typeof(CollectionAttribute));
+            Assert.Equal(nameof(BrowserSampleCollection), Assert.Single(collection.ConstructorArguments).Value);
+        }
+        foreach (var type in new[]
+        {
+            typeof(AndroidSampleRunTests), typeof(IosSampleRunTests),
+            typeof(MacSampleRunTests), typeof(WindowsSampleRunTests)
+        })
+        {
+            var collection = Assert.Single(type.GetCustomAttributesData(),
+                attribute => attribute.AttributeType == typeof(CollectionAttribute));
+            Assert.Equal(AppiumCollection.Name, Assert.Single(collection.ConstructorArguments).Value);
+        }
+        foreach (var type in new[]
+        {
+            typeof(BrowserSampleCollection), typeof(DockerSampleCollection), typeof(AppiumCollection)
+        })
+        {
+            var definition = Assert.Single(type.GetCustomAttributesData(),
+                attribute => attribute.AttributeType == typeof(CollectionDefinitionAttribute));
+            Assert.DoesNotContain(definition.NamedArguments,
+                argument => argument.MemberName == nameof(CollectionDefinitionAttribute.DisableParallelization) &&
+                    Equals(argument.TypedValue.Value, true));
+        }
+    }
+
+    [Fact]
+    public void DockerBuildAndRunShareOneCollectionFixture()
+    {
+        foreach (var type in new[] { typeof(DockerSampleBuildTests), typeof(DockerSampleRunTests) })
+        {
+            var collection = Assert.Single(type.GetCustomAttributesData(),
+                attribute => attribute.AttributeType == typeof(CollectionAttribute));
+            Assert.Equal(nameof(DockerSampleCollection), Assert.Single(collection.ConstructorArguments).Value);
+            Assert.DoesNotContain(typeof(IClassFixture<DockerSampleFixture>), type.GetInterfaces());
+        }
+        Assert.Contains(typeof(ICollectionFixture<DockerSampleFixture>), typeof(DockerSampleCollection).GetInterfaces());
+    }
+
+    [Fact]
     public void DockerCasesCoverBothSamples()
     {
-        var cases = DockerSampleTests.Cases().ToArray();
+        var cases = DockerSampleBuildTests.Cases().ToArray();
         Assert.All(cases, row => Assert.Equal(2, row.Length));
         Assert.Equal(
             new[] { Path.Combine("Basic", "DockerConsole"), Path.Combine("Basic", "DockerWebApi") },
@@ -76,7 +125,9 @@ public class SampleDiscoveryTests
     [Fact]
     public void SampleCasesCoverEligibleBasicSamples()
     {
-        var cases = BasicSampleTests.Cases().ToArray();
+        var cases = SampleBuildTests.Cases()
+            .Where(row => ((string)row[0]).StartsWith("Basic" + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+            .ToArray();
         Assert.All(cases, row => Assert.Equal(3, row.Length));
         var expected = CommonSamples.Concat(HostSamples[SampleLookup.HostPlatform])
             .Select(name => Path.Combine("Basic", name)).Order(StringComparer.Ordinal);
@@ -93,7 +144,7 @@ public class SampleDiscoveryTests
     [Fact]
     public void GalleryCasesSelectTheHostSolution()
     {
-        var row = Assert.Single(GallerySampleTests.Cases());
+        var row = Assert.Single(SampleBuildTests.Cases(), row => (string)row[0] == "Gallery");
         Assert.Equal(3, row.Length);
         Assert.Equal("Gallery", Assert.IsType<string>(row[0]));
         Assert.Equal($"SkiaSharpSample.{SampleLookup.HostPlatform}.slnx", Assert.IsType<string>(row[1]));

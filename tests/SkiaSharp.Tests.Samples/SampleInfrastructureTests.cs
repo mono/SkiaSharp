@@ -45,6 +45,45 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
+    public void DockerContextContainsSelectedSampleAndLocalPackagesOnly()
+    {
+        FileIn("inputs/Basic/DockerConsole/linux.Dockerfile", "FROM scratch");
+        FileIn("inputs/Basic/DockerConsole/App.csproj");
+        FileIn("inputs/Basic/DockerConsole/bin/App.dll");
+        FileIn("inputs/Basic/DockerConsole/obj/assets.json");
+        FileIn("inputs/Basic/Web/App.csproj");
+        FileIn("packages/nested/SkiaSharp.1.2.3.nupkg", "package sentinel");
+        FileIn("packages/not-a-package.txt");
+        var context = Path.Combine(root, "context");
+
+        DockerSampleTestBase.PrepareContext(Path.Combine(root, "inputs", "Basic", "DockerConsole"),
+            Path.Combine(root, "packages"), context);
+
+        Assert.True(File.Exists(Path.Combine(context, "linux.Dockerfile")));
+        Assert.True(File.Exists(Path.Combine(context, "App.csproj")));
+        Assert.False(Directory.Exists(Path.Combine(context, "bin")));
+        Assert.False(Directory.Exists(Path.Combine(context, "obj")));
+        Assert.False(Directory.Exists(Path.Combine(context, "Basic")));
+        Assert.Equal("package sentinel", File.ReadAllText(Path.Combine(context, "packages", "SkiaSharp.1.2.3.nupkg")));
+        Assert.Single(Directory.EnumerateFiles(Path.Combine(context, "packages")));
+        var config = XDocument.Load(Path.Combine(context, "nuget.config"));
+        var artifacts = Assert.Single(config.Descendants("packageSources").Elements("add"),
+            source => (string?)source.Attribute("key") == "artifacts");
+        Assert.Equal("packages", (string?)artifacts.Attribute("value"));
+        Assert.False(File.Exists(Path.Combine(context, "global.json")));
+    }
+
+    [Fact]
+    public void DockerContextRejectsAnEmptyPackageCohort()
+    {
+        FileIn("inputs/App.csproj");
+        Directory.CreateDirectory(Path.Combine(root, "packages"));
+        Assert.Throws<Xunit.Sdk.NotEmptyException>(() =>
+            DockerSampleTestBase.PrepareContext(Path.Combine(root, "inputs"),
+                Path.Combine(root, "packages"), Path.Combine(root, "context")));
+    }
+
+    [Fact]
     public void FiltersAndMissingInputsFailExplicitly()
     {
         FileIn("Console/Console.slnx");
@@ -232,11 +271,35 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public void HttpRequestsUseTheOwnedOriginAndPreserveQueries()
+    public async Task HttpRequestsUseTheOwnedOriginAndPreserveQueries()
     {
-        Assert.Equal("http://127.0.0.1:49152/api/images/SkiaSharp?x=1",
-            RunningApp.RequestUri(new Uri("http://127.0.0.1:49152"), "/api/images/SkiaSharp?x=1").AbsoluteUri);
+        var app = new AddressRunningApp(Path.Combine(root, "http"));
+        await app.Run(async () =>
+        {
+            Assert.Equal("http://127.0.0.1:49152/api/images/SkiaSharp?x=1",
+                (await app.RequestUri("/api/images/SkiaSharp?x=1")).AbsoluteUri);
+            Assert.Equal("http://127.0.0.1:49152/health",
+                (await app.RequestUri("/health")).AbsoluteUri);
+            Assert.Equal(1, app.AddressRequests);
+        });
     }
+
+    [Theory]
+    [InlineData("Now listening on: http://127.0.0.1:54321", "http://127.0.0.1:54321/")]
+    [InlineData("  Now listening on: http://127.0.0.1:54321  ", "http://127.0.0.1:54321/")]
+    [InlineData("App url: http://127.0.0.1:60542/?arg=--urls&arg=http%3a%2f%2f127.0.0.1%3a0",
+        "http://127.0.0.1:60542/?arg=--urls&arg=http%3a%2f%2f127.0.0.1%3a0")]
+    public void DotNetRecognizesOwnedHttpAddress(string output, string expected) =>
+        Assert.Equal(new Uri(expected), DotNetRunningApp.ParseAddress(output));
+
+    [Theory]
+    [InlineData("App url: https://127.0.0.1:60545/")]
+    [InlineData("App url: http://example.com:54321/")]
+    [InlineData("App url: http://127.0.0.1:0/")]
+    [InlineData("App url: not-an-address")]
+    [InlineData("Debug at url: http://127.0.0.1:60542/_framework/debug")]
+    public void DotNetRejectsOtherAddresses(string output) =>
+        Assert.Null(DotNetRunningApp.ParseAddress(output));
 
     [Theory]
     [InlineData("https://localhost/health")]
@@ -244,9 +307,10 @@ public class SampleInfrastructureTests : IDisposable
     [InlineData("/\\example.com/health")]
     [InlineData("/health#fragment")]
     [InlineData("")]
-    public void HttpRequestsCannotEscapeTheOwnedOrigin(string path)
+    public async Task HttpRequestsCannotEscapeTheOwnedOrigin(string path)
     {
-        Assert.Throws<ArgumentException>(() => RunningApp.RequestUri(new Uri("http://127.0.0.1:49152"), path));
+        var app = new AddressRunningApp(Path.Combine(root, "http"));
+        await app.Run(() => Assert.ThrowsAsync<ArgumentException>(() => app.RequestUri(path)));
     }
 
     [Fact]
@@ -262,6 +326,20 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
+    public void RepeatedAttachmentsPreserveEachDiagnosticSnapshot()
+    {
+        FileIn("snapshot.txt", "First diagnostic.");
+        var path = Path.Combine(root, "snapshot.txt");
+        TestContext.Current.AddFileAttachment(path, "text/plain");
+        File.WriteAllText(path, "Second diagnostic.");
+        TestContext.Current.AddFileAttachment(path, "text/plain");
+        TestContext.Current.AddFileAttachment(path, "text/plain", "snapshot.txt");
+        Assert.Contains("snapshot.txt", TestContext.Current.Attachments!.Keys);
+        Assert.Contains("snapshot.txt-2", TestContext.Current.Attachments.Keys);
+        Assert.Contains("snapshot.txt-3", TestContext.Current.Attachments.Keys);
+    }
+
+    [Fact]
     public void GoldenMismatchKeepsActualAndExpectedAttachmentsDistinct()
     {
         var actual = Path.Combine(root, "actual", "canvas.png");
@@ -269,9 +347,11 @@ public class SampleInfrastructureTests : IDisposable
         Save(actual, SKColors.Red);
         Save(expected, SKColors.Blue);
         TestContext.Current.AddFileAttachment(actual, "image/png");
-        var error = Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected));
+        var error = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
         Assert.Contains("Sample pixels differ", error.Message);
         Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+        Assert.Contains("canvas.png-2", TestContext.Current.Attachments!.Keys);
+        Assert.Contains("expected-canvas.png", TestContext.Current.Attachments.Keys);
 
         static void Save(string path, SKColor color)
         {
@@ -285,15 +365,26 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public void PngMustDecodeAndHaveTheExpectedSize()
+    public async Task ImageMustDecodeAndHaveTheExpectedSize()
     {
         using var bitmap = new SKBitmap(800, 600);
         bitmap.Erase(SKColors.Red);
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-        SampleImage.Validate(data.ToArray());
-        Assert.ThrowsAny<Exception>(() => SampleImage.Validate(data.ToArray().AsSpan(0, 12)));
-        Assert.ThrowsAny<Exception>(() => SampleImage.Validate(data.ToArray(), 400, 300));
+        var expected = SavePng(bitmap, "decode.expected.png");
+        var options = new SampleImageOptions { ExpectedSize = new(800, 600) };
+        await SampleImage.Validate(data.ToArray(), Path.Combine(root, "decode.actual.png"), expected, options);
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            SampleImage.Validate(data.ToArray().AsSpan(0, 12).ToArray(),
+                Path.Combine(root, "invalid.actual.png"), expected, options));
+        var invalidSignature = Path.Combine(root, "invalid-signature.actual.png");
+        var error = await Assert.ThrowsAnyAsync<Exception>(() =>
+            SampleImage.Validate(new byte[] { 1, 2, 3 }, invalidSignature, expected, options));
+        Assert.Contains("Expected a PNG image", error.Message);
+        Assert.Equal(new byte[] { 1, 2, 3 }, File.ReadAllBytes(invalidSignature));
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            SampleImage.Validate(data.ToArray(), Path.Combine(root, "wrong-size.actual.png"), expected,
+                options with { ExpectedSize = new(400, 300) }));
     }
 
     [Theory]
@@ -320,12 +411,12 @@ public class SampleInfrastructureTests : IDisposable
 
         if (accepted)
         {
-            SampleImage.CompareGolden(actual, expected);
+            SampleImage.Validate(actual, expected);
             Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
         }
         else
         {
-            var error = Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.CompareGolden(actual, expected));
+            var error = Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.Validate(actual, expected));
             Assert.Contains($"{changedPixels}/{width * height} pixels", error.Message);
             Assert.Contains("exceeding", error.Message);
             Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
@@ -343,7 +434,7 @@ public class SampleInfrastructureTests : IDisposable
         bitmap.Erase(new SKColor(red, green, blue, alpha));
         var actual = SavePng(bitmap, "actual.png");
 
-        var error = Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.CompareGolden(actual, expected));
+        var error = Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.Validate(actual, expected));
         Assert.Contains("4000/4000 pixels", error.Message);
         Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
     }
@@ -359,7 +450,185 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public void SampleTestBaseOwnsOnlyItsPreparedWorkspace()
+    public async Task ImageOptionsApplyToSavedFilesAndDirectComparisonsWithoutMutation()
+    {
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "options.expected.png");
+        var actual = Path.Combine(root, "options.actual.png");
+        var options = new SampleImageOptions { ExpectedSize = new(16, 12) };
+
+        await SampleImage.Validate(File.ReadAllBytes(expected), actual, expected, options);
+        SampleImage.Validate(actual, expected, options);
+        Assert.Contains("options.actual.png-2", TestContext.Current.Attachments!.Keys);
+        Assert.Equal(new SKSizeI(16, 12), options.ExpectedSize);
+        Assert.Equal(0.00075m, options.MaxErrorPixelFraction);
+        Assert.Null(options.MaxAverageColorErrorFraction);
+
+        var wrongSize = options with { ExpectedSize = new(15, 12) };
+        Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected, wrongSize));
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            SampleImage.Validate(File.ReadAllBytes(expected),
+                Path.Combine(root, "wrong-size.actual.png"), expected, wrongSize));
+        Assert.Equal(new SKSizeI(16, 12), options.ExpectedSize);
+    }
+
+    [Theory]
+    [InlineData(-0.01)]
+    [InlineData(1.01)]
+    [InlineData(double.NaN)]
+    public void ImageOptionsRejectInvalidAverageColorErrorLimits(double limit)
+    {
+        using var bitmap = new SKBitmap(4, 4);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "invalid-options.expected.png");
+        var actual = SavePng(bitmap, "invalid-options.actual.png");
+        Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected,
+            new() { MaxAverageColorErrorFraction = limit }));
+    }
+
+    [Theory]
+    [InlineData(0, true)]
+    [InlineData(1, true)]
+    [InlineData(2, false)]
+    public void ImageOptionsApplyAnExplicitPixelBudget(int changedPixels, bool accepted)
+    {
+        using var bitmap = new SKBitmap(10, 10);
+        bitmap.Erase(SKColors.Black);
+        var expected = SavePng(bitmap, "pixel-options.expected.png");
+        for (var i = 0; i < changedPixels; i++)
+            bitmap.SetPixel(i, 0, SKColors.White);
+        var actual = SavePng(bitmap, "pixel-options.actual.png");
+        var options = new SampleImageOptions { MaxErrorPixelFraction = 0.01m };
+        if (accepted)
+            SampleImage.Validate(actual, expected, options);
+        else
+            Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.Validate(actual, expected, options));
+        Assert.Equal(0.00075m, new SampleImageOptions().MaxErrorPixelFraction);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(2)]
+    public void ImageOptionsRejectInvalidPixelBudgets(int limit)
+    {
+        using var bitmap = new SKBitmap(4, 4);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "invalid-pixel-options.expected.png");
+        var actual = SavePng(bitmap, "invalid-pixel-options.actual.png");
+        Assert.ThrowsAny<Exception>(() =>
+            SampleImage.Validate(actual, expected, new() { MaxErrorPixelFraction = limit }));
+    }
+
+    [Fact]
+    public void GoldenComparisonSupportsPageSizesAndRetainsPixelDifferences()
+    {
+        Directory.CreateDirectory(root);
+        var actual = Path.Combine(root, "page.actual.png");
+        var expected = Path.Combine(root, "page.expected.png");
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        using (var image = SKImage.FromBitmap(bitmap))
+        using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+            File.WriteAllBytes(actual, data.ToArray());
+        File.Copy(actual, expected);
+        SampleImage.Validate(actual, expected);
+
+        bitmap.Erase(SKColors.Blue);
+        using (var image = SKImage.FromBitmap(bitmap))
+        using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+            File.WriteAllBytes(actual, data.ToArray());
+        var error = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
+        Assert.Contains("192/192", error.Message);
+        Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+    }
+
+    [Fact]
+    public void MissingReviewedGoldenFailsWithoutCreatingAReference()
+    {
+        Directory.CreateDirectory(root);
+        var actual = Path.Combine(root, "missing-reference.actual.png");
+        var expected = Path.Combine(root, "missing-reference.png");
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        File.WriteAllBytes(actual, data.ToArray());
+        var error = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
+        Assert.Contains("Missing reviewed sample golden", error.Message);
+        Assert.True(File.Exists(actual));
+        Assert.False(File.Exists(expected));
+    }
+
+    [Fact]
+    public void AverageColorErrorAllowsExactlyFivePercentButRejectsOneChannelStepOver()
+    {
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "average.expected.png");
+        bitmap.Erase(new SKColor(238, 17, 17));
+        var actual = SavePng(bitmap, "average.actual.png");
+        SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 });
+        Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+
+        bitmap.SetPixel(0, 0, new SKColor(238, 18, 17));
+        SavePng(bitmap, "average.actual.png");
+        var error = Assert.ThrowsAny<Exception>(() =>
+            SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 }));
+        Assert.Contains("average RGBA color error", error.Message);
+        Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+    }
+
+    [Fact]
+    public void AverageColorErrorDoesNotChangeTheHeadlessPixelBudgetOrExplicitExactComparison()
+    {
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "channel.expected.png");
+        bitmap.Erase(new SKColor(247, 8, 8));
+        var actual = SavePng(bitmap, "channel.actual.png");
+        SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 });
+        var error = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
+        Assert.Contains("192/192", error.Message);
+        Assert.ThrowsAny<Exception>(() =>
+            SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0 }));
+    }
+
+    [Fact]
+    public void AverageColorErrorIncludesAlphaInItsFivePercentBoundary()
+    {
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Black);
+        var expected = SavePng(bitmap, "alpha.expected.png");
+        bitmap.Erase(new SKColor(0, 0, 0, 204));
+        var actual = SavePng(bitmap, "alpha.actual.png");
+        SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 });
+
+        bitmap.SetPixel(0, 0, new SKColor(0, 0, 0, 203));
+        SavePng(bitmap, "alpha.actual.png");
+        Assert.ThrowsAny<Exception>(() =>
+            SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 }));
+    }
+
+    [Fact]
+    public void AverageColorErrorAllowsExactlyTheGpuSixPercentBudget()
+    {
+        using var bitmap = new SKBitmap(5, 1);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "gpu-budget.expected.png");
+        bitmap.Erase(new SKColor(234, 20, 20));
+        bitmap.SetPixel(0, 0, new SKColor(233, 20, 20));
+        var actual = SavePng(bitmap, "gpu-budget.actual.png");
+        SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.06 });
+
+        bitmap.SetPixel(1, 0, new SKColor(233, 20, 20));
+        SavePng(bitmap, "gpu-budget.actual.png");
+        Assert.ThrowsAny<Exception>(() =>
+            SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0.06 }));
+    }
+
+    [Fact]
+    public void DotNetSampleTestBaseOwnsOnlyItsPreparedWorkspace()
     {
         FileIn("inputs/Basic/Console/App.slnx");
         string working;
@@ -373,7 +642,7 @@ public class SampleInfrastructureTests : IDisposable
         Assert.True(Directory.Exists(Path.Combine(root, "inputs")));
     }
 
-    private sealed class LifetimeTest(string samplesDir) : SampleTestBase(samplesDir)
+    private sealed class LifetimeTest(string samplesDir) : DotNetSampleTestBase(samplesDir)
     {
         internal string Prepare() => PrepareSample(Path.Combine("Basic", "Console")).Root;
         internal string Diagnostics => PrepareSample(Path.Combine("Basic", "Console")).DiagnosticsRoot;
@@ -383,7 +652,7 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public async Task SampleTestBaseBuildsWithRetainedDiagnostics()
+    public async Task DotNetSampleTestBaseBuildsWithRetainedDiagnostics()
     {
         FileIn("inputs/Basic/Console/App.csproj", """
             <Project Sdk="Microsoft.NET.Sdk">
@@ -795,6 +1064,25 @@ public class SampleInfrastructureTests : IDisposable
         {
             await release;
         }
+    }
+
+    private sealed class AddressRunningApp(string diagnostics) : RunningApp(diagnostics)
+    {
+        internal int AddressRequests { get; private set; }
+
+        internal override Task<Uri> GetAddress()
+        {
+            AddressRequests++;
+            return Task.FromResult(new Uri("http://127.0.0.1:49152"));
+        }
+
+        internal override Task<(int ExitCode, string Output, string Error)> WaitForExit() =>
+            Task.FromResult((0, "", ""));
+
+        protected override Task Stop() => Task.CompletedTask;
+
+        protected override Task<(string Output, string Error)> ReadOutput() =>
+            Task.FromResult(("", ""));
     }
 
     public void Dispose()

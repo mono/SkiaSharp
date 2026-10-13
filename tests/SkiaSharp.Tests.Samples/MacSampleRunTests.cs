@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests.Samples;
 [Collection(AppiumCollection.Name)]
 [Trait("Category", "Device")]
 [Trait("Category", "Golden")]
-public sealed class MacSampleTests(AppiumFixture appium) : AppiumSampleTestBase
+public sealed class MacSampleRunTests(AppiumFixture appium) : AppiumSampleRunTestBase
 {
 	[Fact]
 	[RunGroup(SampleRunGroup.Mac)]

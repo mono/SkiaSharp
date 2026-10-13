@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
 
-public abstract class AppiumSampleTestBase : SampleTestBase
+public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 {
 	private protected static string Output(SampleWorkspace workspace, string folder, string project, string framework) =>
 		Path.Combine(workspace.Root, "samples", folder, Path.GetDirectoryName(project)!, "bin", "Debug", framework);
@@ -37,7 +37,7 @@ public abstract class AppiumSampleTestBase : SampleTestBase
 		var drawn = app.CaptureStable(drawingId, "drawing-stroke");
 		AppiumRunningApp.AssertSceneChanged(empty, drawn);
 		app.Click(clearId);
-		SampleImage.CompareGolden(app.CaptureStable(drawingId, "drawing-cleared"), empty);
+		SampleImage.Validate(app.CaptureStable(drawingId, "drawing-cleared"), empty);
 
 		// Animated Basic GPU scenes use a rendering smoke check, not a frozen golden.
 		navigateGpu();
@@ -45,7 +45,7 @@ public abstract class AppiumSampleTestBase : SampleTestBase
 		AppiumRunningApp.AssertRendered(app.Capture(gpuId, "basic-gpu-smoke"));
 
 		navigateCpu();
-		SampleImage.CompareGolden(app.CaptureStable(cpuId, "basic-cpu-returned"), cpu);
+		SampleImage.Validate(app.CaptureStable(cpuId, "basic-cpu-returned"), cpu);
 		Compare(cpu, family, platform, device, "basic-cpu");
 	}
 
@@ -92,7 +92,7 @@ public abstract class AppiumSampleTestBase : SampleTestBase
 	}
 
 	private static void Compare(string actual, string family, string platform, string device, string name) =>
-		SampleImage.CompareGolden(actual, Path.Combine(
+		SampleImage.Validate(actual, Path.Combine(
 			Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", "Appium",
 			family, platform, device.Replace('/', Path.DirectorySeparatorChar), name + ".png"));
 }

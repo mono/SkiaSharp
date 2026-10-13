@@ -1,18 +1,20 @@
-namespace SkiaSharp.Tests.Samples.Utils;
+using SkiaSharp.Tests.Samples.Utils;
+
+namespace SkiaSharp.Tests.Samples;
 
 // Prepares and builds each sample in one owned workspace.
-public abstract class SampleTestBase : IDisposable
+public abstract class DotNetSampleTestBase : IDisposable
 {
     private SampleWorkspace? workspace;
     private string? preparedFolder;
     private readonly string samplesDir;
 
-    protected SampleTestBase()
+    protected DotNetSampleTestBase()
         : this(Repo.SamplesDir)
     {
     }
 
-    protected SampleTestBase(string samplesDir)
+    protected DotNetSampleTestBase(string samplesDir)
     {
         this.samplesDir = samplesDir;
     }
@@ -46,6 +48,22 @@ public abstract class SampleTestBase : IDisposable
         await DotNet.Build(prepared, project, diagnostics, options);
         return prepared;
     }
+
+    private protected async Task RunSample(
+        string folder, IEnumerable<string> arguments, Func<DotNetRunningApp, string, Task> test,
+        DotNetOptions? options = null)
+    {
+        folder = folder.Replace('\\', '/').Replace('/', Path.DirectorySeparatorChar);
+        var sample = SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
+            .Single(sample => sample.Folder == folder && !sample.Kind.HasFlag(SampleLookup.EntryKind.Docker));
+        options ??= new();
+        var workspace = await BuildSample(folder, sample.FileName, options);
+        var project = Path.Combine(workspace.Root, "samples", folder, "SkiaSharpSample", "SkiaSharpSample.csproj");
+        await DotNet.Run(workspace, project, arguments, app => test(app, project), options);
+    }
+
+    private protected Task RunBrowserSample(string folder, IEnumerable<string> arguments, Func<BrowserRunningApp, Task> test) =>
+        RunSample(folder, arguments, (app, _) => BrowserRunningApp.Run(app, test));
 
     public void Dispose() =>
         workspace?.Dispose();

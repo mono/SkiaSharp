@@ -55,6 +55,7 @@ Task ("samples")
     // Consumer commands own their timeouts; MTP's activity monitor misdetects these process trees.
     RunDotNetTest(ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj"),
         results, noBuild: SKIP_BUILD, hangTimeout: null,
+        properties: new Dictionary<string, string> { ["SampleRunGroup"] = RUN_GROUP },
         runnerArguments: selection);
 });
 

@@ -8,7 +8,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-[CollectionDefinition(Name, DisableParallelization = true)]
+[CollectionDefinition(Name)]
 public sealed class AppiumCollection : ICollectionFixture<AppiumFixture>
 {
 	public const string Name = "Appium";
