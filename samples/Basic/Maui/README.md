@@ -57,7 +57,9 @@ dotnet build samples/Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj -f net10.
 ```
 
 The separate experimental AppKit project reuses the same CPU, GPU, and Drawing
-pages without changing the stable MAUI sample:
+pages without changing the stable MAUI sample. Build it from this source
+checkout; the generated-sample package suite does not include the experimental
+AppKit handler package:
 
 ```bash
 dotnet run --project samples/Basic/Maui/SkiaSharpSample.MacOS/SkiaSharpSample.MacOS.csproj -f net10.0-macos -p:PlatformTargetFrameworks=net10.0-macos
