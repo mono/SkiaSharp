@@ -200,12 +200,12 @@ internal abstract class AppiumRunningApp
         ThrowFailures(failures);
     }
 
-    internal async Task Run(Uri address, Func<AppiumRunningApp, Task> scenario,
-        Func<Task> startServer, Func<Task> stopServer)
+    internal async Task Run(Uri address, Func<AppiumRunningApp, Task> scenario, Func<Task> startServer, Func<Task> stopServer)
     {
         if (used)
             throw new InvalidOperationException("A running app owns one test lifetime and cannot be reused.");
         used = true;
+
         List<Exception> failures = [];
         try
         {
@@ -311,6 +311,7 @@ internal abstract class AppiumRunningApp
         var colorful = 0;
         var count = 0;
         for (var y = 0; y < bitmap.Height; y += 4)
+        {
             for (var x = 0; x < bitmap.Width; x += 4)
             {
                 var color = bitmap.GetPixel(x, y);
@@ -320,6 +321,7 @@ internal abstract class AppiumRunningApp
                     colorful++;
                 count++;
             }
+        }
         Assert.True(colors.Count > 32 && colorful > count * 0.05,
             $"Expected a rendered colored scene, not a blank canvas: {colors.Count} colors, {colorful}/{count} colored pixels; {path}.");
     }

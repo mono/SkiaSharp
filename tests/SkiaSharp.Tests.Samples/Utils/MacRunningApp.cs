@@ -33,17 +33,13 @@ internal sealed class MacRunningApp(
     protected override async Task Start(Uri address)
     {
         Require(OperatingSystem.IsMacOS(), "Mac2 tests require macOS, Xcode and configured XCTest Accessibility/automation permissions.");
-        Require(Directory.Exists(Artifact) && Artifact.EndsWith(".app", StringComparison.OrdinalIgnoreCase),
-            "Mac2 requires the actual built macOS or MacCatalyst .app bundle.");
+        Require(Directory.Exists(Artifact) && Artifact.EndsWith(".app", StringComparison.OrdinalIgnoreCase), "Mac2 requires the actual built macOS or MacCatalyst .app bundle.");
         Require(Regex.IsMatch(ApplicationId, @"^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$"), $"Invalid Mac bundle ID: {ApplicationId}");
-        Require((await Command("/usr/bin/stat", ["-f", "%Su", "/dev/console"])).Trim() == Environment.UserName,
-            "Mac2 requires this user to own an unlocked interactive desktop.");
+        Require((await Command("/usr/bin/stat", ["-f", "%Su", "/dev/console"])).Trim() == Environment.UserName, "Mac2 requires this user to own an unlocked interactive desktop.");
         var info = Path.Combine(Artifact, "Contents", "Info.plist");
         Require(File.Exists(info), $"Built bundle metadata is missing: {info}");
-        Require((await Command("/usr/bin/plutil", ["-extract", "CFBundleIdentifier", "raw", "-o", "-", info])).Trim() == ApplicationId,
-            $"Built bundle does not declare {ApplicationId}.");
-        executable = Path.Combine(Artifact, "Contents", "MacOS",
-            (await Command("/usr/bin/plutil", ["-extract", "CFBundleExecutable", "raw", "-o", "-", info])).Trim());
+        Require((await Command("/usr/bin/plutil", ["-extract", "CFBundleIdentifier", "raw", "-o", "-", info])).Trim() == ApplicationId, $"Built bundle does not declare {ApplicationId}.");
+        executable = Path.Combine(Artifact, "Contents", "MacOS", (await Command("/usr/bin/plutil", ["-extract", "CFBundleExecutable", "raw", "-o", "-", info])).Trim());
         Require(File.Exists(executable), $"Built bundle executable is missing: {executable}");
         var conflicts = await Script($$"""
             ObjC.import('AppKit');
