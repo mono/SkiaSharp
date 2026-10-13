@@ -274,6 +274,11 @@ public class SampleInfrastructureTests : IDisposable
         await Assert.ThrowsAnyAsync<Exception>(() =>
             SampleImage.Validate(data.ToArray().AsSpan(0, 12).ToArray(),
                 Path.Combine(root, "invalid.actual.png"), expected, options));
+        var invalidSignature = Path.Combine(root, "invalid-signature.actual.png");
+        var error = await Assert.ThrowsAnyAsync<Exception>(() =>
+            SampleImage.Validate(new byte[] { 1, 2, 3 }, invalidSignature, expected, options));
+        Assert.Contains("Expected a PNG image", error.Message);
+        Assert.Equal(new byte[] { 1, 2, 3 }, File.ReadAllBytes(invalidSignature));
         await Assert.ThrowsAnyAsync<Exception>(() =>
             SampleImage.Validate(data.ToArray(), Path.Combine(root, "wrong-size.actual.png"), expected,
                 options with { ExpectedSize = new(400, 300) }));

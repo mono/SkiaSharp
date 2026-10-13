@@ -65,8 +65,6 @@ public class BasicSampleTests : SampleTestBase
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
             var png = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
-            Assert.True(png.AsSpan().StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }), "Expected a PNG response.");
-
             await SampleImage.Validate(png,
                 Path.Combine(app.Diagnostics, "output.png"),
                 $"Host/{SampleLookup.HostPlatform}/web.png", new() { ExpectedSize = new(512, 512) });

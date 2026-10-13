@@ -28,12 +28,13 @@ internal sealed record SampleImageOptions
 // Checks sample output against a reviewed reference and retains comparison diagnostics.
 internal static class SampleImage
 {
-    /// <summary>Saves the actual image bytes, then validates the saved image against the expected reference.</summary>
+    /// <summary>Saves the actual PNG bytes, checks their signature, then validates the saved image against the expected reference.</summary>
     internal static async Task Validate(byte[] bytes, string actual, string expected, SampleImageOptions? options = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(actual)!);
 
         await File.WriteAllBytesAsync(actual, bytes);
+        Assert.True(bytes.AsSpan().StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }), "Expected a PNG image.");
 
         Validate(actual, expected, options);
     }
