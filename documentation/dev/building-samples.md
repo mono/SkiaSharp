@@ -104,3 +104,8 @@ Dimensions must match; the default limit is **0.075% differing pixels** with
 zero channel tolerance. Animated GPU pages use a loose **6% mean RGBA error**
 smoke check that can miss uniform dark output. Mismatches retain actual/diff
 images; references are never accepted automatically.
+
+Image helpers take `actual`, `expected` (or a relative golden path), and an
+optional `SampleImageOptions` record. Set `ExpectedSize = new(800, 600)` for
+fixed-size PNGs; only animated GPU checks set `MaxAverageColorErrorFraction`.
+Omitting options retains the strict pixel comparison and golden dimensions.

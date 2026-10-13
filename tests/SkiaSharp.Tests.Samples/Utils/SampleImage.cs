@@ -2,14 +2,18 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
+internal sealed record SampleImageOptions
+{
+    public SKSizeI? ExpectedSize { get; init; }
+    public double? MaxAverageColorErrorFraction { get; init; }
+}
+
 // Checks that sample output is a decodable image with the expected dimensions.
 internal static class SampleImage
 {
     private const decimal MaximumErrorPixelFraction = 0.00075m;
 
-    public static void Validate(ReadOnlySpan<byte> png) => Validate(png, 800, 600);
-
-    public static void Validate(ReadOnlySpan<byte> png, int width, int height)
+    public static void Validate(ReadOnlySpan<byte> png, int width = 800, int height = 600)
     {
         Assert.True(png.StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }), "Expected a PNG file.");
 
@@ -19,37 +23,28 @@ internal static class SampleImage
         Assert.Equal(height, bitmap.Height);
     }
 
-    internal static void ValidateFile(string actual, int width, int height, string golden)
+    internal static void ValidateFile(string actual, string golden, SampleImageOptions? options = null)
     {
-        Validate(File.ReadAllBytes(actual), width, height);
-        ValidateFile(actual, golden);
-    }
-
-    internal static void ValidateFile(string actual, string golden) =>
-        ValidateFile(actual, golden, null);
-
-    internal static void ValidateFile(string actual, string golden, double? maxAverageColorErrorFraction)
-    {
+        if (options?.ExpectedSize is { } size)
+            Validate(File.ReadAllBytes(actual), size.Width, size.Height);
         TestContext.Current.AddFileAttachment(actual, "image/png");
 
         CompareGolden(actual, Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", golden),
-            maxAverageColorErrorFraction);
+            options);
     }
 
-    internal static async Task SaveAndValidate(byte[] png, string actual, int width, int height, string golden)
+    internal static async Task SaveAndValidate(byte[] png, string actual, string golden, SampleImageOptions? options = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(actual)!);
 
         await File.WriteAllBytesAsync(actual, png);
 
-        ValidateFile(actual, width, height, golden);
+        ValidateFile(actual, golden, options);
     }
 
-    internal static void CompareGolden(string actual, string expected) =>
-        CompareGolden(actual, expected, null);
-
-    internal static void CompareGolden(string actual, string expected, double? maxAverageColorErrorFraction)
+    internal static void CompareGolden(string actual, string expected, SampleImageOptions? options = null)
     {
+        var maxAverageColorErrorFraction = options?.MaxAverageColorErrorFraction;
         if (maxAverageColorErrorFraction is { } maximum)
             Assert.InRange(maximum, 0, 1);
         Assert.True(File.Exists(expected), $"Missing reviewed sample golden: {expected}. Actual image retained at {actual}.");
@@ -58,6 +53,11 @@ internal static class SampleImage
         using var expectedImage = SKImage.FromEncodedData(expected);
         Assert.NotNull(actualImage);
         Assert.NotNull(expectedImage);
+        if (options?.ExpectedSize is { } size)
+        {
+            Assert.Equal(size.Width, actualImage.Width);
+            Assert.Equal(size.Height, actualImage.Height);
+        }
         Assert.Equal(expectedImage.Width, actualImage.Width);
         Assert.Equal(expectedImage.Height, actualImage.Height);
 

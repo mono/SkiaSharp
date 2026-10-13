@@ -45,7 +45,8 @@ public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<Docke
             var output = OperatingSystem.IsWindows() ? @"C:\app\output.png" : "/app/output.png";
             await app.DownloadFile(output, image);
 
-            SampleImage.ValidateFile(image, 800, 600, $"Docker/{ContainerPlatform}/console.png");
+            SampleImage.ValidateFile(image, $"Docker/{ContainerPlatform}/console.png",
+                new() { ExpectedSize = new(800, 600) });
         });
 
     [Fact]
@@ -65,7 +66,6 @@ public class DockerSampleTests(DockerSampleFixture docker) : IClassFixture<Docke
             await SampleImage.SaveAndValidate(
                 await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken),
                 Path.Combine(app.Diagnostics, "output.png"),
-                800, 600,
-                $"Docker/{ContainerPlatform}/web.png");
+                $"Docker/{ContainerPlatform}/web.png", new() { ExpectedSize = new(800, 600) });
         });
 }

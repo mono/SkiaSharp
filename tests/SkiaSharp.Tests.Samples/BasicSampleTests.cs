@@ -46,7 +46,8 @@ public class BasicSampleTests : SampleTestBase
 
             var image = Path.Combine(app.Diagnostics, "output.png");
             File.Copy(Path.Combine(Path.GetDirectoryName(project)!, "output.png"), image);
-            SampleImage.ValidateFile(image, 800, 600, $"Host/{SampleLookup.HostPlatform}/console.png");
+            SampleImage.ValidateFile(image, $"Host/{SampleLookup.HostPlatform}/console.png",
+                new() { ExpectedSize = new(800, 600) });
         });
 
     [Fact]
@@ -67,8 +68,7 @@ public class BasicSampleTests : SampleTestBase
             await SampleImage.SaveAndValidate(
                 await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken),
                 Path.Combine(app.Diagnostics, "output.png"),
-                512, 512,
-                $"Host/{SampleLookup.HostPlatform}/web.png");
+                $"Host/{SampleLookup.HostPlatform}/web.png", new() { ExpectedSize = new(512, 512) });
         });
 
     [Fact]
@@ -121,7 +121,7 @@ public class BasicSampleTests : SampleTestBase
             await app.WaitForElement(".canvas-container canvas");
             var screenshot = await app.Screenshot();
             SampleImage.ValidateFile(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-gpu-page.png",
-                maxAverageColorErrorFraction: 0.06);
+                new() { MaxAverageColorErrorFraction = 0.06 });
         });
 
     [Fact]

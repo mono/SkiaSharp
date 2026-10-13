@@ -320,6 +320,43 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
+    public async Task ImageOptionsApplyToSavedFilesAndDirectComparisonsWithoutMutation()
+    {
+        using var bitmap = new SKBitmap(16, 12);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "options.expected.png");
+        var actual = Path.Combine(root, "options.actual.png");
+        var options = new SampleImageOptions { ExpectedSize = new(16, 12) };
+
+        await SampleImage.SaveAndValidate(File.ReadAllBytes(expected), actual, expected, options);
+        SampleImage.CompareGolden(actual, expected, options);
+        Assert.Equal(new SKSizeI(16, 12), options.ExpectedSize);
+        Assert.Null(options.MaxAverageColorErrorFraction);
+
+        var wrongSize = options with { ExpectedSize = new(15, 12) };
+        Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected, wrongSize));
+        Assert.ThrowsAny<Exception>(() => SampleImage.ValidateFile(actual, expected, wrongSize));
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            SampleImage.SaveAndValidate(File.ReadAllBytes(expected),
+                Path.Combine(root, "wrong-size.actual.png"), expected, wrongSize));
+        Assert.Equal(new SKSizeI(16, 12), options.ExpectedSize);
+    }
+
+    [Theory]
+    [InlineData(-0.01)]
+    [InlineData(1.01)]
+    [InlineData(double.NaN)]
+    public void ImageOptionsRejectInvalidAverageColorErrorLimits(double limit)
+    {
+        using var bitmap = new SKBitmap(4, 4);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "invalid-options.expected.png");
+        var actual = SavePng(bitmap, "invalid-options.actual.png");
+        Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected,
+            new() { MaxAverageColorErrorFraction = limit }));
+    }
+
+    [Fact]
     public void GoldenComparisonSupportsPageSizesAndRetainsPixelDifferences()
     {
         Directory.CreateDirectory(root);
@@ -367,12 +404,13 @@ public class SampleInfrastructureTests : IDisposable
         var expected = SavePng(bitmap, "average.expected.png");
         bitmap.Erase(new SKColor(238, 17, 17));
         var actual = SavePng(bitmap, "average.actual.png");
-        SampleImage.CompareGolden(actual, expected, 0.05);
+        SampleImage.CompareGolden(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 });
         Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
 
         bitmap.SetPixel(0, 0, new SKColor(238, 18, 17));
         SavePng(bitmap, "average.actual.png");
-        var error = Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected, 0.05));
+        var error = Assert.ThrowsAny<Exception>(() =>
+            SampleImage.CompareGolden(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 }));
         Assert.Contains("average RGBA color error", error.Message);
         Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
     }
@@ -385,10 +423,11 @@ public class SampleInfrastructureTests : IDisposable
         var expected = SavePng(bitmap, "channel.expected.png");
         bitmap.Erase(new SKColor(247, 8, 8));
         var actual = SavePng(bitmap, "channel.actual.png");
-        SampleImage.CompareGolden(actual, expected, 0.05);
+        SampleImage.CompareGolden(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 });
         var error = Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected));
         Assert.Contains("192/192", error.Message);
-        Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected, 0));
+        Assert.ThrowsAny<Exception>(() =>
+            SampleImage.CompareGolden(actual, expected, new() { MaxAverageColorErrorFraction = 0 }));
     }
 
     [Fact]
@@ -399,11 +438,12 @@ public class SampleInfrastructureTests : IDisposable
         var expected = SavePng(bitmap, "alpha.expected.png");
         bitmap.Erase(new SKColor(0, 0, 0, 204));
         var actual = SavePng(bitmap, "alpha.actual.png");
-        SampleImage.CompareGolden(actual, expected, 0.05);
+        SampleImage.CompareGolden(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 });
 
         bitmap.SetPixel(0, 0, new SKColor(0, 0, 0, 203));
         SavePng(bitmap, "alpha.actual.png");
-        Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected, 0.05));
+        Assert.ThrowsAny<Exception>(() =>
+            SampleImage.CompareGolden(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 }));
     }
 
     [Fact]
@@ -415,11 +455,12 @@ public class SampleInfrastructureTests : IDisposable
         bitmap.Erase(new SKColor(234, 20, 20));
         bitmap.SetPixel(0, 0, new SKColor(233, 20, 20));
         var actual = SavePng(bitmap, "gpu-budget.actual.png");
-        SampleImage.CompareGolden(actual, expected, 0.06);
+        SampleImage.CompareGolden(actual, expected, new() { MaxAverageColorErrorFraction = 0.06 });
 
         bitmap.SetPixel(1, 0, new SKColor(233, 20, 20));
         SavePng(bitmap, "gpu-budget.actual.png");
-        Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected, 0.06));
+        Assert.ThrowsAny<Exception>(() =>
+            SampleImage.CompareGolden(actual, expected, new() { MaxAverageColorErrorFraction = 0.06 }));
     }
 
     [Fact]
