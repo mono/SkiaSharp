@@ -223,6 +223,20 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
+    public void RepeatedAttachmentsPreserveEachDiagnosticSnapshot()
+    {
+        FileIn("snapshot.txt", "First diagnostic.");
+        var path = Path.Combine(root, "snapshot.txt");
+        TestContext.Current.AddFileAttachment(path, "text/plain");
+        File.WriteAllText(path, "Second diagnostic.");
+        TestContext.Current.AddFileAttachment(path, "text/plain");
+        TestContext.Current.AddFileAttachment(path, "text/plain", "snapshot.txt");
+        Assert.Contains("snapshot.txt", TestContext.Current.Attachments!.Keys);
+        Assert.Contains("snapshot.txt-2", TestContext.Current.Attachments.Keys);
+        Assert.Contains("snapshot.txt-3", TestContext.Current.Attachments.Keys);
+    }
+
+    [Fact]
     public void GoldenMismatchKeepsActualAndExpectedAttachmentsDistinct()
     {
         var actual = Path.Combine(root, "actual", "canvas.png");

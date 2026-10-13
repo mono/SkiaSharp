@@ -43,7 +43,7 @@ internal static class SampleImage
     {
         expected = Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", expected);
 
-        AttachImage(actual);
+        TestContext.Current.AddFileAttachment(actual, "image/png");
 
         options ??= new();
         var maxErrorPixelFraction = options.MaxErrorPixelFraction;
@@ -86,19 +86,11 @@ internal static class SampleImage
         var diffPath = Path.ChangeExtension(actual, ".diff.png");
         File.WriteAllBytes(diffPath, data.ToArray());
 
-        AttachImage(expected, $"expected-{Path.GetFileName(expected)}");
-        AttachImage(diffPath);
+        TestContext.Current.AddFileAttachment(expected, "image/png", $"expected-{Path.GetFileName(expected)}");
+        TestContext.Current.AddFileAttachment(diffPath, "image/png");
 
         Assert.Fail($"Sample pixels differ from {expected}: {result.ErrorPixelCount}/{result.TotalPixels} pixels; " +
             $"{comparison}; actual {actual}; diff {diffPath}.");
     }
 
-    private static void AttachImage(string file, string? name = null)
-    {
-        name ??= Path.GetFileName(file);
-        var attachmentName = name;
-        for (var suffix = 2; TestContext.Current.Attachments?.ContainsKey(attachmentName) == true; suffix++)
-            attachmentName = $"{name}-{suffix}";
-        TestContext.Current.AddFileAttachment(file, "image/png", attachmentName);
-    }
 }

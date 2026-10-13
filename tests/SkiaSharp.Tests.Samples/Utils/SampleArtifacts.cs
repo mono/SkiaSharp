@@ -18,6 +18,9 @@ internal static class SampleArtifacts
             context.TestOutputHelper?.WriteLine("Retained as a pipeline artifact rather than embedding more than 8 MiB in the test result.");
             return;
         }
-        context.AddAttachment(name, File.ReadAllBytes(file), mediaType);
+        var attachmentName = name;
+        for (var suffix = 2; context.Attachments?.ContainsKey(attachmentName) == true; suffix++)
+            attachmentName = $"{name}-{suffix}";
+        context.AddAttachment(attachmentName, File.ReadAllBytes(file), mediaType);
     }
 }
