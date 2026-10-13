@@ -1,4 +1,5 @@
-﻿using OpenQA.Selenium.Appium;
+﻿using OpenQA.Selenium;
+using OpenQA.Selenium.Appium;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -92,7 +93,7 @@ public sealed class IosSampleTests(AppiumFixture appium) : AppiumSampleTestBase
 
 	private static void NavigateMauiIos(AppiumRunningApp app, string title)
 	{
-		app.Click(MobileBy.IosNSPredicate("type == 'XCUIElementTypeButton' AND label == 'Menu'"));
+		app.Click(By.XPath("//XCUIElementTypeNavigationBar//XCUIElementTypeButton[@label='Menu']"));
 		app.Click(MobileBy.IosNSPredicate($"type == 'XCUIElementTypeButton' AND label == '{title}'"));
 	}
 }
