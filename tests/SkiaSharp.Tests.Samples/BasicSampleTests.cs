@@ -16,11 +16,10 @@ public class BasicSampleTests : SampleTestBase
     {
         var folder = Path.Combine("Basic", name);
         var sample = Cases().Single(sample => (string)sample[0] == folder);
-        var configuration = (string)sample[2];
-        var workspace = await BuildSample(folder, (string)sample[1], new DotNetBuildOptions { Configuration = configuration });
+        var options = new DotNetOptions { Configuration = (string)sample[2] };
+        var workspace = await BuildSample(folder, (string)sample[1], options);
         var project = Path.Combine(workspace.Root, "samples", folder, "SkiaSharpSample", "SkiaSharpSample.csproj");
-        await DotNet.Run(workspace, project, app => test(app, project),
-            new DotNetRunOptions { Configuration = configuration, Arguments = arguments.ToArray() });
+        await DotNet.Run(workspace, project, arguments, app => test(app, project), options);
     }
 
     [Theory]
@@ -28,7 +27,7 @@ public class BasicSampleTests : SampleTestBase
     [Trait("Category", "SampleBuild")]
     [MemberData(nameof(Cases))]
     public Task GeneratedSampleBuilds(string folder, string solution, string configuration) =>
-        BuildSample(folder, solution, new DotNetBuildOptions { Configuration = configuration });
+        BuildSample(folder, solution, new() { Configuration = configuration });
 
     public static IEnumerable<object[]> ConsoleCases()
     {

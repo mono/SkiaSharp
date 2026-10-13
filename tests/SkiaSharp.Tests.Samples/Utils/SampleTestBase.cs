@@ -27,9 +27,10 @@ public abstract class SampleTestBase : IDisposable
         return workspace;
     }
 
-    protected async Task<SampleWorkspace> BuildSample(string folder, string solution, DotNetBuildOptions options)
+    protected async Task<SampleWorkspace> BuildSample(string folder, string solution, DotNetOptions? options = null)
     {
-        ArgumentNullException.ThrowIfNull(options);
+        options ??= new();
+        options.Validate();
         var prepared = PrepareSample(folder);
 
         var project = Path.Combine(prepared.Root, "samples", folder, solution);

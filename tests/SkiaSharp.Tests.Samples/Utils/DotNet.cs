@@ -37,20 +37,11 @@ public static class DotNet
         return selected;
     }
 
-    public static Task Build(SampleWorkspace workspace, string project, string diagnostics, DotNetBuildOptions options)
+    public static async Task Build(
+        SampleWorkspace workspace, string project, string diagnostics, DotNetOptions? options = null)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.Configuration);
-        if (options.Framework is not null)
-            ArgumentException.ThrowIfNullOrWhiteSpace(options.Framework);
-        ArgumentNullException.ThrowIfNull(options.Properties);
-        return BuildImplementation(workspace, project, diagnostics, options.Configuration, options.Framework, options.Properties);
-    }
-
-    private static async Task BuildImplementation(
-        SampleWorkspace workspace, string project, string diagnostics, string configuration, string? framework,
-        IReadOnlyDictionary<string, string>? properties = null)
-    {
+        options ??= new();
+        options.Validate();
         project = Path.GetFullPath(project);
         diagnostics = Path.GetFullPath(diagnostics);
         Directory.CreateDirectory(diagnostics);
@@ -62,11 +53,11 @@ public static class DotNet
         await File.WriteAllTextAsync(stderrLog, "");
         try
         {
-            var arguments = BuildArguments(workspace, project, diagnostics, configuration, framework, properties);
-            var result = await Execute(workspace, arguments, new DotNetCommandOptions
+            var arguments = BuildArguments(workspace, project, diagnostics, options);
+            var result = await Execute(workspace, arguments, options with
             {
-                Timeout = TimeSpan.FromMinutes(30),
-                WorkingDirectory = Path.GetDirectoryName(project)
+                Timeout = options.Timeout ?? TimeSpan.FromMinutes(30),
+                WorkingDirectory = options.GetWorkingDirectory(Path.GetDirectoryName(project)!)
             });
             await File.WriteAllTextAsync(stdoutLog, result.Output);
             await File.WriteAllTextAsync(stderrLog, result.Error);
@@ -90,52 +81,48 @@ public static class DotNet
     }
 
     internal static string[] BuildArguments(
-        SampleWorkspace workspace, string project, string diagnostics, string configuration, string? framework,
-        IReadOnlyDictionary<string, string>? properties = null)
+        SampleWorkspace workspace, string project, string diagnostics, DotNetOptions? options = null)
     {
+        options ??= new();
+        options.Validate();
         var arguments = new List<string>
         {
-            "build", Path.GetFullPath(project), "-c", configuration, "--nologo", "-v:minimal",
+            "build", Path.GetFullPath(project), "-c", options.Configuration, "--nologo", "-v:minimal",
             $"-bl:{Path.Combine(Path.GetFullPath(diagnostics), "build.binlog")}",
             $"-p:RestoreConfigFile={Path.Combine(workspace.Root, "NuGet.Config")}",
             "-p:RestoreNoCache=true",
             "-p:UseSharedCompilation=false"
         };
-        if (framework is not null)
+        if (options.Framework is not null)
         {
-            RootFrameworkSelection.Write(workspace, project, framework, diagnostics);
-            arguments.AddRange(["--framework", framework,
-                $"-p:SampleRootProject={Path.GetFullPath(project)}", $"-p:SampleRootFramework={framework}"]);
+            RootFrameworkSelection.Write(workspace, project, options.Framework, diagnostics);
+            arguments.AddRange([$"-p:SampleRootProject={Path.GetFullPath(project)}", $"-p:SampleRootFramework={options.Framework}"]);
         }
-        if (properties is not null)
-        {
-            foreach (var (name, value) in properties)
-            {
-                ArgumentException.ThrowIfNullOrWhiteSpace(name);
-                if (name.Equals("TargetFramework", StringComparison.OrdinalIgnoreCase) ||
-                    name.Equals("TargetFrameworks", StringComparison.OrdinalIgnoreCase) ||
-                    name.Equals("Configuration", StringComparison.OrdinalIgnoreCase) ||
-                    arguments.Any(argument => argument.StartsWith($"-p:{name}=", StringComparison.OrdinalIgnoreCase)))
-                    throw new ArgumentException($"Build property {name} is already owned by the sample helper.", nameof(properties));
-                arguments.Add($"-p:{name}={value}");
-            }
-        }
+        AddOptionsArguments(arguments, options);
         return arguments.ToArray();
     }
 
     internal static Task<(int ExitCode, string Output, string Error)> Execute(
-        SampleWorkspace workspace, IEnumerable<string> arguments, DotNetCommandOptions? options = null)
+        SampleWorkspace workspace,
+        IEnumerable<string> arguments,
+        DotNetOptions? options = null)
     {
-        options ??= new DotNetCommandOptions();
-        return ProcessRunner.Run("dotnet", arguments, options.WorkingDirectory ?? workspace.Root, options.Timeout,
+        options ??= new();
+        options.Validate();
+        return ProcessRunner.Run(
+            "dotnet",
+            arguments,
+            options.GetWorkingDirectory(workspace.Root),
+            options.Timeout ?? TimeSpan.FromMinutes(1),
             start => ConfigureProcess(start, workspace));
     }
 
     internal static Process Start(SampleWorkspace workspace, IEnumerable<string> arguments,
-        DotNetCommandOptions? options = null, Action<ProcessStartInfo>? configure = null)
+        DotNetOptions? options = null, Action<ProcessStartInfo>? configure = null)
     {
-        options ??= new DotNetCommandOptions();
-        return ProcessRunner.Start("dotnet", arguments, options.WorkingDirectory ?? workspace.Root,
+        options ??= new();
+        options.Validate();
+        return ProcessRunner.Start("dotnet", arguments, options.GetWorkingDirectory(workspace.Root),
             start =>
             {
                 ConfigureProcess(start, workspace);
@@ -144,48 +131,44 @@ public static class DotNet
     }
 
     internal static Task<(int ExitCode, string Output, string Error)> ExecuteTool(
-        string tool, IEnumerable<string> arguments, DotNetCommandOptions? options = null)
+        string tool, IEnumerable<string> arguments, DotNetOptions? options = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tool);
-        options ??= new DotNetCommandOptions();
-        if (options.WorkingDirectory is not null && Path.GetFullPath(options.WorkingDirectory) != Repo.RootDir)
+        options ??= new();
+        options.Validate();
+        if (options.GetWorkingDirectory(Repo.RootDir) != Repo.RootDir)
             throw new ArgumentException("Repository tools must resolve the pinned manifest from the repository root.", nameof(options));
-        return ProcessRunner.Run("dotnet", ["tool", "run", tool, "--", .. arguments], Repo.RootDir, options.Timeout);
+        return ProcessRunner.Run("dotnet", ["tool", "run", tool, "--", .. arguments], Repo.RootDir,
+            options.Timeout ?? TimeSpan.FromMinutes(1));
     }
 
-    internal static Process StartTool(string tool, IEnumerable<string> arguments)
+    internal static Process StartTool(string tool, IEnumerable<string> arguments, DotNetOptions? options = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tool);
+        options ??= new();
+        options.Validate();
+        if (options.GetWorkingDirectory(Repo.RootDir) != Repo.RootDir)
+            throw new ArgumentException("Repository tools must resolve the pinned manifest from the repository root.", nameof(options));
         // Preserve the explicitly restored tool resolver/cache instead of replacing its CLI home.
         return ProcessRunner.Start("dotnet", ["tool", "run", tool, "--", .. arguments], Repo.RootDir);
     }
 
-    internal static Task Run(SampleWorkspace workspace, string project, Func<DotNetRunningApp, Task> test,
-        DotNetRunOptions options)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.Configuration);
-        if (options.Framework is not null)
-            ArgumentException.ThrowIfNullOrWhiteSpace(options.Framework);
-        ArgumentNullException.ThrowIfNull(options.Arguments);
-        return RunImplementation(workspace, project, options.Configuration, options.Framework, options.Arguments, test);
-    }
-
-    private static async Task RunImplementation(
+    internal static async Task Run(
         SampleWorkspace workspace,
         string project,
-        string configuration,
-        string? framework,
         IEnumerable<string> arguments,
-        Func<DotNetRunningApp, Task> test)
+        Func<DotNetRunningApp, Task> test,
+        DotNetOptions? options = null)
     {
+        options ??= new();
+        options.Validate();
+        project = Path.GetFullPath(project);
         var diagnostics = Path.Combine(workspace.DiagnosticsRoot, "run");
         Directory.CreateDirectory(diagnostics);
 
         using var process = ProcessRunner.Start("dotnet",
-            ["run", "--project", project, "-c", configuration, "--no-build", "--no-launch-profile",
-                .. (framework is null ? Array.Empty<string>() : new[] { "--framework", framework }), "--", .. arguments],
-            Path.GetDirectoryName(project)!,
+            RunArguments(project, arguments, options),
+            options.GetWorkingDirectory(Path.GetDirectoryName(project)!),
             start =>
             {
                 ConfigureProcess(start, workspace);
@@ -195,8 +178,30 @@ public static class DotNet
                 start.Environment["Logging__LogLevel__Microsoft.Hosting.Lifetime"] = "Information";
             });
 
-        var app = new DotNetRunningApp(process, diagnostics);
+        var app = new DotNetRunningApp(process, diagnostics, options.Timeout);
         await app.Run(() => test(app));
+    }
+
+    internal static string[] RunArguments(string project, IEnumerable<string> arguments, DotNetOptions? options = null)
+    {
+        options ??= new();
+        options.Validate();
+        var result = new List<string>
+        {
+            "run", "--project", Path.GetFullPath(project), "-c", options.Configuration, "--no-build", "--no-launch-profile"
+        };
+        AddOptionsArguments(result, options);
+        result.Add("--");
+        result.AddRange(arguments);
+        return result.ToArray();
+    }
+
+    private static void AddOptionsArguments(List<string> arguments, DotNetOptions options)
+    {
+        if (options.Framework is not null)
+            arguments.AddRange(["--framework", options.Framework]);
+        foreach (var (name, value) in options.Properties)
+            arguments.Add($"-p:{name}={value}");
     }
 
     internal static void ConfigureProcess(ProcessStartInfo start, SampleWorkspace workspace)

@@ -70,6 +70,20 @@ packages. The runner uses the repository SDK; sample builds use `dotnet` from
 the inherited `PATH`, without changing project TFMs. Set the intended SDK and
 platform environment before launching the terminal or IDE.
 
+Sample helpers accept one optional `DotNetOptions` record. For example,
+`BuildSample(folder, project, new() { Framework = "net10.0-android" })`
+selects a declared root framework without retargeting referenced libraries.
+Reuse the same options with `DotNet.Build` and the callback-based `DotNet.Run`;
+additional `Properties` are passed to both before run's `--` separator.
+Configuration defaults to Release. `WorkingDirectory` defaults to the project
+directory (workspace root for raw `DotNet.Execute` commands).
+`Timeout` defaults to 30 minutes for builds and one minute for raw commands.
+For sample runs it overrides only address/exit waits (normally two/three minutes),
+not callback duration or browser-operation waits; cleanup/output reads stay bounded
+to one minute. Configuration, framework and helper-owned restore properties cannot
+be overridden through `Properties`.
+
+
 ## Coverage and diagnostics
 
 The suite builds host-eligible Basic and Gallery solutions. Gallery, WASM, and

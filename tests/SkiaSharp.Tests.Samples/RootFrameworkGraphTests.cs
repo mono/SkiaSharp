@@ -69,7 +69,7 @@ public sealed class RootFrameworkGraphTests
                     ["msbuild", project, "-t:GenerateRestoreGraphFile", "-nologo", "-v:quiet",
                         $"-p:SampleRootProject={selectedRoot}", $"-p:SampleRootFramework={framework}",
                         $"-p:RestoreGraphOutputPath={output}", $"-p:RestoreConfigFile={config}"],
-                    new DotNetCommandOptions { Timeout = TimeSpan.FromMinutes(2) });
+                    new DotNetOptions { Timeout = TimeSpan.FromMinutes(2) });
         }
         finally
         {

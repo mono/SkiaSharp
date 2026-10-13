@@ -116,7 +116,7 @@ internal sealed class Android
     private static async Task<ToolCommandResult> Execute(string[] arguments, TimeSpan? timeout = null)
     {
         var result = await DotNet.ExecuteTool("android", arguments,
-            new DotNetCommandOptions { Timeout = timeout ?? TimeSpan.FromSeconds(30) });
+            new DotNetOptions { Timeout = timeout ?? TimeSpan.FromSeconds(30) });
         return new($"dotnet tool run android -- {string.Join(" ", arguments)}", result.ExitCode, result.Output, result.Error);
     }
 }

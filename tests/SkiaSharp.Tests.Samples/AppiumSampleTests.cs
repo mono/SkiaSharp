@@ -19,7 +19,7 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
     public async Task BasicAndroidRendersAndDraws(string folder, string applicationId, bool maui, int api)
     {
         const string project = "SkiaSharpSample/SkiaSharpSample.csproj";
-        var workspace = await BuildSample(folder, project, new DotNetBuildOptions
+        var workspace = await BuildSample(folder, project, new DotNetOptions
         {
             Configuration = "Debug", Framework = "net10.0-android",
             Properties = new Dictionary<string, string> { ["AndroidPackageFormats"] = "apk" }
@@ -164,7 +164,7 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
     {
         const string folder = "Gallery";
         const string project = "Maui/SkiaSharpSample.Maui.csproj";
-        var workspace = await BuildSample(folder, project, new DotNetBuildOptions
+        var workspace = await BuildSample(folder, project, new DotNetOptions
         {
             Configuration = "Debug", Framework = "net10.0-android",
             Properties = new Dictionary<string, string> { ["AndroidPackageFormats"] = "apk" }
@@ -214,7 +214,7 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
     {
         var rid = (simulator ? "iossimulator" : framework == "net10.0-macos" ? "osx" : "maccatalyst")
             + "-" + HostArchitecture();
-        var workspace = await BuildSample(folder, project, new DotNetBuildOptions
+        var workspace = await BuildSample(folder, project, new DotNetOptions
         {
             Configuration = "Debug", Framework = framework,
             Properties = new Dictionary<string, string> { ["RuntimeIdentifier"] = rid }
@@ -237,7 +237,7 @@ public sealed class AppiumSampleTests(AppiumFixture appium) : SampleTestBase
                 ["RuntimeIdentifier"] = (nativeWinUi ? "win10-" : "win-") + architecture,
                 ["AppxPackageSigningEnabled"] = "false"
             };
-        var workspace = await BuildSample(folder, project, new DotNetBuildOptions
+        var workspace = await BuildSample(folder, project, new DotNetOptions
         {
             Configuration = "Debug", Framework = framework, Properties = properties
         });
