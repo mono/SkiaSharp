@@ -12,14 +12,6 @@ or Linux containers on macOS/Linux. CI does not provision Docker on macOS.
 Unavailable Docker produces visible skips; wrong container mode and sample
 failures fail the tests.
 
-CI runs eight execution-target jobs: Build, Host, and Docker on Windows/Linux,
-and Build and Host on macOS. All use the existing repository SDK and host
-toolchain. Docker retains its existing image SDK pins.
-Like the other test jobs, Samples jobs disable successful whole-output
-publication, publish TRX results explicitly, and declare logs through the shared
-`publishArtifacts` mechanism with `always: true` for success/failure retention.
-The shared failed-run whole-output diagnostic artifact remains enabled.
-
 **Bootstrap before staging packages:** bootstrap resets `output/`.
 For managed-only work:
 
@@ -54,9 +46,9 @@ generation uses the supplied arguments, not package-filename version detection.
 Cake streams active-test progress and test output to the console while retaining
 TRX results and diagnostic artifacts.
 
-To select one execution partition, add `--runGroup=Build`, `--runGroup=Host`,
-or `--runGroup=Docker`. Omit it for the full local suite as before. Unknown
-groups fail explicitly.
+To run one group, add `--runGroup=Build`, `--runGroup=Host`, or
+`--runGroup=Docker`. Omit `--runGroup` to run the full suite.
+Group names are case-sensitive.
 
 ## IDE and direct test runs
 
@@ -84,13 +76,16 @@ Blazor are build-only; Console/Web runtime tests check exit codes, HTTP response
 and PNGs on the host and in Docker. Generated-project tests check exact package
 versions and Uno's SkiaSharp override. Integration/MSBuild suites remain separate.
 
-Annotate tests with typed `RunGroup` attributes by execution target, not sample
-family: compile-only and infrastructure tests use Build, Console/HTTP execution
-uses Host, and containers use Docker. Android/Ios/Mac/Windows are reserved for
-future native execution tests; they have no CI jobs. Use class groups only for
-homogeneous classes; mixed classes need method groups. The Samples-only compiler
-analyzer requires exactly one valid effective group and rejects raw `RunGroup`
-traits. It does not reconcile discovery or CI routing.
+| Group | Tests | CI hosts |
+| --- | --- | --- |
+| Build | Generated sample compilation and infrastructure checks | Windows, macOS, Linux |
+| Host | Console and Web sample execution | Windows, macOS, Linux |
+| Docker | Container image builds and sample execution | Windows, Linux |
+
+When adding tests, choose a `RunGroup` by execution target, not sample family.
+Each test requires exactly one typed attribute, such as
+`[RunGroup(SampleRunGroup.Build)]`. Apply it to a class only when every test uses
+the same group; otherwise annotate individual methods.
 
 Use IDE filters or select one test:
 
