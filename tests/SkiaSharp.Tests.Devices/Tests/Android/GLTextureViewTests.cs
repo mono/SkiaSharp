@@ -8,6 +8,8 @@ using Microsoft.Maui.Controls;
 using SkiaSharp.Tests;
 using SkiaSharp.Views.Maui.Controls.Tests;
 using Xunit;
+using Handler = Android.OS.Handler;
+using Looper = Android.OS.Looper;
 using MauiGLView = SkiaSharp.Views.Maui.Controls.SKGLView;
 
 namespace SkiaSharp.Views.Android.Tests;
@@ -49,6 +51,70 @@ public class GLTextureViewTests : SKUITests
 
 			view.HasRenderLoop = true;
 			await AssertDisplayPaced(paints);
+		});
+
+	[UIFact]
+	public Task Issue_533_GLThreadRenderModeTransitionsRestartFrameCallbacks() =>
+		WithTextureView(false, async (view, platformView, paints) =>
+		{
+			using var handler = new Handler(Looper.MainLooper!);
+			var dirty = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+			var continuous = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+			var before = paints.Count;
+			var prepared = false;
+			using var afterDisplayFrame = new DisplayFrames(() => ChangeMode(Rendermode.Continuously, continuous));
+			using var beforeDisplayFrame = new DisplayFrames(() =>
+			{
+				if (prepared)
+				{
+					ChangeMode(Rendermode.WhenDirty, dirty);
+				}
+				else if (paints.Count > before)
+				{
+					prepared = true;
+					// Register after the view reposts its callback for the next display frame.
+					handler.Post(afterDisplayFrame.Start);
+				}
+			});
+
+			beforeDisplayFrame.Start();
+			platformView.RenderMode = Rendermode.Continuously;
+			try
+			{
+				// Change mode around the view's callback, before either queued update can run.
+				await Task.WhenAll(dirty.Task, continuous.Task).WaitAsync(TimeSpan.FromSeconds(5));
+			}
+			finally
+			{
+				handler.RemoveCallbacksAndMessages(null);
+				beforeDisplayFrame.Stop();
+				afterDisplayFrame.Stop();
+			}
+
+			Assert.Equal(Rendermode.Continuously, platformView.RenderMode);
+			await AssertDisplayPaced(paints);
+
+			void ChangeMode(Rendermode mode, TaskCompletionSource completed)
+			{
+				if (completed.Task.IsCompleted)
+					return;
+
+				try
+				{
+					var changed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+					platformView.QueueEvent(() =>
+					{
+						platformView.RenderMode = mode;
+						changed.TrySetResult();
+					});
+					Assert.True(changed.Task.Wait(TimeSpan.FromSeconds(5)), "The GL thread did not change render mode.");
+					completed.TrySetResult();
+				}
+				catch (Exception error)
+				{
+					completed.TrySetException(error);
+				}
+			}
 		});
 
 	[UIFact]
@@ -237,7 +303,17 @@ public class GLTextureViewTests : SKUITests
 	private sealed class DisplayFrames : Java.Lang.Object, Choreographer.IFrameCallback
 	{
 		private readonly Choreographer choreographer = Choreographer.Instance!;
+		private readonly Action? onFrame;
 		private bool running;
+
+		public DisplayFrames()
+		{
+		}
+
+		public DisplayFrames(Action onFrame)
+		{
+			this.onFrame = onFrame;
+		}
 
 		public int Count { get; private set; }
 
@@ -259,6 +335,7 @@ public class GLTextureViewTests : SKUITests
 				return;
 
 			Count++;
+			onFrame?.Invoke();
 			choreographer.PostFrameCallback(this);
 		}
 	}

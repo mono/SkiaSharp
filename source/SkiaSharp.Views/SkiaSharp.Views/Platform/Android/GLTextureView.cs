@@ -904,6 +904,7 @@ namespace SkiaSharp.Views.Android
 			private Rendermode renderMode;
 			private bool requestRender;
 			private bool frameRenderRequested;
+			private bool frameCallbackPosted;
 			private bool frameCallbackUpdatePending;
 			private bool frameHandlerDisposed;
 			private bool renderComplete;
@@ -955,12 +956,17 @@ namespace SkiaSharp.Views.Android
 							// Choreographer must be obtained on a Looper thread, not the GL worker.
 							choreographer = Choreographer.Instance;
 							frameCallback = new FrameCallback(this);
+						}
+						if (!frameCallbackPosted)
+						{
+							frameCallbackPosted = true;
 							choreographer.PostFrameCallback(frameCallback);
 						}
 					}
 					else
 					{
 						frameRenderRequested = false;
+						frameCallbackPosted = false;
 						if (frameCallback != null)
 						{
 							choreographer.RemoveFrameCallback(frameCallback);
@@ -991,7 +997,11 @@ namespace SkiaSharp.Views.Android
 				{
 					lock (owner.threadManager)
 					{
-						if (owner.frameCallback != this || !owner.ShouldScheduleFrameCallback())
+						if (owner.frameCallback != this)
+							return;
+
+						owner.frameCallbackPosted = false;
+						if (!owner.ShouldScheduleFrameCallback())
 						{
 							owner.UpdateFrameCallbackLocked();
 							return;
@@ -1000,6 +1010,7 @@ namespace SkiaSharp.Views.Android
 						// One pending frame at most; all rendering stays on the GL thread.
 						owner.frameRenderRequested = true;
 						Monitor.PulseAll(owner.threadManager);
+						owner.frameCallbackPosted = true;
 						owner.choreographer.PostFrameCallback(this);
 					}
 				}
