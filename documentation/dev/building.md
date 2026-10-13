@@ -205,9 +205,10 @@ Download the `nuget` artifact from one exact completed SkiaSharp CI build and
 place its packages in `output/nugets`. Record the build URL/commit when reporting
 results. Do not combine different builds or substitute published packages for
 missing artifacts. Both families require their core, `NativeAssets.Win32`,
-`NativeAssets.macOS`, `NativeAssets.Linux`, and `NativeAssets.WebAssembly` packages; NoDependencies cases also
-require `SkiaSharp.NativeAssets.Linux.NoDependencies`. Package versions are read
-from their nuspec metadata, not inferred from the checkout.
+`NativeAssets.macOS`, `NativeAssets.Linux`, and `NativeAssets.WebAssembly`
+packages; NoDependencies cases also require
+`SkiaSharp.NativeAssets.Linux.NoDependencies`. Package versions are read from
+their nuspec metadata, not inferred from the checkout.
 
 For local runs, select the configured preview SDK in `global.json` before running
 either entry point below; keep the .NET 10 runtime installed for the test runner.
@@ -264,8 +265,8 @@ or mock CLI are used.
 
 Four additional theory cases cover each family with `build` and `publish` of a
 real console project declaring `TargetFrameworks=net10.0;net11.0`. The outer
-build omits `--framework` and `-o`, validating both normal
-per-framework output trees. Publish selects each framework separately with
+build omits `--framework` and `-o`, validating both normal per-framework
+output trees. Publish selects each framework separately with
 `--framework` and distinct output directories, then rechecks both trees to catch
 cross-framework overwrites. These cases validate eight framework outputs,
 including restored frameworks, runtime TFM, native paths, and package hashes.

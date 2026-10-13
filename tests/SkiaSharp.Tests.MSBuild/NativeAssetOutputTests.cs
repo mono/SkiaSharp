@@ -82,7 +82,7 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
             .ToDictionary(group => group.Attribute("targetFramework")!.Value,
                 group => group.Elements().Select(dependency => dependency.Attribute("id")!.Value).ToHashSet());
 
-        foreach (var framework in new[] { "net10.0", ".NETFramework4.6.2", ".NETStandard2.0" })
+        foreach (var framework in new[] { "net10.0", "net11.0", ".NETFramework4.6.2", ".NETStandard2.0" })
             Assert.Contains(family + ".NativeAssets.WebAssembly", dependencies[framework]);
         var android = dependencies.Single(group => group.Key.StartsWith("net10.0-android", StringComparison.Ordinal));
         Assert.DoesNotContain(family + ".NativeAssets.WebAssembly", android.Value);
