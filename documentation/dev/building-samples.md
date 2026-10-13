@@ -70,7 +70,8 @@ dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
 ```
 
 Use the Release script path for a Release build. CI installs Chromium before
-tests automatically; local tests do not. Linux `--with-deps` may require `sudo`.
+Host-group or unfiltered tests automatically; other groups and local tests do
+not. Linux `--with-deps` may require `sudo`.
 See [Playwright browser installation](https://playwright.dev/dotnet/docs/browsers).
 Filtered runs do not replace the full suite.
 
@@ -87,7 +88,7 @@ Browser errors and unavailable GPU rendering fail.
 | Group | Tests | CI hosts |
 | --- | --- | --- |
 | Build | Generated sample compilation and infrastructure checks | Windows, macOS, Linux |
-| Host | Console and Web sample execution | Windows, macOS, Linux |
+| Host | Console, Web API and browser sample execution | Windows, macOS, Linux |
 | Docker | Container image builds and sample execution | Windows, Linux |
 
 When adding tests, choose a `RunGroup` by execution target, not sample family.

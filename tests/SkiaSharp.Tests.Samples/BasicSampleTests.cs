@@ -71,6 +71,7 @@ public class BasicSampleTests : SampleTestBase
         });
 
     [Fact]
+    [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
@@ -84,6 +85,7 @@ public class BasicSampleTests : SampleTestBase
         });
 
     [Fact]
+    [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
@@ -97,6 +99,7 @@ public class BasicSampleTests : SampleTestBase
         });
 
     [Fact]
+    [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
@@ -110,6 +113,7 @@ public class BasicSampleTests : SampleTestBase
         });
 
     [Fact]
+    [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
@@ -124,6 +128,7 @@ public class BasicSampleTests : SampleTestBase
         });
 
     [Fact]
+    [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
@@ -202,6 +207,7 @@ public class BasicSampleTests : SampleTestBase
     }
 
     [Fact]
+    [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
@@ -215,6 +221,7 @@ public class BasicSampleTests : SampleTestBase
         });
 
     [Fact]
+    [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
@@ -312,6 +319,7 @@ public class BasicSampleTests : SampleTestBase
     }
 
     [Theory]
+    [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "Browser")]
     [InlineData("navigate")]
     [InlineData("wait")]
@@ -337,6 +345,7 @@ public class BasicSampleTests : SampleTestBase
     }
 
     [Fact]
+    [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "Browser")]
     public async Task BrowserCallbackReportsPageErrors()
     {
