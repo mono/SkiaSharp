@@ -153,10 +153,11 @@ Omitting options retains the strict pixel comparison and golden dimensions.
 
 ## Appium application runtime tests
 
-`AndroidSampleRunTests`, `IosSampleRunTests`, `MacSampleRunTests` and
-`WindowsSampleRunTests` run generated Basic and Gallery MAUI apps on Android,
+`AppiumAndroidSampleRunTests`, `AppiumIosSampleRunTests`, `AppiumMacSampleRunTests`
+and `AppiumWindowsSampleRunTests` run generated Basic and Gallery MAUI apps on Android,
 iOS, MacCatalyst and Windows, and native Basic Android, iOS, MacCatalyst,
-macOS and WinUI apps. Basic covers CPU rendering, drawing/clear and GPU smoke;
+macOS and WinUI apps. Basic visits every page and checks CPU/GPU rendering;
+separate MAUI touch tests draw two strokes and clear the drawing.
 Gallery covers search, filtering, Gradient controls and CPU/GPU rendering.
 
 After the package setup above, restore local tools with `dotnet tool restore`.
@@ -195,6 +196,8 @@ must already be installed. Unset these variables to return to local defaults.
 
 Appium receives the device profile and built app. XCUITest's
 `enforceFreshSimulatorCreation` creates, boots and deletes a fresh iOS simulator;
+its startup normalizes the status bar to `10:10`, fixed signal indicators and
+100% battery through Appium. This does not change the system clock or crop images.
 UiAutomator2's `avd` capability boots the uniquely named Android AVD.
 The small Android helper creates/deletes a unique `SkiaSharpSamples_<version>_<id>`
 AVD from the preinstalled image, because UiAutomator2 does not provide AVD

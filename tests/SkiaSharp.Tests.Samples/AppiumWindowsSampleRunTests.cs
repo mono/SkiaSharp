@@ -8,52 +8,55 @@ namespace SkiaSharp.Tests.Samples;
 [Collection(nameof(AppiumCollection))]
 [Trait("Category", "Device")]
 [Trait("Category", "Golden")]
-public sealed class WindowsSampleRunTests(AppiumFixture appium) : AppiumSampleRunTestBase
+public sealed class AppiumWindowsSampleRunTests(AppiumFixture appium) : AppiumSampleRunTestBase
 {
 	[Fact]
 	[RunGroup(SampleRunGroup.Windows)]
 	[Trait("Platform", "Windows")]
-	public async Task BasicMauiWindows()
+	public async Task BasicMauiWindowsNavigatePages()
 	{
 		Assert.SkipUnless(OperatingSystem.IsWindows(), "Windows desktop tests require Windows.");
 
-		var app = await BuildWindowsApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj",
-			"win-" + HostArchitecture());
+		var app = await BuildWindowsApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj");
 
 		await appium.Run(app, running =>
-		{
 			Basic(running, "Maui", "Windows", HostArchitecture(),
-				"basic-canvas-cpu", "basic-canvas-drawing", "basic-drawing-clear",
-				"basic-canvas-gpu", "basic-gpu-fps",
-				() => NavigateMauiWindows(running, "Drawing"),
-				() => NavigateMauiWindows(running, "GPU"),
-				() => NavigateMauiWindows(running, "CPU"));
-
-			return Task.CompletedTask;
-		});
+			[
+				new("CPU", "basic-canvas-cpu", "basic-cpu"),
+				new("GPU", "basic-canvas-gpu", "basic-gpu-smoke", new("basic-gpu-fps", HasFps), Animated: true),
+				new("Drawing", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
+			], NavigateMauiWindows));
 	}
 
 	[Fact]
 	[RunGroup(SampleRunGroup.Windows)]
 	[Trait("Platform", "Windows")]
-	public async Task BasicNativeWindows()
+	public async Task BasicNativeWindowsNavigatePages()
 	{
 		Assert.SkipUnless(OperatingSystem.IsWindows(), "Windows desktop tests require Windows.");
 
-		var app = await BuildWindowsApp("Basic/WinUI", "SkiaSharpSample/SkiaSharpSample.csproj",
-			"win10-" + HostArchitecture());
+		var app = await BuildWindowsApp("Basic/WinUI", "SkiaSharpSample/SkiaSharpSample.csproj");
 
 		await appium.Run(app, running =>
-		{
 			Basic(running, "Native", "Windows", HostArchitecture(),
-				"basic-canvas-cpu", "basic-canvas-drawing", "basic-drawing-clear",
-				"basic-canvas-gpu", "basic-gpu-fps",
-				() => running.Click("basic-navigation-drawing"),
-				() => running.Click("basic-navigation-gpu"),
-				() => running.Click("basic-navigation-cpu"));
+			[
+				new("basic-navigation-cpu", "basic-canvas-cpu", "basic-cpu"),
+				new("basic-navigation-gpu", "basic-canvas-gpu", "basic-gpu-smoke", new("basic-gpu-fps", HasFps), Animated: true),
+				new("basic-navigation-drawing", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
+			], NavigateNativeWindows));
+	}
 
-			return Task.CompletedTask;
-		});
+	[Fact]
+	[RunGroup(SampleRunGroup.Windows)]
+	[Trait("Platform", "Windows")]
+	public async Task BasicMauiWindowsDrawing()
+	{
+		Assert.SkipUnless(OperatingSystem.IsWindows(), "Windows desktop tests require Windows.");
+
+		var app = await BuildWindowsApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj");
+
+		await appium.Run(app, running =>
+			MauiDrawing(running, "Windows", HostArchitecture(), NavigateMauiWindows));
 	}
 
 	[Fact]
@@ -63,14 +66,12 @@ public sealed class WindowsSampleRunTests(AppiumFixture appium) : AppiumSampleRu
 	{
 		Assert.SkipUnless(OperatingSystem.IsWindows(), "Windows desktop tests require Windows.");
 
-		var app = await BuildWindowsApp("Gallery", "Maui/SkiaSharpSample.Maui.csproj",
-			"win-" + HostArchitecture());
+		var app = await BuildWindowsApp("Gallery", "Maui/SkiaSharpSample.Maui.csproj");
 
 		await appium.Run(app, running => Gallery(running, "Windows", HostArchitecture()));
 	}
 
-	private async Task<WindowsRunningApp> BuildWindowsApp(
-		string folder, string project, string runtimeIdentifier)
+	private async Task<WindowsRunningApp> BuildWindowsApp(string folder, string project)
 	{
 		const string framework = "net10.0-windows10.0.19041.0";
 		var architecture = HostArchitecture();
@@ -78,9 +79,18 @@ public sealed class WindowsSampleRunTests(AppiumFixture appium) : AppiumSampleRu
 		var properties = new Dictionary<string, string>
 		{
 			["Platform"] = architecture,
-			["RuntimeIdentifier"] = runtimeIdentifier,
 			["AppxPackageSigningEnabled"] = "false"
 		};
+
+		var prepared = PrepareSample(folder);
+		var selectedProject = Path.Combine(prepared.Root, "samples", folder, project);
+		var declaredRids = XDocument.Load(selectedProject)
+			.Descendants("RuntimeIdentifiers").SingleOrDefault()?.Value;
+		properties["RuntimeIdentifier"] = string.IsNullOrWhiteSpace(declaredRids)
+			? "win-" + architecture
+			: declaredRids.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+				.Single(rid => rid.EndsWith("-" + architecture, StringComparison.Ordinal));
+
 		var workspace = await BuildSample(folder, project, new DotNetOptions
 		{
 			Configuration = "Debug",
@@ -89,8 +99,7 @@ public sealed class WindowsSampleRunTests(AppiumFixture appium) : AppiumSampleRu
 		});
 
 		var output = await TargetDirectory(workspace, folder, project, framework, properties);
-		var manifest = Assert.Single(Directory.EnumerateFiles(
-			output, "AppxManifest.xml", SearchOption.AllDirectories));
+		var manifest = Assert.Single(Directory.EnumerateFiles(output, "AppxManifest.xml", SearchOption.AllDirectories));
 		var document = XDocument.Load(manifest);
 
 		var applicationId = (string?)Assert.Single(document.Descendants(),
@@ -104,9 +113,11 @@ public sealed class WindowsSampleRunTests(AppiumFixture appium) : AppiumSampleRu
 		SampleWorkspace workspace, string folder, string project,
 		string framework, IReadOnlyDictionary<string, string> properties)
 	{
+		var selectedProject = Path.Combine(workspace.Root, "samples", folder, project);
 		var result = await DotNet.Execute(workspace,
-			["msbuild", Path.Combine(workspace.Root, "samples", folder, project), "-nologo",
+			["msbuild", selectedProject, "-nologo",
 				"-getProperty:TargetDir", "-p:Configuration=Debug", $"-p:TargetFramework={framework}",
+				$"-p:SampleRootProject={selectedProject}", $"-p:SampleRootFramework={framework}",
 				.. properties.Select(property => $"-p:{property.Key}={property.Value}")]);
 		if (result.ExitCode != 0)
 			throw new InvalidOperationException($"Could not evaluate the built sample output: {result.Output}\n{result.Error}");
@@ -124,4 +135,7 @@ public sealed class WindowsSampleRunTests(AppiumFixture appium) : AppiumSampleRu
 		app.Click(By.Name("Open navigation menu"));
 		app.Click(By.Name(title));
 	}
+
+	private static void NavigateNativeWindows(AppiumRunningApp app, string id) =>
+		app.Click(id);
 }

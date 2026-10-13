@@ -5,6 +5,51 @@ namespace SkiaSharp.Tests.Samples.Utils;
 // Checks sample output against a reviewed reference and retains comparison diagnostics.
 internal static class SampleImage
 {
+    internal static (int Width, int Height, byte[] Pixels) ReadPixels(byte[] png)
+    {
+        using var bitmap = SKBitmap.Decode(png);
+        Assert.NotNull(bitmap);
+        return (bitmap.Width, bitmap.Height, bitmap.GetPixelSpan().ToArray());
+    }
+
+    internal static void AssertRendered(string path)
+    {
+        using var bitmap = SKBitmap.Decode(path);
+        Assert.NotNull(bitmap);
+        var colors = new HashSet<SKColor>();
+        var colorful = 0;
+        var count = 0;
+        for (var y = 0; y < bitmap.Height; y += 4)
+        {
+            for (var x = 0; x < bitmap.Width; x += 4)
+            {
+                var color = bitmap.GetPixel(x, y);
+                colors.Add(color);
+                if (Math.Max(color.Red, Math.Max(color.Green, color.Blue)) -
+                    Math.Min(color.Red, Math.Min(color.Green, color.Blue)) > 25)
+                    colorful++;
+                count++;
+            }
+        }
+        Assert.True(colors.Count > 32 && colorful > count * 0.05,
+            $"Expected a rendered colored scene, not a blank canvas: {colors.Count} colors, {colorful}/{count} colored pixels; {path}.");
+    }
+
+    internal static void AssertSceneChanged(string before, string after)
+    {
+        using var original = SKBitmap.Decode(before);
+        using var changed = SKBitmap.Decode(after);
+        Assert.NotNull(original);
+        Assert.NotNull(changed);
+        Assert.Equal(original.Width, changed.Width);
+        Assert.Equal(original.Height, changed.Height);
+        for (var y = original.Height / 4; y < original.Height / 2; y++)
+            for (var x = original.Width / 4; x < original.Width * 3 / 4; x++)
+                if (original.GetPixel(x, y) != changed.GetPixel(x, y))
+                    return;
+        Assert.Fail($"The rendered scene did not change: {before}; {after}.");
+    }
+
     internal static int CountPixels(string screenshot, SKRectI region, Func<SKColor, bool> matches)
     {
         using var bitmap = SKBitmap.Decode(screenshot);
@@ -87,5 +132,4 @@ internal static class SampleImage
         Assert.Fail($"Sample pixels differ from {expected}: {result.ErrorPixelCount}/{result.TotalPixels} pixels; " +
             $"{comparison}; actual {actual}; diff {diffPath}.");
     }
-
 }

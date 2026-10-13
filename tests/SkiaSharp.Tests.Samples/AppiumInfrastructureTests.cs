@@ -6,6 +6,27 @@ namespace SkiaSharp.Tests.Samples;
 [RunGroup(SampleRunGroup.Build)]
 public sealed class AppiumInfrastructureTests
 {
+	[Theory]
+	[InlineData("Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj", "com.companyname.SkiaSharpSample")]
+	[InlineData("Gallery/Maui/SkiaSharpSample.Maui.csproj", "com.skiasharp.gallery.maui")]
+	public void MauiApplicationIdComesFromProjectXml(string project, string expected)
+	{
+		var path = Path.Combine(Repo.RootDir, "samples", project);
+		Assert.Equal(expected, MetadataProbe.ReadProjectApplicationId(path));
+		Assert.Equal(expected, MetadataProbe.ReadAppleApplicationId(path));
+	}
+
+	[Theory]
+	[InlineData("Basic/iOS", "com.companyname.skiasharpsample")]
+	[InlineData("Basic/MacCatalyst", "com.companyname.SkiaSharpSample")]
+	[InlineData("Basic/macOS", "com.companyname.skiasharpsample")]
+	public void NativeAppleApplicationIdComesFromSourcePlist(string folder, string expected)
+	{
+		var path = Path.Combine(Repo.RootDir, "samples", folder, "SkiaSharpSample", "SkiaSharpSample.csproj");
+		Assert.Null(MetadataProbe.ReadProjectApplicationId(path));
+		Assert.Equal(expected, MetadataProbe.ReadAppleApplicationId(path));
+	}
+
 	[Fact]
 	public void AndroidReferenceProfileUsesTheConfiguredModel()
 	{
@@ -63,11 +84,11 @@ public sealed class AppiumInfrastructureTests
 			Save(before);
 			bitmap.SetPixel(15, 15, SKColors.Red);
 			Save(after);
-			var error = Assert.ThrowsAny<Exception>(() => AppiumRunningApp.AssertSceneChanged(before, after));
+			var error = Assert.ThrowsAny<Exception>(() => SampleImage.AssertSceneChanged(before, after));
 			Assert.Contains("rendered scene did not change", error.Message);
 			bitmap.SetPixel(4, 4, SKColors.Blue);
 			Save(after);
-			AppiumRunningApp.AssertSceneChanged(before, after);
+			SampleImage.AssertSceneChanged(before, after);
 
 			void Save(string path)
 			{
@@ -82,4 +103,10 @@ public sealed class AppiumInfrastructureTests
 		}
 	}
 
+	private sealed class MetadataProbe : AppiumSampleRunTestBase
+	{
+		internal static string? ReadProjectApplicationId(string project) => ProjectApplicationId(project);
+
+		internal static string ReadAppleApplicationId(string project) => AppleApplicationId(project);
+	}
 }

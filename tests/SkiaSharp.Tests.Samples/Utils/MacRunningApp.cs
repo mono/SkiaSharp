@@ -3,6 +3,7 @@ using System.Diagnostics;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium.Mac;
 using OpenQA.Selenium.Interactions;
+using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
@@ -28,14 +29,14 @@ internal sealed class MacRunningApp(
 
 	protected override Task Start(Uri address)
 	{
-		Require(OperatingSystem.IsMacOS(),
+		Assert.True(OperatingSystem.IsMacOS(),
 			"Mac2 tests require macOS, Xcode and XCTest Accessibility/automation permissions.");
 
 		// Mac2 launches the exact appPath. Do not let its reset terminate an existing app/WDA.
 		foreach (var process in Process.GetProcesses())
 		{
 			using (process)
-				Require(process.ProcessName != Path.GetFileNameWithoutExtension(Artifact) &&
+				Assert.True(process.ProcessName != Path.GetFileNameWithoutExtension(Artifact) &&
 					!process.ProcessName.Contains("WebDriverAgent", StringComparison.OrdinalIgnoreCase),
 					"A target app or WDA is already running; close it before selecting Mac tests.");
 		}
@@ -68,7 +69,7 @@ internal sealed class MacRunningApp(
 			Path.Combine(library, "Preferences", ApplicationId + ".plist"),
 			Path.Combine(library, "Saved Application State", ApplicationId + ".savedState")];
 		foreach (var path in paths)
-			Require(!File.Exists(path) && !Directory.Exists(path),
+			Assert.True(!File.Exists(path) && !Directory.Exists(path),
 				$"Existing app state at {path}; remove it explicitly before selecting this desktop test.");
 		// Appium terminates the app; remove only data that did not exist before this test.
 		foreach (var path in paths)

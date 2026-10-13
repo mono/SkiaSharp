@@ -2,6 +2,7 @@
 using OpenQA.Selenium.Appium.Android;
 using OpenQA.Selenium.Appium.Android.Enums;
 using OpenQA.Selenium.Interactions;
+using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
@@ -14,9 +15,11 @@ internal sealed class AndroidRunningApp(
 	: AppiumRunningApp(workspace, artifact, applicationId)
 {
 	private readonly string model =
-		Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_MODEL") ?? "pixel_9";
+		Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_MODEL")
+		?? "pixel_9";
 	private readonly string version = version
-		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_VERSION") ?? "17";
+		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_VERSION")
+		?? "17";
 	private readonly string imagePrefix = imagePrefix
 		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_IMAGE_PREFIX")
 		?? "system-images;android-37.1;google_apis_ps16k";
@@ -32,7 +35,7 @@ internal sealed class AndroidRunningApp(
 
 	protected override async Task Start(Uri address)
 	{
-		Require(Path.GetExtension(Artifact).Equals(".apk", StringComparison.OrdinalIgnoreCase),
+		Assert.True(Path.GetExtension(Artifact).Equals(".apk", StringComparison.OrdinalIgnoreCase),
 			"Provide the actual built APK, not an AAB or synthetic app.");
 
 		var sdk = Environment.GetEnvironmentVariable("ANDROID_HOME")

@@ -2,6 +2,7 @@
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.iOS;
 using OpenQA.Selenium.Interactions;
+using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
@@ -27,9 +28,9 @@ internal sealed class IosRunningApp(
 
 	protected override Task Start(Uri address)
 	{
-		Require(OperatingSystem.IsMacOS(),
+		Assert.True(OperatingSystem.IsMacOS(),
 			"iOS tests require macOS, Xcode and the declared preinstalled simulator runtime.");
-		Require(Directory.Exists(Artifact) && Artifact.EndsWith(".app", StringComparison.OrdinalIgnoreCase),
+		Assert.True(Directory.Exists(Artifact) && Artifact.EndsWith(".app", StringComparison.OrdinalIgnoreCase),
 			"Provide the actual built simulator .app bundle.");
 
 		var wdaLocalPort = AppiumFixture.GetFreePort();
@@ -48,6 +49,23 @@ internal sealed class IosRunningApp(
 		options.AddAdditionalAppiumOption("waitForIdleTimeout", 1);
 
 		SetDriver(new IOSDriver(address, options, TimeSpan.FromMinutes(6)));
+
+		// Normalize only this fresh simulator's system chrome; retain the full canvas capture.
+		var status = Assert.IsAssignableFrom<IDictionary<string, object>>(
+			Driver.ExecuteScript("mobile: simctl", new Dictionary<string, object>
+			{
+				["command"] = "status_bar",
+				["args"] = new[]
+				{
+					"override", "--time", "10:10",
+					"--dataNetwork", "wifi", "--wifiMode", "active", "--wifiBars", "3",
+					"--cellularMode", "active", "--cellularBars", "4",
+					"--batteryState", "charged", "--batteryLevel", "100"
+				}
+			}));
+		Assert.NotNull(status["code"]);
+		Assert.Equal(0, Convert.ToInt32(status["code"]));
+
 		Wait(() => Driver.FindElement(By.XPath("//XCUIElementTypeApplication"))
 			is { Displayed: true } element ? element : null, $"{ApplicationId} foreground UI");
 		return Task.CompletedTask;

@@ -8,8 +8,6 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-internal readonly record struct ToolCommandResult(string Command, int ExitCode, string Output, string Error);
-
 // Native apps own a driver and platform resources, not an HTTP sample server.
 internal abstract class AppiumRunningApp
 {
@@ -114,12 +112,7 @@ internal abstract class AppiumRunningApp
 	internal string CaptureStable(string id, string name)
 	{
 		var previous = ((ITakesScreenshot)Find(id)).GetScreenshot().AsByteArray;
-		using var first = SKBitmap.Decode(previous);
-		Assert.NotNull(first);
-
-		var width = first.Width;
-		var height = first.Height;
-		var pixels = first.GetPixelSpan().ToArray();
+		var previousPixels = SampleImage.ReadPixels(previous);
 		var deadline = DateTime.UtcNow.AddSeconds(10);
 
 		do
@@ -128,18 +121,15 @@ internal abstract class AppiumRunningApp
 			Thread.Sleep(200);
 
 			var next = ((ITakesScreenshot)Find(id)).GetScreenshot().AsByteArray;
-			using var bitmap = SKBitmap.Decode(next);
-			Assert.NotNull(bitmap);
+			var nextPixels = SampleImage.ReadPixels(next);
 
 			// Compare decoded pixels; retain the driver's original PNG without re-encoding.
-			if (width == bitmap.Width && height == bitmap.Height &&
-				pixels.AsSpan().SequenceEqual(bitmap.GetPixelSpan()))
+			if (previousPixels.Width == nextPixels.Width && previousPixels.Height == nextPixels.Height &&
+				previousPixels.Pixels.AsSpan().SequenceEqual(nextPixels.Pixels))
 				return SaveCapture(next, name);
 
 			previous = next;
-			width = bitmap.Width;
-			height = bitmap.Height;
-			pixels = bitmap.GetPixelSpan().ToArray();
+			previousPixels = nextPixels;
 		} while (DateTime.UtcNow < deadline);
 
 		SaveCapture(previous, name);
@@ -184,7 +174,7 @@ internal abstract class AppiumRunningApp
 		List<Exception> failures = [];
 		try
 		{
-			RequireArtifact();
+			AssertArtifact();
 			Directory.CreateDirectory(Diagnostics);
 			await startServer();
 			await Start(address);
@@ -224,20 +214,22 @@ internal abstract class AppiumRunningApp
 		string executable, string[] arguments, TimeSpan? timeout = null,
 		Action<ProcessStartInfo>? configure = null)
 	{
-		var result = await ProcessRunner.Run(executable, arguments, Workspace.Root,
-			timeout ?? TimeSpan.FromSeconds(30), configure);
-		return await CaptureCommand(Task.FromResult(new ToolCommandResult(
-			$"{executable} {string.Join(" ", arguments)}", result.ExitCode, result.Output, result.Error)));
+		return await CaptureCommand(ProcessRunner.Run(
+			executable, arguments, Workspace.Root, timeout ?? TimeSpan.FromSeconds(30), configure));
 	}
 
-	protected async Task<string> CaptureCommand(Task<ToolCommandResult> command)
+	protected async Task<string> CaptureCommand(Task<(int ExitCode, string Output, string Error)> command)
 	{
 		var result = await command;
 		List<Exception> failures = [];
-		if (result.ExitCode != 0)
-			failures.Add(new InvalidOperationException($"{result.Command} failed ({result.ExitCode}); inspect {Diagnostics}.\n{result.Error}"));
+		await Attempt(failures, () =>
+		{
+			Assert.True(result.ExitCode == 0,
+				$"Device command failed ({result.ExitCode}); inspect {Diagnostics}.\n{result.Error}");
+			return Task.CompletedTask;
+		});
 		await Attempt(failures, () => SaveText($"command-{Guid.NewGuid():N}.log",
-			$"{result.Command}\nExit: {result.ExitCode}\n{result.Output}\n{result.Error}"));
+			$"Exit: {result.ExitCode}\n{result.Output}\n{result.Error}"));
 		ThrowFailures(failures);
 		return result.Output;
 	}
@@ -250,19 +242,13 @@ internal abstract class AppiumRunningApp
 		TestContext.Current.AddFileAttachment(path, contentType);
 	}
 
-	protected void Require(bool condition, string message)
-	{
-		if (!condition)
-			throw new InvalidOperationException(message);
-	}
-
-	private void RequireArtifact()
+	private void AssertArtifact()
 	{
 		var relative = Path.GetRelativePath(Workspace.Root, Artifact);
-		Require(!Path.IsPathRooted(relative) && relative != ".." &&
+		Assert.True(!Path.IsPathRooted(relative) && relative != ".." &&
 			!relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal),
 			$"The exact built artifact must belong to the selected workspace: {Artifact}");
-		Require(File.Exists(Artifact) || Directory.Exists(Artifact), $"Built artifact is missing: {Artifact}");
+		Assert.True(File.Exists(Artifact) || Directory.Exists(Artifact), $"Built artifact is missing: {Artifact}");
 	}
 
 	internal static async Task Attempt(List<Exception> failures, Func<Task> action)
@@ -278,44 +264,6 @@ internal abstract class AppiumRunningApp
 			ExceptionDispatchInfo.Capture(failures[0]).Throw();
 		if (failures.Count > 1)
 			throw new AggregateException("Appium lifecycle failed; all diagnostics and owned cleanup were attempted.", failures);
-	}
-
-	internal static void AssertRendered(string path)
-	{
-		using var bitmap = SKBitmap.Decode(path);
-		Assert.NotNull(bitmap);
-		var colors = new HashSet<SKColor>();
-		var colorful = 0;
-		var count = 0;
-		for (var y = 0; y < bitmap.Height; y += 4)
-		{
-			for (var x = 0; x < bitmap.Width; x += 4)
-			{
-				var color = bitmap.GetPixel(x, y);
-				colors.Add(color);
-				if (Math.Max(color.Red, Math.Max(color.Green, color.Blue)) -
-					Math.Min(color.Red, Math.Min(color.Green, color.Blue)) > 25)
-					colorful++;
-				count++;
-			}
-		}
-		Assert.True(colors.Count > 32 && colorful > count * 0.05,
-			$"Expected a rendered colored scene, not a blank canvas: {colors.Count} colors, {colorful}/{count} colored pixels; {path}.");
-	}
-
-	internal static void AssertSceneChanged(string before, string after)
-	{
-		using var original = SKBitmap.Decode(before);
-		using var changed = SKBitmap.Decode(after);
-		Assert.NotNull(original);
-		Assert.NotNull(changed);
-		Assert.Equal(original.Width, changed.Width);
-		Assert.Equal(original.Height, changed.Height);
-		for (var y = original.Height / 4; y < original.Height / 2; y++)
-			for (var x = original.Width / 4; x < original.Width * 3 / 4; x++)
-				if (original.GetPixel(x, y) != changed.GetPixel(x, y))
-					return;
-		Assert.Fail($"The rendered scene did not change: {before}; {after}.");
 	}
 
 }

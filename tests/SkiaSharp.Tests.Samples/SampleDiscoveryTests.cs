@@ -56,8 +56,8 @@ public class SampleDiscoveryTests
         }
         foreach (var type in new[]
         {
-            typeof(AndroidSampleRunTests), typeof(IosSampleRunTests),
-            typeof(MacSampleRunTests), typeof(WindowsSampleRunTests)
+            typeof(AppiumAndroidSampleRunTests), typeof(AppiumIosSampleRunTests),
+            typeof(AppiumMacSampleRunTests), typeof(AppiumWindowsSampleRunTests)
         })
         {
             var collection = Assert.Single(type.GetCustomAttributesData(),

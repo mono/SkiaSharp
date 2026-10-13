@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium.Windows;
 using OpenQA.Selenium.Interactions;
+using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
@@ -39,22 +40,22 @@ internal sealed class WindowsRunningApp(
 
     protected override async Task Start(Uri address)
     {
-        Require(OperatingSystem.IsWindows(), "Windows tests require a Windows host.");
-        RequireInteractiveDesktop();
-        Require(File.Exists(winAppDriverPath),
+        Assert.True(OperatingSystem.IsWindows(), "Windows tests require a Windows host.");
+        AssertInteractiveDesktop();
+        Assert.True(File.Exists(winAppDriverPath),
             "Provide the preinstalled WinAppDriver.exe path. Tests never download or install drivers.");
         var extension = Path.GetExtension(Artifact).ToLowerInvariant();
         string executable;
         string app;
         if (kind == WindowsAppKind.Packaged)
         {
-            Require(extension is ".msix" or ".appx" || Path.GetFileName(Artifact).Equals("AppxManifest.xml", StringComparison.OrdinalIgnoreCase),
+            Assert.True(extension is ".msix" or ".appx" || Path.GetFileName(Artifact).Equals("AppxManifest.xml", StringComparison.OrdinalIgnoreCase),
                 "Packaged Windows apps require the actual package or final generated manifest, not an unpackaged .exe.");
             package = ReadPackage();
-            Require((await InstalledPackages()).Length == 0,
+            Assert.True((await InstalledPackages()).Length == 0,
                 $"Package {package.Name} is already registered; refusing to overwrite its installation/data.");
             var packageData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages");
-            Require(!Directory.Exists(packageData) || !Directory.EnumerateDirectories(packageData)
+            Assert.True(!Directory.Exists(packageData) || !Directory.EnumerateDirectories(packageData)
                 .Any(path => Path.GetFileName(path).StartsWith(package.Name + "_", StringComparison.OrdinalIgnoreCase)),
                 $"Existing package state for {package.Name}; remove it explicitly before selecting the test.");
             ownsPackage = true;
@@ -65,7 +66,7 @@ internal sealed class WindowsRunningApp(
                 : $"Add-AppxPackage -Path {Quote(Artifact)} -ErrorAction Stop", TimeSpan.FromMinutes(2));
             var current = (await InstalledPackages()) is [var installed] ? installed :
                 throw new InvalidOperationException($"Expected one newly registered {package.Name} package.");
-            Require(current.GetProperty("Publisher").GetString() == package.Publisher &&
+            Assert.True(current.GetProperty("Publisher").GetString() == package.Publisher &&
                 current.GetProperty("Version").GetString() == package.Version,
                 "Registered package identity/version differs from the exact built artifact.");
             packageFullName = current.GetProperty("PackageFullName").GetString()!;
@@ -74,16 +75,16 @@ internal sealed class WindowsRunningApp(
         }
         else
         {
-            Require(kind == WindowsAppKind.Unpackaged && extension == ".exe",
+            Assert.True(kind == WindowsAppKind.Unpackaged && extension == ".exe",
                 "An explicitly unpackaged Windows app requires its actual executable.");
-            Require(!File.Exists(Path.Combine(Path.GetDirectoryName(Artifact)!, "AppxManifest.xml")),
+            Assert.True(!File.Exists(Path.Combine(Path.GetDirectoryName(Artifact)!, "AppxManifest.xml")),
                 "This executable is packaged output; pass its package or generated manifest.");
             executable = app = Artifact;
         }
-        Require(File.Exists(executable), $"Built application executable is missing: {executable}");
+        Assert.True(File.Exists(executable), $"Built application executable is missing: {executable}");
         using var processes = JsonDocument.Parse(await PowerShell(
             $"ConvertTo-Json -InputObject @(Get-Process | Where-Object {{ $_.Path -eq {Quote(executable)} }}) -Compress"));
-        Require(processes.RootElement.GetArrayLength() == 0,
+        Assert.True(processes.RootElement.GetArrayLength() == 0,
             $"The target executable is already running; refusing to relaunch or terminate it: {executable}");
         var options = Options("Windows", "Windows");
         options.App = app;
@@ -110,13 +111,13 @@ internal sealed class WindowsRunningApp(
         foreach (var current in await InstalledPackages())
         {
             var fullName = current.GetProperty("PackageFullName").GetString()!;
-            Require(current.GetProperty("Publisher").GetString() == package!.Publisher &&
+            Assert.True(current.GetProperty("Publisher").GetString() == package!.Publisher &&
                 current.GetProperty("Version").GetString() == package.Version &&
                 (packageFullName is null || fullName == packageFullName),
                 $"Package identity changed; refusing to remove foreign {fullName}.");
             await PowerShell($"Remove-AppxPackage -Package {Quote(fullName)} -ErrorAction Stop", TimeSpan.FromMinutes(2));
         }
-        Require((await InstalledPackages()).Length == 0, $"Owned {package!.Name} package was not removed.");
+        Assert.True((await InstalledPackages()).Length == 0, $"Owned {package!.Name} package was not removed.");
     }
 
     private PackageMetadata ReadPackage()
@@ -135,10 +136,10 @@ internal sealed class WindowsRunningApp(
         var identity = manifest.Root?.Element(ns + "Identity") ?? throw new InvalidOperationException("Built package identity is missing.");
         var apps = manifest.Root!.Element(ns + "Applications")?.Elements(ns + "Application")
             .Where(item => (string?)item.Attribute("Id") == ApplicationId).ToArray() ?? [];
-        Require(apps.Length == 1, $"Declare the exact Application/@Id from the built manifest: {ApplicationId}");
+        Assert.True(apps.Length == 1, $"Declare the exact Application/@Id from the built manifest: {ApplicationId}");
         var metadata = new PackageMetadata(Required(identity, "Name"), Required(identity, "Publisher"),
             Required(identity, "Version"), ApplicationId, Required(apps[0], "Executable"));
-        Require(!metadata.Executable.Contains('$') && !Path.IsPathRooted(metadata.Executable) &&
+        Assert.True(!metadata.Executable.Contains('$') && !Path.IsPathRooted(metadata.Executable) &&
             !metadata.Executable.Split('\\', '/').Contains(".."), "Pass a final generated manifest, not source with MSBuild tokens.");
         return metadata;
 
@@ -157,16 +158,16 @@ internal sealed class WindowsRunningApp(
             });
     private static string Quote(string value) => "'" + value.Replace("'", "''") + "'";
 
-    private void RequireInteractiveDesktop()
+    private void AssertInteractiveDesktop()
     {
-        Require(Environment.UserInteractive && Process.GetCurrentProcess().SessionId != 0,
+        Assert.True(Environment.UserInteractive && Process.GetCurrentProcess().SessionId != 0,
             "Windows UI tests require a logged-in interactive desktop, not service/session 0.");
         var desktop = OpenInputDesktop(0, false, 1);
-        Require(desktop != IntPtr.Zero, "No accessible input desktop. Unlock and dedicate the host.");
+        Assert.True(desktop != IntPtr.Zero, "No accessible input desktop. Unlock and dedicate the host.");
         try
         {
             var name = new StringBuilder(256);
-            Require(GetUserObjectInformation(desktop, 2, name, name.Capacity * 2, out _) &&
+            Assert.True(GetUserObjectInformation(desktop, 2, name, name.Capacity * 2, out _) &&
                 name.ToString().Equals("Default", StringComparison.OrdinalIgnoreCase),
                 "Windows UI tests require an unlocked Default input desktop.");
         }
