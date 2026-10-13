@@ -54,8 +54,8 @@ The full Chrome release calendar is published at [Chromium's release schedule](h
 
 | Path | Version line | Latest release |
 |------|--------------|----------------|
-| Stable | 4.153.x | [4.153.1](4.153.1.md) |
-| Stable | 4.152.x | [4.152.3](4.152.3.md) |
+| Stable | 4.153.x | [4.153.2](4.153.2.md) |
+| Stable | 4.152.x | [4.152.4](4.152.4.md) |
 | Stable | 4.151.x | [4.151.5](4.151.5.md) |
 | Stable | 4.150.x | [4.150.5](4.150.5.md) |
 | Preview | 4.155.x | [4.155.0](4.155.0.md) |
@@ -64,17 +64,18 @@ The full Chrome release calendar is published at [Chromium's release schedule](h
 ## Supported versions
 
 - **Version 4.155.x** — Preview
-  - [Version 4.155.0 (Unreleased)](4.155.0-unreleased.md)
   - [Version 4.155.0](4.155.0.md)
 - **Version 4.154.x** — Preview
-  - [Version 4.154.0 (Unreleased)](4.154.0-unreleased.md)
+  - [Version 4.154.1 (Unreleased)](4.154.1-unreleased.md)
   - [Version 4.154.0](4.154.0.md)
 - **Version 4.153.x** — Stable
-  - [Version 4.153.2 (Unreleased)](4.153.2-unreleased.md)
+  - [Version 4.153.3 (Unreleased)](4.153.3-unreleased.md)
+  - [Version 4.153.2](4.153.2.md)
   - [Version 4.153.1](4.153.1.md)
   - [Version 4.153.0](4.153.0.md)
 - **Version 4.152.x** — Stable
-  - [Version 4.152.4 (Unreleased)](4.152.4-unreleased.md)
+  - [Version 4.152.5 (Unreleased)](4.152.5-unreleased.md)
+  - [Version 4.152.4](4.152.4.md)
   - [Version 4.152.3](4.152.3.md)
   - [Version 4.152.2](4.152.2.md)
   - [Version 4.152.1](4.152.1.md)
@@ -105,6 +106,7 @@ These SkiaSharp 3.x and 4.x lines are no longer supported. They remain available
 
 - **Version 4.156.x**
   - [Version 4.156.0 (Unreleased)](4.156.0-unreleased.md)
+  - [Version 4.156.0](4.156.0.md)
 - **Version 4.148.x**
   - [Version 4.148.1 (Unreleased)](4.148.1-unreleased.md)
   - [Version 4.148.0](4.148.0.md)
