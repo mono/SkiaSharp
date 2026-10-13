@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium.Android;
 using OpenQA.Selenium.Appium.Android.Enums;
@@ -15,10 +14,7 @@ internal sealed class AndroidRunningApp(
     : AppiumRunningApp(workspace, artifact, applicationId)
 {
     private Android? android;
-    private bool ownsApp;
-    private string? activity;
-    private static readonly string[] DriverPackages =
-        ["io.appium.uiautomator2.server", "io.appium.uiautomator2.server.test", "io.appium.settings"];
+    private bool booted;
 
     internal override PointerKind PointerKind => PointerKind.Touch;
     internal override By Locator(string id) => By.Id($"{ApplicationId}:id/{id}");
@@ -36,9 +32,6 @@ internal sealed class AndroidRunningApp(
             ?? Environment.GetEnvironmentVariable("ANDROID_SDK_ROOT")
             ?? throw new InvalidOperationException("Set ANDROID_HOME or ANDROID_SDK_ROOT to the explicitly installed Android SDK.");
         android = new Android(sdk);
-        var manifest = XDocument.Parse(await CaptureCommand(android.Manifest(Artifact)));
-        Require((string?)manifest.Root?.Attribute("package") == ApplicationId,
-            $"The exact built APK does not declare application {ApplicationId}; refusing to install an unowned package.");
         AppiumFixture.RequireFreePort(AppiumFixture.AndroidPort);
         Require((await AdbForwards()).All(parts => parts[1] != $"tcp:{AppiumFixture.AndroidPort}"),
             $"An existing adb forward uses port {AppiumFixture.AndroidPort}; refusing to replace a foreign mapping.");
@@ -82,52 +75,28 @@ internal sealed class AndroidRunningApp(
         Require((await CaptureCommand(android.AvdName(device))).Split('\n')[0].Trim() == device.Name,
             $"Serial {device.Serial} is not the explicitly selected {device.Name}; refusing foreign device reuse.");
         await Property("sys.boot_completed", "1");
+        booted = true;
         await Property("ro.build.version.release", device.Version);
         await Property("ro.build.version.sdk", device.Api.ToString());
         Require((await CaptureCommand(android.PageSize(device))).Trim() == device.PageSize.ToString(),
             $"Selected {device.Serial} must use {device.PageSize}-byte pages.");
-        foreach (var package in DriverPackages.Prepend(ApplicationId))
-            Require(!await HasApp(package),
-                $"Selected {device.Serial} already contains {package}; remove it explicitly or choose a clean dedicated device. Existing app/data will not be overwritten.");
-
-        ownsApp = true;
-        Own(() => RemoveApp(ApplicationId));
-        await CaptureCommand(android.Install(device, Artifact));
-        Require(await HasApp(ApplicationId), $"Built APK did not install declared application {ApplicationId}.");
-        var resolved = (await CaptureCommand(android.LauncherActivity(device, ApplicationId)))
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries).LastOrDefault()?.Trim() ?? "";
-        Require(resolved.StartsWith(ApplicationId + "/", StringComparison.Ordinal),
-            $"No launcher activity for the actual installed APK: {resolved}");
-        activity = resolved[(ApplicationId.Length + 1)..];
-
-        // These packages were absent at preflight. Appium may install them even when session creation fails.
-        foreach (var package in DriverPackages)
-            Own(() => RemoveApp(package));
-        Own(RemoveForward);
         var options = Options("Android", "UiAutomator2");
+        options.App = Artifact;
         options.DeviceName = device.Name;
         options.PlatformVersion = device.Version;
         options.AddAdditionalAppiumOption("udid", device.Serial);
         options.AddAdditionalAppiumOption("appPackage", ApplicationId);
-        options.AddAdditionalAppiumOption("appActivity", activity);
         options.AddAdditionalAppiumOption("systemPort", AppiumFixture.AndroidPort);
-        options.AddAdditionalAppiumOption("noReset", true);
-        options.AddAdditionalAppiumOption("autoLaunch", false);
+        options.AddAdditionalAppiumOption("noReset", false);
+        options.AddAdditionalAppiumOption("fullReset", true);
         SetDriver(new AndroidDriver(address, options, TimeSpan.FromMinutes(3)));
-        await CaptureCommand(android.Launch(device, ApplicationId, activity));
         Wait(() => Driver.PageSource.Contains($"package=\"{ApplicationId}\"", StringComparison.Ordinal)
             ? "foreground app" : null, $"{ApplicationId} foreground UI");
     }
 
-    protected override async Task StopApplication()
-    {
-        if (ownsApp && await HasApp(ApplicationId))
-            await CaptureCommand(Tools.ForceStop(device, ApplicationId));
-    }
-
     protected override async Task CapturePlatformDiagnostics()
     {
-        if (ownsApp)
+        if (booted)
             await CaptureCommand(Tools.RuntimeLogs(device));
     }
 
@@ -137,20 +106,6 @@ internal sealed class AndroidRunningApp(
 
     private Android Tools => android ?? throw new InvalidOperationException("Android preflight has not completed.");
 
-    private async Task<bool> HasApp(string appId)
-    {
-        using var apps = JsonDocument.Parse(await CaptureCommand(Tools.ListPackages(device)));
-        return apps.RootElement.EnumerateArray().Any(app => app.GetProperty("packageName").GetString() == appId);
-    }
-
-    private async Task RemoveApp(string appId)
-    {
-        if (!await HasApp(appId))
-            return;
-        await CaptureCommand(Tools.Uninstall(device, appId));
-        Require(!await HasApp(appId), $"Owned package {appId} was not removed from {device.Serial}.");
-    }
-
     private async Task<string[][]> AdbForwards()
     {
         var rows = (await CaptureCommand(Tools.ListForwards())).Split('\n', StringSplitOptions.RemoveEmptyEntries)
@@ -158,18 +113,6 @@ internal sealed class AndroidRunningApp(
             .ToArray();
         Require(rows.All(parts => parts.Length == 3), "adb returned an unrecognized forward list; refusing uncertain mapping ownership.");
         return rows;
-    }
-
-    private async Task RemoveForward()
-    {
-        foreach (var parts in (await AdbForwards()).Where(parts => parts[1] == $"tcp:{AppiumFixture.AndroidPort}"))
-        {
-            Require(parts[0] == device.Serial,
-                $"Port {AppiumFixture.AndroidPort} now belongs to foreign device {parts[0]}; refusing to remove its adb forward.");
-            await CaptureCommand(Tools.RemoveForward(device, AppiumFixture.AndroidPort));
-        }
-        Require((await AdbForwards()).All(parts => parts[1] != $"tcp:{AppiumFixture.AndroidPort}"),
-            $"Owned adb forward on {AppiumFixture.AndroidPort} was not removed.");
     }
 
     private static async Task<string> ReadBootOutput(Process process, TaskCompletionSource ready)

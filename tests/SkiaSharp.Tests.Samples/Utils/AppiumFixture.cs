@@ -79,7 +79,7 @@ public sealed class AppiumFixture
                 server = ProcessRunner.Start(
                     OperatingSystem.IsWindows() ? "cmd.exe" : "appium",
                     OperatingSystem.IsWindows() ? ["/d", "/c", "appium", .. arguments] : arguments,
-                    app.Workspace.Root);
+                    app.Workspace.Root, app.ConfigureServer);
             }
             catch (Win32Exception error)
             {

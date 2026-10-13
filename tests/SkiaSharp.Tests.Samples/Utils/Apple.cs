@@ -38,18 +38,6 @@ internal static class Apple
     internal static Task<ToolCommandResult> ShutdownSimulator(string udid) =>
         Execute(["simulator", "shutdown", SimulatorId(udid)]);
 
-    internal static Task<ToolCommandResult> ListApps(string udid) =>
-        Execute(["simulator", "app", "list", SimulatorId(udid), "--format", "json"]);
-
-    internal static Task<ToolCommandResult> Install(string udid, string artifact) =>
-        Execute(["simulator", "app", "install", SimulatorId(udid), artifact], TimeSpan.FromMinutes(2));
-
-    internal static Task<ToolCommandResult> Launch(string udid, string applicationId) =>
-        Execute(["simulator", "app", "launch", SimulatorId(udid), applicationId], TimeSpan.FromMinutes(2));
-
-    internal static Task<ToolCommandResult> Uninstall(string udid, string applicationId) =>
-        Execute(["simulator", "app", "uninstall", SimulatorId(udid), applicationId]);
-
     internal static Task<ToolCommandResult> RuntimeLogs(string udid, DateTime start, string executable) =>
         Execute(["simulator", "logs", SimulatorId(udid),
             "--start", start.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),

@@ -11,7 +11,7 @@ internal sealed class IosRunningApp(
     : AppiumRunningApp(workspace, artifact, applicationId)
 {
     private string? udid;
-    private bool ownsApp;
+    private bool booted;
     private string? executableName;
     private readonly string wdaBundleId = $"com.skiasharp.samples.tests.wda{Guid.NewGuid():N}";
     private readonly DateTime started = DateTime.Now;
@@ -64,24 +64,15 @@ internal sealed class IosRunningApp(
         await CaptureCommand(Apple.BootSimulator(udid));
         Require(RequireSimulator(await ListDevices(), device.Name, device.Version) == (udid, "Booted"),
             $"Selected simulator {udid} did not become Booted.");
-        var installed = await Apps();
-        Require(!installed.Contains(ApplicationId), $"Simulator already contains {ApplicationId}; refusing to overwrite existing app/data.");
-        Require(!installed.Any(id => id.Contains("WebDriverAgent", StringComparison.OrdinalIgnoreCase) ||
-            id.StartsWith("com.skiasharp.samples.tests.wda", StringComparison.Ordinal)),
-            "Simulator contains a WDA runner; remove the conflicting installation explicitly before running tests.");
-
-        ownsApp = true;
-        Own(() => RemoveApp(ApplicationId));
-        await CaptureCommand(Apple.Install(udid, Artifact));
-        Require((await Apps()).Contains(ApplicationId), $"Built .app did not install declared bundle {ApplicationId}.");
-        Own(() => RemoveApp(wdaBundleId + ".xctrunner"));
+        booted = true;
         var options = Options("iOS", "XCUITest");
+        options.App = Artifact;
         options.DeviceName = device.Name;
         options.PlatformVersion = device.Version;
         options.AddAdditionalAppiumOption("udid", udid);
         options.AddAdditionalAppiumOption("bundleId", ApplicationId);
-        options.AddAdditionalAppiumOption("noReset", true);
-        options.AddAdditionalAppiumOption("autoLaunch", false);
+        options.AddAdditionalAppiumOption("noReset", false);
+        options.AddAdditionalAppiumOption("fullReset", true);
         options.AddAdditionalAppiumOption("useNewWDA", true);
         options.AddAdditionalAppiumOption("wdaStartupRetries", 1);
         options.AddAdditionalAppiumOption("wdaLocalPort", AppiumFixture.IosPort);
@@ -90,31 +81,14 @@ internal sealed class IosRunningApp(
         options.AddAdditionalAppiumOption("derivedDataPath", Path.Combine(Workspace.Root, "wda-ios"));
         options.AddAdditionalAppiumOption("showXcodeLog", true);
         SetDriver(new IOSDriver(address, options, TimeSpan.FromMinutes(6)));
-        await CaptureCommand(Apple.Launch(udid, ApplicationId));
         Wait(() => Driver.FindElement(OpenQA.Selenium.By.XPath("//XCUIElementTypeApplication"))
             is { Displayed: true } element ? element : null, $"{ApplicationId} foreground UI");
     }
 
     protected override async Task CapturePlatformDiagnostics()
     {
-        if (ownsApp)
+        if (booted)
             await CaptureCommand(Apple.RuntimeLogs(udid!, started, executableName!));
-    }
-
-    // Uninstall stops the newly-owned application even if it crashed or never launched.
-    private async Task RemoveApp(string appId)
-    {
-        if (!(await Apps()).Contains(appId))
-            return;
-        await CaptureCommand(Apple.Uninstall(udid!, appId));
-        Require(!(await Apps()).Contains(appId), $"Owned bundle {appId} was not removed from {udid}.");
-    }
-
-    private async Task<HashSet<string>> Apps()
-    {
-        using var apps = JsonDocument.Parse(await CaptureCommand(Apple.ListApps(udid!)));
-        return apps.RootElement.EnumerateArray().Select(app => app.GetProperty("CFBundleIdentifier").GetString()!)
-            .ToHashSet(StringComparer.Ordinal);
     }
 
     private Task<string> ListDevices() => CaptureCommand(Apple.ListSimulators(device));

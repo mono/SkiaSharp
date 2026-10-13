@@ -154,6 +154,9 @@ Tests create uniquely named devices from the installed image/runtime, boot
 them, run the app and delete the owned device afterward, including on failure.
 Existing devices and their data remain untouched. The profile's emulator
 ports must be free. Foreground interactions are serialized.
+Appium installs and launches the built Android/iOS app through its `app`
+capability and owns reset/session cleanup. Dotnet tools manage only device
+creation, boot and deletion, plus prerequisite checks and diagnostics.
 
 Appium port 4727 and the selected driver port must be free: Android 8217,
 iOS 8117, Mac2 10117, Windows 4737. Mac2 requires an unlocked GUI session,
@@ -162,6 +165,10 @@ Xcode automation/XcodeHelper Accessibility permissions, and
 WebDriverAgentMac source. Windows uses port 4737 and requires an interactive
 desktop, Developer Mode and `SKIASHARP_APPIUM_WINAPPDRIVER` pointing to the
 explicitly installed executable.
+Mac2 and Windows drivers also own app launch/termination and their WDA/WAD
+server lifecycle. Windows package registration remains an OS preparation step:
+WinAppDriver accepts an installed application ID but has no MSIX registration
+API. Only the newly registered package is removed afterward.
 
 After bootstrap, package staging, and exact-suffix generation:
 

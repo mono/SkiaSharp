@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
@@ -19,9 +18,6 @@ internal sealed class Android
         if (!File.Exists(adb))
             throw new FileNotFoundException("Install Android platform-tools before selecting Android tests.", adb);
     }
-
-    internal Task<ToolCommandResult> Manifest(string artifact) =>
-        Execute(["apk", "manifest", "info", "--pkg", artifact, "--format", "xml"]);
 
     internal Task<ToolCommandResult> ListAvds() => ExecuteSdk(["avd", "list", "--format", "json"]);
     internal Task<ToolCommandResult> ListDevices() => ExecuteSdk(["device", "list", "--format", "json"]);
@@ -54,19 +50,6 @@ internal sealed class Android
         return ExecuteSdk(["avd", "delete", "--name", device.Name]);
     }
 
-    internal Task<ToolCommandResult> ListPackages(AndroidDevice device) =>
-        ExecuteSdk(["device", "packages", "--id", DeviceSelector(device), "--format", "json"]);
-
-    internal Task<ToolCommandResult> Install(AndroidDevice device, string artifact) =>
-        ExecuteSdk(["device", "install", "--id", DeviceSelector(device), "--pkg", artifact], TimeSpan.FromMinutes(2));
-
-    internal Task<ToolCommandResult> Uninstall(AndroidDevice device, string applicationId) =>
-        ExecuteSdk(["device", "uninstall", "--id", DeviceSelector(device), "--pkg", applicationId]);
-
-    internal Task<ToolCommandResult> Launch(AndroidDevice device, string applicationId, string activity) =>
-        ExecuteSdk(["device", "launch", "--id", DeviceSelector(device), "--pkg", applicationId, "--activity", activity],
-            TimeSpan.FromMinutes(2));
-
     internal Process StartAvd(AndroidDevice device)
     {
         var port = device.Validate();
@@ -78,26 +61,9 @@ internal sealed class Android
     internal Task<ToolCommandResult> AvdName(AndroidDevice device) => Adb(device, ["emu", "avd", "name"]);
     internal Task<ToolCommandResult> Property(AndroidDevice device, string name) => Adb(device, ["shell", "getprop", name]);
     internal Task<ToolCommandResult> PageSize(AndroidDevice device) => Adb(device, ["shell", "getconf", "PAGE_SIZE"]);
-    internal Task<ToolCommandResult> LauncherActivity(AndroidDevice device, string applicationId) =>
-        Adb(device, ["shell", "cmd", "package", "resolve-activity", "--brief", applicationId]);
-    internal Task<ToolCommandResult> ForceStop(AndroidDevice device, string applicationId) =>
-        Adb(device, ["shell", "am", "force-stop", applicationId]);
     internal Task<ToolCommandResult> RuntimeLogs(AndroidDevice device) =>
         Adb(device, ["logcat", "-d", "-t", "5000", "-s", "AndroidRuntime", "DOTNET", "mono-stdout", "mono-stderr"]);
     internal Task<ToolCommandResult> ListForwards() => RunAdb(["forward", "--list"]);
-    internal Task<ToolCommandResult> RemoveForward(AndroidDevice device, int port)
-    {
-        if (port is <= 0 or > 65535)
-            throw new ArgumentOutOfRangeException(nameof(port));
-        return Adb(device, ["forward", "--remove", $"tcp:{port.ToString(CultureInfo.InvariantCulture)}"]);
-    }
-
-    private static string DeviceSelector(AndroidDevice device)
-    {
-        device.Validate();
-        return $"^{Regex.Escape(device.Serial)}$";
-    }
-
     private Task<ToolCommandResult> Adb(AndroidDevice device, string[] arguments)
     {
         device.Validate();

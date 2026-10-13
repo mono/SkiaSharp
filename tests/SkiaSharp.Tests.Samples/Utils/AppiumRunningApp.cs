@@ -37,7 +37,7 @@ internal abstract class AppiumRunningApp
     internal virtual void SubmitSearch() => Driver.SwitchTo().ActiveElement().SendKeys(Keys.Enter);
 
     protected abstract Task Start(Uri address);
-    protected virtual Task StopApplication() => Task.CompletedTask;
+    internal virtual void ConfigureServer(ProcessStartInfo start) { }
     protected virtual Task CapturePlatformDiagnostics() => Task.CompletedTask;
     protected void Own(Func<Task> release) => cleanup.Add(release);
 
@@ -223,7 +223,6 @@ internal abstract class AppiumRunningApp
         finally
         {
             await Attempt(failures, SaveDiagnostics);
-            await Attempt(failures, StopApplication);
             await Attempt(failures, () =>
             {
                 driver?.Dispose();
