@@ -4,15 +4,22 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal sealed record SampleImageOptions
 {
-    public SKSizeI? ExpectedSize { get; init; }
-    public double? MaxAverageColorErrorFraction { get; init; }
+    internal const decimal DefaultMaxErrorPixelFraction = 0.00075m;
+
+    // Optional required output size; actual and expected dimensions must always match.
+    internal SKSizeI? ExpectedSize { get; init; }
+
+    // Fraction of pixels allowed to differ by any RGBA channel value (0.00075 = 0.075%).
+    internal decimal MaxErrorPixelFraction { get; init; } = DefaultMaxErrorPixelFraction;
+
+    // When set, replaces the pixel-count limit with mean absolute RGBA error / 255.
+    // Small changes across many pixels can pass; use only for animated GPU smoke checks.
+    internal double? MaxAverageColorErrorFraction { get; init; }
 }
 
 // Checks that sample output is a decodable image with the expected dimensions.
 internal static class SampleImage
 {
-    private const decimal MaximumErrorPixelFraction = 0.00075m;
-
     public static void Validate(ReadOnlySpan<byte> png, int width = 800, int height = 600)
     {
         Assert.True(png.StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }), "Expected a PNG file.");
@@ -44,7 +51,10 @@ internal static class SampleImage
 
     internal static void CompareGolden(string actual, string expected, SampleImageOptions? options = null)
     {
-        var maxAverageColorErrorFraction = options?.MaxAverageColorErrorFraction;
+        options ??= new();
+        var maxErrorPixelFraction = options.MaxErrorPixelFraction;
+        var maxAverageColorErrorFraction = options.MaxAverageColorErrorFraction;
+        Assert.InRange(maxErrorPixelFraction, 0, 1);
         if (maxAverageColorErrorFraction is { } maximum)
             Assert.InRange(maximum, 0, 1);
         Assert.True(File.Exists(expected), $"Missing reviewed sample golden: {expected}. Actual image retained at {actual}.");
@@ -53,7 +63,7 @@ internal static class SampleImage
         using var expectedImage = SKImage.FromEncodedData(expected);
         Assert.NotNull(actualImage);
         Assert.NotNull(expectedImage);
-        if (options?.ExpectedSize is { } size)
+        if (options.ExpectedSize is { } size)
         {
             Assert.Equal(size.Width, actualImage.Width);
             Assert.Equal(size.Height, actualImage.Height);
@@ -65,16 +75,16 @@ internal static class SampleImage
         var averageColorErrorFraction = result.AbsoluteError / (result.TotalPixels * 4.0 * 255);
         var comparison = maxAverageColorErrorFraction is { } limit
             ? $"average RGBA color error {averageColorErrorFraction:P3}, exceeding {limit:P3}"
-            : $"differing pixels {(decimal)result.ErrorPixelCount / result.TotalPixels:P3}, exceeding {MaximumErrorPixelFraction:P3}";
+            : $"differing pixels {(decimal)result.ErrorPixelCount / result.TotalPixels:P3}, exceeding {maxErrorPixelFraction:P3}";
         TestContext.Current.TestOutputHelper?.WriteLine(
             $"Image comparison: {result.ErrorPixelCount}/{result.TotalPixels} pixels differ; " +
             $"average RGBA color error {averageColorErrorFraction:P3}; " +
             (maxAverageColorErrorFraction is { } allowed
                 ? $"allowed average color error {allowed:P3}."
-                : $"allowed differing pixels {MaximumErrorPixelFraction:P3}."));
+                : $"allowed differing pixels {maxErrorPixelFraction:P3}."));
         if (maxAverageColorErrorFraction is { } averageLimit
             ? averageColorErrorFraction <= averageLimit
-            : result.ErrorPixelCount <= result.TotalPixels * MaximumErrorPixelFraction)
+            : result.ErrorPixelCount <= result.TotalPixels * maxErrorPixelFraction)
             return;
 
         using var diff = SkiaSharp.Extended.SKPixelComparer.GenerateDifferenceImage(expectedImage, actualImage, 0);

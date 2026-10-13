@@ -108,4 +108,5 @@ images; references are never accepted automatically.
 Image helpers take `actual`, `expected` (or a relative golden path), and an
 optional `SampleImageOptions` record. Set `ExpectedSize = new(800, 600)` for
 fixed-size PNGs; only animated GPU checks set `MaxAverageColorErrorFraction`.
+The options own the default `MaxErrorPixelFraction` of `0.00075m`.
 Omitting options retains the strict pixel comparison and golden dimensions.

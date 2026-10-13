@@ -331,6 +331,7 @@ public class SampleInfrastructureTests : IDisposable
         await SampleImage.SaveAndValidate(File.ReadAllBytes(expected), actual, expected, options);
         SampleImage.CompareGolden(actual, expected, options);
         Assert.Equal(new SKSizeI(16, 12), options.ExpectedSize);
+        Assert.Equal(0.00075m, options.MaxErrorPixelFraction);
         Assert.Null(options.MaxAverageColorErrorFraction);
 
         var wrongSize = options with { ExpectedSize = new(15, 12) };
@@ -354,6 +355,39 @@ public class SampleInfrastructureTests : IDisposable
         var actual = SavePng(bitmap, "invalid-options.actual.png");
         Assert.ThrowsAny<Exception>(() => SampleImage.CompareGolden(actual, expected,
             new() { MaxAverageColorErrorFraction = limit }));
+    }
+
+    [Theory]
+    [InlineData(0, true)]
+    [InlineData(1, true)]
+    [InlineData(2, false)]
+    public void ImageOptionsApplyAnExplicitPixelBudget(int changedPixels, bool accepted)
+    {
+        using var bitmap = new SKBitmap(10, 10);
+        bitmap.Erase(SKColors.Black);
+        var expected = SavePng(bitmap, "pixel-options.expected.png");
+        for (var i = 0; i < changedPixels; i++)
+            bitmap.SetPixel(i, 0, SKColors.White);
+        var actual = SavePng(bitmap, "pixel-options.actual.png");
+        var options = new SampleImageOptions { MaxErrorPixelFraction = 0.01m };
+        if (accepted)
+            SampleImage.CompareGolden(actual, expected, options);
+        else
+            Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.CompareGolden(actual, expected, options));
+        Assert.Equal(0.00075m, new SampleImageOptions().MaxErrorPixelFraction);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(2)]
+    public void ImageOptionsRejectInvalidPixelBudgets(int limit)
+    {
+        using var bitmap = new SKBitmap(4, 4);
+        bitmap.Erase(SKColors.Red);
+        var expected = SavePng(bitmap, "invalid-pixel-options.expected.png");
+        var actual = SavePng(bitmap, "invalid-pixel-options.actual.png");
+        Assert.ThrowsAny<Exception>(() =>
+            SampleImage.CompareGolden(actual, expected, new() { MaxErrorPixelFraction = limit }));
     }
 
     [Fact]
