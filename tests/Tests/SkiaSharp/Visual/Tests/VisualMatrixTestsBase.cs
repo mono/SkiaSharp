@@ -129,7 +129,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 			var allowedOutliers = (long)Math.Floor(result.TotalPixels * tolerance.MaxOutlierFraction);
 
 			using var diffImage = SKPixelComparer.GenerateDifferenceImage(
-				goldenImage, actualImage, options, SKPixelDifferenceStyle.ThresholdOverlay);
+				goldenImage, actualImage, SKPixelDifferenceStyle.ThresholdOverlay, options);
 
 			EmitImage(GoldenImageMarker, rendererName, sceneName, info, goldenImage);
 			EmitImage(DiffImageMarker, rendererName, sceneName, info, diffImage);

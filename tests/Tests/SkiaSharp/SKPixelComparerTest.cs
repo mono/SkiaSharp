@@ -289,16 +289,16 @@ public class SKPixelComparerTest
 		Assert.Equal(1, SKPixelComparer.Compare(a, b, options).ErrorPixelCount);
 		options.MaxErrorPixels = 1;
 		Assert.True(SKPixelComparer.Compare(a, b, options).IsMatch);
-		using var binary = SKPixelComparer.GenerateDifferenceImage(a, b, options, SKPixelDifferenceStyle.BinaryMask);
-		using var styledBinary = SKPixelComparer.GenerateDifferenceImage(a, b, options, SKPixelDifferenceStyle.BinaryMask);
+		using var binary = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.BinaryMask, options);
+		using var styledBinary = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.BinaryMask, options);
 		using var overlay = SKPixelComparer.GenerateDifferenceImage(a, b, options);
-		using var explicitOverlay = SKPixelComparer.GenerateDifferenceImage(a, b, options, SKPixelDifferenceStyle.ThresholdOverlay);
-		using var raw = SKPixelComparer.GenerateDifferenceImage(a, b, options, SKPixelDifferenceStyle.ChannelDelta);
-		using var strictMask = SKPixelComparer.GenerateDifferenceImage(a, b, null, SKPixelDifferenceStyle.BinaryMask);
+		using var explicitOverlay = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.ThresholdOverlay, options);
+		using var raw = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.ChannelDelta, options);
+		using var strictMask = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.BinaryMask, null);
 		using var bitmapOverlay = SKPixelComparer.GenerateDifferenceImage(first, second);
 		using var firstPixmap = first.PeekPixels();
 		using var secondPixmap = second.PeekPixels();
-		using var pixmapBinary = SKPixelComparer.GenerateDifferenceImage(firstPixmap, secondPixmap, options, SKPixelDifferenceStyle.BinaryMask);
+		using var pixmapBinary = SKPixelComparer.GenerateDifferenceImage(firstPixmap, secondPixmap, SKPixelDifferenceStyle.BinaryMask, options);
 		AssertPixel(binary, 0, SKColors.White);
 		AssertPixel(binary, 1, SKColors.Black);
 		AssertPixel(binary, 2, SKColors.Black);
@@ -348,8 +348,8 @@ public class SKPixelComparerTest
 		Assert.Equal(1, SKPixelComparer.Compare(firstPixmap, secondPixmap, options).ErrorPixelCount);
 		Assert.Equal(1, SKPixelComparer.Compare(a, b, options).ErrorPixelCount);
 		using var overlay = SKPixelComparer.GenerateDifferenceImage(a, b, options);
-		using var binary = SKPixelComparer.GenerateDifferenceImage(a, b, options, SKPixelDifferenceStyle.BinaryMask);
-		using var delta = SKPixelComparer.GenerateDifferenceImage(a, b, options, SKPixelDifferenceStyle.ChannelDelta);
+		using var binary = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.BinaryMask, options);
+		using var delta = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.ChannelDelta, options);
 		AssertPixel(overlay, 0, SKColors.Red);
 		AssertPixel(binary, 0, SKColors.White);
 		AssertPixel(delta, 0, SKColors.Black);
@@ -382,7 +382,7 @@ public class SKPixelComparerTest
 				Assert.Equal(0L, result.RawMetrics.AbsoluteError);
 				Assert.Equal(0, result.MaxChannelDelta);
 			}
-			using var diff = SKPixelComparer.GenerateDifferenceImage(a, b, options, SKPixelDifferenceStyle.BinaryMask);
+			using var diff = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.BinaryMask, options);
 			AssertPixel(diff, 0, SKColors.Black);
 		}
 		Assert.Equal(new SKColor(255, 0, 0, 0), firstPixmap.GetPixelSpan<SKColor>()[0]);
@@ -442,10 +442,10 @@ public class SKPixelComparerTest
 		Assert.Throws<InvalidOperationException>(() => SKPixelComparer.Compare(image, image, new SKPixelComparerOptions { ToleranceMask = mismatch }));
 		Assert.Throws<ArgumentException>(() => SKPixelComparer.Compare(bitmap, emptyBitmap));
 		Assert.Throws<ArgumentException>(() => SKPixelComparer.Compare(pixmap, emptyPixmap));
-		Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.GenerateDifferenceImage(image, image, null, (SKPixelDifferenceStyle)99));
+		Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.GenerateDifferenceImage(image, image, (SKPixelDifferenceStyle)99, null));
 		foreach (var invalid in new[] { SKAlphaType.Opaque, SKAlphaType.Unknown })
 			Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.Compare(image, image, new SKPixelComparerOptions { AlphaType = invalid }));
-		Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.GenerateDifferenceImage(image, image, new SKPixelComparerOptions { AlphaType = SKAlphaType.Opaque }, SKPixelDifferenceStyle.BinaryMask));
+		Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.GenerateDifferenceImage(image, image, SKPixelDifferenceStyle.BinaryMask, new SKPixelComparerOptions { AlphaType = SKAlphaType.Opaque }));
 		Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.Compare(image, image, new SKPixelComparerOptions { MaxErrorPixels = -1 }));
 		foreach (var invalid in new[] { -0.01, 1.01, double.NaN, double.PositiveInfinity, double.NegativeInfinity })
 		{

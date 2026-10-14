@@ -229,7 +229,7 @@ namespace SkiaSharp.Tests
 				WriteOutput(expected, "EXPECTED bitmap");
 				WriteOutput(actual, "ACTUAL bitmap");
 
-				using var diff = SKPixelComparer.GenerateDifferenceImage(expected, actual, options, SKPixelDifferenceStyle.BinaryMask);
+				using var diff = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.BinaryMask, options);
 				WriteOutput(diff, "DIFF bitmap");
 
 				throw;

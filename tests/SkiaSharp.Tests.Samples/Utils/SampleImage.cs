@@ -133,7 +133,7 @@ internal static class SampleImage
             return false;
 
         using var diff = SKPixelComparer.GenerateDifferenceImage(
-            expectedImage, actualImage, comparisonOptions, SKPixelDifferenceStyle.ThresholdOverlay);
+            expectedImage, actualImage, SKPixelDifferenceStyle.ThresholdOverlay, comparisonOptions);
         using var data = diff.Encode(SKEncodedImageFormat.Png, 100);
         var diffPath = Path.ChangeExtension(actual, ".diff.png");
         File.WriteAllBytes(diffPath, data.ToArray());
