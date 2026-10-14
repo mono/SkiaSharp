@@ -669,16 +669,16 @@ preview, RC or PR/build suffix. For example, stable `SkiaSharp 4.156.0` produces
 exception. The **API**, not the package version, is marked experimental:
 
 ```csharp
-[assembly: Experimental("SKTEST001")]
+[assembly: Experimental("SKIA001")]
 ```
 
 The assembly-level attribute covers all seven public types. Supported C#
-compilers report `SKTEST001` when consumers use this evolving API. Opt in
+compilers report `SKIA001` when consumers use this evolving API. Opt in
 explicitly in the consuming project:
 
 ```xml
 <PropertyGroup>
-  <NoWarn>$(NoWarn);SKTEST001</NoWarn>
+  <NoWarn>$(NoWarn);SKIA001</NoWarn>
 </PropertyGroup>
 ```
 
@@ -689,6 +689,10 @@ compatibility attribute emits the same experimental metadata without adding a
 public helper type or package dependency. Older compilers that do not recognize
 this attribute cannot enforce the opt-in; the documented experimental contract
 still applies.
+
+`SKIA001` identifies the testing library's experimental comparison API, not every
+future experiment. Other independently opted-in product APIs or views receive
+their own IDs under the shared [experimental API convention](api-design.md#experimental-apis).
 
 Experimental APIs may change between releases even when the package has a stable
 NuGet version. This does not relax the ABI contract of `SkiaSharp.dll` or any
