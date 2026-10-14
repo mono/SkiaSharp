@@ -94,6 +94,8 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		app.WaitText("sample-render-status", text => text.StartsWith("CPU", StringComparison.Ordinal) && text.Contains("  |"));
 		await Compare(app, "sample-canvas-cpu", "gallery-gradient-cpu", "Maui", platform);
 
+		if (app is IosRunningApp)
+			app.Drag(app.Find("sample-controls"), 0.5, 0.85, 0.5, 0.2);
 		var before = app.Text("control-angle-value");
 		app.Drag(app.Find("control-angle"), 0.2, 0.5, 0.7, 0.5);
 		app.WaitText("control-angle-value", text => text != before);
