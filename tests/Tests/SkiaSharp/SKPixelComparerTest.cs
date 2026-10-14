@@ -67,54 +67,47 @@ public class SKPixelComparerTest
 	}
 
 	[Fact]
-	public void ToleranceFactoriesValidateBoundsSelectionFractionalThresholdsAndEquality()
+	public void ScalarToleranceFactoriesValidateBoundsFractionalThresholdsAndEquality()
 	{
 		Assert.Equal(SKPixelTolerance.Exact, default(SKPixelTolerance));
 		Assert.Equal(SKPixelTolerance.Absolute(0), default(SKPixelTolerance));
 		Assert.Equal(SKPixelTolerance.Percent(0), default(SKPixelTolerance));
+		Assert.Equal(0.0, default(SKPixelTolerance).Value);
 		Assert.True(SKPixelTolerance.Exact == SKPixelTolerance.Absolute(0));
 		Assert.False(SKPixelTolerance.Exact != SKPixelTolerance.Percent(0));
 		Assert.Equal(SKPixelTolerance.Exact.GetHashCode(), SKPixelTolerance.Absolute(0).GetHashCode());
 		Assert.Equal(SKPixelTolerance.Absolute(255), SKPixelTolerance.Percent(100));
 		Assert.Equal(SKPixelTolerance.Absolute(255).GetHashCode(), SKPixelTolerance.Percent(100).GetHashCode());
-		Assert.Equal(4, SKPixelTolerance.Exact.ChannelCount);
-		Assert.Equal(255.0, SKPixelTolerance.Absolute(255).Alpha);
-		Assert.Equal(255.0, SKPixelTolerance.Percent(100).Red);
-		Assert.Equal(1.275, SKPixelTolerance.Percent(0.5).Red!.Value, 12);
-		var rgb = SKPixelTolerance.Absolute(3, 6, 9, null);
-		Assert.Equal(3, rgb.ChannelCount);
-		Assert.Null(rgb.Alpha);
-		Assert.Equal(3.0, rgb.Red);
-		Assert.Equal(6.0, rgb.Green);
-		Assert.Equal(9.0, rgb.Blue);
-		Assert.Equal(rgb, SKPixelTolerance.Absolute(3, 6, 9, null));
-		Assert.True(rgb.Equals((object)SKPixelTolerance.Absolute(3, 6, 9, null)));
-		Assert.Equal(rgb.GetHashCode(), SKPixelTolerance.Absolute(3, 6, 9, null).GetHashCode());
-		Assert.True(rgb != SKPixelTolerance.Exact);
-		Assert.False(rgb.Equals("not a tolerance"));
-		Assert.Equal(1, SKPixelTolerance.Percent(null, 50, null, null).ChannelCount);
-		Assert.Equal(127.5, SKPixelTolerance.Percent(null, 50, null, null).Green);
-		Assert.Null(SKPixelTolerance.Percent(null, 50, null, null).Red);
+		Assert.Equal(255.0, SKPixelTolerance.Absolute(255).Value);
+		Assert.Equal(255.0, SKPixelTolerance.Percent(100).Value);
+		Assert.Equal(127.5, SKPixelTolerance.Percent(50).Value);
+		Assert.Equal(1.275, SKPixelTolerance.Percent(0.5).Value, 12);
+		var tolerance = SKPixelTolerance.Absolute(3);
+		Assert.Equal(3.0, tolerance.Value);
+		Assert.Equal(tolerance, SKPixelTolerance.Absolute(3));
+		Assert.True(tolerance.Equals((object)SKPixelTolerance.Absolute(3)));
+		Assert.Equal(tolerance.GetHashCode(), SKPixelTolerance.Absolute(3).GetHashCode());
+		Assert.True(tolerance != SKPixelTolerance.Exact);
+		Assert.False(tolerance.Equals("not a tolerance"));
 		Assert.Equal("value", Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelTolerance.Absolute(-1)).ParamName);
 		Assert.Equal("value", Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelTolerance.Absolute(256)).ParamName);
-		Assert.Equal("blue", Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelTolerance.Absolute(0, 0, -1, null)).ParamName);
-		Assert.Equal("alpha", Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelTolerance.Absolute(0, 0, 0, 256)).ParamName);
 		foreach (var invalid in new[] { -0.001, 100.001, double.NaN, double.PositiveInfinity, double.NegativeInfinity })
-		{
 			Assert.Equal("value", Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelTolerance.Percent(invalid)).ParamName);
-			Assert.Equal("green", Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelTolerance.Percent(null, invalid, null, null)).ParamName);
-		}
-		Assert.Throws<ArgumentException>(() => SKPixelTolerance.Absolute(null, null, null, null));
-		Assert.Throws<ArgumentException>(() => SKPixelTolerance.Percent(null, null, null, null));
 	}
 
 	[Fact]
-	public void UniformAndUnevenThresholdsFilterChannelsButPreserveRawStatistics()
+	public void MixedThresholdsFilterChannelsButPreserveRawStatistics()
 	{
 		using var first = CreateBitmap(SKColors.Black);
 		using var second = CreateBitmap(new SKColor(3, 6, 9));
 		var strict = SKPixelComparer.Compare(first, second);
-		var options = new SKPixelComparerOptions { Tolerance = SKPixelTolerance.Absolute(3, 5, 9, null) };
+		var options = new SKPixelComparerOptions
+		{
+			RedTolerance = SKPixelTolerance.Absolute(3),
+			GreenTolerance = SKPixelTolerance.Absolute(5),
+			BlueTolerance = SKPixelTolerance.Absolute(9),
+			AlphaTolerance = null,
+		};
 		var filtered = SKPixelComparer.Compare(first, second, options);
 		Assert.Equal(3, filtered.ChannelCount);
 		Assert.Equal(1, filtered.ErrorPixelCount);
@@ -127,7 +120,8 @@ public class SKPixelComparerTest
 		Assert.Equal(2.0, filtered.ThresholdedMetrics.MeanAbsoluteError);
 		Assert.Equal(12.0, filtered.ThresholdedMetrics.MeanSquaredError);
 		Assert.Equal(9, filtered.MaxChannelDelta);
-		options.Tolerance = SKPixelTolerance.Absolute(3, 6, 9, null);
+		options.GreenTolerance = SKPixelTolerance.Absolute(6);
+		options.BlueTolerance = SKPixelTolerance.Absolute(9);
 		var tolerated = SKPixelComparer.Compare(first, second, options);
 		Assert.True(tolerated.IsMatch);
 		Assert.Equal(0, tolerated.ErrorPixelCount);
@@ -140,13 +134,41 @@ public class SKPixelComparerTest
 
 		using var small = CreateBitmap(new SKColor(1, 0, 0));
 		using var larger = CreateBitmap(new SKColor(2, 0, 0));
-		options.Tolerance = SKPixelTolerance.Percent(0.5);
+		SetUniformTolerance(options, SKPixelTolerance.Percent(0.5));
 		Assert.Equal(0, SKPixelComparer.Compare(first, first, options).ErrorPixelCount);
 		Assert.Equal(0, SKPixelComparer.Compare(small, larger, options).ErrorPixelCount);
 		using var beyond = CreateBitmap(new SKColor(3, 0, 0));
 		Assert.Equal(1, SKPixelComparer.Compare(small, beyond, options).ErrorPixelCount);
-		options.Tolerance = SKPixelTolerance.Exact;
+		SetUniformTolerance(options, SKPixelTolerance.Exact);
 		Assert.Equal(1, SKPixelComparer.Compare(small, larger, options).ErrorPixelCount);
+	}
+
+	[Fact]
+	public void MixedAbsoluteAndPercentThresholdsUseEffectiveByteValues()
+	{
+		using var first = CreateBitmap(new SKColor(10, 20, 30));
+		using var second = CreateBitmap(new SKColor(12, 22, 255));
+		var options = new SKPixelComparerOptions
+		{
+			RedTolerance = SKPixelTolerance.Absolute(2),
+			GreenTolerance = SKPixelTolerance.Percent(0.5),
+			BlueTolerance = SKPixelTolerance.Percent(100),
+			AlphaTolerance = null,
+		};
+		var result = SKPixelComparer.Compare(first, second, options);
+		Assert.Equal(3, result.ChannelCount);
+		Assert.Equal(3L, result.RawMetrics.SampleCount);
+		Assert.Equal(229L, result.RawMetrics.AbsoluteError);
+		Assert.Equal(50633L, result.RawMetrics.SumSquaredError);
+		Assert.Equal(2L, result.ThresholdedMetrics.AbsoluteError);
+		Assert.Equal(4L, result.ThresholdedMetrics.SumSquaredError);
+		Assert.Equal(1, result.ErrorPixelCount);
+		Assert.Equal(225, result.MaxChannelDelta);
+		using var binary = SKPixelComparer.GenerateDifferenceImage(first, second, SKPixelDifferenceStyle.BinaryMask, options);
+		AssertPixel(binary, 0, SKColors.White);
+		Assert.Null(options.AlphaTolerance);
+		options.GreenTolerance = SKPixelTolerance.Absolute(2);
+		Assert.Equal(0, SKPixelComparer.Compare(first, second, options).ErrorPixelCount);
 	}
 
 	[Fact]
@@ -161,30 +183,38 @@ public class SKPixelComparerTest
 		Assert.Equal(4096L, rgba.RawMetrics.SumSquaredError);
 		Assert.Equal(4L, rgba.RawMetrics.SampleCount);
 		Assert.Equal(64, rgba.MaxChannelDelta);
-		options.Tolerance = SKPixelTolerance.Absolute(0, 0, 0, null);
+		options.AlphaTolerance = null;
 		var rgb = SKPixelComparer.Compare(first, second, options);
 		Assert.True(rgb.IsMatch);
 		Assert.Equal(3, rgb.ChannelCount);
 		Assert.Equal(0L, rgb.RawMetrics.AbsoluteError);
 		Assert.Equal(3L, rgb.RawMetrics.SampleCount);
+		Assert.Equal(0.0, rgb.RawMetrics.NormalizedRootMeanSquaredError);
 		Assert.Equal(0, rgb.MaxChannelDelta);
-		options.Tolerance = SKPixelTolerance.Absolute(null, null, null, 0);
+		options.RedTolerance = null;
+		options.GreenTolerance = null;
+		options.BlueTolerance = null;
+		options.AlphaTolerance = SKPixelTolerance.Exact;
 		var alpha = SKPixelComparer.Compare(first, second, options);
 		Assert.Equal(1, alpha.ChannelCount);
 		Assert.Equal(1L, alpha.RawMetrics.SampleCount);
 		Assert.Equal(64.0, alpha.RawMetrics.MeanAbsoluteError);
 		Assert.Equal(4096.0, alpha.RawMetrics.MeanSquaredError);
-		options.Tolerance = SKPixelTolerance.Absolute(null, null, null, 64);
+		Assert.Equal(64.0 / 255, alpha.RawMetrics.NormalizedRootMeanSquaredError, 12);
+		options.AlphaTolerance = SKPixelTolerance.Absolute(64);
 		Assert.Equal(0, SKPixelComparer.Compare(first, second, options).ErrorPixelCount);
 
 		using var redFirst = CreateBitmap(new SKColor(10, 20, 30));
 		using var redSecond = CreateBitmap(new SKColor(13, 26, 39));
 		options.AlphaType = SKAlphaType.Unpremul;
-		options.Tolerance = SKPixelTolerance.Absolute(0, null, null, null);
+		options.RedTolerance = SKPixelTolerance.Exact;
+		options.AlphaTolerance = null;
 		var red = SKPixelComparer.Compare(redFirst, redSecond, options);
+		Assert.Equal(1, red.ChannelCount);
 		Assert.Equal(1L, red.RawMetrics.SampleCount);
 		Assert.Equal(3L, red.RawMetrics.AbsoluteError);
 		Assert.Equal(9L, red.RawMetrics.SumSquaredError);
+		Assert.Equal(3.0 / 255, red.RawMetrics.NormalizedRootMeanSquaredError, 12);
 		Assert.Equal(3, red.MaxChannelDelta);
 	}
 
@@ -223,7 +253,7 @@ public class SKPixelComparerTest
 		options.MaxErrorPixels = 1;
 		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
 		options.MaxErrorPixels = null;
-		options.Tolerance = SKPixelTolerance.Absolute(6);
+		SetUniformTolerance(options, SKPixelTolerance.Absolute(6));
 		options.MaxNormalizedRootMeanSquaredError = rms - 0.000001;
 		var tolerated = SKPixelComparer.Compare(first, second, options);
 		Assert.Equal(0, tolerated.ErrorPixelCount);
@@ -255,7 +285,8 @@ public class SKPixelComparerTest
 		using var mask = SKImage.FromBitmap(maskBitmap);
 		var options = new SKPixelComparerOptions
 		{
-			Tolerance = SKPixelTolerance.Absolute(5, 0, 0, null),
+			RedTolerance = SKPixelTolerance.Absolute(5),
+			AlphaTolerance = null,
 			ToleranceMask = mask,
 		};
 		var withMask = SKPixelComparer.Compare(first, second, options);
@@ -272,12 +303,20 @@ public class SKPixelComparerTest
 		Assert.Equal(30L, withoutMask.ThresholdedMetrics.AbsoluteError);
 		Assert.Equal(234L, withoutMask.ThresholdedMetrics.SumSquaredError);
 		options.ToleranceMask = mask;
-		options.Tolerance = SKPixelTolerance.Absolute(null, null, null, 0);
+		options.RedTolerance = null;
+		options.GreenTolerance = null;
+		options.BlueTolerance = null;
+		options.AlphaTolerance = SKPixelTolerance.Exact;
 		var alphaOnly = SKPixelComparer.Compare(first, second, options);
 		Assert.Equal(1, alphaOnly.ChannelCount);
 		Assert.Equal(0L, alphaOnly.RawMetrics.AbsoluteError);
 		Assert.Equal(0, alphaOnly.ErrorPixelCount);
 		Assert.Equal(0, alphaOnly.MaxChannelDelta);
+		using var alphaOnlyDifference = SKPixelComparer.GenerateDifferenceImage(first, second, SKPixelDifferenceStyle.BinaryMask, options);
+		AssertPixel(alphaOnlyDifference, 0, SKColors.Black);
+		Assert.Null(options.RedTolerance);
+		Assert.Null(options.GreenTolerance);
+		Assert.Null(options.BlueTolerance);
 		Assert.Equal(new SKColor(3, 5, 9), maskBitmap.GetPixel(0, 0));
 	}
 
@@ -291,7 +330,9 @@ public class SKPixelComparerTest
 		var options = new SKPixelComparerOptions
 		{
 			AlphaType = SKAlphaType.Premul,
-			Tolerance = SKPixelTolerance.Absolute(null, null, null, 0),
+			RedTolerance = null,
+			GreenTolerance = null,
+			BlueTolerance = null,
 			ToleranceMask = threshold,
 		};
 		var tolerated = SKPixelComparer.Compare(first, second, options);
@@ -313,7 +354,14 @@ public class SKPixelComparerTest
 		using var mask = SKImage.FromBitmap(maskBitmap);
 		using var a = SKImage.FromBitmap(first);
 		using var b = SKImage.FromBitmap(second);
-		var options = new SKPixelComparerOptions { Tolerance = SKPixelTolerance.Absolute(3, 5, 9, null), ToleranceMask = mask };
+		var options = new SKPixelComparerOptions
+		{
+			RedTolerance = SKPixelTolerance.Absolute(3),
+			GreenTolerance = SKPixelTolerance.Absolute(5),
+			BlueTolerance = SKPixelTolerance.Absolute(9),
+			AlphaTolerance = null,
+			ToleranceMask = mask,
+		};
 		Assert.Equal(1, SKPixelComparer.Compare(a, b, options).ErrorPixelCount);
 		options.MaxErrorPixels = 1;
 		Assert.True(SKPixelComparer.Compare(a, b, options).IsMatch);
@@ -381,7 +429,10 @@ public class SKPixelComparerTest
 		AssertPixel(overlay, 0, SKColors.Red);
 		AssertPixel(binary, 0, SKColors.White);
 		AssertPixel(delta, 0, SKColors.Black);
-		options.Tolerance = SKPixelTolerance.Absolute(null, null, null, 64);
+		options.RedTolerance = null;
+		options.GreenTolerance = null;
+		options.BlueTolerance = null;
+		options.AlphaTolerance = SKPixelTolerance.Absolute(64);
 		using var tolerated = SKPixelComparer.GenerateDifferenceImage(first, second, options: options);
 		AssertPixel(tolerated, 0, new SKColor(255, 200, 0));
 		Assert.Equal(0, SKPixelComparer.Compare(a, b, options).ErrorPixelCount);
@@ -462,6 +513,18 @@ public class SKPixelComparerTest
 		using var pixmap = bitmap.PeekPixels();
 		using var emptyBitmap = new SKBitmap();
 		using var emptyPixmap = new SKPixmap();
+		var allDisabled = new SKPixelComparerOptions
+		{
+			RedTolerance = null,
+			GreenTolerance = null,
+			BlueTolerance = null,
+			AlphaTolerance = null,
+		};
+		Assert.Equal("options", Assert.Throws<ArgumentException>(() => SKPixelComparer.Compare(bitmap, bitmap, allDisabled)).ParamName);
+		Assert.Equal("options", Assert.Throws<ArgumentException>(() =>
+			SKPixelComparer.GenerateDifferenceImage(image, image, options: allDisabled)).ParamName);
+		Assert.Equal(4, SKPixelComparer.Compare(bitmap, bitmap, null).ChannelCount);
+		Assert.Equal(4, SKPixelComparer.Compare(bitmap, bitmap, new SKPixelComparerOptions()).ChannelCount);
 		Assert.Throws<ArgumentNullException>(() => SKPixelComparer.Compare((SKImage)null!, image));
 		Assert.Throws<ArgumentNullException>(() => SKPixelComparer.Compare(image, (SKImage)null!));
 		Assert.Throws<ArgumentNullException>(() => SKPixelComparer.Compare((SKBitmap)null!, bitmap));
@@ -501,7 +564,7 @@ public class SKPixelComparerTest
 		second.Erase(SKColors.White);
 		var result = SKPixelComparer.Compare(first, second, new SKPixelComparerOptions
 		{
-			Tolerance = SKPixelTolerance.Absolute(0, 0, 0, null),
+			AlphaTolerance = null,
 		});
 		Assert.Equal(8_294_400, result.TotalPixels);
 		Assert.Equal(8_294_400, result.ErrorPixelCount);
@@ -527,6 +590,14 @@ public class SKPixelComparerTest
 		Assert.Equal(0.0, metrics.RootMeanSquaredError);
 		Assert.Equal(0.0, metrics.NormalizedRootMeanSquaredError);
 		Assert.Equal(double.PositiveInfinity, metrics.PeakSignalToNoiseRatio);
+	}
+
+	private static void SetUniformTolerance(SKPixelComparerOptions options, SKPixelTolerance tolerance)
+	{
+		options.RedTolerance = tolerance;
+		options.GreenTolerance = tolerance;
+		options.BlueTolerance = tolerance;
+		options.AlphaTolerance = tolerance;
 	}
 
 	private static SKBitmap CreateBitmap(params SKColor[] colors)

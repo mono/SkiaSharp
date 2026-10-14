@@ -23,7 +23,7 @@ defaults and units rather than preserving Extended's signatures.
 
 | Required capability | Current implementation |
 | --- | --- |
-| Exact/tolerant RGB, RGBA, or individual-channel comparison | `SKPixelTolerance`, with nullable channel allowances |
+| Exact/tolerant RGB, RGBA, or individual-channel comparison | Scalar `SKPixelTolerance` on four nullable options properties |
 | Per-pixel tolerance image | `ToleranceMask`, combined with global allowances |
 | Error count, fraction, bounds and largest channel error | `SKPixelComparisonResult` |
 | Absolute/SSE, MAE/MSE/RMSE/normalized RMS/PSNR | Separate raw and thresholded metric groups |
@@ -68,14 +68,8 @@ public readonly struct SKPixelTolerance : IEquatable<SKPixelTolerance>
     public SKPixelTolerance();
     public static SKPixelTolerance Exact { get; }
     public static SKPixelTolerance Absolute(int value);
-    public static SKPixelTolerance Absolute(int? red, int? green, int? blue, int? alpha);
     public static SKPixelTolerance Percent(double value);
-    public static SKPixelTolerance Percent(double? red, double? green, double? blue, double? alpha);
-    public double? Red { get; }
-    public double? Green { get; }
-    public double? Blue { get; }
-    public double? Alpha { get; }
-    public int ChannelCount { get; }
+    public double Value { get; }
     public bool Equals(SKPixelTolerance other);
     public override bool Equals(object? obj);
     public override int GetHashCode();
@@ -86,7 +80,10 @@ public readonly struct SKPixelTolerance : IEquatable<SKPixelTolerance>
 public sealed class SKPixelComparerOptions
 {
     public SKPixelComparerOptions();
-    public SKPixelTolerance Tolerance { get; set; }
+    public SKPixelTolerance? RedTolerance { get; set; }
+    public SKPixelTolerance? GreenTolerance { get; set; }
+    public SKPixelTolerance? BlueTolerance { get; set; }
+    public SKPixelTolerance? AlphaTolerance { get; set; }
     public SKAlphaType AlphaType { get; set; }
     public SKImage? ToleranceMask { get; set; }
     public long? MaxErrorPixels { get; set; }
@@ -153,7 +150,10 @@ All settings belong to one options object:
 ```csharp
 var options = new SKPixelComparerOptions
 {
-    Tolerance = SKPixelTolerance.Absolute(10, 20, 2, 2),
+    RedTolerance = SKPixelTolerance.Absolute(10),
+    GreenTolerance = SKPixelTolerance.Absolute(20),
+    BlueTolerance = SKPixelTolerance.Absolute(2),
+    AlphaTolerance = SKPixelTolerance.Absolute(2),
     MaxErrorPixelFraction = 0.002,
 };
 
@@ -172,21 +172,33 @@ selects the library's default settings. Difference style defaults to
 
 ## Tolerance: how different may a sample be?
 
-`SKPixelTolerance` is an immutable value. The default value and `Exact` both
-enable all four channels with zero allowance:
+`SKPixelTolerance` is an immutable **single-channel** allowance. Its default
+value and `Exact` both mean zero allowance. Channel selection belongs to the four
+nullable options properties, which each default to `Exact`:
 
 ```csharp
 var exact = SKPixelTolerance.Exact;
-var allChannels = SKPixelTolerance.Absolute(2);
-var perChannel = SKPixelTolerance.Absolute(10, 20, 2, 2);
-var rgbOnly = SKPixelTolerance.Absolute(0, 0, 0, null);
-var redOnly = SKPixelTolerance.Absolute(0, null, null, null);
-var alphaOnly = SKPixelTolerance.Absolute(null, null, null, 0);
-var percentages = SKPixelTolerance.Percent(0.5, 0.2, 1, null);
+var options = new SKPixelComparerOptions
+{
+    RedTolerance = SKPixelTolerance.Absolute(10),
+    GreenTolerance = SKPixelTolerance.Percent(0.5),
+    BlueTolerance = SKPixelTolerance.Exact,
+    AlphaTolerance = null, // Ignore alpha.
+};
+var rgbOnly = new SKPixelComparerOptions { AlphaTolerance = null };
+var redOnly = new SKPixelComparerOptions
+{
+    GreenTolerance = null, BlueTolerance = null, AlphaTolerance = null,
+};
+var alphaOnly = new SKPixelComparerOptions
+{
+    RedTolerance = null, GreenTolerance = null, BlueTolerance = null,
+};
 ```
 
-**Zero means exact; `null` disables a channel.** Disabling all channels is
-invalid. Disabled channels contribute neither rejection nor raw/thresholded
+**Zero means exact; a `null` options property disables its channel.** Disabling
+all four channels is invalid when comparison or difference generation starts.
+Disabled channels contribute neither rejection nor raw/thresholded
 metrics nor maximum delta, so red-only RMS has a one-channel denominator.
 This encodes selection without another options flag or enum.
 
@@ -194,8 +206,10 @@ This encodes selection without another options flag or enum.
 `Percent` accepts percentage points from 0 through 100, not fractions. It
 converts each value to a percentage of the full channel range without rounding:
 0.5% of 255 is 1.275, so a difference of 1 passes and 2 fails.
-The nullable `Red`, `Green`, `Blue`, and `Alpha` properties expose these effective
-byte-unit allowances; `ChannelCount` reports the number of enabled channels.
+The scalar's `Value` property exposes the effective byte-unit allowance.
+`ChannelCount` belongs to the result/metrics, not the scalar tolerance.
+There is no uniform-tolerance constructor or competing aggregate `Tolerance`
+property; set the four named properties when a uniform allowance is needed.
 
 A selected channel rejects a pixel only when its absolute difference is
 **greater than** its allowance. Equality at the boundary is tolerated. A pixel
@@ -271,7 +285,10 @@ binary/overlay diagnostic uses the same classification settings.
 ```csharp
 var options = new SKPixelComparerOptions
 {
-    Tolerance = SKPixelTolerance.Absolute(2),
+    RedTolerance = SKPixelTolerance.Absolute(2),
+    GreenTolerance = SKPixelTolerance.Absolute(2),
+    BlueTolerance = SKPixelTolerance.Absolute(2),
+    AlphaTolerance = SKPixelTolerance.Absolute(2),
     ToleranceMask = toleranceMask,
 };
 
@@ -303,8 +320,8 @@ The new defaults do not silently change the owning harnesses' established gates.
 
 | Consumer | Explicit settings and gate |
 | --- | --- |
-| Core bitmap assertion | `Absolute(0, 0, 0, null)`, premultiplied; external strict fraction comparison `< 10^-precision` |
-| Renderer goldens | RGBA `Absolute(ChannelTolerance)`, premultiplied, configured maximum error fraction with the same floor-based budget |
+| Core bitmap assertion | `AlphaTolerance = null`, other channels exact, premultiplied; external strict fraction comparison `< 10^-precision` |
+| Renderer goldens | Four `Absolute(ChannelTolerance)` properties, premultiplied, configured maximum error fraction with the same floor-based budget |
 | Package integration | Exact RGB, premultiplied; existing crop/resize adapter and similarity at least 95% remain |
 | Samples | Exact RGBA, premultiplied; decimal pixel fraction 0.00075 by default, or the caller-selected normalized raw-MAE replacement gate |
 | MAUI Graphics / Resizetizer | Exact RGB, legacy representation; fraction limits 0.07 / 0.27 |
@@ -314,7 +331,9 @@ The new defaults do not silently change the owning harnesses' established gates.
 var result = SKPixelComparer.Compare(expected, actual,
     new SKPixelComparerOptions
     {
-        Tolerance = SKPixelTolerance.Absolute(0, null, null, null),
+        GreenTolerance = null,
+        BlueTolerance = null,
+        AlphaTolerance = null,
         MaxNormalizedRootMeanSquaredError = 0.005,
     });
 ```
