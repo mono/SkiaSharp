@@ -23,22 +23,27 @@ is the first available HarfBuzzSharp ID, not an allocated feature.
 
 | Range | API family | Projects and scope |
 | --- | --- | --- |
-| `SKIA0xxx` | Core graphics | `binding/SkiaSharp`, including its `GR` GPU APIs |
-| `SKIA1xxx` | Native/platform views | `SkiaSharp.Views` platform views and desktop common, Windows Forms, WPF, WinUI, GTK3 and GTK4 integrations |
-| `SKIA2xxx` | MAUI | `SkiaSharp.Views.Maui.Core`, `SkiaSharp.Views.Maui.Controls` and future MAUI-owned experimental backends |
-| `SKIA3xxx` | Uno | Uno WinUI, Skia and WASM integrations, whether native or web |
-| `SKIA4xxx` | Rendering extensions | `SkiaSharp.Skottie`, `SkiaSharp.SceneGraph` and `SkiaSharp.Resources` |
-| `SKIA5xxx` | Testing libraries | `SkiaSharp.Testing`; not test-runner or analyzer diagnostics |
-| `SKIA6xxx` | SkiaSharp text/shaping integration | `SkiaSharp.HarfBuzz`; HarfBuzzSharp itself uses `HARFBUZZ####` |
-| `SKIA7xxx` | External GPU integrations | `SkiaSharp.Vulkan.SharpVk`, `SkiaSharp.Vulkan.Silk.NET` and `SkiaSharp.Direct3D.Vortice`; core `GR` APIs remain in `0xxx` |
-| `SKIA8xxx` | Blazor | `SkiaSharp.Views.Blazor` |
+| `SKIA0xxx` | Core graphics and Skia modules | `binding/SkiaSharp`, including its `GR` GPU APIs, plus `SkiaSharp.Skottie`, `SkiaSharp.SceneGraph` and `SkiaSharp.Resources` |
+| `SKIA1xxx` | Views and UI frameworks | All native/platform views, desktop common, Windows Forms, WPF, WinUI, GTK3/GTK4, MAUI, Uno and Blazor integrations, including experimental framework backends |
+| `SKIA2xxx` | SkiaSharp text/shaping integration | `SkiaSharp.HarfBuzz`; HarfBuzzSharp itself uses `HARFBUZZ####` |
+| `SKIA3xxx` | Extensions and external integrations | GPU integrations such as `SkiaSharp.Vulkan.SharpVk`, `SkiaSharp.Vulkan.Silk.NET` and `SkiaSharp.Direct3D.Vortice`; core `GR` APIs remain in `0xxx` |
+| `SKIA4xxx` | Testing libraries | `SkiaSharp.Testing`; not test-runner or analyzer diagnostics |
+| `SKIA5xxx` | Unassigned | Reserved for a future library family |
+| `SKIA6xxx` | Unassigned | Reserved for a future library family |
+| `SKIA7xxx` | Unassigned | Reserved for a future library family |
+| `SKIA8xxx` | Unassigned | Reserved for a future library family |
 | `SKIA9xxx` | Unassigned | Reserved for a future library family |
 
-Feature numbering within a SkiaSharp family starts at `001`, so `SKIA5001` is
-testing feature 001. Group by framework/API ownership, not physical folder,
-rendering target or one prefix per DLL. Uno is a framework family like MAUI,
-not a web-only integration. Blazor belongs to `8xxx` even though its project lives
-under `source/SkiaSharp.Views`.
+Feature numbering within a SkiaSharp family starts at `001`, so `SKIA4001` is
+testing feature 001. There are ten ranges (`0xxx` through `9xxx`); the five
+unassigned ranges leave room for future families without renumbering existing
+IDs. Allocate a new family only when a concrete feature needs it.
+
+Group by API ownership, not physical folder, rendering target or one prefix per
+DLL. MAUI and Uno remain frameworks, whether a backend is native or web; they
+share the broad views family with Blazor and native controls. Each independent
+experiment still gets its own ID within `1xxx`. Skottie is a Skia engine module
+in core, not an external extension.
 
 A coherent feature can span several DLLs within a product and share an ID;
 independent features within one DLL need distinct IDs. Native-assets packages
@@ -50,11 +55,11 @@ merge their opt-ins.
 
 | Diagnostic | Feature | Scope | Status |
 | --- | --- | --- | --- |
-| `SKIA5001` | Pixel comparison, tolerance, acceptance budgets and diagnostics | Entire `SkiaSharp.Testing` assembly | Experimental |
+| `SKIA4001` | Pixel comparison, tolerance, acceptance budgets and diagnostics | Entire `SkiaSharp.Testing` assembly | Experimental |
 
 No `HARFBUZZ####` IDs are allocated yet.
 
-### SKIA5001: Pixel comparison
+### SKIA4001: Pixel comparison
 
 `SkiaSharp.Testing` is a separate testing library whose public API is still
 evolving. The assembly-level experimental marker covers all its comparison types
@@ -77,17 +82,17 @@ scope is appropriate only when the whole component is experimental, as with
 `SkiaSharp.Testing`:
 
 ```csharp
-[assembly: Experimental("SKIA5001")]
+[assembly: Experimental("SKIA4001")]
 ```
 
 Supported compilers report that diagnostic when consumers use the API. Consumers
 explicitly opt in to the feature, for example:
 
 ```xml
-<NoWarn>$(NoWarn);SKIA5001</NoWarn>
+<NoWarn>$(NoWarn);SKIA4001</NoWarn>
 ```
 
-A narrower `#pragma warning disable SKIA5001` / `restore` is also possible.
+A narrower `#pragma warning disable SKIA4001` / `restore` is also possible.
 Suppressing an ID opts into every API carrying it, regardless of which referenced
 DLL declares it. Do not use one ID for unrelated experiments or suppress a whole
 family.
