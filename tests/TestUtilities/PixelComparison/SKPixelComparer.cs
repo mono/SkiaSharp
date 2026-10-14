@@ -75,14 +75,14 @@ public static class SKPixelComparer
 
 	/// <summary>Creates a caller-owned threshold overlay; match budgets do not affect its colors.</summary>
 	public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelComparerOptions? options) =>
-		GenerateDifferenceImage(first, second, options, SKPixelDifferenceStyle.ThresholdOverlay);
+		GenerateDifferenceImage(first, second, SKPixelDifferenceStyle.ThresholdOverlay, options);
 
 	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and an optional borrowed mask.</summary>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
 	/// <exception cref="ArgumentException">An input or mask is empty or disposed.</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">The style, alpha type, or budget is invalid.</exception>
-	public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelComparerOptions? options, SKPixelDifferenceStyle style)
+	public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelDifferenceStyle style, SKPixelComparerOptions? options)
 	{
 		ValidatePair(first, second);
 		ValidateStyle(style);
@@ -99,14 +99,14 @@ public static class SKPixelComparer
 
 	/// <summary>Creates a caller-owned threshold overlay; match budgets do not affect its colors.</summary>
 	public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options) =>
-		GenerateDifferenceImage(first, second, options, SKPixelDifferenceStyle.ThresholdOverlay);
+		GenerateDifferenceImage(first, second, SKPixelDifferenceStyle.ThresholdOverlay, options);
 
 	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and an optional borrowed mask.</summary>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
 	/// <exception cref="ArgumentException">An input or mask is empty or disposed.</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">The style, alpha type, or budget is invalid.</exception>
-	public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options, SKPixelDifferenceStyle style)
+	public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelDifferenceStyle style, SKPixelComparerOptions? options)
 	{
 		ValidatePair(first, second);
 		ValidateStyle(style);
@@ -123,14 +123,14 @@ public static class SKPixelComparer
 
 	/// <summary>Creates a caller-owned threshold overlay; match budgets do not affect its colors.</summary>
 	public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options) =>
-		GenerateDifferenceImage(first, second, options, SKPixelDifferenceStyle.ThresholdOverlay);
+		GenerateDifferenceImage(first, second, SKPixelDifferenceStyle.ThresholdOverlay, options);
 
 	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and an optional borrowed mask.</summary>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
 	/// <exception cref="ArgumentException">An input or mask is empty or disposed.</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">The style, alpha type, or budget is invalid.</exception>
-	public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options, SKPixelDifferenceStyle style)
+	public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelDifferenceStyle style, SKPixelComparerOptions? options)
 	{
 		ValidatePair(first, second);
 		ValidateStyle(style);
