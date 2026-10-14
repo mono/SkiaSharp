@@ -5,13 +5,13 @@ using System;
 namespace SkiaSharp.Testing;
 
 /// <summary>Raw or thresholded enabled-channel error statistics over all compared pixels.</summary>
-/// <remarks>Both metric groups use the same total pixels, enabled channel count and sample denominator. Thresholding changes only the error sums: tolerated channel differences contribute zero, while exceeding differences contribute their full deltas, not deltas minus allowances.</remarks>
+/// <remarks>Both metric groups use the same sample denominator. Thresholding changes only the error sums: tolerated channel differences contribute zero, while differences exceeding their allowances contribute their full magnitudes.</remarks>
 public sealed class SKPixelComparisonMetrics
 {
-	internal SKPixelComparisonMetrics(int totalPixels, int channelCount, long absoluteError, long sumSquaredError)
+	internal SKPixelComparisonMetrics(int totalPixels, int channelCount, long sumAbsoluteError, long sumSquaredError)
 	{
 		SampleCount = (long)totalPixels * channelCount;
-		AbsoluteError = absoluteError;
+		SumAbsoluteError = sumAbsoluteError;
 		SumSquaredError = sumSquaredError;
 	}
 
@@ -19,13 +19,16 @@ public sealed class SKPixelComparisonMetrics
 	public long SampleCount { get; }
 
 	/// <summary>Gets the sum of enabled-channel absolute byte differences; thresholded metrics replace tolerated differences with zero.</summary>
-	public long AbsoluteError { get; }
+	public long SumAbsoluteError { get; }
 
 	/// <summary>Gets the sum of squared enabled-channel byte differences; thresholded metrics replace tolerated differences with zero.</summary>
 	public long SumSquaredError { get; }
 
 	/// <summary>Gets absolute error divided by all selected samples, in byte units; returns zero when the sample count is zero.</summary>
-	public double MeanAbsoluteError => SampleCount == 0 ? 0.0 : (double)AbsoluteError / SampleCount;
+	public double MeanAbsoluteError => SampleCount == 0 ? 0.0 : (double)SumAbsoluteError / SampleCount;
+
+	/// <summary>Gets mean absolute error divided by 255, from zero to one; returns zero when the sample count is zero.</summary>
+	public double NormalizedMeanAbsoluteError => SampleCount == 0 ? 0.0 : (double)SumAbsoluteError / (SampleCount * 255.0);
 
 	/// <summary>Gets squared error divided by all selected samples, in squared byte units; returns zero when the sample count is zero.</summary>
 	public double MeanSquaredError => SampleCount == 0 ? 0.0 : (double)SumSquaredError / SampleCount;
