@@ -13,6 +13,20 @@ test host.
 There is no requirement to preserve the separately published Extended comparer's
 API shape.
 
+## Terminology
+
+| Term | Meaning |
+| --- | --- |
+| Difference | An observed absolute channel difference before acceptance is evaluated |
+| Mismatch | A pixel exceeds at least one enabled channel's effective allowance |
+| Error | A conventional statistical measurement, such as mean absolute or squared error |
+| Match | The complete comparison passes its configured policy, even if a permitted number of pixels mismatch |
+
+The API uses mismatch names for counts, fractions, bounds and budgets,
+difference names for channel magnitudes and diagnostic images, and established
+error names for MAE/MSE/RMS statistics. `IsMatch` does not mean encoded-byte
+identity or necessarily zero raw difference.
+
 ## MVP scope and readiness
 
 The useful MVP is the comparison kernel below, shared by SkiaSharp and exposed
@@ -28,7 +42,7 @@ defaults and units rather than preserving Extended's signatures.
 | Error count, fraction, bounds and largest channel error | `SKPixelComparisonResult` |
 | Absolute/SSE, MAE/MSE/RMSE/normalized RMS/PSNR | Separate raw and thresholded metric groups |
 | Whole-image acceptance | Optional count, fraction and raw-RMS budgets |
-| Diagnostic PNG-ready images | Binary mask, raw RGB delta, threshold overlay |
+| Diagnostic PNG-ready images | Binary mask, raw RGB channel difference, threshold overlay |
 | Standalone consumer library | Nonshipping `SkiaSharp.Testing` prototype; publication remains separate |
 
 Two boundaries matter. The library requires equal dimensions and readable CPU
@@ -115,7 +129,7 @@ public sealed class SKPixelComparerOptions
     /// <summary>Gets or sets a borrowed same-size mask that widens enabled channel allowances; alpha is a threshold, not coverage.</summary>
     public SKImage? ToleranceMask { get; set; }
     /// <summary>Gets or sets the count/percentage budget; combines with RMS using AND, with zero errors required when both are unset.</summary>
-    public SKPixelErrorBudget? ErrorBudget { get; set; }
+    public SKPixelMismatchBudget? MismatchBudget { get; set; }
     /// <summary>Gets or sets a raw difference-magnitude limit from 0 to 1, independent of tolerance; null disables this RMS gate.</summary>
     public double? MaxNormalizedRootMeanSquaredError { get; set; }
 }
@@ -123,23 +137,23 @@ public sealed class SKPixelComparerOptions
 /// <summary>Contains immutable measurements and a match decision without retaining native inputs.</summary>
 public sealed class SKPixelComparisonResult
 {
-    /// <summary>Gets whether all configured limits pass, or zero pixels are rejected when no limits are configured.</summary>
+    /// <summary>Gets whether all configured limits pass, or zero pixels mismatch when no limits are configured.</summary>
     public bool IsMatch { get; }
     /// <summary>Gets all compared pixels, including matches and tolerated differences; both metric groups use this count.</summary>
     public int TotalPixels { get; }
     /// <summary>Gets enabled channels per pixel, from one to four; identical in both metric groups.</summary>
     public int ChannelCount { get; }
     /// <summary>Gets the number of pixels exceeding at least one enabled channel's effective allowance.</summary>
-    public int ErrorPixelCount { get; }
-    /// <summary>Gets rejected pixels divided by total pixels, as a fraction from 0 to 1.</summary>
-    public double ErrorPixelFraction { get; }
+    public int MismatchedPixelCount { get; }
+    /// <summary>Gets mismatched pixels divided by total pixels, as a fraction from 0 to 1.</summary>
+    public double MismatchedPixelFraction { get; }
     /// <summary>Gets the largest raw difference on an enabled channel, including tolerated differences.</summary>
-    public int MaxChannelDelta { get; }
-    /// <summary>Gets the bounding rectangle of rejected pixels, or null when none are rejected.</summary>
-    public SKRectI? ErrorBounds { get; }
+    public int MaxChannelDifference { get; }
+    /// <summary>Gets the bounding rectangle of mismatched pixels, or null when none mismatch.</summary>
+    public SKRectI? MismatchBounds { get; }
     /// <summary>Gets unfiltered enabled-channel error sums and averages over all compared pixels times enabled channels.</summary>
     public SKPixelComparisonMetrics RawMetrics { get; }
-    /// <summary>Gets full exceeding deltas with tolerated deltas replaced by zero; pixel/channel/sample counts match RawMetrics.</summary>
+    /// <summary>Gets full exceeding channel differences with tolerated ones replaced by zero; the denominator matches RawMetrics.</summary>
     public SKPixelComparisonMetrics ThresholdedMetrics { get; }
 }
 
@@ -148,12 +162,14 @@ public sealed class SKPixelComparisonMetrics
 {
     /// <summary>Gets total compared pixels times enabled channels; tolerated samples remain in this denominator.</summary>
     public long SampleCount { get; }
-    /// <summary>Gets the 64-bit absolute-difference sum; thresholded metrics replace tolerated channel deltas with zero.</summary>
-    public long AbsoluteError { get; }
-    /// <summary>Gets the 64-bit squared-difference sum; thresholded metrics replace tolerated channel deltas with zero.</summary>
+    /// <summary>Gets the 64-bit absolute-difference sum; thresholded metrics replace tolerated channel differences with zero.</summary>
+    public long SumAbsoluteError { get; }
+    /// <summary>Gets the 64-bit squared-difference sum; thresholded metrics replace tolerated channel differences with zero.</summary>
     public long SumSquaredError { get; }
-    /// <summary>Gets AbsoluteError divided by SampleCount, in byte-channel units.</summary>
+    /// <summary>Gets SumAbsoluteError divided by SampleCount, in byte-channel units.</summary>
     public double MeanAbsoluteError { get; }
+    /// <summary>Gets mean absolute error normalized to 0-1 by the 255 channel range, using the selected sample denominator.</summary>
+    public double NormalizedMeanAbsoluteError { get; }
     /// <summary>Gets SumSquaredError divided by SampleCount, in squared byte-channel units.</summary>
     public double MeanSquaredError { get; }
     /// <summary>Gets the square root of MeanSquaredError, in byte-channel units.</summary>
@@ -167,49 +183,49 @@ public sealed class SKPixelComparisonMetrics
 /// <summary>Selects the diagnostic visualization without changing numerical comparison or acceptance.</summary>
 public enum SKPixelDifferenceStyle
 {
-    /// <summary>Uses opaque white for rejected pixels and black otherwise.</summary>
+    /// <summary>Uses opaque white for mismatched pixels and black otherwise.</summary>
     BinaryMask = 0,
-    /// <summary>Uses opaque raw absolute RGB differences, without visualizing alpha or filtering by tolerance.</summary>
-    ChannelDelta = 1,
+    /// <summary>Uses opaque raw absolute RGB differences, including excluded RGB channels; does not visualize alpha or filter by tolerance.</summary>
+    ChannelDifference = 1,
     /// <summary>Uses red for rejection, amber for tolerated differences, and dimmed actual RGB for matches.</summary>
     ThresholdOverlay = 2,
 }
 
-/// <summary>Represents an inclusive rejected-pixel count cap, percentage cap, or both.</summary>
-public readonly struct SKPixelErrorBudget : IEquatable<SKPixelErrorBudget>
+/// <summary>Represents an inclusive mismatched-pixel count cap, percentage cap, or both.</summary>
+public readonly struct SKPixelMismatchBudget : IEquatable<SKPixelMismatchBudget>
 {
     /// <summary>Creates the default budget, equivalent to Exact.</summary>
-    public SKPixelErrorBudget();
-    /// <summary>Gets a budget allowing zero rejected pixels.</summary>
-    public static SKPixelErrorBudget Exact { get; }
-    /// <summary>Creates an inclusive nonnegative rejected-pixel count cap.</summary>
-    public static SKPixelErrorBudget Pixels(long maximum);
-    /// <summary>Creates a rejected-pixel percentage cap from 0 through 100 percentage points.</summary>
-    public static SKPixelErrorBudget Percent(double maximum);
+    public SKPixelMismatchBudget();
+    /// <summary>Gets a budget allowing zero mismatched pixels.</summary>
+    public static SKPixelMismatchBudget Exact { get; }
+    /// <summary>Creates an inclusive nonnegative mismatched-pixel count cap.</summary>
+    public static SKPixelMismatchBudget Pixels(long maximum);
+    /// <summary>Creates a mismatched-pixel percentage cap from 0 through 100 percentage points.</summary>
+    public static SKPixelMismatchBudget Percent(double maximum);
     /// <summary>Creates simultaneous count and percentage caps; both must pass.</summary>
-    public static SKPixelErrorBudget Both(long pixels, double percent);
+    public static SKPixelMismatchBudget Both(long pixels, double percent);
     /// <summary>Gets the count cap, or null for a percentage-only budget.</summary>
     public long? MaxPixels { get; }
     /// <summary>Gets the cap in percentage points, or null for a count-only budget.</summary>
     public double? MaxPercent { get; }
-    /// <summary>Tests valid rejected/compared counts against the configured caps, with inclusive floor-based percentage acceptance.</summary>
-    public bool Allows(long errorPixels, long comparedPixels);
+    /// <summary>Tests valid mismatched/compared counts against the configured caps, with inclusive floor-based percentage acceptance.</summary>
+    public bool Allows(long mismatchedPixels, long comparedPixels);
     /// <summary>Tests equality of configured budget caps.</summary>
-    public bool Equals(SKPixelErrorBudget other);
+    public bool Equals(SKPixelMismatchBudget other);
     /// <summary>Tests whether an object is an equal error budget.</summary>
     public override bool Equals(object? obj);
     /// <summary>Returns a hash consistent with equality of configured caps.</summary>
     public override int GetHashCode();
     /// <summary>Tests whether two budgets are equal.</summary>
-    public static bool operator ==(SKPixelErrorBudget left, SKPixelErrorBudget right);
+    public static bool operator ==(SKPixelMismatchBudget left, SKPixelMismatchBudget right);
     /// <summary>Tests whether two budgets differ.</summary>
-    public static bool operator !=(SKPixelErrorBudget left, SKPixelErrorBudget right);
+    public static bool operator !=(SKPixelMismatchBudget left, SKPixelMismatchBudget right);
 }
 ```
 
 The seven public types are `SKPixelComparer`, `SKPixelComparerOptions`,
 `SKPixelTolerance`, `SKPixelComparisonResult`, `SKPixelComparisonMetrics`,
-`SKPixelDifferenceStyle`, and `SKPixelErrorBudget`. Results/metrics have no public constructors.
+`SKPixelDifferenceStyle`, and `SKPixelMismatchBudget`. Results/metrics have no public constructors.
 Settings have a normal public constructor and writable properties; comparison
 snapshots them without retaining native inputs.
 
@@ -235,7 +251,7 @@ var options = new SKPixelComparerOptions
     GreenTolerance = SKPixelTolerance.Absolute(20),
     BlueTolerance = SKPixelTolerance.Absolute(2),
     AlphaTolerance = SKPixelTolerance.Absolute(2),
-    ErrorBudget = SKPixelErrorBudget.Percent(0.2),
+    MismatchBudget = SKPixelMismatchBudget.Percent(0.2),
 };
 
 var result = SKPixelComparer.Compare(expected, actual, options);
@@ -280,7 +296,7 @@ var alphaOnly = new SKPixelComparerOptions
 **Zero means exact; a `null` options property disables its channel.** Disabling
 all four channels is invalid when comparison or difference generation starts.
 Disabled channels contribute neither rejection nor raw/thresholded
-metrics nor maximum delta, so red-only RMS has a one-channel denominator.
+metrics nor maximum channel difference, so red-only RMS has a one-channel denominator.
 This encodes selection without another options flag or enum.
 
 `Absolute` accepts integer byte-channel allowances from 0 through 255.
@@ -295,7 +311,7 @@ property; set the four named properties when a uniform allowance is needed.
 
 A selected channel rejects a pixel only when its absolute difference is
 **greater than** its allowance. Equality at the boundary is tolerated. A pixel
-is rejected if any enabled channel rejects it. An absolute allowance is not
+mismatches if any enabled channel exceeds its allowance. An absolute allowance is not
 named `Exact(10, ...)`, since a nonzero allowance is not exact equality.
 
 `tolerance.Allows(absoluteDifference)` owns this inclusive boundary and rejects
@@ -311,24 +327,24 @@ The optional properties on `SKPixelComparerOptions` are:
 
 | Property | Units and decision |
 | --- | --- |
-| `ErrorBudget` | Inclusive pixel count, percentage, or simultaneous count and percentage caps |
+| `MismatchBudget` | Inclusive mismatched-pixel count, percentage, or simultaneous count and percentage caps |
 | `MaxNormalizedRootMeanSquaredError` | Raw selected-channel normalized RMS, 0-1; measured value must be no greater |
 
-All configured limits must pass. With no limits, `IsMatch` means zero rejected
+All configured limits must pass. With no limits, `IsMatch` means zero mismatched
 pixels under the selected tolerance. An RMS-only limit does not secretly impose
-zero rejected pixels.
+zero mismatched pixels.
 
 ```csharp
-var count = SKPixelErrorBudget.Pixels(20);
-var percentage = SKPixelErrorBudget.Percent(0.3); // 0.3% of image pixels.
-var both = SKPixelErrorBudget.Both(pixels: 20, percent: 0.3);
-bool allowed = both.Allows(errorPixels: 3, comparedPixels: 1000);
-var options = new SKPixelComparerOptions { ErrorBudget = both };
+var count = SKPixelMismatchBudget.Pixels(20);
+var percentage = SKPixelMismatchBudget.Percent(0.3); // 0.3% of image pixels.
+var both = SKPixelMismatchBudget.Both(pixels: 20, percent: 0.3);
+bool allowed = both.Allows(mismatchedPixels: 3, comparedPixels: 1000);
+var options = new SKPixelComparerOptions { MismatchBudget = both };
 ```
 
 Count and percentage caps can differ when image area changes. `Both(20, 0.3)`
-allows 3 rejected pixels in a 1,000-pixel image and 20 in a 10,000-pixel image:
-the stricter cap wins. Default budget and `Exact` allow zero rejected pixels.
+allows 3 mismatched pixels in a 1,000-pixel image and 20 in a 10,000-pixel image:
+the stricter cap wins. Default budget and `Exact` allow zero mismatched pixels.
 Budget `Percent` uses 0-100 percentage points of compared pixels, not the 0-1
 fraction used by RMS or the channel range used by tolerance percentages.
 `MaxPixels` and `MaxPercent` expose the configured caps; `Allows` receives both
@@ -341,9 +357,9 @@ losing a pixel to the binary representation of 0.3. The calculation also avoids
 rounding count limits upward for very large denominators. Channel tolerance
 still retains its effective floating-point byte threshold; it does not floor it.
 
-`ErrorBudget = null` leaves only the RMS gate when RMS is configured; with both
+`MismatchBudget = null` leaves only the RMS gate when RMS is configured; with both
 settings unset, comparison is strict under the channel tolerances.
-`ErrorBudget = Exact` explicitly requires zero rejected pixels even alongside
+`MismatchBudget = Exact` explicitly requires zero mismatched pixels even alongside
 RMS. Budget and RMS gates combine with AND; neither changes raw measurements.
 
 For example, a tolerance of 2 ignores small rounding changes at any pixel. An
@@ -359,9 +375,9 @@ PSNR may legitimately be positive infinity when squared error is zero.
 `SKPixelComparisonResult` provides:
 
 - `IsMatch`, `TotalPixels`, and `ChannelCount`.
-- `ErrorPixelCount` and `ErrorPixelFraction`, with an explicit 0-1 fraction.
-- Raw selected-channel `MaxChannelDelta`, including tolerated differences.
-- `ErrorBounds`, the bounding rectangle of rejected pixels, or `null` when none.
+- `MismatchedPixelCount` and `MismatchedPixelFraction`, with an explicit 0-1 fraction.
+- Raw selected-channel `MaxChannelDifference`, including tolerated differences.
+- `MismatchBounds`, the bounding rectangle of mismatched pixels, or `null` when none.
 - `RawMetrics` and `ThresholdedMetrics`.
 
 Each `SKPixelComparisonMetrics` group has wide absolute/SSE numerators and
@@ -380,22 +396,49 @@ and retain no native inputs.
 Both metric groups have the same `SampleCount`, their product. For 100 pixels
 with four enabled channels, both groups divide by 400,
 even if only one channel sample exceeds tolerance. Thresholded MAE/MSE measure
-remaining error across the whole image, not average severity among rejected
+remaining error across the whole image, not average severity among mismatched
 samples. No member reports the count of exceeding channel samples.
+
+### Helpers that avoid manual arithmetic
+
+`SampleCount` already contains compared pixels times enabled channels, so metrics
+do not need redundant `TotalPixels` or `ChannelCount` properties to calculate
+averages. Prefer the existing get-only measurements:
+
+| Need | Member |
+| --- | --- |
+| Mean channel difference in byte units | `metrics.MeanAbsoluteError` |
+| Mean channel difference normalized to 0-1 | `metrics.NormalizedMeanAbsoluteError` |
+| RMS magnitude in byte units | `metrics.RootMeanSquaredError` |
+| RMS magnitude normalized to 0-1 | `metrics.NormalizedRootMeanSquaredError` |
+| Share of pixels exceeding tolerance | `result.MismatchedPixelFraction` |
+| Complete acceptance decision | `result.IsMatch` |
+
+The new normalized-MAE helper calculates
+`SumAbsoluteError / (SampleCount * 255.0)`, with zero for zero samples. It
+automatically handles RGB, RGBA or individual channels and avoids caller-side
+hard-coded `4` and `255`. `SampleImage` uses it for the existing raw-MAE gate;
+raw versus thresholded choice remains explicit at the call site.
+
+Possible later shortcuts include normalized MSE, maximum channel difference
+normalized to 0-1, or mismatch percentage in 0-100 units. Add them only when a
+caller needs them; prefer explicit units and derived getters over duplicate
+metadata or a generic calculation framework. A percentage helper would not
+change the existing 0-1 fraction's meaning.
 
 ```csharp
 using var binary = SKPixelComparer.GenerateDifferenceImage(
     expected, actual, SKPixelDifferenceStyle.BinaryMask, options);
 using var overlay = SKPixelComparer.GenerateDifferenceImage(expected, actual, options: options);
-using var delta = SKPixelComparer.GenerateDifferenceImage(
-    expected, actual, SKPixelDifferenceStyle.ChannelDelta, options);
+using var difference = SKPixelComparer.GenerateDifferenceImage(
+    expected, actual, SKPixelDifferenceStyle.ChannelDifference, options);
 ```
 
 The default difference image is `ThresholdOverlay`, so alpha-only rejections are
-visible. Red means rejected, amber means a selected difference within tolerance,
+visible. Red means mismatched, amber means a selected difference within tolerance,
 and matching pixels show dimmed actual RGB. `BinaryMask` uses white/black.
-`ChannelDelta` is an opaque raw RGB diagnostic and does not claim to display
-alpha-only changes.
+`ChannelDifference` is an opaque raw RGB diagnostic, including RGB channels
+excluded from classification. It does not claim to display alpha-only changes.
 
 Limits affect `IsMatch`, not which pixels are colored red. Every comparison and
 binary/overlay diagnostic uses the same classification settings.
@@ -476,10 +519,10 @@ gate. It is normalized raw MAE:
 
 ```csharp
 var normalizedMae =
-    result.RawMetrics.AbsoluteError / (result.TotalPixels * 4.0 * 255);
+    result.RawMetrics.NormalizedMeanAbsoluteError;
 ```
 
-It is neither NRMSE nor the share of rejected pixels. Browser animated-GPU smoke
+It is neither NRMSE nor the share of mismatched pixels. Browser animated-GPU smoke
 checks currently use 0.06; a broad, slight change can pass this criterion while
 many pixels differ. Do not substitute the RMS limit or add the pixel-count gate
 as a second requirement. Existing infrastructure tests cover both policies.

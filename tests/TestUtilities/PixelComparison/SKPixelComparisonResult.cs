@@ -9,20 +9,20 @@ namespace SkiaSharp.Testing;
 /// <remarks>Contains no references to the compared inputs, options, or borrowed mask.</remarks>
 public sealed class SKPixelComparisonResult
 {
-	internal SKPixelComparisonResult(int totalPixels, int channelCount, int errorPixelCount, int maxChannelDelta,
-		SKRectI? errorBounds, SKPixelComparisonMetrics rawMetrics, SKPixelComparisonMetrics thresholdedMetrics, bool isMatch)
+	internal SKPixelComparisonResult(int totalPixels, int channelCount, int mismatchedPixelCount, int maxChannelDifference,
+		SKRectI? mismatchBounds, SKPixelComparisonMetrics rawMetrics, SKPixelComparisonMetrics thresholdedMetrics, bool isMatch)
 	{
 		TotalPixels = totalPixels;
 		ChannelCount = channelCount;
-		ErrorPixelCount = errorPixelCount;
-		MaxChannelDelta = maxChannelDelta;
-		ErrorBounds = errorBounds;
+		MismatchedPixelCount = mismatchedPixelCount;
+		MaxChannelDifference = maxChannelDifference;
+		MismatchBounds = mismatchBounds;
 		RawMetrics = rawMetrics;
 		ThresholdedMetrics = thresholdedMetrics;
 		IsMatch = isMatch;
 	}
 
-	/// <summary>Whether the configured rejected-pixel budget and/or raw RMS limit pass, or (without either) no pixel is rejected.</summary>
+	/// <summary>Whether the configured mismatched-pixel budget and/or raw RMS limit pass, or (without either) no pixel is mismatched.</summary>
 	public bool IsMatch { get; }
 
 	/// <summary>Gets all compared image pixels, including exact matches and tolerated differences; both metric groups use this count.</summary>
@@ -32,20 +32,20 @@ public sealed class SKPixelComparisonResult
 	public int ChannelCount { get; }
 
 	/// <summary>Number of pixels whose difference exceeds at least one enabled channel allowance.</summary>
-	public int ErrorPixelCount { get; }
+	public int MismatchedPixelCount { get; }
 
-	/// <summary>Gets rejected pixels divided by all compared pixels as a fraction from zero to one; returns zero when the total is zero.</summary>
-	public double ErrorPixelFraction => TotalPixels == 0 ? 0.0 : (double)ErrorPixelCount / TotalPixels;
+	/// <summary>Gets mismatched pixels divided by all compared pixels as a fraction from zero to one; returns zero when the total is zero.</summary>
+	public double MismatchedPixelFraction => TotalPixels == 0 ? 0.0 : (double)MismatchedPixelCount / TotalPixels;
 
-	/// <summary>Largest raw delta on any enabled channel, including tolerated differences.</summary>
-	public int MaxChannelDelta { get; }
+	/// <summary>Largest raw absolute difference on any enabled channel, including tolerated differences.</summary>
+	public int MaxChannelDifference { get; }
 
-	/// <summary>Bounding rectangle of rejected pixels, or null when none are rejected.</summary>
-	public SKRectI? ErrorBounds { get; }
+	/// <summary>Bounding rectangle of mismatched pixels, or null when none are mismatched.</summary>
+	public SKRectI? MismatchBounds { get; }
 
-	/// <summary>Gets enabled-channel error sums before tolerance or mask filtering, divided by all compared pixels times enabled channels.</summary>
+	/// <summary>Gets enabled-channel error statistics before tolerance or mask filtering.</summary>
 	public SKPixelComparisonMetrics RawMetrics { get; }
 
-	/// <summary>Gets full deltas only for enabled channels exceeding their effective allowances; tolerated deltas are zero and the denominator matches RawMetrics.</summary>
+	/// <summary>Gets error statistics for enabled channels exceeding their allowances; tolerated differences are zero and the denominator matches RawMetrics.</summary>
 	public SKPixelComparisonMetrics ThresholdedMetrics { get; }
 }
