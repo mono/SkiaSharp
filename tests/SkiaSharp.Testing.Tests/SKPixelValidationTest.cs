@@ -12,7 +12,7 @@ public class SKPixelValidationTest : SKPixelComparerTestBase
 		var attributes = typeof(SKPixelComparer).Assembly.GetCustomAttributesData();
 		var experimental = Assert.Single(attributes,
 			attribute => attribute.AttributeType.FullName == "System.Diagnostics.CodeAnalysis.ExperimentalAttribute");
-		Assert.Equal("SKIA001", Assert.Single(experimental.ConstructorArguments).Value);
+		Assert.Equal("SKIA5001", Assert.Single(experimental.ConstructorArguments).Value);
 		Assert.Equal("https://github.com/mono/SkiaSharp/blob/main/documentation/dev/pixel-comparison.md#experimental-api-contract",
 			Assert.Single(experimental.NamedArguments).TypedValue.Value);
 		Assert.DoesNotContain(attributes,
