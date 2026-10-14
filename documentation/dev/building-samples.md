@@ -235,6 +235,9 @@ UiAutomator2 selects its own available driver port. Mac2 requires an unlocked GU
 Xcode automation/XcodeHelper Accessibility permissions, and
 an installed Mac2 driver. Appium discovers and builds its WebDriverAgentMac.
 Windows requires an interactive desktop, Developer Mode and installed WinAppDriver.
+Windows Appium CI jobs select `1es-windows-2022-open`, matching MAUI's public
+Windows UI-test image; ordinary Windows build jobs keep their existing image.
+The installer does not enable Developer Mode or change desktop settings.
 Appium finds WinAppDriver in standard Program Files locations or its MSI registration;
 `APPIUM_WAD_PATH` optionally overrides its executable path.
 Mac2 launches the exact built bundle through `appPath`; no custom launch or

@@ -11,7 +11,17 @@ jobs:
     parameters:
       name: ${{ parameters.name }}
       displayName: Appium (${{ parameters.platform }})
-      buildAgent: ${{ parameters.buildAgent }}
+      buildAgent:
+        ${{ each setting in parameters.buildAgent }}:
+          ${{ if ne(setting.key, 'pool') }}:
+            ${{ setting.key }}: ${{ setting.value }}
+        pool:
+          ${{ if eq(parameters.platform, 'Windows') }}:
+            name: ${{ parameters.buildAgent.pool.name }}
+            demands: ImageOverride -equals 1es-windows-2022-open
+            os: windows
+          ${{ else }}:
+            ${{ insert }}: ${{ parameters.buildAgent.pool }}
       target: samples
       additionalArgs: --runGroup=${{ parameters.runGroup }} --sampleRunId=${{ parameters.name }} --skipExternals="all"
       env:
@@ -89,13 +99,13 @@ jobs:
                   $json = & xcrun simctl list runtimes --json
                   if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the installed simulator runtimes.' }
                   $runtimes = ($json | ConvertFrom-Json).runtimes
-                  if (!($runtimes | Where-Object { $_.name.StartsWith('iOS ') -and $_.version -eq '${{ parameters.device.version }}' -and $_.isAvailable })) {
-                      & xcodebuild -downloadPlatform iOS -buildVersion '${{ parameters.device.version }}'
+                  if (!($runtimes | Where-Object { $_.name.StartsWith('iOS ') -and $_.version -eq '${{ parameters.device.version }}' -and $_.buildversion -eq '${{ parameters.device.buildVersion }}' -and $_.isAvailable })) {
+                      & xcodebuild -downloadPlatform iOS -buildVersion '${{ parameters.device.buildVersion }}'
                       if ($LASTEXITCODE -ne 0) { throw 'Selected iOS simulator runtime installation failed.' }
                       $json = & xcrun simctl list runtimes --json
                       if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the installed simulator runtimes.' }
                       $runtimes = ($json | ConvertFrom-Json).runtimes
-                      if (!($runtimes | Where-Object { $_.name.StartsWith('iOS ') -and $_.version -eq '${{ parameters.device.version }}' -and $_.isAvailable })) {
+                      if (!($runtimes | Where-Object { $_.name.StartsWith('iOS ') -and $_.version -eq '${{ parameters.device.version }}' -and $_.buildversion -eq '${{ parameters.device.buildVersion }}' -and $_.isAvailable })) {
                           throw 'The exact selected iOS simulator runtime is not available after installation.'
                       }
                   }
