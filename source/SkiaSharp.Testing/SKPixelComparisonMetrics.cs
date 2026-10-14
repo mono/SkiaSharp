@@ -5,23 +5,23 @@ using System;
 namespace SkiaSharp.Testing;
 
 /// <summary>Raw or thresholded enabled-channel error statistics over all compared pixels.</summary>
-/// <remarks>Both metric groups use the same sample denominator. Thresholding changes only the error sums: tolerated channel differences contribute zero, while differences exceeding their allowances contribute their full magnitudes.</remarks>
+/// <remarks>Both metric groups exclude ignored pixels and use the same sample denominator. Thresholding changes only the error sums: tolerated channel differences contribute zero, while differences exceeding their allowances contribute their full magnitudes.</remarks>
 public sealed class SKPixelComparisonMetrics
 {
-	internal SKPixelComparisonMetrics(int totalPixels, int channelCount, long sumAbsoluteError, long sumSquaredError)
+	internal SKPixelComparisonMetrics(int comparedPixels, int channelCount, long sumAbsoluteError, long sumSquaredError)
 	{
-		SampleCount = (long)totalPixels * channelCount;
+		SampleCount = (long)comparedPixels * channelCount;
 		SumAbsoluteError = sumAbsoluteError;
 		SumSquaredError = sumSquaredError;
 	}
 
-	/// <summary>Gets total compared pixels times enabled channels; tolerated samples remain in this denominator.</summary>
+	/// <summary>Gets nonignored compared pixels times enabled channels; tolerated samples remain in this denominator.</summary>
 	public long SampleCount { get; }
 
-	/// <summary>Gets the sum of enabled-channel absolute byte differences; thresholded metrics replace tolerated differences with zero.</summary>
+	/// <summary>Gets the sum of nonignored enabled-channel absolute byte differences; thresholded metrics replace tolerated differences with zero.</summary>
 	public long SumAbsoluteError { get; }
 
-	/// <summary>Gets the sum of squared enabled-channel byte differences; thresholded metrics replace tolerated differences with zero.</summary>
+	/// <summary>Gets the sum of squared nonignored enabled-channel byte differences; thresholded metrics replace tolerated differences with zero.</summary>
 	public long SumSquaredError { get; }
 
 	/// <summary>Gets absolute error divided by all selected samples, in byte units; returns zero when the sample count is zero.</summary>

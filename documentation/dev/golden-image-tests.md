@@ -115,7 +115,7 @@ architecture and replayed on others. Tolerance is chosen by renderer alone —
 `GoldenTolerance.For` sees only the renderer name.
 
 The [shared pixel comparer](pixel-comparison.md) lives in
-`tests/TestUtilities/PixelComparison/`, not in the shipping SkiaSharp assembly.
+`source/SkiaSharp.Testing/`, not in the shipping SkiaSharp assembly.
 The matrix supplies premultiplied RGBA comparison through
 `SKPixelTolerance.Absolute(ChannelTolerance)` and configures
 `MismatchBudget = SKPixelMismatchBudget.Percent(MaxOutlierFraction * 100)`

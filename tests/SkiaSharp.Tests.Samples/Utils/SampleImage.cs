@@ -107,6 +107,7 @@ internal static class SampleImage
         var comparisonOptions = new SKPixelComparerOptions
         {
             AlphaType = SKAlphaType.Premul,
+            MaxNormalizedMeanAbsoluteError = maxAverageColorErrorFraction,
         };
         var result = SKPixelComparer.Compare(expectedImage, actualImage, comparisonOptions);
         var averageColorErrorFraction = result.RawMetrics.NormalizedMeanAbsoluteError;
@@ -119,8 +120,8 @@ internal static class SampleImage
             (maxAverageColorErrorFraction is { } allowed
                 ? $"allowed average color error {allowed:P3}."
                 : $"allowed differing pixels {maxErrorPixelFraction:P3}."));
-        if (maxAverageColorErrorFraction is { } averageLimit
-            ? averageColorErrorFraction <= averageLimit
+        if (maxAverageColorErrorFraction.HasValue
+            ? result.IsMatch
             : result.MismatchedPixelCount <= result.TotalPixels * maxErrorPixelFraction)
         {
             if (!reportMismatch)
