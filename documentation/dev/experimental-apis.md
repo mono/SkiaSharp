@@ -27,7 +27,7 @@ carrying it. Native-assets payloads and build/analyzer diagnostics are separate.
 
 | ID | Feature | Scope | Status |
 | --- | --- | --- | --- |
-| `SKIA4001` | [Pixel comparison](../docfx/testing/image-comparison.md) | `SkiaSharp.Testing` assembly | Experimental |
+| `SKIA4001` | [Pixel comparison](../docfx/guides/testing/image-comparison.md) | `SkiaSharp.Testing` assembly | Experimental |
 
 No HarfBuzzSharp IDs are allocated. When adding an experiment, record its ID and
 link its conceptual/API documentation here. Keep published IDs fixed; when an
