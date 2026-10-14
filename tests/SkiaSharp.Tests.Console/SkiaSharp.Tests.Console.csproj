@@ -7,6 +7,7 @@
     <DefineConstants Condition="$(TargetFramework.StartsWith('net4'))">$(DefineConstants);SYSTEM_DRAWING</DefineConstants>
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
     <AssemblyName>SkiaSharp.Tests</AssemblyName>
+    <NoWarn>$(NoWarn);SKTEST001</NoWarn>
     <OutputType>Exe</OutputType>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
@@ -35,6 +36,7 @@
     <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Testing\SkiaSharp.Testing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,7 +49,6 @@
     <None Remove="TestResults\**" />
   </ItemGroup>
 
-  <Import Project="..\TestUtilities\PixelComparison\PixelComparison.projitems" />
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
 

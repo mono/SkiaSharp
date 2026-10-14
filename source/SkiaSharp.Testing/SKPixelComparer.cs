@@ -9,12 +9,12 @@ using System;
 namespace SkiaSharp.Testing;
 
 /// <summary>Compares two decoded images, bitmaps, or pixmaps after normalization to tightly packed BGRA8888.</summary>
-/// <remarks>Inputs and optional tolerance masks are borrowed for a synchronous call; do not mutate or dispose them concurrently. Results retain no native inputs. Difference images are independent, caller-owned, and must be disposed.</remarks>
+/// <remarks>Inputs and optional tolerance and ignore masks are borrowed for a synchronous call; do not mutate or dispose them concurrently. Results retain no native inputs. Difference images are independent, caller-owned, and must be disposed.</remarks>
 public static class SKPixelComparer
 {
-	/// <summary>Compares two images with snapshotted per-channel tolerances, optional mask, and whole-image match budgets.</summary>
+	/// <summary>Compares two images with snapshotted per-channel tolerances, optional tolerance and ignore masks, and match gates over nonignored coverage.</summary>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
-	/// <exception cref="ArgumentException">An input or mask is empty or disposed, or all channels are disabled.</exception>
+	/// <exception cref="ArgumentException">An input or mask is empty or disposed, all channels are disabled, or IgnoreMask excludes every pixel (parameter IgnoreMask).</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">A configured alpha type or budget is invalid.</exception>
 	public static SKPixelComparisonResult Compare(SKImage first, SKImage second, SKPixelComparerOptions? options = null)
@@ -24,12 +24,13 @@ public static class SKPixelComparer
 		using var a = Normalize(first, settings);
 		using var b = Normalize(second, settings);
 		using var mask = NormalizeMask(first.Width, first.Height, settings);
-		return ComparePixels(a, b, mask, settings);
+		using var ignoreMask = ReadIgnoreMask(first.Width, first.Height, settings);
+		return ComparePixels(a, b, mask, ignoreMask, settings);
 	}
 
-	/// <summary>Compares two bitmaps with snapshotted per-channel tolerances, optional mask, and whole-image match budgets.</summary>
+	/// <summary>Compares two bitmaps with snapshotted per-channel tolerances, optional tolerance and ignore masks, and match gates over nonignored coverage.</summary>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
-	/// <exception cref="ArgumentException">An input or mask is empty or disposed, or all channels are disabled.</exception>
+	/// <exception cref="ArgumentException">An input or mask is empty or disposed, all channels are disabled, or IgnoreMask excludes every pixel (parameter IgnoreMask).</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">A configured alpha type or budget is invalid.</exception>
 	public static SKPixelComparisonResult Compare(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options = null)
@@ -39,12 +40,13 @@ public static class SKPixelComparer
 		using var a = Normalize(first, settings);
 		using var b = Normalize(second, settings);
 		using var mask = NormalizeMask(first.Width, first.Height, settings);
-		return ComparePixels(a, b, mask, settings);
+		using var ignoreMask = ReadIgnoreMask(first.Width, first.Height, settings);
+		return ComparePixels(a, b, mask, ignoreMask, settings);
 	}
 
-	/// <summary>Compares two pixmaps with snapshotted per-channel tolerances, optional mask, and whole-image match budgets.</summary>
+	/// <summary>Compares two pixmaps with snapshotted per-channel tolerances, optional tolerance and ignore masks, and match gates over nonignored coverage.</summary>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
-	/// <exception cref="ArgumentException">An input or mask is empty or disposed, or all channels are disabled.</exception>
+	/// <exception cref="ArgumentException">An input or mask is empty or disposed, all channels are disabled, or IgnoreMask excludes every pixel (parameter IgnoreMask).</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">A configured alpha type or budget is invalid.</exception>
 	public static SKPixelComparisonResult Compare(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options = null)
@@ -54,12 +56,14 @@ public static class SKPixelComparer
 		using var a = Normalize(first, settings);
 		using var b = Normalize(second, settings);
 		using var mask = NormalizeMask(first.Width, first.Height, settings);
-		return ComparePixels(a, b, mask, settings);
+		using var ignoreMask = ReadIgnoreMask(first.Width, first.Height, settings);
+		return ComparePixels(a, b, mask, ignoreMask, settings);
 	}
 
-	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and an optional borrowed mask.</summary>
+	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and optional borrowed tolerance and ignore masks.</summary>
+	/// <remarks>Ignored pixels are black in BinaryMask and ChannelDifference, or neutral gray (128,128,128) in ThresholdOverlay.</remarks>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
-	/// <exception cref="ArgumentException">An input or mask is empty or disposed, or all channels are disabled.</exception>
+	/// <exception cref="ArgumentException">An input or mask is empty or disposed, all channels are disabled, or IgnoreMask excludes every pixel (parameter IgnoreMask).</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">The style, alpha type, or budget is invalid.</exception>
 	public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelDifferenceStyle style = SKPixelDifferenceStyle.ThresholdOverlay, SKPixelComparerOptions? options = null)
@@ -70,12 +74,14 @@ public static class SKPixelComparer
 		using var a = Normalize(first, settings);
 		using var b = Normalize(second, settings);
 		using var mask = NormalizeMask(first.Width, first.Height, settings);
-		return DifferenceImage(a, b, mask, style, settings);
+		using var ignoreMask = ReadIgnoreMask(first.Width, first.Height, settings);
+		return DifferenceImage(a, b, mask, ignoreMask, style, settings);
 	}
 
-	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and an optional borrowed mask.</summary>
+	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and optional borrowed tolerance and ignore masks.</summary>
+	/// <remarks>Ignored pixels are black in BinaryMask and ChannelDifference, or neutral gray (128,128,128) in ThresholdOverlay.</remarks>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
-	/// <exception cref="ArgumentException">An input or mask is empty or disposed, or all channels are disabled.</exception>
+	/// <exception cref="ArgumentException">An input or mask is empty or disposed, all channels are disabled, or IgnoreMask excludes every pixel (parameter IgnoreMask).</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">The style, alpha type, or budget is invalid.</exception>
 	public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelDifferenceStyle style = SKPixelDifferenceStyle.ThresholdOverlay, SKPixelComparerOptions? options = null)
@@ -86,12 +92,14 @@ public static class SKPixelComparer
 		using var a = Normalize(first, settings);
 		using var b = Normalize(second, settings);
 		using var mask = NormalizeMask(first.Width, first.Height, settings);
-		return DifferenceImage(a, b, mask, style, settings);
+		using var ignoreMask = ReadIgnoreMask(first.Width, first.Height, settings);
+		return DifferenceImage(a, b, mask, ignoreMask, style, settings);
 	}
 
-	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and an optional borrowed mask.</summary>
+	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and optional borrowed tolerance and ignore masks.</summary>
+	/// <remarks>Ignored pixels are black in BinaryMask and ChannelDifference, or neutral gray (128,128,128) in ThresholdOverlay.</remarks>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
-	/// <exception cref="ArgumentException">An input or mask is empty or disposed, or all channels are disabled.</exception>
+	/// <exception cref="ArgumentException">An input or mask is empty or disposed, all channels are disabled, or IgnoreMask excludes every pixel (parameter IgnoreMask).</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">The style, alpha type, or budget is invalid.</exception>
 	public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelDifferenceStyle style = SKPixelDifferenceStyle.ThresholdOverlay, SKPixelComparerOptions? options = null)
@@ -102,7 +110,8 @@ public static class SKPixelComparer
 		using var a = Normalize(first, settings);
 		using var b = Normalize(second, settings);
 		using var mask = NormalizeMask(first.Width, first.Height, settings);
-		return DifferenceImage(a, b, mask, style, settings);
+		using var ignoreMask = ReadIgnoreMask(first.Width, first.Height, settings);
+		return DifferenceImage(a, b, mask, ignoreMask, style, settings);
 	}
 
 	private static SKBitmap? NormalizeMask(int width, int height, Settings settings)
@@ -113,9 +122,19 @@ public static class SKPixelComparer
 		return Normalize(settings.Mask, settings);
 	}
 
-	private static SKPixelComparisonResult ComparePixels(SKBitmap first, SKBitmap second, SKBitmap? mask, Settings settings)
+	private static SKBitmap? ReadIgnoreMask(int width, int height, Settings settings)
+	{
+		if (settings.IgnoreMask == null)
+			return null;
+		Validate(settings.IgnoreMask, nameof(SKPixelComparerOptions.IgnoreMask));
+		ValidateDimensions(width, height, settings.IgnoreMask.Width, settings.IgnoreMask.Height);
+		return ReadPixels(settings.IgnoreMask, SKAlphaType.Unpremul);
+	}
+
+	private static SKPixelComparisonResult ComparePixels(SKBitmap first, SKBitmap second, SKBitmap? mask, SKBitmap? ignoreMask, Settings settings)
 	{
 		var totalPixels = checked(first.Width * first.Height);
+		var comparedPixels = 0;
 		var mismatchedPixels = 0;
 		var maxChannelDifference = 0;
 		var rawSumAbsoluteError = 0L;
@@ -130,14 +149,19 @@ public static class SKPixelComparer
 		using var aPixmap = first.PeekPixels();
 		using var bPixmap = second.PeekPixels();
 		using var mPixmap = mask?.PeekPixels();
-		if (aPixmap == null || bPixmap == null || (mask != null && mPixmap == null))
+		using var iPixmap = ignoreMask?.PeekPixels();
+		if (aPixmap == null || bPixmap == null || (mask != null && mPixmap == null) || (ignoreMask != null && iPixmap == null))
 			throw new InvalidOperationException("Unable to access normalized pixels.");
 		var a = aPixmap.GetPixelSpan<SKColor>();
 		var b = bPixmap.GetPixelSpan<SKColor>();
 		var m = mPixmap == null ? Span<SKColor>.Empty : mPixmap.GetPixelSpan<SKColor>();
+		var ignored = iPixmap == null ? Span<SKColor>.Empty : iPixmap.GetPixelSpan<SKColor>();
 
 		for (var i = 0; i < totalPixels; i++)
 		{
+			if (ignoreMask != null && IsIgnored(ignored[i]))
+				continue;
+			comparedPixels++;
 			var delta = Evaluate(a[i], b[i], mask == null ? (SKColor?)null : m[i], settings);
 			rawSumAbsoluteError = checked(rawSumAbsoluteError + delta.RawSumAbsoluteError);
 			rawSumSquaredError = checked(rawSumSquaredError + delta.RawSumSquaredError);
@@ -156,28 +180,34 @@ public static class SKPixelComparer
 			maxChannelDifference = Math.Max(maxChannelDifference, delta.MaxChannelDifference);
 		}
 
-		var raw = new SKPixelComparisonMetrics(totalPixels, settings.ChannelCount, rawSumAbsoluteError, rawSumSquaredError);
-		var thresholded = new SKPixelComparisonMetrics(totalPixels, settings.ChannelCount, thresholdedSumAbsoluteError, thresholdedSumSquaredError);
-		var isMatch = (!settings.MismatchBudget.HasValue && !settings.MaxNormalizedRootMeanSquaredError.HasValue
+		ValidateCoverage(comparedPixels);
+		var raw = new SKPixelComparisonMetrics(comparedPixels, settings.ChannelCount, rawSumAbsoluteError, rawSumSquaredError);
+		var thresholded = new SKPixelComparisonMetrics(comparedPixels, settings.ChannelCount, thresholdedSumAbsoluteError, thresholdedSumSquaredError);
+		var isMatch = (!settings.MismatchBudget.HasValue && !settings.MaxNormalizedRootMeanSquaredError.HasValue && !settings.MaxNormalizedMeanAbsoluteError.HasValue
 				? mismatchedPixels == 0
-				: (!settings.MismatchBudget.HasValue || settings.MismatchBudget.Value.Allows(mismatchedPixels, totalPixels))) &&
+				: (!settings.MismatchBudget.HasValue || settings.MismatchBudget.Value.Allows(mismatchedPixels, comparedPixels))) &&
 			(!settings.MaxNormalizedRootMeanSquaredError.HasValue ||
-				raw.NormalizedRootMeanSquaredError <= settings.MaxNormalizedRootMeanSquaredError.Value);
-		return new SKPixelComparisonResult(totalPixels, settings.ChannelCount, mismatchedPixels, maxChannelDifference,
+				raw.NormalizedRootMeanSquaredError <= settings.MaxNormalizedRootMeanSquaredError.Value) &&
+			(!settings.MaxNormalizedMeanAbsoluteError.HasValue ||
+				raw.NormalizedMeanAbsoluteError <= settings.MaxNormalizedMeanAbsoluteError.Value);
+		return new SKPixelComparisonResult(totalPixels, comparedPixels, settings.ChannelCount, mismatchedPixels, maxChannelDifference,
 			mismatchedPixels == 0 ? (SKRectI?)null : new SKRectI(left, top, right, bottom), raw, thresholded, isMatch);
 	}
 
-	private static SKImage DifferenceImage(SKBitmap first, SKBitmap second, SKBitmap? mask, SKPixelDifferenceStyle style, Settings settings)
+	private static SKImage DifferenceImage(SKBitmap first, SKBitmap second, SKBitmap? mask, SKBitmap? ignoreMask, SKPixelDifferenceStyle style, Settings settings)
 	{
 		var totalPixels = checked(first.Width * first.Height);
+		var comparedPixels = 0;
 		using var aPixmap = first.PeekPixels();
 		using var bPixmap = second.PeekPixels();
 		using var mPixmap = mask?.PeekPixels();
-		if (aPixmap == null || bPixmap == null || (mask != null && mPixmap == null))
+		using var iPixmap = ignoreMask?.PeekPixels();
+		if (aPixmap == null || bPixmap == null || (mask != null && mPixmap == null) || (ignoreMask != null && iPixmap == null))
 			throw new InvalidOperationException("Unable to access normalized pixels.");
 		var a = aPixmap.GetPixelSpan<SKColor>();
 		var b = bPixmap.GetPixelSpan<SKColor>();
 		var m = mPixmap == null ? Span<SKColor>.Empty : mPixmap.GetPixelSpan<SKColor>();
+		var ignored = iPixmap == null ? Span<SKColor>.Empty : iPixmap.GetPixelSpan<SKColor>();
 
 		using var bitmap = Allocate(new SKImageInfo(first.Width, first.Height, SKColorType.Bgra8888, SKAlphaType.Opaque));
 		using var pixmap = bitmap.PeekPixels();
@@ -186,6 +216,12 @@ public static class SKPixelComparer
 		var pixels = pixmap.GetPixelSpan<SKColor>();
 		for (var i = 0; i < totalPixels; i++)
 		{
+			if (ignoreMask != null && IsIgnored(ignored[i]))
+			{
+				pixels[i] = style == SKPixelDifferenceStyle.ThresholdOverlay ? new SKColor(128, 128, 128) : SKColors.Black;
+				continue;
+			}
+			comparedPixels++;
 			var delta = Evaluate(a[i], b[i], mask == null ? (SKColor?)null : m[i], settings);
 			pixels[i] = style switch
 			{
@@ -197,7 +233,16 @@ public static class SKPixelComparer
 			};
 		}
 
+		ValidateCoverage(comparedPixels);
 		return SKImage.FromBitmap(bitmap) ?? throw new InvalidOperationException("Unable to create difference image.");
+	}
+
+	private static bool IsIgnored(SKColor pixel) => pixel.Red != 0 || pixel.Green != 0 || pixel.Blue != 0;
+
+	private static void ValidateCoverage(int comparedPixels)
+	{
+		if (comparedPixels == 0)
+			throw new ArgumentException("IgnoreMask must leave at least one pixel compared.", nameof(SKPixelComparerOptions.IgnoreMask));
 	}
 
 	private static PixelDifference Evaluate(SKColor first, SKColor second, SKColor? mask, Settings settings)
@@ -276,14 +321,18 @@ public static class SKPixelComparer
 				(BlueTolerance.HasValue ? 1 : 0) + (AlphaTolerance.HasValue ? 1 : 0);
 			AlphaType = options?.AlphaType ?? SKAlphaType.Unpremul;
 			Mask = options?.ToleranceMask;
+			IgnoreMask = options?.IgnoreMask;
 			MismatchBudget = options?.MismatchBudget;
 			MaxNormalizedRootMeanSquaredError = options?.MaxNormalizedRootMeanSquaredError;
+			MaxNormalizedMeanAbsoluteError = options?.MaxNormalizedMeanAbsoluteError;
 			if (ChannelCount == 0)
 				throw new ArgumentException("At least one channel must be enabled.", nameof(options));
 			if (AlphaType != SKAlphaType.Unpremul && AlphaType != SKAlphaType.Premul)
 				throw new ArgumentOutOfRangeException(nameof(options), "AlphaType must be Unpremul or Premul.");
 			if (InvalidFraction(MaxNormalizedRootMeanSquaredError))
 				throw new ArgumentOutOfRangeException(nameof(options), "MaxNormalizedRootMeanSquaredError must be finite and between 0 and 1.");
+			if (InvalidFraction(MaxNormalizedMeanAbsoluteError))
+				throw new ArgumentOutOfRangeException(nameof(options), "MaxNormalizedMeanAbsoluteError must be finite and between 0 and 1.");
 		}
 
 		public SKPixelTolerance? RedTolerance { get; }
@@ -293,8 +342,10 @@ public static class SKPixelComparer
 		public int ChannelCount { get; }
 		public SKAlphaType AlphaType { get; }
 		public SKImage? Mask { get; }
+		public SKImage? IgnoreMask { get; }
 		public SKPixelMismatchBudget? MismatchBudget { get; }
 		public double? MaxNormalizedRootMeanSquaredError { get; }
+		public double? MaxNormalizedMeanAbsoluteError { get; }
 
 		private static bool InvalidFraction(double? value) =>
 			value.HasValue && (double.IsNaN(value.Value) || double.IsInfinity(value.Value) || value < 0 || value > 1);
@@ -302,16 +353,30 @@ public static class SKPixelComparer
 
 	private static SKBitmap Normalize(SKImage source, Settings settings)
 	{
-		var bitmap = Allocate(new SKImageInfo(source.Width, source.Height, SKColorType.Bgra8888, settings.AlphaType));
+		var bitmap = ReadPixels(source, settings.AlphaType);
+		try
+		{
+			// Validate readback, then retain Extended's draw normalization, including hidden RGB at alpha zero.
+			using var canvas = new SKCanvas(bitmap);
+			canvas.Clear(SKColors.Transparent);
+			canvas.DrawImage(source, 0, 0, SKSamplingOptions.Default);
+			return bitmap;
+		}
+		catch
+		{
+			bitmap.Dispose();
+			throw;
+		}
+	}
+
+	private static SKBitmap ReadPixels(SKImage source, SKAlphaType alphaType)
+	{
+		var bitmap = Allocate(new SKImageInfo(source.Width, source.Height, SKColorType.Bgra8888, alphaType));
 		try
 		{
 			using var destination = bitmap.PeekPixels();
 			if (destination == null || !source.ReadPixels(destination))
 				throw new InvalidOperationException("Unable to read image pixels.");
-			// Validate readback, then retain Extended's draw normalization, including hidden RGB at alpha zero.
-			using var canvas = new SKCanvas(bitmap);
-			canvas.Clear(SKColors.Transparent);
-			canvas.DrawImage(source, 0, 0, SKSamplingOptions.Default);
 			return bitmap;
 		}
 		catch
