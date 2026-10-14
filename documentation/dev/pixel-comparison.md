@@ -692,7 +692,7 @@ still applies.
 
 `SKIA5001` identifies the testing library's experimental comparison API, not every
 future experiment. Other independently opted-in product APIs or views receive
-their own IDs under the shared [experimental diagnostic registry](README.md#experimental-api-diagnostic-ids).
+their own IDs under the shared [experimental API policy and registry](experimental-apis.md).
 
 Experimental APIs may change between releases even when the package has a stable
 NuGet version. This does not relax the ABI contract of `SkiaSharp.dll` or any
