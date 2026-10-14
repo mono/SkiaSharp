@@ -1,37 +1,58 @@
 {
-  "theme": "Runtime performance and reliability",
-  "highlights_headline": "SkiaSharp 4.156.0 improves managed rendering and text-shaping performance while correcting stream lifetime behavior.",
-  "highlights_body": "Image pixel copies and HarfBuzz text encoding allocate less during repeated use, while native feature-string decoding avoids an unnecessary allocation.",
+  "theme": "Rendering and memory efficiency",
+  "highlights_headline": "This unreleased update improves rendering responsiveness, memory use, and WebGPU distribution across supported platforms.",
+  "highlights_body": "It synchronizes Android texture rendering with display refresh, reduces allocations in image and text-shaping paths, packages the WebGPU implementation into the native library, and corrects front-buffered stream retention.",
   "breaking": [],
   "categories": [
     {
-      "heading": "Lifecycle & Internals",
+      "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Managed image and text shaping allocations reduced",
-          "detail": "Image pixel copies are optimized, and HarfBuzzSharp reuses its UTF-32 encoding buffer to reduce allocation pressure in repeated rendering and shaping workloads.",
+          "lead": "Android texture rendering synchronized",
+          "detail": "Coordinates texture rendering with the display refresh cycle for smoother Android output.",
           "prs": [
-            5052,
-            5060
+            5345
           ]
         },
         {
-          "lead": "Feature-string decoding avoids native allocation",
-          "detail": "Parsing OpenType feature strings no longer allocates native memory unnecessarily while preserving the existing decoded results.",
-          "prs": [
-            5230
-          ]
-        },
-        {
-          "lead": "Front-buffered streams release retained data",
-          "detail": "Corrects front-buffered stream retention so buffered data is not kept alive longer than intended.",
+          "lead": "Front-buffered streams no longer retain data unnecessarily",
+          "detail": "Corrects stream retention so buffered input can be released when it is no longer needed.",
           "prs": [
             5327
           ]
         }
       ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Image and shaping allocations reduced",
+          "detail": "Optimizes managed image pixel copies and avoids unnecessary native allocations when decoding HarfBuzz feature strings.",
+          "prs": [
+            5052,
+            5060,
+            5230
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "WebGPU implementation packaged with the native library",
+          "detail": "Ships the WebGPU implementation in libSkiaSharp.a so native consumers receive the required rendering support with the library.",
+          "prs": [
+            5316
+          ]
+        }
+      ]
     }
   ],
-  "contributor_summaries": {},
-  "preview_summaries": {}
+  "contributor_summaries": {
+    "ramezgerges": "Packaged the WebGPU implementation with the native SkiaSharp library"
+  },
+  "preview_summaries": {},
+  "harfbuzz_summary": null
 }
