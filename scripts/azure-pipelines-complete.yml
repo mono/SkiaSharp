@@ -162,8 +162,10 @@ extends:
                         Write-Host "Administrator: $($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))"
                         Write-Host "UserInteractive: $([Environment]::UserInteractive)"
                         Write-Host "Agent session ID: $([Diagnostics.Process]::GetCurrentProcess().SessionId)"
-                        $developerMode = Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' -Name AllowDevelopmentWithoutDevLicense -ErrorAction SilentlyContinue
-                        Write-Host "Developer Mode registry value: $developerMode"
+                        $developerMode = [Microsoft.Win32.Registry]::GetValue(
+                            'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock',
+                            'AllowDevelopmentWithoutDevLicense', $null)
+                        Write-Host "Developer Mode registry value: $(if ($null -eq $developerMode) { 'absent' } else { $developerMode })"
                         Get-Command msiexec.exe, node, npm.cmd -ErrorAction SilentlyContinue | Select-Object Name, Source
                         foreach ($directory in @(${env:ProgramFiles(x86)}, $env:ProgramFiles)) {
                             if ([string]::IsNullOrWhiteSpace($directory)) { continue }
