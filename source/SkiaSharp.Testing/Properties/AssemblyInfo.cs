@@ -3,7 +3,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-[assembly: Experimental("SKIA4001", UrlFormat = "https://mono.github.io/SkiaSharp/docs/guides/testing/image-comparison.html#set-up")]
+[assembly: Experimental("SKIA4001", UrlFormat = "https://mono.github.io/SkiaSharp/docs/guides/testing/image-comparison.html#getting-started")]
 
 [assembly: InternalsVisibleTo("SkiaSharp.Testing.Tests, PublicKey=" +
 	"002400000480000094000000060200000024000052534131000400000100010079159977d2d03a" +
