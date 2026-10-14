@@ -64,9 +64,9 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		const string canvasId = "basic-canvas-drawing";
 		navigate(app, "Drawing");
 
-		// Element-relative crossing strokes stay clear of the floating page controls.
-		app.Drag(app.Find(canvasId), 0.3, 0.3, 0.7, 0.6);
-		app.Drag(app.Find(canvasId), 0.3, 0.6, 0.7, 0.3);
+		// Axis-aligned strokes avoid timing-dependent diagonal interpolation.
+		app.Drag(app.Find(canvasId), 0.3, 0.45, 0.7, 0.45);
+		app.Drag(app.Find(canvasId), 0.5, 0.3, 0.5, 0.6);
 		return Assert.MultipleAsync(
 			() => Compare(app, canvasId, "basic-drawing-two-lines", "Maui", platform),
 			async () =>
