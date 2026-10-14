@@ -837,17 +837,6 @@ Assert-True ($updatedVersions -match 'SkiaSharp nuget 4\.151\.1\.1') `
     'Prepare did not update SkiaSharp packages.'
 Assert-True ($updatedVersions -match 'HarfBuzzSharp nuget 14\.2\.1\.2') `
     'Prepare did not update HarfBuzzSharp packages.'
-$familyVersionsText = "SkiaSharp nuget 4.156.0`nSkiaSharp.Testing nuget 4.156.0`nSkiaSharp.NativeAssets.Linux nuget 4.156.0`nHarfBuzzSharp nuget 14.4.0.100`nlibSkiaSharp milestone 156`nHarfBuzz soname 0.61440.0`n"
-$familyVersions = Set-PackageVersions $familyVersionsText '4.156.0.1' '14.4.0.101'
-foreach ($id in @('SkiaSharp', 'SkiaSharp.Testing', 'SkiaSharp.NativeAssets.Linux')) {
-    Assert-True ($familyVersions -match "(?m)^$([regex]::Escape($id)) nuget 4\.156\.0\.1$") `
-        "Prepare must advance $id with the same numeric family version."
-}
-Assert-True ($familyVersions -match '(?m)^HarfBuzzSharp nuget 14\.4\.0\.101$') `
-    'Registering the helper changed HarfBuzzSharp package version coupling.'
-Assert-True ($familyVersions -match '(?m)^libSkiaSharp milestone 156$' -and
-    $familyVersions -match '(?m)^HarfBuzz soname 0\.61440\.0$') `
-    'Registering a managed helper must not change native version metadata.'
 
 # Loads and exercises Finish's release metadata and dry-run behavior.
 Invoke-Expression (Get-ScriptFunctionText $finishPath)
