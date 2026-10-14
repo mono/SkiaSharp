@@ -7,74 +7,74 @@ using System.Numerics;
 
 namespace SkiaSharp.Testing;
 
-/// <summary>An inclusive rejected-pixel allowance, limited by a count, percentage, or both.</summary>
+/// <summary>An inclusive mismatched-pixel allowance, limited by a count, percentage, or both.</summary>
 /// <remarks>The default value is <see cref="Exact"/>. Percentages are percentage points of the compared pixel count, not fractions. Their inclusive pixel limits are floored from the invariant round-trip decimal representation of the percentage to avoid binary rounding at decimal boundaries.</remarks>
-public readonly struct SKPixelErrorBudget : IEquatable<SKPixelErrorBudget>
+public readonly struct SKPixelMismatchBudget : IEquatable<SKPixelMismatchBudget>
 {
 	private readonly long? maxPixels;
 	private readonly double? maxPercent;
 
-	private SKPixelErrorBudget(long? maxPixels, double? maxPercent)
+	private SKPixelMismatchBudget(long? maxPixels, double? maxPercent)
 	{
 		this.maxPixels = maxPixels;
 		this.maxPercent = maxPercent;
 	}
 
-	/// <summary>Allows no rejected pixels.</summary>
-	public static SKPixelErrorBudget Exact => default;
+	/// <summary>Allows no mismatched pixels.</summary>
+	public static SKPixelMismatchBudget Exact => default;
 
-	/// <summary>Gets the inclusive rejected-pixel count limit, or null if no count limit was specified.</summary>
+	/// <summary>Gets the inclusive mismatched-pixel count limit, or null if no count limit was specified.</summary>
 	public long? MaxPixels => maxPixels ?? (maxPercent.HasValue ? (long?)null : 0L);
 
 	/// <summary>Gets the percentage-point limit (0 through 100), or null if no percentage limit was specified.</summary>
 	public double? MaxPercent => maxPercent;
 
-	/// <summary>Allows at most <paramref name="maximum"/> rejected pixels.</summary>
+	/// <summary>Allows at most <paramref name="maximum"/> mismatched pixels.</summary>
 	/// <exception cref="ArgumentOutOfRangeException">The maximum is negative.</exception>
-	public static SKPixelErrorBudget Pixels(long maximum)
+	public static SKPixelMismatchBudget Pixels(long maximum)
 	{
 		if (maximum < 0)
 			throw new ArgumentOutOfRangeException(nameof(maximum), "Maximum pixels must be nonnegative.");
-		return new SKPixelErrorBudget(maximum, null);
+		return new SKPixelMismatchBudget(maximum, null);
 	}
 
-	/// <summary>Allows at most <paramref name="maximum"/> percentage points of compared pixels to be rejected.</summary>
+	/// <summary>Allows at most <paramref name="maximum"/> percentage points of compared pixels to be mismatched.</summary>
 	/// <exception cref="ArgumentOutOfRangeException">The maximum is non-finite or outside 0 through 100.</exception>
-	public static SKPixelErrorBudget Percent(double maximum)
+	public static SKPixelMismatchBudget Percent(double maximum)
 	{
 		ValidatePercent(maximum, nameof(maximum));
-		return new SKPixelErrorBudget(null, maximum);
+		return new SKPixelMismatchBudget(null, maximum);
 	}
 
-	/// <summary>Allows rejected pixels only when both the count and percentage-point limits pass.</summary>
+	/// <summary>Allows mismatched pixels only when both the count and percentage-point limits pass.</summary>
 	/// <exception cref="ArgumentOutOfRangeException">The count is negative or the percentage is non-finite or outside 0 through 100.</exception>
-	public static SKPixelErrorBudget Both(long pixels, double percent)
+	public static SKPixelMismatchBudget Both(long pixels, double percent)
 	{
 		if (pixels < 0)
 			throw new ArgumentOutOfRangeException(nameof(pixels), "Maximum pixels must be nonnegative.");
 		ValidatePercent(percent, nameof(percent));
-		return new SKPixelErrorBudget(pixels, percent);
+		return new SKPixelMismatchBudget(pixels, percent);
 	}
 
-	/// <summary>Tests whether the rejected pixel count satisfies every configured inclusive limit.</summary>
-	/// <exception cref="ArgumentOutOfRangeException">The compared count is not positive, or the rejected count is outside zero through the compared count.</exception>
-	public bool Allows(long errorPixels, long comparedPixels)
+	/// <summary>Tests whether the mismatched pixel count satisfies every configured inclusive limit.</summary>
+	/// <exception cref="ArgumentOutOfRangeException">The compared count is not positive, or the mismatched count is outside zero through the compared count.</exception>
+	public bool Allows(long mismatchedPixels, long comparedPixels)
 	{
 		if (comparedPixels <= 0)
 			throw new ArgumentOutOfRangeException(nameof(comparedPixels), "Compared pixels must be positive.");
-		if (errorPixels < 0 || errorPixels > comparedPixels)
-			throw new ArgumentOutOfRangeException(nameof(errorPixels), "Rejected pixels must be between zero and the compared pixel count.");
+		if (mismatchedPixels < 0 || mismatchedPixels > comparedPixels)
+			throw new ArgumentOutOfRangeException(nameof(mismatchedPixels), "Mismatched pixels must be between zero and the compared pixel count.");
 
-		if (MaxPixels is long countLimit && errorPixels > countLimit)
+		if (MaxPixels is long countLimit && mismatchedPixels > countLimit)
 			return false;
-		return !maxPercent.HasValue || errorPixels <= PercentLimit(comparedPixels, maxPercent.Value);
+		return !maxPercent.HasValue || mismatchedPixels <= PercentLimit(comparedPixels, maxPercent.Value);
 	}
 
 	/// <summary>Determines whether both budgets have the same limits.</summary>
-	public bool Equals(SKPixelErrorBudget other) => MaxPixels == other.MaxPixels && maxPercent == other.maxPercent;
+	public bool Equals(SKPixelMismatchBudget other) => MaxPixels == other.MaxPixels && maxPercent == other.maxPercent;
 
-	/// <summary>Determines whether an object is an equal pixel error budget.</summary>
-	public override bool Equals(object? obj) => obj is SKPixelErrorBudget other && Equals(other);
+	/// <summary>Determines whether an object is an equal pixel mismatch budget.</summary>
+	public override bool Equals(object? obj) => obj is SKPixelMismatchBudget other && Equals(other);
 
 	/// <summary>Returns a hash code for the count and percentage-point limits.</summary>
 	public override int GetHashCode()
@@ -85,11 +85,11 @@ public readonly struct SKPixelErrorBudget : IEquatable<SKPixelErrorBudget>
 		}
 	}
 
-	/// <summary>Tests two pixel error budgets for equality.</summary>
-	public static bool operator ==(SKPixelErrorBudget left, SKPixelErrorBudget right) => left.Equals(right);
+	/// <summary>Tests two pixel mismatch budgets for equality.</summary>
+	public static bool operator ==(SKPixelMismatchBudget left, SKPixelMismatchBudget right) => left.Equals(right);
 
-	/// <summary>Tests two pixel error budgets for inequality.</summary>
-	public static bool operator !=(SKPixelErrorBudget left, SKPixelErrorBudget right) => !left.Equals(right);
+	/// <summary>Tests two pixel mismatch budgets for inequality.</summary>
+	public static bool operator !=(SKPixelMismatchBudget left, SKPixelMismatchBudget right) => !left.Equals(right);
 
 	private static void ValidatePercent(double percent, string parameterName)
 	{
