@@ -107,7 +107,6 @@ internal static class SampleImage
         var comparisonOptions = new SKPixelComparerOptions
         {
             AlphaType = SKAlphaType.Premul,
-            Tolerance = SKPixelTolerance.Exact,
         };
         var result = SKPixelComparer.Compare(expectedImage, actualImage, comparisonOptions);
         var averageColorErrorFraction = result.RawMetrics.AbsoluteError / (result.TotalPixels * 4.0 * 255);

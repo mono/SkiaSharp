@@ -215,7 +215,7 @@ namespace SkiaSharp.Tests
 			var options = new SKPixelComparerOptions
 			{
 				AlphaType = SKAlphaType.Premul,
-				Tolerance = SKPixelTolerance.Absolute(0, 0, 0, null),
+				AlphaTolerance = null,
 			};
 
 			var result = SKPixelComparer.Compare(expected, actual, options);

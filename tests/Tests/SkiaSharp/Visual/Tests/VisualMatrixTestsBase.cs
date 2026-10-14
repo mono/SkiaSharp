@@ -118,7 +118,10 @@ namespace SkiaSharp.Tests.Visual.Tests
 			var options = new SKPixelComparerOptions
 			{
 				AlphaType = SKAlphaType.Premul,
-				Tolerance = SKPixelTolerance.Absolute(tolerance.ChannelTolerance),
+				RedTolerance = SKPixelTolerance.Absolute(tolerance.ChannelTolerance),
+				GreenTolerance = SKPixelTolerance.Absolute(tolerance.ChannelTolerance),
+				BlueTolerance = SKPixelTolerance.Absolute(tolerance.ChannelTolerance),
+				AlphaTolerance = SKPixelTolerance.Absolute(tolerance.ChannelTolerance),
 				MaxErrorPixelFraction = tolerance.MaxOutlierFraction,
 			};
 
