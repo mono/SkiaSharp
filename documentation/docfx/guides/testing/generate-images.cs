@@ -33,7 +33,6 @@ SaveImage("expected.png", expected);
 SaveImage("actual.png", actual);
 SaveImage("tolerance-mask.png", toleranceMask);
 SaveImage("ignore-mask.png", ignoreMask);
-var exactOptions = new SKPixelComparerOptions();
 using var exact = SKPixelComparer.GenerateDifferenceImage(expected, actual);
 SaveImage("comparison-exact.png", exact);
 
@@ -41,9 +40,13 @@ var toleranceOptions = RgbTolerance();
 using var tolerant = SKPixelComparer.GenerateDifferenceImage(expected, actual, options: toleranceOptions);
 SaveImage("comparison-tolerant.png", tolerant);
 
-using var map = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.ThresholdMap, exactOptions);
-using var binary = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.BinaryMask, exactOptions);
-using var channels = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.ChannelDifference, exactOptions);
+var styleOptions = RgbTolerance();
+styleOptions.AlphaTolerance = SKPixelTolerance.Exact;
+using var overlay = SKPixelComparer.GenerateDifferenceImage(expected, actual, options: styleOptions);
+using var map = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.ThresholdMap, styleOptions);
+using var binary = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.BinaryMask, styleOptions);
+using var channels = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.ChannelDifference, styleOptions);
+SaveImage("threshold-overlay.png", overlay);
 SaveImage("threshold-map.png", map);
 SaveImage("binary-mask.png", binary);
 SaveImage("channel-difference.png", channels);
