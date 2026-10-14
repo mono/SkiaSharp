@@ -23,12 +23,12 @@ jobs:
         ${{ if eq(parameters.platform, 'iOS') }}:
           SAMPLE_TEST_IOS_VERSION: ${{ parameters.device.version }}
           SAMPLE_TEST_IOS_MODEL: ${{ parameters.device.model }}
-        ${{ if or(eq(parameters.platform, 'iOS'), eq(parameters.platform, 'Mac')) }}:
+        ${{ if eq(parameters.buildAgent.pool.os, 'macos') }}:
           DEVELOPER_DIR: /Applications/Xcode_${{ parameters.sdk.xcodeVersion }}.app/Contents/Developer
       retryCount: 0
       shouldPublish: false
       installXcode: false
-      installAndroidSdk: false
+      installAndroidSdk: ${{ eq(parameters.platform, 'Android') }}
       installAndroidNdk: false
       installNode: false
       provisioningSteps:
@@ -54,15 +54,45 @@ jobs:
             version: '22.x'
             checkLatest: true
         - ${{ if eq(parameters.platform, 'Android') }}:
+          - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
+            - bash: |
+                set -e
+                echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+                sudo udevadm control --reload-rules
+                sudo udevadm trigger --name-match=kvm
+              displayName: Enable KVM for the selected Android host
           - bash: |
               set -e
-              echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-              sudo udevadm control --reload-rules
-              sudo udevadm trigger --name-match=kvm
               mkdir -p "$HOME/.android/avd"
               echo "##vso[task.setvariable variable=ANDROID_AVD_HOME]$HOME/.android/avd"
               echo "##vso[task.setvariable variable=ANDROID_EMULATOR_HOME]$HOME/.android"
-            displayName: Reuse Android device-test KVM and AVD provisioning
+            displayName: Set Android AVD home
+          - pwsh: |
+              $ErrorActionPreference = 'Stop'
+              ./scripts/infra/managed/install-android-package.ps1 -Package emulator
+              if ($LASTEXITCODE -ne 0) { throw 'Android emulator installation failed.' }
+              $abi = switch ([Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()) {
+                  'Arm64' { 'arm64-v8a' }
+                  'X64' { 'x86_64' }
+                  default { throw 'Android sample jobs require an arm64 or x64 host.' }
+              }
+              ./scripts/infra/managed/install-android-package.ps1 -Package "system-images;${{ parameters.device.image }};$abi"
+              if ($LASTEXITCODE -ne 0) { throw 'Selected Android emulator image installation failed.' }
+            displayName: Install the exact selected Android emulator image
+        - ${{ if eq(parameters.platform, 'iOS') }}:
+          - pwsh: |
+              $ErrorActionPreference = 'Stop'
+              & xcodebuild -downloadPlatform iOS -buildVersion '${{ parameters.device.version }}'
+              if ($LASTEXITCODE -ne 0) { throw 'Selected iOS simulator runtime installation failed.' }
+              $json = & xcrun simctl list runtimes --json
+              if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the installed simulator runtimes.' }
+              $runtimes = ($json | ConvertFrom-Json).runtimes
+              if (!($runtimes | Where-Object { $_.name.StartsWith('iOS ') -and $_.version -eq '${{ parameters.device.version }}' -and $_.isAvailable })) {
+                  throw 'The exact selected iOS simulator runtime is not available after installation.'
+              }
+            displayName: Install the exact selected iOS simulator runtime
+            env:
+              DEVELOPER_DIR: /Applications/Xcode_${{ parameters.sdk.xcodeVersion }}.app/Contents/Developer
         - pwsh: ./scripts/infra/tests/install-appium.ps1 -Platform '${{ parameters.platform }}'
           displayName: Install isolated Appium and selected driver
           env:

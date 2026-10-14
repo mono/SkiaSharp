@@ -32,6 +32,15 @@ internal sealed class WindowsRunningApp(SampleWorkspace workspace, string artifa
             ["durationMs"] = 500
         });
 
+    internal override void Scroll(Rectangle container, int amount) =>
+        Driver.ExecuteScript("windows: scroll", new Dictionary<string, object>
+        {
+            ["x"] = container.Left + container.Width / 2,
+            ["y"] = container.Top + container.Height / 2,
+            // Windows driver deltas are wheel notches, not pixels. Recheck geometry after each notch.
+            ["deltaY"] = -Math.Sign(amount)
+        });
+
     protected override async Task Start(Uri address)
     {
         Assert.True(OperatingSystem.IsWindows(), "Windows tests require a Windows host.");

@@ -98,13 +98,141 @@ internal abstract class AppiumRunningApp
 		ThrowFailures(failures);
 	}
 
-	internal T Wait<T>(Func<T?> probe, string description) where T : class
+	internal IWebElement ScrollIntoView(string containerId, string targetId)
 	{
-		var limit = TimeSpan.FromSeconds(30);
+		ArgumentException.ThrowIfNullOrWhiteSpace(containerId);
+		ArgumentException.ThrowIfNullOrWhiteSpace(targetId);
+		return ScrollIntoView(
+			() => Driver.FindElement(Locator(containerId)),
+			() => Driver.FindElement(Locator(targetId)), Scroll,
+			$"'{targetId}' inside '{containerId}'", TimeSpan.FromSeconds(30), 12,
+			TestContext.Current.CancellationToken);
+	}
+
+	// Positive amounts reveal content below the viewport; touch moves in the opposite direction.
+	internal virtual void Scroll(Rectangle container, int amount)
+	{
+		var (start, end) = ScrollGesture(container, amount);
+		Drag(start, end);
+	}
+
+	internal static (Point Start, Point End) ScrollGesture(Rectangle container, int amount)
+	{
+		if (container.Width <= 0 || container.Height < 3)
+			throw new InvalidOperationException($"Scroll container has no usable gesture area: {container}.");
+		var margin = Math.Max(1, container.Height / 5);
+		if (amount == 0 || Math.Abs((long)amount) > container.Height - 2 * margin)
+			throw new ArgumentOutOfRangeException(nameof(amount), amount, $"Gesture must remain inside {container}.");
+		var x = container.Left + container.Width / 2;
+		var start = new Point(x, amount > 0 ? container.Bottom - margin - 1 : container.Top + margin);
+		return (start, new Point(x, start.Y - amount));
+	}
+
+	internal static int ScrollAmount(Rectangle container, Rectangle target)
+	{
+		if (container.Width <= 0 || container.Height <= 0 || target.Width <= 0 || target.Height <= 0)
+			throw new InvalidOperationException($"Scroll bounds must have positive dimensions: container={container}, target={target}.");
+		if (target.Width > container.Width || target.Height > container.Height)
+			throw new InvalidOperationException($"Target is larger than its scroll container: container={container}, target={target}.");
+		if (target.Left < container.Left || target.Right > container.Right)
+			throw new InvalidOperationException($"Vertical scrolling cannot reveal the target horizontally: container={container}, target={target}.");
+		// Aim inside the viewport; tiny edge corrections may not exceed native touch slop.
+		var centerPadding = (container.Height - target.Height) / 2;
+		var amount = target.Top < container.Top ? target.Top - container.Top - centerPadding :
+			target.Bottom > container.Bottom ? target.Bottom - container.Bottom + centerPadding : 0;
+		return Math.Clamp(amount, -Math.Max(1, container.Height * 3 / 5), Math.Max(1, container.Height * 3 / 5));
+	}
+
+	internal static IWebElement ScrollIntoView(
+		Func<IWebElement> findContainer, Func<IWebElement> findTarget, Action<Rectangle, int> scroll,
+		string description, TimeSpan timeout, int maxScrolls, CancellationToken cancellationToken)
+	{
+		ArgumentOutOfRangeException.ThrowIfLessThan(maxScrolls, 1);
+		if (timeout <= TimeSpan.Zero)
+			throw new ArgumentOutOfRangeException(nameof(timeout));
+		var clock = Stopwatch.StartNew();
+		var gestures = 0;
+		(Rectangle Container, Rectangle Target, int Amount)? previous = null;
+		(Rectangle Container, Rectangle Target)? observed = null;
+		var changedAt = TimeSpan.Zero;
+		var last = "container/target not yet present";
+		try
+		{
+			while (true)
+			{
+				Rectangle bounds = default, targetBounds = default;
+				var amount = 0;
+				var element = Wait(() =>
+				{
+					var container = findContainer();
+					var target = findTarget();
+					bounds = new Rectangle(container.Location, container.Size);
+					targetBounds = new Rectangle(target.Location, target.Size);
+					var displayed = target.Displayed;
+					last = $"container={bounds}, target={targetBounds}, Displayed={displayed}, gestures={gestures}/{maxScrolls}";
+					amount = ScrollAmount(bounds, targetBounds);
+					if (!container.Displayed)
+						return null;
+					if (amount == 0 && displayed)
+						return target;
+
+					if (previous is { } before)
+					{
+						var current = (bounds, targetBounds);
+						if (observed != current)
+						{
+							observed = current;
+							changedAt = clock.Elapsed;
+							return null;
+						}
+						// Allow native scrolling/animation to settle before comparing and scrolling again.
+						if (clock.Elapsed - changedAt < TimeSpan.FromMilliseconds(200))
+							return null;
+						if (bounds == before.Container && targetBounds == before.Target)
+						{
+							if (clock.Elapsed - changedAt < TimeSpan.FromSeconds(1))
+								return null;
+							throw new InvalidOperationException($"Appium scroll made no progress for {description}: {last}.");
+						}
+						if (bounds.Size == before.Container.Size && targetBounds.Size == before.Target.Size &&
+							Math.Sign((long)before.Target.Top - before.Container.Top - targetBounds.Top + bounds.Top) != Math.Sign(before.Amount))
+							throw new InvalidOperationException($"Appium scroll did not advance toward {description}: before={before}; {last}.");
+						previous = null;
+					}
+					if (amount == 0)
+						return null; // Bounds alone are not proof that a native target is displayed.
+					return target;
+				}, description, timeout - clock.Elapsed, cancellationToken);
+				cancellationToken.ThrowIfCancellationRequested();
+				if (amount == 0)
+					return element;
+				if (gestures == maxScrolls)
+					throw new InvalidOperationException($"Appium exhausted {maxScrolls} scrolls for {description}: {last}.");
+				if (clock.Elapsed >= timeout)
+					throw new TimeoutException("Scroll deadline elapsed before the next gesture.");
+				// Gestures are outside Wait: only stale/missing reads may be retried.
+				scroll(bounds, amount);
+				gestures++;
+				previous = (bounds, targetBounds, amount);
+				observed = (bounds, targetBounds);
+				changedAt = clock.Elapsed;
+			}
+		}
+		catch (TimeoutException error)
+		{
+			throw new TimeoutException($"Appium could not scroll {description} fully into view within {timeout}: {last}.", error);
+		}
+	}
+
+	internal T Wait<T>(Func<T?> probe, string description) where T : class =>
+		Wait(probe, description, TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+
+	internal static T Wait<T>(Func<T?> probe, string description, TimeSpan limit, CancellationToken cancellationToken) where T : class
+	{
 		var clock = Stopwatch.StartNew();
 		do
 		{
-			TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+			cancellationToken.ThrowIfCancellationRequested();
 			try
 			{
 				if (probe() is { } result)
@@ -112,7 +240,11 @@ internal abstract class AppiumRunningApp
 			}
 			catch (NoSuchElementException) { }
 			catch (StaleElementReferenceException) { }
-			Thread.Sleep(200);
+			var remaining = limit - clock.Elapsed;
+			if (remaining <= TimeSpan.Zero)
+				break;
+			if (cancellationToken.WaitHandle.WaitOne(remaining < TimeSpan.FromMilliseconds(200) ? remaining : TimeSpan.FromMilliseconds(200)))
+				cancellationToken.ThrowIfCancellationRequested();
 		} while (clock.Elapsed < limit);
 		throw new TimeoutException($"Appium did not expose {description} within {limit}.");
 	}

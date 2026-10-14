@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -35,6 +36,27 @@ internal static class SampleImage
         var limit = timeout ?? TimeSpan.FromSeconds(2);
         ArgumentOutOfRangeException.ThrowIfLessThan(limit, TimeSpan.Zero);
         options ??= new();
+        if (AppContext.TryGetSwitch("SampleTest.CaptureReferences", out var captureReferences) && captureReferences)
+        {
+            await Task.Delay(limit, TestContext.Current.CancellationToken);
+            var actual = await capture();
+            using var image = SKImage.FromEncodedData(actual);
+            Assert.NotNull(image);
+            if (options.ExpectedSize is { } size)
+            {
+                Assert.Equal(size.Width, image.Width);
+                Assert.Equal(size.Height, image.Height);
+            }
+            expected = Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", expected);
+            var record = Path.ChangeExtension(actual, ".reference.json");
+            await File.WriteAllTextAsync(record, JsonSerializer.Serialize(new { actual, expected }),
+                TestContext.Current.CancellationToken);
+            TestContext.Current.AddFileAttachment(actual, "image/png");
+            TestContext.Current.AddFileAttachment(record, "application/json");
+            TestContext.Current.TestOutputHelper?.WriteLine(
+                $"REFERENCE CAPTURE ONLY (not a golden validation): {actual} => {expected}");
+            return;
+        }
         var clock = Stopwatch.StartNew();
         while (true)
         {

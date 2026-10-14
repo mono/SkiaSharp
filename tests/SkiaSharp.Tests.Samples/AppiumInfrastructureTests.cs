@@ -1,4 +1,7 @@
-﻿using SkiaSharp.Tests.Samples.Utils;
+﻿using System.Collections.ObjectModel;
+using System.Drawing;
+using OpenQA.Selenium;
+using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
@@ -127,6 +130,273 @@ public sealed class AppiumInfrastructureTests
 		}
 	}
 
+	[Theory]
+	[InlineData(610, 207, 819, 18, 114)]
+	[InlineData(610, 207, 841, 35, 124)]
+	[InlineData(610, 207, 793, 35, 97)]
+	[InlineData(610, 207, 590, 18, -114)]
+	[InlineData(610, 207, 610, 18, 0)]
+	[InlineData(610, 207, 799, 18, 0)]
+	[InlineData(20, 100, 500, 20, 60)]
+	[InlineData(20, 100, -500, 20, -60)]
+	public void ScrollAmountComesFromCurrentBounds(int top, int height, int targetTop, int targetHeight, int expected) =>
+		Assert.Equal(expected, AppiumRunningApp.ScrollAmount(
+			new Rectangle(12, top, 378, height), new Rectangle(24, targetTop, 80, targetHeight)));
+
+	[Theory]
+	[InlineData(0, 100, 20, 20, "positive dimensions")]
+	[InlineData(100, 0, 20, 20, "positive dimensions")]
+	[InlineData(100, 100, 0, 20, "positive dimensions")]
+	[InlineData(100, 100, 20, 0, "positive dimensions")]
+	[InlineData(100, 100, 101, 20, "larger")]
+	[InlineData(100, 100, 20, 101, "larger")]
+	public void ScrollRejectsImpossibleDimensions(int width, int height, int targetWidth, int targetHeight, string message)
+	{
+		var error = Assert.Throws<InvalidOperationException>(() => AppiumRunningApp.ScrollAmount(
+			new Rectangle(10, 20, width, height), new Rectangle(10, 20, targetWidth, targetHeight)));
+		Assert.Contains(message, error.Message);
+		Assert.Contains("container=", error.Message);
+		Assert.Contains("target=", error.Message);
+	}
+
+	[Theory]
+	[InlineData(9)]
+	[InlineData(91)]
+	public void ScrollRejectsHorizontalClipping(int targetLeft)
+	{
+		var error = Assert.Throws<InvalidOperationException>(() => AppiumRunningApp.ScrollAmount(
+			new Rectangle(10, 20, 100, 100), new Rectangle(targetLeft, 30, 20, 20)));
+		Assert.Contains("horizontally", error.Message);
+	}
+
+	[Theory]
+	[InlineData(3)]
+	[InlineData(5)]
+	[InlineData(100)]
+	[InlineData(207)]
+	[InlineData(901)]
+	public void ScrollTouchGestureStaysInsideChangingContainers(int height)
+	{
+		var container = new Rectangle(12, 610, 378, height);
+		foreach (var direction in new[] { -1, 1 })
+		{
+			var amount = AppiumRunningApp.ScrollAmount(container, new Rectangle(24, 610 + direction * height * 2, 20, 1));
+			var (start, end) = AppiumRunningApp.ScrollGesture(container, amount);
+			Assert.True(container.Contains(start));
+			Assert.True(container.Contains(end));
+			Assert.Equal(amount, start.Y - end.Y);
+			Assert.Equal(start.X, end.X);
+		}
+	}
+
+	[Fact]
+	public void ScrollAlreadyVisibleRequiresNoGesture()
+	{
+		var container = new ScrollElement(new Rectangle(12, 610, 378, 207));
+		var target = new ScrollElement(new Rectangle(24, 700, 80, 18));
+		Assert.Same(target, ScrollTest(container, () => target, (_, _) => Assert.Fail("Visible targets must not scroll.")));
+	}
+
+	[Theory]
+	[InlineData(841, 124)]
+	[InlineData(590, -106)]
+	[InlineData(1500, 744)]
+	public void ScrollFindsHiddenTargetsAboveAndBelowWithRepeatedGeometryChecks(int top, int distance)
+	{
+		var container = new ScrollElement(new Rectangle(12, 610, 378, 207));
+		var target = new ScrollElement(new Rectangle(24, top, 80, 35), displayed: false);
+		var amounts = new List<int>();
+		Assert.Same(target, ScrollTest(container, () => target, (bounds, amount) =>
+		{
+			Assert.Equal(container.Bounds, bounds);
+			Assert.Equal(Math.Sign(distance), Math.Sign(amount));
+			amounts.Add(amount);
+			target.Bounds = target.Bounds with { Y = target.Bounds.Y - amount };
+			target.Displayed = bounds.Contains(target.Bounds);
+		}));
+		Assert.Equal(distance, amounts.Sum());
+		Assert.Equal(Math.Abs(distance) > 124 ? 6 : 1, amounts.Count);
+		Assert.True(container.Bounds.Contains(target.Bounds));
+	}
+
+	[Fact]
+	public void ScrollRetriesMissingAndStaleReadsWithoutExtraGestures()
+	{
+		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
+		var target = new ScrollElement(new Rectangle(10, 110, 20, 20), displayed: false);
+		var probes = 0;
+		var gestures = 0;
+		Assert.Same(target, ScrollTest(container, () => ++probes switch
+		{
+			1 => throw new NoSuchElementException("Target is not present yet."),
+			2 => throw new StaleElementReferenceException("Native tree refreshed."),
+			4 => throw new StaleElementReferenceException("Native tree refreshed after scrolling."),
+			_ => target
+		}, (_, amount) =>
+		{
+			gestures++;
+			target.Bounds = target.Bounds with { Y = target.Bounds.Y - amount };
+			target.Displayed = true;
+		}));
+		Assert.Equal(1, gestures);
+		Assert.True(probes >= 5);
+	}
+
+	[Fact]
+	public void ScrollRecomputesAmountsWhenTheContainerResizes()
+	{
+		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
+		var target = new ScrollElement(new Rectangle(10, 500, 20, 20), displayed: false);
+		var amounts = new List<int>();
+		Assert.Same(target, ScrollTest(container, () => target, (_, amount) =>
+		{
+			amounts.Add(amount);
+			target.Bounds = target.Bounds with { Y = target.Bounds.Y - amount };
+			container.Bounds = container.Bounds with { Height = 200 };
+			target.Displayed = container.Bounds.Contains(target.Bounds);
+		}));
+		Assert.Equal(new[] { 60, 120, 120, 110 }, amounts);
+	}
+
+	[Fact]
+	public void ScrollWaitsForDisplayedEvenWhenBoundsAlreadyFit()
+	{
+		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
+		var target = new ScrollElement(new Rectangle(10, 10, 20, 20), displayed: false);
+		var probes = 0;
+		Assert.Same(target, ScrollTest(container, () =>
+		{
+			target.Displayed = ++probes > 1;
+			return target;
+		}, (_, _) => Assert.Fail("A contained target only needs to become displayed.")));
+		Assert.Equal(2, probes);
+	}
+
+	[Fact]
+	public void ScrollStopsActionablyWhenGeometryDoesNotAdvance()
+	{
+		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
+		var target = new ScrollElement(new Rectangle(10, 110, 20, 20), displayed: false);
+		var gestures = 0;
+		var error = Assert.Throws<InvalidOperationException>(() => ScrollTest(container, () => target, (_, _) => gestures++));
+		Assert.Equal(1, gestures);
+		Assert.Contains("no progress", error.Message);
+		Assert.Contains("'target' inside 'container'", error.Message);
+		Assert.Contains("container=", error.Message);
+		Assert.Contains("Displayed=False", error.Message);
+	}
+
+	[Fact]
+	public void ScrollStopsWhenDriverMovesInTheWrongDirection()
+	{
+		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
+		var target = new ScrollElement(new Rectangle(10, 110, 20, 20), displayed: false);
+		var error = Assert.Throws<InvalidOperationException>(() => ScrollTest(container, () => target,
+			(_, _) => target.Bounds = target.Bounds with { Y = target.Bounds.Y + 10 }));
+		Assert.Contains("did not advance", error.Message);
+	}
+
+	[Fact]
+	public void ScrollCapsGesturesEvenWhenTheTargetKeepsMoving()
+	{
+		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
+		var target = new ScrollElement(new Rectangle(10, 1000, 20, 20), displayed: false);
+		var gestures = 0;
+		var error = Assert.Throws<InvalidOperationException>(() => AppiumRunningApp.ScrollIntoView(
+			() => container, () => target, (_, _) =>
+			{
+				gestures++;
+				target.Bounds = target.Bounds with { Y = target.Bounds.Y - 1 };
+			}, "'target' inside 'container'", TimeSpan.FromSeconds(5), 2, CancellationToken.None));
+		Assert.Equal(2, gestures);
+		Assert.Contains("exhausted 2 scrolls", error.Message);
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public void ScrollNeverAcceptsMissingOrHiddenTargets(bool present)
+	{
+		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
+		var target = new ScrollElement(new Rectangle(10, 10, 20, 20), displayed: false);
+		var error = Assert.Throws<TimeoutException>(() => AppiumRunningApp.ScrollIntoView(
+			() => container, () => present ? target : throw new NoSuchElementException("Target is missing."),
+			(_, _) => Assert.Fail("There is no geometry-directed scroll to perform."),
+			"'target' inside 'container'", TimeSpan.FromMilliseconds(100), 2, CancellationToken.None));
+		Assert.Contains("'target' inside 'container'", error.Message);
+		Assert.Contains(present ? "Displayed=False" : "not yet present", error.Message);
+	}
+
+	[Fact]
+	public void ScrollHonorsCancellationBeforeAnyGesture()
+	{
+		using var cancellation = new CancellationTokenSource();
+		cancellation.Cancel();
+		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
+		var target = new ScrollElement(new Rectangle(10, 110, 20, 20), displayed: false);
+		Assert.Throws<OperationCanceledException>(() => AppiumRunningApp.ScrollIntoView(
+			() => container, () => target, (_, _) => Assert.Fail("Cancelled scrolling must not gesture."),
+			"'target' inside 'container'", TimeSpan.FromSeconds(5), 2, cancellation.Token));
+	}
+
+	[Fact]
+	public void ScrollHonorsCancellationAfterTheFirstGesture()
+	{
+		using var cancellation = new CancellationTokenSource();
+		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
+		var target = new ScrollElement(new Rectangle(10, 1000, 20, 20), displayed: false);
+		var gestures = 0;
+		Assert.Throws<OperationCanceledException>(() => AppiumRunningApp.ScrollIntoView(
+			() => container, () => target, (_, _) =>
+			{
+				gestures++;
+				cancellation.Cancel();
+			}, "'target' inside 'container'", TimeSpan.FromSeconds(5), 12, cancellation.Token));
+		Assert.Equal(1, gestures);
+	}
+
+	[Fact]
+	public void ScrollDoesNotRetryGestureFailuresAsStaleReads()
+	{
+		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
+		var target = new ScrollElement(new Rectangle(10, 110, 20, 20), displayed: false);
+		var failure = new StaleElementReferenceException("Gesture failed.");
+		var gestures = 0;
+		Assert.Same(failure, Assert.Throws<StaleElementReferenceException>(() => ScrollTest(container, () => target, (_, _) =>
+		{
+			gestures++;
+			throw failure;
+		})));
+		Assert.Equal(1, gestures);
+	}
+
+	private static IWebElement ScrollTest(ScrollElement container, Func<IWebElement> target, Action<Rectangle, int> scroll) =>
+		AppiumRunningApp.ScrollIntoView(() => container, target, scroll, "'target' inside 'container'",
+			TimeSpan.FromSeconds(5), 12, CancellationToken.None);
+
+	private sealed class ScrollElement(Rectangle bounds, bool displayed = true) : IWebElement
+	{
+		internal Rectangle Bounds { get; set; } = bounds;
+		public bool Displayed { get; set; } = displayed;
+		public Point Location => Bounds.Location;
+		public Size Size => Bounds.Size;
+		public string TagName => throw new NotSupportedException();
+		public string Text => throw new NotSupportedException();
+		public bool Enabled => throw new NotSupportedException();
+		public bool Selected => throw new NotSupportedException();
+		public void Clear() => throw new NotSupportedException();
+		public void Click() => throw new NotSupportedException();
+		public void SendKeys(string text) => throw new NotSupportedException();
+		public void Submit() => throw new NotSupportedException();
+		public string GetAttribute(string name) => throw new NotSupportedException();
+		public string GetDomAttribute(string name) => throw new NotSupportedException();
+		public string GetDomProperty(string name) => throw new NotSupportedException();
+		public string GetCssValue(string name) => throw new NotSupportedException();
+		public ISearchContext GetShadowRoot() => throw new NotSupportedException();
+		public IWebElement FindElement(By by) => throw new NotSupportedException();
+		public ReadOnlyCollection<IWebElement> FindElements(By by) => throw new NotSupportedException();
+	}
+
 	[Fact]
 	public Task GoldenRetryStopsAtTheExpectedFrame() =>
 		WithImages(async (actual, expected) =>
@@ -238,6 +508,29 @@ public sealed class AppiumInfrastructureTests
 				}), expected, TimeSpan.FromSeconds(2)));
 			Assert.Equal("Capture failed.", error.Message);
 			Assert.Equal(1, captures);
+		});
+
+	[Fact]
+	public Task ReferenceCaptureModeRecordsTheDestinationWithoutWritingIt() =>
+		WithImages(async (actual, expected) =>
+		{
+			File.Delete(expected);
+			var enabled = AppContext.TryGetSwitch("SampleTest.CaptureReferences", out var captureReferences) && captureReferences;
+			if (!enabled)
+			{
+				await Assert.ThrowsAnyAsync<Exception>(() =>
+					SampleImage.Validate(() => actual, expected, TimeSpan.Zero));
+				Assert.False(File.Exists(Path.ChangeExtension(actual, ".reference.json")));
+			}
+			else
+			{
+				await SampleImage.Validate(() => actual, expected, TimeSpan.Zero);
+				using var record = System.Text.Json.JsonDocument.Parse(
+					File.ReadAllText(Path.ChangeExtension(actual, ".reference.json")));
+				Assert.Equal(actual, record.RootElement.GetProperty("actual").GetString());
+				Assert.Equal(expected, record.RootElement.GetProperty("expected").GetString());
+			}
+			Assert.False(File.Exists(expected));
 		});
 
 	private static async Task WithImages(Func<string, string, Task> test)

@@ -156,6 +156,12 @@ Set `ExpectedSize = new(800, 600)` for fixed-size PNGs.
 Omitting options retains the strict pixel comparison and golden dimensions.
 Pass a screenshot callback to retry that same comparison for up to two seconds.
 Only the final mismatch produces a diff; missing references fail immediately.
+For an explicitly requested reference-generation run, build the runner with
+`-p:CaptureSampleReferences=true`. Screenshot comparisons then retain PNGs and
+`.reference.json` destination records instead of asserting golden matches.
+Inspect the captures before copying them into `Expected/`, then rebuild without
+that property and run normal validation. Capture mode never updates references
+automatically and is not evidence that golden comparisons pass.
 
 ## Appium application runtime tests
 
@@ -174,6 +180,9 @@ Windows. Tests do not install tools, workloads or device images.
 CI runs `scripts/infra/tests/install-appium.ps1` to install Appium and the selected
 driver in job-owned directories. Windows jobs also provision WinAppDriver.
 Appium jobs use the repository's platform-default .NET workloads and pinned Tizen setup.
+Android jobs use macOS so the unchanged multi-target MAUI project can restore its
+Apple targets as well. CI provisions each explicitly selected emulator image or
+simulator runtime; local tests still require those prerequisites to be installed.
 Windows samples build with `WindowsPackageType=None` and launch their executable
 directly; tests do not register or uninstall MSIX packages.
 
@@ -186,8 +195,8 @@ the separate `dotnet` fast-deployment step.
 
 Local runs select Android **17**, using model `pixel_9`. iOS defaults to **iPhone 16 Pro**
 on **26.2**. Install `system-images;android-37.1;google_apis_ps16k;<host-ABI>`
-and the selected iOS runtime/device type before running tests. Missing prerequisites fail; neither
-the tests nor the Appium CI preparation path installs device images or simulator runtimes.
+and the selected iOS runtime/device type before running tests. Missing prerequisites
+fail local tests; the test runner never installs device images or simulator runtimes.
 
 CI device jobs supply the desired version/image or simulator model. To use a
 different preinstalled runtime locally:

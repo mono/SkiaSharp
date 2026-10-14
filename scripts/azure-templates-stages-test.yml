@@ -455,7 +455,7 @@ stages:
                   name: samples_appium_${{ sdk.name }}_${{ device.name }}
                   platform: Android
                   runGroup: Android
-                  buildAgent: ${{ parameters.buildAgentAndroidTests }}
+                  buildAgent: ${{ parameters.buildAgentMac }}
             - ${{ each device in sdk.iosDevices }}:
               - template: /scripts/azure-templates-jobs-sample-appium.yml@self
                 parameters:

@@ -40,6 +40,15 @@ internal sealed class MacRunningApp(SampleWorkspace workspace, string artifact)
 			["duration"] = 0.5
 		});
 
+	internal override void Scroll(Rectangle container, int amount) =>
+		Driver.ExecuteScript("macos: scroll", new Dictionary<string, object>
+		{
+			["x"] = container.Left + container.Width / 2,
+			["y"] = container.Top + container.Height / 2,
+			["deltaX"] = 0,
+			["deltaY"] = -amount
+		});
+
 	protected override Task Start(Uri address)
 	{
 		Assert.True(OperatingSystem.IsMacOS(),
@@ -66,8 +75,9 @@ internal sealed class MacRunningApp(SampleWorkspace workspace, string artifact)
 		options.AddAdditionalAppiumOption("showServerLogs", true);
 
 		SetDriver(new MacDriver(address, options, TimeSpan.FromMinutes(3)));
-		Wait(() => Driver.FindElement(By.XPath("//XCUIElementTypeApplication"))
-			is { Displayed: true } element ? element : null, $"{ApplicationId} desktop UI");
+		Wait(() => Driver.FindElements(By.XPath("//XCUIElementTypeWindow"))
+			.FirstOrDefault(window => window.Displayed && window.Size.Width > 0 && window.Size.Height > 0),
+			$"{ApplicationId} desktop window");
 
 		return Task.CompletedTask;
 	}
