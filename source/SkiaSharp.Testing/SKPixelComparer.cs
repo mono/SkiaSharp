@@ -58,7 +58,7 @@ public static class SKPixelComparer
 	}
 
 	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and optional borrowed tolerance and ignore masks.</summary>
-	/// <remarks>Ignored pixels are black in BinaryMask and ChannelDifference, or neutral gray (128,128,128) in ThresholdOverlay.</remarks>
+	/// <remarks>The default ThresholdOverlay flattens the second (actual) input onto white, then blends red mismatch, amber (255,200,0) tolerated selected-channel difference, or gray (128,128,128) ignored highlights at 50%, rounding half-channel values upward. Exact selected-channel matches retain the flattened actual RGB, including disabled channels. ThresholdMap instead uses opaque red, amber, dimmed actual RGB, and gray classifications. Ignored pixels are black in BinaryMask and ChannelDifference. All styles output BGRA8888 with alpha 255.</remarks>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
 	/// <exception cref="ArgumentException">An input or mask is empty or disposed, all channels are disabled, or IgnoreMask excludes every pixel (parameter IgnoreMask).</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
@@ -76,7 +76,7 @@ public static class SKPixelComparer
 	}
 
 	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and optional borrowed tolerance and ignore masks.</summary>
-	/// <remarks>Ignored pixels are black in BinaryMask and ChannelDifference, or neutral gray (128,128,128) in ThresholdOverlay.</remarks>
+	/// <remarks>The default ThresholdOverlay flattens the second (actual) input onto white, then blends red mismatch, amber (255,200,0) tolerated selected-channel difference, or gray (128,128,128) ignored highlights at 50%, rounding half-channel values upward. Exact selected-channel matches retain the flattened actual RGB, including disabled channels. ThresholdMap instead uses opaque red, amber, dimmed actual RGB, and gray classifications. Ignored pixels are black in BinaryMask and ChannelDifference. All styles output BGRA8888 with alpha 255.</remarks>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
 	/// <exception cref="ArgumentException">An input or mask is empty or disposed, all channels are disabled, or IgnoreMask excludes every pixel (parameter IgnoreMask).</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
@@ -94,7 +94,7 @@ public static class SKPixelComparer
 	}
 
 	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and optional borrowed tolerance and ignore masks.</summary>
-	/// <remarks>Ignored pixels are black in BinaryMask and ChannelDifference, or neutral gray (128,128,128) in ThresholdOverlay.</remarks>
+	/// <remarks>The default ThresholdOverlay flattens the second (actual) input onto white, then blends red mismatch, amber (255,200,0) tolerated selected-channel difference, or gray (128,128,128) ignored highlights at 50%, rounding half-channel values upward. Exact selected-channel matches retain the flattened actual RGB, including disabled channels. ThresholdMap instead uses opaque red, amber, dimmed actual RGB, and gray classifications. Ignored pixels are black in BinaryMask and ChannelDifference. All styles output BGRA8888 with alpha 255.</remarks>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
 	/// <exception cref="ArgumentException">An input or mask is empty or disposed, all channels are disabled, or IgnoreMask excludes every pixel (parameter IgnoreMask).</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
@@ -215,7 +215,12 @@ public static class SKPixelComparer
 		{
 			if (ignoreMask != null && IsIgnored(ignored[i]))
 			{
-				pixels[i] = style == SKPixelDifferenceStyle.ThresholdOverlay ? new SKColor(128, 128, 128) : SKColors.Black;
+				pixels[i] = style switch
+				{
+					SKPixelDifferenceStyle.ThresholdMap => new SKColor(128, 128, 128),
+					SKPixelDifferenceStyle.ThresholdOverlay => BlendOverlay(b[i], new SKColor(128, 128, 128), settings.AlphaType),
+					_ => SKColors.Black,
+				};
 				continue;
 			}
 			comparedPixels++;
@@ -224,14 +229,32 @@ public static class SKPixelComparer
 			{
 				SKPixelDifferenceStyle.BinaryMask => delta.Mismatched ? SKColors.White : SKColors.Black,
 				SKPixelDifferenceStyle.ChannelDifference => new SKColor((byte)delta.Red, (byte)delta.Green, (byte)delta.Blue),
-				_ => delta.Mismatched ? SKColors.Red
+				SKPixelDifferenceStyle.ThresholdMap => delta.Mismatched ? SKColors.Red
 					: delta.MaxChannelDifference > 0 ? new SKColor(255, 200, 0)
 					: new SKColor((byte)(b[i].Red / 4), (byte)(b[i].Green / 4), (byte)(b[i].Blue / 4)),
+				_ => BlendOverlay(b[i], delta.Mismatched ? SKColors.Red
+					: delta.MaxChannelDifference > 0 ? new SKColor(255, 200, 0) : (SKColor?)null, settings.AlphaType),
 			};
 		}
 
 		ValidateCoverage(comparedPixels);
 		return SKImage.FromBitmap(bitmap) ?? throw new InvalidOperationException("Unable to create difference image.");
+	}
+
+	private static SKColor BlendOverlay(SKColor actual, SKColor? classification, SKAlphaType alphaType)
+	{
+		var red = Flatten(actual.Red);
+		var green = Flatten(actual.Green);
+		var blue = Flatten(actual.Blue);
+		return classification.HasValue
+			? new SKColor((byte)((red + classification.Value.Red + 1) / 2),
+				(byte)((green + classification.Value.Green + 1) / 2),
+				(byte)((blue + classification.Value.Blue + 1) / 2))
+			: new SKColor(red, green, blue);
+
+		byte Flatten(byte channel) => alphaType == SKAlphaType.Premul
+			? (byte)Math.Min(255, channel + 255 - actual.Alpha)
+			: (byte)((channel * actual.Alpha + 255 * (255 - actual.Alpha) + 127) / 255);
 	}
 
 	private static bool IsIgnored(SKColor pixel) => pixel.Red != 0 || pixel.Green != 0 || pixel.Blue != 0;
@@ -496,6 +519,7 @@ public static class SKPixelComparer
 	{
 		if (style != SKPixelDifferenceStyle.BinaryMask &&
 			style != SKPixelDifferenceStyle.ChannelDifference &&
+			style != SKPixelDifferenceStyle.ThresholdMap &&
 			style != SKPixelDifferenceStyle.ThresholdOverlay)
 			throw new ArgumentOutOfRangeException(nameof(style));
 	}
