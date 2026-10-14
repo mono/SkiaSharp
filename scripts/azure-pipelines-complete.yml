@@ -7,6 +7,18 @@ pr:
   - release/*
 
 parameters:
+  - name: agentProbe
+    displayName: 'Run only the temporary agent diagnostic job:'
+    type: boolean
+    default: false
+  - name: probeAgent
+    displayName: 'Agent to inspect:'
+    type: string
+    default: macos
+    values:
+      - macos
+      - macos26
+      - windows
   - name: enableCaching
     displayName: 'Enable build caching (skip native builds on cache hit):'
     type: boolean
@@ -85,15 +97,67 @@ extends:
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     stages:
-      - template: /scripts/azure-templates-stages.yml@self
-        parameters:
-          buildPipelineType: 'complete'
-          buildAgentHost: ${{ parameters.buildAgentHost }}
-          buildAgentWindows: ${{ parameters.buildAgentWindows }}
-          buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
-          buildAgentMac: ${{ parameters.buildAgentMac }}
-          buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
-          buildAgentLinux: ${{ parameters.buildAgentLinux }}
-          buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
-          buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
-          enableCaching: ${{ parameters.enableCaching }}
+      - ${{ if eq(parameters.agentProbe, true) }}:
+        - stage: agent_probe
+          displayName: Temporary agent probe
+          dependsOn: []
+          jobs:
+            - job: inspect_agent
+              displayName: Inspect ${{ parameters.probeAgent }}
+              dependsOn: []
+              timeoutInMinutes: 10
+              ${{ if eq(parameters.probeAgent, 'windows') }}:
+                pool: ${{ parameters.buildAgentWindows.pool }}
+              ${{ elseif eq(parameters.probeAgent, 'macos26') }}:
+                pool:
+                  name: Azure Pipelines
+                  vmImage: macos-26
+              ${{ else }}:
+                pool: ${{ parameters.buildAgentMac.pool }}
+              steps:
+                - checkout: none
+                - pwsh: |
+                    $ErrorActionPreference = 'Stop'
+                    Write-Host "OS: $([Runtime.InteropServices.RuntimeInformation]::OSDescription)"
+                    Write-Host "Architecture: $([Runtime.InteropServices.RuntimeInformation]::OSArchitecture)"
+                    if ($IsMacOS) {
+                        & sw_vers
+                        $original = $env:DEVELOPER_DIR
+                        try {
+                            foreach ($app in Get-ChildItem /Applications -Directory -Filter 'Xcode_*.app' | Sort-Object Name) {
+                                $env:DEVELOPER_DIR = Join-Path $app.FullName 'Contents/Developer'
+                                Write-Host "`nXcode: $($app.FullName)"
+                                & xcodebuild -version
+                                & xcodebuild -showsdks
+                                & xcrun simctl list runtimes --json
+                                if ($LASTEXITCODE -ne 0) { throw "Runtime query failed for $($app.Name)." }
+                            }
+                        }
+                        finally { $env:DEVELOPER_DIR = $original }
+                    }
+                    elseif ($IsWindows) {
+                        $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+                        $principal = [Security.Principal.WindowsPrincipal]::new($identity)
+                        Write-Host "Administrator: $($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))"
+                        Get-Command msiexec.exe, node, npm.cmd -ErrorAction SilentlyContinue | Select-Object Name, Source
+                        foreach ($directory in @(${env:ProgramFiles(x86)}, $env:ProgramFiles)) {
+                            if ([string]::IsNullOrWhiteSpace($directory)) { continue }
+                            $path = Join-Path $directory 'Windows Application Driver/WinAppDriver.exe'
+                            Write-Host "WinAppDriver $path : $(Test-Path $path -PathType Leaf)"
+                        }
+                        Get-CimInstance Win32_Service -Filter "Name='msiserver'" | Select-Object Name, State, StartMode
+                    }
+                  displayName: Inspect installed tools without provisioning
+      - ${{ else }}:
+        - template: /scripts/azure-templates-stages.yml@self
+          parameters:
+            buildPipelineType: 'complete'
+            buildAgentHost: ${{ parameters.buildAgentHost }}
+            buildAgentWindows: ${{ parameters.buildAgentWindows }}
+            buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
+            buildAgentMac: ${{ parameters.buildAgentMac }}
+            buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
+            buildAgentLinux: ${{ parameters.buildAgentLinux }}
+            buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
+            buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
+            enableCaching: ${{ parameters.enableCaching }}
