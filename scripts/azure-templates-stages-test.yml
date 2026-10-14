@@ -31,11 +31,11 @@ parameters:
           - name: android26
             version: '8.0'
             model: pixel_9
-            imagePrefix: system-images;android-26;google_apis
+            image: android-26;google_apis
           - name: android37
             version: '17'
             model: pixel_9
-            imagePrefix: system-images;android-37.1;google_apis_ps16k
+            image: android-37.1;google_apis_ps16k
         iosDevices:
           - name: ios18_6
             version: '18.6'
@@ -52,24 +52,18 @@ parameters:
           windows:
             - sdkVersion: $(DOTNET_VERSION_PREVIEW)
               workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
-              workloads: [android, macos, wasm-tools, wasm-tools-net10, ios, tvos, maccatalyst, maui]
-              tizen:
-                manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+              additionalWorkloads: [wasm-tools-net10]
+              tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
           macos:
             - sdkVersion: $(DOTNET_VERSION_PREVIEW)
               workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
-              workloads: [android, macos, wasm-tools, wasm-tools-net10, ios, tvos, maccatalyst, maui]
-              tizen:
-                manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+              additionalWorkloads: [wasm-tools-net10]
+              tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
           linux:
             - sdkVersion: $(DOTNET_VERSION_PREVIEW)
               workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
-              workloads: [android, macos, wasm-tools, wasm-tools-net10, maui-android]
-              tizen:
-                manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+              additionalWorkloads: [wasm-tools-net10]
+              tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
         runDevices: false
         androidDevices: []
         iosDevices: []
@@ -97,9 +91,7 @@ stages:
             dotnetSdks:
               - sdkVersion: $(DOTNET_VERSION)
                 workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizen:
-                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+                tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Managed (Windows)
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: libs
@@ -117,9 +109,7 @@ stages:
             dotnetSdks:
               - sdkVersion: $(DOTNET_VERSION)
                 workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizen:
-                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+                tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Managed (macOS)
             buildAgent: ${{ parameters.buildAgentMac }}
             target: libs
@@ -137,9 +127,7 @@ stages:
             dotnetSdks:
               - sdkVersion: $(DOTNET_VERSION)
                 workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizen:
-                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+                tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Managed (Linux)
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES)
@@ -468,7 +456,6 @@ stages:
                   platform: Android
                   runGroup: Android
                   buildAgent: ${{ parameters.buildAgentAndroidTests }}
-                  workloads: [android, maui-android]
             - ${{ each device in sdk.iosDevices }}:
               - template: /scripts/azure-templates-jobs-sample-appium.yml@self
                 parameters:
@@ -478,7 +465,6 @@ stages:
                   platform: iOS
                   runGroup: Ios
                   buildAgent: ${{ parameters.buildAgentMac }}
-                  workloads: [ios, maui-ios]
             - template: /scripts/azure-templates-jobs-sample-appium.yml@self
               parameters:
                 sdk: ${{ sdk }}
@@ -486,7 +472,6 @@ stages:
                 platform: Mac
                 runGroup: Mac
                 buildAgent: ${{ parameters.buildAgentMac }}
-                workloads: [macos, maccatalyst, maui-maccatalyst]
             - template: /scripts/azure-templates-jobs-sample-appium.yml@self
               parameters:
                 sdk: ${{ sdk }}
@@ -494,4 +479,3 @@ stages:
                 platform: Windows
                 runGroup: Windows
                 buildAgent: ${{ parameters.buildAgentWindows }}
-                workloads: [maui-windows]

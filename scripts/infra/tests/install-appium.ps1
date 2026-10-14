@@ -77,12 +77,6 @@ try {
     }
 
     if ($Platform -eq 'Mac') {
-        $wdaRoot = Join-Path $driverRoot 'WebDriverAgentMac'
-        if (!(Test-Path (Join-Path $wdaRoot 'WebDriverAgentMac.xcodeproj') -PathType Container)) {
-            throw "Mac2 installation is missing WebDriverAgentMac.xcodeproj under '$wdaRoot'."
-        }
-        $env:SKIASHARP_APPIUM_MAC_WDA_ROOT = $wdaRoot
-        Write-Host "##vso[task.setvariable variable=SKIASHARP_APPIUM_MAC_WDA_ROOT]$wdaRoot"
         Write-Warning 'Mac2 still requires an interactive desktop and XCTest Accessibility/Automation permissions. This installer does not grant permissions or change Xcode selection.'
         Invoke-InstallerCommand $appium @('driver', 'doctor', 'mac2') | Out-Null
     }
@@ -101,8 +95,6 @@ try {
         if (!$wad) {
             throw 'WinAppDriver installation did not produce Windows Application Driver/WinAppDriver.exe under ProgramFiles(x86) or ProgramFiles.'
         }
-        $env:SKIASHARP_APPIUM_WINAPPDRIVER = $wad
-        Write-Host "##vso[task.setvariable variable=SKIASHARP_APPIUM_WINAPPDRIVER]$wad"
     }
 }
 catch {

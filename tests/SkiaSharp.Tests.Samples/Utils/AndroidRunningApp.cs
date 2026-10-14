@@ -1,4 +1,5 @@
 ﻿using OpenQA.Selenium;
+using System.Xml.Linq;
 using OpenQA.Selenium.Appium.Android;
 using OpenQA.Selenium.Appium.Android.Enums;
 using OpenQA.Selenium.Interactions;
@@ -6,13 +7,8 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-internal sealed class AndroidRunningApp(
-	SampleWorkspace workspace,
-	string artifact,
-	string applicationId,
-	string? version = null,
-	string? imagePrefix = null)
-	: AppiumRunningApp(workspace, artifact, applicationId)
+internal sealed class AndroidRunningApp(SampleWorkspace workspace, string artifact, string? version = null, string? image = null)
+	: AppiumRunningApp(workspace, artifact)
 {
 	private readonly string model =
 		Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_MODEL")
@@ -20,13 +16,28 @@ internal sealed class AndroidRunningApp(
 	private readonly string version = version
 		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_VERSION")
 		?? "17";
-	private readonly string imagePrefix = imagePrefix
-		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_IMAGE_PREFIX")
-		?? "system-images;android-37.1;google_apis_ps16k";
+	private readonly string image = image
+		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_IMAGE")
+		?? "android-37.1;google_apis_ps16k";
 
 	internal override string DeviceProfile => $"{model}/{version}";
 
 	internal override PointerKind PointerKind => PointerKind.Touch;
+
+	internal override async Task<string> ReadApplicationId()
+	{
+		var manifest = await CaptureCommand(DotNet.ExecuteTool(
+			"android", ["apk", "manifest", "info", "--pkg", Artifact, "--format", "xml"]));
+		return PackageId(manifest);
+	}
+
+	internal static string PackageId(string manifest)
+	{
+		var package = XDocument.Parse(manifest).Root?.Attribute("package")?.Value.Trim();
+		if (string.IsNullOrWhiteSpace(package) || package.Any(char.IsWhiteSpace))
+			throw new InvalidOperationException("Built APK manifest has no valid package ID.");
+		return package;
+	}
 
 	internal override By Locator(string id) => By.Id($"{ApplicationId}:id/{id}");
 
@@ -49,7 +60,7 @@ internal sealed class AndroidRunningApp(
 		{
 			await CaptureCommand(android.DeleteAvd(name));
 		});
-		await CaptureCommand(android.CreateAvd(name, imagePrefix, model));
+		await CaptureCommand(android.CreateAvd(name, image, model));
 
 		var options = Options("Android", "UiAutomator2");
 		options.App = Artifact;

@@ -2,7 +2,6 @@ parameters:
   name: ''
   platform: ''
   buildAgent: {}
-  workloads: []
   sdk: {}
   device: {}
   runGroup: ''
@@ -20,7 +19,7 @@ jobs:
         ${{ if eq(parameters.platform, 'Android') }}:
           SAMPLE_TEST_ANDROID_VERSION: ${{ parameters.device.version }}
           SAMPLE_TEST_ANDROID_MODEL: ${{ parameters.device.model }}
-          SAMPLE_TEST_ANDROID_IMAGE_PREFIX: ${{ parameters.device.imagePrefix }}
+          SAMPLE_TEST_ANDROID_IMAGE: ${{ parameters.device.image }}
         ${{ if eq(parameters.platform, 'iOS') }}:
           SAMPLE_TEST_IOS_VERSION: ${{ parameters.device.version }}
           SAMPLE_TEST_IOS_MODEL: ${{ parameters.device.model }}
@@ -39,7 +38,7 @@ jobs:
       dotnetSdks:
         - sdkVersion: ${{ parameters.sdk.version }}
           workloadSetVersion: ${{ parameters.sdk.workloadVersion }}
-          workloads: ${{ parameters.workloads }}
+          tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
       requiredArtifacts:
         - name: native
         - name: nuget

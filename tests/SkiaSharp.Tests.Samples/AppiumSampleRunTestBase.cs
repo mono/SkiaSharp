@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using System.Xml.Linq;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -19,47 +18,12 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 	private protected static string Output(SampleWorkspace workspace, string folder, string project, string framework) =>
 		Path.Combine(workspace.Root, "samples", folder, Path.GetDirectoryName(project)!, "bin", "Debug", framework);
 
-	private protected static string? ProjectApplicationId(string project)
-	{
-		var applicationId = XDocument.Load(project).Descendants("ApplicationId").SingleOrDefault()?.Value.Trim();
-		return string.IsNullOrEmpty(applicationId) ? null : applicationId;
-	}
-
-	private protected static string AppleApplicationId(string project)
-	{
-		if (ProjectApplicationId(project) is { } applicationId)
-			return applicationId;
-
-		var plist = Path.Combine(Path.GetDirectoryName(project)!, "Info.plist");
-		var identifier = XDocument.Load(plist).Descendants("key")
-			.Single(key => key.Value == "CFBundleIdentifier").ElementsAfterSelf().First();
-		if (identifier.Name != "string" || string.IsNullOrWhiteSpace(identifier.Value))
-			throw new InvalidOperationException($"Source CFBundleIdentifier is missing: {plist}");
-		return identifier.Value.Trim();
-	}
-
-	private protected static string AndroidApplicationId(string project)
-	{
-		if (ProjectApplicationId(project) is { } applicationId)
-			return applicationId;
-
-		var manifest = Path.Combine(Path.GetDirectoryName(project)!, "Properties", "AndroidManifest.xml");
-		var package = XDocument.Load(manifest).Root?.Attribute("package")?.Value;
-		if (string.IsNullOrWhiteSpace(package))
-			throw new InvalidOperationException($"Source application ID is missing: {manifest}");
-		return package.Trim();
-	}
-
 	private protected static string HostArchitecture() => RuntimeInformation.ProcessArchitecture switch
 	{
 		Architecture.Arm64 => "arm64",
 		Architecture.X64 => "x64",
 		_ => throw new InvalidOperationException("Appium desktop/simulator cases declare only arm64 and x64 hosts.")
 	};
-
-	private protected static string RequiredEnvironment(string name) =>
-		Environment.GetEnvironmentVariable(name) is { Length: > 0 } value ? value :
-			throw new InvalidOperationException($"Set {name} to the explicitly installed platform driver's path before selecting its tests.");
 
 	private protected static async Task Basic(
 		AppiumRunningApp app,

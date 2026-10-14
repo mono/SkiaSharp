@@ -173,6 +173,7 @@ Mac2 for MacCatalyst/macOS, or Windows for WinUI/MAUI
 Windows. Tests do not install tools, workloads or device images.
 CI runs `scripts/infra/tests/install-appium.ps1` to install Appium and the selected
 driver in job-owned directories. Windows jobs also provision WinAppDriver.
+Appium jobs use the repository's platform-default .NET workloads and pinned Tizen setup.
 Windows samples build with `WindowsPackageType=None` and launch their executable
 directly; tests do not register or uninstall MSIX packages.
 
@@ -194,7 +195,7 @@ different preinstalled runtime locally:
 ```sh
 export SAMPLE_TEST_ANDROID_VERSION=8.0
 export SAMPLE_TEST_ANDROID_MODEL=pixel_9
-export SAMPLE_TEST_ANDROID_IMAGE_PREFIX='system-images;android-26;google_apis'
+export SAMPLE_TEST_ANDROID_IMAGE='android-26;google_apis'
 export SAMPLE_TEST_IOS_VERSION=18.6
 export SAMPLE_TEST_IOS_MODEL='iPhone 16 Pro'
 ```
@@ -204,7 +205,11 @@ from `dotnet android avd devices`.
 The Android ABI follows the host architecture; the image and iOS runtime/model
 must already be installed. Unset these variables to return to local defaults.
 
-Appium receives the device profile and built app. XCUITest's
+Appium receives the device profile and built app.
+Android reads its package ID from the APK with the repository Android tool;
+iOS and Mac read the built bundle's `Info.plist` with `plutil` (XML or binary).
+Builders do not read app IDs from source projects.
+XCUITest's
 `enforceFreshSimulatorCreation` creates, boots and deletes a fresh iOS simulator;
 its startup normalizes the status bar to `10:10`, fixed signal indicators and
 100% battery through Appium. This does not change the system clock or crop images.
@@ -219,10 +224,10 @@ interactions are serialized.
 The fixture uses a free loopback port for each server and driver connection;
 UiAutomator2 selects its own available driver port. Mac2 requires an unlocked GUI session,
 Xcode automation/XcodeHelper Accessibility permissions, and
-`SKIASHARP_APPIUM_MAC_WDA_ROOT` pointing to the installed driver's
-WebDriverAgentMac source. Windows requires an interactive
-desktop, Developer Mode and `SKIASHARP_APPIUM_WINAPPDRIVER` pointing to the
-explicitly installed executable.
+an installed Mac2 driver. Appium discovers and builds its WebDriverAgentMac.
+Windows requires an interactive desktop, Developer Mode and installed WinAppDriver.
+Appium finds WinAppDriver in standard Program Files locations or its MSI registration;
+`APPIUM_WAD_PATH` optionally overrides its executable path.
 Mac2 launches the exact built bundle through `appPath`; no custom launch or
 LaunchServices scripts are needed. Existing app state/running apps are not reused.
 Mac2 and Windows drivers own app launch/termination and their WDA/WAD

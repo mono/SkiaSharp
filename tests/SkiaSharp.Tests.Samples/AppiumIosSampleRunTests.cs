@@ -83,9 +83,7 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium) : AppiumSample
 
 		var artifact = Assert.Single(Directory.EnumerateDirectories(
 			Path.Combine(Output(workspace, folder, project, framework), rid), "*.app"));
-		var applicationId = AppleApplicationId(Path.Combine(workspace.Root, "samples", folder, project));
-
-		return new IosRunningApp(workspace, artifact, applicationId);
+		return new IosRunningApp(workspace, artifact);
 	}
 
 	private static void NavigateMauiIos(AppiumRunningApp app, string title)

@@ -40,21 +40,12 @@ steps:
         condition: ${{ parameters.condition }}
     - ${{ if ne(sdk.workloadSetVersion, '') }}:
       - pwsh: |
-          $ids = $env:SETUP_WORKLOADS
-          if ($env:SETUP_TIZEN_BAND) { $ids += ',tizen' }
           ./scripts/infra/managed/install-dotnet-workloads.ps1 `
-            -SdkVersion $env:SETUP_SDK_VERSION -WorkloadSetVersion $env:SETUP_WORKLOAD_SET `
-            -Workloads $ids -TizenManifestBand $env:SETUP_TIZEN_BAND `
-            -TizenManifestVersion $env:SETUP_TIZEN_VERSION
-        env:
-          SETUP_SDK_VERSION: ${{ sdk.sdkVersion }}
-          SETUP_WORKLOAD_SET: ${{ sdk.workloadSetVersion }}
-          SETUP_TIZEN_BAND: ${{ sdk.tizen.manifestBand }}
-          SETUP_TIZEN_VERSION: ${{ sdk.tizen.manifestVersion }}
-          ${{ if ne(sdk.workloads, '') }}:
-            SETUP_WORKLOADS: ${{ join(',', sdk.workloads) }}
-          ${{ else }}:
-            SETUP_WORKLOADS: ${{ join(',', parameters.workloadDefaults[parameters.platform]) }}
+            -SdkVersion '${{ sdk.sdkVersion }}' -WorkloadSetVersion '${{ sdk.workloadSetVersion }}' `
+            -Workloads '${{ join(',', sdk.workloads) }}' `
+            -DefaultWorkloads '${{ join(',', parameters.workloadDefaults[parameters.platform]) }}' `
+            -AdditionalWorkloads '${{ join(',', sdk.additionalWorkloads) }}' `
+            -TizenVersion '${{ sdk.tizenVersion }}'
         displayName: Install .NET ${{ sdk.sdkVersion }} workloads
         condition: ${{ parameters.condition }}
         retryCountOnTaskFailure: 3

@@ -10,16 +10,14 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-internal sealed class WindowsRunningApp(
-    SampleWorkspace workspace, string artifact, string winAppDriverPath, string architecture)
-    : AppiumRunningApp(workspace, artifact, Path.GetFullPath(artifact))
+internal sealed class WindowsRunningApp(SampleWorkspace workspace, string artifact, string architecture)
+    : AppiumRunningApp(workspace, artifact)
 {
     internal override string DeviceProfile { get; } = architecture;
 
     internal override PointerKind PointerKind => PointerKind.Mouse;
 
-    internal override void ConfigureServer(ProcessStartInfo start) =>
-        start.Environment["APPIUM_WAD_PATH"] = Path.GetFullPath(winAppDriverPath);
+    internal override Task<string> ReadApplicationId() => Task.FromResult(Artifact);
 
     internal override void SubmitSearch() =>
         Driver.ExecuteScript("windows: keys", new Dictionary<string, object>
@@ -37,9 +35,9 @@ internal sealed class WindowsRunningApp(
     protected override async Task Start(Uri address)
     {
         Assert.True(OperatingSystem.IsWindows(), "Windows tests require a Windows host.");
+
         AssertInteractiveDesktop();
-        Assert.True(File.Exists(winAppDriverPath),
-            "Provide the preinstalled WinAppDriver.exe path. Tests never download or install drivers.");
+
         Assert.True(Path.GetExtension(Artifact).Equals(".exe", StringComparison.OrdinalIgnoreCase),
             "Windows sample tests require the actual unpackaged executable.");
         Assert.True(!File.Exists(Path.Combine(Path.GetDirectoryName(Artifact)!, "AppxManifest.xml")),

@@ -89,8 +89,7 @@ public sealed class AppiumMacSampleRunTests(AppiumFixture appium) : AppiumSample
 	{
 		var macOS = folder == "Basic/macOS";
 		var framework = macOS ? "net10.0-macos" : "net10.0-maccatalyst";
-		var architecture = HostArchitecture();
-		var rid = (macOS ? "osx-" : "maccatalyst-") + architecture;
+		var rid = (macOS ? "osx-" : "maccatalyst-") + MacRunningApp.HostArchitecture;
 
 		var workspace = await BuildSample(folder, project, new DotNetOptions
 		{
@@ -101,9 +100,7 @@ public sealed class AppiumMacSampleRunTests(AppiumFixture appium) : AppiumSample
 
 		var artifact = Assert.Single(Directory.EnumerateDirectories(
 			Path.Combine(Output(workspace, folder, project, framework), rid), "*.app"));
-		var applicationId = AppleApplicationId(Path.Combine(workspace.Root, "samples", folder, project));
-
-		return new MacRunningApp(workspace, artifact, applicationId, RequiredEnvironment("SKIASHARP_APPIUM_MAC_WDA_ROOT"), architecture);
+		return new MacRunningApp(workspace, artifact);
 	}
 
 	private static void NavigateMauiMacCatalyst(AppiumRunningApp app, string title)

@@ -92,7 +92,7 @@ public sealed class AppiumWindowsSampleRunTests(AppiumFixture appium) : AppiumSa
 		var executable = Assert.Single(Directory.EnumerateFiles(
 			output, Path.GetFileNameWithoutExtension(project) + ".exe", SearchOption.AllDirectories));
 
-		return new WindowsRunningApp(workspace, executable, RequiredEnvironment("SKIASHARP_APPIUM_WINAPPDRIVER"), architecture);
+		return new WindowsRunningApp(workspace, executable, architecture);
 	}
 
 	private static void NavigateMauiWindows(AppiumRunningApp app, string title)

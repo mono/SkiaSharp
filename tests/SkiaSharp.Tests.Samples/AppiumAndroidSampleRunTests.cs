@@ -77,10 +77,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 
 		var artifact = Assert.Single(Directory.EnumerateFiles(
 			Output(workspace, folder, project, framework), "*-Signed.apk", SearchOption.AllDirectories));
-		var selectedProject = Path.Combine(workspace.Root, "samples", folder, project);
-		var applicationId = AndroidApplicationId(selectedProject);
-
-		return new AndroidRunningApp(workspace, artifact, applicationId);
+		return new AndroidRunningApp(workspace, artifact);
 	}
 
 	private static void NavigateMauiAndroid(AppiumRunningApp app, string title)

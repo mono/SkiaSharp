@@ -13,11 +13,10 @@ internal sealed class Android
 		SdkDirectory = Path.GetFullPath(sdkDirectory);
 	}
 
-	internal Task<(int ExitCode, string Output, string Error)> CreateAvd(
-		string name, string imagePrefix, string model)
+	internal Task<(int ExitCode, string Output, string Error)> CreateAvd(string name, string image, string model)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(name);
-		ArgumentException.ThrowIfNullOrWhiteSpace(imagePrefix);
+		ArgumentException.ThrowIfNullOrWhiteSpace(image);
 		ArgumentException.ThrowIfNullOrWhiteSpace(model);
 
 		// UiAutomator2 can boot an AVD, but cannot create it or install missing images.
@@ -27,8 +26,8 @@ internal sealed class Android
 			Architecture.X64 => "x86_64",
 			_ => throw new InvalidOperationException("The declared emulator profiles require an arm64 or x64 host.")
 		};
-		var image = $"{imagePrefix};{architecture}";
-		var imageDirectory = Path.Combine(SdkDirectory, image.Replace(';', Path.DirectorySeparatorChar));
+		var package = $"system-images;{image};{architecture}";
+		var imageDirectory = Path.Combine(SdkDirectory, package.Replace(';', Path.DirectorySeparatorChar));
 		if (!File.Exists(Path.Combine(imageDirectory, "package.xml")) || !File.Exists(Path.Combine(imageDirectory, "system.img")))
 			throw new DirectoryNotFoundException($"Required emulator image is not installed: {imageDirectory}. Tests never download images.");
 
@@ -36,12 +35,10 @@ internal sealed class Android
 		var manager = Path.Combine(
 			SdkDirectory, "cmdline-tools", "latest", "bin",
 			OperatingSystem.IsWindows() ? "avdmanager.bat" : "avdmanager");
-		return RunAvdManager(
-			manager, ["create", "avd", "--name", name, "--package", image, "--device", model]);
+		return RunAvdManager(manager, ["create", "avd", "--name", name, "--package", package, "--device", model]);
 	}
 
-	private static Task<(int ExitCode, string Output, string Error)> RunAvdManager(
-		string manager, string[] arguments)
+	private static Task<(int ExitCode, string Output, string Error)> RunAvdManager(string manager, string[] arguments)
 	{
 		var executable = OperatingSystem.IsWindows() ? "cmd.exe" : manager;
 		string[] command = OperatingSystem.IsWindows() ? ["/d", "/c", manager, .. arguments] : arguments;
@@ -56,11 +53,9 @@ internal sealed class Android
 
 	private Task<(int ExitCode, string Output, string Error)> ExecuteSdk(string[] arguments)
 	{
-		string[] command = [.. arguments, "--home", SdkDirectory];
 		return DotNet.ExecuteTool(
 			"android",
-			command,
+			[.. arguments, "--home", SdkDirectory],
 			new DotNetOptions { Timeout = TimeSpan.FromSeconds(30) });
-
 	}
 }

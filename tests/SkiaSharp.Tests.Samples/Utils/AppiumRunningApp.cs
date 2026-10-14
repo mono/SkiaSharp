@@ -13,21 +13,20 @@ internal abstract class AppiumRunningApp
 {
 	private readonly List<Func<Task>> cleanup = [];
 	private AppiumDriver? driver;
+	private string? applicationId;
 	private bool used;
 
-	protected AppiumRunningApp(SampleWorkspace workspace, string artifact, string applicationId)
+	protected AppiumRunningApp(SampleWorkspace workspace, string artifact)
 	{
 		Workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
 		ArgumentException.ThrowIfNullOrWhiteSpace(artifact);
-		ArgumentException.ThrowIfNullOrWhiteSpace(applicationId);
 		Artifact = Path.GetFullPath(artifact);
-		ApplicationId = applicationId;
 		Diagnostics = Path.Combine(workspace.DiagnosticsRoot, "appium");
 	}
 
 	internal SampleWorkspace Workspace { get; }
 	internal string Artifact { get; }
-	internal string ApplicationId { get; }
+	internal string ApplicationId => applicationId ?? throw new InvalidOperationException("The built application's identity has not been read.");
 	internal string Diagnostics { get; }
 	internal abstract string DeviceProfile { get; }
 	internal AppiumDriver Driver => driver ?? throw new InvalidOperationException("The owned Appium session is not ready.");
@@ -36,6 +35,17 @@ internal abstract class AppiumRunningApp
 	internal virtual void SubmitSearch() => Driver.SwitchTo().ActiveElement().SendKeys(Keys.Enter);
 
 	protected abstract Task Start(Uri address);
+	internal abstract Task<string> ReadApplicationId();
+
+	protected async Task<string> ReadAppleApplicationId()
+	{
+		var contents = Path.Combine(Artifact, "Contents", "Info.plist");
+		var plist = File.Exists(contents) ? contents : Path.Combine(Artifact, "Info.plist");
+		var id = (await Command("plutil", ["-extract", "CFBundleIdentifier", "raw", "-o", "-", plist])).Trim();
+		if (string.IsNullOrWhiteSpace(id) || id.Any(char.IsWhiteSpace))
+			throw new InvalidOperationException($"Built app bundle has an invalid CFBundleIdentifier: {plist}");
+		return id;
+	}
 	internal virtual void ConfigureServer(ProcessStartInfo start) { }
 	protected virtual Task CapturePlatformDiagnostics() => Task.CompletedTask;
 	protected void Own(Func<Task> release) => cleanup.Add(release);
@@ -149,6 +159,9 @@ internal abstract class AppiumRunningApp
 		{
 			AssertArtifact();
 			Directory.CreateDirectory(Diagnostics);
+			applicationId = await ReadApplicationId();
+			if (string.IsNullOrWhiteSpace(applicationId))
+				throw new InvalidOperationException($"Built application identity is invalid: {Artifact}");
 			await startServer();
 			await Start(address);
 			await scenario(this);

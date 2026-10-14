@@ -6,13 +6,8 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-internal sealed class IosRunningApp(
-	SampleWorkspace workspace,
-	string artifact,
-	string applicationId,
-	string? version = null,
-	string? model = null)
-	: AppiumRunningApp(workspace, artifact, applicationId)
+internal sealed class IosRunningApp(SampleWorkspace workspace, string artifact, string? version = null, string? model = null)
+	: AppiumRunningApp(workspace, artifact)
 {
 	private readonly string version = version
 		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_IOS_VERSION")
@@ -24,6 +19,8 @@ internal sealed class IosRunningApp(
 	internal override string DeviceProfile => $"{model.Replace(' ', '-')}/{version}";
 
 	internal override PointerKind PointerKind => PointerKind.Touch;
+
+	internal override Task<string> ReadApplicationId() => ReadAppleApplicationId();
 
 	internal override void SubmitSearch() =>
 		Find(MobileBy.IosNSPredicate("type == 'XCUIElementTypeButton' AND name == 'Return'")).Click();

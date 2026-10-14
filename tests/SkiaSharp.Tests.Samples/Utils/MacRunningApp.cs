@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium.Mac;
 using OpenQA.Selenium.Interactions;
@@ -7,13 +8,21 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-internal sealed class MacRunningApp(
-	SampleWorkspace workspace, string artifact, string applicationId, string webDriverAgentMacRoot, string architecture)
-	: AppiumRunningApp(workspace, artifact, applicationId)
+internal sealed class MacRunningApp(SampleWorkspace workspace, string artifact)
+	: AppiumRunningApp(workspace, artifact)
 {
-	internal override string DeviceProfile { get; } = architecture;
+	internal static string HostArchitecture => RuntimeInformation.OSArchitecture switch
+	{
+		Architecture.Arm64 => "arm64",
+		Architecture.X64 => "x64",
+		_ => throw new InvalidOperationException("Mac sample tests require an arm64 or x64 host.")
+	};
+
+	internal override string DeviceProfile => HostArchitecture;
 
 	internal override PointerKind PointerKind => PointerKind.Mouse;
+
+	internal override Task<string> ReadApplicationId() => ReadAppleApplicationId();
 
 	internal override void SubmitSearch() =>
 		Driver.ExecuteScript("macos: keys", new Dictionary<string, object>
@@ -47,15 +56,11 @@ internal sealed class MacRunningApp(
 
 		OwnAppData();
 
-		var bootstrap = Path.Combine(Workspace.Root, "wda-mac");
-		SampleWorkspace.CopyTree(webDriverAgentMacRoot, bootstrap);
-
 		var options = Options("mac", "mac2");
 		options.AddAdditionalAppiumOption("bundleId", ApplicationId);
 		options.AddAdditionalAppiumOption("appPath", Artifact);
 		options.AddAdditionalAppiumOption("noReset", false);
 		options.AddAdditionalAppiumOption("skipAppKill", false);
-		options.AddAdditionalAppiumOption("bootstrapRoot", bootstrap);
 		options.AddAdditionalAppiumOption("systemPort", AppiumFixture.GetFreePort());
 		options.AddAdditionalAppiumOption("systemHost", "127.0.0.1");
 		options.AddAdditionalAppiumOption("showServerLogs", true);
@@ -87,5 +92,4 @@ internal sealed class MacRunningApp(
 				return Task.CompletedTask;
 			});
 	}
-
 }

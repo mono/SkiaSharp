@@ -7,32 +7,58 @@ namespace SkiaSharp.Tests.Samples;
 public sealed class AppiumInfrastructureTests
 {
 	[Theory]
-	[InlineData("Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj", "com.companyname.SkiaSharpSample")]
-	[InlineData("Gallery/Maui/SkiaSharpSample.Maui.csproj", "com.skiasharp.gallery.maui")]
-	public void MauiApplicationIdComesFromProjectXml(string project, string expected)
+	[InlineData("<manifest package=\"com.skiasharp.sample\"><application name=\"OtherClass\" /></manifest>")]
+	[InlineData("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" package=\"com.skiasharp.sample\" />")]
+	public void AndroidPackageIdComesFromDecodedApkManifest(string manifest)
 	{
-		var path = Path.Combine(Repo.RootDir, "samples", project);
-		Assert.Equal(expected, MetadataProbe.ReadProjectApplicationId(path));
-		Assert.Equal(expected, MetadataProbe.ReadAppleApplicationId(path));
-		Assert.Equal(expected, MetadataProbe.ReadAndroidApplicationId(path));
-	}
-
-	[Fact]
-	public void NativeAndroidApplicationIdComesFromSourceManifest()
-	{
-		var path = Path.Combine(Repo.RootDir, "samples", "Basic", "Android", "SkiaSharpSample", "SkiaSharpSample.csproj");
-		Assert.Equal("com.companyname.skiasharpsample", MetadataProbe.ReadAndroidApplicationId(path));
+		Assert.Equal("com.skiasharp.sample", AndroidRunningApp.PackageId(manifest));
 	}
 
 	[Theory]
-	[InlineData("Basic/iOS", "com.companyname.skiasharpsample")]
-	[InlineData("Basic/MacCatalyst", "com.companyname.SkiaSharpSample")]
-	[InlineData("Basic/macOS", "com.companyname.skiasharpsample")]
-	public void NativeAppleApplicationIdComesFromSourcePlist(string folder, string expected)
+	[InlineData("<manifest><application name=\"com.skiasharp.sample\" /></manifest>")]
+	[InlineData("<manifest package=\"\" />")]
+	[InlineData("<manifest package=\"com.skiasharp. sample\" />")]
+	public void AndroidPackageIdRejectsMissingOrWrappedValues(string manifest)
 	{
-		var path = Path.Combine(Repo.RootDir, "samples", folder, "SkiaSharpSample", "SkiaSharpSample.csproj");
-		Assert.Null(MetadataProbe.ReadProjectApplicationId(path));
-		Assert.Equal(expected, MetadataProbe.ReadAppleApplicationId(path));
+		Assert.Throws<InvalidOperationException>(() => AndroidRunningApp.PackageId(manifest));
+	}
+
+	[Theory]
+	[InlineData(false, false)]
+	[InlineData(false, true)]
+	[InlineData(true, false)]
+	[InlineData(true, true)]
+	public async Task AppleAppIdentityReadsXmlAndBinaryBundlePlists(bool macOS, bool binary)
+	{
+		Assert.SkipUnless(OperatingSystem.IsMacOS(), "Apple bundle metadata requires macOS plutil.");
+		var root = Path.Combine(Path.GetTempPath(), SampleWorkspace.CreateIdentity("appium-bundle"));
+		try
+		{
+			var inputs = Path.Combine(root, "inputs");
+			Directory.CreateDirectory(Path.Combine(inputs, "Sample"));
+			using var workspace = new SampleWorkspace("Sample", inputs, Repo.PackagesDir,
+				Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+			var bundle = Path.Combine(workspace.Root, "Built.app");
+			var directory = macOS ? Path.Combine(bundle, "Contents") : bundle;
+			Directory.CreateDirectory(directory);
+			var plist = Path.Combine(directory, "Info.plist");
+			File.WriteAllText(plist, """
+				<?xml version="1.0" encoding="UTF-8"?>
+				<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+				<plist version="1.0"><dict><key>CFBundleIdentifier</key><string>com.skiasharp.built</string></dict></plist>
+				""");
+			if (binary)
+			{
+				var result = await ProcessRunner.Run("plutil", ["-convert", "binary1", plist], workspace.Root, TimeSpan.FromSeconds(30));
+				Assert.Equal(0, result.ExitCode);
+			}
+			AppiumRunningApp app = macOS ? new MacRunningApp(workspace, bundle) : new IosRunningApp(workspace, bundle);
+			Assert.Equal("com.skiasharp.built", await app.ReadApplicationId());
+		}
+		finally
+		{
+			SampleWorkspace.DeleteDirectory(root);
+		}
 	}
 
 	[Fact]
@@ -47,7 +73,7 @@ public sealed class AppiumInfrastructureTests
 				"Sample", inputs, Repo.PackagesDir,
 				Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
 			var app = new AndroidRunningApp(
-				workspace, Path.Combine(workspace.Root, "sample.apk"), "com.skiasharp.sample");
+				workspace, Path.Combine(workspace.Root, "sample.apk"));
 
 			var model = Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_MODEL") ?? "pixel_9";
 			var version = Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_VERSION") ?? "17";
@@ -60,7 +86,7 @@ public sealed class AppiumInfrastructureTests
 	}
 
 	[Fact]
-	public void WindowsAppUsesItsExecutablePathAndBuiltArchitecture()
+	public async Task WindowsAppUsesItsExecutablePathAndBuiltArchitecture()
 	{
 		var root = Path.Combine(Path.GetTempPath(), SampleWorkspace.CreateIdentity("appium-windows"));
 		try
@@ -71,9 +97,9 @@ public sealed class AppiumInfrastructureTests
 				"Sample", inputs, Repo.PackagesDir,
 				Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
 			var executable = Path.Combine(workspace.Root, "samples", "Sample", "bin", "Sample.exe");
-			var app = new WindowsRunningApp(workspace, executable, "WinAppDriver.exe", "x64");
+			var app = new WindowsRunningApp(workspace, executable, "x64");
 			Assert.Equal(Path.GetFullPath(executable), app.Artifact);
-			Assert.Equal(app.Artifact, app.ApplicationId);
+			Assert.Equal(app.Artifact, await app.ReadApplicationId());
 			Assert.Equal("x64", app.DeviceProfile);
 		}
 		finally
@@ -91,7 +117,7 @@ public sealed class AppiumInfrastructureTests
 			Directory.CreateDirectory(sdk);
 			var android = new Android(sdk);
 			var error = await Assert.ThrowsAsync<DirectoryNotFoundException>(() =>
-				android.CreateAvd("SkiaSharpSamples_missing", "system-images;android-37.1;google_apis_ps16k", "pixel_9"));
+				android.CreateAvd("SkiaSharpSamples_missing", "android-37.1;google_apis_ps16k", "pixel_9"));
 			Assert.Contains("Tests never download images", error.Message);
 		}
 		finally
@@ -241,13 +267,4 @@ public sealed class AppiumInfrastructureTests
 		File.WriteAllBytes(path, data.ToArray());
 	}
 
-	private sealed class MetadataProbe : AppiumSampleRunTestBase
-	{
-		internal static string? ReadProjectApplicationId(string project) => ProjectApplicationId(project);
-
-		internal static string ReadAppleApplicationId(string project) => AppleApplicationId(project);
-
-		internal static string ReadAndroidApplicationId(string project) => AndroidApplicationId(project);
-
-	}
 }
