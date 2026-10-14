@@ -13,6 +13,58 @@ test host.
 There is no requirement to preserve the separately published Extended comparer's
 API shape.
 
+## MVP scope and readiness
+
+The useful MVP is the comparison kernel below, shared by SkiaSharp and exposed
+through a separate portable library for external consumers. It covers Extended's
+general capabilities: decoded image inputs, pixel counts, channel differences,
+tolerance maps, error statistics, and binary/color diagnostics. It improves the
+defaults and units rather than preserving Extended's signatures.
+
+| Required capability | Current implementation |
+| --- | --- |
+| Exact/tolerant RGB, RGBA, or individual-channel comparison | `SKPixelTolerance`, with nullable channel allowances |
+| Per-pixel tolerance image | `ToleranceMask`, combined with global allowances |
+| Error count, fraction, bounds and largest channel error | `SKPixelComparisonResult` |
+| Absolute/SSE, MAE/MSE/RMSE/normalized RMS/PSNR | Separate raw and thresholded metric groups |
+| Whole-image acceptance | Optional count, fraction and raw-RMS budgets |
+| Diagnostic PNG-ready images | Binary mask, raw RGB delta, threshold overlay |
+| Standalone consumer library | Nonshipping `SkiaSharp.Testing` prototype; publication remains separate |
+
+Two boundaries matter. The library requires equal dimensions and readable CPU
+pixels; GPU readback, screenshot targeting and resizing belong to the caller.
+It measures normalized 8-bit samples, not arbitrary HDR values, perceptual
+similarity, or encoded-file identity. Fonts, profiles, scale and animation
+determinism must be controlled by the test producer.
+
+The public surface is implemented, but external adoption is not yet a completed
+package release or a verified replacement for every Magick input. In particular,
+MAUI's pinned red-RMS conversion needs oracle fixtures. Current Samples also uses
+normalized mean absolute error; the measurement is already available, but a
+built-in MAE acceptance property is an additive follow-up, not implemented today.
+
+### API shape
+
+For each of `SKImage`, `SKBitmap`, and `SKPixmap`, the entry points are:
+
+```csharp
+// Signature summary; equivalent decoded-type overloads are provided.
+SKPixelComparisonResult Compare(SKImage first, SKImage second);
+SKPixelComparisonResult Compare(SKImage first, SKImage second, SKPixelComparerOptions? options);
+SKImage GenerateDifferenceMask(SKImage first, SKImage second);
+SKImage GenerateDifferenceMask(SKImage first, SKImage second, SKPixelComparerOptions? options);
+SKImage GenerateDifferenceImage(SKImage first, SKImage second);
+SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelComparerOptions? options);
+SKImage GenerateDifferenceImage(
+    SKImage first, SKImage second, SKPixelComparerOptions? options, SKPixelDifferenceStyle style);
+```
+
+The six public types are `SKPixelComparer`, `SKPixelComparerOptions`,
+`SKPixelTolerance`, `SKPixelComparisonResult`, `SKPixelComparisonMetrics`,
+and `SKPixelDifferenceStyle`. Results/metrics have no public constructors.
+Settings have a normal public constructor and writable properties; comparison
+snapshots them without retaining native inputs.
+
 ## Given two images
 
 ```csharp
@@ -181,7 +233,7 @@ The new defaults do not silently change the owning harnesses' established gates.
 | Core bitmap assertion | `Absolute(0, 0, 0, null)`, premultiplied; external strict fraction comparison `< 10^-precision` |
 | Renderer goldens | RGBA `Absolute(ChannelTolerance)`, premultiplied, configured maximum error fraction with the same floor-based budget |
 | Package integration | Exact RGB, premultiplied; existing crop/resize adapter and similarity at least 95% remain |
-| Samples | Exact RGBA, premultiplied; existing decimal error-pixel fraction budget of 0.00075 remains |
+| Samples | Exact RGBA, premultiplied; decimal pixel fraction 0.00075 by default, or the caller-selected normalized raw-MAE replacement gate |
 | MAUI Graphics / Resizetizer | Exact RGB, legacy representation; fraction limits 0.07 / 0.27 |
 | MAUI screenshot metric | Exact red only, raw normalized RMS limit 0.005; verify pinned Magick Q8 conversion parity before replacement |
 
@@ -198,6 +250,55 @@ This expresses the
 [actual MAUI red-channel RMS call](https://github.com/dotnet/maui/blob/7a5a5d610cc056e6fbd0f3dfe3930ea6de1f28bc/src/TestUtils/src/VisualTestUtils.MagickNet/MagickNetVisualComparer.cs).
 It is not a claim of general ImageMagick parity. Exception-message percentage
 parsing, screenshot preparation, and baseline acceptance stay outside this API.
+
+### Current SampleImage and browser/Appium boundaries
+
+Canonical `SampleImage` now accepts files or saved PNG bytes plus
+`SampleImageOptions`. It validates optional expected size and always requires
+actual/reference dimensions to match. Its default is exact premultiplied RGBA
+with a decimal `MaxErrorPixelFraction` of `0.00075m`. The adapter keeps that
+decimal count gate rather than translating it through a binary-floating fraction.
+
+When `MaxAverageColorErrorFraction` is set, it **replaces** the pixel-fraction
+gate. It is normalized raw MAE:
+
+```csharp
+var normalizedMae =
+    result.RawMetrics.AbsoluteError / (result.TotalPixels * 4.0 * 255);
+```
+
+It is neither NRMSE nor the share of rejected pixels. Browser animated-GPU smoke
+checks currently use 0.06; a broad, slight change can pass this criterion while
+many pixels differ. Do not substitute the RMS limit or add the pixel-count gate
+as a second requirement. Existing infrastructure tests cover both policies.
+`CountPixels` is an independent region/content assertion, not a golden metric.
+
+Browser capture uses full-page PNGs with device scale factor 1 and OS-specific
+references. These are not interchangeable with GPU-surface or element captures.
+The comparer owns neither browser timing nor HTML/UI stabilization.
+
+The [published Appium sample work](https://github.com/mono/SkiaSharp/pull/5338)
+was inspected at commit `737646a6b82a929fb25768403c39627ad33cbd6b`.
+It captures target elements through Appium and stores references by application
+family, platform and device profile. Its `SampleImage` adapter additionally
+re-captures within a bounded timeout, distinguishes dimension mismatches while
+waiting, and emits final failure attachments. Its explicit reference-capture
+mode records candidates, not a successful baseline validation.
+Some animated pages capture diagnostics without golden comparison.
+These are consumer responsibilities, not new comparer overloads.
+
+The current Appium contract uses zero channel tolerance, matching dimensions
+and the same strict 0.075% differing-pixel budget. No crop, mask or relaxed
+budget is authorized by that contract. An OS home-indicator or other system-UI
+change can therefore legitimately fail the capture comparison. Future ignored
+regions require a separate consumer decision and coverage review; they are not
+a workaround to turn those current failures green.
+
+Neither this branch nor that reference requires a general screenshot editor in
+the kernel. Any future crop/scale/background-composite helpers should be separate,
+explicit operations with recorded preparation metadata. Keep raw screenshot,
+prepared actual, reference, options and diff associated with the same attempt;
+never retry only the comparison against an unrelated earlier capture.
 
 ## Packaging for MAUI: proposed, not published
 
@@ -249,7 +350,7 @@ ProjectReference the matching local binding. The distributed NuGet dependency
 range is a separate choice; it must not pull a new native milestone into MAUI
 just to compare images.
 
-The standalone, signed class-library prototype has been compiled against
+The standalone, signed class-library prototype was compiled before the current rebase against
 `SkiaSharp 4.150.1` for both `netstandard2.0` and `net10.0`, with generated compiler
 XML and reference assemblies and zero documentation warnings. It uses these
 public sources without referencing a test assembly. This verifies the compile
@@ -275,15 +376,86 @@ review the public API and XML documentation, add the project to the appropriate
 shipping/package manifests, and make an explicit version/publication decision.
 The separately published Extended package is not changed or deprecated here.
 
-## Small future additions, if needed
+## Competitor overlap and recommended next increments
 
-A distinct one-byte excluded-pixel mask and normalized `ReadOnlySpan<byte>`
-input could be added when a real caller needs them. Excluded pixels would leave
-the metric denominator, unlike tolerance-map pixels. Zero comparison coverage
-must not look like a successful match.
+The strongest common ground is explicit thresholds, mismatch counts, numerical
+metrics and useful diff images, not a screenshot framework. Those are already
+the MVP. Comparison criteria must retain their units: ImageMagick fuzz, RGB-byte
+tolerance, perceptual distance, MAE, RMS and mismatch fraction are not synonyms.
 
-Anti-alias detection, perceptual thresholds, window-density scores, SSIM,
-correlations, EXIF comparison, and PDF/SVG processing are deliberately excluded.
-Current pixelmatch main and published `v7.2.0` use different perceptual
-algorithms; any future borrowing must name and pin its algorithm rather than
-pretend its threshold is a byte-channel tolerance.
+| Reference | Useful capability | Recommendation |
+| --- | --- | --- |
+| [pixelmatch](https://github.com/mapbox/pixelmatch/blob/v7.2.0/README.md) | Perceptual threshold, optional AA exclusion, configurable/transparent diff | Borrow diagnostic ergonomics first; perceptual/AA classification must be opt-in |
+| [Playwright](https://playwright.dev/docs/test-snapshots) | Count/ratio limits, stable capture, platform baselines | Limits belong here; capture stabilization and baseline lookup stay in adapters |
+| [Magick.NET](https://github.com/dlemstra/Magick.NET) | Channel-selective MAE/RMS, masks, metrics and diff colors | Prove MAUI's narrow metric subset, not full ImageMagick parity |
+| [Codeuctivity.SkiaSharpCompare](https://github.com/Codeuctivity/SkiaSharp.Compare) | Tolerance maps, alpha, optional resizing, convenience inputs | Maps/alpha are covered; keep resizing explicit and outside strict comparison |
+| [Codeuctivity.ImageSharpCompare](https://github.com/Codeuctivity/ImageSharp.Compare) | Pixel fraction and editable difference/tolerance maps | Keep map meaning explicit; do not inherit differing percentage units or another engine |
+| [Verify.ImageMagick](https://github.com/VerifyTests/Verify.ImageMagick) | Thin framework comparers, review/acceptance tooling | Offer adapter examples, not a Verify/NUnit/xUnit dependency in the package |
+
+**First recommendation: normalized MAE acceptance and ignored-region support.**
+MAE is needed by a current consumer; excluded regions are common in screenshot
+tools and prevent volatile UI from forcing broad global tolerances.
+Improve diagnostics next. Do not introduce a general algorithm/plugin pipeline
+before there is a proven requirement.
+
+The following signatures are **proposals only**, not available APIs:
+
+| Priority | Additive surface | Required contract |
+| --- | --- | --- |
+| Next | `double? SKPixelComparerOptions.MaxNormalizedMeanAbsoluteError` | Raw selected-channel MAE / 255; finite 0-1; joins configured budgets with AND. Samples sets this alone when its MAE policy replaces its fraction gate |
+| Next | `SKImage? SKPixelComparerOptions.IgnoreMask` | Dedicated coverage map, separate from tolerance: explicit nonzero coverage excludes a pixel. Add `ComparedPixelCount`/`IgnoredPixelCount`; reject zero coverage |
+| Next | `SKPixelDifferenceOptions` plus a new difference-generation overload | Configurable highlight/tolerated/background colors and optional transparent diagnostic output; existing style overload defaults unchanged |
+| Later | Normalized `ReadOnlySpan<byte>` input overloads with image info and row bytes | Borrowed buffers, explicit layout/stride/alpha, equivalent metrics; no decode or pointer ownership surprises |
+| Later | Named perceptual/AA comparison entry point returning a distinct result | Versioned metric, neighborhood semantics and counted/excluded AA pixels; never reinterpret existing byte tolerance |
+| Optional | Region/tile metrics or maximum window error | Useful for compact regressions hidden by global averages; separate opt-in measurements, not a new default gate |
+| Demand-driven | SSIM/perceptual hash, alignment search, metadata or document rendering | Separate capabilities/packages as needed; none required for the current image-testing MVP |
+
+Ignoring pixels is a deliberate coverage change. Preserve `TotalPixels` as image
+area, but use `ComparedPixelCount` for error fractions, metric denominators and
+count-derived fraction budgets when an ignore mask is explicitly supplied.
+With no ignore mask, results must be identical. Specify mask size, format,
+coordinates, ignored diff appearance and raw-stat exclusion before implementation.
+Do not use tolerance-mask alpha to mean coverage.
+
+### Preserve both binary API and behavioral compatibility
+
+Before shipping, continue refining the unpublished surface rather than keeping
+obsolete internal aliases. After shipping, retain signatures and getters,
+add overloads/properties rather than changing their types, and never rely on
+changed optional-parameter defaults at callers' compile time.
+
+New options must default to today's behavior: new budgets unset, no ignored
+pixels, unchanged channel representation and opaque red/amber overlay.
+The readonly tolerance keeps its existing `Exact`/`Absolute`/`Percent` meaning;
+do not add perceptual units or change percentage points to fractions.
+Results remain library-constructed; additional getters can be added without
+changing existing construction signatures.
+
+Extended's summed-channel threshold is not retained as an MVP mode: it is a
+different classifier, not another spelling of per-channel tolerance. If a real
+consumer needs that exact criterion, add a separately named comparison overload
+or criterion with explicit units and characterization fixtures. Binary/colored
+diffs, masks, alpha and existing metrics already preserve the useful general
+feature set without that historical overload ambiguity.
+
+Pin any borrowed perceptual algorithm. In the research snapshot, pixelmatch main
+had newer OKLab/ignore-mask/window ideas than its published `v7.2.0` YIQ release;
+main-branch code is not proof of a released feature. AA exclusion can hide stroke
+regressions, and global MAE/RMS can dilute small catastrophic changes. Keep strict
+pixel counts alongside richer metrics where coverage needs it.
+
+### Release gates for a useful external MVP
+
+Require exact math/boundary/channel tests, wide accumulators, raw-stat invariance,
+mask/diff consistency, padded input parity, invalid-input and native-lifetime
+tests, portable XML/reference builds and consumer package-graph validation.
+Characterize opaque, transparent and color-managed fixtures against the actual
+MAUI Magick Q8 version before claiming replacement parity. Decide and document
+color-space conversion and fully transparent hidden-RGB behavior; matching
+normalized samples is not encoded-byte equality.
+
+Retain caller ownership of baseline review, missing-reference failure,
+capture-only provenance, device identity and scale, bounded re-capture,
+attachments, GPU capability policy and test-framework assertions. Publication
+needs its own version/release approval; a green compile prototype does not
+publish a package or establish every runtime/native combination.
