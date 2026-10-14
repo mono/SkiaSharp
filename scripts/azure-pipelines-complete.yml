@@ -19,6 +19,7 @@ parameters:
       - macos
       - macos26
       - windows
+      - windows-ui
   - name: probeWinAppDriver
     displayName: 'Test the WinAppDriver MSI on the Windows probe:'
     type: boolean
@@ -116,6 +117,10 @@ extends:
               timeoutInMinutes: 30
               ${{ if eq(parameters.probeAgent, 'windows') }}:
                 pool: ${{ parameters.buildAgentWindows.pool }}
+              ${{ elseif eq(parameters.probeAgent, 'windows-ui') }}:
+                pool:
+                  name: ${{ parameters.buildAgentWindows.pool.name }}
+                  demands: ImageOverride -equals 1es-windows-2022-open
               ${{ elseif eq(parameters.probeAgent, 'macos26') }}:
                 pool:
                   name: Azure Pipelines
