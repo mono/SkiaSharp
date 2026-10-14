@@ -73,10 +73,10 @@ Use assembly scope only when the entire component is experimental, as with
 `SkiaSharp.Testing`. In a stable product or views assembly, annotate only the new
 experimental type or member, leaving existing APIs unaffected. Give a future
 independent feature the next unused ID in its family rather than extending
-`SKIA5001`.
+`SKIA4001`.
 
-Consumers explicitly opt in with `<NoWarn>$(NoWarn);SKIA5001</NoWarn>` or a narrower
-`#pragma warning disable SKIA5001`. This is a compiler diagnostic, not a runtime
+Consumers explicitly opt in with `<NoWarn>$(NoWarn);SKIA4001</NoWarn>` or a narrower
+`#pragma warning disable SKIA4001`. This is a compiler diagnostic, not a runtime
 feature switch. Before .NET 8, preserve the attribute metadata with an internal
 compatibility definition; older compilers may not enforce the diagnostic.
 Remove the attribute when the feature becomes stable and retain its registry
