@@ -109,8 +109,9 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 
 		app.Click("sample-back");
 		app.Find("gallery-search", "gallery-filter-search");
-		app.Click("gallery-header-gpu");
 		app.Click("sample-gradient");
+		app.WaitText("sample-render-status", text => text.StartsWith("CPU", StringComparison.Ordinal) && text.Contains("  |"));
+		app.Click("gallery-header-gpu");
 		app.WaitText("sample-render-status", text => text.StartsWith("GPU", StringComparison.Ordinal) && text.Contains("  |"));
 		await Compare(app, "sample-canvas-gpu", "gallery-gradient-gpu", "Maui", platform);
 		app.Click("sample-back");

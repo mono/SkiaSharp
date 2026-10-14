@@ -59,6 +59,10 @@ public class DrawingViewController : NSViewController
 	{
 		base.ViewDidLoad();
 
+		skiaView.AccessibilityElement = true;
+		skiaView.AccessibilityRole = NSAccessibilityRoles.ImageRole;
+		skiaView.AccessibilityIdentifier = "basic-canvas-drawing";
+		clearButton.Identifier = "basic-drawing-clear";
 		skiaView.IgnorePixelScaling = true;
 		skiaView.PaintSurface += OnPaintSurface;
 
