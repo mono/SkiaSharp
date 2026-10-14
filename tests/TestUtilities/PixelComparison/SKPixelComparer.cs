@@ -69,30 +69,6 @@ public static class SKPixelComparer
 		return ComparePixels(a, b, mask, settings);
 	}
 
-	/// <summary>Creates a caller-owned opaque black/white difference image using exact RGBA.</summary>
-	public static SKImage GenerateDifferenceMask(SKImage first, SKImage second) =>
-		GenerateDifferenceMask(first, second, null);
-
-	/// <summary>Creates a caller-owned black/white image using the same rejection predicate as <see cref="Compare(SKImage, SKImage, SKPixelComparerOptions)"/>; match budgets do not affect pixels.</summary>
-	public static SKImage GenerateDifferenceMask(SKImage first, SKImage second, SKPixelComparerOptions? options) =>
-		GenerateDifferenceImage(first, second, options, SKPixelDifferenceStyle.BinaryMask);
-
-	/// <summary>Creates a caller-owned opaque black/white difference image using exact RGBA.</summary>
-	public static SKImage GenerateDifferenceMask(SKBitmap first, SKBitmap second) =>
-		GenerateDifferenceMask(first, second, null);
-
-	/// <summary>Creates a caller-owned black/white image using the same rejection predicate as <see cref="Compare(SKBitmap, SKBitmap, SKPixelComparerOptions)"/>; match budgets do not affect pixels.</summary>
-	public static SKImage GenerateDifferenceMask(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options) =>
-		GenerateDifferenceImage(first, second, options, SKPixelDifferenceStyle.BinaryMask);
-
-	/// <summary>Creates a caller-owned opaque black/white difference image using exact RGBA.</summary>
-	public static SKImage GenerateDifferenceMask(SKPixmap first, SKPixmap second) =>
-		GenerateDifferenceMask(first, second, null);
-
-	/// <summary>Creates a caller-owned black/white image using the same rejection predicate as <see cref="Compare(SKPixmap, SKPixmap, SKPixelComparerOptions)"/>; match budgets do not affect pixels.</summary>
-	public static SKImage GenerateDifferenceMask(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options) =>
-		GenerateDifferenceImage(first, second, options, SKPixelDifferenceStyle.BinaryMask);
-
 	/// <summary>Creates a caller-owned threshold overlay using exact RGBA; alpha-only failures are visible.</summary>
 	public static SKImage GenerateDifferenceImage(SKImage first, SKImage second) =>
 		GenerateDifferenceImage(first, second, null);

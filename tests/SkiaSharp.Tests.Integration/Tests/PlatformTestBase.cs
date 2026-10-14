@@ -202,7 +202,7 @@ public abstract class PlatformTestBase : IDisposable
             Output.WriteLine($"Comparison: {result.TotalPixels} total, {result.ErrorPixelCount} errors, {result.RawMetrics.AbsoluteError} absolute error");
             
             // Generate and save diff image
-            using var diffImage = SKPixelComparer.GenerateDifferenceMask(expectedImage, compareActual, options);
+            using var diffImage = SKPixelComparer.GenerateDifferenceImage(expectedImage, compareActual, options, SKPixelDifferenceStyle.BinaryMask);
             using var diffData = diffImage.Encode(SKEncodedImageFormat.Png, 100);
             var diffPath = Path.Combine(ScreenshotDir, $"{diffName}-diff.png");
             await File.WriteAllBytesAsync(diffPath, diffData.ToArray());
