@@ -158,14 +158,11 @@ public static class SKPixelComparer
 
 		var raw = new SKPixelComparisonMetrics(totalPixels, settings.ChannelCount, rawAbsolute, rawSquared);
 		var filtered = new SKPixelComparisonMetrics(totalPixels, settings.ChannelCount, filteredAbsolute, filteredSquared);
-		var budgets = settings.MaxErrorPixels.HasValue || settings.MaxErrorPixelFraction.HasValue ||
-			settings.MaxNormalizedRootMeanSquaredError.HasValue;
-		var isMatch = budgets
-			? (!settings.MaxErrorPixels.HasValue || errorPixels <= settings.MaxErrorPixels.Value) &&
-				(!settings.MaxErrorPixelFraction.HasValue || errorPixels <= Math.Floor(totalPixels * settings.MaxErrorPixelFraction.Value)) &&
-				(!settings.MaxNormalizedRootMeanSquaredError.HasValue ||
-					raw.NormalizedRootMeanSquaredError <= settings.MaxNormalizedRootMeanSquaredError.Value)
-			: errorPixels == 0;
+		var isMatch = (!settings.ErrorBudget.HasValue && !settings.MaxNormalizedRootMeanSquaredError.HasValue
+				? errorPixels == 0
+				: (!settings.ErrorBudget.HasValue || settings.ErrorBudget.Value.Allows(errorPixels, totalPixels))) &&
+			(!settings.MaxNormalizedRootMeanSquaredError.HasValue ||
+				raw.NormalizedRootMeanSquaredError <= settings.MaxNormalizedRootMeanSquaredError.Value);
 		return new SKPixelComparisonResult(totalPixels, settings.ChannelCount, errorPixels, maxDelta,
 			errorPixels == 0 ? (SKRectI?)null : new SKRectI(left, top, right, bottom), raw, filtered, isMatch);
 	}
@@ -221,7 +218,7 @@ public static class SKPixelComparer
 		return new PixelDifference(r, g, b, max, rawAbsolute, rawSquared, filteredAbsolute, filteredSquared);
 	}
 
-	private static void Accumulate(int delta, double? allowance, byte? maskAllowance, ref int rawAbsolute, ref long rawSquared,
+	private static void Accumulate(int delta, SKPixelTolerance? allowance, byte? maskAllowance, ref int rawAbsolute, ref long rawSquared,
 		ref int filteredAbsolute, ref long filteredSquared, ref int max)
 	{
 		if (!allowance.HasValue)
@@ -229,7 +226,7 @@ public static class SKPixelComparer
 		rawAbsolute += delta;
 		rawSquared += (long)delta * delta;
 		max = Math.Max(max, delta);
-		if (delta > Math.Max(allowance.Value, maskAllowance ?? 0))
+		if (!allowance.Value.Allows(delta) && (!maskAllowance.HasValue || delta > maskAllowance.Value))
 		{
 			filteredAbsolute += delta;
 			filteredSquared += (long)delta * delta;
@@ -266,38 +263,32 @@ public static class SKPixelComparer
 	{
 		public Settings(SKPixelComparerOptions? options)
 		{
-			RedTolerance = options == null ? SKPixelTolerance.Exact.Value : options.RedTolerance?.Value;
-			GreenTolerance = options == null ? SKPixelTolerance.Exact.Value : options.GreenTolerance?.Value;
-			BlueTolerance = options == null ? SKPixelTolerance.Exact.Value : options.BlueTolerance?.Value;
-			AlphaTolerance = options == null ? SKPixelTolerance.Exact.Value : options.AlphaTolerance?.Value;
+			RedTolerance = options == null ? SKPixelTolerance.Exact : options.RedTolerance;
+			GreenTolerance = options == null ? SKPixelTolerance.Exact : options.GreenTolerance;
+			BlueTolerance = options == null ? SKPixelTolerance.Exact : options.BlueTolerance;
+			AlphaTolerance = options == null ? SKPixelTolerance.Exact : options.AlphaTolerance;
 			ChannelCount = (RedTolerance.HasValue ? 1 : 0) + (GreenTolerance.HasValue ? 1 : 0) +
 				(BlueTolerance.HasValue ? 1 : 0) + (AlphaTolerance.HasValue ? 1 : 0);
 			AlphaType = options?.AlphaType ?? SKAlphaType.Unpremul;
 			Mask = options?.ToleranceMask;
-			MaxErrorPixels = options?.MaxErrorPixels;
-			MaxErrorPixelFraction = options?.MaxErrorPixelFraction;
+			ErrorBudget = options?.ErrorBudget;
 			MaxNormalizedRootMeanSquaredError = options?.MaxNormalizedRootMeanSquaredError;
 			if (ChannelCount == 0)
 				throw new ArgumentException("At least one channel must be enabled.", nameof(options));
 			if (AlphaType != SKAlphaType.Unpremul && AlphaType != SKAlphaType.Premul)
 				throw new ArgumentOutOfRangeException(nameof(options), "AlphaType must be Unpremul or Premul.");
-			if (MaxErrorPixels < 0)
-				throw new ArgumentOutOfRangeException(nameof(options), "MaxErrorPixels must be nonnegative.");
-			if (InvalidFraction(MaxErrorPixelFraction))
-				throw new ArgumentOutOfRangeException(nameof(options), "MaxErrorPixelFraction must be finite and between 0 and 1.");
 			if (InvalidFraction(MaxNormalizedRootMeanSquaredError))
 				throw new ArgumentOutOfRangeException(nameof(options), "MaxNormalizedRootMeanSquaredError must be finite and between 0 and 1.");
 		}
 
-		public double? RedTolerance { get; }
-		public double? GreenTolerance { get; }
-		public double? BlueTolerance { get; }
-		public double? AlphaTolerance { get; }
+		public SKPixelTolerance? RedTolerance { get; }
+		public SKPixelTolerance? GreenTolerance { get; }
+		public SKPixelTolerance? BlueTolerance { get; }
+		public SKPixelTolerance? AlphaTolerance { get; }
 		public int ChannelCount { get; }
 		public SKAlphaType AlphaType { get; }
 		public SKImage? Mask { get; }
-		public long? MaxErrorPixels { get; }
-		public double? MaxErrorPixelFraction { get; }
+		public SKPixelErrorBudget? ErrorBudget { get; }
 		public double? MaxNormalizedRootMeanSquaredError { get; }
 
 		private static bool InvalidFraction(double? value) =>

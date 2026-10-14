@@ -37,6 +37,15 @@ public readonly struct SKPixelTolerance : IEquatable<SKPixelTolerance>
 		return new SKPixelTolerance(value * 255.0 / 100.0);
 	}
 
+	/// <summary>Tests whether a finite nonnegative channel difference is within this inclusive byte allowance.</summary>
+	/// <exception cref="ArgumentOutOfRangeException">The difference is negative or non-finite.</exception>
+	public bool Allows(double absoluteDifference)
+	{
+		if (double.IsNaN(absoluteDifference) || double.IsInfinity(absoluteDifference) || absoluteDifference < 0)
+			throw new ArgumentOutOfRangeException(nameof(absoluteDifference), "Difference must be finite and nonnegative.");
+		return absoluteDifference <= value;
+	}
+
 	/// <summary>Determines whether the effective byte allowances are equal.</summary>
 	public bool Equals(SKPixelTolerance other) => value == other.value;
 

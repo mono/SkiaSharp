@@ -118,7 +118,8 @@ The [shared pixel comparer](pixel-comparison.md) lives in
 `tests/TestUtilities/PixelComparison/`, not in the shipping SkiaSharp assembly.
 The matrix supplies premultiplied RGBA comparison through
 `SKPixelTolerance.Absolute(ChannelTolerance)` and configures
-`MaxErrorPixelFraction` in the same options object. `IsMatch` applies the existing
+`ErrorBudget.Percent(MaxOutlierFraction * 100)` in the same options object.
+`IsMatch` applies the existing
 floor-based outlier budget, while the threshold-overlay diff keeps the red/amber
 diagnostics. Baseline lookup and GPU policy remain owned by this harness.
 

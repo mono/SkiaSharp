@@ -22,7 +22,7 @@ public sealed class SKPixelComparisonResult
 		IsMatch = isMatch;
 	}
 
-	/// <summary>Whether all configured whole-image budgets pass, or (without budgets) no pixel is rejected.</summary>
+	/// <summary>Whether the configured rejected-pixel budget and/or raw RMS limit pass, or (without either) no pixel is rejected.</summary>
 	public bool IsMatch { get; }
 
 	/// <summary>Number of pixels compared.</summary>

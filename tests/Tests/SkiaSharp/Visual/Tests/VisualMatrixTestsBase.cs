@@ -122,7 +122,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 				GreenTolerance = SKPixelTolerance.Absolute(tolerance.ChannelTolerance),
 				BlueTolerance = SKPixelTolerance.Absolute(tolerance.ChannelTolerance),
 				AlphaTolerance = SKPixelTolerance.Absolute(tolerance.ChannelTolerance),
-				MaxErrorPixelFraction = tolerance.MaxOutlierFraction,
+				ErrorBudget = SKPixelErrorBudget.Percent(tolerance.MaxOutlierFraction * 100),
 			};
 
 			using var actualImage = ToImage(actual, normalized);
