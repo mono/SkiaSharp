@@ -110,7 +110,7 @@ internal static class SampleImage
             Tolerance = SKPixelTolerance.Exact,
         };
         var result = SKPixelComparer.Compare(expectedImage, actualImage, comparisonOptions);
-        var averageColorErrorFraction = result.RawMetrics.MeanAbsoluteError / 255.0;
+        var averageColorErrorFraction = result.RawMetrics.AbsoluteError / (result.TotalPixels * 4.0 * 255);
         var comparison = maxAverageColorErrorFraction is { } limit
             ? $"average RGBA color error {averageColorErrorFraction:P3}, exceeding {limit:P3}"
             : $"differing pixels {(decimal)result.ErrorPixelCount / result.TotalPixels:P3}, exceeding {maxErrorPixelFraction:P3}";
