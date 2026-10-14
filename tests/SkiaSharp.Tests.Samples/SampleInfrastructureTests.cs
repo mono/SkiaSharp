@@ -45,6 +45,115 @@ public class SampleInfrastructureTests : IDisposable
             SampleLookup.EntryKind.Basic | SampleLookup.EntryKind.Docker), entries);
     }
 
+    [Theory]
+    [InlineData("Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj")]
+    [InlineData("Gallery/Maui/SkiaSharpSample.Maui.csproj")]
+    public void MauiSourceProjectsDeclareOnlyHostSupportedFrameworks(string relativeProject)
+    {
+        var project = XDocument.Load(Path.Combine(Repo.RootDir, "samples", relativeProject));
+        var frameworks = project.Descendants("TargetFrameworks").ToArray();
+        Assert.Equal(3, frameworks.Length);
+        Assert.Equal("net10.0-android", Assert.Single(frameworks,
+            element => element.Attribute("Condition") is null).Value);
+        Assert.Equal("net10.0-android;net10.0-ios;net10.0-maccatalyst", Assert.Single(frameworks,
+            element => (string?)element.Attribute("Condition") == "$([MSBuild]::IsOSPlatform('OSX'))").Value);
+        Assert.Equal("net10.0-android;net10.0-windows10.0.19041.0", Assert.Single(frameworks,
+            element => (string?)element.Attribute("Condition") == "$([MSBuild]::IsOSPlatform('Windows'))").Value);
+    }
+
+    [Fact]
+    public void NativeAndroidSourceProjectSupportsLinuxEmulatorArchitectures()
+    {
+        var project = XDocument.Load(Path.Combine(Repo.RootDir, "samples", "Basic", "Android",
+            "SkiaSharpSample", "SkiaSharpSample.csproj"));
+        var frameworks = Assert.Single(project.Descendants("TargetFrameworks"));
+        Assert.Null(frameworks.Attribute("Condition"));
+        Assert.Equal("net10.0-android", frameworks.Value);
+        var runtimes = Assert.Single(project.Descendants("RuntimeIdentifiers"));
+        Assert.Null(runtimes.Attribute("Condition"));
+        Assert.Equal("android-arm;android-x86;android-arm64;android-x64", runtimes.Value);
+    }
+
+    [Theory]
+    [InlineData("Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj")]
+    [InlineData("Gallery/Maui/SkiaSharpSample.Maui.csproj")]
+    public void MauiSourceProjectsUseTheSameMauiPackage(string relativeProject)
+    {
+        var project = XDocument.Load(Path.Combine(Repo.RootDir, "samples", relativeProject));
+        Assert.Equal("10.0.110", Assert.Single(project.Descendants("MauiVersion")).Value);
+    }
+
+    [Theory]
+    [InlineData("Basic/iOS/SkiaSharpSample/SkiaSharpSample.csproj", "ios", "15.0")]
+    [InlineData("Basic/MacCatalyst/SkiaSharpSample/SkiaSharpSample.csproj", "maccatalyst", "17.0")]
+    [InlineData("Basic/macOS/SkiaSharpSample/SkiaSharpSample.csproj", "macos", "14.0")]
+    [InlineData("Basic/tvOS/SkiaSharpSample/SkiaSharpSample.csproj", "tvos", "15.0")]
+    [InlineData("Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj", "ios", "15.0")]
+    [InlineData("Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj", "maccatalyst", "17.0")]
+    [InlineData("Gallery/Maui/SkiaSharpSample.Maui.csproj", "ios", "15.0")]
+    [InlineData("Gallery/Maui/SkiaSharpSample.Maui.csproj", "maccatalyst", "17.0")]
+    public void AppleSourceProjectsMeetApprovedDeploymentFloors(string relativeProject, string platform, string minimum)
+    {
+        var project = XDocument.Load(Path.Combine(Repo.RootDir, "samples", relativeProject));
+        var declared = Assert.Single(project.Descendants("SupportedOSPlatformVersion"), element =>
+            element.Attribute("Condition") is null ||
+            element.Attribute("Condition")!.Value.Contains($"'-{platform}'", StringComparison.Ordinal));
+        Assert.True(Version.Parse(declared.Value) >= Version.Parse(minimum));
+    }
+
+    [Theory]
+    [InlineData("Basic/iOS/SkiaSharpSample", false)]
+    [InlineData("Basic/MacCatalyst/SkiaSharpSample", false)]
+    [InlineData("Basic/Maui/SkiaSharpSample/Platforms/iOS", true)]
+    [InlineData("Basic/Maui/SkiaSharpSample/Platforms/MacCatalyst", true)]
+    [InlineData("Gallery/Maui/Platforms/iOS", true)]
+    [InlineData("Gallery/Maui/Platforms/MacCatalyst", true)]
+    public void AppleSourceManifestsBindTheCorrectSceneOwner(string relativeHead, bool maui)
+    {
+        var head = Path.Combine(Repo.RootDir, "samples", relativeHead);
+        var root = XDocument.Load(Path.Combine(head, "Info.plist")).Root!.Element("dict")!;
+        var manifest = PlistValue(root, "UIApplicationSceneManifest");
+        Assert.Equal("false", PlistValue(manifest, "UIApplicationSupportsMultipleScenes").Name.LocalName);
+        var configurations = PlistValue(manifest, "UISceneConfigurations");
+        var configuration = Assert.Single(PlistValue(configurations, "UIWindowSceneSessionRoleApplication").Elements("dict"));
+        Assert.Equal(maui ? "__MAUI_DEFAULT_SCENE_CONFIGURATION__" : "Default Configuration",
+            PlistValue(configuration, "UISceneConfigurationName").Value);
+        Assert.Equal("SceneDelegate", PlistValue(configuration, "UISceneDelegateClassName").Value);
+        var source = File.ReadAllText(Path.Combine(head, "SceneDelegate.cs"));
+        Assert.Contains("[Register(\"SceneDelegate\")]", source);
+        Assert.Contains(maui ? "SceneDelegate : MauiUISceneDelegate" : "SceneDelegate : UIResponder, IUIWindowSceneDelegate", source);
+        if (maui)
+        {
+            Assert.DoesNotContain("UISceneStoryboardFile", configuration.Descendants("key").Select(element => element.Value));
+            Assert.Contains("AppDelegate : MauiUIApplicationDelegate", File.ReadAllText(Path.Combine(head, "AppDelegate.cs")));
+        }
+        else
+        {
+            Assert.Equal("Main", PlistValue(configuration, "UISceneStoryboardFile").Value);
+            Assert.Equal("Main", PlistValue(root, "UIMainStoryboardFile").Value);
+        }
+    }
+
+    private static XElement PlistValue(XElement dictionary, string key) =>
+        Assert.Single(dictionary.Elements("key"), element => element.Value == key).ElementsAfterSelf().First();
+
+    [Fact]
+    public void NativeIosDefaultPageSelectionBelongsToItsStoryboardScene()
+    {
+        var head = Path.Combine(Repo.RootDir, "samples", "Basic", "iOS", "SkiaSharpSample");
+        var app = File.ReadAllText(Path.Combine(head, "AppDelegate.cs"));
+        Assert.DoesNotContain("FinishedLaunching", app);
+        Assert.DoesNotContain("Window", app);
+        Assert.Contains("SamplePage.Cpu", app);
+        var scene = File.ReadAllText(Path.Combine(head, "SceneDelegate.cs"));
+        Assert.Contains("[Export(\"scene:willConnectToSession:options:\")]", scene);
+        Assert.Contains("NSRunLoop.Main.BeginInvokeOnMainThread", scene);
+        Assert.Contains("Window?.RootViewController is UITabBarController tabs", scene);
+        Assert.Contains("tabs.SelectedIndex = (nint)(int)AppDelegate.DefaultPage;", scene);
+        var root = XDocument.Load(Path.Combine(head, "Info.plist")).Root!.Element("dict")!;
+        Assert.Equal("LaunchScreen", PlistValue(root, "UILaunchStoryboardName").Value);
+    }
+
     [Fact]
     public void DockerContextContainsSelectedSampleAndLocalPackagesOnly()
     {
