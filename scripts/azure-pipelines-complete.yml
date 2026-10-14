@@ -203,7 +203,18 @@ extends:
                             $listener.Stop()
                             $stdout = Join-Path $env:AGENT_TEMPDIRECTORY 'winappdriver-probe.stdout.log'
                             $stderr = Join-Path $env:AGENT_TEMPDIRECTORY 'winappdriver-probe.stderr.log'
-                            $driver = Start-Process -FilePath $installed[0] -ArgumentList @('127.0.0.1', "$port") -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+                            $start = [Diagnostics.ProcessStartInfo]::new($installed[0])
+                            $start.ArgumentList.Add('127.0.0.1')
+                            $start.ArgumentList.Add("$port")
+                            $start.UseShellExecute = $false
+                            $start.RedirectStandardInput = $true
+                            $start.RedirectStandardOutput = $true
+                            $start.RedirectStandardError = $true
+                            $start.StandardOutputEncoding = [Text.Encoding]::Unicode
+                            $start.StandardErrorEncoding = [Text.Encoding]::Unicode
+                            $driver = [Diagnostics.Process]::Start($start)
+                            $stdoutRead = $driver.StandardOutput.ReadToEndAsync()
+                            $stderrRead = $driver.StandardError.ReadToEndAsync()
                             try {
                                 $deadline = [DateTime]::UtcNow.AddSeconds(20)
                                 $ready = $false
@@ -228,8 +239,10 @@ extends:
                                     $driver.Kill()
                                     $driver.WaitForExit()
                                 }
-                                if (Test-Path $stdout) { Get-Content $stdout }
-                                if (Test-Path $stderr) { Get-Content $stderr }
+                                [IO.File]::WriteAllText($stdout, $stdoutRead.GetAwaiter().GetResult())
+                                [IO.File]::WriteAllText($stderr, $stderrRead.GetAwaiter().GetResult())
+                                Get-Content $stdout
+                                Get-Content $stderr
                                 $driver.Dispose()
                             }
                         }
