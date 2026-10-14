@@ -1,30 +1,42 @@
 {
-  "theme": "Runtime performance and reliability",
-  "highlights_headline": "SkiaSharp 4.156.0 improves managed rendering and text-shaping performance while correcting stream lifetime behavior.",
-  "highlights_body": "Image pixel copies and HarfBuzz text encoding allocate less during repeated use, while native feature-string decoding avoids an unnecessary allocation.",
+  "theme": "Rendering and memory refinements",
+  "highlights_headline": "SkiaSharp 4.156.0 improves Android rendering cadence and reduces allocation overhead in image, stream, and text-shaping paths.",
+  "highlights_body": "Android texture rendering now follows display refresh, while managed pixel copies, HarfBuzz text shaping, feature-string decoding, and front-buffered streams avoid unnecessary retained memory or allocations.",
   "breaking": [],
   "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Android texture rendering follows display refresh",
+          "detail": "Texture-backed rendering on Android is synchronized with the display refresh cadence for smoother presentation.",
+          "prs": [
+            5345
+          ]
+        },
+        {
+          "lead": "Image pixel copies use less managed overhead",
+          "detail": "Managed image pixel-copy operations avoid unnecessary work, reducing overhead when applications transfer pixel data.",
+          "prs": [
+            5052
+          ]
+        },
+        {
+          "lead": "Text-shaping allocations reduced",
+          "detail": "HarfBuzz UTF-32 encoding reuses a pooled buffer, and feature-string decoding avoids an unnecessary native allocation.",
+          "prs": [
+            5060,
+            5230
+          ]
+        }
+      ]
+    },
     {
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Managed image and text shaping allocations reduced",
-          "detail": "Image pixel copies are optimized, and HarfBuzzSharp reuses its UTF-32 encoding buffer to reduce allocation pressure in repeated rendering and shaping workloads.",
-          "prs": [
-            5052,
-            5060
-          ]
-        },
-        {
-          "lead": "Feature-string decoding avoids native allocation",
-          "detail": "Parsing OpenType feature strings no longer allocates native memory unnecessarily while preserving the existing decoded results.",
-          "prs": [
-            5230
-          ]
-        },
-        {
-          "lead": "Front-buffered streams release retained data",
-          "detail": "Corrects front-buffered stream retention so buffered data is not kept alive longer than intended.",
+          "lead": "Front-buffered streams no longer retain data unnecessarily",
+          "detail": "Front-buffered streams release retained data correctly, reducing memory retention during stream-based decoding and processing.",
           "prs": [
             5327
           ]
