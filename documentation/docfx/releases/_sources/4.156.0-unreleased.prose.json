@@ -1,48 +1,37 @@
 {
-  "theme": "M156 platform updates",
-  "highlights_headline": "SkiaSharp 4.156.0 updates to Skia M156 and broadens native rendering support across desktop platforms.",
-  "highlights_body": "This line adds GTK4 GPU rendering, restores Linux system-font discovery for NoDependencies deployments, and aligns upcoming .NET and native toolchain assets.",
+  "theme": "Runtime performance and reliability",
+  "highlights_headline": "SkiaSharp 4.156.0 improves managed rendering and text-shaping performance while correcting stream lifetime behavior.",
+  "highlights_body": "Image pixel copies and HarfBuzz text encoding allocate less during repeated use, while native feature-string decoding avoids an unnecessary allocation.",
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Skia updated to milestone M156",
-          "detail": "Moves the bundled renderer to Skia M156 and incorporates the current core-fork cleanup.",
-          "prs": [5247, 5208]
-        }
-      ]
-    },
-    {
-      "heading": "Bug Fixes",
-      "bullets": [
-        {
-          "lead": "Linux system-font discovery restored",
-          "detail": "NoDependencies deployments can again locate fonts installed on Linux systems.",
-          "prs": [5086]
-        }
-      ]
-    },
-    {
-      "heading": "Platform",
-      "bullets": [
-        {
-          "lead": "GTK4 gains native GPU rendering",
-          "detail": "Adds GPU-backed rendering and pixel scaling for the GTK4 integration.",
-          "prs": [5249]
+          "lead": "Managed image and text shaping allocations reduced",
+          "detail": "Image pixel copies are optimized, and HarfBuzzSharp reuses its UTF-32 encoding buffer to reduce allocation pressure in repeated rendering and shaping workloads.",
+          "prs": [
+            5052,
+            5060
+          ]
         },
         {
-          "lead": "Native platform assets refreshed",
-          "detail": "Aligns Windows toolchains, Tizen packaging, .NET 11 preview assets, and the WinUI Windows SDK configuration.",
-          "prs": [5306, 5238, 5235, 5273]
+          "lead": "Feature-string decoding avoids native allocation",
+          "detail": "Parsing OpenType feature strings no longer allocates native memory unnecessarily while preserving the existing decoded results.",
+          "prs": [
+            5230
+          ]
+        },
+        {
+          "lead": "Front-buffered streams release retained data",
+          "detail": "Corrects front-buffered stream retention so buffered data is not kept alive longer than intended.",
+          "prs": [
+            5327
+          ]
         }
       ]
     }
   ],
-  "contributor_summaries": {
-    "ramezgerges": "Restored Linux system-font discovery for NoDependencies deployments"
-  },
-  "preview_summaries": {},
-  "harfbuzz_summary": "Refreshes HarfBuzzSharp build assets alongside the updated Windows and Tizen native toolchains."
+  "contributor_summaries": {},
+  "preview_summaries": {}
 }
