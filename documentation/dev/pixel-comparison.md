@@ -63,13 +63,13 @@ public static class SKPixelComparer
 
     public static SKImage GenerateDifferenceImage(SKImage first, SKImage second);
     public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelComparerOptions? options);
-    public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelComparerOptions? options, SKPixelDifferenceStyle style);
+    public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelDifferenceStyle style, SKPixelComparerOptions? options);
     public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second);
     public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options);
-    public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options, SKPixelDifferenceStyle style);
+    public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelDifferenceStyle style, SKPixelComparerOptions? options);
     public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second);
     public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options);
-    public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options, SKPixelDifferenceStyle style);
+    public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelDifferenceStyle style, SKPixelComparerOptions? options);
 }
 
 public readonly struct SKPixelTolerance : IEquatable<SKPixelTolerance>
@@ -170,7 +170,7 @@ var result = SKPixelComparer.Compare(expected, actual, options);
 Assert.True(result.IsMatch);
 
 using var diff = SKPixelComparer.GenerateDifferenceImage(
-    expected, actual, options, SKPixelDifferenceStyle.ThresholdOverlay);
+    expected, actual, SKPixelDifferenceStyle.ThresholdOverlay, options);
 ```
 
 The same overload families accept `SKImage`, `SKBitmap`, or `SKPixmap`. There are
@@ -258,10 +258,10 @@ and retain no native inputs.
 
 ```csharp
 using var binary = SKPixelComparer.GenerateDifferenceImage(
-    expected, actual, options, SKPixelDifferenceStyle.BinaryMask);
+    expected, actual, SKPixelDifferenceStyle.BinaryMask, options);
 using var overlay = SKPixelComparer.GenerateDifferenceImage(expected, actual, options);
 using var delta = SKPixelComparer.GenerateDifferenceImage(
-    expected, actual, options, SKPixelDifferenceStyle.ChannelDelta);
+    expected, actual, SKPixelDifferenceStyle.ChannelDelta, options);
 ```
 
 The default difference image is `ThresholdOverlay`, so alpha-only rejections are
