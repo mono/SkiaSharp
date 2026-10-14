@@ -10,13 +10,7 @@ objects. It reports pixel differences, evaluates acceptance limits and can
 generate a diagnostic image. Screenshot capture, resizing, baseline selection
 and test-framework assertions remain the caller's responsibility.
 
-![Illustration of an expected image and an actual image with a slightly changed blue panel and an added red bar.](images/comparison-inputs.svg)
-
-The blue panel changes from RGB **(37, 99, 235)** to **(39, 101, 237)**:
-just +2 per channel, deliberately hard to see. A new red bar is also added.
-These illustrations explain comparison rules, not a particular platform's output.
-
-## Set up
+## Getting started
 
 Install `SkiaSharp.Testing` alongside the matching SkiaSharp release and retain
 your application's existing native-assets setup:
@@ -37,6 +31,12 @@ dotnet add package SkiaSharp.Testing
 ```
 
 ## Compare two images
+
+![Illustration of an expected image and an actual image with a slightly changed blue panel and an added red bar.](images/comparison-inputs.svg)
+
+The blue panel changes from RGB **(37, 99, 235)** to **(39, 101, 237)**:
+just +2 per channel, deliberately hard to see. A new red bar is also added.
+These illustrations explain comparison rules, not a particular platform's output.
 
 ```csharp
 using System;
