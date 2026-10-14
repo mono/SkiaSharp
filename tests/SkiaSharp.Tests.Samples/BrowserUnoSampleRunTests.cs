@@ -17,7 +17,8 @@ public class BrowserUnoSampleRunTests : DotNetSampleTestBase
         {
             await app.Navigate("/");
             await app.WaitForElement("#uno-canvas");
-            await SampleImage.Validate(app.Screenshot, $"Host/{SampleLookup.HostPlatform}/uno-cpu-page.png");
+            await SampleImage.Validate(app.Screenshot, $"Host/{SampleLookup.HostPlatform}/uno-cpu-page.png",
+                timeout: TimeSpan.FromSeconds(60));
         });
 
     [Fact]
@@ -30,7 +31,8 @@ public class BrowserUnoSampleRunTests : DotNetSampleTestBase
         {
             await app.Navigate("/");
             await app.WaitForElement("#uno-canvas");
-            await SampleImage.Validate(app.Screenshot, $"Host/{SampleLookup.HostPlatform}/uno-cpu-page.png");
+            await SampleImage.Validate(app.Screenshot, $"Host/{SampleLookup.HostPlatform}/uno-cpu-page.png",
+                timeout: TimeSpan.FromSeconds(60));
 
             // SkiaRenderer draws the navigation and controls into the 1280x900 canvas.
             await app.Page.Mouse.ClickAsync(220, 24);

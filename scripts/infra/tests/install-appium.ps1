@@ -82,20 +82,23 @@ try {
     }
     elseif ($Platform -eq 'Windows') {
         Write-Warning 'WinAppDriver installation requires administrator privileges. Tests still require Developer Mode and an interactive, unlocked Windows desktop; this installer does not configure these.'
-        Invoke-InstallerCommand $appium @('driver', 'run', 'windows', 'install-wad') | Out-Null
+        $installer = Join-Path $root 'WindowsApplicationDriver_1.2.1.msi'
+        $installerLog = Join-Path $logs 'install-winappdriver-msi.log'
+        Invoke-WebRequest -Uri 'https://github.com/microsoft/WinAppDriver/releases/download/v1.2.1/WindowsApplicationDriver_1.2.1.msi' -OutFile $installer
+        $installation = Start-Process -FilePath msiexec.exe -ArgumentList @(
+            '/i', "`"$installer`"", '/qn', '/norestart', '/L*v', "`"$installerLog`""
+        ) -Wait -PassThru
+        if ($installation.ExitCode -notin @(0, 3010)) {
+            throw "WinAppDriver MSI installation failed with exit code $($installation.ExitCode). Inspect $installerLog."
+        }
         $wad = $null
-        # The driver hook starts msiexec asynchronously.
-        $installation = [Diagnostics.Stopwatch]::StartNew()
-        while (!$wad -and $installation.Elapsed.TotalSeconds -lt 60) {
-            foreach ($programFiles in @(${env:ProgramFiles(x86)}, $env:ProgramFiles)) {
-                if ([string]::IsNullOrWhiteSpace($programFiles)) { continue }
-                $candidate = Join-Path $programFiles 'Windows Application Driver/WinAppDriver.exe'
-                if (Test-Path $candidate -PathType Leaf) {
-                    $wad = $candidate
-                    break
-                }
+        foreach ($programFiles in @(${env:ProgramFiles(x86)}, $env:ProgramFiles)) {
+            if ([string]::IsNullOrWhiteSpace($programFiles)) { continue }
+            $candidate = Join-Path $programFiles 'Windows Application Driver/WinAppDriver.exe'
+            if (Test-Path $candidate -PathType Leaf) {
+                $wad = $candidate
+                break
             }
-            if (!$wad) { Start-Sleep -Milliseconds 250 }
         }
         if (!$wad) {
             throw 'WinAppDriver installation did not produce Windows Application Driver/WinAppDriver.exe under ProgramFiles(x86) or ProgramFiles.'
