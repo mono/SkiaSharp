@@ -61,9 +61,9 @@ versioning; this attribute does not require a preview runtime or language versio
 Do not retroactively mark existing stable APIs experimental to relax their ABI
 contract.
 
-Allocate `SKIA` plus four digits per independently opted-in feature. The first
-digit identifies an API family; the remaining three identify the feature within
-that family. Use the [range and feature registry](README.md#experimental-api-diagnostic-ids)
+Allocate `SKIA` plus four digits per independently opted-in SkiaSharp feature;
+HarfBuzzSharp is a separate product and uses `HARFBUZZ` plus four digits.
+Use the [experimental API policy and registry](experimental-apis.md)
 as the single source of truth.
 Several related APIs may share one ID; unrelated features must not share an ID,
 because suppressing it opts into every API carrying that ID. Record new IDs there
