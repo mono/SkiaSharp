@@ -20,6 +20,7 @@ public sealed class SKPixelComparerOptions
 	public SKPixelTolerance? BlueTolerance { get; set; } = SKPixelTolerance.Exact;
 
 	/// <summary>Alpha-channel byte allowance, or null to exclude alpha from comparisons and statistics; defaults to <see cref="SKPixelTolerance.Exact"/>.</summary>
+	/// <remarks>Excluding alpha does not undo premultiplication: when AlphaType is Premul, opacity can still affect compared RGB samples.</remarks>
 	public SKPixelTolerance? AlphaTolerance { get; set; } = SKPixelTolerance.Exact;
 
 	/// <summary>Normalization output alpha type (Unpremul by default); only Unpremul or Premul is supported.</summary>
@@ -30,8 +31,10 @@ public sealed class SKPixelComparerOptions
 	public SKImage? ToleranceMask { get; set; }
 
 	/// <summary>Optional inclusive rejected-pixel budget for <see cref="SKPixelComparisonResult.IsMatch"/>; null imposes no count restriction when RMS is configured.</summary>
+	/// <remarks>Budget and RMS restrictions combine with AND. With both unset, IsMatch requires zero rejected pixels; an explicit Exact budget retains that requirement alongside an RMS limit.</remarks>
 	public SKPixelErrorBudget? ErrorBudget { get; set; }
 
 	/// <summary>Optional inclusive maximum raw selected-channel normalized RMS error (0 through 1), independent of tolerance.</summary>
+	/// <remarks>This is a raw difference-magnitude limit, not a rejected-pixel fraction. Increasing tolerance or mask allowances does not reduce it; null imposes no RMS restriction.</remarks>
 	public double? MaxNormalizedRootMeanSquaredError { get; set; }
 }
