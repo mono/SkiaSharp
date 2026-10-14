@@ -1,19 +1,19 @@
 ---
 title: "Compare images"
-description: "Use SkiaSharp.Testing to compare rendered images, set tolerances and generate failure diagnostics."
+description: "Use SkiaSharp.Testing to compare rendered images, set tolerances and budgets, and generate failure diagnostics."
 ---
 
 # Compare images
 
-`SkiaSharp.Testing` compares two decoded `SKImage`, `SKBitmap` or `SKPixmap`
-objects. It reports pixel differences, evaluates acceptance limits and can
-generate a diagnostic image. Screenshot capture, resizing, baseline selection
-and test-framework assertions remain the caller's responsibility.
+`SkiaSharp.Testing` compares decoded `SKImage`, `SKBitmap` or `SKPixmap` objects.
+It measures differences, evaluates acceptance limits and generates diagnostics.
+Capture, resizing, reference selection and test assertions remain the caller's
+responsibility.
 
 ## Getting started
 
-Install `SkiaSharp.Testing` alongside the matching SkiaSharp release and retain
-your application's existing native-assets setup:
+Install `SkiaSharp.Testing` alongside the matching SkiaSharp release and your
+application's existing native-assets setup:
 
 ```bash
 dotnet add package SkiaSharp.Testing
@@ -21,8 +21,8 @@ dotnet add package SkiaSharp.Testing
 
 > [!IMPORTANT]
 > This API is experimental and may change between releases, including releases
-> with a stable package version. Opt in to diagnostic `SKIA4001` in your test
-> project; no preview SDK or runtime is required.
+> with stable package versions. Opt in to `SKIA4001`; no preview SDK or runtime
+> is required.
 
 ```xml
 <PropertyGroup>
@@ -32,11 +32,14 @@ dotnet add package SkiaSharp.Testing
 
 ## Compare two images
 
-![Illustration of an expected image and an actual image with a slightly changed blue panel and an added red bar.](images/comparison-inputs.svg)
+| Expected | Actual |
+| --- | --- |
+| ![Expected scene.](images/expected.png) | ![Actual scene with changed blue, translucent green and an added red bar.](images/actual.png) |
 
-The blue panel changes from RGB **(37, 99, 235)** to **(39, 101, 237)**:
-just +2 per channel, deliberately hard to see. A new red bar is also added.
-These illustrations explain comparison rules, not a particular platform's output.
+Every example uses this scene. The blue panel changes from RGB **(37, 99, 235)**
+to **(39, 101, 237)**, the green circle keeps RGB **(0, 255, 0)** but changes alpha
+from **255** to **128**, and the red bar is new. The actual circle is transparent;
+the page background shows through it.
 
 ```csharp
 using System.IO;
@@ -45,7 +48,6 @@ using SkiaSharp.Testing;
 
 using var expected = SKImage.FromEncodedData("expected.png");
 using var actual = SKImage.FromEncodedData("actual.png");
-
 var result = SKPixelComparer.Compare(expected, actual);
 if (!result.IsMatch)
 {
@@ -55,21 +57,17 @@ if (!result.IsMatch)
 }
 ```
 
-![Illustration of the exact comparison's difference image, with both the slightly changed blue panel and added bar marked red.](images/comparison-exact.svg)
+![Exact RGBA comparison highlights all three changed regions over the actual image.](images/comparison-exact.png)
 
-With no tolerance, both changed areas are red, including the blue panel's tiny
-+2 differences. Matching pixels show dimmed actual RGB.
-
-The default is exact RGBA comparison after normalization to unpremultiplied
-8-bit pixels. Inputs must have equal, nonempty dimensions and readable pixels.
-Normalize capture size, scale, fonts and animation timing before comparing;
-the library does not align or resize images.
+Defaults are exact RGBA after normalization to unpremultiplied 8-bit pixels.
+The default diagnostic blends red highlights over the actual image, preserving
+detail. Inputs must have equal, nonempty dimensions and readable pixels.
+Control capture size, scale, fonts and animation time before comparison.
 
 ## Allow small differences
 
-Channel tolerances classify individual pixels. A pixel mismatches when any
-enabled channel exceeds its allowance. A mismatch budget controls how many such
-pixels the whole image may contain:
+Tolerance decides **which pixels mismatch**. A pixel mismatches if any enabled
+channel exceeds its allowance:
 
 ```csharp
 var options = new SKPixelComparerOptions
@@ -78,7 +76,6 @@ var options = new SKPixelComparerOptions
     GreenTolerance = SKPixelTolerance.Absolute(2),
     BlueTolerance = SKPixelTolerance.Absolute(2),
     AlphaTolerance = null,
-    MismatchBudget = SKPixelMismatchBudget.Percent(0.2),
 };
 var result = SKPixelComparer.Compare(expected, actual, options);
 using var difference = SKPixelComparer.GenerateDifferenceImage(
@@ -87,113 +84,137 @@ using var png = difference.Encode(SKEncodedImageFormat.Png, 100);
 File.WriteAllBytes("difference-tolerant.png", png.ToArray());
 ```
 
-![Illustration of the difference image at tolerance 2, with the panel amber and the added bar still red.](images/comparison-tolerant.svg)
+![The blue panel is tolerated, alpha is excluded, and the red bar still mismatches.](images/comparison-tolerant.png)
 
-The same panel is now **amber**, because +2 is within the allowance. The added
-bar remains **red**. Use the same options when generating the diagnostic;
-otherwise it would show the strict result above. The mismatch budget changes
-`IsMatch`, not these colors.
+The +2 blue change is now amber-tinted. This example intentionally excludes alpha,
+so the green circle is not highlighted; the red bar still mismatches. Always
+generate the diagnostic with the same options as the comparison.
 
 `null` disables a channel; zero requires an exact match. `Absolute` uses byte
-levels, while tolerance `Percent` uses percentage points of the full 255 range.
-Budget `Percent(0.2)` means 0.2% of compared pixels, not a fraction of 0.2.
-`Pixels(n)` sets a count cap; `Both(n, percent)` requires both caps to pass.
-Boundaries are inclusive, and percentage budgets floor to a whole-pixel limit.
+levels, and tolerance `Percent` uses percentage points of the full 255 range.
+Boundaries are inclusive.
 
-For an average difference-magnitude gate instead, configure
-`MaxNormalizedMeanAbsoluteError` or `MaxNormalizedRootMeanSquaredError` from
-0 to 1. For example, a normalized MAE limit of `0.01` allows an average absolute
-channel difference of 2.55 byte levels. It does not mean 1% mismatched pixels.
-All explicitly configured gates combine with AND; an MAE-only or RMS-only gate
-does not also require zero mismatches. With no gates, zero mismatches are allowed.
+## Set a mismatch budget
 
-## Read measurements and diagnostics
+A budget decides **how many mismatches are acceptable**, after tolerance has
+classified the pixels. Starting with the options above:
 
-`RawMetrics` measures enabled-channel differences before tolerance filtering.
-`ThresholdedMetrics` replaces tolerated channel differences with zero; exceeding
-differences retain their full magnitude. Both use
-`ComparedPixelCount * ChannelCount` samples, so thresholding never shrinks the
-denominator. Prefer helpers such as `NormalizedMeanAbsoluteError` and
-`NormalizedRootMeanSquaredError` over hard-coded channel counts or ranges.
+```csharp
+options.MismatchBudget = SKPixelMismatchBudget.Pixels(20);
+var result = SKPixelComparer.Compare(expected, actual, options);
+```
 
-`MismatchBounds` locates mismatched pixels, while `MaxChannelDifference` includes
-tolerated differences. `IsMatch` can be true even when some pixels mismatch.
+| Budget | Meaning |
+| --- | --- |
+| `Pixels(20)` | At most 20 mismatched pixels |
+| `Percent(0.2)` | At most 0.2% of compared pixels, not a fraction of 0.2 |
+| `Both(20, 0.2)` | Both limits must pass |
 
-Pass a `SKPixelDifferenceStyle` to `GenerateDifferenceImage`:
+Count limits are inclusive; percentage limits floor to a whole-pixel count.
+With no budget or magnitude gate, zero pixels may mismatch.
+
+| Budget below the measured mismatch count | Budget at the measured mismatch count |
+| --- | --- |
+| ![Rejected comparison.](images/comparison-tolerant.png) | ![Accepted comparison with the same diagnostic.](images/comparison-tolerant.png) |
+| `IsMatch = false` | `IsMatch = true` |
+
+The budget changes `IsMatch`, **not the diagnostic colors**. A passing comparison
+can still contain highlighted mismatches.
+
+For a magnitude-based gate instead, set `MaxNormalizedMeanAbsoluteError` or
+`MaxNormalizedRootMeanSquaredError` from 0 to 1. A normalized MAE limit of `0.01`
+allows an average absolute channel difference of 2.55 byte levels, not 1%
+mismatched pixels. All configured gates combine with AND; an MAE-only or RMS-only
+gate does not impose a hidden count restriction.
+
+## Choose a diagnostic
+
+Pass `SKPixelDifferenceStyle` to `GenerateDifferenceImage`:
 
 | Style | Output |
 | --- | --- |
-| `ThresholdOverlay` (default) | Red mismatches, amber tolerated differences, dimmed actual RGB matches |
-| `BinaryMask` | White mismatches, black otherwise |
-| `ChannelDifference` | Raw absolute RGB differences, including disabled RGB channels; alpha-only differences are not visible |
+| `ThresholdOverlay` (default) | 50% red/amber highlights over actual pixels; gray tint for ignored coverage |
+| `ThresholdMap` | Solid red mismatches, amber tolerated differences, dimmed exact matches, gray ignored pixels |
+| `BinaryMask` | White mismatches; black matches, tolerated and ignored pixels |
+| `ChannelDifference` | Raw absolute RGB differences, including disabled RGB channels; no alpha visualization |
 
-![Illustration of threshold overlay, binary mask and raw channel-difference diagnostics for the example scene.](images/comparison-diagnostics.svg)
+| Threshold overlay | Threshold map |
+| --- | --- |
+| ![Translucent classification over actual pixels.](images/comparison-exact.png) | ![Opaque classification map.](images/threshold-map.png) |
 
-With a channel tolerance of 2, the blue panel is amber in the overlay and absent
-from the binary mask. The added bar still mismatches. Raw channel differences
-are not thresholded: the panel remains a very faint difference, while the bar
-has a strong signal.
+| Binary mask | Channel difference |
+| --- | --- |
+| ![White mismatched pixels.](images/binary-mask.png) | ![Raw RGB differences without the alpha-only circle.](images/channel-difference.png) |
 
-**Overlay colors classify pixels; they do not show the size of a difference.**
-Even a one-level tolerated change is solid amber. Red means an allowance was
-exceeded, dimmed actual RGB means an exact selected-channel match, and gray means
-excluded coverage.
+The overlay is a true translucent highlight, but the returned diagnostic is
+opaque: actual transparency is flattened onto white first. Use `ThresholdMap`
+for unambiguous solid classification colors. Classification colors show a
+pixel's status, not the magnitude of its difference.
 
-Limits affect acceptance, not diagnostic classification. Use the same options
-for comparison and difference generation.
+`RawMetrics` measures selected-channel differences before tolerance filtering.
+`ThresholdedMetrics` zeros tolerated differences but retains full exceeding
+magnitudes. Both use `ComparedPixelCount * ChannelCount` samples. Prefer helpers
+such as `NormalizedMeanAbsoluteError` over manual denominators.
 
-### Alpha-only differences
+## Alpha-only differences
 
-![Illustration of the same blue RGB at alpha 255 and 128, an RGBA overlay detecting the change, and a black raw RGB difference image.](images/comparison-alpha.svg)
+| Expected | Actual |
+| --- | --- |
+| ![Opaque green circle.](images/expected.png) | ![The same scene with a translucent green circle.](images/actual.png) |
 
-The rectangles have identical RGB **(0, 0, 255)** but alpha **255** and **128**.
-The checkerboard is only a viewing background for transparency. Default exact
-RGBA comparison detects the change; `ChannelDifference` stays black because it
-does not display alpha. Set `AlphaTolerance = null` only when alpha is
-intentionally outside the comparison.
+The circle's RGB is identical; only its alpha changes. Default RGBA comparison
+detects it:
+
+| RGBA overlay | RGB difference |
+| --- | --- |
+| ![The circle's alpha change is highlighted.](images/comparison-exact.png) | ![Other RGB changes remain, but the circle has no RGB difference.](images/channel-difference.png) |
+
+`ChannelDifference` cannot show the circle's alpha delta, although the blue and
+red RGB changes remain visible. Exclude alpha only intentionally. Comparing
+premultiplied RGB can still reflect opacity even when alpha is disabled.
 
 ## Tolerance and ignore masks
 
-Both masks are optional, caller-owned `SKImage` objects with the input dimensions:
-
-- `ToleranceMask` widens each enabled channel's allowance using that mask byte.
-  Its alpha byte is an alpha-channel allowance, not coverage. Pixels remain in
-  raw measurements and all denominators.
-- `IgnoreMask` excludes entire pixels: black RGB compares; any nonzero decoded
-  RGB ignores, independently of mask alpha or enabled comparison channels.
-  Ignore masks are read as unpremultiplied data without drawing or compositing.
+Both masks are borrowed, same-size `SKImage` objects. These examples start with
+exact RGB and `AlphaTolerance = null`.
 
 ### Tolerate a region
 
-![A dark gray tolerance-mask panel with RGB values 32, and an overlay that tolerates the blue panel's small difference but still rejects the added bar.](images/comparison-tolerance.svg)
+| Tolerance mask | Overlay |
+| --- | --- |
+| ![Gray RGB32 panel on a black tolerance mask.](images/tolerance-mask.png) | ![Tolerated panel with raw measurements retained.](images/comparison-tolerance.png) |
 
-This example starts with exact RGB global allowances (`AlphaTolerance = null`).
-The mask's dark gray panel has RGB **(32, 32, 32)**, allowing up to 32 byte levels
-per channel there; black outside allows zero. The +2 panel differences are amber,
-but remain in raw metrics and the sample denominator. The unmasked red bar fails.
+`ToleranceMask` widens each enabled channel's allowance using that mask byte.
+The panel's RGB **(32, 32, 32)** allows 32 levels there; black outside allows zero.
+The +2 blue differences are tolerated but stay in raw measurements and the
+sample denominator. Mask alpha is an alpha allowance, not coverage.
 
 ### Exclude a region
 
-![A white ignore-mask panel and an overlay marking that panel gray, while the unmasked added bar still fails.](images/comparison-ignore.svg)
+| Ignore mask | Overlay |
+| --- | --- |
+| ![White excluded panel on a black ignore mask.](images/ignore-mask.png) | ![Excluded panel marked by a gray tint.](images/comparison-ignore.png) |
 
-With the same exact RGB settings, a white region in `IgnoreMask` excludes that
-panel completely. Gray makes the lost coverage visible. The red bar still fails.
-Use exclusions only for regions intentionally outside the test's coverage,
-not to hide an unexpected change.
+`IgnoreMask` removes entire pixels: black compares, any nonzero decoded RGB
+excludes, independently of mask alpha. The panel contributes no errors, bounds,
+maxima or metric samples. The added bar remains a mismatch in both examples.
 
-| Effect in the marked region | Tolerance mask | Ignore mask |
-| --- | --- | --- |
-| Classify the small difference | Tolerated (amber) | Not compared (gray) |
-| Include raw differences | Yes | No |
-| Include samples in the denominator | Yes | No |
+`TotalPixels` is the full image area; fractions and budgets use
+`ComparedPixelCount`. Ignoring every pixel is invalid. Inputs and masks must
+remain alive and unmodified during a call; dispose returned diagnostic images.
 
-`TotalPixels` remains the image area; `ComparedPixelCount` and `IgnoredPixelCount`
-report coverage, and fractions/budgets use only compared pixels. Ignoring every
-pixel is invalid. Ignored diagnostics are black in binary/channel-difference
-styles and neutral gray in overlays.
+## Regenerate these examples
 
-Inputs and masks must stay alive and unmodified during each synchronous call.
-Results retain no native inputs; returned difference images are independently
-owned and must be disposed. Set `AlphaType = SKAlphaType.Premul` when comparing
-that representation intentionally; disabling alpha does not undo opacity's
-effect on premultiplied RGB.
+All images are rendered from one scene by the actual comparer, not hand-drawn
+diagnostics. Layout and captions belong to this page, not the image files.
+With matching native assets built or staged in `output/native`,
+run this file-based .NET 10 app from the repository root:
+
+```bash
+dotnet run --file documentation/docfx/guides/testing/generate-images.cs \
+  -p:TargetFrameworks=net10.0
+```
+
+Edit `RenderScene` in `generate-images.cs` to change the base artwork. The script
+regenerates the plain inputs, masks and diagnostics together. It does not draw
+labels, compose panels, capture devices, update references or accept baselines.
