@@ -28,7 +28,7 @@ public readonly struct SKPixelTolerance : IEquatable<SKPixelTolerance>
 		return new SKPixelTolerance(value);
 	}
 
-	/// <summary>Allows <paramref name="value"/> percentage points of the 255 byte range on a channel, without rounding.</summary>
+	/// <summary>Allows <paramref name="value"/> percentage points of the full 255 byte range on a channel, without integer rounding.</summary>
 	/// <exception cref="ArgumentOutOfRangeException">The value is non-finite or outside 0 through 100.</exception>
 	public static SKPixelTolerance Percent(double value)
 	{

@@ -79,7 +79,7 @@ public readonly struct SKPixelTolerance : IEquatable<SKPixelTolerance>
     public static SKPixelTolerance Exact { get; }
     /// <summary>Creates an allowance of 0 through 255 byte levels.</summary>
     public static SKPixelTolerance Absolute(int value);
-    /// <summary>Creates an allowance of 0 through 100 percentage points of 255, without rounding.</summary>
+    /// <summary>Creates an allowance of 0 through 100 percentage points of the full 255 range, without integer rounding.</summary>
     public static SKPixelTolerance Percent(double value);
     /// <summary>Gets the effective allowance in byte units, including fractional values such as 1.275.</summary>
     public double Value { get; }
@@ -114,9 +114,9 @@ public sealed class SKPixelComparerOptions
     public SKAlphaType AlphaType { get; set; }
     /// <summary>Gets or sets a borrowed same-size mask that widens enabled channel allowances; alpha is a threshold, not coverage.</summary>
     public SKImage? ToleranceMask { get; set; }
-    /// <summary>Gets or sets the count/percentage rejected-pixel budget; null imposes no pixel-budget gate when RMS is configured.</summary>
+    /// <summary>Gets or sets the count/percentage budget; combines with RMS using AND, with zero errors required when both are unset.</summary>
     public SKPixelErrorBudget? ErrorBudget { get; set; }
-    /// <summary>Gets or sets an inclusive raw normalized RMS limit from 0 to 1, independent of channel tolerance.</summary>
+    /// <summary>Gets or sets a raw difference-magnitude limit from 0 to 1, independent of tolerance; null disables this RMS gate.</summary>
     public double? MaxNormalizedRootMeanSquaredError { get; set; }
 }
 
@@ -125,9 +125,9 @@ public sealed class SKPixelComparisonResult
 {
     /// <summary>Gets whether all configured limits pass, or zero pixels are rejected when no limits are configured.</summary>
     public bool IsMatch { get; }
-    /// <summary>Gets the number of image pixels compared.</summary>
+    /// <summary>Gets all compared pixels, including matches and tolerated differences; both metric groups use this count.</summary>
     public int TotalPixels { get; }
-    /// <summary>Gets the number of enabled channels per pixel, from one to four.</summary>
+    /// <summary>Gets enabled channels per pixel, from one to four; identical in both metric groups.</summary>
     public int ChannelCount { get; }
     /// <summary>Gets the number of pixels exceeding at least one enabled channel's effective allowance.</summary>
     public int ErrorPixelCount { get; }
@@ -137,24 +137,24 @@ public sealed class SKPixelComparisonResult
     public int MaxChannelDelta { get; }
     /// <summary>Gets the bounding rectangle of rejected pixels, or null when none are rejected.</summary>
     public SKRectI? ErrorBounds { get; }
-    /// <summary>Gets enabled-channel metrics before tolerance or mask filtering.</summary>
+    /// <summary>Gets unfiltered enabled-channel error sums and averages over all compared pixels times enabled channels.</summary>
     public SKPixelComparisonMetrics RawMetrics { get; }
-    /// <summary>Gets metrics counting only enabled channel deltas that exceed their allowances, with the same sample denominator.</summary>
+    /// <summary>Gets full exceeding deltas with tolerated deltas replaced by zero; pixel/channel/sample counts match RawMetrics.</summary>
     public SKPixelComparisonMetrics ThresholdedMetrics { get; }
 }
 
-/// <summary>Contains raw or thresholded error measurements across the selected channel samples.</summary>
+/// <summary>Contains raw or thresholded error measurements using the same compared-pixel and enabled-channel denominator.</summary>
 public sealed class SKPixelComparisonMetrics
 {
-    /// <summary>Gets the number of pixels contributing to this metric group's denominator.</summary>
+    /// <summary>Gets all compared pixels; identical to the result and other metric group, not just rejected pixels.</summary>
     public int TotalPixels { get; }
-    /// <summary>Gets the number of selected channels per pixel.</summary>
+    /// <summary>Gets enabled channels per pixel; identical for raw and thresholded metrics.</summary>
     public int ChannelCount { get; }
-    /// <summary>Gets total pixels multiplied by selected channel count.</summary>
+    /// <summary>Gets total compared pixels times enabled channels; tolerated samples remain in this denominator.</summary>
     public long SampleCount { get; }
-    /// <summary>Gets the 64-bit sum of absolute channel differences in this metric group.</summary>
+    /// <summary>Gets the 64-bit absolute-difference sum; thresholded metrics replace tolerated channel deltas with zero.</summary>
     public long AbsoluteError { get; }
-    /// <summary>Gets the 64-bit sum of squared channel differences in this metric group.</summary>
+    /// <summary>Gets the 64-bit squared-difference sum; thresholded metrics replace tolerated channel deltas with zero.</summary>
     public long SumSquaredError { get; }
     /// <summary>Gets AbsoluteError divided by SampleCount, in byte-channel units.</summary>
     public double MeanAbsoluteError { get; }
@@ -378,6 +378,12 @@ Changing only tolerance leaves `RawMetrics` unchanged. This prevents a tolerated
 image from being reported as having zero raw RMS merely because the classifier
 ignored its differences. Result and metric objects have controlled construction
 and retain no native inputs.
+
+`TotalPixels`, `ChannelCount` and `SampleCount` are identical in both metric
+groups. For 100 pixels with four enabled channels, both groups divide by 400,
+even if only one channel sample exceeds tolerance. Thresholded MAE/MSE measure
+remaining error across the whole image, not average severity among rejected
+samples. No member reports the count of exceeding channel samples.
 
 ```csharp
 using var binary = SKPixelComparer.GenerateDifferenceImage(
