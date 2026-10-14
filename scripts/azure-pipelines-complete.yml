@@ -23,6 +23,10 @@ parameters:
     displayName: 'Test the WinAppDriver MSI on the Windows probe:'
     type: boolean
     default: false
+  - name: probeIosRuntime
+    displayName: 'Test the exact iOS 26.2 runtime download on the Mac probe:'
+    type: boolean
+    default: false
   - name: enableCaching
     displayName: 'Enable build caching (skip native builds on cache hit):'
     type: boolean
@@ -109,7 +113,7 @@ extends:
             - job: inspect_agent
               displayName: Inspect ${{ parameters.probeAgent }}
               dependsOn: []
-              timeoutInMinutes: 10
+              timeoutInMinutes: 30
               ${{ if eq(parameters.probeAgent, 'windows') }}:
                 pool: ${{ parameters.buildAgentWindows.pool }}
               ${{ elseif eq(parameters.probeAgent, 'macos26') }}:
@@ -136,6 +140,19 @@ extends:
                                 & xcrun simctl list runtimes --json
                                 if ($LASTEXITCODE -ne 0) { throw "Runtime query failed for $($app.Name)." }
                             }
+                            if ('${{ parameters.probeIosRuntime }}' -eq 'True') {
+                                $env:DEVELOPER_DIR = '/Applications/Xcode_26.3.app/Contents/Developer'
+                                if (!(Test-Path $env:DEVELOPER_DIR -PathType Container)) { throw 'Required installed Xcode 26.3 is missing.' }
+                                & xcodebuild -downloadPlatform iOS -buildVersion 23C54
+                                if ($LASTEXITCODE -ne 0) { throw 'Exact iOS 26.2 build 23C54 download failed.' }
+                                $json = & xcrun simctl list runtimes --json
+                                if ($LASTEXITCODE -ne 0) { throw 'Post-download runtime query failed.' }
+                                $runtimes = ($json | ConvertFrom-Json).runtimes
+                                $runtimes | Select-Object name, version, buildversion, isAvailable | Format-Table
+                                if (!($runtimes | Where-Object { $_.version -eq '26.2' -and $_.buildversion -eq '23C54' -and $_.isAvailable })) {
+                                    throw 'Exact iOS 26.2 build 23C54 is not available after download.'
+                                }
+                            }
                         }
                         finally { $env:DEVELOPER_DIR = $original }
                     }
@@ -143,6 +160,10 @@ extends:
                         $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
                         $principal = [Security.Principal.WindowsPrincipal]::new($identity)
                         Write-Host "Administrator: $($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))"
+                        Write-Host "UserInteractive: $([Environment]::UserInteractive)"
+                        Write-Host "Agent session ID: $([Diagnostics.Process]::GetCurrentProcess().SessionId)"
+                        $developerMode = Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' -Name AllowDevelopmentWithoutDevLicense -ErrorAction SilentlyContinue
+                        Write-Host "Developer Mode registry value: $developerMode"
                         Get-Command msiexec.exe, node, npm.cmd -ErrorAction SilentlyContinue | Select-Object Name, Source
                         foreach ($directory in @(${env:ProgramFiles(x86)}, $env:ProgramFiles)) {
                             if ([string]::IsNullOrWhiteSpace($directory)) { continue }
@@ -163,12 +184,47 @@ extends:
                                 Get-Content $log -Tail 50
                             }
                             if ($process.ExitCode -notin @(0, 3010)) { throw "MSI failed with exit code $($process.ExitCode)." }
-                            $installed = @(${env:ProgramFiles(x86)}, $env:ProgramFiles) |
+                            $installed = @(@(${env:ProgramFiles(x86)}, $env:ProgramFiles) |
                                 Where-Object { $_ } |
                                 ForEach-Object { Join-Path $_ 'Windows Application Driver/WinAppDriver.exe' } |
-                                Where-Object { Test-Path $_ -PathType Leaf }
+                                Where-Object { Test-Path $_ -PathType Leaf })
                             if (!$installed) { throw 'Successful MSI did not produce WinAppDriver.exe.' }
                             Write-Host "Installed WinAppDriver: $installed"
+                            $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
+                            $listener.Start()
+                            $port = $listener.LocalEndpoint.Port
+                            $listener.Stop()
+                            $stdout = Join-Path $env:AGENT_TEMPDIRECTORY 'winappdriver-probe.stdout.log'
+                            $stderr = Join-Path $env:AGENT_TEMPDIRECTORY 'winappdriver-probe.stderr.log'
+                            $driver = Start-Process -FilePath $installed[0] -ArgumentList @('127.0.0.1', "$port") -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+                            try {
+                                $deadline = [DateTime]::UtcNow.AddSeconds(20)
+                                $ready = $false
+                                do {
+                                    $driver.Refresh()
+                                    if ($driver.HasExited) { throw "Owned WinAppDriver exited with code $($driver.ExitCode)." }
+                                    $status = & curl.exe --silent --show-error --max-time 2 "http://127.0.0.1:$port/status"
+                                    if ($LASTEXITCODE -eq 0) {
+                                        Write-Host "WinAppDriver status: $status"
+                                        $response = $status | ConvertFrom-Json
+                                        if ($response.status -ne 0) { throw 'WinAppDriver reported an unsuccessful status.' }
+                                        $ready = $true
+                                        break
+                                    }
+                                    Start-Sleep -Milliseconds 250
+                                } while ([DateTime]::UtcNow -lt $deadline)
+                                if (!$ready) { throw 'Owned WinAppDriver did not respond within 20 seconds.' }
+                            }
+                            finally {
+                                $driver.Refresh()
+                                if (!$driver.HasExited) {
+                                    $driver.Kill()
+                                    $driver.WaitForExit()
+                                }
+                                if (Test-Path $stdout) { Get-Content $stdout }
+                                if (Test-Path $stderr) { Get-Content $stderr }
+                                $driver.Dispose()
+                            }
                         }
                     }
                   displayName: Inspect installed tools without provisioning
