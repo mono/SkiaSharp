@@ -84,13 +84,18 @@ try {
         Write-Warning 'WinAppDriver installation requires administrator privileges. Tests still require Developer Mode and an interactive, unlocked Windows desktop; this installer does not configure these.'
         Invoke-InstallerCommand $appium @('driver', 'run', 'windows', 'install-wad') | Out-Null
         $wad = $null
-        foreach ($programFiles in @(${env:ProgramFiles(x86)}, $env:ProgramFiles)) {
-            if ([string]::IsNullOrWhiteSpace($programFiles)) { continue }
-            $candidate = Join-Path $programFiles 'Windows Application Driver/WinAppDriver.exe'
-            if (Test-Path $candidate -PathType Leaf) {
-                $wad = $candidate
-                break
+        # The driver hook starts msiexec asynchronously.
+        $installation = [Diagnostics.Stopwatch]::StartNew()
+        while (!$wad -and $installation.Elapsed.TotalSeconds -lt 60) {
+            foreach ($programFiles in @(${env:ProgramFiles(x86)}, $env:ProgramFiles)) {
+                if ([string]::IsNullOrWhiteSpace($programFiles)) { continue }
+                $candidate = Join-Path $programFiles 'Windows Application Driver/WinAppDriver.exe'
+                if (Test-Path $candidate -PathType Leaf) {
+                    $wad = $candidate
+                    break
+                }
             }
+            if (!$wad) { Start-Sleep -Milliseconds 250 }
         }
         if (!$wad) {
             throw 'WinAppDriver installation did not produce Windows Application Driver/WinAppDriver.exe under ProgramFiles(x86) or ProgramFiles.'

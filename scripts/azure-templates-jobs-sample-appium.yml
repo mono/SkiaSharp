@@ -82,13 +82,26 @@ jobs:
         - ${{ if eq(parameters.platform, 'iOS') }}:
           - pwsh: |
               $ErrorActionPreference = 'Stop'
-              & xcodebuild -downloadPlatform iOS -buildVersion '${{ parameters.device.version }}'
-              if ($LASTEXITCODE -ne 0) { throw 'Selected iOS simulator runtime installation failed.' }
-              $json = & xcrun simctl list runtimes --json
-              if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the installed simulator runtimes.' }
-              $runtimes = ($json | ConvertFrom-Json).runtimes
-              if (!($runtimes | Where-Object { $_.name.StartsWith('iOS ') -and $_.version -eq '${{ parameters.device.version }}' -and $_.isAvailable })) {
-                  throw 'The exact selected iOS simulator runtime is not available after installation.'
+              New-Item -ItemType Directory -Path output/logs -Force | Out-Null
+              Start-Transcript -Path output/logs/install-ios-runtime.log | Out-Null
+              try {
+                  # Initialize CoreSimulator before xcodebuild downloads a runtime.
+                  $json = & xcrun simctl list runtimes --json
+                  if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the installed simulator runtimes.' }
+                  $runtimes = ($json | ConvertFrom-Json).runtimes
+                  if (!($runtimes | Where-Object { $_.name.StartsWith('iOS ') -and $_.version -eq '${{ parameters.device.version }}' -and $_.isAvailable })) {
+                      & xcodebuild -downloadPlatform iOS -buildVersion '${{ parameters.device.version }}'
+                      if ($LASTEXITCODE -ne 0) { throw 'Selected iOS simulator runtime installation failed.' }
+                      $json = & xcrun simctl list runtimes --json
+                      if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the installed simulator runtimes.' }
+                      $runtimes = ($json | ConvertFrom-Json).runtimes
+                      if (!($runtimes | Where-Object { $_.name.StartsWith('iOS ') -and $_.version -eq '${{ parameters.device.version }}' -and $_.isAvailable })) {
+                          throw 'The exact selected iOS simulator runtime is not available after installation.'
+                      }
+                  }
+              }
+              finally {
+                  Stop-Transcript | Out-Null
               }
             displayName: Install the exact selected iOS simulator runtime
             env:
