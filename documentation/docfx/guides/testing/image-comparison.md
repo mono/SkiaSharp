@@ -140,16 +140,23 @@ Pass `SKPixelDifferenceStyle` to `GenerateDifferenceImage`:
 
 | Threshold overlay | Threshold map |
 | --- | --- |
-| ![Translucent classification over actual pixels.](images/comparison-exact.png) | ![Opaque classification map.](images/threshold-map.png) |
+| ![Translucent classification over actual pixels.](images/threshold-overlay.png) | ![Opaque classification map.](images/threshold-map.png) |
 
 | Binary mask | Channel difference |
 | --- | --- |
 | ![White mismatched pixels.](images/binary-mask.png) | ![Raw RGB differences without the alpha-only circle.](images/channel-difference.png) |
 
+These four examples use RGB tolerance **2** and exact alpha. The blue panel is
+tolerated (amber), while the circle's alpha change and added bar mismatch (red).
+The binary mask therefore excludes the panel; raw RGB differences still show
+its small change but cannot show the circle's alpha change.
+
 The overlay is a true translucent highlight, but the returned diagnostic is
 opaque: actual transparency is flattened onto white first. Use `ThresholdMap`
 for unambiguous solid classification colors. Classification colors show a
-pixel's status, not the magnitude of its difference.
+pixel's status, not the magnitude of its difference. In the overlay, amber mixed
+with the blue panel looks olive, and red mixed with the green circle looks brown;
+the map shows the literal amber and red.
 
 `RawMetrics` measures selected-channel differences before tolerance filtering.
 `ThresholdedMetrics` zeros tolerated differences but retains full exceeding
