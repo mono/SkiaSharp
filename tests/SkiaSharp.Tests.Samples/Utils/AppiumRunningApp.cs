@@ -59,6 +59,12 @@ internal abstract class AppiumRunningApp
 	internal IWebElement Find(By selector) =>
 		Wait(() => Driver.FindElement(selector) is { Displayed: true } element ? element : null, selector.ToString());
 
+	internal IWebElement Find(string id, string alternative) =>
+		Wait(() => FindOptional(id) ?? FindOptional(alternative), $"'{id}' or '{alternative}'");
+
+	internal IWebElement? FindOptional(string id) =>
+		Driver.FindElements(Locator(id)).FirstOrDefault(element => element.Displayed);
+
 	internal IWebElement Find(string id) => Find(Locator(id));
 	internal string Text(string id) => Find(id).Text;
 	internal void Click(string id) => Find(id).Click();

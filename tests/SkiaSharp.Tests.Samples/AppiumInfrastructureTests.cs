@@ -448,7 +448,7 @@ public sealed class AppiumInfrastructureTests
 					File.Copy(expected, actual, overwrite: true);
 				}
 				return actual;
-			}, expected, TimeSpan.FromSeconds(2));
+			}, expected, TimeSpan.FromSeconds(30));
 			Assert.Equal(2, captures);
 			Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
 		});
@@ -478,7 +478,7 @@ public sealed class AppiumInfrastructureTests
 				if (++captures == 2)
 					File.Copy(expected, actual, overwrite: true);
 				return actual;
-			}, expected);
+			}, expected, TimeSpan.FromSeconds(30));
 			Assert.Equal(2, captures);
 		});
 

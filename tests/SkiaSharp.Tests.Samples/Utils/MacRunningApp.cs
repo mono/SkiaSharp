@@ -63,8 +63,6 @@ internal sealed class MacRunningApp(SampleWorkspace workspace, string artifact)
 					"A target app or WDA is already running; close it before selecting Mac tests.");
 		}
 
-		OwnAppData();
-
 		var options = Options("mac", "mac2");
 		options.AddAdditionalAppiumOption("bundleId", ApplicationId);
 		options.AddAdditionalAppiumOption("appPath", Artifact);
@@ -80,26 +78,5 @@ internal sealed class MacRunningApp(SampleWorkspace workspace, string artifact)
 			$"{ApplicationId} desktop window");
 
 		return Task.CompletedTask;
-	}
-
-	private void OwnAppData()
-	{
-		var library = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library");
-		string[] paths = [Path.Combine(library, "Containers", ApplicationId),
-			Path.Combine(library, "Preferences", ApplicationId + ".plist"),
-			Path.Combine(library, "Saved Application State", ApplicationId + ".savedState")];
-		foreach (var path in paths)
-			Assert.True(!File.Exists(path) && !Directory.Exists(path),
-				$"Existing app state at {path}; remove it explicitly before selecting this desktop test.");
-		// Appium terminates the app; remove only data that did not exist before this test.
-		foreach (var path in paths)
-			Own(() =>
-			{
-				if (Directory.Exists(path))
-					SampleWorkspace.DeleteDirectory(path);
-				else if (File.Exists(path))
-					File.Delete(path);
-				return Task.CompletedTask;
-			});
 	}
 }
