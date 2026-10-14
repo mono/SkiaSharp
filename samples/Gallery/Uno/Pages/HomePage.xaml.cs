@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.UI;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 
@@ -177,6 +178,7 @@ public sealed partial class HomePage : Page
                 IsEnabled = currentItems[i].Supported,
                 Tag = currentItems[i].Sample,
             };
+            AutomationProperties.SetName(link, currentItems[i].Sample.Title);
             link.Click += OnCardClicked;
             Grid.SetColumn(link, i % currentColumns);
             currentRow!.Children.Add(link);
