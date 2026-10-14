@@ -25,16 +25,16 @@ public sealed class SKPixelComparisonResult
 	/// <summary>Whether the configured rejected-pixel budget and/or raw RMS limit pass, or (without either) no pixel is rejected.</summary>
 	public bool IsMatch { get; }
 
-	/// <summary>Number of pixels compared.</summary>
+	/// <summary>Gets all compared image pixels, including exact matches and tolerated differences; both metric groups use this count.</summary>
 	public int TotalPixels { get; }
 
-	/// <summary>Number of enabled channels per pixel (one to four).</summary>
+	/// <summary>Gets enabled channels per pixel, from one to four; both metric groups use this count.</summary>
 	public int ChannelCount { get; }
 
 	/// <summary>Number of pixels whose difference exceeds at least one enabled channel allowance.</summary>
 	public int ErrorPixelCount { get; }
 
-	/// <summary>Rejected pixel count divided by total pixels (zero for an internal empty fixture).</summary>
+	/// <summary>Gets rejected pixels divided by all compared pixels as a fraction from zero to one; returns zero when the total is zero.</summary>
 	public double ErrorPixelFraction => TotalPixels == 0 ? 0.0 : (double)ErrorPixelCount / TotalPixels;
 
 	/// <summary>Largest raw delta on any enabled channel, including tolerated differences.</summary>
@@ -43,9 +43,9 @@ public sealed class SKPixelComparisonResult
 	/// <summary>Bounding rectangle of rejected pixels, or null when none are rejected.</summary>
 	public SKRectI? ErrorBounds { get; }
 
-	/// <summary>Metrics across all enabled channel differences, before any tolerance or mask.</summary>
+	/// <summary>Gets enabled-channel error sums before tolerance or mask filtering, divided by all compared pixels times enabled channels.</summary>
 	public SKPixelComparisonMetrics RawMetrics { get; }
 
-	/// <summary>Metrics across enabled channel differences exceeding their allowances; non-exceeding differences contribute zero.</summary>
+	/// <summary>Gets full deltas only for enabled channels exceeding their effective allowances; tolerated deltas are zero and the denominator matches RawMetrics.</summary>
 	public SKPixelComparisonMetrics ThresholdedMetrics { get; }
 }
