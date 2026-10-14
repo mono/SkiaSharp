@@ -39,7 +39,6 @@ just +2 per channel, deliberately hard to see. A new red bar is also added.
 These illustrations explain comparison rules, not a particular platform's output.
 
 ```csharp
-using System;
 using System.IO;
 using SkiaSharp;
 using SkiaSharp.Testing;
@@ -53,10 +52,13 @@ if (!result.IsMatch)
     using var difference = SKPixelComparer.GenerateDifferenceImage(expected, actual);
     using var png = difference.Encode(SKEncodedImageFormat.Png, 100);
     File.WriteAllBytes("difference.png", png.ToArray());
-    throw new InvalidOperationException(
-        $"{result.MismatchedPixelCount} pixels differ.");
 }
 ```
+
+![Illustration of the exact comparison's difference image, with both the slightly changed blue panel and added bar marked red.](images/comparison-exact.svg)
+
+With no tolerance, both changed areas are red, including the blue panel's tiny
++2 differences. Matching pixels show dimmed actual RGB.
 
 The default is exact RGBA comparison after normalization to unpremultiplied
 8-bit pixels. Inputs must have equal, nonempty dimensions and readable pixels.
@@ -79,7 +81,18 @@ var options = new SKPixelComparerOptions
     MismatchBudget = SKPixelMismatchBudget.Percent(0.2),
 };
 var result = SKPixelComparer.Compare(expected, actual, options);
+using var difference = SKPixelComparer.GenerateDifferenceImage(
+    expected, actual, options: options);
+using var png = difference.Encode(SKEncodedImageFormat.Png, 100);
+File.WriteAllBytes("difference-tolerant.png", png.ToArray());
 ```
+
+![Illustration of the difference image at tolerance 2, with the panel amber and the added bar still red.](images/comparison-tolerant.svg)
+
+The same panel is now **amber**, because +2 is within the allowance. The added
+bar remains **red**. Use the same options when generating the diagnostic;
+otherwise it would show the strict result above. The mismatch budget changes
+`IsMatch`, not these colors.
 
 `null` disables a channel; zero requires an exact match. `Absolute` uses byte
 levels, while tolerance `Percent` uses percentage points of the full 255 range.
