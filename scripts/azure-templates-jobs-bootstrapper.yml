@@ -33,7 +33,7 @@ parameters:
   installNinja: false                           # whether or not to install the ninja build system
   installNode: true                             # whether or not to install Node.js
   checkoutSubmodules: true                      # whether or not to recursively initialize all submodules
-  installXcode: true                            # whether or not to install Xcode
+  installXcode: true                            # whether or not to select the exact installed Xcode for this job
   publishArtifacts: []                          # the additional artifacts to publish
   tools: []                                     # any additional .net global tools
   skipInstall: false                            # whether or not to install any tools
@@ -216,13 +216,13 @@ jobs:
 
       # install extra bits for the managed builds
       - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true')) }}:
-        - ${{ if and(eq(parameters.installNode, 'true'), eq(parameters.buildAgent.pool.os, 'windows')) }}:
+        - ${{ if eq(parameters.installNode, 'true') }}:
           - task: UseNode@1
             displayName: Install Node.js
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             inputs:
-              version: 20.x
+              version: 22.x
         # install ninja
         - ${{ if eq(parameters.installNinja, 'true') }}:
           - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
@@ -262,12 +262,12 @@ jobs:
       # install the mac tools
       - ${{ if and(eq(parameters.installXcode, 'true'), ne(parameters.buildAgent.parameters.installXcode, 'false'), eq(parameters.buildAgent.pool.os, 'macos'), ne(parameters.skipInstall, 'true')) }}:
         - ${{ if not(startsWith(parameters.name, 'native_')) }}:
-          - bash: sudo ./scripts/infra/native/apple/select-xcode.sh $(XCODE_VERSION)
-            displayName: Switch to the latest Xcode
+          - bash: ./scripts/infra/native/apple/select-xcode.sh "$(XCODE_VERSION)"
+            displayName: Select the exact managed Xcode for this job
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if startsWith(parameters.name, 'native_') }}:
-          - bash: sudo ./scripts/infra/native/apple/select-xcode.sh $(XCODE_VERSION_NATIVE)
-            displayName: Switch to the latest Xcode
+          - bash: ./scripts/infra/native/apple/select-xcode.sh "$(XCODE_VERSION_NATIVE)"
+            displayName: Select the exact native Xcode for this job
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install the linux tools

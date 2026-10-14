@@ -5,6 +5,8 @@ parameters:
     type: object
   - name: buildAgentWindows
     type: object
+  - name: buildAgentWindowsAppium
+    type: object
   - name: buildAgentMac
     type: object
   - name: buildAgentLinux
@@ -20,8 +22,7 @@ parameters:
       - name: net10
         version: $(DOTNET_VERSION)
         workloadVersion: $(DOTNET_WORKLOAD_VERSION)
-        xcodeVersion: '26.3'
-        macVmImage: ''
+        xcodeVersion: '26.6'
         additionalSdks:
           windows: []
           macos: []
@@ -49,23 +50,19 @@ parameters:
         version: $(DOTNET_VERSION_PREVIEW)
         workloadVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
         xcodeVersion: '26.6'
-        macVmImage: macos-26
         additionalSdks:
           windows:
             - sdkVersion: $(DOTNET_VERSION_PREVIEW)
               workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
               additionalWorkloads: [wasm-tools-net10]
-              tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
           macos:
             - sdkVersion: $(DOTNET_VERSION_PREVIEW)
               workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
               additionalWorkloads: [wasm-tools-net10]
-              tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
           linux:
             - sdkVersion: $(DOTNET_VERSION_PREVIEW)
               workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
               additionalWorkloads: [wasm-tools-net10]
-              tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
         runDevices: false
         androidDevices: []
         iosDevices: []
@@ -93,7 +90,6 @@ stages:
             dotnetSdks:
               - sdkVersion: $(DOTNET_VERSION)
                 workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Managed (Windows)
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: libs
@@ -111,7 +107,6 @@ stages:
             dotnetSdks:
               - sdkVersion: $(DOTNET_VERSION)
                 workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Managed (macOS)
             buildAgent: ${{ parameters.buildAgentMac }}
             target: libs
@@ -129,7 +124,6 @@ stages:
             dotnetSdks:
               - sdkVersion: $(DOTNET_VERSION)
                 workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-                tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
             displayName: Managed (Linux)
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES)
@@ -429,24 +423,14 @@ stages:
           - template: /scripts/azure-templates-jobs-samples.yml@self
             parameters:
               sdk: ${{ sdk }}
-              platform: windows
               buildAgent: ${{ parameters.buildAgentWindows}}
           - template: /scripts/azure-templates-jobs-samples.yml@self
             parameters:
               sdk: ${{ sdk }}
-              platform: macos
-              ${{ if eq(sdk.macVmImage, '') }}:
-                buildAgent: ${{ parameters.buildAgentMac }}
-              ${{ else }}:
-                buildAgent:
-                  pool:
-                    name: Azure Pipelines
-                    vmImage: ${{ sdk.macVmImage }}
-                    os: macos
+              buildAgent: ${{ parameters.buildAgentMac }}
           - template: /scripts/azure-templates-jobs-samples.yml@self
             parameters:
               sdk: ${{ sdk }}
-              platform: linux
               buildAgent: ${{ parameters.buildAgentLinux }}
           - ${{ if eq(sdk.runDevices, true) }}:
             - ${{ each device in sdk.androidDevices }}:
@@ -455,29 +439,25 @@ stages:
                   sdk: ${{ sdk }}
                   device: ${{ device }}
                   name: samples_appium_${{ sdk.name }}_${{ device.name }}
-                  platform: Android
                   runGroup: Android
-                  buildAgent: ${{ parameters.buildAgentMac }}
+                  buildAgent: ${{ parameters.buildAgentAndroidTests }}
             - ${{ each device in sdk.iosDevices }}:
               - template: /scripts/azure-templates-jobs-sample-appium.yml@self
                 parameters:
                   sdk: ${{ sdk }}
                   device: ${{ device }}
                   name: samples_appium_${{ sdk.name }}_${{ device.name }}
-                  platform: iOS
                   runGroup: Ios
                   buildAgent: ${{ parameters.buildAgentMac }}
             - template: /scripts/azure-templates-jobs-sample-appium.yml@self
               parameters:
                 sdk: ${{ sdk }}
                 name: samples_appium_${{ sdk.name }}_mac
-                platform: Mac
                 runGroup: Mac
                 buildAgent: ${{ parameters.buildAgentMac }}
             - template: /scripts/azure-templates-jobs-sample-appium.yml@self
               parameters:
                 sdk: ${{ sdk }}
                 name: samples_appium_${{ sdk.name }}_windows
-                platform: Windows
                 runGroup: Windows
-                buildAgent: ${{ parameters.buildAgentWindows }}
+                buildAgent: ${{ parameters.buildAgentWindowsAppium }}

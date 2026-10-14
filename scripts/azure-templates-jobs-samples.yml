@@ -1,34 +1,31 @@
 parameters:
-  platform: ''
   buildAgent: {}
   sdk: {}
 
 jobs:
   - ${{ each group in split('Build,Host,Docker', ',') }}:
-    - ${{ if or(ne(parameters.platform, 'macos'), ne(group, 'Docker')) }}:
+    - ${{ if or(ne(parameters.buildAgent.pool.os, 'macos'), ne(group, 'Docker')) }}:
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
         parameters:
-          name: samples_${{ parameters.platform }}_${{ parameters.sdk.name }}_${{ lower(group) }}
-          displayName: ${{ parameters.platform }} (${{ parameters.sdk.name }}, ${{ group }})
+          name: samples_${{ parameters.buildAgent.pool.os }}_${{ parameters.sdk.name }}_${{ lower(group) }}
+          displayName: ${{ parameters.buildAgent.pool.os }} (${{ parameters.sdk.name }}, ${{ group }})
           buildAgent: ${{ parameters.buildAgent }}
           dotnetSdks:
             - sdkVersion: $(DOTNET_VERSION)
               workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-              tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
-            - ${{ parameters.sdk.additionalSdks[parameters.platform] }}
+            - ${{ parameters.sdk.additionalSdks[parameters.buildAgent.pool.os] }}
           env:
             SAMPLE_TEST_SDK_VERSION: ${{ parameters.sdk.version }}
-          ${{ if eq(parameters.platform, 'macos') }}:
+          ${{ if eq(parameters.buildAgent.pool.os, 'macos') }}:
             variables:
               XCODE_VERSION: ${{ parameters.sdk.xcodeVersion }}
-          ${{ if eq(parameters.platform, 'macos') }}:
             installNinja: true
-          ${{ if eq(parameters.platform, 'linux') }}:
+          ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
             packages: $(MANAGED_LINUX_PACKAGES)
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
           target: samples
-          additionalArgs: --runGroup=${{ group }} --sampleRunId=${{ parameters.sdk.name }}_${{ parameters.platform }}_${{ lower(group) }}
+          additionalArgs: --runGroup=${{ group }} --sampleRunId=${{ parameters.sdk.name }}_${{ parameters.buildAgent.pool.os }}_${{ lower(group) }}
           retryCount: 0
           shouldPublish: false
           requiredArtifacts:
@@ -36,7 +33,7 @@ jobs:
             - name: nuget
               dir: nugets
           publishArtifacts:
-            - name: sample_logs_${{ parameters.platform }}_${{ parameters.sdk.name }}_${{ lower(group) }}
+            - name: sample_logs_${{ parameters.buildAgent.pool.os }}_${{ parameters.sdk.name }}_${{ lower(group) }}
               always: true
               path: output/logs
           postBuildSteps:
@@ -44,5 +41,5 @@ jobs:
               condition: always()
               inputs:
                 testResultsFormat: VSTest
-                testResultsFiles: output/logs/testlogs/samples/${{ parameters.sdk.name }}_${{ parameters.platform }}_${{ lower(group) }}/**/*.trx
-                testRunTitle: Samples (${{ parameters.platform }}, ${{ parameters.sdk.name }}, ${{ group }})
+                testResultsFiles: output/logs/testlogs/samples/${{ parameters.sdk.name }}_${{ parameters.buildAgent.pool.os }}_${{ lower(group) }}/**/*.trx
+                testRunTitle: Samples (${{ parameters.buildAgent.pool.os }}, ${{ parameters.sdk.name }}, ${{ group }})

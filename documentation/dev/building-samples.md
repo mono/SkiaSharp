@@ -5,7 +5,23 @@ runs Console/Web APIs on the host and in Docker, and checks actual browser UIs.
 
 ## Run the suite
 
-Install the repository SDK and your host's required workloads. For Docker tests,
+Install .NET SDK **10.0.402** and workload set **10.0.401** with your host's
+required workloads. .NET 10 managed Apple builds require macOS Tahoe and
+**Xcode 26.6**; select it with `DEVELOPER_DIR`.
+Native Apple builds use the same Xcode version.
+The WinUI C++ projection uses SDK **10.0.113** alongside the main SDK because
+VS MSBuild 17.x cannot load the newer SDK feature bands.
+
+The pinned Apple workload is **26.5.10318**. Basic and Gallery pin MAUI
+**10.0.110**. Basic native and Basic/Gallery MAUI samples support iOS 15.0 and
+MacCatalyst 17.0 (macOS 14); native AppKit and tvOS samples require macOS 14.0 and
+tvOS 15.0. Their Apple heads use the scene lifecycle for local
+Xcode 27 compatibility as well as the CI Apple 26 pairing. MAUI uses
+`MauiUISceneDelegate`; native UIKit retains its `Main` storyboard and default-tab
+selection in the owning scene. Check the built app's scene manifest and runtime
+launch behavior; source plist checks alone do not establish compatibility.
+
+For Docker tests,
 put `docker` on `PATH` and start a daemon using Windows containers on Windows
 or Linux containers on macOS/Linux. Unavailable Docker skips those tests;
 wrong container mode and sample failures fail.
@@ -116,7 +132,7 @@ Browser errors and unavailable GPU rendering fail.
 | Build | Generated sample compilation and infrastructure checks | Windows, macOS, Linux |
 | Host | Console, Web API and browser sample execution | Windows, macOS, Linux |
 | Docker | Container image builds and sample execution | Windows, Linux |
-| Android | MAUI and native Android app execution | Android agent |
+| Android | MAUI and native Android app execution | Linux (Ubuntu 24.04, KVM) |
 | Ios | MAUI and native iOS simulator execution | macOS |
 | Mac | MAUI/native MacCatalyst and native AppKit execution | macOS |
 | Windows | MAUI and native WinUI app execution | Windows |
@@ -180,9 +196,15 @@ Windows. Tests do not install tools, workloads or device images.
 CI runs `scripts/infra/tests/install-appium.ps1` to install Appium and the selected
 driver in job-owned directories. Windows jobs also provision WinAppDriver.
 Appium jobs use the repository's platform-default .NET workloads and pinned Tizen setup.
-Android jobs use macOS so the unchanged multi-target MAUI project can restore its
-Apple targets as well. CI provisions each explicitly selected emulator image or
+Android jobs run on Linux with KVM. Basic and Gallery MAUI declare Android only
+on Linux, Android/iOS/MacCatalyst on macOS, and Android/Windows on Windows.
+Native Basic Android remains Android-only. Framework selection does not rewrite
+these declarations; restore uses the host's declared graph.
+CI provisions each explicitly selected emulator image or
 simulator runtime; local tests still require those prerequisites to be installed.
+The shared bootstrapper supplies Node.js 22 on managed hosts and selects the SDK
+descriptor's exact installed Xcode for the job through `DEVELOPER_DIR` and
+`MD_APPLE_SDK_ROOT`, without changing the machine's global Xcode selection.
 Windows samples build with `WindowsPackageType=None` and launch their executable
 directly; tests do not register or uninstall MSIX packages.
 
@@ -197,6 +219,21 @@ Local runs select Android **17**, using model `pixel_9`. iOS defaults to **iPhon
 on **26.2**. Install `system-images;android-37.1;google_apis_ps16k;<host-ABI>`
 and the selected iOS runtime/device type before running tests. Missing prerequisites
 fail local tests; the test runner never installs device images or simulator runtimes.
+
+Install the selected prerequisites explicitly before a local run:
+
+```powershell
+pwsh scripts/infra/managed/install-android-package.ps1 -Package emulator
+pwsh scripts/infra/managed/install-android-image.ps1 -Image 'android-37.1;google_apis_ps16k'
+# On macOS, with DEVELOPER_DIR already selecting the required installed Xcode:
+pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version 26.2 -BuildVersion 23C54
+```
+
+The Android image helper selects `arm64-v8a` or `x86_64` from the host architecture;
+pass only the short image name, without `system-images;` or an ABI.
+The iOS helper requires the exact released OS version and build, warms CoreSimulator,
+and verifies availability again after downloading. Its transcript is
+`output/logs/install-ios-runtime.log`. These helpers do not create or boot devices.
 
 CI device jobs supply the desired version/image or simulator model. To use a
 different preinstalled runtime locally:
@@ -241,7 +278,9 @@ The installer does not enable Developer Mode or change desktop settings.
 Appium finds WinAppDriver in standard Program Files locations or its MSI registration;
 `APPIUM_WAD_PATH` optionally overrides its executable path.
 Mac2 launches the exact built bundle through `appPath`; no custom launch or
-LaunchServices scripts are needed. Existing app state/running apps are not reused.
+LaunchServices scripts are needed. Existing running apps are not reused.
+Mac2 relaunches each test app; normal macOS preferences and sandbox containers
+are left intact, so repeated runs do not delete user data or change app identities.
 Mac2 and Windows drivers own app launch/termination and their WDA/WAD
 server lifecycle. Windows launches the exact built executable through its full
 path; existing processes are not reused or terminated.
@@ -264,8 +303,8 @@ Select only platforms supported by your host. Missing prerequisites fail selecte
 
 Local `samples` and IDE discovery remain unfiltered. CI runs Appium device
 legs after acquiring native and NuGet artifacts; existing `Build`, `Host` and
-`Docker` jobs retain their execution groups. Agents must already have compatible Appium drivers, tools
-and images/runtimes; CI preparation only checks prerequisites.
+`Docker` jobs retain their execution groups. CI explicitly installs the selected
+Appium driver and image/runtime; tests only check these prerequisites.
 The `sampleSdks` objects in `scripts/azure-templates-stages-test.yml` declare SDK
 installs, Console frameworks, Xcode, agent image and device profiles. Build,
 Host and Docker jobs use both SDK descriptors. `runDevices` selects which

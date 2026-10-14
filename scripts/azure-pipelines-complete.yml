@@ -7,27 +7,6 @@ pr:
   - release/*
 
 parameters:
-  - name: agentProbe
-    displayName: 'Run only the temporary agent diagnostic job:'
-    type: boolean
-    default: false
-  - name: probeAgent
-    displayName: 'Agent to inspect:'
-    type: string
-    default: macos
-    values:
-      - macos
-      - macos26
-      - windows
-      - windows-ui
-  - name: probeWinAppDriver
-    displayName: 'Test the WinAppDriver MSI on the Windows probe:'
-    type: boolean
-    default: false
-  - name: probeIosRuntime
-    displayName: 'Test the exact iOS 26.2 runtime download on the Mac probe:'
-    type: boolean
-    default: false
   - name: enableCaching
     displayName: 'Enable build caching (skip native builds on cache hit):'
     type: boolean
@@ -56,6 +35,14 @@ parameters:
         name: $(DncEngPublicBuildPool)
         demands: ImageOverride -equals 1es-windows-2022-open
         os: windows
+  - name: buildAgentWindowsAppium
+    displayName: 'The Windows Appium agent configuration:'
+    type: object
+    default:
+      pool:
+        name: $(DncEngPublicBuildPool)
+        demands: ImageOverride -equals 1es-windows-2022-open
+        os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
     type: object
@@ -70,7 +57,7 @@ parameters:
     default:
       pool:
         name: AcesShared
-        demands: ImageOverride -equals ACES_VM_SharedPool_Sequoia
+        demands: ImageOverride -equals ACES_VM_SharedPool_Tahoe
         os: macos
   - name: buildAgentLinux
     displayName: 'The Linux build agent configuration:'
@@ -106,169 +93,16 @@ extends:
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     stages:
-      - ${{ if eq(parameters.agentProbe, true) }}:
-        - stage: agent_probe
-          displayName: Temporary agent probe
-          dependsOn: []
-          jobs:
-            - job: inspect_agent
-              displayName: Inspect ${{ parameters.probeAgent }}
-              dependsOn: []
-              timeoutInMinutes: 30
-              ${{ if eq(parameters.probeAgent, 'windows') }}:
-                pool: ${{ parameters.buildAgentWindows.pool }}
-              ${{ elseif eq(parameters.probeAgent, 'windows-ui') }}:
-                pool:
-                  name: ${{ parameters.buildAgentWindows.pool.name }}
-                  demands: ImageOverride -equals 1es-windows-2022-open
-              ${{ elseif eq(parameters.probeAgent, 'macos26') }}:
-                pool:
-                  name: Azure Pipelines
-                  vmImage: macos-26
-              ${{ else }}:
-                pool: ${{ parameters.buildAgentMac.pool }}
-              steps:
-                - checkout: none
-                - pwsh: |
-                    $ErrorActionPreference = 'Stop'
-                    Write-Host "OS: $([Runtime.InteropServices.RuntimeInformation]::OSDescription)"
-                    Write-Host "Architecture: $([Runtime.InteropServices.RuntimeInformation]::OSArchitecture)"
-                    $dotnet = Get-Command dotnet -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
-                    if ($dotnet) {
-                        & $dotnet.Source --list-sdks
-                        & $dotnet.Source --list-runtimes
-                    }
-                    else { Write-Host 'No preinstalled dotnet command on PATH.' }
-                    if ($IsMacOS) {
-                        & sw_vers
-                        $original = $env:DEVELOPER_DIR
-                        try {
-                            foreach ($app in Get-ChildItem /Applications -Directory -Filter 'Xcode*.app' | Sort-Object Name) {
-                                $env:DEVELOPER_DIR = Join-Path $app.FullName 'Contents/Developer'
-                                Write-Host "`nXcode: $($app.FullName)"
-                                & xcodebuild -version
-                                & xcodebuild -showsdks
-                                $json = & xcrun simctl list runtimes --json
-                                if ($LASTEXITCODE -ne 0) { throw "Runtime query failed for $($app.Name)." }
-                                ($json | ConvertFrom-Json).runtimes |
-                                    Select-Object name, version, buildversion, isAvailable |
-                                    Format-Table -AutoSize
-                            }
-                            if ('${{ parameters.probeIosRuntime }}' -eq 'True') {
-                                $env:DEVELOPER_DIR = '/Applications/Xcode_26.3.app/Contents/Developer'
-                                if (!(Test-Path $env:DEVELOPER_DIR -PathType Container)) { throw 'Required installed Xcode 26.3 is missing.' }
-                                & xcodebuild -downloadPlatform iOS -buildVersion 23C54
-                                if ($LASTEXITCODE -ne 0) { throw 'Exact iOS 26.2 build 23C54 download failed.' }
-                                $json = & xcrun simctl list runtimes --json
-                                if ($LASTEXITCODE -ne 0) { throw 'Post-download runtime query failed.' }
-                                $runtimes = ($json | ConvertFrom-Json).runtimes
-                                $runtimes | Select-Object name, version, buildversion, isAvailable | Format-Table
-                                if (!($runtimes | Where-Object { $_.version -eq '26.2' -and $_.buildversion -eq '23C54' -and $_.isAvailable })) {
-                                    throw 'Exact iOS 26.2 build 23C54 is not available after download.'
-                                }
-                            }
-                        }
-                        finally { $env:DEVELOPER_DIR = $original }
-                    }
-                    elseif ($IsWindows) {
-                        $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-                        $principal = [Security.Principal.WindowsPrincipal]::new($identity)
-                        Write-Host "Administrator: $($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))"
-                        Write-Host "UserInteractive: $([Environment]::UserInteractive)"
-                        Write-Host "Agent session ID: $([Diagnostics.Process]::GetCurrentProcess().SessionId)"
-                        $developerMode = [Microsoft.Win32.Registry]::GetValue(
-                            'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock',
-                            'AllowDevelopmentWithoutDevLicense', $null)
-                        Write-Host "Developer Mode registry value: $(if ($null -eq $developerMode) { 'absent' } else { $developerMode })"
-                        Get-Command msiexec.exe, node, npm.cmd -ErrorAction SilentlyContinue | Select-Object Name, Source
-                        foreach ($directory in @(${env:ProgramFiles(x86)}, $env:ProgramFiles)) {
-                            if ([string]::IsNullOrWhiteSpace($directory)) { continue }
-                            $path = Join-Path $directory 'Windows Application Driver/WinAppDriver.exe'
-                            Write-Host "WinAppDriver $path : $(Test-Path $path -PathType Leaf)"
-                        }
-                        Get-CimInstance Win32_Service -Filter "Name='msiserver'" | Select-Object Name, State, StartMode
-                        if ('${{ parameters.probeWinAppDriver }}' -eq 'True') {
-                            $installer = Join-Path $env:AGENT_TEMPDIRECTORY 'WindowsApplicationDriver_1.2.1.msi'
-                            $log = Join-Path $env:AGENT_TEMPDIRECTORY 'install-winappdriver-msi.log'
-                            Invoke-WebRequest -Uri 'https://github.com/microsoft/WinAppDriver/releases/download/v1.2.1/WindowsApplicationDriver_1.2.1.msi' -OutFile $installer
-                            $process = Start-Process -FilePath msiexec.exe -ArgumentList @(
-                                '/i', "`"$installer`"", '/qn', '/norestart', '/L*v', "`"$log`""
-                            ) -Wait -PassThru
-                            Write-Host "MSI exit code: $($process.ExitCode)"
-                            if (Test-Path $log) {
-                                Select-String -Path $log -Pattern 'error|Return value 3|Installation success or error status' -Context 2,2
-                                Get-Content $log -Tail 50
-                            }
-                            if ($process.ExitCode -notin @(0, 3010)) { throw "MSI failed with exit code $($process.ExitCode)." }
-                            $installed = @(@(${env:ProgramFiles(x86)}, $env:ProgramFiles) |
-                                Where-Object { $_ } |
-                                ForEach-Object { Join-Path $_ 'Windows Application Driver/WinAppDriver.exe' } |
-                                Where-Object { Test-Path $_ -PathType Leaf })
-                            if (!$installed) { throw 'Successful MSI did not produce WinAppDriver.exe.' }
-                            Write-Host "Installed WinAppDriver: $installed"
-                            $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
-                            $listener.Start()
-                            $port = $listener.LocalEndpoint.Port
-                            $listener.Stop()
-                            $stdout = Join-Path $env:AGENT_TEMPDIRECTORY 'winappdriver-probe.stdout.log'
-                            $stderr = Join-Path $env:AGENT_TEMPDIRECTORY 'winappdriver-probe.stderr.log'
-                            $start = [Diagnostics.ProcessStartInfo]::new($installed[0])
-                            $start.ArgumentList.Add('127.0.0.1')
-                            $start.ArgumentList.Add("$port")
-                            $start.UseShellExecute = $false
-                            $start.RedirectStandardInput = $true
-                            $start.RedirectStandardOutput = $true
-                            $start.RedirectStandardError = $true
-                            $start.StandardOutputEncoding = [Text.Encoding]::Unicode
-                            $start.StandardErrorEncoding = [Text.Encoding]::Unicode
-                            $driver = [Diagnostics.Process]::Start($start)
-                            $stdoutRead = $driver.StandardOutput.ReadToEndAsync()
-                            $stderrRead = $driver.StandardError.ReadToEndAsync()
-                            try {
-                                $deadline = [DateTime]::UtcNow.AddSeconds(20)
-                                $ready = $false
-                                do {
-                                    $driver.Refresh()
-                                    if ($driver.HasExited) { throw "Owned WinAppDriver exited with code $($driver.ExitCode)." }
-                                    $status = & curl.exe --fail --silent --show-error --max-time 2 "http://127.0.0.1:$port/status"
-                                    if ($LASTEXITCODE -eq 0) {
-                                        Write-Host "WinAppDriver status: $status"
-                                        $response = $status | ConvertFrom-Json
-                                        if ([string]::IsNullOrWhiteSpace($response.build.version) -or $response.os.name -ne 'windows') {
-                                            throw 'WinAppDriver status did not contain the expected build and Windows OS metadata.'
-                                        }
-                                        $ready = $true
-                                        break
-                                    }
-                                    Start-Sleep -Milliseconds 250
-                                } while ([DateTime]::UtcNow -lt $deadline)
-                                if (!$ready) { throw 'Owned WinAppDriver did not respond within 20 seconds.' }
-                            }
-                            finally {
-                                $driver.Refresh()
-                                if (!$driver.HasExited) {
-                                    $driver.Kill()
-                                    $driver.WaitForExit()
-                                }
-                                [IO.File]::WriteAllText($stdout, $stdoutRead.GetAwaiter().GetResult())
-                                [IO.File]::WriteAllText($stderr, $stderrRead.GetAwaiter().GetResult())
-                                Get-Content $stdout
-                                Get-Content $stderr
-                                $driver.Dispose()
-                            }
-                        }
-                    }
-                  displayName: Inspect installed tools without provisioning
-      - ${{ else }}:
-        - template: /scripts/azure-templates-stages.yml@self
-          parameters:
-            buildPipelineType: 'complete'
-            buildAgentHost: ${{ parameters.buildAgentHost }}
-            buildAgentWindows: ${{ parameters.buildAgentWindows }}
-            buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
-            buildAgentMac: ${{ parameters.buildAgentMac }}
-            buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
-            buildAgentLinux: ${{ parameters.buildAgentLinux }}
-            buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
-            buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
-            enableCaching: ${{ parameters.enableCaching }}
+      - template: /scripts/azure-templates-stages.yml@self
+        parameters:
+          buildPipelineType: 'complete'
+          buildAgentHost: ${{ parameters.buildAgentHost }}
+          buildAgentWindows: ${{ parameters.buildAgentWindows }}
+          buildAgentWindowsAppium: ${{ parameters.buildAgentWindowsAppium }}
+          buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
+          buildAgentMac: ${{ parameters.buildAgentMac }}
+          buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
+          buildAgentLinux: ${{ parameters.buildAgentLinux }}
+          buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
+          buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
+          enableCaching: ${{ parameters.enableCaching }}

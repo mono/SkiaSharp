@@ -3,14 +3,15 @@
 .SYNOPSIS
 Lists the complete NuGet mirror inventory for a CLI workload-set version.
 .DESCRIPTION
-Accepts CLI versions such as 10.0.401 or 11.0.100-rc.1.26458.5, not NuGet
+Accepts CLI versions such as 10.0.401, 10.0.401.1 or 11.0.100-rc.1.26458.5, not NuGet
 package versions. Reads workload-set and manifest packages from NuGet.org.
 Includes those metadata packages and all packs, resolving aliases for every
 host RID. By default, does not download packs, check a mirror, or install workloads.
 Writes only deduplicated "- ID/Version" lines to the success stream, after
 the entire inventory has been read successfully.
-With -MissingOnly, checks package version indexes on the dotnet-public mirror
-and prints only versions absent there. Runs independently of repository files.
+With -MissingOnly, prints published NuGet.org versions absent from dotnet-public.
+Manifest-declared versions not published on NuGet.org are reported to stderr,
+not listed as mirror requests. Runs independently of repository files.
 .EXAMPLE
 .\scripts\infra\managed\list-workload-packs.ps1 -WorkloadSetVersion 10.0.401
 .EXAMPLE
@@ -26,7 +27,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-if ($WorkloadSetVersion -notmatch '^(?<major>[1-9]\d*)\.(?<minor>0|[1-9]\d*)\.(?<patch>[1-9]\d{2})(?<suffix>-(?<label>preview|rc)\.(?<number>[1-9]\d*)\.\d+\.\d+)?$') {
+if ($WorkloadSetVersion -notmatch '^(?<major>[1-9]\d*)\.(?<minor>0|[1-9]\d*)\.(?<patch>[1-9]\d{2})(?:\.(?<revision>0|[1-9]\d*))?(?<suffix>-(?<label>preview|rc)\.(?<number>[1-9]\d*)\.\d+\.\d+)?$') {
     throw "Invalid CLI workload-set version '$WorkloadSetVersion'; expected e.g. 10.0.401 or 11.0.100-rc.1.26458.5."
 }
 $bandPatch = [int]([math]::Floor([int]$Matches.patch / 100) * 100)
@@ -35,7 +36,8 @@ if ($Matches['suffix']) {
     $band += "-$($Matches.label).$($Matches.number)"
 }
 $setId = "Microsoft.NET.Workloads.$band"
-$setVersion = "$($Matches.major).$($Matches.patch).0$($Matches['suffix'])"
+$revision = if ($Matches['revision']) { $Matches.revision } else { '0' }
+$setVersion = "$($Matches.major).$($Matches.patch).$revision$($Matches['suffix'])"
 Set-Variable -Name SourceFeed -Value 'https://api.nuget.org/v3/index.json' -Option Constant
 Set-Variable -Name MirrorFeed -Value 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json' -Option Constant
 $scratch = Join-Path ([IO.Path]::GetTempPath()) "workload-packs-$([guid]::NewGuid())"
@@ -169,8 +171,33 @@ if ($MissingOnly) {
                 $null = $remaining.Remove($version)
             }
         }
+        $published = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        if ($remaining.Count -gt 0) {
+            $sourceBase = $using:sourceBaseAddress
+            $sourceUrl = "$($sourceBase.TrimEnd('/'))/$($_.Name.ToLowerInvariant())/index.json"
+            $sourceResponse = Invoke-WebRequest -Uri $sourceUrl -SkipHttpErrorCheck -TimeoutSec 30
+            if ($sourceResponse.StatusCode -ne 404) {
+                if ($sourceResponse.StatusCode -ne 200) {
+                    throw "Source package index request failed: HTTP $($sourceResponse.StatusCode) at '$sourceUrl'."
+                }
+                $sourceIndex = ConvertFrom-Json -InputObject $sourceResponse.Content
+                if (-not $sourceIndex.PSObject.Properties['versions'] -or $sourceIndex.versions -isnot [array]) {
+                    throw "Invalid source package version index at '$sourceUrl'."
+                }
+                foreach ($version in $sourceIndex.versions) {
+                    if ($version -isnot [string]) {
+                        throw "Invalid source package version in index at '$sourceUrl'."
+                    }
+                    $null = $published.Add($version)
+                }
+            }
+        }
         foreach ($package in $_.Group) {
-            if ($remaining.Contains($package.Split('/')[1])) { $package }
+            $version = $package.Split('/')[1]
+            if ($remaining.Contains($version)) {
+                if ($published.Contains($version)) { $package }
+                else { [Console]::Error.WriteLine("Not published on NuGet.org; cannot mirror: $package") }
+            }
         }
     } -ThrottleLimit 12 -AsJob
     try {

@@ -45,7 +45,7 @@ steps:
             -Workloads '${{ join(',', sdk.workloads) }}' `
             -DefaultWorkloads '${{ join(',', parameters.workloadDefaults[parameters.platform]) }}' `
             -AdditionalWorkloads '${{ join(',', sdk.additionalWorkloads) }}' `
-            -TizenVersion '${{ sdk.tizenVersion }}'
+            -TizenVersion '$(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)'
         displayName: Install .NET ${{ sdk.sdkVersion }} workloads
         condition: ${{ parameters.condition }}
         retryCountOnTaskFailure: 3
