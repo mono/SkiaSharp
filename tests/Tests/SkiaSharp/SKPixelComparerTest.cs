@@ -89,10 +89,112 @@ public class SKPixelComparerTest
 		Assert.Equal(tolerance.GetHashCode(), SKPixelTolerance.Absolute(3).GetHashCode());
 		Assert.True(tolerance != SKPixelTolerance.Exact);
 		Assert.False(tolerance.Equals("not a tolerance"));
+		Assert.True(SKPixelTolerance.Exact.Allows(0));
+		Assert.False(SKPixelTolerance.Exact.Allows(0.001));
+		Assert.True(SKPixelTolerance.Absolute(3).Allows(3));
+		Assert.False(SKPixelTolerance.Absolute(3).Allows(3.001));
+		Assert.True(SKPixelTolerance.Percent(50).Allows(127.5));
+		Assert.False(SKPixelTolerance.Percent(50).Allows(127.5001));
+		Assert.True(SKPixelTolerance.Percent(100).Allows(255));
+		Assert.False(SKPixelTolerance.Percent(100).Allows(256));
+		foreach (var invalid in new[] { -0.001, double.NaN, double.PositiveInfinity, double.NegativeInfinity })
+			Assert.Equal("absoluteDifference", Assert.Throws<ArgumentOutOfRangeException>(() => tolerance.Allows(invalid)).ParamName);
 		Assert.Equal("value", Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelTolerance.Absolute(-1)).ParamName);
 		Assert.Equal("value", Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelTolerance.Absolute(256)).ParamName);
 		foreach (var invalid in new[] { -0.001, 100.001, double.NaN, double.PositiveInfinity, double.NegativeInfinity })
 			Assert.Equal("value", Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelTolerance.Percent(invalid)).ParamName);
+	}
+
+	[Fact]
+	public void ErrorBudgetFactoriesValidateAndExposeImmutableLimits()
+	{
+		Assert.Empty(typeof(SKPixelErrorBudget).GetConstructors());
+		var exact = default(SKPixelErrorBudget);
+		Assert.Equal(SKPixelErrorBudget.Exact, exact);
+		Assert.Equal(SKPixelErrorBudget.Pixels(0), exact);
+		Assert.Equal(0L, exact.MaxPixels);
+		Assert.Null(exact.MaxPercent);
+		var count = SKPixelErrorBudget.Pixels(long.MaxValue);
+		Assert.Equal(long.MaxValue, count.MaxPixels);
+		Assert.Null(count.MaxPercent);
+		var percent = SKPixelErrorBudget.Percent(0.2);
+		Assert.Null(percent.MaxPixels);
+		Assert.Equal(0.2, percent.MaxPercent);
+		var both = SKPixelErrorBudget.Both(131, 0.2);
+		Assert.Equal(131L, both.MaxPixels);
+		Assert.Equal(0.2, both.MaxPercent);
+		Assert.True(both == SKPixelErrorBudget.Both(131, 0.2));
+		Assert.False(both != SKPixelErrorBudget.Both(131, 0.2));
+		Assert.True(both.Equals((object)SKPixelErrorBudget.Both(131, 0.2)));
+		Assert.Equal(both.GetHashCode(), SKPixelErrorBudget.Both(131, 0.2).GetHashCode());
+		Assert.Equal(exact.GetHashCode(), SKPixelErrorBudget.Pixels(0).GetHashCode());
+		Assert.NotEqual(SKPixelErrorBudget.Percent(0), SKPixelErrorBudget.Pixels(0));
+		Assert.NotEqual(SKPixelErrorBudget.Both(0, 100), SKPixelErrorBudget.Pixels(0));
+		Assert.NotEqual(SKPixelErrorBudget.Pixels(1), SKPixelErrorBudget.Pixels(2));
+		Assert.NotEqual(SKPixelErrorBudget.Percent(2), SKPixelErrorBudget.Percent(3));
+		Assert.False(both.Equals("not a budget"));
+		Assert.Equal("maximum", Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelErrorBudget.Pixels(-1)).ParamName);
+		Assert.Equal("pixels", Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelErrorBudget.Both(-1, 1)).ParamName);
+		foreach (var invalid in new[] { -0.001, 100.001, double.NaN, double.PositiveInfinity, double.NegativeInfinity })
+		{
+			Assert.Equal("percent", Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelErrorBudget.Both(0, invalid)).ParamName);
+			Assert.Equal("maximum", Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelErrorBudget.Percent(invalid)).ParamName);
+		}
+	}
+
+	[Fact]
+	public void ErrorBudgetAllowsInclusiveCountPercentAndBothFloors()
+	{
+		var exact = SKPixelErrorBudget.Exact;
+		Assert.True(exact.Allows(0, 3));
+		Assert.False(exact.Allows(1, 3));
+		Assert.True(SKPixelErrorBudget.Pixels(2).Allows(2, 3));
+		Assert.False(SKPixelErrorBudget.Pixels(1).Allows(2, 3));
+		Assert.True(SKPixelErrorBudget.Percent(0).Allows(0, 3));
+		Assert.False(SKPixelErrorBudget.Percent(0).Allows(1, 3));
+		Assert.True(SKPixelErrorBudget.Percent(100).Allows(3, 3));
+		Assert.True(SKPixelErrorBudget.Percent(200.0 / 3.0).Allows(2, 3));
+		Assert.False(SKPixelErrorBudget.Percent(66).Allows(2, 3));
+		Assert.True(SKPixelErrorBudget.Both(2, 200.0 / 3.0).Allows(2, 3));
+		Assert.False(SKPixelErrorBudget.Both(1, 100).Allows(2, 3));
+		Assert.False(SKPixelErrorBudget.Both(3, 50).Allows(2, 3));
+		Assert.True(SKPixelErrorBudget.Percent(0.3).Allows(3, 1000));
+		Assert.False(SKPixelErrorBudget.Percent(0.3).Allows(4, 1000));
+		Assert.True(SKPixelErrorBudget.Percent(0.3).Allows(30, 10_000));
+		Assert.False(SKPixelErrorBudget.Percent(0.3).Allows(31, 10_000));
+		Assert.True(SKPixelErrorBudget.Both(20, 0.3).Allows(3, 1000));
+		Assert.False(SKPixelErrorBudget.Both(20, 0.3).Allows(4, 1000));
+		Assert.True(SKPixelErrorBudget.Both(20, 0.3).Allows(20, 10_000));
+		Assert.False(SKPixelErrorBudget.Both(20, 0.3).Allows(21, 10_000));
+		Assert.True(SKPixelErrorBudget.Percent(0.002 * 100).Allows(1, 500));
+		Assert.False(SKPixelErrorBudget.Percent(0.002 * 100).Allows(2, 500));
+		Assert.True(SKPixelErrorBudget.Percent(0.02 * 100).Allows(1, 50));
+		Assert.False(SKPixelErrorBudget.Percent(0.02 * 100).Allows(2, 50));
+		Assert.True(SKPixelErrorBudget.Percent(0.002 * 100).Allows(131, 65_536));
+		Assert.False(SKPixelErrorBudget.Percent(0.002 * 100).Allows(132, 65_536));
+		Assert.True(SKPixelErrorBudget.Percent(0.02 * 100).Allows(1310, 65_536));
+		Assert.False(SKPixelErrorBudget.Percent(0.02 * 100).Allows(1311, 65_536));
+		Assert.Equal("comparedPixels", Assert.Throws<ArgumentOutOfRangeException>(() => exact.Allows(0, 0)).ParamName);
+		Assert.Equal("comparedPixels", Assert.Throws<ArgumentOutOfRangeException>(() => exact.Allows(0, -1)).ParamName);
+		Assert.Equal("errorPixels", Assert.Throws<ArgumentOutOfRangeException>(() => exact.Allows(-1, 1)).ParamName);
+		Assert.Equal("errorPixels", Assert.Throws<ArgumentOutOfRangeException>(() => exact.Allows(2, 1)).ParamName);
+	}
+
+	[Fact]
+	public void ErrorBudgetAtLongLimitsDoesNotRoundUpOrOverflow()
+	{
+		const long total = long.MaxValue;
+		const long half = total / 2;
+		Assert.True(SKPixelErrorBudget.Pixels(total).Allows(total, total));
+		Assert.True(SKPixelErrorBudget.Percent(100).Allows(total, total));
+		Assert.False(SKPixelErrorBudget.Exact.Allows(total, total));
+		Assert.True(SKPixelErrorBudget.Percent(50).Allows(half, total));
+		Assert.False(SKPixelErrorBudget.Percent(50).Allows(half + 1, total));
+		Assert.False(SKPixelErrorBudget.Percent(99.99999999999999).Allows(total, total));
+		Assert.False(SKPixelErrorBudget.Percent(99.99999999999999).Allows(total - 1, total));
+		Assert.False(SKPixelErrorBudget.Both(total, 99.99999999999999).Allows(total, total));
+		Assert.True(SKPixelErrorBudget.Percent(double.Epsilon).Allows(0, total));
+		Assert.False(SKPixelErrorBudget.Percent(double.Epsilon).Allows(1, total));
 	}
 
 	[Fact]
@@ -233,32 +335,40 @@ public class SKPixelComparerTest
 		options.MaxNormalizedRootMeanSquaredError = rms - 0.000001;
 		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
 		options.MaxNormalizedRootMeanSquaredError = null;
-		options.MaxErrorPixels = 2;
+		options.ErrorBudget = SKPixelErrorBudget.Pixels(2);
 		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
-		options.MaxErrorPixels = 0;
+		options.ErrorBudget = SKPixelErrorBudget.Exact;
 		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
-		options.MaxErrorPixels = 1;
+		options.ErrorBudget = SKPixelErrorBudget.Pixels(1);
 		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
-		options.MaxErrorPixels = null;
-		options.MaxErrorPixelFraction = 2.0 / 3.0;
+		options.ErrorBudget = SKPixelErrorBudget.Percent(200.0 / 3.0);
 		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
-		options.MaxErrorPixelFraction = 0.66;
+		options.ErrorBudget = SKPixelErrorBudget.Percent(66);
 		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
-		options.MaxErrorPixelFraction = 0.5;
-		options.MaxErrorPixels = 3;
+		options.ErrorBudget = SKPixelErrorBudget.Both(3, 50);
 		options.MaxNormalizedRootMeanSquaredError = rms;
 		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
-		options.MaxErrorPixelFraction = 1;
+		options.ErrorBudget = SKPixelErrorBudget.Both(3, 100);
 		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
-		options.MaxErrorPixels = 1;
+		options.ErrorBudget = SKPixelErrorBudget.Both(1, 100);
 		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
-		options.MaxErrorPixels = null;
+		options.ErrorBudget = null;
 		SetUniformTolerance(options, SKPixelTolerance.Absolute(6));
 		options.MaxNormalizedRootMeanSquaredError = rms - 0.000001;
 		var tolerated = SKPixelComparer.Compare(first, second, options);
 		Assert.Equal(0, tolerated.ErrorPixelCount);
 		Assert.False(tolerated.IsMatch);
 		Assert.Equal(rms, tolerated.RawMetrics.NormalizedRootMeanSquaredError);
+		options.MaxNormalizedRootMeanSquaredError = null;
+		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+		SetUniformTolerance(options, SKPixelTolerance.Exact);
+		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		options.ErrorBudget = SKPixelErrorBudget.Exact;
+		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		options.ErrorBudget = SKPixelErrorBudget.Pixels(2);
+		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+		options.MaxNormalizedRootMeanSquaredError = rms - 0.000001;
+		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
 	}
 
 	[Fact]
@@ -363,7 +473,7 @@ public class SKPixelComparerTest
 			ToleranceMask = mask,
 		};
 		Assert.Equal(1, SKPixelComparer.Compare(a, b, options).ErrorPixelCount);
-		options.MaxErrorPixels = 1;
+		options.ErrorBudget = SKPixelErrorBudget.Pixels(1);
 		Assert.True(SKPixelComparer.Compare(a, b, options).IsMatch);
 		using var binary = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.BinaryMask, options);
 		using var styledBinary = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.BinaryMask, options);
@@ -537,10 +647,8 @@ public class SKPixelComparerTest
 		foreach (var invalid in new[] { SKAlphaType.Opaque, SKAlphaType.Unknown })
 			Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.Compare(image, image, new SKPixelComparerOptions { AlphaType = invalid }));
 		Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.GenerateDifferenceImage(image, image, SKPixelDifferenceStyle.BinaryMask, new SKPixelComparerOptions { AlphaType = SKAlphaType.Opaque }));
-		Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.Compare(image, image, new SKPixelComparerOptions { MaxErrorPixels = -1 }));
 		foreach (var invalid in new[] { -0.01, 1.01, double.NaN, double.PositiveInfinity, double.NegativeInfinity })
 		{
-			Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.Compare(image, image, new SKPixelComparerOptions { MaxErrorPixelFraction = invalid }));
 			Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.Compare(image, image, new SKPixelComparerOptions { MaxNormalizedRootMeanSquaredError = invalid }));
 		}
 		using var disposedMask = SKImage.FromBitmap(bitmap);
