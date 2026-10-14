@@ -106,9 +106,9 @@ public sealed class AppiumMacSampleRunTests(AppiumFixture appium) : AppiumSample
 	private static void NavigateMauiMacCatalyst(AppiumRunningApp app, string title)
 	{
 		app.Click(By.XPath("//XCUIElementTypeNavigationBar//XCUIElementTypeButton[@label='Menu']"));
-		app.Click(By.Name(title));
+		app.Click(By.XPath($"//XCUIElementTypeWindow//*[@label='{title}' or @title='{title}']"));
 	}
 
 	private static void NavigateNativeMac(AppiumRunningApp app, string title) =>
-		app.Click(By.Name(title));
+		app.Click(By.XPath($"//XCUIElementTypeWindow//*[@label='{title}' or @title='{title}']"));
 }

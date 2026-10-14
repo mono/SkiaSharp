@@ -333,19 +333,35 @@ public sealed class AppiumInfrastructureTests
 		Assert.Contains("exhausted 2 scrolls", error.Message);
 	}
 
-	[Theory]
-	[InlineData(false)]
-	[InlineData(true)]
-	public void ScrollNeverAcceptsMissingOrHiddenTargets(bool present)
+	[Fact]
+	public void ScrollNeverAcceptsHiddenTargets()
 	{
 		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
 		var target = new ScrollElement(new Rectangle(10, 10, 20, 20), displayed: false);
 		var error = Assert.Throws<TimeoutException>(() => AppiumRunningApp.ScrollIntoView(
-			() => container, () => present ? target : throw new NoSuchElementException("Target is missing."),
+			() => container, () => target,
 			(_, _) => Assert.Fail("There is no geometry-directed scroll to perform."),
 			"'target' inside 'container'", TimeSpan.FromMilliseconds(100), 2, CancellationToken.None));
 		Assert.Contains("'target' inside 'container'", error.Message);
-		Assert.Contains(present ? "Displayed=False" : "target not exposed", error.Message);
+		Assert.Contains("Displayed=False", error.Message);
+	}
+
+	[Fact]
+	public void ScrollBoundsDiscoveryForMissingTargets()
+	{
+		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
+		var gestures = 0;
+		var error = Assert.Throws<InvalidOperationException>(() => AppiumRunningApp.ScrollIntoView(
+			() => container, () => throw new NoSuchElementException("Target is missing."),
+			(_, amount) =>
+			{
+				Assert.Equal(60, amount);
+				gestures++;
+			},
+			"'target' inside 'container'", TimeSpan.FromSeconds(30), 2, CancellationToken.None));
+		Assert.Equal(2, gestures);
+		Assert.Contains("exhausted 2 scrolls", error.Message);
+		Assert.Contains("target not exposed", error.Message);
 	}
 
 	[Fact]
