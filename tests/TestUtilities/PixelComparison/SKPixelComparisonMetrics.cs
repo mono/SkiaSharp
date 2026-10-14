@@ -4,7 +4,8 @@ using System;
 
 namespace SkiaSharp.Testing;
 
-/// <summary>Selected-channel error statistics, with a common pixel and channel denominator for raw and filtered metrics.</summary>
+/// <summary>Raw or thresholded enabled-channel error statistics over all compared pixels.</summary>
+/// <remarks>Both metric groups use the same total pixels, enabled channel count and sample denominator. Thresholding changes only the error sums: tolerated channel differences contribute zero, while exceeding differences contribute their full deltas, not deltas minus allowances.</remarks>
 public sealed class SKPixelComparisonMetrics
 {
 	internal SKPixelComparisonMetrics(int totalPixels, int channelCount, long absoluteError, long sumSquaredError)
@@ -15,25 +16,25 @@ public sealed class SKPixelComparisonMetrics
 		SumSquaredError = sumSquaredError;
 	}
 
-	/// <summary>Number of considered pixels.</summary>
+	/// <summary>Gets all compared pixels; identical to the result and to the other metric group, regardless of tolerance.</summary>
 	public int TotalPixels { get; }
 
-	/// <summary>Number of enabled channels per pixel.</summary>
+	/// <summary>Gets the enabled channels per pixel; identical for raw and thresholded metrics.</summary>
 	public int ChannelCount { get; }
 
-	/// <summary>Number of samples: considered pixels times enabled channels (zero for an internal empty fixture).</summary>
+	/// <summary>Gets total compared pixels times enabled channels; tolerated samples remain in this denominator.</summary>
 	public long SampleCount => (long)TotalPixels * ChannelCount;
 
-	/// <summary>Sum of absolute enabled-channel byte differences (filtered channels contribute zero in thresholded metrics).</summary>
+	/// <summary>Gets the sum of enabled-channel absolute byte differences; thresholded metrics replace tolerated differences with zero.</summary>
 	public long AbsoluteError { get; }
 
-	/// <summary>Sum of squared enabled-channel byte differences (filtered channels contribute zero in thresholded metrics).</summary>
+	/// <summary>Gets the sum of squared enabled-channel byte differences; thresholded metrics replace tolerated differences with zero.</summary>
 	public long SumSquaredError { get; }
 
-	/// <summary>Absolute error divided by the number of samples, or zero for an internal empty fixture.</summary>
+	/// <summary>Gets absolute error divided by all selected samples, in byte units; returns zero when the sample count is zero.</summary>
 	public double MeanAbsoluteError => SampleCount == 0 ? 0.0 : (double)AbsoluteError / SampleCount;
 
-	/// <summary>Squared error divided by the number of samples, or zero for an internal empty fixture.</summary>
+	/// <summary>Gets squared error divided by all selected samples, in squared byte units; returns zero when the sample count is zero.</summary>
 	public double MeanSquaredError => SampleCount == 0 ? 0.0 : (double)SumSquaredError / SampleCount;
 
 	/// <summary>Square root of the mean squared error.</summary>
