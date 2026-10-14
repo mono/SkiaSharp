@@ -19,6 +19,8 @@ namespace SkiaSharp
 	/// ]]></format></remarks>
 	public unsafe class SKGraphiteRecorder : SKObject
 	{
+		private SKCanvas deferredCanvas;
+
 		// Pin keeping the user's image-upload callback alive while Skia's FfiImageProvider
 		// can dispatch into it. Freed in DisposeNative AFTER the native recorder is destroyed.
 		private GCHandle pinnedImageCallback;
@@ -44,6 +46,9 @@ namespace SkiaSharp
 		/// <remarks />
 		protected override void DisposeNative ()
 		{
+			deferredCanvas?.Dispose ();
+			deferredCanvas = null;
+
 			imageCallbackDispose?.Invoke ();
 			imageCallbackDispose = null;
 
@@ -72,8 +77,52 @@ namespace SkiaSharp
 		/// <remarks />
 		public SKGraphiteRecording Snap ()
 		{
+			deferredCanvas?.Dispose ();
+			deferredCanvas = null;
+
 			IntPtr handle = SkiaApi.sk_graphite_recorder_snap (Handle);
 			return handle == IntPtr.Zero ? null : new SKGraphiteRecording (handle, true);
+		}
+
+		/// <summary>Creates a canvas whose drawing is targeted at a surface when its recording is inserted.</summary>
+		/// <param name="info">The dimensions and color information of the deferred target.</param>
+		/// <param name="textureInfo">The texture descriptor that the eventual target must match.</param>
+		/// <returns>A borrowed canvas, or <see langword="null" /> if a deferred canvas could not be created.</returns>
+		/// <remarks>Only one deferred canvas may be created per recording. The canvas is invalidated by <see cref="Snap" /> or recorder disposal. Keep this recorder alive while using the canvas.</remarks>
+		public SKCanvas CreateDeferredCanvas (SKImageInfo info, SKGraphiteTextureInfo textureInfo)
+		{
+			if (textureInfo == null)
+				throw new ArgumentNullException (nameof (textureInfo));
+			if (info.Width <= 0)
+				throw new ArgumentOutOfRangeException (
+					nameof (info), info.Width, "Width must be positive.");
+			if (info.Height <= 0)
+				throw new ArgumentOutOfRangeException (
+					nameof (info), info.Height, "Height must be positive.");
+			if (info.Width > MaxTextureSize || info.Height > MaxTextureSize)
+				throw new ArgumentOutOfRangeException (
+					nameof (info), info.Size, "Dimensions exceed the recorder's maximum texture size.");
+			if (info.ColorType == SKColorType.Unknown)
+				throw new ArgumentException ("Color type must be specified.", nameof (info));
+			if (info.AlphaType != SKAlphaType.Premul && info.AlphaType != SKAlphaType.Opaque)
+				throw new ArgumentException ("Alpha type must be premultiplied or opaque.", nameof (info));
+			if (!textureInfo.IsValid)
+				throw new ArgumentException ("Texture information must be valid.", nameof (textureInfo));
+			if (textureInfo.Backend != Backend)
+				throw new ArgumentException (
+					"Texture information must use the recorder's backend.",
+					nameof (textureInfo));
+
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			IntPtr handle = SkiaApi.sk_graphite_recorder_make_deferred_canvas (
+				Handle, &cinfo, textureInfo.Handle);
+			GC.KeepAlive (textureInfo);
+			GC.KeepAlive (info.ColorSpace);
+			if (handle == IntPtr.Zero)
+				return null;
+
+			deferredCanvas = SKCanvas.GetObject (handle, false, unrefExisting: false);
+			return deferredCanvas;
 		}
 
 		/// <summary>Creates a new backend texture that is owned by the recorder's context.</summary>

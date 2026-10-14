@@ -130,6 +130,136 @@ namespace SkiaSharp.Tests
 			});
 		}
 
+		[Fact]
+		public Task DeferredRecordingReplaysAndInvalidatesBorrowedCanvas()
+		{
+			SkipIfUnsupported();
+			return RunGuardedAsync(async () =>
+			{
+				using var harness = await CreateHarnessAsync();
+				var (backendTexture, textureOwner) = harness.CreateBackendTexture(Width, Height);
+				try
+				{
+					using var textureInfo = backendTexture.TextureInfo;
+					Assert.NotNull(textureInfo);
+					Assert.True(textureInfo.IsValid);
+					Assert.Equal(harness.Recorder.Backend, textureInfo.Backend);
+					var info = new SKImageInfo(Width, Height, ColorType, SKAlphaType.Premul);
+					Assert.Throws<ArgumentException>(() => harness.Recorder.CreateDeferredCanvas(
+						info.WithAlphaType(SKAlphaType.Unpremul), textureInfo));
+					Assert.Null(harness.Recorder.CreateDeferredCanvas(
+						info.WithColorType(SKColorType.Rgb565).WithAlphaType(SKAlphaType.Opaque), textureInfo));
+					var canvas = harness.Recorder.CreateDeferredCanvas(info, textureInfo);
+					Assert.NotNull(canvas);
+					using (var paint = new SKPaint { Color = SKColors.Red })
+						canvas.DrawRect(SKRect.Create(Width, Height), paint);
+					using var recording = harness.Recorder.Snap();
+					Assert.NotNull(recording);
+					Assert.Equal(IntPtr.Zero, canvas.Handle);
+
+					using var surface = SKSurface.Create(harness.Recorder, backendTexture, ColorType);
+					Assert.NotNull(surface);
+					var finished = 0;
+					var succeeded = false;
+					Assert.Equal(SKGraphiteInsertStatus.Success, harness.Context.InsertRecording(
+						recording,
+						new SKGraphiteInsertRecordingOptions
+						{
+							TargetSurface = surface,
+							Finished = success =>
+							{
+								finished++;
+								succeeded = success;
+							},
+						}));
+					await CompleteGpuWorkAsync(harness.Context, () => finished != 0);
+					Assert.Equal(1, finished);
+					Assert.True(succeeded);
+
+					byte[] pixels = null;
+					var readFinished = false;
+					harness.Context.RequestReadPixels(
+						surface,
+						new SKImageInfo(Width, Height, SKColorType.Rgba8888, SKAlphaType.Unpremul),
+						SKRectI.Create(Width, Height),
+						result =>
+						{
+							pixels = result?.ToArray();
+							readFinished = true;
+						});
+					await CompleteGpuWorkAsync(harness.Context, () => readFinished);
+					Assert.NotNull(pixels);
+					Assert.Equal(255, pixels[0]);
+					Assert.Equal(0, pixels[1]);
+					Assert.Equal(0, pixels[2]);
+					Assert.Equal(255, pixels[3]);
+					Assert.Equal(1, finished);
+				}
+				finally
+				{
+					PumpToCompletion(harness.Context);
+					textureOwner.Dispose();
+				}
+			});
+		}
+
+		[Fact]
+		public Task RejectedRecordingNotifiesFailureExactlyOnce()
+		{
+			SkipIfUnsupported();
+			return RunGuardedAsync(async () =>
+			{
+				using var harness = await CreateHarnessAsync();
+				var info = new SKImageInfo(Width, Height, ColorType, SKAlphaType.Premul);
+				using var surface = SKSurface.Create(harness.Recorder, info);
+				Assert.NotNull(surface);
+				surface.Canvas.Clear(SKColors.Blue);
+				using var recording = harness.Recorder.Snap();
+				Assert.NotNull(recording);
+				Assert.Throws<ArgumentException>(() => harness.Context.InsertRecording(
+					recording, new SKGraphiteInsertRecordingOptions
+					{
+						WaitSemaphores = new SKGraphiteBackendSemaphore[] { null },
+					}));
+				Assert.Throws<ArgumentException>(() => harness.Context.InsertRecording(
+					recording, new SKGraphiteInsertRecordingOptions
+					{
+						SignalSemaphores = new SKGraphiteBackendSemaphore[] { null },
+					}));
+				using var rasterTarget = SKSurface.Create(info);
+				Assert.NotNull(rasterTarget);
+				var completed = 0;
+				var succeeded = true;
+				Assert.Equal(SKGraphiteInsertStatus.InvalidRecording, harness.Context.InsertRecording(
+					recording,
+					new SKGraphiteInsertRecordingOptions
+					{
+						TargetSurface = rasterTarget,
+						Finished = success =>
+						{
+							completed++;
+							succeeded = success;
+						},
+					}));
+				Assert.Equal(1, completed);
+				Assert.False(succeeded);
+				harness.Context.CheckAsyncWorkCompletion();
+				Assert.Equal(1, completed);
+			});
+		}
+
+		private async Task CompleteGpuWorkAsync(SKGraphiteContext context, Func<bool> completed)
+		{
+			Assert.True(context.Submit(new SKGraphiteSubmitInfo { Sync = CanSubmitSync }));
+			for (var i = 0; i < 1000 && !completed(); i++)
+			{
+				context.CheckAsyncWorkCompletion();
+				if (!CanSubmitSync && !completed())
+					await Task.Delay(1);
+			}
+			Assert.True(completed(), "Graphite GPU completion was not delivered.");
+		}
+
 		/// <summary>
 		/// Runs the GPU scenario. GPU work is serialized across the whole assembly
 		/// by the GPU rendering test collection each derived class joins (xUnit

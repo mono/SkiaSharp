@@ -65,6 +65,11 @@ namespace SkiaSharp
 	/// <remarks />
 	public delegate void SKGraphiteReleaseDelegate ();
 
+	/// <summary>Represents the method called when a Graphite recording finishes or cannot be executed.</summary>
+	/// <param name="success">Whether the recording completed successfully on the GPU.</param>
+	/// <remarks>The callback runs when the owning context processes completion or releases the pending work.</remarks>
+	public delegate void SKGraphiteFinishedDelegate (bool success);
+
 	/// <summary>Represents a callback method that receives the path and transformation matrix for each glyph when enumerating glyph paths.</summary>
 	/// <param name="path">The path of the glyph, or <see langword="null" /> if the glyph has no path.</param>
 	/// <param name="matrix">The transformation matrix to position the glyph.</param>
@@ -155,6 +160,16 @@ namespace SkiaSharp
 			var del = Get<SKGraphiteReleaseDelegate> ((IntPtr)releaseContext, out var gch);
 			try {
 				del.Invoke ();
+			} finally {
+				gch.Free ();
+			}
+		}
+
+		private static partial void SKGraphiteFinishedProxyImplementation (void* finishedContext, bool success)
+		{
+			var del = Get<SKGraphiteFinishedDelegate> ((IntPtr)finishedContext, out var gch);
+			try {
+				del.Invoke (success);
 			} finally {
 				gch.Free ();
 			}
