@@ -133,7 +133,7 @@ extends:
                     $ErrorActionPreference = 'Stop'
                     Write-Host "OS: $([Runtime.InteropServices.RuntimeInformation]::OSDescription)"
                     Write-Host "Architecture: $([Runtime.InteropServices.RuntimeInformation]::OSArchitecture)"
-                    $dotnet = Get-Command dotnet -CommandType Application -ErrorAction SilentlyContinue
+                    $dotnet = Get-Command dotnet -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
                     if ($dotnet) {
                         & $dotnet.Source --list-sdks
                         & $dotnet.Source --list-runtimes
@@ -230,11 +230,13 @@ extends:
                                 do {
                                     $driver.Refresh()
                                     if ($driver.HasExited) { throw "Owned WinAppDriver exited with code $($driver.ExitCode)." }
-                                    $status = & curl.exe --silent --show-error --max-time 2 "http://127.0.0.1:$port/status"
+                                    $status = & curl.exe --fail --silent --show-error --max-time 2 "http://127.0.0.1:$port/status"
                                     if ($LASTEXITCODE -eq 0) {
                                         Write-Host "WinAppDriver status: $status"
                                         $response = $status | ConvertFrom-Json
-                                        if ($response.status -ne 0) { throw 'WinAppDriver reported an unsuccessful status.' }
+                                        if ([string]::IsNullOrWhiteSpace($response.build.version) -or $response.os.name -ne 'windows') {
+                                            throw 'WinAppDriver status did not contain the expected build and Windows OS metadata.'
+                                        }
                                         $ready = $true
                                         break
                                     }
