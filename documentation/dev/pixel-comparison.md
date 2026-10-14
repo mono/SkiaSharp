@@ -83,6 +83,8 @@ public readonly struct SKPixelTolerance : IEquatable<SKPixelTolerance>
     public static SKPixelTolerance Percent(double value);
     /// <summary>Gets the effective allowance in byte units, including fractional values such as 1.275.</summary>
     public double Value { get; }
+    /// <summary>Tests whether a finite nonnegative absolute channel difference is within this allowance.</summary>
+    public bool Allows(double absoluteDifference);
     /// <summary>Tests equality of effective byte allowances, regardless of which factory created them.</summary>
     public bool Equals(SKPixelTolerance other);
     /// <summary>Tests whether the object is a scalar tolerance with the same effective allowance.</summary>
@@ -112,10 +114,8 @@ public sealed class SKPixelComparerOptions
     public SKAlphaType AlphaType { get; set; }
     /// <summary>Gets or sets a borrowed same-size mask that widens enabled channel allowances; alpha is a threshold, not coverage.</summary>
     public SKImage? ToleranceMask { get; set; }
-    /// <summary>Gets or sets an inclusive maximum rejected-pixel count; null imposes no count limit.</summary>
-    public long? MaxErrorPixels { get; set; }
-    /// <summary>Gets or sets an inclusive rejected-pixel fraction from 0 to 1, converted to a floor-based count budget.</summary>
-    public double? MaxErrorPixelFraction { get; set; }
+    /// <summary>Gets or sets the count/percentage rejected-pixel budget; null imposes no pixel-budget gate when RMS is configured.</summary>
+    public SKPixelErrorBudget? ErrorBudget { get; set; }
     /// <summary>Gets or sets an inclusive raw normalized RMS limit from 0 to 1, independent of channel tolerance.</summary>
     public double? MaxNormalizedRootMeanSquaredError { get; set; }
 }
@@ -178,11 +178,42 @@ public enum SKPixelDifferenceStyle
     /// <summary>Uses red for rejection, amber for tolerated differences, and dimmed actual RGB for matches.</summary>
     ThresholdOverlay = 2,
 }
+
+/// <summary>Represents an inclusive rejected-pixel count cap, percentage cap, or both.</summary>
+public readonly struct SKPixelErrorBudget : IEquatable<SKPixelErrorBudget>
+{
+    /// <summary>Creates the default budget, equivalent to Exact.</summary>
+    public SKPixelErrorBudget();
+    /// <summary>Gets a budget allowing zero rejected pixels.</summary>
+    public static SKPixelErrorBudget Exact { get; }
+    /// <summary>Creates an inclusive nonnegative rejected-pixel count cap.</summary>
+    public static SKPixelErrorBudget Pixels(long maximum);
+    /// <summary>Creates a rejected-pixel percentage cap from 0 through 100 percentage points.</summary>
+    public static SKPixelErrorBudget Percent(double maximum);
+    /// <summary>Creates simultaneous count and percentage caps; both must pass.</summary>
+    public static SKPixelErrorBudget Both(long pixels, double percent);
+    /// <summary>Gets the count cap, or null for a percentage-only budget.</summary>
+    public long? MaxPixels { get; }
+    /// <summary>Gets the cap in percentage points, or null for a count-only budget.</summary>
+    public double? MaxPercent { get; }
+    /// <summary>Tests valid rejected/compared counts against the configured caps, with inclusive floor-based percentage acceptance.</summary>
+    public bool Allows(long errorPixels, long comparedPixels);
+    /// <summary>Tests equality of configured budget caps.</summary>
+    public bool Equals(SKPixelErrorBudget other);
+    /// <summary>Tests whether an object is an equal error budget.</summary>
+    public override bool Equals(object? obj);
+    /// <summary>Returns a hash consistent with equality of configured caps.</summary>
+    public override int GetHashCode();
+    /// <summary>Tests whether two budgets are equal.</summary>
+    public static bool operator ==(SKPixelErrorBudget left, SKPixelErrorBudget right);
+    /// <summary>Tests whether two budgets differ.</summary>
+    public static bool operator !=(SKPixelErrorBudget left, SKPixelErrorBudget right);
+}
 ```
 
-The six public types are `SKPixelComparer`, `SKPixelComparerOptions`,
+The seven public types are `SKPixelComparer`, `SKPixelComparerOptions`,
 `SKPixelTolerance`, `SKPixelComparisonResult`, `SKPixelComparisonMetrics`,
-and `SKPixelDifferenceStyle`. Results/metrics have no public constructors.
+`SKPixelDifferenceStyle`, and `SKPixelErrorBudget`. Results/metrics have no public constructors.
 Settings have a normal public constructor and writable properties; comparison
 snapshots them without retaining native inputs.
 
@@ -208,7 +239,7 @@ var options = new SKPixelComparerOptions
     GreenTolerance = SKPixelTolerance.Absolute(20),
     BlueTolerance = SKPixelTolerance.Absolute(2),
     AlphaTolerance = SKPixelTolerance.Absolute(2),
-    MaxErrorPixelFraction = 0.002,
+    ErrorBudget = SKPixelErrorBudget.Percent(0.2),
 };
 
 var result = SKPixelComparer.Compare(expected, actual, options);
@@ -270,6 +301,10 @@ A selected channel rejects a pixel only when its absolute difference is
 is rejected if any enabled channel rejects it. An absolute allowance is not
 named `Exact(10, ...)`, since a nonzero allowance is not exact equality.
 
+`tolerance.Allows(absoluteDifference)` owns this inclusive boundary and rejects
+invalid negative/non-finite differences. A disabled channel is excluded by
+options; it is not represented by an infinite tolerance.
+
 ## Limits: how much whole-image error is acceptable?
 
 Tolerance classifies individual samples. Limits evaluate the complete
@@ -279,16 +314,43 @@ The optional properties on `SKPixelComparerOptions` are:
 
 | Property | Units and decision |
 | --- | --- |
-| `MaxErrorPixels` | Nonnegative count; rejected count must be no greater |
-| `MaxErrorPixelFraction` | Fraction 0-1; rejected count must be no greater than `floor(totalPixels * fraction)` |
+| `ErrorBudget` | Inclusive pixel count, percentage, or simultaneous count and percentage caps |
 | `MaxNormalizedRootMeanSquaredError` | Raw selected-channel normalized RMS, 0-1; measured value must be no greater |
 
 All configured limits must pass. With no limits, `IsMatch` means zero rejected
 pixels under the selected tolerance. An RMS-only limit does not secretly impose
 zero rejected pixels.
 
-For example, a tolerance of 2 ignores small rounding changes at any pixel. A
-fraction limit of 0.002 additionally allows up to 0.2% of pixels to exceed that
+```csharp
+var count = SKPixelErrorBudget.Pixels(20);
+var percentage = SKPixelErrorBudget.Percent(0.3); // 0.3% of image pixels.
+var both = SKPixelErrorBudget.Both(pixels: 20, percent: 0.3);
+bool allowed = both.Allows(errorPixels: 3, comparedPixels: 1000);
+var options = new SKPixelComparerOptions { ErrorBudget = both };
+```
+
+Count and percentage caps can differ when image area changes. `Both(20, 0.3)`
+allows 3 rejected pixels in a 1,000-pixel image and 20 in a 10,000-pixel image:
+the stricter cap wins. Default budget and `Exact` allow zero rejected pixels.
+Budget `Percent` uses 0-100 percentage points of compared pixels, not the 0-1
+fraction used by RMS or the channel range used by tolerance percentages.
+`MaxPixels` and `MaxPercent` expose the configured caps; `Allows` receives both
+counts because percentage acceptance depends on the denominator. Invalid or
+zero comparison coverage is rejected, not treated as a vacuous match.
+
+Percentage budgets floor using the percentage's round-trip decimal
+representation, so `Percent(0.3)` allows exactly 3 of 1,000 pixels rather than
+losing a pixel to the binary representation of 0.3. The calculation also avoids
+rounding count limits upward for very large denominators. Channel tolerance
+still retains its effective floating-point byte threshold; it does not floor it.
+
+`ErrorBudget = null` leaves only the RMS gate when RMS is configured; with both
+settings unset, comparison is strict under the channel tolerances.
+`ErrorBudget = Exact` explicitly requires zero rejected pixels even alongside
+RMS. Budget and RMS gates combine with AND; neither changes raw measurements.
+
+For example, a tolerance of 2 ignores small rounding changes at any pixel. An
+error budget of `Percent(0.2)` additionally allows up to 0.2% of pixels to exceed that
 tolerance. This is different from allowing a per-channel difference of 0.2% of
 255. Increasing tolerance does not lower the raw RMS measurement.
 
