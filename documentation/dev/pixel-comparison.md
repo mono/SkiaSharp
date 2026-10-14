@@ -45,16 +45,97 @@ built-in MAE acceptance property is an additive follow-up, not implemented today
 
 ### API shape
 
-For each of `SKImage`, `SKBitmap`, and `SKPixmap`, the entry points are:
+The complete public surface is shown below. These are declaration-only
+signatures, not executable implementation code; implicit constructors are
+listed explicitly. Private/internal implementation members are omitted.
 
 ```csharp
-// Signature summary; equivalent decoded-type overloads are provided.
-SKPixelComparisonResult Compare(SKImage first, SKImage second);
-SKPixelComparisonResult Compare(SKImage first, SKImage second, SKPixelComparerOptions? options);
-SKImage GenerateDifferenceImage(SKImage first, SKImage second);
-SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelComparerOptions? options);
-SKImage GenerateDifferenceImage(
-    SKImage first, SKImage second, SKPixelComparerOptions? options, SKPixelDifferenceStyle style);
+namespace SkiaSharp.Testing;
+
+public static class SKPixelComparer
+{
+    public static SKPixelComparisonResult Compare(SKImage first, SKImage second);
+    public static SKPixelComparisonResult Compare(SKImage first, SKImage second, SKPixelComparerOptions? options);
+    public static SKPixelComparisonResult Compare(SKBitmap first, SKBitmap second);
+    public static SKPixelComparisonResult Compare(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options);
+    public static SKPixelComparisonResult Compare(SKPixmap first, SKPixmap second);
+    public static SKPixelComparisonResult Compare(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options);
+
+    public static SKImage GenerateDifferenceImage(SKImage first, SKImage second);
+    public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelComparerOptions? options);
+    public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelComparerOptions? options, SKPixelDifferenceStyle style);
+    public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second);
+    public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options);
+    public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options, SKPixelDifferenceStyle style);
+    public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second);
+    public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options);
+    public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options, SKPixelDifferenceStyle style);
+}
+
+public readonly struct SKPixelTolerance : IEquatable<SKPixelTolerance>
+{
+    public SKPixelTolerance();
+    public static SKPixelTolerance Exact { get; }
+    public static SKPixelTolerance Absolute(int value);
+    public static SKPixelTolerance Absolute(int? red, int? green, int? blue, int? alpha);
+    public static SKPixelTolerance Percent(double value);
+    public static SKPixelTolerance Percent(double? red, double? green, double? blue, double? alpha);
+    public double? Red { get; }
+    public double? Green { get; }
+    public double? Blue { get; }
+    public double? Alpha { get; }
+    public int ChannelCount { get; }
+    public bool Equals(SKPixelTolerance other);
+    public override bool Equals(object? obj);
+    public override int GetHashCode();
+    public static bool operator ==(SKPixelTolerance left, SKPixelTolerance right);
+    public static bool operator !=(SKPixelTolerance left, SKPixelTolerance right);
+}
+
+public sealed class SKPixelComparerOptions
+{
+    public SKPixelComparerOptions();
+    public SKPixelTolerance Tolerance { get; set; }
+    public SKAlphaType AlphaType { get; set; }
+    public SKImage? ToleranceMask { get; set; }
+    public long? MaxErrorPixels { get; set; }
+    public double? MaxErrorPixelFraction { get; set; }
+    public double? MaxNormalizedRootMeanSquaredError { get; set; }
+}
+
+public sealed class SKPixelComparisonResult
+{
+    public bool IsMatch { get; }
+    public int TotalPixels { get; }
+    public int ChannelCount { get; }
+    public int ErrorPixelCount { get; }
+    public double ErrorPixelFraction { get; }
+    public int MaxChannelDelta { get; }
+    public SKRectI? ErrorBounds { get; }
+    public SKPixelComparisonMetrics RawMetrics { get; }
+    public SKPixelComparisonMetrics ThresholdedMetrics { get; }
+}
+
+public sealed class SKPixelComparisonMetrics
+{
+    public int TotalPixels { get; }
+    public int ChannelCount { get; }
+    public long SampleCount { get; }
+    public long AbsoluteError { get; }
+    public long SumSquaredError { get; }
+    public double MeanAbsoluteError { get; }
+    public double MeanSquaredError { get; }
+    public double RootMeanSquaredError { get; }
+    public double NormalizedRootMeanSquaredError { get; }
+    public double PeakSignalToNoiseRatio { get; }
+}
+
+public enum SKPixelDifferenceStyle
+{
+    BinaryMask = 0,
+    ChannelDelta = 1,
+    ThresholdOverlay = 2,
+}
 ```
 
 The six public types are `SKPixelComparer`, `SKPixelComparerOptions`,
