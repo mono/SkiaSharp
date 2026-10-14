@@ -55,35 +55,8 @@ public SKShader ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingO
 
 ## Experimental APIs
 
-Use `System.Diagnostics.CodeAnalysis.ExperimentalAttribute` for new APIs that
-may change while collecting feedback. The package still follows normal release
-versioning; this attribute does not require a preview runtime or language version.
-Do not retroactively mark existing stable APIs experimental to relax their ABI
-contract.
-
-Allocate `SKIA` plus four digits per independently opted-in SkiaSharp feature;
-HarfBuzzSharp is a separate product and uses `HARFBUZZ` plus four digits.
-Use the [experimental API policy and registry](experimental-apis.md)
-as the single source of truth.
-Several related APIs may share one ID; unrelated features must not share an ID,
-because suppressing it opts into every API carrying that ID. Record new IDs there
-and never reuse a retired ID for another feature.
-
-Use assembly scope only when the entire component is experimental, as with
-`SkiaSharp.Testing`. In a stable product or views assembly, annotate only the new
-experimental type or member, leaving existing APIs unaffected. Give a future
-independent feature the next unused ID in its family rather than extending
-`SKIA4001`.
-
-Consumers explicitly opt in with `<NoWarn>$(NoWarn);SKIA4001</NoWarn>` or a narrower
-`#pragma warning disable SKIA4001`. This is a compiler diagnostic, not a runtime
-feature switch. Before .NET 8, preserve the attribute metadata with an internal
-compatibility definition; older compilers may not enforce the diagnostic.
-Remove the attribute when the feature becomes stable and retain its registry
-entry as retired. See [.NET preview API guidance](https://learn.microsoft.com/dotnet/fundamentals/runtime-libraries/preview-apis).
-
-The older `SK00xx` / `SK0x0x` / `SKx00x` categories in `SkiaSharp.Build.props`
-describe build-warning namespaces, not experimental feature opt-ins.
+For evolving APIs, follow the [experimental API policy and diagnostic registry](experimental-apis.md).
+Existing stable API contracts remain unchanged.
 
 ---
 
