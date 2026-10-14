@@ -146,10 +146,6 @@ public sealed class SKPixelComparisonResult
 /// <summary>Contains raw or thresholded error measurements using the same compared-pixel and enabled-channel denominator.</summary>
 public sealed class SKPixelComparisonMetrics
 {
-    /// <summary>Gets all compared pixels; identical to the result and other metric group, not just rejected pixels.</summary>
-    public int TotalPixels { get; }
-    /// <summary>Gets enabled channels per pixel; identical for raw and thresholded metrics.</summary>
-    public int ChannelCount { get; }
     /// <summary>Gets total compared pixels times enabled channels; tolerated samples remain in this denominator.</summary>
     public long SampleCount { get; }
     /// <summary>Gets the 64-bit absolute-difference sum; thresholded metrics replace tolerated channel deltas with zero.</summary>
@@ -292,7 +288,8 @@ This encodes selection without another options flag or enum.
 converts each value to a percentage of the full channel range without rounding:
 0.5% of 255 is 1.275, so a difference of 1 passes and 2 fails.
 The scalar's `Value` property exposes the effective byte-unit allowance.
-`ChannelCount` belongs to the result/metrics, not the scalar tolerance.
+`ChannelCount` belongs to the comparison result, not the scalar tolerance or
+individual metric groups.
 There is no uniform-tolerance constructor or competing aggregate `Tolerance`
 property; set the four named properties when a uniform allowance is needed.
 
@@ -379,8 +376,9 @@ image from being reported as having zero raw RMS merely because the classifier
 ignored its differences. Result and metric objects have controlled construction
 and retain no native inputs.
 
-`TotalPixels`, `ChannelCount` and `SampleCount` are identical in both metric
-groups. For 100 pixels with four enabled channels, both groups divide by 400,
+`TotalPixels` and `ChannelCount` are exposed once on the comparison result.
+Both metric groups have the same `SampleCount`, their product. For 100 pixels
+with four enabled channels, both groups divide by 400,
 even if only one channel sample exceeds tolerance. Thresholded MAE/MSE measure
 remaining error across the whole image, not average severity among rejected
 samples. No member reports the count of exceeding channel samples.
