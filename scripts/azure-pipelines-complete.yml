@@ -62,7 +62,7 @@ parameters:
     default:
       pool:
         name: AcesShared
-        demands: ImageOverride -equals ACES_VM_SharedPool_Sequoia
+        demands: ImageOverride -equals ACES_VM_SharedPool_Tahoe
         os: macos
   - name: buildAgentMacNative
     displayName: 'The macOS build agent configuration for building the native assets:'
@@ -133,17 +133,26 @@ extends:
                     $ErrorActionPreference = 'Stop'
                     Write-Host "OS: $([Runtime.InteropServices.RuntimeInformation]::OSDescription)"
                     Write-Host "Architecture: $([Runtime.InteropServices.RuntimeInformation]::OSArchitecture)"
+                    $dotnet = Get-Command dotnet -CommandType Application -ErrorAction SilentlyContinue
+                    if ($dotnet) {
+                        & $dotnet.Source --list-sdks
+                        & $dotnet.Source --list-runtimes
+                    }
+                    else { Write-Host 'No preinstalled dotnet command on PATH.' }
                     if ($IsMacOS) {
                         & sw_vers
                         $original = $env:DEVELOPER_DIR
                         try {
-                            foreach ($app in Get-ChildItem /Applications -Directory -Filter 'Xcode_*.app' | Sort-Object Name) {
+                            foreach ($app in Get-ChildItem /Applications -Directory -Filter 'Xcode*.app' | Sort-Object Name) {
                                 $env:DEVELOPER_DIR = Join-Path $app.FullName 'Contents/Developer'
                                 Write-Host "`nXcode: $($app.FullName)"
                                 & xcodebuild -version
                                 & xcodebuild -showsdks
-                                & xcrun simctl list runtimes --json
+                                $json = & xcrun simctl list runtimes --json
                                 if ($LASTEXITCODE -ne 0) { throw "Runtime query failed for $($app.Name)." }
+                                ($json | ConvertFrom-Json).runtimes |
+                                    Select-Object name, version, buildversion, isAvailable |
+                                    Format-Table -AutoSize
                             }
                             if ('${{ parameters.probeIosRuntime }}' -eq 'True') {
                                 $env:DEVELOPER_DIR = '/Applications/Xcode_26.3.app/Contents/Developer'
