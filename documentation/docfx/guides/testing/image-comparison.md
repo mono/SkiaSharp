@@ -12,9 +12,9 @@ and test-framework assertions remain the caller's responsibility.
 
 ![Illustration of an expected image and an actual image with a slightly changed blue panel and an added red bar.](images/comparison-inputs.svg)
 
-The illustrations below use this simple scene: the blue panel changes by two
-byte levels per RGB channel, and a new red bar appears. They illustrate the
-comparison rules rather than screenshots from a particular platform.
+The blue panel changes from RGB **(37, 99, 235)** to **(39, 101, 237)**:
+just +2 per channel, deliberately hard to see. A new red bar is also added.
+These illustrations explain comparison rules, not a particular platform's output.
 
 ## Set up
 
@@ -121,8 +121,23 @@ from the binary mask. The added bar still mismatches. Raw channel differences
 are not thresholded: the panel remains a very faint difference, while the bar
 has a strong signal.
 
+**Overlay colors classify pixels; they do not show the size of a difference.**
+Even a one-level tolerated change is solid amber. Red means an allowance was
+exceeded, dimmed actual RGB means an exact selected-channel match, and gray means
+excluded coverage.
+
 Limits affect acceptance, not diagnostic classification. Use the same options
 for comparison and difference generation.
+
+### Alpha-only differences
+
+![Illustration of the same blue RGB at alpha 255 and 128, an RGBA overlay detecting the change, and a black raw RGB difference image.](images/comparison-alpha.svg)
+
+The rectangles have identical RGB **(0, 0, 255)** but alpha **255** and **128**.
+The checkerboard is only a viewing background for transparency. Default exact
+RGBA comparison detects the change; `ChannelDifference` stays black because it
+does not display alpha. Set `AlphaTolerance = null` only when alpha is
+intentionally outside the comparison.
 
 ## Tolerance and ignore masks
 
@@ -135,18 +150,34 @@ Both masks are optional, caller-owned `SKImage` objects with the input dimension
   RGB ignores, independently of mask alpha or enabled comparison channels.
   Ignore masks are read as unpremultiplied data without drawing or compositing.
 
-Ignored pixels contribute no errors, mismatches, maxima or bounds.
+### Tolerate a region
+
+![A dark gray tolerance-mask panel with RGB values 32, and an overlay that tolerates the blue panel's small difference but still rejects the added bar.](images/comparison-tolerance.svg)
+
+This example starts with exact RGB global allowances (`AlphaTolerance = null`).
+The mask's dark gray panel has RGB **(32, 32, 32)**, allowing up to 32 byte levels
+per channel there; black outside allows zero. The +2 panel differences are amber,
+but remain in raw metrics and the sample denominator. The unmasked red bar fails.
+
+### Exclude a region
+
+![A white ignore-mask panel and an overlay marking that panel gray, while the unmasked added bar still fails.](images/comparison-ignore.svg)
+
+With the same exact RGB settings, a white region in `IgnoreMask` excludes that
+panel completely. Gray makes the lost coverage visible. The red bar still fails.
+Use exclusions only for regions intentionally outside the test's coverage,
+not to hide an unexpected change.
+
+| Effect in the marked region | Tolerance mask | Ignore mask |
+| --- | --- | --- |
+| Classify the small difference | Tolerated (amber) | Not compared (gray) |
+| Include raw differences | Yes | No |
+| Include samples in the denominator | Yes | No |
+
 `TotalPixels` remains the image area; `ComparedPixelCount` and `IgnoredPixelCount`
 report coverage, and fractions/budgets use only compared pixels. Ignoring every
 pixel is invalid. Ignored diagnostics are black in binary/channel-difference
 styles and neutral gray in overlays.
-
-![Illustration of an ignore mask covering the added bar and an overlay marking that excluded area gray.](images/comparison-ignore.svg)
-
-The white mask region excludes the bar; gray in the overlay makes that lost
-coverage visible. The blue panel is still compared and remains amber at
-tolerance 2. Use exclusions only for regions intentionally outside the test's
-coverage, not to hide an unexpected change.
 
 Inputs and masks must stay alive and unmodified during each synchronous call.
 Results retain no native inputs; returned difference images are independently
