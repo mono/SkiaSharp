@@ -7,6 +7,21 @@ namespace SkiaSharp.Tests;
 public class SKPixelComparerTest
 {
 	[Fact]
+	public void MetricGroupsExposeOnlyTheirSharedSampleDenominator()
+	{
+		Assert.Null(typeof(SKPixelComparisonMetrics).GetProperty("TotalPixels"));
+		Assert.Null(typeof(SKPixelComparisonMetrics).GetProperty("ChannelCount"));
+		var raw = new SKPixelComparisonMetrics(100, 4, 20, 40);
+		var thresholded = new SKPixelComparisonMetrics(100, 4, 10, 20);
+		Assert.Equal(400L, raw.SampleCount);
+		Assert.Equal(raw.SampleCount, thresholded.SampleCount);
+		Assert.Equal(0.05, raw.MeanAbsoluteError);
+		Assert.Equal(0.025, thresholded.MeanAbsoluteError);
+		Assert.Equal(0.1, raw.MeanSquaredError);
+		Assert.Equal(0.05, thresholded.MeanSquaredError);
+	}
+
+	[Fact]
 	public void PublicEntryPointsUseOptionalNullSettingsWithoutConvenienceOverloads()
 	{
 		var methods = typeof(SKPixelComparer).GetMethods(

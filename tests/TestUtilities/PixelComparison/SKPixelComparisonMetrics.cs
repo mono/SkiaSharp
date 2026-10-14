@@ -10,20 +10,13 @@ public sealed class SKPixelComparisonMetrics
 {
 	internal SKPixelComparisonMetrics(int totalPixels, int channelCount, long absoluteError, long sumSquaredError)
 	{
-		TotalPixels = totalPixels;
-		ChannelCount = channelCount;
+		SampleCount = (long)totalPixels * channelCount;
 		AbsoluteError = absoluteError;
 		SumSquaredError = sumSquaredError;
 	}
 
-	/// <summary>Gets all compared pixels; identical to the result and to the other metric group, regardless of tolerance.</summary>
-	public int TotalPixels { get; }
-
-	/// <summary>Gets the enabled channels per pixel; identical for raw and thresholded metrics.</summary>
-	public int ChannelCount { get; }
-
 	/// <summary>Gets total compared pixels times enabled channels; tolerated samples remain in this denominator.</summary>
-	public long SampleCount => (long)TotalPixels * ChannelCount;
+	public long SampleCount { get; }
 
 	/// <summary>Gets the sum of enabled-channel absolute byte differences; thresholded metrics replace tolerated differences with zero.</summary>
 	public long AbsoluteError { get; }
