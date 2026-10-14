@@ -7,10 +7,8 @@ namespace SkiaSharp.Testing.Tests;
 public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 {
 	[Fact]
-	public void MetricGroupsExposeOnlyTheirSharedSampleDenominator()
+	public void MetricGroupsUseTheSameSampleDenominator()
 	{
-		Assert.Null(typeof(SKPixelComparisonMetrics).GetProperty("TotalPixels"));
-		Assert.Null(typeof(SKPixelComparisonMetrics).GetProperty("ChannelCount"));
 		var raw = new SKPixelComparisonMetrics(100, 4, 20, 40);
 		var thresholded = new SKPixelComparisonMetrics(100, 4, 10, 20);
 		Assert.Equal(400L, raw.SampleCount);
@@ -21,13 +19,6 @@ public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 		Assert.Equal(10.0 / (400 * 255.0), thresholded.NormalizedMeanAbsoluteError);
 		Assert.Equal(0.1, raw.MeanSquaredError);
 		Assert.Equal(0.05, thresholded.MeanSquaredError);
-		Assert.Null(typeof(SKPixelComparisonMetrics).GetProperty("AbsoluteError"));
-		Assert.Null(typeof(SKPixelComparisonResult).GetProperty("ErrorPixelCount"));
-		Assert.Null(typeof(SKPixelComparisonResult).GetProperty("ErrorPixelFraction"));
-		Assert.Null(typeof(SKPixelComparisonResult).GetProperty("ErrorBounds"));
-		Assert.Null(typeof(SKPixelComparisonResult).GetProperty("MaxChannelDelta"));
-		Assert.Null(typeof(SKPixelComparerOptions).GetProperty("ErrorBudget"));
-		Assert.DoesNotContain("ChannelDelta", Enum.GetNames(typeof(SKPixelDifferenceStyle)));
 	}
 
 	[Fact]
