@@ -114,7 +114,7 @@ Raster is not bit-exact because the shared `raster/` golden is captured on one
 architecture and replayed on others. Tolerance is chosen by renderer alone —
 `GoldenTolerance.For` sees only the renderer name.
 
-The matrix uses [SkiaSharp.Testing](../docfx/testing/image-comparison.md) with
+The matrix uses [SkiaSharp.Testing](../docfx/guides/testing/image-comparison.md) with
 premultiplied RGBA, per-channel tolerance and the same floor-based outlier budget.
 Baseline lookup and GPU policy remain owned by this harness.
 
