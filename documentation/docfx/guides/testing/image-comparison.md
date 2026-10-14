@@ -44,17 +44,14 @@ using System.IO;
 using SkiaSharp;
 using SkiaSharp.Testing;
 
-using var expected = SKImage.FromEncodedData("expected.png")
-    ?? throw new InvalidOperationException("Unable to decode the reference.");
-using var actual = SKImage.FromEncodedData("actual.png")
-    ?? throw new InvalidOperationException("Unable to decode the actual image.");
+using var expected = SKImage.FromEncodedData("expected.png");
+using var actual = SKImage.FromEncodedData("actual.png");
 
 var result = SKPixelComparer.Compare(expected, actual);
 if (!result.IsMatch)
 {
     using var difference = SKPixelComparer.GenerateDifferenceImage(expected, actual);
-    using var png = difference.Encode(SKEncodedImageFormat.Png, 100)
-        ?? throw new InvalidOperationException("Unable to encode the difference.");
+    using var png = difference.Encode(SKEncodedImageFormat.Png, 100);
     File.WriteAllBytes("difference.png", png.ToArray());
     throw new InvalidOperationException(
         $"{result.MismatchedPixelCount} pixels differ.");
