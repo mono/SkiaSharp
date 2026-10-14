@@ -54,22 +54,13 @@ namespace SkiaSharp.Testing;
 
 public static class SKPixelComparer
 {
-    public static SKPixelComparisonResult Compare(SKImage first, SKImage second);
-    public static SKPixelComparisonResult Compare(SKImage first, SKImage second, SKPixelComparerOptions? options);
-    public static SKPixelComparisonResult Compare(SKBitmap first, SKBitmap second);
-    public static SKPixelComparisonResult Compare(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options);
-    public static SKPixelComparisonResult Compare(SKPixmap first, SKPixmap second);
-    public static SKPixelComparisonResult Compare(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options);
+    public static SKPixelComparisonResult Compare(SKImage first, SKImage second, SKPixelComparerOptions? options = null);
+    public static SKPixelComparisonResult Compare(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options = null);
+    public static SKPixelComparisonResult Compare(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options = null);
 
-    public static SKImage GenerateDifferenceImage(SKImage first, SKImage second);
-    public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelComparerOptions? options);
-    public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelDifferenceStyle style, SKPixelComparerOptions? options);
-    public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second);
-    public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options);
-    public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelDifferenceStyle style, SKPixelComparerOptions? options);
-    public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second);
-    public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options);
-    public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelDifferenceStyle style, SKPixelComparerOptions? options);
+    public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelDifferenceStyle style = SKPixelDifferenceStyle.ThresholdOverlay, SKPixelComparerOptions? options = null);
+    public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelDifferenceStyle style = SKPixelDifferenceStyle.ThresholdOverlay, SKPixelComparerOptions? options = null);
+    public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelDifferenceStyle style = SKPixelDifferenceStyle.ThresholdOverlay, SKPixelComparerOptions? options = null);
 }
 
 public readonly struct SKPixelTolerance : IEquatable<SKPixelTolerance>
@@ -174,8 +165,10 @@ using var diff = SKPixelComparer.GenerateDifferenceImage(
 ```
 
 The same overload families accept `SKImage`, `SKBitmap`, or `SKPixmap`. There are
-no positional tolerance or mask arguments, filename overloads, optional
-parameters, channels enum, or summed-tolerance mode.
+no positional tolerance or mask arguments, filename overloads, channels enum,
+or summed-tolerance mode. In this independent testing API, `options = null`
+selects the library's default settings. Difference style defaults to
+`ThresholdOverlay`; use `options: options` to supply settings without a style.
 
 ## Tolerance: how different may a sample be?
 
@@ -259,7 +252,7 @@ and retain no native inputs.
 ```csharp
 using var binary = SKPixelComparer.GenerateDifferenceImage(
     expected, actual, SKPixelDifferenceStyle.BinaryMask, options);
-using var overlay = SKPixelComparer.GenerateDifferenceImage(expected, actual, options);
+using var overlay = SKPixelComparer.GenerateDifferenceImage(expected, actual, options: options);
 using var delta = SKPixelComparer.GenerateDifferenceImage(
     expected, actual, SKPixelDifferenceStyle.ChannelDelta, options);
 ```
