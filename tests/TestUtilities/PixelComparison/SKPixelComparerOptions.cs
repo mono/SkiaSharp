@@ -30,11 +30,11 @@ public sealed class SKPixelComparerOptions
 	/// <remarks>Mask alpha is an alpha-channel threshold, not opacity coverage. The mask never enables an excluded channel, marks a pixel ignored, or changes metric denominators. The caller retains and must not mutate or dispose it during the call.</remarks>
 	public SKImage? ToleranceMask { get; set; }
 
-	/// <summary>Optional inclusive rejected-pixel budget for <see cref="SKPixelComparisonResult.IsMatch"/>; null imposes no count restriction when RMS is configured.</summary>
-	/// <remarks>Budget and RMS restrictions combine with AND. With both unset, IsMatch requires zero rejected pixels; an explicit Exact budget retains that requirement alongside an RMS limit.</remarks>
-	public SKPixelErrorBudget? ErrorBudget { get; set; }
+	/// <summary>Optional inclusive mismatched-pixel budget for <see cref="SKPixelComparisonResult.IsMatch"/>; null imposes no count restriction when RMS is configured.</summary>
+	/// <remarks>Budget and RMS restrictions combine with AND. With both unset, IsMatch requires zero mismatched pixels; an explicit Exact budget retains that requirement alongside an RMS limit.</remarks>
+	public SKPixelMismatchBudget? MismatchBudget { get; set; }
 
 	/// <summary>Optional inclusive maximum raw selected-channel normalized RMS error (0 through 1), independent of tolerance.</summary>
-	/// <remarks>This is a raw difference-magnitude limit, not a rejected-pixel fraction. Increasing tolerance or mask allowances does not reduce it; null imposes no RMS restriction.</remarks>
+	/// <remarks>This is a raw difference-magnitude limit, not a mismatched-pixel fraction. Increasing tolerance or mask allowances does not reduce it; null imposes no RMS restriction.</remarks>
 	public double? MaxNormalizedRootMeanSquaredError { get; set; }
 }

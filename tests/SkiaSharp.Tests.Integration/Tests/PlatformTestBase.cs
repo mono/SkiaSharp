@@ -196,10 +196,10 @@ public abstract class PlatformTestBase : IDisposable
             // Compare using SKPixelComparer
             var result = SKPixelComparer.Compare(expectedImage, compareActual, options);
             var similarity = result.TotalPixels > 0 
-                ? (1.0 - (double)result.ErrorPixelCount / result.TotalPixels) * 100 
+                ? (1.0 - (double)result.MismatchedPixelCount / result.TotalPixels) * 100
                 : 0;
             
-            Output.WriteLine($"Comparison: {result.TotalPixels} total, {result.ErrorPixelCount} errors, {result.RawMetrics.AbsoluteError} absolute error");
+            Output.WriteLine($"Comparison: {result.TotalPixels} total, {result.MismatchedPixelCount} mismatched pixels, {result.RawMetrics.SumAbsoluteError} sum absolute error");
             
             // Generate and save diff image
             using var diffImage = SKPixelComparer.GenerateDifferenceImage(expectedImage, compareActual, SKPixelDifferenceStyle.BinaryMask, options);

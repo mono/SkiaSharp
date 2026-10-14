@@ -116,12 +116,12 @@ public static class SKPixelComparer
 	private static SKPixelComparisonResult ComparePixels(SKBitmap first, SKBitmap second, SKBitmap? mask, Settings settings)
 	{
 		var totalPixels = checked(first.Width * first.Height);
-		var errorPixels = 0;
-		var maxDelta = 0;
-		var rawAbsolute = 0L;
-		var rawSquared = 0L;
-		var filteredAbsolute = 0L;
-		var filteredSquared = 0L;
+		var mismatchedPixels = 0;
+		var maxChannelDifference = 0;
+		var rawSumAbsoluteError = 0L;
+		var rawSumSquaredError = 0L;
+		var thresholdedSumAbsoluteError = 0L;
+		var thresholdedSumSquaredError = 0L;
 		var left = first.Width;
 		var top = first.Height;
 		var right = 0;
@@ -139,13 +139,13 @@ public static class SKPixelComparer
 		for (var i = 0; i < totalPixels; i++)
 		{
 			var delta = Evaluate(a[i], b[i], mask == null ? (SKColor?)null : m[i], settings);
-			rawAbsolute = checked(rawAbsolute + delta.RawAbsolute);
-			rawSquared = checked(rawSquared + delta.RawSquared);
-			filteredAbsolute = checked(filteredAbsolute + delta.FilteredAbsolute);
-			filteredSquared = checked(filteredSquared + delta.FilteredSquared);
-			if (delta.Rejected)
+			rawSumAbsoluteError = checked(rawSumAbsoluteError + delta.RawSumAbsoluteError);
+			rawSumSquaredError = checked(rawSumSquaredError + delta.RawSumSquaredError);
+			thresholdedSumAbsoluteError = checked(thresholdedSumAbsoluteError + delta.ThresholdedSumAbsoluteError);
+			thresholdedSumSquaredError = checked(thresholdedSumSquaredError + delta.ThresholdedSumSquaredError);
+			if (delta.Mismatched)
 			{
-				errorPixels++;
+				mismatchedPixels++;
 				var x = i % first.Width;
 				var y = i / first.Width;
 				left = Math.Min(left, x);
@@ -153,18 +153,18 @@ public static class SKPixelComparer
 				right = Math.Max(right, x + 1);
 				bottom = Math.Max(bottom, y + 1);
 			}
-			maxDelta = Math.Max(maxDelta, delta.MaxChannelDelta);
+			maxChannelDifference = Math.Max(maxChannelDifference, delta.MaxChannelDifference);
 		}
 
-		var raw = new SKPixelComparisonMetrics(totalPixels, settings.ChannelCount, rawAbsolute, rawSquared);
-		var filtered = new SKPixelComparisonMetrics(totalPixels, settings.ChannelCount, filteredAbsolute, filteredSquared);
-		var isMatch = (!settings.ErrorBudget.HasValue && !settings.MaxNormalizedRootMeanSquaredError.HasValue
-				? errorPixels == 0
-				: (!settings.ErrorBudget.HasValue || settings.ErrorBudget.Value.Allows(errorPixels, totalPixels))) &&
+		var raw = new SKPixelComparisonMetrics(totalPixels, settings.ChannelCount, rawSumAbsoluteError, rawSumSquaredError);
+		var thresholded = new SKPixelComparisonMetrics(totalPixels, settings.ChannelCount, thresholdedSumAbsoluteError, thresholdedSumSquaredError);
+		var isMatch = (!settings.MismatchBudget.HasValue && !settings.MaxNormalizedRootMeanSquaredError.HasValue
+				? mismatchedPixels == 0
+				: (!settings.MismatchBudget.HasValue || settings.MismatchBudget.Value.Allows(mismatchedPixels, totalPixels))) &&
 			(!settings.MaxNormalizedRootMeanSquaredError.HasValue ||
 				raw.NormalizedRootMeanSquaredError <= settings.MaxNormalizedRootMeanSquaredError.Value);
-		return new SKPixelComparisonResult(totalPixels, settings.ChannelCount, errorPixels, maxDelta,
-			errorPixels == 0 ? (SKRectI?)null : new SKRectI(left, top, right, bottom), raw, filtered, isMatch);
+		return new SKPixelComparisonResult(totalPixels, settings.ChannelCount, mismatchedPixels, maxChannelDifference,
+			mismatchedPixels == 0 ? (SKRectI?)null : new SKRectI(left, top, right, bottom), raw, thresholded, isMatch);
 	}
 
 	private static SKImage DifferenceImage(SKBitmap first, SKBitmap second, SKBitmap? mask, SKPixelDifferenceStyle style, Settings settings)
@@ -189,10 +189,10 @@ public static class SKPixelComparer
 			var delta = Evaluate(a[i], b[i], mask == null ? (SKColor?)null : m[i], settings);
 			pixels[i] = style switch
 			{
-				SKPixelDifferenceStyle.BinaryMask => delta.Rejected ? SKColors.White : SKColors.Black,
-				SKPixelDifferenceStyle.ChannelDelta => new SKColor((byte)delta.Red, (byte)delta.Green, (byte)delta.Blue),
-				_ => delta.Rejected ? SKColors.Red
-					: delta.MaxChannelDelta > 0 ? new SKColor(255, 200, 0)
+				SKPixelDifferenceStyle.BinaryMask => delta.Mismatched ? SKColors.White : SKColors.Black,
+				SKPixelDifferenceStyle.ChannelDifference => new SKColor((byte)delta.Red, (byte)delta.Green, (byte)delta.Blue),
+				_ => delta.Mismatched ? SKColors.Red
+					: delta.MaxChannelDifference > 0 ? new SKColor(255, 200, 0)
 					: new SKColor((byte)(b[i].Red / 4), (byte)(b[i].Green / 4), (byte)(b[i].Blue / 4)),
 			};
 		}
@@ -206,57 +206,62 @@ public static class SKPixelComparer
 		var g = Math.Abs(second.Green - first.Green);
 		var b = Math.Abs(second.Blue - first.Blue);
 		var a = Math.Abs(second.Alpha - first.Alpha);
-		var rawAbsolute = 0;
-		var rawSquared = 0L;
-		var filteredAbsolute = 0;
-		var filteredSquared = 0L;
-		var max = 0;
-		Accumulate(r, settings.RedTolerance, mask?.Red, ref rawAbsolute, ref rawSquared, ref filteredAbsolute, ref filteredSquared, ref max);
-		Accumulate(g, settings.GreenTolerance, mask?.Green, ref rawAbsolute, ref rawSquared, ref filteredAbsolute, ref filteredSquared, ref max);
-		Accumulate(b, settings.BlueTolerance, mask?.Blue, ref rawAbsolute, ref rawSquared, ref filteredAbsolute, ref filteredSquared, ref max);
-		Accumulate(a, settings.AlphaTolerance, mask?.Alpha, ref rawAbsolute, ref rawSquared, ref filteredAbsolute, ref filteredSquared, ref max);
-		return new PixelDifference(r, g, b, max, rawAbsolute, rawSquared, filteredAbsolute, filteredSquared);
+		var rawSumAbsoluteError = 0;
+		var rawSumSquaredError = 0L;
+		var thresholdedSumAbsoluteError = 0;
+		var thresholdedSumSquaredError = 0L;
+		var maxChannelDifference = 0;
+		Accumulate(r, settings.RedTolerance, mask?.Red, ref rawSumAbsoluteError, ref rawSumSquaredError,
+			ref thresholdedSumAbsoluteError, ref thresholdedSumSquaredError, ref maxChannelDifference);
+		Accumulate(g, settings.GreenTolerance, mask?.Green, ref rawSumAbsoluteError, ref rawSumSquaredError,
+			ref thresholdedSumAbsoluteError, ref thresholdedSumSquaredError, ref maxChannelDifference);
+		Accumulate(b, settings.BlueTolerance, mask?.Blue, ref rawSumAbsoluteError, ref rawSumSquaredError,
+			ref thresholdedSumAbsoluteError, ref thresholdedSumSquaredError, ref maxChannelDifference);
+		Accumulate(a, settings.AlphaTolerance, mask?.Alpha, ref rawSumAbsoluteError, ref rawSumSquaredError,
+			ref thresholdedSumAbsoluteError, ref thresholdedSumSquaredError, ref maxChannelDifference);
+		return new PixelDifference(r, g, b, maxChannelDifference, rawSumAbsoluteError, rawSumSquaredError,
+			thresholdedSumAbsoluteError, thresholdedSumSquaredError);
 	}
 
-	private static void Accumulate(int delta, SKPixelTolerance? allowance, byte? maskAllowance, ref int rawAbsolute, ref long rawSquared,
-		ref int filteredAbsolute, ref long filteredSquared, ref int max)
+	private static void Accumulate(int difference, SKPixelTolerance? allowance, byte? maskAllowance, ref int rawSumAbsoluteError, ref long rawSumSquaredError,
+		ref int thresholdedSumAbsoluteError, ref long thresholdedSumSquaredError, ref int maxChannelDifference)
 	{
 		if (!allowance.HasValue)
 			return;
-		rawAbsolute += delta;
-		rawSquared += (long)delta * delta;
-		max = Math.Max(max, delta);
-		if (!allowance.Value.Allows(delta) && (!maskAllowance.HasValue || delta > maskAllowance.Value))
+		rawSumAbsoluteError += difference;
+		rawSumSquaredError += (long)difference * difference;
+		maxChannelDifference = Math.Max(maxChannelDifference, difference);
+		if (!allowance.Value.Allows(difference) && (!maskAllowance.HasValue || difference > maskAllowance.Value))
 		{
-			filteredAbsolute += delta;
-			filteredSquared += (long)delta * delta;
+			thresholdedSumAbsoluteError += difference;
+			thresholdedSumSquaredError += (long)difference * difference;
 		}
 	}
 
 	private readonly struct PixelDifference
 	{
-		public PixelDifference(int red, int green, int blue, int maxChannelDelta, int rawAbsolute, long rawSquared,
-			int filteredAbsolute, long filteredSquared)
+		public PixelDifference(int red, int green, int blue, int maxChannelDifference, int rawSumAbsoluteError, long rawSumSquaredError,
+			int thresholdedSumAbsoluteError, long thresholdedSumSquaredError)
 		{
 			Red = red;
 			Green = green;
 			Blue = blue;
-			MaxChannelDelta = maxChannelDelta;
-			RawAbsolute = rawAbsolute;
-			RawSquared = rawSquared;
-			FilteredAbsolute = filteredAbsolute;
-			FilteredSquared = filteredSquared;
+			MaxChannelDifference = maxChannelDifference;
+			RawSumAbsoluteError = rawSumAbsoluteError;
+			RawSumSquaredError = rawSumSquaredError;
+			ThresholdedSumAbsoluteError = thresholdedSumAbsoluteError;
+			ThresholdedSumSquaredError = thresholdedSumSquaredError;
 		}
 
 		public int Red { get; }
 		public int Green { get; }
 		public int Blue { get; }
-		public int MaxChannelDelta { get; }
-		public int RawAbsolute { get; }
-		public long RawSquared { get; }
-		public int FilteredAbsolute { get; }
-		public long FilteredSquared { get; }
-		public bool Rejected => FilteredAbsolute > 0;
+		public int MaxChannelDifference { get; }
+		public int RawSumAbsoluteError { get; }
+		public long RawSumSquaredError { get; }
+		public int ThresholdedSumAbsoluteError { get; }
+		public long ThresholdedSumSquaredError { get; }
+		public bool Mismatched => ThresholdedSumAbsoluteError > 0;
 	}
 
 	private readonly struct Settings
@@ -271,7 +276,7 @@ public static class SKPixelComparer
 				(BlueTolerance.HasValue ? 1 : 0) + (AlphaTolerance.HasValue ? 1 : 0);
 			AlphaType = options?.AlphaType ?? SKAlphaType.Unpremul;
 			Mask = options?.ToleranceMask;
-			ErrorBudget = options?.ErrorBudget;
+			MismatchBudget = options?.MismatchBudget;
 			MaxNormalizedRootMeanSquaredError = options?.MaxNormalizedRootMeanSquaredError;
 			if (ChannelCount == 0)
 				throw new ArgumentException("At least one channel must be enabled.", nameof(options));
@@ -288,7 +293,7 @@ public static class SKPixelComparer
 		public int ChannelCount { get; }
 		public SKAlphaType AlphaType { get; }
 		public SKImage? Mask { get; }
-		public SKPixelErrorBudget? ErrorBudget { get; }
+		public SKPixelMismatchBudget? MismatchBudget { get; }
 		public double? MaxNormalizedRootMeanSquaredError { get; }
 
 		private static bool InvalidFraction(double? value) =>
@@ -428,7 +433,7 @@ public static class SKPixelComparer
 	private static void ValidateStyle(SKPixelDifferenceStyle style)
 	{
 		if (style != SKPixelDifferenceStyle.BinaryMask &&
-			style != SKPixelDifferenceStyle.ChannelDelta &&
+			style != SKPixelDifferenceStyle.ChannelDifference &&
 			style != SKPixelDifferenceStyle.ThresholdOverlay)
 			throw new ArgumentOutOfRangeException(nameof(style));
 	}

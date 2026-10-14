@@ -122,7 +122,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 				GreenTolerance = SKPixelTolerance.Absolute(tolerance.ChannelTolerance),
 				BlueTolerance = SKPixelTolerance.Absolute(tolerance.ChannelTolerance),
 				AlphaTolerance = SKPixelTolerance.Absolute(tolerance.ChannelTolerance),
-				ErrorBudget = SKPixelErrorBudget.Percent(tolerance.MaxOutlierFraction * 100),
+				MismatchBudget = SKPixelMismatchBudget.Percent(tolerance.MaxOutlierFraction * 100),
 			};
 
 			using var actualImage = ToImage(actual, normalized);
@@ -145,8 +145,8 @@ namespace SkiaSharp.Tests.Visual.Tests
 
 			Assert.Fail(
 				$"Visual regression for '{rendererName}/{sceneName}' against golden '{golden.Location}'. " +
-				$"{result.ErrorPixelCount}/{result.TotalPixels} pixels exceed the per-channel tolerance of {tolerance.ChannelTolerance} " +
-				$"(allowed outliers: {allowedOutliers}); max observed channel delta {result.MaxChannelDelta}. " +
+				$"{result.MismatchedPixelCount}/{result.TotalPixels} pixels exceed the per-channel tolerance of {tolerance.ChannelTolerance} " +
+				$"(allowed outliers: {allowedOutliers}); max observed channel difference {result.MaxChannelDifference}. " +
 				ArtifactSuffix(actualPath, diffPath) +
 				$"The rendered PNG is in the test results as a {ActualImageMarker} marker. " +
 				"If this change is expected, harvest it with scripts/infra/tests/extract-visual-goldens.py and commit; " +

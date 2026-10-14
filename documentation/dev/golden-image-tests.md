@@ -102,7 +102,7 @@ the CPU baseline.
 
 ## Tolerance
 
-`GoldenTolerance` gives each test a `ChannelTolerance` (max per-channel delta)
+`GoldenTolerance` gives each test a `ChannelTolerance` (maximum per-channel difference)
 and a `MaxOutlierFraction` (share of pixels allowed to exceed it).
 
 | Renderer | Tolerance |
@@ -118,7 +118,8 @@ The [shared pixel comparer](pixel-comparison.md) lives in
 `tests/TestUtilities/PixelComparison/`, not in the shipping SkiaSharp assembly.
 The matrix supplies premultiplied RGBA comparison through
 `SKPixelTolerance.Absolute(ChannelTolerance)` and configures
-`ErrorBudget.Percent(MaxOutlierFraction * 100)` in the same options object.
+`MismatchBudget = SKPixelMismatchBudget.Percent(MaxOutlierFraction * 100)`
+in the same options object.
 `IsMatch` applies the existing
 floor-based outlier budget, while the threshold-overlay diff keeps the red/amber
 diagnostics. Baseline lookup and GPU policy remain owned by this harness.

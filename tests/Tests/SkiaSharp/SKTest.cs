@@ -222,7 +222,7 @@ namespace SkiaSharp.Tests
 
 			try
 			{
-				Assert.True(result.ErrorPixelFraction < percentage);
+				Assert.True(result.MismatchedPixelFraction < percentage);
 			}
 			catch
 			{

@@ -109,19 +109,19 @@ internal static class SampleImage
             AlphaType = SKAlphaType.Premul,
         };
         var result = SKPixelComparer.Compare(expectedImage, actualImage, comparisonOptions);
-        var averageColorErrorFraction = result.RawMetrics.AbsoluteError / (result.TotalPixels * 4.0 * 255);
+        var averageColorErrorFraction = result.RawMetrics.NormalizedMeanAbsoluteError;
         var comparison = maxAverageColorErrorFraction is { } limit
             ? $"average RGBA color error {averageColorErrorFraction:P3}, exceeding {limit:P3}"
-            : $"differing pixels {(decimal)result.ErrorPixelCount / result.TotalPixels:P3}, exceeding {maxErrorPixelFraction:P3}";
+            : $"differing pixels {(decimal)result.MismatchedPixelCount / result.TotalPixels:P3}, exceeding {maxErrorPixelFraction:P3}";
         TestContext.Current.TestOutputHelper?.WriteLine(
-            $"Image comparison: {result.ErrorPixelCount}/{result.TotalPixels} pixels differ; " +
+            $"Image comparison: {result.MismatchedPixelCount}/{result.TotalPixels} pixels differ; " +
             $"average RGBA color error {averageColorErrorFraction:P3}; " +
             (maxAverageColorErrorFraction is { } allowed
                 ? $"allowed average color error {allowed:P3}."
                 : $"allowed differing pixels {maxErrorPixelFraction:P3}."));
         if (maxAverageColorErrorFraction is { } averageLimit
             ? averageColorErrorFraction <= averageLimit
-            : result.ErrorPixelCount <= result.TotalPixels * maxErrorPixelFraction)
+            : result.MismatchedPixelCount <= result.TotalPixels * maxErrorPixelFraction)
         {
             if (!reportMismatch)
                 TestContext.Current.AddFileAttachment(actual, "image/png");
@@ -140,7 +140,7 @@ internal static class SampleImage
         TestContext.Current.AddFileAttachment(expected, "image/png", $"expected-{Path.GetFileName(expected)}");
         TestContext.Current.AddFileAttachment(diffPath, "image/png");
 
-        Assert.Fail($"Sample pixels differ from {expected}: {result.ErrorPixelCount}/{result.TotalPixels} pixels; " +
+        Assert.Fail($"Sample pixels differ from {expected}: {result.MismatchedPixelCount}/{result.TotalPixels} pixels; " +
             $"{comparison}; actual {actual}; diff {diffPath}.");
         return false;
     }
