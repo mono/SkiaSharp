@@ -155,6 +155,7 @@ internal abstract class AppiumRunningApp
 		(Rectangle Container, Rectangle Target, int Amount)? previous = null;
 		(Rectangle Container, Rectangle Target)? observed = null;
 		var changedAt = TimeSpan.Zero;
+		var missingTargetProbes = 0;
 		var last = "container/target not yet present";
 		try
 		{
@@ -165,14 +166,32 @@ internal abstract class AppiumRunningApp
 				var element = Wait(() =>
 				{
 					var container = findContainer();
-					var target = findTarget();
 					bounds = new Rectangle(container.Location, container.Size);
+					if (!container.Displayed)
+						return null;
+					IWebElement target;
+					try
+					{
+						target = findTarget();
+					}
+					catch (NoSuchElementException)
+					{
+						last = $"container={bounds}, target not exposed, gestures={gestures}/{maxScrolls}";
+						if (++missingTargetProbes < 3)
+							return null;
+						missingTargetProbes = 0;
+						if (bounds.Width <= 0 || bounds.Height < 3)
+							throw new InvalidOperationException($"Scroll container has no usable bounds: {bounds}.");
+						// Virtualized children have no bounds until their container is scrolled.
+						amount = Math.Max(1, bounds.Height * 3 / 5);
+						previous = null;
+						return container;
+					}
+					missingTargetProbes = 0;
 					targetBounds = new Rectangle(target.Location, target.Size);
 					var displayed = target.Displayed;
 					last = $"container={bounds}, target={targetBounds}, Displayed={displayed}, gestures={gestures}/{maxScrolls}";
 					amount = ScrollAmount(bounds, targetBounds);
-					if (!container.Displayed)
-						return null;
 					if (amount == 0 && displayed)
 						return target;
 

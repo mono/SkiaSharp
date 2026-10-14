@@ -243,6 +243,27 @@ public sealed class AppiumInfrastructureTests
 	}
 
 	[Fact]
+	public void ScrollDiscoversChildrenNotExposedUntilTheViewportMoves()
+	{
+		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
+		var target = new ScrollElement(new Rectangle(10, 150, 20, 20), displayed: false);
+		var gestures = 0;
+		Assert.Same(target, ScrollTest(container, () =>
+		{
+			if (gestures == 0)
+				throw new NoSuchElementException("Offscreen child is not in the native tree.");
+			return target;
+		}, (bounds, amount) =>
+		{
+			gestures++;
+			target.Bounds = target.Bounds with { Y = target.Bounds.Y - amount };
+			target.Displayed = bounds.Contains(target.Bounds);
+		}));
+		Assert.Equal(2, gestures);
+		Assert.True(container.Bounds.Contains(target.Bounds));
+	}
+
+	[Fact]
 	public void ScrollRecomputesAmountsWhenTheContainerResizes()
 	{
 		var container = new ScrollElement(new Rectangle(0, 0, 100, 100));
@@ -324,7 +345,7 @@ public sealed class AppiumInfrastructureTests
 			(_, _) => Assert.Fail("There is no geometry-directed scroll to perform."),
 			"'target' inside 'container'", TimeSpan.FromMilliseconds(100), 2, CancellationToken.None));
 		Assert.Contains("'target' inside 'container'", error.Message);
-		Assert.Contains(present ? "Displayed=False" : "not yet present", error.Message);
+		Assert.Contains(present ? "Displayed=False" : "target not exposed", error.Message);
 	}
 
 	[Fact]
