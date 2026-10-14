@@ -52,76 +52,130 @@ listed explicitly. Private/internal implementation members are omitted.
 ```csharp
 namespace SkiaSharp.Testing;
 
+/// <summary>Compares borrowed decoded inputs synchronously and creates independently owned diagnostic images.</summary>
 public static class SKPixelComparer
 {
+    /// <summary>Compares images; null options select exact RGBA with unpremultiplied normalization.</summary>
     public static SKPixelComparisonResult Compare(SKImage first, SKImage second, SKPixelComparerOptions? options = null);
+    /// <summary>Compares bitmaps without mutating them; null options select exact RGBA.</summary>
     public static SKPixelComparisonResult Compare(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options = null);
+    /// <summary>Compares pixmaps respecting source row stride; null options select exact RGBA.</summary>
     public static SKPixelComparisonResult Compare(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options = null);
 
+    /// <summary>Creates a caller-owned opaque image in the chosen style; limits do not change its pixel classification.</summary>
     public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelDifferenceStyle style = SKPixelDifferenceStyle.ThresholdOverlay, SKPixelComparerOptions? options = null);
+    /// <summary>Creates a caller-owned diagnostic from bitmaps; the default style is the threshold overlay.</summary>
     public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelDifferenceStyle style = SKPixelDifferenceStyle.ThresholdOverlay, SKPixelComparerOptions? options = null);
+    /// <summary>Creates a caller-owned diagnostic from pixmaps; the default style is the threshold overlay.</summary>
     public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelDifferenceStyle style = SKPixelDifferenceStyle.ThresholdOverlay, SKPixelComparerOptions? options = null);
 }
 
+/// <summary>Represents one channel's inclusive difference allowance, expressed in effective byte units.</summary>
 public readonly struct SKPixelTolerance : IEquatable<SKPixelTolerance>
 {
+    /// <summary>Creates the default scalar value, equivalent to Exact.</summary>
     public SKPixelTolerance();
+    /// <summary>Gets a zero allowance: the selected channel must match exactly.</summary>
     public static SKPixelTolerance Exact { get; }
+    /// <summary>Creates an allowance of 0 through 255 byte levels.</summary>
     public static SKPixelTolerance Absolute(int value);
+    /// <summary>Creates an allowance of 0 through 100 percentage points of 255, without rounding.</summary>
     public static SKPixelTolerance Percent(double value);
+    /// <summary>Gets the effective allowance in byte units, including fractional values such as 1.275.</summary>
     public double Value { get; }
+    /// <summary>Tests equality of effective byte allowances, regardless of which factory created them.</summary>
     public bool Equals(SKPixelTolerance other);
+    /// <summary>Tests whether the object is a scalar tolerance with the same effective allowance.</summary>
     public override bool Equals(object? obj);
+    /// <summary>Returns a hash consistent with equality of effective allowances.</summary>
     public override int GetHashCode();
+    /// <summary>Tests whether two scalar allowances are equal.</summary>
     public static bool operator ==(SKPixelTolerance left, SKPixelTolerance right);
+    /// <summary>Tests whether two scalar allowances differ.</summary>
     public static bool operator !=(SKPixelTolerance left, SKPixelTolerance right);
 }
 
+/// <summary>Configures channel allowances, normalization and optional whole-image acceptance limits.</summary>
 public sealed class SKPixelComparerOptions
 {
+    /// <summary>Creates exact RGBA settings, unpremultiplied normalization, no mask and no image-wide limits.</summary>
     public SKPixelComparerOptions();
+    /// <summary>Gets or sets the red allowance; defaults to Exact, with null excluding red from comparison and metrics.</summary>
     public SKPixelTolerance? RedTolerance { get; set; }
+    /// <summary>Gets or sets the green allowance; defaults to Exact, with null excluding green.</summary>
     public SKPixelTolerance? GreenTolerance { get; set; }
+    /// <summary>Gets or sets the blue allowance; defaults to Exact, with null excluding blue.</summary>
     public SKPixelTolerance? BlueTolerance { get; set; }
+    /// <summary>Gets or sets the alpha allowance; defaults to Exact, with null excluding alpha but not undoing premultiplication.</summary>
     public SKPixelTolerance? AlphaTolerance { get; set; }
+    /// <summary>Gets or sets the normalized representation: Unpremul by default, or Premul; this does not select channels.</summary>
     public SKAlphaType AlphaType { get; set; }
+    /// <summary>Gets or sets a borrowed same-size mask that widens enabled channel allowances; alpha is a threshold, not coverage.</summary>
     public SKImage? ToleranceMask { get; set; }
+    /// <summary>Gets or sets an inclusive maximum rejected-pixel count; null imposes no count limit.</summary>
     public long? MaxErrorPixels { get; set; }
+    /// <summary>Gets or sets an inclusive rejected-pixel fraction from 0 to 1, converted to a floor-based count budget.</summary>
     public double? MaxErrorPixelFraction { get; set; }
+    /// <summary>Gets or sets an inclusive raw normalized RMS limit from 0 to 1, independent of channel tolerance.</summary>
     public double? MaxNormalizedRootMeanSquaredError { get; set; }
 }
 
+/// <summary>Contains immutable measurements and a match decision without retaining native inputs.</summary>
 public sealed class SKPixelComparisonResult
 {
+    /// <summary>Gets whether all configured limits pass, or zero pixels are rejected when no limits are configured.</summary>
     public bool IsMatch { get; }
+    /// <summary>Gets the number of image pixels compared.</summary>
     public int TotalPixels { get; }
+    /// <summary>Gets the number of enabled channels per pixel, from one to four.</summary>
     public int ChannelCount { get; }
+    /// <summary>Gets the number of pixels exceeding at least one enabled channel's effective allowance.</summary>
     public int ErrorPixelCount { get; }
+    /// <summary>Gets rejected pixels divided by total pixels, as a fraction from 0 to 1.</summary>
     public double ErrorPixelFraction { get; }
+    /// <summary>Gets the largest raw difference on an enabled channel, including tolerated differences.</summary>
     public int MaxChannelDelta { get; }
+    /// <summary>Gets the bounding rectangle of rejected pixels, or null when none are rejected.</summary>
     public SKRectI? ErrorBounds { get; }
+    /// <summary>Gets enabled-channel metrics before tolerance or mask filtering.</summary>
     public SKPixelComparisonMetrics RawMetrics { get; }
+    /// <summary>Gets metrics counting only enabled channel deltas that exceed their allowances, with the same sample denominator.</summary>
     public SKPixelComparisonMetrics ThresholdedMetrics { get; }
 }
 
+/// <summary>Contains raw or thresholded error measurements across the selected channel samples.</summary>
 public sealed class SKPixelComparisonMetrics
 {
+    /// <summary>Gets the number of pixels contributing to this metric group's denominator.</summary>
     public int TotalPixels { get; }
+    /// <summary>Gets the number of selected channels per pixel.</summary>
     public int ChannelCount { get; }
+    /// <summary>Gets total pixels multiplied by selected channel count.</summary>
     public long SampleCount { get; }
+    /// <summary>Gets the 64-bit sum of absolute channel differences in this metric group.</summary>
     public long AbsoluteError { get; }
+    /// <summary>Gets the 64-bit sum of squared channel differences in this metric group.</summary>
     public long SumSquaredError { get; }
+    /// <summary>Gets AbsoluteError divided by SampleCount, in byte-channel units.</summary>
     public double MeanAbsoluteError { get; }
+    /// <summary>Gets SumSquaredError divided by SampleCount, in squared byte-channel units.</summary>
     public double MeanSquaredError { get; }
+    /// <summary>Gets the square root of MeanSquaredError, in byte-channel units.</summary>
     public double RootMeanSquaredError { get; }
+    /// <summary>Gets RootMeanSquaredError divided by 255, from 0 to 1.</summary>
     public double NormalizedRootMeanSquaredError { get; }
+    /// <summary>Gets PSNR in decibels, or positive infinity when this group's squared error is zero.</summary>
     public double PeakSignalToNoiseRatio { get; }
 }
 
+/// <summary>Selects the diagnostic visualization without changing numerical comparison or acceptance.</summary>
 public enum SKPixelDifferenceStyle
 {
+    /// <summary>Uses opaque white for rejected pixels and black otherwise.</summary>
     BinaryMask = 0,
+    /// <summary>Uses opaque raw absolute RGB differences, without visualizing alpha or filtering by tolerance.</summary>
     ChannelDelta = 1,
+    /// <summary>Uses red for rejection, amber for tolerated differences, and dimmed actual RGB for matches.</summary>
     ThresholdOverlay = 2,
 }
 ```
