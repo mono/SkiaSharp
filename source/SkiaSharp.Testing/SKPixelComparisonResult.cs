@@ -1,7 +1,4 @@
-// Based on SkiaSharp.Extended's SKPixelComparisonResult at
-// https://github.com/mono/SkiaSharp.Extended/tree/579c974196199962dc1cb7c22bc68fe32e9a5b64
-// Copyright (c) 2015-2016 Xamarin, Inc.
-// Copyright (c) 2017-2020 Microsoft Corporation. Licensed under the MIT license.
+// Copyright (c) Microsoft Corporation. Licensed under the MIT license.
 
 namespace SkiaSharp.Testing;
 
