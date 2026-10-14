@@ -190,7 +190,7 @@ public abstract class PlatformTestBase : IDisposable
             var options = new SKPixelComparerOptions
             {
                 AlphaType = SKAlphaType.Premul,
-                Tolerance = SKPixelTolerance.Absolute(0, 0, 0, null),
+                AlphaTolerance = null,
             };
 
             // Compare using SKPixelComparer

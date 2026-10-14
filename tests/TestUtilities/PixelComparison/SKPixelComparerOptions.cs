@@ -10,8 +10,17 @@ namespace SkiaSharp.Testing;
 /// <remarks>Do not mutate these settings or their borrowed mask during a call. No native input or mask ownership is transferred.</remarks>
 public sealed class SKPixelComparerOptions
 {
-	/// <summary>Per-channel allowance and selection; defaults to strict RGBA.</summary>
-	public SKPixelTolerance Tolerance { get; set; } = SKPixelTolerance.Exact;
+	/// <summary>Red-channel byte allowance, or null to exclude red from comparisons and statistics; defaults to <see cref="SKPixelTolerance.Exact"/>.</summary>
+	public SKPixelTolerance? RedTolerance { get; set; } = SKPixelTolerance.Exact;
+
+	/// <summary>Green-channel byte allowance, or null to exclude green from comparisons and statistics; defaults to <see cref="SKPixelTolerance.Exact"/>.</summary>
+	public SKPixelTolerance? GreenTolerance { get; set; } = SKPixelTolerance.Exact;
+
+	/// <summary>Blue-channel byte allowance, or null to exclude blue from comparisons and statistics; defaults to <see cref="SKPixelTolerance.Exact"/>.</summary>
+	public SKPixelTolerance? BlueTolerance { get; set; } = SKPixelTolerance.Exact;
+
+	/// <summary>Alpha-channel byte allowance, or null to exclude alpha from comparisons and statistics; defaults to <see cref="SKPixelTolerance.Exact"/>.</summary>
+	public SKPixelTolerance? AlphaTolerance { get; set; } = SKPixelTolerance.Exact;
 
 	/// <summary>Normalization output alpha type (Unpremul by default); only Unpremul or Premul is supported.</summary>
 	public SKAlphaType AlphaType { get; set; } = SKAlphaType.Unpremul;

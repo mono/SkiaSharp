@@ -14,7 +14,7 @@ public static class SKPixelComparer
 {
 	/// <summary>Compares two images with snapshotted per-channel tolerances, optional mask, and whole-image match budgets.</summary>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
-	/// <exception cref="ArgumentException">An input or mask is empty or disposed.</exception>
+	/// <exception cref="ArgumentException">An input or mask is empty or disposed, or all channels are disabled.</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">A configured alpha type or budget is invalid.</exception>
 	public static SKPixelComparisonResult Compare(SKImage first, SKImage second, SKPixelComparerOptions? options = null)
@@ -29,7 +29,7 @@ public static class SKPixelComparer
 
 	/// <summary>Compares two bitmaps with snapshotted per-channel tolerances, optional mask, and whole-image match budgets.</summary>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
-	/// <exception cref="ArgumentException">An input or mask is empty or disposed.</exception>
+	/// <exception cref="ArgumentException">An input or mask is empty or disposed, or all channels are disabled.</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">A configured alpha type or budget is invalid.</exception>
 	public static SKPixelComparisonResult Compare(SKBitmap first, SKBitmap second, SKPixelComparerOptions? options = null)
@@ -44,7 +44,7 @@ public static class SKPixelComparer
 
 	/// <summary>Compares two pixmaps with snapshotted per-channel tolerances, optional mask, and whole-image match budgets.</summary>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
-	/// <exception cref="ArgumentException">An input or mask is empty or disposed.</exception>
+	/// <exception cref="ArgumentException">An input or mask is empty or disposed, or all channels are disabled.</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">A configured alpha type or budget is invalid.</exception>
 	public static SKPixelComparisonResult Compare(SKPixmap first, SKPixmap second, SKPixelComparerOptions? options = null)
@@ -59,7 +59,7 @@ public static class SKPixelComparer
 
 	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and an optional borrowed mask.</summary>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
-	/// <exception cref="ArgumentException">An input or mask is empty or disposed.</exception>
+	/// <exception cref="ArgumentException">An input or mask is empty or disposed, or all channels are disabled.</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">The style, alpha type, or budget is invalid.</exception>
 	public static SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelDifferenceStyle style = SKPixelDifferenceStyle.ThresholdOverlay, SKPixelComparerOptions? options = null)
@@ -75,7 +75,7 @@ public static class SKPixelComparer
 
 	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and an optional borrowed mask.</summary>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
-	/// <exception cref="ArgumentException">An input or mask is empty or disposed.</exception>
+	/// <exception cref="ArgumentException">An input or mask is empty or disposed, or all channels are disabled.</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">The style, alpha type, or budget is invalid.</exception>
 	public static SKImage GenerateDifferenceImage(SKBitmap first, SKBitmap second, SKPixelDifferenceStyle style = SKPixelDifferenceStyle.ThresholdOverlay, SKPixelComparerOptions? options = null)
@@ -91,7 +91,7 @@ public static class SKPixelComparer
 
 	/// <summary>Creates a caller-owned opaque difference image in the selected style, using snapshotted options and an optional borrowed mask.</summary>
 	/// <exception cref="ArgumentNullException">An input is null.</exception>
-	/// <exception cref="ArgumentException">An input or mask is empty or disposed.</exception>
+	/// <exception cref="ArgumentException">An input or mask is empty or disposed, or all channels are disabled.</exception>
 	/// <exception cref="InvalidOperationException">The dimensions differ or pixel readback fails.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">The style, alpha type, or budget is invalid.</exception>
 	public static SKImage GenerateDifferenceImage(SKPixmap first, SKPixmap second, SKPixelDifferenceStyle style = SKPixelDifferenceStyle.ThresholdOverlay, SKPixelComparerOptions? options = null)
@@ -138,7 +138,7 @@ public static class SKPixelComparer
 
 		for (var i = 0; i < totalPixels; i++)
 		{
-			var delta = Evaluate(a[i], b[i], mask == null ? (SKColor?)null : m[i], settings.Tolerance);
+			var delta = Evaluate(a[i], b[i], mask == null ? (SKColor?)null : m[i], settings);
 			rawAbsolute = checked(rawAbsolute + delta.RawAbsolute);
 			rawSquared = checked(rawSquared + delta.RawSquared);
 			filteredAbsolute = checked(filteredAbsolute + delta.FilteredAbsolute);
@@ -156,8 +156,8 @@ public static class SKPixelComparer
 			maxDelta = Math.Max(maxDelta, delta.MaxChannelDelta);
 		}
 
-		var raw = new SKPixelComparisonMetrics(totalPixels, settings.Tolerance.ChannelCount, rawAbsolute, rawSquared);
-		var filtered = new SKPixelComparisonMetrics(totalPixels, settings.Tolerance.ChannelCount, filteredAbsolute, filteredSquared);
+		var raw = new SKPixelComparisonMetrics(totalPixels, settings.ChannelCount, rawAbsolute, rawSquared);
+		var filtered = new SKPixelComparisonMetrics(totalPixels, settings.ChannelCount, filteredAbsolute, filteredSquared);
 		var budgets = settings.MaxErrorPixels.HasValue || settings.MaxErrorPixelFraction.HasValue ||
 			settings.MaxNormalizedRootMeanSquaredError.HasValue;
 		var isMatch = budgets
@@ -166,7 +166,7 @@ public static class SKPixelComparer
 				(!settings.MaxNormalizedRootMeanSquaredError.HasValue ||
 					raw.NormalizedRootMeanSquaredError <= settings.MaxNormalizedRootMeanSquaredError.Value)
 			: errorPixels == 0;
-		return new SKPixelComparisonResult(totalPixels, settings.Tolerance.ChannelCount, errorPixels, maxDelta,
+		return new SKPixelComparisonResult(totalPixels, settings.ChannelCount, errorPixels, maxDelta,
 			errorPixels == 0 ? (SKRectI?)null : new SKRectI(left, top, right, bottom), raw, filtered, isMatch);
 	}
 
@@ -189,7 +189,7 @@ public static class SKPixelComparer
 		var pixels = pixmap.GetPixelSpan<SKColor>();
 		for (var i = 0; i < totalPixels; i++)
 		{
-			var delta = Evaluate(a[i], b[i], mask == null ? (SKColor?)null : m[i], settings.Tolerance);
+			var delta = Evaluate(a[i], b[i], mask == null ? (SKColor?)null : m[i], settings);
 			pixels[i] = style switch
 			{
 				SKPixelDifferenceStyle.BinaryMask => delta.Rejected ? SKColors.White : SKColors.Black,
@@ -203,7 +203,7 @@ public static class SKPixelComparer
 		return SKImage.FromBitmap(bitmap) ?? throw new InvalidOperationException("Unable to create difference image.");
 	}
 
-	private static PixelDifference Evaluate(SKColor first, SKColor second, SKColor? mask, SKPixelTolerance tolerance)
+	private static PixelDifference Evaluate(SKColor first, SKColor second, SKColor? mask, Settings settings)
 	{
 		var r = Math.Abs(second.Red - first.Red);
 		var g = Math.Abs(second.Green - first.Green);
@@ -214,10 +214,10 @@ public static class SKPixelComparer
 		var filteredAbsolute = 0;
 		var filteredSquared = 0L;
 		var max = 0;
-		Accumulate(r, tolerance.Red, mask?.Red, ref rawAbsolute, ref rawSquared, ref filteredAbsolute, ref filteredSquared, ref max);
-		Accumulate(g, tolerance.Green, mask?.Green, ref rawAbsolute, ref rawSquared, ref filteredAbsolute, ref filteredSquared, ref max);
-		Accumulate(b, tolerance.Blue, mask?.Blue, ref rawAbsolute, ref rawSquared, ref filteredAbsolute, ref filteredSquared, ref max);
-		Accumulate(a, tolerance.Alpha, mask?.Alpha, ref rawAbsolute, ref rawSquared, ref filteredAbsolute, ref filteredSquared, ref max);
+		Accumulate(r, settings.RedTolerance, mask?.Red, ref rawAbsolute, ref rawSquared, ref filteredAbsolute, ref filteredSquared, ref max);
+		Accumulate(g, settings.GreenTolerance, mask?.Green, ref rawAbsolute, ref rawSquared, ref filteredAbsolute, ref filteredSquared, ref max);
+		Accumulate(b, settings.BlueTolerance, mask?.Blue, ref rawAbsolute, ref rawSquared, ref filteredAbsolute, ref filteredSquared, ref max);
+		Accumulate(a, settings.AlphaTolerance, mask?.Alpha, ref rawAbsolute, ref rawSquared, ref filteredAbsolute, ref filteredSquared, ref max);
 		return new PixelDifference(r, g, b, max, rawAbsolute, rawSquared, filteredAbsolute, filteredSquared);
 	}
 
@@ -266,12 +266,19 @@ public static class SKPixelComparer
 	{
 		public Settings(SKPixelComparerOptions? options)
 		{
-			Tolerance = options?.Tolerance ?? SKPixelTolerance.Exact;
+			RedTolerance = options == null ? SKPixelTolerance.Exact.Value : options.RedTolerance?.Value;
+			GreenTolerance = options == null ? SKPixelTolerance.Exact.Value : options.GreenTolerance?.Value;
+			BlueTolerance = options == null ? SKPixelTolerance.Exact.Value : options.BlueTolerance?.Value;
+			AlphaTolerance = options == null ? SKPixelTolerance.Exact.Value : options.AlphaTolerance?.Value;
+			ChannelCount = (RedTolerance.HasValue ? 1 : 0) + (GreenTolerance.HasValue ? 1 : 0) +
+				(BlueTolerance.HasValue ? 1 : 0) + (AlphaTolerance.HasValue ? 1 : 0);
 			AlphaType = options?.AlphaType ?? SKAlphaType.Unpremul;
 			Mask = options?.ToleranceMask;
 			MaxErrorPixels = options?.MaxErrorPixels;
 			MaxErrorPixelFraction = options?.MaxErrorPixelFraction;
 			MaxNormalizedRootMeanSquaredError = options?.MaxNormalizedRootMeanSquaredError;
+			if (ChannelCount == 0)
+				throw new ArgumentException("At least one channel must be enabled.", nameof(options));
 			if (AlphaType != SKAlphaType.Unpremul && AlphaType != SKAlphaType.Premul)
 				throw new ArgumentOutOfRangeException(nameof(options), "AlphaType must be Unpremul or Premul.");
 			if (MaxErrorPixels < 0)
@@ -282,7 +289,11 @@ public static class SKPixelComparer
 				throw new ArgumentOutOfRangeException(nameof(options), "MaxNormalizedRootMeanSquaredError must be finite and between 0 and 1.");
 		}
 
-		public SKPixelTolerance Tolerance { get; }
+		public double? RedTolerance { get; }
+		public double? GreenTolerance { get; }
+		public double? BlueTolerance { get; }
+		public double? AlphaTolerance { get; }
+		public int ChannelCount { get; }
 		public SKAlphaType AlphaType { get; }
 		public SKImage? Mask { get; }
 		public long? MaxErrorPixels { get; }
