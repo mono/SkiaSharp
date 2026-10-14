@@ -19,6 +19,10 @@ parameters:
       - macos
       - macos26
       - windows
+  - name: probeWinAppDriver
+    displayName: 'Test the WinAppDriver MSI on the Windows probe:'
+    type: boolean
+    default: false
   - name: enableCaching
     displayName: 'Enable build caching (skip native builds on cache hit):'
     type: boolean
@@ -146,6 +150,26 @@ extends:
                             Write-Host "WinAppDriver $path : $(Test-Path $path -PathType Leaf)"
                         }
                         Get-CimInstance Win32_Service -Filter "Name='msiserver'" | Select-Object Name, State, StartMode
+                        if ('${{ parameters.probeWinAppDriver }}' -eq 'True') {
+                            $installer = Join-Path $env:AGENT_TEMPDIRECTORY 'WindowsApplicationDriver_1.2.1.msi'
+                            $log = Join-Path $env:AGENT_TEMPDIRECTORY 'install-winappdriver-msi.log'
+                            Invoke-WebRequest -Uri 'https://github.com/microsoft/WinAppDriver/releases/download/v1.2.1/WindowsApplicationDriver_1.2.1.msi' -OutFile $installer
+                            $process = Start-Process -FilePath msiexec.exe -ArgumentList @(
+                                '/i', "`"$installer`"", '/qn', '/norestart', '/L*v', "`"$log`""
+                            ) -Wait -PassThru
+                            Write-Host "MSI exit code: $($process.ExitCode)"
+                            if (Test-Path $log) {
+                                Select-String -Path $log -Pattern 'error|Return value 3|Installation success or error status' -Context 2,2
+                                Get-Content $log -Tail 50
+                            }
+                            if ($process.ExitCode -notin @(0, 3010)) { throw "MSI failed with exit code $($process.ExitCode)." }
+                            $installed = @(${env:ProgramFiles(x86)}, $env:ProgramFiles) |
+                                Where-Object { $_ } |
+                                ForEach-Object { Join-Path $_ 'Windows Application Driver/WinAppDriver.exe' } |
+                                Where-Object { Test-Path $_ -PathType Leaf }
+                            if (!$installed) { throw 'Successful MSI did not produce WinAppDriver.exe.' }
+                            Write-Host "Installed WinAppDriver: $installed"
+                        }
                     }
                   displayName: Inspect installed tools without provisioning
       - ${{ else }}:
