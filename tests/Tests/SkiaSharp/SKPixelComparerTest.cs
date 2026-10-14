@@ -7,6 +7,34 @@ namespace SkiaSharp.Tests;
 public class SKPixelComparerTest
 {
 	[Fact]
+	public void PublicEntryPointsUseOptionalNullSettingsWithoutConvenienceOverloads()
+	{
+		var methods = typeof(SKPixelComparer).GetMethods(
+			System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+		Assert.Equal(6, methods.Length);
+		foreach (var method in methods)
+		{
+			var parameters = method.GetParameters();
+			var options = parameters[parameters.Length - 1];
+			Assert.Equal("options", options.Name);
+			Assert.True(options.IsOptional);
+			Assert.Null(options.DefaultValue);
+			if (method.Name == nameof(SKPixelComparer.GenerateDifferenceImage))
+			{
+				Assert.Equal(4, parameters.Length);
+				Assert.Equal("style", parameters[2].Name);
+				Assert.True(parameters[2].IsOptional);
+				Assert.Equal(SKPixelDifferenceStyle.ThresholdOverlay, parameters[2].DefaultValue);
+			}
+			else
+			{
+				Assert.Equal(nameof(SKPixelComparer.Compare), method.Name);
+				Assert.Equal(3, parameters.Length);
+			}
+		}
+	}
+
+	[Fact]
 	public void DefaultIsStrictRgbaAndReportsRawMetricsAndBounds()
 	{
 		using var first = CreateBitmap(new SKColor(10, 20, 30), SKColors.Black);
@@ -291,7 +319,7 @@ public class SKPixelComparerTest
 		Assert.True(SKPixelComparer.Compare(a, b, options).IsMatch);
 		using var binary = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.BinaryMask, options);
 		using var styledBinary = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.BinaryMask, options);
-		using var overlay = SKPixelComparer.GenerateDifferenceImage(a, b, options);
+		using var overlay = SKPixelComparer.GenerateDifferenceImage(a, b, options: options);
 		using var explicitOverlay = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.ThresholdOverlay, options);
 		using var raw = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.ChannelDelta, options);
 		using var strictMask = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.BinaryMask, null);
@@ -347,14 +375,14 @@ public class SKPixelComparerTest
 		Assert.Equal(1, SKPixelComparer.Compare(first, second, options).ErrorPixelCount);
 		Assert.Equal(1, SKPixelComparer.Compare(firstPixmap, secondPixmap, options).ErrorPixelCount);
 		Assert.Equal(1, SKPixelComparer.Compare(a, b, options).ErrorPixelCount);
-		using var overlay = SKPixelComparer.GenerateDifferenceImage(a, b, options);
+		using var overlay = SKPixelComparer.GenerateDifferenceImage(a, b, options: options);
 		using var binary = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.BinaryMask, options);
 		using var delta = SKPixelComparer.GenerateDifferenceImage(a, b, SKPixelDifferenceStyle.ChannelDelta, options);
 		AssertPixel(overlay, 0, SKColors.Red);
 		AssertPixel(binary, 0, SKColors.White);
 		AssertPixel(delta, 0, SKColors.Black);
 		options.Tolerance = SKPixelTolerance.Absolute(null, null, null, 64);
-		using var tolerated = SKPixelComparer.GenerateDifferenceImage(first, second, options);
+		using var tolerated = SKPixelComparer.GenerateDifferenceImage(first, second, options: options);
 		AssertPixel(tolerated, 0, new SKColor(255, 200, 0));
 		Assert.Equal(0, SKPixelComparer.Compare(a, b, options).ErrorPixelCount);
 	}
@@ -419,7 +447,7 @@ public class SKPixelComparerTest
 		Assert.Equal(new SKRectI(1, 1, 2, 2), image.ErrorBounds);
 		Assert.Equal(18L, SKPixelComparer.Compare(first, second).RawMetrics.AbsoluteError);
 		Assert.Equal(18L, SKPixelComparer.Compare(firstPixmap, secondPixmap).RawMetrics.AbsoluteError);
-		using var difference = SKPixelComparer.GenerateDifferenceImage(firstPixmap, secondPixmap, options);
+		using var difference = SKPixelComparer.GenerateDifferenceImage(firstPixmap, secondPixmap, options: options);
 		using var pixels = SKBitmap.FromImage(difference);
 		Assert.Equal(SKColors.Red, pixels.GetPixel(1, 1));
 	}
