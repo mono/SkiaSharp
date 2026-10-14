@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using SkiaSharp.Tests.Visual;
 using Xunit;
@@ -6,23 +7,37 @@ using Xunit;
 namespace SkiaSharp.Tests
 {
 	/// <summary>
-	/// Shared behaviour tests for the Graphite wrap-backend-texture release
-	/// callbacks (<see cref="SKSurface.Create(SKGraphiteRecorder, SKGraphiteBackendTexture, SKColorType, SKColorSpace, SKSurfaceProperties, SKGraphiteReleaseDelegate)"/>
-	/// and <see cref="SKImage.FromTexture(SKGraphiteRecorder, SKGraphiteBackendTexture, SKColorType, SKAlphaType, SKColorSpace, SKGraphiteReleaseDelegate)"/>).
+	/// Shared backend-agnostic Graphite test scenarios. A derived class provides
+	/// backend-specific bring-up (context + recorder from a live GPU) and, if the
+	/// scenario needs one, a wrappable backend texture. Every test body defined
+	/// on this class runs on every backend whose subclass supports it.
 	///
 	/// <para>
-	/// The test bodies are backend-agnostic; a derived class provides the two
-	/// backend-specific pieces — bringing up a context/recorder
-	/// (<see cref="CreateHarnessAsync"/>) and handing back a wrappable backend
-	/// texture (<see cref="GraphiteReleaseHarness.CreateBackendTexture"/>). One
-	/// derived class per Graphite backend (Metal, Vulkan, Dawn) runs the same
-	/// assertions on the hosts that can drive it.
+	/// Currently covered:
+	///   * <see cref="SKSurface.Create(SKGraphiteRecorder, SKGraphiteBackendTexture, SKColorType, SKColorSpace, SKSurfaceProperties, SKGraphiteReleaseDelegate)"/>
+	///     / <see cref="SKImage.FromTexture(SKGraphiteRecorder, SKGraphiteBackendTexture, SKColorType, SKAlphaType, SKColorSpace, SKGraphiteReleaseDelegate)"/>
+	///     release-callback lifetime (fires exactly once on dispose, null callback safe);
+	///   * shader-error handler installation via <see cref="SKGraphiteContextOptions.ShaderErrorHandler"/>
+	///     (installation + no-spurious-fire; #4555).
+	/// </para>
+	///
+	/// <para>
+	/// New scenarios that need the same bring-up (backend context, options,
+	/// deferred-work pumping) belong here rather than in new bespoke test files —
+	/// see the review discussion on #4586.
 	/// </para>
 	/// </summary>
-	public abstract class SKGraphiteReleaseTestsBase : SKTest
+	public abstract class GraphiteBackendTestBase : SKTest
 	{
 		protected const int Width = 64;
 		protected const int Height = 64;
+
+		private static int shaderErrorCount;
+		private static readonly SKGraphiteContextOptions harnessOptions = new SKGraphiteContextOptions
+		{
+			// Dawn shares one context, so every harness installs the same handler.
+			ShaderErrorHandler = (shader, errors, cached) => Interlocked.Increment(ref shaderErrorCount),
+		};
 
 		/// <summary>Colour type matching the backend texture the harness creates.</summary>
 		protected abstract SKColorType ColorType { get; }
@@ -34,10 +49,17 @@ namespace SkiaSharp.Tests
 		protected abstract string Backend { get; }
 
 		/// <summary>
-		/// Brings up the backend and returns a live harness. Must not catch a failed
-		/// bring-up.
+		/// Brings up the backend with common options and returns a live harness.
+		/// Must not catch a failed bring-up.
 		/// </summary>
-		protected abstract Task<GraphiteReleaseHarness> CreateHarnessAsync();
+		protected Task<GraphiteBackendHarness> CreateHarnessAsync() =>
+			CreateHarnessAsync(harnessOptions);
+
+		/// <summary>
+		/// Brings up the backend using the supplied options. A process-shared context
+		/// must verify that later harnesses request the same options.
+		/// </summary>
+		protected abstract Task<GraphiteBackendHarness> CreateHarnessAsync(SKGraphiteContextOptions options);
 
 		[Fact]
 		public Task SurfaceWrapReleaseProcFiresExactlyOnceOnDispose()
@@ -130,18 +152,41 @@ namespace SkiaSharp.Tests
 			});
 		}
 
+		// Callback arguments are covered by SKGraphiteShaderErrorHandlerTest. This
+		// scenario exercises normal GPU work with the common handler installed.
+		[Fact]
+		public Task ShaderErrorHandlerWiringSurvivesFullRoundTrip()
+		{
+			SkipIfUnsupported();
+			return RunGuardedAsync(async () =>
+			{
+				using var harness = await CreateHarnessAsync();
+				using var surface = SKSurface.Create(harness.Recorder, new SKImageInfo(Width, Height), false, null);
+				Assert.NotNull(surface);
+				surface.Canvas.Clear(SKColors.Cyan);
+				using var paint = new SKPaint { Color = SKColors.Red };
+				surface.Canvas.DrawRect(SKRect.Create(Width, Height), paint);
+				SnapAndSubmit(harness);
+				PumpToCompletion(harness.Context);
+			});
+		}
+
 		/// <summary>
 		/// Runs the GPU scenario. GPU work is serialized across the whole assembly
 		/// by the GPU rendering test collection each derived class joins (xUnit
 		/// <c>DisableParallelization</c>), so no in-test lock is needed; the body is
-		/// simply awaited (harness creation completes synchronously for the desktop
-		/// backends and genuinely awaits on single-threaded WASM for Dawn).
+		/// awaited before checking for shader errors (harness creation completes
+		/// synchronously for desktop backends and awaits on single-threaded WASM for Dawn).
 		/// </summary>
-		protected Task RunGuardedAsync(Func<Task> body) => body();
+		protected async Task RunGuardedAsync(Func<Task> body)
+		{
+			await body();
+			Assert.Equal(0, Volatile.Read(ref shaderErrorCount));
+		}
 
 		private void SkipIfUnsupported() => GpuPolicy.RequireOrSkip(Backend);
 
-		private void SnapAndSubmit(GraphiteReleaseHarness harness)
+		private void SnapAndSubmit(GraphiteBackendHarness harness)
 		{
 			using var recording = harness.Recorder.Snap();
 			Assert.Equal(SKGraphiteInsertStatus.Success, harness.Context.InsertRecording(recording));
@@ -162,7 +207,7 @@ namespace SkiaSharp.Tests
 		/// A live Graphite context + recorder plus a way to mint a wrappable
 		/// backend texture. Implemented once per backend.
 		/// </summary>
-		protected abstract class GraphiteReleaseHarness : IDisposable
+		protected abstract class GraphiteBackendHarness : IDisposable
 		{
 			public abstract SKGraphiteContext Context { get; }
 

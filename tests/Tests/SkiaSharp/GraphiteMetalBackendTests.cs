@@ -7,23 +7,23 @@ using Xunit;
 namespace SkiaSharp.Tests
 {
 	/// <summary>
-	/// Graphite release-callback tests over Apple Metal — the one backend a dev
-	/// host can drive without a swapchain. Creates a real <c>MTLTexture</c> via
+	/// <see cref="GraphiteBackendTestBase"/> harness over Apple Metal — the one backend
+	/// a dev host can drive without a swapchain. Creates a real <c>MTLTexture</c> via
 	/// the Objective-C runtime and wraps it. (The Metal objc here is duplicated
 	/// with <c>GraphiteMetalRenderer</c> for now; a shared Metal test vehicle is a
 	/// later cleanup.)
 	/// </summary>
 	[Collection(GpuRenderingCollection.Name)]
-	public sealed class SKGraphiteReleaseMetalTests : SKGraphiteReleaseTestsBase
+	public sealed class GraphiteMetalBackendTests : GraphiteBackendTestBase
 	{
 		protected override SKColorType ColorType => SKColorType.Bgra8888;
 
 		protected override string Backend => GpuBackends.GraphiteMetal;
 
-		protected override Task<GraphiteReleaseHarness> CreateHarnessAsync() =>
-			Task.FromResult(CreateHarness());
+		protected override Task<GraphiteBackendHarness> CreateHarnessAsync(SKGraphiteContextOptions options) =>
+			Task.FromResult(CreateHarness(options));
 
-		private GraphiteReleaseHarness CreateHarness()
+		private GraphiteBackendHarness CreateHarness(SKGraphiteContextOptions options)
 		{
 			var device = MTLCreateSystemDefaultDevice();
 			if (device == IntPtr.Zero)
@@ -45,7 +45,7 @@ namespace SkiaSharp.Tests
 			}
 
 			var backendContext = new SKGraphiteMtlBackendContext { MtlDevice = device, MtlQueue = queue };
-			var context = SKGraphiteContext.CreateMetal(backendContext)
+			var context = SKGraphiteContext.CreateMetal(backendContext, options)
 				?? throw new InvalidOperationException("SKGraphiteContext.CreateMetal returned null.");
 			var recorder = context.CreateRecorder()
 				?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
@@ -53,7 +53,7 @@ namespace SkiaSharp.Tests
 			return new MetalHarness(device, queue, context, recorder);
 		}
 
-		private sealed class MetalHarness : GraphiteReleaseHarness
+		private sealed class MetalHarness : GraphiteBackendHarness
 		{
 			private readonly IntPtr device;
 			private readonly IntPtr queue;
