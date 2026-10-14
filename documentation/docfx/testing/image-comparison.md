@@ -1,14 +1,20 @@
 ---
-title: "Compare images for testing"
+title: "Compare images"
 description: "Use SkiaSharp.Testing to compare rendered images, set tolerances and generate failure diagnostics."
 ---
 
-# Compare images for testing
+# Compare images
 
 `SkiaSharp.Testing` compares two decoded `SKImage`, `SKBitmap` or `SKPixmap`
 objects. It reports pixel differences, evaluates acceptance limits and can
 generate a diagnostic image. Screenshot capture, resizing, baseline selection
 and test-framework assertions remain the caller's responsibility.
+
+![Illustration of an expected image and an actual image with a slightly changed blue panel and an added red bar.](images/comparison-inputs.svg)
+
+The illustrations below use this simple scene: the blue panel changes by two
+byte levels per RGB channel, and a new red bar appears. They illustrate the
+comparison rules rather than screenshots from a particular platform.
 
 ## Set up
 
@@ -111,6 +117,13 @@ Pass a `SKPixelDifferenceStyle` to `GenerateDifferenceImage`:
 | `BinaryMask` | White mismatches, black otherwise |
 | `ChannelDifference` | Raw absolute RGB differences, including disabled RGB channels; alpha-only differences are not visible |
 
+![Illustration of threshold overlay, binary mask and raw channel-difference diagnostics for the example scene.](images/comparison-diagnostics.svg)
+
+With a channel tolerance of 2, the blue panel is amber in the overlay and absent
+from the binary mask. The added bar still mismatches. Raw channel differences
+are not thresholded: the panel remains a very faint difference, while the bar
+has a strong signal.
+
 Limits affect acceptance, not diagnostic classification. Use the same options
 for comparison and difference generation.
 
@@ -130,6 +143,13 @@ Ignored pixels contribute no errors, mismatches, maxima or bounds.
 report coverage, and fractions/budgets use only compared pixels. Ignoring every
 pixel is invalid. Ignored diagnostics are black in binary/channel-difference
 styles and neutral gray in overlays.
+
+![Illustration of an ignore mask covering the added bar and an overlay marking that excluded area gray.](images/comparison-ignore.svg)
+
+The white mask region excludes the bar; gray in the overlay makes that lost
+coverage visible. The blue panel is still compared and remains amber at
+tolerance 2. Use exclusions only for regions intentionally outside the test's
+coverage, not to hide an unexpected change.
 
 Inputs and masks must stay alive and unmodified during each synchronous call.
 Results retain no native inputs; returned difference images are independently
