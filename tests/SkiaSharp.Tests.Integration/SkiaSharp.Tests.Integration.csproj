@@ -9,6 +9,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);SKTEST001</NoWarn>
     <RootNamespace>SkiaSharp.Tests.Integration</RootNamespace>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <Version>1.0.0</Version>
@@ -58,6 +59,7 @@
   <ItemGroup Condition="'$(SkiaSharpVersion)' != ''">
     <PackageReference Include="SkiaSharp" Version="$(SkiaSharpVersion)" />
     <PackageReference Include="HarfBuzzSharp" Version="$(HarfBuzzSharpVersion)" />
+    <PackageReference Include="SkiaSharp.Testing" Version="$(SkiaSharpVersion)" />
   </ItemGroup>
 
   <!-- Test assets -->
@@ -92,6 +94,5 @@
     <Message Importance="High" Text="Testing SkiaSharp $(SkiaSharpVersion) with HarfBuzzSharp $(HarfBuzzSharpVersion)" />
   </Target>
 
-  <Import Project="..\TestUtilities\PixelComparison\PixelComparison.projitems" />
 
 </Project>
