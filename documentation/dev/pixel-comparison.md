@@ -51,8 +51,6 @@ For each of `SKImage`, `SKBitmap`, and `SKPixmap`, the entry points are:
 // Signature summary; equivalent decoded-type overloads are provided.
 SKPixelComparisonResult Compare(SKImage first, SKImage second);
 SKPixelComparisonResult Compare(SKImage first, SKImage second, SKPixelComparerOptions? options);
-SKImage GenerateDifferenceMask(SKImage first, SKImage second);
-SKImage GenerateDifferenceMask(SKImage first, SKImage second, SKPixelComparerOptions? options);
 SKImage GenerateDifferenceImage(SKImage first, SKImage second);
 SKImage GenerateDifferenceImage(SKImage first, SKImage second, SKPixelComparerOptions? options);
 SKImage GenerateDifferenceImage(
@@ -178,7 +176,8 @@ ignored its differences. Result and metric objects have controlled construction
 and retain no native inputs.
 
 ```csharp
-using var binary = SKPixelComparer.GenerateDifferenceMask(expected, actual, options);
+using var binary = SKPixelComparer.GenerateDifferenceImage(
+    expected, actual, options, SKPixelDifferenceStyle.BinaryMask);
 using var overlay = SKPixelComparer.GenerateDifferenceImage(expected, actual, options);
 using var delta = SKPixelComparer.GenerateDifferenceImage(
     expected, actual, options, SKPixelDifferenceStyle.ChannelDelta);
