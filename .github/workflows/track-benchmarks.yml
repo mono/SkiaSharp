@@ -345,7 +345,7 @@ jobs:
         run: dotnet build source/SkiaSharp.Testing/SkiaSharp.Testing.csproj -c Release -p:BasicTargetFrameworks=net10.0 -p:AllTargetFrameworks=net10.0 -p:BuildingInsideVisualStudio=true
 
       - name: Build source benchmarks
-        run: dotnet build "$PROJECT" -c Release -p:IncludePixelComparisonBenchmarks=true
+        run: dotnet build "$PROJECT" -c Release
 
       - name: Run source benchmarks
         working-directory: ${{ env.PROJECT }}

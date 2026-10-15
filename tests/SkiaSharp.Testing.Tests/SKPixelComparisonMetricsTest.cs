@@ -193,6 +193,37 @@ public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 		Assert.Equal(0.0, result.RawMetrics.PeakSignalToNoiseRatio);
 	}
 
+	[Theory]
+	[InlineData(1, 7)]
+	[InlineData(7, 1)]
+	[InlineData(5, 3)]
+	public void ExactPixelsRemainInMetricsAndMismatchesUseImageCoordinates(int width, int height)
+	{
+		var info = new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+		using var first = new SKBitmap(info);
+		using var second = new SKBitmap(info);
+		first.Erase(SKColors.Black);
+		second.Erase(SKColors.Black);
+		second.SetPixel(width - 1, height - 1, SKColors.White);
+		var count = width * height;
+		var sparseMetrics = new SKPixelComparisonMetrics(count, 4, 3 * 255, 3 * 255 * 255);
+		var sparse = new SKPixelComparisonResult(count, count, 4, 1, 255,
+			new SKRectI(width - 1, height - 1, width, height), sparseMetrics, sparseMetrics, false);
+		AssertEquivalent(sparse, SKPixelComparer.Compare(first, second));
+
+		second.Erase(SKColors.White);
+		var denseMetrics = new SKPixelComparisonMetrics(count, 4, count * 3 * 255, count * 3 * 255 * 255);
+		var dense = new SKPixelComparisonResult(count, count, 4, count, 255,
+			new SKRectI(0, 0, width, height), denseMetrics, denseMetrics, false);
+		AssertEquivalent(dense, SKPixelComparer.Compare(first, second));
+
+		second.Erase(SKColors.Black);
+		var exactMetrics = new SKPixelComparisonMetrics(count, 4, 0, 0);
+		var exact = new SKPixelComparisonResult(count, count, 4, 0, 0,
+			null, exactMetrics, exactMetrics, true);
+		AssertEquivalent(exact, SKPixelComparer.Compare(first, second));
+	}
+
 	[Fact]
 	public void InternalEmptyMetricsHaveDefinedZeroDenominators()
 	{
