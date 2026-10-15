@@ -104,7 +104,7 @@ stages:
                 displayName: Configure Android emulators (KVM and AVD home)
               - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "emulator"
                 displayName: Install the Android emulator
-              - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
+              - pwsh: .\scripts\infra\managed\install-android-image.ps1 -Image "android-$(ANDROID_TEST_DEVICE_VERSION);google_apis"
                 displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
 
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
