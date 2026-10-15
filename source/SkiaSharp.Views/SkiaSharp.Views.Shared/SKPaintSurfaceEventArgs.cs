@@ -2,7 +2,7 @@
 
 #if HAS_UNO_WINUI
 namespace SkiaSharp.Views.Windows
-#elif WINDOWS_UWP || HAS_UNO
+#elif WINDOWS_UWP
 namespace SkiaSharp.Views.UWP
 #elif __ANDROID__
 namespace SkiaSharp.Views.Android
@@ -22,7 +22,7 @@ namespace SkiaSharp.Views.Windows
 namespace SkiaSharp.Views.Blazor
 #endif
 {
-	#if __ANDROID__ && !HAS_UNO
+	#if __ANDROID__
 	/// <summary>Provides data for the <see cref="E:SkiaSharp.Views.Android.SKCanvasView.PaintSurface" /> event.</summary>
 	/// <remarks />
 	#elif (WINDOWS || HAS_UNO_WINUI) && !__DESKTOP__
@@ -34,7 +34,7 @@ namespace SkiaSharp.Views.Blazor
 	#endif
 	public class SKPaintSurfaceEventArgs : EventArgs
 	{
-		#if __ANDROID__ && !HAS_UNO
+		#if __ANDROID__
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKPaintSurfaceEventArgs" /> event arguments.</summary>
 		/// <param name="surface">The surface that is being drawn on.</param>
 		/// <param name="info">The information about the surface.</param>
@@ -55,7 +55,7 @@ namespace SkiaSharp.Views.Blazor
 		{
 		}
 
-		#if __ANDROID__ && !HAS_UNO
+		#if __ANDROID__
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKPaintSurfaceEventArgs" /> event arguments.</summary>
 		/// <param name="surface">The surface that is being drawn on.</param>
 		/// <param name="info">The information about the surface.</param>
@@ -81,7 +81,7 @@ namespace SkiaSharp.Views.Blazor
 			RawInfo = rawInfo;
 		}
 
-		#if __ANDROID__ && !HAS_UNO
+		#if __ANDROID__
 		/// <summary>Gets the surface that is currently being drawn on.</summary>
 		/// <value>The surface being drawn on.</value>
 		/// <remarks />
@@ -92,7 +92,7 @@ namespace SkiaSharp.Views.Blazor
 		#endif
 		public SKSurface Surface { get; }
 
-		#if __ANDROID__ && !HAS_UNO
+		#if __ANDROID__
 		/// <summary>Gets the information about the surface that is currently being drawn.</summary>
 		/// <value>The information about the surface.</value>
 		/// <remarks />
@@ -103,7 +103,7 @@ namespace SkiaSharp.Views.Blazor
 		#endif
 		public SKImageInfo Info { get; }
 
-		#if __ANDROID__ && !HAS_UNO
+		#if __ANDROID__
 		/// <summary>Gets the raw image information of the underlying surface.</summary>
 		/// <value>The <see cref="T:SkiaSharp.SKImageInfo" /> containing the actual dimensions and color type of the underlying surface.</value>
 		/// <remarks />
