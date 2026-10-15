@@ -113,8 +113,6 @@ Task("libHarfBuzzSharp")
         var soname = GetVersion("HarfBuzz", "soname");
         var map = MakeAbsolute((FilePath)"libHarfBuzzSharp/libHarfBuzzSharp.map");
 
-        // Keep calls to bundled HarfBuzz functions inside this library even
-        // when another HarfBuzz implementation was loaded globally first.
         GnNinja($"{VARIANT}/{arch}", "HarfBuzzSharp",
             $"target_os='linux' " +
             $"target_cpu='{skiaArch}' " +
@@ -122,7 +120,7 @@ Task("libHarfBuzzSharp")
             $"skia_use_partition_alloc=false " +
             $"extra_asmflags=[] " +
             $"extra_cflags=[ '-stdlib=libc++'{bionicDefineHB} ] " +
-            $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxxHB}, '-Wl,-Bsymbolic-functions', '-Wl,--version-script={map}' ] " +
+            $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxxHB}, '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);
