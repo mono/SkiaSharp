@@ -88,8 +88,8 @@ Do not manually queue a different build.
 
 | Pipeline | Required evidence |
 | --- | --- |
-| [`skiasharp-package` (1642)](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) | Succeeded at the exact release branch and commit; record Build ID, run number, package versions, and BAR ID |
-| [`skiasharp-tests` (1630)](https://dev.azure.com/dnceng/internal/_build?definitionId=1630) | Succeeded, triggered by that exact Build run through its `SkiaSharp` pipeline resource |
+| [`skiasharp-package`](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) | Succeeded at the exact release branch and commit; record Build ID, run number, package versions, and BAR ID |
+| [`skiasharp-tests`](https://dev.azure.com/dnceng/internal/_build?definitionId=1630) | Succeeded, triggered by that exact Build run through its `SkiaSharp` pipeline resource |
 
 Branch, commit, build number, and upstream pipeline resource must agree.
 Public CI artifacts are unsigned and are not the release BAR. Local tests
@@ -102,7 +102,7 @@ Resume and monitor an existing run; do not queue a duplicate. The
 `release-publish` skill can perform these checks and queue the pipeline.
 
 Publication uses
-[`dotnet-maui-release` (1445)](https://dev.azure.com/dnceng/internal/_build?definitionId=1445),
+[`dotnet-maui-release`](https://dev.azure.com/dnceng/internal/_build?definitionId=1445),
 which supports SkiaSharp publication from the internal MAUI `main` branch.
 Use its configured default branch, `refs/heads/main`, not a feature branch.
 
