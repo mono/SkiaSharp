@@ -71,6 +71,24 @@ not callback duration or browser-operation waits; cleanup/output reads stay boun
 to one minute. Configuration, framework and helper-owned restore properties cannot
 be overridden through `Properties`.
 
+## Apple scene lifecycle
+
+Native UIKit samples on iOS, tvOS, and Mac Catalyst use `SceneDelegate`
+(`IUIWindowSceneDelegate`) and a single-window `UIApplicationSceneManifest`.
+The scene loads `Main.storyboard` and selects the initial page; the app delegate
+handles process-wide setup. MAUI's iOS and Mac Catalyst heads use
+`MauiUISceneDelegate` with MAUI's default scene configuration and create their UI
+programmatically, without a scene storyboard.
+
+These samples require iOS/tvOS 15 or Mac Catalyst 17; the MAUI samples pin
+MAUI 10.0.110, the minimum scene-capable version used here. Use MAUI 10.0.110 or
+newer when updating them. For Xcode 27, use the supported .NET Apple workload
+set 10.0.401.1. The installed Apple workloads and selected Xcode must match;
+do not bypass the workload's Xcode version check.
+
+Uno heads remain on the legacy lifecycle because their pinned Uno SDK lacks
+scene-delegate support. Native macOS uses AppKit and does not need UIKit scenes.
+
 ## Browser runs
 
 For local browser tests, build the runner and install its matching Chromium:
