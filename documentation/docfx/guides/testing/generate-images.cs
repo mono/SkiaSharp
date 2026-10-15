@@ -34,14 +34,14 @@ SaveImage("expected.png", expected);
 SaveImage("actual.png", actual);
 SavePreview("expected-preview.png", expected);
 SavePreview("actual-preview.png", actual);
-SaveImage("tolerance-mask.png", toleranceMask);
-SaveImage("ignore-mask.png", ignoreMask);
+SavePreview("tolerance-mask.png", toleranceMask);
+SavePreview("ignore-mask.png", ignoreMask);
 using var exact = SKPixelComparer.GenerateDifferenceImage(expected, actual);
-SaveImage("comparison-exact.png", exact);
+SavePreview("comparison-exact.png", exact);
 
 var toleranceOptions = RgbTolerance();
 using var tolerant = SKPixelComparer.GenerateDifferenceImage(expected, actual, options: toleranceOptions);
-SaveImage("comparison-tolerant.png", tolerant);
+SavePreview("comparison-tolerant.png", tolerant);
 
 var styleOptions = RgbTolerance();
 styleOptions.AlphaTolerance = SKPixelTolerance.Exact;
@@ -49,10 +49,10 @@ using var overlay = SKPixelComparer.GenerateDifferenceImage(expected, actual, op
 using var map = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.ThresholdMap, styleOptions);
 using var binary = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.BinaryMask, styleOptions);
 using var channels = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.ChannelDifference, styleOptions);
-SaveImage("threshold-overlay.png", overlay);
-SaveImage("threshold-map.png", map);
-SaveImage("binary-mask.png", binary);
-SaveImage("channel-difference.png", channels);
+SavePreview("threshold-overlay.png", overlay);
+SavePreview("threshold-map.png", map);
+SavePreview("binary-mask.png", binary);
+SavePreview("channel-difference.png", channels);
 
 var regionalTolerance = new SKPixelComparerOptions
 {
@@ -60,7 +60,7 @@ var regionalTolerance = new SKPixelComparerOptions
     ToleranceMask = toleranceMask,
 };
 using var regionTolerated = SKPixelComparer.GenerateDifferenceImage(expected, actual, options: regionalTolerance);
-SaveImage("comparison-tolerance.png", regionTolerated);
+SavePreview("comparison-tolerance.png", regionTolerated);
 
 var regionalIgnore = new SKPixelComparerOptions
 {
@@ -68,7 +68,7 @@ var regionalIgnore = new SKPixelComparerOptions
     IgnoreMask = ignoreMask,
 };
 using var regionIgnored = SKPixelComparer.GenerateDifferenceImage(expected, actual, options: regionalIgnore);
-SaveImage("comparison-ignore.png", regionIgnored);
+SavePreview("comparison-ignore.png", regionIgnored);
 
 Console.WriteLine($"Generated comparison images in {images}");
 
@@ -125,17 +125,20 @@ void SaveImage(string name, SKImage image)
 
 void SavePreview(string name, SKImage image)
 {
-    using var bitmap = new SKBitmap(new SKImageInfo(image.Width, image.Height, SKColorType.Bgra8888, SKAlphaType.Opaque));
+    const int padding = 50;
+    var width = image.Width + padding * 2;
+    var height = image.Height + padding * 2;
+    using var bitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Opaque));
     using var canvas = new SKCanvas(bitmap);
     using var paint = new SKPaint();
-    for (var y = 0; y < image.Height; y += 16)
-        for (var x = 0; x < image.Width; x += 16)
+    for (var y = 0; y < height; y += 16)
+        for (var x = 0; x < width; x += 16)
         {
             paint.Color = ((x / 16 + y / 16) & 1) == 0
                 ? SKColors.White : new SKColor(224, 228, 234);
-            canvas.DrawRect(x, y, Math.Min(16, image.Width - x), Math.Min(16, image.Height - y), paint);
+            canvas.DrawRect(x, y, Math.Min(16, width - x), Math.Min(16, height - y), paint);
         }
-    canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
+    canvas.DrawImage(image, padding, padding, SKSamplingOptions.Default);
     using var preview = SKImage.FromBitmap(bitmap)
         ?? throw new InvalidOperationException($"Unable to create {name}.");
     SaveImage(name, preview);
