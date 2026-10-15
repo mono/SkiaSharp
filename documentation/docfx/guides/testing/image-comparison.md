@@ -39,7 +39,9 @@ dotnet add package SkiaSharp.Testing
 Every example uses this scene. The rounded blue panel changes from RGB **(72, 104, 192)**
 to **(74, 106, 194)**, the green circle keeps RGB **(48, 185, 131)** but changes alpha
 from **255** to **128**, and the rounded violet square is new. The display copies
-have a checkerboard behind them to reveal transparency. The original
+have a 50-pixel checkerboard surround and backdrop to reveal transparency.
+Every displayed image, including masks and diagnostics, is 900x700 with the
+800x600 result centered inside. Opaque regions hide the checkerboard. The original
 `expected.png` and `actual.png` retain their alpha for comparison; the
 checkerboard is not part of the compared pixels.
 
@@ -225,6 +227,6 @@ dotnet run --file documentation/docfx/guides/testing/generate-images.cs \
 ```
 
 Edit `RenderScene` in `generate-images.cs` to change the base artwork. The script
-regenerates the plain inputs, masks and diagnostics together, plus checkerboard
-display copies of the inputs. It does not draw labels, compose panels, capture
+regenerates the plain inputs plus padded checkerboard display copies of every
+input, mask and diagnostic. It does not draw labels, compose panels, capture
 devices, update references or accept baselines.
