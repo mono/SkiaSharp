@@ -46,27 +46,55 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
     public Task BlazorWebAssemblyCpuSampleRuns(bool delayFirstPaint) =>
         RunBrowserSample("Basic/BlazorWebAssembly", ["--urls", "http://127.0.0.1:0"], async app =>
         {
+            var firstPixelProbe = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (delayFirstPaint)
             {
-                // Keep the canvas visible while its raster interop is still loading.
+                await app.Page.ExposeFunctionAsync("observeFirstCpuPixel", (int alpha) =>
+                    firstPixelProbe.TrySetResult(alpha));
+                await app.Page.AddInitScriptAsync("""
+                    (() => {
+                        const getImageData = CanvasRenderingContext2D.prototype.getImageData;
+                        CanvasRenderingContext2D.prototype.getImageData = function(...args) {
+                            const pixels = getImageData.apply(this, args);
+                            if (this.canvas.matches('.canvas-container canvas')) {
+                                CanvasRenderingContext2D.prototype.getImageData = getImageData;
+                                globalThis.observeFirstCpuPixel(pixels.data[3])
+                                    .catch(error => console.error(error));
+                            }
+                            return pixels;
+                        };
+                    })();
+                    """);
+                // Keep initialization blocked until the readiness check observes real transparent pixels.
                 await app.Page.RouteAsync("**/_content/SkiaSharp.Views.Blazor/SKHtmlCanvas.js", async route =>
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);
+                    await firstPixelProbe.Task.WaitAsync(TestContext.Current.CancellationToken);
                     await route.ContinueAsync();
                 });
             }
 
-            await app.Navigate("/");
-            await app.WaitForElement(".canvas-container canvas");
-            // The element is visible before raster interop presents its first opaque frame.
-            await app.Page.WaitForFunctionAsync("""
-                () => {
-                    const canvas = document.querySelector('.canvas-container canvas');
-                    return canvas?.getContext('2d')?.getImageData(0, 0, 1, 1).data[3] === 255;
-                }
-                """).WaitAsync(TestContext.Current.CancellationToken);
-            var screenshot = await app.Screenshot();
-            SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png");
+            try
+            {
+                await app.Navigate("/");
+                await app.WaitForElement(".canvas-container canvas");
+                // The element is visible before raster interop presents its first opaque frame.
+                await app.Page.WaitForFunctionAsync("""
+                    () => {
+                        const canvas = document.querySelector('.canvas-container canvas');
+                        return canvas?.getContext('2d')?.getImageData(0, 0, 1, 1).data[3] === 255;
+                    }
+                    """).WaitAsync(TestContext.Current.CancellationToken);
+                var screenshot = await app.Screenshot();
+                SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png");
+                if (delayFirstPaint)
+                    Assert.Equal(0, await firstPixelProbe.Task.WaitAsync(TestContext.Current.CancellationToken));
+            }
+            finally
+            {
+                // A failed/removed readiness check must not leave a blocked route during cleanup.
+                firstPixelProbe.TrySetResult(0);
+                await app.Page.UnrouteAllAsync(new() { Behavior = UnrouteBehavior.Wait });
+            }
         });
 
     [Fact]
