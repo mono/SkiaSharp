@@ -63,7 +63,7 @@ $uri = "https://github.com/pal1000/mesa-dist-win/releases/download/$mesaVersion/
 $archive = Join-Path $tempDir $archiveName
 
 Write-Host "Downloading Mesa $mesaVersion ..."
-& (Join-Path $PSScriptRoot '..\shared\download-file.ps1') -Uri $uri -OutFile $archive
+& (Join-Path $PSScriptRoot '..\..\native\shared\download-file.ps1') -Uri $uri -OutFile $archive
 
 $actualSha = (Get-FileHash -Algorithm SHA256 -Path $archive).Hash.ToLowerInvariant()
 if ($actualSha -ne $mesaSha) {
