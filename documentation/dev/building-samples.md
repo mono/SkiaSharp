@@ -217,7 +217,7 @@ Debug APKs embed their managed assemblies because Appium installs them without
 the separate `dotnet` fast-deployment step.
 
 Local runs select Android **17**, using model `pixel_9`. iOS defaults to **iPhone 16 Pro**
-on **26.2**. Install `system-images;android-37.1;google_apis_ps16k;<host-ABI>`
+on **26.5**. Install `system-images;android-37.1;google_apis_ps16k;<host-ABI>`
 and the selected iOS runtime/device type before running tests. Missing prerequisites
 fail local tests; the test runner never installs device images or simulator runtimes.
 
@@ -227,7 +227,7 @@ Install the selected prerequisites explicitly before a local run:
 pwsh scripts/infra/managed/install-android-package.ps1 -Package emulator
 pwsh scripts/infra/managed/install-android-image.ps1 -Image 'android-37.1;google_apis_ps16k'
 # On macOS, with DEVELOPER_DIR already selecting the required installed Xcode:
-pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version 26.2 -BuildVersion 23C54
+pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version 26.5 -BuildVersion 23F77
 ```
 
 The Android image helper selects `arm64-v8a` or `x86_64` from the host architecture;

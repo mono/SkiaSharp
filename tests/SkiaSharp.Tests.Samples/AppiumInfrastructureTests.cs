@@ -9,6 +9,31 @@ namespace SkiaSharp.Tests.Samples;
 [RunGroup(SampleRunGroup.Build)]
 public sealed class AppiumInfrastructureTests
 {
+	[Fact]
+	public void CapturesOfTheSameSceneKeepBothFiles()
+	{
+		var root = Path.Combine(Path.GetTempPath(), SampleWorkspace.CreateIdentity("appium-captures"));
+		try
+		{
+			var inputs = Path.Combine(root, "inputs");
+			Directory.CreateDirectory(Path.Combine(inputs, "Sample"));
+			using var workspace = new SampleWorkspace("Sample", inputs, Repo.PackagesDir,
+				Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+			var app = new MacRunningApp(workspace, Path.Combine(workspace.Root, "Sample.app"));
+
+			var before = app.SaveCapture([1, 2], "drawing");
+			var after = app.SaveCapture([3, 4], "drawing");
+
+			Assert.NotEqual(before, after);
+			Assert.Equal(new byte[] { 1, 2 }, File.ReadAllBytes(before));
+			Assert.Equal(new byte[] { 3, 4 }, File.ReadAllBytes(after));
+		}
+		finally
+		{
+			SampleWorkspace.DeleteDirectory(root);
+		}
+	}
+
 	[Theory]
 	[InlineData("<manifest package=\"com.skiasharp.sample\"><application name=\"OtherClass\" /></manifest>")]
 	[InlineData("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" package=\"com.skiasharp.sample\" />")]

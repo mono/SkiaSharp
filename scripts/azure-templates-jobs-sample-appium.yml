@@ -9,11 +9,13 @@ jobs:
   - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
     parameters:
       name: ${{ parameters.name }}
-      displayName: Appium (${{ parameters.runGroup }})
+      displayName: Appium reference capture (${{ parameters.runGroup }})
       buildAgent: ${{ parameters.buildAgent }}
       target: samples
       additionalArgs: --runGroup=${{ parameters.runGroup }} --sampleRunId=${{ parameters.name }} --skipExternals="all"
       env:
+        # Temporary capture-only run: retain images for review, then restore strict validation.
+        CaptureSampleReferences: 'true'
         SAMPLE_TEST_SDK_VERSION: ${{ parameters.sdk.version }}
         ${{ if eq(parameters.runGroup, 'Android') }}:
           SAMPLE_TEST_ANDROID_VERSION: ${{ parameters.device.version }}
@@ -77,4 +79,18 @@ jobs:
           inputs:
             testResultsFormat: VSTest
             testResultsFiles: output/logs/testlogs/samples/${{ parameters.name }}/**/*.trx
-            testRunTitle: Appium samples (${{ parameters.runGroup }})
+            testRunTitle: Appium reference capture (${{ parameters.runGroup }})
+        - ${{ if eq(parameters.runGroup, 'Mac') }}:
+          - pwsh: |
+              $reports = Join-Path $HOME 'Library/Logs/DiagnosticReports'
+              if (Test-Path $reports) {
+                  Get-ChildItem $reports -Filter 'SkiaSharpSample*.ips' |
+                      Copy-Item -Destination output/logs
+              }
+            displayName: Retain sample app crash reports
+            condition: failed()
+        - pwsh: |
+            Write-Host 'Reference capture only: review the PNGs and rerun strict comparisons before accepting this job.'
+            exit 1
+          displayName: Reference captures require review (not strict validation)
+          condition: succeeded()

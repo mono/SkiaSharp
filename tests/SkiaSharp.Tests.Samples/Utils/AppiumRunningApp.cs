@@ -15,6 +15,7 @@ internal abstract class AppiumRunningApp
 	private AppiumDriver? driver;
 	private string? applicationId;
 	private bool used;
+	private int captureIndex;
 
 	protected AppiumRunningApp(SampleWorkspace workspace, string artifact)
 	{
@@ -277,11 +278,11 @@ internal abstract class AppiumRunningApp
 	internal string Capture(string id, string name) =>
 		SaveCapture(((ITakesScreenshot)Find(id)).GetScreenshot().AsByteArray, name);
 
-	private string SaveCapture(byte[] png, string name)
+	internal string SaveCapture(byte[] png, string name)
 	{
 		if (string.IsNullOrWhiteSpace(name) || name != Path.GetFileName(name) || name is "." or "..")
 			throw new ArgumentException("Screenshot names must be a single nonempty filename.", nameof(name));
-		var path = Path.Combine(Workspace.DiagnosticsRoot, "screenshots", name + ".png");
+		var path = Path.Combine(Workspace.DiagnosticsRoot, "screenshots", $"{++captureIndex:D2}-{name}.png");
 		Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 		File.WriteAllBytes(path, png);
 		return path;

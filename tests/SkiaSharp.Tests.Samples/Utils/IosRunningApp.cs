@@ -11,7 +11,7 @@ internal sealed class IosRunningApp(SampleWorkspace workspace, string artifact, 
 {
 	private readonly string version = version
 		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_IOS_VERSION")
-		?? "26.2";
+		?? "26.5";
 	private readonly string model = model
 		?? Environment.GetEnvironmentVariable("SAMPLE_TEST_IOS_MODEL")
 		?? "iPhone 16 Pro";
