@@ -222,7 +222,7 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             inputs:
-              version: 20.x
+              version: 24.x
         # install ninja
         - ${{ if eq(parameters.installNinja, 'true') }}:
           - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
