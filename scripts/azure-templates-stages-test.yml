@@ -14,9 +14,6 @@ parameters:
   - name: enableCaching
     type: boolean
     default: false
-  - name: use1ESPipelineTemplates
-    type: boolean
-    default: false
 
 stages:
 
@@ -30,12 +27,10 @@ stages:
       - template: /scripts/azure-templates-jobs-tests-native.yml@self
         parameters:
           buildAgent: ${{ parameters.buildAgentLinux }}
-          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           platform: linux
       - template: /scripts/azure-templates-jobs-tests-native.yml@self
         parameters:
           buildAgent: ${{ parameters.buildAgentWindows }}
-          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           platform: windows
 
   - template: /scripts/azure-templates-stages-managed.yml@self

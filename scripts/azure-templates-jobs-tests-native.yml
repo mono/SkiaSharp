@@ -1,6 +1,5 @@
 parameters:
   buildAgent: {}
-  use1ESPipelineTemplates: false
   platform: linux
 
 jobs:
@@ -9,7 +8,6 @@ jobs:
       name: tests_native_${{ parameters.platform }}
       displayName: Native tests (${{ iif(eq(parameters.platform, 'windows'), 'Windows', 'Linux') }})
       buildAgent: ${{ parameters.buildAgent }}
-      use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
       ${{ if eq(parameters.platform, 'linux') }}:
         docker: scripts/infra/tests/docker/native
         dotnetSdks: []
