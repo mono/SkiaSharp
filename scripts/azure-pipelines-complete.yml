@@ -1,10 +1,5 @@
-trigger:
-  - main
-  - release/*
-
-pr:
-  - main
-  - release/*
+trigger: none
+pr: none
 
 parameters:
   - name: enableCaching
@@ -80,20 +75,36 @@ variables:
   - template: /eng/common/templates/variables/pool-providers.yml@self
   - template: /scripts/azure-templates-variables.yml@self
 
-extends:
-  template: /scripts/azure-template-fake-1es.yml@self
-  parameters:
-    pool: ${{ parameters.buildAgentHost.pool }}
-    stages:
-      - template: /scripts/azure-templates-stages.yml@self
-        parameters:
-          buildPipelineType: 'complete'
-          buildAgentHost: ${{ parameters.buildAgentHost }}
-          buildAgentWindows: ${{ parameters.buildAgentWindows }}
-          buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
-          buildAgentMac: ${{ parameters.buildAgentMac }}
-          buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
-          buildAgentLinux: ${{ parameters.buildAgentLinux }}
-          buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
-          buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
-          enableCaching: ${{ parameters.enableCaching }}
+jobs:
+  - job: public_windows_tool_inventory
+    timeoutInMinutes: 5
+    pool:
+      name: ${{ parameters.buildAgentWindows.pool.name }}
+      demands: ${{ parameters.buildAgentWindows.pool.demands }}
+    steps:
+      - checkout: none
+      - pwsh: |
+          $tools = @('llvm-readelf.exe', 'llvm-readobj.exe', 'llvm-nm.exe', 'llvm-ar.exe', 'llvm-pdbutil.exe', 'llvm-objdump.exe')
+          foreach ($tool in $tools) {
+            $command = Get-Command $tool -CommandType Application -ErrorAction SilentlyContinue
+            Write-Host "PATH command $tool : $($command.Source)"
+          }
+          foreach ($directory in @(
+            'C:\Program Files\LLVM\bin',
+            'C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\Llvm\x64\bin',
+            'C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\Llvm\bin'
+          )) {
+            Write-Host "Literal directory $directory exists: $(Test-Path -LiteralPath $directory -PathType Container)"
+            foreach ($tool in $tools) {
+              $path = Join-Path $directory $tool
+              $exists = Test-Path -LiteralPath $path -PathType Leaf
+              Write-Host "$path exists: $exists"
+              if ($exists) {
+                & $path --version
+                if ($LASTEXITCODE -ne 0) {
+                  throw "$path --version failed: $LASTEXITCODE"
+                }
+              }
+            }
+          }
+        displayName: Inspect only PATH and declared LLVM installation paths
