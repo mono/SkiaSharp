@@ -28,6 +28,10 @@
     <RuntimeHostConfigurationOption Include="SampleTest.RepositoryDirectory" Value="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..'))" />
     <RuntimeHostConfigurationOption Include="SampleTest.CaptureReferences" Value="true" Condition="'$(CaptureSampleReferences)' == 'true'" />
     <Compile Include="..\Tests\Utils\SKPixelComparer.cs" Link="Utils\SKPixelComparer.cs" />
+    <Compile Include="..\Tests\SkiaSharp\GlContexts\Cgl\Cgl.cs" Link="Utils\Cgl\Cgl.cs" />
+    <Compile Include="..\Tests\SkiaSharp\GlContexts\Cgl\CGLError.cs" Link="Utils\Cgl\CGLError.cs" />
+    <Compile Include="..\Tests\SkiaSharp\GlContexts\Cgl\CGLPixelFormatAttribute.cs" Link="Utils\Cgl\CGLPixelFormatAttribute.cs" />
+    <Compile Include="..\Tests\SkiaSharp\GlContexts\Cgl\CGLOpenGLProfile.cs" Link="Utils\Cgl\CGLOpenGLProfile.cs" />
   </ItemGroup>
 
   <Target Name="ValidateSamplePlatformPackages" BeforeTargets="CollectPackageReferences;Restore;Build">

@@ -31,6 +31,8 @@ jobs:
       shouldPublish: false
       installAndroidSdk: ${{ eq(parameters.runGroup, 'Android') }}
       installAndroidNdk: false
+      ${{ if and(eq(parameters.runGroup, 'Android'), eq(parameters.buildAgent.pool.os, 'linux')) }}:
+        packages: libpulse0
       provisioningSteps:
         - pwsh: New-Item -ItemType Directory -Path output/logs -Force | Out-Null
           displayName: Prepare Appium diagnostic artifacts

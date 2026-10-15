@@ -10,6 +10,44 @@ namespace SkiaSharp.Tests.Samples;
 public sealed class AppiumInfrastructureTests
 {
 	[Fact]
+	public async Task NativeDiagnosticsFollowTheScenarioWithoutHidingItsFailure()
+	{
+		var order = new List<string>();
+		var failure = new InvalidOperationException("Actual app launch failed.");
+		var reported = await Assert.ThrowsAsync<InvalidOperationException>(() => Assert.MultipleAsync(
+			async () =>
+			{
+				order.Add("scenario");
+				await Task.Yield();
+				order.Add("cleanup");
+				throw failure;
+			},
+			() =>
+			{
+				order.Add("diagnostics");
+				return Task.CompletedTask;
+			}));
+		Assert.Same(failure, reported);
+		Assert.Equal(new[] { "scenario", "cleanup", "diagnostics" }, order);
+	}
+
+	[Fact]
+	public void MacGlDiagnosticsCompareTheViewRequestWithoutSelectingAFallback()
+	{
+		var requests = MacRunningApp.OpenGlPixelFormatRequests();
+		Assert.Equal(5, requests.Length);
+		var requested = requests[0];
+		Assert.Equal("view-request", requested.Name);
+		Assert.Contains(CGLPixelFormatAttribute.kCGLPFAAccelerated, requested.Attributes);
+		Assert.Contains(CGLPixelFormatAttribute.kCGLPFAMultisample, requested.Attributes);
+		var samples = Array.IndexOf(requested.Attributes, CGLPixelFormatAttribute.kCGLPFASamples);
+		Assert.Equal((CGLPixelFormatAttribute)4, requested.Attributes[samples + 1]);
+		Assert.DoesNotContain(CGLPixelFormatAttribute.kCGLPFAMultisample, requests[1].Attributes);
+		Assert.DoesNotContain(CGLPixelFormatAttribute.kCGLPFAAccelerated, requests[2].Attributes);
+		Assert.All(requests, request => Assert.Equal(CGLPixelFormatAttribute.kCGLPFANone, request.Attributes[^1]));
+	}
+
+	[Fact]
 	public void CapturesOfTheSameSceneKeepBothFiles()
 	{
 		var root = Path.Combine(Path.GetTempPath(), SampleWorkspace.CreateIdentity("appium-captures"));

@@ -207,7 +207,8 @@ CI runs `scripts/infra/tests/install-appium.ps1` to install Appium and the selec
 driver in the standard npm global and `~/.appium` locations. Windows jobs use
 WinAppDriver supplied by the selected UI-test image.
 Appium jobs use the repository's platform-default .NET workloads and pinned Tizen setup.
-Android jobs run on Linux with KVM. Basic and Gallery MAUI declare Android only
+Android jobs run on Linux with KVM. Linux emulator runs are headless and require
+`libpulse0`. Basic and Gallery MAUI declare Android only
 on Linux, Android/iOS/MacCatalyst on macOS, and Android/Windows on Windows.
 Native Basic Android remains Android-only. Framework selection does not rewrite
 these declarations; restore uses the host's declared graph.
@@ -280,6 +281,10 @@ creation/deletion. Appium selects the emulator serial; existing devices/data
 remain untouched.
 Appium owns app installation, launch, logs and session cleanup. Foreground
 interactions are serialized.
+
+The native AppKit scenario attaches `opengl-pixel-formats.log`, comparing the
+view's CGL requirements with bounded controls on the same host. This does not
+select a fallback or replace execution of the actual app.
 
 The fixture uses a free loopback port for each server and driver connection;
 UiAutomator2 selects its own available driver port. Mac2 requires an unlocked GUI session,

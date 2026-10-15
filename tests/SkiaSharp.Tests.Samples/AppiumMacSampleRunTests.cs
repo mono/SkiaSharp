@@ -64,13 +64,16 @@ public sealed class AppiumMacSampleRunTests(AppiumFixture appium) : AppiumSample
 
 		var app = await BuildMacApp("Basic/macOS", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running => Basic(running, "Native", "macOS",
-		[
-			new("CPU", "basic-canvas-cpu", "basic-cpu"),
-			new("GPU (GL)", "basic-canvas-gpu-gl", "basic-gpu-gl-smoke", new("basic-gpu-gl-fps", HasFps), Animated: true),
-			new("GPU (Metal)", "basic-canvas-gpu-metal", "basic-gpu-metal-smoke", new("basic-gpu-metal-fps", HasFps), Animated: true),
-			new("Drawing", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
-		], NavigateNativeMac));
+		// Run the real app before diagnostic queries can initialize graphics services.
+		await Assert.MultipleAsync(
+			() => appium.Run(app, running => Basic(running, "Native", "macOS",
+			[
+				new("CPU", "basic-canvas-cpu", "basic-cpu"),
+				new("GPU (GL)", "basic-canvas-gpu-gl", "basic-gpu-gl-smoke", new("basic-gpu-gl-fps", HasFps), Animated: true),
+				new("GPU (Metal)", "basic-canvas-gpu-metal", "basic-gpu-metal-smoke", new("basic-gpu-metal-fps", HasFps), Animated: true),
+				new("Drawing", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
+			], NavigateNativeMac)),
+			app.RecordOpenGlPixelFormats);
 	}
 
 	[Fact]

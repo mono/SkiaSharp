@@ -24,6 +24,56 @@ internal sealed class MacRunningApp(SampleWorkspace workspace, string artifact)
 
 	internal override Task<string> ReadApplicationId() => ReadAppleApplicationId();
 
+	internal Task RecordOpenGlPixelFormats()
+	{
+		Assert.True(OperatingSystem.IsMacOS(), "CGL diagnostics require macOS.");
+		TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+		Cgl.CGLGetVersion(out var major, out var minor);
+		var lines = new List<string> { $"CGL version {major}.{minor}; format selection only, no context or renderer changes." };
+		foreach (var (name, attributes) in OpenGlPixelFormatRequests())
+		{
+			var status = Cgl.CGLChoosePixelFormat(attributes, out var format, out var count);
+			try
+			{
+				lines.Add($"{name}: status={status}; formats={count}; selected={format != IntPtr.Zero}");
+			}
+			finally
+			{
+				if (format != IntPtr.Zero)
+					Cgl.CGLReleasePixelFormat(format);
+			}
+		}
+		return SaveText("opengl-pixel-formats.log", string.Join(Environment.NewLine, lines));
+	}
+
+	internal static (string Name, CGLPixelFormatAttribute[] Attributes)[] OpenGlPixelFormatRequests()
+	{
+		CGLPixelFormatAttribute[] common =
+		[
+			CGLPixelFormatAttribute.kCGLPFADoubleBuffer,
+			CGLPixelFormatAttribute.kCGLPFAColorSize, (CGLPixelFormatAttribute)32,
+			CGLPixelFormatAttribute.kCGLPFAAlphaSize, (CGLPixelFormatAttribute)8,
+			CGLPixelFormatAttribute.kCGLPFADepthSize, (CGLPixelFormatAttribute)24,
+			CGLPixelFormatAttribute.kCGLPFAStencilSize, (CGLPixelFormatAttribute)8
+		];
+		CGLPixelFormatAttribute[] multisample =
+		[
+			CGLPixelFormatAttribute.kCGLPFAMultisample,
+			CGLPixelFormatAttribute.kCGLPFASampleBuffers, (CGLPixelFormatAttribute)1,
+			CGLPixelFormatAttribute.kCGLPFASamples, (CGLPixelFormatAttribute)4
+		];
+		// Mirror SKGLView's request and vary one requirement at a time; these are diagnostics, not fallbacks.
+		return
+		[
+			("view-request", [CGLPixelFormatAttribute.kCGLPFAAccelerated, .. common, .. multisample, CGLPixelFormatAttribute.kCGLPFANone]),
+			("no-msaa-requirement", [CGLPixelFormatAttribute.kCGLPFAAccelerated, .. common, CGLPixelFormatAttribute.kCGLPFANone]),
+			("no-acceleration-requirement", [.. common, .. multisample, CGLPixelFormatAttribute.kCGLPFANone]),
+			("no-acceleration-or-msaa-requirement", [.. common, CGLPixelFormatAttribute.kCGLPFANone]),
+			("core-test", [CGLPixelFormatAttribute.kCGLPFAOpenGLProfile, (CGLPixelFormatAttribute)CGLOpenGLProfile.kCGLOGLPVersion_3_2_Core,
+				CGLPixelFormatAttribute.kCGLPFADoubleBuffer, CGLPixelFormatAttribute.kCGLPFANone])
+		];
+	}
+
 	internal override void SubmitSearch() =>
 		Driver.ExecuteScript("macos: keys", new Dictionary<string, object>
 		{
