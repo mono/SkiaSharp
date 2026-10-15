@@ -194,7 +194,8 @@ Use UiAutomator2 for API 26 and 37 (driver 6+ requires API 26), XCUITest for iOS
 Mac2 for MacCatalyst/macOS, or Windows for WinUI/MAUI
 Windows. Tests do not install tools, workloads or device images.
 CI runs `scripts/infra/tests/install-appium.ps1` to install Appium and the selected
-driver in job-owned directories. Windows jobs also provision WinAppDriver.
+driver in the standard npm global and `~/.appium` locations. Windows jobs use
+WinAppDriver supplied by the selected UI-test image.
 Appium jobs use the repository's platform-default .NET workloads and pinned Tizen setup.
 Android jobs run on Linux with KVM. Basic and Gallery MAUI declare Android only
 on Linux, Android/iOS/MacCatalyst on macOS, and Android/Windows on Windows.
