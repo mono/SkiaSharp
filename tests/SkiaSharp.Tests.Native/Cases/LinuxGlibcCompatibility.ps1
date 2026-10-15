@@ -12,7 +12,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module "$PSScriptRoot/Helpers.psm1"
 
 Assert-NativeRoot $NativeRoot
-Assert-Readelf
+Assert-Tool llvm-readobj
 
 # Compatibility policy belongs with the test, independently of the producing toolchain.
 $limits = @{
@@ -30,7 +30,7 @@ foreach ($arch in $limits.Keys | Sort-Object) {
         foreach ($name in 'libSkiaSharp', 'libHarfBuzzSharp') {
             $library = Join-Path $NativeRoot "$variant/$arch/$name.so"
             Assert-Artifact $library
-            $output = (& llvm-readelf --wide --dynamic --version-info $library) -join "`n"
+            $output = (& llvm-readobj --elf-output-style=GNU --dynamic-table --version-info $library) -join "`n"
             $dependencies = @([regex]::Matches($output, '\(NEEDED\).+\[(.+)\]') |
                 ForEach-Object { $_.Groups[1].Value })
             if ('libc.so.6' -cnotin $dependencies -or @($dependencies -match '^libc\.musl-').Count -gt 0) {
