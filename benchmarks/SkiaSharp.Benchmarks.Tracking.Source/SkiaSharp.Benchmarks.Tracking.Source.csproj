@@ -51,6 +51,19 @@
     </Reference>
   </ItemGroup>
 
+  <!-- Testing is not published for historical tracking versions. Opt in only after
+       building the local Testing assembly, without restoring its transitive workloads. -->
+  <PropertyGroup Condition="'$(IncludePixelComparisonBenchmarks)' == 'true'">
+    <NoWarn>$(NoWarn);SKIA4001</NoWarn>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IncludePixelComparisonBenchmarks)' == 'true'">
+    <Compile Include="..\SkiaSharp.Benchmarks\Benchmarks\PixelComparerBenchmarks.cs" />
+    <Reference Include="SkiaSharp.Testing">
+      <HintPath>..\..\source\SkiaSharp.Testing\bin\$(Configuration)\net10.0\SkiaSharp.Testing.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
 
 </Project>

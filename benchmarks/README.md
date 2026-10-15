@@ -70,3 +70,46 @@ Tips:
   run — that is noise, not a finding.
 - Use `[DisassemblyDiagnoser]` when a change is codegen-sensitive (inlining, `sealed`, bounds
   checks) to confirm the JIT did what you expect.
+
+## Pixel comparer: timing, allocations, and tracking
+
+`PixelComparerComparisonBenchmark` measures the public image/bitmap/pixmap comparison overloads
+and comparison with both tolerance and ignore masks. `PixelComparerDiagnosticBenchmark` measures
+all four difference-image styles, including an eight-pixel checksum and output disposal. Their shared `PixelComparerFixture`
+preallocates deterministic decoded inputs and masks in `GlobalSetup` and releases them in
+`GlobalCleanup`; no decode or fixture construction is timed. Unchanged, tolerated, mismatched,
+alpha-only, mask-tolerated, and ignored regions coexist in each input. RGB/RGBA mean three/four
+selected channels, using BGRA8888 Unpremul inputs and normalization.
+
+Four comparison scenarios (32×32 RGB, 256×256 RGBA, 800×600 RGB, 1920×1080 RGBA) and three diagnostic
+scenarios (all except 32×32) make **28 image cases**, not a size/channel/style Cartesian product.
+`PixelMismatchBudgetBenchmark` adds three small cases for percentage-boundary arithmetic,
+including scientific notation, independently of image scanning.
+Timing covers each whole public call, including its internal normalization and native allocations.
+Diagnostics also include the checksum's temporary pixmap wrapper and disposal.
+`MemoryDiagnoser`'s `Allocated` column counts **managed allocations only**: native pixel/image
+buffers are **not counted**, including diagnostic output buffers. These are persistent workload
+measurements, not copied `Old` implementations or an assertion that one overload is a baseline.
+
+```bash
+dotnet run -c Release --project benchmarks/SkiaSharp.Benchmarks -- --filter '*PixelComparer*' '*PixelMismatchBudget*' --job short --exporters fulljson
+```
+
+The command exports full BenchmarkDotNet JSON alongside the normal reports. The PR source
+leg of the tracking workflow builds the matching Testing assembly and includes these workloads.
+For local source tracking, first build matching source assemblies, then opt into the **same classes** in the
+existing tracking source runner (which already exports full JSON):
+
+```bash
+dotnet build source/SkiaSharp.Testing/SkiaSharp.Testing.csproj -c Release \
+  -p:BasicTargetFrameworks=net10.0 -p:AllTargetFrameworks=net10.0 -p:BuildingInsideVisualStudio=true
+dotnet run -c Release --project benchmarks/SkiaSharp.Benchmarks.Tracking.Source \
+  -p:IncludePixelComparisonBenchmarks=true -- --filter '*PixelComparer*' '*PixelMismatchBudget*'
+```
+
+The source runner uses its configured in-process job; do not add `--job short`, which also
+creates an out-of-process job that cannot reuse the source-only build properties.
+Use the default job and repeat runs for final numbers. The experimental API opt-in is explicit
+(`NoWarn=SKIA4001`). Tracking is **source-only**: SkiaSharp.Testing is not yet published and cannot
+run against historical core packages. The package tracking project is unchanged, so these cases
+appear in PR source results, not the persisted daily package history yet.
