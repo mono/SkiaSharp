@@ -51,128 +51,39 @@ Task("git-sync-deps")
 
 void CheckWindowsDependencies(FilePath dll, string[] excluded = null, string[] included = null, string[] delayLoaded = null, bool checkSpectre = true)
 {
-    excluded = excluded ?? new string[0];
-    included = included ?? new string[0];
-    delayLoaded = delayLoaded ?? new string[0];
-
-    if (excluded.Length > 0)
-        Information($"Making sure that there are no dependencies on: {string.Join(", ", excluded)}");
-    if (included.Length > 0)
-        Information($"Making sure that there ARE dependencies on: {string.Join(", ", included)}");
-    if (delayLoaded.Length > 0)
-        Information($"Making sure that these are delay-loaded (not hard deps): {string.Join(", ", delayLoaded)}");
-
     var dumpbins = GetFiles($"{VS_INSTALL}/VC/Tools/MSVC/*/bin/Host*/*/dumpbin.exe");
     if (dumpbins.Count == 0) {
         throw new Exception("Could not find dumpbin.exe, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
     }
 
-    RunProcess(dumpbins.First(), $"/dependents {dll}", out var stdoutEnum);
-    var stdout = stdoutEnum.ToArray();
-
-    // Parse the dumpbin /dependents output into regular and delay-loaded sections.
-    var needed = new List<string>();
-    var delayed = new List<string>();
-    List<string> currentList = null;
-    foreach (var line in stdout) {
-        if (line.Contains("has the following dependencies:"))
-            currentList = needed;
-        else if (line.Contains("has the following delay load dependencies:"))
-            currentList = delayed;
-        else if (line.Contains("Summary"))
-            currentList = null;
-        else if (currentList != null) {
-            var match = System.Text.RegularExpressions.Regex.Match(line, @"\s\s+(\S+\.dll)");
-            if (match.Success)
-                currentList.Add(match.Groups[1].Value);
-        }
-    }
-
-    Information("Dependencies:");
-    foreach (var need in needed) {
-        Information($"    {need}");
-    }
-    if (delayed.Count > 0) {
-        Information("Delay-loaded:");
-        foreach (var d in delayed) {
-            Information($"    {d}");
-        }
-    }
-
-    foreach (var exclude in excluded) {
-        if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
-            throw new Exception($"{dll} contained a dependency on {exclude}.");
-    }
-
-    foreach (var include in included) {
-        if (!needed.Any(o => o.Contains(include.Trim(), StringComparison.OrdinalIgnoreCase)))
-            throw new Exception($"{dll} is missing an expected dependency on {include}.");
-    }
-
-    foreach (var dl in delayLoaded) {
-        if (needed.Any(o => o.Contains(dl.Trim(), StringComparison.OrdinalIgnoreCase)))
-            throw new Exception($"{dll} has a hard dependency on {dl} which should be delay-loaded.");
-        if (!delayed.Any(o => o.Contains(dl.Trim(), StringComparison.OrdinalIgnoreCase)))
-            throw new Exception($"{dll} is missing an expected delay-loaded dependency on {dl}.");
-    }
-
-    if (checkSpectre) {
-        var pdb = dll.ChangeExtension(".pdb");
-        var contents = System.IO.File.ReadAllText(pdb.FullPath, System.Text.Encoding.ASCII);
-        if (!contents.Contains("objr_spectre", StringComparison.OrdinalIgnoreCase) &&
-            !contents.Contains("objd_spectre", StringComparison.OrdinalIgnoreCase))
-            throw new Exception($"{dll} has no Spectre runtime build marker in {pdb}.");
-        Information($"Spectre runtime build marker found in {pdb}.");
-    }
+    RunNativeArtifactTests("windows", dll,
+        $"--excluded=\"{string.Join(",", excluded ?? Array.Empty<string>())}\" " +
+        $"--included=\"{string.Join(",", included ?? Array.Empty<string>())}\" " +
+        $"--delay-loaded=\"{string.Join(",", delayLoaded ?? Array.Empty<string>())}\" " +
+        $"--dumpbin=\"{dumpbins.First().FullPath}\" " +
+        $"--check-runtime-marker={checkSpectre.ToString().ToLowerInvariant()}");
 }
 
 void CheckLinuxDependencies(FilePath so, string[] excluded = null, string[] included = null, string maxGlibc = null)
 {
-    excluded = excluded ?? new string[0];
-    included = included ?? new string[0];
+    RunNativeArtifactTests("linux", so,
+        $"--excluded=\"{string.Join(",", excluded ?? Array.Empty<string>())}\" " +
+        $"--included=\"{string.Join(",", included ?? Array.Empty<string>())}\" " +
+        $"--max-glibc=\"{maxGlibc ?? ""}\"");
+}
 
-    if (excluded.Length > 0)
-        Information($"Making sure that there are no dependencies on: {string.Join(", ", excluded)}");
-    if (included.Length > 0)
-        Information($"Making sure that there ARE dependencies on: {string.Join(", ", included)}");
-
-    RunProcess("readelf", $"-dV {so}", out var stdoutEnum);
-    var stdout = stdoutEnum.ToArray();
-
-    var needed = MatchRegex(@"\(NEEDED\).+\[(.+)\]", stdout).ToList();
-
-    Information("Dependencies:");
-    foreach (var need in needed) {
-        Information($"    {need}");
-    }
-
-    foreach (var exclude in excluded) {
-        if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
-            throw new Exception($"{so} contained a dependency on {exclude}.");
-    }
-
-    foreach (var include in included) {
-        if (!needed.Any(o => o.Contains(include.Trim(), StringComparison.OrdinalIgnoreCase)))
-            throw new Exception($"{so} is missing an expected dependency on {include}.");
-    }
-
-    if (!string.IsNullOrEmpty(maxGlibc)) {
-        var maxVersion = System.Version.Parse(maxGlibc);
-
-        var glibcs = MatchRegex(@"GLIBC_([\w\.\d]+)", stdout).Distinct().ToList();
-        glibcs.Sort();
-
-        Information("GLIBC:");
-        foreach (var glibc in glibcs) {
-            Information($"    {glibc}");
-        }
-
-        foreach (var glibc in glibcs) {
-            var version = System.Version.Parse(glibc);
-            if (version > maxVersion)
-                throw new Exception($"{so} contained a dependency on GLIBC {glibc} which is greater than the expected GLIBC {maxVersion}.");
-        }
-    }
+void RunNativeArtifactTests(string lane, FilePath library, string args = "", string label = null)
+{
+    library = MakeAbsolute(library);
+    var suite = ROOT_PATH.Combine("scripts/infra/native/tests");
+    var reports = ROOT_OUTPUT_PATH.Combine("logs/native-tests");
+    EnsureDirectoryExists(reports);
+    var name = label ?? System.Text.RegularExpressions.Regex.Replace(
+        ROOT_PATH.GetRelativePath(library).FullPath, @"[^a-zA-Z0-9_.-]", "_");
+    var report = reports.CombineWithFilePath($"{lane}-{name}.xml");
+    RunProcess(PYTHON_EXE,
+        $"-m pytest \"{suite.FullPath}\" -q --lane={lane} --library=\"{library.FullPath}\" " +
+        $"{args} --junitxml=\"{report.FullPath}\"");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
