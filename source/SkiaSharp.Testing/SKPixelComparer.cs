@@ -130,7 +130,8 @@ public static class SKPixelComparer
 
 	private static SKPixelComparisonResult ComparePixels(SKBitmap first, SKBitmap second, SKBitmap? mask, SKBitmap? ignoreMask, Settings settings)
 	{
-		var totalPixels = checked(first.Width * first.Height);
+		var width = first.Width;
+		var totalPixels = checked(width * first.Height);
 		var comparedPixels = 0;
 		var mismatchedPixels = 0;
 		var maxChannelDifference = 0;
@@ -138,7 +139,7 @@ public static class SKPixelComparer
 		var rawSumSquaredError = 0L;
 		var thresholdedSumAbsoluteError = 0L;
 		var thresholdedSumSquaredError = 0L;
-		var left = first.Width;
+		var left = width;
 		var top = first.Height;
 		var right = 0;
 		var bottom = 0;
@@ -159,6 +160,8 @@ public static class SKPixelComparer
 			if (ignoreMask != null && IsIgnored(ignored[i]))
 				continue;
 			comparedPixels++;
+			if (a[i] == b[i])
+				continue;
 			var delta = Evaluate(a[i], b[i], mask == null ? (SKColor?)null : m[i], settings);
 			rawSumAbsoluteError = checked(rawSumAbsoluteError + delta.RawSumAbsoluteError);
 			rawSumSquaredError = checked(rawSumSquaredError + delta.RawSumSquaredError);
@@ -167,8 +170,8 @@ public static class SKPixelComparer
 			if (delta.Mismatched)
 			{
 				mismatchedPixels++;
-				var x = i % first.Width;
-				var y = i / first.Width;
+				var x = i % width;
+				var y = i / width;
 				left = Math.Min(left, x);
 				top = Math.Min(top, y);
 				right = Math.Max(right, x + 1);

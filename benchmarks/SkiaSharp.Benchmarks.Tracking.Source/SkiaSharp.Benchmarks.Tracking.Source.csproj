@@ -22,7 +22,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <!-- The classic SKPath API is [Obsolete] in 4.x; suppress since a benchmark uses it. -->
-    <NoWarn>$(NoWarn);CS0618</NoWarn>
+    <NoWarn>$(NoWarn);CS0618;SKIA4001</NoWarn>
     <!-- HEAD is always the newest SkiaSharp, so the newest-API branch of every #if. -->
     <DefineConstants>$(DefineConstants);SKIASHARP_3_OR_GREATER;SKIASHARP_4_OR_GREATER</DefineConstants>
   </PropertyGroup>
@@ -51,12 +51,7 @@
     </Reference>
   </ItemGroup>
 
-  <!-- Testing is not published for historical tracking versions. Opt in only after
-       building the local Testing assembly, without restoring its transitive workloads. -->
-  <PropertyGroup Condition="'$(IncludePixelComparisonBenchmarks)' == 'true'">
-    <NoWarn>$(NoWarn);SKIA4001</NoWarn>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(IncludePixelComparisonBenchmarks)' == 'true'">
+  <ItemGroup>
     <Compile Include="..\SkiaSharp.Benchmarks\Benchmarks\PixelComparerBenchmarks.cs" />
     <Reference Include="SkiaSharp.Testing">
       <HintPath>..\..\source\SkiaSharp.Testing\bin\$(Configuration)\net10.0\SkiaSharp.Testing.dll</HintPath>
