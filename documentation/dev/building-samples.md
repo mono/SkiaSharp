@@ -57,9 +57,6 @@ dotnet test tests/SkiaSharp.Tests.Samples.slnx \
 
 Keep both framework properties to limit the runner's source dependencies to
 .NET 10. Sample builds use the SDK on `PATH` and their own declared TFMs.
-Sample dependencies and their transitive dependencies must be available on the
-repository's package mirrors. Generated consumers resolve SkiaSharp and
-HarfBuzzSharp packages only from staged artifacts.
 
 Sample helpers accept one optional `DotNetOptions` record. For example,
 `BuildSample(folder, project, new() { Framework = "net10.0-browserwasm" })`
@@ -100,9 +97,6 @@ target, checking CPU rendering and Drawing navigation, pointer strokes and
 clear rather than launching a desktop or host solution variant.
 Gallery is build-only; device execution is separate.
 Browser errors and unavailable GPU rendering fail.
-Browser golden captures disable CSS/Web Animations through Playwright: finite
-transitions finish before capture, and infinite animations reset for the capture.
-Canvas rendering still requires the test's own readiness assertions.
 
 | Group | Tests | CI hosts |
 | --- | --- | --- |
@@ -144,11 +138,3 @@ Set `ExpectedSize = new(800, 600)` for
 fixed-size PNGs; only animated GPU checks set `MaxAverageColorErrorFraction`.
 The options own the default `MaxErrorPixelFraction` of `0.00075m`.
 Omitting options retains the strict pixel comparison and golden dimensions.
-
-For a settling UI, `await SampleImage.Validate(app.Screenshot, expected)` recaptures
-until the reviewed image matches, with a default two-second deadline. The overload
-returns the matching image path and accepts an explicit timeout and comparison
-options. It retries dimension/pixel mismatches only; capture errors, invalid
-images, and missing references fail immediately. On expiry, the last mismatch
-retains the usual diagnostics. Keep explicit application readiness assertions;
-an eventual image match does not prove every intermediate frame was correct.
