@@ -119,7 +119,7 @@ public class SKPixelNormalizationTest : SKPixelComparerTestBase
 			AssertEquivalent(image, SKPixelComparer.Compare(first, second, options));
 			options.IgnoreMask = mask;
 
-			foreach (var style in new[] { SKPixelDifferenceStyle.BinaryMask, SKPixelDifferenceStyle.ChannelDifference, SKPixelDifferenceStyle.ThresholdMap, SKPixelDifferenceStyle.ThresholdOverlay })
+			foreach (var style in Enum.GetValues<SKPixelDifferenceStyle>())
 			{
 				using var imageDiff = SKPixelComparer.GenerateDifferenceImage(a, b, style, options);
 				using var bitmapDiff = SKPixelComparer.GenerateDifferenceImage(first, second, style, options);
@@ -134,7 +134,7 @@ public class SKPixelNormalizationTest : SKPixelComparerTestBase
 					for (var x = 0; x < first.Width; x++)
 					{
 						var expected = x == 0 && y == 1
-							? style == SKPixelDifferenceStyle.ThresholdMap ? new SKColor(128, 128, 128)
+							? style is SKPixelDifferenceStyle.ThresholdMap or SKPixelDifferenceStyle.Heatmap ? new SKColor(128, 128, 128)
 								: style == SKPixelDifferenceStyle.ThresholdOverlay ? new SKColor(192, 192, 192) : SKColors.Black
 							: unmaskedPixels.GetPixel(x, y);
 						Assert.Equal(expected, pixels.GetPixel(x, y));
