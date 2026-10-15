@@ -9,13 +9,16 @@ jobs:
   - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
     parameters:
       name: ${{ parameters.name }}
-      displayName: Appium reference capture (${{ parameters.runGroup }})
+      ${{ if eq(parameters.runGroup, 'Ios') }}:
+        displayName: Appium (${{ parameters.runGroup }})
+      ${{ else }}:
+        displayName: Appium reference capture (${{ parameters.runGroup }})
       buildAgent: ${{ parameters.buildAgent }}
       target: samples
       additionalArgs: --runGroup=${{ parameters.runGroup }} --sampleRunId=${{ parameters.name }} --skipExternals="all"
       env:
-        # Temporary capture-only run: retain images for review, then restore strict validation.
-        CaptureSampleReferences: 'true'
+        # iOS references are approved; other platforms still require capture review.
+        CaptureSampleReferences: ${{ ne(parameters.runGroup, 'Ios') }}
         SAMPLE_TEST_SDK_VERSION: ${{ parameters.sdk.version }}
         ${{ if eq(parameters.runGroup, 'Android') }}:
           SAMPLE_TEST_ANDROID_VERSION: ${{ parameters.device.version }}
@@ -83,7 +86,10 @@ jobs:
           inputs:
             testResultsFormat: VSTest
             testResultsFiles: output/logs/testlogs/samples/${{ parameters.name }}/**/*.trx
-            testRunTitle: Appium reference capture (${{ parameters.runGroup }})
+            ${{ if eq(parameters.runGroup, 'Ios') }}:
+              testRunTitle: Appium (${{ parameters.runGroup }})
+            ${{ else }}:
+              testRunTitle: Appium reference capture (${{ parameters.runGroup }})
         - ${{ if eq(parameters.runGroup, 'Mac') }}:
           - pwsh: |
               $reports = Join-Path $HOME 'Library/Logs/DiagnosticReports'
@@ -95,8 +101,9 @@ jobs:
               exit $LASTEXITCODE
             displayName: Retain sample app crash reports and exception messages
             condition: failed()
-        - pwsh: |
-            Write-Host 'Reference capture only: review the PNGs and rerun strict comparisons before accepting this job.'
-            exit 1
-          displayName: Reference captures require review (not strict validation)
-          condition: succeeded()
+        - ${{ if ne(parameters.runGroup, 'Ios') }}:
+          - pwsh: |
+              Write-Host 'Reference capture only: review the PNGs and rerun strict comparisons before accepting this job.'
+              exit 1
+            displayName: Reference captures require review (not strict validation)
+            condition: succeeded()
