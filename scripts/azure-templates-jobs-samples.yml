@@ -25,7 +25,7 @@ jobs:
                 - bash: |
                     set -e
                     xcrun simctl list runtimes
-                    xcodebuild -downloadPlatform tvOS -buildVersion "$(xcrun --sdk appletvsimulator --show-sdk-version)"
+                    xcodebuild -downloadPlatform tvOS
                   displayName: Install the tvOS runtime required by the selected Xcode storyboard compiler
           ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
             packages: $(MANAGED_LINUX_PACKAGES)

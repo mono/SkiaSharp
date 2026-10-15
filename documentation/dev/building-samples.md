@@ -21,12 +21,13 @@ Xcode 27 compatibility as well as the CI Apple 26 pairing. MAUI uses
 selection in the owning scene. Check the built app's scene manifest and runtime
 launch behavior; source plist checks alone do not establish compatibility.
 
-The macOS Build group also needs the tvOS simulator runtime matching Xcode's SDK
-to compile storyboards. CI provisions it with:
+The macOS Build group also needs a tvOS simulator runtime to compile storyboards.
+CI uses the selected Xcode's standard platform download, without deriving a
+runtime version from the SDK version:
 
 ```sh
 xcrun simctl list runtimes
-xcodebuild -downloadPlatform tvOS -buildVersion "$(xcrun --sdk appletvsimulator --show-sdk-version)"
+xcodebuild -downloadPlatform tvOS
 ```
 
 For Docker tests,
