@@ -3,6 +3,9 @@
 #:property PublishAot=false
 #:property NoWarn=SKIA4001
 
+// From the repository root with matching assets in output/native:
+// dotnet run --file documentation/docfx/guides/testing/generate-images.cs -p:TargetFrameworks=net10.0
+
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using SkiaSharp;
