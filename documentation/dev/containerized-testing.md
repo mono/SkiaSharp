@@ -1,9 +1,5 @@
 # Containerized testing (Docker)
 
-For folder-based native scenarios, see
-[Native tests](native-artifact-testing.md). Those use a separate compiler-equipped image;
-the minimal managed-runtime images described here are unchanged.
-
 The console test suite (`SkiaSharp.Tests.Console`) can be run **inside a Docker container** against a
 chosen native build. This covers container runtimes that the agent-based test legs don't — **Linux
 (Azure Linux, glibc)**, **Linux (Alpine, musl)**, their **No Dependencies** variants, and **Windows
