@@ -139,7 +139,7 @@ Browser errors and unavailable GPU rendering fail.
 
 When adding tests, choose a `RunGroup` by execution target, not sample family.
 Name execution classes by purpose: `SampleBuildTests`, `BasicSampleRunTests`,
-`BrowserSampleRunTests`, and `BrowserUnoSampleRunTests`. `DockerSampleBuildTests`
+`BrowserSampleRunTests`, and `UnoBrowserSampleRunTests`. `DockerSampleBuildTests`
 and `DockerSampleRunTests` share one collection fixture and both use the Docker
 group. Infrastructure, discovery, and artifact-contract checks stay separate.
 `DotNetSampleTestBase` prepares isolated .NET workspaces; `DockerSampleTestBase`
