@@ -136,6 +136,9 @@ selection and clear. Basic Uno runs its declared `net10.0-browserwasm` project
 target, checking CPU rendering and Drawing navigation, pointer strokes and
 clear rather than launching a desktop or host solution variant.
 Gallery MAUI also has Appium device-runtime coverage.
+Gallery browser tests cover catalog search/reset/navigation and static Gradient
+controls; Blazor also switches CPU/GPU backends. SkiaFiddle selects a bundled
+static snippet and checks real Roslyn compilation, editor errors and recovery.
 Browser errors and unavailable GPU rendering fail.
 
 | Group | Tests | CI hosts |
@@ -175,6 +178,11 @@ Dimensions must match; the default limit is **0.075% differing pixels** with
 zero channel tolerance. Animated browser GPU pages use a loose **6% mean RGBA error**
 smoke check that can miss uniform dark output. Mismatches retain actual/diff
 images; references are never accepted automatically.
+
+Gallery/Fiddle browser scenes use the default full-page comparison. Only the
+Blazor catalog permits 1% differing pixels to accommodate its visible build
+metadata footer. Select Oldest sorting before catalog captures and review
+genuine platform captures; do not substitute another platform's references.
 
 `SampleImage.Validate` takes `actual`, `expected` (or a relative golden path),
 and an optional `SampleImageOptions` record. Its byte-array overload also takes

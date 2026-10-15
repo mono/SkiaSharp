@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 
 namespace SkiaSharpSample.Controls;
@@ -105,6 +106,7 @@ public sealed partial class ControlPanelView : UserControl
         var panel = new StackPanel { Spacing = 2 };
         panel.Children.Add(new TextBlock { Text = p.Label, FontSize = 12, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
         var combo = new ComboBox { SelectedIndex = p.SelectedIndex };
+        AutomationProperties.SetName(combo, p.Label);
         foreach (var option in p.Options)
         {
             combo.Items.Add(option);
