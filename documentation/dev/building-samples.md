@@ -285,6 +285,8 @@ interactions are serialized.
 The native AppKit scenario attaches `opengl-pixel-formats.log`, comparing the
 view's CGL requirements with bounded controls on the same host. This does not
 select a fallback or replace execution of the actual app.
+Mac drawing-page diagnostics also record the Clear button's enabled, hittable
+and keyboard-focus state in `drawing-clear-state.log`.
 
 The fixture uses a free loopback port for each server and driver connection;
 UiAutomator2 selects its own available driver port. Mac2 requires an unlocked GUI session,

@@ -24,6 +24,14 @@ internal sealed class MacRunningApp(SampleWorkspace workspace, string artifact)
 
 	internal override Task<string> ReadApplicationId() => ReadAppleApplicationId();
 
+	protected override Task CapturePlatformDiagnostics()
+	{
+		var clear = FindOptional("basic-drawing-clear");
+		return clear is null ? Task.CompletedTask : SaveText("drawing-clear-state.log",
+			$"enabled={clear.Enabled}; hittable={clear.GetAttribute("hittable")}; " +
+			$"focused={clear.GetAttribute("focused")}; location={clear.Location}; size={clear.Size}");
+	}
+
 	internal Task RecordOpenGlPixelFormats()
 	{
 		Assert.True(OperatingSystem.IsMacOS(), "CGL diagnostics require macOS.");
