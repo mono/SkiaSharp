@@ -49,6 +49,10 @@ public class PixelComparerComparisonBenchmark
 		SKPixelComparer.Compare(fixture.ExpectedImage, fixture.ActualImage, fixture.Options).RawMetrics.SumSquaredError;
 
 	[Benchmark]
+	public long CompareIdenticalImage() =>
+		SKPixelComparer.Compare(fixture.ExpectedImage, fixture.ExpectedImage, fixture.Options).RawMetrics.SumSquaredError;
+
+	[Benchmark]
 	public long CompareBitmap() =>
 		SKPixelComparer.Compare(fixture.ExpectedBitmap, fixture.ActualBitmap, fixture.Options).RawMetrics.SumSquaredError;
 
