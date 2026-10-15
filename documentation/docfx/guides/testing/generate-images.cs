@@ -24,6 +24,7 @@ var native = OperatingSystem.IsMacOS()
 NativeLibrary.SetDllImportResolver(typeof(SKImage).Assembly,
     (name, _, _) => name == "libSkiaSharp" ? NativeLibrary.Load(native) : IntPtr.Zero);
 
+var bluePanel = SKRect.Create(60, 110, 420, 160);
 using var expected = RenderScene(actual: false);
 using var actual = RenderScene(actual: true);
 using var toleranceMask = RenderMask(ignore: false);
@@ -78,36 +79,37 @@ static SKPixelComparerOptions RgbTolerance() => new()
     AlphaTolerance = null,
 };
 
-static SKImage RenderScene(bool actual)
+SKImage RenderScene(bool actual)
 {
     using var bitmap = new SKBitmap(new SKImageInfo(800, 600, SKColorType.Bgra8888, SKAlphaType.Unpremul));
     using var canvas = new SKCanvas(bitmap);
     using var paint = new SKPaint { IsAntialias = false, BlendMode = SKBlendMode.Src };
-    canvas.Clear(new SKColor(248, 250, 252));
-    canvas.Scale(2.5f);
-    canvas.Translate(0, 48);
-    paint.Color = actual ? new SKColor(39, 101, 237) : new SKColor(37, 99, 235);
-    canvas.DrawRect(20, 22, 160, 38, paint);
-    paint.Color = new SKColor(0, 255, 0, actual ? (byte)128 : (byte)255);
-    canvas.DrawCircle(250, 88, 24, paint);
+    using var gradient = SKShader.CreateLinearGradient(
+        new SKPoint(0, 0), new SKPoint(800, 600),
+        new[] { new SKColor(247, 245, 252), new SKColor(231, 241, 246) },
+        SKShaderTileMode.Clamp);
+    using var background = new SKPaint { Shader = gradient };
+    canvas.DrawPaint(background);
+    paint.Color = actual ? new SKColor(74, 106, 194) : new SKColor(72, 104, 192);
+    canvas.DrawRoundRect(bluePanel, 24, 24, paint);
+    paint.Color = new SKColor(48, 185, 131, actual ? (byte)128 : (byte)255);
+    canvas.DrawCircle(640, 205, 90, paint);
     if (actual)
     {
-        paint.Color = new SKColor(220, 38, 38);
-        canvas.DrawRect(20, 98, 80, 14, paint);
+        paint.Color = new SKColor(221, 91, 103);
+        canvas.DrawRoundRect(80, 345, 180, 180, 28, 28, paint);
     }
     return SKImage.FromBitmap(bitmap)
         ?? throw new InvalidOperationException("Unable to snapshot the example scene.");
 }
 
-static SKImage RenderMask(bool ignore)
+SKImage RenderMask(bool ignore)
 {
     using var bitmap = new SKBitmap(new SKImageInfo(800, 600, SKColorType.Bgra8888, SKAlphaType.Opaque));
     using var canvas = new SKCanvas(bitmap);
     using var paint = new SKPaint { Color = ignore ? SKColors.White : new SKColor(32, 32, 32) };
     canvas.Clear(SKColors.Black);
-    canvas.Scale(2.5f);
-    canvas.Translate(0, 48);
-    canvas.DrawRect(20, 22, 160, 38, paint);
+    canvas.DrawRoundRect(bluePanel, 24, 24, paint);
     return SKImage.FromBitmap(bitmap)
         ?? throw new InvalidOperationException("Unable to snapshot the example mask.");
 }
