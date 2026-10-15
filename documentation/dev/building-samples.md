@@ -285,6 +285,8 @@ creation/deletion. Appium selects the emulator serial; existing devices/data
 remain untouched.
 Appium owns app installation, launch, logs and session cleanup. Foreground
 interactions are serialized.
+Emulator kernel boot messages are retained in the owned Appium server log, including
+startup failures before an ADB session is available.
 Android guest diagnostics match the exact owned AVD name before collecting boot
 properties, logcat and available kernel output, including failed session creation.
 

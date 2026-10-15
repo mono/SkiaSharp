@@ -70,7 +70,7 @@ internal sealed class AndroidRunningApp(SampleWorkspace workspace, string artifa
 		options.PlatformVersion = version;
 		options.AddAdditionalAppiumOption("avd", name);
 		options.AddAdditionalAppiumOption("isHeadless", OperatingSystem.IsLinux());
-		options.AddAdditionalAppiumOption("avdArgs", new[] { "-no-snapshot", "-no-boot-anim" });
+		options.AddAdditionalAppiumOption("avdArgs", new[] { "-no-snapshot", "-no-boot-anim", "-show-kernel" });
 		options.AddAdditionalAppiumOption("appPackage", ApplicationId);
 		options.AddAdditionalAppiumOption("suppressKillServer", true);
 		options.AddAdditionalAppiumOption("fullReset", true);
