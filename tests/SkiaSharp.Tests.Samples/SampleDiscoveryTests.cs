@@ -54,7 +54,20 @@ public class SampleDiscoveryTests
                 attribute => attribute.AttributeType == typeof(CollectionAttribute));
             Assert.Equal(nameof(BrowserSampleCollection), Assert.Single(collection.ConstructorArguments).Value);
         }
-        foreach (var type in new[] { typeof(BrowserSampleCollection), typeof(DockerSampleCollection) })
+        foreach (var type in new[]
+        {
+            typeof(AppiumAndroidSampleRunTests), typeof(AppiumIosSampleRunTests),
+            typeof(AppiumMacSampleRunTests), typeof(AppiumWindowsSampleRunTests)
+        })
+        {
+            var collection = Assert.Single(type.GetCustomAttributesData(),
+                attribute => attribute.AttributeType == typeof(CollectionAttribute));
+            Assert.Equal(nameof(AppiumCollection), Assert.Single(collection.ConstructorArguments).Value);
+        }
+        foreach (var type in new[]
+        {
+            typeof(BrowserSampleCollection), typeof(DockerSampleCollection), typeof(AppiumCollection)
+        })
         {
             var definition = Assert.Single(type.GetCustomAttributesData(),
                 attribute => attribute.AttributeType == typeof(CollectionDefinitionAttribute));

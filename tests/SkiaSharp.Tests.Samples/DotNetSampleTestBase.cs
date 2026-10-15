@@ -49,12 +49,14 @@ public abstract class DotNetSampleTestBase : IDisposable
         return prepared;
     }
 
-    private protected async Task RunSample(string folder, IEnumerable<string> arguments, Func<DotNetRunningApp, string, Task> test)
+    private protected async Task RunSample(
+        string folder, IEnumerable<string> arguments, Func<DotNetRunningApp, string, Task> test,
+        DotNetOptions? options = null)
     {
         folder = folder.Replace('\\', '/').Replace('/', Path.DirectorySeparatorChar);
         var sample = SampleLookup.Discover(Repo.SamplesDir, SampleLookup.HostPlatform)
             .Single(sample => sample.Folder == folder && !sample.Kind.HasFlag(SampleLookup.EntryKind.Docker));
-        var options = new DotNetOptions();
+        options ??= new();
         var workspace = await BuildSample(folder, sample.FileName, options);
         var project = Path.Combine(workspace.Root, "samples", folder, "SkiaSharpSample", "SkiaSharpSample.csproj");
         await DotNet.Run(workspace, project, arguments, app => test(app, project), options);

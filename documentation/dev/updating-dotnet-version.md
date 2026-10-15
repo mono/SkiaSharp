@@ -205,14 +205,14 @@ only; managed jobs request a workload set explicitly:
 dotnetSdks:
   - sdkVersion: $(DOTNET_VERSION)
     workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-    tizen:
-      manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-      manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+    tizenVersion: $(DOTNET_TIZEN_MANIFEST_BAND)/$(DOTNET_TIZEN_MANIFEST_VERSION)
   - sdkVersion: $(DOTNET_VERSION_WINUI) # SDK-only
 ```
 
 Omitting `workloadSetVersion` installs only the SDK. When a set is present,
 `workloads` optionally overrides the centralized host list with explicit IDs.
+`additionalWorkloads` adds to that list. `tizenVersion` carries the exact Samsung
+manifest `band/version` pair.
 An empty `dotnetSdks` list performs no host .NET provisioning; container images
 own their SDK installations.
 

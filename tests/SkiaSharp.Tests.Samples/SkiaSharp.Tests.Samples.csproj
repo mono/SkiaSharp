@@ -18,6 +18,7 @@
     <PackageReference Include="Microsoft.Playwright" Version="1.55.0" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.9.1" />
     <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
+    <PackageReference Include="Appium.WebDriver" Version="9.0.0" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\SkiaSharp.Tests.Samples.Analyzers\SkiaSharp.Tests.Samples.Analyzers.csproj"
       OutputItemType="Analyzer" ReferenceOutputAssembly="false" GlobalPropertiesToRemove="TargetFramework;TargetFrameworks" />
@@ -25,7 +26,12 @@
 
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="SampleTest.RepositoryDirectory" Value="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..'))" />
+    <RuntimeHostConfigurationOption Include="SampleTest.CaptureReferences" Value="true" Condition="'$(CaptureSampleReferences)' == 'true'" />
     <Compile Include="..\Tests\Utils\SKPixelComparer.cs" Link="Utils\SKPixelComparer.cs" />
+    <Compile Include="..\Tests\SkiaSharp\GlContexts\Cgl\Cgl.cs" Link="Utils\Cgl\Cgl.cs" />
+    <Compile Include="..\Tests\SkiaSharp\GlContexts\Cgl\CGLError.cs" Link="Utils\Cgl\CGLError.cs" />
+    <Compile Include="..\Tests\SkiaSharp\GlContexts\Cgl\CGLPixelFormatAttribute.cs" Link="Utils\Cgl\CGLPixelFormatAttribute.cs" />
+    <Compile Include="..\Tests\SkiaSharp\GlContexts\Cgl\CGLOpenGLProfile.cs" Link="Utils\Cgl\CGLOpenGLProfile.cs" />
   </ItemGroup>
 
   <Target Name="ValidateSamplePlatformPackages" BeforeTargets="CollectPackageReferences;Restore;Build">

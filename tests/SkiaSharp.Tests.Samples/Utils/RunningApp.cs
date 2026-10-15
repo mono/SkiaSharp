@@ -4,13 +4,15 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal abstract class RunningApp(string diagnostics)
 {
+    private readonly string runId = SampleWorkspace.CreateIdentity("run");
+
     private readonly HttpClient client = new(new HttpClientHandler
     {
         UseProxy = false,
         AllowAutoRedirect = false
     })
     {
-        Timeout = TimeSpan.FromSeconds(4)
+        Timeout = TimeSpan.FromSeconds(30)
     };
 
     private Uri? address;
@@ -38,7 +40,9 @@ internal abstract class RunningApp(string diagnostics)
         {
             try
             {
-                var response = await GetResponse(path);
+                using var probe = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+                probe.CancelAfter(TimeSpan.FromSeconds(4));
+                var response = await client.GetAsync(request, probe.Token);
                 if (response.IsSuccessStatusCode)
                     return response;
                 lastError = $"HTTP {(int)response.StatusCode}";
@@ -73,8 +77,9 @@ internal abstract class RunningApp(string diagnostics)
                     var result = await ReadOutput();
 
                     Directory.CreateDirectory(Diagnostics);
-                    var stdoutLog = Path.Combine(Diagnostics, "run.stdout.log");
-                    var stderrLog = Path.Combine(Diagnostics, "run.stderr.log");
+                    // Several runs can belong to one test; retain each log and attachment.
+                    var stdoutLog = Path.Combine(Diagnostics, $"{runId}.stdout.log");
+                    var stderrLog = Path.Combine(Diagnostics, $"{runId}.stderr.log");
                     await File.WriteAllTextAsync(stdoutLog, result.Output);
                     await File.WriteAllTextAsync(stderrLog, result.Error);
                     TestContext.Current.TestOutputHelper?.WriteLine(result.Output);

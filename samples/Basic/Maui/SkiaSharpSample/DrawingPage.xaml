@@ -4,14 +4,16 @@
              x:Class="SkiaSharpSample.DrawingPage"
              Title="Drawing">
 
-    <Grid>
+    <Grid AutomationId="{OnPlatform WinUI=basic-canvas-drawing}">
         <skia:SKCanvasView x:Name="skiaView"
+                           AutomationId="{OnPlatform Default=basic-canvas-drawing, WinUI=basic-canvas-drawing-content}"
                            PaintSurface="OnPaintSurface"
                            EnableTouchEvents="True"
                            Touch="OnTouch" />
 
         <!-- Floating Clear button — top-right -->
         <Button Text="Clear"
+                AutomationId="basic-drawing-clear"
                 Clicked="OnClearClicked"
                 HorizontalOptions="End"
                 VerticalOptions="Start"

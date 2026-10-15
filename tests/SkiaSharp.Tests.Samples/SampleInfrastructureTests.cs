@@ -1,4 +1,7 @@
 using System.Diagnostics;
+using System.Globalization;
+using System.Net;
+using System.Net.Sockets;
 using System.Text.Json;
 using System.Xml.Linq;
 using SkiaSharp.Tests.Samples.Utils;
@@ -11,13 +14,53 @@ namespace SkiaSharp.Tests.Samples;
 [RunGroup(SampleRunGroup.Build)]
 public class SampleInfrastructureTests : IDisposable
 {
-    private readonly string root = Path.Combine(Repo.ArtifactsDir, $"infrastructure-{Guid.NewGuid():N}");
+    private readonly string root = Path.Combine(Repo.ArtifactsDir, SampleWorkspace.CreateIdentity("infrastructure"));
 
     private void FileIn(string relative, string text = "<Project />")
     {
         var path = Path.Combine(root, relative);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, text);
+    }
+
+    [Fact]
+    public async Task ProcessCaptureCanKeepDiscoveryOutputOutOfTestLogs()
+    {
+        var marker = Guid.NewGuid().ToString("N");
+        var windows = OperatingSystem.IsWindows();
+        var file = windows ? "capture.cmd" : "capture.sh";
+        FileIn(file, windows ? $"@echo off\r\necho {marker}\r\n" : $"printf '%s' '{marker}'\n");
+        var arguments = windows ? new[] { "/d", "/c", file } : new[] { file };
+        var output = TestContext.Current.TestOutputHelper;
+        Assert.NotNull(output);
+
+        var captured = await ProcessRunner.Run(windows ? "cmd.exe" : "/bin/sh", arguments,
+            root, TimeSpan.FromSeconds(10), publishOutput: false);
+        Assert.Equal(0, captured.ExitCode);
+        Assert.Contains(marker, captured.Output);
+        Assert.DoesNotContain(marker, output.Output);
+
+        var published = await ProcessRunner.Run(windows ? "cmd.exe" : "/bin/sh", arguments,
+            root, TimeSpan.FromSeconds(10));
+        Assert.Equal(0, published.ExitCode);
+        Assert.Contains(marker, output.Output);
+    }
+
+    [Fact]
+    public async Task QuietProcessTimeoutDoesNotDiscloseCapturedStreams()
+    {
+        var marker = Guid.NewGuid().ToString("N");
+        var windows = OperatingSystem.IsWindows();
+        var file = windows ? "capture.cmd" : "capture.sh";
+        FileIn(file, windows
+            ? $"@echo off\r\necho {marker}\r\nping -n 6 127.0.0.1 >nul\r\n"
+            : $"printf '%s' '{marker}'\nsleep 5\n");
+        var arguments = windows ? new[] { "/d", "/c", file } : new[] { file };
+        var failure = await Assert.ThrowsAsync<TimeoutException>(() => ProcessRunner.Run(
+            windows ? "cmd.exe" : "/bin/sh", arguments, root,
+            TimeSpan.FromMilliseconds(500), publishOutput: false));
+        Assert.DoesNotContain(marker, failure.Message);
+        Assert.DoesNotContain(marker, TestContext.Current.TestOutputHelper!.Output);
     }
 
     [Theory]
@@ -42,6 +85,153 @@ public class SampleInfrastructureTests : IDisposable
         Assert.Contains(new SampleLookup.Entry(Path.Combine("Basic", "Docker"), "App.slnx", SampleLookup.EntryKind.Basic), entries);
         Assert.Contains(new SampleLookup.Entry(Path.Combine("Basic", "Docker"), dockerfile,
             SampleLookup.EntryKind.Basic | SampleLookup.EntryKind.Docker), entries);
+    }
+
+    [Theory]
+    [InlineData("Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj")]
+    [InlineData("Gallery/Maui/SkiaSharpSample.Maui.csproj")]
+    public void MauiSourceProjectsDeclareOnlyHostSupportedFrameworks(string relativeProject)
+    {
+        var project = XDocument.Load(Path.Combine(Repo.RootDir, "samples", relativeProject));
+        var frameworks = project.Descendants("TargetFrameworks").ToArray();
+        Assert.Equal(3, frameworks.Length);
+        Assert.Equal("net10.0-android", Assert.Single(frameworks,
+            element => element.Attribute("Condition") is null).Value);
+        Assert.Equal("net10.0-android;net10.0-ios;net10.0-maccatalyst", Assert.Single(frameworks,
+            element => (string?)element.Attribute("Condition") == "$([MSBuild]::IsOSPlatform('OSX'))").Value);
+        Assert.Equal("net10.0-android;net10.0-windows10.0.19041.0", Assert.Single(frameworks,
+            element => (string?)element.Attribute("Condition") == "$([MSBuild]::IsOSPlatform('Windows'))").Value);
+    }
+
+    [Fact]
+    public void NativeAndroidSourceProjectSupportsLinuxEmulatorArchitectures()
+    {
+        var project = XDocument.Load(Path.Combine(Repo.RootDir, "samples", "Basic", "Android",
+            "SkiaSharpSample", "SkiaSharpSample.csproj"));
+        var frameworks = Assert.Single(project.Descendants("TargetFrameworks"));
+        Assert.Null(frameworks.Attribute("Condition"));
+        Assert.Equal("net10.0-android", frameworks.Value);
+        var runtimes = Assert.Single(project.Descendants("RuntimeIdentifiers"));
+        Assert.Null(runtimes.Attribute("Condition"));
+        Assert.Equal("android-arm;android-x86;android-arm64;android-x64", runtimes.Value);
+    }
+
+    [Theory]
+    [InlineData("CpuPage.xaml", "basic-canvas-cpu")]
+    [InlineData("GpuPage.xaml", "basic-canvas-gpu")]
+    [InlineData("DrawingPage.xaml", "basic-canvas-drawing")]
+    public void WindowsMauiCanvasIdentifiersUseExistingAccessibleHosts(string page, string id)
+    {
+        var document = XDocument.Load(Path.Combine(Repo.RootDir, "samples", "Basic", "Maui", "SkiaSharpSample", page));
+        var canvas = Assert.Single(document.Descendants(),
+            element => element.Name.LocalName is "SKCanvasView" or "SKGLView");
+        Assert.Equal($"{{OnPlatform WinUI={id}}}", (string?)canvas.Parent!.Attribute("AutomationId"));
+        Assert.Equal($"{{OnPlatform Default={id}, WinUI={id}-content}}", (string?)canvas.Attribute("AutomationId"));
+    }
+
+    [Fact]
+    public void WindowsGalleryUsesTheExistingCanvasHost()
+    {
+        var document = XDocument.Load(Path.Combine(Repo.RootDir, "samples", "Gallery", "Maui", "SampleDetailPage.xaml"));
+        XNamespace xaml = "http://schemas.microsoft.com/winfx/2009/xaml";
+        var host = Assert.Single(document.Descendants(),
+            element => (string?)element.Attribute(xaml + "Name") == "surfaceHost");
+        Assert.Equal("Grid", host.Name.LocalName);
+        Assert.Equal("{OnPlatform WinUI=sample-canvas-host}", (string?)host.Attribute("AutomationId"));
+    }
+
+    [Theory]
+    [InlineData("Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj")]
+    [InlineData("Gallery/Maui/SkiaSharpSample.Maui.csproj")]
+    public void MauiSourceProjectsUseTheSameMauiPackage(string relativeProject)
+    {
+        var project = XDocument.Load(Path.Combine(Repo.RootDir, "samples", relativeProject));
+        Assert.Equal("10.0.110", Assert.Single(project.Descendants("MauiVersion")).Value);
+    }
+
+    [Theory]
+    [InlineData("Basic/iOS/SkiaSharpSample/SkiaSharpSample.csproj", "ios", "15.0")]
+    [InlineData("Basic/MacCatalyst/SkiaSharpSample/SkiaSharpSample.csproj", "maccatalyst", "17.0")]
+    [InlineData("Basic/macOS/SkiaSharpSample/SkiaSharpSample.csproj", "macos", "14.0")]
+    [InlineData("Basic/tvOS/SkiaSharpSample/SkiaSharpSample.csproj", "tvos", "15.0")]
+    [InlineData("Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj", "ios", "15.0")]
+    [InlineData("Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj", "maccatalyst", "17.0")]
+    [InlineData("Gallery/Maui/SkiaSharpSample.Maui.csproj", "ios", "15.0")]
+    [InlineData("Gallery/Maui/SkiaSharpSample.Maui.csproj", "maccatalyst", "17.0")]
+    public void AppleSourceProjectsMeetApprovedDeploymentFloors(string relativeProject, string platform, string minimum)
+    {
+        var projectPath = Path.Combine(Repo.RootDir, "samples", relativeProject);
+        var project = XDocument.Load(projectPath);
+        var declared = Assert.Single(project.Descendants("SupportedOSPlatformVersion"), element =>
+            element.Attribute("Condition") is null ||
+            element.Attribute("Condition")!.Value.Contains($"'-{platform}'", StringComparison.Ordinal));
+        Assert.True(Version.Parse(declared.Value) >= Version.Parse(minimum));
+        var maui = project.Descendants("UseMaui").Any(element => element.Value.Equals("true", StringComparison.OrdinalIgnoreCase));
+        var manifestDirectory = maui
+            ? Path.Combine("Platforms", platform == "ios" ? "iOS" : "MacCatalyst")
+            : "";
+        var manifest = XDocument.Load(Path.Combine(Path.GetDirectoryName(projectPath)!, manifestDirectory, "Info.plist"));
+        var minimumKey = platform == "macos" ? "LSMinimumSystemVersion" : "MinimumOSVersion";
+        var key = manifest.Root!.Element("dict")!.Elements("key").SingleOrDefault(element => element.Value == minimumKey);
+        if (key is not null)
+            Assert.Equal(Version.Parse(declared.Value), Version.Parse(key.ElementsAfterSelf().First().Value));
+    }
+
+    [Theory]
+    [InlineData("Basic/iOS/SkiaSharpSample", false)]
+    [InlineData("Basic/MacCatalyst/SkiaSharpSample", false)]
+    [InlineData("Basic/Maui/SkiaSharpSample/Platforms/iOS", true)]
+    [InlineData("Basic/Maui/SkiaSharpSample/Platforms/MacCatalyst", true)]
+    [InlineData("Gallery/Maui/Platforms/iOS", true)]
+    [InlineData("Gallery/Maui/Platforms/MacCatalyst", true)]
+    public void AppleSourceManifestsBindTheCorrectSceneOwner(string relativeHead, bool maui)
+    {
+        var head = Path.Combine(Repo.RootDir, "samples", relativeHead);
+        var root = XDocument.Load(Path.Combine(head, "Info.plist")).Root!.Element("dict")!;
+        var manifest = PlistValue(root, "UIApplicationSceneManifest");
+        Assert.Equal("false", PlistValue(manifest, "UIApplicationSupportsMultipleScenes").Name.LocalName);
+        var configurations = PlistValue(manifest, "UISceneConfigurations");
+        var configuration = Assert.Single(PlistValue(configurations, "UIWindowSceneSessionRoleApplication").Elements("dict"));
+        Assert.Equal(maui ? "__MAUI_DEFAULT_SCENE_CONFIGURATION__" : "Default Configuration",
+            PlistValue(configuration, "UISceneConfigurationName").Value);
+        Assert.Equal("SceneDelegate", PlistValue(configuration, "UISceneDelegateClassName").Value);
+        var source = File.ReadAllText(Path.Combine(head, "SceneDelegate.cs"));
+        Assert.Contains("[Register(\"SceneDelegate\")]", source);
+        Assert.Contains(maui ? "SceneDelegate : MauiUISceneDelegate" : "SceneDelegate : UIResponder, IUIWindowSceneDelegate", source);
+        if (maui)
+        {
+            Assert.DoesNotContain("UISceneStoryboardFile", configuration.Descendants("key").Select(element => element.Value));
+            Assert.Contains("AppDelegate : MauiUIApplicationDelegate", File.ReadAllText(Path.Combine(head, "AppDelegate.cs")));
+        }
+        else
+        {
+            Assert.Equal("Main", PlistValue(configuration, "UISceneStoryboardFile").Value);
+            var storyboard = root.Elements("key").SingleOrDefault(element => element.Value == "UIMainStoryboardFile");
+            if (storyboard is not null)
+                Assert.Equal("Main", storyboard.ElementsAfterSelf().First().Value);
+        }
+    }
+
+    private static XElement PlistValue(XElement dictionary, string key) =>
+        Assert.Single(dictionary.Elements("key"), element => element.Value == key).ElementsAfterSelf().First();
+
+    [Fact]
+    public void NativeIosDefaultPageSelectionBelongsToItsStoryboardScene()
+    {
+        var head = Path.Combine(Repo.RootDir, "samples", "Basic", "iOS", "SkiaSharpSample");
+        var app = File.ReadAllText(Path.Combine(head, "AppDelegate.cs"));
+        Assert.DoesNotContain("FinishedLaunching", app);
+        Assert.DoesNotContain("Window", app);
+        Assert.Contains("SamplePage.Cpu", app);
+        var scene = File.ReadAllText(Path.Combine(head, "SceneDelegate.cs"));
+        Assert.Contains("[Export(\"scene:willConnectToSession:options:\")]", scene);
+        Assert.DoesNotContain("NSRunLoop.Main.BeginInvokeOnMainThread", scene);
+        Assert.Contains("AppDelegate.DefaultPage != SamplePage.Cpu", scene);
+        Assert.Contains("Window?.RootViewController is UITabBarController tabs", scene);
+        Assert.Contains("tabs.SelectedIndex = (nint)(int)AppDelegate.DefaultPage;", scene);
+        var root = XDocument.Load(Path.Combine(head, "Info.plist")).Root!.Element("dict")!;
+        Assert.Equal("LaunchScreen", PlistValue(root, "UILaunchStoryboardName").Value);
+        Assert.DoesNotContain("UIMainStoryboardFile", root.Elements("key").Select(element => element.Value));
     }
 
     [Fact]
@@ -127,6 +317,57 @@ public class SampleInfrastructureTests : IDisposable
         Assert.Throws<ArgumentException>(() => SampleWorkspace.CopySample(root, folder, Path.Combine(root, "copy")));
 
     [Fact]
+    public void IdentitiesAreUtcSortableUniqueAndPathSafeAcrossCulturesAndConcurrentCalls()
+    {
+        var culture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("ar-SA");
+            var identities = Enumerable.Range(0, 1000)
+                .Select(index => SampleWorkspace.CreateIdentity(index % 2 == 0 ? "Basic/Console" : "App"))
+                .ToArray();
+            Assert.Equal(identities, identities.Order(StringComparer.Ordinal));
+            foreach (var identity in identities)
+            {
+                Assert.Matches(@"^[0-9]{8}T[0-9]{13}Z-[a-z0-9-]+-[a-f0-9]+-[a-f0-9]+$", identity);
+                var timestamp = DateTime.ParseExact(identity[..23], "yyyyMMdd'T'HHmmssfffffff'Z'",
+                    CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+                Assert.Equal(DateTimeKind.Utc, timestamp.Kind);
+            }
+            var concurrent = new string[1000];
+            Parallel.For(0, concurrent.Length, index => concurrent[index] = SampleWorkspace.CreateIdentity("Basic/Console"));
+            Assert.Equal(identities.Length + concurrent.Length,
+                identities.Concat(concurrent).Distinct(StringComparer.Ordinal).Count());
+            Assert.Contains("-basic-console-", identities[0]);
+            Assert.Throws<ArgumentException>(() => SampleWorkspace.CreateIdentity(""));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = culture;
+        }
+    }
+
+    [Fact]
+    public async Task RunningAppsKeepSortableDistinctLogPairsInTheirOwnedDirectory()
+    {
+        var diagnostics = Path.Combine(root, "run");
+        FileIn("other-run/keep.txt", "Keep this run.");
+        await new AddressRunningApp(diagnostics).Run(() => Task.CompletedTask);
+        var first = Assert.Single(Directory.EnumerateFiles(diagnostics, "*.stdout.log"));
+        await new AddressRunningApp(diagnostics).Run(() => Task.CompletedTask);
+        var outputs = Directory.EnumerateFiles(diagnostics, "*.stdout.log").Order(StringComparer.Ordinal).ToArray();
+        Assert.Equal(2, outputs.Length);
+        Assert.Equal(first, outputs[0]);
+        Assert.Equal(4, Directory.EnumerateFiles(diagnostics).Count());
+        foreach (var output in outputs)
+        {
+            Assert.Matches(@"^[0-9]{8}T[0-9]{13}Z-run-[a-f0-9]+-[a-f0-9]+\.stdout\.log$", Path.GetFileName(output));
+            Assert.True(File.Exists(output.Replace(".stdout.log", ".stderr.log", StringComparison.Ordinal)));
+        }
+        Assert.Equal("Keep this run.", File.ReadAllText(Path.Combine(root, "other-run", "keep.txt")));
+    }
+
+    [Fact]
     public void RejectsSampleLocalSdkPins()
     {
         FileIn("inputs/Basic/App/global.json", "{}");
@@ -164,9 +405,9 @@ public class SampleInfrastructureTests : IDisposable
             Path.Combine(repository, "output", "samples"),
             Path.Combine(repository, "output", "nugets"),
             Path.Combine(repository, "output", "samples-test-workspaces"),
-            Path.Combine(root, "diagnostics"));
+            Path.Combine(root, "diagnostics"), sdkVersion: null);
         var working = workspace.Root;
-        Assert.StartsWith("basic-console-", Path.GetFileName(working));
+        Assert.Contains("-basic-console-", Path.GetFileName(working));
         Assert.Equal(Path.GetFileName(working), Path.GetFileName(workspace.DiagnosticsRoot));
         using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(working, "global.json")));
         Assert.Single(json.RootElement.EnumerateObject());
@@ -195,6 +436,55 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
+    public async Task ConsumerSdkPinCannotRollForwardOrFallBack()
+    {
+        FileIn("inputs/App/App.csproj");
+        FileIn("packages/input.nupkg");
+        using var workspace = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Path.Combine(root, "packages"),
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"), "1.2.345");
+        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(workspace.Root, "global.json")));
+        var sdk = json.RootElement.GetProperty("sdk");
+        Assert.Equal("1.2.345", sdk.GetProperty("version").GetString());
+        Assert.Equal("disable", sdk.GetProperty("rollForward").GetString());
+        Assert.True(sdk.GetProperty("allowPrerelease").GetBoolean());
+        Assert.Equal("$host$", sdk.GetProperty("paths")[0].GetString());
+        Assert.False(sdk.TryGetProperty("workloadVersion", out _));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => DotNet.GetVersion(workspace));
+    }
+
+    [Fact]
+    public void ConsumerSdkSelectionAndRootFrameworkSelectionPreserveProjectDeclarations()
+    {
+        const string project = """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+            </Project>
+            """;
+        FileIn("inputs/App/App.csproj", project);
+        FileIn("packages/input.nupkg");
+        using var baseline = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Path.Combine(root, "packages"),
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"), "10.0.401");
+        using var preview = new SampleWorkspace(
+            "App", Path.Combine(root, "inputs"), Path.Combine(root, "packages"),
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"), "11.0.100-rc.1.26425.128");
+        foreach (var workspace in new[] { baseline, preview })
+        {
+            var ownedProject = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
+            var arguments = DotNet.BuildArguments(workspace, ownedProject, workspace.DiagnosticsRoot,
+                new DotNetOptions { Framework = "net10.0" });
+            Assert.Contains("--framework", arguments);
+            Assert.DoesNotContain(arguments, argument => argument.StartsWith("-p:TargetFramework", StringComparison.Ordinal));
+            Assert.Equal(project, File.ReadAllText(ownedProject));
+            using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(workspace.Root, "global.json")));
+            Assert.Equal(workspace.SdkVersion, json.RootElement.GetProperty("sdk").GetProperty("version").GetString());
+            Assert.Equal("disable", json.RootElement.GetProperty("sdk").GetProperty("rollForward").GetString());
+        }
+        Assert.Equal(project, File.ReadAllText(Path.Combine(root, "inputs", "App", "App.csproj")));
+    }
+
+    [Fact]
     public void ArtifactPackagesCannotFallBackToPublicFeeds()
     {
         Directory.CreateDirectory(root);
@@ -218,6 +508,41 @@ public class SampleInfrastructureTests : IDisposable
                 (await app.RequestUri("/health")).AbsoluteUri);
             Assert.Equal(1, app.AddressRequests);
         });
+    }
+
+    [Fact]
+    public async Task HttpContentCanTakeLongerThanAReadinessProbe()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var address = new Uri($"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}");
+        var server = Respond();
+        try
+        {
+            var app = new AddressRunningApp(Path.Combine(root, "slow-http")) { Address = address };
+            await app.Run(async () =>
+            {
+                using var response = await app.GetResponse("/api/images");
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                Assert.Equal("OK", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            });
+        }
+        finally
+        {
+            listener.Stop();
+            await server;
+        }
+
+        async Task Respond()
+        {
+            using var connection = await listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
+            await using var stream = connection.GetStream();
+            using var reader = new StreamReader(stream, leaveOpen: true);
+            while (!string.IsNullOrEmpty(await reader.ReadLineAsync(TestContext.Current.CancellationToken))) { }
+            await Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            await stream.WriteAsync("HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nOK"u8.ToArray(),
+                TestContext.Current.CancellationToken);
+        }
     }
 
     [Theory]
@@ -618,7 +943,7 @@ public class SampleInfrastructureTests : IDisposable
               </PropertyGroup>
               <Target Name="VerifySelectedFramework" BeforeTargets="CoreCompile">
                 <Error Condition="'$(TargetFramework)' != 'net10.0-windows' or '$(TargetFrameworks)' != 'net10.0;net10.0-windows'"
-                       Text="Build must select net10.0-windows without overriding the declared framework list." />
+                       Text="Build must select the declared root framework without rewriting its framework list." />
                 <Error Condition="'$(ContractSentinel)' != 'forwarded-by-buildsample'"
                        Text="BuildSample must forward the test-owned property dictionary." />
                 <Message Importance="high" Text="Selected $(TargetFramework) from $(TargetFrameworks)" />
@@ -699,7 +1024,8 @@ public class SampleInfrastructureTests : IDisposable
         }, options);
         Assert.True(called);
         Assert.Contains("argument with spaces|--sentinel",
-            File.ReadAllText(Path.Combine(workspace.DiagnosticsRoot, "run", "run.stdout.log")));
+            File.ReadAllText(Assert.Single(Directory.EnumerateFiles(
+                Path.Combine(workspace.DiagnosticsRoot, "run"), "*.stdout.log"))));
         foreach (var waitForAddress in new[] { false, true })
         {
             await Assert.ThrowsAsync<TimeoutException>(() =>
@@ -710,8 +1036,9 @@ public class SampleInfrastructureTests : IDisposable
                     else
                         await app.WaitForExit();
                 }, options with { Timeout = TimeSpan.FromMilliseconds(100) }));
-            Assert.True(File.Exists(Path.Combine(workspace.DiagnosticsRoot, "run", "run.stderr.log")));
         }
+        Assert.Equal(3, Directory.EnumerateFiles(
+            Path.Combine(workspace.DiagnosticsRoot, "run"), "*.stderr.log").Count());
         test.Dispose();
         Assert.False(Directory.Exists(working));
         Assert.True(Directory.Exists(diagnostics));
@@ -745,7 +1072,7 @@ public class SampleInfrastructureTests : IDisposable
     [Fact]
     public void ExplicitBuildPropertiesKeepDefaultFlagsAndDoNotMutateTheCaller()
     {
-        FileIn("inputs/App/App.csproj");
+        FileIn("inputs/App/App.csproj", "<Project><PropertyGroup><TargetFramework>net10.0-ios</TargetFramework></PropertyGroup></Project>");
         using var workspace = new SampleWorkspace(
             "App", Path.Combine(root, "inputs"), Repo.PackagesDir,
             Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
@@ -758,7 +1085,8 @@ public class SampleInfrastructureTests : IDisposable
         Assert.Equal(defaults, arguments.Take(defaults.Length));
         Assert.Equal(new[]
         {
-            "--framework", "net10.0-ios", "-p:RuntimeIdentifier=iossimulator-arm64"
+            "--framework", "net10.0-ios",
+            "-p:RuntimeIdentifier=iossimulator-arm64"
         }, arguments.Skip(defaults.Length));
         Assert.Equal(Path.GetFullPath(project), arguments[1]);
         Assert.Single(arguments, argument => argument.StartsWith("-bl:", StringComparison.Ordinal));
@@ -772,7 +1100,8 @@ public class SampleInfrastructureTests : IDisposable
             "run", "--project", Path.GetFullPath(project), "-c", "Release", "--no-build", "--no-launch-profile",
             "--framework", "net10.0-ios", "-p:RuntimeIdentifier=iossimulator-arm64", "--", "argument with spaces", "--sentinel"
         }, run);
-        foreach (var name in new[] { "TargetFramework", "TargetFrameworks", "configuration", "RestoreConfigFile", "RestoreNoCache", "UseSharedCompilation", " " })
+        foreach (var name in new[] { "TargetFramework", "TargetFrameworks", "configuration", "RestoreConfigFile",
+            "RestoreNoCache", "UseSharedCompilation", " " })
         {
             var conflicting = new Dictionary<string, string> { [name] = "override" };
             Assert.Throws<ArgumentException>(() =>
@@ -780,6 +1109,35 @@ public class SampleInfrastructureTests : IDisposable
             Assert.Throws<ArgumentException>(() =>
                 DotNet.RunArguments(project, [], options with { Properties = conflicting }));
         }
+    }
+
+    [Fact]
+    public void FrameworkSelectionValidatesDeclarationsWithoutWritingProjectsOrTargets()
+    {
+        const string projectXml = "<Project><PropertyGroup><TargetFrameworks>net10.0;net8.0</TargetFrameworks></PropertyGroup></Project>";
+        FileIn("inputs/App/App.csproj", projectXml);
+        FileIn("inputs/Directory.Build.targets", "<Project><Target Name=\"ExistingSampleTarget\" /></Project>");
+        using var workspace = new SampleWorkspace("App", Path.Combine(root, "inputs"), Repo.PackagesDir,
+            Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+        var project = Path.Combine(workspace.Root, "samples", "App", "App.csproj");
+        var diagnostics = Path.Combine(workspace.DiagnosticsRoot, "build");
+        var targets = Path.Combine(workspace.Root, "samples", "Directory.Build.targets");
+        var originalTargets = File.ReadAllText(targets);
+        DotNet.BuildArguments(workspace, project, diagnostics, new() { Framework = "net10.0" });
+        DotNet.BuildArguments(workspace, project, diagnostics, new() { Framework = "net8.0" });
+        var original = System.Xml.Linq.XDocument.Load(targets);
+        Assert.Equal("ExistingSampleTarget", Assert.Single(original.Descendants("Target")).Attribute("Name")!.Value);
+        Assert.Empty(original.Descendants("Import"));
+        Assert.Equal(originalTargets, File.ReadAllText(targets));
+        Assert.False(File.Exists(Path.Combine(diagnostics, "selected-root.targets")));
+        Assert.Equal(projectXml, File.ReadAllText(project));
+        Assert.Equal(projectXml, File.ReadAllText(Path.Combine(root, "inputs", "App", "App.csproj")));
+        Assert.Throws<ArgumentException>(() => DotNet.ValidateDeclaredFramework(workspace, project, "net11.0"));
+        Assert.Throws<ArgumentException>(() => DotNet.ValidateDeclaredFramework(workspace, project, "net10.0;net8.0"));
+        Assert.Throws<ArgumentException>(() => DotNet.ValidateDeclaredFramework(workspace,
+            Path.Combine(workspace.Root, "..", "outside.csproj"), "net10.0"));
+        Assert.Throws<ArgumentException>(() => DotNet.ValidateDeclaredFramework(workspace,
+            Path.Combine(root, "inputs", "App", "App.csproj"), "net10.0"));
     }
 
     [Fact]
@@ -976,11 +1334,12 @@ public class SampleInfrastructureTests : IDisposable
     private sealed class AddressRunningApp(string diagnostics) : RunningApp(diagnostics)
     {
         internal int AddressRequests { get; private set; }
+        internal Uri Address { get; init; } = new("http://127.0.0.1:49152");
 
         internal override Task<Uri> GetAddress()
         {
             AddressRequests++;
-            return Task.FromResult(new Uri("http://127.0.0.1:49152"));
+            return Task.FromResult(Address);
         }
 
         internal override Task<(int ExitCode, string Output, string Error)> WaitForExit() =>

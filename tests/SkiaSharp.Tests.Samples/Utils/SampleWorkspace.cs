@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.Json;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -5,8 +7,16 @@ namespace SkiaSharp.Tests.Samples.Utils;
 // Owns the sample copy, private build environment, and disposable workspace.
 public sealed class SampleWorkspace : IDisposable
 {
+    private static readonly object identityLock = new();
+    private static long identityTicks;
+    private static long identityCounter;
+
     public string Root { get; }
     public string DiagnosticsRoot { get; }
+    public string? SdkVersion { get; }
+
+    internal static string ConsumerSdkVersion =>
+        Environment.GetEnvironmentVariable("SAMPLE_TEST_SDK_VERSION") is { Length: > 0 } version ? version : Repo.DefaultSdkVersion;
 
     public SampleWorkspace(string folder)
         : this(folder, Repo.SamplesDir, Repo.PackagesDir, Repo.WorkspacesDir, Repo.ArtifactsDir)
@@ -14,7 +24,13 @@ public sealed class SampleWorkspace : IDisposable
     }
 
     internal SampleWorkspace(string folder, string samplesDir, string packagesDir, string workspacesDir, string artifactsDir)
+        : this(folder, samplesDir, packagesDir, workspacesDir, artifactsDir, ConsumerSdkVersion)
     {
+    }
+
+    internal SampleWorkspace(string folder, string samplesDir, string packagesDir, string workspacesDir, string artifactsDir, string? sdkVersion)
+    {
+        SdkVersion = sdkVersion;
         packagesDir = Path.GetFullPath(packagesDir);
         if (!Directory.Exists(packagesDir) || !Directory.EnumerateFiles(packagesDir, "*.nupkg", SearchOption.AllDirectories).Any())
             throw new InvalidOperationException($"Input NuGet packages are missing: {packagesDir}");
@@ -26,10 +42,16 @@ public sealed class SampleWorkspace : IDisposable
         Directory.CreateDirectory(Root);
         try
         {
-            // Block repository imports and SDK pins; let dotnet on PATH select the SDK.
+            // Block repository imports; the consumer pin is independent of the runner SDK.
             File.WriteAllText(Path.Combine(Root, "Directory.Build.props"), "<Project />");
             File.WriteAllText(Path.Combine(Root, "Directory.Build.targets"), "<Project />");
-            File.WriteAllText(Path.Combine(Root, "global.json"), """{"sdk":{"paths":["$host$"],"allowPrerelease":true}}""");
+            var sdk = new Dictionary<string, object> { ["paths"] = new[] { "$host$" }, ["allowPrerelease"] = true };
+            if (SdkVersion is not null)
+            {
+                sdk["version"] = SdkVersion;
+                sdk["rollForward"] = "disable";
+            }
+            File.WriteAllText(Path.Combine(Root, "global.json"), JsonSerializer.Serialize(new { sdk }));
             DotNet.WriteNuGetConfig(Path.Combine(Root, "NuGet.Config"), packagesDir);
             CopySample(samplesDir, folder, Path.Combine(Root, "samples"));
         }
@@ -44,7 +66,14 @@ public sealed class SampleWorkspace : IDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(folder);
         var name = new string(folder.Select(c => char.IsAsciiLetterOrDigit(c) ? char.ToLowerInvariant(c) : '-').ToArray());
-        return $"{name}-{Guid.NewGuid():N}";
+        lock (identityLock)
+        {
+            // Preserve creation order even within one clock tick or after a clock adjustment.
+            identityTicks = Math.Max(DateTime.UtcNow.Ticks, identityTicks + 1);
+            var timestamp = new DateTime(identityTicks, DateTimeKind.Utc)
+                .ToString("yyyyMMdd'T'HHmmssfffffff'Z'", CultureInfo.InvariantCulture);
+            return FormattableString.Invariant($"{timestamp}-{name}-{Environment.ProcessId:x}-{++identityCounter:x}");
+        }
     }
 
     internal static void CopySample(string source, string folder, string destination)

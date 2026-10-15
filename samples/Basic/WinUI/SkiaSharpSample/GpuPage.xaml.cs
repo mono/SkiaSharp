@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using SkiaSharp;
@@ -80,6 +81,9 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 	{
 		InitializeComponent();
 	}
+
+	protected override AutomationPeer OnCreateAutomationPeer() =>
+		new FrameworkElementAutomationPeer(this);
 
 	private void OnLoaded(object sender, RoutedEventArgs e)
 	{

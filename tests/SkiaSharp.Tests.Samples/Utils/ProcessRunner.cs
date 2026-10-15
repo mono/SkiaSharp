@@ -6,11 +6,20 @@ namespace SkiaSharp.Tests.Samples.Utils;
 // Runs any tool with captured output and a bounded process-tree lifetime.
 internal static class ProcessRunner
 {
-    public static async Task<(int ExitCode, string Output, string Error)> Run(
+    public static Task<(int ExitCode, string Output, string Error)> Run(
         string executable,
         IEnumerable<string> arguments,
         string directory,
         TimeSpan timeout,
+        Action<ProcessStartInfo>? configure = null) =>
+        Run(executable, arguments, directory, timeout, publishOutput: true, configure: configure);
+
+    internal static async Task<(int ExitCode, string Output, string Error)> Run(
+        string executable,
+        IEnumerable<string> arguments,
+        string directory,
+        TimeSpan timeout,
+        bool publishOutput,
         Action<ProcessStartInfo>? configure = null)
     {
         using var process = Start(executable, arguments, directory, configure);
@@ -26,14 +35,20 @@ internal static class ProcessRunner
             if (!process.HasExited)
                 process.Kill(entireProcessTree: true);
             await process.WaitForExitAsync();
-            throw new TimeoutException($"{executable} timed out after {timeout}: {directory}\n{await stdout}\n{await stderr}");
+            var timedOutOutput = await stdout;
+            var timedOutError = await stderr;
+            var captured = publishOutput ? $"{timedOutOutput}\n{timedOutError}" : "Captured process output was not published.";
+            throw new TimeoutException($"{executable} timed out after {timeout}: {directory}\n{captured}");
         }
         var text = await stdout;
         var errors = await stderr;
 
-        WriteOutput(text);
-        if (errors.Length > 0)
-            WriteOutput(errors);
+        if (publishOutput)
+        {
+            WriteOutput(text);
+            if (errors.Length > 0)
+                WriteOutput(errors);
+        }
 
         return (process.ExitCode, text, errors);
     }
