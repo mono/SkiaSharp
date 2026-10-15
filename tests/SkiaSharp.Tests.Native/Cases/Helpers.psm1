@@ -91,12 +91,8 @@ function Get-WindowsArtifacts([string] $NativeRoot) {
 }
 
 # These tools inspect target files without loading them into the test host.
-function Assert-Readelf {
-    Assert-Tool llvm-readelf
-}
-
 function Get-ElfBuildId([string] $Path) {
-    $notes = (& llvm-readelf --notes $Path) -join "`n"
+    $notes = (& llvm-readobj --elf-output-style=GNU --notes $Path) -join "`n"
     $match = [regex]::Match($notes, '(?i)Build ID:\s*([0-9a-f]+)')
     if (!$match.Success) {
         throw "Missing GNU build ID: $Path"
@@ -352,7 +348,7 @@ function Assert-CliMetadata([string] $Path) {
 }
 
 Export-ModuleMember -Function @(
-    'Assert-NativeRoot', 'Assert-Artifact', 'Assert-Tool', 'Assert-Readelf', 'Assert-IdenticalArtifact', 'Assert-CliMetadata'
+    'Assert-NativeRoot', 'Assert-Artifact', 'Assert-Tool', 'Assert-IdenticalArtifact', 'Assert-CliMetadata'
     'Get-AndroidArtifacts', 'Get-LinuxArtifacts', 'Get-WindowsArtifacts', 'Get-ElfBuildId', 'Get-PeImports'
     'Get-AppleArtifacts', 'Get-TizenArtifacts', 'Get-WasmArtifacts', 'Get-NativeArtifactInventory', 'Get-NativeArtifactFiles'
     'Get-StreamPrefix', 'Test-NativeArtifact', 'Get-PeCodeViewIdentity'

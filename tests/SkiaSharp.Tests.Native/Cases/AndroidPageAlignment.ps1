@@ -11,7 +11,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module "$PSScriptRoot/Helpers.psm1"
 
 Assert-NativeRoot $NativeRoot
-Assert-Readelf
+Assert-Tool llvm-readobj
 
 $abis = @{
     x86 = @('ELF32', 'Intel 80386')
@@ -29,7 +29,7 @@ foreach ($library in Get-AndroidArtifacts $NativeRoot) {
         throw "Unsupported Android ABI: $abi"
     }
     $class, $machine = $abis[$abi]
-    $header = (& llvm-readelf --file-header $library) -join "`n"
+    $header = (& llvm-readobj --elf-output-style=GNU --file-headers $library) -join "`n"
     if ($header -notmatch "(?m)^\s*Class:\s+$class\s*$" -or
         $header -notmatch "(?m)^\s*Machine:\s+$([regex]::Escape($machine))\s*$" -or
         $header -notmatch '(?m)^\s*Type:\s+DYN\b' -or
@@ -37,7 +37,7 @@ foreach ($library in Get-AndroidArtifacts $NativeRoot) {
         throw "Expected little-endian $class shared library for Android $abi ($machine): $library"
     }
 
-    $headers = & llvm-readelf --program-headers --wide $library
+    $headers = & llvm-readobj --elf-output-style=GNU --program-headers $library
     $loads = @($headers | Where-Object { $_ -match '^\s*LOAD\s' })
     if ($loads.Count -eq 0) {
         throw "No LOAD program headers found: $library"
