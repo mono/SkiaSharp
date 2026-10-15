@@ -36,14 +36,8 @@ dotnet add package SkiaSharp.Testing
 | --- | --- |
 | ![Expected scene on a soft gradient.](images/expected-preview.png) | ![Actual scene with changed blue, a checkerboard visible through the translucent green circle, and an added rounded violet square.](images/actual-preview.png) |
 
-Every example uses this scene. The rounded blue panel changes from RGB **(72, 104, 192)**
-to **(74, 106, 194)**, the green circle keeps RGB **(48, 185, 131)** but changes alpha
-from **255** to **128**, and the rounded violet square is new. The display copies
-have a 25-pixel checkerboard surround and backdrop to reveal transparency.
-Every displayed image, including masks and diagnostics, is 850x650 with the
-800x600 result centered inside. Opaque regions hide the checkerboard. The original
-`expected.png` and `actual.png` retain their alpha for comparison; the
-checkerboard is not part of the compared pixels.
+The panel has a small color change, the circle has a transparency change,
+and the square is new.
 
 ```csharp
 using System.IO;
@@ -155,12 +149,10 @@ tolerated (amber), while the circle's alpha change and added square mismatch (re
 The binary mask therefore excludes the panel; raw RGB differences still show
 its small change but cannot show the circle's alpha change.
 
-The overlay is a true translucent highlight, but the returned diagnostic is
-opaque: actual transparency is flattened onto white first. Use `ThresholdMap`
-for unambiguous solid classification colors. Classification colors show a
-pixel's status, not the magnitude of its difference. In the overlay, amber mixed
-with the blue panel looks olive, and red mixed with the green circle looks brown;
-the map shows the literal amber and red.
+Overlay highlights blend with the actual image, so their appearance depends on
+the underlying colors. The returned diagnostic is opaque, with actual
+transparency flattened onto white. Use `ThresholdMap` for solid classification
+colors. These colors show status, not the magnitude of a difference.
 
 `RawMetrics` measures selected-channel differences before tolerance filtering.
 `ThresholdedMetrics` zeros tolerated differences but retains full exceeding
@@ -180,8 +172,8 @@ detects it:
 | --- | --- |
 | ![The circle's alpha change is highlighted.](images/comparison-exact.png) | ![Other RGB changes remain, but the circle has no RGB difference.](images/channel-difference.png) |
 
-`ChannelDifference` cannot show the circle's alpha delta, although the blue and
-red RGB changes remain visible. Exclude alpha only intentionally. Comparing
+`ChannelDifference` cannot show the circle's alpha delta, although the other
+RGB changes remain visible. Exclude alpha only intentionally. Comparing
 premultiplied RGB can still reflect opacity even when alpha is disabled.
 
 ## Tolerance and ignore masks
@@ -213,20 +205,3 @@ maxima or metric samples. The added square remains a mismatch in both examples.
 `TotalPixels` is the full image area; fractions and budgets use
 `ComparedPixelCount`. Ignoring every pixel is invalid. Inputs and masks must
 remain alive and unmodified during a call; dispose returned diagnostic images.
-
-## Regenerate these examples
-
-All images are rendered from one scene by the actual comparer, not hand-drawn
-diagnostics. Layout and captions belong to this page, not the image files.
-With matching native assets built or staged in `output/native`,
-run this file-based .NET 10 app from the repository root:
-
-```bash
-dotnet run --file documentation/docfx/guides/testing/generate-images.cs \
-  -p:TargetFrameworks=net10.0
-```
-
-Edit `RenderScene` in `generate-images.cs` to change the base artwork. The script
-regenerates the plain inputs plus padded checkerboard display copies of every
-input, mask and diagnostic. It does not draw labels, compose panels, capture
-devices, update references or accept baselines.
