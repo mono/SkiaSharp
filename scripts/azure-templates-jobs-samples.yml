@@ -22,7 +22,10 @@ jobs:
             installNinja: true
             ${{ if eq(group, 'Build') }}:
               preBuildSteps:
-                - bash: xcodebuild -downloadPlatform tvOS -buildVersion "$(xcrun --sdk appletvsimulator --show-sdk-version)"
+                - bash: |
+                    set -e
+                    xcrun simctl list runtimes
+                    xcodebuild -downloadPlatform tvOS -buildVersion "$(xcrun --sdk appletvsimulator --show-sdk-version)"
                   displayName: Install the tvOS runtime required by the selected Xcode storyboard compiler
           ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
             packages: $(MANAGED_LINUX_PACKAGES)

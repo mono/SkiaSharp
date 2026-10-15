@@ -25,6 +25,7 @@ The macOS Build group also needs the tvOS simulator runtime matching Xcode's SDK
 to compile storyboards. CI provisions it with:
 
 ```sh
+xcrun simctl list runtimes
 xcodebuild -downloadPlatform tvOS -buildVersion "$(xcrun --sdk appletvsimulator --show-sdk-version)"
 ```
 
