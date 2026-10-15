@@ -26,6 +26,10 @@ RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-inst
 
 ARG BUILD_ARCH=x64
 
+RUN tdnf install -y python3-pip binutils \
+    && python3 -m pip install --no-cache-dir pytest==8.4.2 \
+    && tdnf clean all
+
 # Map BUILD_ARCH to Android triple, discover NDK dynamically, and write skia-env.
 RUN case ${BUILD_ARCH} in \
         x64)   ANDROID_TRIPLE=x86_64-linux-android29  ; ANDROID_SYSROOT_LIB=x86_64-linux-android ;; \

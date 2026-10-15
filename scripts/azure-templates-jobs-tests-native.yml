@@ -1,0 +1,29 @@
+parameters:
+  buildAgent: {}
+
+jobs:
+  - ${{ each runtime in split('azurelinux,alpine', ',') }}:
+    - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+      parameters:
+        name: tests_native_${{ runtime }}
+        displayName: Native runtime (${{ runtime }})
+        buildAgent: ${{ parameters.buildAgent }}
+        docker: scripts/infra/native/runtime/${{ runtime }}
+        target: tests-native-runtime
+        ${{ if eq(runtime, 'alpine') }}:
+          additionalArgs: --nativePlatform=alpine --nativeLibc=musl
+        ${{ else }}:
+          additionalArgs: --nativePlatform=linux --nativeLibc=glibc
+        dotnetSdks: []
+        checkoutSubmodules: false
+        installAndroidSdk: false
+        installXcode: false
+        shouldPublish: false
+        retryCount: 0
+        nativeArtifactTests: true
+        requiredArtifacts:
+          - name: native
+        publishArtifacts:
+          - name: testlogs_native_${{ runtime }}
+            always: true
+            path: output/logs/native-tests
