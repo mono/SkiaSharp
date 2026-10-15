@@ -163,7 +163,7 @@ public sealed partial class HomePage : Page
                 Icon = currentItems[i].Icon,
                 Supported = currentItems[i].Supported,
             };
-            // UserControl PointerReleased is unreliable under SkiaRenderer; HyperlinkButton.Click is not.
+            // UserControl PointerReleased is unreliable here; HyperlinkButton.Click is not.
             var link = new HyperlinkButton
             {
                 Content = card,
