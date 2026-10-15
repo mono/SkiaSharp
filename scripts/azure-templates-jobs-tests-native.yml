@@ -1,17 +1,16 @@
 parameters:
   buildAgent: {}
-  platform: linux
 
 jobs:
   - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
     parameters:
-      name: tests_native_${{ parameters.platform }}
-      displayName: Native tests (${{ iif(eq(parameters.platform, 'windows'), 'Windows', 'Linux') }})
+      name: tests_native_${{ parameters.buildAgent.pool.os }}
+      displayName: Native tests (${{ iif(eq(parameters.buildAgent.pool.os, 'windows'), 'Windows', 'Linux') }})
       buildAgent: ${{ parameters.buildAgent }}
-      ${{ if eq(parameters.platform, 'linux') }}:
+      ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
         docker: scripts/infra/tests/docker/native
         dotnetSdks: []
-      ${{ if eq(parameters.platform, 'windows') }}:
+      ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
         preBuildSteps:
           - pwsh: ./scripts/infra/tests/provision-native-windows.ps1
             displayName: Provision native artifact inspection tools
@@ -33,10 +32,10 @@ jobs:
           inputs:
             testResultsFormat: VSTest
             testResultsFiles: output/logs/testlogs/SkiaSharp.Tests.Native/**/*.trx
-            testRunTitle: Native tests (${{ iif(eq(parameters.platform, 'windows'), 'Windows', 'Linux') }})
+            testRunTitle: Native tests (${{ iif(eq(parameters.buildAgent.pool.os, 'windows'), 'Windows', 'Linux') }})
             failTaskOnFailedTests: true
             failTaskOnMissingResultsFile: true
       publishArtifacts:
-        - name: testlogs_native_${{ parameters.platform }}
+        - name: testlogs_native_${{ parameters.buildAgent.pool.os }}
           always: true
           path: output/logs/testlogs/SkiaSharp.Tests.Native
