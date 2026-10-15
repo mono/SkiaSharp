@@ -22,8 +22,8 @@ Keep scenario assertions in the case script, with short section comments and bla
 ## Running
 
 Artifact inspection requires PowerShell 7.4 or later and LLVM's inspection tools on
-either Windows or Linux. The HarfBuzz runtime case additionally requires Linux/glibc
-and a C compiler. Both hosts use `llvm-readelf` for consistent ELF inspection.
+either Windows or Linux. Both hosts use `llvm-readelf` for consistent ELF inspection;
+the current suite does not require a C compiler or execute target libraries.
 
 A platform-only case may explicitly write `SKIP: <reason>` and exit 77. The runner
 reports that as a skipped xUnit case; exit 77 without a reason fails. Missing tools,
@@ -40,12 +40,7 @@ dotnet test tests/SkiaSharp.Tests.Native.slnx
 dotnet cake --target=tests-native
 ```
 
-The runtime case, `HarfBuzzSymbolBinding`, checks the matching host architecture's `linux`
-and `linuxnodeps` artifacts. It compiles a standalone loader and conflicting functions,
-verifies a deliberately preemptible negative control, then tests the produced HarfBuzz
-library. Conflicting libraries are never loaded into the xUnit process.
-
-The remaining cases inspect artifacts without executing them, including cross-built targets:
+The twelve cases inspect artifacts without executing them, including cross-built targets:
 
 | Case | Checks |
 |---|---|
@@ -79,7 +74,7 @@ exist: absent inputs fail rather than silently reducing coverage.
 A case can also run without .NET:
 
 ```sh
-pwsh -NoLogo -NoProfile -File tests/SkiaSharp.Tests.Native/Cases/HarfBuzzSymbolBinding/test.ps1 "$PWD/output/native"
+pwsh -NoLogo -NoProfile -File tests/SkiaSharp.Tests.Native/Cases/AndroidDebugSymbols.ps1 "$PWD/output/native"
 ```
 
 ## CI
@@ -89,7 +84,7 @@ in the Complete pipeline. Packaging does not wait for tests. The Package pipelin
 build-only and does not run native tests.
 In the standalone Tests pipeline it runs after
 preparation against the source build's native artifacts. Both Linux and Windows jobs consume
-the merged `native` artifact and `native_msvc` under `output/msvc`, runs `tests-native`
+the merged `native` artifact and `native_msvc` under `output/msvc`, run `tests-native`
 and publish separate TRX results even on failure. The Linux job's small image
 is independent of native build images and minimal managed-runtime images:
 
@@ -99,16 +94,14 @@ docker run --rm --volume "$(pwd):/work" -w /work skiasharp-native-tests \
   /bin/sh -c "dotnet tool restore && dotnet cake --target=tests-native"
 ```
 
-The current CI host is x64. Artifacts must match the runtime architecture and libc;
-missing tools/artifacts or mismatches fail, never silently skip.
+The current CI hosts are x64. Artifact inspection is independent of the host architecture
+and libc; missing tools/artifacts or incorrect target metadata fail, never silently skip.
 The Windows job uses the existing Windows agent without Docker and explicitly provisions
 the required LLVM tools. Provisioning reuses a complete LLVM 19.1.1 installation or
 installs the official full archive in the agent tool cache; the smaller Windows installer
-does not include `llvm-readelf`. The HarfBuzz runtime regression is declared Linux/glibc-only
-and skips on Windows; the artifact inspection cases still run.
+does not include `llvm-readelf`. All twelve current cases run on both hosts.
 
-Static ABI and symbol checks do not imply runtime coverage on target platforms. Only
-the HarfBuzz case executes target code on its matching glibc host.
+Static ABI and symbol checks do not imply runtime coverage on target platforms.
 Cake retains toolchain and build-input validation, but does not duplicate these artifact assertions.
 
 Build modified native sources using `externals-<platform>`, never `externals-download`.
