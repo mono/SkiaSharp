@@ -57,9 +57,9 @@ dotnet test tests/SkiaSharp.Tests.Samples.slnx \
 
 Keep both framework properties to limit the runner's source dependencies to
 .NET 10. Sample builds use the SDK on `PATH` and their own declared TFMs.
-Sample dependencies must be available on the repository's package mirrors,
-including the pinned Uno SDK and its transitive dependencies. Generated consumers
-resolve SkiaSharp and HarfBuzzSharp packages only from staged artifacts.
+Sample dependencies and their transitive dependencies must be available on the
+repository's package mirrors. Generated consumers resolve SkiaSharp and
+HarfBuzzSharp packages only from staged artifacts.
 
 Sample helpers accept one optional `DotNetOptions` record. For example,
 `BuildSample(folder, project, new() { Framework = "net10.0-browserwasm" })`
@@ -100,11 +100,6 @@ target, checking CPU rendering and Drawing navigation, pointer strokes and
 clear rather than launching a desktop or host solution variant.
 Gallery is build-only; device execution is separate.
 Browser errors and unavailable GPU rendering fail.
-On stable Uno 6.7, the Basic WASM sample temporarily subscribes to
-`CompositionTarget.Rendering` during startup to work around the upstream
-splash-dismissal race (unoplatform/uno#24260). It stops after Uno removes its
-loader, on window close, or with an error after 60 seconds. Startup checks run at
-normal and throttled CPU speed and verify the subscription stops.
 Browser golden captures disable CSS/Web Animations through Playwright: finite
 transitions finish before capture, and infinite animations reset for the capture.
 Canvas rendering still requires the test's own readiness assertions.
