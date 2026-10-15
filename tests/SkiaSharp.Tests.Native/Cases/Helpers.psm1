@@ -57,10 +57,11 @@ function Get-LinuxArtifacts([string] $NativeRoot) {
 }
 
 function Get-WindowsArtifacts([string] $NativeRoot) {
+    # Windows producers create ARM64 first, so both libraries share that directory.
     $desktop = @(
         'windows/x86/libSkiaSharp.dll', 'windows/x86/libHarfBuzzSharp.dll'
         'windows/x64/libSkiaSharp.dll', 'windows/x64/libHarfBuzzSharp.dll'
-        'windows/ARM64/libSkiaSharp.dll', 'windows/arm64/libHarfBuzzSharp.dll'
+        'windows/ARM64/libSkiaSharp.dll', 'windows/ARM64/libHarfBuzzSharp.dll'
     )
 
     # MSVC desktop builds are published separately from the Clang, NanoServer and WinUI collection.
@@ -80,18 +81,6 @@ function Get-WindowsArtifacts([string] $NativeRoot) {
         }
 
         foreach ($path in $paths) {
-            # Windows merges ARM64 and arm64 directories; preserve the spelling retained by artifact extraction.
-            $windows = Join-Path $root 'windows'
-            if ($path -cmatch '^windows/(?:ARM64|arm64)/(.+)$' -and (Test-Path -LiteralPath $windows)) {
-                $name = $Matches[1]
-                $directories = @(Get-ChildItem -LiteralPath $windows -Directory |
-                        Where-Object { $_.Name -cin @('ARM64', 'arm64') -and
-                            (Test-Path -LiteralPath (Join-Path $_.FullName $name) -PathType Leaf) })
-                if ($directories.Count -eq 1) {
-                    $path = "windows/$($directories[0].Name)/$name"
-                }
-            }
-
             [pscustomobject]@{
                 Path = [IO.Path]::GetFullPath((Join-Path $root $path))
                 RuntimeMarker = $path -notlike 'winui/any/*'
@@ -221,15 +210,8 @@ function Get-WasmArtifacts([string] $NativeRoot) {
                 $binary = "$directory/$name.a"
                 New-NativeArtifact $NativeRoot $binary WasmArtifacts WasmArchive $name @('wasm32')
                 if ($name -eq 'libHarfBuzzSharp') {
-                    # The recipe retains whichever spelling its emsdk produced, beside the normalized archive.
-                    $aliases = @("$directory/$name.a.wasm", "$directory/$name.wasm.a")
-                    $present = @($aliases | Where-Object { Test-Path -LiteralPath (Join-Path $NativeRoot $_) -PathType Leaf })
-                    if ($present.Count -eq 0) {
-                        $present = @($aliases[0])
-                    }
-                    foreach ($alias in $present) {
-                        New-NativeArtifact $NativeRoot $alias ArtifactCoverage Alias -AliasOf $binary
-                    }
+                    # Published builds retain this producer filename beside the normalized consumer archive.
+                    New-NativeArtifact $NativeRoot "$directory/$name.wasm.a" ArtifactCoverage Alias -AliasOf $binary
                 }
             }
         }
