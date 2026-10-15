@@ -57,10 +57,11 @@ dotnet test tests/SkiaSharp.Tests.Samples.slnx \
 
 Keep both framework properties to limit the runner's source dependencies to
 .NET 10. Sample builds use the SDK on `PATH` and their own declared TFMs.
-Uno packages and their `WebView2Aot`/`DirectNAot` desktop dependencies use
-NuGet.org so the sample can consume the WASM splash-dismissal fix before it is
-mirrored to `dotnet-public`. Source mapping keeps SkiaSharp and HarfBuzzSharp
-packages restricted to staged artifacts.
+The Basic Uno sample and isolated consumers resolve Uno packages and their
+`WebView2Aot`/`DirectNAot` desktop dependencies from NuGet.org to consume the WASM
+splash-dismissal fix before it is mirrored to `dotnet-public`. Source mapping
+keeps generated consumers' SkiaSharp and HarfBuzzSharp packages restricted to
+staged artifacts.
 
 Sample helpers accept one optional `DotNetOptions` record. For example,
 `BuildSample(folder, project, new() { Framework = "net10.0-browserwasm" })`

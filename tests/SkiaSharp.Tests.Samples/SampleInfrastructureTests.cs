@@ -209,10 +209,12 @@ public class SampleInfrastructureTests : IDisposable
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void UnoPackagesUseTheirPublishingFeedWithoutExposingArtifactPackages(bool repositoryConfig)
+    public void UnoPackagesUseTheirPublishingFeedWithoutExposingArtifactPackages(bool sourceSampleConfig)
     {
-        var file = repositoryConfig ? Path.Combine(Repo.RootDir, "nuget.config") : Path.Combine(root, "NuGet.Config");
-        if (!repositoryConfig)
+        var file = sourceSampleConfig
+            ? Path.Combine(Repo.RootDir, "samples", "Basic", "UnoPlatform", "nuget.config")
+            : Path.Combine(root, "NuGet.Config");
+        if (!sourceSampleConfig)
         {
             Directory.CreateDirectory(root);
             DotNet.WriteNuGetConfig(file, "packages");
