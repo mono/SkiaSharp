@@ -1,0 +1,31 @@
+parameters:
+  - name: buildPipelineType
+    type: string
+  - name: buildAgentWindows
+    type: object
+  - name: buildAgentMac
+    type: object
+  - name: buildAgentLinux
+    type: object
+
+stages:
+
+    - stage: samples
+      displayName: Samples
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
+        dependsOn: prepare
+      ${{ else }}:
+        dependsOn: package
+      jobs:
+        - template: /scripts/azure-templates-jobs-samples.yml@self
+          parameters:
+            platform: windows
+            buildAgent: ${{ parameters.buildAgentWindows}}
+        - template: /scripts/azure-templates-jobs-samples.yml@self
+          parameters:
+            platform: macos
+            buildAgent: ${{ parameters.buildAgentMac }}
+        - template: /scripts/azure-templates-jobs-samples.yml@self
+          parameters:
+            platform: linux
+            buildAgent: ${{ parameters.buildAgentLinux }}

@@ -1,0 +1,91 @@
+parameters:
+  - name: buildPipelineType
+    type: string
+  - name: buildAgentWindows
+    type: object
+  - name: buildAgentMac
+    type: object
+  - name: buildAgentLinux
+    type: object
+  - name: enableCaching
+    type: boolean
+    default: false
+
+stages:
+
+    - stage: managed
+      displayName: Build Managed
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
+        dependsOn: prepare
+      ${{ else }}:
+        dependsOn: native
+      jobs:
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Validate Interop
+          parameters:
+            name: managed_interop_windows
+            displayName: Validate Interop
+            buildAgent: ${{ parameters.buildAgentWindows}}
+            target: externals-interop
+            additionalArgs: --skipExternals="all"
+            installAndroidSdk: false
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Managed (Windows)
+          parameters:
+            name: managed_windows
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+            displayName: Managed (Windows)
+            buildAgent: ${{ parameters.buildAgentWindows}}
+            target: libs
+            cacheJob: managed/libs
+            enableCaching: ${{ parameters.enableCaching }}
+            additionalArgs: --skipExternals="all"
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                displayName: Delete the native folder
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Managed (macOS)
+          parameters:
+            name: managed_macos
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+            displayName: Managed (macOS)
+            buildAgent: ${{ parameters.buildAgentMac }}
+            target: libs
+            cacheJob: managed/libs
+            enableCaching: ${{ parameters.enableCaching }}
+            additionalArgs: --skipExternals="all"
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                displayName: Delete the native folder
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Managed (Linux)
+          parameters:
+            name: managed_linux
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                tizen:
+                  manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+                  manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+            displayName: Managed (Linux)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            packages: $(MANAGED_LINUX_PACKAGES)
+            target: libs
+            cacheJob: managed/libs
+            enableCaching: ${{ parameters.enableCaching }}
+            additionalArgs: --skipExternals="all"
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                displayName: Delete the native folder
