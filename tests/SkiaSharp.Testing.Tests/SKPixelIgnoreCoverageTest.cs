@@ -174,7 +174,7 @@ public class SKPixelIgnoreCoverageTest : SKPixelComparerTestBase
 		Assert.Equal(1.0 / 3, baseline.MismatchedPixelFraction);
 		options.IgnoreMask = mask;
 		AssertEquivalent(baseline, SKPixelComparer.Compare(first, second, options));
-		foreach (var style in new[] { SKPixelDifferenceStyle.BinaryMask, SKPixelDifferenceStyle.ChannelDifference, SKPixelDifferenceStyle.ThresholdMap, SKPixelDifferenceStyle.ThresholdOverlay })
+		foreach (var style in Enum.GetValues<SKPixelDifferenceStyle>())
 		{
 			using var masked = SKPixelComparer.GenerateDifferenceImage(first, second, style, options);
 			options.IgnoreMask = null;
@@ -309,7 +309,7 @@ public class SKPixelIgnoreCoverageTest : SKPixelComparerTestBase
 		Assert.Equal(8L, result.RawMetrics.SampleCount);
 		Assert.Equal(result.RawMetrics.SampleCount, result.ThresholdedMetrics.SampleCount);
 		Assert.Equal(9, result.MaxChannelDifference);
-		foreach (var style in new[] { SKPixelDifferenceStyle.BinaryMask, SKPixelDifferenceStyle.ChannelDifference, SKPixelDifferenceStyle.ThresholdMap, SKPixelDifferenceStyle.ThresholdOverlay })
+		foreach (var style in Enum.GetValues<SKPixelDifferenceStyle>())
 		{
 			using var diff = SKPixelComparer.GenerateDifferenceImage(first, second, style, options);
 			var expected = style switch
@@ -317,6 +317,7 @@ public class SKPixelIgnoreCoverageTest : SKPixelComparerTestBase
 				SKPixelDifferenceStyle.BinaryMask => new[] { SKColors.Black, SKColors.Black, SKColors.White },
 				SKPixelDifferenceStyle.ChannelDifference => new[] { SKColors.Black, new SKColor(3, 6, 9), new SKColor(3, 6, 9) },
 				SKPixelDifferenceStyle.ThresholdMap => new[] { new SKColor(128, 128, 128), new SKColor(255, 200, 0), SKColors.Red },
+				SKPixelDifferenceStyle.Heatmap => new[] { new SKColor(128, 128, 128), new SKColor(0, 24, 255), new SKColor(0, 24, 255) },
 				_ => new[] { new SKColor(192, 192, 192), new SKColor(129, 103, 5), new SKColor(129, 3, 5) },
 			};
 			for (var x = 0; x < first.Width; x++)
