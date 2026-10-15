@@ -6,7 +6,9 @@ stages:
 
   - stage: package
     displayName: Package NuGets
-    dependsOn: native
+    dependsOn:
+      - native
+      - native_tests
     jobs:
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package NuGets
         parameters:

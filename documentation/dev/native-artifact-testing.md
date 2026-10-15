@@ -1,7 +1,7 @@
 # Native tests
 
 Native scenarios use the same xUnit v3 runner and TRX reporting as the managed tests.
-They live in `tests/SkiaSharp.Tests.Native.Console/Cases`: **add a folder to add a test**.
+They live in `tests/SkiaSharp.Tests.Native/Cases`: **add a folder to add a test**.
 The project copies every case folder to its output, and one theory enumerates those folders.
 No C# registration or manifest is needed.
 
@@ -18,12 +18,12 @@ The initial suite requires Linux/glibc, Bash, a C compiler, GNU binutils and cor
 It tests existing native outputs; it does not build or download Skia.
 
 ```sh
-dotnet test tests/SkiaSharp.Tests.Native.Console/SkiaSharp.Tests.Native.Console.csproj
+dotnet test tests/SkiaSharp.Tests.Native/SkiaSharp.Tests.Native.csproj
 
 # Dedicated solution; kept separate from the cross-platform managed console suite.
 dotnet test tests/SkiaSharp.Tests.Native.slnx
 
-# Cake writes TRX under output/logs/testlogs/SkiaSharp.Tests.Native.Console.
+# Cake writes TRX under output/logs/testlogs/SkiaSharp.Tests.Native.
 dotnet cake --target=tests-native
 ```
 
@@ -35,13 +35,15 @@ library. Conflicting libraries are never loaded into the xUnit process.
 A case can also run without .NET:
 
 ```sh
-bash tests/SkiaSharp.Tests.Native.Console/Cases/HarfBuzzSymbolBinding/test.sh "$PWD/output/native"
+bash tests/SkiaSharp.Tests.Native/Cases/HarfBuzzSymbolBinding/test.sh "$PWD/output/native"
 ```
 
 ## CI
 
-The Tests stage has one dedicated Linux native-test job. It consumes the merged `native`
-artifact, runs `tests-native` and publishes TRX results even on failure. Its small image
+The Native Tests stage runs immediately after native artifact merging and gates packaging
+in the Build and Complete pipelines. In the standalone Tests pipeline it runs after
+preparation against the source build's native artifacts. Its dedicated Linux job consumes
+the merged `native` artifact, runs `tests-native` and publishes TRX results even on failure. Its small image
 is independent of native build images and minimal managed-runtime images:
 
 ```sh

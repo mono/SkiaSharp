@@ -7,7 +7,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 Task("Default")
     .Does(() =>
 {
-    var testAssembly = "SkiaSharp.Tests.Native.Console";
+    var testAssembly = "SkiaSharp.Tests.Native";
     var project = ROOT_PATH.CombineWithFilePath($"tests/{testAssembly}/{testAssembly}.csproj");
     RunDotNetTest(project, ROOT_OUTPUT_PATH.Combine($"logs/testlogs/{testAssembly}"),
         noBuild: false, hangTimeout: null);

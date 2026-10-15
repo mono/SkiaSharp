@@ -1,5 +1,6 @@
 parameters:
   buildAgent: {}
+  use1ESPipelineTemplates: false
 
 jobs:
   - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
@@ -7,6 +8,7 @@ jobs:
       name: tests_native_linux
       displayName: Native tests (Linux)
       buildAgent: ${{ parameters.buildAgent }}
+      use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
       docker: scripts/infra/tests/docker/native
       target: tests-native
       dotnetSdks: []
@@ -23,11 +25,11 @@ jobs:
           condition: always()
           inputs:
             testResultsFormat: VSTest
-            testResultsFiles: output/logs/testlogs/SkiaSharp.Tests.Native.Console/**/*.trx
+            testResultsFiles: output/logs/testlogs/SkiaSharp.Tests.Native/**/*.trx
             testRunTitle: Native tests (Linux)
             failTaskOnFailedTests: true
             failTaskOnMissingResultsFile: true
       publishArtifacts:
         - name: testlogs_native_linux
           always: true
-          path: output/logs/testlogs/SkiaSharp.Tests.Native.Console
+          path: output/logs/testlogs/SkiaSharp.Tests.Native

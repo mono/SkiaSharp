@@ -101,9 +101,6 @@ stages:
       ${{ else }}:
         dependsOn: native
       jobs:
-        - template: /scripts/azure-templates-jobs-tests-native.yml@self
-          parameters:
-            buildAgent: ${{ parameters.buildAgentLinux }}
         - ${{ each arch in split('x64,x86', ',') }}:
           - template: /scripts/azure-templates-jobs-tests.yml@self
             parameters:
