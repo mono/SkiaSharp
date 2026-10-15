@@ -100,13 +100,8 @@ stages:
                 workloads: [android, maui-android]
             logArtifact: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
             preBuildSteps:
-              - bash: bash ./scripts/infra/tests/enable-kvm.sh
-                displayName: Enable KVM for Android emulator
-              - script: |
-                  mkdir -p "$HOME/.android/avd"
-                  echo "##vso[task.setvariable variable=ANDROID_AVD_HOME]$HOME/.android/avd"
-                  echo "##vso[task.setvariable variable=ANDROID_EMULATOR_HOME]$HOME/.android"
-                displayName: Set Android AVD home (fix XDG path mismatch)
+              - bash: bash ./scripts/infra/tests/configure-emulators.sh
+                displayName: Configure Android emulators (KVM and AVD home)
               - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "emulator"
                 displayName: Install the Android emulator
               - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
