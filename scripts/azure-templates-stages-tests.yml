@@ -82,26 +82,7 @@ stages:
             # graphite-vulkan are required here, so missing provisioning fails.
             packages: $(MANAGED_LINUX_PACKAGES) xvfb mesa-utils libgl1-mesa-dri libglx-mesa0 mesa-vulkan-drivers vulkan-tools
             preBuildSteps:
-              - bash: |
-                  set -e
-                  nohup Xvfb :99 -screen 0 1280x1024x24 > /tmp/xvfb.log 2>&1 &
-                  sleep 3
-                  echo "Started Xvfb on :99"
-                  # Expose the software-GPU environment to the test step. Forcing
-                  # Mesa (GL) and the lavapipe ICD (Vulkan) keeps output deterministic.
-                  #
-                  # softpipe rather than llvmpipe for GL: llvmpipe's LLVM shader JIT
-                  # segfaults compiling the fragment shader Skia generates for a
-                  # runtime blender and takes the whole test host with it, which is
-                  # what made this leg lose all its results (#4590). softpipe is the
-                  # non-JIT gallium rasterizer and runs the same tests green. It
-                  # caps at GL 3.3, which is well past the 3.0 Ganesh needs. See
-                  # #4604 to move back to llvmpipe.
-                  echo "##vso[task.setvariable variable=DISPLAY]:99"
-                  echo "##vso[task.setvariable variable=LIBGL_ALWAYS_SOFTWARE]1"
-                  echo "##vso[task.setvariable variable=GALLIUM_DRIVER]softpipe"
-                  echo "##vso[task.setvariable variable=VK_ICD_FILENAMES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
-                  echo "##vso[task.setvariable variable=VK_DRIVER_FILES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
+              - bash: bash ./scripts/infra/tests/start-xvfb.sh
                 displayName: Start Xvfb and select software GPU (visual tests)
 
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
@@ -119,10 +100,7 @@ stages:
                 workloads: [android, maui-android]
             logArtifact: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
             preBuildSteps:
-              - script: |
-                  echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-                  sudo udevadm control --reload-rules
-                  sudo udevadm trigger --name-match=kvm
+              - bash: bash ./scripts/infra/tests/enable-kvm.sh
                 displayName: Enable KVM for Android emulator
               - script: |
                   mkdir -p "$HOME/.android/avd"
