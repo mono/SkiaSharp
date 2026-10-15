@@ -20,6 +20,9 @@ It tests existing native outputs; it does not build or download Skia.
 ```sh
 dotnet test tests/SkiaSharp.Tests.Native.Console/SkiaSharp.Tests.Native.Console.csproj
 
+# Dedicated solution; kept separate from the cross-platform managed console suite.
+dotnet test tests/SkiaSharp.Tests.Native.slnx
+
 # Cake writes TRX under output/logs/testlogs/SkiaSharp.Tests.Native.Console.
 dotnet cake --target=tests-native
 ```
