@@ -99,6 +99,8 @@ For sample runs it overrides only address/exit waits (normally two/three minutes
 not callback duration or browser-operation waits; cleanup/output reads stay bounded
 to one minute. Configuration, framework and helper-owned restore properties cannot
 be overridden through `Properties`.
+HTTP content requests allow 30 seconds for cold rendering; readiness probes retain
+their four-second per-attempt limit.
 
 ## Browser runs
 

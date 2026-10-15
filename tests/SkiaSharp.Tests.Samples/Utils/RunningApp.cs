@@ -12,7 +12,7 @@ internal abstract class RunningApp(string diagnostics)
         AllowAutoRedirect = false
     })
     {
-        Timeout = TimeSpan.FromSeconds(4)
+        Timeout = TimeSpan.FromSeconds(30)
     };
 
     private Uri? address;
@@ -40,7 +40,9 @@ internal abstract class RunningApp(string diagnostics)
         {
             try
             {
-                var response = await GetResponse(path);
+                using var probe = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+                probe.CancelAfter(TimeSpan.FromSeconds(4));
+                var response = await client.GetAsync(request, probe.Token);
                 if (response.IsSuccessStatusCode)
                     return response;
                 lastError = $"HTTP {(int)response.StatusCode}";

@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Net;
+using System.Net.Sockets;
 using System.Text.Json;
 using System.Xml.Linq;
 using SkiaSharp.Tests.Samples.Utils;
@@ -438,6 +440,41 @@ public class SampleInfrastructureTests : IDisposable
                 (await app.RequestUri("/health")).AbsoluteUri);
             Assert.Equal(1, app.AddressRequests);
         });
+    }
+
+    [Fact]
+    public async Task HttpContentCanTakeLongerThanAReadinessProbe()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var address = new Uri($"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}");
+        var server = Respond();
+        try
+        {
+            var app = new AddressRunningApp(Path.Combine(root, "slow-http")) { Address = address };
+            await app.Run(async () =>
+            {
+                using var response = await app.GetResponse("/api/images");
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                Assert.Equal("OK", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            });
+        }
+        finally
+        {
+            listener.Stop();
+            await server;
+        }
+
+        async Task Respond()
+        {
+            using var connection = await listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
+            await using var stream = connection.GetStream();
+            using var reader = new StreamReader(stream, leaveOpen: true);
+            while (!string.IsNullOrEmpty(await reader.ReadLineAsync(TestContext.Current.CancellationToken))) { }
+            await Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            await stream.WriteAsync("HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nOK"u8.ToArray(),
+                TestContext.Current.CancellationToken);
+        }
     }
 
     [Theory]
@@ -1229,11 +1266,12 @@ public class SampleInfrastructureTests : IDisposable
     private sealed class AddressRunningApp(string diagnostics) : RunningApp(diagnostics)
     {
         internal int AddressRequests { get; private set; }
+        internal Uri Address { get; init; } = new("http://127.0.0.1:49152");
 
         internal override Task<Uri> GetAddress()
         {
             AddressRequests++;
-            return Task.FromResult(new Uri("http://127.0.0.1:49152"));
+            return Task.FromResult(Address);
         }
 
         internal override Task<(int ExitCode, string Output, string Error)> WaitForExit() =>
