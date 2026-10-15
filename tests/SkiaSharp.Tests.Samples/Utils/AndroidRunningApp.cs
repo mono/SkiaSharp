@@ -10,6 +10,7 @@ namespace SkiaSharp.Tests.Samples.Utils;
 internal sealed class AndroidRunningApp(SampleWorkspace workspace, string artifact, string? version = null, string? image = null)
 	: AppiumRunningApp(workspace, artifact)
 {
+	private (Android Sdk, string Name)? ownedAvd;
 	private readonly string model =
 		Environment.GetEnvironmentVariable("SAMPLE_TEST_ANDROID_MODEL")
 		?? "pixel_9";
@@ -54,6 +55,7 @@ internal sealed class AndroidRunningApp(SampleWorkspace workspace, string artifa
 			?? throw new InvalidOperationException("Set ANDROID_HOME or ANDROID_SDK_ROOT to the preinstalled SDK.");
 		var android = new Android(sdk);
 		var name = SampleWorkspace.CreateIdentity($"SkiaSharpSamples-{version}");
+		ownedAvd = (android, name);
 
 		// This lifetime owns only its unique AVD; Appium boots it and selects its serial.
 		Own(async () =>
@@ -79,5 +81,7 @@ internal sealed class AndroidRunningApp(SampleWorkspace workspace, string artifa
 	}
 
 	protected override Task CapturePlatformDiagnostics() =>
-		SaveText("device.log", string.Join(Environment.NewLine, Driver.Manage().Logs.GetLog("logcat")));
+		ownedAvd is { } avd
+			? avd.Sdk.CaptureAvdDiagnostics(avd.Name, (file, text) => SaveText(file, text))
+			: SaveText("android-avd.log", "Startup did not select an owned AVD. No device diagnostics were attempted.");
 }

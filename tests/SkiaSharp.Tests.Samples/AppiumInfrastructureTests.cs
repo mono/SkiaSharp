@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Drawing;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Interactions;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -9,6 +10,58 @@ namespace SkiaSharp.Tests.Samples;
 [RunGroup(SampleRunGroup.Build)]
 public sealed class AppiumInfrastructureTests
 {
+	[Fact]
+	public async Task PlatformDiagnosticsRunWhenSessionCreationFailed()
+	{
+		var root = Path.Combine(Path.GetTempPath(), SampleWorkspace.CreateIdentity("startup-diagnostics"));
+		try
+		{
+			var inputs = Path.Combine(root, "inputs");
+			Directory.CreateDirectory(Path.Combine(inputs, "Sample"));
+			using var workspace = new SampleWorkspace("Sample", inputs, Repo.PackagesDir,
+				Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
+			var artifact = Path.Combine(workspace.Root, "Sample.app");
+			Directory.CreateDirectory(artifact);
+			var app = new DiagnosticApp(workspace, artifact);
+			var stopped = false;
+			await Assert.ThrowsAsync<NotSupportedException>(() => app.Run(
+				new Uri("http://127.0.0.1:1"),
+				_ => throw new InvalidOperationException("The scenario must not run after startup fails."),
+				() => Task.CompletedTask,
+				() =>
+				{
+					stopped = true;
+					return Task.CompletedTask;
+				}));
+			Assert.Equal(1, app.DiagnosticCalls);
+			Assert.True(stopped);
+			await new MacRunningApp(workspace, artifact).SaveDiagnostics();
+			await new IosRunningApp(workspace, artifact).SaveDiagnostics();
+			var android = new AndroidRunningApp(workspace, Path.Combine(workspace.Root, "Sample.apk"));
+			await android.SaveDiagnostics();
+			Assert.Contains("did not select an owned AVD",
+				File.ReadAllText(Path.Combine(android.Diagnostics, "android-avd.log")));
+		}
+		finally
+		{
+			SampleWorkspace.DeleteDirectory(root);
+		}
+	}
+
+	private sealed class DiagnosticApp(SampleWorkspace workspace, string artifact) : AppiumRunningApp(workspace, artifact)
+	{
+		internal int DiagnosticCalls { get; private set; }
+		internal override string DeviceProfile => "unit-fixture";
+		internal override PointerKind PointerKind => PointerKind.Mouse;
+		internal override Task<string> ReadApplicationId() => Task.FromResult("unit.fixture");
+		protected override Task Start(Uri address) => throw new NotSupportedException();
+		protected override Task CapturePlatformDiagnostics()
+		{
+			DiagnosticCalls++;
+			return Task.CompletedTask;
+		}
+	}
+
 	[Fact]
 	public async Task NativeDiagnosticsFollowTheScenarioWithoutHidingItsFailure()
 	{

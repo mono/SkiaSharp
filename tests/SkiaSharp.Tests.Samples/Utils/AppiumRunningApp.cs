@@ -31,6 +31,7 @@ internal abstract class AppiumRunningApp
 	internal string Diagnostics { get; }
 	internal abstract string DeviceProfile { get; }
 	internal AppiumDriver Driver => driver ?? throw new InvalidOperationException("The owned Appium session is not ready.");
+	protected bool HasDriver => driver is not null;
 	internal abstract PointerKind PointerKind { get; }
 	internal virtual By Locator(string id) => MobileBy.AccessibilityId(id);
 	internal virtual void SubmitSearch() => Driver.SwitchTo().ActiveElement().SendKeys(Keys.Enter);
@@ -320,8 +321,8 @@ internal abstract class AppiumRunningApp
 				TestContext.Current.AddFileAttachment(path, "image/png");
 				return Task.CompletedTask;
 			});
-			await Attempt(failures, CapturePlatformDiagnostics);
 		}
+		await Attempt(failures, CapturePlatformDiagnostics);
 		ThrowFailures(failures);
 	}
 

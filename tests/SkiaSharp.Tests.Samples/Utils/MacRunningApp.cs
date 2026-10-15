@@ -26,6 +26,8 @@ internal sealed class MacRunningApp(SampleWorkspace workspace, string artifact)
 
 	protected override Task CapturePlatformDiagnostics()
 	{
+		if (!HasDriver)
+			return Task.CompletedTask;
 		var clear = FindOptional("basic-drawing-clear");
 		return clear is null ? Task.CompletedTask : SaveText("drawing-clear-state.log",
 			$"enabled={clear.Enabled}; hittable={clear.GetAttribute("hittable")}; " +

@@ -23,6 +23,46 @@ public class SampleInfrastructureTests : IDisposable
         File.WriteAllText(path, text);
     }
 
+    [Fact]
+    public async Task ProcessCaptureCanKeepDiscoveryOutputOutOfTestLogs()
+    {
+        var marker = Guid.NewGuid().ToString("N");
+        var windows = OperatingSystem.IsWindows();
+        var file = windows ? "capture.cmd" : "capture.sh";
+        FileIn(file, windows ? $"@echo off\r\necho {marker}\r\n" : $"printf '%s' '{marker}'\n");
+        var arguments = windows ? new[] { "/d", "/c", file } : new[] { file };
+        var output = TestContext.Current.TestOutputHelper;
+        Assert.NotNull(output);
+
+        var captured = await ProcessRunner.Run(windows ? "cmd.exe" : "/bin/sh", arguments,
+            root, TimeSpan.FromSeconds(10), publishOutput: false);
+        Assert.Equal(0, captured.ExitCode);
+        Assert.Contains(marker, captured.Output);
+        Assert.DoesNotContain(marker, output.Output);
+
+        var published = await ProcessRunner.Run(windows ? "cmd.exe" : "/bin/sh", arguments,
+            root, TimeSpan.FromSeconds(10));
+        Assert.Equal(0, published.ExitCode);
+        Assert.Contains(marker, output.Output);
+    }
+
+    [Fact]
+    public async Task QuietProcessTimeoutDoesNotDiscloseCapturedStreams()
+    {
+        var marker = Guid.NewGuid().ToString("N");
+        var windows = OperatingSystem.IsWindows();
+        var file = windows ? "capture.cmd" : "capture.sh";
+        FileIn(file, windows
+            ? $"@echo off\r\necho {marker}\r\nping -n 6 127.0.0.1 >nul\r\n"
+            : $"printf '%s' '{marker}'\nsleep 5\n");
+        var arguments = windows ? new[] { "/d", "/c", file } : new[] { file };
+        var failure = await Assert.ThrowsAsync<TimeoutException>(() => ProcessRunner.Run(
+            windows ? "cmd.exe" : "/bin/sh", arguments, root,
+            TimeSpan.FromMilliseconds(500), publishOutput: false));
+        Assert.DoesNotContain(marker, failure.Message);
+        Assert.DoesNotContain(marker, TestContext.Current.TestOutputHelper!.Output);
+    }
+
     [Theory]
     [InlineData("Windows", "Gallery.Windows.slnx", "windows.Dockerfile")]
     [InlineData("Mac", "Gallery.Mac.slnx", "linux.Dockerfile")]

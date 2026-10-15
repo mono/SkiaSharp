@@ -282,6 +282,8 @@ creation/deletion. Appium selects the emulator serial; existing devices/data
 remain untouched.
 Appium owns app installation, launch, logs and session cleanup. Foreground
 interactions are serialized.
+Android guest diagnostics match the exact owned AVD name before collecting boot
+properties, logcat and available kernel output, including failed session creation.
 
 The native AppKit scenario attaches `opengl-pixel-formats.log`, comparing the
 view's CGL requirements with bounded controls on the same host. This does not
@@ -306,6 +308,8 @@ are left intact, so repeated runs do not delete user data or change app identiti
 Mac2 and Windows drivers own app launch/termination and their WDA/WAD
 server lifecycle. Windows launches the exact built executable through its full
 path; existing processes are not reused or terminated.
+Windows retains the session window's verified process identity and handle, then
+terminates only that owned process if it survives driver/server cleanup.
 
 After bootstrap, package staging, and exact-suffix generation:
 

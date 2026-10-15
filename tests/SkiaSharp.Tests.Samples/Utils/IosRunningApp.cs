@@ -71,5 +71,7 @@ internal sealed class IosRunningApp(SampleWorkspace workspace, string artifact, 
 	}
 
 	protected override Task CapturePlatformDiagnostics() =>
-		SaveText("device.log", string.Join(Environment.NewLine, Driver.Manage().Logs.GetLog("syslog")));
+		HasDriver
+			? SaveText("device.log", string.Join(Environment.NewLine, Driver.Manage().Logs.GetLog("syslog")))
+			: Task.CompletedTask;
 }

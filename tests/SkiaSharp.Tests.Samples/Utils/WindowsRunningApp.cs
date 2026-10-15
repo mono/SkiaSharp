@@ -1,5 +1,7 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
@@ -13,6 +15,13 @@ namespace SkiaSharp.Tests.Samples.Utils;
 internal sealed class WindowsRunningApp(SampleWorkspace workspace, string artifact, string architecture)
     : AppiumRunningApp(workspace, artifact)
 {
+    private Process? ownedProcess;
+    private OwnedProcessIdentity? ownedProcessIdentity;
+    private DateTime? launchAttemptedAtUtc;
+    private bool prelaunchGuardWasEmpty;
+
+    private sealed record OwnedProcessIdentity(int ProcessId, DateTime StartTimeUtc, string WindowHandle, string Executable);
+
     internal override string DeviceProfile { get; } = architecture;
 
     internal override PointerKind PointerKind => PointerKind.Mouse;
@@ -56,13 +65,112 @@ internal sealed class WindowsRunningApp(SampleWorkspace workspace, string artifa
             $"ConvertTo-Json -InputObject @(Get-Process | Where-Object {{ $_.Path -eq {Quote(Artifact)} }}) -Compress"));
         Assert.True(processes.RootElement.GetArrayLength() == 0,
             $"The target executable is already running; refusing to relaunch or terminate it: {Artifact}");
+        prelaunchGuardWasEmpty = true;
+        Own(ReleaseOwnedProcess);
         var options = Options("Windows", "Windows");
         options.App = Artifact;
         options.AddAdditionalAppiumOption("appWorkingDir", Path.GetDirectoryName(Artifact)!);
         options.AddAdditionalAppiumOption("systemPort", AppiumFixture.GetFreePort());
         options.AddAdditionalAppiumOption("ms:forcequit", true);
+        launchAttemptedAtUtc = DateTime.UtcNow;
         SetDriver(new WindowsDriver(address, options, TimeSpan.FromMinutes(2)));
+        AdoptSessionProcess(Driver.CurrentWindowHandle);
+        await SaveOwnedProcess("owned-process-started.json", "verified-session-process");
         Wait(() => Driver.FindElement(By.XPath("/*")) is { Displayed: true } element ? element : null, $"{Artifact} desktop window");
+    }
+
+    private void AdoptSessionProcess(string windowHandle)
+    {
+        if (!prelaunchGuardWasEmpty)
+            throw new InvalidOperationException("Windows process ownership requires an empty prelaunch artifact guard.");
+        var digits = windowHandle.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? windowHandle[2..] : windowHandle;
+        if (!ulong.TryParse(digits, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var value) || value == 0)
+            throw new InvalidOperationException($"The owned Windows session returned an invalid native window handle: {windowHandle}.");
+        var window = checked((nint)value);
+        if (GetWindowThreadProcessId(window, out var processId) == 0 || processId == 0)
+            throw new InvalidOperationException($"Could not resolve session window {windowHandle} to a process (Win32 error {Marshal.GetLastWin32Error()}).");
+
+        var candidate = Process.GetProcessById(checked((int)processId));
+        try
+        {
+            // Retain the native process handle so cleanup cannot target a reused PID.
+            _ = candidate.Handle;
+            var executable = candidate.MainModule?.FileName;
+            if (executable is null || !Path.GetFullPath(executable).Equals(Artifact, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException($"Session window {windowHandle} belongs to PID {processId} at '{executable}', not the unique artifact '{Artifact}'.");
+            var started = candidate.StartTime.ToUniversalTime();
+            if (launchAttemptedAtUtc is not { } attempted || started < attempted)
+                throw new InvalidOperationException($"Session PID {processId} was not started after our launch attempt: start={started:O}, attempt={launchAttemptedAtUtc:O}.");
+            if (GetWindowThreadProcessId(window, out var currentProcessId) == 0 || currentProcessId != processId)
+                throw new InvalidOperationException($"Session window {windowHandle} changed process identity before ownership could be established.");
+            ownedProcessIdentity = new(candidate.Id, started, windowHandle, executable);
+            ownedProcess = candidate;
+        }
+        finally
+        {
+            if (ownedProcess != candidate)
+                candidate.Dispose();
+        }
+    }
+
+    protected override Task CapturePlatformDiagnostics() =>
+        SaveOwnedProcess("owned-process-before-cleanup.json", "before-driver-cleanup");
+
+    private Task SaveOwnedProcess(string name, string phase, bool terminationAttempted = false) =>
+        SaveText(name, JsonSerializer.Serialize(new
+        {
+            Phase = phase,
+            Artifact,
+            PrelaunchGuardWasEmpty = prelaunchGuardWasEmpty,
+            LaunchAttemptedAtUtc = launchAttemptedAtUtc,
+            Identity = ownedProcessIdentity,
+            HasExited = ownedProcess?.HasExited,
+            TerminationAttempted = terminationAttempted,
+            OwnershipUnverified = launchAttemptedAtUtc is not null && ownedProcessIdentity is null
+        }, new JsonSerializerOptions { WriteIndented = true }), "application/json");
+
+    private async Task ReleaseOwnedProcess()
+    {
+        if (ownedProcess is not { } process)
+        {
+            await SaveOwnedProcess("owned-process-after-cleanup.json", "no-verified-process-no-termination");
+            return;
+        }
+        List<Exception> failures = [];
+        var terminationAttempted = false;
+        try
+        {
+            await Attempt(failures, async () =>
+            {
+                if (!process.HasExited)
+                {
+                    terminationAttempted = true;
+                    try
+                    {
+                        process.Kill();
+                    }
+                    catch (InvalidOperationException) when (process.HasExited) { }
+                    catch (Win32Exception) when (process.HasExited) { }
+                }
+                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                try
+                {
+                    await process.WaitForExitAsync(timeout.Token);
+                }
+                catch (OperationCanceledException error) when (timeout.IsCancellationRequested)
+                {
+                    throw new TimeoutException($"Owned Windows PID {ownedProcessIdentity!.ProcessId} did not exit within 30 seconds.", error);
+                }
+            });
+            await Attempt(failures, () => SaveOwnedProcess("owned-process-after-cleanup.json",
+                "after-driver-and-server-cleanup", terminationAttempted));
+            ThrowFailures(failures);
+        }
+        finally
+        {
+            process.Dispose();
+            ownedProcess = null;
+        }
     }
 
     private Task<string> PowerShell(string script, TimeSpan? timeout = null) =>
@@ -95,6 +203,8 @@ internal sealed class WindowsRunningApp(SampleWorkspace workspace, string artifa
         }
     }
 
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr OpenInputDesktop(uint flags, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint access);
     [DllImport("user32.dll", SetLastError = true)]
