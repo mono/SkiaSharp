@@ -52,7 +52,7 @@ Platform-specific UI controls for rendering SkiaSharp content. These provide rea
 | **SkiaSharp.Views.Blazor** | Blazor WebAssembly controls: `SKCanvasView`, `SKGLView`. net6.0+ (WASM native assets require net8.0+). Auto-includes SkiaSharp.NativeAssets.WebAssembly. |
 | **SkiaSharp.Views.Maui.Core** | .NET MAUI shared view infrastructure. net8.0+. Depends on Microsoft.Maui.Core. |
 | **SkiaSharp.Views.Maui.Controls** | .NET MAUI controls: `SKCanvasView`, `SKGLView`. net8.0+. Depends on SkiaSharp.Views.Maui.Core and Microsoft.Maui.Controls. |
-| **SkiaSharp.Views.Uno.WinUI** | Uno Platform controls: `SKXamlCanvas`, `SKSwapChainPanel`. net8.0+. Depends on Uno.WinUI. Auto-includes SkiaSharp.NativeAssets.WebAssembly for WASM targets and SkiaSharp.Views.WinUI for Windows targets. |
+| **SkiaSharp.Views.Uno.WinUI** | Uno Platform controls: `SKXamlCanvas` on every target, `SKSwapChainPanel` on Windows only (Uno's own `SKCanvasElement` is the GPU-backed control elsewhere). net10.0+, Uno Platform 7+. Depends on Uno.WinUI; uses SkiaSharp.Views.WinUI on Windows targets. The Uno.Sdk supplies the native assets. |
 
 ---
 
@@ -117,7 +117,7 @@ The core `SkiaSharp` and `HarfBuzzSharp` packages automatically include NativeAs
 
 - `SkiaSharp.NativeAssets.Linux` / `HarfBuzzSharp.NativeAssets.Linux` — for Linux server/desktop
 - `SkiaSharp.NativeAssets.Linux.NoDependencies` — for minimal Linux containers (SkiaSharp only)
-- `SkiaSharp.NativeAssets.WebAssembly` / `HarfBuzzSharp.NativeAssets.WebAssembly` — for Blazor/Uno WASM. `SkiaSharp.NativeAssets.WebAssembly` is auto-included by `SkiaSharp.Views.Blazor` and `SkiaSharp.Views.Uno.WinUI`; `HarfBuzzSharp.NativeAssets.WebAssembly` must always be added manually.
+- `SkiaSharp.NativeAssets.WebAssembly` / `HarfBuzzSharp.NativeAssets.WebAssembly` — for Blazor/Uno WASM. `SkiaSharp.NativeAssets.WebAssembly` is auto-included by `SkiaSharp.Views.Blazor`, and the Uno.Sdk adds it to Uno Platform apps; `HarfBuzzSharp.NativeAssets.WebAssembly` must always be added manually.
 - `SkiaSharp.NativeAssets.NanoServer` — for Windows Nano Server (SkiaSharp only)
 - `SkiaSharp.NativeAssets.WinUI` — for WinUI 3 apps (SkiaSharp only; auto-included by `SkiaSharp.Views.WinUI`)
 
