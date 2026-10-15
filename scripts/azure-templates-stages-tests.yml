@@ -41,9 +41,9 @@ stages:
               preBuildSteps:
                 # Provision a software GL driver (Mesa) and a software Vulkan ICD
                 # (SwiftShader) so ganesh-gl and ganesh-vulkan render here.
-                - pwsh: .\scripts\infra\native\windows\install-mesa-gl.ps1
+                - pwsh: .\scripts\infra\tests\windows\install-mesa-gl.ps1
                   displayName: Provision software OpenGL (Mesa) for the GL tests
-                - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
+                - pwsh: .\scripts\infra\tests\windows\install-vulkan-icd.ps1
                   displayName: Provision software Vulkan (SwiftShader) for visual tests
 
         - template: /scripts/azure-templates-jobs-tests.yml@self
@@ -53,9 +53,9 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindows }}
             publishCoverage: true
             preBuildSteps:
-              - pwsh: .\scripts\infra\native\windows\install-mesa-gl.ps1
+              - pwsh: .\scripts\infra\tests\windows\install-mesa-gl.ps1
                 displayName: Provision software OpenGL (Mesa) for the GL tests
-              - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
+              - pwsh: .\scripts\infra\tests\windows\install-vulkan-icd.ps1
                 displayName: Provision software Vulkan (SwiftShader) for visual tests
 
         - template: /scripts/azure-templates-jobs-tests.yml@self
@@ -165,7 +165,7 @@ stages:
             env:
               SKIASHARP_TEST_SKIP_GPU: graphite-dawn
             preBuildSteps:
-              - bash: bash ./scripts/infra/managed/install-chrome.sh
+              - bash: bash ./scripts/infra/tests/install-chrome.sh
                 displayName: Install Chrome for WASM tests
 
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
@@ -193,7 +193,7 @@ stages:
             env:
               SKIASHARP_TEST_SKIP_GPU: graphite-dawn
             preBuildSteps:
-              - bash: bash ./scripts/infra/managed/install-chrome.sh
+              - bash: bash ./scripts/infra/tests/install-chrome.sh
                 displayName: Install Chrome for WASM tests
 
         - template: /scripts/azure-templates-jobs-tests-container.yml@self

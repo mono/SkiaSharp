@@ -47,7 +47,7 @@ $dest = Join-Path $repoRoot 'externals\vulkan-icd'
 $tempDir = Join-Path $dest '_download'
 New-Item -ItemType Directory -Force -Path $dest, $tempDir | Out-Null
 
-$downloadFile = Join-Path $PSScriptRoot '..\shared\download-file.ps1'
+$downloadFile = Join-Path $PSScriptRoot '..\..\native\shared\download-file.ps1'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $packages = @(
