@@ -10,6 +10,26 @@ namespace SkiaSharp.Tests.Samples;
 [RunGroup(SampleRunGroup.Build)]
 public sealed class AppiumInfrastructureTests
 {
+	[Theory]
+	[InlineData(0, 0, 754, 518, 137, 130, 754, 518, 377, 456, 514, 586)]
+	[InlineData(137, 130, 754, 518, 137, 130, 754, 518, 514, 586, 514, 586)]
+	[InlineData(0, 0, 800, 600, -1200, 150, 1200, 900, 400, 300, -600, 600)]
+	public void WindowsPointerCoordinatesUseTheMeasuredScreenWindow(
+		int x, int y, int width, int height, int screenX, int screenY, int screenWidth, int screenHeight,
+		int pointX, int pointY, int expectedX, int expectedY) =>
+		Assert.Equal(new Point(expectedX, expectedY), WindowsRunningApp.ScreenPoint(
+			new Point(pointX, pointY), new Rectangle(x, y, width, height),
+			new Rectangle(screenX, screenY, screenWidth, screenHeight)));
+
+	[Theory]
+	[InlineData(0, 100, 100, 100)]
+	[InlineData(100, 0, 100, 100)]
+	[InlineData(100, 100, 0, 100)]
+	[InlineData(100, 100, 100, 0)]
+	public void WindowsPointerCoordinatesRejectUnavailableWindowBounds(int width, int height, int screenWidth, int screenHeight) =>
+		Assert.Throws<InvalidOperationException>(() => WindowsRunningApp.ScreenPoint(new Point(10, 10),
+			new Rectangle(0, 0, width, height), new Rectangle(137, 130, screenWidth, screenHeight)));
+
 	[Fact]
 	public async Task PlatformDiagnosticsRunWhenSessionCreationFailed()
 	{

@@ -19,6 +19,7 @@ internal sealed class WindowsRunningApp(SampleWorkspace workspace, string artifa
     private OwnedProcessIdentity? ownedProcessIdentity;
     private DateTime? launchAttemptedAtUtc;
     private bool prelaunchGuardWasEmpty;
+    private IntPtr ownedWindow;
 
     private sealed record OwnedProcessIdentity(int ProcessId, DateTime StartTimeUtc, string WindowHandle, string Executable);
 
@@ -34,21 +35,74 @@ internal sealed class WindowsRunningApp(SampleWorkspace workspace, string artifa
             ["actions"] = new[] { new Dictionary<string, object> { ["virtualKeyCode"] = 0x0D } }
         });
 
-    internal override void Drag(Point start, Point end) =>
+    internal override void Drag(Point start, Point end)
+    {
+        var (automation, screen) = CoordinateSpace();
+        start = ScreenPoint(start, automation, screen);
+        end = ScreenPoint(end, automation, screen);
         Driver.ExecuteScript("windows: clickAndDrag", new Dictionary<string, object>
         {
             ["startX"] = start.X, ["startY"] = start.Y, ["endX"] = end.X, ["endY"] = end.Y,
             ["durationMs"] = 500
         });
+    }
 
-    internal override void Scroll(Rectangle container, int amount) =>
+    internal override void Scroll(Rectangle container, int amount)
+    {
+        var (automation, screen) = CoordinateSpace();
+        var point = ScreenPoint(new Point(container.Left + container.Width / 2,
+            container.Top + container.Height / 2), automation, screen);
         Driver.ExecuteScript("windows: scroll", new Dictionary<string, object>
         {
-            ["x"] = container.Left + container.Width / 2,
-            ["y"] = container.Top + container.Height / 2,
+            ["x"] = point.X,
+            ["y"] = point.Y,
             // Windows driver deltas are wheel notches, not pixels. Recheck geometry after each notch.
             ["deltaY"] = -Math.Sign(amount)
         });
+    }
+
+    private (Rectangle Automation, Rectangle Screen) CoordinateSpace()
+    {
+        if (ownedProcessIdentity is not { } identity ||
+            GetWindowThreadProcessId(ownedWindow, out var processId) == 0 ||
+            processId != identity.ProcessId)
+            throw new InvalidOperationException("The owned application window is no longer available for pointer input.");
+        var root = Driver.FindElement(By.XPath("/*"));
+        var automation = new Rectangle(root.Location, root.Size);
+        var previous = SetThreadDpiAwarenessContext(new IntPtr(-4));
+        if (previous == IntPtr.Zero)
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not read physical application-window coordinates.");
+        NativeRectangle bounds = default;
+        List<Exception> failures = [];
+        try
+        {
+            if (!GetWindowRect(ownedWindow, out bounds))
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not read the owned application window bounds.");
+        }
+        catch (Win32Exception error)
+        {
+            failures.Add(error);
+        }
+        finally
+        {
+            if (SetThreadDpiAwarenessContext(previous) == IntPtr.Zero)
+                failures.Add(new Win32Exception(Marshal.GetLastWin32Error(), "Could not restore the pointer-input thread's DPI context."));
+        }
+        ThrowFailures(failures);
+        var screen = Rectangle.FromLTRB(bounds.Left, bounds.Top, bounds.Right, bounds.Bottom);
+        TestContext.Current.TestOutputHelper?.WriteLine($"Windows pointer coordinates: automation={automation}, screen={screen}.");
+        return (automation, screen);
+    }
+
+    // WinAppDriver geometry is window-relative; SendInput gestures require physical screen coordinates.
+    internal static Point ScreenPoint(Point point, Rectangle automation, Rectangle screen)
+    {
+        if (automation.Width <= 0 || automation.Height <= 0 || screen.Width <= 0 || screen.Height <= 0)
+            throw new InvalidOperationException($"Cannot map pointer coordinates between invalid window bounds: {automation}; {screen}.");
+        return new Point(
+            checked(screen.Left + (int)Math.Round(((double)point.X - automation.Left) * screen.Width / automation.Width)),
+            checked(screen.Top + (int)Math.Round(((double)point.Y - automation.Top) * screen.Height / automation.Height)));
+    }
 
     protected override async Task Start(Uri address)
     {
@@ -104,6 +158,7 @@ internal sealed class WindowsRunningApp(SampleWorkspace workspace, string artifa
             if (GetWindowThreadProcessId(window, out var currentProcessId) == 0 || currentProcessId != processId)
                 throw new InvalidOperationException($"Session window {windowHandle} changed process identity before ownership could be established.");
             ownedProcessIdentity = new(candidate.Id, started, windowHandle, executable);
+            ownedWindow = window;
             ownedProcess = candidate;
         }
         finally
@@ -205,6 +260,16 @@ internal sealed class WindowsRunningApp(SampleWorkspace workspace, string artifa
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeRectangle
+    {
+        public int Left, Top, Right, Bottom;
+    }
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetWindowRect(IntPtr window, out NativeRectangle bounds);
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr OpenInputDesktop(uint flags, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint access);
     [DllImport("user32.dll", SetLastError = true)]

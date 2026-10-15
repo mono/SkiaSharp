@@ -222,6 +222,9 @@ Windows samples build with `WindowsPackageType=None` and launch their executable
 directly; tests do not register or uninstall MSIX packages.
 MAUI Windows canvas captures use the existing page/layout hosts, whose automation
 peers expose their bounds; the underlying WinUI canvas controls have no peers.
+Windows pointer gestures map automation coordinates to the owned window's measured
+physical screen bounds. Their logs retain both rectangles for diagnosing window
+position or display-scaling differences.
 
 Set `ANDROID_HOME` or `ANDROID_SDK_ROOT` for Android. On macOS, set
 `DEVELOPER_DIR` to the Xcode required by your installed workload; tests do not
