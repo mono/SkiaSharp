@@ -34,11 +34,11 @@ dotnet add package SkiaSharp.Testing
 
 | Expected | Actual |
 | --- | --- |
-| ![Expected scene.](images/expected.png) | ![Actual scene with changed blue, translucent green and an added red bar.](images/actual.png) |
+| ![Expected scene on a soft gradient.](images/expected.png) | ![Actual scene with changed blue, translucent green and an added rounded red square.](images/actual.png) |
 
-Every example uses this scene. The blue panel changes from RGB **(37, 99, 235)**
-to **(39, 101, 237)**, the green circle keeps RGB **(0, 255, 0)** but changes alpha
-from **255** to **128**, and the red bar is new. The actual circle is transparent;
+Every example uses this scene. The rounded blue panel changes from RGB **(72, 104, 192)**
+to **(74, 106, 194)**, the green circle keeps RGB **(48, 185, 131)** but changes alpha
+from **255** to **128**, and the rounded red square is new. The actual circle is transparent;
 the page background shows through it.
 
 ```csharp
@@ -84,10 +84,10 @@ using var png = difference.Encode(SKEncodedImageFormat.Png, 100);
 File.WriteAllBytes("difference-tolerant.png", png.ToArray());
 ```
 
-![The blue panel is tolerated, alpha is excluded, and the red bar still mismatches.](images/comparison-tolerant.png)
+![The blue panel is tolerated, alpha is excluded, and the red square still mismatches.](images/comparison-tolerant.png)
 
 The +2 blue change is now amber-tinted. This example intentionally excludes alpha,
-so the green circle is not highlighted; the red bar still mismatches. Always
+so the green circle is not highlighted; the red square still mismatches. Always
 generate the diagnostic with the same options as the comparison.
 
 `null` disables a channel; zero requires an exact match. `Absolute` uses byte
@@ -147,7 +147,7 @@ Pass `SKPixelDifferenceStyle` to `GenerateDifferenceImage`:
 | ![White mismatched pixels.](images/binary-mask.png) | ![Raw RGB differences without the alpha-only circle.](images/channel-difference.png) |
 
 These four examples use RGB tolerance **2** and exact alpha. The blue panel is
-tolerated (amber), while the circle's alpha change and added bar mismatch (red).
+tolerated (amber), while the circle's alpha change and added square mismatch (red).
 The binary mask therefore excludes the panel; raw RGB differences still show
 its small change but cannot show the circle's alpha change.
 
@@ -204,7 +204,7 @@ sample denominator. Mask alpha is an alpha allowance, not coverage.
 
 `IgnoreMask` removes entire pixels: black compares, any nonzero decoded RGB
 excludes, independently of mask alpha. The panel contributes no errors, bounds,
-maxima or metric samples. The added bar remains a mismatch in both examples.
+maxima or metric samples. The added square remains a mismatch in both examples.
 
 `TotalPixels` is the full image area; fractions and budgets use
 `ComparedPixelCount`. Ignoring every pixel is invalid. Inputs and masks must
