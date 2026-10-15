@@ -135,6 +135,7 @@ Pass `SKPixelDifferenceStyle` to `GenerateDifferenceImage`:
 | `ThresholdMap` | Solid red mismatches, amber tolerated differences, dimmed exact matches, gray ignored pixels |
 | `BinaryMask` | White mismatches; black matches, tolerated and ignored pixels |
 | `ChannelDifference` | Raw absolute RGB differences, including disabled RGB channels; no alpha visualization |
+| `Heatmap` | Largest raw enabled-channel difference, from blue through cyan and yellow to red; black exact matches, gray ignored pixels |
 
 | Threshold overlay | Threshold map |
 | --- | --- |
@@ -153,6 +154,11 @@ Overlay highlights blend with the actual image, so their appearance depends on
 the underlying colors. The returned diagnostic is opaque, with actual
 transparency flattened onto white. Use `ThresholdMap` for solid classification
 colors. These colors show status, not the magnitude of a difference.
+
+![Heatmap showing the small panel change in blue and the larger circle and square changes in warmer colors.](images/heatmap.png)
+
+`Heatmap` uses a fixed 0–255 scale, including tolerated differences and enabled
+alpha differences. The same error always has the same color across images.
 
 `RawMetrics` measures selected-channel differences before tolerance filtering.
 `ThresholdedMetrics` zeros tolerated differences but retains full exceeding
