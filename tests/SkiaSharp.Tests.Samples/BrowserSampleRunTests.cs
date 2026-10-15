@@ -46,14 +46,8 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
         {
             await app.Navigate("/");
             await app.WaitForElement(".canvas-container canvas");
-            // The element is visible before raster interop presents its first opaque frame.
-            await app.Page.WaitForFunctionAsync("""
-                () => {
-                    const canvas = document.querySelector('.canvas-container canvas');
-                    return canvas?.getContext('2d')?.getImageData(0, 0, 1, 1).data[3] === 255;
-                }
-                """).WaitAsync(TestContext.Current.CancellationToken);
-            await SampleImage.Validate(app.Screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png");
+            await SampleImage.Validate(app.Screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png",
+                timeout: TimeSpan.FromSeconds(10));
         });
 
     [Fact]
