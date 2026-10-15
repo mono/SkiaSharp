@@ -125,7 +125,7 @@ void SaveImage(string name, SKImage image)
 
 void SavePreview(string name, SKImage image)
 {
-    const int padding = 50;
+    const int padding = 25;
     var width = image.Width + padding * 2;
     var height = image.Height + padding * 2;
     using var bitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Opaque));
