@@ -35,7 +35,7 @@ dotnet add package SkiaSharp.Testing
 | ![Expected rendering.](images/expected-preview.png) | ![Actual rendering with color, opacity and shape changes.](images/actual-preview.png) |
 
 The panel has a small color change, the circle has a transparency change,
-and the square is new.
+the square is new, and the ellipse's gradient has been replaced with a solid fill.
 
 ```csharp
 using System.IO;
@@ -53,7 +53,7 @@ if (!result.IsMatch)
 }
 ```
 
-![Exact RGBA comparison highlights all three changed regions over the actual image.](images/comparison-exact.png)
+![Exact RGBA comparison highlights the changed regions over the actual image.](images/comparison-exact.png)
 
 Defaults are exact RGBA after normalization to unpremultiplied 8-bit pixels.
 The default diagnostic blends red highlights over the actual image, preserving
@@ -80,11 +80,11 @@ using var png = difference.Encode(SKEncodedImageFormat.Png, 100);
 File.WriteAllBytes("difference-tolerant.png", png.ToArray());
 ```
 
-![The blue panel is tolerated, alpha is excluded, and the violet square still mismatches.](images/comparison-tolerant.png)
+![The panel is tolerated and alpha is excluded; the square and ellipse still mismatch.](images/comparison-tolerant.png)
 
 The panel's two-level RGB change is now amber-tinted. Alpha is disabled, so the
-circle is not highlighted; the square still mismatches. Generate the diagnostic
-with the same options as the comparison.
+circle is not highlighted; the square and ellipse still mismatch. Generate the
+diagnostic with the same options as the comparison.
 
 `null` disables a channel; zero requires an exact match. `Absolute` uses byte
 levels, and tolerance `Percent` uses percentage points of the full 255 range.
@@ -186,7 +186,7 @@ and the sample denominator. Mask alpha is an alpha allowance, not coverage.
 
 `IgnoreMask` removes entire pixels: black compares, any nonzero decoded RGB
 excludes, independently of mask alpha. The panel contributes no errors, bounds,
-maxima or metric samples. The added square remains a mismatch in both examples.
+maxima or metric samples. The square and ellipse remain mismatches in both examples.
 
 `TotalPixels` is the full image area; fractions and budgets use
 `ComparedPixelCount`. At least one pixel must remain compared. Inputs and masks
