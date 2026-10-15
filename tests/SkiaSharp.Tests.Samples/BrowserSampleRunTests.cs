@@ -36,16 +36,35 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/browser-wasm-page.png");
         });
 
-    [Fact]
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
     [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
-    public Task BlazorWebAssemblyCpuSampleRuns() =>
+    public Task BlazorWebAssemblyCpuSampleRuns(bool delayFirstPaint) =>
         RunBrowserSample("Basic/BlazorWebAssembly", ["--urls", "http://127.0.0.1:0"], async app =>
         {
+            if (delayFirstPaint)
+            {
+                // Keep the canvas visible while its raster interop is still loading.
+                await app.Page.RouteAsync("**/_content/SkiaSharp.Views.Blazor/SKHtmlCanvas.js", async route =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);
+                    await route.ContinueAsync();
+                });
+            }
+
             await app.Navigate("/");
             await app.WaitForElement(".canvas-container canvas");
+            // The element is visible before raster interop presents its first opaque frame.
+            await app.Page.WaitForFunctionAsync("""
+                () => {
+                    const canvas = document.querySelector('.canvas-container canvas');
+                    return canvas?.getContext('2d')?.getImageData(0, 0, 1, 1).data[3] === 255;
+                }
+                """).WaitAsync(TestContext.Current.CancellationToken);
             var screenshot = await app.Screenshot();
             SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png");
         });
