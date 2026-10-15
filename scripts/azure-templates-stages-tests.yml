@@ -45,6 +45,7 @@ stages:
                   displayName: Provision software OpenGL (Mesa) for the GL tests
                 - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
                   displayName: Provision software Vulkan (SwiftShader) for visual tests
+
         - template: /scripts/azure-templates-jobs-tests.yml@self
           parameters:
             name: tests_netcore_windows
@@ -56,6 +57,7 @@ stages:
                 displayName: Provision software OpenGL (Mesa) for the GL tests
               - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
                 displayName: Provision software Vulkan (SwiftShader) for visual tests
+
         - template: /scripts/azure-templates-jobs-tests.yml@self
           parameters:
             name: tests_netcore_macos
@@ -68,6 +70,7 @@ stages:
             # job times out at 180 min — no results, no TRX. See #4598.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
+
         - template: /scripts/azure-templates-jobs-tests.yml@self
           parameters:
             name: tests_netcore_linux
@@ -100,6 +103,7 @@ stages:
                   echo "##vso[task.setvariable variable=VK_ICD_FILENAMES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
                   echo "##vso[task.setvariable variable=VK_DRIVER_FILES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
                 displayName: Start Xvfb and select software GPU (visual tests)
+
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
           parameters:
             name: tests_android_linux
@@ -129,6 +133,7 @@ stages:
                 displayName: Install the Android emulator
               - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
                 displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
+
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
           parameters:
             name: tests_ios_macos
@@ -147,6 +152,7 @@ stages:
             # Graphite's gradient pipeline (#4555). #4591 tracks the wider picture.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
+
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
           parameters:
             name: tests_maccatalyst_macos
@@ -162,6 +168,7 @@ stages:
             # shutdown (#4598). #4591 tracks the wider picture.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
+
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
           parameters:
             name: tests_wasm_linux
@@ -182,6 +189,7 @@ stages:
             preBuildSteps:
               - bash: bash ./scripts/infra/managed/install-chrome.sh
                 displayName: Install Chrome for WASM tests
+
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
           parameters:
             # Runs the SkiaSharp.Tests.Wasm suite as the preview .NET (tests only — the rest of CI
@@ -209,6 +217,7 @@ stages:
             preBuildSteps:
               - bash: bash ./scripts/infra/managed/install-chrome.sh
                 displayName: Install Chrome for WASM tests
+
         - template: /scripts/azure-templates-jobs-tests-container.yml@self
           parameters:
             name: tests_container_linux
@@ -218,6 +227,7 @@ stages:
             nativePlatform: linux
             resultLabel: Azure Linux
             logArtifact: testlogs_container_linux
+
         - template: /scripts/azure-templates-jobs-tests-container.yml@self
           parameters:
             name: tests_container_linux_nodeps
@@ -227,6 +237,7 @@ stages:
             nativePlatform: linuxnodeps
             resultLabel: Azure Linux NoDeps
             logArtifact: testlogs_container_linux_nodeps
+
         - template: /scripts/azure-templates-jobs-tests-container.yml@self
           parameters:
             name: tests_container_alpine_linux
@@ -236,6 +247,7 @@ stages:
             nativePlatform: alpine
             resultLabel: Alpine
             logArtifact: testlogs_container_alpine
+
         - template: /scripts/azure-templates-jobs-tests-container.yml@self
           parameters:
             name: tests_container_alpine_nodeps
@@ -245,6 +257,7 @@ stages:
             nativePlatform: alpinenodeps
             resultLabel: Alpine NoDeps
             logArtifact: testlogs_container_alpine_nodeps
+
         - template: /scripts/azure-templates-jobs-tests-container.yml@self
           parameters:
             name: tests_container_nanoserver_windows

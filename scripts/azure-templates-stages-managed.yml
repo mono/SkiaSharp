@@ -28,6 +28,7 @@ stages:
             target: externals-interop
             additionalArgs: --skipExternals="all"
             installAndroidSdk: false
+
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Managed (Windows)
           parameters:
             name: managed_windows
@@ -48,6 +49,7 @@ stages:
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
+
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Managed (macOS)
           parameters:
             name: managed_macos
@@ -68,6 +70,7 @@ stages:
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
+
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Managed (Linux)
           parameters:
             name: managed_linux

@@ -21,10 +21,12 @@ stages:
           parameters:
             platform: windows
             buildAgent: ${{ parameters.buildAgentWindows}}
+
         - template: /scripts/azure-templates-jobs-samples.yml@self
           parameters:
             platform: macos
             buildAgent: ${{ parameters.buildAgentMac }}
+
         - template: /scripts/azure-templates-jobs-samples.yml@self
           parameters:
             platform: linux
