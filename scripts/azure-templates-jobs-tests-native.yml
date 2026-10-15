@@ -23,11 +23,11 @@ jobs:
           condition: always()
           inputs:
             testResultsFormat: VSTest
-            testResultsFiles: output/logs/testlogs/native/**/*.trx
+            testResultsFiles: output/logs/testlogs/SkiaSharp.Tests.Native.Console/**/*.trx
             testRunTitle: Native tests (Linux)
             failTaskOnFailedTests: true
             failTaskOnMissingResultsFile: true
       publishArtifacts:
         - name: testlogs_native_linux
           always: true
-          path: output/logs/testlogs/native
+          path: output/logs/testlogs/SkiaSharp.Tests.Native.Console

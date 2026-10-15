@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Xunit;
 
-namespace SkiaSharp.Native.Tests;
+namespace SkiaSharp.Tests.Native;
 
 internal static class NativeProcess
 {
