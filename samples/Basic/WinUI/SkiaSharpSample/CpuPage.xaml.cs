@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using SkiaSharp;
 using SkiaSharp.Views.Windows;
@@ -27,6 +28,9 @@ public sealed partial class CpuPage : Page
 	{
 		InitializeComponent();
 	}
+
+	protected override AutomationPeer OnCreateAutomationPeer() =>
+		new FrameworkElementAutomationPeer(this);
 
 	private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 	{

@@ -76,9 +76,11 @@ public sealed class AppiumWindowsSampleRunTests(AppiumFixture appium) : AppiumSa
 		{
 			["Platform"] = architecture,
 			["WindowsPackageType"] = "None",
-			["WindowsAppSDKSelfContained"] = "true",
-			["RuntimeIdentifier"] = "win-" + architecture
+			["WindowsAppSDKSelfContained"] = "true"
 		};
+		// A global Windows RID would also apply to MAUI's Android restore target.
+		if (folder == "Basic/WinUI")
+			properties["RuntimeIdentifier"] = "win-" + architecture;
 
 		var workspace = await BuildSample(folder, project, new DotNetOptions
 		{
