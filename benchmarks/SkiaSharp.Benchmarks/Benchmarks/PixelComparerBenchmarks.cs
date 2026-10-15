@@ -112,6 +112,14 @@ public class PixelComparerDiagnosticBenchmark
 		return Checksum(image);
 	}
 
+	[Benchmark]
+	public uint Heatmap()
+	{
+		using var image = SKPixelComparer.GenerateDifferenceImage(fixture.ExpectedImage, fixture.ActualImage,
+			SKPixelDifferenceStyle.Heatmap, fixture.MaskedOptions);
+		return Checksum(image);
+	}
+
 	private static uint Checksum(SKImage image)
 	{
 		using var pixmap = image.PeekPixels();

@@ -220,7 +220,7 @@ public static class SKPixelComparer
 			{
 				pixels[i] = style switch
 				{
-					SKPixelDifferenceStyle.ThresholdMap => new SKColor(128, 128, 128),
+					SKPixelDifferenceStyle.ThresholdMap or SKPixelDifferenceStyle.Heatmap => new SKColor(128, 128, 128),
 					SKPixelDifferenceStyle.ThresholdOverlay => BlendOverlay(b[i], new SKColor(128, 128, 128), settings.AlphaType),
 					_ => SKColors.Black,
 				};
@@ -232,6 +232,7 @@ public static class SKPixelComparer
 			{
 				SKPixelDifferenceStyle.BinaryMask => delta.Mismatched ? SKColors.White : SKColors.Black,
 				SKPixelDifferenceStyle.ChannelDifference => new SKColor((byte)delta.Red, (byte)delta.Green, (byte)delta.Blue),
+				SKPixelDifferenceStyle.Heatmap => HeatmapPalette.Colors[delta.MaxChannelDifference],
 				SKPixelDifferenceStyle.ThresholdMap => delta.Mismatched ? SKColors.Red
 					: delta.MaxChannelDifference > 0 ? new SKColor(255, 200, 0)
 					: new SKColor((byte)(b[i].Red / 4), (byte)(b[i].Green / 4), (byte)(b[i].Blue / 4)),
@@ -242,6 +243,26 @@ public static class SKPixelComparer
 
 		ValidateCoverage(comparedPixels);
 		return SKImage.FromBitmap(bitmap) ?? throw new InvalidOperationException("Unable to create difference image.");
+	}
+
+	private static class HeatmapPalette
+	{
+		internal static readonly SKColor[] Colors;
+
+		static HeatmapPalette()
+		{
+			Colors = new SKColor[256];
+			Colors[0] = SKColors.Black;
+			for (var d = 1; d <= 85; d++)
+				Colors[d] = new SKColor(0, (byte)((d - 1) * 255 / 84), 255);
+			for (var d = 86; d <= 170; d++)
+			{
+				var step = (d - 85) * 255 / 85;
+				Colors[d] = new SKColor((byte)step, 255, (byte)(255 - step));
+			}
+			for (var d = 171; d <= 255; d++)
+				Colors[d] = new SKColor(255, (byte)(255 - (d - 170) * 255 / 85), 0);
+		}
 	}
 
 	private static SKColor BlendOverlay(SKColor actual, SKColor? classification, SKAlphaType alphaType)
@@ -523,7 +544,8 @@ public static class SKPixelComparer
 		if (style != SKPixelDifferenceStyle.BinaryMask &&
 			style != SKPixelDifferenceStyle.ChannelDifference &&
 			style != SKPixelDifferenceStyle.ThresholdMap &&
-			style != SKPixelDifferenceStyle.ThresholdOverlay)
+			style != SKPixelDifferenceStyle.ThresholdOverlay &&
+			style != SKPixelDifferenceStyle.Heatmap)
 			throw new ArgumentOutOfRangeException(nameof(style));
 	}
 }

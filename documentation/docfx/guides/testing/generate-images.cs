@@ -52,10 +52,12 @@ using var overlay = SKPixelComparer.GenerateDifferenceImage(expected, actual, op
 using var map = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.ThresholdMap, styleOptions);
 using var binary = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.BinaryMask, styleOptions);
 using var channels = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.ChannelDifference, styleOptions);
+using var heatmap = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.Heatmap, styleOptions);
 SavePreview("threshold-overlay.png", overlay);
 SavePreview("threshold-map.png", map);
 SavePreview("binary-mask.png", binary);
 SavePreview("channel-difference.png", channels);
+SavePreview("heatmap.png", heatmap);
 
 var regionalTolerance = new SKPixelComparerOptions
 {
