@@ -34,12 +34,14 @@ dotnet add package SkiaSharp.Testing
 
 | Expected | Actual |
 | --- | --- |
-| ![Expected scene on a soft gradient.](images/expected.png) | ![Actual scene with changed blue, translucent green and an added rounded violet square.](images/actual.png) |
+| ![Expected scene on a soft gradient.](images/expected-preview.png) | ![Actual scene with changed blue, a checkerboard visible through the translucent green circle, and an added rounded violet square.](images/actual-preview.png) |
 
 Every example uses this scene. The rounded blue panel changes from RGB **(72, 104, 192)**
 to **(74, 106, 194)**, the green circle keeps RGB **(48, 185, 131)** but changes alpha
-from **255** to **128**, and the rounded violet square is new. The actual circle is transparent;
-the page background shows through it.
+from **255** to **128**, and the rounded violet square is new. The display copies
+have a checkerboard behind them to reveal transparency. The original
+`expected.png` and `actual.png` retain their alpha for comparison; the
+checkerboard is not part of the compared pixels.
 
 ```csharp
 using System.IO;
@@ -167,7 +169,7 @@ such as `NormalizedMeanAbsoluteError` over manual denominators.
 
 | Expected | Actual |
 | --- | --- |
-| ![Opaque green circle.](images/expected.png) | ![The same scene with a translucent green circle.](images/actual.png) |
+| ![Opaque green circle.](images/expected-preview.png) | ![Checkerboard visible through the translucent green circle.](images/actual-preview.png) |
 
 The circle's RGB is identical; only its alpha changes. Default RGBA comparison
 detects it:
@@ -223,5 +225,6 @@ dotnet run --file documentation/docfx/guides/testing/generate-images.cs \
 ```
 
 Edit `RenderScene` in `generate-images.cs` to change the base artwork. The script
-regenerates the plain inputs, masks and diagnostics together. It does not draw
-labels, compose panels, capture devices, update references or accept baselines.
+regenerates the plain inputs, masks and diagnostics together, plus checkerboard
+display copies of the inputs. It does not draw labels, compose panels, capture
+devices, update references or accept baselines.
