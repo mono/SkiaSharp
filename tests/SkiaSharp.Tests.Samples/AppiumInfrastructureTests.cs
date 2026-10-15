@@ -483,8 +483,12 @@ public sealed class AppiumInfrastructureTests
 		var container = new ScrollElement(new Rectangle(13, 372, 728, 169));
 		var target = new ScrollElement(new Rectangle(-137, -130, 0, 0), displayed: false);
 		var error = Assert.Throws<TimeoutException>(() => AppiumRunningApp.ScrollIntoView(
-			() => container, () => target, (_, _) => Assert.Fail("Discovery must respect its deadline."),
-			"'target' inside 'container'", TimeSpan.FromMilliseconds(50), 12, CancellationToken.None));
+			() => container, () =>
+			{
+				Thread.Sleep(50);
+				return target;
+			}, (_, _) => Assert.Fail("Discovery must respect its deadline."),
+			"'target' inside 'container'", TimeSpan.FromMilliseconds(10), 12, CancellationToken.None));
 		Assert.Contains("Width=0,Height=0", error.Message);
 	}
 
