@@ -2,6 +2,7 @@
 Checks GLIBC symbol-version requirements in both normal and nodeps libraries against the per-architecture ceilings
 declared below. This catches accidental minimum-runtime increases caused by toolchain or sysroot changes, even when
 the build succeeds. Inspection is independent of the host architecture and does not load the target libraries.
+Missing glibc dependencies or empty version output fail rather than being treated as a compatible baseline.
 #>
 
 param([Parameter(Mandatory)][string] $NativeRoot)
@@ -29,9 +30,18 @@ foreach ($arch in $limits.Keys | Sort-Object) {
         foreach ($name in 'libSkiaSharp', 'libHarfBuzzSharp') {
             $library = Join-Path $NativeRoot "$variant/$arch/$name.so"
             Assert-Artifact $library
-            $output = (& llvm-readelf --wide --version-info $library) -join "`n"
-            $versions = [regex]::Matches($output, 'GLIBC_([\w.]+)') |
-                ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+            $output = (& llvm-readelf --wide --dynamic --version-info $library) -join "`n"
+            $dependencies = @([regex]::Matches($output, '\(NEEDED\).+\[(.+)\]') |
+                ForEach-Object { $_.Groups[1].Value })
+            if ('libc.so.6' -cnotin $dependencies -or @($dependencies -match '^libc\.musl-').Count -gt 0) {
+                throw "Expected glibc dependency, not another libc, in $library"
+            }
+
+            $versions = @([regex]::Matches($output, 'GLIBC_([\w.]+)') |
+                ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
+            if ($versions.Count -eq 0) {
+                throw "No GLIBC requirements found in expected glibc artifact: $library"
+            }
 
             foreach ($version in $versions) {
                 if ($version -notmatch '^\d+(\.\d+)+$') {
