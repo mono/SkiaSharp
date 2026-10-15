@@ -45,7 +45,7 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
                         await new Promise(resolve => requestAnimationFrame(resolve));
                     return [before, globalThis.unoSplashChecks];
                 }
-                """);
+                """).WaitAsync(TimeSpan.FromSeconds(60), TestContext.Current.CancellationToken);
             Assert.True(checks[0] > 0, "The startup rendering workaround must observe the loader.");
             Assert.Equal(checks[0], checks[1]);
         });
