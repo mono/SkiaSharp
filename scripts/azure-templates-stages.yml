@@ -56,16 +56,21 @@ stages:
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableCaching: ${{ parameters.enableCaching }}
 
-  - template: /scripts/azure-templates-stages-tests-native.yml@self
-    parameters:
-      buildPipelineType: ${{ parameters.buildPipelineType }}
-      buildAgentLinux: ${{ parameters.buildAgentLinux }}
-      use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+  - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
+    - template: /scripts/azure-templates-stages-tests-native.yml@self
+      parameters:
+        buildPipelineType: ${{ parameters.buildPipelineType }}
+        buildAgentLinux: ${{ parameters.buildAgentLinux }}
+        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
 
   - ${{ if in(parameters.buildPipelineType, 'build', 'complete') }}:
     - template: /scripts/azure-templates-stages-package.yml@self
       parameters:
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
+        ${{ if eq(parameters.buildPipelineType, 'complete') }}:
+          dependsOn:
+            - native
+            - native_tests
 
   # Exclude public builds and both policy-triggered and manually queued PR refs
   # before expanding any internal signing, compliance, or publishing stages.
