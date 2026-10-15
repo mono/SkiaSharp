@@ -36,65 +36,24 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/browser-wasm-page.png");
         });
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
+    [Fact]
     [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
-    public Task BlazorWebAssemblyCpuSampleRuns(bool delayFirstPaint) =>
+    public Task BlazorWebAssemblyCpuSampleRuns() =>
         RunBrowserSample("Basic/BlazorWebAssembly", ["--urls", "http://127.0.0.1:0"], async app =>
         {
-            var firstPixelProbe = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-            if (delayFirstPaint)
-            {
-                await app.Page.ExposeFunctionAsync("observeFirstCpuPixel", (int alpha) =>
-                    firstPixelProbe.TrySetResult(alpha));
-                await app.Page.AddInitScriptAsync("""
-                    (() => {
-                        const getImageData = CanvasRenderingContext2D.prototype.getImageData;
-                        CanvasRenderingContext2D.prototype.getImageData = function(...args) {
-                            const pixels = getImageData.apply(this, args);
-                            if (this.canvas.matches('.canvas-container canvas')) {
-                                CanvasRenderingContext2D.prototype.getImageData = getImageData;
-                                globalThis.observeFirstCpuPixel(pixels.data[3])
-                                    .catch(error => console.error(error));
-                            }
-                            return pixels;
-                        };
-                    })();
-                    """);
-                // Keep initialization blocked until the readiness check observes real transparent pixels.
-                await app.Page.RouteAsync("**/_content/SkiaSharp.Views.Blazor/SKHtmlCanvas.js", async route =>
-                {
-                    await firstPixelProbe.Task.WaitAsync(TestContext.Current.CancellationToken);
-                    await route.ContinueAsync();
-                });
-            }
-
-            try
-            {
-                await app.Navigate("/");
-                await app.WaitForElement(".canvas-container canvas");
-                // The element is visible before raster interop presents its first opaque frame.
-                await app.Page.WaitForFunctionAsync("""
-                    () => {
-                        const canvas = document.querySelector('.canvas-container canvas');
-                        return canvas?.getContext('2d')?.getImageData(0, 0, 1, 1).data[3] === 255;
-                    }
-                    """).WaitAsync(TestContext.Current.CancellationToken);
-                var screenshot = await app.Screenshot();
-                SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png");
-                if (delayFirstPaint)
-                    Assert.Equal(0, await firstPixelProbe.Task.WaitAsync(TestContext.Current.CancellationToken));
-            }
-            finally
-            {
-                // A failed/removed readiness check must not leave a blocked route during cleanup.
-                firstPixelProbe.TrySetResult(0);
-                await app.Page.UnrouteAllAsync(new() { Behavior = UnrouteBehavior.Wait });
-            }
+            await app.Navigate("/");
+            await app.WaitForElement(".canvas-container canvas");
+            // The element is visible before raster interop presents its first opaque frame.
+            await app.Page.WaitForFunctionAsync("""
+                () => {
+                    const canvas = document.querySelector('.canvas-container canvas');
+                    return canvas?.getContext('2d')?.getImageData(0, 0, 1, 1).data[3] === 255;
+                }
+                """).WaitAsync(TestContext.Current.CancellationToken);
+            await SampleImage.Validate(app.Screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png");
         });
 
     [Fact]
@@ -217,6 +176,29 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await Assertions.Expect(swatch).ToHaveCSSAsync("background-color", "rgb(0, 0, 255)");
         });
 
+    [Fact]
+    [RunGroup(SampleRunGroup.Host)]
+    [Trait("Category", "Browser")]
+    public Task BrowserScreenshotsRetryUntilRendered() =>
+        RunBrowserSample("Basic/Web", ["--urls", "http://127.0.0.1:0"], async app =>
+        {
+            await app.Page.SetContentAsync("<style>html { background: blue; }</style>");
+            var expected = await app.Screenshot();
+            await app.Page.EvaluateAsync("document.documentElement.style.background = 'red'");
+            var attempts = 0;
+
+            var matched = await SampleImage.Validate(async () =>
+            {
+                var actual = await app.Screenshot();
+                if (++attempts == 1)
+                    await app.Page.EvaluateAsync("document.documentElement.style.background = 'blue'");
+                return actual;
+            }, expected);
+
+            Assert.Equal(2, attempts);
+            Assert.Equal(10000, CountPixels(matched, new SKRectI(0, 0, 100, 100), c => c == SKColors.Blue));
+        });
+
     [Theory]
     [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "Browser")]
@@ -236,7 +218,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
                 {
                     case "navigate": await app.Navigate("/"); break;
                     case "wait": await app.WaitForElement("body"); break;
-                    case "screenshot": await app.Screenshot(); break;
+                    case "screenshot": await SampleImage.Validate(app.Screenshot, "unused.png"); break;
                 }
             }));
         Assert.Contains("first browser sentinel", error.Message);

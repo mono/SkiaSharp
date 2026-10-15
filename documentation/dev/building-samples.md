@@ -144,3 +144,11 @@ Set `ExpectedSize = new(800, 600)` for
 fixed-size PNGs; only animated GPU checks set `MaxAverageColorErrorFraction`.
 The options own the default `MaxErrorPixelFraction` of `0.00075m`.
 Omitting options retains the strict pixel comparison and golden dimensions.
+
+For a settling UI, `await SampleImage.Validate(app.Screenshot, expected)` recaptures
+until the reviewed image matches, with a default two-second deadline. The overload
+returns the matching image path and accepts an explicit timeout and comparison
+options. It retries dimension/pixel mismatches only; capture errors, invalid
+images, and missing references fail immediately. On expiry, the last mismatch
+retains the usual diagnostics. Keep explicit application readiness assertions;
+an eventual image match does not prove every intermediate frame was correct.

@@ -314,6 +314,145 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Fact]
+    public async Task ScreenshotComparisonRetriesUntilItMatches()
+    {
+        using var bitmap = new SKBitmap(4, 4);
+        bitmap.Erase(SKColors.Blue);
+        var expected = SavePng(bitmap, "retry.expected.png");
+        bitmap.Erase(SKColors.Red);
+        var actual = SavePng(bitmap, "retry.actual.png");
+        var attempts = 0;
+
+        var matched = await SampleImage.Validate(() =>
+        {
+            if (++attempts == 2)
+                File.Copy(expected, actual, overwrite: true);
+            return Task.FromResult(actual);
+        }, expected);
+
+        Assert.Equal(2, attempts);
+        Assert.Equal(actual, matched);
+        Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+        Assert.Contains(Path.GetFileName(actual), TestContext.Current.Attachments!.Keys);
+        Assert.DoesNotContain("expected-" + Path.GetFileName(expected), TestContext.Current.Attachments.Keys);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ScreenshotComparisonReportsPersistentMismatch(bool wrongSize)
+    {
+        using var expectedBitmap = new SKBitmap(4, 4);
+        expectedBitmap.Erase(SKColors.Blue);
+        var expected = SavePng(expectedBitmap, "persistent.expected.png");
+        using var actualBitmap = new SKBitmap(wrongSize ? 2 : 4, 4);
+        actualBitmap.Erase(SKColors.Red);
+        var actual = SavePng(actualBitmap, "persistent.actual.png");
+
+        var error = await Assert.ThrowsAnyAsync<Exception>(() =>
+            SampleImage.Validate(() => Task.FromResult(actual), expected, TimeSpan.FromMilliseconds(150)));
+
+        Assert.Contains(Path.GetFileName(actual), TestContext.Current.Attachments!.Keys);
+        if (!wrongSize)
+        {
+            Assert.Contains("Sample pixels differ", error.Message);
+            Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+            Assert.Contains("expected-" + Path.GetFileName(expected), TestContext.Current.Attachments.Keys);
+        }
+    }
+
+    [Fact]
+    public async Task ScreenshotComparisonRetriesTransientDimensions()
+    {
+        using var bitmap = new SKBitmap(4, 4);
+        bitmap.Erase(SKColors.Blue);
+        var expected = SavePng(bitmap, "dimensions.expected.png");
+        using var small = new SKBitmap(2, 2);
+        small.Erase(SKColors.Blue);
+        var actual = SavePng(small, "dimensions.actual.png");
+        var attempts = 0;
+        await SampleImage.Validate(() =>
+        {
+            if (++attempts == 2)
+                File.Copy(expected, actual, overwrite: true);
+            return Task.FromResult(actual);
+        }, expected, options: new() { ExpectedSize = new(4, 4) });
+        Assert.Equal(2, attempts);
+    }
+
+    [Theory]
+    [InlineData("missing-reference")]
+    [InlineData("corrupt-reference")]
+    [InlineData("corrupt-capture")]
+    [InlineData("capture-error")]
+    [InlineData("canceled-capture")]
+    public async Task ScreenshotComparisonDoesNotRetryErrors(string failure)
+    {
+        using var bitmap = new SKBitmap(4, 4);
+        bitmap.Erase(SKColors.Blue);
+        var expected = SavePng(bitmap, "error.expected.png");
+        var actual = SavePng(bitmap, "error.actual.png");
+        if (failure == "missing-reference")
+            File.Delete(expected);
+        if (failure == "corrupt-reference")
+            File.WriteAllText(expected, "not a PNG");
+        if (failure == "corrupt-capture")
+            File.WriteAllText(actual, "not a PNG");
+        var attempts = 0;
+        var sentinel = new InvalidOperationException("Browser capture failed.");
+
+        var error = await Assert.ThrowsAnyAsync<Exception>(() =>
+            SampleImage.Validate(() =>
+            {
+                attempts++;
+                return failure switch
+                {
+                    "capture-error" => Task.FromException<string>(sentinel),
+                    "canceled-capture" => Task.FromCanceled<string>(new CancellationToken(canceled: true)),
+                    _ => Task.FromResult(actual)
+                };
+            }, expected));
+
+        Assert.Equal(1, attempts);
+        if (failure == "capture-error")
+            Assert.Same(sentinel, error);
+        if (failure == "canceled-capture")
+            Assert.IsAssignableFrom<OperationCanceledException>(error);
+        if (failure == "missing-reference")
+            Assert.False(File.Exists(expected));
+    }
+
+    [Fact]
+    public async Task ScreenshotComparisonBoundsCaptureTime()
+    {
+        var pending = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        try
+        {
+            await Assert.ThrowsAsync<TimeoutException>(() =>
+                SampleImage.Validate(() => pending.Task, "unused.png", TimeSpan.FromMilliseconds(100)));
+        }
+        finally
+        {
+            pending.TrySetCanceled(TestContext.Current.CancellationToken);
+        }
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task ScreenshotComparisonRejectsInvalidTimeoutBeforeCapture(int milliseconds)
+    {
+        var attempts = 0;
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            SampleImage.Validate(() =>
+            {
+                attempts++;
+                return Task.FromResult("unused.png");
+            }, "unused.png", TimeSpan.FromMilliseconds(milliseconds)));
+        Assert.Equal(0, attempts);
+    }
+
+    [Fact]
     public async Task ImageMustDecodeAndHaveTheExpectedSize()
     {
         using var bitmap = new SKBitmap(800, 600);
