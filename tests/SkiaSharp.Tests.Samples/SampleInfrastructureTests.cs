@@ -94,11 +94,21 @@ public class SampleInfrastructureTests : IDisposable
     [InlineData("Gallery/Maui/SkiaSharpSample.Maui.csproj", "maccatalyst", "17.0")]
     public void AppleSourceProjectsMeetApprovedDeploymentFloors(string relativeProject, string platform, string minimum)
     {
-        var project = XDocument.Load(Path.Combine(Repo.RootDir, "samples", relativeProject));
+        var projectPath = Path.Combine(Repo.RootDir, "samples", relativeProject);
+        var project = XDocument.Load(projectPath);
         var declared = Assert.Single(project.Descendants("SupportedOSPlatformVersion"), element =>
             element.Attribute("Condition") is null ||
             element.Attribute("Condition")!.Value.Contains($"'-{platform}'", StringComparison.Ordinal));
         Assert.True(Version.Parse(declared.Value) >= Version.Parse(minimum));
+        var maui = project.Descendants("UseMaui").Any(element => element.Value.Equals("true", StringComparison.OrdinalIgnoreCase));
+        var manifestDirectory = maui
+            ? Path.Combine("Platforms", platform == "ios" ? "iOS" : "MacCatalyst")
+            : "";
+        var manifest = XDocument.Load(Path.Combine(Path.GetDirectoryName(projectPath)!, manifestDirectory, "Info.plist"));
+        var minimumKey = platform == "macos" ? "LSMinimumSystemVersion" : "MinimumOSVersion";
+        var key = manifest.Root!.Element("dict")!.Elements("key").SingleOrDefault(element => element.Value == minimumKey);
+        if (key is not null)
+            Assert.Equal(Version.Parse(declared.Value), Version.Parse(key.ElementsAfterSelf().First().Value));
     }
 
     [Theory]
