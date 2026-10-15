@@ -10,10 +10,6 @@ jobs:
       ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
         docker: scripts/infra/tests/docker/native
         dotnetSdks: []
-      ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
-        preBuildSteps:
-          - pwsh: ./scripts/infra/tests/provision-native-windows.ps1
-            displayName: Provision native artifact inspection tools
       target: tests-native
       checkoutSubmodules: false
       installAndroidSdk: false
