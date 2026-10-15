@@ -272,6 +272,12 @@ before assignments. Warnings about missing tags, release boundaries, or
 ambiguous ownership still block safe mutation and must be resolved rather than
 ignored.
 
+Linked issues come from GitHub's closing references and visible PR-body closing
+directives. HTML comments, inline code, and fenced code examples are excluded
+from body scanning. Body-only candidates are checked through the issues endpoint;
+pull requests and missing targets (HTTP 404) are skipped with explicit warnings.
+Authentication, network, and server errors still fail reconciliation.
+
 The maintained cadence follows Chromium's overlapping two-week trains. This
 M153/M154 example shows each offset from its Chromium branch point; the
 Chromium marker appears before the corresponding SkiaSharp release:
