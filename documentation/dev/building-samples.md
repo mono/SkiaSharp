@@ -8,7 +8,7 @@ runs Console/Web APIs on the host and in Docker, and checks actual browser UIs.
 Install .NET SDK **10.0.402** and workload set **10.0.401** with your host's
 required workloads. .NET 10 managed Apple builds require macOS Tahoe and
 **Xcode 26.6**; select it with `DEVELOPER_DIR`.
-Native Apple builds use the same Xcode version.
+Native Apple sample apps use the same Xcode version.
 The WinUI C++ projection uses SDK **10.0.113** alongside the main SDK because
 VS MSBuild 17.x cannot load the newer SDK feature bands.
 
@@ -20,6 +20,13 @@ Xcode 27 compatibility as well as the CI Apple 26 pairing. MAUI uses
 `MauiUISceneDelegate`; native UIKit retains its `Main` storyboard and default-tab
 selection in the owning scene. Check the built app's scene manifest and runtime
 launch behavior; source plist checks alone do not establish compatibility.
+
+The macOS Build group also needs the tvOS simulator runtime matching Xcode's SDK
+to compile storyboards. CI provisions it with:
+
+```sh
+xcodebuild -downloadPlatform tvOS -buildVersion "$(xcrun --sdk appletvsimulator --show-sdk-version)"
+```
 
 For Docker tests,
 put `docker` on `PATH` and start a daemon using Windows containers on Windows
