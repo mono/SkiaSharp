@@ -66,9 +66,21 @@ public class NativeTests
 			await process.WaitForExitAsync();
 		}
 
+		var standardOutput = await stdout;
+		var standardError = await stderr;
 		var output = $"Script: {script}\nWorking directory: {workingDirectory}\nNative directory: {nativeDirectory}\n" +
-			$"stdout:\n{await stdout}\nstderr:\n{await stderr}";
+			$"stdout:\n{standardOutput}\nstderr:\n{standardError}";
 		Assert.False(timedOut, $"Native test exceeded five minutes.\n{output}");
+
+		// Only an explicit skip exit code and reason can turn a case into a declared skip.
+		if (process.ExitCode == 77)
+		{
+			var reason = standardOutput.Split('\n').FirstOrDefault(line => line.StartsWith("SKIP: ", StringComparison.Ordinal));
+			if (reason is null || string.IsNullOrWhiteSpace(reason[6..]))
+				Assert.Fail($"Native test requested a skip without a reason.\n{output}");
+			Assert.Skip(reason[6..].Trim());
+		}
+
 		Assert.True(process.ExitCode == 0, $"Native test exited {process.ExitCode}.\n{output}");
 	}
 }

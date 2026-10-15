@@ -102,15 +102,12 @@ function Get-WindowsArtifacts([string] $NativeRoot) {
 }
 
 # These tools inspect target files without loading them into the test host.
-function Assert-GnuReadelf {
-    Assert-Tool readelf
-    if (((& readelf --version) -join "`n") -notmatch 'GNU readelf') {
-        throw 'GNU readelf is required.'
-    }
+function Assert-Readelf {
+    Assert-Tool llvm-readelf
 }
 
 function Get-ElfBuildId([string] $Path) {
-    $notes = (& readelf --notes $Path) -join "`n"
+    $notes = (& llvm-readelf --notes $Path) -join "`n"
     $match = [regex]::Match($notes, '(?i)Build ID:\s*([0-9a-f]+)')
     if (!$match.Success) {
         throw "Missing GNU build ID: $Path"
@@ -310,7 +307,7 @@ function Get-NativeArtifactFiles([string] $NativeRoot) {
             } else {
                 "/$($match.Groups['link'].Value)"
             }
-            $expected = Join-Path $NativeRoot "$($match.Groups[1].Value)/Versions/A$suffix"
+            $expected = [IO.Path]::GetFullPath((Join-Path $NativeRoot "$($match.Groups[1].Value)/Versions/A$suffix"))
             $target = $file.ResolveLinkTarget($true)
             if (!$target -or $target.FullName -cne $expected) {
                 throw "Framework directory alias does not resolve to $expected`: $($file.FullName)"
@@ -373,7 +370,7 @@ function Assert-CliMetadata([string] $Path) {
 }
 
 Export-ModuleMember -Function @(
-    'Assert-NativeRoot', 'Assert-Artifact', 'Assert-Tool', 'Assert-GnuReadelf', 'Assert-IdenticalArtifact', 'Assert-CliMetadata'
+    'Assert-NativeRoot', 'Assert-Artifact', 'Assert-Tool', 'Assert-Readelf', 'Assert-IdenticalArtifact', 'Assert-CliMetadata'
     'Get-AndroidArtifacts', 'Get-LinuxArtifacts', 'Get-WindowsArtifacts', 'Get-ElfBuildId', 'Get-PeImports'
     'Get-AppleArtifacts', 'Get-TizenArtifacts', 'Get-WasmArtifacts', 'Get-NativeArtifactInventory', 'Get-NativeArtifactFiles'
     'Get-StreamPrefix', 'Test-NativeArtifact', 'Get-PeCodeViewIdentity'

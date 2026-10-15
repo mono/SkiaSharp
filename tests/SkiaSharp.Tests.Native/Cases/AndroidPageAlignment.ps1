@@ -11,11 +11,11 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module "$PSScriptRoot/Helpers.psm1"
 
 Assert-NativeRoot $NativeRoot
-Assert-GnuReadelf
+Assert-Readelf
 
 foreach ($library in Get-AndroidArtifacts $NativeRoot) {
     Assert-Artifact $library
-    $headers = & readelf --program-headers --wide $library
+    $headers = & llvm-readelf --program-headers --wide $library
     $loads = @($headers | Where-Object { $_ -match '^\s*LOAD\s' })
     if ($loads.Count -eq 0) {
         throw "No LOAD program headers found: $library"

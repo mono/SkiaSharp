@@ -10,12 +10,12 @@ $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 Import-Module "$PSScriptRoot/Helpers.psm1"
 Assert-NativeRoot $NativeRoot
-Assert-GnuReadelf
+Assert-Readelf
 
 # These are static ABI checks, not a substitute for running the Tizen runtime tests.
 foreach ($artifact in Get-TizenArtifacts $NativeRoot) {
     Assert-Artifact $artifact.Path
-    $header = (& readelf --file-header $artifact.Path) -join "`n"
+    $header = (& llvm-readelf --file-header $artifact.Path) -join "`n"
     $machine = if ($artifact.Arches[0] -eq 'aarch64') {
         'AArch64'
     } else {
@@ -27,7 +27,7 @@ foreach ($artifact in Get-TizenArtifacts $NativeRoot) {
         throw "Expected a 64-bit Tizen shared library for $($artifact.Arches[0]): $($artifact.Path)"
     }
 
-    $symbols = (& readelf --dyn-syms --wide $artifact.Path) -join "`n"
+    $symbols = (& llvm-readelf --dyn-syms --wide $artifact.Path) -join "`n"
     $exports = if ($artifact.Name -eq 'libSkiaSharp') {
         'sk_version_get_milestone', 'sk_bitmap_new'
     } else {

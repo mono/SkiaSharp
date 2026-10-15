@@ -11,7 +11,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module "$PSScriptRoot/Helpers.psm1"
 
 Assert-NativeRoot $NativeRoot
-Assert-GnuReadelf
+Assert-Readelf
 
 foreach ($library in Get-AndroidArtifacts $NativeRoot) {
     $symbols = "$library.dbg"
@@ -27,7 +27,7 @@ foreach ($library in Get-AndroidArtifacts $NativeRoot) {
 
     # The filename is case-sensitive even though build ID hex digits are not.
     $expected = [IO.Path]::GetFileName($symbols)
-    $debugLink = (& readelf --string-dump=.gnu_debuglink $library) -join "`n"
+    $debugLink = (& llvm-readelf --string-dump=.gnu_debuglink $library) -join "`n"
     $match = [regex]::Match($debugLink, '(?m)^\s*\[\s*0\]\s+([^\r\n]+)')
     if (!$match.Success -or $match.Groups[1].Value -cne $expected) {
         throw "Expected .gnu_debuglink '$expected': $library"

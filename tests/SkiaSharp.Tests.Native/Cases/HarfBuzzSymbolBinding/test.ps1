@@ -2,6 +2,7 @@
 Reproduces Linux symbol preemption by loading conflicting HarfBuzz functions globally before each shipped library.
 A deliberately preemptible control proves the probe detects the problem, then normal and nodeps artifacts must both
 work with and without the conflict. Only matching Linux/glibc artifacts execute, in isolated native child processes.
+Other operating systems explicitly skip this runtime-only case before requiring a compiler.
 #>
 
 param([Parameter(Mandatory)][string] $NativeRoot)
@@ -11,13 +12,14 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module "$PSScriptRoot/../Helpers.psm1"
 
 # Require glibc and a supported host before loading any artifacts.
-Assert-NativeRoot $NativeRoot
 if (-not $IsLinux) {
-    throw 'HarfBuzz symbol binding requires Linux glibc.'
+    Write-Output 'SKIP: HarfBuzz symbol binding requires a Linux/glibc host.'
+    exit 77
 }
 
+Assert-NativeRoot $NativeRoot
 Assert-Tool getconf
-Assert-GnuReadelf
+Assert-Readelf
 $libc = & getconf GNU_LIBC_VERSION
 if ($libc -notmatch '^glibc ') {
     throw "Unsupported host libc: $libc"
@@ -54,7 +56,7 @@ foreach ($variant in 'linux', 'linuxnodeps') {
     Write-Host "Checking $variant ($arch, ${libc}): $library"
     Assert-Artifact $library
 
-    $header = (& readelf -h $library) -join "`n"
+    $header = (& llvm-readelf -h $library) -join "`n"
     if ($header -notmatch '(?m)^\s*Class:\s+ELF64\s*$') {
         throw "Expected ELF64: $library"
     }
@@ -65,7 +67,7 @@ foreach ($variant in 'linux', 'linuxnodeps') {
         throw "Expected shared library: $library"
     }
 
-    $dynamic = (& readelf -d $library) -join "`n"
+    $dynamic = (& llvm-readelf -d $library) -join "`n"
     if (-not $dynamic.Contains('Shared library: [libc.so.6]')) {
         throw "Artifact is not glibc-linked: $library"
     }
