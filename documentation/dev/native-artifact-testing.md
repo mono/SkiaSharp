@@ -21,8 +21,13 @@ Keep scenario assertions in the case script, with short section comments and bla
 
 ## Running
 
-The suite requires Linux/glibc, PowerShell 7.4 or later, a C compiler, GNU binutils
-and LLVM's `llvm-readobj`. PowerShell is included in the .NET SDK test image.
+Artifact inspection requires PowerShell 7.4 or later and LLVM's inspection tools on
+either Windows or Linux. The HarfBuzz runtime case additionally requires Linux/glibc
+and a C compiler. Both hosts use `llvm-readelf` for consistent ELF inspection.
+
+A platform-only case may explicitly write `SKIP: <reason>` and exit 77. The runner
+reports that as a skipped xUnit case; exit 77 without a reason fails. Missing tools,
+missing artifacts and unexpected native-command failures remain failures, never skips.
 It tests existing native outputs; it does not build or download Skia.
 
 ```sh
@@ -83,9 +88,9 @@ The Native Tests stage runs immediately after native artifact merging as a leaf 
 in the Complete pipeline. Packaging does not wait for tests. The Package pipeline is
 build-only and does not run native tests.
 In the standalone Tests pipeline it runs after
-preparation against the source build's native artifacts. Its dedicated Linux job consumes
+preparation against the source build's native artifacts. Both Linux and Windows jobs consume
 the merged `native` artifact and `native_msvc` under `output/msvc`, runs `tests-native`
-and publishes TRX results even on failure. Its small image
+and publish separate TRX results even on failure. The Linux job's small image
 is independent of native build images and minimal managed-runtime images:
 
 ```sh
@@ -96,9 +101,14 @@ docker run --rm --volume "$(pwd):/work" -w /work skiasharp-native-tests \
 
 The current CI host is x64. Artifacts must match the runtime architecture and libc;
 missing tools/artifacts or mismatches fail, never silently skip.
-All artifact inspection runs in this same Linux job; it does not need Windows, Android,
-Apple or Tizen runtime hosts. Static ABI and symbol checks do not imply runtime coverage
-on those platforms. Only the HarfBuzz case executes target code on its matching glibc host.
+The Windows job uses the existing Windows agent without Docker and explicitly provisions
+the required LLVM tools. Provisioning reuses a complete LLVM 19.1.1 installation or
+installs the official full archive in the agent tool cache; the smaller Windows installer
+does not include `llvm-readelf`. The HarfBuzz runtime regression is declared Linux/glibc-only
+and skips on Windows; the artifact inspection cases still run.
+
+Static ABI and symbol checks do not imply runtime coverage on target platforms. Only
+the HarfBuzz case executes target code on its matching glibc host.
 Cake retains toolchain and build-input validation, but does not duplicate these artifact assertions.
 
 Build modified native sources using `externals-<platform>`, never `externals-download`.

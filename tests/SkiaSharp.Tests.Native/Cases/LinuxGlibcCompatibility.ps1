@@ -11,7 +11,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module "$PSScriptRoot/Helpers.psm1"
 
 Assert-NativeRoot $NativeRoot
-Assert-GnuReadelf
+Assert-Readelf
 
 # Compatibility policy belongs with the test, independently of the producing toolchain.
 $limits = @{
@@ -29,7 +29,7 @@ foreach ($arch in $limits.Keys | Sort-Object) {
         foreach ($name in 'libSkiaSharp', 'libHarfBuzzSharp') {
             $library = Join-Path $NativeRoot "$variant/$arch/$name.so"
             Assert-Artifact $library
-            $output = (& readelf --wide --version-info $library) -join "`n"
+            $output = (& llvm-readelf --wide --version-info $library) -join "`n"
             $versions = [regex]::Matches($output, 'GLIBC_([\w.]+)') |
                 ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
 

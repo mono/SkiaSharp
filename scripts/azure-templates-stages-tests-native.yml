@@ -3,6 +3,8 @@ parameters:
     type: string
   - name: buildAgentLinux
     type: object
+  - name: buildAgentWindows
+    type: object
   - name: use1ESPipelineTemplates
     type: boolean
     default: false
@@ -19,3 +21,9 @@ stages:
         parameters:
           buildAgent: ${{ parameters.buildAgentLinux }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+          platform: linux
+      - template: /scripts/azure-templates-jobs-tests-native.yml@self
+        parameters:
+          buildAgent: ${{ parameters.buildAgentWindows }}
+          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+          platform: windows

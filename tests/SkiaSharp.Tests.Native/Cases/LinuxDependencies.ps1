@@ -11,11 +11,11 @@ $PSNativeCommandUseErrorActionPreference = $true
 Import-Module "$PSScriptRoot/Helpers.psm1"
 
 Assert-NativeRoot $NativeRoot
-Assert-GnuReadelf
+Assert-Readelf
 
 foreach ($artifact in Get-LinuxArtifacts $NativeRoot) {
     Assert-Artifact $artifact.Path
-    $dynamic = (& readelf --wide --dynamic $artifact.Path) -join "`n"
+    $dynamic = (& llvm-readelf --wide --dynamic $artifact.Path) -join "`n"
     $needed = @([regex]::Matches($dynamic, '\(NEEDED\).+\[(.+)\]') | ForEach-Object { $_.Groups[1].Value })
     $fontconfig = @($needed | Where-Object { $_ -match 'fontconfig' }).Count -gt 0
 
