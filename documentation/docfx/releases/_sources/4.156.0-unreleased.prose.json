@@ -1,24 +1,17 @@
 {
-  "theme": "Rendering and memory efficiency",
-  "highlights_headline": "This unreleased update improves Android rendering, memory use, and WebGPU packaging across supported platforms.",
-  "highlights_body": "It synchronizes Android texture rendering with display refresh, reduces allocations in image and text-shaping paths, packages WebGPU support into the native library, and corrects front-buffered stream retention.",
+  "theme": "Rendering and memory refinements",
+  "highlights_headline": "SkiaSharp 4.156.0 improves Android presentation, stream lifetime handling, and managed image and text processing.",
+  "highlights_body": "This release also includes the WebGPU implementation in the native library, reducing integration work for consumers using that backend.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Android texture rendering synchronized",
-          "detail": "Coordinates continuous texture rendering with the display refresh cycle while preserving explicit render requests and lifecycle behavior.",
+          "lead": "Android texture rendering follows display refresh",
+          "detail": "Synchronizes Android texture rendering with the display refresh cycle for more reliable frame presentation.",
           "prs": [
             5345
-          ]
-        },
-        {
-          "lead": "Front-buffered streams release retained data",
-          "detail": "Corrects stream retention so buffered input can be released when it is no longer needed.",
-          "prs": [
-            5327
           ]
         }
       ]
@@ -27,8 +20,15 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Image and shaping allocations reduced",
-          "detail": "Managed image pixel copies avoid an intermediate allocation, while HarfBuzz UTF-32 encoding and feature-string decoding reuse storage without changing results.",
+          "lead": "Front-buffered streams no longer retain unnecessary data",
+          "detail": "Corrects front-buffered stream retention so data can be released when it is no longer needed.",
+          "prs": [
+            5327
+          ]
+        },
+        {
+          "lead": "Image copies and text shaping reduce allocation overhead",
+          "detail": "Optimizes managed image pixel copies, feature-string handling, and HarfBuzz UTF-32 encoding buffers to reduce work and transient allocations.",
           "prs": [
             5052,
             5060,
@@ -41,8 +41,8 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "WebGPU implementation packaged with the native library",
-          "detail": "Includes the WebGPU C++ support in libSkiaSharp.a, keeping consumer WebAssembly application links free of its C++ compiler settings.",
+          "lead": "WebGPU implementation ships in the native library",
+          "detail": "Packages emdawnwebgpu's webgpu.cpp into libSkiaSharp.a for consumers using the WebGPU backend.",
           "prs": [
             5316
           ]
@@ -51,7 +51,8 @@
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Packaged the WebGPU C++ implementation with the native SkiaSharp library for WebAssembly consumers"
+    "ramezgerges": "Included the WebGPU implementation in the native SkiaSharp library"
   },
-  "preview_summaries": {}
+  "preview_summaries": {},
+  "harfbuzz_summary": null
 }
