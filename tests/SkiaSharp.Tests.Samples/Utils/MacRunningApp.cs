@@ -44,6 +44,21 @@ internal sealed class MacRunningApp(SampleWorkspace workspace, string artifact)
 			try
 			{
 				lines.Add($"{name}: status={status}; formats={count}; selected={format != IntPtr.Zero}");
+				if (status == CGLError.kCGLNoError && format != IntPtr.Zero)
+				{
+					foreach (var attribute in new[]
+					{
+						CGLPixelFormatAttribute.kCGLPFAAccelerated,
+						CGLPixelFormatAttribute.kCGLPFASampleBuffers,
+						CGLPixelFormatAttribute.kCGLPFASamples,
+						CGLPixelFormatAttribute.kCGLPFAOpenGLProfile
+					})
+					{
+						var described = CGLDescribePixelFormat(format, 0, attribute, out var value);
+						lines.Add($"  {attribute}: status={described}; " +
+							$"value={(described == CGLError.kCGLNoError ? value.ToString() : "not returned")}");
+					}
+				}
 			}
 			finally
 			{
@@ -78,9 +93,17 @@ internal sealed class MacRunningApp(SampleWorkspace workspace, string artifact)
 			("no-acceleration-requirement", [.. common, .. multisample, CGLPixelFormatAttribute.kCGLPFANone]),
 			("no-acceleration-or-msaa-requirement", [.. common, CGLPixelFormatAttribute.kCGLPFANone]),
 			("core-test", [CGLPixelFormatAttribute.kCGLPFAOpenGLProfile, (CGLPixelFormatAttribute)CGLOpenGLProfile.kCGLOGLPVersion_3_2_Core,
-				CGLPixelFormatAttribute.kCGLPFADoubleBuffer, CGLPixelFormatAttribute.kCGLPFANone])
+				CGLPixelFormatAttribute.kCGLPFADoubleBuffer, CGLPixelFormatAttribute.kCGLPFANone]),
+			("core-profile-view-request", [CGLPixelFormatAttribute.kCGLPFAOpenGLProfile, (CGLPixelFormatAttribute)CGLOpenGLProfile.kCGLOGLPVersion_3_2_Core,
+				CGLPixelFormatAttribute.kCGLPFAAccelerated, .. common, .. multisample, CGLPixelFormatAttribute.kCGLPFANone]),
+			("core-profile-no-msaa", [CGLPixelFormatAttribute.kCGLPFAOpenGLProfile, (CGLPixelFormatAttribute)CGLOpenGLProfile.kCGLOGLPVersion_3_2_Core,
+				CGLPixelFormatAttribute.kCGLPFAAccelerated, .. common, CGLPixelFormatAttribute.kCGLPFANone])
 		];
 	}
+
+	[DllImport("/System/Library/Frameworks/OpenGL.framework/Versions/A/OpenGL", ExactSpelling = true)]
+	private static extern CGLError CGLDescribePixelFormat(
+		IntPtr format, int screen, CGLPixelFormatAttribute attribute, out int value);
 
 	internal override void SubmitSearch() =>
 		Driver.ExecuteScript("macos: keys", new Dictionary<string, object>

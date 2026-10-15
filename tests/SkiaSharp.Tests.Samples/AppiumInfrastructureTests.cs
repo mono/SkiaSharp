@@ -35,7 +35,7 @@ public sealed class AppiumInfrastructureTests
 	public void MacGlDiagnosticsCompareTheViewRequestWithoutSelectingAFallback()
 	{
 		var requests = MacRunningApp.OpenGlPixelFormatRequests();
-		Assert.Equal(5, requests.Length);
+		Assert.Equal(7, requests.Length);
 		var requested = requests[0];
 		Assert.Equal("view-request", requested.Name);
 		Assert.Contains(CGLPixelFormatAttribute.kCGLPFAAccelerated, requested.Attributes);
@@ -44,6 +44,11 @@ public sealed class AppiumInfrastructureTests
 		Assert.Equal((CGLPixelFormatAttribute)4, requested.Attributes[samples + 1]);
 		Assert.DoesNotContain(CGLPixelFormatAttribute.kCGLPFAMultisample, requests[1].Attributes);
 		Assert.DoesNotContain(CGLPixelFormatAttribute.kCGLPFAAccelerated, requests[2].Attributes);
+		Assert.All(requests[5..], request =>
+		{
+			Assert.Contains(CGLPixelFormatAttribute.kCGLPFAOpenGLProfile, request.Attributes);
+			Assert.Contains(CGLPixelFormatAttribute.kCGLPFAAccelerated, request.Attributes);
+		});
 		Assert.All(requests, request => Assert.Equal(CGLPixelFormatAttribute.kCGLPFANone, request.Attributes[^1]));
 	}
 
@@ -324,6 +329,126 @@ public sealed class AppiumInfrastructureTests
 		}));
 		Assert.Equal(2, gestures);
 		Assert.True(container.Bounds.Contains(target.Bounds));
+	}
+
+	[Fact]
+	public void ScrollDiscoversOffscreenZeroSizePlaceholders()
+	{
+		var container = new ScrollElement(new Rectangle(13, 372, 728, 169));
+		var target = new ScrollElement(new Rectangle(-137, -130, 0, 0), displayed: false);
+		var gestures = 0;
+		Assert.Same(target, ScrollTest(container, () => target, (bounds, amount) =>
+		{
+			Assert.Equal(container.Bounds, bounds);
+			Assert.Equal(101, amount);
+			gestures++;
+			target.Bounds = new Rectangle(34, 450, 686, 32);
+			target.Displayed = true;
+		}));
+		Assert.Equal(1, gestures);
+		Assert.True(container.Bounds.Contains(target.Bounds));
+	}
+
+	[Fact]
+	public void ScrollWaitsForTransientZeroSizePlaceholdersBeforeGesturing()
+	{
+		var container = new ScrollElement(new Rectangle(13, 372, 728, 169));
+		var placeholder = new ScrollElement(new Rectangle(-137, -130, 0, 0), displayed: false);
+		var target = new ScrollElement(new Rectangle(34, 450, 686, 32));
+		var probes = 0;
+		Assert.Same(target, ScrollTest(container, () => ++probes < 3 ? placeholder : target,
+			(_, _) => Assert.Fail("A transient placeholder should settle before discovery scrolling.")));
+		Assert.Equal(3, probes);
+	}
+
+	[Fact]
+	public void ScrollBoundsDiscoveryForUnrealizedTargets()
+	{
+		var container = new ScrollElement(new Rectangle(13, 372, 728, 169));
+		var target = new ScrollElement(new Rectangle(-137, -130, 0, 0), displayed: false);
+		var gestures = 0;
+		var error = Assert.Throws<InvalidOperationException>(() => AppiumRunningApp.ScrollIntoView(
+			() => container, () => target, (_, amount) =>
+			{
+				Assert.Equal(101, amount);
+				gestures++;
+			}, "'target' inside 'container'", TimeSpan.FromSeconds(5), 2, CancellationToken.None));
+		Assert.Equal(2, gestures);
+		Assert.Contains("exhausted 2 scrolls", error.Message);
+		Assert.Contains("Width=0,Height=0", error.Message);
+		Assert.Contains("Displayed=False", error.Message);
+	}
+
+	[Theory]
+	[InlineData(0, 169)]
+	[InlineData(728, 0)]
+	[InlineData(728, 2)]
+	public void ScrollRejectsInvalidContainersForUnrealizedTargets(int width, int height)
+	{
+		var container = new ScrollElement(new Rectangle(13, 372, width, height));
+		var target = new ScrollElement(new Rectangle(-137, -130, 0, 0), displayed: false);
+		var error = Assert.Throws<InvalidOperationException>(() => ScrollTest(container, () => target,
+			(_, _) => Assert.Fail("An unusable container must not scroll.")));
+		Assert.Contains("container", error.Message, StringComparison.OrdinalIgnoreCase);
+	}
+
+	[Theory]
+	[InlineData(0, 0, true)]
+	[InlineData(-1, 0, false)]
+	[InlineData(0, -1, false)]
+	[InlineData(686, 0, false)]
+	public void ScrollRejectsInvalidTargetsOtherThanHiddenZeroSizePlaceholders(int width, int height, bool displayed)
+	{
+		var container = new ScrollElement(new Rectangle(13, 372, 728, 169));
+		var target = new ScrollElement(new Rectangle(-137, -130, width, height), displayed);
+		var error = Assert.Throws<InvalidOperationException>(() => ScrollTest(container, () => target,
+			(_, _) => Assert.Fail("Invalid geometry must not scroll.")));
+		Assert.Contains("positive dimensions", error.Message);
+	}
+
+	[Theory]
+	[InlineData(729, 32)]
+	[InlineData(686, 170)]
+	public void ScrollRejectsOversizedTargetsAfterRealization(int width, int height)
+	{
+		var container = new ScrollElement(new Rectangle(13, 372, 728, 169));
+		var target = new ScrollElement(new Rectangle(-137, -130, 0, 0), displayed: false);
+		var gestures = 0;
+		var error = Assert.Throws<InvalidOperationException>(() => ScrollTest(container, () => target, (_, _) =>
+		{
+			gestures++;
+			target.Bounds = new Rectangle(34, 450, width, height);
+			target.Displayed = true;
+		}));
+		Assert.Equal(1, gestures);
+		Assert.Contains("larger", error.Message);
+	}
+
+	[Fact]
+	public void ScrollUnrealizedTargetHonorsDeadline()
+	{
+		var container = new ScrollElement(new Rectangle(13, 372, 728, 169));
+		var target = new ScrollElement(new Rectangle(-137, -130, 0, 0), displayed: false);
+		var error = Assert.Throws<TimeoutException>(() => AppiumRunningApp.ScrollIntoView(
+			() => container, () => target, (_, _) => Assert.Fail("Discovery must respect its deadline."),
+			"'target' inside 'container'", TimeSpan.FromMilliseconds(50), 12, CancellationToken.None));
+		Assert.Contains("Width=0,Height=0", error.Message);
+	}
+
+	[Fact]
+	public void ScrollUnrealizedTargetHonorsCancellationAfterDiscoveryGesture()
+	{
+		using var cancellation = new CancellationTokenSource();
+		var container = new ScrollElement(new Rectangle(13, 372, 728, 169));
+		var target = new ScrollElement(new Rectangle(-137, -130, 0, 0), displayed: false);
+		var gestures = 0;
+		Assert.Throws<OperationCanceledException>(() => AppiumRunningApp.ScrollIntoView(
+			() => container, () => target, (_, _) =>
+			{
+				gestures++;
+				cancellation.Cancel();
+			}, "'target' inside 'container'", TimeSpan.FromSeconds(5), 12, cancellation.Token));
+		Assert.Equal(1, gestures);
 	}
 
 	[Fact]
