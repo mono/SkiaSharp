@@ -102,6 +102,8 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		app.WaitText("sample-render-status", text => text.StartsWith("CPU", StringComparison.Ordinal) && text.Contains("  |"));
 		await Compare(app, canvasHostId ?? "sample-canvas-cpu", "gallery-gradient-cpu", "Maui", platform);
 
+		if (app.FindOptional("sample-controls-toggle")?.Text == "Controls ▸")
+			app.Click("sample-controls-toggle");
 		app.ScrollIntoView("sample-controls", "control-angle");
 		app.Drag(app.Find("control-angle"), 0.2, 0.5, 0.0, 0.5);
 		app.WaitText("control-angle-value", text => text == "Angle: 0");

@@ -69,7 +69,20 @@ internal abstract class AppiumRunningApp
 	internal IWebElement Find(string id) => Find(Locator(id));
 	internal string Text(string id) => Find(id).Text;
 	internal void Click(string id) => Click(Locator(id));
-	internal virtual void Click(By selector) => Find(selector).Click();
+	internal void Click(By selector) =>
+		ClickElement(() => Driver.FindElement(selector), selector.ToString(),
+			TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+
+	internal static IWebElement ClickElement(
+		Func<IWebElement> find, string description, TimeSpan limit, CancellationToken cancellationToken) =>
+		Wait(() =>
+		{
+			var element = find();
+			if (!element.Displayed)
+				return null;
+			element.Click();
+			return element;
+		}, description, limit, cancellationToken);
 
 	internal void WaitText(string id, Func<string, bool> predicate) =>
 		Wait(() =>

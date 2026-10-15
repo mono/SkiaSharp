@@ -30,18 +30,6 @@ internal sealed class MacRunningApp(SampleWorkspace workspace, string artifact)
 			["keys"] = new[] { "XCUIKeyboardKeyReturn" }
 		});
 
-	internal override void Click(By selector)
-	{
-		var element = Find(selector);
-		var location = element.Location;
-		var size = element.Size;
-		Driver.ExecuteScript("macos: click", new Dictionary<string, object>
-		{
-			["x"] = location.X + size.Width / 2,
-			["y"] = location.Y + size.Height / 2
-		});
-	}
-
 	internal override void Drag(Point start, Point end) =>
 		Driver.ExecuteScript("macos: clickAndDrag", new Dictionary<string, object>
 		{

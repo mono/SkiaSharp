@@ -99,7 +99,7 @@ public sealed class AppiumWindowsSampleRunTests(AppiumFixture appium) : AppiumSa
 
 	private static void NavigateMauiWindows(AppiumRunningApp app, string title)
 	{
-		app.Click(MobileBy.Name("Open navigation menu"));
+		app.Click(MobileBy.Name("Open Navigation"));
 		app.Click(MobileBy.Name(title));
 	}
 

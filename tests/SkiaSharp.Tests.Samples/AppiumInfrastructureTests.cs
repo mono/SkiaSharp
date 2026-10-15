@@ -436,7 +436,68 @@ public sealed class AppiumInfrastructureTests
 		AppiumRunningApp.ScrollIntoView(() => container, target, scroll, "'target' inside 'container'",
 			TimeSpan.FromSeconds(5), 12, CancellationToken.None);
 
-	private sealed class ScrollElement(Rectangle bounds, bool displayed = true) : IWebElement
+	[Fact]
+	public void ClickRequeriesAnElementReplacedDuringNavigation()
+	{
+		var queries = 0;
+		var clicks = 0;
+		var stale = new ScrollElement(new Rectangle(0, 0, 100, 40),
+			onClick: () => throw new StaleElementReferenceException("Menu snapshot replaced."));
+		var current = new ScrollElement(new Rectangle(0, 0, 100, 40), onClick: () => clicks++);
+		Assert.Same(current, AppiumRunningApp.ClickElement(
+			() => ++queries == 1 ? stale : current, "CPU menu item", TimeSpan.FromSeconds(2), CancellationToken.None));
+		Assert.Equal(2, queries);
+		Assert.Equal(1, clicks);
+	}
+
+	[Fact]
+	public void ClickWaitsForTheTargetToAppear()
+	{
+		var queries = 0;
+		var clicks = 0;
+		var target = new ScrollElement(new Rectangle(0, 0, 100, 40), onClick: () => clicks++);
+		Assert.Same(target, AppiumRunningApp.ClickElement(
+			() => ++queries == 1 ? throw new NoSuchElementException("Menu opening.") : target,
+			"CPU menu item", TimeSpan.FromSeconds(2), CancellationToken.None));
+		Assert.Equal(2, queries);
+		Assert.Equal(1, clicks);
+	}
+
+	[Fact]
+	public void ClickDoesNotRetryOtherDriverFailures()
+	{
+		var queries = 0;
+		var failure = new WebDriverException("Pointer command failed.");
+		var target = new ScrollElement(new Rectangle(0, 0, 100, 40), onClick: () => throw failure);
+		Assert.Same(failure, Assert.Throws<WebDriverException>(() =>
+			AppiumRunningApp.ClickElement(() =>
+			{
+				queries++;
+				return target;
+			}, "CPU menu item", TimeSpan.FromSeconds(2), CancellationToken.None)));
+		Assert.Equal(1, queries);
+	}
+
+	[Fact]
+	public void ClickHonorsCancellationBeforeFindingTheTarget()
+	{
+		using var cancellation = new CancellationTokenSource();
+		cancellation.Cancel();
+		Assert.Throws<OperationCanceledException>(() => AppiumRunningApp.ClickElement(
+			() => throw new InvalidOperationException("Cancelled clicks must not query the UI."),
+			"CPU menu item", TimeSpan.FromSeconds(2), cancellation.Token));
+	}
+
+	[Fact]
+	public void ClickNeverActsOnAHiddenTarget()
+	{
+		var target = new ScrollElement(new Rectangle(0, 0, 100, 40), displayed: false,
+			onClick: () => Assert.Fail("Hidden elements must not be clicked."));
+		Assert.Throws<TimeoutException>(() => AppiumRunningApp.ClickElement(
+			() => target, "CPU menu item", TimeSpan.FromMilliseconds(20), CancellationToken.None));
+	}
+
+	private sealed class ScrollElement(Rectangle bounds, bool displayed = true, Action? onClick = null) : IWebElement
 	{
 		internal Rectangle Bounds { get; set; } = bounds;
 		public bool Displayed { get; set; } = displayed;
@@ -447,7 +508,7 @@ public sealed class AppiumInfrastructureTests
 		public bool Enabled => throw new NotSupportedException();
 		public bool Selected => throw new NotSupportedException();
 		public void Clear() => throw new NotSupportedException();
-		public void Click() => throw new NotSupportedException();
+		public void Click() => (onClick ?? throw new NotSupportedException()).Invoke();
 		public void SendKeys(string text) => throw new NotSupportedException();
 		public void Submit() => throw new NotSupportedException();
 		public string GetAttribute(string name) => throw new NotSupportedException();
