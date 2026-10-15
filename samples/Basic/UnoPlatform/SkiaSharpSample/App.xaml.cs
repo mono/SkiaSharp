@@ -50,9 +50,12 @@ public partial class App : Application
         }
 
         MainWindow.SetWindowIcon();
+        StartBrowserSplashRendering();
         // Ensure the current window is active
         MainWindow.Activate();
     }
+
+    partial void StartBrowserSplashRendering();
 
     /// <summary>
     /// Invoked when Navigation to a certain page fails

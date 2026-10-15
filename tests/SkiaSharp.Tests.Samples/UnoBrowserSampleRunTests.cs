@@ -8,18 +8,46 @@ namespace SkiaSharp.Tests.Samples;
 [Collection(nameof(BrowserSampleCollection))]
 public class UnoBrowserSampleRunTests : DotNetSampleTestBase
 {
-    [Fact]
+    [Theory]
     [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
-    public Task UnoPlatformCpuSampleRuns() =>
+    [InlineData(1)]
+    [InlineData(4)]
+    public Task UnoPlatformCpuSampleRuns(int cpuRate) =>
         RunUnoBrowserSample(async app =>
         {
+            var session = await app.Page.Context.NewCDPSessionAsync(app.Page);
+            await session.SendAsync("Emulation.setCPUThrottlingRate", new() { ["rate"] = cpuRate });
+            await app.Page.AddInitScriptAsync("""
+                (() => {
+                    const querySelector = document.querySelector;
+                    globalThis.unoSplashChecks = 0;
+                    document.querySelector = function(selector) {
+                        if (selector === '.uno-loader')
+                            globalThis.unoSplashChecks++;
+                        return querySelector.call(this, selector);
+                    };
+                })();
+                """);
             await app.Navigate("/");
             await app.WaitForElement("#uno-canvas");
             var screenshot = await WaitForUnoCpu(app);
             SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/uno-cpu-page.png");
+
+            // Observe subsequent frames, not a sleep: the temporary render subscription must stop.
+            var checks = await app.Page.EvaluateAsync<int[]>("""
+                async () => {
+                    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                    const before = globalThis.unoSplashChecks;
+                    for (let frame = 0; frame < 20; frame++)
+                        await new Promise(resolve => requestAnimationFrame(resolve));
+                    return [before, globalThis.unoSplashChecks];
+                }
+                """);
+            Assert.True(checks[0] > 0, "The startup rendering workaround must observe the loader.");
+            Assert.Equal(checks[0], checks[1]);
         });
 
     [Fact]
