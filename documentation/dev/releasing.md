@@ -4,6 +4,15 @@ Maintainer runbook for shipping SkiaSharp. Follow the steps in order; use
 [Release process internals](release-process-internals.md) for automation
 contracts and recovery details.
 
+## Quick steps
+
+1. [Audit](#1-audit-the-release-line) the line and resolve outstanding work.
+2. [Prepare](#2-prepare-the-release-branches) the paired release branches.
+3. [Verify](#3-verify-the-release-build-and-tests) the producing Build, Tests, and BAR.
+4. [Publish](#4-publish-the-packages) through the MAUI release pipeline, approve its package audit, and verify NuGet.org.
+5. [Finish](#5-finish-the-public-release) to publish the tag and GitHub Release and update milestones.
+6. [Complete follow-ups](#6-complete-follow-ups) by reviewing and merging the automation PRs.
+
 ## Safety and prerequisites
 
 - Release branches, tags, package versions, and published GitHub Releases are
@@ -93,10 +102,9 @@ Resume and monitor an existing run; do not queue a duplicate. The
 `release-publish` skill can perform these checks and queue the pipeline.
 
 Publication uses
-[`dotnet-maui-release` (1445)](https://dev.azure.com/dnceng/internal/_build?definitionId=1445)
-on merged, mirrored MAUI `main`. Require its configured default branch to be
-`refs/heads/main` and its current tip to contain SkiaSharp release support.
-If the internal mirror is behind, wait; do not use an unmerged feature branch.
+[`dotnet-maui-release` (1445)](https://dev.azure.com/dnceng/internal/_build?definitionId=1445),
+which supports SkiaSharp publication from the internal MAUI `main` branch.
+Use its configured default branch, `refs/heads/main`, not a feature branch.
 
 To queue it directly:
 
@@ -113,7 +121,7 @@ az pipelines run \
 
 `commitHash` is the **SkiaSharp release commit**, not the mono/skia gitlink
 or the MAUI pipeline-code commit. Read back the resolved MAUI source ref/SHA
-and parameters; verify `refs/heads/main` and support at that SHA.
+and parameters; verify `refs/heads/main` and the requested SkiaSharp commit.
 
 The same run stages packages and pauses at `ManualValidation`. Before a human
 approves it, compare `NuGetReleaseAudit` with the release record:

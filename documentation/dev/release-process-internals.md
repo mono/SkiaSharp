@@ -129,8 +129,8 @@ or visual goldens can diagnose failures but cannot substitute for this evidence.
 
 The internal MAUI `dotnet-maui-release` definition 1445 owns production
 credentials and approval. It is queued only on an explicit publication
-request, not automatically after Tests. Use merged, mirrored MAUI `main`,
-with default branch `refs/heads/main` and SkiaSharp support at its current tip.
+request, not automatically after Tests. SkiaSharp publication is supported on
+the internal MAUI `main` branch; use the configured default, `refs/heads/main`.
 
 Two commits have distinct roles:
 
