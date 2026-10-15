@@ -106,6 +106,15 @@ SKImage RenderScene(bool actual)
         paint.Color = new SKColor(145, 112, 188);
         canvas.DrawRoundRect(80, 345, 180, 180, 28, 28, paint);
     }
+    var ellipse = SKRect.Create(440, 355, 310, 180);
+    var solidFill = new SKColor(0, 75, 95);
+    using var fillGradient = SKShader.CreateLinearGradient(
+        new SKPoint(ellipse.Left, ellipse.MidY), new SKPoint(ellipse.Right, ellipse.MidY),
+        new[] { solidFill, new SKColor(255, 245, 225) },
+        SKShaderTileMode.Clamp);
+    paint.Color = solidFill;
+    paint.Shader = actual ? null : fillGradient;
+    canvas.DrawOval(ellipse, paint);
     return SKImage.FromBitmap(bitmap)
         ?? throw new InvalidOperationException("Unable to snapshot the example scene.");
 }
