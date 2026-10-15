@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0.401-azurelinux3.0
 
-RUN tdnf install -y gcc glibc-devel binutils llvm \
+RUN tdnf install -y llvm \
     && tdnf clean all \
     && pwsh -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
 
