@@ -1,22 +1,22 @@
 {
-  "theme": "Rendering and memory efficiency",
-  "highlights_headline": "This unreleased update improves Android rendering, memory use, and WebGPU packaging across supported platforms.",
-  "highlights_body": "It synchronizes Android texture rendering with display refresh, reduces allocations in image and text-shaping paths, packages WebGPU support into the native library, and corrects front-buffered stream retention.",
+  "theme": "Runtime and WebGPU improvements",
+  "highlights_headline": "SkiaSharp 4.156.0 improves managed rendering performance and makes WebGPU browser applications easier to build.",
+  "highlights_body": "Image pixel transfers and HarfBuzz text handling now avoid avoidable allocations, while Android continuous texture rendering follows the display refresh rate.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Android texture rendering synchronized",
-          "detail": "Coordinates continuous texture rendering with the display refresh cycle while preserving explicit render requests and lifecycle behavior.",
+          "lead": "Android texture rendering follows the display clock",
+          "detail": "Automatic continuous frames for Android GL texture views are paced by display refresh callbacks, avoiding redraws driven by buffer-swap throughput while preserving explicit render requests.",
           "prs": [
             5345
           ]
         },
         {
-          "lead": "Front-buffered streams release retained data",
-          "detail": "Corrects stream retention so buffered input can be released when it is no longer needed.",
+          "lead": "Front-buffered managed streams release their backing data",
+          "detail": "Front-buffered managed streams no longer retain their initial data after it is no longer needed.",
           "prs": [
             5327
           ]
@@ -27,8 +27,8 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Image and shaping allocations reduced",
-          "detail": "Managed image pixel copies avoid an intermediate allocation, while HarfBuzz UTF-32 encoding and feature-string decoding reuse storage without changing results.",
+          "lead": "Image copying and text shaping allocate less",
+          "detail": "Managed pixel copies can take a direct raster path, and HarfBuzz text and feature conversion reuse stack or pooled storage to reduce allocation overhead without changing decoded values.",
           "prs": [
             5052,
             5060,
@@ -41,8 +41,8 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "WebGPU implementation packaged with the native library",
-          "detail": "Includes the WebGPU C++ support in libSkiaSharp.a, keeping consumer WebAssembly application links free of its C++ compiler settings.",
+          "lead": "WebGPU browser builds package native C++ support",
+          "detail": "The WebGPU C++ port is now built into libSkiaSharp.a, so browser applications no longer compile it during their final link while retaining the required JavaScript glue.",
           "prs": [
             5316
           ]
@@ -51,7 +51,7 @@
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Packaged the WebGPU C++ implementation with the native SkiaSharp library for WebAssembly consumers"
+    "ramezgerges": "Improved WebGPU browser builds by packaging the native C++ support with libSkiaSharp"
   },
   "preview_summaries": {}
 }
