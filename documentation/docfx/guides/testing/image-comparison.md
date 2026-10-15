@@ -34,11 +34,11 @@ dotnet add package SkiaSharp.Testing
 
 | Expected | Actual |
 | --- | --- |
-| ![Expected scene on a soft gradient.](images/expected.png) | ![Actual scene with changed blue, translucent green and an added rounded red square.](images/actual.png) |
+| ![Expected scene on a soft gradient.](images/expected.png) | ![Actual scene with changed blue, translucent green and an added rounded violet square.](images/actual.png) |
 
 Every example uses this scene. The rounded blue panel changes from RGB **(72, 104, 192)**
 to **(74, 106, 194)**, the green circle keeps RGB **(48, 185, 131)** but changes alpha
-from **255** to **128**, and the rounded red square is new. The actual circle is transparent;
+from **255** to **128**, and the rounded violet square is new. The actual circle is transparent;
 the page background shows through it.
 
 ```csharp
@@ -84,10 +84,10 @@ using var png = difference.Encode(SKEncodedImageFormat.Png, 100);
 File.WriteAllBytes("difference-tolerant.png", png.ToArray());
 ```
 
-![The blue panel is tolerated, alpha is excluded, and the red square still mismatches.](images/comparison-tolerant.png)
+![The blue panel is tolerated, alpha is excluded, and the violet square still mismatches.](images/comparison-tolerant.png)
 
 The +2 blue change is now amber-tinted. This example intentionally excludes alpha,
-so the green circle is not highlighted; the red square still mismatches. Always
+so the green circle is not highlighted; the violet square still mismatches. Always
 generate the diagnostic with the same options as the comparison.
 
 `null` disables a channel; zero requires an exact match. `Absolute` uses byte
