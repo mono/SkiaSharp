@@ -40,8 +40,9 @@ bash tests/SkiaSharp.Tests.Native/Cases/HarfBuzzSymbolBinding/test.sh "$PWD/outp
 
 ## CI
 
-The Native Tests stage runs immediately after native artifact merging and gates packaging
-in the Complete pipeline. The Package pipeline is build-only and does not run native tests.
+The Native Tests stage runs immediately after native artifact merging as a leaf stage
+in the Complete pipeline. Packaging does not wait for tests. The Package pipeline is
+build-only and does not run native tests.
 In the standalone Tests pipeline it runs after
 preparation against the source build's native artifacts. Its dedicated Linux job consumes
 the merged `native` artifact, runs `tests-native` and publishes TRX results even on failure. Its small image

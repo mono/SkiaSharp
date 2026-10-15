@@ -1,16 +1,12 @@
 parameters:
   - name: buildAgentWindows
     type: object
-  - name: dependsOn
-    type: object
-    default:
-      - native
 
 stages:
 
   - stage: package
     displayName: Package NuGets
-    dependsOn: ${{ parameters.dependsOn }}
+    dependsOn: native
     jobs:
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package NuGets
         parameters:
