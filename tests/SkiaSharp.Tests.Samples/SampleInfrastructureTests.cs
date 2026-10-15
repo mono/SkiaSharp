@@ -206,6 +206,27 @@ public class SampleInfrastructureTests : IDisposable
             artifact.Elements("package").Select(element => (string?)element.Attribute("pattern")));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void UnoPackagesUseTheirPublishingFeedWithoutExposingArtifactPackages(bool repositoryConfig)
+    {
+        var file = repositoryConfig ? Path.Combine(Repo.RootDir, "nuget.config") : Path.Combine(root, "NuGet.Config");
+        if (!repositoryConfig)
+        {
+            Directory.CreateDirectory(root);
+            DotNet.WriteNuGetConfig(file, "packages");
+        }
+        var config = XDocument.Load(file).Root!;
+        var source = Assert.Single(config.Element("packageSources")!.Elements("add"),
+            element => (string?)element.Attribute("key") == "uno");
+        Assert.Equal("https://api.nuget.org/v3/index.json", (string?)source.Attribute("value"));
+        var mapping = Assert.Single(config.Element("packageSourceMapping")!.Elements("packageSource"),
+            element => (string?)element.Attribute("key") == "uno");
+        Assert.Equal(new[] { "Uno.*", "WebView2Aot", "DirectNAot", "DirectNAot.Extensions" },
+            mapping.Elements("package").Select(element => (string?)element.Attribute("pattern")));
+    }
+
     [Fact]
     public async Task HttpRequestsUseTheOwnedOriginAndPreserveQueries()
     {
