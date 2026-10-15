@@ -5,7 +5,6 @@
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
-    <MauiVersion>10.0.110</MauiVersion>
     <SingleProject>true</SingleProject>
     <Nullable>enable</Nullable>
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
@@ -18,8 +17,8 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">15.0</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">17.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">12.2</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
   </PropertyGroup>
@@ -37,7 +36,7 @@
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SkiaSharp" Version="4.155.0-preview.2.26479.13" />
-    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="4.155.0-preview.2.26479.13" />
+    <PackageReference Include="SkiaSharp" Version="4.156.0-preview.1.26512.10" />
+    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="4.156.0-preview.1.26512.10" />
   </ItemGroup>
 </Project>
