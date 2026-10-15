@@ -14,7 +14,8 @@ automatically by the runner; no environment variable or path setup is needed.
 
 ## Running
 
-The initial suite requires Linux/glibc, Bash, a C compiler, GNU binutils and coreutils.
+The suite requires Linux/glibc, Bash, a C compiler, GNU binutils, coreutils, awk, grep, sed
+and LLVM's `llvm-readobj`.
 It tests existing native outputs; it does not build or download Skia.
 
 ```sh
@@ -27,10 +28,28 @@ dotnet test tests/SkiaSharp.Tests.Native.slnx
 dotnet cake --target=tests-native
 ```
 
-The first case, `HarfBuzzSymbolBinding`, checks the matching host architecture's `linux`
+The runtime case, `HarfBuzzSymbolBinding`, checks the matching host architecture's `linux`
 and `linuxnodeps` artifacts. It compiles a standalone loader and conflicting functions,
 verifies a deliberately preemptible negative control, then tests the produced HarfBuzz
 library. Conflicting libraries are never loaded into the xUnit process.
+
+The remaining cases inspect artifacts without executing them, including cross-built targets:
+
+| Case folder | Checks |
+|---|---|
+| `LinuxDependencies` | Fontconfig dependency policy for glibc, musl, nodeps and Bionic builds. |
+| `LinuxGlibcCompatibility` | Both libraries and nodeps variants stay within each architecture's GLIBC ceiling, read from the native CI build matrix. |
+| `AndroidPageAlignment` | Every LOAD segment supports 16 KB pages for both libraries and all four Android ABIs. |
+| `AndroidDebugSymbols` | Matching nonempty GNU build IDs and the exact `.gnu_debuglink` filename for each `.so`/`.so.dbg` pair. |
+| `WindowsDependencies` | No hard `VCRUNTIME` or `MSVCP` dependencies in desktop, Nano Server and WinUI artifacts. |
+| `WindowsDelayLoads` | Desktop Skia DLLs require D3D12 and D3DCompiler as delay imports, not hard imports. |
+| `WindowsRuntimeMarker` | Native Windows PDBs contain the existing `objr_spectre`/`objd_spectre` runtime marker. |
+
+The PDB marker is not evidence of compiler mitigation, code generation, CFG or complete
+Spectre protection. The managed WinUI projection is excluded from that marker check,
+matching the build gate. Existing native build checks remain in place; these scenarios
+also check the merged artifacts consumed by tests. Required artifacts and tools must
+exist: absent inputs fail rather than silently reducing coverage.
 
 A case can also run without .NET:
 
@@ -56,7 +75,8 @@ docker run --rm --volume "$(pwd):/work" -w /work skiasharp-native-tests \
 
 The current CI host is x64. Artifacts must match the runtime architecture and libc;
 missing tools/artifacts or mismatches fail, never silently skip.
-Alpine, Windows and macOS scenarios/jobs are not part of this initial suite.
+Windows and Android artifact inspection runs in this same Linux job; it does not need
+Windows or Android runtime hosts. Alpine, Windows and macOS runtime jobs are not included.
 Existing Cake dependency and platform checks remain unchanged in native builds.
 
 Build modified native sources using `externals-<platform>`, never `externals-download`.
