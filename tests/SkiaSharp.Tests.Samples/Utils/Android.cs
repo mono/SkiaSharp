@@ -31,9 +31,11 @@ internal sealed class Android
 		if (!File.Exists(Path.Combine(imageDirectory, "package.xml")) || !File.Exists(Path.Combine(imageDirectory, "system.img")))
 			throw new DirectoryNotFoundException($"Required emulator image is not installed: {imageDirectory}. Tests never download images.");
 
-		// The installed SDK manager understands minor API targets; the tool wrapper writes android-0.
+		// Use the same command-line tools selected by SDK provisioning, not an older "latest" directory.
+		var sdkManager = Environment.GetEnvironmentVariable("ANDROID_SDK_MANAGER_PATH")
+			?? Path.Combine(SdkDirectory, "cmdline-tools", "latest", "bin", "sdkmanager");
 		var manager = Path.Combine(
-			SdkDirectory, "cmdline-tools", "latest", "bin",
+			Path.GetDirectoryName(sdkManager)!,
 			OperatingSystem.IsWindows() ? "avdmanager.bat" : "avdmanager");
 		return RunAvdManager(manager, ["create", "avd", "--name", name, "--package", package, "--device", model]);
 	}

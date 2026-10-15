@@ -89,7 +89,9 @@ jobs:
                   Get-ChildItem $reports -Filter 'SkiaSharpSample*.ips' |
                       Copy-Item -Destination output/logs
               }
-            displayName: Retain sample app crash reports
+              /usr/bin/log show --style compact --last 15m --info --debug --predicate 'process == "SkiaSharpSample"' > output/logs/sample-app.log
+              exit $LASTEXITCODE
+            displayName: Retain sample app crash reports and exception messages
             condition: failed()
         - pwsh: |
             Write-Host 'Reference capture only: review the PNGs and rerun strict comparisons before accepting this job.'

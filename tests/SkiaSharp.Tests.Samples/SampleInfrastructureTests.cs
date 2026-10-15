@@ -77,6 +77,30 @@ public class SampleInfrastructureTests : IDisposable
     }
 
     [Theory]
+    [InlineData("CpuPage.xaml", "basic-canvas-cpu")]
+    [InlineData("GpuPage.xaml", "basic-canvas-gpu")]
+    [InlineData("DrawingPage.xaml", "basic-canvas-drawing")]
+    public void WindowsMauiCanvasIdentifiersUseExistingAccessibleHosts(string page, string id)
+    {
+        var document = XDocument.Load(Path.Combine(Repo.RootDir, "samples", "Basic", "Maui", "SkiaSharpSample", page));
+        var canvas = Assert.Single(document.Descendants(),
+            element => element.Name.LocalName is "SKCanvasView" or "SKGLView");
+        Assert.Equal($"{{OnPlatform WinUI={id}}}", (string?)canvas.Parent!.Attribute("AutomationId"));
+        Assert.Equal($"{{OnPlatform Default={id}, WinUI={id}-content}}", (string?)canvas.Attribute("AutomationId"));
+    }
+
+    [Fact]
+    public void WindowsGalleryUsesTheExistingCanvasHost()
+    {
+        var document = XDocument.Load(Path.Combine(Repo.RootDir, "samples", "Gallery", "Maui", "SampleDetailPage.xaml"));
+        XNamespace xaml = "http://schemas.microsoft.com/winfx/2009/xaml";
+        var host = Assert.Single(document.Descendants(),
+            element => (string?)element.Attribute(xaml + "Name") == "surfaceHost");
+        Assert.Equal("Grid", host.Name.LocalName);
+        Assert.Equal("{OnPlatform WinUI=sample-canvas-host}", (string?)host.Attribute("AutomationId"));
+    }
+
+    [Theory]
     [InlineData("Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj")]
     [InlineData("Gallery/Maui/SkiaSharpSample.Maui.csproj")]
     public void MauiSourceProjectsUseTheSameMauiPackage(string relativeProject)

@@ -4,9 +4,9 @@
              x:Class="SkiaSharpSample.DrawingPage"
              Title="Drawing">
 
-    <Grid>
+    <Grid AutomationId="{OnPlatform WinUI=basic-canvas-drawing}">
         <skia:SKCanvasView x:Name="skiaView"
-                           AutomationId="basic-canvas-drawing"
+                           AutomationId="{OnPlatform Default=basic-canvas-drawing, WinUI=basic-canvas-drawing-content}"
                            PaintSurface="OnPaintSurface"
                            EnableTouchEvents="True"
                            Touch="OnTouch" />

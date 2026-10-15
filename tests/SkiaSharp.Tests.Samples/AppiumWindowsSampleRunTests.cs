@@ -1,4 +1,4 @@
-﻿using OpenQA.Selenium;
+﻿using OpenQA.Selenium.Appium;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -64,7 +64,7 @@ public sealed class AppiumWindowsSampleRunTests(AppiumFixture appium) : AppiumSa
 
 		var app = await BuildWindowsApp("Gallery", "Maui/SkiaSharpSample.Maui.csproj");
 
-		await appium.Run(app, running => Gallery(running, "Windows"));
+		await appium.Run(app, running => Gallery(running, "Windows", "sample-canvas-host"));
 	}
 
 	private async Task<WindowsRunningApp> BuildWindowsApp(string folder, string project)
@@ -99,8 +99,8 @@ public sealed class AppiumWindowsSampleRunTests(AppiumFixture appium) : AppiumSa
 
 	private static void NavigateMauiWindows(AppiumRunningApp app, string title)
 	{
-		app.Click(By.Name("Open navigation menu"));
-		app.Click(By.Name(title));
+		app.Click(MobileBy.Name("Open navigation menu"));
+		app.Click(MobileBy.Name(title));
 	}
 
 	private static void NavigateNativeWindows(AppiumRunningApp app, string id) =>

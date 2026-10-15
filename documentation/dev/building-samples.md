@@ -210,11 +210,14 @@ descriptor's exact installed Xcode for the job through `DEVELOPER_DIR` and
 `MD_APPLE_SDK_ROOT`, without changing the machine's global Xcode selection.
 Windows samples build with `WindowsPackageType=None` and launch their executable
 directly; tests do not register or uninstall MSIX packages.
+MAUI Windows canvas captures use the existing page/layout hosts, whose automation
+peers expose their bounds; the underlying WinUI canvas controls have no peers.
 
 Set `ANDROID_HOME` or `ANDROID_SDK_ROOT` for Android. On macOS, set
 `DEVELOPER_DIR` to the Xcode required by your installed workload; tests do not
 change the global Xcode selection.
-Android also requires the installed `cmdline-tools/latest/bin/avdmanager`.
+Android requires the installed `cmdline-tools/latest/bin/avdmanager`, or the
+sibling of `ANDROID_SDK_MANAGER_PATH` when an SDK manager is selected explicitly.
 Debug APKs embed their managed assemblies because Appium installs them without
 the separate `dotnet` fast-deployment step.
 

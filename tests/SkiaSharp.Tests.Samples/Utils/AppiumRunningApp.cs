@@ -68,8 +68,8 @@ internal abstract class AppiumRunningApp
 
 	internal IWebElement Find(string id) => Find(Locator(id));
 	internal string Text(string id) => Find(id).Text;
-	internal void Click(string id) => Find(id).Click();
-	internal void Click(By selector) => Find(selector).Click();
+	internal void Click(string id) => Click(Locator(id));
+	internal virtual void Click(By selector) => Find(selector).Click();
 
 	internal void WaitText(string id, Func<string, bool> predicate) =>
 		Wait(() =>

@@ -77,7 +77,7 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 			});
 	}
 
-	private protected static async Task Gallery(AppiumRunningApp app, string platform)
+	private protected static async Task Gallery(AppiumRunningApp app, string platform, string? canvasHostId = null)
 	{
 		app.Click("gallery-header-cpu");
 		app.Find("gallery-search", "gallery-filter-search").SendKeys("Gradient");
@@ -100,12 +100,12 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		app.Click("sample-gradient");
 		app.WaitText("sample-title", text => text == "Gradient");
 		app.WaitText("sample-render-status", text => text.StartsWith("CPU", StringComparison.Ordinal) && text.Contains("  |"));
-		await Compare(app, "sample-canvas-cpu", "gallery-gradient-cpu", "Maui", platform);
+		await Compare(app, canvasHostId ?? "sample-canvas-cpu", "gallery-gradient-cpu", "Maui", platform);
 
 		app.ScrollIntoView("sample-controls", "control-angle");
 		app.Drag(app.Find("control-angle"), 0.2, 0.5, 0.0, 0.5);
 		app.WaitText("control-angle-value", text => text == "Angle: 0");
-		await Compare(app, "sample-canvas-cpu", "gallery-gradient-adjusted", "Maui", platform);
+		await Compare(app, canvasHostId ?? "sample-canvas-cpu", "gallery-gradient-adjusted", "Maui", platform);
 
 		app.Click("sample-back");
 		app.Find("gallery-search", "gallery-filter-search");
@@ -113,7 +113,7 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		app.WaitText("sample-render-status", text => text.StartsWith("CPU", StringComparison.Ordinal) && text.Contains("  |"));
 		app.Click("gallery-header-gpu");
 		app.WaitText("sample-render-status", text => text.StartsWith("GPU", StringComparison.Ordinal) && text.Contains("  |"));
-		await Compare(app, "sample-canvas-gpu", "gallery-gradient-gpu", "Maui", platform);
+		await Compare(app, canvasHostId ?? "sample-canvas-gpu", "gallery-gradient-gpu", "Maui", platform);
 		app.Click("sample-back");
 		app.Find("gallery-search", "gallery-filter-search");
 	}
