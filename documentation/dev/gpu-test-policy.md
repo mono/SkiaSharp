@@ -66,7 +66,7 @@ dotnet cake --target=tests-android --skipGpu=ganesh-vulkan
 ```
 
 In CI desktop and device opt-outs are `env:` values passed to the shared test
-job templates from `scripts/azure-templates-stages-test.yml`, declared per leg
+job templates from `scripts/azure-templates-stages-tests.yml`, declared per leg
 with the reason and a tracking issue recorded inline. The common container
 opt-out lives in `scripts/azure-templates-jobs-tests-container.yml`. These are
 the live declarations — read them there.
