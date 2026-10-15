@@ -39,7 +39,8 @@ internal sealed class BrowserRunningApp(RunningApp hostApp, IPage page, Concurre
         var name = ++screenshots == 1 ? "page" : $"page-{screenshots}";
         var actual = Path.Combine(HostApp.Diagnostics, $"{name}.actual.png");
 
-        await Page.ScreenshotAsync(new() { Path = actual, FullPage = true })
+        // Finish finite CSS transitions before comparing pixels, including hover-exit effects.
+        await Page.ScreenshotAsync(new() { Path = actual, FullPage = true, Animations = ScreenshotAnimations.Disabled })
             .WaitAsync(TestContext.Current.CancellationToken);
 
         // Retain the capture even when browser errors prevent golden validation.

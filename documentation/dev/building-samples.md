@@ -97,6 +97,9 @@ target, checking CPU rendering and Drawing navigation, pointer strokes and
 clear rather than launching a desktop or host solution variant.
 Gallery is build-only; device execution is separate.
 Browser errors and unavailable GPU rendering fail.
+Browser golden captures disable CSS/Web Animations through Playwright: finite
+transitions finish before capture, and infinite animations reset for the capture.
+Canvas rendering still requires the test's own readiness assertions.
 
 | Group | Tests | CI hosts |
 | --- | --- | --- |

@@ -152,6 +152,43 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             SampleImage.Validate(cleared, $"Host/{SampleLookup.HostPlatform}/blazor-drawing-cleared-page.png");
         });
 
+    [Fact]
+    [RunGroup(SampleRunGroup.Host)]
+    [Trait("Category", "Browser")]
+    public Task BrowserScreenshotsFinishFiniteTransitions() =>
+        RunBrowserSample("Basic/Web", ["--urls", "http://127.0.0.1:0"], async app =>
+        {
+            await app.Page.SetContentAsync("""
+                <style>
+                    body { margin: 0; }
+                    #swatch {
+                        width: 100px;
+                        height: 100px;
+                        background-color: rgb(255, 0, 0);
+                        transition: background-color 60s linear;
+                    }
+                </style>
+                <div id="swatch"></div>
+                """);
+            var swatch = app.Page.Locator("#swatch");
+            await swatch.EvaluateAsync("""
+                element => {
+                    getComputedStyle(element).backgroundColor;
+                    element.style.backgroundColor = 'rgb(0, 0, 255)';
+                    const [transition] = element.getAnimations();
+                    // Hold the transition halfway so scheduling cannot hide the race.
+                    transition.pause();
+                    transition.currentTime = 30000;
+                }
+                """);
+            await Assertions.Expect(swatch).ToHaveCSSAsync("background-color", "rgb(128, 0, 128)");
+
+            var screenshot = await app.Screenshot();
+            TestContext.Current.AddFileAttachment(screenshot, "image/png");
+            Assert.Equal(10000, CountPixels(screenshot, new SKRectI(0, 0, 100, 100), c => c == SKColors.Blue));
+            await Assertions.Expect(swatch).ToHaveCSSAsync("background-color", "rgb(0, 0, 255)");
+        });
+
     [Theory]
     [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "Browser")]
