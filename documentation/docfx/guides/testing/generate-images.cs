@@ -96,7 +96,7 @@ SKImage RenderScene(bool actual)
     canvas.DrawCircle(640, 205, 90, paint);
     if (actual)
     {
-        paint.Color = new SKColor(221, 91, 103);
+        paint.Color = new SKColor(145, 112, 188);
         canvas.DrawRoundRect(80, 345, 180, 180, 28, 28, paint);
     }
     return SKImage.FromBitmap(bitmap)
