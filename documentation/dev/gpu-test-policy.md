@@ -71,10 +71,6 @@ with the reason and a tracking issue recorded inline. The common container
 opt-out lives in `scripts/azure-templates-jobs-tests-container.yml`. These are
 the live declarations — read them there.
 
-Test-only provisioning scripts live in `scripts/infra/tests/`: `start-xvfb.sh`
-configures the Linux software GPU environment, and `windows/install-mesa-gl.ps1`
-and `windows/install-vulkan-icd.ps1` install the Windows software drivers.
-
 An opt-out is a statement about **one agent**, not about the backend. It belongs
 in the YAML precisely so it can be removed when the agent gains the capability,
 without touching the policy or this document.
