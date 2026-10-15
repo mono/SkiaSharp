@@ -58,11 +58,15 @@ The full Chrome release calendar is published at [Chromium's release schedule](h
 | Stable | 4.152.x | [4.152.4](4.152.4.md) |
 | Stable | 4.151.x | [4.151.5](4.151.5.md) |
 | Stable | 4.150.x | [4.150.5](4.150.5.md) |
+| Preview | 4.156.x | [4.156.0](4.156.0.md) |
 | Preview | 4.155.x | [4.155.0](4.155.0.md) |
 | Preview | 4.154.x | [4.154.0](4.154.0.md) |
 
 ## Supported versions
 
+- **Version 4.156.x** — Preview
+  - [Version 4.156.0 (Unreleased)](4.156.0-unreleased.md)
+  - [Version 4.156.0](4.156.0.md)
 - **Version 4.155.x** — Preview
   - [Version 4.155.0](4.155.0.md)
 - **Version 4.154.x** — Preview
@@ -104,9 +108,6 @@ These SkiaSharp 3.x and 4.x lines are no longer supported. They remain available
 <details>
 <summary>Show out-of-support releases</summary>
 
-- **Version 4.156.x**
-  - [Version 4.156.0 (Unreleased)](4.156.0-unreleased.md)
-  - [Version 4.156.0](4.156.0.md)
 - **Version 4.148.x**
   - [Version 4.148.1 (Unreleased)](4.148.1-unreleased.md)
   - [Version 4.148.0](4.148.0.md)
