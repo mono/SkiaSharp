@@ -343,7 +343,7 @@ jobs:
         run: dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -p:AllTargetFrameworks=net10.0 -p:BuildingInsideVisualStudio=true
 
       - name: Build SkiaSharp.Testing (managed, net10 only)
-        run: dotnet build source/SkiaSharp.Testing/SkiaSharp.Testing.csproj -c Release -p:BasicTargetFrameworks=net10.0 -p:AllTargetFrameworks=net10.0 -p:BuildingInsideVisualStudio=true
+        run: dotnet build source/SkiaSharp.Testing/SkiaSharp.Testing.csproj -c Release -p:BasicTargetFrameworks=net10.0 -p:AllTargetFrameworks=net10.0 -p:BuildingInsideVisualStudio=true -p:ShouldUnsetParentConfigurationAndPlatform=false
 
       - name: Build source benchmarks
         run: dotnet build "$PROJECT" -c Release
