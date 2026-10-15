@@ -32,6 +32,8 @@ using var ignoreMask = RenderMask(ignore: true);
 
 SaveImage("expected.png", expected);
 SaveImage("actual.png", actual);
+SavePreview("expected-preview.png", expected);
+SavePreview("actual-preview.png", actual);
 SaveImage("tolerance-mask.png", toleranceMask);
 SaveImage("ignore-mask.png", ignoreMask);
 using var exact = SKPixelComparer.GenerateDifferenceImage(expected, actual);
@@ -119,4 +121,22 @@ void SaveImage(string name, SKImage image)
     using var data = image.Encode(SKEncodedImageFormat.Png, 100)
         ?? throw new InvalidOperationException($"Unable to encode {name}.");
     File.WriteAllBytes(Path.Combine(images, name), data.ToArray());
+}
+
+void SavePreview(string name, SKImage image)
+{
+    using var bitmap = new SKBitmap(new SKImageInfo(image.Width, image.Height, SKColorType.Bgra8888, SKAlphaType.Opaque));
+    using var canvas = new SKCanvas(bitmap);
+    using var paint = new SKPaint();
+    for (var y = 0; y < image.Height; y += 16)
+        for (var x = 0; x < image.Width; x += 16)
+        {
+            paint.Color = ((x / 16 + y / 16) & 1) == 0
+                ? SKColors.White : new SKColor(224, 228, 234);
+            canvas.DrawRect(x, y, Math.Min(16, image.Width - x), Math.Min(16, image.Height - y), paint);
+        }
+    canvas.DrawImage(image, 0, 0, SKSamplingOptions.Default);
+    using var preview = SKImage.FromBitmap(bitmap)
+        ?? throw new InvalidOperationException($"Unable to create {name}.");
+    SaveImage(name, preview);
 }
