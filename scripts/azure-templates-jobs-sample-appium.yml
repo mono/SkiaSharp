@@ -63,6 +63,8 @@ jobs:
             displayName: Set Android AVD home
           - pwsh: |
               $ErrorActionPreference = 'Stop'
+              ./scripts/infra/managed/install-android-package.ps1 -Package 'cmdline-tools;latest'
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
               ./scripts/infra/managed/install-android-package.ps1 -Package emulator
               if ($LASTEXITCODE -ne 0) { throw 'Android emulator installation failed.' }
               ./scripts/infra/managed/install-android-image.ps1 -Image '${{ parameters.device.image }}'
