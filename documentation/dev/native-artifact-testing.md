@@ -1,7 +1,7 @@
 # Native tests
 
 Native scenarios use the same xUnit v3 runner and TRX reporting as the managed tests.
-They live in `tests/SkiaSharp.Native.Tests/Cases`: **add a folder to add a test**.
+They live in `tests/SkiaSharp.Tests.Native.Console/Cases`: **add a folder to add a test**.
 The project copies every case folder to its output, and one theory enumerates those folders.
 No C# registration or manifest is needed.
 
@@ -18,9 +18,9 @@ The initial suite requires Linux/glibc, Bash, a C compiler, GNU binutils and cor
 It tests existing native outputs; it does not build or download Skia.
 
 ```sh
-dotnet test tests/SkiaSharp.Native.Tests/SkiaSharp.Native.Tests.csproj
+dotnet test tests/SkiaSharp.Tests.Native.Console/SkiaSharp.Tests.Native.Console.csproj
 
-# Cake writes TRX under output/logs/testlogs/native.
+# Cake writes TRX under output/logs/testlogs/SkiaSharp.Tests.Native.Console.
 dotnet cake --target=tests-native
 ```
 
@@ -32,7 +32,7 @@ library. Conflicting libraries are never loaded into the xUnit process.
 A case can also run without .NET:
 
 ```sh
-bash tests/SkiaSharp.Native.Tests/Cases/HarfBuzzSymbolBinding/test.sh "$PWD/output/native"
+bash tests/SkiaSharp.Tests.Native.Console/Cases/HarfBuzzSymbolBinding/test.sh "$PWD/output/native"
 ```
 
 ## CI

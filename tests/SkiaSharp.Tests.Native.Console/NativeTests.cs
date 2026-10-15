@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace SkiaSharp.Native.Tests;
+namespace SkiaSharp.Tests.Native;
 
 public class NativeTests
 {
