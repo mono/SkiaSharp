@@ -125,10 +125,6 @@ RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-inst
 
 ENV CC=clang CXX=clang++
 
-RUN tdnf install -y python3-pip binutils \
-    && python3 -m pip install --no-cache-dir pytest==8.4.2 \
-    && tdnf clean all
-
 # zstd is needed to extract newer .deb packages (Ubuntu 22.04+ uses zstd compression).
 # (xz is already present in the .NET cross base image for the older .debs.)
 RUN tdnf install -y zstd && tdnf clean all

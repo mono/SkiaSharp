@@ -2,28 +2,32 @@ parameters:
   buildAgent: {}
 
 jobs:
-  - ${{ each runtime in split('azurelinux,alpine', ',') }}:
-    - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
-      parameters:
-        name: tests_native_${{ runtime }}
-        displayName: Native runtime (${{ runtime }})
-        buildAgent: ${{ parameters.buildAgent }}
-        docker: scripts/infra/native/runtime/${{ runtime }}
-        target: tests-native-runtime
-        ${{ if eq(runtime, 'alpine') }}:
-          additionalArgs: --nativePlatform=alpine --nativeLibc=musl
-        ${{ else }}:
-          additionalArgs: --nativePlatform=linux --nativeLibc=glibc
-        dotnetSdks: []
-        checkoutSubmodules: false
-        installAndroidSdk: false
-        installXcode: false
-        shouldPublish: false
-        retryCount: 0
-        nativeArtifactTests: true
-        requiredArtifacts:
-          - name: native
-        publishArtifacts:
-          - name: testlogs_native_${{ runtime }}
-            always: true
-            path: output/logs/native-tests
+  - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+    parameters:
+      name: tests_native_linux
+      displayName: Native tests (Linux)
+      buildAgent: ${{ parameters.buildAgent }}
+      docker: scripts/infra/tests/docker/native
+      target: tests-native
+      dotnetSdks: []
+      checkoutSubmodules: false
+      installAndroidSdk: false
+      installXcode: false
+      shouldPublish: false
+      retryCount: 0
+      requiredArtifacts:
+        - name: native
+      postBuildSteps:
+        - task: PublishTestResults@2
+          displayName: Publish native test results
+          condition: always()
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: output/logs/testlogs/native/**/*.trx
+            testRunTitle: Native tests (Linux)
+            failTaskOnFailedTests: true
+            failTaskOnMissingResultsFile: true
+      publishArtifacts:
+        - name: testlogs_native_linux
+          always: true
+          path: output/logs/testlogs/native

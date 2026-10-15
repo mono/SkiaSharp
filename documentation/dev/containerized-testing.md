@@ -1,7 +1,7 @@
 # Containerized testing (Docker)
 
-For isolated C probes and cross-build artifact inspection, see
-[Native artifact tests](native-artifact-testing.md). Those use separate compiler-equipped images;
+For folder-based native scenarios, see
+[Native tests](native-artifact-testing.md). Those use a separate compiler-equipped image;
 the minimal managed-runtime images described here are unchanged.
 
 The console test suite (`SkiaSharp.Tests.Console`) can be run **inside a Docker container** against a

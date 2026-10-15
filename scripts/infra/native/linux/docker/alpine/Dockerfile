@@ -69,10 +69,6 @@ RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-inst
 
 ENV CC=clang CXX=clang++
 
-RUN tdnf install -y python3-pip binutils \
-    && python3 -m pip install --no-cache-dir pytest==8.4.2 \
-    && tdnf clean all
-
 # Install fontconfig-dev into the sysroot from Alpine repos.
 # The sysroot is Alpine 3.17 but we pull fontconfig from 3.21 (newer keys needed).
 # SSL_CERT_FILE is needed because apk.static (musl) can't find Azure Linux's CA bundle.
