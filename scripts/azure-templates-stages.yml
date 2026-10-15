@@ -56,14 +56,6 @@ stages:
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableCaching: ${{ parameters.enableCaching }}
 
-  - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
-    - template: /scripts/azure-templates-stages-tests-native.yml@self
-      parameters:
-        buildPipelineType: ${{ parameters.buildPipelineType }}
-        buildAgentLinux: ${{ parameters.buildAgentLinux }}
-        buildAgentWindows: ${{ parameters.buildAgentWindows }}
-        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
-
   - ${{ if in(parameters.buildPipelineType, 'build', 'complete') }}:
     - template: /scripts/azure-templates-stages-package.yml@self
       parameters:
@@ -107,3 +99,4 @@ stages:
         buildAgentLinux: ${{ parameters.buildAgentLinux }}
         buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
         enableCaching: ${{ parameters.enableCaching }}
+        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}

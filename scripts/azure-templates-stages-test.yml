@@ -14,8 +14,29 @@ parameters:
   - name: enableCaching
     type: boolean
     default: false
+  - name: use1ESPipelineTemplates
+    type: boolean
+    default: false
 
 stages:
+
+    - stage: native_tests
+      displayName: Native Tests
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
+        dependsOn: prepare
+      ${{ else }}:
+        dependsOn: native
+      jobs:
+        - template: /scripts/azure-templates-jobs-tests-native.yml@self
+          parameters:
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+            platform: linux
+        - template: /scripts/azure-templates-jobs-tests-native.yml@self
+          parameters:
+            buildAgent: ${{ parameters.buildAgentWindows }}
+            use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+            platform: windows
 
     - stage: managed
       displayName: Build Managed
