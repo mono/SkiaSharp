@@ -111,12 +111,12 @@ SAMPLE_TEST_IOS_VERSION="$IOS_VERSION" dotnet cake --target=samples --runGroup=I
 ```
 
 Use your staged packages' suffix, not the example suffix. The installer provisions
-the runtime; tests require an exact available match and reviewed image references.
-Each test creates and removes its own simulator and Appium session without
-reusing a running server or shutting down unrelated simulators.
-The runner uses `dotnet apple` to boot the simulator with `--wait`, then install
-and launch the built app before Appium attaches. Preparation failures are reported separately
-from Appium session startup.
+and verifies the runtime build; tests require reviewed image references.
+The serialized iOS collection fixture creates and boots one configured simulator
+using `dotnet apple` and removes it at collection teardown. Each test builds its
+generated sample and owns a fresh Appium server/session that reinstalls and launches
+the app without erasing or rebooting the shared simulator. Appium remains
+responsible for WebDriverAgent; unrelated simulators are left alone.
 
 Coverage includes page navigation, CPU/GPU rendering, drawing and Clear, and
 Gallery search, filtering and controls. For failures, inspect the TRX attachments

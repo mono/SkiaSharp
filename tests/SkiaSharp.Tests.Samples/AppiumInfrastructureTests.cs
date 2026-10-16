@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Drawing;
-using System.Text.Json;
 using OpenQA.Selenium;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
@@ -36,9 +35,9 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			() => { order.Add("server-start"); return Task.CompletedTask; },
 			() => { order.Add("server-stop"); return Task.CompletedTask; }));
 		Assert.Same(app.StartFailure, failure);
-		Assert.Equal(new[] { "prepare", "server-start", "session-start", "diagnostics", "server-stop", "cleanup-second", "cleanup-first" }, order);
+		Assert.Equal(new[] { "server-start", "session-start", "diagnostics", "server-stop", "cleanup-second", "cleanup-first" }, order);
 		Assert.True(File.Exists(Path.Combine(app.Diagnostics, "failure.log")));
-		await new IosRunningApp(workspace, artifact).SaveDiagnostics();
+		await new IosRunningApp(workspace, artifact, new IosSimulatorFixture()).SaveDiagnostics();
 		await Assert.ThrowsAsync<InvalidOperationException>(() => app.Run(
 			new Uri("http://127.0.0.1:1"), _ => Task.CompletedTask,
 			() => Task.CompletedTask, () => Task.CompletedTask));
@@ -57,68 +56,45 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			() => { order.Add("server-stop"); throw new IOException("server-stop"); }));
 		Assert.Same(app.StartFailure, failure.InnerExceptions[0]);
 		Assert.Equal(4, failure.InnerExceptions.Count);
-		Assert.Equal(new[] { "prepare", "session-start", "diagnostics", "server-stop", "cleanup-second", "cleanup-first" }, order);
+		Assert.Equal(new[] { "session-start", "diagnostics", "server-stop", "cleanup-second", "cleanup-first" }, order);
 	}
 
 	[Fact]
-	public async Task PreparationFailureCleansOwnedSimulatorWithoutStartingServerOrSession()
+	public void IosCollectionRegistersTheSharedSimulatorAlongsidePerTestAppiumSessions()
 	{
-		using var workspace = Workspace();
-		var artifact = Path.Combine(workspace.Root, "Sample.app");
-		Directory.CreateDirectory(artifact);
-		var order = new List<string>();
-		var app = new DiagnosticApp(workspace, artifact, order, failPreparation: true);
-		var failure = await Assert.ThrowsAsync<NotSupportedException>(() => app.Run(
-			new Uri("http://127.0.0.1:1"), _ => throw new InvalidOperationException("Scenario must not run."),
-			() => throw new InvalidOperationException("Server must not start."),
-			() => { order.Add("server-stop"); return Task.CompletedTask; }));
-		Assert.Same(app.StartFailure, failure);
-		Assert.Equal(new[] { "prepare", "diagnostics", "server-stop", "simulator-cleanup" }, order);
+		Assert.Contains(typeof(ICollectionFixture<IosSimulatorFixture>), typeof(AppiumCollection).GetInterfaces());
+		Assert.Contains(typeof(ICollectionFixture<AppiumFixture>), typeof(AppiumCollection).GetInterfaces());
+		var collection = Assert.Single(typeof(AppiumIosSampleRunTests).GetCustomAttributesData(),
+			attribute => attribute.AttributeType == typeof(CollectionAttribute));
+		Assert.Equal(nameof(AppiumCollection), Assert.Single(collection.ConstructorArguments).Value);
+		Assert.Contains(Assert.Single(typeof(AppiumIosSampleRunTests).GetConstructors()).GetParameters(),
+			parameter => parameter.ParameterType == typeof(IosSimulatorFixture));
 	}
 
 	[Theory]
-	[InlineData(-1)]
-	[InlineData(0)]
-	[InlineData(1)]
-	[InlineData(2)]
-	public async Task IosPreparationWaitsForBootBeforeInstallAndLaunchAndStopsOnFailure(int failAt)
+	[InlineData("18.6", "iPhone 16 Pro")]
+	[InlineData("26.5", "iPhone 16 Pro")]
+	[InlineData("18.6", "iPhone 16")]
+	public void IosAppiumInstallsAndResetsEachArtifactOnTheSharedSimulator(string version, string model)
 	{
-		var commands = new List<string>();
-		var failure = new IOException("Device operation failed.");
-		var preparation = IosRunningApp.PrepareApplication("owned-uuid", "/owned/Built.app", "sample.bundle",
-			async arguments =>
-			{
-				await Task.Yield();
-				commands.Add("dotnet " + string.Join(" ", arguments));
-				if (commands.Count - 1 == failAt)
-					throw failure;
-			});
-		if (failAt < 0)
-			await preparation;
-		else
-			Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => preparation));
-		string[] expected =
-		[
-			"dotnet apple simulator boot owned-uuid --wait",
-			"dotnet apple simulator app install owned-uuid /owned/Built.app",
-			"dotnet apple simulator app launch owned-uuid sample.bundle"
-		];
-		Assert.Equal(failAt < 0 ? expected : expected.Take(failAt + 1), commands);
-	}
-
-	[Fact]
-	public void IosBindsThePreparedAppWithoutResetInstallOrForcedRelaunch()
-	{
-		var capabilities = IosRunningApp.AttachOptions("owned-uuid", "sample.bundle", "iPhone 16 Pro", "18.6")
-			.ToCapabilities();
-		Assert.Equal("owned-uuid", capabilities.GetCapability("appium:udid"));
-		Assert.Equal("sample.bundle", capabilities.GetCapability("appium:bundleId"));
-		Assert.Equal(true, capabilities.GetCapability("appium:noReset"));
-		Assert.Equal(true, capabilities.GetCapability("appium:autoLaunch"));
-		Assert.Equal(false, capabilities.GetCapability("appium:forceAppLaunch"));
-		Assert.Equal(false, capabilities.GetCapability("appium:shutdownOtherSimulators"));
-		Assert.Null(capabilities.GetCapability("appium:app"));
-		Assert.Null(capabilities.GetCapability("appium:fullReset"));
+		const string udid = "51DE3D2F-4F8E-4533-9899-9FC250A49050";
+		for (var i = 0; i < 2; i++)
+		{
+			var artifact = Path.Combine(root, $"case-{i}", "Built.app");
+			var capabilities = IosRunningApp.SessionOptions(artifact, udid, "sample.bundle", model, version).ToCapabilities();
+			Assert.Equal(udid, capabilities.GetCapability("appium:udid"));
+			Assert.Equal(artifact, capabilities.GetCapability("appium:app"));
+			Assert.Equal("sample.bundle", capabilities.GetCapability("appium:bundleId"));
+			Assert.Equal(model, capabilities.GetCapability("appium:deviceName"));
+			Assert.Equal(version, capabilities.GetCapability("appium:platformVersion"));
+			Assert.Equal(false, capabilities.GetCapability("appium:fullReset"));
+			Assert.Equal(true, capabilities.GetCapability("appium:resetOnSessionStartOnly"));
+			Assert.Equal(false, capabilities.GetCapability("appium:shutdownOtherSimulators"));
+			Assert.Equal(false, capabilities.GetCapability("appium:noReset"));
+			Assert.Null(capabilities.GetCapability("appium:autoLaunch"));
+			Assert.Null(capabilities.GetCapability("appium:forceAppLaunch"));
+			Assert.Null(capabilities.GetCapability("appium:enforceFreshSimulatorCreation"));
+		}
 	}
 
 	[Fact]
@@ -135,22 +111,12 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	private sealed class DiagnosticApp(
-		SampleWorkspace workspace, string artifact, List<string> order, bool failCleanup = false, bool failPreparation = false)
+		SampleWorkspace workspace, string artifact, List<string> order, bool failCleanup = false)
 		: AppiumRunningApp(workspace, artifact)
 	{
 		internal Exception StartFailure { get; } = new NotSupportedException("Session construction failed.");
 		internal override string DeviceProfile => "unit-fixture";
 		internal override Task<string> ReadApplicationId() => Task.FromResult("unit.fixture");
-		protected override Task Prepare()
-		{
-			order.Add("prepare");
-			if (failPreparation)
-			{
-				Own(() => { order.Add("simulator-cleanup"); return Task.CompletedTask; });
-				throw StartFailure;
-			}
-			return Task.CompletedTask;
-		}
 		protected override Task Start(Uri address)
 		{
 			order.Add("session-start");
@@ -177,7 +143,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public void CapturesOfTheSameSceneKeepBothFiles()
 	{
 		using var workspace = Workspace();
-		var app = new IosRunningApp(workspace, Path.Combine(workspace.Root, "Sample.app"));
+		var app = new IosRunningApp(workspace, Path.Combine(workspace.Root, "Sample.app"), new IosSimulatorFixture());
 		var before = app.SaveCapture([1, 2], "drawing");
 		var after = app.SaveCapture([3, 4], "drawing");
 		Assert.NotEqual(before, after);
@@ -248,25 +214,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			var result = await ProcessRunner.Run("plutil", ["-convert", "binary1", plist], workspace.Root, TimeSpan.FromSeconds(30));
 			Assert.Equal(0, result.ExitCode);
 		}
-		Assert.Equal("com.skiasharp.built", await new IosRunningApp(workspace, bundle).ReadApplicationId());
-	}
-
-	[Theory]
-	[InlineData("18.6", "22G86")]
-	[InlineData("26.5", "23F77")]
-	public void RuntimeSelectionRequiresTheExactAvailableIosBuild(string version, string build)
-	{
-		using var inventory = JsonDocument.Parse($$"""
-			[
-			  {"name":"iOS {{version}}","version":"{{version}}","buildversion":"other","isAvailable":true,"identifier":"wrong-build"},
-			  {"name":"iOS {{version}}","version":"{{version}}","buildversion":"{{build}}","isAvailable":false,"identifier":"unavailable"},
-			  {"name":"iOS {{version}}","version":"{{version}}","buildversion":"{{build}}","isAvailable":true,"identifier":"selected"}
-			]
-			""");
-		Assert.Equal(build, IosRunningApp.RuntimeBuild(version));
-		Assert.Equal("selected", IosRunningApp.SelectRuntime(inventory.RootElement, version, build));
-		Assert.ThrowsAny<Exception>(() => IosRunningApp.SelectRuntime(inventory.RootElement, version, "missing"));
-		Assert.Throws<InvalidOperationException>(() => IosRunningApp.RuntimeBuild("26.2"));
+		Assert.Equal("com.skiasharp.built", await new IosRunningApp(workspace, bundle, new IosSimulatorFixture()).ReadApplicationId());
 	}
 
 	[Theory]
