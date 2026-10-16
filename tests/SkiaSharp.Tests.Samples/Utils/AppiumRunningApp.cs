@@ -8,7 +8,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-// Owns the iOS driver and fresh simulator, not an HTTP sample server.
+// Owns one app session; simulator ownership belongs to the collection fixture.
 internal abstract class AppiumRunningApp
 {
 	private readonly List<Func<Task>> cleanup = [];
@@ -36,7 +36,6 @@ internal abstract class AppiumRunningApp
 	internal void SubmitSearch() =>
 		Find(MobileBy.IosNSPredicate("type == 'XCUIElementTypeButton' AND name == 'Return'")).Click();
 
-	protected virtual Task Prepare() => Task.CompletedTask;
 	protected abstract Task Start(Uri address);
 	internal abstract Task<string> ReadApplicationId();
 
@@ -338,7 +337,6 @@ internal abstract class AppiumRunningApp
 			applicationId = await ReadApplicationId();
 			if (string.IsNullOrWhiteSpace(applicationId))
 				throw new InvalidOperationException($"Built application identity is invalid: {Artifact}");
-			await Prepare();
 			await startServer();
 			await Start(address);
 			await scenario(this);
