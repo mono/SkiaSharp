@@ -1,0 +1,9 @@
+queries:
+  # FreeType uses (&buffer)[1] to form a one-past-end pointer, not to read buffer contents.
+  # The expression remains in upstream 2.14.3 and 2.15.0; an upgrade alone does not remove it.
+  # This also excludes future SM01947 findings in this file; other rules remain enabled.
+  - exclude:
+      path:
+        - "externals/skia/third_party/externals/freetype/src/raster/ftraster.c"
+      opaqueid:
+        - "SM01947"
