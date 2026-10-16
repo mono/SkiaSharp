@@ -1,7 +1,7 @@
 # Building and Validating Samples
 
 The Samples suite builds generated applications against produced NuGet packages,
-runs Console/Web APIs on the host and in Docker, and checks actual browser UIs.
+runs Console/Web APIs on the host and in Docker, and checks browser and iOS UIs.
 
 ## Run the suite
 
@@ -91,48 +91,34 @@ Filtered runs do not replace the full suite.
 
 ## iOS simulator runs
 
-The `Ios` group builds the generated, package-consuming Basic MAUI, native iOS,
-and Gallery MAUI projects with their declared `net10.0-ios` target and a
-host-architecture simulator RID. It does not retarget samples or use a test app.
-Use SDK **10.0.402**, workload set **10.0.401**, Xcode **26.6** on macOS Tahoe,
-Node.js 24, Appium 3 and XCUITest. The unchanged multi-target MAUI projects
-still need their normal restore workload closure.
+The `Ios` group runs Basic MAUI, native iOS and Gallery MAUI samples on macOS
+using Appium and XCUITest. Install the SDK, workloads, Xcode and Node.js versions
+specified in the [iOS job template](../../scripts/azure-templates-jobs-sample-appium.yml).
+Multi-target projects need their restore workloads even when building only iOS.
 
-Select Xcode with process-local `DEVELOPER_DIR` and `MD_APPLE_SDK_ROOT`, not
-`xcode-select`. Provision the selected runtime before running tests:
+Choose a device profile from the [sample stage configuration](../../scripts/azure-templates-stages-samples.yml).
+Set `IOS_VERSION` and `IOS_BUILD` to that profile's runtime version and build,
+and `XCODE_APP` to the installed Xcode application path. Select Xcode for the
+current shell rather than changing the machine-wide selection:
 
 ```sh
-export DEVELOPER_DIR=/Applications/Xcode_26.6.app/Contents/Developer
-export MD_APPLE_SDK_ROOT=/Applications/Xcode_26.6.app
+export DEVELOPER_DIR="$XCODE_APP/Contents/Developer"
+export MD_APPLE_SDK_ROOT="$XCODE_APP"
 pwsh scripts/infra/tests/install-appium.ps1
-pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version 18.6 -BuildVersion 22G86
-SAMPLE_TEST_IOS_VERSION=18.6 dotnet cake --target=samples --runGroup=Ios \
-  --sampleRunId=ios18_6 --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
+pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version "$IOS_VERSION" -BuildVersion "$IOS_BUILD"
+SAMPLE_TEST_IOS_VERSION="$IOS_VERSION" dotnet cake --target=samples --runGroup=Ios \
+  --sampleRunId=ios --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-Use your staged cohort's suffix, not the example suffix. The only reviewed
-device profiles are **iPhone 16 Pro / iOS 18.6 (22G86)** and
-**iPhone 16 Pro / iOS 26.5 (23F77)**; use the corresponding version/build for the
-second run. The runner checks the exact available runtime and never installs it.
-Each test creates a fresh simulator UUID and owns its Appium server, session,
-WDA build directory, shutdown and deletion. It neither reuses another daemon nor
-shuts down unrelated simulators. Startup, diagnostic and cleanup failures are
-aggregated rather than masking the original failure.
+Use your staged packages' suffix, not the example suffix. The installer provisions
+the runtime; tests require an exact available match and reviewed image references.
+Each test creates and removes its own simulator and Appium session without
+reusing a running server or shutting down unrelated simulators.
 
-Each profile runs four scenarios: Basic MAUI CPU/GPU/Drawing navigation; native
-iOS CPU/GL/Metal/Drawing navigation; MAUI drawing strokes and Clear; and Gallery
-search, category filter, Gradient controls, back navigation and CPU/GPU rendering.
-Static canvases use the reviewed PNGs under `Expected/Appium/` with at most two
-seconds of settling and the unchanged strict comparer. Missing references fail.
-Drawing also checks each stroke region independently before and after Clear.
-Animated Basic GPU canvases require populated FPS labels and attach screenshots;
-they are not frozen or compared with a relaxed tolerance.
-
-CI adds two strict jobs to the existing Samples stage, using the same native
-and NuGet producing cohort as the other sample jobs. Only these jobs select the
-newer SDK/workload set and Tahoe host; existing build, host and Docker jobs keep
-their pools and SDK settings. These jobs publish `samples_appium_ios*_logs`
-artifacts and TRX results. No reference capture or automatic approval is supported.
+Coverage includes page navigation, CPU/GPU rendering, drawing and Clear, and
+Gallery search, filtering and controls. For failures, inspect the TRX attachments
+and `samples_appium_*_logs` CI artifacts for server/device logs, UI hierarchy and
+screenshots. Missing or mismatched references fail; tests never approve them.
 
 ## Coverage and diagnostics
 
@@ -149,7 +135,7 @@ Browser errors and unavailable GPU rendering fail.
 | Build | Generated sample compilation and infrastructure checks | Windows, macOS, Linux |
 | Host | Console, Web API and browser sample execution | Windows, macOS, Linux |
 | Docker | Container image builds and sample execution | Windows, Linux |
-| Ios | Basic MAUI/native iOS and Gallery MAUI Appium execution | macOS Tahoe, iOS 18.6 and 26.5 |
+| Ios | Basic MAUI/native iOS and Gallery MAUI Appium execution | macOS with the configured simulator profiles |
 
 When adding tests, choose a `RunGroup` by execution target, not sample family.
 Name execution classes by purpose: `SampleBuildTests`, `BasicSampleRunTests`,
