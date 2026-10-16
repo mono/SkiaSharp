@@ -1,0 +1,62 @@
+parameters:
+  name: ''
+  device: {}
+
+jobs:
+  - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: Appium (iOS ${{ parameters.device.version }})
+      buildAgent:
+        pool:
+          name: Azure Pipelines
+          vmImage: macos-26
+          os: macos
+      target: samples
+      additionalArgs: --runGroup=Ios --sampleRunId=${{ parameters.name }} --skipExternals="all"
+      env:
+        SAMPLE_TEST_IOS_VERSION: ${{ parameters.device.version }}
+        SAMPLE_TEST_IOS_MODEL: iPhone 16 Pro
+      variables:
+        DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+        MD_APPLE_SDK_ROOT: /Applications/Xcode_26.6.app
+      jobSdkVersion: '10.0.402'
+      dotnetSdks:
+        - sdkVersion: '10.0.402'
+          workloadSetVersion: '10.0.401'
+      installXcode: false
+      installAndroidSdk: false
+      installAndroidNdk: false
+      retryCount: 0
+      shouldPublish: false
+      requiredArtifacts:
+        - name: native
+        - name: nuget
+          dir: nugets
+      publishArtifacts:
+        - name: ${{ parameters.name }}_logs
+          always: true
+          path: output/logs
+      preBuildSteps:
+        - bash: |
+            set -euo pipefail
+            test -d "$DEVELOPER_DIR"
+            selected=$(xcrun xcodebuild -version)
+            printf '%s\n' "$selected"
+            [[ "$selected" == $'Xcode 26.6\n'* ]]
+          displayName: Verify the job-local Xcode 26.6
+        - task: UseNode@1
+          inputs:
+            version: 24.x
+          displayName: Install Node.js for Appium 3
+        - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ parameters.device.version }}' -BuildVersion '${{ parameters.device.buildVersion }}'
+          displayName: Install the exact selected iOS simulator runtime
+        - pwsh: ./scripts/infra/tests/install-appium.ps1
+          displayName: Install Appium 3 and XCUITest
+      postBuildSteps:
+        - task: PublishTestResults@2
+          condition: always()
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: output/logs/testlogs/samples/${{ parameters.name }}/**/*.trx
+            testRunTitle: Appium (iOS ${{ parameters.device.version }})
