@@ -2,7 +2,7 @@
 
 #if HAS_UNO_WINUI
 namespace SkiaSharp.Views.Windows
-#elif WINDOWS_UWP || HAS_UNO
+#elif (WINDOWS_UWP || HAS_UNO)
 namespace SkiaSharp.Views.UWP
 #elif __ANDROID__
 namespace SkiaSharp.Views.Android
@@ -16,7 +16,7 @@ namespace SkiaSharp.Views.Desktop
 namespace SkiaSharp.Views.Mac
 #elif __TIZEN__
 namespace SkiaSharp.Views.Tizen
-#elif WINDOWS
+#elif (WINDOWS || WINUI)
 namespace SkiaSharp.Views.Windows
 #elif __BLAZOR__
 namespace SkiaSharp.Views.Blazor

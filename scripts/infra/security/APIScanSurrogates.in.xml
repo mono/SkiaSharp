@@ -121,5 +121,50 @@
         <Binary path=".*\\symbols-extracted\\skiasharp\.nativeassets\.winui.*\\runtimes\\win-arm64\\native\\skiasharp\.views\.winui\.native\.dll" pathType="Regex" />
       </Targets>
     </Mapping>
+    <!-- UWP ARM64 libEGL target to the API-compatible package x64 surrogate -->
+    <Mapping>
+      <SurrogateSet>
+        <BinarySet>
+          <SymbolLocations>
+            <SymbolLocation>{SOFTWARE_FOLDER}\surrogate-binaries\uwp</SymbolLocation>
+            <SymbolLocation>SRV*https://symweb</SymbolLocation>
+          </SymbolLocations>
+          <Binary path="{SOFTWARE_FOLDER}\surrogate-binaries\uwp\libEGL.dll" />
+        </BinarySet>
+      </SurrogateSet>
+      <Targets>
+        <Binary path=".*\\symbols-extracted\\skiasharp\.nativeassets\.uwp.*\\runtimes\\win-arm64\\native\\libegl\.dll" pathType="Regex" />
+      </Targets>
+    </Mapping>
+    <!-- UWP ARM64 libGLESv2 target to the API-compatible package x64 surrogate -->
+    <Mapping>
+      <SurrogateSet>
+        <BinarySet>
+          <SymbolLocations>
+            <SymbolLocation>{SOFTWARE_FOLDER}\surrogate-binaries\uwp</SymbolLocation>
+            <SymbolLocation>SRV*https://symweb</SymbolLocation>
+          </SymbolLocations>
+          <Binary path="{SOFTWARE_FOLDER}\surrogate-binaries\uwp\libGLESv2.dll" />
+        </BinarySet>
+      </SurrogateSet>
+      <Targets>
+        <Binary path=".*\\symbols-extracted\\skiasharp\.nativeassets\.uwp.*\\runtimes\\win-arm64\\native\\libglesv2\.dll" pathType="Regex" />
+      </Targets>
+    </Mapping>
+    <!-- UWP ARM64 native component target to the API-compatible package x64 surrogate -->
+    <Mapping>
+      <SurrogateSet>
+        <BinarySet>
+          <SymbolLocations>
+            <SymbolLocation>{SOFTWARE_FOLDER}\surrogate-binaries\uwp</SymbolLocation>
+            <SymbolLocation>SRV*https://symweb</SymbolLocation>
+          </SymbolLocations>
+          <Binary path="{SOFTWARE_FOLDER}\surrogate-binaries\uwp\SkiaSharp.Views.UWP.Native.dll" />
+        </BinarySet>
+      </SurrogateSet>
+      <Targets>
+        <Binary path=".*\\symbols-extracted\\skiasharp\.nativeassets\.uwp.*\\runtimes\\win-arm64\\native\\skiasharp\.views\.uwp\.native\.dll" pathType="Regex" />
+      </Targets>
+    </Mapping>
   </Mappings>
 </APIScanSurrogates>

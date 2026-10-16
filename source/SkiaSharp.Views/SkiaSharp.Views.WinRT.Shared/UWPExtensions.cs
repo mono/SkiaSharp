@@ -2,23 +2,28 @@ using System;
 using Windows.Foundation;
 using Windows.UI;
 using Windows.Storage.Streams;
-#if !HAS_UNO
+
+#if !HAS_UNO && WINUI
 using SkiaSharp.Views.WinUI.Native;
+#elif !HAS_UNO && WINDOWS_UWP
+using SkiaSharp.Views.UWP.Native;
 #endif
 
-#if WINDOWS || WINUI
+#if WINUI
 using Microsoft.UI.Xaml.Media.Imaging;
 #else
 using Windows.UI.Xaml.Media.Imaging;
+
 #endif
 
-#if WINDOWS || WINUI
+#if WINUI
 namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP
 #endif
 {
-#if WINDOWS
+	// WindowsExtensions for SkiaSharp.Views.WinUI; UWPExtensions for UWP and Uno
+#if WINUI && WINDOWS
 	/// <summary>Various extension methods to convert between SkiaSharp types and Windows types.</summary>
 	/// <remarks />
 	public static class WindowsExtensions
