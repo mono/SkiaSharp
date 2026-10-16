@@ -116,6 +116,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	{
 		internal Exception StartFailure { get; } = new NotSupportedException("Session construction failed.");
 		internal override string DeviceProfile => "unit-fixture";
+		internal override AppiumOperations Operations => throw new InvalidOperationException("Session construction failed.");
 		internal override Task<string> ReadApplicationId() => Task.FromResult("unit.fixture");
 		protected override Task Start(Uri address)
 		{
@@ -132,16 +133,31 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Fact]
+	public void IosOperationsReuseTheAppsOwnedSessionWithoutStartingOne()
+	{
+		using var workspace = Workspace();
+		var app = new IosRunningApp(workspace, Path.Combine(workspace.Root, "Sample.app"), new IosSimulatorFixture());
+		AppiumRunningApp running = app;
+		var operations = Assert.IsType<IosAppiumOperations>(running.Operations);
+		Assert.Same(operations, app.Operations);
+
+		var failure = Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
+		Assert.Equal("The owned Appium session is not ready.", failure.Message);
+	}
+
+	[Fact]
 	public void CapturesOfTheSameSceneKeepBothFiles()
 	{
 		using var workspace = Workspace();
 		var app = new IosRunningApp(workspace, Path.Combine(workspace.Root, "Sample.app"), new IosSimulatorFixture());
-		var before = app.SaveCapture([1, 2], "drawing");
-		var after = app.SaveCapture([3, 4], "drawing");
+		var before = app.Operations.SaveCapture([1, 2], "drawing");
+		var after = app.Operations.SaveCapture([3, 4], "drawing");
 		Assert.NotEqual(before, after);
+		Assert.Equal(Path.Combine(workspace.DiagnosticsRoot, "screenshots", "01-drawing.png"), before);
+		Assert.Equal(Path.Combine(workspace.DiagnosticsRoot, "screenshots", "02-drawing.png"), after);
 		Assert.Equal(new byte[] { 1, 2 }, File.ReadAllBytes(before));
 		Assert.Equal(new byte[] { 3, 4 }, File.ReadAllBytes(after));
-		Assert.Throws<ArgumentException>(() => app.SaveCapture([], "../foreign"));
+		Assert.Throws<ArgumentException>(() => app.Operations.SaveCapture([], "../foreign"));
 	}
 
 	[Theory]
@@ -216,7 +232,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData(610, 207, 610, 18, 0)]
 	[InlineData(610, 207, 799, 18, 0)]
 	public void ScrollAmountComesFromCurrentBounds(int top, int height, int targetTop, int targetHeight, int expected) =>
-		Assert.Equal(expected, AppiumRunningApp.ScrollAmount(
+		Assert.Equal(expected, AppiumOperations.ScrollAmount(
 			new Rectangle(12, top, 378, height), new Rectangle(24, targetTop, 80, targetHeight)));
 
 	[Theory]
@@ -226,7 +242,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData(100, 100, 101, 20)]
 	[InlineData(100, 100, 20, 101)]
 	public void ScrollRejectsImpossibleGeometry(int width, int height, int targetWidth, int targetHeight) =>
-		Assert.Throws<InvalidOperationException>(() => AppiumRunningApp.ScrollAmount(
+		Assert.Throws<InvalidOperationException>(() => AppiumOperations.ScrollAmount(
 			new Rectangle(10, 20, width, height), new Rectangle(10, 20, targetWidth, targetHeight)));
 
 	[Theory]
@@ -238,8 +254,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		var container = new Rectangle(12, 610, 378, height);
 		foreach (var direction in new[] { -1, 1 })
 		{
-			var amount = AppiumRunningApp.ScrollAmount(container, new Rectangle(24, 610 + direction * height * 2, 20, 1));
-			var (start, end) = AppiumRunningApp.ScrollGesture(container, amount);
+			var amount = AppiumOperations.ScrollAmount(container, new Rectangle(24, 610 + direction * height * 2, 20, 1));
+			var (start, end) = AppiumOperations.ScrollGesture(container, amount);
 			Assert.True(container.Contains(start));
 			Assert.True(container.Contains(end));
 			Assert.Equal(amount, start.Y - end.Y);
@@ -299,7 +315,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	{
 		var container = new Element(new Rectangle(0, 0, 100, 100));
 		var gestures = 0;
-		var error = Assert.Throws<InvalidOperationException>(() => AppiumRunningApp.ScrollIntoView(
+		var error = Assert.Throws<InvalidOperationException>(() => AppiumOperations.ScrollIntoView(
 			() => container, () => throw new NoSuchElementException("Missing."),
 			(_, _) => gestures++, "missing", TimeSpan.FromSeconds(5), 2, CancellationToken.None));
 		Assert.Equal(2, gestures);
@@ -323,18 +339,18 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	{
 		var container = new Element(new Rectangle(0, 0, 100, 100));
 		var target = new Element(new Rectangle(10, 10, 20, 20), displayed: false);
-		Assert.Throws<TimeoutException>(() => AppiumRunningApp.ScrollIntoView(
+		Assert.Throws<TimeoutException>(() => AppiumOperations.ScrollIntoView(
 			() => container, () => target, (_, _) => Assert.Fail("Contained target must not scroll."),
 			"hidden", TimeSpan.FromMilliseconds(20), 2, CancellationToken.None));
 		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
-		Assert.Throws<OperationCanceledException>(() => AppiumRunningApp.ScrollIntoView(
+		Assert.Throws<OperationCanceledException>(() => AppiumOperations.ScrollIntoView(
 			() => container, () => target, (_, _) => Assert.Fail("Cancelled."),
 			"cancelled", TimeSpan.FromSeconds(5), 2, cancellation.Token));
 	}
 
 	private static IWebElement ScrollTest(Element container, Func<IWebElement> target, Action<Rectangle, int> scroll) =>
-		AppiumRunningApp.ScrollIntoView(() => container, target, scroll, "'target' inside 'container'",
+		AppiumOperations.ScrollIntoView(() => container, target, scroll, "'target' inside 'container'",
 			TimeSpan.FromSeconds(5), 12, CancellationToken.None);
 
 	[Fact]
@@ -345,14 +361,14 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		var stale = new Element(new Rectangle(0, 0, 100, 40),
 			onClick: () => throw new StaleElementReferenceException("Menu replaced."));
 		var current = new Element(new Rectangle(0, 0, 100, 40), onClick: () => clicks++);
-		Assert.Same(current, AppiumRunningApp.ClickElement(
+		Assert.Same(current, AppiumOperations.ClickElement(
 			() => ++queries == 1 ? stale : current, "CPU", TimeSpan.FromSeconds(2), CancellationToken.None));
 		Assert.Equal(2, queries);
 		Assert.Equal(1, clicks);
 		var failure = new WebDriverException("Pointer command failed.");
 		var broken = new Element(new Rectangle(0, 0, 100, 40), onClick: () => throw failure);
 		Assert.Same(failure, Assert.Throws<WebDriverException>(() =>
-			AppiumRunningApp.ClickElement(() => broken, "CPU", TimeSpan.FromSeconds(2), CancellationToken.None)));
+			AppiumOperations.ClickElement(() => broken, "CPU", TimeSpan.FromSeconds(2), CancellationToken.None)));
 	}
 
 	[Fact]
@@ -361,10 +377,10 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		var hidden = new Element(new Rectangle(0, 0, 100, 40), displayed: false,
 			onClick: () => Assert.Fail("Hidden target."));
 		Assert.Throws<TimeoutException>(() =>
-			AppiumRunningApp.ClickElement(() => hidden, "CPU", TimeSpan.FromMilliseconds(20), CancellationToken.None));
+			AppiumOperations.ClickElement(() => hidden, "CPU", TimeSpan.FromMilliseconds(20), CancellationToken.None));
 		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
-		Assert.Throws<OperationCanceledException>(() => AppiumRunningApp.ClickElement(
+		Assert.Throws<OperationCanceledException>(() => AppiumOperations.ClickElement(
 			() => throw new InvalidOperationException("Cancelled clicks must not query."),
 			"CPU", TimeSpan.FromSeconds(2), cancellation.Token));
 	}
