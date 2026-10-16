@@ -47,17 +47,16 @@ internal sealed class IosRunningApp(SampleWorkspace workspace, string artifact, 
 		Own(DeleteSimulator);
 		await SaveText("simulator.json", JsonSerializer.Serialize(new { simulator, model, version, build }), "application/json");
 
-		await PrepareApplication(simulator, Artifact, ApplicationId, async (executable, arguments) =>
-			await CaptureCommand(ProcessRunner.Run(executable, arguments, Repo.RootDir, TimeSpan.FromMinutes(3))));
+		await PrepareApplication(simulator, Artifact, ApplicationId, async arguments =>
+			await CaptureCommand(ProcessRunner.Run("dotnet", arguments, Repo.RootDir, TimeSpan.FromMinutes(3))));
 	}
 
 	internal static async Task PrepareApplication(
-		string simulator, string artifact, string applicationId, Func<string, string[], Task> execute)
+		string simulator, string artifact, string applicationId, Func<string[], Task> execute)
 	{
-		await execute("dotnet", ["apple", "simulator", "boot", simulator, "--wait"]);
-		await execute("xcrun", ["simctl", "bootstatus", simulator, "-b"]);
-		await execute("xcrun", ["simctl", "install", simulator, artifact]);
-		await execute("xcrun", ["simctl", "launch", simulator, applicationId]);
+		await execute(["apple", "simulator", "boot", simulator, "--wait"]);
+		await execute(["apple", "simulator", "app", "install", simulator, artifact]);
+		await execute(["apple", "simulator", "app", "launch", simulator, applicationId]);
 	}
 
 	internal static AppiumOptions AttachOptions(
