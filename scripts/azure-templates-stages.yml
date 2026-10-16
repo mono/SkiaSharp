@@ -83,6 +83,13 @@ stages:
             buildAgentWindows: ${{ parameters.buildAgentWindows }}
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
+    - template: /scripts/azure-templates-stages-msbuild.yml@self
+      parameters:
+        buildPipelineType: ${{ parameters.buildPipelineType }}
+        buildAgentWindows: ${{ parameters.buildAgentWindows }}
+        buildAgentMac: ${{ parameters.buildAgentMac }}
+        buildAgentLinux: ${{ parameters.buildAgentLinux }}
+
     - template: /scripts/azure-templates-stages-test.yml@self
       parameters:
         buildPipelineType: ${{ parameters.buildPipelineType }}

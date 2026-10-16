@@ -165,14 +165,12 @@ Task("libSkiaSharp")
         $"skia_enable_ganesh={(SUPPORT_GPU ? "true" : "false")} " +
         (SUPPORT_GPU ? "skia_gl_standard='webgl'" : "") +
         $"skia_enable_pdf=true " +
-        $"skia_use_dng_sdk=false " +
         $"skia_use_webgl=true " +
         $"skia_use_fontconfig=false " +
         $"skia_use_freetype=true " +
         $"skia_use_harfbuzz=false " +
         $"skia_use_icu=false " +
         $"skia_use_partition_alloc=false " +
-        $"skia_use_piex=false " +
         $"skia_use_expat=true " +
         $"skia_use_libwebp_encode=true " +
         $"skia_use_system_expat=false " +
@@ -187,6 +185,9 @@ Task("libSkiaSharp")
         $"skia_enable_graphite={SUPPORT_GRAPHITE} ".ToLower() +
         $"skia_use_dawn={SUPPORT_GRAPHITE} ".ToLower() +
         $"skia_use_webgpu={SUPPORT_GRAPHITE} ".ToLower() +
+        // The port ships webgpu.cpp as source; this builds it into libSkiaSharp.a so apps
+        // link an object instead of compiling C++20 on their own link line.
+        (SUPPORT_GRAPHITE ? $"skiasharp_emdawnwebgpu_dir='{EMDAWN_ROOT}' " : "") +
         $"extra_cflags=[ " +
         $"  '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DXML_POOR_ENTROPY', " +
         $" {(!hasSimdEnabled ? "'-DSKNX_NO_SIMD', " : "")} '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +

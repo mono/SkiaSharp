@@ -12,8 +12,9 @@ Pieces:
 - **Env images** [`scripts/infra/tests/docker/`](../../scripts/infra/tests/docker) —
   `azurelinux/`, `azurelinux-nodeps/`, `alpine/`, `alpine-nodeps/`, `nanoserver/`.
 - **CI legs** `tests_container_linux`, `tests_container_linux_nodeps`, `tests_container_alpine_linux`,
-  `tests_container_alpine_nodeps`, `tests_container_nanoserver_windows` in
-  [`scripts/azure-templates-stages-test.yml`](../../scripts/azure-templates-stages-test.yml).
+  `tests_container_alpine_nodeps`, `tests_container_nanoserver_windows` are configured in
+  [`scripts/azure-templates-stages-tests.yml`](../../scripts/azure-templates-stages-tests.yml)
+  using the shared [`container job template`](../../scripts/azure-templates-jobs-tests-container.yml).
 
 The desktop `Linux` leg already runs on an Ubuntu agent, so the glibc container leg uses **Azure
 Linux** instead — a different, minimal glibc distro rather than a second Ubuntu run.

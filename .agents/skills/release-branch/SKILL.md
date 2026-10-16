@@ -8,17 +8,36 @@ description: >
 
 # Release Branch
 
-Use the **Release - Prepare** GitHub workflow for normal releases. Leave `push`
-unchecked for the read-only plan. After reviewing that output, dispatch again
-with `push` checked to create the remote release branches.
+Use the **Release - Prepare** GitHub workflow for normal releases. In chat,
+dispatch it on `main` with `push=false` first, inspect the read-only plan, and
+obtain confirmation before dispatching the same inputs with `push=true`:
 
-The script requires:
+```bash
+gh workflow run release-prepare.yml --repo mono/SkiaSharp --ref main \
+  -f base=main -f release=4.153.0-preview.1 -f push=false
 
-- `-Base`: a SkiaSharp branch or commit SHA;
-- `-Release`: `X.Y.Z[-preview.N|-rc.N|-stable]`, or the corresponding
+# After reviewing the plan and receiving confirmation:
+gh workflow run release-prepare.yml --repo mono/SkiaSharp --ref main \
+  -f base=main -f release=4.153.0-preview.1 -f push=true
+```
+
+Replace the example base and identity with the requested values. Locate and
+inspect each dispatched run; never infer success from a successful dispatch.
+Verify both release branches exist at the planned commits before proceeding.
+The branch push starts the internal `skiasharp-package` and `skiasharp-tests`
+chain. Package publication is a separate, explicitly requested
+`release-publish` action; Prepare must not queue it.
+
+The Prepare workflow accepts:
+
+- `base`: a SkiaSharp branch or commit SHA;
+- `release`: `X.Y.Z[-preview.N|-rc.N|-stable]`, or the corresponding
   four-part hotfix form `X.Y.Z.F[-preview.N|-rc.N|-stable]`.
 
-Local modes:
+## Local fallback
+
+Use the local script only when the workflow is unavailable or the user
+explicitly requests local execution. It does not replace workflow verification:
 
 ```powershell
 # Read-only

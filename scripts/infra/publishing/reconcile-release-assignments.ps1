@@ -407,16 +407,72 @@ function Test-LiveReleaseAssignmentOwnership(
     )
 }
 
-# Combines GitHub closing references with closing keywords in the pull request body.
+# Combines GitHub closing references with validated, visible body closing keywords.
 function Get-LinkedIssues([string] $Repository, [int] $PullRequest) {
     $numbers = [System.Collections.Generic.HashSet[int]]::new()
     foreach ($number in Get-GitHubClosingIssues -Repository $Repository -PullRequest $PullRequest) {
         $null = $numbers.Add($number)
     }
     $pull = Get-GitHubPullRequest -Repository $Repository -Number $PullRequest
+    $body = [regex]::Replace([string] $pull.body, '(?s)<!--.*?(?:-->|$)', ' ')
+    $visibleLines = [System.Text.StringBuilder]::new()
+    $fenceCharacter = ''
+    $fenceLength = 0
+    foreach ($line in $body -split '\r?\n') {
+        if ($fenceLength) {
+            $closing = [regex]::Match($line, '^ {0,3}(?<fence>`+|~+)[ \t]*$')
+            if (
+                $closing.Success -and
+                $closing.Groups['fence'].Value[0] -eq $fenceCharacter -and
+                $closing.Groups['fence'].Length -ge $fenceLength
+            ) {
+                $fenceLength = 0
+            }
+            $null = $visibleLines.AppendLine()
+            continue
+        }
+        $opening = [regex]::Match($line, '^ {0,3}(?<fence>`{3,}|~{3,})(?<info>.*)$')
+        if (
+            $opening.Success -and
+            !($opening.Groups['fence'].Value[0] -eq '`' -and
+                $opening.Groups['info'].Value.Contains('`'))
+        ) {
+            $fenceCharacter = $opening.Groups['fence'].Value[0]
+            $fenceLength = $opening.Groups['fence'].Length
+            $null = $visibleLines.AppendLine()
+            continue
+        }
+        $null = $visibleLines.AppendLine($line)
+    }
+    $visibleBody = [regex]::Replace(
+        $visibleLines.ToString(),
+        '(?s)(?<!`)(?<delimiter>`+)(?!`).*?(?<!`)\k<delimiter>(?!`)',
+        ' ')
     $pattern = '(?i)(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s*:?\s+#(?<number>\d+)'
-    foreach ($match in [regex]::Matches([string] $pull.body, $pattern)) {
-        $null = $numbers.Add([int] $match.Groups['number'].Value)
+    $candidates = [System.Collections.Generic.HashSet[int]]::new()
+    foreach ($match in [regex]::Matches($visibleBody, $pattern)) {
+        $number = [int] $match.Groups['number'].Value
+        if ($numbers.Contains($number) -or !$candidates.Add($number)) {
+            continue
+        }
+        try {
+            $issue = Get-GitHubIssue -Repository $Repository -Number $number
+        } catch {
+            if ($_.Exception.Message -notmatch '\bHTTP 404\b') {
+                throw
+            }
+            Write-Warning (
+                "Skipping body closing reference in pull request #$PullRequest to #${number}: " +
+                'target was not found (HTTP 404).')
+            continue
+        }
+        if ($issue.PSObject.Properties['pull_request']) {
+            Write-Warning (
+                "Skipping body closing reference in pull request #$PullRequest to #${number}: " +
+                'target is a pull request, not an issue.')
+            continue
+        }
+        $null = $numbers.Add($number)
     }
     return @($numbers | Sort-Object)
 }

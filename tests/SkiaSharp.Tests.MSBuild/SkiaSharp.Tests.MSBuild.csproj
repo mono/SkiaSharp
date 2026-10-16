@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <PackageDirectory Condition="'$(PackageDirectory)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..', 'output', 'nugets'))</PackageDirectory>
+    <MSBuildTestArtifactsDirectory Condition="'$(MSBuildTestArtifactsDirectory)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..', 'output', 'logs', 'testlogs', 'msbuild'))</MSBuildTestArtifactsDirectory>
+    <ConsumerDotNetHost Condition="'$(ConsumerDotNetHost)' == ''">$(DOTNET_HOST_PATH)</ConsumerDotNetHost>
+    <ConsumerDotNetHost Condition="'$(ConsumerDotNetHost)' == ''">$(DotNetHostPath)</ConsumerDotNetHost>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.9.1" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
+    <RuntimeHostConfigurationOption Include="MSBuildTest.PackageDirectory" Value="$(PackageDirectory)" />
+    <RuntimeHostConfigurationOption Include="MSBuildTest.ArtifactsDirectory" Value="$(MSBuildTestArtifactsDirectory)" />
+    <RuntimeHostConfigurationOption Include="MSBuildTest.SdkVersion" Value="$(NETCoreSdkVersion)" />
+    <RuntimeHostConfigurationOption Include="MSBuildTest.DotNetHost" Value="$(ConsumerDotNetHost)" />
+    <RuntimeHostConfigurationOption Include="MSBuildTest.RepositoryDirectory" Value="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..'))" />
+  </ItemGroup>
+</Project>

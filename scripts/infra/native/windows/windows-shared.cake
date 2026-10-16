@@ -1,4 +1,20 @@
+#addin nuget:?package=Cake.FileHelpers&version=4.0.1
+
 var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
+// empty lets GN detect an installed SDK
+string WINDOWS_SDK_VERSION = Argument("windowsSdkVersion", "");
+
+string GetToolsetVersion()
+{
+    var build = ((DirectoryPath)VS_INSTALL).Combine("VC/Auxiliary/Build");
+    var version = FileReadText(build.CombineWithFilePath("Microsoft.VCToolsVersion.default.txt")).Trim();
+    var parsed = Version.Parse(version);
+    if (parsed.Major != 14 || parsed.Minor < 30 || parsed.Minor >= 50)
+        version = FileReadText(build.CombineWithFilePath("Microsoft.VCToolsVersion.v143.default.txt")).Trim();
+    return version;
+}
+
+var TOOLSET_VERSION = new Lazy<string>(GetToolsetVersion);
 
 void RunNinjaWithVcVars(
     DirectoryPath working,
@@ -8,8 +24,8 @@ void RunNinjaWithVcVars(
     string windowsSdkVersion,
     string vcVarsVersion)
 {
-    var vcVarsAll = ((DirectoryPath)VS_INSTALL)
-        .CombineWithFilePath("VC/Auxiliary/Build/vcvarsall.bat");
+    var vcVarsAll = ((DirectoryPath)VS_INSTALL).CombineWithFilePath("VC/Auxiliary/Build/vcvarsall.bat");
+
     // omitted rather than empty, as vcvarsall fails on an SDK that is not installed
     var windowsSdkVersionArg = string.IsNullOrEmpty(windowsSdkVersion)
         ? ""
@@ -40,9 +56,8 @@ string GetSpectreLibPath(string arch)
         _ => arch.ToLower()
     };
 
-    var spectrePaths = GetDirectories($"{VS_INSTALL}/VC/Tools/MSVC/*/lib/spectre/{spectreArch}");
-    if (spectrePaths.Count == 0) {
-        throw new Exception($"Could not find spectre library path for {spectreArch}, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
-    }
-    return spectrePaths.First().FullPath;
+    var spectrePath = ((DirectoryPath)VS_INSTALL).Combine($"VC/Tools/MSVC/{TOOLSET_VERSION.Value}/lib/spectre/{spectreArch}");
+    if (!DirectoryExists(spectrePath))
+        throw new Exception($"Selected MSVC toolset {TOOLSET_VERSION.Value} has no Spectre libraries for {spectreArch} at {spectrePath}. Install the matching Spectre-mitigated libraries.");
+    return spectrePath.FullPath;
 }

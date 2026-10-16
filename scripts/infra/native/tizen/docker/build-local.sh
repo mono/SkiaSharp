@@ -3,8 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-# The Tizen toolchain version is fixed inside the image (see install-tizen.sh),
-# so the only knob here is which architecture(s) to build.
+# The image contains the pinned Tizen 10 native SDK.
 BUILD_ARCH="${1:-all}"
 
 # Tizen Studio only ships x86_64 (linux/amd64) tooling, so always build and run
@@ -20,5 +19,5 @@ fi
 
 (cd "$DIR/../../../../.." && \
     docker run --rm $PLATFORM_ARGS --name skiasharp-tizen --volume "$(pwd)":/work skiasharp-tizen /bin/bash -c "\
-        dotnet tool restore ; \
+        dotnet tool restore; \
         dotnet cake --target=externals-tizen $BUILD_ARCH_ARG")

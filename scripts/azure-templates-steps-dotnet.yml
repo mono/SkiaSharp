@@ -1,0 +1,63 @@
+parameters:
+  - name: sdks
+    type: object
+    default: []
+  - name: platform
+    type: string
+  - name: jobSdkVersion
+    type: string
+    default: ''
+  - name: condition
+    type: string
+    default: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+  - name: workloadDefaults
+    type: object
+    default:
+      linux: [android, macos, wasm-tools, maui-android]
+      windows: [android, macos, wasm-tools, ios, tvos, maccatalyst, maui]
+      macos: [android, macos, wasm-tools, ios, tvos, maccatalyst, maui]
+
+steps:
+  - ${{ each sdk in parameters.sdks }}:
+    - task: UseDotNet@2
+      inputs:
+        packageType: sdk
+        version: ${{ sdk.sdkVersion }}
+      displayName: Install .NET ${{ sdk.sdkVersion }}
+      retryCountOnTaskFailure: 3
+      condition: ${{ parameters.condition }}
+    - ${{ if ne(sdk.workloadSetVersion, '') }}:
+      - pwsh: |
+          $ids = $env:SETUP_WORKLOADS
+          if ($env:SETUP_TIZEN_BAND) { $ids += ',tizen' }
+          ./scripts/infra/managed/install-dotnet-workloads.ps1 `
+            -SdkVersion $env:SETUP_SDK_VERSION -WorkloadSetVersion $env:SETUP_WORKLOAD_SET `
+            -Workloads $ids -TizenManifestBand $env:SETUP_TIZEN_BAND `
+            -TizenManifestVersion $env:SETUP_TIZEN_VERSION
+        env:
+          SETUP_SDK_VERSION: ${{ sdk.sdkVersion }}
+          SETUP_WORKLOAD_SET: ${{ sdk.workloadSetVersion }}
+          SETUP_TIZEN_BAND: ${{ sdk.tizen.manifestBand }}
+          SETUP_TIZEN_VERSION: ${{ sdk.tizen.manifestVersion }}
+          ${{ if ne(sdk.workloads, '') }}:
+            SETUP_WORKLOADS: ${{ join(',', sdk.workloads) }}
+          ${{ else }}:
+            SETUP_WORKLOADS: ${{ join(',', parameters.workloadDefaults[parameters.platform]) }}
+        displayName: Install .NET ${{ sdk.sdkVersion }} workloads
+        condition: ${{ parameters.condition }}
+        retryCountOnTaskFailure: 3
+  - ${{ if ne(parameters.jobSdkVersion, '') }}:
+    - pwsh: |
+        $configuration = Get-Content global.json -Raw | ConvertFrom-Json -AsHashtable
+        $configuration.sdk.version = $env:JOB_SDK_VERSION
+        $configuration.sdk.rollForward = 'disable'
+        $configuration.sdk.allowPrerelease = $true
+        $configuration | ConvertTo-Json -Depth 20 | Set-Content global.json
+        $selected = dotnet --version
+        if ($LASTEXITCODE -ne 0 -or $selected.Trim() -ne $env:JOB_SDK_VERSION) {
+          throw "Job SDK selection failed: expected $env:JOB_SDK_VERSION, got '$selected'."
+        }
+      env:
+        JOB_SDK_VERSION: ${{ parameters.jobSdkVersion }}
+      displayName: Select explicit .NET job SDK
+      condition: ${{ parameters.condition }}

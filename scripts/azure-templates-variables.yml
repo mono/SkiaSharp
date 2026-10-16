@@ -1,7 +1,7 @@
 variables:
   # NOTE: Update this value when bumping the SkiaSharp version. It must match
   # the SkiaSharp NuGet version in scripts/VERSIONS.txt.
-  SKIASHARP_VERSION: 4.155.0
+  SKIASHARP_VERSION: 4.156.0
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranch)
@@ -23,9 +23,10 @@ variables:
   DOTNET_VERSION_WINUI: '10.0.111'
   # Preview .NET SDK version + its workload set, used by jobs that run tests against a preview
   # runtime. Bump both to the next preview .NET as it moves forward.
-  DOTNET_VERSION_PREVIEW: '11.0.100-preview.6.26359.118'
-  DOTNET_WORKLOAD_VERSION_PREVIEW: '11.0.100-preview.6.26364.2'
-  DOTNET_WORKLOAD_TIZEN: '10.0.100/10.0.123'
+  DOTNET_VERSION_PREVIEW: '11.0.100-rc.1.26425.128'
+  DOTNET_WORKLOAD_VERSION_PREVIEW: '11.0.100-rc.1.26460.1'
+  DOTNET_TIZEN_MANIFEST_BAND: '10.0.100'
+  DOTNET_TIZEN_MANIFEST_VERSION: '10.0.123'
   # Intentionally keep this tested 2xx workload set with SDK 10.0.401. The 4xx sets
   # require Xcode 26.6, which is unavailable on macOS 15; this set requires Xcode 26.3.
   DOTNET_WORKLOAD_VERSION: '10.0.202'
@@ -38,4 +39,5 @@ variables:
   IOS_TEST_DEVICE_VERSION: 26.2
   ANDROID_TEST_DEVICE_VERSION: 36
   ANDROID_PLATFORM_VERSIONS: 21,35,36
+  OPENJDK_VERSION: '21.0.10+7'
   TeamName: .NET MAUI

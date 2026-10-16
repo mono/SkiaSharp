@@ -59,7 +59,10 @@ pwsh ./scripts/infra/publishing/audit-release-state.ps1 `
 
 Do not manually repeat branch ordering, build selection, BAR parsing, upstream
 comparison, or action gating in the skill. Those deterministic rules belong to
-the PowerShell command and its shared modules.
+the PowerShell command and its shared modules. It prefers the newest succeeded
+BAR build on the exact branch commit; newer canceled or failed reruns are
+reported without displacing that build. A partially succeeded build with a
+BAR is reported for review, not marked ready.
 
 Lead with:
 
@@ -71,12 +74,21 @@ Then group exact actions under:
 1. **Finish now** — public packages with incomplete tags or Releases.
 2. **Resume publication** — prepared branches whose exact-tip build is green
    and has one BAR ID.
-3. **Build blocked or running** — missing, active, failed, canceled, or BAR-less
-   exact-tip builds.
+3. **Build blocked, running, or needing review** — missing, active, failed,
+   canceled, BAR-less, or partially succeeded exact-tip builds without a
+   succeeded BAR build.
 4. **Merge or synchronize before branching** — upstream work and sync PRs.
 5. **Start next releases** — only Prepare actions emitted by the script.
 6. **Unavailable or inconsistent checks** — every exit `2`, provenance
    mismatch, ambiguous state, or unreachable service.
+
+Always name and link every `incomingPullRequest` in the line summary, including
+draft PRs with `BlocksRelease: false`. Draft means not ready to merge, not
+absent: identify the review needed and do not describe the sync branch as
+already merged merely because its upstream comparison says `current`. For
+cross-repository sync, check the corresponding open `mono/skia` PR on the same
+sync branch and link the native PR before the parent SkiaSharp PR. Distinguish
+PR review from a release-cut blocker and from a newer upstream commit.
 
 When a line has an already-cut branch plus newer maintenance/upstream work,
 state the sequence explicitly: publish the existing branch, land the sync,
@@ -88,7 +100,8 @@ The command should provide enough information for normal release decisions.
 Use AI investigation only when it reports:
 
 - an unavailable internal pipeline or external service;
-- a failed or canceled exact-tip build;
+- a failed or canceled exact-tip build without an earlier succeeded BAR build;
+- a partially succeeded BAR build offered for review;
 - several/missing BAR IDs;
 - mismatched branch, commit, tag, or public package provenance;
 - an incomplete cross-repository sync;
@@ -104,12 +117,13 @@ The audit and this skill remain read-only until the user asks to act:
 
 - **Start:** invoke `release-branch`; show the Prepare dry run and planned refs
   before `push=true`.
-- **Test a BAR:** invoke `release-testing` with the exact package version and
-  BAR ID.
-- **Publish packages:** the protected team BAR-to-NuGet process remains outside
-  this skill.
-- **Finish:** invoke `release-publish`; show the dry run and obtain confirmation
-  before `push=true`.
+- **Publish packages:** when explicitly requested, invoke `release-publish` to
+  verify the exact producing Build/Tests runs and BAR, then queue the protected
+  MAUI pipeline from chat. The pipeline's human approval remains mandatory;
+  an audit never queues it automatically. The audit does not track already-queued
+  MAUI publication runs, so check for one before dispatch.
+- **Finish:** invoke `release-publish` after exact packages are public; show the
+  Finish workflow's read-only plan and obtain confirmation before `push=true`.
 - **Sync Skia:** follow `update-skia` and obtain confirmation before dispatch.
 
 After any mutation completes, rerun the affected line. Never advance to the

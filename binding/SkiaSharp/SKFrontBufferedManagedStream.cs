@@ -80,8 +80,8 @@ namespace SkiaSharp
 		{
 			if (disposeStream && stream != null) {
 				stream.Dispose ();
-				stream = null;
 			}
+			stream = null;
 
 			base.DisposeManaged ();
 		}

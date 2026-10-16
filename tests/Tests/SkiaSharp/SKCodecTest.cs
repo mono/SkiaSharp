@@ -15,6 +15,29 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void DngIsNotDecoded()
+		{
+			var path = Path.Combine(PathToImages, "adobe-dng.dng");
+
+			using var fileCodec = SKCodec.Create(path, out var fileResult);
+			Assert.Null(fileCodec);
+			Assert.Equal(SKCodecResult.Unimplemented, fileResult);
+
+			using var stream = File.OpenRead(path);
+			using var streamCodec = SKCodec.Create(stream, out var streamResult);
+			Assert.Null(streamCodec);
+			Assert.Equal(SKCodecResult.Unimplemented, streamResult);
+
+			using var data = SKData.Create(path);
+			using var dataCodec = SKCodec.Create(data);
+			using var bitmap = SKBitmap.Decode(data);
+			using var image = SKImage.FromEncodedData(data);
+			Assert.Null(dataCodec);
+			Assert.Null(bitmap);
+			Assert.Null(image);
+		}
+
+		[Fact]
 		public unsafe void ImageCanBeDecodedManyTimes()
 		{
 			var codec = SKCodec.Create(Path.Combine(PathToImages, "color-wheel.png"));

@@ -22,7 +22,7 @@ on:
         description: "What to sync. Empty = rotate over the supported versions.json lines (the scheduled default). Or a milestone number (e.g. 151), or `main` for the very tip of upstream Skia (google/skia main HEAD — bleeding edge, NOT a version bump)."
         required: false
         type: string
-      base_branch:
+      target_branch:
         description: "Optional mono/SkiaSharp base branch override for manual workflow validation. Empty uses normal main/release detection."
         required: false
         type: string
@@ -51,7 +51,7 @@ on:
       # can't inject shell — the script consumes it as a real --target arg.
       env:
         SYNC_TARGET: ${{ github.event.inputs.target }}
-        SYNC_BASE_BRANCH: ${{ github.event.inputs.base_branch }}
+        SYNC_BASE_BRANCH: ${{ github.event.inputs.target_branch }}
         GH_TOKEN: ${{ github.token }}
       run: bash .github/scripts/skia-sync-detect.sh --output "$GITHUB_OUTPUT" --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
 
@@ -82,7 +82,7 @@ checkout:
 timeout-minutes: 120
 max-ai-credits: 2000
 concurrency:
-  group: skia-upstream-sync-${{ github.event.inputs.base_branch || 'auto' }}-${{ github.event.inputs.target || github.event.schedule || 'manual' }}
+  group: skia-upstream-sync-${{ github.event.inputs.target_branch || 'auto' }}-${{ github.event.inputs.target || github.event.schedule || 'manual' }}
   cancel-in-progress: true
   job-discriminator: ${{ github.run_id }}
 
@@ -135,6 +135,7 @@ safe-outputs:
   staged: true
   create-pull-request:
     staged: true
+    allowed-base-branches: "${{ github.event.inputs.target_branch || 'main,release/*' }}"
     if-no-changes: ignore
   # report-as-issue defaults to true, but this workflow has no `issues: write` and a real sync
   # is NOT a no-op — disable the no-op→issue posting so genuine no-work runs don't try (and fail)
@@ -169,7 +170,7 @@ steps:
     # $GITHUB_SHA. skia-sync-detect.sh is the single source of truth.
     env:
       SYNC_TARGET: ${{ github.event.inputs.target }}
-      SYNC_BASE_BRANCH: ${{ github.event.inputs.base_branch }}
+      SYNC_BASE_BRANCH: ${{ github.event.inputs.target_branch }}
       GH_TOKEN: ${{ github.token }}
     run: |
       OUT=$(mktemp)

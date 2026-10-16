@@ -1,0 +1,17 @@
+declare_args() {
+  spectre_lib_root = ""
+}
+
+config("skiasharp") {
+  if (is_win) {
+    assert(spectre_lib_root != "", "SkiaSharp requires an explicit MSVC Spectre library directory.")
+    cflags = [
+      "/guard:cf",
+      "/GS",
+    ]
+    ldflags = [
+      "/guard:cf",
+      "/LIBPATH:${spectre_lib_root}/${current_cpu}",
+    ]
+  }
+}

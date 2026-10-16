@@ -1,14 +1,17 @@
 Param(
-    [string] $Version = '17.0.8.1',
-    [string] $FolderVersion = '17.0.8.1+1',
+    [ValidatePattern('^\d+(\.\d+)*\+\d+$')]
+    [string] $Version = '21.0.10+7',
     [string] $InstallDestination = $null
 )
 
 $ErrorActionPreference = 'Stop'
 
-if ("$env:JAVA_HOME_17_X64" -and (Test-Path (Join-Path "$env:JAVA_HOME_17_X64" "bin"))) {
-    Write-Host "Java is already installed to '$env:JAVA_HOME_17_X64'..."
-    $java_home = $env:JAVA_HOME_17_X64
+$downloadVersion = $Version.Split('+')[0]
+$majorVersion = [int] $downloadVersion.Split('.')[0]
+$installedJavaHome = [Environment]::GetEnvironmentVariable("JAVA_HOME_${majorVersion}_X64")
+if ($installedJavaHome) {
+    Write-Host "Using the existing JDK at '$installedJavaHome'..."
+    $java_home = $installedJavaHome
 } else {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -16,13 +19,13 @@ if ("$env:JAVA_HOME_17_X64" -and (Test-Path (Join-Path "$env:JAVA_HOME_17_X64" "
 
     if ($IsMacOS) {
         $ext = "tar.gz"
-        $url = "https://aka.ms/download-jdk/microsoft-jdk-$Version-macOS-x64.tar.gz"
+        $url = "https://aka.ms/download-jdk/microsoft-jdk-$downloadVersion-macOS-x64.tar.gz"
     } elseif ($IsLinux) {
         $ext = "tar.gz"
-        $url = "https://aka.ms/download-jdk/microsoft-jdk-$Version-linux-x64.tar.gz"
+        $url = "https://aka.ms/download-jdk/microsoft-jdk-$downloadVersion-linux-x64.tar.gz"
     } else {
         $ext = "zip"
-        $url = "https://aka.ms/download-jdk/microsoft-jdk-$Version-windows-x64.zip"
+        $url = "https://aka.ms/download-jdk/microsoft-jdk-$downloadVersion-windows-x64.zip"
     }
 
     $jdk = Join-Path "$HOME_DIR" "openjdk"
@@ -44,28 +47,44 @@ if ("$env:JAVA_HOME_17_X64" -and (Test-Path (Join-Path "$env:JAVA_HOME_17_X64" "
     New-Item -ItemType Directory -Force -Path "$jdk" | Out-Null
     if ($IsMacOS -or $IsLinux) {
         tar -vxzf "$archive" -C "$jdk"
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to extract OpenJDK (exit code $LASTEXITCODE)."
+        }
     } else {
         [System.IO.Compression.ZipFile]::ExtractToDirectory("$archive", "$jdk")
     }
 
     # set the JAVA_HOME
     if ($IsMacOS) {
-        $java_home = Join-Path "$jdk" "jdk-$FolderVersion/Contents/Home"
+        $java_home = Join-Path "$jdk" "jdk-$Version/Contents/Home"
     } else {
-        $java_home = Join-Path "$jdk" "jdk-$FolderVersion"
+        $java_home = Join-Path "$jdk" "jdk-$Version"
+    }
+}
+
+$javaBin = Join-Path "$java_home" "bin"
+$executableExtension = if ($IsMacOS -or $IsLinux) { "" } else { ".exe" }
+foreach ($tool in @("java", "javac")) {
+    $executable = Join-Path "$javaBin" "$tool$executableExtension"
+    if (-not (Test-Path -LiteralPath "$executable" -PathType Leaf)) {
+        throw "The selected JDK is missing '$executable'."
+    }
+    $versionOutput = & "$executable" -version 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "$tool -version failed at '$java_home' (exit code $LASTEXITCODE): $versionOutput"
+    }
+    Write-Host ($versionOutput -join [Environment]::NewLine)
+    $versionPattern = if ($tool -eq "java") { 'version "(\d+)\.' } else { '^javac (\d+)\.' }
+    if (($versionOutput -join "`n") -notmatch $versionPattern -or [int] $Matches[1] -ne $majorVersion) {
+        throw "Expected JDK $majorVersion at '$java_home', but $tool reported: $versionOutput"
     }
 }
 
 Write-Host "##vso[task.setvariable variable=JAVA_HOME;]$java_home"
 $env:JAVA_HOME = "$java_home"
 
-# make sure that JAVA_HOME/bin is in the PATH
-$javaBin = Join-Path "$java_home" "bin"
-if (-not $env:PATH.Contains($javaBin)) {
-    $env:PATH = "$javaBin" + [IO.Path]::PathSeparator + "$env:PATH"
-    Write-Host "##vso[task.setvariable variable=PATH;]$env:PATH"
-}
+# Prepend even if already present later, so an older Java cannot take precedence.
+$env:PATH = "$javaBin" + [IO.Path]::PathSeparator + "$env:PATH"
+Write-Host "##vso[task.prependpath]$javaBin"
 
-java -version
-
-exit $LASTEXITCODE
+exit 0

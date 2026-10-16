@@ -24,6 +24,7 @@ void SyncAngle(DirectoryPath anglePath, string angleVersion)
     SyncAngleSubmodules(anglePath);
     PatchAngleToolchainOutputNames(anglePath);
     WriteAngleGclientArgs(anglePath);
+    ApplyAngleSkiaSharpConfig(anglePath);
     WriteAngleLastChange(anglePath);
     DownloadAngleRc(anglePath);
     DownloadAngleClang(anglePath);
@@ -66,13 +67,13 @@ void SyncAngleSubmodules(DirectoryPath anglePath)
 void PatchAngleToolchainOutputNames(DirectoryPath anglePath)
 {
     var toolchain = anglePath.CombineWithFilePath("build/toolchain/win/toolchain.gni");
-    var contents = System.IO.File.ReadAllText(toolchain.FullPath);
+    var contents = FileReadText(toolchain);
     var newContents = contents
         .Replace("\"${dllname}.lib\"", "\"{{output_dir}}/{{target_output_name}}.lib\"")
         .Replace("\"${dllname}.pdb\"", "\"{{output_dir}}/{{target_output_name}}.pdb\"");
 
     if (contents != newContents)
-        System.IO.File.WriteAllText(toolchain.FullPath, newContents);
+        FileWriteText(toolchain, newContents);
 }
 
 // Normally written by gclient, which we do not run.
@@ -88,7 +89,26 @@ void WriteAngleGclientArgs(DirectoryPath anglePath)
         "checkout_angle_restricted_traces = false",
         "generate_location_tags = false"
     };
-    System.IO.File.WriteAllLines(gclientArgs.FullPath, lines);
+    FileWriteLines(gclientArgs, lines);
+}
+
+// Hardening options live in a real GN config so Ninja tracks changes to them,
+// rather than in extra_cflags/extra_ldflags.
+void ApplyAngleSkiaSharpConfig(DirectoryPath anglePath)
+{
+    CopyDirectory(ROOT_PATH.Combine("scripts/infra/native/windows/angle-gn"), anglePath.Combine("build/config/skiasharp"));
+
+    var buildConfig = anglePath.CombineWithFilePath("build/config/BUILDCONFIG.gn");
+    var contents = FileReadText(buildConfig);
+    const string config = "  \"//build/config/skiasharp:skiasharp\",";
+    if (contents.Contains(config))
+        return;
+
+    const string anchor = "default_compiler_configs = [";
+    if (!contents.Contains(anchor))
+        throw new Exception($"Cannot apply the SkiaSharp config to ANGLE targets at {buildConfig}.");
+
+    FileWriteText(buildConfig, contents.Replace(anchor, $"{anchor}\n{config}"));
 }
 
 void WriteAngleLastChange(DirectoryPath anglePath)
@@ -109,7 +129,7 @@ void DownloadAngleRc(DirectoryPath anglePath)
         return;
 
     var shaPath = anglePath.CombineWithFilePath($"{rcExe}.sha1");
-    var sha = System.IO.File.ReadAllText(shaPath.FullPath);
+    var sha = FileReadText(shaPath);
     var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
     DownloadFile(url, rcPath);
 }
@@ -127,16 +147,10 @@ void DownloadAngleClang(DirectoryPath anglePath)
 // ---------------------------------------------------------------------------
 
 // GN args common to every ANGLE flavour we ship. `flavorArgs` carries the bits
-// that differ (target_os, angle_is_winappsdk, winappsdk_dir, ...) and
-// `extraCFlags` is appended to the shared hardening flags.
-string AngleGnArgs(string arch, string[] flavorArgs = null, string[] extraCFlags = null)
+// that differ (target_os, angle_is_winappsdk, winappsdk_dir, ...); hardening
+// comes from the skiasharp GN config applied during the sync.
+string AngleGnArgs(string arch, string[] flavorArgs = null)
 {
-    var cflags = new List<string> { "'/guard:cf'", "'/GS'" };
-    if (extraCFlags != null) {
-        foreach (var flag in extraCFlags)
-            cflags.Add($"'{flag}'");
-    }
-
     var args = new List<string> { $"target_cpu='{arch}'" };
 
     if (flavorArgs != null)
@@ -150,8 +164,7 @@ string AngleGnArgs(string arch, string[] flavorArgs = null, string[] extraCFlags
     args.Add("angle_enable_wgpu=false");
     args.Add("angle_enable_gl_desktop_backend=false");
     args.Add("angle_enable_vulkan=false");
-    args.Add($"extra_cflags=[ {string.Join(", ", cflags)} ]");
-    args.Add($"extra_ldflags=[ '/guard:cf', '/LIBPATH:{GetSpectreLibPath(arch)}' ]");
+    args.Add($"spectre_lib_root='{System.IO.Path.GetDirectoryName(GetSpectreLibPath(arch))}'");
 
     return string.Join(" ", args);
 }
@@ -169,17 +182,23 @@ void BuildAngle(
 {
     var outDir = $"out/{outName}/{arch}";
 
+    var previousDepotToolsWinToolchain = EnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN");
+
     try
     {
         // We are not Googlers, so use the local Visual Studio toolchain.
         System.Environment.SetEnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN", "0");
 
-        RunGn(anglePath, outDir, gnArgs);
+        RunGn(anglePath, outDir, gnArgs, new Dictionary<string, string> {
+            { "GYP_MSVS_OVERRIDE_PATH", VS_INSTALL },
+            { "vs2022_install", VS_INSTALL },
+            { "VCToolsVersion", TOOLSET_VERSION.Value },
+        });
         RunNinja(anglePath, outDir, target);
     }
     finally
     {
-        System.Environment.SetEnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN", "");
+        System.Environment.SetEnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN", previousDepotToolsWinToolchain);
     }
 
     var destDir = outputPath.Combine(arch);

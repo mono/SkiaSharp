@@ -54,7 +54,9 @@ A freehand drawing canvas with a floating toolbox for choosing colors and brush 
 
 ## Running the Sample
 
-Open `SkiaSharpSample.slnx` in Visual Studio, select a platform (x64, x86 or arm64) and run. Deploying copies the native libraries into the app package.
+Open `SkiaSharpSample/SkiaSharpSample.csproj` in Visual Studio, select a platform (x64, x86 or arm64) and run. Deploying copies the native libraries into the app package.
+
+This sample ships without a solution file so the sample test suite does not pick it up: it builds with MSBuild only, not the `dotnet` CLI.
 
 To build only, from the command line:
 

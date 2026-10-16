@@ -1,0 +1,63 @@
+{
+  "theme": "Reliability and performance",
+  "highlights_headline": "The next 4.156 update improves mobile rendering, pixel-copy performance, and native resource reliability.",
+  "highlights_body": "Android texture rendering now follows display refresh, while image-pixel and HarfBuzz feature processing avoid unnecessary allocations.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Android texture rendering synchronized",
+          "detail": "Texture rendering on Android now follows the display refresh cadence for smoother front-buffered updates.",
+          "prs": [
+            5345
+          ]
+        },
+        {
+          "lead": "Front-buffered streams released correctly",
+          "detail": "Corrects stream retention in front-buffered image handling so native resources are no longer held longer than required.",
+          "prs": [
+            5327
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Managed pixel copies optimized",
+          "detail": "Reduces overhead when copying image pixels through the managed API.",
+          "prs": [
+            5052
+          ]
+        },
+        {
+          "lead": "Feature decoding avoids native allocations",
+          "detail": "Avoids allocating native feature strings while preserving the existing feature-decoding behavior.",
+          "prs": [
+            5230
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "WebGPU native implementation bundled",
+          "detail": "Includes emdawnwebgpu's webgpu.cpp in libSkiaSharp.a so consumers of the static native library receive the required WebGPU implementation.",
+          "prs": [
+            5316
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Bundled the emdawnwebgpu implementation in the static native library",
+    "VirgilMing": "Improved the reliability of Blazor CPU sample test timing"
+  },
+  "preview_summaries": {}
+}

@@ -1,0 +1,63 @@
+parameters:
+  - name: buildPipelineType
+    type: string
+  - name: buildAgentWindows
+    type: object
+  - name: buildAgentMac
+    type: object
+  - name: buildAgentLinux
+    type: object
+
+stages:
+  - stage: msbuild_tests
+    displayName: MSBuild package tests
+    ${{ if eq(parameters.buildPipelineType, 'test') }}:
+      dependsOn: prepare
+    ${{ else }}:
+      dependsOn: package
+    jobs:
+      - ${{ each platform in split('windows,macos,linux', ',') }}:
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+          parameters:
+            name: tests_msbuild_${{ platform }}
+            ${{ if eq(platform, 'windows') }}:
+              displayName: Windows
+              buildAgent: ${{ parameters.buildAgentWindows }}
+            ${{ if eq(platform, 'macos') }}:
+              displayName: macOS
+              buildAgent: ${{ parameters.buildAgentMac }}
+            ${{ if eq(platform, 'linux') }}:
+              displayName: Linux
+              buildAgent: ${{ parameters.buildAgentLinux }}
+            target: tests-msbuild
+            retryCount: 0
+            shouldPublish: false
+            checkoutSubmodules: false
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+              - sdkVersion: $(DOTNET_VERSION_PREVIEW)
+            jobSdkVersion: $(DOTNET_VERSION_PREVIEW)
+            installAndroidSdk: false
+            installAndroidNdk: false
+            installXcode: false
+            installNode: false
+            installLlvm: false
+            installEmsdk: false
+            installNinja: false
+            requiredArtifacts:
+              - name: nuget
+                dir: nugets
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish MSBuild package test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/msbuild/**/*.trx'
+                  testRunTitle: '${{ platform }} MSBuild package tests'
+                  failTaskOnFailedTests: true
+                  failTaskOnMissingResultsFile: true
+            publishArtifacts:
+              - name: testlogs_msbuild_${{ platform }}
+                always: true
+                path: output/logs
