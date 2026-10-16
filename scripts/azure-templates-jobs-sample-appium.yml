@@ -1,6 +1,7 @@
 parameters:
   name: ''
   buildAgent: {}
+  env: {}
   device: {}
 
 jobs:
@@ -11,9 +12,7 @@ jobs:
       buildAgent: ${{ parameters.buildAgent }}
       target: samples
       additionalArgs: --runGroup=Ios --sampleRunId=${{ parameters.name }} --skipExternals="all"
-      env:
-        SAMPLE_TEST_IOS_VERSION: ${{ parameters.device.version }}
-        SAMPLE_TEST_IOS_MODEL: iPhone 16 Pro
+      env: ${{ parameters.env }}
       dotnetSdks:
         - sdkVersion: $(DOTNET_VERSION)
           workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
