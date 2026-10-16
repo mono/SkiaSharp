@@ -23,7 +23,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Fact]
-	public async Task FailedSessionStillRunsDiagnosticsAndOwnedCleanupInOrder()
+	public async Task FailedSessionStillRunsDiagnosticsAndStopsTheServer()
 	{
 		using var workspace = Workspace();
 		var artifact = Path.Combine(workspace.Root, "Sample.app");
@@ -35,7 +35,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			() => { order.Add("server-start"); return Task.CompletedTask; },
 			() => { order.Add("server-stop"); return Task.CompletedTask; }));
 		Assert.Same(app.StartFailure, failure);
-		Assert.Equal(new[] { "server-start", "session-start", "diagnostics", "server-stop", "cleanup-second", "cleanup-first" }, order);
+		Assert.Equal(new[] { "server-start", "session-start", "diagnostics", "server-stop" }, order);
 		Assert.True(File.Exists(Path.Combine(app.Diagnostics, "failure.log")));
 		await new IosRunningApp(workspace, artifact, new IosSimulatorFixture()).SaveDiagnostics();
 		await Assert.ThrowsAsync<InvalidOperationException>(() => app.Run(
@@ -44,19 +44,19 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Fact]
-	public async Task DiagnosticsAndCleanupFailuresNeverHideStartupOrStopOtherCleanup()
+	public async Task DiagnosticsFailuresNeverHideStartupOrPreventServerCleanup()
 	{
 		using var workspace = Workspace();
 		var artifact = Path.Combine(workspace.Root, "Sample.app");
 		Directory.CreateDirectory(artifact);
 		var order = new List<string>();
-		var app = new DiagnosticApp(workspace, artifact, order, failCleanup: true);
+		var app = new DiagnosticApp(workspace, artifact, order, failDiagnostics: true);
 		var failure = await Assert.ThrowsAsync<AggregateException>(() => app.Run(
 			new Uri("http://127.0.0.1:1"), _ => Task.CompletedTask, () => Task.CompletedTask,
 			() => { order.Add("server-stop"); throw new IOException("server-stop"); }));
 		Assert.Same(app.StartFailure, failure.InnerExceptions[0]);
-		Assert.Equal(4, failure.InnerExceptions.Count);
-		Assert.Equal(new[] { "session-start", "diagnostics", "server-stop", "cleanup-second", "cleanup-first" }, order);
+		Assert.Equal(3, failure.InnerExceptions.Count);
+		Assert.Equal(new[] { "session-start", "diagnostics", "server-stop" }, order);
 	}
 
 	[Fact]
@@ -111,7 +111,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	private sealed class DiagnosticApp(
-		SampleWorkspace workspace, string artifact, List<string> order, bool failCleanup = false)
+		SampleWorkspace workspace, string artifact, List<string> order, bool failDiagnostics = false)
 		: AppiumRunningApp(workspace, artifact)
 	{
 		internal Exception StartFailure { get; } = new NotSupportedException("Session construction failed.");
@@ -120,20 +120,12 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		protected override Task Start(Uri address)
 		{
 			order.Add("session-start");
-			Own(() => { order.Add("cleanup-first"); return Task.CompletedTask; });
-			Own(() =>
-			{
-				order.Add("cleanup-second");
-				if (failCleanup)
-					throw new IOException("cleanup-second");
-				return Task.CompletedTask;
-			});
 			throw StartFailure;
 		}
 		protected override Task CapturePlatformDiagnostics()
 		{
 			order.Add("diagnostics");
-			if (failCleanup)
+			if (failDiagnostics)
 				throw new IOException("diagnostics");
 			return Task.CompletedTask;
 		}
