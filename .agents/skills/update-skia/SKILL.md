@@ -145,15 +145,8 @@ needed for that phase.
   source and reports new native functions.
 - `scripts/build_native.py --platform <platform> --arch <arch>` restores tools and builds native
   source for that target; `scripts/build_managed.py` builds the managed bindings;
-  `scripts/run_tests.py` runs the unfiltered test solution. Each script writes combined output and
-  its actual exit receipt, archives any previous log, invalidates its own and later success receipts,
-  and never retries or advances to another stage. Every completed attempt's log includes its exit
-  code, so archived failures remain identifiable after a successful rerun. The scripts share
-  log/receipt handling in `scripts/validation_common.py`.
-  Locally, `--artifact-dir` is optional: explicit paths take precedence over
-  `SKIA_SYNC_ARTIFACT_DIR`, then exported `ARTIFACT_DIR`, then `skia-sync-agent` under the system
-  temporary directory (`${TMPDIR:-/tmp}`, matching `update_versions.py`).
-  Each invocation prints its resolved log and exit-record paths.
+  `scripts/run_tests.py` runs the unfiltered test solution. Use these helpers instead of shell
+  pipelines. They record exit codes, archive previous logs, and clear stale downstream results.
 - `scripts/audit_fork_patches.py` compares the old and new fork deltas and fails while any
   added, removed, or changed patch lacks a final evidence-backed disposition.
 

@@ -55,12 +55,8 @@ cited source, and the final summaries list every tracked semantic-version decisi
 
 ## Phase 07 — build the updated native source
 
-Never use `externals-download` during a Skia update. `build_native.py` restores repository tools,
-then runs the canonical native source build. `SKIA_SYNC_SKILL_DIR` selects the immutable staged
-skill in automation; when unset, the commands use the repository-local skill.
-
-The table gives examples, not an exhaustive target list. Cake validates the supplied platform and
-architecture. Each command below requires `$ARTIFACT_DIR` to be set:
+Never use `externals-download` during a Skia update. Run `build_native.py` with the resolved
+platform and architecture; it restores tools and builds from source. Example targets:
 
 | Host | Command |
 |---|---|
@@ -77,11 +73,8 @@ python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native
   --platform "{PLATFORM}" --arch "{ARCH}"
 ```
 
-Supply an explicit platform and architecture supported by Cake. The helper records combined output
-in `native-build.log` and the actual exit status in `native-build-exit-code.txt`. It invalidates
-native, managed, and test receipts before starting; a tool-restore failure stops before Cake.
-Any previous native log is preserved as `native-build-attempt-<UTC timestamp>.log`.
-Require the invocation to succeed before continuing.
+Require exit 0 before continuing. Inspect `native-build.log` for failures; prior attempts remain
+in `native-build-attempt-*.log`.
 
 Run the helper as one foreground shell invocation and wait for that invocation to return. Do not
 wrap it in `nohup`, append `&`, or start progress-polling commands; the shell tool can remain active
