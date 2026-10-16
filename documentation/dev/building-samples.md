@@ -99,20 +99,20 @@ with Node.js and the Appium prerequisites in the
 Multi-target projects need their restore workloads even when building only iOS.
 
 Choose a device profile from the [sample stage configuration](../../scripts/azure-templates-stages-samples.yml).
-Set `IOS_VERSION` and `IOS_BUILD` to that profile's runtime version and build,
+Set `IOS_VERSION` to that profile's runtime version,
 and `XCODE_VERSION` to the configured Xcode version. Use the repository's Xcode
 selection script before provisioning the runtime:
 
 ```sh
 sudo scripts/infra/native/apple/select-xcode.sh "$XCODE_VERSION"
 pwsh scripts/infra/tests/install-appium.ps1
-pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version "$IOS_VERSION" -BuildVersion "$IOS_BUILD"
+pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version "$IOS_VERSION"
 SAMPLE_TEST_IOS_VERSION="$IOS_VERSION" dotnet cake --target=samples --runGroup=Ios \
   --sampleRunId=ios --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
 Use your staged packages' suffix, not the example suffix. The installer provisions
-and verifies the runtime build; tests require reviewed image references.
+and verifies the runtime version; tests require reviewed image references.
 The serialized iOS collection fixture creates and boots one configured simulator
 using `dotnet apple` and removes it at collection teardown. Each test builds its
 generated sample and owns a fresh Appium server/session that reinstalls and launches

@@ -1,10 +1,7 @@
 Param(
     [Parameter(Mandatory)]
     [ValidatePattern('^[0-9]+\.[0-9]+(?:\.[0-9]+)?$')]
-    [string] $Version,
-    [Parameter(Mandatory)]
-    [ValidatePattern('^[0-9]+[A-Z][0-9]+$')]
-    [string] $BuildVersion
+    [string] $Version
 )
 
 $ErrorActionPreference = 'Stop'
@@ -27,11 +24,11 @@ try {
         }
         foreach ($runtime in $inventory.runtimes) {
             if ($runtime.name -isnot [string] -or $runtime.version -isnot [string] -or
-                $runtime.buildversion -isnot [string] -or $runtime.isAvailable -isnot [bool]) {
-                throw 'simctl returned malformed runtime inventory: expected name, version, buildversion and boolean isAvailable.'
+                $runtime.isAvailable -isnot [bool]) {
+                throw 'simctl returned malformed runtime inventory: expected name, version and boolean isAvailable.'
             }
             if ($runtime.name.StartsWith('iOS ', [StringComparison]::Ordinal) -and $runtime.version -ceq $Version -and
-                $runtime.buildversion -ceq $BuildVersion -and $runtime.isAvailable -eq $true) {
+                $runtime.isAvailable -eq $true) {
                 return $true
             }
         }
@@ -45,7 +42,7 @@ try {
             throw "Selected iOS $Version runtime installation failed (exit code $LASTEXITCODE)."
         }
         if (-not (Test-SelectedRuntime)) {
-            throw "The exact released iOS $Version runtime ($BuildVersion) is not available after installation. Check this Xcode's runtime catalog."
+            throw "The iOS $Version runtime is not available after installation. Check this Xcode's runtime catalog."
         }
     }
 }

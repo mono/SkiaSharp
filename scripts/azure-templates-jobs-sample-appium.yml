@@ -33,8 +33,8 @@ jobs:
           always: true
           path: output/logs
       preBuildSteps:
-        - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ parameters.device.version }}' -BuildVersion '${{ parameters.device.buildVersion }}'
-          displayName: Install the exact selected iOS simulator runtime
+        - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ parameters.device.version }}'
+          displayName: Install the selected iOS simulator runtime
         - pwsh: ./scripts/infra/tests/install-appium.ps1
           displayName: Install Appium 3 and XCUITest
       postBuildSteps:
