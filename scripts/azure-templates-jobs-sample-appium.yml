@@ -1,17 +1,19 @@
 parameters:
   name: ''
+  displayName: ''
   buildAgent: {}
+  additionalArgs: ''
   env: {}
-  device: {}
+  preBuildSteps: []
 
 jobs:
   - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
     parameters:
       name: ${{ parameters.name }}
-      displayName: Appium (iOS ${{ parameters.device.version }})
+      displayName: ${{ parameters.displayName }}
       buildAgent: ${{ parameters.buildAgent }}
       target: samples
-      additionalArgs: --runGroup=Ios --sampleRunId=${{ parameters.name }} --skipExternals="all"
+      additionalArgs: ${{ parameters.additionalArgs }}
       env: ${{ parameters.env }}
       dotnetSdks:
         - sdkVersion: $(DOTNET_VERSION)
@@ -31,15 +33,11 @@ jobs:
         - name: ${{ parameters.name }}_logs
           always: true
           path: output/logs
-      preBuildSteps:
-        - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ parameters.device.version }}'
-          displayName: Install the selected iOS simulator runtime
-        - pwsh: ./scripts/infra/tests/install-appium.ps1
-          displayName: Install Appium 3 and XCUITest
+      preBuildSteps: ${{ parameters.preBuildSteps }}
       postBuildSteps:
         - task: PublishTestResults@2
           condition: always()
           inputs:
             testResultsFormat: VSTest
             testResultsFiles: output/logs/testlogs/samples/${{ parameters.name }}/**/*.trx
-            testRunTitle: Appium (iOS ${{ parameters.device.version }})
+            testRunTitle: ${{ parameters.displayName }}
