@@ -57,7 +57,7 @@ public sealed class IosSimulatorFixture : IAsyncLifetime
 
 		await AppiumRunningApp.Attempt(failures, async () =>
 		{
-			await CaptureCommand("dotnet apple simulator create", created);
+			await CaptureCommand("create", created);
 		});
 
 		AppiumRunningApp.ThrowFailures(failures);
@@ -66,7 +66,7 @@ public sealed class IosSimulatorFixture : IAsyncLifetime
 			JsonSerializer.Serialize(new { simulator = ownedSimulator, model = Model, version = Version }), "application/json");
 
 		await CaptureCommand(
-			$"dotnet apple simulator boot {ownedSimulator} --wait",
+			"boot",
 			await Apple.BootSimulator(ownedSimulator!));
 
 		ready = true;
@@ -89,14 +89,14 @@ public sealed class IosSimulatorFixture : IAsyncLifetime
 			await AppiumRunningApp.Attempt(failures, async () =>
 			{
 				await CaptureCommand(
-					$"dotnet apple simulator shutdown {ownedSimulator}",
+					"shutdown",
 					await Apple.ShutdownSimulator(ownedSimulator));
 			});
 
 			await AppiumRunningApp.Attempt(failures, async () =>
 			{
 				await CaptureCommand(
-					$"dotnet apple simulator delete {ownedSimulator}",
+					"delete",
 					await Apple.DeleteSimulator(ownedSimulator));
 			});
 		}
@@ -113,21 +113,21 @@ public sealed class IosSimulatorFixture : IAsyncLifetime
 		}
 	}
 
-	private async Task<string> CaptureCommand(string command, (int ExitCode, string Output, string Error) result)
+	private async Task<string> CaptureCommand(string operation, (int ExitCode, string Output, string Error) result)
 	{
 		List<Exception> failures = [];
 
 		await AppiumRunningApp.Attempt(failures, () =>
 		{
-			Assert.True(result.ExitCode == 0, $"Simulator command failed ({result.ExitCode}); inspect {diagnostics}.\n{result.Error}");
+			Assert.True(result.ExitCode == 0, $"Simulator {operation} failed ({result.ExitCode}); inspect {diagnostics}.\n{result.Error}");
 
 			return Task.CompletedTask;
 		});
 
 		await AppiumRunningApp.Attempt(failures, () =>
 		{
-			return SaveText($"{SampleWorkspace.CreateIdentity("command")}.log",
-				$"{command}\nExit: {result.ExitCode}\n{result.Output}\n{result.Error}");
+			return SaveText($"{operation}.log",
+				$"Exit: {result.ExitCode}\n{result.Output}\n{result.Error}");
 		});
 
 		AppiumRunningApp.ThrowFailures(failures);
