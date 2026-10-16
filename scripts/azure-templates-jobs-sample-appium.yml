@@ -17,17 +17,12 @@ jobs:
       env:
         SAMPLE_TEST_IOS_VERSION: ${{ parameters.device.version }}
         SAMPLE_TEST_IOS_MODEL: iPhone 16 Pro
-      variables:
-        DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
-        MD_APPLE_SDK_ROOT: /Applications/Xcode_26.6.app
-      jobSdkVersion: '10.0.402'
       dotnetSdks:
-        - sdkVersion: '10.0.402'
-          workloadSetVersion: '10.0.401'
+        - sdkVersion: $(DOTNET_VERSION)
+          workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
           tizen:
             manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
             manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-      installXcode: false
       installAndroidSdk: false
       installAndroidNdk: false
       retryCount: 0

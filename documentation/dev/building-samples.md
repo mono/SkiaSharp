@@ -92,18 +92,19 @@ Filtered runs do not replace the full suite.
 ## iOS simulator runs
 
 The `Ios` group runs Basic MAUI, native iOS and Gallery MAUI samples on macOS
-using Appium and XCUITest. Install the SDK, workloads, Xcode and Node.js versions
-specified in the [iOS job template](../../scripts/azure-templates-jobs-sample-appium.yml).
+using Appium and XCUITest. Install the SDK, workloads and Xcode versions specified
+in the [shared CI variables](../../scripts/azure-templates-variables.yml), along
+with Node.js and the Appium prerequisites in the
+[iOS job template](../../scripts/azure-templates-jobs-sample-appium.yml).
 Multi-target projects need their restore workloads even when building only iOS.
 
 Choose a device profile from the [sample stage configuration](../../scripts/azure-templates-stages-samples.yml).
 Set `IOS_VERSION` and `IOS_BUILD` to that profile's runtime version and build,
-and `XCODE_APP` to the installed Xcode application path. Select Xcode for the
-current shell rather than changing the machine-wide selection:
+and `XCODE_VERSION` to the configured Xcode version. Use the repository's Xcode
+selection script before provisioning the runtime:
 
 ```sh
-export DEVELOPER_DIR="$XCODE_APP/Contents/Developer"
-export MD_APPLE_SDK_ROOT="$XCODE_APP"
+sudo scripts/infra/native/apple/select-xcode.sh "$XCODE_VERSION"
 pwsh scripts/infra/tests/install-appium.ps1
 pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version "$IOS_VERSION" -BuildVersion "$IOS_BUILD"
 SAMPLE_TEST_IOS_VERSION="$IOS_VERSION" dotnet cake --target=samples --runGroup=Ios \

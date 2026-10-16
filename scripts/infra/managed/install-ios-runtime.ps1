@@ -12,10 +12,6 @@ $ErrorActionPreference = 'Stop'
 if (-not $IsMacOS) {
     throw 'iOS simulator runtimes can only be installed on macOS.'
 }
-if (-not $env:DEVELOPER_DIR -or -not (Test-Path -LiteralPath $env:DEVELOPER_DIR -PathType Container)) {
-    throw 'Set DEVELOPER_DIR to the exact installed Xcode Contents/Developer directory before installing an iOS runtime.'
-}
-
 $logDirectory = Join-Path $PSScriptRoot '../../../output/logs'
 New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
 Start-Transcript -Path (Join-Path $logDirectory 'install-ios-runtime.log') | Out-Null
