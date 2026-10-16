@@ -38,17 +38,6 @@ jobs:
           always: true
           path: output/logs
       preBuildSteps:
-        - bash: |
-            set -euo pipefail
-            test -d "$DEVELOPER_DIR"
-            selected=$(xcrun xcodebuild -version)
-            printf '%s\n' "$selected"
-            [[ "$selected" == $'Xcode 26.6\n'* ]]
-          displayName: Verify the job-local Xcode 26.6
-        - task: UseNode@1
-          inputs:
-            version: 24.x
-          displayName: Install Node.js for Appium 3
         - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ parameters.device.version }}' -BuildVersion '${{ parameters.device.buildVersion }}'
           displayName: Install the exact selected iOS simulator runtime
         - pwsh: ./scripts/infra/tests/install-appium.ps1
