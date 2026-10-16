@@ -8,7 +8,7 @@ namespace SkiaSharp.Tests.Samples;
 [Collection(nameof(AppiumCollection))]
 [Trait("Category", "Device")]
 [Trait("Category", "Golden")]
-public sealed class AppiumIosSampleRunTests(AppiumFixture appium, IosSimulatorFixture simulator) : AppiumSampleRunTestBase
+public sealed class AppiumIosSampleRunTests(AppiumFixture appium) : AppiumSampleRunTestBase
 {
 	[Fact]
 	[RunGroup(SampleRunGroup.Ios)]
@@ -71,7 +71,6 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium, IosSimulatorFi
 
 	private async Task<IosRunningApp> BuildIosApp(string folder, string project)
 	{
-		simulator.AttachDiagnostics();
 		const string framework = "net10.0-ios";
 		var rid = "iossimulator-" + HostArchitecture();
 
@@ -84,7 +83,7 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium, IosSimulatorFi
 
 		var artifact = Assert.Single(Directory.EnumerateDirectories(
 			Path.Combine(Output(workspace, folder, project, framework), rid), "*.app"));
-		return new IosRunningApp(workspace, artifact, simulator);
+		return new IosRunningApp(workspace, artifact);
 	}
 
 	private static void NavigateMauiIos(AppiumOperations app, string title)

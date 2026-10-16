@@ -7,31 +7,39 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal sealed class IosRunningApp : AppiumRunningApp
 {
-	private readonly IosSimulatorFixture simulator;
+	private readonly string version =
+		Environment.GetEnvironmentVariable("SAMPLE_TEST_IOS_VERSION") ?? "26.5";
 
-	internal IosRunningApp(SampleWorkspace workspace, string artifact, IosSimulatorFixture simulator)
+	private readonly string model =
+		Environment.GetEnvironmentVariable("SAMPLE_TEST_IOS_MODEL") ?? "iPhone 16 Pro";
+
+	private readonly string? simulator =
+		Environment.GetEnvironmentVariable("SAMPLE_TEST_IOS_UDID");
+
+	internal IosRunningApp(SampleWorkspace workspace, string artifact)
 		: base(workspace, artifact)
 	{
-		this.simulator = simulator;
 		Operations = new IosAppiumOperations(this);
 	}
 
-	internal override string DeviceProfile => simulator.DeviceProfile;
+	internal override string DeviceProfile => $"{model.Replace(' ', '-')}/{version}";
 	internal override IosAppiumOperations Operations { get; }
 
 	internal override Task<string> ReadApplicationId() => ReadAppleApplicationId();
 
 	internal static AppiumOptions SessionOptions(
-		string artifact, string simulator, string applicationId, string model, string version)
+		string artifact, string? simulator, string applicationId, string model, string version)
 	{
 		var options = Options();
 		options.App = artifact;
 		options.DeviceName = model;
 		options.PlatformVersion = version;
-		options.AddAdditionalAppiumOption("udid", simulator);
+		if (!string.IsNullOrWhiteSpace(simulator))
+			options.AddAdditionalAppiumOption("udid", simulator);
+
 		options.AddAdditionalAppiumOption("bundleId", applicationId);
 
-		// Reset/reinstall the app, not the shared simulator: fullReset erases and reboots it.
+		// Reset/reinstall the app, not Cake's simulator; direct runs leave selection to Appium.
 		options.AddAdditionalAppiumOption("fullReset", false);
 		options.AddAdditionalAppiumOption("noReset", false);
 		options.AddAdditionalAppiumOption("resetOnSessionStartOnly", true);
@@ -48,7 +56,7 @@ internal sealed class IosRunningApp : AppiumRunningApp
 			"Provide the actual built simulator .app bundle.");
 
 		var wdaLocalPort = AppiumFixture.GetFreePort();
-		var options = SessionOptions(Artifact, simulator.Udid, ApplicationId, simulator.Model, simulator.Version);
+		var options = SessionOptions(Artifact, simulator, ApplicationId, model, version);
 		options.AddAdditionalAppiumOption("useNewWDA", true);
 		options.AddAdditionalAppiumOption("wdaLocalPort", wdaLocalPort);
 		options.AddAdditionalAppiumOption("derivedDataPath", Path.Combine(Workspace.Root, "wda-ios"));
@@ -57,7 +65,7 @@ internal sealed class IosRunningApp : AppiumRunningApp
 
 		SetDriver(new IOSDriver(address, options, TimeSpan.FromMinutes(6)));
 
-		// Normalize only the owned simulator's system chrome; retain the full canvas capture.
+		// Normalize only the session's simulator chrome; retain the full canvas capture.
 		var status = Assert.IsAssignableFrom<IDictionary<string, object>>(
 			Driver.ExecuteScript("mobile: simctl", new Dictionary<string, object>
 			{

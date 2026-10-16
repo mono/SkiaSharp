@@ -5,6 +5,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 #load "../shared/shared.cake"
 #load "../shared/msbuild.cake"
 #load "tests-shared.cake"
+#load "tests-shared-apple.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // SAMPLES TASKS
@@ -17,6 +18,29 @@ if (!string.IsNullOrEmpty(RUN_GROUP) && !RUN_GROUPS.Contains(RUN_GROUP))
     throw new ArgumentException($"Unknown sample run group '{RUN_GROUP}'. Expected {string.Join(", ", RUN_GROUPS)}.");
 if (!string.IsNullOrEmpty(RUN_ID) && RUN_ID.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-' && c != '_'))
     throw new ArgumentException("sampleRunId must contain only ASCII letters, digits, '-' or '_'.");
+
+string OWNED_IOS_SIMULATOR = null;
+
+Setup(context =>
+{
+    if (TARGET.Equals("samples-generate", StringComparison.OrdinalIgnoreCase) ||
+        !IsRunningOnMacOs() || (!string.IsNullOrEmpty(RUN_GROUP) && RUN_GROUP != "Ios"))
+        return;
+
+    var version = Argument("iosVersion", EnvironmentVariable("SAMPLE_TEST_IOS_VERSION") ?? "26.5");
+    var model = Argument("iosSimulator", EnvironmentVariable("SAMPLE_TEST_IOS_MODEL") ?? "iPhone 16 Pro");
+
+    SetupIosSimulator(ref OWNED_IOS_SIMULATOR, model, version);
+
+    Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_VERSION", version);
+    Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_MODEL", model);
+    Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_UDID", OWNED_IOS_SIMULATOR);
+});
+
+Teardown(context =>
+{
+    TeardownIosSimulator(ref OWNED_IOS_SIMULATOR, context.ThrownException);
+});
 
 Task ("samples-generate")
     .Description ("Generate and zip the samples directory structure.")
@@ -39,13 +63,6 @@ Task ("samples")
     .Does (() =>
 {
     var results = ROOT_PATH.Combine($"output/logs/testlogs/samples/{(string.IsNullOrEmpty(RUN_ID) ? DATE_TIME_STR : RUN_ID + "/" + DATE_TIME_STR)}");
-
-    if (RUN_GROUP == "Ios") {
-        Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_VERSION",
-            Argument("iosVersion", EnvironmentVariable("SAMPLE_TEST_IOS_VERSION") ?? "26.5"));
-        Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_MODEL",
-            Argument("iosSimulator", EnvironmentVariable("SAMPLE_TEST_IOS_MODEL") ?? "iPhone 16 Pro"));
-    }
 
     // Consumer commands own their timeouts; MTP's activity monitor misdetects these process trees.
     RunDotNetTest(ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj"),

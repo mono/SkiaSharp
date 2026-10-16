@@ -37,7 +37,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		Assert.Same(app.StartFailure, failure);
 		Assert.Equal(new[] { "server-start", "session-start", "diagnostics", "server-stop" }, order);
 		Assert.True(File.Exists(Path.Combine(app.Diagnostics, "failure.log")));
-		await new IosRunningApp(workspace, artifact, new IosSimulatorFixture()).SaveDiagnostics();
+		await new IosRunningApp(workspace, artifact).SaveDiagnostics();
 		await Assert.ThrowsAsync<InvalidOperationException>(() => app.Run(
 			new Uri("http://127.0.0.1:1"), _ => Task.CompletedTask,
 			() => Task.CompletedTask, () => Task.CompletedTask));
@@ -59,30 +59,26 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		Assert.Equal(new[] { "session-start", "diagnostics", "server-stop" }, order);
 	}
 
-	[Fact]
-	public void IosCollectionRegistersTheSharedSimulatorAlongsidePerTestAppiumSessions()
-	{
-		Assert.Contains(typeof(ICollectionFixture<IosSimulatorFixture>), typeof(AppiumCollection).GetInterfaces());
-		Assert.Contains(typeof(ICollectionFixture<AppiumFixture>), typeof(AppiumCollection).GetInterfaces());
-		var collection = Assert.Single(typeof(AppiumIosSampleRunTests).GetCustomAttributesData(),
-			attribute => attribute.AttributeType == typeof(CollectionAttribute));
-		Assert.Equal(nameof(AppiumCollection), Assert.Single(collection.ConstructorArguments).Value);
-		Assert.Contains(Assert.Single(typeof(AppiumIosSampleRunTests).GetConstructors()).GetParameters(),
-			parameter => parameter.ParameterType == typeof(IosSimulatorFixture));
-	}
-
 	[Theory]
-	[InlineData("18.6", "iPhone 16 Pro")]
-	[InlineData("26.5", "iPhone 16 Pro")]
-	[InlineData("18.6", "iPhone 16")]
-	public void IosAppiumInstallsAndResetsEachArtifactOnTheSharedSimulator(string version, string model)
+	[InlineData("18.6", "iPhone 16 Pro", "51DE3D2F-4F8E-4533-9899-9FC250A49050")]
+	[InlineData("26.5", "iPhone 16 Pro", "51DE3D2F-4F8E-4533-9899-9FC250A49050")]
+	[InlineData("18.6", "iPhone 16", "51DE3D2F-4F8E-4533-9899-9FC250A49050")]
+	[InlineData("18.6", "iPhone 16 Pro", null)]
+	[InlineData("26.5", "iPhone 16 Pro", null)]
+	[InlineData("18.6", "iPhone 16", null)]
+	[InlineData("26.5", "iPhone 16 Pro", "")]
+	[InlineData("26.5", "iPhone 16 Pro", " ")]
+	public void IosAppiumInstallsEachArtifactWithoutResettingTheSimulator(string version, string model, string? udid)
 	{
-		const string udid = "51DE3D2F-4F8E-4533-9899-9FC250A49050";
 		for (var i = 0; i < 2; i++)
 		{
 			var artifact = Path.Combine(root, $"case-{i}", "Built.app");
 			var capabilities = IosRunningApp.SessionOptions(artifact, udid, "sample.bundle", model, version).ToCapabilities();
-			Assert.Equal(udid, capabilities.GetCapability("appium:udid"));
+			if (string.IsNullOrWhiteSpace(udid))
+				Assert.False(capabilities.HasCapability("appium:udid"));
+			else
+				Assert.Equal(udid, capabilities.GetCapability("appium:udid"));
+
 			Assert.Equal(artifact, capabilities.GetCapability("appium:app"));
 			Assert.Equal("sample.bundle", capabilities.GetCapability("appium:bundleId"));
 			Assert.Equal(model, capabilities.GetCapability("appium:deviceName"));
@@ -136,7 +132,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public void IosOperationsReuseTheAppsOwnedSessionWithoutStartingOne()
 	{
 		using var workspace = Workspace();
-		var app = new IosRunningApp(workspace, Path.Combine(workspace.Root, "Sample.app"), new IosSimulatorFixture());
+		var app = new IosRunningApp(workspace, Path.Combine(workspace.Root, "Sample.app"));
 		AppiumRunningApp running = app;
 		var operations = Assert.IsType<IosAppiumOperations>(running.Operations);
 		Assert.Same(operations, app.Operations);
@@ -149,7 +145,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public void CapturesOfTheSameSceneKeepBothFiles()
 	{
 		using var workspace = Workspace();
-		var app = new IosRunningApp(workspace, Path.Combine(workspace.Root, "Sample.app"), new IosSimulatorFixture());
+		var app = new IosRunningApp(workspace, Path.Combine(workspace.Root, "Sample.app"));
 		var before = app.Operations.SaveCapture([1, 2], "drawing");
 		var after = app.Operations.SaveCapture([3, 4], "drawing");
 		Assert.NotEqual(before, after);
@@ -222,7 +218,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			var result = await ProcessRunner.Run("plutil", ["-convert", "binary1", plist], workspace.Root, TimeSpan.FromSeconds(30));
 			Assert.Equal(0, result.ExitCode);
 		}
-		Assert.Equal("com.skiasharp.built", await new IosRunningApp(workspace, bundle, new IosSimulatorFixture()).ReadApplicationId());
+		Assert.Equal("com.skiasharp.built", await new IosRunningApp(workspace, bundle).ReadApplicationId());
 	}
 
 	[Theory]
