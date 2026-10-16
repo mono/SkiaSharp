@@ -1,4 +1,4 @@
-<Project Sdk="Uno.Sdk/6.6.0-dev.208">
+<Project Sdk="Uno.Sdk/7.0.0-dev.79">
     <PropertyGroup>
         <TargetFrameworks>net10.0-desktop;net10.0-browserwasm</TargetFrameworks>
         <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net10.0-windows10.0.19041.0;$(TargetFrameworks)</TargetFrameworks>
@@ -15,11 +15,6 @@
         <Description>SkiaSharpSample powered by Uno Platform.</Description>
   
         <UnoFeatures>
-            <!--
-              Comment SkiaRenderer out to test SKSwapChainPanel which only works with
-              Uno native rendering
-            -->
-            SkiaRenderer;
             Skia;
         </UnoFeatures>
     </PropertyGroup>
@@ -27,7 +22,6 @@
   
     <PropertyGroup>
       <!-- We use project references for SkiaSharp, not the NuGet packages that Uno SDK adds implicitly -->
-      <UnoDisableLottieSkiaVersionCheck>true</UnoDisableLottieSkiaVersionCheck>
       <SkiaSharpVersion />
     </PropertyGroup>
   

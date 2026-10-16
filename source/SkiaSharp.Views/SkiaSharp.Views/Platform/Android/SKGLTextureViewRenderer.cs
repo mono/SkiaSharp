@@ -5,21 +5,11 @@ using Javax.Microedition.Khronos.Opengles;
 
 using EGLConfig = Javax.Microedition.Khronos.Egl.EGLConfig;
 
-#if HAS_UNO_WINUI
-namespace SkiaSharp.Views.Windows
-#elif HAS_UNO
-namespace SkiaSharp.Views.UWP
-#else
 namespace SkiaSharp.Views.Android
-#endif
 {
-#if HAS_UNO
-	internal
-#else
 	/// <summary>An abstract implementation of <see cref="T:SkiaSharp.Views.Android.GLTextureView.IRenderer" /> that provides a <see cref="T:SkiaSharp.SKSurface" /> for drawing.</summary>
 	/// <remarks />
 	public
-#endif
 	abstract partial class SKGLTextureViewRenderer : Java.Lang.Object, GLTextureView.IRenderer
 	{
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKGLTextureViewRenderer" /> class.</summary>
