@@ -1,24 +1,17 @@
 {
-  "theme": "Reliability and performance",
-  "highlights_headline": "The next 4.156 update improves mobile rendering, pixel-copy performance, and native resource reliability.",
-  "highlights_body": "Android texture rendering now follows display refresh, while image-pixel and HarfBuzz feature processing avoid unnecessary allocations.",
+  "theme": "Rendering performance and reliability",
+  "highlights_headline": "SkiaSharp 4.156.0 improves rendering reliability while reducing allocations in image and text-processing paths.",
+  "highlights_body": "It synchronizes Android texture rendering with display refresh, bundles required WebGPU native support, and fixes retained front-buffered stream data.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Android texture rendering synchronized",
-          "detail": "Texture rendering on Android now follows the display refresh cadence for smoother front-buffered updates.",
+          "lead": "Android texture rendering follows display refresh",
+          "detail": "Texture-backed Android rendering is synchronized with display refresh to provide smoother presentation.",
           "prs": [
             5345
-          ]
-        },
-        {
-          "lead": "Front-buffered streams released correctly",
-          "detail": "Corrects stream retention in front-buffered image handling so native resources are no longer held longer than required.",
-          "prs": [
-            5327
           ]
         }
       ]
@@ -27,17 +20,25 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Managed pixel copies optimized",
-          "detail": "Reduces overhead when copying image pixels through the managed API.",
+          "lead": "Managed pixel transfers use fewer allocations",
+          "detail": "Image pixel-copy operations avoid unnecessary managed allocations while preserving their existing behavior.",
           "prs": [
             5052
           ]
         },
         {
-          "lead": "Feature decoding avoids native allocations",
-          "detail": "Avoids allocating native feature strings while preserving the existing feature-decoding behavior.",
+          "lead": "Text processing reuses temporary buffers",
+          "detail": "Feature-string handling avoids native temporary allocations, and HarfBuzz text shaping pools its UTF-32 encoding buffer.",
           "prs": [
+            5060,
             5230
+          ]
+        },
+        {
+          "lead": "Front-buffered streams release retained data",
+          "detail": "Front-buffered stream handling no longer retains data after it is no longer needed.",
+          "prs": [
+            5327
           ]
         }
       ]
@@ -46,8 +47,8 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "WebGPU native implementation bundled",
-          "detail": "Includes emdawnwebgpu's webgpu.cpp in libSkiaSharp.a so consumers of the static native library receive the required WebGPU implementation.",
+          "lead": "Native WebGPU support is bundled",
+          "detail": "The WebGPU implementation is included in libSkiaSharp.a so native consumers receive the required WebGPU support with the library.",
           "prs": [
             5316
           ]
@@ -56,8 +57,8 @@
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Bundled the emdawnwebgpu implementation in the static native library",
-    "VirgilMing": "Improved the reliability of Blazor CPU sample test timing"
+    "ramezgerges": "Bundled the native WebGPU implementation in libSkiaSharp.a",
+    "VirgilMing": "Improved the reliability of Blazor CPU sample tests by waiting for the first canvas paint"
   },
   "preview_summaries": {}
 }
