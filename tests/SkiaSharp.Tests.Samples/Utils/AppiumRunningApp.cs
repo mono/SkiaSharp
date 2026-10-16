@@ -11,7 +11,6 @@ namespace SkiaSharp.Tests.Samples.Utils;
 // Owns one app session; simulator ownership belongs to the collection fixture.
 internal abstract class AppiumRunningApp
 {
-	private readonly List<Func<Task>> cleanup = [];
 	private AppiumDriver? driver;
 	private string? applicationId;
 	private bool used;
@@ -48,7 +47,6 @@ internal abstract class AppiumRunningApp
 		return id;
 	}
 	protected virtual Task CapturePlatformDiagnostics() => Task.CompletedTask;
-	protected void Own(Func<Task> release) => cleanup.Add(release);
 
 	protected void SetDriver(AppiumDriver value)
 	{
@@ -355,11 +353,8 @@ internal abstract class AppiumRunningApp
 				driver = null;
 				return Task.CompletedTask;
 			});
-			// Failed session constructors can leave driver children alive. Stop our server tree
-			// before deleting resources created by this test.
+			// Failed session constructors can leave driver children alive.
 			await Attempt(failures, stopServer);
-			foreach (var release in cleanup.AsEnumerable().Reverse())
-				await Attempt(failures, release);
 		}
 		ThrowFailures(failures);
 	}

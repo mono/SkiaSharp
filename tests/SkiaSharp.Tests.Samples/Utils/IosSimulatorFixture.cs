@@ -62,9 +62,6 @@ public sealed class IosSimulatorFixture : IAsyncLifetime
 
 		AppiumRunningApp.ThrowFailures(failures);
 
-		await SaveText("simulator.json",
-			JsonSerializer.Serialize(new { simulator = ownedSimulator, model = Model, version = Version }), "application/json");
-
 		await CaptureCommand(
 			"boot",
 			await Apple.BootSimulator(ownedSimulator!));
@@ -108,12 +105,11 @@ public sealed class IosSimulatorFixture : IAsyncLifetime
 	{
 		foreach (var path in Directory.EnumerateFiles(diagnostics))
 		{
-			TestContext.Current.AddFileAttachment(path,
-				Path.GetExtension(path) == ".json" ? "application/json" : "text/plain");
+			TestContext.Current.AddFileAttachment(path, "text/plain");
 		}
 	}
 
-	private async Task<string> CaptureCommand(string operation, (int ExitCode, string Output, string Error) result)
+	private async Task CaptureCommand(string operation, (int ExitCode, string Output, string Error) result)
 	{
 		List<Exception> failures = [];
 
@@ -132,10 +128,9 @@ public sealed class IosSimulatorFixture : IAsyncLifetime
 
 		AppiumRunningApp.ThrowFailures(failures);
 
-		return result.Output;
 	}
 
-	private async Task SaveText(string name, string text, string contentType = "text/plain")
+	private async Task SaveText(string name, string text)
 	{
 		Directory.CreateDirectory(diagnostics);
 
@@ -144,7 +139,7 @@ public sealed class IosSimulatorFixture : IAsyncLifetime
 
 		if (TestContext.Current.Test is not null)
 		{
-			TestContext.Current.AddFileAttachment(path, contentType);
+			TestContext.Current.AddFileAttachment(path, "text/plain");
 		}
 		else
 		{
