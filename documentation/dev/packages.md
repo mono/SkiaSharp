@@ -52,7 +52,7 @@ Platform-specific UI controls for rendering SkiaSharp content. These provide rea
 | **SkiaSharp.Views.Blazor** | Blazor WebAssembly controls: `SKCanvasView`, `SKGLView`. net6.0+ (WASM native assets require net8.0+). Auto-includes SkiaSharp.NativeAssets.WebAssembly. |
 | **SkiaSharp.Views.Maui.Core** | .NET MAUI shared view infrastructure. net8.0+. Depends on Microsoft.Maui.Core. |
 | **SkiaSharp.Views.Maui.Controls** | .NET MAUI controls: `SKCanvasView`, `SKGLView`. net8.0+. Depends on SkiaSharp.Views.Maui.Core and Microsoft.Maui.Controls. |
-| **SkiaSharp.Views.Uno.WinUI** | Uno Platform controls: `SKXamlCanvas` on every target, `SKSwapChainPanel` on Windows only (Uno's own `SKCanvasElement` is the GPU-backed control elsewhere). net10.0+, Uno Platform 7+. Depends on Uno.WinUI; uses SkiaSharp.Views.WinUI on Windows targets. The Uno.Sdk supplies the native assets. |
+| **SkiaSharp.Views.Uno.WinUI** | Uno Platform controls: `SKXamlCanvas`, and `SKSwapChainPanel`, which is GPU-accelerated on Windows and renders on the CPU elsewhere (Uno's own `SKCanvasElement` is the GPU-backed control there). net10.0+, Uno Platform 7+. Depends on Uno.WinUI; uses SkiaSharp.Views.WinUI on Windows targets. The Uno.Sdk supplies the native assets. |
 
 ---
 

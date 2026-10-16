@@ -8,7 +8,7 @@ Demonstrates SkiaSharp views in an Uno Platform 7 app. This sample uses `SKXamlC
 |---------|-----------|----------|
 | `SKXamlCanvas` | Software (CPU) | Static or on-demand content — works everywhere |
 | `SKCanvasElement` (Uno Platform) | GPU | Continuous animation — hardware-accelerated on every Uno Platform target |
-| `SKSwapChainPanel` | DirectX (GPU) | Continuous animation on Windows App SDK. Not supported on Uno Platform targets |
+| `SKSwapChainPanel` | DirectX (GPU) on Windows App SDK, CPU elsewhere | Existing code using it; prefer `SKCanvasElement` for GPU drawing on Uno Platform targets |
 
 ## Sample Pages
 
