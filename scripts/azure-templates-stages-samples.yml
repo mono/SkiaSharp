@@ -31,3 +31,17 @@ stages:
           parameters:
             platform: linux
             buildAgent: ${{ parameters.buildAgentLinux }}
+
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_ios18_6
+            device:
+              version: '18.6'
+              buildVersion: '22G86'
+
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_ios26_5
+            device:
+              version: '26.5'
+              buildVersion: '23F77'
