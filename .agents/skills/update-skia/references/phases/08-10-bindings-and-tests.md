@@ -5,12 +5,19 @@
 The native build must run first so dependency headers exist:
 
 ```bash
+set -euo pipefail
 python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/regenerate_bindings.py" \
   --repo-root "${GITHUB_WORKSPACE:-$PWD}"
-dotnet build binding/SkiaSharp/SkiaSharp.csproj
+python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_managed.py" \
+  --repo-root "${GITHUB_WORKSPACE:-$PWD}" --artifact-dir "$ARTIFACT_DIR"
 ```
 
-The helper runs every maintained generator configuration from the checked-out source, reports
+`build_managed.py` runs `dotnet build binding/SkiaSharp/SkiaSharp.csproj`, writes
+`managed-build.log` and `managed-build-exit-code.txt`, and invalidates managed and test receipts
+before starting. Any previous managed log is preserved as
+`managed-build-attempt-<UTC timestamp>.log`. Require both helpers to succeed before continuing.
+
+The binding helper runs every maintained generator configuration from the checked-out source, reports
 generated changes, and lists new native functions. Never manually edit generated
 declarations or interop code. Source-controlled `///` comment trivia is the
 exception: edit it directly when needed, regenerate, and verify preservation.
@@ -46,18 +53,15 @@ validation from incomplete coverage.
 ### Canonical full solution
 
 ```bash
-rm -f "$ARTIFACT_DIR/test-output.txt" "$ARTIFACT_DIR/test-exit-code.txt"
-(
-  set +e
-  dotnet test tests/SkiaSharp.Tests.Console.slnx \
-    -p:TargetFramework=net10.0 \
-    -p:TargetFrameworks=net10.0 \
-    > "$ARTIFACT_DIR/test-output.txt" 2>&1
-  TEST_EXIT=$?
-  printf '%s\n' "$TEST_EXIT" > "$ARTIFACT_DIR/test-exit-code.txt"
-  exit "$TEST_EXIT"
-)
+python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/run_tests.py" \
+  --repo-root "${GITHUB_WORKSPACE:-$PWD}" --artifact-dir "$ARTIFACT_DIR"
 ```
+
+The helper runs exactly `dotnet test tests/SkiaSharp.Tests.Console.slnx
+-p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0`, captures combined output in
+`test-output.txt`, and records its actual exit status in `test-exit-code.txt`. It removes the old
+receipt before starting, archives any previous canonical log as `test-output-attempt-<UTC timestamp>.txt`,
+and returns the child failure status without retries or later work.
 
 Run the solution unfiltered. Confirm every maintained test host in the solution reported results.
 Run each full solution command as one foreground invocation and wait for it to return; do not
@@ -99,9 +103,10 @@ Diagnose the failing behavior before editing:
 - After native changes, rebuild from source and prove the changed library is loaded.
 - If the C API surface changed, regenerate bindings and repeat Phase 09.
 
-A focused run proves a candidate fix only. Before replacing a failed canonical log, preserve it as
-`$ARTIFACT_DIR/test-attempt-<UTC timestamp>.txt`. After the fix, rerun the canonical full-solution
-command above; only a green canonical run against the unchanged final source satisfies the gate.
+A focused run proves a candidate fix only. The helper preserves previous canonical logs as
+`$ARTIFACT_DIR/test-output-attempt-<UTC timestamp>.txt` before replacing them. After the fix, rerun the
+canonical full-solution helper above; only a green canonical run against the unchanged final source
+satisfies the gate.
 Keep complete output in the artifact and inspect targeted failure excerpts instead of streaming the
 entire log into model context.
 

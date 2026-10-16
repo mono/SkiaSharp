@@ -55,23 +55,35 @@ cited source, and the final summaries list every tracked semantic-version decisi
 
 ## Phase 07 — build the updated native source
 
-Never use `externals-download` during a Skia update. Restore repository tools, then build the local
-platform from source:
+Never use `externals-download` during a Skia update. `build_native.py` restores repository tools,
+then runs the canonical native source build. `SKIA_SYNC_SKILL_DIR` selects the immutable staged
+skill in automation; when unset, the commands use the repository-local skill.
+
+The table gives examples, not an exhaustive target list. Cake validates the supplied platform and
+architecture. Each command below requires `$ARTIFACT_DIR` to be set:
 
 | Host | Command |
 |---|---|
-| Linux x64 | `dotnet cake --target=externals-linux --arch=x64` |
-| Linux arm64 | `dotnet cake --target=externals-linux --arch=arm64` |
-| Windows x64 | `dotnet cake --target=externals-windows --arch=x64` |
-| macOS arm64 | `dotnet cake --target=externals-macos --arch=arm64` |
-| macOS x64 | `dotnet cake --target=externals-macos --arch=x64` |
+| Linux x64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --platform linux --arch x64 --artifact-dir "$ARTIFACT_DIR"` |
+| Linux arm64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --platform linux --arch arm64 --artifact-dir "$ARTIFACT_DIR"` |
+| Windows x64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --platform windows --arch x64 --artifact-dir "$ARTIFACT_DIR"` |
+| macOS arm64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --platform macos --arch arm64 --artifact-dir "$ARTIFACT_DIR"` |
+| macOS x64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --platform macos --arch x64 --artifact-dir "$ARTIFACT_DIR"` |
 
 ```bash
-dotnet tool restore
-dotnet cake --target="externals-{PLATFORM}" --arch="{ARCH}"
+set -euo pipefail
+python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" \
+  --repo-root "${GITHUB_WORKSPACE:-$PWD}" --artifact-dir "$ARTIFACT_DIR" \
+  --platform "{PLATFORM}" --arch "{ARCH}"
 ```
 
-Run the build as one foreground shell invocation and wait for that invocation to return. Do not
+Supply an explicit platform and architecture supported by Cake. The helper records combined output
+in `native-build.log` and the actual exit status in `native-build-exit-code.txt`. It invalidates
+native, managed, and test receipts before starting; a tool-restore failure stops before Cake.
+Any previous native log is preserved as `native-build-attempt-<UTC timestamp>.log`.
+Require the invocation to succeed before continuing.
+
+Run the helper as one foreground shell invocation and wait for that invocation to return. Do not
 wrap it in `nohup`, append `&`, or start progress-polling commands; the shell tool can remain active
 for the full build.
 
