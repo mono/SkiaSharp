@@ -2,7 +2,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 #load "../shared/shared.cake"
 #load "../shared/msbuild.cake"
-#load "test-shared.cake"
+#load "tests-shared.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ANDROID TESTS — build, emulator management, and dotnet test execution

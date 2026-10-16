@@ -95,7 +95,7 @@ The `Ios` group runs Basic MAUI, native iOS and Gallery MAUI samples on macOS
 using Appium and XCUITest. Install the SDK, workloads and Xcode versions specified
 in the [shared CI variables](../../scripts/azure-templates-variables.yml), along
 with Node.js and the Appium prerequisites in the
-[iOS job template](../../scripts/azure-templates-jobs-sample-appium.yml).
+[sample stage configuration](../../scripts/azure-templates-stages-samples.yml).
 Multi-target projects need their restore workloads even when building only iOS.
 
 Choose a device profile from the [sample stage configuration](../../scripts/azure-templates-stages-samples.yml).
@@ -114,11 +114,20 @@ dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
 
 Use your staged packages' suffix, not the example suffix. The installer provisions
 and verifies the runtime version; tests require reviewed image references.
-The serialized iOS collection fixture creates and boots one configured simulator
-using `dotnet apple` and removes it at collection teardown. Each test builds its
-generated sample and owns a fresh Appium server/session that reinstalls and launches
-the app without erasing or rebooting the shared simulator. Appium remains
-responsible for WebDriverAgent; unrelated simulators are left alone.
+Cake creates and boots one simulator using `dotnet apple`, passes its exact UUID
+to the serialized iOS tests, and removes only that simulator at teardown, including
+after failures. The same lifecycle helpers serve the DeviceRunners iOS target.
+`samples-generate` does not start a simulator. Each test builds its generated sample
+and owns a fresh Appium server/session that reinstalls and launches the app without
+erasing or rebooting the shared simulator. Appium manages WebDriverAgent.
+
+For direct test or IDE runs, set `SAMPLE_TEST_IOS_VERSION` and
+`SAMPLE_TEST_IOS_MODEL` to select the runtime and device model; defaults match the
+primary CI profile. Set `SAMPLE_TEST_IOS_UDID` to use an already-running simulator
+you manage yourself. If unset, the `appium:udid` capability is omitted and Appium
+selects or creates a simulator using the model and version. C# tests do not manage
+simulator lifetimes or install runtimes. Unsupported runtimes and missing reviewed
+references fail without fallback.
 
 Coverage includes page navigation, CPU/GPU rendering, drawing and Clear, and
 Gallery search, filtering and controls. For failures, inspect the TRX attachments
