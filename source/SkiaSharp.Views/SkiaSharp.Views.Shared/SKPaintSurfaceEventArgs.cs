@@ -2,8 +2,6 @@
 
 #if HAS_UNO_WINUI
 namespace SkiaSharp.Views.Windows
-#elif WINDOWS_UWP
-namespace SkiaSharp.Views.UWP
 #elif __ANDROID__
 namespace SkiaSharp.Views.Android
 #elif __TVOS__
