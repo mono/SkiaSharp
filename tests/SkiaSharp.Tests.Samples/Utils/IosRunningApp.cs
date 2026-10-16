@@ -5,10 +5,19 @@ using static SkiaSharp.Tests.Samples.Utils.FailureHandling;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-internal sealed class IosRunningApp(SampleWorkspace workspace, string artifact, IosSimulatorFixture simulator)
-	: AppiumRunningApp(workspace, artifact)
+internal sealed class IosRunningApp : AppiumRunningApp
 {
+	private readonly IosSimulatorFixture simulator;
+
+	internal IosRunningApp(SampleWorkspace workspace, string artifact, IosSimulatorFixture simulator)
+		: base(workspace, artifact)
+	{
+		this.simulator = simulator;
+		Operations = new IosAppiumOperations(this);
+	}
+
 	internal override string DeviceProfile => simulator.DeviceProfile;
+	internal override IosAppiumOperations Operations { get; }
 
 	internal override Task<string> ReadApplicationId() => ReadAppleApplicationId();
 
@@ -64,7 +73,7 @@ internal sealed class IosRunningApp(SampleWorkspace workspace, string artifact, 
 		Assert.NotNull(status["code"]);
 		Assert.Equal(0, Convert.ToInt32(status["code"]));
 
-		Wait(() => Convert.ToInt32(Driver.ExecuteScript("mobile: queryAppState",
+		Operations.Wait(() => Convert.ToInt32(Driver.ExecuteScript("mobile: queryAppState",
 			new Dictionary<string, object> { ["bundleId"] = ApplicationId })) == 4
 			? ApplicationId : null, $"{ApplicationId} running in the foreground");
 		return Task.CompletedTask;

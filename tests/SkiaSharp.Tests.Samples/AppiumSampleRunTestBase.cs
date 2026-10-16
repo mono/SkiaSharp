@@ -26,10 +26,10 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 	};
 
 	private protected static async Task Basic(
-		AppiumRunningApp app,
+		AppiumOperations app,
 		string family,
 		IReadOnlyList<BasicPageCommand> pages,
-		Action<AppiumRunningApp, string> navigate)
+		Action<AppiumOperations, string> navigate)
 	{
 		Assert.NotEmpty(pages);
 		foreach (var page in pages)
@@ -58,8 +58,8 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 	}
 
 	private protected static async Task MauiDrawing(
-		AppiumRunningApp app,
-		Action<AppiumRunningApp, string> navigate)
+		AppiumOperations app,
+		Action<AppiumOperations, string> navigate)
 	{
 		const string canvasId = "basic-canvas-drawing";
 		navigate(app, "Drawing");
@@ -109,7 +109,7 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		}
 	}
 
-	private protected static async Task Gallery(AppiumRunningApp app)
+	private protected static async Task Gallery(AppiumOperations app)
 	{
 		app.Click("gallery-header-cpu");
 		app.Find("gallery-search", "gallery-filter-search").SendKeys("Gradient");
@@ -153,14 +153,14 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 	}
 
 	private static async Task<string> Compare(
-		AppiumRunningApp app, string canvasId, string name, string family)
+		AppiumOperations app, string canvasId, string name, string family)
 	{
 		string actual = "";
 		await SampleImage.Validate(() => actual = app.Capture(canvasId, name), Expected(app, name, family));
 		return actual;
 	}
 
-	private static string Expected(AppiumRunningApp app, string name, string family) =>
+	private static string Expected(AppiumOperations app, string name, string family) =>
 		Path.Combine(
 			Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", "Appium",
 			family, "iOS", app.DeviceProfile.Replace('/', Path.DirectorySeparatorChar), name + ".png");

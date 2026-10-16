@@ -19,7 +19,7 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium, IosSimulatorFi
 
 		var app = await BuildIosApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running => Basic(running, "Maui",
+		await appium.Run(app, running => Basic(running.Operations, "Maui",
 		[
 			new("CPU", "basic-canvas-cpu", "basic-cpu"),
 			new("GPU", "basic-canvas-gpu", "basic-gpu-smoke", new("basic-gpu-fps", HasFps), Animated: true),
@@ -36,7 +36,7 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium, IosSimulatorFi
 
 		var app = await BuildIosApp("Basic/iOS", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running => Basic(running, "Native",
+		await appium.Run(app, running => Basic(running.Operations, "Native",
 		[
 			new("CPU", "basic-canvas-cpu", "basic-cpu"),
 			new("GL", "basic-canvas-gpu-gl", "basic-gpu-gl-smoke", new("basic-gpu-gl-fps", HasFps), Animated: true),
@@ -54,7 +54,7 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium, IosSimulatorFi
 
 		var app = await BuildIosApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj");
 
-		await appium.Run(app, running => MauiDrawing(running, NavigateMauiIos));
+		await appium.Run(app, running => MauiDrawing(running.Operations, NavigateMauiIos));
 	}
 
 	[Fact]
@@ -66,7 +66,7 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium, IosSimulatorFi
 
 		var app = await BuildIosApp("Gallery", "Maui/SkiaSharpSample.Maui.csproj");
 
-		await appium.Run(app, Gallery);
+		await appium.Run(app, running => Gallery(running.Operations));
 	}
 
 	private async Task<IosRunningApp> BuildIosApp(string folder, string project)
@@ -87,12 +87,12 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium, IosSimulatorFi
 		return new IosRunningApp(workspace, artifact, simulator);
 	}
 
-	private static void NavigateMauiIos(AppiumRunningApp app, string title)
+	private static void NavigateMauiIos(AppiumOperations app, string title)
 	{
 		app.Click(By.XPath("//XCUIElementTypeNavigationBar//XCUIElementTypeButton[@label='Menu']"));
 		app.Click(MobileBy.IosNSPredicate($"type == 'XCUIElementTypeButton' AND label == '{title}'"));
 	}
 
-	private static void NavigateNativeIos(AppiumRunningApp app, string title) =>
+	private static void NavigateNativeIos(AppiumOperations app, string title) =>
 		app.Click(MobileBy.IosNSPredicate($"type == 'XCUIElementTypeButton' AND label == '{title}'"));
 }
