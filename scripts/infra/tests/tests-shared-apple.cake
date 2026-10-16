@@ -25,9 +25,23 @@ void SetupIosSimulator(ref string ownedSimulator, string model, string version)
     arguments.Append("--format json");
 
     try {
-        RunProcess("dotnet", arguments.Render(), out var stdout);
+        var settings = new ProcessSettings {
+            Arguments = arguments,
+            RedirectStandardOutput = true,
+            EnvironmentVariables = new Dictionary<string, string> {
+                ["NO_COLOR"] = "1",
+                ["SPECTRE_ANSI"] = "0",
+                ["DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTION"] = "0",
+            },
+        };
+        var exitCode = StartProcess("dotnet", settings, out var stdout);
+        var output = string.Join(Environment.NewLine, stdout);
+        Information("{0}", output);
 
-        using var json = System.Text.Json.JsonDocument.Parse(string.Join(Environment.NewLine, stdout));
+        if (exitCode != 0)
+            throw new Exception($"Apple simulator creation failed with exit code {exitCode}.");
+
+        using var json = System.Text.Json.JsonDocument.Parse(output);
         var udid = json.RootElement.GetProperty("udid").GetString();
         if (!Guid.TryParse(udid, out _))
             throw new Exception($"Apple tool returned an invalid simulator UUID: {udid}");
