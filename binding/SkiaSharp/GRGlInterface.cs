@@ -177,17 +177,7 @@ namespace SkiaSharp
 			private static readonly IntPtr libEGL;
 			private static readonly IntPtr libGLESv2;
 
-#if WINDOWS_UWP
-			// https://msdn.microsoft.com/en-us/library/windows/desktop/mt186421(v=vs.85).aspx
-
-			[DllImport ("api-ms-win-core-libraryloader-l2-1-0.dll", SetLastError = true, CharSet = CharSet.Ansi)]
-			private static extern IntPtr LoadPackagedLibrary ([MarshalAs (UnmanagedType.LPWStr)] string lpFileName, uint Reserved);
-
-			[DllImport ("api-ms-win-core-libraryloader-l1-2-0.dll", SetLastError = true, CharSet = CharSet.Ansi)]
-			private static extern IntPtr GetProcAddress (IntPtr hModule, [MarshalAs (UnmanagedType.LPStr)] string lpProcName);
-
-			private static IntPtr LoadLibrary (string lpFileName) => LoadPackagedLibrary(lpFileName, 0);
-#elif USE_LIBRARY_IMPORT
+#if USE_LIBRARY_IMPORT
 			[LibraryImport ("Kernel32.dll", SetLastError = true, EntryPoint = "LoadLibraryW", StringMarshalling = StringMarshalling.Utf16)]
 			private static partial IntPtr LoadLibrary (string lpFileName);
 
