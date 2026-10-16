@@ -27,18 +27,18 @@ public sealed class AppiumFixture
 				return;
 			stopped = true;
 			List<Exception> failures = [];
-			await AppiumRunningApp.Attempt(failures, async () =>
+			await FailureHandling.Attempt(failures, async () =>
 			{
 				if (!server.HasExited)
 					server.Kill(entireProcessTree: true);
 				await server.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(30));
 			});
-			await AppiumRunningApp.Attempt(failures, async () =>
+			await FailureHandling.Attempt(failures, async () =>
 				await SaveLog("server.stdout.log", await stdout!.WaitAsync(TimeSpan.FromSeconds(30))));
-			await AppiumRunningApp.Attempt(failures, async () =>
+			await FailureHandling.Attempt(failures, async () =>
 				await SaveLog("server.stderr.log", await stderr!.WaitAsync(TimeSpan.FromSeconds(30))));
 			server.Dispose();
-			AppiumRunningApp.ThrowFailures(failures);
+			FailureHandling.ThrowFailures(failures);
 		}
 
 		async Task StartServer()

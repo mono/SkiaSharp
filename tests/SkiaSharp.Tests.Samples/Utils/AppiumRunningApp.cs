@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.ExceptionServices;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Interactions;
 using Xunit;
+using static SkiaSharp.Tests.Samples.Utils.FailureHandling;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
@@ -405,21 +405,6 @@ internal abstract class AppiumRunningApp
 			!relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal),
 			$"The exact built artifact must belong to the selected workspace: {Artifact}");
 		Assert.True(File.Exists(Artifact) || Directory.Exists(Artifact), $"Built artifact is missing: {Artifact}");
-	}
-
-	internal static async Task Attempt(List<Exception> failures, Func<Task> action)
-	{
-		try
-		{ await action(); }
-		catch (Exception error) { failures.Add(error); }
-	}
-
-	internal static void ThrowFailures(List<Exception> failures)
-	{
-		if (failures.Count == 1)
-			ExceptionDispatchInfo.Capture(failures[0]).Throw();
-		if (failures.Count > 1)
-			throw new AggregateException("Appium lifecycle failed; all diagnostics and owned cleanup were attempted.", failures);
 	}
 
 }

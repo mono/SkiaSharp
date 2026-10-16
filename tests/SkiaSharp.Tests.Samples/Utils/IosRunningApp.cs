@@ -1,6 +1,7 @@
 ﻿using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.iOS;
 using Xunit;
+using static SkiaSharp.Tests.Samples.Utils.FailureHandling;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
