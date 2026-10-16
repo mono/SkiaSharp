@@ -81,16 +81,15 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData(0)]
 	[InlineData(1)]
 	[InlineData(2)]
-	[InlineData(3)]
 	public async Task IosPreparationWaitsForBootBeforeInstallAndLaunchAndStopsOnFailure(int failAt)
 	{
 		var commands = new List<string>();
 		var failure = new IOException("Device operation failed.");
 		var preparation = IosRunningApp.PrepareApplication("owned-uuid", "/owned/Built.app", "sample.bundle",
-			async (executable, arguments) =>
+			async arguments =>
 			{
 				await Task.Yield();
-				commands.Add(executable + " " + string.Join(" ", arguments));
+				commands.Add("dotnet " + string.Join(" ", arguments));
 				if (commands.Count - 1 == failAt)
 					throw failure;
 			});
@@ -101,9 +100,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		string[] expected =
 		[
 			"dotnet apple simulator boot owned-uuid --wait",
-			"xcrun simctl bootstatus owned-uuid -b",
-			"xcrun simctl install owned-uuid /owned/Built.app",
-			"xcrun simctl launch owned-uuid sample.bundle"
+			"dotnet apple simulator app install owned-uuid /owned/Built.app",
+			"dotnet apple simulator app launch owned-uuid sample.bundle"
 		];
 		Assert.Equal(failAt < 0 ? expected : expected.Take(failAt + 1), commands);
 	}
