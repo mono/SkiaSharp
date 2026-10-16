@@ -1,5 +1,6 @@
 parameters:
   name: ''
+  buildAgent: {}
   device: {}
 
 jobs:
@@ -7,11 +8,7 @@ jobs:
     parameters:
       name: ${{ parameters.name }}
       displayName: Appium (iOS ${{ parameters.device.version }})
-      buildAgent:
-        pool:
-          name: Azure Pipelines
-          vmImage: macos-26
-          os: macos
+      buildAgent: ${{ parameters.buildAgent }}
       target: samples
       additionalArgs: --runGroup=Ios --sampleRunId=${{ parameters.name }} --skipExternals="all"
       env:
