@@ -42,7 +42,7 @@ public sealed class IosSimulatorFixture : IAsyncLifetime
 
 		if (created.ExitCode == 0)
 		{
-			await AppiumRunningApp.Attempt(failures, () =>
+			await FailureHandling.Attempt(failures, () =>
 			{
 				using var json = JsonDocument.Parse(created.Output);
 				var udid = json.RootElement.GetProperty("udid").GetString();
@@ -55,16 +55,10 @@ public sealed class IosSimulatorFixture : IAsyncLifetime
 			});
 		}
 
-		await AppiumRunningApp.Attempt(failures, async () =>
-		{
-			await CaptureCommand("create", created);
-		});
+		await FailureHandling.Attempt(failures, async () => await CaptureCommand("create", created));
+		FailureHandling.ThrowFailures(failures);
 
-		AppiumRunningApp.ThrowFailures(failures);
-
-		await CaptureCommand(
-			"boot",
-			await Apple.BootSimulator(ownedSimulator!));
+		await CaptureCommand("boot", await Apple.BootSimulator(ownedSimulator!));
 
 		ready = true;
 	}
@@ -83,14 +77,14 @@ public sealed class IosSimulatorFixture : IAsyncLifetime
 		if (ownedSimulator is not null)
 		{
 			// A failed boot or shutdown must not prevent deletion of our own device.
-			await AppiumRunningApp.Attempt(failures, async () =>
+			await FailureHandling.Attempt(failures, async () =>
 			{
 				await CaptureCommand(
 					"shutdown",
 					await Apple.ShutdownSimulator(ownedSimulator));
 			});
 
-			await AppiumRunningApp.Attempt(failures, async () =>
+			await FailureHandling.Attempt(failures, async () =>
 			{
 				await CaptureCommand(
 					"delete",
@@ -98,7 +92,7 @@ public sealed class IosSimulatorFixture : IAsyncLifetime
 			});
 		}
 
-		AppiumRunningApp.ThrowFailures(failures);
+		FailureHandling.ThrowFailures(failures);
 	}
 
 	internal void AttachDiagnostics()
@@ -113,20 +107,20 @@ public sealed class IosSimulatorFixture : IAsyncLifetime
 	{
 		List<Exception> failures = [];
 
-		await AppiumRunningApp.Attempt(failures, () =>
+		await FailureHandling.Attempt(failures, () =>
 		{
 			Assert.True(result.ExitCode == 0, $"Simulator {operation} failed ({result.ExitCode}); inspect {diagnostics}.\n{result.Error}");
 
 			return Task.CompletedTask;
 		});
 
-		await AppiumRunningApp.Attempt(failures, () =>
+		await FailureHandling.Attempt(failures, () =>
 		{
 			return SaveText($"{operation}.log",
 				$"Exit: {result.ExitCode}\n{result.Output}\n{result.Error}");
 		});
 
-		AppiumRunningApp.ThrowFailures(failures);
+		FailureHandling.ThrowFailures(failures);
 
 	}
 
