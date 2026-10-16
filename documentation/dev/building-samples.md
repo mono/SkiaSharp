@@ -114,6 +114,9 @@ Use your staged packages' suffix, not the example suffix. The installer provisio
 the runtime; tests require an exact available match and reviewed image references.
 Each test creates and removes its own simulator and Appium session without
 reusing a running server or shutting down unrelated simulators.
+The runner boots the simulator, waits for boot services, and installs and launches
+the built app before Appium attaches. Preparation failures are reported separately
+from Appium session startup.
 
 Coverage includes page navigation, CPU/GPU rendering, drawing and Clear, and
 Gallery search, filtering and controls. For failures, inspect the TRX attachments

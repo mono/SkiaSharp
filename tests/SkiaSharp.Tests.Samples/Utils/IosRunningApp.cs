@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using OpenQA.Selenium;
+using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.iOS;
 using Xunit;
 
@@ -27,7 +27,7 @@ internal sealed class IosRunningApp(SampleWorkspace workspace, string artifact, 
 		_ => throw new InvalidOperationException($"No reviewed iOS sample profile exists for {version}.")
 	};
 
-	protected override async Task Start(Uri address)
+	protected override async Task Prepare()
 	{
 		Assert.True(OperatingSystem.IsMacOS(),
 			"iOS tests require macOS, Xcode and the declared preinstalled simulator runtime.");
@@ -47,15 +47,40 @@ internal sealed class IosRunningApp(SampleWorkspace workspace, string artifact, 
 		Own(DeleteSimulator);
 		await SaveText("simulator.json", JsonSerializer.Serialize(new { simulator, model, version, build }), "application/json");
 
-		var wdaLocalPort = AppiumFixture.GetFreePort();
+		await PrepareApplication(simulator, Artifact, ApplicationId, async (executable, arguments) =>
+			await CaptureCommand(ProcessRunner.Run(executable, arguments, Repo.RootDir, TimeSpan.FromMinutes(3))));
+	}
+
+	internal static async Task PrepareApplication(
+		string simulator, string artifact, string applicationId, Func<string, string[], Task> execute)
+	{
+		await execute("dotnet", ["apple", "simulator", "boot", simulator, "--wait"]);
+		await execute("xcrun", ["simctl", "bootstatus", simulator, "-b"]);
+		await execute("xcrun", ["simctl", "install", simulator, artifact]);
+		await execute("xcrun", ["simctl", "launch", simulator, applicationId]);
+	}
+
+	internal static AppiumOptions AttachOptions(
+		string simulator, string applicationId, string model, string version)
+	{
 		var options = Options();
-		options.App = Artifact;
 		options.DeviceName = model;
 		options.PlatformVersion = version;
 		options.AddAdditionalAppiumOption("udid", simulator);
-		options.AddAdditionalAppiumOption("bundleId", ApplicationId);
+		options.AddAdditionalAppiumOption("bundleId", applicationId);
+		options.AddAdditionalAppiumOption("noReset", true);
+		// Keep the AUT bound to WDA; forceAppLaunch=false preserves the prelaunched process.
+		options.AddAdditionalAppiumOption("autoLaunch", true);
+		options.AddAdditionalAppiumOption("forceAppLaunch", false);
 		options.AddAdditionalAppiumOption("shutdownOtherSimulators", false);
-		options.AddAdditionalAppiumOption("fullReset", true);
+		return options;
+	}
+
+	protected override Task Start(Uri address)
+	{
+		Assert.NotNull(simulator);
+		var wdaLocalPort = AppiumFixture.GetFreePort();
+		var options = AttachOptions(simulator, ApplicationId, model, version);
 		options.AddAdditionalAppiumOption("useNewWDA", true);
 		options.AddAdditionalAppiumOption("wdaLocalPort", wdaLocalPort);
 		options.AddAdditionalAppiumOption("derivedDataPath", Path.Combine(Workspace.Root, "wda-ios"));
@@ -80,8 +105,10 @@ internal sealed class IosRunningApp(SampleWorkspace workspace, string artifact, 
 		Assert.NotNull(status["code"]);
 		Assert.Equal(0, Convert.ToInt32(status["code"]));
 
-		Wait(() => Driver.FindElement(By.XPath("//XCUIElementTypeApplication"))
-			is { Displayed: true } element ? element : null, $"{ApplicationId} foreground UI");
+		Wait(() => Convert.ToInt32(Driver.ExecuteScript("mobile: queryAppState",
+			new Dictionary<string, object> { ["bundleId"] = ApplicationId })) == 4
+			? ApplicationId : null, $"{ApplicationId} running in the foreground");
+		return Task.CompletedTask;
 	}
 
 	internal static string SelectRuntime(JsonElement runtimes, string version, string build) =>
