@@ -36,7 +36,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			() => { order.Add("server-start"); return Task.CompletedTask; },
 			() => { order.Add("server-stop"); return Task.CompletedTask; }));
 		Assert.Same(app.StartFailure, failure);
-		Assert.Equal(new[] { "server-start", "session-start", "diagnostics", "server-stop", "cleanup-second", "cleanup-first" }, order);
+		Assert.Equal(new[] { "prepare", "server-start", "session-start", "diagnostics", "server-stop", "cleanup-second", "cleanup-first" }, order);
 		Assert.True(File.Exists(Path.Combine(app.Diagnostics, "failure.log")));
 		await new IosRunningApp(workspace, artifact).SaveDiagnostics();
 		await Assert.ThrowsAsync<InvalidOperationException>(() => app.Run(
@@ -57,7 +57,70 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			() => { order.Add("server-stop"); throw new IOException("server-stop"); }));
 		Assert.Same(app.StartFailure, failure.InnerExceptions[0]);
 		Assert.Equal(4, failure.InnerExceptions.Count);
-		Assert.Equal(new[] { "session-start", "diagnostics", "server-stop", "cleanup-second", "cleanup-first" }, order);
+		Assert.Equal(new[] { "prepare", "session-start", "diagnostics", "server-stop", "cleanup-second", "cleanup-first" }, order);
+	}
+
+	[Fact]
+	public async Task PreparationFailureCleansOwnedSimulatorWithoutStartingServerOrSession()
+	{
+		using var workspace = Workspace();
+		var artifact = Path.Combine(workspace.Root, "Sample.app");
+		Directory.CreateDirectory(artifact);
+		var order = new List<string>();
+		var app = new DiagnosticApp(workspace, artifact, order, failPreparation: true);
+		var failure = await Assert.ThrowsAsync<NotSupportedException>(() => app.Run(
+			new Uri("http://127.0.0.1:1"), _ => throw new InvalidOperationException("Scenario must not run."),
+			() => throw new InvalidOperationException("Server must not start."),
+			() => { order.Add("server-stop"); return Task.CompletedTask; }));
+		Assert.Same(app.StartFailure, failure);
+		Assert.Equal(new[] { "prepare", "diagnostics", "server-stop", "simulator-cleanup" }, order);
+	}
+
+	[Theory]
+	[InlineData(-1)]
+	[InlineData(0)]
+	[InlineData(1)]
+	[InlineData(2)]
+	[InlineData(3)]
+	public async Task IosPreparationWaitsForBootBeforeInstallAndLaunchAndStopsOnFailure(int failAt)
+	{
+		var commands = new List<string>();
+		var failure = new IOException("Device operation failed.");
+		var preparation = IosRunningApp.PrepareApplication("owned-uuid", "/owned/Built.app", "sample.bundle",
+			async (executable, arguments) =>
+			{
+				await Task.Yield();
+				commands.Add(executable + " " + string.Join(" ", arguments));
+				if (commands.Count - 1 == failAt)
+					throw failure;
+			});
+		if (failAt < 0)
+			await preparation;
+		else
+			Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => preparation));
+		string[] expected =
+		[
+			"dotnet apple simulator boot owned-uuid --wait",
+			"xcrun simctl bootstatus owned-uuid -b",
+			"xcrun simctl install owned-uuid /owned/Built.app",
+			"xcrun simctl launch owned-uuid sample.bundle"
+		];
+		Assert.Equal(failAt < 0 ? expected : expected.Take(failAt + 1), commands);
+	}
+
+	[Fact]
+	public void IosBindsThePreparedAppWithoutResetInstallOrForcedRelaunch()
+	{
+		var capabilities = IosRunningApp.AttachOptions("owned-uuid", "sample.bundle", "iPhone 16 Pro", "18.6")
+			.ToCapabilities();
+		Assert.Equal("owned-uuid", capabilities.GetCapability("appium:udid"));
+		Assert.Equal("sample.bundle", capabilities.GetCapability("appium:bundleId"));
+		Assert.Equal(true, capabilities.GetCapability("appium:noReset"));
+		Assert.Equal(true, capabilities.GetCapability("appium:autoLaunch"));
+		Assert.Equal(false, capabilities.GetCapability("appium:forceAppLaunch"));
+		Assert.Equal(false, capabilities.GetCapability("appium:shutdownOtherSimulators"));
+		Assert.Null(capabilities.GetCapability("appium:app"));
+		Assert.Null(capabilities.GetCapability("appium:fullReset"));
 	}
 
 	[Fact]
@@ -74,12 +137,22 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	private sealed class DiagnosticApp(
-		SampleWorkspace workspace, string artifact, List<string> order, bool failCleanup = false)
+		SampleWorkspace workspace, string artifact, List<string> order, bool failCleanup = false, bool failPreparation = false)
 		: AppiumRunningApp(workspace, artifact)
 	{
 		internal Exception StartFailure { get; } = new NotSupportedException("Session construction failed.");
 		internal override string DeviceProfile => "unit-fixture";
 		internal override Task<string> ReadApplicationId() => Task.FromResult("unit.fixture");
+		protected override Task Prepare()
+		{
+			order.Add("prepare");
+			if (failPreparation)
+			{
+				Own(() => { order.Add("simulator-cleanup"); return Task.CompletedTask; });
+				throw StartFailure;
+			}
+			return Task.CompletedTask;
+		}
 		protected override Task Start(Uri address)
 		{
 			order.Add("session-start");

@@ -36,6 +36,7 @@ internal abstract class AppiumRunningApp
 	internal void SubmitSearch() =>
 		Find(MobileBy.IosNSPredicate("type == 'XCUIElementTypeButton' AND name == 'Return'")).Click();
 
+	protected virtual Task Prepare() => Task.CompletedTask;
 	protected abstract Task Start(Uri address);
 	internal abstract Task<string> ReadApplicationId();
 
@@ -337,6 +338,7 @@ internal abstract class AppiumRunningApp
 			applicationId = await ReadApplicationId();
 			if (string.IsNullOrWhiteSpace(applicationId))
 				throw new InvalidOperationException($"Built application identity is invalid: {Artifact}");
+			await Prepare();
 			await startServer();
 			await Start(address);
 			await scenario(this);
