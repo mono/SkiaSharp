@@ -121,9 +121,11 @@ after failures. The same lifecycle helpers serve the DeviceRunners iOS target.
 and owns a fresh Appium server/session that reinstalls and launches the app without
 erasing or rebooting the shared simulator. Appium manages WebDriverAgent.
 
-For direct test or IDE runs, set `SAMPLE_TEST_IOS_VERSION` and
-`SAMPLE_TEST_IOS_MODEL` to select the runtime and device model; defaults match the
-primary CI profile. Set `SAMPLE_TEST_IOS_UDID` to use an already-running simulator
+Device and sample runs use `--iosVersion` and `--iosSimulator`, backed by
+`TEST_IOS_SIMULATOR_VERSION` and `TEST_IOS_SIMULATOR_NAME`. The name is a device
+type such as `iPhone 16 Pro`, not the unique name of a created simulator.
+For direct test or IDE runs, set those environment variables to select the
+runtime and device type. Set `TEST_IOS_SIMULATOR_UDID` to use an already-running simulator
 you manage yourself. If unset, the `appium:udid` capability is omitted and Appium
 selects or creates a simulator using the model and version. C# tests do not manage
 simulator lifetimes or install runtimes. Unsupported runtimes and missing reviewed
