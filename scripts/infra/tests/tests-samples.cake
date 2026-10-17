@@ -24,7 +24,7 @@ string OWNED_IOS_SIMULATOR = null;
 Setup(context =>
 {
     if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
-        if (IsRunningOnMacOs() && !TARGET.Equals("samples-generate", StringComparison.OrdinalIgnoreCase)) {
+        if (!TARGET.Equals("samples-generate", StringComparison.OrdinalIgnoreCase)) {
             var version = Argument("iosVersion", EnvironmentVariable("TEST_IOS_SIMULATOR_VERSION") ?? "26.5");
             var model = Argument("iosSimulator", EnvironmentVariable("TEST_IOS_SIMULATOR_NAME") ?? "iPhone 16 Pro");
 

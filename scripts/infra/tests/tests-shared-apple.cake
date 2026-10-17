@@ -4,6 +4,9 @@
 
 void SetupIosSimulator(ref string ownedSimulator, string model, string version)
 {
+    if (!IsRunningOnMacOs())
+        return;
+
     // Cake 4 still invokes Setup/Teardown in a dry run and does not set IsDryRun().
     var dryRunOptions = new[] { "--dryrun", "--noop", "--whatif" };
     if (System.Environment.GetCommandLineArgs().Any(arg =>
@@ -58,6 +61,9 @@ void SetupIosSimulator(ref string ownedSimulator, string model, string version)
 
 void TeardownIosSimulator(ref string ownedSimulator, Exception originalError)
 {
+    if (!IsRunningOnMacOs())
+        return;
+
     if (string.IsNullOrEmpty(ownedSimulator))
         return;
 
