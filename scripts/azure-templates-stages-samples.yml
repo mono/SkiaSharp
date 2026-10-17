@@ -46,12 +46,10 @@ stages:
 
         - template: /scripts/azure-templates-jobs-sample-appium.yml@self
           parameters:
-            name: samples_appium_ios26_5
-            displayName: Appium (iOS 26.5)
+            name: samples_appium_ios_latest
+            displayName: Appium (iOS latest installed)
             buildAgent: ${{ parameters.buildAgentMac }}
-            additionalArgs: --runGroup=Ios --sampleRunId=samples_appium_ios26_5 --iosVersion=26.5 --iosSimulatorModel="iPhone 16 Pro" --skipExternals="all"
+            additionalArgs: --runGroup=Ios --sampleRunId=samples_appium_ios_latest --iosVersion=latest --iosSimulatorModel="iPhone 16 Pro" --skipExternals="all"
             preBuildSteps:
-              - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '26.5'
-                displayName: Install the selected iOS simulator runtime
               - pwsh: ./scripts/infra/tests/install-appium.ps1
                 displayName: Install Appium 3 and XCUITest

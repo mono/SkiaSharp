@@ -25,7 +25,8 @@ void SetupIosSimulator(ref string ownedSimulator)
         .AppendQuoted(name)
         .Append("--device-type").AppendQuoted(TEST_IOS_SIMULATOR_MODEL);
 
-    if (!string.IsNullOrEmpty(TEST_IOS_SIMULATOR_VERSION))
+    if (!string.IsNullOrEmpty(TEST_IOS_SIMULATOR_VERSION) &&
+        !TEST_IOS_SIMULATOR_VERSION.Equals("latest", StringComparison.OrdinalIgnoreCase))
         arguments.Append("--runtime").AppendQuoted($"iOS {TEST_IOS_SIMULATOR_VERSION}");
 
     arguments.Append("--format json");
@@ -52,9 +53,15 @@ void SetupIosSimulator(ref string ownedSimulator)
         if (!Guid.TryParse(udid, out _))
             throw new Exception($"Apple tool returned an invalid simulator UUID: {udid}");
 
-        // Record ownership before booting so a failed boot still removes this device.
+        // Record ownership before reading metadata or booting so either failure removes this device.
         ownedSimulator = udid;
-        Information("Booting owned iOS simulator: {0}", ownedSimulator);
+
+        var version = json.RootElement.GetProperty("runtime").GetProperty("version").GetString();
+        if (!Version.TryParse(version, out _))
+            throw new Exception($"Apple tool returned an invalid simulator runtime version: {version}");
+
+        TEST_IOS_SIMULATOR_VERSION = version;
+        Information("Booting owned iOS simulator: {0} (iOS {1})", ownedSimulator, version);
         DotNetTool($"apple simulator boot \"{ownedSimulator}\" --wait");
     } catch (Exception error) {
         TeardownIosSimulator(ref ownedSimulator, error);

@@ -5,7 +5,7 @@ using static SkiaSharp.Tests.Samples.Utils.FailureHandling;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-// Owns one app session; simulator ownership belongs to the collection fixture.
+// Owns one app session and its diagnostics; platform setup belongs to the caller.
 internal abstract class AppiumRunningApp
 {
 	private AppiumDriver? driver;
@@ -21,25 +21,25 @@ internal abstract class AppiumRunningApp
 	}
 
 	internal SampleWorkspace Workspace { get; }
+
 	internal string Artifact { get; }
+
 	internal string ApplicationId => applicationId ?? throw new InvalidOperationException("The built application's identity has not been read.");
+
 	internal string Diagnostics { get; }
+
 	internal abstract string DeviceProfile { get; }
+
 	internal abstract AppiumOperations Operations { get; }
+
 	internal AppiumDriver Driver => driver ?? throw new InvalidOperationException("The owned Appium session is not ready.");
+
 	protected bool HasDriver => driver is not null;
 
 	protected abstract Task Start(Uri address);
+
 	internal abstract Task<string> ReadApplicationId();
 
-	protected async Task<string> ReadAppleApplicationId()
-	{
-		var plist = Path.Combine(Artifact, "Info.plist");
-		var id = (await Command("plutil", ["-extract", "CFBundleIdentifier", "raw", "-o", "-", plist])).Trim();
-		if (string.IsNullOrWhiteSpace(id) || id.Any(char.IsWhiteSpace))
-			throw new InvalidOperationException($"Built app bundle has an invalid CFBundleIdentifier: {plist}");
-		return id;
-	}
 	protected virtual Task CapturePlatformDiagnostics() => Task.CompletedTask;
 
 	protected void SetDriver(AppiumDriver value)
@@ -62,6 +62,7 @@ internal abstract class AppiumRunningApp
 				return Task.CompletedTask;
 			});
 		}
+
 		await Attempt(failures, CapturePlatformDiagnostics);
 		ThrowFailures(failures);
 	}
@@ -73,6 +74,7 @@ internal abstract class AppiumRunningApp
 		used = true;
 
 		List<Exception> failures = [];
+
 		try
 		{
 			AssertArtifact();
@@ -80,6 +82,7 @@ internal abstract class AppiumRunningApp
 			applicationId = await ReadApplicationId();
 			if (string.IsNullOrWhiteSpace(applicationId))
 				throw new InvalidOperationException($"Built application identity is invalid: {Artifact}");
+
 			await startServer();
 			await Start(address);
 			await scenario(this);
@@ -98,17 +101,12 @@ internal abstract class AppiumRunningApp
 				driver = null;
 				return Task.CompletedTask;
 			});
+
 			// Failed session constructors can leave driver children alive.
 			await Attempt(failures, stopServer);
 		}
-		ThrowFailures(failures);
-	}
 
-	protected static AppiumOptions Options()
-	{
-		var options = new AppiumOptions { PlatformName = "iOS", AutomationName = "XCUITest" };
-		options.AddAdditionalAppiumOption("newCommandTimeout", 120);
-		return options;
+		ThrowFailures(failures);
 	}
 
 	protected async Task<string> Command(
@@ -123,14 +121,16 @@ internal abstract class AppiumRunningApp
 	{
 		var result = await command;
 		List<Exception> failures = [];
+
 		await Attempt(failures, () =>
 		{
 			Assert.True(result.ExitCode == 0,
-				$"Device command failed ({result.ExitCode}); inspect {Diagnostics}.\n{result.Error}");
+				$"Application command failed ({result.ExitCode}); inspect {Diagnostics}.\n{result.Error}");
 			return Task.CompletedTask;
 		});
 		await Attempt(failures, () => SaveText($"{SampleWorkspace.CreateIdentity("command")}.log",
 			$"Exit: {result.ExitCode}\n{result.Output}\n{result.Error}"));
+
 		ThrowFailures(failures);
 		return result.Output;
 	}

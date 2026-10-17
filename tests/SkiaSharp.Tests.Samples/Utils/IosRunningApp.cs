@@ -7,8 +7,11 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal sealed class IosRunningApp : AppiumRunningApp
 {
-	private readonly string version =
-		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_VERSION") ?? "26.5";
+	private readonly string? version =
+		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_VERSION");
+
+	private readonly string? referenceVersion =
+		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_REFERENCE_VERSION");
 
 	private readonly string model =
 		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_MODEL") ?? "iPhone 16 Pro";
@@ -22,18 +25,46 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		Operations = new IosAppiumOperations(this);
 	}
 
-	internal override string DeviceProfile => $"{model.Replace(' ', '-')}/{version}";
+	internal override string DeviceProfile => ReferenceProfile(model, version, referenceVersion);
+
 	internal override IosAppiumOperations Operations { get; }
 
-	internal override Task<string> ReadApplicationId() => ReadAppleApplicationId();
+	internal override async Task<string> ReadApplicationId()
+	{
+		var plist = Path.Combine(Artifact, "Info.plist");
+		var id = (await Command("plutil", ["-extract", "CFBundleIdentifier", "raw", "-o", "-", plist])).Trim();
+
+		if (string.IsNullOrWhiteSpace(id) || id.Any(char.IsWhiteSpace))
+			throw new InvalidOperationException($"Built app bundle has an invalid CFBundleIdentifier: {plist}");
+
+		return id;
+	}
+
+	internal static string ReferenceProfile(string model, string? version, string? referenceVersion)
+	{
+		var profileVersion = string.IsNullOrEmpty(referenceVersion) ? version : referenceVersion;
+		if (string.IsNullOrEmpty(profileVersion) || profileVersion.Equals("latest", StringComparison.OrdinalIgnoreCase))
+			profileVersion = "latest";
+
+		return $"{model.Replace(' ', '-')}/{profileVersion}";
+	}
 
 	internal static AppiumOptions SessionOptions(
-		string artifact, string? simulator, string applicationId, string model, string version)
+		string artifact, string? simulator, string applicationId, string model, string? version)
 	{
-		var options = Options();
-		options.App = artifact;
-		options.DeviceName = model;
-		options.PlatformVersion = version;
+		var options = new AppiumOptions
+		{
+			PlatformName = "iOS",
+			AutomationName = "XCUITest",
+			App = artifact,
+			DeviceName = model
+		};
+		options.AddAdditionalAppiumOption("newCommandTimeout", 120);
+
+		// A direct latest run lets Appium select the runtime; Cake passes the resolved version.
+		if (!string.IsNullOrEmpty(version) && !version.Equals("latest", StringComparison.OrdinalIgnoreCase))
+			options.PlatformVersion = version;
+
 		if (!string.IsNullOrWhiteSpace(simulator))
 			options.AddAdditionalAppiumOption("udid", simulator);
 
@@ -64,6 +95,9 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		options.AddAdditionalAppiumOption("waitForIdleTimeout", 1);
 
 		SetDriver(new IOSDriver(address, options, TimeSpan.FromMinutes(6)));
+
+		TestContext.Current.TestOutputHelper?.WriteLine(
+			$"iOS runtime: {Driver.Capabilities.GetCapability("platformVersion")}; golden profile: {DeviceProfile}.");
 
 		// Normalize only the session's simulator chrome; retain the full canvas capture.
 		var status = Assert.IsAssignableFrom<IDictionary<string, object>>(
@@ -96,6 +130,7 @@ internal sealed class IosRunningApp : AppiumRunningApp
 			await Attempt(failures, () => SaveText("device.log",
 				string.Join(Environment.NewLine, Driver.Manage().Logs.GetLog("syslog"))));
 		}
+
 		ThrowFailures(failures);
 	}
 }
