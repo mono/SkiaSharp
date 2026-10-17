@@ -1,9 +1,82 @@
+# These file/rule exceptions require review and also apply to future findings.
+# Re-review the rationale when the affected dependency or its consumers change.
 queries:
-  # FreeType uses (&buffer)[1] to form a one-past-end pointer, not to read buffer contents.
-  # The expression remains in upstream 2.14.3 and 2.15.0; an upgrade alone does not remove it.
-  # This also excludes future SM01947 findings in this file; other rules remain enabled.
+  # safeUniformCount is clamped to the remaining uint16_t textureUnitsCount.
+  # The loop exits before its uint16_t index can wrap; the wider comparison is bounded.
+  - exclude:
+      path:
+        - "externals/angle/src/libANGLE/ProgramExecutable.cpp"
+      opaqueid:
+        - "SM01928"
+
+  # MD5 supplies a short builder/configuration directory name, not an integrity check.
+  # Changing it changes build/cache paths and the recipe's expected output.
+  - exclude:
+      path:
+        - "externals/skia/infra/bots/recipes/compile.py"
+      opaqueid:
+        - "SM02167"
+
+  # Deliberately broad modes test ZIP permission preservation under a private temp root.
+  # Reducing the fixture's modes would remove the behavior that the test verifies.
+  - exclude:
+      path:
+        - "externals/skia/infra/bots/zip_utils_test.py"
+      opaqueid:
+        - "SM03150"
+
+  # Supported subclasses close in their destructors before base destruction.
+  # The closed-state guard prevents both reported pure-virtual calls in the base.
+  - exclude:
+      path:
+        - "externals/skia/src/core/SkDocument.cpp"
+      opaqueid:
+        - "SM03728"
+
+  # MD5/SHA1 are printed dictionary diagnostics alongside SHA256, not authentication.
+  # Digest mismatches report diagnostics rather than granting access or trust.
+  - exclude:
+      path:
+        - "externals/skia/third_party/externals/brotli/scripts/dictionary/step-03-validate-bin.py"
+      opaqueid:
+        - "SM02167"
+
+  # The reported upstream expression forms a raster-pool end pointer, not a buffer read.
+  # This is a vendor exception, not proof of strict-C conformance; re-review pool changes.
   - exclude:
       path:
         - "externals/skia/third_party/externals/freetype/src/raster/ftraster.c"
       opaqueid:
         - "SM01947"
+
+  # SHA1 is the documented fuzz-corpus seed filename, not font authentication.
+  # Recorder consumers depend on the same naming convention.
+  - exclude:
+      path:
+        - "externals/skia/third_party/externals/harfbuzz/test/fuzzing/hb_fuzzing_tools.py"
+      opaqueid:
+        - "SM02167"
+
+  # SHA1 identifies a system-font fixture version before comparing shaping results.
+  # A mismatch skips that regression case; it does not authorize product input.
+  - exclude:
+      path:
+        - "externals/skia/third_party/externals/harfbuzz/test/shape/run-tests.py"
+      opaqueid:
+        - "SM02167"
+
+  # MD5 compares newline-normalized generated shader/reflection text with test references.
+  # It is regression-output equality, not authentication of an untrusted artifact.
+  - exclude:
+      path:
+        - "externals/skia/third_party/externals/spirv-cross/test_shaders.py"
+      opaqueid:
+        - "SM02167"
+
+  # MD5 reproduces Bazel's workspace-cache directory format to locate SDK symlinks.
+  # Replacing the algorithm would look in a different directory and break that contract.
+  - exclude:
+      path:
+        - "externals/skia/tools/macsdk_dir.py"
+      opaqueid:
+        - "SM02167"
