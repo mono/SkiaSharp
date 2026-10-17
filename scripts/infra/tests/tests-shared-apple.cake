@@ -27,7 +27,8 @@ void SetupIosSimulator(ref string ownedSimulator)
 
     if (!string.IsNullOrEmpty(TEST_IOS_SIMULATOR_VERSION) &&
         !TEST_IOS_SIMULATOR_VERSION.Equals("latest", StringComparison.OrdinalIgnoreCase))
-        arguments.Append("--runtime").AppendQuoted($"iOS {TEST_IOS_SIMULATOR_VERSION}");
+        arguments.Append("--runtime").AppendQuoted(
+            $"com.apple.CoreSimulator.SimRuntime.iOS-{TEST_IOS_SIMULATOR_VERSION.Replace('.', '-')}");
 
     arguments.Append("--format json");
 
@@ -47,6 +48,10 @@ void SetupIosSimulator(ref string ownedSimulator)
 
         if (exitCode != 0)
             throw new Exception($"Apple simulator creation failed with exit code {exitCode}.");
+
+        // The pinned Apple tool can print a failure message while returning exit code zero.
+        if (!output.TrimStart().StartsWith("{", StringComparison.Ordinal))
+            throw new Exception($"Apple simulator creation did not return JSON: {output}");
 
         using var json = System.Text.Json.JsonDocument.Parse(output);
         var udid = json.RootElement.GetProperty("udid").GetString();
