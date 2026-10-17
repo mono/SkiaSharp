@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using SkiaSharp.Testing;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -103,20 +104,25 @@ internal static class SampleImage
         Assert.Equal(expectedImage.Width, actualImage.Width);
         Assert.Equal(expectedImage.Height, actualImage.Height);
 
-        var result = SkiaSharp.Extended.SKPixelComparer.Compare(expectedImage, actualImage, 0);
-        var averageColorErrorFraction = result.AbsoluteError / (result.TotalPixels * 4.0 * 255);
+        var comparisonOptions = new SKPixelComparerOptions
+        {
+            AlphaType = SKAlphaType.Premul,
+            MaxNormalizedMeanAbsoluteError = maxAverageColorErrorFraction,
+        };
+        var result = SKPixelComparer.Compare(expectedImage, actualImage, comparisonOptions);
+        var averageColorErrorFraction = result.RawMetrics.NormalizedMeanAbsoluteError;
         var comparison = maxAverageColorErrorFraction is { } limit
             ? $"average RGBA color error {averageColorErrorFraction:P3}, exceeding {limit:P3}"
-            : $"differing pixels {(decimal)result.ErrorPixelCount / result.TotalPixels:P3}, exceeding {maxErrorPixelFraction:P3}";
+            : $"differing pixels {(decimal)result.MismatchedPixelCount / result.TotalPixels:P3}, exceeding {maxErrorPixelFraction:P3}";
         TestContext.Current.TestOutputHelper?.WriteLine(
-            $"Image comparison: {result.ErrorPixelCount}/{result.TotalPixels} pixels differ; " +
+            $"Image comparison: {result.MismatchedPixelCount}/{result.TotalPixels} pixels differ; " +
             $"average RGBA color error {averageColorErrorFraction:P3}; " +
             (maxAverageColorErrorFraction is { } allowed
                 ? $"allowed average color error {allowed:P3}."
                 : $"allowed differing pixels {maxErrorPixelFraction:P3}."));
-        if (maxAverageColorErrorFraction is { } averageLimit
-            ? averageColorErrorFraction <= averageLimit
-            : result.ErrorPixelCount <= result.TotalPixels * maxErrorPixelFraction)
+        if (maxAverageColorErrorFraction.HasValue
+            ? result.IsMatch
+            : result.MismatchedPixelCount <= result.TotalPixels * maxErrorPixelFraction)
         {
             if (!reportMismatch)
                 TestContext.Current.AddFileAttachment(actual, "image/png");
@@ -126,7 +132,8 @@ internal static class SampleImage
         if (!reportMismatch)
             return false;
 
-        using var diff = SkiaSharp.Extended.SKPixelComparer.GenerateDifferenceImage(expectedImage, actualImage, 0);
+        using var diff = SKPixelComparer.GenerateDifferenceImage(
+            expectedImage, actualImage, SKPixelDifferenceStyle.ThresholdOverlay, comparisonOptions);
         using var data = diff.Encode(SKEncodedImageFormat.Png, 100);
         var diffPath = Path.ChangeExtension(actual, ".diff.png");
         File.WriteAllBytes(diffPath, data.ToArray());
@@ -134,7 +141,7 @@ internal static class SampleImage
         TestContext.Current.AddFileAttachment(expected, "image/png", $"expected-{Path.GetFileName(expected)}");
         TestContext.Current.AddFileAttachment(diffPath, "image/png");
 
-        Assert.Fail($"Sample pixels differ from {expected}: {result.ErrorPixelCount}/{result.TotalPixels} pixels; " +
+        Assert.Fail($"Sample pixels differ from {expected}: {result.MismatchedPixelCount}/{result.TotalPixels} pixels; " +
             $"{comparison}; actual {actual}; diff {diffPath}.");
         return false;
     }

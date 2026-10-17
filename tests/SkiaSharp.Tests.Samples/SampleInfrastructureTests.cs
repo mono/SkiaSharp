@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Xml.Linq;
+using SkiaSharp.Testing;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -565,6 +566,8 @@ public class SampleInfrastructureTests : IDisposable
     [InlineData(-0.01)]
     [InlineData(1.01)]
     [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
     public void ImageOptionsRejectInvalidAverageColorErrorLimits(double limit)
     {
         using var bitmap = new SKBitmap(4, 4);
@@ -680,6 +683,38 @@ public class SampleInfrastructureTests : IDisposable
         Assert.Contains("192/192", error.Message);
         Assert.ThrowsAny<Exception>(() =>
             SampleImage.Validate(actual, expected, new() { MaxAverageColorErrorFraction = 0 }));
+    }
+
+    [Fact]
+    public void AverageColorErrorReplacesAnExplicitZeroPixelBudgetAtTheMeasuredRawCutoff()
+    {
+        using var bitmap = new SKBitmap(4, 4);
+        bitmap.Erase(SKColors.Black);
+        var expected = SavePng(bitmap, "mae-gate.expected.png");
+        bitmap.Erase(new SKColor(1, 0, 0));
+        var actual = SavePng(bitmap, "mae-gate.actual.png");
+        using var expectedImage = SKImage.FromEncodedData(expected);
+        using var actualImage = SKImage.FromEncodedData(actual);
+        var result = SKPixelComparer.Compare(expectedImage, actualImage,
+            new SKPixelComparerOptions { AlphaType = SKAlphaType.Premul });
+        Assert.Equal(16, result.MismatchedPixelCount);
+        Assert.Equal(1.0 / (4 * 255), result.RawMetrics.NormalizedMeanAbsoluteError);
+        var options = new SampleImageOptions
+        {
+            MaxErrorPixelFraction = 0m,
+            MaxAverageColorErrorFraction = result.RawMetrics.NormalizedMeanAbsoluteError,
+        };
+        SampleImage.Validate(actual, expected, options);
+        Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+        var justBelow = BitConverter.Int64BitsToDouble(
+            BitConverter.DoubleToInt64Bits(result.RawMetrics.NormalizedMeanAbsoluteError) - 1);
+        var error = Assert.Throws<Xunit.Sdk.FailException>(() =>
+            SampleImage.Validate(actual, expected, options with { MaxAverageColorErrorFraction = justBelow }));
+        Assert.Contains("average RGBA color error", error.Message);
+        Assert.Contains("16/16 pixels", error.Message);
+        Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+        Assert.Equal(0m, options.MaxErrorPixelFraction);
+        Assert.Equal(result.RawMetrics.NormalizedMeanAbsoluteError, options.MaxAverageColorErrorFraction);
     }
 
     [Fact]

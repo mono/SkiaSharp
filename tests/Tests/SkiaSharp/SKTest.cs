@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using SkiaSharp.Extended;
+using SkiaSharp.Testing;
 
 namespace SkiaSharp.Tests
 {
@@ -212,19 +212,24 @@ namespace SkiaSharp.Tests
 		protected void AssertSimilar(SKBitmap expected, SKBitmap actual, int precision = PRECISION)
 		{
 			var percentage = 1 / Math.Pow(10, precision);
+			var options = new SKPixelComparerOptions
+			{
+				AlphaType = SKAlphaType.Premul,
+				AlphaTolerance = null,
+			};
 
-			var result = SKPixelComparer.Compare(expected, actual);
+			var result = SKPixelComparer.Compare(expected, actual, options);
 
 			try
 			{
-				Assert.True(result.ErrorPixelPercentage < percentage);
+				Assert.True(result.MismatchedPixelFraction < percentage);
 			}
 			catch
 			{
 				WriteOutput(expected, "EXPECTED bitmap");
 				WriteOutput(actual, "ACTUAL bitmap");
 
-				using var diff = SKPixelComparer.GenerateDifferenceMask(expected, actual);
+				using var diff = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.BinaryMask, options);
 				WriteOutput(diff, "DIFF bitmap");
 
 				throw;

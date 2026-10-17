@@ -36,6 +36,8 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 | Document | Description |
 |----------|-------------|
 | [adding-apis.md](adding-apis.md) | Step-by-step guide to add bindings |
+| [api-design.md](api-design.md) | Stable API rules and experimental feature opt-ins |
+| [experimental-apis.md](experimental-apis.md) | Experimental API policy, product namespaces, family ranges and allocated features |
 | [adding-libraries.md](adding-libraries.md) | Adding new projects and NuGet packages |
 | [writing-docs.md](writing-docs.md) | API documentation process |
 | [maintaining.md](maintaining.md) | Maintainer responsibilities |
@@ -73,7 +75,6 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 |----------|-------------|
 | [dependencies.md](dependencies.md) | Native dependencies: security relevance, CVE tracking, cgmanifest.json |
 | [debugging-methodology.md](debugging-methodology.md) | Best practices for complex debugging |
-
 
 ## Quick Build
 
