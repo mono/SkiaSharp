@@ -34,6 +34,9 @@ The excluded dependencies are:
     <PackageFile Include="..\..\output\native\bionic\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-x64\native\%(Filename)%(Extension)" />
     <PackageFile Include="..\..\output\native\bionic\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-arm64\native\%(Filename)%(Extension)" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageFile Include="NativeAssets.Prefer.targets" PackagePath="buildTransitive\netcoreapp3.1\$(PackageId).targets" />
+  </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
       <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
