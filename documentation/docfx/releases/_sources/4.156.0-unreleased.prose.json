@@ -1,15 +1,15 @@
 {
-  "theme": "More efficient rendering and interop",
-  "highlights_headline": "SkiaSharp 4.156.0 improves browser WebGPU packaging, Android texture rendering, and managed graphics and text-shaping performance.",
-  "highlights_body": "WebGPU browser applications can link against the packaged native archive without compiling its C++ support themselves. Android texture rendering now follows display refresh, while image copying and HarfBuzz text shaping avoid unnecessary managed and native allocations.",
+  "theme": "WebGPU and allocation improvements",
+  "highlights_headline": "SkiaSharp 4.156.0 improves WebGPU packaging and reduces allocations in image and HarfBuzz text processing.",
+  "highlights_body": "Android continuous texture rendering now follows the display refresh rate, and front-buffered streams release their source stream when disposed.",
   "breaking": [],
   "categories": [
     {
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "WebGPU support is packaged with browser native assets",
-          "detail": "The WebGPU C++ support is now built into libSkiaSharp.a, so browser applications no longer compile it during their final link and C projects avoid incompatible C++ compiler flags.",
+          "lead": "WebGPU support is packaged with native WebAssembly assets",
+          "detail": "The emdawnwebgpu implementation is now built into libSkiaSharp.a, so browser applications no longer compile its C++ source during their own link step.",
           "prs": [
             5316
           ]
@@ -20,15 +20,15 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Android texture rendering follows the display clock",
-          "detail": "Continuous Android GL texture rendering is paced by display refresh rather than buffer-swap throughput, reducing unnecessary paint callbacks while preserving explicit render requests and lifecycle behavior.",
+          "lead": "Android texture rendering follows display refresh",
+          "detail": "GLTextureView continuous rendering is paced by Android frame callbacks, coalescing requests and avoiding queued frames while the surface is active.",
           "prs": [
             5345
           ]
         },
         {
-          "lead": "Front-buffered managed streams no longer retain data unnecessarily",
-          "detail": "Corrects stream retention so front-buffered managed streams can release data when it is no longer needed.",
+          "lead": "Front-buffered streams release their source",
+          "detail": "Disposing SKFrontBufferedManagedStream now clears its managed stream reference whether or not it owns the underlying stream.",
           "prs": [
             5327
           ]
@@ -39,16 +39,10 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Image pixel copies avoid an intermediate allocation",
-          "detail": "Managed pixel buffers that can be copied directly now avoid creating an intermediate SKData instance while preserving existing validation behavior.",
+          "lead": "Pixel-copy and text-processing allocations reduced",
+          "detail": "SKImage pixel copies use pinned input memory when valid, while HarfBuzz UTF-32 encoding and feature formatting reuse stack or pooled buffers to reduce transient allocations.",
           "prs": [
-            5052
-          ]
-        },
-        {
-          "lead": "Text shaping reduces temporary allocations",
-          "detail": "HarfBuzz UTF-32 buffer input and feature-string formatting reuse managed storage where possible, reducing allocation overhead without changing encoded text or feature decoding.",
-          "prs": [
+            5052,
             5060,
             5230
           ]
@@ -57,8 +51,8 @@
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Packaged the WebGPU C++ support inside the browser native archive",
-    "VirgilMing": "Stabilized Blazor CPU sample tests by waiting for the first canvas paint"
+    "ramezgerges": "Packaged the emdawnwebgpu implementation with SkiaSharp's WebAssembly native assets",
+    "VirgilMing": "Improved Blazor CPU sample test reliability by waiting for the first canvas paint"
   },
   "preview_summaries": {}
 }
