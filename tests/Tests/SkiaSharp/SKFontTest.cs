@@ -438,6 +438,63 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentNullException>(() => font.BreakText(IntPtr.Zero, 123, SKTextEncoding.Utf8, 50.0f));
 		}
 
+		[Theory]
+		[InlineData(1, 0)]
+		[InlineData(3, 50)]
+		[InlineData(5, float.MaxValue)]
+		public void BreakTextRejectsIncompleteGlyphIds(int length, float maxWidth)
+		{
+			using var font = new SKFont { Size = 0 };
+			var text = new byte[length];
+
+			Assert.Throws<ArgumentException>("text", () => font.BreakText(text, SKTextEncoding.GlyphId, maxWidth));
+			Assert.Throws<ArgumentException>("text", () => font.BreakText(text, SKTextEncoding.GlyphId, maxWidth, out _));
+		}
+
+		[Theory]
+		[InlineData(1)]
+		[InlineData(3)]
+		public unsafe void BreakTextRejectsIncompleteGlyphIdsFromPointer(int length)
+		{
+			using var font = new SKFont { Size = 0 };
+			var text = new byte[length];
+			fixed (byte* ptr = text)
+			{
+				var address = (IntPtr)ptr;
+				Assert.Throws<ArgumentException>("text", () => font.BreakText(address, length, SKTextEncoding.GlyphId, 50));
+				Assert.Throws<ArgumentException>("text", () => font.BreakText(address, length, SKTextEncoding.GlyphId, 50, out _));
+			}
+		}
+
+		[Theory]
+		[InlineData(-1)]
+		[InlineData(-2)]
+		public unsafe void BreakTextRejectsNegativeByteLength(int length)
+		{
+			using var font = new SKFont { Size = 0 };
+			byte text = 0;
+			var address = (IntPtr)(&text);
+
+			Assert.Throws<ArgumentOutOfRangeException>("length", () => font.BreakText(address, length, SKTextEncoding.GlyphId, 50));
+		}
+
+		[Theory]
+		[InlineData(0)]
+		[InlineData(2)]
+		[InlineData(6)]
+		public unsafe void BreakTextAcceptsCompleteGlyphIds(int length)
+		{
+			using var font = new SKFont { Size = 0 };
+			var text = new byte[length];
+
+			Assert.Equal(length, font.BreakText(text, SKTextEncoding.GlyphId, 50, out var measured));
+			Assert.Equal(0, measured);
+			fixed (byte* ptr = text)
+			{
+				Assert.Equal(length, font.BreakText((IntPtr)ptr, length, SKTextEncoding.GlyphId, 50));
+			}
+		}
+
 		[Fact]
 		public void BreakTextReturnsTheCorrectNumberOfCharacters()
 		{
