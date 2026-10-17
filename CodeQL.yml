@@ -103,3 +103,16 @@ queries:
         - "externals/skia/tools/macsdk_dir.py"
       opaqueid:
         - "SM02167"
+
+  # Reviewed: externals/skia/tools/run-wasm-gm-tests/run-wasm-gm-tests.js:175,190
+  # L175: res.send(JSON.stringify(resourceListing))
+  # L190: fs.writeFileSync(newFile, data, ...)
+  # Upstream CanvasKit/GM test server, not run by SkiaSharp's supported build/test/runtime flows.
+  # X-MD5-Hash identifies image results; it is not an authentication credential.
+  # This unused-tool exception does not claim its HTTP routes are safe when the tool is run.
+  - exclude:
+      path:
+        - "externals/skia/tools/run-wasm-gm-tests/run-wasm-gm-tests.js"
+      opaqueid:
+        - "SM02996"
+        - "SM01514"
