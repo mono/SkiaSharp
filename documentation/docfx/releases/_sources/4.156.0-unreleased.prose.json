@@ -1,34 +1,30 @@
 {
-  "theme": "More efficient rendering and interop",
-  "highlights_headline": "SkiaSharp 4.156.0 improves browser WebGPU packaging, Android texture rendering, and managed graphics and text-shaping performance.",
-  "highlights_body": "WebGPU browser applications can link against the packaged native archive without compiling its C++ support themselves. Android texture rendering now follows display refresh, while image copying and HarfBuzz text shaping avoid unnecessary managed and native allocations.",
-  "breaking": [],
-  "categories": [
+  "theme": "Platform baseline and performance",
+  "highlights_headline": "SkiaSharp 4.156 raises Apple deployment minimums while improving rendering, pixel access, and text shaping performance.",
+  "highlights_body": "WebAssembly packages now include the WebGPU implementation, Android texture rendering follows display refresh, and managed pixel and HarfBuzz operations avoid unnecessary allocations.",
+  "breaking": [
     {
-      "heading": "Platform",
-      "bullets": [
-        {
-          "lead": "WebGPU support is packaged with browser native assets",
-          "detail": "The WebGPU C++ support is now built into libSkiaSharp.a, so browser applications no longer compile it during their final link and C projects avoid incompatible C++ compiler flags.",
-          "prs": [
-            5316
-          ]
-        }
+      "title": "Apple deployment minimums increased",
+      "body": "iOS and tvOS applications must now target version 14.0 or later, and macOS applications must target version 11.0 or later. Update your application deployment targets before adopting this release.",
+      "prs": [
+        5383
       ]
-    },
+    }
+  ],
+  "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Android texture rendering follows the display clock",
-          "detail": "Continuous Android GL texture rendering is paced by display refresh rather than buffer-swap throughput, reducing unnecessary paint callbacks while preserving explicit render requests and lifecycle behavior.",
+          "lead": "Android texture rendering follows display refresh",
+          "detail": "Synchronizes GL texture rendering with the display refresh cycle to provide smoother Android rendering.",
           "prs": [
             5345
           ]
         },
         {
-          "lead": "Front-buffered managed streams no longer retain data unnecessarily",
-          "detail": "Corrects stream retention so front-buffered managed streams can release data when it is no longer needed.",
+          "lead": "Front-buffered streams no longer retain their source",
+          "detail": "Releases the underlying stream when front-buffered managed streams are disposed, preventing unnecessary retention.",
           "prs": [
             5327
           ]
@@ -39,25 +35,44 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Image pixel copies avoid an intermediate allocation",
-          "detail": "Managed pixel buffers that can be copied directly now avoid creating an intermediate SKData instance while preserving existing validation behavior.",
+          "lead": "Image pixel copies reduce managed overhead",
+          "detail": "Optimizes managed image pixel copying to reduce work when transferring image data.",
           "prs": [
             5052
           ]
         },
         {
-          "lead": "Text shaping reduces temporary allocations",
-          "detail": "HarfBuzz UTF-32 buffer input and feature-string formatting reuse managed storage where possible, reducing allocation overhead without changing encoded text or feature decoding.",
+          "lead": "HarfBuzz text processing avoids temporary allocations",
+          "detail": "Pools UTF-32 encoding buffers and avoids native feature-string allocations while preserving text shaping and feature decoding behavior.",
           "prs": [
             5060,
             5230
           ]
         }
       ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "WebAssembly packages include WebGPU support",
+          "detail": "Ships emdawnwebgpu's implementation inside the native SkiaSharp library so WebAssembly consumers receive the required WebGPU code with the package.",
+          "prs": [
+            5316
+          ]
+        },
+        {
+          "lead": "Apple platform support baseline updated",
+          "detail": "Native assets and managed target metadata now align with iOS and tvOS 14.0 and macOS 11.0.",
+          "prs": [
+            5383
+          ]
+        }
+      ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Packaged the WebGPU C++ support inside the browser native archive",
+    "ramezgerges": "Packaged the WebGPU implementation with the WebAssembly native library",
     "VirgilMing": "Stabilized Blazor CPU sample tests by waiting for the first canvas paint"
   },
   "preview_summaries": {}
