@@ -72,13 +72,13 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 			async () =>
 			{
 				var drawn = await Compare(app, canvasId, "basic-drawing-two-lines", "Maui");
-				AssertDrawingStrokeRegions(drawn, Expected(app, "basic-drawing-two-lines", "Maui"));
+				AssertDrawingStrokeRegions(drawn, Expected(app.DeviceProfile, "basic-drawing-two-lines", "Maui"));
 			},
 			async () =>
 			{
 				app.Click("basic-drawing-clear");
 				var cleared = await Compare(app, canvasId, "basic-drawing-page", "Maui");
-				AssertDrawingStrokeRegions(cleared, Expected(app, "basic-drawing-page", "Maui"));
+				AssertDrawingStrokeRegions(cleared, Expected(app.DeviceProfile, "basic-drawing-page", "Maui"));
 			});
 	}
 
@@ -156,12 +156,12 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		AppiumOperations app, string canvasId, string name, string family)
 	{
 		string actual = "";
-		await SampleImage.Validate(() => actual = app.Capture(canvasId, name), Expected(app, name, family));
+		await SampleImage.Validate(() => actual = app.Capture(canvasId, name), Expected(app.DeviceProfile, name, family));
 		return actual;
 	}
 
-	private static string Expected(AppiumOperations app, string name, string family) =>
+	internal static string Expected(string deviceProfile, string name, string family) =>
 		Path.Combine(
 			Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", "Appium",
-			family, "iOS", app.DeviceProfile.Replace('/', Path.DirectorySeparatorChar), name + ".png");
+			family, "iOS", deviceProfile.Replace('/', Path.DirectorySeparatorChar), name + ".png");
 }

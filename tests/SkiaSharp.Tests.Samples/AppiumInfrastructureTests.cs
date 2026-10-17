@@ -68,7 +68,13 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("18.6", "iPhone 16", null)]
 	[InlineData("26.5", "iPhone 16 Pro", "")]
 	[InlineData("26.5", "iPhone 16 Pro", " ")]
-	public void IosAppiumInstallsEachArtifactWithoutResettingTheSimulator(string version, string model, string? udid)
+	[InlineData(null, "iPhone 16 Pro", null)]
+	[InlineData("", "iPhone 16 Pro", null)]
+	[InlineData("latest", "iPhone 16 Pro", null)]
+	[InlineData("LATEST", "iPhone 16 Pro", null)]
+	[InlineData(null, "iPhone 16 Pro", "51DE3D2F-4F8E-4533-9899-9FC250A49050")]
+	[InlineData("latest", "iPhone 16 Pro", "51DE3D2F-4F8E-4533-9899-9FC250A49050")]
+	public void IosAppiumInstallsEachArtifactWithoutResettingTheSimulator(string? version, string model, string? udid)
 	{
 		for (var i = 0; i < 2; i++)
 		{
@@ -82,7 +88,14 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			Assert.Equal(artifact, capabilities.GetCapability("appium:app"));
 			Assert.Equal("sample.bundle", capabilities.GetCapability("appium:bundleId"));
 			Assert.Equal(model, capabilities.GetCapability("appium:deviceName"));
-			Assert.Equal(version, capabilities.GetCapability("appium:platformVersion"));
+			if (string.IsNullOrEmpty(version) || version.Equals("latest", StringComparison.OrdinalIgnoreCase))
+				Assert.False(capabilities.HasCapability("appium:platformVersion"));
+			else
+				Assert.Equal(version, capabilities.GetCapability("appium:platformVersion"));
+
+			Assert.Equal("iOS", capabilities.GetCapability("platformName"));
+			Assert.Equal("XCUITest", capabilities.GetCapability("appium:automationName"));
+			Assert.Equal(120, capabilities.GetCapability("appium:newCommandTimeout"));
 			Assert.Equal(false, capabilities.GetCapability("appium:fullReset"));
 			Assert.Equal(true, capabilities.GetCapability("appium:resetOnSessionStartOnly"));
 			Assert.Equal(false, capabilities.GetCapability("appium:shutdownOtherSimulators"));
@@ -91,6 +104,49 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			Assert.Null(capabilities.GetCapability("appium:forceAppLaunch"));
 			Assert.Null(capabilities.GetCapability("appium:enforceFreshSimulatorCreation"));
 		}
+	}
+
+	[Theory]
+	[InlineData(null, null, "latest")]
+	[InlineData("", null, "latest")]
+	[InlineData("latest", null, "latest")]
+	[InlineData("LATEST", null, "latest")]
+	[InlineData("26.5", "latest", "latest")]
+	[InlineData("27.0", "latest", "latest")]
+	[InlineData("18.6", null, "18.6")]
+	[InlineData("18.6", "18.6", "18.6")]
+	[InlineData("18.6.1", "18.6", "18.6")]
+	[InlineData("26.5", null, "26.5")]
+	public void IosGoldenProfileIsIndependentOfTheSelectedRuntime(
+		string? version, string? referenceVersion, string expectedVersion)
+	{
+		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", version, referenceVersion);
+		Assert.Equal($"iPhone-16-Pro/{expectedVersion}", profile);
+
+		foreach (var family in new[] { "Maui", "Native" })
+		{
+			var expected = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", family);
+			Assert.Equal(Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
+				"Appium", family, "iOS", "iPhone-16-Pro", expectedVersion, "basic-cpu.png"), expected);
+		}
+	}
+
+	[Theory]
+	[InlineData("latest", "not-reviewed")]
+	[InlineData("18.6", "not-reviewed")]
+	[InlineData("99.0", "basic-cpu")]
+	public void IosGoldensFailWithoutFallingBackToAnotherProfile(string referenceVersion, string name)
+	{
+		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", "26.5", referenceVersion);
+		var expected = AppiumSampleRunTestBase.Expected(profile, name, "Maui");
+		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/latest", "basic-cpu", "Maui");
+		Assert.True(File.Exists(actual));
+		Assert.False(File.Exists(expected));
+
+		// Missing references fail before image decoding and must never be created by a test.
+		var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
+		Assert.Contains($"Missing reviewed sample golden: {expected}", failure.Message);
+		Assert.False(File.Exists(expected));
 	}
 
 	[Fact]
@@ -159,8 +215,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[Theory]
 	[InlineData("18.6", true)]
 	[InlineData("18.6", false)]
-	[InlineData("26.5", true)]
-	[InlineData("26.5", false)]
+	[InlineData("latest", true)]
+	[InlineData("latest", false)]
 	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(string version, bool horizontal)
 	{
 		var references = Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
