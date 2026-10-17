@@ -108,7 +108,7 @@ sudo scripts/infra/native/apple/select-xcode.sh "$XCODE_VERSION"
 pwsh scripts/infra/tests/install-appium.ps1
 pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version "$IOS_VERSION"
 dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
-  --iosSimulator="iPhone 16 Pro" \
+  --iosSimulatorModel="iPhone 16 Pro" \
   --sampleRunId=ios --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
@@ -121,8 +121,8 @@ after failures. The same lifecycle helpers serve the DeviceRunners iOS target.
 and owns a fresh Appium server/session that reinstalls and launches the app without
 erasing or rebooting the shared simulator. Appium manages WebDriverAgent.
 
-Device and sample runs use `--iosVersion` and `--iosSimulator`, backed by
-`TEST_IOS_SIMULATOR_VERSION` and `TEST_IOS_SIMULATOR_NAME`. The name is a device
+Device and sample runs use `--iosVersion` and `--iosSimulatorModel`, backed by
+`TEST_IOS_SIMULATOR_VERSION` and `TEST_IOS_SIMULATOR_MODEL`. The model is a device
 type such as `iPhone 16 Pro`, not the unique name of a created simulator.
 For direct test or IDE runs, set those environment variables to select the
 runtime and device type. Set `TEST_IOS_SIMULATOR_UDID` to use an already-running simulator
