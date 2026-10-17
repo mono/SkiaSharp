@@ -8,10 +8,7 @@ internal abstract class RunningApp(string diagnostics)
     {
         UseProxy = false,
         AllowAutoRedirect = false
-    })
-    {
-        Timeout = TimeSpan.FromSeconds(30)
-    };
+    });
 
     private Uri? address;
 
@@ -25,9 +22,12 @@ internal abstract class RunningApp(string diagnostics)
 
     protected abstract Task<(string Output, string Error)> ReadOutput();
 
-    internal async Task<HttpResponseMessage> GetResponse(string path, CancellationToken? cancellationToken = null)
+    internal async Task<HttpResponseMessage> GetResponse(string path, CancellationToken? cancellationToken = null, TimeSpan? timeout = null)
     {
-        return await client.GetAsync(await RequestUri(path), cancellationToken ?? TestContext.Current.CancellationToken);
+        var request = await RequestUri(path);
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken ?? TestContext.Current.CancellationToken);
+        cancellation.CancelAfter(timeout ?? TimeSpan.FromSeconds(30));
+        return await client.GetAsync(request, cancellation.Token);
     }
 
     internal async Task<HttpResponseMessage> WaitForResponse(string path)
@@ -38,9 +38,7 @@ internal abstract class RunningApp(string diagnostics)
         {
             try
             {
-                using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-                cancellation.CancelAfter(TimeSpan.FromSeconds(4));
-                var response = await GetResponse(path, cancellation.Token);
+                var response = await GetResponse(path, timeout: TimeSpan.FromSeconds(4));
                 if (response.IsSuccessStatusCode)
                     return response;
                 lastError = $"HTTP {(int)response.StatusCode}";
