@@ -50,7 +50,7 @@ A freehand drawing canvas with a floating toolbox for choosing colors and brush 
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) or later
 - Windows 10 (build 19041 or later)
-- [Windows App SDK 1.8](https://learn.microsoft.com/windows/apps/windows-app-sdk/) runtime
+- [Windows App SDK 2.5](https://learn.microsoft.com/windows/apps/windows-app-sdk/) runtime
 
 ## Running the Sample
 
