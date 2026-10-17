@@ -9,13 +9,26 @@ using static SkiaSharp.Tests.Samples.Utils.FailureHandling;
 namespace SkiaSharp.Tests.Samples.Utils;
 
 // Borrows the app's session; only AppiumRunningApp owns and disposes the driver.
-internal abstract class AppiumOperations(AppiumRunningApp app)
+internal abstract class AppiumOperations
 {
+	private AppiumRunningApp? app;
 	private int captureIndex;
 
-	protected AppiumDriver Driver => app.Driver;
+	private AppiumRunningApp App =>
+		app ?? throw new InvalidOperationException("Appium operations have not been attached to an app.");
 
-	internal string DeviceProfile => app.DeviceProfile;
+	protected AppiumDriver Driver => App.Driver;
+
+	internal string DeviceProfile => App.DeviceProfile;
+
+	internal void Attach(AppiumRunningApp owner)
+	{
+		ArgumentNullException.ThrowIfNull(owner);
+		if (app is not null)
+			throw new InvalidOperationException("Appium operations already belong to an app.");
+
+		app = owner;
+	}
 
 	protected abstract By Locator(string id);
 
@@ -345,7 +358,7 @@ internal abstract class AppiumOperations(AppiumRunningApp app)
 		if (string.IsNullOrWhiteSpace(name) || name != Path.GetFileName(name) || name is "." or "..")
 			throw new ArgumentException("Screenshot names must be a single nonempty filename.", nameof(name));
 
-		var path = Path.Combine(app.Workspace.DiagnosticsRoot, "screenshots", $"{++captureIndex:D2}-{name}.png");
+		var path = Path.Combine(App.Workspace.DiagnosticsRoot, "screenshots", $"{++captureIndex:D2}-{name}.png");
 		Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 		File.WriteAllBytes(path, png);
 

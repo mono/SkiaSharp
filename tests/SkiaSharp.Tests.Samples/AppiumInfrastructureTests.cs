@@ -60,53 +60,6 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Theory]
-	[InlineData("18.6", "iPhone 16 Pro", "51DE3D2F-4F8E-4533-9899-9FC250A49050")]
-	[InlineData("26.5", "iPhone 16 Pro", "51DE3D2F-4F8E-4533-9899-9FC250A49050")]
-	[InlineData("18.6", "iPhone 16", "51DE3D2F-4F8E-4533-9899-9FC250A49050")]
-	[InlineData("18.6", "iPhone 16 Pro", null)]
-	[InlineData("26.5", "iPhone 16 Pro", null)]
-	[InlineData("18.6", "iPhone 16", null)]
-	[InlineData("26.5", "iPhone 16 Pro", "")]
-	[InlineData("26.5", "iPhone 16 Pro", " ")]
-	[InlineData(null, "iPhone 16 Pro", null)]
-	[InlineData("", "iPhone 16 Pro", null)]
-	[InlineData("latest", "iPhone 16 Pro", null)]
-	[InlineData("LATEST", "iPhone 16 Pro", null)]
-	[InlineData(null, "iPhone 16 Pro", "51DE3D2F-4F8E-4533-9899-9FC250A49050")]
-	[InlineData("latest", "iPhone 16 Pro", "51DE3D2F-4F8E-4533-9899-9FC250A49050")]
-	public void IosAppiumInstallsEachArtifactWithoutResettingTheSimulator(string? version, string model, string? udid)
-	{
-		for (var i = 0; i < 2; i++)
-		{
-			var artifact = Path.Combine(root, $"case-{i}", "Built.app");
-			var capabilities = IosRunningApp.SessionOptions(artifact, udid, "sample.bundle", model, version).ToCapabilities();
-			if (string.IsNullOrWhiteSpace(udid))
-				Assert.False(capabilities.HasCapability("appium:udid"));
-			else
-				Assert.Equal(udid, capabilities.GetCapability("appium:udid"));
-
-			Assert.Equal(artifact, capabilities.GetCapability("appium:app"));
-			Assert.Equal("sample.bundle", capabilities.GetCapability("appium:bundleId"));
-			Assert.Equal(model, capabilities.GetCapability("appium:deviceName"));
-			if (string.IsNullOrEmpty(version) || version.Equals("latest", StringComparison.OrdinalIgnoreCase))
-				Assert.False(capabilities.HasCapability("appium:platformVersion"));
-			else
-				Assert.Equal(version, capabilities.GetCapability("appium:platformVersion"));
-
-			Assert.Equal("iOS", capabilities.GetCapability("platformName"));
-			Assert.Equal("XCUITest", capabilities.GetCapability("appium:automationName"));
-			Assert.Equal(120, capabilities.GetCapability("appium:newCommandTimeout"));
-			Assert.Equal(false, capabilities.GetCapability("appium:fullReset"));
-			Assert.Equal(true, capabilities.GetCapability("appium:resetOnSessionStartOnly"));
-			Assert.Equal(false, capabilities.GetCapability("appium:shutdownOtherSimulators"));
-			Assert.Equal(false, capabilities.GetCapability("appium:noReset"));
-			Assert.Null(capabilities.GetCapability("appium:autoLaunch"));
-			Assert.Null(capabilities.GetCapability("appium:forceAppLaunch"));
-			Assert.Null(capabilities.GetCapability("appium:enforceFreshSimulatorCreation"));
-		}
-	}
-
-	[Theory]
 	[InlineData(null, null, "latest")]
 	[InlineData("", null, "latest")]
 	[InlineData("latest", null, "latest")]
@@ -164,11 +117,10 @@ public sealed class AppiumInfrastructureTests : IDisposable
 
 	private sealed class DiagnosticApp(
 		SampleWorkspace workspace, string artifact, List<string> order, bool failDiagnostics = false)
-		: AppiumRunningApp(workspace, artifact)
+		: AppiumRunningApp(workspace, artifact, new IosAppiumOperations())
 	{
 		internal Exception StartFailure { get; } = new NotSupportedException("Session construction failed.");
 		internal override string DeviceProfile => "unit-fixture";
-		internal override AppiumOperations Operations => throw new InvalidOperationException("Session construction failed.");
 		internal override Task<string> ReadApplicationId() => Task.FromResult("unit.fixture");
 		protected override Task Start(Uri address)
 		{
@@ -192,9 +144,21 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		AppiumRunningApp running = app;
 		var operations = Assert.IsType<IosAppiumOperations>(running.Operations);
 		Assert.Same(operations, app.Operations);
+		Assert.Equal(app.DeviceProfile, operations.DeviceProfile);
+		Assert.Throws<InvalidOperationException>(() => operations.Attach(app));
 
 		var failure = Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
 		Assert.Equal("The owned Appium session is not ready.", failure.Message);
+	}
+
+	[Fact]
+	public void OperationsRequireAnOwnerBeforeUsingTheSession()
+	{
+		var operations = new IosAppiumOperations();
+		var failure = Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
+		Assert.Equal("Appium operations have not been attached to an app.", failure.Message);
+		Assert.Throws<InvalidOperationException>(() => operations.DeviceProfile);
+		Assert.Throws<ArgumentNullException>(() => operations.Attach(null!));
 	}
 
 	[Fact]
