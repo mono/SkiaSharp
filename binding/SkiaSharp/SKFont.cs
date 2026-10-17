@@ -7,7 +7,10 @@ using System.Diagnostics;
 namespace SkiaSharp
 {
 	/// <summary>Represents a font used for drawing and measuring text.</summary>
-	/// <remarks />
+	/// <remarks>
+	/// Methods accepting encoded text reject negative byte lengths and incomplete 16-bit
+	/// glyph IDs when the encoding is <see cref="SKTextEncoding.GlyphId" />.
+	/// </remarks>
 	public unsafe class SKFont : SKObject
 	{
 		internal const float DefaultSize = 12f;
@@ -765,14 +768,8 @@ namespace SkiaSharp
 
 		internal int BreakText (void* text, int length, SKTextEncoding encoding, float maxWidth, float* measuredWidth, SKPaint paint)
 		{
-			if (length < 0)
-				throw new ArgumentOutOfRangeException (nameof (length));
-
 			if (!ValidateTextArgs (text, length, encoding))
 				return 0;
-
-			if (encoding == SKTextEncoding.GlyphId && length % sizeof (ushort) != 0)
-				throw new ArgumentException ("The text must contain complete 16-bit glyph IDs.", nameof (text));
 
 			var result = (int)SkiaApi.sk_font_break_text (Handle, text, (IntPtr)length, encoding, maxWidth, measuredWidth, paint?.Handle ?? IntPtr.Zero);
 			GC.KeepAlive (paint);
@@ -1677,11 +1674,17 @@ namespace SkiaSharp
 
 		private bool ValidateTextArgs (void* text, int length, SKTextEncoding encoding)
 		{
+			if (length < 0)
+				throw new ArgumentOutOfRangeException (nameof (length));
+
 			if (length == 0)
 				return false;
 
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
+
+			if (encoding == SKTextEncoding.GlyphId && length % sizeof (ushort) != 0)
+				throw new ArgumentException ("The text must contain complete 16-bit glyph IDs.", nameof (text));
 
 			return true;
 		}
