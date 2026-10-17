@@ -98,6 +98,10 @@ An update is complete only when:
 - Run long builds and full test suites in the foreground as one shell invocation. Do not use
   `nohup`, `&`, or agent-turn progress polling. If the shell tool keeps a command running, block on
   that existing session and inspect its output once after it exits.
+- Start ad hoc Bash validation snippets with `set -euo pipefail`. Handle expected nonzero statuses
+  (such as `git diff` or `git merge-base --is-ancestor`) explicitly, distinguishing a negative result
+  from an error. Never let `head` or `tee` mask a command's failure; capture complete output first,
+  then inspect bounded excerpts.
 - Keep complete logs and broad diffs in `$ARTIFACT_DIR`; inspect bounded excerpts instead of
   streaming large generated files, manifests, or successful build/test logs into model context.
 - Do not create PRs, write automation handoff files, or report completion while any gate fails.
@@ -139,6 +143,10 @@ needed for that phase.
   DEPS-to-Component-Governance identity/review signals.
 - `scripts/regenerate_bindings.py` runs every binding configuration from the checked-out
   source and reports new native functions.
+- `scripts/build_native.py --platform <platform> --arch <arch>` restores tools and builds native
+  source for that target; `scripts/build_managed.py` builds the managed bindings;
+  `scripts/run_tests.py` runs the unfiltered test solution. Use these helpers instead of shell
+  pipelines. They record exit codes, archive previous logs, and clear stale downstream results.
 - `scripts/audit_fork_patches.py` compares the old and new fork deltas and fails while any
   added, removed, or changed patch lacks a final evidence-backed disposition.
 
