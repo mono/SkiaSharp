@@ -32,8 +32,10 @@ Task ("Default")
         "SkiaSharp.Vulkan.Tests.Console",
         "SkiaSharp.Direct3D.Tests.Console",
     };
-    if (IsRunningOnLinux ())
+    if (IsRunningOnLinux ()) {
         testAssemblies.Add ("SkiaSharp.Views.Gtk4.Tests");
+        testAssemblies.Add ("SkiaSharp.Views.Maui.Gtk4.Tests");
+    }
 
     foreach (var testAssembly in testAssemblies) {
         var csproj = $"{ROOT_PATH}/tests/{testAssembly}/{testAssembly}.csproj";
