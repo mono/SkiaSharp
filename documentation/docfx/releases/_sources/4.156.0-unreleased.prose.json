@@ -1,34 +1,22 @@
 {
-  "theme": "More efficient rendering and interop",
-  "highlights_headline": "SkiaSharp 4.156.0 improves browser WebGPU packaging, Android texture rendering, and managed graphics and text-shaping performance.",
-  "highlights_body": "WebGPU browser applications can link against the packaged native archive without compiling its C++ support themselves. Android texture rendering now follows display refresh, while image copying and HarfBuzz text shaping avoid unnecessary managed and native allocations.",
+  "theme": "Runtime performance and stability",
+  "highlights_headline": "SkiaSharp 4.156.0 improves rendering responsiveness, memory retention, and managed interop performance across supported platforms.",
+  "highlights_body": "Android texture rendering now follows display refresh, while pixel operations and text shaping avoid avoidable work. WebGPU support is included directly in native artifacts, and front-buffered streams no longer retain more data than necessary.",
   "breaking": [],
   "categories": [
-    {
-      "heading": "Platform",
-      "bullets": [
-        {
-          "lead": "WebGPU support is packaged with browser native assets",
-          "detail": "The WebGPU C++ support is now built into libSkiaSharp.a, so browser applications no longer compile it during their final link and C projects avoid incompatible C++ compiler flags.",
-          "prs": [
-            5316
-          ]
-        }
-      ]
-    },
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Android texture rendering follows the display clock",
-          "detail": "Continuous Android GL texture rendering is paced by display refresh rather than buffer-swap throughput, reducing unnecessary paint callbacks while preserving explicit render requests and lifecycle behavior.",
+          "lead": "Android texture rendering synchronized with display refresh",
+          "detail": "Texture-backed Android rendering now coordinates presentation with the display refresh cycle, improving visual responsiveness.",
           "prs": [
             5345
           ]
         },
         {
-          "lead": "Front-buffered managed streams no longer retain data unnecessarily",
-          "detail": "Corrects stream retention so front-buffered managed streams can release data when it is no longer needed.",
+          "lead": "Front-buffered streams release retained data",
+          "detail": "Front-buffered stream handling no longer retains buffered content unnecessarily, reducing memory pressure for consumers that read streams incrementally.",
           "prs": [
             5327
           ]
@@ -39,26 +27,39 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Image pixel copies avoid an intermediate allocation",
-          "detail": "Managed pixel buffers that can be copied directly now avoid creating an intermediate SKData instance while preserving existing validation behavior.",
+          "lead": "Managed image pixel copies optimized",
+          "detail": "Managed image pixel-copy paths avoid unnecessary work, improving throughput when applications move pixel data between SkiaSharp and managed buffers.",
           "prs": [
             5052
           ]
         },
         {
           "lead": "Text shaping reduces temporary allocations",
-          "detail": "HarfBuzz UTF-32 buffer input and feature-string formatting reuse managed storage where possible, reducing allocation overhead without changing encoded text or feature decoding.",
+          "detail": "HarfBuzz text input reuses UTF-32 buffers, and feature-string processing no longer allocates native memory while preserving existing decoding behavior.",
           "prs": [
             5060,
             5230
           ]
         }
       ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "WebGPU implementation ships in native artifacts",
+          "detail": "The native SkiaSharp library now includes emdawnwebgpu's WebGPU implementation, making the required support available with the shipped artifact.",
+          "prs": [
+            5316
+          ]
+        }
+      ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Packaged the WebGPU C++ support inside the browser native archive",
-    "VirgilMing": "Stabilized Blazor CPU sample tests by waiting for the first canvas paint"
+    "ramezgerges": "Included the emdawnwebgpu WebGPU implementation in the native SkiaSharp library",
+    "VirgilMing": "Improved reliability of the Blazor CPU sample tests by waiting for the first canvas paint"
   },
-  "preview_summaries": {}
+  "preview_summaries": {},
+  "harfbuzz_summary": null
 }
