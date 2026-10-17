@@ -23,23 +23,25 @@ string OWNED_IOS_SIMULATOR = null;
 
 Setup(context =>
 {
-    if (TARGET.Equals("samples-generate", StringComparison.OrdinalIgnoreCase) ||
-        !IsRunningOnMacOs() || (!string.IsNullOrEmpty(RUN_GROUP) && RUN_GROUP != "Ios"))
-        return;
+    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
+        if (IsRunningOnMacOs() && !TARGET.Equals("samples-generate", StringComparison.OrdinalIgnoreCase)) {
+            var version = Argument("iosVersion", EnvironmentVariable("SAMPLE_TEST_IOS_VERSION") ?? "26.5");
+            var model = Argument("iosSimulator", EnvironmentVariable("SAMPLE_TEST_IOS_MODEL") ?? "iPhone 16 Pro");
 
-    var version = Argument("iosVersion", EnvironmentVariable("SAMPLE_TEST_IOS_VERSION") ?? "26.5");
-    var model = Argument("iosSimulator", EnvironmentVariable("SAMPLE_TEST_IOS_MODEL") ?? "iPhone 16 Pro");
+            SetupIosSimulator(ref OWNED_IOS_SIMULATOR, model, version);
 
-    SetupIosSimulator(ref OWNED_IOS_SIMULATOR, model, version);
-
-    Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_VERSION", version);
-    Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_MODEL", model);
-    Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_UDID", OWNED_IOS_SIMULATOR);
+            Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_VERSION", version);
+            Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_MODEL", model);
+            Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_UDID", OWNED_IOS_SIMULATOR);
+        }
+    }
 });
 
 Teardown(context =>
 {
-    TeardownIosSimulator(ref OWNED_IOS_SIMULATOR, context.ThrownException);
+    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
+        TeardownIosSimulator(ref OWNED_IOS_SIMULATOR, context.ThrownException);
+    }
 });
 
 Task ("samples-generate")
