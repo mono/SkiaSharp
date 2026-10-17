@@ -25,9 +25,9 @@ internal abstract class RunningApp(string diagnostics)
 
     protected abstract Task<(string Output, string Error)> ReadOutput();
 
-    internal async Task<HttpResponseMessage> GetResponse(string path)
+    internal async Task<HttpResponseMessage> GetResponse(string path, CancellationToken? cancellationToken = null)
     {
-        return await client.GetAsync(await RequestUri(path), TestContext.Current.CancellationToken);
+        return await client.GetAsync(await RequestUri(path), cancellationToken ?? TestContext.Current.CancellationToken);
     }
 
     internal async Task<HttpResponseMessage> WaitForResponse(string path)
@@ -38,10 +38,9 @@ internal abstract class RunningApp(string diagnostics)
         {
             try
             {
-                using var cancellation =
-                    CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+                using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
                 cancellation.CancelAfter(TimeSpan.FromSeconds(4));
-                var response = await client.GetAsync(request, cancellation.Token);
+                var response = await GetResponse(path, cancellation.Token);
                 if (response.IsSuccessStatusCode)
                     return response;
                 lastError = $"HTTP {(int)response.StatusCode}";
