@@ -20,14 +20,11 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_UDID");
 
 	internal IosRunningApp(SampleWorkspace workspace, string artifact)
-		: base(workspace, artifact)
+		: base(workspace, artifact, new IosAppiumOperations())
 	{
-		Operations = new IosAppiumOperations(this);
 	}
 
 	internal override string DeviceProfile => ReferenceProfile(model, version, referenceVersion);
-
-	internal override IosAppiumOperations Operations { get; }
 
 	internal override async Task<string> ReadApplicationId()
 	{
@@ -49,14 +46,18 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		return $"{model.Replace(' ', '-')}/{profileVersion}";
 	}
 
-	internal static AppiumOptions SessionOptions(
-		string artifact, string? simulator, string applicationId, string model, string? version)
+	protected override Task Start(Uri address)
 	{
+		Assert.True(OperatingSystem.IsMacOS(),
+			"iOS tests require macOS, Xcode and the declared preinstalled simulator runtime.");
+		Assert.True(Directory.Exists(Artifact) && Artifact.EndsWith(".app", StringComparison.OrdinalIgnoreCase),
+			"Provide the actual built simulator .app bundle.");
+
 		var options = new AppiumOptions
 		{
 			PlatformName = "iOS",
 			AutomationName = "XCUITest",
-			App = artifact,
+			App = Artifact,
 			DeviceName = model
 		};
 		options.AddAdditionalAppiumOption("newCommandTimeout", 120);
@@ -68,7 +69,7 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		if (!string.IsNullOrWhiteSpace(simulator))
 			options.AddAdditionalAppiumOption("udid", simulator);
 
-		options.AddAdditionalAppiumOption("bundleId", applicationId);
+		options.AddAdditionalAppiumOption("bundleId", ApplicationId);
 
 		// Reset/reinstall the app, not Cake's simulator; direct runs leave selection to Appium.
 		options.AddAdditionalAppiumOption("fullReset", false);
@@ -76,18 +77,7 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		options.AddAdditionalAppiumOption("resetOnSessionStartOnly", true);
 		options.AddAdditionalAppiumOption("shutdownOtherSimulators", false);
 
-		return options;
-	}
-
-	protected override Task Start(Uri address)
-	{
-		Assert.True(OperatingSystem.IsMacOS(),
-			"iOS tests require macOS, Xcode and the declared preinstalled simulator runtime.");
-		Assert.True(Directory.Exists(Artifact) && Artifact.EndsWith(".app", StringComparison.OrdinalIgnoreCase),
-			"Provide the actual built simulator .app bundle.");
-
 		var wdaLocalPort = AppiumFixture.GetFreePort();
-		var options = SessionOptions(Artifact, simulator, ApplicationId, model, version);
 		options.AddAdditionalAppiumOption("useNewWDA", true);
 		options.AddAdditionalAppiumOption("wdaLocalPort", wdaLocalPort);
 		options.AddAdditionalAppiumOption("derivedDataPath", Path.Combine(Workspace.Root, "wda-ios"));
@@ -126,7 +116,10 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		List<Exception> failures = [];
 		if (HasDriver)
 		{
-			await Attempt(failures, async () => await Command("xcrun", ["simctl", "list", "devices", "--json"]));
+			// Resolve the pinned local Apple tool from the repository manifest.
+			await Attempt(failures, async () => await CaptureCommand(ProcessRunner.Run(
+				"dotnet", ["apple", "simulator", "list", "--format", "json"],
+				Repo.RootDir, TimeSpan.FromSeconds(30))));
 			await Attempt(failures, () => SaveText("device.log",
 				string.Join(Environment.NewLine, Driver.Manage().Logs.GetLog("syslog"))));
 		}

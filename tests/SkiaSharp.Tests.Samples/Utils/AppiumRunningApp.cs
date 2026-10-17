@@ -12,12 +12,14 @@ internal abstract class AppiumRunningApp
 	private string? applicationId;
 	private bool used;
 
-	protected AppiumRunningApp(SampleWorkspace workspace, string artifact)
+	protected AppiumRunningApp(SampleWorkspace workspace, string artifact, AppiumOperations operations)
 	{
 		Workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
 		ArgumentException.ThrowIfNullOrWhiteSpace(artifact);
 		Artifact = Path.GetFullPath(artifact);
 		Diagnostics = Path.Combine(workspace.DiagnosticsRoot, "appium");
+		Operations = operations ?? throw new ArgumentNullException(nameof(operations));
+		Operations.Attach(this);
 	}
 
 	internal SampleWorkspace Workspace { get; }
@@ -30,7 +32,7 @@ internal abstract class AppiumRunningApp
 
 	internal abstract string DeviceProfile { get; }
 
-	internal abstract AppiumOperations Operations { get; }
+	internal AppiumOperations Operations { get; }
 
 	internal AppiumDriver Driver => driver ?? throw new InvalidOperationException("The owned Appium session is not ready.");
 

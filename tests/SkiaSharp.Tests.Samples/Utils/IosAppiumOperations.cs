@@ -3,7 +3,7 @@ using OpenQA.Selenium.Appium;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-internal sealed class IosAppiumOperations(AppiumRunningApp app) : AppiumOperations(app)
+internal sealed class IosAppiumOperations : AppiumOperations
 {
 	protected override By Locator(string id) => MobileBy.AccessibilityId(id);
 
