@@ -448,7 +448,7 @@ public sealed class AppiumImageInfrastructureTests
 			{
 				if (++captures == 2)
 					File.Copy(expected, actual, overwrite: true);
-				return actual;
+				return Task.FromResult(actual);
 			}, expected);
 			Assert.Equal(2, captures);
 			Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
@@ -460,13 +460,13 @@ public sealed class AppiumImageInfrastructureTests
 		{
 			File.Copy(expected, actual, overwrite: true);
 			var captures = 0;
-			await SampleImage.Validate(() => { captures++; return actual; }, expected);
+			await SampleImage.Validate(() => { captures++; return Task.FromResult(actual); }, expected);
 			Assert.Equal(1, captures);
 		});
 
 	[Fact]
 	public Task StaticCanvasReportsTheFinalMismatchWithStrictLimits() =>
-		WithImages(async (actual, expected) =>
+		WithImages((actual, expected) =>
 		{
 			using (var bitmap = new SKBitmap(16, 16))
 			{
@@ -476,13 +476,11 @@ public sealed class AppiumImageInfrastructureTests
 				using var data = image.Encode(SKEncodedImageFormat.Png, 100);
 				File.WriteAllBytes(actual, data.ToArray());
 			}
-			var captures = 0;
-			var failure = await Assert.ThrowsAsync<Xunit.Sdk.FailException>(() =>
-				SampleImage.Validate(() => { captures++; return actual; }, expected, TimeSpan.Zero));
+			var failure = Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.Validate(actual, expected));
 			Assert.Contains("Sample pixels differ", failure.Message);
-			Assert.Equal(1, captures);
 			Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
 			Assert.Equal(0.00075m, SampleImageOptions.DefaultMaxErrorPixelFraction);
+			return Task.CompletedTask;
 		});
 
 	[Fact]
@@ -492,7 +490,7 @@ public sealed class AppiumImageInfrastructureTests
 			File.Delete(expected);
 			var captures = 0;
 			var failure = await Assert.ThrowsAnyAsync<Exception>(() =>
-				SampleImage.Validate(() => { captures++; return actual; }, expected));
+				SampleImage.Validate(() => { captures++; return Task.FromResult(actual); }, expected));
 			Assert.Contains("Missing reviewed sample golden", failure.Message);
 			Assert.Equal(1, captures);
 			Assert.False(File.Exists(expected));

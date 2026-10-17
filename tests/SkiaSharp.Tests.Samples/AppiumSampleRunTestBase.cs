@@ -154,11 +154,9 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 
 	private static async Task<string> Compare(
 		AppiumOperations app, string canvasId, string name, string family)
-	{
-		string actual = "";
-		await SampleImage.Validate(() => actual = app.Capture(canvasId, name), Expected(app.DeviceProfile, name, family));
-		return actual;
-	}
+		=> await SampleImage.Validate(
+			() => Task.FromResult(app.Capture(canvasId, name)),
+			Expected(app.DeviceProfile, name, family));
 
 	internal static string Expected(string deviceProfile, string name, string family) =>
 		Path.Combine(
