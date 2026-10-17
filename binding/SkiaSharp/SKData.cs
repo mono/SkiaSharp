@@ -315,6 +315,9 @@ namespace SkiaSharp
 			var del = releaseProc != null && context != null
 				? new SKDataReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
+			// SkData::MakeWithProc (src/core/SkData.cpp) always creates an object,
+			// even for an empty buffer. Its destructor invokes releaseProc, which
+			// frees the handle; there is no failed-create handle to free here.
 			DelegateProxies.Create (del, out _, out var ctx);
 			var proxy = del is not null ? DelegateProxies.SKDataReleaseProxy : null;
 			return GetObject (SkiaApi.sk_data_new_with_proc ((void*)address, (IntPtr)length, proxy, (void*)ctx));
