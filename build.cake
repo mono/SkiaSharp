@@ -107,6 +107,10 @@ Task ("tests-container")
     .Description ("Run the console test suite against prebuilt natives (used by the containerized test legs).")
     .Does (() => RunCake ("./scripts/infra/tests/tests-container.cake", "Default"));
 
+Task ("tests-native")
+    .Description ("Run folder-based native tests against prebuilt artifacts.")
+    .Does (() => RunCake ("./scripts/infra/tests/tests-native.cake", "Default"));
+
 Task ("tests-msbuild")
     .Description ("Test MSBuild consumers of the already-packed NuGets.")
     .Does (() => RunCake ("./scripts/infra/tests/tests-msbuild.cake", "Default"));

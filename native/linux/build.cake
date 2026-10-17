@@ -6,14 +6,6 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
-var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
-    .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-
-var VERIFY_INCLUDED = Argument("verifyIncluded", Argument("verifyincluded", ""))
-    .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-
-var VERIFY_GLIBC_MAX = Argument("verifyGlibcMax", Argument("verifyglibcmax", ""));
-
 string CC = Argument("cc", EnvironmentVariable("CC"));
 string CXX = Argument("cxx", EnvironmentVariable("CXX"));
 string AR = Argument("ar", EnvironmentVariable("AR"));
@@ -38,15 +30,6 @@ if (!string.IsNullOrEmpty(CXX))
     COMPILERS += $"cxx='{CXX}' ";
 if (!string.IsNullOrEmpty(AR))
     COMPILERS += $"ar='{AR}' ";
-
-void CheckDeps(FilePath so, bool checkIncluded = true)
-{
-    CheckLinuxDependencies(
-        so,
-        excluded: VERIFY_EXCLUDED,
-        included: checkIncluded ? VERIFY_INCLUDED : null,
-        maxGlibc: string.IsNullOrEmpty(VERIFY_GLIBC_MAX) ? null : VERIFY_GLIBC_MAX);
-}
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
@@ -111,7 +94,6 @@ Task("libSkiaSharp")
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libSkiaSharp.so"));
 
-        CheckDeps(so);
     }
 });
 
@@ -149,7 +131,6 @@ Task("libHarfBuzzSharp")
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
 
-        CheckDeps(so, checkIncluded: false); // HarfBuzz doesn't need fontconfig
     }
 });
 
