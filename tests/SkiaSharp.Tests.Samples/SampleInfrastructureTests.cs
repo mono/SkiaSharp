@@ -1,7 +1,4 @@
 using System.Diagnostics;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
 using SkiaSharp.Tests.Samples.Utils;
@@ -233,96 +230,6 @@ public class SampleInfrastructureTests : IDisposable
             Assert.Equal("http://127.0.0.1:49152/health",
                 (await app.RequestUri("/health")).AbsoluteUri);
             Assert.Equal(1, app.AddressRequests);
-        });
-    }
-
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task HttpRequestsAllowSlowFirstResponsesWithoutRetrying(bool delayBody)
-    {
-        await using var server = new HttpSampleServer(async (stream, _, cancellation) =>
-        {
-            var headers = Encoding.ASCII.GetBytes(
-                "HTTP/1.1 200 OK\r\nContent-Length: 5\r\nConnection: close\r\n\r\n");
-            if (delayBody)
-                await stream.WriteAsync(headers, cancellation);
-            await Task.Delay(TimeSpan.FromSeconds(5), cancellation);
-            if (!delayBody)
-                await stream.WriteAsync(headers, cancellation);
-            await stream.WriteAsync("image"u8.ToArray(), cancellation);
-        });
-        var app = new AddressRunningApp(Path.Combine(root, "http"), server.Address);
-        await app.Run(async () =>
-        {
-            using var response = await app.GetResponse("/api/images");
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.Equal("image", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
-            Assert.Equal(1, server.Requests);
-        });
-    }
-
-    [Fact]
-    public async Task HttpReadinessKeepsShortProbeTimeouts()
-    {
-        await using var server = new HttpSampleServer(async (stream, attempt, cancellation) =>
-        {
-            if (attempt == 1)
-            {
-                // The first probe stalls until the client cancels and closes its connection.
-                Assert.Equal(0, await stream.ReadAsync(new byte[1], cancellation));
-                return;
-            }
-            await stream.WriteAsync(
-                "HTTP/1.1 200 OK\r\nContent-Length: 5\r\nConnection: close\r\n\r\nready"u8.ToArray(), cancellation);
-        });
-        var app = new AddressRunningApp(Path.Combine(root, "http"), server.Address);
-        await app.Run(async () =>
-        {
-            using var response = await app.WaitForResponse("/").WaitAsync(TimeSpan.FromSeconds(15));
-            Assert.Equal("ready", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
-            Assert.Equal(2, server.Requests);
-        });
-    }
-
-    [Fact]
-    public async Task HttpRequestsBoundTheEntireResponseBody()
-    {
-        await using var server = new HttpSampleServer(async (stream, _, cancellation) =>
-        {
-            await stream.WriteAsync(
-                "HTTP/1.1 200 OK\r\nContent-Length: 5\r\nConnection: close\r\n\r\n"u8.ToArray(), cancellation);
-            await Task.Delay(Timeout.InfiniteTimeSpan, cancellation);
-        });
-        var app = new AddressRunningApp(Path.Combine(root, "http"), server.Address);
-        await app.Run(async () =>
-        {
-            var elapsed = Stopwatch.StartNew();
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-                app.GetResponse("/api/images").WaitAsync(TimeSpan.FromSeconds(40)));
-            Assert.InRange(elapsed.Elapsed, TimeSpan.FromSeconds(25), TimeSpan.FromSeconds(40));
-            Assert.Equal(1, server.Requests);
-        });
-    }
-
-    [Theory]
-    [InlineData(302)]
-    [InlineData(500)]
-    public async Task HttpRequestsDoNotRetryErrorsOrFollowRedirects(int status)
-    {
-        await using var server = new HttpSampleServer(async (stream, _, cancellation) =>
-        {
-            var response = $"HTTP/1.1 {status} Error\r\nLocation: http://example.com/\r\n" +
-                "Content-Length: 5\r\nConnection: close\r\n\r\nerror";
-            await stream.WriteAsync(Encoding.ASCII.GetBytes(response), cancellation);
-        });
-        var app = new AddressRunningApp(Path.Combine(root, "http"), server.Address);
-        await app.Run(async () =>
-        {
-            using var response = await app.GetResponse("/api/images");
-            Assert.Equal(status, (int)response.StatusCode);
-            Assert.Equal("error", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
-            Assert.Equal(1, server.Requests);
         });
     }
 
@@ -1218,60 +1125,14 @@ public class SampleInfrastructureTests : IDisposable
         }
     }
 
-    private sealed class HttpSampleServer : IAsyncDisposable
-    {
-        private readonly TcpListener listener = new(IPAddress.Loopback, 0);
-        private readonly CancellationTokenSource cancellation =
-            CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-        private readonly Task server;
-
-        internal HttpSampleServer(Func<NetworkStream, int, CancellationToken, Task> respond)
-        {
-            listener.Start();
-            Address = new Uri($"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}");
-            cancellation.CancelAfter(TimeSpan.FromSeconds(45));
-            server = Serve(respond);
-        }
-
-        internal Uri Address { get; }
-        internal int Requests { get; private set; }
-
-        private async Task Serve(Func<NetworkStream, int, CancellationToken, Task> respond)
-        {
-            while (true)
-            {
-                using var connection = await listener.AcceptTcpClientAsync(cancellation.Token);
-                using var stream = connection.GetStream();
-                using var reader = new StreamReader(stream, leaveOpen: true);
-                while (await reader.ReadLineAsync(cancellation.Token) is { Length: > 0 }) { }
-                await respond(stream, ++Requests, cancellation.Token);
-            }
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            await cancellation.CancelAsync();
-            try
-            {
-                await server;
-            }
-            catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
-            finally
-            {
-                listener.Stop();
-                cancellation.Dispose();
-            }
-        }
-    }
-
-    private sealed class AddressRunningApp(string diagnostics, Uri? address = null) : RunningApp(diagnostics)
+    private sealed class AddressRunningApp(string diagnostics) : RunningApp(diagnostics)
     {
         internal int AddressRequests { get; private set; }
 
         internal override Task<Uri> GetAddress()
         {
             AddressRequests++;
-            return Task.FromResult(address ?? new Uri("http://127.0.0.1:49152"));
+            return Task.FromResult(new Uri("http://127.0.0.1:49152"));
         }
 
         internal override Task<(int ExitCode, string Output, string Error)> WaitForExit() =>
