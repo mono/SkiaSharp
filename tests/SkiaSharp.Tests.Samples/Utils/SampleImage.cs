@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -34,13 +35,49 @@ internal static class SampleImage
     }
 
     /// <summary>Validates image dimensions and pixels against an absolute or golden-directory-relative reference path.</summary>
-    internal static void Validate(string actual, string expected, SampleImageOptions? options = null)
+    internal static void Validate(string actual, string expected, SampleImageOptions? options = null) =>
+        Validate(actual, expected, options ?? new(), reportMismatch: true);
+
+    /// <summary>Captures until an image matches the reviewed reference or the timeout expires.</summary>
+    internal static async Task<string> Validate(
+        Func<Task<string>> capture, string expected, TimeSpan? timeout = null, SampleImageOptions? options = null)
+    {
+        ArgumentNullException.ThrowIfNull(capture);
+        var limit = timeout ?? TimeSpan.FromSeconds(2);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(limit, TimeSpan.Zero);
+        options ??= new();
+        var cancellation = TestContext.Current.CancellationToken;
+        var clock = Stopwatch.StartNew();
+        string? actual = null;
+
+        while (true)
+        {
+            cancellation.ThrowIfCancellationRequested();
+            var remaining = limit - clock.Elapsed;
+            if (remaining <= TimeSpan.Zero)
+            {
+                if (actual is null)
+                    throw new TimeoutException("The sample screenshot deadline expired before capture.");
+                Validate(actual, expected, options, reportMismatch: true);
+                return actual;
+            }
+            actual = await capture().WaitAsync(remaining, cancellation);
+            if (Validate(actual, expected, options, reportMismatch: false))
+                return actual;
+
+            remaining = limit - clock.Elapsed;
+            if (remaining > TimeSpan.Zero)
+                await Task.Delay(remaining < TimeSpan.FromMilliseconds(100) ? remaining : TimeSpan.FromMilliseconds(100), cancellation);
+        }
+    }
+
+    private static bool Validate(string actual, string expected, SampleImageOptions options, bool reportMismatch)
     {
         expected = Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", expected);
 
-        TestContext.Current.AddFileAttachment(actual, "image/png");
+        if (reportMismatch || !File.Exists(expected))
+            TestContext.Current.AddFileAttachment(actual, "image/png");
 
-        options ??= new();
         var maxErrorPixelFraction = options.MaxErrorPixelFraction;
         var maxAverageColorErrorFraction = options.MaxAverageColorErrorFraction;
         Assert.InRange(maxErrorPixelFraction, 0, 1);
@@ -50,8 +87,14 @@ internal static class SampleImage
 
         using var actualImage = SKImage.FromEncodedData(actual);
         using var expectedImage = SKImage.FromEncodedData(expected);
+        if (!reportMismatch && (actualImage is null || expectedImage is null))
+            TestContext.Current.AddFileAttachment(actual, "image/png");
         Assert.NotNull(actualImage);
         Assert.NotNull(expectedImage);
+        var dimensionsMatch = actualImage.Width == expectedImage.Width && actualImage.Height == expectedImage.Height &&
+            (options.ExpectedSize is not { } required || actualImage.Width == required.Width && actualImage.Height == required.Height);
+        if (!dimensionsMatch && !reportMismatch)
+            return false;
         if (options.ExpectedSize is { } size)
         {
             Assert.Equal(size.Width, actualImage.Width);
@@ -74,7 +117,14 @@ internal static class SampleImage
         if (maxAverageColorErrorFraction is { } averageLimit
             ? averageColorErrorFraction <= averageLimit
             : result.ErrorPixelCount <= result.TotalPixels * maxErrorPixelFraction)
-            return;
+        {
+            if (!reportMismatch)
+                TestContext.Current.AddFileAttachment(actual, "image/png");
+            return true;
+        }
+
+        if (!reportMismatch)
+            return false;
 
         using var diff = SkiaSharp.Extended.SKPixelComparer.GenerateDifferenceImage(expectedImage, actualImage, 0);
         using var data = diff.Encode(SKEncodedImageFormat.Png, 100);
@@ -86,6 +136,7 @@ internal static class SampleImage
 
         Assert.Fail($"Sample pixels differ from {expected}: {result.ErrorPixelCount}/{result.TotalPixels} pixels; " +
             $"{comparison}; actual {actual}; diff {diffPath}.");
+        return false;
     }
 
 }

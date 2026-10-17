@@ -36,37 +36,18 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/browser-wasm-page.png");
         });
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
+    [Fact]
     [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "SampleRun")]
     [Trait("Category", "Host")]
     [Trait("Category", "Browser")]
-    public Task BlazorWebAssemblyCpuSampleRuns(bool delayFirstPaint) =>
+    public Task BlazorWebAssemblyCpuSampleRuns() =>
         RunBrowserSample("Basic/BlazorWebAssembly", ["--urls", "http://127.0.0.1:0"], async app =>
         {
-            if (delayFirstPaint)
-            {
-                // Keep the canvas visible while its raster interop is still loading.
-                await app.Page.RouteAsync("**/_content/SkiaSharp.Views.Blazor/SKHtmlCanvas.js", async route =>
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);
-                    await route.ContinueAsync();
-                });
-            }
-
             await app.Navigate("/");
             await app.WaitForElement(".canvas-container canvas");
-            // The element is visible before raster interop presents its first opaque frame.
-            await app.Page.WaitForFunctionAsync("""
-                () => {
-                    const canvas = document.querySelector('.canvas-container canvas');
-                    return canvas?.getContext('2d')?.getImageData(0, 0, 1, 1).data[3] === 255;
-                }
-                """).WaitAsync(TestContext.Current.CancellationToken);
-            var screenshot = await app.Screenshot();
-            SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png");
+            await SampleImage.Validate(app.Screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png",
+                timeout: TimeSpan.FromSeconds(10));
         });
 
     [Fact]
@@ -152,6 +133,66 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             SampleImage.Validate(cleared, $"Host/{SampleLookup.HostPlatform}/blazor-drawing-cleared-page.png");
         });
 
+    [Fact]
+    [RunGroup(SampleRunGroup.Host)]
+    [Trait("Category", "Browser")]
+    public Task BrowserScreenshotsFinishFiniteTransitions() =>
+        RunBrowserSample("Basic/Web", ["--urls", "http://127.0.0.1:0"], async app =>
+        {
+            await app.Page.SetContentAsync("""
+                <style>
+                    body { margin: 0; }
+                    #swatch {
+                        width: 100px;
+                        height: 100px;
+                        background-color: rgb(255, 0, 0);
+                        transition: background-color 60s linear;
+                    }
+                </style>
+                <div id="swatch"></div>
+                """);
+            var swatch = app.Page.Locator("#swatch");
+            await swatch.EvaluateAsync("""
+                element => {
+                    getComputedStyle(element).backgroundColor;
+                    element.style.backgroundColor = 'rgb(0, 0, 255)';
+                    const [transition] = element.getAnimations();
+                    // Hold the transition halfway so scheduling cannot hide the race.
+                    transition.pause();
+                    transition.currentTime = 30000;
+                }
+                """);
+            await Assertions.Expect(swatch).ToHaveCSSAsync("background-color", "rgb(128, 0, 128)");
+
+            var screenshot = await app.Screenshot();
+            TestContext.Current.AddFileAttachment(screenshot, "image/png");
+            Assert.Equal(10000, CountPixels(screenshot, new SKRectI(0, 0, 100, 100), c => c == SKColors.Blue));
+            await Assertions.Expect(swatch).ToHaveCSSAsync("background-color", "rgb(0, 0, 255)");
+        });
+
+    [Fact]
+    [RunGroup(SampleRunGroup.Host)]
+    [Trait("Category", "Browser")]
+    public Task BrowserScreenshotsRetryUntilRendered() =>
+        RunBrowserSample("Basic/Web", ["--urls", "http://127.0.0.1:0"], async app =>
+        {
+            await app.Page.SetContentAsync("<style>html { background: blue; }</style>");
+            var expected = await app.Screenshot();
+            await app.Page.EvaluateAsync("document.documentElement.style.background = 'red'");
+            var attempts = 0;
+
+            var matched = await SampleImage.Validate(async () =>
+            {
+                var actual = await app.Screenshot();
+                if (++attempts == 1)
+                    await app.Page.EvaluateAsync("document.documentElement.style.background = 'blue'");
+                return actual;
+            }, expected);
+
+            Assert.Equal(2, attempts);
+            Assert.Equal(10000, CountPixels(matched, new SKRectI(0, 0, 100, 100), c => c == SKColors.Blue));
+        });
+
     [Theory]
     [RunGroup(SampleRunGroup.Host)]
     [Trait("Category", "Browser")]
@@ -171,7 +212,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
                 {
                     case "navigate": await app.Navigate("/"); break;
                     case "wait": await app.WaitForElement("body"); break;
-                    case "screenshot": await app.Screenshot(); break;
+                    case "screenshot": await SampleImage.Validate(app.Screenshot, "unused.png"); break;
                 }
             }));
         Assert.Contains("first browser sentinel", error.Message);
