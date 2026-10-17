@@ -11,7 +11,7 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_VERSION") ?? "26.5";
 
 	private readonly string model =
-		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_NAME") ?? "iPhone 16 Pro";
+		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_MODEL") ?? "iPhone 16 Pro";
 
 	private readonly string? simulator =
 		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_UDID");
