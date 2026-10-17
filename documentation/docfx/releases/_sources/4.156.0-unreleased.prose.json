@@ -1,15 +1,15 @@
 {
-  "theme": "More efficient rendering and interop",
+  "theme": "Runtime performance and rendering",
   "highlights_headline": "SkiaSharp 4.156.0 improves browser WebGPU packaging, Android texture rendering, and managed graphics and text-shaping performance.",
-  "highlights_body": "WebGPU browser applications can link against the packaged native archive without compiling its C++ support themselves. Android texture rendering now follows display refresh, while image copying and HarfBuzz text shaping avoid unnecessary managed and native allocations.",
+  "highlights_body": "Browser WebGPU apps can link against the packaged native archive without compiling C++ support themselves. Android texture rendering now follows display refresh, while image copying and HarfBuzz text shaping avoid unnecessary managed and native allocations.",
   "breaking": [],
   "categories": [
     {
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "WebGPU support is packaged with browser native assets",
-          "detail": "The WebGPU C++ support is now built into libSkiaSharp.a, so browser applications no longer compile it during their final link and C projects avoid incompatible C++ compiler flags.",
+          "lead": "Browser WebGPU support is packaged with the native archive",
+          "detail": "The emdawnwebgpu implementation is included in libSkiaSharp.a, so browser applications can link WebGPU support without separately compiling its C++ source.",
           "prs": [
             5316
           ]
@@ -25,7 +25,12 @@
           "prs": [
             5345
           ]
-        },
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
         {
           "lead": "Front-buffered managed streams no longer retain data unnecessarily",
           "detail": "Corrects stream retention so front-buffered managed streams can release data when it is no longer needed.",
@@ -36,19 +41,13 @@
       ]
     },
     {
-      "heading": "Lifecycle & Internals",
+      "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Image pixel copies avoid an intermediate allocation",
-          "detail": "Managed pixel buffers that can be copied directly now avoid creating an intermediate SKData instance while preserving existing validation behavior.",
+          "lead": "Image copying and text shaping reduce temporary allocations",
+          "detail": "Managed pixel buffers that can be copied directly avoid an intermediate SKData instance, while HarfBuzz UTF-32 input and feature-string formatting reuse storage without changing existing decoding behavior.",
           "prs": [
-            5052
-          ]
-        },
-        {
-          "lead": "Text shaping reduces temporary allocations",
-          "detail": "HarfBuzz UTF-32 buffer input and feature-string formatting reuse managed storage where possible, reducing allocation overhead without changing encoded text or feature decoding.",
-          "prs": [
+            5052,
             5060,
             5230
           ]
@@ -57,8 +56,8 @@
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Packaged the WebGPU C++ support inside the browser native archive",
-    "VirgilMing": "Stabilized Blazor CPU sample tests by waiting for the first canvas paint"
+    "ramezgerges": "Packaged the emdawnwebgpu implementation for browser WebGPU applications",
+    "VirgilMing": "Stabilized browser sample testing by waiting for the first CPU canvas paint"
   },
   "preview_summaries": {}
 }
