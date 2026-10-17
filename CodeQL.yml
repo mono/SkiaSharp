@@ -4,6 +4,10 @@
 # Status describes the specific file's use in supported SkiaSharp pipelines/runtime.
 # Upstream or manual workflows may use files marked Unused.
 queries:
+  # ---------------------------------------------------------------------------
+  # Used runtime code - reviewed exceptions
+  # ---------------------------------------------------------------------------
+
   # Reviewed: externals/angle/src/libANGLE/ProgramExecutable.cpp:2995
   # Code: for (uint16_t arrayIndex = 0; arrayIndex < safeUniformCount; ++arrayIndex)
   # Status: Used
@@ -15,6 +19,35 @@ queries:
         - "externals/angle/src/libANGLE/ProgramExecutable.cpp"
       opaqueid:
         - "SM01928"
+
+  # Reviewed: externals/skia/src/core/SkDocument.cpp:48,57
+  # L48: this->onEndPage();
+  # L57: this->onClose(fStream);
+  # Status: Used
+  # Used by SKDocument PDF/XPS APIs.
+  # Supported subclasses close in their destructors before base destruction.
+  # The closed-state guard prevents both reported pure-virtual calls in the base.
+  - exclude:
+      path:
+        - "externals/skia/src/core/SkDocument.cpp"
+      opaqueid:
+        - "SM03728"
+
+  # Reviewed: externals/skia/third_party/externals/freetype/src/raster/ftraster.c:2524
+  # Code: ras.sizeBuff = (&buffer)[1];
+  # Status: Used
+  # FreeType-backed font rendering includes monochrome glyphs.
+  # The reported upstream expression forms a raster-pool end pointer, not a buffer read.
+  # This is a vendor exception, not proof of strict-C conformance; re-review pool changes.
+  - exclude:
+      path:
+        - "externals/skia/third_party/externals/freetype/src/raster/ftraster.c"
+      opaqueid:
+        - "SM01947"
+
+  # ---------------------------------------------------------------------------
+  # Unused upstream tools and tests - outside supported SkiaSharp execution
+  # ---------------------------------------------------------------------------
 
   # Reviewed: externals/skia/infra/bots/recipes/compile.py:42
   # Code: short_name = hashlib.md5(long_name.encode('utf-8')).hexdigest()[:6]
@@ -40,19 +73,6 @@ queries:
       opaqueid:
         - "SM03150"
 
-  # Reviewed: externals/skia/src/core/SkDocument.cpp:48,57
-  # L48: this->onEndPage();
-  # L57: this->onClose(fStream);
-  # Status: Used
-  # Used by SKDocument PDF/XPS APIs.
-  # Supported subclasses close in their destructors before base destruction.
-  # The closed-state guard prevents both reported pure-virtual calls in the base.
-  - exclude:
-      path:
-        - "externals/skia/src/core/SkDocument.cpp"
-      opaqueid:
-        - "SM03728"
-
   # Reviewed: externals/skia/third_party/externals/brotli/scripts/dictionary/step-03-validate-bin.py:27,30
   # L27: hashlib.md5(data).hexdigest()
   # L30: hashlib.sha1(data).hexdigest()
@@ -66,18 +86,6 @@ queries:
         - "externals/skia/third_party/externals/brotli/scripts/dictionary/step-03-validate-bin.py"
       opaqueid:
         - "SM02167"
-
-  # Reviewed: externals/skia/third_party/externals/freetype/src/raster/ftraster.c:2524
-  # Code: ras.sizeBuff = (&buffer)[1];
-  # Status: Used
-  # FreeType-backed font rendering includes monochrome glyphs.
-  # The reported upstream expression forms a raster-pool end pointer, not a buffer read.
-  # This is a vendor exception, not proof of strict-C conformance; re-review pool changes.
-  - exclude:
-      path:
-        - "externals/skia/third_party/externals/freetype/src/raster/ftraster.c"
-      opaqueid:
-        - "SM01947"
 
   # Reviewed: externals/skia/third_party/externals/harfbuzz/test/fuzzing/hb_fuzzing_tools.py:308
   # Code: digest = hashlib.sha1(font_bytes).hexdigest()
