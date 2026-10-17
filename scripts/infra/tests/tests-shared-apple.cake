@@ -5,7 +5,7 @@
 var TEST_IOS_SIMULATOR_MODEL = Argument("iosSimulatorModel", EnvironmentVariable("TEST_IOS_SIMULATOR_MODEL") ?? "iPhone 16 Pro");
 var TEST_IOS_SIMULATOR_VERSION = Argument("iosVersion", EnvironmentVariable("TEST_IOS_SIMULATOR_VERSION") ?? "");
 
-void SetupIosSimulator(ref string ownedSimulator, string model, string version)
+void SetupIosSimulator(ref string ownedSimulator)
 {
     if (!IsRunningOnMacOs())
         return;
@@ -23,10 +23,10 @@ void SetupIosSimulator(ref string ownedSimulator, string model, string version)
     var arguments = new ProcessArgumentBuilder()
         .Append("apple simulator create")
         .AppendQuoted(name)
-        .Append("--device-type").AppendQuoted(model);
+        .Append("--device-type").AppendQuoted(TEST_IOS_SIMULATOR_MODEL);
 
-    if (!string.IsNullOrEmpty(version))
-        arguments.Append("--runtime").AppendQuoted($"iOS {version}");
+    if (!string.IsNullOrEmpty(TEST_IOS_SIMULATOR_VERSION))
+        arguments.Append("--runtime").AppendQuoted($"iOS {TEST_IOS_SIMULATOR_VERSION}");
 
     arguments.Append("--format json");
 

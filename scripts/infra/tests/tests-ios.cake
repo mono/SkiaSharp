@@ -13,7 +13,7 @@ string OWNED_IOS_SIMULATOR = null;
 
 Setup(context =>
 {
-    SetupIosSimulator(ref OWNED_IOS_SIMULATOR, TEST_IOS_SIMULATOR_MODEL, TEST_IOS_SIMULATOR_VERSION);
+    SetupIosSimulator(ref OWNED_IOS_SIMULATOR);
 });
 
 Teardown(context =>
