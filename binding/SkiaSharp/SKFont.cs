@@ -7,7 +7,10 @@ using System.Diagnostics;
 namespace SkiaSharp
 {
 	/// <summary>Represents a font used for drawing and measuring text.</summary>
-	/// <remarks />
+	/// <remarks>
+	/// Methods accepting encoded text reject negative byte lengths and incomplete 16-bit
+	/// glyph IDs when the encoding is <see cref="SKTextEncoding.GlyphId" />.
+	/// </remarks>
 	public unsafe class SKFont : SKObject
 	{
 		internal const float DefaultSize = 12f;
@@ -710,6 +713,7 @@ namespace SkiaSharp
 		/// <param name="maxWidth">The maximum width constraint.</param>
 		/// <param name="paint">An optional <see cref="T:SkiaSharp.SKPaint" /> for additional text effects.</param>
 		/// <returns>The number of characters that fit within the maximum width.</returns>
+		/// <exception cref="ArgumentException">The encoding is <see cref="SKTextEncoding.GlyphId" /> and the text contains an incomplete 16-bit glyph ID.</exception>
 		/// <remarks />
 		public int BreakText (ReadOnlySpan<byte> text, SKTextEncoding encoding, float maxWidth, SKPaint paint = null) =>
 			BreakText (text, encoding, maxWidth, out _, paint);
@@ -721,6 +725,7 @@ namespace SkiaSharp
 		/// <param name="measuredWidth">When this method returns, contains the actual measured width of the text.</param>
 		/// <param name="paint">An optional <see cref="T:SkiaSharp.SKPaint" /> for additional text effects.</param>
 		/// <returns>The number of characters that fit within the maximum width.</returns>
+		/// <exception cref="ArgumentException">The encoding is <see cref="SKTextEncoding.GlyphId" /> and the text contains an incomplete 16-bit glyph ID.</exception>
 		/// <remarks />
 		public int BreakText (ReadOnlySpan<byte> text, SKTextEncoding encoding, float maxWidth, out float measuredWidth, SKPaint paint = null)
 		{
@@ -737,6 +742,8 @@ namespace SkiaSharp
 		/// <param name="maxWidth">The maximum width constraint.</param>
 		/// <param name="paint">An optional <see cref="T:SkiaSharp.SKPaint" /> for additional text effects.</param>
 		/// <returns>The number of characters that fit within the maximum width.</returns>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="length" /> is negative.</exception>
+		/// <exception cref="ArgumentException">The encoding is <see cref="SKTextEncoding.GlyphId" /> and the text contains an incomplete 16-bit glyph ID.</exception>
 		/// <remarks />
 		public int BreakText (IntPtr text, int length, SKTextEncoding encoding, float maxWidth, SKPaint paint = null) =>
 			BreakText (text, length, encoding, maxWidth, out _, paint);
@@ -749,6 +756,8 @@ namespace SkiaSharp
 		/// <param name="measuredWidth">When this method returns, contains the actual measured width of the text.</param>
 		/// <param name="paint">An optional <see cref="T:SkiaSharp.SKPaint" /> for additional text effects.</param>
 		/// <returns>The number of characters that fit within the maximum width.</returns>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="length" /> is negative.</exception>
+		/// <exception cref="ArgumentException">The encoding is <see cref="SKTextEncoding.GlyphId" /> and the text contains an incomplete 16-bit glyph ID.</exception>
 		/// <remarks />
 		public int BreakText (IntPtr text, int length, SKTextEncoding encoding, float maxWidth, out float measuredWidth, SKPaint paint = null)
 		{
@@ -1665,11 +1674,17 @@ namespace SkiaSharp
 
 		private bool ValidateTextArgs (void* text, int length, SKTextEncoding encoding)
 		{
+			if (length < 0)
+				throw new ArgumentOutOfRangeException (nameof (length));
+
 			if (length == 0)
 				return false;
 
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
+
+			if (encoding == SKTextEncoding.GlyphId && length % sizeof (ushort) != 0)
+				throw new ArgumentException ("The text must contain complete 16-bit glyph IDs.", nameof (text));
 
 			return true;
 		}

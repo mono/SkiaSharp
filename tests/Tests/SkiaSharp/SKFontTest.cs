@@ -74,6 +74,57 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentNullException>(() => font.CountGlyphs(IntPtr.Zero, 123, SKTextEncoding.Utf16));
 		}
 
+		[Theory]
+		[InlineData(1)]
+		[InlineData(3)]
+		public unsafe void TextMethodsRejectIncompleteGlyphIds(int length)
+		{
+			using var font = new SKFont();
+			using var path = new SKPath();
+			var text = new byte[length];
+
+			Assert.Throws<ArgumentException>("text", () => font.CountGlyphs(text, SKTextEncoding.GlyphId));
+			Assert.Throws<ArgumentException>("text", () => font.GetGlyphs(text, SKTextEncoding.GlyphId));
+			Assert.Throws<ArgumentException>("text", () => font.GetGlyphs(text, SKTextEncoding.GlyphId, new ushort[1]));
+			Assert.Throws<ArgumentException>("text", () => font.MeasureText(text, SKTextEncoding.GlyphId));
+			Assert.Throws<ArgumentException>("text", () => font.GetGlyphPositions(text, SKTextEncoding.GlyphId));
+			Assert.Throws<ArgumentException>("text", () => font.GetGlyphOffsets(text, SKTextEncoding.GlyphId));
+			Assert.Throws<ArgumentException>("text", () => font.GetGlyphWidths(text, SKTextEncoding.GlyphId));
+			Assert.Throws<ArgumentException>("text", () => font.GetTextPath(text, SKTextEncoding.GlyphId));
+			Assert.Throws<ArgumentException>("text", () => font.GetTextPath(text, SKTextEncoding.GlyphId, new SKPoint[1]));
+			Assert.Throws<ArgumentException>("text", () => font.GetTextPathOnPath(text, SKTextEncoding.GlyphId, path));
+
+			fixed (byte* ptr = text)
+			{
+				var address = (IntPtr)ptr;
+				Assert.Throws<ArgumentException>("text", () => font.CountGlyphs(address, length, SKTextEncoding.GlyphId));
+				Assert.Throws<ArgumentException>("text", () => font.GetGlyphs(address, length, SKTextEncoding.GlyphId));
+				Assert.Throws<ArgumentException>("text", () => font.MeasureText(address, length, SKTextEncoding.GlyphId));
+				Assert.Throws<ArgumentException>("text", () => font.GetGlyphPositions(address, length, SKTextEncoding.GlyphId));
+				Assert.Throws<ArgumentException>("text", () => font.GetGlyphOffsets(address, length, SKTextEncoding.GlyphId));
+				Assert.Throws<ArgumentException>("text", () => font.GetGlyphWidths(address, length, SKTextEncoding.GlyphId));
+				Assert.Throws<ArgumentException>("text", () => font.GetTextPath(address, length, SKTextEncoding.GlyphId));
+				Assert.Throws<ArgumentException>("text", () => font.GetTextPath(address, length, SKTextEncoding.GlyphId, new SKPoint[1]));
+				Assert.Throws<ArgumentException>("text", () => font.GetTextPathOnPath(address, length, SKTextEncoding.GlyphId, path));
+			}
+		}
+
+		[Theory]
+		[InlineData(SKTextEncoding.Utf8)]
+		[InlineData(SKTextEncoding.Utf16)]
+		[InlineData(SKTextEncoding.Utf32)]
+		[InlineData(SKTextEncoding.GlyphId)]
+		public unsafe void TextMethodsRejectNegativeByteLength(SKTextEncoding encoding)
+		{
+			using var font = new SKFont();
+			byte text = 0;
+			var address = (IntPtr)(&text);
+
+			Assert.Throws<ArgumentOutOfRangeException>("length", () => font.CountGlyphs(address, -2, encoding));
+			Assert.Throws<ArgumentOutOfRangeException>("length", () => font.GetGlyphs(address, -2, encoding));
+			Assert.Throws<ArgumentOutOfRangeException>("length", () => font.MeasureText(address, -2, encoding));
+		}
+
 		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void PlainGlyphsReturnsTheCorrectNumberOfCharacters()
@@ -436,6 +487,63 @@ namespace SkiaSharp.Tests
 			var font = new SKFont();
 
 			Assert.Throws<ArgumentNullException>(() => font.BreakText(IntPtr.Zero, 123, SKTextEncoding.Utf8, 50.0f));
+		}
+
+		[Theory]
+		[InlineData(1, 0)]
+		[InlineData(3, 50)]
+		[InlineData(5, float.MaxValue)]
+		public void BreakTextRejectsIncompleteGlyphIds(int length, float maxWidth)
+		{
+			using var font = new SKFont { Size = 0 };
+			var text = new byte[length];
+
+			Assert.Throws<ArgumentException>("text", () => font.BreakText(text, SKTextEncoding.GlyphId, maxWidth));
+			Assert.Throws<ArgumentException>("text", () => font.BreakText(text, SKTextEncoding.GlyphId, maxWidth, out _));
+		}
+
+		[Theory]
+		[InlineData(1)]
+		[InlineData(3)]
+		public unsafe void BreakTextRejectsIncompleteGlyphIdsFromPointer(int length)
+		{
+			using var font = new SKFont { Size = 0 };
+			var text = new byte[length];
+			fixed (byte* ptr = text)
+			{
+				var address = (IntPtr)ptr;
+				Assert.Throws<ArgumentException>("text", () => font.BreakText(address, length, SKTextEncoding.GlyphId, 50));
+				Assert.Throws<ArgumentException>("text", () => font.BreakText(address, length, SKTextEncoding.GlyphId, 50, out _));
+			}
+		}
+
+		[Theory]
+		[InlineData(-1)]
+		[InlineData(-2)]
+		public unsafe void BreakTextRejectsNegativeByteLength(int length)
+		{
+			using var font = new SKFont { Size = 0 };
+			byte text = 0;
+			var address = (IntPtr)(&text);
+
+			Assert.Throws<ArgumentOutOfRangeException>("length", () => font.BreakText(address, length, SKTextEncoding.GlyphId, 50));
+		}
+
+		[Theory]
+		[InlineData(0)]
+		[InlineData(2)]
+		[InlineData(6)]
+		public unsafe void BreakTextAcceptsCompleteGlyphIds(int length)
+		{
+			using var font = new SKFont { Size = 0 };
+			var text = new byte[length];
+
+			Assert.Equal(length, font.BreakText(text, SKTextEncoding.GlyphId, 50, out var measured));
+			Assert.Equal(0, measured);
+			fixed (byte* ptr = text)
+			{
+				Assert.Equal(length, font.BreakText((IntPtr)ptr, length, SKTextEncoding.GlyphId, 50));
+			}
 		}
 
 		[Fact]
