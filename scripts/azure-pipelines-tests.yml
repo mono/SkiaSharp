@@ -25,8 +25,16 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: macos-15
+        vmImage: macos-26
         os: macos
+  - name: buildAgentWindowsAppium
+    displayName: 'The Windows Appium agent configuration:'
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: windows-2022
+        os: windows
   - name: buildAgentLinux
     displayName: 'The Linux build agent configuration:'
     type: object
@@ -64,6 +72,7 @@ extends:
           buildPipelineType: 'test'
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
+          buildAgentWindowsAppium: ${{ parameters.buildAgentWindowsAppium }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
           buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}

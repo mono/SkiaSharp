@@ -4,8 +4,9 @@
              x:Class="SkiaSharpSample.GpuPage"
              Title="GPU">
 
-    <Grid>
+    <Grid AutomationId="{OnPlatform WinUI=basic-canvas-gpu}">
         <skia:SKGLView x:Name="skiaView"
+                       AutomationId="{OnPlatform Default=basic-canvas-gpu, WinUI=basic-canvas-gpu-content}"
                        PaintSurface="OnPaintSurface"
                        HasRenderLoop="False"
                        EnableTouchEvents="True"
@@ -21,6 +22,7 @@
                 BackgroundColor="#AA000000"
                 Padding="12,6">
             <Label x:Name="fpsLabel"
+                   AutomationId="basic-gpu-fps"
                    Text="FPS: --"
                    TextColor="White"
                    FontSize="14" />

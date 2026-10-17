@@ -14,22 +14,21 @@ variables:
   BUILD_NUMBER: ''
   BUILD_COUNTER: $[counter('global_counter', 1)]
   MANAGED_LINUX_PACKAGES: ttf-ancient-fonts ninja-build libgtk-4-1
-  XCODE_VERSION: '26.3'
+  XCODE_VERSION: '26.6'
   XCODE_VERSION_NATIVE: '26.3'
   VISUAL_STUDIO_VERSION: ''
-  DOTNET_VERSION: '10.0.401'
+  DOTNET_VERSION: '10.0.402'
   # The WinUI C++/WinRT projection uses VS MSBuild 17.x, which cannot load
   # .NET SDK 10.0.2xx+. Install the final 1xx SDK side-by-side for those jobs.
-  DOTNET_VERSION_WINUI: '10.0.111'
+  DOTNET_VERSION_WINUI: '10.0.113'
   # Preview .NET SDK version + its workload set, used by jobs that run tests against a preview
   # runtime. Bump both to the next preview .NET as it moves forward.
   DOTNET_VERSION_PREVIEW: '11.0.100-rc.1.26425.128'
   DOTNET_WORKLOAD_VERSION_PREVIEW: '11.0.100-rc.1.26460.1'
   DOTNET_TIZEN_MANIFEST_BAND: '10.0.100'
   DOTNET_TIZEN_MANIFEST_VERSION: '10.0.123'
-  # Intentionally keep this tested 2xx workload set with SDK 10.0.401. The 4xx sets
-  # require Xcode 26.6, which is unavailable on macOS 15; this set requires Xcode 26.3.
-  DOTNET_WORKLOAD_VERSION: '10.0.202'
+  # Newest stable Apple 26 pairing; newer sets require Xcode 27.
+  DOTNET_WORKLOAD_VERSION: '10.0.401'
   CONFIGURATION: 'Release'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   NUGET_DIFF_PRERELEASE: false

@@ -35,13 +35,21 @@ parameters:
         name: $(DncEngPublicBuildPool)
         demands: ImageOverride -equals 1es-windows-2022-open
         os: windows
+  - name: buildAgentWindowsAppium
+    displayName: 'The Windows Appium agent configuration:'
+    type: object
+    default:
+      pool:
+        name: $(DncEngPublicBuildPool)
+        demands: ImageOverride -equals 1es-windows-2022-open
+        os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
     type: object
     default:
       pool:
         name: AcesShared
-        demands: ImageOverride -equals ACES_VM_SharedPool_Sequoia
+        demands: ImageOverride -equals ACES_VM_SharedPool_Tahoe
         os: macos
   - name: buildAgentMacNative
     displayName: 'The macOS build agent configuration for building the native assets:'
@@ -90,6 +98,7 @@ extends:
           buildPipelineType: 'complete'
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
+          buildAgentWindowsAppium: ${{ parameters.buildAgentWindowsAppium }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
           buildAgentMacNative: ${{ parameters.buildAgentMacNative }}

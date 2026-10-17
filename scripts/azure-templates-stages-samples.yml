@@ -3,10 +3,64 @@ parameters:
     type: string
   - name: buildAgentWindows
     type: object
+  - name: buildAgentWindowsAppium
+    type: object
   - name: buildAgentMac
     type: object
   - name: buildAgentLinux
     type: object
+  - name: buildAgentAndroidTests
+    type: object
+  - name: sampleSdks
+    type: object
+    default:
+      - name: net10
+        version: $(DOTNET_VERSION)
+        workloadVersion: $(DOTNET_WORKLOAD_VERSION)
+        xcodeVersion: '26.6'
+        additionalSdks:
+          windows: []
+          macos: []
+          linux: []
+        runDevices: true
+        androidDevices:
+          - name: android26
+            version: '8.0'
+            model: pixel_9
+            image: android-26;google_apis
+          - name: android37
+            version: '17'
+            model: pixel_9
+            image: android-37.1;google_apis_ps16k
+        iosDevices:
+          - name: ios18_6
+            version: '18.6'
+            buildVersion: '22G86'
+            model: iPhone 16 Pro
+          - name: ios26_5
+            version: '26.5'
+            buildVersion: '23F77'
+            model: iPhone 16 Pro
+      - name: net11
+        version: $(DOTNET_VERSION_PREVIEW)
+        workloadVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
+        xcodeVersion: '26.6'
+        additionalSdks:
+          windows:
+            - sdkVersion: $(DOTNET_VERSION_PREVIEW)
+              workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
+              additionalWorkloads: [wasm-tools-net10]
+          macos:
+            - sdkVersion: $(DOTNET_VERSION_PREVIEW)
+              workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
+              additionalWorkloads: [wasm-tools-net10]
+          linux:
+            - sdkVersion: $(DOTNET_VERSION_PREVIEW)
+              workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
+              additionalWorkloads: [wasm-tools-net10]
+        runDevices: false
+        androidDevices: []
+        iosDevices: []
 
 stages:
 
@@ -17,17 +71,45 @@ stages:
       ${{ else }}:
         dependsOn: package
       jobs:
-        - template: /scripts/azure-templates-jobs-samples.yml@self
-          parameters:
-            platform: windows
-            buildAgent: ${{ parameters.buildAgentWindows}}
-
-        - template: /scripts/azure-templates-jobs-samples.yml@self
-          parameters:
-            platform: macos
-            buildAgent: ${{ parameters.buildAgentMac }}
-
-        - template: /scripts/azure-templates-jobs-samples.yml@self
-          parameters:
-            platform: linux
-            buildAgent: ${{ parameters.buildAgentLinux }}
+        - ${{ each sdk in parameters.sampleSdks }}:
+          - template: /scripts/azure-templates-jobs-samples.yml@self
+            parameters:
+              sdk: ${{ sdk }}
+              buildAgent: ${{ parameters.buildAgentWindows }}
+          - template: /scripts/azure-templates-jobs-samples.yml@self
+            parameters:
+              sdk: ${{ sdk }}
+              buildAgent: ${{ parameters.buildAgentMac }}
+          - template: /scripts/azure-templates-jobs-samples.yml@self
+            parameters:
+              sdk: ${{ sdk }}
+              buildAgent: ${{ parameters.buildAgentLinux }}
+          - ${{ if eq(sdk.runDevices, true) }}:
+            - ${{ each device in sdk.androidDevices }}:
+              - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+                parameters:
+                  sdk: ${{ sdk }}
+                  device: ${{ device }}
+                  name: samples_appium_${{ sdk.name }}_${{ device.name }}
+                  runGroup: Android
+                  buildAgent: ${{ parameters.buildAgentAndroidTests }}
+            - ${{ each device in sdk.iosDevices }}:
+              - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+                parameters:
+                  sdk: ${{ sdk }}
+                  device: ${{ device }}
+                  name: samples_appium_${{ sdk.name }}_${{ device.name }}
+                  runGroup: Ios
+                  buildAgent: ${{ parameters.buildAgentMac }}
+            - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+              parameters:
+                sdk: ${{ sdk }}
+                name: samples_appium_${{ sdk.name }}_mac
+                runGroup: Mac
+                buildAgent: ${{ parameters.buildAgentMac }}
+            - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+              parameters:
+                sdk: ${{ sdk }}
+                name: samples_appium_${{ sdk.name }}_windows
+                runGroup: Windows
+                buildAgent: ${{ parameters.buildAgentWindowsAppium }}

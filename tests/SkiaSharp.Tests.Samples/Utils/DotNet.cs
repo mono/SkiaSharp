@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -30,7 +31,11 @@ public static class DotNet
         var result = await Execute(workspace, ["--version"]);
         if (result.ExitCode != 0)
             throw new InvalidOperationException($"The dotnet host on PATH could not select an SDK: {result.Output}\n{result.Error}");
-        return result.Output.Trim();
+        var selected = result.Output.Trim();
+        TestContext.Current.TestOutputHelper?.WriteLine($"Consumer SDK: {selected}; runner runtime: {Environment.Version}");
+        if (workspace.SdkVersion is not null && selected != workspace.SdkVersion)
+            throw new InvalidOperationException($"Expected consumer SDK {workspace.SdkVersion}, selected {selected}.");
+        return selected;
     }
 
     public static async Task Build(
@@ -89,8 +94,31 @@ public static class DotNet
             "-p:RestoreNoCache=true",
             "-p:UseSharedCompilation=false"
         };
+        if (options.Framework is not null)
+        {
+            ValidateDeclaredFramework(workspace, project, options.Framework);
+        }
         AddOptionsArguments(arguments, options);
         return arguments.ToArray();
+    }
+
+    internal static void ValidateDeclaredFramework(SampleWorkspace workspace, string project, string framework)
+    {
+        if (!Regex.IsMatch(framework, "^[A-Za-z0-9][A-Za-z0-9.-]+$"))
+            throw new ArgumentException("Select one declared target framework.", nameof(framework));
+        project = Path.GetFullPath(project);
+        var relative = Path.GetRelativePath(workspace.Root, project);
+        if (Path.IsPathRooted(relative) || relative == ".." ||
+            relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+            throw new ArgumentException("The selected root must belong to the owned sample workspace.", nameof(project));
+        var declared = XDocument.Load(project).Descendants()
+            .Where(element => element.Name.LocalName is "TargetFramework" or "TargetFrameworks")
+            .SelectMany(element => element.Value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .Distinct(StringComparer.Ordinal).ToArray();
+        if (!declared.Contains(framework, StringComparer.Ordinal))
+            throw new ArgumentException(
+                $"Selected framework is not declared by {project}: {framework}; declared {string.Join(';', declared)}.",
+                nameof(framework));
     }
 
     internal static Task<(int ExitCode, string Output, string Error)> Execute(
@@ -106,6 +134,18 @@ public static class DotNet
             options.GetWorkingDirectory(workspace.Root),
             options.Timeout ?? TimeSpan.FromMinutes(1),
             start => ConfigureProcess(start, workspace));
+    }
+
+    internal static Task<(int ExitCode, string Output, string Error)> ExecuteTool(
+        string tool, IEnumerable<string> arguments, DotNetOptions? options = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tool);
+        options ??= new();
+        options.Validate();
+        if (options.GetWorkingDirectory(Repo.RootDir) != Repo.RootDir)
+            throw new ArgumentException("Repository tools must resolve the pinned manifest from the repository root.", nameof(options));
+        return ProcessRunner.Run("dotnet", ["tool", "run", tool, "--", .. arguments], Repo.RootDir,
+            options.Timeout ?? TimeSpan.FromMinutes(1));
     }
 
     internal static async Task Run(
@@ -178,5 +218,4 @@ public static class DotNet
         start.Environment["MSBUILDDISABLENODEREUSE"] = "1";
         start.Environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
     }
-
 }

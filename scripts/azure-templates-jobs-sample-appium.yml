@@ -1,0 +1,109 @@
+parameters:
+  name: ''
+  buildAgent: {}
+  sdk: {}
+  device: {}
+  runGroup: ''
+
+jobs:
+  - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+    parameters:
+      name: ${{ parameters.name }}
+      ${{ if eq(parameters.runGroup, 'Ios') }}:
+        displayName: Appium (${{ parameters.runGroup }})
+      ${{ else }}:
+        displayName: Appium reference capture (${{ parameters.runGroup }})
+      buildAgent: ${{ parameters.buildAgent }}
+      target: samples
+      additionalArgs: --runGroup=${{ parameters.runGroup }} --sampleRunId=${{ parameters.name }} --skipExternals="all"
+      env:
+        # iOS references are approved; other platforms still require capture review.
+        CaptureSampleReferences: ${{ ne(parameters.runGroup, 'Ios') }}
+        SAMPLE_TEST_SDK_VERSION: ${{ parameters.sdk.version }}
+        ${{ if eq(parameters.runGroup, 'Android') }}:
+          SAMPLE_TEST_ANDROID_VERSION: ${{ parameters.device.version }}
+          SAMPLE_TEST_ANDROID_MODEL: ${{ parameters.device.model }}
+          SAMPLE_TEST_ANDROID_IMAGE: ${{ parameters.device.image }}
+        ${{ if eq(parameters.runGroup, 'Ios') }}:
+          SAMPLE_TEST_IOS_VERSION: ${{ parameters.device.version }}
+          SAMPLE_TEST_IOS_MODEL: ${{ parameters.device.model }}
+      ${{ if eq(parameters.buildAgent.pool.os, 'macos') }}:
+        variables:
+          XCODE_VERSION: ${{ parameters.sdk.xcodeVersion }}
+      retryCount: 0
+      shouldPublish: false
+      installAndroidSdk: ${{ eq(parameters.runGroup, 'Android') }}
+      installAndroidNdk: false
+      ${{ if and(eq(parameters.runGroup, 'Android'), eq(parameters.buildAgent.pool.os, 'linux')) }}:
+        packages: libpulse0
+      provisioningSteps:
+        - pwsh: New-Item -ItemType Directory -Path output/logs -Force | Out-Null
+          displayName: Prepare Appium diagnostic artifacts
+          condition: always()
+      dotnetSdks:
+        - sdkVersion: ${{ parameters.sdk.version }}
+          workloadSetVersion: ${{ parameters.sdk.workloadVersion }}
+      requiredArtifacts:
+        - name: native
+        - name: nuget
+          dir: nugets
+      publishArtifacts:
+        - name: ${{ parameters.name }}_logs
+          always: true
+          path: output/logs
+      preBuildSteps:
+        - ${{ if eq(parameters.runGroup, 'Android') }}:
+          - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
+            - bash: |
+                set -e
+                echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+                sudo udevadm control --reload-rules
+                sudo udevadm trigger --name-match=kvm
+              displayName: Enable KVM for the selected Android host
+          - bash: |
+              set -e
+              mkdir -p "$HOME/.android/avd"
+              echo "##vso[task.setvariable variable=ANDROID_AVD_HOME]$HOME/.android/avd"
+              echo "##vso[task.setvariable variable=ANDROID_EMULATOR_HOME]$HOME/.android"
+            displayName: Set Android AVD home
+          - pwsh: |
+              $ErrorActionPreference = 'Stop'
+              ./scripts/infra/managed/install-android-package.ps1 -Package 'cmdline-tools;latest'
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+              ./scripts/infra/managed/install-android-package.ps1 -Package emulator
+              if ($LASTEXITCODE -ne 0) { throw 'Android emulator installation failed.' }
+              ./scripts/infra/managed/install-android-image.ps1 -Image '${{ parameters.device.image }}'
+              if ($LASTEXITCODE -ne 0) { throw 'Selected Android emulator image installation failed.' }
+            displayName: Install the exact selected Android emulator image
+        - ${{ if eq(parameters.runGroup, 'Ios') }}:
+          - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ parameters.device.version }}' -BuildVersion '${{ parameters.device.buildVersion }}'
+            displayName: Install the exact selected iOS simulator runtime
+        - pwsh: ./scripts/infra/tests/install-appium.ps1 -Platform '${{ parameters.runGroup }}'
+          displayName: Install Appium and selected driver
+      postBuildSteps:
+        - task: PublishTestResults@2
+          condition: always()
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: output/logs/testlogs/samples/${{ parameters.name }}/**/*.trx
+            ${{ if eq(parameters.runGroup, 'Ios') }}:
+              testRunTitle: Appium (${{ parameters.runGroup }})
+            ${{ else }}:
+              testRunTitle: Appium reference capture (${{ parameters.runGroup }})
+        - ${{ if eq(parameters.runGroup, 'Mac') }}:
+          - pwsh: |
+              $reports = Join-Path $HOME 'Library/Logs/DiagnosticReports'
+              if (Test-Path $reports) {
+                  Get-ChildItem $reports -Filter 'SkiaSharpSample*.ips' |
+                      Copy-Item -Destination output/logs
+              }
+              /usr/bin/log show --style compact --last 15m --info --debug --predicate 'process == "SkiaSharpSample"' > output/logs/sample-app.log
+              exit $LASTEXITCODE
+            displayName: Retain sample app crash reports and exception messages
+            condition: failed()
+        - ${{ if ne(parameters.runGroup, 'Ios') }}:
+          - pwsh: |
+              Write-Host 'Reference capture only: review the PNGs and rerun strict comparisons before accepting this job.'
+              exit 1
+            displayName: Reference captures require review (not strict validation)
+            condition: succeeded()

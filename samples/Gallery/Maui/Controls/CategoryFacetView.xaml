@@ -4,6 +4,9 @@
       xmlns:items="clr-namespace:SkiaSharpSample.Controls"
       x:Class="SkiaSharpSample.Controls.CategoryFacetView"
       x:DataType="items:CategoryFacet">
+    <Grid.GestureRecognizers>
+        <PointerGestureRecognizer PointerEntered="OnPointerEntered" PointerExited="OnPointerExited" />
+    </Grid.GestureRecognizers>
     <Border x:Name="RowSurface" AutomationId="{Binding RowId}"
             BackgroundColor="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}"
             StrokeShape="RoundRectangle 8" StrokeThickness="0"
@@ -45,9 +48,5 @@
             SemanticProperties.Description="{Binding Description}"
             TextColor="Transparent" BackgroundColor="Transparent"
             BorderWidth="0" Padding="0" MinimumHeightRequest="37"
-            Clicked="OnClicked">
-        <Button.GestureRecognizers>
-            <PointerGestureRecognizer PointerEntered="OnPointerEntered" PointerExited="OnPointerExited" />
-        </Button.GestureRecognizers>
-    </Button>
+            Clicked="OnClicked" />
 </Grid>

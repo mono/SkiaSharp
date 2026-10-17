@@ -4,19 +4,10 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
-.\scripts\infra\managed\install-android-sdk.ps1
-
-$sdkmanager = "$env:ANDROID_SDK_MANAGER_PATH"
-
-Set-Content -Value "y" -Path "yes.txt"
-try {
-    if ($IsMacOS -or $IsLinux) {
-        sh -c "'$sdkmanager' '$Package' < yes.txt"
-    } else {
-        cmd /c "`"$sdkmanager`" `"$Package`" < yes.txt"
-    }
-} finally {
-    Remove-Item "yes.txt"
+& (Join-Path $PSScriptRoot 'install-android-sdk.ps1')
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
 }
 
+'y' | & $env:ANDROID_SDK_MANAGER_PATH $Package
 exit $LASTEXITCODE
