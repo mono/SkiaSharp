@@ -1,6 +1,9 @@
 # These file/rule exceptions require review and also apply to future findings.
 # Re-review the rationale when the affected dependency or its consumers change.
+# Reviewed locations and code below are evidence, not line-scoped exclusions.
 queries:
+  # Reviewed: externals/angle/src/libANGLE/ProgramExecutable.cpp:2995
+  # Code: for (uint16_t arrayIndex = 0; arrayIndex < safeUniformCount; ++arrayIndex)
   # safeUniformCount is clamped to the remaining uint16_t textureUnitsCount.
   # The loop exits before its uint16_t index can wrap; the wider comparison is bounded.
   - exclude:
@@ -9,6 +12,8 @@ queries:
       opaqueid:
         - "SM01928"
 
+  # Reviewed: externals/skia/infra/bots/recipes/compile.py:42
+  # Code: short_name = hashlib.md5(long_name.encode('utf-8')).hexdigest()[:6]
   # MD5 supplies a short builder/configuration directory name, not an integrity check.
   # Changing it changes build/cache paths and the recipe's expected output.
   - exclude:
@@ -17,6 +22,8 @@ queries:
       opaqueid:
         - "SM02167"
 
+  # Reviewed: externals/skia/infra/bots/zip_utils_test.py:30
+  # Code: fw.write('a.txt', 0o777)
   # Deliberately broad modes test ZIP permission preservation under a private temp root.
   # Reducing the fixture's modes would remove the behavior that the test verifies.
   - exclude:
@@ -25,6 +32,9 @@ queries:
       opaqueid:
         - "SM03150"
 
+  # Reviewed: externals/skia/src/core/SkDocument.cpp:48,57
+  # L48: this->onEndPage();
+  # L57: this->onClose(fStream);
   # Supported subclasses close in their destructors before base destruction.
   # The closed-state guard prevents both reported pure-virtual calls in the base.
   - exclude:
@@ -33,6 +43,9 @@ queries:
       opaqueid:
         - "SM03728"
 
+  # Reviewed: externals/skia/third_party/externals/brotli/scripts/dictionary/step-03-validate-bin.py:27,30
+  # L27: hashlib.md5(data).hexdigest()
+  # L30: hashlib.sha1(data).hexdigest()
   # MD5/SHA1 are printed dictionary diagnostics alongside SHA256, not authentication.
   # Digest mismatches report diagnostics rather than granting access or trust.
   - exclude:
@@ -41,6 +54,8 @@ queries:
       opaqueid:
         - "SM02167"
 
+  # Reviewed: externals/skia/third_party/externals/freetype/src/raster/ftraster.c:2524
+  # Code: ras.sizeBuff = (&buffer)[1];
   # The reported upstream expression forms a raster-pool end pointer, not a buffer read.
   # This is a vendor exception, not proof of strict-C conformance; re-review pool changes.
   - exclude:
@@ -49,6 +64,8 @@ queries:
       opaqueid:
         - "SM01947"
 
+  # Reviewed: externals/skia/third_party/externals/harfbuzz/test/fuzzing/hb_fuzzing_tools.py:308
+  # Code: digest = hashlib.sha1(font_bytes).hexdigest()
   # SHA1 is the documented fuzz-corpus seed filename, not font authentication.
   # Recorder consumers depend on the same naming convention.
   - exclude:
@@ -57,6 +74,8 @@ queries:
       opaqueid:
         - "SM02167"
 
+  # Reviewed: externals/skia/third_party/externals/harfbuzz/test/shape/run-tests.py:209
+  # Code: actual_hash = hashlib.sha1(ff.read()).hexdigest().strip()
   # SHA1 identifies a system-font fixture version before comparing shaping results.
   # A mismatch skips that regression case; it does not authorize product input.
   - exclude:
@@ -65,6 +84,8 @@ queries:
       opaqueid:
         - "SM02167"
 
+  # Reviewed: externals/skia/third_party/externals/spirv-cross/test_shaders.py:688
+  # Code: md5 = hashlib.md5()
   # MD5 compares newline-normalized generated shader/reflection text with test references.
   # It is regression-output equality, not authentication of an untrusted artifact.
   - exclude:
@@ -73,6 +94,8 @@ queries:
       opaqueid:
         - "SM02167"
 
+  # Reviewed: externals/skia/tools/macsdk_dir.py:36
+  # Code: return hashlib.md5(ws).hexdigest()
   # MD5 reproduces Bazel's workspace-cache directory format to locate SDK symlinks.
   # Replacing the algorithm would look in a different directory and break that contract.
   - exclude:

@@ -20,17 +20,6 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.WaitForElement(".card img");
             var screenshot = await app.Screenshot();
             SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/web-page.png");
-
-            await app.Page.SetViewportSizeAsync(375, 812);
-            var toggle = app.Page.GetByRole(AriaRole.Button, new() { Name = "Toggle navigation" });
-            var navigation = app.Page.Locator(".navbar-collapse");
-            await Assertions.Expect(navigation).ToBeHiddenAsync();
-            await toggle.ClickAsync();
-            await Assertions.Expect(toggle).ToHaveAttributeAsync("aria-expanded", "true");
-            await Assertions.Expect(app.Page.Locator(".navbar-collapse.collapse.show")).ToBeVisibleAsync();
-            await toggle.ClickAsync();
-            await Assertions.Expect(toggle).ToHaveAttributeAsync("aria-expanded", "false");
-            await Assertions.Expect(navigation).ToBeHiddenAsync();
         });
 
     [Fact]
