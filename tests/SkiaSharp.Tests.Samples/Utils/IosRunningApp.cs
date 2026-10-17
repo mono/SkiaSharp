@@ -8,13 +8,13 @@ namespace SkiaSharp.Tests.Samples.Utils;
 internal sealed class IosRunningApp : AppiumRunningApp
 {
 	private readonly string version =
-		Environment.GetEnvironmentVariable("SAMPLE_TEST_IOS_VERSION") ?? "26.5";
+		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_VERSION") ?? "26.5";
 
 	private readonly string model =
-		Environment.GetEnvironmentVariable("SAMPLE_TEST_IOS_MODEL") ?? "iPhone 16 Pro";
+		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_NAME") ?? "iPhone 16 Pro";
 
 	private readonly string? simulator =
-		Environment.GetEnvironmentVariable("SAMPLE_TEST_IOS_UDID");
+		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_UDID");
 
 	internal IosRunningApp(SampleWorkspace workspace, string artifact)
 		: base(workspace, artifact)

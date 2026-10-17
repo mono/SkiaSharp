@@ -25,14 +25,14 @@ Setup(context =>
 {
     if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
         if (IsRunningOnMacOs() && !TARGET.Equals("samples-generate", StringComparison.OrdinalIgnoreCase)) {
-            var version = Argument("iosVersion", EnvironmentVariable("SAMPLE_TEST_IOS_VERSION") ?? "26.5");
-            var model = Argument("iosSimulator", EnvironmentVariable("SAMPLE_TEST_IOS_MODEL") ?? "iPhone 16 Pro");
+            var version = Argument("iosVersion", EnvironmentVariable("TEST_IOS_SIMULATOR_VERSION") ?? "26.5");
+            var model = Argument("iosSimulator", EnvironmentVariable("TEST_IOS_SIMULATOR_NAME") ?? "iPhone 16 Pro");
 
             SetupIosSimulator(ref OWNED_IOS_SIMULATOR, model, version);
 
-            Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_VERSION", version);
-            Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_MODEL", model);
-            Environment.SetEnvironmentVariable("SAMPLE_TEST_IOS_UDID", OWNED_IOS_SIMULATOR);
+            Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_VERSION", version);
+            Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_NAME", model);
+            Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_UDID", OWNED_IOS_SIMULATOR);
         }
     }
 });

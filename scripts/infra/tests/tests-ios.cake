@@ -9,13 +9,13 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 // IOS TESTS — DeviceRunners execution on one owned simulator
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var IOS_SIMULATOR_NAME = Argument("iosSimulator", EnvironmentVariable("IOS_SIMULATOR_NAME") ?? "iPhone 16");
-var IOS_VERSION = Argument("iosVersion", EnvironmentVariable("SAMPLE_TEST_IOS_VERSION") ?? "");
+var TEST_IOS_SIMULATOR_NAME = Argument("iosSimulator", EnvironmentVariable("TEST_IOS_SIMULATOR_NAME") ?? "iPhone 16 Pro");
+var TEST_IOS_SIMULATOR_VERSION = Argument("iosVersion", EnvironmentVariable("TEST_IOS_SIMULATOR_VERSION") ?? "");
 string OWNED_IOS_SIMULATOR = null;
 
 Setup(context =>
 {
-    SetupIosSimulator(ref OWNED_IOS_SIMULATOR, IOS_SIMULATOR_NAME, IOS_VERSION);
+    SetupIosSimulator(ref OWNED_IOS_SIMULATOR, TEST_IOS_SIMULATOR_NAME, TEST_IOS_SIMULATOR_VERSION);
 });
 
 Teardown(context =>
