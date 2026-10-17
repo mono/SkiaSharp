@@ -71,6 +71,11 @@ not callback duration or browser-operation waits; cleanup/output reads stay boun
 to one minute. Configuration, framework and helper-owned restore properties cannot
 be overridden through `Properties`.
 
+HTTP readiness uses four-second probes with up to 30 attempts. Functional
+requests run once with a 30-second timeout covering headers and the complete
+response body, allowing the first render to initialize without retrying it.
+Both honor test cancellation; redirects remain disabled.
+
 ## Browser runs
 
 For local browser tests, build the runner and install its matching Chromium:
