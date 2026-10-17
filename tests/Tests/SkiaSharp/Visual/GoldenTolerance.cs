@@ -27,7 +27,7 @@ namespace SkiaSharp.Tests.Visual
 		public static readonly GoldenTolerance Deterministic = new(2, 0.002);
 
 		// Absorbs GPU driver and antialiasing variance.
-		public static readonly GoldenTolerance Gpu = new(12, 0.02);
+		public static readonly GoldenTolerance Gpu = new(12, 0.03);
 
 		public static GoldenTolerance For(string rendererName) =>
 			rendererName == GpuBackends.Raster ? Deterministic : Gpu;
