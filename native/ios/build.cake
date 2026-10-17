@@ -8,10 +8,7 @@ string VARIANT = (BUILD_VARIANT ?? "ios").ToLower();
 
 string GetDeploymentTarget(string arch)
 {
-    switch (VARIANT) {
-        case "maccatalyst": return "13.1";
-        default: return "11.0";
-    }
+    return "14.0";
 }
 
 Task("libSkiaSharp")
