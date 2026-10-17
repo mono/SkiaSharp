@@ -2,6 +2,9 @@
 // IOS SIMULATOR — explicit lifecycle for the UUID owned by this Cake run
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+var TEST_IOS_SIMULATOR_MODEL = Argument("iosSimulatorModel", EnvironmentVariable("TEST_IOS_SIMULATOR_MODEL") ?? "iPhone 16 Pro");
+var TEST_IOS_SIMULATOR_VERSION = Argument("iosVersion", EnvironmentVariable("TEST_IOS_SIMULATOR_VERSION") ?? "");
+
 void SetupIosSimulator(ref string ownedSimulator, string model, string version)
 {
     if (!IsRunningOnMacOs())
