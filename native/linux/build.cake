@@ -120,7 +120,7 @@ Task("libHarfBuzzSharp")
             $"skia_use_partition_alloc=false " +
             $"extra_asmflags=[] " +
             $"extra_cflags=[ '-stdlib=libc++'{bionicDefineHB} ] " +
-            $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxxHB}, '-Wl,--version-script={map}' ] " +
+            $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxxHB}, '-Wl,-Bsymbolic-functions', '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);
