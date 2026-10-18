@@ -99,23 +99,34 @@ Task("sync-ANGLE")
     // generate Windows App SDK files
     if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h"))) {
         var winappsdk_version = GetVersion("Microsoft.WindowsAppSDK", "release");
-        var metadata_package = "Microsoft.WindowsAppSDK.InteractiveExperiences";
-        var metadata_version = GetVersion(metadata_package, "release");
-        var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}-{metadata_version}.stamp");
+        var metadata_packages = new[] {
+            new {
+                Id = "Microsoft.WindowsAppSDK.InteractiveExperiences",
+                Version = GetVersion("Microsoft.WindowsAppSDK.InteractiveExperiences", "release"),
+            },
+            new {
+                Id = "Microsoft.WindowsAppSDK.WinUI",
+                Version = GetVersion("Microsoft.WindowsAppSDK.WinUI", "release"),
+            },
+        };
+        var metadata_versions = string.Join("-", metadata_packages.Select(package => package.Version));
+        var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}-{metadata_versions}.stamp");
 
         // Windows App SDK 1.8+ is a meta-package. The WinUI metadata ANGLE needs
-        // is shipped in Microsoft.WindowsAppSDK.InteractiveExperiences.
+        // is split across component packages.
         if (!FileExists(stamp)) {
             if (DirectoryExists(WINAPPSDK_PATH)) {
                 DeleteDirectory(WINAPPSDK_PATH, new DeleteDirectorySettings { Recursive = true, Force = true });
             }
             EnsureDirectoryExists(WINAPPSDK_PATH);
-            var packageId = metadata_package.ToLowerInvariant();
-            var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/{packageId}/{metadata_version}/{packageId}.{metadata_version}.nupkg";
-            var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{packageId}.{metadata_version}.nupkg");
-            DownloadFile(nugetUrl, nupkgPath);
-            Unzip(nupkgPath, WINAPPSDK_PATH);
-            DeleteFile(nupkgPath);
+            foreach (var package in metadata_packages) {
+                var packageId = package.Id.ToLowerInvariant();
+                var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/{packageId}/{package.Version}/{packageId}.{package.Version}.nupkg";
+                var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{packageId}.{package.Version}.nupkg");
+                DownloadFile(nugetUrl, nupkgPath);
+                Unzip(nupkgPath, WINAPPSDK_PATH);
+                DeleteFile(nupkgPath);
+            }
             FileWriteText(stamp, "");
         }
 
