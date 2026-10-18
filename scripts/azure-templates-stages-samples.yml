@@ -7,6 +7,8 @@ parameters:
     type: object
   - name: buildAgentLinux
     type: object
+  - name: buildAgentAndroidTests
+    type: object
   - name: iosSimulators
     type: object
     default:
@@ -67,5 +69,67 @@ stages:
                 - ${{ if eq(ios.installRuntime, true) }}:
                   - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ ios.version }}'
                     displayName: Install the selected iOS simulator runtime
-                - pwsh: ./scripts/infra/tests/install-appium.ps1
+                - pwsh: ./scripts/infra/tests/install-appium.ps1 -Platform iOS
                   displayName: Install Appium 3 and XCUITest
+
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_android8
+            displayName: Appium (Android 8 capture review)
+            buildAgent: ${{ parameters.buildAgentAndroidTests }}
+            env:
+              TEST_ANDROID_CAPTURE_REVIEW: 'true'
+            additionalArgs: --runGroup=Android --androidVersion=8.0 --androidImage="android-26;google_apis" --androidModel=pixel_9 --skipExternals="all"
+            preBuildSteps:
+              - pwsh: ./scripts/infra/managed/install-openjdk.ps1 -Version "$(OPENJDK_VERSION)"
+                displayName: Install the selected JDK
+              - pwsh: ./scripts/infra/managed/install-android-sdk.ps1
+                displayName: Select the Android SDK
+              - pwsh: |
+                  foreach ($package in @('platform-tools', 'build-tools;35.0.0', 'build-tools;36.0.0', 'emulator')) {
+                    ./scripts/infra/managed/install-android-package.ps1 -Package $package
+                    if ($LASTEXITCODE -ne 0) { throw "Android package installation failed: $package" }
+                  }
+                displayName: Install Android build tools and emulator
+              - pwsh: ./scripts/infra/managed/install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
+                displayName: Install the selected Android compile platforms
+              - pwsh: ./scripts/infra/managed/install-android-image.ps1 -Image "android-26;google_apis"
+                displayName: Install the Android 8 emulator image
+              - bash: |
+                  sudo apt-get update
+                  sudo apt-get install -y libpulse0
+                  bash ./scripts/infra/tests/configure-emulators.sh
+                displayName: Configure headless Android emulators (libpulse and KVM)
+              - pwsh: ./scripts/infra/tests/install-appium.ps1 -Platform Android
+                displayName: Install Appium 3 and UiAutomator2
+
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_android17
+            displayName: Appium (Android 17 capture review)
+            buildAgent: ${{ parameters.buildAgentAndroidTests }}
+            env:
+              TEST_ANDROID_CAPTURE_REVIEW: 'true'
+            additionalArgs: --runGroup=Android --androidVersion=17 --androidImage="android-37.1;google_apis_ps16k" --androidModel=pixel_9 --skipExternals="all"
+            preBuildSteps:
+              - pwsh: ./scripts/infra/managed/install-openjdk.ps1 -Version "$(OPENJDK_VERSION)"
+                displayName: Install the selected JDK
+              - pwsh: ./scripts/infra/managed/install-android-sdk.ps1
+                displayName: Select the Android SDK
+              - pwsh: |
+                  foreach ($package in @('platform-tools', 'build-tools;35.0.0', 'build-tools;36.0.0', 'emulator')) {
+                    ./scripts/infra/managed/install-android-package.ps1 -Package $package
+                    if ($LASTEXITCODE -ne 0) { throw "Android package installation failed: $package" }
+                  }
+                displayName: Install Android build tools and emulator
+              - pwsh: ./scripts/infra/managed/install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
+                displayName: Install the selected Android compile platforms
+              - pwsh: ./scripts/infra/managed/install-android-image.ps1 -Image "android-37.1;google_apis_ps16k"
+                displayName: Install the Android 17 emulator image
+              - bash: |
+                  sudo apt-get update
+                  sudo apt-get install -y libpulse0
+                  bash ./scripts/infra/tests/configure-emulators.sh
+                displayName: Configure headless Android emulators (libpulse and KVM)
+              - pwsh: ./scripts/infra/tests/install-appium.ps1 -Platform Android
+                displayName: Install Appium 3 and UiAutomator2

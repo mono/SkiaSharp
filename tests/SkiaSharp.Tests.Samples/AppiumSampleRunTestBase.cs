@@ -1,6 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
+using Xunit.Sdk;
+using static SkiaSharp.Tests.Samples.Utils.FailureHandling;
 
 namespace SkiaSharp.Tests.Samples;
 
@@ -29,8 +31,10 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		AppiumOperations app,
 		string family,
 		IReadOnlyList<BasicPageCommand> pages,
-		Action<AppiumOperations, string> navigate)
+		Action<AppiumOperations, string> navigate,
+		bool captureReview = false)
 	{
+		var failures = ReviewFailures(captureReview);
 		Assert.NotEmpty(pages);
 		foreach (var page in pages)
 		{
@@ -52,38 +56,55 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 			}
 			else
 			{
-				await Compare(app, page.CanvasId, page.ScreenshotName, family);
+				await Compare(app, page.CanvasId, page.ScreenshotName, family, failures);
 			}
 		}
+		ThrowFailures(failures ?? []);
 	}
 
 	private protected static async Task MauiDrawing(
 		AppiumOperations app,
-		Action<AppiumOperations, string> navigate)
+		Action<AppiumOperations, string> navigate,
+		bool captureReview = false)
 	{
+		var failures = ReviewFailures(captureReview);
 		const string canvasId = "basic-canvas-drawing";
 		navigate(app, "Drawing");
-		await Compare(app, canvasId, "basic-drawing-page", "Maui");
+		await Compare(app, canvasId, "basic-drawing-page", "Maui", failures);
 
 		// Axis-aligned strokes avoid timing-dependent diagonal interpolation.
 		app.Drag(app.Find(canvasId), 0.3, 0.45, 0.7, 0.45);
 		app.Drag(app.Find(canvasId), 0.5, 0.3, 0.5, 0.6);
-		await Assert.MultipleAsync(
-			async () =>
-			{
-				var drawn = await Compare(app, canvasId, "basic-drawing-two-lines", "Maui");
-				AssertDrawingStrokeRegions(drawn, Expected(app.DeviceProfile, "basic-drawing-two-lines", "Maui"));
-			},
-			async () =>
-			{
-				app.Click("basic-drawing-clear");
-				var cleared = await Compare(app, canvasId, "basic-drawing-page", "Maui");
-				AssertDrawingStrokeRegions(cleared, Expected(app.DeviceProfile, "basic-drawing-page", "Maui"));
-			});
+		async Task CheckDrawn()
+		{
+			var drawn = await Compare(app, canvasId, "basic-drawing-two-lines", "Maui", failures);
+			CheckImage(() => AssertDrawingStrokeRegions(drawn,
+				Expected(app.DeviceProfile, "basic-drawing-two-lines", "Maui", app.Platform)), failures);
+		}
+		async Task ClearAndCheck()
+		{
+			app.Click("basic-drawing-clear");
+			var cleared = await Compare(app, canvasId, "basic-drawing-page", "Maui", failures);
+			CheckImage(() => AssertDrawingStrokeRegions(cleared,
+				Expected(app.DeviceProfile, "basic-drawing-page", "Maui", app.Platform)), failures);
+		}
+
+		if (captureReview)
+		{
+			await CheckDrawn();
+			await ClearAndCheck();
+		}
+		else
+		{
+			// Preserve the existing strict-mode Clear check even after a drawing assertion fails.
+			await Assert.MultipleAsync(CheckDrawn, ClearAndCheck);
+		}
+		ThrowFailures(failures ?? []);
 	}
 
 	internal static void AssertDrawingStrokeRegions(string actual, string expected)
 	{
+		Assert.True(File.Exists(expected), $"Missing reviewed sample golden: {expected}.");
 		using var actualImage = SKImage.FromEncodedData(actual);
 		using var expectedImage = SKImage.FromEncodedData(expected);
 		Assert.NotNull(actualImage);
@@ -109,8 +130,9 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		}
 	}
 
-	private protected static async Task Gallery(AppiumOperations app)
+	private protected static async Task Gallery(AppiumOperations app, bool captureReview = false)
 	{
+		var failures = ReviewFailures(captureReview);
 		app.Click("gallery-header-cpu");
 		app.Find("gallery-search", "gallery-filter-search").SendKeys("Gradient");
 		app.SubmitSearch();
@@ -132,14 +154,14 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		app.Click("sample-gradient");
 		app.WaitText("sample-title", text => text == "Gradient");
 		app.WaitText("sample-render-status", text => text.StartsWith("CPU", StringComparison.Ordinal) && text.Contains("  |"));
-		await Compare(app, "sample-canvas-cpu", "gallery-gradient-cpu", "Maui");
+		await Compare(app, "sample-canvas-cpu", "gallery-gradient-cpu", "Maui", failures);
 
 		if (app.FindOptional("sample-controls-toggle")?.Text == "Controls ▸")
 			app.Click("sample-controls-toggle");
 		app.ScrollIntoView("sample-controls", "control-angle");
 		app.Drag(app.Find("control-angle"), 0.2, 0.5, 0.0, 0.5);
 		app.WaitText("control-angle-value", text => text == "Angle: 0");
-		await Compare(app, "sample-canvas-cpu", "gallery-gradient-adjusted", "Maui");
+		await Compare(app, "sample-canvas-cpu", "gallery-gradient-adjusted", "Maui", failures);
 
 		app.Click("sample-back");
 		app.Find("gallery-search", "gallery-filter-search");
@@ -147,25 +169,60 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		app.WaitText("sample-render-status", text => text.StartsWith("CPU", StringComparison.Ordinal) && text.Contains("  |"));
 		app.Click("gallery-header-gpu");
 		app.WaitText("sample-render-status", text => text.StartsWith("GPU", StringComparison.Ordinal) && text.Contains("  |"));
-		await Compare(app, "sample-canvas-gpu", "gallery-gradient-gpu", "Maui");
+		await Compare(app, "sample-canvas-gpu", "gallery-gradient-gpu", "Maui", failures);
 		app.Click("sample-back");
 		app.Find("gallery-search", "gallery-filter-search");
+		ThrowFailures(failures ?? []);
 	}
 
 	private static async Task<string> Compare(
-		AppiumOperations app, string canvasId, string name, string family)
-		=> await SampleImage.Validate(
-			() => Task.FromResult(app.Capture(canvasId, name)),
-			app.TransformReference(Expected(app.DeviceProfile, name, family)));
+		AppiumOperations app, string canvasId, string name, string family, List<Exception>? failures = null)
+	{
+		var expected = app.TransformReference(Expected(app.DeviceProfile, name, family, app.Platform));
+		if (failures is null)
+			return await SampleImage.Validate(() => Task.FromResult(app.Capture(canvasId, name)), expected);
 
-	internal static string Expected(string deviceProfile, string name, string family) =>
-		Expected(deviceProfile, name, family, HostArchitecture());
+		return CaptureAndCheck(
+			() => app.Capture(canvasId, name),
+			actual => SampleImage.Validate(actual, expected), failures);
+	}
 
-	internal static string Expected(string deviceProfile, string name, string family, string architecture)
+	internal static string CaptureAndCheck(Func<string> capture, Action<string> check, List<Exception>? failures)
+	{
+		var actual = capture();
+		CheckImage(() => check(actual), failures);
+		return actual;
+	}
+
+	internal static void CheckImage(Action check, List<Exception>? failures)
+	{
+		try
+		{
+			check();
+		}
+		catch (XunitException error) when (failures is not null)
+		{
+			failures.Add(error);
+		}
+	}
+
+	private static List<Exception>? ReviewFailures(bool captureReview)
+	{
+		if (!captureReview)
+			return null;
+		TestContext.Current.TestOutputHelper?.WriteLine(
+			"DIAGNOSTIC CAPTURE REVIEW: retaining strict image assertions until scenario end; no reference acceptance or fallback.");
+		return [];
+	}
+
+	internal static string Expected(string deviceProfile, string name, string family, string platform = "iOS") =>
+		Expected(deviceProfile, name, family, platform, HostArchitecture());
+
+	internal static string Expected(string deviceProfile, string name, string family, string platform, string architecture)
 	{
 		var directory = Path.Combine(
 			Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", "Appium",
-			family, "iOS", deviceProfile.Replace('/', Path.DirectorySeparatorChar));
+			family, platform, deviceProfile.Replace('/', Path.DirectorySeparatorChar));
 		var architectureSpecific = Path.Combine(directory, $"{name}.{architecture}.png");
 		return File.Exists(architectureSpecific)
 			? architectureSpecific

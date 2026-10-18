@@ -21,6 +21,10 @@ internal abstract class AppiumOperations
 
 	internal string DeviceProfile => App.DeviceProfile;
 
+	internal string Platform => App.Platform;
+
+	protected string ApplicationId => App.ApplicationId;
+
 	internal void Attach(AppiumRunningApp owner)
 	{
 		ArgumentNullException.ThrowIfNull(owner);

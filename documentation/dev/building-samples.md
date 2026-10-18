@@ -1,7 +1,7 @@
 # Building and Validating Samples
 
 The Samples suite builds generated applications against produced NuGet packages,
-runs Console/Web APIs on the host and in Docker, and checks browser and iOS UIs.
+runs Console/Web APIs on the host and in Docker, and checks browser, iOS and Android UIs.
 
 ## Run the suite
 
@@ -42,8 +42,8 @@ This generates the samples and runs the suite. Keep all packages from the same
 producing build and pass its suffix explicitly.
 
 To run one group, add `--runGroup=Build`, `--runGroup=Host`,
-`--runGroup=Docker`, or `--runGroup=Ios`. Omit `--runGroup` to run the full suite,
-including iOS simulator cases on macOS.
+`--runGroup=Docker`, `--runGroup=Ios`, or `--runGroup=Android`. Omit `--runGroup`
+to run the full suite; device groups require their platform setup and explicit profiles.
 Group names are case-sensitive.
 
 ## IDE and direct test runs
@@ -101,7 +101,7 @@ After staging packages, select one of the runtimes from the
 ```sh
 IOS_VERSION=18.6
 sudo scripts/infra/native/apple/select-xcode.sh "$XCODE_VERSION"
-pwsh scripts/infra/tests/install-appium.ps1
+pwsh scripts/infra/tests/install-appium.ps1 -Platform iOS
 pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version "$IOS_VERSION"
 dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
   --iosModel="iPhone 16 Pro" \
@@ -183,6 +183,61 @@ Review actual/diff captures before replacing an intentional change. Use the
 canvas PNG from the TRX attachment, not full-screen diagnostics or animated GPU
 captures, then rerun every configured profile against the same package build.
 
+## Android emulator runs
+
+The `Android` group runs Basic MAUI, native Android (CPU, GPU Surface/Texture and
+Drawing navigation), MAUI Drawing strokes/Clear and Gallery MAUI using UiAutomator2.
+Use the SDK/workloads and JDK from [shared CI variables](../../scripts/azure-templates-variables.yml)
+and the exact OS version, image and model from one of the two
+[Android sample CI legs](../../scripts/azure-templates-stages-samples.yml).
+Node.js, `adb`, emulator and command-line tools must already be installed.
+The standard Linux workloads include `android` and `maui-android`.
+
+After staging the same producing package cohort used above:
+
+```sh
+# Set these to one complete profile from the sample stage configuration.
+export TEST_ANDROID_VERSION="<OS version>" TEST_ANDROID_IMAGE="<image>" TEST_ANDROID_MODEL="<model>"
+pwsh scripts/infra/managed/install-openjdk.ps1 -Version "$OPENJDK_VERSION"
+pwsh scripts/infra/managed/install-android-sdk.ps1
+pwsh scripts/infra/managed/install-android-package.ps1 -Package emulator
+pwsh scripts/infra/managed/install-android-image.ps1 -Image "$TEST_ANDROID_IMAGE"
+pwsh scripts/infra/tests/install-appium.ps1 -Platform Android
+dotnet cake --target=samples --runGroup=Android \
+  --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
+```
+
+Use the selected SDK's absolute `ANDROID_HOME` and `ANDROID_SDK_MANAGER_PATH`
+in your shell; provisioning scripts publish these for CI but cannot export them
+back to a calling shell. Install its platform/build tools and compile platforms
+as shown in the CI legs. Headless Linux also requires `libpulse0` and KVM access;
+CI uses `scripts/infra/tests/configure-emulators.sh`.
+
+Cake creates a uniquely named AVD on an unused port, passes its exact serial to
+the runner, and attempts only owned-device shutdown and deletion after failures.
+It never reuses an existing AVD. Appium owns each built signed APK's installed
+state, server and session; it does not own Cake's emulator or the shared adb server.
+Neither `samples-generate` nor helper tests start devices.
+
+For direct/IDE runs, explicitly set the same three `TEST_ANDROID_*` profile
+variables and optionally `TEST_ANDROID_UDID` for a device you manage.
+Without a UDID, direct runs leave device selection to the driver; Cake never does.
+Diagnostics target only Cake's serial or the established session's UDID.
+
+Android references route to
+`Expected/Appium/<Maui|Native>/Android/<model>/<image>/`. Review actual CI captures
+for the exact profile before adding references. Missing or mismatched references
+fail without fallback to iOS or another image; tests never accept or copy them.
+Animated Basic GPU pages require FPS and retain captures rather
+than compare animated goldens; Gallery's static GPU gradient remains strict.
+
+For a diagnostic capture-review run, explicitly set
+`TEST_ANDROID_CAPTURE_REVIEW=true` (or queue CI with that variable). This keeps
+ordered captures and retains only image/region assertion failures until the end
+of each scenario; the run still fails and is labeled diagnostic in test output.
+Interaction, capture and infrastructure failures stop immediately.
+Unset it for the default fail-fast comparison behavior. iOS remains unchanged.
+
 ## Coverage and diagnostics
 
 Basic/Gallery samples have build coverage; Console/Web APIs and Web/WASM/Blazor
@@ -190,7 +245,7 @@ UIs have runtime checks, including Blazor Drawing pointer strokes, color/brush
 selection and clear. Basic Uno runs its declared `net10.0-browserwasm` project
 target, checking CPU rendering and Drawing navigation, pointer strokes and
 clear rather than launching a desktop or host solution variant.
-Gallery also has iOS device execution through the separate `Ios` group.
+Gallery also has device execution through the separate `Ios` and `Android` groups.
 Browser errors and unavailable GPU rendering fail.
 
 | Group | Tests | CI hosts |
@@ -199,6 +254,7 @@ Browser errors and unavailable GPU rendering fail.
 | Host | Console, Web API and browser sample execution | Windows, macOS, Linux |
 | Docker | Container image builds and sample execution | Windows, Linux |
 | Ios | Basic MAUI/native iOS and Gallery MAUI Appium execution | macOS with the configured simulator profiles |
+| Android | Basic MAUI/native Android and Gallery MAUI Appium execution | Configured Android test pool with the two selected emulator profiles |
 
 When adding tests, choose a `RunGroup` by execution target, not sample family.
 Name execution classes by purpose: `SampleBuildTests`, `BasicSampleRunTests`,
@@ -224,7 +280,7 @@ versions against staged packages. Do not clear shared caches.
 Review platform references under `tests/SkiaSharp.Tests.Samples/Expected/`.
 Dimensions must match; the default limit is **0.075% differing pixels** with
 zero channel tolerance. Existing browser animated GPU pages use a loose
-**6% mean RGBA error** smoke check that can miss uniform dark output; iOS
+**6% mean RGBA error** smoke check that can miss uniform dark output; iOS/Android
 animated Basic GPU pages instead require FPS and retain a capture. Mismatches
 retain actual/diff images; references are never accepted automatically.
 

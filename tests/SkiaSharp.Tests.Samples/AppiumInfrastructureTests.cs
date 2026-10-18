@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Appium;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -212,14 +213,16 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		return new("Sample", inputs, packages, Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
 	}
 
-	[Fact]
-	public async Task FailedSessionStillRunsDiagnosticsAndStopsTheServer()
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task FailedSessionStillRunsDiagnosticsAndStopsTheServer(bool android)
 	{
 		using var workspace = Workspace();
 		var artifact = Path.Combine(workspace.Root, "Sample.app");
 		Directory.CreateDirectory(artifact);
 		var order = new List<string>();
-		var app = new DiagnosticApp(workspace, artifact, order);
+		var app = new DiagnosticApp(workspace, artifact, order, android: android);
 		var failure = await Assert.ThrowsAsync<NotSupportedException>(() => app.Run(
 			new Uri("http://127.0.0.1:1"), _ => throw new InvalidOperationException("Scenario must not run."),
 			() => { order.Add("server-start"); return Task.CompletedTask; },
@@ -233,14 +236,16 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			() => Task.CompletedTask, () => Task.CompletedTask));
 	}
 
-	[Fact]
-	public async Task DiagnosticsFailuresNeverHideStartupOrPreventServerCleanup()
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task DiagnosticsFailuresNeverHideStartupOrPreventServerCleanup(bool android)
 	{
 		using var workspace = Workspace();
 		var artifact = Path.Combine(workspace.Root, "Sample.app");
 		Directory.CreateDirectory(artifact);
 		var order = new List<string>();
-		var app = new DiagnosticApp(workspace, artifact, order, failDiagnostics: true);
+		var app = new DiagnosticApp(workspace, artifact, order, failDiagnostics: true, android: android);
 		var failure = await Assert.ThrowsAsync<AggregateException>(() => app.Run(
 			new Uri("http://127.0.0.1:1"), _ => Task.CompletedTask, () => Task.CompletedTask,
 			() => { order.Add("server-stop"); throw new IOException("server-stop"); }));
@@ -271,8 +276,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	{
 		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", "26.2");
 
-		var x64 = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", "Maui", "x64");
-		var arm64 = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", "Maui", "arm64");
+		var x64 = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", "Maui", "iOS", "x64");
+		var arm64 = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", "Maui", "iOS", "arm64");
 
 		Assert.EndsWith(Path.Combine("26.2", "basic-cpu.x64.png"), x64);
 		Assert.EndsWith(Path.Combine("26.2", "basic-cpu.png"), arm64);
@@ -311,11 +316,12 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	private sealed class DiagnosticApp(
-		SampleWorkspace workspace, string artifact, List<string> order, bool failDiagnostics = false)
-		: AppiumRunningApp(workspace, artifact, new IosAppiumOperations())
+		SampleWorkspace workspace, string artifact, List<string> order, bool failDiagnostics = false, bool android = false)
+		: AppiumRunningApp(workspace, artifact, android ? new AndroidAppiumOperations() : new IosAppiumOperations())
 	{
 		internal Exception StartFailure { get; } = new NotSupportedException("Session construction failed.");
 		internal override string DeviceProfile => "unit-fixture";
+		internal override string Platform => android ? "Android" : "iOS";
 		internal override Task<string> ReadApplicationId() => Task.FromResult("unit.fixture");
 		protected override Task Start(Uri address)
 		{
@@ -340,6 +346,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		var operations = Assert.IsType<IosAppiumOperations>(running.Operations);
 		Assert.Same(operations, app.Operations);
 		Assert.Equal(app.DeviceProfile, operations.DeviceProfile);
+		Assert.Equal("iOS", operations.Platform);
 		Assert.Throws<InvalidOperationException>(() => operations.Attach(app));
 
 		var failure = Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
@@ -353,7 +360,138 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		var failure = Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
 		Assert.Equal("Appium operations have not been attached to an app.", failure.Message);
 		Assert.Throws<InvalidOperationException>(() => operations.DeviceProfile);
+		Assert.Throws<InvalidOperationException>(() => operations.Platform);
 		Assert.Throws<ArgumentNullException>(() => operations.Attach(null!));
+	}
+
+	[Theory]
+	[InlineData("8.0", "android-26;google_apis")]
+	[InlineData("17", "android-37.1;google_apis_ps16k")]
+	public void AndroidGoldenProfilesRouteOnlyToTheirExactPlatformAndImage(string version, string image)
+	{
+		var profile = AndroidRunningApp.ReferenceProfile("pixel_9", version, image);
+		Assert.Equal($"pixel_9/{image}", profile);
+		foreach (var family in new[] { "Maui", "Native" })
+		{
+			var expected = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", family, "Android");
+			Assert.Equal(Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
+				"Appium", family, "Android", "pixel_9", image, "basic-cpu.png"), expected);
+			var missing = AppiumSampleRunTestBase.Expected(profile, "unit-fixture-not-reviewed", family, "Android");
+			Assert.False(File.Exists(missing));
+			var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/latest", "basic-cpu", "Maui");
+			var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, missing));
+			Assert.Contains($"Missing reviewed sample golden: {missing}", failure.Message);
+			Assert.False(File.Exists(missing));
+		}
+	}
+
+	[Theory]
+	[InlineData(null, "8.0", "android-26;google_apis")]
+	[InlineData("pixel_9", null, "android-26;google_apis")]
+	[InlineData("pixel_9", "latest", "android-26;google_apis")]
+	[InlineData("pixel_9", "8.0", null)]
+	[InlineData("pixel_9", "8.0", "latest")]
+	[InlineData("../pixel_9", "8.0", "android-26;google_apis")]
+	[InlineData("pixel_9", "8.0", "android-26;google_apis/foreign")]
+	public void AndroidRequiresAnExplicitSafeProfile(string? model, string? version, string? image) =>
+		Assert.Throws<InvalidOperationException>(() => AndroidRunningApp.ReferenceProfile(model, version, image));
+
+	[Theory]
+	[InlineData("com.skiasharp.built")]
+	[InlineData(" com.skiasharp.built\n")]
+	public void AndroidIdentityUsesTheBuiltApkAnalyzerOutput(string output) =>
+		Assert.Equal("com.skiasharp.built", AndroidRunningApp.ParseApplicationId(output));
+
+	[Theory]
+	[InlineData("")]
+	[InlineData("com.skiasharp.built\ncom.foreign.app")]
+	[InlineData("package: name='com.skiasharp.built'")]
+	[InlineData("com.skiasharp/foreign")]
+	public void AndroidRejectsInvalidOrAmbiguousApkIdentity(string output) =>
+		Assert.Throws<InvalidOperationException>(() => AndroidRunningApp.ParseApplicationId(output));
+
+	[Fact]
+	public void AndroidOperationsBelongToTheAppAndUseItsPackageResourceIds()
+	{
+		using var workspace = Workspace();
+		var app = new AndroidRunningApp(workspace, Path.Combine(workspace.Root, "Built-Signed.apk"));
+		var operations = Assert.IsType<AndroidAppiumOperations>(app.Operations);
+		Assert.Same(operations, app.Operations);
+		Assert.Equal("Android", app.Platform);
+		Assert.Equal(app.Platform, operations.Platform);
+		Assert.Throws<InvalidOperationException>(() => operations.Attach(app));
+		Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
+		Assert.Equal(By.Id("com.skiasharp.built:id/skiaView").ToString(),
+			AndroidAppiumOperations.ElementLocator("com.skiasharp.built", "skiaView", nativeResourceIds: true).ToString());
+		Assert.Equal(MobileBy.AccessibilityId("basic-canvas-cpu").ToString(),
+			AndroidAppiumOperations.ElementLocator("com.skiasharp.built", "basic-canvas-cpu", nativeResourceIds: false).ToString());
+	}
+
+	[Fact]
+	public void CaptureReviewRetainsEachImageAndRegionAssertionUntilScenarioEnd()
+	{
+		List<Exception> failures = [];
+		List<string> order = [];
+		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/latest", "basic-cpu", "Maui");
+		var expected = AppiumSampleRunTestBase.Expected("unit-fixture/not-reviewed", "missing", "Maui", "Android");
+		foreach (var phase in new[] { "blank", "strokes", "clear" })
+		{
+			var captured = AppiumSampleRunTestBase.CaptureAndCheck(
+				() => { order.Add($"capture-{phase}"); return actual; },
+				file => SampleImage.Validate(file, expected), failures);
+			if (phase != "blank")
+				AppiumSampleRunTestBase.CheckImage(
+					() => AppiumSampleRunTestBase.AssertDrawingStrokeRegions(captured, expected), failures);
+			order.Add($"after-{phase}");
+		}
+		Assert.Equal(new[] { "capture-blank", "after-blank", "capture-strokes", "after-strokes", "capture-clear", "after-clear" }, order);
+		var failure = Assert.Throws<AggregateException>(() => FailureHandling.ThrowFailures(failures));
+		Assert.Equal(5, failure.InnerExceptions.Count);
+		Assert.All(failure.InnerExceptions, error => Assert.Contains($"Missing reviewed sample golden: {expected}", error.Message));
+		Assert.False(File.Exists(expected));
+	}
+
+	[Fact]
+	public void NormalImageValidationFailsFastWithoutCollectingAssertions()
+	{
+		var continued = false;
+		Assert.ThrowsAny<Xunit.Sdk.XunitException>(() =>
+		{
+			AppiumSampleRunTestBase.CaptureAndCheck(() => "captured.png", _ => Assert.Fail("strict mismatch"), null);
+			continued = true;
+		});
+		Assert.False(continued);
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public void CaptureReviewNeverRetainsInteractionOrCaptureAssertions(bool duringCapture)
+	{
+		List<Exception> failures = [];
+		var fatal = new Xunit.Sdk.XunitException(duringCapture ? "capture failed" : "interaction failed");
+		var continued = false;
+		var failure = Assert.Throws<Xunit.Sdk.XunitException>(() =>
+		{
+			AppiumSampleRunTestBase.CheckImage(() => Assert.Fail("earlier comparison mismatch"), failures);
+			if (duringCapture)
+				AppiumSampleRunTestBase.CaptureAndCheck(() => throw fatal, _ => Assert.Fail("must not validate"), failures);
+			else
+				throw fatal;
+			continued = true;
+		});
+		Assert.Same(fatal, failure);
+		Assert.Single(failures);
+		Assert.False(continued);
+	}
+
+	[Fact]
+	public void CaptureReviewNeverRetainsNonAssertionValidationErrors()
+	{
+		List<Exception> failures = [];
+		Assert.Throws<IOException>(() => AppiumSampleRunTestBase.CaptureAndCheck(
+			() => "captured.png", _ => throw new IOException("comparison infrastructure failed"), failures));
+		Assert.Empty(failures);
 	}
 
 	[Fact]

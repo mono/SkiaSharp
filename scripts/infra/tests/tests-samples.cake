@@ -6,12 +6,14 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 #load "../shared/msbuild.cake"
 #load "tests-shared.cake"
 #load "tests-shared-apple.cake"
+#load "tests-shared-android.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // SAMPLES TASKS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var RUN_GROUP = Argument("runGroup", "");
+var TEST_ANDROID_VERSION = Argument("androidVersion", EnvironmentVariable("TEST_ANDROID_VERSION") ?? "");
 var RUN_GROUPS = new[] { "Build", "Host", "Docker", "Android", "Ios", "Mac", "Windows" };
 var APPIUM_RUN_GROUPS = new[] { "Ios" };
 if (!string.IsNullOrEmpty(RUN_GROUP) && !RUN_GROUPS.Contains(RUN_GROUP))
@@ -24,6 +26,8 @@ if (APPIUM_MODE != "all" && !APPIUM_RUN_GROUPS.Contains(RUN_GROUP))
     throw new ArgumentException($"Select an Appium run group ({string.Join(", ", APPIUM_RUN_GROUPS)}) with an explicit phase.");
 
 string OWNED_IOS_SIMULATOR = null;
+string OWNED_ANDROID_AVD = null;
+string OWNED_ANDROID_SERIAL = null;
 
 void SetupSampleDevices()
 {
@@ -34,13 +38,35 @@ void SetupSampleDevices()
         Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_MODEL", TEST_IOS_SIMULATOR_MODEL);
         Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_UDID", OWNED_IOS_SIMULATOR);
     }
+    if (APPIUM_RUN_GROUPS.Contains("Android") && (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Android")) {
+        SetupAndroidEmulator(ref OWNED_ANDROID_AVD, ref OWNED_ANDROID_SERIAL);
+        Environment.SetEnvironmentVariable("TEST_ANDROID_VERSION", TEST_ANDROID_VERSION);
+        Environment.SetEnvironmentVariable("TEST_ANDROID_IMAGE", TEST_ANDROID_IMAGE);
+        Environment.SetEnvironmentVariable("TEST_ANDROID_MODEL", TEST_ANDROID_MODEL);
+        Environment.SetEnvironmentVariable("TEST_ANDROID_UDID", OWNED_ANDROID_SERIAL);
+    }
 }
 
 Teardown(context =>
 {
-    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
-        TeardownIosSimulator(ref OWNED_IOS_SIMULATOR, context.ThrownException);
+    var failures = new List<Exception>();
+    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Android") {
+        try {
+            TeardownAndroidEmulator(ref OWNED_ANDROID_AVD, ref OWNED_ANDROID_SERIAL, context.ThrownException);
+        } catch (Exception error) {
+            failures.Add(error);
+        }
     }
+
+    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
+        try {
+            TeardownIosSimulator(ref OWNED_IOS_SIMULATOR, context.ThrownException);
+        } catch (Exception error) {
+            failures.Add(error);
+        }
+    }
+    if (failures.Count != 0)
+        throw new AggregateException("Owned sample device cleanup failed.", failures);
 });
 
 Task ("samples-generate")
