@@ -124,8 +124,10 @@ Task("sync-ANGLE")
                 var packageId = package.Id.ToLowerInvariant();
                 var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/{packageId}/{package.Version}/{packageId}.{package.Version}.nupkg";
                 var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{packageId}.{package.Version}.nupkg");
+                var packagePath = WINAPPSDK_PATH.Combine(packageId);
                 DownloadFile(nugetUrl, nupkgPath);
-                Unzip(nupkgPath, WINAPPSDK_PATH);
+                EnsureDirectoryExists(packagePath);
+                Unzip(nupkgPath, packagePath);
                 DeleteFile(nupkgPath);
             }
             FileWriteText(stamp, "");

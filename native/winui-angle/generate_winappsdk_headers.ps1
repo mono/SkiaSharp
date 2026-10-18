@@ -21,7 +21,6 @@ $ErrorActionPreference = 'Stop'
 
 $includePath = Join-Path $Path 'include'
 $libPath = Join-Path $Path 'lib'
-$metadataPath = Join-Path $Path 'metadata'
 $uapVersion = '10.0.18362'
 
 # Ensure include directory exists
@@ -51,12 +50,10 @@ Write-Host "WinAppSDK path: $Path"
 # (midlrt resolves imported IDL files relative to CWD)
 Push-Location $includePath
 try {
-    # Windows App SDK 1.8+ component packages use metadata/, while older
-    # packages use lib/. Scan both layouts and make every metadata directory
-    # available when resolving references between WINMD files.
-    $metadataRoots = @($libPath, $metadataPath) | Where-Object { Test-Path $_ }
-    $winmdFiles = $metadataRoots |
-        ForEach-Object { Get-ChildItem $_ -Filter '*.winmd' -Recurse } |
+    # Windows App SDK 1.8+ splits metadata across component packages, while
+    # older packages use a single lib/ layout. Scan the entire extraction root
+    # and make every metadata directory available when resolving references.
+    $winmdFiles = Get-ChildItem $Path -Filter '*.winmd' -Recurse |
         Sort-Object FullName -Descending
     $metadataDirs = @(
         'C:\Windows\System32\WinMetadata'
