@@ -46,23 +46,23 @@ public class PixelComparerComparisonBenchmark
 
 	[Benchmark]
 	public long CompareImage() =>
-		SKPixelComparer.Compare(fixture.ExpectedImage, fixture.ActualImage, fixture.Options).RawMetrics.SumSquaredError;
+		SKImageComparison.Compare(fixture.ExpectedImage, fixture.ActualImage, fixture.Options).RawMetrics.SumSquaredError;
 
 	[Benchmark]
 	public long CompareIdenticalImage() =>
-		SKPixelComparer.Compare(fixture.ExpectedImage, fixture.ExpectedImage, fixture.Options).RawMetrics.SumSquaredError;
+		SKImageComparison.Compare(fixture.ExpectedImage, fixture.ExpectedImage, fixture.Options).RawMetrics.SumSquaredError;
 
 	[Benchmark]
 	public long CompareBitmap() =>
-		SKPixelComparer.Compare(fixture.ExpectedBitmap, fixture.ActualBitmap, fixture.Options).RawMetrics.SumSquaredError;
+		SKImageComparison.Compare(fixture.ExpectedBitmap, fixture.ActualBitmap, fixture.Options).RawMetrics.SumSquaredError;
 
 	[Benchmark]
 	public long ComparePixmap() =>
-		SKPixelComparer.Compare(fixture.ExpectedPixmap, fixture.ActualPixmap, fixture.Options).RawMetrics.SumSquaredError;
+		SKImageComparison.Compare(fixture.ExpectedPixmap, fixture.ActualPixmap, fixture.Options).RawMetrics.SumSquaredError;
 
 	[Benchmark]
 	public long CompareWithMasks() =>
-		SKPixelComparer.Compare(fixture.ExpectedImage, fixture.ActualImage, fixture.MaskedOptions).RawMetrics.SumSquaredError;
+		SKImageComparison.Compare(fixture.ExpectedImage, fixture.ActualImage, fixture.MaskedOptions).RawMetrics.SumSquaredError;
 }
 
 [MemoryDiagnoser]
@@ -83,40 +83,40 @@ public class PixelComparerDiagnosticBenchmark
 	[Benchmark]
 	public uint ThresholdMap()
 	{
-		using var image = SKPixelComparer.GenerateDifferenceImage(fixture.ExpectedImage, fixture.ActualImage,
-			SKPixelDifferenceStyle.ThresholdMap, fixture.MaskedOptions);
+		using var image = SKImageComparison.GenerateDifferenceImage(fixture.ExpectedImage, fixture.ActualImage,
+			SKDifferenceStyle.ThresholdMap, fixture.MaskedOptions);
 		return Checksum(image);
 	}
 
 	[Benchmark]
 	public uint ThresholdOverlay()
 	{
-		using var image = SKPixelComparer.GenerateDifferenceImage(fixture.ExpectedImage, fixture.ActualImage,
-			SKPixelDifferenceStyle.ThresholdOverlay, fixture.MaskedOptions);
+		using var image = SKImageComparison.GenerateDifferenceImage(fixture.ExpectedImage, fixture.ActualImage,
+			SKDifferenceStyle.ThresholdOverlay, fixture.MaskedOptions);
 		return Checksum(image);
 	}
 
 	[Benchmark]
 	public uint ChannelDifference()
 	{
-		using var image = SKPixelComparer.GenerateDifferenceImage(fixture.ExpectedImage, fixture.ActualImage,
-			SKPixelDifferenceStyle.ChannelDifference, fixture.MaskedOptions);
+		using var image = SKImageComparison.GenerateDifferenceImage(fixture.ExpectedImage, fixture.ActualImage,
+			SKDifferenceStyle.ChannelDifference, fixture.MaskedOptions);
 		return Checksum(image);
 	}
 
 	[Benchmark]
 	public uint BinaryMask()
 	{
-		using var image = SKPixelComparer.GenerateDifferenceImage(fixture.ExpectedImage, fixture.ActualImage,
-			SKPixelDifferenceStyle.BinaryMask, fixture.MaskedOptions);
+		using var image = SKImageComparison.GenerateDifferenceImage(fixture.ExpectedImage, fixture.ActualImage,
+			SKDifferenceStyle.BinaryMask, fixture.MaskedOptions);
 		return Checksum(image);
 	}
 
 	[Benchmark]
 	public uint Heatmap()
 	{
-		using var image = SKPixelComparer.GenerateDifferenceImage(fixture.ExpectedImage, fixture.ActualImage,
-			SKPixelDifferenceStyle.Heatmap, fixture.MaskedOptions);
+		using var image = SKImageComparison.GenerateDifferenceImage(fixture.ExpectedImage, fixture.ActualImage,
+			SKDifferenceStyle.Heatmap, fixture.MaskedOptions);
 		return Checksum(image);
 	}
 
@@ -204,8 +204,8 @@ public sealed class PixelComparerFixture : IDisposable
 	public SKImage ActualImage { get; }
 	public SKImage ToleranceMask { get; }
 	public SKImage IgnoreMask { get; }
-	public SKPixelComparerOptions Options { get; }
-	public SKPixelComparerOptions MaskedOptions { get; }
+	public SKComparisonOptions Options { get; }
+	public SKComparisonOptions MaskedOptions { get; }
 
 	public void Dispose()
 	{
@@ -219,7 +219,7 @@ public sealed class PixelComparerFixture : IDisposable
 		ActualBitmap.Dispose();
 	}
 
-	private static SKPixelComparerOptions CreateOptions(bool compareAlpha) => new SKPixelComparerOptions
+	private static SKComparisonOptions CreateOptions(bool compareAlpha) => new SKComparisonOptions
 	{
 		RedTolerance = SKPixelTolerance.Absolute(4),
 		GreenTolerance = SKPixelTolerance.Absolute(4),

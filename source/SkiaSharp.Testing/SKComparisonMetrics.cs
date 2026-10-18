@@ -6,9 +6,9 @@ namespace SkiaSharp.Testing;
 
 /// <summary>Raw or thresholded enabled-channel error statistics over all compared pixels.</summary>
 /// <remarks>Both metric groups exclude ignored pixels and use the same sample denominator. Thresholding changes only the error sums: tolerated channel differences contribute zero, while differences exceeding their allowances contribute their full magnitudes.</remarks>
-public sealed class SKPixelComparisonMetrics
+public sealed class SKComparisonMetrics
 {
-	internal SKPixelComparisonMetrics(int comparedPixels, int channelCount, long sumAbsoluteError, long sumSquaredError)
+	internal SKComparisonMetrics(int comparedPixels, int channelCount, long sumAbsoluteError, long sumSquaredError)
 	{
 		SampleCount = (long)comparedPixels * channelCount;
 		SumAbsoluteError = sumAbsoluteError;

@@ -4,13 +4,13 @@ using Xunit;
 
 namespace SkiaSharp.Testing.Tests;
 
-public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
+public class SKComparisonMetricsTest : SKImageComparisonTestBase
 {
 	[Fact]
 	public void MetricGroupsUseTheSameSampleDenominator()
 	{
-		var raw = new SKPixelComparisonMetrics(100, 4, 20, 40);
-		var thresholded = new SKPixelComparisonMetrics(100, 4, 10, 20);
+		var raw = new SKComparisonMetrics(100, 4, 20, 40);
+		var thresholded = new SKComparisonMetrics(100, 4, 10, 20);
 		Assert.Equal(400L, raw.SampleCount);
 		Assert.Equal(raw.SampleCount, thresholded.SampleCount);
 		Assert.Equal(0.05, raw.MeanAbsoluteError);
@@ -28,14 +28,14 @@ public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 		const long sumAbsoluteError = 3217;
 		for (var channels = 1; channels <= 4; channels++)
 		{
-			var metrics = new SKPixelComparisonMetrics(pixels, channels, sumAbsoluteError, 0);
+			var metrics = new SKComparisonMetrics(pixels, channels, sumAbsoluteError, 0);
 			Assert.Equal(sumAbsoluteError / (pixels * channels * 255.0), metrics.NormalizedMeanAbsoluteError);
 		}
 
 		const long nearThresholdSum = 131;
-		var nearThreshold = new SKPixelComparisonMetrics(65_536, 4, nearThresholdSum, 0);
+		var nearThreshold = new SKComparisonMetrics(65_536, 4, nearThresholdSum, 0);
 		Assert.Equal(nearThresholdSum / (65_536 * 4 * 255.0), nearThreshold.NormalizedMeanAbsoluteError);
-		var maxContrast = new SKPixelComparisonMetrics(1, 4, 4 * 255, 4 * 255 * 255);
+		var maxContrast = new SKComparisonMetrics(1, 4, 4 * 255, 4 * 255 * 255);
 		Assert.Equal(1.0, maxContrast.NormalizedMeanAbsoluteError);
 	}
 
@@ -44,7 +44,7 @@ public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 	{
 		using var first = CreateBitmap(new SKColor(10, 20, 30), SKColors.Black);
 		using var second = CreateBitmap(new SKColor(13, 26, 39), SKColors.Black);
-		var result = SKPixelComparer.Compare(first, second);
+		var result = SKImageComparison.Compare(first, second);
 		Assert.False(result.IsMatch);
 		Assert.Equal(2, result.TotalPixels);
 		Assert.Equal(2, result.ComparedPixelCount);
@@ -65,7 +65,7 @@ public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 		Assert.Equal(10 * Math.Log10(65025.0 / 15.75), result.RawMetrics.PeakSignalToNoiseRatio, 12);
 		Assert.Equal(result.RawMetrics.SumSquaredError, result.ThresholdedMetrics.SumSquaredError);
 
-		var identical = SKPixelComparer.Compare(first, first);
+		var identical = SKImageComparison.Compare(first, first);
 		Assert.True(identical.IsMatch);
 		Assert.Equal(identical.TotalPixels, identical.ComparedPixelCount);
 		Assert.Equal(0, identical.IgnoredPixelCount);
@@ -82,8 +82,8 @@ public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 	{
 		using var first = CreateRawPremulBitmap(new SKColor(64, 0, 0, 64));
 		using var second = CreateRawPremulBitmap(new SKColor(64, 0, 0, 128));
-		var options = new SKPixelComparerOptions { AlphaType = SKAlphaType.Premul };
-		var rgba = SKPixelComparer.Compare(first, second, options);
+		var options = new SKComparisonOptions { AlphaType = SKAlphaType.Premul };
+		var rgba = SKImageComparison.Compare(first, second, options);
 		Assert.Equal(1, rgba.MismatchedPixelCount);
 		Assert.Equal(64L, rgba.RawMetrics.SumAbsoluteError);
 		Assert.Equal(4096L, rgba.RawMetrics.SumSquaredError);
@@ -91,7 +91,7 @@ public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 		Assert.Equal(64.0 / (1 * 4 * 255.0), rgba.RawMetrics.NormalizedMeanAbsoluteError);
 		Assert.Equal(64, rgba.MaxChannelDifference);
 		options.AlphaTolerance = null;
-		var rgb = SKPixelComparer.Compare(first, second, options);
+		var rgb = SKImageComparison.Compare(first, second, options);
 		Assert.True(rgb.IsMatch);
 		Assert.Equal(3, rgb.ChannelCount);
 		Assert.Equal(0L, rgb.RawMetrics.SumAbsoluteError);
@@ -103,7 +103,7 @@ public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 		options.GreenTolerance = null;
 		options.BlueTolerance = null;
 		options.AlphaTolerance = SKPixelTolerance.Exact;
-		var alpha = SKPixelComparer.Compare(first, second, options);
+		var alpha = SKImageComparison.Compare(first, second, options);
 		Assert.Equal(1, alpha.ChannelCount);
 		Assert.Equal(1L, alpha.RawMetrics.SampleCount);
 		Assert.Equal(64.0, alpha.RawMetrics.MeanAbsoluteError);
@@ -111,14 +111,14 @@ public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 		Assert.Equal(4096.0, alpha.RawMetrics.MeanSquaredError);
 		Assert.Equal(64.0 / 255, alpha.RawMetrics.NormalizedRootMeanSquaredError, 12);
 		options.AlphaTolerance = SKPixelTolerance.Absolute(64);
-		Assert.Equal(0, SKPixelComparer.Compare(first, second, options).MismatchedPixelCount);
+		Assert.Equal(0, SKImageComparison.Compare(first, second, options).MismatchedPixelCount);
 
 		using var redFirst = CreateBitmap(new SKColor(10, 20, 30));
 		using var redSecond = CreateBitmap(new SKColor(13, 26, 39));
 		options.AlphaType = SKAlphaType.Unpremul;
 		options.RedTolerance = SKPixelTolerance.Exact;
 		options.AlphaTolerance = null;
-		var red = SKPixelComparer.Compare(redFirst, redSecond, options);
+		var red = SKImageComparison.Compare(redFirst, redSecond, options);
 		Assert.Equal(1, red.ChannelCount);
 		Assert.Equal(1L, red.RawMetrics.SampleCount);
 		Assert.Equal(3L, red.RawMetrics.SumAbsoluteError);
@@ -133,18 +133,18 @@ public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 	{
 		using var first = CreateRawPremulBitmap(new SKColor(32, 0, 0, 128));
 		using var second = CreateRawPremulBitmap(new SKColor(64, 0, 0, 128));
-		var options = new SKPixelComparerOptions
+		var options = new SKComparisonOptions
 		{
 			AlphaType = SKAlphaType.Premul,
 			AlphaTolerance = null,
 		};
-		var rgb = SKPixelComparer.Compare(first, second, options);
+		var rgb = SKImageComparison.Compare(first, second, options);
 		Assert.Equal(3L, rgb.RawMetrics.SampleCount);
 		Assert.Equal(32L, rgb.RawMetrics.SumAbsoluteError);
 		Assert.Equal(32.0 / (1 * 3 * 255.0), rgb.RawMetrics.NormalizedMeanAbsoluteError);
 		options.GreenTolerance = null;
 		options.BlueTolerance = null;
-		var red = SKPixelComparer.Compare(first, second, options);
+		var red = SKImageComparison.Compare(first, second, options);
 		Assert.Equal(1L, red.RawMetrics.SampleCount);
 		Assert.Equal(32.0 / (1 * 1 * 255.0), red.RawMetrics.NormalizedMeanAbsoluteError);
 	}
@@ -159,7 +159,7 @@ public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 		second.Erase(SKColors.Black);
 		second.SetPixel(1, 0, SKColors.White);
 		second.SetPixel(3, 2, SKColors.White);
-		var result = SKPixelComparer.Compare(first, second);
+		var result = SKImageComparison.Compare(first, second);
 		Assert.Equal(2, result.MismatchedPixelCount);
 		Assert.Equal(new SKRectI(1, 0, 4, 3), result.MismatchBounds);
 	}
@@ -172,7 +172,7 @@ public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 		using var second = new SKBitmap(info);
 		first.Erase(SKColors.Black);
 		second.Erase(SKColors.White);
-		var result = SKPixelComparer.Compare(first, second, new SKPixelComparerOptions
+		var result = SKImageComparison.Compare(first, second, new SKComparisonOptions
 		{
 			AlphaTolerance = null,
 		});
@@ -206,28 +206,28 @@ public class SKPixelComparisonMetricsTest : SKPixelComparerTestBase
 		second.Erase(SKColors.Black);
 		second.SetPixel(width - 1, height - 1, SKColors.White);
 		var count = width * height;
-		var sparseMetrics = new SKPixelComparisonMetrics(count, 4, 3 * 255, 3 * 255 * 255);
-		var sparse = new SKPixelComparisonResult(count, count, 4, 1, 255,
+		var sparseMetrics = new SKComparisonMetrics(count, 4, 3 * 255, 3 * 255 * 255);
+		var sparse = new SKComparisonResult(count, count, 4, 1, 255,
 			new SKRectI(width - 1, height - 1, width, height), sparseMetrics, sparseMetrics, false);
-		AssertEquivalent(sparse, SKPixelComparer.Compare(first, second));
+		AssertEquivalent(sparse, SKImageComparison.Compare(first, second));
 
 		second.Erase(SKColors.White);
-		var denseMetrics = new SKPixelComparisonMetrics(count, 4, count * 3 * 255, count * 3 * 255 * 255);
-		var dense = new SKPixelComparisonResult(count, count, 4, count, 255,
+		var denseMetrics = new SKComparisonMetrics(count, 4, count * 3 * 255, count * 3 * 255 * 255);
+		var dense = new SKComparisonResult(count, count, 4, count, 255,
 			new SKRectI(0, 0, width, height), denseMetrics, denseMetrics, false);
-		AssertEquivalent(dense, SKPixelComparer.Compare(first, second));
+		AssertEquivalent(dense, SKImageComparison.Compare(first, second));
 
 		second.Erase(SKColors.Black);
-		var exactMetrics = new SKPixelComparisonMetrics(count, 4, 0, 0);
-		var exact = new SKPixelComparisonResult(count, count, 4, 0, 0,
+		var exactMetrics = new SKComparisonMetrics(count, 4, 0, 0);
+		var exact = new SKComparisonResult(count, count, 4, 0, 0,
 			null, exactMetrics, exactMetrics, true);
-		AssertEquivalent(exact, SKPixelComparer.Compare(first, second));
+		AssertEquivalent(exact, SKImageComparison.Compare(first, second));
 	}
 
 	[Fact]
 	public void InternalEmptyMetricsHaveDefinedZeroDenominators()
 	{
-		var metrics = new SKPixelComparisonMetrics(0, 3, 0, 0);
+		var metrics = new SKComparisonMetrics(0, 3, 0, 0);
 		Assert.Equal(0L, metrics.SampleCount);
 		Assert.Equal(0.0, metrics.MeanAbsoluteError);
 		Assert.Equal(0.0, metrics.NormalizedMeanAbsoluteError);

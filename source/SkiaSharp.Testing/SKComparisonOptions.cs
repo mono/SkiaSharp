@@ -5,7 +5,7 @@ namespace SkiaSharp.Testing;
 
 /// <summary>Mutable comparison configuration, snapshotted at the start of each synchronous operation.</summary>
 /// <remarks>Do not mutate these settings or their borrowed masks during a call. No native input or mask ownership is transferred.</remarks>
-public sealed class SKPixelComparerOptions
+public sealed class SKComparisonOptions
 {
 	/// <summary>Red-channel byte allowance, or null to exclude red from comparisons and statistics; defaults to <see cref="SKPixelTolerance.Exact"/>.</summary>
 	public SKPixelTolerance? RedTolerance { get; set; } = SKPixelTolerance.Exact;
