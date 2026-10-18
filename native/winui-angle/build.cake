@@ -110,6 +110,14 @@ Task("sync-ANGLE")
                 Id = "Microsoft.WindowsAppSDK.WinUI",
                 Version = GetVersion("Microsoft.WindowsAppSDK.WinUI", "release"),
             },
+            new {
+                Id = "Microsoft.WindowsAppSDK.Foundation",
+                Version = GetVersion("Microsoft.WindowsAppSDK.Foundation", "release"),
+            },
+            new {
+                Id = "Microsoft.Web.WebView2",
+                Version = GetVersion("Microsoft.Web.WebView2", "release"),
+            },
         };
         var metadata_versions = string.Join("-", metadata_packages.Select(package => package.Version));
         var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}-{metadata_versions}.stamp");

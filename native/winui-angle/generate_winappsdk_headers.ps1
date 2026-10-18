@@ -59,9 +59,12 @@ Write-Host "WinAppSDK path: $Path"
 Push-Location $includePath
 try {
     # Windows App SDK 1.8+ splits metadata across component packages, while
-    # older packages use a single lib/ layout. Scan the entire extraction root
-    # and make every metadata directory available when resolving references.
-    $winmdFiles = Get-ChildItem $Path -Filter '*.winmd' -Recurse |
+    # older packages use a single lib/ layout. Scan package metadata and lib
+    # directories, excluding tool-private WINMD files.
+    $metadataRoots = Get-ChildItem $Path -Directory -Recurse |
+        Where-Object { $_.Name -in @('lib', 'metadata') }
+    $winmdFiles = $metadataRoots |
+        ForEach-Object { Get-ChildItem $_ -Filter '*.winmd' -Recurse } |
         Sort-Object FullName -Descending
     $metadataDirs = @(
         'C:\Windows\System32\WinMetadata'
