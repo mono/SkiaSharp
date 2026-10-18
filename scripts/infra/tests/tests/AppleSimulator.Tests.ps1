@@ -30,7 +30,7 @@ case "$3" in
             invalid-uuid) echo '{"udid":"foreign"}'; exit 0 ;;
             missing-metadata) echo '{"udid":"12345678-1234-1234-1234-123456789abc"}'; exit 0 ;;
             invalid-version) version=invalid ;;
-            *) version=26.2 ;;
+            *) version=26.3.1 ;;
         esac
         printf '{"udid":"12345678-1234-1234-1234-123456789abc","runtime":{"version":"%s"}}\n' "$version"
         ;;
@@ -112,7 +112,7 @@ Task("Default").Does(() => {
 RunTarget("Default");
 "@
     $env:FIXTURE_APPLE_ROOT = $root
-    $env:TEST_IOS_SIMULATOR_VERSION = '26.2'
+    $env:TEST_IOS_SIMULATOR_VERSION = '26.3.1'
 
     $cases = @(
         @{ Args = @(); Model = 'iPhone 16'; EnvModel = $null; Legacy = $null }
@@ -130,7 +130,7 @@ RunTarget("Default");
         $creates = @($commands | Where-Object { $_ -match '^apple simulator create ' })
         if ($creates.Count -ne 11) { throw 'Unexpected creation count (including non-mac host guard).' }
         foreach ($create in $creates) {
-            if (-not $create.Contains("--device-type $($case.Model) --runtime com.apple.CoreSimulator.SimRuntime.iOS-26-2 --format json")) {
+            if (-not $create.Contains("--device-type $($case.Model) --runtime com.apple.CoreSimulator.SimRuntime.iOS-26-3 --format json")) {
                 throw "Model/runtime selection changed: $create"
             }
         }

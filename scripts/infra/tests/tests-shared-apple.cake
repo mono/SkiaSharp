@@ -27,9 +27,15 @@ void SetupIosSimulator(ref string ownedSimulator)
         .Append("--device-type").AppendQuoted(TEST_IOS_SIMULATOR_MODEL);
 
     if (!string.IsNullOrEmpty(TEST_IOS_SIMULATOR_VERSION) &&
-        !TEST_IOS_SIMULATOR_VERSION.Equals("latest", StringComparison.OrdinalIgnoreCase))
+        !TEST_IOS_SIMULATOR_VERSION.Equals("latest", StringComparison.OrdinalIgnoreCase)) {
+        if (!Version.TryParse(TEST_IOS_SIMULATOR_VERSION, out var requestedVersion))
+            throw new ArgumentException($"Invalid iOS simulator version: {TEST_IOS_SIMULATOR_VERSION}");
+
+        // CoreSimulator runtime identifiers use major/minor even when the
+        // runtime reports an exact patch version such as 26.3.1.
         arguments.Append("--runtime").AppendQuoted(
-            $"com.apple.CoreSimulator.SimRuntime.iOS-{TEST_IOS_SIMULATOR_VERSION.Replace('.', '-')}");
+            $"com.apple.CoreSimulator.SimRuntime.iOS-{requestedVersion.Major}-{requestedVersion.Minor}");
+    }
 
     arguments.Append("--format json");
 
