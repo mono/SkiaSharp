@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SkiaSharp.Testing.Tests;
 
-public class SKPixelComparisonAcceptanceTest : SKPixelComparerTestBase
+public class SKPixelComparisonAcceptanceTest : SKImageComparisonTestBase
 {
 	[Fact]
 	public void MismatchBudgetFactoriesValidateAndExposeImmutableLimits()
@@ -103,50 +103,50 @@ public class SKPixelComparisonAcceptanceTest : SKPixelComparerTestBase
 	{
 		using var first = CreateBitmap(SKColors.Black, SKColors.Black, SKColors.Black);
 		using var second = CreateBitmap(new SKColor(3, 0, 0), new SKColor(6, 0, 0), SKColors.Black);
-		var options = new SKPixelComparerOptions();
-		var strict = SKPixelComparer.Compare(first, second);
+		var options = new SKComparisonOptions();
+		var strict = SKImageComparison.Compare(first, second);
 		Assert.False(strict.IsMatch);
 		Assert.Equal(2, strict.MismatchedPixelCount);
 		var rms = strict.RawMetrics.NormalizedRootMeanSquaredError;
 		options.MaxNormalizedRootMeanSquaredError = rms;
-		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.True(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MaxNormalizedRootMeanSquaredError = rms - 0.000001;
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MaxNormalizedRootMeanSquaredError = null;
 		options.MismatchBudget = SKPixelMismatchBudget.Pixels(2);
-		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.True(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MismatchBudget = SKPixelMismatchBudget.Exact;
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MismatchBudget = SKPixelMismatchBudget.Pixels(1);
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MismatchBudget = SKPixelMismatchBudget.Percent(200.0 / 3.0);
-		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.True(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MismatchBudget = SKPixelMismatchBudget.Percent(66);
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MismatchBudget = SKPixelMismatchBudget.Both(3, 50);
 		options.MaxNormalizedRootMeanSquaredError = rms;
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MismatchBudget = SKPixelMismatchBudget.Both(3, 100);
-		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.True(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MismatchBudget = SKPixelMismatchBudget.Both(1, 100);
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MismatchBudget = null;
 		SetUniformTolerance(options, SKPixelTolerance.Absolute(6));
 		options.MaxNormalizedRootMeanSquaredError = rms - 0.000001;
-		var tolerated = SKPixelComparer.Compare(first, second, options);
+		var tolerated = SKImageComparison.Compare(first, second, options);
 		Assert.Equal(0, tolerated.MismatchedPixelCount);
 		Assert.False(tolerated.IsMatch);
 		Assert.Equal(rms, tolerated.RawMetrics.NormalizedRootMeanSquaredError);
 		options.MaxNormalizedRootMeanSquaredError = null;
-		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.True(SKImageComparison.Compare(first, second, options).IsMatch);
 		SetUniformTolerance(options, SKPixelTolerance.Exact);
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MismatchBudget = SKPixelMismatchBudget.Exact;
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MismatchBudget = SKPixelMismatchBudget.Pixels(2);
-		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.True(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MaxNormalizedRootMeanSquaredError = rms - 0.000001;
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 	}
 
 	[Fact]
@@ -154,33 +154,33 @@ public class SKPixelComparisonAcceptanceTest : SKPixelComparerTestBase
 	{
 		using var first = CreateBitmap(SKColors.Black, SKColors.Black, SKColors.Black);
 		using var second = CreateBitmap(new SKColor(3, 0, 0), new SKColor(6, 0, 0), SKColors.Black);
-		var options = new SKPixelComparerOptions { MaxNormalizedMeanAbsoluteError = 0 };
+		var options = new SKComparisonOptions { MaxNormalizedMeanAbsoluteError = 0 };
 		Assert.Null(options.MismatchBudget);
 		Assert.Null(options.MaxNormalizedRootMeanSquaredError);
-		Assert.True(SKPixelComparer.Compare(first, first, options).IsMatch);
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
-		var strict = SKPixelComparer.Compare(first, second);
+		Assert.True(SKImageComparison.Compare(first, first, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
+		var strict = SKImageComparison.Compare(first, second);
 		var mae = strict.RawMetrics.NormalizedMeanAbsoluteError;
 		Assert.Equal(9.0 / (3 * 4 * 255.0), mae);
 		options.MaxNormalizedMeanAbsoluteError = mae;
-		var allowed = SKPixelComparer.Compare(first, second, options);
+		var allowed = SKImageComparison.Compare(first, second, options);
 		Assert.True(allowed.IsMatch);
 		Assert.Equal(2, allowed.MismatchedPixelCount);
 		Assert.Equal(strict.MismatchBounds, allowed.MismatchBounds);
 		options.MaxNormalizedMeanAbsoluteError = JustBelow(mae);
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MaxNormalizedMeanAbsoluteError = 1;
-		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.True(SKImageComparison.Compare(first, second, options).IsMatch);
 
 		using var transparent = CreateBitmap(SKColors.Transparent);
 		using var white = CreateBitmap(SKColors.White);
-		var maximum = SKPixelComparer.Compare(transparent, white, options);
+		var maximum = SKImageComparison.Compare(transparent, white, options);
 		Assert.Equal(1.0, maximum.RawMetrics.NormalizedMeanAbsoluteError);
 		Assert.True(maximum.IsMatch);
 		options.MaxNormalizedMeanAbsoluteError = JustBelow(1.0);
-		Assert.False(SKPixelComparer.Compare(transparent, white, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(transparent, white, options).IsMatch);
 		options.MaxNormalizedMeanAbsoluteError = null;
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 	}
 
 	[Fact]
@@ -188,13 +188,13 @@ public class SKPixelComparisonAcceptanceTest : SKPixelComparerTestBase
 	{
 		using var first = CreateBitmap(SKColors.Black, SKColors.Black);
 		using var second = CreateBitmap(new SKColor(3, 0, 0), SKColors.Black);
-		var strict = SKPixelComparer.Compare(first, second);
+		var strict = SKImageComparison.Compare(first, second);
 		var mae = strict.RawMetrics.NormalizedMeanAbsoluteError;
 		var rms = strict.RawMetrics.NormalizedRootMeanSquaredError;
-		var options = new SKPixelComparerOptions { MaxNormalizedMeanAbsoluteError = mae };
-		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+		var options = new SKComparisonOptions { MaxNormalizedMeanAbsoluteError = mae };
+		Assert.True(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MismatchBudget = SKPixelMismatchBudget.Exact;
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		foreach (var budget in new[]
 		{
 			SKPixelMismatchBudget.Pixels(1),
@@ -203,28 +203,28 @@ public class SKPixelComparisonAcceptanceTest : SKPixelComparerTestBase
 		})
 		{
 			options.MismatchBudget = budget;
-			Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+			Assert.True(SKImageComparison.Compare(first, second, options).IsMatch);
 			options.MaxNormalizedMeanAbsoluteError = JustBelow(mae);
-			Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+			Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 			options.MaxNormalizedMeanAbsoluteError = mae;
 		}
 		options.MismatchBudget = SKPixelMismatchBudget.Percent(49);
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MismatchBudget = null;
 		options.MaxNormalizedRootMeanSquaredError = rms;
-		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.True(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MaxNormalizedRootMeanSquaredError = JustBelow(rms);
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MaxNormalizedRootMeanSquaredError = rms;
 		options.MaxNormalizedMeanAbsoluteError = JustBelow(mae);
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MaxNormalizedMeanAbsoluteError = mae;
 		options.MismatchBudget = SKPixelMismatchBudget.Pixels(1);
-		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.True(SKImageComparison.Compare(first, second, options).IsMatch);
 		options.MismatchBudget = SKPixelMismatchBudget.Exact;
-		Assert.False(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.False(SKImageComparison.Compare(first, second, options).IsMatch);
 		SetUniformTolerance(options, SKPixelTolerance.Absolute(3));
-		Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+		Assert.True(SKImageComparison.Compare(first, second, options).IsMatch);
 	}
 
 	[Fact]
@@ -237,25 +237,25 @@ public class SKPixelComparisonAcceptanceTest : SKPixelComparerTestBase
 		var sums = new[] { 3L, 9L, 18L, 18L };
 		for (var channels = 1; channels <= 4; channels++)
 		{
-			var options = new SKPixelComparerOptions
+			var options = new SKComparisonOptions
 			{
 				GreenTolerance = channels >= 2 ? SKPixelTolerance.Exact : null,
 				BlueTolerance = channels >= 3 ? SKPixelTolerance.Exact : null,
 				AlphaTolerance = channels >= 4 ? SKPixelTolerance.Exact : null,
 			};
-			var raw = SKPixelComparer.Compare(first, second, options);
+			var raw = SKImageComparison.Compare(first, second, options);
 			var mae = sums[channels - 1] / (channels * 255.0);
 			Assert.Equal(channels, raw.ChannelCount);
 			Assert.Equal(mae, raw.RawMetrics.NormalizedMeanAbsoluteError);
 			options.ToleranceMask = mask;
 			options.MaxNormalizedMeanAbsoluteError = JustBelow(mae);
-			var masked = SKPixelComparer.Compare(first, second, options);
+			var masked = SKImageComparison.Compare(first, second, options);
 			Assert.Equal(0, masked.MismatchedPixelCount);
 			Assert.Equal(0L, masked.ThresholdedMetrics.SumAbsoluteError);
 			Assert.Equal(mae, masked.RawMetrics.NormalizedMeanAbsoluteError);
 			Assert.False(masked.IsMatch);
 			options.MaxNormalizedMeanAbsoluteError = mae;
-			Assert.True(SKPixelComparer.Compare(first, second, options).IsMatch);
+			Assert.True(SKImageComparison.Compare(first, second, options).IsMatch);
 			options.ToleranceMask = null;
 			options.RedTolerance = SKPixelTolerance.Absolute(3);
 			if (channels >= 2)
@@ -263,7 +263,7 @@ public class SKPixelComparisonAcceptanceTest : SKPixelComparerTestBase
 			if (channels >= 3)
 				options.BlueTolerance = SKPixelTolerance.Absolute(9);
 			options.MaxNormalizedMeanAbsoluteError = JustBelow(mae);
-			var tolerated = SKPixelComparer.Compare(first, second, options);
+			var tolerated = SKImageComparison.Compare(first, second, options);
 			Assert.Equal(0, tolerated.MismatchedPixelCount);
 			Assert.Equal(mae, tolerated.RawMetrics.NormalizedMeanAbsoluteError);
 			Assert.False(tolerated.IsMatch);

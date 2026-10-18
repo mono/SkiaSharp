@@ -4,10 +4,10 @@ namespace SkiaSharp.Testing;
 
 /// <summary>Immutable comparison outcome and raw and tolerance-filtered selected-channel statistics.</summary>
 /// <remarks>Contains no references to the compared inputs, options, or borrowed masks.</remarks>
-public sealed class SKPixelComparisonResult
+public sealed class SKComparisonResult
 {
-	internal SKPixelComparisonResult(int totalPixels, int comparedPixelCount, int channelCount, int mismatchedPixelCount, int maxChannelDifference,
-		SKRectI? mismatchBounds, SKPixelComparisonMetrics rawMetrics, SKPixelComparisonMetrics thresholdedMetrics, bool isMatch)
+	internal SKComparisonResult(int totalPixels, int comparedPixelCount, int channelCount, int mismatchedPixelCount, int maxChannelDifference,
+		SKRectI? mismatchBounds, SKComparisonMetrics rawMetrics, SKComparisonMetrics thresholdedMetrics, bool isMatch)
 	{
 		TotalPixels = totalPixels;
 		ComparedPixelCount = comparedPixelCount;
@@ -48,8 +48,8 @@ public sealed class SKPixelComparisonResult
 	public SKRectI? MismatchBounds { get; }
 
 	/// <summary>Gets nonignored enabled-channel error statistics before tolerance or tolerance-mask filtering.</summary>
-	public SKPixelComparisonMetrics RawMetrics { get; }
+	public SKComparisonMetrics RawMetrics { get; }
 
 	/// <summary>Gets nonignored enabled-channel error statistics exceeding their allowances; tolerated differences are zero and the denominator matches RawMetrics.</summary>
-	public SKPixelComparisonMetrics ThresholdedMetrics { get; }
+	public SKComparisonMetrics ThresholdedMetrics { get; }
 }
