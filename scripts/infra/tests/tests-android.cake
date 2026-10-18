@@ -2,7 +2,8 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 #load "../shared/shared.cake"
 #load "../shared/msbuild.cake"
-#load "test-shared.cake"
+#load "tests-shared.cake"
+#load "tests-shared-android.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ANDROID TESTS — build, emulator management, and dotnet test execution
@@ -12,7 +13,8 @@ var TEST_RESULTS = Argument("results", EnvironmentVariable("ANDROID_TEST_RESULTS
 var TEST_DEVICE = Argument("device", EnvironmentVariable("ANDROID_TEST_DEVICE") ?? "android-emulator-64");
 var TEST_VERSION = Argument("deviceVersion", EnvironmentVariable("ANDROID_TEST_DEVICE_VERSION") ?? "36");
 
-var ANDROID_AVD = "DEVICE_TESTS_EMULATOR";
+string OWNED_ANDROID_AVD = null;
+string OWNED_ANDROID_SERIAL = null;
 var DEVICE_NAME = Argument("skin", EnvironmentVariable("ANDROID_TEST_SKIN") ?? "Nexus 5X");
 var DEVICE_ID = "";
 var DEVICE_ARCH = "";
@@ -20,6 +22,12 @@ var usingEmulator = true;
 
 Setup(context =>
 {
+    if (!TARGET.Equals("Default", StringComparison.OrdinalIgnoreCase) ||
+        System.Environment.GetCommandLineArgs().Any(arg => new[] {
+            "--showdescription", "--dryrun", "--noop", "--whatif",
+        }.Contains(arg.Split('=')[0], StringComparer.OrdinalIgnoreCase)))
+        return;
+
     if (string.IsNullOrEmpty(TEST_RESULTS)) {
         TEST_RESULTS = $"{ROOT_PATH}/output/logs/testlogs/SkiaSharp.Tests.Devices.Android/{DATE_TIME_STR}";
     }
@@ -77,34 +85,24 @@ Setup(context =>
 
     Information("Test Device ID: {0}", DEVICE_ID);
 
-    Information("Creating AVD: {0}...", ANDROID_AVD);
+    Information("Creating owned AVD...");
     Information("  SDK: {0}", DEVICE_ID);
     Information("  Device: {0}", DEVICE_NAME);
-    DotNetTool($"android avd create --name \"{ANDROID_AVD}\" --sdk \"{DEVICE_ID}\" --device \"{DEVICE_NAME}\" --force");
-
-    Information("Listing AVDs after creation:");
-    DotNetTool("android avd list");
-
-    var gpuMode = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-        ? "swiftshader_indirect"
-        : "guest";
-    Information("Starting Emulator: {0}...", ANDROID_AVD);
-    Information("  GPU: {0}", gpuMode);
-    DotNetTool($"android avd start --name \"{ANDROID_AVD}\" --gpu {gpuMode} --wait --no-window --no-snapshot --no-audio --no-boot-anim --no-animations --cpu-threshold 3 --response-threshold 5 --camera-back none --camera-front none --timeout 300");
-
-    Information("Emulator started:");
-    DotNetTool("android device list");
+    SetupAndroidEmulator(ref OWNED_ANDROID_AVD, ref OWNED_ANDROID_SERIAL, DEVICE_ID, DEVICE_NAME);
 
     TakeSnapshot(TEST_RESULTS, "boot-complete");
 });
 
 Teardown(context =>
 {
-    if (!usingEmulator)
+    if (OWNED_ANDROID_AVD == null)
         return;
 
-    TakeSnapshot(TEST_RESULTS, "teardown");
-    DotNetTool($"android avd delete --name \"{ANDROID_AVD}\"");
+    try {
+        TakeSnapshot(TEST_RESULTS, "teardown");
+    } finally {
+        TeardownAndroidEmulator(ref OWNED_ANDROID_AVD, ref OWNED_ANDROID_SERIAL, context.ThrownException);
+    }
 });
 
 Task("Default")
@@ -112,7 +110,10 @@ Task("Default")
 {
     FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
 
-    RunDeviceRunnersTest(csproj, (DirectoryPath)TEST_RESULTS, configuration: "Release", framework: "net10.0-android", noBuild: true);
+    var properties = new Dictionary<string, string>();
+    if (usingEmulator)
+        properties["DeviceRunnersDevice"] = OWNED_ANDROID_SERIAL;
+    RunDeviceRunnersTest(csproj, (DirectoryPath)TEST_RESULTS, configuration: "Release", framework: "net10.0-android", noBuild: true, properties: properties);
 });
 
 RunTarget(TARGET);
