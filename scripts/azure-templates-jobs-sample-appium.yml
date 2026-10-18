@@ -1,0 +1,43 @@
+parameters:
+  name: ''
+  displayName: ''
+  buildAgent: {}
+  additionalArgs: ''
+  env: {}
+  preBuildSteps: []
+
+jobs:
+  - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: ${{ parameters.displayName }}
+      buildAgent: ${{ parameters.buildAgent }}
+      target: samples
+      additionalArgs: ${{ parameters.additionalArgs }}
+      env: ${{ parameters.env }}
+      dotnetSdks:
+        - sdkVersion: $(DOTNET_VERSION)
+          workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+          tizen:
+            manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
+            manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
+      installAndroidSdk: false
+      installAndroidNdk: false
+      retryCount: 0
+      shouldPublish: false
+      requiredArtifacts:
+        - name: native
+        - name: nuget
+          dir: nugets
+      publishArtifacts:
+        - name: ${{ parameters.name }}_logs
+          always: true
+          path: output/logs
+      preBuildSteps: ${{ parameters.preBuildSteps }}
+      postBuildSteps:
+        - task: PublishTestResults@2
+          condition: always()
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: output/logs/testlogs/samples/${{ parameters.name }}/**/*.trx
+            testRunTitle: ${{ parameters.displayName }}

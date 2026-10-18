@@ -4,7 +4,8 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 #load "../shared/shared.cake"
 #load "../shared/msbuild.cake"
-#load "../tests/test-shared.cake"
+#load "tests-shared.cake"
+#load "tests-shared-apple.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // SAMPLES TASKS
@@ -17,6 +18,36 @@ if (!string.IsNullOrEmpty(RUN_GROUP) && !RUN_GROUPS.Contains(RUN_GROUP))
     throw new ArgumentException($"Unknown sample run group '{RUN_GROUP}'. Expected {string.Join(", ", RUN_GROUPS)}.");
 if (!string.IsNullOrEmpty(RUN_ID) && RUN_ID.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-' && c != '_'))
     throw new ArgumentException("sampleRunId must contain only ASCII letters, digits, '-' or '_'.");
+
+string OWNED_IOS_SIMULATOR = null;
+
+Setup(context =>
+{
+    if (TARGET.Equals("samples-generate", StringComparison.OrdinalIgnoreCase))
+        return;
+
+    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
+        // Keep the golden profile before setup replaces the request with the selected runtime.
+        var referenceVersion = string.IsNullOrEmpty(TEST_IOS_SIMULATOR_VERSION) ||
+            TEST_IOS_SIMULATOR_VERSION.Equals("latest", StringComparison.OrdinalIgnoreCase)
+                ? "latest"
+                : TEST_IOS_SIMULATOR_VERSION;
+
+        SetupIosSimulator(ref OWNED_IOS_SIMULATOR);
+
+        Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_VERSION", TEST_IOS_SIMULATOR_VERSION);
+        Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_REFERENCE_VERSION", referenceVersion);
+        Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_MODEL", TEST_IOS_SIMULATOR_MODEL);
+        Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_UDID", OWNED_IOS_SIMULATOR);
+    }
+});
+
+Teardown(context =>
+{
+    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
+        TeardownIosSimulator(ref OWNED_IOS_SIMULATOR, context.ThrownException);
+    }
+});
 
 Task ("samples-generate")
     .Description ("Generate and zip the samples directory structure.")
@@ -39,6 +70,7 @@ Task ("samples")
     .Does (() =>
 {
     var results = ROOT_PATH.Combine($"output/logs/testlogs/samples/{(string.IsNullOrEmpty(RUN_ID) ? DATE_TIME_STR : RUN_ID + "/" + DATE_TIME_STR)}");
+
     // Consumer commands own their timeouts; MTP's activity monitor misdetects these process trees.
     RunDotNetTest(ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj"),
         results, noBuild: SKIP_BUILD, hangTimeout: null,

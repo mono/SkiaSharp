@@ -1,7 +1,7 @@
 # Building and Validating Samples
 
 The Samples suite builds generated applications against produced NuGet packages,
-runs Console/Web APIs on the host and in Docker, and checks actual browser UIs.
+runs Console/Web APIs on the host and in Docker, and checks browser and iOS UIs.
 
 ## Run the suite
 
@@ -41,8 +41,9 @@ dotnet cake --target=samples --previewLabel=pr.1234 --buildNumber=26509.10
 This generates the samples and runs the suite. Keep all packages from the same
 producing build and pass its suffix explicitly.
 
-To run one group, add `--runGroup=Build`, `--runGroup=Host`, or
-`--runGroup=Docker`. Omit `--runGroup` to run the full suite.
+To run one group, add `--runGroup=Build`, `--runGroup=Host`,
+`--runGroup=Docker`, or `--runGroup=Ios`. Omit `--runGroup` to run the full suite,
+including iOS simulator cases on macOS.
 Group names are case-sensitive.
 
 ## IDE and direct test runs
@@ -88,6 +89,55 @@ not. Linux `--with-deps` may require `sudo`.
 See [Playwright browser installation](https://playwright.dev/dotnet/docs/browsers).
 Filtered runs do not replace the full suite.
 
+## iOS simulator runs
+
+The `Ios` group runs Basic MAUI, native iOS and Gallery MAUI samples on macOS
+using Appium and XCUITest. Install Node.js and the SDK, workloads and Xcode specified
+in the [shared CI variables](../../scripts/azure-templates-variables.yml).
+Multi-target projects need their restore workloads even when building only iOS.
+
+After staging packages, set `XCODE_VERSION` to the configured version and choose
+`latest` or the pinned runtime from the
+[sample stage configuration](../../scripts/azure-templates-stages-samples.yml):
+
+```sh
+IOS_VERSION=latest
+sudo scripts/infra/native/apple/select-xcode.sh "$XCODE_VERSION"
+pwsh scripts/infra/tests/install-appium.ps1
+if [ "$IOS_VERSION" != latest ]; then
+  pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version "$IOS_VERSION"
+fi
+dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
+  --iosSimulatorModel="iPhone 16 Pro" \
+  --sampleRunId=ios --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
+```
+
+Use your staged packages' suffix, not the example suffix. `latest` selects the
+newest compatible **installed** runtime under the selected Xcode and compares
+against `latest/` references; a pinned version uses its numeric reference folder.
+Missing or mismatched references fail without fallback.
+
+Cake owns and cleans up only the simulator it creates. Each test owns its Appium
+server/session, not the shared simulator. `samples-generate` starts neither.
+
+For IDE or direct runs, use `TEST_IOS_SIMULATOR_VERSION` and
+`TEST_IOS_SIMULATOR_MODEL` for selection, and `TEST_IOS_SIMULATOR_UDID` to target
+an already-running simulator you manage. Set
+`TEST_IOS_SIMULATOR_REFERENCE_VERSION=latest` only when explicitly selecting a
+runtime but comparing against the moving profile.
+
+Inspect TRX attachments or CI's `samples_appium_*_logs` artifacts for logs,
+UI hierarchy and screenshots. Test output reports the runtime and reference profile.
+
+### Updating latest references
+
+References are in `tests/SkiaSharp.Tests.Samples/Expected/Appium/<Maui|Native>/iOS/<model>/`.
+Review actual/diff captures before replacing an intentional change in `latest/`
+with the corresponding actual canvas PNG from TRX attachments (remove its sequence
+prefix). Do not use full-screen diagnostics or animated GPU captures.
+Leave numeric profiles pinned; rerun latest and the pinned profile against the same
+packages, and record the runtime, package build and reason in the PR.
+
 ## Coverage and diagnostics
 
 Basic/Gallery samples have build coverage; Console/Web APIs and Web/WASM/Blazor
@@ -95,7 +145,7 @@ UIs have runtime checks, including Blazor Drawing pointer strokes, color/brush
 selection and clear. Basic Uno runs its declared `net10.0-browserwasm` project
 target, checking CPU rendering and Drawing navigation, pointer strokes and
 clear rather than launching a desktop or host solution variant.
-Gallery is build-only; device execution is separate.
+Gallery also has iOS device execution through the separate `Ios` group.
 Browser errors and unavailable GPU rendering fail.
 
 | Group | Tests | CI hosts |
@@ -103,6 +153,7 @@ Browser errors and unavailable GPU rendering fail.
 | Build | Generated sample compilation and infrastructure checks | Windows, macOS, Linux |
 | Host | Console, Web API and browser sample execution | Windows, macOS, Linux |
 | Docker | Container image builds and sample execution | Windows, Linux |
+| Ios | Basic MAUI/native iOS and Gallery MAUI Appium execution | macOS with the configured simulator profiles |
 
 When adding tests, choose a `RunGroup` by execution target, not sample family.
 Name execution classes by purpose: `SampleBuildTests`, `BasicSampleRunTests`,
@@ -127,9 +178,10 @@ versions against staged packages. Do not clear shared caches.
 
 Review platform references under `tests/SkiaSharp.Tests.Samples/Expected/`.
 Dimensions must match; the default limit is **0.075% differing pixels** with
-zero channel tolerance. Animated GPU pages use a loose **6% mean RGBA error**
-smoke check that can miss uniform dark output. Mismatches retain actual/diff
-images; references are never accepted automatically.
+zero channel tolerance. Existing browser animated GPU pages use a loose
+**6% mean RGBA error** smoke check that can miss uniform dark output; iOS
+animated Basic GPU pages instead require FPS and retain a capture. Mismatches
+retain actual/diff images; references are never accepted automatically.
 
 `SampleImage.Validate` takes `actual`, `expected` (or a relative golden path),
 and an optional `SampleImageOptions` record. Its byte-array overload also takes

@@ -113,9 +113,9 @@ stages:
             displayName: iOS
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-ios
-            additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            additionalArgs: --iosSimulatorModel="$(TEST_IOS_SIMULATOR_MODEL)" --iosVersion=$(TEST_IOS_SIMULATOR_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             installAndroidSdk: true
-            logArtifact: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
+            logArtifact: testlogs_ios_$(TEST_IOS_SIMULATOR_VERSION)
             # The iOS *simulator* on the x64 macOS pool exposes a virtualized Metal
             # device: creating a command queue on it leaves dispatch-queue state that
             # never signals, hanging the test host's shutdown for hours. Declared here
