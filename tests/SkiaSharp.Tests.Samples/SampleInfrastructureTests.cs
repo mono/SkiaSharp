@@ -695,8 +695,8 @@ public class SampleInfrastructureTests : IDisposable
         var actual = SavePng(bitmap, "mae-gate.actual.png");
         using var expectedImage = SKImage.FromEncodedData(expected);
         using var actualImage = SKImage.FromEncodedData(actual);
-        var result = SKPixelComparer.Compare(expectedImage, actualImage,
-            new SKPixelComparerOptions { AlphaType = SKAlphaType.Premul });
+        var result = SKImageComparison.Compare(expectedImage, actualImage,
+            new SKComparisonOptions { AlphaType = SKAlphaType.Premul });
         Assert.Equal(16, result.MismatchedPixelCount);
         Assert.Equal(1.0 / (4 * 255), result.RawMetrics.NormalizedMeanAbsoluteError);
         var options = new SampleImageOptions

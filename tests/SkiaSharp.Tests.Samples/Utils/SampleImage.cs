@@ -104,12 +104,12 @@ internal static class SampleImage
         Assert.Equal(expectedImage.Width, actualImage.Width);
         Assert.Equal(expectedImage.Height, actualImage.Height);
 
-        var comparisonOptions = new SKPixelComparerOptions
+        var comparisonOptions = new SKComparisonOptions
         {
             AlphaType = SKAlphaType.Premul,
             MaxNormalizedMeanAbsoluteError = maxAverageColorErrorFraction,
         };
-        var result = SKPixelComparer.Compare(expectedImage, actualImage, comparisonOptions);
+        var result = SKImageComparison.Compare(expectedImage, actualImage, comparisonOptions);
         var averageColorErrorFraction = result.RawMetrics.NormalizedMeanAbsoluteError;
         var comparison = maxAverageColorErrorFraction is { } limit
             ? $"average RGBA color error {averageColorErrorFraction:P3}, exceeding {limit:P3}"
@@ -132,8 +132,8 @@ internal static class SampleImage
         if (!reportMismatch)
             return false;
 
-        using var diff = SKPixelComparer.GenerateDifferenceImage(
-            expectedImage, actualImage, SKPixelDifferenceStyle.ThresholdOverlay, comparisonOptions);
+        using var diff = SKImageComparison.GenerateDifferenceImage(
+            expectedImage, actualImage, SKDifferenceStyle.ThresholdOverlay, comparisonOptions);
         using var data = diff.Encode(SKEncodedImageFormat.Png, 100);
         var diffPath = Path.ChangeExtension(actual, ".diff.png");
         File.WriteAllBytes(diffPath, data.ToArray());

@@ -4,12 +4,12 @@ using Xunit;
 
 namespace SkiaSharp.Testing.Tests;
 
-public class SKPixelValidationTest : SKPixelComparerTestBase
+public class SKPixelValidationTest : SKImageComparisonTestBase
 {
 	[Fact]
 	public void LibraryAssemblyMarksItsEntireApiExperimentalWithoutRequiringPreviewFeatures()
 	{
-		var attributes = typeof(SKPixelComparer).Assembly.GetCustomAttributesData();
+		var attributes = typeof(SKImageComparison).Assembly.GetCustomAttributesData();
 		var experimental = Assert.Single(attributes,
 			attribute => attribute.AttributeType.FullName == "System.Diagnostics.CodeAnalysis.ExperimentalAttribute");
 		Assert.Equal("SKIA4001", Assert.Single(experimental.ConstructorArguments).Value);
@@ -20,7 +20,7 @@ public class SKPixelValidationTest : SKPixelComparerTestBase
 	[Fact]
 	public void PublicEntryPointsUseOptionalNullSettingsWithoutConvenienceOverloads()
 	{
-		var methods = typeof(SKPixelComparer).GetMethods(
+		var methods = typeof(SKImageComparison).GetMethods(
 			System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
 		Assert.Equal(6, methods.Length);
 		foreach (var method in methods)
@@ -30,16 +30,16 @@ public class SKPixelValidationTest : SKPixelComparerTestBase
 			Assert.Equal("options", options.Name);
 			Assert.True(options.IsOptional);
 			Assert.Null(options.DefaultValue);
-			if (method.Name == nameof(SKPixelComparer.GenerateDifferenceImage))
+			if (method.Name == nameof(SKImageComparison.GenerateDifferenceImage))
 			{
 				Assert.Equal(4, parameters.Length);
 				Assert.Equal("style", parameters[2].Name);
 				Assert.True(parameters[2].IsOptional);
-				Assert.Equal(SKPixelDifferenceStyle.ThresholdOverlay, parameters[2].DefaultValue);
+				Assert.Equal(SKDifferenceStyle.ThresholdOverlay, parameters[2].DefaultValue);
 			}
 			else
 			{
-				Assert.Equal(nameof(SKPixelComparer.Compare), method.Name);
+				Assert.Equal(nameof(SKImageComparison.Compare), method.Name);
 				Assert.Equal(3, parameters.Length);
 			}
 		}
@@ -53,12 +53,12 @@ public class SKPixelValidationTest : SKPixelComparerTestBase
 		using var pixmap = bitmap.PeekPixels();
 		foreach (var invalid in new[] { -0.01, 1.01, double.NaN, double.PositiveInfinity, double.NegativeInfinity })
 		{
-			var options = new SKPixelComparerOptions { MaxNormalizedMeanAbsoluteError = invalid };
+			var options = new SKComparisonOptions { MaxNormalizedMeanAbsoluteError = invalid };
 			foreach (var operation in Operations(bitmap, bitmap, image, image, pixmap, pixmap, options))
 			{
 				var error = Assert.Throws<ArgumentOutOfRangeException>(operation);
 				Assert.Equal("options", error.ParamName);
-				Assert.Contains(nameof(SKPixelComparerOptions.MaxNormalizedMeanAbsoluteError), error.Message);
+				Assert.Contains(nameof(SKComparisonOptions.MaxNormalizedMeanAbsoluteError), error.Message);
 			}
 		}
 	}
@@ -74,7 +74,7 @@ public class SKPixelValidationTest : SKPixelComparerTestBase
 		using var secondPixmap = second.PeekPixels();
 		using var maskBitmap = CreateBitmap(SKColors.White, new SKColor(0, 0, 1, 0));
 		using var mask = SKImage.FromBitmap(maskBitmap);
-		var options = new SKPixelComparerOptions { IgnoreMask = mask };
+		var options = new SKComparisonOptions { IgnoreMask = mask };
 		foreach (var configuredGates in new[] { false, true })
 		{
 			if (configuredGates)
@@ -84,11 +84,11 @@ public class SKPixelValidationTest : SKPixelComparerTestBase
 				options.MaxNormalizedRootMeanSquaredError = 1;
 				SetUniformTolerance(options, SKPixelTolerance.Absolute(255));
 			}
-			foreach (var style in Enum.GetValues<SKPixelDifferenceStyle>())
+			foreach (var style in Enum.GetValues<SKDifferenceStyle>())
 			foreach (var operation in Operations(first, second, a, b, firstPixmap, secondPixmap, options, style))
 			{
 				var error = Assert.Throws<ArgumentException>(operation);
-				Assert.Equal(nameof(SKPixelComparerOptions.IgnoreMask), error.ParamName);
+				Assert.Equal(nameof(SKComparisonOptions.IgnoreMask), error.ParamName);
 				Assert.Contains("at least one pixel", error.Message);
 			}
 		}
@@ -103,14 +103,14 @@ public class SKPixelValidationTest : SKPixelComparerTestBase
 		using var pixmap = bitmap.PeekPixels();
 		using var otherSize = CreateBitmap(SKColors.Black);
 		using var mismatchedMask = SKImage.FromBitmap(otherSize);
-		var options = new SKPixelComparerOptions { IgnoreMask = mismatchedMask };
+		var options = new SKComparisonOptions { IgnoreMask = mismatchedMask };
 		foreach (var operation in Operations(bitmap, bitmap, image, image, pixmap, pixmap, options))
 			Assert.Throws<InvalidOperationException>(operation);
 		using var disposedMask = SKImage.FromBitmap(bitmap);
 		disposedMask.Dispose();
 		options.IgnoreMask = disposedMask;
 		foreach (var operation in Operations(bitmap, bitmap, image, image, pixmap, pixmap, options))
-			Assert.Equal(nameof(SKPixelComparerOptions.IgnoreMask), Assert.Throws<ArgumentException>(operation).ParamName);
+			Assert.Equal(nameof(SKComparisonOptions.IgnoreMask), Assert.Throws<ArgumentException>(operation).ParamName);
 	}
 
 	[Fact]
@@ -123,42 +123,42 @@ public class SKPixelValidationTest : SKPixelComparerTestBase
 		using var pixmap = bitmap.PeekPixels();
 		using var emptyBitmap = new SKBitmap();
 		using var emptyPixmap = new SKPixmap();
-		var allDisabled = new SKPixelComparerOptions
+		var allDisabled = new SKComparisonOptions
 		{
 			RedTolerance = null,
 			GreenTolerance = null,
 			BlueTolerance = null,
 			AlphaTolerance = null,
 		};
-		Assert.Equal("options", Assert.Throws<ArgumentException>(() => SKPixelComparer.Compare(bitmap, bitmap, allDisabled)).ParamName);
+		Assert.Equal("options", Assert.Throws<ArgumentException>(() => SKImageComparison.Compare(bitmap, bitmap, allDisabled)).ParamName);
 		Assert.Equal("options", Assert.Throws<ArgumentException>(() =>
-			SKPixelComparer.GenerateDifferenceImage(image, image, options: allDisabled)).ParamName);
-		Assert.Equal(4, SKPixelComparer.Compare(bitmap, bitmap, null).ChannelCount);
-		Assert.Equal(4, SKPixelComparer.Compare(bitmap, bitmap, new SKPixelComparerOptions()).ChannelCount);
-		Assert.Throws<ArgumentNullException>(() => SKPixelComparer.Compare((SKImage)null!, image));
-		Assert.Throws<ArgumentNullException>(() => SKPixelComparer.Compare(image, (SKImage)null!));
-		Assert.Throws<ArgumentNullException>(() => SKPixelComparer.Compare((SKBitmap)null!, bitmap));
-		Assert.Throws<ArgumentNullException>(() => SKPixelComparer.Compare((SKPixmap)null!, pixmap));
-		Assert.Throws<InvalidOperationException>(() => SKPixelComparer.Compare(image, mismatch));
-		Assert.Throws<InvalidOperationException>(() => SKPixelComparer.Compare(image, image, new SKPixelComparerOptions { ToleranceMask = mismatch }));
-		Assert.Throws<ArgumentException>(() => SKPixelComparer.Compare(bitmap, emptyBitmap));
-		Assert.Throws<ArgumentException>(() => SKPixelComparer.Compare(pixmap, emptyPixmap));
-		Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.GenerateDifferenceImage(image, image, (SKPixelDifferenceStyle)99, null));
+			SKImageComparison.GenerateDifferenceImage(image, image, options: allDisabled)).ParamName);
+		Assert.Equal(4, SKImageComparison.Compare(bitmap, bitmap, null).ChannelCount);
+		Assert.Equal(4, SKImageComparison.Compare(bitmap, bitmap, new SKComparisonOptions()).ChannelCount);
+		Assert.Throws<ArgumentNullException>(() => SKImageComparison.Compare((SKImage)null!, image));
+		Assert.Throws<ArgumentNullException>(() => SKImageComparison.Compare(image, (SKImage)null!));
+		Assert.Throws<ArgumentNullException>(() => SKImageComparison.Compare((SKBitmap)null!, bitmap));
+		Assert.Throws<ArgumentNullException>(() => SKImageComparison.Compare((SKPixmap)null!, pixmap));
+		Assert.Throws<InvalidOperationException>(() => SKImageComparison.Compare(image, mismatch));
+		Assert.Throws<InvalidOperationException>(() => SKImageComparison.Compare(image, image, new SKComparisonOptions { ToleranceMask = mismatch }));
+		Assert.Throws<ArgumentException>(() => SKImageComparison.Compare(bitmap, emptyBitmap));
+		Assert.Throws<ArgumentException>(() => SKImageComparison.Compare(pixmap, emptyPixmap));
+		Assert.Throws<ArgumentOutOfRangeException>(() => SKImageComparison.GenerateDifferenceImage(image, image, (SKDifferenceStyle)99, null));
 		foreach (var invalid in new[] { SKAlphaType.Opaque, SKAlphaType.Unknown })
-			Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.Compare(image, image, new SKPixelComparerOptions { AlphaType = invalid }));
-		Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.GenerateDifferenceImage(image, image, SKPixelDifferenceStyle.BinaryMask, new SKPixelComparerOptions { AlphaType = SKAlphaType.Opaque }));
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKImageComparison.Compare(image, image, new SKComparisonOptions { AlphaType = invalid }));
+		Assert.Throws<ArgumentOutOfRangeException>(() => SKImageComparison.GenerateDifferenceImage(image, image, SKDifferenceStyle.BinaryMask, new SKComparisonOptions { AlphaType = SKAlphaType.Opaque }));
 		foreach (var invalid in new[] { -0.01, 1.01, double.NaN, double.PositiveInfinity, double.NegativeInfinity })
 		{
-			Assert.Throws<ArgumentOutOfRangeException>(() => SKPixelComparer.Compare(image, image, new SKPixelComparerOptions { MaxNormalizedRootMeanSquaredError = invalid }));
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKImageComparison.Compare(image, image, new SKComparisonOptions { MaxNormalizedRootMeanSquaredError = invalid }));
 		}
 		using var disposedMask = SKImage.FromBitmap(bitmap);
 		disposedMask.Dispose();
-		Assert.Throws<ArgumentException>(() => SKPixelComparer.Compare(image, image, new SKPixelComparerOptions { ToleranceMask = disposedMask }));
+		Assert.Throws<ArgumentException>(() => SKImageComparison.Compare(image, image, new SKComparisonOptions { ToleranceMask = disposedMask }));
 		image.Dispose();
 		bitmap.Dispose();
 		pixmap.Dispose();
-		Assert.Throws<ArgumentException>(() => SKPixelComparer.Compare(image, image));
-		Assert.Throws<ArgumentException>(() => SKPixelComparer.Compare(bitmap, bitmap));
-		Assert.Throws<ArgumentException>(() => SKPixelComparer.Compare(pixmap, pixmap));
+		Assert.Throws<ArgumentException>(() => SKImageComparison.Compare(image, image));
+		Assert.Throws<ArgumentException>(() => SKImageComparison.Compare(bitmap, bitmap));
+		Assert.Throws<ArgumentException>(() => SKImageComparison.Compare(pixmap, pixmap));
 	}
 }

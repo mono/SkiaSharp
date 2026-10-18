@@ -12,7 +12,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 	/// The shared engine behind every visual-regression test. One test is one
 	/// <c>(renderer × scene)</c> pair: it renders the scene with the renderer and
 	/// compares the pixels to a committed golden via
-	/// <see cref="SKPixelComparer"/> with a per-renderer
+	/// <see cref="SKImageComparison"/> with a per-renderer
 	/// tolerance (see <see cref="GoldenTolerance"/>). Golden lookup is handled by
 	/// <see cref="GoldenStore"/>.
 	///
@@ -115,7 +115,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 		{
 			var normalized = RendererPixels.NormalizedInfo(info);
 			var tolerance = GoldenTolerance.For(rendererName);
-			var options = new SKPixelComparerOptions
+			var options = new SKComparisonOptions
 			{
 				AlphaType = SKAlphaType.Premul,
 				RedTolerance = SKPixelTolerance.Absolute(tolerance.ChannelTolerance),
@@ -128,11 +128,11 @@ namespace SkiaSharp.Tests.Visual.Tests
 			using var actualImage = ToImage(actual, normalized);
 			using var goldenImage = ToImage(golden.Pixels, normalized);
 
-			var result = SKPixelComparer.Compare(goldenImage, actualImage, options);
+			var result = SKImageComparison.Compare(goldenImage, actualImage, options);
 			var allowedOutliers = (long)Math.Floor(result.TotalPixels * tolerance.MaxOutlierFraction);
 
-			using var diffImage = SKPixelComparer.GenerateDifferenceImage(
-				goldenImage, actualImage, SKPixelDifferenceStyle.ThresholdOverlay, options);
+			using var diffImage = SKImageComparison.GenerateDifferenceImage(
+				goldenImage, actualImage, SKDifferenceStyle.ThresholdOverlay, options);
 
 			EmitImage(GoldenImageMarker, rendererName, sceneName, info, goldenImage);
 			EmitImage(DiffImageMarker, rendererName, sceneName, info, diffImage);

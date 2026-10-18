@@ -39,46 +39,46 @@ SavePreview("expected-preview.png", expected);
 SavePreview("actual-preview.png", actual);
 SavePreview("tolerance-mask.png", toleranceMask);
 SavePreview("ignore-mask.png", ignoreMask);
-using var exact = SKPixelComparer.GenerateDifferenceImage(expected, actual);
+using var exact = SKImageComparison.GenerateDifferenceImage(expected, actual);
 SavePreview("comparison-exact.png", exact);
 
 var toleranceOptions = RgbTolerance();
-using var tolerant = SKPixelComparer.GenerateDifferenceImage(expected, actual, options: toleranceOptions);
+using var tolerant = SKImageComparison.GenerateDifferenceImage(expected, actual, options: toleranceOptions);
 SavePreview("comparison-tolerant.png", tolerant);
 
 var styleOptions = RgbTolerance();
 styleOptions.AlphaTolerance = SKPixelTolerance.Exact;
-using var overlay = SKPixelComparer.GenerateDifferenceImage(expected, actual, options: styleOptions);
-using var map = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.ThresholdMap, styleOptions);
-using var binary = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.BinaryMask, styleOptions);
-using var channels = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.ChannelDifference, styleOptions);
-using var heatmap = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.Heatmap, styleOptions);
+using var overlay = SKImageComparison.GenerateDifferenceImage(expected, actual, options: styleOptions);
+using var map = SKImageComparison.GenerateDifferenceImage(expected, actual, SKDifferenceStyle.ThresholdMap, styleOptions);
+using var binary = SKImageComparison.GenerateDifferenceImage(expected, actual, SKDifferenceStyle.BinaryMask, styleOptions);
+using var channels = SKImageComparison.GenerateDifferenceImage(expected, actual, SKDifferenceStyle.ChannelDifference, styleOptions);
+using var heatmap = SKImageComparison.GenerateDifferenceImage(expected, actual, SKDifferenceStyle.Heatmap, styleOptions);
 SavePreview("threshold-overlay.png", overlay);
 SavePreview("threshold-map.png", map);
 SavePreview("binary-mask.png", binary);
 SavePreview("channel-difference.png", channels);
 SavePreview("heatmap.png", heatmap);
 
-var regionalTolerance = new SKPixelComparerOptions
+var regionalTolerance = new SKComparisonOptions
 {
     AlphaTolerance = null,
     ToleranceMask = toleranceMask,
 };
-using var regionTolerated = SKPixelComparer.GenerateDifferenceImage(expected, actual, options: regionalTolerance);
+using var regionTolerated = SKImageComparison.GenerateDifferenceImage(expected, actual, options: regionalTolerance);
 SavePreview("comparison-tolerance.png", regionTolerated);
 
-var regionalIgnore = new SKPixelComparerOptions
+var regionalIgnore = new SKComparisonOptions
 {
     AlphaTolerance = null,
     IgnoreMask = ignoreMask,
 };
-using var regionIgnored = SKPixelComparer.GenerateDifferenceImage(expected, actual, options: regionalIgnore);
+using var regionIgnored = SKImageComparison.GenerateDifferenceImage(expected, actual, options: regionalIgnore);
 SavePreview("comparison-ignore.png", regionIgnored);
 
 Console.WriteLine($"Generated comparison images in {images}");
 
 static string SourceFile([CallerFilePath] string file = "") => file;
-static SKPixelComparerOptions RgbTolerance() => new()
+static SKComparisonOptions RgbTolerance() => new()
 {
     RedTolerance = SKPixelTolerance.Absolute(2),
     GreenTolerance = SKPixelTolerance.Absolute(2),

@@ -1,7 +1,7 @@
 namespace SkiaSharp.Testing;
 
 /// <summary>Opaque diagnostic representations of a decoded pixel comparison.</summary>
-public enum SKPixelDifferenceStyle
+public enum SKDifferenceStyle
 {
 	/// <summary>Mismatched pixels are white; all other pixels, including ignored coverage, are black, using the same predicate as the comparison.</summary>
 	BinaryMask = 0,

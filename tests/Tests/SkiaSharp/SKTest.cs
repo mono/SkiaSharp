@@ -212,13 +212,13 @@ namespace SkiaSharp.Tests
 		protected void AssertSimilar(SKBitmap expected, SKBitmap actual, int precision = PRECISION)
 		{
 			var percentage = 1 / Math.Pow(10, precision);
-			var options = new SKPixelComparerOptions
+			var options = new SKComparisonOptions
 			{
 				AlphaType = SKAlphaType.Premul,
 				AlphaTolerance = null,
 			};
 
-			var result = SKPixelComparer.Compare(expected, actual, options);
+			var result = SKImageComparison.Compare(expected, actual, options);
 
 			try
 			{
@@ -229,7 +229,7 @@ namespace SkiaSharp.Tests
 				WriteOutput(expected, "EXPECTED bitmap");
 				WriteOutput(actual, "ACTUAL bitmap");
 
-				using var diff = SKPixelComparer.GenerateDifferenceImage(expected, actual, SKPixelDifferenceStyle.BinaryMask, options);
+				using var diff = SKImageComparison.GenerateDifferenceImage(expected, actual, SKDifferenceStyle.BinaryMask, options);
 				WriteOutput(diff, "DIFF bitmap");
 
 				throw;
