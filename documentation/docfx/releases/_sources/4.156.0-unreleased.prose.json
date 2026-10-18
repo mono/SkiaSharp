@@ -1,29 +1,29 @@
 {
-  "theme": "Runtime and platform updates",
-  "highlights_headline": "SkiaSharp 4.156.0 improves runtime efficiency and updates native support across Apple, Android, Linux, and WebGPU.",
-  "highlights_body": "Apple deployment targets have advanced, Android texture rendering follows display refresh, and native packaging is more reliable for Linux text shaping and WebGPU consumers.",
+  "theme": "Platform and runtime refinements",
+  "highlights_headline": "SkiaSharp 4.156.0 strengthens platform support and runtime efficiency for modern Apple, Android, WebAssembly, Linux, image, stream, and text workloads.",
+  "highlights_body": "The release raises Apple deployment targets, makes WebGPU builds more reliable, paces Android texture rendering with the display, and removes unnecessary allocations in frequently used image and HarfBuzzSharp paths.",
   "breaking": [],
   "categories": [
     {
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Apple deployment baselines advanced",
-          "detail": "Apple-targeted packages now require newer operating-system deployment targets. Update application deployment settings before adopting this release.",
+          "lead": "Apple deployment targets raised",
+          "detail": "Apple native packages now target newer platform baselines, aligning supported iOS, macOS, and tvOS deployments with current toolchains.",
           "prs": [
             5383
           ]
         },
         {
-          "lead": "WebGPU native implementation packaged with SkiaSharp",
-          "detail": "The native library now includes emdawnwebgpu's webgpu.cpp implementation, so consumers using WebGPU have the required code in the bundled SkiaSharp artifact.",
+          "lead": "WebAssembly WebGPU builds simplified",
+          "detail": "The native WebGPU C++ support is bundled into libSkiaSharp, so browser applications no longer compile it on their final link line.",
           "prs": [
             5316
           ]
         },
         {
-          "lead": "Linux HarfBuzz binding resolution localized",
-          "detail": "Linux packages bind bundled HarfBuzz functions locally, avoiding dependence on externally resolved HarfBuzz symbols when using the shipped native assets.",
+          "lead": "Bundled HarfBuzz resolves locally on Linux",
+          "detail": "Linux native builds bind bundled HarfBuzz functions locally, avoiding unintended symbol resolution against other libraries in the process.",
           "prs": [
             5352
           ]
@@ -34,8 +34,8 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Android texture rendering synchronized to display refresh",
-          "detail": "Texture rendering now follows the display refresh cadence, improving frame presentation for Android applications.",
+          "lead": "Android texture rendering follows the display clock",
+          "detail": "Continuous GLTextureView rendering is paced by display callbacks, coalescing missed frames while preserving explicit render requests and lifecycle progress.",
           "prs": [
             5345
           ]
@@ -46,15 +46,15 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Stream data retention corrected",
-          "detail": "Front-buffered streams no longer retain backing data longer than needed, reducing avoidable memory retention in stream-based workloads.",
+          "lead": "Front-buffered streams release retained sources",
+          "detail": "Disposing an SKFrontBufferedManagedStream now clears its managed stream reference even when it does not own the underlying stream.",
           "prs": [
             5327
           ]
         },
         {
-          "lead": "Image and text shaping allocations reduced",
-          "detail": "Managed image pixel copies, HarfBuzz UTF-32 encoding, and feature-string decoding avoid unnecessary allocation work, reducing overhead in frequently used image and text operations.",
+          "lead": "Image and HarfBuzzSharp work avoids allocations",
+          "detail": "Managed image pixel copies, UTF-32 text input, and HarfBuzz feature formatting reduce temporary allocations without changing their results.",
           "prs": [
             5052,
             5060,
@@ -65,8 +65,8 @@
     }
   ],
   "contributor_summaries": {
-    "VirgilMing": "Localized Linux HarfBuzz bindings to the bundled native assets and stabilized the Blazor CPU sample test after its first canvas paint",
-    "ramezgerges": "Packaged the emdawnwebgpu implementation inside the SkiaSharp native library"
+    "VirgilMing": "Linux HarfBuzz symbol binding and more reliable Blazor CPU sample rendering tests",
+    "ramezgerges": "WebAssembly WebGPU packaging that moves the native C++ support into libSkiaSharp"
   },
   "preview_summaries": {}
 }
