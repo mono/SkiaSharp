@@ -144,7 +144,7 @@ string AndroidAvdWindowsArguments(string manager, params string[] arguments)
     return $"/d /v:off /s /c \"{command.Render()}\"";
 }
 
-void AndroidAvdCommand(params string[] arguments)
+string AndroidAvdCommand(params string[] arguments)
 {
     var start = new System.Diagnostics.ProcessStartInfo(IsRunningOnWindows() ? "cmd.exe" : ANDROID_AVD_MANAGER) {
         RedirectStandardInput = true,
@@ -170,10 +170,12 @@ void AndroidAvdCommand(params string[] arguments)
             throw new TimeoutException("Owned avdmanager process did not stop within 30 seconds.");
         throw new TimeoutException("Selected avdmanager did not finish within 30 seconds.");
     }
-    Information("{0}", stdout.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult());
+    var output = stdout.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult();
+    Information("{0}", output);
     Information("{0}", stderr.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult());
     if (process.ExitCode != 0)
         throw new Exception($"Selected avdmanager failed with exit code {process.ExitCode}.");
+    return output;
 }
 
 void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Exception originalError)
@@ -211,7 +213,13 @@ void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Except
         ANDROID_EMULATOR_STDERR = null;
         // Never remove an AVD's files while its owned emulator is still running.
         try {
-            AndroidAvdCommand("delete", "avd", "--name", ownedAvd);
+            // Creation can fail before registering any AVD. Non-compact listing also includes
+            // invalid/partially created AVDs, which must still be removed by their exact name.
+            var namePattern = @"^\s*Name:\s*" + System.Text.RegularExpressions.Regex.Escape(ownedAvd) + @"\s*$";
+            var exists = ownedSerial != null || AndroidAvdCommand("list", "avd").Split('\n').Any(line =>
+                System.Text.RegularExpressions.Regex.IsMatch(line, namePattern));
+            if (exists)
+                AndroidAvdCommand("delete", "avd", "--name", ownedAvd);
             ownedAvd = null;
             ownedSerial = null;
         } catch (Exception error) {

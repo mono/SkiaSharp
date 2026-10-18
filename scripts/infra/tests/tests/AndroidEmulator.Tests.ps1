@@ -26,6 +26,17 @@ try {
     Set-Content (Join-Path $bin 'avdmanager') @'
 #!/bin/sh
 command="$1"
+if [ "$command" = "list" ]; then
+    printf 'list\n' >> "$FIXTURE_ANDROID_ROOT/commands"
+    [ "$FIXTURE_ANDROID_MODE" != create-list-failure ] || exit 10
+    echo 'Available Android Virtual Devices:'
+    printf '    Name: %s-unrelated\n' "$(cat "$FIXTURE_ANDROID_ROOT/name")"
+    if [ -d "$FIXTURE_ANDROID_ROOT/$(cat "$FIXTURE_ANDROID_ROOT/name")" ]; then
+        echo 'The following Android Virtual Devices could not be loaded:'
+        printf '    Name: %s\n' "$(cat "$FIXTURE_ANDROID_ROOT/name")"
+    fi
+    exit 0
+fi
 printf '%s\n' "$@" >> "$FIXTURE_ANDROID_ROOT/avd-arguments"
 while [ "$#" -gt 0 ]; do
     if [ "$1" = "--name" ]; then shift; name="$1"; fi
@@ -35,9 +46,10 @@ printf '%s %s\n' "$command" "$name" >> "$FIXTURE_ANDROID_ROOT/commands"
 if [ "$command" = "create" ]; then
     read answer
     [ "$answer" = "no" ] || exit 3
-    mkdir "$FIXTURE_ANDROID_ROOT/$name" || exit 4
     printf '%s' "$name" > "$FIXTURE_ANDROID_ROOT/name"
-    [ "$FIXTURE_ANDROID_MODE" != create-failure ] || exit 6
+    [ "$FIXTURE_ANDROID_MODE" != create-no-avd ] || exit 6
+    mkdir "$FIXTURE_ANDROID_ROOT/$name" || exit 4
+    case "$FIXTURE_ANDROID_MODE" in create-failure|create-list-failure) exit 6 ;; esac
 else
     if [ -f "$FIXTURE_ANDROID_ROOT/pid" ]; then
         # The helper must reap its owned process before deleting this AVD.
@@ -118,7 +130,14 @@ Task("Default").Does(() => {
     }
     if ((failure != null) != (mode != "success"))
         throw new Exception("Unexpected lifecycle result: " + mode, failure);
-    if (mode == "delete-failure") {
+    if (mode == "create-no-avd" &&
+        (failure is AggregateException || !failure.Message.Contains("exit code 6")))
+        throw new Exception("Rejected creation was obscured by cleanup of a nonexistent AVD.", failure);
+    if (mode == "create-list-failure" &&
+        (!(failure is AggregateException) || !failure.ToString().Contains("exit code 6") ||
+            !failure.ToString().Contains("exit code 10")))
+        throw new Exception("AVD discovery failure lost the original creation error.", failure);
+    if (mode == "delete-failure" || mode == "create-list-failure") {
         if (avd == null)
             throw new Exception("Failed deletion lost AVD ownership.");
         System.Environment.SetEnvironmentVariable("FIXTURE_ANDROID_MODE", "success");
@@ -140,7 +159,9 @@ RunTarget("Default");
         @{ Mode = 'success'; Abi = 'armeabi-v7a' }
         @{ Mode = 'success'; Abi = 'arm64-v8a' }
         @{ Mode = 'identity-failure'; Abi = 'arm64-v8a' }
+        @{ Mode = 'create-no-avd'; Abi = 'arm64-v8a' }
         @{ Mode = 'create-failure'; Abi = 'arm64-v8a' }
+        @{ Mode = 'create-list-failure'; Abi = 'arm64-v8a' }
         @{ Mode = 'boot-failure'; Abi = 'arm64-v8a' }
         @{ Mode = 'animation-failure'; Abi = 'arm64-v8a' }
         @{ Mode = 'delete-failure'; Abi = 'arm64-v8a' }
@@ -169,10 +190,14 @@ RunTarget("Default");
         $name = Get-Content (Join-Path $root 'name') -Raw
         if (Test-Path (Join-Path $root $name)) { throw "Owned AVD was not deleted: $name." }
         $commands = @(Get-Content (Join-Path $root 'commands'))
-        if ($commands[0] -ne "create $name" -or @($commands | Where-Object { $_ -ne "create $name" -and $_ -ne "delete $name" }).Count) {
+        if ($commands[0] -ne "create $name" -or @($commands | Where-Object {
+                $_ -ne "create $name" -and $_ -ne "delete $name" -and $_ -ne 'list' }).Count) {
             throw 'Lifecycle targeted a non-owned AVD.'
         }
-        if ($case.Mode -ne 'create-failure') {
+        if ($case.Mode -eq 'create-no-avd' -and ($commands -join '|') -ne "create $name|list") {
+            throw 'Rejected creation must list once, never delete a nonexistent or unrelated AVD, and clear ownership.'
+        }
+        if ($case.Mode -notin @('create-no-avd', 'create-failure', 'create-list-failure')) {
             $emulatorPid = [int](Get-Content (Join-Path $root 'pid') -Raw)
             try {
                 $process = [Diagnostics.Process]::GetProcessById($emulatorPid)
