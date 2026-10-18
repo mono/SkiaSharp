@@ -189,10 +189,24 @@ fallback. `--iosVersion` / `TEST_IOS_SIMULATOR_VERSION` selects an already insta
 runtime; omitted or `latest` uses the latest installed runtime. No runtime is
 installed by the test runner.
 
-Android retains `--device` / `ANDROID_TEST_DEVICE` (default `android-emulator-64`),
-`--deviceVersion` / `ANDROID_TEST_DEVICE_VERSION` (default API 36, also used for
-`latest`), and `--skin` / `ANDROID_TEST_SKIN` (default `Nexus 5X`). Physical
-`android-device-32` / `android-device-64` selections do not create an emulator.
+`tests-shared-android.cake` owns selection and validates it only when setup runs.
+CLI arguments override the corresponding environment variables. Legacy inputs
+remain `--device` / `ANDROID_TEST_DEVICE` (default `android-emulator-64`),
+`--deviceVersion` / `ANDROID_TEST_DEVICE_VERSION` (default API 36), and `--skin` /
+`ANDROID_TEST_SKIN` (default `Nexus 5X`). An empty version or `latest` uses an
+embedded `_API` suffix, otherwise API 36. `android-simulator-64` remains an alias;
+physical `android-device-32` / `android-device-64` needs no SDK or emulator image.
+
+Alternatively, supply the complete explicit profile: `--androidVersion` /
+`TEST_ANDROID_VERSION` is the Android **OS version** (for example `8.0` or `17`);
+`--androidImage` / `TEST_ANDROID_IMAGE` is the image API and vendor (for example
+`android-26;google_apis` or `android-37.1;google_apis_ps16k`); `--androidModel` /
+`TEST_ANDROID_MODEL` is a catalog ID such as `pixel_9`. Any explicit component
+requires all three. The image gets the x64/arm64 host ABI appended; unsupported
+hosts and physical-device selections are rejected. The OS version is retained
+for test consumers, not converted to an image API. Incomplete profiles never
+use legacy defaults.
+
 Emulators use the exact installed system image, ABI, model, `ANDROID_HOME`, and
 command-line tools selected by `ANDROID_SDK_MANAGER_PATH`; there is no tool or
 image fallback. Release builds run before starting the owned emulator, which has

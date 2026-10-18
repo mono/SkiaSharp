@@ -8,17 +8,24 @@ if (-not ($IsMacOS -or $IsLinux)) {
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '../../../..')).Path
 $root = Join-Path $repo "output/android-lifecycle-fixture-$([Guid]::NewGuid().ToString('N'))"
 $oldEnvironment = @{}
-foreach ($key in @('ANDROID_HOME', 'ANDROID_SDK_MANAGER_PATH', 'FIXTURE_ANDROID_ROOT',
-        'FIXTURE_ANDROID_MODE', 'FIXTURE_ANDROID_IMAGE', 'FIXTURE_ANDROID_MODEL')) {
+$keys = @('ANDROID_HOME', 'ANDROID_SDK_MANAGER_PATH', 'FIXTURE_ANDROID_ROOT',
+        'FIXTURE_ANDROID_MODE', 'FIXTURE_ARCH', 'FIXTURE_CONFIG_EXPECTED', 'FIXTURE_CONFIG_ERROR', 'FIXTURE_PROFILE_EXPECTED',
+        'TEST_ANDROID_VERSION', 'TEST_ANDROID_IMAGE', 'TEST_ANDROID_MODEL', 'TEST_ANDROID_UDID',
+        'ANDROID_TEST_DEVICE', 'ANDROID_TEST_DEVICE_VERSION', 'ANDROID_TEST_SKIN', 'ANDROID_TEST_RESULTS') +
+    @(Get-ChildItem Env: | Where-Object Name -Match '^(TEST_ANDROID_|ANDROID_TEST_)' | Select-Object -ExpandProperty Name)
+foreach ($key in @($keys | Sort-Object -Unique)) {
     $oldEnvironment[$key] = [Environment]::GetEnvironmentVariable($key)
+    Remove-Item -LiteralPath "Env:$key" -ErrorAction SilentlyContinue
 }
 
 try {
     $bin = Join-Path $root 'sdk/cmdline-tools/selected/bin'
     New-Item $bin, (Join-Path $root 'sdk/platform-tools'), (Join-Path $root 'sdk/emulator') `
         -ItemType Directory -Force | Out-Null
-    foreach ($abi in @('x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a')) {
-        $image = Join-Path $root "sdk/system-images/android-36/google_apis/$abi"
+    foreach ($imagePath in @('android-36/google_apis/x86', 'android-36/google_apis/x86_64',
+            'android-36/google_apis/arm64-v8a', 'android-26/google_apis/x86_64',
+            'android-37.1/google_apis_ps16k/arm64-v8a')) {
+        $image = Join-Path $root "sdk/system-images/$imagePath"
         New-Item $image -ItemType Directory -Force | Out-Null
         Set-Content (Join-Path $image 'system.img') 'fixture'
     }
@@ -84,7 +91,11 @@ fi
     & chmod +x (Join-Path $bin 'avdmanager') (Join-Path $root 'sdk/emulator/emulator') (Join-Path $root 'sdk/platform-tools/adb')
     if ($LASTEXITCODE -ne 0) { throw 'Could not make lifecycle fixtures executable.' }
 
-    $helper = (Join-Path $PSScriptRoot '../tests-shared-android.cake').Replace('\', '/')
+    $helper = (Join-Path $root 'android-helper.cake').Replace('\', '/')
+    $source = Get-Content (Join-Path $PSScriptRoot '../tests-shared-android.cake') -Raw
+    $source = $source.Replace('System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture',
+        'System.Enum.Parse<System.Runtime.InteropServices.Architecture>(EnvironmentVariable("FIXTURE_ARCH"))')
+    Set-Content $helper $source
     $harness = Join-Path $root 'lifecycle.cake'
     Set-Content $harness @"
 #load "$helper"
@@ -108,14 +119,12 @@ Task("Default").Does(() => {
     Exception failure = null;
     var mode = EnvironmentVariable("FIXTURE_ANDROID_MODE");
     try {
-        SetupAndroidEmulator(ref avd, ref serial,
-            EnvironmentVariable("FIXTURE_ANDROID_IMAGE"), EnvironmentVariable("FIXTURE_ANDROID_MODEL"));
+        SetupAndroidEmulator(ref avd, ref serial);
         if (mode == "success") {
             if (!avd.StartsWith("SkiaSharp-Tests-") || !serial.StartsWith("emulator-"))
                 throw new Exception("Missing exact owned identity.");
             try {
-                SetupAndroidEmulator(ref avd, ref serial,
-                    EnvironmentVariable("FIXTURE_ANDROID_IMAGE"), EnvironmentVariable("FIXTURE_ANDROID_MODEL"));
+                SetupAndroidEmulator(ref avd, ref serial);
                 throw new Exception("Duplicate setup unexpectedly succeeded.");
             } catch (InvalidOperationException) { }
         }
@@ -146,18 +155,173 @@ Task("Default").Does(() => {
     if (avd != null || serial != null || ANDROID_EMULATOR_PROCESS != null)
         throw new Exception("Owned resources remain after cleanup.");
 });
-RunTarget("Default");
+Task("Unused").Does(() => { });
+Task("Configuration").Does(() => {
+    var expectError = EnvironmentVariable("FIXTURE_CONFIG_ERROR") == "true";
+    try {
+        var before = (TEST_ANDROID_VERSION, TEST_ANDROID_IMAGE, TEST_ANDROID_MODEL);
+        var config = GetAndroidEmulatorConfiguration();
+        if (expectError)
+            throw new Exception("Invalid Android configuration unexpectedly succeeded.");
+        var actual = string.Join("|", config.UsingEmulator, config.SystemImage, config.Model, config.Architecture);
+        if (actual != EnvironmentVariable("FIXTURE_CONFIG_EXPECTED"))
+            throw new Exception("Unexpected selected configuration: " + actual);
+        var expectedProfile = EnvironmentVariable("FIXTURE_PROFILE_EXPECTED");
+        if (expectedProfile != null &&
+            string.Join("|", TEST_ANDROID_VERSION, TEST_ANDROID_IMAGE, TEST_ANDROID_MODEL) != expectedProfile)
+            throw new Exception("OS version/image/model inputs lost their values or precedence.");
+        if (config != GetAndroidEmulatorConfiguration() ||
+            before != (TEST_ANDROID_VERSION, TEST_ANDROID_IMAGE, TEST_ANDROID_MODEL))
+            throw new Exception("Selection mutated profile inputs or changed on a second call.");
+        if (!config.UsingEmulator) {
+            string avd = null, serial = null;
+            SetupAndroidEmulator(ref avd, ref serial);
+            if (avd != null || serial != null || ANDROID_AVD_MANAGER != null || ANDROID_ADB != null ||
+                ANDROID_EMULATOR_PROCESS != null)
+                throw new Exception("Physical selection acquired emulator resources or tools.");
+        }
+    } catch (ArgumentException) {
+        if (!expectError)
+            throw;
+    }
+});
+Task("PureConfiguration").Does(() => {
+    var x64 = System.Runtime.InteropServices.Architecture.X64;
+    var arm64 = System.Runtime.InteropServices.Architecture.Arm64;
+    var x86 = System.Runtime.InteropServices.Architecture.X86;
+    var cases = new[] {
+        ("android-emulator-32", "36", x64, true, "x86"),
+        ("android-emulator-32", "36", arm64, true, "x86"),
+        ("android-emulator-64", "36", x64, true, "x86_64"),
+        ("android-simulator-64", "36", arm64, true, "arm64-v8a"),
+        ("android-device-32", "36", x64, false, "armeabi-v7a"),
+        ("android-device-32", "36", arm64, false, "armeabi-v7a"),
+        ("android-device-64", "36", x64, false, "arm64-v8a"),
+        ("android-device-64", "36", arm64, false, "arm64-v8a"),
+    };
+    foreach (var (device, version, host, emulator, abi) in cases) {
+        var config = SelectAndroidEmulatorConfiguration(device, version, "Nexus 5X", "", "", "", host);
+        if (config.UsingEmulator != emulator || config.Architecture != abi ||
+            config.SystemImage != (emulator ? "system-images;android-36;google_apis;" + abi : null) ||
+            config.Model != (emulator ? "Nexus 5X" : null))
+            throw new Exception("Incorrect legacy mapping: " + device + "/" + host);
+    }
+    foreach (var version in new[] { "", "latest" }) {
+        foreach (var device in new[] { "android-emulator-64", "android-emulator-64_35" }) {
+            var config = SelectAndroidEmulatorConfiguration(device, version, "Nexus 5X", "", "", "", x64);
+            if (!config.SystemImage.Contains(device.EndsWith("_35") ? "android-35;" : "android-36;"))
+                throw new Exception("Empty/latest or embedded API compatibility changed.");
+        }
+    }
+    foreach (var device in new[] { "", "android", "ios-emulator-64", "android-unknown-64",
+            "android-emulator-16", "android-emulator-64-extra", "android-emulator-64_bad",
+            "android-emulator-64_35_36", "android-emulator-64_0", "android-emulator-64_999999999999" }) {
+        try {
+            SelectAndroidEmulatorConfiguration(device, "latest", "Nexus 5X", "", "", "", x64);
+            throw new Exception("Invalid device accepted: " + device);
+        } catch (ArgumentException) { }
+    }
+    foreach (var version in new[] { "0", "-1", "8.0", "garbage", "999999999999" }) {
+        try {
+            SelectAndroidEmulatorConfiguration("android-emulator-64", version, "Nexus 5X", "", "", "", x64);
+            throw new Exception("Invalid legacy API accepted: " + version);
+        } catch (ArgumentException) { }
+    }
+    foreach (var skin in new[] { "", " ", "bad\nmodel" }) {
+        try {
+            SelectAndroidEmulatorConfiguration("android-emulator-64", "36", skin, "", "", "", x64);
+            throw new Exception("Invalid legacy model accepted.");
+        } catch (ArgumentException) { }
+    }
+    foreach (var profile in new[] {
+        ("8.0", "", ""), ("", "android-26;google_apis", ""), ("", "", "pixel_9"),
+        ("8.0", "android-26;google_apis", ""), ("8.0", "", "pixel_9"),
+        ("", "android-26;google_apis", "pixel_9"), ("latest", "android-26;google_apis", "pixel_9"),
+        ("17", "system-images;android-37.1;google_apis_ps16k", "pixel_9"),
+        ("17", "android-37.1;google_apis_ps16k;arm64-v8a", "pixel_9"),
+        ("17", "android-37.1;bad-vendor", "pixel_9"), ("17", "android-37.1;google_apis_ps16k", "Nexus 5X"),
+        ("17", "android-37.1;google_apis_ps16k", "pixel/9"), (" ", "android-26;google_apis", "pixel_9"),
+        ("8.0\n", "android-26;google_apis", "pixel_9"), ("8.0", "android-26;google_apis\n", "pixel_9"),
+        ("8.0", "android-26;google_apis", "pixel_9\n"),
+    }) {
+        try {
+            SelectAndroidEmulatorConfiguration("android-emulator-64", "36", "Nexus 5X",
+                profile.Item1, profile.Item2, profile.Item3, x64);
+            throw new Exception("Partial/invalid explicit profile accepted: " + profile);
+        } catch (ArgumentException) { }
+    }
+    foreach (var selection in new[] { ("android-emulator-64", x86), ("android-device-32", x64),
+            ("android-device-64", arm64) }) {
+        try {
+            SelectAndroidEmulatorConfiguration(selection.Item1, "36", "Nexus 5X",
+                "8.0", "android-26;google_apis", "pixel_9", selection.Item2);
+            throw new Exception("Unsupported host or physical explicit profile accepted.");
+        } catch (ArgumentException) { }
+    }
+});
+RunTarget(Argument("target", "Default"));
 "@
     $env:ANDROID_HOME = Join-Path $root 'sdk'
     $env:ANDROID_SDK_MANAGER_PATH = Join-Path $bin 'sdkmanager'
     $env:FIXTURE_ANDROID_ROOT = $root
-    $env:FIXTURE_ANDROID_MODEL = 'Nexus 5X'
+    $env:FIXTURE_ARCH = 'X64'
+    & dotnet cake $harness --target=PureConfiguration --verbosity=quiet
+    if ($LASTEXITCODE -ne 0) { throw 'Pure Android selection fixtures failed.' }
+
+    $configCases = @(
+        @{ Args = @(); Expected = 'True|system-images;android-36;google_apis;x86_64|Nexus 5X|x86_64' }
+        @{ Args = @(); Env = @{ ANDROID_TEST_DEVICE_VERSION = '' }; Expected = 'True|system-images;android-36;google_apis;x86_64|Nexus 5X|x86_64' }
+        @{ Args = @('--device=android-emulator-64_35'); Env = @{ ANDROID_TEST_DEVICE_VERSION = '' }; Expected = 'True|system-images;android-35;google_apis;x86_64|Nexus 5X|x86_64' }
+        @{ Args = @(); Env = @{ ANDROID_TEST_DEVICE = 'android-emulator-32'; ANDROID_TEST_DEVICE_VERSION = '35'; ANDROID_TEST_SKIN = 'Environment model' }
+            Expected = 'True|system-images;android-35;google_apis;x86|Environment model|x86' }
+        @{ Args = @('--device=android-simulator-64', '--deviceVersion=36', '--skin=Nexus 5X')
+            Env = @{ ANDROID_TEST_DEVICE = 'android-device-32'; ANDROID_TEST_DEVICE_VERSION = '35'; ANDROID_TEST_SKIN = 'Environment model' }
+            Expected = 'True|system-images;android-36;google_apis;x86_64|Nexus 5X|x86_64' }
+        @{ Args = @('--device=android-device-32'); Expected = 'False|||armeabi-v7a' }
+        @{ Args = @('--device=android-device-64'); Expected = 'False|||arm64-v8a' }
+        @{ Args = @('--androidVersion=8.0', '--androidImage=android-26;google_apis', '--androidModel=pixel_9')
+            Expected = 'True|system-images;android-26;google_apis;x86_64|pixel_9|x86_64'; Profile = '8.0|android-26;google_apis|pixel_9' }
+        @{ Args = @(); Arch = 'Arm64'
+            Env = @{ TEST_ANDROID_VERSION = '17'; TEST_ANDROID_IMAGE = 'android-37.1;google_apis_ps16k'; TEST_ANDROID_MODEL = 'pixel_9' }
+            Expected = 'True|system-images;android-37.1;google_apis_ps16k;arm64-v8a|pixel_9|arm64-v8a'; Profile = '17|android-37.1;google_apis_ps16k|pixel_9' }
+        @{ Args = @('--androidVersion=8.0', '--androidImage=android-26;google_apis', '--androidModel=pixel_9')
+            Env = @{ TEST_ANDROID_VERSION = '17'; TEST_ANDROID_IMAGE = 'android-37.1;google_apis_ps16k'; TEST_ANDROID_MODEL = 'other_model' }
+            Expected = 'True|system-images;android-26;google_apis;x86_64|pixel_9|x86_64'; Profile = '8.0|android-26;google_apis|pixel_9' }
+        @{ Args = @('--androidVersion=8.0'); Env = @{ TEST_ANDROID_VERSION = '17'; TEST_ANDROID_IMAGE = 'android-26;google_apis'; TEST_ANDROID_MODEL = 'pixel_9' }
+            Expected = 'True|system-images;android-26;google_apis;x86_64|pixel_9|x86_64'; Profile = '8.0|android-26;google_apis|pixel_9' }
+        @{ Args = @('--androidModel=Nexus 5X'); Env = @{ TEST_ANDROID_VERSION = '17'; TEST_ANDROID_IMAGE = 'android-37.1;google_apis_ps16k'; TEST_ANDROID_MODEL = 'pixel_9' }; Error = $true }
+        @{ Args = @('--androidVersion=8.0'); Error = $true }
+        @{ Args = @('--device=android-device-64', '--androidVersion=8.0', '--androidImage=android-26;google_apis', '--androidModel=pixel_9'); Error = $true }
+        @{ Args = @('--androidVersion=8.0'); Target = 'Unused' }
+    )
+    $selectionKeys = @('TEST_ANDROID_VERSION', 'TEST_ANDROID_IMAGE', 'TEST_ANDROID_MODEL',
+        'ANDROID_TEST_DEVICE', 'ANDROID_TEST_DEVICE_VERSION', 'ANDROID_TEST_SKIN')
+    # No valid SDK exists during configuration/physical checks, so accidental lifecycle work fails.
+    $env:ANDROID_HOME = Join-Path $root 'no-sdk'
+    $env:ANDROID_SDK_MANAGER_PATH = Join-Path $root 'no-sdk/sdkmanager'
+    foreach ($case in $configCases) {
+        foreach ($key in $selectionKeys) { Remove-Item -LiteralPath "Env:$key" -ErrorAction SilentlyContinue }
+        if ($case['Env']) {
+            foreach ($entry in $case.Env.GetEnumerator()) { [Environment]::SetEnvironmentVariable($entry.Key, $entry.Value) }
+        }
+        $env:FIXTURE_ARCH = if ($case['Arch']) { $case.Arch } else { 'X64' }
+        $env:FIXTURE_CONFIG_EXPECTED = $case['Expected']
+        $env:FIXTURE_PROFILE_EXPECTED = $case['Profile']
+        $env:FIXTURE_CONFIG_ERROR = if ($case['Error']) { 'true' } else { 'false' }
+        $target = if ($case['Target']) { $case.Target } else { 'Configuration' }
+        & dotnet cake $harness "--target=$target" @($case.Args) --verbosity=quiet
+        if ($LASTEXITCODE -ne 0) { throw "Android input selection failed: $($case.Args)." }
+        if (Test-Path (Join-Path $root 'commands')) { throw 'Configuration/physical selection ran SDK tools.' }
+    }
+    foreach ($key in $selectionKeys) { Remove-Item -LiteralPath "Env:$key" -ErrorAction SilentlyContinue }
+    $env:ANDROID_HOME = Join-Path $root 'sdk'
 
     $cases = @(
-        @{ Mode = 'success'; Abi = 'x86' }
-        @{ Mode = 'success'; Abi = 'x86_64' }
-        @{ Mode = 'success'; Abi = 'armeabi-v7a' }
+        @{ Mode = 'success'; Abi = 'x86'; Device = 'android-emulator-32' }
+        @{ Mode = 'success'; Abi = 'x86_64'; Arch = 'X64' }
         @{ Mode = 'success'; Abi = 'arm64-v8a' }
+        @{ Mode = 'success'; Abi = 'x86_64'; Arch = 'X64'; Version = '8.0'; Image = 'android-26;google_apis'; Model = 'pixel_9' }
+        @{ Mode = 'success'; Abi = 'arm64-v8a'; Version = '17'; Image = 'android-37.1;google_apis_ps16k'; Model = 'pixel_9' }
         @{ Mode = 'identity-failure'; Abi = 'arm64-v8a' }
         @{ Mode = 'create-no-avd'; Abi = 'arm64-v8a' }
         @{ Mode = 'create-failure'; Abi = 'arm64-v8a' }
@@ -170,10 +334,16 @@ RunTarget("Default");
     )
     foreach ($case in $cases) {
         $env:FIXTURE_ANDROID_MODE = $case.Mode
-        $env:FIXTURE_ANDROID_IMAGE = "system-images;android-36;google_apis;$($case.Abi)"
-        if ($case.Mode -eq 'missing-image') {
-            $env:FIXTURE_ANDROID_IMAGE = 'system-images;android-99;google_apis;arm64-v8a'
+        $env:FIXTURE_ARCH = if ($case['Arch']) { $case.Arch } else { 'Arm64' }
+        $env:ANDROID_TEST_DEVICE = if ($case['Device']) { $case.Device } else { 'android-emulator-64' }
+        $env:ANDROID_TEST_DEVICE_VERSION = if ($case.Mode -eq 'missing-image') { '99' } else { '36' }
+        $env:TEST_ANDROID_VERSION = $case['Version']
+        $env:TEST_ANDROID_IMAGE = $case['Image']
+        $env:TEST_ANDROID_MODEL = $case['Model']
+        $expectedImage = if ($case['Image']) { "system-images;$($case.Image);$($case.Abi)" } else {
+            "system-images;android-$($env:ANDROID_TEST_DEVICE_VERSION);google_apis;$($case.Abi)"
         }
+        $expectedModel = if ($case['Model']) { $case.Model } else { 'Nexus 5X' }
         $env:ANDROID_SDK_MANAGER_PATH = if ($case.Mode -eq 'missing-tools') {
             Join-Path $root 'sdk/cmdline-tools/missing/bin/sdkmanager'
         } else { Join-Path $bin 'sdkmanager' }
@@ -184,7 +354,7 @@ RunTarget("Default");
             continue
         }
         $arguments = @(Get-Content (Join-Path $root 'avd-arguments'))
-        if ($arguments[5] -ne $env:FIXTURE_ANDROID_IMAGE -or $arguments[7] -ne 'Nexus 5X') {
+        if ($arguments[5] -ne $expectedImage -or $arguments[7] -ne $expectedModel) {
             throw 'Full system image ABI or legacy model was not passed as a single argument.'
         }
         $name = Get-Content (Join-Path $root 'name') -Raw
@@ -236,7 +406,7 @@ RunTarget("Default");
             if (Test-Path $path) { Remove-Item -LiteralPath $path }
         }
     }
-    Write-Host 'Android lifecycle fixtures passed (fake SDK only; all four ABIs and legacy model).'
+    Write-Host 'Android configuration and lifecycle fixtures passed (fake SDK only; emulator ABIs, physical mappings, legacy and explicit profiles).'
 } finally {
     # On a fixture assertion failure, stop only a process whose command contains this exact fixture path.
     $pidFile = Join-Path $root 'pid'
@@ -252,7 +422,11 @@ RunTarget("Default");
         }
     }
     foreach ($entry in $oldEnvironment.GetEnumerator()) {
-        [Environment]::SetEnvironmentVariable($entry.Key, $entry.Value)
+        if ($null -eq $entry.Value) {
+            Remove-Item -LiteralPath "Env:$($entry.Key)" -ErrorAction SilentlyContinue
+        } else {
+            [Environment]::SetEnvironmentVariable($entry.Key, $entry.Value)
+        }
     }
     if (Test-Path $root) { Remove-Item -LiteralPath $root -Recurse -Force }
 }

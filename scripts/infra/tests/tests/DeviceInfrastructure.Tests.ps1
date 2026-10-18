@@ -5,11 +5,14 @@ $repo = (Resolve-Path (Join-Path $PSScriptRoot '../../../..')).Path
 $tests = Join-Path $repo 'scripts/infra/tests'
 $root = Join-Path $repo "output/device-routing-fixture-$([Guid]::NewGuid().ToString('N'))"
 $keys = @('ANDROID_TEST_RESULTS', 'ANDROID_TEST_DEVICE', 'ANDROID_TEST_DEVICE_VERSION',
-    'ANDROID_TEST_SKIN', 'FIXTURE_ARCH', 'FIXTURE_MODE')
+    'ANDROID_TEST_SKIN', 'TEST_ANDROID_VERSION', 'TEST_ANDROID_IMAGE', 'TEST_ANDROID_MODEL',
+    'FIXTURE_ARCH', 'FIXTURE_MODE') +
+    @(Get-ChildItem Env: | Where-Object Name -Match '^(TEST_ANDROID_|ANDROID_TEST_)' | Select-Object -ExpandProperty Name)
+$keys = @($keys | Sort-Object -Unique)
 $oldEnvironment = @{}
 foreach ($key in $keys) {
     $oldEnvironment[$key] = [Environment]::GetEnvironmentVariable($key)
-    [Environment]::SetEnvironmentVariable($key, $null)
+    Remove-Item -LiteralPath "Env:$key" -ErrorAction SilentlyContinue
 }
 
 try {
@@ -38,6 +41,11 @@ try {
     }
     if ($sample -match 'Setup\(|Teardown\(|tests-shared-(apple|android)|Appium') {
         throw 'The sample runner must not own any device or Appium lifecycle.'
+    }
+    $android = Get-Content (Join-Path $tests 'tests-android.cake') -Raw
+    if ($android -match 'Argument\("(device|deviceVersion|skin|androidVersion|androidImage|androidModel)"|ANDROID_TEST_(DEVICE|SKIN)|TEST_ANDROID_|DEVICE_(ARCH|ID|NAME)|RuntimeInformation|usingEmulator' -or
+        -not $android.Contains('SetupAndroidEmulator(ref OWNED_ANDROID_AVD, ref OWNED_ANDROID_SERIAL);')) {
+        throw 'Android caller must use the two-ref setup without duplicate selection/configuration.'
     }
     $cache = Get-Content (Join-Path $repo 'scripts/infra/caching/repo-deps.json') -Raw | ConvertFrom-Json
     $sampleInputs = $cache.jobs.managed.children.package.children.samples.include
@@ -78,13 +86,16 @@ void FixtureRunDotNetBuild(FilePath project, string configuration, Dictionary<st
     if (EnvironmentVariable("FIXTURE_MODE") == "build-failure")
         throw new Exception("Fixture build failure.");
 }
-void FixtureSetupAndroidEmulator(ref string avd, ref string serial, string image, string model)
+void FixtureSetupAndroidEmulator(ref string avd, ref string serial)
 {
+    var config = GetAndroidEmulatorConfiguration();
+    if (!config.UsingEmulator)
+        return;
     if (!SKIP_BUILD && !FIXTURE_BUILT)
         throw new Exception("Emulator started before Release pre-build.");
     avd = "owned-avd";
     serial = "emulator-5554";
-    Record("setup:" + image + ":" + model);
+    Record("setup:" + config.SystemImage + ":" + config.Model);
 }
 void FixtureTeardownAndroidEmulator(ref string avd, ref string serial, Exception error)
 {
@@ -121,6 +132,16 @@ void FixtureRunDeviceRunnersTest(FilePath project, DirectoryPath output, string 
         throw new Exception("Fixture test failure.");
 }
 '@
+    # Load production input parsing/selection only; omit every external lifecycle entry point.
+    # The two-ref stub above calls this real selector, never a replica of its rules.
+    $helper = Get-Content (Join-Path $tests 'tests-shared-android.cake') -Raw
+    $lifecycle = $helper.IndexOf('void SetupAndroidEmulator(')
+    if ($lifecycle -lt 0) { throw 'Missing Android lifecycle boundary.' }
+    $config = $helper.Substring(0, $lifecycle).Replace(
+        'System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture', 'FIXTURE_ARCH')
+    if ($config -match 'StartProcess\(|Process\.Start\(') { throw 'Selection fixture must not contain subprocess paths.' }
+    $configPath = (Join-Path $root 'android-config.cake').Replace('\', '/')
+    Set-Content $configPath $config
     foreach ($platform in @('android', 'ios', 'maccatalyst')) {
         $source = Get-Content (Join-Path $tests "tests-$platform.cake") -Raw
         $source = [regex]::Replace($source, '(?m)^#load .*\r?\n', '')
@@ -130,9 +151,8 @@ void FixtureRunDeviceRunnersTest(FilePath project, DirectoryPath output, string 
                 'TeardownIosSimulator', 'RunDeviceRunnersTest')) {
             $source = $source.Replace("$boundary(", "Fixture$boundary(")
         }
-        $source = $source.Replace('RuntimeInformation.ProcessArchitecture', 'FIXTURE_ARCH')
         $source = $source.Replace('RunTarget(TARGET);', 'Task("unrelated").Does(() => Record("unrelated")); RunTarget(TARGET);')
-        Set-Content (Join-Path $root "$platform.cake") "$stubs`n$source"
+        Set-Content (Join-Path $root "$platform.cake") "#load `"$configPath`"`n$stubs`n$source"
     }
 
     $cases = @(
@@ -141,41 +161,72 @@ void FixtureRunDeviceRunnersTest(FilePath project, DirectoryPath output, string 
         @{ Args = @('--device=android-emulator-32', '--deviceVersion=latest'); Arch = 'x64'; Image = '36;google_apis;x86' }
         @{ Args = @('--device=android-simulator-64', '--deviceVersion=35', '--skin=pixel_9'); Arch = 'x64'; Image = '35;google_apis;x86_64'; Model = 'pixel_9' }
         @{ Args = @('--device=android-emulator-64_35', '--deviceVersion=latest', '--skipbuild=true'); Arch = 'x64'; Image = '35;google_apis;x86_64'; SkipBuild = $true }
+        @{ Args = @('--device=android-emulator-64_35'); Env = @{ ANDROID_TEST_DEVICE_VERSION = '' }; Arch = 'x64'; Image = '35;google_apis;x86_64' }
         @{ Args = @('--device=android-device-32'); Arch = 'x64'; Physical = $true }
         @{ Args = @('--device=android-device-64'); Arch = 'arm64'; Physical = $true }
-        @{ Args = @(); Arch = 'x64'; Image = '35;google_apis;x86'; Env = $true }
+        @{ Args = @('--device=android-device-64', '--skipbuild=true'); Arch = 'x64'; Physical = $true; SkipBuild = $true }
+        @{ Args = @(); Arch = 'x64'; Image = '35;google_apis;x86'
+            Env = @{ ANDROID_TEST_DEVICE = 'android-emulator-32'; ANDROID_TEST_DEVICE_VERSION = '35'; ANDROID_TEST_SKIN = 'Environment model' }; Model = 'Environment model' }
+        @{ Args = @('--device=android-emulator-64', '--deviceVersion=36', '--skin=CLI model'); Arch = 'x64'; Image = '36;google_apis;x86_64'; Model = 'CLI model'
+            Env = @{ ANDROID_TEST_DEVICE = 'android-device-32'; ANDROID_TEST_DEVICE_VERSION = '35'; ANDROID_TEST_SKIN = 'Environment model' } }
+        @{ Args = @('--androidVersion=8.0', '--androidImage=android-26;google_apis', '--androidModel=pixel_9')
+            Arch = 'x64'; Image = '26;google_apis;x86_64'; Model = 'pixel_9' }
+        @{ Args = @(); Arch = 'arm64'; Image = '37.1;google_apis_ps16k;arm64-v8a'; Model = 'pixel_9'
+            Env = @{ TEST_ANDROID_VERSION = '17'; TEST_ANDROID_IMAGE = 'android-37.1;google_apis_ps16k'; TEST_ANDROID_MODEL = 'pixel_9' } }
+        @{ Args = @('--androidVersion=8.0', '--androidImage=android-26;google_apis', '--androidModel=pixel_9')
+            Arch = 'x64'; Image = '26;google_apis;x86_64'; Model = 'pixel_9'
+            Env = @{ TEST_ANDROID_VERSION = '17'; TEST_ANDROID_IMAGE = 'android-37.1;google_apis_ps16k'; TEST_ANDROID_MODEL = 'environment_model' } }
+        @{ Args = @('--androidVersion=8.0'); Arch = 'x64'; Mode = 'invalid-config' }
+        @{ Args = @('--device=android-device-64', '--androidVersion=8.0', '--androidImage=android-26;google_apis', '--androidModel=pixel_9')
+            Arch = 'x64'; Mode = 'invalid-config' }
         @{ Args = @(); Arch = 'x64'; Mode = 'test-failure'; Image = '36;google_apis;x86_64' }
         @{ Args = @(); Arch = 'x64'; Mode = 'build-failure' }
+        @{ Args = @('--androidVersion=8.0'); Arch = 'x64'; Mode = 'build-failure' }
+        @{ Args = @('--target=unrelated', '--androidVersion=8.0'); Arch = 'x64'; Unrelated = $true }
     )
+    $selectionKeys = @('ANDROID_TEST_DEVICE', 'ANDROID_TEST_DEVICE_VERSION', 'ANDROID_TEST_SKIN',
+        'TEST_ANDROID_VERSION', 'TEST_ANDROID_IMAGE', 'TEST_ANDROID_MODEL')
     foreach ($case in $cases) {
         $env:FIXTURE_ARCH = $case.Arch
         $env:FIXTURE_MODE = $case['Mode']
-        $env:ANDROID_TEST_DEVICE = if ($case['Env']) { 'android-emulator-32' } else { $null }
-        $env:ANDROID_TEST_DEVICE_VERSION = if ($case['Env']) { '35' } else { $null }
-        $env:ANDROID_TEST_SKIN = if ($case['Env']) { 'Environment model' } else { $null }
+        foreach ($key in $selectionKeys) { Remove-Item -LiteralPath "Env:$key" -ErrorAction SilentlyContinue }
+        if ($case['Env']) {
+            foreach ($entry in $case.Env.GetEnumerator()) { [Environment]::SetEnvironmentVariable($entry.Key, $entry.Value) }
+        }
         & dotnet cake (Join-Path $root 'android.cake') @($case.Args) --verbosity=quiet
         if (($LASTEXITCODE -ne 0) -ne [bool]$case['Mode']) { throw "Unexpected runner result: $($case.Args)." }
         $result = @(Get-Content (Join-Path $root 'result'))
-        if ($result[0] -ne $(if ($case['SkipBuild']) { "setup:system-images;android-$($case.Image):Nexus 5X" } else { 'build' })) {
+        $model = if ($case['Model']) { $case.Model } else { 'Nexus 5X' }
+        $setup = "setup:system-images;android-$($case['Image']):$model"
+        $first = if ($case['Unrelated']) { 'unrelated' } elseif (-not $case['SkipBuild']) { 'build' } elseif ($case['Physical']) { 'physical' } else { $setup }
+        if ($result[0] -ne $first) {
             throw 'Release pre-build no longer precedes emulator startup.'
         }
-        if ($case['Mode'] -eq 'build-failure') {
-            if ($result.Count -ne 1) { throw 'Build failure must not start or delete a device.' }
+        if ($case['Unrelated']) {
+            if (($result -join '|') -ne 'unrelated') { throw 'Unrelated targets must not select, build, or own devices.' }
+        } elseif ($case['Mode'] -in @('build-failure', 'invalid-config')) {
+            if ($result.Count -ne 1) { throw 'Build/config failure must not start or delete a device.' }
         } elseif ($case['Physical']) {
-            if ($result.Count -ne 3 -or $result[1] -ne 'physical' -or
-                $result[2] -ne 'test:net10.0-android:physical-or-host') {
+            $expected = @()
+            if (-not $case['SkipBuild']) { $expected += 'build' }
+            $expected += @('physical', 'test:net10.0-android:physical-or-host')
+            if (($result -join '|') -ne ($expected -join '|')) {
                 throw 'Physical selection must not create, select an owned serial, screenshot, or delete an emulator.'
             }
         } else {
-            $model = if ($case['Model']) { $case['Model'] } elseif ($case['Env']) { 'Environment model' } else { 'Nexus 5X' }
-            if ("setup:system-images;android-$($case.Image):$model" -notin $result -or
-                'test:net10.0-android:emulator-5554' -notin $result -or $result[-1] -ne 'cleanup') {
+            $expected = @()
+            if (-not $case['SkipBuild']) { $expected += 'build' }
+            $expected += @($setup, 'snapshot:boot-complete', 'test:net10.0-android:emulator-5554', 'snapshot:teardown', 'cleanup')
+            if (($result -join '|') -ne ($expected -join '|')) {
                 throw "Image/model/serial selection or cleanup changed: $result"
             }
         }
         Remove-Item (Join-Path $root 'result')
     }
     $env:FIXTURE_MODE = $null
+    foreach ($key in $selectionKeys) { Remove-Item -LiteralPath "Env:$key" -ErrorAction SilentlyContinue }
+    # Unused Android configuration must remain lazy on Apple routes and description-only runs.
+    $env:TEST_ANDROID_VERSION = '8.0'
     foreach ($platform in @('ios', 'maccatalyst')) {
         $targets = if ($platform -eq 'ios') { @('Default', 'tests-ios', 'unrelated') } else { @('Default', 'tests-maccatalyst') }
         foreach ($target in $targets) {
@@ -196,7 +247,11 @@ void FixtureRunDeviceRunnersTest(FilePath project, DirectoryPath output, string 
     Write-Host 'Device infrastructure references, selection/routing fixtures, and Cake descriptions passed.'
 } finally {
     foreach ($entry in $oldEnvironment.GetEnumerator()) {
-        [Environment]::SetEnvironmentVariable($entry.Key, $entry.Value)
+        if ($null -eq $entry.Value) {
+            Remove-Item -LiteralPath "Env:$($entry.Key)" -ErrorAction SilentlyContinue
+        } else {
+            [Environment]::SetEnvironmentVariable($entry.Key, $entry.Value)
+        }
     }
     if (Test-Path $root) { Remove-Item -LiteralPath $root -Recurse -Force }
 }

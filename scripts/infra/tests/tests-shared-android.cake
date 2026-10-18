@@ -2,26 +2,94 @@
 // ANDROID EMULATOR — one named AVD and explicit serial owned by this Cake run
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+var TEST_ANDROID_VERSION = Argument("androidVersion", EnvironmentVariable("TEST_ANDROID_VERSION") ?? "");
+var TEST_ANDROID_IMAGE = Argument("androidImage", EnvironmentVariable("TEST_ANDROID_IMAGE") ?? "");
+var TEST_ANDROID_MODEL = Argument("androidModel", EnvironmentVariable("TEST_ANDROID_MODEL") ?? "");
+
 string ANDROID_AVD_MANAGER = null;
 string ANDROID_ADB = null;
 System.Diagnostics.Process ANDROID_EMULATOR_PROCESS = null;
 System.Threading.Tasks.Task<string> ANDROID_EMULATOR_STDOUT = null;
 System.Threading.Tasks.Task<string> ANDROID_EMULATOR_STDERR = null;
 
-void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial, string systemImage, string deviceModel)
+(bool UsingEmulator, string SystemImage, string Model, string Architecture) GetAndroidEmulatorConfiguration() =>
+    SelectAndroidEmulatorConfiguration(
+        Argument("device", EnvironmentVariable("ANDROID_TEST_DEVICE") ?? "android-emulator-64"),
+        Argument("deviceVersion", EnvironmentVariable("ANDROID_TEST_DEVICE_VERSION") ?? "36"),
+        Argument("skin", EnvironmentVariable("ANDROID_TEST_SKIN") ?? "Nexus 5X"),
+        TEST_ANDROID_VERSION, TEST_ANDROID_IMAGE, TEST_ANDROID_MODEL,
+        System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture);
+
+(bool UsingEmulator, string SystemImage, string Model, string Architecture) SelectAndroidEmulatorConfiguration(
+    string device, string deviceVersion, string skin, string androidVersion, string androidImage, string androidModel,
+    System.Runtime.InteropServices.Architecture hostArchitecture)
+{
+    var match = System.Text.RegularExpressions.Regex.Match((device ?? "").Trim().ToLowerInvariant(),
+        @"^android-(device|emulator|simulator)-(32|64)(?:_([0-9]+))?\z");
+    if (!match.Success)
+        throw new ArgumentException("Expected android-device|emulator|simulator-32|64 with an optional _API suffix: " + device);
+
+    var usingEmulator = match.Groups[1].Value != "device";
+    var explicitProfile = new[] { androidVersion, androidImage, androidModel }.Any(value => !string.IsNullOrEmpty(value));
+    if (explicitProfile) {
+        if (!System.Text.RegularExpressions.Regex.IsMatch(androidVersion ?? "", @"^[0-9]+(?:\.[0-9]+)*\z") ||
+            !System.Text.RegularExpressions.Regex.IsMatch(androidImage ?? "", @"^android-[0-9]+(?:\.[0-9]+)?;[a-zA-Z0-9_]+\z") ||
+            !System.Text.RegularExpressions.Regex.IsMatch(androidModel ?? "", @"^[a-zA-Z0-9_-]+\z"))
+            throw new ArgumentException("Declare exact androidVersion, androidImage and androidModel (or TEST_ANDROID_* equivalents).");
+        if (!usingEmulator)
+            throw new ArgumentException("An explicit Android emulator profile cannot be combined with a physical device selection.");
+
+        var profileAbi = hostArchitecture switch {
+            System.Runtime.InteropServices.Architecture.X64 => "x86_64",
+            System.Runtime.InteropServices.Architecture.Arm64 => "arm64-v8a",
+            _ => throw new ArgumentException("The declared Android profiles require an arm64 or x64 host."),
+        };
+        // The SDK image selects the runtime; the separate OS version remains available to test consumers.
+        return (true, $"system-images;{androidImage};{profileAbi}", androidModel, profileAbi);
+    }
+
+    var api = string.IsNullOrEmpty(deviceVersion) || deviceVersion.Equals("latest", StringComparison.OrdinalIgnoreCase)
+        ? (match.Groups[3].Success ? match.Groups[3].Value : "36")
+        : deviceVersion;
+    if (!System.Text.RegularExpressions.Regex.IsMatch(api, @"^[0-9]+\z") ||
+        !int.TryParse(api, out var apiNumber) || apiNumber <= 0 ||
+        (match.Groups[3].Success && (!int.TryParse(match.Groups[3].Value, out var embeddedApi) || embeddedApi <= 0)))
+        throw new ArgumentException("Expected a positive Android API number or latest for deviceVersion: " + deviceVersion);
+
+    var abi = match.Groups[2].Value == "32"
+        ? (usingEmulator ? "x86" : "armeabi-v7a")
+        : !usingEmulator ? "arm64-v8a"
+        : hostArchitecture switch {
+            System.Runtime.InteropServices.Architecture.X64 => "x86_64",
+            System.Runtime.InteropServices.Architecture.Arm64 => "arm64-v8a",
+            _ => throw new ArgumentException("Android 64-bit emulators require an arm64 or x64 host."),
+        };
+    if (!usingEmulator)
+        return (false, null, null, abi);
+    if (string.IsNullOrWhiteSpace(skin) || skin.Any(char.IsControl))
+        throw new ArgumentException("Declare an Android device model.");
+
+    return (true, $"system-images;android-{apiNumber};google_apis;{abi}", skin, abi);
+}
+
+void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
 {
     var listingOptions = new[] { "--showdescription", "--dryrun", "--noop", "--whatif" };
     if (System.Environment.GetCommandLineArgs().Any(arg =>
         listingOptions.Contains(arg.Split('=')[0], StringComparer.OrdinalIgnoreCase)))
         return;
 
-    if (string.IsNullOrWhiteSpace(systemImage) ||
-        !System.Text.RegularExpressions.Regex.IsMatch(systemImage,
-            @"^system-images;android-[0-9]+(?:\.[0-9]+)?;[a-zA-Z0-9_]+;(?:x86|x86_64|armeabi-v7a|arm64-v8a)$") ||
-        string.IsNullOrWhiteSpace(deviceModel) || deviceModel.Any(char.IsControl))
-        throw new ArgumentException("Declare a full Android system image (including ABI) and a device model.");
+    var config = GetAndroidEmulatorConfiguration();
     if (ownedAvd != null || ownedSerial != null || ANDROID_EMULATOR_PROCESS != null)
         throw new InvalidOperationException("This Cake run already owns an Android emulator.");
+    if (!config.UsingEmulator)
+        return;
+
+    var systemImage = config.SystemImage;
+    var deviceModel = config.Model;
+    Information("Creating owned AVD...");
+    Information("  SDK: {0}", systemImage);
+    Information("  Device: {0}", deviceModel);
 
     var sdk = EnvironmentVariable("ANDROID_HOME");
     var sdkManager = EnvironmentVariable("ANDROID_SDK_MANAGER_PATH");
