@@ -97,7 +97,8 @@ Task("sync-ANGLE")
     }
 
     // generate Windows App SDK files
-    if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h"))) {
+    if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h")) ||
+        !FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Xaml.h"))) {
         var winappsdk_version = GetVersion("Microsoft.WindowsAppSDK", "release");
         var metadata_packages = new[] {
             new {
