@@ -86,11 +86,11 @@ stages:
               - pwsh: ./scripts/infra/managed/install-android-sdk.ps1
                 displayName: Select the Android SDK
               - pwsh: |
-                  foreach ($package in @('platform-tools', 'build-tools;35.0.0', 'build-tools;36.0.0', 'emulator')) {
+                  foreach ($package in @('cmdline-tools;latest', 'platform-tools', 'build-tools;35.0.0', 'build-tools;36.0.0', 'emulator')) {
                     ./scripts/infra/managed/install-android-package.ps1 -Package $package
                     if ($LASTEXITCODE -ne 0) { throw "Android package installation failed: $package" }
                   }
-                displayName: Install Android build tools and emulator
+                displayName: Install current command-line tools, Android build tools and emulator
               - pwsh: ./scripts/infra/managed/install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
                 displayName: Install the selected Android compile platforms
               - pwsh: ./scripts/infra/managed/install-android-image.ps1 -Image "android-26;google_apis"
@@ -117,11 +117,11 @@ stages:
               - pwsh: ./scripts/infra/managed/install-android-sdk.ps1
                 displayName: Select the Android SDK
               - pwsh: |
-                  foreach ($package in @('platform-tools', 'build-tools;35.0.0', 'build-tools;36.0.0', 'emulator')) {
+                  foreach ($package in @('cmdline-tools;latest', 'platform-tools', 'build-tools;35.0.0', 'build-tools;36.0.0', 'emulator')) {
                     ./scripts/infra/managed/install-android-package.ps1 -Package $package
                     if ($LASTEXITCODE -ne 0) { throw "Android package installation failed: $package" }
                   }
-                displayName: Install Android build tools and emulator
+                displayName: Install current command-line tools, Android build tools and emulator
               - pwsh: ./scripts/infra/managed/install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
                 displayName: Install the selected Android compile platforms
               - pwsh: ./scripts/infra/managed/install-android-image.ps1 -Image "android-37.1;google_apis_ps16k"
