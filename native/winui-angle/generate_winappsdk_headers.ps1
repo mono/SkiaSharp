@@ -21,6 +21,7 @@ $ErrorActionPreference = 'Stop'
 
 $includePath = Join-Path $Path 'include'
 $libPath = Join-Path $Path 'lib'
+$metadataPath = Join-Path $Path 'metadata'
 $uapVersion = '10.0.18362'
 
 # Ensure include directory exists
@@ -50,15 +51,19 @@ Write-Host "WinAppSDK path: $Path"
 # (midlrt resolves imported IDL files relative to CWD)
 Push-Location $includePath
 try {
-    # Process all WINMD files with winmdidl.exe
-    # Discover all .winmd files under the lib directory so new namespaces in
-    # newer WinAppSDK versions are handled automatically.
+    # Windows App SDK 1.8+ component packages use metadata/, while older
+    # packages use lib/. Scan both layouts and make every metadata directory
+    # available when resolving references between WINMD files.
+    $metadataRoots = @($libPath, $metadataPath) | Where-Object { Test-Path $_ }
+    $winmdFiles = $metadataRoots |
+        ForEach-Object { Get-ChildItem $_ -Filter '*.winmd' -Recurse } |
+        Sort-Object FullName -Descending
     $metadataDirs = @(
         'C:\Windows\System32\WinMetadata'
         (Join-Path $libPath "uap$uapVersion")
         (Join-Path $libPath 'uap10.0')
-    )
-    $winmdFiles = Get-ChildItem $libPath -Filter '*.winmd' -Recurse
+    ) + ($winmdFiles | ForEach-Object { $_.DirectoryName })
+    $metadataDirs = $metadataDirs | Where-Object { Test-Path $_ } | Select-Object -Unique
 
     foreach ($winmd in $winmdFiles) {
         # Use the first IDL that would be produced as a stamp file
