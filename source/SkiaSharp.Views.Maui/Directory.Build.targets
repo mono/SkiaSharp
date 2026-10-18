@@ -6,7 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Update="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.8249" />
+    <PackageReference Update="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.756" Condition="$(TargetFramework.StartsWith('net9.0'))" />
+    <PackageReference Update="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.8249" Condition="$(TargetFramework.StartsWith('net10.0'))" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)..\SkiaSharp.Build.targets" />
