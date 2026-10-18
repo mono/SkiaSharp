@@ -60,39 +60,29 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Theory]
-	[InlineData(null, null, "latest")]
-	[InlineData("", null, "latest")]
-	[InlineData("latest", null, "latest")]
-	[InlineData("LATEST", null, "latest")]
-	[InlineData("26.5", "latest", "latest")]
-	[InlineData("27.0", "latest", "latest")]
-	[InlineData("18.6", null, "18.6")]
-	[InlineData("18.6", "18.6", "18.6")]
-	[InlineData("18.6.1", "18.6", "18.6")]
-	[InlineData("26.5", null, "26.5")]
-	public void IosGoldenProfileIsIndependentOfTheSelectedRuntime(
-		string? version, string? referenceVersion, string expectedVersion)
+	[InlineData("18.6")]
+	[InlineData("26.3.1")]
+	public void IosGoldenProfileUsesTheSelectedRuntime(string version)
 	{
-		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", version, referenceVersion);
-		Assert.Equal($"iPhone-16-Pro/{expectedVersion}", profile);
+		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", version);
+		Assert.Equal($"iPhone-16-Pro/{version}", profile);
 
 		foreach (var family in new[] { "Maui", "Native" })
 		{
 			var expected = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", family);
 			Assert.Equal(Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
-				"Appium", family, "iOS", "iPhone-16-Pro", expectedVersion, "basic-cpu.png"), expected);
+				"Appium", family, "iOS", "iPhone-16-Pro", version, "basic-cpu.png"), expected);
 		}
 	}
 
 	[Theory]
-	[InlineData("latest", "not-reviewed")]
 	[InlineData("18.6", "not-reviewed")]
 	[InlineData("99.0", "basic-cpu")]
-	public void IosGoldensFailWithoutFallingBackToAnotherProfile(string referenceVersion, string name)
+	public void IosGoldensFailWithoutFallingBackToAnotherProfile(string version, string name)
 	{
-		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", "26.5", referenceVersion);
+		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", version);
 		var expected = AppiumSampleRunTestBase.Expected(profile, name, "Maui");
-		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/latest", "basic-cpu", "Maui");
+		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.3.1", "basic-cpu", "Maui");
 		Assert.True(File.Exists(actual));
 		Assert.False(File.Exists(expected));
 
@@ -179,8 +169,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[Theory]
 	[InlineData("18.6", true)]
 	[InlineData("18.6", false)]
-	[InlineData("latest", true)]
-	[InlineData("latest", false)]
+	[InlineData("26.3.1", true)]
+	[InlineData("26.3.1", false)]
 	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(string version, bool horizontal)
 	{
 		var references = Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",

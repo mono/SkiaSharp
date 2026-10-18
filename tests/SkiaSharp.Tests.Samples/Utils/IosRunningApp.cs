@@ -7,11 +7,8 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal sealed class IosRunningApp : AppiumRunningApp
 {
-	private readonly string? version =
-		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_VERSION");
-
-	private readonly string? referenceVersion =
-		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_REFERENCE_VERSION");
+	private readonly string version =
+		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_VERSION") ?? "26.3.1";
 
 	private readonly string model =
 		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_MODEL") ?? "iPhone 16 Pro";
@@ -24,7 +21,7 @@ internal sealed class IosRunningApp : AppiumRunningApp
 	{
 	}
 
-	internal override string DeviceProfile => ReferenceProfile(model, version, referenceVersion);
+	internal override string DeviceProfile => ReferenceProfile(model, version);
 
 	internal override async Task<string> ReadApplicationId()
 	{
@@ -37,14 +34,8 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		return id;
 	}
 
-	internal static string ReferenceProfile(string model, string? version, string? referenceVersion)
-	{
-		var profileVersion = string.IsNullOrEmpty(referenceVersion) ? version : referenceVersion;
-		if (string.IsNullOrEmpty(profileVersion) || profileVersion.Equals("latest", StringComparison.OrdinalIgnoreCase))
-			profileVersion = "latest";
-
-		return $"{model.Replace(' ', '-')}/{profileVersion}";
-	}
+	internal static string ReferenceProfile(string model, string version) =>
+		$"{model.Replace(' ', '-')}/{version}";
 
 	protected override Task Start(Uri address)
 	{
@@ -62,9 +53,7 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		};
 		options.AddAdditionalAppiumOption("newCommandTimeout", 120);
 
-		// A direct latest run lets Appium select the runtime; Cake passes the resolved version.
-		if (!string.IsNullOrEmpty(version) && !version.Equals("latest", StringComparison.OrdinalIgnoreCase))
-			options.PlatformVersion = version;
+		options.PlatformVersion = version;
 
 		if (!string.IsNullOrWhiteSpace(simulator))
 			options.AddAdditionalAppiumOption("udid", simulator);

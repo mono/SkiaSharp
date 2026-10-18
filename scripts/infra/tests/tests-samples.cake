@@ -27,16 +27,9 @@ Setup(context =>
         return;
 
     if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
-        // Keep the golden profile before setup replaces the request with the selected runtime.
-        var referenceVersion = string.IsNullOrEmpty(TEST_IOS_SIMULATOR_VERSION) ||
-            TEST_IOS_SIMULATOR_VERSION.Equals("latest", StringComparison.OrdinalIgnoreCase)
-                ? "latest"
-                : TEST_IOS_SIMULATOR_VERSION;
-
         SetupIosSimulator(ref OWNED_IOS_SIMULATOR);
 
         Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_VERSION", TEST_IOS_SIMULATOR_VERSION);
-        Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_REFERENCE_VERSION", referenceVersion);
         Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_MODEL", TEST_IOS_SIMULATOR_MODEL);
         Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_UDID", OWNED_IOS_SIMULATOR);
     }
