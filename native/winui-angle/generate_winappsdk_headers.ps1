@@ -28,6 +28,14 @@ if (-not (Test-Path $includePath)) {
     New-Item -ItemType Directory -Path $includePath | Out-Null
 }
 
+# Component packages also ship native interop headers that cannot be generated
+# from WINMD. Merge those with the generated headers.
+$componentIncludePaths = Get-ChildItem $Path -Directory -Filter 'include' -Recurse |
+    Where-Object { $_.FullName -ne $includePath }
+foreach ($componentIncludePath in $componentIncludePaths) {
+    Copy-Item (Join-Path $componentIncludePath.FullName '*') $includePath -Recurse -Force
+}
+
 # Find Windows SDK bin directory
 $winSdkDir = $env:WindowsSdkDir
 if (-not $winSdkDir) {
