@@ -4,9 +4,9 @@ using Xunit;
 
 namespace SkiaSharp.Testing.Tests;
 
-public abstract class SKPixelComparerTestBase
+public abstract class SKImageComparisonTestBase
 {
-	protected static void SetUniformTolerance(SKPixelComparerOptions options, SKPixelTolerance tolerance)
+	protected static void SetUniformTolerance(SKComparisonOptions options, SKPixelTolerance tolerance)
 	{
 		options.RedTolerance = tolerance;
 		options.GreenTolerance = tolerance;
@@ -18,18 +18,18 @@ public abstract class SKPixelComparerTestBase
 		BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(positiveValue) - 1);
 
 	protected static Action[] Operations(SKBitmap first, SKBitmap second, SKImage a, SKImage b, SKPixmap firstPixmap, SKPixmap secondPixmap,
-		SKPixelComparerOptions options, SKPixelDifferenceStyle style = SKPixelDifferenceStyle.ThresholdOverlay) =>
+		SKComparisonOptions options, SKDifferenceStyle style = SKDifferenceStyle.ThresholdOverlay) =>
 		new Action[]
 		{
-			() => SKPixelComparer.Compare(first, second, options),
-			() => SKPixelComparer.Compare(a, b, options),
-			() => SKPixelComparer.Compare(firstPixmap, secondPixmap, options),
-			() => { using var diff = SKPixelComparer.GenerateDifferenceImage(first, second, style, options); },
-			() => { using var diff = SKPixelComparer.GenerateDifferenceImage(a, b, style, options); },
-			() => { using var diff = SKPixelComparer.GenerateDifferenceImage(firstPixmap, secondPixmap, style, options); },
+			() => SKImageComparison.Compare(first, second, options),
+			() => SKImageComparison.Compare(a, b, options),
+			() => SKImageComparison.Compare(firstPixmap, secondPixmap, options),
+			() => { using var diff = SKImageComparison.GenerateDifferenceImage(first, second, style, options); },
+			() => { using var diff = SKImageComparison.GenerateDifferenceImage(a, b, style, options); },
+			() => { using var diff = SKImageComparison.GenerateDifferenceImage(firstPixmap, secondPixmap, style, options); },
 		};
 
-	protected static void AssertEquivalent(SKPixelComparisonResult expected, SKPixelComparisonResult actual)
+	protected static void AssertEquivalent(SKComparisonResult expected, SKComparisonResult actual)
 	{
 		Assert.Equal(expected.IsMatch, actual.IsMatch);
 		Assert.Equal(expected.TotalPixels, actual.TotalPixels);
@@ -43,7 +43,7 @@ public abstract class SKPixelComparerTestBase
 		AssertMetrics(expected.RawMetrics, actual.RawMetrics);
 		AssertMetrics(expected.ThresholdedMetrics, actual.ThresholdedMetrics);
 
-		static void AssertMetrics(SKPixelComparisonMetrics expected, SKPixelComparisonMetrics actual)
+		static void AssertMetrics(SKComparisonMetrics expected, SKComparisonMetrics actual)
 		{
 			Assert.Equal(expected.SampleCount, actual.SampleCount);
 			Assert.Equal(expected.SumAbsoluteError, actual.SumAbsoluteError);

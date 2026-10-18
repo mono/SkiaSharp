@@ -44,10 +44,10 @@ using SkiaSharp.Testing;
 
 using var expected = SKImage.FromEncodedData("expected.png");
 using var actual = SKImage.FromEncodedData("actual.png");
-var result = SKPixelComparer.Compare(expected, actual);
+var result = SKImageComparison.Compare(expected, actual);
 if (!result.IsMatch)
 {
-    using var difference = SKPixelComparer.GenerateDifferenceImage(expected, actual);
+    using var difference = SKImageComparison.GenerateDifferenceImage(expected, actual);
     using var png = difference.Encode(SKEncodedImageFormat.Png, 100);
     File.WriteAllBytes("difference.png", png.ToArray());
 }
@@ -66,15 +66,15 @@ Tolerance decides **which pixels mismatch**. A pixel mismatches if any enabled
 channel exceeds its allowance:
 
 ```csharp
-var options = new SKPixelComparerOptions
+var options = new SKComparisonOptions
 {
     RedTolerance = SKPixelTolerance.Absolute(2),
     GreenTolerance = SKPixelTolerance.Absolute(2),
     BlueTolerance = SKPixelTolerance.Absolute(2),
     AlphaTolerance = null,
 };
-var result = SKPixelComparer.Compare(expected, actual, options);
-using var difference = SKPixelComparer.GenerateDifferenceImage(
+var result = SKImageComparison.Compare(expected, actual, options);
+using var difference = SKImageComparison.GenerateDifferenceImage(
     expected, actual, options: options);
 using var png = difference.Encode(SKEncodedImageFormat.Png, 100);
 File.WriteAllBytes("difference-tolerant.png", png.ToArray());
@@ -97,7 +97,7 @@ classified the pixels. Starting with the options above:
 
 ```csharp
 options.MismatchBudget = SKPixelMismatchBudget.Pixels(20);
-var result = SKPixelComparer.Compare(expected, actual, options);
+var result = SKImageComparison.Compare(expected, actual, options);
 ```
 
 | Budget | Meaning |
@@ -124,7 +124,7 @@ Both use `ComparedPixelCount * ChannelCount` samples.
 
 ## Choose a diagnostic
 
-Pass `SKPixelDifferenceStyle` to `GenerateDifferenceImage`:
+Pass `SKDifferenceStyle` to `GenerateDifferenceImage`:
 
 | Actual | Threshold overlay (default) | Threshold map |
 | --- | --- | --- |

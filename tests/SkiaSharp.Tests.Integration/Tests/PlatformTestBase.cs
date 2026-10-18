@@ -160,7 +160,7 @@ public abstract class PlatformTestBase : IDisposable
     }
 
     /// <summary>
-    /// Compares two images using SKPixelComparer and saves a diff image.
+    /// Compares two images using SKImageComparison and saves a diff image.
     /// Returns the similarity percentage (0-100).
     /// </summary>
     protected async Task<double> CompareAndSaveDiff(byte[] expected, byte[] actual, string diffName)
@@ -187,14 +187,14 @@ public abstract class PlatformTestBase : IDisposable
         
         try
         {
-            var options = new SKPixelComparerOptions
+            var options = new SKComparisonOptions
             {
                 AlphaType = SKAlphaType.Premul,
                 AlphaTolerance = null,
             };
 
-            // Compare using SKPixelComparer
-            var result = SKPixelComparer.Compare(expectedImage, compareActual, options);
+            // Compare using SKImageComparison
+            var result = SKImageComparison.Compare(expectedImage, compareActual, options);
             var similarity = result.TotalPixels > 0 
                 ? (1.0 - (double)result.MismatchedPixelCount / result.TotalPixels) * 100
                 : 0;
@@ -202,7 +202,7 @@ public abstract class PlatformTestBase : IDisposable
             Output.WriteLine($"Comparison: {result.TotalPixels} total, {result.MismatchedPixelCount} mismatched pixels, {result.RawMetrics.SumAbsoluteError} sum absolute error");
             
             // Generate and save diff image
-            using var diffImage = SKPixelComparer.GenerateDifferenceImage(expectedImage, compareActual, SKPixelDifferenceStyle.BinaryMask, options);
+            using var diffImage = SKImageComparison.GenerateDifferenceImage(expectedImage, compareActual, SKDifferenceStyle.BinaryMask, options);
             using var diffData = diffImage.Encode(SKEncodedImageFormat.Png, 100);
             var diffPath = Path.Combine(ScreenshotDir, $"{diffName}-diff.png");
             await File.WriteAllBytesAsync(diffPath, diffData.ToArray());

@@ -6,7 +6,7 @@ using System;
 namespace SkiaSharp.Testing;
 
 /// <summary>An inclusive absolute byte-difference allowance for one color channel.</summary>
-/// <remarks>The default value is <see cref="Exact"/>. Configure each channel independently with <see cref="SKPixelComparerOptions"/>; null disables that channel.</remarks>
+/// <remarks>The default value is <see cref="Exact"/>. Configure each channel independently with <see cref="SKComparisonOptions"/>; null disables that channel.</remarks>
 public readonly struct SKPixelTolerance : IEquatable<SKPixelTolerance>
 {
 	private readonly double value;
