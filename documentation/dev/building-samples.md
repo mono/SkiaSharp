@@ -92,26 +92,16 @@ Filtered runs do not replace the full suite.
 ## iOS simulator runs
 
 The `Ios` group runs Basic MAUI, native iOS and Gallery MAUI samples on macOS
-using Appium and XCUITest. Install the SDK, workloads and Xcode versions specified
-in the [shared CI variables](../../scripts/azure-templates-variables.yml), along
-with Node.js and the Appium prerequisites in the
-[sample stage configuration](../../scripts/azure-templates-stages-samples.yml).
+using Appium and XCUITest. Install Node.js and the SDK, workloads and Xcode specified
+in the [shared CI variables](../../scripts/azure-templates-variables.yml).
 Multi-target projects need their restore workloads even when building only iOS.
 
-CI runs a pinned runtime and a moving `latest` golden profile; see the
-[sample stage configuration](../../scripts/azure-templates-stages-samples.yml).
-`latest` means the newest compatible **installed** runtime selected by
-`dotnet apple simulator create` under the configured Xcode, not the newest
-runtime available to download. CI provisions the pinned runtime explicitly; the latest leg
-requires a compatible runtime already installed and does not run a version
-installer.
-
-Set `XCODE_VERSION` to the configured Xcode version and choose `latest` or a
-pinned runtime for `IOS_VERSION`. Use the repository's Xcode selection script
-before provisioning a pinned runtime:
+After staging packages, set `XCODE_VERSION` to the configured version and choose
+`latest` or the pinned runtime from the
+[sample stage configuration](../../scripts/azure-templates-stages-samples.yml):
 
 ```sh
-IOS_VERSION=latest # Or 18.6 for the pinned profile.
+IOS_VERSION=latest
 sudo scripts/infra/native/apple/select-xcode.sh "$XCODE_VERSION"
 pwsh scripts/infra/tests/install-appium.ps1
 if [ "$IOS_VERSION" != latest ]; then
@@ -122,60 +112,31 @@ dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
   --sampleRunId=ios --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-Use your staged packages' suffix, not the example suffix. For samples, omitting
-`--iosVersion` (with no version environment variable) also selects `latest`.
-The pinned installer provisions and verifies the runtime version; tests require
-reviewed image references.
-Cake creates and boots one simulator using `dotnet apple`, passes its exact UUID
-and actual runtime version from the creation JSON to the serialized iOS tests,
-and removes only that simulator at teardown, including after failures.
-The golden profile stays `latest` even when the selected runtime changes.
-The same lifecycle helpers serve the DeviceRunners iOS target, whose explicitly
-configured CI runtime and model remain unchanged.
-`samples-generate` does not start a simulator. Each test builds its generated sample
-and owns a fresh Appium server/session that reinstalls and launches the app without
-erasing or rebooting the shared simulator. Appium manages WebDriverAgent.
+Use your staged packages' suffix, not the example suffix. `latest` selects the
+newest compatible **installed** runtime under the selected Xcode and compares
+against `latest/` references; a pinned version uses its numeric reference folder.
+Missing or mismatched references fail without fallback.
 
-Device and sample runs use `--iosVersion` and `--iosSimulatorModel`, backed by
-`TEST_IOS_SIMULATOR_VERSION` and `TEST_IOS_SIMULATOR_MODEL`. The model is a device
-type such as `iPhone 16 Pro`, not the unique name of a created simulator.
-For direct test or IDE runs, set those environment variables to select the
-runtime and device type. Set `TEST_IOS_SIMULATOR_UDID` to use an already-running simulator
-you manage yourself. If unset, the `appium:udid` capability is omitted and Appium
-selects or creates a simulator using the model and version. With no version or
-`latest`, direct runs omit `appium:platformVersion` and use `latest` references.
-When selecting a concrete runtime directly but comparing against the moving
-profile, also set `TEST_IOS_SIMULATOR_REFERENCE_VERSION=latest`. Cake sets that
-reference variable before exporting the resolved actual version; pinned runs use
-their requested numeric reference folder. C# tests do not manage simulator
-lifetimes or install runtimes. Unsupported runtimes and missing reviewed references
-fail without fallback.
+Cake owns and cleans up only the simulator it creates. Each test owns its Appium
+server/session, not the shared simulator. `samples-generate` starts neither.
 
-Coverage includes page navigation, CPU/GPU rendering, drawing and Clear, and
-Gallery search, filtering and controls. For failures, inspect the TRX attachments
-and `samples_appium_*_logs` CI artifacts for server/device logs, UI hierarchy and
-screenshots. Missing or mismatched references fail; tests never approve them.
-Cake's creation JSON records the actual selected runtime; the actual
-`platformVersion` returned by the Appium session and its golden profile are
-written to test output.
+For IDE or direct runs, use `TEST_IOS_SIMULATOR_VERSION` and
+`TEST_IOS_SIMULATOR_MODEL` for selection, and `TEST_IOS_SIMULATOR_UDID` to target
+an already-running simulator you manage. Set
+`TEST_IOS_SIMULATOR_REFERENCE_VERSION=latest` only when explicitly selecting a
+runtime but comparing against the moving profile.
+
+Inspect TRX attachments or CI's `samples_appium_*_logs` artifacts for logs,
+UI hierarchy and screenshots. Test output reports the runtime and reference profile.
 
 ### Updating latest references
 
-References live under `Expected/Appium/<Maui|Native>/iOS/<model>/<version>/` in
-the sample test project. `latest/` moves with the selected runtime; numeric
-folders remain pinned. Both use the same strict comparisons.
-
-When a runtime update changes rendering, inspect the actual/diff captures and
-runtime reported in the test output. Fix regressions before accepting new images.
-For intentional changes, optionally copy the previous reviewed `latest/` folders
-to their source runtime version without overwriting existing pinned references.
-Then replace only reviewed scene PNGs in `latest/` with actual canvas captures
-from the TRX attachments, removing their sequence prefixes. Do not use diff,
-full-screen diagnostic or animated GPU captures as references.
-
-Re-run latest and the pinned profile against the same packages before committing.
-Record the actual runtime, package build and reason for the image changes in the
-PR. Tests never approve references automatically or fall back to another folder.
+References are in `tests/SkiaSharp.Tests.Samples/Expected/Appium/<Maui|Native>/iOS/<model>/`.
+Review actual/diff captures before replacing an intentional change in `latest/`
+with the corresponding actual canvas PNG from TRX attachments (remove its sequence
+prefix). Do not use full-screen diagnostics or animated GPU captures.
+Leave numeric profiles pinned; rerun latest and the pinned profile against the same
+packages, and record the runtime, package build and reason in the PR.
 
 ## Coverage and diagnostics
 
