@@ -99,14 +99,20 @@ Task("sync-ANGLE")
     // generate Windows App SDK files
     if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h"))) {
         var winappsdk_version = GetVersion("Microsoft.WindowsAppSDK", "release");
-        var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.stamp");
+        var metadata_package = "Microsoft.WindowsAppSDK.InteractiveExperiences";
+        var metadata_version = GetVersion(metadata_package, "release");
+        var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}-{metadata_version}.stamp");
 
-        // Download and extract the NuGet package using .NET HTTP (works on restricted agents
-        // where Python's urllib is blocked by firewall policy)
+        // Windows App SDK 1.8+ is a meta-package. The WinUI metadata ANGLE needs
+        // is shipped in Microsoft.WindowsAppSDK.InteractiveExperiences.
         if (!FileExists(stamp)) {
-            var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdk_version}/microsoft.windowsappsdk.{winappsdk_version}.nupkg";
-            var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.nupkg");
+            if (DirectoryExists(WINAPPSDK_PATH)) {
+                DeleteDirectory(WINAPPSDK_PATH, new DeleteDirectorySettings { Recursive = true, Force = true });
+            }
             EnsureDirectoryExists(WINAPPSDK_PATH);
+            var packageId = metadata_package.ToLowerInvariant();
+            var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/{packageId}/{metadata_version}/{packageId}.{metadata_version}.nupkg";
+            var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{packageId}.{metadata_version}.nupkg");
             DownloadFile(nugetUrl, nupkgPath);
             Unzip(nupkgPath, WINAPPSDK_PATH);
             DeleteFile(nupkgPath);
