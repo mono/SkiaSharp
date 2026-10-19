@@ -14,17 +14,19 @@ parameters:
   - name: androidDevices
     type: object
     default:
-      # Vulkan is required on Android; API 29 is the oldest emulator image where
-      # the full Ganesh and Graphite Vulkan suite is viable on hosted agents.
+      # API 21 is the minimum supported Android version. Vulkan is unavailable
+      # before API 24, so this leg validates the remaining CPU, GL and UI suite.
       - name: oldest
-        displayName: Android (API 29)
-        image: 'android-29;google_apis'
+        displayName: Android (API 21)
+        image: 'android-21;google_apis'
         model: Nexus 5X
+        additionalArgs: '--skipGpu="ganesh-vulkan,graphite-vulkan,ganesh-vulkan-sharpvk"'
       # API 36 is the newest google_apis system image currently available.
       - name: latest
         displayName: Android (API 36)
         image: 'android-36;google_apis'
         model: Nexus 5X
+        additionalArgs: ''
   - name: iosSimulators
     type: object
     default:
@@ -119,7 +121,7 @@ stages:
               displayName: ${{ android.displayName }}
               buildAgent: ${{ parameters.buildAgentAndroidTests }}
               target: tests-android
-              additionalArgs: --androidImage="${{ android.image }}" --androidModel="${{ android.model }}" --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+              additionalArgs: --androidImage="${{ android.image }}" --androidModel="${{ android.model }}" ${{ android.additionalArgs }} --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
               installAndroidSdk: true
               installXcode: false
               dotnetSdks:
