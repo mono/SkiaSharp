@@ -2,8 +2,7 @@
 // IOS SIMULATOR — explicit lifecycle for the UUID owned by this Cake run
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var TEST_IOS_SIMULATOR_MODEL = Argument("iosSimulatorModel", EnvironmentVariable("TEST_IOS_SIMULATOR_MODEL") ??
-    Argument("iosSimulator", EnvironmentVariable("IOS_SIMULATOR_NAME") ?? "iPhone 16"));
+var TEST_IOS_SIMULATOR_MODEL = Argument("iosModel", EnvironmentVariable("TEST_IOS_SIMULATOR_MODEL") ?? "iPhone 16");
 var TEST_IOS_SIMULATOR_VERSION = Argument("iosVersion", EnvironmentVariable("TEST_IOS_SIMULATOR_VERSION") ?? "");
 
 void SetupIosSimulator(ref string ownedSimulator)
@@ -11,10 +10,7 @@ void SetupIosSimulator(ref string ownedSimulator)
     if (!IsRunningOnMacOs())
         return;
 
-    // Cake 4 still invokes Setup/Teardown in a dry run and does not set IsDryRun().
-    var listingOptions = new[] { "--showdescription", "--dryrun", "--noop", "--whatif" };
-    if (System.Environment.GetCommandLineArgs().Any(arg =>
-        listingOptions.Contains(arg.Split('=')[0], StringComparer.OrdinalIgnoreCase)))
+    if (IsCakeListingCommand())
         return;
 
     if (!string.IsNullOrEmpty(ownedSimulator))

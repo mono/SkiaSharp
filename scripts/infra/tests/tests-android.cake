@@ -16,10 +16,7 @@ string OWNED_ANDROID_SERIAL = null;
 
 Setup(context =>
 {
-    if (!TARGET.Equals("Default", StringComparison.OrdinalIgnoreCase) ||
-        System.Environment.GetCommandLineArgs().Any(arg => new[] {
-            "--showdescription", "--dryrun", "--noop", "--whatif",
-        }.Contains(arg.Split('=')[0], StringComparer.OrdinalIgnoreCase)))
+    if (!TARGET.Equals("Default", StringComparison.OrdinalIgnoreCase) || IsCakeListingCommand())
         return;
 
     if (string.IsNullOrEmpty(TEST_RESULTS)) {
