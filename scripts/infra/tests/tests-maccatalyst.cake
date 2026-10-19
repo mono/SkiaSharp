@@ -8,7 +8,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 // MAC CATALYST TESTS — DeviceRunners execution without a simulator
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Task ("tests-maccatalyst")
+Task ("Default")
     .Description ("Run all Mac Catalyst tests.")
     .Does (() =>
 {
@@ -17,8 +17,5 @@ Task ("tests-maccatalyst")
 
     RunDeviceRunnersTest(csproj, results, configuration: "Debug", framework: "net10.0-maccatalyst", noBuild: SKIP_BUILD);
 });
-
-Task ("Default")
-    .IsDependentOn ("tests-maccatalyst");
 
 RunTarget(TARGET);

@@ -123,12 +123,12 @@ Task ("tests-android")
 Task ("tests-ios")
     .Description ("Run all iOS tests.")
     .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests-ios.cake", "tests-ios"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-ios.cake", "Default"));
 
 Task ("tests-maccatalyst")
     .Description ("Run all Mac Catalyst tests.")
     .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests-maccatalyst.cake", "tests-maccatalyst"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-maccatalyst.cake", "Default"));
 
 Task ("tests-wasm")
     .Description ("Run WASM tests.")

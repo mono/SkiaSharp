@@ -13,8 +13,7 @@ string OWNED_IOS_SIMULATOR = null;
 
 Setup(context =>
 {
-    if (TARGET.Equals("Default", StringComparison.OrdinalIgnoreCase) ||
-        TARGET.Equals("tests-ios", StringComparison.OrdinalIgnoreCase))
+    if (TARGET.Equals("Default", StringComparison.OrdinalIgnoreCase))
         SetupIosSimulator(ref OWNED_IOS_SIMULATOR);
 });
 
@@ -23,7 +22,7 @@ Teardown(context =>
     TeardownIosSimulator(ref OWNED_IOS_SIMULATOR, context.ThrownException);
 });
 
-Task ("tests-ios")
+Task ("Default")
     .Description ("Run all iOS tests.")
     .Does (() =>
 {
@@ -36,8 +35,5 @@ Task ("tests-ios")
 
     RunDeviceRunnersTest(csproj, results, configuration: "Debug", framework: "net10.0-ios", noBuild: SKIP_BUILD, properties: properties);
 });
-
-Task ("Default")
-    .IsDependentOn ("tests-ios");
 
 RunTarget(TARGET);
