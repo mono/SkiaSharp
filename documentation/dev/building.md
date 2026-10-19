@@ -175,57 +175,6 @@ dotnet cake --target=externals-linux --arch=x64
 
 > **Tip:** Native builds can take 10-30 minutes depending on your machine. Only build for platforms you need to test.
 
-## Device Tests
-
-The root Cake targets `tests-android`, `tests-ios`, and `tests-maccatalyst` run the
-DeviceRunners suite. iOS and Mac Catalyst have separate runners; Mac Catalyst does
-not create a simulator. Samples use `scripts/infra/tests/tests-samples.cake` and do
-not start devices.
-
-On macOS, `tests-ios` creates, boots, shuts down, and deletes only its own simulator
-UUID. Select its model with `--iosSimulatorModel` / `TEST_IOS_SIMULATOR_MODEL`
-(default `iPhone 16`); the older `--iosSimulator` / `IOS_SIMULATOR_NAME` remains a
-fallback. `--iosVersion` / `TEST_IOS_SIMULATOR_VERSION` selects an already installed
-runtime; omitted or `latest` uses the latest installed runtime. No runtime is
-installed by the test runner.
-
-`tests-shared-android.cake` owns selection and validates it only when setup runs.
-CLI arguments override the corresponding environment variables. Legacy inputs
-remain `--device` / `ANDROID_TEST_DEVICE` (default `android-emulator-64`),
-`--deviceVersion` / `ANDROID_TEST_DEVICE_VERSION` (default API 36), and `--skin` /
-`ANDROID_TEST_SKIN` (default `Nexus 5X`). An empty version or `latest` uses an
-embedded `_API` suffix, otherwise API 36. `android-simulator-64` remains an alias;
-physical `android-device-32` / `android-device-64` needs no SDK or emulator image.
-
-Alternatively, supply the complete explicit profile: `--androidVersion` /
-`TEST_ANDROID_VERSION` is the Android **OS version** (for example `8.0` or `17`);
-`--androidImage` / `TEST_ANDROID_IMAGE` is the image API and vendor (for example
-`android-26;google_apis` or `android-37.1;google_apis_ps16k`); `--androidModel` /
-`TEST_ANDROID_MODEL` is a catalog ID such as `pixel_9`. Any explicit component
-requires all three. The image gets the x64/arm64 host ABI appended; unsupported
-hosts and physical-device selections are rejected. The OS version is retained
-for test consumers, not converted to an image API. Incomplete profiles never
-use legacy defaults.
-
-Emulators use the exact installed system image, ABI, model, `ANDROID_HOME`, and
-command-line tools selected by `ANDROID_SDK_MANAGER_PATH`; there is no tool or
-image fallback. Release builds run before starting the owned emulator, which has
-a five-minute boot budget. DeviceRunners receives its exact serial. Teardown
-stops the owned process tree before deleting its AVD, and retains boot output in
-`output/logs/android/<owned-avd>/`.
-
-To validate lifecycle changes without any real device tools:
-
-```powershell
-pwsh -NoLogo -NoProfile -File scripts/infra/tests/tests/AppleSimulator.Tests.ps1
-pwsh -NoLogo -NoProfile -File scripts/infra/tests/tests/AndroidEmulator.Tests.ps1
-pwsh -NoLogo -NoProfile -File scripts/infra/tests/tests/DeviceInfrastructure.Tests.ps1
-```
-
-These fixtures use fake executables and isolated directories under `output/`.
-For repository Cake compilation/listing, use only `--showdescription`:
-Cake 4 executes setup/teardown even with `--dryrun`.
-
 ## GTK4 Tests
 
 Desktop CI runs the GTK4-native test suite only on Linux, where `libgtk-4-1`
