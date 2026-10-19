@@ -38,19 +38,15 @@ void SetupIosSimulator(ref string ownedSimulator)
     try {
         var settings = new ProcessSettings {
             Arguments = arguments,
-            RedirectStandardOutput = true,
             EnvironmentVariables = new Dictionary<string, string> {
                 ["NO_COLOR"] = "1",
                 ["SPECTRE_ANSI"] = "0",
                 ["DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTION"] = "0",
             },
         };
-        var exitCode = StartProcess("dotnet", settings, out var stdout);
+        RunProcess("dotnet", settings, out var stdout);
         var output = string.Join(Environment.NewLine, stdout);
         Information("{0}", output);
-
-        if (exitCode != 0)
-            throw new Exception($"Apple simulator creation failed with exit code {exitCode}.");
 
         // The pinned Apple tool can print a failure message while returning exit code zero.
         if (!output.TrimStart().StartsWith("{", StringComparison.Ordinal))
