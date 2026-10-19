@@ -13,6 +13,7 @@ This guide covers building SkiaSharp on Windows and macOS.
     * [Building](#building)
  * [Native Building](#native-building)
     * [Dependencies](#dependencies-1)
+ * [GTK4 Tests](#gtk4-tests)
  * [MSBuild Package-Consumer Tests](#msbuild-package-consumer-tests)
  * [Documentation Outputs](#documentation-outputs)
 
@@ -137,6 +138,11 @@ Use `--windowsSdkVersion` if you need a specific installed Windows SDK.
  - Make
  - OpenJDK 17+
 
+Linux cross-image fontconfig downloads retry transient transfer failures up to
+three times, with a 30-second connection timeout and a 300-second limit per
+attempt. Downloads must succeed before the existing pinned SHA-256 checks run;
+exhausted retries fail the image build rather than continuing with a missing file.
+
 ### Building Native Libraries
 
 Build native libraries for specific platforms using Cake targets:
@@ -168,6 +174,22 @@ dotnet cake --target=externals-linux --arch=x64
 ```
 
 > **Tip:** Native builds can take 10-30 minutes depending on your machine. Only build for platforms you need to test.
+
+## GTK4 Tests
+
+Desktop CI runs the GTK4-native test suite only on Linux, where `libgtk-4-1`
+and Xvfb are already provisioned. Windows and macOS continue running all core
+and GPU test hosts without requiring an additional GTK4/libepoxy installation.
+GTK4 tests run serially because GTK initialization and widget access are not
+thread-safe. Initial-state assertions use APIs available in Ubuntu 22.04's GTK 4.6.
+
+With the Linux native assets and GTK4 installed, run the existing suite under a
+virtual display:
+
+```sh
+xvfb-run -a dotnet test tests/SkiaSharp.Views.Gtk4.Tests/SkiaSharp.Views.Gtk4.Tests.csproj \
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
+```
 
 ## MSBuild Package-Consumer Tests
 

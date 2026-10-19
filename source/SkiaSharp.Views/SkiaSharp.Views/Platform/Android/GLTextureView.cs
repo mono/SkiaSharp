@@ -9,6 +9,7 @@ using Android.Content;
 using Android.Content.PM;
 using Android.Graphics;
 using Android.Opengl;
+using Android.OS;
 using Android.Runtime;
 using Android.Util;
 using Android.Views;
@@ -217,7 +218,7 @@ namespace SkiaSharp.Views.Android
 
 		/// <summary>Gets or sets the render mode.</summary>
 		/// <value>One of the enumeration values that specifies the render mode.</value>
-		/// <remarks />
+		/// <remarks>Continuous rendering is paced by the display's frame callbacks while the view has a drawable surface and is not paused. Frame requests are coalesced, so missed display frames are not queued. In render-on-demand mode, call <see cref="RequestRender" /> to request a frame. Surface creation, resizing, and resuming may also request a frame independently of the display callbacks.</remarks>
 		public Rendermode RenderMode
 		{
 			get { return glThread.GetRenderMode(); }
@@ -881,6 +882,9 @@ namespace SkiaSharp.Views.Android
 			private GLThreadManager threadManager;
 			private EglHelper eglHelper;
 			private WeakReference<GLTextureView> textureViewWeakRef;
+			private readonly Handler frameHandler;
+			private Choreographer choreographer;
+			private FrameCallback frameCallback;
 
 			// Once the thread is started, all accesses to the following member
 			// variables are protected by the sGLThreadManager monitor
@@ -899,6 +903,10 @@ namespace SkiaSharp.Views.Android
 			private int height;
 			private Rendermode renderMode;
 			private bool requestRender;
+			private bool frameRenderRequested;
+			private bool frameCallbackPosted;
+			private bool frameCallbackUpdatePending;
+			private bool frameHandlerDisposed;
 			private bool renderComplete;
 			private Queue<Java.Lang.IRunnable> eventQueue = new Queue<Java.Lang.IRunnable>();
 			private bool surfaceSizeChanged = true;
@@ -913,7 +921,99 @@ namespace SkiaSharp.Views.Android
 				requestRender = true;
 				renderMode = Rendermode.Continuously;
 				textureViewWeakRef = glTextureViewWeakRef;
+				frameHandler = new Handler(Looper.MainLooper);
 				thread = new Thread(new ThreadStart(Run));
+			}
+
+			private bool CanDraw()
+			{
+				return !shouldExit && !paused && !requestPaused && hasSurface && !surfaceIsBad && width > 0 && height > 0;
+			}
+
+			private bool ShouldScheduleFrameCallback()
+			{
+				return CanDraw() && renderMode == Rendermode.Continuously;
+			}
+
+			private void UpdateFrameCallbackLocked()
+			{
+				if (frameCallbackUpdatePending || frameHandlerDisposed)
+					return;
+
+				frameCallbackUpdatePending = true;
+				frameHandler.Post(UpdateFrameCallback);
+			}
+
+			private void UpdateFrameCallback()
+			{
+				lock (threadManager)
+				{
+					frameCallbackUpdatePending = false;
+					if (ShouldScheduleFrameCallback())
+					{
+						if (frameCallback == null)
+						{
+							// Choreographer must be obtained on a Looper thread, not the GL worker.
+							choreographer = Choreographer.Instance;
+							frameCallback = new FrameCallback(this);
+						}
+						if (!frameCallbackPosted)
+						{
+							frameCallbackPosted = true;
+							choreographer.PostFrameCallback(frameCallback);
+						}
+					}
+					else
+					{
+						frameRenderRequested = false;
+						frameCallbackPosted = false;
+						if (frameCallback != null)
+						{
+							choreographer.RemoveFrameCallback(frameCallback);
+							frameCallback.Dispose();
+							frameCallback = null;
+							choreographer = null;
+						}
+
+						if (shouldExit || exited)
+						{
+							frameHandlerDisposed = true;
+							frameHandler.Dispose();
+						}
+					}
+				}
+			}
+
+			private sealed class FrameCallback : Java.Lang.Object, Choreographer.IFrameCallback
+			{
+				private readonly GLThread owner;
+
+				public FrameCallback(GLThread owner)
+				{
+					this.owner = owner;
+				}
+
+				public void DoFrame(long frameTimeNanos)
+				{
+					lock (owner.threadManager)
+					{
+						if (owner.frameCallback != this)
+							return;
+
+						owner.frameCallbackPosted = false;
+						if (!owner.ShouldScheduleFrameCallback())
+						{
+							owner.UpdateFrameCallbackLocked();
+							return;
+						}
+
+						// One pending frame at most; all rendering stays on the GL thread.
+						owner.frameRenderRequested = true;
+						Monitor.PulseAll(owner.threadManager);
+						owner.frameCallbackPosted = true;
+						owner.choreographer.PostFrameCallback(this);
+					}
+				}
 			}
 
 			public int Id => thread.ManagedThreadId;
@@ -1001,6 +1101,7 @@ namespace SkiaSharp.Views.Android
 								{
 									pausing = requestPaused;
 									paused = requestPaused;
+									UpdateFrameCallbackLocked();
 									Monitor.PulseAll(threadManager);
 
 									LogDebug($"[GLThread {Id}] paused is now {paused}");
@@ -1142,6 +1243,7 @@ namespace SkiaSharp.Views.Android
 											surfaceSizeChanged = false;
 										}
 										requestRender = false;
+										frameRenderRequested = false;
 										Monitor.PulseAll(threadManager);
 										break;
 									}
@@ -1179,6 +1281,7 @@ namespace SkiaSharp.Views.Android
 								{
 									finishedCreatingEglSurface = true;
 									surfaceIsBad = true;
+									UpdateFrameCallbackLocked();
 									Monitor.PulseAll(threadManager);
 								}
 								continue;
@@ -1243,6 +1346,7 @@ namespace SkiaSharp.Views.Android
 								lock (threadManager)
 								{
 									surfaceIsBad = true;
+									UpdateFrameCallbackLocked();
 									Monitor.PulseAll(threadManager);
 								}
 								break;
@@ -1258,6 +1362,8 @@ namespace SkiaSharp.Views.Android
 				{
 					lock (threadManager)
 					{
+						shouldExit = true;
+						UpdateFrameCallbackLocked();
 						StopEglSurfaceLocked();
 						StopEglContextLocked();
 					}
@@ -1266,12 +1372,12 @@ namespace SkiaSharp.Views.Android
 
 			public bool IsAbleToDraw()
 			{
-				return haveEglContext && haveEglSurface && IsReadyToDraw();
+				return haveEglContext && haveEglSurface && CanDraw();
 			}
 
 			private bool IsReadyToDraw()
 			{
-				return (!paused) && hasSurface && (!surfaceIsBad) && (width > 0) && (height > 0) && (requestRender || (renderMode == Rendermode.Continuously));
+				return CanDraw() && (requestRender || frameRenderRequested);
 			}
 
 			public void SetRenderMode(Rendermode mode)
@@ -1279,6 +1385,8 @@ namespace SkiaSharp.Views.Android
 				lock (threadManager)
 				{
 					renderMode = mode;
+					frameRenderRequested = false;
+					UpdateFrameCallbackLocked();
 					Monitor.PulseAll(threadManager);
 				}
 			}
@@ -1307,7 +1415,9 @@ namespace SkiaSharp.Views.Android
 					LogDebug($"[GLThread {Id}] OnSurfaceCreated");
 
 					hasSurface = true;
+					requestRender = true;
 					finishedCreatingEglSurface = false;
+					UpdateFrameCallbackLocked();
 					Monitor.PulseAll(threadManager);
 					while (waitingForSurface && !finishedCreatingEglSurface && !exited)
 					{
@@ -1330,6 +1440,8 @@ namespace SkiaSharp.Views.Android
 					LogDebug($"[GLThread {Id}] OnSurfaceDestroyed");
 
 					hasSurface = false;
+					frameRenderRequested = false;
+					UpdateFrameCallbackLocked();
 					Monitor.PulseAll(threadManager);
 					while ((!waitingForSurface) && (!exited))
 					{
@@ -1352,6 +1464,8 @@ namespace SkiaSharp.Views.Android
 					LogDebug($"[GLThread {Id}] OnPause");
 
 					requestPaused = true;
+					frameRenderRequested = false;
+					UpdateFrameCallbackLocked();
 					Monitor.PulseAll(threadManager);
 
 					while ((!exited) && (!paused))
@@ -1379,6 +1493,7 @@ namespace SkiaSharp.Views.Android
 					requestPaused = false;
 					requestRender = true;
 					renderComplete = false;
+					UpdateFrameCallbackLocked();
 					Monitor.PulseAll(threadManager);
 					while ((!exited) && paused && (!renderComplete))
 					{
@@ -1405,6 +1520,7 @@ namespace SkiaSharp.Views.Android
 					surfaceSizeChanged = true;
 					requestRender = true;
 					renderComplete = false;
+					UpdateFrameCallbackLocked();
 					Monitor.PulseAll(threadManager);
 
 					// Wait for thread to react to resize and render a frame
@@ -1430,6 +1546,8 @@ namespace SkiaSharp.Views.Android
 				lock (threadManager)
 				{
 					shouldExit = true;
+					frameRenderRequested = false;
+					UpdateFrameCallbackLocked();
 					Monitor.PulseAll(threadManager);
 					while (!exited)
 					{

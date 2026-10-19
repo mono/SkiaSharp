@@ -31,7 +31,8 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Null(view.GRContext);
 			Assert.False(view.IgnorePixelScaling);
 			Assert.False(view.EnableRenderLoop);
-			Assert.Equal(global::Gdk.GLAPI.Gl | global::Gdk.GLAPI.Gles, view.GetAllowedApis());
+			Assert.False(view.GetAutoRender());
+			Assert.True(view.GetHasStencilBuffer());
 
 			view.EnableRenderLoop = true;
 			Assert.True(view.EnableRenderLoop);
