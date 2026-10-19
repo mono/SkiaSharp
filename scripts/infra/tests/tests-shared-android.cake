@@ -6,7 +6,7 @@ var TEST_ANDROID_DEVICE = Argument("androidDevice", EnvironmentVariable("TEST_AN
 var TEST_ANDROID_IMAGE = Argument("androidImage", EnvironmentVariable("TEST_ANDROID_IMAGE") ?? "android-36;google_apis");
 var TEST_ANDROID_MODEL = Argument("androidModel", EnvironmentVariable("TEST_ANDROID_MODEL") ?? "Nexus 5X");
 
-string ANDROID_HOME_PATH = null;
+string ANDROID_AVD_MANAGER = null;
 string ANDROID_ADB = null;
 System.Diagnostics.Process ANDROID_EMULATOR_PROCESS = null;
 System.Threading.Tasks.Task<string> ANDROID_EMULATOR_STDOUT = null;
@@ -42,31 +42,32 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
     Information("  SDK: {0}", systemImage);
     Information("  Device: {0}", TEST_ANDROID_MODEL);
 
-    ANDROID_HOME_PATH = EnvironmentVariable("ANDROID_HOME");
-    if (string.IsNullOrWhiteSpace(ANDROID_HOME_PATH) || !System.IO.Directory.Exists(ANDROID_HOME_PATH))
-        throw new Exception("ANDROID_HOME must identify the selected Android SDK.");
+    var sdk = EnvironmentVariable("ANDROID_HOME");
+    var sdkManager = EnvironmentVariable("ANDROID_SDK_MANAGER_PATH");
+    if (string.IsNullOrWhiteSpace(sdk) || !System.IO.Directory.Exists(sdk) ||
+        string.IsNullOrWhiteSpace(sdkManager) || !System.IO.File.Exists(sdkManager))
+        throw new Exception("ANDROID_HOME and the selected ANDROID_SDK_MANAGER_PATH must exist.");
 
-    var imagePath = System.IO.Path.Combine(ANDROID_HOME_PATH,
-        systemImage.Replace(';', System.IO.Path.DirectorySeparatorChar));
+    var imagePath = System.IO.Path.Combine(sdk, systemImage.Replace(';', System.IO.Path.DirectorySeparatorChar));
     if (!System.IO.File.Exists(System.IO.Path.Combine(imagePath, "system.img")))
         throw new Exception($"The exact selected emulator image must already be installed: {imagePath}");
 
-    ANDROID_ADB = System.IO.Path.Combine(ANDROID_HOME_PATH, "platform-tools",
-        IsRunningOnWindows() ? "adb.exe" : "adb");
-    if (!System.IO.File.Exists(ANDROID_ADB) ||
-        !System.IO.File.Exists(System.IO.Path.Combine(ANDROID_HOME_PATH, "emulator",
-            IsRunningOnWindows() ? "emulator.exe" : "emulator")))
-        throw new Exception("The selected SDK must provide adb and emulator.");
+    // Follow SDK provisioning's selected command-line tools, including latest-2 layouts.
+    ANDROID_AVD_MANAGER = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(sdkManager),
+        IsRunningOnWindows() ? "avdmanager.bat" : "avdmanager");
+    ANDROID_ADB = System.IO.Path.Combine(sdk, "platform-tools", IsRunningOnWindows() ? "adb.exe" : "adb");
+    if (!System.IO.File.Exists(ANDROID_AVD_MANAGER) || !System.IO.File.Exists(ANDROID_ADB) ||
+        !System.IO.File.Exists(System.IO.Path.Combine(sdk, "emulator", IsRunningOnWindows() ? "emulator.exe" : "emulator")))
+        throw new Exception("The selected SDK must provide avdmanager, adb and emulator.");
 
     var port = AndroidEmulatorPort();
     ownedAvd = $"SkiaSharp-Tests-{Guid.NewGuid():N}";
     try {
-        CreateAndroidAvd(ownedAvd, systemImage, TEST_ANDROID_MODEL);
+        AndroidAvdCommand("create", "avd", "--name", ownedAvd, "--package", systemImage, "--device", TEST_ANDROID_MODEL);
         ownedSerial = $"emulator-{port}";
         var gpu = IsRunningOnLinux() ? "swiftshader_indirect" : "guest";
         var start = new System.Diagnostics.ProcessStartInfo(
-            System.IO.Path.Combine(ANDROID_HOME_PATH, "emulator",
-                IsRunningOnWindows() ? "emulator.exe" : "emulator")) {
+            System.IO.Path.Combine(sdk, "emulator", IsRunningOnWindows() ? "emulator.exe" : "emulator")) {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -150,85 +151,50 @@ void AssertOwnedAndroidEmulator(string ownedAvd, string ownedSerial)
         throw new Exception($"The exact serial {ownedSerial} did not identify owned AVD {ownedAvd}.");
 }
 
-void CreateAndroidAvd(string name, string systemImage, string model)
+string AndroidAvdWindowsArguments(string manager, params string[] arguments)
 {
-    RunAndroidAvdCommand(
-        "create",
-        "--home", ANDROID_HOME_PATH,
-        "--name", name,
-        "--sdk", systemImage,
-        "--device", model);
-    if (!AndroidAvdIsValid(name))
-        throw new Exception($"Android AVD command did not create valid owned AVD {name}.");
+    // cmd expands percent variables even inside quotes; reject inputs it cannot pass literally.
+    if (new[] { manager }.Concat(arguments).Any(value => value.Any(c => c == '"' || c == '%' || char.IsControl(c))))
+        throw new ArgumentException("Windows avdmanager paths and arguments cannot contain quotes, percent signs or control characters.");
+
+    var command = new ProcessArgumentBuilder().AppendQuoted(manager);
+    foreach (var argument in arguments)
+        command.AppendQuoted(argument);
+    return $"/d /v:off /s /c \"{command.Render()}\"";
 }
 
-IEnumerable<string> AndroidAvdHomes()
+string AndroidAvdCommand(params string[] arguments)
 {
-    string CombineHome(string root, params string[] paths) =>
-        string.IsNullOrWhiteSpace(root) ? null : System.IO.Path.Combine(new[] { root }.Concat(paths).ToArray());
-    return new[] {
-        EnvironmentVariable("ANDROID_AVD_ROOT"),
-        EnvironmentVariable("ANDROID_AVD_HOME"),
-        CombineHome(EnvironmentVariable("ANDROID_USER_HOME"), "avd"),
-        CombineHome(EnvironmentVariable("ANDROID_PREFS_ROOT"), ".android", "avd"),
-        CombineHome(EnvironmentVariable("ANDROID_SDK_HOME"), ".android", "avd"),
-        CombineHome(EnvironmentVariable("TEST_TMPDIR"), ".android", "avd"),
-        CombineHome(EnvironmentVariable("XDG_CONFIG_HOME"), ".android", "avd"),
-        CombineHome(EnvironmentVariable("HOME"), ".android", "avd"),
-        CombineHome(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), ".android", "avd"),
-    }.Where(home => !string.IsNullOrWhiteSpace(home)).Distinct();
-}
-
-bool AndroidAvdRegistrationExists(string name) =>
-    AndroidAvdHomes().Any(home =>
-        System.IO.File.Exists(System.IO.Path.Combine(home, $"{name}.ini")) ||
-        System.IO.Directory.Exists(System.IO.Path.Combine(home, $"{name}.avd")));
-
-bool AndroidAvdIsValid(string name) =>
-    AndroidAvdHomes().Any(home =>
-        System.IO.File.Exists(System.IO.Path.Combine(home, $"{name}.ini")) &&
-        System.IO.File.Exists(System.IO.Path.Combine(home, $"{name}.avd", "config.ini")));
-
-void DeleteAndroidAvd(string name)
-{
-    RunAndroidAvdCommand(
-        "delete",
-        "--home", ANDROID_HOME_PATH,
-        "--name", name);
-    if (AndroidAvdRegistrationExists(name))
-        throw new Exception($"Android AVD command did not delete owned AVD {name}.");
-}
-
-void RunAndroidAvdCommand(params string[] arguments)
-{
-    var start = new System.Diagnostics.ProcessStartInfo("dotnet") {
+    var start = new System.Diagnostics.ProcessStartInfo(IsRunningOnWindows() ? "cmd.exe" : ANDROID_AVD_MANAGER) {
+        RedirectStandardInput = true,
         RedirectStandardOutput = true,
         RedirectStandardError = true,
         UseShellExecute = false,
     };
-    start.ArgumentList.Add("android");
-    start.ArgumentList.Add("avd");
-    foreach (var argument in arguments)
-        start.ArgumentList.Add(argument);
-
+    if (IsRunningOnWindows()) {
+        start.Arguments = AndroidAvdWindowsArguments(ANDROID_AVD_MANAGER, arguments);
+    } else {
+        foreach (var argument in arguments)
+            start.ArgumentList.Add(argument);
+    }
     using var process = System.Diagnostics.Process.Start(start);
     var stdout = process.StandardOutput.ReadToEndAsync();
     var stderr = process.StandardError.ReadToEndAsync();
-    var timedOut = !process.WaitForExit(30000);
-    if (timedOut) {
+    if (arguments[0] == "create")
+        process.StandardInput.WriteLine("no");
+    process.StandardInput.Close();
+    if (!process.WaitForExit(30000)) {
         process.Kill(entireProcessTree: true);
         if (!process.WaitForExit(30000))
-            throw new TimeoutException("Owned Android AVD command did not stop within 30 seconds.");
+            throw new TimeoutException("Owned avdmanager process did not stop within 30 seconds.");
+        throw new TimeoutException("Selected avdmanager did not finish within 30 seconds.");
     }
-
     var output = stdout.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult();
-    var error = stderr.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult();
     Information("{0}", output);
-    Information("{0}", error);
-    if (timedOut)
-        throw new TimeoutException("Owned Android AVD command did not finish within 30 seconds.");
+    Information("{0}", stderr.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult());
     if (process.ExitCode != 0)
-        throw new Exception($"Android AVD command failed with exit code {process.ExitCode}.");
+        throw new Exception($"Selected avdmanager failed with exit code {process.ExitCode}.");
+    return output;
 }
 
 void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Exception originalError)
@@ -266,10 +232,13 @@ void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Except
         ANDROID_EMULATOR_STDERR = null;
         // Never remove an AVD's files while its owned emulator is still running.
         try {
-            // Creation can fail before registering any AVD, so query by exact owned name first.
-            var exists = ownedSerial != null || AndroidAvdRegistrationExists(ownedAvd);
+            // Creation can fail before registering any AVD. Non-compact listing also includes
+            // invalid/partially created AVDs, which must still be removed by their exact name.
+            var namePattern = @"^\s*Name:\s*" + System.Text.RegularExpressions.Regex.Escape(ownedAvd) + @"\s*$";
+            var exists = ownedSerial != null || AndroidAvdCommand("list", "avd").Split('\n').Any(line =>
+                System.Text.RegularExpressions.Regex.IsMatch(line, namePattern));
             if (exists)
-                DeleteAndroidAvd(ownedAvd);
+                AndroidAvdCommand("delete", "avd", "--name", ownedAvd);
             ownedAvd = null;
             ownedSerial = null;
         } catch (Exception error) {
