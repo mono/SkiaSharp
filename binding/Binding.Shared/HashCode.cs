@@ -29,7 +29,10 @@ namespace SkiaSharp
 		private static unsafe uint GenerateGlobalSeed ()
 		{
 			var rnd = new Random ();
+			// The seed only randomizes hash codes between processes, it is not security sensitive.
+#pragma warning disable CA5394 // Do not use insecure randomness
 			var result = rnd.Next ();
+#pragma warning restore CA5394
 			return unchecked((uint)result);
 		}
 

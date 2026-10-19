@@ -179,3 +179,10 @@ dotnet_naming_rule.parameters_should_be_pascal_case.style = camel_case
 dotnet_naming_rule.camel_case_for_private_internal_fields.severity = suggestion
 dotnet_naming_rule.camel_case_for_private_internal_fields.symbols = private_internal_fields
 dotnet_naming_rule.camel_case_for_private_internal_fields.style = camel_case
+
+# CA5394 (do not use insecure randomness) is disabled by default. Enable it for the shipping assemblies so that any
+# new System.Random use has to be justified: use RandomNumberGenerator, or if the value is not security sensitive,
+# suppress the diagnostic with a comment saying why (see binding/Binding.Shared/HashCode.cs).
+# Samples, tests and benchmarks are not covered, they only use Random for deterministic or throwaway data.
+[{binding,source}/**.cs]
+dotnet_diagnostic.CA5394.severity = error
