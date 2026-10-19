@@ -105,7 +105,7 @@ sudo scripts/infra/native/apple/select-xcode.sh "$XCODE_VERSION"
 pwsh scripts/infra/tests/install-appium.ps1
 pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version "$IOS_VERSION"
 dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
-  --iosSimulatorModel="iPhone 16 Pro" \
+  --iosModel="iPhone 16 Pro" \
   --sampleRunId=ios --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
