@@ -39,13 +39,8 @@ Setup(context =>
 
     SetupAndroidEmulator(ref OWNED_ANDROID_AVD, ref OWNED_ANDROID_SERIAL);
 
-    if (OWNED_ANDROID_SERIAL == null) {
-        Information("Using a physical device:");
-        DotNetTool("android device list");
-        return;
-    }
-
-    TakeSnapshot(TEST_RESULTS, "boot-complete");
+    if (OWNED_ANDROID_SERIAL != null)
+        TakeSnapshot(TEST_RESULTS, "boot-complete");
 });
 
 Teardown(context =>

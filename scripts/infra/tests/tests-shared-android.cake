@@ -21,8 +21,11 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         throw new InvalidOperationException("This Cake run already owns an Android emulator.");
 
     var device = TEST_ANDROID_DEVICE.Trim().ToLowerInvariant();
-    if (device == "physical")
+    if (device == "physical") {
+        Information("Using a physical device:");
+        ListAndroidDevices();
         return;
+    }
     if (device != "emulator")
         throw new ArgumentException($"Invalid Android device type '{TEST_ANDROID_DEVICE}'. Expected emulator or physical.");
     if (!System.Text.RegularExpressions.Regex.IsMatch(TEST_ANDROID_IMAGE ?? "",
@@ -93,10 +96,17 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
             }) != 0)
                 throw new Exception($"Failed to disable {setting} on owned Android emulator {ownedSerial}.");
         }
+        ListAndroidDevices();
     } catch (Exception error) {
         TeardownAndroidEmulator(ref ownedAvd, ref ownedSerial, error);
         throw;
     }
+}
+
+void ListAndroidDevices()
+{
+    Information("Available Android devices:");
+    DotNetTool("android device list");
 }
 
 void WaitForAndroidBoot(string ownedSerial)
