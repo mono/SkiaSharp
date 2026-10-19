@@ -77,6 +77,7 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         };
         foreach (var argument in new[] {
             "-avd", ownedAvd, "-port", port.ToString(), "-gpu", gpu,
+            "-partition-size", "4096",
             "-no-window", "-no-snapshot", "-no-audio", "-no-boot-anim", "-show-kernel",
             "-camera-back", "none", "-camera-front", "none",
         })
@@ -157,7 +158,19 @@ void AssertOwnedAndroidEmulator(string ownedAvd, string ownedSerial)
         Timeout = 30000,
     };
     var exit = StartProcess(ANDROID_ADB, settings, out var stdout);
-    if (exit != 0 || !stdout.Any(line => line.Trim().Equals(ownedAvd, StringComparison.Ordinal)))
+    if (exit != 0)
+        throw new Exception($"The exact serial {ownedSerial} did not identify owned AVD {ownedAvd}.");
+
+    var identity = stdout.Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
+    if (identity.Length == 0) {
+        settings.Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
+            .Append("shell getprop ro.boot.qemu.avd_name");
+        exit = StartProcess(ANDROID_ADB, settings, out stdout);
+        identity = stdout.Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
+    }
+
+    if (exit != 0 || identity.Length != 1 ||
+        !identity[0].Equals(ownedAvd, StringComparison.Ordinal))
         throw new Exception($"The exact serial {ownedSerial} did not identify owned AVD {ownedAvd}.");
 }
 
