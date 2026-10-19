@@ -78,7 +78,14 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		TestContext.Current.TestOutputHelper?.WriteLine(
 			$"iOS runtime: {Driver.Capabilities.GetCapability("platformVersion")}; golden profile: {DeviceProfile}.");
 
-		// Normalize only the session's simulator chrome; retain the full canvas capture.
+		// Simulator defaults can inherit accessibility and appearance settings from
+		// the host. Normalize both before capturing system chrome with the canvas.
+		Driver.ExecuteScript("mobile: setAppearance",
+			new Dictionary<string, object> { ["style"] = "light" });
+		Driver.ExecuteScript("mobile: setIncreaseContrast",
+			new Dictionary<string, object> { ["increaseContrast"] = "disabled" });
+
+		// Normalize only the session's simulator status bar; retain the full canvas capture.
 		var status = Assert.IsAssignableFrom<IDictionary<string, object>>(
 			Driver.ExecuteScript("mobile: simctl", new Dictionary<string, object>
 			{
