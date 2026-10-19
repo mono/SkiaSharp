@@ -14,10 +14,11 @@ parameters:
   - name: androidDevices
     type: object
     default:
-      # Vulkan is required on Android and was introduced in API 24.
+      # Vulkan is required on Android; API 29 is the oldest emulator image where
+      # the full Ganesh and Graphite Vulkan suite is viable on hosted agents.
       - name: oldest
-        displayName: Android (API 24)
-        image: 'android-24;google_apis'
+        displayName: Android (API 29)
+        image: 'android-29;google_apis'
         model: Nexus 5X
       # API 36 is the newest google_apis system image currently available.
       - name: latest
