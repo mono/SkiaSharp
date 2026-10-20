@@ -31,9 +31,11 @@ Setup(context =>
         // Android IL linking is very memory-intensive and running it concurrently with the
         // emulator can cause OOM on CI agents.
         Information("Pre-building Android test project...");
-        RunDotNetBuild(csproj, configuration: "Release", properties: new Dictionary<string, string> {
+        var properties = new Dictionary<string, string> {
             { "TargetFramework", "net10.0-android" },
-        });
+        };
+        AddGpuOptOut(properties);
+        RunDotNetBuild(csproj, configuration: "Release", properties: properties);
         Information("Pre-build complete.");
     }
 
