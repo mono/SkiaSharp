@@ -15,15 +15,11 @@ parameters:
         version: '18.6'
         model: iPhone 16 Pro
         installRuntime: true
-        runInternal: true
-      - name: ios26_3_1
-        displayName: iOS 26.3.1
-        version: '26.3.1'
+      - name: ios26_2
+        displayName: iOS 26.2
+        version: '26.2'
         model: iPhone 16 Pro
         installRuntime: true
-        # The internal macOS 15 image selects Xcode 26.3, whose runtime catalog
-        # does not offer 26.3.1. Public CI selects the supported newer Xcode.
-        runInternal: false
 
 stages:
 
@@ -50,16 +46,15 @@ stages:
             buildAgent: ${{ parameters.buildAgentLinux }}
 
         - ${{ each ios in parameters.iosSimulators }}:
-          - ${{ if or(ne(variables['System.TeamProject'], 'internal'), eq(ios.runInternal, true)) }}:
-            - template: /scripts/azure-templates-jobs-sample-appium.yml@self
-              parameters:
-                name: samples_appium_${{ ios.name }}
-                displayName: Appium (${{ ios.displayName }})
-                buildAgent: ${{ parameters.buildAgentMac }}
-                additionalArgs: --runGroup=Ios --iosVersion=${{ ios.version }} --iosModel="${{ ios.model }}" --skipExternals="all"
-                preBuildSteps:
-                  - ${{ if eq(ios.installRuntime, true) }}:
-                    - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ ios.version }}'
-                      displayName: Install the selected iOS simulator runtime
-                  - pwsh: ./scripts/infra/tests/install-appium.ps1
-                    displayName: Install Appium 3 and XCUITest
+          - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+            parameters:
+              name: samples_appium_${{ ios.name }}
+              displayName: Appium (${{ ios.displayName }})
+              buildAgent: ${{ parameters.buildAgentMac }}
+              additionalArgs: --runGroup=Ios --iosVersion=${{ ios.version }} --iosModel="${{ ios.model }}" --skipExternals="all"
+              preBuildSteps:
+                - ${{ if eq(ios.installRuntime, true) }}:
+                  - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ ios.version }}'
+                    displayName: Install the selected iOS simulator runtime
+                - pwsh: ./scripts/infra/tests/install-appium.ps1
+                  displayName: Install Appium 3 and XCUITest

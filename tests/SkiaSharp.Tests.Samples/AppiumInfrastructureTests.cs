@@ -61,7 +61,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 
 	[Theory]
 	[InlineData("18.6")]
-	[InlineData("26.3.1")]
+	[InlineData("26.2")]
 	public void IosGoldenProfileUsesTheSelectedRuntime(string version)
 	{
 		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", version);
@@ -82,7 +82,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	{
 		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", version);
 		var expected = AppiumSampleRunTestBase.Expected(profile, name, "Maui");
-		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.3.1", "basic-cpu", "Maui");
+		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.2", "basic-cpu", "Maui");
 		Assert.True(File.Exists(actual));
 		Assert.False(File.Exists(expected));
 
@@ -189,8 +189,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[Theory]
 	[InlineData("18.6", true)]
 	[InlineData("18.6", false)]
-	[InlineData("26.3.1", true)]
-	[InlineData("26.3.1", false)]
+	[InlineData("26.2", true)]
+	[InlineData("26.2", false)]
 	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(string version, bool horizontal)
 	{
 		var references = Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",

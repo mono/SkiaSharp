@@ -99,7 +99,7 @@ After staging packages, select one of the runtimes from the
 [sample stage](../../scripts/azure-templates-stages-samples.yml):
 
 ```sh
-IOS_VERSION=26.3.1
+IOS_VERSION=26.2
 sudo scripts/infra/native/apple/select-xcode.sh "$XCODE_VERSION"
 pwsh scripts/infra/tests/install-appium.ps1
 pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version "$IOS_VERSION"
