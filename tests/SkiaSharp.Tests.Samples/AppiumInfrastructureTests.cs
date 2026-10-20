@@ -373,7 +373,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 				"Appium", family, "Android", "pixel_9", image, "basic-cpu.png"), expected);
 			var missing = AppiumSampleRunTestBase.Expected(profile, "unit-fixture-not-reviewed", family, "Android");
 			Assert.False(File.Exists(missing));
-			var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.3.1", "basic-cpu", "Maui");
+			var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.2", "basic-cpu", "Maui");
 			var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, missing));
 			Assert.Contains($"Missing reviewed sample golden: {missing}", failure.Message);
 			Assert.False(File.Exists(missing));
@@ -427,7 +427,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	{
 		List<Exception> failures = [];
 		List<string> order = [];
-		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.3.1", "basic-cpu", "Maui");
+		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.2", "basic-cpu", "Maui");
 		var expected = AppiumSampleRunTestBase.Expected("unit-fixture/not-reviewed", "missing", "Maui", "Android");
 		foreach (var phase in new[] { "blank", "strokes", "clear" })
 		{
