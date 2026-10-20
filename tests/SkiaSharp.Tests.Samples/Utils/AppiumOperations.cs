@@ -350,8 +350,39 @@ internal abstract class AppiumOperations
 
 	// Captures
 
-	internal string Capture(string id, string name) =>
-		SaveCapture(((ITakesScreenshot)Find(id)).GetScreenshot().AsByteArray, name);
+	internal string Capture(string id, string name, int cropBottomPixels = 0)
+	{
+		var png = ((ITakesScreenshot)Find(id)).GetScreenshot().AsByteArray;
+		if (cropBottomPixels > 0)
+			png = CropBottom(png, cropBottomPixels);
+		return SaveCapture(png, name);
+	}
+
+	internal string CropReference(string path, int cropBottomPixels)
+	{
+		var output = Path.Combine(App.Workspace.DiagnosticsRoot, "references", Path.GetFileName(path));
+		Directory.CreateDirectory(Path.GetDirectoryName(output)!);
+		File.WriteAllBytes(output, CropBottom(File.ReadAllBytes(path), cropBottomPixels));
+		return output;
+	}
+
+	internal static byte[] CropBottom(byte[] png, int pixels)
+	{
+		ArgumentNullException.ThrowIfNull(png);
+		using var source = SKBitmap.Decode(png);
+		if (source is null)
+			throw new ArgumentException("Expected a decodable PNG image.", nameof(png));
+		ArgumentOutOfRangeException.ThrowIfLessThan(pixels, 1);
+		ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(pixels, source.Height);
+
+		using var cropped = new SKBitmap(
+			source.Width, source.Height - pixels, source.ColorType, source.AlphaType);
+		using (var canvas = new SKCanvas(cropped))
+			canvas.DrawBitmap(source, 0, 0);
+		using var image = SKImage.FromBitmap(cropped);
+		using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+		return data.ToArray();
+	}
 
 	internal string SaveCapture(byte[] png, string name)
 	{

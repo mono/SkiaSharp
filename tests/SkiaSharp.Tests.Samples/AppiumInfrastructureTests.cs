@@ -166,6 +166,26 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		Assert.Throws<ArgumentException>(() => app.Operations.SaveCapture([], "../foreign"));
 	}
 
+	[Fact]
+	public void NativeCaptureCropRemovesOnlyTheSystemBottomBand()
+	{
+		using var source = new SKBitmap(3, 4);
+		source.Erase(SKColors.Red);
+		for (var x = 0; x < source.Width; x++)
+			source.SetPixel(x, source.Height - 1, SKColors.Blue);
+		using var image = SKImage.FromBitmap(source);
+		using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+
+		var croppedBytes = AppiumOperations.CropBottom(data.ToArray(), 1);
+		using var cropped = SKBitmap.Decode(croppedBytes);
+		Assert.NotNull(cropped);
+		Assert.Equal(3, cropped.Width);
+		Assert.Equal(3, cropped.Height);
+		Assert.All(cropped.Pixels, color => Assert.Equal(SKColors.Red, color));
+		Assert.Throws<ArgumentOutOfRangeException>(() => AppiumOperations.CropBottom(data.ToArray(), 0));
+		Assert.Throws<ArgumentOutOfRangeException>(() => AppiumOperations.CropBottom(data.ToArray(), 4));
+	}
+
 	[Theory]
 	[InlineData("18.6", true)]
 	[InlineData("18.6", false)]

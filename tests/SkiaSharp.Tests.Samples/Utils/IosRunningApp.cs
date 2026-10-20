@@ -79,14 +79,14 @@ internal sealed class IosRunningApp : AppiumRunningApp
 			$"iOS runtime: {Driver.Capabilities.GetCapability("platformVersion")}; golden profile: {DeviceProfile}.");
 
 		// Simulator defaults can inherit accessibility and appearance settings from
-		// the host. Increased contrast keeps the captured home indicator at the
-		// stable high-contrast opacity used by the reviewed native references.
+		// the host. Normalize both before capturing system chrome with the canvas.
 		Driver.ExecuteScript("mobile: setAppearance",
 			new Dictionary<string, object> { ["style"] = "light" });
 		Driver.ExecuteScript("mobile: setIncreaseContrast",
-			new Dictionary<string, object> { ["increaseContrast"] = "enabled" });
+			new Dictionary<string, object> { ["increaseContrast"] = "disabled" });
 
-		// Normalize only the session's simulator status bar; retain the full canvas capture.
+		// Normalize only the session's simulator status bar. Native comparisons separately
+		// exclude the system-owned home-indicator band from otherwise full canvas captures.
 		var status = Assert.IsAssignableFrom<IDictionary<string, object>>(
 			Driver.ExecuteScript("mobile: simctl", new Dictionary<string, object>
 			{
