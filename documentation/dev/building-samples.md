@@ -92,12 +92,11 @@ Filtered runs do not replace the full suite.
 ## iOS simulator runs
 
 The `Ios` group runs Basic MAUI, native iOS and Gallery MAUI samples on macOS
-using Appium and XCUITest. Install Node.js and the SDK, workloads and Xcode specified
-in the [shared CI variables](../../scripts/azure-templates-variables.yml).
-Multi-target projects need their restore workloads even when building only iOS.
+using Appium and XCUITest. Install Node.js and the SDK, workloads and Xcode from
+the [shared CI variables](../../scripts/azure-templates-variables.yml).
 
-After staging packages, set `XCODE_VERSION` and `IOS_VERSION` from the
-[sample stage configuration](../../scripts/azure-templates-stages-samples.yml):
+After staging packages, select one of the runtimes from the
+[sample stage](../../scripts/azure-templates-stages-samples.yml):
 
 ```sh
 IOS_VERSION=26.3.1
@@ -112,24 +111,19 @@ dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
 Use your staged packages' suffix, not the example suffix. Each runtime uses its
 matching numeric reference folder. Missing or mismatched references fail without fallback.
 
-Cake owns and cleans up only the simulator it creates. Each test owns its Appium
-server/session, not the shared simulator. `samples-generate` starts neither.
-
 For IDE or direct runs, use `TEST_IOS_SIMULATOR_VERSION` and
 `TEST_IOS_SIMULATOR_MODEL` for selection, and `TEST_IOS_SIMULATOR_UDID` to target
 an already-running simulator you manage.
 
-Inspect TRX attachments or CI's `samples_appium_*_logs` artifacts for logs,
-UI hierarchy and screenshots. Test output reports the runtime and reference profile.
+Cake cleans up the simulator it creates. Inspect TRX attachments or CI's
+`samples_appium_*_logs` artifacts for logs, UI hierarchy and screenshots.
 
 ### Updating references
 
 References are in `tests/SkiaSharp.Tests.Samples/Expected/Appium/<Maui|Native>/iOS/<model>/`.
-Review actual/diff captures before replacing an intentional change in a version folder
-with the corresponding actual canvas PNG from TRX attachments (remove its sequence
-prefix). Do not use full-screen diagnostics or animated GPU captures.
-Rerun all configured profiles against the same packages, and record the runtime,
-package build and reason in the PR.
+Review actual/diff captures before replacing an intentional change. Use the
+canvas PNG from the TRX attachment, not full-screen diagnostics or animated GPU
+captures, then rerun every configured profile against the same package build.
 
 ## Coverage and diagnostics
 

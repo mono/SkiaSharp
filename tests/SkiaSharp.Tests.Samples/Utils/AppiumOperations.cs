@@ -378,7 +378,7 @@ internal abstract class AppiumOperations
 		using var cropped = new SKBitmap(
 			source.Width, source.Height - pixels, source.ColorType, source.AlphaType);
 		using (var canvas = new SKCanvas(cropped))
-			canvas.DrawBitmap(source, 0, 0);
+			canvas.DrawBitmap(source, SKRect.Create(source.Width, source.Height), SKSamplingOptions.Default);
 		using var image = SKImage.FromBitmap(cropped);
 		using var data = image.Encode(SKEncodedImageFormat.Png, 100);
 		return data.ToArray();

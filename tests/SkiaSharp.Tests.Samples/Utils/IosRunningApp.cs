@@ -113,10 +113,7 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		List<Exception> failures = [];
 		if (HasDriver)
 		{
-			// Resolve the pinned local Apple tool from the repository manifest.
-			await Attempt(failures, async () => await CaptureCommand(ProcessRunner.Run(
-				"dotnet", ["apple", "simulator", "list", "--format", "json"],
-				Repo.RootDir, TimeSpan.FromSeconds(30))));
+			await Attempt(failures, async () => await CaptureCommand(Apple.ListSimulators()));
 			await Attempt(failures, () => SaveText("device.log",
 				string.Join(Environment.NewLine, Driver.Manage().Logs.GetLog("syslog"))));
 		}
