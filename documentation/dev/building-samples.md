@@ -185,58 +185,44 @@ captures, then rerun every configured profile against the same package build.
 
 ## Android emulator runs
 
-The `Android` group runs Basic MAUI, native Android (CPU, GPU Surface/Texture and
-Drawing navigation), MAUI Drawing strokes/Clear and Gallery MAUI using UiAutomator2.
-Use the SDK/workloads and JDK from [shared CI variables](../../scripts/azure-templates-variables.yml)
-and the exact OS version, image and model from one of the two
-[Android sample CI legs](../../scripts/azure-templates-stages-samples.yml).
-Node.js, `adb`, emulator and command-line tools must already be installed.
-The standard Linux workloads include `android` and `maui-android`.
+The `Android` group runs Basic MAUI, native Android and Gallery MAUI with
+Appium/UiAutomator2. Install Node.js and the SDK, JDK, workloads, compile platforms
+and emulator tools specified by the
+[Android CI legs](../../scripts/azure-templates-stages-samples.yml).
+Use one complete OS/image/model profile from that configuration.
+Headless Linux requires `libpulse0` and KVM access.
 
-After staging the same producing package cohort used above:
+After staging packages, set the selected SDK's absolute `ANDROID_HOME` and
+`ANDROID_SDK_MANAGER_PATH` in your shell:
 
 ```sh
 # Set these to one complete profile from the sample stage configuration.
 export TEST_ANDROID_VERSION="<OS version>" TEST_ANDROID_IMAGE="<image>" TEST_ANDROID_MODEL="<model>"
-pwsh scripts/infra/managed/install-openjdk.ps1 -Version "$OPENJDK_VERSION"
-pwsh scripts/infra/managed/install-android-sdk.ps1
-pwsh scripts/infra/managed/install-android-package.ps1 -Package emulator
 pwsh scripts/infra/managed/install-android-image.ps1 -Image "$TEST_ANDROID_IMAGE"
 pwsh scripts/infra/tests/install-appium.ps1 -Platform Android
 dotnet cake --target=samples --runGroup=Android \
   --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-Use the selected SDK's absolute `ANDROID_HOME` and `ANDROID_SDK_MANAGER_PATH`
-in your shell; provisioning scripts publish these for CI but cannot export them
-back to a calling shell. Install its platform/build tools and compile platforms
-as shown in the CI legs. Headless Linux also requires `libpulse0` and KVM access;
-CI uses `scripts/infra/tests/configure-emulators.sh`.
-
-Cake creates a uniquely named AVD on an unused port, passes its exact serial to
-the runner, and attempts only owned-device shutdown and deletion after failures.
-It never reuses an existing AVD. Appium owns each built signed APK's installed
-state, server and session; it does not own Cake's emulator or the shared adb server.
-Neither `samples-generate` nor helper tests start devices.
+Use your packages' suffix, not the example suffix. Provisioning scripts publish
+SDK paths for CI but cannot export them back to a calling shell.
+Cake creates and cleans up only its unique AVD/process; each test owns its
+Appium server/session and installed APK. `samples-generate` starts neither.
 
 For direct/IDE runs, explicitly set the same three `TEST_ANDROID_*` profile
 variables and optionally `TEST_ANDROID_UDID` for a device you manage.
-Without a UDID, direct runs leave device selection to the driver; Cake never does.
-Diagnostics target only Cake's serial or the established session's UDID.
+Without a UDID, direct runs leave device selection to the driver.
 
 Android references route to
-`Expected/Appium/<Maui|Native>/Android/<model>/<image>/`. Review actual CI captures
-for the exact profile before adding references. Missing or mismatched references
-fail without fallback to iOS or another image; tests never accept or copy them.
-Animated Basic GPU pages require FPS and retain captures rather
-than compare animated goldens; Gallery's static GPU gradient remains strict.
+`Expected/Appium/<Maui|Native>/Android/<model>/<image>/`. Review exact-profile
+captures before adding references; missing or mismatched references fail without
+fallback or automatic acceptance. Animated Basic GPU pages require FPS and retain
+captures; Gallery's static GPU gradient uses strict comparison.
 
 For a diagnostic capture-review run, explicitly set
-`TEST_ANDROID_CAPTURE_REVIEW=true` (or queue CI with that variable). This keeps
-ordered captures and retains only image/region assertion failures until the end
-of each scenario; the run still fails and is labeled diagnostic in test output.
-Interaction, capture and infrastructure failures stop immediately.
-Unset it for the default fail-fast comparison behavior. iOS remains unchanged.
+`TEST_ANDROID_CAPTURE_REVIEW=true`. Image/region assertions are collected until
+scenario end so one failing run can retain the full review set. Interaction,
+capture and infrastructure failures still stop immediately.
 
 ## Coverage and diagnostics
 

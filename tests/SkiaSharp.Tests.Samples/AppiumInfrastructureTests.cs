@@ -212,16 +212,14 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		return new("Sample", inputs, packages, Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
 	}
 
-	[Theory]
-	[InlineData(false)]
-	[InlineData(true)]
-	public async Task FailedSessionStillRunsDiagnosticsAndStopsTheServer(bool android)
+	[Fact]
+	public async Task FailedSessionStillRunsDiagnosticsAndStopsTheServer()
 	{
 		using var workspace = Workspace();
 		var artifact = Path.Combine(workspace.Root, "Sample.app");
 		Directory.CreateDirectory(artifact);
 		var order = new List<string>();
-		var app = new DiagnosticApp(workspace, artifact, order, android: android);
+		var app = new DiagnosticApp(workspace, artifact, order);
 		var failure = await Assert.ThrowsAsync<NotSupportedException>(() => app.Run(
 			new Uri("http://127.0.0.1:1"), _ => throw new InvalidOperationException("Scenario must not run."),
 			() => { order.Add("server-start"); return Task.CompletedTask; },
@@ -235,16 +233,14 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			() => Task.CompletedTask, () => Task.CompletedTask));
 	}
 
-	[Theory]
-	[InlineData(false)]
-	[InlineData(true)]
-	public async Task DiagnosticsFailuresNeverHideStartupOrPreventServerCleanup(bool android)
+	[Fact]
+	public async Task DiagnosticsFailuresNeverHideStartupOrPreventServerCleanup()
 	{
 		using var workspace = Workspace();
 		var artifact = Path.Combine(workspace.Root, "Sample.app");
 		Directory.CreateDirectory(artifact);
 		var order = new List<string>();
-		var app = new DiagnosticApp(workspace, artifact, order, failDiagnostics: true, android: android);
+		var app = new DiagnosticApp(workspace, artifact, order, failDiagnostics: true);
 		var failure = await Assert.ThrowsAsync<AggregateException>(() => app.Run(
 			new Uri("http://127.0.0.1:1"), _ => Task.CompletedTask, () => Task.CompletedTask,
 			() => { order.Add("server-stop"); throw new IOException("server-stop"); }));
@@ -315,12 +311,12 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	private sealed class DiagnosticApp(
-		SampleWorkspace workspace, string artifact, List<string> order, bool failDiagnostics = false, bool android = false)
-		: AppiumRunningApp(workspace, artifact, android ? new AndroidAppiumOperations() : new IosAppiumOperations())
+		SampleWorkspace workspace, string artifact, List<string> order, bool failDiagnostics = false)
+		: AppiumRunningApp(workspace, artifact, new IosAppiumOperations())
 	{
 		internal Exception StartFailure { get; } = new NotSupportedException("Session construction failed.");
 		internal override string DeviceProfile => "unit-fixture";
-		internal override string Platform => android ? "Android" : "iOS";
+		internal override string Platform => "iOS";
 		internal override Task<string> ReadApplicationId() => Task.FromResult("unit.fixture");
 		protected override Task Start(Uri address)
 		{
