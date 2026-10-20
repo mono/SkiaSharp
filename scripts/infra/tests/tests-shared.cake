@@ -15,6 +15,14 @@
 
 var SKIP_GPU = Argument("skipGpu", EnvironmentVariable("SKIASHARP_TEST_SKIP_GPU") ?? "");
 
+bool IsCakeListingCommand()
+{
+    // Cake 4 still invokes Setup/Teardown in a dry run and does not set IsDryRun().
+    var listingOptions = new[] { "--showdescription", "--dryrun", "--noop", "--whatif" };
+    return System.Environment.GetCommandLineArgs().Any(arg =>
+        listingOptions.Contains(arg.Split('=')[0], StringComparer.OrdinalIgnoreCase));
+}
+
 // GpuPolicy accepts comma, semicolon or whitespace separators; normalise to the one form the
 // MSBuild property path survives. Cake's DotNetMSBuildSettings quotes the value, so a comma-joined
 // list arrives intact — a raw /p: on a command line would not, since MSBuild splits that switch on
