@@ -12,12 +12,9 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var RUN_GROUP = Argument("runGroup", "");
-var RUN_ID = Argument("sampleRunId", "");
 var RUN_GROUPS = new[] { "Build", "Host", "Docker", "Android", "Ios", "Mac", "Windows" };
 if (!string.IsNullOrEmpty(RUN_GROUP) && !RUN_GROUPS.Contains(RUN_GROUP))
     throw new ArgumentException($"Unknown sample run group '{RUN_GROUP}'. Expected {string.Join(", ", RUN_GROUPS)}.");
-if (!string.IsNullOrEmpty(RUN_ID) && RUN_ID.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-' && c != '_'))
-    throw new ArgumentException("sampleRunId must contain only ASCII letters, digits, '-' or '_'.");
 
 string OWNED_IOS_SIMULATOR = null;
 
@@ -62,7 +59,7 @@ Task ("samples")
     .Description ("Build generated samples and test their Docker applications.")
     .Does (() =>
 {
-    var results = ROOT_PATH.Combine($"output/logs/testlogs/samples/{(string.IsNullOrEmpty(RUN_ID) ? DATE_TIME_STR : RUN_ID + "/" + DATE_TIME_STR)}");
+    var results = ROOT_PATH.Combine($"output/logs/testlogs/samples/{DATE_TIME_STR}");
 
     // Consumer commands own their timeouts; MTP's activity monitor misdetects these process trees.
     RunDotNetTest(ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj"),
