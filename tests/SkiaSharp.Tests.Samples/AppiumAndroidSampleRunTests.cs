@@ -10,9 +10,6 @@ namespace SkiaSharp.Tests.Samples;
 [Trait("Category", "Golden")]
 public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSampleRunTestBase
 {
-	private static bool CaptureReview =>
-		bool.Parse(Environment.GetEnvironmentVariable("TEST_ANDROID_CAPTURE_REVIEW") ?? "false");
-
 	[Fact]
 	[RunGroup(SampleRunGroup.Android)]
 	[Trait("Platform", "Android")]
@@ -24,7 +21,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 			new("CPU", "basic-canvas-cpu", "basic-cpu"),
 			new("GPU", "basic-canvas-gpu", "basic-gpu-smoke", new("basic-gpu-fps", HasFps), Animated: true),
 			new("Drawing", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
-		], NavigateMauiAndroid, captureReview: CaptureReview));
+		], NavigateMauiAndroid));
 	}
 
 	[Fact]
@@ -39,7 +36,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 			new("nav_gpu_surface", "gpuSurfaceCanvas", "basic-gpu-surface-smoke", new("fpsLabel", HasFps), Animated: true),
 			new("nav_gpu_texture", "gpuTextureCanvas", "basic-gpu-texture-smoke", new("fpsLabel", HasFps), Animated: true),
 			new("nav_drawing", "skiaView", "basic-drawing-page", new("btnClear"))
-		], (operations, id) => operations.Click(id), captureReview: CaptureReview));
+		], (operations, id) => operations.Click(id)));
 	}
 
 	[Fact]
@@ -48,7 +45,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 	public async Task BasicMauiAndroidDrawing()
 	{
 		var app = await BuildAndroidApp("Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj");
-		await appium.Run(app, running => MauiDrawing(running.Operations, NavigateMauiAndroid, captureReview: CaptureReview));
+		await appium.Run(app, running => MauiDrawing(running.Operations, NavigateMauiAndroid));
 	}
 
 	[Fact]
@@ -57,7 +54,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 	public async Task GalleryMauiAndroid()
 	{
 		var app = await BuildAndroidApp("Gallery", "Maui/SkiaSharpSample.Maui.csproj");
-		await appium.Run(app, running => Gallery(running.Operations, captureReview: CaptureReview));
+		await appium.Run(app, running => Gallery(running.Operations));
 	}
 
 	private async Task<AndroidRunningApp> BuildAndroidApp(string folder, string project)

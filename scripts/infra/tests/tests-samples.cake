@@ -13,7 +13,6 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var RUN_GROUP = Argument("runGroup", "");
-var TEST_ANDROID_VERSION = Argument("androidVersion", EnvironmentVariable("TEST_ANDROID_VERSION") ?? "");
 var RUN_GROUPS = new[] { "Build", "Host", "Docker", "Android", "Ios", "Mac", "Windows" };
 var APPIUM_RUN_GROUPS = new[] { "Ios" };
 if (!string.IsNullOrEmpty(RUN_GROUP) && !RUN_GROUPS.Contains(RUN_GROUP))
@@ -40,7 +39,6 @@ void SetupSampleDevices()
     }
     if (APPIUM_RUN_GROUPS.Contains("Android") && (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Android")) {
         SetupAndroidEmulator(ref OWNED_ANDROID_AVD, ref OWNED_ANDROID_SERIAL);
-        Environment.SetEnvironmentVariable("TEST_ANDROID_VERSION", TEST_ANDROID_VERSION);
         Environment.SetEnvironmentVariable("TEST_ANDROID_IMAGE", TEST_ANDROID_IMAGE);
         Environment.SetEnvironmentVariable("TEST_ANDROID_MODEL", TEST_ANDROID_MODEL);
         Environment.SetEnvironmentVariable("TEST_ANDROID_UDID", OWNED_ANDROID_SERIAL);

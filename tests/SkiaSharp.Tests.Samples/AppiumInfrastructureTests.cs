@@ -360,11 +360,11 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Theory]
-	[InlineData("8.0", "android-26;google_apis")]
-	[InlineData("17", "android-37.1;google_apis_ps16k")]
-	public void AndroidGoldenProfilesRouteOnlyToTheirExactPlatformAndImage(string version, string image)
+	[InlineData("android-26;google_apis")]
+	[InlineData("android-37.1;google_apis_ps16k")]
+	public void AndroidGoldenProfilesRouteOnlyToTheirExactPlatformAndImage(string image)
 	{
-		var profile = AndroidRunningApp.ReferenceProfile("pixel_9", version, image);
+		var profile = AndroidRunningApp.ReferenceProfile("pixel_9", image);
 		Assert.Equal($"pixel_9/{image}", profile);
 		foreach (var family in new[] { "Maui", "Native" })
 		{
@@ -381,27 +381,25 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Theory]
-	[InlineData(null, "8.0", "android-26;google_apis")]
-	[InlineData("pixel_9", null, "android-26;google_apis")]
-	[InlineData("pixel_9", "latest", "android-26;google_apis")]
-	[InlineData("pixel_9", "8.0", null)]
-	[InlineData("pixel_9", "8.0", "latest")]
-	[InlineData("../pixel_9", "8.0", "android-26;google_apis")]
-	[InlineData("pixel_9", "8.0", "android-26;google_apis/foreign")]
-	public void AndroidRequiresAnExplicitSafeProfile(string? model, string? version, string? image) =>
-		Assert.Throws<InvalidOperationException>(() => AndroidRunningApp.ReferenceProfile(model, version, image));
+	[InlineData(null, "android-26;google_apis")]
+	[InlineData("pixel_9", null)]
+	[InlineData("pixel_9", "latest")]
+	[InlineData("../pixel_9", "android-26;google_apis")]
+	[InlineData("pixel_9", "android-26;google_apis/foreign")]
+	public void AndroidRequiresAnExplicitSafeProfile(string? model, string? image) =>
+		Assert.Throws<InvalidOperationException>(() => AndroidRunningApp.ReferenceProfile(model, image));
 
 	[Theory]
-	[InlineData("com.skiasharp.built")]
-	[InlineData(" com.skiasharp.built\n")]
-	public void AndroidIdentityUsesTheBuiltApkAnalyzerOutput(string output) =>
+	[InlineData("<manifest package=\"com.skiasharp.built\" />")]
+	[InlineData("<?xml version=\"1.0\"?><manifest package=\"com.skiasharp.built\"><application /></manifest>")]
+	public void AndroidIdentityUsesTheBuiltApkManifest(string output) =>
 		Assert.Equal("com.skiasharp.built", AndroidRunningApp.ParseApplicationId(output));
 
 	[Theory]
-	[InlineData("")]
-	[InlineData("com.skiasharp.built\ncom.foreign.app")]
-	[InlineData("package: name='com.skiasharp.built'")]
-	[InlineData("com.skiasharp/foreign")]
+	[InlineData("<manifest />")]
+	[InlineData("<manifest package=\"com.skiasharp/foreign\" />")]
+	[InlineData("<manifest package=\"com.skiasharp.built&#10;com.foreign.app\" />")]
+	[InlineData("<application package=\"com.skiasharp.built\" />")]
 	public void AndroidRejectsInvalidOrAmbiguousApkIdentity(string output) =>
 		Assert.Throws<InvalidOperationException>(() => AndroidRunningApp.ParseApplicationId(output));
 
@@ -423,70 +421,16 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Fact]
-	public void CaptureReviewRetainsEachImageAndRegionAssertionUntilScenarioEnd()
+	public void MissingReferenceTransformationPreservesStrictValidationAndActualCapture()
 	{
-		List<Exception> failures = [];
-		List<string> order = [];
+		using var workspace = Workspace();
+		var app = new AndroidRunningApp(workspace, Path.Combine(workspace.Root, "Built-Signed.apk"));
+		var expected = Path.Combine(workspace.Root, "not-reviewed", "canvas.png");
+		Assert.Equal(expected, app.Operations.TransformReference(expected));
 		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.2", "basic-cpu", "Maui");
-		var expected = AppiumSampleRunTestBase.Expected("unit-fixture/not-reviewed", "missing", "Maui", "Android");
-		foreach (var phase in new[] { "blank", "strokes", "clear" })
-		{
-			var captured = AppiumSampleRunTestBase.CaptureAndCheck(
-				() => { order.Add($"capture-{phase}"); return actual; },
-				file => SampleImage.Validate(file, expected), failures);
-			if (phase != "blank")
-				AppiumSampleRunTestBase.CheckImage(
-					() => AppiumSampleRunTestBase.AssertDrawingStrokeRegions(captured, expected), failures);
-			order.Add($"after-{phase}");
-		}
-		Assert.Equal(new[] { "capture-blank", "after-blank", "capture-strokes", "after-strokes", "capture-clear", "after-clear" }, order);
-		var failure = Assert.Throws<AggregateException>(() => FailureHandling.ThrowFailures(failures));
-		Assert.Equal(5, failure.InnerExceptions.Count);
-		Assert.All(failure.InnerExceptions, error => Assert.Contains($"Missing reviewed sample golden: {expected}", error.Message));
+		var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
+		Assert.Contains("Missing reviewed sample golden:", failure.Message);
 		Assert.False(File.Exists(expected));
-	}
-
-	[Fact]
-	public void NormalImageValidationFailsFastWithoutCollectingAssertions()
-	{
-		var continued = false;
-		Assert.ThrowsAny<Xunit.Sdk.XunitException>(() =>
-		{
-			AppiumSampleRunTestBase.CaptureAndCheck(() => "captured.png", _ => Assert.Fail("strict mismatch"), null);
-			continued = true;
-		});
-		Assert.False(continued);
-	}
-
-	[Theory]
-	[InlineData(false)]
-	[InlineData(true)]
-	public void CaptureReviewNeverRetainsInteractionOrCaptureAssertions(bool duringCapture)
-	{
-		List<Exception> failures = [];
-		var fatal = new Xunit.Sdk.XunitException(duringCapture ? "capture failed" : "interaction failed");
-		var continued = false;
-		var failure = Assert.Throws<Xunit.Sdk.XunitException>(() =>
-		{
-			AppiumSampleRunTestBase.CheckImage(() => Assert.Fail("earlier comparison mismatch"), failures);
-			if (duringCapture)
-				AppiumSampleRunTestBase.CaptureAndCheck(() => throw fatal, _ => Assert.Fail("must not validate"), failures);
-			else
-				throw fatal;
-			continued = true;
-		});
-		Assert.Same(fatal, failure);
-		Assert.Single(failures);
-		Assert.False(continued);
-	}
-
-	[Fact]
-	public void CaptureReviewNeverRetainsNonAssertionValidationErrors()
-	{
-		List<Exception> failures = [];
-		Assert.Throws<IOException>(() => AppiumSampleRunTestBase.CaptureAndCheck(
-			() => "captured.png", _ => throw new IOException("comparison infrastructure failed"), failures));
-		Assert.Empty(failures);
 	}
 
 	[Fact]

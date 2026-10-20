@@ -167,11 +167,19 @@ void AssertOwnedAndroidEmulator(string ownedAvd, string ownedSerial)
             .Append("shell getprop ro.boot.qemu.avd_name");
         exit = StartProcess(ANDROID_ADB, settings, out stdout);
         identity = stdout.Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
+        if (exit == 0 && identity.Length == 0) {
+            // Older images publish the same exact AVD name under the legacy kernel prefix.
+            settings.Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
+                .Append("shell getprop ro.kernel.qemu.avd_name");
+            exit = StartProcess(ANDROID_ADB, settings, out stdout);
+            identity = stdout.Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
+        }
     }
 
     if (exit != 0 || identity.Length != 1 ||
         !identity[0].Equals(ownedAvd, StringComparison.Ordinal))
-        throw new Exception($"The exact serial {ownedSerial} did not identify owned AVD {ownedAvd}.");
+        throw new Exception($"The exact serial {ownedSerial} did not identify owned AVD {ownedAvd}. " +
+            $"Exit: {exit}; reported identity: {string.Join(" | ", identity)}");
 }
 
 string[] AndroidEmulatorIdentityLines(IEnumerable<string> output)

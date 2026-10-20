@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Android;
 using Xunit;
@@ -7,7 +8,6 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal sealed class AndroidRunningApp : AppiumRunningApp
 {
-	private readonly string? version = Environment.GetEnvironmentVariable("TEST_ANDROID_VERSION");
 	private readonly string? image = Environment.GetEnvironmentVariable("TEST_ANDROID_IMAGE");
 	private readonly string? model = Environment.GetEnvironmentVariable("TEST_ANDROID_MODEL");
 	private readonly string? serial = Environment.GetEnvironmentVariable("TEST_ANDROID_UDID");
@@ -19,14 +19,13 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 
 	internal override string Platform => "Android";
 
-	internal override string DeviceProfile => ReferenceProfile(model, version, image);
+	internal override string DeviceProfile => ReferenceProfile(model, image);
 
-	internal static string ReferenceProfile(string? model, string? version, string? image)
+	internal static string ReferenceProfile(string? model, string? image)
 	{
 		if (string.IsNullOrWhiteSpace(model) || !Regex.IsMatch(model, @"^[a-zA-Z0-9_-]+$") ||
-			string.IsNullOrWhiteSpace(version) || !Regex.IsMatch(version, @"^[0-9]+(?:\.[0-9]+)*$") ||
 			string.IsNullOrWhiteSpace(image) || !Regex.IsMatch(image, @"^android-[0-9]+(?:\.[0-9]+)?;[a-zA-Z0-9_]+$"))
-			throw new InvalidOperationException("Declare the exact TEST_ANDROID_MODEL, TEST_ANDROID_VERSION and TEST_ANDROID_IMAGE profile.");
+			throw new InvalidOperationException("Declare the exact TEST_ANDROID_MODEL and TEST_ANDROID_IMAGE profile.");
 
 		return $"{model}/{image}";
 	}
@@ -34,25 +33,15 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 	internal override async Task<string> ReadApplicationId()
 	{
 		_ = DeviceProfile;
-		var manager = Environment.GetEnvironmentVariable("ANDROID_SDK_MANAGER_PATH");
-		if (string.IsNullOrWhiteSpace(manager) || !File.Exists(manager))
-			throw new FileNotFoundException("The selected ANDROID_SDK_MANAGER_PATH must exist.", manager);
-
-		var analyzer = Path.Combine(Path.GetDirectoryName(manager)!,
-			OperatingSystem.IsWindows() ? "apkanalyzer.bat" : "apkanalyzer");
-		if (!File.Exists(analyzer))
-			throw new FileNotFoundException("The selected SDK must provide apkanalyzer beside sdkmanager.", analyzer);
-
-		return ParseApplicationId(await Command(
-			OperatingSystem.IsWindows() ? "cmd.exe" : analyzer,
-			OperatingSystem.IsWindows() ? ["/d", "/c", analyzer, "manifest", "application-id", Artifact] :
-				["manifest", "application-id", Artifact]));
+		return ParseApplicationId(await CaptureCommand(Android.ReadManifest(Artifact)));
 	}
 
 	internal static string ParseApplicationId(string output)
 	{
-		var id = output.Trim();
-		if (!Regex.IsMatch(id, @"^[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)+$"))
+		var manifest = XDocument.Parse(output);
+		var id = manifest.Root?.Name.LocalName == "manifest"
+			? manifest.Root.Attribute("package")?.Value : null;
+		if (id is null || !Regex.IsMatch(id, @"^[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)+$"))
 			throw new InvalidOperationException("Built APK has an invalid application ID.");
 		return id;
 	}
@@ -67,7 +56,6 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 		{
 			PlatformName = "Android",
 			AutomationName = "UiAutomator2",
-			PlatformVersion = version,
 			DeviceName = model,
 			App = Artifact
 		};
@@ -92,18 +80,11 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 		var target = serial ?? (HasDriver ? Driver.Capabilities.GetCapability("udid")?.ToString() : null);
 		if (!string.IsNullOrWhiteSpace(target))
 		{
-			var sdk = Environment.GetEnvironmentVariable("ANDROID_HOME");
-			if (string.IsNullOrWhiteSpace(sdk))
-				throw new InvalidOperationException("ANDROID_HOME must select the SDK for exact-device diagnostics.");
-			var adb = Path.Combine(sdk, "platform-tools", OperatingSystem.IsWindows() ? "adb.exe" : "adb");
 			List<Exception> failures = [];
-			foreach (var (name, arguments) in new (string, string[])[]
-			{
-				("device.log", ["logcat", "-b", "all", "-d", "-v", "threadtime"]),
-				("last-anr.log", ["shell", "dumpsys", "activity", "lastanr"])
-			})
-				await FailureHandling.Attempt(failures, async () =>
-					await SaveText(name, await Command(adb, ["-s", target, .. arguments])));
+			await FailureHandling.Attempt(failures, async () =>
+				await SaveText("device.log", await CaptureCommand(Android.Logcat(target))));
+			await FailureHandling.Attempt(failures, async () =>
+				await SaveText("last-anr.log", await CaptureCommand(Android.LastAnr(target))));
 			FailureHandling.ThrowFailures(failures);
 		}
 	}

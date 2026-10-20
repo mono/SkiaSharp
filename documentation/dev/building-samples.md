@@ -189,7 +189,7 @@ The `Android` group runs Basic MAUI, native Android and Gallery MAUI with
 Appium/UiAutomator2. Install Node.js and the SDK, JDK, workloads, compile platforms
 and emulator tools specified by the
 [Android CI legs](../../scripts/azure-templates-stages-samples.yml).
-Use one complete OS/image/model profile from that configuration.
+Use one complete image/model profile from that configuration.
 Headless Linux requires `libpulse0` and KVM access.
 
 After staging packages, set the selected SDK's absolute `ANDROID_HOME` and
@@ -197,7 +197,7 @@ After staging packages, set the selected SDK's absolute `ANDROID_HOME` and
 
 ```sh
 # Set these to one complete profile from the sample stage configuration.
-export TEST_ANDROID_VERSION="<OS version>" TEST_ANDROID_IMAGE="<image>" TEST_ANDROID_MODEL="<model>"
+export TEST_ANDROID_IMAGE="<image>" TEST_ANDROID_MODEL="<model>"
 pwsh scripts/infra/managed/install-android-image.ps1 -Image "$TEST_ANDROID_IMAGE"
 pwsh scripts/infra/tests/install-appium.ps1 -Platform Android
 dotnet cake --target=samples --runGroup=Android \
@@ -209,7 +209,7 @@ SDK paths for CI but cannot export them back to a calling shell.
 Cake creates and cleans up only its unique AVD/process; each test owns its
 Appium server/session and installed APK. `samples-generate` starts neither.
 
-For direct/IDE runs, explicitly set the same three `TEST_ANDROID_*` profile
+For direct/IDE runs, explicitly set the same two `TEST_ANDROID_*` profile
 variables and optionally `TEST_ANDROID_UDID` for a device you manage.
 Without a UDID, direct runs leave device selection to the driver.
 
@@ -218,11 +218,6 @@ Android references route to
 captures before adding references; missing or mismatched references fail without
 fallback or automatic acceptance. Animated Basic GPU pages require FPS and retain
 captures; Gallery's static GPU gradient uses strict comparison.
-
-For a diagnostic capture-review run, explicitly set
-`TEST_ANDROID_CAPTURE_REVIEW=true`. Image/region assertions are collected until
-scenario end so one failing run can retain the full review set. Interaction,
-capture and infrastructure failures still stop immediately.
 
 ## Coverage and diagnostics
 
