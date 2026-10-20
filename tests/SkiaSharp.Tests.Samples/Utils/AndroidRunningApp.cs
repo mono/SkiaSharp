@@ -12,8 +12,8 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 	private readonly string? model = Environment.GetEnvironmentVariable("TEST_ANDROID_MODEL");
 	private readonly string? serial = Environment.GetEnvironmentVariable("TEST_ANDROID_UDID");
 
-	internal AndroidRunningApp(SampleWorkspace workspace, string artifact, bool nativeResourceIds = false)
-		: base(workspace, artifact, new AndroidAppiumOperations(nativeResourceIds))
+	internal AndroidRunningApp(SampleWorkspace workspace, string artifact)
+		: base(workspace, artifact, new AndroidAppiumOperations())
 	{
 	}
 
@@ -96,8 +96,15 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 			if (string.IsNullOrWhiteSpace(sdk))
 				throw new InvalidOperationException("ANDROID_HOME must select the SDK for exact-device diagnostics.");
 			var adb = Path.Combine(sdk, "platform-tools", OperatingSystem.IsWindows() ? "adb.exe" : "adb");
-			await SaveText("device.log", await Command(adb,
-				["-s", target, "logcat", "-d", "-v", "threadtime", "-t", "2000"]));
+			List<Exception> failures = [];
+			foreach (var (name, arguments) in new (string, string[])[]
+			{
+				("device.log", ["logcat", "-b", "all", "-d", "-v", "threadtime"]),
+				("last-anr.log", ["shell", "dumpsys", "activity", "lastanr"])
+			})
+				await FailureHandling.Attempt(failures, async () =>
+					await SaveText(name, await Command(adb, ["-s", target, .. arguments])));
+			FailureHandling.ThrowFailures(failures);
 		}
 	}
 }

@@ -32,7 +32,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 	[Trait("Platform", "Android")]
 	public async Task BasicNativeAndroidNavigatePages()
 	{
-		var app = await BuildAndroidApp("Basic/Android", "SkiaSharpSample/SkiaSharpSample.csproj", nativeResourceIds: true);
+		var app = await BuildAndroidApp("Basic/Android", "SkiaSharpSample/SkiaSharpSample.csproj");
 		await appium.Run(app, running => Basic(running.Operations, "Native",
 		[
 			new("nav_cpu", "skiaView", "basic-cpu"),
@@ -60,7 +60,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 		await appium.Run(app, running => Gallery(running.Operations, captureReview: CaptureReview));
 	}
 
-	private async Task<AndroidRunningApp> BuildAndroidApp(string folder, string project, bool nativeResourceIds = false)
+	private async Task<AndroidRunningApp> BuildAndroidApp(string folder, string project)
 	{
 		const string framework = "net10.0-android";
 		var workspace = await BuildSample(folder, project, new DotNetOptions
@@ -75,7 +75,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 		});
 		var artifact = Assert.Single(Directory.EnumerateFiles(
 			Output(workspace, folder, project, framework), "*-Signed.apk"));
-		return new AndroidRunningApp(workspace, artifact, nativeResourceIds);
+		return new AndroidRunningApp(workspace, artifact);
 	}
 
 	private static void NavigateMauiAndroid(AppiumOperations app, string title)

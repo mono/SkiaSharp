@@ -4,7 +4,6 @@ using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Appium;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -378,7 +377,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 				"Appium", family, "Android", "pixel_9", image, "basic-cpu.png"), expected);
 			var missing = AppiumSampleRunTestBase.Expected(profile, "unit-fixture-not-reviewed", family, "Android");
 			Assert.False(File.Exists(missing));
-			var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/latest", "basic-cpu", "Maui");
+			var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.3.1", "basic-cpu", "Maui");
 			var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, missing));
 			Assert.Contains($"Missing reviewed sample golden: {missing}", failure.Message);
 			Assert.False(File.Exists(missing));
@@ -422,9 +421,9 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		Assert.Throws<InvalidOperationException>(() => operations.Attach(app));
 		Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
 		Assert.Equal(By.Id("com.skiasharp.built:id/skiaView").ToString(),
-			AndroidAppiumOperations.ElementLocator("com.skiasharp.built", "skiaView", nativeResourceIds: true).ToString());
-		Assert.Equal(MobileBy.AccessibilityId("basic-canvas-cpu").ToString(),
-			AndroidAppiumOperations.ElementLocator("com.skiasharp.built", "basic-canvas-cpu", nativeResourceIds: false).ToString());
+			AndroidAppiumOperations.ElementLocator("com.skiasharp.built", "skiaView").ToString());
+		Assert.Equal(By.Id("com.skiasharp.built:id/gallery-header-cpu").ToString(),
+			AndroidAppiumOperations.ElementLocator("com.skiasharp.built", "gallery-header-cpu").ToString());
 	}
 
 	[Fact]
@@ -432,7 +431,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	{
 		List<Exception> failures = [];
 		List<string> order = [];
-		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/latest", "basic-cpu", "Maui");
+		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.3.1", "basic-cpu", "Maui");
 		var expected = AppiumSampleRunTestBase.Expected("unit-fixture/not-reviewed", "missing", "Maui", "Android");
 		foreach (var phase in new[] { "blank", "strokes", "clear" })
 		{
