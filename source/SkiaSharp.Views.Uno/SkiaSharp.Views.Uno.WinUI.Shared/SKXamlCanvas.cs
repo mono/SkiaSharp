@@ -199,7 +199,7 @@ namespace SkiaSharp.Views.UWP
 
 		/// <summary>Invalidates the entire surface of the control and causes the control to be redrawn.</summary>
 		/// <remarks />
-		public new void Invalidate()
+		public void Invalidate()
 		{
 			if (Dispatcher.HasThreadAccess)
 				DoInvalidate();

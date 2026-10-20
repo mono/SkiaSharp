@@ -177,12 +177,11 @@
   </PropertyGroup>
 
   <!-- Uno Platform -->
+  <!-- Uno Platform 7 draws every head with a single Skia build and ships no platform or pre-net10.0 assets -->
   <PropertyGroup>
     <UnoTargetFrameworksReference>$(TFMCurrent)</UnoTargetFrameworksReference>
-    <UnoTargetFrameworksReference Condition="'$(TFMPrevious)' != ''">$(UnoTargetFrameworksReference);$(TFMPrevious)</UnoTargetFrameworksReference>
-    <UnoTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent);$(TFMCurrent)-macos$(TPVmacOSCurrent)</UnoTargetFrameworksCurrent>
-    <UnoTargetFrameworksPrevious Condition="!$(IsLinux) and '$(TFMPrevious)' != ''">$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious);$(TFMPrevious)-macos$(TPVmacOSPrevious)</UnoTargetFrameworksPrevious>
-    <UnoTargetFrameworks>$(UnoTargetFrameworksReference);$(UnoTargetFrameworksCurrent);$(UnoTargetFrameworksPrevious);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
+    <UnoTargetFrameworksReference Condition="'$(TFMPrevious)' != '' and $([MSBuild]::VersionGreaterThanOrEquals($([MSBuild]::GetTargetFrameworkVersion('$(TFMPrevious)')), '10.0'))">$(UnoTargetFrameworksReference);$(TFMPrevious)</UnoTargetFrameworksReference>
+    <UnoTargetFrameworks>$(UnoTargetFrameworksReference);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -104,7 +104,7 @@ namespace SkiaSharp.Views.UWP
 
 		/// <summary>Requests that the control be redrawn.</summary>
 		/// <remarks />
-		public new void Invalidate()
+		public void Invalidate()
 		{
 			_ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
 		}
