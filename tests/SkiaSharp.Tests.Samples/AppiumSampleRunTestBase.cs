@@ -6,10 +6,6 @@ namespace SkiaSharp.Tests.Samples;
 
 public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 {
-	// The exact iPhone 16 Pro references are 3x screenshots. The bottom 39 pixels
-	// contain only the system-owned home indicator, whose fade opacity is not app state.
-	private const int NativeIosHomeIndicatorBandPixels = 39;
-
 	private protected sealed record BasicPageCommand(
 		string NavigationId, string CanvasId, string ScreenshotName,
 		PageElementCheck? ElementCheck = null, bool Animated = false);
@@ -158,16 +154,9 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 
 	private static async Task<string> Compare(
 		AppiumOperations app, string canvasId, string name, string family)
-	{
-		var cropBottom = family == "Native" ? NativeIosHomeIndicatorBandPixels : 0;
-		var expected = Expected(app.DeviceProfile, name, family);
-		if (cropBottom > 0)
-			expected = app.CropReference(expected, cropBottom);
-
-		return await SampleImage.Validate(
-			() => Task.FromResult(app.Capture(canvasId, name, cropBottom)),
-			expected);
-	}
+		=> await SampleImage.Validate(
+			() => Task.FromResult(app.Capture(canvasId, name)),
+			app.TransformReference(Expected(app.DeviceProfile, name, family)));
 
 	internal static string Expected(string deviceProfile, string name, string family) =>
 		Path.Combine(

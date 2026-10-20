@@ -167,23 +167,35 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Fact]
-	public void NativeCaptureCropRemovesOnlyTheSystemBottomBand()
+	public void IosCapturePolicyRemovesOnlyTheKnownSystemBottomBand()
 	{
-		using var source = new SKBitmap(3, 4);
+		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ScreenshotInsets(
+			"iPhone 16 Pro", "18.6", new(1206, 2622)));
+		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ScreenshotInsets(
+			"iPhone 16 Pro", "26.2", new(1206, 2622)));
+		Assert.Equal(SKRectI.Empty, IosRunningApp.ScreenshotInsets(
+			"iPhone 16", "26.2", new(1206, 2622)));
+		Assert.Equal(SKRectI.Empty, IosRunningApp.ScreenshotInsets(
+			"iPhone 16 Pro", "26.2", new(1032, 2592)));
+
+		using var source = new SKBitmap(4, 5);
 		source.Erase(SKColors.Red);
-		for (var x = 0; x < source.Width; x++)
-			source.SetPixel(x, source.Height - 1, SKColors.Blue);
+		source.SetPixel(1, 1, SKColors.Blue);
+		source.SetPixel(2, 2, SKColors.Green);
 		using var image = SKImage.FromBitmap(source);
 		using var data = image.Encode(SKEncodedImageFormat.Png, 100);
 
-		var croppedBytes = AppiumOperations.CropBottom(data.ToArray(), 1);
+		var croppedBytes = AppiumRunningApp.Crop(data.ToArray(), new(1, 1, 1, 2));
 		using var cropped = SKBitmap.Decode(croppedBytes);
 		Assert.NotNull(cropped);
-		Assert.Equal(3, cropped.Width);
-		Assert.Equal(3, cropped.Height);
-		Assert.All(cropped.Pixels, color => Assert.Equal(SKColors.Red, color));
-		Assert.Throws<ArgumentOutOfRangeException>(() => AppiumOperations.CropBottom(data.ToArray(), 0));
-		Assert.Throws<ArgumentOutOfRangeException>(() => AppiumOperations.CropBottom(data.ToArray(), 4));
+		Assert.Equal(2, cropped.Width);
+		Assert.Equal(2, cropped.Height);
+		Assert.Equal(SKColors.Blue, cropped.GetPixel(0, 0));
+		Assert.Equal(SKColors.Green, cropped.GetPixel(1, 1));
+		Assert.Throws<ArgumentOutOfRangeException>(() =>
+			AppiumRunningApp.Crop(data.ToArray(), new(-1, 0, 0, 0)));
+		Assert.Throws<ArgumentOutOfRangeException>(() =>
+			AppiumRunningApp.Crop(data.ToArray(), new(2, 0, 2, 0)));
 	}
 
 	[Theory]

@@ -42,7 +42,49 @@ internal abstract class AppiumRunningApp
 
 	internal abstract Task<string> ReadApplicationId();
 
+	internal byte[]? TransformScreenshot(byte[] png)
+	{
+		ArgumentNullException.ThrowIfNull(png);
+		using var bitmap = SKBitmap.Decode(png);
+		if (bitmap is null)
+			throw new ArgumentException("Expected a decodable PNG image.", nameof(png));
+
+		var insets = ScreenshotInsets(new(bitmap.Width, bitmap.Height));
+		return insets == SKRectI.Empty ? null : Crop(png, insets);
+	}
+
 	protected virtual Task CapturePlatformDiagnostics() => Task.CompletedTask;
+
+	protected virtual SKRectI ScreenshotInsets(SKSizeI size) => SKRectI.Empty;
+
+	internal static byte[] Crop(byte[] png, SKRectI insets)
+	{
+		ArgumentNullException.ThrowIfNull(png);
+		using var source = SKBitmap.Decode(png);
+		if (source is null)
+			throw new ArgumentException("Expected a decodable PNG image.", nameof(png));
+		ArgumentOutOfRangeException.ThrowIfNegative(insets.Left);
+		ArgumentOutOfRangeException.ThrowIfNegative(insets.Top);
+		ArgumentOutOfRangeException.ThrowIfNegative(insets.Right);
+		ArgumentOutOfRangeException.ThrowIfNegative(insets.Bottom);
+
+		var width = source.Width - insets.Left - insets.Right;
+		var height = source.Height - insets.Top - insets.Bottom;
+		ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
+		ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
+
+		using var cropped = new SKBitmap(
+			width, height, source.ColorType, source.AlphaType);
+		using (var canvas = new SKCanvas(cropped))
+			canvas.DrawBitmap(
+				source,
+				new SKRect(insets.Left, insets.Top, source.Width - insets.Right, source.Height - insets.Bottom),
+				SKRect.Create(width, height),
+				SKSamplingOptions.Default);
+		using var image = SKImage.FromBitmap(cropped);
+		using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+		return data.ToArray();
+	}
 
 	protected void SetDriver(AppiumDriver value)
 	{

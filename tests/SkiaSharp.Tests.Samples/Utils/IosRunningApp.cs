@@ -23,6 +23,16 @@ internal sealed class IosRunningApp : AppiumRunningApp
 
 	internal override string DeviceProfile => ReferenceProfile(model, version);
 
+	protected override SKRectI ScreenshotInsets(SKSizeI size) =>
+		ScreenshotInsets(model, version, size);
+
+	internal static SKRectI ScreenshotInsets(string model, string version, SKSizeI size) =>
+		model == "iPhone 16 Pro" &&
+		version is "18.6" or "26.2" &&
+		size == new SKSizeI(1206, 2622)
+			? new SKRectI(0, 0, 0, 39)
+			: SKRectI.Empty;
+
 	internal override async Task<string> ReadApplicationId()
 	{
 		var plist = Path.Combine(Artifact, "Info.plist");
@@ -85,8 +95,8 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		Driver.ExecuteScript("mobile: setIncreaseContrast",
 			new Dictionary<string, object> { ["increaseContrast"] = "disabled" });
 
-		// Normalize only the session's simulator status bar. Native comparisons separately
-		// exclude the system-owned home-indicator band from otherwise full canvas captures.
+		// Normalize only the session's simulator status bar. Full-screen iOS comparisons
+		// separately exclude the system-owned home-indicator band.
 		var status = Assert.IsAssignableFrom<IDictionary<string, object>>(
 			Driver.ExecuteScript("mobile: simctl", new Dictionary<string, object>
 			{
