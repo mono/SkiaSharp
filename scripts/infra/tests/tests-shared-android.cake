@@ -161,7 +161,7 @@ void AssertOwnedAndroidEmulator(string ownedAvd, string ownedSerial)
     if (exit != 0)
         throw new Exception($"The exact serial {ownedSerial} did not identify owned AVD {ownedAvd}.");
 
-    var identity = stdout.Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
+    var identity = AndroidEmulatorIdentityLines(stdout);
     if (identity.Length == 0) {
         settings.Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
             .Append("shell getprop ro.boot.qemu.avd_name");
@@ -172,6 +172,14 @@ void AssertOwnedAndroidEmulator(string ownedAvd, string ownedSerial)
     if (exit != 0 || identity.Length != 1 ||
         !identity[0].Equals(ownedAvd, StringComparison.Ordinal))
         throw new Exception($"The exact serial {ownedSerial} did not identify owned AVD {ownedAvd}.");
+}
+
+string[] AndroidEmulatorIdentityLines(IEnumerable<string> output)
+{
+    var lines = output.Select(line => line.Trim()).Where(line => line.Length > 0).ToList();
+    if (lines.Count > 0 && lines[lines.Count - 1].Equals("OK", StringComparison.Ordinal))
+        lines.RemoveAt(lines.Count - 1);
+    return lines.ToArray();
 }
 
 string AndroidAvdWindowsArguments(string manager, params string[] arguments)
