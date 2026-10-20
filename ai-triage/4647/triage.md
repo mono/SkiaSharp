@@ -1,0 +1,359 @@
+# Issue Triage Report — #4647
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-10-20T04:26:13Z |
+| Type | type/bug (0.99 (99%)) |
+| Area | area/libSkiaSharp.native (0.98 (98%)) |
+| Suggested action | ready-to-fix (0.92 (92%)) |
+
+**Issue Summary:** On Windows x64, SkiaSharp 4.150.1 and later can terminate a process with 0xC0000409 or an access violation when repeated native OpenGL interface creation reuses stale WGL function pointers after opengl32.dll is unloaded and relocated.
+
+**Analysis:** The managed GRGlInterface.Create path first requests the native platform OpenGL interface and only falls back to ANGLE after that request returns null. In the affected native Windows implementation described by the reporter, addresses resolved from opengl32.dll persist in function-local statics while the module is released after every call. A later load at another address can therefore invoke a dangling WGL pointer before the fallback path, causing an unrecoverable Control Flow Guard failure or access violation.
+
+**Recommendations:** **ready-to-fix** — The native lifetime defect has a clear triggering sequence, independent production confirmation, a minimal reproduction, and a narrow implementation direction. Native build and Windows validation remain necessary.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/libSkiaSharp.native |
+| Platforms | os/Windows-Classic, os/Windows-WinUI |
+| Backends | backend/OpenGL |
+| Tenets | tenet/reliability |
+| Perf | — |
+| Partner | partner/maui |
+
+## Evidence
+
+### Reproduction
+
+1. On Windows x64 with an OpenGL ICD and no current WGL context, create a native GRGlInterface.
+2. Allow the call to return null, which leaves the reported opengl32.dll function-pointer cache initialized after the module is released.
+3. Cause opengl32.dll to reload at a different base address, for example by reserving its prior address range.
+4. Create a native GRGlInterface again and observe the process terminate when the stale WGL pointer is invoked.
+
+**Environment:** Windows x64; reporter supplied a .NET 8+ reproduction for SkiaSharp 4.150.1. A production .NET MAUI Windows/WinUI confirmation reports the same behavior on SkiaSharp 4.153.1 and Windows 11.
+
+**Related issues:** #5167, #5331
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/issues/5167 — Open report of the same stale opengl32.dll address relocation crash in a MAUI SKGLView application.
+- https://github.com/mono/SkiaSharp/issues/5331 — Open WinUI SKSwapChainPanel reproduction with the same 0xC0000409 failure and an external minimal project.
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | True |
+| Error type | crash |
+| Error message | STATUS_STACK_BUFFER_OVERRUN (0xC0000409), FAST_FAIL_GUARD_ICALL_CHECK_FAILURE |
+| Repro quality | complete |
+| Target frameworks | net8.0 |
+
+**Stack trace:**
+
+```text
+__fastfail(FAST_FAIL_GUARD_ICALL_CHECK_FAILURE) from a libSkiaSharp frame; the blocked target is a freed address formerly in opengl32.dll.
+```
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | 3.119.4, 4.150.1, 4.153.1, 4.154.0-rc.1, 4.156.0-preview.1 |
+| Worked in | 3.119.4 |
+| Broke in | 4.150.1 |
+| Current relevance | likely |
+| Relevance reason | The issue and follow-up state that the static WGL cache remains present in current and preview Skia submodule revisions, and two independently reported open issues describe the same failure. |
+
+### Regression
+
+| Field | Value |
+|-------|-------|
+| Is regression | True |
+| Confidence | 0.95 (95%) |
+| Reason | The reporter identifies the dynamic WGL loading change as the introduction point; the follow-up reports that 3.119.4 re-resolved both functions per call and did not exhibit the crash. |
+| Worked in version | 3.119.4 |
+| Broke in version | 4.150.1 |
+
+## Analysis
+
+### Technical Summary
+
+The managed GRGlInterface.Create path first requests the native platform OpenGL interface and only falls back to ANGLE after that request returns null. In the affected native Windows implementation described by the reporter, addresses resolved from opengl32.dll persist in function-local statics while the module is released after every call. A later load at another address can therefore invoke a dangling WGL pointer before the fallback path, causing an unrecoverable Control Flow Guard failure or access violation.
+
+### Rationale
+
+This is a high-severity Windows native crash with a deterministic reproduction technique, production confirmation, a clear regression range, and two related open reports. The native implementation is the primary faulty component; WinUI/MAUI is a common trigger rather than the root cause. The available checkout omits the Skia submodule, so the native implementation was not independently re-read here; the managed source still confirms the relevant native-first call path and ANGLE fallback.
+
+### Key Signals
+
+- "The minimal reproduction forces opengl32.dll to reload at a different base and then crashes on the second GRGlInterface.Create call." — **issue body** (Provides a complete, deterministic trigger for the stale function-pointer hypothesis.)
+- "A production .NET MAUI WinUI application on 4.153.1 observed 0xC0000409 crashes and avoided them by keeping opengl32.dll loaded." — **issue comment** (Independently confirms impact and a temporary mitigation on a later affected version.)
+- "Issue #5167 and issue #5331 report the same opengl32.dll relocation and FAST_FAIL_GUARD_ICALL_CHECK_FAILURE symptoms." — **related issue search** (Corroborates that the report is neither isolated nor an application-specific lifecycle defect.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/GRGlInterface.cs` | 30-37 | direct | GRGlInterface.Create calls CreateGl before CreateAngle, and CreateGl invokes the native gr_glinterface_create_native_interface entry point. |
+| `source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKSwapChainPanel.cs` | 49-64 | direct | OnRenderFrame initializes the interface through GRGlInterface.Create and then creates a GL context, confirming that WinUI SKSwapChainPanel reaches the native-first path identified in the report. |
+| `binding/SkiaSharp/Generated/SkiaApi_include_c_gr_context_h.generated.cs` | 813-829 | related | The generated interop exposes gr_glinterface_create_native_interface as the native C API call used by the managed CreateGl path. |
+
+**Error fingerprint:** `Windows-WGL-opengl32-stale-function-pointer-0xC0000409`
+
+### Workarounds
+
+- Before any SkiaSharp OpenGL interface creation, keep opengl32.dll loaded for the process lifetime; reporters confirmed that this prevented the observed relocation crash.
+- Avoid calling GRGlInterface.Create without a current WGL context until a native fix is available, because the reported first context-less call initializes the unsafe cache.
+
+### Next Questions
+
+- Confirm the exact current mono/skia commit and whether the release branch contains a native fix before implementation begins.
+- Validate a native change that both avoids caching WGL addresses across module release and preserves ANGLE fallback behavior for WinUI.
+- Determine whether #5167 and #5331 should be linked as duplicates or retained as platform-specific reproductions after the fix is prepared.
+
+### Resolution Proposals
+
+**Hypothesis:** The native Windows OpenGL interface factory retains WGL procedure addresses beyond the lifetime of the dynamically loaded opengl32.dll module, so a relocation turns the next indirect call into a dangling-pointer call.
+
+1. **Resolve WGL functions only while opengl32.dll is loaded** — fix, confidence 0.94 (94%), cost/s, validated=untested
+   - Remove the cross-call static cache or otherwise ensure the module remains pinned for exactly the lifetime of cached WGL function addresses; also preserve the early no-context path so a probe cannot poison later calls.
+2. **Keep opengl32.dll loaded before creating SkiaSharp GL interfaces** — workaround, confidence 0.88 (88%), cost/xs, validated=untested
+   - Use the reporter-confirmed process-lifetime module-load mitigation before any GL interface or view initialization while awaiting the native correction.
+
+**Recommended proposal:** Resolve WGL functions only while opengl32.dll is loaded
+
+**Why:** This directly removes the stale-pointer lifetime mismatch and addresses every managed caller, whereas pinning the module only mitigates applications that can control initialization order.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.92 (92%) |
+| Reason | The native lifetime defect has a clear triggering sequence, independent production confirmation, a minimal reproduction, and a narrow implementation direction. Native build and Windows validation remain necessary. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.99 (99%) | Apply the native Windows OpenGL crash classification labels. | labels=type/bug, area/libSkiaSharp.native, os/Windows-Classic, os/Windows-WinUI, backend/OpenGL, tenet/reliability, partner/maui |
+| link-related | low | 0.96 (96%) | Link the independently reported MAUI SKGLView relocation crash. | linkedIssue=#5167 |
+| link-related | low | 0.96 (96%) | Link the WinUI SKSwapChainPanel reproduction of the same native crash. | linkedIssue=#5331 |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4647,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-10-20T04:26:13Z"
+  },
+  "summary": "On Windows x64, SkiaSharp 4.150.1 and later can terminate a process with 0xC0000409 or an access violation when repeated native OpenGL interface creation reuses stale WGL function pointers after opengl32.dll is unloaded and relocated.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.99
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.98
+    },
+    "platforms": [
+      "os/Windows-Classic",
+      "os/Windows-WinUI"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "crash",
+      "errorMessage": "STATUS_STACK_BUFFER_OVERRUN (0xC0000409), FAST_FAIL_GUARD_ICALL_CHECK_FAILURE",
+      "stackTrace": "__fastfail(FAST_FAIL_GUARD_ICALL_CHECK_FAILURE) from a libSkiaSharp frame; the blocked target is a freed address formerly in opengl32.dll.",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "On Windows x64 with an OpenGL ICD and no current WGL context, create a native GRGlInterface.",
+        "Allow the call to return null, which leaves the reported opengl32.dll function-pointer cache initialized after the module is released.",
+        "Cause opengl32.dll to reload at a different base address, for example by reserving its prior address range.",
+        "Create a native GRGlInterface again and observe the process terminate when the stale WGL pointer is invoked."
+      ],
+      "environmentDetails": "Windows x64; reporter supplied a .NET 8+ reproduction for SkiaSharp 4.150.1. A production .NET MAUI Windows/WinUI confirmation reports the same behavior on SkiaSharp 4.153.1 and Windows 11.",
+      "relatedIssues": [
+        5167,
+        5331
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/5167",
+          "description": "Open report of the same stale opengl32.dll address relocation crash in a MAUI SKGLView application."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/5331",
+          "description": "Open WinUI SKSwapChainPanel reproduction with the same 0xC0000409 failure and an external minimal project."
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.119.4",
+        "4.150.1",
+        "4.153.1",
+        "4.154.0-rc.1",
+        "4.156.0-preview.1"
+      ],
+      "workedIn": "3.119.4",
+      "brokeIn": "4.150.1",
+      "currentRelevance": "likely",
+      "relevanceReason": "The issue and follow-up state that the static WGL cache remains present in current and preview Skia submodule revisions, and two independently reported open issues describe the same failure."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.95,
+      "reason": "The reporter identifies the dynamic WGL loading change as the introduction point; the follow-up reports that 3.119.4 re-resolved both functions per call and did not exhibit the crash.",
+      "workedInVersion": "3.119.4",
+      "brokeInVersion": "4.150.1"
+    }
+  },
+  "analysis": {
+    "summary": "The managed GRGlInterface.Create path first requests the native platform OpenGL interface and only falls back to ANGLE after that request returns null. In the affected native Windows implementation described by the reporter, addresses resolved from opengl32.dll persist in function-local statics while the module is released after every call. A later load at another address can therefore invoke a dangling WGL pointer before the fallback path, causing an unrecoverable Control Flow Guard failure or access violation.",
+    "rationale": "This is a high-severity Windows native crash with a deterministic reproduction technique, production confirmation, a clear regression range, and two related open reports. The native implementation is the primary faulty component; WinUI/MAUI is a common trigger rather than the root cause. The available checkout omits the Skia submodule, so the native implementation was not independently re-read here; the managed source still confirms the relevant native-first call path and ANGLE fallback.",
+    "keySignals": [
+      {
+        "text": "The minimal reproduction forces opengl32.dll to reload at a different base and then crashes on the second GRGlInterface.Create call.",
+        "source": "issue body",
+        "interpretation": "Provides a complete, deterministic trigger for the stale function-pointer hypothesis."
+      },
+      {
+        "text": "A production .NET MAUI WinUI application on 4.153.1 observed 0xC0000409 crashes and avoided them by keeping opengl32.dll loaded.",
+        "source": "issue comment",
+        "interpretation": "Independently confirms impact and a temporary mitigation on a later affected version."
+      },
+      {
+        "text": "Issue #5167 and issue #5331 report the same opengl32.dll relocation and FAST_FAIL_GUARD_ICALL_CHECK_FAILURE symptoms.",
+        "source": "related issue search",
+        "interpretation": "Corroborates that the report is neither isolated nor an application-specific lifecycle defect."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/GRGlInterface.cs",
+        "lines": "30-37",
+        "finding": "GRGlInterface.Create calls CreateGl before CreateAngle, and CreateGl invokes the native gr_glinterface_create_native_interface entry point.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKSwapChainPanel.cs",
+        "lines": "49-64",
+        "finding": "OnRenderFrame initializes the interface through GRGlInterface.Create and then creates a GL context, confirming that WinUI SKSwapChainPanel reaches the native-first path identified in the report.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/Generated/SkiaApi_include_c_gr_context_h.generated.cs",
+        "lines": "813-829",
+        "finding": "The generated interop exposes gr_glinterface_create_native_interface as the native C API call used by the managed CreateGl path.",
+        "relevance": "related"
+      }
+    ],
+    "errorFingerprint": "Windows-WGL-opengl32-stale-function-pointer-0xC0000409",
+    "workarounds": [
+      "Before any SkiaSharp OpenGL interface creation, keep opengl32.dll loaded for the process lifetime; reporters confirmed that this prevented the observed relocation crash.",
+      "Avoid calling GRGlInterface.Create without a current WGL context until a native fix is available, because the reported first context-less call initializes the unsafe cache."
+    ],
+    "nextQuestions": [
+      "Confirm the exact current mono/skia commit and whether the release branch contains a native fix before implementation begins.",
+      "Validate a native change that both avoids caching WGL addresses across module release and preserves ANGLE fallback behavior for WinUI.",
+      "Determine whether #5167 and #5331 should be linked as duplicates or retained as platform-specific reproductions after the fix is prepared."
+    ],
+    "resolution": {
+      "hypothesis": "The native Windows OpenGL interface factory retains WGL procedure addresses beyond the lifetime of the dynamically loaded opengl32.dll module, so a relocation turns the next indirect call into a dangling-pointer call.",
+      "proposals": [
+        {
+          "title": "Resolve WGL functions only while opengl32.dll is loaded",
+          "description": "Remove the cross-call static cache or otherwise ensure the module remains pinned for exactly the lifetime of cached WGL function addresses; also preserve the early no-context path so a probe cannot poison later calls.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.94,
+          "effort": "cost/s"
+        },
+        {
+          "title": "Keep opengl32.dll loaded before creating SkiaSharp GL interfaces",
+          "description": "Use the reporter-confirmed process-lifetime module-load mitigation before any GL interface or view initialization while awaiting the native correction.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.88,
+          "effort": "cost/xs"
+        }
+      ],
+      "recommendedProposal": "Resolve WGL functions only while opengl32.dll is loaded",
+      "recommendedReason": "This directly removes the stale-pointer lifetime mismatch and addresses every managed caller, whereas pinning the module only mitigates applications that can control initialization order."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.92,
+      "reason": "The native lifetime defect has a clear triggering sequence, independent production confirmation, a minimal reproduction, and a narrow implementation direction. Native build and Windows validation remain necessary.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply the native Windows OpenGL crash classification labels.",
+        "risk": "low",
+        "confidence": 0.99,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/Windows-Classic",
+          "os/Windows-WinUI",
+          "backend/OpenGL",
+          "tenet/reliability",
+          "partner/maui"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link the independently reported MAUI SKGLView relocation crash.",
+        "risk": "low",
+        "confidence": 0.96,
+        "linkedIssue": 5167
+      },
+      {
+        "type": "link-related",
+        "description": "Link the WinUI SKSwapChainPanel reproduction of the same native crash.",
+        "risk": "low",
+        "confidence": 0.96,
+        "linkedIssue": 5331
+      }
+    ]
+  }
+}
+```
+
+</details>
