@@ -52,6 +52,12 @@ namespace SkiaSharp.Views.UWP
 
 			var info = CreateBitmap(out var unscaledSize, out var dpi);
 
+			if (info.Width <= 0 || info.Height <= 0)
+			{
+				CanvasSize = SKSize.Empty;
+				return;
+			}
+
 			using (var surface = SKSurface.Create(info, pixelsHandle.AddrOfPinnedObject(), info.RowBytes))
 			{
 				var userVisibleSize = IgnorePixelScaling ? unscaledSize : info.Size;

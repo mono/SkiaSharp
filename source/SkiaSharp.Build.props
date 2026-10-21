@@ -179,9 +179,12 @@
   <!-- Uno Platform -->
   <!-- Uno Platform 7 draws every head with a single Skia build and ships no platform or pre-net10.0 assets -->
   <PropertyGroup>
+    <_UnoIncludesTFMPrevious Condition="'$(TFMPrevious)' != '' and $([MSBuild]::VersionGreaterThanOrEquals($([MSBuild]::GetTargetFrameworkVersion('$(TFMPrevious)')), '10.0'))">true</_UnoIncludesTFMPrevious>
     <UnoTargetFrameworksReference>$(TFMCurrent)</UnoTargetFrameworksReference>
-    <UnoTargetFrameworksReference Condition="'$(TFMPrevious)' != '' and $([MSBuild]::VersionGreaterThanOrEquals($([MSBuild]::GetTargetFrameworkVersion('$(TFMPrevious)')), '10.0'))">$(UnoTargetFrameworksReference);$(TFMPrevious)</UnoTargetFrameworksReference>
-    <UnoTargetFrameworks>$(UnoTargetFrameworksReference);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
+    <UnoTargetFrameworksReference Condition="'$(_UnoIncludesTFMPrevious)' == 'true'">$(UnoTargetFrameworksReference);$(TFMPrevious)</UnoTargetFrameworksReference>
+    <UnoTargetFrameworksWindows>$(WindowsTargetFrameworksCurrent)</UnoTargetFrameworksWindows>
+    <UnoTargetFrameworksWindows Condition="'$(_UnoIncludesTFMPrevious)' == 'true' and '$(WindowsTargetFrameworksPrevious)' != ''">$(UnoTargetFrameworksWindows);$(WindowsTargetFrameworksPrevious)</UnoTargetFrameworksWindows>
+    <UnoTargetFrameworks>$(UnoTargetFrameworksReference);$(UnoTargetFrameworksWindows)</UnoTargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>

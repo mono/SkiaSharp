@@ -18,12 +18,12 @@ namespace SkiaSharp.Views.UWP
 #endif
 {
 	/// <summary>A XAML control that uses hardware-accelerated rendering via ANGLE to draw using SkiaSharp.</summary>
-	/// <remarks>This control uses an OpenGL ES context via ANGLE to provide GPU-accelerated SkiaSharp drawing. It inherits from <see cref="T:SkiaSharp.Views.Windows.AngleSwapChainPanel" /> and provides SkiaSharp-specific rendering functionality.</remarks>
+	/// <remarks>On Uno Platform, every target renders with Skia, where this control is not supported: it throws <see cref="T:System.NotSupportedException" /> unless <see cref="P:SkiaSharp.Views.Windows.SKSwapChainPanel.RaiseOnUnsupported" /> is <see langword="false" />. Use Uno Platform's <c>SKCanvasElement</c> for GPU-accelerated drawing.</remarks>
 	public partial class SKSwapChainPanel : FrameworkElement
 	{
 		/// <summary>Gets or sets a value indicating whether unsupported rendering operations raise an exception.</summary>
-		/// <value><see langword="true" /> to raise an exception for unsupported operations; otherwise, <see langword="false" />.</value>
-		/// <remarks />
+		/// <value><see langword="true" /> to raise an exception for unsupported operations; otherwise, <see langword="false" />. The default is <see langword="true" />.</value>
+		/// <remarks>When <see langword="false" />, the control renders nothing on targets where it is not supported.</remarks>
 		public static bool RaiseOnUnsupported { get; set; } = true;
 
 		private static readonly DependencyProperty ProxyVisibilityProperty =

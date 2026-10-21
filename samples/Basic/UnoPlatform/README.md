@@ -1,13 +1,14 @@
-# SkiaSharp Uno Platform Sample (Native Renderer)
+# SkiaSharp Uno Platform Sample
 
-Demonstrates SkiaSharp views in an Uno Platform app using the **native rendering** path. This sample uses `SKXamlCanvas` for CPU-rendered content and `SKSwapChainPanel` for hardware-accelerated GPU rendering via the platform's native graphics backend.
+Demonstrates SkiaSharp views in an Uno Platform 7 app, where every target renders with Skia. This sample uses `SKXamlCanvas` for CPU-rendered content, and for GPU rendering uses Uno's `SKCanvasElement` on Uno targets and `SKSwapChainPanel` on Windows.
 
 ## Rendering Approach
 
 | Control | Rendering | Use Case |
 |---------|-----------|----------|
 | `SKXamlCanvas` | Software (CPU) | Static or on-demand content — works everywhere |
-| `SKSwapChainPanel` | DirectX/OpenGL (GPU) | Continuous animation — hardware-accelerated on WinUI + native mobile |
+| `SKCanvasElement` (Uno) | Uno's Skia compositor (GPU) | Continuous animation — hardware-accelerated on Uno targets |
+| `SKSwapChainPanel` | DirectX via ANGLE (GPU) | Continuous animation — Windows only; not supported on Uno's Skia targets |
 
 ## Sample Pages
 
@@ -32,7 +33,7 @@ A real-time animated shader running at full frame rate on the GPU, with pointer 
 
 **Features:**
 
-- **`SKSwapChainPanel`** — Hardware-accelerated canvas using the platform GPU backend.
+- **`SKCanvasElement`** / **`SKSwapChainPanel`** — Hardware-accelerated canvas: Uno's `SKCanvasElement` (via `SkiaGpuView`) on Uno targets, `SKSwapChainPanel` on Windows.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **Render loop** — Continuous animation with `EnableRenderLoop="True"` and an FPS counter overlay.
 - **Pointer interaction** — Pointer position is passed as a shader uniform.

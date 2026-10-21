@@ -1,4 +1,4 @@
-<Project Sdk="Uno.Sdk/7.0.0-dev.81">
+<Project Sdk="Uno.Sdk/6.6.0-dev.208">
 
   <PropertyGroup>
     <!-- WASM-only: SkiaFiddle compiles user C# in the browser via Roslyn. -->
@@ -27,6 +27,9 @@
     <UnoDisableLottieSkiaVersionCheck>true</UnoDisableLottieSkiaVersionCheck>
     <SkiaSharpVersion />
     <UnoXamlResourcesTrimming>true</UnoXamlResourcesTrimming>
+    <!-- SkiaFiddle doesn't use SkiaSharp.Views.Uno.WinUI, whose Uno 7 build would clash with this Uno 6 SDK.
+         It moves to Uno 7 once Uno.Monaco.Editor 7 is available on the repository feeds. -->
+    <IncludeSkiaSharpUnoViews>false</IncludeSkiaSharpUnoViews>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -82,5 +85,13 @@
 
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
+
+  <!-- Uno.Sdk 6 implicitly references SkiaSharp.Views.Uno.WinUI at $(SkiaSharpVersion), and the
+       generated sample sets that to the current release, which is built for Uno Platform 7 -->
+  <Target Name="_RemoveImplicitSkiaSharpUnoViews" BeforeTargets="UnoImplicitPackages">
+    <ItemGroup>
+      <_UnoProjectSystemPackageReference Remove="SkiaSharp.Views.Uno.WinUI" />
+    </ItemGroup>
+  </Target>
 
 </Project>

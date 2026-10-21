@@ -21,7 +21,7 @@ namespace SkiaSharp.Views.UWP
 		{
 			if (RaiseOnUnsupported)
 			{
-				throw new NotSupportedException($"SKSwapChainPanel is not supported for Skia based platforms");
+				throw new NotSupportedException($"SKSwapChainPanel is not supported on Uno Platform Skia rendering. Use Uno's SKCanvasElement for GPU-accelerated drawing.");
 			}
 		}
 
@@ -29,7 +29,7 @@ namespace SkiaSharp.Views.UWP
 		{
 			if (RaiseOnUnsupported)
 			{
-				throw new NotSupportedException($"SKSwapChainPanel is not supported for Skia based platforms");
+				throw new NotSupportedException($"SKSwapChainPanel is not supported on Uno Platform Skia rendering. Use Uno's SKCanvasElement for GPU-accelerated drawing.");
 			}
 
 			return new SKSize();
@@ -39,7 +39,7 @@ namespace SkiaSharp.Views.UWP
 		{
 			if (RaiseOnUnsupported)
 			{
-				throw new NotSupportedException($"SKSwapChainPanel is not supported for Skia based platforms");
+				throw new NotSupportedException($"SKSwapChainPanel is not supported on Uno Platform Skia rendering. Use Uno's SKCanvasElement for GPU-accelerated drawing.");
 			}
 
 			return null;

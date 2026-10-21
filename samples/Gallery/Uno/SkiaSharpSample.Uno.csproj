@@ -35,6 +35,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\source\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
+    <ProjectReference Include="..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI\SkiaSharp.Views.Uno.WinUI.csproj" />
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
     <ProjectReference Include="..\..\..\binding\SkiaSharp.NativeAssets.Linux\SkiaSharp.NativeAssets.Linux.csproj" />
     <ProjectReference Include="..\..\..\binding\HarfBuzzSharp.NativeAssets.Linux\HarfBuzzSharp.NativeAssets.Linux.csproj" />
@@ -53,15 +54,6 @@
         implicit references from Uno.Sdk match the versions specified in SkiaSharpSample.Shared -->
     <SkiaSharpVersion />
   </PropertyGroup>
-
-  <!-- SkiaSharp.Views.WinUI is needed for SKXamlCanvas/SKSwapChainPanel on Windows.
-       In-tree, this comes via _UnoPlatformSamples.targets (as a ProjectReference).
-       In generated samples, that import is stripped, so this PackageReference ensures
-       the generated build can resolve the types. samples-generate bumps the version.
-       Uno.Sdk 7 rejects duplicate PackageReference items, so skip it when the import already added one. -->
-  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
-    <PackageReference Include="SkiaSharp.Views.WinUI" Version="3.119.2" Condition="'@(PackageReference->AnyHaveMetadataValue('Identity', 'SkiaSharp.Views.WinUI'))' != 'true'" />
-  </ItemGroup>
 
   <Import Project="..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="..\..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />

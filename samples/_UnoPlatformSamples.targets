@@ -8,7 +8,11 @@
     <PackageReference Include="SkiaSharp" Version="3.119.2" ExcludeAssets="all" />
     <PackageReference Include="SkiaSharp.Views.WinUI" Version="3.119.2" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-windows'))" />
     <PackageReference Include="SkiaSharp.Views.Uno.WinUI" Version="3.119.2" ExcludeAssets="all" />
+    <!-- Uno 7 packages (e.g. Uno.WinUI.Lottie) depend on these at 4.151.1, so a lower placeholder is a downgrade -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Android" Version="4.151.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-android'))" />
+    <PackageReference Include="SkiaSharp.NativeAssets.iOS" Version="4.151.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-ios'))" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="3.119.2" ExcludeAssets="all" />
     <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.2" ExcludeAssets="all" />
     <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="3.119.2" ExcludeAssets="all" />
     <PackageReference Include="SkiaSharp.Views.Desktop.Common" Version="3.119.2" ExcludeAssets="all" />
@@ -39,7 +43,7 @@
     </When>
     <!-- Uno Platform 7 draws every head with Skia -->
     <Otherwise>
-      <ItemGroup>
+      <ItemGroup Condition="'$(IncludeSkiaSharpUnoViews)' != 'false'">
         <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI.Skia\SkiaSharp.Views.Uno.WinUI.Skia.csproj" />
       </ItemGroup>
     </Otherwise>
