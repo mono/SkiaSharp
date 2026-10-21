@@ -19,15 +19,33 @@ stages:
             displayName: Validate build identity rules
           - pwsh: ./scripts/infra/security/tests/PrepareApiScanInputs.Tests.ps1
             displayName: Validate API Scan input preparation
-          - bash: python3 scripts/infra/caching/repo-deps.py validate
+          - pwsh: |
+              python3 scripts/infra/caching/repo-deps.py validate
+              if ($LASTEXITCODE -ne 0) {
+                throw "Cache configuration validation exited with code $LASTEXITCODE."
+              }
             displayName: Validate cache config coverage
-          - bash: |
-              BASE=""
-              if [ -n "$SYSTEM_PULLREQUEST_TARGETBRANCH" ]; then
-                TARGET=$(echo "$SYSTEM_PULLREQUEST_TARGETBRANCH" | sed 's|refs/heads/||')
-                git fetch origin "$TARGET" --depth=1 2>/dev/null
-                BASE="origin/$TARGET"
-              fi
-              python3 scripts/infra/caching/repo-deps.py cache-key \
-                --job all --name prepare ${BASE:+--base "$BASE"}
+          - pwsh: |
+              $arguments = @(
+                'scripts/infra/caching/repo-deps.py'
+                'cache-key'
+                '--job'
+                'all'
+                '--name'
+                'prepare'
+              )
+
+              if ($env:SYSTEM_PULLREQUEST_TARGETBRANCH) {
+                $target = $env:SYSTEM_PULLREQUEST_TARGETBRANCH -replace '^refs/heads/', ''
+                git fetch origin $target --depth=1
+                if ($LASTEXITCODE -ne 0) {
+                  throw "Could not fetch target branch '$target'."
+                }
+                $arguments += @('--base', "origin/$target")
+              }
+
+              python3 @arguments
+              if ($LASTEXITCODE -ne 0) {
+                throw "Dependency tree exited with code $LASTEXITCODE."
+              }
             displayName: Show dependency tree
