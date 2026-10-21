@@ -99,8 +99,43 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         }
         ListAndroidDevices();
     } catch (Exception error) {
-        TeardownAndroidEmulator(ref ownedAvd, ref ownedSerial, error);
-        throw;
+        var failure = error;
+        if (ANDROID_EMULATOR_PROCESS != null && !ANDROID_EMULATOR_PROCESS.HasExited && ownedSerial != null) {
+            try {
+                CaptureOwnedAndroidBootDiagnostics(ownedAvd, ownedSerial);
+            } catch (Exception diagnosticsError) {
+                failure = new AggregateException("Owned Android setup and boot diagnostics failed.", error, diagnosticsError);
+            }
+        }
+        TeardownAndroidEmulator(ref ownedAvd, ref ownedSerial, failure);
+        System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+    }
+}
+
+void CaptureOwnedAndroidBootDiagnostics(string ownedAvd, string ownedSerial)
+{
+    AssertOwnedAndroidEmulator(ownedAvd, ownedSerial);
+    var logs = System.IO.Path.Combine(ROOT_PATH.FullPath, "output", "logs", "android", ownedAvd);
+    System.IO.Directory.CreateDirectory(logs);
+    // These shell diagnostics are not exposed by the pinned dotnet android CLI.
+    foreach (var diagnostic in new[] {
+        (Name: "last-anr", Command: "dumpsys activity lastanr"),
+        (Name: "resources", Command: "dumpsys cpuinfo && dumpsys meminfo"),
+    }) {
+        var exit = StartProcess(ANDROID_ADB, new ProcessSettings {
+            Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
+                .Append("shell").AppendQuoted(diagnostic.Command),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            Timeout = 30000,
+        }, out var stdout, out var stderr);
+        var lines = stdout.Concat(stderr).ToArray();
+        System.IO.File.WriteAllLines(System.IO.Path.Combine(logs, diagnostic.Name + ".log"), lines);
+        Information("Owned Android {0} (first 120 lines):\n{1}", diagnostic.Name, string.Join("\n", lines.Take(120)));
+        if (diagnostic.Name == "resources")
+            Information("Owned Android memory summary (last 40 lines):\n{0}", string.Join("\n", lines.TakeLast(40)));
+        if (exit != 0)
+            throw new Exception($"Owned Android {diagnostic.Name} diagnostics failed with exit code {exit}.");
     }
 }
 
@@ -267,10 +302,18 @@ void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Except
         try {
             var logs = System.IO.Path.Combine(ROOT_PATH.FullPath, "output", "logs", "android", ownedAvd);
             System.IO.Directory.CreateDirectory(logs);
+            var stdout = ANDROID_EMULATOR_STDOUT.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult();
+            var stderr = ANDROID_EMULATOR_STDERR.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult();
             System.IO.File.WriteAllText(System.IO.Path.Combine(logs, "emulator.stdout.log"),
-                ANDROID_EMULATOR_STDOUT.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult());
+                stdout);
             System.IO.File.WriteAllText(System.IO.Path.Combine(logs, "emulator.stderr.log"),
-                ANDROID_EMULATOR_STDERR.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult());
+                stderr);
+            if (originalError != null) {
+                Information("Owned Android emulator stdout (last 100 lines):\n{0}",
+                    string.Join("\n", stdout.Split('\n').TakeLast(100)));
+                Information("Owned Android emulator stderr (last 100 lines):\n{0}",
+                    string.Join("\n", stderr.Split('\n').TakeLast(100)));
+            }
         } catch (Exception error) {
             failures.Add(error);
         }
