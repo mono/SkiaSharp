@@ -200,13 +200,15 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                 import.Remove();
             }
 
-            // substitute <SkiaSharpVersion> (used by Uno.Sdk to override the version of its
-            // implicitly-referenced SkiaSharp package; not a <PackageReference> so not handled above)
-            foreach (var ve in xdoc.Descendants().Where(e => e.Name.LocalName == "SkiaSharpVersion").ToArray()) {
-                var skiaVersion = GetSamplePackageVersion("SkiaSharp", versionSuffix);
-                if (!string.IsNullOrWhiteSpace(skiaVersion)) {
-                    Debug($"Substituting SkiaSharpVersion for {skiaVersion}.");
-                    ve.Value = skiaVersion;
+            // substitute <SkiaSharpVersion> and <HarfBuzzSharpVersion> (used by Uno.Sdk to override the version of its
+            // implicitly-referenced SkiaSharp and HarfBuzzSharp packages; not a <PackageReference> so not handled above)
+            foreach (var family in new[] { "SkiaSharp", "HarfBuzzSharp" }) {
+                foreach (var ve in xdoc.Descendants().Where(e => e.Name.LocalName == family + "Version").ToArray()) {
+                    var familyVersion = GetSamplePackageVersion(family, versionSuffix);
+                    if (!string.IsNullOrWhiteSpace(familyVersion)) {
+                        Debug($"Substituting {family}Version for {familyVersion}.");
+                        ve.Value = familyVersion;
+                    }
                 }
             }
 

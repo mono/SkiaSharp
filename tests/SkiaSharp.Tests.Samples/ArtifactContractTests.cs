@@ -38,6 +38,10 @@ public class ArtifactContractTests
             Assert.Null(version.Attribute("Condition"));
             Assert.True(File.Exists(Path.Combine(Repo.PackagesDir, $"SkiaSharp.{version.Value}.nupkg")),
                 $"Generated Uno project {relative} must override the SDK's SkiaSharp version with the supplied product version.");
+            var harfBuzzVersion = Assert.Single(project.Descendants("HarfBuzzSharpVersion"));
+            Assert.Null(harfBuzzVersion.Attribute("Condition"));
+            Assert.True(File.Exists(Path.Combine(Repo.PackagesDir, $"HarfBuzzSharp.{harfBuzzVersion.Value}.nupkg")),
+                $"Generated Uno project {relative} must override the SDK's HarfBuzzSharp version with the supplied product version.");
             Assert.DoesNotContain(project.Descendants().Attributes("Condition"),
                 condition => condition.Value.Contains("_UnoPlatformSamples.targets", StringComparison.Ordinal));
         }
