@@ -14,6 +14,7 @@ npm install --global appium@3
 appium driver install xcuitest@12.13.2
 
 $wda = Join-Path $PSScriptRoot '../../../output/appium/wda'
+New-Item (Split-Path $wda -Parent) -ItemType Directory -Force | Out-Null
 if (Test-Path $wda) {
     Remove-Item $wda -Recurse -Force
 }
