@@ -63,7 +63,7 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 	{
 		const string canvasId = "basic-canvas-drawing";
 		navigate(app, "Drawing");
-		await Compare(app, canvasId, "basic-drawing-page", "Maui");
+		await Compare(app, canvasId, "basic-drawing-initial", "Maui");
 
 		// Axis-aligned strokes avoid timing-dependent diagonal interpolation.
 		app.Drag(app.Find(canvasId), 0.3, 0.45, 0.7, 0.45);
@@ -133,22 +133,27 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		app.Click("sample-gradient");
 		app.WaitText("sample-title", text => text == "Gradient");
 		app.WaitText("sample-render-status", text => text.StartsWith("CPU", StringComparison.Ordinal) && text.Contains("  |"));
-		await Compare(app, "sample-canvas-cpu", "gallery-gradient-cpu", "Maui");
-
-		if (app.FindOptional("sample-controls-toggle")?.Text == "Controls ▸")
-			app.Click("sample-controls-toggle");
-		app.ScrollIntoView("sample-controls", "control-angle");
-		app.Drag(app.Find("control-angle"), 0.2, 0.5, 0.0, 0.5);
-		app.WaitText("control-angle-value", text => text == "Angle: 0");
-		await Compare(app, "sample-canvas-cpu", "gallery-gradient-adjusted", "Maui");
-
-		app.Click("sample-back");
-		app.Find("gallery-search", "gallery-filter-search");
-		app.Click("sample-gradient");
-		app.WaitText("sample-render-status", text => text.StartsWith("CPU", StringComparison.Ordinal) && text.Contains("  |"));
-		app.Click("gallery-header-gpu");
-		app.WaitText("sample-render-status", text => text.StartsWith("GPU", StringComparison.Ordinal) && text.Contains("  |"));
-		await Compare(app, "sample-canvas-gpu", "gallery-gradient-gpu", "Maui");
+		await Assert.MultipleAsync(
+			async () => await Compare(app, "sample-canvas-cpu", "gallery-gradient-cpu", "Maui"),
+			async () =>
+			{
+				if (app.FindOptional("sample-controls-toggle")?.Text == "Controls ▸")
+					app.Click("sample-controls-toggle");
+				app.ScrollIntoView("sample-controls", "control-angle");
+				app.Drag(app.Find("control-angle"), 0.2, 0.5, 0.0, 0.5);
+				app.WaitText("control-angle-value", text => text == "Angle: 0");
+				await Compare(app, "sample-canvas-cpu", "gallery-gradient-adjusted", "Maui");
+			},
+			async () =>
+			{
+				app.Click("sample-back");
+				app.Find("gallery-search", "gallery-filter-search");
+				app.Click("sample-gradient");
+				app.WaitText("sample-render-status", text => text.StartsWith("CPU", StringComparison.Ordinal) && text.Contains("  |"));
+				app.Click("gallery-header-gpu");
+				app.WaitText("sample-render-status", text => text.StartsWith("GPU", StringComparison.Ordinal) && text.Contains("  |"));
+				await Compare(app, "sample-canvas-gpu", "gallery-gradient-gpu", "Maui");
+			});
 		app.Click("sample-back");
 		app.Find("gallery-search", "gallery-filter-search");
 	}

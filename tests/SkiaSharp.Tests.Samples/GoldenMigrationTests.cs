@@ -14,7 +14,7 @@ public sealed class GoldenMigrationTests : IDisposable
     [InlineData("gallery-gradient-cpu")]
     [InlineData("gallery-gradient-gpu")]
     [InlineData("gallery-gradient-adjusted")]
-    public void AndroidKeepsOnlyTheDemonstratedArchitectureDifferences(string name)
+    public void AndroidKeepsTheDemonstratedArchitectureDifferences(string name)
     {
         var store = GoldenStoreIndex.FromDirectory(SampleReferences.Root);
         var oldArm = store.Resolve(new("pixel-9", "26", name, "arm64")).Asset!;
@@ -25,8 +25,31 @@ public sealed class GoldenMigrationTests : IDisposable
         var currentArm = store.Resolve(new("pixel-9", "36", name, "arm64")).Asset!;
         var currentIntel = store.Resolve(new("pixel-9", "36", name, "x64")).Asset!;
         Assert.Null(currentArm.Key.Architecture);
-        Assert.Equal(currentArm.Key.ToString(), currentIntel.Key.ToString());
-        Assert.Equal(currentArm.ReadBytes(), currentIntel.ReadBytes());
+        if (name == "gallery-gradient-cpu")
+        {
+            Assert.Equal("x64", currentIntel.Key.Architecture);
+            Assert.NotEqual(currentArm.ReadBytes(), currentIntel.ReadBytes());
+        }
+        else
+        {
+            Assert.Equal(currentArm.Key.ToString(), currentIntel.Key.ToString());
+            Assert.Equal(currentArm.ReadBytes(), currentIntel.ReadBytes());
+        }
+    }
+
+    [Fact]
+    public void AndroidDrawingInitialAndPostInteractionAreExplicitCases()
+    {
+        var store = GoldenStoreIndex.FromDirectory(SampleReferences.Root);
+        var initial = store.Resolve(new("pixel-9", "36", "maui-basic-drawing-initial", "x64")).Asset!;
+        var afterInteraction = store.Resolve(new("pixel-9", "36", "maui-basic-drawing", "x64")).Asset!;
+        Assert.Null(initial.Key.Architecture);
+        Assert.Equal("x64", afterInteraction.Key.Architecture);
+        Assert.NotEqual(initial.Key.CaseName, afterInteraction.Key.CaseName);
+        using var first = SKImage.FromEncodedData(initial.Location);
+        using var after = SKImage.FromEncodedData(afterInteraction.Location);
+        var difference = SkiaSharp.Extended.SKPixelComparer.Compare(first, after, 0);
+        Assert.True(difference.ErrorPixelCount > difference.TotalPixels * SampleImageOptions.DefaultMaxErrorPixelFraction);
     }
 
     [Theory]

@@ -223,8 +223,12 @@ variables and `TEST_ANDROID_UDID` to the exact serial of a device you manage.
 Missing serials fail before device interaction; no first-device selection is used.
 
 Android references use `pixel-9/<API>/<case>[.arm64|.x64].png`.
-Only API 26's three Gallery gradients currently need architecture overrides;
-the other reviewed ABI pairs share unsuffixed files. API levels are not Android
+API 26's three Gallery gradients and API 36's Gallery CPU/post-interaction drawing
+captures have reviewed x64 overrides; the other verified pairs share unsuffixed
+files. Initial drawing is a separate case: captured control antialiasing on
+API 36 x64 changes after interaction. These cases retain channel tolerance
+zero and the same outlier budget rather than selecting a reference by its pixels.
+API levels are not Android
 release numbers: API 36 never searches API 26. The registered Pixel 9 profile
 requires `google_apis`; another image flavor needs its own reviewed profile.
 The actual device API and ABI are checked before comparing. Animated Basic GPU
