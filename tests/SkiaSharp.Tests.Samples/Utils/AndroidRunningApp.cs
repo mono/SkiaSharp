@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using OpenQA.Selenium.Appium;
@@ -19,15 +20,21 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 
 	internal override string Platform => "Android";
 
-	internal override string DeviceProfile => ReferenceProfile(model, image);
+	internal override string DeviceProfile => ReferenceProfile(model, image, RuntimeInformation.OSArchitecture);
 
-	internal static string ReferenceProfile(string? model, string? image)
+	internal static string ReferenceProfile(string? model, string? image, Architecture architecture)
 	{
 		if (string.IsNullOrWhiteSpace(model) || !Regex.IsMatch(model, @"^[a-zA-Z0-9_-]+$") ||
 			string.IsNullOrWhiteSpace(image) || !Regex.IsMatch(image, @"^android-[0-9]+(?:\.[0-9]+)?;[a-zA-Z0-9_]+$"))
 			throw new InvalidOperationException("Declare the exact TEST_ANDROID_MODEL and TEST_ANDROID_IMAGE profile.");
 
-		return $"{model}/{image[..image.IndexOf(';')]}";
+		var abi = architecture switch
+		{
+			Architecture.X64 => "x86_64",
+			Architecture.Arm64 => "arm64-v8a",
+			_ => throw new InvalidOperationException("Android emulators require an arm64 or x64 host.")
+		};
+		return $"{model}/{image[..image.IndexOf(';')]}/{abi}";
 	}
 
 	internal override async Task<string> ReadApplicationId()

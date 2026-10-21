@@ -360,18 +360,22 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Theory]
-	[InlineData("android-26;google_apis", "android-26")]
-	[InlineData("android-26;google_apis_playstore", "android-26")]
-	[InlineData("android-36;google_apis", "android-36")]
-	public void AndroidGoldenProfilesUseApiLevelWithoutImageFlavor(string image, string api)
+	[InlineData("android-26;google_apis", "android-26", Architecture.Arm64, "arm64-v8a")]
+	[InlineData("android-26;google_apis_playstore", "android-26", Architecture.Arm64, "arm64-v8a")]
+	[InlineData("android-36;google_apis", "android-36", Architecture.Arm64, "arm64-v8a")]
+	[InlineData("android-26;google_apis", "android-26", Architecture.X64, "x86_64")]
+	[InlineData("android-26;google_apis_playstore", "android-26", Architecture.X64, "x86_64")]
+	[InlineData("android-36;google_apis", "android-36", Architecture.X64, "x86_64")]
+	public void AndroidGoldenProfilesUseApiLevelAndSelectedEmulatorAbiWithoutImageFlavor(
+		string image, string api, Architecture architecture, string abi)
 	{
-		var profile = AndroidRunningApp.ReferenceProfile("pixel_9", image);
-		Assert.Equal($"pixel_9/{api}", profile);
+		var profile = AndroidRunningApp.ReferenceProfile("pixel_9", image, architecture);
+		Assert.Equal($"pixel_9/{api}/{abi}", profile);
 		foreach (var family in new[] { "Maui", "Native" })
 		{
 			var expected = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", family, "Android");
 			Assert.Equal(Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
-				"Appium", family, "Android", "pixel_9", api, "basic-cpu.png"), expected);
+				"Appium", family, "Android", "pixel_9", api, abi, "basic-cpu.png"), expected);
 			var missing = AppiumSampleRunTestBase.Expected(profile, "unit-fixture-not-reviewed", family, "Android");
 			Assert.False(File.Exists(missing));
 			var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.2", "basic-cpu", "Maui");
@@ -388,7 +392,14 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("../pixel_9", "android-26;google_apis")]
 	[InlineData("pixel_9", "android-26;google_apis/foreign")]
 	public void AndroidRequiresAnExplicitSafeProfile(string? model, string? image) =>
-		Assert.Throws<InvalidOperationException>(() => AndroidRunningApp.ReferenceProfile(model, image));
+		Assert.Throws<InvalidOperationException>(() => AndroidRunningApp.ReferenceProfile(model, image, Architecture.Arm64));
+
+	[Theory]
+	[InlineData(Architecture.X86)]
+	[InlineData(Architecture.Arm)]
+	public void AndroidRejectsUnsupportedEmulatorArchitectures(Architecture architecture) =>
+		Assert.Throws<InvalidOperationException>(() =>
+			AndroidRunningApp.ReferenceProfile("pixel_9", "android-26;google_apis", architecture));
 
 	[Theory]
 	[InlineData("<manifest package=\"com.skiasharp.built\" />")]
@@ -490,10 +501,14 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("26.2", false)]
 	[InlineData("26.3.1", true)]
 	[InlineData("26.3.1", false)]
-	[InlineData("android-26", true, "Android")]
-	[InlineData("android-26", false, "Android")]
-	[InlineData("android-36", true, "Android")]
-	[InlineData("android-36", false, "Android")]
+	[InlineData("android-26/arm64-v8a", true, "Android")]
+	[InlineData("android-26/arm64-v8a", false, "Android")]
+	[InlineData("android-36/arm64-v8a", true, "Android")]
+	[InlineData("android-36/arm64-v8a", false, "Android")]
+	[InlineData("android-26/x86_64", true, "Android")]
+	[InlineData("android-26/x86_64", false, "Android")]
+	[InlineData("android-36/x86_64", true, "Android")]
+	[InlineData("android-36/x86_64", false, "Android")]
 	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(string version, bool horizontal, string platform = "iOS")
 	{
 		var references = Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
