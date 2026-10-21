@@ -37,6 +37,12 @@ internal static class Docker
     internal static Task<string> InspectRunning(string name) =>
         RunCommand(["inspect", "--format", "{{.State.Running}}", name]);
 
+    internal static Task<string> ImageId(string name) =>
+        RunCommand(["inspect", "--format", "{{.Image}}", name]);
+
+    internal static Task<string> ImageEnvironment(string image) =>
+        RunCommand(["image", "inspect", "--format", "{{.Os}}|{{.Architecture}}|{{.OsVersion}}", image]);
+
     internal static Task Stop(string name) =>
         RunCommand(["container", "stop", "--time", "5", name]);
 

@@ -1,0 +1,33 @@
+<Project>
+  <PropertyGroup>
+    <GoldenAssetsMode Condition="'$(GoldenAssetsMode)' == '' and ('$(MSBuildProjectName)' == 'SkiaSharp.Tests.Devices' or '$(MSBuildProjectName)' == 'SkiaSharp.Tests.Wasm')">Embed</GoldenAssetsMode>
+    <GoldenAssetsMode Condition="'$(GoldenAssetsMode)' == ''">Copy</GoldenAssetsMode>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>SkiaSharp.GoldenSourceRoot</_Parameter1>
+      <_Parameter2>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'Goldens', 'v1'))</_Parameter2>
+    </AssemblyAttribute>
+    <_GoldenAsset Include="$(MSBuildThisFileDirectory)Goldens/v1/**/visual-*.png"
+                  Condition="'$(MSBuildProjectName)' != 'SkiaSharp.Tests.Samples'">
+      <GoldenKey>$([System.String]::Copy('%(RecursiveDir)%(Filename)%(Extension)').Replace('\', '/'))</GoldenKey>
+    </_GoldenAsset>
+    <_GoldenAsset Include="$(MSBuildThisFileDirectory)Goldens/v1/**/*.png"
+                  Exclude="$(MSBuildThisFileDirectory)Goldens/v1/**/visual-*.png"
+                  Condition="'$(MSBuildProjectName)' == 'SkiaSharp.Tests.Samples'">
+      <GoldenKey>$([System.String]::Copy('%(RecursiveDir)%(Filename)%(Extension)').Replace('\', '/'))</GoldenKey>
+    </_GoldenAsset>
+    <Content Include="@(_GoldenAsset)" Condition="'$(GoldenAssetsMode)' == 'Copy'"
+             CopyToOutputDirectory="PreserveNewest">
+      <Link>Goldens/v1/%(GoldenKey)</Link>
+    </Content>
+    <EmbeddedResource Include="@(_GoldenAsset)" Condition="'$(GoldenAssetsMode)' == 'Embed'">
+      <LogicalName>SkiaSharp.Goldens.v1/%(GoldenKey)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Target Name="ValidateCopiedGoldenAssets" AfterTargets="CopyFilesToOutputDirectory"
+          Condition="'$(GoldenAssetsMode)' == 'Copy' and '$(TargetFramework)' != ''">
+    <Error Condition="!Exists('$(TargetDir)Goldens/v1/%(_GoldenAsset.GoldenKey)')"
+           Text="Canonical golden was not copied: %(_GoldenAsset.GoldenKey)" />
+  </Target>
+</Project>

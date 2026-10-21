@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SkiaSharp.Tests.Goldens;
 using Xunit;
 
 namespace SkiaSharp.Tests.Visual.Tests
@@ -55,9 +56,9 @@ namespace SkiaSharp.Tests.Visual.Tests
 		// Which markers are present says everything: no golden means none was
 		// committed, and a diff only exists when there was something to diff
 		// against. A pass emits all three too, so a near-miss can still be eyeballed.
-		public const string ActualImageMarker = "##SKIA-VISUAL-ACTUAL##";
-		public const string GoldenImageMarker = "##SKIA-VISUAL-GOLDEN##";
-		public const string DiffImageMarker = "##SKIA-VISUAL-DIFF##";
+		public const string ActualImageMarker = "##SKIA-GOLDEN-V2## role=actual";
+		public const string GoldenImageMarker = "##SKIA-GOLDEN-V2## role=reference";
+		public const string DiffImageMarker = "##SKIA-GOLDEN-V2## role=diff";
 
 		protected VisualMatrixTestsBase(ITestOutputHelper output)
 			: base(output)
@@ -79,34 +80,35 @@ namespace SkiaSharp.Tests.Visual.Tests
 
 			var actual = await renderer.RenderAsync(scene, info, CancellationToken.None);
 
-			EmitActual(renderer.Name, scene.Name, info, actual);
+			var resolution = GoldenStore.Resolve(renderer.Name, scene.Name);
+			WriteOutput(resolution.Describe());
+			EmitActual(renderer.Name, scene.Name, info, actual, resolution);
 
-			var golden = GoldenStore.TryLoad(renderer.Name, scene.Name, info);
-			if (golden is null)
+			if (resolution.Asset is null)
 			{
-				FailUnseeded(renderer.Name, scene.Name, info, actual);
+				FailUnseeded(renderer.Name, scene.Name, info, actual, resolution);
 				return;
 			}
 
-			CompareOrFail(renderer.Name, scene.Name, info, actual, golden.Value);
+			CompareOrFail(renderer.Name, scene.Name, info, actual, GoldenStore.Load(resolution, info));
 		}
 
 		// Harvesting this marker from the TRX is how goldens are created, so it
 		// carries the pixels verbatim.
-		private void EmitActual(string rendererName, string sceneName, SKImageInfo info, byte[] actual) =>
-			Emit(ActualImageMarker, rendererName, sceneName, info, GoldenStore.EncodePng(actual, info));
+		private void EmitActual(string rendererName, string sceneName, SKImageInfo info, byte[] actual, GoldenResolution resolution) =>
+			Emit(ActualImageMarker, info, GoldenStore.EncodePng(actual, info), resolution);
 
-		private void EmitImage(string marker, string rendererName, string sceneName, SKImageInfo info, SKImage image)
+		private void EmitImage(string marker, SKImageInfo info, SKImage image, GoldenResolution resolution)
 		{
 			using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-			Emit(marker, rendererName, sceneName, info, data.ToArray());
+			Emit(marker, info, data.ToArray(), resolution);
 		}
 
-		private void Emit(string marker, string rendererName, string sceneName, SKImageInfo info, byte[] png)
+		private void Emit(string marker, SKImageInfo info, byte[] png, GoldenResolution resolution)
 		{
 			var normalized = RendererPixels.NormalizedInfo(info);
 			WriteOutput(
-				$"{marker} path={GoldenStore.Key(rendererName, sceneName)} " +
+				$"{marker} key={GoldenStore.CaptureKey(resolution.Request)} selected={resolution.Asset?.Key.ToString() ?? "-"} " +
 				$"size={normalized.Width}x{normalized.Height} base64={Convert.ToBase64String(png)}");
 		}
 
@@ -123,8 +125,8 @@ namespace SkiaSharp.Tests.Visual.Tests
 
 			using var diffImage = SkiaSharp.Extended.SKPixelComparer.GenerateDifferenceImage(goldenImage, actualImage, tolerance.ChannelTolerance);
 
-			EmitImage(GoldenImageMarker, rendererName, sceneName, info, goldenImage);
-			EmitImage(DiffImageMarker, rendererName, sceneName, info, diffImage);
+			EmitImage(GoldenImageMarker, info, goldenImage, golden.Resolution);
+			EmitImage(DiffImageMarker, info, diffImage, golden.Resolution);
 
 			if (result.ErrorPixelCount <= allowedOutliers)
 				return;
@@ -142,14 +144,12 @@ namespace SkiaSharp.Tests.Visual.Tests
 				"otherwise fix the regression.");
 		}
 
-		private void FailUnseeded(string rendererName, string sceneName, SKImageInfo info, byte[] actual)
+		private void FailUnseeded(string rendererName, string sceneName, SKImageInfo info, byte[] actual, GoldenResolution resolution)
 		{
 			var actualPath = TrySave(() => GoldenStore.SaveFailureArtifact(rendererName, sceneName, ".actual.png", actual, info));
-			var looked = string.Join(" or ", GoldenStore.Candidates(rendererName, sceneName).Select(k => "Goldens/" + k));
 
 			Assert.Fail(
-				$"No golden recorded yet for '{rendererName}/{sceneName}' on '{string.Join("' / '", VisualPlatform.Tags)}' " +
-				$"(looked for {looked}). " +
+				$"No golden recorded yet for '{rendererName}/{sceneName}'. {resolution.Describe()} " +
 				$"The rendered PNG is in the test results as a {ActualImageMarker} marker; " +
 				"seed it with scripts/infra/tests/extract-visual-goldens.py and commit. " +
 				ArtifactSuffix(actualPath, null));

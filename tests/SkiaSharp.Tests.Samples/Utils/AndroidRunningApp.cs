@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Android;
+using SkiaSharp.Tests.Goldens;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -12,6 +13,7 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 	private readonly string? image = Environment.GetEnvironmentVariable("TEST_ANDROID_IMAGE");
 	private readonly string? model = Environment.GetEnvironmentVariable("TEST_ANDROID_MODEL");
 	private readonly string serial;
+	private string? actualArchitecture;
 
 	internal AndroidRunningApp(SampleWorkspace workspace, string artifact, string? serial)
 		: base(workspace, artifact, new AndroidAppiumOperations())
@@ -25,19 +27,28 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 
 	internal override string DeviceProfile => ReferenceProfile(model, image, RuntimeInformation.OSArchitecture);
 
+	internal override GoldenRequest Reference(string caseName)
+	{
+		_ = DeviceProfile;
+		return new(DeviceProfile, image![8..image.IndexOf(';')], caseName,
+			actualArchitecture ?? RuntimeInformation.OSArchitecture.ToString().ToLowerInvariant());
+	}
+
 	internal static string ReferenceProfile(string? model, string? image, Architecture architecture)
 	{
 		if (string.IsNullOrWhiteSpace(model) || !Regex.IsMatch(model, @"^[a-zA-Z0-9_-]+$") ||
 			string.IsNullOrWhiteSpace(image) || !Regex.IsMatch(image, @"^android-[0-9]+(?:\.[0-9]+)?;[a-zA-Z0-9_]+$"))
 			throw new InvalidOperationException("Declare the exact TEST_ANDROID_MODEL and TEST_ANDROID_IMAGE profile.");
 
-		var abi = architecture switch
+		_ = architecture switch
 		{
 			Architecture.X64 => "x86_64",
 			Architecture.Arm64 => "arm64-v8a",
 			_ => throw new InvalidOperationException("Android emulators require an arm64 or x64 host.")
 		};
-		return $"{model}/{image[..image.IndexOf(';')]}/{abi}";
+		if (model != "pixel_9" || image[(image.IndexOf(';') + 1)..] != "google_apis")
+			throw new InvalidOperationException("Only the declared Pixel 9 google_apis capture profile is registered; other image flavors must not reuse it.");
+		return "pixel-9";
 	}
 
 	internal override async Task<string> ReadApplicationId()
@@ -56,7 +67,7 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 		return id;
 	}
 
-	protected override Task Start(Uri address)
+	protected override async Task Start(Uri address)
 	{
 		Assert.True(File.Exists(Artifact) && Artifact.EndsWith(".apk", StringComparison.OrdinalIgnoreCase),
 			"Provide the actual built signed APK.");
@@ -78,9 +89,18 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 		options.AddAdditionalAppiumOption("newCommandTimeout", 120);
 		SetDriver(new AndroidDriver(address, options));
 
+		var api = (await CaptureCommand(Android.DeviceProperty(serial, "ro.build.version.sdk"))).Trim();
+		Assert.Equal(image![8..image.IndexOf(';')].Split('.')[0], api);
+		var abi = (await CaptureCommand(Android.DeviceProperty(serial, "ro.product.cpu.abi"))).Trim();
+		actualArchitecture = abi switch
+		{
+			"arm64-v8a" => "arm64",
+			"x86_64" => "x64",
+			_ => throw new InvalidOperationException($"Unsupported actual emulator ABI: {abi}")
+		};
+
 		TestContext.Current.TestOutputHelper?.WriteLine(
 			$"Android runtime: {Driver.Capabilities.GetCapability("platformVersion")}; golden profile: {DeviceProfile}.");
-		return Task.CompletedTask;
 	}
 
 	protected override async Task CapturePlatformDiagnostics()

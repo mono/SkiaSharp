@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using OpenQA.Selenium;
 using SkiaSharp.Tests.Samples.Utils;
+using SkiaSharp.Tests.Goldens;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
@@ -202,6 +203,13 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		Assert.Equal(new[] { "diagnostics" }, order);
 	}
 
+	private static string Reference(string profile, string version, string name, string architecture = "arm64")
+	{
+		var resolved = SampleReferences.Resolve(new GoldenRequest(profile, version, name, architecture));
+		Assert.NotNull(resolved.Asset);
+		return resolved.Asset.Location;
+	}
+
 	private SampleWorkspace Workspace()
 	{
 		var inputs = Path.Combine(root, "inputs");
@@ -256,13 +264,13 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public void IosGoldenProfileUsesTheSelectedRuntime(string version)
 	{
 		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", version);
-		Assert.Equal($"iPhone-16-Pro/{version}", profile);
+		Assert.Equal("iphone-16-pro", profile);
 
 		foreach (var family in new[] { "Maui", "Native" })
 		{
-			var expected = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", family, "iOS", "arm64");
-			Assert.Equal(Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
-				"Appium", family, "iOS", "iPhone-16-Pro", version, "basic-cpu.png"), expected);
+			var name = AppiumSampleRunTestBase.CaseName("basic-cpu", family);
+			var expected = Reference(profile, version, name);
+			Assert.Equal(Path.Combine(SampleReferences.Root, profile, version, name + ".png"), expected);
 		}
 	}
 
@@ -271,11 +279,11 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	{
 		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", "26.2");
 
-		var x64 = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", "Maui", "iOS", "x64");
-		var arm64 = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", "Maui", "iOS", "arm64");
+		var x64 = Reference(profile, "26.2", "maui-basic-cpu", "x64");
+		var arm64 = Reference(profile, "26.2", "maui-basic-cpu", "arm64");
 
-		Assert.EndsWith(Path.Combine("26.2", "basic-cpu.x64.png"), x64);
-		Assert.EndsWith(Path.Combine("26.2", "basic-cpu.png"), arm64);
+		Assert.EndsWith(Path.Combine("26.2", "maui-basic-cpu.x64.png"), x64);
+		Assert.EndsWith(Path.Combine("26.2", "maui-basic-cpu.png"), arm64);
 		Assert.True(File.Exists(x64));
 		Assert.True(File.Exists(arm64));
 	}
@@ -286,14 +294,15 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public void IosGoldensFailWithoutFallingBackToAnotherProfile(string version, string name)
 	{
 		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", version);
-		var expected = AppiumSampleRunTestBase.Expected(profile, name, "Maui");
-		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.2", "basic-cpu", "Maui");
+		var request = new GoldenRequest(profile, version, AppiumSampleRunTestBase.CaseName(name, "Maui"), "arm64");
+		var expected = Path.Combine(SampleReferences.Root, profile, version, request.CaseName + ".png");
+		var actual = Reference("iphone-16-pro", "26.2", "maui-basic-cpu");
 		Assert.True(File.Exists(actual));
 		Assert.False(File.Exists(expected));
 
 		// Missing references fail before image decoding and must never be created by a test.
-		var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
-		Assert.Contains($"Missing reviewed sample golden: {expected}", failure.Message);
+		var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, request));
+		Assert.Contains("Missing reviewed sample golden", failure.Message);
 		Assert.False(File.Exists(expected));
 	}
 
@@ -361,27 +370,24 @@ public sealed class AppiumInfrastructureTests : IDisposable
 
 	[Theory]
 	[InlineData("android-26;google_apis", "android-26", Architecture.Arm64, "arm64-v8a")]
-	[InlineData("android-26;google_apis_playstore", "android-26", Architecture.Arm64, "arm64-v8a")]
 	[InlineData("android-36;google_apis", "android-36", Architecture.Arm64, "arm64-v8a")]
 	[InlineData("android-26;google_apis", "android-26", Architecture.X64, "x86_64")]
-	[InlineData("android-26;google_apis_playstore", "android-26", Architecture.X64, "x86_64")]
 	[InlineData("android-36;google_apis", "android-36", Architecture.X64, "x86_64")]
-	public void AndroidGoldenProfilesUseApiLevelAndSelectedEmulatorAbiWithoutImageFlavor(
+	public void AndroidGoldenProfilesShareIdenticalAbiReferencesWithinAnApi(
 		string image, string api, Architecture architecture, string abi)
 	{
 		var profile = AndroidRunningApp.ReferenceProfile("pixel_9", image, architecture);
-		Assert.Equal($"pixel_9/{api}/{abi}", profile);
+		Assert.Equal("pixel-9", profile);
+		Assert.Equal(architecture == Architecture.Arm64 ? "arm64-v8a" : "x86_64", abi);
+		var version = api["android-".Length..];
 		foreach (var family in new[] { "Maui", "Native" })
 		{
-			var expected = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", family, "Android");
-			Assert.Equal(Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
-				"Appium", family, "Android", "pixel_9", api, abi, "basic-cpu.png"), expected);
-			var missing = AppiumSampleRunTestBase.Expected(profile, "unit-fixture-not-reviewed", family, "Android");
-			Assert.False(File.Exists(missing));
-			var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.2", "basic-cpu", "Maui");
-			var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, missing));
-			Assert.Contains($"Missing reviewed sample golden: {missing}", failure.Message);
-			Assert.False(File.Exists(missing));
+			var name = AppiumSampleRunTestBase.CaseName("basic-cpu", family);
+			var expected = Reference(profile, version, name, architecture.ToString().ToLowerInvariant());
+			Assert.Equal(Path.Combine(SampleReferences.Root, profile, version, name + ".png"), expected);
+			var missing = new GoldenRequest(profile, version, "unit-fixture-not-reviewed", architecture.ToString().ToLowerInvariant());
+			var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(expected, missing));
+			Assert.Contains("Missing reviewed sample golden", failure.Message);
 		}
 	}
 
@@ -391,6 +397,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("pixel_9", "latest")]
 	[InlineData("../pixel_9", "android-26;google_apis")]
 	[InlineData("pixel_9", "android-26;google_apis/foreign")]
+	[InlineData("pixel_9", "android-26;google_apis_playstore")]
 	public void AndroidRequiresAnExplicitSafeProfile(string? model, string? image) =>
 		Assert.Throws<InvalidOperationException>(() => AndroidRunningApp.ReferenceProfile(model, image, Architecture.Arm64));
 
@@ -451,7 +458,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		var app = new AndroidRunningApp(workspace, Path.Combine(workspace.Root, "Built-Signed.apk"), "unit-fixture-device");
 		var expected = Path.Combine(workspace.Root, "not-reviewed", "canvas.png");
 		Assert.Equal(expected, app.Operations.TransformReference(expected));
-		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.2", "basic-cpu", "Maui");
+		var actual = Reference("iphone-16-pro", "26.2", "maui-basic-cpu");
 		var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
 		Assert.Contains("Missing reviewed sample golden:", failure.Message);
 		Assert.False(File.Exists(expected));
@@ -481,6 +488,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			"iPhone 16 Pro", "26.2", new(1206, 2622)));
 		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ScreenshotInsets(
 			"iPhone 16 Pro", "26.3.1", new(1206, 2622)));
+		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ScreenshotInsets(
+			"iPhone 16 Pro", "26.3.2", new(1206, 2622)));
 		Assert.Equal(SKRectI.Empty, IosRunningApp.ScreenshotInsets(
 			"iPhone 16", "26.2", new(1206, 2622)));
 		Assert.Equal(SKRectI.Empty, IosRunningApp.ScreenshotInsets(
@@ -513,20 +522,19 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("26.2", false)]
 	[InlineData("26.3.1", true)]
 	[InlineData("26.3.1", false)]
-	[InlineData("android-26/arm64-v8a", true, "Android")]
-	[InlineData("android-26/arm64-v8a", false, "Android")]
-	[InlineData("android-36/arm64-v8a", true, "Android")]
-	[InlineData("android-36/arm64-v8a", false, "Android")]
-	[InlineData("android-26/x86_64", true, "Android")]
-	[InlineData("android-26/x86_64", false, "Android")]
-	[InlineData("android-36/x86_64", true, "Android")]
-	[InlineData("android-36/x86_64", false, "Android")]
-	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(string version, bool horizontal, string platform = "iOS")
+	[InlineData("26", true, "pixel-9")]
+	[InlineData("26", false, "pixel-9")]
+	[InlineData("36", true, "pixel-9")]
+	[InlineData("36", false, "pixel-9")]
+	[InlineData("26", true, "pixel-9", "x64")]
+	[InlineData("26", false, "pixel-9", "x64")]
+	[InlineData("36", true, "pixel-9", "x64")]
+	[InlineData("36", false, "pixel-9", "x64")]
+	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(
+		string version, bool horizontal, string profile = "iphone-16-pro", string architecture = "arm64")
 	{
-		var references = Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
-			"Appium", "Maui", platform, platform == "Android" ? "pixel_9" : "iPhone-16-Pro", version);
-		var drawn = Path.Combine(references, "basic-drawing-two-lines.png");
-		var blank = Path.Combine(references, "basic-drawing-page.png");
+		var drawn = Reference(profile, version, "maui-basic-drawing-two-lines", architecture);
+		var blank = Reference(profile, version, "maui-basic-drawing", architecture);
 		AppiumSampleRunTestBase.AssertDrawingStrokeRegions(drawn, drawn);
 		AppiumSampleRunTestBase.AssertDrawingStrokeRegions(blank, blank);
 
