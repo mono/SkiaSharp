@@ -112,23 +112,35 @@ void ListAndroidDevices()
 
 void WaitForAndroidBoot(string ownedSerial)
 {
-    // Match the repository device suite's five-minute boot budget, not a consumer session timeout.
+    // Preserve the original device runner's CPU/response stability gate within its boot budget.
     var clock = System.Diagnostics.Stopwatch.StartNew();
+    var stable = 0;
+    var last = "boot properties unavailable";
     while (clock.Elapsed < TimeSpan.FromSeconds(300)) {
         if (ANDROID_EMULATOR_PROCESS.HasExited)
             throw new Exception($"Owned Android emulator exited during boot: {ANDROID_EMULATOR_PROCESS.ExitCode}.");
+        var response = System.Diagnostics.Stopwatch.StartNew();
         var exit = StartProcess(ANDROID_ADB, new ProcessSettings {
             Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
-                .Append("shell getprop sys.boot_completed"),
+                .Append("shell").AppendQuoted("getprop sys.boot_completed; cat /proc/loadavg"),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             Timeout = 10000,
         }, out var stdout, out var stderr);
-        if (exit == 0 && stdout.Any(line => line.Trim() == "1"))
+        var lines = stdout.Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
+        var ready = exit == 0 && lines.Length == 2 && lines[0] == "1" &&
+            double.TryParse(lines[1].Split(' ')[0], System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var load) && load < 3 &&
+            response.Elapsed < TimeSpan.FromSeconds(5);
+        last = $"exit={exit}, response={response.Elapsed.TotalSeconds:F1}s, output={string.Join(" | ", lines)}";
+        stable = ready ? stable + 1 : 0;
+        if (stable == 3) {
+            Information("Owned Android emulator ready: {0}", last);
             return;
-        System.Threading.Thread.Sleep(500);
+        }
+        System.Threading.Thread.Sleep(1000);
     }
-    throw new TimeoutException($"Owned Android emulator {ownedSerial} did not complete boot within 300 seconds.");
+    throw new TimeoutException($"Owned Android emulator {ownedSerial} did not reach boot/CPU/response readiness within 300 seconds: {last}.");
 }
 
 int AndroidEmulatorPort()
