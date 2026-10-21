@@ -11,7 +11,8 @@ internal static class ProcessRunner
         IEnumerable<string> arguments,
         string directory,
         TimeSpan timeout,
-        Action<ProcessStartInfo>? configure = null)
+        Action<ProcessStartInfo>? configure = null,
+        bool publishOutput = true)
     {
         using var process = Start(executable, arguments, directory, configure);
         var stdout = process.StandardOutput.ReadToEndAsync();
@@ -31,7 +32,8 @@ internal static class ProcessRunner
         var text = await stdout;
         var errors = await stderr;
 
-        WriteOutput(text);
+        if (publishOutput)
+            WriteOutput(text);
         if (errors.Length > 0)
             WriteOutput(errors);
 
