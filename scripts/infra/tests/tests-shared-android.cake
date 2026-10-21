@@ -147,7 +147,7 @@ void ListAndroidDevices()
 
 void WaitForAndroidBoot(string ownedSerial)
 {
-    // Preserve the original device runner's CPU/response stability gate within its boot budget.
+    // Package Manager readiness is observable directly; aggregate Linux load is not a service readiness signal.
     var clock = System.Diagnostics.Stopwatch.StartNew();
     var stable = 0;
     var last = "boot properties unavailable";
@@ -157,17 +157,16 @@ void WaitForAndroidBoot(string ownedSerial)
         var response = System.Diagnostics.Stopwatch.StartNew();
         var exit = StartProcess(ANDROID_ADB, new ProcessSettings {
             Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
-                .Append("shell").AppendQuoted("getprop sys.boot_completed; cat /proc/loadavg"),
+                .Append("shell").AppendQuoted("getprop sys.boot_completed; pm path android; cat /proc/loadavg"),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             Timeout = 10000,
         }, out var stdout, out var stderr);
         var lines = stdout.Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
-        var ready = exit == 0 && lines.Length == 2 && lines[0] == "1" &&
-            double.TryParse(lines[1].Split(' ')[0], System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out var load) && load < 3 &&
+        var ready = exit == 0 && lines.Length == 3 && lines[0] == "1" &&
+            lines[1].StartsWith("package:/", StringComparison.Ordinal) &&
             response.Elapsed < TimeSpan.FromSeconds(5);
-        last = $"exit={exit}, response={response.Elapsed.TotalSeconds:F1}s, output={string.Join(" | ", lines)}";
+        last = $"exit={exit}, response={response.Elapsed.TotalSeconds:F1}s, output={string.Join(" | ", lines)}, error={string.Join(" | ", stderr)}";
         stable = ready ? stable + 1 : 0;
         if (stable == 3) {
             Information("Owned Android emulator ready: {0}", last);
@@ -175,7 +174,7 @@ void WaitForAndroidBoot(string ownedSerial)
         }
         System.Threading.Thread.Sleep(1000);
     }
-    throw new TimeoutException($"Owned Android emulator {ownedSerial} did not reach boot/CPU/response readiness within 300 seconds: {last}.");
+    throw new TimeoutException($"Owned Android emulator {ownedSerial} did not reach boot/Package Manager/response readiness within 300 seconds: {last}.");
 }
 
 int AndroidEmulatorPort()
