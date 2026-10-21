@@ -27,7 +27,7 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 			string.IsNullOrWhiteSpace(image) || !Regex.IsMatch(image, @"^android-[0-9]+(?:\.[0-9]+)?;[a-zA-Z0-9_]+$"))
 			throw new InvalidOperationException("Declare the exact TEST_ANDROID_MODEL and TEST_ANDROID_IMAGE profile.");
 
-		return $"{model}/{image}";
+		return $"{model}/{image[..image.IndexOf(';')]}";
 	}
 
 	internal override async Task<string> ReadApplicationId()

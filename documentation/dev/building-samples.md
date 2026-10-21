@@ -214,7 +214,8 @@ variables and optionally `TEST_ANDROID_UDID` for a device you manage.
 Without a UDID, direct runs leave device selection to the driver.
 
 Android references route to
-`Expected/Appium/<Maui|Native>/Android/<model>/<image>/`. Review exact-profile
+`Expected/Appium/<Maui|Native>/Android/<model>/android-<API>/`, such as `android-26/`.
+The emulator image flavor is used for installation, not reference naming. Review exact-profile
 captures before adding references; missing or mismatched references fail without
 fallback or automatic acceptance. Animated Basic GPU pages require FPS and retain
 captures; Gallery's static GPU gradient uses strict comparison.

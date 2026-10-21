@@ -360,17 +360,18 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Theory]
-	[InlineData("android-26;google_apis")]
-	[InlineData("android-37.1;google_apis_ps16k")]
-	public void AndroidGoldenProfilesRouteOnlyToTheirExactPlatformAndImage(string image)
+	[InlineData("android-26;google_apis", "android-26")]
+	[InlineData("android-26;google_apis_playstore", "android-26")]
+	[InlineData("android-37.1;google_apis_ps16k", "android-37.1")]
+	public void AndroidGoldenProfilesUseApiLevelWithoutImageFlavor(string image, string api)
 	{
 		var profile = AndroidRunningApp.ReferenceProfile("pixel_9", image);
-		Assert.Equal($"pixel_9/{image}", profile);
+		Assert.Equal($"pixel_9/{api}", profile);
 		foreach (var family in new[] { "Maui", "Native" })
 		{
 			var expected = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", family, "Android");
 			Assert.Equal(Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
-				"Appium", family, "Android", "pixel_9", image, "basic-cpu.png"), expected);
+				"Appium", family, "Android", "pixel_9", api, "basic-cpu.png"), expected);
 			var missing = AppiumSampleRunTestBase.Expected(profile, "unit-fixture-not-reviewed", family, "Android");
 			Assert.False(File.Exists(missing));
 			var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.2", "basic-cpu", "Maui");
