@@ -362,7 +362,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[Theory]
 	[InlineData("android-26;google_apis", "android-26")]
 	[InlineData("android-26;google_apis_playstore", "android-26")]
-	[InlineData("android-37.1;google_apis_ps16k", "android-37.1")]
+	[InlineData("android-36;google_apis", "android-36")]
 	public void AndroidGoldenProfilesUseApiLevelWithoutImageFlavor(string image, string api)
 	{
 		var profile = AndroidRunningApp.ReferenceProfile("pixel_9", image);
