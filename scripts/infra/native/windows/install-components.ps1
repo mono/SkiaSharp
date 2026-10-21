@@ -23,8 +23,9 @@ if ($matches.Count -ne 1) {
     throw "Expected exactly one Visual Studio 2026 product at $InstallationPath, found $($matches.Count)."
 }
 $instance = $matches[0]
+$isBuildTools = $instance.productId -eq 'Microsoft.VisualStudio.Product.BuildTools'
 
-$config = if ($instance.productId -eq 'Microsoft.VisualStudio.Product.BuildTools') {
+$config = if ($isBuildTools) {
     Join-Path $PSScriptRoot 'build-tools.vsconfig'
 } else {
     [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../../../source/.vsconfig'))
@@ -49,7 +50,24 @@ Write-Host 'Verified all configured Visual Studio components.'
 
 $env:VS_INSTALL = $InstallationPath
 Write-Host "##vso[task.setvariable variable=VS_INSTALL]$InstallationPath"
-if ($env:GITHUB_ENV) { "VS_INSTALL=$InstallationPath" | Add-Content $env:GITHUB_ENV }
+Write-Host "##vso[task.setvariable variable=VS_IS_BUILD_TOOLS]$($isBuildTools.ToString().ToLowerInvariant())"
+if ($env:GITHUB_ENV) {
+    "VS_INSTALL=$InstallationPath" | Add-Content $env:GITHUB_ENV
+    "VS_IS_BUILD_TOOLS=$($isBuildTools.ToString().ToLowerInvariant())" | Add-Content $env:GITHUB_ENV
+}
+
+if (!$isBuildTools) {
+    $pythonKey = 'HKLM:\SOFTWARE\Python\PythonCore\3.9\InstallPath'
+    if (!(Test-Path $pythonKey)) { throw "Missing VS Installer Python registration: $pythonKey" }
+    $pythonRoot = (Get-Item $pythonKey).GetValue('')
+    $python = Join-Path $pythonRoot 'python.exe'
+    if (!(Test-Path $python -PathType Leaf)) { throw "Missing VS Installer tool: $python" }
+    $env:PYTHON_EXE = $python
+    Write-Host "##vso[task.setvariable variable=PYTHON_EXE]$python"
+    Write-Host "##vso[task.prependpath]$pythonRoot"
+    if ($env:GITHUB_ENV) { "PYTHON_EXE=$python" | Add-Content $env:GITHUB_ENV }
+    if ($env:GITHUB_PATH) { $pythonRoot | Add-Content $env:GITHUB_PATH }
+}
 
 $tools = @{
     LLVM_HOME = Join-Path $InstallationPath 'VC\Tools\Llvm\x64'
