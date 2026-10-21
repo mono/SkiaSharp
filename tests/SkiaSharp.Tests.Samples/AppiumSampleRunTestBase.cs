@@ -159,7 +159,16 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 			app.TransformReference(Expected(app.DeviceProfile, name, family)));
 
 	internal static string Expected(string deviceProfile, string name, string family) =>
-		Path.Combine(
+		Expected(deviceProfile, name, family, HostArchitecture());
+
+	internal static string Expected(string deviceProfile, string name, string family, string architecture)
+	{
+		var directory = Path.Combine(
 			Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", "Appium",
-			family, "iOS", deviceProfile.Replace('/', Path.DirectorySeparatorChar), name + ".png");
+			family, "iOS", deviceProfile.Replace('/', Path.DirectorySeparatorChar));
+		var architectureSpecific = Path.Combine(directory, $"{name}.{architecture}.png");
+		return File.Exists(architectureSpecific)
+			? architectureSpecific
+			: Path.Combine(directory, name + ".png");
+	}
 }

@@ -45,19 +45,16 @@ stages:
             platform: linux
             buildAgent: ${{ parameters.buildAgentLinux }}
 
-        # The strict Appium references and GPU scenarios require the Apple Silicon
-        # macOS agents used by the Complete pipeline.
-        - ${{ if eq(parameters.buildPipelineType, 'complete') }}:
-          - ${{ each ios in parameters.iosSimulators }}:
-            - template: /scripts/azure-templates-jobs-sample-appium.yml@self
-              parameters:
-                name: samples_appium_${{ ios.name }}
-                displayName: Appium (${{ ios.displayName }})
-                buildAgent: ${{ parameters.buildAgentMac }}
-                additionalArgs: --runGroup=Ios --iosVersion=${{ ios.version }} --iosModel="${{ ios.model }}" --skipExternals="all"
-                preBuildSteps:
-                  - ${{ if eq(ios.installRuntime, true) }}:
-                    - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ ios.version }}'
-                      displayName: Install the selected iOS simulator runtime
-                  - pwsh: ./scripts/infra/tests/install-appium.ps1
-                    displayName: Install Appium 3 and XCUITest
+        - ${{ each ios in parameters.iosSimulators }}:
+          - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+            parameters:
+              name: samples_appium_${{ ios.name }}
+              displayName: Appium (${{ ios.displayName }})
+              buildAgent: ${{ parameters.buildAgentMac }}
+              additionalArgs: --runGroup=Ios --iosVersion=${{ ios.version }} --iosModel="${{ ios.model }}" --skipExternals="all"
+              preBuildSteps:
+                - ${{ if eq(ios.installRuntime, true) }}:
+                  - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ ios.version }}'
+                    displayName: Install the selected iOS simulator runtime
+                - pwsh: ./scripts/infra/tests/install-appium.ps1
+                  displayName: Install Appium 3 and XCUITest

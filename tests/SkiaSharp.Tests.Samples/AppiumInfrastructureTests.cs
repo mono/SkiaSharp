@@ -76,6 +76,20 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		}
 	}
 
+	[Fact]
+	public void IosGoldenProfileUsesAReviewedArchitectureOverride()
+	{
+		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", "26.2");
+
+		var x64 = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", "Maui", "x64");
+		var arm64 = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", "Maui", "arm64");
+
+		Assert.EndsWith(Path.Combine("26.2", "basic-cpu.x64.png"), x64);
+		Assert.EndsWith(Path.Combine("26.2", "basic-cpu.png"), arm64);
+		Assert.True(File.Exists(x64));
+		Assert.True(File.Exists(arm64));
+	}
+
 	[Theory]
 	[InlineData("18.6", "not-reviewed")]
 	[InlineData("99.0", "basic-cpu")]
