@@ -6,7 +6,7 @@ internal static class Android
 		Run(["apk", "manifest", "info", "--pkg", apk, "--format", "xml"]);
 
 	internal static Task<(int ExitCode, string Output, string Error)> Logcat(string serial) =>
-		Run(["device", "logcat", "--id", serial]);
+		Run(["device", "logcat", "--id", serial], publishOutput: false);
 
 	internal static Task<(int ExitCode, string Output, string Error)> LastAnr(string serial)
 	{
@@ -19,6 +19,7 @@ internal static class Android
 			Repo.RootDir, TimeSpan.FromSeconds(30));
 	}
 
-	private static Task<(int ExitCode, string Output, string Error)> Run(string[] arguments) =>
-		ProcessRunner.Run("dotnet", ["android", .. arguments], Repo.RootDir, TimeSpan.FromSeconds(30));
+	private static Task<(int ExitCode, string Output, string Error)> Run(string[] arguments, bool publishOutput = true) =>
+		ProcessRunner.Run("dotnet", ["android", .. arguments], Repo.RootDir, TimeSpan.FromSeconds(30),
+			publishOutput: publishOutput);
 }
