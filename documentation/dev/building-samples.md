@@ -186,7 +186,9 @@ captures, then rerun every configured profile against the same package build.
 ## Android emulator runs
 
 The `Android` group runs Basic MAUI, native Android and Gallery MAUI with
-Appium/UiAutomator2. Install Node.js and the SDK, JDK, workloads, compile platforms
+Appium/UiAutomator2. The same `--appiumMode=build|run|all` phases apply; use
+`--runGroup=Android` with the explicit image/model options below. Install Node.js
+and the SDK, JDK, workloads, compile platforms
 and emulator tools specified by the
 [Android CI legs](../../scripts/azure-templates-stages-samples.yml).
 Use one complete image/model profile from that configuration.

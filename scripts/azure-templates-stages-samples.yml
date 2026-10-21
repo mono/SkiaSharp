@@ -67,6 +67,15 @@ stages:
             buildAgent: ${{ parameters.buildAgentMac }}
             additionalArgs: --runGroup=Ios --skipExternals="all"
 
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_build_android
+            displayName: Build Appium apps (Android)
+            phase: build
+            platform: android
+            buildAgent: ${{ parameters.buildAgentAndroidTests }}
+            additionalArgs: --runGroup=Android --skipExternals="all"
+
         - ${{ each ios in parameters.iosSimulators }}:
           - template: /scripts/azure-templates-jobs-sample-appium.yml@self
             parameters:
@@ -88,21 +97,21 @@ stages:
             parameters:
               name: samples_appium_${{ android.name }}
               displayName: Appium (${{ android.displayName }})
+              platform: android
+              dependsOn: [samples_appium_build_android]
               buildAgent: ${{ parameters.buildAgentAndroidTests }}
               additionalArgs: --runGroup=Android --androidImage="${{ android.image }}" --androidModel="${{ android.model }}" --skipExternals="all"
               preBuildSteps:
                 - pwsh: ./scripts/infra/managed/install-openjdk.ps1 -Version "$(OPENJDK_VERSION)"
-                  displayName: Install the selected JDK
+                  displayName: Install the JDK for Android SDK command-line tools
                 - pwsh: ./scripts/infra/managed/install-android-sdk.ps1
                   displayName: Select the Android SDK
                 - pwsh: |
-                    foreach ($package in @('cmdline-tools;latest', 'platform-tools', 'build-tools;35.0.0', 'build-tools;36.0.0', 'emulator')) {
+                    foreach ($package in @('cmdline-tools;latest', 'platform-tools', 'emulator')) {
                       ./scripts/infra/managed/install-android-package.ps1 -Package $package
                       if ($LASTEXITCODE -ne 0) { throw "Android package installation failed: $package" }
                     }
-                  displayName: Install current command-line tools, Android build tools and emulator
-                - pwsh: ./scripts/infra/managed/install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
-                  displayName: Install the selected Android compile platforms
+                  displayName: Install current command-line tools, platform tools and emulator
                 - pwsh: ./scripts/infra/managed/install-android-image.ps1 -Image "${{ android.image }}"
                   displayName: Install the selected Android emulator image
                 - bash: |

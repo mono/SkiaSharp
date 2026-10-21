@@ -57,22 +57,30 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 		await appium.Run(app, running => Gallery(running.Operations));
 	}
 
-	private async Task<AndroidRunningApp> BuildAndroidApp(string folder, string project)
+	private Task<AppiumPreparedApp> BuildAndroidApp(string folder, string project)
 	{
 		const string framework = "net10.0-android";
-		var workspace = await BuildSample(folder, project, new DotNetOptions
+		var rid = "android-" + HostArchitecture();
+		return appium.Prepare(new("android", HostArchitecture(), folder, project, framework, rid), async () =>
 		{
-			Configuration = "Debug",
-			Framework = framework,
-			Properties = new Dictionary<string, string>
+			var workspace = await BuildSample(folder, project, new DotNetOptions
 			{
-				["AndroidPackageFormats"] = "apk",
-				["EmbedAssembliesIntoApk"] = "true"
-			}
-		});
-		var artifact = Assert.Single(Directory.EnumerateFiles(
-			Output(workspace, folder, project, framework), "*-Signed.apk"));
-		return new AndroidRunningApp(workspace, artifact, Environment.GetEnvironmentVariable("TEST_ANDROID_UDID"));
+				Configuration = "Debug",
+				Framework = framework,
+				Properties = new Dictionary<string, string>
+				{
+					["RuntimeIdentifier"] = rid,
+					["AndroidPackageFormats"] = "apk",
+					["EmbedAssembliesIntoApk"] = "true"
+				}
+			});
+			var artifact = Assert.Single(Directory.EnumerateFiles(
+				Path.Combine(Output(workspace, folder, project, framework), rid), "*-Signed.apk"));
+			var result = await Android.ReadManifest(artifact);
+			Assert.True(result.ExitCode == 0, $"Cannot read built APK identity: {result.Error}");
+			return (artifact, AndroidRunningApp.ParseApplicationId(result.Output));
+		}, static (workspace, artifact) =>
+			new AndroidRunningApp(workspace, artifact, Environment.GetEnvironmentVariable("TEST_ANDROID_UDID")));
 	}
 
 	private static void NavigateMauiAndroid(AppiumOperations app, string title)
