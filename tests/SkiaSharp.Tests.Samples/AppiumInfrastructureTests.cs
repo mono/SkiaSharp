@@ -260,7 +260,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 
 		foreach (var family in new[] { "Maui", "Native" })
 		{
-			var expected = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", family);
+			var expected = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", family, "arm64");
 			Assert.Equal(Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
 				"Appium", family, "iOS", "iPhone-16-Pro", version, "basic-cpu.png"), expected);
 		}
