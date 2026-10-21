@@ -45,11 +45,22 @@ stages:
             platform: linux
             buildAgent: ${{ parameters.buildAgentLinux }}
 
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_build_ios
+            displayName: Build Appium apps (iOS)
+            phase: build
+            platform: ios
+            buildAgent: ${{ parameters.buildAgentMac }}
+            additionalArgs: --runGroup=Ios --skipExternals="all"
+
         - ${{ each ios in parameters.iosSimulators }}:
           - template: /scripts/azure-templates-jobs-sample-appium.yml@self
             parameters:
               name: samples_appium_${{ ios.name }}
               displayName: Appium (${{ ios.displayName }})
+              platform: ios
+              dependsOn: [samples_appium_build_ios]
               buildAgent: ${{ parameters.buildAgentMac }}
               additionalArgs: --runGroup=Ios --iosVersion=${{ ios.version }} --iosModel="${{ ios.model }}" --skipExternals="all"
               preBuildSteps:

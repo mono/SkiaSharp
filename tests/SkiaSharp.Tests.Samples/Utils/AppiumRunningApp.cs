@@ -28,6 +28,8 @@ internal abstract class AppiumRunningApp
 
 	internal string ApplicationId => applicationId ?? throw new InvalidOperationException("The built application's identity has not been read.");
 
+	internal string? ExpectedApplicationId { get; set; }
+
 	internal string Diagnostics { get; }
 
 	internal abstract string DeviceProfile { get; }
@@ -126,6 +128,8 @@ internal abstract class AppiumRunningApp
 			applicationId = await ReadApplicationId();
 			if (string.IsNullOrWhiteSpace(applicationId))
 				throw new InvalidOperationException($"Built application identity is invalid: {Artifact}");
+			if (ExpectedApplicationId is not null && applicationId != ExpectedApplicationId)
+				throw new InvalidDataException($"Built application identity does not match its acquired manifest: {Artifact}");
 
 			await startServer();
 			await Start(address);

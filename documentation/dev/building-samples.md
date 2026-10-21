@@ -119,6 +119,63 @@ an already-running simulator you manage.
 Cake cleans up the simulator it creates. Inspect TRX attachments or CI's
 `samples_appium_*_logs` artifacts for logs, UI hierarchy and screenshots.
 
+### Two-phase Appium execution
+
+The same test bodies build/prepare an app and pass a scenario to `appium.Run`.
+Select `--appiumMode=build`, `run`, or `all` (default), or set
+`TEST_APPIUM_MODE` for direct/IDE runs. Explicit Cake phases require a configured
+Appium run group.
+
+```sh
+# Stage one producing build's packages first; use their actual suffix.
+dotnet cake --target=samples --runGroup=Ios --appiumMode=build \
+  --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
+
+# After provisioning Appium and the chosen runtime/image, consume that build.
+dotnet cake --target=samples --runGroup=Ios --appiumMode=run \
+  --iosVersion=18.6 --iosModel="iPhone 16 Pro" --skipExternals=all
+
+# One shot: complete all selected app builds, then boot and run the device.
+dotnet cake --target=samples --runGroup=Ios \
+  --iosVersion=18.6 --iosModel="iPhone 16 Pro" \
+  --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
+```
+
+Build mode needs compile SDKs/workloads and packages, but no
+emulator/simulator, Appium server, WDA, or device serial. It builds, reads the
+built application identity, exports the app, and deliberately does not invoke
+the scenario. Repeated cases sharing an app reuse its successful export only
+within that test invocation. A fresh build/all invocation rebuilds it.
+
+Apps are staged at
+`output/appium-apps/{android|ios}/{x64|arm64}/{Basic/Maui|Basic/Android|Basic/iOS|Gallery}/`.
+Each directory contains `manifest.json` and `app.apk` (signed Android APK)
+or `app.tar` (iOS bundle, preserving executable permissions and symbolic links).
+Manifests record project, framework, runtime architecture, app identity,
+artifact SHA-256, and the actual acquired SkiaSharp/HarfBuzzSharp package IDs,
+versions and SHA-256 hashes. Missing, corrupt, traversal, mismatched-target or
+different-package-cohort artifacts fail; run mode never falls back to building.
+Device OS/API is not part of the app key: the same build fans out to runtime profiles.
+
+Build mode also exports the ordinary source-built test runner and host native
+assets as `output/appium-runner/{android|ios}/{x64|arm64}/runner.tar` plus
+`runner.sha256` and `runner.host`. Cake run mode checks its hash/host and
+executes that runner directly with `dotnet exec`:
+no sample generation, project evaluation, restore, or compilation. Keep both
+staging trees and the exact producing `output/nugets` cohort when transferring
+between machines; the platform, host OS and architecture must match the build
+host. `TEST_SAMPLE_REPOSITORY` points relocated runners at the consumer checkout
+(Cake sets it automatically). Direct test runs default to `all` and prepare
+each app before starting its server; use Cake to finish every selected build
+before booting its owned device.
+
+CI has one device-free build job per platform/host architecture and dependent
+runtime-profile jobs. They download apps and runners from the **current** run,
+and packages from the same exact producing build. Only build jobs install sample
+workloads/compile platforms; run jobs provision the selected devices and Appium.
+Both phases publish separate test results, so build-as-test success is distinct
+from scenario execution.
+
 ### Updating references
 
 References are in `tests/SkiaSharp.Tests.Samples/Expected/Appium/<Maui|Native>/iOS/<model>/`.

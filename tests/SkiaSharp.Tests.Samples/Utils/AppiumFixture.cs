@@ -9,6 +9,54 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 public sealed class AppiumFixture
 {
+	private readonly Dictionary<string, AppiumAppSpec> built = new(StringComparer.Ordinal);
+	private readonly AppiumMode? mode;
+	private readonly string packagesDirectory;
+	private readonly string appsDirectory;
+	private AppiumPackage[]? packages;
+
+	public AppiumFixture() : this(null, Repo.PackagesDir, Repo.AppiumAppsDir) { }
+
+	internal AppiumFixture(AppiumMode? mode, string packagesDirectory, string appsDirectory)
+	{
+		this.mode = mode;
+		this.packagesDirectory = packagesDirectory;
+		this.appsDirectory = appsDirectory;
+	}
+
+	internal AppiumMode Mode => mode ?? AppiumAppArtifact.ParseMode(Environment.GetEnvironmentVariable("TEST_APPIUM_MODE"));
+
+	internal async Task<AppiumPreparedApp> Prepare(
+		AppiumAppSpec spec, Func<Task<(string Artifact, string ApplicationId)>> build,
+		Func<SampleWorkspace, string, AppiumRunningApp> sessionFactory)
+	{
+		ArgumentNullException.ThrowIfNull(sessionFactory);
+		var mode = Mode;
+		spec.Validate();
+		packages ??= AppiumAppArtifact.ReadPackages(packagesDirectory);
+		var directory = AppiumAppArtifact.DirectoryFor(appsDirectory, spec);
+		if (built.TryGetValue(spec.Key, out var previous) && previous != spec)
+			throw new InvalidOperationException($"Conflicting Appium app key: {spec.Key}");
+		if (mode != AppiumMode.Run && !built.ContainsKey(spec.Key))
+		{
+			var (artifact, applicationId) = await build();
+			AppiumAppArtifact.Export(directory, spec, artifact, applicationId, packages);
+			built.Add(spec.Key, spec);
+		}
+		return new(mode, directory, AppiumAppArtifact.Load(directory, spec, packages), sessionFactory);
+	}
+
+	internal async Task Run(AppiumPreparedApp app, Func<AppiumRunningApp, Task> scenario)
+	{
+		if (app.Mode == AppiumMode.Build)
+		{
+			TestContext.Current.TestOutputHelper?.WriteLine($"Built/exported {app.Manifest.App.Key}; build phase does not invoke the scenario.");
+			return;
+		}
+		using var workspace = SampleWorkspace.ForAppiumRun();
+		await Run(app.CreateRunningApp(workspace), scenario);
+	}
+
 	internal async Task Run(AppiumRunningApp app, Func<AppiumRunningApp, Task> scenario)
 	{
 		Process? server = null;

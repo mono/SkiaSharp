@@ -5,6 +5,9 @@ parameters:
   additionalArgs: ''
   env: {}
   preBuildSteps: []
+  phase: run
+  platform: ''
+  dependsOn: []
 
 jobs:
   - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
@@ -12,24 +15,40 @@ jobs:
       name: ${{ parameters.name }}
       displayName: ${{ parameters.displayName }}
       buildAgent: ${{ parameters.buildAgent }}
+      dependsOn: ${{ parameters.dependsOn }}
       target: samples
-      additionalArgs: ${{ parameters.additionalArgs }}
+      additionalArgs: --appiumMode=${{ parameters.phase }} ${{ parameters.additionalArgs }}
       env: ${{ parameters.env }}
       dotnetSdks:
         - sdkVersion: $(DOTNET_VERSION)
-          workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-          tizen:
-            manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
-            manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-      installAndroidSdk: false
+          ${{ if eq(parameters.phase, 'build') }}:
+            workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+            ${{ if eq(parameters.platform, 'android') }}:
+              workloads: [android, maui-android]
+            ${{ else }}:
+              workloads: [android, ios, maccatalyst, maui]
+      installAndroidSdk: ${{ and(eq(parameters.phase, 'build'), eq(parameters.platform, 'android')) }}
       installAndroidNdk: false
       retryCount: 0
       shouldPublish: false
       requiredArtifacts:
-        - name: native
+        - ${{ if eq(parameters.phase, 'build') }}:
+          - name: native
         - name: nuget
           dir: nugets
+        - ${{ if eq(parameters.phase, 'run') }}:
+          - name: samples_appium_build_${{ parameters.platform }}_apps
+            dir: appium-apps/${{ parameters.platform }}
+            currentRun: true
+          - name: samples_appium_build_${{ parameters.platform }}_runner
+            dir: appium-runner/${{ parameters.platform }}
+            currentRun: true
       publishArtifacts:
+        - ${{ if eq(parameters.phase, 'build') }}:
+          - name: ${{ parameters.name }}_apps
+            path: output/appium-apps/${{ parameters.platform }}
+          - name: ${{ parameters.name }}_runner
+            path: output/appium-runner/${{ parameters.platform }}
         - name: ${{ parameters.name }}_logs
           always: true
           path: output/logs
