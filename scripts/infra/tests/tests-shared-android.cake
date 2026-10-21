@@ -87,8 +87,7 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         ANDROID_EMULATOR_PROCESS = System.Diagnostics.Process.Start(start);
         ANDROID_EMULATOR_STDOUT = ANDROID_EMULATOR_PROCESS.StandardOutput.ReadToEndAsync();
         ANDROID_EMULATOR_STDERR = ANDROID_EMULATOR_PROCESS.StandardError.ReadToEndAsync();
-        WaitForAndroidBoot(ownedSerial);
-        AssertOwnedAndroidEmulator(ownedAvd, ownedSerial);
+        WaitForAndroidBoot(ownedAvd, ownedSerial);
         foreach (var setting in new[] { "window_animation_scale", "transition_animation_scale", "animator_duration_scale" }) {
             if (StartProcess(ANDROID_ADB, new ProcessSettings {
                 Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
@@ -145,7 +144,7 @@ void ListAndroidDevices()
     DotNetTool("android device list");
 }
 
-void WaitForAndroidBoot(string ownedSerial)
+void WaitForAndroidBoot(string ownedAvd, string ownedSerial)
 {
     // Package Manager readiness is observable directly; aggregate Linux load is not a service readiness signal.
     var clock = System.Diagnostics.Stopwatch.StartNew();
@@ -166,7 +165,9 @@ void WaitForAndroidBoot(string ownedSerial)
         var ready = exit == 0 && lines.Length == 3 && lines[0] == "1" &&
             lines[1].StartsWith("package:/", StringComparison.Ordinal) &&
             response.Elapsed < TimeSpan.FromSeconds(5);
-        last = $"exit={exit}, response={response.Elapsed.TotalSeconds:F1}s, output={string.Join(" | ", lines)}, error={string.Join(" | ", stderr)}";
+        var identityReady = ready && HasOwnedAndroidEmulatorIdentity(ownedAvd, ownedSerial);
+        ready = identityReady && response.Elapsed < TimeSpan.FromSeconds(5);
+        last = $"exit={exit}, response={response.Elapsed.TotalSeconds:F1}s, identity={(identityReady ? "exact" : "not confirmed")}, output={string.Join(" | ", lines)}, error={string.Join(" | ", stderr)}";
         stable = ready ? stable + 1 : 0;
         if (stable == 3) {
             Information("Owned Android emulator ready: {0}", last);
@@ -174,7 +175,7 @@ void WaitForAndroidBoot(string ownedSerial)
         }
         System.Threading.Thread.Sleep(1000);
     }
-    throw new TimeoutException($"Owned Android emulator {ownedSerial} did not reach boot/Package Manager/response readiness within 300 seconds: {last}.");
+    throw new TimeoutException($"Owned Android emulator {ownedSerial} did not reach boot/Package Manager/identity/response readiness within 300 seconds: {last}.");
 }
 
 int AndroidEmulatorPort()
@@ -197,6 +198,12 @@ int AndroidEmulatorPort()
 }
 
 void AssertOwnedAndroidEmulator(string ownedAvd, string ownedSerial)
+{
+    if (!HasOwnedAndroidEmulatorIdentity(ownedAvd, ownedSerial))
+        throw new Exception($"The exact serial {ownedSerial} has not reported owned AVD {ownedAvd}.");
+}
+
+bool HasOwnedAndroidEmulatorIdentity(string ownedAvd, string ownedSerial)
 {
     var settings = new ProcessSettings {
         Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial).Append("emu avd name"),
@@ -222,10 +229,11 @@ void AssertOwnedAndroidEmulator(string ownedAvd, string ownedSerial)
         }
     }
 
-    if (exit != 0 || identity.Length != 1 ||
-        !identity[0].Equals(ownedAvd, StringComparison.Ordinal))
+    if (exit != 0 || identity.Length > 1 ||
+        (identity.Length == 1 && !identity[0].Equals(ownedAvd, StringComparison.Ordinal)))
         throw new Exception($"The exact serial {ownedSerial} did not identify owned AVD {ownedAvd}. " +
             $"Exit: {exit}; reported identity: {string.Join(" | ", identity)}");
+    return identity.Length == 1;
 }
 
 string[] AndroidEmulatorIdentityLines(IEnumerable<string> output)
