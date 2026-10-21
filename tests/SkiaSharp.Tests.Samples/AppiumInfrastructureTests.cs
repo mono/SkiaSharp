@@ -490,10 +490,14 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("26.2", false)]
 	[InlineData("26.3.1", true)]
 	[InlineData("26.3.1", false)]
-	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(string version, bool horizontal)
+	[InlineData("android-26", true, "Android")]
+	[InlineData("android-26", false, "Android")]
+	[InlineData("android-36", true, "Android")]
+	[InlineData("android-36", false, "Android")]
+	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(string version, bool horizontal, string platform = "iOS")
 	{
 		var references = Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
-			"Appium", "Maui", "iOS", "iPhone-16-Pro", version);
+			"Appium", "Maui", platform, platform == "Android" ? "pixel_9" : "iPhone-16-Pro", version);
 		var drawn = Path.Combine(references, "basic-drawing-two-lines.png");
 		var blank = Path.Combine(references, "basic-drawing-page.png");
 		AppiumSampleRunTestBase.AssertDrawingStrokeRegions(drawn, drawn);
