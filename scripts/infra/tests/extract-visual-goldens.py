@@ -16,7 +16,7 @@ import sys
 
 PROFILES = {
     "portable", "mac", "windows", "linux", "ios", "android", "maccatalyst",
-    "tvos", "browser", "windows-nanoserver", "windows-client", "windows-server",
+    "tvos", "browser", "windows-nanoserver", "windows-client", "windows-server", "windows-servercore",
     "ubuntu", "alpine", "azurelinux", "debian", "iphone-16-pro", "pixel-9",
 }
 ARCHITECTURES = {"arm", "arm64", "x86", "x64", "wasm", "loongarch64", "riscv64"}
