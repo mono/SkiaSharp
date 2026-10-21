@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,8 +12,8 @@ namespace SkiaSharp.Tests.Goldens
 {
 	internal sealed class GoldenRequest
 	{
-		public GoldenRequest(string profile, string version, string caseName, string architecture, string variant = null,
-			bool allowNeutralVariant = false, string minimumVersion = null, bool exactVersion = false)
+		public GoldenRequest(string profile, string version, string caseName, string? architecture, string? variant = null,
+			bool allowNeutralVariant = false, string? minimumVersion = null, bool exactVersion = false)
 		{
 			GoldenPolicy.ValidateIdentity(profile, caseName, variant, architecture);
 			var current = GoldenPolicy.ParseVersion(profile, version, false);
@@ -39,16 +40,16 @@ namespace SkiaSharp.Tests.Goldens
 		public string Profile { get; }
 		public string Version { get; }
 		public string CaseName { get; }
-		public string Architecture { get; }
-		public string Variant { get; }
+		public string? Architecture { get; }
+		public string? Variant { get; }
 		public bool AllowNeutralVariant { get; }
-		public string MinimumVersion { get; }
+		public string? MinimumVersion { get; }
 		public bool ExactVersion { get; }
 	}
 
 	internal readonly struct GoldenKey
 	{
-		private GoldenKey(string profile, string version, string caseName, string variant, string architecture)
+		private GoldenKey(string profile, string version, string caseName, string? variant, string? architecture)
 		{
 			Profile = profile;
 			Version = version;
@@ -60,8 +61,8 @@ namespace SkiaSharp.Tests.Goldens
 		public string Profile { get; }
 		public string Version { get; }
 		public string CaseName { get; }
-		public string Variant { get; }
-		public string Architecture { get; }
+		public string? Variant { get; }
+		public string? Architecture { get; }
 
 		public static GoldenKey Parse(string relative)
 		{
@@ -74,8 +75,8 @@ namespace SkiaSharp.Tests.Goldens
 			if (tokens.Length < 1 || tokens.Length > 3)
 				throw new ArgumentException("A golden filename has at most one functional variant followed by one architecture.", nameof(relative));
 
-			string variant = null;
-			string architecture = null;
+			string? variant = null;
+			string? architecture = null;
 			if (tokens.Length == 2)
 			{
 				if (GoldenPolicy.IsArchitecture(tokens[1]))
@@ -134,7 +135,7 @@ namespace SkiaSharp.Tests.Goldens
 
 	internal sealed class GoldenResolution
 	{
-		internal GoldenResolution(GoldenRequest request, GoldenAsset asset, List<string> candidates)
+		internal GoldenResolution(GoldenRequest request, GoldenAsset? asset, List<string> candidates)
 		{
 			Request = request;
 			Asset = asset;
@@ -142,7 +143,7 @@ namespace SkiaSharp.Tests.Goldens
 		}
 
 		public GoldenRequest Request { get; }
-		public GoldenAsset Asset { get; }
+		public GoldenAsset? Asset { get; }
 		public IReadOnlyList<string> Candidates { get; }
 
 		public string Describe()
@@ -247,7 +248,7 @@ namespace SkiaSharp.Tests.Goldens
 				{
 					foreach (var variant in Variants(request))
 					{
-						foreach (var architecture in request.Architecture == null ? new string[] { null } : new[] { request.Architecture, null })
+						foreach (var architecture in request.Architecture == null ? new string?[] { null } : new[] { request.Architecture, null })
 						{
 							var key = profile + "/" + version + "/" + request.CaseName +
 								(variant == null ? "" : "." + variant) + (architecture == null ? "" : "." + architecture) + ".png";
@@ -261,7 +262,7 @@ namespace SkiaSharp.Tests.Goldens
 			return new GoldenResolution(request, null, attempted);
 		}
 
-		private static IEnumerable<string> Variants(GoldenRequest request)
+		private static IEnumerable<string?> Variants(GoldenRequest request)
 		{
 			yield return request.Variant;
 			if (request.Variant != null && request.AllowNeutralVariant)
@@ -302,8 +303,8 @@ namespace SkiaSharp.Tests.Goldens
 			"graphite-metal", "graphite-vulkan", "graphite-dawn",
 		}, StringComparer.Ordinal);
 
-		public static bool IsArchitecture(string value) => value != null && architectures.Contains(value);
-		public static bool IsBrowserEngine(string value) => value == "chromium" || value == "firefox" || value == "webkit";
+		public static bool IsArchitecture(string? value) => value != null && architectures.Contains(value);
+		public static bool IsBrowserEngine(string? value) => value == "chromium" || value == "firefox" || value == "webkit";
 		private static bool IsVisual(string name) => name.StartsWith("visual-", StringComparison.Ordinal);
 		private static bool IsNeutral(string profile) => profile == "portable" || profile == "windows" || profile == "linux" || profile == "browser";
 		private static bool IsAndroid(string profile) => profile == "android" || profile == "pixel-9";
@@ -320,7 +321,7 @@ namespace SkiaSharp.Tests.Goldens
 				throw new ArgumentException("Expected a lowercase, Windows-safe kebab-case slug: " + value, parameter);
 		}
 
-		public static void ValidateIdentity(string profile, string caseName, string variant, string architecture)
+		public static void ValidateIdentity(string profile, string caseName, string? variant, string? architecture)
 		{
 			if (profile == null || !profiles.Contains(profile))
 				throw new ArgumentException("Unknown golden rendering profile: " + profile, nameof(profile));
@@ -361,7 +362,7 @@ namespace SkiaSharp.Tests.Goldens
 			yield return "portable";
 		}
 
-		public static GoldenVersion ParseVersion(string profile, string text, bool asset)
+		public static GoldenVersion? ParseVersion(string profile, string text, bool asset)
 		{
 			if (text == "base")
 				return null;
@@ -425,7 +426,8 @@ namespace SkiaSharp.Tests.Goldens
 					yield return "base";
 				yield break;
 			}
-			var current = ParseVersion(request.Profile, request.Version, false);
+			var current = ParseVersion(request.Profile, request.Version, false)
+				?? throw new InvalidOperationException("A numeric request lost its version.");
 			var minimum = request.MinimumVersion == null ? null : ParseVersion(request.Profile, request.MinimumVersion, false);
 			var tiers = new List<string> { request.Version };
 			if (!request.ExactVersion)
@@ -441,7 +443,7 @@ namespace SkiaSharp.Tests.Goldens
 			var seen = new HashSet<string>(StringComparer.Ordinal);
 			foreach (var tier in tiers)
 			{
-				if (seen.Add(tier) && (minimum == null || ParseVersion(request.Profile, tier, false).CompareTo(minimum) >= 0))
+				if (seen.Add(tier) && (minimum == null || ParseVersion(request.Profile, tier, false) is { } parsed && parsed.CompareTo(minimum) >= 0))
 					yield return tier;
 			}
 			if (request.ExactVersion)
@@ -453,7 +455,7 @@ namespace SkiaSharp.Tests.Goldens
 					(k.Architecture == null || k.Architecture == request.Architecture) &&
 					(k.Variant == request.Variant || (request.AllowNeutralVariant && k.Variant == null)))
 				.Select(k => k.Version).Distinct(StringComparer.Ordinal)
-				.Select(v => ParseVersion(request.Profile, v, true))
+				.Select(v => ParseVersion(request.Profile, v, true) ?? throw new InvalidOperationException("Older versions must be numeric."))
 				.Where(v => v.Family == current.Family && v.CompareTo(current) < 0 && (minimum == null || v.CompareTo(minimum) >= 0))
 				.OrderByDescending(v => v);
 			foreach (var version in older)
@@ -483,7 +485,7 @@ namespace SkiaSharp.Tests.Goldens
 		public string NumericText => Revision.HasValue ? Text.Substring(0, Text.LastIndexOf('.')) : Text;
 		public string Prefix(int length) => string.Join(".", NumericText.Split('.').Take(length));
 
-		public int CompareTo(GoldenVersion other)
+		public int CompareTo(GoldenVersion? other)
 		{
 			if (other == null)
 				return 1;

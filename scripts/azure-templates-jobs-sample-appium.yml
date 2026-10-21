@@ -54,6 +54,9 @@ jobs:
           path: output/logs
       preBuildSteps: ${{ parameters.preBuildSteps }}
       postBuildSteps:
+        - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs/samples --images-out output/logs/testlogs/samples/golden-images
+          displayName: Extract device reference diagnostics
+          condition: always()
         - task: PublishTestResults@2
           condition: always()
           inputs:

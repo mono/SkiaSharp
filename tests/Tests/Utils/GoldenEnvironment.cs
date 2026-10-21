@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Diagnostics;
 using System.Globalization;
@@ -21,7 +22,7 @@ namespace SkiaSharp.Tests.Goldens
 		public string Architecture { get; }
 		public string Description { get; }
 
-		public GoldenRequest Request(string caseName, string variant = null) =>
+		public GoldenRequest Request(string caseName, string? variant = null) =>
 			new GoldenRequest(Profile, Version, caseName, Architecture, variant);
 
 		public static GoldenEnvironment Current()
@@ -34,7 +35,7 @@ namespace SkiaSharp.Tests.Goldens
 					UseShellExecute = false,
 					RedirectStandardOutput = true,
 					RedirectStandardError = true
-				});
+				}) ?? throw new InvalidOperationException("Cannot start the macOS product version probe.");
 				var version = process.StandardOutput.ReadToEnd().Trim();
 				var error = process.StandardError.ReadToEnd();
 				if (!process.WaitForExit(10000) || process.ExitCode != 0 || !System.Version.TryParse(version, out _))
@@ -50,7 +51,7 @@ namespace SkiaSharp.Tests.Goldens
 
 		public static GoldenEnvironment Linux(string osRelease, string architecture)
 		{
-			string id = null, version = null;
+			string? id = null, version = null;
 			foreach (var line in osRelease.Split('\n'))
 			{
 				if (line.StartsWith("ID=", StringComparison.Ordinal))
@@ -63,7 +64,7 @@ namespace SkiaSharp.Tests.Goldens
 			var profile = id == "ubuntu" || id == "debian" || id == "alpine" || id == "azurelinux" ? id : "linux";
 			if (profile != "linux" && !System.Version.TryParse(version != null && version.IndexOf('.') < 0 ? version + ".0" : version, out _))
 				throw new InvalidOperationException("The rendering environment has an invalid VERSION_ID: " + version);
-			return new GoldenEnvironment(profile, profile == "linux" ? "base" : version, architecture,
+			return new GoldenEnvironment(profile, profile == "linux" ? "base" : version ?? throw new InvalidOperationException("VERSION_ID is required."), architecture,
 				"os-release ID=" + id + "; VERSION_ID=" + version +
 				(profile == "linux" ? "; only explicitly portable Linux baselines are eligible" : ""));
 		}

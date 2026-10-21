@@ -30,7 +30,8 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 	internal override GoldenRequest Reference(string caseName)
 	{
 		_ = DeviceProfile;
-		return new(DeviceProfile, image![8..image.IndexOf(';')], caseName,
+		var selectedImage = image ?? throw new InvalidOperationException("TEST_ANDROID_IMAGE is required.");
+		return new(DeviceProfile, selectedImage[8..selectedImage.IndexOf(';')], caseName,
 			actualArchitecture ?? RuntimeInformation.OSArchitecture.ToString().ToLowerInvariant());
 	}
 
@@ -90,7 +91,8 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 		SetDriver(new AndroidDriver(address, options));
 
 		var api = (await CaptureCommand(Android.DeviceProperty(serial, "ro.build.version.sdk"))).Trim();
-		Assert.Equal(image![8..image.IndexOf(';')].Split('.')[0], api);
+		var selectedImage = image ?? throw new InvalidOperationException("TEST_ANDROID_IMAGE is required.");
+		Assert.Equal(selectedImage[8..selectedImage.IndexOf(';')].Split('.')[0], api);
 		var abi = (await CaptureCommand(Android.DeviceProperty(serial, "ro.product.cpu.abi"))).Trim();
 		actualArchitecture = abi switch
 		{

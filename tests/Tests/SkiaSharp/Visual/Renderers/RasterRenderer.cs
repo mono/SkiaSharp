@@ -7,8 +7,8 @@ namespace SkiaSharp.Tests.Visual
 	/// <summary>
 	/// Pure-CPU rasterizer. Always available and deterministic across platforms
 	/// for the geometric scenes, so its output is the portable baseline stored
-	/// under the shared <c>Content/Goldens/raster/</c> folder (with a
-	/// <c>raster.{platform}/</c> override for any scene that diverges by OS, such
+	/// under <c>Goldens/v1/portable/base/</c> with a raster suffix (and an
+	/// environment profile override for any scene that diverges by OS, such
 	/// as text).
 	/// </summary>
 	public sealed class RasterRenderer : IRenderer

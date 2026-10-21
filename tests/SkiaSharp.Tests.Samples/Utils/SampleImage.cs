@@ -39,25 +39,37 @@ internal static class SampleImage
         TimeSpan? timeout = null, SampleImageOptions? options = null,
         Func<string, string>? transformReference = null, Func<string, string>? rawActual = null)
     {
+        ArgumentNullException.ThrowIfNull(capture);
+        var limit = timeout ?? TimeSpan.FromSeconds(2);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(limit, TimeSpan.Zero);
+        var clock = Stopwatch.StartNew();
         var resolution = SampleReferences.Resolve(request);
-        if (resolution.Asset is null)
-        {
-            var retained = await capture().WaitAsync(timeout ?? TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
-            SampleReferences.Require(resolution, retained);
-        }
-        var expected = resolution.Asset!.Location;
-        if (transformReference is not null)
-            expected = transformReference(expected);
-        string? actual = null;
+        var actual = await capture().WaitAsync(limit, TestContext.Current.CancellationToken);
+        var expected = SampleReferences.Require(resolution, actual, rawActual?.Invoke(actual));
+        TestContext.Current.AddFileAttachment(actual, "image/png");
         try
         {
-            actual = await Validate(async () => actual = await capture(), expected, timeout, options);
+            if (transformReference is not null)
+                expected = transformReference(expected);
+            var first = true;
+            var remaining = limit - clock.Elapsed;
+            if (remaining <= TimeSpan.Zero)
+                Validate(actual, expected, options);
+            else
+                actual = await Validate(async () =>
+                {
+                    if (first)
+                    {
+                        first = false;
+                        return actual;
+                    }
+                    return actual = await capture();
+                }, expected, remaining, options);
             return new(actual, expected);
         }
         finally
         {
-            if (actual is not null)
-                SampleReferences.Record(resolution, actual, expected, rawActual?.Invoke(actual));
+            SampleReferences.Record(resolution, actual, expected, rawActual?.Invoke(actual));
         }
     }
 

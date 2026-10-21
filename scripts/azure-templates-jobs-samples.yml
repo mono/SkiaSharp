@@ -35,6 +35,16 @@ jobs:
               always: true
               path: output/logs
           postBuildSteps:
+            - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs/samples --images-out output/logs/testlogs/samples/golden-images
+              displayName: Extract sample reference diagnostics
+              condition: always()
+            - ${{ if eq(group, 'Build') }}:
+              - pwsh: |
+                  python3 -m unittest discover -s scripts/infra/tests -p test_golden_images.py
+                  if ($LASTEXITCODE -ne 0) { throw "Golden exporter tests failed." }
+                  python3 scripts/infra/tests/extract-visual-goldens.py --check tests/Goldens/v1
+                  if ($LASTEXITCODE -ne 0) { throw "Canonical golden validation failed." }
+                displayName: Validate canonical references and export tooling
             - task: PublishTestResults@2
               condition: always()
               inputs:

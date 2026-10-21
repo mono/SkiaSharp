@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using SkiaSharp.Tests.Goldens;
@@ -45,17 +46,8 @@ namespace SkiaSharp.Tests.Visual.Tests
 		/// </summary>
 		public const string VisualCategory = "Visual";
 
-		// One marker per image, each a single line so the harvest script can scan a
-		// TRX line by line (base64 has no whitespace and is XML-safe). All three
-		// share one path — the golden key:
-		//
-		//   ##SKIA-VISUAL-ACTUAL## path={renderer}.{platform}/{scene}.png size=WxH base64=...
-		//   ##SKIA-VISUAL-GOLDEN## path=... size=WxH base64=...
-		//   ##SKIA-VISUAL-DIFF##   path=... size=WxH base64=...
-		//
-		// Which markers are present says everything: no golden means none was
-		// committed, and a diff only exists when there was something to diff
-		// against. A pass emits all three too, so a near-miss can still be eyeballed.
+		// Capture identity and the chosen reference are separate fields, so export
+		// never overwrites a shared reference just because this host used it.
 		public const string ActualImageMarker = "##SKIA-GOLDEN-V2## role=actual";
 		public const string GoldenImageMarker = "##SKIA-GOLDEN-V2## role=reference";
 		public const string DiffImageMarker = "##SKIA-GOLDEN-V2## role=diff";
@@ -82,6 +74,12 @@ namespace SkiaSharp.Tests.Visual.Tests
 
 			var resolution = GoldenStore.Resolve(renderer.Name, scene.Name);
 			WriteOutput(resolution.Describe());
+			if (resolution.Asset is not null)
+			{
+				using var sha = SHA256.Create();
+				WriteOutput("Reference SHA256: " +
+					BitConverter.ToString(sha.ComputeHash(resolution.Asset.ReadBytes())).Replace("-", "").ToLowerInvariant());
+			}
 			EmitActual(renderer.Name, scene.Name, info, actual, resolution);
 
 			if (resolution.Asset is null)
@@ -139,7 +137,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 				$"{result.ErrorPixelCount}/{result.TotalPixels} pixels exceed the per-channel tolerance of {tolerance.ChannelTolerance} " +
 				$"(allowed outliers: {allowedOutliers}); max observed channel delta {result.MaxChannelDelta}. " +
 				ArtifactSuffix(actualPath, diffPath) +
-				$"The rendered PNG is in the test results as a {ActualImageMarker} marker. " +
+				"The rendered PNG is retained in the test results. " +
 				"If this change is expected, harvest it with scripts/infra/tests/extract-visual-goldens.py and commit; " +
 				"otherwise fix the regression.");
 		}
@@ -150,7 +148,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 
 			Assert.Fail(
 				$"No golden recorded yet for '{rendererName}/{sceneName}'. {resolution.Describe()} " +
-				$"The rendered PNG is in the test results as a {ActualImageMarker} marker; " +
+				"The rendered PNG is retained in the test results; " +
 				"seed it with scripts/infra/tests/extract-visual-goldens.py and commit. " +
 				ArtifactSuffix(actualPath, null));
 		}
