@@ -601,7 +601,7 @@ the comment. Never manually change generated declarations or interop code.
 - **No `#nullable disable`** unless the file has reference-type fields that require it
 - **One primary type per file**, file named after the type
 - **No `System.Random` in `binding/` or `source/`**: CA5394 is an error there (see `.editorconfig`). Use `RandomNumberGenerator`,
-  or if the value is not security sensitive, suppress the diagnostic with a comment saying why, like `Binding.Shared/HashCode.cs`
+  or if the value is not security sensitive, suppress the diagnostic with a comment saying why
 
 ---
 
