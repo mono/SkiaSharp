@@ -13,7 +13,9 @@ public static class DotNet
                 new XElement("clear"),
                 new XElement("add", new XAttribute("key", "artifacts"), new XAttribute("value", packagesDir)),
                 new XElement("add", new XAttribute("key", "dotnet-public"), new XAttribute("value", "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json")),
-                new XElement("add", new XAttribute("key", "dotnet-eng"), new XAttribute("value", "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json"))),
+                new XElement("add", new XAttribute("key", "dotnet-eng"), new XAttribute("value", "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json")),
+                // TEMPORARY: Uno Platform 7 packages are not mirrored into dotnet-public yet. Remove before merging.
+                new XElement("add", new XAttribute("key", "nuget.org"), new XAttribute("value", "https://api.nuget.org/v3/index.json"))),
             new XElement("packageSourceMapping",
                 new XElement("clear"),
                 new XElement("packageSource", new XAttribute("key", "artifacts"),
@@ -22,6 +24,8 @@ public static class DotNet
                 new XElement("packageSource", new XAttribute("key", "dotnet-public"),
                     new XElement("package", new XAttribute("pattern", "*"))),
                 new XElement("packageSource", new XAttribute("key", "dotnet-eng"),
+                    new XElement("package", new XAttribute("pattern", "*"))),
+                new XElement("packageSource", new XAttribute("key", "nuget.org"),
                     new XElement("package", new XAttribute("pattern", "*"))))))
         .Save(path);
 
