@@ -3,34 +3,35 @@ param([string] $InstallationPath)
 $ErrorActionPreference = 'Stop'
 
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+$products = @(
+    'Microsoft.VisualStudio.Product.Community'
+    'Microsoft.VisualStudio.Product.Professional'
+    'Microsoft.VisualStudio.Product.Enterprise'
+    'Microsoft.VisualStudio.Product.BuildTools'
+)
+$selection = @('-prerelease', '-products') + $products + @('-version', '[18.0,19.0)')
 
 Write-Host "Installed Visual Studio Versions:"
-& $vswhere -all -prerelease -property installationPath
+& $vswhere -all @selection -property installationPath
 
-Write-Host "Setting Environment Variables..."
-$selection = @('-all', '-products', '*', '-version', '[18.0,19.0)', '-requires',
-    'Microsoft.VisualStudio.Component.VC.Tools.x86.x64')
-$instances = @(& $vswhere @selection -property installationPath)
+Write-Host "Selecting Visual Studio 2026..."
+$instances = @(& $vswhere -all @selection -property installationPath)
 if ($LASTEXITCODE -ne 0) { throw "vswhere exited with code $LASTEXITCODE." }
 if ($InstallationPath) {
-    if ($instances -notcontains $InstallationPath) { throw "No VS 2026 C++ installation at $InstallationPath." }
+    if ($instances -notcontains $InstallationPath) { throw "No Visual Studio 2026 installation at $InstallationPath." }
 } else {
     $InstallationPath = & $vswhere @selection -latest -property installationPath
-    if ($LASTEXITCODE -ne 0 -or !$InstallationPath) { throw 'Visual Studio 2026 C++ tools are required.' }
+    if ($LASTEXITCODE -ne 0 -or !$InstallationPath) { throw 'An existing Visual Studio 2026 installation is required.' }
 }
-Write-Host "##vso[task.prependpath]$installationPath\MSBuild\Current\Bin"
-Write-Host "##vso[task.setvariable variable=VS_INSTALL]$installationPath"
-$env:VS_INSTALL = $installationPath
-Write-Host "Selected VS $installationPath"
 
-$tools = @{
-    LLVM_HOME = Join-Path $InstallationPath 'VC\Tools\Llvm\x64'
-    NINJA_EXE = Join-Path $InstallationPath 'Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe'
+$msbuild = Join-Path $InstallationPath 'MSBuild\Current\Bin'
+$env:VS_INSTALL = $InstallationPath
+Write-Host "##vso[task.prependpath]$msbuild"
+Write-Host "##vso[task.setvariable variable=VS_INSTALL]$InstallationPath"
+if ($env:GITHUB_ENV) {
+    "VS_INSTALL=$InstallationPath" | Add-Content $env:GITHUB_ENV
 }
-foreach ($name in $tools.Keys) {
-    $path = $tools[$name]
-    $executable = if ($name -eq 'LLVM_HOME') { Join-Path $path 'bin\clang.exe' } else { $path }
-    if (!(Test-Path $executable)) { throw "Missing VS Installer tool: $executable" }
-    [Environment]::SetEnvironmentVariable($name, $path, 'Process')
-    Write-Host "##vso[task.setvariable variable=$name]$path"
+if ($env:GITHUB_PATH) {
+    $msbuild | Add-Content $env:GITHUB_PATH
 }
+Write-Host "Selected Visual Studio 2026 at $InstallationPath"

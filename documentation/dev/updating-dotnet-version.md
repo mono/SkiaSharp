@@ -208,10 +208,9 @@ dotnetSdks:
     tizen:
       manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
       manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-  - sdkVersion: $(DOTNET_VERSION_WINUI) # SDK-only
 ```
 
-Omitting `workloadSetVersion` installs only the SDK. When a set is present,
+Additional entries without `workloadSetVersion` install only that SDK. When a set is present,
 `workloads` optionally overrides the centralized host list with explicit IDs.
 An empty `dotnetSdks` list performs no host .NET provisioning; container images
 own their SDK installations.

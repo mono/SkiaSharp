@@ -267,8 +267,11 @@ jobs:
 
       # install the Windows tools
       - ${{ if and(eq(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipInstall, 'true')) }}:
-        - pwsh: .\scripts\infra\native\windows\install-components.ps1
-          displayName: Provision and select Visual Studio 2026 tools
+        - pwsh: .\scripts\infra\native\windows\select-vs.ps1
+          displayName: Select Visual Studio 2026
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        - pwsh: .\scripts\infra\native\windows\install-components.ps1 -InstallationPath "$(VS_INSTALL)"
+          displayName: Apply Visual Studio 2026 components
           condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
       # install any .NET global tools
       - ${{ if ne(parameters.skipInstall, 'true') }}:

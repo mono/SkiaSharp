@@ -325,7 +325,8 @@ jobs:
         # Only libSkiaSharp is needed by the source benchmarks.
         run: |
           dotnet tool restore
-          ./scripts/infra/native/windows/install-components.ps1
+          ./scripts/infra/native/windows/select-vs.ps1
+          ./scripts/infra/native/windows/install-components.ps1 -InstallationPath $env:VS_INSTALL
           dotnet cake native/windows/build.cake --target=libSkiaSharp --configuration=Release --arch=x64 --vsinstall="$env:VS_INSTALL"
 
       - name: Build SkiaSharp (managed, net10 only)

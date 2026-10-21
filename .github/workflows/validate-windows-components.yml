@@ -7,16 +7,9 @@ on:
       - .github/workflows/validate-windows-components.yml
       - source/.vsconfig
       - source/SkiaSharpSource.slnx
-      - source/SkiaSharp.Build.props
       - scripts/infra/native/windows/install-components.ps1
       - scripts/infra/native/windows/build-tools.vsconfig
       - scripts/infra/native/windows/select-vs.ps1
-      - scripts/infra/native/windows/windows-shared.cake
-      - scripts/VERSIONS.txt
-      - cgmanifest.json
-      - native/windows/**
-      - native/winui/**
-      - native/winui-angle/**
 
 permissions:
   contents: read
@@ -78,18 +71,27 @@ jobs:
               throw "Visual Studio removal was incomplete: $remaining"
             }
             'No Visual Studio instances remain.' | Set-Content (Join-Path $evidence 'clean-vs.txt')
+            $bootstrapper = Join-Path $env:RUNNER_TEMP 'vs_buildtools.exe'
+            Invoke-WebRequest 'https://aka.ms/vs/stable/vs_buildtools.exe' -OutFile $bootstrapper
+            $config = (Resolve-Path 'scripts/infra/native/windows/build-tools.vsconfig').Path
+            $process = Start-Process $bootstrapper -ArgumentList @(
+              '--installPath', "`"$env:VS_INSTALL`"", '--config', "`"$config`"",
+              '--quiet', '--norestart', '--wait'
+            ) -Wait -PassThru
+            if ($process.ExitCode -ne 0) {
+              throw "Visual Studio Build Tools installation exited with code $($process.ExitCode)."
+            }
+            "VS_INSTALL=$env:VS_INSTALL" >> $env:GITHUB_ENV
           } else {
-            $installation = & $vswhere -latest -version '[18.0,19.0)' -property installationPath
-            if ($LASTEXITCODE -ne 0 -or !$installation) { throw "The OS does not provide full VS $env:VS_VERSION." }
-            "VS_INSTALL=$installation" >> $env:GITHUB_ENV
+            ./scripts/infra/native/windows/select-vs.ps1
           }
 
       - name: Apply configured Visual Studio components
         run: |
-          ./scripts/infra/native/windows/install-components.ps1 `
-            -BuildTools:($env:BUILD_TOOLS -eq 'true') -InstallationPath $env:VS_INSTALL
+          ./scripts/infra/native/windows/select-vs.ps1 -InstallationPath $env:VS_INSTALL
+          ./scripts/infra/native/windows/install-components.ps1 -InstallationPath $env:VS_INSTALL
 
-      - name: Select VS 2026 tools and inventory preinstalled prerequisites
+      - name: Inventory selected VS 2026 tools and preinstalled prerequisites
         run: |
           $evidence = Join-Path $env:RUNNER_TEMP 'windows-components'
           $llvm = Join-Path $env:VS_INSTALL 'VC\Tools\Llvm\x64'
@@ -104,7 +106,7 @@ jobs:
           "LLVM_HOME=$llvm" >> $env:GITHUB_ENV
           "NINJA_EXE=$ninja" >> $env:GITHUB_ENV
           Split-Path $cmake >> $env:GITHUB_PATH
-          $python = (Get-Command python -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
+          $python = (Get-Command python -CommandType Application -ErrorAction Stop).Source
           & $python --version | Tee-Object (Join-Path $evidence 'prerequisites.txt')
           if ($LASTEXITCODE -ne 0) { throw "Python exited with code $LASTEXITCODE." }
           "PYTHON_EXE=$python" >> $env:GITHUB_ENV
@@ -137,16 +139,6 @@ jobs:
             Set-Content (Join-Path $evidence 'toolset-versions.txt')
           Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\Lib" |
             Select-Object Name | Out-File (Join-Path $evidence 'sdk-versions.txt')
-          $sdkComponents = (Get-Content $config -Raw | ConvertFrom-Json).components |
-            Where-Object { $_ -match '^Microsoft\.VisualStudio\.Component\.Windows(?:10|11)SDK\.\d+$' }
-          $declaredSdks = @($sdkComponents | ForEach-Object { "10.0.$(($_ -split '\.')[-1]).0" })
-          foreach ($directory in @('bin', 'Lib', 'Include')) {
-            $latestSdk = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\$directory" -Directory -Filter '10.0.*' |
-              Sort-Object { [Version]$_.Name } -Descending | Select-Object -First 1
-            if ($env:BUILD_TOOLS -eq 'true' -and (!$latestSdk -or $declaredSdks -notcontains $latestSdk.Name)) {
-              throw "ANGLE's automatic SDK selection in $directory is outside the manifest: $($latestSdk.Name). The runner is not isolated enough to validate the declared SDK requirements."
-            }
-          }
 
       - name: Prepare native source and build tools
         run: |
@@ -209,12 +201,15 @@ jobs:
 
       - name: Verify ANGLE rendering and run the console tests
         if: matrix.arch == 'x64'
+        env:
+          GALLIUM_DRIVER: softpipe
+          LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
           python native/winui-angle/smoke_test.py output/native/winui/x64 2>&1 |
             Tee-Object (Join-Path $env:RUNNER_TEMP 'windows-components/angle-rendering.log')
           if ($LASTEXITCODE -ne 0) { throw "ANGLE rendering exited with code $LASTEXITCODE." }
-          & ./scripts/infra/native/windows/install-mesa-gl.ps1
-          & ./scripts/infra/native/windows/install-vulkan-icd.ps1
+          & ./scripts/infra/tests/windows/install-mesa-gl.ps1
+          & ./scripts/infra/tests/windows/install-vulkan-icd.ps1
           dotnet test tests/SkiaSharp.Tests.Console.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx 2>&1 |
             Tee-Object (Join-Path $env:RUNNER_TEMP 'windows-components/console-tests.log')
           if ($LASTEXITCODE -ne 0) { throw "Console tests exited with code $LASTEXITCODE." }

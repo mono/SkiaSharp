@@ -14,7 +14,10 @@
 #>
 param(
     [Parameter(Mandatory)]
-    [string]$Path
+    [string] $Path,
+
+    [Parameter(Mandatory)]
+    [string] $WindowsSdkVersion
 )
 
 $ErrorActionPreference = 'Stop'
@@ -23,43 +26,44 @@ $includePath = Join-Path $Path 'include'
 $libPath = Join-Path $Path 'lib'
 $uapVersion = '10.0.18362'
 
-# Ensure include directory exists
-if (-not (Test-Path $includePath)) {
-    New-Item -ItemType Directory -Path $includePath | Out-Null
+$winSdkDir = $env:WindowsSdkDir
+if (!$winSdkDir) { throw 'vcvarsall did not set WindowsSdkDir.' }
+if (!$env:WindowsSDKVersion) { throw 'vcvarsall did not set WindowsSDKVersion.' }
+
+$sdkVersion = $WindowsSdkVersion.TrimEnd('\')
+$selectedSdkVersion = $env:WindowsSDKVersion.TrimEnd('\')
+if ($selectedSdkVersion -ne $sdkVersion) {
+    throw "vcvarsall selected Windows SDK $selectedSdkVersion, expected $sdkVersion."
 }
 
-# Find Windows SDK bin directory
-$winSdkDir = $env:WindowsSdkDir
-if (-not $winSdkDir) {
-    $winSdkDir = 'C:\Program Files (x86)\Windows Kits\10'
-}
-$sdkVersion = Get-ChildItem (Join-Path $winSdkDir 'bin') -Directory -Filter '10.0.*' |
-    Sort-Object Name -Descending |
-    Select-Object -First 1
-if (-not $sdkVersion) {
-    throw "Could not find Windows SDK bin directory under $winSdkDir"
-}
-$winSdkBin = Join-Path $sdkVersion.FullName 'x64'
+$winSdkBin = Join-Path $winSdkDir "bin\$sdkVersion\x64"
 $winmdidl = Join-Path $winSdkBin 'winmdidl.exe'
 $midlrt = Join-Path $winSdkBin 'midlrt.exe'
+foreach ($tool in $winmdidl, $midlrt) {
+    if (!(Test-Path $tool -PathType Leaf)) { throw "Missing Windows SDK tool: $tool" }
+}
 
-Write-Host "Using Windows SDK: $($sdkVersion.Name)"
+Write-Host "Using Windows SDK: $sdkVersion"
 Write-Host "WinAppSDK path: $Path"
 
-# Both winmdidl and midlrt run with CWD set to the include directory
-# (midlrt resolves imported IDL files relative to CWD)
 Push-Location $includePath
 try {
-    # Process all WINMD files with winmdidl.exe
-    # Discover all .winmd files under the lib directory so new namespaces in
-    # newer WinAppSDK versions are handled automatically.
     $metadataDirs = @(
         'C:\Windows\System32\WinMetadata'
         (Join-Path $libPath "uap$uapVersion")
         (Join-Path $libPath 'uap10.0')
     )
-    $winmdFiles = Get-ChildItem $libPath -Filter '*.winmd' -Recurse
+    foreach ($directory in $metadataDirs) {
+        if (!(Test-Path $directory -PathType Container)) { throw "Missing metadata directory: $directory" }
+    }
+
+    $winmdFiles = @(Get-ChildItem $libPath -Filter '*.winmd' -Recurse)
+    if (!$winmdFiles.Count) { throw "No WINMD files found under $libPath" }
+
     $abiIdlPath = Join-Path $includePath 'winmdidl'
+    if (Test-Path $abiIdlPath) {
+        Remove-Item $abiIdlPath -Recurse -Force
+    }
     New-Item -ItemType Directory -Path $abiIdlPath -Force | Out-Null
 
     foreach ($winmd in $winmdFiles) {
@@ -68,16 +72,15 @@ try {
         & $winmdidl $winmd.FullName @metadataArgs "/outdir:$abiIdlPath" /nologo
         if ($LASTEXITCODE -ne 0) { throw "winmdidl failed for $($winmd.Name)" }
     }
-    # Package source MIDL 3 files are not ABI IDLs and cannot serve as stamps.
     $abiIdls = @(Get-ChildItem $abiIdlPath -Filter '*.idl')
     if (!$abiIdls.Count) { throw "winmdidl produced no ABI IDLs under $abiIdlPath" }
     $abiIdls | Copy-Item -Destination $includePath -Force
 
-    # Include local transitive imports: MIDL reads imported IDLs but does not
-    # generate their headers when processing the importing file.
     $idlFiles = Get-ChildItem $includePath -Filter '*.idl' |
         Where-Object { $_.Name -like 'Microsoft.UI*.idl' -or $_.Name -like 'Microsoft.Graphics*.idl' } |
         Select-Object -ExpandProperty Name
+    if (!$idlFiles.Count) { throw "No ANGLE Windows App SDK IDLs found under $includePath" }
+
     $requiredIdls = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     $pendingIdls = [System.Collections.Generic.Queue[string]]::new()
     foreach ($idl in $idlFiles) { $pendingIdls.Enqueue($idl) }
@@ -90,6 +93,8 @@ try {
                 $dependency = $name.Groups[1].Value
                 if (Test-Path (Join-Path $includePath $dependency)) {
                     $pendingIdls.Enqueue($dependency)
+                } elseif ($dependency.StartsWith('Microsoft.', [StringComparison]::OrdinalIgnoreCase)) {
+                    throw "Missing local IDL import '$dependency' required by $idl"
                 }
             }
         }
@@ -97,15 +102,11 @@ try {
 
     foreach ($idl in ($requiredIdls | Sort-Object)) {
         $noExt = [System.IO.Path]::GetFileNameWithoutExtension($idl)
-        $headerFile = Join-Path $includePath "$noExt.h"
-        if (Test-Path $headerFile) { continue }
-
         Write-Host "  midlrt: $idl"
         & $midlrt $idl /metadata_dir C:\Windows\System32\WinMetadata /ns_prefix /nomidl /nologo
-        if ($LASTEXITCODE -ne 0) {
-            throw "midlrt failed for required ANGLE header $idl (exit code $LASTEXITCODE)."
-        }
+        if ($LASTEXITCODE -ne 0) { throw "midlrt failed for $idl (exit code $LASTEXITCODE)." }
     }
+
     foreach ($header in @('Microsoft.Foundation.h', 'Microsoft.UI.Dispatching.h', 'Microsoft.UI.Xaml.h')) {
         if (!(Test-Path (Join-Path $includePath $header))) { throw "Missing required ANGLE header: $header" }
     }

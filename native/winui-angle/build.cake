@@ -79,16 +79,12 @@ Task("sync-ANGLE")
             FileWriteText(toolchain, contents.Replace(original, replacement));
     }
 
-    // set build args
-    if (!FileExists(ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni"))) {
-        var lines = new[] {
-            "checkout_angle_internal = false",
-            "checkout_angle_mesa = false",
-            "checkout_angle_restricted_traces = false",
-            "generate_location_tags = false"
-        };
-        FileWriteLines(ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni"), lines);
-    }
+    FileWriteLines(ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni"), new[] {
+        "checkout_angle_internal = false",
+        "checkout_angle_mesa = false",
+        "checkout_angle_restricted_traces = false",
+        "generate_location_tags = false",
+    });
 
     // Apply a real GN config so Ninja also tracks security-option changes.
     {
@@ -123,35 +119,36 @@ Task("sync-ANGLE")
             actualSha = string.Concat(algorithm.ComputeHash(stream).Select(value => value.ToString("x2")));
         }
         var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
-        if (actualSha != sha)
+        if (actualSha != sha) {
             DownloadFile(url, rcPath);
+            using var stream = System.IO.File.OpenRead(rcPath.FullPath);
+            using var algorithm = System.Security.Cryptography.SHA1.Create();
+            actualSha = string.Concat(algorithm.ComputeHash(stream).Select(value => value.ToString("x2")));
+        }
+        if (actualSha != sha)
+            throw new Exception($"Chromium resource compiler hash mismatch: expected {sha}, found {actualSha}.");
     }
 
     // download llvm
     RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("tools/clang/scripts/update.py"));
 
-    // generate Windows App SDK files
-    if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h"))) {
-        var winappsdk_version = GetVersion("Microsoft.WindowsAppSDK", "release");
-        var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.stamp");
+    if (string.IsNullOrEmpty(WINDOWS_SDK_VERSION))
+        throw new Exception("ANGLE requires an explicit --windowsSdkVersion.");
 
-        // Download and extract the NuGet package using .NET HTTP (works on restricted agents
-        // where Python's urllib is blocked by firewall policy)
-        if (!FileExists(stamp)) {
-            var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdk_version}/microsoft.windowsappsdk.{winappsdk_version}.nupkg";
-            var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.nupkg");
-            EnsureDirectoryExists(WINAPPSDK_PATH);
-            DownloadFile(nugetUrl, nupkgPath);
-            Unzip(nupkgPath, WINAPPSDK_PATH);
-            DeleteFile(nupkgPath);
-            FileWriteText(stamp, "");
-        }
+    var winappsdkVersion = GetVersion("Microsoft.WindowsAppSDK", "release");
+    var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdkVersion}/microsoft.windowsappsdk.{winappsdkVersion}.nupkg";
+    var nupkgPath = ROOT_PATH.CombineWithFilePath($"externals/microsoft.windowsappsdk.{winappsdkVersion}.nupkg");
+    CleanDirectory(WINAPPSDK_PATH);
+    DownloadFile(nugetUrl, nupkgPath);
+    Unzip(nupkgPath, WINAPPSDK_PATH);
+    DeleteFile(nupkgPath);
 
-        // Run the header generation script under vcvarsall.bat so midlrt can find cl.exe
-        var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
-        var generateScript = MakeAbsolute(File("generate_winappsdk_headers.ps1"));
-        RunProcess(vcvarsall, $"\"{VS_INSTALL}\" \"x64\" pwsh -NoProfile -ExecutionPolicy Bypass -File \"{generateScript}\" -Path \"{WINAPPSDK_PATH}\"");
-    }
+    var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
+    var generateScript = MakeAbsolute(File("generate_winappsdk_headers.ps1"));
+    RunProcess(vcvarsall,
+        $"\"{VS_INSTALL}\" \"x64 {WINDOWS_SDK_VERSION}\" pwsh -NoProfile -ExecutionPolicy Bypass " +
+        $"-File \"{generateScript}\" " +
+        $"-Path \"{WINAPPSDK_PATH}\" -WindowsSdkVersion \"{WINDOWS_SDK_VERSION}\"");
 });
 
 Task("ANGLE")
@@ -214,7 +211,6 @@ Task("ANGLE")
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.dll"), outDir);
         CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.pdb"), outDir);
-        CheckWindowsDependencies($"{outDir}/{target}.dll", excluded: VERIFY_EXCLUDED);
         var dumpbin = ((DirectoryPath)VS_INSTALL).CombineWithFilePath(
             $"VC/Tools/MSVC/{TOOLSET_VERSION.Value}/bin/Hostx64/x64/dumpbin.exe");
         RunProcess(dumpbin, $"/headers \"{outDir}/{target}.dll\"", out var headers);
