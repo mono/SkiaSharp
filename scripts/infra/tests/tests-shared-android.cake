@@ -68,7 +68,7 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
     try {
         AndroidAvdCommand("create", "avd", "--name", ownedAvd, "--package", systemImage, "--device", TEST_ANDROID_MODEL);
         ownedSerial = $"emulator-{port}";
-        var gpu = IsRunningOnLinux() ? "swiftshader" : "guest";
+        var gpu = IsRunningOnLinux() ? "swangle" : "guest";
         var start = new System.Diagnostics.ProcessStartInfo(
             System.IO.Path.Combine(sdk, "emulator", IsRunningOnWindows() ? "emulator.exe" : "emulator")) {
             RedirectStandardOutput = true,
