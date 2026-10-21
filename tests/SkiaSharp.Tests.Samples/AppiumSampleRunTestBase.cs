@@ -72,18 +72,21 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 			async () =>
 			{
 				var drawn = await Compare(app, canvasId, "basic-drawing-two-lines", "Maui");
-				AssertDrawingStrokeRegions(drawn, Expected(app.DeviceProfile, "basic-drawing-two-lines", "Maui"));
+				AssertDrawingStrokeRegions(drawn,
+					Expected(app.DeviceProfile, "basic-drawing-two-lines", "Maui", app.Platform));
 			},
 			async () =>
 			{
 				app.Click("basic-drawing-clear");
 				var cleared = await Compare(app, canvasId, "basic-drawing-page", "Maui");
-				AssertDrawingStrokeRegions(cleared, Expected(app.DeviceProfile, "basic-drawing-page", "Maui"));
+				AssertDrawingStrokeRegions(cleared,
+					Expected(app.DeviceProfile, "basic-drawing-page", "Maui", app.Platform));
 			});
 	}
 
 	internal static void AssertDrawingStrokeRegions(string actual, string expected)
 	{
+		Assert.True(File.Exists(expected), $"Missing reviewed sample golden: {expected}.");
 		using var actualImage = SKImage.FromEncodedData(actual);
 		using var expectedImage = SKImage.FromEncodedData(expected);
 		Assert.NotNull(actualImage);
@@ -153,19 +156,19 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 	}
 
 	private static async Task<string> Compare(
-		AppiumOperations app, string canvasId, string name, string family)
-		=> await SampleImage.Validate(
+		AppiumOperations app, string canvasId, string name, string family) =>
+		await SampleImage.Validate(
 			() => Task.FromResult(app.Capture(canvasId, name)),
-			app.TransformReference(Expected(app.DeviceProfile, name, family)));
+			app.TransformReference(Expected(app.DeviceProfile, name, family, app.Platform)));
 
-	internal static string Expected(string deviceProfile, string name, string family) =>
-		Expected(deviceProfile, name, family, HostArchitecture());
+	internal static string Expected(string deviceProfile, string name, string family, string platform = "iOS") =>
+		Expected(deviceProfile, name, family, platform, HostArchitecture());
 
-	internal static string Expected(string deviceProfile, string name, string family, string architecture)
+	internal static string Expected(string deviceProfile, string name, string family, string platform, string architecture)
 	{
 		var directory = Path.Combine(
 			Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", "Appium",
-			family, "iOS", deviceProfile.Replace('/', Path.DirectorySeparatorChar));
+			family, platform, deviceProfile.Replace('/', Path.DirectorySeparatorChar));
 		var architectureSpecific = Path.Combine(directory, $"{name}.{architecture}.png");
 		return File.Exists(architectureSpecific)
 			? architectureSpecific

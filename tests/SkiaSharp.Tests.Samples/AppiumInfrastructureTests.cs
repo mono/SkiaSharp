@@ -260,7 +260,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 
 		foreach (var family in new[] { "Maui", "Native" })
 		{
-			var expected = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", family, "arm64");
+			var expected = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", family, "iOS", "arm64");
 			Assert.Equal(Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
 				"Appium", family, "iOS", "iPhone-16-Pro", version, "basic-cpu.png"), expected);
 		}
@@ -271,8 +271,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	{
 		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", "26.2");
 
-		var x64 = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", "Maui", "x64");
-		var arm64 = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", "Maui", "arm64");
+		var x64 = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", "Maui", "iOS", "x64");
+		var arm64 = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", "Maui", "iOS", "arm64");
 
 		Assert.EndsWith(Path.Combine("26.2", "basic-cpu.x64.png"), x64);
 		Assert.EndsWith(Path.Combine("26.2", "basic-cpu.png"), arm64);
@@ -316,6 +316,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	{
 		internal Exception StartFailure { get; } = new NotSupportedException("Session construction failed.");
 		internal override string DeviceProfile => "unit-fixture";
+		internal override string Platform => "iOS";
 		internal override Task<string> ReadApplicationId() => Task.FromResult("unit.fixture");
 		protected override Task Start(Uri address)
 		{
@@ -340,6 +341,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		var operations = Assert.IsType<IosAppiumOperations>(running.Operations);
 		Assert.Same(operations, app.Operations);
 		Assert.Equal(app.DeviceProfile, operations.DeviceProfile);
+		Assert.Equal("iOS", operations.Platform);
 		Assert.Throws<InvalidOperationException>(() => operations.Attach(app));
 
 		var failure = Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
@@ -353,7 +355,106 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		var failure = Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
 		Assert.Equal("Appium operations have not been attached to an app.", failure.Message);
 		Assert.Throws<InvalidOperationException>(() => operations.DeviceProfile);
+		Assert.Throws<InvalidOperationException>(() => operations.Platform);
 		Assert.Throws<ArgumentNullException>(() => operations.Attach(null!));
+	}
+
+	[Theory]
+	[InlineData("android-26;google_apis", "android-26", Architecture.Arm64, "arm64-v8a")]
+	[InlineData("android-26;google_apis_playstore", "android-26", Architecture.Arm64, "arm64-v8a")]
+	[InlineData("android-36;google_apis", "android-36", Architecture.Arm64, "arm64-v8a")]
+	[InlineData("android-26;google_apis", "android-26", Architecture.X64, "x86_64")]
+	[InlineData("android-26;google_apis_playstore", "android-26", Architecture.X64, "x86_64")]
+	[InlineData("android-36;google_apis", "android-36", Architecture.X64, "x86_64")]
+	public void AndroidGoldenProfilesUseApiLevelAndSelectedEmulatorAbiWithoutImageFlavor(
+		string image, string api, Architecture architecture, string abi)
+	{
+		var profile = AndroidRunningApp.ReferenceProfile("pixel_9", image, architecture);
+		Assert.Equal($"pixel_9/{api}/{abi}", profile);
+		foreach (var family in new[] { "Maui", "Native" })
+		{
+			var expected = AppiumSampleRunTestBase.Expected(profile, "basic-cpu", family, "Android");
+			Assert.Equal(Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
+				"Appium", family, "Android", "pixel_9", api, abi, "basic-cpu.png"), expected);
+			var missing = AppiumSampleRunTestBase.Expected(profile, "unit-fixture-not-reviewed", family, "Android");
+			Assert.False(File.Exists(missing));
+			var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.2", "basic-cpu", "Maui");
+			var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, missing));
+			Assert.Contains($"Missing reviewed sample golden: {missing}", failure.Message);
+			Assert.False(File.Exists(missing));
+		}
+	}
+
+	[Theory]
+	[InlineData(null, "android-26;google_apis")]
+	[InlineData("pixel_9", null)]
+	[InlineData("pixel_9", "latest")]
+	[InlineData("../pixel_9", "android-26;google_apis")]
+	[InlineData("pixel_9", "android-26;google_apis/foreign")]
+	public void AndroidRequiresAnExplicitSafeProfile(string? model, string? image) =>
+		Assert.Throws<InvalidOperationException>(() => AndroidRunningApp.ReferenceProfile(model, image, Architecture.Arm64));
+
+	[Theory]
+	[InlineData(Architecture.X86)]
+	[InlineData(Architecture.Arm)]
+	public void AndroidRejectsUnsupportedEmulatorArchitectures(Architecture architecture) =>
+		Assert.Throws<InvalidOperationException>(() =>
+			AndroidRunningApp.ReferenceProfile("pixel_9", "android-26;google_apis", architecture));
+
+	[Theory]
+	[InlineData(null)]
+	[InlineData("")]
+	[InlineData(" ")]
+	public void AndroidRejectsMissingSerialBeforeAnyDeviceInteraction(string? serial)
+	{
+		using var workspace = Workspace();
+		var failure = Assert.Throws<InvalidOperationException>(() =>
+			new AndroidRunningApp(workspace, "fixture.apk", serial));
+		Assert.Contains("TEST_ANDROID_UDID", failure.Message);
+	}
+
+	[Theory]
+	[InlineData("<manifest package=\"com.skiasharp.built\" />")]
+	[InlineData("<?xml version=\"1.0\"?><manifest package=\"com.skiasharp.built\"><application /></manifest>")]
+	public void AndroidIdentityUsesTheBuiltApkManifest(string output) =>
+		Assert.Equal("com.skiasharp.built", AndroidRunningApp.ParseApplicationId(output));
+
+	[Theory]
+	[InlineData("<manifest />")]
+	[InlineData("<manifest package=\"com.skiasharp/foreign\" />")]
+	[InlineData("<manifest package=\"com.skiasharp.built&#10;com.foreign.app\" />")]
+	[InlineData("<application package=\"com.skiasharp.built\" />")]
+	public void AndroidRejectsInvalidOrAmbiguousApkIdentity(string output) =>
+		Assert.Throws<InvalidOperationException>(() => AndroidRunningApp.ParseApplicationId(output));
+
+	[Fact]
+	public void AndroidOperationsBelongToTheAppAndUseItsPackageResourceIds()
+	{
+		using var workspace = Workspace();
+		var app = new AndroidRunningApp(workspace, Path.Combine(workspace.Root, "Built-Signed.apk"), "unit-fixture-device");
+		var operations = Assert.IsType<AndroidAppiumOperations>(app.Operations);
+		Assert.Same(operations, app.Operations);
+		Assert.Equal("Android", app.Platform);
+		Assert.Equal(app.Platform, operations.Platform);
+		Assert.Throws<InvalidOperationException>(() => operations.Attach(app));
+		Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
+		Assert.Equal(By.Id("com.skiasharp.built:id/skiaView").ToString(),
+			AndroidAppiumOperations.ElementLocator("com.skiasharp.built", "skiaView").ToString());
+		Assert.Equal(By.Id("com.skiasharp.built:id/gallery-header-cpu").ToString(),
+			AndroidAppiumOperations.ElementLocator("com.skiasharp.built", "gallery-header-cpu").ToString());
+	}
+
+	[Fact]
+	public void MissingReferenceTransformationPreservesStrictValidationAndActualCapture()
+	{
+		using var workspace = Workspace();
+		var app = new AndroidRunningApp(workspace, Path.Combine(workspace.Root, "Built-Signed.apk"), "unit-fixture-device");
+		var expected = Path.Combine(workspace.Root, "not-reviewed", "canvas.png");
+		Assert.Equal(expected, app.Operations.TransformReference(expected));
+		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.2", "basic-cpu", "Maui");
+		var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
+		Assert.Contains("Missing reviewed sample golden:", failure.Message);
+		Assert.False(File.Exists(expected));
 	}
 
 	[Fact]
@@ -412,10 +513,18 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("26.2", false)]
 	[InlineData("26.3.1", true)]
 	[InlineData("26.3.1", false)]
-	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(string version, bool horizontal)
+	[InlineData("android-26/arm64-v8a", true, "Android")]
+	[InlineData("android-26/arm64-v8a", false, "Android")]
+	[InlineData("android-36/arm64-v8a", true, "Android")]
+	[InlineData("android-36/arm64-v8a", false, "Android")]
+	[InlineData("android-26/x86_64", true, "Android")]
+	[InlineData("android-26/x86_64", false, "Android")]
+	[InlineData("android-36/x86_64", true, "Android")]
+	[InlineData("android-36/x86_64", false, "Android")]
+	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(string version, bool horizontal, string platform = "iOS")
 	{
 		var references = Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected",
-			"Appium", "Maui", "iOS", "iPhone-16-Pro", version);
+			"Appium", "Maui", platform, platform == "Android" ? "pixel_9" : "iPhone-16-Pro", version);
 		var drawn = Path.Combine(references, "basic-drawing-two-lines.png");
 		var blank = Path.Combine(references, "basic-drawing-page.png");
 		AppiumSampleRunTestBase.AssertDrawingStrokeRegions(drawn, drawn);

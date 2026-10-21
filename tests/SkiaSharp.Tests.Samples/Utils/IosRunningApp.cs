@@ -23,6 +23,8 @@ internal sealed class IosRunningApp : AppiumRunningApp
 
 	internal override string DeviceProfile => ReferenceProfile(model, version);
 
+	internal override string Platform => "iOS";
+
 	protected override SKRectI ScreenshotInsets(SKSizeI size) =>
 		ScreenshotInsets(model, version, size);
 

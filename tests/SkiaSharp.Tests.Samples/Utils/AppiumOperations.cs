@@ -21,6 +21,10 @@ internal abstract class AppiumOperations
 
 	internal string DeviceProfile => App.DeviceProfile;
 
+	internal string Platform => App.Platform;
+
+	protected string ApplicationId => App.ApplicationId;
+
 	internal void Attach(AppiumRunningApp owner)
 	{
 		ArgumentNullException.ThrowIfNull(owner);
@@ -359,6 +363,9 @@ internal abstract class AppiumOperations
 
 	internal string TransformReference(string path)
 	{
+		// Let strict validation retain the actual capture and report a missing reference.
+		if (!File.Exists(path))
+			return path;
 		var transformed = App.TransformScreenshot(File.ReadAllBytes(path));
 		if (transformed is null)
 			return path;

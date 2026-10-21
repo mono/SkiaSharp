@@ -34,6 +34,8 @@ internal abstract class AppiumRunningApp
 
 	internal abstract string DeviceProfile { get; }
 
+	internal abstract string Platform { get; }
+
 	internal AppiumOperations Operations { get; }
 
 	internal AppiumDriver Driver => driver ?? throw new InvalidOperationException("The owned Appium session is not ready.");

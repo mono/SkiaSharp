@@ -68,7 +68,7 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
     try {
         AndroidAvdCommand("create", "avd", "--name", ownedAvd, "--package", systemImage, "--device", TEST_ANDROID_MODEL);
         ownedSerial = $"emulator-{port}";
-        var gpu = IsRunningOnLinux() ? "swiftshader_indirect" : "guest";
+        var gpu = IsRunningOnLinux() ? "swiftshader" : "guest";
         var start = new System.Diagnostics.ProcessStartInfo(
             System.IO.Path.Combine(sdk, "emulator", IsRunningOnWindows() ? "emulator.exe" : "emulator")) {
             RedirectStandardOutput = true,
@@ -76,7 +76,7 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
             UseShellExecute = false,
         };
         foreach (var argument in new[] {
-            "-avd", ownedAvd, "-port", port.ToString(), "-gpu", gpu,
+            "-avd", ownedAvd, "-port", port.ToString(), "-gpu", gpu, "-cores", "2", "-memory", "4096",
             "-partition-size", "4096",
             "-no-window", "-no-snapshot", "-no-audio", "-no-boot-anim", "-show-kernel",
             "-camera-back", "none", "-camera-front", "none",
@@ -87,8 +87,7 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         ANDROID_EMULATOR_PROCESS = System.Diagnostics.Process.Start(start);
         ANDROID_EMULATOR_STDOUT = ANDROID_EMULATOR_PROCESS.StandardOutput.ReadToEndAsync();
         ANDROID_EMULATOR_STDERR = ANDROID_EMULATOR_PROCESS.StandardError.ReadToEndAsync();
-        WaitForAndroidBoot(ownedSerial);
-        AssertOwnedAndroidEmulator(ownedAvd, ownedSerial);
+        WaitForAndroidBoot(ownedAvd, ownedSerial);
         foreach (var setting in new[] { "window_animation_scale", "transition_animation_scale", "animator_duration_scale" }) {
             if (StartProcess(ANDROID_ADB, new ProcessSettings {
                 Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
@@ -99,8 +98,43 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         }
         ListAndroidDevices();
     } catch (Exception error) {
-        TeardownAndroidEmulator(ref ownedAvd, ref ownedSerial, error);
-        throw;
+        var failure = error;
+        if (ANDROID_EMULATOR_PROCESS != null && !ANDROID_EMULATOR_PROCESS.HasExited && ownedSerial != null) {
+            try {
+                CaptureOwnedAndroidBootDiagnostics(ownedAvd, ownedSerial);
+            } catch (Exception diagnosticsError) {
+                failure = new AggregateException("Owned Android setup and boot diagnostics failed.", error, diagnosticsError);
+            }
+        }
+        TeardownAndroidEmulator(ref ownedAvd, ref ownedSerial, failure);
+        System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+    }
+}
+
+void CaptureOwnedAndroidBootDiagnostics(string ownedAvd, string ownedSerial)
+{
+    AssertOwnedAndroidEmulator(ownedAvd, ownedSerial);
+    var logs = System.IO.Path.Combine(ROOT_PATH.FullPath, "output", "logs", "android", ownedAvd);
+    System.IO.Directory.CreateDirectory(logs);
+    // These shell diagnostics are not exposed by the pinned dotnet android CLI.
+    foreach (var diagnostic in new[] {
+        (Name: "last-anr", Command: "dumpsys activity lastanr"),
+        (Name: "resources", Command: "dumpsys cpuinfo && dumpsys meminfo"),
+    }) {
+        var exit = StartProcess(ANDROID_ADB, new ProcessSettings {
+            Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
+                .Append("shell").AppendQuoted(diagnostic.Command),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            Timeout = 30000,
+        }, out var stdout, out var stderr);
+        var lines = stdout.Concat(stderr).ToArray();
+        System.IO.File.WriteAllLines(System.IO.Path.Combine(logs, diagnostic.Name + ".log"), lines);
+        Information("Owned Android {0} (first 120 lines):\n{1}", diagnostic.Name, string.Join("\n", lines.Take(120)));
+        if (diagnostic.Name == "resources")
+            Information("Owned Android memory summary (last 40 lines):\n{0}", string.Join("\n", lines.TakeLast(40)));
+        if (exit != 0)
+            throw new Exception($"Owned Android {diagnostic.Name} diagnostics failed with exit code {exit}.");
     }
 }
 
@@ -110,25 +144,38 @@ void ListAndroidDevices()
     DotNetTool("android device list");
 }
 
-void WaitForAndroidBoot(string ownedSerial)
+void WaitForAndroidBoot(string ownedAvd, string ownedSerial)
 {
-    // Match the repository device suite's five-minute boot budget, not a consumer session timeout.
+    // Package Manager readiness is observable directly; aggregate Linux load is not a service readiness signal.
     var clock = System.Diagnostics.Stopwatch.StartNew();
+    var stable = 0;
+    var last = "boot properties unavailable";
     while (clock.Elapsed < TimeSpan.FromSeconds(300)) {
         if (ANDROID_EMULATOR_PROCESS.HasExited)
             throw new Exception($"Owned Android emulator exited during boot: {ANDROID_EMULATOR_PROCESS.ExitCode}.");
+        var response = System.Diagnostics.Stopwatch.StartNew();
         var exit = StartProcess(ANDROID_ADB, new ProcessSettings {
             Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
-                .Append("shell getprop sys.boot_completed"),
+                .Append("shell").AppendQuoted("getprop sys.boot_completed; pm path android; cat /proc/loadavg"),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             Timeout = 10000,
         }, out var stdout, out var stderr);
-        if (exit == 0 && stdout.Any(line => line.Trim() == "1"))
+        var lines = stdout.Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
+        var ready = exit == 0 && lines.Length == 3 && lines[0] == "1" &&
+            lines[1].StartsWith("package:/", StringComparison.Ordinal) &&
+            response.Elapsed < TimeSpan.FromSeconds(5);
+        var identityReady = ready && HasOwnedAndroidEmulatorIdentity(ownedAvd, ownedSerial);
+        ready = identityReady && response.Elapsed < TimeSpan.FromSeconds(5);
+        last = $"exit={exit}, response={response.Elapsed.TotalSeconds:F1}s, identity={(identityReady ? "exact" : "not confirmed")}, output={string.Join(" | ", lines)}, error={string.Join(" | ", stderr)}";
+        stable = ready ? stable + 1 : 0;
+        if (stable == 3) {
+            Information("Owned Android emulator ready: {0}", last);
             return;
-        System.Threading.Thread.Sleep(500);
+        }
+        System.Threading.Thread.Sleep(1000);
     }
-    throw new TimeoutException($"Owned Android emulator {ownedSerial} did not complete boot within 300 seconds.");
+    throw new TimeoutException($"Owned Android emulator {ownedSerial} did not reach boot/Package Manager/identity/response readiness within 300 seconds: {last}.");
 }
 
 int AndroidEmulatorPort()
@@ -152,6 +199,12 @@ int AndroidEmulatorPort()
 
 void AssertOwnedAndroidEmulator(string ownedAvd, string ownedSerial)
 {
+    if (!HasOwnedAndroidEmulatorIdentity(ownedAvd, ownedSerial))
+        throw new Exception($"The exact serial {ownedSerial} has not reported owned AVD {ownedAvd}.");
+}
+
+bool HasOwnedAndroidEmulatorIdentity(string ownedAvd, string ownedSerial)
+{
     var settings = new ProcessSettings {
         Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial).Append("emu avd name"),
         RedirectStandardOutput = true,
@@ -167,11 +220,20 @@ void AssertOwnedAndroidEmulator(string ownedAvd, string ownedSerial)
             .Append("shell getprop ro.boot.qemu.avd_name");
         exit = StartProcess(ANDROID_ADB, settings, out stdout);
         identity = stdout.Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
+        if (exit == 0 && identity.Length == 0) {
+            // Older images publish the same exact AVD name under the legacy kernel prefix.
+            settings.Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
+                .Append("shell getprop ro.kernel.qemu.avd_name");
+            exit = StartProcess(ANDROID_ADB, settings, out stdout);
+            identity = stdout.Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
+        }
     }
 
-    if (exit != 0 || identity.Length != 1 ||
-        !identity[0].Equals(ownedAvd, StringComparison.Ordinal))
-        throw new Exception($"The exact serial {ownedSerial} did not identify owned AVD {ownedAvd}.");
+    if (exit != 0 || identity.Length > 1 ||
+        (identity.Length == 1 && !identity[0].Equals(ownedAvd, StringComparison.Ordinal)))
+        throw new Exception($"The exact serial {ownedSerial} did not identify owned AVD {ownedAvd}. " +
+            $"Exit: {exit}; reported identity: {string.Join(" | ", identity)}");
+    return identity.Length == 1;
 }
 
 string[] AndroidEmulatorIdentityLines(IEnumerable<string> output)
@@ -247,10 +309,18 @@ void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Except
         try {
             var logs = System.IO.Path.Combine(ROOT_PATH.FullPath, "output", "logs", "android", ownedAvd);
             System.IO.Directory.CreateDirectory(logs);
+            var stdout = ANDROID_EMULATOR_STDOUT.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult();
+            var stderr = ANDROID_EMULATOR_STDERR.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult();
             System.IO.File.WriteAllText(System.IO.Path.Combine(logs, "emulator.stdout.log"),
-                ANDROID_EMULATOR_STDOUT.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult());
+                stdout);
             System.IO.File.WriteAllText(System.IO.Path.Combine(logs, "emulator.stderr.log"),
-                ANDROID_EMULATOR_STDERR.WaitAsync(TimeSpan.FromSeconds(30)).GetAwaiter().GetResult());
+                stderr);
+            if (originalError != null) {
+                Information("Owned Android emulator stdout (last 100 lines):\n{0}",
+                    string.Join("\n", stdout.Split('\n').TakeLast(100)));
+                Information("Owned Android emulator stderr (last 100 lines):\n{0}",
+                    string.Join("\n", stderr.Split('\n').TakeLast(100)));
+            }
         } catch (Exception error) {
             failures.Add(error);
         }

@@ -1,7 +1,7 @@
 # Building and Validating Samples
 
 The Samples suite builds generated applications against produced NuGet packages,
-runs Console/Web APIs on the host and in Docker, and checks browser and iOS UIs.
+runs Console/Web APIs on the host and in Docker, and checks browser, iOS and Android UIs.
 
 ## Run the suite
 
@@ -42,8 +42,8 @@ This generates the samples and runs the suite. Keep all packages from the same
 producing build and pass its suffix explicitly.
 
 To run one group, add `--runGroup=Build`, `--runGroup=Host`,
-`--runGroup=Docker`, or `--runGroup=Ios`. Omit `--runGroup` to run the full suite,
-including iOS simulator cases on macOS.
+`--runGroup=Docker`, `--runGroup=Ios`, or `--runGroup=Android`. Omit `--runGroup`
+to run the full suite; device groups require their platform setup and explicit profiles.
 Group names are case-sensitive.
 
 ## IDE and direct test runs
@@ -101,7 +101,7 @@ After staging packages, select one of the runtimes from the
 ```sh
 IOS_VERSION=18.6
 sudo scripts/infra/native/apple/select-xcode.sh "$XCODE_VERSION"
-pwsh scripts/infra/tests/install-appium.ps1
+pwsh scripts/infra/tests/install-appium.ps1 -Platform iOS
 pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version "$IOS_VERSION"
 dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
   --iosModel="iPhone 16 Pro" \
@@ -183,6 +183,47 @@ Review actual/diff captures before replacing an intentional change. Use the
 canvas PNG from the TRX attachment, not full-screen diagnostics or animated GPU
 captures, then rerun every configured profile against the same package build.
 
+## Android emulator runs
+
+The `Android` group runs Basic MAUI, native Android and Gallery MAUI with
+Appium/UiAutomator2. The same `--appiumMode=build|run|all` phases apply; use
+`--runGroup=Android` with the explicit image/model options below. Install Node.js
+and the SDK, JDK, workloads, compile platforms
+and emulator tools specified by the
+[Android CI legs](../../scripts/azure-templates-stages-samples.yml).
+Use one complete image/model profile from that configuration.
+Headless Linux requires `libpulse0` and KVM access.
+
+After staging packages, set the selected SDK's absolute `ANDROID_HOME` and
+`ANDROID_SDK_MANAGER_PATH` in your shell:
+
+```sh
+# Set these to one complete profile from the sample stage configuration.
+export TEST_ANDROID_IMAGE="<image>" TEST_ANDROID_MODEL="<model>"
+pwsh scripts/infra/managed/install-android-image.ps1 -Image "$TEST_ANDROID_IMAGE"
+pwsh scripts/infra/tests/install-appium.ps1 -Platform Android
+dotnet cake --target=samples --runGroup=Android \
+  --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
+```
+
+Use your packages' suffix, not the example suffix. Provisioning scripts publish
+SDK paths for CI but cannot export them back to a calling shell.
+Cake creates and cleans up only its unique AVD/process; each test owns its
+Appium server/session and installed APK. `samples-generate` starts neither.
+
+For direct/IDE runs, explicitly set the same two `TEST_ANDROID_*` profile
+variables and `TEST_ANDROID_UDID` to the exact serial of a device you manage.
+Missing serials fail before device interaction; no first-device selection is used.
+
+Android references route to
+`Expected/Appium/<Maui|Native>/Android/<model>/android-<API>/<ABI>/`, such as
+`pixel_9/android-26/x86_64/`. The ABI matches the host-selected emulator image
+(`x86_64` or `arm64-v8a`); antialiased edges can differ between architectures.
+The emulator image flavor is used for installation, not reference naming. Review exact-profile
+captures before adding references; missing or mismatched references fail without
+fallback or automatic acceptance. Animated Basic GPU pages require FPS and retain
+captures; Gallery's static GPU gradient uses strict comparison.
+
 ## Coverage and diagnostics
 
 Basic/Gallery samples have build coverage; Console/Web APIs and Web/WASM/Blazor
@@ -190,7 +231,7 @@ UIs have runtime checks, including Blazor Drawing pointer strokes, color/brush
 selection and clear. Basic Uno runs its declared `net10.0-browserwasm` project
 target, checking CPU rendering and Drawing navigation, pointer strokes and
 clear rather than launching a desktop or host solution variant.
-Gallery also has iOS device execution through the separate `Ios` group.
+Gallery also has device execution through the separate `Ios` and `Android` groups.
 Browser errors and unavailable GPU rendering fail.
 
 | Group | Tests | CI hosts |
@@ -199,6 +240,7 @@ Browser errors and unavailable GPU rendering fail.
 | Host | Console, Web API and browser sample execution | Windows, macOS, Linux |
 | Docker | Container image builds and sample execution | Windows, Linux |
 | Ios | Basic MAUI/native iOS and Gallery MAUI Appium execution | macOS with the configured simulator profiles |
+| Android | Basic MAUI/native Android and Gallery MAUI Appium execution | Configured Android test pool with the two selected emulator profiles |
 
 When adding tests, choose a `RunGroup` by execution target, not sample family.
 Name execution classes by purpose: `SampleBuildTests`, `BasicSampleRunTests`,
@@ -224,7 +266,7 @@ versions against staged packages. Do not clear shared caches.
 Review platform references under `tests/SkiaSharp.Tests.Samples/Expected/`.
 Dimensions must match; the default limit is **0.075% differing pixels** with
 zero channel tolerance. Existing browser animated GPU pages use a loose
-**6% mean RGBA error** smoke check that can miss uniform dark output; iOS
+**6% mean RGBA error** smoke check that can miss uniform dark output; iOS/Android
 animated Basic GPU pages instead require FPS and retain a capture. Mismatches
 retain actual/diff images; references are never accepted automatically.
 
