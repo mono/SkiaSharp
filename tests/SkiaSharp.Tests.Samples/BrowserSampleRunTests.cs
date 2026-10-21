@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Microsoft.Playwright;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
@@ -46,7 +47,10 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
         {
             await app.Navigate("/");
             await app.WaitForElement(".canvas-container canvas");
-            await SampleImage.Validate(app.Screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png",
+            var reference = SampleLookup.HostPlatform == "Mac" && RuntimeInformation.ProcessArchitecture == Architecture.X64
+                ? "Host/Mac/blazor-cpu-page-x64.png"
+                : $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png";
+            await SampleImage.Validate(app.Screenshot, reference,
                 timeout: TimeSpan.FromSeconds(10));
         });
 
