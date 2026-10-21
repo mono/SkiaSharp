@@ -1,5 +1,5 @@
 parameters:
-  - name: buildAgentHost
+  - name: buildAgent
     type: object
 
 stages:
@@ -8,7 +8,7 @@ stages:
     jobs:
       - job: prepare
         displayName: Prepare Build
-        pool: ${{ parameters.buildAgentHost.pool }}
+        pool: ${{ parameters.buildAgent.pool }}
         steps:
           - checkout: self
             submodules: false
@@ -19,11 +19,6 @@ stages:
             displayName: Validate build identity rules
           - pwsh: ./scripts/infra/security/tests/PrepareApiScanInputs.Tests.ps1
             displayName: Validate API Scan input preparation
-          - task: UsePythonVersion@0
-            displayName: Install Python for cache validation
-            inputs:
-              versionSpec: '3.x'
-              architecture: 'x64'
           - pwsh: |
               python3 scripts/infra/caching/repo-deps.py validate
               if ($LASTEXITCODE -ne 0) {
