@@ -58,12 +58,6 @@ stages:
               onefuzzDropDirectory: $(Build.ArtifactStagingDirectory)\OneFuzz
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-          - task: PublishPipelineArtifact@1
-            displayName: Retain Windows OneFuzz drop
-            condition: succeededOrFailed()
-            inputs:
-              targetPath: $(Build.ArtifactStagingDirectory)\OneFuzz
-              artifact: onefuzz_windows
 
       - job: fuzzing_ubuntu
         displayName: OneFuzz Ubuntu x64
@@ -118,10 +112,3 @@ stages:
             env:
               onefuzzDropDirectory: $(Build.ArtifactStagingDirectory)/OneFuzz
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-
-          - task: PublishPipelineArtifact@1
-            displayName: Retain Ubuntu OneFuzz drop
-            condition: succeededOrFailed()
-            inputs:
-              targetPath: $(Build.ArtifactStagingDirectory)/OneFuzz
-              artifact: onefuzz_ubuntu
