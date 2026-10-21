@@ -182,7 +182,9 @@ from scenario execution.
 References live in `tests/Goldens/v1/<profile>/<version-or-base>/`.
 For example, `iphone-16-pro/26.3.1/maui-basic-cpu.png` and
 `mac/base/blazor-cpu.x64.png`. Cases distinguish MAUI/native and drawing states;
-the test driver does not affect the key. See
+the test driver does not affect the key. The runner reads its packaged
+`Goldens/v1/` subtree, so preserve that content when relocating the runner;
+reference lookup does not require the source checkout. See
 [reference lookup and promotion](golden-image-tests.md#goldens) for ordering,
 diagnostic export and review rules. For transformed captures, proposals retain
 the raw PNG; do not replace a raw golden with its cropped comparison artifact.

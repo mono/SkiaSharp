@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal static class SampleReferences
 {
-    internal static string Root => Path.Combine(Repo.RootDir, "tests", "Goldens", "v1");
+    internal static string Root => Path.Combine(AppContext.BaseDirectory, "Goldens", "v1");
 
     private static readonly Lazy<GoldenStoreIndex> Store = new(() => GoldenStoreIndex.FromDirectory(Root));
     private static readonly Lazy<GoldenEnvironment> HostEnvironment = new(GoldenEnvironment.Current);
