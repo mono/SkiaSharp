@@ -76,7 +76,7 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
             UseShellExecute = false,
         };
         foreach (var argument in new[] {
-            "-avd", ownedAvd, "-port", port.ToString(), "-gpu", gpu, "-cores", "4",
+            "-avd", ownedAvd, "-port", port.ToString(), "-gpu", gpu, "-cores", "4", "-memory", "4096",
             "-partition-size", "4096",
             "-no-window", "-no-snapshot", "-no-audio", "-no-boot-anim", "-show-kernel",
             "-camera-back", "none", "-camera-front", "none",

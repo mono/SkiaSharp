@@ -106,6 +106,9 @@ stages:
                 - pwsh: ./scripts/infra/managed/install-android-image.ps1 -Image "${{ android.image }}"
                   displayName: Install the selected Android emulator image
                 - bash: |
+                    set -e
+                    getconf _NPROCESSORS_ONLN
+                    free -h
                     sudo apt-get update
                     sudo apt-get install -y libpulse0
                     bash ./scripts/infra/tests/configure-emulators.sh
