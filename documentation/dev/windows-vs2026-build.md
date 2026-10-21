@@ -16,6 +16,7 @@ detects the selected product and applies the matching profile.
 The profiles install:
 
 - MSVC v145 for x86, x64 and ARM64, including matching Spectre libraries
+- matching preview compiler/Spectre components used by VS 2026 Insiders images
 - LLVM, CMake and Ninja from Visual Studio Installer
 - Windows SDKs 22621, 26100 and 28000
 - managed desktop, MAUI, Android, MSIX and UWP build components

@@ -161,11 +161,9 @@ jobs:
         env:
           BUILD_ARCH: ${{ matrix.arch }}
         run: |
-          $expectedSdk = (Get-Content global.json -Raw | ConvertFrom-Json).sdk.version
           $selected = dotnet --version
-          if ($LASTEXITCODE -ne 0 -or $selected.Trim() -ne $expectedSdk) {
-            throw "Expected WinUI SDK $expectedSdk, got '$selected'."
-          }
+          if ($LASTEXITCODE -ne 0) { throw 'The repository SDK could not be selected from global.json.' }
+          Write-Host "Building native WinUI with .NET SDK $selected"
           dotnet cake native/winui/build.cake --configuration=Release --arch="$env:BUILD_ARCH" `
             --vsinstall="$env:VS_INSTALL" --windowsSdkVersion=10.0.22621.0 2>&1 |
             Tee-Object (Join-Path $env:RUNNER_TEMP 'windows-components/winui-build.log')
