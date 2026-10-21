@@ -402,6 +402,18 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			AndroidRunningApp.ReferenceProfile("pixel_9", "android-26;google_apis", architecture));
 
 	[Theory]
+	[InlineData(null)]
+	[InlineData("")]
+	[InlineData(" ")]
+	public void AndroidRejectsMissingSerialBeforeAnyDeviceInteraction(string? serial)
+	{
+		using var workspace = Workspace();
+		var failure = Assert.Throws<InvalidOperationException>(() =>
+			new AndroidRunningApp(workspace, "fixture.apk", serial));
+		Assert.Contains("TEST_ANDROID_UDID", failure.Message);
+	}
+
+	[Theory]
 	[InlineData("<manifest package=\"com.skiasharp.built\" />")]
 	[InlineData("<?xml version=\"1.0\"?><manifest package=\"com.skiasharp.built\"><application /></manifest>")]
 	public void AndroidIdentityUsesTheBuiltApkManifest(string output) =>
@@ -419,7 +431,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public void AndroidOperationsBelongToTheAppAndUseItsPackageResourceIds()
 	{
 		using var workspace = Workspace();
-		var app = new AndroidRunningApp(workspace, Path.Combine(workspace.Root, "Built-Signed.apk"));
+		var app = new AndroidRunningApp(workspace, Path.Combine(workspace.Root, "Built-Signed.apk"), "unit-fixture-device");
 		var operations = Assert.IsType<AndroidAppiumOperations>(app.Operations);
 		Assert.Same(operations, app.Operations);
 		Assert.Equal("Android", app.Platform);
@@ -436,7 +448,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public void MissingReferenceTransformationPreservesStrictValidationAndActualCapture()
 	{
 		using var workspace = Workspace();
-		var app = new AndroidRunningApp(workspace, Path.Combine(workspace.Root, "Built-Signed.apk"));
+		var app = new AndroidRunningApp(workspace, Path.Combine(workspace.Root, "Built-Signed.apk"), "unit-fixture-device");
 		var expected = Path.Combine(workspace.Root, "not-reviewed", "canvas.png");
 		Assert.Equal(expected, app.Operations.TransformReference(expected));
 		var actual = AppiumSampleRunTestBase.Expected("iPhone-16-Pro/26.2", "basic-cpu", "Maui");

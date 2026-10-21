@@ -72,7 +72,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 		});
 		var artifact = Assert.Single(Directory.EnumerateFiles(
 			Output(workspace, folder, project, framework), "*-Signed.apk"));
-		return new AndroidRunningApp(workspace, artifact);
+		return new AndroidRunningApp(workspace, artifact, Environment.GetEnvironmentVariable("TEST_ANDROID_UDID"));
 	}
 
 	private static void NavigateMauiAndroid(AppiumOperations app, string title)

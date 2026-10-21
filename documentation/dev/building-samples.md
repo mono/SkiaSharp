@@ -210,8 +210,8 @@ Cake creates and cleans up only its unique AVD/process; each test owns its
 Appium server/session and installed APK. `samples-generate` starts neither.
 
 For direct/IDE runs, explicitly set the same two `TEST_ANDROID_*` profile
-variables and optionally `TEST_ANDROID_UDID` for a device you manage.
-Without a UDID, direct runs leave device selection to the driver.
+variables and `TEST_ANDROID_UDID` to the exact serial of a device you manage.
+Missing serials fail before device interaction; no first-device selection is used.
 
 Android references route to
 `Expected/Appium/<Maui|Native>/Android/<model>/android-<API>/<ABI>/`, such as

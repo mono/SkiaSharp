@@ -11,11 +11,14 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 {
 	private readonly string? image = Environment.GetEnvironmentVariable("TEST_ANDROID_IMAGE");
 	private readonly string? model = Environment.GetEnvironmentVariable("TEST_ANDROID_MODEL");
-	private readonly string? serial = Environment.GetEnvironmentVariable("TEST_ANDROID_UDID");
+	private readonly string serial;
 
-	internal AndroidRunningApp(SampleWorkspace workspace, string artifact)
+	internal AndroidRunningApp(SampleWorkspace workspace, string artifact, string? serial)
 		: base(workspace, artifact, new AndroidAppiumOperations())
 	{
+		if (string.IsNullOrWhiteSpace(serial))
+			throw new InvalidOperationException("Declare the exact TEST_ANDROID_UDID; Android tests must not select the first available device.");
+		this.serial = serial;
 	}
 
 	internal override string Platform => "Android";
@@ -67,8 +70,7 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 			App = Artifact
 		};
 		options.AddAdditionalAppiumOption("appPackage", ApplicationId);
-		if (!string.IsNullOrWhiteSpace(serial))
-			options.AddAdditionalAppiumOption("udid", serial);
+		options.AddAdditionalAppiumOption("udid", serial);
 		options.AddAdditionalAppiumOption("fullReset", true);
 		options.AddAdditionalAppiumOption("noReset", false);
 		options.AddAdditionalAppiumOption("suppressKillServer", true);
@@ -83,16 +85,11 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 
 	protected override async Task CapturePlatformDiagnostics()
 	{
-		// Cake supplies its owned serial; a direct run can use only its established session's serial.
-		var target = serial ?? (HasDriver ? Driver.Capabilities.GetCapability("udid")?.ToString() : null);
-		if (!string.IsNullOrWhiteSpace(target))
-		{
-			List<Exception> failures = [];
-			await FailureHandling.Attempt(failures, async () =>
-				await SaveText("device.log", await CaptureCommand(Android.Logcat(target))));
-			await FailureHandling.Attempt(failures, async () =>
-				await SaveText("last-anr.log", await CaptureCommand(Android.LastAnr(target))));
-			FailureHandling.ThrowFailures(failures);
-		}
+		List<Exception> failures = [];
+		await FailureHandling.Attempt(failures, async () =>
+			await SaveText("device.log", await CaptureCommand(Android.Logcat(serial))));
+		await FailureHandling.Attempt(failures, async () =>
+			await SaveText("last-anr.log", await CaptureCommand(Android.LastAnr(serial))));
+		FailureHandling.ThrowFailures(failures);
 	}
 }
