@@ -28,7 +28,7 @@ internal sealed class IosRunningApp : AppiumRunningApp
 
 	internal static SKRectI ScreenshotInsets(string model, string version, SKSizeI size) =>
 		model == "iPhone 16 Pro" &&
-		version is "18.6" or "26.2" &&
+		version is "18.6" or "26.2" or "26.3.1" &&
 		size == new SKSizeI(1206, 2622)
 			? new SKRectI(0, 0, 0, 39)
 			: SKRectI.Empty;
