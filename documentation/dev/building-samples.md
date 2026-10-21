@@ -110,6 +110,7 @@ dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
 
 Use your staged packages' suffix, not the example suffix. Each runtime uses its
 matching numeric reference folder. Missing or mismatched references fail without fallback.
+The Appium installer also downloads the XCUITest driver's matching prebuilt simulator WDA.
 
 For IDE or direct runs, use `TEST_IOS_SIMULATOR_VERSION` and
 `TEST_IOS_SIMULATOR_MODEL` for selection, and `TEST_IOS_SIMULATOR_UDID` to target

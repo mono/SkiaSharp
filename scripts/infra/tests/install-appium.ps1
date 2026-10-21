@@ -12,3 +12,14 @@ npm install --global appium@3
 # Remove the pin only after upstream supports earlier Xcode 26 installations:
 # https://github.com/appium/WebDriverAgent/pull/1271
 appium driver install xcuitest@12.13.2
+
+$wda = Join-Path $PSScriptRoot '../../../output/appium/wda'
+if (Test-Path $wda) {
+    Remove-Item $wda -Recurse -Force
+}
+appium driver run xcuitest download-wda -- --outdir=$wda --kind=sim --platform=ios
+
+$wdaApp = Join-Path $wda 'WebDriverAgentRunner-Runner.app'
+if (-not (Test-Path $wdaApp -PathType Container)) {
+    throw "The XCUITest driver did not provide the prebuilt simulator WDA app: $wdaApp"
+}

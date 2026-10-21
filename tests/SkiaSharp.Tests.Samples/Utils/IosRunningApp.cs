@@ -77,11 +77,12 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		options.AddAdditionalAppiumOption("shutdownOtherSimulators", false);
 
 		var wdaLocalPort = AppiumFixture.GetFreePort();
-		options.AddAdditionalAppiumOption("useNewWDA", false);
+		var wda = Path.Combine(
+			Repo.RootDir, "output", "appium", "wda", "WebDriverAgentRunner-Runner.app");
+		Assert.True(Directory.Exists(wda), $"Install the prebuilt simulator WDA app before running iOS samples: {wda}");
+		options.AddAdditionalAppiumOption("usePreinstalledWDA", true);
+		options.AddAdditionalAppiumOption("prebuiltWDAPath", wda);
 		options.AddAdditionalAppiumOption("wdaLocalPort", wdaLocalPort);
-		options.AddAdditionalAppiumOption("wdaLaunchTimeout", 180_000);
-		options.AddAdditionalAppiumOption("derivedDataPath", Path.Combine(
-			Repo.ArtifactsDir, "appium", "wda-ios", simulator ?? ReferenceProfile(model, version)));
 		options.AddAdditionalAppiumOption("showXcodeLog", true);
 		options.AddAdditionalAppiumOption("waitForIdleTimeout", 1);
 
