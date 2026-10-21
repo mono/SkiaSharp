@@ -82,10 +82,18 @@ namespace SkiaSharp.Tests.Goldens
 			var revision = key.GetValue("UBR");
 			if (kind == null || !int.TryParse(build, NumberStyles.None, CultureInfo.InvariantCulture, out _) || revision == null)
 				throw new InvalidOperationException("Windows build, servicing revision and installation kind are required.");
-			var profile = kind == "Nano Server" ? "windows-nanoserver" :
-				kind == "Client" ? "windows-client" : "windows-server";
-			return new GoldenEnvironment(profile, build + "." + Convert.ToInt32(revision, CultureInfo.InvariantCulture),
+			return new GoldenEnvironment(WindowsProfile(kind),
+				build + "." + Convert.ToInt32(revision, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture),
 				architecture, kind + "; " + RuntimeInformation.OSDescription);
 		}
+
+		public static string WindowsProfile(string installationType) => installationType switch
+		{
+			"Client" => "windows-client",
+			"Server" => "windows-server",
+			"Server Core" => "windows-servercore",
+			"Nano Server" => "windows-nanoserver",
+			_ => throw new InvalidOperationException("Unregistered Windows installation kind: " + installationType)
+		};
 	}
 }

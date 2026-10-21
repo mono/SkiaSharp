@@ -409,6 +409,7 @@ namespace SkiaSharp.Tests
 		[Theory]
 		[InlineData("windows-client")]
 		[InlineData("windows-server")]
+		[InlineData("windows-servercore")]
 		public void WindowsProductSamplesCanUsePreservedBroadWindowsBaselines(string profile)
 		{
 			var request = new GoldenRequest(profile, "26100.2033", "basic-console", "x64");
@@ -423,6 +424,30 @@ namespace SkiaSharp.Tests
 			Assert.Null(Store("windows/base/basic-console.png")
 				.Resolve(new GoldenRequest(profile, "26100.2033", "basic-console", "x64", minimumVersion: "26100")).Asset);
 		}
+
+		[Theory]
+		[InlineData("Client", "windows-client")]
+		[InlineData("Server", "windows-server")]
+		[InlineData("Server Core", "windows-servercore")]
+		[InlineData("Nano Server", "windows-nanoserver")]
+		public void WindowsInstallationKindsRemainDistinct(string kind, string profile)
+		{
+			Assert.Equal(profile, GoldenEnvironment.WindowsProfile(kind));
+			foreach (var sibling in new[] { "windows-client", "windows-server", "windows-servercore", "windows-nanoserver" })
+			{
+				if (sibling == profile)
+					continue;
+				Assert.Null(Store(sibling + "/26100/basic-console.png")
+					.Resolve(new GoldenRequest(profile, "26100.2033", "basic-console", "x64")).Asset);
+			}
+		}
+
+		[Theory]
+		[InlineData("")]
+		[InlineData("Windows PE")]
+		[InlineData("Unrecognized")]
+		public void UnknownWindowsInstallationKindsNeverDefaultToServer(string kind) =>
+			Assert.Throws<InvalidOperationException>(() => GoldenEnvironment.WindowsProfile(kind));
 
 		[Fact]
 		public void DistroParentsAreExplicitAndNeverBorrowNumericVersionsOrLibcSiblings()

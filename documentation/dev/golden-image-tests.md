@@ -106,7 +106,7 @@ existing older captures within the same family are tried before `base`.
 | --- | --- |
 | iOS / modern macOS | Same product major; historical macOS 10.x stays within its minor |
 | Android | Same API and registered image flavor; optional platform/image revision tiers |
-| Windows | Same product/installation kind and build train, then servicing revisions |
+| Windows | Same Client/Server/Server Core/Nano installation kind and build train, then servicing revisions |
 | Linux | Same distro/libc/release series: Ubuntu 22.04, Alpine 3.23, Azure Linux 3.0, Debian 12 |
 
 Generic Windows/Linux profiles hold explicitly approved `base` files.

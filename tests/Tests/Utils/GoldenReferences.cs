@@ -288,7 +288,7 @@ namespace SkiaSharp.Tests.Goldens
 		private static readonly HashSet<string> profiles = new HashSet<string>(new[]
 		{
 			"portable", "mac", "windows", "linux", "ios", "android", "maccatalyst", "tvos", "browser",
-			"windows-nanoserver", "windows-client", "windows-server", "ubuntu", "alpine", "azurelinux", "debian",
+			"windows-nanoserver", "windows-client", "windows-server", "windows-servercore", "ubuntu", "alpine", "azurelinux", "debian",
 			"iphone-16-pro", "pixel-9",
 		}, StringComparer.Ordinal);
 
@@ -352,7 +352,7 @@ namespace SkiaSharp.Tests.Goldens
 				yield break;
 			if (IsDistro(request.Profile))
 				yield return "linux";
-			if (request.Profile == "windows-client" || request.Profile == "windows-server")
+			if (request.Profile == "windows-client" || request.Profile == "windows-server" || request.Profile == "windows-servercore")
 				yield return "windows";
 			if (!IsVisual(request.CaseName) || request.Profile == "portable" ||
 				request.Profile == "iphone-16-pro" || request.Profile == "pixel-9")
