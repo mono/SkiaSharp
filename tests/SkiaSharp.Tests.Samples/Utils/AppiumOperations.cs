@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using SkiaSharp.Tests.Goldens;
 using System.Drawing;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
@@ -22,6 +23,8 @@ internal abstract class AppiumOperations
 	internal string DeviceProfile => App.DeviceProfile;
 
 	internal string Platform => App.Platform;
+
+	internal GoldenRequest Reference(string caseName) => App.Reference(caseName);
 
 	protected string ApplicationId => App.ApplicationId;
 
@@ -357,9 +360,12 @@ internal abstract class AppiumOperations
 	internal string Capture(string id, string name)
 	{
 		var png = ((ITakesScreenshot)Find(id)).GetScreenshot().AsByteArray;
-		png = App.TransformScreenshot(png) ?? png;
-		return SaveCapture(png, name);
+		var path = SaveCapture(App.TransformScreenshot(png) ?? png, name);
+		File.WriteAllBytes(RawCapture(path), png);
+		return path;
 	}
+
+	internal static string RawCapture(string path) => Path.ChangeExtension(path, ".raw.png");
 
 	internal string TransformReference(string path)
 	{

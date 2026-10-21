@@ -1,5 +1,7 @@
 ﻿using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.iOS;
+using SkiaSharp.Tests.Goldens;
+using System.Runtime.InteropServices;
 using Xunit;
 using static SkiaSharp.Tests.Samples.Utils.FailureHandling;
 
@@ -16,6 +18,8 @@ internal sealed class IosRunningApp : AppiumRunningApp
 	private readonly string? simulator =
 		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_UDID");
 
+	private string? actualVersion;
+
 	internal IosRunningApp(SampleWorkspace workspace, string artifact)
 		: base(workspace, artifact, new IosAppiumOperations())
 	{
@@ -25,12 +29,17 @@ internal sealed class IosRunningApp : AppiumRunningApp
 
 	internal override string Platform => "iOS";
 
+	internal override GoldenRequest Reference(string caseName) =>
+		new(DeviceProfile, actualVersion ?? version, caseName,
+			RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+
 	protected override SKRectI ScreenshotInsets(SKSizeI size) =>
 		ScreenshotInsets(model, version, size);
 
 	internal static SKRectI ScreenshotInsets(string model, string version, SKSizeI size) =>
 		model == "iPhone 16 Pro" &&
-		version is "18.6" or "26.2" or "26.3.1" &&
+		Version.TryParse(version, out var runtime) &&
+		(runtime.Major == 26 || runtime.Major == 18 && runtime.Minor == 6) &&
 		size == new SKSizeI(1206, 2622)
 			? new SKRectI(0, 0, 0, 39)
 			: SKRectI.Empty;
@@ -46,8 +55,12 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		return id;
 	}
 
-	internal static string ReferenceProfile(string model, string version) =>
-		$"{model.Replace(' ', '-')}/{version}";
+	internal static string ReferenceProfile(string model, string version)
+	{
+		if (model != "iPhone 16 Pro" || !Version.TryParse(version, out _))
+			throw new InvalidOperationException($"No approved iOS capture profile for '{model}' at '{version}'.");
+		return "iphone-16-pro";
+	}
 
 	protected override Task Start(Uri address)
 	{
@@ -89,6 +102,12 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		options.AddAdditionalAppiumOption("waitForIdleTimeout", 1);
 
 		SetDriver(new IOSDriver(address, options, TimeSpan.FromMinutes(6)));
+
+		actualVersion = Driver.Capabilities.GetCapability("platformVersion") as string;
+		Assert.True(Version.TryParse(actualVersion, out var actual), "The device must report an actual iOS version.");
+		var requested = Version.Parse(version);
+		Assert.True(actual!.Major == requested.Major && actual.Minor == requested.Minor,
+			$"The simulator reported {actualVersion}, requested {version}.");
 
 		TestContext.Current.TestOutputHelper?.WriteLine(
 			$"iOS runtime: {Driver.Capabilities.GetCapability("platformVersion")}; golden profile: {DeviceProfile}.");

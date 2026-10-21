@@ -19,7 +19,7 @@ public class BasicSampleRunTests : DotNetSampleTestBase
 
             var image = Path.Combine(app.Diagnostics, "output.png");
             File.Copy(Path.Combine(Path.GetDirectoryName(project)!, "output.png"), image);
-            SampleImage.Validate(image, $"Host/{SampleLookup.HostPlatform}/console.png",
+            SampleImage.Validate(image, SampleReferences.Host("basic-console"),
                 new() { ExpectedSize = new(800, 600) });
         });
 
@@ -40,6 +40,6 @@ public class BasicSampleRunTests : DotNetSampleTestBase
             var png = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
             await SampleImage.Validate(png,
                 Path.Combine(app.Diagnostics, "output.png"),
-                $"Host/{SampleLookup.HostPlatform}/web.png", new() { ExpectedSize = new(512, 512) });
+                SampleReferences.Host("web-api-square"), new() { ExpectedSize = new(512, 512) });
         });
 }

@@ -1,110 +1,77 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using SkiaSharp.Tests.Goldens;
 
 namespace SkiaSharp.Tests.Visual
 {
-	/// <summary>
-	/// Resolves and loads golden images for the visual-regression matrix, and
-	/// encodes captured pixels to PNG for emission into the test log.
-	///
-	/// <para><b>Layered lookup, generalizing over host tags.</b> A test
-	/// resolves the first of:</para>
-	/// <list type="number">
-	///   <item><c>Content/Goldens/{renderer}.{platform-architecture}/{scene}.png</c> —
-	///         architecture override, used when the same platform diverges.</item>
-	///   <item><c>Content/Goldens/{renderer}.{platform}/{scene}.png</c> —
-	///         platform override, used when this OS/driver diverges.</item>
-	///   <item><c>Content/Goldens/{renderer}/{scene}.png</c> — the renderer's
-	///         golden shared across platforms, used when the backend produces the
-	///         same pixels everywhere (the common case for CPU raster and for
-	///         software GL).</item>
-	/// </list>
-	///
-	/// <para>The fallback deliberately generalizes only over <b>host tags</b>,
-	/// never over <b>renderer</b>: different backends legitimately differ
-	/// (antialiasing, driver), so a test never falls back to another backend's
-	/// bytes and a GPU result is never compared against the CPU baseline.</para>
-	///
-	/// <para><b>No record mode.</b> Goldens are seeded by harvesting the captured
-	/// PNGs that every test emits into the test results (TRX) and committing them
-	/// (see <c>scripts/infra/tests/extract-visual-goldens.py</c>). That works
-	/// uniformly for desktop, device, and browser hosts — including the
-	/// device/browser hosts where the filesystem is sandboxed/embedded and an
-	/// in-process write-to-source-tree is impossible. The harvest writes the
-	/// per-platform path by default; promoting identical per-platform goldens up to
-	/// the shared <c>{renderer}/</c> folder is a manual dedupe (the harvest then
-	/// stops re-creating the per-platform copies once they are byte-identical). The
-	/// store therefore only reads.</para>
-	///
-	/// <para>Each candidate is checked on disk first (the build copies
-	/// <c>Content</c> next to the test binary, and a source-tree walk lets the
-	/// inner loop edit a golden without rebuilding) and then as an embedded
-	/// resource (device and browser hosts embed <c>Content</c> rather than copying
-	/// it to a readable filesystem).</para>
-	/// </summary>
 	internal static class GoldenStore
 	{
-		private const string GoldensFolder = "Goldens";
+		private static readonly Lazy<GoldenStoreIndex> store = new(CreateStore);
 
 		public readonly struct ResolvedGolden
 		{
-			public ResolvedGolden(byte[] pixels, string location)
+			public ResolvedGolden(byte[] pixels, GoldenResolution resolution)
 			{
 				Pixels = pixels;
-				Location = location;
+				Resolution = resolution;
 			}
-
 			public byte[] Pixels { get; }
-
-			public string Location { get; }
+			public GoldenResolution Resolution { get; }
+			public string Location => Resolution.Asset.Location;
 		}
 
-		/// <summary>
-		/// The default golden key for a test, relative to the <c>Goldens</c> root:
-		/// <c>{renderer}.{host-tag}/{scene}.png</c> using the most-specific host tag.
-		/// This is the path the image markers carry and the harvest script
-		/// writes to by default; a promoted, platform-portable golden lives at the
-		/// shared <c>{renderer}/{scene}.png</c> key instead.
-		/// </summary>
-		public static string Key(string rendererName, string sceneName) =>
-			$"{rendererName}.{VisualPlatform.Tags[0]}/{sceneName}.png";
+		public static GoldenResolution Resolve(string rendererName, string sceneName) =>
+			store.Value.Resolve(VisualPlatform.Request(rendererName, sceneName));
 
-		/// <summary>
-		/// Golden keys for a test in lookup order (most specific first):
-		/// each host tag, then the platform-portable renderer golden.
-		/// </summary>
-		public static IEnumerable<string> Candidates(string rendererName, string sceneName)
+		public static string CaptureKey(GoldenRequest request) =>
+			$"{request.Profile}/{request.Version}/{request.CaseName}.{request.Variant}.{request.Architecture}.png";
+
+		public static ResolvedGolden Load(GoldenResolution resolution, SKImageInfo info)
 		{
-			foreach (var tag in VisualPlatform.Tags)
-				yield return $"{rendererName}.{tag}/{sceneName}.png";
-			yield return $"{rendererName}/{sceneName}.png";
+			if (resolution.Asset == null)
+				throw new InvalidOperationException(resolution.Describe());
+			return new ResolvedGolden(Decode(resolution.Asset.ReadBytes(), info, resolution.Asset.Location), resolution);
 		}
 
-		// Returns the decoded golden (RGBA8888/Premul, sized to info) or null when
-		// no golden exists for this test on this platform.
-		public static ResolvedGolden? TryLoad(string rendererName, string sceneName, SKImageInfo info)
+		private static GoldenStoreIndex CreateStore()
 		{
-			foreach (var key in Candidates(rendererName, sceneName))
+			var stores = new List<GoldenStoreIndex>();
+			var roots = new HashSet<string>(StringComparer.Ordinal);
+			var assemblies = new HashSet<Assembly>
 			{
-				var relative = $"{GoldensFolder}/{key}";
+				typeof(GoldenStore).Assembly,
+				TestConfig.Current.GetType().Assembly
+			};
+			var entry = Assembly.GetEntryAssembly();
+			if (entry != null)
+				assemblies.Add(entry);
 
-				var diskPath = FindOnDisk(relative);
-				if (diskPath is not null)
-					return new ResolvedGolden(Decode(File.ReadAllBytes(diskPath), info, diskPath), diskPath);
-
-				var resource = FindEmbedded(relative);
-				if (resource is not null)
-					return new ResolvedGolden(Decode(resource.Value.Bytes, info, resource.Value.Name), resource.Value.Name);
+			AddDirectory(Path.Combine(RuntimeRoot, "Goldens", "v1"));
+			if (!string.IsNullOrEmpty(TestConfig.Current.PathRoot))
+				AddDirectory(Path.Combine(TestConfig.Current.PathRoot, "Goldens", "v1"));
+			foreach (var assembly in assemblies)
+			{
+				foreach (var attribute in assembly.GetCustomAttributes<AssemblyMetadataAttribute>())
+					if (attribute.Key == "SkiaSharp.GoldenSourceRoot")
+						AddDirectory(attribute.Value);
+				if (assembly.GetManifestResourceNames().Any(n => n.StartsWith("SkiaSharp.Goldens.v1/", StringComparison.Ordinal)))
+					stores.Add(GoldenStoreIndex.FromAssembly(assembly));
 			}
+			if (stores.Count == 0)
+				throw new InvalidOperationException("No canonical golden assets were packaged or registered for this host.");
+			return GoldenStoreIndex.Combine(stores.ToArray());
 
-			return null;
+			void AddDirectory(string root)
+			{
+				if (root != null && Directory.Exists(root) && roots.Add(Path.GetFullPath(root)))
+					stores.Add(GoldenStoreIndex.FromDirectory(root));
+			}
 		}
 
-		// PNG-encodes captured RGBA8888/Premul pixels. Used to emit the actual
-		// image (base64) into the test log and to write local failure artifacts.
 		public static byte[] EncodePng(byte[] rgba, SKImageInfo info)
 		{
 			var normalized = RendererPixels.NormalizedInfo(info);
@@ -139,183 +106,32 @@ namespace SkiaSharp.Tests.Visual
 			return path;
 		}
 
-		// ---- disk ----
-
-		private static string FindOnDisk(string relative)
-		{
-			foreach (var root in DiskRoots)
-			{
-				var path = Path.Combine(root, ToPlatformPath(relative));
-				if (File.Exists(path))
-					return path;
-			}
-
-			return null;
-		}
-
-		private static IEnumerable<string> DiskRoots
-		{
-			get
-			{
-				yield return Path.Combine(RuntimeRoot, "Content");
-				if (!string.IsNullOrEmpty(TestConfig.Current.PathRoot))
-					yield return Path.Combine(TestConfig.Current.PathRoot, "Content");
-				yield return SourceContentRoot;
-			}
-		}
-
-		// ---- embedded resources ----
-
-		private static (byte[] Bytes, string Name)? FindEmbedded(string relative)
-		{
-			var suffix = ("Content." + relative.Replace('/', '.'));
-
-			// MSBuild derives the manifest name of an EmbeddedResource by mangling
-			// every *directory* segment into a valid identifier — 'ganesh-metal.ios'
-			// embeds as 'ganesh_metal.ios' — while the file name itself is kept
-			// verbatim. Any renderer with a dash in its name (ganesh-*, graphite-*)
-			// would otherwise never resolve on the device/browser hosts that read
-			// goldens from embedded resources.
-			var mangledSuffix = "Content." + MangleDirectorySegments(relative);
-
-			foreach (var assembly in ResourceAssemblies)
-			{
-				string match = null;
-				foreach (var name in assembly.GetManifestResourceNames())
-				{
-					if (name.EndsWith(suffix, StringComparison.Ordinal) ||
-						name.EndsWith(mangledSuffix, StringComparison.Ordinal))
-					{
-						match = name;
-						break;
-					}
-				}
-
-				if (match is null)
-					continue;
-
-				using var stream = assembly.GetManifestResourceStream(match);
-				if (stream is null)
-					continue;
-
-				using var ms = new MemoryStream();
-				stream.CopyTo(ms);
-				return (ms.ToArray(), $"{assembly.GetName().Name}!{match}");
-			}
-
-			return null;
-		}
-
-		// Applies the directory-segment half of MSBuild's manifest-name mangling
-		// to a 'dir/dir/file.ext' relative path: '-' (invalid in an identifier)
-		// becomes '_' in directory segments; the trailing file name is untouched.
-		private static string MangleDirectorySegments(string relative)
-		{
-			var segments = relative.Split('/');
-			for (var i = 0; i < segments.Length - 1; i++)
-				segments[i] = segments[i].Replace('-', '_');
-			return string.Join(".", segments);
-		}
-
-		private static IEnumerable<Assembly> ResourceAssemblies
-		{
-			get
-			{
-				var seen = new HashSet<Assembly>();
-
-				// Fast path: the entry assembly (the Content-embedding host on WASM /
-				// Console) and this shared assembly.
-				var entry = Assembly.GetEntryAssembly();
-				if (entry is not null && seen.Add(entry))
-					yield return entry;
-				if (seen.Add(typeof(GoldenStore).Assembly))
-					yield return typeof(GoldenStore).Assembly;
-
-				// On the MAUI device hosts Assembly.GetEntryAssembly() is null, and the
-				// Content resources are embedded in the host app assembly (e.g.
-				// SkiaSharp.Tests.Devices) — not in this shared assembly. Without this
-				// fallback no golden is ever found on device and every test fails as
-				// unseeded. Scan every loaded assembly so the goldens are located
-				// regardless of which host embeds them.
-				foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-				{
-					if (seen.Add(assembly))
-						yield return assembly;
-				}
-			}
-		}
-
-		// ---- PNG decode ----
-
 		private static byte[] Decode(byte[] png, SKImageInfo info, string location)
 		{
 			var normalized = RendererPixels.NormalizedInfo(info);
 			using var data = SKData.CreateCopy(png);
 			using var codec = SKCodec.Create(data)
 				?? throw new InvalidOperationException($"Failed to decode golden image '{location}'.");
-
 			if (codec.Info.Width != normalized.Width || codec.Info.Height != normalized.Height)
 				throw new InvalidOperationException(
 					$"Golden image '{location}' is {codec.Info.Width}x{codec.Info.Height} but the scene rendered {normalized.Width}x{normalized.Height}.");
-
 			var pixels = new byte[normalized.BytesSize];
 			var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
 			try
 			{
 				var result = codec.GetPixels(normalized, handle.AddrOfPinnedObject());
-				if (result is not SKCodecResult.Success and not SKCodecResult.IncompleteInput)
+				if (result != SKCodecResult.Success)
 					throw new InvalidOperationException($"SKCodec.GetPixels failed for golden '{location}': {result}.");
 			}
 			finally
 			{
 				handle.Free();
 			}
-
 			return pixels;
 		}
 
-		// ---- roots ----
-
-		// AppContext.BaseDirectory (not Assembly.Location): net48's runner
-		// shadow-copies the test assembly to a temp dir, but the copied Content
-		// and the source tree are only reachable from the real output folder.
 		private static string RuntimeRoot => AppContext.BaseDirectory
 			.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
 		private static string FailuresRoot => Path.Combine(RuntimeRoot, "_visualfailures");
-
-		private static string sourceRootCache;
-
-		// Walks up from the output folder to the repo's tests/Content directory so
-		// the inner loop can edit a golden in the source tree and re-run without a
-		// rebuild. Unreachable on device/browser hosts (those read the embedded
-		// resource instead).
-		private static string SourceContentRoot
-		{
-			get
-			{
-				if (sourceRootCache is not null)
-					return sourceRootCache;
-
-				var dir = RuntimeRoot;
-				for (var i = 0; i < 12 && dir is not null; i++)
-				{
-					var candidate = Path.Combine(dir, "tests", "Content");
-					if (Directory.Exists(Path.Combine(candidate, GoldensFolder)) || Directory.Exists(candidate))
-					{
-						sourceRootCache = candidate;
-						return sourceRootCache;
-					}
-
-					dir = Path.GetDirectoryName(dir);
-				}
-
-				sourceRootCache = Path.Combine(RuntimeRoot, "Content");
-				return sourceRootCache;
-			}
-		}
-
-		private static string ToPlatformPath(string relative) =>
-			relative.Replace('/', Path.DirectorySeparatorChar);
 	}
 }

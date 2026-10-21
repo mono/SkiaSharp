@@ -2,6 +2,16 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal static class Android
 {
+	internal static Task<(int ExitCode, string Output, string Error)> DeviceProperty(string serial, string property)
+	{
+		var sdk = Environment.GetEnvironmentVariable("ANDROID_HOME");
+		if (string.IsNullOrWhiteSpace(sdk))
+			throw new InvalidOperationException("ANDROID_HOME must select the device SDK.");
+		var adb = Path.Combine(sdk, "platform-tools", OperatingSystem.IsWindows() ? "adb.exe" : "adb");
+		return ProcessRunner.Run(adb, ["-s", serial, "shell", "getprop", property],
+			Repo.RootDir, TimeSpan.FromSeconds(30));
+	}
+
 	internal static Task<(int ExitCode, string Output, string Error)> ReadManifest(string apk) =>
 		Run(["apk", "manifest", "info", "--pkg", apk, "--format", "xml"]);
 

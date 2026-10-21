@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using SkiaSharp.Tests.Goldens;
 using OpenQA.Selenium.Appium;
 using Xunit;
 using static SkiaSharp.Tests.Samples.Utils.FailureHandling;
@@ -35,6 +36,9 @@ internal abstract class AppiumRunningApp
 	internal abstract string DeviceProfile { get; }
 
 	internal abstract string Platform { get; }
+
+	internal virtual GoldenRequest Reference(string caseName) =>
+		throw new NotSupportedException("This app has no registered capture profile.");
 
 	internal AppiumOperations Operations { get; }
 

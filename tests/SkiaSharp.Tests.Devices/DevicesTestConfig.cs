@@ -2,6 +2,13 @@
 {
 	public class DevicesTestConfig : TestConfig
 	{
+		public override string GoldenVersion =>
+#if ANDROID
+			((int)Android.OS.Build.VERSION.SdkInt).ToString(System.Globalization.CultureInfo.InvariantCulture);
+#else
+			base.GoldenVersion;
+#endif
+
 		public DevicesTestConfig()
 		{
 			// the the base paths

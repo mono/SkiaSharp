@@ -72,15 +72,13 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 			async () =>
 			{
 				var drawn = await Compare(app, canvasId, "basic-drawing-two-lines", "Maui");
-				AssertDrawingStrokeRegions(drawn,
-					Expected(app.DeviceProfile, "basic-drawing-two-lines", "Maui", app.Platform));
+				AssertDrawingStrokeRegions(drawn.Actual, drawn.Expected);
 			},
 			async () =>
 			{
 				app.Click("basic-drawing-clear");
 				var cleared = await Compare(app, canvasId, "basic-drawing-page", "Maui");
-				AssertDrawingStrokeRegions(cleared,
-					Expected(app.DeviceProfile, "basic-drawing-page", "Maui", app.Platform));
+				AssertDrawingStrokeRegions(cleared.Actual, cleared.Expected);
 			});
 	}
 
@@ -155,23 +153,15 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		app.Find("gallery-search", "gallery-filter-search");
 	}
 
-	private static async Task<string> Compare(
+	private static Task<SampleImage.Comparison> Compare(
 		AppiumOperations app, string canvasId, string name, string family) =>
-		await SampleImage.Validate(
+		SampleImage.Compare(
 			() => Task.FromResult(app.Capture(canvasId, name)),
-			app.TransformReference(Expected(app.DeviceProfile, name, family, app.Platform)));
+			app.Reference(CaseName(name, family)), transformReference: app.TransformReference,
+			rawActual: AppiumOperations.RawCapture);
 
-	internal static string Expected(string deviceProfile, string name, string family, string platform = "iOS") =>
-		Expected(deviceProfile, name, family, platform, HostArchitecture());
-
-	internal static string Expected(string deviceProfile, string name, string family, string platform, string architecture)
-	{
-		var directory = Path.Combine(
-			Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", "Appium",
-			family, platform, deviceProfile.Replace('/', Path.DirectorySeparatorChar));
-		var architectureSpecific = Path.Combine(directory, $"{name}.{architecture}.png");
-		return File.Exists(architectureSpecific)
-			? architectureSpecific
-			: Path.Combine(directory, name + ".png");
-	}
+	internal static string CaseName(string name, string family) =>
+		name.StartsWith("basic-", StringComparison.Ordinal)
+			? family.ToLowerInvariant() + "-" + name.Replace("-page", "")
+			: name;
 }
