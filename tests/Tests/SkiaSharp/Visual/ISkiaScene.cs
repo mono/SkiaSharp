@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests.Visual
 	{
 		/// <summary>
 		/// Stable identifier, used as the golden-file basename
-		/// (<c>Content/Goldens/{renderer}.{platform}/{Name}.png</c>).
+		/// (<c>Goldens/v1/{profile}/{version}/visual-{name}.{renderer}.png</c>).
 		/// </summary>
 		string Name { get; }
 

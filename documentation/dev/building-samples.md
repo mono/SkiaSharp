@@ -108,8 +108,9 @@ dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
   --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-Use your staged packages' suffix, not the example suffix. Each runtime uses its
-matching numeric reference folder. Missing or mismatched references fail without fallback.
+Use your staged packages' suffix, not the example suffix. Reference lookup uses
+the actual runtime version, matching version tiers and compatible older captures.
+Missing references and mismatches still fail.
 The Appium installer also downloads the XCUITest driver's matching prebuilt simulator WDA.
 
 For IDE or direct runs, use `TEST_IOS_SIMULATOR_VERSION` and
@@ -178,10 +179,14 @@ from scenario execution.
 
 ### Updating references
 
-References are in `tests/SkiaSharp.Tests.Samples/Expected/Appium/<Maui|Native>/iOS/<model>/`.
-Review actual/diff captures before replacing an intentional change. Use the
-canvas PNG from the TRX attachment, not full-screen diagnostics or animated GPU
-captures, then rerun every configured profile against the same package build.
+References live in `tests/Goldens/v1/<profile>/<version-or-base>/`.
+For example, `iphone-16-pro/26.3.1/maui-basic-cpu.png` and
+`mac/base/blazor-cpu.x64.png`. Cases distinguish MAUI/native and drawing states;
+the test driver does not affect the key. See
+[reference lookup and promotion](golden-image-tests.md#goldens) for ordering,
+diagnostic export and review rules. For transformed captures, proposals retain
+the raw PNG; do not replace a raw golden with its cropped comparison artifact.
+Rerun all configured profiles against the same package cohort before promotion.
 
 ## Android emulator runs
 
@@ -215,14 +220,13 @@ For direct/IDE runs, explicitly set the same two `TEST_ANDROID_*` profile
 variables and `TEST_ANDROID_UDID` to the exact serial of a device you manage.
 Missing serials fail before device interaction; no first-device selection is used.
 
-Android references route to
-`Expected/Appium/<Maui|Native>/Android/<model>/android-<API>/<ABI>/`, such as
-`pixel_9/android-26/x86_64/`. The ABI matches the host-selected emulator image
-(`x86_64` or `arm64-v8a`); antialiased edges can differ between architectures.
-The emulator image flavor is used for installation, not reference naming. Review exact-profile
-captures before adding references; missing or mismatched references fail without
-fallback or automatic acceptance. Animated Basic GPU pages require FPS and retain
-captures; Gallery's static GPU gradient uses strict comparison.
+Android references use `pixel-9/<API>/<case>[.arm64|.x64].png`.
+Only API 26's three Gallery gradients currently need architecture overrides;
+the other reviewed ABI pairs share unsuffixed files. API levels are not Android
+release numbers: API 36 never searches API 26. The registered Pixel 9 profile
+requires `google_apis`; another image flavor needs its own reviewed profile.
+The actual device API and ABI are checked before comparing. Animated Basic GPU
+pages require FPS and retain captures; Gallery's static GPU gradient stays strict.
 
 ## Coverage and diagnostics
 
@@ -263,15 +267,18 @@ Find output, binlogs, results and images under `output/logs/testlogs/samples/`
 or CI's `sample_logs_*` artifacts. For restore failures, check the generated
 versions against staged packages. Do not clear shared caches.
 
-Review platform references under `tests/SkiaSharp.Tests.Samples/Expected/`.
+Review references under `tests/Goldens/v1/`.
 Dimensions must match; the default limit is **0.075% differing pixels** with
 zero channel tolerance. Existing browser animated GPU pages use a loose
 **6% mean RGBA error** smoke check that can miss uniform dark output; iOS/Android
 animated Basic GPU pages instead require FPS and retain a capture. Mismatches
 retain actual/diff images; references are never accepted automatically.
 
-`SampleImage.Validate` takes `actual`, `expected` (or a relative golden path),
-and an optional `SampleImageOptions` record. Its byte-array overload also takes
+`SampleImage.Validate` takes `actual`, a typed golden request (or an absolute
+reference path for infrastructure fixtures), and optional `SampleImageOptions`.
+It resolves once before comparison/retries and reports the selected key and
+ordered lookup chain. A differing selected image cannot trigger looser lookup.
+Its byte-array overload also takes
 the actual output path, saves the bytes, then calls the file overload.
 Set `ExpectedSize = new(800, 600)` for
 fixed-size PNGs; only animated GPU checks set `MaxAverageColorErrorFraction`.

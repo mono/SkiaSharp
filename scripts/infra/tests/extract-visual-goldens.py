@@ -142,6 +142,9 @@ def trx_files(paths):
 
 def records(path):
     text = path.read_text(encoding="utf-8")
+    for line in text.splitlines():
+        if line.lstrip().startswith("##SKIA-GOLDEN-V2##") and V2.search(line) is None:
+            raise ValueError(f"Malformed v2 golden record in {path}")
     for match in V2.finditer(text):
         role, key, selected, width, height, encoded = match.groups()
         validate_key(key)
@@ -202,6 +205,9 @@ def main(argv=None):
     try:
         if args.check:
             print(f"Validated {validate_assets(args.check, args.packaged)} canonical PNGs.")
+            return 0
+        if args.images_out and not any(Path(name).exists() for name in args.paths):
+            print("No test results were produced; no diagnostic images to export.")
             return 0
         files = trx_files(args.paths)
         if not files:

@@ -12,6 +12,7 @@ internal sealed class DockerRunningApp(string containerName, string diagnostics)
     {
         if (environment is null)
         {
+            Directory.CreateDirectory(Diagnostics);
             var image = await Docker.ImageId(containerName);
             var metadata = await Docker.ImageEnvironment(image);
             var parts = metadata.Split('|');

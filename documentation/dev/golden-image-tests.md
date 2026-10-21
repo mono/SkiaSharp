@@ -75,30 +75,61 @@ in the TRX — harvest it, commit, and the test goes green.
 
 ## Goldens
 
-They live in `tests/Content/Goldens/` and ride the existing `Content` pipeline
-(copied next to the binary on desktop, embedded as resources on device/browser).
+Visual and sample references share `tests/Goldens/v1/` and one resolver:
 
 ```
-tests/Content/Goldens/
-  <renderer>.<platform>/<scene>.png   ← per-platform override
-  <renderer>/<scene>.png              ← shared across platforms
+tests/Goldens/v1/
+  mac/base/visual-diagonal-lines.ganesh-gl.arm64.png
+  mac/base/visual-diagonal-lines.ganesh-gl.png
+  portable/base/visual-diagonal-lines.raster.png
+  iphone-16-pro/26.3.1/maui-basic-cpu.png
+  iphone-16-pro/base/gallery-gradient-cpu.png
+  pixel-9/26/gallery-gradient-cpu.x64.png
+  pixel-9/36/gallery-gradient-cpu.png
 ```
 
-Lookup takes the first hit over `VisualPlatform.Tags` then the shared folder.
-Tags are `macos`, `windows`, `linux`, `android`, `ios`, `maccatalyst`, `tvos`,
-`browser`, `nanoserver`. Not every tag has committed goldens — a tag only gains
-them once a leg runs that backend, so the first run fails as unseeded until
-harvested. Nano Server yields two tags, so it probes
-`{renderer}.nanoserver` → `{renderer}.windows` → `{renderer}`: it *is* Windows,
-but rasterizes text with FreeType instead of DirectWrite.
+The grammar is `<profile>/<version-or-base>/<case>[.<variant>][.<architecture>].png`.
+Profiles describe the actual model/render environment, not Appium, Playwright,
+Docker or a test suite. Cases identify semantic output; `visual-*` cases require
+an exact backend variant. Functional variant precedes architecture.
+Browser samples start engine-neutral; only measured differences justify engine
+variants. Case names are lowercase kebab-case without dots.
 
-Each directory is probed on disk first (build output, `TestConfig.PathRoot`, then
-a walk up the source tree so you can edit a golden and re-run without a rebuild),
-then as an embedded resource.
+For runtime `12.6.2`, lookup tries exact `12.6.2`, matching minor `12.6`,
+family `12`, then `base`. At each tier, current architecture wins over neutral.
+Matching prefix baselines outrank older exact captures. When those are absent,
+existing older captures within the same family are tried before `base`.
+`12.6` is a minor baseline, distinct from an exact `12.6.0` capture.
+`latest` is input-only and must resolve to an actual version before lookup.
 
-**The fallback generalizes over platform only, never over renderer.** Different
-backends legitimately differ, so a missing GPU golden must never be satisfied by
-the CPU baseline.
+| Policy | Numeric fallback boundary |
+| --- | --- |
+| iOS / modern macOS | Same product major; historical macOS 10.x stays within its minor |
+| Android | Same API and registered image flavor; optional platform/image revision tiers |
+| Windows | Same product/installation kind and build train, then servicing revisions |
+| Linux | Same distro/libc/release series: Ubuntu 22.04, Alpine 3.23, Azure Linux 3.0, Debian 12 |
+
+Generic Windows/Linux profiles hold explicitly approved `base` files.
+Specific distro/product profiles may use these portable baselines; numeric
+lookup never crosses distro or build families. Visual scenes additionally allow
+portable same-renderer references. Nano Server retains an explicit Windows
+visual edge because its font scaler differs.
+
+**Never fall back across device models, renderer backends or incompatible
+dimensions.** The selected reference is authoritative: corruption, wrong size
+or mismatching pixels fail rather than triggering another lookup.
+Minimum-version/exact-version barriers invalidate older/base references when
+a deliberate rendering contract changes.
+
+`GoldenAssets.targets` selects cases for each runner and embeds explicit
+`SkiaSharp.Goldens.v1/<key>` names. Disk/resource enumeration uses the same
+parser, without authored catalogs or name mangling. Packaging partitions do not
+affect matching; conflicting bytes for one key fail. Validate the source tree:
+
+```sh
+python3 scripts/infra/tests/extract-visual-goldens.py --check tests/Goldens/v1
+python3 -m unittest discover -s scripts/infra/tests -p test_golden_images.py
+```
 
 ## Tolerance
 
@@ -110,7 +141,7 @@ and a `MaxOutlierFraction` (share of pixels allowed to exceed it).
 | `raster` | `(2, 0.002)` |
 | every GPU renderer | `(12, 0.03)` |
 
-Raster is not bit-exact because the shared `raster/` golden is captured on one
+Raster is not bit-exact because the shared `portable/` golden is captured on one
 architecture and replayed on others. Tolerance is chosen by renderer alone —
 `GoldenTolerance.For` sees only the renderer name.
 
@@ -145,34 +176,39 @@ and browser hosts:
 # from the repo root
 python3 scripts/infra/tests/extract-visual-goldens.py path/to/visual.trx --dry-run
 python3 scripts/infra/tests/extract-visual-goldens.py path/to/visual.trx
-git add tests/Content/Goldens && git commit
+# Review output/golden-proposals, then copy approved files to tests/Goldens/v1.
 ```
 
 For a platform you can't run locally, download that CI leg's published TRX and
-harvest the same way. Always review harvested PNGs before committing — the
-harvest trusts whatever the renderer produced, so never blind-harvest a
+export the same way. Exports stage exact-environment proposals, never overwrite
+the selected shared baseline. Always review PNGs before committing; never blind-accept a
 *mismatch*; that would bless a regression as the new golden.
 
-To share one golden across platforms, move byte-identical per-platform PNGs up to
-`{renderer}/` and delete the copies; the harvest then stops re-creating them.
+Promote a reviewed reference to a family tier, `base`, or neutral architecture
+only after replaying its supported profiles. Pixel-identical PNGs can have
+different encodings; review decoded pixels, not just hashes. Keep demonstrated
+overrides. Conflicting captures for one proposed key fail; no last-writer wins
+or automatic reference approval.
 
 ## Triage
 
-Three single-line markers carry everything needed to triage from a TRX, on every
-host:
+Versioned single-line records work across hosts:
 
 | Marker | Carries |
 |---|---|
-| `##SKIA-VISUAL-ACTUAL##` | the rendered PNG |
-| `##SKIA-VISUAL-GOLDEN##` | the committed reference PNG, when one exists |
-| `##SKIA-VISUAL-DIFF##` | the difference PNG, when a golden exists |
+| `##SKIA-GOLDEN-V2## role=actual` | the rendered PNG |
+| `##SKIA-GOLDEN-V2## role=reference` | the selected reviewed reference |
+| `##SKIA-GOLDEN-V2## role=diff` | the comparison difference |
 
-All three share one `path` — the golden key — so the marker name is the only
-thing that distinguishes them.
+Records carry the exact capture `key`, separate `selected` reference key,
+dimensions and base64 bytes. Resolution output includes candidate chain/location
+on success as well as failure. Samples attach a `.reference.json` run artifact
+with hash and comparison paths; it is not a source-authored catalog.
 
 An `always()` CI step runs `extract-visual-goldens.py … --images-out` to decode
-them into the published `testlogs_*` artifact as browsable PNGs mirroring the
-goldens tree: `{renderer}.{platform}/{scene}.{actual,golden,diff}.png`. A scene
+them into published test artifacts as browsable PNGs mirroring the canonical
+tree, grouped by results file and occurrence. Historical v1 markers support
+diagnostic extraction only, not canonical reference proposals. A scene
 with only an `.actual.png` had no golden; the test result and its message say
 whether the rest passed.
 
@@ -200,5 +236,7 @@ you harvest the goldens.
 | `Visual/Renderers/`, `Renderers/Desktop/` | shared and desktop-only renderers |
 | `Visual/Tests/VisualMatrixTestsBase.cs` | the render/compare pipeline every host shares |
 | `tests/VulkanTests/Visual/` | the Vulkan satellite's renderers and driver |
-| `tests/Content/Goldens/` | committed reference PNGs |
+| `tests/Goldens/v1/` | committed reference PNGs |
+| `tests/Tests/Utils/GoldenReferences.cs` | shared key parser, policies and resolver |
+| `tests/GoldenAssets.targets` | case-based copy/embed packaging |
 | `scripts/infra/tests/extract-visual-goldens.py` | marker → PNG harvest |

@@ -58,6 +58,22 @@ class GoldenImageTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "Packaged asset"):
                 goldens.validate_assets(source, output)
 
+    def test_malformed_current_records_are_not_silently_ignored(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "run.trx"
+            path.write_text("##SKIA-GOLDEN-V2## role=actual key=invalid")
+            with self.assertRaisesRegex(ValueError, "Malformed"):
+                list(goldens.records(path))
+
+    def test_failure_prose_does_not_hide_actual_capture(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "failed.trx"
+            key = "mac/12.6/blazor-cpu.x64.png"
+            path.write_text(
+                f"##SKIA-GOLDEN-V2## role=actual key={key} selected=- size=1x1 base64={base64.b64encode(png(0)).decode()}\n"
+                "Assertion failed: rendered PNG is retained as a ##SKIA-GOLDEN-V2## role=actual marker.")
+            self.assertEqual({key: png(0)}, goldens.proposals([path]))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,9 +8,6 @@ namespace SkiaSharp.Tests.Samples;
 [Collection(nameof(DockerSampleCollection))]
 public class DockerSampleRunTests(DockerSampleFixture docker) : DockerSampleTestBase(docker)
 {
-    private static string ContainerPlatform =>
-        OperatingSystem.IsWindows() ? "Windows" : "Linux";
-
     [Fact]
     [Trait("Category", "SampleRun")]
     public Task ConsoleSampleRuns() =>
