@@ -1,43 +1,24 @@
 {
-  "theme": "Runtime and platform updates",
-  "highlights_headline": "SkiaSharp 4.156.0 improves runtime efficiency and updates native support across Apple, Android, Linux, and WebGPU.",
-  "highlights_body": "Apple deployment targets have advanced, Android texture rendering follows display refresh, and native packaging is more reliable for Linux text shaping and WebGPU consumers.",
+  "theme": "Runtime and platform refinements",
+  "highlights_headline": "SkiaSharp 4.156.0 improves platform compatibility and runtime efficiency across rendering, streams, and text shaping.",
+  "highlights_body": "It updates native packaging for WebGPU and Apple platforms, improves Android rendering synchronization, and reduces allocations in image and HarfBuzzSharp operations.",
   "breaking": [],
   "categories": [
-    {
-      "heading": "Platform",
-      "bullets": [
-        {
-          "lead": "Apple deployment baselines advanced",
-          "detail": "Apple-targeted packages now require newer operating-system deployment targets. Update application deployment settings before adopting this release.",
-          "prs": [
-            5383
-          ]
-        },
-        {
-          "lead": "WebGPU native implementation packaged with SkiaSharp",
-          "detail": "The native library now includes emdawnwebgpu's webgpu.cpp implementation, so consumers using WebGPU have the required code in the bundled SkiaSharp artifact.",
-          "prs": [
-            5316
-          ]
-        },
-        {
-          "lead": "Linux HarfBuzz binding resolution localized",
-          "detail": "Linux packages bind bundled HarfBuzz functions locally, avoiding dependence on externally resolved HarfBuzz symbols when using the shipped native assets.",
-          "prs": [
-            5352
-          ]
-        }
-      ]
-    },
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Android texture rendering synchronized to display refresh",
-          "detail": "Texture rendering now follows the display refresh cadence, improving frame presentation for Android applications.",
+          "lead": "Android texture rendering synchronized",
+          "detail": "Android GL texture rendering now synchronizes with the display refresh cycle for smoother, more predictable presentation.",
           "prs": [
             5345
+          ]
+        },
+        {
+          "lead": "Front-buffered streams release retained data",
+          "detail": "Fixes front-buffered managed streams retaining data after it is no longer needed, reducing unnecessary managed memory use.",
+          "prs": [
+            5327
           ]
         }
       ]
@@ -46,27 +27,52 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Stream data retention corrected",
-          "detail": "Front-buffered streams no longer retain backing data longer than needed, reducing avoidable memory retention in stream-based workloads.",
+          "lead": "Image pixel copies optimized",
+          "detail": "Managed image pixel copy operations perform less work, improving efficiency when applications frequently read or copy pixels.",
           "prs": [
-            5327
+            5052
           ]
         },
         {
-          "lead": "Image and text shaping allocations reduced",
-          "detail": "Managed image pixel copies, HarfBuzz UTF-32 encoding, and feature-string decoding avoid unnecessary allocation work, reducing overhead in frequently used image and text operations.",
+          "lead": "HarfBuzzSharp allocations reduced",
+          "detail": "UTF-32 input buffers are pooled and feature-string formatting avoids native allocation while preserving existing decoding behavior.",
           "prs": [
-            5052,
             5060,
             5230
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "WebGPU native support packaged",
+          "detail": "The WebGPU implementation is included in libSkiaSharp.a so WebAssembly builds receive the required native support.",
+          "prs": [
+            5316
+          ]
+        },
+        {
+          "lead": "Apple deployment baselines updated",
+          "detail": "Native assets now target updated minimum Apple platform versions for supported iOS, macOS, and tvOS environments.",
+          "prs": [
+            5383
+          ]
+        },
+        {
+          "lead": "Linux HarfBuzz bindings localized",
+          "detail": "Linux native builds bind bundled HarfBuzz functions locally, keeping the binding aligned with the library shipped by SkiaSharp.",
+          "prs": [
+            5352
           ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "VirgilMing": "Localized Linux HarfBuzz bindings to the bundled native assets and stabilized the Blazor CPU sample test after its first canvas paint",
-    "ramezgerges": "Packaged the emdawnwebgpu implementation inside the SkiaSharp native library"
+    "VirgilMing": "Localized bundled HarfBuzz function binding on Linux and improved Blazor CPU sample test readiness",
+    "ramezgerges": "Packaged the WebGPU implementation with the SkiaSharp native library"
   },
   "preview_summaries": {}
 }
