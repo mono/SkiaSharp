@@ -39,6 +39,9 @@ parameters:
   - name: runApiScan
     type: boolean
     default: false
+  - name: runFuzzing
+    type: boolean
+    default: false
 
 stages:
 
@@ -81,6 +84,12 @@ stages:
         - template: /scripts/azure-templates-stages-apiscan.yml@self
           parameters:
             buildAgentWindows: ${{ parameters.buildAgentWindows }}
+
+      - ${{ if or(eq(parameters.runFuzzing, 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Schedule'))) }}:
+        - template: /scripts/azure-templates-stages-fuzzing.yml@self
+          parameters:
+            buildAgentWindows: ${{ parameters.buildAgentWindows }}
+            buildAgentLinux: ${{ parameters.buildAgentLinux }}
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-msbuild.yml@self

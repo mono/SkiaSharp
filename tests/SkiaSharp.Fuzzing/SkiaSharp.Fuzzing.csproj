@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(TFMCurrent)</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>SkiaSharp.Fuzzing</RootNamespace>
+    <AssemblyName>SkiaSharp.Fuzzing</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <DebugType>portable</DebugType>
+    <SignAssembly>false</SignAssembly>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\Content\fonts\ZeroGlyphs.ttf"
+             Link="seed-sources\ZeroGlyphs.ttf"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+
+</Project>
