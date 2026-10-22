@@ -1,3 +1,6 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
+
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 #load "../shared/shared.cake"
@@ -18,36 +21,160 @@ Task("onefuzz-prepare")
 {
     if (string.IsNullOrWhiteSpace(ONEFUZZ_PLATFORM))
         throw new Exception("The 'platform' argument is required (windows|ubuntu).");
+    if (!new[] { "windows", "ubuntu" }.Contains(ONEFUZZ_PLATFORM, StringComparer.OrdinalIgnoreCase))
+        throw new Exception($"Invalid platform '{ONEFUZZ_PLATFORM}'. Expected 'windows' or 'ubuntu'.");
     if (string.IsNullOrWhiteSpace(ONEFUZZ_OUTPUT_DIRECTORY))
         throw new Exception("The 'outputDirectory' argument is required.");
     if (string.IsNullOrWhiteSpace(ONEFUZZ_SHARPFUZZ_PATH))
         throw new Exception("The 'sharpFuzzPath' argument is required.");
 
-    var scriptPath = ROOT_PATH.CombineWithFilePath("scripts/infra/security/prepare-onefuzz-drop.ps1");
-    string Quoted(string value) => $"\"{value.Replace("\"", "\\\"")}\"";
-    var args = new List<string>
-    {
-        "-NoLogo",
-        "-NoProfile",
-        "-File",
-        Quoted(scriptPath.FullPath),
-        "-Platform",
-        Quoted(ONEFUZZ_PLATFORM),
-        "-OutputDirectory",
-        Quoted(ONEFUZZ_OUTPUT_DIRECTORY),
-        "-SharpFuzzPath",
-        Quoted(ONEFUZZ_SHARPFUZZ_PATH),
-        "-Configuration",
-        Quoted(ONEFUZZ_CONFIGURATION),
-    };
+    string Quote(string value) => $"\"{value.Replace("\"", "\\\"")}\"";
 
-    if (!string.IsNullOrWhiteSpace(ONEFUZZ_VALIDATION_BUILD_ID))
+    var projectPath = ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Fuzzing/SkiaSharp.Fuzzing.csproj").FullPath;
+    var outputPath = Path.GetFullPath(ONEFUZZ_OUTPUT_DIRECTORY);
+    var sharpFuzzPath = Path.GetFullPath(ONEFUZZ_SHARPFUZZ_PATH);
+    var configSource = ROOT_PATH.CombineWithFilePath($"tests/SkiaSharp.Fuzzing/OneFuzzConfig.{ONEFUZZ_PLATFORM.ToLowerInvariant()}.json").FullPath;
+    var skiaNativeLibrary = ONEFUZZ_PLATFORM.Equals("windows", StringComparison.OrdinalIgnoreCase) ? "libSkiaSharp.dll" : "libSkiaSharp.so";
+    var harfBuzzNativeLibrary = ONEFUZZ_PLATFORM.Equals("windows", StringComparison.OrdinalIgnoreCase) ? "libHarfBuzzSharp.dll" : "libHarfBuzzSharp.so";
+
+    if (!File.Exists(sharpFuzzPath))
+        throw new Exception($"The SharpFuzz tool path does not exist: {sharpFuzzPath}");
+    if (Directory.Exists(outputPath))
+        throw new Exception($"The OneFuzz output directory already exists: {outputPath}");
+
+    RunProcess("dotnet", string.Join(" ", new[]
     {
-        args.Add("-ValidationBuildId");
-        args.Add(Quoted(ONEFUZZ_VALIDATION_BUILD_ID));
+        "publish",
+        Quote(projectPath),
+        "-c", Quote(ONEFUZZ_CONFIGURATION),
+        "-f", "net10.0",
+        "-o", Quote(outputPath),
+        "-p:AllTargetFrameworks=net10.0",
+        "-p:IsCI=false",
+        "-p:IsNetTizenSupported=false",
+        "-p:IsNetTVOSSupported=false",
+        "-p:IsNetMacOSSupported=false",
+    }));
+
+    var harness = Path.Combine(outputPath, "SkiaSharp.Fuzzing.dll");
+    var skiaManagedTarget = Path.Combine(outputPath, "SkiaSharp.dll");
+    var harfBuzzManagedTarget = Path.Combine(outputPath, "HarfBuzzSharp.dll");
+    var resourcesManagedTarget = Path.Combine(outputPath, "SkiaSharp.Resources.dll");
+    var skottieManagedTarget = Path.Combine(outputPath, "SkiaSharp.Skottie.dll");
+    var sceneGraphManagedTarget = Path.Combine(outputPath, "SkiaSharp.SceneGraph.dll");
+    var skiaNativeTarget = Path.Combine(outputPath, skiaNativeLibrary);
+    var harfBuzzNativeTarget = Path.Combine(outputPath, harfBuzzNativeLibrary);
+    var sharpFuzzCommonTarget = Path.Combine(outputPath, "SharpFuzz.Common.dll");
+    var seedDirectory = Path.Combine(outputPath, "seeds");
+
+    var sharpFuzzToolDirectory = Path.GetDirectoryName(sharpFuzzPath) ?? throw new Exception($"Unable to determine the SharpFuzz tool directory from '{sharpFuzzPath}'.");
+    var sharpFuzzCommonSource = Directory
+        .GetFiles(sharpFuzzToolDirectory, "SharpFuzz.Common.dll", SearchOption.AllDirectories)
+        .FirstOrDefault(path =>
+        {
+            var normalized = path.Replace('\\', '/');
+            return Regex.IsMatch(normalized, @"/tools/net10\.0/any/SharpFuzz\.Common\.dll$", RegexOptions.CultureInvariant);
+        });
+
+    if (string.IsNullOrWhiteSpace(sharpFuzzCommonSource))
+        throw new Exception($"Unable to find the .NET 10 SharpFuzz.Common.dll beside '{sharpFuzzPath}'.");
+
+    File.Copy(sharpFuzzCommonSource, sharpFuzzCommonTarget);
+
+    foreach (var requiredFile in new[]
+    {
+        harness,
+        skiaManagedTarget,
+        harfBuzzManagedTarget,
+        resourcesManagedTarget,
+        skottieManagedTarget,
+        sceneGraphManagedTarget,
+        skiaNativeTarget,
+        harfBuzzNativeTarget,
+        sharpFuzzCommonTarget
+    })
+    {
+        if (!File.Exists(requiredFile))
+            throw new Exception($"The OneFuzz drop is missing required file: {requiredFile}");
     }
 
-    RunProcess("pwsh", string.Join(" ", args));
+    RunProcess("dotnet", $"{Quote(harness)} --write-seeds {Quote(seedDirectory)}");
+    RunProcess("dotnet", $"{Quote(harness)} --smoke {Quote(seedDirectory)}");
+
+    var instrumentationTargets = new[]
+    {
+        new
+        {
+            Assembly = skiaManagedTarget,
+            Types = new[]
+            {
+                "SkiaSharp.SKBitmap",
+                "SkiaSharp.SKCodec",
+                "SkiaSharp.SKFontManager",
+                "SkiaSharp.SKFrontBufferedManagedStream",
+                "SkiaSharp.SKManagedStream",
+                "SkiaSharp.SKPicture"
+            }
+        },
+        new
+        {
+            Assembly = harfBuzzManagedTarget,
+            Types = new[]
+            {
+                "HarfBuzzSharp.Buffer",
+                "HarfBuzzSharp.Face",
+                "HarfBuzzSharp.Font"
+            }
+        },
+        new
+        {
+            Assembly = resourcesManagedTarget,
+            Types = new[]
+            {
+                "SkiaSharp.Resources.CachingResourceProvider",
+                "SkiaSharp.Resources.DataUriResourceProvider",
+                "SkiaSharp.Resources.FileResourceProvider"
+            }
+        },
+        new
+        {
+            Assembly = skottieManagedTarget,
+            Types = new[]
+            {
+                "SkiaSharp.Skottie.Animation",
+                "SkiaSharp.Skottie.AnimationBuilder"
+            }
+        }
+    };
+
+    foreach (var instrumentation in instrumentationTargets)
+    {
+        var args = string.Join(" ", new[] { Quote(instrumentation.Assembly) }.Concat(instrumentation.Types.Select(Quote)));
+        RunProcess(sharpFuzzPath, args);
+    }
+
+    var config = JsonNode.Parse(File.ReadAllText(configSource)) ?? throw new Exception($"Failed to load OneFuzz config: {configSource}");
+    if (!string.IsNullOrWhiteSpace(ONEFUZZ_VALIDATION_BUILD_ID))
+    {
+        foreach (var entry in config["Entries"]?.AsArray() ?? new JsonArray())
+        {
+            foreach (var job in entry?["OneFuzzJobs"]?.AsArray() ?? new JsonArray())
+            {
+                var targetName = job?["TargetName"]?.GetValue<string>();
+                if (!string.IsNullOrWhiteSpace(targetName))
+                    job["TargetName"] = $"validation-{targetName}-{ONEFUZZ_VALIDATION_BUILD_ID}";
+            }
+        }
+    }
+
+    var configPath = Path.Combine(outputPath, "OneFuzzConfig.json");
+    File.WriteAllText(configPath, config.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+
+    var seedSourcesPath = Path.Combine(outputPath, "seed-sources");
+    if (Directory.Exists(seedSourcesPath))
+        Directory.Delete(seedSourcesPath, recursive: true);
+
+    Information($"Prepared the {ONEFUZZ_PLATFORM} OneFuzz drop at '{outputPath}'.");
 });
 
 RunTarget(TARGET);
