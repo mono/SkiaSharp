@@ -31,15 +31,15 @@ Task("onefuzz-prepare")
     string Quote(string value) => $"\"{value.Replace("\"", "\\\"")}\"";
 
     var projectPath = ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Fuzzing/SkiaSharp.Fuzzing.csproj").FullPath;
-    var outputPath = Path.GetFullPath(ONEFUZZ_OUTPUT_DIRECTORY);
-    var sharpFuzzPath = Path.GetFullPath(ONEFUZZ_SHARPFUZZ_PATH);
+    var outputPath = System.IO.Path.GetFullPath(ONEFUZZ_OUTPUT_DIRECTORY);
+    var sharpFuzzPath = System.IO.Path.GetFullPath(ONEFUZZ_SHARPFUZZ_PATH);
     var configSource = ROOT_PATH.CombineWithFilePath($"tests/SkiaSharp.Fuzzing/OneFuzzConfig.{ONEFUZZ_PLATFORM.ToLowerInvariant()}.json").FullPath;
     var skiaNativeLibrary = ONEFUZZ_PLATFORM.Equals("windows", StringComparison.OrdinalIgnoreCase) ? "libSkiaSharp.dll" : "libSkiaSharp.so";
     var harfBuzzNativeLibrary = ONEFUZZ_PLATFORM.Equals("windows", StringComparison.OrdinalIgnoreCase) ? "libHarfBuzzSharp.dll" : "libHarfBuzzSharp.so";
 
-    if (!File.Exists(sharpFuzzPath))
+    if (!System.IO.File.Exists(sharpFuzzPath))
         throw new Exception($"The SharpFuzz tool path does not exist: {sharpFuzzPath}");
-    if (Directory.Exists(outputPath))
+    if (System.IO.Directory.Exists(outputPath))
         throw new Exception($"The OneFuzz output directory already exists: {outputPath}");
 
     RunProcess("dotnet", string.Join(" ", new[]
@@ -56,20 +56,20 @@ Task("onefuzz-prepare")
         "-p:IsNetMacOSSupported=false",
     }));
 
-    var harness = Path.Combine(outputPath, "SkiaSharp.Fuzzing.dll");
-    var skiaManagedTarget = Path.Combine(outputPath, "SkiaSharp.dll");
-    var harfBuzzManagedTarget = Path.Combine(outputPath, "HarfBuzzSharp.dll");
-    var resourcesManagedTarget = Path.Combine(outputPath, "SkiaSharp.Resources.dll");
-    var skottieManagedTarget = Path.Combine(outputPath, "SkiaSharp.Skottie.dll");
-    var sceneGraphManagedTarget = Path.Combine(outputPath, "SkiaSharp.SceneGraph.dll");
-    var skiaNativeTarget = Path.Combine(outputPath, skiaNativeLibrary);
-    var harfBuzzNativeTarget = Path.Combine(outputPath, harfBuzzNativeLibrary);
-    var sharpFuzzCommonTarget = Path.Combine(outputPath, "SharpFuzz.Common.dll");
-    var seedDirectory = Path.Combine(outputPath, "seeds");
+    var harness = System.IO.Path.Combine(outputPath, "SkiaSharp.Fuzzing.dll");
+    var skiaManagedTarget = System.IO.Path.Combine(outputPath, "SkiaSharp.dll");
+    var harfBuzzManagedTarget = System.IO.Path.Combine(outputPath, "HarfBuzzSharp.dll");
+    var resourcesManagedTarget = System.IO.Path.Combine(outputPath, "SkiaSharp.Resources.dll");
+    var skottieManagedTarget = System.IO.Path.Combine(outputPath, "SkiaSharp.Skottie.dll");
+    var sceneGraphManagedTarget = System.IO.Path.Combine(outputPath, "SkiaSharp.SceneGraph.dll");
+    var skiaNativeTarget = System.IO.Path.Combine(outputPath, skiaNativeLibrary);
+    var harfBuzzNativeTarget = System.IO.Path.Combine(outputPath, harfBuzzNativeLibrary);
+    var sharpFuzzCommonTarget = System.IO.Path.Combine(outputPath, "SharpFuzz.Common.dll");
+    var seedDirectory = System.IO.Path.Combine(outputPath, "seeds");
 
-    var sharpFuzzToolDirectory = Path.GetDirectoryName(sharpFuzzPath) ?? throw new Exception($"Unable to determine the SharpFuzz tool directory from '{sharpFuzzPath}'.");
-    var sharpFuzzCommonSource = Directory
-        .GetFiles(sharpFuzzToolDirectory, "SharpFuzz.Common.dll", SearchOption.AllDirectories)
+    var sharpFuzzToolDirectory = System.IO.Path.GetDirectoryName(sharpFuzzPath) ?? throw new Exception($"Unable to determine the SharpFuzz tool directory from '{sharpFuzzPath}'.");
+    var sharpFuzzCommonSource = System.IO.Directory
+        .GetFiles(sharpFuzzToolDirectory, "SharpFuzz.Common.dll", System.IO.SearchOption.AllDirectories)
         .FirstOrDefault(path =>
         {
             var normalized = path.Replace('\\', '/');
@@ -79,7 +79,7 @@ Task("onefuzz-prepare")
     if (string.IsNullOrWhiteSpace(sharpFuzzCommonSource))
         throw new Exception($"Unable to find the .NET 10 SharpFuzz.Common.dll beside '{sharpFuzzPath}'.");
 
-    File.Copy(sharpFuzzCommonSource, sharpFuzzCommonTarget);
+    System.IO.File.Copy(sharpFuzzCommonSource, sharpFuzzCommonTarget);
 
     foreach (var requiredFile in new[]
     {
@@ -94,7 +94,7 @@ Task("onefuzz-prepare")
         sharpFuzzCommonTarget
     })
     {
-        if (!File.Exists(requiredFile))
+        if (!System.IO.File.Exists(requiredFile))
             throw new Exception($"The OneFuzz drop is missing required file: {requiredFile}");
     }
 
@@ -153,7 +153,7 @@ Task("onefuzz-prepare")
         RunProcess(sharpFuzzPath, args);
     }
 
-    var config = JsonNode.Parse(File.ReadAllText(configSource)) ?? throw new Exception($"Failed to load OneFuzz config: {configSource}");
+    var config = JsonNode.Parse(System.IO.File.ReadAllText(configSource)) ?? throw new Exception($"Failed to load OneFuzz config: {configSource}");
     if (!string.IsNullOrWhiteSpace(ONEFUZZ_VALIDATION_BUILD_ID))
     {
         foreach (var entry in config["Entries"]?.AsArray() ?? new JsonArray())
@@ -167,12 +167,12 @@ Task("onefuzz-prepare")
         }
     }
 
-    var configPath = Path.Combine(outputPath, "OneFuzzConfig.json");
-    File.WriteAllText(configPath, config.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+    var configPath = System.IO.Path.Combine(outputPath, "OneFuzzConfig.json");
+    System.IO.File.WriteAllText(configPath, config.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
 
-    var seedSourcesPath = Path.Combine(outputPath, "seed-sources");
-    if (Directory.Exists(seedSourcesPath))
-        Directory.Delete(seedSourcesPath, recursive: true);
+    var seedSourcesPath = System.IO.Path.Combine(outputPath, "seed-sources");
+    if (System.IO.Directory.Exists(seedSourcesPath))
+        System.IO.Directory.Delete(seedSourcesPath, recursive: true);
 
     Information($"Prepared the {ONEFUZZ_PLATFORM} OneFuzz drop at '{outputPath}'.");
 });
