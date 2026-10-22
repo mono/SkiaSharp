@@ -111,26 +111,31 @@ jobs:
           displayName: Configure build variables
 
       # Select and configure the existing Visual Studio product before any
-      # Windows cache/build scripts need its Python or native tools.
+      # Windows cache/build scripts need its native tools.
       - ${{ if and(eq(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipInstall, 'true')) }}:
+        - task: UsePythonVersion@0
+          displayName: Install Python
+          retryCountOnTaskFailure: 3
+          inputs:
+            versionSpec: '3.12'
+            architecture: 'x64'
         - pwsh: .\scripts\infra\native\windows\select-vs.ps1
           displayName: Select Visual Studio 2026
-        - pwsh: .\scripts\infra\native\windows\install-components.ps1 -InstallationPath "$(VS_INSTALL)"
+        - pwsh: .\scripts\infra\native\windows\install-components.ps1
           displayName: Apply Visual Studio 2026 components
-
-        - task: UsePythonVersion@0
-          displayName: Install Python for Visual Studio Build Tools
-          retryCountOnTaskFailure: 3
-          condition: and(succeeded(), eq(variables['VS_IS_BUILD_TOOLS'], 'true'))
-          inputs:
-            versionSpec: '3.x'
-            architecture: 'x64'
         - pwsh: |
-            $python = Get-Command python -CommandType Application -ErrorAction Stop |
+            $python = Get-Command python.exe -CommandType Application -ErrorAction Stop |
               Select-Object -First 1 -ExpandProperty Source
+            $vsRoot = [IO.Path]::GetFullPath("$(VS_INSTALL)").TrimEnd('\') + '\'
+            if ([IO.Path]::GetFullPath($python).StartsWith($vsRoot, [StringComparison]::OrdinalIgnoreCase)) {
+              throw "Python must be installed separately from Visual Studio: $python"
+            }
+            $llvm = Join-Path "$(VS_INSTALL)" 'VC\Tools\Llvm\x64'
+            $cmake = Join-Path "$(VS_INSTALL)" 'Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin'
             Write-Host "##vso[task.setvariable variable=PYTHON_EXE]$python"
-          displayName: Select Build Tools Python
-          condition: and(succeeded(), eq(variables['VS_IS_BUILD_TOOLS'], 'true'))
+            Write-Host "##vso[task.setvariable variable=LLVM_HOME]$llvm"
+            Write-Host "##vso[task.prependpath]$cmake"
+          displayName: Configure Windows build tools
 
       - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
         - pwsh: |
@@ -205,9 +210,9 @@ jobs:
       # install extra bits for the native builds
       - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.skipInstall, 'true')) }}:
         # install ninja
-        - ${{ if and(eq(parameters.docker, ''), ne(parameters.buildAgent.pool.os, 'windows')) }}:
+        - ${{ if eq(parameters.docker, '') }}:
           - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
-            displayName: Install Ninja
+            displayName: Configure Ninja
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
@@ -244,9 +249,9 @@ jobs:
             inputs:
               version: 24.x
         # install ninja
-        - ${{ if and(eq(parameters.installNinja, 'true'), ne(parameters.buildAgent.pool.os, 'windows')) }}:
+        - ${{ if eq(parameters.installNinja, 'true') }}:
           - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
-            displayName: Install Ninja
+            displayName: Configure Ninja
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         # install the bits needed for Android
@@ -349,6 +354,7 @@ jobs:
                 JavaSdkDirectory: $(JAVA_HOME)
                 LLVM_HOME: $(LLVM_HOME)
                 NINJA_EXE: $(NINJA_EXE)
+                PYTHON_EXE: $(PYTHON_EXE)
                 VS_INSTALL: $(VS_INSTALL)
                 # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
                 AppxSymbolPackageEnabled: false

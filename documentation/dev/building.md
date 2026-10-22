@@ -119,9 +119,6 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
        - Android NDK (via Visual Studio Installer or [manually](https://developer.android.com/ndk/downloads))
           - Make sure the path to the root is in the `ANDROID_NDK_ROOT` or `ANDROID_NDK_HOME` environment variables
  - [OpenJDK 17+](https://adoptium.net/)
- - Clang/LLVM
-    - Run `.\scripts\install-llvm.ps1`
-    - Set `LLVM_HOME` to the path of the install
 
 If you have multiple Visual Studio installations, use `--vsinstall` or set
 `VS_INSTALL` to select one with the v143 tools and matching Spectre libraries.

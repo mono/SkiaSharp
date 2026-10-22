@@ -6,19 +6,19 @@ baseline. Open `source/SkiaSharpSource.slnx` to let Visual Studio apply
 
 ```powershell
 ./scripts/infra/native/windows/select-vs.ps1
-./scripts/infra/native/windows/install-components.ps1 -InstallationPath $env:VS_INSTALL
+./scripts/infra/native/windows/install-components.ps1
 ```
 
 `select-vs.ps1` selects an installed VS 2026 IDE or Build Tools product. It does
-not install Visual Studio or require components. `install-components.ps1`
-detects the selected product and applies the matching profile.
+not install Visual Studio or require components. It prefers Enterprise,
+Professional, Community and then Build Tools. `install-components.ps1` runs
+Visual Studio Installer once with the selected installation and profile.
 
 The profiles install:
 
 - MSVC v145 for x86, x64 and ARM64, including matching Spectre libraries
 - matching preview compiler/Spectre components used by VS 2026 Insiders images
 - LLVM, CMake and Ninja from Visual Studio Installer
-- Visual Studio IDE's bundled Python 3.9 runtime for native build scripts
 - Windows SDKs 22621, 26100 and 28000
 - managed desktop, MAUI, Android, MSIX and UWP build components
 
@@ -36,13 +36,10 @@ dotnet cake native/winui-angle/build.cake --configuration=Release --arch=x64 `
   --vsinstall="$env:VS_INSTALL" --windowsSdkVersion=10.0.28000.0
 ```
 
-Git, PowerShell, the SDK pinned by `global.json`, and repository .NET workloads
-remain separate prerequisites. Visual Studio IDE's Python component is out of
-support and is used only for repository native build scripts because the internal
-VS 2026 image cannot download a newer runtime. Build Tools does not offer that
-component and requires a separately provisioned Python. NuGet, Skia dependency
-synchronization, and ANGLE's revision-pinned GN, LLVM and resource-compiler
-downloads require network access.
+Git, PowerShell, Python 3.12, the SDK pinned by `global.json`, and repository
+.NET workloads remain separate prerequisites. Python must be installed outside
+Visual Studio. NuGet, Skia dependency synchronization, and ANGLE's
+revision-pinned GN, LLVM and resource-compiler downloads require network access.
 
 ## Compatibility
 
