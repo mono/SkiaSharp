@@ -106,25 +106,6 @@ jobs:
           fetchDepth: 1
         - pwsh: ./scripts/infra/shared/set-build-variables.ps1
           displayName: Configure build variables
-      - ${{ else }}:
-        - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipSteps, 'true'), eq(parameters.checkoutSubmodules, 'true')) }}:
-          - checkout: self
-            submodules: recursive
-        - ${{ else }}:
-          - checkout: self
-            submodules: false
-        - pwsh: ./scripts/infra/shared/set-build-variables.ps1
-          displayName: Configure build variables
-
-      # Select and configure the existing Visual Studio product before any
-      # Windows cache/build scripts need its native tools.
-      - ${{ if and(eq(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipInstall, 'true')) }}:
-        - pwsh: .\scripts\infra\native\windows\select-vs.ps1
-          displayName: Select Visual Studio 2026
-        - pwsh: .\scripts\infra\native\windows\install-components.ps1
-          displayName: Apply Visual Studio 2026 components
-
-      - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
         - pwsh: |
             $python = if ('${{ parameters.buildAgent.pool.os }}' -eq 'windows') {
               $env:PYTHON_EXE
@@ -154,6 +135,23 @@ jobs:
                 Write-Host "##[section]Cache MISS - full build required"
             }
           displayName: Evaluate cache decision
+      - ${{ else }}:
+        - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipSteps, 'true'), eq(parameters.checkoutSubmodules, 'true')) }}:
+          - checkout: self
+            submodules: recursive
+        - ${{ else }}:
+          - checkout: self
+            submodules: false
+        - pwsh: ./scripts/infra/shared/set-build-variables.ps1
+          displayName: Configure build variables
+
+      - ${{ if and(eq(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipInstall, 'true')) }}:
+        - pwsh: .\scripts\infra\native\windows\select-vs.ps1
+          displayName: Select Visual Studio 2026
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        - pwsh: .\scripts\infra\native\windows\install-components.ps1
+          displayName: Apply Visual Studio 2026 components
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # Native source builds only use Skia. Merge-only jobs use no submodules.
       - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.skipSteps, 'true')) }}:

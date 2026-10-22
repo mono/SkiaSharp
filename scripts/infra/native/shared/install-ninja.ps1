@@ -1,6 +1,12 @@
 $ErrorActionPreference = 'Stop'
 
-if ($IsWindows) {
+if ($IsMacOS) {
+    brew install ninja
+    $ninja = (Get-Command ninja -CommandType Application -ErrorAction Stop).Source
+} elseif ($IsLinux) {
+    sudo apt install -y ninja-build
+    $ninja = (Get-Command ninja -CommandType Application -ErrorAction Stop).Source
+} else {
     if (!$env:VS_INSTALL) {
         throw 'Select Visual Studio before configuring Ninja.'
     }
@@ -8,14 +14,6 @@ if ($IsWindows) {
     if (!(Test-Path $ninja -PathType Leaf)) {
         throw "Visual Studio Ninja was not installed: $ninja"
     }
-} elseif ($IsMacOS) {
-    brew install ninja
-    $ninja = (Get-Command ninja -CommandType Application -ErrorAction Stop).Source
-} elseif ($IsLinux) {
-    sudo apt install -y ninja-build
-    $ninja = (Get-Command ninja -CommandType Application -ErrorAction Stop).Source
-} else {
-    throw 'Unsupported platform.'
 }
 
 $env:NINJA_EXE = $ninja
