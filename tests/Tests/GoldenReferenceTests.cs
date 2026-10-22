@@ -63,7 +63,7 @@ namespace SkiaSharp.Tests
 			var keys = new[] { "mac/" + first + "/sample.png", "mac/" + second + "/sample.png" };
 			var request = new GoldenRequest("mac", runtime, "sample", null);
 			Assert.Equal("mac/" + expected + "/sample.png", GoldenReference.Resolve(keys, request).Key);
-			Assert.Equal(GoldenReference.Resolve(keys, request).Key, GoldenReference.Resolve(keys.Reverse(), request).Key);
+			Assert.Equal(GoldenReference.Resolve(keys, request).Key, GoldenReference.Resolve(Enumerable.Reverse(keys), request).Key);
 		}
 
 		[Theory]
@@ -209,7 +209,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void DirectoryLookupUsesScopedRelativeNamesAndDoesNotReadImageContents()
 		{
-			var root = Path.Combine(Environment.CurrentDirectory, "golden-reference-tests-" + Guid.NewGuid().ToString("N"));
+			var root = Path.Combine(Path.GetTempPath(), "golden-reference-tests-" + Guid.NewGuid().ToString("N"));
 			const string key = "custom/base/sample.png";
 			var path = Path.Combine(root, key.Replace('/', Path.DirectorySeparatorChar));
 			try
