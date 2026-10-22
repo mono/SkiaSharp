@@ -9,6 +9,8 @@ parameters:
     type: object
   - name: buildAgentAndroidTests
     type: object
+  - name: buildAgentAndroidAppiumTests
+    type: object
   - name: iosSimulators
     type: object
     default:
@@ -99,7 +101,7 @@ stages:
               displayName: Appium (${{ android.displayName }})
               platform: android
               dependsOn: [samples_appium_build_android]
-              buildAgent: ${{ parameters.buildAgentAndroidTests }}
+              buildAgent: ${{ parameters.buildAgentAndroidAppiumTests }}
               additionalArgs: --runGroup=Android --androidImage="${{ android.image }}" --androidModel="${{ android.model }}" --skipExternals="all"
               preBuildSteps:
                 - pwsh: ./scripts/infra/managed/install-openjdk.ps1 -Version "$(OPENJDK_VERSION)"

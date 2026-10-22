@@ -65,31 +65,41 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
 
     var port = AndroidEmulatorPort();
     ownedAvd = $"SkiaSharp-Tests-{Guid.NewGuid():N}";
+    var appium = EnvironmentVariable("TEST_ANDROID_PREINSTALL_APPIUM_SERVER") == "1";
     try {
         AndroidAvdCommand("create", "avd", "--name", ownedAvd, "--package", systemImage, "--device", TEST_ANDROID_MODEL);
         ownedSerial = $"emulator-{port}";
-        var gpu = IsRunningOnLinux() ? "swiftshader" : "guest";
+        var gpu = IsRunningOnLinux() ? "swiftshader_indirect" : "guest";
         var start = new System.Diagnostics.ProcessStartInfo(
             System.IO.Path.Combine(sdk, "emulator", IsRunningOnWindows() ? "emulator.exe" : "emulator")) {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
         };
-        foreach (var argument in new[] {
-            "-avd", ownedAvd, "-port", port.ToString(), "-gpu", gpu, "-cores", "2", "-memory", "4096",
+        var arguments = new List<string> {
+            "-avd", ownedAvd, "-port", port.ToString(), "-gpu", gpu,
+        };
+        if (appium)
+            arguments.AddRange(new[] { "-cores", "2", "-memory", "4096" });
+        arguments.AddRange(new[] {
             "-partition-size", "4096",
             "-no-window", "-no-snapshot", "-no-audio", "-no-boot-anim", "-show-kernel",
             "-camera-back", "none", "-camera-front", "none",
-        })
+        });
+        foreach (var argument in arguments)
             start.ArgumentList.Add(argument);
 
         // Retain the process before readiness: adb may never become available on a failed boot.
         ANDROID_EMULATOR_PROCESS = System.Diagnostics.Process.Start(start);
         ANDROID_EMULATOR_STDOUT = ANDROID_EMULATOR_PROCESS.StandardOutput.ReadToEndAsync();
         ANDROID_EMULATOR_STDERR = ANDROID_EMULATOR_PROCESS.StandardError.ReadToEndAsync();
-        WaitForAndroidBoot(ownedAvd, ownedSerial);
-        if (EnvironmentVariable("TEST_ANDROID_PREINSTALL_APPIUM_SERVER") == "1")
+        if (appium) {
+            WaitForAndroidAppiumBoot(ownedAvd, ownedSerial);
             InstallAndroidAppiumArtifacts(ownedSerial);
+        } else {
+            WaitForAndroidBoot(ownedSerial);
+            AssertOwnedAndroidEmulator(ownedAvd, ownedSerial);
+        }
         foreach (var setting in new[] { "window_animation_scale", "transition_animation_scale", "animator_duration_scale" }) {
             if (StartProcess(ANDROID_ADB, new ProcessSettings {
                 Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
@@ -101,7 +111,7 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         ListAndroidDevices();
     } catch (Exception error) {
         var failure = error;
-        if (ANDROID_EMULATOR_PROCESS != null && !ANDROID_EMULATOR_PROCESS.HasExited && ownedSerial != null) {
+        if (appium && ANDROID_EMULATOR_PROCESS != null && !ANDROID_EMULATOR_PROCESS.HasExited && ownedSerial != null) {
             try {
                 CaptureOwnedAndroidBootDiagnostics(ownedAvd, ownedSerial);
             } catch (Exception diagnosticsError) {
@@ -185,7 +195,27 @@ void ListAndroidDevices()
     DotNetTool("android device list");
 }
 
-void WaitForAndroidBoot(string ownedAvd, string ownedSerial)
+void WaitForAndroidBoot(string ownedSerial)
+{
+    var clock = System.Diagnostics.Stopwatch.StartNew();
+    while (clock.Elapsed < TimeSpan.FromSeconds(300)) {
+        if (ANDROID_EMULATOR_PROCESS.HasExited)
+            throw new Exception($"Owned Android emulator exited during boot: {ANDROID_EMULATOR_PROCESS.ExitCode}.");
+        var exit = StartProcess(ANDROID_ADB, new ProcessSettings {
+            Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
+                .Append("shell getprop sys.boot_completed"),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            Timeout = 10000,
+        }, out var stdout, out var stderr);
+        if (exit == 0 && stdout.Any(line => line.Trim() == "1"))
+            return;
+        System.Threading.Thread.Sleep(500);
+    }
+    throw new TimeoutException($"Owned Android emulator {ownedSerial} did not complete boot within 300 seconds.");
+}
+
+void WaitForAndroidAppiumBoot(string ownedAvd, string ownedSerial)
 {
     // Package Manager readiness is observable directly; aggregate Linux load is not a service readiness signal.
     var clock = System.Diagnostics.Stopwatch.StartNew();
