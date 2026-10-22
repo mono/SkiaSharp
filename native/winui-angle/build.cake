@@ -44,18 +44,15 @@ Task("sync-ANGLE")
         WorkingDirectory = ANGLE_PATH.FullPath,
     });
 
-    // Set the linker PDB path, not just the copied filename: the DLL embeds it.
+    // Use conventional import library and PDB names.
     {
         var toolchain = ANGLE_PATH.CombineWithFilePath("build/toolchain/win/toolchain.gni");
         var contents = FileReadText(toolchain);
-        const string original = "pdbname = \"${dllname}.pdb\"";
-        const string replacement = "pdbname = \"{{output_dir}}/{{target_output_name}}.pdb\"";
-        var originalCount = contents.Split(new[] { original }, StringSplitOptions.None).Length - 1;
-        var replacementCount = contents.Split(new[] { replacement }, StringSplitOptions.None).Length - 1;
-        if (originalCount + replacementCount != 2)
-            throw new Exception($"Unexpected ANGLE DLL PDB definitions at {toolchain}.");
-        if (originalCount > 0)
-            FileWriteText(toolchain, contents.Replace(original, replacement));
+        var newContents = contents
+            .Replace("\"${dllname}.lib\"", "\"{{output_dir}}/{{target_output_name}}.lib\"")
+            .Replace("\"${dllname}.pdb\"", "\"{{output_dir}}/{{target_output_name}}.pdb\"");
+        if (contents != newContents)
+            FileWriteText(toolchain, newContents);
     }
 
     FileWriteLines(ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni"), new[] {
