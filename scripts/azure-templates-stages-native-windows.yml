@@ -72,7 +72,7 @@ stages:
           target: externals-winui
           cacheJob: native/winui
           enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=x86 --windowsSdkVersion=$(WINDOWS_SDK_VERSION_WINUI)
+          additionalArgs: --buildarch=x86
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native WinUI|x64 (Win)
         parameters:
           name: native_winui_x64_windows
@@ -81,7 +81,7 @@ stages:
           target: externals-winui
           cacheJob: native/winui
           enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=x64 --windowsSdkVersion=$(WINDOWS_SDK_VERSION_WINUI)
+          additionalArgs: --buildarch=x64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native WinUI|arm64 (Win)
         parameters:
           name: native_winui_arm64_windows
@@ -90,7 +90,7 @@ stages:
           target: externals-winui
           cacheJob: native/winui
           enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=arm64 --windowsSdkVersion=$(WINDOWS_SDK_VERSION_WINUI)
+          additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE WinUI|x86 (Win)
         parameters:
           name: native_winui_angle_x86_windows

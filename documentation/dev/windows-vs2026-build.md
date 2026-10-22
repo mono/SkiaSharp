@@ -31,7 +31,7 @@ dotnet tool restore
 dotnet cake native/windows/build.cake --configuration=Release --arch=x64 `
   --vsinstall="$env:VS_INSTALL" --windowsSdkVersion=10.0.28000.0
 dotnet cake native/winui/build.cake --configuration=Release --arch=x64 `
-  --vsinstall="$env:VS_INSTALL" --windowsSdkVersion=10.0.22621.0
+  --vsinstall="$env:VS_INSTALL"
 dotnet cake native/winui-angle/build.cake --configuration=Release --arch=x64 `
   --vsinstall="$env:VS_INSTALL" --windowsSdkVersion=10.0.28000.0
 ```
