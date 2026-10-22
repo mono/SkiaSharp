@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using SkiaSharp.Tests.Goldens;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -6,6 +7,53 @@ namespace SkiaSharp.Tests.Samples.Utils;
 // Checks sample output against a reviewed reference and retains comparison diagnostics.
 internal static class SampleImage
 {
+    internal static async Task Validate(byte[] bytes, string actual, GoldenRequest request, SampleImageOptions? options = null)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(actual)!);
+        await File.WriteAllBytesAsync(actual, bytes);
+        Assert.True(bytes.AsSpan().StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }), "Expected a PNG image.");
+        Validate(actual, request, options);
+    }
+
+    internal static void Validate(string actual, GoldenRequest request, SampleImageOptions? options = null)
+    {
+        var resolution = SampleReferences.Resolve(request);
+        try
+        {
+            Validate(actual, SampleReferences.Require(resolution, actual), options);
+        }
+        finally
+        {
+            SampleReferences.Emit(resolution, actual);
+        }
+    }
+
+    internal static async Task<string> Validate(
+        Func<Task<string>> capture, GoldenRequest request, TimeSpan? timeout = null, SampleImageOptions? options = null)
+    {
+        ArgumentNullException.ThrowIfNull(capture);
+        var limit = timeout ?? TimeSpan.FromSeconds(2);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(limit, TimeSpan.Zero);
+        var resolution = SampleReferences.Resolve(request);
+        if (resolution.Path is null)
+        {
+            var missing = await capture().WaitAsync(limit, TestContext.Current.CancellationToken);
+            SampleReferences.Emit(resolution, missing);
+            SampleReferences.Require(resolution, missing);
+        }
+        string? actual = null;
+        try
+        {
+            return await Validate(async () => actual = await capture(),
+                resolution.Path!, limit, options);
+        }
+        finally
+        {
+            if (actual is not null)
+                SampleReferences.Emit(resolution, actual);
+        }
+    }
+
     internal static int CountPixels(string screenshot, SKRectI region, Func<SKColor, bool> matches)
     {
         using var bitmap = SKBitmap.Decode(screenshot);
@@ -34,7 +82,7 @@ internal static class SampleImage
         Validate(actual, expected, options);
     }
 
-    /// <summary>Validates image dimensions and pixels against an absolute or golden-directory-relative reference path.</summary>
+    /// <summary>Validates image dimensions and pixels against an absolute or canonical golden-relative reference path.</summary>
     internal static void Validate(string actual, string expected, SampleImageOptions? options = null) =>
         Validate(actual, expected, options ?? new(), reportMismatch: true);
 
@@ -73,7 +121,7 @@ internal static class SampleImage
 
     private static bool Validate(string actual, string expected, SampleImageOptions options, bool reportMismatch)
     {
-        expected = Path.Combine(Repo.RootDir, "tests", "SkiaSharp.Tests.Samples", "Expected", expected);
+        expected = Path.Combine(SampleReferences.Root, expected);
 
         if (reportMismatch || !File.Exists(expected))
             TestContext.Current.AddFileAttachment(actual, "image/png");

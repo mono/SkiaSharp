@@ -8,9 +8,6 @@ namespace SkiaSharp.Tests.Samples;
 [Collection(nameof(DockerSampleCollection))]
 public class DockerSampleRunTests(DockerSampleFixture docker) : DockerSampleTestBase(docker)
 {
-    private static string ContainerPlatform =>
-        OperatingSystem.IsWindows() ? "Windows" : "Linux";
-
     [Fact]
     [Trait("Category", "SampleRun")]
     public Task ConsoleSampleRuns() =>
@@ -27,7 +24,7 @@ public class DockerSampleRunTests(DockerSampleFixture docker) : DockerSampleTest
             var output = OperatingSystem.IsWindows() ? @"C:\app\output.png" : "/app/output.png";
             await app.DownloadFile(output, image);
 
-            SampleImage.Validate(image, $"Docker/{ContainerPlatform}/console.png",
+            SampleImage.Validate(image, SampleReferences.Container("console"),
                 new() { ExpectedSize = new(800, 600) });
         });
 
@@ -47,6 +44,6 @@ public class DockerSampleRunTests(DockerSampleFixture docker) : DockerSampleTest
             var png = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
             await SampleImage.Validate(png,
                 Path.Combine(app.Diagnostics, "output.png"),
-                $"Docker/{ContainerPlatform}/web.png", new() { ExpectedSize = new(800, 600) });
+                SampleReferences.Container("web"), new() { ExpectedSize = new(800, 600) });
         });
 }

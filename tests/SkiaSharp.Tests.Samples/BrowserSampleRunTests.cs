@@ -19,7 +19,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement(".card img");
             var screenshot = await app.Screenshot();
-            SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/web-page.png");
+            SampleImage.Validate(screenshot, SampleReferences.Host("web-page"));
         });
 
     [Fact]
@@ -33,7 +33,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement("#output");
             var screenshot = await app.Screenshot();
-            SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/browser-wasm-page.png");
+            SampleImage.Validate(screenshot, SampleReferences.Host("browser-wasm-page"));
         });
 
     [Fact]
@@ -46,7 +46,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
         {
             await app.Navigate("/");
             await app.WaitForElement(".canvas-container canvas");
-            await SampleImage.Validate(app.Screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-cpu-page.png",
+            await SampleImage.Validate(app.Screenshot, SampleReferences.Host("blazor-cpu-page"),
                 timeout: TimeSpan.FromSeconds(10));
         });
 
@@ -61,7 +61,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/gpu");
             await app.WaitForElement(".canvas-container canvas");
             var screenshot = await app.Screenshot();
-            SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-gpu-page.png",
+            SampleImage.Validate(screenshot, SampleReferences.Host("blazor-gpu-page"),
                 new() { MaxAverageColorErrorFraction = 0.06 });
         });
 
@@ -129,8 +129,8 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             Assert.Equal(0, CountPixels(cleared, region, c =>
                 c == new SKColor(229, 57, 53) || c == new SKColor(30, 136, 229)));
 
-            SampleImage.Validate(drawn, $"Host/{SampleLookup.HostPlatform}/blazor-drawing-page.png");
-            SampleImage.Validate(cleared, $"Host/{SampleLookup.HostPlatform}/blazor-drawing-cleared-page.png");
+            SampleImage.Validate(drawn, SampleReferences.Host("blazor-drawing-page"));
+            SampleImage.Validate(cleared, SampleReferences.Host("blazor-drawing-cleared-page"));
         });
 
     [Fact]

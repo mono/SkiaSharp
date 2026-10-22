@@ -1,234 +1,180 @@
 #!/usr/bin/env python3
-"""Harvest golden images for the visual-regression tests from test results (TRX).
+"""Export unversioned ##SKIA-GOLDEN## records from TRX.
 
-Every visual test (tests/Tests/SkiaSharp/Visual) emits its images into the test
-output, one line each, all sharing one path -- the golden key:
-
-    ##SKIA-VISUAL-ACTUAL## path={renderer}.{platform}/{scene}.png size=WxH base64=<...>
-    ##SKIA-VISUAL-GOLDEN## path=... size=WxH base64=<...>
-    ##SKIA-VISUAL-DIFF##   path=... size=WxH base64=<...>
-
-No golden means none was committed, and a diff only exists when there was
-something to diff against.
-
-Those lines land in the TRX produced by every test host -- desktop Console, the
-MAUI device hosts, and the WASM host alike -- which makes the TRX the one uniform
-channel for seeding goldens, including on device/browser hosts whose filesystem is
-sandboxed/embedded and cannot be written to in-process.
-
-Seeding workflow:
-    1. Run the suite (locally or in CI). Tests with no committed golden FAIL and
-       emit their rendered PNG.
-    2. Point this script at the TRX file(s) (the CI 'testlogs_*' artifacts, or a
-       local output/logs/testlogs directory).
-    3. Review the resulting git diff of tests/Content/Goldens/** and commit.
-    4. Re-run -- the now-committed goldens are compared and pass.
-
-Usage:
-    python3 scripts/infra/tests/extract-visual-goldens.py [PATH ...]
-        [--out tests/Content/Goldens] [--dry-run]
-
-PATH may be a .trx file or a directory (searched recursively for *.trx).
-Defaults to output/logs/testlogs.
+Stage actual images in output/golden-proposals for review, or export all roles
+with --images-out. Neither operation approves a new reference automatically.
+Keys are relative to tests/Goldens, including their Samples or Visual directory.
 """
 
 import argparse
 import base64
-import os
+import hashlib
+from pathlib import Path
 import re
+import struct
 import sys
+import zlib
+
+PNG = b"\x89PNG\r\n\x1a\n"
+SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
+RESERVED = re.compile(r"(?:con|prn|aux|nul|com[1-9]|lpt[1-9])\Z")
+ARCHITECTURES = {"x86", "x64", "arm", "arm64", "armv6", "wasm", "s390x", "loongarch64", "ppc64le", "riscv64"}
+MARKER = re.compile(
+    r"##SKIA-GOLDEN## role=(actual|reference|diff) key=(\S+) "
+    r"size=(\d+)x(\d+) base64=([A-Za-z0-9+/=]+)"
+)
 
 
-def _marker_re(role):
-    return re.compile(
-        rf"##SKIA-VISUAL-{role}##\s+path=(?P<path>[^\s]+)\s+"
-        r"size=(?P<size>\d+x\d+)\s+base64=(?P<b64>[A-Za-z0-9+/=]+)"
-    )
+def validate_key(key):
+    parts = key.split("/")
+    if len(parts) != 4 or parts[0] not in ("Samples", "Visual"):
+        raise ValueError(f"Expected Samples|Visual/profile/version/case[.variant][.architecture].png: {key}")
+    _, profile, version, filename = parts
+    if version != "base":
+        if not re.fullmatch(r"[1-9][0-9]*(?:\.[0-9]+)*(?:\.r[1-9][0-9]*)?", version):
+            raise ValueError(f"Expected an actual version or base: {key}")
+        if any(int(component.removeprefix("r")) > 2147483647 for component in version.split(".")):
+            raise ValueError(f"Version component is out of range: {key}")
+    if not filename.endswith(".png"):
+        raise ValueError(f"Expected a PNG filename: {key}")
+    names = filename[:-4].split(".")
+    if not 1 <= len(names) <= 3:
+        raise ValueError(f"Too many filename suffixes: {key}")
+    if len(names) == 3 and (names[1] in ARCHITECTURES or names[2] not in ARCHITECTURES):
+        raise ValueError(f"Variant must precede a recognized architecture: {key}")
+    for name in [profile, *names]:
+        if not SLUG.fullmatch(name) or RESERVED.fullmatch(name):
+            raise ValueError(f"Unsafe golden path: {key}")
 
 
-ACTUAL_MARKER = "##SKIA-VISUAL-ACTUAL##"
-MARKERS = {role: _marker_re(role.upper()) for role in ("actual", "golden", "diff")}
+def png_size(data):
+    if not data.startswith(PNG):
+        raise ValueError("Capture is not a PNG")
+    offset = len(PNG)
+    size = None
+    has_pixels = False
+    while offset + 12 <= len(data):
+        length = struct.unpack_from(">I", data, offset)[0]
+        kind = data[offset + 4:offset + 8]
+        end = offset + 12 + length
+        if end > len(data):
+            raise ValueError("Truncated PNG chunk")
+        payload = data[offset + 8:end - 4]
+        if zlib.crc32(kind + payload) != struct.unpack_from(">I", data, end - 4)[0]:
+            raise ValueError("PNG chunk checksum does not match")
+        if size is None:
+            if kind != b"IHDR" or length != 13:
+                raise ValueError("PNG must begin with IHDR")
+            size = struct.unpack_from(">II", payload)
+            if not all(size):
+                raise ValueError("PNG dimensions must be positive")
+        elif kind == b"IHDR":
+            raise ValueError("PNG has multiple IHDR chunks")
+        has_pixels |= kind == b"IDAT"
+        if kind == b"IEND":
+            if length or end != len(data) or not has_pixels:
+                raise ValueError("Invalid PNG ending or missing pixels")
+            return size
+        offset = end
+    raise ValueError("PNG is missing IEND")
 
-# Golden paths are always "{renderer}.{platform}/{scene}.png": exactly one
-# subdirectory, a .png leaf, and no traversal. Reject anything else so a malformed
-# or hostile marker can never write outside the goldens tree. \Z rather than $,
-# since $ also matches before a trailing newline.
-SAFE_PATH_RE = re.compile(r"^[A-Za-z0-9][\w.\-]*/[A-Za-z0-9][\w.\-]*\.png\Z")
 
-# Splits "{renderer}.{platform}/{scene}.png" into its shared, platform-portable
-# counterpart "{renderer}/{scene}.png" (renderer is everything before the last dot
-# of the directory). Returns None when the directory has no platform suffix (the
-# path is already the shared form).
-PLATFORM_DIR_RE = re.compile(r"^(?P<renderer>.+)\.(?P<platform>[^.]+)/(?P<scene>.+\.png)$")
+def contained(root, key):
+    validate_key(key)
+    target = root.joinpath(*key.split("/"))
+    if not target.resolve().is_relative_to(root.resolve()):
+        raise ValueError(f"Output escapes destination: {key}")
+    return target
 
 
-def shared_path_for(path):
-    m = PLATFORM_DIR_RE.match(path)
-    if not m:
-        return None
-    return f"{m.group('renderer')}/{m.group('scene')}"
-
-
-def read_bytes(path):
-    with open(path, "rb") as fh:
-        return fh.read()
-
-
-def find_trx_files(paths):
-    files = []
-    for p in paths:
-        if os.path.isdir(p):
-            for root, _, names in os.walk(p):
-                for name in names:
-                    if name.lower().endswith(".trx"):
-                        files.append(os.path.join(root, name))
-        elif os.path.isfile(p):
-            files.append(p)
+def trx_files(paths):
+    result = set()
+    for name in paths:
+        path = Path(name)
+        if path.is_dir():
+            result.update(path.rglob("*.trx"))
+        elif path.is_file():
+            result.add(path)
         else:
-            print(f"warning: '{p}' does not exist, skipping", file=sys.stderr)
-    return sorted(set(files))
+            raise ValueError(f"Results do not exist: {path}")
+    return sorted(result)
 
 
-def extract(trx_files):
-    """Return {golden_path: png_bytes}. Later files win; conflicting bytes warn."""
-    found = {}
-    sources = {}
-    for trx in trx_files:
-        with open(trx, "r", encoding="utf-8", errors="replace") as fh:
-            text = fh.read()
-        for m in MARKERS["actual"].finditer(text):
-            path = m.group("path")
-            if not SAFE_PATH_RE.match(path):
-                print(f"warning: skipping unsafe golden path '{path}' in {trx}", file=sys.stderr)
+def records(path):
+    text = path.read_text(encoding="utf-8")
+    for line in text.splitlines():
+        if line.lstrip().startswith("##SKIA-GOLDEN##") and MARKER.search(line) is None:
+            raise ValueError(f"Malformed golden record in {path}")
+    for match in MARKER.finditer(text):
+        role, key, width, height, encoded = match.groups()
+        validate_key(key)
+        data = base64.b64decode(encoded, validate=True)
+        if png_size(data) != (int(width), int(height)):
+            raise ValueError(f"PNG dimensions disagree with marker: {key}")
+        yield role, key, data
+
+
+def proposals(files):
+    result = {}
+    for path in files:
+        for role, key, data in records(path):
+            if role != "actual":
                 continue
-            try:
-                data = base64.b64decode(m.group("b64"), validate=True)
-            except Exception as ex:  # noqa: BLE001
-                print(f"warning: bad base64 for '{path}' in {trx}: {ex}", file=sys.stderr)
-                continue
-            if path in found and found[path] != data:
-                print(
-                    f"note: '{path}' differs between {sources[path]} and {trx}; "
-                    f"using the latter (a tolerance-level difference between hosts is normal).",
-                    file=sys.stderr,
-                )
-            found[path] = data
-            sources[path] = trx
-    return found
+            if key in result and result[key] != data:
+                raise ValueError(f"Conflicting captures for {key}; review each run instead of choosing a winner")
+            result[key] = data
+    return result
 
 
-def extract_images(trx_files, out_dir):
-    """Write every emitted image as a browsable PNG, mirroring the goldens tree.
-
-    Produces {out_dir}/{renderer}.{platform}/{scene}.{actual,golden,diff}.png. A
-    scene with only an .actual.png had no golden committed; one with all three was
-    compared, and the test result says whether it passed. Returns the file count.
-    """
-    # The path carries the OS tag, not the architecture or the retry number, so
-    # the same scene appears in several TRX files. Take each path from the first
-    # file that has it, otherwise a triple could pair one run's actual with
-    # another's golden and misdirect whoever is reading it.
-    seen = set()
-    written = 0
-    for trx in trx_files:
-        with open(trx, "r", encoding="utf-8", errors="replace") as fh:
-            text = fh.read()
-
-        images = {}
-        for role, regex in MARKERS.items():
-            for m in regex.finditer(text):
-                path = m.group("path")
-                if not SAFE_PATH_RE.match(path):
-                    print(f"warning: skipping unsafe path '{path}' in {trx}", file=sys.stderr)
-                    continue
-                if path in seen:
-                    continue
-                try:
-                    images.setdefault(path, {})[role] = base64.b64decode(m.group("b64"), validate=True)
-                except Exception as ex:  # noqa: BLE001
-                    print(f"warning: bad base64 for '{path}' in {trx}: {ex}", file=sys.stderr)
-
-        for path, roles in images.items():
-            rel_dir, leaf = path.split("/", 1)
-            dest_dir = os.path.join(out_dir, *rel_dir.split("/"))
-            os.makedirs(dest_dir, exist_ok=True)
-            for role, data in roles.items():
-                with open(os.path.join(dest_dir, f"{leaf[:-4]}.{role}.png"), "wb") as out:
-                    out.write(data)
-                written += 1
-            seen.add(path)
-
-    print(f"Wrote {written} image(s) under {out_dir}.")
-    return written
+def export_images(files, destination):
+    count = 0
+    for path in files:
+        run = path.stem + "-" + hashlib.sha256(str(path).encode()).hexdigest()[:8]
+        occurrences = {}
+        for role, key, data in records(path):
+            number = occurrences.get((role, key), 0) + 1
+            occurrences[role, key] = number
+            output = destination.joinpath(run, *key.split("/"))
+            output = output.with_name(f"{output.stem}.{number}.{role}.png")
+            if not output.resolve().is_relative_to(destination.resolve()):
+                raise ValueError(f"Output escapes destination: {key}")
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_bytes(data)
+            count += 1
+    return count
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("paths", nargs="*", default=["output/logs/testlogs"],
-                        help="TRX files or directories to search (default: output/logs/testlogs)")
-    parser.add_argument("--out", default=os.path.join("tests", "Content", "Goldens"),
-                        help="Goldens root to write into (default: tests/Content/Goldens)")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="List the goldens that would be written without writing them")
-    parser.add_argument("--images-out", metavar="DIR", default=None,
-                        help="Instead of seeding goldens, write every emitted actual/golden/diff "
-                             "image into DIR as browsable PNGs. Intended as an always() CI step "
-                             "writing into the published test-logs artifact.")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("paths", nargs="*", default=["output/logs/testlogs"])
+    parser.add_argument("--out", default="output/golden-proposals")
+    parser.add_argument("--images-out")
+    parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
-
-    trx_files = find_trx_files(args.paths)
-    if not trx_files:
-        print("No .trx files found.", file=sys.stderr)
-        # A missing TRX is not an error when extracting images (the lane may have
-        # no visual tests); never fail the CI step over it.
-        return 0 if args.images_out else 1
-
-    if args.images_out:
-        print(f"Scanning {len(trx_files)} TRX file(s) for visual-regression images...")
-        extract_images(trx_files, args.images_out)
+    try:
+        if args.images_out and not any(Path(name).exists() for name in args.paths):
+            print("No test results were produced; no diagnostic images to export.")
+            return 0
+        files = trx_files(args.paths)
+        if args.images_out:
+            print(f"Exported {export_images(files, Path(args.images_out))} diagnostic images.")
+            return 0
+        captures = proposals(files)
+        if not captures:
+            raise ValueError("No actual golden captures found")
+        for key, data in sorted(captures.items()):
+            destination = contained(Path(args.out), key)
+            print(f"{'Would stage' if args.dry_run else 'Staging'} {destination}")
+            if not args.dry_run:
+                if destination.exists() and destination.read_bytes() != data:
+                    raise ValueError(f"Conflicting proposal already exists: {destination}")
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(data)
+        print("Review proposals and rerun the supported profiles before committing references.")
         return 0
-
-    print(f"Scanning {len(trx_files)} TRX file(s) for {ACTUAL_MARKER} markers...")
-    goldens = extract(trx_files)
-    if not goldens:
-        print(f"No {ACTUAL_MARKER} markers found. Did the visual tests run and emit images?", file=sys.stderr)
+    except (ValueError, OSError) as error:
+        print(f"error: {error}", file=sys.stderr)
         return 1
-
-    written = 0
-    covered = 0
-    for path in sorted(goldens):
-        data = goldens[path]
-        # A promoted, platform-portable golden lives at {renderer}/{scene}.png.
-        # If one already exists and is byte-identical to this capture, the shared
-        # golden already covers this platform: don't re-create the per-platform
-        # copy (that is what keeps a manual promotion from being clobbered on the
-        # next harvest). A genuine per-platform divergence is byte-different, so it
-        # is still written as an override.
-        shared = shared_path_for(path)
-        if shared is not None:
-            shared_dest = os.path.join(args.out, *shared.split("/"))
-            if os.path.isfile(shared_dest) and read_bytes(shared_dest) == data:
-                print(f"  skip {path} (covered by shared {shared})")
-                covered += 1
-                continue
-
-        dest = os.path.join(args.out, *path.split("/"))
-        if args.dry_run:
-            print(f"  would write {dest} ({len(data)} bytes)")
-            continue
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        with open(dest, "wb") as fh:
-            fh.write(data)
-        print(f"  wrote {dest} ({len(data)} bytes)")
-        written += 1
-
-    suffix = f" ({covered} already covered by a shared golden)" if covered else ""
-    if args.dry_run:
-        print(f"\n{len(goldens) - covered} golden(s) would be written under {args.out}{suffix}. "
-              "Re-run without --dry-run to write them.")
-    else:
-        print(f"\nWrote {written} golden(s) under {args.out}{suffix}. Review the diff and commit.")
-    return 0
 
 
 if __name__ == "__main__":

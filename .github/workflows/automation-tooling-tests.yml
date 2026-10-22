@@ -19,6 +19,8 @@ on:
       - ".agents/skills/review-skia-update/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
+      - "scripts/infra/tests/extract-visual-goldens.py"
+      - "scripts/infra/tests/test_golden_images.py"
       # Any workflow edit, so the registry and safety tests re-check source and generated
       # configuration. '*.yml' covers the generated '*.lock.yml' files.
       - ".github/workflows/*.md"
@@ -30,6 +32,8 @@ on:
       - ".agents/skills/review-skia-update/**"
       - ".agents/skills/update-skia/**"
       - ".github/scripts/**"
+      - "scripts/infra/tests/extract-visual-goldens.py"
+      - "scripts/infra/tests/test_golden_images.py"
       - ".github/workflows/*.md"
       - ".github/workflows/*.yml"
   workflow_dispatch:
@@ -89,3 +93,6 @@ jobs:
 
       - name: Run skia-sync work detector tests
         run: bash .github/scripts/tests/skia-sync-detect.test.sh
+
+      - name: Run golden image exporter tests
+        run: python3 -m unittest discover -s scripts/infra/tests -p "test_golden_images.py" -v
