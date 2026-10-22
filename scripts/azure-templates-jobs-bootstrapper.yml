@@ -85,12 +85,12 @@ jobs:
         displayName: Get the volume information before the run
         condition: always()
 
-      - ${{ if and(ne(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipSteps, 'true'), or(not(startsWith(parameters.name, 'native_')), eq(parameters.docker, ''), and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)))) }}:
+      - ${{ if and(ne(parameters.skipSteps, 'true'), or(not(startsWith(parameters.name, 'native_')), eq(parameters.docker, ''), and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)))) }}:
         - task: UsePythonVersion@0
-          displayName: Switch to the correct Python version
+          displayName: Install Python
           retryCountOnTaskFailure: 3
           inputs:
-            versionSpec: '3.x'
+            versionSpec: '3.12'
             architecture: 'x64'
 
       # prepare - checkout strategy depends on caching
@@ -113,12 +113,6 @@ jobs:
       # Select and configure the existing Visual Studio product before any
       # Windows cache/build scripts need its native tools.
       - ${{ if and(eq(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipInstall, 'true')) }}:
-        - task: UsePythonVersion@0
-          displayName: Install Python
-          retryCountOnTaskFailure: 3
-          inputs:
-            versionSpec: '3.12'
-            architecture: 'x64'
         - pwsh: .\scripts\infra\native\windows\select-vs.ps1
           displayName: Select Visual Studio 2026
         - pwsh: .\scripts\infra\native\windows\install-components.ps1
