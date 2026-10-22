@@ -9,6 +9,9 @@ string ANGLE_REVISION = GetVersion("ANGLE", "revision");
 #load "../../scripts/infra/shared/msbuild.cake"
 #load "../../scripts/infra/native/windows/windows-shared.cake"
 
+if (string.IsNullOrEmpty(WINDOWS_SDK_VERSION))
+    WINDOWS_SDK_VERSION = EnvironmentVariable("WINDOWS_SDK_VERSION") ?? "";
+
 Task("sync-ANGLE")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>

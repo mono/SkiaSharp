@@ -45,7 +45,7 @@ stages:
           target: externals-windows
           cacheJob: native/windows
           enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=x86 --llvm="msvc" --windowsSdkVersion=$(WINDOWS_SDK_VERSION)
+          additionalArgs: --buildarch=x86 --llvm="msvc"
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Win32|x64 (Win + MSVC)
         parameters:
           name: native_win32_x64_msvc_windows
@@ -54,7 +54,7 @@ stages:
           target: externals-windows
           cacheJob: native/windows
           enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=x64 --llvm="msvc" --windowsSdkVersion=$(WINDOWS_SDK_VERSION)
+          additionalArgs: --buildarch=x64 --llvm="msvc"
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Win32|arm64 (Win + MSVC)
         parameters:
           name: native_win32_arm64_msvc_windows
@@ -63,7 +63,7 @@ stages:
           target: externals-windows
           cacheJob: native/windows
           enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=arm64 --llvm="msvc" --windowsSdkVersion=$(WINDOWS_SDK_VERSION)
+          additionalArgs: --buildarch=arm64 --llvm="msvc"
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native WinUI|x86 (Win)
         parameters:
           name: native_winui_x86_windows
@@ -99,7 +99,7 @@ stages:
           target: externals-winui-angle
           cacheJob: native/winui_angle
           enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=x86 --windowsSdkVersion=$(WINDOWS_SDK_VERSION)
+          additionalArgs: --buildarch=x86
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE WinUI|x64 (Win)
         parameters:
           name: native_winui_angle_x64_windows
@@ -108,7 +108,7 @@ stages:
           target: externals-winui-angle
           cacheJob: native/winui_angle
           enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=x64 --windowsSdkVersion=$(WINDOWS_SDK_VERSION)
+          additionalArgs: --buildarch=x64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE WinUI|arm64 (Win)
         parameters:
           name: native_winui_angle_arm64_windows
@@ -117,7 +117,7 @@ stages:
           target: externals-winui-angle
           cacheJob: native/winui_angle
           enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=arm64 --windowsSdkVersion=$(WINDOWS_SDK_VERSION)
+          additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native NanoServer|x64 (Win)
         parameters:
           name: native_win32_x64_nanoserver_windows
