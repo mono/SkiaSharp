@@ -92,6 +92,12 @@ jobs:
           inputs:
             versionSpec: '3.12'
             architecture: 'x64'
+        - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
+          - pwsh: |
+              $python = Get-Command python.exe -CommandType Application -ErrorAction Stop |
+                Select-Object -First 1 -ExpandProperty Source
+              Write-Host "##vso[task.setvariable variable=PYTHON_EXE]$python"
+            displayName: Configure Python
 
       # prepare - checkout strategy depends on caching
       - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
@@ -117,19 +123,6 @@ jobs:
           displayName: Select Visual Studio 2026
         - pwsh: .\scripts\infra\native\windows\install-components.ps1
           displayName: Apply Visual Studio 2026 components
-        - pwsh: |
-            $python = Get-Command python.exe -CommandType Application -ErrorAction Stop |
-              Select-Object -First 1 -ExpandProperty Source
-            $vsRoot = [IO.Path]::GetFullPath("$(VS_INSTALL)").TrimEnd('\') + '\'
-            if ([IO.Path]::GetFullPath($python).StartsWith($vsRoot, [StringComparison]::OrdinalIgnoreCase)) {
-              throw "Python must be installed separately from Visual Studio: $python"
-            }
-            $llvm = Join-Path "$(VS_INSTALL)" 'VC\Tools\Llvm\x64'
-            $cmake = Join-Path "$(VS_INSTALL)" 'Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin'
-            Write-Host "##vso[task.setvariable variable=PYTHON_EXE]$python"
-            Write-Host "##vso[task.setvariable variable=LLVM_HOME]$llvm"
-            Write-Host "##vso[task.prependpath]$cmake"
-          displayName: Configure Windows build tools
 
       - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
         - pwsh: |
@@ -346,7 +339,6 @@ jobs:
               env:
                 AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
-                LLVM_HOME: $(LLVM_HOME)
                 NINJA_EXE: $(NINJA_EXE)
                 PYTHON_EXE: $(PYTHON_EXE)
                 VS_INSTALL: $(VS_INSTALL)
