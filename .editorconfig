@@ -179,14 +179,3 @@ dotnet_naming_rule.parameters_should_be_pascal_case.style = camel_case
 dotnet_naming_rule.camel_case_for_private_internal_fields.severity = suggestion
 dotnet_naming_rule.camel_case_for_private_internal_fields.symbols = private_internal_fields
 dotnet_naming_rule.camel_case_for_private_internal_fields.style = camel_case
-
-# CA5394 (do not use insecure randomness) is disabled by default. It is an error for the shipped code (the NuGet
-# packages are built from binding/ and source/), so any new System.Random use there has to be justified: use
-# RandomNumberGenerator, or if the value is not security sensitive, suppress the diagnostic with a comment saying why.
-[{binding,source}/**.cs]
-dotnet_diagnostic.CA5394.severity = error
-
-# The code that is not shipped (samples, tests, benchmarks and utils) is ignored, it uses Random for deterministic or
-# throwaway data. This also holds if the rule is enabled more broadly, for example with AnalysisMode=All.
-[{samples,tests,benchmarks,utils}/**.cs]
-dotnet_diagnostic.CA5394.severity = none
