@@ -28,7 +28,7 @@ Task("SkiaSharp.Views.WinUI.Native")
         var name = "SkiaSharp.Views.WinUI.Native";
         RunMSBuild($"{name}/{name}.slnx", arch,
             properties: new Dictionary<string, string> {
-                { "CsWinRTWindowsMetadata", string.IsNullOrEmpty(WINDOWS_SDK_VERSION) ? "sdk" : WINDOWS_SDK_VERSION },
+                { "CsWinRTWindowsMetadata", WINDOWS_SDK_VERSION },
                 { "VCToolsVersion", TOOLSET_VERSION.Value },
                 { "WindowsTargetPlatformVersion", WINDOWS_SDK_VERSION }
             });

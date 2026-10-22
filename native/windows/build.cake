@@ -42,7 +42,7 @@ Task("libSkiaSharp")
         var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
         var win_toolchain_version = $"win_toolchain_version='{TOOLSET_VERSION.Value}' ";
         var win_vcvars_version = $"win_vcvars_version='{TOOLSET_VERSION.Value.Substring(0, 4)}' ";
-        var win_sdk_version = string.IsNullOrEmpty(WINDOWS_SDK_VERSION) ? "" : $"win_sdk_version='{WINDOWS_SDK_VERSION}' ";
+        var win_sdk_version = $"win_sdk_version='{WINDOWS_SDK_VERSION}' ";
         var vcVarsArchitecture = skiaArch == "x64" ? "amd64" : $"amd64_{skiaArch}";
         var d = CONFIGURATION.ToLower() == "release" ? "" : "d";
         var spectreLibPath = GetSpectreLibPath(arch);
@@ -106,7 +106,7 @@ Task("libHarfBuzzSharp")
         RunMSBuild("libHarfBuzzSharp/libHarfBuzzSharp.slnx", platformTarget: arch,
             properties: new Dictionary<string, string> {
                 { "VCToolsVersion", TOOLSET_VERSION.Value },
-                { "WindowsTargetPlatformVersion", string.IsNullOrEmpty(WINDOWS_SDK_VERSION) ? "10.0" : WINDOWS_SDK_VERSION }
+                { "WindowsTargetPlatformVersion", WINDOWS_SDK_VERSION }
             });
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");

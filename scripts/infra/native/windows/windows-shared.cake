@@ -2,6 +2,11 @@
 
 string WINDOWS_SDK_VERSION = Argument("windowsSdkVersion", EnvironmentVariable("WINDOWS_SDK_VERSION") ?? "10.0.28000.0");
 
+if (string.IsNullOrEmpty(VS_INSTALL))
+    throw new Exception("A Visual Studio installation is required. Pass --vsinstall or set VS_INSTALL.");
+if (string.IsNullOrEmpty(WINDOWS_SDK_VERSION))
+    throw new Exception("A Windows SDK version is required. Pass --windowsSdkVersion or set WINDOWS_SDK_VERSION.");
+
 string GetToolsetVersion()
 {
     var build = ((DirectoryPath)VS_INSTALL).Combine("VC/Auxiliary/Build");
@@ -24,10 +29,7 @@ void RunNinjaWithVcVars(
 {
     var vcVarsAll = ((DirectoryPath)VS_INSTALL).CombineWithFilePath("VC/Auxiliary/Build/vcvarsall.bat");
 
-    // omitted rather than empty, as vcvarsall fails on an SDK that is not installed
-    var windowsSdkVersionArg = string.IsNullOrEmpty(windowsSdkVersion)
-        ? ""
-        : $" {windowsSdkVersion}";
+    var windowsSdkVersionArg = $" {windowsSdkVersion}";
     var vcVarsVersionArg = string.IsNullOrEmpty(vcVarsVersion)
         ? ""
         : $" -vcvars_ver={vcVarsVersion}";

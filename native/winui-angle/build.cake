@@ -132,9 +132,6 @@ Task("sync-ANGLE")
     // download llvm
     RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("tools/clang/scripts/update.py"));
 
-    if (string.IsNullOrEmpty(WINDOWS_SDK_VERSION))
-        throw new Exception("ANGLE requires a Windows SDK version.");
-
     var winappsdkVersion = GetVersion("Microsoft.WindowsAppSDK", "release");
     var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdkVersion}/microsoft.windowsappsdk.{winappsdkVersion}.nupkg";
     var nupkgPath = ROOT_PATH.CombineWithFilePath($"externals/microsoft.windowsappsdk.{winappsdkVersion}.nupkg");
