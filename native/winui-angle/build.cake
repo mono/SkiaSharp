@@ -45,6 +45,22 @@ Task("sync-ANGLE")
         WorkingDirectory = ANGLE_PATH.FullPath,
     });
 
+    // Use ANGLE's compatible GN revision.
+    var gnVersion = GetRegexValue(
+        @"'buildtools/win':\s*\{[\s\S]*?'package':\s*'gn/gn/windows-amd64'[\s\S]*?'version':\s*'([^']+)'",
+        ANGLE_PATH.CombineWithFilePath("DEPS"));
+    if (string.IsNullOrEmpty(gnVersion))
+        throw new Exception("Could not resolve ANGLE's Windows GN revision.");
+    var gnDirectory = ANGLE_PATH.Combine("out/tools/gn");
+    EnsureDirectoryExists(gnDirectory);
+    var cipd = ANGLE_PATH.CombineWithFilePath("third_party/depot_tools/cipd.bat");
+    RunProcess("cmd.exe", new ProcessSettings {
+        Arguments = new ProcessArgumentBuilder().Append("/d").Append("/s").Append("/c")
+            .AppendQuoted($"call \"{cipd}\" install gn/gn/windows-amd64 {gnVersion} -root \"{gnDirectory}\""),
+        WorkingDirectory = ANGLE_PATH.FullPath,
+    });
+    GN_EXE = gnDirectory.CombineWithFilePath("gn.exe").FullPath;
+
     // Use conventional import library and PDB names.
     {
         var toolchain = ANGLE_PATH.CombineWithFilePath("build/toolchain/win/toolchain.gni");
