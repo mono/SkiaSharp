@@ -52,16 +52,21 @@ stages:
               dotnet tool install --tool-path $toolDirectory SharpFuzz.CommandLine --version 2.3.0
               if ($LASTEXITCODE -ne 0) { throw "Installing SharpFuzz failed with exit code $LASTEXITCODE." }
 
-              $arguments = @{
-                Platform = 'windows'
-                OutputDirectory = Join-Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY 'OneFuzz'
-                SharpFuzzPath = Join-Path $toolDirectory 'sharpfuzz.exe'
-              }
+              dotnet tool restore
+              if ($LASTEXITCODE -ne 0) { throw "Restoring local .NET tools failed with exit code $LASTEXITCODE." }
+
+              $cakeArguments = @(
+                '--target=onefuzz-prepare',
+                '--platform=windows',
+                "--outputDirectory=$([IO.Path]::Combine($env:BUILD_ARTIFACTSTAGINGDIRECTORY, 'OneFuzz'))",
+                "--sharpFuzzPath=$([IO.Path]::Combine($toolDirectory, 'sharpfuzz.exe'))"
+              )
               if ($env:BUILD_SOURCEBRANCH -ne 'refs/heads/main' -or $env:BUILD_REASON -ne 'Schedule') {
-                $arguments.ValidationBuildId = $env:BUILD_BUILDID
+                $cakeArguments += "--validationBuildId=$($env:BUILD_BUILDID)"
               }
 
-              ./scripts/infra/security/prepare-onefuzz-drop.ps1 @arguments
+              dotnet cake @cakeArguments
+              if ($LASTEXITCODE -ne 0) { throw "Preparing the OneFuzz drop via Cake failed with exit code $LASTEXITCODE." }
             displayName: Prepare Windows OneFuzz drop
 
           - task: onefuzz-task@0
@@ -107,16 +112,21 @@ stages:
                 dotnet tool install --tool-path $toolDirectory SharpFuzz.CommandLine --version 2.3.0
                 if ($LASTEXITCODE -ne 0) { throw "Installing SharpFuzz failed with exit code $LASTEXITCODE." }
 
-                $arguments = @{
-                  Platform = 'ubuntu'
-                  OutputDirectory = Join-Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY 'OneFuzz'
-                  SharpFuzzPath = Join-Path $toolDirectory 'sharpfuzz'
-                }
+                dotnet tool restore
+                if ($LASTEXITCODE -ne 0) { throw "Restoring local .NET tools failed with exit code $LASTEXITCODE." }
+
+                $cakeArguments = @(
+                  '--target=onefuzz-prepare',
+                  '--platform=ubuntu',
+                  "--outputDirectory=$([IO.Path]::Combine($env:BUILD_ARTIFACTSTAGINGDIRECTORY, 'OneFuzz'))",
+                  "--sharpFuzzPath=$([IO.Path]::Combine($toolDirectory, 'sharpfuzz'))"
+                )
                 if ($env:BUILD_SOURCEBRANCH -ne 'refs/heads/main' -or $env:BUILD_REASON -ne 'Schedule') {
-                  $arguments.ValidationBuildId = $env:BUILD_BUILDID
+                  $cakeArguments += "--validationBuildId=$($env:BUILD_BUILDID)"
                 }
 
-                ./scripts/infra/security/prepare-onefuzz-drop.ps1 @arguments
+                dotnet cake @cakeArguments
+                if ($LASTEXITCODE -ne 0) { throw "Preparing the OneFuzz drop via Cake failed with exit code $LASTEXITCODE." }
               displayName: Prepare Ubuntu OneFuzz drop
 
             - task: onefuzz-task@0
