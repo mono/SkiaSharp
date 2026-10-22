@@ -28,14 +28,6 @@ if (-not (Test-Path $includePath)) {
     New-Item -ItemType Directory -Path $includePath | Out-Null
 }
 
-# Component packages also ship native interop headers that cannot be generated
-# from WINMD. Merge those with the generated headers.
-$componentIncludePaths = Get-ChildItem $Path -Directory -Filter 'include' -Recurse |
-    Where-Object { $_.FullName -ne $includePath }
-foreach ($componentIncludePath in $componentIncludePaths) {
-    Copy-Item (Join-Path $componentIncludePath.FullName '*') $includePath -Recurse -Force
-}
-
 # Find Windows SDK bin directory
 $winSdkDir = $env:WindowsSdkDir
 if (-not $winSdkDir) {
@@ -58,20 +50,15 @@ Write-Host "WinAppSDK path: $Path"
 # (midlrt resolves imported IDL files relative to CWD)
 Push-Location $includePath
 try {
-    # Windows App SDK 1.8+ splits metadata across component packages, while
-    # older packages use a single lib/ layout. Scan package metadata and lib
-    # directories, excluding tool-private WINMD files.
-    $metadataRoots = Get-ChildItem $Path -Directory -Recurse |
-        Where-Object { $_.Name -in @('lib', 'metadata') }
-    $winmdFiles = $metadataRoots |
-        ForEach-Object { Get-ChildItem $_ -Filter '*.winmd' -Recurse } |
-        Sort-Object FullName -Descending
+    # Process all WINMD files with winmdidl.exe
+    # Discover all .winmd files under the lib directory so new namespaces in
+    # newer WinAppSDK versions are handled automatically.
     $metadataDirs = @(
         'C:\Windows\System32\WinMetadata'
         (Join-Path $libPath "uap$uapVersion")
         (Join-Path $libPath 'uap10.0')
-    ) + ($winmdFiles | ForEach-Object { $_.DirectoryName })
-    $metadataDirs = $metadataDirs | Where-Object { Test-Path $_ } | Select-Object -Unique
+    )
+    $winmdFiles = Get-ChildItem $libPath -Filter '*.winmd' -Recurse
 
     foreach ($winmd in $winmdFiles) {
         # Use the first IDL that would be produced as a stamp file

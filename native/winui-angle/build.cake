@@ -97,48 +97,19 @@ Task("sync-ANGLE")
     }
 
     // generate Windows App SDK files
-    if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h")) ||
-        !FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Xaml.h")) ||
-        !FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("microsoft.ui.xaml.media.dxinterop.h"))) {
+    if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h"))) {
         var winappsdk_version = GetVersion("Microsoft.WindowsAppSDK", "release");
-        var metadata_packages = new[] {
-            new {
-                Id = "Microsoft.WindowsAppSDK.InteractiveExperiences",
-                Version = GetVersion("Microsoft.WindowsAppSDK.InteractiveExperiences", "release"),
-            },
-            new {
-                Id = "Microsoft.WindowsAppSDK.WinUI",
-                Version = GetVersion("Microsoft.WindowsAppSDK.WinUI", "release"),
-            },
-            new {
-                Id = "Microsoft.WindowsAppSDK.Foundation",
-                Version = GetVersion("Microsoft.WindowsAppSDK.Foundation", "release"),
-            },
-            new {
-                Id = "Microsoft.Web.WebView2",
-                Version = GetVersion("Microsoft.Web.WebView2", "release"),
-            },
-        };
-        var metadata_versions = string.Join("-", metadata_packages.Select(package => package.Version));
-        var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}-{metadata_versions}.stamp");
+        var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.stamp");
 
-        // Windows App SDK 1.8+ is a meta-package. The WinUI metadata ANGLE needs
-        // is split across component packages.
+        // Download and extract the NuGet package using .NET HTTP (works on restricted agents
+        // where Python's urllib is blocked by firewall policy)
         if (!FileExists(stamp)) {
-            if (DirectoryExists(WINAPPSDK_PATH)) {
-                DeleteDirectory(WINAPPSDK_PATH, new DeleteDirectorySettings { Recursive = true, Force = true });
-            }
+            var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdk_version}/microsoft.windowsappsdk.{winappsdk_version}.nupkg";
+            var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.nupkg");
             EnsureDirectoryExists(WINAPPSDK_PATH);
-            foreach (var package in metadata_packages) {
-                var packageId = package.Id.ToLowerInvariant();
-                var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/{packageId}/{package.Version}/{packageId}.{package.Version}.nupkg";
-                var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{packageId}.{package.Version}.nupkg");
-                var packagePath = WINAPPSDK_PATH.Combine(packageId);
-                DownloadFile(nugetUrl, nupkgPath);
-                EnsureDirectoryExists(packagePath);
-                Unzip(nupkgPath, packagePath);
-                DeleteFile(nupkgPath);
-            }
+            DownloadFile(nugetUrl, nupkgPath);
+            Unzip(nupkgPath, WINAPPSDK_PATH);
+            DeleteFile(nupkgPath);
             FileWriteText(stamp, "");
         }
 
