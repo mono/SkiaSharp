@@ -55,12 +55,15 @@ Task("sync-ANGLE")
             FileWriteText(toolchain, newContents);
     }
 
-    FileWriteLines(ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni"), new[] {
-        "checkout_angle_internal = false",
-        "checkout_angle_mesa = false",
-        "checkout_angle_restricted_traces = false",
-        "generate_location_tags = false",
-    });
+    var gclientArgs = ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni");
+    if (!FileExists(gclientArgs)) {
+        FileWriteLines(gclientArgs, new[] {
+            "checkout_angle_internal = false",
+            "checkout_angle_mesa = false",
+            "checkout_angle_restricted_traces = false",
+            "generate_location_tags = false",
+        });
+    }
 
     // Apply a real GN config so Ninja also tracks security-option changes.
     {
