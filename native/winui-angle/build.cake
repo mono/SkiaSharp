@@ -113,17 +113,22 @@ Task("sync-ANGLE")
     var winappsdkVersion = GetVersion("Microsoft.WindowsAppSDK", "release");
     var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdkVersion}/microsoft.windowsappsdk.{winappsdkVersion}.nupkg";
     var nupkgPath = ROOT_PATH.CombineWithFilePath($"externals/microsoft.windowsappsdk.{winappsdkVersion}.nupkg");
-    CleanDirectory(WINAPPSDK_PATH);
-    DownloadFile(nugetUrl, nupkgPath);
-    Unzip(nupkgPath, WINAPPSDK_PATH);
-    DeleteFile(nupkgPath);
+    var generatedHeader = WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h");
+    var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdkVersion}-{WINDOWS_SDK_VERSION}.stamp");
+    if (!FileExists(generatedHeader) || !FileExists(stamp)) {
+        CleanDirectory(WINAPPSDK_PATH);
+        DownloadFile(nugetUrl, nupkgPath);
+        Unzip(nupkgPath, WINAPPSDK_PATH);
+        DeleteFile(nupkgPath);
 
-    var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
-    var generateScript = MakeAbsolute(File("generate_winappsdk_headers.ps1"));
-    RunProcess(vcvarsall,
-        $"\"{VS_INSTALL}\" \"x64 {WINDOWS_SDK_VERSION}\" pwsh -NoProfile -ExecutionPolicy Bypass " +
-        $"-File \"{generateScript}\" " +
-        $"-Path \"{WINAPPSDK_PATH}\" -WindowsSdkVersion \"{WINDOWS_SDK_VERSION}\"");
+        var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
+        var generateScript = MakeAbsolute(File("generate_winappsdk_headers.ps1"));
+        RunProcess(vcvarsall,
+            $"\"{VS_INSTALL}\" \"x64 {WINDOWS_SDK_VERSION}\" pwsh -NoProfile -ExecutionPolicy Bypass " +
+            $"-File \"{generateScript}\" " +
+            $"-Path \"{WINAPPSDK_PATH}\" -WindowsSdkVersion \"{WINDOWS_SDK_VERSION}\"");
+        FileWriteText(stamp, "");
+    }
 });
 
 Task("ANGLE")
@@ -186,14 +191,6 @@ Task("ANGLE")
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.dll"), outDir);
         CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.pdb"), outDir);
-        var dumpbin = ((DirectoryPath)VS_INSTALL).CombineWithFilePath(
-            $"VC/Tools/MSVC/{TOOLSET_VERSION.Value}/bin/Hostx64/x64/dumpbin.exe");
-        RunProcess(dumpbin, $"/headers \"{outDir}/{target}.dll\"", out var headers);
-        var pdbReference = System.Text.RegularExpressions.Regex.Match(string.Join("\n", headers),
-            @"Format:\s*RSDS,.*,\s*([^\r\n]+\.pdb)");
-        if (!pdbReference.Success || System.IO.Path.GetFileName(pdbReference.Groups[1].Value.Trim()) != $"{target}.pdb")
-            throw new Exception($"ANGLE {target}.dll does not reference its packaged {target}.pdb.");
-        Information($"Verified embedded PDB reference: {pdbReference.Groups[1].Value.Trim()}");
     }
 });
 

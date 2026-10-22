@@ -1,7 +1,7 @@
 <#
-Validates Windows symbol and metadata artifacts. Native MSF and managed portable PDB identities must match their
-DLL's CodeView identity, and WinUI projection/WinMD files must contain readable CLI metadata. This catches mismatched
-or invalid debug artifacts without loading the target assemblies or requiring a Windows runtime.
+Validates Windows symbol and metadata artifacts. Native MSF and managed portable PDB names and identities must match
+their DLL's CodeView data, and WinUI projection/WinMD files must contain readable CLI metadata. This catches
+mismatched or invalid debug artifacts without loading the target assemblies or requiring a Windows runtime.
 #>
 
 param([Parameter(Mandatory)][string] $NativeRoot)
@@ -21,6 +21,10 @@ foreach ($artifact in Get-NativeArtifactInventory $NativeRoot | Where-Object Cas
         $binary = Join-Path $NativeRoot $artifact.DebugOf
         Assert-Artifact $binary
         $identity = Get-PeCodeViewIdentity $binary
+        $pdbName = Split-Path $artifact.Path -Leaf
+        if ([IO.Path]::GetFileName($identity.Path) -cne $pdbName) {
+            throw "Embedded PDB name does not match $pdbName`: $($identity.Path)"
+        }
         $stream = [IO.File]::OpenRead($artifact.Path)
         try {
             $portable = [Convert]::ToHexString((Get-StreamPrefix $stream)).StartsWith('42534A42')

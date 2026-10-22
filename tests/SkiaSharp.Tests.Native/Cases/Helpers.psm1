@@ -323,7 +323,7 @@ function Get-PeCodeViewIdentity([string] $Path) {
             throw "Expected one CodeView identity: $Path"
         }
         $identity = $reader.ReadCodeViewDebugDirectoryData($entries[0])
-        return [pscustomobject]@{ Guid = $identity.Guid; Age = $identity.Age }
+        return [pscustomobject]@{ Guid = $identity.Guid; Age = $identity.Age; Path = $identity.Path }
     } finally {
         $reader.Dispose()
         $stream.Dispose()
