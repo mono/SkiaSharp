@@ -44,6 +44,17 @@ SkiaSharp uses only a subset of Skia's dependencies. Some unused dependencies ar
 | Dependency | Purpose | Platforms |
 |------------|---------|-----------|
 | **buildtools** | Compiler toolchain | All |
+| **GN** | Build-file generator (build-time only) | All |
+
+### GN Tool Pin
+
+Keep `externals/skia/bin/fetch-gn` and the three GN packages in
+`externals/skia/bazel/cipd_deps.bzl` on the same exact upstream revision.
+Regenerate `externals/skia/MODULE.bazel.lock` with the repository's pinned Bazel
+version after changing the CIPD tags and archive hashes. Skia's
+`gn/BUILDCONFIG.gn` explicitly retains loose include checking and transitive
+generated-header dependencies because newer GN versions default to strict
+include checking.
 
 ---
 
