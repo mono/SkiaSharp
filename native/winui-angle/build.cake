@@ -110,9 +110,6 @@ Task("sync-ANGLE")
             throw new Exception($"Chromium resource compiler hash mismatch: expected {sha}, found {actualSha}.");
     }
 
-    // download llvm
-    RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("tools/clang/scripts/update.py"));
-
     var winappsdkVersion = GetVersion("Microsoft.WindowsAppSDK", "release");
     var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdkVersion}/microsoft.windowsappsdk.{winappsdkVersion}.nupkg";
     var nupkgPath = ROOT_PATH.CombineWithFilePath($"externals/microsoft.windowsappsdk.{winappsdkVersion}.nupkg");
