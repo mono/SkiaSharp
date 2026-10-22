@@ -32,5 +32,7 @@ if ($Platform -eq 'iOS') {
         throw "The XCUITest driver did not provide the prebuilt simulator WDA app: $wdaApp"
     }
 } else {
-    appium driver install uiautomator2
+    # Keep the driver/server pair deterministic because the runtime job
+    # preinstalls these exact server APKs once before starting any sessions.
+    appium driver install uiautomator2@8.7.0
 }

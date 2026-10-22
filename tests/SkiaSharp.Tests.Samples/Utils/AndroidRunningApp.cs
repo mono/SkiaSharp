@@ -85,6 +85,8 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 		options.AddAdditionalAppiumOption("udid", serial);
 		options.AddAdditionalAppiumOption("fullReset", true);
 		options.AddAdditionalAppiumOption("noReset", false);
+		if (Environment.GetEnvironmentVariable("TEST_ANDROID_APPIUM_SERVER_PREINSTALLED") == "1")
+			options.AddAdditionalAppiumOption("skipServerInstallation", true);
 		options.AddAdditionalAppiumOption("suppressKillServer", true);
 		options.AddAdditionalAppiumOption("systemPort", AppiumFixture.GetFreePort());
 		options.AddAdditionalAppiumOption("newCommandTimeout", 120);

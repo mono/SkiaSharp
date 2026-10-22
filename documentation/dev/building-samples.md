@@ -195,9 +195,11 @@ Rerun all configured profiles against the same package cohort before promotion.
 The `Android` group runs Basic MAUI, native Android and Gallery MAUI with
 Appium/UiAutomator2. The same `--appiumMode=build|run|all` phases apply; use
 `--runGroup=Android` with the explicit image/model options below. Install Node.js
-and the SDK, JDK, workloads, compile platforms
-and emulator tools specified by the
+and the SDK, JDK, workloads, compile platforms and emulator tools specified by the
 [Android CI legs](../../scripts/azure-templates-stages-samples.yml).
+The Appium installer pins UiAutomator2; owned-emulator setup preinstalls that
+driver's exact server APKs once, and runtime sessions reuse them instead of
+reinstalling the server for every scenario.
 Use one complete image/model profile from that configuration.
 Headless Linux requires `libpulse0` and KVM access.
 

@@ -192,6 +192,7 @@ void RunPreparedAppiumTests(string group, DirectoryPath results)
         var args = new ProcessArgumentBuilder().Append("exec").AppendQuoted(assembly.FullPath)
             .Append("--show-live-output on --no-ansi --results-directory").AppendQuoted(results.FullPath)
             .Append("--report-trx --report-trx-filename TestResults.trx")
+            .Append("--parallel none")
             .Append("--filter-trait").AppendQuoted($"RunGroup={group}");
         if (StartProcess("dotnet", new ProcessSettings { Arguments = args, WorkingDirectory = ROOT_PATH }) != 0)
             throw new Exception($"Prepared Appium {group} tests failed.");
