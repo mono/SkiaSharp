@@ -36,7 +36,7 @@ dotnet cake native/winui-angle/build.cake --configuration=Release --arch=x64 `
   --vsinstall="$env:VS_INSTALL" --windowsSdkVersion=10.0.28000.0
 ```
 
-Git, PowerShell, Python 3.12, the SDK pinned by `global.json`, and repository
+Git, PowerShell, Python 3, the SDK pinned by `global.json`, and repository
 .NET workloads remain separate prerequisites. Python must be installed outside
 Visual Studio. NuGet, Skia dependency synchronization, and ANGLE's
 revision-pinned GN, LLVM and resource-compiler downloads require network access.
