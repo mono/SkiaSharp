@@ -45,6 +45,20 @@ Task("sync-ANGLE")
         WorkingDirectory = ANGLE_PATH.FullPath,
     });
 
+    // Chromium's resource compiler wrapper expects clang-cl at this path even for MSVC builds.
+    var llvmHome = MakeAbsolute(Directory(EnvironmentVariable("LLVM_HOME") ?? $"{VS_INSTALL}/VC/Tools/Llvm/x64"));
+    var clang = llvmHome.CombineWithFilePath("bin/clang-cl.exe");
+    if (!FileExists(clang))
+        throw new Exception($"Visual Studio LLVM was not installed: {clang}");
+    var chromiumLlvm = ANGLE_PATH.Combine("third_party/llvm-build/Release+Asserts");
+    if (!DirectoryExists(chromiumLlvm)) {
+        EnsureDirectoryExists(chromiumLlvm.GetParent());
+        RunProcess("cmd.exe", new ProcessSettings {
+            Arguments = new ProcessArgumentBuilder().Append("/d").Append("/s").Append("/c")
+                .AppendQuoted($"mklink /J \"{chromiumLlvm}\" \"{llvmHome}\""),
+        });
+    }
+
     // Use ANGLE's compatible GN revision.
     var gnVersion = GetRegexValue(
         @"'buildtools/win':\s*\{[\s\S]*?'package':\s*'gn/gn/windows-amd64'[\s\S]*?'version':\s*'([^']+)'",

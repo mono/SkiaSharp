@@ -205,7 +205,7 @@ jobs:
             displayName: Configure Ninja
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-        - ${{ if contains(parameters.name, '_win32_') }}:
+        - ${{ if or(contains(parameters.name, '_win32_'), contains(parameters.name, '_winui_angle_')) }}:
           - pwsh: .\scripts\infra\native\windows\select-llvm.ps1
             displayName: Select Visual Studio LLVM
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
