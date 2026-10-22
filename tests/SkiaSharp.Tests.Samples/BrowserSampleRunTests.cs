@@ -64,6 +64,8 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
         {
             await app.Navigate("/gpu");
             await app.WaitForElement(".canvas-container canvas");
+            await app.Page.WaitForFunctionAsync(
+                "() => /^FPS: [1-9]\\d*$/.test(document.querySelector('.overlay-stats')?.textContent?.trim() ?? '')");
             var screenshot = await app.Screenshot();
             SampleImage.Validate(screenshot, $"Host/{SampleLookup.HostPlatform}/blazor-gpu-page.png",
                 new() { MaxAverageColorErrorFraction = 0.06 });
