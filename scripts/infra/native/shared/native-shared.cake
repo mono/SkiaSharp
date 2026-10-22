@@ -1,6 +1,6 @@
 #load "../../shared/shared.cake"
 
-var PYTHON_EXE = Argument("python", EnvironmentVariable("PYTHON_EXE") ?? (IsRunningOnWindows() ? "python" : "python3"));
+var PYTHON_EXE = Argument("python", EnvironmentVariable("PYTHON_EXE") ?? "python3");
 
 if (!string.IsNullOrEmpty(PYTHON_EXE) && FileExists(PYTHON_EXE)) {
     var dir = MakeAbsolute((FilePath)PYTHON_EXE).GetDirectory();
