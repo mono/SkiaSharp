@@ -4,7 +4,8 @@ declare_args() {
 
 config("skiasharp") {
   if (is_win) {
-    assert(spectre_lib_root != "", "SkiaSharp requires an explicit MSVC Spectre library directory.")
+    assert(spectre_lib_root != "",
+           "SkiaSharp requires an explicit MSVC Spectre library directory.")
     if (angle_is_winappsdk) {
       # Keep angle_common and libANGLE on the same SimpleMutex implementation.
       defines = [ "ANGLE_WINDOWS_NO_FUTEX=1" ]
