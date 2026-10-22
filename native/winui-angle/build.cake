@@ -10,7 +10,7 @@ string ANGLE_REVISION = GetVersion("ANGLE", "revision");
 #load "../../scripts/infra/native/windows/windows-shared.cake"
 
 if (string.IsNullOrEmpty(WINDOWS_SDK_VERSION))
-    WINDOWS_SDK_VERSION = EnvironmentVariable("WINDOWS_SDK_VERSION") ?? "";
+    WINDOWS_SDK_VERSION = "10.0.28000.0";
 
 Task("sync-ANGLE")
     .WithCriteria(IsRunningOnWindows())
@@ -136,7 +136,7 @@ Task("sync-ANGLE")
     RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("tools/clang/scripts/update.py"));
 
     if (string.IsNullOrEmpty(WINDOWS_SDK_VERSION))
-        throw new Exception("ANGLE requires an explicit --windowsSdkVersion.");
+        throw new Exception("ANGLE requires a Windows SDK version.");
 
     var winappsdkVersion = GetVersion("Microsoft.WindowsAppSDK", "release");
     var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdkVersion}/microsoft.windowsappsdk.{winappsdkVersion}.nupkg";
