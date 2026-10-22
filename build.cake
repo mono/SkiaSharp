@@ -123,12 +123,12 @@ Task ("tests-android")
 Task ("tests-ios")
     .Description ("Run all iOS tests.")
     .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests-apple.cake", "tests-ios"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-ios.cake", "Default"));
 
 Task ("tests-maccatalyst")
     .Description ("Run all Mac Catalyst tests.")
     .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests-apple.cake", "tests-maccatalyst"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-maccatalyst.cake", "Default"));
 
 Task ("tests-wasm")
     .Description ("Run WASM tests.")
@@ -224,11 +224,11 @@ Task ("clean-managed")
 
 Task ("samples")
     .Description ("Generate and test sample builds and Docker applications.")
-    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "Default"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-samples.cake", "Default"));
 
 Task ("samples-generate")
     .Description ("Generate sample project files.")
-    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-generate"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-samples.cake", "samples-generate"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DEFAULT - target for common development
