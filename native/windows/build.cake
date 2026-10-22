@@ -76,11 +76,7 @@ Task("libSkiaSharp")
             $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}', '/DELAYLOAD:d3d12.dll', '/DELAYLOAD:dxgi.dll', '/DELAYLOAD:D3DCOMPILER_47.dll', '/DEFAULTLIB:delayimp' ] " +
             ADDITIONAL_GN_ARGS);
 
-        RunNinjaWithVcVars(
-            SKIA_PATH,
-            $"out/{nativeOutDir}",
-            "SkiaSharp",
-            vcVarsArchitecture);
+        RunNinjaWithVcVars(SKIA_PATH, $"out/{nativeOutDir}", "SkiaSharp", vcVarsArchitecture);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
