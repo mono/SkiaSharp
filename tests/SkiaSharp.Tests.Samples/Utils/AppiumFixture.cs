@@ -138,7 +138,7 @@ public sealed class AppiumFixture
 		{
 			Timeout = TimeSpan.FromSeconds(2)
 		};
-		var deadline = DateTime.UtcNow.AddSeconds(30);
+		var deadline = DateTime.UtcNow.AddSeconds(120);
 		while (DateTime.UtcNow < deadline)
 		{
 			if (server.HasExited)
@@ -159,6 +159,6 @@ public sealed class AppiumFixture
 			}
 			await Task.Delay(250);
 		}
-		throw new TimeoutException("Owned Appium did not become ready within 30 seconds; inspect attached server logs.");
+		throw new TimeoutException("Owned Appium did not become ready within 120 seconds; inspect attached server logs.");
 	}
 }

@@ -89,7 +89,7 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         ANDROID_EMULATOR_STDERR = ANDROID_EMULATOR_PROCESS.StandardError.ReadToEndAsync();
         WaitForAndroidBoot(ownedAvd, ownedSerial);
         if (EnvironmentVariable("TEST_ANDROID_PREINSTALL_APPIUM_SERVER") == "1")
-            InstallAndroidAppiumServer(ownedSerial);
+            InstallAndroidAppiumArtifacts(ownedSerial);
         foreach (var setting in new[] { "window_animation_scale", "transition_animation_scale", "animator_duration_scale" }) {
             if (StartProcess(ANDROID_ADB, new ProcessSettings {
                 Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
@@ -113,7 +113,7 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
     }
 }
 
-void InstallAndroidAppiumServer(string ownedSerial)
+void InstallAndroidAppiumArtifacts(string ownedSerial)
 {
     var home = EnvironmentVariable("APPIUM_HOME");
     if (string.IsNullOrWhiteSpace(home))
@@ -126,15 +126,30 @@ void InstallAndroidAppiumServer(string ownedSerial)
     var testServer = System.IO.Directory.GetFiles(home, "appium-uiautomator2-server-debug-androidTest.apk",
         System.IO.SearchOption.AllDirectories).Single();
     foreach (var apk in new[] { server, testServer }) {
+        Install(apk, "UiAutomator2 server");
+    }
+
+    var appsRoot = System.IO.Path.Combine(ROOT_OUTPUT_PATH.FullPath, "appium-apps", "android");
+    var apps = System.IO.Directory.Exists(appsRoot)
+        ? System.IO.Directory.GetFiles(appsRoot, "app.apk", System.IO.SearchOption.AllDirectories)
+        : Array.Empty<string>();
+    if (apps.Length == 0)
+        throw new Exception($"Acquire prepared Android Appium applications before booting the emulator: {appsRoot}");
+    foreach (var app in apps)
+        Install(app, "prepared Appium application");
+
+    Environment.SetEnvironmentVariable("TEST_ANDROID_APPIUM_SERVER_PREINSTALLED", "1");
+
+    void Install(string apk, string description)
+    {
         var exit = StartProcess(ANDROID_ADB, new ProcessSettings {
             Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
                 .Append("install -r --no-incremental").AppendQuoted(apk),
             Timeout = 120000,
         });
         if (exit != 0)
-            throw new Exception($"Failed to preinstall the exact UiAutomator2 server APK on {ownedSerial}: {apk}");
+            throw new Exception($"Failed to preinstall the exact {description} on {ownedSerial}: {apk}");
     }
-    Environment.SetEnvironmentVariable("TEST_ANDROID_APPIUM_SERVER_PREINSTALLED", "1");
 }
 
 void CaptureOwnedAndroidBootDiagnostics(string ownedAvd, string ownedSerial)

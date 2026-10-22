@@ -198,8 +198,9 @@ Appium/UiAutomator2. The same `--appiumMode=build|run|all` phases apply; use
 and the SDK, JDK, workloads, compile platforms and emulator tools specified by the
 [Android CI legs](../../scripts/azure-templates-stages-samples.yml).
 The Appium installer pins UiAutomator2; owned-emulator setup preinstalls that
-driver's exact server APKs once, and runtime sessions reuse them instead of
-reinstalling the server for every scenario.
+driver's exact server APKs and prepared sample APKs once. Runtime sessions clear
+and relaunch the installed applications instead of uninstalling and reinstalling
+them for every scenario.
 Use one complete image/model profile from that configuration.
 Headless Linux requires `libpulse0` and KVM access.
 

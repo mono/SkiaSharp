@@ -83,8 +83,9 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 		};
 		options.AddAdditionalAppiumOption("appPackage", ApplicationId);
 		options.AddAdditionalAppiumOption("udid", serial);
-		options.AddAdditionalAppiumOption("fullReset", true);
+		options.AddAdditionalAppiumOption("fullReset", false);
 		options.AddAdditionalAppiumOption("noReset", false);
+		options.AddAdditionalAppiumOption("enforceAppInstall", false);
 		if (Environment.GetEnvironmentVariable("TEST_ANDROID_APPIUM_SERVER_PREINSTALLED") == "1")
 			options.AddAdditionalAppiumOption("skipServerInstallation", true);
 		options.AddAdditionalAppiumOption("suppressKillServer", true);
