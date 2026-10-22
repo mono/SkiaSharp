@@ -21,7 +21,8 @@ Set-StrictMode -Version Latest
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 $project = Join-Path $repoRoot 'tests/SkiaSharp.Fuzzing/SkiaSharp.Fuzzing.csproj'
 $outputPath = [IO.Path]::GetFullPath($OutputDirectory)
-$nativeLibrary = if ($Platform -eq 'windows') { 'libSkiaSharp.dll' } else { 'libSkiaSharp.so' }
+$skiaNativeLibrary = if ($Platform -eq 'windows') { 'libSkiaSharp.dll' } else { 'libSkiaSharp.so' }
+$harfBuzzNativeLibrary = if ($Platform -eq 'windows') { 'libHarfBuzzSharp.dll' } else { 'libHarfBuzzSharp.so' }
 $configSource = Join-Path $repoRoot "tests/SkiaSharp.Fuzzing/OneFuzzConfig.$Platform.json"
 $sharpFuzz = (Resolve-Path $SharpFuzzPath).Path
 
@@ -38,8 +39,13 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $harness = Join-Path $outputPath 'SkiaSharp.Fuzzing.dll'
-$managedTarget = Join-Path $outputPath 'SkiaSharp.dll'
-$nativeTarget = Join-Path $outputPath $nativeLibrary
+$skiaManagedTarget = Join-Path $outputPath 'SkiaSharp.dll'
+$harfBuzzManagedTarget = Join-Path $outputPath 'HarfBuzzSharp.dll'
+$resourcesManagedTarget = Join-Path $outputPath 'SkiaSharp.Resources.dll'
+$skottieManagedTarget = Join-Path $outputPath 'SkiaSharp.Skottie.dll'
+$sceneGraphManagedTarget = Join-Path $outputPath 'SkiaSharp.SceneGraph.dll'
+$skiaNativeTarget = Join-Path $outputPath $skiaNativeLibrary
+$harfBuzzNativeTarget = Join-Path $outputPath $harfBuzzNativeLibrary
 $sharpFuzzCommon = Join-Path $outputPath 'SharpFuzz.Common.dll'
 $seedDirectory = Join-Path $outputPath 'seeds'
 
@@ -51,7 +57,17 @@ if (-not $sharpFuzzCommonSource) {
 }
 Copy-Item $sharpFuzzCommonSource.FullName $sharpFuzzCommon
 
-foreach ($requiredFile in @($harness, $managedTarget, $nativeTarget, $sharpFuzzCommon)) {
+foreach ($requiredFile in @(
+    $harness,
+    $skiaManagedTarget,
+    $harfBuzzManagedTarget,
+    $resourcesManagedTarget,
+    $skottieManagedTarget,
+    $sceneGraphManagedTarget,
+    $skiaNativeTarget,
+    $harfBuzzNativeTarget,
+    $sharpFuzzCommon
+)) {
     if (-not (Test-Path $requiredFile -PathType Leaf)) {
         throw "The OneFuzz drop is missing required file: $requiredFile"
     }
@@ -67,14 +83,49 @@ if ($LASTEXITCODE -ne 0) {
     throw "The uninstrumented OneFuzz smoke run failed with exit code $LASTEXITCODE."
 }
 
-& $sharpFuzz $managedTarget `
-    SkiaSharp.SKCodec `
-    SkiaSharp.SKFontManager `
-    SkiaSharp.SKFrontBufferedManagedStream `
-    SkiaSharp.SKManagedStream `
-    SkiaSharp.SKPicture
-if ($LASTEXITCODE -ne 0) {
-    throw "SharpFuzz instrumentation failed with exit code $LASTEXITCODE."
+$instrumentationTargets = @(
+    @{
+        Assembly = $skiaManagedTarget
+        Types = @(
+            'SkiaSharp.SKBitmap',
+            'SkiaSharp.SKCodec',
+            'SkiaSharp.SKFontManager',
+            'SkiaSharp.SKFrontBufferedManagedStream',
+            'SkiaSharp.SKManagedStream',
+            'SkiaSharp.SKPicture'
+        )
+    },
+    @{
+        Assembly = $harfBuzzManagedTarget
+        Types = @(
+            'HarfBuzzSharp.Buffer',
+            'HarfBuzzSharp.Face',
+            'HarfBuzzSharp.Font'
+        )
+    },
+    @{
+        Assembly = $resourcesManagedTarget
+        Types = @(
+            'SkiaSharp.Resources.CachingResourceProvider',
+            'SkiaSharp.Resources.DataUriResourceProvider',
+            'SkiaSharp.Resources.FileResourceProvider'
+        )
+    },
+    @{
+        Assembly = $skottieManagedTarget
+        Types = @(
+            'SkiaSharp.Skottie.Animation',
+            'SkiaSharp.Skottie.AnimationBuilder'
+        )
+    }
+)
+
+foreach ($target in $instrumentationTargets) {
+    $arguments = @($target.Assembly) + $target.Types
+    & $sharpFuzz @arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "SharpFuzz instrumentation failed for '$($target.Assembly)' with exit code $LASTEXITCODE."
+    }
 }
 
 $config = Get-Content $configSource -Raw | ConvertFrom-Json

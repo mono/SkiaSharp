@@ -14,6 +14,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.SceneGraph\SkiaSharp.SceneGraph.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.Resources\SkiaSharp.Resources.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
   </ItemGroup>
 
@@ -22,8 +26,21 @@
              Link="seed-sources\ZeroGlyphs.ttf"
              CopyToOutputDirectory="PreserveNewest"
              CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\Content\images\baboon.png"
+             Link="seed-sources\images\baboon.png"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\Content\images\LottieLogo1.json"
+             Link="seed-sources\images\LottieLogo1.json"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\Content\images\lottie-base64_dotnet-bot.json"
+             Link="seed-sources\images\lottie-base64_dotnet-bot.json"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
 
 </Project>
