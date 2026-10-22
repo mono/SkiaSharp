@@ -57,12 +57,3 @@ the pinned upstream layout changes.
 
 Normal Windows CI selects the VS 2026 product already installed on the agent and
 applies the matching profile. It does not install an IDE.
-
-`Validate - Windows Components` is the isolated profile test. It may remove
-Visual Studio from a disposable GitHub runner and install a clean Build Tools
-instance. It validates both profiles on x86, x64 and ARM64 by building
-Skia/HarfBuzz, WinUI and ANGLE. Its x64 jobs also run a D3D11 WARP smoke test
-and the unfiltered .NET 10 console suite.
-
-The console suite provisions the repository's pinned Mesa and SwiftShader
-drivers for WGL and Vulkan. Those test drivers are not Visual Studio components.
