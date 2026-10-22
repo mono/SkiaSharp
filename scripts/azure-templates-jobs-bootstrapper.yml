@@ -49,7 +49,6 @@ jobs:
     continueOnError: ${{ parameters.continueOnError }}
     variables:
       DOTNET_NOLOGO: true
-      PYTHON_ARCHITECTURE: $[ lower(variables['Agent.OSArchitecture']) ]
       ${{ if ne(parameters.buildAgent.variables, '') }}:
         ${{ parameters.buildAgent.variables }}
       ${{ if ne(length(parameters.variables), 0) }}:
@@ -87,6 +86,13 @@ jobs:
         condition: always()
 
       - ${{ if and(ne(parameters.skipSteps, 'true'), or(not(startsWith(parameters.name, 'native_')), eq(parameters.docker, ''), and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)))) }}:
+        - pwsh: |
+            $architecture = $env:AGENT_OSARCHITECTURE.ToLowerInvariant()
+            if ($architecture -notin @('x86', 'x64', 'arm64')) {
+              throw "Unsupported Python architecture: $architecture"
+            }
+            Write-Host "##vso[task.setvariable variable=PYTHON_ARCHITECTURE]$architecture"
+          displayName: Configure Python architecture
         - task: UsePythonVersion@0
           displayName: Install Python
           retryCountOnTaskFailure: 3
