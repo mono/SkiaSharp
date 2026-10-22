@@ -1,7 +1,8 @@
 #addin nuget:?package=Cake.FileHelpers&version=4.0.1
 
-// empty lets GN detect an installed SDK
-string WINDOWS_SDK_VERSION = Argument("windowsSdkVersion", "");
+string WINDOWS_SDK_VERSION = Argument(
+    "windowsSdkVersion",
+    EnvironmentVariable("WINDOWS_SDK_VERSION") ?? "10.0.28000.0");
 
 string GetToolsetVersion()
 {

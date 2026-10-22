@@ -16,9 +16,6 @@ bool USE_FONTMGR_WIN = !USE_FREETYPE;
 #load "../../scripts/infra/shared/msbuild.cake"
 #load "../../scripts/infra/native/windows/windows-shared.cake"
 
-if (string.IsNullOrEmpty(WINDOWS_SDK_VERSION))
-    WINDOWS_SDK_VERSION = "10.0.28000.0";
-
 var llvmHomeArg = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? $"{VS_INSTALL}/VC/Tools/Llvm/x64");
 DirectoryPath LLVM_HOME = string.IsNullOrEmpty(llvmHomeArg) || llvmHomeArg.ToLower() == "msvc" ? "" : llvmHomeArg;
 
