@@ -5,6 +5,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 
 #if HARFBUZZ
 namespace HarfBuzzSharp
@@ -28,9 +29,11 @@ namespace SkiaSharp
 
 		private static unsafe uint GenerateGlobalSeed ()
 		{
-			var rnd = new Random ();
-			var result = rnd.Next ();
-			return unchecked((uint)result);
+			var bytes = new byte[sizeof (uint)];
+			using (var rng = RandomNumberGenerator.Create ()) {
+				rng.GetBytes (bytes);
+			}
+			return BitConverter.ToUInt32 (bytes, 0);
 		}
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
