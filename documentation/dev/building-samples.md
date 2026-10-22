@@ -73,6 +73,10 @@ be overridden through `Properties`.
 
 ## Browser runs
 
+Sample runs bind to ephemeral loopback HTTP through `ASPNETCORE_URLS`, so no
+HTTPS development certificate is required. WasmAppHost forwards application
+arguments such as `--urls` to the browser rather than configuring its server.
+
 For local browser tests, build the runner and install its matching Chromium:
 
 ```sh

@@ -877,7 +877,10 @@ public class SampleInfrastructureTests : IDisposable
               <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType></PropertyGroup>
             </Project>
             """);
-        FileIn("inputs/App/Program.cs", """System.Console.WriteLine(string.Join("|", args));""");
+        FileIn("inputs/App/Program.cs", """
+            System.Console.WriteLine(string.Join("|", args));
+            System.Console.WriteLine("Sample host URLs: " + System.Environment.GetEnvironmentVariable("ASPNETCORE_URLS"));
+            """);
         using var workspace = new SampleWorkspace(
             "App", Path.Combine(root, "inputs"), Repo.PackagesDir,
             Path.Combine(root, "workspaces"), Path.Combine(root, "diagnostics"));
@@ -890,6 +893,7 @@ public class SampleInfrastructureTests : IDisposable
             var result = await app.WaitForExit();
             Assert.Equal(0, result.ExitCode);
             Assert.Contains("old argument|--sentinel", result.Output);
+            Assert.Contains("Sample host URLs: http://127.0.0.1:0", result.Output);
         });
         Assert.True(called);
     }

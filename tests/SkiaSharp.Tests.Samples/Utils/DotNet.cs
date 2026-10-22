@@ -129,6 +129,8 @@ public static class DotNet
                 ConfigureProcess(start, workspace);
                 start.Environment.Remove("ASPNETCORE_HTTPS_PORT");
                 start.Environment.Remove("ASPNETCORE_HTTPS_PORTS");
+                // WasmAppHost forwards --urls to the browser app; its server reads this instead.
+                start.Environment["ASPNETCORE_URLS"] = "http://127.0.0.1:0";
                 start.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
                 start.Environment["Logging__LogLevel__Microsoft.Hosting.Lifetime"] = "Information";
             });
