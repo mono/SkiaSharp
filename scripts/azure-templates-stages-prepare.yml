@@ -26,14 +26,7 @@ stages:
               }
             displayName: Validate cache config coverage
           - pwsh: |
-              $arguments = @(
-                'scripts/infra/caching/repo-deps.py'
-                'cache-key'
-                '--job'
-                'all'
-                '--name'
-                'prepare'
-              )
+              $arguments = @('scripts/infra/caching/repo-deps.py', 'cache-key', '--job', 'all', '--name', 'prepare')
 
               if ($env:SYSTEM_PULLREQUEST_TARGETBRANCH) {
                 $target = $env:SYSTEM_PULLREQUEST_TARGETBRANCH -replace '^refs/heads/', ''
