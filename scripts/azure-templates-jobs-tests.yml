@@ -32,9 +32,14 @@ jobs:
       requiredArtifacts:
         - name: native
       postBuildSteps:
-        - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
-          displayName: Extract visual-regression images for triage
-          condition: always()
+        - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
+          - pwsh: '& "$(PYTHON_EXE)" scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images'
+            displayName: Extract visual-regression images for triage
+            condition: always()
+        - ${{ else }}:
+          - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+            displayName: Extract visual-regression images for triage
+            condition: always()
         - task: PublishTestResults@2
           displayName: Publish the ${{ parameters.resultLabel }} test results
           condition: always()
