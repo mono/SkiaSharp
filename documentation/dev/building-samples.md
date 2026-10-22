@@ -204,12 +204,16 @@ them for every scenario.
 Use one complete image/model profile from that configuration.
 Headless Linux requires `libpulse0` and KVM access.
 
-After staging packages, set the selected SDK's absolute `ANDROID_HOME` and
-`ANDROID_SDK_MANAGER_PATH` in your shell:
+After staging packages, restore the repository's pinned .NET tools and set the
+selected SDK's absolute `ANDROID_HOME` in your shell:
 
 ```sh
 # Set these to one complete profile from the sample stage configuration.
 export TEST_ANDROID_IMAGE="<image>" TEST_ANDROID_MODEL="<model>"
+dotnet tool restore
+pwsh scripts/infra/managed/install-android-sdk.ps1
+pwsh scripts/infra/managed/install-android-package.ps1 -Package platform-tools
+pwsh scripts/infra/managed/install-android-package.ps1 -Package emulator
 pwsh scripts/infra/managed/install-android-image.ps1 -Image "$TEST_ANDROID_IMAGE"
 pwsh scripts/infra/tests/install-appium.ps1 -Platform Android
 dotnet cake --target=samples --runGroup=Android \
@@ -218,6 +222,16 @@ dotnet cake --target=samples --runGroup=Android \
 
 Use your packages' suffix, not the example suffix. Provisioning scripts publish
 SDK paths for CI but cannot export them back to a calling shell.
+
+Provisioning and emulator lifecycle use the pinned `dotnet android` CLI.
+Cake creates a unique AVD, starts it with `avd start --wait --no-animations`
+and the CLI's CPU/response settling, then requires its exact serial in
+`device list`. The released CLI owns boot readiness, including its built-in
+launcher/ANR handling; Cake does not add a second boot/readiness loop.
+Only teardown uses direct ADB to stop that exact serial before CLI AVD deletion,
+because the released tool has no standalone stop command. Diagnostics include
+CLI logcat, device properties and the Android tool's process log; arbitrary
+shell/last-ANR dumps are not available through this CLI.
 Cake creates and cleans up only its unique AVD/process; each test owns its
 Appium server/session and installed APK. `samples-generate` starts neither.
 

@@ -114,7 +114,7 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 		await FailureHandling.Attempt(failures, async () =>
 			await SaveText("device.log", await CaptureCommand(Android.Logcat(serial))));
 		await FailureHandling.Attempt(failures, async () =>
-			await SaveText("last-anr.log", await CaptureCommand(Android.LastAnr(serial))));
+			await SaveText("device-info.json", await CaptureCommand(Android.DeviceInfo(serial))));
 		FailureHandling.ThrowFailures(failures);
 	}
 }

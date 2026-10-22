@@ -106,14 +106,8 @@ stages:
               preBuildSteps:
                 - pwsh: ./scripts/infra/managed/install-openjdk.ps1 -Version "$(OPENJDK_VERSION)"
                   displayName: Install the JDK for Android SDK command-line tools
-                - pwsh: ./scripts/infra/managed/install-android-sdk.ps1
-                  displayName: Select the Android SDK
-                - pwsh: |
-                    foreach ($package in @('cmdline-tools;latest', 'platform-tools', 'emulator')) {
-                      ./scripts/infra/managed/install-android-package.ps1 -Package $package
-                      if ($LASTEXITCODE -ne 0) { throw "Android package installation failed: $package" }
-                    }
-                  displayName: Install current command-line tools, platform tools and emulator
+                - pwsh: ./scripts/infra/managed/install-android-package.ps1 -Package "platform-tools", "emulator"
+                  displayName: Install Android SDK, platform tools and emulator
                 - pwsh: ./scripts/infra/managed/install-android-image.ps1 -Image "${{ android.image }}"
                   displayName: Install the selected Android emulator image
                 - bash: |

@@ -13,6 +13,21 @@ public class SampleInfrastructureTests : IDisposable
 {
     private readonly string root = Path.Combine(Repo.ArtifactsDir, $"infrastructure-{Guid.NewGuid():N}");
 
+    [Fact]
+    public void AndroidPropertiesUseTheExactCliDevice()
+    {
+        const string output = """
+            [{"device":{"serial":"emulator-5554"},"properties":{"ro.build.version.sdk":"36"}}]
+            """;
+        Assert.Equal("36", Android.ParseDeviceProperty(output, "emulator-5554", "ro.build.version.sdk"));
+        Assert.Throws<InvalidOperationException>(() =>
+            Android.ParseDeviceProperty(output, "emulator-5556", "ro.build.version.sdk"));
+        Assert.Throws<InvalidOperationException>(() =>
+            Android.ParseDeviceProperty("[]", "emulator-5554", "ro.build.version.sdk"));
+        Assert.Throws<KeyNotFoundException>(() =>
+            Android.ParseDeviceProperty(output, "emulator-5554", "ro.product.cpu.abi"));
+    }
+
     private void FileIn(string relative, string text = "<Project />")
     {
         var path = Path.Combine(root, relative);
