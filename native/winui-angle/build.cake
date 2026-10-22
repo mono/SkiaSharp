@@ -2,6 +2,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath ANGLE_PATH = ROOT_PATH.Combine("externals/angle");
 DirectoryPath WINAPPSDK_PATH = ROOT_PATH.Combine("externals/winappsdk");
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"));
+string ANGLE_VERSION = GetVersion("ANGLE", "release");
 string ANGLE_REVISION = GetVersion("ANGLE", "revision");
 
 #load "../../scripts/infra/native/shared/native-shared.cake"
@@ -14,7 +15,7 @@ Task("sync-ANGLE")
 {
     // sync ANGLE
     if (!DirectoryExists(ANGLE_PATH)) {
-        RunProcess("git", $"clone https://github.com/google/angle.git --filter=blob:none --no-checkout --depth 1 {ANGLE_PATH}");
+        RunProcess("git", $"clone https://github.com/google/angle.git --branch {ANGLE_VERSION} --depth 1 --single-branch --shallow-submodules {ANGLE_PATH}");
     }
     RunProcess("git", new ProcessSettings {
         Arguments = $"fetch --depth 1 origin {ANGLE_REVISION}",
