@@ -212,6 +212,7 @@ selected SDK's absolute `ANDROID_HOME` in your shell:
 export TEST_ANDROID_IMAGE="<image>" TEST_ANDROID_MODEL="<model>"
 dotnet tool restore
 pwsh scripts/infra/managed/install-android-sdk.ps1
+pwsh scripts/infra/managed/install-android-package.ps1 -Package 'cmdline-tools;latest'
 pwsh scripts/infra/managed/install-android-package.ps1 -Package platform-tools
 pwsh scripts/infra/managed/install-android-package.ps1 -Package emulator
 pwsh scripts/infra/managed/install-android-image.ps1 -Image "$TEST_ANDROID_IMAGE"
@@ -222,6 +223,8 @@ dotnet cake --target=samples --runGroup=Android \
 
 Use your packages' suffix, not the example suffix. Provisioning scripts publish
 SDK paths for CI but cannot export them back to a calling shell.
+Update command-line tools as well as emulator packages: older SDKs may not
+include the configured Pixel 9 device profile.
 
 Provisioning and emulator lifecycle use the pinned `dotnet android` CLI.
 Cake creates a unique AVD, starts it with `avd start --wait --no-animations`
