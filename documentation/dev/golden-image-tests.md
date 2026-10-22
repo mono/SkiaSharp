@@ -75,17 +75,18 @@ in the TRX — harvest it, commit, and the test goes green.
 
 ## Goldens
 
-Visual and sample references share `tests/Goldens/v1/` and one resolver:
+Visual and sample references use separate roots and one resolver:
 
 ```
-tests/Goldens/v1/
-  mac/base/visual-diagonal-lines.ganesh-gl.arm64.png
-  mac/base/visual-diagonal-lines.ganesh-gl.png
-  portable/base/visual-diagonal-lines.raster.png
-  iphone-16-pro/26.3.1/maui-basic-cpu.png
-  iphone-16-pro/base/gallery-gradient-cpu.png
-  pixel-9/26/gallery-gradient-cpu.x64.png
-  pixel-9/36/gallery-gradient-cpu.png
+tests/Goldens/
+  Visual/mac/base/visual-diagonal-lines.ganesh-gl.arm64.png
+  Visual/mac/base/visual-diagonal-lines.ganesh-gl.png
+  Samples/mac/base/blazor-cpu.png
+  Visual/portable/base/visual-diagonal-lines.raster.png
+  Samples/iphone-16-pro/26.3.1/maui-basic-cpu.png
+  Samples/iphone-16-pro/base/gallery-gradient-cpu.png
+  Samples/pixel-9/26/gallery-gradient-cpu.x64.png
+  Samples/pixel-9/36/gallery-gradient-cpu.png
 ```
 
 The grammar is `<profile>/<version-or-base>/<case>[.<variant>][.<architecture>].png`.
@@ -121,13 +122,14 @@ or mismatching pixels fail rather than triggering another lookup.
 Minimum-version/exact-version barriers invalidate older/base references when
 a deliberate rendering contract changes.
 
-`GoldenAssets.targets` selects cases for each runner and embeds explicit
-`SkiaSharp.Goldens.v1/<key>` names. Disk/resource enumeration uses the same
-parser, without authored catalogs or name mangling. Packaging partitions do not
-affect matching; conflicting bytes for one key fail. Validate the source tree:
+`GoldenAssets.targets` copies or embeds the owning root with explicit
+`SkiaSharp.Goldens/<key>` names. Disk/resource enumeration uses the same parser,
+without authored catalogs or name mangling. Packaging roots do not affect
+matching. Validate the source trees:
 
 ```sh
-python3 scripts/infra/tests/extract-visual-goldens.py --check tests/Goldens/v1
+python3 scripts/infra/tests/extract-visual-goldens.py --check tests/Goldens/Visual
+python3 scripts/infra/tests/extract-visual-goldens.py --check tests/Goldens/Samples
 python3 -m unittest discover -s scripts/infra/tests -p test_golden_images.py
 ```
 
@@ -176,7 +178,7 @@ and browser hosts:
 # from the repo root
 python3 scripts/infra/tests/extract-visual-goldens.py path/to/visual.trx --dry-run
 python3 scripts/infra/tests/extract-visual-goldens.py path/to/visual.trx
-# Review output/golden-proposals, then copy approved files to tests/Goldens/v1.
+# Review output/golden-proposals, then copy approved files to the owning root.
 ```
 
 For a platform you can't run locally, download that CI leg's published TRX and
@@ -196,9 +198,9 @@ Versioned single-line records work across hosts:
 
 | Marker | Carries |
 |---|---|
-| `##SKIA-GOLDEN-V2## role=actual` | the rendered PNG |
-| `##SKIA-GOLDEN-V2## role=reference` | the selected reviewed reference |
-| `##SKIA-GOLDEN-V2## role=diff` | the comparison difference |
+| `##SKIA-GOLDEN## role=actual` | the rendered PNG |
+| `##SKIA-GOLDEN## role=reference` | the selected reviewed reference |
+| `##SKIA-GOLDEN## role=diff` | the comparison difference |
 
 Records carry the exact capture `key`, separate `selected` reference key,
 dimensions and base64 bytes. Resolution output includes candidate chain/location
@@ -207,10 +209,8 @@ with hash and comparison paths; it is not a source-authored catalog.
 
 An `always()` CI step runs `extract-visual-goldens.py … --images-out` to decode
 them into published test artifacts as browsable PNGs mirroring the canonical
-tree, grouped by results file and occurrence. Historical v1 markers support
-diagnostic extraction only, not canonical reference proposals. A scene
-with only an `.actual.png` had no golden; the test result and its message say
-whether the rest passed.
+tree, grouped by results file and occurrence. A scene with only an `.actual.png`
+had no golden; the test result and its message say whether the rest passed.
 
 ## Extending
 
@@ -236,7 +236,7 @@ you harvest the goldens.
 | `Visual/Renderers/`, `Renderers/Desktop/` | shared and desktop-only renderers |
 | `Visual/Tests/VisualMatrixTestsBase.cs` | the render/compare pipeline every host shares |
 | `tests/VulkanTests/Visual/` | the Vulkan satellite's renderers and driver |
-| `tests/Goldens/v1/` | committed reference PNGs |
+| `tests/Goldens/{Visual,Samples}/` | committed reference PNGs |
 | `tests/Tests/Utils/GoldenReferences.cs` | shared key parser, policies and resolver |
-| `tests/GoldenAssets.targets` | case-based copy/embed packaging |
+| `tests/GoldenAssets.targets` | copy/embed packaging for the owning root |
 | `scripts/infra/tests/extract-visual-goldens.py` | marker → PNG harvest |

@@ -9,21 +9,26 @@ namespace SkiaSharp.Tests.Goldens
 {
 	internal sealed class GoldenEnvironment
 	{
-		public GoldenEnvironment(string profile, string version, string architecture, string description)
+		public GoldenEnvironment(string profile, string version, string architecture, string description,
+			GoldenVersionScope versionScope = GoldenVersionScope.Major, string[]? fallbackProfiles = null)
 		{
 			Profile = profile;
 			Version = version;
 			Architecture = architecture;
 			Description = description;
+			VersionScope = versionScope;
+			FallbackProfiles = fallbackProfiles ?? Array.Empty<string>();
 		}
 
 		public string Profile { get; }
 		public string Version { get; }
 		public string Architecture { get; }
 		public string Description { get; }
+		public GoldenVersionScope VersionScope { get; }
+		public string[] FallbackProfiles { get; }
 
 		public GoldenRequest Request(string caseName, string? variant = null) =>
-			new GoldenRequest(Profile, Version, caseName, Architecture, variant);
+			new GoldenRequest(Profile, Version, caseName, Architecture, variant, VersionScope, FallbackProfiles);
 
 		public static GoldenEnvironment Current()
 		{
@@ -40,7 +45,8 @@ namespace SkiaSharp.Tests.Goldens
 				var error = process.StandardError.ReadToEnd();
 				if (!process.WaitForExit(10000) || process.ExitCode != 0 || !System.Version.TryParse(version, out _))
 					throw new InvalidOperationException("Cannot read the macOS product version: " + error);
-				return new GoldenEnvironment("mac", version, architecture, RuntimeInformation.OSDescription);
+				return new GoldenEnvironment("mac", version, architecture, RuntimeInformation.OSDescription,
+					System.Version.Parse(version).Major == 10 ? GoldenVersionScope.Minor : GoldenVersionScope.Major);
 			}
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 				return Windows(architecture);
@@ -66,7 +72,10 @@ namespace SkiaSharp.Tests.Goldens
 				throw new InvalidOperationException("The rendering environment has an invalid VERSION_ID: " + version);
 			return new GoldenEnvironment(profile, profile == "linux" ? "base" : version ?? throw new InvalidOperationException("VERSION_ID is required."), architecture,
 				"os-release ID=" + id + "; VERSION_ID=" + version +
-				(profile == "linux" ? "; only explicitly portable Linux baselines are eligible" : ""));
+				(profile == "linux" ? "; only explicitly portable Linux baselines are eligible" : ""),
+				profile == "linux" ? GoldenVersionScope.Unversioned :
+					profile == "debian" ? GoldenVersionScope.Major : GoldenVersionScope.Minor,
+				profile == "linux" ? null : new[] { "linux" });
 		}
 
 #if NET5_0_OR_GREATER
@@ -82,9 +91,11 @@ namespace SkiaSharp.Tests.Goldens
 			var revision = key.GetValue("UBR");
 			if (kind == null || !int.TryParse(build, NumberStyles.None, CultureInfo.InvariantCulture, out _) || revision == null)
 				throw new InvalidOperationException("Windows build, servicing revision and installation kind are required.");
-			return new GoldenEnvironment(WindowsProfile(kind),
+			var profile = WindowsProfile(kind);
+			return new GoldenEnvironment(profile,
 				build + "." + Convert.ToInt32(revision, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture),
-				architecture, kind + "; " + RuntimeInformation.OSDescription);
+				architecture, kind + "; " + RuntimeInformation.OSDescription, GoldenVersionScope.Major,
+				profile == "windows-nanoserver" ? null : new[] { "windows" });
 		}
 
 		public static string WindowsProfile(string installationType) => installationType switch

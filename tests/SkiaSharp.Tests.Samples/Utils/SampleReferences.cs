@@ -7,9 +7,8 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal static class SampleReferences
 {
-    internal static string Root => Path.Combine(AppContext.BaseDirectory, "Goldens", "v1");
+    internal static string Root => Path.Combine(AppContext.BaseDirectory, "Goldens");
 
-    private static readonly Lazy<GoldenStoreIndex> Store = new(() => GoldenStoreIndex.FromDirectory(Root));
     private static readonly Lazy<GoldenEnvironment> HostEnvironment = new(GoldenEnvironment.Current);
 
     internal static GoldenRequest Host(string caseName, string? variant = null)
@@ -20,47 +19,46 @@ internal static class SampleReferences
 
     internal static GoldenResolution Resolve(GoldenRequest request)
     {
-        var resolution = Store.Value.Resolve(request);
+        var resolution = GoldenReference.Resolve(Root, request);
         TestContext.Current.TestOutputHelper?.WriteLine(resolution.Describe());
         return resolution;
     }
 
     internal static string Require(GoldenResolution resolution, string actual, string? rawActual = null)
     {
-        if (resolution.Asset is null)
+        if (resolution.Key is null)
         {
             TestContext.Current.AddFileAttachment(actual, "image/png");
             Emit("actual", resolution, rawActual ?? actual);
         }
-        Assert.True(resolution.Asset is not null,
+        Assert.True(resolution.Path is not null,
             $"Missing reviewed sample golden. {resolution.Describe()} Actual retained at {actual}.");
-        return resolution.Asset!.Location;
+        return resolution.Path!;
     }
 
     internal static void Record(GoldenResolution resolution, string actual, string comparedReference, string? rawActual = null)
     {
-        var asset = resolution.Asset!;
+        var expected = resolution.Path ?? throw new InvalidOperationException(resolution.Describe());
         var record = Path.ChangeExtension(actual, ".reference.json");
         var dimensions = Dimensions(actual);
-        var referenceDimensions = Dimensions(asset.Location);
+        var referenceDimensions = Dimensions(expected);
         File.WriteAllText(record, JsonSerializer.Serialize(new
         {
-            schema = 2,
             request = resolution.Request,
-            selected = asset.Key.ToString(),
-            source = asset.Location,
-            sha256 = Convert.ToHexString(SHA256.HashData(asset.ReadBytes())).ToLowerInvariant(),
+            selected = resolution.Key,
+            source = expected,
+            sha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(expected))).ToLowerInvariant(),
             candidates = resolution.Candidates,
             actual,
             rawActual,
             comparedReference,
             dimensions,
             referenceDimensions,
-            captureContract = comparedReference == asset.Location ? "raw-v1" : "iphone-16-pro-home39-v1"
+            captureContract = comparedReference == expected ? "raw" : "home-indicator"
         }, new JsonSerializerOptions { WriteIndented = true }));
         TestContext.Current.AddFileAttachment(record, "application/json");
         Emit("actual", resolution, rawActual ?? actual);
-        Emit("reference", resolution, asset.Location);
+        Emit("reference", resolution, expected);
         var diff = Path.ChangeExtension(actual, ".diff.png");
         if (File.Exists(diff))
             Emit("diff", resolution, diff);
@@ -89,7 +87,7 @@ internal static class SampleReferences
         var width = System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(bytes.AsSpan(16, 4));
         var height = System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(bytes.AsSpan(20, 4));
         TestContext.Current.TestOutputHelper?.WriteLine(
-            $"##SKIA-GOLDEN-V2## role={role} key={capture} selected={resolution.Asset?.Key.ToString() ?? "-"} " +
+            $"##SKIA-GOLDEN## role={role} key={capture} selected={resolution.Key ?? "-"} " +
             $"size={width}x{height} base64={Convert.ToBase64String(bytes)}");
     }
 }

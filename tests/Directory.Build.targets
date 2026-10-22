@@ -2,11 +2,6 @@
 
   <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Build.targets" />
 
-  <ItemGroup Condition="'$(MSBuildProjectName)' == 'SkiaSharp.Tests' or '$(MSBuildProjectName)' == 'SkiaSharp.Tests.Console'">
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Fixtures/golden-paths.tsv"
-                      LogicalName="SkiaSharp.GoldenPathConformance" />
-  </ItemGroup>
-
   <!--
     Carries the GPU opt-out into hosts that never see the build agent's environment: the Android,
     iOS, Mac Catalyst and WASM test apps run on a device, emulator or browser. GpuPolicy reads the

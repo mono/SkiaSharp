@@ -42,8 +42,10 @@ jobs:
               - pwsh: |
                   python3 -m unittest discover -s scripts/infra/tests -p test_golden_images.py
                   if ($LASTEXITCODE -ne 0) { throw "Golden exporter tests failed." }
-                  python3 scripts/infra/tests/extract-visual-goldens.py --check tests/Goldens/v1
-                  if ($LASTEXITCODE -ne 0) { throw "Canonical golden validation failed." }
+                  python3 scripts/infra/tests/extract-visual-goldens.py --check tests/Goldens/Samples
+                  if ($LASTEXITCODE -ne 0) { throw "Canonical sample golden validation failed." }
+                  python3 scripts/infra/tests/extract-visual-goldens.py --check tests/Goldens/Visual
+                  if ($LASTEXITCODE -ne 0) { throw "Canonical visual golden validation failed." }
                 displayName: Validate canonical references and export tooling
             - task: PublishTestResults@2
               condition: always()

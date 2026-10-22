@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using SkiaSharp.Tests.Goldens;
@@ -48,9 +47,9 @@ namespace SkiaSharp.Tests.Visual.Tests
 
 		// Capture identity and the chosen reference are separate fields, so export
 		// never overwrites a shared reference just because this host used it.
-		public const string ActualImageMarker = "##SKIA-GOLDEN-V2## role=actual";
-		public const string GoldenImageMarker = "##SKIA-GOLDEN-V2## role=reference";
-		public const string DiffImageMarker = "##SKIA-GOLDEN-V2## role=diff";
+		public const string ActualImageMarker = "##SKIA-GOLDEN## role=actual";
+		public const string GoldenImageMarker = "##SKIA-GOLDEN## role=reference";
+		public const string DiffImageMarker = "##SKIA-GOLDEN## role=diff";
 
 		protected VisualMatrixTestsBase(ITestOutputHelper output)
 			: base(output)
@@ -74,15 +73,9 @@ namespace SkiaSharp.Tests.Visual.Tests
 
 			var resolution = GoldenStore.Resolve(renderer.Name, scene.Name);
 			WriteOutput(resolution.Describe());
-			if (resolution.Asset is not null)
-			{
-				using var sha = SHA256.Create();
-				WriteOutput("Reference SHA256: " +
-					BitConverter.ToString(sha.ComputeHash(resolution.Asset.ReadBytes())).Replace("-", "").ToLowerInvariant());
-			}
 			EmitActual(renderer.Name, scene.Name, info, actual, resolution);
 
-			if (resolution.Asset is null)
+			if (resolution.Key is null)
 			{
 				FailUnseeded(renderer.Name, scene.Name, info, actual, resolution);
 				return;
@@ -106,7 +99,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 		{
 			var normalized = RendererPixels.NormalizedInfo(info);
 			WriteOutput(
-				$"{marker} key={GoldenStore.CaptureKey(resolution.Request)} selected={resolution.Asset?.Key.ToString() ?? "-"} " +
+				$"{marker} key={GoldenStore.CaptureKey(resolution.Request)} selected={resolution.Key ?? "-"} " +
 				$"size={normalized.Width}x{normalized.Height} base64={Convert.ToBase64String(png)}");
 		}
 

@@ -3,7 +3,7 @@
 
 Default export stages exact-environment captures in output/golden-proposals.
 It never updates a selected shared baseline. Review proposals before promoting
-them to tests/Goldens/v1. Historical v1 markers support diagnostics only.
+them to tests/Goldens.
 """
 
 import argparse
@@ -14,79 +14,38 @@ import re
 import struct
 import sys
 
-PROFILES = {
-    "portable", "mac", "windows", "linux", "ios", "android", "maccatalyst",
-    "tvos", "browser", "windows-nanoserver", "windows-client", "windows-server", "windows-servercore",
-    "ubuntu", "alpine", "azurelinux", "debian", "iphone-16-pro", "pixel-9",
-}
 ARCHITECTURES = {"arm", "arm64", "x86", "x64", "wasm", "loongarch64", "riscv64"}
-BACKENDS = {
-    "raster", "ganesh-gl", "ganesh-metal", "ganesh-vulkan",
-    "ganesh-vulkan-sharpvk", "ganesh-direct3d", "graphite-metal",
-    "graphite-vulkan", "graphite-dawn",
-}
-ENGINES = {"chromium", "firefox", "webkit"}
-NEUTRAL = {"portable", "windows", "linux", "browser"}
 SLUG = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*\Z")
 RESERVED = re.compile(r"(?:con|prn|aux|nul|com[1-9]|lpt[1-9])\Z")
-V2 = re.compile(
-    r"##SKIA-GOLDEN-V2## role=(actual|reference|diff) key=(\S+) selected=(\S+) "
+MARKER = re.compile(
+    r"##SKIA-GOLDEN## role=(actual|reference|diff) key=(\S+) selected=(\S+) "
     r"size=(\d+)x(\d+) base64=([A-Za-z0-9+/=]+)"
-)
-LEGACY = re.compile(
-    r"##SKIA-VISUAL-(ACTUAL|GOLDEN|DIFF)## path=([A-Za-z0-9][\w.-]*/[A-Za-z0-9][\w.-]*\.png) "
-    r"size=\d+x\d+ base64=([A-Za-z0-9+/=]+)"
 )
 PNG = b"\x89PNG\r\n\x1a\n"
 
 
 def validate_key(key):
-    """Parse the same strict grammar as GoldenKey; never infer driver identity."""
+    """Validate profile/version/case[.variant][.architecture].png."""
     parts = key.split("/")
-    if len(parts) != 3 or parts[0] not in PROFILES or "\\" in key:
+    if len(parts) != 3 or "\\" in key:
         raise ValueError(f"Invalid canonical golden key: {key}")
     profile, version, filename = parts
-    if version != "base":
-        if profile in NEUTRAL:
-            raise ValueError(f"Profile {profile} permits only base references")
-        values = version.split(".")
-        if profile in {"android", "pixel-9"} and values[-1].startswith("r"):
-            revision = values.pop()[1:]
-            if not re.fullmatch(r"[1-9][0-9]*", revision):
-                raise ValueError(f"Invalid Android revision: {version}")
-        for i, value in enumerate(values):
-            pattern = r"[0-9]{2}" if profile == "ubuntu" and i == 1 else r"(?:0|[1-9][0-9]*)"
-            if not re.fullmatch(pattern, value) or int(value) > 2147483647:
-                raise ValueError(f"Noncanonical version: {version}")
-        minimum, maximum = 1, 3
-        if profile in {"android", "pixel-9", "debian"}:
-            maximum = 2
-        if profile.startswith("windows-"):
-            maximum = 2
-            if not values or int(values[0]) < 10000:
-                raise ValueError("Windows selectors use build trains, not NT versions")
-        if profile in {"ubuntu", "alpine", "azurelinux"} or profile == "mac" and values[0] == "10":
-            minimum = 2
-        if not minimum <= len(values) <= maximum or int(values[0]) == 0:
-            raise ValueError(f"Invalid selector precision: {version}")
+    for segment in (profile,):
+        if not SLUG.fullmatch(segment) or RESERVED.fullmatch(segment):
+            raise ValueError(f"Invalid profile: {key}")
+    if version != "base" and not re.fullmatch(r"[1-9][0-9]*(?:\.[0-9]+)*(?:\.r[1-9][0-9]*)?", version):
+        raise ValueError(f"Invalid version: {key}")
     if not filename.endswith(".png"):
         raise ValueError(f"Expected a PNG leaf: {key}")
     tokens = filename[:-4].split(".")
-    architecture = tokens.pop() if len(tokens) > 1 and tokens[-1] in ARCHITECTURES else None
+    if len(tokens) > 1 and tokens[-1] in ARCHITECTURES:
+        tokens.pop()
     if not 1 <= len(tokens) <= 2:
         raise ValueError(f"Variant must precede architecture: {key}")
-    case = tokens[0]
-    variant = tokens[1] if len(tokens) == 2 else None
-    if not SLUG.fullmatch(case) or RESERVED.fullmatch(case) or case in ARCHITECTURES | BACKENDS | ENGINES | {"noto-sans"}:
-        raise ValueError(f"Invalid case: {key}")
-    if case.startswith("visual-"):
-        if variant not in BACKENDS:
-            raise ValueError(f"Visual cases require an exact renderer: {key}")
-    elif variant is not None:
-        browser = profile == "browser" or case.startswith(("blazor-", "browser-", "uno-")) or case == "web-page"
-        if not (browser and variant in ENGINES or case == "basic-console" and variant == "noto-sans"):
-            raise ValueError(f"Unknown functional variant: {key}")
-    return profile, version, case, variant, architecture
+    for token in tokens:
+        if not SLUG.fullmatch(token) or RESERVED.fullmatch(token):
+            raise ValueError(f"Invalid case or variant: {key}")
+    return parts
 
 
 def png_size(data):
@@ -143,9 +102,9 @@ def trx_files(paths):
 def records(path):
     text = path.read_text(encoding="utf-8")
     for line in text.splitlines():
-        if line.lstrip().startswith("##SKIA-GOLDEN-V2##") and V2.search(line) is None:
-            raise ValueError(f"Malformed v2 golden record in {path}")
-    for match in V2.finditer(text):
+        if line.lstrip().startswith("##SKIA-GOLDEN##") and MARKER.search(line) is None:
+            raise ValueError(f"Malformed golden record in {path}")
+    for match in MARKER.finditer(text):
         role, key, selected, width, height, encoded = match.groups()
         validate_key(key)
         if selected != "-":
@@ -166,15 +125,6 @@ def export_images(files, destination):
             occurrences[role, key] = number
             leaf = key[:-4] + f".{number}.{role}.png"
             output = contained(destination / run, leaf)
-            output.parent.mkdir(parents=True, exist_ok=True)
-            output.write_bytes(data)
-            count += 1
-        # Legacy records are diagnostic-only, never reference proposals.
-        for number, match in enumerate(LEGACY.finditer(path.read_text(encoding="utf-8")), 1):
-            role, key, encoded = match.groups()
-            data = base64.b64decode(encoded, validate=True)
-            png_size(data)
-            output = contained(destination / run / "legacy", key[:-4] + f".{number}.{role.lower()}.png")
             output.parent.mkdir(parents=True, exist_ok=True)
             output.write_bytes(data)
             count += 1
@@ -220,7 +170,7 @@ def main(argv=None):
             return 0
         captures = proposals(files)
         if not captures:
-            raise ValueError("No v2 actual captures; historical markers are diagnostics only")
+            raise ValueError("No actual golden captures found")
         for key, data in sorted(captures.items()):
             destination = contained(Path(args.out), key)
             print(f"{'Would stage' if args.dry_run else 'Staging'} {destination}")

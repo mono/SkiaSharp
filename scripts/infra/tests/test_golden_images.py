@@ -19,33 +19,24 @@ def png(value):
 
 
 class GoldenImageTests(unittest.TestCase):
-    def test_shared_path_conformance(self):
-        fixture = Path(__file__).resolve().parents[3] / "tests/Fixtures/golden-paths.tsv"
-        for row in fixture.read_text().splitlines():
-            expected, key = row.split("\t")
-            with self.subTest(key=key):
-                if expected == "valid":
-                    goldens.validate_key(key)
-                else:
-                    with self.assertRaises(ValueError):
-                        goldens.validate_key(key)
+    def test_path_grammar(self):
+        for key in ("mac/base/blazor-cpu.png", "pixel-9/36/maui-basic-cpu.x64.png",
+                    "portable/base/visual-text.raster.png"):
+            goldens.validate_key(key)
+        for key in ("v1/mac/base/blazor.png", "Mac/base/blazor.png", "mac/latest/blazor.png",
+                    "mac/base/blazor.x64.firefox.png"):
+            with self.assertRaises(ValueError):
+                goldens.validate_key(key)
 
     def test_conflicting_captures_never_choose_last_writer(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "run.trx"
             key = "mac/12.6/blazor-cpu.x64.png"
             path.write_text("\n".join(
-                f"##SKIA-GOLDEN-V2## role=actual key={key} selected={key} size=1x1 base64={base64.b64encode(png(v)).decode()}"
+                f"##SKIA-GOLDEN## role=actual key={key} selected={key} size=1x1 base64={base64.b64encode(png(v)).decode()}"
                 for v in (0, 1)))
             with self.assertRaisesRegex(ValueError, "Conflicting"):
                 goldens.proposals([path])
-
-    def test_legacy_capture_cannot_seed_new_identity(self):
-        with tempfile.TemporaryDirectory() as folder:
-            path = Path(folder) / "run.trx"
-            path.write_text(f"##SKIA-VISUAL-ACTUAL## path=raster.macos/Text.png size=1x1 base64={base64.b64encode(png(0)).decode()}")
-            self.assertEqual({}, goldens.proposals([path]))
-            self.assertEqual(1, goldens.export_images([path], Path(folder) / "images"))
 
     def test_source_packaged_assets_must_match(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -61,7 +52,7 @@ class GoldenImageTests(unittest.TestCase):
     def test_malformed_current_records_are_not_silently_ignored(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "run.trx"
-            path.write_text("##SKIA-GOLDEN-V2## role=actual key=invalid")
+            path.write_text("##SKIA-GOLDEN## role=actual key=invalid")
             with self.assertRaisesRegex(ValueError, "Malformed"):
                 list(goldens.records(path))
 
@@ -70,8 +61,8 @@ class GoldenImageTests(unittest.TestCase):
             path = Path(folder) / "failed.trx"
             key = "mac/12.6/blazor-cpu.x64.png"
             path.write_text(
-                f"##SKIA-GOLDEN-V2## role=actual key={key} selected=- size=1x1 base64={base64.b64encode(png(0)).decode()}\n"
-                "Assertion failed: rendered PNG is retained as a ##SKIA-GOLDEN-V2## role=actual marker.")
+                f"##SKIA-GOLDEN## role=actual key={key} selected=- size=1x1 base64={base64.b64encode(png(0)).decode()}\n"
+                "Assertion failed: rendered PNG is retained as a ##SKIA-GOLDEN## role=actual marker.")
             self.assertEqual({key: png(0)}, goldens.proposals([path]))
 
 

@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests.Visual
 	/// <summary>
 	/// Pure-CPU rasterizer. Always available and deterministic across platforms
 	/// for the geometric scenes, so its output is the portable baseline stored
-	/// under <c>Goldens/v1/portable/base/</c> with a raster suffix (and an
+	/// under <c>Goldens/portable/base/</c> with a raster suffix (and an
 	/// environment profile override for any scene that diverges by OS, such
 	/// as text).
 	/// </summary>

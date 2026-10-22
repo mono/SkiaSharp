@@ -10,7 +10,8 @@ namespace SkiaSharp.Tests.Visual
 {
 	internal static class GoldenStore
 	{
-		private static readonly Lazy<GoldenStoreIndex> store = new(CreateStore);
+		private const string ResourcePrefix = "SkiaSharp.Goldens/";
+		private static readonly Lazy<IReadOnlyDictionary<string, GoldenSource>> sources = new(CreateSources);
 
 		public readonly struct ResolvedGolden
 		{
@@ -21,25 +22,29 @@ namespace SkiaSharp.Tests.Visual
 			}
 			public byte[] Pixels { get; }
 			public GoldenResolution Resolution { get; }
-			public string Location => Resolution.Asset.Location;
+			public string Location => Resolution.Path ?? Resolution.Key ?? "unknown golden";
 		}
 
 		public static GoldenResolution Resolve(string rendererName, string sceneName) =>
-			store.Value.Resolve(VisualPlatform.Request(rendererName, sceneName));
+			GoldenReference.Resolve(sources.Value.Keys, VisualPlatform.Request(rendererName, sceneName));
 
 		public static string CaptureKey(GoldenRequest request) =>
-			$"{request.Profile}/{request.Version}/{request.CaseName}.{request.Variant}.{request.Architecture}.png";
+			$"{request.Profile}/{request.Version}/{request.CaseName}" +
+			(request.Variant == null ? "" : "." + request.Variant) +
+			(request.Architecture == null ? "" : "." + request.Architecture) +
+			".png";
 
 		public static ResolvedGolden Load(GoldenResolution resolution, SKImageInfo info)
 		{
-			if (resolution.Asset == null)
+			if (resolution.Key == null || !sources.Value.TryGetValue(resolution.Key, out var source))
 				throw new InvalidOperationException(resolution.Describe());
-			return new ResolvedGolden(Decode(resolution.Asset.ReadBytes(), info, resolution.Asset.Location), resolution);
+			var resolved = new GoldenResolution(resolution.Request, resolution.Key, source.Location, resolution.Candidates);
+			return new ResolvedGolden(Decode(source.ReadBytes(), info, source.Location), resolved);
 		}
 
-		private static GoldenStoreIndex CreateStore()
+		private static IReadOnlyDictionary<string, GoldenSource> CreateSources()
 		{
-			var stores = new List<GoldenStoreIndex>();
+			var result = new Dictionary<string, GoldenSource>(StringComparer.Ordinal);
 			var roots = new HashSet<string>(StringComparer.Ordinal);
 			var assemblies = new HashSet<Assembly>
 			{
@@ -50,26 +55,56 @@ namespace SkiaSharp.Tests.Visual
 			if (entry != null)
 				assemblies.Add(entry);
 
-			AddDirectory(Path.Combine(RuntimeRoot, "Goldens", "v1"));
+			AddDirectory(Path.Combine(RuntimeRoot, "Goldens"));
 			if (!string.IsNullOrEmpty(TestConfig.Current.PathRoot))
-				AddDirectory(Path.Combine(TestConfig.Current.PathRoot, "Goldens", "v1"));
+				AddDirectory(Path.Combine(TestConfig.Current.PathRoot, "Goldens"));
 			foreach (var assembly in assemblies)
 			{
-				foreach (var attribute in assembly.GetCustomAttributes<AssemblyMetadataAttribute>())
-					if (attribute.Key == "SkiaSharp.GoldenSourceRoot")
-						AddDirectory(attribute.Value);
-				if (assembly.GetManifestResourceNames().Any(n => n.StartsWith("SkiaSharp.Goldens.v1/", StringComparison.Ordinal)))
-					stores.Add(GoldenStoreIndex.FromAssembly(assembly));
+				foreach (var resource in assembly.GetManifestResourceNames()
+					.Where(name => name.StartsWith(ResourcePrefix, StringComparison.Ordinal)))
+				{
+					var key = resource.Substring(ResourcePrefix.Length);
+					Add(key, new GoldenSource(resource, () =>
+					{
+						using var stream = assembly.GetManifestResourceStream(resource)
+							?? throw new InvalidOperationException($"Missing embedded golden resource '{resource}'.");
+						using var memory = new MemoryStream();
+						stream.CopyTo(memory);
+						return memory.ToArray();
+					}));
+				}
 			}
-			if (stores.Count == 0)
+			if (result.Count == 0)
 				throw new InvalidOperationException("No canonical golden assets were packaged or registered for this host.");
-			return GoldenStoreIndex.Combine(stores.ToArray());
+			return result;
 
 			void AddDirectory(string root)
 			{
 				if (root != null && Directory.Exists(root) && roots.Add(Path.GetFullPath(root)))
-					stores.Add(GoldenStoreIndex.FromDirectory(root));
+					foreach (var key in GoldenReference.Keys(root))
+					{
+						var path = Path.Combine(root, key.Replace('/', Path.DirectorySeparatorChar));
+						Add(key, new GoldenSource(path, () => File.ReadAllBytes(path)));
+					}
 			}
+
+			void Add(string key, GoldenSource source)
+			{
+				if (!result.ContainsKey(key))
+					result.Add(key, source);
+			}
+		}
+
+		private sealed class GoldenSource
+		{
+			public GoldenSource(string location, Func<byte[]> readBytes)
+			{
+				Location = location;
+				ReadBytes = readBytes;
+			}
+
+			public string Location { get; }
+			public Func<byte[]> ReadBytes { get; }
 		}
 
 		public static byte[] EncodePng(byte[] rgba, SKImageInfo info)

@@ -206,8 +206,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	private static string Reference(string profile, string version, string name, string architecture = "arm64")
 	{
 		var resolved = SampleReferences.Resolve(new GoldenRequest(profile, version, name, architecture));
-		Assert.NotNull(resolved.Asset);
-		return resolved.Asset.Location;
+		Assert.NotNull(resolved.Path);
+		return resolved.Path;
 	}
 
 	private SampleWorkspace Workspace()
