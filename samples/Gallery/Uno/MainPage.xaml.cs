@@ -18,6 +18,17 @@ public sealed partial class MainPage : Page
             isDark = ActualTheme == ElementTheme.Dark;
             UpdateThemeIcon();
         };
+#if HAS_UNO
+        // WinAppSDK has no SystemNavigationManager; on Uno it carries the Android back button.
+        Windows.UI.Core.SystemNavigationManager.GetForCurrentView().BackRequested += (_, args) =>
+        {
+            if (ContentFrame.Content is SamplePage)
+            {
+                args.Handled = true;
+                NavigateHome();
+            }
+        };
+#endif
     }
 
     protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)

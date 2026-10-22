@@ -1,27 +1,20 @@
 using System;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.Graphics.Display;
 using Windows.UI.Core;
-#if WINUI
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
-#else
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Data;
-#endif
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 
-
-#if WINDOWS || WINUI
 namespace SkiaSharp.Views.Windows
-#else
-namespace SkiaSharp.Views.UWP
-#endif
 {
 	/// <summary>A XAML canvas that can be drawn on using SkiaSharp drawing commands.</summary>
 	/// <remarks />
-	public partial class SKXamlCanvas : Canvas
+	public class SKXamlCanvas : Canvas
 	{
 		private const float DpiBase = 96.0f;
 
@@ -39,6 +32,19 @@ namespace SkiaSharp.Views.UWP
 
 		// workaround for https://github.com/mono/SkiaSharp/issues/1118
 		private int loadUnloadCounter = 0;
+
+		private byte[] pixels;
+		private GCHandle pixelsHandle;
+		private int pixelWidth;
+		private int pixelHeight;
+		private WriteableBitmap bitmap;
+
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKXamlCanvas" /> class.</summary>
+		/// <remarks />
+		public SKXamlCanvas()
+		{
+			Initialize();
+		}
 
 		private void Initialize()
 		{
@@ -177,8 +183,6 @@ namespace SkiaSharp.Views.UWP
 			if (loadUnloadCounter != 1)
 				return;
 
-			DoLoaded();
-
 			var display = DisplayInformation.GetForCurrentView();
 			display.DpiChanged += OnDpiChanged;
 
@@ -191,7 +195,7 @@ namespace SkiaSharp.Views.UWP
 			if (loadUnloadCounter != 0)
 				return;
 
-			DoUnloaded();
+			FreeBitmap();
 
 			var display = DisplayInformation.GetForCurrentView();
 			display.DpiChanged -= OnDpiChanged;
@@ -199,7 +203,7 @@ namespace SkiaSharp.Views.UWP
 
 		/// <summary>Invalidates the entire surface of the control and causes the control to be redrawn.</summary>
 		/// <remarks />
-		public new void Invalidate()
+		public void Invalidate()
 		{
 			if (Dispatcher.HasThreadAccess)
 				DoInvalidate();
@@ -207,9 +211,49 @@ namespace SkiaSharp.Views.UWP
 				_ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
 		}
 
-		partial void DoLoaded();
+		private void DoInvalidate()
+		{
+			if (designMode)
+				return;
 
-		partial void DoUnloaded();
+			if (!isVisible)
+				return;
+
+			if (ActualWidth <= 0 || ActualHeight <= 0)
+			{
+				CanvasSize = SKSize.Empty;
+				return;
+			}
+
+			var info = CreateBitmap(out var unscaledSize, out var dpi);
+
+			using (var surface = SKSurface.Create(info, pixelsHandle.AddrOfPinnedObject(), info.RowBytes))
+			{
+				var userVisibleSize = IgnorePixelScaling ? unscaledSize : info.Size;
+				CanvasSize = userVisibleSize;
+
+				if (IgnorePixelScaling)
+				{
+					var canvas = surface.Canvas;
+					canvas.Scale(dpi);
+					canvas.Save();
+				}
+
+				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
+			}
+
+			// This implementation is not fast enough, and providing the original pixel buffer
+			// is needed, yet the internal `IBufferByteAccess` interface is not yet available in Uno.
+			// Once it is, we can replace this implementation and provide the pinned array directly
+			// to skia.
+			using (var data = bitmap.PixelBuffer.AsStream())
+			{
+				data.Write(pixels, 0, pixels.Length);
+				data.Flush();
+			}
+
+			bitmap.Invalidate();
+		}
 
 		private SKSizeI CreateSize(out SKSizeI unscaledSize, out float dpi)
 		{
@@ -231,5 +275,51 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
+		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize, out float dpi)
+		{
+			var size = CreateSize(out unscaledSize, out dpi);
+			var info = new SKImageInfo(size.Width, size.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
+
+			if (bitmap?.PixelWidth != info.Width || bitmap?.PixelHeight != info.Height)
+				FreeBitmap();
+
+			if (bitmap == null && info.Width > 0 && info.Height > 0)
+			{
+				bitmap = new WriteableBitmap(info.Width, info.Height);
+
+				var brush = new ImageBrush
+				{
+					ImageSource = bitmap,
+					AlignmentX = AlignmentX.Left,
+					AlignmentY = AlignmentY.Top,
+					Stretch = Stretch.Fill
+				};
+
+				Background = brush;
+			}
+
+			if (pixels == null || pixelWidth != info.Width || pixelHeight != info.Height)
+			{
+				FreeBitmap();
+
+				pixels = new byte[info.BytesSize];
+				pixelsHandle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+
+				pixelWidth = info.Width;
+				pixelHeight = info.Height;
+			}
+
+			return info;
+		}
+
+		private void FreeBitmap()
+		{
+			if (pixels != null)
+			{
+				pixelsHandle.Free();
+				pixels = null;
+				bitmap = null;
+			}
+		}
 	}
 }

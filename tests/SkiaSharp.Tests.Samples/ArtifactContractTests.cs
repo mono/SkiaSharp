@@ -38,6 +38,10 @@ public class ArtifactContractTests
             Assert.Null(version.Attribute("Condition"));
             Assert.True(File.Exists(Path.Combine(Repo.PackagesDir, $"SkiaSharp.{version.Value}.nupkg")),
                 $"Generated Uno project {relative} must override the SDK's SkiaSharp version with the supplied product version.");
+            var harfBuzzVersion = Assert.Single(project.Descendants("HarfBuzzSharpVersion"));
+            Assert.Null(harfBuzzVersion.Attribute("Condition"));
+            Assert.True(File.Exists(Path.Combine(Repo.PackagesDir, $"HarfBuzzSharp.{harfBuzzVersion.Value}.nupkg")),
+                $"Generated Uno project {relative} must override the SDK's HarfBuzzSharp version with the supplied product version.");
             Assert.DoesNotContain(project.Descendants().Attributes("Condition"),
                 condition => condition.Value.Contains("_UnoPlatformSamples.targets", StringComparison.Ordinal));
         }
@@ -60,10 +64,12 @@ public class ArtifactContractTests
     [InlineData("Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.NativeAssets.Linux.NoDependencies")]
     [InlineData("Basic/Web/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.NativeAssets.Linux.NoDependencies")]
     [InlineData("Basic/UnoPlatform/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.Views")]
+    [InlineData("Basic/UnoPlatform/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.Views.Uno.WinUI")]
     [InlineData("Basic/UnoPlatform/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.Skottie")]
     [InlineData("Basic/UnoPlatform/SkiaSharpSample/SkiaSharpSample.csproj", "SkiaSharp.NativeAssets.Linux")]
     [InlineData("Basic/UnoPlatform/SkiaSharpSample/SkiaSharpSample.csproj", "HarfBuzzSharp.NativeAssets.Linux")]
     [InlineData("Gallery/Uno/SkiaSharpSample.Uno.csproj", "SkiaSharp.Views")]
+    [InlineData("Gallery/Uno/SkiaSharpSample.Uno.csproj", "SkiaSharp.Views.Uno.WinUI")]
     [InlineData("Gallery/Uno/SkiaSharpSample.Uno.csproj", "SkiaSharp.Skottie")]
     [InlineData("Gallery/Uno/SkiaSharpSample.Uno.csproj", "SkiaSharp.NativeAssets.Linux")]
     [InlineData("Gallery/Uno/SkiaSharpSample.Uno.csproj", "HarfBuzzSharp.NativeAssets.Linux")]
