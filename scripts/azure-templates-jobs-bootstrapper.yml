@@ -94,6 +94,7 @@ jobs:
             Write-Host "##vso[task.setvariable variable=PYTHON_ARCHITECTURE]$architecture"
           displayName: Configure Python architecture
         - task: UsePythonVersion@0
+          name: usePython
           displayName: Install Python
           retryCountOnTaskFailure: 3
           inputs:
@@ -101,7 +102,7 @@ jobs:
             architecture: $(PYTHON_ARCHITECTURE)
         - pwsh: |
             $executable = if ($IsMacOS -or $IsLinux) { 'bin/python' } else { 'python.exe' }
-            $python = Join-Path '$(pythonLocation)' $executable
+            $python = Join-Path '$(usePython.pythonLocation)' $executable
             if (!(Test-Path $python -PathType Leaf)) {
               throw "Python executable was not installed: $python"
             }
