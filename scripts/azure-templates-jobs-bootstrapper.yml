@@ -204,6 +204,10 @@ jobs:
             displayName: Configure Ninja
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        - ${{ if contains(parameters.name, '_win32_') }}:
+          - pwsh: .\scripts\infra\native\windows\select-llvm.ps1
+            displayName: Select Visual Studio LLVM
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install android ndk
           - ${{ if and(eq(parameters.installAndroidNdk, 'true'), contains(parameters.name, '_android_')) }}:
@@ -341,7 +345,7 @@ jobs:
               env:
                 AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
-                LLVM_HOME: $(VS_INSTALL)\VC\Tools\Llvm\x64
+                LLVM_HOME: $(LLVM_HOME)
                 NINJA_EXE: $(NINJA_EXE)
                 PYTHON_EXE: $(PYTHON_EXE)
                 VS_INSTALL: $(VS_INSTALL)

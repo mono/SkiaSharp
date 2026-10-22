@@ -327,8 +327,8 @@ jobs:
           dotnet tool restore
           ./scripts/infra/native/windows/select-vs.ps1
           ./scripts/infra/native/windows/install-components.ps1
+          ./scripts/infra/native/windows/select-llvm.ps1
           ./scripts/infra/native/shared/install-ninja.ps1
-          $env:LLVM_HOME = Join-Path $env:VS_INSTALL 'VC\Tools\Llvm\x64'
           $env:PYTHON_EXE = Get-Command python.exe -CommandType Application -ErrorAction Stop |
             Select-Object -First 1 -ExpandProperty Source
           dotnet cake native/windows/build.cake --target=libSkiaSharp --configuration=Release --arch=x64 `
