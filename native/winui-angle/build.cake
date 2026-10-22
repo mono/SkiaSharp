@@ -46,7 +46,7 @@ Task("sync-ANGLE")
     });
 
     // Chromium's resource compiler wrapper expects clang-cl at this path even for MSVC builds.
-    var llvmHome = MakeAbsolute(Directory(EnvironmentVariable("LLVM_HOME") ?? $"{VS_INSTALL}/VC/Tools/Llvm/x64"));
+    var llvmHome = MakeAbsolute(Directory(LLVM_HOME));
     var clang = llvmHome.CombineWithFilePath("bin/clang-cl.exe");
     if (!FileExists(clang))
         throw new Exception($"Visual Studio LLVM was not installed: {clang}");

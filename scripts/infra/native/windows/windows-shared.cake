@@ -7,6 +7,8 @@ if (string.IsNullOrEmpty(VS_INSTALL))
 if (string.IsNullOrEmpty(WINDOWS_SDK_VERSION))
     throw new Exception("A Windows SDK version is required. Pass --windowsSdkVersion or set WINDOWS_SDK_VERSION.");
 
+string LLVM_HOME = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? $"{VS_INSTALL}/VC/Tools/Llvm/x64");
+
 string GetToolsetVersion()
 {
     var build = ((DirectoryPath)VS_INSTALL).Combine("VC/Auxiliary/Build");

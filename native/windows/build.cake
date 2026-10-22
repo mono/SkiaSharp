@@ -16,13 +16,12 @@ bool USE_FONTMGR_WIN = !USE_FREETYPE;
 #load "../../scripts/infra/shared/msbuild.cake"
 #load "../../scripts/infra/native/windows/windows-shared.cake"
 
-var llvmHomeArg = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? $"{VS_INSTALL}/VC/Tools/Llvm/x64");
-DirectoryPath LLVM_HOME = string.IsNullOrEmpty(llvmHomeArg) || llvmHomeArg.ToLower() == "msvc" ? "" : llvmHomeArg;
+DirectoryPath LLVM_PATH = string.IsNullOrEmpty(LLVM_HOME) || LLVM_HOME.ToLower() == "msvc" ? "" : LLVM_HOME;
 
 string VARIANT = BUILD_VARIANT ?? "windows";
 
 Information("Native Arguments:");
-Information($"    {"LLVM_HOME".PadRight(30)} {{0}}", string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "(Using MSVC)" : LLVM_HOME);
+Information($"    {"LLVM_HOME".PadRight(30)} {{0}}", string.IsNullOrEmpty(LLVM_PATH.FullPath) ? "(Using MSVC)" : LLVM_PATH);
 Information($"    {"VARIANT".PadRight(30)} {{0}}", VARIANT);
 Information($"    {"CONFIGURATION".PadRight(30)} {{0}}", CONFIGURATION);
 
@@ -39,7 +38,7 @@ Task("libSkiaSharp")
     {
         if (Skip(arch)) return;
 
-        var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
+        var clang = string.IsNullOrEmpty(LLVM_PATH.FullPath) ? "" : $"clang_win='{LLVM_PATH}' ";
         var win_toolchain_version = $"win_toolchain_version='{TOOLSET_VERSION.Value}' ";
         var win_vcvars_version = $"win_vcvars_version='{TOOLSET_VERSION.Value.Substring(0, 4)}' ";
         var win_sdk_version = $"win_sdk_version='{WINDOWS_SDK_VERSION}' ";
