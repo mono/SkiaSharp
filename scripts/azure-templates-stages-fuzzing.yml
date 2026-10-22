@@ -11,7 +11,7 @@ stages:
   - stage: fuzzing
     displayName: OneFuzz
     ${{ if and(eq(parameters.runFuzzing, true), ne(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
-      dependsOn: native
+      dependsOn: native_windows
     ${{ else }}:
       dependsOn: package
     jobs:
@@ -32,12 +32,20 @@ stages:
               packageType: sdk
               version: $(DOTNET_VERSION)
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download native artifacts
-            inputs:
-              buildType: current
-              artifactName: native
-              targetPath: $(Build.SourcesDirectory)\output
+          - ${{ if and(eq(parameters.runFuzzing, true), ne(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+            - task: DownloadPipelineArtifact@2
+              displayName: Download native_win32_x64_windows artifacts
+              inputs:
+                buildType: current
+                artifactName: native_win32_x64_windows
+                targetPath: $(Build.SourcesDirectory)\output
+          - ${{ else }}:
+            - task: DownloadPipelineArtifact@2
+              displayName: Download native artifacts
+              inputs:
+                buildType: current
+                artifactName: native
+                targetPath: $(Build.SourcesDirectory)\output
 
           - pwsh: |
               $toolDirectory = Join-Path $env:AGENT_TEMPDIRECTORY 'sharpfuzz'
@@ -64,57 +72,57 @@ stages:
               onefuzzDropDirectory: $(Build.ArtifactStagingDirectory)\OneFuzz
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+      - ${{ if not(and(eq(parameters.runFuzzing, true), ne(variables['Build.SourceBranch'], 'refs/heads/main'))) }}:
+        - job: fuzzing_ubuntu
+          displayName: OneFuzz Ubuntu x64
+          timeoutInMinutes: 120
+          pool: ${{ parameters.buildAgentLinux.pool }}
+          workspace:
+            clean: all
+          steps:
+            - checkout: self
+              submodules: false
+              fetchDepth: 1
 
-      - job: fuzzing_ubuntu
-        displayName: OneFuzz Ubuntu x64
-        timeoutInMinutes: 120
-        pool: ${{ parameters.buildAgentLinux.pool }}
-        workspace:
-          clean: all
-        steps:
-          - checkout: self
-            submodules: false
-            fetchDepth: 1
+            - task: UseDotNet@2
+              displayName: Install .NET $(DOTNET_VERSION)
+              inputs:
+                packageType: sdk
+                version: $(DOTNET_VERSION)
 
-          - task: UseDotNet@2
-            displayName: Install .NET $(DOTNET_VERSION)
-            inputs:
-              packageType: sdk
-              version: $(DOTNET_VERSION)
+            - task: DownloadPipelineArtifact@2
+              displayName: Download native artifacts
+              inputs:
+                buildType: current
+                artifactName: native
+                targetPath: $(Build.SourcesDirectory)/output
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download native artifacts
-            inputs:
-              buildType: current
-              artifactName: native
-              targetPath: $(Build.SourcesDirectory)/output
+            - bash: |
+                sudo apt-get update
+                sudo apt-get install -y libfontconfig1
+              displayName: Install Linux runtime dependencies
 
-          - bash: |
-              sudo apt-get update
-              sudo apt-get install -y libfontconfig1
-            displayName: Install Linux runtime dependencies
+            - pwsh: |
+                $toolDirectory = Join-Path $env:AGENT_TEMPDIRECTORY 'sharpfuzz'
+                dotnet tool install --tool-path $toolDirectory SharpFuzz.CommandLine --version 2.3.0
+                if ($LASTEXITCODE -ne 0) { throw "Installing SharpFuzz failed with exit code $LASTEXITCODE." }
 
-          - pwsh: |
-              $toolDirectory = Join-Path $env:AGENT_TEMPDIRECTORY 'sharpfuzz'
-              dotnet tool install --tool-path $toolDirectory SharpFuzz.CommandLine --version 2.3.0
-              if ($LASTEXITCODE -ne 0) { throw "Installing SharpFuzz failed with exit code $LASTEXITCODE." }
+                $arguments = @{
+                  Platform = 'ubuntu'
+                  OutputDirectory = Join-Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY 'OneFuzz'
+                  SharpFuzzPath = Join-Path $toolDirectory 'sharpfuzz'
+                }
+                if ($env:BUILD_SOURCEBRANCH -ne 'refs/heads/main' -or $env:BUILD_REASON -ne 'Schedule') {
+                  $arguments.ValidationBuildId = $env:BUILD_BUILDID
+                }
 
-              $arguments = @{
-                Platform = 'ubuntu'
-                OutputDirectory = Join-Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY 'OneFuzz'
-                SharpFuzzPath = Join-Path $toolDirectory 'sharpfuzz'
-              }
-              if ($env:BUILD_SOURCEBRANCH -ne 'refs/heads/main' -or $env:BUILD_REASON -ne 'Schedule') {
-                $arguments.ValidationBuildId = $env:BUILD_BUILDID
-              }
+                ./scripts/infra/security/prepare-onefuzz-drop.ps1 @arguments
+              displayName: Prepare Ubuntu OneFuzz drop
 
-              ./scripts/infra/security/prepare-onefuzz-drop.ps1 @arguments
-            displayName: Prepare Ubuntu OneFuzz drop
-
-          - task: onefuzz-task@0
-            displayName: Submit Ubuntu targets to OneFuzz
-            inputs:
-              onefuzzOSes: azurelinux3
-            env:
-              onefuzzDropDirectory: $(Build.ArtifactStagingDirectory)/OneFuzz
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            - task: onefuzz-task@0
+              displayName: Submit Ubuntu targets to OneFuzz
+              inputs:
+                onefuzzOSes: azurelinux3
+              env:
+                onefuzzDropDirectory: $(Build.ArtifactStagingDirectory)/OneFuzz
+                SYSTEM_ACCESSTOKEN: $(System.AccessToken)
