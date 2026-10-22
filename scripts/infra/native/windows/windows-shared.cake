@@ -29,12 +29,9 @@ void RunNinjaWithVcVars(
 {
     var vcVarsAll = ((DirectoryPath)VS_INSTALL).CombineWithFilePath("VC/Auxiliary/Build/vcvarsall.bat");
 
-    var vcVarsVersionArg = string.IsNullOrEmpty(vcVarsVersion)
-        ? ""
-        : $" -vcvars_ver={vcVarsVersion}";
     var ninjaTarget = string.IsNullOrEmpty(target) ? "" : $" {target}";
     var command =
-        $"call \"{vcVarsAll.FullPath}\" {architecture} {windowsSdkVersion}{vcVarsVersionArg}" +
+        $"call \"{vcVarsAll.FullPath}\" {architecture} {windowsSdkVersion} -vcvars_ver={vcVarsVersion}" +
         $" && \"{NINJA_EXE}\" -C \"{outDir.FullPath}\"{ninjaTarget}";
 
     Information($"Initializing the Visual C++ environment once for {architecture}.");
