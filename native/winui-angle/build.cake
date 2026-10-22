@@ -34,6 +34,7 @@ Task("sync-ANGLE")
         "third_party/jsoncpp",
         "third_party/vulkan-deps",
         "third_party/astc-encoder/src",
+        "third_party/depot_tools",
         "third_party/spirv-headers/src",
         "third_party/spirv-tools/src",
         "third_party/vulkan-headers/src",
