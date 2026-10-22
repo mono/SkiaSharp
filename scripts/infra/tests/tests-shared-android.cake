@@ -88,7 +88,8 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         ANDROID_EMULATOR_STDOUT = ANDROID_EMULATOR_PROCESS.StandardOutput.ReadToEndAsync();
         ANDROID_EMULATOR_STDERR = ANDROID_EMULATOR_PROCESS.StandardError.ReadToEndAsync();
         WaitForAndroidBoot(ownedAvd, ownedSerial);
-        InstallAndroidAppiumServer(ownedSerial);
+        if (EnvironmentVariable("TEST_ANDROID_PREINSTALL_APPIUM_SERVER") == "1")
+            InstallAndroidAppiumServer(ownedSerial);
         foreach (var setting in new[] { "window_animation_scale", "transition_animation_scale", "animator_duration_scale" }) {
             if (StartProcess(ANDROID_ADB, new ProcessSettings {
                 Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)
@@ -117,13 +118,13 @@ void InstallAndroidAppiumServer(string ownedSerial)
     var home = EnvironmentVariable("APPIUM_HOME");
     if (string.IsNullOrWhiteSpace(home))
         home = System.IO.Path.Combine(EnvironmentVariable("HOME"), ".appium");
-    var serverRoot = System.IO.Path.Combine(home, "node_modules", "appium-uiautomator2-driver",
-        "node_modules", "appium-uiautomator2-server", "apks");
-    if (!System.IO.Directory.Exists(serverRoot))
-        throw new Exception($"The installed UiAutomator2 driver did not provide its server APK directory: {serverRoot}");
+    if (!System.IO.Directory.Exists(home))
+        throw new Exception($"The installed Appium home does not exist: {home}");
 
-    var server = System.IO.Directory.GetFiles(serverRoot, "appium-uiautomator2-server-v*.apk").Single();
-    var testServer = System.IO.Directory.GetFiles(serverRoot, "appium-uiautomator2-server-debug-androidTest.apk").Single();
+    var server = System.IO.Directory.GetFiles(home, "appium-uiautomator2-server-v*.apk",
+        System.IO.SearchOption.AllDirectories).Single();
+    var testServer = System.IO.Directory.GetFiles(home, "appium-uiautomator2-server-debug-androidTest.apk",
+        System.IO.SearchOption.AllDirectories).Single();
     foreach (var apk in new[] { server, testServer }) {
         var exit = StartProcess(ANDROID_ADB, new ProcessSettings {
             Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial)

@@ -37,7 +37,9 @@ void SetupSampleDevices()
         Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_MODEL", TEST_IOS_SIMULATOR_MODEL);
         Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_UDID", OWNED_IOS_SIMULATOR);
     }
+
     if (APPIUM_RUN_GROUPS.Contains("Android") && (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Android")) {
+        Environment.SetEnvironmentVariable("TEST_ANDROID_PREINSTALL_APPIUM_SERVER", "1");
         SetupAndroidEmulator(ref OWNED_ANDROID_AVD, ref OWNED_ANDROID_SERIAL);
         Environment.SetEnvironmentVariable("TEST_ANDROID_IMAGE", TEST_ANDROID_IMAGE);
         Environment.SetEnvironmentVariable("TEST_ANDROID_MODEL", TEST_ANDROID_MODEL);
