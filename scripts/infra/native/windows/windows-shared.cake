@@ -19,19 +19,13 @@ string GetToolsetVersion()
 
 var TOOLSET_VERSION = new Lazy<string>(GetToolsetVersion);
 
-void RunNinjaWithVcVars(
-    DirectoryPath working,
-    DirectoryPath outDir,
-    string target,
-    string architecture,
-    string windowsSdkVersion,
-    string vcVarsVersion)
+void RunNinjaWithVcVars(DirectoryPath working, DirectoryPath outDir, string target, string architecture)
 {
     var vcVarsAll = ((DirectoryPath)VS_INSTALL).CombineWithFilePath("VC/Auxiliary/Build/vcvarsall.bat");
 
     var ninjaTarget = string.IsNullOrEmpty(target) ? "" : $" {target}";
     var command =
-        $"call \"{vcVarsAll.FullPath}\" {architecture} {windowsSdkVersion} -vcvars_ver={vcVarsVersion}" +
+        $"call \"{vcVarsAll.FullPath}\" {architecture} {WINDOWS_SDK_VERSION} -vcvars_ver={TOOLSET_VERSION.Value}" +
         $" && \"{NINJA_EXE}\" -C \"{outDir.FullPath}\"{ninjaTarget}";
 
     Information($"Initializing the Visual C++ environment once for {architecture}.");

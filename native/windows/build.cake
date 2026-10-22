@@ -80,9 +80,7 @@ Task("libSkiaSharp")
             SKIA_PATH,
             $"out/{nativeOutDir}",
             "SkiaSharp",
-            vcVarsArchitecture,
-            WINDOWS_SDK_VERSION,
-            TOOLSET_VERSION.Value);
+            vcVarsArchitecture);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
