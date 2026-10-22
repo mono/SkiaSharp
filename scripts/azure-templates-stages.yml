@@ -91,6 +91,7 @@ stages:
           parameters:
             buildAgentWindows: ${{ parameters.buildAgentWindows }}
             buildAgentLinux: ${{ parameters.buildAgentLinux }}
+            runFuzzing: ${{ parameters.runFuzzing }}
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-msbuild.yml@self

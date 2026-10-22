@@ -1,6 +1,9 @@
 parameters:
   - name: buildAgentHost
     type: object
+  - name: runFuzzing
+    type: boolean
+    default: false
 
 stages:
 
@@ -50,28 +53,31 @@ stages:
             # tvOS
             - name: native_tvos_macos
             # Linux
-            - name: native_linux_arm_alpine_linux
-            - name: native_linux_arm_alpine_nodeps_linux
             - name: native_linux_arm_linux
             - name: native_linux_arm_nodeps_linux
-            - name: native_linux_arm64_alpine_linux
-            - name: native_linux_arm64_alpine_nodeps_linux
             - name: native_linux_arm64_linux
             - name: native_linux_arm64_nodeps_linux
-            - name: native_linux_loongarch64_alpine_linux
-            - name: native_linux_loongarch64_alpine_nodeps_linux
             - name: native_linux_loongarch64_linux
             - name: native_linux_loongarch64_nodeps_linux
-            - name: native_linux_riscv64_alpine_linux
-            - name: native_linux_riscv64_alpine_nodeps_linux
             - name: native_linux_riscv64_linux
             - name: native_linux_riscv64_nodeps_linux
-            - name: native_linux_x64_alpine_linux
-            - name: native_linux_x64_alpine_nodeps_linux
             - name: native_linux_x64_linux
             - name: native_linux_x64_nodeps_linux
             - name: native_linux_x86_linux
             - name: native_linux_x86_nodeps_linux
+            # .NET official musl/Alpine artifacts are conditionally required.
+            # For branch fuzzing validation runs we intentionally skip Alpine build legs.
+            - ${{ if or(ne(parameters.runFuzzing, true), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+              - name: native_linux_arm_alpine_linux
+              - name: native_linux_arm_alpine_nodeps_linux
+              - name: native_linux_arm64_alpine_linux
+              - name: native_linux_arm64_alpine_nodeps_linux
+              - name: native_linux_loongarch64_alpine_linux
+              - name: native_linux_loongarch64_alpine_nodeps_linux
+              - name: native_linux_riscv64_alpine_linux
+              - name: native_linux_riscv64_alpine_nodeps_linux
+              - name: native_linux_x64_alpine_linux
+              - name: native_linux_x64_alpine_nodeps_linux
             # Bionic
             - name: native_linux_x64_bionic_linux
             - name: native_linux_arm64_bionic_linux            
@@ -95,28 +101,31 @@ stages:
           displayName: Merge Native Linux Artifacts
           buildAgent: ${{ parameters.buildAgentHost }}
           requiredArtifacts:
-            - name: native_linux_arm_alpine_linux
-            - name: native_linux_arm_alpine_nodeps_linux
             - name: native_linux_arm_linux
             - name: native_linux_arm_nodeps_linux
-            - name: native_linux_arm64_alpine_linux
-            - name: native_linux_arm64_alpine_nodeps_linux
             - name: native_linux_arm64_linux
             - name: native_linux_arm64_nodeps_linux
-            - name: native_linux_loongarch64_alpine_linux
-            - name: native_linux_loongarch64_alpine_nodeps_linux
             - name: native_linux_loongarch64_linux
             - name: native_linux_loongarch64_nodeps_linux
-            - name: native_linux_riscv64_alpine_linux
-            - name: native_linux_riscv64_alpine_nodeps_linux
             - name: native_linux_riscv64_linux
             - name: native_linux_riscv64_nodeps_linux
-            - name: native_linux_x64_alpine_linux
-            - name: native_linux_x64_alpine_nodeps_linux
             - name: native_linux_x64_linux
             - name: native_linux_x64_nodeps_linux
             - name: native_linux_x86_linux
             - name: native_linux_x86_nodeps_linux
+            # .NET official musl/Alpine artifacts are conditionally required.
+            # For branch fuzzing validation runs we intentionally skip Alpine build legs.
+            - ${{ if or(ne(parameters.runFuzzing, true), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+              - name: native_linux_arm_alpine_linux
+              - name: native_linux_arm_alpine_nodeps_linux
+              - name: native_linux_arm64_alpine_linux
+              - name: native_linux_arm64_alpine_nodeps_linux
+              - name: native_linux_loongarch64_alpine_linux
+              - name: native_linux_loongarch64_alpine_nodeps_linux
+              - name: native_linux_riscv64_alpine_linux
+              - name: native_linux_riscv64_alpine_nodeps_linux
+              - name: native_linux_x64_alpine_linux
+              - name: native_linux_x64_alpine_nodeps_linux
             # Bionic
             - name: native_linux_x64_bionic_linux
             - name: native_linux_arm64_bionic_linux

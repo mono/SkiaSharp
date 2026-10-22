@@ -3,11 +3,17 @@ parameters:
     type: object
   - name: buildAgentLinux
     type: object
+  - name: runFuzzing
+    type: boolean
+    default: false
 
 stages:
   - stage: fuzzing
     displayName: OneFuzz
-    dependsOn: package
+    ${{ if and(eq(parameters.runFuzzing, true), ne(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+      dependsOn: native
+    ${{ else }}:
+      dependsOn: package
     jobs:
       - job: fuzzing_windows
         displayName: OneFuzz Windows x64
