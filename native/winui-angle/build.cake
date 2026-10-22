@@ -50,10 +50,8 @@ Task("sync-ANGLE")
         var contents = FileReadText(toolchain);
         const string original = "pdbname = \"${dllname}.pdb\"";
         const string replacement = "pdbname = \"{{output_dir}}/{{target_output_name}}.pdb\"";
-        var originalCount = System.Text.RegularExpressions.Regex.Matches(contents,
-            System.Text.RegularExpressions.Regex.Escape(original)).Count;
-        var replacementCount = System.Text.RegularExpressions.Regex.Matches(contents,
-            System.Text.RegularExpressions.Regex.Escape(replacement)).Count;
+        var originalCount = contents.Split(new[] { original }, StringSplitOptions.None).Length - 1;
+        var replacementCount = contents.Split(new[] { replacement }, StringSplitOptions.None).Length - 1;
         if (originalCount + replacementCount != 2)
             throw new Exception($"Unexpected ANGLE DLL PDB definitions at {toolchain}.");
         if (originalCount > 0)
