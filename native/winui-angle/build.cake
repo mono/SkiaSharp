@@ -90,15 +90,15 @@ Task("sync-ANGLE")
     var rc_exe = "build/toolchain/win/rc/win/rc.exe";
     var rcPath = ANGLE_PATH.CombineWithFilePath(rc_exe);
     {
-        var sha = FileReadText(ANGLE_PATH.CombineWithFilePath($"{rc_exe}.sha1")).Trim();
         string actualSha = "";
         if (FileExists(rcPath)) {
             using var stream = System.IO.File.OpenRead(rcPath.FullPath);
             using var algorithm = System.Security.Cryptography.SHA1.Create();
             actualSha = string.Concat(algorithm.ComputeHash(stream).Select(value => value.ToString("x2")));
         }
-        var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
+        var sha = FileReadText(ANGLE_PATH.CombineWithFilePath($"{rc_exe}.sha1")).Trim();
         if (actualSha != sha) {
+            var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
             DownloadFile(url, rcPath);
             using var stream = System.IO.File.OpenRead(rcPath.FullPath);
             using var algorithm = System.Security.Cryptography.SHA1.Create();
