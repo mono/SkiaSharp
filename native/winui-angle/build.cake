@@ -81,8 +81,8 @@ Task("sync-ANGLE")
     }
 
     // set version numbers
-    {
-        var lastchange = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE");
+    var lastchange = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE");
+    if (!FileExists(lastchange)) {
         RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
     }
 
