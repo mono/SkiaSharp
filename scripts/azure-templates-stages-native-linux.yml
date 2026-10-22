@@ -6,6 +6,9 @@ parameters:
   - name: enableCaching
     type: boolean
     default: false
+  - name: runFuzzing
+    type: boolean
+    default: false
 
 stages:
 
@@ -62,11 +65,15 @@ stages:
               docker: scripts/infra/native/linux/docker/glibc
               target: externals-linux-clang-cross
             # .NET official cross images (musl/Alpine)
-            - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64', ',') }}:
-              - arch: ${{ arch }}
-                variant: alpine
-                docker: scripts/infra/native/linux/docker/alpine
-                target: externals-linux-clang-cross
+            # For ad-hoc fuzzing validation runs on non-main branches we skip Alpine
+            # legs because the external apk.static bootstrap host is currently flaky.
+            # Main branch behavior remains unchanged.
+            - ${{ if or(ne(parameters.runFuzzing, true), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+              - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64', ',') }}:
+                - arch: ${{ arch }}
+                  variant: alpine
+                  docker: scripts/infra/native/linux/docker/alpine
+                  target: externals-linux-clang-cross
 
       - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Bionic)
         parameters:

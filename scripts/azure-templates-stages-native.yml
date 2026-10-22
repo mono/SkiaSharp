@@ -12,6 +12,9 @@ parameters:
   - name: enableCaching
     type: boolean
     default: false
+  - name: runFuzzing
+    type: boolean
+    default: false
 
 stages:
 
@@ -30,6 +33,7 @@ stages:
       buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
       use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
       enableCaching: ${{ parameters.enableCaching }}
+      runFuzzing: ${{ parameters.runFuzzing }}
 
   - template: /scripts/azure-templates-stages-native-wasm.yml@self
     parameters:

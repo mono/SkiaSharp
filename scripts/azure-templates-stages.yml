@@ -58,6 +58,7 @@ stages:
         buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableCaching: ${{ parameters.enableCaching }}
+        runFuzzing: ${{ parameters.runFuzzing }}
 
   - ${{ if in(parameters.buildPipelineType, 'build', 'complete') }}:
     - template: /scripts/azure-templates-stages-package.yml@self
