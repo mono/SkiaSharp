@@ -49,6 +49,7 @@ jobs:
     continueOnError: ${{ parameters.continueOnError }}
     variables:
       DOTNET_NOLOGO: true
+      PYTHON_ARCHITECTURE: $[ lower(variables['Agent.OSArchitecture']) ]
       ${{ if ne(parameters.buildAgent.variables, '') }}:
         ${{ parameters.buildAgent.variables }}
       ${{ if ne(length(parameters.variables), 0) }}:
@@ -86,25 +87,12 @@ jobs:
         condition: always()
 
       - ${{ if and(ne(parameters.skipSteps, 'true'), or(not(startsWith(parameters.name, 'native_')), eq(parameters.docker, ''), and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)))) }}:
-        - pwsh: |
-            $architecture = $env:AGENT_OSARCHITECTURE.ToLowerInvariant()
-            if ($architecture -notin @('x86', 'x64', 'arm64')) {
-              throw "Unsupported Python architecture: $architecture"
-            }
-            Write-Host "##vso[task.setvariable variable=PYTHON_ARCHITECTURE]$architecture"
-          displayName: Configure Python architecture
         - task: UsePythonVersion@0
           displayName: Install Python
           retryCountOnTaskFailure: 3
           inputs:
             versionSpec: '3.x'
             architecture: $(PYTHON_ARCHITECTURE)
-        - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
-          - pwsh: |
-              $python = Get-Command python.exe -CommandType Application -ErrorAction Stop |
-                Select-Object -First 1 -ExpandProperty Source
-              Write-Host "##vso[task.setvariable variable=PYTHON_EXE]$python"
-            displayName: Configure Python
 
       # prepare - checkout strategy depends on caching
       - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
@@ -114,12 +102,7 @@ jobs:
         - pwsh: ./scripts/infra/shared/set-build-variables.ps1
           displayName: Configure build variables
         - pwsh: |
-            $python = if ('${{ parameters.buildAgent.pool.os }}' -eq 'windows') {
-              $env:PYTHON_EXE
-            } else {
-              'python3'
-            }
-            & $python scripts/infra/caching/repo-deps.py cache-key `
+            python scripts/infra/caching/repo-deps.py cache-key `
               --name '${{ parameters.name }}' `
               --job '${{ parameters.cacheJob }}' `
               --docker '${{ parameters.docker }}'
@@ -345,7 +328,6 @@ jobs:
                 AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
                 NINJA_EXE: $(NINJA_EXE)
-                PYTHON_EXE: $(PYTHON_EXE)
                 VS_INSTALL: $(VS_INSTALL)
                 # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
                 AppxSymbolPackageEnabled: false

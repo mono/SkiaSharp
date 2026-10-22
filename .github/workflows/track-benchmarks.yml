@@ -328,15 +328,6 @@ jobs:
           ./scripts/infra/native/windows/select-vs.ps1
           ./scripts/infra/native/windows/install-components.ps1
           ./scripts/infra/native/shared/install-ninja.ps1
-          $env:PYTHON_EXE = Get-Command python.exe -CommandType Application -ErrorAction Stop |
-            Select-Object -First 1 -ExpandProperty Source
-          $vsRoot = [IO.Path]::GetFullPath($env:VS_INSTALL).TrimEnd('\') + '\'
-          if ([IO.Path]::GetFullPath($env:PYTHON_EXE).StartsWith($vsRoot, [StringComparison]::OrdinalIgnoreCase)) {
-            throw "Python must be installed separately from Visual Studio: $env:PYTHON_EXE"
-          }
-          $env:LLVM_HOME = Join-Path $env:VS_INSTALL 'VC\Tools\Llvm\x64'
-          $cmake = Join-Path $env:VS_INSTALL 'Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin'
-          $env:PATH = "$cmake;$env:PATH"
           dotnet cake native/windows/build.cake --target=libSkiaSharp --configuration=Release --arch=x64 `
             --vsinstall="$env:VS_INSTALL"
 
