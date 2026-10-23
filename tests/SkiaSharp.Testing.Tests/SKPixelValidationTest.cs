@@ -84,7 +84,7 @@ public class SKPixelValidationTest : SKImageComparisonTestBase
 				options.MaxNormalizedRootMeanSquaredError = 1;
 				SetUniformTolerance(options, SKPixelTolerance.Absolute(255));
 			}
-			foreach (var style in Enum.GetValues<SKDifferenceStyle>())
+			foreach (SKDifferenceStyle style in Enum.GetValues(typeof(SKDifferenceStyle)))
 			foreach (var operation in Operations(first, second, a, b, firstPixmap, secondPixmap, options, style))
 			{
 				var error = Assert.Throws<ArgumentException>(operation);

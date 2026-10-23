@@ -33,10 +33,8 @@ using var actual = RenderScene(actual: true);
 using var toleranceMask = RenderMask(ignore: false);
 using var ignoreMask = RenderMask(ignore: true);
 
-SaveImage("expected.png", expected);
-SaveImage("actual.png", actual);
-SavePreview("expected-preview.png", expected);
-SavePreview("actual-preview.png", actual);
+SavePreview("expected.png", expected);
+SavePreview("actual.png", actual);
 SavePreview("tolerance-mask.png", toleranceMask);
 SavePreview("ignore-mask.png", ignoreMask);
 using var exact = SKImageComparison.GenerateDifferenceImage(expected, actual);
@@ -139,6 +137,8 @@ void SaveImage(string name, SKImage image)
 
 void SavePreview(string name, SKImage image)
 {
+    SaveImage(name, image);
+    name = $"{Path.GetFileNameWithoutExtension(name)}-preview.png";
     const int padding = 25;
     var width = image.Width + padding * 2;
     var height = image.Height + padding * 2;
