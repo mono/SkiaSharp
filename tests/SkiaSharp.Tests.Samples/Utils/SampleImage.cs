@@ -12,13 +12,13 @@ internal static class SampleImage
     internal static GoldenStore Store => new(new[] { Root });
 
     internal static GoldenRequest Host(string casePath) =>
-        new(SampleLookup.HostPlatform.ToLowerInvariant(), new Version(0, 0, 0), casePath,
+        new(SampleLookup.HostPlatform.ToLowerInvariant(), casePath, architecture:
             RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
 
     internal static GoldenRequest Container(string casePath) =>
-        new(OperatingSystem.IsWindows() ? "docker-windows" : "docker-linux", new Version(0, 0, 0), casePath);
+        new(OperatingSystem.IsWindows() ? "docker-windows" : "docker-linux", casePath);
 
-    internal static async Task Validate(byte[] bytes, string actual, GoldenRequest request, SampleImageOptions? options = null)
+    internal static async Task Validate(byte[] bytes, string actual, GoldenRequest request, GoldenComparisonOptions? options = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(actual)!);
         await File.WriteAllBytesAsync(actual, bytes);
@@ -26,7 +26,7 @@ internal static class SampleImage
         Validate(actual, request, options);
     }
 
-    internal static void Validate(string actual, GoldenRequest request, SampleImageOptions? options = null)
+    internal static void Validate(string actual, GoldenRequest request, GoldenComparisonOptions? options = null)
     {
         var resolution = Store.Resolve(request);
         TestContext.Current.TestOutputHelper?.WriteLine(resolution.Describe());
@@ -42,7 +42,7 @@ internal static class SampleImage
     }
 
     internal static async Task<string> Validate(
-        Func<Task<string>> capture, GoldenRequest request, TimeSpan? timeout = null, SampleImageOptions? options = null)
+        Func<Task<string>> capture, GoldenRequest request, TimeSpan? timeout = null, GoldenComparisonOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(capture);
         var limit = timeout ?? TimeSpan.FromSeconds(2);
@@ -112,7 +112,7 @@ internal static class SampleImage
     }
 
     /// <summary>Saves the actual PNG bytes, checks their signature, then validates the saved image against the expected reference.</summary>
-    internal static async Task Validate(byte[] bytes, string actual, string expected, SampleImageOptions? options = null)
+    internal static async Task Validate(byte[] bytes, string actual, string expected, GoldenComparisonOptions? options = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(actual)!);
 
@@ -123,12 +123,12 @@ internal static class SampleImage
     }
 
     /// <summary>Validates image dimensions and pixels against an absolute or canonical golden-relative reference path.</summary>
-    internal static void Validate(string actual, string expected, SampleImageOptions? options = null) =>
+    internal static void Validate(string actual, string expected, GoldenComparisonOptions? options = null) =>
         Validate(actual, expected, options ?? new(), reportMismatch: true);
 
     /// <summary>Captures until an image matches the reviewed reference or the timeout expires.</summary>
     internal static async Task<string> Validate(
-        Func<Task<string>> capture, string expected, TimeSpan? timeout = null, SampleImageOptions? options = null)
+        Func<Task<string>> capture, string expected, TimeSpan? timeout = null, GoldenComparisonOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(capture);
         var limit = timeout ?? TimeSpan.FromSeconds(2);
@@ -164,7 +164,7 @@ internal static class SampleImage
         }
     }
 
-    private static bool Validate(string actual, string expected, SampleImageOptions options, bool reportMismatch)
+    private static bool Validate(string actual, string expected, GoldenComparisonOptions options, bool reportMismatch)
     {
         expected = Path.Combine(Root, expected);
 
@@ -175,19 +175,13 @@ internal static class SampleImage
         return Validate(actual, expected, File.ReadAllBytes(expected), options, reportMismatch, attachActual: false);
     }
 
-    private static bool Validate(string actual, string expected, byte[] expectedBytes, SampleImageOptions options,
+    private static bool Validate(string actual, string expected, byte[] expectedBytes, GoldenComparisonOptions options,
         bool reportMismatch, bool attachActual = true)
     {
         if (reportMismatch && attachActual)
             TestContext.Current.AddFileAttachment(actual, "image/png");
-        var maxErrorPixelFraction = options.MaxErrorPixelFraction;
-        var maxAverageColorErrorFraction = options.MaxAverageColorErrorFraction;
-        Assert.InRange(maxErrorPixelFraction, 0, 1);
-        if (maxAverageColorErrorFraction is { } maximum)
-            Assert.InRange(maximum, 0, 1);
-
-        using var actualImage = SKImage.FromEncodedData(actual);
-        using var expectedImage = SKImage.FromEncodedData(expectedBytes);
+        using var actualImage = GoldenImage.TryDecode(File.ReadAllBytes(actual));
+        using var expectedImage = GoldenImage.TryDecode(expectedBytes);
         if (!reportMismatch && (actualImage is null || expectedImage is null))
             TestContext.Current.AddFileAttachment(actual, "image/png");
         Assert.NotNull(actualImage);
@@ -204,20 +198,17 @@ internal static class SampleImage
         Assert.Equal(expectedImage.Width, actualImage.Width);
         Assert.Equal(expectedImage.Height, actualImage.Height);
 
-        var result = SKPixelComparer.Compare(expectedImage, actualImage, 0);
-        var averageColorErrorFraction = result.AbsoluteError / (result.TotalPixels * 4.0 * 255);
-        var comparison = maxAverageColorErrorFraction is { } limit
-            ? $"average RGBA color error {averageColorErrorFraction:P3}, exceeding {limit:P3}"
-            : $"differing pixels {(decimal)result.ErrorPixelCount / result.TotalPixels:P3}, exceeding {maxErrorPixelFraction:P3}";
+        var result = GoldenImage.Compare(expectedImage, actualImage, options);
+        var failure = options.MaxAverageColorErrorFraction is { } limit
+            ? $"average RGBA color error {result.AverageColorErrorFraction:P3}, exceeding {limit:P3}"
+            : $"differing pixels {(double)result.Pixels.ErrorPixelCount / result.Pixels.TotalPixels:P3}, exceeding {options.MaxErrorPixelFraction:P3}";
         TestContext.Current.TestOutputHelper?.WriteLine(
-            $"Image comparison: {result.ErrorPixelCount}/{result.TotalPixels} pixels differ; " +
-            $"average RGBA color error {averageColorErrorFraction:P3}; " +
-            (maxAverageColorErrorFraction is { } allowed
+            $"Image comparison: {result.Pixels.ErrorPixelCount}/{result.Pixels.TotalPixels} pixels differ; " +
+            $"average RGBA color error {result.AverageColorErrorFraction:P3}; " +
+            (options.MaxAverageColorErrorFraction is { } allowed
                 ? $"allowed average color error {allowed:P3}."
-                : $"allowed differing pixels {maxErrorPixelFraction:P3}."));
-        if (maxAverageColorErrorFraction is { } averageLimit
-            ? averageColorErrorFraction <= averageLimit
-            : result.ErrorPixelCount <= result.TotalPixels * maxErrorPixelFraction)
+                : $"allowed differing pixels {options.MaxErrorPixelFraction:P3}."));
+        if (result.IsMatch)
         {
             if (!reportMismatch)
                 TestContext.Current.AddFileAttachment(actual, "image/png");
@@ -227,10 +218,9 @@ internal static class SampleImage
         if (!reportMismatch)
             return false;
 
-        using var diff = SKPixelComparer.GenerateDifferenceImage(expectedImage, actualImage, 0);
-        using var data = diff.Encode(SKEncodedImageFormat.Png, 100);
+        using var diff = GoldenImage.Difference(expectedImage, actualImage, options);
         var diffPath = Path.ChangeExtension(actual, ".diff.png");
-        File.WriteAllBytes(diffPath, data.ToArray());
+        File.WriteAllBytes(diffPath, GoldenImage.Encode(diff));
 
         if (File.Exists(expected))
             TestContext.Current.AddFileAttachment(expected, "image/png", $"expected-{Path.GetFileName(expected)}");
@@ -244,8 +234,8 @@ internal static class SampleImage
         }
         TestContext.Current.AddFileAttachment(diffPath, "image/png");
 
-        Assert.Fail($"Sample pixels differ from {expected}: {result.ErrorPixelCount}/{result.TotalPixels} pixels; " +
-            $"{comparison}; actual {actual}; diff {diffPath}.");
+        Assert.Fail($"Sample pixels differ from {expected}: {result.Pixels.ErrorPixelCount}/{result.Pixels.TotalPixels} pixels; " +
+            $"{failure}; actual {actual}; diff {diffPath}.");
         return false;
     }
 

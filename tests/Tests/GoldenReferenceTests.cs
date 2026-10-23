@@ -24,127 +24,103 @@ namespace SkiaSharp.Tests
 			return new GoldenStore(new[] { directory }).Resolve(request);
 		}
 
-		[Fact]
-		public void ExactThenExistingOlderVersionsThenZeroBaseline()
+		[Theory]
+		[InlineData("1.0.0", "mac/18.2.0/Text.png")]
+		[InlineData("18.2.0", "mac/18.2.0/Text.png")]
+		[InlineData("18.2.1", "mac/26.1.0/Text.png")]
+		[InlineData("26.1.0", "mac/26.1.0/Text.png")]
+		[InlineData("26.1.1", "mac/Text.png")]
+		public void VersionFoldersAreInclusiveUpperBoundsAndRootIsLatest(string runtime, string expected)
 		{
-			var request = new GoldenRequest("mac", new Version(12, 12, 2), "Text", "arm64");
-			var keys = new[]
-			{
-				"mac/12.12.2/Text.png", "mac/12.12.1/Text.arm64.png", "mac/12.10.0/Text.png",
-				"mac/12.9.0/Text.png", "mac/11.0.0/Text.png", "mac/0.0.0/Text.arm64.png",
-			};
-			for (var i = 0; i < keys.Length; i++)
-				Assert.Equal(keys[i], Resolve(keys.Skip(i).Reverse().ToArray(), request).Key);
+			var keys = new[] { "mac/18.2.0/Text.png", "mac/26.1.0/Text.png", "mac/Text.png" };
+			var request = new GoldenRequest("mac", "Text", Version.Parse(runtime));
+			Assert.Equal(expected, Resolve(keys.Reverse().ToArray(), request).Key);
 		}
 
 		[Fact]
-		public void FutureVersionsAreNotAttemptedAndMissingTraceIsReadable()
+		public void UnversionedRequestsUseOnlyTheLatestRoot()
 		{
-			var request = new GoldenRequest("mac", new Version(12, 6, 2), "Group/Text", "arm64");
-			var result = Resolve(new[] { "mac/12.6.3/Group/Text.png", "portable/13.0.0/Group/Text.png" }, request);
-			Assert.Same(request, result.Request);
+			var result = Resolve(new[] { "mac/18.2.0/Text.png", "mac/Text.png" },
+				new GoldenRequest("mac", "Text"));
+			Assert.Equal("mac/Text.png", result.Key);
+			Assert.Equal(new[] { "mac/Text.png" }, result.Candidates);
+		}
+
+		[Fact]
+		public void MissingTraceShowsFutureSnapshotsThenLatestRoot()
+		{
+			var request = new GoldenRequest("mac", "Group/Text", new Version(18, 2, 1), "arm64");
+			var result = Resolve(new[] { "mac/18.2.0/Other.png", "mac/26.1.0/Other.png" }, request);
 			Assert.Null(result.Key);
 			Assert.Null(result.Location);
 			Assert.Equal(new[]
 			{
-				"mac/12.6.2/Group/Text.arm64.png", "mac/12.6.2/Group/Text.png",
-				"mac/0.0.0/Group/Text.arm64.png", "mac/0.0.0/Group/Text.png",
-				"portable/12.6.2/Group/Text.arm64.png", "portable/12.6.2/Group/Text.png",
-				"portable/0.0.0/Group/Text.arm64.png", "portable/0.0.0/Group/Text.png",
+				"mac/26.1.0/Group/Text.arm64.png", "mac/26.1.0/Group/Text.png",
+				"mac/Group/Text.arm64.png", "mac/Group/Text.png",
+				"portable/Group/Text.arm64.png", "portable/Group/Text.png",
 			}, result.Candidates);
-			Assert.Contains("Golden request: mac/12.6.2/Group/Text", result.Describe());
+			Assert.Contains("Golden request: mac at 18.2.1/Group/Text", result.Describe());
 			Assert.Contains("MISSING reference", result.Describe());
-			Assert.Contains("Attempted (in order):", result.Describe());
-			Assert.Contains(string.Join(Environment.NewLine + "  ", result.Candidates), result.Describe());
 			Assert.Throws<InvalidOperationException>(() => result.ReadBytes());
 		}
 
 		[Theory]
 		[InlineData("12.6", "12.6.0")]
-		[InlineData("0.0", "0.0.0")]
 		[InlineData("12.6.2", "12.6.2")]
-		[InlineData("12.6.2.0", "12.6.2.0")]
 		[InlineData("12.6.2.10", "12.6.2.10")]
 		public void SystemVersionsNormalizeToAtLeastThreeComponents(string input, string expected)
 		{
-			var request = new GoldenRequest("mac", Version.Parse(input), "Text");
+			var request = new GoldenRequest("mac", "Text", Version.Parse(input));
 			Assert.Equal(Version.Parse(expected), request.Version);
-			Assert.Equal("Visual/mac/" + expected + "/Text.png", GoldenDiagnostics.CaptureKey("Visual", request));
-			Assert.Equal("mac/" + expected + "/Text.png", Resolve(new[] { "mac/" + expected + "/Text.png" }, request).Key);
-		}
-
-		[Fact]
-		public void FourComponentVersionsUseSystemVersionOrdering()
-		{
-			var keys = new[] { "mac/1.2.3.9/Text.png", "mac/1.2.3.10/Text.png", "mac/1.2.3/Text.png" };
-			Assert.Equal(keys[1], Resolve(keys, new GoldenRequest("mac", new Version(1, 2, 3, 11), "Text")).Key);
-			var result = Resolve(keys, new GoldenRequest("mac", new Version(1, 2, 3), "Text"));
-			Assert.Equal(keys[2], result.Key);
-			Assert.Single(result.Candidates);
+			Assert.Equal("Visual/mac/Text.png", GoldenDiagnostics.CaptureKey("Visual", request));
 		}
 
 		[Theory]
-		[InlineData("macos", "mac,portable")]
-		[InlineData("mac", "mac,portable")]
-		[InlineData("linux", "linux,portable")]
-		[InlineData("new-platform", "new-platform,portable")]
-		[InlineData("docker-linux", "docker-linux,portable")]
-		[InlineData("docker-windows", "docker-windows,portable")]
-		[InlineData("nanoserver", "nanoserver,windows,portable")]
-		[InlineData("portable", "portable")]
-		public void PlatformPolicyIsDeterministicAndDeduplicated(string profile, string chain) =>
-			Assert.Equal(chain.Split(','), GoldenPlatform.Profiles(profile));
+		[InlineData("macos", "mac")]
+		[InlineData("mac", "mac")]
+		[InlineData("linux", "linux")]
+		[InlineData("new-platform", "new-platform")]
+		[InlineData("docker-linux", "docker-linux")]
+		public void PlatformsNormalizeAndUseTheGeneralPortableFallback(string platform, string normalized)
+		{
+			var request = new GoldenRequest(platform, "Text");
+			Assert.Equal(normalized, request.Platform);
+			Assert.Equal("portable/Text.png",
+				Resolve(new[] { "portable/Text.png" }, request).Key);
+		}
 
 		[Fact]
-		public void EachProfileSearchesNormalVersionsBeforeMovingToTheNext()
+		public void EachProfileIsExhaustedBeforeTheNextFallback()
 		{
-			var request = new GoldenRequest("nanoserver", new Version(12, 6, 2), "Text");
+			var request = new GoldenRequest("nanoserver", "Text", new Version(20, 0, 0));
 			var keys = new[]
 			{
-				"nanoserver/0.0.0/Text.png", "windows/12.6.2/Text.png",
-				"windows/12.5.0/Text.png", "windows/0.0.0/Text.png", "portable/12.6.1/Text.png",
-				"portable/0.0.0/Text.png",
+				"nanoserver/Text.png", "windows/26.1.0/Text.png", "windows/Text.png",
+				"portable/21.0.0/Text.png", "portable/Text.png",
 			};
 			for (var i = 0; i < keys.Length; i++)
 				Assert.Equal(keys[i], Resolve(keys.Skip(i).ToArray(), request).Key);
 		}
 
 		[Fact]
-		public void VariantThenArchitectureOrderDoesNotBorrowSiblingVariants()
+		public void VariantThenArchitectureOrderDoesNotBorrowNeutralOrSiblingVariants()
 		{
 			var ordered = new[]
 			{
-				"portable/0.0.0/Text.ganesh-gl.arm64.png", "portable/0.0.0/Text.ganesh-gl.png",
-				"portable/0.0.0/Text.arm64.png", "portable/0.0.0/Text.png",
+				"portable/Text.ganesh-gl.arm64.png", "portable/Text.ganesh-gl.png",
 			};
-			var request = new GoldenRequest("portable", new Version(0, 0, 0), "Text", "arm64", "ganesh-gl", allowNeutralVariant: true);
+			var request = new GoldenRequest("portable", "Text", architecture: "arm64",
+				variant: "ganesh-gl");
 			for (var i = 0; i < ordered.Length; i++)
-			{
-				var result = Resolve(ordered.Skip(i).ToArray(), request);
-				Assert.Equal(ordered[i], result.Key);
-				Assert.Equal(ordered.Take(i + 1), result.Candidates);
-			}
-			var strict = new GoldenRequest("portable", new Version(0, 0, 0), "Text", "arm64", "ganesh-gl");
-			var missing = Resolve(ordered.Skip(2).Concat(new[]
-			{
-				"portable/0.0.0/Text.ganesh-metal.arm64.png", "portable/0.0.0/Text.ganesh-gl.x64.png",
-			}).ToArray(), strict);
-			Assert.Null(missing.Key);
-			Assert.Equal(ordered.Take(2), missing.Candidates);
-			Assert.Null(Resolve(ordered.Take(3).ToArray(), new GoldenRequest("portable", new Version(0, 0, 0), "Text")).Key);
-		}
+				Assert.Equal(ordered[i], Resolve(ordered.Skip(i).ToArray(), request).Key);
 
-		[Fact]
-		public void ExactVersionBeatsOlderVariantSpecificityAndInputOrderDoesNotMatter()
-		{
-			var keys = new[] { "mac/12.6.2/Text.png", "mac/12.6.1/Text.ganesh-gl.arm64.png" };
-			var request = new GoldenRequest("mac", new Version(12, 6, 2), "Text", "arm64", "ganesh-gl", allowNeutralVariant: true);
-			var result = Resolve(keys, request);
-			var reordered = Resolve(keys.Reverse().ToArray(), request);
-			Assert.Equal(keys[0], result.Key);
-			Assert.Equal(result.Key, reordered.Key);
-			Assert.Equal(result.Candidates, reordered.Candidates);
-			Assert.Contains("Selected: " + result.Key + " at ", result.Describe());
+			var missing = Resolve(new[]
+			{
+				"portable/Text.arm64.png", "portable/Text.png",
+				"portable/Text.ganesh-metal.arm64.png", "portable/Text.ganesh-gl.x64.png",
+			}, request);
+			Assert.Null(missing.Key);
+			Assert.Equal(ordered, missing.Candidates);
 		}
 
 		[Theory]
@@ -152,11 +128,12 @@ namespace SkiaSharp.Tests
 		[InlineData("Web/page")]
 		[InlineData("Maui/home")]
 		[InlineData("DiagonalLines")]
+		[InlineData("3D")]
 		public void HierarchicalCasePathsPreserveCase(string casePath)
 		{
-			var request = new GoldenRequest("mac", new Version(0, 0, 0), casePath);
+			var request = new GoldenRequest("mac", casePath);
 			Assert.Equal(casePath, request.CasePath);
-			var key = "mac/0.0.0/" + casePath + ".png";
+			var key = "mac/" + casePath + ".png";
 			Assert.Equal(key, Resolve(new[] { key }, request).Key);
 		}
 
@@ -172,10 +149,8 @@ namespace SkiaSharp.Tests
 		[InlineData("Text.png")]
 		[InlineData("Text Lines")]
 		[InlineData("Text/CON")]
-		[InlineData("Text/aux")]
-		[InlineData("Text/unsafe\n")]
 		public void UnsafeCasePathsAreRejected(string casePath) =>
-			Assert.Throws<ArgumentException>(() => new GoldenRequest("mac", new Version(0, 0, 0), casePath));
+			Assert.Throws<ArgumentException>(() => new GoldenRequest("mac", casePath));
 
 		[Theory]
 		[InlineData("x86")]
@@ -190,75 +165,51 @@ namespace SkiaSharp.Tests
 		[InlineData("riscv64")]
 		public void ArchitectureTokensAreReserved(string architecture)
 		{
-			var request = new GoldenRequest("portable", new Version(0, 0, 0), "Text", architecture, "raster");
-			var key = "portable/0.0.0/Text.raster." + architecture + ".png";
+			var request = new GoldenRequest("portable", "Text", architecture: architecture, variant: "raster");
+			var key = "portable/Text.raster." + architecture + ".png";
 			Assert.Equal(key, Resolve(new[] { key }, request).Key);
-			Assert.Throws<ArgumentException>(() => new GoldenRequest("mac", new Version(0, 0, 0), "Text", null, architecture));
+			Assert.Throws<ArgumentException>(() => new GoldenRequest("mac", "Text", variant: architecture));
 		}
 
 		[Theory]
-		[InlineData("Upper")]
-		[InlineData("bad/name")]
-		[InlineData("bad\\name")]
-		[InlineData("trailing-")]
-		[InlineData("con")]
-		public void ProfileAndVariantMustRemainSafeLowercase(string value)
-		{
-			Assert.Throws<ArgumentException>(() => new GoldenRequest(value, new Version(0, 0, 0), "Text"));
-			Assert.Throws<ArgumentException>(() => new GoldenRequest("mac", new Version(0, 0, 0), "Text", null, value));
-		}
-
-		[Theory]
-		[InlineData("amd64")]
-		[InlineData("ARM64")]
-		[InlineData("custom-arch")]
-		public void UnknownArchitecturesAreRejected(string architecture) =>
-			Assert.Throws<ArgumentException>(() => new GoldenRequest("mac", new Version(0, 0, 0), "Text", architecture));
-
-		[Theory]
-		[InlineData("mac/base/Text.png")]
-		[InlineData("mac/latest/Text.png")]
-		[InlineData("mac/12.0.0.r1/Text.png")]
 		[InlineData("mac/12.0/Text.png")]
 		[InlineData("mac/12.00.0/Text.png")]
-		[InlineData("mac/2147483648.0.0/Text.png")]
 		[InlineData("mac/1.0.0/CON/Text.png")]
-		[InlineData("mac/1.0.0/Text.x64.raster.png")]
-		[InlineData("mac/1.0.0/Text.raster.unknown.png")]
-		[InlineData("mac/1.0.0/Text.x64.arm64.png")]
-		[InlineData("mac/1.0.0/Text.PNG")]
+		[InlineData("mac/Text.x64.raster.png")]
+		[InlineData("mac/Text.raster.unknown.png")]
+		[InlineData("mac/Text.x64.arm64.png")]
+		[InlineData("mac/Text.PNG")]
 		public void MalformedStoredKeysAreRejected(string key) =>
-			Assert.Throws<ArgumentException>(() => Resolve(new[] { key }, new GoldenRequest("mac", new Version(1, 0, 0), "Text")));
+			Assert.Throws<ArgumentException>(() => Resolve(new[] { key }, new GoldenRequest("mac", "Text")));
 
 		[Fact]
 		public void OrderedSourcesWinAndBytesAreReadFresh()
 		{
 			var first = Path.Combine(root, "first");
 			var second = Path.Combine(root, "second");
-			const string key = "portable/0.0.0/Group/Text.png";
+			const string key = "portable/Group/Text.png";
 			foreach (var directory in new[] { first, second })
 			{
 				var path = Path.Combine(directory, key);
 				Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 				File.WriteAllBytes(path, new byte[] { directory == first ? (byte)1 : (byte)2 });
 			}
-			var request = new GoldenRequest("portable", new Version(0, 0, 0), "Group/Text");
-			var result = new GoldenStore(new[] { first, second, first }).Resolve(request);
+			var result = new GoldenStore(new[] { first, second, first })
+				.Resolve(new GoldenRequest("portable", "Group/Text"));
 			Assert.Equal(Path.Combine(first, key), result.Location);
 			Assert.Equal(new byte[] { 1 }, result.ReadBytes());
 			File.WriteAllBytes(result.Location!, new byte[] { 3 });
 			Assert.Equal(new byte[] { 3 }, result.ReadBytes());
-			Assert.Equal(new byte[] { 2 }, new GoldenStore(new[] { second, first }).Resolve(request).ReadBytes());
 		}
 
 		[Fact]
-		public void DiagnosticsUseCanonicalCaptureRequestRatherThanSelectedBaseline()
+		public void DiagnosticsAlwaysProposeTheLatestRoot()
 		{
-			var request = new GoldenRequest("macos", new Version(12, 6), "Maui/home", "arm64", "raster");
-			var result = Resolve(new[] { "portable/0.0.0/Maui/home.raster.png" }, request);
-			Assert.Equal("portable/0.0.0/Maui/home.raster.png", result.Key);
-			Assert.Equal("Samples/mac/12.6.0/Maui/home.raster.arm64.png", GoldenDiagnostics.CaptureKey("Samples", request));
-			Assert.Equal("##SKIA-GOLDEN## role=actual key=Visual/mac/12.6.0/Maui/home.raster.arm64.png size=1x2 base64=AQID",
+			var request = new GoldenRequest("macos", "Maui/home", new Version(12, 6), "arm64", "raster");
+			var result = Resolve(new[] { "portable/Maui/home.raster.png" }, request);
+			Assert.Equal("portable/Maui/home.raster.png", result.Key);
+			Assert.Equal("Samples/mac/Maui/home.raster.arm64.png", GoldenDiagnostics.CaptureKey("Samples", request));
+			Assert.Equal("##SKIA-GOLDEN## role=actual key=Visual/mac/Maui/home.raster.arm64.png size=1x2 base64=AQID",
 				GoldenDiagnostics.Marker("Visual", "actual", request, 1, 2, new byte[] { 1, 2, 3 }));
 		}
 

@@ -129,10 +129,10 @@ Find output, binlogs, results and images under `output/logs/testlogs/samples/`
 or CI's `sample_logs_*` artifacts. For restore failures, check the generated
 versions against staged packages. Do not clear shared caches.
 
-Review platform references under `tests/Goldens/Samples/{profile}/0.0.0/`.
+Review current platform references under `tests/Goldens/Samples/{platform}/`.
 Host profiles are `mac`, `linux` and `windows`; Docker uses separate
 `docker-linux` and `docker-windows` profiles. Existing references remain
-at the numeric baseline, organized by case paths such as `Console/output`,
+at the platform root, organized by case paths such as `Console/output`,
 `Web/page` and `Blazor/drawing-drawn`. See [golden-image tests](golden-image-tests.md) for
 candidate ordering, packaging and capture review.
 Dimensions must match; the default limit is **0.075% differing pixels** with
@@ -141,11 +141,11 @@ smoke check that can miss uniform dark output. Mismatches retain actual/diff
 images; references are never accepted automatically.
 
 `SampleImage.Validate` takes `actual`, a typed golden request (for example,
-`SampleImage.Host("Console/output")`), and an optional `SampleImageOptions` record.
+`SampleImage.Host("Console/output")`), and optional shared `GoldenComparisonOptions`.
 Absolute expected-image paths remain available for transient screenshot checks.
 Its byte-array overload also takes
 the actual output path, saves the bytes, then calls the file overload.
 Set `ExpectedSize = new(800, 600)` for
 fixed-size PNGs; only animated GPU checks set `MaxAverageColorErrorFraction`.
-The options own the default `MaxErrorPixelFraction` of `0.00075m`.
+The options own the default `MaxErrorPixelFraction` of `0.00075`.
 Omitting options retains the strict pixel comparison and golden dimensions.

@@ -28,13 +28,17 @@ MARKER = re.compile(
 
 def validate_key(key):
     parts = key.split("/")
-    if len(parts) < 4 or parts[0] not in ("Samples", "Visual"):
-        raise ValueError(f"Expected Samples|Visual/profile/version/case[.variant][.architecture].png: {key}")
-    _, profile, version, *case = parts
-    if not re.fullmatch(r"(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){2,3}", version):
+    if len(parts) < 3 or parts[0] not in ("Samples", "Visual"):
+        raise ValueError(f"Expected Samples|Visual/platform/[version/]case[.variant][.architecture].png: {key}")
+    _, platform, *case = parts
+    if len(case) >= 2 and re.fullmatch(r"(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){2,3}", case[0]):
+        if any(int(component) > 2147483647 for component in case[0].split(".")):
+            raise ValueError(f"Version component is out of range: {key}")
+        case.pop(0)
+    elif len(case) >= 2 and case[0][0].isdigit() and "." in case[0]:
         raise ValueError(f"Expected a normalized three- or four-component System.Version: {key}")
-    if any(int(component) > 2147483647 for component in version.split(".")):
-        raise ValueError(f"Version component is out of range: {key}")
+    if not case:
+        raise ValueError(f"Expected a golden case path: {key}")
     filename = case[-1]
     if not filename.endswith(".png"):
         raise ValueError(f"Expected a PNG filename: {key}")
@@ -43,7 +47,7 @@ def validate_key(key):
         raise ValueError(f"Too many filename suffixes: {key}")
     if len(names) == 3 and (names[1] in ARCHITECTURES or names[2] not in ARCHITECTURES):
         raise ValueError(f"Variant must precede a recognized architecture: {key}")
-    for name in [profile, *names[1:]]:
+    for name in [platform, *names[1:]]:
         if not SLUG.fullmatch(name) or RESERVED.fullmatch(name):
             raise ValueError(f"Unsafe golden path: {key}")
     for name in [*case[:-1], names[0]]:

@@ -21,8 +21,9 @@ namespace SkiaSharp.Tests
 			var resolution = VisualMatrixTestsBase.ResolveGolden("raster", scene.Name);
 			Assert.NotNull(resolution.Key);
 			Assert.NotNull(resolution.Location);
-			var pixels = GoldenImages.Decode(resolution.ReadBytes(), scene.Info, resolution.Location);
-			Assert.Equal(scene.Info.BytesSize, pixels.Length);
+			using var image = GoldenImage.Decode(resolution.ReadBytes(), resolution.Location);
+			Assert.Equal(scene.Info.Width, image.Width);
+			Assert.Equal(scene.Info.Height, image.Height);
 
 			if (embedded)
 			{
@@ -33,13 +34,12 @@ namespace SkiaSharp.Tests
 				Assert.Equal(resolution.Key, resource.Key);
 				Assert.Contains("!" + GoldenStore.ResourcePrefix, resource.Location);
 				var png = resource.ReadBytes();
-				using var image = SKImage.FromEncodedData(png);
-				Assert.NotNull(image);
-				Assert.Equal(scene.Info.Width, image.Width);
-				Assert.Equal(scene.Info.Height, image.Height);
+				using var embeddedImage = GoldenImage.Decode(png, resource.Location);
+				Assert.Equal(scene.Info.Width, embeddedImage.Width);
+				Assert.Equal(scene.Info.Height, embeddedImage.Height);
 				Assert.Contains(names, name => name.StartsWith(GoldenStore.ResourcePrefix, StringComparison.Ordinal) &&
 					name.Contains("ganesh-gl"));
-				var missing = resourceStore.Resolve(new GoldenRequest("missing", new Version(0, 0, 0), "Missing/case"));
+				var missing = resourceStore.Resolve(new GoldenRequest("missing", "Missing/case"));
 				Assert.Null(missing.Key);
 				Assert.Throws<InvalidOperationException>(() => missing.ReadBytes());
 
