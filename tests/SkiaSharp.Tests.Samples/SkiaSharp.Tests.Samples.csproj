@@ -55,7 +55,8 @@
     <Error Condition="!Exists('$(TargetDir)playwright.ps1')"
       Text="Build the sample test runner before installing its Playwright browser: $(TargetDir)playwright.ps1." />
     <Message Importance="high" Text="Installing Chromium for CI sample tests." />
-    <Exec Command="pwsh -NoLogo -NoProfile -File &quot;$(TargetDir)playwright.ps1&quot; install --with-deps chromium" />
+    <Exec Command="pwsh -NoLogo -NoProfile -File &quot;$(TargetDir)playwright.ps1&quot; install --with-deps chromium"
+      IgnoreStandardErrorWarningFormat="true" />
   </Target>
 
 </Project>
