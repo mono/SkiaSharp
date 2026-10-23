@@ -200,7 +200,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentException>(() => Resolve(new[] { key }, "mac", "Text"));
 
 		[Fact]
-		public void OrderedSourcesWinAndBytesAreReadFresh()
+		public void StoreCachesItsSourceIndexButReadsSelectedBytesFresh()
 		{
 			var first = Path.Combine(root, "first");
 			var second = Path.Combine(root, "second");
@@ -211,14 +211,19 @@ namespace SkiaSharp.Tests
 				Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 				File.WriteAllBytes(path, new byte[] { directory == first ? (byte)1 : (byte)2 });
 			}
-			var result = new GoldenStore(new[] { first, second, first })
-				.Resolve("portable", "Group/Text");
+			var store = new GoldenStore(new[] { first, second, first });
+			var result = store.Resolve("portable", "Group/Text");
 			Assert.Equal(
 				Path.Combine(first, key.Replace('/', Path.DirectorySeparatorChar)),
 				result.ReferenceLocation);
 			Assert.Equal(new byte[] { 1 }, result.ReadBytes());
 			File.WriteAllBytes(result.ReferenceLocation!, new byte[] { 3 });
 			Assert.Equal(new byte[] { 3 }, result.ReadBytes());
+
+			var added = Path.Combine(first, "portable", "Group", "Added.png");
+			Directory.CreateDirectory(Path.GetDirectoryName(added)!);
+			File.WriteAllBytes(added, new byte[] { 4 });
+			Assert.Null(store.Resolve("portable", "Group/Added").ReferenceKey);
 		}
 
 		[Fact]

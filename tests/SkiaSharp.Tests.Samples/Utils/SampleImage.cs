@@ -8,7 +8,7 @@ internal static class SampleImage
     internal static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(2);
 
     internal static string Root => Path.Combine(AppContext.BaseDirectory, "Goldens");
-    internal static GoldenStore Store => new(new[] { Root });
+    internal static GoldenStore Store { get; } = new(new[] { Root });
 
     internal static Golden Host(string casePath) =>
         Store.Resolve(

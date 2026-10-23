@@ -94,11 +94,12 @@ SkiaSharp.Goldens/{platform}/[{max-version}/]{case/path}[.variant][.architecture
 
 `GoldenStore` accepts ordered disk roots and resource assemblies. Disk roots
 precede embedded resources; the first source containing a key wins. Enumeration
-within each source is ordinal and deterministic. The visual consumer configures
+within each source is ordinal and deterministic. Each store snapshots this
+key/source index on first resolution and reuses it for the process; it does not
+cache PNG bytes, so a selected file is read fresh for every verification. The visual consumer configures
 the output directory and `TestConfig.PathRoot`, then the entry, configured host
 and test assemblies. Samples configure their packaged output directory.
 Neither scans all loaded assemblies or relies on directory-name mangling.
-Selected bytes are read fresh, without a shared byte cache.
 
 ## Comparison policy
 

@@ -14,12 +14,16 @@ public sealed class GoldenStore
 
 	private readonly string[] diskRoots;
 	private readonly Assembly[] resourceAssemblies;
+	private readonly Lazy<Dictionary<string, Source>> sources;
 
 	public GoldenStore(IEnumerable<string> diskRoots, IEnumerable<Assembly>? resourceAssemblies = null)
 	{
 		this.diskRoots = (diskRoots ?? throw new ArgumentNullException(nameof(diskRoots)))
 			.Select(Path.GetFullPath).Distinct(StringComparer.Ordinal).ToArray();
 		this.resourceAssemblies = (resourceAssemblies ?? Array.Empty<Assembly>()).Distinct().ToArray();
+		sources = new Lazy<Dictionary<string, Source>>(
+			EnumerateSources,
+			isThreadSafe: true);
 	}
 
 	public Golden Resolve(
@@ -46,17 +50,18 @@ public sealed class GoldenStore
 		}
 
 		var fileNames = FileNames(casePath, architecture, variant).ToArray();
-		var sources = EnumerateSources();
+		var sources = this.sources.Value;
 		var attempted = new List<string>();
 		foreach (var candidateProfile in FallbackChain(profile))
 		{
 			if (version != null)
 			{
-				var versions = sources.Keys
-					.Where(key => key.StartsWith(candidateProfile + "/", StringComparison.Ordinal))
-					.Select(ValidateKey)
-					.Where(value => value != null && value >= version)
-					.Cast<Version>()
+				var versions = sources
+					.Where(source =>
+						source.Key.StartsWith(candidateProfile + "/", StringComparison.Ordinal) &&
+						source.Value.Version != null &&
+						source.Value.Version >= version)
+					.Select(source => source.Value.Version!)
 					.Distinct()
 					.OrderBy(value => value);
 				foreach (var candidateVersion in versions)
@@ -87,9 +92,9 @@ public sealed class GoldenStore
 			null, null, attempted, null);
 	}
 
-	private Dictionary<string, (string Location, Func<byte[]> Read)> EnumerateSources()
+	private Dictionary<string, Source> EnumerateSources()
 	{
-		var sources = new Dictionary<string, (string Location, Func<byte[]> Read)>(StringComparer.Ordinal);
+		var sources = new Dictionary<string, Source>(StringComparer.Ordinal);
 		foreach (var root in diskRoots)
 		{
 			if (!Directory.Exists(root))
@@ -126,9 +131,9 @@ public sealed class GoldenStore
 
 		void Add(string key, string location, Func<byte[]> read)
 		{
-			ValidateKey(key);
+			var version = ValidateKey(key);
 			if (!sources.ContainsKey(key))
-				sources.Add(key, (location, read));
+				sources.Add(key, new Source(location, read, version));
 		}
 	}
 
@@ -224,4 +229,17 @@ public sealed class GoldenStore
 		return parsed;
 	}
 
+	private sealed record Source
+	{
+		public Source(string location, Func<byte[]> read, Version? version)
+		{
+			Location = location;
+			Read = read;
+			Version = version;
+		}
+
+		public string Location { get; }
+		public Func<byte[]> Read { get; }
+		public Version? Version { get; }
+	}
 }

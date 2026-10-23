@@ -38,6 +38,8 @@ namespace SkiaSharp.Tests.Visual.Tests
 	/// </summary>
 	public abstract class VisualMatrixTestsBase : SKTest
 	{
+		private static readonly Lazy<GoldenStore> goldenStore = new(CreateStore);
+
 		/// <summary>
 		/// Trait value tagging every visual test. Lets CI and developers run or skip
 		/// just the visual suite without naming individual classes.
@@ -71,13 +73,13 @@ namespace SkiaSharp.Tests.Visual.Tests
 		}
 
 		internal static Golden Resolve(string rendererName, string sceneName) =>
-			CreateStore().Resolve(
+			goldenStore.Value.Resolve(
 				TestConfig.Current.PlatformName,
 				sceneName,
 				architecture: RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
 				variant: rendererName);
 
-		internal static GoldenStore CreateStore()
+		private static GoldenStore CreateStore()
 		{
 			var roots = new List<string> { Path.Combine(AppContext.BaseDirectory, "Goldens") };
 			if (!string.IsNullOrEmpty(TestConfig.Current.PathRoot))

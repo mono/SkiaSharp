@@ -242,7 +242,10 @@ public static class SKPixelComparer
 			else if (maxDelta > 0)
 				diffPixels[idx] = new SKColor(255, 200, 0);
 			else
-				diffPixels[idx] = new SKColor((byte)(secondPixel.Red / 4), (byte)(secondPixel.Green / 4), (byte)(secondPixel.Blue / 4));
+				diffPixels[idx] = new SKColor(
+					(byte)(secondPixel.Red / 4),
+					(byte)(secondPixel.Green / 4),
+					(byte)(secondPixel.Blue / 4));
 		}
 
 		return SKImage.FromBitmap(diffBitmap);
@@ -314,7 +317,9 @@ public static class SKPixelComparer
 		var s2 = mask.Info.Size;
 
 		if (s1 != s2)
-			throw new InvalidOperationException($"Unable to compare using mask of a different size: {s1.Width}x{s1.Height} vs {s2.Width}x{s2.Height}.");
+			throw new InvalidOperationException(
+				$"Unable to compare using mask of a different size: " +
+				$"{s1.Width}x{s1.Height} vs {s2.Width}x{s2.Height}.");
 	}
 
 	private static void Validate(SKImage first, SKImage second)
@@ -326,7 +331,9 @@ public static class SKPixelComparer
 		var s2 = second.Info.Size;
 
 		if (s1 != s2)
-			throw new InvalidOperationException($"Unable to compare images of different sizes: {s1.Width}x{s1.Height} vs {s2.Width}x{s2.Height}.");
+			throw new InvalidOperationException(
+				$"Unable to compare images of different sizes: " +
+				$"{s1.Width}x{s1.Height} vs {s2.Width}x{s2.Height}.");
 	}
 
 	private static SKBitmap GetNormalizedBitmap(SKImage image)
