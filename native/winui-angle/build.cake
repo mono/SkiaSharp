@@ -32,12 +32,7 @@ Task("sync-ANGLE")
         "testing",
         "third_party/zlib",
         "third_party/jsoncpp",
-        "third_party/vulkan-deps",
         "third_party/astc-encoder/src",
-        "third_party/spirv-headers/src",
-        "third_party/spirv-tools/src",
-        "third_party/vulkan-headers/src",
-        "tools/clang",
     };
     RunProcess("git", new ProcessSettings {
         Arguments = $"-c core.longpaths=true submodule update --init --recursive --depth 1 --single-branch -- {string.Join(" ", submodules)}",
