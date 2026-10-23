@@ -182,6 +182,7 @@ Task("ANGLE")
                 $"angle_enable_wgpu=false " +
                 $"angle_enable_gl_desktop_backend=false " +
                 $"angle_enable_vulkan=false " +
+                $"angle_build_vulkan_system_info=false " +
                 $"spectre_lib_root='{System.IO.Path.GetDirectoryName(spectreLibPath)}'",
                 new Dictionary<string, string> {
                     { "GYP_MSVS_OVERRIDE_PATH", VS_INSTALL },
