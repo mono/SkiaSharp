@@ -119,7 +119,7 @@ public class SKPixelNormalizationTest : SKImageComparisonTestBase
 			AssertEquivalent(image, SKImageComparison.Compare(first, second, options));
 			options.IgnoreMask = mask;
 
-			foreach (var style in Enum.GetValues<SKDifferenceStyle>())
+			foreach (SKDifferenceStyle style in Enum.GetValues(typeof(SKDifferenceStyle)))
 			{
 				using var imageDiff = SKImageComparison.GenerateDifferenceImage(a, b, style, options);
 				using var bitmapDiff = SKImageComparison.GenerateDifferenceImage(first, second, style, options);
