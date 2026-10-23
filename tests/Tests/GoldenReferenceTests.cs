@@ -190,13 +190,13 @@ namespace SkiaSharp.Tests
 			const string key = "portable/Group/Text.png";
 			foreach (var directory in new[] { first, second })
 			{
-				var path = Path.Combine(directory, key);
+				var path = Path.Combine(directory, key.Replace('/', Path.DirectorySeparatorChar));
 				Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 				File.WriteAllBytes(path, new byte[] { directory == first ? (byte)1 : (byte)2 });
 			}
 			var result = new GoldenStore(new[] { first, second, first })
 				.Resolve(new GoldenRequest("portable", "Group/Text"));
-			Assert.Equal(Path.Combine(first, key), result.Location);
+			Assert.Equal(Path.Combine(first, key.Replace('/', Path.DirectorySeparatorChar)), result.Location);
 			Assert.Equal(new byte[] { 1 }, result.ReadBytes());
 			File.WriteAllBytes(result.Location!, new byte[] { 3 });
 			Assert.Equal(new byte[] { 3 }, result.ReadBytes());
