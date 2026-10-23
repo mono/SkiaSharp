@@ -22,7 +22,7 @@ public class BasicSampleRunTests : DotNetSampleTestBase
             File.Copy(Path.Combine(Path.GetDirectoryName(project)!, "output.png"), image);
             SampleImage.Host("Console/output").Verify(
                 GoldenInput.Path(image),
-                new GoldenOptions(expectedSize: new(800, 600)));
+                new(expectedSize: new(800, 600)));
         });
 
     [Fact]
@@ -41,7 +41,7 @@ public class BasicSampleRunTests : DotNetSampleTestBase
             Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
             var png = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
             SampleImage.Host("Web/output").Verify(
-                GoldenInput.Path(Golden.WritePng(Path.Combine(app.Diagnostics, "output.png"), png)),
-                new GoldenOptions(expectedSize: new(512, 512)));
+                GoldenInput.Bytes(png, "output.png"),
+                new(expectedSize: new(512, 512)));
         });
 }

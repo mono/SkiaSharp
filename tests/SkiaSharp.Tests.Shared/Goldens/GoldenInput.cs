@@ -26,14 +26,14 @@ public sealed class GoldenInput
 	public static GoldenInput Path(string path)
 	{
 		if (path == null) throw new ArgumentNullException(nameof(path));
-		return new GoldenInput(path, path: path);
+		return new(path, path: path);
 	}
 
 	public static GoldenInput Bytes(byte[] bytes, string name = "image.png")
 	{
 		if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 		ValidateName(name);
-		return new GoldenInput(name, bytes: bytes);
+		return new(name, bytes: bytes);
 	}
 
 	public static GoldenInput Bytes(ReadOnlySpan<byte> bytes, string name = "image.png") =>
@@ -43,7 +43,7 @@ public sealed class GoldenInput
 	{
 		if (pixels == null) throw new ArgumentNullException(nameof(pixels));
 		ValidateName(name);
-		return new GoldenInput(name, bytes: pixels, imageInfo: imageInfo, pixels: true);
+		return new(name, bytes: pixels, imageInfo: imageInfo, pixels: true);
 	}
 
 	public static GoldenInput Pixels(ReadOnlySpan<byte> pixels, SKImageInfo imageInfo, string name = "image.png") =>
@@ -52,7 +52,7 @@ public sealed class GoldenInput
 	public static GoldenInput Capture(Func<Task<string>> capturePath)
 	{
 		if (capturePath == null) throw new ArgumentNullException(nameof(capturePath));
-		return new GoldenInput("capture.png", capturePath: capturePath);
+		return new("capture.png", capturePath: capturePath);
 	}
 
 	internal async Task<Image> ReadAsync() =>
@@ -65,7 +65,7 @@ public sealed class GoldenInput
 		if (path != null)
 			return ReadEncoded(File.ReadAllBytes(path), path, path);
 		if (pixels)
-			return new Image(EncodePixels(bytes!, imageInfo), name, null, PngName(name));
+			return new(EncodePixels(bytes!, imageInfo), name, null, PngName(name));
 		return ReadEncoded(bytes!, name, null);
 	}
 
@@ -78,10 +78,10 @@ public sealed class GoldenInput
 	private static Image ReadEncoded(byte[] encoded, string label, string? filePath)
 	{
 		if (HasPngSignature(encoded))
-			return new Image(encoded, label, filePath, System.IO.Path.GetFileName(label));
+			return new(encoded, label, filePath, System.IO.Path.GetFileName(label));
 		using var image = SKImage.FromEncodedData(encoded)
 			?? throw new InvalidOperationException($"Failed to decode image: {label}.");
-		return new Image(Encode(image), label, null, PngName(label));
+		return new(Encode(image), label, null, PngName(label));
 	}
 
 	private static byte[] EncodePixels(byte[] value, SKImageInfo info)

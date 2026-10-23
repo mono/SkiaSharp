@@ -67,13 +67,13 @@ namespace SkiaSharp.Tests.Visual.Tests
 			var raster = renderer.Name == GpuBackends.Raster;
 			Resolve(renderer.Name, scene.Name).Verify(
 				GoldenInput.Pixels(actual, RendererPixels.NormalizedInfo(info)),
-				new GoldenOptions(
+				new(
 					channelTolerance: raster ? 2 : 12,
 					maxErrorPixelFraction: raster ? 0.002 : 0.03));
 		}
 
 		internal static Golden Resolve(string rendererName, string sceneName) =>
-			goldenStore.Value.Resolve(new GoldenCase(
+			goldenStore.Value.Resolve(new(
 				TestConfig.Current.PlatformName,
 				sceneName,
 				architecture: RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),

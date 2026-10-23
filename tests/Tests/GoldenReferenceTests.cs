@@ -28,7 +28,7 @@ namespace SkiaSharp.Tests
 				File.WriteAllBytes(path, new byte[] { 1, 2, 3 });
 			}
 			return new GoldenStore(new[] { directory })
-				.Resolve(new GoldenCase(profile, casePath, version, architecture, variant));
+				.Resolve(new(profile, casePath, version, architecture, variant));
 		}
 
 		[Theory]
@@ -220,7 +220,7 @@ namespace SkiaSharp.Tests
 				File.WriteAllBytes(path, new byte[] { directory == first ? (byte)1 : (byte)2 });
 			}
 			var store = new GoldenStore(new[] { first, second, first });
-			var result = store.Resolve(new GoldenCase("portable", "Group/Text"));
+			var result = store.Resolve(new("portable", "Group/Text"));
 			Assert.Equal(
 				Path.Combine(first, key.Replace('/', Path.DirectorySeparatorChar)),
 				result.ReferenceLocation);
@@ -231,7 +231,7 @@ namespace SkiaSharp.Tests
 			var added = Path.Combine(first, "portable", "Group", "Added.png");
 			Directory.CreateDirectory(Path.GetDirectoryName(added)!);
 			File.WriteAllBytes(added, new byte[] { 4 });
-			Assert.Null(store.Resolve(new GoldenCase("portable", "Group/Added")).ReferenceKey);
+			Assert.Null(store.Resolve(new("portable", "Group/Added")).ReferenceKey);
 		}
 
 		[Fact]

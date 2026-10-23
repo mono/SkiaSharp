@@ -133,20 +133,19 @@ Review current platform references under `tests/Goldens/Samples/{platform}/`.
 Host profiles are `mac`, `linux` and `windows`; Docker uses separate
 `docker-linux` and `docker-windows` profiles. Existing references remain
 at the platform root, organized by case paths such as `Console/output`,
-`Web/page` and `Blazor/drawing-drawn`. See [golden-image tests](golden-image-tests.md) for
-candidate ordering, packaging and capture review.
-Dimensions must match; the default limit is **0.075% differing pixels** with
-zero channel tolerance. Animated GPU pages use a loose **6% mean RGBA error**
-smoke check that can miss uniform dark output. Mismatches retain actual/diff
-images; references are never accepted automatically.
+`Web/page` and `Blazor/drawing-drawn`.
 
-Resolve and verify in one flow:
+Sample tests use `SampleImage.Host(...)` or `SampleImage.Container(...)` to
+select the appropriate profile:
 
 ```csharp
-SampleImage.Host("Console/output")
-    .Verify(
-        GoldenInput.Path(actualPath),
-        new GoldenOptions(expectedSize: new(800, 600)));
+SampleImage.Host("Console/output").Verify(
+    GoldenInput.Path(actualPath),
+    new(expectedSize: new(800, 600)));
+
+SampleImage.Host("Web/output").Verify(
+    GoldenInput.Bytes(png, "output.png"),
+    new(expectedSize: new(512, 512)));
 
 await SampleImage.Host("Blazor/cpu").VerifyAsync(
     GoldenInput.Capture(app.Screenshot),
@@ -154,10 +153,10 @@ await SampleImage.Host("Blazor/cpu").VerifyAsync(
     TestContext.Current.CancellationToken);
 ```
 
-Use `Golden.Verify(GoldenInput.Path(actualPath), GoldenInput.Path(expectedPath))`
-for transient image-to-image checks. `GoldenInput.Bytes(...)` accepts any
-Skia-decodable encoded image, while `GoldenInput.Pixels(...)` accepts raw pixels
-with their `SKImageInfo`. Use `Golden.WritePng(path, bytes)` when a response must
-first be persisted. Only animated GPU checks set
-`new GoldenOptions(maxAverageColorErrorFraction: 0.06)`; omitting options retains
-zero channel tolerance and the default `0.00075` differing-pixel fraction.
+Dimensions must match; the default limit is **0.075% differing pixels** with
+zero channel tolerance. Animated GPU pages use a loose **6% mean RGBA error**
+smoke check that can miss uniform dark output. Mismatches retain actual/diff
+images; references are never accepted automatically.
+
+See [golden-image tests](golden-image-tests.md) for reference lookup, input
+types, packaging, diagnostics and capture review.

@@ -32,7 +32,7 @@ namespace SkiaSharp.Tests
 				var names = assembly.GetManifestResourceNames();
 				Assert.Contains(GoldenStore.ResourcePrefix + golden.ReferenceKey, names);
 				var resourceStore = new GoldenStore(Array.Empty<string>(), new[] { assembly });
-				var resource = resourceStore.Resolve(new GoldenCase(
+				var resource = resourceStore.Resolve(new(
 					TestConfig.Current.PlatformName,
 					scene.Name,
 					architecture: RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
@@ -46,7 +46,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(scene.Info.Height, embeddedImage.Height);
 				Assert.Contains(names, name => name.StartsWith(GoldenStore.ResourcePrefix, StringComparison.Ordinal) &&
 					name.Contains("ganesh-gl"));
-				var missing = resourceStore.Resolve(new GoldenCase("missing", "Missing/case"));
+				var missing = resourceStore.Resolve(new("missing", "Missing/case"));
 				Assert.Null(missing.ReferenceKey);
 				Assert.Throws<InvalidOperationException>(() => missing.ReadBytes());
 
@@ -57,7 +57,7 @@ namespace SkiaSharp.Tests
 					Directory.CreateDirectory(Path.GetDirectoryName(path));
 					File.WriteAllBytes(path, png);
 					var mixed = new GoldenStore(new[] { root }, new[] { assembly })
-						.Resolve(new GoldenCase(
+						.Resolve(new(
 							TestConfig.Current.PlatformName,
 							scene.Name,
 							architecture: RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),

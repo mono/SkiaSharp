@@ -50,7 +50,7 @@ public sealed class GoldenStore
 					var key = $"{candidateProfile}/{candidateVersion}/{fileName}";
 					attempted.Add(key);
 					if (sources.TryGetValue(key, out var source))
-						return new Golden(goldenCase, key, source.Location, attempted, source.Read);
+						return new(goldenCase, key, source.Location, attempted, source.Read);
 				}
 			}
 
@@ -59,11 +59,11 @@ public sealed class GoldenStore
 				var key = $"{candidateProfile}/{fileName}";
 				attempted.Add(key);
 				if (sources.TryGetValue(key, out var source))
-					return new Golden(goldenCase, key, source.Location, attempted, source.Read);
+					return new(goldenCase, key, source.Location, attempted, source.Read);
 			}
 		}
 
-		return new Golden(goldenCase, null, null, attempted, null);
+		return new(goldenCase, null, null, attempted, null);
 	}
 
 	private Dictionary<string, Source> EnumerateSources()
@@ -107,7 +107,7 @@ public sealed class GoldenStore
 		{
 			var version = ValidateKey(key);
 			if (!sources.ContainsKey(key))
-				sources.Add(key, new Source(location, read, version));
+				sources.Add(key, new(location, read, version));
 		}
 	}
 

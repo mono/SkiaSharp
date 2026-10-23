@@ -1,184 +1,113 @@
 # Golden-image tests
 
-Visual tests render each scene through every backend required by the host's
-[GPU policy](gpu-test-policy.md). Sample tests compare application output and
-browser screenshots. Both use reviewed PNG references and the non-shipping
-`SkiaSharp.Tests.Shared` project for case resolution, platform policy, disk/resource
-lookup, PNG handling, comparison, diagnostic markers and `SKPixelComparer`.
-`GoldenCase` owns the validated profile, case path, version, architecture and
-variant. `GoldenStore.Resolve(GoldenCase)` returns one `Golden` that owns the
-complete compare, retry, diff, attachment and assertion flow. Consumers keep
-only case selection, policy choices and renderer/capture operations.
+Visual and sample tests compare rendered output with reviewed PNG references.
+The shared, non-shipping implementation lives in `SkiaSharp.Tests.Shared`.
 
-## Reference paths
+## Using a golden
 
-```text
-tests/Goldens/{Samples|Visual}/{platform}/[{max-version}/]{case/path}[.variant][.architecture].png
+Resolve the test case, then verify the form of image the test already has:
+
+```csharp
+var golden = store.Resolve(new(
+    profile: "mac",
+    casePath: "DiagonalLines",
+    architecture: "arm64",
+    variant: "raster"));
+
+golden.Verify(
+    GoldenInput.Path(actualPath),
+    new(expectedSize: new(256, 256), channelTolerance: 2));
+
+golden.Verify(GoldenInput.Bytes(encodedImage, "actual.png"));
+golden.Verify(GoldenInput.Pixels(pixels, imageInfo));
+
+await golden.VerifyAsync(
+    GoldenInput.Capture(CaptureScreenshot),
+    TimeSpan.FromSeconds(10),
+    cancellationToken);
 ```
 
-Profiles, variants and architectures are safe lowercase alphanumeric/kebab
-segments. Cases are safe relative paths with one or more segments, preserving
-case (for example `Console/output` or `Maui/home`). The containing folder already
-identifies the platform, so groups distinguish test families such as `Maui/*` and `Native/*`
-rather than repeating `Android` or `iOS`. Rooted paths,
-backslashes, empty segments, dot segments and reserved device names are rejected.
-Optional version folders use `System.Version`, normalized to at least three
-numeric components; fourth components retain normal `System.Version` ordering.
-Stored directories use this canonical numeric form, without leading zeros.
-The platform root is the current/latest reference.
-Architectures use .NET architecture names (`x64`, `arm64`, `wasm`, etc.);
-those tokens are reserved and cannot also name functional variants.
-There are no symbolic versions, image revision suffixes or version scopes.
+Use the static form for a direct comparison without reference lookup:
 
-Examples:
-
-```text
-Visual/mac/DiagonalLines.ganesh-gl.arm64.png
-Visual/portable/FilledCircle.raster.png
-Samples/mac/Browser/wasm-page.png
-Samples/docker-linux/Console/output.png
+```csharp
+Golden.Verify(GoldenInput.Path(actualPath), GoldenInput.Path(expectedPath));
 ```
 
-Existing visual and sample references live directly under their platform because
-they are the current references. Migrating their paths does not change any PNG
-bytes or infer a product version. Sample host profiles are
-`mac`, `linux` and `windows`; container profiles are `docker-linux` and
-`docker-windows`, so container and host output cannot accidentally share a
-baseline.
+`GoldenInput.Bytes(...)` accepts any format Skia can decode. Diagnostics,
+attachments and generated differences are normalized to PNG.
 
-## Lookup rules
+## References
 
-`GoldenCase` accepts and validates the profile, case path, optional `Version`,
-architecture and functional variant. It also owns the canonical capture key and
-ordered architecture-specific/neutral filenames used during resolution.
-
-For each eligible version, candidate filenames are ordered:
+References use:
 
 ```text
-case.variant.architecture.png
-case.variant.png
+tests/Goldens/{Samples|Visual}/{profile}/[{max-version}/]{case/path}[.variant][.architecture].png
 ```
 
-Without a variant, only the architecture-specific and neutral filenames apply.
-A named variant never borrows a sibling variant; another architecture is never
-substituted, and a named variant never falls back to an unqualified image.
-Visual tests use the renderer as the variant, so a missing GPU reference cannot
-resolve to raster pixels.
+The profile root is the current reference. Optional version directories are
+inclusive upper-bound snapshots.
 
-Version folders are inclusive upper-bound snapshots. For a runtime version,
-lookup selects the smallest stored version greater than or equal to it. With
-`18.2.0/`, `26.1.0/`, and a root reference, runtimes through 18.2 use the first
-snapshot, later runtimes through 26.1 use the second, and newer runtimes use the
-root. An unversioned request uses the root directly. Lookup never synthesizes
-intermediate versions.
+Lookup tries the functional variant with the requested architecture, then the
+same variant without an architecture. Named variants never borrow sibling or
+unqualified references.
 
-The whole primary platform precedes fallback platforms, which use the same version
-search. Resolution normalizes `macos` to `mac`. Every platform except
-`portable` falls back to `portable`; the sole special chain is
-`nanoserver -> windows -> portable`. Platforms are deduplicated. Docker platforms
-also fall back to `portable` (there currently are no portable sample references).
-Callers cannot supply arbitrary fallback lists.
+The requested profile is exhausted before fallback:
 
-The returned `Golden` reports the capture key, selected reference key/location,
-ordered attempted candidates, fresh `ReadBytes()` access and a readable trace.
-Missing results retain the trace. Lookup never creates or approves a reference.
+- `nanoserver -> windows -> portable`
+- other non-portable profiles -> `portable`
 
-## Packaging
-
-`tests/GoldenAssets.targets` packages the source selected by a host's
-`GoldenRoot`. Each consumer project has its own output directory and copies its
-selected references to `Goldens/{platform}/...`; device/browser
-visual hosts set `EmbedGoldens=true` and use exact logical resource names:
-
-```text
-SkiaSharp.Goldens/{platform}/[{max-version}/]{case/path}[.variant][.architecture].png
-```
-
-`GoldenStore` accepts ordered disk roots and resource assemblies. Disk roots
-precede embedded resources; the first source containing a key wins. Enumeration
-within each source is ordinal and deterministic. Each store snapshots this
-key/source index on first resolution and reuses it for the process; it does not
-cache PNG bytes, so a selected file is read fresh for every verification. The visual consumer configures
-the output directory and `TestConfig.PathRoot`, then the entry, configured host
-and test assemblies. Samples configure their packaged output directory.
-Neither scans all loaded assemblies or relies on directory-name mangling.
+`tests/GoldenAssets.targets` copies references for normal hosts or embeds them
+as deterministic `SkiaSharp.Goldens/...` resources for device and browser hosts.
 
 ## Comparison policy
 
-`GoldenInput` explicitly represents a file path, encoded image bytes, raw pixels
-with `SKImageInfo`, or a retryable capture. Encoded inputs may use any
-Skia-decodable format; diagnostics and attachments are normalized to PNG.
-`GoldenOptions` groups expected dimensions and comparison tolerances.
-`Golden.Verify(...)` standardizes decoding, threshold evaluation and difference
-generation. Visual comparisons remain renderer-specific:
+Visual tests use:
 
-| Renderer | Per-channel tolerance | Allowed outlier fraction |
+| Renderer | Channel tolerance | Allowed differing pixels |
 | --- | --- | --- |
-| `raster` | 2 | 0.002 |
-| GPU renderers | 12 | 0.03 |
+| `raster` | 2 | 0.2% |
+| GPU renderers | 12 | 3% |
 
-Sample comparisons retain zero channel tolerance, **0.075% differing pixels**
-by default, exact dimensions and the existing **6% mean RGBA error** option for
-animated GPU pages. See [sample guidance](building-samples.md).
+Sample tests use zero channel tolerance and allow 0.075% differing pixels.
+Animated GPU sample pages may instead use a 6% mean RGBA error limit.
 
-## Running and reviewing captures
+## Running and reviewing
 
-For managed-only work, bootstrap unchanged natives, then run the full console
-solution. Native changes require building natives from source instead.
+For managed-only changes:
 
 ```sh
 dotnet cake --target=externals-download
-dotnet test tests/SkiaSharp.Tests.Console.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
+dotnet test tests/SkiaSharp.Tests.Console.slnx \
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
+```
 
-# Focused diagnostics; these do not replace the unfiltered solution gate.
+Focused checks:
+
+```sh
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
   -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 \
   -- --filter-class "*GoldenReferenceTests"
+
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
-  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -p:EmbedGoldens=true \
-  -- --filter-class "*GoldenResourceTests"
-python3 -m unittest discover -s scripts/infra/tests -p test_golden_images.py -v
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 \
+  -p:EmbedGoldens=true -- --filter-class "*GoldenResourceTests"
 ```
 
-Each image is emitted as one unversioned marker in the test output/TRX:
-
-```text
-##SKIA-GOLDEN## role=actual key=mac/Text.raster.arm64.png size=256x256 base64=...
-```
-
-Roles are `actual`, `reference` and `diff`. The key is relative to the consumer's
-configured `GoldenRoot`; sample and visual runs already have different roots.
-It describes the capture request, not a selected shared reference; the readable
-lookup trace names that reference separately.
+Failures emit `##SKIA-GOLDEN##` records to the test result. Extract proposals
+outside the committed reference tree:
 
 ```sh
 python3 scripts/infra/tests/extract-visual-goldens.py path/to/results.trx \
-  --out output/golden-proposals/Visual --dry-run
-python3 scripts/infra/tests/extract-visual-goldens.py path/to/results.trx \
   --out output/golden-proposals/Visual
-python3 scripts/infra/tests/extract-visual-goldens.py path/to/results.trx --images-out output/golden-images
 ```
 
-The exporter validates paths, PNG integrity and dimensions. Run it against one
-consumer's results and choose that consumer's proposal root (`Visual` or
-`Samples`). Proposals remain outside the committed reference tree. Conflicting
-captures fail rather than silently selecting a winner.
-Diagnostic export retains each run, role and retry separately.
+Review proposed pixels before moving them into `tests/Goldens`; references are
+never accepted automatically. File-backed failures retain a sibling
+`.diff.png`; in-memory failures attach the difference to the test result.
 
-Review pixels before promoting a proposal into `tests/Goldens`; never bless a
-mismatch automatically. Re-run affected profiles after promotion. File-backed
-captures retain a sibling `.diff.png`; in-memory captures attach the difference
-directly to the test result.
+## Adding visual coverage
 
-## Extending the visual matrix
-
-Add deterministic, parameterless `ISkiaScene` implementations under
+Add deterministic `ISkiaScene` implementations under
 `tests/Tests/SkiaSharp/Visual/Scenes/`. Avoid system fonts, clocks and randomness.
-Renderer implementations live under `Visual/Renderers/`, desktop-only GL under
-`Renderers/Desktop/`, and Vulkan renderers under `tests/VulkanTests/Visual/`.
-Keep constructors cheap; do GPU work in `RenderAsync`. Register required
-backends in `GpuPolicy` and serialize their rendering collection.
-
-The matrix catalogs discover scenes/renderers only; they are not golden
-catalogs. New `(renderer, scene)` pairs fail as unseeded until a reviewed
-reference is committed.
+Register required backends in `GpuPolicy`. New renderer/scene pairs fail until a
+reviewed reference is committed.

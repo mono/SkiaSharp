@@ -103,7 +103,7 @@ public sealed class Golden
 			(image, report) => VerifyCore(null, image, expectedImage ??= expected.Read(), options, report));
 	}
 
-	public static string WritePng(string path, byte[] png)
+	private static void WritePng(string path, byte[] png)
 	{
 		if (path == null) throw new ArgumentNullException(nameof(path));
 		if (png == null) throw new ArgumentNullException(nameof(png));
@@ -113,7 +113,6 @@ public sealed class Golden
 		File.WriteAllBytes(path, png);
 		if (!GoldenInput.HasPngSignature(png))
 			throw new InvalidOperationException("Expected a PNG image.");
-		return path;
 	}
 
 	private GoldenInput.Image? ReferenceInput()
@@ -172,12 +171,12 @@ public sealed class Golden
 		if (actualSize != expectedSize)
 		{
 			var failure = $"Image dimensions differ: actual {Size(actualSize)}, expected {Size(expectedSize)}.";
-			return new Comparison(false, actualSize, expectedSize, null, null, failure);
+			return new(false, actualSize, expectedSize, null, null, failure);
 		}
 		if (options.ExpectedSize is { } required && actualSize != required)
 		{
 			var failure = $"Image is {Size(actualSize)}, expected {Size(required)}.";
-			return new Comparison(false, actualSize, expectedSize, null, null, failure);
+			return new(false, actualSize, expectedSize, null, null, failure);
 		}
 
 		var pixels = SKPixelComparer.Compare(expectedImage, actualImage, options.ChannelTolerance);
@@ -185,7 +184,7 @@ public sealed class Golden
 			? pixels.AverageColorErrorFraction <= average
 			: pixels.ErrorPixelCount <= (long)Math.Floor(pixels.TotalPixels * options.MaxErrorPixelFraction);
 		if (matched)
-			return new Comparison(true, actualSize, expectedSize, pixels, null, null);
+			return new(true, actualSize, expectedSize, pixels, null, null);
 
 		var pixelDifference = $"{pixels.ErrorPixelCount}/{pixels.TotalPixels} pixels differ";
 		var budget = $"{pixelDifference}, exceeding {options.MaxErrorPixelFraction:P3};";
@@ -200,7 +199,7 @@ public sealed class Golden
 			using var data = difference.Encode(SKEncodedImageFormat.Png, 100);
 			differencePng = data.ToArray();
 		}
-		return new Comparison(false, actualSize, expectedSize, pixels, differencePng, message);
+		return new(false, actualSize, expectedSize, pixels, differencePng, message);
 	}
 
 	private void WriteDiagnostics(GoldenInput.Image actual, SKSizeI actualSize)
@@ -244,8 +243,7 @@ public sealed class Golden
 			}
 			else
 			{
-				TestArtifacts.AddAttachment(
-					TestContext.Current, "difference.png", comparison.DifferencePng, "image/png");
+				TestArtifacts.AddAttachment(TestContext.Current, "difference.png", comparison.DifferencePng, "image/png");
 			}
 		}
 

@@ -27,7 +27,7 @@ public class DockerSampleRunTests(DockerSampleFixture docker) : DockerSampleTest
 
             SampleImage.Container("Console/output").Verify(
                 GoldenInput.Path(image),
-                new GoldenOptions(expectedSize: new(800, 600)));
+                new(expectedSize: new(800, 600)));
         });
 
     [Fact]
@@ -45,7 +45,7 @@ public class DockerSampleRunTests(DockerSampleFixture docker) : DockerSampleTest
             Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
             var png = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
             SampleImage.Container("Web/output").Verify(
-                GoldenInput.Path(Golden.WritePng(Path.Combine(app.Diagnostics, "output.png"), png)),
-                new GoldenOptions(expectedSize: new(800, 600)));
+                GoldenInput.Bytes(png, "output.png"),
+                new(expectedSize: new(800, 600)));
         });
 }

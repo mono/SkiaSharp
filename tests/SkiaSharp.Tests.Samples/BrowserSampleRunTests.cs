@@ -65,7 +65,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             var screenshot = await app.Screenshot();
             SampleImage.Host("Blazor/gpu").Verify(
                 GoldenInput.Path(screenshot),
-                new GoldenOptions(maxAverageColorErrorFraction: 0.06));
+                new(maxAverageColorErrorFraction: 0.06));
         });
 
     [Fact]
