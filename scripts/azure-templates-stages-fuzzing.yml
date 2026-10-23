@@ -20,55 +20,57 @@ stages:
     displayName: OneFuzz
     dependsOn: native
     jobs:
-      - job: fuzzing
-        displayName: OneFuzz
+      # Builds, instruments and publishes the drop. Nothing here talks to OneFuzz.
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+        parameters:
+          name: onefuzz_prepare
+          displayName: Prepare the OneFuzz drop
+          buildAgent: ${{ parameters.buildAgentLinux }}
+          target: onefuzz-prepare
+          # Only scheduled builds of main use the production target names.
+          ${{ if not(and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Schedule'))) }}:
+            additionalArgs: --validationBuildId=$(Build.BuildId)
+          # The Linux native library needs fontconfig for the harness smoke run.
+          packages: libfontconfig1
+          checkoutSubmodules: false
+          installAndroidSdk: false
+          installXcode: false
+          installNode: false
+          shouldPublish: false
+          requiredArtifacts:
+            - name: native
+          publishArtifacts:
+            - name: onefuzz
+              path: output/onefuzz
+
+      # Runs on a fresh agent: it never builds anything, it only submits the published drop.
+      - job: onefuzz_submit
+        displayName: Submit to OneFuzz
+        dependsOn: onefuzz_prepare
         timeoutInMinutes: 120
         pool: ${{ parameters.buildAgentLinux.pool }}
         workspace:
           clean: all
         steps:
-          - checkout: self
-            submodules: false
-            fetchDepth: 1
+          - checkout: none
 
-          # Linux avoids the macOS-only target frameworks that CI otherwise enables, which need a workload.
-          # The harness smoke run loads the Linux native library, which needs fontconfig.
-          - bash: |
-              sudo apt update
-              sudo apt install -y libfontconfig1
-            displayName: Install additional package dependencies
-            retryCountOnTaskFailure: 3
+          - download: current
+            artifact: onefuzz
+            displayName: Download the OneFuzz drop
 
-          - template: /scripts/azure-templates-steps-dotnet.yml@self
-            parameters:
-              platform: ${{ parameters.buildAgentLinux.pool.os }}
-              sdks:
-                - sdkVersion: $(DOTNET_VERSION)
-
-          - pwsh: ./scripts/infra/native/shared/patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
-            displayName: Fix the Microsoft.WinFX.* file
-
-          - template: /scripts/azure-templates-steps-download-artifacts.yml@self
-            parameters:
-              artifacts:
-                - name: native
-
-          # Only scheduled builds of main use the production target names.
-          - pwsh: ./scripts/infra/security/prepare-onefuzz-drop.ps1
-            displayName: Prepare the OneFuzz drop
-            ${{ if not(and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Schedule'))) }}:
-              env:
-                ONEFUZZ_VALIDATION_BUILD_ID: $(Build.BuildId)
-
-          # The drop is shared; each submission only differs by its config and OS.
+          # Every submission gets its own copy so one submission can never change what another uploads.
           - ${{ each submission in parameters.submissions }}:
-            - pwsh: Copy-Item ./output/onefuzz/OneFuzzConfig.${{ submission.value.config }}.json ./output/onefuzz/OneFuzzConfig.json -Force
-              displayName: Select the ${{ submission.key }} OneFuzz config
+            - pwsh: |
+                $drop = Join-Path $env:PIPELINE_WORKSPACE 'submit/${{ submission.key }}'
+                New-Item -ItemType Directory -Force -Path $drop | Out-Null
+                Copy-Item (Join-Path $env:PIPELINE_WORKSPACE 'onefuzz/*') $drop -Recurse -Force
+                Copy-Item (Join-Path $drop 'OneFuzzConfig.${{ submission.value.config }}.json') (Join-Path $drop 'OneFuzzConfig.json') -Force
+              displayName: Stage the ${{ submission.key }} drop
 
             - task: onefuzz-task@0
               displayName: Submit the ${{ submission.key }} targets to OneFuzz
               inputs:
                 onefuzzOSes: ${{ submission.value.os }}
               env:
-                onefuzzDropDirectory: $(Build.SourcesDirectory)/output/onefuzz
+                onefuzzDropDirectory: $(Pipeline.Workspace)/submit/${{ submission.key }}
                 SYSTEM_ACCESSTOKEN: $(System.AccessToken)
