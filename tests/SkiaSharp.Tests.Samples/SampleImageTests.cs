@@ -204,6 +204,39 @@ public class SampleImageTests : IDisposable
     }
 
     [Fact]
+    public async Task ScreenshotComparisonReportsLastMismatchWhenRetryCaptureTimesOut()
+    {
+        using var bitmap = new SKBitmap(4, 4);
+        bitmap.Erase(SKColors.Blue);
+        var expected = SavePng(bitmap, "retry-timeout.expected.png");
+        bitmap.Erase(SKColors.Red);
+        var actual = SavePng(bitmap, "retry-timeout.actual.png");
+        var pending = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var attempts = 0;
+
+        try
+        {
+            var error = await Assert.ThrowsAsync<Xunit.Sdk.FailException>(() =>
+                Golden.VerifyAsync(
+                    GoldenInput.Capture(() =>
+                        ++attempts == 1 ? Task.FromResult(actual) : pending.Task),
+                    GoldenInput.Path(expected),
+                    TimeSpan.FromMilliseconds(200),
+                    TestContext.Current.CancellationToken));
+
+            Assert.Equal(2, attempts);
+            Assert.Contains("Golden images differ", error.Message);
+            Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+            Assert.Contains(Path.GetFileName(actual), TestContext.Current.Attachments!.Keys);
+            Assert.Contains("expected-" + Path.GetFileName(expected), TestContext.Current.Attachments.Keys);
+        }
+        finally
+        {
+            pending.TrySetCanceled(TestContext.Current.CancellationToken);
+        }
+    }
+
+    [Fact]
     public async Task ScreenshotComparisonRetriesTransientDimensions()
     {
         using var bitmap = new SKBitmap(4, 4);
@@ -351,6 +384,22 @@ public class SampleImageTests : IDisposable
                     data.ToArray())),
                 GoldenInput.Path(expected),
                 new(expectedSize: new(400, 300)))));
+    }
+
+    [Fact]
+    public void RawPixelInputsValidateImageInfoAndBufferSize()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            GoldenInput.Pixels(new byte[1], default));
+
+        var info = new SKImageInfo(4, 4, SKColorType.Rgba8888, SKAlphaType.Premul);
+        Assert.Throws<ArgumentException>(() =>
+            GoldenInput.Pixels(new byte[info.BytesSize - 1], info));
+
+        var pixels = new byte[info.BytesSize];
+        Golden.Verify(
+            GoldenInput.Pixels(pixels, info),
+            GoldenInput.Pixels(pixels.AsSpan(), info));
     }
 
     [Theory]

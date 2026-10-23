@@ -300,7 +300,15 @@ public sealed class Golden
 				return actual.Label;
 			}
 
-			actual = await WaitAsync(input.ReadAsync(), remaining, cancellationToken);
+			try
+			{
+				actual = await WaitAsync(input.ReadAsync(), remaining, cancellationToken);
+			}
+			catch (TimeoutException) when (actual != null && !cancellationToken.IsCancellationRequested)
+			{
+				verify(actual, true);
+				return actual.Label;
+			}
 			if (verify(actual, false))
 				return actual.Label;
 

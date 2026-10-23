@@ -93,8 +93,8 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
   -p:EmbedGoldens=true -- --filter-class "*GoldenResourceTests"
 ```
 
-Failures emit `##SKIA-GOLDEN##` records to the test result. Extract proposals
-outside the committed reference tree:
+Resolved verifications emit `##SKIA-GOLDEN##` records to the test result.
+Extract proposals outside the committed reference tree:
 
 ```sh
 python3 scripts/infra/tests/extract-visual-goldens.py path/to/results.trx \

@@ -43,6 +43,12 @@ public sealed class GoldenInput
 	{
 		if (pixels == null) throw new ArgumentNullException(nameof(pixels));
 		ValidateName(name);
+		if (imageInfo.Width <= 0 || imageInfo.Height <= 0 || imageInfo.BytesSize64 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(imageInfo));
+		if (pixels.LongLength < imageInfo.BytesSize64)
+			throw new ArgumentException(
+				$"Expected at least {imageInfo.BytesSize64} bytes for {imageInfo.Width}x{imageInfo.Height} pixels.",
+				nameof(pixels));
 		return new(name, bytes: pixels, imageInfo: imageInfo, pixels: true);
 	}
 
@@ -90,7 +96,8 @@ public sealed class GoldenInput
 		try
 		{
 			using var pixmap = new SKPixmap(info, handle.AddrOfPinnedObject());
-			using var image = SKImage.FromPixels(pixmap);
+			using var image = SKImage.FromPixels(pixmap)
+				?? throw new InvalidOperationException("Failed to create an image from raw pixels.");
 			return Encode(image);
 		}
 		finally
