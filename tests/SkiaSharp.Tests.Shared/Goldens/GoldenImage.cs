@@ -74,7 +74,8 @@ public static class GoldenImage
 	{
 		if (path == null) throw new ArgumentNullException(nameof(path));
 		if (png == null) throw new ArgumentNullException(nameof(png));
-		Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+		if (Path.GetDirectoryName(path) is { Length: > 0 } directory)
+			Directory.CreateDirectory(directory);
 		File.WriteAllBytes(path, png);
 	}
 

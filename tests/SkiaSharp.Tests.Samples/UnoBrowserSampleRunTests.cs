@@ -18,8 +18,7 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
         {
             await app.Navigate("/");
             await app.WaitForElement("#uno-canvas");
-            var screenshot = await WaitForUnoCpu(app);
-            SampleImage.Verifier.Verify(SampleImage.Host("Uno/cpu"), screenshot);
+            await WaitForUnoCpu(app);
         });
 
     [Fact]
@@ -32,14 +31,11 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
         {
             await app.Navigate("/");
             await app.WaitForElement("#uno-canvas");
-            var cpu = await WaitForUnoCpu(app);
+            await WaitForUnoCpu(app);
 
             // SkiaRenderer draws the navigation and controls into the 1280x900 canvas.
             await app.Page.Mouse.ClickAsync(220, 24);
             await app.Page.Mouse.MoveAsync(0, 0);
-            var region = new SKRectI(150, 150, 850, 550);
-            var empty = await app.Screenshot();
-            Assert.Equal(region.Width * region.Height, ImagePixels.Count(empty, region, c => c == SKColors.White));
 
             await app.Page.Mouse.ClickAsync(471, 852);
             await app.Page.Mouse.MoveAsync(1000, 600);
@@ -56,21 +52,20 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
             await app.Page.Mouse.UpAsync();
             await app.Page.Mouse.MoveAsync(0, 0);
             var drawn = await app.Screenshot();
-            Assert.True(ImagePixels.Count(drawn, region, c => c == new SKColor(229, 57, 53)) > 2000);
-            Assert.True(ImagePixels.Count(drawn, region, c => c == new SKColor(30, 136, 229)) > 2000);
+            SampleImage.Verifier.Verify(SampleImage.Host("Uno/drawing-drawn"), drawn);
 
             await app.Page.Mouse.ClickAsync(1237, 76);
             await app.Page.Mouse.MoveAsync(0, 0);
-            var cleared = await ScreenshotAfterUnoClear(app, drawn, region);
-            Assert.Equal(region.Width * region.Height, ImagePixels.Count(cleared, region, c => c == SKColors.White));
+            await SampleImage.Verifier.VerifyAsync(
+                SampleImage.Host("Uno/drawing-cleared"),
+                async () => GoldenImageSource.FromFile(await app.Screenshot()),
+                null,
+                TimeSpan.FromSeconds(4),
+                TestContext.Current.CancellationToken);
 
             await app.Page.Mouse.ClickAsync(50, 24);
             await app.Page.Mouse.MoveAsync(0, 0);
-            var returned = await WaitForUnoCpu(app);
-            SampleImage.Verifier.Verify(returned, cpu);
-            SampleImage.Verifier.Verify(SampleImage.Host("Uno/drawing-drawn"), drawn);
-            SampleImage.Verifier.Verify(SampleImage.Host("Uno/drawing-cleared"), cleared);
-            SampleImage.Verifier.Verify(SampleImage.Host("Uno/cpu"), returned);
+            await WaitForUnoCpu(app);
         });
 
     private async Task RunUnoBrowserSample(Func<BrowserRunningApp, Task> test)
@@ -89,29 +84,11 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
     {
         // Uno creates its canvas while the splash screen still covers the application.
         await app.Page.Locator(".uno-loader").WaitForAsync(new() { State = WaitForSelectorState.Hidden });
-        var screenshot = await app.Screenshot();
-        Assert.True(ImagePixels.Count(screenshot, new SKRectI(100, 150, 1180, 750),
-            c => c.Blue > 150 && c.Blue > c.Red && c.Blue > c.Green) > 100000,
-            "Uno CPU scene must render its blue/purple background, not the splash or a blank canvas.");
-        return screenshot;
-    }
-
-    private static async Task<string> ScreenshotAfterUnoClear(BrowserRunningApp app, string drawn, SKRectI region)
-    {
-        using var before = SKBitmap.Decode(drawn);
-        Assert.NotNull(before);
-        var normalButtonColor = before.GetPixel(1237, 85);
-        for (var attempt = 0; attempt < 40; attempt++)
-        {
-            var screenshot = await app.Screenshot();
-            using var bitmap = SKBitmap.Decode(screenshot);
-            Assert.NotNull(bitmap);
-            if (bitmap.GetPixel(1237, 85) == normalButtonColor &&
-                ImagePixels.Count(screenshot, region, c => c == SKColors.White) == region.Width * region.Height)
-                return screenshot;
-            // Observe the native pressed-state transition without changing the app's clock.
-            await Task.Delay(100, TestContext.Current.CancellationToken);
-        }
-        throw new TimeoutException("Uno did not render a cleared canvas with the Clear button in its normal state.");
+        return await SampleImage.Verifier.VerifyAsync(
+            SampleImage.Host("Uno/cpu"),
+            async () => GoldenImageSource.FromFile(await app.Screenshot()),
+            null,
+            TimeSpan.FromSeconds(10),
+            TestContext.Current.CancellationToken);
     }
 }

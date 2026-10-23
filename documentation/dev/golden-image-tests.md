@@ -7,8 +7,7 @@ browser screenshots. Both use reviewed PNG references and the non-shipping
 lookup, byte loading, PNG handling, comparison results, diagnostic markers and
 `SKPixelComparer`. `GoldenVerifier` gives visual and sample tests the same
 resolve, require, compare, retry, diff and marker flow. Consumers keep only their
-request factories, policy choices, renderer/capture operations, artifact paths,
-test-result attachments and assertion wording.
+request factories, policy choices and renderer/capture operations.
 
 ## Reference paths
 
@@ -161,9 +160,9 @@ captures fail rather than silently selecting a winner.
 Diagnostic export retains each run, role and retry separately.
 
 Review pixels before promoting a proposal into `tests/Goldens`; never bless a
-mismatch automatically. Re-run affected profiles after promotion. Visual
-failures also retain `_visualfailures/{renderer}/{scene}.actual.png` and
-`.diff.png` when the host has a writable output directory.
+mismatch automatically. Re-run affected profiles after promotion. File-backed
+captures retain a sibling `.diff.png`; in-memory captures attach the difference
+directly to the test result.
 
 ## Extending the visual matrix
 

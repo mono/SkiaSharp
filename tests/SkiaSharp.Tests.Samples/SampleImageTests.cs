@@ -46,6 +46,23 @@ public class SampleImageTests : IDisposable
     }
 
     [Fact]
+    public void MissingTypedGoldenStillValidatesTheCapture()
+    {
+        var request = new GoldenRequest("missing-profile", "Missing/invalid");
+        var invalid = GoldenImageSource.FromBytes(new byte[] { 1, 2, 3 }, "invalid.png");
+        var decodeError = Assert.Throws<InvalidOperationException>(() =>
+            SampleImage.Verifier.Verify(request, invalid));
+        Assert.Contains("Failed to decode image", decodeError.Message);
+
+        using var bitmap = new SKBitmap(4, 4);
+        bitmap.Erase(SKColors.Blue);
+        var actual = GoldenImageSource.FromBytes(EncodePng(bitmap), "actual.png");
+        var sizeError = Assert.Throws<Xunit.Sdk.FailException>(() =>
+            SampleImage.Verifier.Verify(request, actual, new() { ExpectedSize = new(8, 8) }));
+        Assert.Contains("Image is 4x4, expected 8x8", sizeError.Message);
+    }
+
+    [Fact]
     public void InvalidTypedCaptureReportsTheComparisonFailureWithoutDiagnosticMasking()
     {
         var actual = Path.Combine(root, "invalid-typed.actual.png");
@@ -80,6 +97,32 @@ public class SampleImageTests : IDisposable
             using var image = SKImage.FromBitmap(bitmap);
             using var data = image.Encode(SKEncodedImageFormat.Png, 100);
             File.WriteAllBytes(path, data.ToArray());
+        }
+    }
+
+    [Fact]
+    public void InMemoryMismatchDoesNotWriteToItsLogicalLocation()
+    {
+        var logicalDirectory = $"logical-{Guid.NewGuid():N}";
+        var actualLocation = $"{logicalDirectory}/actual.png";
+        using var actualBitmap = new SKBitmap(4, 4);
+        actualBitmap.Erase(SKColors.Red);
+        using var expectedBitmap = new SKBitmap(4, 4);
+        expectedBitmap.Erase(SKColors.Blue);
+
+        try
+        {
+            Assert.Throws<Xunit.Sdk.FailException>(() =>
+                SampleImage.Verifier.Verify(
+                    GoldenImageSource.FromBytes(EncodePng(actualBitmap), actualLocation),
+                    GoldenImageSource.FromBytes(EncodePng(expectedBitmap), "expected.png")));
+            Assert.False(File.Exists(Path.ChangeExtension(actualLocation, ".diff.png")));
+            Assert.Contains("difference.png", TestContext.Current.Attachments!.Keys);
+        }
+        finally
+        {
+            if (Directory.Exists(logicalDirectory))
+                Directory.Delete(logicalDirectory, true);
         }
     }
 
@@ -343,10 +386,15 @@ public class SampleImageTests : IDisposable
     {
         Directory.CreateDirectory(root);
         var path = Path.Combine(root, name);
+        File.WriteAllBytes(path, EncodePng(bitmap));
+        return path;
+    }
+
+    private static byte[] EncodePng(SKBitmap bitmap)
+    {
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-        File.WriteAllBytes(path, data.ToArray());
-        return path;
+        return data.ToArray();
     }
 
     [Fact]
