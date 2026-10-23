@@ -20,7 +20,7 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 		[
 			new("CPU", "basic-canvas-cpu", "basic-cpu"),
 			new("GPU", "basic-canvas-gpu", "basic-gpu-smoke", new("basic-gpu-fps", HasFps), Animated: true),
-			new("Drawing", "basic-canvas-drawing", "basic-drawing-page", new("basic-drawing-clear"))
+			new("Drawing", "basic-canvas-drawing", "basic-drawing-initial", new("basic-drawing-clear"))
 		], NavigateMauiAndroid));
 	}
 
