@@ -22,7 +22,8 @@ foreach ($artifact in Get-NativeArtifactInventory $NativeRoot | Where-Object Cas
         Assert-Artifact $binary
         $identity = Get-PeCodeViewIdentity $binary
         $pdbName = Split-Path $artifact.Path -Leaf
-        if ([IO.Path]::GetFileName($identity.Path) -cne $pdbName) {
+        $embeddedPdbName = [IO.Path]::GetFileName($identity.Path.Replace('\', '/'))
+        if ($embeddedPdbName -cne $pdbName) {
             throw "Embedded PDB name does not match $pdbName`: $($identity.Path)"
         }
         $stream = [IO.File]::OpenRead($artifact.Path)
