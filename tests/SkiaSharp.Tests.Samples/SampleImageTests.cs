@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using SkiaSharp.Tests.Shared;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
@@ -9,6 +10,20 @@ namespace SkiaSharp.Tests.Samples;
 public class SampleImageTests : IDisposable
 {
     private readonly string root = Path.Combine(Repo.ArtifactsDir, $"sample-images-{Guid.NewGuid():N}");
+
+    [Fact]
+    public void BrowserGoldensUseTheHostOperatingSystemArchitecture()
+    {
+        Assert.Equal(
+            RuntimeInformation.OSArchitecture.ToString().ToLowerInvariant(),
+            SampleImage.Browser("Blazor/cpu").Case.Architecture);
+        Assert.Equal(
+            RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
+            SampleImage.Host("Console/output").Case.Architecture);
+        Assert.Equal(
+            "mac/Blazor/cpu.x64.png",
+            SampleImage.Store.Resolve(new("mac", "Blazor/cpu", architecture: "x64")).ReferenceKey);
+    }
 
     [Fact]
     public void TypedGoldenComparisonUsesPackagedBytesAndRetainsStrictPolicy()
