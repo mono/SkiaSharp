@@ -4,8 +4,7 @@ declare_args() {
 
 config("skiasharp") {
   if (is_win) {
-    assert(spectre_lib_root != "",
-           "SkiaSharp requires an explicit MSVC Spectre library directory.")
+    assert(spectre_lib_root != "", "Spectre library directory is required.")
     defines = [ "ANGLE_WINDOWS_NO_FUTEX=1" ]
     cflags = [
       "/guard:cf",

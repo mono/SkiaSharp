@@ -33,6 +33,7 @@ Task("sync-ANGLE")
         "third_party/zlib",
         "third_party/jsoncpp",
         "third_party/astc-encoder/src",
+        "third_party/depot_tools",
     };
     RunProcess("git", new ProcessSettings {
         Arguments = $"-c core.longpaths=true submodule update --init --recursive --depth 1 --single-branch -- {string.Join(" ", submodules)}",
@@ -89,32 +90,11 @@ Task("sync-ANGLE")
         }
     }
 
-    // Set deterministic Chromium version metadata from the pinned ANGLE commit.
+    // set version numbers
     var lastchange = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE");
     var committime = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE.committime");
     if (!FileExists(lastchange) || !FileExists(committime)) {
-        RunProcess("git", new ProcessSettings {
-            Arguments = "log -1 --format=%H%n%ct%n%B --grep=^Change-Id: HEAD",
-            WorkingDirectory = ANGLE_PATH.FullPath,
-        }, out var versionOutput);
-
-        var versionLines = versionOutput.ToArray();
-        if (versionLines.Length < 2 || !long.TryParse(versionLines[1], out var timestamp))
-            throw new Exception("Could not resolve ANGLE commit metadata.");
-
-        var revision = versionLines[0];
-        var position = versionLines
-            .Skip(2)
-            .Reverse()
-            .FirstOrDefault(line => line.StartsWith("Cr-Commit-Position:", StringComparison.Ordinal));
-        if (!string.IsNullOrEmpty(position))
-            revision += $"-{position.Substring("Cr-Commit-Position:".Length).Trim()}";
-
-        FileWriteLines(lastchange, new[] {
-            $"LASTCHANGE={revision}",
-            $"LASTCHANGE_YEAR={DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime.Year}",
-        });
-        FileWriteText(committime, timestamp.ToString());
+        RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
     }
 
     // download rc.exe
