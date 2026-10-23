@@ -169,6 +169,11 @@ Task("onefuzz-validate")
     bool IsCovered(string file, IEnumerable<string> patterns) => patterns.Any(pattern =>
         Regex.IsMatch(file, "^" + Regex.Escape(System.IO.Path.GetFileName(pattern.Replace('\\', '/'))).Replace("\\*", ".*") + "$"));
 
+    // OneFuzz instruments the harness and FuzzingTargetBinaries itself. A drop that already carries SharpFuzz
+    // (pre-instrumented assemblies or its own SharpFuzz.Common.dll) crashes the harness at startup.
+    foreach (var sharpFuzzFile in System.IO.Directory.GetFiles(outputPath, "SharpFuzz*", System.IO.SearchOption.AllDirectories))
+        errors.Add($"The drop contains '{System.IO.Path.GetRelativePath(outputPath, sharpFuzzFile)}'; OneFuzz instruments the drop itself, so SharpFuzz must not ship with it.");
+
     var configFiles = System.IO.Directory.GetFiles(outputPath, "OneFuzzConfig.*.json");
     if (configFiles.Length == 0)
         errors.Add("No OneFuzzConfig.<platform>.json files were generated.");
