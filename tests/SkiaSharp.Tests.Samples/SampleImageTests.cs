@@ -11,21 +11,22 @@ public class SampleImageTests : IDisposable
     private readonly string root = Path.Combine(Repo.ArtifactsDir, $"sample-images-{Guid.NewGuid():N}");
 
     [Fact]
-    public async Task TypedGoldenComparisonUsesPackagedBytesAndRetainsStrictPolicy()
+    public void TypedGoldenComparisonUsesPackagedBytesAndRetainsStrictPolicy()
     {
-        var request = SampleImage.Host("Console/output");
-        var reference = SampleImage.Store.Resolve(request);
-        Assert.NotNull(reference.Location);
-        Assert.StartsWith(AppContext.BaseDirectory, reference.Location);
+        var golden = SampleImage.Host("Console/output");
+        Assert.NotNull(golden.ReferenceLocation);
+        Assert.StartsWith(AppContext.BaseDirectory, golden.ReferenceLocation);
         var actual = Path.Combine(root, "typed.actual.png");
-        SampleImage.Verifier.Verify(request, GoldenImageSource.WritePng(reference.ReadBytes(), actual),
-            new() { ExpectedSize = new(800, 600), MaxErrorPixelFraction = 0 });
-        using var bitmap = SKBitmap.Decode(reference.ReadBytes());
+        golden.Verify(
+            Golden.WritePng(actual, golden.ReadBytes()),
+            expectedSize: new(800, 600),
+            maxErrorPixelFraction: 0);
+        using var bitmap = SKBitmap.Decode(golden.ReadBytes());
         Assert.NotNull(bitmap);
         bitmap.Erase(SKColors.Red);
         actual = SavePng(bitmap, "typed-mismatch.actual.png");
         var error = Assert.Throws<Xunit.Sdk.FailException>(() =>
-            SampleImage.Verifier.Verify(request, actual, new() { MaxErrorPixelFraction = 0 }));
+            golden.Verify(actual, maxErrorPixelFraction: 0));
         Assert.Contains("Golden images differ", error.Message);
         Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
     }
@@ -36,29 +37,29 @@ public class SampleImageTests : IDisposable
         using var bitmap = new SKBitmap(4, 4);
         bitmap.Erase(SKColors.Blue);
         var actual = SavePng(bitmap, "typed-missing.actual.png");
-        var request = new GoldenRequest("missing-profile", "Missing/case", new Version(12, 6, 2), "arm64", "engine");
-        var resolution = SampleImage.Store.Resolve(request);
-        var error = Assert.ThrowsAny<Exception>(() => SampleImage.Verifier.Verify(request, actual));
-        Assert.Null(resolution.Key);
-        Assert.Contains(resolution.Describe(), error.Message);
+        var golden = SampleImage.Store.Resolve(
+            "missing-profile", "Missing/case", new Version(12, 6, 2), "arm64", "engine");
+        var error = Assert.ThrowsAny<Exception>(() => golden.Verify(actual));
+        Assert.Null(golden.ReferenceKey);
+        Assert.Contains(golden.Describe(), error.Message);
         Assert.Contains(Path.GetFileName(actual), TestContext.Current.Attachments!.Keys);
-        Assert.False(File.Exists(Path.Combine(SampleImage.Root, resolution.Candidates[0])));
+        Assert.False(File.Exists(Path.Combine(SampleImage.Root, golden.Attempts[0])));
     }
 
     [Fact]
     public void MissingTypedGoldenStillValidatesTheCapture()
     {
-        var request = new GoldenRequest("missing-profile", "Missing/invalid");
-        var invalid = GoldenImageSource.FromBytes(new byte[] { 1, 2, 3 }, "invalid.png");
+        var golden = SampleImage.Store.Resolve("missing-profile", "Missing/invalid");
+        var invalid = new byte[] { 1, 2, 3 };
         var decodeError = Assert.Throws<InvalidOperationException>(() =>
-            SampleImage.Verifier.Verify(request, invalid));
+            golden.Verify(invalid));
         Assert.Contains("Failed to decode image", decodeError.Message);
 
         using var bitmap = new SKBitmap(4, 4);
         bitmap.Erase(SKColors.Blue);
-        var actual = GoldenImageSource.FromBytes(EncodePng(bitmap), "actual.png");
+        var actual = EncodePng(bitmap);
         var sizeError = Assert.Throws<Xunit.Sdk.FailException>(() =>
-            SampleImage.Verifier.Verify(request, actual, new() { ExpectedSize = new(8, 8) }));
+            golden.Verify(actual, expectedSize: new(8, 8)));
         Assert.Contains("Image is 4x4, expected 8x8", sizeError.Message);
     }
 
@@ -70,7 +71,7 @@ public class SampleImageTests : IDisposable
         File.WriteAllBytes(actual, new byte[] { 1, 2, 3 });
 
         var error = Assert.ThrowsAny<Exception>(() =>
-            SampleImage.Verifier.Verify(SampleImage.Host("Console/output"), actual));
+            SampleImage.Host("Console/output").Verify(actual));
 
         Assert.Contains("Failed to decode image", error.Message);
     }
@@ -83,7 +84,7 @@ public class SampleImageTests : IDisposable
         Save(actual, SKColors.Red);
         Save(expected, SKColors.Blue);
         TestContext.Current.AddFileAttachment(actual, "image/png");
-        var error = Assert.ThrowsAny<Exception>(() => SampleImage.Verifier.Verify(actual, expected));
+        var error = Assert.ThrowsAny<Exception>(() => Golden.Verify(actual, expected));
         Assert.Contains("Golden images differ", error.Message);
         Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
         Assert.Contains("canvas.png-2", TestContext.Current.Attachments!.Keys);
@@ -101,29 +102,16 @@ public class SampleImageTests : IDisposable
     }
 
     [Fact]
-    public void InMemoryMismatchDoesNotWriteToItsLogicalLocation()
+    public void InMemoryMismatchAttachesTheDifference()
     {
-        var logicalDirectory = $"logical-{Guid.NewGuid():N}";
-        var actualLocation = $"{logicalDirectory}/actual.png";
         using var actualBitmap = new SKBitmap(4, 4);
         actualBitmap.Erase(SKColors.Red);
         using var expectedBitmap = new SKBitmap(4, 4);
         expectedBitmap.Erase(SKColors.Blue);
 
-        try
-        {
-            Assert.Throws<Xunit.Sdk.FailException>(() =>
-                SampleImage.Verifier.Verify(
-                    GoldenImageSource.FromBytes(EncodePng(actualBitmap), actualLocation),
-                    GoldenImageSource.FromBytes(EncodePng(expectedBitmap), "expected.png")));
-            Assert.False(File.Exists(Path.ChangeExtension(actualLocation, ".diff.png")));
-            Assert.Contains("difference.png", TestContext.Current.Attachments!.Keys);
-        }
-        finally
-        {
-            if (Directory.Exists(logicalDirectory))
-                Directory.Delete(logicalDirectory, true);
-        }
+        Assert.Throws<Xunit.Sdk.FailException>(() =>
+            Golden.Verify(EncodePng(actualBitmap), EncodePng(expectedBitmap)));
+        Assert.Contains("difference.png", TestContext.Current.Attachments!.Keys);
     }
 
     [Fact]
@@ -136,15 +124,14 @@ public class SampleImageTests : IDisposable
         var actual = SavePng(bitmap, "retry.actual.png");
         var attempts = 0;
 
-        var matched = await SampleImage.Verifier.VerifyAsync(
+        var matched = await Golden.VerifyAsync(
             () =>
             {
                 if (++attempts == 2)
                     File.Copy(expected, actual, overwrite: true);
-                return Task.FromResult(GoldenImageSource.FromFile(actual));
+                return Task.FromResult(actual);
             },
             expected,
-            null,
             SampleImage.DefaultTimeout,
             TestContext.Current.CancellationToken);
 
@@ -168,10 +155,9 @@ public class SampleImageTests : IDisposable
         var actual = SavePng(actualBitmap, "persistent.actual.png");
 
         var error = await Assert.ThrowsAnyAsync<Exception>(() =>
-            SampleImage.Verifier.VerifyAsync(
-                () => Task.FromResult(GoldenImageSource.FromFile(actual)),
+            Golden.VerifyAsync(
+                () => Task.FromResult(actual),
                 expected,
-                null,
                 TimeSpan.FromMilliseconds(150),
                 TestContext.Current.CancellationToken));
 
@@ -194,17 +180,17 @@ public class SampleImageTests : IDisposable
         small.Erase(SKColors.Blue);
         var actual = SavePng(small, "dimensions.actual.png");
         var attempts = 0;
-        await SampleImage.Verifier.VerifyAsync(
+        await Golden.VerifyAsync(
             () =>
             {
                 if (++attempts == 2)
                     File.Copy(expected, actual, overwrite: true);
-                return Task.FromResult(GoldenImageSource.FromFile(actual));
+                return Task.FromResult(actual);
             },
             expected,
-            new() { ExpectedSize = new(4, 4) },
             SampleImage.DefaultTimeout,
-            TestContext.Current.CancellationToken);
+            TestContext.Current.CancellationToken,
+            expectedSize: new(4, 4));
         Assert.Equal(2, attempts);
     }
 
@@ -230,19 +216,18 @@ public class SampleImageTests : IDisposable
         var sentinel = new InvalidOperationException("Browser capture failed.");
 
         var error = await Assert.ThrowsAnyAsync<Exception>(() =>
-            SampleImage.Verifier.VerifyAsync(
+            Golden.VerifyAsync(
                 () =>
                 {
                     attempts++;
                     return failure switch
                     {
-                        "capture-error" => Task.FromException<GoldenImageSource>(sentinel),
-                        "canceled-capture" => Task.FromCanceled<GoldenImageSource>(new CancellationToken(canceled: true)),
-                        _ => Task.FromResult(GoldenImageSource.FromFile(actual))
+                        "capture-error" => Task.FromException<string>(sentinel),
+                        "canceled-capture" => Task.FromCanceled<string>(new CancellationToken(canceled: true)),
+                        _ => Task.FromResult(actual)
                     };
                 },
                 expected,
-                null,
                 SampleImage.DefaultTimeout,
                 TestContext.Current.CancellationToken));
 
@@ -258,14 +243,15 @@ public class SampleImageTests : IDisposable
     [Fact]
     public async Task ScreenshotComparisonBoundsCaptureTime()
     {
-        var pending = new TaskCompletionSource<GoldenImageSource>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var bitmap = new SKBitmap(1, 1);
+        var expected = SavePng(bitmap, "timeout.expected.png");
+        var pending = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
             await Assert.ThrowsAsync<TimeoutException>(() =>
-                SampleImage.Verifier.VerifyAsync(
+                Golden.VerifyAsync(
                     () => pending.Task,
-                    "unused.png",
-                    null,
+                    expected,
                     TimeSpan.FromMilliseconds(100),
                     TestContext.Current.CancellationToken));
         }
@@ -282,14 +268,13 @@ public class SampleImageTests : IDisposable
     {
         var attempts = 0;
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
-            SampleImage.Verifier.VerifyAsync(
+            Golden.VerifyAsync(
                 () =>
                 {
                     attempts++;
-                    return Task.FromResult(GoldenImageSource.FromFile("unused.png"));
+                    return Task.FromResult("unused.png");
                 },
                 "unused.png",
-                null,
                 TimeSpan.FromMilliseconds(milliseconds),
                 TestContext.Current.CancellationToken));
         Assert.Equal(0, attempts);
@@ -303,31 +288,30 @@ public class SampleImageTests : IDisposable
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         var expected = SavePng(bitmap, "decode.expected.png");
-        var options = new GoldenComparisonOptions { ExpectedSize = new(800, 600) };
-        SampleImage.Verifier.Verify(
-            GoldenImageSource.WritePng(data.ToArray(), Path.Combine(root, "decode.actual.png")),
+        Golden.Verify(
+            Golden.WritePng(Path.Combine(root, "decode.actual.png"), data.ToArray()),
             expected,
-            options);
+            expectedSize: new(800, 600));
         await Assert.ThrowsAnyAsync<Exception>(() =>
-            Task.Run(() => SampleImage.Verifier.Verify(
-                GoldenImageSource.WritePng(
-                    data.ToArray().AsSpan(0, 12).ToArray(),
-                    Path.Combine(root, "invalid.actual.png")),
+            Task.Run(() => Golden.Verify(
+                Golden.WritePng(
+                    Path.Combine(root, "invalid.actual.png"),
+                    data.ToArray().AsSpan(0, 12).ToArray()),
                 expected,
-                options)));
+                expectedSize: new(800, 600))));
         var invalidSignature = Path.Combine(root, "invalid-signature.actual.png");
         var error = await Assert.ThrowsAnyAsync<Exception>(() =>
-            Task.Run(() => SampleImage.Verifier.Verify(
-                GoldenImageSource.WritePng(new byte[] { 1, 2, 3 }, invalidSignature),
+            Task.Run(() => Golden.Verify(
+                Golden.WritePng(invalidSignature, new byte[] { 1, 2, 3 }),
                 expected,
-                options)));
+                expectedSize: new(800, 600))));
         Assert.Contains("Expected a PNG image", error.Message);
         Assert.Equal(new byte[] { 1, 2, 3 }, File.ReadAllBytes(invalidSignature));
         await Assert.ThrowsAnyAsync<Exception>(() =>
-            Task.Run(() => SampleImage.Verifier.Verify(
-                GoldenImageSource.WritePng(data.ToArray(), Path.Combine(root, "wrong-size.actual.png")),
+            Task.Run(() => Golden.Verify(
+                Golden.WritePng(Path.Combine(root, "wrong-size.actual.png"), data.ToArray()),
                 expected,
-                new GoldenComparisonOptions { ExpectedSize = new(400, 300) })));
+                expectedSize: new(400, 300))));
     }
 
     [Theory]
@@ -354,12 +338,12 @@ public class SampleImageTests : IDisposable
 
         if (accepted)
         {
-            SampleImage.Verifier.Verify(actual, expected);
+            Golden.Verify(actual, expected);
             Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
         }
         else
         {
-            var error = Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.Verifier.Verify(actual, expected));
+            var error = Assert.Throws<Xunit.Sdk.FailException>(() => Golden.Verify(actual, expected));
             Assert.Contains($"{changedPixels}/{width * height} pixels", error.Message);
             Assert.Contains("exceeding", error.Message);
             Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
@@ -377,7 +361,7 @@ public class SampleImageTests : IDisposable
         bitmap.Erase(new SKColor(red, green, blue, alpha));
         var actual = SavePng(bitmap, "actual.png");
 
-        var error = Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.Verifier.Verify(actual, expected));
+        var error = Assert.Throws<Xunit.Sdk.FailException>(() => Golden.Verify(actual, expected));
         Assert.Contains("4000/4000 pixels", error.Message);
         Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
     }
@@ -398,31 +382,26 @@ public class SampleImageTests : IDisposable
     }
 
     [Fact]
-    public async Task ImageOptionsApplyToSavedFilesAndDirectComparisonsWithoutMutation()
+    public async Task ComparisonArgumentsApplyToSavedFilesAndDirectComparisons()
     {
         using var bitmap = new SKBitmap(16, 12);
         bitmap.Erase(SKColors.Red);
         var expected = SavePng(bitmap, "options.expected.png");
         var actual = Path.Combine(root, "options.actual.png");
-        var options = new GoldenComparisonOptions { ExpectedSize = new(16, 12) };
-
-        SampleImage.Verifier.Verify(GoldenImageSource.WritePng(File.ReadAllBytes(expected), actual), expected, options);
-        SampleImage.Verifier.Verify(actual, expected, options);
+        Golden.Verify(
+            Golden.WritePng(actual, File.ReadAllBytes(expected)),
+            expected,
+            expectedSize: new(16, 12));
+        Golden.Verify(actual, expected, expectedSize: new(16, 12));
         Assert.Contains("options.actual.png-2", TestContext.Current.Attachments!.Keys);
-        Assert.Equal(new SKSizeI(16, 12), options.ExpectedSize);
-        Assert.Equal(0.00075, options.MaxErrorPixelFraction);
-        Assert.Null(options.MaxAverageColorErrorFraction);
-
-        var wrongSize = new GoldenComparisonOptions { ExpectedSize = new(15, 12) };
-        Assert.ThrowsAny<Exception>(() => SampleImage.Verifier.Verify(actual, expected, wrongSize));
+        Assert.ThrowsAny<Exception>(() => Golden.Verify(actual, expected, expectedSize: new(15, 12)));
         await Assert.ThrowsAnyAsync<Exception>(() =>
-            Task.Run(() => SampleImage.Verifier.Verify(
-                GoldenImageSource.WritePng(
-                    File.ReadAllBytes(expected),
-                    Path.Combine(root, "wrong-size.actual.png")),
+            Task.Run(() => Golden.Verify(
+                Golden.WritePng(
+                    Path.Combine(root, "wrong-size.actual.png"),
+                    File.ReadAllBytes(expected)),
                 expected,
-                wrongSize)));
-        Assert.Equal(new SKSizeI(16, 12), options.ExpectedSize);
+                expectedSize: new(15, 12))));
     }
 
     [Theory]
@@ -435,8 +414,8 @@ public class SampleImageTests : IDisposable
         bitmap.Erase(SKColors.Red);
         var expected = SavePng(bitmap, "invalid-options.expected.png");
         var actual = SavePng(bitmap, "invalid-options.actual.png");
-        Assert.ThrowsAny<Exception>(() => SampleImage.Verifier.Verify(actual, expected,
-            new() { MaxAverageColorErrorFraction = limit }));
+        Assert.ThrowsAny<Exception>(() =>
+            Golden.Verify(actual, expected, maxAverageColorErrorFraction: limit));
     }
 
     [Theory]
@@ -451,12 +430,11 @@ public class SampleImageTests : IDisposable
         for (var i = 0; i < changedPixels; i++)
             bitmap.SetPixel(i, 0, SKColors.White);
         var actual = SavePng(bitmap, "pixel-options.actual.png");
-        var options = new GoldenComparisonOptions { MaxErrorPixelFraction = 0.01 };
         if (accepted)
-            SampleImage.Verifier.Verify(actual, expected, options);
+            Golden.Verify(actual, expected, maxErrorPixelFraction: 0.01);
         else
-            Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.Verifier.Verify(actual, expected, options));
-        Assert.Equal(0.00075, new GoldenComparisonOptions().MaxErrorPixelFraction);
+            Assert.Throws<Xunit.Sdk.FailException>(() =>
+                Golden.Verify(actual, expected, maxErrorPixelFraction: 0.01));
     }
 
     [Theory]
@@ -470,7 +448,7 @@ public class SampleImageTests : IDisposable
         var expected = SavePng(bitmap, "invalid-pixel-options.expected.png");
         var actual = SavePng(bitmap, "invalid-pixel-options.actual.png");
         Assert.ThrowsAny<Exception>(() =>
-            SampleImage.Verifier.Verify(actual, expected, new() { MaxErrorPixelFraction = limit }));
+            Golden.Verify(actual, expected, maxErrorPixelFraction: limit));
     }
 
     [Fact]
@@ -485,13 +463,13 @@ public class SampleImageTests : IDisposable
         using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
             File.WriteAllBytes(actual, data.ToArray());
         File.Copy(actual, expected);
-        SampleImage.Verifier.Verify(actual, expected);
+        Golden.Verify(actual, expected);
 
         bitmap.Erase(SKColors.Blue);
         using (var image = SKImage.FromBitmap(bitmap))
         using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
             File.WriteAllBytes(actual, data.ToArray());
-        var error = Assert.ThrowsAny<Exception>(() => SampleImage.Verifier.Verify(actual, expected));
+        var error = Assert.ThrowsAny<Exception>(() => Golden.Verify(actual, expected));
         Assert.Contains("192/192", error.Message);
         Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
     }
@@ -507,7 +485,7 @@ public class SampleImageTests : IDisposable
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         File.WriteAllBytes(actual, data.ToArray());
-        Assert.Throws<FileNotFoundException>(() => SampleImage.Verifier.Verify(actual, expected));
+        Assert.Throws<FileNotFoundException>(() => Golden.Verify(actual, expected));
         Assert.True(File.Exists(actual));
         Assert.False(File.Exists(expected));
     }
@@ -520,13 +498,13 @@ public class SampleImageTests : IDisposable
         var expected = SavePng(bitmap, "average.expected.png");
         bitmap.Erase(new SKColor(238, 17, 17));
         var actual = SavePng(bitmap, "average.actual.png");
-        SampleImage.Verifier.Verify(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 });
+        Golden.Verify(actual, expected, maxAverageColorErrorFraction: 0.05);
         Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
 
         bitmap.SetPixel(0, 0, new SKColor(238, 18, 17));
         SavePng(bitmap, "average.actual.png");
         var error = Assert.ThrowsAny<Exception>(() =>
-            SampleImage.Verifier.Verify(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 }));
+            Golden.Verify(actual, expected, maxAverageColorErrorFraction: 0.05));
         Assert.Contains("average RGBA color error", error.Message);
         Assert.True(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
     }
@@ -539,11 +517,11 @@ public class SampleImageTests : IDisposable
         var expected = SavePng(bitmap, "channel.expected.png");
         bitmap.Erase(new SKColor(247, 8, 8));
         var actual = SavePng(bitmap, "channel.actual.png");
-        SampleImage.Verifier.Verify(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 });
-        var error = Assert.ThrowsAny<Exception>(() => SampleImage.Verifier.Verify(actual, expected));
+        Golden.Verify(actual, expected, maxAverageColorErrorFraction: 0.05);
+        var error = Assert.ThrowsAny<Exception>(() => Golden.Verify(actual, expected));
         Assert.Contains("192/192", error.Message);
         Assert.ThrowsAny<Exception>(() =>
-            SampleImage.Verifier.Verify(actual, expected, new() { MaxAverageColorErrorFraction = 0 }));
+            Golden.Verify(actual, expected, maxAverageColorErrorFraction: 0));
     }
 
     [Fact]
@@ -554,12 +532,12 @@ public class SampleImageTests : IDisposable
         var expected = SavePng(bitmap, "alpha.expected.png");
         bitmap.Erase(new SKColor(0, 0, 0, 204));
         var actual = SavePng(bitmap, "alpha.actual.png");
-        SampleImage.Verifier.Verify(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 });
+        Golden.Verify(actual, expected, maxAverageColorErrorFraction: 0.05);
 
         bitmap.SetPixel(0, 0, new SKColor(0, 0, 0, 203));
         SavePng(bitmap, "alpha.actual.png");
         Assert.ThrowsAny<Exception>(() =>
-            SampleImage.Verifier.Verify(actual, expected, new() { MaxAverageColorErrorFraction = 0.05 }));
+            Golden.Verify(actual, expected, maxAverageColorErrorFraction: 0.05));
     }
 
     [Fact]
@@ -571,12 +549,12 @@ public class SampleImageTests : IDisposable
         bitmap.Erase(new SKColor(234, 20, 20));
         bitmap.SetPixel(0, 0, new SKColor(233, 20, 20));
         var actual = SavePng(bitmap, "gpu-budget.actual.png");
-        SampleImage.Verifier.Verify(actual, expected, new() { MaxAverageColorErrorFraction = 0.06 });
+        Golden.Verify(actual, expected, maxAverageColorErrorFraction: 0.06);
 
         bitmap.SetPixel(1, 0, new SKColor(233, 20, 20));
         SavePng(bitmap, "gpu-budget.actual.png");
         Assert.ThrowsAny<Exception>(() =>
-            SampleImage.Verifier.Verify(actual, expected, new() { MaxAverageColorErrorFraction = 0.06 }));
+            Golden.Verify(actual, expected, maxAverageColorErrorFraction: 0.06));
     }
 
     public void Dispose()

@@ -25,8 +25,7 @@ public class DockerSampleRunTests(DockerSampleFixture docker) : DockerSampleTest
             var output = OperatingSystem.IsWindows() ? @"C:\app\output.png" : "/app/output.png";
             await app.DownloadFile(output, image);
 
-            SampleImage.Verifier.Verify(SampleImage.Container("Console/output"), GoldenImageSource.FromFile(image),
-                new() { ExpectedSize = new(800, 600) });
+            SampleImage.Container("Console/output").Verify(image, expectedSize: new(800, 600));
         });
 
     [Fact]
@@ -43,9 +42,8 @@ public class DockerSampleRunTests(DockerSampleFixture docker) : DockerSampleTest
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
             var png = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
-            SampleImage.Verifier.Verify(
-                SampleImage.Container("Web/output"),
-                GoldenImageSource.WritePng(png, Path.Combine(app.Diagnostics, "output.png")),
-                new() { ExpectedSize = new(800, 600) });
+            SampleImage.Container("Web/output").Verify(
+                Golden.WritePng(Path.Combine(app.Diagnostics, "output.png"), png),
+                expectedSize: new(800, 600));
         });
 }

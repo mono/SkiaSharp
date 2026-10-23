@@ -21,18 +21,7 @@ public static class TestArtifacts
 		AddAttachment(context, name, File.ReadAllBytes(file), mediaType);
 	}
 
-	public static void AddImageAttachment(this ITestContext context, GoldenImageSource source, string? name = null)
-	{
-		if (File.Exists(source.Location))
-		{
-			AddFileAttachment(context, source.Location, "image/png", name ?? Path.GetFileName(source.Location));
-			return;
-		}
-
-		AddAttachment(context, name ?? Path.GetFileName(source.Location), source.ReadBytes(), "image/png");
-	}
-
-	private static void AddAttachment(ITestContext context, string name, byte[] bytes, string mediaType)
+	public static void AddAttachment(this ITestContext context, string name, byte[] bytes, string mediaType)
 	{
 		var attachmentName = name;
 		for (var suffix = 2; context.Attachments?.ContainsKey(attachmentName) == true; suffix++)

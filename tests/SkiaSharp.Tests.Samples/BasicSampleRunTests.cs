@@ -20,8 +20,7 @@ public class BasicSampleRunTests : DotNetSampleTestBase
 
             var image = Path.Combine(app.Diagnostics, "output.png");
             File.Copy(Path.Combine(Path.GetDirectoryName(project)!, "output.png"), image);
-            SampleImage.Verifier.Verify(SampleImage.Host("Console/output"), GoldenImageSource.FromFile(image),
-                new() { ExpectedSize = new(800, 600) });
+            SampleImage.Host("Console/output").Verify(image, expectedSize: new(800, 600));
         });
 
     [Fact]
@@ -39,9 +38,8 @@ public class BasicSampleRunTests : DotNetSampleTestBase
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
             var png = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
-            SampleImage.Verifier.Verify(
-                SampleImage.Host("Web/output"),
-                GoldenImageSource.WritePng(png, Path.Combine(app.Diagnostics, "output.png")),
-                new() { ExpectedSize = new(512, 512) });
+            SampleImage.Host("Web/output").Verify(
+                Golden.WritePng(Path.Combine(app.Diagnostics, "output.png"), png),
+                expectedSize: new(512, 512));
         });
 }

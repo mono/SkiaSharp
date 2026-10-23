@@ -3,11 +3,11 @@
 Visual tests render each scene through every backend required by the host's
 [GPU policy](gpu-test-policy.md). Sample tests compare application output and
 browser screenshots. Both use reviewed PNG references and the non-shipping
-`SkiaSharp.Tests.Shared` project for requests, platform policy, disk/resource
-lookup, byte loading, PNG handling, comparison results, diagnostic markers and
-`SKPixelComparer`. `GoldenVerifier` gives visual and sample tests the same
-resolve, require, compare, retry, diff and marker flow. Consumers keep only their
-request factories, policy choices and renderer/capture operations.
+`SkiaSharp.Tests.Shared` project for case resolution, platform policy, disk/resource
+lookup, PNG handling, comparison, diagnostic markers and `SKPixelComparer`.
+`GoldenStore.Resolve(...)` returns one `Golden` that owns the complete compare,
+retry, diff, attachment and assertion flow. Consumers keep only profile/case
+selection, policy choices and renderer/capture operations.
 
 ## Reference paths
 
@@ -47,8 +47,8 @@ baseline.
 
 ## Lookup rules
 
-`GoldenRequest` carries the platform, optional `Version`, case path, optional architecture,
-and optional functional variant.
+`GoldenStore.Resolve(...)` accepts the profile, case path, optional `Version`,
+architecture and functional variant.
 
 For each eligible version, candidate filenames are ordered:
 
@@ -71,15 +71,15 @@ root. An unversioned request uses the root directly. Lookup never synthesizes
 intermediate versions.
 
 The whole primary platform precedes fallback platforms, which use the same version
-search. `GoldenPlatform` normalizes `macos` to `mac`. Every platform except
+search. Resolution normalizes `macos` to `mac`. Every platform except
 `portable` falls back to `portable`; the sole special chain is
 `nanoserver -> windows -> portable`. Platforms are deduplicated. Docker platforms
 also fall back to `portable` (there currently are no portable sample references).
 Callers cannot supply arbitrary fallback lists.
 
-`GoldenResolution` reports the selected key/location, ordered attempted
-candidates, a `ReadBytes()` method and a readable trace. Missing results retain
-the trace. Lookup never creates or approves a reference.
+The returned `Golden` reports the capture key, selected reference key/location,
+ordered attempted candidates, fresh `ReadBytes()` access and a readable trace.
+Missing results retain the trace. Lookup never creates or approves a reference.
 
 ## Packaging
 
@@ -102,9 +102,10 @@ Selected bytes are read fresh, without a shared byte cache.
 
 ## Comparison policy
 
-The shared `GoldenComparisonOptions` and `GoldenVerifier` standardize image
-decoding, dimensions, threshold evaluation and difference generation. Consumers
-still choose policy. Visual comparisons remain renderer-specific:
+`Golden.Verify(...)` standardizes image decoding, dimensions, threshold
+evaluation and difference generation. File paths, encoded PNG bytes and raw
+pixels use overloads rather than source-holder types. Consumers select policy
+with named arguments. Visual comparisons remain renderer-specific:
 
 | Renderer | Per-channel tolerance | Allowed outlier fraction |
 | --- | --- | --- |

@@ -19,7 +19,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement(".card img");
             var screenshot = await app.Screenshot();
-            SampleImage.Verifier.Verify(SampleImage.Host("Web/page"), screenshot);
+            SampleImage.Host("Web/page").Verify(screenshot);
         });
 
     [Fact]
@@ -33,7 +33,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement("#output");
             var screenshot = await app.Screenshot();
-            SampleImage.Verifier.Verify(SampleImage.Host("Browser/wasm-page"), screenshot);
+            SampleImage.Host("Browser/wasm-page").Verify(screenshot);
         });
 
     [Fact]
@@ -46,10 +46,8 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
         {
             await app.Navigate("/");
             await app.WaitForElement(".canvas-container canvas");
-            await SampleImage.Verifier.VerifyAsync(
-                SampleImage.Host("Blazor/cpu"),
-                async () => GoldenImageSource.FromFile(await app.Screenshot()),
-                null,
+            await SampleImage.Host("Blazor/cpu").VerifyAsync(
+                app.Screenshot,
                 TimeSpan.FromSeconds(10),
                 TestContext.Current.CancellationToken);
         });
@@ -65,8 +63,9 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/gpu");
             await app.WaitForElement(".canvas-container canvas");
             var screenshot = await app.Screenshot();
-            SampleImage.Verifier.Verify(SampleImage.Host("Blazor/gpu"), screenshot,
-                new() { MaxAverageColorErrorFraction = 0.06 });
+            SampleImage.Host("Blazor/gpu").Verify(
+                screenshot,
+                maxAverageColorErrorFraction: 0.06);
         });
 
     [Fact]
@@ -127,8 +126,8 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
                 """);
             var cleared = await app.Screenshot();
 
-            SampleImage.Verifier.Verify(SampleImage.Host("Blazor/drawing-drawn"), drawn);
-            SampleImage.Verifier.Verify(SampleImage.Host("Blazor/drawing-cleared"), cleared);
+            SampleImage.Host("Blazor/drawing-drawn").Verify(drawn);
+            SampleImage.Host("Blazor/drawing-cleared").Verify(cleared);
         });
 
     [Fact]
@@ -181,16 +180,15 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Page.EvaluateAsync("document.documentElement.style.background = 'red'");
             var attempts = 0;
 
-            var matched = await SampleImage.Verifier.VerifyAsync(
+            var matched = await Golden.VerifyAsync(
                 async () =>
                 {
                     var actual = await app.Screenshot();
                     if (++attempts == 1)
                         await app.Page.EvaluateAsync("document.documentElement.style.background = 'blue'");
-                    return GoldenImageSource.FromFile(actual);
+                    return actual;
                 },
                 expected,
-                null,
                 SampleImage.DefaultTimeout,
                 TestContext.Current.CancellationToken);
 
@@ -218,10 +216,8 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
                     case "navigate": await app.Navigate("/"); break;
                     case "wait": await app.WaitForElement("body"); break;
                     case "screenshot":
-                        await SampleImage.Verifier.VerifyAsync(
-                            async () => GoldenImageSource.FromFile(await app.Screenshot()),
-                            "unused.png",
-                            null,
+                        await SampleImage.Host("Web/page").VerifyAsync(
+                            app.Screenshot,
                             SampleImage.DefaultTimeout,
                             TestContext.Current.CancellationToken);
                         break;

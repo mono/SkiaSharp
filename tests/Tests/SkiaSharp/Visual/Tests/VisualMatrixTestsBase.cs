@@ -13,9 +13,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 	/// <summary>
 	/// The shared engine behind every visual-regression test. One test is one
 	/// <c>(renderer × scene)</c> pair: it renders the scene with the renderer and
-	/// compares the pixels to a committed golden via
-	/// <see cref="GoldenImage"/> with per-renderer comparison options. Golden lookup is handled by
-	/// <see cref="GoldenStore"/>.
+	/// compares the pixels to a committed golden resolved by <see cref="GoldenStore"/>.
 	///
 	/// <para>The pipeline lives here so hosts can contribute their own renderers:
 	/// <see cref="VisualMatrixTests"/> drives every auto-discovered renderer in the
@@ -64,16 +62,20 @@ namespace SkiaSharp.Tests.Visual.Tests
 
 			var info = scene.Info;
 			var actual = await renderer.RenderAsync(scene, info, CancellationToken.None);
-			var actualPng = GoldenImage.EncodePixels(actual, RendererPixels.NormalizedInfo(info));
-			new GoldenVerifier(CreateStore()).Verify(
-				Request(renderer.Name, scene.Name),
-				GoldenImageSource.FromBytes(actualPng, renderer.Name + "/" + scene.Name),
-				ComparisonOptions(renderer.Name));
+			var raster = renderer.Name == GpuBackends.Raster;
+			Resolve(renderer.Name, scene.Name).Verify(
+				actual,
+				RendererPixels.NormalizedInfo(info),
+				channelTolerance: raster ? 2 : 12,
+				maxErrorPixelFraction: raster ? 0.002 : 0.03);
 		}
 
-		internal static GoldenRequest Request(string rendererName, string sceneName) =>
-			new GoldenRequest(TestConfig.Current.PlatformName, sceneName, architecture:
-				RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(), variant: rendererName);
+		internal static Golden Resolve(string rendererName, string sceneName) =>
+			CreateStore().Resolve(
+				TestConfig.Current.PlatformName,
+				sceneName,
+				architecture: RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
+				variant: rendererName);
 
 		internal static GoldenStore CreateStore()
 		{
@@ -87,9 +89,5 @@ namespace SkiaSharp.Tests.Visual.Tests
 			return new GoldenStore(roots, assemblies);
 		}
 
-		private static GoldenComparisonOptions ComparisonOptions(string rendererName) =>
-			rendererName == GpuBackends.Raster
-				? new GoldenComparisonOptions { ChannelTolerance = 2, MaxErrorPixelFraction = 0.002 }
-				: new GoldenComparisonOptions { ChannelTolerance = 12, MaxErrorPixelFraction = 0.03 };
 	}
 }
