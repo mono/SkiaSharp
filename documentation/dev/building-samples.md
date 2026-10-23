@@ -140,11 +140,11 @@ zero channel tolerance. Animated GPU pages use a loose **6% mean RGBA error**
 smoke check that can miss uniform dark output. Mismatches retain actual/diff
 images; references are never accepted automatically.
 
-`SampleImage.Validate` takes `actual`, a typed golden request (for example,
-`SampleImage.Host("Console/output")`), and optional shared `ImageComparisonOptions`.
-Absolute expected-image paths remain available for transient screenshot checks.
-Its byte-array overload also takes
-the actual output path, saves the bytes, then calls the file overload.
+Use `SampleImage.Verifier.Verify(...)` with a `GoldenImageSource`, a typed request
+(for example, `SampleImage.Host("Console/output")`), and optional shared
+`GoldenComparisonOptions`. Use the same verifier overload without a request for
+transient image-to-image checks. `GoldenImageSource` accepts file paths directly
+or can persist response bytes with `WritePng`.
 Set `ExpectedSize = new(800, 600)` for
 fixed-size PNGs; only animated GPU checks set `MaxAverageColorErrorFraction`.
 The options own the default `MaxErrorPixelFraction` of `0.00075`.

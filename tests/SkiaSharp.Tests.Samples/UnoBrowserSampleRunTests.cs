@@ -19,7 +19,7 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement("#uno-canvas");
             var screenshot = await WaitForUnoCpu(app);
-            SampleImage.Validate(screenshot, SampleImage.Host("Uno/cpu"));
+            SampleImage.Verifier.Verify(SampleImage.Host("Uno/cpu"), screenshot);
         });
 
     [Fact]
@@ -67,10 +67,10 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
             await app.Page.Mouse.ClickAsync(50, 24);
             await app.Page.Mouse.MoveAsync(0, 0);
             var returned = await WaitForUnoCpu(app);
-            SampleImage.Validate(returned, cpu);
-            SampleImage.Validate(drawn, SampleImage.Host("Uno/drawing-drawn"));
-            SampleImage.Validate(cleared, SampleImage.Host("Uno/drawing-cleared"));
-            SampleImage.Validate(returned, SampleImage.Host("Uno/cpu"));
+            SampleImage.Verifier.Verify(returned, cpu);
+            SampleImage.Verifier.Verify(SampleImage.Host("Uno/drawing-drawn"), drawn);
+            SampleImage.Verifier.Verify(SampleImage.Host("Uno/drawing-cleared"), cleared);
+            SampleImage.Verifier.Verify(SampleImage.Host("Uno/cpu"), returned);
         });
 
     private async Task RunUnoBrowserSample(Func<BrowserRunningApp, Task> test)

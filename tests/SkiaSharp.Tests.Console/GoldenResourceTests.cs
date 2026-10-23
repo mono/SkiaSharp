@@ -18,7 +18,8 @@ namespace SkiaSharp.Tests
 			var embedded = assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
 				.Single(attribute => attribute.Key == "SkiaSharp.Tests.EmbedGoldens").Value == "true";
 			var scene = new FilledCircleScene();
-			var resolution = VisualMatrixTestsBase.ResolveGolden("raster", scene.Name);
+			var resolution = VisualMatrixTestsBase.CreateStore()
+				.Resolve(VisualMatrixTestsBase.Request("raster", scene.Name));
 			Assert.NotNull(resolution.Key);
 			Assert.NotNull(resolution.Location);
 			using var image = GoldenImage.Decode(resolution.ReadBytes(), resolution.Location);

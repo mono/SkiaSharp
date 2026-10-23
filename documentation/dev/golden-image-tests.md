@@ -103,7 +103,7 @@ Selected bytes are read fresh, without a shared byte cache.
 
 ## Comparison policy
 
-The shared `ImageComparisonOptions`, `ImageVerifier`, and `GoldenVerifier` standardize image
+The shared `GoldenComparisonOptions` and `GoldenVerifier` standardize image
 decoding, dimensions, threshold evaluation and difference generation. Consumers
 still choose policy. Visual comparisons remain renderer-specific:
 

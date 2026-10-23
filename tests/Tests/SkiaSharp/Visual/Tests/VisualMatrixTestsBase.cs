@@ -46,8 +46,6 @@ namespace SkiaSharp.Tests.Visual.Tests
 		/// </summary>
 		public const string VisualCategory = "Visual";
 
-		public const string ImageMarker = GoldenImage.MarkerPrefix;
-
 		protected VisualMatrixTestsBase(ITestOutputHelper output)
 			: base(output)
 		{
@@ -67,38 +65,17 @@ namespace SkiaSharp.Tests.Visual.Tests
 			var info = scene.Info;
 			var actual = await renderer.RenderAsync(scene, info, CancellationToken.None);
 			var actualPng = GoldenImage.EncodePixels(actual, RendererPixels.NormalizedInfo(info));
-			var verification = new GoldenVerifier(CreateStore()).Verify(
+			new GoldenVerifier(CreateStore()).Verify(
 				Request(renderer.Name, scene.Name),
-				ImageSource.FromBytes(actualPng, renderer.Name + "/" + scene.Name),
+				GoldenImageSource.FromBytes(actualPng, renderer.Name + "/" + scene.Name),
 				ComparisonOptions(renderer.Name));
-
-			WriteOutput(verification.Resolution.Describe());
-			foreach (var marker in verification.Markers())
-				WriteOutput(marker);
-			if (verification.IsMatch)
-				return;
-
-			var actualPath = TrySave(() =>
-				SaveFailureArtifact(renderer.Name, scene.Name, ".actual.png", verification.ActualPng));
-			var diffPath = verification.Image?.DifferencePng is { } difference
-				? TrySave(() => SaveFailureArtifact(renderer.Name, scene.Name, ".diff.png", difference))
-				: null;
-			Assert.Fail(
-				$"Visual golden failed for '{renderer.Name}/{scene.Name}'. {verification.Failure} " +
-				ArtifactSuffix(actualPath, diffPath) +
-				$"The rendered PNG is in the test results as an {ImageMarker} role=actual marker. " +
-				"If this change is expected, harvest it with scripts/infra/tests/extract-visual-goldens.py and commit; " +
-				"otherwise fix the regression.");
 		}
 
 		internal static GoldenRequest Request(string rendererName, string sceneName) =>
 			new GoldenRequest(TestConfig.Current.PlatformName, sceneName, architecture:
 				RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(), variant: rendererName);
 
-		internal static GoldenResolution ResolveGolden(string rendererName, string sceneName)
-			=> CreateStore().Resolve(Request(rendererName, sceneName));
-
-		private static GoldenStore CreateStore()
+		internal static GoldenStore CreateStore()
 		{
 			var roots = new List<string> { Path.Combine(AppContext.BaseDirectory, "Goldens") };
 			if (!string.IsNullOrEmpty(TestConfig.Current.PathRoot))
@@ -110,38 +87,9 @@ namespace SkiaSharp.Tests.Visual.Tests
 			return new GoldenStore(roots, assemblies);
 		}
 
-		private static ImageComparisonOptions ComparisonOptions(string rendererName) =>
+		private static GoldenComparisonOptions ComparisonOptions(string rendererName) =>
 			rendererName == GpuBackends.Raster
-				? new ImageComparisonOptions { ChannelTolerance = 2, MaxErrorPixelFraction = 0.002 }
-				: new ImageComparisonOptions { ChannelTolerance = 12, MaxErrorPixelFraction = 0.03 };
-
-		private static string SaveFailureArtifact(string rendererName, string sceneName, string suffix, byte[] png)
-		{
-			var path = Path.Combine(AppContext.BaseDirectory, "_visualfailures", rendererName, sceneName + suffix);
-			GoldenImage.Write(path, png);
-			return path;
-		}
-
-		private static string TrySave(Func<string> save)
-		{
-			try
-			{
-				return save();
-			}
-			catch
-			{
-				return null;
-			}
-		}
-
-		private static string ArtifactSuffix(string actualPath, string diffPath)
-		{
-			var parts = new List<string>();
-			if (actualPath is not null)
-				parts.Add($"actual: '{actualPath}'");
-			if (diffPath is not null)
-				parts.Add($"diff: '{diffPath}'");
-			return parts.Count == 0 ? "" : "Saved " + string.Join(", ", parts) + ". ";
-		}
+				? new GoldenComparisonOptions { ChannelTolerance = 2, MaxErrorPixelFraction = 0.002 }
+				: new GoldenComparisonOptions { ChannelTolerance = 12, MaxErrorPixelFraction = 0.03 };
 	}
 }

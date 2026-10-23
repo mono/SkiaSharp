@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Xml.Linq;
+using SkiaSharp.Tests.Shared;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -269,7 +270,7 @@ public class SampleInfrastructureTests : IDisposable
         Assert.NotNull(TestContext.Current.TestOutputHelper);
         TestContext.Current.AddFileAttachment(Path.Combine(root, "small.txt"), "text/plain");
         using (var file = File.Create(Path.Combine(root, "large.binlog")))
-            file.SetLength(SampleArtifacts.AttachmentLimit + 1);
+            file.SetLength(TestArtifacts.AttachmentLimit + 1);
         TestContext.Current.AddFileAttachment(Path.Combine(root, "large.binlog"), "application/octet-stream");
         Assert.True(File.Exists(Path.Combine(root, "large.binlog")));
     }

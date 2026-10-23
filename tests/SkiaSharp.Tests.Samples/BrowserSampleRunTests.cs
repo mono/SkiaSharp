@@ -19,7 +19,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement(".card img");
             var screenshot = await app.Screenshot();
-            SampleImage.Validate(screenshot, SampleImage.Host("Web/page"));
+            SampleImage.Verifier.Verify(SampleImage.Host("Web/page"), screenshot);
         });
 
     [Fact]
@@ -33,7 +33,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement("#output");
             var screenshot = await app.Screenshot();
-            SampleImage.Validate(screenshot, SampleImage.Host("Browser/wasm-page"));
+            SampleImage.Verifier.Verify(SampleImage.Host("Browser/wasm-page"), screenshot);
         });
 
     [Fact]
@@ -46,8 +46,12 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
         {
             await app.Navigate("/");
             await app.WaitForElement(".canvas-container canvas");
-            await SampleImage.Validate(app.Screenshot, SampleImage.Host("Blazor/cpu"),
-                timeout: TimeSpan.FromSeconds(10));
+            await SampleImage.Verifier.VerifyAsync(
+                SampleImage.Host("Blazor/cpu"),
+                async () => GoldenImageSource.FromFile(await app.Screenshot()),
+                null,
+                TimeSpan.FromSeconds(10),
+                TestContext.Current.CancellationToken);
         });
 
     [Fact]
@@ -61,7 +65,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/gpu");
             await app.WaitForElement(".canvas-container canvas");
             var screenshot = await app.Screenshot();
-            SampleImage.Validate(screenshot, SampleImage.Host("Blazor/gpu"),
+            SampleImage.Verifier.Verify(SampleImage.Host("Blazor/gpu"), screenshot,
                 new() { MaxAverageColorErrorFraction = 0.06 });
         });
 
@@ -129,8 +133,8 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             Assert.Equal(0, ImagePixels.Count(cleared, region, c =>
                 c == new SKColor(229, 57, 53) || c == new SKColor(30, 136, 229)));
 
-            SampleImage.Validate(drawn, SampleImage.Host("Blazor/drawing-drawn"));
-            SampleImage.Validate(cleared, SampleImage.Host("Blazor/drawing-cleared"));
+            SampleImage.Verifier.Verify(SampleImage.Host("Blazor/drawing-drawn"), drawn);
+            SampleImage.Verifier.Verify(SampleImage.Host("Blazor/drawing-cleared"), cleared);
         });
 
     [Fact]
@@ -181,13 +185,18 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Page.EvaluateAsync("document.documentElement.style.background = 'red'");
             var attempts = 0;
 
-            var matched = await SampleImage.Validate(async () =>
-            {
-                var actual = await app.Screenshot();
-                if (++attempts == 1)
-                    await app.Page.EvaluateAsync("document.documentElement.style.background = 'blue'");
-                return actual;
-            }, expected);
+            var matched = await SampleImage.Verifier.VerifyAsync(
+                async () =>
+                {
+                    var actual = await app.Screenshot();
+                    if (++attempts == 1)
+                        await app.Page.EvaluateAsync("document.documentElement.style.background = 'blue'");
+                    return GoldenImageSource.FromFile(actual);
+                },
+                expected,
+                null,
+                SampleImage.DefaultTimeout,
+                TestContext.Current.CancellationToken);
 
             Assert.Equal(2, attempts);
             Assert.Equal(10000, ImagePixels.Count(matched, new SKRectI(0, 0, 100, 100), c => c == SKColors.Blue));
@@ -212,7 +221,14 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
                 {
                     case "navigate": await app.Navigate("/"); break;
                     case "wait": await app.WaitForElement("body"); break;
-                    case "screenshot": await SampleImage.Validate(app.Screenshot, "unused.png"); break;
+                    case "screenshot":
+                        await SampleImage.Verifier.VerifyAsync(
+                            async () => GoldenImageSource.FromFile(await app.Screenshot()),
+                            "unused.png",
+                            null,
+                            SampleImage.DefaultTimeout,
+                            TestContext.Current.CancellationToken);
+                        break;
                 }
             }));
         Assert.Contains("first browser sentinel", error.Message);

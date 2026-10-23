@@ -199,6 +199,16 @@ public static class SKPixelComparer
 		return new SKPixelComparisonResult(totalPixels, errorPixels, absoluteError, maxChannelDelta);
 	}
 
+	public static SKPixelComparisonResult Compare(
+		SKImage first,
+		SKImage second,
+		GoldenComparisonOptions options)
+	{
+		if (options == null) throw new ArgumentNullException(nameof(options));
+		options.Validate();
+		return Compare(first, second, options.ChannelTolerance);
+	}
+
 	// Produces a colored diff to make a failure self-explanatory: pixels that
 	// exceed the tolerance are painted red, pixels that differ but are within
 	// tolerance are amber, and matching pixels are a dimmed version of the

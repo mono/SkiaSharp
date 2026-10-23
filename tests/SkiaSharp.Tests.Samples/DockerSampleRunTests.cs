@@ -1,3 +1,4 @@
+using SkiaSharp.Tests.Shared;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -24,7 +25,7 @@ public class DockerSampleRunTests(DockerSampleFixture docker) : DockerSampleTest
             var output = OperatingSystem.IsWindows() ? @"C:\app\output.png" : "/app/output.png";
             await app.DownloadFile(output, image);
 
-            SampleImage.Validate(image, SampleImage.Container("Console/output"),
+            SampleImage.Verifier.Verify(SampleImage.Container("Console/output"), GoldenImageSource.FromFile(image),
                 new() { ExpectedSize = new(800, 600) });
         });
 
@@ -42,8 +43,9 @@ public class DockerSampleRunTests(DockerSampleFixture docker) : DockerSampleTest
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
             var png = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
-            await SampleImage.Validate(png,
-                Path.Combine(app.Diagnostics, "output.png"),
-                SampleImage.Container("Web/output"), new() { ExpectedSize = new(800, 600) });
+            SampleImage.Verifier.Verify(
+                SampleImage.Container("Web/output"),
+                GoldenImageSource.WritePng(png, Path.Combine(app.Diagnostics, "output.png")),
+                new() { ExpectedSize = new(800, 600) });
         });
 }

@@ -1,3 +1,4 @@
+using SkiaSharp.Tests.Shared;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -19,7 +20,7 @@ public class BasicSampleRunTests : DotNetSampleTestBase
 
             var image = Path.Combine(app.Diagnostics, "output.png");
             File.Copy(Path.Combine(Path.GetDirectoryName(project)!, "output.png"), image);
-            SampleImage.Validate(image, SampleImage.Host("Console/output"),
+            SampleImage.Verifier.Verify(SampleImage.Host("Console/output"), GoldenImageSource.FromFile(image),
                 new() { ExpectedSize = new(800, 600) });
         });
 
@@ -38,8 +39,9 @@ public class BasicSampleRunTests : DotNetSampleTestBase
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
             var png = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
-            await SampleImage.Validate(png,
-                Path.Combine(app.Diagnostics, "output.png"),
-                SampleImage.Host("Web/output"), new() { ExpectedSize = new(512, 512) });
+            SampleImage.Verifier.Verify(
+                SampleImage.Host("Web/output"),
+                GoldenImageSource.WritePng(png, Path.Combine(app.Diagnostics, "output.png")),
+                new() { ExpectedSize = new(512, 512) });
         });
 }

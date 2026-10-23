@@ -3,27 +3,46 @@ namespace SkiaSharp.Tests.Shared;
 public sealed class GoldenVerification
 {
 	internal GoldenVerification(
-		GoldenResolution resolution,
-		ImageSource actual,
+		GoldenImageSource actual,
+		GoldenImageSource? expected,
 		byte[] actualPng,
-		ImageVerification? image)
+		byte[]? expectedPng,
+		SKSizeI? actualSize,
+		SKSizeI? expectedSize,
+		SKPixelComparisonResult? comparison,
+		byte[]? differencePng,
+		string? failure,
+		bool isMatch,
+		GoldenResolution? resolution = null)
 	{
-		Resolution = resolution;
 		Actual = actual;
+		Expected = expected;
 		ActualPng = actualPng;
-		Image = image;
+		ExpectedPng = expectedPng;
+		ActualSize = actualSize;
+		ExpectedSize = expectedSize;
+		Comparison = comparison;
+		DifferencePng = differencePng;
+		Failure = failure;
+		IsMatch = isMatch;
+		Resolution = resolution;
 	}
 
-	public GoldenResolution Resolution { get; }
-	public ImageSource Actual { get; }
+	public GoldenImageSource Actual { get; }
+	public GoldenImageSource? Expected { get; }
 	public byte[] ActualPng { get; }
-	public ImageVerification? Image { get; }
-	public bool IsMissing => Resolution.Key == null;
-	public bool IsMatch => Image?.IsMatch == true;
-	public string Failure =>
-		IsMissing ? "Missing reviewed golden. " + Resolution.Describe() :
-		Image?.Failure ?? "Golden comparison did not complete.";
+	public byte[]? ExpectedPng { get; }
+	public SKSizeI? ActualSize { get; }
+	public SKSizeI? ExpectedSize { get; }
+	public SKPixelComparisonResult? Comparison { get; }
+	public byte[]? DifferencePng { get; }
+	public string? Failure { get; }
+	public bool IsMatch { get; }
+	public GoldenResolution? Resolution { get; }
+	public bool IsMissing => Resolution != null && Resolution.Key == null;
 
 	public IEnumerable<string> Markers() =>
-		GoldenImage.Markers(Resolution, ActualPng, Image?.DifferencePng);
+		Resolution == null
+			? Array.Empty<string>()
+			: GoldenImage.Markers(Resolution, ActualPng, DifferencePng);
 }
